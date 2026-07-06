@@ -22,6 +22,17 @@ export {
 export { createGame } from "./game/create.ts";
 export { step } from "./game/step.ts";
 
+// The autopilot: bot strategies producing player input (tests, ?bot=, and
+// the future AI second player).
+export {
+  BOT_STRATEGIES,
+  botAct,
+  botAllocate,
+  createBot,
+  type Bot,
+  type BotStrategy,
+} from "./game/bot.ts";
+
 // Player-driven mutations (level-up chooser, inventory UI, phase toggles).
 export {
   allocateStat,

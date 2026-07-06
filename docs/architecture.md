@@ -56,6 +56,10 @@ weapon means adding catalog entries, not touching the simulation.
   mutations the UI calls into: loot rolls, `equipFromInventory` /
   `unequipToInventory` / `moveInventoryItem`, `allocateStat`, and the
   derived stats (max hp, weapon damage, move speed, crit chance).
+- **`src/game/bot.ts`** — the autopilot: pure strategies (`idle`, `rush`,
+  `kite`, `boss`, `survivor`) that turn the live state into ordinary
+  `GameInput`, so a bot can sit anywhere a player does — headless tests,
+  the app's `?bot=` autoplay mode, and later an AI-driven second player.
 - **`src/lib/`** — generic, game-agnostic helpers (`vec.ts`, `rng.ts`),
   imported via the `@game/lib/*` alias and earmarked for extraction into
   oss-framework once mature (extraction is then a prefix swap).
