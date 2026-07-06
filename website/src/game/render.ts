@@ -10,6 +10,7 @@ import {
   abilityDef,
   enemyDef,
   equipmentIcon,
+  magnetRadius,
   orbPositions,
   type GameState,
 } from "@game/core";
@@ -68,6 +69,11 @@ const DECOR_SPRITES: Record<string, keyof Sprites> = {
 const LANDMARK_SPRITES: Record<string, keyof Sprites> = {
   lander: "lander",
   flag: "flag",
+};
+
+const OBSTACLE_SPRITES: Record<string, keyof Sprites> = {
+  boulder: "boulder",
+  rock: "rock",
 };
 
 export function drawFrame(
@@ -134,18 +140,31 @@ export function drawFrame(
     );
   }
 
+  // Obstacles sit on the ground plane, under everything that moves.
+  for (const obstacle of state.obstacles) {
+    if (!inView(obstacle.pos.x, obstacle.pos.y, 32)) continue;
+    const sprite = sprites[OBSTACLE_SPRITES[obstacle.kind] ?? "rock"];
+    ctx.drawImage(
+      sprite,
+      Math.round(obstacle.pos.x - sprite.width / 2 - camera.x),
+      Math.round(obstacle.pos.y - sprite.height / 2 - camera.y),
+    );
+  }
+
   for (const item of state.items) {
     if (!inView(item.pos.x, item.pos.y, 16)) continue;
     const sprite =
       item.kind === "medkit"
         ? sprites.medkit
-        : item.kind === "upgrade"
+        : item.kind === "xp"
           ? sprites.upgrade
-          : item.kind === "ability"
-            ? (spriteByName(sprites, abilityDef(item.defId).icon) ??
-              sprites.medkit)
-            : (spriteByName(sprites, equipmentIcon(item.equipment.defId)) ??
-              sprites.medkit);
+          : item.kind === "repair"
+            ? sprites.repair
+            : item.kind === "ability"
+              ? (spriteByName(sprites, abilityDef(item.defId).icon) ??
+                sprites.medkit)
+              : (spriteByName(sprites, equipmentIcon(item.equipment.defId)) ??
+                sprites.medkit);
     const x = Math.round(item.pos.x - sprite.width / 2 - camera.x);
     const y = Math.round(item.pos.y - sprite.height / 2 - camera.y);
     // Dropped equipment glints in its tier color so rarity reads from afar.
@@ -250,6 +269,21 @@ function drawAbilities(
         );
       }
     }
+
+    if (def.magnet) {
+      // The magnet's reach, pulsing warm — items inside are on their way.
+      const pulse = 0.14 + 0.08 * Math.sin(timeMs / 180);
+      ctx.strokeStyle = `rgba(216, 96, 96, ${pulse})`;
+      ctx.beginPath();
+      ctx.arc(
+        Math.round(player.pos.x - camera.x),
+        Math.round(player.pos.y - camera.y),
+        magnetRadius(state, def),
+        0,
+        Math.PI * 2,
+      );
+      ctx.stroke();
+    }
   }
 }
 
@@ -258,9 +292,11 @@ function drawAbilities(
  * accumulates them from engine events and passes what is still alive.
  */
 export type Effect = {
-  kind: "lightning";
+  kind: "lightning" | "nuke";
   pos: { x: number; y: number };
   untilMs: number;
+  /** Nuke: total effect length, for the expanding-ring progress. */
+  durationMs?: number;
 };
 
 export function drawEffects(
@@ -273,6 +309,19 @@ export function drawEffects(
     if (timeMs > effect.untilMs) continue;
     const x = Math.round(effect.pos.x - camera.x);
     const groundY = Math.round(effect.pos.y - camera.y);
+
+    if (effect.kind === "nuke") {
+      // A white flash collapsing into an expanding shockwave ring.
+      const duration = effect.durationMs ?? 450;
+      const t = 1 - (effect.untilMs - timeMs) / duration; // 0 → 1
+      ctx.fillStyle = `rgba(255, 245, 210, ${0.55 * (1 - t)})`;
+      ctx.fillRect(0, 0, ctx.canvas.width, ctx.canvas.height);
+      ctx.strokeStyle = `rgba(255, 215, 94, ${0.9 * (1 - t)})`;
+      ctx.beginPath();
+      ctx.arc(x, groundY, 12 + t * 240, 0, Math.PI * 2);
+      ctx.stroke();
+      continue;
+    }
     // A jagged bolt from the sky to the strike point, plus a hot flash.
     ctx.strokeStyle = "#ffd75e";
     ctx.beginPath();

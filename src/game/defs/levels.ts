@@ -82,6 +82,17 @@ export type LevelDef = {
   spawns: SpawnSpec[];
   /** The horde: thousands more streamed in around the player over time. */
   waves?: WaveSpec;
+  /**
+   * Solid features scattered at level creation. Nothing moves through one;
+   * `jumpable` ones can be hopped over — monsters never jump, so low rocks
+   * are walls to the horde and shortcuts to the player.
+   */
+  obstacles: {
+    kind: string;
+    count: number;
+    radius: number;
+    jumpable: boolean;
+  }[];
   decor: { kind: string; count: number }[];
   /** Keep decor at least this far from landmarks. */
   decorClearance: number;
@@ -162,6 +173,12 @@ const MOON: LevelDef = {
       { enemy: "wraith", count: 300, window: [0.55, 1] },
     ],
   },
+  // Boulders wall off lanes outright; low rocks only stop what can't jump —
+  // hopping a rock line the horde must flow around is the moon's core trick.
+  obstacles: [
+    { kind: "boulder", count: 26, radius: 13, jumpable: false },
+    { kind: "rock", count: 44, radius: 8, jumpable: true },
+  ],
   decor: [
     { kind: "craterBig", count: 9 },
     { kind: "craterSmall", count: 16 },
@@ -181,7 +198,7 @@ const MOON: LevelDef = {
       "void_wand",
     ],
     gearPool: ["suit_plating", "moon_charm"],
-    abilityPool: ["fire_orbs", "storm_cell", "stasis_field"],
+    abilityPool: ["fire_orbs", "storm_cell", "stasis_field", "item_magnet"],
     tierChances: { magic: 0.2 },
     // MOON'S BLADE arrives early — within the first hundred kills — so the
     // run's signature weapon shapes the run instead of capping it.

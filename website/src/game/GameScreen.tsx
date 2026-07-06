@@ -22,6 +22,7 @@ import {
   dismissIntro,
   openInventory,
   step,
+  weaponDef,
   type BotStrategy,
   type Difficulty,
   type GameInput,
@@ -61,6 +62,8 @@ type Hud = {
   bagCount: number;
   /** Banked ability pickups, oldest first (ABILITY_DEFS ids). */
   heldAbilities: string[];
+  /** Equipped weapon's durability 0..1, or null for the unbreakable sidearm. */
+  weaponWear: number | null;
   stats: GameStats;
 };
 
@@ -266,6 +269,14 @@ export function GameScreen({
               untilMs: state.stats.timeMs + 130,
             });
           }
+          if (event.type === "nuke") {
+            effects.push({
+              kind: "nuke",
+              pos: event.pos,
+              untilMs: state.stats.timeMs + 450,
+              durationMs: 450,
+            });
+          }
           // The run is over: silence the loop so the jingle stands alone.
           if (event.type === "victory" || event.type === "defeat") {
             stopMusic();
@@ -283,7 +294,12 @@ export function GameScreen({
         // Mirror the slow-moving values into React only when they change.
         const bagCount = state.player.inventory.filter(Boolean).length;
         const held = state.player.heldAbilities.join(",");
-        const key = `${state.phase}/${state.player.hp}/${state.player.xp}/${state.player.level}/${state.player.pendingStatPoints}/${state.enemies.length}/${bagCount}/${held}/${Math.floor(state.stats.timeMs / 1000)}`;
+        const weapon = state.player.equipment.weapon;
+        const weaponWear =
+          weapon.durability === undefined
+            ? null
+            : weapon.durability / weaponDef(weapon.defId).durability;
+        const key = `${state.phase}/${state.player.hp}/${state.player.xp}/${state.player.level}/${state.player.pendingStatPoints}/${state.enemies.length}/${bagCount}/${held}/${weaponWear?.toFixed(2) ?? ""}/${Math.floor(state.stats.timeMs / 1000)}`;
         if (key !== lastHud) {
           lastHud = key;
           setHud({
@@ -296,6 +312,7 @@ export function GameScreen({
             enemiesLeft: state.enemies.length,
             bagCount,
             heldAbilities: [...state.player.heldAbilities],
+            weaponWear,
             stats: { ...state.stats },
           });
         }
@@ -344,6 +361,20 @@ export function GameScreen({
                 style={{ width: `${(100 * hud.xp) / hud.xpToNext}%` }}
               />
             </div>
+            {hud.weaponWear !== null && (
+              <>
+                <PixelText font={font} text="WPN" scale={2} color="#9aa3ad" />
+                <div className="hud-bar">
+                  <div
+                    className="hud-bar-fill"
+                    style={{
+                      width: `${Math.round(100 * hud.weaponWear)}%`,
+                      background: hud.weaponWear < 0.25 ? "#d83a3a" : "#9aa3ad",
+                    }}
+                  />
+                </div>
+              </>
+            )}
           </div>
           <div className="hud-right">
             {hud.heldAbilities.length > 0 && (

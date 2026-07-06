@@ -8,11 +8,11 @@
 
 import { createRng, randomRange, type Rng } from "@game/lib/rng.ts";
 import { distance, vec, type Vec2 } from "@game/lib/vec.ts";
-import { ENEMY_AI, LEVELING, LOOT, PLAYER } from "./config.ts";
+import { ENEMY_AI, LEVELING, LOOT, OBSTACLES, PLAYER } from "./config.ts";
 import { difficultyDef, scaledMobCount } from "./defs/difficulties.ts";
 import { enemyDef } from "./defs/enemies.ts";
 import { LEVEL_ORDER, levelDef, type LevelDef } from "./defs/levels.ts";
-import type { Decor, Difficulty, Enemy, GameState } from "./types.ts";
+import type { Decor, Difficulty, Enemy, GameState, Obstacle } from "./types.ts";
 
 export function createGame(
   seed: number,
@@ -35,6 +35,12 @@ export function createGame(
     bossSpawn && "at" in bossSpawn
       ? distance(playerSpawn, bossSpawn.at)
       : Math.hypot(def.width, def.height);
+
+  // Obstacles go down first so monsters (and their walk-in spawns) never
+  // start wedged inside one.
+  const obstacles = scatterObstacles(rng, def, playerSpawn, () => nextId++);
+  const blocked = (pos: Vec2, radius: number) =>
+    obstacles.some((o) => distance(pos, o.pos) < o.radius + radius);
 
   const enemies: Enemy[] = [];
   for (const spawn of def.spawns) {
@@ -66,7 +72,8 @@ export function createGame(
         if (
           fromSpawn >= bandMin &&
           fromSpawn <= bandMax &&
-          distance(pos, playerSpawn) >= ENEMY_AI.minSpawnDistance
+          distance(pos, playerSpawn) >= ENEMY_AI.minSpawnDistance &&
+          !blocked(pos, margin)
         ) {
           break;
         }
@@ -141,6 +148,7 @@ export function createGame(
     projectiles: [],
     items: [],
     decor,
+    obstacles,
     victoryCountdownMs: null,
     minionEquipmentDrops: 0,
     waveSpawned: (def.waves?.budget ?? []).map(() => 0),
@@ -198,6 +206,49 @@ export function spawnEnemy(
     speed: def.speed * (1 + jitter),
     contactCooldownMs: 0,
   };
+}
+
+/**
+ * Scatter the level's solid obstacles: clear of landmarks (the boss must
+ * reach his flag), clear of the player spawn, and spaced apart from each
+ * other so the field always leaves walkable lanes.
+ */
+function scatterObstacles(
+  rng: Rng,
+  def: LevelDef,
+  playerSpawn: Vec2,
+  takeId: () => number,
+): Obstacle[] {
+  const obstacles: Obstacle[] = [];
+  for (const spec of def.obstacles) {
+    for (let i = 0; i < spec.count; i++) {
+      for (let attempts = 0; attempts < 30; attempts++) {
+        const pos = vec(
+          randomRange(rng, spec.radius + 8, def.width - spec.radius - 8),
+          randomRange(rng, spec.radius + 8, def.height - spec.radius - 8),
+        );
+        const clear =
+          distance(pos, playerSpawn) > OBSTACLES.spawnClearance + spec.radius &&
+          def.landmarks.every(
+            (l) => distance(pos, l.pos) > def.decorClearance + spec.radius,
+          ) &&
+          obstacles.every(
+            (o) =>
+              distance(pos, o.pos) > o.radius + spec.radius + OBSTACLES.spacing,
+          );
+        if (!clear) continue;
+        obstacles.push({
+          id: takeId(),
+          kind: spec.kind,
+          pos,
+          radius: spec.radius,
+          jumpable: spec.jumpable,
+        });
+        break;
+      }
+    }
+  }
+  return obstacles;
 }
 
 /** Scatter the level's decorative features, keeping landmarks clear. */

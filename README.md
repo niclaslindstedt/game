@@ -50,19 +50,30 @@ and something enormous haunts the old flag.
   classic hold-to-steer under SETTINGS → CONTROLS.)
 - **Tap** (or press Space) to **jump** — moon gravity carries you high
   enough to sail clean over a ghost's grasp.
-- **Ability pickups** (fire orbs, storm cell, stasis field) are carried
-  with you — on desktop **click** (or press E, or the HUD USE button) to
-  pop one when the horde closes in; on touch they fire the moment you grab
-  them (two-finger tap uses one manually). Tune it under SETTINGS, along
-  with music and sound volumes.
+- **Rocks and boulders** litter the moonscape and nothing walks through
+  them — but low rocks can be **jumped over**, and ghosts can't jump: a
+  rock line the horde must flow around is your best friend.
+- **Ability pickups** (fire orbs, storm cell, stasis field, the item
+  magnet — and the rare screen-clearing NUKE) are carried with you — on
+  desktop **click** (or press E, or the HUD USE button) to pop one when the
+  horde closes in; on touch they fire the moment you grab them (two-finger
+  tap uses one manually). Tune it under SETTINGS, along with music and
+  sound volumes.
 - The character **fights by itself** with whatever weapon is equipped —
   your job is positioning: kite the haunting, don't get surrounded.
-- Kills grant **XP**; each level-up pauses the run to spend a stat point on
-  HEALTH, STRENGTH (melee), DEXTERITY (ranged), INTELLECT (magic), or LUCK
-  (crits, loot).
-- Ghosts drop **loot** — medkits, weapons, and gear in regular or magic
-  tier. Open the **BAG** (or press I) for the Diablo-style inventory: drag
-  items onto their slot or tap to quick-equip.
+- Kills grant **XP**; each level-up **restores you to full health** and
+  pauses the run to spend a stat point on HEALTH, STRENGTH (melee),
+  DEXTERITY (ranged), INTELLECT (magic), or LUCK (crits, loot). Golden
+  **XP arrows** drop from the horde and are always worth a fixed share of
+  your next level.
+- Ghosts drop **loot** — medkits, weapons, gear, repair kits, and XP
+  arrows, in regular or magic tier. Picking up something **better than
+  what you wear equips it instantly**; the rest lands in the **BAG** (press
+  I) — a Diablo-style inventory: drag items onto their slot or tap to
+  quick-equip.
+- Dropped weapons **wear out** as they fire: when one breaks it is trashed
+  and the best weapon left in your bag takes its place (your own sidearm
+  never breaks). **Repair kits** restore the equipped weapon's edge.
 - **Kill ARMSTRONG**, the giant astronaut ghost guarding the flag, to clear
   the level; if your HP reaches zero the run ends with a stats screen and a
   retry button.

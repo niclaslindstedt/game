@@ -21,7 +21,6 @@ import {
   moveInventoryItem,
   playerCritChance,
   unequipToInventory,
-  UPGRADE,
   weaponDamage,
   weaponDef,
   WEAPON_DEFS,
@@ -87,11 +86,11 @@ function itemLines(item: Equipment): string[] {
     lines.push(`DAMAGE ${def.damage}`);
     lines.push(`SPEED ${(1000 / def.cooldownMs).toFixed(1)}/S`);
     lines.push(`RANGE ${def.range}`);
-    if (item.upgrades) {
-      lines.push(
-        `UPGRADED +${Math.round(item.upgrades * UPGRADE.damageBonus * 100)}%`,
-      );
-    }
+    lines.push(
+      item.durability === undefined
+        ? "UNBREAKABLE"
+        : `DURABILITY ${item.durability}/${def.durability}`,
+    );
   } else {
     const def = gearDef(item.defId);
     lines.push(def.slot === "suit" ? "SUIT ARMOR" : "CHARM");

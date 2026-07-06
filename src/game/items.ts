@@ -9,7 +9,7 @@
 
 import type { Rng } from "@game/lib/rng.ts";
 import { randomRange } from "@game/lib/rng.ts";
-import { LOOT, PLAYER, STATS, UPGRADE } from "./config.ts";
+import { LOOT, PLAYER, STATS } from "./config.ts";
 import {
   AFFIX_POOLS,
   gearDef,
@@ -124,7 +124,10 @@ export function rollEquipment(
     affixes.push(rollAffix(rng, affixDef));
   }
 
-  return { id: state.nextId++, defId, slot, tier, affixes };
+  const rolled: Equipment = { id: state.nextId++, defId, slot, tier, affixes };
+  // Dropped weapons arrive fresh but finite — they wear out per attack.
+  if (family === "weapon") rolled.durability = weaponDef(defId).durability;
+  return rolled;
 }
 
 // ---- Derived stats -----------------------------------------------------------
@@ -215,15 +218,59 @@ export function dropChance(state: GameState): number {
 
 /** The equipped weapon's per-hit damage before the crit roll. */
 export function weaponDamage(state: GameState): number {
-  const weapon = state.player.equipment.weapon;
+  return weaponDamageFor(state, state.player.equipment.weapon);
+}
+
+/** Per-hit damage a specific weapon instance would deal for this player. */
+function weaponDamageFor(state: GameState, weapon: Equipment): number {
   const def = weaponDef(weapon.defId);
   const stat = effectiveStat(state, CLASS_STAT[def.class]);
   let multiplier = 1 + stat * STATS.damageBonusPerPoint;
-  multiplier += (weapon.upgrades ?? 0) * UPGRADE.damageBonus;
   for (const affix of weapon.affixes) {
     if (affix.kind === "damagePct") multiplier += affix.value;
   }
   return def.damage * multiplier;
+}
+
+// ---- Auto-equip scoring --------------------------------------------------------
+
+/**
+ * A weapon's expected damage per second in this player's hands — the number
+ * auto-equip ranks weapons by, so an INT build genuinely prefers wands.
+ */
+export function weaponScore(state: GameState, weapon: Equipment): number {
+  return (
+    (weaponDamageFor(state, weapon) * 1000) / weaponDef(weapon.defId).cooldownMs
+  );
+}
+
+/**
+ * A rough single number for a gear piece's worth, so pickups can be
+ * compared to what is worn. Crit is worth ~3 hp per 1%, a stat point ~15.
+ */
+export function gearScore(gear: Equipment): number {
+  const def = gearDef(gear.defId);
+  let score = (def.bonuses.maxHp ?? 0) + (def.bonuses.critChance ?? 0) * 300;
+  for (const affix of gear.affixes) {
+    if (affix.kind === "maxHp") score += affix.value;
+    else if (affix.kind === "crit") score += affix.value * 300;
+    else if (affix.kind === "stat") score += affix.value * 15;
+    else score += affix.value * 100;
+  }
+  return score;
+}
+
+/** Is `candidate` strictly better than the piece occupying its slot? */
+export function isBetterEquipment(
+  state: GameState,
+  candidate: Equipment,
+): boolean {
+  if (candidate.slot === "weapon") {
+    const current = state.player.equipment.weapon;
+    return weaponScore(state, candidate) > weaponScore(state, current);
+  }
+  const current = state.player.equipment[candidate.slot];
+  return current === null || gearScore(candidate) > gearScore(current);
 }
 
 // ---- Inventory mutations (called by the app's UI) ------------------------------
@@ -286,6 +333,77 @@ export function addToInventory(state: GameState, item: Equipment): boolean {
   const free = state.player.inventory.indexOf(null);
   if (free === -1) return false;
   state.player.inventory[free] = item;
+  return true;
+}
+
+// ---- Durability -------------------------------------------------------------------
+
+/**
+ * Spend one attack's worth of the equipped weapon's durability. At zero the
+ * weapon is trashed (never returned to the bag) and the best surviving
+ * weapon left in the bag — highest DPS with durability remaining — takes
+ * its place. With an empty bag the player draws a fresh sidearm, so the
+ * weapon slot honors its never-empty contract.
+ */
+export function wearEquippedWeapon(state: GameState): void {
+  const player = state.player;
+  const weapon = player.equipment.weapon;
+  if (weapon.durability === undefined) return; // the unbreakable sidearm
+  weapon.durability--;
+  if (weapon.durability > 0) return;
+
+  state.events.push({ type: "weaponBroke", defId: weapon.defId });
+
+  // Bag weapons only wear while equipped, so any weapon found here still
+  // has durability — but guard anyway so a broken one is trashed, not worn.
+  let bestIndex = -1;
+  let bestScore = -Infinity;
+  for (let i = 0; i < player.inventory.length; i++) {
+    const item = player.inventory[i];
+    if (!item || item.slot !== "weapon") continue;
+    if (item.durability !== undefined && item.durability <= 0) {
+      player.inventory[i] = null;
+      continue;
+    }
+    const score = weaponScore(state, item);
+    if (score > bestScore) {
+      bestScore = score;
+      bestIndex = i;
+    }
+  }
+
+  if (bestIndex >= 0) {
+    const next = player.inventory[bestIndex] as Equipment;
+    player.inventory[bestIndex] = null;
+    player.equipment.weapon = next;
+  } else {
+    // The holster is never empty: draw a plain, unbreakable sidearm.
+    player.equipment.weapon = {
+      id: state.nextId++,
+      defId: "blaster",
+      slot: "weapon",
+      tier: "regular",
+      affixes: [],
+    };
+  }
+  player.weaponCooldownMs = 0;
+  state.events.push({
+    type: "autoEquipped",
+    defId: player.equipment.weapon.defId,
+  });
+}
+
+/**
+ * Restore the equipped weapon to full durability (the repair-kit pickup).
+ * False when there is nothing to repair — unbreakable or already pristine —
+ * so the kit can stay on the ground for later.
+ */
+export function repairEquippedWeapon(state: GameState): boolean {
+  const weapon = state.player.equipment.weapon;
+  if (weapon.durability === undefined) return false;
+  const max = weaponDef(weapon.defId).durability;
+  if (weapon.durability >= max) return false;
+  weapon.durability = max;
   return true;
 }
 

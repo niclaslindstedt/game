@@ -80,6 +80,12 @@ export const LEVELING = {
   baseXpToLevel: 100,
   xpGrowth: 1.65,
   statPointsPerLevel: 1,
+  /**
+   * XP granted by a golden arrow pickup, as a fraction of the CURRENT
+   * xpToNext — a share of a level, not a flat sum, so arrows stay worth
+   * chasing at level 20 exactly as much as at level 2.
+   */
+  arrowXpShare: 0.25,
 } as const;
 
 /**
@@ -115,12 +121,19 @@ export const LOOT = {
    * the steady rain of upgrades is what keeps the player ahead of the ramp.
    */
   dropChance: 0.12,
-  /** Of those drops, the share that is equipment. */
+  /**
+   * The share of drops that is a screen-nuke pickup — checked first, before
+   * the ladder below, so it stays rare no matter how the rest is tuned.
+   */
+  nukeShare: 0.012,
+  /** Of the remaining drops, the share that is equipment. */
   equipmentShare: 0.25,
   /** …the share that is a time-limited ability pickup… */
-  abilityShare: 0.15,
-  /** …the share that is a weapon upgrade (the rest are medkits). */
-  upgradeShare: 0.35,
+  abilityShare: 0.13,
+  /** …the share that is a golden XP arrow… */
+  xpArrowShare: 0.22,
+  /** …the share that is a weapon repair kit (the rest are medkits). */
+  repairShare: 0.1,
   /**
    * Clearing every regular monster on a level is guaranteed to have dropped
    * at least this much equipment (a pity roll forces the tail end; boss
@@ -132,10 +145,17 @@ export const LOOT = {
   inventorySize: 12,
 } as const;
 
-/** Weapon-upgrade pickups: each one permanently sharpens the held weapon. */
-export const UPGRADE = {
-  /** Additive damage multiplier per upgrade applied (+12% each). */
-  damageBonus: 0.12,
+/**
+ * Solid obstacles. Levels scatter them at creation (see LevelDef.obstacles);
+ * nothing walks through one, and only jumpable ones can be cleared mid-air.
+ */
+export const OBSTACLES = {
+  /** A jumpable obstacle is cleared while the player's z exceeds this. */
+  clearHeight: 14,
+  /** Keep obstacles at least this far from the player spawn (world px). */
+  spawnClearance: 140,
+  /** Minimum gap between two obstacles' edges, so lanes always exist. */
+  spacing: 28,
 } as const;
 
 /** The medkit consumable: picked up on touch, never enters the inventory. */

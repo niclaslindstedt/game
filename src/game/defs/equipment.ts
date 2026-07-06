@@ -34,6 +34,11 @@ export type WeaponDef = {
   damage: number;
   cooldownMs: number;
   range: number;
+  /**
+   * Attacks before a dropped instance of this weapon breaks. The player's
+   * own starting sidearm is minted without durability and never breaks.
+   */
+  durability: number;
   /** Melee weapons hit directly and omit this. */
   projectile?: {
     speed: number;
@@ -57,6 +62,7 @@ export const WEAPON_DEFS: Record<string, WeaponDef> = {
     damage: 8,
     cooldownMs: 650,
     range: 260,
+    durability: 150,
     projectile: { speed: 420, radius: 3, lifetimeMs: 900, sprite: "bolt" },
     icon: "icon_blaster",
   },
@@ -67,6 +73,7 @@ export const WEAPON_DEFS: Record<string, WeaponDef> = {
     damage: 15,
     cooldownMs: 500,
     range: 300,
+    durability: 160,
     projectile: { speed: 320, radius: 4, lifetimeMs: 1300, sprite: "spark" },
     icon: "icon_wand",
   },
@@ -77,6 +84,7 @@ export const WEAPON_DEFS: Record<string, WeaponDef> = {
     damage: 22,
     cooldownMs: 420,
     range: 42,
+    durability: 160,
     icon: "icon_wrench",
   },
   // The plain drop pool — simple, unnamed base types Diablo-style. Tier
@@ -88,6 +96,7 @@ export const WEAPON_DEFS: Record<string, WeaponDef> = {
     damage: 16,
     cooldownMs: 320,
     range: 40,
+    durability: 180,
     icon: "icon_pipe",
   },
   hammer: {
@@ -97,6 +106,7 @@ export const WEAPON_DEFS: Record<string, WeaponDef> = {
     damage: 34,
     cooldownMs: 640,
     range: 44,
+    durability: 120,
     icon: "icon_hammer",
   },
   pistol: {
@@ -106,6 +116,7 @@ export const WEAPON_DEFS: Record<string, WeaponDef> = {
     damage: 7,
     cooldownMs: 400,
     range: 230,
+    durability: 200,
     projectile: { speed: 400, radius: 3, lifetimeMs: 800, sprite: "bolt" },
     icon: "icon_pistol",
   },
@@ -116,6 +127,7 @@ export const WEAPON_DEFS: Record<string, WeaponDef> = {
     damage: 18,
     cooldownMs: 950,
     range: 320,
+    durability: 120,
     projectile: { speed: 540, radius: 3, lifetimeMs: 900, sprite: "bolt" },
     icon: "icon_rifle",
   },
@@ -126,6 +138,7 @@ export const WEAPON_DEFS: Record<string, WeaponDef> = {
     damage: 21,
     cooldownMs: 700,
     range: 290,
+    durability: 130,
     projectile: { speed: 340, radius: 4, lifetimeMs: 1200, sprite: "spark" },
     icon: "icon_star_wand",
   },
@@ -136,6 +149,7 @@ export const WEAPON_DEFS: Record<string, WeaponDef> = {
     damage: 11,
     cooldownMs: 340,
     range: 260,
+    durability: 220,
     projectile: { speed: 360, radius: 4, lifetimeMs: 1000, sprite: "spark" },
     icon: "icon_void_wand",
   },
@@ -148,6 +162,7 @@ export const WEAPON_DEFS: Record<string, WeaponDef> = {
     damage: 26,
     cooldownMs: 380,
     range: 46,
+    durability: 220,
     icon: "icon_machete",
   },
   moons_blade: {
@@ -157,6 +172,7 @@ export const WEAPON_DEFS: Record<string, WeaponDef> = {
     damage: 32,
     cooldownMs: 400,
     range: 48,
+    durability: 260,
     icon: "icon_moons_blade",
   },
 };

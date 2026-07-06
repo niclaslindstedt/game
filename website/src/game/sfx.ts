@@ -162,23 +162,32 @@ export function playEventSounds(
                 delayMs: i * 70,
               }),
           );
-        } else if (event.kind === "upgrade") {
-          // A metallic sharpening rasp rising into a ring.
-          synth.noise({ durationMs: 70, volume: 0.04 });
+        } else if (event.kind === "xp") {
+          // The golden arrow: a rising ring — a taste of the level-up scale.
           synth.tone({
             type: "square",
             from: 440,
             to: 880,
             durationMs: 110,
             volume: 0.05,
-            delayMs: 40,
           });
           synth.tone({
             type: "triangle",
             from: 1320,
             durationMs: 140,
             volume: 0.05,
-            delayMs: 130,
+            delayMs: 90,
+          });
+        } else if (event.kind === "repair") {
+          // The toolbox: two ratchet clicks, then the mended edge rings.
+          synth.noise({ durationMs: 35, volume: 0.05 });
+          synth.noise({ durationMs: 35, volume: 0.05, delayMs: 70 });
+          synth.tone({
+            type: "triangle",
+            from: 988,
+            durationMs: 140,
+            volume: 0.05,
+            delayMs: 140,
           });
         } else if (event.kind === "ability") {
           // A power surging on: a fast rising sweep into a shimmer.
@@ -236,6 +245,48 @@ export function playEventSounds(
           to: 320,
           durationMs: 200,
           volume: 0.04,
+        });
+        break;
+      case "weaponBroke":
+        // The blade snapping: a hard crack, then the pieces fall.
+        synth.noise({ durationMs: 90, volume: 0.08 });
+        synth.tone({
+          type: "square",
+          from: 520,
+          to: 90,
+          durationMs: 240,
+          volume: 0.07,
+          delayMs: 40,
+        });
+        break;
+      case "autoEquipped":
+        // The replacement clacking into the hand (mirrors the UI equip).
+        synth.noise({ durationMs: 35, volume: 0.04 });
+        synth.tone({
+          type: "square",
+          from: 784,
+          durationMs: 80,
+          volume: 0.05,
+          delayMs: 30,
+        });
+        break;
+      case "nuke":
+        // The screen-clearer: a deep detonation under a long falling roar.
+        synth.noise({ durationMs: 600, volume: 0.1 });
+        synth.tone({
+          type: "square",
+          from: 300,
+          to: 40,
+          durationMs: 500,
+          volume: 0.09,
+        });
+        synth.tone({
+          type: "triangle",
+          from: 1400,
+          to: 200,
+          durationMs: 350,
+          volume: 0.05,
+          delayMs: 60,
         });
         break;
       case "levelUp":
