@@ -45,8 +45,11 @@ jobs:
     runs-on: ubuntu-latest
     if: github.ref == 'refs/heads/main'
     # contents: write — this job pushes the release commit and the tag.
+    # packages: read — npm ci resolves @niclaslindstedt/oss-framework from
+    # GitHub Packages when the GITHUB_PAT fallback is `github.token`.
     permissions:
       contents: write
+      packages: read
     outputs:
       version: ${{ steps.bump.outputs.version }}
       tag: ${{ steps.bump.outputs.tag }}
@@ -150,10 +153,12 @@ jobs:
     permissions:
       # pages.yml declares `contents: write` at the top level because its
       # build job force-pushes the /branch/ slot to the `branch-deploy`
-      # orphan branch. A reusable workflow can't be granted fewer
-      # permissions than it requests, so these must match or the whole
-      # release run fails at startup before any job runs.
+      # orphan branch, and `packages: read` because its npm ci resolves
+      # the framework from GitHub Packages. A reusable workflow can't be
+      # granted fewer permissions than it requests, so these must match
+      # or the whole release run fails at startup before any job runs.
       contents: write
       pages: write
       id-token: write
+      packages: read
     secrets: inherit
