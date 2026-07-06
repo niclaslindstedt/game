@@ -24,18 +24,41 @@ timestep — the same seed and input sequence always replays the same run,
 which is what makes gameplay unit-testable in plain Node and bugs
 reproducible.
 
-- **`src/game/config.ts`** — every balance knob (level size, speeds, hp,
-  cooldowns, counts), nothing hardcoded in logic.
+Content is data, simulation is code: the game's levels, monsters, and
+equipment live in **catalogs** under `src/game/defs/`, and the engine only
+ever references them by id. Shipping level 1 (earth) or the hundredth
+weapon means adding catalog entries, not touching the simulation.
+
+- **`src/game/config.ts`** — the GLOBAL balance knobs (player, jumping, XP
+  curve, stat effects, loot rules), nothing hardcoded in logic.
+- **`src/game/defs/levels.ts`** — the level registry: geometry, per-level
+  gravity (the moon's low g is why jumps soar), biome, the story intro text,
+  landmark props, banded enemy spawns, the objective (`killBoss` /
+  `clearAll`), decor, and the loot table (pools + tier chances).
+- **`src/game/defs/enemies.ts`** — the monster catalog (stats, AI radii,
+  roles; bosses pin guaranteed drops). Level 2 ships wisp → moon ghost →
+  wraith plus ARMSTRONG, the giant astronaut ghost guarding the flag.
+- **`src/game/defs/equipment.ts`** — weapons (melee/ranged/magic classes),
+  gear, the four-tier quality ladder (regular/magic/epic/legendary — later
+  levels unlock the upper tiers), and the affix pools magic+ items roll.
 - **`src/game/types.ts`** — state shapes plus the `GameEvent` union: events
   are the only channel from simulation to presentation (sound, flashes);
   the engine never knows a renderer or speaker exists.
-- **`src/game/create.ts`** — seeded level setup (player, slimes, medkits).
+- **`src/game/create.ts`** — seeded run setup from a level def: difficulty
+  bands scale with distance from the player spawn toward the objective.
 - **`src/game/step.ts`** — the per-tick pipeline, in documented order:
-  player steering → weapon auto-fire → projectiles → enemies → item
-  pickups → win/lose. The character acts autonomously; the player's only
-  input is a hold-to-steer target.
+  player steering + jump physics → weapon auto-attack → projectiles →
+  enemies (aggro/guard AI, contact damage) → item pickups → objective →
+  win/lose. The character fights autonomously; the player steers
+  (hold), jumps (tap/Space), spends level-up stat points, and manages
+  the inventory.
+- **`src/game/items.ts`** — equipment instances and the player-driven
+  mutations the UI calls into: loot rolls, `equipFromInventory` /
+  `unequipToInventory` / `moveInventoryItem`, `allocateStat`, and the
+  derived stats (max hp, weapon damage, crit chance).
 - **`src/lib/`** — generic, game-agnostic helpers (`vec.ts`, `rng.ts`),
-  earmarked for extraction into oss-framework once mature.
+  imported via the `@game/lib/*` alias and earmarked for extraction into
+  oss-framework once mature (extraction is then a prefix swap).
 - **`src/index.ts`** — the public surface the app imports via `@game/core`.
 
 `src/output.ts` remains the central output module (OSS_SPEC §19.4) through
@@ -51,17 +74,22 @@ deploy-shaped:
 
 - **`website/src/App.tsx`** — the title screen and the switch into the game.
 - **`website/src/game/`** — the presentation of the engine:
-  `GameScreen.tsx` (canvas mount, fixed-timestep loop, HUD, end-of-run
-  splash with stats + retry), `render.ts` (camera + sprite drawing onto a
-  world-unit canvas upscaled with `image-rendering: pixelated`), `sfx.ts`
-  (engine events → synthesized sounds), `assets.ts` (loads the generated
-  sprites + pixel font), and `assets/` (generated PNGs + font atlas — never
-  hand-edited).
-- **`website/src/lib/`** — generic game UI plumbing earmarked for
-  oss-framework extraction: `game-loop.ts` (fixed-timestep rAF loop),
-  `pointer.ts` (hold-to-steer tracking), `synth.ts` (WebAudio SFX synth —
-  the game ships zero audio files), `pixel-font.ts` + `PixelText.tsx`
-  (runtime renderer for the generated bitmap font), `load-images.ts`.
+  `GameScreen.tsx` (canvas mount, fixed-timestep loop, HUD with hp/XP bars,
+  jump input, end-of-run splash), `IntroOverlay.tsx` (the level's story
+  text box), `LevelUpOverlay.tsx` (the stat chooser shown while the engine
+  pauses in `levelup`), `InventoryPanel.tsx` (the Diablo-style bag:
+  drag-to-equip slots, tier-colored borders, item card, character sheet),
+  `render.ts` (camera + sprite drawing onto a world-unit canvas upscaled
+  with `image-rendering: pixelated`), `tiers.ts` (tier name colors),
+  `sfx.ts` (engine events → synthesized sounds), `assets.ts` (loads the
+  generated sprites + pixel font), and `assets/` (generated PNGs + font
+  atlas — never hand-edited).
+- **`website/src/lib/`** — generic game UI plumbing imported via the
+  `@ui/lib/*` alias and earmarked for oss-framework extraction:
+  `game-loop.ts` (fixed-timestep rAF loop), `pointer.ts` (hold-to-steer +
+  tap detection), `synth.ts` (WebAudio SFX synth — the game ships zero
+  audio files), `pixel-font.ts` + `PixelText.tsx` (runtime renderer for
+  the generated bitmap font), `load-images.ts`.
 - **`website/scripts/asset-tools/` + `sprite-data.mjs` +
   `generate-assets.mjs`** — the pixel-asset pipeline (`make assets`):
   sprites are character grids with ramp-derived palettes, rendered at build
@@ -91,14 +119,16 @@ the policy.
 
 ## Deployment topology
 
-GitHub Pages serves three deploy slots on one origin (OSS_SPEC §11.5),
-assembled by a single `pages.yml` run into one artifact:
+GitHub Pages serves three deploy slots on one origin —
+**<https://game.niclaslindstedt.se/>**, a custom domain (CNAME) on the
+GitHub Pages origin — assembled by a single `pages.yml` run into one
+artifact:
 
-| Slot       | URL              | Source                                                                                     | Indexed        |
-| ---------- | ---------------- | ------------------------------------------------------------------------------------------ | -------------- |
-| Production | `/game/`         | Highest `v*` tag (or `main` before the first release)                                      | Yes            |
-| Staging    | `/game/preview/` | `main` HEAD, every push                                                                    | No (`noindex`) |
-| Branch     | `/game/branch/`  | Last branch parked via `workflow_dispatch`, persisted in the `branch-deploy` orphan branch | No (`noindex`) |
+| Slot       | URL         | Source                                                                                     | Indexed        |
+| ---------- | ----------- | ------------------------------------------------------------------------------------------ | -------------- |
+| Production | `/`         | Highest `v*` tag (or `main` before the first release)                                      | Yes            |
+| Staging    | `/preview/` | `main` HEAD, every push                                                                    | No (`noindex`) |
+| Branch     | `/branch/`  | Last branch parked via `workflow_dispatch`, persisted in the `branch-deploy` orphan branch | No (`noindex`) |
 
 Each slot is built separately with its own `VITE_BASE`, gets its own service
 worker scoped to its base, and a disjoint precache id (`game`,
@@ -112,7 +142,7 @@ next semver from conventional commits and pushes a `v*` tag using
 `CHANGELOG.md`, rewrites every version string
 (`scripts/update-versions.sh`), commits to `main`, force-moves the tag to
 the release commit, runs the build + tests, publishes a GitHub Release, and
-chains into `pages.yml` so the new tag is live at `/game/` immediately.
+chains into `pages.yml` so the new tag is live at the site root immediately.
 
 ## Design decisions
 

@@ -44,8 +44,10 @@ picked-up weapons and items.
 
 Two layers, one dependency direction:
 
-- **`src/` — the engine.** Framework-free TypeScript (simulation loop,
-  steering, weapons, items, spawning — to be built). It must stay importable
+- **`src/` — the engine.** Framework-free TypeScript: the simulation
+  (steering, jumping, combat, XP/stats, loot, inventory) plus the content
+  catalogs under `src/game/defs/` (levels, enemies, equipment — content is
+  data, referenced by id). It must stay importable
   from any renderer; no React, no DOM assumptions beyond what a browser
   provides. `src/output.ts` is the central output module (§19.4) — all
   diagnostic output routes through it; raw `console.*` elsewhere fails lint.
@@ -57,9 +59,10 @@ Two layers, one dependency direction:
   app.
 
 Deployment is three GitHub Pages slots on one origin
-(`https://niclaslindstedt.github.io/game/`): `/game/` serves the highest
-`v*` tag (or `main` before the first release), `/game/preview/` serves every
-`main` push, `/game/branch/` serves a manually parked branch persisted in
+(`https://game.niclaslindstedt.se/`, a custom domain on the GitHub Pages
+origin): `/` serves the highest
+`v*` tag (or `main` before the first release), `/preview/` serves every
+`main` push, `/branch/` serves a manually parked branch persisted in
 the `branch-deploy` orphan branch. `.github/workflows/pages.yml` builds all
 slots into a single Pages artifact; each slot gets its own service worker and
 a disjoint precache cache id (`website/src/app/pwa.ts`).
@@ -91,22 +94,29 @@ from GitHub Packages. **Prefer the framework over hand-rolling**:
   once the code has matured and playtesting shows it works, extract the
   `lib/` module into oss-framework and swap the imports to the package.
   The clean separation is what keeps that extraction cheap.
+- **Always import the generic pools through their aliases** — `@game/lib/*`
+  (engine) and `@ui/lib/*` (React/UI), never by relative path. Extraction to
+  oss-framework is then a prefix swap (`@game/lib/rng.ts` →
+  `@niclaslindstedt/oss-framework/rng`) with no path surgery; keep framework
+  subpaths named after the module. The alias maps live in `tsconfig.json`,
+  `website/tsconfig.json`, `vitest.config.ts`, and `website/vite.config.ts`
+  — keep all four in lockstep.
 - Installing `@niclaslindstedt/*` packages requires a `GITHUB_PAT` env var
   with `read:packages` (see `.npmrc`); CI falls back to the workflow token.
 
 ## Where new code goes
 
-| Change type                                 | Goes in                                                                       |
-| ------------------------------------------- | ----------------------------------------------------------------------------- |
-| Engine/gameplay logic specific to this game | `src/...` (framework-free TypeScript)                                         |
-| Generic engine code (usable by any game)    | `src/lib/...` — earmarked for extraction to oss-framework once mature         |
-| App shell, rendering, PWA, game-specific UI | `website/src/...`                                                             |
-| Generic React/UI game components            | `website/src/lib/...` — earmarked for extraction to oss-framework once mature |
-| Mature, playtested generic code             | extract into `oss-framework`, then import the package here                    |
-| Tests                                       | `tests/...` (engine) — name them `*_test.ts`                                  |
-| Docs update                                 | `docs/...`                                                                    |
-| Examples                                    | `examples/...`                                                                |
-| LLM prompt                                  | `prompts/<name>/<major>_<minor>_<patch>.md` (see `prompts/README.md`)         |
+| Change type                                 | Goes in                                                                                                |
+| ------------------------------------------- | ------------------------------------------------------------------------------------------------------ |
+| Engine/gameplay logic specific to this game | `src/...` (framework-free TypeScript)                                                                  |
+| Generic engine code (usable by any game)    | `src/lib/...` — imported as `@game/lib/*`; earmarked for extraction to oss-framework once mature       |
+| App shell, rendering, PWA, game-specific UI | `website/src/...`                                                                                      |
+| Generic React/UI game components            | `website/src/lib/...` — imported as `@ui/lib/*`; earmarked for extraction to oss-framework once mature |
+| Mature, playtested generic code             | extract into `oss-framework`, then import the package here                                             |
+| Tests                                       | `tests/...` (engine) — name them `*_test.ts`                                                           |
+| Docs update                                 | `docs/...`                                                                                             |
+| Examples                                    | `examples/...`                                                                                         |
+| LLM prompt                                  | `prompts/<name>/<major>_<minor>_<patch>.md` (see `prompts/README.md`)                                  |
 
 ## Test conventions
 

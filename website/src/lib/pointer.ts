@@ -17,8 +17,23 @@ export type PointerTracker = {
   dispose: () => void;
 };
 
-export function trackPointer(element: HTMLElement): PointerTracker {
+export type PointerOptions = {
+  /** Called on a quick press-and-release that barely moved — a tap. */
+  onTap?: () => void;
+  /** Maximum press duration for a tap (ms). */
+  tapMaxMs?: number;
+  /** Maximum pointer travel for a tap (CSS px). */
+  tapMaxDistance?: number;
+};
+
+export function trackPointer(
+  element: HTMLElement,
+  { onTap, tapMaxMs = 220, tapMaxDistance = 12 }: PointerOptions = {},
+): PointerTracker {
   const state: PointerState = { held: false, x: 0, y: 0 };
+  let downAt = 0;
+  let downX = 0;
+  let downY = 0;
 
   const update = (event: PointerEvent) => {
     const rect = element.getBoundingClientRect();
@@ -30,11 +45,22 @@ export function trackPointer(element: HTMLElement): PointerTracker {
     element.setPointerCapture(event.pointerId);
     state.held = true;
     update(event);
+    downAt = performance.now();
+    downX = state.x;
+    downY = state.y;
   };
   const move = (event: PointerEvent) => {
     if (state.held) update(event);
   };
   const up = () => {
+    if (
+      state.held &&
+      onTap &&
+      performance.now() - downAt <= tapMaxMs &&
+      Math.hypot(state.x - downX, state.y - downY) <= tapMaxDistance
+    ) {
+      onTap();
+    }
     state.held = false;
   };
   // Long-press context menus would interrupt touch steering.

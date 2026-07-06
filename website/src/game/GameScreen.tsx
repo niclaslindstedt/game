@@ -1,14 +1,19 @@
 // SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
 // The playable screen: mounts the canvas, runs the fixed-timestep loop over
-// the engine, feeds it hold-to-steer pointer input, plays event sounds, and
-// overlays the DOM HUD + end-of-run splash (stats + retry). One <GameScreen>
-// mount = one session at the menu; one run = one `runId` (retry bumps it).
+// the engine, feeds it hold-to-steer pointer input (tap or Space to jump),
+// plays event sounds, and overlays the DOM UI: HUD, the level intro text
+// box, the level-up stat chooser, the Diablo-style inventory, and the
+// end-of-run splash. One <GameScreen> mount = one session at the menu; one
+// run = one `runId` (retry bumps it).
 
 import { useEffect, useRef, useState } from "react";
 
 import {
+  closeInventory,
   createGame,
   debug,
+  dismissIntro,
+  openInventory,
   step,
   type GameInput,
   type GamePhase,
@@ -16,11 +21,15 @@ import {
   type GameStats,
 } from "@game/core";
 
-import { startGameLoop } from "../lib/game-loop.ts";
-import { PixelText } from "../lib/PixelText.tsx";
-import { trackPointer } from "../lib/pointer.ts";
-import { createSynth, type Synth } from "../lib/synth.ts";
+import { startGameLoop } from "@ui/lib/game-loop.ts";
+import { PixelText } from "@ui/lib/PixelText.tsx";
+import { trackPointer } from "@ui/lib/pointer.ts";
+import { createSynth, type Synth } from "@ui/lib/synth.ts";
+
 import { loadGameAssets, type GameAssets } from "./assets.ts";
+import { IntroOverlay } from "./IntroOverlay.tsx";
+import { InventoryPanel } from "./InventoryPanel.tsx";
+import { LevelUpOverlay } from "./LevelUpOverlay.tsx";
 import { computeCamera, drawFrame, VIEW_SCALE } from "./render.ts";
 import { playEventSounds } from "./sfx.ts";
 
@@ -28,7 +37,11 @@ type Hud = {
   phase: GamePhase;
   hp: number;
   maxHp: number;
+  level: number;
+  xp: number;
+  xpToNext: number;
   enemiesLeft: number;
+  bagCount: number;
   stats: GameStats;
 };
 
@@ -42,9 +55,17 @@ function formatTime(ms: number): string {
 export function GameScreen({ onQuit }: { onQuit: () => void }) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const synthRef = useRef<Synth | null>(null);
+  const jumpQueuedRef = useRef(false);
   const [assets, setAssets] = useState<GameAssets | null>(null);
   const [runId, setRunId] = useState(0);
   const [hud, setHud] = useState<Hud | null>(null);
+  // The live engine state object for this run. Mutable (the loop advances it
+  // in place); stored in React state so overlays can read it during render.
+  const [state, setState] = useState<GameState | null>(null);
+  // Bumped by paused-phase UI (inventory, level-up) after engine mutations
+  // so React re-reads the frozen state.
+  const [, setUiTick] = useState(0);
+  const bumpUi = () => setUiTick((t) => t + 1);
 
   useEffect(() => {
     let alive = true;
@@ -64,6 +85,7 @@ export function GameScreen({ onQuit }: { onQuit: () => void }) {
 
     const seed = Date.now() & 0x7fffffff;
     const state = createGame(seed);
+    setState(state);
     debug(`run ${runId} started (seed ${seed})`);
 
     // In debug mode (?debug) the live state is reachable from the console /
@@ -91,8 +113,38 @@ export function GameScreen({ onQuit }: { onQuit: () => void }) {
     observer.observe(canvas);
     resize();
 
-    const pointer = trackPointer(canvas);
-    const input: GameInput = { steering: false, target: { x: 0, y: 0 } };
+    // Tap = jump (moon gravity!); hold = steer. Space works too.
+    const pointer = trackPointer(canvas, {
+      onTap: () => {
+        jumpQueuedRef.current = true;
+      },
+    });
+    const onKeyDown = (event: KeyboardEvent) => {
+      if (event.repeat) return;
+      if (event.code === "Space") {
+        event.preventDefault();
+        if (state.phase === "intro") {
+          dismissIntro(state);
+          bumpUi();
+        } else {
+          jumpQueuedRef.current = true;
+        }
+      } else if (event.key === "i" || event.key === "I") {
+        if (state.phase === "playing") openInventory(state);
+        else if (state.phase === "inventory") closeInventory(state);
+        bumpUi();
+      } else if (event.key === "Escape" && state.phase === "inventory") {
+        closeInventory(state);
+        bumpUi();
+      }
+    };
+    window.addEventListener("keydown", onKeyDown);
+
+    const input: GameInput = {
+      steering: false,
+      target: { x: 0, y: 0 },
+      jump: false,
+    };
     let lastHud = "";
 
     const stop = startGameLoop({
@@ -101,6 +153,8 @@ export function GameScreen({ onQuit }: { onQuit: () => void }) {
         input.steering = pointer.state.held;
         input.target.x = camera.x + pointer.state.x * cssToWorld.x;
         input.target.y = camera.y + pointer.state.y * cssToWorld.y;
+        input.jump = jumpQueuedRef.current;
+        jumpQueuedRef.current = false;
         step(state, input, dtMs);
         playEventSounds(synth, state.events);
       },
@@ -109,14 +163,19 @@ export function GameScreen({ onQuit }: { onQuit: () => void }) {
         drawFrame(ctx, state, assets, camera, timeMs);
 
         // Mirror the slow-moving values into React only when they change.
-        const key = `${state.phase}/${state.player.hp}/${state.enemies.length}/${Math.floor(state.stats.timeMs / 1000)}`;
+        const bagCount = state.player.inventory.filter(Boolean).length;
+        const key = `${state.phase}/${state.player.hp}/${state.player.xp}/${state.player.level}/${state.player.pendingStatPoints}/${state.enemies.length}/${bagCount}/${Math.floor(state.stats.timeMs / 1000)}`;
         if (key !== lastHud) {
           lastHud = key;
           setHud({
             phase: state.phase,
             hp: state.player.hp,
             maxHp: state.player.maxHp,
+            level: state.player.level,
+            xp: state.player.xp,
+            xpToNext: state.player.xpToNext,
             enemiesLeft: state.enemies.length,
+            bagCount,
             stats: { ...state.stats },
           });
         }
@@ -127,6 +186,7 @@ export function GameScreen({ onQuit }: { onQuit: () => void }) {
       stop();
       pointer.dispose();
       observer.disconnect();
+      window.removeEventListener("keydown", onKeyDown);
       canvas.removeEventListener("pointerdown", unlock);
     };
   }, [assets, runId]);
@@ -151,11 +211,23 @@ export function GameScreen({ onQuit }: { onQuit: () => void }) {
               />
             </div>
             <PixelText font={font} text={String(hud.hp)} scale={2} />
+            <PixelText
+              font={font}
+              text={`LV ${hud.level}`}
+              scale={2}
+              color="#ffd75e"
+            />
+            <div className="hud-bar xp-bar">
+              <div
+                className="hud-bar-fill xp-fill"
+                style={{ width: `${(100 * hud.xp) / hud.xpToNext}%` }}
+              />
+            </div>
           </div>
           <div className="hud-right">
             <PixelText
               font={font}
-              text={`SLIMES ${hud.stats.totalEnemies - hud.enemiesLeft}/${hud.stats.totalEnemies}`}
+              text={`GHOSTS ${hud.stats.totalEnemies - hud.enemiesLeft}/${hud.stats.totalEnemies}`}
               scale={2}
               color="#d9a0f0"
             />
@@ -164,11 +236,57 @@ export function GameScreen({ onQuit }: { onQuit: () => void }) {
               text={formatTime(hud.stats.timeMs)}
               scale={2}
             />
+            <button
+              type="button"
+              className="pixel-button bag-button"
+              aria-label="open-inventory"
+              onClick={() => {
+                if (state) {
+                  openInventory(state);
+                  bumpUi();
+                }
+              }}
+            >
+              <PixelText
+                font={font}
+                text={`BAG ${hud.bagCount}`}
+                scale={2}
+                color="#0b0d10"
+              />
+            </button>
           </div>
         </div>
       )}
 
-      {hud && hud.phase !== "playing" && (
+      {state && hud?.phase === "intro" && (
+        <IntroOverlay
+          state={state}
+          font={font}
+          onBegin={() => {
+            dismissIntro(state);
+            bumpUi();
+          }}
+        />
+      )}
+
+      {state && hud?.phase === "levelup" && (
+        <LevelUpOverlay state={state} font={font} onChange={bumpUi} />
+      )}
+
+      {state && hud?.phase === "inventory" && (
+        <InventoryPanel
+          state={state}
+          font={font}
+          sprites={assets.sprites}
+          onChange={bumpUi}
+          onClose={() => {
+            closeInventory(state);
+            bumpUi();
+          }}
+        />
+      )}
+
+      {hud && (hud.phase === "victory" || hud.phase === "defeat") && (
         <div className="game-splash">
           <PixelText
             font={font}
@@ -184,12 +302,17 @@ export function GameScreen({ onQuit }: { onQuit: () => void }) {
             />
             <PixelText
               font={font}
-              text={`KILLS ${hud.stats.kills}/${hud.stats.totalEnemies}`}
+              text={`LEVEL REACHED ${hud.level}`}
               scale={3}
             />
             <PixelText
               font={font}
-              text={`SHOTS FIRED ${hud.stats.shotsFired}`}
+              text={`GHOSTS ${hud.stats.kills}/${hud.stats.totalEnemies}`}
+              scale={3}
+            />
+            <PixelText
+              font={font}
+              text={`XP ${hud.stats.xpGained}`}
               scale={3}
             />
             <PixelText
@@ -204,7 +327,7 @@ export function GameScreen({ onQuit }: { onQuit: () => void }) {
             />
             <PixelText
               font={font}
-              text={`MEDKITS USED ${hud.stats.itemsCollected}`}
+              text={`ITEMS ${hud.stats.itemsCollected}`}
               scale={3}
             />
           </div>

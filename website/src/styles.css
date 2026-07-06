@@ -180,3 +180,188 @@ body {
   font-size: 1.1rem;
   margin: 0.5rem 0 1.5rem;
 }
+
+/* HUD widgets added for the moon level: XP bar + the bag button. */
+.hud-bar.xp-bar {
+  width: 5rem;
+}
+
+.hud-bar-fill.xp-fill {
+  background: linear-gradient(180deg, #ffd75e, #d8a018);
+}
+
+.bag-button {
+  pointer-events: auto;
+  padding: 0.4rem 0.75rem;
+}
+
+.game-hud .pixel-button {
+  pointer-events: auto;
+}
+
+/* ---- Full-screen pause overlays (intro, level-up, inventory) ------------- */
+
+.game-overlay {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(11, 13, 16, 0.82);
+  padding: 1rem;
+}
+
+.intro-box,
+.levelup-box {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1.5rem;
+  max-width: 42rem;
+  padding: 2rem;
+  background: #10151c;
+  border: 3px solid #1d2530;
+  box-shadow: 0 8px 0 rgba(0, 0, 0, 0.4);
+}
+
+.intro-lines {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 0.5rem;
+}
+
+.intro-gap {
+  height: 0.75rem;
+}
+
+.stat-buttons {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  width: 100%;
+}
+
+.stat-button {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 0.35rem;
+  background: #ffd75e;
+  box-shadow:
+    0 4px 0 #b8961e,
+    0 6px 0 rgba(0, 0, 0, 0.4);
+}
+
+.stat-button:active {
+  box-shadow: 0 0 0 #b8961e;
+}
+
+/* ---- Inventory (Diablo-style bag + equipment slots) ----------------------- */
+
+.inventory-panel {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1.25rem;
+  max-width: 46rem;
+  width: 100%;
+  padding: 1.5rem;
+  background: #10151c;
+  border: 3px solid #1d2530;
+  box-shadow: 0 8px 0 rgba(0, 0, 0, 0.4);
+  touch-action: none;
+}
+
+.inventory-columns {
+  display: flex;
+  gap: 2rem;
+  width: 100%;
+  justify-content: center;
+  flex-wrap: wrap;
+}
+
+.inventory-left,
+.inventory-right {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.equip-row {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  justify-content: space-between;
+}
+
+.inv-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 3.25rem);
+  gap: 0.4rem;
+}
+
+.inv-cell {
+  width: 3.25rem;
+  height: 3.25rem;
+  display: grid;
+  place-items: center;
+  background: #0b0d10;
+  border: 2px solid #1d2530;
+  cursor: grab;
+  touch-action: none;
+}
+
+.inv-cell.drop-ok {
+  border-color: #7ef0c8;
+}
+
+.pixel-img {
+  image-rendering: pixelated;
+  pointer-events: none;
+}
+
+.char-sheet {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+  margin-top: 1rem;
+  padding-top: 1rem;
+  border-top: 2px solid #1d2530;
+}
+
+.item-card {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+  min-height: 6.5rem;
+  padding: 0.75rem;
+  background: #0b0d10;
+  border: 2px solid #1d2530;
+}
+
+.drag-ghost {
+  position: fixed;
+  z-index: 50;
+  pointer-events: none;
+  opacity: 0.9;
+}
+
+/* PixelText renders to a <canvas>; never let flex stretch it. */
+.inventory-left,
+.inventory-right,
+.char-sheet,
+.item-card {
+  align-items: flex-start;
+}
+
+.inventory-panel canvas,
+.game-overlay canvas {
+  flex: 0 0 auto;
+  align-self: flex-start;
+}
+
+.stat-button canvas,
+.pixel-button canvas {
+  align-self: center;
+}

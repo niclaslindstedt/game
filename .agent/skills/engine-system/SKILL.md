@@ -14,9 +14,13 @@ what makes every game rule unit-testable in plain Node.
 
 | Piece | File |
 | --- | --- |
-| Tuning numbers (hp, speeds, cooldowns, counts) | `src/game/config.ts` — ALL balance knobs live here, nothing hardcoded in logic |
-| State shapes & events | `src/game/types.ts` |
+| GLOBAL tuning (player, XP curve, stat effects, loot rules) | `src/game/config.ts` — cross-level knobs only |
+| A new level (geometry, gravity, intro, spawns, objective, loot table) | `src/game/defs/levels.ts` — one `LevelDef` entry |
+| A new monster (stats, AI radii, role, guaranteed drops) | `src/game/defs/enemies.ts` — one `EnemyDef` entry + sprites named after it |
+| A new weapon/gear piece or affix | `src/game/defs/equipment.ts` — catalog entry; add its id to level loot pools |
+| State shapes & events | `src/game/types.ts` (entities reference defs by id — keep it that way) |
 | Level/entity setup | `src/game/create.ts` (seeded RNG only — no `Math.random`, determinism is what makes bugs reproducible) |
+| Player-driven mutations (equip, stat allocation, phase toggles) | `src/game/items.ts` — safe to call from UI outside `step()` |
 | Per-tick behavior | `src/game/step.ts` — one `stepX()` function per system, called in a fixed order documented at the top |
 | Generic helpers (any game could use) | `src/lib/` — earmarked for oss-framework extraction |
 | Public surface | `src/index.ts` — export new types/constants the app needs |
@@ -65,3 +69,11 @@ what makes every game rule unit-testable in plain Node.
 When a new system forces a pattern not covered here (status effects, timed
 spawners, projectile-vs-projectile collision…), record where it landed and
 why, so the next system follows suit.
+
+- **Content catalogs (2026-07, moon level):** levels/enemies/equipment are
+  data registries under `src/game/defs/`; runtime entities carry a `defId`.
+  New content = new entries, not engine changes. Paused sub-states (intro
+  text, level-up chooser, inventory) are `GamePhase` values — `step()`
+  freezes on anything but `playing`, and the UI resumes via exported
+  mutators. Import `src/lib` through `@game/lib/*` (never relative) so
+  oss-framework extraction stays a prefix swap.

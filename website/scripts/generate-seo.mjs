@@ -8,7 +8,7 @@
 //   - 404.html    — noindex SPA-fallback shell for unknown URLs
 //
 // Only the production slot is indexed; the pages workflow serves this dist/
-// at the site root, and secondary slots (/game/preview/, /game/branch/)
+// at the site root, and secondary slots (/preview/, /branch/)
 // carry a noindex robots meta injected by pwa-plugin.ts.
 
 import { existsSync, writeFileSync } from "node:fs";
@@ -17,7 +17,7 @@ import { fileURLToPath } from "node:url";
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const DIST = resolve(__dirname, "../dist");
-const SITE_URL = "https://niclaslindstedt.github.io/game";
+const SITE_URL = "https://game.niclaslindstedt.se";
 
 if (!existsSync(DIST)) {
   console.error("generate-seo: dist/ is missing — run `vite build` first");

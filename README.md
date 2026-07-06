@@ -26,23 +26,35 @@ An offline top-down survival scroller shooter that runs entirely in your browser
 
 ## Play
 
-The deployed game lives at **<https://niclaslindstedt.github.io/game/>**:
+The deployed game lives at **<https://game.niclaslindstedt.se/>**:
 
-| Slot       | URL              | Serves                                                    |
-| ---------- | ---------------- | --------------------------------------------------------- |
-| Production | `/game/`         | The latest release (or `main` until the first release)    |
-| Preview    | `/game/preview/` | The current `main`, on every push                         |
-| Branch     | `/game/branch/`  | A feature branch parked via the `pages` workflow dispatch |
+| Slot       | URL         | Serves                                                    |
+| ---------- | ----------- | --------------------------------------------------------- |
+| Production | `/`         | The latest release (or `main` until the first release)    |
+| Preview    | `/preview/` | The current `main`, on every push                         |
+| Branch     | `/branch/`  | A feature branch parked via the `pages` workflow dispatch |
 
 ### How to play
 
+Level 2 — THE MOON: Ada went out for a midnight walk and never came back;
+the trail leads here. Ghosts thicken the further you stray from the lander,
+and something enormous haunts the old flag.
+
 - **Hold** the pointer / your finger on the level: the character walks
   toward it. Release to stop.
-- The character **fires by itself** at the nearest slime in range — your job
-  is positioning: kite the pack, don't let it surround you.
-- Walk over **medkits** to heal. Touching a slime hurts.
-- **Clear every slime** on the level to win; if your HP reaches zero the run
-  ends with a stats screen and a retry button.
+- **Tap** (or press Space) to **jump** — moon gravity carries you high
+  enough to sail clean over a ghost's grasp.
+- The character **fights by itself** with whatever weapon is equipped —
+  your job is positioning: kite the haunting, don't get surrounded.
+- Kills grant **XP**; each level-up pauses the run to spend a stat point on
+  HEALTH, STRENGTH (melee), DEXTERITY (ranged), INTELLECT (magic), or LUCK
+  (crits, loot).
+- Ghosts drop **loot** — medkits, weapons, and gear in regular or magic
+  tier. Open the **BAG** (or press I) for the Diablo-style inventory: drag
+  items onto their slot or tap to quick-equip.
+- **Kill ARMSTRONG**, the giant astronaut ghost guarding the flag, to clear
+  the level; if your HP reaches zero the run ends with a stats screen and a
+  retry button.
 
 ### Install it as an app
 
@@ -100,7 +112,7 @@ The game has no user-facing configuration yet. Build-time knobs:
 | Variable           | Effect                                                                                                                                          |
 | ------------------ | ----------------------------------------------------------------------------------------------------------------------------------------------- |
 | `GITHUB_PAT`       | Auth for GitHub Packages installs (`.npmrc`)                                                                                                    |
-| `VITE_BASE`        | Deploy-slot base path (`/game/`, `/game/preview/`, `/game/branch/`); defaults to `/` for local builds                                           |
+| `VITE_BASE`        | Deploy-slot base path (`/`, `/preview/`, `/branch/`); defaults to `/` for local builds                                                          |
 | `?debug` URL param | Turns on debug-level console output (`src/output.ts`) and exposes the live game state as `window.__game` for inspection and automated playtests |
 
 ## Examples

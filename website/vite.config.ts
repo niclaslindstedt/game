@@ -11,9 +11,9 @@ import { defineConfig } from "vite";
 import { gamePwa } from "./pwa-plugin.ts";
 
 // The GitHub Pages base path is injected by the `pages.yml` workflow via
-// VITE_BASE so the same source builds for `/game/` (release), `/game/preview/`
-// (main), or `/game/branch/` (a dispatched feature branch). Defaults to `/`
-// for local dev and the CI quality gates, which serve dist/ at a root.
+// VITE_BASE so the same source builds for `/` (release), `/preview/` (main),
+// or `/branch/` (a dispatched feature branch) on game.niclaslindstedt.se.
+// Defaults to `/` for local dev and the CI quality gates.
 const base = process.env.VITE_BASE ?? "/";
 
 // Label shown by the PWA update toast for the incoming build. Prefer the
@@ -55,7 +55,15 @@ export default defineConfig({
   plugins: [react(), tailwindcss(), gamePwa({ base, version })],
   resolve: {
     // The engine lives at the repository root (`../src`); the app imports it
-    // through this alias so engine code never reaches into app modules.
-    alias: [{ find: "@game/core", replacement: here("../src/index.ts") }],
+    // through these aliases so engine code never reaches into app modules.
+    // @game/lib and @ui/lib are the generic pools earmarked for extraction
+    // into oss-framework: once a module migrates, only the alias prefix in
+    // its importers changes (@…/lib/foo → @niclaslindstedt/oss-framework/foo).
+    // Keep in lockstep with tsconfig `paths` here and at the root.
+    alias: [
+      { find: "@game/core", replacement: here("../src/index.ts") },
+      { find: "@game/lib", replacement: here("../src/lib") },
+      { find: "@ui/lib", replacement: here("./src/lib") },
+    ],
   },
 });
