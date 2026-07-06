@@ -5,6 +5,12 @@ on:
     branches: [main]
   pull_request:
     branches: [main]
+    # Include `labeled` / `unlabeled` so the `no-changelog` escape
+    # hatch re-runs the changeset job when the label is toggled after
+    # the PR opened. The default activity types (`opened`,
+    # `synchronize`, `reopened`) would otherwise leave the check stuck
+    # red until the next push.
+    types: [opened, synchronize, reopened, labeled, unlabeled]
 
 env:
   # @niclaslindstedt/oss-framework is pulled from GitHub Packages, which
@@ -17,7 +23,7 @@ jobs:
   test:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
         with:
           fetch-depth: 0
       - uses: actions/setup-node@v4
@@ -34,13 +40,30 @@ jobs:
       - name: make fmt-check
         run: make fmt-check
 
+  changeset:
+    # Enforces that every PR touching user-visible code drops a
+    # changelog fragment under .changes/unreleased/, or opts out via
+    # the `no-changelog` label. Pure refactors, CI/build tweaks, and
+    # docs-only edits pass via the skip-list inside the script.
+    if: github.event_name == 'pull_request'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
+      - name: Check changeset fragment
+        env:
+          BASE_SHA: ${{ github.event.pull_request.base.sha }}
+          LABELS: ${{ toJSON(github.event.pull_request.labels.*.name) }}
+        run: node scripts/release/check-changeset.mjs
+
   # §7.1 — every tool-specific agent-guidance file must be a symlink to
   # AGENTS.md, and .claude/skills must resolve to .agent/skills. A commit that
   # dereferences one into a regular file breaks the single source of truth.
   symlinks:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
       - name: Verify agent-guidance symlinks
         run: |
           fail=0
@@ -65,7 +88,7 @@ jobs:
   shell-lint:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
       - name: Install actionlint
         run: |
           bash <(curl -sSfL https://raw.githubusercontent.com/rhysd/actionlint/main/scripts/download-actionlint.bash)

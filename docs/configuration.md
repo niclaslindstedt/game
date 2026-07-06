@@ -37,7 +37,10 @@ editing that file and playtesting (see the `playtest` skill).
 
 ## Release configuration
 
-| Secret          | Used by                                   | Purpose                                                                                                           |
-| --------------- | ----------------------------------------- | ----------------------------------------------------------------------------------------------------------------- |
-| `RELEASE_TOKEN` | `version-bump.yml`                        | A PAT/App token that pushes the `v*` tag; the default `GITHUB_TOKEN` would not fire the downstream `release.yml`. |
-| `GITHUB_PAT`    | ci/pages/release/seo/lighthouse workflows | GitHub Packages reads (optional — workflows fall back to `github.token`).                                         |
+| Secret       | Used by                                   | Purpose                                                                   |
+| ------------ | ----------------------------------------- | ------------------------------------------------------------------------- |
+| `GITHUB_PAT` | ci/pages/release/seo/lighthouse workflows | GitHub Packages reads (optional — workflows fall back to `github.token`). |
+
+No `RELEASE_TOKEN` is needed: `release.yml` is dispatched manually and
+chains into `pages.yml` via `workflow_call` inside the same run, so the
+default `GITHUB_TOKEN` suffices end to end.

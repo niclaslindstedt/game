@@ -8,3 +8,9 @@ updates:
     directory: "/"
     schedule:
       interval: "weekly"
+    # Dependency bumps touch package.json, which is not on the changeset
+    # check's skip-list — the label opts them out (see
+    # scripts/release/check-changeset.mjs).
+    labels:
+      - "dependencies"
+      - "no-changelog"

@@ -1,89 +1,158 @@
 name: release
 
-# Triggered by the `v*` tag push that version-bump performs. That upstream
-# tag push must be authenticated with RELEASE_TOKEN (a PAT or GitHub App
-# token) — the default GITHUB_TOKEN deliberately suppresses downstream
-# workflow triggers, so a tag pushed with it would not fire this workflow.
+# Manual-only. The maintainer dispatches this and the workflow derives
+# the semver bump from the changeset fragments in .changes/unreleased/
+# (their front-matter carries the Added/Changed/Fixed/... type and an
+# optional `breaking: true` — see scripts/release/compute-bump.mjs),
+# then consumes those fragments into a new CHANGELOG section, updates
+# every shipped version string via scripts/update-versions.sh, tags
+# vX.Y.Z, pushes, creates a GitHub Release, then chains into pages.yml
+# so the new tag is served at `/` (and the same code at `/preview/`
+# because main now matches the tag) without waiting for the next push.
 #
-# This workflow itself uses the default GITHUB_TOKEN for its commit-to-main
-# and retag steps. That same trigger suppression is what prevents the
-# force-pushed tag from re-firing this workflow on itself and starting a
-# duplicate release run. See OSS_SPEC §10.3.
+# `bump` defaults to `auto` — the fragment-derived bump above. Set it to
+# an explicit patch/minor/major only to override that derivation.
 #
-# The game ships no package registry artifact — the deliverable is the GitHub
-# Pages deploy, so after the release commit lands this workflow chains into
-# pages.yml with the new tag to promote it to the production slot.
+# Because the release commit, tag, GitHub Release, and Pages deploy all
+# happen inside this one dispatched run (the deploy is a workflow_call
+# chain, not a cross-workflow trigger), the default GITHUB_TOKEN is
+# sufficient — no RELEASE_TOKEN PAT is needed.
+
 on:
-  push:
-    tags:
-      - "v*"
+  workflow_dispatch:
+    inputs:
+      bump:
+        description: "Semver bump. 'auto' derives it from the .changes/unreleased/ fragments (breaking → major, Added/Changed/Removed/Deprecated → minor, Fixed/Security → patch). Pick patch/minor/major to override."
+        required: true
+        type: choice
+        default: auto
+        options:
+          - auto
+          - patch
+          - minor
+          - major
 
 # Default to no permissions; every job declares its own least-privilege
 # `permissions:` block (see OSS_SPEC §10.3).
 permissions: {}
 
 env:
+  # GitHub Packages auth for @niclaslindstedt/oss-framework (see .npmrc).
   GITHUB_PAT: ${{ secrets.GITHUB_PAT || github.token }}
 
 jobs:
   release:
     runs-on: ubuntu-latest
-    # contents: write — this job pushes the release commit and force-pushes
-    # the rewritten tag to `main`.
+    if: github.ref == 'refs/heads/main'
+    # contents: write — this job pushes the release commit and the tag.
     permissions:
       contents: write
+    outputs:
+      version: ${{ steps.bump.outputs.version }}
+      tag: ${{ steps.bump.outputs.tag }}
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
         with:
           fetch-depth: 0
-          ref: main
       - uses: actions/setup-node@v4
         with:
           node-version-file: .nvmrc
           cache: npm
       - run: npm ci
-      - name: Resolve tag
-        id: tag
-        run: echo "tag=${GITHUB_REF_NAME}" >> "$GITHUB_OUTPUT"
-      - name: Generate changelog
-        run: ./scripts/generate-changelog.sh ${{ steps.tag.outputs.tag }}
-      - name: Update versions
-        run: ./scripts/update-versions.sh ${{ steps.tag.outputs.tag }}
-      - name: Commit + retag
+
+      - name: Verify clean working tree
         run: |
-          git config user.name "github-actions[bot]"
-          git config user.email "github-actions[bot]@users.noreply.github.com"
-          git add -A
-          git diff --cached --quiet || git commit -m "chore(release): update changelog and versions for ${{ steps.tag.outputs.tag }}"
-          git tag -f "${{ steps.tag.outputs.tag }}" HEAD
-          git push origin HEAD:main
-          git push origin "${{ steps.tag.outputs.tag }}" --force
+          if ! git diff --quiet || ! git diff --quiet --cached; then
+            echo "::error::working tree is not clean — refusing to release"
+            git status
+            exit 1
+          fi
+
+      # Resolve the effective bump. `auto` (the default) derives it from
+      # the changeset fragments' front-matter so the release needs no
+      # human judgement; an explicit patch/minor/major from the dispatch
+      # form overrides that derivation.
+      - name: Resolve bump
+        id: resolve
+        run: |
+          if [ "${{ inputs.bump }}" = "auto" ] || [ -z "${{ inputs.bump }}" ]; then
+            BUMP=$(node scripts/release/compute-bump.mjs)
+            echo "Auto-derived bump from fragments: $BUMP"
+          else
+            BUMP="${{ inputs.bump }}"
+            echo "Using requested bump override: $BUMP"
+          fi
+          echo "bump=$BUMP" >> "$GITHUB_OUTPUT"
+
+      # Compute the next version from the highest released tag (not from
+      # package.json, which could lag), then rewrite every shipped
+      # version string — root + workspace package.json, the lockfile,
+      # and src/version.ts — via the script that owns them.
+      - name: Bump version
+        id: bump
+        run: |
+          LATEST_TAG=$(git tag --list 'v*' --sort=-v:refname | head -n1)
+          CURRENT="${LATEST_TAG#v}"
+          CURRENT="${CURRENT:-0.0.0}"
+          IFS=. read -r MAJOR MINOR PATCH <<<"$CURRENT"
+          case "${{ steps.resolve.outputs.bump }}" in
+            major) MAJOR=$((MAJOR+1)); MINOR=0; PATCH=0 ;;
+            minor) MINOR=$((MINOR+1)); PATCH=0 ;;
+            patch) PATCH=$((PATCH+1)) ;;
+            *) echo "::error::unknown bump '${{ steps.resolve.outputs.bump }}'"; exit 1 ;;
+          esac
+          VERSION="${MAJOR}.${MINOR}.${PATCH}"
+          ./scripts/update-versions.sh "v${VERSION}"
+          echo "version=${VERSION}" >> "$GITHUB_OUTPUT"
+          echo "tag=v${VERSION}" >> "$GITHUB_OUTPUT"
+          echo "Bumped from ${LATEST_TAG:-nothing} to v${VERSION}"
+
+      - name: Collate changelog
+        run: node scripts/release/collate-changelog.mjs "${{ steps.bump.outputs.version }}"
+
+      - name: Extract release-notes body
+        run: node scripts/release/extract-section.mjs "${{ steps.bump.outputs.version }}" > .release-notes.md
+
       - name: make build
         run: make build
       - name: make test
         run: make test
-      - name: Extract release notes
-        run: |
-          # The section of the freshly generated CHANGELOG.md between the
-          # newest `## [x.y.z]` heading and the next one (§10.3 step 10).
-          awk '/^## \[/{n++} n==1' CHANGELOG.md > release-notes.md
-          if [ ! -s release-notes.md ]; then
-            echo "Release ${{ steps.tag.outputs.tag }}" > release-notes.md
-          fi
-      - name: GitHub Release
-        uses: softprops/action-gh-release@v2
-        with:
-          tag_name: ${{ steps.tag.outputs.tag }}
-          body_path: release-notes.md
 
-  # Promote the fresh tag to the production Pages slot immediately instead of
-  # waiting for the next push to main (§11.5.2).
+      - name: Commit + tag
+        env:
+          TAG: ${{ steps.bump.outputs.tag }}
+          VERSION: ${{ steps.bump.outputs.version }}
+        run: |
+          git config user.name  'github-actions[bot]'
+          git config user.email 'github-actions[bot]@users.noreply.github.com'
+          git add package.json package-lock.json website/package.json src/version.ts CHANGELOG.md .changes/unreleased
+          git commit -m "chore(release): v${VERSION}"
+          git tag -a "$TAG" -m "Release ${TAG}"
+          git push origin HEAD:main
+          git push origin "$TAG"
+
+      - name: Create GitHub Release
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          gh release create "${{ steps.bump.outputs.tag }}" \
+            --title "${{ steps.bump.outputs.tag }}" \
+            --notes-file .release-notes.md
+
+  # Chain straight into pages.yml so the new tag is served at `/`
+  # immediately — without this, deployment would wait for the next
+  # push to main (§11.5.2).
   pages:
     needs: release
     uses: ./.github/workflows/pages.yml
     with:
-      release_ref: ${{ github.ref_name }}
+      release_ref: ${{ needs.release.outputs.tag }}
     permissions:
+      # pages.yml declares `contents: write` at the top level because its
+      # build job force-pushes the /branch/ slot to the `branch-deploy`
+      # orphan branch. A reusable workflow can't be granted fewer
+      # permissions than it requests, so these must match or the whole
+      # release run fails at startup before any job runs.
       contents: write
       pages: write
       id-token: write

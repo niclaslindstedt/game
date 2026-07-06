@@ -61,7 +61,7 @@ jobs:
   build:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
         with:
           fetch-depth: 0
       - uses: actions/setup-node@v4
@@ -222,8 +222,8 @@ jobs:
             echo "Merged: /branch/ from $BRANCH_DEPLOY_REF"
           fi
 
-      - uses: actions/configure-pages@v5
-      - uses: actions/upload-pages-artifact@v3
+      - uses: actions/configure-pages@v6
+      - uses: actions/upload-pages-artifact@v5
         with:
           path: site
 
@@ -232,10 +232,30 @@ jobs:
     runs-on: ubuntu-latest
     environment:
       name: github-pages
-      url: ${{ steps.deployment.outputs.page_url }}
+      # Whichever attempt actually published reports the URL.
+      url: ${{ steps.deployment.outputs.page_url || steps.deployment_retry.outputs.page_url }}
     permissions:
       pages: write
       id-token: write
     steps:
+      # GitHub Pages' publish backend intermittently *rejects* a fresh
+      # deployment outright — "Deployment failed, try again later." on the
+      # first status poll — when it is still settling the previously
+      # published deploy. Our pushes land minutes apart, so this hits a
+      # meaningful share of runs. The build is fine (the artifact uploaded
+      # cleanly); re-creating the deployment from the *same* artifact a
+      # moment later succeeds — exactly what a manual re-run does. Without
+      # this retry a flaky reject on a push to main leaves `/preview` (and
+      # `/`) stale on the previous commit until someone re-runs by hand,
+      # which reads as "preview isn't deploying". Retry once in-job so the
+      # deploy is self-healing; a second failure still fails the job so a
+      # genuinely broken deploy is surfaced.
       - id: deployment
-        uses: actions/deploy-pages@v4
+        uses: actions/deploy-pages@v5
+        continue-on-error: true
+      - name: Wait before retrying a rejected deployment
+        if: steps.deployment.outcome == 'failure'
+        run: sleep 45
+      - id: deployment_retry
+        if: steps.deployment.outcome == 'failure'
+        uses: actions/deploy-pages@v5

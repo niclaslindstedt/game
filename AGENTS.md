@@ -26,6 +26,8 @@ make lint          # zero-warning linter
 make fmt           # format in place
 make fmt-check     # verify formatting (CI)
 make assets        # regenerate in-game pixel assets + previews
+make bump          # print the release bump derived from .changes/unreleased/
+make changelog VERSION=X.Y.Z  # preview a release's CHANGELOG section
 ```
 
 ## Commit and PR conventions
@@ -34,6 +36,33 @@ make assets        # regenerate in-game pixel assets + previews
 - PRs are squash-merged; the **PR title** becomes the single commit on `main`,
   so it must follow conventional-commit format.
 - Breaking changes use `<type>!:` or a `BREAKING CHANGE:` footer.
+
+## Changelog fragments
+
+Every PR that changes something user-visible must add a changeset fragment
+under `.changes/unreleased/` — CI's `changeset` job enforces it (label the
+PR `no-changelog` to opt out for pure refactors/CI/docs changes; files in
+`tests/`, `docs/`, `scripts/`, `.github/`, etc. are skip-listed anyway).
+
+```
+.changes/unreleased/$(date +%s)-short-slug.md
+
+---
+type: Added         # Added | Changed | Fixed | Removed | Security | Deprecated
+title: Short title  # optional — bolded at the head of the changelog bullet
+breaking: true      # optional — forces a major version bump
+---
+
+One-sentence user-facing summary.
+```
+
+At release time `release.yml` (manual dispatch) derives the semver bump
+from the fragments (`breaking` → major, Added/Changed/Removed/Deprecated →
+minor, Fixed/Security → patch), collates them into `CHANGELOG.md`, updates
+every version string via `scripts/update-versions.sh`, tags, publishes a
+GitHub Release, and deploys. Preview locally with `make bump` (shows the
+derived bump) and `make changelog VERSION=X.Y.Z` (consumes fragments —
+revert afterwards).
 
 ## Architecture summary
 

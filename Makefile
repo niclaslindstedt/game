@@ -1,4 +1,4 @@
-.PHONY: build test lint fmt fmt-check shellcheck actionlint release clean docs website website-dev icons assets install
+.PHONY: build test lint fmt fmt-check shellcheck actionlint release clean docs website website-dev icons assets install changelog bump
 
 build:
 	npm run build
@@ -48,3 +48,18 @@ icons:
 # programmatic sources — see the pixel-assets skill.
 assets:
 	npm run assets
+
+# Pass the planned version: `make changelog VERSION=0.2.0`. Consumes the
+# fragments in .changes/unreleased/ — run inside a scratch branch or
+# revert afterwards if you only wanted a preview.
+changelog:
+	@test -n "$(VERSION)" || { \
+		echo "usage: make changelog VERSION=X.Y.Z"; exit 2; \
+	}
+	node scripts/release/collate-changelog.mjs $(VERSION)
+
+# Print the semver bump (patch/minor/major) the release workflow will
+# auto-derive from the current .changes/unreleased/ fragments. Read-only
+# — touches nothing.
+bump:
+	@node scripts/release/compute-bump.mjs
