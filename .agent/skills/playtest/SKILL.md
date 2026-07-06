@@ -43,6 +43,10 @@ and out). **Look at the screenshots with the Read tool** (`title.png`,
 `gameplay.png`, `end.png`) — visual regressions (HUD overlap, sprite
 misalignment, tile patterns, unreadable text) only show up there.
 
+The harness runs at a **phone-landscape viewport (844×390)** — the game is
+mobile-first (see AGENTS.md) and every "does it fit / can you see it"
+judgement must be made at that size, not on a roomy desktop window.
+
 ## Evaluating game feel
 
 Judge each run against these expectations, and tune

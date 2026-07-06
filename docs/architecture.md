@@ -41,17 +41,24 @@ weapon means adding catalog entries, not touching the simulation.
 - **`src/game/defs/equipment.ts`** — weapons (melee/ranged/magic classes),
   gear, the four-tier quality ladder (regular/magic/epic/legendary — later
   levels unlock the upper tiers), and the affix pools magic+ items roll.
+- **`src/game/defs/abilities.ts`** — the time-limited ability pickups
+  (orbiting fire orbs, storm strikes, stasis slow fields); levels choose
+  which can drop via their `loot.abilityPool`.
+- **`src/game/abilities.ts`** — ability activation and the helpers the
+  renderer shares (`orbPositions`, `stasisFactorAt`); the per-tick behavior
+  runs inside `step.ts` so all damage flows through one path.
 - **`src/game/types.ts`** — state shapes plus the `GameEvent` union: events
   are the only channel from simulation to presentation (sound, flashes);
   the engine never knows a renderer or speaker exists.
 - **`src/game/create.ts`** — seeded run setup from a level def: difficulty
   bands scale with distance from the player spawn toward the objective.
 - **`src/game/step.ts`** — the per-tick pipeline, in documented order:
-  player steering + jump physics → weapon auto-attack → projectiles →
-  enemies (aggro/guard AI, contact damage) → item pickups → objective →
-  win/lose. The character fights autonomously; the player steers
-  (hold), jumps (tap/Space), spends level-up stat points, and manages
-  the inventory.
+  player steering + jump physics → weapon auto-attack → abilities →
+  projectiles → enemies (aggro/guard AI, contact damage) → wave spawner →
+  item pickups → objective → win/lose. The character fights autonomously
+  (and only targets monsters inside the visible view the app passes in
+  `input.view`); the player steers (hold), jumps (tap/Space), spends
+  level-up stat points, and manages the inventory.
 - **`src/game/items.ts`** — equipment instances and the player-driven
   mutations the UI calls into: loot rolls, `equipFromInventory` /
   `unequipToInventory` / `moveInventoryItem`, `allocateStat`, and the

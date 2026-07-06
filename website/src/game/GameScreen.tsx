@@ -36,7 +36,13 @@ import { loadGameAssets, type GameAssets } from "./assets.ts";
 import { IntroOverlay } from "./IntroOverlay.tsx";
 import { InventoryPanel } from "./InventoryPanel.tsx";
 import { LevelUpOverlay } from "./LevelUpOverlay.tsx";
-import { computeCamera, drawFrame, VIEW_SCALE } from "./render.ts";
+import {
+  computeCamera,
+  drawEffects,
+  drawFrame,
+  VIEW_SCALE,
+  type Effect,
+} from "./render.ts";
 import { playEventSounds } from "./sfx.ts";
 
 type Hud = {
@@ -161,9 +167,19 @@ export function GameScreen({ onQuit }: { onQuit: () => void }) {
       jump: false,
     };
     let lastHud = "";
+    // Transient visuals driven by engine events (lightning strikes).
+    let effects: Effect[] = [];
 
     const stop = startGameLoop({
       simulate(dtMs) {
+        const camera = computeCamera(state, canvas.width, canvas.height);
+        // The character only targets what the player can see.
+        input.view = {
+          x: camera.x,
+          y: camera.y,
+          width: canvas.width,
+          height: canvas.height,
+        };
         if (bot) {
           // The bot is a drop-in input source; it also clears the paused
           // phases a human would click through.
@@ -178,7 +194,6 @@ export function GameScreen({ onQuit }: { onQuit: () => void }) {
           input.target.y = decided.target.y;
           input.jump = decided.jump;
         } else {
-          const camera = computeCamera(state, canvas.width, canvas.height);
           input.steering = pointer.state.held;
           input.target.x = camera.x + pointer.state.x * cssToWorld.x;
           input.target.y = camera.y + pointer.state.y * cssToWorld.y;
@@ -187,10 +202,24 @@ export function GameScreen({ onQuit }: { onQuit: () => void }) {
         }
         step(state, input, dtMs);
         playEventSounds(synth, state.events);
+
+        for (const event of state.events) {
+          if (event.type === "lightning") {
+            effects.push({
+              kind: "lightning",
+              pos: event.pos,
+              untilMs: state.stats.timeMs + 130,
+            });
+          }
+        }
+        if (effects.length > 0) {
+          effects = effects.filter((e) => e.untilMs > state.stats.timeMs);
+        }
       },
       render(timeMs) {
         const camera = computeCamera(state, canvas.width, canvas.height);
         drawFrame(ctx, state, assets, camera, timeMs);
+        drawEffects(ctx, effects, camera, state.stats.timeMs);
 
         // Mirror the slow-moving values into React only when they change.
         const bagCount = state.player.inventory.filter(Boolean).length;

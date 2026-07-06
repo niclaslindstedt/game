@@ -6,9 +6,16 @@
 
 import { describe, expect, it } from "vitest";
 
-import { allocateStat, ENEMY_AI, enemyDef, LEVELS, step } from "@game/core";
+import {
+  allocateStat,
+  ENEMY_AI,
+  enemyDef,
+  LEVELS,
+  PLAYER,
+  step,
+} from "@game/core";
 import type { GameState } from "@game/core";
-import { DT, idle, makeEnemy, run, startGame } from "./helpers.ts";
+import { DT, idle, startGame } from "./helpers.ts";
 
 const WAVES = LEVELS.moon!.waves!;
 const dist = (a: { x: number; y: number }, b: { x: number; y: number }) =>
@@ -18,13 +25,16 @@ const spawnedSoFar = (state: GameState) =>
   state.waveSpawned.reduce((sum, n) => sum + n, 0);
 
 /**
- * Step with idle input, auto-spending level-ups so time keeps flowing and
- * holding the player airborne so the horde can never end the run early.
+ * Step with idle input, auto-spending level-ups so time keeps flowing,
+ * holding the player airborne so the horde can never end the run early,
+ * and keeping the weapon quiet so no kills muddy the spawn counts (the
+ * near-floor would refill every death, hiding the windowed ramp).
  */
 function stepThrough(state: GameState, steps: number): void {
   for (let i = 0; i < steps; i++) {
     state.player.z = 100;
     state.player.vz = 0;
+    state.player.weaponCooldownMs = 1_000_000;
     step(state, idle, DT);
     while (state.player.pendingStatPoints > 0) allocateStat(state, "health");
   }
@@ -94,24 +104,37 @@ describe("wave spawner", () => {
     expect(a.waveSpawned).toEqual(b.waveSpawned);
   });
 
-  it("holds the trophy back while the horde is still coming", () => {
+  it("keeps at least minAlive minions in the field from the first step", () => {
     const state = startGame();
-    state.items = [];
+    // Strip the placed spawns: the floor alone must repopulate the screen.
     state.enemies = state.enemies.filter((e) => isBoss(e.defId));
-    state.enemies.push(
-      makeEnemy({
-        pos: { x: state.player.pos.x + 40, y: state.player.pos.y },
-        hp: 1,
-        maxHp: 1,
-      }),
+    step(state, idle, DT);
+    expect(state.enemies.filter((e) => !isBoss(e.defId)).length).toBe(
+      WAVES.minAlive,
     );
-    // The last LIVE minion dies, but the wave budget is untouched — no
-    // MOON'S BLADE until the level is truly cleared.
-    run(state, idle, 200, (s) => !s.enemies.some((e) => !isBoss(e.defId)));
-    expect(
-      state.items.some(
-        (i) => i.kind === "equipment" && i.equipment.defId === "moons_blade",
-      ),
-    ).toBe(false);
+  });
+
+  it("stirs extra monsters awake as the player walks", () => {
+    const state = startGame();
+    stepThrough(state, 1); // settle the opening floor spawns
+    const before = spawnedSoFar(state);
+
+    // Bank a long walk without simulating it step by step.
+    state.moveSpawnCredit = WAVES.moveSpawnEvery * 5;
+    state.player.z = 100; // stay untouchable, as stepThrough does
+    step(state, idle, DT);
+    expect(spawnedSoFar(state)).toBeGreaterThanOrEqual(before + 5);
+    expect(state.moveSpawnCredit).toBeLessThan(WAVES.moveSpawnEvery);
+  });
+
+  it("banks walked distance into moveSpawnCredit while steering", () => {
+    const state = startGame();
+    const target = { x: state.player.pos.x + 200, y: state.player.pos.y };
+    step(state, { steering: true, target, jump: false }, DT);
+    // One step's walk (well under moveSpawnEvery, so nothing is spent yet).
+    expect(state.moveSpawnCredit).toBeCloseTo((PLAYER.speed * DT) / 1000, 3);
+
+    step(state, idle, DT);
+    expect(state.moveSpawnCredit).toBeCloseTo((PLAYER.speed * DT) / 1000, 3);
   });
 });

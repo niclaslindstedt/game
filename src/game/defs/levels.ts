@@ -42,6 +42,17 @@ export type WaveSpec = {
   rampDurationMs: number;
   /** Live-minion cap — spawning defers (never cancels) above it. */
   maxAlive: number;
+  /**
+   * Live-minion floor: whenever fewer minions than this are alive (and the
+   * budget isn't spent), spawns are pulled forward so the screen is never
+   * quiet.
+   */
+  minAlive: number;
+  /**
+   * Every this-many world px the player walks pulls one extra spawn forward
+   * — exploring stirs the horde awake.
+   */
+  moveSpawnEvery: number;
   budget: WaveBudget[];
 };
 
@@ -84,11 +95,19 @@ export type LevelDef = {
      * to each). Omitted tiers cannot drop here — the moon caps at magic.
      */
     tierChances: Partial<Record<Tier, number>>;
+    /** ABILITY_DEFS ids this level's drops draw from. */
+    abilityPool: string[];
     /**
      * Trophy weapon def dropped by the last regular monster standing —
      * clearing every mob on the level always earns it.
      */
     allClearWeapon?: string;
+    /**
+     * A weapon guaranteed to drop early: at a kill count rolled uniformly in
+     * [minKills, maxKills] at level creation, the dying monster surrenders
+     * it.
+     */
+    earlyWeapon?: { defId: string; minKills: number; maxKills: number };
   };
 };
 
@@ -130,9 +149,13 @@ const MOON: LevelDef = {
     { enemy: "armstrong", at: { x: 2130, y: 260 } },
   ],
   // The haunting proper: over five minutes the moon empties its graves.
+  // The floor keeps a dozen ghosts on screen from the first breath; walking
+  // the moonscape stirs extras out of the regolith every 48 px.
   waves: {
     rampDurationMs: 300_000,
     maxAlive: 220,
+    minAlive: 20,
+    moveSpawnEvery: 64,
     budget: [
       { enemy: "wisp", count: 500, window: [0, 0.55] },
       { enemy: "ghost", count: 400, window: [0.3, 0.85] },
@@ -146,10 +169,23 @@ const MOON: LevelDef = {
   ],
   decorClearance: 80,
   loot: {
-    weaponPool: ["blaster", "wand", "wrench"],
+    weaponPool: [
+      "blaster",
+      "wand",
+      "wrench",
+      "pipe",
+      "hammer",
+      "pistol",
+      "rifle",
+      "star_wand",
+      "void_wand",
+    ],
     gearPool: ["suit_plating", "moon_charm"],
+    abilityPool: ["fire_orbs", "storm_cell", "stasis_field"],
     tierChances: { magic: 0.2 },
-    allClearWeapon: "moons_blade",
+    // MOON'S BLADE arrives early — within the first hundred kills — so the
+    // run's signature weapon shapes the run instead of capping it.
+    earlyWeapon: { defId: "moons_blade", minKills: 40, maxKills: 100 },
   },
 };
 

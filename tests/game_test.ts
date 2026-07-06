@@ -106,6 +106,23 @@ describe("steering", () => {
     );
   });
 
+  it("only flips the sprite on decisively horizontal movement", () => {
+    const state = startGame();
+    clearStage(state);
+    const { x, y } = state.player.pos;
+
+    step(state, steerTo(x - 200, y), DT);
+    expect(state.player.faceLeft).toBe(true);
+
+    // Near-vertical steering (even leaning slightly right) keeps the flip:
+    // this is what used to flicker when diagonals hovered around vertical.
+    step(state, steerTo(state.player.pos.x + 2, state.player.pos.y + 300), DT);
+    expect(state.player.faceLeft).toBe(true);
+
+    step(state, steerTo(state.player.pos.x + 200, state.player.pos.y), DT);
+    expect(state.player.faceLeft).toBe(false);
+  });
+
   it("does not move while the pointer is released", () => {
     const state = startGame();
     const before = { ...state.player.pos };
@@ -211,6 +228,40 @@ describe("weapon", () => {
     expect(state.enemies).toHaveLength(0);
     expect(state.stats.kills).toBe(1);
     expect(state.stats.damageDealt).toBeGreaterThanOrEqual(45);
+  });
+
+  it("fires from the player's height mid-jump and the shot sinks back", () => {
+    const state = startGame();
+    clearStage(state);
+    state.player.z = 40; // mid-jump
+    state.enemies.push(
+      makeEnemy({
+        pos: { x: state.player.pos.x + 100, y: state.player.pos.y },
+      }),
+    );
+    step(state, idle, DT);
+    // Fired at z=40; one step of sink has already applied.
+    const shot = state.projectiles[0]!;
+    expect(shot.z).toBeGreaterThan(30);
+    const early = shot.z;
+    run(state, idle, 5); // a few more steps of flight, before it connects
+    expect(shot.z).toBeLessThan(early); // sinking in flight
+  });
+
+  it("ignores monsters outside the given view — they aren't on screen yet", () => {
+    const state = startGame();
+    clearStage(state);
+    const { x, y } = state.player.pos;
+    state.enemies.push(makeEnemy({ pos: { x: x + 150, y } }));
+    // A view that ends before the monster: in range, but not visible.
+    const view = { x: x - 160, y: y - 90, width: 300, height: 180 };
+    step(state, { ...idle, view }, DT);
+    expect(state.projectiles).toHaveLength(0);
+
+    // Widen the view and the same monster is fair game.
+    view.width = 400;
+    step(state, { ...idle, view }, DT);
+    expect(state.projectiles).toHaveLength(1);
   });
 
   it("swings melee weapons directly, no projectile", () => {

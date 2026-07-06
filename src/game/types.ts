@@ -58,6 +58,20 @@ export type Equipment = {
   upgrades?: number;
 };
 
+/**
+ * A running time-limited power granted by an ability pickup (fire orbs,
+ * lightning storm, stasis field). `defId` keys into ABILITY_DEFS; the two
+ * scratch fields mean different things per ability kind.
+ */
+export type ActiveAbility = {
+  defId: string;
+  remainingMs: number;
+  /** Orbit abilities: the current sweep angle in radians. */
+  angle: number;
+  /** Ms until the ability's next damage tick / strike. */
+  cooldownMs: number;
+};
+
 export type Player = {
   pos: Vec2;
   /** Height above the ground (world px) and vertical speed while jumping. */
@@ -67,6 +81,13 @@ export type Player = {
   maxHp: number;
   /** Unit vector of the last movement direction; drives sprite facing. */
   facing: Vec2;
+  /**
+   * Which way the sprite mirrors. Updated with hysteresis (see
+   * PLAYER.faceFlipMinX) so near-vertical movement doesn't flicker the flip.
+   */
+  faceLeft: boolean;
+  /** Time-limited powers currently running (ability pickups). */
+  abilities: ActiveAbility[];
   /** True while the player moved this step; drives the walk animation. */
   moving: boolean;
   /** Remaining ms until the weapon may fire again. */
@@ -118,12 +139,19 @@ export type Projectile = {
   lifetimeMs: number;
   /** Which weapon class fired it (drives the projectile sprite). */
   weaponClass: WeaponClass;
+  /**
+   * Height above the ground at which the shot is drawn — inherited from a
+   * jumping shooter, sinking back to 0 in flight. Visual only.
+   */
+  z: number;
 };
 
 export type Item =
   | { id: number; kind: "medkit"; pos: Vec2 }
   | { id: number; kind: "upgrade"; pos: Vec2 }
-  | { id: number; kind: "equipment"; pos: Vec2; equipment: Equipment };
+  | { id: number; kind: "equipment"; pos: Vec2; equipment: Equipment }
+  /** A time-limited power pickup; `defId` keys into ABILITY_DEFS. */
+  | { id: number; kind: "ability"; pos: Vec2; defId: string };
 
 /** A decorative feature scattered at level creation — rendered, no collision. */
 export type Decor = {
@@ -164,6 +192,11 @@ export type GameEvent =
   | { type: "playerHurt"; crit: boolean }
   | { type: "itemCollected"; kind: Item["kind"]; tier?: Tier }
   | { type: "itemDropped"; pos: Vec2 }
+  /** A storm ability bolt struck at `pos` (drives the flash + crack). */
+  | { type: "lightning"; pos: Vec2 }
+  /** An ability pickup kicked in (or refreshed its timer). */
+  | { type: "abilityStarted"; defId: string }
+  | { type: "abilityEnded"; defId: string }
   | { type: "levelUp"; level: number }
   | { type: "bossDefeated"; pos: Vec2 }
   | { type: "victory" }
@@ -177,6 +210,13 @@ export type GameInput = {
   target: Vec2;
   /** True on the step a jump was requested (tap / space edge, not hold). */
   jump: boolean;
+  /**
+   * The world rect currently on screen (the camera view). When set, the
+   * auto-weapon only targets monsters inside it — the character never
+   * shoots at enemies the player cannot see yet. Absent (headless tests,
+   * bots) targeting falls back to weapon range alone.
+   */
+  view?: { x: number; y: number; width: number; height: number };
 };
 
 /** Static facts about the running level, snapshotted from its LevelDef. */
@@ -219,6 +259,18 @@ export type GameState = {
    * exhausted; empty when the level has no waves.
    */
   waveSpawned: number[];
+  /**
+   * World px the player has walked that the spawner hasn't converted into
+   * monsters yet — moving through the level stirs more of the horde awake
+   * (waves.moveSpawnEvery px each).
+   */
+  moveSpawnCredit: number;
+  /**
+   * Kill count at which the level's guaranteed early weapon drops (rolled
+   * at creation from loot.earlyWeapon); null once dropped or when the level
+   * has none.
+   */
+  earlyWeaponAtKills: number | null;
   stats: GameStats;
   /** Events emitted by the most recent `step()`. */
   events: GameEvent[];

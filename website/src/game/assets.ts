@@ -11,6 +11,7 @@ import armstrong1Url from "./assets/armstrong_1.png";
 import boltUrl from "./assets/bolt.png";
 import craterBigUrl from "./assets/crater_big.png";
 import craterSmallUrl from "./assets/crater_small.png";
+import fireballUrl from "./assets/fireball.png";
 import flagUrl from "./assets/flag.png";
 import fontMeta from "./assets/font.json";
 import fontUrl from "./assets/font.png";
@@ -20,9 +21,18 @@ import gravel0Url from "./assets/gravel_0.png";
 import gravel1Url from "./assets/gravel_1.png";
 import iconBlasterUrl from "./assets/icon_blaster.png";
 import iconCharmUrl from "./assets/icon_charm.png";
+import iconFireOrbsUrl from "./assets/icon_fire_orbs.png";
+import iconHammerUrl from "./assets/icon_hammer.png";
 import iconMacheteUrl from "./assets/icon_machete.png";
 import iconMoonsBladeUrl from "./assets/icon_moons_blade.png";
+import iconPipeUrl from "./assets/icon_pipe.png";
+import iconPistolUrl from "./assets/icon_pistol.png";
+import iconRifleUrl from "./assets/icon_rifle.png";
+import iconStarWandUrl from "./assets/icon_star_wand.png";
+import iconStasisUrl from "./assets/icon_stasis.png";
+import iconStormUrl from "./assets/icon_storm.png";
 import iconSuitUrl from "./assets/icon_suit.png";
+import iconVoidWandUrl from "./assets/icon_void_wand.png";
 import iconWandUrl from "./assets/icon_wand.png";
 import iconWrenchUrl from "./assets/icon_wrench.png";
 import landerUrl from "./assets/lander.png";
@@ -47,6 +57,7 @@ const SPRITE_URLS = {
   bolt: boltUrl,
   crater_big: craterBigUrl,
   crater_small: craterSmallUrl,
+  fireball: fireballUrl,
   flag: flagUrl,
   ghost_0: ghost0Url,
   ghost_1: ghost1Url,
@@ -54,9 +65,18 @@ const SPRITE_URLS = {
   gravel_1: gravel1Url,
   icon_blaster: iconBlasterUrl,
   icon_charm: iconCharmUrl,
+  icon_fire_orbs: iconFireOrbsUrl,
+  icon_hammer: iconHammerUrl,
   icon_machete: iconMacheteUrl,
   icon_moons_blade: iconMoonsBladeUrl,
+  icon_pipe: iconPipeUrl,
+  icon_pistol: iconPistolUrl,
+  icon_rifle: iconRifleUrl,
+  icon_star_wand: iconStarWandUrl,
+  icon_stasis: iconStasisUrl,
+  icon_storm: iconStormUrl,
   icon_suit: iconSuitUrl,
+  icon_void_wand: iconVoidWandUrl,
   icon_wand: iconWandUrl,
   icon_wrench: iconWrenchUrl,
   lander: landerUrl,

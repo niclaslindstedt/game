@@ -6,7 +6,13 @@
 // landmarks → items → projectiles → enemies → player (shadow, jump height)
 // → hurt flash.
 
-import { enemyDef, equipmentIcon, type GameState } from "@game/core";
+import {
+  abilityDef,
+  enemyDef,
+  equipmentIcon,
+  orbPositions,
+  type GameState,
+} from "@game/core";
 
 import { spriteByName, type GameAssets, type Sprites } from "./assets.ts";
 import { TIER_COLORS } from "./tiers.ts";
@@ -135,8 +141,11 @@ export function drawFrame(
         ? sprites.medkit
         : item.kind === "upgrade"
           ? sprites.upgrade
-          : (spriteByName(sprites, equipmentIcon(item.equipment.defId)) ??
-            sprites.medkit);
+          : item.kind === "ability"
+            ? (spriteByName(sprites, abilityDef(item.defId).icon) ??
+              sprites.medkit)
+            : (spriteByName(sprites, equipmentIcon(item.equipment.defId)) ??
+              sprites.medkit);
     const x = Math.round(item.pos.x - sprite.width / 2 - camera.x);
     const y = Math.round(item.pos.y - sprite.height / 2 - camera.y);
     // Dropped equipment glints in its tier color so rarity reads from afar.
@@ -155,10 +164,13 @@ export function drawFrame(
   for (const projectile of state.projectiles) {
     const sprite =
       projectile.weaponClass === "magic" ? sprites.spark : sprites.bolt;
+    // Shots fired mid-jump draw at their height, sinking back in flight.
     ctx.drawImage(
       sprite,
       Math.round(projectile.pos.x - sprite.width / 2 - camera.x),
-      Math.round(projectile.pos.y - sprite.height / 2 - camera.y),
+      Math.round(
+        projectile.pos.y - sprite.height / 2 - camera.y - projectile.z,
+      ),
     );
   }
 
@@ -186,12 +198,91 @@ export function drawFrame(
     }
   }
 
+  drawAbilities(ctx, state, assets, camera, timeMs);
   drawPlayer(ctx, state, assets, camera, timeMs);
 
   // Red flash while recently hurt.
   if (state.player.hurtFlashMs > 0) {
     ctx.fillStyle = `rgba(216, 58, 58, ${(0.25 * state.player.hurtFlashMs) / 250})`;
     ctx.fillRect(0, 0, view.width, view.height);
+  }
+}
+
+/**
+ * Running ability visuals: stasis draws its slow-field ring, orbit abilities
+ * draw their fireballs at the engine's own orb positions.
+ */
+function drawAbilities(
+  ctx: CanvasRenderingContext2D,
+  state: GameState,
+  assets: GameAssets,
+  camera: Camera,
+  timeMs: number,
+): void {
+  const player = state.player;
+  for (const ability of player.abilities) {
+    const def = abilityDef(ability.defId);
+
+    if (def.stasis) {
+      // A faint pulsing ring marks the field's slowing reach.
+      const pulse = 0.18 + 0.08 * Math.sin(timeMs / 220);
+      ctx.strokeStyle = `rgba(140, 205, 215, ${pulse})`;
+      ctx.beginPath();
+      ctx.arc(
+        Math.round(player.pos.x - camera.x),
+        Math.round(player.pos.y - camera.y),
+        def.stasis.radius,
+        0,
+        Math.PI * 2,
+      );
+      ctx.stroke();
+    }
+
+    if (def.orbit) {
+      const sprite =
+        spriteByName(assets.sprites, def.orbit.sprite) ??
+        assets.sprites.fireball;
+      for (const orb of orbPositions(player, ability)) {
+        ctx.drawImage(
+          sprite,
+          Math.round(orb.x - sprite.width / 2 - camera.x),
+          Math.round(orb.y - sprite.height / 2 - camera.y),
+        );
+      }
+    }
+  }
+}
+
+/**
+ * Transient app-side effects (the storm's lightning strikes). GameScreen
+ * accumulates them from engine events and passes what is still alive.
+ */
+export type Effect = {
+  kind: "lightning";
+  pos: { x: number; y: number };
+  untilMs: number;
+};
+
+export function drawEffects(
+  ctx: CanvasRenderingContext2D,
+  effects: readonly Effect[],
+  camera: Camera,
+  timeMs: number,
+): void {
+  for (const effect of effects) {
+    if (timeMs > effect.untilMs) continue;
+    const x = Math.round(effect.pos.x - camera.x);
+    const groundY = Math.round(effect.pos.y - camera.y);
+    // A jagged bolt from the sky to the strike point, plus a hot flash.
+    ctx.strokeStyle = "#ffd75e";
+    ctx.beginPath();
+    ctx.moveTo(x + 6, Math.max(0, groundY - 90));
+    ctx.lineTo(x - 3, groundY - 55);
+    ctx.lineTo(x + 4, groundY - 30);
+    ctx.lineTo(x, groundY);
+    ctx.stroke();
+    ctx.fillStyle = "rgba(255, 245, 200, 0.9)";
+    ctx.fillRect(x - 2, groundY - 2, 4, 4);
   }
 }
 
@@ -225,7 +316,7 @@ function drawPlayer(
   // Blink during the post-hit flash so damage is legible on the character.
   if (player.hurtFlashMs > 0 && Math.floor(timeMs / 60) % 2 === 0) return;
 
-  if (player.facing.x < 0) {
+  if (player.faceLeft) {
     ctx.save();
     ctx.translate(x + TILE, y);
     ctx.scale(-1, 1);

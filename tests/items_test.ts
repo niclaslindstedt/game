@@ -10,6 +10,7 @@ import {
   equipFromInventory,
   equipmentName,
   GEAR_DEFS,
+  LEVELS,
   LOOT,
   moveInventoryItem,
   rollEquipment,
@@ -117,10 +118,9 @@ describe("ghost drops", () => {
     expect(state.items.length).toBeGreaterThan(0);
   });
 
-  it("killing every regular monster yields the equipment minimum plus the trophy", () => {
+  it("killing every regular monster yields the equipment minimum", () => {
     // Three 1-hp minions can miss their rolls at most once: the pity rule
-    // must still land at least LOOT.minEquipmentPerLevel equipment drops,
-    // and the last mob standing surrenders the MOON'S BLADE on top.
+    // must still land at least LOOT.minEquipmentPerLevel equipment drops.
     for (const seed of [1, 2, 3, 4, 5]) {
       const state = startGame(seed);
       clearStage(state); // only the parked boss remains
@@ -137,14 +137,38 @@ describe("ghost drops", () => {
       }
       run(state, idle, 5000, (s) => s.enemies.length === 1);
       const equipment = state.items.filter((i) => i.kind === "equipment");
-      const blades = equipment.filter(
-        (i) => i.kind === "equipment" && i.equipment.defId === "moons_blade",
-      );
-      expect(blades).toHaveLength(1);
-      expect(equipment.length - blades.length).toBeGreaterThanOrEqual(
+      expect(equipment.length).toBeGreaterThanOrEqual(
         LOOT.minEquipmentPerLevel,
       );
     }
+  });
+});
+
+describe("the guaranteed early weapon", () => {
+  it("rolls its drop kill inside the configured window", () => {
+    const early = LEVELS.moon!.loot.earlyWeapon!;
+    for (const seed of [1, 2, 3, 4, 5, 99]) {
+      const state = startGame(seed);
+      expect(state.earlyWeaponAtKills).toBeGreaterThanOrEqual(early.minKills);
+      expect(state.earlyWeaponAtKills).toBeLessThanOrEqual(early.maxKills);
+    }
+  });
+
+  it("surrenders MOON'S BLADE on the rolled kill, exactly once", () => {
+    const state = startGame();
+    clearStage(state);
+    state.items = [];
+    // One kill away from the rolled count: the next death pays out.
+    state.stats.kills = state.earlyWeaponAtKills! - 1;
+    state.enemies.push(
+      makeEnemy({ pos: { x: state.player.pos.x + 60, y: state.player.pos.y } }),
+    );
+    run(state, idle, 2000, (s) => s.enemies.length === 1);
+    const blades = state.items.filter(
+      (i) => i.kind === "equipment" && i.equipment.defId === "moons_blade",
+    );
+    expect(blades).toHaveLength(1);
+    expect(state.earlyWeaponAtKills).toBeNull(); // never a second one
   });
 });
 
