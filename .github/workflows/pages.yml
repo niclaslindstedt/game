@@ -43,6 +43,11 @@ permissions:
   contents: write
   pages: write
   id-token: write
+  # npm ci resolves @niclaslindstedt/oss-framework from GitHub Packages.
+  # Without this, the GITHUB_PAT fallback to `github.token` (see env) has
+  # no package-read scope — the explicit permissions block denies
+  # everything unlisted — and `npm ci` 403s whenever the npm cache is cold.
+  packages: read
 
 concurrency:
   group: pages
