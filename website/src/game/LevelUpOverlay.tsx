@@ -19,6 +19,7 @@ const CHOICES: { stat: StatName; label: string; blurb: string }[] = [
   { stat: "strength", label: "STRENGTH", blurb: "MELEE DAMAGE" },
   { stat: "dexterity", label: "DEXTERITY", blurb: "RANGED DAMAGE" },
   { stat: "intelligence", label: "INTELLECT", blurb: "MAGIC DAMAGE" },
+  { stat: "speed", label: "SPEED", blurb: "MOVE SPEED" },
   { stat: "luck", label: "LUCK", blurb: "CRITS + LOOT" },
 ];
 

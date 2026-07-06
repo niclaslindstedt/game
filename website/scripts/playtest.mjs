@@ -10,8 +10,10 @@
 //   node scripts/playtest.mjs [--url http://localhost:5199] [--strategy kite|rush|boss|idle] [--timeout 120]
 //
 // Strategies: `kite` circles the nearest ghost at weapon range, `rush` walks
-// straight into it, `boss` beelines for the flag and fights ARMSTRONG (the
-// only strategy that can reach victory), `idle` stands there and dies.
+// straight into it, `boss` beelines for the flag and fights ARMSTRONG,
+// `survivor` plays the horde properly — flees the pack's centroid, detours
+// through pickups, and pushes for the boss once levelled (the strategy that
+// should win), `idle` stands there and dies.
 //
 // Playwright is intentionally NOT a dependency of this repo; install it
 // ephemerally when playtesting: `npm install --no-save playwright`.
@@ -71,6 +73,7 @@ const snapshot = () =>
         defId: e.defId,
         hp: e.hp,
       })),
+      items: g.items.map((i) => ({ x: i.pos.x, y: i.pos.y, kind: i.kind })),
       flag: g.landmarks.find((l) => l.kind === "flag")?.pos ?? null,
       level_: g.level,
       stats: g.stats,
@@ -109,12 +112,12 @@ async function steerToward(wx, wy) {
 
 /** Spend banked level-up points; the run stays paused until they're spent. */
 async function handleLevelUp() {
-  // A simple build: pump DEX (the starting blaster scales with it), then HP.
-  const order = ["stat-dexterity", "stat-health", "stat-luck"];
   for (let i = 0; i < 10; i++) {
     const s = await snapshot();
     if (s.phase !== "levelup") return;
-    const label = order[Math.min(i, order.length - 1)];
+    // Alternate DEX (the starting blaster scales with it) and HEALTH —
+    // horde play needs the damage AND the hp to wade through the pack.
+    const label = s.level % 2 === 0 ? "stat-dexterity" : "stat-health";
     await page.mouse.up();
     await page.getByRole("button", { name: label }).click();
     await page.waitForTimeout(100);
@@ -128,6 +131,24 @@ const nearest = (s) =>
     return da < db ? a : b;
   });
 
+/** Steer to `boss`-strategy targets: beeline the flag, kite ARMSTRONG. */
+async function pushBoss(s) {
+  const boss = s.enemies.find((e) => e.defId === "armstrong");
+  const target = boss ?? s.flag;
+  if (!target) return;
+  const dx = s.player.x - target.x;
+  const dy = s.player.y - target.y;
+  const d = Math.hypot(dx, dy) || 1;
+  if (d > 240) {
+    await steerToward(target.x, target.y);
+  } else {
+    await steerToward(
+      Math.min(s.level_.width - 20, Math.max(20, target.x + (dx / d) * 180)),
+      Math.min(s.level_.height - 20, Math.max(20, target.y + (dy / d) * 180)),
+    );
+  }
+}
+
 /** One steering decision per tick, by strategy. */
 async function act(s) {
   if (s.enemies.length === 0 || strategy === "idle") return;
@@ -136,22 +157,44 @@ async function act(s) {
     await steerToward(n.x, n.y);
     return;
   }
+  if (strategy === "survivor") {
+    // Competent horde play: levelled and armed → go end it at the flag
+    // before the flood peaks, hopping over the pack (airborne = untouchable).
+    if (s.level >= 6) {
+      if (s.player.z === 0) await page.keyboard.press("Space");
+      await pushBoss(s);
+      return;
+    }
+    // A pickup nearby with breathing room → scoop it up.
+    const n = nearest(s);
+    const nd = Math.hypot(n.x - s.player.x, n.y - s.player.y);
+    const item = s.items
+      .map((i) => ({ ...i, d: Math.hypot(i.x - s.player.x, i.y - s.player.y) }))
+      .sort((a, b) => a.d - b.d)[0];
+    if (item && item.d < 240 && nd > 60) {
+      await steerToward(item.x, item.y);
+      return;
+    }
+    // Otherwise flee the centroid of the local pack, not just one ghost —
+    // the ring spawner punishes tunnel vision.
+    const near = s.enemies.filter(
+      (e) => Math.hypot(e.x - s.player.x, e.y - s.player.y) < 300,
+    );
+    if (near.length === 0) return;
+    const cx = near.reduce((sum, e) => sum + e.x, 0) / near.length;
+    const cy = near.reduce((sum, e) => sum + e.y, 0) / near.length;
+    const dx = s.player.x - cx;
+    const dy = s.player.y - cy;
+    const d = Math.hypot(dx, dy) || 1;
+    await steerToward(
+      Math.min(s.level_.width - 20, Math.max(20, s.player.x + (dx / d) * 200)),
+      Math.min(s.level_.height - 20, Math.max(20, s.player.y + (dy / d) * 200)),
+    );
+    return;
+  }
   if (strategy === "boss") {
     // Beeline for the flag; once the boss is close, kite him instead.
-    const boss = s.enemies.find((e) => e.defId === "armstrong");
-    const target = boss ?? s.flag;
-    if (!target) return;
-    const dx = s.player.x - target.x;
-    const dy = s.player.y - target.y;
-    const d = Math.hypot(dx, dy) || 1;
-    if (d > 240) {
-      await steerToward(target.x, target.y);
-    } else {
-      await steerToward(
-        Math.min(s.level_.width - 20, Math.max(20, target.x + (dx / d) * 180)),
-        Math.min(s.level_.height - 20, Math.max(20, target.y + (dy / d) * 180)),
-      );
-    }
+    await pushBoss(s);
     return;
   }
   // kite: hold ~180 world units off the nearest ghost — inside blaster range

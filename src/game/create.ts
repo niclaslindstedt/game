@@ -67,6 +67,13 @@ export function createGame(
 
   const decor = scatterDecor(rng, def);
 
+  // The wave budget is part of the level's population from the start — the
+  // HUD's "ghosts N/total" counts the whole haunting, not just the placed few.
+  const waveTotal = (def.waves?.budget ?? []).reduce(
+    (sum, entry) => sum + entry.count,
+    0,
+  );
+
   return {
     phase: "intro",
     level: {
@@ -99,6 +106,7 @@ export function createGame(
         strength: 0,
         dexterity: 0,
         intelligence: 0,
+        speed: 0,
         luck: 0,
       },
       equipment: {
@@ -120,9 +128,11 @@ export function createGame(
     items: [],
     decor,
     victoryCountdownMs: null,
+    minionEquipmentDrops: 0,
+    waveSpawned: (def.waves?.budget ?? []).map(() => 0),
     stats: {
       kills: 0,
-      totalEnemies: enemies.length,
+      totalEnemies: enemies.length + waveTotal,
       shotsFired: 0,
       damageDealt: 0,
       damageTaken: 0,
@@ -136,7 +146,13 @@ export function createGame(
   };
 }
 
-function spawnEnemy(defId: string, pos: Vec2, rng: Rng, id: number): Enemy {
+/** Mint one enemy instance (also used by the wave spawner in step.ts). */
+export function spawnEnemy(
+  defId: string,
+  pos: Vec2,
+  rng: Rng,
+  id: number,
+): Enemy {
   const def = enemyDef(defId);
   const jitter =
     def.role === "boss"

@@ -3,10 +3,10 @@
 // mutates the state in place and records what happened in `state.events` so
 // the app layer can play sounds and flash effects. Order per step: player
 // steering + jump physics → weapon auto-attack → projectiles → enemies
-// (aggro, boss guard AI, contact damage) → item pickups → objective check →
-// win/lose. Kills grant XP proportional to the victim's max hp; level-ups
-// pause the run in the `levelup` phase until `allocateStat` spends the
-// point(s).
+// (aggro, boss guard AI, contact damage) → wave spawner (the escalating
+// horde) → item pickups → objective check → win/lose. Kills grant XP
+// proportional to the victim's max hp; level-ups pause the run in the
+// `levelup` phase until `allocateStat` spends the point(s).
 
 import {
   clamp,
@@ -26,6 +26,7 @@ import {
   RUN,
   STATS,
 } from "./config.ts";
+import { spawnEnemy } from "./create.ts";
 import { enemyDef, type EnemyDef } from "./defs/enemies.ts";
 import { weaponDef } from "./defs/equipment.ts";
 import { levelDef } from "./defs/levels.ts";
@@ -34,6 +35,7 @@ import {
   dropChance,
   enemyCritChance,
   playerCritChance,
+  playerSpeed,
   rollEquipment,
   weaponDamage,
 } from "./items.ts";
@@ -51,6 +53,7 @@ export function step(state: GameState, input: GameInput, dtMs: number): void {
   stepWeapon(state, dtMs);
   stepProjectiles(state, dt, dtMs);
   stepEnemies(state, dt, dtMs);
+  stepSpawner(state);
   stepItems(state);
 
   if (state.player.hp <= 0) {
@@ -78,8 +81,86 @@ export function step(state: GameState, input: GameInput, dtMs: number): void {
 /** Has the level's objective been met? */
 function objectiveCleared(state: GameState): boolean {
   const objective = levelDef(state.level.id).objective;
-  if (objective.type === "clearAll") return state.enemies.length === 0;
+  if (objective.type === "clearAll") {
+    return state.enemies.length === 0 && unspawnedMinions(state) === 0;
+  }
   return !state.enemies.some((e) => enemyDef(e.defId).role === "boss");
+}
+
+/** Monsters still owed by the wave budget but not yet streamed in. */
+function unspawnedMinions(state: GameState): number {
+  const waves = levelDef(state.level.id).waves;
+  if (!waves) return 0;
+  return waves.budget.reduce(
+    (sum, entry, i) => sum + entry.count - (state.waveSpawned[i] ?? 0),
+    0,
+  );
+}
+
+/**
+ * The horde spawner: each wave-budget line streams its count in over its
+ * time window, eased quadratically so a level opens with a few strays and
+ * ends in an overwhelming flood. Spawns land in a ring just outside the
+ * player's view and give chase at once; the live cap defers (never cancels)
+ * what the field can't hold.
+ */
+function stepSpawner(state: GameState): void {
+  const waves = levelDef(state.level.id).waves;
+  if (!waves) return;
+
+  let alive = 0;
+  for (const enemy of state.enemies) {
+    if (enemyDef(enemy.defId).role !== "boss") alive++;
+  }
+
+  const t = state.stats.timeMs;
+  for (let i = 0; i < waves.budget.length; i++) {
+    const entry = waves.budget[i] as (typeof waves.budget)[number];
+    const spawned = state.waveSpawned[i] ?? 0;
+    if (spawned >= entry.count) continue;
+
+    const start = entry.window[0] * waves.rampDurationMs;
+    const end = entry.window[1] * waves.rampDurationMs;
+    const progress = clamp((t - start) / Math.max(1, end - start), 0, 1);
+    const eased = progress * progress;
+    let due = Math.floor(entry.count * eased) - spawned;
+
+    while (due-- > 0 && alive < waves.maxAlive) {
+      if (!spawnWaveEnemy(state, entry.enemy)) return;
+      state.waveSpawned[i] = (state.waveSpawned[i] ?? 0) + 1;
+      alive++;
+    }
+  }
+}
+
+/**
+ * Drop one wave monster into the spawn ring around the player. Near a wall
+ * the clamped ring can collapse onto the player — rejection-sample a few
+ * angles and defer the spawn (false) rather than place an unfair one.
+ */
+function spawnWaveEnemy(state: GameState, defId: string): boolean {
+  const def = enemyDef(defId);
+  for (let attempts = 0; attempts < 8; attempts++) {
+    const angle = state.rng() * Math.PI * 2;
+    const ring =
+      ENEMY_AI.minSpawnDistance + state.rng() * ENEMY_AI.spawnRingWidth;
+    const pos = {
+      x: clamp(
+        state.player.pos.x + Math.cos(angle) * ring,
+        def.radius,
+        state.level.width - def.radius,
+      ),
+      y: clamp(
+        state.player.pos.y + Math.sin(angle) * ring,
+        def.radius,
+        state.level.height - def.radius,
+      ),
+    };
+    if (distance(pos, state.player.pos) < ENEMY_AI.minSpawnDistance) continue;
+    state.enemies.push(spawnEnemy(defId, pos, state.rng, state.nextId++));
+    return true;
+  }
+  return false;
 }
 
 function stepPlayer(
@@ -97,7 +178,7 @@ function stepPlayer(
     distance(player.pos, input.target) > PLAYER.arriveRadius
   ) {
     const before = player.pos;
-    const next = moveToward(player.pos, input.target, PLAYER.speed * dt);
+    const next = moveToward(player.pos, input.target, playerSpeed(state) * dt);
     player.facing = direction(before, input.target);
     player.pos = next;
     player.moving = true;
@@ -214,26 +295,63 @@ function hitEnemy(state: GameState, enemy: Enemy, baseDamage: number): void {
 
   if (def.loot) {
     dropGuaranteedLoot(state, def, enemy.pos);
-  } else if (state.rng() < dropChance(state)) {
-    // Regular monsters sometimes leave something behind; LUCK widens the
-    // odds and sweetens the tier roll.
-    const pos = { ...enemy.pos };
-    if (state.rng() < LOOT.equipmentShare) {
-      state.items.push({
-        id: state.nextId++,
-        kind: "equipment",
-        pos,
-        equipment: rollEquipment(state),
-      });
-    } else {
-      state.items.push({ id: state.nextId++, kind: "medkit", pos });
-    }
-    state.events.push({ type: "itemDropped", pos });
+  } else {
+    dropMinionLoot(state, enemy.pos);
   }
 
   if (def.role === "boss") {
     state.events.push({ type: "bossDefeated", pos: { ...enemy.pos } });
   }
+}
+
+/**
+ * A dead regular monster's drop roll: LUCK widens the odds, the loot shares
+ * split what falls between equipment, weapon upgrades, and medkits — and a
+ * pity rule forces equipment whenever the monsters left alive couldn't
+ * otherwise cover the level's guaranteed minimum.
+ */
+function dropMinionLoot(state: GameState, at: Vec2): void {
+  const remaining =
+    state.enemies.filter((e) => enemyDef(e.defId).role !== "boss").length +
+    unspawnedMinions(state);
+
+  // The last regular monster standing surrenders the level's trophy weapon.
+  const trophy = levelDef(state.level.id).loot.allClearWeapon;
+  if (remaining === 0 && trophy) {
+    const pos = { x: at.x + 12, y: at.y };
+    state.items.push({
+      id: state.nextId++,
+      kind: "equipment",
+      pos,
+      equipment: rollEquipment(state, {
+        defId: trophy,
+        tierBonus: LOOT.allClearTierBonus,
+      }),
+    });
+    state.events.push({ type: "itemDropped", pos: { ...pos } });
+  }
+
+  const owed = LOOT.minEquipmentPerLevel - state.minionEquipmentDrops;
+  const forced = owed > remaining;
+
+  if (!forced && state.rng() >= dropChance(state)) return;
+
+  const pos = { ...at };
+  const roll = state.rng();
+  if (forced || roll < LOOT.equipmentShare) {
+    state.minionEquipmentDrops++;
+    state.items.push({
+      id: state.nextId++,
+      kind: "equipment",
+      pos,
+      equipment: rollEquipment(state),
+    });
+  } else if (roll < LOOT.equipmentShare + LOOT.upgradeShare) {
+    state.items.push({ id: state.nextId++, kind: "upgrade", pos });
+  } else {
+    state.items.push({ id: state.nextId++, kind: "medkit", pos });
+  }
+  state.events.push({ type: "itemDropped", pos });
 }
 
 /** Bosses always pay out: their def pins the drops, scattered around them. */
@@ -244,6 +362,14 @@ function dropGuaranteedLoot(state: GameState, def: EnemyDef, at: Vec2): void {
     x: clamp(at.x + (state.rng() - 0.5) * 90, 16, state.level.width - 16),
     y: clamp(at.y + (state.rng() - 0.5) * 90, 16, state.level.height - 16),
   });
+  for (const defId of loot.items ?? []) {
+    state.items.push({
+      id: state.nextId++,
+      kind: "equipment",
+      pos: scatter(),
+      equipment: rollEquipment(state, { defId, tierBonus: loot.tierBonus }),
+    });
+  }
   const drops: ("weapon" | "gear")[] = [
     ...Array<"weapon">(loot.weapons).fill("weapon"),
     ...Array<"gear">(loot.gear).fill("gear"),
@@ -255,6 +381,9 @@ function dropGuaranteedLoot(state: GameState, def: EnemyDef, at: Vec2): void {
       pos: scatter(),
       equipment: rollEquipment(state, { slot, tierBonus: loot.tierBonus }),
     });
+  }
+  for (let i = 0; i < loot.upgrades; i++) {
+    state.items.push({ id: state.nextId++, kind: "upgrade", pos: scatter() });
   }
   for (let i = 0; i < loot.medkits; i++) {
     state.items.push({ id: state.nextId++, kind: "medkit", pos: scatter() });
@@ -315,23 +444,7 @@ function stepEnemies(state: GameState, dt: number, dtMs: number): void {
     moveEnemy(state, enemy, dt);
   }
 
-  // Push overlapping monsters apart so packs spread instead of collapsing
-  // into a single stacked blob. O(n²) is fine for a few dozen enemies.
-  for (let i = 0; i < state.enemies.length; i++) {
-    for (let j = i + 1; j < state.enemies.length; j++) {
-      const a = state.enemies[i];
-      const b = state.enemies[j];
-      if (!a || !b) continue;
-      const d = distance(a.pos, b.pos);
-      if (d >= ENEMY_AI.separation || d === 0) continue;
-      const push = (ENEMY_AI.separation - d) / 2;
-      const dir = direction(a.pos, b.pos);
-      a.pos.x -= dir.x * push;
-      a.pos.y -= dir.y * push;
-      b.pos.x += dir.x * push;
-      b.pos.y += dir.y * push;
-    }
-  }
+  separateEnemies(state);
 
   for (const enemy of state.enemies) {
     const def = enemyDef(enemy.defId);
@@ -361,6 +474,55 @@ function stepEnemies(state: GameState, dt: number, dtMs: number): void {
       enemy.contactCooldownMs = def.contactCooldownMs;
       state.stats.damageTaken += damage;
       state.events.push({ type: "playerHurt", crit });
+    }
+  }
+}
+
+// Spatial hash reused across steps: at horde scale (hundreds alive) the old
+// all-pairs separation is the tick's hotspot, and reusing the map keeps
+// per-tick allocation down to the bucket arrays.
+const separationGrid = new Map<number, Enemy[]>();
+
+/**
+ * Push overlapping monsters apart so packs spread instead of collapsing
+ * into a single stacked blob. Neighbors are found through a uniform grid
+ * (cell = separation distance): any pair closer than one cell shares a
+ * cell or sits in adjacent ones, so only those pairs are tested.
+ */
+function separateEnemies(state: GameState): void {
+  const cell = ENEMY_AI.separation;
+  // Level width caps near a few thousand px, so cell columns stay < 2¹⁶
+  // and this key never collides.
+  const keyOf = (x: number, y: number) =>
+    Math.floor(x / cell) * 65536 + Math.floor(y / cell);
+
+  separationGrid.clear();
+  for (const enemy of state.enemies) {
+    const key = keyOf(enemy.pos.x, enemy.pos.y);
+    const bucket = separationGrid.get(key);
+    if (bucket) bucket.push(enemy);
+    else separationGrid.set(key, [enemy]);
+  }
+
+  for (const a of state.enemies) {
+    const kx = Math.floor(a.pos.x / cell);
+    const ky = Math.floor(a.pos.y / cell);
+    for (let dx = -1; dx <= 1; dx++) {
+      for (let dy = -1; dy <= 1; dy++) {
+        const bucket = separationGrid.get((kx + dx) * 65536 + (ky + dy));
+        if (!bucket) continue;
+        for (const b of bucket) {
+          if (b.id <= a.id) continue; // handle each pair once
+          const d = distance(a.pos, b.pos);
+          if (d >= cell || d === 0) continue;
+          const push = (cell - d) / 2;
+          const dir = direction(a.pos, b.pos);
+          a.pos.x -= dir.x * push;
+          a.pos.y -= dir.y * push;
+          b.pos.x += dir.x * push;
+          b.pos.y += dir.y * push;
+        }
+      }
     }
   }
 }
@@ -410,6 +572,15 @@ function stepItems(state: GameState): void {
       player.hp = Math.min(player.maxHp, player.hp + MEDKIT.heal);
       state.stats.itemsCollected++;
       state.events.push({ type: "itemCollected", kind: "medkit" });
+      return false;
+    }
+
+    // Upgrades sharpen whatever weapon is in hand, permanently.
+    if (item.kind === "upgrade") {
+      const weapon = player.equipment.weapon;
+      weapon.upgrades = (weapon.upgrades ?? 0) + 1;
+      state.stats.itemsCollected++;
+      state.events.push({ type: "itemCollected", kind: "upgrade" });
       return false;
     }
 

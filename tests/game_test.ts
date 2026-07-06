@@ -9,6 +9,7 @@ import {
   allocateStat,
   createGame,
   dismissIntro,
+  ENEMY_AI,
   ENEMY_DEFS,
   enemyDef,
   JUMP,
@@ -28,6 +29,7 @@ import {
   SEED,
   startGame,
   steerTo,
+  stopWaves,
 } from "./helpers.ts";
 
 const MOON = LEVELS.moon!;
@@ -115,7 +117,7 @@ describe("steering", () => {
   it("clamps the player inside the finite level", () => {
     const state = startGame();
     clearStage(state);
-    run(state, steerTo(-5000, -5000), 900);
+    run(state, steerTo(-5000, -5000), 1800);
     expect(state.player.pos.x).toBe(PLAYER.radius);
     expect(state.player.pos.y).toBe(PLAYER.radius);
   });
@@ -157,7 +159,12 @@ describe("jumping", () => {
     step(state, jumpOnce, DT);
     run(state, idle, 100, (s) => s.player.z > JUMP.dodgeHeight + 10);
     expect(state.player.z).toBeGreaterThan(JUMP.dodgeHeight);
-    const ghost = makeEnemy({ pos: { ...state.player.pos } });
+    // Unkillable so the auto-blaster can't clear it before the landing.
+    const ghost = makeEnemy({
+      pos: { ...state.player.pos },
+      hp: 1_000_000,
+      maxHp: 1_000_000,
+    });
     state.enemies.push(ghost);
     step(state, idle, DT);
     expect(state.stats.damageTaken).toBe(0);
@@ -195,6 +202,7 @@ describe("weapon", () => {
 
   it("kills a monster after enough hits and records the kill", () => {
     const state = startGame();
+    stopWaves(state);
     state.enemies = [
       makeEnemy({ pos: { x: state.player.pos.x + 80, y: state.player.pos.y } }),
     ];
@@ -250,6 +258,7 @@ describe("enemy AI", () => {
 
   it("deals contact damage with a cooldown", () => {
     const state = startGame();
+    stopWaves(state);
     state.enemies = [
       makeEnemy({
         pos: { x: state.player.pos.x + 40, y: state.player.pos.y },
@@ -265,6 +274,12 @@ describe("enemy AI", () => {
     // Immediately after a hit the cooldown must block a second hit.
     step(state, idle, DT);
     expect(state.stats.damageTaken).toBe(taken);
+  });
+
+  it("is outpaced by the player: every monster is slower, even with jitter", () => {
+    for (const def of Object.values(ENEMY_DEFS)) {
+      expect(def.speed * (1 + ENEMY_AI.speedJitter)).toBeLessThan(PLAYER.speed);
+    }
   });
 
   it("keeps the boss guarding the flag until the player closes in", () => {
@@ -308,6 +323,7 @@ describe("win and lose", () => {
 
   it("ends in victory shortly after the boss falls", () => {
     const state = startGame();
+    stopWaves(state);
     const boss = state.enemies.find((e) => isBoss(e.defId))!;
     state.enemies = [boss];
     boss.hp = 1;

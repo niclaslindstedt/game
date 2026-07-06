@@ -20,9 +20,9 @@ import type { Vec2 } from "@game/lib/vec.ts";
 export type GamePhase =
   "intro" | "playing" | "levelup" | "inventory" | "victory" | "defeat";
 
-/** The five trainable stats, one point awarded per level-up. */
+/** The six trainable stats, one point awarded per level-up. */
 export type StatName =
-  "health" | "strength" | "dexterity" | "intelligence" | "luck";
+  "health" | "strength" | "dexterity" | "intelligence" | "speed" | "luck";
 
 export type WeaponClass = "melee" | "ranged" | "magic";
 
@@ -51,6 +51,11 @@ export type Equipment = {
   tier: Tier;
   /** Rolled bonuses; length is dictated by the tier. */
   affixes: Affix[];
+  /**
+   * Weapon-upgrade pickups applied to this piece (weapons only). They stick
+   * to the weapon that was held when the upgrade was collected.
+   */
+  upgrades?: number;
 };
 
 export type Player = {
@@ -117,6 +122,7 @@ export type Projectile = {
 
 export type Item =
   | { id: number; kind: "medkit"; pos: Vec2 }
+  | { id: number; kind: "upgrade"; pos: Vec2 }
   | { id: number; kind: "equipment"; pos: Vec2; equipment: Equipment };
 
 /** A decorative feature scattered at level creation — rendered, no collision. */
@@ -202,6 +208,17 @@ export type GameState = {
   decor: Decor[];
   /** Counts down once the objective clears; the level ends at 0. */
   victoryCountdownMs: number | null;
+  /**
+   * Equipment dropped by regular monsters so far — the pity counter behind
+   * LOOT.minEquipmentPerLevel (boss drops don't count toward it).
+   */
+  minionEquipmentDrops: number;
+  /**
+   * Monsters spawned so far per wave-budget line (indexed like the level's
+   * `waves.budget`). The spawner streams each line in until its count is
+   * exhausted; empty when the level has no waves.
+   */
+  waveSpawned: number[];
   stats: GameStats;
   /** Events emitted by the most recent `step()`. */
   events: GameEvent[];

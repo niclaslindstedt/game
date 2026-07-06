@@ -133,8 +133,10 @@ export function drawFrame(
     const sprite =
       item.kind === "medkit"
         ? sprites.medkit
-        : (spriteByName(sprites, equipmentIcon(item.equipment.defId)) ??
-          sprites.medkit);
+        : item.kind === "upgrade"
+          ? sprites.upgrade
+          : (spriteByName(sprites, equipmentIcon(item.equipment.defId)) ??
+            sprites.medkit);
     const x = Math.round(item.pos.x - sprite.width / 2 - camera.x);
     const y = Math.round(item.pos.y - sprite.height / 2 - camera.y);
     // Dropped equipment glints in its tier color so rarity reads from afar.
