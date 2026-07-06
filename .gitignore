@@ -18,6 +18,8 @@ coverage/
 website/node_modules/
 website/dist/
 website/src/generated/
+# Sprite previews for the pixel-assets iteration loop (regenerate on demand)
+website/assets-preview/
 
 # Generated docs
 docs/_build/

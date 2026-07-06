@@ -1,4 +1,4 @@
-.PHONY: build test lint fmt fmt-check shellcheck actionlint release clean docs website website-dev icons install
+.PHONY: build test lint fmt fmt-check shellcheck actionlint release clean docs website website-dev icons assets install
 
 build:
 	npm run build
@@ -43,3 +43,8 @@ website-dev:
 # Regenerate every raster icon + the OG card from website/public/icon.svg (§11.4.2).
 icons:
 	npm run icons
+
+# Regenerate in-game pixel assets (sprites, font atlas, previews) from their
+# programmatic sources — see the pixel-assets skill.
+assets:
+	npm run assets

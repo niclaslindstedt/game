@@ -7,9 +7,10 @@ An offline top-down survival scroller shooter that runs entirely in your browser
 [![Pages](https://github.com/niclaslindstedt/game/actions/workflows/pages.yml/badge.svg)](https://github.com/niclaslindstedt/game/actions/workflows/pages.yml)
 [![License: PolyForm Noncommercial](https://img.shields.io/badge/license-PolyForm%20Noncommercial%201.0.0-blue.svg)](LICENSE)
 
-> **Status: pre-gameplay scaffolding.** The project structure, build
-> pipeline, PWA shell, and GitHub Pages deployment are in place; the game
-> itself is not written yet.
+> **Status: first playable level.** Steer your character across a finite
+> grassy level, let the auto-firing blaster deal with the slimes, grab
+> medkits to stay alive, and clear every slime to win. Dying shows a run
+> summary with a retry button.
 
 ## Why?
 
@@ -32,6 +33,16 @@ The deployed game lives at **<https://niclaslindstedt.github.io/game/>**:
 | Production | `/game/`         | The latest release (or `main` until the first release)    |
 | Preview    | `/game/preview/` | The current `main`, on every push                         |
 | Branch     | `/game/branch/`  | A feature branch parked via the `pages` workflow dispatch |
+
+### How to play
+
+- **Hold** the pointer / your finger on the level: the character walks
+  toward it. Release to stop.
+- The character **fires by itself** at the nearest slime in range — your job
+  is positioning: kite the pack, don't let it surround you.
+- Walk over **medkits** to heal. Touching a slime hurts.
+- **Clear every slime** on the level to win; if your HP reaches zero the run
+  ends with a stats screen and a retry button.
 
 ### Install it as an app
 
@@ -70,26 +81,27 @@ make build         # typecheck everything and produce website/dist
 
 ## Usage
 
-| Command                               | Purpose                                                               |
-| ------------------------------------- | --------------------------------------------------------------------- |
-| `make build`                          | Typecheck the engine + app and build the deployable bundle            |
-| `make test`                           | Run the Vitest suite (`tests/*_test.ts`)                              |
-| `make lint`                           | ESLint + TypeScript over the whole repo, zero warnings                |
-| `make fmt` / `make fmt-check`         | Prettier format / verify                                              |
-| `make website-dev`                    | Local dev server for the game app                                     |
-| `make website`                        | Production build of the game app                                      |
-| `make icons`                          | Regenerate all PWA icons + the OG card from `website/public/icon.svg` |
-| `make shellcheck` / `make actionlint` | Lint shell scripts / workflow YAML                                    |
+| Command                               | Purpose                                                                                                     |
+| ------------------------------------- | ----------------------------------------------------------------------------------------------------------- |
+| `make build`                          | Typecheck the engine + app and build the deployable bundle                                                  |
+| `make test`                           | Run the Vitest suite (`tests/*_test.ts`)                                                                    |
+| `make lint`                           | ESLint + TypeScript over the whole repo, zero warnings                                                      |
+| `make fmt` / `make fmt-check`         | Prettier format / verify                                                                                    |
+| `make website-dev`                    | Local dev server for the game app                                                                           |
+| `make website`                        | Production build of the game app                                                                            |
+| `make icons`                          | Regenerate all PWA icons + the OG card from `website/public/icon.svg`                                       |
+| `make assets`                         | Regenerate in-game pixel assets (sprites, tiles, UI font) + previews from `website/scripts/sprite-data.mjs` |
+| `make shellcheck` / `make actionlint` | Lint shell scripts / workflow YAML                                                                          |
 
 ## Configuration
 
 The game has no user-facing configuration yet. Build-time knobs:
 
-| Variable           | Effect                                                                                                |
-| ------------------ | ----------------------------------------------------------------------------------------------------- |
-| `GITHUB_PAT`       | Auth for GitHub Packages installs (`.npmrc`)                                                          |
-| `VITE_BASE`        | Deploy-slot base path (`/game/`, `/game/preview/`, `/game/branch/`); defaults to `/` for local builds |
-| `?debug` URL param | Turns on debug-level console output (see `src/output.ts`)                                             |
+| Variable           | Effect                                                                                                                                          |
+| ------------------ | ----------------------------------------------------------------------------------------------------------------------------------------------- |
+| `GITHUB_PAT`       | Auth for GitHub Packages installs (`.npmrc`)                                                                                                    |
+| `VITE_BASE`        | Deploy-slot base path (`/game/`, `/game/preview/`, `/game/branch/`); defaults to `/` for local builds                                           |
+| `?debug` URL param | Turns on debug-level console output (`src/output.ts`) and exposes the live game state as `window.__game` for inspection and automated playtests |
 
 ## Examples
 

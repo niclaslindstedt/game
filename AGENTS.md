@@ -25,6 +25,7 @@ make test          # full test suite
 make lint          # zero-warning linter
 make fmt           # format in place
 make fmt-check     # verify formatting (CI)
+make assets        # regenerate in-game pixel assets + previews
 ```
 
 ## Commit and PR conventions
@@ -144,6 +145,23 @@ fails if `src/version.ts` and `package.json` disagree.
   must match; `tests/version_test.ts` and the extract script both enforce it.
 - Icons are generated from `website/public/icon.svg` only (`make icons`) —
   never edit the PNGs.
+- In-game pixel assets (sprites, tiles, the UI font atlas) are generated
+  from `website/scripts/sprite-data.mjs` + `asset-tools/` only
+  (`make assets`) — never edit the PNGs under `website/src/game/assets/`.
+
+## Game development skills
+
+The repo ships a skill for each recurring game-development activity, so the
+workflow (and its quality bars) stays consistent across sessions. Load the
+relevant `SKILL.md` before starting that kind of work:
+
+| Skill           | Use for                                                                                                                                               |
+| --------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `engine-system` | Adding/changing gameplay systems (enemies, weapons, items, rules) — the engine-first workflow: config → types → step → events → tests → presentation. |
+| `pixel-assets`  | Creating or changing sprites, tiles, palettes, animations, or pixel-font glyphs — the generate → look → evaluate → loop cycle.                        |
+| `sound-effects` | Adding or tuning synthesized WebAudio SFX — the sound vocabulary, mixing rules, and audition loop.                                                    |
+| `playtest`      | Verifying changes in the running game and tuning game feel with the autoplay bot (`website/scripts/playtest.mjs`).                                    |
+| `debug-game`    | Investigating gameplay/render/input/audio bugs — deterministic seed repros, `?debug` + `window.__game`, failing-test-first fixes.                     |
 
 ## Maintenance skills
 

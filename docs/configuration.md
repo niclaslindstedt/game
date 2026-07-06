@@ -15,9 +15,17 @@ environment.
 
 ## URL parameters
 
-| Parameter | Effect                                                                                                                                                                             |
-| --------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `?debug`  | Enables debug-level console output (`src/output.ts`, OSS_SPEC §19.3). All levels are always captured in the in-memory buffer regardless; the flag only controls console verbosity. |
+| Parameter | Effect                                                                                                                                                                                                                                                                                                                                                                                  |
+| --------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `?debug`  | Enables debug-level console output (`src/output.ts`, OSS_SPEC §19.3). All levels are always captured in the in-memory buffer regardless; the flag only controls console verbosity. Additionally exposes the live engine state as `window.__game` (`website/src/game/GameScreen.tsx`) so DevTools and the playtest bot (`website/scripts/playtest.mjs`) can inspect and drive real runs. |
+
+## Gameplay tuning
+
+All balance knobs — level size, player/enemy speed and hp, weapon cooldown
+and range, item heals, spawn counts — live in one file:
+[`src/game/config.ts`](../src/game/config.ts). They are compile-time
+constants by design (no runtime settings surface yet); tuning happens by
+editing that file and playtesting (see the `playtest` skill).
 
 ## Repository pins
 

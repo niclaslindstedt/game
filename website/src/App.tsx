@@ -1,14 +1,17 @@
 // SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
+import { useState } from "react";
+
 import { UpdateToast, usePwaUpdate } from "@niclaslindstedt/oss-framework/pwa";
 
 import { cacheIdForBase } from "./app/pwa.ts";
+import { GameScreen } from "./game/GameScreen.tsx";
 
-// The title screen. This is deliberately NOT the game yet — the repository is
-// scaffolding-only until gameplay work starts. The screen's job today is to
-// prove the whole pipeline end-to-end: the engine alias resolves, the
-// framework renders, the service worker installs, and the update toast fires
-// on the next deploy.
+// The app shell: title screen ↔ the playable game. The title screen also
+// owns the PWA update lifecycle so a new deploy can never silently reload
+// mid-run.
 export function App() {
+  const [playing, setPlaying] = useState(false);
+
   // Register the deploy slot's service worker (§11.4.3) and track its update
   // lifecycle. The framework hook performs the actual
   // `navigator.serviceWorker.register(...)` via workbox-window, registering
@@ -22,18 +25,29 @@ export function App() {
     enabled: !import.meta.env.DEV,
   });
 
+  if (playing) {
+    return <GameScreen onQuit={() => setPlaying(false)} />;
+  }
+
   return (
     <main className="prelaunch">
       <h1>Game</h1>
       <p>
-        A top-down survival scroller shooter that runs entirely in your browser
-        — no account, no server, fully playable offline once loaded.
+        A top-down survival shooter that runs entirely in your browser — no
+        account, no server, fully playable offline once loaded.
       </p>
       <p>
-        You steer by holding the pointer down (or touching the screen); your
-        character fights on its own, acting according to the weapons and items
-        you pick up along the way. Survive the scroll as long as you can.
+        <strong>Hold</strong> the pointer (or touch) to steer; your character
+        fires at the nearest slime on its own. Grab medkits to stay alive, and
+        clear every slime from the level to win.
       </p>
+      <button
+        type="button"
+        className="pixel-button start-button"
+        onClick={() => setPlaying(true)}
+      >
+        Start game
+      </button>
       <p>
         The game is an installable Progressive Web App: add it to your home
         screen from the browser menu and it launches fullscreen, works offline,

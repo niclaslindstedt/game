@@ -1,0 +1,67 @@
+---
+name: engine-system
+description: "Use when adding or changing a gameplay system (enemy type, weapon, item, movement rule, win condition, spawning…). Walks the engine-first workflow: tune config, extend types/state, implement in the step pipeline, emit events, test headlessly, then wire rendering and sound in the app layer."
+---
+
+# Adding a Gameplay System
+
+Gameplay lives in the **engine** (`src/`, framework-free TypeScript); the
+**app** (`website/`) only draws state and reacts to events. Keep that
+direction: the engine never knows a renderer or a speaker exists. This is
+what makes every game rule unit-testable in plain Node.
+
+## Where the pieces go
+
+| Piece | File |
+| --- | --- |
+| Tuning numbers (hp, speeds, cooldowns, counts) | `src/game/config.ts` — ALL balance knobs live here, nothing hardcoded in logic |
+| State shapes & events | `src/game/types.ts` |
+| Level/entity setup | `src/game/create.ts` (seeded RNG only — no `Math.random`, determinism is what makes bugs reproducible) |
+| Per-tick behavior | `src/game/step.ts` — one `stepX()` function per system, called in a fixed order documented at the top |
+| Generic helpers (any game could use) | `src/lib/` — earmarked for oss-framework extraction |
+| Public surface | `src/index.ts` — export new types/constants the app needs |
+| Tests | `tests/<system>_test.ts` (Vitest, `_test` suffix mandatory) |
+| Drawing | `website/src/game/render.ts` (+ new sprites via the `pixel-assets` skill) |
+| Sound | `website/src/game/sfx.ts` (+ the `sound-effects` skill) |
+| HUD/overlay | `website/src/game/GameScreen.tsx` |
+
+## Workflow
+
+1. **Config first.** Add the system's tuning block to `src/game/config.ts`
+   with units in the comments (world px, ms, hp). If you can't express the
+   knob there, the design isn't ready.
+2. **Types.** Extend `src/game/types.ts`. Anything the app must react to
+   (sound, flash, particles) becomes a `GameEvent` variant — events are the
+   ONLY channel from simulation to presentation. Events are cleared and
+   refilled by every `step()`, so the app never misses or double-plays one.
+3. **Simulate.** Implement `stepX(state, …)` in `src/game/step.ts` and slot
+   it into the documented order inside `step()`. Mutate state in place;
+   respect `phase !== "playing"` freezing. Keep per-tick allocation near
+   zero (this runs 60×/s).
+4. **Test headlessly** in `tests/`: build a state with `createGame(SEED)`,
+   surgically arrange entities, run fixed `step(state, input, 16)` loops,
+   assert on state + events. Every rule you claim ("cooldown blocks the
+   second hit") gets an assertion. `npx vitest run tests/<file>` to iterate.
+5. **Export** what the app needs from `src/index.ts`.
+6. **Present.** Sprites via the `pixel-assets` skill; draw order and
+   animation in `render.ts`; event → sound mapping via the `sound-effects`
+   skill; HUD numbers in `GameScreen.tsx`.
+7. **Playtest** with the `playtest` skill — numbers that look right in a
+   test can still feel terrible at 60fps.
+
+## Invariants to preserve
+
+- `step()` must stay deterministic for (seed, input sequence, dt sequence) —
+  no wall clock, no `Math.random`, no DOM.
+- The engine imports nothing from `website/`; `@game/core` is the only
+  direction of dependency.
+- Docs: a public API change means updating `docs/architecture.md` and the
+  README per the sync table in `AGENTS.md`; new config knobs go in
+  `docs/configuration.md` if they're user-facing.
+- Source files stay under 1000 lines — split by concern before the cap.
+
+## Skill self-improvement
+
+When a new system forces a pattern not covered here (status effects, timed
+spawners, projectile-vs-projectile collision…), record where it landed and
+why, so the next system follows suit.
