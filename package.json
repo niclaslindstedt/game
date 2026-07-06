@@ -17,7 +17,8 @@
     "lint": "eslint . && npm run typecheck",
     "fmt": "prettier --write .",
     "fmt:check": "prettier --check .",
-    "icons": "npm run icons --workspace website"
+    "icons": "npm run icons --workspace website",
+    "assets": "npm run assets --workspace website"
   },
   "devDependencies": {
     "@eslint/js": "^10.0.1",

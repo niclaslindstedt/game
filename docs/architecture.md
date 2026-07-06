@@ -17,30 +17,59 @@ src/      (the engine: framework-free TypeScript game logic)
 
 ### `src/` — the engine
 
-Pure TypeScript with no React and no build-tool coupling. This is where the
-gameplay systems will live as they are built:
+Pure TypeScript with no React and no build-tool coupling. The simulation is
+deterministic by construction: `createGame(seed)` builds the level from a
+seeded RNG, and `step(state, input, dtMs)` advances it with a fixed
+timestep — the same seed and input sequence always replays the same run,
+which is what makes gameplay unit-testable in plain Node and bugs
+reproducible.
 
-- the fixed-timestep simulation loop,
-- pointer/touch steering (hold to move, release to stop),
-- the autonomous combat model — the character acts according to the weapons
-  and items it has picked up,
-- enemy waves, spawning, and scroll progression.
+- **`src/game/config.ts`** — every balance knob (level size, speeds, hp,
+  cooldowns, counts), nothing hardcoded in logic.
+- **`src/game/types.ts`** — state shapes plus the `GameEvent` union: events
+  are the only channel from simulation to presentation (sound, flashes);
+  the engine never knows a renderer or speaker exists.
+- **`src/game/create.ts`** — seeded level setup (player, slimes, medkits).
+- **`src/game/step.ts`** — the per-tick pipeline, in documented order:
+  player steering → weapon auto-fire → projectiles → enemies → item
+  pickups → win/lose. The character acts autonomously; the player's only
+  input is a hold-to-steer target.
+- **`src/lib/`** — generic, game-agnostic helpers (`vec.ts`, `rng.ts`),
+  earmarked for extraction into oss-framework once mature.
+- **`src/index.ts`** — the public surface the app imports via `@game/core`.
 
-Today it contains the public entry point (`src/index.ts`), the embedded
-version constant (`src/version.ts`), and the central output module
-(`src/output.ts`, OSS_SPEC §19.4) through which all diagnostic output flows:
-semantic helpers (`status`/`warn`/`info`/`header`/`error`/`debug`), an
-always-on in-memory log buffer (`recentLogs()`), and a debug switch
-(`?debug` URL param or `setDebugEnabled`). Raw `console.*` calls outside
-this module fail lint.
+`src/output.ts` remains the central output module (OSS_SPEC §19.4) through
+which all diagnostic output flows: semantic helpers
+(`status`/`warn`/`info`/`header`/`error`/`debug`), an always-on in-memory
+log buffer (`recentLogs()`), and a debug switch (`?debug` URL param or
+`setDebugEnabled`). Raw `console.*` calls outside this module fail lint.
 
 ### `website/` — the app
 
 A Vite + React 19 shell that mounts the engine and owns everything
 deploy-shaped:
 
-- **`website/src/App.tsx`** — currently the title screen; the game canvas
-  will mount here.
+- **`website/src/App.tsx`** — the title screen and the switch into the game.
+- **`website/src/game/`** — the presentation of the engine:
+  `GameScreen.tsx` (canvas mount, fixed-timestep loop, HUD, end-of-run
+  splash with stats + retry), `render.ts` (camera + sprite drawing onto a
+  world-unit canvas upscaled with `image-rendering: pixelated`), `sfx.ts`
+  (engine events → synthesized sounds), `assets.ts` (loads the generated
+  sprites + pixel font), and `assets/` (generated PNGs + font atlas — never
+  hand-edited).
+- **`website/src/lib/`** — generic game UI plumbing earmarked for
+  oss-framework extraction: `game-loop.ts` (fixed-timestep rAF loop),
+  `pointer.ts` (hold-to-steer tracking), `synth.ts` (WebAudio SFX synth —
+  the game ships zero audio files), `pixel-font.ts` + `PixelText.tsx`
+  (runtime renderer for the generated bitmap font), `load-images.ts`.
+- **`website/scripts/asset-tools/` + `sprite-data.mjs` +
+  `generate-assets.mjs`** — the pixel-asset pipeline (`make assets`):
+  sprites are character grids with ramp-derived palettes, rendered at build
+  time to committed PNGs plus gitignored previews (contact sheet, film
+  strips, palette sheet, font specimen). See the `pixel-assets` skill.
+- **`website/scripts/playtest.mjs`** — the autoplay bot that drives real
+  runs headlessly through the `?debug` state hook. See the `playtest`
+  skill.
 - **`website/pwa-plugin.ts`** — emits the service worker, `version.json`,
   and `precache-manifest.json` at build time (the pattern is borrowed from
   the oss-framework demo). The worker precaches the app shell, parks new
@@ -94,6 +123,14 @@ chains into `pages.yml` so the new tag is live at `/game/` immediately.
   `usePwaUpdate` needs three emitted files and one cache-naming convention;
   emitting them from a small Vite plugin is cheaper than adopting the
   Workbox toolchain, and the update flow stays fully inspectable.
-- **No gameplay before structure** — this scaffold intentionally ships zero
-  game code. The first gameplay PRs should land systems in `src/` with tests
-  alongside, and mount rendering in `website/src/App.tsx`.
+- **Events over callbacks** — the simulation reports what happened
+  (`GameEvent[]` per step) and the app decides how to present it. Sound,
+  screen flashes, and future particles hang off the same channel without
+  the engine growing presentation hooks.
+- **Generated assets over binaries** — sprites, tiles, and the UI font are
+  committed PNGs, but their sources of truth are reviewable text
+  (pixel grids, palette ramps, glyph definitions) rendered by
+  `make assets`. Art is diffable and agent-editable like any other code.
+- **Synthesized audio over audio files** — every sound is a handful of
+  WebAudio oscillator/noise parameters in `website/src/game/sfx.ts`,
+  keeping the offline PWA payload tiny.

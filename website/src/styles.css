@@ -56,3 +56,127 @@ body {
   color: #7a8088;
   font-variant-numeric: tabular-nums;
 }
+
+/* ---- Game screen -------------------------------------------------------- */
+
+.game-screen {
+  position: fixed;
+  inset: 0;
+  overflow: hidden;
+  background: #0b0d10;
+}
+
+.game-canvas {
+  width: 100%;
+  height: 100%;
+  display: block;
+  image-rendering: pixelated;
+  touch-action: none;
+  user-select: none;
+  -webkit-user-select: none;
+  cursor: crosshair;
+}
+
+.game-loading {
+  position: fixed;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  color: #7a8088;
+}
+
+/* HUD overlay: ignores the pointer so it never blocks steering. */
+.game-hud {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: max(0.75rem, env(safe-area-inset-top)) 1rem 0;
+  pointer-events: none;
+}
+
+.hud-left,
+.hud-right {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.hud-bar {
+  width: 8rem;
+  height: 0.75rem;
+  background: #1d2530;
+  border: 2px solid #1a1c2c;
+}
+
+.hud-bar-fill {
+  height: 100%;
+  background: linear-gradient(180deg, #d83a3a, #a02424);
+  transition: width 120ms steps(4);
+}
+
+/* End-of-run splash: stats + retry. */
+.game-splash {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 2rem;
+  background: rgba(11, 13, 16, 0.82);
+  text-align: center;
+}
+
+.splash-stats {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 0.75rem;
+}
+
+.splash-buttons {
+  display: flex;
+  gap: 1rem;
+}
+
+/* Chunky pixel-style button shared by the splash and the title screen. */
+.pixel-button {
+  appearance: none;
+  border: 0;
+  padding: 0.75rem 1.5rem;
+  background: #7ef0c8;
+  color: #0b0d10;
+  font: inherit;
+  font-weight: 700;
+  cursor: pointer;
+  box-shadow:
+    0 4px 0 #3aa285,
+    0 6px 0 rgba(0, 0, 0, 0.4);
+  image-rendering: pixelated;
+}
+
+.pixel-button:active {
+  transform: translateY(4px);
+  box-shadow: 0 0 0 #3aa285;
+}
+
+.pixel-button.secondary {
+  background: #1d2530;
+  color: #e6e8eb;
+  box-shadow:
+    0 4px 0 #10151c,
+    0 6px 0 rgba(0, 0, 0, 0.4);
+}
+
+.pixel-button canvas {
+  display: block;
+}
+
+.start-button {
+  font-size: 1.1rem;
+  margin: 0.5rem 0 1.5rem;
+}
