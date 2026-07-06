@@ -58,10 +58,11 @@ export type Equipment = {
   /** Rolled bonuses; length is dictated by the tier. */
   affixes: Affix[];
   /**
-   * Weapon-upgrade pickups applied to this piece (weapons only). They stick
-   * to the weapon that was held when the upgrade was collected.
+   * Attacks left before this weapon breaks (weapons only; the def carries
+   * the maximum). Undefined = unbreakable — the player's own sidearm never
+   * wears out, so the run can never be left weaponless.
    */
-  upgrades?: number;
+  durability?: number;
 };
 
 /**
@@ -159,7 +160,10 @@ export type Projectile = {
 
 export type Item =
   | { id: number; kind: "medkit"; pos: Vec2 }
-  | { id: number; kind: "upgrade"; pos: Vec2 }
+  /** The golden level-up arrow: grants a share of the XP to the next level. */
+  | { id: number; kind: "xp"; pos: Vec2 }
+  /** A repair kit: restores the equipped weapon's durability to full. */
+  | { id: number; kind: "repair"; pos: Vec2 }
   | { id: number; kind: "equipment"; pos: Vec2; equipment: Equipment }
   /** A time-limited power pickup; `defId` keys into ABILITY_DEFS. */
   | { id: number; kind: "ability"; pos: Vec2; defId: string };
@@ -168,6 +172,22 @@ export type Item =
 export type Decor = {
   kind: string;
   pos: Vec2;
+};
+
+/**
+ * A solid feature neither the player nor monsters can move through. Low ones
+ * (`jumpable`) can be cleared mid-jump — monsters never jump, so a low rock
+ * is a wall to the horde and a hop to the player. Tall ones block everyone.
+ */
+export type Obstacle = {
+  id: number;
+  /** Sprite/kind key for the renderer ("boulder", "rock"). */
+  kind: string;
+  pos: Vec2;
+  /** Collision radius in world px. */
+  radius: number;
+  /** True when a jumping player sails over it. */
+  jumpable: boolean;
 };
 
 /** A fixed story prop (the lander, the flag, …) placed by the level def. */
@@ -203,6 +223,12 @@ export type GameEvent =
   | { type: "playerHurt"; crit: boolean }
   | { type: "itemCollected"; kind: Item["kind"]; tier?: Tier }
   | { type: "itemDropped"; pos: Vec2 }
+  /** A picked-up piece was better than the equipped one and replaced it. */
+  | { type: "autoEquipped"; defId: string }
+  /** The equipped weapon's durability ran out; `defId` is the broken one. */
+  | { type: "weaponBroke"; defId: string }
+  /** A screen-nuke pickup went off at the player's position. */
+  | { type: "nuke"; pos: Vec2 }
   /** A storm ability bolt struck at `pos` (drives the flash + crack). */
   | { type: "lightning"; pos: Vec2 }
   /** An ability pickup kicked in (or refreshed its timer). */
@@ -265,6 +291,8 @@ export type GameState = {
   projectiles: Projectile[];
   items: Item[];
   decor: Decor[];
+  /** Solid features scattered at level creation — see Obstacle. */
+  obstacles: Obstacle[];
   /** Counts down once the objective clears; the level ends at 0. */
   victoryCountdownMs: number | null;
   /**

@@ -4,7 +4,7 @@
 // runs for its duration; picking the same one up again refreshes the timer.
 // Levels choose which abilities can drop via their loot.abilityPool.
 
-export type AbilityKind = "orbit" | "storm" | "stasis";
+export type AbilityKind = "orbit" | "storm" | "stasis" | "nuke" | "magnet";
 
 export type AbilityDef = {
   id: string;
@@ -44,6 +44,22 @@ export type AbilityDef = {
     /** Multiplier on enemy speed inside the field (0.3 = 70% slower). */
     slowFactor: number;
   };
+  /**
+   * `nuke`: instant, not timed — using it kills every non-boss monster
+   * within the radius (roughly the visible screen) on the spot.
+   */
+  nuke?: {
+    radius: number;
+  };
+  /** `magnet`: ground items inside the radius are pulled to the player. */
+  magnet?: {
+    /** Base pull radius (world px). */
+    radius: number;
+    /** Extra radius per point of INTELLIGENCE. */
+    radiusPerInt: number;
+    /** How fast caught items fly at the player (world px/s). */
+    pullSpeed: number;
+  };
 };
 
 export const ABILITY_DEFS: Record<string, AbilityDef> = {
@@ -78,6 +94,24 @@ export const ABILITY_DEFS: Record<string, AbilityDef> = {
     durationMs: 9_000,
     icon: "icon_stasis",
     stasis: { radius: 130, slowFactor: 0.3 },
+  },
+  screen_nuke: {
+    id: "screen_nuke",
+    name: "NUKE",
+    kind: "nuke",
+    durationMs: 0, // instant — never becomes an ActiveAbility
+    icon: "icon_nuke",
+    // Radius comfortably covers the phone-landscape view (half-diagonal
+    // ≈ 232 world px, see AGENTS.md) from a player at its center.
+    nuke: { radius: 240 },
+  },
+  item_magnet: {
+    id: "item_magnet",
+    name: "MAGNET",
+    kind: "magnet",
+    durationMs: 12_000,
+    icon: "icon_magnet",
+    magnet: { radius: 80, radiusPerInt: 8, pullSpeed: 200 },
   },
 };
 

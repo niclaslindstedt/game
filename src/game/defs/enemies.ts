@@ -41,7 +41,10 @@ export type EnemyDef = {
     items?: string[];
     weapons: number;
     gear: number;
-    upgrades: number;
+    /** Golden XP arrows (see LEVELING.arrowXpShare). */
+    xpArrows: number;
+    /** Weapon repair kits. */
+    repairs: number;
     medkits: number;
     /** Added to every tier chance when rolling this enemy's drops. */
     tierBonus: number;
@@ -115,7 +118,8 @@ export const ENEMY_DEFS: Record<string, EnemyDef> = {
       items: ["machete"],
       weapons: 0,
       gear: 1,
-      upgrades: 2,
+      xpArrows: 2,
+      repairs: 1,
       medkits: 2,
       tierBonus: 0.35,
     },

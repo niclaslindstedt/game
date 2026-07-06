@@ -5,7 +5,8 @@
 // so all combat flows through one hitEnemy path.
 
 import { distance, type Vec2 } from "@game/lib/vec.ts";
-import { abilityDef } from "./defs/abilities.ts";
+import { abilityDef, type AbilityDef } from "./defs/abilities.ts";
+import { effectiveStat } from "./items.ts";
 import type { ActiveAbility, GameState, Player } from "./types.ts";
 
 /**
@@ -41,6 +42,19 @@ export function orbPositions(player: Player, ability: ActiveAbility): Vec2[] {
     });
   }
   return positions;
+}
+
+/**
+ * A magnet ability's effective pull radius for this player: the def's base
+ * widened by INTELLIGENCE. Shared by the item-pull step and the renderer's
+ * field ring.
+ */
+export function magnetRadius(state: GameState, def: AbilityDef): number {
+  if (!def.magnet) return 0;
+  return (
+    def.magnet.radius +
+    effectiveStat(state, "intelligence") * def.magnet.radiusPerInt
+  );
 }
 
 /**

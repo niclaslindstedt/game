@@ -34,18 +34,24 @@ weapon means adding catalog entries, not touching the simulation.
 - **`src/game/defs/levels.ts`** — the level registry: geometry, per-level
   gravity (the moon's low g is why jumps soar), biome, the story intro text,
   landmark props, banded enemy spawns, the objective (`killBoss` /
-  `clearAll`), decor, and the loot table (pools + tier chances).
+  `clearAll`), solid obstacles (tall boulders block everyone; low rocks can
+  be jumped by the player but never by monsters), decor, and the loot table
+  (pools + tier chances).
 - **`src/game/defs/enemies.ts`** — the monster catalog (stats, AI radii,
   roles; bosses pin guaranteed drops). Level 2 ships wisp → moon ghost →
   wraith plus ARMSTRONG, the giant astronaut ghost guarding the flag.
-- **`src/game/defs/equipment.ts`** — weapons (melee/ranged/magic classes),
-  gear, the four-tier quality ladder (regular/magic/epic/legendary — later
-  levels unlock the upper tiers), and the affix pools magic+ items roll.
-- **`src/game/defs/abilities.ts`** — the time-limited ability pickups
-  (orbiting fire orbs, storm strikes, stasis slow fields); levels choose
-  which can drop via their `loot.abilityPool`. Pickups are banked into
-  `player.heldAbilities` (up to `HELD_ITEMS.cap`) and spent with the
-  `useItem` input.
+- **`src/game/defs/equipment.ts`** — weapons (melee/ranged/magic classes,
+  each with a durability budget — dropped weapons wear out per attack and
+  break; the starting sidearm is minted unbreakable), gear, the four-tier
+  quality ladder (regular/magic/epic/legendary — later levels unlock the
+  upper tiers), and the affix pools magic+ items roll.
+- **`src/game/defs/abilities.ts`** — the ability pickups: time-limited
+  powers (orbiting fire orbs, storm strikes, stasis slow fields, the item
+  magnet whose pull radius grows with INTELLIGENCE) plus the instant
+  screen nuke (kills every non-boss monster on screen, its drop rate kept
+  rare by `LOOT.nukeShare`); levels choose which can drop via their
+  `loot.abilityPool`. Pickups are banked into `player.heldAbilities` (up
+  to `HELD_ITEMS.cap`) and spent with the `useItem` input.
 - **`src/game/defs/difficulties.ts`** — the difficulty ladder (EASY →
   MEDIUM → HARD → NIGHTMARE → JESUS CHRIST!), chosen on the main menu and
   layered over every level: multipliers for spawn counts, monster hp, and
@@ -61,17 +67,23 @@ weapon means adding catalog entries, not touching the simulation.
 - **`src/game/create.ts`** — seeded run setup from a level def: difficulty
   bands scale with distance from the player spawn toward the objective.
 - **`src/game/step.ts`** — the per-tick pipeline, in documented order:
-  player steering + jump physics → use-item edge → weapon auto-attack →
-  abilities → projectiles → enemies (aggro/guard AI, contact damage) →
-  wave spawner → item pickups → objective → win/lose. The character fights
-  autonomously (and only targets monsters inside the visible view the app
-  passes in `input.view`); the player steers, jumps (tap/Space), spends
-  banked ability pickups (`input.useItem`), spends level-up stat points,
-  and manages the inventory.
+  player steering + jump physics (+ obstacle push-out) → use-item edge →
+  weapon auto-attack (wearing the weapon's durability) → abilities →
+  projectiles → enemies (aggro/guard AI, contact damage, obstacle
+  push-out) → wave spawner → item pickups → objective → win/lose. The
+  character fights autonomously (and only targets monsters inside the
+  visible view the app passes in `input.view`); the player steers, jumps
+  (tap/Space), spends banked ability pickups (`input.useItem`), spends
+  level-up stat points, and manages the inventory. Level-ups restore full
+  health; golden XP arrows grant a fixed share of the current threshold.
+  Picked-up equipment that beats what is worn is equipped on the spot.
 - **`src/game/items.ts`** — equipment instances and the player-driven
   mutations the UI calls into: loot rolls, `equipFromInventory` /
-  `unequipToInventory` / `moveInventoryItem`, `allocateStat`, and the
-  derived stats (max hp, weapon damage, move speed, crit chance).
+  `unequipToInventory` / `moveInventoryItem`, `allocateStat`, the derived
+  stats (max hp, weapon damage, move speed, crit chance), the auto-equip
+  scoring (`weaponScore` DPS / `gearScore`), and the durability cycle
+  (`wearEquippedWeapon` — a broken weapon is trashed and the best bag
+  weapon takes over — and `repairEquippedWeapon` for repair-kit drops).
 - **`src/game/bot.ts`** — the autopilot: pure strategies (`idle`, `rush`,
   `kite`, `boss`, `survivor`) that turn the live state into ordinary
   `GameInput`, so a bot can sit anywhere a player does — headless tests,

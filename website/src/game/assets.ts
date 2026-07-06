@@ -9,6 +9,7 @@ import { createPixelFont, type PixelFont } from "@ui/lib/pixel-font.ts";
 import armstrong0Url from "./assets/armstrong_0.png";
 import armstrong1Url from "./assets/armstrong_1.png";
 import boltUrl from "./assets/bolt.png";
+import boulderUrl from "./assets/boulder.png";
 import craterBigUrl from "./assets/crater_big.png";
 import craterSmallUrl from "./assets/crater_small.png";
 import fireballUrl from "./assets/fireball.png";
@@ -24,7 +25,9 @@ import iconCharmUrl from "./assets/icon_charm.png";
 import iconFireOrbsUrl from "./assets/icon_fire_orbs.png";
 import iconHammerUrl from "./assets/icon_hammer.png";
 import iconMacheteUrl from "./assets/icon_machete.png";
+import iconMagnetUrl from "./assets/icon_magnet.png";
 import iconMoonsBladeUrl from "./assets/icon_moons_blade.png";
+import iconNukeUrl from "./assets/icon_nuke.png";
 import iconPipeUrl from "./assets/icon_pipe.png";
 import iconPistolUrl from "./assets/icon_pistol.png";
 import iconRifleUrl from "./assets/icon_rifle.png";
@@ -42,6 +45,8 @@ import moon1Url from "./assets/moon_1.png";
 import player0Url from "./assets/player_0.png";
 import player1Url from "./assets/player_1.png";
 import playerJumpUrl from "./assets/player_jump.png";
+import repairUrl from "./assets/repair.png";
+import rockUrl from "./assets/rock.png";
 import rocksUrl from "./assets/rocks.png";
 import shadowUrl from "./assets/shadow.png";
 import sparkUrl from "./assets/spark.png";
@@ -55,6 +60,7 @@ const SPRITE_URLS = {
   armstrong_0: armstrong0Url,
   armstrong_1: armstrong1Url,
   bolt: boltUrl,
+  boulder: boulderUrl,
   crater_big: craterBigUrl,
   crater_small: craterSmallUrl,
   fireball: fireballUrl,
@@ -68,7 +74,9 @@ const SPRITE_URLS = {
   icon_fire_orbs: iconFireOrbsUrl,
   icon_hammer: iconHammerUrl,
   icon_machete: iconMacheteUrl,
+  icon_magnet: iconMagnetUrl,
   icon_moons_blade: iconMoonsBladeUrl,
+  icon_nuke: iconNukeUrl,
   icon_pipe: iconPipeUrl,
   icon_pistol: iconPistolUrl,
   icon_rifle: iconRifleUrl,
@@ -86,6 +94,8 @@ const SPRITE_URLS = {
   player_0: player0Url,
   player_1: player1Url,
   player_jump: playerJumpUrl,
+  repair: repairUrl,
+  rock: rockUrl,
   rocks: rocksUrl,
   shadow: shadowUrl,
   spark: sparkUrl,

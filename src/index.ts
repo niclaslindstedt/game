@@ -43,18 +43,24 @@ export {
   effectiveStat,
   equipFromInventory,
   equipmentName,
+  gearScore,
+  isBetterEquipment,
   moveInventoryItem,
   openInventory,
   playerCritChance,
   playerSpeed,
+  repairEquippedWeapon,
   rollEquipment,
   unequipToInventory,
   weaponDamage,
+  weaponScore,
+  wearEquippedWeapon,
 } from "./game/items.ts";
 
 // Time-limited abilities: activation and the helpers the renderer shares.
 export {
   grantAbility,
+  magnetRadius,
   orbPositions,
   stasisFactorAt,
 } from "./game/abilities.ts";
@@ -112,11 +118,11 @@ export {
   LEVELING,
   LOOT,
   MEDKIT,
+  OBSTACLES,
   PLAYER,
   PROJECTILE,
   RUN,
   STATS,
-  UPGRADE,
 } from "./game/config.ts";
 
 export type {
@@ -135,6 +141,7 @@ export type {
   Item,
   Landmark,
   LevelInfo,
+  Obstacle,
   Player,
   Projectile,
   StatName,

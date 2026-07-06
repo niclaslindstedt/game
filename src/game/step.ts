@@ -17,7 +17,12 @@ import {
   moveToward,
   type Vec2,
 } from "@game/lib/vec.ts";
-import { grantAbility, orbPositions, stasisFactorAt } from "./abilities.ts";
+import {
+  grantAbility,
+  magnetRadius,
+  orbPositions,
+  stasisFactorAt,
+} from "./abilities.ts";
 import {
   ENEMY_AI,
   HELD_ITEMS,
@@ -25,6 +30,7 @@ import {
   LEVELING,
   LOOT,
   MEDKIT,
+  OBSTACLES,
   PLAYER,
   PROJECTILE,
   RUN,
@@ -40,12 +46,16 @@ import {
   addToInventory,
   dropChance,
   enemyCritChance,
+  isBetterEquipment,
   playerCritChance,
   playerSpeed,
+  recomputeMaxHp,
+  repairEquippedWeapon,
   rollEquipment,
   weaponDamage,
+  wearEquippedWeapon,
 } from "./items.ts";
-import type { Enemy, GameInput, GameState } from "./types.ts";
+import type { Enemy, GameInput, GameState, Item } from "./types.ts";
 
 /** Advance the simulation by `dtMs` milliseconds. */
 export function step(state: GameState, input: GameInput, dtMs: number): void {
@@ -218,6 +228,7 @@ function spawnWaveEnemy(state: GameState, defId: string): boolean {
       ),
     };
     if (distance(pos, state.player.pos) < ENEMY_AI.minSpawnDistance) continue;
+    if (insideObstacle(state, pos, def.radius)) continue;
     state.enemies.push(
       spawnEnemy(
         defId,
@@ -276,6 +287,10 @@ function stepPlayer(
     }
   }
 
+  // Solid ground features: only jumpable ones can be cleared, and only
+  // while actually high enough — landing on one pushes the player off it.
+  resolveObstacles(state, player.pos, PLAYER.radius, player.z);
+
   // The level is finite: clamp to its bounds.
   player.pos.x = clamp(
     player.pos.x,
@@ -290,6 +305,42 @@ function stepPlayer(
 }
 
 /**
+ * Push a circular body out of every obstacle it overlaps. A body at height
+ * `z` above OBSTACLES.clearHeight sails over jumpable obstacles; nothing
+ * clears the tall ones. Monsters never leave the ground, so every obstacle
+ * blocks them.
+ */
+function resolveObstacles(
+  state: GameState,
+  pos: Vec2,
+  radius: number,
+  z = 0,
+): void {
+  for (const obstacle of state.obstacles) {
+    if (obstacle.jumpable && z > OBSTACLES.clearHeight) continue;
+    const min = obstacle.radius + radius;
+    if (distanceSq(pos, obstacle.pos) >= min * min) continue;
+    const d = distance(pos, obstacle.pos);
+    if (d === 0) {
+      pos.x = obstacle.pos.x + min; // dead-center: pick a side, any side
+      continue;
+    }
+    const dir = direction(obstacle.pos, pos);
+    pos.x = obstacle.pos.x + dir.x * min;
+    pos.y = obstacle.pos.y + dir.y * min;
+  }
+}
+
+/** Is a circle at `pos` overlapping any obstacle (spawn placement check)? */
+function insideObstacle(state: GameState, pos: Vec2, radius: number): boolean {
+  for (const obstacle of state.obstacles) {
+    const min = obstacle.radius + radius;
+    if (distanceSq(pos, obstacle.pos) < min * min) return true;
+  }
+  return false;
+}
+
+/**
  * Spend one carried ability pickup on the `useItem` input edge: the oldest
  * banked ability kicks in (grantAbility emits the abilityStarted event).
  * With empty hands the input is a quiet no-op.
@@ -297,7 +348,32 @@ function stepPlayer(
 function stepUseItem(state: GameState, input: GameInput): void {
   if (!input.useItem) return;
   const defId = state.player.heldAbilities.shift();
-  if (defId) grantAbility(state, defId);
+  if (!defId) return;
+  const def = abilityDef(defId);
+  if (def.nuke) {
+    detonateNuke(state, def.nuke.radius);
+    return;
+  }
+  grantAbility(state, defId);
+}
+
+/**
+ * The screen-nuke pickup: every non-boss monster within the radius dies on
+ * the spot. Kills flow through hitEnemy, so XP, loot rolls, the pity rule,
+ * and the all-clear trophy all behave exactly as if the player had done it
+ * the hard way.
+ */
+function detonateNuke(state: GameState, radius: number): void {
+  state.events.push({ type: "nuke", pos: { ...state.player.pos } });
+  const radiusSq = radius * radius;
+  const caught = state.enemies.filter(
+    (enemy) =>
+      enemyDef(enemy.defId).role !== "boss" &&
+      distanceSq(enemy.pos, state.player.pos) <= radiusSq,
+  );
+  for (const enemy of caught) {
+    hitEnemy(state, enemy, enemy.hp);
+  }
 }
 
 /**
@@ -324,6 +400,8 @@ function stepWeapon(state: GameState, input: GameInput, dtMs: number): void {
   if (!weapon.projectile) {
     state.events.push({ type: "swing" });
     hitEnemy(state, target, weaponDamage(state));
+    // Wear AFTER the strike so the blow lands with the weapon that swung.
+    wearEquippedWeapon(state);
     return;
   }
 
@@ -341,6 +419,7 @@ function stepWeapon(state: GameState, input: GameInput, dtMs: number): void {
   });
   state.stats.shotsFired++;
   state.events.push({ type: "shot", weaponClass: weapon.class });
+  wearEquippedWeapon(state);
 }
 
 function nearestEnemy(
@@ -411,6 +490,17 @@ function stepAbilities(state: GameState, dt: number, dtMs: number): void {
         ability.cooldownMs = def.storm.intervalMs;
         state.events.push({ type: "lightning", pos: { ...victim.pos } });
         hitEnemy(state, victim, def.storm.damage);
+      }
+    }
+
+    // The magnet: drops caught in the field fly at the player. Actual
+    // pickup stays stepItems' job once they arrive within reach.
+    if (def.magnet) {
+      const reach = magnetRadius(state, def);
+      const pull = def.magnet.pullSpeed * dt;
+      for (const item of state.items) {
+        if (distance(item.pos, player.pos) > reach) continue;
+        item.pos = moveToward(item.pos, player.pos, pull);
       }
     }
   }
@@ -515,8 +605,17 @@ function dropMinionLoot(state: GameState, at: Vec2): void {
   const pos = { ...at };
   const abilities = levelDef(state.level.id).loot.abilityPool;
   const abilityShare = abilities.length > 0 ? LOOT.abilityShare : 0;
+  // The rare slice first, so tuning the ladder below never dilutes it.
+  const nuked = !forced && state.rng() < LOOT.nukeShare;
   const roll = state.rng();
-  if (forced || roll < LOOT.equipmentShare) {
+  if (nuked) {
+    state.items.push({
+      id: state.nextId++,
+      kind: "ability",
+      pos,
+      defId: "screen_nuke",
+    });
+  } else if (forced || roll < LOOT.equipmentShare) {
     state.minionEquipmentDrops++;
     state.items.push({
       id: state.nextId++,
@@ -531,8 +630,13 @@ function dropMinionLoot(state: GameState, at: Vec2): void {
       pos,
       defId: abilities[Math.floor(state.rng() * abilities.length)] as string,
     });
-  } else if (roll < LOOT.equipmentShare + abilityShare + LOOT.upgradeShare) {
-    state.items.push({ id: state.nextId++, kind: "upgrade", pos });
+  } else if (roll < LOOT.equipmentShare + abilityShare + LOOT.xpArrowShare) {
+    state.items.push({ id: state.nextId++, kind: "xp", pos });
+  } else if (
+    roll <
+    LOOT.equipmentShare + abilityShare + LOOT.xpArrowShare + LOOT.repairShare
+  ) {
+    state.items.push({ id: state.nextId++, kind: "repair", pos });
   } else {
     state.items.push({ id: state.nextId++, kind: "medkit", pos });
   }
@@ -567,8 +671,11 @@ function dropGuaranteedLoot(state: GameState, def: EnemyDef, at: Vec2): void {
       equipment: rollEquipment(state, { slot, tierBonus: loot.tierBonus }),
     });
   }
-  for (let i = 0; i < loot.upgrades; i++) {
-    state.items.push({ id: state.nextId++, kind: "upgrade", pos: scatter() });
+  for (let i = 0; i < loot.xpArrows; i++) {
+    state.items.push({ id: state.nextId++, kind: "xp", pos: scatter() });
+  }
+  for (let i = 0; i < loot.repairs; i++) {
+    state.items.push({ id: state.nextId++, kind: "repair", pos: scatter() });
   }
   for (let i = 0; i < loot.medkits; i++) {
     state.items.push({ id: state.nextId++, kind: "medkit", pos: scatter() });
@@ -588,6 +695,8 @@ function grantXp(state: GameState, amount: number): void {
       LEVELING.baseXpToLevel * Math.pow(LEVELING.xpGrowth, player.level - 1),
     );
     player.pendingStatPoints += LEVELING.statPointsPerLevel;
+    // A new level starts at full strength: the ding is also the heal.
+    player.hp = player.maxHp;
     state.events.push({ type: "levelUp", level: player.level });
   }
   if (player.pendingStatPoints > 0) state.phase = "levelup";
@@ -635,6 +744,8 @@ function stepEnemies(state: GameState, dt: number, dtMs: number): void {
 
   for (const enemy of state.enemies) {
     const def = enemyDef(enemy.defId);
+    // Grounded monsters never clear an obstacle — even the jumpable ones.
+    resolveObstacles(state, enemy.pos, def.radius);
     enemy.pos.x = clamp(
       enemy.pos.x,
       def.radius,
@@ -752,6 +863,9 @@ function moveEnemy(state: GameState, enemy: Enemy, dt: number): void {
 
 function stepItems(state: GameState): void {
   const player = state.player;
+  // Pieces displaced by an auto-equip with a full bag fall back to the
+  // ground — collected here so the filter pass isn't mutated mid-flight.
+  const displaced: Item[] = [];
   state.items = state.items.filter((item) => {
     const overlapping =
       distance(item.pos, player.pos) <= MEDKIT.radius + PLAYER.radius;
@@ -764,12 +878,24 @@ function stepItems(state: GameState): void {
       return false;
     }
 
-    // Upgrades sharpen whatever weapon is in hand, permanently.
-    if (item.kind === "upgrade") {
-      const weapon = player.equipment.weapon;
-      weapon.upgrades = (weapon.upgrades ?? 0) + 1;
+    // The golden arrow: a share of the current level's XP bar. It scales
+    // with the threshold, so arrows keep paying toward level-ups all run.
+    if (item.kind === "xp") {
       state.stats.itemsCollected++;
-      state.events.push({ type: "itemCollected", kind: "upgrade" });
+      state.events.push({ type: "itemCollected", kind: "xp" });
+      grantXp(
+        state,
+        Math.max(1, Math.round(player.xpToNext * LEVELING.arrowXpShare)),
+      );
+      return false;
+    }
+
+    // Repair kits mend the equipped weapon; with nothing to repair they
+    // stay on the ground for when the edge has actually dulled.
+    if (item.kind === "repair") {
+      if (!repairEquippedWeapon(state)) return true;
+      state.stats.itemsCollected++;
+      state.events.push({ type: "itemCollected", kind: "repair" });
       return false;
     }
 
@@ -783,7 +909,37 @@ function stepItems(state: GameState): void {
       return false;
     }
 
-    // Equipment goes into the bag; with a full bag it stays on the ground.
+    // Equipment better than what's worn is equipped on the spot; the old
+    // piece heads for the bag, or the ground when the bag is full. Lesser
+    // finds go into the bag, staying grounded when it's full.
+    if (isBetterEquipment(state, item.equipment)) {
+      const slot = item.equipment.slot;
+      const previous =
+        slot === "weapon" ? player.equipment.weapon : player.equipment[slot];
+      if (slot === "weapon") {
+        player.equipment.weapon = item.equipment;
+        player.weaponCooldownMs = 0;
+      } else {
+        player.equipment[slot] = item.equipment;
+      }
+      recomputeMaxHp(state);
+      if (previous && !addToInventory(state, previous)) {
+        displaced.push({
+          id: state.nextId++,
+          kind: "equipment",
+          pos: { ...player.pos },
+          equipment: previous,
+        });
+      }
+      state.stats.itemsCollected++;
+      state.events.push({
+        type: "itemCollected",
+        kind: "equipment",
+        tier: item.equipment.tier,
+      });
+      state.events.push({ type: "autoEquipped", defId: item.equipment.defId });
+      return false;
+    }
     if (!addToInventory(state, item.equipment)) return true;
     state.stats.itemsCollected++;
     state.events.push({
@@ -793,4 +949,5 @@ function stepItems(state: GameState): void {
     });
     return false;
   });
+  if (displaced.length > 0) state.items.push(...displaced);
 }

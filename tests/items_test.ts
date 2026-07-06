@@ -17,8 +17,7 @@ import {
   step,
   TIERS,
   unequipToInventory,
-  UPGRADE,
-  weaponDamage,
+  WEAPON_DEFS,
 } from "@game/core";
 import type { Equipment, GameState, Tier } from "@game/core";
 import {
@@ -46,13 +45,15 @@ function killTheBoss(state: GameState): void {
   const boss = state.enemies.find((e) => enemyDef(e.defId).role === "boss")!;
   state.enemies = [boss];
   boss.hp = 1;
-  boss.pos = { x: state.player.pos.x + 60, y: state.player.pos.y };
+  // Parked at the blaster's reach: the kill lands, but the scattered loot
+  // (±45 px) can never fall inside the player's pickup radius.
+  boss.pos = { x: state.player.pos.x + 200, y: state.player.pos.y };
   boss.speed = 0;
   run(state, idle, 500, (s) => s.enemies.length === 0);
 }
 
 describe("boss loot", () => {
-  it("ALWAYS drops a weapon, gear, upgrades, and medkits", () => {
+  it("ALWAYS drops a weapon, gear, XP arrows, repairs, and medkits", () => {
     // No luck involved: the drop is unconditional across seeds.
     for (const seed of [1, 2, 3, 99]) {
       const state = startGame(seed);
@@ -74,10 +75,10 @@ describe("boss loot", () => {
           (i) => i.kind === "equipment" && i.equipment.defId === "machete",
         ),
       ).toBe(true);
-      // Scattered upgrades may land on the player and apply instantly.
-      const upgrades = state.items.filter((i) => i.kind === "upgrade").length;
-      const applied = state.player.equipment.weapon.upgrades ?? 0;
-      expect(upgrades + applied).toBe(ENEMY_DEFS.armstrong!.loot!.upgrades);
+      const arrows = state.items.filter((i) => i.kind === "xp").length;
+      expect(arrows).toBe(ENEMY_DEFS.armstrong!.loot!.xpArrows);
+      const repairs = state.items.filter((i) => i.kind === "repair").length;
+      expect(repairs).toBe(ENEMY_DEFS.armstrong!.loot!.repairs);
     }
   });
 
@@ -172,40 +173,107 @@ describe("the guaranteed early weapon", () => {
   });
 });
 
-describe("weapon upgrades", () => {
-  it("an upgrade pickup permanently sharpens the held weapon", () => {
-    const state = startGame();
+describe("auto-equip on pickup", () => {
+  it("equips a picked-up weapon that out-damages the held one", () => {
+    const state = startGame(); // blaster: 8 dmg / 650 ms
     clearStage(state);
-    const base = weaponDamage(state);
-    state.items = [{ id: 1, kind: "upgrade", pos: { ...state.player.pos } }];
-    step(state, idle, DT);
-    expect(state.items).toHaveLength(0);
-    expect(state.player.equipment.weapon.upgrades).toBe(1);
-    expect(weaponDamage(state)).toBeCloseTo(base * (1 + UPGRADE.damageBonus));
-    expect(state.events).toContainEqual({
-      type: "itemCollected",
-      kind: "upgrade",
-    });
-  });
-
-  it("upgrades stick to the weapon they were applied to", () => {
-    const state = startGame();
-    state.player.equipment.weapon.upgrades = 3;
-    state.player.inventory[0] = {
-      id: 60,
-      defId: "wand",
+    const hammer: Equipment = {
+      id: 61,
+      defId: "hammer", // 34 dmg / 640 ms — clearly better DPS
       slot: "weapon",
       tier: "regular",
       affixes: [],
+      durability: WEAPON_DEFS.hammer!.durability,
     };
-    equipFromInventory(state, 0); // swap to the plain wand
-    expect(state.player.equipment.weapon.upgrades ?? 0).toBe(0);
-    expect(state.player.inventory[0]?.upgrades).toBe(3); // rides the blaster
+    state.items = [
+      {
+        id: 1,
+        kind: "equipment",
+        pos: { ...state.player.pos },
+        equipment: hammer,
+      },
+    ];
+    step(state, idle, DT);
+    expect(state.player.equipment.weapon.id).toBe(61);
+    // The old sidearm went into the bag, not into the void.
+    expect(state.player.inventory.some((i) => i?.defId === "blaster")).toBe(
+      true,
+    );
+    expect(state.events).toContainEqual({
+      type: "autoEquipped",
+      defId: "hammer",
+    });
+  });
+
+  it("bags a picked-up weapon that is worse than the held one", () => {
+    const state = startGame();
+    clearStage(state);
+    // A pistol (7 dmg / 400 ms) out-damages the starting blaster, so put a
+    // hammer (34 dmg / 640 ms) in hand to make the pickup strictly worse.
+    const pistol: Equipment = {
+      id: 62,
+      defId: "pistol",
+      slot: "weapon",
+      tier: "regular",
+      affixes: [],
+      durability: WEAPON_DEFS.pistol!.durability,
+    };
+    state.player.equipment.weapon = {
+      id: 63,
+      defId: "hammer",
+      slot: "weapon",
+      tier: "regular",
+      affixes: [],
+      durability: WEAPON_DEFS.hammer!.durability,
+    };
+    state.items = [
+      {
+        id: 1,
+        kind: "equipment",
+        pos: { ...state.player.pos },
+        equipment: pistol,
+      },
+    ];
+    step(state, idle, DT);
+    expect(state.player.equipment.weapon.id).toBe(63); // hammer stays
+    expect(state.player.inventory.some((i) => i?.id === 62)).toBe(true);
+  });
+
+  it("drops the displaced piece on the ground when the bag is full", () => {
+    const state = startGame();
+    clearStage(state);
+    state.player.inventory = state.player.inventory.map((_, i) =>
+      makeSuit(100 + i),
+    );
+    const hammer: Equipment = {
+      id: 64,
+      defId: "hammer",
+      slot: "weapon",
+      tier: "regular",
+      affixes: [],
+      durability: WEAPON_DEFS.hammer!.durability,
+    };
+    state.items = [
+      {
+        id: 1,
+        kind: "equipment",
+        pos: { ...state.player.pos },
+        equipment: hammer,
+      },
+    ];
+    step(state, idle, DT);
+    expect(state.player.equipment.weapon.id).toBe(64);
+    // The blaster had nowhere to go: it lies at the player's feet.
+    expect(
+      state.items.some(
+        (i) => i.kind === "equipment" && i.equipment.defId === "blaster",
+      ),
+    ).toBe(true);
   });
 });
 
 describe("inventory", () => {
-  it("picks dropped equipment up into the bag", () => {
+  it("auto-equips gear picked up onto an empty slot", () => {
     const state = startGame();
     state.enemies = [];
     state.items = [
@@ -218,12 +286,30 @@ describe("inventory", () => {
     ];
     step(state, idle, DT);
     expect(state.items).toHaveLength(0);
-    expect(state.player.inventory[0]?.defId).toBe("suit_plating");
+    expect(state.player.equipment.suit?.id).toBe(2);
   });
 
-  it("leaves loot on the ground when the bag is full", () => {
+  it("bags gear that is worse than what is worn", () => {
     const state = startGame();
     state.enemies = [];
+    state.player.equipment.suit = makeSuit(90, "magic"); // +20 hp affix
+    state.items = [
+      {
+        id: 1,
+        kind: "equipment",
+        pos: { ...state.player.pos },
+        equipment: makeSuit(2), // plain — strictly worse
+      },
+    ];
+    step(state, idle, DT);
+    expect(state.player.equipment.suit?.id).toBe(90);
+    expect(state.player.inventory[0]?.id).toBe(2);
+  });
+
+  it("leaves lesser loot on the ground when the bag is full", () => {
+    const state = startGame();
+    state.enemies = [];
+    state.player.equipment.suit = makeSuit(90, "magic");
     state.player.inventory = state.player.inventory.map((_, i) =>
       makeSuit(100 + i),
     );
