@@ -1,0 +1,241 @@
+name: pages
+
+# Deploys the game (the `website/` Vite app, built against the engine source)
+# to GitHub Pages across three slots (OSS_SPEC §11.5):
+#
+#   /game/          the latest release (highest `v*` tag), or `main` until the
+#                   first release exists
+#   /game/preview/  the current `main` (every push)
+#   /game/branch/   a feature branch parked via workflow_dispatch, persisted in
+#                   the `branch-deploy` orphan branch so it survives later
+#                   deploys
+#
+# Served at https://niclaslindstedt.github.io/game/. The Pages artifact root
+# corresponds to `/game/`, so the slot directories inside the artifact are
+# `.`, `preview/`, and `branch/` while the Vite base paths carry the full
+# `/game/…` prefix.
+#
+# Pre-requisite: the repo's Pages source must be set to "GitHub Actions"
+# (Settings → Pages).
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+    inputs:
+      branch_ref:
+        description: "Optional branch to park in the stable /game/branch/ slot. Persists across regular deploys until the next branch_ref dispatch overwrites it."
+        required: false
+        type: string
+        default: ""
+  # Let release.yml chain into us after a release is tagged. The tag passes in
+  # via `release_ref`; otherwise we resolve the highest `v*` tag in the repo.
+  # Before the first release exists both lookups come up empty and we fall
+  # back to serving `main` at the root slot.
+  workflow_call:
+    inputs:
+      release_ref:
+        description: "Tag or sha to build for the production slot."
+        required: false
+        type: string
+
+permissions:
+  contents: write
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: false
+
+env:
+  # Stable orphan branch storing the most recently dispatched /game/branch/
+  # build. Created on demand by the first workflow_dispatch with a branch_ref;
+  # every run rehydrates the branch slot from here so regular deploys
+  # preserve it.
+  BRANCH_DEPLOY_REF: branch-deploy
+  # GitHub Packages auth for @niclaslindstedt/oss-framework (see .npmrc).
+  GITHUB_PAT: ${{ secrets.GITHUB_PAT || github.token }}
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+      - run: npm ci
+
+      # ---- Resolve which tag to serve at the root slot (if any) ----
+      - name: Resolve production tag
+        id: tag
+        run: |
+          if [ -n "${{ inputs.release_ref }}" ]; then
+            REF="${{ inputs.release_ref }}"
+          else
+            # Highest semver tag, not the nearest reachable one — only
+            # release.yml creates `v*` tags, so the highest is the intended
+            # production release regardless of ancestry.
+            REF=$(git tag --list 'v*' --sort=-v:refname | head -n1)
+          fi
+          if [ -n "$REF" ]; then
+            echo "ref=$REF" >> "$GITHUB_OUTPUT"
+            echo "has_release=true" >> "$GITHUB_OUTPUT"
+            echo "Resolved production ref: $REF"
+          else
+            echo "ref=" >> "$GITHUB_OUTPUT"
+            echo "has_release=false" >> "$GITHUB_OUTPUT"
+            echo "No release tag found — will serve main at the root slot."
+          fi
+
+      # ---- Resolve optional branch dispatch ----
+      - name: Resolve branch dispatch
+        id: dispatch
+        run: |
+          REF="${{ inputs.branch_ref }}"
+          if [ -z "$REF" ]; then
+            echo "has_dispatch=false" >> "$GITHUB_OUTPUT"
+            echo "No branch_ref input — preserving any previously-dispatched branch build."
+          else
+            echo "ref=$REF" >> "$GITHUB_OUTPUT"
+            echo "has_dispatch=true" >> "$GITHUB_OUTPUT"
+            echo "Dispatched: $REF -> /game/branch/"
+          fi
+
+      # ---- Preview build (current main) — always served at /game/preview/ ----
+      # The preview slot tracks the triggering commit on every push. Build it
+      # first, off the triggering ref, before any checkout juggling for the
+      # production tag or a dispatched branch moves HEAD away.
+      - name: Build preview
+        run: npm run build --workspace website
+        env:
+          VITE_BASE: /game/preview/
+
+      - name: Stash preview site
+        run: mv website/dist site-preview
+
+      # ---- Root slot build ----
+      # Serves the latest release if one exists; until the first release it
+      # falls back to main. Either way it is a separate build at the
+      # production base path.
+      - name: Checkout production tag
+        if: steps.tag.outputs.has_release == 'true'
+        run: git checkout ${{ steps.tag.outputs.ref }}
+
+      - name: Reinstall deps for production tag
+        if: steps.tag.outputs.has_release == 'true'
+        run: npm ci
+
+      - name: Build root
+        run: npm run build --workspace website
+        env:
+          VITE_BASE: /game/
+
+      - name: Stash root site
+        run: mv website/dist site-root
+
+      - name: Return to triggering ref
+        if: steps.tag.outputs.has_release == 'true'
+        run: git checkout ${{ github.sha }}
+
+      - name: Reinstall main's deps
+        if: steps.tag.outputs.has_release == 'true'
+        run: npm ci
+
+      # ---- Optional branch build + persist to orphan branch ----
+      - name: Checkout dispatched ref
+        if: steps.dispatch.outputs.has_dispatch == 'true'
+        run: |
+          git fetch origin "${{ steps.dispatch.outputs.ref }}"
+          git checkout "${{ steps.dispatch.outputs.ref }}"
+
+      - name: Reinstall deps for dispatched ref
+        if: steps.dispatch.outputs.has_dispatch == 'true'
+        run: npm ci
+
+      - name: Build branch slot
+        if: steps.dispatch.outputs.has_dispatch == 'true'
+        run: npm run build --workspace website
+        env:
+          VITE_BASE: /game/branch/
+
+      - name: Persist branch build to orphan branch
+        if: steps.dispatch.outputs.has_dispatch == 'true'
+        run: |
+          mv website/dist site-branch
+          STAGE=$(mktemp -d)
+          cp -R site-branch/. "$STAGE/"
+          # Build an orphan tree containing just the build output and
+          # force-push it to BRANCH_DEPLOY_REF. Force-push is safe: the branch
+          # is auto-managed and only ever written by this step. The identity
+          # must be configured INSIDE the staging repo — `git init` creates a
+          # fresh repo with no inherited config.
+          cd "$STAGE"
+          git init -q -b "$BRANCH_DEPLOY_REF"
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add -A
+          git commit -q -m "branch deploy: ${{ steps.dispatch.outputs.ref }} (${{ github.run_id }})"
+          REMOTE_URL=$(git -C "$GITHUB_WORKSPACE" remote get-url origin)
+          AUTH_URL=$(printf '%s' "$REMOTE_URL" \
+            | sed "s|https://|https://x-access-token:${{ github.token }}@|")
+          git remote add origin "$AUTH_URL"
+          git push -f origin "HEAD:$BRANCH_DEPLOY_REF"
+          cd "$GITHUB_WORKSPACE"
+
+      - name: Return to triggering ref after dispatch build
+        if: steps.dispatch.outputs.has_dispatch == 'true'
+        run: git checkout ${{ github.sha }}
+
+      # ---- Rehydrate the branch slot from the orphan branch (every run) ----
+      - name: Rehydrate branch slot from orphan branch
+        id: rehydrate
+        run: |
+          if git ls-remote --exit-code --heads origin "$BRANCH_DEPLOY_REF" >/dev/null 2>&1; then
+            git fetch origin "$BRANCH_DEPLOY_REF"
+            mkdir -p site-branch
+            git --work-tree=site-branch checkout "origin/$BRANCH_DEPLOY_REF" -- .
+            echo "has_branch_dist=true" >> "$GITHUB_OUTPUT"
+            echo "Rehydrated branch slot from $BRANCH_DEPLOY_REF."
+          else
+            echo "has_branch_dist=false" >> "$GITHUB_OUTPUT"
+            echo "$BRANCH_DEPLOY_REF branch does not exist yet — skipping branch slot."
+          fi
+
+      # ---- Merge slots into the artifact ----
+      # The artifact root is the root slot (release tag, or main before the
+      # first release); `preview/` always tracks the triggering commit.
+      - name: Merge builds
+        run: |
+          mv site-root site
+          mkdir -p site/preview
+          cp -R site-preview/. site/preview/
+          ROOT_REF="${{ steps.tag.outputs.has_release == 'true' && steps.tag.outputs.ref || 'main' }}"
+          echo "Merged: /game/ = $ROOT_REF, /game/preview/ = ${{ github.sha }}"
+          if [ "${{ steps.rehydrate.outputs.has_branch_dist }}" = "true" ]; then
+            mkdir -p site/branch
+            cp -R site-branch/. site/branch/
+            echo "Merged: /game/branch/ from $BRANCH_DEPLOY_REF"
+          fi
+
+      - uses: actions/configure-pages@v5
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: site
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    permissions:
+      pages: write
+      id-token: write
+    steps:
+      - id: deployment
+        uses: actions/deploy-pages@v4

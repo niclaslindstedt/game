@@ -1,0 +1,58 @@
+/* SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0 */
+/* App stylesheet. The framework's components paint with Tailwind v4 utility
+   classes, so the published-app import pattern applies (see the header of the
+   framework's theme/framework.css): Tailwind base + the framework bundle with
+   the preset palettes baked in. Below that, the app's own title-screen shell
+   styling — gameplay rendering will happen on a canvas; this only needs to
+   make the prelaunch copy presentable in the meantime. */
+
+@import "tailwindcss";
+@import "@niclaslindstedt/oss-framework/styles.css";
+
+:root {
+  color-scheme: dark;
+}
+
+html,
+body {
+  margin: 0;
+  min-height: 100%;
+  background: #0b0d10;
+  color: #e6e8eb;
+  font-family:
+    system-ui,
+    -apple-system,
+    "Segoe UI",
+    Roboto,
+    sans-serif;
+  line-height: 1.6;
+}
+
+.prelaunch {
+  max-width: 40rem;
+  margin: 0 auto;
+  padding: clamp(2rem, 10vh, 6rem) 1.5rem 4rem;
+  padding-bottom: max(4rem, env(safe-area-inset-bottom));
+}
+
+.prelaunch h1 {
+  font-size: clamp(2.5rem, 8vw, 4rem);
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  margin: 0 0 1.5rem;
+  background: linear-gradient(135deg, #7ef0c8, #38b6ff);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+
+.prelaunch a {
+  color: #7ef0c8;
+}
+
+.prelaunch .build-label {
+  margin-top: 3rem;
+  font-size: 0.8rem;
+  color: #7a8088;
+  font-variant-numeric: tabular-nums;
+}

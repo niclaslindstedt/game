@@ -1,0 +1,12 @@
+# Vendored / generated — not ours to format
+OSS_SPEC.md
+CHANGELOG.md
+LICENSE
+package-lock.json
+website/dist/
+website/src/generated/
+site/
+node_modules/
+
+# Agent skill playbooks are templated upstream; keep their formatting stable
+.agent/

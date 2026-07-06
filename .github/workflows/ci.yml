@@ -1,0 +1,76 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+env:
+  # @niclaslindstedt/oss-framework is pulled from GitHub Packages, which
+  # requires auth even for reads (.npmrc references GITHUB_PAT). Prefer the
+  # GITHUB_PAT secret; fall back to the workflow token, which can read
+  # packages in the same owner.
+  GITHUB_PAT: ${{ secrets.GITHUB_PAT || github.token }}
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+      - run: npm ci
+      - name: make build
+        run: make build
+      - name: make test
+        run: make test
+      - name: make lint
+        run: make lint
+      - name: make fmt-check
+        run: make fmt-check
+
+  # §7.1 — every tool-specific agent-guidance file must be a symlink to
+  # AGENTS.md, and .claude/skills must resolve to .agent/skills. A commit that
+  # dereferences one into a regular file breaks the single source of truth.
+  symlinks:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Verify agent-guidance symlinks
+        run: |
+          fail=0
+          for link in CLAUDE.md .cursorrules .windsurfrules GEMINI.md .aider.conf.md .github/copilot-instructions.md; do
+            if [ ! -L "$link" ]; then
+              echo "::error file=$link::$link must be a symlink to AGENTS.md"
+              fail=1
+            elif [ "$(basename "$(readlink "$link")")" != "AGENTS.md" ]; then
+              echo "::error file=$link::$link resolves to $(readlink "$link"), not AGENTS.md"
+              fail=1
+            fi
+          done
+          if [ ! -L .claude/skills ]; then
+            echo "::error file=.claude/skills::.claude/skills must be a symlink to ../.agent/skills"
+            fail=1
+          fi
+          exit $fail
+
+  # Lint workflow YAML with actionlint and shell scripts with shellcheck
+  # (OSS_SPEC §16.1). shellcheck is preinstalled on ubuntu-latest; actionlint
+  # is fetched via its official installer.
+  shell-lint:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install actionlint
+        run: |
+          bash <(curl -sSfL https://raw.githubusercontent.com/rhysd/actionlint/main/scripts/download-actionlint.bash)
+          echo "${PWD}" >> "$GITHUB_PATH"
+      - name: make actionlint
+        run: make actionlint
+      - name: make shellcheck
+        run: make shellcheck
