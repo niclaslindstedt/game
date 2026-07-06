@@ -9,12 +9,18 @@
 import { useEffect, useRef, useState } from "react";
 
 import {
+  allocateStat,
+  BOT_STRATEGIES,
+  botAct,
+  botAllocate,
   closeInventory,
+  createBot,
   createGame,
   debug,
   dismissIntro,
   openInventory,
   step,
+  type BotStrategy,
   type GameInput,
   type GamePhase,
   type GameState,
@@ -90,9 +96,18 @@ export function GameScreen({ onQuit }: { onQuit: () => void }) {
 
     // In debug mode (?debug) the live state is reachable from the console /
     // automated playtests. See the debug-game skill.
-    if (new URLSearchParams(window.location.search).has("debug")) {
+    const params = new URLSearchParams(window.location.search);
+    if (params.has("debug")) {
       (window as { __game?: GameState }).__game = state;
     }
+
+    // Autoplay (?bot=<strategy>): the engine bot steers instead of the
+    // pointer and spends level-ups itself. See the playtest skill.
+    const requested = params.get("bot");
+    const bot =
+      requested && (BOT_STRATEGIES as string[]).includes(requested)
+        ? createBot(requested as BotStrategy)
+        : null;
 
     const synth = (synthRef.current ??= createSynth());
     // Audio can only start from a user gesture; the run itself begins with
@@ -149,12 +164,27 @@ export function GameScreen({ onQuit }: { onQuit: () => void }) {
 
     const stop = startGameLoop({
       simulate(dtMs) {
-        const camera = computeCamera(state, canvas.width, canvas.height);
-        input.steering = pointer.state.held;
-        input.target.x = camera.x + pointer.state.x * cssToWorld.x;
-        input.target.y = camera.y + pointer.state.y * cssToWorld.y;
-        input.jump = jumpQueuedRef.current;
-        jumpQueuedRef.current = false;
+        if (bot) {
+          // The bot is a drop-in input source; it also clears the paused
+          // phases a human would click through.
+          if (state.phase === "intro") dismissIntro(state);
+          if (state.phase === "levelup") {
+            allocateStat(state, botAllocate(bot, state));
+            bumpUi();
+          }
+          const decided = botAct(bot, state);
+          input.steering = decided.steering;
+          input.target.x = decided.target.x;
+          input.target.y = decided.target.y;
+          input.jump = decided.jump;
+        } else {
+          const camera = computeCamera(state, canvas.width, canvas.height);
+          input.steering = pointer.state.held;
+          input.target.x = camera.x + pointer.state.x * cssToWorld.x;
+          input.target.y = camera.y + pointer.state.y * cssToWorld.y;
+          input.jump = jumpQueuedRef.current;
+          jumpQueuedRef.current = false;
+        }
         step(state, input, dtMs);
         playEventSounds(synth, state.events);
       },

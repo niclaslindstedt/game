@@ -13,8 +13,10 @@ change ends with a playtest before it ships.
 
 | Piece | Role |
 | --- | --- |
-| `website/scripts/playtest.mjs` | Autoplay bot: starts a run, steers by strategy, screenshots, prints outcome + stats JSON |
-| `?debug` URL param | Exposes the live `GameState` as `window.__game` (set in `GameScreen.tsx`) — the bot's (and your) window into the simulation |
+| `src/game/bot.ts` | The engine autopilot: strategies that turn `GameState` into `GameInput`. One source of truth — headless tests (`tests/bot_test.ts`) and the browser harness both drive THIS code |
+| `?bot=<strategy>` URL param | Hands the run to the autopilot in the real app (`GameScreen.tsx`): it dismisses the intro, steers, jumps, and spends level-ups itself |
+| `website/scripts/playtest.mjs` | Thin Playwright launcher/observer: opens `?debug&bot=<strategy>`, screenshots, prints outcome + stats JSON |
+| `?debug` URL param | Exposes the live `GameState` as `window.__game` (set in `GameScreen.tsx`) — the harness's (and your) window into the simulation |
 | `website/assets-preview/playtest/` | Screenshots land here (gitignored) |
 
 ## Running
@@ -68,10 +70,15 @@ well?), run headed: `make website-dev` and play in the browser.
 
 ## Extending the bot
 
-New systems usually need a new probe: add a strategy to `playtest.mjs`
-(one `case` in `act()`) rather than a separate script, so every behavior
-stays runnable from one tool. Keep strategies tiny — a steering decision
-per tick from the `window.__game` snapshot.
+New systems usually need a new probe: add a strategy to the ENGINE bot
+(`src/game/bot.ts` — a new `BotStrategy` name plus a case in `botAct`),
+never to the Playwright script. That one strategy is then instantly
+available to headless engine tests (see `tests/bot_test.ts`'s `drive`
+helper), to `?bot=` in the real app, and to this harness. Keep strategies
+tiny and PURE — a steering decision per tick from the state, no state
+mutation, no `state.rng` draws (determinism is the point). The `Bot`
+object is the place for per-bot memory later (and the seed for an
+AI-controlled second player).
 
 ## Skill self-improvement
 
