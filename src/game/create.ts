@@ -6,9 +6,11 @@
 // pass a constant, the app passes a clock-derived value so every retry lays
 // the level out differently.
 
+import { createCutscene } from "@game/lib/cutscene.ts";
 import { createRng, randomRange, type Rng } from "@game/lib/rng.ts";
 import { distance, vec, type Vec2 } from "@game/lib/vec.ts";
 import { ENEMY_AI, LEVELING, LOOT, OBSTACLES, PLAYER } from "./config.ts";
+import { cutsceneDef } from "./defs/cutscenes.ts";
 import { difficultyDef, scaledMobCount } from "./defs/difficulties.ts";
 import { enemyDef } from "./defs/enemies.ts";
 import { LEVEL_ORDER, levelDef, type LevelDef } from "./defs/levels.ts";
@@ -37,8 +39,12 @@ export function createGame(
       : Math.hypot(def.width, def.height);
 
   // Obstacles go down first so monsters (and their walk-in spawns) never
-  // start wedged inside one.
-  const obstacles = scatterObstacles(rng, def, playerSpawn, () => nextId++);
+  // start wedged inside one. Deliberate walls land before the scatter so
+  // scattered pieces keep their distance from the architecture.
+  const obstacles = buildWalls(def, () => nextId++);
+  obstacles.push(
+    ...scatterObstacles(rng, def, playerSpawn, obstacles, () => nextId++),
+  );
   const blocked = (pos: Vec2, radius: number) =>
     obstacles.some((o) => distance(pos, o.pos) < o.radius + radius);
 
@@ -92,7 +98,8 @@ export function createGame(
   );
 
   return {
-    phase: "intro",
+    phase: def.prelude ? "cutscene" : "intro",
+    cutscene: def.prelude ? createCutscene(cutsceneDef(def.prelude)) : null,
     difficulty,
     level: {
       id: def.id,
@@ -102,6 +109,7 @@ export function createGame(
       height: def.height,
       gravity: def.gravity,
       biome: def.biome,
+      foes: def.foes,
     },
     playerSpawn,
     landmarks: def.landmarks.map((l) => ({ kind: l.kind, pos: { ...l.pos } })),
@@ -209,17 +217,51 @@ export function spawnEnemy(
 }
 
 /**
+ * Expand the level's wall segments into chains of solid circles. Centers
+ * step by 1.5× the radius, so neighbouring circles overlap enough that no
+ * body can slip between them — a segment collides as one continuous wall.
+ * Deliberate architecture skips the scatter clearance rules: door gaps are
+ * the designer's responsibility, not the sampler's.
+ */
+function buildWalls(def: LevelDef, takeId: () => number): Obstacle[] {
+  const obstacles: Obstacle[] = [];
+  for (const wall of def.walls ?? []) {
+    const length = distance(wall.from, wall.to);
+    const steps = Math.max(1, Math.ceil(length / (wall.radius * 1.5)));
+    for (let i = 0; i <= steps; i++) {
+      const t = i / steps;
+      obstacles.push({
+        id: takeId(),
+        kind: wall.kind,
+        pos: vec(
+          wall.from.x + (wall.to.x - wall.from.x) * t,
+          wall.from.y + (wall.to.y - wall.from.y) * t,
+        ),
+        radius: wall.radius,
+        jumpable: wall.jumpable,
+      });
+    }
+  }
+  return obstacles;
+}
+
+/**
  * Scatter the level's solid obstacles: clear of landmarks (the boss must
  * reach his flag), clear of the player spawn, and spaced apart from each
- * other so the field always leaves walkable lanes.
+ * other (walls included) so the field always leaves walkable lanes.
  */
 function scatterObstacles(
   rng: Rng,
   def: LevelDef,
   playerSpawn: Vec2,
+  walls: Obstacle[],
   takeId: () => number,
 ): Obstacle[] {
-  const obstacles: Obstacle[] = [];
+  const scattered: Obstacle[] = [];
+  const clearOf = (others: Obstacle[], pos: Vec2, radius: number) =>
+    others.every(
+      (o) => distance(pos, o.pos) > o.radius + radius + OBSTACLES.spacing,
+    );
   for (const spec of def.obstacles) {
     for (let i = 0; i < spec.count; i++) {
       for (let attempts = 0; attempts < 30; attempts++) {
@@ -232,12 +274,10 @@ function scatterObstacles(
           def.landmarks.every(
             (l) => distance(pos, l.pos) > def.decorClearance + spec.radius,
           ) &&
-          obstacles.every(
-            (o) =>
-              distance(pos, o.pos) > o.radius + spec.radius + OBSTACLES.spacing,
-          );
+          clearOf(walls, pos, spec.radius) &&
+          clearOf(scattered, pos, spec.radius);
         if (!clear) continue;
-        obstacles.push({
+        scattered.push({
           id: takeId(),
           kind: spec.kind,
           pos,
@@ -248,7 +288,7 @@ function scatterObstacles(
       }
     }
   }
-  return obstacles;
+  return scattered;
 }
 
 /** Scatter the level's decorative features, keeping landmarks clear. */

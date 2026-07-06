@@ -9,6 +9,7 @@
 // pause the run in the `levelup` phase until `allocateStat` spends the
 // point(s).
 
+import { stepCutscene } from "@game/lib/cutscene.ts";
 import {
   clamp,
   direction,
@@ -38,6 +39,7 @@ import {
 } from "./config.ts";
 import { spawnEnemy } from "./create.ts";
 import { abilityDef } from "./defs/abilities.ts";
+import { cutsceneDef } from "./defs/cutscenes.ts";
 import { difficultyDef, scaledMobCount } from "./defs/difficulties.ts";
 import { enemyDef, type EnemyDef } from "./defs/enemies.ts";
 import { weaponDef } from "./defs/equipment.ts";
@@ -60,6 +62,20 @@ import type { Enemy, GameInput, GameState, Item } from "./types.ts";
 /** Advance the simulation by `dtMs` milliseconds. */
 export function step(state: GameState, input: GameInput, dtMs: number): void {
   state.events = [];
+
+  // The prelude scene runs on the same clock as the sim (deterministic,
+  // headless-testable); the world stays frozen until it plays out.
+  if (state.phase === "cutscene") {
+    if (state.cutscene && !state.cutscene.done) {
+      stepCutscene(state.cutscene, cutsceneDef(state.cutscene.defId), dtMs);
+    }
+    if (!state.cutscene || state.cutscene.done) {
+      state.cutscene = null;
+      state.phase = "intro";
+    }
+    return;
+  }
+
   if (state.phase !== "playing") return;
 
   const dt = dtMs / 1000;

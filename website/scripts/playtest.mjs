@@ -79,7 +79,11 @@ let s = await snapshot();
 const t0 = Date.now();
 let shotTaken = false;
 while (
-  (s.phase === "intro" || s.phase === "playing" || s.phase === "levelup") &&
+  // Cutscene appears for one poll at most — the bot skips its own preludes.
+  (s.phase === "cutscene" ||
+    s.phase === "intro" ||
+    s.phase === "playing" ||
+    s.phase === "levelup") &&
   Date.now() - t0 < timeoutMs
 ) {
   if (!shotTaken && Date.now() - t0 > 1500) {

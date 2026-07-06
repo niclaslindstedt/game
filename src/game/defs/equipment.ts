@@ -52,6 +52,90 @@ export type WeaponDef = {
 };
 
 export const WEAPON_DEFS: Record<string, WeaponDef> = {
+  // ---- SpaceZ HQ (level 1): whatever the office and the lab left lying
+  // around. Numbers sit a notch under the moon pool — this is the run where
+  // a MAGIC KEYBOARD is a genuine find.
+  stapler: {
+    id: "stapler",
+    name: "STAPLER",
+    class: "ranged",
+    damage: 6,
+    cooldownMs: 380,
+    range: 210,
+    durability: 140,
+    projectile: { speed: 380, radius: 3, lifetimeMs: 800, sprite: "staple" },
+    icon: "icon_stapler",
+  },
+  keyboard: {
+    id: "keyboard",
+    name: "KEYBOARD",
+    class: "melee",
+    damage: 13,
+    cooldownMs: 300,
+    range: 38,
+    // Keyboards were not built for this. Keys everywhere.
+    durability: 100,
+    icon: "icon_keyboard",
+  },
+  mop: {
+    id: "mop",
+    name: "MOP",
+    class: "melee",
+    // The janitor's reach weapon: weak per swing, but it keeps the crowd at
+    // arm's length — the longest melee range in the building.
+    damage: 11,
+    cooldownMs: 260,
+    range: 52,
+    durability: 160,
+    icon: "icon_mop",
+  },
+  fire_extinguisher: {
+    id: "fire_extinguisher",
+    name: "FIRE EXTINGUISHER",
+    class: "melee",
+    damage: 28,
+    cooldownMs: 680,
+    range: 42,
+    durability: 110,
+    icon: "icon_extinguisher",
+  },
+  taser: {
+    id: "taser",
+    name: "TASER",
+    class: "ranged",
+    // Security issue: hits hard for its cadence but only across a desk —
+    // the short lifetime caps the reach well inside other ranged arms.
+    damage: 11,
+    cooldownMs: 480,
+    range: 150,
+    durability: 150,
+    projectile: { speed: 460, radius: 3, lifetimeMs: 400, sprite: "zap" },
+    icon: "icon_taser",
+  },
+  laser_pointer: {
+    id: "laser_pointer",
+    name: "LASER POINTER",
+    class: "magic",
+    damage: 9,
+    cooldownMs: 280,
+    range: 300,
+    durability: 180,
+    projectile: { speed: 520, radius: 3, lifetimeMs: 900, sprite: "ray" },
+    icon: "icon_laser_pointer",
+  },
+  beaker: {
+    id: "beaker",
+    name: "BEAKER",
+    class: "magic",
+    // Something unlabeled from the lab shelf. Throws slow, hits like it.
+    damage: 17,
+    cooldownMs: 620,
+    range: 230,
+    durability: 90,
+    projectile: { speed: 300, radius: 4, lifetimeMs: 1100, sprite: "vial" },
+    icon: "icon_beaker",
+  },
+  // ---- The moon (level 2) pool.
   blaster: {
     id: "blaster",
     name: "BLASTER",
@@ -154,7 +238,44 @@ export const WEAPON_DEFS: Record<string, WeaponDef> = {
     icon: "icon_void_wand",
   },
   // Uniques — never in a level's random weapon pool; they arrive via
-  // guaranteed drops (a boss's `loot.items`, a level's `allClearWeapon`).
+  // guaranteed drops (a boss's `loot.items`, a level's `allClearWeapon`,
+  // a level's `earlyWeapon`).
+  security_baton: {
+    id: "security_baton",
+    name: "SECURITY BATON",
+    class: "melee",
+    // HQ's guaranteed early drop: a real weapon within the first dozens of
+    // kills, so the run's melee spine arrives before the crowd thickens.
+    damage: 18,
+    cooldownMs: 360,
+    range: 42,
+    durability: 220,
+    icon: "icon_baton",
+  },
+  golden_stapler: {
+    id: "golden_stapler",
+    name: "GOLDEN STAPLER",
+    class: "ranged",
+    // The all-clear trophy: the CEO's desk ornament, and somehow the best
+    // stapler in the building.
+    damage: 14,
+    cooldownMs: 280,
+    range: 240,
+    durability: 260,
+    projectile: { speed: 420, radius: 3, lifetimeMs: 850, sprite: "staple" },
+    icon: "icon_golden_stapler",
+  },
+  plasma_cutter: {
+    id: "plasma_cutter",
+    name: "PLASMA CUTTER",
+    class: "melee",
+    // MUSKRAT's hoard piece — cleanroom tooling rated for rocket hulls.
+    damage: 26,
+    cooldownMs: 340,
+    range: 44,
+    durability: 260,
+    icon: "icon_plasma_cutter",
+  },
   machete: {
     id: "machete",
     name: "MACHETE",
@@ -190,6 +311,21 @@ export type GearDef = {
 };
 
 export const GEAR_DEFS: Record<string, GearDef> = {
+  lab_coat: {
+    id: "lab_coat",
+    name: "LAB COAT",
+    slot: "suit",
+    bonuses: { maxHp: 15 },
+    icon: "icon_lab_coat",
+  },
+  id_badge: {
+    id: "id_badge",
+    name: "ID BADGE",
+    slot: "charm",
+    // All-areas access reads as luck: doors you should not have opened.
+    bonuses: { critChance: 0.03 },
+    icon: "icon_badge",
+  },
   suit_plating: {
     id: "suit_plating",
     name: "SUIT PLATING",

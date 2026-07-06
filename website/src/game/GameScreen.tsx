@@ -20,8 +20,11 @@ import {
   createGame,
   debug,
   dismissIntro,
+  LEVELS,
   openInventory,
+  skipCutscene,
   step,
+  tapCutscene,
   weaponDef,
   type BotStrategy,
   type Difficulty,
@@ -37,6 +40,7 @@ import { trackPointer } from "@ui/lib/pointer.ts";
 
 import { loadGameAssets, spriteByName, type GameAssets } from "./assets.ts";
 import { synth } from "./audio.ts";
+import { CutsceneOverlay } from "./CutsceneOverlay.tsx";
 import { IntroOverlay } from "./IntroOverlay.tsx";
 import { InventoryPanel } from "./InventoryPanel.tsx";
 import { LevelUpOverlay } from "./LevelUpOverlay.tsx";
@@ -111,8 +115,17 @@ export function GameScreen({
     const ctx = canvas.getContext("2d");
     if (!ctx) return;
 
-    const seed = Date.now() & 0x7fffffff;
-    const state = createGame(seed, undefined, difficulty);
+    // Dev/playtest handles: `?seed=` pins the run's layout, `?level=` jumps
+    // to any catalog level (see docs/configuration.md).
+    const params = new URLSearchParams(window.location.search);
+    const seedParam = Number(params.get("seed"));
+    const seed =
+      Number.isInteger(seedParam) && seedParam > 0
+        ? seedParam & 0x7fffffff
+        : Date.now() & 0x7fffffff;
+    const levelParam = params.get("level");
+    const levelId = levelParam && levelParam in LEVELS ? levelParam : undefined;
+    const state = createGame(seed, levelId, difficulty);
     setState(state);
     debug(`run ${runId} started (seed ${seed}, ${difficulty})`);
 
@@ -125,7 +138,6 @@ export function GameScreen({
 
     // In debug mode (?debug) the live state is reachable from the console /
     // automated playtests. See the debug-game skill.
-    const params = new URLSearchParams(window.location.search);
     if (params.has("debug")) {
       (window as { __game?: GameState }).__game = state;
     }
@@ -181,12 +193,17 @@ export function GameScreen({
       if (event.repeat) return;
       if (event.code === "Space") {
         event.preventDefault();
-        if (state.phase === "intro") {
+        if (state.phase === "cutscene") {
+          tapCutscene(state);
+        } else if (state.phase === "intro") {
           beginRun();
           bumpUi();
         } else {
           jumpQueuedRef.current = true;
         }
+      } else if (event.key === "Escape" && state.phase === "cutscene") {
+        skipCutscene(state);
+        playUiSound(synth, "back");
       } else if (event.key === "e" || event.key === "E") {
         useItemQueuedRef.current = true;
       } else if (event.key === "i" || event.key === "I") {
@@ -229,6 +246,7 @@ export function GameScreen({
         if (bot) {
           // The bot is a drop-in input source; it also clears the paused
           // phases a human would click through.
+          if (state.phase === "cutscene") skipCutscene(state);
           if (state.phase === "intro") beginRun();
           if (state.phase === "levelup") {
             allocateStat(state, botAllocate(bot, state));
@@ -409,7 +427,7 @@ export function GameScreen({
             )}
             <PixelText
               font={font}
-              text={`GHOSTS ${hud.stats.totalEnemies - hud.enemiesLeft}/${hud.stats.totalEnemies}`}
+              text={`${state?.level.foes ?? "FOES"} ${hud.stats.totalEnemies - hud.enemiesLeft}/${hud.stats.totalEnemies}`}
               scale={2}
               color="#d9a0f0"
             />
@@ -438,6 +456,22 @@ export function GameScreen({
             </button>
           </div>
         </div>
+      )}
+
+      {state && state.cutscene && hud?.phase === "cutscene" && (
+        <CutsceneOverlay
+          cutscene={state.cutscene}
+          assets={assets}
+          font={font}
+          onTap={() => {
+            tapCutscene(state);
+            playUiSound(synth, "move");
+          }}
+          onSkip={() => {
+            skipCutscene(state);
+            playUiSound(synth, "back");
+          }}
+        />
       )}
 
       {state && hud?.phase === "intro" && (
@@ -490,7 +524,7 @@ export function GameScreen({
             />
             <PixelText
               font={font}
-              text={`GHOSTS ${hud.stats.kills}/${hud.stats.totalEnemies}`}
+              text={`${state?.level.foes ?? "FOES"} ${hud.stats.kills}/${hud.stats.totalEnemies}`}
               scale={3}
             />
             <PixelText

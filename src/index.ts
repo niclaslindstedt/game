@@ -39,6 +39,8 @@ export {
   CLASS_STAT,
   closeInventory,
   dismissIntro,
+  skipCutscene,
+  tapCutscene,
   dropChance,
   effectiveStat,
   equipFromInventory,
@@ -64,6 +66,25 @@ export {
   orbPositions,
   stasisFactorAt,
 } from "./game/abilities.ts";
+
+// Cutscenes: the generic player (@game/lib) plus the scene catalog. The app
+// renders scenes from CutsceneState + def; `currentLine` is the text on
+// screen this frame.
+export {
+  advanceCutsceneBeat,
+  createCutscene,
+  currentLine,
+  finishCutscene,
+  stepCutscene,
+  type CutsceneActor,
+  type CutsceneActorDef,
+  type CutsceneBeat,
+  type CutsceneDef,
+  type CutsceneProp,
+  type CutsceneStage,
+  type CutsceneState,
+} from "@game/lib/cutscene.ts";
+export { CUTSCENE_DEFS, cutsceneDef } from "./game/defs/cutscenes.ts";
 
 // Content catalogs: levels, monsters, equipment, tiers, difficulties.
 export {

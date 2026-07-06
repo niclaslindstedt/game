@@ -2,7 +2,14 @@
 // Shared scaffolding for the engine test suites. Not a test file itself —
 // vitest only collects `*_test.ts` / `*_tests.ts`.
 
-import { createGame, dismissIntro, enemyDef, levelDef, step } from "@game/core";
+import {
+  createGame,
+  dismissIntro,
+  enemyDef,
+  levelDef,
+  skipCutscene,
+  step,
+} from "@game/core";
 import type { Enemy, GameInput, GameState } from "@game/core";
 
 export const SEED = 42;
@@ -24,9 +31,15 @@ export const jumpOnce: GameInput = {
   jump: true,
 };
 
-/** A run already past the intro text box. */
-export function startGame(seed: number = SEED): GameState {
-  const state = createGame(seed);
+/**
+ * A run already past the prelude scene and the intro text box. The moon is
+ * the reference level for the engine-rule suites — their geometry and
+ * tuning assertions were calibrated against it; level-specific suites pass
+ * their own id.
+ */
+export function startGame(seed: number = SEED, levelId = "moon"): GameState {
+  const state = createGame(seed, levelId);
+  skipCutscene(state);
   dismissIntro(state);
   return state;
 }

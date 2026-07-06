@@ -85,7 +85,7 @@ describe("difficulty catalog", () => {
 
 describe("difficulty scaling in a run", () => {
   it("defaults to medium and matches the level's raw numbers", () => {
-    const state = createGame(SEED);
+    const state = createGame(SEED, "moon");
     expect(state.difficulty).toBe("medium");
     const budget = WAVES.budget.reduce((sum, e) => sum + e.count, 0);
     expect(state.stats.totalEnemies).toBe(state.enemies.length + budget);

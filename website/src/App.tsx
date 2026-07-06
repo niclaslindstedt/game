@@ -1,11 +1,12 @@
 // SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
 import { useState } from "react";
 
-import type { Difficulty } from "@game/core";
+import { CUTSCENE_DEFS, type Difficulty } from "@game/core";
 
 import { UpdateToast, usePwaUpdate } from "@niclaslindstedt/oss-framework/pwa";
 
 import { cacheIdForBase } from "./app/pwa.ts";
+import { CutscenePreview } from "./game/CutscenePreview.tsx";
 import { GameScreen } from "./game/GameScreen.tsx";
 import { TitleScreen } from "./game/TitleScreen.tsx";
 
@@ -28,6 +29,13 @@ export function App() {
     cacheId: cacheIdForBase(import.meta.env.BASE_URL),
     enabled: !import.meta.env.DEV,
   });
+
+  // The cutscene workbench (`?cutscene=<id>`): loop one scene from the
+  // catalog with no run around it — the authoring iteration loop.
+  const sceneId = new URLSearchParams(window.location.search).get("cutscene");
+  if (sceneId && sceneId in CUTSCENE_DEFS) {
+    return <CutscenePreview id={sceneId} />;
+  }
 
   if (difficulty) {
     return (

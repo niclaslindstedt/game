@@ -39,7 +39,7 @@ const isBoss = (defId: string) => enemyDef(defId).role === "boss";
 
 describe("createGame", () => {
   it("opens on the intro text box and only plays after dismissal", () => {
-    const state = createGame(SEED);
+    const state = createGame(SEED, "moon");
     expect(state.phase).toBe("intro");
     expect(MOON.intro.length).toBeGreaterThan(0);
 
@@ -53,7 +53,7 @@ describe("createGame", () => {
   });
 
   it("builds the moonscape: ghosts, boss at the flag, lander-side spawn", () => {
-    const state = createGame(SEED);
+    const state = createGame(SEED, "moon");
     const minions = state.enemies.filter((e) => !isBoss(e.defId));
     const bosses = state.enemies.filter((e) => isBoss(e.defId));
     const expectedMinions = MOON.spawns
@@ -72,7 +72,7 @@ describe("createGame", () => {
   });
 
   it("bands enemy difficulty by distance from the player spawn", () => {
-    const state = createGame(SEED);
+    const state = createGame(SEED, "moon");
     const avg = (defId: string) => {
       const list = state.enemies.filter((e) => e.defId === defId);
       return (
@@ -85,8 +85,8 @@ describe("createGame", () => {
   });
 
   it("is deterministic for a given seed", () => {
-    const a = createGame(SEED);
-    const b = createGame(SEED);
+    const a = createGame(SEED, "moon");
+    const b = createGame(SEED, "moon");
     expect(a.enemies.map((e) => e.pos)).toEqual(b.enemies.map((e) => e.pos));
     expect(a.decor).toEqual(b.decor);
   });

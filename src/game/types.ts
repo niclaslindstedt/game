@@ -9,16 +9,23 @@
 // `defId` into ENEMY_DEFS, an Equipment a `defId` into WEAPON_DEFS/GEAR_DEFS.
 // The catalogs scale to hundreds of entries without these shapes changing.
 
+import type { CutsceneState } from "@game/lib/cutscene.ts";
 import type { Rng } from "@game/lib/rng.ts";
 import type { Vec2 } from "@game/lib/vec.ts";
 
 /**
- * `intro` shows the story text box, `levelup` waits for a stat choice,
- * `inventory` pauses for bag management; the simulation only advances while
- * `playing`.
+ * `cutscene` plays the level's prelude scene, `intro` shows the story text
+ * box, `levelup` waits for a stat choice, `inventory` pauses for bag
+ * management; the simulation only advances while `playing`.
  */
 export type GamePhase =
-  "intro" | "playing" | "levelup" | "inventory" | "victory" | "defeat";
+  | "cutscene"
+  | "intro"
+  | "playing"
+  | "levelup"
+  | "inventory"
+  | "victory"
+  | "defeat";
 
 /**
  * The difficulty ladder, gentlest to absurd. Chosen on the main menu before
@@ -275,10 +282,17 @@ export type LevelInfo = {
   gravity: number;
   /** Tileset/mood key for the renderer ("moon", "earth", …). */
   biome: string;
+  /** What the HUD calls this level's hostiles ("GHOSTS", "STAFF"). */
+  foes: string;
 };
 
 export type GameState = {
   phase: GamePhase;
+  /**
+   * The running prelude scene while `phase === "cutscene"` (see
+   * @game/lib/cutscene and defs/cutscenes.ts); null once it played out.
+   */
+  cutscene: CutsceneState | null;
   level: LevelInfo;
   /** The run's chosen difficulty (scales spawns, hp, and loot). */
   difficulty: Difficulty;

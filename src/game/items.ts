@@ -7,9 +7,11 @@
 // are safe to invoke from outside `step()` because they only touch the
 // player.
 
+import { advanceCutsceneBeat, finishCutscene } from "@game/lib/cutscene.ts";
 import type { Rng } from "@game/lib/rng.ts";
 import { randomRange } from "@game/lib/rng.ts";
 import { LOOT, PLAYER, STATS } from "./config.ts";
+import { cutsceneDef } from "./defs/cutscenes.ts";
 import {
   AFFIX_POOLS,
   gearDef,
@@ -430,6 +432,29 @@ export function allocateStat(state: GameState, stat: StatName): boolean {
 /** Dismiss the story intro and start the run. */
 export function dismissIntro(state: GameState): void {
   if (state.phase === "intro") state.phase = "playing";
+}
+
+/**
+ * The player's tap during the prelude: cut the running beat short (snap a
+ * walk to its mark, dismiss a line early). One tap, one beat.
+ */
+export function tapCutscene(state: GameState): void {
+  if (state.phase !== "cutscene" || !state.cutscene) return;
+  advanceCutsceneBeat(state.cutscene, cutsceneDef(state.cutscene.defId));
+  if (state.cutscene.done) {
+    state.cutscene = null;
+    state.phase = "intro";
+  }
+}
+
+/** The SKIP button: end the prelude outright and land on the intro box. */
+export function skipCutscene(state: GameState): void {
+  if (state.phase !== "cutscene") return;
+  if (state.cutscene) {
+    finishCutscene(state.cutscene, cutsceneDef(state.cutscene.defId));
+  }
+  state.cutscene = null;
+  state.phase = "intro";
 }
 
 /** Pause into the bag. Only possible mid-run. */

@@ -24,22 +24,33 @@ it with a fixed timestep — the same seed, difficulty, and input sequence
 always replays the same run, which is what makes gameplay unit-testable in
 plain Node and bugs reproducible.
 
-Content is data, simulation is code: the game's levels, monsters, and
-equipment live in **catalogs** under `src/game/defs/`, and the engine only
-ever references them by id. Shipping level 1 (earth) or the hundredth
-weapon means adding catalog entries, not touching the simulation.
+Content is data, simulation is code: the game's levels, monsters,
+equipment, and cutscenes live in **catalogs** under `src/game/defs/`, and
+the engine only ever references them by id. Shipping level 12 or the
+hundredth weapon means adding catalog entries, not touching the simulation.
 
 - **`src/game/config.ts`** — the GLOBAL balance knobs (player, jumping, XP
   curve, stat effects, loot rules), nothing hardcoded in logic.
 - **`src/game/defs/levels.ts`** — the level registry: geometry, per-level
   gravity (the moon's low g is why jumps soar), biome, the story intro text,
-  landmark props, banded enemy spawns, the objective (`killBoss` /
-  `clearAll`), solid obstacles (tall boulders block everyone; low rocks can
-  be jumped by the player but never by monsters), decor, and the loot table
-  (pools + tier chances).
+  an optional prelude cutscene id, landmark props, banded enemy spawns, the
+  objective (`killBoss` / `clearAll`), solid obstacles (tall pieces block
+  everyone; low ones can be jumped by the player but never by monsters),
+  deliberate `walls` (segments expanded into chains of solid circles at
+  creation — door gaps between segments are how SPACEZ HQ carves its rooms),
+  decor, and the loot table (pools + tier chances).
 - **`src/game/defs/enemies.ts`** — the monster catalog (stats, AI radii,
-  roles; bosses pin guaranteed drops). Level 2 ships wisp → moon ghost →
-  wraith plus ARMSTRONG, the giant astronaut ghost guarding the flag.
+  roles; bosses pin guaranteed drops). Level 1 ships the SpaceZ night shift
+  (intern → lab scientist → propulsion engineer → security guard → hazmat
+  tech) plus MUSKRAT, the mutant rat under the prototype rocket; level 2
+  ships wisp → moon ghost → wraith plus ARMSTRONG, the giant astronaut
+  ghost guarding the flag.
+- **`src/game/defs/cutscenes.ts`** — the cutscene catalog: pure-data scenes
+  (a stage of props, a cast, a beat timeline) played by the generic
+  `@game/lib/cutscene` state machine. A level references a scene via its
+  `prelude` field; the run then opens in the `cutscene` phase (the sim
+  frozen underneath), advanced by `step()` on the same clock, tapped
+  through with `tapCutscene` or ended with `skipCutscene`.
 - **`src/game/defs/equipment.ts`** — weapons (melee/ranged/magic classes,
   each with a durability budget — dropped weapons wear out per attack and
   break; the starting sidearm is minted unbreakable), gear, the four-tier
@@ -88,7 +99,8 @@ weapon means adding catalog entries, not touching the simulation.
   `kite`, `boss`, `survivor`) that turn the live state into ordinary
   `GameInput`, so a bot can sit anywhere a player does — headless tests,
   the app's `?bot=` autoplay mode, and later an AI-driven second player.
-- **`src/lib/`** — generic, game-agnostic helpers (`vec.ts`, `rng.ts`),
+- **`src/lib/`** — generic, game-agnostic helpers (`vec.ts`, `rng.ts`,
+  `cutscene.ts` — the deterministic beat-machine cutscene player),
   imported via the `@game/lib/*` alias and earmarked for extraction into
   oss-framework once mature (extraction is then a prefix swap).
 - **`src/index.ts`** — the public surface the app imports via `@game/core`.
@@ -104,7 +116,8 @@ log buffer (`recentLogs()`), and a debug switch (`?debug` URL param or
 A Vite + React 19 shell that mounts the engine and owns everything
 deploy-shaped:
 
-- **`website/src/App.tsx`** — the app shell: splash main menu ↔ the game.
+- **`website/src/App.tsx`** — the app shell: splash main menu ↔ the game,
+  plus the cutscene workbench route (`?cutscene=<id>`).
 - **`website/src/game/`** — the presentation of the engine:
   `TitleScreen.tsx` (the Doom-style splash menu: starfield, logo,
   keyboard-and-pointer navigation, NEW GAME → the difficulty ladder,
@@ -112,6 +125,10 @@ deploy-shaped:
   mount, fixed-timestep loop, control-scheme input mapping, HUD with hp/XP
   bars and the banked-item USE button, end-of-run splash),
   `IntroOverlay.tsx` (the level's story text box + chosen difficulty),
+  `CutsceneOverlay.tsx` (draws a running scene — backdrop, props, cast,
+  fade, dialogue — while the engine sits in the `cutscene` phase; TAP
+  advances a beat, SKIP ends the scene) and `CutscenePreview.tsx` (the
+  `?cutscene=<id>` workbench that loops one scene outside any run),
   `LevelUpOverlay.tsx` (the stat chooser shown while the engine pauses in
   `levelup`; folds into a 3×2 grid on landscape phones),
   `InventoryPanel.tsx` (the Diablo-style bag: drag-to-equip slots,
@@ -140,6 +157,10 @@ pixelated`), `tiers.ts` (tier name colors), `sfx.ts` (engine events →
 - **`website/scripts/playtest.mjs`** — the autoplay bot that drives real
   runs headlessly through the `?debug` state hook. See the `playtest`
   skill.
+- **`website/scripts/cutscene-preview.mjs`** — the scene review harness:
+  plays one cutscene in headless Chromium via the workbench and
+  screenshots every beat into `website/assets-preview/cutscenes/<id>/`,
+  so a scene edit is reviewed like a storyboard contact sheet.
 - **`website/pwa-plugin.ts`** — emits the service worker, `version.json`,
   and `precache-manifest.json` at build time (the pattern is borrowed from
   the oss-framework demo). The worker precaches the app shell, parks new
