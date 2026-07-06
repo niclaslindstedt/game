@@ -94,6 +94,8 @@ export function createGame(
       hp: PLAYER.maxHp,
       maxHp: PLAYER.maxHp,
       facing: vec(1, 0),
+      faceLeft: false,
+      abilities: [],
       moving: false,
       weaponCooldownMs: 0,
       hurtFlashMs: 0,
@@ -130,6 +132,18 @@ export function createGame(
     victoryCountdownMs: null,
     minionEquipmentDrops: 0,
     waveSpawned: (def.waves?.budget ?? []).map(() => 0),
+    moveSpawnCredit: 0,
+    // Roll where in [minKills, maxKills] the guaranteed early weapon lands —
+    // fixed per seed, discovered in play.
+    earlyWeaponAtKills: def.loot.earlyWeapon
+      ? Math.floor(
+          randomRange(
+            rng,
+            def.loot.earlyWeapon.minKills,
+            def.loot.earlyWeapon.maxKills + 1,
+          ),
+        )
+      : null,
     stats: {
       kills: 0,
       totalEnemies: enemies.length + waveTotal,

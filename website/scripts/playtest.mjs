@@ -44,7 +44,9 @@ const browser = await chromium.launch({
   executablePath:
     process.env.PLAYWRIGHT_CHROMIUM ?? "/opt/pw-browsers/chromium",
 });
-const page = await browser.newPage({ viewport: { width: 1024, height: 640 } });
+// Mobile-first: the game targets phones held horizontally, so playtests run
+// at a phone-landscape viewport (see AGENTS.md, "Mobile-first, landscape").
+const page = await browser.newPage({ viewport: { width: 844, height: 390 } });
 page.on("pageerror", (e) => console.error("PAGE ERROR:", e.message));
 
 // `?bot=` hands the run to the engine autopilot: it dismisses the intro,

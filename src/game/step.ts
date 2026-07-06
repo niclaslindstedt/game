@@ -2,11 +2,12 @@
 // The simulation step. Called with a fixed timestep by the app's game loop;
 // mutates the state in place and records what happened in `state.events` so
 // the app layer can play sounds and flash effects. Order per step: player
-// steering + jump physics → weapon auto-attack → projectiles → enemies
-// (aggro, boss guard AI, contact damage) → wave spawner (the escalating
-// horde) → item pickups → objective check → win/lose. Kills grant XP
-// proportional to the victim's max hp; level-ups pause the run in the
-// `levelup` phase until `allocateStat` spends the point(s).
+// steering + jump physics → weapon auto-attack → abilities (orbs, storms,
+// stasis) → projectiles → enemies (aggro, boss guard AI, contact damage) →
+// wave spawner (the escalating horde) → item pickups → objective check →
+// win/lose. Kills grant XP proportional to the victim's max hp; level-ups
+// pause the run in the `levelup` phase until `allocateStat` spends the
+// point(s).
 
 import {
   clamp,
@@ -16,6 +17,7 @@ import {
   moveToward,
   type Vec2,
 } from "@game/lib/vec.ts";
+import { grantAbility, orbPositions, stasisFactorAt } from "./abilities.ts";
 import {
   ENEMY_AI,
   JUMP,
@@ -23,10 +25,12 @@ import {
   LOOT,
   MEDKIT,
   PLAYER,
+  PROJECTILE,
   RUN,
   STATS,
 } from "./config.ts";
 import { spawnEnemy } from "./create.ts";
+import { abilityDef } from "./defs/abilities.ts";
 import { enemyDef, type EnemyDef } from "./defs/enemies.ts";
 import { weaponDef } from "./defs/equipment.ts";
 import { levelDef } from "./defs/levels.ts";
@@ -50,7 +54,8 @@ export function step(state: GameState, input: GameInput, dtMs: number): void {
   state.stats.timeMs += dtMs;
 
   stepPlayer(state, input, dt, dtMs);
-  stepWeapon(state, dtMs);
+  stepWeapon(state, input, dtMs);
+  stepAbilities(state, dt, dtMs);
   stepProjectiles(state, dt, dtMs);
   stepEnemies(state, dt, dtMs);
   stepSpawner(state);
@@ -98,23 +103,30 @@ function unspawnedMinions(state: GameState): number {
 }
 
 /**
- * The horde spawner: each wave-budget line streams its count in over its
- * time window, eased quadratically so a level opens with a few strays and
- * ends in an overwhelming flood. Spawns land in a ring just outside the
- * player's view and give chase at once; the live cap defers (never cancels)
- * what the field can't hold.
+ * The horde spawner, three pressures stacked. (1) Each wave-budget line
+ * streams its count in over its time window, eased quadratically, so the
+ * ramp ends in an overwhelming flood. (2) Walking the level spends
+ * moveSpawnCredit — every `moveSpawnEvery` px stirs one extra monster
+ * awake. (3) A live floor (`minAlive`) pulls spawns forward whenever the
+ * field goes quiet, so there is always a pack on screen. All three draw
+ * from the same finite budget; spawns land in a ring just outside the
+ * player's view and give chase at once; the live cap defers (never
+ * cancels) what the field can't hold.
  */
 function stepSpawner(state: GameState): void {
   const waves = levelDef(state.level.id).waves;
   if (!waves) return;
 
   let alive = 0;
+  let near = 0; // minions close enough to count as "on the player's screen"
   for (const enemy of state.enemies) {
-    if (enemyDef(enemy.defId).role !== "boss") alive++;
+    if (enemyDef(enemy.defId).role === "boss") continue;
+    alive++;
+    if (distance(enemy.pos, state.player.pos) <= ENEMY_AI.nearRadius) near++;
   }
 
   const t = state.stats.timeMs;
-  for (let i = 0; i < waves.budget.length; i++) {
+  outer: for (let i = 0; i < waves.budget.length; i++) {
     const entry = waves.budget[i] as (typeof waves.budget)[number];
     const spawned = state.waveSpawned[i] ?? 0;
     if (spawned >= entry.count) continue;
@@ -126,11 +138,50 @@ function stepSpawner(state: GameState): void {
     let due = Math.floor(entry.count * eased) - spawned;
 
     while (due-- > 0 && alive < waves.maxAlive) {
-      if (!spawnWaveEnemy(state, entry.enemy)) return;
+      if (!spawnWaveEnemy(state, entry.enemy)) break outer;
       state.waveSpawned[i] = (state.waveSpawned[i] ?? 0) + 1;
       alive++;
     }
   }
+
+  // Movement pressure: spend the walked distance banked by stepPlayer.
+  while (
+    state.moveSpawnCredit >= waves.moveSpawnEvery &&
+    alive < waves.maxAlive
+  ) {
+    if (!spawnFromBudget(state, waves)) break;
+    state.moveSpawnCredit -= waves.moveSpawnEvery;
+    alive++;
+  }
+  // A capped field must not bank an instant flood for later.
+  state.moveSpawnCredit = Math.min(
+    state.moveSpawnCredit,
+    waves.moveSpawnEvery * 8,
+  );
+
+  // The floor: while the budget lasts, the player's surroundings never go
+  // quiet — spawns land in the ring, inside the near-count radius.
+  while (near < waves.minAlive && alive < waves.maxAlive) {
+    if (!spawnFromBudget(state, waves)) break;
+    near++;
+    alive++;
+  }
+}
+
+/** Pull one monster forward from the earliest unfinished budget line. */
+function spawnFromBudget(
+  state: GameState,
+  waves: NonNullable<ReturnType<typeof levelDef>["waves"]>,
+): boolean {
+  for (let i = 0; i < waves.budget.length; i++) {
+    const entry = waves.budget[i] as (typeof waves.budget)[number];
+    const spawned = state.waveSpawned[i] ?? 0;
+    if (spawned >= entry.count) continue;
+    if (!spawnWaveEnemy(state, entry.enemy)) return false;
+    state.waveSpawned[i] = spawned + 1;
+    return true;
+  }
+  return false;
 }
 
 /**
@@ -180,6 +231,13 @@ function stepPlayer(
     const before = player.pos;
     const next = moveToward(player.pos, input.target, playerSpeed(state) * dt);
     player.facing = direction(before, input.target);
+    // The sprite flip only follows decisively horizontal movement —
+    // near-vertical steering would otherwise mirror-flicker every step.
+    if (Math.abs(player.facing.x) >= PLAYER.faceFlipMinX) {
+      player.faceLeft = player.facing.x < 0;
+    }
+    // Walking stirs the horde: bank the distance for the wave spawner.
+    state.moveSpawnCredit += distance(before, next);
     player.pos = next;
     player.moving = true;
   }
@@ -216,15 +274,21 @@ function stepPlayer(
 /**
  * The character fights autonomously with whatever is in the weapon slot:
  * melee weapons strike the nearest monster in reach directly, the rest fire
- * a projectile at it.
+ * a projectile at it. Only monsters inside the current view (input.view)
+ * are targets — the character never shoots at enemies the player can't see.
  */
-function stepWeapon(state: GameState, dtMs: number): void {
+function stepWeapon(state: GameState, input: GameInput, dtMs: number): void {
   const player = state.player;
   player.weaponCooldownMs = Math.max(0, player.weaponCooldownMs - dtMs);
   if (player.weaponCooldownMs > 0) return;
 
   const weapon = weaponDef(player.equipment.weapon.defId);
-  const target = nearestEnemy(state.enemies, player.pos, weapon.range);
+  const target = nearestEnemy(
+    state.enemies,
+    player.pos,
+    weapon.range,
+    input.view,
+  );
   if (!target) return;
 
   player.weaponCooldownMs = weapon.cooldownMs;
@@ -243,6 +307,8 @@ function stepWeapon(state: GameState, dtMs: number): void {
     damage: weaponDamage(state),
     lifetimeMs: weapon.projectile.lifetimeMs,
     weaponClass: weapon.class,
+    // The shot leaves from the shooter's height and sinks back in flight.
+    z: player.z,
   });
   state.stats.shotsFired++;
   state.events.push({ type: "shot", weaponClass: weapon.class });
@@ -252,10 +318,12 @@ function nearestEnemy(
   enemies: Enemy[],
   from: Vec2,
   range: number,
+  view?: GameInput["view"],
 ): Enemy | undefined {
   let best: Enemy | undefined;
   let bestDistSq = range * range;
   for (const enemy of enemies) {
+    if (view && !insideView(enemy.pos, view)) continue;
     const d = distanceSq(from, enemy.pos);
     if (d <= bestDistSq) {
       best = enemy;
@@ -263,6 +331,67 @@ function nearestEnemy(
     }
   }
   return best;
+}
+
+/** Is a world position on screen (inside the camera rect)? */
+function insideView(pos: Vec2, view: NonNullable<GameInput["view"]>): boolean {
+  return (
+    pos.x >= view.x &&
+    pos.x <= view.x + view.width &&
+    pos.y >= view.y &&
+    pos.y <= view.y + view.height
+  );
+}
+
+/**
+ * Advance the player's time-limited abilities: orbit orbs sweep and mangle
+ * what they touch, storms strike the nearest monster on an interval, and
+ * expired abilities fall away. (Stasis fields act inside moveEnemy.) All
+ * damage flows through hitEnemy, so crits, XP, and loot work unchanged.
+ */
+function stepAbilities(state: GameState, dt: number, dtMs: number): void {
+  const player = state.player;
+  if (player.abilities.length === 0) return;
+
+  for (const ability of player.abilities) {
+    ability.remainingMs -= dtMs;
+    ability.cooldownMs = Math.max(0, ability.cooldownMs - dtMs);
+    const def = abilityDef(ability.defId);
+
+    if (def.orbit) {
+      ability.angle += def.orbit.angularSpeed * dt;
+      if (ability.cooldownMs <= 0) {
+        let struck = false;
+        for (const orb of orbPositions(player, ability)) {
+          const victim = state.enemies.find(
+            (enemy) =>
+              distance(enemy.pos, orb) <=
+              enemyDef(enemy.defId).radius + def.orbit!.orbRadius,
+          );
+          if (!victim) continue;
+          hitEnemy(state, victim, def.orbit.damage);
+          struck = true;
+        }
+        if (struck) ability.cooldownMs = def.orbit.hitCooldownMs;
+      }
+    }
+
+    if (def.storm && ability.cooldownMs <= 0) {
+      const victim = nearestEnemy(state.enemies, player.pos, def.storm.range);
+      if (victim) {
+        ability.cooldownMs = def.storm.intervalMs;
+        state.events.push({ type: "lightning", pos: { ...victim.pos } });
+        hitEnemy(state, victim, def.storm.damage);
+      }
+    }
+  }
+
+  for (let i = player.abilities.length - 1; i >= 0; i--) {
+    const ability = player.abilities[i] as (typeof player.abilities)[number];
+    if (ability.remainingMs > 0) continue;
+    player.abilities.splice(i, 1);
+    state.events.push({ type: "abilityEnded", defId: ability.defId });
+  }
 }
 
 /**
@@ -293,6 +422,24 @@ function hitEnemy(state: GameState, enemy: Enemy, baseDamage: number): void {
 
   grantXp(state, def.xp ?? Math.round(enemy.maxHp * LEVELING.xpPerHp));
 
+  // The level's guaranteed early weapon: the rolled kill hands it over.
+  const early = levelDef(state.level.id).loot.earlyWeapon;
+  if (
+    early &&
+    state.earlyWeaponAtKills !== null &&
+    state.stats.kills >= state.earlyWeaponAtKills
+  ) {
+    state.earlyWeaponAtKills = null;
+    const pos = { x: enemy.pos.x + 12, y: enemy.pos.y };
+    state.items.push({
+      id: state.nextId++,
+      kind: "equipment",
+      pos,
+      equipment: rollEquipment(state, { defId: early.defId }),
+    });
+    state.events.push({ type: "itemDropped", pos: { ...pos } });
+  }
+
   if (def.loot) {
     dropGuaranteedLoot(state, def, enemy.pos);
   } else {
@@ -306,9 +453,9 @@ function hitEnemy(state: GameState, enemy: Enemy, baseDamage: number): void {
 
 /**
  * A dead regular monster's drop roll: LUCK widens the odds, the loot shares
- * split what falls between equipment, weapon upgrades, and medkits — and a
- * pity rule forces equipment whenever the monsters left alive couldn't
- * otherwise cover the level's guaranteed minimum.
+ * split what falls between equipment, ability pickups, weapon upgrades, and
+ * medkits — and a pity rule forces equipment whenever the monsters left
+ * alive couldn't otherwise cover the level's guaranteed minimum.
  */
 function dropMinionLoot(state: GameState, at: Vec2): void {
   const remaining =
@@ -337,6 +484,8 @@ function dropMinionLoot(state: GameState, at: Vec2): void {
   if (!forced && state.rng() >= dropChance(state)) return;
 
   const pos = { ...at };
+  const abilities = levelDef(state.level.id).loot.abilityPool;
+  const abilityShare = abilities.length > 0 ? LOOT.abilityShare : 0;
   const roll = state.rng();
   if (forced || roll < LOOT.equipmentShare) {
     state.minionEquipmentDrops++;
@@ -346,7 +495,14 @@ function dropMinionLoot(state: GameState, at: Vec2): void {
       pos,
       equipment: rollEquipment(state),
     });
-  } else if (roll < LOOT.equipmentShare + LOOT.upgradeShare) {
+  } else if (roll < LOOT.equipmentShare + abilityShare) {
+    state.items.push({
+      id: state.nextId++,
+      kind: "ability",
+      pos,
+      defId: abilities[Math.floor(state.rng() * abilities.length)] as string,
+    });
+  } else if (roll < LOOT.equipmentShare + abilityShare + LOOT.upgradeShare) {
     state.items.push({ id: state.nextId++, kind: "upgrade", pos });
   } else {
     state.items.push({ id: state.nextId++, kind: "medkit", pos });
@@ -413,6 +569,8 @@ function stepProjectiles(state: GameState, dt: number, dtMs: number): void {
   for (const projectile of state.projectiles) {
     projectile.pos.x += projectile.dir.x * projectile.speed * dt;
     projectile.pos.y += projectile.dir.y * projectile.speed * dt;
+    // Shots fired mid-jump sink back to ground level (visual only).
+    projectile.z = Math.max(0, projectile.z - PROJECTILE.zFallSpeed * dt);
     projectile.lifetimeMs -= dtMs;
 
     const outOfBounds =
@@ -536,6 +694,8 @@ function separateEnemies(state: GameState): void {
 function moveEnemy(state: GameState, enemy: Enemy, dt: number): void {
   const player = state.player;
   const def = enemyDef(enemy.defId);
+  // Stasis fields slow whatever crawls inside them — bosses included.
+  const speed = enemy.speed * stasisFactorAt(player, enemy.pos);
 
   if (def.role === "boss") {
     const awake =
@@ -546,17 +706,17 @@ function moveEnemy(state: GameState, enemy: Enemy, dt: number): void {
       def.ai.leashRadius !== undefined &&
       distance(enemy.pos, enemy.home) > def.ai.leashRadius;
     const target = awake && !leashed ? player.pos : enemy.home;
-    enemy.pos = moveToward(enemy.pos, target, enemy.speed * dt);
+    enemy.pos = moveToward(enemy.pos, target, speed * dt);
     return;
   }
 
   if (distance(player.pos, enemy.pos) < def.ai.aggroRadius) {
-    enemy.pos = moveToward(enemy.pos, player.pos, enemy.speed * dt);
+    enemy.pos = moveToward(enemy.pos, player.pos, speed * dt);
   } else if (distance(enemy.pos, enemy.home) > 4) {
     enemy.pos = moveToward(
       enemy.pos,
       enemy.home,
-      enemy.speed * (def.ai.returnSpeedFactor ?? 0.5) * dt,
+      speed * (def.ai.returnSpeedFactor ?? 0.5) * dt,
     );
   }
 }
@@ -581,6 +741,14 @@ function stepItems(state: GameState): void {
       weapon.upgrades = (weapon.upgrades ?? 0) + 1;
       state.stats.itemsCollected++;
       state.events.push({ type: "itemCollected", kind: "upgrade" });
+      return false;
+    }
+
+    // Ability pickups kick in on touch, never entering the bag.
+    if (item.kind === "ability") {
+      grantAbility(state, item.defId);
+      state.stats.itemsCollected++;
+      state.events.push({ type: "itemCollected", kind: "ability" });
       return false;
     }
 

@@ -53,6 +53,9 @@ export type EnemyDef = {
  * astronaut ghost with the enormous arms who guards the flag he planted.
  */
 export const ENEMY_DEFS: Record<string, EnemyDef> = {
+  // Minion speeds sit far below the player's 80 px/s: the horde is a slow,
+  // inevitable tide the player reads and routes around, not a footrace.
+  // Aggro radii dwarf the screen — once a monster exists, it is coming.
   wisp: {
     id: "wisp",
     name: "WISP",
@@ -61,13 +64,12 @@ export const ENEMY_DEFS: Record<string, EnemyDef> = {
     // One base blaster hit: wisps are the horde's fodder — the flood is
     // only survivable because its front rank evaporates on contact.
     hp: 10,
-    speed: 32,
+    speed: 13,
     radius: 8,
     contactDamage: 6,
     critChance: 0.1,
     contactCooldownMs: 700,
-    // Aggro exceeds the spawn ring: wave arrivals give chase instantly.
-    ai: { aggroRadius: 360 },
+    ai: { aggroRadius: 900 },
   },
   ghost: {
     id: "ghost",
@@ -75,12 +77,12 @@ export const ENEMY_DEFS: Record<string, EnemyDef> = {
     role: "minion",
     sprite: "ghost",
     hp: 45,
-    speed: 42,
+    speed: 16,
     radius: 9,
     contactDamage: 12,
     critChance: 0.1,
     contactCooldownMs: 700,
-    ai: { aggroRadius: 380 },
+    ai: { aggroRadius: 950 },
   },
   wraith: {
     id: "wraith",
@@ -88,12 +90,12 @@ export const ENEMY_DEFS: Record<string, EnemyDef> = {
     role: "minion",
     sprite: "wraith",
     hp: 90,
-    speed: 56,
+    speed: 22,
     radius: 9,
     contactDamage: 20,
     critChance: 0.12,
     contactCooldownMs: 700,
-    ai: { aggroRadius: 400 },
+    ai: { aggroRadius: 1000 },
   },
   armstrong: {
     id: "armstrong",
@@ -101,7 +103,7 @@ export const ENEMY_DEFS: Record<string, EnemyDef> = {
     role: "boss",
     sprite: "armstrong",
     hp: 550,
-    speed: 52,
+    speed: 40,
     radius: 20,
     contactDamage: 30,
     critChance: 0.15,

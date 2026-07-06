@@ -112,6 +112,22 @@ export function playEventSounds(
             volume: 0.05,
             delayMs: 130,
           });
+        } else if (event.kind === "ability") {
+          // A power surging on: a fast rising sweep into a shimmer.
+          synth.tone({
+            type: "sawtooth",
+            from: 220,
+            to: 880,
+            durationMs: 180,
+            volume: 0.06,
+          });
+          synth.tone({
+            type: "triangle",
+            from: 1320,
+            durationMs: 200,
+            volume: 0.05,
+            delayMs: 160,
+          });
         } else {
           synth.tone({ type: "sine", from: 660, durationMs: 90, volume: 0.06 });
           synth.tone({
@@ -125,6 +141,27 @@ export function playEventSounds(
         break;
       case "itemDropped":
         synth.tone({ type: "sine", from: 440, durationMs: 60, volume: 0.03 });
+        break;
+      case "lightning":
+        // The storm ability's strike: a snap of noise over a falling zap.
+        synth.noise({ durationMs: 90, volume: 0.05 });
+        synth.tone({
+          type: "sawtooth",
+          from: 1400,
+          to: 180,
+          durationMs: 120,
+          volume: 0.05,
+        });
+        break;
+      case "abilityEnded":
+        // The power winding down: a soft falling sigh.
+        synth.tone({
+          type: "sine",
+          from: 700,
+          to: 320,
+          durationMs: 200,
+          volume: 0.04,
+        });
         break;
       case "levelUp":
         [392, 523, 659, 784, 1047].forEach((freq, i) =>

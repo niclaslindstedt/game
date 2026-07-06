@@ -52,7 +52,20 @@ export {
   weaponDamage,
 } from "./game/items.ts";
 
+// Time-limited abilities: activation and the helpers the renderer shares.
+export {
+  grantAbility,
+  orbPositions,
+  stasisFactorAt,
+} from "./game/abilities.ts";
+
 // Content catalogs: levels, monsters, equipment, tiers.
+export {
+  ABILITY_DEFS,
+  abilityDef,
+  type AbilityDef,
+  type AbilityKind,
+} from "./game/defs/abilities.ts";
 export {
   LEVEL_ORDER,
   LEVELS,
@@ -92,12 +105,14 @@ export {
   LOOT,
   MEDKIT,
   PLAYER,
+  PROJECTILE,
   RUN,
   STATS,
   UPGRADE,
 } from "./game/config.ts";
 
 export type {
+  ActiveAbility,
   Affix,
   Decor,
   Enemy,

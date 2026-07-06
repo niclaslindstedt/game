@@ -71,6 +71,14 @@ IS the game** — an offline top-down survival scroller shooter, steered by
 holding pointer/touch, where the character acts autonomously according to
 picked-up weapons and items.
 
+**Mobile-first, landscape.** The reference device is a phone held
+horizontally: a ~844×390 CSS viewport (≈422×195 world units at the app's
+`VIEW_SCALE` of 2). Design every element — HUD, overlays, spawn distances,
+weapon ranges, anything sized against "the screen" — to fit and feel right
+at that size; larger desktop windows just see more moon. Run playtests and
+visual checks at this viewport (the playtest harness defaults to it), not
+at a desktop size.
+
 Two layers, one dependency direction:
 
 - **`src/` — the engine.** Framework-free TypeScript: the simulation

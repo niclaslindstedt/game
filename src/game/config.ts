@@ -9,11 +9,27 @@ export const PLAYER = {
   /** Base max hp before HEALTH stat points and equipment bonuses. */
   maxHp: 100,
   /** Base world units per second while the pointer is held (SPEED adds). */
-  speed: 120,
+  speed: 80,
   /** Collision radius. */
   radius: 10,
   /** Steering closer than this to the pointer target stops jitter. */
   arriveRadius: 4,
+  /**
+   * The sprite only mirrors when the horizontal share of the move direction
+   * exceeds this — near-vertical steering keeps the last facing instead of
+   * flip-flickering every step.
+   */
+  faceFlipMinX: 0.2,
+} as const;
+
+/** Projectile rules shared by every weapon (per-weapon numbers in defs). */
+export const PROJECTILE = {
+  /**
+   * Shots fired mid-jump leave from the player's height and sink back to
+   * ground level at this rate (world px/s) — purely visual; collisions stay
+   * in the ground plane.
+   */
+  zFallSpeed: 90,
 } as const;
 
 /**
@@ -32,17 +48,28 @@ export const JUMP = {
 export const ENEMY_AI = {
   /** Per-enemy speed jitter so a pack spreads out (fraction of speed). */
   speedJitter: 0.25,
-  /** Enemies spawn at least this far from the player. */
-  minSpawnDistance: 240,
+  /**
+   * Enemies spawn at least this far from the player — just past the
+   * phone-landscape screen edge (world half-view ≈ 211×97, see AGENTS.md),
+   * so the slow horde is visible arriving within seconds instead of
+   * trickling in from far off-screen.
+   */
+  minSpawnDistance: 150,
   /**
    * Wave spawns land in a ring [minSpawnDistance, minSpawnDistance + width]
    * around the player — just past the screen edge, never on top of them.
    * Keep ring max below the minions' aggro radii so the horde converges
    * the moment it spawns.
    */
-  spawnRingWidth: 100,
+  spawnRingWidth: 80,
   /** Pairwise push-apart distance so packs don't stack into one blob. */
   separation: 16,
+  /**
+   * A minion counts toward the wave floor (waves.minAlive) only within this
+   * distance of the player — parked spawns on the far side of the map must
+   * not satisfy "there's a pack on screen".
+   */
+  nearRadius: 340,
 } as const;
 
 /** XP and level-ups. Each level-up grants stat points to spend. */
@@ -84,14 +111,16 @@ export const STATS = {
 export const LOOT = {
   /**
    * Base chance a regular monster drops anything (LUCK adds to it). Tuned
-   * for horde scale: hundreds of kills per run, a drop every ~17 of them —
+   * for horde scale: hundreds of kills per run, a drop every ~8 of them —
    * the steady rain of upgrades is what keeps the player ahead of the ramp.
    */
-  dropChance: 0.06,
+  dropChance: 0.12,
   /** Of those drops, the share that is equipment. */
-  equipmentShare: 0.2,
+  equipmentShare: 0.25,
+  /** …the share that is a time-limited ability pickup… */
+  abilityShare: 0.15,
   /** …the share that is a weapon upgrade (the rest are medkits). */
-  upgradeShare: 0.45,
+  upgradeShare: 0.35,
   /**
    * Clearing every regular monster on a level is guaranteed to have dropped
    * at least this much equipment (a pity roll forces the tail end; boss
