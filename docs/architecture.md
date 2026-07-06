@@ -140,13 +140,18 @@ worker scoped to its base, and a disjoint precache id (`game`,
 production worker's scope covers the nested slots, so it carries a
 navigation denylist and refuses to answer their navigations.
 
-Releases: a maintainer dispatches `version-bump.yml`, which computes the
-next semver from conventional commits and pushes a `v*` tag using
-`RELEASE_TOKEN`. That tag push fires `release.yml`, which regenerates
-`CHANGELOG.md`, rewrites every version string
-(`scripts/update-versions.sh`), commits to `main`, force-moves the tag to
-the release commit, runs the build + tests, publishes a GitHub Release, and
-chains into `pages.yml` so the new tag is live at the site root immediately.
+Releases: a maintainer dispatches `release.yml`, which derives the semver
+bump from the changeset fragments in `.changes/unreleased/` (front-matter
+`type` + optional `breaking: true` — see `scripts/release/compute-bump.mjs`;
+an explicit patch/minor/major input overrides it), consumes the fragments
+into a new dated `CHANGELOG.md` section, rewrites every version string
+(`scripts/update-versions.sh`), runs the build + tests, commits and tags
+`vX.Y.Z` on `main`, publishes a GitHub Release, and chains into `pages.yml`
+so the new tag is live at the site root immediately. Everything happens in
+one dispatched run with the default `GITHUB_TOKEN` — no `RELEASE_TOKEN` PAT.
+Every PR that touches user-visible code must add a fragment under
+`.changes/unreleased/` (CI's `changeset` job enforces it; label a PR
+`no-changelog` to opt out).
 
 ## Design decisions
 

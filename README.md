@@ -104,6 +104,8 @@ make build         # typecheck everything and produce website/dist
 | `make icons`                          | Regenerate all PWA icons + the OG card from `website/public/icon.svg`                                       |
 | `make assets`                         | Regenerate in-game pixel assets (sprites, tiles, UI font) + previews from `website/scripts/sprite-data.mjs` |
 | `make shellcheck` / `make actionlint` | Lint shell scripts / workflow YAML                                                                          |
+| `make bump`                           | Print the semver bump the release workflow derives from `.changes/unreleased/`                              |
+| `make changelog VERSION=X.Y.Z`        | Preview a release: collate the changeset fragments into `CHANGELOG.md`                                      |
 
 ## Configuration
 
