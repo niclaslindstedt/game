@@ -35,6 +35,7 @@ export {
   moveInventoryItem,
   openInventory,
   playerCritChance,
+  playerSpeed,
   rollEquipment,
   unequipToInventory,
   weaponDamage,
@@ -47,6 +48,8 @@ export {
   levelDef,
   type LevelDef,
   type SpawnSpec,
+  type WaveBudget,
+  type WaveSpec,
 } from "./game/defs/levels.ts";
 export {
   ENEMY_DEFS,
@@ -80,6 +83,7 @@ export {
   PLAYER,
   RUN,
   STATS,
+  UPGRADE,
 } from "./game/config.ts";
 
 export type {

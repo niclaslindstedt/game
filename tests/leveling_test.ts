@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
-// XP, level-ups, and the five stats: kills grant XP proportional to the
+// XP, level-ups, and the six stats: kills grant XP proportional to the
 // victim's max hp, each level banks a stat point, spending points changes
 // derived numbers (hp, damage, crits, drops) the way the design says.
 
@@ -17,7 +17,15 @@ import {
   WEAPON_DEFS,
   weaponDamage,
 } from "@game/core";
-import { clearStage, DT, idle, makeEnemy, run, startGame } from "./helpers.ts";
+import {
+  clearStage,
+  DT,
+  idle,
+  makeEnemy,
+  run,
+  startGame,
+  steerTo,
+} from "./helpers.ts";
 
 /** Kill one hand-placed ghost of the given max hp and return the state. */
 function killGhostWorth(maxHp: number) {
@@ -68,7 +76,9 @@ describe("xp", () => {
   });
 
   it("banks multiple points when one kill crosses several thresholds", () => {
-    const state = killGhostWorth(200); // 60 + 90 crossed, 50 into level 3
+    const toLevel2 = LEVELING.baseXpToLevel;
+    const toLevel3 = Math.round(LEVELING.baseXpToLevel * LEVELING.xpGrowth);
+    const state = killGhostWorth(toLevel2 + toLevel3 + 10); // 10 into level 3
     expect(state.player.level).toBe(3);
     expect(state.player.pendingStatPoints).toBe(2);
     allocateStat(state, "health");
@@ -100,6 +110,25 @@ describe("stats", () => {
     state.player.stats.dexterity = 2;
     expect(weaponDamage(state)).toBeCloseTo(
       base * (1 + 2 * STATS.damageBonusPerPoint),
+    );
+  });
+
+  it("SPEED quickens the walk", () => {
+    const state = startGame();
+    clearStage(state);
+    const start = state.player.pos.x;
+    step(state, steerTo(start + 1000, state.player.pos.y), DT);
+    expect(state.player.pos.x - start).toBeCloseTo(
+      PLAYER.speed * (DT / 1000),
+      5,
+    );
+
+    state.player.stats.speed = 5;
+    const mid = state.player.pos.x;
+    step(state, steerTo(mid + 1000, state.player.pos.y), DT);
+    expect(state.player.pos.x - mid).toBeCloseTo(
+      PLAYER.speed * (1 + 5 * STATS.speedPerPoint) * (DT / 1000),
+      5,
     );
   });
 

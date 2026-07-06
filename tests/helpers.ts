@@ -2,7 +2,7 @@
 // Shared scaffolding for the engine test suites. Not a test file itself —
 // vitest only collects `*_test.ts` / `*_tests.ts`.
 
-import { createGame, dismissIntro, enemyDef, step } from "@game/core";
+import { createGame, dismissIntro, enemyDef, levelDef, step } from "@game/core";
 import type { Enemy, GameInput, GameState } from "@game/core";
 
 export const SEED = 42;
@@ -32,11 +32,24 @@ export function startGame(seed: number = SEED): GameState {
 }
 
 /**
- * Strip the level to just the parked, far-away boss. Tests that want a
- * clean stage must keep him: removing every boss clears the objective and
- * starts the victory countdown.
+ * Exhaust the level's wave budget so the horde spawner stays quiet and
+ * tests keep surgical control over `state.enemies`.
+ */
+export function stopWaves(state: GameState): void {
+  const waves = levelDef(state.level.id).waves;
+  if (!waves) return;
+  waves.budget.forEach((entry, i) => {
+    state.waveSpawned[i] = entry.count;
+  });
+}
+
+/**
+ * Strip the level to just the parked, far-away boss (waves included).
+ * Tests that want a clean stage must keep him: removing every boss clears
+ * the objective and starts the victory countdown.
  */
 export function clearStage(state: GameState): void {
+  stopWaves(state);
   state.enemies = state.enemies.filter(
     (e) => enemyDef(e.defId).role === "boss",
   );

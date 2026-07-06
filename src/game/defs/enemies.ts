@@ -37,8 +37,11 @@ export type EnemyDef = {
   };
   /** Guaranteed drops (bosses). Rolled drops are the level's loot table. */
   loot?: {
+    /** Specific equipment def ids always dropped, on top of the counts. */
+    items?: string[];
     weapons: number;
     gear: number;
+    upgrades: number;
     medkits: number;
     /** Added to every tier chance when rolling this enemy's drops. */
     tierBonus: number;
@@ -55,13 +58,16 @@ export const ENEMY_DEFS: Record<string, EnemyDef> = {
     name: "WISP",
     role: "minion",
     sprite: "wisp",
-    hp: 20,
-    speed: 45,
+    // One base blaster hit: wisps are the horde's fodder — the flood is
+    // only survivable because its front rank evaporates on contact.
+    hp: 10,
+    speed: 32,
     radius: 8,
     contactDamage: 6,
     critChance: 0.1,
     contactCooldownMs: 700,
-    ai: { aggroRadius: 280 },
+    // Aggro exceeds the spawn ring: wave arrivals give chase instantly.
+    ai: { aggroRadius: 360 },
   },
   ghost: {
     id: "ghost",
@@ -69,12 +75,12 @@ export const ENEMY_DEFS: Record<string, EnemyDef> = {
     role: "minion",
     sprite: "ghost",
     hp: 45,
-    speed: 60,
+    speed: 42,
     radius: 9,
     contactDamage: 12,
     critChance: 0.1,
     contactCooldownMs: 700,
-    ai: { aggroRadius: 300 },
+    ai: { aggroRadius: 380 },
   },
   wraith: {
     id: "wraith",
@@ -82,12 +88,12 @@ export const ENEMY_DEFS: Record<string, EnemyDef> = {
     role: "minion",
     sprite: "wraith",
     hp: 90,
-    speed: 80,
+    speed: 56,
     radius: 9,
     contactDamage: 20,
     critChance: 0.12,
     contactCooldownMs: 700,
-    ai: { aggroRadius: 320 },
+    ai: { aggroRadius: 400 },
   },
   armstrong: {
     id: "armstrong",
@@ -95,13 +101,22 @@ export const ENEMY_DEFS: Record<string, EnemyDef> = {
     role: "boss",
     sprite: "armstrong",
     hp: 550,
-    speed: 72,
+    speed: 52,
     radius: 20,
     contactDamage: 30,
     critChance: 0.15,
     contactCooldownMs: 900,
     ai: { aggroRadius: 280, leashRadius: 460 },
-    loot: { weapons: 1, gear: 1, medkits: 2, tierBonus: 0.35 },
+    // The machete rode up in his survival kit — Apollo crews really packed
+    // one for jungle splashdowns. Fifty years on, it's for the aliens.
+    loot: {
+      items: ["machete"],
+      weapons: 0,
+      gear: 1,
+      upgrades: 2,
+      medkits: 2,
+      tierBonus: 0.35,
+    },
   },
 };
 

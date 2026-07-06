@@ -55,7 +55,7 @@ weapon means adding catalog entries, not touching the simulation.
 - **`src/game/items.ts`** — equipment instances and the player-driven
   mutations the UI calls into: loot rolls, `equipFromInventory` /
   `unequipToInventory` / `moveInventoryItem`, `allocateStat`, and the
-  derived stats (max hp, weapon damage, crit chance).
+  derived stats (max hp, weapon damage, move speed, crit chance).
 - **`src/lib/`** — generic, game-agnostic helpers (`vec.ts`, `rng.ts`),
   imported via the `@game/lib/*` alias and earmarked for extraction into
   oss-framework once mature (extraction is then a prefix swap).

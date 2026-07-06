@@ -9,7 +9,7 @@
 
 import type { Rng } from "@game/lib/rng.ts";
 import { randomRange } from "@game/lib/rng.ts";
-import { LOOT, PLAYER, STATS } from "./config.ts";
+import { LOOT, PLAYER, STATS, UPGRADE } from "./config.ts";
 import {
   AFFIX_POOLS,
   gearDef,
@@ -92,20 +92,24 @@ function rollTier(state: GameState, tierBonus: number): Tier {
 }
 
 /**
- * Roll a fresh equipment instance from the level's loot pools. Tier affix
+ * Roll a fresh equipment instance from the level's loot pools — or, with
+ * `defId`, mint a specific piece (uniques like boss trophies). Tier affix
  * counts come from the tier ladder (regular 0, magic 1, epic 2, legendary
  * 3); affix kinds never repeat on one item.
  */
 export function rollEquipment(
   state: GameState,
-  opts: { slot?: "weapon" | "gear"; tierBonus?: number } = {},
+  opts: { slot?: "weapon" | "gear"; tierBonus?: number; defId?: string } = {},
 ): Equipment {
   const rng = state.rng;
   const loot = levelDef(state.level.id).loot;
-  const family =
-    opts.slot ?? (rng() < 0.6 ? ("weapon" as const) : ("gear" as const));
+  const family = opts.defId
+    ? isWeaponDef(opts.defId)
+      ? ("weapon" as const)
+      : ("gear" as const)
+    : (opts.slot ?? (rng() < 0.6 ? ("weapon" as const) : ("gear" as const)));
   const pool = family === "weapon" ? loot.weaponPool : loot.gearPool;
-  const defId = pool[Math.floor(rng() * pool.length)] as string;
+  const defId = opts.defId ?? (pool[Math.floor(rng() * pool.length)] as string);
   const slot: EquipSlot = family === "weapon" ? "weapon" : gearDef(defId).slot;
 
   const tier = rollTier(state, opts.tierBonus ?? 0);
@@ -182,6 +186,13 @@ export function playerCritChance(state: GameState): number {
   return chance;
 }
 
+/** The player's walk speed in world px/s: base quickened by SPEED points. */
+export function playerSpeed(state: GameState): number {
+  return (
+    PLAYER.speed * (1 + effectiveStat(state, "speed") * STATS.speedPerPoint)
+  );
+}
+
 /** Enemy crit chance against the player, after LUCK's avoidance. */
 export function enemyCritChance(state: GameState, base: number): number {
   return Math.max(
@@ -203,6 +214,7 @@ export function weaponDamage(state: GameState): number {
   const def = weaponDef(weapon.defId);
   const stat = effectiveStat(state, CLASS_STAT[def.class]);
   let multiplier = 1 + stat * STATS.damageBonusPerPoint;
+  multiplier += (weapon.upgrades ?? 0) * UPGRADE.damageBonus;
   for (const affix of weapon.affixes) {
     if (affix.kind === "damagePct") multiplier += affix.value;
   }

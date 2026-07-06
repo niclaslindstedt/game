@@ -94,6 +94,24 @@ export function playEventSounds(
               delayMs: i * 70,
             }),
           );
+        } else if (event.kind === "upgrade") {
+          // A metallic sharpening rasp rising into a ring.
+          synth.noise({ durationMs: 70, volume: 0.04 });
+          synth.tone({
+            type: "square",
+            from: 440,
+            to: 880,
+            durationMs: 110,
+            volume: 0.05,
+            delayMs: 40,
+          });
+          synth.tone({
+            type: "triangle",
+            from: 1320,
+            durationMs: 140,
+            volume: 0.05,
+            delayMs: 130,
+          });
         } else {
           synth.tone({ type: "sine", from: 660, durationMs: 90, volume: 0.06 });
           synth.tone({

@@ -76,6 +76,26 @@ export const WEAPON_DEFS: Record<string, WeaponDef> = {
     range: 42,
     icon: "icon_wrench",
   },
+  // Uniques — never in a level's random weapon pool; they arrive via
+  // guaranteed drops (a boss's `loot.items`, a level's `allClearWeapon`).
+  machete: {
+    id: "machete",
+    name: "MACHETE",
+    class: "melee",
+    damage: 26,
+    cooldownMs: 380,
+    range: 46,
+    icon: "icon_machete",
+  },
+  moons_blade: {
+    id: "moons_blade",
+    name: "MOON'S BLADE",
+    class: "melee",
+    damage: 32,
+    cooldownMs: 400,
+    range: 48,
+    icon: "icon_moons_blade",
+  },
 };
 
 // ---- Gear -------------------------------------------------------------------
@@ -135,6 +155,7 @@ export const STAT_NAMES: StatName[] = [
   "strength",
   "dexterity",
   "intelligence",
+  "speed",
   "luck",
 ];
 

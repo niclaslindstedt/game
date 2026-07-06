@@ -21,6 +21,7 @@ import {
   moveInventoryItem,
   playerCritChance,
   unequipToInventory,
+  UPGRADE,
   weaponDamage,
   weaponDef,
   WEAPON_DEFS,
@@ -59,6 +60,7 @@ const STAT_LABELS: Record<StatName, string> = {
   strength: "STRENGTH",
   dexterity: "DEXTERITY",
   intelligence: "INTELLECT",
+  speed: "SPEED",
   luck: "LUCK",
 };
 
@@ -83,6 +85,11 @@ function itemLines(item: Equipment): string[] {
     lines.push(`DAMAGE ${def.damage}`);
     lines.push(`SPEED ${(1000 / def.cooldownMs).toFixed(1)}/S`);
     lines.push(`RANGE ${def.range}`);
+    if (item.upgrades) {
+      lines.push(
+        `UPGRADED +${Math.round(item.upgrades * UPGRADE.damageBonus * 100)}%`,
+      );
+    }
   } else {
     const def = gearDef(item.defId);
     lines.push(def.slot === "suit" ? "SUIT ARMOR" : "CHARM");

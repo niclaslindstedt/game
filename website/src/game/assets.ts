@@ -20,6 +20,8 @@ import gravel0Url from "./assets/gravel_0.png";
 import gravel1Url from "./assets/gravel_1.png";
 import iconBlasterUrl from "./assets/icon_blaster.png";
 import iconCharmUrl from "./assets/icon_charm.png";
+import iconMacheteUrl from "./assets/icon_machete.png";
+import iconMoonsBladeUrl from "./assets/icon_moons_blade.png";
 import iconSuitUrl from "./assets/icon_suit.png";
 import iconWandUrl from "./assets/icon_wand.png";
 import iconWrenchUrl from "./assets/icon_wrench.png";
@@ -33,6 +35,7 @@ import playerJumpUrl from "./assets/player_jump.png";
 import rocksUrl from "./assets/rocks.png";
 import shadowUrl from "./assets/shadow.png";
 import sparkUrl from "./assets/spark.png";
+import upgradeUrl from "./assets/upgrade.png";
 import wisp0Url from "./assets/wisp_0.png";
 import wisp1Url from "./assets/wisp_1.png";
 import wraith0Url from "./assets/wraith_0.png";
@@ -51,6 +54,8 @@ const SPRITE_URLS = {
   gravel_1: gravel1Url,
   icon_blaster: iconBlasterUrl,
   icon_charm: iconCharmUrl,
+  icon_machete: iconMacheteUrl,
+  icon_moons_blade: iconMoonsBladeUrl,
   icon_suit: iconSuitUrl,
   icon_wand: iconWandUrl,
   icon_wrench: iconWrenchUrl,
@@ -64,6 +69,7 @@ const SPRITE_URLS = {
   rocks: rocksUrl,
   shadow: shadowUrl,
   spark: sparkUrl,
+  upgrade: upgradeUrl,
   wisp_0: wisp0Url,
   wisp_1: wisp1Url,
   wraith_0: wraith0Url,

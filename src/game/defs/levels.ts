@@ -26,6 +26,25 @@ export type SpawnSpec =
       at: Vec2;
     };
 
+/** One line of a level's wave budget: `count` monsters streamed in over a
+ * time window (fractions of `rampDurationMs`). Spawning eases in
+ * quadratically, so each line starts as a trickle and ends as a flood. */
+export type WaveBudget = {
+  /** Key into ENEMY_DEFS. */
+  enemy: string;
+  count: number;
+  window: [number, number];
+};
+
+/** The continuous spawner that turns a level into a survivors-style horde. */
+export type WaveSpec = {
+  /** Time to full pressure; every window is a fraction of this. */
+  rampDurationMs: number;
+  /** Live-minion cap — spawning defers (never cancels) above it. */
+  maxAlive: number;
+  budget: WaveBudget[];
+};
+
 export type LevelDef = {
   /** Registry key. */
   id: string;
@@ -48,7 +67,10 @@ export type LevelDef = {
    * scale from the player spawn toward the boss.
    */
   objective: { type: "killBoss" } | { type: "clearAll" };
+  /** Monsters placed at level creation — the "few on screen" at the start. */
   spawns: SpawnSpec[];
+  /** The horde: thousands more streamed in around the player over time. */
+  waves?: WaveSpec;
   decor: { kind: string; count: number }[];
   /** Keep decor at least this far from landmarks. */
   decorClearance: number;
@@ -62,6 +84,11 @@ export type LevelDef = {
      * to each). Omitted tiers cannot drop here — the moon caps at magic.
      */
     tierChances: Partial<Record<Tier, number>>;
+    /**
+     * Trophy weapon def dropped by the last regular monster standing —
+     * clearing every mob on the level always earns it.
+     */
+    allClearWeapon?: string;
   };
 };
 
@@ -97,11 +124,21 @@ const MOON: LevelDef = {
   ],
   objective: { type: "killBoss" },
   spawns: [
-    { enemy: "wisp", count: 10, band: [0, 0.38] },
-    { enemy: "ghost", count: 8, band: [0.38, 0.7] },
-    { enemy: "wraith", count: 7, band: [0.7, 1.05] },
+    { enemy: "wisp", count: 8, band: [0.05, 0.45] },
+    { enemy: "ghost", count: 6, band: [0.4, 0.8] },
+    { enemy: "wraith", count: 4, band: [0.75, 1.05] },
     { enemy: "armstrong", at: { x: 2130, y: 260 } },
   ],
+  // The haunting proper: over five minutes the moon empties its graves.
+  waves: {
+    rampDurationMs: 300_000,
+    maxAlive: 220,
+    budget: [
+      { enemy: "wisp", count: 500, window: [0, 0.55] },
+      { enemy: "ghost", count: 400, window: [0.3, 0.85] },
+      { enemy: "wraith", count: 300, window: [0.55, 1] },
+    ],
+  },
   decor: [
     { kind: "craterBig", count: 9 },
     { kind: "craterSmall", count: 16 },
@@ -112,6 +149,7 @@ const MOON: LevelDef = {
     weaponPool: ["blaster", "wand", "wrench"],
     gearPool: ["suit_plating", "moon_charm"],
     tierChances: { magic: 0.2 },
+    allClearWeapon: "moons_blade",
   },
 };
 

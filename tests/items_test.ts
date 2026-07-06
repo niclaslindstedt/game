@@ -5,18 +5,30 @@
 import { describe, expect, it } from "vitest";
 
 import {
+  ENEMY_DEFS,
   enemyDef,
   equipFromInventory,
   equipmentName,
   GEAR_DEFS,
+  LOOT,
   moveInventoryItem,
   rollEquipment,
   step,
   TIERS,
   unequipToInventory,
+  UPGRADE,
+  weaponDamage,
 } from "@game/core";
 import type { Equipment, GameState, Tier } from "@game/core";
-import { clearStage, DT, idle, makeEnemy, run, startGame } from "./helpers.ts";
+import {
+  clearStage,
+  DT,
+  idle,
+  makeEnemy,
+  run,
+  startGame,
+  stopWaves,
+} from "./helpers.ts";
 
 function makeSuit(id: number, tier: Tier = "regular"): Equipment {
   return {
@@ -29,6 +41,7 @@ function makeSuit(id: number, tier: Tier = "regular"): Equipment {
 }
 
 function killTheBoss(state: GameState): void {
+  stopWaves(state);
   const boss = state.enemies.find((e) => enemyDef(e.defId).role === "boss")!;
   state.enemies = [boss];
   boss.hp = 1;
@@ -38,7 +51,7 @@ function killTheBoss(state: GameState): void {
 }
 
 describe("boss loot", () => {
-  it("ALWAYS drops a weapon, a piece of gear, and medkits", () => {
+  it("ALWAYS drops a weapon, gear, upgrades, and medkits", () => {
     // No luck involved: the drop is unconditional across seeds.
     for (const seed of [1, 2, 3, 99]) {
       const state = startGame(seed);
@@ -54,6 +67,16 @@ describe("boss loot", () => {
         1,
       );
       expect(medkits.length).toBeGreaterThan(0);
+      // His weapon drop is the survival-kit machete, always.
+      expect(
+        equipment.some(
+          (i) => i.kind === "equipment" && i.equipment.defId === "machete",
+        ),
+      ).toBe(true);
+      // Scattered upgrades may land on the player and apply instantly.
+      const upgrades = state.items.filter((i) => i.kind === "upgrade").length;
+      const applied = state.player.equipment.weapon.upgrades ?? 0;
+      expect(upgrades + applied).toBe(ENEMY_DEFS.armstrong!.loot!.upgrades);
     }
   });
 
@@ -84,7 +107,7 @@ describe("boss loot", () => {
 describe("ghost drops", () => {
   it("max LUCK guarantees a drop from a regular ghost", () => {
     const state = startGame();
-    state.player.stats.luck = 30; // dropChance ≥ 1
+    state.player.stats.luck = 100; // dropChance ≥ 1
     state.items = [];
     clearStage(state);
     state.enemies.push(
@@ -92,6 +115,68 @@ describe("ghost drops", () => {
     );
     run(state, idle, 2000, (s) => s.enemies.length === 1);
     expect(state.items.length).toBeGreaterThan(0);
+  });
+
+  it("killing every regular monster yields the equipment minimum plus the trophy", () => {
+    // Three 1-hp minions can miss their rolls at most once: the pity rule
+    // must still land at least LOOT.minEquipmentPerLevel equipment drops,
+    // and the last mob standing surrenders the MOON'S BLADE on top.
+    for (const seed of [1, 2, 3, 4, 5]) {
+      const state = startGame(seed);
+      clearStage(state); // only the parked boss remains
+      state.items = [];
+      for (let i = 0; i < 3; i++) {
+        state.enemies.push(
+          makeEnemy({
+            id: 9000 + i,
+            pos: { x: state.player.pos.x + 40 + i * 12, y: state.player.pos.y },
+            hp: 1,
+            maxHp: 1,
+          }),
+        );
+      }
+      run(state, idle, 5000, (s) => s.enemies.length === 1);
+      const equipment = state.items.filter((i) => i.kind === "equipment");
+      const blades = equipment.filter(
+        (i) => i.kind === "equipment" && i.equipment.defId === "moons_blade",
+      );
+      expect(blades).toHaveLength(1);
+      expect(equipment.length - blades.length).toBeGreaterThanOrEqual(
+        LOOT.minEquipmentPerLevel,
+      );
+    }
+  });
+});
+
+describe("weapon upgrades", () => {
+  it("an upgrade pickup permanently sharpens the held weapon", () => {
+    const state = startGame();
+    clearStage(state);
+    const base = weaponDamage(state);
+    state.items = [{ id: 1, kind: "upgrade", pos: { ...state.player.pos } }];
+    step(state, idle, DT);
+    expect(state.items).toHaveLength(0);
+    expect(state.player.equipment.weapon.upgrades).toBe(1);
+    expect(weaponDamage(state)).toBeCloseTo(base * (1 + UPGRADE.damageBonus));
+    expect(state.events).toContainEqual({
+      type: "itemCollected",
+      kind: "upgrade",
+    });
+  });
+
+  it("upgrades stick to the weapon they were applied to", () => {
+    const state = startGame();
+    state.player.equipment.weapon.upgrades = 3;
+    state.player.inventory[0] = {
+      id: 60,
+      defId: "wand",
+      slot: "weapon",
+      tier: "regular",
+      affixes: [],
+    };
+    equipFromInventory(state, 0); // swap to the plain wand
+    expect(state.player.equipment.weapon.upgrades ?? 0).toBe(0);
+    expect(state.player.inventory[0]?.upgrades).toBe(3); // rides the blaster
   });
 });
 
