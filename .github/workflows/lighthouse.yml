@@ -1,0 +1,31 @@
+name: lighthouse
+
+# §11.3.10 — measured Lighthouse runs against the built app, with thresholds
+# enforced via `.github/lighthouse/lighthouserc.json`. Catches the Core Web
+# Vitals regressions (LCP, CLS, TBT) that the static `check-seo` workflow
+# can't see.
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+env:
+  GITHUB_PAT: ${{ secrets.GITHUB_PAT || github.token }}
+
+jobs:
+  lighthouse:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+      - run: npm ci
+      - run: npm run build --workspace website
+      - run: npm install --global @lhci/cli@0.14.x
+      - run: lhci autorun --config=./.github/lighthouse/lighthouserc.json

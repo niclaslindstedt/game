@@ -1,0 +1,37 @@
+{
+  "name": "game",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Offline top-down survival scroller shooter for the browser: steer by holding pointer/touch; the character auto-acts based on picked-up weapons and items. TypeScript PWA deployed to GitHub Pages.",
+  "license": "PolyForm-Noncommercial-1.0.0",
+  "author": "Niclas Lindstedt <niclas@agilator.se>",
+  "type": "module",
+  "workspaces": [
+    "website"
+  ],
+  "scripts": {
+    "build": "npm run typecheck && npm run build --workspace website",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "typecheck": "tsc --noEmit && npm run typecheck --workspace website",
+    "lint": "eslint . && npm run typecheck",
+    "fmt": "prettier --write .",
+    "fmt:check": "prettier --check .",
+    "icons": "npm run icons --workspace website"
+  },
+  "devDependencies": {
+    "@eslint/js": "^10.0.1",
+    "@types/node": "^25.9.3",
+    "@typescript-eslint/eslint-plugin": "^8.61.1",
+    "@typescript-eslint/parser": "^8.61.1",
+    "eslint": "^10.5.0",
+    "eslint-plugin-react-hooks": "^7.1.1",
+    "globals": "^17.6.0",
+    "prettier": "^3.4.2",
+    "typescript": "^6.0.3",
+    "vitest": "^4.1.9"
+  },
+  "engines": {
+    "node": ">=24"
+  }
+}

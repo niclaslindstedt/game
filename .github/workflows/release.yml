@@ -1,0 +1,90 @@
+name: release
+
+# Triggered by the `v*` tag push that version-bump performs. That upstream
+# tag push must be authenticated with RELEASE_TOKEN (a PAT or GitHub App
+# token) — the default GITHUB_TOKEN deliberately suppresses downstream
+# workflow triggers, so a tag pushed with it would not fire this workflow.
+#
+# This workflow itself uses the default GITHUB_TOKEN for its commit-to-main
+# and retag steps. That same trigger suppression is what prevents the
+# force-pushed tag from re-firing this workflow on itself and starting a
+# duplicate release run. See OSS_SPEC §10.3.
+#
+# The game ships no package registry artifact — the deliverable is the GitHub
+# Pages deploy, so after the release commit lands this workflow chains into
+# pages.yml with the new tag to promote it to the production slot.
+on:
+  push:
+    tags:
+      - "v*"
+
+# Default to no permissions; every job declares its own least-privilege
+# `permissions:` block (see OSS_SPEC §10.3).
+permissions: {}
+
+env:
+  GITHUB_PAT: ${{ secrets.GITHUB_PAT || github.token }}
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    # contents: write — this job pushes the release commit and force-pushes
+    # the rewritten tag to `main`.
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          ref: main
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+      - run: npm ci
+      - name: Resolve tag
+        id: tag
+        run: echo "tag=${GITHUB_REF_NAME}" >> "$GITHUB_OUTPUT"
+      - name: Generate changelog
+        run: ./scripts/generate-changelog.sh ${{ steps.tag.outputs.tag }}
+      - name: Update versions
+        run: ./scripts/update-versions.sh ${{ steps.tag.outputs.tag }}
+      - name: Commit + retag
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add -A
+          git diff --cached --quiet || git commit -m "chore(release): update changelog and versions for ${{ steps.tag.outputs.tag }}"
+          git tag -f "${{ steps.tag.outputs.tag }}" HEAD
+          git push origin HEAD:main
+          git push origin "${{ steps.tag.outputs.tag }}" --force
+      - name: make build
+        run: make build
+      - name: make test
+        run: make test
+      - name: Extract release notes
+        run: |
+          # The section of the freshly generated CHANGELOG.md between the
+          # newest `## [x.y.z]` heading and the next one (§10.3 step 10).
+          awk '/^## \[/{n++} n==1' CHANGELOG.md > release-notes.md
+          if [ ! -s release-notes.md ]; then
+            echo "Release ${{ steps.tag.outputs.tag }}" > release-notes.md
+          fi
+      - name: GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ steps.tag.outputs.tag }}
+          body_path: release-notes.md
+
+  # Promote the fresh tag to the production Pages slot immediately instead of
+  # waiting for the next push to main (§11.5.2).
+  pages:
+    needs: release
+    uses: ./.github/workflows/pages.yml
+    with:
+      release_ref: ${{ github.ref_name }}
+    permissions:
+      contents: write
+      pages: write
+      id-token: write
+    secrets: inherit

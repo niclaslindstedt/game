@@ -1,0 +1,18 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
+  <!-- Single vector source for every raster icon (§11.4.2). Regenerate the
+       PNGs with `npm run icons` after editing — never edit the PNGs by hand.
+       Artwork stays inside the 80%-diameter safe zone so Android's adaptive
+       mask cannot eat it. -->
+  <defs>
+    <linearGradient id="ship" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#7ef0c8"/>
+      <stop offset="1" stop-color="#38b6ff"/>
+    </linearGradient>
+  </defs>
+  <rect width="512" height="512" fill="#0b0d10"/>
+  <!-- Radar rings -->
+  <circle cx="256" cy="256" r="150" fill="none" stroke="#1d2530" stroke-width="10"/>
+  <circle cx="256" cy="256" r="96" fill="none" stroke="#28313e" stroke-width="8"/>
+  <!-- The ship: a top-down triangle pushing up the scroll -->
+  <path d="M256 128 L344 340 L256 296 L168 340 Z" fill="url(#ship)"/>
+</svg>

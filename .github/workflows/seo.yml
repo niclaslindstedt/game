@@ -1,0 +1,30 @@
+name: seo
+
+# §11.3.10 — structural SEO assertions. Runs `check-seo.mjs` against the
+# built app so the discoverability failure modes the spec calls out (empty
+# SPA shell, missing canonical, JSON-LD drift from og:image, sitemap gaps,
+# llms.txt missing, critical-path JS budget breach) cannot ship silently.
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+env:
+  GITHUB_PAT: ${{ secrets.GITHUB_PAT || github.token }}
+
+jobs:
+  check-seo:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+      - run: npm ci
+      - run: npm run build --workspace website
+      - run: npm run check:seo --workspace website

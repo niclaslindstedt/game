@@ -1,0 +1,118 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <!-- An installed PWA game is an app, not a document: lock pinch-zoom and
+         iOS input auto-zoom, and let the canvas paint under the notch. -->
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover"
+    />
+    <meta name="color-scheme" content="dark" />
+    <meta name="referrer" content="strict-origin-when-cross-origin" />
+    <!-- Must match manifest.webmanifest theme_color so the splash screen and
+         the loaded app agree (§11.4.1). -->
+    <meta name="theme-color" content="#0b0d10" />
+
+    <title>Game — offline survival shooter for the browser</title>
+    <meta
+      name="description"
+      content="An offline top-down survival shooter that runs entirely in your browser. Hold to steer; your picked-up weapons and items do the fighting. Installable PWA."
+    />
+    <link rel="canonical" href="https://niclaslindstedt.github.io/game/" />
+
+    <meta property="og:site_name" content="Game" />
+    <meta property="og:locale" content="en_US" />
+    <meta property="og:type" content="website" />
+    <meta
+      property="og:title"
+      content="Game — offline survival shooter for the browser"
+    />
+    <meta
+      property="og:description"
+      content="An offline top-down survival shooter that runs entirely in your browser. Hold to steer; your picked-up weapons and items do the fighting. Installable PWA."
+    />
+    <meta property="og:url" content="https://niclaslindstedt.github.io/game/" />
+    <meta
+      property="og:image"
+      content="https://niclaslindstedt.github.io/game/og-default.png"
+    />
+    <meta property="og:image:width" content="1200" />
+    <meta property="og:image:height" content="630" />
+    <meta
+      property="og:image:alt"
+      content="Game — a top-down survival shooter played by holding pointer or touch"
+    />
+
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta
+      name="twitter:title"
+      content="Game — offline survival shooter for the browser"
+    />
+    <meta
+      name="twitter:description"
+      content="An offline top-down survival shooter that runs entirely in your browser. Hold to steer; your picked-up weapons and items do the fighting. Installable PWA."
+    />
+    <meta
+      name="twitter:image"
+      content="https://niclaslindstedt.github.io/game/og-default.png"
+    />
+    <meta
+      name="twitter:image:alt"
+      content="Game — a top-down survival shooter played by holding pointer or touch"
+    />
+
+    <script type="application/ld+json">
+      {
+        "@context": "https://schema.org",
+        "@type": "VideoGame",
+        "@id": "https://niclaslindstedt.github.io/game/#game",
+        "name": "Game",
+        "url": "https://niclaslindstedt.github.io/game/",
+        "description": "An offline top-down survival shooter that runs entirely in your browser. Hold to steer; your picked-up weapons and items do the fighting.",
+        "image": "https://niclaslindstedt.github.io/game/og-default.png",
+        "applicationCategory": "GameApplication",
+        "operatingSystem": "Any (web browser)",
+        "gamePlatform": ["Web browser", "Progressive Web App"],
+        "playMode": "SinglePlayer",
+        "inLanguage": "en",
+        "author": {
+          "@type": "Person",
+          "@id": "https://niclaslindstedt.github.io/game/#author",
+          "name": "Niclas Lindstedt",
+          "sameAs": ["https://github.com/niclaslindstedt"]
+        },
+        "offers": { "@type": "Offer", "price": "0", "priceCurrency": "USD" }
+      }
+    </script>
+  </head>
+  <body>
+    <div id="root">
+      <!-- Prerendered shell (§11.3.1): real content crawlers can index without
+           running JavaScript. React replaces it with the live title screen. -->
+      <main class="prelaunch">
+        <h1>Game</h1>
+        <p>
+          A top-down survival scroller shooter that runs entirely in your
+          browser — no account, no server, fully playable offline once loaded.
+        </p>
+        <p>
+          You steer by holding the pointer down (or touching the screen); your
+          character fights on its own, acting according to the weapons and items
+          you pick up along the way. Survive the scroll as long as you can.
+        </p>
+        <p>
+          The game is an installable Progressive Web App: add it to your home
+          screen from the browser menu and it launches fullscreen, works
+          offline, and updates itself when a new build ships.
+        </p>
+        <p>
+          Source code and development docs live in the
+          <a href="https://github.com/niclaslindstedt/game">GitHub repository</a
+          >.
+        </p>
+      </main>
+    </div>
+    <script type="module" src="/src/main.tsx"></script>
+  </body>
+</html>
