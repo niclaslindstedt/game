@@ -18,7 +18,9 @@
     "noEmit": true,
     "types": ["vite/client", "node"],
     "paths": {
-      "@game/core": ["../src/index.ts"]
+      "@game/core": ["../src/index.ts"],
+      "@game/lib/*": ["../src/lib/*"],
+      "@ui/lib/*": ["./src/lib/*"]
     }
   },
   "include": [

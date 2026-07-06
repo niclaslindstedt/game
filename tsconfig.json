@@ -14,7 +14,11 @@
     "allowImportingTsExtensions": true,
     "skipLibCheck": true,
     "noEmit": true,
-    "types": []
+    "types": [],
+    "paths": {
+      "@game/core": ["./src/index.ts"],
+      "@game/lib/*": ["./src/lib/*"]
+    }
   },
   "include": ["src", "tests", "vitest.config.ts"]
 }

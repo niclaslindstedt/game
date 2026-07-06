@@ -20,20 +20,19 @@ import { cacheIdForBase } from "./src/app/pwa.ts";
 //   - `${base}precache-manifest.json` `{ totalBytes, assets }` driving the fill
 //   - a Cache Storage entry named `<cacheId>-precache`
 //
-// THREE SLOTS, ONE ORIGIN. The game deploys to `/game/` (release),
-// `/game/preview/` (main), and `/game/branch/` (a parked branch) on the
-// GitHub Pages origin. Each slot gets its own worker (scoped to its base) and
-// its own precache id. The release worker's scope (`/game/`) also covers the
-// sibling slots nested under it, so it carries a navigation denylist and
-// refuses to answer their navigations, letting each slot boot its own shell
-// and worker.
+// THREE SLOTS, ONE ORIGIN. The game deploys to `/` (release), `/preview/`
+// (main), and `/branch/` (a parked branch) on game.niclaslindstedt.se. Each
+// slot gets its own worker (scoped to its base) and its own precache id. The
+// release worker's scope (`/`) also covers the sibling slots nested under
+// it, so it carries a navigation denylist and refuses to answer their
+// navigations, letting each slot boot its own shell and worker.
 
 // The deploy slots `pages.yml` serves, in priority order. Mirror that file.
-export const DEPLOY_SLOTS = ["/game/", "/game/preview/", "/game/branch/"];
+export const DEPLOY_SLOTS = ["/", "/preview/", "/branch/"];
 
 type GamePwaOptions = {
-  // The bundler base (`/game/`, `/game/preview/`, `/game/branch/`, or `/` for
-  // local builds). Drives the SW scope, the emitted file URLs, and — via
+  // The bundler base (`/`, `/preview/`, or `/branch/`; local builds also use
+  // `/`). Drives the SW scope, the emitted file URLs, and — via
   // `cacheIdForBase` — the precache name.
   base: string;
   // Label shown in the "a new version is ready" toast (short commit sha or a
@@ -88,8 +87,8 @@ const PRECACHE = ${JSON.stringify(precache)};
 const PRECACHE_PATHS = new Set(
   PRECACHE.map((u) => new URL(u, self.location.href).pathname),
 );
-// Sibling deploy slots nested under this worker's scope (e.g. \`/game/preview/\`
-// for the \`/game/\` release worker). Navigations into them are NOT ours.
+// Sibling deploy slots nested under this worker's scope (e.g. \`/preview/\`
+// for the \`/\` release worker). Navigations into them are NOT ours.
 const DENY = ${JSON.stringify(denylist)};
 
 self.addEventListener("install", (event) => {
@@ -176,8 +175,8 @@ export function gamePwa({
 }: GamePwaOptions): Plugin {
   const cacheId = cacheIdForBase(base);
   // Sibling slots that fall inside our scope — nested under `base` but not
-  // `base` itself. For `/game/` this is `/game/preview/` + `/game/branch/`;
-  // for either of those it's empty.
+  // `base` itself. For `/` this is `/preview/` + `/branch/`; for either of
+  // those it's empty.
   const denylist = slots.filter((s) => s !== base && s.startsWith(base));
   let config: ResolvedConfig;
 

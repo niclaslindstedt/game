@@ -3,20 +3,20 @@ name: pages
 # Deploys the game (the `website/` Vite app, built against the engine source)
 # to GitHub Pages across three slots (OSS_SPEC §11.5):
 #
-#   /game/          the latest release (highest `v*` tag), or `main` until the
-#                   first release exists
-#   /game/preview/  the current `main` (every push)
-#   /game/branch/   a feature branch parked via workflow_dispatch, persisted in
-#                   the `branch-deploy` orphan branch so it survives later
-#                   deploys
+#   /          the latest release (highest `v*` tag), or `main` until the
+#              first release exists
+#   /preview/  the current `main` (every push)
+#   /branch/   a feature branch parked via workflow_dispatch, persisted in
+#              the `branch-deploy` orphan branch so it survives later deploys
 #
-# Served at https://niclaslindstedt.github.io/game/. The Pages artifact root
-# corresponds to `/game/`, so the slot directories inside the artifact are
-# `.`, `preview/`, and `branch/` while the Vite base paths carry the full
-# `/game/…` prefix.
+# Served at https://game.niclaslindstedt.se/ — a custom domain (DNS CNAME)
+# on the GitHub Pages origin. The Pages artifact root IS the site root, so
+# the slot directories inside the artifact are `.`, `preview/`, and
+# `branch/`, matching the Vite base paths `/`, `/preview/`, `/branch/`.
 #
-# Pre-requisite: the repo's Pages source must be set to "GitHub Actions"
-# (Settings → Pages).
+# Pre-requisites: the repo's Pages source must be set to "GitHub Actions"
+# and the custom domain to game.niclaslindstedt.se (Settings → Pages); the
+# DNS CNAME record must point at niclaslindstedt.github.io.
 
 on:
   push:
@@ -24,7 +24,7 @@ on:
   workflow_dispatch:
     inputs:
       branch_ref:
-        description: "Optional branch to park in the stable /game/branch/ slot. Persists across regular deploys until the next branch_ref dispatch overwrites it."
+        description: "Optional branch to park in the stable /branch/ slot. Persists across regular deploys until the next branch_ref dispatch overwrites it."
         required: false
         type: string
         default: ""
@@ -49,7 +49,7 @@ concurrency:
   cancel-in-progress: false
 
 env:
-  # Stable orphan branch storing the most recently dispatched /game/branch/
+  # Stable orphan branch storing the most recently dispatched /branch/
   # build. Created on demand by the first workflow_dispatch with a branch_ref;
   # every run rehydrates the branch slot from here so regular deploys
   # preserve it.
@@ -103,17 +103,17 @@ jobs:
           else
             echo "ref=$REF" >> "$GITHUB_OUTPUT"
             echo "has_dispatch=true" >> "$GITHUB_OUTPUT"
-            echo "Dispatched: $REF -> /game/branch/"
+            echo "Dispatched: $REF -> /branch/"
           fi
 
-      # ---- Preview build (current main) — always served at /game/preview/ ----
+      # ---- Preview build (current main) — always served at /preview/ ----
       # The preview slot tracks the triggering commit on every push. Build it
       # first, off the triggering ref, before any checkout juggling for the
       # production tag or a dispatched branch moves HEAD away.
       - name: Build preview
         run: npm run build --workspace website
         env:
-          VITE_BASE: /game/preview/
+          VITE_BASE: /preview/
 
       - name: Stash preview site
         run: mv website/dist site-preview
@@ -133,7 +133,7 @@ jobs:
       - name: Build root
         run: npm run build --workspace website
         env:
-          VITE_BASE: /game/
+          VITE_BASE: /
 
       - name: Stash root site
         run: mv website/dist site-root
@@ -161,7 +161,7 @@ jobs:
         if: steps.dispatch.outputs.has_dispatch == 'true'
         run: npm run build --workspace website
         env:
-          VITE_BASE: /game/branch/
+          VITE_BASE: /branch/
 
       - name: Persist branch build to orphan branch
         if: steps.dispatch.outputs.has_dispatch == 'true'
@@ -215,11 +215,11 @@ jobs:
           mkdir -p site/preview
           cp -R site-preview/. site/preview/
           ROOT_REF="${{ steps.tag.outputs.has_release == 'true' && steps.tag.outputs.ref || 'main' }}"
-          echo "Merged: /game/ = $ROOT_REF, /game/preview/ = ${{ github.sha }}"
+          echo "Merged: /game/ = $ROOT_REF, /preview/ = ${{ github.sha }}"
           if [ "${{ steps.rehydrate.outputs.has_branch_dist }}" = "true" ]; then
             mkdir -p site/branch
             cp -R site-branch/. site/branch/
-            echo "Merged: /game/branch/ from $BRANCH_DEPLOY_REF"
+            echo "Merged: /branch/ from $BRANCH_DEPLOY_REF"
           fi
 
       - uses: actions/configure-pages@v5

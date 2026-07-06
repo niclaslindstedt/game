@@ -49,7 +49,7 @@ toast, or close every tab/instance of the app and reopen.
 
 ### The preview slot shows the production app (or vice versa)
 
-The production worker's scope covers `/game/preview/` and `/game/branch/`;
+The production worker's scope covers `/preview/` and `/branch/`;
 its navigation denylist should make it ignore them. If a stale worker from
 before the denylist is still controlling the origin, unregister it
 (DevTools → Application → Service Workers → Unregister) and reload.

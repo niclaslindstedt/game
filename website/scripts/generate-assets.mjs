@@ -33,7 +33,8 @@ for (const [name, grid] of Object.entries(SPRITES)) {
   // Orphan pixels read as noise at 1x — flag them for the checklist. Ground
   // tiles are exempt: their speckles are deliberately scattered single px.
   const { orphans } = gridStats(grid);
-  if (orphans.length > 0 && !name.startsWith("grass_")) {
+  const speckledTile = /^(grass|moon|gravel)_/.test(name);
+  if (orphans.length > 0 && !speckledTile) {
     console.warn(
       `! ${name}: orphan pixel(s) at ${orphans
         .map((o) => `(${o.x},${o.y} "${o.char}")`)
@@ -48,7 +49,7 @@ for (const [name, surface] of Object.entries(surfaces)) {
 }
 
 await writePng(
-  buildContactSheet(surfaces, surfaces.grass_0),
+  buildContactSheet(surfaces, surfaces.moon_0),
   `${previewDir}/sheet.png`,
 );
 

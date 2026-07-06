@@ -34,12 +34,15 @@ export function App() {
       <h1>Game</h1>
       <p>
         A top-down survival shooter that runs entirely in your browser — no
-        account, no server, fully playable offline once loaded.
+        account, no server, fully playable offline once loaded. Ada went out for
+        a midnight walk and never came back; the trail leads to the moon.
       </p>
       <p>
-        <strong>Hold</strong> the pointer (or touch) to steer; your character
-        fires at the nearest slime on its own. Grab medkits to stay alive, and
-        clear every slime from the level to win.
+        <strong>Hold</strong> the pointer (or touch) to steer,{" "}
+        <strong>tap</strong> (or Space) to jump — moon gravity carries you clean
+        over the ghosts. Your character fights on its own with whatever is
+        equipped. Loot the haunting, level up your stats, and take the fight to
+        the thing guarding the old flag.
       </p>
       <button
         type="button"

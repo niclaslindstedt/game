@@ -17,7 +17,7 @@ import { fileURLToPath } from "node:url";
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const DIST = resolve(__dirname, "../dist");
-const SITE_URL = "https://niclaslindstedt.github.io/game";
+const SITE_URL = "https://game.niclaslindstedt.se";
 
 const findings = [];
 const err = (file, message) => findings.push({ level: "error", file, message });
