@@ -57,24 +57,30 @@ export function botAct(bot: Bot, state: GameState): GameInput {
   if (bot.strategy === "idle" || state.enemies.length === 0) {
     return idleInput();
   }
-  switch (bot.strategy) {
-    case "rush":
-      return steer(state, nearestEnemy(state)!.pos);
-    case "kite": {
-      // Hold inside weapon range, outside the pack's grasp.
-      const range = weaponDef(state.player.equipment.weapon.defId).range;
-      return steer(
-        state,
-        holdOff(state, nearestEnemy(state)!.pos, range * 0.7),
-      );
+  const decided = ((): GameInput => {
+    switch (bot.strategy) {
+      case "rush":
+        return steer(state, nearestEnemy(state)!.pos);
+      case "kite": {
+        // Hold inside weapon range, outside the pack's grasp.
+        const range = weaponDef(state.player.equipment.weapon.defId).range;
+        return steer(
+          state,
+          holdOff(state, nearestEnemy(state)!.pos, range * 0.7),
+        );
+      }
+      case "boss":
+        return pushBoss(state);
+      case "survivor":
+        return survive(state);
+      default:
+        return idleInput();
     }
-    case "boss":
-      return pushBoss(state);
-    case "survivor":
-      return survive(state);
-    default:
-      return idleInput();
-  }
+  })();
+  // Bots pop ability pickups the moment they carry one — no tactical
+  // hoarding, matching how these items auto-activated before banking.
+  decided.useItem = state.player.heldAbilities.length > 0;
+  return decided;
 }
 
 /**

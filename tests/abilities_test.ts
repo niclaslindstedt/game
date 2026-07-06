@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
-// Time-limited ability pickups: activation on touch, orbiting fire orbs
-// mangling the pack, storm strikes, stasis slow, and expiry.
+// Time-limited ability pickups: banking on touch, activation via the
+// useItem input, orbiting fire orbs mangling the pack, storm strikes,
+// stasis slow, and expiry.
 
 import { describe, expect, it } from "vitest";
 
@@ -11,33 +12,52 @@ import {
   orbPositions,
   step,
 } from "@game/core";
-import type { GameState } from "@game/core";
+import type { GameInput, GameState } from "@game/core";
 import { clearStage, DT, idle, makeEnemy, run, startGame } from "./helpers.ts";
 
-/** A run with a clean stage and one ability item under the player's feet. */
+const useItem: GameInput = { ...idle, useItem: true };
+
+/** A run with a clean stage and one ability picked up AND activated. */
 function pickUp(defId: string): GameState {
   const state = startGame();
   clearStage(state);
   state.items = [
     { id: 500, kind: "ability", pos: { ...state.player.pos }, defId },
   ];
-  step(state, idle, DT);
+  step(state, idle, DT); // touch banks it…
+  step(state, useItem, DT); // …and the useItem edge spends it
   return state;
 }
 
 describe("ability pickups", () => {
-  it("activate on touch and never enter the bag", () => {
-    const state = pickUp("fire_orbs");
+  it("bank on touch and activate on the useItem input", () => {
+    const state = startGame();
+    clearStage(state);
+    state.items = [
+      {
+        id: 500,
+        kind: "ability",
+        pos: { ...state.player.pos },
+        defId: "fire_orbs",
+      },
+    ];
+    step(state, idle, DT);
+    // Banked, not running — and never in the bag.
     expect(state.items).toHaveLength(0);
+    expect(state.player.heldAbilities).toEqual(["fire_orbs"]);
+    expect(state.player.abilities).toHaveLength(0);
     expect(state.player.inventory.every((cell) => cell === null)).toBe(true);
+    expect(state.events).toContainEqual({
+      type: "itemCollected",
+      kind: "ability",
+    });
+
+    step(state, useItem, DT);
+    expect(state.player.heldAbilities).toEqual([]);
     expect(state.player.abilities.map((a) => a.defId)).toEqual(["fire_orbs"]);
     expect(state.events).toContainEqual({
       type: "abilityStarted",
       defId: "fire_orbs",
-    });
-    expect(state.events).toContainEqual({
-      type: "itemCollected",
-      kind: "ability",
     });
   });
 
@@ -56,10 +76,13 @@ describe("ability pickups", () => {
       },
     ];
     step(state, idle, DT);
+    step(state, useItem, DT);
     expect(state.player.abilities).toHaveLength(1);
-    expect(state.player.abilities[0]!.remainingMs).toBe(
-      abilityDef("fire_orbs").durationMs,
+    // Refreshed to (nearly) full — the activating step itself ticks DT off.
+    expect(state.player.abilities[0]!.remainingMs).toBeGreaterThanOrEqual(
+      abilityDef("fire_orbs").durationMs - DT,
     );
+    expect(state.player.abilities[0]!.remainingMs).toBeGreaterThan(worn);
   });
 
   it("expire after their duration, with an event", () => {

@@ -21,6 +21,7 @@ import {
   type AffixDef,
   equipmentBaseName,
 } from "./defs/equipment.ts";
+import { difficultyDef } from "./defs/difficulties.ts";
 import { levelDef } from "./defs/levels.ts";
 import type {
   Affix,
@@ -76,16 +77,18 @@ function rollAffix(rng: Rng, def: AffixDef): Affix {
 
 /**
  * Roll the tier for a drop: best tier first, each gated by the level's loot
- * table (absent = cannot drop on this level), sweetened by LUCK and any
- * per-enemy bonus.
+ * table plus the difficulty's bonus (absent from both = cannot drop here —
+ * harder difficulties unlock tiers the level alone doesn't), sweetened by
+ * LUCK and any per-enemy bonus.
  */
 function rollTier(state: GameState, tierBonus: number): Tier {
   const chances = levelDef(state.level.id).loot.tierChances;
+  const difficultyChances = difficultyDef(state.difficulty).tierChanceBonus;
   const luckBonus =
     effectiveStat(state, "luck") * STATS.tierChancePerLuck + tierBonus;
   for (const tier of TIER_ROLL_ORDER) {
-    const base = chances[tier];
-    if (base === undefined) continue;
+    const base = (chances[tier] ?? 0) + (difficultyChances[tier] ?? 0);
+    if (base <= 0) continue;
     if (state.rng() < base + luckBonus) return tier;
   }
   return "regular";
@@ -201,10 +204,12 @@ export function enemyCritChance(state: GameState, base: number): number {
   );
 }
 
-/** Chance a regular monster drops loot, after LUCK. */
+/** Chance a regular monster drops loot, after LUCK and difficulty. */
 export function dropChance(state: GameState): number {
   return (
-    LOOT.dropChance + effectiveStat(state, "luck") * STATS.dropChancePerLuck
+    LOOT.dropChance +
+    difficultyDef(state.difficulty).dropChanceBonus +
+    effectiveStat(state, "luck") * STATS.dropChancePerLuck
   );
 }
 

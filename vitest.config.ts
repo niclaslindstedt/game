@@ -8,11 +8,14 @@ const here = (p: string) => fileURLToPath(new URL(p, import.meta.url));
 export default defineConfig({
   resolve: {
     // Keep in lockstep with tsconfig.json `paths` (and the website's vite
-    // config): @game/lib is the engine-generic pool earmarked for extraction
-    // into oss-framework — extraction swaps the prefix, not the code.
+    // config): @game/lib and @ui/lib are the generic pools earmarked for
+    // extraction into oss-framework — extraction swaps the prefix, not the
+    // code. @ui/lib is aliased here so DOM-free UI-lib modules (the chiptune
+    // sequencer) stay testable from tests/.
     alias: [
       { find: "@game/core", replacement: here("./src/index.ts") },
       { find: "@game/lib", replacement: here("./src/lib") },
+      { find: "@ui/lib", replacement: here("./website/src/lib") },
     ],
   },
   test: {

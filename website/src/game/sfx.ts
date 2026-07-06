@@ -1,11 +1,71 @@
 // SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
 // Sound design: maps engine events to synthesized effects (lib/synth.ts).
 // Every sound is described by oscillator/noise parameters — tweak numbers
-// here, no audio files involved.
+// here, no audio files involved. The palette is deliberately NES: square
+// waves for actions and damage, triangle for rewards and jingles, noise for
+// percussion and impacts — no sines or saws, they read as "not 8-bit".
 
 import type { GameEvent } from "@game/core";
 
 import type { Synth } from "@ui/lib/synth.ts";
+
+/** Menu/interface moments (not engine events — the menus are app-owned). */
+export type UiSound = "move" | "confirm" | "back" | "start" | "equip";
+
+export function playUiSound(synth: Synth, sound: UiSound): void {
+  switch (sound) {
+    case "move":
+      // A single dry square blip, straight off an NES cursor.
+      synth.tone({ type: "square", from: 880, durationMs: 45, volume: 0.04 });
+      break;
+    case "confirm":
+      // Two rising square steps: "accepted".
+      synth.tone({ type: "square", from: 660, durationMs: 60, volume: 0.05 });
+      synth.tone({
+        type: "square",
+        from: 990,
+        durationMs: 90,
+        volume: 0.05,
+        delayMs: 60,
+      });
+      break;
+    case "back":
+      // The confirm inverted: two falling steps.
+      synth.tone({ type: "square", from: 660, durationMs: 60, volume: 0.04 });
+      synth.tone({
+        type: "square",
+        from: 440,
+        durationMs: 90,
+        volume: 0.04,
+        delayMs: 60,
+      });
+      break;
+    case "start":
+      // The run-start fanfare: a fast rising square arpeggio + snare hit.
+      [523, 659, 784, 1047].forEach((freq, i) =>
+        synth.tone({
+          type: "square",
+          from: freq,
+          durationMs: 70,
+          volume: 0.05,
+          delayMs: i * 70,
+        }),
+      );
+      synth.noise({ durationMs: 80, volume: 0.04, delayMs: 280 });
+      break;
+    case "equip":
+      // Gear clacking into its slot: a snap of noise, then a bright ring.
+      synth.noise({ durationMs: 35, volume: 0.04 });
+      synth.tone({
+        type: "square",
+        from: 784,
+        durationMs: 80,
+        volume: 0.05,
+        delayMs: 30,
+      });
+      break;
+  }
+}
 
 export function playEventSounds(
   synth: Synth,
@@ -15,24 +75,27 @@ export function playEventSounds(
     switch (event.type) {
       case "shot":
         if (event.weaponClass === "magic") {
+          // A rising triangle zap — softer than the guns, clearly arcane.
           synth.tone({
-            type: "sine",
+            type: "triangle",
             from: 620,
-            to: 980,
-            durationMs: 90,
-            volume: 0.04,
+            to: 1240,
+            durationMs: 80,
+            volume: 0.045,
           });
         } else {
+          // The classic pew: a fast square dive.
           synth.tone({
             type: "square",
             from: 880,
-            to: 320,
-            durationMs: 70,
+            to: 220,
+            durationMs: 60,
             volume: 0.03,
           });
         }
         break;
       case "swing":
+        // A whoosh of noise over a low triangle thunk.
         synth.noise({ durationMs: 60, volume: 0.05 });
         synth.tone({
           type: "triangle",
@@ -43,12 +106,13 @@ export function playEventSounds(
         });
         break;
       case "jump":
+        // The Mario-school rising square boing (moon gravity edition).
         synth.tone({
-          type: "sine",
-          from: 260,
-          to: 540,
-          durationMs: 160,
-          volume: 0.04,
+          type: "square",
+          from: 220,
+          to: 660,
+          durationMs: 140,
+          volume: 0.035,
         });
         break;
       case "land":
@@ -64,35 +128,39 @@ export function playEventSounds(
         });
         break;
       case "enemyKilled":
+        // An 8-bit pop: noise burst over a square drop to the floor.
+        synth.noise({ durationMs: 160, volume: 0.05 });
         synth.tone({
-          type: "sawtooth",
-          from: 320,
-          to: 60,
-          durationMs: 250,
-          volume: 0.07,
+          type: "square",
+          from: 420,
+          to: 55,
+          durationMs: 220,
+          volume: 0.06,
         });
-        synth.noise({ durationMs: 150, volume: 0.05 });
         break;
       case "playerHurt":
+        // Must cut through: the low harsh square buzz, loudest in the mix.
         synth.tone({
-          type: "sawtooth",
-          from: event.crit ? 180 : 140,
-          to: 90,
-          durationMs: event.crit ? 260 : 180,
+          type: "square",
+          from: event.crit ? 190 : 150,
+          to: 60,
+          durationMs: event.crit ? 260 : 190,
           volume: event.crit ? 0.12 : 0.09,
         });
+        synth.noise({ durationMs: 70, volume: 0.05 });
         break;
       case "itemCollected":
         if (event.kind === "equipment") {
-          // A little "treasure" flourish — brighter for magic finds.
-          [520, 780, event.tier === "magic" ? 1180 : 1040].forEach((freq, i) =>
-            synth.tone({
-              type: "triangle",
-              from: freq,
-              durationMs: 90,
-              volume: 0.06,
-              delayMs: i * 70,
-            }),
+          // A little "treasure" flourish — brighter for magic+ finds.
+          [520, 780, event.tier === "regular" ? 1040 : 1180].forEach(
+            (freq, i) =>
+              synth.tone({
+                type: "triangle",
+                from: freq,
+                durationMs: 90,
+                volume: 0.06,
+                delayMs: i * 70,
+              }),
           );
         } else if (event.kind === "upgrade") {
           // A metallic sharpening rasp rising into a ring.
@@ -115,11 +183,11 @@ export function playEventSounds(
         } else if (event.kind === "ability") {
           // A power surging on: a fast rising sweep into a shimmer.
           synth.tone({
-            type: "sawtooth",
+            type: "square",
             from: 220,
             to: 880,
             durationMs: 180,
-            volume: 0.06,
+            volume: 0.05,
           });
           synth.tone({
             type: "triangle",
@@ -129,34 +197,41 @@ export function playEventSounds(
             delayMs: 160,
           });
         } else {
-          synth.tone({ type: "sine", from: 660, durationMs: 90, volume: 0.06 });
+          // The medkit: a warm two-note triangle mend.
           synth.tone({
-            type: "sine",
-            from: 990,
-            durationMs: 120,
+            type: "triangle",
+            from: 523,
+            durationMs: 90,
+            volume: 0.06,
+          });
+          synth.tone({
+            type: "triangle",
+            from: 784,
+            durationMs: 130,
             volume: 0.06,
             delayMs: 90,
           });
         }
         break;
       case "itemDropped":
-        synth.tone({ type: "sine", from: 440, durationMs: 60, volume: 0.03 });
+        // Loot hitting the regolith: a tiny square tick.
+        synth.tone({ type: "square", from: 440, durationMs: 50, volume: 0.03 });
         break;
       case "lightning":
         // The storm ability's strike: a snap of noise over a falling zap.
         synth.noise({ durationMs: 90, volume: 0.05 });
         synth.tone({
-          type: "sawtooth",
+          type: "square",
           from: 1400,
           to: 180,
           durationMs: 120,
-          volume: 0.05,
+          volume: 0.045,
         });
         break;
       case "abilityEnded":
         // The power winding down: a soft falling sigh.
         synth.tone({
-          type: "sine",
+          type: "triangle",
           from: 700,
           to: 320,
           durationMs: 200,
@@ -164,6 +239,7 @@ export function playEventSounds(
         });
         break;
       case "levelUp":
+        // The five-note triangle fanfare, straight up the major scale.
         [392, 523, 659, 784, 1047].forEach((freq, i) =>
           synth.tone({
             type: "triangle",
@@ -175,13 +251,14 @@ export function playEventSounds(
         );
         break;
       case "bossDefeated":
+        // The giant coming down: a long rumble under descending squares.
         synth.noise({ durationMs: 500, volume: 0.08 });
         [220, 165, 110, 82].forEach((freq, i) =>
           synth.tone({
-            type: "sawtooth",
+            type: "square",
             from: freq,
             durationMs: 300,
-            volume: 0.08,
+            volume: 0.07,
             delayMs: i * 200,
           }),
         );
@@ -198,15 +275,17 @@ export function playEventSounds(
         );
         break;
       case "defeat":
+        // The falling minor line, a noise thud on the last note.
         [392, 311, 262, 196].forEach((freq, i) =>
           synth.tone({
-            type: "sawtooth",
+            type: "triangle",
             from: freq,
             durationMs: 220,
-            volume: 0.06,
+            volume: 0.07,
             delayMs: i * 160,
           }),
         );
+        synth.noise({ durationMs: 200, volume: 0.05, delayMs: 480 });
         break;
     }
   }

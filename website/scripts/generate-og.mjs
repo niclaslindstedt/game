@@ -20,11 +20,11 @@ const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="630">
   <circle cx="985" cy="315" r="135" fill="none" stroke="#28313e" stroke-width="10"/>
   <path d="M985 135 L1108 432 L985 370 L862 432 Z" fill="url(#ship)"/>
   <text x="90" y="270" font-family="system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif"
-        font-size="120" font-weight="800" letter-spacing="8" fill="#e6e8eb">GAME</text>
+        font-size="96" font-weight="800" letter-spacing="4" fill="#e6e8eb">GONE IN SPACE</text>
   <text x="92" y="345" font-family="system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif"
-        font-size="38" fill="#9aa3ad">Offline survival shooter for the browser</text>
+        font-size="38" fill="#9aa3ad">Survive the search for your lost love</text>
   <text x="92" y="410" font-family="system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif"
-        font-size="30" fill="#5d6670">Hold to steer — your loadout does the fighting</text>
+        font-size="30" fill="#5d6670">The trail leads to the moon</text>
 </svg>`;
 
 await sharp(Buffer.from(svg)).png().toFile(out);

@@ -2,7 +2,7 @@
 // The level's story text box: why the player has arrived here. Shown while
 // the engine sits in the `intro` phase; dismissing it starts the run.
 
-import { levelDef, type GameState } from "@game/core";
+import { difficultyDef, levelDef, type GameState } from "@game/core";
 
 import { PixelText } from "@ui/lib/PixelText.tsx";
 import type { PixelFont } from "@ui/lib/pixel-font.ts";
@@ -25,6 +25,12 @@ export function IntroOverlay({
           text={`LEVEL ${def.index} - ${def.name}`}
           scale={3}
           color="#7ef0c8"
+        />
+        <PixelText
+          font={font}
+          text={`DIFFICULTY - ${difficultyDef(state.difficulty).name}`}
+          scale={1}
+          color="#d9a0f0"
         />
         <div className="intro-lines">
           {def.intro.map((line, i) =>

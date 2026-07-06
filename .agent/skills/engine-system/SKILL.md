@@ -77,3 +77,14 @@ why, so the next system follows suit.
   freezes on anything but `playing`, and the UI resumes via exported
   mutators. Import `src/lib` through `@game/lib/*` (never relative) so
   oss-framework extraction stays a prefix swap.
+- **Cross-level modifiers (2026-07, difficulty ladder):** a setting that
+  scales EVERY level (difficulty) is its own defs catalog
+  (`defs/difficulties.ts`) threaded through `createGame(seed, levelId,
+  modifier)` and stored on the state (`state.difficulty`); spawn/loot code
+  reads it via a lookup, never via globals. Keep the default entry an
+  exact 1.0 baseline so existing tests and tuning stay untouched.
+- **Player-timed consumables (2026-07, held ability items):** pickups the
+  player triggers later are a queue on the player (`heldAbilities`) plus an
+  input edge (`input.useItem`) consumed by a small `stepX()` — never an
+  app-side mutation, so bots (`botAct` sets the edge) and tests drive the
+  same path.

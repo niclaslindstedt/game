@@ -117,7 +117,13 @@ export function spriteByName(
   return (sprites as Record<string, HTMLImageElement>)[name];
 }
 
-export async function loadGameAssets(): Promise<GameAssets> {
-  const sprites = await loadImages(SPRITE_URLS);
-  return { sprites, font: createPixelFont(sprites.font, fontMeta) };
+let loaded: Promise<GameAssets> | null = null;
+
+export function loadGameAssets(): Promise<GameAssets> {
+  // Memoized: the title screen and the game screen share one decode pass.
+  loaded ??= loadImages(SPRITE_URLS).then((sprites) => ({
+    sprites,
+    font: createPixelFont(sprites.font, fontMeta),
+  }));
+  return loaded;
 }

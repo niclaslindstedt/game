@@ -144,6 +144,16 @@ export const MEDKIT = {
   radius: 8,
 } as const;
 
+/**
+ * Ability pickups are carried, not auto-used: touching one banks it, and the
+ * `useItem` input (mouse click / two-finger tap / the HUD button) spends the
+ * oldest banked one. Timing the storm for the flood is the player's call.
+ */
+export const HELD_ITEMS = {
+  /** How many ability pickups the player can carry; extras stay grounded. */
+  cap: 3,
+} as const;
+
 /** Run flow. */
 export const RUN = {
   /** Grace period between clearing the objective and the victory splash —

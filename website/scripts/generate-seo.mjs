@@ -58,7 +58,7 @@ function renderRobots() {
 // the site root. Generated from the same URL list the sitemap uses.
 function renderLlmsTxt() {
   return [
-    "# Game",
+    "# Gone in Space",
     "",
     "> An offline top-down survival shooter that runs entirely in the browser. Hold to steer; picked-up weapons and items do the fighting. Installable PWA.",
     "",
@@ -81,12 +81,12 @@ function render404() {
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Not found — Game</title>
+    <title>Not found — Gone in Space</title>
     <meta name="description" content="This page does not exist. The game itself lives at the site root and works offline once loaded." />
     <meta name="robots" content="noindex,follow" />
     <link rel="canonical" href="${SITE_URL}/" />
     <meta property="og:type" content="website" />
-    <meta property="og:title" content="Not found — Game" />
+    <meta property="og:title" content="Not found — Gone in Space" />
     <meta property="og:description" content="This page does not exist. The game itself lives at the site root." />
     <meta property="og:url" content="${SITE_URL}/" />
     <meta property="og:image" content="${SITE_URL}/og-default.png" />
