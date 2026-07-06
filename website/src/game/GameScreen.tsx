@@ -1,14 +1,16 @@
 // SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
 // The playable screen: mounts the canvas, runs the fixed-timestep loop over
-// the engine, feeds it hold-to-steer pointer input (tap or Space to jump),
-// plays event sounds, and overlays the DOM UI: HUD, the level intro text
-// box, the level-up stat chooser, the Diablo-style inventory, and the
-// end-of-run splash. One <GameScreen> mount = one session at the menu; one
-// run = one `runId` (retry bumps it).
+// the engine, feeds it pointer input per the player's control settings
+// (hold- or cursor-steer; tap/Space jumps; click, two-finger tap, E, or the
+// HUD button spends a banked item), plays event sounds, and overlays the
+// DOM UI: HUD, the level intro text box, the level-up stat chooser, the
+// Diablo-style inventory, and the end-of-run splash. One <GameScreen> mount
+// = one session at the menu; one run = one `runId` (retry bumps it).
 
 import { useEffect, useRef, useState } from "react";
 
 import {
+  abilityDef,
   allocateStat,
   BOT_STRATEGIES,
   botAct,
@@ -21,6 +23,7 @@ import {
   openInventory,
   step,
   type BotStrategy,
+  type Difficulty,
   type GameInput,
   type GamePhase,
   type GameState,
@@ -30,12 +33,13 @@ import {
 import { startGameLoop } from "@ui/lib/game-loop.ts";
 import { PixelText } from "@ui/lib/PixelText.tsx";
 import { trackPointer } from "@ui/lib/pointer.ts";
-import { createSynth, type Synth } from "@ui/lib/synth.ts";
 
-import { loadGameAssets, type GameAssets } from "./assets.ts";
+import { loadGameAssets, spriteByName, type GameAssets } from "./assets.ts";
+import { synth } from "./audio.ts";
 import { IntroOverlay } from "./IntroOverlay.tsx";
 import { InventoryPanel } from "./InventoryPanel.tsx";
 import { LevelUpOverlay } from "./LevelUpOverlay.tsx";
+import { playLevelMusic, stopMusic } from "./music.ts";
 import {
   computeCamera,
   drawEffects,
@@ -43,7 +47,8 @@ import {
   VIEW_SCALE,
   type Effect,
 } from "./render.ts";
-import { playEventSounds } from "./sfx.ts";
+import { getSettings } from "./settings.ts";
+import { playEventSounds, playUiSound } from "./sfx.ts";
 
 type Hud = {
   phase: GamePhase;
@@ -54,6 +59,8 @@ type Hud = {
   xpToNext: number;
   enemiesLeft: number;
   bagCount: number;
+  /** Banked ability pickups, oldest first (ABILITY_DEFS ids). */
+  heldAbilities: string[];
   stats: GameStats;
 };
 
@@ -64,10 +71,16 @@ function formatTime(ms: number): string {
   return `${minutes}:${String(seconds).padStart(2, "0")}`;
 }
 
-export function GameScreen({ onQuit }: { onQuit: () => void }) {
+export function GameScreen({
+  difficulty,
+  onQuit,
+}: {
+  difficulty: Difficulty;
+  onQuit: () => void;
+}) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
-  const synthRef = useRef<Synth | null>(null);
   const jumpQueuedRef = useRef(false);
+  const useItemQueuedRef = useRef(false);
   const [assets, setAssets] = useState<GameAssets | null>(null);
   const [runId, setRunId] = useState(0);
   const [hud, setHud] = useState<Hud | null>(null);
@@ -96,9 +109,16 @@ export function GameScreen({ onQuit }: { onQuit: () => void }) {
     if (!ctx) return;
 
     const seed = Date.now() & 0x7fffffff;
-    const state = createGame(seed);
+    const state = createGame(seed, undefined, difficulty);
     setState(state);
-    debug(`run ${runId} started (seed ${seed})`);
+    debug(`run ${runId} started (seed ${seed}, ${difficulty})`);
+
+    // The run's music: the level theme rolls once the intro is dismissed and
+    // stops for the end-of-run jingles (victory/defeat events below).
+    const beginRun = () => {
+      dismissIntro(state);
+      playLevelMusic();
+    };
 
     // In debug mode (?debug) the live state is reachable from the console /
     // automated playtests. See the debug-game skill.
@@ -115,7 +135,6 @@ export function GameScreen({ onQuit }: { onQuit: () => void }) {
         ? createBot(requested as BotStrategy)
         : null;
 
-    const synth = (synthRef.current ??= createSynth());
     // Audio can only start from a user gesture; the run itself begins with
     // a click/tap, and steering keeps the context alive after that.
     synth.unlock();
@@ -134,10 +153,25 @@ export function GameScreen({ onQuit }: { onQuit: () => void }) {
     observer.observe(canvas);
     resize();
 
-    // Tap = jump (moon gravity!); hold = steer. Space works too.
+    // The control scheme (see settings.ts): touch always steers by holding,
+    // taps jump, and a two-finger tap spends a banked item. A mouse follows
+    // the steering setting — cursor-follow mode turns clicks into item use
+    // (Space jumps), classic mode keeps click-tap = jump.
     const pointer = trackPointer(canvas, {
-      onTap: () => {
-        jumpQueuedRef.current = true;
+      onTap: ({ fingers, pointerType }) => {
+        if (fingers >= 2) {
+          useItemQueuedRef.current = true;
+        } else if (
+          pointerType !== "mouse" ||
+          getSettings().steering === "hold"
+        ) {
+          jumpQueuedRef.current = true;
+        }
+      },
+      onPress: ({ pointerType }) => {
+        if (pointerType === "mouse" && getSettings().steering === "hover") {
+          useItemQueuedRef.current = true;
+        }
       },
     });
     const onKeyDown = (event: KeyboardEvent) => {
@@ -145,17 +179,25 @@ export function GameScreen({ onQuit }: { onQuit: () => void }) {
       if (event.code === "Space") {
         event.preventDefault();
         if (state.phase === "intro") {
-          dismissIntro(state);
+          beginRun();
           bumpUi();
         } else {
           jumpQueuedRef.current = true;
         }
+      } else if (event.key === "e" || event.key === "E") {
+        useItemQueuedRef.current = true;
       } else if (event.key === "i" || event.key === "I") {
-        if (state.phase === "playing") openInventory(state);
-        else if (state.phase === "inventory") closeInventory(state);
+        if (state.phase === "playing") {
+          openInventory(state);
+          playUiSound(synth, "confirm");
+        } else if (state.phase === "inventory") {
+          closeInventory(state);
+          playUiSound(synth, "back");
+        }
         bumpUi();
       } else if (event.key === "Escape" && state.phase === "inventory") {
         closeInventory(state);
+        playUiSound(synth, "back");
         bumpUi();
       }
     };
@@ -165,6 +207,7 @@ export function GameScreen({ onQuit }: { onQuit: () => void }) {
       steering: false,
       target: { x: 0, y: 0 },
       jump: false,
+      useItem: false,
     };
     let lastHud = "";
     // Transient visuals driven by engine events (lightning strikes).
@@ -183,7 +226,7 @@ export function GameScreen({ onQuit }: { onQuit: () => void }) {
         if (bot) {
           // The bot is a drop-in input source; it also clears the paused
           // phases a human would click through.
-          if (state.phase === "intro") dismissIntro(state);
+          if (state.phase === "intro") beginRun();
           if (state.phase === "levelup") {
             allocateStat(state, botAllocate(bot, state));
             bumpUi();
@@ -193,12 +236,24 @@ export function GameScreen({ onQuit }: { onQuit: () => void }) {
           input.target.x = decided.target.x;
           input.target.y = decided.target.y;
           input.jump = decided.jump;
+          input.useItem = decided.useItem ?? false;
         } else {
-          input.steering = pointer.state.held;
+          const settings = getSettings();
+          // Cursor-follow steering: a hovering mouse steers with no button.
+          const hoverSteer =
+            settings.steering === "hover" && pointer.state.hovering;
+          input.steering = pointer.state.held || hoverSteer;
           input.target.x = camera.x + pointer.state.x * cssToWorld.x;
           input.target.y = camera.y + pointer.state.y * cssToWorld.y;
           input.jump = jumpQueuedRef.current;
           jumpQueuedRef.current = false;
+          // Instant item use (the touch-first default) pops pickups the
+          // moment they are carried; manual waits for the player's edge.
+          input.useItem =
+            useItemQueuedRef.current ||
+            (settings.itemUse === "auto" &&
+              state.player.heldAbilities.length > 0);
+          useItemQueuedRef.current = false;
         }
         step(state, input, dtMs);
         playEventSounds(synth, state.events);
@@ -210,6 +265,10 @@ export function GameScreen({ onQuit }: { onQuit: () => void }) {
               pos: event.pos,
               untilMs: state.stats.timeMs + 130,
             });
+          }
+          // The run is over: silence the loop so the jingle stands alone.
+          if (event.type === "victory" || event.type === "defeat") {
+            stopMusic();
           }
         }
         if (effects.length > 0) {
@@ -223,7 +282,8 @@ export function GameScreen({ onQuit }: { onQuit: () => void }) {
 
         // Mirror the slow-moving values into React only when they change.
         const bagCount = state.player.inventory.filter(Boolean).length;
-        const key = `${state.phase}/${state.player.hp}/${state.player.xp}/${state.player.level}/${state.player.pendingStatPoints}/${state.enemies.length}/${bagCount}/${Math.floor(state.stats.timeMs / 1000)}`;
+        const held = state.player.heldAbilities.join(",");
+        const key = `${state.phase}/${state.player.hp}/${state.player.xp}/${state.player.level}/${state.player.pendingStatPoints}/${state.enemies.length}/${bagCount}/${held}/${Math.floor(state.stats.timeMs / 1000)}`;
         if (key !== lastHud) {
           lastHud = key;
           setHud({
@@ -235,6 +295,7 @@ export function GameScreen({ onQuit }: { onQuit: () => void }) {
             xpToNext: state.player.xpToNext,
             enemiesLeft: state.enemies.length,
             bagCount,
+            heldAbilities: [...state.player.heldAbilities],
             stats: { ...state.stats },
           });
         }
@@ -243,12 +304,13 @@ export function GameScreen({ onQuit }: { onQuit: () => void }) {
 
     return () => {
       stop();
+      stopMusic();
       pointer.dispose();
       observer.disconnect();
       window.removeEventListener("keydown", onKeyDown);
       canvas.removeEventListener("pointerdown", unlock);
     };
-  }, [assets, runId]);
+  }, [assets, runId, difficulty]);
 
   if (!assets) {
     return <div className="game-loading">Loading…</div>;
@@ -284,6 +346,36 @@ export function GameScreen({ onQuit }: { onQuit: () => void }) {
             </div>
           </div>
           <div className="hud-right">
+            {hud.heldAbilities.length > 0 && (
+              <button
+                type="button"
+                className="pixel-button use-button"
+                aria-label="use-item"
+                onClick={() => {
+                  useItemQueuedRef.current = true;
+                }}
+              >
+                {(() => {
+                  const icon = spriteByName(
+                    assets.sprites,
+                    abilityDef(hud.heldAbilities[0] as string).icon,
+                  );
+                  return icon ? (
+                    <img src={icon.src} alt="" className="pixel-img use-icon" />
+                  ) : null;
+                })()}
+                <PixelText
+                  font={font}
+                  text={
+                    hud.heldAbilities.length > 1
+                      ? `USE x${hud.heldAbilities.length}`
+                      : "USE"
+                  }
+                  scale={2}
+                  color="#0b0d10"
+                />
+              </button>
+            )}
             <PixelText
               font={font}
               text={`GHOSTS ${hud.stats.totalEnemies - hud.enemiesLeft}/${hud.stats.totalEnemies}`}
@@ -323,6 +415,7 @@ export function GameScreen({ onQuit }: { onQuit: () => void }) {
           font={font}
           onBegin={() => {
             dismissIntro(state);
+            playLevelMusic();
             bumpUi();
           }}
         />

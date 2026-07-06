@@ -59,13 +59,20 @@ export {
   stasisFactorAt,
 } from "./game/abilities.ts";
 
-// Content catalogs: levels, monsters, equipment, tiers.
+// Content catalogs: levels, monsters, equipment, tiers, difficulties.
 export {
   ABILITY_DEFS,
   abilityDef,
   type AbilityDef,
   type AbilityKind,
 } from "./game/defs/abilities.ts";
+export {
+  DIFFICULTY_DEFS,
+  DIFFICULTY_ORDER,
+  difficultyDef,
+  scaledMobCount,
+  type DifficultyDef,
+} from "./game/defs/difficulties.ts";
 export {
   LEVEL_ORDER,
   LEVELS,
@@ -100,6 +107,7 @@ export {
 // Global tuning.
 export {
   ENEMY_AI,
+  HELD_ITEMS,
   JUMP,
   LEVELING,
   LOOT,
@@ -115,6 +123,7 @@ export type {
   ActiveAbility,
   Affix,
   Decor,
+  Difficulty,
   Enemy,
   EquipSlot,
   Equipment,

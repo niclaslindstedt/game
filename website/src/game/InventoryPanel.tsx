@@ -36,6 +36,8 @@ import { PixelText } from "@ui/lib/PixelText.tsx";
 import type { PixelFont } from "@ui/lib/pixel-font.ts";
 
 import { spriteByName, type Sprites } from "./assets.ts";
+import { synth } from "./audio.ts";
+import { playUiSound } from "./sfx.ts";
 import { TIER_COLORS } from "./tiers.ts";
 
 type DragSource =
@@ -155,7 +157,9 @@ export function InventoryPanel({
         if (d.from.type === "inv" && kind === "inv") {
           moveInventoryItem(state, d.from.index, Number(arg));
         } else if (d.from.type === "inv" && kind === "slot") {
-          if (d.item.slot === arg) equipFromInventory(state, d.from.index);
+          if (d.item.slot === arg && equipFromInventory(state, d.from.index)) {
+            playUiSound(synth, "equip");
+          }
         } else if (d.from.type === "slot" && kind === "inv") {
           if (unequipToInventory(state, d.from.slot)) {
             const landed = state.player.inventory.findIndex(
@@ -186,8 +190,11 @@ export function InventoryPanel({
       if (!d) return;
       if (!d.moved) {
         // A tap: quick-equip from the bag, quick-unequip from a slot.
-        if (d.from.type === "inv") equipFromInventory(state, d.from.index);
-        else unequipToInventory(state, d.from.slot);
+        const swapped =
+          d.from.type === "inv"
+            ? equipFromInventory(state, d.from.index)
+            : unequipToInventory(state, d.from.slot);
+        if (swapped) playUiSound(synth, "equip");
       } else {
         const el = document
           .elementFromPoint(e.clientX, e.clientY)

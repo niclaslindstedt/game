@@ -16,12 +16,17 @@ export type ToneOptions = {
   volume?: number;
   /** Schedule the sound this far in the future (for little melodies). */
   delayMs?: number;
+  /** Absolute AudioContext start time in seconds (see `now()`); overrides
+   * `delayMs`. Sequencers use this for drift-free scheduling. */
+  at?: number;
 };
 
 export type NoiseOptions = {
   durationMs: number;
   volume?: number;
   delayMs?: number;
+  /** Absolute AudioContext start time in seconds; overrides `delayMs`. */
+  at?: number;
 };
 
 export type Synth = {
@@ -29,6 +34,9 @@ export type Synth = {
   unlock: () => void;
   tone: (options: ToneOptions) => void;
   noise: (options: NoiseOptions) => void;
+  /** The AudioContext clock in seconds, or null while locked/unavailable.
+   * Absolute `at` times for tone/noise are measured on this clock. */
+  now: () => number | null;
 };
 
 export function createSynth(): Synth {
@@ -46,6 +54,11 @@ export function createSynth(): Synth {
       if (c && c.state === "suspended") void c.resume();
     },
 
+    now() {
+      const c = ensure();
+      return c && c.state === "running" ? c.currentTime : null;
+    },
+
     tone({
       type = "square",
       from,
@@ -53,10 +66,11 @@ export function createSynth(): Synth {
       durationMs,
       volume = 0.06,
       delayMs = 0,
+      at,
     }) {
       const c = ensure();
       if (!c || c.state !== "running") return;
-      const t0 = c.currentTime + delayMs / 1000;
+      const t0 = at ?? c.currentTime + delayMs / 1000;
       const t1 = t0 + durationMs / 1000;
 
       const osc = c.createOscillator();
@@ -73,10 +87,10 @@ export function createSynth(): Synth {
       osc.stop(t1);
     },
 
-    noise({ durationMs, volume = 0.05, delayMs = 0 }) {
+    noise({ durationMs, volume = 0.05, delayMs = 0, at }) {
       const c = ensure();
       if (!c || c.state !== "running") return;
-      const t0 = c.currentTime + delayMs / 1000;
+      const t0 = at ?? c.currentTime + delayMs / 1000;
       const length = Math.max(
         1,
         Math.floor((c.sampleRate * durationMs) / 1000),

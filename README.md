@@ -1,15 +1,16 @@
 # game
 
-An offline top-down survival scroller shooter that runs entirely in your browser: you steer by holding the pointer (or touch) down, and your character fights on its own according to the weapons and items it picks up.
+**Gone in Space** — survive the search for your lost love. Ada went out for a midnight walk and never came back; the trail leads to the moon. An offline top-down survival scroller shooter that runs entirely in your browser: you steer with the pointer (or touch), and your character fights on its own according to the weapons and items it picks up.
 
 [![CI](https://github.com/niclaslindstedt/game/actions/workflows/ci.yml/badge.svg)](https://github.com/niclaslindstedt/game/actions/workflows/ci.yml)
 [![SEO](https://github.com/niclaslindstedt/game/actions/workflows/seo.yml/badge.svg)](https://github.com/niclaslindstedt/game/actions/workflows/seo.yml)
 [![Pages](https://github.com/niclaslindstedt/game/actions/workflows/pages.yml/badge.svg)](https://github.com/niclaslindstedt/game/actions/workflows/pages.yml)
 [![License: PolyForm Noncommercial](https://img.shields.io/badge/license-PolyForm%20Noncommercial%201.0.0-blue.svg)](LICENSE)
 
-> **Status: first playable level.** Steer your character across a finite
-> grassy level, let the auto-firing blaster deal with the slimes, grab
-> medkits to stay alive, and clear every slime to win. Dying shows a run
+> **Status: first playable level.** Pick a difficulty on the Doom-style
+> main menu, steer your character across the haunted moon to a chiptune
+> soundtrack, let the auto-firing weapons thin the ghost horde, loot gear
+> and powers, and take down ARMSTRONG at the old flag. Dying shows a run
 > summary with a retry button.
 
 ## Why?
@@ -40,10 +41,20 @@ Level 2 — THE MOON: Ada went out for a midnight walk and never came back;
 the trail leads here. Ghosts thicken the further you stray from the lander,
 and something enormous haunts the old flag.
 
-- **Hold** the pointer / your finger on the level: the character walks
-  toward it. Release to stop.
+- Pick **NEW GAME** on the main menu and choose a difficulty — EASY,
+  MEDIUM, HARD, NIGHTMARE, or JESUS CHRIST! Harder settings raise the horde
+  size and monster health, but drop loot more often and unlock higher item
+  tiers (epic and legendary) that the moon alone never rolls.
+- **Steer with the pointer** — on desktop the character chases the cursor;
+  on touch, hold a finger down and release to stop. (Swap the mouse back to
+  classic hold-to-steer under SETTINGS → CONTROLS.)
 - **Tap** (or press Space) to **jump** — moon gravity carries you high
   enough to sail clean over a ghost's grasp.
+- **Ability pickups** (fire orbs, storm cell, stasis field) are carried
+  with you — on desktop **click** (or press E, or the HUD USE button) to
+  pop one when the horde closes in; on touch they fire the moment you grab
+  them (two-finger tap uses one manually). Tune it under SETTINGS, along
+  with music and sound volumes.
 - The character **fights by itself** with whatever weapon is equipped —
   your job is positioning: kite the haunting, don't get surrounded.
 - Kills grant **XP**; each level-up pauses the run to spend a stat point on

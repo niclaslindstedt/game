@@ -1,7 +1,7 @@
 {
-  "name": "Game — offline survival shooter",
-  "short_name": "Game",
-  "description": "An offline top-down survival shooter for the browser. Hold to steer; your picked-up weapons and items do the fighting.",
+  "name": "Gone in Space — survive the search for your lost love",
+  "short_name": "Gone in Space",
+  "description": "Ada is gone and the trail leads to the moon. Fight the haunting, loot the ghosts, bring her home — free and offline in your browser.",
   "id": "./",
   "start_url": "./",
   "scope": "./",

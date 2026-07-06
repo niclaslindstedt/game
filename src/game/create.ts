@@ -9,15 +9,18 @@
 import { createRng, randomRange, type Rng } from "@game/lib/rng.ts";
 import { distance, vec, type Vec2 } from "@game/lib/vec.ts";
 import { ENEMY_AI, LEVELING, LOOT, PLAYER } from "./config.ts";
+import { difficultyDef, scaledMobCount } from "./defs/difficulties.ts";
 import { enemyDef } from "./defs/enemies.ts";
 import { LEVEL_ORDER, levelDef, type LevelDef } from "./defs/levels.ts";
-import type { Decor, Enemy, GameState } from "./types.ts";
+import type { Decor, Difficulty, Enemy, GameState } from "./types.ts";
 
 export function createGame(
   seed: number,
   levelId: string = LEVEL_ORDER[0] as string,
+  difficulty: Difficulty = "medium",
 ): GameState {
   const def = levelDef(levelId);
+  const diff = difficultyDef(difficulty);
   const rng = createRng(seed);
   const playerSpawn = vec(def.playerSpawn.x, def.playerSpawn.y);
   let nextId = 1;
@@ -37,12 +40,19 @@ export function createGame(
   for (const spawn of def.spawns) {
     if ("at" in spawn) {
       enemies.push(
-        spawnEnemy(spawn.enemy, vec(spawn.at.x, spawn.at.y), rng, nextId++),
+        spawnEnemy(
+          spawn.enemy,
+          vec(spawn.at.x, spawn.at.y),
+          rng,
+          nextId++,
+          diff.mobHpMult,
+        ),
       );
       continue;
     }
     const [bandMin, bandMax] = spawn.band;
-    for (let i = 0; i < spawn.count; i++) {
+    const count = scaledMobCount(spawn.count, difficulty);
+    for (let i = 0; i < count; i++) {
       const margin = enemyDef(spawn.enemy).radius + 4;
       let pos = vec(0, 0);
       // Rejection sampling is fine at this scale; the attempt cap keeps
@@ -61,7 +71,7 @@ export function createGame(
           break;
         }
       }
-      enemies.push(spawnEnemy(spawn.enemy, pos, rng, nextId++));
+      enemies.push(spawnEnemy(spawn.enemy, pos, rng, nextId++, diff.mobHpMult));
     }
   }
 
@@ -70,12 +80,13 @@ export function createGame(
   // The wave budget is part of the level's population from the start — the
   // HUD's "ghosts N/total" counts the whole haunting, not just the placed few.
   const waveTotal = (def.waves?.budget ?? []).reduce(
-    (sum, entry) => sum + entry.count,
+    (sum, entry) => sum + scaledMobCount(entry.count, difficulty),
     0,
   );
 
   return {
     phase: "intro",
+    difficulty,
     level: {
       id: def.id,
       index: def.index,
@@ -96,6 +107,7 @@ export function createGame(
       facing: vec(1, 0),
       faceLeft: false,
       abilities: [],
+      heldAbilities: [],
       moving: false,
       weaponCooldownMs: 0,
       hurtFlashMs: 0,
@@ -160,25 +172,29 @@ export function createGame(
   };
 }
 
-/** Mint one enemy instance (also used by the wave spawner in step.ts). */
+/** Mint one enemy instance (also used by the wave spawner in step.ts).
+ * `hpMult` is the difficulty's monster-hp multiplier — kill XP scales with
+ * max hp, so tougher monsters also pay out more. */
 export function spawnEnemy(
   defId: string,
   pos: Vec2,
   rng: Rng,
   id: number,
+  hpMult = 1,
 ): Enemy {
   const def = enemyDef(defId);
   const jitter =
     def.role === "boss"
       ? 0
       : randomRange(rng, -ENEMY_AI.speedJitter, ENEMY_AI.speedJitter);
+  const hp = Math.max(1, Math.round(def.hp * hpMult));
   return {
     id,
     defId,
     pos,
     home: { ...pos },
-    hp: def.hp,
-    maxHp: def.hp,
+    hp,
+    maxHp: hp,
     speed: def.speed * (1 + jitter),
     contactCooldownMs: 0,
   };

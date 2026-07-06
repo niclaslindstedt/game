@@ -1,16 +1,20 @@
 // SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
 import { useState } from "react";
 
+import type { Difficulty } from "@game/core";
+
 import { UpdateToast, usePwaUpdate } from "@niclaslindstedt/oss-framework/pwa";
 
 import { cacheIdForBase } from "./app/pwa.ts";
 import { GameScreen } from "./game/GameScreen.tsx";
+import { TitleScreen } from "./game/TitleScreen.tsx";
 
-// The app shell: title screen ↔ the playable game. The title screen also
+// The app shell: splash main menu ↔ the playable game. The menu screen also
 // owns the PWA update lifecycle so a new deploy can never silently reload
 // mid-run.
 export function App() {
-  const [playing, setPlaying] = useState(false);
+  // The run's difficulty, chosen on the menu; null = still on the menu.
+  const [difficulty, setDifficulty] = useState<Difficulty | null>(null);
 
   // Register the deploy slot's service worker (§11.4.3) and track its update
   // lifecycle. The framework hook performs the actual
@@ -25,44 +29,15 @@ export function App() {
     enabled: !import.meta.env.DEV,
   });
 
-  if (playing) {
-    return <GameScreen onQuit={() => setPlaying(false)} />;
+  if (difficulty) {
+    return (
+      <GameScreen difficulty={difficulty} onQuit={() => setDifficulty(null)} />
+    );
   }
 
   return (
-    <main className="prelaunch">
-      <h1>Game</h1>
-      <p>
-        A top-down survival shooter that runs entirely in your browser — no
-        account, no server, fully playable offline once loaded. Ada went out for
-        a midnight walk and never came back; the trail leads to the moon.
-      </p>
-      <p>
-        <strong>Hold</strong> the pointer (or touch) to steer,{" "}
-        <strong>tap</strong> (or Space) to jump — moon gravity carries you clean
-        over the ghosts. Your character fights on its own with whatever is
-        equipped. Loot the haunting, level up your stats, and take the fight to
-        the thing guarding the old flag.
-      </p>
-      <button
-        type="button"
-        className="pixel-button start-button"
-        onClick={() => setPlaying(true)}
-      >
-        Start game
-      </button>
-      <p>
-        The game is an installable Progressive Web App: add it to your home
-        screen from the browser menu and it launches fullscreen, works offline,
-        and updates itself when a new build ships.
-      </p>
-      <p>
-        Source code and development docs live in the{" "}
-        <a href="https://github.com/niclaslindstedt/game">GitHub repository</a>.
-      </p>
-      <p className="build-label">
-        v{__APP_VERSION__} · {__BUILD_COMMIT__}
-      </p>
+    <>
+      <TitleScreen onStart={setDifficulty} />
 
       {/* The framework's "a new version is ready" prompt (§11.4.4), fed from
           the service worker reaching `waiting`. Applying reloads onto the new
@@ -73,6 +48,6 @@ export function App() {
         onReload={() => pwa.reload()}
         onDismiss={() => pwa.dismiss()}
       />
-    </main>
+    </>
   );
 }

@@ -20,6 +20,7 @@ import {
 import { grantAbility, orbPositions, stasisFactorAt } from "./abilities.ts";
 import {
   ENEMY_AI,
+  HELD_ITEMS,
   JUMP,
   LEVELING,
   LOOT,
@@ -31,6 +32,7 @@ import {
 } from "./config.ts";
 import { spawnEnemy } from "./create.ts";
 import { abilityDef } from "./defs/abilities.ts";
+import { difficultyDef, scaledMobCount } from "./defs/difficulties.ts";
 import { enemyDef, type EnemyDef } from "./defs/enemies.ts";
 import { weaponDef } from "./defs/equipment.ts";
 import { levelDef } from "./defs/levels.ts";
@@ -54,6 +56,7 @@ export function step(state: GameState, input: GameInput, dtMs: number): void {
   state.stats.timeMs += dtMs;
 
   stepPlayer(state, input, dt, dtMs);
+  stepUseItem(state, input);
   stepWeapon(state, input, dtMs);
   stepAbilities(state, dt, dtMs);
   stepProjectiles(state, dt, dtMs);
@@ -97,7 +100,10 @@ function unspawnedMinions(state: GameState): number {
   const waves = levelDef(state.level.id).waves;
   if (!waves) return 0;
   return waves.budget.reduce(
-    (sum, entry, i) => sum + entry.count - (state.waveSpawned[i] ?? 0),
+    (sum, entry, i) =>
+      sum +
+      scaledMobCount(entry.count, state.difficulty) -
+      (state.waveSpawned[i] ?? 0),
     0,
   );
 }
@@ -116,6 +122,12 @@ function unspawnedMinions(state: GameState): number {
 function stepSpawner(state: GameState): void {
   const waves = levelDef(state.level.id).waves;
   if (!waves) return;
+  // Difficulty scales the horde: every budget line grows by the mob
+  // multiplier, and the live cap/floor stretch so the bigger budget can
+  // actually crowd the field instead of queueing behind medium's cap.
+  const aliveMult = difficultyDef(state.difficulty).aliveMult;
+  const maxAlive = Math.round(waves.maxAlive * aliveMult);
+  const minAlive = Math.round(waves.minAlive * aliveMult);
 
   let alive = 0;
   let near = 0; // minions close enough to count as "on the player's screen"
@@ -128,16 +140,17 @@ function stepSpawner(state: GameState): void {
   const t = state.stats.timeMs;
   outer: for (let i = 0; i < waves.budget.length; i++) {
     const entry = waves.budget[i] as (typeof waves.budget)[number];
+    const count = scaledMobCount(entry.count, state.difficulty);
     const spawned = state.waveSpawned[i] ?? 0;
-    if (spawned >= entry.count) continue;
+    if (spawned >= count) continue;
 
     const start = entry.window[0] * waves.rampDurationMs;
     const end = entry.window[1] * waves.rampDurationMs;
     const progress = clamp((t - start) / Math.max(1, end - start), 0, 1);
     const eased = progress * progress;
-    let due = Math.floor(entry.count * eased) - spawned;
+    let due = Math.floor(count * eased) - spawned;
 
-    while (due-- > 0 && alive < waves.maxAlive) {
+    while (due-- > 0 && alive < maxAlive) {
       if (!spawnWaveEnemy(state, entry.enemy)) break outer;
       state.waveSpawned[i] = (state.waveSpawned[i] ?? 0) + 1;
       alive++;
@@ -145,10 +158,7 @@ function stepSpawner(state: GameState): void {
   }
 
   // Movement pressure: spend the walked distance banked by stepPlayer.
-  while (
-    state.moveSpawnCredit >= waves.moveSpawnEvery &&
-    alive < waves.maxAlive
-  ) {
+  while (state.moveSpawnCredit >= waves.moveSpawnEvery && alive < maxAlive) {
     if (!spawnFromBudget(state, waves)) break;
     state.moveSpawnCredit -= waves.moveSpawnEvery;
     alive++;
@@ -161,7 +171,7 @@ function stepSpawner(state: GameState): void {
 
   // The floor: while the budget lasts, the player's surroundings never go
   // quiet — spawns land in the ring, inside the near-count radius.
-  while (near < waves.minAlive && alive < waves.maxAlive) {
+  while (near < minAlive && alive < maxAlive) {
     if (!spawnFromBudget(state, waves)) break;
     near++;
     alive++;
@@ -176,7 +186,7 @@ function spawnFromBudget(
   for (let i = 0; i < waves.budget.length; i++) {
     const entry = waves.budget[i] as (typeof waves.budget)[number];
     const spawned = state.waveSpawned[i] ?? 0;
-    if (spawned >= entry.count) continue;
+    if (spawned >= scaledMobCount(entry.count, state.difficulty)) continue;
     if (!spawnWaveEnemy(state, entry.enemy)) return false;
     state.waveSpawned[i] = spawned + 1;
     return true;
@@ -208,7 +218,15 @@ function spawnWaveEnemy(state: GameState, defId: string): boolean {
       ),
     };
     if (distance(pos, state.player.pos) < ENEMY_AI.minSpawnDistance) continue;
-    state.enemies.push(spawnEnemy(defId, pos, state.rng, state.nextId++));
+    state.enemies.push(
+      spawnEnemy(
+        defId,
+        pos,
+        state.rng,
+        state.nextId++,
+        difficultyDef(state.difficulty).mobHpMult,
+      ),
+    );
     return true;
   }
   return false;
@@ -269,6 +287,17 @@ function stepPlayer(
     PLAYER.radius,
     state.level.height - PLAYER.radius,
   );
+}
+
+/**
+ * Spend one carried ability pickup on the `useItem` input edge: the oldest
+ * banked ability kicks in (grantAbility emits the abilityStarted event).
+ * With empty hands the input is a quiet no-op.
+ */
+function stepUseItem(state: GameState, input: GameInput): void {
+  if (!input.useItem) return;
+  const defId = state.player.heldAbilities.shift();
+  if (defId) grantAbility(state, defId);
 }
 
 /**
@@ -744,9 +773,11 @@ function stepItems(state: GameState): void {
       return false;
     }
 
-    // Ability pickups kick in on touch, never entering the bag.
+    // Ability pickups are banked for the `useItem` input (never the bag);
+    // at the carry cap they stay on the ground like an overflowing drop.
     if (item.kind === "ability") {
-      grantAbility(state, item.defId);
+      if (state.player.heldAbilities.length >= HELD_ITEMS.cap) return true;
+      state.player.heldAbilities.push(item.defId);
       state.stats.itemsCollected++;
       state.events.push({ type: "itemCollected", kind: "ability" });
       return false;

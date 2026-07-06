@@ -1,8 +1,19 @@
 # Configuration
 
-The game itself has no user-facing configuration yet (player settings will
-be stored on-device via the oss-framework storage module once gameplay
-exists). What is configurable today is the build and the development
+## In-game settings
+
+The main menu's **SETTINGS** screen holds the player-facing configuration,
+persisted on-device in `localStorage` under `gone-in-space:settings`
+(`website/src/game/settings.ts`):
+
+| Setting             | Values                                                              | Default                                                     |
+| ------------------- | ------------------------------------------------------------------- | ----------------------------------------------------------- |
+| Controls → Mouse    | follow cursor / hold to steer                                       | follow cursor on fine pointers, hold on touch-first devices |
+| Controls → Item use | use instantly / use manually (click, two-finger tap, E, HUD button) | manual on fine pointers, instant on touch-first devices     |
+| Music volume        | 0–100% in quarter steps                                             | 80%                                                         |
+| Sound FX volume     | 0–100% in quarter steps                                             | 100%                                                        |
+
+Everything else configurable concerns the build and the development
 environment.
 
 ## Environment variables
@@ -25,8 +36,10 @@ environment.
 All balance knobs — level size, player/enemy speed and hp, weapon cooldown
 and range, item heals, spawn counts — live in one file:
 [`src/game/config.ts`](../src/game/config.ts). They are compile-time
-constants by design (no runtime settings surface yet); tuning happens by
-editing that file and playtesting (see the `playtest` skill).
+constants by design; tuning happens by editing that file and playtesting
+(see the `playtest` skill). The difficulty ladder's multipliers live in
+[`src/game/defs/difficulties.ts`](../src/game/defs/difficulties.ts) —
+MEDIUM is the exact 1.0 baseline the levels are tuned at.
 
 ## Repository pins
 

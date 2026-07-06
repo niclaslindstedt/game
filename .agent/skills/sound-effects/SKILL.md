@@ -63,3 +63,15 @@ run start and every canvas pointerdown — keep that invariant if you touch
 
 Record parameter recipes that worked ("UI confirm = sine 660+990 stepped
 90 ms apart") so the palette of proven sounds grows over time.
+
+- **NES palette rule (2026-07):** the SFX set deliberately sticks to
+  square (actions/damage), triangle (rewards/jingles), and noise
+  (percussion/impacts) — no sines or saws, they read as "not 8-bit". UI
+  recipes: cursor move = square 880 Hz 45 ms; confirm = square 660→990
+  stepped 60 ms; back = the inverse; equip = 35 ms noise + square 784.
+- **Music (2026-07):** background tunes are note data in
+  `website/src/game/music.ts` played by the `@ui/lib/chiptune.ts`
+  sequencer through `audio.ts`'s music-volume synth view. Compose in bars
+  of 16 sixteenth-note tokens (`"A2 . = G2 …"`); `tests/chiptune_test.ts`
+  smoke-plays every shipped theme, so a typo'd note fails CI. Keep music
+  volumes well under SFX (lead ~0.03, bass ~0.05, hats ~0.012).

@@ -18,11 +18,11 @@ src/      (the engine: framework-free TypeScript game logic)
 ### `src/` — the engine
 
 Pure TypeScript with no React and no build-tool coupling. The simulation is
-deterministic by construction: `createGame(seed)` builds the level from a
-seeded RNG, and `step(state, input, dtMs)` advances it with a fixed
-timestep — the same seed and input sequence always replays the same run,
-which is what makes gameplay unit-testable in plain Node and bugs
-reproducible.
+deterministic by construction: `createGame(seed, levelId?, difficulty?)`
+builds the level from a seeded RNG, and `step(state, input, dtMs)` advances
+it with a fixed timestep — the same seed, difficulty, and input sequence
+always replays the same run, which is what makes gameplay unit-testable in
+plain Node and bugs reproducible.
 
 Content is data, simulation is code: the game's levels, monsters, and
 equipment live in **catalogs** under `src/game/defs/`, and the engine only
@@ -43,7 +43,15 @@ weapon means adding catalog entries, not touching the simulation.
   levels unlock the upper tiers), and the affix pools magic+ items roll.
 - **`src/game/defs/abilities.ts`** — the time-limited ability pickups
   (orbiting fire orbs, storm strikes, stasis slow fields); levels choose
-  which can drop via their `loot.abilityPool`.
+  which can drop via their `loot.abilityPool`. Pickups are banked into
+  `player.heldAbilities` (up to `HELD_ITEMS.cap`) and spent with the
+  `useItem` input.
+- **`src/game/defs/difficulties.ts`** — the difficulty ladder (EASY →
+  MEDIUM → HARD → NIGHTMARE → JESUS CHRIST!), chosen on the main menu and
+  layered over every level: multipliers for spawn counts, monster hp, and
+  the wave spawner's live cap, plus loot sweeteners (drop-chance bonus and
+  per-tier chance bonuses that unlock epic/legendary on levels whose own
+  loot table caps lower). MEDIUM is the exact 1.0 baseline.
 - **`src/game/abilities.ts`** — ability activation and the helpers the
   renderer shares (`orbPositions`, `stasisFactorAt`); the per-tick behavior
   runs inside `step.ts` so all damage flows through one path.
@@ -53,12 +61,13 @@ weapon means adding catalog entries, not touching the simulation.
 - **`src/game/create.ts`** — seeded run setup from a level def: difficulty
   bands scale with distance from the player spawn toward the objective.
 - **`src/game/step.ts`** — the per-tick pipeline, in documented order:
-  player steering + jump physics → weapon auto-attack → abilities →
-  projectiles → enemies (aggro/guard AI, contact damage) → wave spawner →
-  item pickups → objective → win/lose. The character fights autonomously
-  (and only targets monsters inside the visible view the app passes in
-  `input.view`); the player steers (hold), jumps (tap/Space), spends
-  level-up stat points, and manages the inventory.
+  player steering + jump physics → use-item edge → weapon auto-attack →
+  abilities → projectiles → enemies (aggro/guard AI, contact damage) →
+  wave spawner → item pickups → objective → win/lose. The character fights
+  autonomously (and only targets monsters inside the visible view the app
+  passes in `input.view`); the player steers, jumps (tap/Space), spends
+  banked ability pickups (`input.useItem`), spends level-up stat points,
+  and manages the inventory.
 - **`src/game/items.ts`** — equipment instances and the player-driven
   mutations the UI calls into: loot rolls, `equipFromInventory` /
   `unequipToInventory` / `moveInventoryItem`, `allocateStat`, and the
@@ -83,23 +92,33 @@ log buffer (`recentLogs()`), and a debug switch (`?debug` URL param or
 A Vite + React 19 shell that mounts the engine and owns everything
 deploy-shaped:
 
-- **`website/src/App.tsx`** — the title screen and the switch into the game.
+- **`website/src/App.tsx`** — the app shell: splash main menu ↔ the game.
 - **`website/src/game/`** — the presentation of the engine:
-  `GameScreen.tsx` (canvas mount, fixed-timestep loop, HUD with hp/XP bars,
-  jump input, end-of-run splash), `IntroOverlay.tsx` (the level's story
-  text box), `LevelUpOverlay.tsx` (the stat chooser shown while the engine
-  pauses in `levelup`), `InventoryPanel.tsx` (the Diablo-style bag:
-  drag-to-equip slots, tier-colored borders, item card, character sheet),
-  `render.ts` (camera + sprite drawing onto a world-unit canvas upscaled
-  with `image-rendering: pixelated`), `tiers.ts` (tier name colors),
-  `sfx.ts` (engine events → synthesized sounds), `assets.ts` (loads the
+  `TitleScreen.tsx` (the Doom-style splash menu: starfield, logo,
+  keyboard-and-pointer navigation, NEW GAME → the difficulty ladder,
+  SETTINGS → controls + volumes, HOW TO PLAY), `GameScreen.tsx` (canvas
+  mount, fixed-timestep loop, control-scheme input mapping, HUD with hp/XP
+  bars and the banked-item USE button, end-of-run splash),
+  `IntroOverlay.tsx` (the level's story text box + chosen difficulty),
+  `LevelUpOverlay.tsx` (the stat chooser shown while the engine pauses in
+  `levelup`; folds into a 3×2 grid on landscape phones),
+  `InventoryPanel.tsx` (the Diablo-style bag: drag-to-equip slots,
+  tier-colored borders, item card, character sheet), `render.ts` (camera +
+  sprite drawing onto a world-unit canvas upscaled with `image-rendering:
+pixelated`), `tiers.ts` (tier name colors), `sfx.ts` (engine events →
+  synthesized NES-palette sounds + menu UI sounds), `music.ts` (the
+  original chiptune title/level themes as note data), `audio.ts` (one
+  shared synth split into SFX/music volume views), `settings.ts`
+  (persisted control-scheme + volume settings), `assets.ts` (loads the
   generated sprites + pixel font), and `assets/` (generated PNGs + font
   atlas — never hand-edited).
 - **`website/src/lib/`** — generic game UI plumbing imported via the
   `@ui/lib/*` alias and earmarked for oss-framework extraction:
-  `game-loop.ts` (fixed-timestep rAF loop), `pointer.ts` (hold-to-steer +
-  tap detection), `synth.ts` (WebAudio SFX synth — the game ships zero
-  audio files), `pixel-font.ts` + `PixelText.tsx` (runtime renderer for
+  `game-loop.ts` (fixed-timestep rAF loop), `pointer.ts` (pointer gestures:
+  hold/hover steering state, taps with finger count, press edges),
+  `synth.ts` (WebAudio SFX synth — the game ships zero audio files),
+  `chiptune.ts` (the NES-style music sequencer scheduling note-data tracks
+  on the synth), `pixel-font.ts` + `PixelText.tsx` (runtime renderer for
   the generated bitmap font), `load-images.ts`.
 - **`website/scripts/asset-tools/` + `sprite-data.mjs` +
   `generate-assets.mjs`** — the pixel-asset pipeline (`make assets`):
@@ -178,5 +197,7 @@ Every PR that touches user-visible code must add a fragment under
   (pixel grids, palette ramps, glyph definitions) rendered by
   `make assets`. Art is diffable and agent-editable like any other code.
 - **Synthesized audio over audio files** — every sound is a handful of
-  WebAudio oscillator/noise parameters in `website/src/game/sfx.ts`,
-  keeping the offline PWA payload tiny.
+  WebAudio oscillator/noise parameters in `website/src/game/sfx.ts`, and
+  the background music is note data (`website/src/game/music.ts`) played
+  by a small sequencer (`@ui/lib/chiptune.ts`) on the same synth — the
+  offline PWA payload stays tiny and both tunes are diffable code.

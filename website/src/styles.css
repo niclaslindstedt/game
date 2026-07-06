@@ -176,9 +176,160 @@ body {
   display: block;
 }
 
-.start-button {
-  font-size: 1.1rem;
-  margin: 0.5rem 0 1.5rem;
+/* ---- Splash title screen (Doom-style main menu) --------------------------- */
+
+.title-screen {
+  position: fixed;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: clamp(0.75rem, 3.5vh, 2rem);
+  overflow: hidden auto;
+  background: radial-gradient(ellipse at 50% 130%, #172030 0%, #0b0d10 65%);
+  user-select: none;
+  -webkit-user-select: none;
+}
+
+/* A tiled pixel starfield, layered from three drifting gradient sheets. */
+.title-stars {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background-image:
+    radial-gradient(1px 1px at 22px 34px, #e6e8eb, transparent),
+    radial-gradient(1px 1px at 120px 90px, #9aa3ad, transparent),
+    radial-gradient(2px 2px at 185px 40px, #7ef0c8, transparent),
+    radial-gradient(1px 1px at 70px 160px, #e6e8eb, transparent),
+    radial-gradient(1px 1px at 210px 140px, #6a7078, transparent),
+    radial-gradient(1px 1px at 160px 210px, #e6e8eb, transparent),
+    radial-gradient(2px 2px at 40px 230px, #9aa3ad, transparent),
+    radial-gradient(1px 1px at 240px 250px, #d9a0f0, transparent);
+  background-size: 260px 260px;
+  animation: title-stars-drift 120s linear infinite;
+  opacity: 0.9;
+}
+
+@keyframes title-stars-drift {
+  from {
+    background-position: 0 0;
+  }
+  to {
+    background-position: -260px 260px;
+  }
+}
+
+/* The moon the trail leads to, hanging in the corner. */
+.title-moon {
+  position: absolute;
+  top: max(6%, env(safe-area-inset-top));
+  right: 7%;
+  width: clamp(64px, 14vmin, 130px);
+  height: clamp(64px, 14vmin, 130px);
+  border-radius: 50%;
+  pointer-events: none;
+  background:
+    radial-gradient(circle at 64% 28%, #8f96a0 0 7%, transparent 8%),
+    radial-gradient(circle at 38% 58%, #8f96a0 0 10%, transparent 11%),
+    radial-gradient(circle at 70% 66%, #8f96a0 0 5%, transparent 6%),
+    radial-gradient(circle at 52% 82%, #8f96a0 0 4%, transparent 5%),
+    radial-gradient(circle at 35% 35%, #f4f6f8, #c3c9d1 55%, #99a0aa);
+  box-shadow: 0 0 24px rgba(230, 232, 235, 0.25);
+}
+
+.title-logo {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.6rem;
+  z-index: 1;
+  filter: drop-shadow(0 5px 0 rgba(0, 0, 0, 0.55));
+}
+
+.title-menu {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 0.15rem;
+  z-index: 1;
+}
+
+.menu-item {
+  appearance: none;
+  border: 0;
+  background: none;
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.3rem 0.75rem;
+  cursor: pointer;
+  font: inherit;
+}
+
+.menu-cursor {
+  width: 1.6rem;
+  image-rendering: pixelated;
+  animation: menu-cursor-bob 0.8s steps(2) infinite;
+}
+
+@keyframes menu-cursor-bob {
+  0%,
+  100% {
+    transform: translateY(-2px);
+  }
+  50% {
+    transform: translateY(2px);
+  }
+}
+
+.menu-item-text {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 0.3rem;
+}
+
+.title-help {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 0.35rem;
+  max-width: min(90vw, 40rem);
+  padding: 1rem 1.5rem;
+  background: rgba(16, 21, 28, 0.92);
+  border: 3px solid #1d2530;
+  box-shadow: 0 6px 0 rgba(0, 0, 0, 0.4);
+  z-index: 1;
+}
+
+.title-footer {
+  position: absolute;
+  left: 1rem;
+  right: 1rem;
+  bottom: max(0.6rem, env(safe-area-inset-bottom));
+  display: flex;
+  justify-content: space-between;
+  font-size: 0.75rem;
+  color: #7a8088;
+  font-variant-numeric: tabular-nums;
+  z-index: 1;
+}
+
+.title-footer a {
+  color: #7a8088;
+}
+
+.visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  margin: -1px;
+  padding: 0;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+  border: 0;
 }
 
 /* HUD widgets added for the moon level: XP bar + the bag button. */
@@ -195,6 +346,28 @@ body {
   padding: 0.4rem 0.75rem;
 }
 
+/* The banked-item button: icon + USE, purple to read as "power". */
+.use-button {
+  pointer-events: auto;
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.4rem 0.75rem;
+  background: #d9a0f0;
+  box-shadow:
+    0 4px 0 #9a5fc0,
+    0 6px 0 rgba(0, 0, 0, 0.4);
+}
+
+.use-button:active {
+  box-shadow: 0 0 0 #9a5fc0;
+}
+
+.use-icon {
+  width: 1.25rem;
+  height: 1.25rem;
+}
+
 .game-hud .pixel-button {
   pointer-events: auto;
 }
@@ -209,6 +382,14 @@ body {
   justify-content: center;
   background: rgba(11, 13, 16, 0.82);
   padding: 1rem;
+  /* Never trap content off-screen on short landscape viewports. */
+  overflow-y: auto;
+}
+
+/* `align-items: center` clips the top of content taller than the overlay;
+   safe-center keeps it scrollable instead. */
+.game-overlay > * {
+  margin: auto 0;
 }
 
 .intro-box,
@@ -236,8 +417,8 @@ body {
 }
 
 .stat-buttons {
-  display: flex;
-  flex-direction: column;
+  display: grid;
+  grid-template-columns: 1fr;
   gap: 0.75rem;
   width: 100%;
 }
@@ -255,6 +436,30 @@ body {
 
 .stat-button:active {
   box-shadow: 0 0 0 #b8961e;
+}
+
+/* Landscape (the mobile-first reference is a 844×390 phone): six stacked
+   stat buttons cannot fit 390px — fold them into a 3×2 grid and tighten
+   the box so the whole chooser stays on screen without scrolling. */
+@media (min-aspect-ratio: 4/3) {
+  .intro-box,
+  .levelup-box {
+    gap: 0.75rem;
+    padding: 1rem 1.5rem;
+  }
+
+  .levelup-box {
+    max-width: 46rem;
+  }
+
+  .stat-buttons {
+    grid-template-columns: repeat(3, 1fr);
+    gap: 0.5rem;
+  }
+
+  .stat-button {
+    padding: 0.5rem 0.75rem;
+  }
 }
 
 /* ---- Inventory (Diablo-style bag + equipment slots) ----------------------- */

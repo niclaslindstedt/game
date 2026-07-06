@@ -20,6 +20,12 @@ import type { Vec2 } from "@game/lib/vec.ts";
 export type GamePhase =
   "intro" | "playing" | "levelup" | "inventory" | "victory" | "defeat";
 
+/**
+ * The difficulty ladder, gentlest to absurd. Chosen on the main menu before
+ * a run; the per-setting numbers live in defs/difficulties.ts.
+ */
+export type Difficulty = "easy" | "medium" | "hard" | "nightmare" | "jesus";
+
 /** The six trainable stats, one point awarded per level-up. */
 export type StatName =
   "health" | "strength" | "dexterity" | "intelligence" | "speed" | "luck";
@@ -86,8 +92,13 @@ export type Player = {
    * PLAYER.faceFlipMinX) so near-vertical movement doesn't flicker the flip.
    */
   faceLeft: boolean;
-  /** Time-limited powers currently running (ability pickups). */
+  /** Time-limited powers currently running (spent ability pickups). */
   abilities: ActiveAbility[];
+  /**
+   * Ability pickups carried but not yet used (ABILITY_DEFS ids, oldest
+   * first). The `useItem` input spends the head; HELD_ITEMS.cap bounds it.
+   */
+  heldAbilities: string[];
   /** True while the player moved this step; drives the walk animation. */
   moving: boolean;
   /** Remaining ms until the weapon may fire again. */
@@ -211,6 +222,12 @@ export type GameInput = {
   /** True on the step a jump was requested (tap / space edge, not hold). */
   jump: boolean;
   /**
+   * True on the step the player asked to use a carried ability pickup
+   * (mouse click / two-finger tap / HUD button edge). Spends the oldest
+   * held ability; a no-op with empty hands.
+   */
+  useItem?: boolean;
+  /**
    * The world rect currently on screen (the camera view). When set, the
    * auto-weapon only targets monsters inside it — the character never
    * shoots at enemies the player cannot see yet. Absent (headless tests,
@@ -237,6 +254,8 @@ export type LevelInfo = {
 export type GameState = {
   phase: GamePhase;
   level: LevelInfo;
+  /** The run's chosen difficulty (scales spawns, hp, and loot). */
+  difficulty: Difficulty;
   /** Where the run begins; also the origin difficulty scales out from. */
   playerSpawn: Vec2;
   /** Story props to draw (the lander, the boss's flag, …). */
