@@ -238,8 +238,15 @@ export const SPACEZ_HQ: LevelDef = {
     abilityPool: ["storm_cell", "stasis_field", "item_magnet"],
     tierChances: { magic: 0.18 },
     allClearWeapon: "golden_stapler",
-    // The SECURITY BATON arrives within the first eighty kills — the run's
-    // guaranteed melee spine before the crowd thickens.
-    earlyWeapon: { defId: "security_baton", minKills: 30, maxKills: 80 },
+    // The opening loot loop, on a schedule the rain can't promise: the
+    // SECURITY BATON drops on the second kill — a real weapon in hand before
+    // the first level-up, so the opening stat choice is informed by it — then
+    // a STORM CELL powerup and a golden XP arrow, all inside the first minute.
+    // Every new run learns "kills drop upgrades" in its opening seconds.
+    earlyDrops: [
+      { atKills: 2, weapon: "security_baton" },
+      { atKills: 5, ability: "storm_cell" },
+      { atKills: 8, item: "xp" },
+    ],
   },
 };

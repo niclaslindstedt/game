@@ -69,23 +69,10 @@ export function hitEnemy(
 
   grantXp(state, def.xp ?? Math.round(enemy.maxHp * LEVELING.xpPerHp));
 
-  // The level's guaranteed early weapon: the rolled kill hands it over.
-  const early = levelDef(state.level.id).loot.earlyWeapon;
-  if (
-    early &&
-    state.earlyWeaponAtKills !== null &&
-    state.stats.kills >= state.earlyWeaponAtKills
-  ) {
-    state.earlyWeaponAtKills = null;
-    const pos = { x: enemy.pos.x + 12, y: enemy.pos.y };
-    state.items.push({
-      id: state.nextId++,
-      kind: "equipment",
-      pos,
-      equipment: rollEquipment(state, { defId: early.defId }),
-    });
-    state.events.push({ type: "itemDropped", pos: { ...pos } });
-  }
+  // The level's scripted opening drops: hand over every schedule entry this
+  // kill has reached, in author order — the guaranteed weapon → powerup → item
+  // loop the probabilistic rain can't promise inside the first minute.
+  dropEarlyDrops(state, enemy.pos);
 
   if (def.loot) {
     dropGuaranteedLoot(state, def, enemy.pos);
@@ -101,6 +88,50 @@ export function hitEnemy(
   // (elites and bosses). Comes after XP and drops so a level-up earned by
   // the killing blow simply waits its turn behind the death scene.
   startDeathWords(state, enemy.defId);
+}
+
+/**
+ * The scripted opening loot cadence: for each entry the latest kill count has
+ * reached (in author order), hand over its guaranteed drop — a weapon, an
+ * ability powerup, or a plain consumable/XP pickup — and advance the cursor.
+ * Several entries owed by the same kill fan out so their pickups don't stack.
+ */
+function dropEarlyDrops(state: GameState, at: Vec2): void {
+  const schedule = levelDef(state.level.id).loot.earlyDrops;
+  if (!schedule) return;
+  while (state.earlyDropCursor < schedule.length) {
+    const i = state.earlyDropCursor;
+    const entry = schedule[i];
+    const atKills = state.earlyDropKills[i];
+    if (!entry || atKills === undefined || state.stats.kills < atKills) break;
+    state.earlyDropCursor++;
+    const pos = {
+      x: clamp(
+        at.x + 12 + state.earlyDropCursor * 8,
+        16,
+        state.level.width - 16,
+      ),
+      y: at.y,
+    };
+    if ("weapon" in entry) {
+      state.items.push({
+        id: state.nextId++,
+        kind: "equipment",
+        pos,
+        equipment: rollEquipment(state, { defId: entry.weapon }),
+      });
+    } else if ("ability" in entry) {
+      state.items.push({
+        id: state.nextId++,
+        kind: "ability",
+        pos,
+        defId: entry.ability,
+      });
+    } else {
+      state.items.push({ id: state.nextId++, kind: entry.item, pos });
+    }
+    state.events.push({ type: "itemDropped", pos: { ...pos } });
+  }
 }
 
 /**

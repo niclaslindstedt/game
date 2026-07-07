@@ -199,10 +199,33 @@ export type LevelDef = {
      */
     allClearWeapon?: string;
     /**
-     * A weapon guaranteed to drop early: at a kill count rolled uniformly in
-     * [minKills, maxKills] at level creation, the dying monster surrenders
-     * it.
+     * A scripted opening loot cadence, authored in ascending `atKills` order.
+     * Where the probabilistic drop rain can leave an unlucky player
+     * empty-handed for the first minute, this hands over the weapon → powerup
+     * → item loop on a schedule, so every run teaches the drop loop up front.
+     * Author the first weapon before the first level-up (a handful of kills)
+     * so the opening stat choice is informed by a weapon already in hand.
      */
-    earlyWeapon?: { defId: string; minKills: number; maxKills: number };
+    earlyDrops?: EarlyDrop[];
   };
 };
+
+/**
+ * One entry in a level's scripted opening loot cadence (`loot.earlyDrops`):
+ * a guaranteed drop handed over once the kill count reaches `atKills`. The
+ * payload picks exactly one of a specific weapon, an ability powerup, or a
+ * plain consumable/XP pickup.
+ */
+export type EarlyDrop = {
+  /**
+   * Kill count at or past which this entry drops. A number is an exact
+   * threshold (deterministic onboarding); a `[min, max]` pair is rolled
+   * uniformly at level creation, so the drop lands at a kill discovered in
+   * play. Entries are authored in ascending order (by the low bound).
+   */
+  atKills: number | [number, number];
+} & (
+  | { weapon: string }
+  | { ability: string }
+  | { item: "medkit" | "repair" | "xp" }
+);

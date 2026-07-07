@@ -250,7 +250,7 @@ export const WEAPON_DEFS: Record<string, WeaponDef> = {
   },
   // Uniques — never in a level's random weapon pool; they arrive via
   // guaranteed drops (a boss's `loot.items`, a level's `allClearWeapon`,
-  // a level's `earlyWeapon`).
+  // a level's `earlyDrops` schedule).
   security_baton: {
     id: "security_baton",
     name: "SECURITY BATON",

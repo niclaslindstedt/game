@@ -138,8 +138,9 @@ export const MOON: LevelDef = {
     gearPool: ["suit_plating", "moon_charm"],
     abilityPool: ["fire_orbs", "storm_cell", "stasis_field", "item_magnet"],
     tierChances: { magic: 0.2 },
-    // MOON'S BLADE arrives early — within the first hundred kills — so the
-    // run's signature weapon shapes the run instead of capping it.
-    earlyWeapon: { defId: "moons_blade", minKills: 40, maxKills: 100 },
+    // MOON'S BLADE arrives early — at a kill rolled in the first hundred,
+    // discovered in play — so the run's signature weapon shapes the run
+    // instead of capping it.
+    earlyDrops: [{ atKills: [40, 100], weapon: "moons_blade" }],
   },
 };

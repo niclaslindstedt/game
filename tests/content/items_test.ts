@@ -145,31 +145,41 @@ describe("ghost drops", () => {
   });
 });
 
-describe("the guaranteed early weapon", () => {
-  it("rolls its drop kill inside the configured window", () => {
-    const early = LEVELS.moon!.loot.earlyWeapon!;
-    for (const seed of [1, 2, 3, 4, 5, 99]) {
-      const state = startGame(seed);
-      expect(state.earlyWeaponAtKills).toBeGreaterThanOrEqual(early.minKills);
-      expect(state.earlyWeaponAtKills).toBeLessThanOrEqual(early.maxKills);
-    }
-  });
-
-  it("surrenders MOON'S BLADE on the rolled kill, exactly once", () => {
-    const state = startGame();
-    clearStage(state);
+describe("the scripted opening drops", () => {
+  // Drive the next kill to fire the schedule entry at `atKills`: park kills
+  // one short, then let the blaster finish a stray minion. Returns once the
+  // minion is down (the boss clearStage keeps stays parked and alive).
+  function killAt(state: GameState, atKills: number): void {
     state.items = [];
-    // One kill away from the rolled count: the next death pays out.
-    state.stats.kills = state.earlyWeaponAtKills! - 1;
+    state.stats.kills = atKills - 1;
     state.enemies.push(
       makeEnemy({ pos: { x: state.player.pos.x + 60, y: state.player.pos.y } }),
     );
     run(state, idle, 2000, (s) => s.enemies.length === 1);
+  }
+
+  it("rolls MOON'S BLADE inside its configured window", () => {
+    const range = LEVELS.moon!.loot.earlyDrops!.find(
+      (d) => "weapon" in d && d.weapon === "moons_blade",
+    )!.atKills as [number, number];
+    for (const seed of [1, 2, 3, 4, 5, 99]) {
+      const state = startGame(seed);
+      expect(state.earlyDropKills[0]).toBeGreaterThanOrEqual(range[0]);
+      expect(state.earlyDropKills[0]).toBeLessThanOrEqual(range[1]);
+    }
+  });
+
+  it("hands MOON'S BLADE over on its rolled kill, exactly once", () => {
+    const state = startGame();
+    clearStage(state);
+    killAt(state, state.earlyDropKills[0]!);
+    // A unique — never in the random weapon pool, so any blade here is the
+    // scheduled one, and there is exactly one.
     const blades = state.items.filter(
       (i) => i.kind === "equipment" && i.equipment.defId === "moons_blade",
     );
     expect(blades).toHaveLength(1);
-    expect(state.earlyWeaponAtKills).toBeNull(); // never a second one
+    expect(state.earlyDropCursor).toBe(1); // never a second one
   });
 });
 
