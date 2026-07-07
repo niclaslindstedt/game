@@ -109,6 +109,8 @@ describe("stats", () => {
   it("STRENGTH scales physical (melee + ranged) damage; DEX and INT do not", () => {
     const state = startGame(); // blaster equipped: ranged
     const base = weaponDamage(state);
+    // The starting sidearm is the unbreakable baseline — exempt from the global
+    // damage lever (which only cuts looted weapons), so it keeps full damage.
     expect(base).toBe(weaponDef("blaster").damage);
 
     // DEX (a speed stat now) and INT (magic/range) leave physical damage alone.
@@ -138,22 +140,28 @@ describe("stats", () => {
       durability: wandDef.durability,
     };
 
-    expect(weaponDamageFor(state, wand)).toBe(wandDef.damage);
+    expect(weaponDamageFor(state, wand)).toBe(
+      wandDef.damage * WEAPON.damageMult,
+    );
 
     // DEX (the equipped blaster's stat) must NOT move the magic wand.
     state.player.stats.dexterity = 4;
-    expect(weaponDamageFor(state, wand)).toBe(wandDef.damage);
+    expect(weaponDamageFor(state, wand)).toBe(
+      wandDef.damage * WEAPON.damageMult,
+    );
 
     // INT (the wand's own class stat) does.
     state.player.stats.intelligence = 3;
     expect(weaponDamageFor(state, wand)).toBeCloseTo(
-      wandDef.damage * (1 + 3 * STATS.damageBonusPerPoint),
+      wandDef.damage * WEAPON.damageMult * (1 + 3 * STATS.damageBonusPerPoint),
     );
 
     // A damagePct affix stacks into the same multiplier.
     wand.affixes = [{ kind: "damagePct", value: 0.5 }];
     expect(weaponDamageFor(state, wand)).toBeCloseTo(
-      wandDef.damage * (1 + 3 * STATS.damageBonusPerPoint + 0.5),
+      wandDef.damage *
+        WEAPON.damageMult *
+        (1 + 3 * STATS.damageBonusPerPoint + 0.5),
     );
   });
 
@@ -264,6 +272,8 @@ describe("stats", () => {
       }),
     );
     run(state, idle, 400, (s) => s.stats.damageDealt > 0);
+    // The starting sidearm keeps full damage (looted-only lever), so a
+    // guaranteed crit deals exactly double its catalog damage.
     expect(state.stats.damageDealt).toBe(
       Math.round(weaponDef("blaster").damage * STATS.critMultiplier),
     );

@@ -317,7 +317,13 @@ export function weaponDamageFor(state: GameState, weapon: Equipment): number {
   for (const affix of weapon.affixes) {
     if (affix.kind === "damagePct") multiplier += affix.value;
   }
-  return def.damage * multiplier;
+  // The global damage lever cuts every LOOTED weapon, so a scavenged weapon is
+  // a measured edge, not a free power spike that lets a basic loadout melt the
+  // horde. The built-in sidearm — minted unbreakable (no durability), the
+  // baseline the difficulty ladder is calibrated on — is exempt and keeps its
+  // full catalog damage, so the opening fight stays exactly as tuned.
+  const lootMult = weapon.durability === undefined ? 1 : WEAPON.damageMult;
+  return def.damage * multiplier * lootMult;
 }
 
 /**

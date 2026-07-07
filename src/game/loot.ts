@@ -11,7 +11,7 @@ import { scaledMobCount } from "./defs/difficulties.ts";
 import { enemyDef, type EnemyDef } from "./defs/enemies/index.ts";
 import { levelDef } from "./defs/levels/index.ts";
 import { dropChance, playerCritChance, rollEquipment } from "./items.ts";
-import { bankMenace, maybePowerScale } from "./menace.ts";
+import { bankOverkill, maybePowerScale } from "./menace.ts";
 import { startDeathWords } from "./story.ts";
 import type { Enemy, GameState } from "./types.ts";
 
@@ -73,10 +73,11 @@ export function hitEnemy(
     crit,
   });
 
-  // Feed the escalation meter: the flat pace tick plus the OVERKILL — the
-  // damage this blow dumped past the mob's last hp — which also lures the
-  // nearby horde in. `enemy.hp` is now ≤ 0, so its magnitude is the overkill.
-  bankMenace(state, -enemy.hp);
+  // An overpowered kill's answer: the OVERKILL — the damage this blow dumped
+  // past the mob's last hp — jolts the menace meter and lures the nearby horde
+  // in. `enemy.hp` is now ≤ 0, so its magnitude is the overkill. The meter also
+  // heats continuously from the player's rolling output (see tickMenace).
+  bankOverkill(state, -enemy.hp);
 
   grantXp(state, def.xp ?? Math.round(enemy.maxHp * LEVELING.xpPerHp));
 
@@ -212,15 +213,17 @@ function dropMinionLoot(state: GameState, at: Vec2, evo = 0): void {
       pos,
       defId: abilities[Math.floor(state.rng() * abilities.length)] as string,
     });
-  } else if (roll < LOOT.equipmentShare + abilityShare + LOOT.xpArrowShare) {
-    state.items.push({ id: state.nextId++, kind: "xp", pos });
+  } else if (roll < LOOT.equipmentShare + abilityShare + LOOT.medkitShare) {
+    state.items.push({ id: state.nextId++, kind: "medkit", pos });
   } else if (
     roll <
-    LOOT.equipmentShare + abilityShare + LOOT.xpArrowShare + LOOT.repairShare
+    LOOT.equipmentShare + abilityShare + LOOT.medkitShare + LOOT.repairShare
   ) {
     state.items.push({ id: state.nextId++, kind: "repair", pos });
   } else {
-    state.items.push({ id: state.nextId++, kind: "medkit", pos });
+    // The remainder are golden XP arrows — the field still rains pickups, but
+    // they buy levels (points to spend on a build) rather than free healing.
+    state.items.push({ id: state.nextId++, kind: "xp", pos });
   }
   state.events.push({ type: "itemDropped", pos });
 }

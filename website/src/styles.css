@@ -329,6 +329,13 @@ body {
 .inventory-avatar {
   position: relative;
   appearance: none;
+  /* Hold the portrait's size no matter how tight the HUD row gets. On a narrow
+     (portrait) viewport the status row runs out of width and the flex layout
+     would otherwise shrink this button — and because the sprite carries the
+     global `img { max-width: 100% }`, a collapsed button drags the avatar image
+     to zero width, so it vanishes (landscape has spare width and never hits
+     this). Refusing to shrink keeps the framed hero visible in both. */
+  flex: 0 0 auto;
   border: 2px solid #2a3444;
   border-radius: 5px;
   padding: 0.15rem;

@@ -187,9 +187,12 @@ function formatTime(ms: number): string {
   return `${minutes}:${String(seconds).padStart(2, "0")}`;
 }
 
-/** The rampage gauge heats from amber to red as the menace stage climbs. */
+/** The rampage gauge heats from amber to red as the menace stage climbs
+ * (0…MENACE.maxStage = 10) — the top stages glow a hotter red so the deadly
+ * end of the meter reads at a glance. */
 function rampageColor(stage: number): string {
-  if (stage >= 4) return "#ff5030";
+  if (stage >= 8) return "#ff3020";
+  if (stage >= 5) return "#ff5030";
   if (stage >= 2) return "#ff9040";
   return "#ffd050";
 }
