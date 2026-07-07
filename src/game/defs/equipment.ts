@@ -39,6 +39,14 @@ export type WeaponDef = {
    * own starting sidearm is minted without durability and never breaks.
    */
   durability: number;
+  /**
+   * Melee only: the full angle (degrees) of the swing's cone of effect. Every
+   * monster within `range` and inside this arc of the aim is struck at once,
+   * so a swing cleaves the crowd. A wide arc is a blade's slash; a narrow arc
+   * paired with a long `range` is a spear's thrust, skewering the line ahead
+   * rather than sweeping sideways. Defaults to `MELEE.defaultSweepDeg`.
+   */
+  sweepDeg?: number;
   /** Melee weapons hit directly and omit this. */
   projectile?: {
     speed: number;
@@ -82,10 +90,12 @@ export const WEAPON_DEFS: Record<string, WeaponDef> = {
     name: "MOP",
     class: "melee",
     // The janitor's reach weapon: weak per swing, but it keeps the crowd at
-    // arm's length — the longest melee range in the building.
+    // arm's length — the longest melee range in the building. A thrust, not a
+    // slash: a narrow cone that skewers the line directly ahead.
     damage: 11,
     cooldownMs: 260,
     range: 52,
+    sweepDeg: 44,
     durability: 160,
     icon: "icon_mop",
   },
@@ -329,9 +339,11 @@ export const WEAPON_DEFS: Record<string, WeaponDef> = {
     name: "WET FLOOR SIGN",
     class: "melee",
     // THE JANITOR's halberd: light, fast, and the longest reach on level 1.
+    // A polearm's thrust — a narrow cone that reaches far down the line.
     damage: 15,
     cooldownMs: 240,
     range: 54,
+    sweepDeg: 44,
     durability: 200,
     icon: "icon_floor_sign",
   },

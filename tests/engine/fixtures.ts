@@ -144,6 +144,19 @@ export const FIX_WEAPONS: Record<string, WeaponDef> = {
     durability: 160,
     icon: "icon_wrench",
   },
+  // A reach weapon with a narrow thrust cone and long range (mirrors `mop`):
+  // the spear shape for melee-AoE tests.
+  test_spear: {
+    id: "test_spear",
+    name: "TEST SPEAR",
+    class: "melee",
+    damage: 11,
+    cooldownMs: 260,
+    range: 90,
+    sweepDeg: 40,
+    durability: 160,
+    icon: "icon_mop",
+  },
   // Durability + DPS ladder for durability tests (mirror pipe/hammer/wand/pistol).
   test_pipe: {
     id: "test_pipe",

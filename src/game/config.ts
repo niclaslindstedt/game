@@ -135,6 +135,19 @@ export const STATS = {
   critMultiplier: 2,
 } as const;
 
+/**
+ * Melee area-of-effect. A swing is not a single tap but a sector of effect:
+ * every monster within the weapon's reach and inside the cone of the aim
+ * takes the blow, so a blade cleaves the crowd it faces instead of one mob.
+ * `defaultSweepDeg` is the full cone angle for weapons that don't name their
+ * own — a broad slash. Reach weapons (spears, poles) override it in the
+ * catalog with a narrow `sweepDeg` and lean on their long `range` instead: a
+ * thrust that skewers the line directly ahead rather than sweeping an arc.
+ */
+export const MELEE = {
+  defaultSweepDeg: 120,
+} as const;
+
 /** Loot rules that hold on every level (pools and tier odds are per level). */
 export const LOOT = {
   /**

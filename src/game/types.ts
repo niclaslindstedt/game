@@ -318,9 +318,11 @@ export type GameEvent =
   | { type: "shot"; weaponClass: WeaponClass; pos: Vec2; dir: Vec2 }
   /**
    * A melee weapon swung. `pos` is the swinger, `dir` the unit aim, `range`
-   * the effective reach — the app sweeps a slash arc at that radius.
+   * the effective reach, `arc` the full cone angle (radians) that the swing
+   * strikes — the app sweeps a slash across that cone at that radius (a wide
+   * arc for a blade, a narrow thrust for a spear).
    */
-  | { type: "swing"; pos: Vec2; dir: Vec2; range: number }
+  | { type: "swing"; pos: Vec2; dir: Vec2; range: number; arc: number }
   | { type: "jump" }
   | { type: "land" }
   | {

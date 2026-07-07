@@ -61,6 +61,7 @@ import {
   weaponCooldownFor,
   weaponDamage,
   weaponRangeFor,
+  weaponSweepHalfAngle,
   wearEquippedWeapon,
 } from "./items.ts";
 import { grantXp, hitEnemy, unspawnedMinions } from "./loot.ts";
@@ -467,8 +468,18 @@ function stepWeapon(state: GameState, input: GameInput, dtMs: number): void {
   player.weaponCooldownMs = weaponCooldownFor(state, equipped);
   const dir = direction(player.pos, target.pos);
   if (!weapon.projectile) {
-    state.events.push({ type: "swing", pos: { ...player.pos }, dir, range });
-    hitEnemy(state, target, weaponDamage(state));
+    // A swing cleaves a cone: the nearest monster is the aim, and every other
+    // monster within reach and inside the weapon's arc is struck in the same
+    // blow. A blade sweeps a wide slash; a spear thrusts a narrow cone far.
+    const half = weaponSweepHalfAngle(equipped);
+    state.events.push({
+      type: "swing",
+      pos: { ...player.pos },
+      dir,
+      range,
+      arc: half * 2,
+    });
+    meleeSweep(state, dir, range, half, weaponDamage(state));
     // Wear AFTER the strike so the blow lands with the weapon that swung.
     wearEquippedWeapon(state);
     return;
@@ -495,6 +506,44 @@ function stepWeapon(state: GameState, input: GameInput, dtMs: number): void {
     dir,
   });
   wearEquippedWeapon(state);
+}
+
+/**
+ * Resolve a melee swing's cone: strike every monster within `range` of the
+ * player and inside `halfAngle` of the aim `dir`, each for `damage` (crits
+ * roll per hit inside hitEnemy). The nearest monster — the aim — always sits
+ * at the cone's centre, so a swing never whiffs the target it locked onto;
+ * the arc just lets it cleave whatever else it faces. A monster touching the
+ * player has no meaningful bearing and is always in reach. Walls still block:
+ * a monster behind cover is spared even inside the cone. Iterates a snapshot
+ * because hitEnemy removes the slain from state.enemies.
+ */
+function meleeSweep(
+  state: GameState,
+  dir: Vec2,
+  range: number,
+  halfAngle: number,
+  damage: number,
+): void {
+  const player = state.player;
+  const rangeSq = range * range;
+  const cosHalf = Math.cos(halfAngle);
+  for (const enemy of [...state.enemies]) {
+    const dx = enemy.pos.x - player.pos.x;
+    const dy = enemy.pos.y - player.pos.y;
+    const distSq = dx * dx + dy * dy;
+    if (distSq > rangeSq) continue;
+    const radius = enemyDef(enemy.defId).radius;
+    // Overlapping the player: no bearing to test, always struck. Otherwise the
+    // enemy must fall inside the cone (compare cosines, no atan2 needed).
+    if (distSq > radius * radius) {
+      const dist = Math.sqrt(distSq);
+      const dot = (dx * dir.x + dy * dir.y) / dist;
+      if (dot < cosHalf) continue;
+    }
+    if (!lineOfSight(state, player.pos, enemy.pos)) continue;
+    hitEnemy(state, enemy, damage);
+  }
 }
 
 function nearestEnemy(
