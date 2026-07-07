@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 
 import { CUTSCENE_DEFS, type Difficulty } from "@game/core";
 
@@ -29,6 +29,40 @@ export function App() {
     cacheId: cacheIdForBase(import.meta.env.BASE_URL),
     enabled: !import.meta.env.DEV,
   });
+
+  // The framework surfaces the update prompt from the service worker's
+  // `waiting` event, which only fires for a worker that becomes waiting while
+  // this page is open. A worker already parked in `waiting` when we load
+  // (installed on a previous visit or in another tab) is missed, so the toast
+  // never appears. checkForUpdate() reads `registration.waiting` directly and
+  // flips needRefresh — poll it as the async registration settles after load,
+  // and again whenever the tab regains focus.
+  // `pwa.checkForUpdate` is a fresh closure each render; hold it in a ref so
+  // the wiring below runs once instead of re-subscribing on every render.
+  const checkForUpdateRef = useRef(pwa.checkForUpdate);
+  useEffect(() => {
+    checkForUpdateRef.current = pwa.checkForUpdate;
+  });
+  useEffect(() => {
+    let cancelled = false;
+    const check = () => {
+      if (!cancelled) void checkForUpdateRef.current();
+    };
+    // Registration resolves asynchronously; retry a few times on load so an
+    // already-waiting worker is caught once `registration` is available.
+    const timers = [0, 1500, 4000].map((ms) => window.setTimeout(check, ms));
+    const onVisible = () => {
+      if (document.visibilityState === "visible") check();
+    };
+    document.addEventListener("visibilitychange", onVisible);
+    window.addEventListener("focus", onVisible);
+    return () => {
+      cancelled = true;
+      for (const t of timers) window.clearTimeout(t);
+      document.removeEventListener("visibilitychange", onVisible);
+      window.removeEventListener("focus", onVisible);
+    };
+  }, []);
 
   // The cutscene workbench (`?cutscene=<id>`): loop one scene from the
   // catalog with no run around it — the authoring iteration loop.
