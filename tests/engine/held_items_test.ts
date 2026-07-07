@@ -5,7 +5,7 @@
 
 import { describe, expect, it } from "vitest";
 
-import { HELD_ITEMS, step } from "@game/core";
+import { discardHeldAbility, HELD_ITEMS, step } from "@game/core";
 import type { GameInput, GameState, Item } from "@game/core";
 import { clearStage, DT, idle, startGame } from "./helpers.ts";
 
@@ -118,5 +118,56 @@ describe("held ability items", () => {
       "test_stasis",
       "test_orbit",
     ]);
+  });
+});
+
+describe("discarding banked abilities", () => {
+  it("drops a specific slot and shifts the rest down, without granting it", () => {
+    const state = startGame();
+    clearStage(state);
+    state.items = [
+      abilityAt(state, 500, "test_orbit"),
+      abilityAt(state, 501, "test_storm"),
+      abilityAt(state, 502, "test_stasis"),
+    ];
+    step(state, idle, DT);
+
+    // Drag the middle slot out to the ground: it is gone (never activated) and
+    // the row closes up oldest-first.
+    expect(discardHeldAbility(state, 1)).toBe("test_storm");
+    expect(state.player.heldAbilities).toEqual(["test_orbit", "test_stasis"]);
+    expect(state.player.abilities).toHaveLength(0);
+  });
+
+  it("frees room so a grounded overflow pickup can bank", () => {
+    const state = startGame();
+    clearStage(state);
+    state.items = [
+      abilityAt(state, 500, "test_orbit"),
+      abilityAt(state, 501, "test_storm"),
+      abilityAt(state, 502, "test_stasis"),
+      abilityAt(state, 503, "test_orbit"), // one past the cap of 3
+    ];
+    step(state, idle, DT); // bank three, one left grounded
+
+    discardHeldAbility(state, 0); // trash the oldest → a slot opens
+    step(state, idle, DT); // overflow pickup now banks
+    expect(state.items).toHaveLength(0);
+    expect(state.player.heldAbilities).toEqual([
+      "test_storm",
+      "test_stasis",
+      "test_orbit",
+    ]);
+  });
+
+  it("is a no-op on an empty or out-of-range slot", () => {
+    const state = startGame();
+    clearStage(state);
+    state.items = [abilityAt(state, 500, "test_storm")];
+    step(state, idle, DT);
+
+    expect(discardHeldAbility(state, 5)).toBeNull();
+    expect(discardHeldAbility(state, -1)).toBeNull();
+    expect(state.player.heldAbilities).toEqual(["test_storm"]);
   });
 });

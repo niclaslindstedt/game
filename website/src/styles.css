@@ -738,6 +738,113 @@ body {
   height: 2.5rem;
 }
 
+/* While a powerup is being dragged out of its slot, the slot reads as an empty
+   red-dashed socket — the icon has "lifted off" and follows the pointer, and
+   the red warns the release will trash it. */
+.powerup-slot.dragging {
+  border-style: dashed;
+  border-color: #e06a6a;
+  background: rgba(20, 26, 34, 0.5);
+  box-shadow: none;
+  transform: none;
+  opacity: 0.75;
+}
+
+/* The lifted powerup icon trailing the finger/cursor mid-discard. Fixed to the
+   viewport and centered on the pointer; purely decorative (no pointer events). */
+.powerup-drag-ghost {
+  position: fixed;
+  z-index: 41;
+  transform: translate(-50%, -50%) scale(1.1);
+  pointer-events: none;
+  opacity: 0.92;
+  filter: drop-shadow(0 3px 4px rgba(0, 0, 0, 0.55));
+}
+
+/* The "DRAG OFF TO DISCARD" prompt that rises above the dock during a drag,
+   aligned to whichever corner the dock lives in. */
+.powerup-discard-hint {
+  position: absolute;
+  bottom: calc(max(0.75rem, env(safe-area-inset-bottom)) + 4.6rem);
+  padding: 0.25rem 0.5rem;
+  background: rgba(20, 26, 34, 0.88);
+  border: 1px solid #e06a6a;
+  border-radius: 6px;
+  pointer-events: none;
+}
+
+.powerup-discard-hint.dock-left {
+  left: max(0.75rem, env(safe-area-inset-left));
+}
+
+.powerup-discard-hint.dock-right {
+  right: max(0.75rem, env(safe-area-inset-right));
+}
+
+/* The discard poof: seven soft smoke puffs bursting outward from where the
+   powerup vanished, each rotated to its own spoke and drifting out as it fades.
+   Fixed to the viewport, centered on the slot, and self-removing after the run
+   (see POOF_TTL_MS). */
+.powerup-poof {
+  position: fixed;
+  z-index: 40;
+  transform: translate(-50%, -50%);
+  pointer-events: none;
+}
+
+.poof-puff {
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 1.2rem;
+  height: 1.2rem;
+  margin: -0.6rem;
+  border-radius: 50%;
+  background: radial-gradient(
+    circle at 50% 45%,
+    #f4f7fb 0%,
+    #cdd4de 45%,
+    rgba(170, 178, 190, 0.35) 70%,
+    rgba(170, 178, 190, 0) 78%
+  );
+  opacity: 0;
+  animation: poof-puff 560ms ease-out forwards;
+}
+
+/* Alternating size + a light stagger so the cloud reads as organic, not a ring
+   of identical dots. */
+.poof-puff:nth-child(even) {
+  width: 0.85rem;
+  height: 0.85rem;
+  margin: -0.425rem;
+  animation-duration: 500ms;
+}
+
+.poof-puff:nth-child(3n) {
+  animation-delay: 45ms;
+}
+
+@keyframes poof-puff {
+  0% {
+    opacity: 0;
+    transform: rotate(calc(var(--puff) * 51.4deg)) translateY(0) scale(0.3);
+  }
+  25% {
+    opacity: 0.95;
+  }
+  100% {
+    opacity: 0;
+    transform: rotate(calc(var(--puff) * 51.4deg)) translateY(-1.7rem)
+      scale(1.25);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .poof-puff {
+    animation-duration: 220ms;
+  }
+}
+
 /* The 1/2/3 · 1-4 key caps on the dock and weapon switcher (desktop only,
    gated on the keyboardMove setting). A small light chip in the top corner. */
 .powerup-slot,

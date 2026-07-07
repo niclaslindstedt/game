@@ -3,14 +3,21 @@
 // the engine, feeds it pointer input per the player's control settings
 // (touch: a virtual dpad anchored where the finger lands, taps jump —
 // including a second finger while steering; mouse: hold- or cursor-steer,
-// Space jumps; a powerup-dock slot tap, click, or E spends a banked ability),
+// Space jumps; a powerup-dock slot tap, click, or E spends a banked ability,
+// and dragging a slot clear of the dock discards it in a poof of smoke),
 // plays event sounds, and overlays the DOM UI: the HUD (top vitals + XP strip
 // + the hero-avatar inventory button, plus the bottom-corner powerup dock),
 // the level intro text box, the level-up stat chooser, the Diablo-style
 // inventory, and the end-of-run splash. One <GameScreen> mount = one session
 // at the menu; one run = one `runId` (retry bumps it).
 
-import { useEffect, useRef, useState } from "react";
+import {
+  useEffect,
+  useRef,
+  useState,
+  type CSSProperties,
+  type PointerEvent as ReactPointerEvent,
+} from "react";
 
 import {
   abilityDef,
@@ -23,6 +30,7 @@ import {
   createBot,
   createGame,
   debug,
+  discardHeldAbility,
   dismissIntro,
   enemyDef,
   equipFromInventory,
@@ -106,6 +114,22 @@ type Hud = {
   stats: GameStats;
 };
 
+// A powerup mid-drag out of its dock slot. `moved` flips once the pointer
+// travels past the tap threshold, which is what tells a discard drag apart
+// from a plain tap that spends the powerup.
+type DockDrag = {
+  index: number;
+  defId: string;
+  rect: DOMRect;
+  x: number;
+  y: number;
+  moved: boolean;
+};
+
+// A one-shot smoke poof anchored (in viewport px) to where a discarded powerup
+// vanished.
+type Poof = { id: number; x: number; y: number };
+
 // The touch virtual dpad: dragging past the deadzone walks in that direction;
 // the steer target is projected this far ahead (world units, must stay well
 // beyond PLAYER.arriveRadius so the walk never "arrives").
@@ -116,6 +140,12 @@ const DPAD_RING_PX = 36;
 // At most this many pickup lines show at once; older ones drop off the top so
 // a loot flood never buries the screen.
 const PICKUP_MAX = 6;
+// How far a powerup must be dragged off its dock slot's center before the
+// gesture counts as a drag-to-discard rather than a tap that spends it (CSS px).
+const DOCK_DRAG_THRESHOLD_PX = 16;
+// How long a discard smoke poof lives before it clears itself (ms) — matches
+// the .powerup-poof CSS animation.
+const POOF_TTL_MS = 600;
 // The gentlest push past the deadzone still creeps at this fraction of full
 // speed, so a barely-off-center thumb walks instead of standing still.
 const MIN_WALK_THROTTLE = 0.35;
@@ -225,6 +255,17 @@ export function GameScreen({
   // Which powerup dock slot the player tapped this frame (index into
   // heldAbilities). null = spend the oldest (click / E / auto-use).
   const useItemIndexRef = useRef<number | null>(null);
+  // A powerup being dragged out of its dock slot to trash it. Tracks the slot
+  // (index + defId), the slot cell's screen rect (where the poof blooms), the
+  // live pointer position (the drag ghost), and whether it has moved far enough
+  // to count as a drag rather than a tap-to-spend. Mirrored into a ref so the
+  // pointer-up handler reads the freshest value without re-subscribing.
+  const [dockDrag, setDockDrag] = useState<DockDrag | null>(null);
+  const dockDragRef = useRef<DockDrag | null>(null);
+  // Short-lived smoke poofs left where discarded powerups vanished; each clears
+  // itself after the CSS animation (see the .powerup-poof layer).
+  const [poofs, setPoofs] = useState<Poof[]>([]);
+  const poofIdRef = useRef(0);
   const [assets, setAssets] = useState<GameAssets | null>(null);
   const [runId, setRunId] = useState(0);
   const [hud, setHud] = useState<Hud | null>(null);
@@ -766,6 +807,80 @@ export function GameScreen({
   // desktop keyboard controls are on (touch has no keys to hint).
   const keyHints = getSettings().keyboardMove === "on";
 
+  // Powerup dock interaction. A filled slot is both a button and a drag handle:
+  // a plain tap/click spends the powerup (queued for the sim loop), while
+  // dragging it clear of the dock trashes it in a poof of smoke — a quick way
+  // to clear a banked slot for fresh loot. The gesture captures the pointer on
+  // the slot so a touch keeps tracking off the button, and never reaches the
+  // steering canvas (a separate element).
+  const startDockDrag =
+    (index: number, defId: string) => (e: ReactPointerEvent) => {
+      e.preventDefault();
+      e.currentTarget.setPointerCapture(e.pointerId);
+      dockDragRef.current = {
+        index,
+        defId,
+        rect: e.currentTarget.getBoundingClientRect(),
+        x: e.clientX,
+        y: e.clientY,
+        moved: false,
+      };
+      setDockDrag(dockDragRef.current);
+    };
+
+  const moveDockDrag = (e: ReactPointerEvent) => {
+    const d = dockDragRef.current;
+    if (!d) return;
+    const moved =
+      d.moved ||
+      Math.hypot(
+        e.clientX - (d.rect.left + d.rect.width / 2),
+        e.clientY - (d.rect.top + d.rect.height / 2),
+      ) > DOCK_DRAG_THRESHOLD_PX;
+    dockDragRef.current = { ...d, x: e.clientX, y: e.clientY, moved };
+    setDockDrag(dockDragRef.current);
+  };
+
+  const endDockDrag = (e: ReactPointerEvent) => {
+    const d = dockDragRef.current;
+    dockDragRef.current = null;
+    setDockDrag(null);
+    if (!d) return;
+    if (!d.moved) {
+      // Barely moved: treat as a tap/click that spends this exact slot (the
+      // dock's original behavior), queued for the next sim tick.
+      useItemQueuedRef.current = true;
+      useItemIndexRef.current = d.index;
+      return;
+    }
+    // A real drag: released clear of the dock discards the powerup. A release
+    // back over the dock is a harmless cancel (keep the powerup).
+    const overDock = document
+      .elementFromPoint(e.clientX, e.clientY)
+      ?.closest(".powerup-dock");
+    if (!overDock && state && discardHeldAbility(state, d.index)) {
+      playUiSound(synth, "back");
+      const id = poofIdRef.current++;
+      const poof: Poof = {
+        id,
+        x: d.rect.left + d.rect.width / 2,
+        y: d.rect.top + d.rect.height / 2,
+      };
+      setPoofs((prev) => [...prev, poof]);
+      window.setTimeout(
+        () => setPoofs((prev) => prev.filter((p) => p.id !== id)),
+        POOF_TTL_MS,
+      );
+    }
+  };
+
+  // A cancelled pointer (OS gesture, focus loss) just drops the drag — never a
+  // discard, since the release point is unknown.
+  const cancelDockDrag = () => {
+    dockDragRef.current = null;
+    setDockDrag(null);
+  };
+
   return (
     <div className="game-screen">
       <canvas ref={canvasRef} className="game-canvas" />
@@ -1026,8 +1141,10 @@ export function GameScreen({
 
       {/* The powerup dock: three big, thumb-sized slots. Oldest sits leftmost
           and fills rightward; tapping a slot spends exactly that powerup and
-          the rest shift down. Sits in whichever bottom corner the player
-          picked (settings.powerupSide). */}
+          the rest shift down. Dragging a slot clear of the dock trashes that
+          powerup in a poof of smoke — a fast way to free a slot for new loot.
+          Sits in whichever bottom corner the player picked
+          (settings.powerupSide). */}
       {hud?.phase === "playing" && (
         <div className={`powerup-dock dock-${powerupSide}`}>
           {[0, 1, 2].map((i) => {
@@ -1035,22 +1152,24 @@ export function GameScreen({
             const icon = defId
               ? spriteDataUrl(assets.sprites, abilityDef(defId).icon)
               : undefined;
+            const dragging = dockDrag?.moved && dockDrag.index === i;
             return (
               <button
                 key={i}
                 type="button"
-                className={`powerup-slot${defId ? " filled" : ""}`}
+                className={`powerup-slot${defId ? " filled" : ""}${
+                  dragging ? " dragging" : ""
+                }`}
                 aria-label={
                   defId ? `use-powerup-${i}` : `powerup-slot-${i}-empty`
                 }
                 disabled={!defId}
-                onClick={() => {
-                  if (!defId) return;
-                  useItemQueuedRef.current = true;
-                  useItemIndexRef.current = i;
-                }}
+                onPointerDown={defId ? startDockDrag(i, defId) : undefined}
+                onPointerMove={defId ? moveDockDrag : undefined}
+                onPointerUp={defId ? endDockDrag : undefined}
+                onPointerCancel={defId ? cancelDockDrag : undefined}
               >
-                {icon && (
+                {icon && !dragging && (
                   <img src={icon} alt="" className="pixel-img powerup-icon" />
                 )}
                 {/* 1/2/3 fire the dock — but while the weapon stack is open
@@ -1070,6 +1189,54 @@ export function GameScreen({
           })}
         </div>
       )}
+
+      {/* The powerup being dragged out follows the pointer as a ghost, with a
+          "DRAG OFF TO DISCARD" hint so the destructive gesture reads clearly. */}
+      {dockDrag?.moved &&
+        (() => {
+          const icon = spriteDataUrl(
+            assets.sprites,
+            abilityDef(dockDrag.defId).icon,
+          );
+          return (
+            <>
+              <div
+                className="powerup-drag-ghost"
+                style={{ left: dockDrag.x, top: dockDrag.y }}
+              >
+                {icon && (
+                  <img src={icon} alt="" className="pixel-img powerup-icon" />
+                )}
+              </div>
+              <div className={`powerup-discard-hint dock-${powerupSide}`}>
+                <PixelText
+                  font={font}
+                  text="DRAG OFF TO DISCARD"
+                  scale={1}
+                  color="#e06a6a"
+                />
+              </div>
+            </>
+          );
+        })()}
+
+      {/* Smoke poofs where discarded powerups vanished. */}
+      {poofs.map((poof) => (
+        <div
+          key={poof.id}
+          className="powerup-poof"
+          style={{ left: poof.x, top: poof.y }}
+          aria-hidden="true"
+        >
+          {[0, 1, 2, 3, 4, 5, 6].map((n) => (
+            <span
+              key={n}
+              className="poof-puff"
+              style={{ "--puff": n } as CSSProperties}
+            />
+          ))}
+        </div>
+      ))}
 
       {hud?.phase === "playing" && (
         <PickupFeed
