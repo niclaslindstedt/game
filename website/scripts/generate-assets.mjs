@@ -13,9 +13,16 @@ import { fileURLToPath } from "node:url";
 import { buildFilmStrip, writeAnimatedWebp } from "./asset-tools/animation.mjs";
 import { buildFontAtlas, renderText } from "./asset-tools/font.mjs";
 import { gridStats, gridToSurface, validateGrid } from "./asset-tools/grid.mjs";
+import { buildPalette } from "./asset-tools/palette.mjs";
 import { buildContactSheet, writePng } from "./asset-tools/preview.mjs";
 import { blit, createSurface, fill, upscale } from "./asset-tools/surface.mjs";
-import { ANIMATIONS, PALETTE, SPRITES } from "./sprite-data.mjs";
+import { CORE_PALETTE } from "./sprite-data/core.mjs";
+import {
+  ANIMATIONS,
+  FAMILIES,
+  SPRITE_PALETTES,
+  SPRITES,
+} from "./sprite-data/index.mjs";
 
 const here = (p) => fileURLToPath(new URL(p, import.meta.url));
 const assetsDir = here("../src/game/assets");
@@ -27,8 +34,8 @@ mkdirSync(previewDir, { recursive: true });
 
 const surfaces = {};
 for (const [name, grid] of Object.entries(SPRITES)) {
-  validateGrid(name, grid, PALETTE);
-  surfaces[name] = gridToSurface(grid, PALETTE);
+  validateGrid(name, grid, SPRITE_PALETTES[name]);
+  surfaces[name] = gridToSurface(grid, SPRITE_PALETTES[name]);
 
   // Orphan pixels read as noise at 1x — flag them for the checklist. Ground
   // tiles are exempt: their speckles are deliberately scattered single px.
@@ -84,25 +91,45 @@ specimenLines.forEach((line, i) => {
 });
 await writePng(upscale(specimen, 4), `${previewDir}/font-specimen.png`);
 
-// ---- Palette sheet: every char as a labeled swatch --------------------------
+// ---- Palette sheet: every scope's chars as labeled swatches -----------------
+// One section per palette scope: the shared core first, then each family
+// with local chars — so a free char is checked per scope, not globally.
 
 const swatch = 12;
-const entries = Object.entries(PALETTE);
+const scopes = [
+  ["CORE", buildPalette(CORE_PALETTE)],
+  ...FAMILIES.filter((f) => Object.keys(f.localPalette).length > 0).map((f) => [
+    f.name.toUpperCase(),
+    f.localPalette,
+  ]),
+];
+const rows = scopes.reduce((n, [, map]) => n + 1 + Object.keys(map).length, 0);
 const paletteSheet = fill(
-  createSurface(84, entries.length * (swatch + 2) + 2, 4),
+  createSurface(84, rows * (swatch + 2) + 2, 4),
   [24, 24, 28, 255],
 );
-entries.forEach(([char, color], i) => {
-  const y = 2 + i * (swatch + 2);
-  blit(paletteSheet, fill(createSurface(swatch, swatch), color), 2, y);
-  const label = `${char} ${color.slice(0, 3).join(",")}`;
+let row = 0;
+for (const [scope, map] of scopes) {
   blit(
     paletteSheet,
-    renderText(label, [244, 244, 244, 255]),
-    swatch + 6,
-    y + 3,
+    renderText(scope, [244, 244, 244, 255]),
+    2,
+    2 + row * (swatch + 2) + 3,
   );
-});
+  row++;
+  for (const [char, color] of Object.entries(map)) {
+    const y = 2 + row * (swatch + 2);
+    blit(paletteSheet, fill(createSurface(swatch, swatch), color), 2, y);
+    const label = `${char} ${color.slice(0, 3).join(",")}`;
+    blit(
+      paletteSheet,
+      renderText(label, [244, 244, 244, 255]),
+      swatch + 6,
+      y + 3,
+    );
+    row++;
+  }
+}
 await writePng(upscale(paletteSheet, 4), `${previewDir}/palette.png`);
 
 console.log(
