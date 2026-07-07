@@ -92,14 +92,17 @@ run against synthetic fixtures with no shipped content (see
   screen nuke (kills every non-boss monster on screen, its drop rate kept
   rare by `LOOT.nukeShare`); levels choose which can drop via their
   `loot.abilityPool`. Pickups are banked into `player.heldAbilities` (up
-  to `HELD_ITEMS.cap`) and spent with the `useItem` input.
+  to `HELD_ITEMS.cap`) and spent with the `useItem` input, or dragged out
+  of their dock slot to be discarded (`discardHeldAbility`) when the bank
+  is full of powers you don't want.
 - **`src/game/defs/difficulties.ts`** — the difficulty ladder (EASY →
   MEDIUM → HARD → NIGHTMARE → JESUS CHRIST!), chosen on the main menu and
   layered over every level: multipliers for spawn counts, monster hp, and
   the wave spawner's live cap, plus loot sweeteners (drop-chance bonus and
   per-tier chance bonuses that unlock rare/epic/legendary on levels whose own
   loot table caps lower). MEDIUM is the exact 1.0 baseline.
-- **`src/game/abilities.ts`** — ability activation and the helpers the
+- **`src/game/abilities.ts`** — ability activation (`grantAbility`),
+  discarding a banked pickup (`discardHeldAbility`), and the helpers the
   renderer shares (`orbPositions`, `stasisFactorAt`); the per-tick behavior
   runs inside `step.ts` so all damage flows through one path.
 - **`src/game/types.ts`** — state shapes plus the `GameEvent` union: events

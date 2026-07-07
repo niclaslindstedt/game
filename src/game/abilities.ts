@@ -29,6 +29,25 @@ export function grantAbility(state: GameState, defId: string): void {
   state.events.push({ type: "abilityStarted", defId });
 }
 
+/**
+ * Permanently drop the banked ability pickup in dock slot `index` — the "drag
+ * it out of its slot to make room for new loot" gesture. The rest of the row
+ * shifts down so the dock stays packed oldest-first. Returns the discarded
+ * def-id (so the UI can announce/poof it), or null on an empty or out-of-range
+ * slot. There is no undo and nothing is left on the ground: the powerup is
+ * gone for good. Safe to call outside step() (the dock discards while paused-
+ * free play continues).
+ */
+export function discardHeldAbility(
+  state: GameState,
+  index: number,
+): string | null {
+  const held = state.player.heldAbilities;
+  if (index < 0 || index >= held.length) return null;
+  const [defId] = held.splice(index, 1);
+  return defId ?? null;
+}
+
 /** World positions of an orbit ability's orbs, spread evenly on the ring. */
 export function orbPositions(player: Player, ability: ActiveAbility): Vec2[] {
   const orbit = abilityDef(ability.defId).orbit;

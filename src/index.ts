@@ -77,6 +77,7 @@ export { enemyPowerScale, menaceStage } from "./game/menace.ts";
 
 // Time-limited abilities: activation and the helpers the renderer shares.
 export {
+  discardHeldAbility,
   grantAbility,
   magnetRadius,
   orbPositions,
