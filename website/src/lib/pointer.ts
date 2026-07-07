@@ -145,6 +145,14 @@ export function trackPointer(
   // Long-press context menus would interrupt touch steering.
   const contextmenu = (event: Event) => event.preventDefault();
 
+  // iOS interprets a quick double-tap (routine here — a tap jumps) as the
+  // start of a text-selection gesture and pops the selection loupe/magnifier
+  // over the game, even with user-select:none. Only preventing the touch
+  // default suppresses it. Native Pointer Events fire independently of the
+  // touch default action (their gestures are governed by touch-action, set to
+  // none on the canvas), so steering, taps, and pointer capture are unaffected.
+  const suppressTouch = (event: TouchEvent) => event.preventDefault();
+
   element.addEventListener("pointerdown", down);
   element.addEventListener("pointermove", move);
   element.addEventListener("pointerup", up);
@@ -152,6 +160,7 @@ export function trackPointer(
   element.addEventListener("pointerenter", enter);
   element.addEventListener("pointerleave", leave);
   element.addEventListener("contextmenu", contextmenu);
+  element.addEventListener("touchstart", suppressTouch, { passive: false });
 
   return {
     state,
@@ -163,6 +172,7 @@ export function trackPointer(
       element.removeEventListener("pointerenter", enter);
       element.removeEventListener("pointerleave", leave);
       element.removeEventListener("contextmenu", contextmenu);
+      element.removeEventListener("touchstart", suppressTouch);
     },
   };
 }

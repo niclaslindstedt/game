@@ -11,6 +11,20 @@
 
 :root {
   color-scheme: dark;
+
+  /* The framework's UI components (e.g. the PWA UpdateToast) paint with slot
+     tokens — bg-surface, text-fg, border-line, text-muted, text-accent. Those
+     are only defined under a `[data-theme]` palette, which this game never
+     sets, so without defaults they resolve to nothing and the toast renders
+     transparent. Pin solid, on-brand values so framework surfaces are opaque. */
+  --surface: #161b22;
+  --surface-2: #1f262e;
+  --surface-3: #0b0d10;
+  --fg: #e6e8eb;
+  --fg-bright: #ffffff;
+  --muted: #7a8088;
+  --line: #2a2f36;
+  --accent: #7ef0c8;
 }
 
 html,
@@ -79,6 +93,8 @@ body {
   touch-action: none;
   user-select: none;
   -webkit-user-select: none;
+  /* Suppress the iOS long-press/double-tap selection loupe over the game. */
+  -webkit-touch-callout: none;
   cursor: crosshair;
 }
 
