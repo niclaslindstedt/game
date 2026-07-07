@@ -15,6 +15,7 @@ import {
 
 import {
   computeMaxHp,
+  discardFromInventory,
   effectiveStat,
   equipFromInventory,
   equipmentIcon,
@@ -43,7 +44,7 @@ import type { PixelFont } from "@ui/lib/pixel-font.ts";
 import { spriteDataUrl, type Sprites } from "./assets.ts";
 import { synth } from "./audio.ts";
 import { playUiSound } from "./sfx/index.ts";
-import { TIER_COLORS } from "./tiers.ts";
+import { AFFIX_COLORS, TIER_COLORS, WEAPON_CLASS_COLORS } from "./tiers.ts";
 
 type DragSource =
   { type: "inv"; index: number } | { type: "slot"; slot: EquipSlot };
@@ -84,46 +85,75 @@ function affixLine(affix: Affix): string {
   }
 }
 
-function itemLines(state: GameState, item: Equipment): string[] {
-  const lines: string[] = [];
+/** A stat line in the item card: text with an optional accent color (the
+ * default white reads as a plain fact; a color flags a class or a bonus). */
+type CardLine = { text: string; color?: string };
+
+function itemLines(state: GameState, item: Equipment): CardLine[] {
+  const lines: CardLine[] = [];
   if (item.defId in WEAPON_DEFS) {
     const def = weaponDef(item.defId);
-    lines.push(`${def.class.toUpperCase()} WEAPON`);
+    // The weapon's class, tinted by class (magic=purple, melee=gold,
+    // ranged=orange) so it reads as "what kind of weapon" — never confused
+    // with the blue MAGIC quality tier the name color carries.
+    lines.push({
+      text: `${def.class.toUpperCase()} WEAPON`,
+      color: WEAPON_CLASS_COLORS[def.class].border,
+    });
     // Show the damage this weapon would deal in the player's hands (stats +
     // affixes folded in), with the bonus over the raw base as a "+x" hint.
     const effective = Math.round(weaponDamageFor(state, item));
     const bonus = effective - def.damage;
-    lines.push(
-      bonus > 0 ? `DAMAGE ${effective} (+${bonus})` : `DAMAGE ${effective}`,
-    );
-    // Fire rate the same way: the speed stat (DEX for melee & ranged, INT for
-    // magic) quickens the cadence, so show the effective shots/sec + bonus.
-    const effRate = 1000 / weaponCooldownFor(state, item);
-    const rateBonus = effRate - 1000 / def.cooldownMs;
-    lines.push(
-      rateBonus > 0.05
-        ? `SPEED ${effRate.toFixed(1)}/S (+${rateBonus.toFixed(1)})`
-        : `SPEED ${effRate.toFixed(1)}/S`,
-    );
+    lines.push({
+      text:
+        bonus > 0 ? `DAMAGE ${effective} (+${bonus})` : `DAMAGE ${effective}`,
+    });
+    // Attack speed as plain seconds between attacks (lower is faster). The
+    // unit is spelled " SEC" — never a bare trailing "S", which the pixel font
+    // renders close enough to a "5" to read as part of the number. The speed
+    // stat (DEX for melee & ranged, INT for magic) quickens the cadence, so
+    // show the base-relative time shaved off as a "-X" hint.
+    const secs = weaponCooldownFor(state, item) / 1000;
+    const saved = def.cooldownMs / 1000 - secs;
+    lines.push({
+      text:
+        saved > 0.005
+          ? `SPEED ${secs.toFixed(2)} SEC (-${saved.toFixed(2)})`
+          : `SPEED ${secs.toFixed(2)} SEC`,
+    });
     // Reach the same way: INTELLIGENCE lengthens every weapon's range.
     const effRange = Math.round(weaponRangeFor(state, item));
     const rangeBonus = effRange - def.range;
-    lines.push(
-      rangeBonus > 0
-        ? `RANGE ${effRange} (+${rangeBonus})`
-        : `RANGE ${effRange}`,
-    );
+    lines.push({
+      text:
+        rangeBonus > 0
+          ? `RANGE ${effRange} (+${rangeBonus})`
+          : `RANGE ${effRange}`,
+    });
     lines.push(
       item.durability === undefined
-        ? "UNBREAKABLE"
-        : `DURABILITY ${item.durability}/${def.durability}`,
+        ? { text: "UNBREAKABLE" }
+        : {
+            text: `DURABILITY ${item.durability}/${def.durability}`,
+            // A near-broken weapon warns in red.
+            color:
+              item.durability <= def.durability * 0.25 ? "#e06a6a" : undefined,
+          },
     );
   } else {
     const def = gearDef(item.defId);
-    lines.push(def.slot === "suit" ? "SUIT ARMOR" : "CHARM");
-    if (def.bonuses.maxHp) lines.push(`+${def.bonuses.maxHp} MAX HP`);
+    lines.push({ text: def.slot === "suit" ? "SUIT ARMOR" : "CHARM" });
+    if (def.bonuses.maxHp) {
+      lines.push({
+        text: `+${def.bonuses.maxHp} MAX HP`,
+        color: AFFIX_COLORS.maxHp,
+      });
+    }
     if (def.bonuses.critChance) {
-      lines.push(`+${Math.round(def.bonuses.critChance * 100)}% CRIT`);
+      lines.push({
+        text: `+${Math.round(def.bonuses.critChance * 100)}% CRIT`,
+        color: AFFIX_COLORS.crit,
+      });
     }
   }
   return lines;
@@ -238,7 +268,17 @@ export function InventoryPanel({
     const applyDrop = (d: Drag, target: string | null) => {
       if (target) {
         const [kind, arg] = target.split(":");
-        if (d.from.type === "inv" && kind === "inv") {
+        if (kind === "ground") {
+          // Dropped clear of the bag and slots: destroy a carried item. Only
+          // bag pieces can be trashed this way (the equipped weapon is never
+          // parked in the bag, and unequipping is the safe way off a slot).
+          if (
+            d.from.type === "inv" &&
+            discardFromInventory(state, d.from.index)
+          ) {
+            playUiSound(synth, "back");
+          }
+        } else if (d.from.type === "inv" && kind === "inv") {
           moveInventoryItem(state, d.from.index, Number(arg));
         } else if (d.from.type === "inv" && kind === "slot") {
           if (d.item.slot === arg && equipFromInventory(state, d.from.index)) {
@@ -320,9 +360,13 @@ export function InventoryPanel({
   // itself).
   const preview = shown ? previewEquipped(state, shown) : null;
 
+  // The backdrop is the "ground": releasing a bag item over it destroys the
+  // item. The panel itself absorbs drops (data-drop="none") so a miss between
+  // cells — or onto the stats/item card — is a harmless no-op, never a
+  // discard; only a release out beyond the panel trashes the piece.
   return (
-    <div className="game-overlay inventory-overlay">
-      <div className="inventory-panel">
+    <div className="game-overlay inventory-overlay" data-drop="ground">
+      <div className="inventory-panel" data-drop="none">
         <div className="inventory-columns">
           {/* Equipment slots + character sheet */}
           <div className="inventory-left">
@@ -453,14 +497,23 @@ export function InventoryPanel({
             <div className="item-card">
               {shown ? (
                 <>
-                  <PixelText
-                    font={font}
-                    text={equipmentName(shown)}
-                    scale={2}
-                    color={TIER_COLORS[shown.tier]}
-                  />
+                  <div className="item-card-header">
+                    <ItemIcon sprites={sprites} item={shown} size={40} />
+                    <PixelText
+                      font={font}
+                      text={equipmentName(shown)}
+                      scale={2}
+                      color={TIER_COLORS[shown.tier]}
+                    />
+                  </div>
                   {itemLines(state, shown).map((line) => (
-                    <PixelText key={line} font={font} text={line} scale={1} />
+                    <PixelText
+                      key={line.text}
+                      font={font}
+                      text={line.text}
+                      scale={1}
+                      color={line.color}
+                    />
                   ))}
                   {shown.affixes.map((affix, i) => (
                     <PixelText
@@ -468,14 +521,14 @@ export function InventoryPanel({
                       font={font}
                       text={affixLine(affix)}
                       scale={1}
-                      color={TIER_COLORS[shown.tier]}
+                      color={AFFIX_COLORS[affix.kind]}
                     />
                   ))}
                 </>
               ) : (
                 <PixelText
                   font={font}
-                  text="DRAG TO EQUIP - TAP TO QUICK-EQUIP"
+                  text="DRAG TO EQUIP - DROP OUTSIDE TO DESTROY"
                   scale={1}
                   color="#9aa3ad"
                 />
@@ -493,6 +546,19 @@ export function InventoryPanel({
           <PixelText font={font} text="CLOSE" scale={2} color="#0b0d10" />
         </button>
       </div>
+
+      {/* Discard warning: only a bag item dragged clear of the panel is at
+          risk, so only then does the "destroy" prompt appear. */}
+      {drag && drag.moved && drag.from.type === "inv" && (
+        <div className="discard-hint">
+          <PixelText
+            font={font}
+            text="DROP OUTSIDE THE BAG TO DESTROY"
+            scale={1}
+            color="#e06a6a"
+          />
+        </div>
+      )}
 
       {/* Drag ghost following the pointer */}
       {drag && drag.moved && (

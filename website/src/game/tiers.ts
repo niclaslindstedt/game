@@ -4,13 +4,27 @@
 // is the app's business. All four tiers are styled now even though the moon
 // only drops the first two.
 
-import type { Tier, WeaponClass } from "@game/core";
+import type { Affix, Tier, WeaponClass } from "@game/core";
 
 export const TIER_COLORS: Record<Tier, string> = {
   regular: "#e6e8eb",
   magic: "#4da6ff",
+  rare: "#ffe14d",
   epic: "#b45df0",
   legendary: "#ffa726",
+};
+
+/**
+ * The magic attributes (affixes) each get their own hue in the item card so a
+ * bonus reads at a glance by what it does: orange for raw damage, gold for
+ * crit, green for vitality, blue for a stat point. Shared by the rolled
+ * affixes and a gear piece's baked-in bonuses, which mean the same things.
+ */
+export const AFFIX_COLORS: Record<Affix["kind"], string> = {
+  damagePct: "#e0603a",
+  crit: "#e8b93e",
+  maxHp: "#5fd97a",
+  stat: "#4da6ff",
 };
 
 /**

@@ -265,7 +265,7 @@ export function TitleScreen({
           aria: "controls-keyboard-move",
           blurb:
             s.keyboardMove === "on"
-              ? "WASD / ARROWS WALK - SHIFT RUNS - SPACE JUMPS"
+              ? "WASD / ARROWS RUN - SHIFT WALKS - SPACE JUMPS"
               : "STEERING STAYS ON THE MOUSE",
           action: () => {
             playUiSound(synth, "confirm");

@@ -61,9 +61,10 @@ describe("space suit", () => {
     const state = spacez();
     const rolled = suit(state, "epic");
     expect(rolled.tier).toBe("epic");
-    // Epic carries two affixes (TIERS ladder) — the forced tier ignores the
-    // level's magic-only tier table.
-    expect(rolled.affixes).toHaveLength(2);
+    // Epic gear carries three affixes (the TIERS ladder, capped by the gear
+    // pool's three kinds) — the forced tier ignores the level's magic-only
+    // tier table.
+    expect(rolled.affixes).toHaveLength(3);
     expect(gearDef(rolled.defId).spacesuit).toBe(true);
   });
 

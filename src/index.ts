@@ -44,6 +44,7 @@ export {
   tapCutscene,
   computeMaxHp,
   dropChance,
+  discardFromInventory,
   effectiveStat,
   equipFromInventory,
   equipmentName,

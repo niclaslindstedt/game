@@ -74,7 +74,7 @@ export const DIFFICULTY_DEFS: Record<Difficulty, DifficultyDef> = {
     mobHpMult: 1.35,
     aliveMult: 1.3,
     dropChanceBonus: 0.03,
-    tierChanceBonus: { magic: 0.1, epic: 0.06 },
+    tierChanceBonus: { magic: 0.1, rare: 0.08, epic: 0.06 },
   },
   nightmare: {
     id: "nightmare",

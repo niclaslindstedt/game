@@ -137,7 +137,10 @@ export const MOON: LevelDef = {
     ],
     gearPool: ["suit_plating", "moon_charm"],
     abilityPool: ["fire_orbs", "storm_cell", "stasis_field", "item_magnet"],
-    tierChances: { magic: 0.2 },
+    // The moon is where yellow rares start turning up: a slim base chance for
+    // the rank-and-file ghosts, which the elites' and boss's tierBonus (and
+    // LUCK) lift into a real reward. Level 1 stays rare-free.
+    tierChances: { magic: 0.2, rare: 0.05 },
     // MOON'S BLADE arrives early — at a kill rolled in the first hundred,
     // discovered in play — so the run's signature weapon shapes the run
     // instead of capping it.

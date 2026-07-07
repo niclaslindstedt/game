@@ -4,25 +4,34 @@
 // via their loot pools and which tiers are unlocked via their tier chances —
 // so growing this file to hundreds of items never touches the engine.
 
-import type { EquipSlot, StatName, Tier, WeaponClass } from "../types.ts";
+import type {
+  Affix,
+  EquipSlot,
+  StatName,
+  Tier,
+  WeaponClass,
+} from "../types.ts";
 
 // ---- Tiers -----------------------------------------------------------------
 
 /**
  * The full quality ladder, defined engine-wide from day one. The moon level
- * only unlocks regular+magic; later levels raise epic/legendary chances in
- * their loot tables. `affixCount` is how many bonuses an item of that tier
- * rolls.
+ * unlocks regular+magic plus a slim chance of rare; harder difficulties and
+ * later levels raise the rare/epic/legendary chances. `affixCount` is how many
+ * bonuses an item of that tier rolls — an upper bound, since a family never
+ * repeats an affix kind, so a piece can only carry as many as its pool holds
+ * (a legendary weapon caps at the weapon pool's size, gear at the gear pool's).
  */
 export const TIERS: Record<Tier, { prefix: string; affixCount: number }> = {
   regular: { prefix: "", affixCount: 0 },
   magic: { prefix: "MAGIC ", affixCount: 1 },
-  epic: { prefix: "EPIC ", affixCount: 2 },
-  legendary: { prefix: "LEGENDARY ", affixCount: 3 },
+  rare: { prefix: "RARE ", affixCount: 2 },
+  epic: { prefix: "EPIC ", affixCount: 3 },
+  legendary: { prefix: "LEGENDARY ", affixCount: 4 },
 };
 
 /** Roll order: try the best tier first, fall through to regular. */
-export const TIER_ROLL_ORDER: Tier[] = ["legendary", "epic", "magic"];
+export const TIER_ROLL_ORDER: Tier[] = ["legendary", "epic", "rare", "magic"];
 
 // ---- Weapons ----------------------------------------------------------------
 
@@ -482,6 +491,15 @@ export const AFFIX_POOLS: Record<"weapon" | "gear", AffixDef[]> = {
   weapon: [
     { kind: "damagePct", range: [0.15, 0.35], weight: 7 },
     { kind: "crit", range: [0.03, 0.06], weight: 3 },
+    // A weapon can also carry a stat point (STRENGTH, DEXTERITY, …) or a little
+    // life, so a multi-affix rare/epic/legendary weapon reads like a Diablo
+    // yellow — "CRUEL PIPE OF THE FOX" — not just raw damage (the engine folds
+    // an equipped weapon's maxHp/crit/stat affixes into the player like any
+    // other worn piece). Weighted below the offensive rolls so damage stays a
+    // weapon's headline, and four kinds let a legendary weapon fill all four
+    // affix slots.
+    { kind: "stat", range: [1, 1], weight: 2 },
+    { kind: "maxHp", range: [8, 20], weight: 2 },
   ],
   gear: [
     { kind: "maxHp", range: [10, 30], weight: 4 },
@@ -498,6 +516,53 @@ export const STAT_NAMES: StatName[] = [
   "speed",
   "luck",
 ];
+
+// ---- Magic item naming (Diablo-style) -----------------------------------------
+
+/**
+ * The "of the X" suffix each `+stat` affix lends an item's name, so a rolled
+ * bonus reads as flavor (BEAKER OF THE FOX = +DEXTERITY) the way Diablo names
+ * its magic finds. Deterministic — the name follows the affix, not a fresh
+ * roll.
+ */
+const STAT_SUFFIX: Record<StatName, string> = {
+  health: "OF THE WHALE",
+  strength: "OF THE OX",
+  dexterity: "OF THE FOX",
+  intelligence: "OF THE OWL",
+  speed: "OF THE HARE",
+  luck: "OF FORTUNE",
+};
+
+/**
+ * The word an affix contributes to a magic item's name: a `prefix` sits before
+ * the base name (VICIOUS BEAKER), a `suffix` after it (BEAKER OF PRECISION).
+ * Each kind picks one or the other so a two-affix item reads as
+ * "<PREFIX> BASE OF <SUFFIX>"; the wording steps up with the roll's magnitude.
+ * Purely presentational — the numbers still live on the affix.
+ */
+export function affixNaming(affix: Affix): {
+  prefix?: string;
+  suffix?: string;
+} {
+  switch (affix.kind) {
+    case "damagePct":
+      return {
+        prefix:
+          affix.value < 0.22
+            ? "JAGGED"
+            : affix.value < 0.3
+              ? "VICIOUS"
+              : "CRUEL",
+      };
+    case "crit":
+      return { suffix: affix.value < 0.045 ? "OF PRECISION" : "OF DEADLINESS" };
+    case "maxHp":
+      return { prefix: affix.value < 20 ? "STURDY" : "REINFORCED" };
+    case "stat":
+      return { suffix: STAT_SUFFIX[affix.stat] };
+  }
+}
 
 // ---- Lookups -------------------------------------------------------------------
 
