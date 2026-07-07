@@ -32,12 +32,13 @@ hundredth weapon means adding catalog entries, not touching the simulation.
 - **`src/game/config.ts`** — the GLOBAL balance knobs (player, jumping, XP
   curve, stat effects, loot rules), nothing hardcoded in logic.
 - **`src/game/defs/levels.ts`** — the level registry: geometry, per-level
-  gravity (the moon's low g is why jumps soar), biome, the story intro text,
+  gravity (low gravity makes jumps soar), biome (a `tiles` sprite spec the
+  renderer paints from), the story intro text,
   an optional prelude cutscene id, landmark props, banded enemy spawns, the
   objective (`killBoss` / `clearAll`), solid obstacles (tall pieces block
   everyone; low ones can be jumped by the player but never by monsters),
   deliberate `walls` (segments expanded into chains of solid circles at
-  creation — door gaps between segments are how SPACEZ HQ carves its rooms),
+  creation — door gaps between segments carve rooms),
   locked `doors` (chains of `door_locked` obstacles tracked in
   `state.doors`, opened by carrying the matching story-item key up to
   them), hand-`placedItems` (locked-room loot, plot pieces on pedestals),
@@ -52,14 +53,8 @@ hundredth weapon means adding catalog entries, not touching the simulation.
   `dialogue` for the stare-down before the fight. Every unique mob also
   carries `lastWords` — a short dying gasp replayed through the same
   dialogue box (an `enemyDeath` scene) as it falls, so a story death lands
-  harder than a nameless minion's. Level 1 ships the SpaceZ
-  night shift (intern → lab scientist → propulsion engineer → security
-  guard → hazmat tech), four elites who know too much (THE NIGHT MANAGER,
-  CHIEF OF SECURITY, DR. NOVA, THE JANITOR), plus MUSKRAT, the mutant rat
-  under the prototype rocket; level 2 ships wisp → moon ghost → wraith,
-  four ghost elites (MISSION SPECIALIST, THE PROSPECTOR, QUARANTINE
-  MEDIC, THE CARTOGRAPHER), plus ARMSTRONG, the giant astronaut ghost
-  guarding the flag.
+  harder than a nameless minion's. This game's actual roster (and the
+  story it tells) is in [`game-content.md`](./game-content.md).
 - **`src/game/defs/story.ts`** — the story-item catalog: plot pieces
   (keycards, dossiers, recovered hardware) dropped by elites or placed in
   locked rooms. Pickups bank into `state.storyItems` (never the bag) and
@@ -234,10 +229,9 @@ the policy.
 
 ## Deployment topology
 
-GitHub Pages serves three deploy slots on one origin —
-**<https://game.niclaslindstedt.se/>**, a custom domain (CNAME) on the
-GitHub Pages origin — assembled by a single `pages.yml` run into one
-artifact:
+GitHub Pages serves three deploy slots on one origin — the `siteUrl` in
+`game.config.json`, a custom domain (CNAME) on the GitHub Pages origin —
+assembled by a single `pages.yml` run into one artifact:
 
 | Slot       | URL         | Source                                                                                     | Indexed        |
 | ---------- | ----------- | ------------------------------------------------------------------------------------------ | -------------- |
@@ -263,6 +257,37 @@ one dispatched run with the default `GITHUB_TOKEN` — no `RELEASE_TOKEN` PAT.
 Every PR that touches user-visible code must add a fragment under
 `.changes/unreleased/` (CI's `changeset` job enforces it; label a PR
 `no-changelog` to opt out).
+
+## Extension points (for improved mechanics)
+
+New _content_ on an existing mechanic is pure data — a new enemy, weapon,
+level, or ability is a catalog entry, no code. New _archetypes_ (a mechanic
+the engine has no shape for yet) require touching a closed union and each
+site that switches on it. The unions and their handler sites:
+
+| Union (types.ts / defs)           | Members                                                             | Handler sites to extend                                                                                              |
+| --------------------------------- | ------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------- |
+| `EnemyRole` (defs/enemies.ts)     | `minion` \| `elite` \| `boss`                                       | `step.ts` enemy AI (aggro/guard/boss branches, last-stand), `create.ts` boss-spawn detection, `render.ts` hp bars    |
+| `AbilityKind` (defs/abilities.ts) | `orbit` \| `storm` \| `stasis` \| `nuke` \| `magnet`                | capability-object dispatch in `abilities.ts` + `step.ts`; visuals in `render.ts` `drawAbilities`                     |
+| `Item["kind"]` (types.ts)         | `medkit` \| `xp` \| `repair` \| `equipment` \| `ability` \| `story` | the pickup switch in `step.ts`; the item-sprite switch in `render.ts`                                                |
+| `Affix["kind"]` (types.ts)        | `damagePct` \| `maxHp` \| `crit` \| `stat`                          | the affix readers in `items.ts` (`effectiveStat`, `computeMaxHp`, `playerCritChance`, `weaponDamage`, `weaponScore`) |
+
+**Checklist to add an archetype:** union entry → def field(s) it needs → the
+`step.ts` (or `items.ts`/`abilities.ts`) handler branch → a `GameEvent`
+variant if the app must react → a headless test in `tests/` → the render +
+SFX mapping in `website/`. The `noFallthroughCasesInSwitch` /
+`verbatimModuleSyntax` compiler settings make a missed switch arm a type
+error, so the compiler points at every site you still owe.
+
+## Making a sequel / new game
+
+A sequel is a clone of this repo with the first game's content stripped and
+new content built on the same engine. The mechanical playbook is the
+`new-game` skill (`.agent/skills/new-game/SKILL.md`): rename via
+`game.config.json`, strip the content catalogs and this game's docs/tests,
+then rebuild content with the `engine-system`, `pixel-assets`,
+`sound-effects`, and `playtest` skills. This game's content walkthrough lives
+in [`game-content.md`](./game-content.md) so a sequel replaces it wholesale.
 
 ## Design decisions
 

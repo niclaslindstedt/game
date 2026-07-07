@@ -163,15 +163,16 @@ from GitHub Packages. **Prefer the framework over hand-rolling**:
 
 ## Documentation sync points
 
-| When you change…                    | Update…                                                                                |
-| ----------------------------------- | -------------------------------------------------------------------------------------- |
-| game identity (title, domain, …)    | `game.config.json` only — the single source of truth; then `make icons` (OG art)       |
-| engine public API (`src/index.ts`)  | `docs/architecture.md`, `README.md` Usage                                              |
-| Make targets / npm scripts          | `README.md` Usage, `CONTRIBUTING.md`, this file                                        |
-| deploy slots / pages workflow       | `docs/architecture.md`, `README.md` Play table, `website/pwa-plugin.ts` `DEPLOY_SLOTS` |
-| config knobs (env vars, URL params) | `docs/configuration.md`, `README.md` Configuration                                     |
-| PWA surface (manifest, icons, SW)   | `docs/architecture.md`, regenerate icons via `make icons`                              |
-| version anywhere                    | never by hand — `scripts/update-versions.sh` owns it                                   |
+| When you change…                      | Update…                                                                                |
+| ------------------------------------- | -------------------------------------------------------------------------------------- |
+| game identity (title, domain, …)      | `game.config.json` only — the single source of truth; then `make icons` (OG art)       |
+| engine public API (`src/index.ts`)    | `docs/architecture.md`, `README.md` Usage                                              |
+| game content (levels, enemies, story) | `docs/game-content.md` (this game's walkthrough; a sequel replaces it wholesale)       |
+| Make targets / npm scripts            | `README.md` Usage, `CONTRIBUTING.md`, this file                                        |
+| deploy slots / pages workflow         | `docs/architecture.md`, `README.md` Play table, `website/pwa-plugin.ts` `DEPLOY_SLOTS` |
+| config knobs (env vars, URL params)   | `docs/configuration.md`, `README.md` Configuration                                     |
+| PWA surface (manifest, icons, SW)     | `docs/architecture.md`, regenerate icons via `make icons`                              |
+| version anywhere                      | never by hand — `scripts/update-versions.sh` owns it                                   |
 
 The website must be regenerated whenever source-derived content changes
 (§11.2): `website/scripts/extract-source-data.mjs` runs on every build and
@@ -205,13 +206,14 @@ The repo ships a skill for each recurring game-development activity, so the
 workflow (and its quality bars) stays consistent across sessions. Load the
 relevant `SKILL.md` before starting that kind of work:
 
-| Skill           | Use for                                                                                                                                               |
-| --------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `engine-system` | Adding/changing gameplay systems (enemies, weapons, items, rules) — the engine-first workflow: config → types → step → events → tests → presentation. |
-| `pixel-assets`  | Creating or changing sprites, tiles, palettes, animations, or pixel-font glyphs — the generate → look → evaluate → loop cycle.                        |
-| `sound-effects` | Adding or tuning synthesized WebAudio SFX — the sound vocabulary, mixing rules, and audition loop.                                                    |
-| `playtest`      | Verifying changes in the running game and tuning game feel with the autoplay bot (`website/scripts/playtest.mjs`).                                    |
-| `debug-game`    | Investigating gameplay/render/input/audio bugs — deterministic seed repros, `?debug` + `window.__game`, failing-test-first fixes.                     |
+| Skill           | Use for                                                                                                                                                |
+| --------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `new-game`      | Turning a clone of this repo into a new game/sequel — the ordered bootstrap: rename via `game.config.json`, strip content, rebuild on the same engine. |
+| `engine-system` | Adding/changing gameplay systems (enemies, weapons, items, rules) — the engine-first workflow: config → types → step → events → tests → presentation.  |
+| `pixel-assets`  | Creating or changing sprites, tiles, palettes, animations, or pixel-font glyphs — the generate → look → evaluate → loop cycle.                         |
+| `sound-effects` | Adding or tuning synthesized WebAudio SFX — the sound vocabulary, mixing rules, and audition loop.                                                     |
+| `playtest`      | Verifying changes in the running game and tuning game feel with the autoplay bot (`website/scripts/playtest.mjs`).                                     |
+| `debug-game`    | Investigating gameplay/render/input/audio bugs — deterministic seed repros, `?debug` + `window.__game`, failing-test-first fixes.                      |
 
 ## Maintenance skills
 

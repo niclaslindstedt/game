@@ -43,8 +43,8 @@ export type WeaponClass = "melee" | "ranged" | "magic";
 
 /**
  * Item quality, lowest to highest. Every tier exists engine-wide; each
- * level's loot table decides which tiers can actually drop there (the moon
- * rolls regular and magic only).
+ * level's loot table decides which tiers can actually drop there (a level
+ * may cap the rarity it awards).
  */
 export type Tier = "regular" | "magic" | "epic" | "legendary";
 
@@ -153,7 +153,8 @@ export type Enemy = {
   /**
    * Elites sleep at their post until the player wanders close (or wounds
    * them); once true they hunt forever — no drifting back home. Minions use
-   * it as their aggro latch: waking needs line of sight (ghosts excepted),
+   * it as their aggro latch: waking needs line of sight (some minions
+   * excepted),
    * the chase then holds even through walls, and escaping the aggro radius
    * puts them back to sleep. Unused by bosses, whose wakefulness is derived
    * per tick.
@@ -395,7 +396,7 @@ export type GameInput = {
 export type LevelInfo = {
   /** Key into LEVELS. */
   id: string;
-  /** Story order (1 = earth, 2 = the moon, …). */
+  /** Story order (1-based). */
   index: number;
   name: string;
   width: number;
