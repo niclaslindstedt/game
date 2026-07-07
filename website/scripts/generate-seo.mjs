@@ -15,9 +15,12 @@ import { existsSync, writeFileSync } from "node:fs";
 import { resolve, dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 
+import identity from "../../game.config.json" with { type: "json" };
+
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const DIST = resolve(__dirname, "../dist");
-const SITE_URL = "https://game.niclaslindstedt.se";
+// Single source of truth for the domain/title lives in game.config.json.
+const SITE_URL = identity.siteUrl;
 
 if (!existsSync(DIST)) {
   console.error("generate-seo: dist/ is missing — run `vite build` first");
@@ -58,9 +61,9 @@ function renderRobots() {
 // the site root. Generated from the same URL list the sitemap uses.
 function renderLlmsTxt() {
   return [
-    "# Gone in Space",
+    `# ${identity.title}`,
     "",
-    "> An offline top-down survival shooter that runs entirely in the browser. Hold to steer; picked-up weapons and items do the fighting. Installable PWA.",
+    `> ${identity.description}`,
     "",
     "## App",
     "",
@@ -68,7 +71,7 @@ function renderLlmsTxt() {
     "",
     "## Development",
     "",
-    "- [Source repository](https://github.com/niclaslindstedt/game): TypeScript source, docs, and contribution guide",
+    `- [Source repository](${identity.repoUrl}): TypeScript source, docs, and contribution guide`,
     "",
   ].join("\n");
 }
@@ -81,12 +84,12 @@ function render404() {
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Not found — Gone in Space</title>
+    <title>Not found — ${identity.title}</title>
     <meta name="description" content="This page does not exist. The game itself lives at the site root and works offline once loaded." />
     <meta name="robots" content="noindex,follow" />
     <link rel="canonical" href="${SITE_URL}/" />
     <meta property="og:type" content="website" />
-    <meta property="og:title" content="Not found — Gone in Space" />
+    <meta property="og:title" content="Not found — ${identity.title}" />
     <meta property="og:description" content="This page does not exist. The game itself lives at the site root." />
     <meta property="og:url" content="${SITE_URL}/" />
     <meta property="og:image" content="${SITE_URL}/og-default.png" />

@@ -12,8 +12,9 @@ import { gamePwa } from "./pwa-plugin.ts";
 
 // The GitHub Pages base path is injected by the `pages.yml` workflow via
 // VITE_BASE so the same source builds for `/` (release), `/preview/` (main),
-// or `/branch/` (a dispatched feature branch) on game.niclaslindstedt.se.
-// Defaults to `/` for local dev and the CI quality gates.
+// or `/branch/` (a dispatched feature branch) on one origin (the identity
+// `siteUrl` in game.config.json). Defaults to `/` for local dev and the CI
+// quality gates.
 const base = process.env.VITE_BASE ?? "/";
 
 // Label shown by the PWA update toast for the incoming build. Prefer the

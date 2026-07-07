@@ -95,9 +95,9 @@ Two layers, one dependency direction:
   toast. The app depends on the engine; the engine never imports from the
   app.
 
-Deployment is three GitHub Pages slots on one origin
-(`https://game.niclaslindstedt.se/`, a custom domain on the GitHub Pages
-origin): `/` serves the highest
+Deployment is three GitHub Pages slots on one origin (the `siteUrl` in
+`game.config.json`, a custom domain on the GitHub Pages origin): `/` serves
+the highest
 `v*` tag (or `main` before the first release), `/preview/` serves every
 `main` push, `/branch/` serves a manually parked branch persisted in
 the `branch-deploy` orphan branch. `.github/workflows/pages.yml` builds all
@@ -165,6 +165,7 @@ from GitHub Packages. **Prefer the framework over hand-rolling**:
 
 | When you change…                    | Update…                                                                                |
 | ----------------------------------- | -------------------------------------------------------------------------------------- |
+| game identity (title, domain, …)    | `game.config.json` only — the single source of truth; then `make icons` (OG art)       |
 | engine public API (`src/index.ts`)  | `docs/architecture.md`, `README.md` Usage                                              |
 | Make targets / npm scripts          | `README.md` Usage, `CONTRIBUTING.md`, this file                                        |
 | deploy slots / pages workflow       | `docs/architecture.md`, `README.md` Play table, `website/pwa-plugin.ts` `DEPLOY_SLOTS` |
@@ -178,6 +179,13 @@ fails if `src/version.ts` and `package.json` disagree.
 
 ## Parity / cross-cutting rules
 
+- **Game identity is centralized.** `game.config.json` (repo root) is the one
+  source for the title, tagline, description, `siteUrl`, `repoUrl`,
+  `storagePrefix`, and `cacheIdPrefix`. App code reads it through
+  `website/src/identity.ts` (`IDENTITY`, `FULL_TITLE`, `storageKey`); node
+  build scripts import the JSON directly; `website/index.html` and
+  `manifest.webmanifest` are filled/generated from it at build time by
+  `website/pwa-plugin.ts`. Never re-hardcode a brand string elsewhere.
 - `website/pwa-plugin.ts` `DEPLOY_SLOTS`, `website/src/app/pwa.ts`
   `cacheIdForBase`, and the slot paths in `.github/workflows/pages.yml` must
   agree — a mismatch makes slots clobber each other's precache or serve the

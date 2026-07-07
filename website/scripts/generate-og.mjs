@@ -6,7 +6,12 @@ import { fileURLToPath } from "node:url";
 
 import sharp from "sharp";
 
+import identity from "../../game.config.json" with { type: "json" };
+
 const out = fileURLToPath(new URL("../public/og-default.png", import.meta.url));
+
+const esc = (s) =>
+  s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
 
 const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="630">
   <defs>
@@ -54,11 +59,11 @@ const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="630">
     </g>
   </g>
   <text x="90" y="270" font-family="system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif"
-        font-size="96" font-weight="800" letter-spacing="4" fill="#e6e8eb">GONE IN SPACE</text>
+        font-size="96" font-weight="800" letter-spacing="4" fill="#e6e8eb">${esc(identity.og.logo)}</text>
   <text x="92" y="345" font-family="system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif"
-        font-size="38" fill="#9aa3ad">Survive the search for your lost love</text>
+        font-size="38" fill="#9aa3ad">${esc(identity.og.tagline)}</text>
   <text x="92" y="410" font-family="system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif"
-        font-size="30" fill="#5d6670">The trail leads to the moon</text>
+        font-size="30" fill="#5d6670">${esc(identity.og.subtitle)}</text>
 </svg>`;
 
 await sharp(Buffer.from(svg)).png().toFile(out);

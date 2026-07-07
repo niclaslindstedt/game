@@ -15,9 +15,11 @@ import { existsSync, readFileSync, readdirSync, statSync } from "node:fs";
 import { dirname, join, relative, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 
+import identity from "../../game.config.json" with { type: "json" };
+
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const DIST = resolve(__dirname, "../dist");
-const SITE_URL = "https://game.niclaslindstedt.se";
+const SITE_URL = identity.siteUrl;
 
 const findings = [];
 const err = (file, message) => findings.push({ level: "error", file, message });

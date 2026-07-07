@@ -5,6 +5,8 @@
 // hold-to-steer with instant item use, mouse players get cursor steering
 // with click-to-use.
 
+import { storageKey } from "../identity.ts";
+
 import { setAudioVolumes } from "./audio.ts";
 
 /** How the mouse steers: chase the cursor, or classic hold-to-steer.
@@ -23,7 +25,7 @@ export type GameSettings = {
   sfxVolume: number;
 };
 
-const STORAGE_KEY = "gone-in-space:settings";
+const STORAGE_KEY = storageKey("settings");
 
 function defaults(): GameSettings {
   // Touch-first devices (phones, tablets) play best with the classic

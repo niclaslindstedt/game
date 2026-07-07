@@ -10,6 +10,8 @@ import { DIFFICULTY_ORDER, difficultyDef, type Difficulty } from "@game/core";
 
 import { PixelText } from "@ui/lib/PixelText.tsx";
 
+import { IDENTITY } from "../identity.ts";
+
 import { loadGameAssets, spriteDataUrl, type GameAssets } from "./assets.ts";
 import { synth } from "./audio.ts";
 import { playTitleMusic } from "./music/index.ts";
@@ -81,7 +83,7 @@ export function TitleScreen({
   // Cursor position per screen; the difficulty list opens on MEDIUM.
   const [cursor, setCursor] = useState(0);
   // Landscape phones are short and portrait ones narrow: pick a logo scale
-  // that keeps "GONE IN SPACE" plus the menu inside both.
+  // that keeps the title logo plus the menu inside both.
   const [compact, setCompact] = useState(
     () => window.matchMedia("(max-height: 480px)").matches,
   );
@@ -298,16 +300,16 @@ export function TitleScreen({
       <div className="title-moon" aria-hidden="true" />
 
       <header className="title-logo">
-        <h1 className="visually-hidden">Gone in Space</h1>
+        <h1 className="visually-hidden">{IDENTITY.title}</h1>
         <PixelText
           font={font}
-          text="GONE IN SPACE"
+          text={IDENTITY.title.toUpperCase()}
           scale={logoScale}
           color="#7ef0c8"
         />
         <PixelText
           font={font}
-          text="SURVIVE THE SEARCH FOR YOUR LOST LOVE"
+          text={IDENTITY.tagline.toUpperCase()}
           scale={1}
           color="#9aa3ad"
         />
@@ -391,11 +393,7 @@ export function TitleScreen({
       </nav>
 
       <footer className="title-footer">
-        <a
-          href="https://github.com/niclaslindstedt/game"
-          target="_blank"
-          rel="noreferrer"
-        >
+        <a href={IDENTITY.repoUrl} target="_blank" rel="noreferrer">
           source code
         </a>
         <span>

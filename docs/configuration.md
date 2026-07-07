@@ -3,8 +3,10 @@
 ## In-game settings
 
 The main menu's **SETTINGS** screen holds the player-facing configuration,
-persisted on-device in `localStorage` under `gone-in-space:settings`
-(`website/src/game/settings.ts`):
+persisted on-device in `localStorage` under `<storagePrefix>:settings`
+(`website/src/game/settings.ts`). The `<storagePrefix>` is the `storagePrefix`
+field of the identity config (`game.config.json`) — this game ships it as its
+own namespace, and a sequel changes it there once:
 
 | Setting             | Values                                              | Default                                                     |
 | ------------------- | --------------------------------------------------- | ----------------------------------------------------------- |
@@ -14,7 +16,7 @@ persisted on-device in `localStorage` under `gone-in-space:settings`
 | Sound FX volume     | 0–100% in quarter steps                             | 100%                                                        |
 
 Story progress is persisted the same way: watched cutscenes are recorded
-under `gone-in-space:seen-cutscenes` (`website/src/game/progress.ts`), so a
+under `<storagePrefix>:seen-cutscenes` (`website/src/game/progress.ts`), so a
 level's prelude plays once per device instead of on every retry. Clearing
 site data resets it; the `?cutscene=<id>` workbench replays any scene
 regardless.
