@@ -1,17 +1,20 @@
 // SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
-// The Diablo-style inventory: equipment slots (drag an item onto its slot to
-// equip, tap to quick-equip/unequip), the character sheet, the bag grid, and
-// an item card for whatever is hovered or dragged. The two sections sit side
-// by side in landscape and stack in portrait (see styles.css). The panel
-// mutates the (paused) engine state through the inventory API and calls
-// `onChange` so React re-reads it.
+// The Diablo-style inventory: a character portrait + equipment slots (drag an
+// item onto its slot to equip; on desktop a plain click quick-equips), the
+// character sheet, and a compact bag grid. Hovering (desktop) or tapping
+// (touch) an item raises a WoW-style tooltip next to it instead of a fixed
+// item card. The two sections sit side by side in landscape and stack in
+// portrait (see styles.css). The panel mutates the (paused) engine state
+// through the inventory API and calls `onChange` so React re-reads it.
 
 import {
   useEffect,
+  useLayoutEffect,
   useRef,
   useState,
   type PointerEvent as ReactPointerEvent,
 } from "react";
+import { createPortal } from "react-dom";
 
 import {
   computeMaxHp,
@@ -22,6 +25,7 @@ import {
   equipmentName,
   gearDef,
   moveInventoryItem,
+  playerAppearance,
   playerCritChance,
   previewEquipped,
   unequipToInventory,
@@ -217,26 +221,95 @@ function StatLine({
   );
 }
 
-function ItemIcon({
-  sprites,
-  item,
-  size = 36,
-}: {
-  sprites: Sprites;
-  item: Equipment;
-  size?: number;
-}) {
+function ItemIcon({ sprites, item }: { sprites: Sprites; item: Equipment }) {
   const src = spriteDataUrl(sprites, equipmentIcon(item.defId));
   if (!src) return null;
   return (
     <img
       src={src}
       alt={equipmentName(item)}
-      width={size}
-      height={size}
-      className="pixel-img"
+      className="pixel-img inv-item-icon"
       draggable={false}
     />
+  );
+}
+
+/**
+ * WoW-style item tooltip: name (in tier color) plus the stat/affix lines,
+ * floated next to the item that raised it. Portaled to <body> and positioned
+ * in viewport coordinates from the anchoring cell's rect, flipping to the
+ * other side / clamping to the viewport so it never spills off-screen. Hidden
+ * on the first paint until it has measured itself, to avoid a positioned
+ * flash.
+ */
+function ItemTooltip({
+  font,
+  state,
+  item,
+  anchor,
+}: {
+  font: PixelFont;
+  state: GameState;
+  item: Equipment;
+  anchor: DOMRect;
+}) {
+  const ref = useRef<HTMLDivElement>(null);
+  const [pos, setPos] = useState<{ left: number; top: number } | null>(null);
+
+  useLayoutEffect(() => {
+    const el = ref.current;
+    if (!el) return;
+    const gap = 10;
+    const margin = 6;
+    const w = el.offsetWidth;
+    const h = el.offsetHeight;
+    // Prefer the right of the item; flip left if it would overflow.
+    let left = anchor.right + gap;
+    if (left + w > window.innerWidth - margin) left = anchor.left - gap - w;
+    left = Math.max(margin, Math.min(left, window.innerWidth - margin - w));
+    // Align the top with the item, clamped into the viewport.
+    let top = anchor.top;
+    top = Math.max(margin, Math.min(top, window.innerHeight - margin - h));
+    setPos({ left, top });
+  }, [anchor, item]);
+
+  return createPortal(
+    <div
+      ref={ref}
+      className="item-tooltip"
+      style={{
+        left: pos?.left ?? anchor.right + 10,
+        top: pos?.top ?? anchor.top,
+        borderColor: TIER_COLORS[item.tier],
+        visibility: pos ? "visible" : "hidden",
+      }}
+    >
+      <PixelText
+        font={font}
+        text={equipmentName(item)}
+        scale={2}
+        color={TIER_COLORS[item.tier]}
+      />
+      {itemLines(state, item).map((line) => (
+        <PixelText
+          key={line.text}
+          font={font}
+          text={line.text}
+          scale={1}
+          color={line.color}
+        />
+      ))}
+      {item.affixes.map((affix, i) => (
+        <PixelText
+          key={i}
+          font={font}
+          text={affixLine(affix)}
+          scale={1}
+          color={AFFIX_COLORS[affix.kind]}
+        />
+      ))}
+    </div>,
+    document.body,
   );
 }
 
@@ -254,7 +327,13 @@ export function InventoryPanel({
   onClose: () => void;
 }) {
   const [drag, setDrag] = useState<Drag | null>(null);
-  const [inspected, setInspected] = useState<Equipment | null>(null);
+  // The item whose WoW-style tooltip is raised, plus the cell rect the tooltip
+  // anchors to. Raised by hover (desktop) or tap (touch); also tracks the
+  // dragged item so the character sheet previews it mid-drag.
+  const [inspect, setInspect] = useState<{
+    item: Equipment;
+    anchor: DOMRect;
+  } | null>(null);
   // Written only from event handlers (start/move/up), never during render:
   // the up-handler needs the freshest drag without re-subscribing per move.
   const dragRef = useRef<Drag | null>(null);
@@ -313,17 +392,26 @@ export function InventoryPanel({
       const d = dragRef.current;
       if (!d) return;
       if (!d.moved) {
-        // A tap: quick-equip from the bag, quick-unequip from a slot.
-        const swapped =
-          d.from.type === "inv"
-            ? equipFromInventory(state, d.from.index)
-            : unequipToInventory(state, d.from.slot);
-        if (swapped) playUiSound(synth, "equip");
+        // A plain click: on desktop, quick-equip from the bag / quick-unequip
+        // from a slot. On touch there is no hover, so a tap instead raises the
+        // item tooltip (already set on pointer-down) and leaves it up —
+        // equipping on touch is done by dragging.
+        if (e.pointerType !== "touch") {
+          const swapped =
+            d.from.type === "inv"
+              ? equipFromInventory(state, d.from.index)
+              : unequipToInventory(state, d.from.slot);
+          if (swapped) {
+            playUiSound(synth, "equip");
+            setInspect(null);
+          }
+        }
       } else {
         const el = document
           .elementFromPoint(e.clientX, e.clientY)
           ?.closest("[data-drop]");
         applyDrop(d, el?.getAttribute("data-drop") ?? null);
+        setInspect(null);
       }
       dragRef.current = null;
       setDrag(null);
@@ -337,10 +425,14 @@ export function InventoryPanel({
     };
   }, [dragActive, state, onChange]);
 
+  // Raise (or update) the item tooltip, anchored to the cell under the pointer.
+  const inspectItem = (item: Equipment) => (e: ReactPointerEvent) =>
+    setInspect({ item, anchor: e.currentTarget.getBoundingClientRect() });
+
   const startDrag =
     (item: Equipment, from: DragSource) => (e: ReactPointerEvent) => {
       e.preventDefault();
-      setInspected(item);
+      setInspect({ item, anchor: e.currentTarget.getBoundingClientRect() });
       dragRef.current = {
         item,
         from,
@@ -352,24 +444,43 @@ export function InventoryPanel({
     };
 
   const player = state.player;
-  const shown = inspected;
+  const shown = inspect?.item ?? null;
   // Holding/hovering an item previews it in the character sheet: the stat
   // getters read a throwaway loadout with `shown` slotted in, and the
   // per-line difference from the live loadout drives the green/red upgrade
   // hints. Inspecting the piece already worn shows no deltas (it equals
   // itself).
   const preview = shown ? previewEquipped(state, shown) : null;
+  const avatarSrc = spriteDataUrl(sprites, `${playerAppearance(state)}_0`);
 
   // The backdrop is the "ground": releasing a bag item over it destroys the
   // item. The panel itself absorbs drops (data-drop="none") so a miss between
   // cells — or onto the stats/item card — is a harmless no-op, never a
   // discard; only a release out beyond the panel trashes the piece.
   return (
-    <div className="game-overlay inventory-overlay" data-drop="ground">
+    <div
+      className="game-overlay inventory-overlay"
+      data-drop="ground"
+      // Tapping empty space (outside any item cell) dismisses the tooltip —
+      // the touch equivalent of moving the mouse off an item.
+      onPointerDown={(e) => {
+        if (!(e.target as HTMLElement).closest(".inv-cell")) setInspect(null);
+      }}
+    >
       <div className="inventory-panel" data-drop="none">
         <div className="inventory-columns">
-          {/* Equipment slots + character sheet */}
+          {/* Character portrait + equipment slots + character sheet */}
           <div className="inventory-left">
+            {avatarSrc && (
+              <div className="char-portrait">
+                <img
+                  src={avatarSrc}
+                  alt="character"
+                  className="pixel-img char-avatar-img"
+                  draggable={false}
+                />
+              </div>
+            )}
             <PixelText font={font} text="EQUIPPED" scale={2} color="#9aa3ad" />
             <div className="equip-slots">
               {SLOTS.map(({ slot, label }) => {
@@ -400,7 +511,12 @@ export function InventoryPanel({
                           ? startDrag(item, { type: "slot", slot })
                           : undefined
                       }
-                      onPointerEnter={() => item && setInspected(item)}
+                      onPointerEnter={item ? inspectItem(item) : undefined}
+                      onPointerLeave={(e) => {
+                        if (e.pointerType !== "touch" && !dragRef.current) {
+                          setInspect(null);
+                        }
+                      }}
                     >
                       {item &&
                         !(
@@ -483,7 +599,12 @@ export function InventoryPanel({
                   onPointerDown={
                     item ? startDrag(item, { type: "inv", index }) : undefined
                   }
-                  onPointerEnter={() => item && setInspected(item)}
+                  onPointerEnter={item ? inspectItem(item) : undefined}
+                  onPointerLeave={(e) => {
+                    if (e.pointerType !== "touch" && !dragRef.current) {
+                      setInspect(null);
+                    }
+                  }}
                 >
                   {item &&
                     !(
@@ -491,48 +612,6 @@ export function InventoryPanel({
                     ) && <ItemIcon sprites={sprites} item={item} />}
                 </div>
               ))}
-            </div>
-
-            {/* Item card */}
-            <div className="item-card">
-              {shown ? (
-                <>
-                  <div className="item-card-header">
-                    <ItemIcon sprites={sprites} item={shown} size={40} />
-                    <PixelText
-                      font={font}
-                      text={equipmentName(shown)}
-                      scale={2}
-                      color={TIER_COLORS[shown.tier]}
-                    />
-                  </div>
-                  {itemLines(state, shown).map((line) => (
-                    <PixelText
-                      key={line.text}
-                      font={font}
-                      text={line.text}
-                      scale={1}
-                      color={line.color}
-                    />
-                  ))}
-                  {shown.affixes.map((affix, i) => (
-                    <PixelText
-                      key={i}
-                      font={font}
-                      text={affixLine(affix)}
-                      scale={1}
-                      color={AFFIX_COLORS[affix.kind]}
-                    />
-                  ))}
-                </>
-              ) : (
-                <PixelText
-                  font={font}
-                  text="DRAG TO EQUIP - DROP OUTSIDE TO DESTROY"
-                  scale={1}
-                  color="#9aa3ad"
-                />
-              )}
             </div>
           </div>
         </div>
@@ -560,12 +639,20 @@ export function InventoryPanel({
         </div>
       )}
 
+      {/* WoW-style tooltip for the hovered / tapped item, hidden while a drag
+          is in flight (the drag ghost speaks for the item instead). */}
+      {inspect && !(drag && drag.moved) && (
+        <ItemTooltip
+          font={font}
+          state={state}
+          item={inspect.item}
+          anchor={inspect.anchor}
+        />
+      )}
+
       {/* Drag ghost following the pointer */}
       {drag && drag.moved && (
-        <div
-          className="drag-ghost"
-          style={{ left: drag.x - 18, top: drag.y - 18 }}
-        >
+        <div className="drag-ghost" style={{ left: drag.x, top: drag.y }}>
           <ItemIcon sprites={sprites} item={drag.item} />
         </div>
       )}

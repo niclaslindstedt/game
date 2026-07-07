@@ -1040,31 +1040,38 @@ body {
 
 .equip-slots {
   display: flex;
-  gap: 0.75rem;
+  gap: 0.5rem;
 }
 
 .equip-col {
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 0.35rem;
+  gap: 0.3rem;
 }
 
+/* Diablo-style compact grid: small square cells packed tightly. */
 .inv-grid {
   display: grid;
-  grid-template-columns: repeat(4, 3.25rem);
-  gap: 0.4rem;
+  grid-template-columns: repeat(4, 2.4rem);
+  gap: 0.3rem;
 }
 
 .inv-cell {
-  width: 3.25rem;
-  height: 3.25rem;
+  width: 2.4rem;
+  height: 2.4rem;
   display: grid;
   place-items: center;
   background: #0b0d10;
   border: 2px solid #1d2530;
   cursor: grab;
   touch-action: none;
+}
+
+/* The equipped slots sit a touch larger than bag cells for hierarchy. */
+.equip-cell {
+  width: 2.9rem;
+  height: 2.9rem;
 }
 
 .inv-cell.drop-ok {
@@ -1074,6 +1081,39 @@ body {
 .pixel-img {
   image-rendering: pixelated;
   pointer-events: none;
+}
+
+/* Item icons size in rem so they scale with the root-font UI breakpoint
+   instead of staying a fixed pixel size on large screens. */
+.inv-item-icon {
+  width: 1.7rem;
+  height: 1.7rem;
+}
+
+.equip-cell .inv-item-icon {
+  width: 2.1rem;
+  height: 2.1rem;
+}
+
+.drag-ghost .inv-item-icon {
+  width: 2rem;
+  height: 2rem;
+}
+
+/* Character portrait heading the equipment column (Diablo/WoW-style). */
+.char-portrait {
+  display: grid;
+  place-items: center;
+  width: 3.4rem;
+  height: 3.4rem;
+  background: #0b0d10;
+  border: 2px solid #2a3542;
+  box-shadow: inset 0 0 0 1px rgba(0, 0, 0, 0.5);
+}
+
+.char-avatar-img {
+  width: 2.6rem;
+  height: 2.6rem;
 }
 
 /* The stat lines fold into two columns; the STATS header spans both. */
@@ -1101,23 +1141,31 @@ body {
   gap: 0.35rem;
 }
 
-.item-card {
+/* WoW-style item tooltip: a floating, near-opaque card with a rarity-colored
+   border (set inline from the item tier) that hovers next to the item it
+   describes. Portaled to <body> and positioned in viewport coords by
+   ItemTooltip, so it never clips against the panel's scroll box. Purely
+   informational — pointer-transparent so taps fall through to dismiss it. */
+.item-tooltip {
+  position: fixed;
+  z-index: 60;
   display: flex;
   flex-direction: column;
-  gap: 0.4rem;
-  min-height: 6.5rem;
-  padding: 0.75rem;
+  gap: 0.35rem;
+  max-width: 16rem;
+  padding: 0.6rem 0.7rem;
   box-sizing: border-box;
-  align-self: stretch;
-  background: #0b0d10;
+  pointer-events: none;
+  background: rgba(6, 9, 13, 0.96);
   border: 2px solid #1d2530;
+  box-shadow:
+    0 0 0 1px rgba(0, 0, 0, 0.6),
+    0 6px 18px rgba(0, 0, 0, 0.65);
 }
 
-/* The item card's title row: the pixel icon beside the (tier-colored) name. */
-.item-card-header {
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
+.item-tooltip canvas {
+  flex: 0 0 auto;
+  align-self: flex-start;
 }
 
 /* Floats over the bag while a bag item is dragged clear of the panel, warning
@@ -1149,11 +1197,7 @@ body {
   }
 
   .inv-grid {
-    grid-template-columns: repeat(6, 3.25rem);
-  }
-
-  .item-card {
-    min-height: 5rem;
+    grid-template-columns: repeat(6, 2.4rem);
   }
 }
 
@@ -1162,13 +1206,13 @@ body {
   z-index: 50;
   pointer-events: none;
   opacity: 0.9;
+  transform: translate(-50%, -50%);
 }
 
 /* PixelText renders to a <canvas>; never let flex stretch it. */
 .inventory-left,
 .inventory-right,
-.char-sheet,
-.item-card {
+.char-sheet {
   align-items: flex-start;
 }
 
@@ -1185,11 +1229,6 @@ body {
 
 /* Slot labels sit centered over their cells. */
 .equip-col canvas {
-  align-self: center;
-}
-
-/* The item name sits centered against its icon in the card header. */
-.item-card-header canvas {
   align-self: center;
 }
 
