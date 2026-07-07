@@ -8,15 +8,27 @@
 import { describe, expect, it } from "vitest";
 
 import {
+  createGame,
+  dismissIntro,
   enemyDef,
   enemyPowerScale,
   MENACE,
   menaceStage,
+  menaceWarmup,
+  skipCutscene,
   step,
 } from "@game/core";
 import type { Equipment, GameState } from "@game/core";
 
 import { DT, idle, makeEnemy, run, startGame, stopWaves } from "./helpers.ts";
+
+/** A run past the prelude on a chosen difficulty (fixtures are installed). */
+function startOn(difficulty: string, levelId = "test_level"): GameState {
+  const state = createGame(42, levelId, difficulty as never);
+  skipCutscene(state);
+  dismissIntro(state);
+  return state;
+}
 
 /** Slot a specific weapon so the swing/shot damage is known. */
 function equip(state: GameState, defId: string): void {
@@ -56,6 +68,7 @@ describe("menace — the meter", () => {
   it("an overpowered kill jolts the meter and lures the horde in", () => {
     const state = startGame();
     bareStage(state);
+    state.player.level = 6; // past the early-game warmup so the jolt isn't damped
     equip(state, "test_hammer"); // melee, 34 dmg, reach 44
     const { x, y } = state.player.pos;
     // One 10-hp fodder in reach: a 34-damage swing overkills it by ≥ 24, so the
@@ -78,13 +91,15 @@ describe("menace — the meter", () => {
   it("an overkill crossing a stage boundary emits menaceRose", () => {
     const state = startGame();
     bareStage(state);
+    state.player.level = 6; // warmed up so the overkill jolt lands at full weight
     equip(state, "test_hammer");
     const { x, y } = state.player.pos;
     state.enemies.push(
       makeEnemy({ pos: { x: x + 20, y }, hp: 10, maxHp: 10 }, "test_fodder"),
     );
-    // Park menace just below stage 1: this kill's overkill (≥ 24 × perOverkill)
-    // tips it over — being wildly overpowered escalates on the spot.
+    // Park menace just below stage 1: this kill's overkill — ≥ 2.4 healthbars
+    // (24 / 10 maxHp) × perOverkill × sensitivity — tips it over. Being wildly
+    // overpowered relative to the mob escalates on the spot.
     state.menace = MENACE.perStage - 0.5;
 
     step(state, idle, DT);
@@ -97,9 +112,12 @@ describe("menace — the meter", () => {
 
   it("sustained damage output heats the meter even without overkill", () => {
     // The rolling DPS/kill-rate driver: grind a tanky mob (no killing blow, so
-    // no overkill spike) and the meter still climbs purely from output.
-    const state = startGame();
+    // no overkill spike) and the meter still climbs purely from output. Run it
+    // on a sensitive difficulty with a warmed-up hero, since the DPS channel is
+    // deliberately a gentle supporting term (see MENACE.perDps).
+    const state = startOn("jesus");
     bareStage(state);
+    state.player.level = 8;
     equip(state, "test_hammer");
     const { x, y } = state.player.pos;
     state.enemies.push(
@@ -128,6 +146,67 @@ describe("menace — the meter", () => {
     // ~decayPerSec drained over the second, never below zero.
     expect(state.menace).toBeLessThan(30);
     expect(state.menace).toBeCloseTo(30 - MENACE.decayPerSec, 0);
+  });
+});
+
+describe("menace — difficulty and warmup gate the heat", () => {
+  /** Menace banked by one identical overkill kill on the given difficulty. */
+  function joltOn(difficulty: string, level: number): number {
+    const state = startOn(difficulty);
+    bareStage(state);
+    state.player.level = level;
+    equip(state, "test_hammer"); // 34 dmg vs a 10-hp fodder → fixed overkill
+    const { x, y } = state.player.pos;
+    state.enemies.push(
+      makeEnemy({ pos: { x: x + 20, y }, hp: 10, maxHp: 10 }, "test_fodder"),
+    );
+    step(state, idle, DT);
+    expect(state.stats.kills).toBe(1);
+    return state.menace;
+  }
+
+  it("the same overpowered kill escalates far harder as difficulty climbs", () => {
+    const warmed = 8; // past the warmup so only the difficulty mult differs
+    const easy = joltOn("easy", warmed);
+    const medium = joltOn("medium", warmed);
+    const hard = joltOn("hard", warmed);
+    const nightmare = joltOn("nightmare", warmed);
+    const jesus = joltOn("jesus", warmed);
+    expect(easy).toBeGreaterThan(0);
+    expect(medium).toBeGreaterThan(easy);
+    expect(hard).toBeGreaterThan(medium);
+    expect(nightmare).toBeGreaterThan(hard);
+    expect(jesus).toBeGreaterThan(nightmare);
+    // EASY is near-inert: a rampage is practically impossible even for an
+    // overpowered build (a whole stage is MENACE.perStage of heat).
+    expect(easy).toBeLessThan(MENACE.perStage * 0.1);
+  });
+
+  it("early levels are damped so a fresh hero cannot rampage yet", () => {
+    // The same kill on the same difficulty banks far less at level 1 than once
+    // the player has grown into their power.
+    expect(joltOn("medium", 1)).toBeLessThan(joltOn("medium", 8));
+    // The warmup eases from the floor at level 1 up to 1.0 by 1 + warmupLevels.
+    expect(menaceWarmup({ player: { level: 1 } } as GameState)).toBeCloseTo(
+      MENACE.warmupFloor,
+    );
+    expect(
+      menaceWarmup({ player: { level: 1 + MENACE.warmupLevels } } as GameState),
+    ).toBeCloseTo(1);
+  });
+
+  it("even a god-tier build barely warms the meter on EASY", () => {
+    // A maxed hero clearing a whole warmed-up run on EASY stays cool: the
+    // difficulty's menaceMult keeps gain below the decay floor.
+    const state = startOn("easy");
+    state.player.level = 20;
+    for (let i = 0; i < 20 * 60; i++) {
+      // Feed the meter a brutal, sustained overkill stream by hand.
+      state.combatDps = 800;
+      state.combatKillRate = 8;
+      step(state, idle, DT);
+    }
+    expect(menaceStage(state)).toBe(0);
   });
 });
 

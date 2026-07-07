@@ -29,6 +29,16 @@ export type DifficultyDef = {
   /** Multiplies the wave spawner's live cap AND floor (`maxAlive`,
    * `minAlive`) — harder difficulties keep a denser field on screen. */
   aliveMult: number;
+  /**
+   * How sensitively the rampage (menace) meter answers this difficulty: a
+   * master multiplier on all menace gain (rolling DPS/kill-rate heat AND
+   * overkill jolts — see `menaceSensitivity` in menace.ts). EASY barely reacts
+   * (a rampage is almost impossible even for a strong build); MEDIUM is the 1.0
+   * baseline where only a genuinely overpowered player heats it; the harder
+   * rungs climb toward JESUS, where a mere handful of kills tips it over. Decay
+   * is a fixed cooler, so a rung below 1.0 lets ordinary fighting trend to zero.
+   */
+  menaceMult: number;
   /** Added to the base minion drop chance (LOOT.dropChance). */
   dropChanceBonus: number;
   /**
@@ -49,6 +59,7 @@ export const DIFFICULTY_DEFS: Record<Difficulty, DifficultyDef> = {
     mobCountMult: 0.7,
     mobHpMult: 0.8,
     aliveMult: 0.7,
+    menaceMult: 0.05,
     dropChanceBonus: 0,
     tierChanceBonus: {},
   },
@@ -61,6 +72,7 @@ export const DIFFICULTY_DEFS: Record<Difficulty, DifficultyDef> = {
     mobCountMult: 1,
     mobHpMult: 1,
     aliveMult: 1,
+    menaceMult: 0.6,
     dropChanceBonus: 0,
     tierChanceBonus: {},
   },
@@ -73,6 +85,7 @@ export const DIFFICULTY_DEFS: Record<Difficulty, DifficultyDef> = {
     mobCountMult: 1.4,
     mobHpMult: 1.35,
     aliveMult: 1.3,
+    menaceMult: 1.1,
     dropChanceBonus: 0.03,
     tierChanceBonus: { magic: 0.1, rare: 0.08, epic: 0.06 },
   },
@@ -85,6 +98,7 @@ export const DIFFICULTY_DEFS: Record<Difficulty, DifficultyDef> = {
     mobCountMult: 1.9,
     mobHpMult: 1.75,
     aliveMult: 1.65,
+    menaceMult: 2.5,
     dropChanceBonus: 0.06,
     tierChanceBonus: { magic: 0.18, epic: 0.14, legendary: 0.04 },
   },
@@ -97,6 +111,7 @@ export const DIFFICULTY_DEFS: Record<Difficulty, DifficultyDef> = {
     mobCountMult: 2.6,
     mobHpMult: 2.25,
     aliveMult: 2.1,
+    menaceMult: 6.0,
     dropChanceBonus: 0.1,
     tierChanceBonus: { magic: 0.26, epic: 0.22, legendary: 0.09 },
   },

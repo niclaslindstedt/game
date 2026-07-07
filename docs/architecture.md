@@ -130,9 +130,14 @@ run against synthetic fixtures with no shipped content (see
   all-clear trophy), the def's guaranteed drops for bosses and elites.
   It also feeds the menace meter on each kill and power-scales an
   elite/boss to the player on its first blow.
-- **`src/game/menace.ts`** — the escalation system: overkill + kill pace
-  bank `state.menace` (`bankMenace`), which idle time bleeds off
-  (`decayMenace`, run from `step.ts`). Its `menaceStage` lures a denser
+- **`src/game/menace.ts`** — the escalation system: the player's rolling
+  DPS/kill-rate (`tickMenace`) plus relative-overkill jolts on a killing
+  blow (`bankOverkill`) bank `state.menace`, which idle time bleeds off (a
+  fixed decay, also in `tickMenace`, run from `step.ts`). All gain is scaled
+  by `menaceSensitivity` — the difficulty's `menaceMult` times an early-game
+  `menaceWarmup` — so a rampage takes a genuinely overpowered build, is
+  practically impossible in the opening levels, and gets touchier the harder
+  the difficulty. Its `menaceStage` lures a denser
   horde (`lureMult`, read by the wave spawner), evolves freshly-spawned
   minions (`evolutionHpMult`, stamped in `create.ts`'s `spawnEnemy`), and
   — with the player's level — power-matches elites/bosses when they engage

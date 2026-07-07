@@ -77,7 +77,7 @@ export function hitEnemy(
   // past the mob's last hp — jolts the menace meter and lures the nearby horde
   // in. `enemy.hp` is now ≤ 0, so its magnitude is the overkill. The meter also
   // heats continuously from the player's rolling output (see tickMenace).
-  bankOverkill(state, -enemy.hp);
+  bankOverkill(state, -enemy.hp, enemy.maxHp);
 
   grantXp(state, def.xp ?? Math.round(enemy.maxHp * LEVELING.xpPerHp));
 
