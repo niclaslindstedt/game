@@ -181,8 +181,12 @@ export function createSynth(): Synth {
     },
 
     now() {
-      const c = ensure();
-      return c && c.state === "running" ? c.currentTime : null;
+      // Never instantiate the context here. Creating an AudioContext outside
+      // a user gesture leaves it in a state some browsers (notably iOS
+      // Safari) will not reliably resume, so a later unlock() could fail to
+      // reach "running" and the theme's scheduler would stay silent. The
+      // context is created only in unlock(), which runs from a real gesture.
+      return ctx && ctx.state === "running" ? ctx.currentTime : null;
     },
 
     tone({
