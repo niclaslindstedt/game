@@ -23,8 +23,32 @@ import {
 import { spriteByName, type GameAssets, type Sprites } from "./assets.ts";
 import { TIER_COLORS } from "./tiers.ts";
 
-/** CSS pixels per world unit — the app's zoom level. */
+/**
+ * CSS pixels per world unit at the mobile-first baseline — the reference
+ * landscape phone (see AGENTS.md). The app is tuned to this zoom.
+ */
 export const VIEW_SCALE = 2;
+
+/**
+ * Large screens (desktop, big tablets) render everything at 2× the phone
+ * baseline so the phone-sized HUD, text, and sprites stay legible instead of
+ * shrinking into a sea of moon. The DOM UI is bumped to match by doubling the
+ * root font-size at the same breakpoint (styles.css) — keep the two in sync.
+ * Gate on the *smaller* viewport dimension so only genuinely large screens
+ * scale: a landscape phone (~390 tall) keeps the baseline; a desktop window
+ * (≥700 in both axes) doubles.
+ */
+export const UI_SCALE_BREAKPOINT_PX = 700;
+
+/** Extra zoom multiplier for a viewport (1 on phones, 2 on desktop). */
+export function uiScaleFor(width: number, height: number): number {
+  return Math.min(width, height) >= UI_SCALE_BREAKPOINT_PX ? 2 : 1;
+}
+
+/** World zoom (CSS px per world unit) for the given viewport. */
+export function viewScaleFor(width: number, height: number): number {
+  return VIEW_SCALE * uiScaleFor(width, height);
+}
 
 const TILE = 16;
 

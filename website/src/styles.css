@@ -27,6 +27,19 @@
   --accent: #7ef0c8;
 }
 
+/* Large screens (desktop, big tablets): render the whole UI at 2× the
+   mobile-first baseline so the phone-tuned HUD and pixel text stay legible
+   instead of shrinking on a big display. Every UI size is expressed in rem
+   (PixelText canvases included — see PixelText.tsx), so doubling the root
+   font-size scales the entire interface in one move. The world canvas is
+   zoomed to match in render.ts (`viewScaleFor`); keep this breakpoint in sync
+   with `UI_SCALE_BREAKPOINT_PX` (700, gated on the smaller viewport axis). */
+@media (min-width: 700px) and (min-height: 700px) {
+  :root {
+    font-size: 200%;
+  }
+}
+
 html,
 body {
   margin: 0;

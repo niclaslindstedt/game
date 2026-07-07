@@ -73,6 +73,7 @@ import {
   drawEffects,
   drawFrame,
   VIEW_SCALE,
+  viewScaleFor,
   type Effect,
 } from "./render.ts";
 import { getSettings } from "./settings.ts";
@@ -262,11 +263,14 @@ export function GameScreen({
     const unlock = () => synth.unlock();
     canvas.addEventListener("pointerdown", unlock);
 
-    // Backing store in world units; CSS upscales by VIEW_SCALE (pixelated).
+    // Backing store in world units; CSS upscales by the view scale
+    // (pixelated). The scale is the phone baseline (VIEW_SCALE), doubled on
+    // large/desktop viewports so the world matches the 2×-scaled DOM UI.
     const cssToWorld = { x: 1 / VIEW_SCALE, y: 1 / VIEW_SCALE };
     const resize = () => {
-      canvas.width = Math.max(1, Math.ceil(canvas.clientWidth / VIEW_SCALE));
-      canvas.height = Math.max(1, Math.ceil(canvas.clientHeight / VIEW_SCALE));
+      const scale = viewScaleFor(window.innerWidth, window.innerHeight);
+      canvas.width = Math.max(1, Math.ceil(canvas.clientWidth / scale));
+      canvas.height = Math.max(1, Math.ceil(canvas.clientHeight / scale));
       cssToWorld.x = canvas.width / canvas.clientWidth;
       cssToWorld.y = canvas.height / canvas.clientHeight;
     };
