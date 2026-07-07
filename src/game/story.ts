@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
 // The story systems: in-world dialogue (elite ambushes, boss confrontations,
-// story-item lore) and the locked doors their keys open. Dialogue freezes
+// unique-mob last words, story-item lore) and the locked doors their keys
+// open. Dialogue freezes
 // the run in the `dialogue` phase — `step()` refuses to advance anything but
 // `playing` — and `advanceDialogue` is the player's tap, safe to call from
 // the app outside `step()` exactly like the inventory mutators.
@@ -22,13 +23,20 @@ export function dialogueContent(dialogue: DialogueState): {
   portrait: string;
   pages: string[][];
 } {
-  if (dialogue.source.kind === "enemy") {
+  if (
+    dialogue.source.kind === "enemy" ||
+    dialogue.source.kind === "enemyDeath"
+  ) {
     const def = enemyDef(dialogue.source.defId);
-    return {
-      speaker: def.name,
-      portrait: def.sprite,
-      pages: def.dialogue ?? [],
-    };
+    // The arrival scene runs the def's `dialogue`; the death scene runs its
+    // `lastWords` as a single page — same speaker, same portrait box.
+    const pages =
+      dialogue.source.kind === "enemyDeath"
+        ? def.lastWords
+          ? [def.lastWords]
+          : []
+        : (def.dialogue ?? []);
+    return { speaker: def.name, portrait: def.sprite, pages };
   }
   const def = storyItemDef(dialogue.source.defId);
   return { speaker: def.name, portrait: def.icon, pages: def.lore };
@@ -64,6 +72,26 @@ export function startEnemyDialogue(state: GameState, enemy: Enemy): void {
     type: "dialogueStarted",
     speaker: enemyDef(enemy.defId).name,
   });
+}
+
+/**
+ * Open a unique mob's death scene mid-step: reuse the arrival dialogue box
+ * to play its `lastWords` as the speaker falls. Called from the kill path
+ * (loot.ts) once the enemy is already off the board, so it carries only the
+ * def id. Silent for mobs without last words, and it yields to any scene
+ * already on stage (a rare double-kill keeps the first speaker). The
+ * `enemyLastWords` event lets the app swap the arrival knock for a somber
+ * cue; the box itself resumes play — or a pending level-up — when tapped
+ * through, exactly like every other dialogue.
+ */
+export function startDeathWords(state: GameState, defId: string): void {
+  const def = enemyDef(defId);
+  if (!def.lastWords || def.lastWords.length === 0 || state.dialogue !== null) {
+    return;
+  }
+  state.dialogue = { source: { kind: "enemyDeath", defId }, page: 0 };
+  state.phase = "dialogue";
+  state.events.push({ type: "enemyLastWords", defId });
 }
 
 /**

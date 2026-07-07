@@ -49,7 +49,10 @@ hundredth weapon means adding catalog entries, not touching the simulation.
   rushes into view at `ai.rushSpeed`, delivers its `dialogue` pages (the
   run pauses in the `dialogue` phase), then fights like a mid-boss and
   drops a signature weapon plus story items. Bosses carry longer
-  `dialogue` for the stare-down before the fight. Level 1 ships the SpaceZ
+  `dialogue` for the stare-down before the fight. Every unique mob also
+  carries `lastWords` — a short dying gasp replayed through the same
+  dialogue box (an `enemyDeath` scene) as it falls, so a story death lands
+  harder than a nameless minion's. Level 1 ships the SpaceZ
   night shift (intern → lab scientist → propulsion engineer → security
   guard → hazmat tech), four elites who know too much (THE NIGHT MANAGER,
   CHIEF OF SECURITY, DR. NOVA, THE JANITOR), plus MUSKRAT, the mutant rat

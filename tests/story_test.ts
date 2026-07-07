@@ -162,7 +162,7 @@ describe("elite ambushes", () => {
     expect(state.phase).toBe("levelup");
   });
 
-  it("forfeits the scene — never the drops — when killed mid-rush", () => {
+  it("forfeits the arrival scene — never the drops or last words — mid-rush", () => {
     const state = startGame();
     clearStage(state);
     // Inside blaster range but outside the speak radius: the bolt reaches
@@ -173,8 +173,17 @@ describe("elite ambushes", () => {
 
     run(state, idle, 60, (s) => !s.enemies.includes(elite));
     expect(state.enemies).not.toContain(elite);
-    expect(state.phase).toBe("playing");
-    expect(state.dialogue).toBeNull();
+    // The arrival ambush never opened (the speaker died mid-rush), but the
+    // death still takes the stage: its last words, not the arrival scene.
+    expect(elite.spoke).toBeFalsy();
+    expect(state.phase).toBe("dialogue");
+    expect(state.dialogue?.source).toEqual({
+      kind: "enemyDeath",
+      defId: "night_manager",
+    });
+    expect(dialogueContent(state.dialogue!).pages).toEqual([
+      enemyDef("night_manager").lastWords,
+    ]);
 
     const drops = state.items;
     expect(

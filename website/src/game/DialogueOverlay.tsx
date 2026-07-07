@@ -30,6 +30,9 @@ export function DialogueOverlay({
   if (!dialogue) return null;
   const content = dialogueContent(dialogue);
   const page = content.pages[dialogue.page] ?? [];
+  // A story-item find gets a banner so the box unmistakably reads as "you
+  // picked this up — here's what it is", not another mob talking at you.
+  const isStoryItem = dialogue.source.kind === "story";
   // Enemy speakers bob live on the canvas behind the box; story items show
   // their icon as a portrait so the find stays on screen while it talks.
   const portrait =
@@ -44,6 +47,16 @@ export function DialogueOverlay({
       role="presentation"
     >
       <div className="dialogue-box">
+        {isStoryItem && (
+          <div className="dialogue-acquired">
+            <PixelText
+              font={font}
+              text="STORY ITEM ACQUIRED"
+              scale={1}
+              color="#7fe3a0"
+            />
+          </div>
+        )}
         <div className="dialogue-header">
           {portrait && (
             <img

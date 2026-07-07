@@ -244,13 +244,16 @@ export type DoorState = {
 
 /**
  * The running conversation while `phase === "dialogue"`: an elite or boss
- * delivering its scene, or a picked-up story item revealing its lore. The
- * pages live on the def (EnemyDef.dialogue / StoryItemDef.lore); this
- * tracks only who speaks and how far the player has tapped.
+ * delivering its scene, a unique mob gasping its last words as it dies, or a
+ * picked-up story item revealing its lore. The pages live on the def
+ * (EnemyDef.dialogue / EnemyDef.lastWords / StoryItemDef.lore); this tracks
+ * only who speaks and how far the player has tapped. `enemyDeath` carries no
+ * `enemyId` — the speaker is already off the board.
  */
 export type DialogueState = {
   source:
     | { kind: "enemy"; enemyId: number; defId: string }
+    | { kind: "enemyDeath"; defId: string }
     | { kind: "story"; defId: string };
   /** Index of the page currently on screen. */
   page: number;
@@ -311,6 +314,13 @@ export type GameEvent =
   | { type: "bossDefeated"; pos: Vec2 }
   /** A speaker took the stage: the run paused into the `dialogue` phase. */
   | { type: "dialogueStarted"; speaker: string }
+  /**
+   * A unique mob (elite/boss) died and its parting line took the stage — the
+   * run paused into the `dialogue` phase on a `enemyDeath` source. Distinct
+   * from `dialogueStarted` so the app can give the death its own somber cue
+   * instead of the arrival knock.
+   */
+  | { type: "enemyLastWords"; defId: string }
   /** A plot piece was picked up (`defId` keys into STORY_ITEM_DEFS). */
   | { type: "storyItemCollected"; defId: string }
   /** A locked door recognized its key and slid open. */
