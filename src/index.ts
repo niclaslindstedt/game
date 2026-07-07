@@ -50,6 +50,7 @@ export {
   isBetterEquipment,
   moveInventoryItem,
   openInventory,
+  playerAppearance,
   playerCritChance,
   playerSpeed,
   playerSuited,
@@ -186,6 +187,7 @@ export type {
   Projectile,
   StatName,
   Tier,
+  TileSpec,
   WeaponClass,
 } from "./game/types.ts";
 export type { Vec2 } from "@game/lib/vec.ts";

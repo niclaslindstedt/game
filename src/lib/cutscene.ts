@@ -14,6 +14,18 @@ import { distance, moveToward, type Vec2 } from "./vec.ts";
 /** A static prop on the stage (a couch, a door…). Purely visual. */
 export type CutsceneProp = { kind: string; pos: Vec2 };
 
+/**
+ * The flat-color palette a scene's backdrop paints with. Data, not code, so
+ * the renderer never hardcodes per-scene colors — a scene carries its own.
+ */
+export type CutsceneBackdrop = {
+  wall: string;
+  floor: string;
+  trim: string;
+  /** Floor line in world-px from the top; omitted = 65% of stage height. */
+  floorY?: number;
+};
+
 /** The fixed backdrop and dressing a scene plays out on. */
 export type CutsceneStage = {
   /** Stage size in world px — the renderer letterboxes/centers it. */
@@ -21,6 +33,8 @@ export type CutsceneStage = {
   height: number;
   /** Backdrop key for the renderer ("livingRoom", "lab", …). */
   backdrop: string;
+  /** Backdrop colors the renderer paints; omitted = the renderer's default. */
+  palette?: CutsceneBackdrop;
   props: CutsceneProp[];
 };
 
@@ -28,6 +42,9 @@ export type CutsceneActorDef = {
   id: string;
   /** Sprite key the renderer draws (poses swap it mid-scene). */
   sprite: string;
+  /** Display name shown over this actor's speech ("ME", "ADA"); omitted =
+   * the id upper-cased. */
+  name?: string;
   at: Vec2;
   /** Which way the sprite mirrors initially (walks update it). */
   faceLeft?: boolean;

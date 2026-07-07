@@ -26,6 +26,7 @@ const PRELUDE: CutsceneDef = {
     width: 224,
     height: 126,
     backdrop: "livingRoom",
+    palette: { wall: "#262838", floor: "#4a3a2c", trim: "#1a1c28", floorY: 78 },
     props: [
       { kind: "window", pos: { x: 112, y: 52 } },
       { kind: "door", pos: { x: 196, y: 80 } },
@@ -39,13 +40,20 @@ const PRELUDE: CutsceneDef = {
     // The hero never leaves the couch — that is the whole joke.
     {
       id: "hero",
+      name: "ME",
       sprite: "hero_couch",
       // One px below the couch anchor: painted after it, reading as seated
       // in front of the backrest instead of hidden behind the cushions.
       at: { x: 98, y: 97 },
       faceLeft: true,
     },
-    { id: "ada", sprite: "ada", at: { x: 130, y: 102 }, faceLeft: true },
+    {
+      id: "ada",
+      name: "ADA",
+      sprite: "ada",
+      at: { x: 130, y: 102 },
+      faceLeft: true,
+    },
   ],
   beats: [
     { kind: "fade", to: 1, ms: 0 }, // open on black…

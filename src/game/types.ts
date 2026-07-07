@@ -204,7 +204,10 @@ export type Item =
 
 /** A decorative feature scattered at level creation — rendered, no collision. */
 export type Decor = {
+  /** Def key for the piece (debugging/analytics); the renderer draws `sprite`. */
   kind: string;
+  /** Sprite name the renderer blits — resolved from the level def. */
+  sprite: string;
   pos: Vec2;
 };
 
@@ -215,8 +218,10 @@ export type Decor = {
  */
 export type Obstacle = {
   id: number;
-  /** Sprite/kind key for the renderer ("boulder", "rock"). */
+  /** Def key for the piece (analytics/debugging). */
   kind: string;
+  /** Sprite name the renderer blits — resolved from the level def. */
+  sprite: string;
   pos: Vec2;
   /** Collision radius in world px. */
   radius: number;
@@ -224,10 +229,29 @@ export type Obstacle = {
   jumpable: boolean;
 };
 
-/** A fixed story prop (the lander, the flag, …) placed by the level def. */
+/** A fixed story prop (a lander, a flag, …) placed by the level def. */
 export type Landmark = {
   kind: string;
+  /** Sprite name the renderer blits — resolved from the level def. */
+  sprite: string;
+  /**
+   * Where the sprite meets its pos: `base` pins the sprite's foot to `pos`
+   * (a standing prop like a flag or mast), `center` centers it. Data, so the
+   * renderer never special-cases a particular prop kind.
+   */
+  anchor: "base" | "center";
   pos: Vec2;
+};
+
+/**
+ * How the renderer paints a level's ground. Data on the level def, so a new
+ * biome is a new entry — no renderer edit. `ground.rare` scatters into
+ * `ground.common` every `rareEvery`-th cell; an optional `patch` clusters a
+ * second pair on a coarse grid for gravel/vent-style clumps.
+ */
+export type TileSpec = {
+  ground: { common: string; rare: string; rareEvery: number };
+  patch?: { a: string; b: string; every: number };
 };
 
 /**
@@ -376,11 +400,13 @@ export type LevelInfo = {
   name: string;
   width: number;
   height: number;
-  /** Downward acceleration in world px/s² — per level: moon ≈ earth/6. */
+  /** Downward acceleration in world px/s² — lower gravity floats jumps. */
   gravity: number;
-  /** Tileset/mood key for the renderer ("moon", "earth", …). */
+  /** Tileset/mood key for the renderer. */
   biome: string;
-  /** What the HUD calls this level's hostiles ("GHOSTS", "STAFF"). */
+  /** How the renderer paints the ground for this level. */
+  tiles: TileSpec;
+  /** What the HUD calls this level's hostiles. */
   foes: string;
 };
 

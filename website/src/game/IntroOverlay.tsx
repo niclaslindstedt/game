@@ -7,6 +7,8 @@ import { difficultyDef, levelDef, type GameState } from "@game/core";
 import { PixelText } from "@ui/lib/PixelText.tsx";
 import type { PixelFont } from "@ui/lib/pixel-font.ts";
 
+import { ENTER_LABEL } from "./copy.ts";
+
 export function IntroOverlay({
   state,
   font,
@@ -47,7 +49,7 @@ export function IntroOverlay({
           aria-label="start-level"
           onClick={onBegin}
         >
-          <PixelText font={font} text="DESCEND" scale={3} color="#0b0d10" />
+          <PixelText font={font} text={ENTER_LABEL} scale={3} color="#0b0d10" />
         </button>
         <PixelText
           font={font}

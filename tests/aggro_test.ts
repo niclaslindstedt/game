@@ -20,9 +20,11 @@ function placeObstacle(
   dx: number,
   jumpable: boolean,
 ): Obstacle {
+  const kind = jumpable ? "rock" : "boulder";
   const obstacle: Obstacle = {
     id: 8000,
-    kind: jumpable ? "rock" : "boulder",
+    kind,
+    sprite: kind,
     pos: { x: state.player.pos.x + dx, y: state.player.pos.y },
     radius: 12,
     jumpable,

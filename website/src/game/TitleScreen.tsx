@@ -12,6 +12,8 @@ import { PixelText } from "@ui/lib/PixelText.tsx";
 
 import { IDENTITY } from "../identity.ts";
 
+import { HELP_LINES } from "./copy.ts";
+
 import { loadGameAssets, spriteDataUrl, type GameAssets } from "./assets.ts";
 import { synth } from "./audio.ts";
 import { playTitleMusic } from "./music/index.ts";
@@ -28,31 +30,6 @@ const DIFFICULTY_COLORS: Record<Difficulty, string> = {
   nightmare: "#ff8c42",
   jesus: "#d83a3a",
 };
-
-const HELP_LINES = [
-  "STEER WITH THE POINTER - ON DESKTOP",
-  "YOUR CHARACTER CHASES THE CURSOR. ON",
-  "TOUCH, HOLD AND DRAG - A JOYSTICK",
-  "APPEARS UNDER YOUR FINGER AND YOU",
-  "WALK THE WAY YOU DRAG.",
-  "",
-  "TAP TO JUMP (WITH THE OTHER HAND",
-  "WHILE STEERING) OR PRESS SPACE -",
-  "MOON GRAVITY CARRIES YOU OVER THE",
-  "GHOSTS.",
-  "",
-  "YOUR CHARACTER FIGHTS ON ITS OWN WITH",
-  "WHATEVER IS EQUIPPED. LOOT THE",
-  "HAUNTING, SPEND LEVEL-UPS, AND TAKE",
-  "THE FIGHT TO THE OLD FLAG.",
-  "",
-  "CLICK (OR THE USE BUTTON, OR E) TO",
-  "USE A CARRIED POWER. PRESS I FOR THE",
-  "BAG. TUNE IT ALL UNDER SETTINGS.",
-  "",
-  "WORKS OFFLINE - INSTALL IT AS AN APP",
-  "FROM YOUR BROWSER MENU.",
-];
 
 const pct = (v: number) => `${Math.round(v * 100)}%`;
 /** 0 → 25 → 50 → 75 → 100 → 0, in quarter steps. */
