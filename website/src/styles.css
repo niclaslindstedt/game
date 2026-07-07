@@ -231,6 +231,29 @@ body {
   box-shadow: 0 1px 0 rgba(11, 13, 16, 0.6);
 }
 
+/* Portrait (phone held vertically): the reference is landscape, so the
+   centered clock unit assumes there is spare width on either side of the left
+   status unit. A narrow viewport has none — the wider status unit overflows
+   its track and collides with the centered clock. Anchor the clock + foe
+   counter to the top-right instead, with the flexible middle track keeping
+   the two units apart. */
+@media (max-aspect-ratio: 4/3) {
+  .hud-top {
+    grid-template-columns: auto 1fr auto;
+  }
+
+  .hud-center {
+    grid-column: 3;
+    justify-self: end;
+    align-items: flex-end;
+    text-align: right;
+  }
+
+  .hud-rampage {
+    align-items: flex-end;
+  }
+}
+
 .hud-bar {
   width: 7rem;
   height: 0.75rem;
