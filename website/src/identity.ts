@@ -13,7 +13,7 @@
 import config from "../../game.config.json";
 
 export type GameIdentity = {
-  /** Display title, e.g. "Gone in Space". */
+  /** Display title. */
   title: string;
   /** PWA short_name / home-screen label. */
   shortName: string;
@@ -23,14 +23,14 @@ export type GameIdentity = {
   description: string;
   /** Shorter description used by the manifest. */
   shortDescription: string;
-  /** Absolute origin, no trailing slash, e.g. "https://game.niclaslindstedt.se". */
+  /** Absolute origin, no trailing slash (e.g. the deployed site URL). */
   siteUrl: string;
   /** Source repository URL. */
   repoUrl: string;
   author: { name: string; url: string };
-  /** localStorage key prefix, e.g. "gone-in-space". */
+  /** localStorage key prefix, namespacing all persisted keys. */
   storagePrefix: string;
-  /** Precache cache-id prefix, e.g. "game" → `game`, `game-preview`. */
+  /** Precache cache-id prefix (e.g. `foo` → `foo`, `foo-preview`). */
   cacheIdPrefix: string;
   /** Alt text for the OG card image. */
   ogImageAlt: string;
@@ -45,7 +45,7 @@ export const IDENTITY: GameIdentity = config;
 /** `${title} — ${tagline}`: the canonical page title / OG title. */
 export const FULL_TITLE = `${IDENTITY.title} — ${IDENTITY.tagline}`;
 
-/** A namespaced localStorage key, e.g. `gone-in-space:settings`. */
+/** A namespaced localStorage key, `<storagePrefix>:<name>`. */
 export function storageKey(name: string): string {
   return `${IDENTITY.storagePrefix}:${name}`;
 }
