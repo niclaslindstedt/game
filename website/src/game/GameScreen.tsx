@@ -42,7 +42,7 @@ import { startGameLoop } from "@ui/lib/game-loop.ts";
 import { PixelText } from "@ui/lib/PixelText.tsx";
 import { trackPointer } from "@ui/lib/pointer.ts";
 
-import { loadGameAssets, spriteByName, type GameAssets } from "./assets.ts";
+import { loadGameAssets, spriteDataUrl, type GameAssets } from "./assets.ts";
 import { synth } from "./audio.ts";
 import { CutsceneOverlay } from "./CutsceneOverlay.tsx";
 import { DialogueOverlay } from "./DialogueOverlay.tsx";
@@ -525,12 +525,12 @@ export function GameScreen({
                 }}
               >
                 {(() => {
-                  const icon = spriteByName(
+                  const icon = spriteDataUrl(
                     assets.sprites,
                     abilityDef(hud.heldAbilities[0] as string).icon,
                   );
                   return icon ? (
-                    <img src={icon.src} alt="" className="pixel-img use-icon" />
+                    <img src={icon} alt="" className="pixel-img use-icon" />
                   ) : null;
                 })()}
                 <PixelText

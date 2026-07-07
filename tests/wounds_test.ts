@@ -5,7 +5,7 @@
 // elites also "wrecked", bosses also "dying". Guards against adding a mob
 // (or renaming a sprite) without regenerating its battle-damage looks.
 
-import { readdirSync } from "node:fs";
+import { readFileSync } from "node:fs";
 
 import { ENEMY_DEFS, type EnemyRole } from "@game/core";
 import { describe, expect, it } from "vitest";
@@ -17,8 +17,16 @@ const STAGES: Record<EnemyRole, string[]> = {
 };
 
 describe("wounded sprite variants", () => {
-  const assets = new Set(
-    readdirSync(new URL("../website/src/game/assets", import.meta.url)),
+  // The committed sprite-atlas manifest is the shipping sprite inventory.
+  const sprites = new Set(
+    Object.keys(
+      JSON.parse(
+        readFileSync(
+          new URL("../website/src/game/assets/atlas.json", import.meta.url),
+          "utf8",
+        ),
+      ),
+    ),
   );
 
   for (const def of Object.values(ENEMY_DEFS)) {
@@ -26,8 +34,8 @@ describe("wounded sprite variants", () => {
       for (const stage of STAGES[def.role]) {
         for (const frame of [0, 1]) {
           expect(
-            assets.has(`${def.sprite}_${stage}_${frame}.png`),
-            `${def.sprite}_${stage}_${frame}.png missing — run \`make assets\``,
+            sprites.has(`${def.sprite}_${stage}_${frame}`),
+            `${def.sprite}_${stage}_${frame} missing from the atlas — run \`make assets\``,
           ).toBe(true);
         }
       }

@@ -12,7 +12,7 @@ import { dialogueContent, type GameState } from "@game/core";
 import { PixelText } from "@ui/lib/PixelText.tsx";
 import type { PixelFont } from "@ui/lib/pixel-font.ts";
 
-import { spriteByName, type GameAssets } from "./assets.ts";
+import { spriteDataUrl, type GameAssets } from "./assets.ts";
 
 export function DialogueOverlay({
   state,
@@ -34,8 +34,8 @@ export function DialogueOverlay({
   // their icon as a portrait so the find stays on screen while it talks.
   const portrait =
     dialogue.source.kind === "story"
-      ? spriteByName(assets.sprites, content.portrait)
-      : (spriteByName(assets.sprites, `${content.portrait}_0`) ?? null);
+      ? spriteDataUrl(assets.sprites, content.portrait)
+      : (spriteDataUrl(assets.sprites, `${content.portrait}_0`) ?? null);
 
   return (
     <div
@@ -47,7 +47,7 @@ export function DialogueOverlay({
         <div className="dialogue-header">
           {portrait && (
             <img
-              src={portrait.src}
+              src={portrait}
               alt=""
               className="pixel-img dialogue-portrait"
             />

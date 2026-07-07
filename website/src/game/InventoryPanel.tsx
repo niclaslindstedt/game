@@ -35,7 +35,7 @@ import {
 import { PixelText } from "@ui/lib/PixelText.tsx";
 import type { PixelFont } from "@ui/lib/pixel-font.ts";
 
-import { spriteByName, type Sprites } from "./assets.ts";
+import { spriteDataUrl, type Sprites } from "./assets.ts";
 import { synth } from "./audio.ts";
 import { playUiSound } from "./sfx/index.ts";
 import { TIER_COLORS } from "./tiers.ts";
@@ -112,11 +112,11 @@ function ItemIcon({
   item: Equipment;
   size?: number;
 }) {
-  const img = spriteByName(sprites, equipmentIcon(item.defId));
-  if (!img) return null;
+  const src = spriteDataUrl(sprites, equipmentIcon(item.defId));
+  if (!src) return null;
   return (
     <img
-      src={img.src}
+      src={src}
       alt={equipmentName(item)}
       width={size}
       height={size}
