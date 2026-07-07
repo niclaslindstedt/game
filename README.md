@@ -76,7 +76,10 @@ and something enormous haunts the old flag.
   your job is positioning: kite the haunting, don't get surrounded.
 - Kills grant **XP**; each level-up **restores you to full health** and
   pauses the run to spend a stat point on HEALTH, STRENGTH (melee),
-  DEXTERITY (ranged), INTELLECT (magic), or LUCK (crits, loot). Golden
+  DEXTERITY (ranged), INTELLECT (magic), or LUCK (crits, loot). STRENGTH,
+  DEXTERITY, and INTELLECT each make their class of weapon hit **harder and
+  faster** — the base fire rate is deliberately slow, so a build is what
+  wins the cadence back. Golden
   **XP arrows** drop from the horde and are always worth a fixed share of
   your next level.
 - The horde drops **loot** — medkits, weapons (staplers, mops, tasers,

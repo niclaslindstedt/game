@@ -14,6 +14,7 @@ import {
   playerCritChance,
   STATS,
   step,
+  weaponCooldownFor,
   weaponDef,
   weaponDamage,
   weaponDamageFor,
@@ -147,6 +148,68 @@ describe("stats", () => {
     expect(weaponDamageFor(state, wand)).toBeCloseTo(
       wandDef.damage * (1 + 3 * STATS.damageBonusPerPoint + 0.5),
     );
+  });
+
+  it("DEXTERITY quickens ranged fire; STRENGTH and INTELLIGENCE do not", () => {
+    const state = startGame(); // blaster equipped: ranged
+    const weapon = state.player.equipment.weapon;
+    const base = weaponCooldownFor(state, weapon);
+    expect(base).toBe(weaponDef("blaster").cooldownMs);
+
+    // The off-class stats leave the sidearm's cadence untouched.
+    state.player.stats.strength = 5;
+    state.player.stats.intelligence = 5;
+    expect(weaponCooldownFor(state, weapon)).toBe(base);
+
+    // DEX divides the cooldown by (1 + points × attackSpeedPerStat).
+    state.player.stats.dexterity = 4;
+    expect(weaponCooldownFor(state, weapon)).toBeCloseTo(
+      base / (1 + 4 * STATS.attackSpeedPerStat),
+    );
+  });
+
+  it("weaponCooldownFor quickens a bag weapon by ITS class stat", () => {
+    const state = startGame(); // blaster equipped: ranged
+    const wandDef = weaponDef("test_wand"); // magic
+    const wand: Equipment = {
+      id: 999,
+      defId: "test_wand",
+      slot: "weapon",
+      tier: "regular",
+      affixes: [],
+      durability: wandDef.durability,
+    };
+    expect(weaponCooldownFor(state, wand)).toBe(wandDef.cooldownMs);
+
+    // DEX (the equipped blaster's stat) must NOT move the magic wand.
+    state.player.stats.dexterity = 4;
+    expect(weaponCooldownFor(state, wand)).toBe(wandDef.cooldownMs);
+
+    // INT (the wand's own class stat) does.
+    state.player.stats.intelligence = 3;
+    expect(weaponCooldownFor(state, wand)).toBeCloseTo(
+      wandDef.cooldownMs / (1 + 3 * STATS.attackSpeedPerStat),
+    );
+  });
+
+  it("a DEX build actually fires more shots in the same window", () => {
+    // End-to-end: the quicker cadence shows up as extra bolts downrange, not
+    // just a smaller number. Park an unkillable target in range and count.
+    const shotsIn = (dex: number) => {
+      const state = startGame();
+      state.player.stats.dexterity = dex;
+      clearStage(state);
+      state.enemies.push(
+        makeEnemy({
+          pos: { x: state.player.pos.x + 60, y: state.player.pos.y },
+          hp: 1_000_000,
+          maxHp: 1_000_000,
+        }),
+      );
+      run(state, idle, 200); // ~3.2s of fire
+      return state.stats.shotsFired;
+    };
+    expect(shotsIn(6)).toBeGreaterThan(shotsIn(0));
   });
 
   it("SPEED quickens the walk", () => {

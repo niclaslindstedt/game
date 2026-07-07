@@ -114,15 +114,19 @@ export const STATS = {
   /** Damage multiplier per point of the weapon's governing stat. */
   damageBonusPerPoint: 0.12,
   /**
-   * STRENGTH's melee-only perks beyond raw damage. `meleeRangePerStr` widens
-   * a melee weapon's reach by this fraction of its base range per point
-   * (+2.5% each), so a strong bruiser keeps the crowd a little further back.
-   * `meleeSpeedPerStr` quickens the swing: each point shortens the cooldown
-   * as `cooldown / (1 + str * meleeSpeedPerStr)` (+4% cadence each). Ranged
-   * and magic weapons ignore both — DEX/INT only ever touch their damage.
+   * STRENGTH widens a melee weapon's reach by this fraction of its base range
+   * per point (+2.5% each), so a strong bruiser keeps the crowd a little
+   * further back. Melee-only — ranged and magic keep their catalog range.
    */
   meleeRangePerStr: 0.025,
-  meleeSpeedPerStr: 0.04,
+  /**
+   * Attack-speed gained per point of the weapon's governing stat (STR for
+   * melee, DEX for ranged, INT for magic): the effective cooldown is divided
+   * by `1 + stat * this`, so +4% cadence per point. Base weapons fire
+   * deliberately slowly now — a build grows the fire rate back by investing in
+   * its class stat, so standing still stops clearing the horde for free.
+   */
+  attackSpeedPerStat: 0.04,
   /** Player base crit chance before LUCK and equipment. */
   baseCritChance: 0.05,
   critChancePerLuck: 0.04,
