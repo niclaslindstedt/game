@@ -113,6 +113,27 @@ export type LevelDef = {
     radius: number;
     jumpable: boolean;
   }[];
+  /**
+   * Locked doors: built exactly like walls (chains of solid `door_locked`
+   * circles) but tracked in `state.doors` — carrying the story-item key
+   * whose `unlocks` names the door's `id` up to it slides it open. Pair
+   * each with wall segments that enclose the room it guards.
+   */
+  doors?: {
+    id: string;
+    from: Vec2;
+    to: Vec2;
+    radius: number;
+  }[];
+  /**
+   * Hand-placed pickups (the loot inside locked rooms, plot pieces on
+   * pedestals). Equipment is minted from its def id; story items key into
+   * STORY_ITEM_DEFS.
+   */
+  placedItems?: (
+    | { kind: "story" | "equipment"; defId: string; pos: Vec2 }
+    | { kind: "medkit" | "xp" | "repair"; pos: Vec2 }
+  )[];
   decor: { kind: string; count: number }[];
   /** Keep decor at least this far from landmarks. */
   decorClearance: number;
@@ -190,6 +211,13 @@ const SPACEZ_HQ: LevelDef = {
     { enemy: "engineer", count: 6, band: [0.45, 0.8] },
     { enemy: "guard", count: 6, band: [0.55, 0.95] },
     { enemy: "hazmat", count: 4, band: [0.7, 1.05] },
+    // The four staffers who know too much, pinned along the route so the
+    // plot unspools in walking order: launches → Ada → the vault → the
+    // Armstrong tease. Each rushes into view and talks before it fights.
+    { enemy: "night_manager", at: { x: 560, y: 370 } },
+    { enemy: "security_chief", at: { x: 1050, y: 700 } },
+    { enemy: "head_scientist", at: { x: 1270, y: 400 } },
+    { enemy: "janitor", at: { x: 900, y: 1000 } },
     { enemy: "muskrat", at: { x: 1730, y: 620 } },
   ],
   // The night shift floods in over ~4.5 minutes — a slightly gentler total
@@ -270,6 +298,64 @@ const SPACEZ_HQ: LevelDef = {
       radius: 8,
       jumpable: false,
     },
+    // Supply bay B: the NW-corner storage room the NIGHT MANAGER's keycard
+    // opens. Map edges close two sides; these walls close the rest, with
+    // the locked door as the only way in.
+    {
+      kind: "wall",
+      from: { x: 310, y: 8 },
+      to: { x: 310, y: 186 },
+      radius: 8,
+      jumpable: false,
+    },
+    {
+      kind: "wall",
+      from: { x: 8, y: 180 },
+      to: { x: 236, y: 180 },
+      radius: 8,
+      jumpable: false,
+    },
+    // The cleanroom vault: SE corner of the boss wing, DR. NOVA's red
+    // keycard opens it. The anti-grav unit waits inside.
+    {
+      kind: "wall",
+      from: { x: 1750, y: 1036 },
+      to: { x: 1750, y: 1192 },
+      radius: 8,
+      jumpable: false,
+    },
+    {
+      kind: "wall",
+      from: { x: 1756, y: 1030 },
+      to: { x: 1926, y: 1030 },
+      radius: 8,
+      jumpable: false,
+    },
+  ],
+  doors: [
+    {
+      id: "storage",
+      from: { x: 244, y: 180 },
+      to: { x: 304, y: 180 },
+      radius: 8,
+    },
+    {
+      id: "vault",
+      from: { x: 1932, y: 1030 },
+      to: { x: 1992, y: 1030 },
+      radius: 8,
+    },
+  ],
+  placedItems: [
+    // Supply bay B — spare parts for a ship-builder: tools and kits.
+    { kind: "equipment", defId: "wrench", pos: { x: 100, y: 80 } },
+    { kind: "repair", pos: { x: 150, y: 60 } },
+    { kind: "repair", pos: { x: 190, y: 100 } },
+    { kind: "medkit", pos: { x: 245, y: 80 } },
+    // The vault — the alien anti-grav unit the whole drive is built around.
+    { kind: "story", defId: "antigrav_unit", pos: { x: 1870, y: 1120 } },
+    { kind: "xp", pos: { x: 1820, y: 1100 } },
+    { kind: "xp", pos: { x: 1920, y: 1100 } },
   ],
   obstacles: [
     { kind: "server", count: 16, radius: 9, jumpable: false },
@@ -340,6 +426,13 @@ const MOON: LevelDef = {
     { enemy: "wisp", count: 8, band: [0.05, 0.45] },
     { enemy: "ghost", count: 6, band: [0.4, 0.8] },
     { enemy: "wraith", count: 4, band: [0.75, 1.05] },
+    // Four ghosts with unfinished business, pinned along the walk to the
+    // flag: the grave under the dust, the moonbase, the clone, and Ada's
+    // trail — each rushes in, talks, then joins the haunting.
+    { enemy: "apollo_ghost", at: { x: 700, y: 1100 } },
+    { enemy: "prospector", at: { x: 1150, y: 850 } },
+    { enemy: "quarantine_medic", at: { x: 1600, y: 550 } },
+    { enemy: "cartographer", at: { x: 1880, y: 520 } },
     { enemy: "armstrong", at: { x: 2130, y: 260 } },
   ],
   // The haunting proper: over five minutes the moon empties its graves.

@@ -85,9 +85,18 @@ and something enormous haunts the old flag.
 - Dropped weapons **wear out** as they fire: when one breaks it is trashed
   and the best weapon left in your bag takes its place (your own sidearm
   never breaks). **Repair kits** restore the equipped weapon's edge.
+- **Unique mobs** wait at set spots on every level — larger, named
+  characters (the NIGHT MANAGER, DR. NOVA, the ghost of an Apollo MISSION
+  SPECIALIST…) that **rush into view and talk**: each scene reveals a
+  piece of the plot — what SPACEZ launches after midnight, what was under
+  the flag in '69, who really came home. Kill one and it drops a
+  **signature weapon** (better than the level's pool, shy of the boss's)
+  plus **story items**: keycards that open **locked rooms** (spare parts,
+  the alien anti-grav unit) and documents that deepen the mystery.
 - **Kill the boss** — MUSKRAT under the rocket, ARMSTRONG at the flag — to
-  clear the level; if your HP reaches zero the run ends with a stats screen
-  and a retry button.
+  clear the level; bosses have their own longer stare-down scenes before
+  the fight. If your HP reaches zero the run ends with a stats screen and
+  a retry button.
 
 ### Install it as an app
 

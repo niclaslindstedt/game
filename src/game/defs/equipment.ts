@@ -286,6 +286,101 @@ export const WEAPON_DEFS: Record<string, WeaponDef> = {
     durability: 220,
     icon: "icon_machete",
   },
+  // ---- Elite signatures — one per unique story mob, arriving via that
+  // elite's guaranteed drop. Tuned a clear notch above the level's random
+  // pool but under the boss trophies, so the plot fights pay in power too.
+  executive_putter: {
+    id: "executive_putter",
+    name: "EXECUTIVE PUTTER",
+    class: "melee",
+    // The NIGHT MANAGER's back-nine special: crisp tempo, real reach.
+    damage: 21,
+    cooldownMs: 380,
+    range: 46,
+    durability: 200,
+    icon: "icon_putter",
+  },
+  riot_taser: {
+    id: "riot_taser",
+    name: "RIOT TASER",
+    class: "ranged",
+    // The CHIEF's issue model: the desk taser with the export firmware.
+    damage: 13,
+    cooldownMs: 420,
+    range: 220,
+    durability: 190,
+    projectile: { speed: 480, radius: 3, lifetimeMs: 550, sprite: "zap" },
+    icon: "icon_riot_taser",
+  },
+  overclocked_laser: {
+    id: "overclocked_laser",
+    name: "OVERCLOCKED LASER",
+    class: "magic",
+    // DR. NOVA's conference pointer, three safety screws short of legal.
+    damage: 12,
+    cooldownMs: 260,
+    range: 300,
+    durability: 200,
+    projectile: { speed: 540, radius: 3, lifetimeMs: 900, sprite: "ray" },
+    icon: "icon_overclocked_laser",
+  },
+  wet_floor_sign: {
+    id: "wet_floor_sign",
+    name: "WET FLOOR SIGN",
+    class: "melee",
+    // THE JANITOR's halberd: light, fast, and the longest reach on level 1.
+    damage: 15,
+    cooldownMs: 240,
+    range: 54,
+    durability: 200,
+    icon: "icon_floor_sign",
+  },
+  flare_gun: {
+    id: "flare_gun",
+    name: "FLARE GUN",
+    class: "ranged",
+    // The MISSION SPECIALIST's survival kit piece: slow, bright, brutal.
+    damage: 22,
+    cooldownMs: 800,
+    range: 300,
+    durability: 160,
+    projectile: { speed: 300, radius: 4, lifetimeMs: 1200, sprite: "fireball" },
+    icon: "icon_flare_gun",
+  },
+  core_drill: {
+    id: "core_drill",
+    name: "CORE DRILL",
+    class: "melee",
+    // The PROSPECTOR's tunneler — chews rock, chews ghosts.
+    damage: 21,
+    cooldownMs: 330,
+    range: 42,
+    durability: 240,
+    icon: "icon_core_drill",
+  },
+  geiger_wand: {
+    id: "geiger_wand",
+    name: "GEIGER WAND",
+    class: "magic",
+    // The MEDIC's screening probe, clicking well past the safe band.
+    damage: 16,
+    cooldownMs: 380,
+    range: 290,
+    durability: 200,
+    projectile: { speed: 380, radius: 4, lifetimeMs: 1000, sprite: "spark" },
+    icon: "icon_geiger_wand",
+  },
+  surveyors_pick: {
+    id: "surveyors_pick",
+    name: "SURVEYOR'S PICK",
+    class: "melee",
+    // THE CARTOGRAPHER's stake hammer: heavy arcs, deep dents.
+    damage: 24,
+    cooldownMs: 450,
+    range: 44,
+    durability: 220,
+    icon: "icon_surveyors_pick",
+  },
   moons_blade: {
     id: "moons_blade",
     name: "MOON'S BLADE",

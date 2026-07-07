@@ -12,6 +12,7 @@ import {
   equipmentIcon,
   magnetRadius,
   orbPositions,
+  storyItemDef,
   type GameState,
 } from "@game/core";
 
@@ -89,6 +90,7 @@ const OBSTACLE_SPRITES: Record<string, keyof Sprites> = {
   boulder: "boulder",
   rock: "rock",
   wall: "wall",
+  door_locked: "door_locked",
   server: "server",
   vending: "vending",
   desk: "desk",
@@ -182,10 +184,23 @@ export function drawFrame(
             : item.kind === "ability"
               ? (spriteByName(sprites, abilityDef(item.defId).icon) ??
                 sprites.medkit)
-              : (spriteByName(sprites, equipmentIcon(item.equipment.defId)) ??
-                sprites.medkit);
+              : item.kind === "story"
+                ? (spriteByName(sprites, storyItemDef(item.defId).icon) ??
+                  sprites.medkit)
+                : (spriteByName(sprites, equipmentIcon(item.equipment.defId)) ??
+                  sprites.medkit);
     const x = Math.round(item.pos.x - sprite.width / 2 - camera.x);
     const y = Math.round(item.pos.y - sprite.height / 2 - camera.y);
+    // Story items glint gold — the plot should catch the eye from afar.
+    if (item.kind === "story") {
+      const pulse = Math.floor(timeMs / 300) % 2 === 0;
+      ctx.fillStyle = "#ffd75e";
+      const r = pulse ? 1 : 2;
+      ctx.fillRect(x - r, y - r, 2, 2);
+      ctx.fillRect(x + sprite.width + r - 2, y - r, 2, 2);
+      ctx.fillRect(x - r, y + sprite.height + r - 2, 2, 2);
+      ctx.fillRect(x + sprite.width + r - 2, y + sprite.height + r - 2, 2, 2);
+    }
     // Dropped equipment glints in its tier color so rarity reads from afar.
     if (item.kind === "equipment" && item.equipment.tier !== "regular") {
       const pulse = Math.floor(timeMs / 300) % 2 === 0;
@@ -216,22 +231,27 @@ export function drawFrame(
     if (!inView(enemy.pos.x, enemy.pos.y, 48)) continue;
     const def = enemyDef(enemy.defId);
     // Offset the float phase per enemy so the haunting doesn't bob in sync.
+    // This same idle bob keeps speakers visibly alive during dialogue —
+    // it runs on render time, which never freezes.
     const frame = Math.floor(timeMs / 300 + enemy.id) % 2;
     const sprite =
       spriteByName(sprites, `${def.sprite}_${frame}`) ?? sprites.ghost_0;
     const bob = Math.round(Math.sin(timeMs / 260 + enemy.id) * 1.5);
     const x = Math.round(enemy.pos.x - sprite.width / 2 - camera.x);
     const y = Math.round(enemy.pos.y - sprite.height / 2 - camera.y) + bob;
-    ctx.drawImage(sprite, x, y);
+    // A critical hit blinks the victim — skip alternating 60ms windows.
+    const critBlink =
+      (enemy.critFlashMs ?? 0) > 0 && Math.floor(timeMs / 60) % 2 === 0;
+    if (!critBlink) ctx.drawImage(sprite, x, y);
 
-    // Bosses carry their health over their head once wounded.
-    if (def.role === "boss" && enemy.hp < enemy.maxHp) {
-      const barWidth = 40;
+    // Bosses and elites carry their health over their head once wounded.
+    if (def.role !== "minion" && enemy.hp < enemy.maxHp) {
+      const barWidth = def.role === "boss" ? 40 : 28;
       const bx = Math.round(enemy.pos.x - barWidth / 2 - camera.x);
       const by = y - 6;
       ctx.fillStyle = "#0b0d10";
       ctx.fillRect(bx - 1, by - 1, barWidth + 2, 5);
-      ctx.fillStyle = "#d83a3a";
+      ctx.fillStyle = def.role === "boss" ? "#d83a3a" : "#d9a0f0";
       ctx.fillRect(bx, by, Math.round((barWidth * enemy.hp) / enemy.maxHp), 3);
     }
   }
@@ -307,15 +327,22 @@ function drawAbilities(
 }
 
 /**
- * Transient app-side effects (the storm's lightning strikes). GameScreen
- * accumulates them from engine events and passes what is still alive.
+ * Transient app-side effects: lightning strikes, nuke rings, gore splashes
+ * on hit mobs, and floating damage numbers. GameScreen accumulates them
+ * from engine events and passes what is still alive.
  */
 export type Effect = {
-  kind: "lightning" | "nuke";
+  kind: "lightning" | "nuke" | "splash" | "damage";
   pos: { x: number; y: number };
   untilMs: number;
-  /** Nuke: total effect length, for the expanding-ring progress. */
+  /** Total effect length, for progress-driven animation. */
   durationMs?: number;
+  /** Splash: sprite family ("blood", "ecto") — frames `<family>_0/_1`. */
+  sprite?: string;
+  /** Damage number: the hit's rounded damage. */
+  value?: number;
+  /** Damage number: crits shake, grow, and glow gold. */
+  crit?: boolean;
 };
 
 export function drawEffects(
@@ -323,11 +350,59 @@ export function drawEffects(
   effects: readonly Effect[],
   camera: Camera,
   timeMs: number,
+  assets: GameAssets,
 ): void {
+  const font = assets.font;
   for (const effect of effects) {
     if (timeMs > effect.untilMs) continue;
     const x = Math.round(effect.pos.x - camera.x);
     const groundY = Math.round(effect.pos.y - camera.y);
+
+    if (effect.kind === "splash") {
+      // Two-frame gore burst pinned to where the hit landed.
+      const duration = effect.durationMs ?? 240;
+      const t = 1 - (effect.untilMs - timeMs) / duration; // 0 → 1
+      const frame = t < 0.5 ? 0 : 1;
+      const sprite = spriteByName(
+        assets.sprites,
+        `${effect.sprite ?? "blood"}_${frame}`,
+      );
+      if (sprite) {
+        ctx.drawImage(
+          sprite,
+          x - Math.round(sprite.width / 2),
+          groundY - Math.round(sprite.height / 2),
+        );
+      }
+      continue;
+    }
+
+    if (effect.kind === "damage") {
+      // The hit's number rises off the victim's head. Crits slam first —
+      // a fat gold figure shaking in place — then float up with the rest.
+      const duration = effect.durationMs ?? 650;
+      const t = 1 - (effect.untilMs - timeMs) / duration; // 0 → 1
+      const crit = effect.crit ?? false;
+      const shakePhase = crit ? Math.min(1, t / 0.25) : 1;
+      const rise = Math.round(
+        (crit ? 26 : 18) * Math.max(0, t - (crit ? 0.25 : 0)),
+      );
+      const shake =
+        crit && shakePhase < 1 ? Math.round(Math.sin(timeMs / 14) * 2) : 0;
+      const scale = crit ? 2 : 1;
+      const text = String(effect.value ?? 0);
+      const width = font.measure(text) * scale;
+      ctx.globalAlpha = t > 0.7 ? 1 - (t - 0.7) / 0.3 : 1;
+      font.draw(
+        ctx,
+        text,
+        x - Math.round(width / 2) + shake,
+        groundY - rise - font.height * scale,
+        { scale, color: crit ? "#ffd75e" : "#f4f4f4" },
+      );
+      ctx.globalAlpha = 1;
+      continue;
+    }
 
     if (effect.kind === "nuke") {
       // A white flash collapsing into an expanding shockwave ring.

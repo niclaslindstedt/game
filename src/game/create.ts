@@ -14,7 +14,16 @@ import { cutsceneDef } from "./defs/cutscenes.ts";
 import { difficultyDef, scaledMobCount } from "./defs/difficulties.ts";
 import { enemyDef } from "./defs/enemies.ts";
 import { LEVEL_ORDER, levelDef, type LevelDef } from "./defs/levels.ts";
-import type { Decor, Difficulty, Enemy, GameState, Obstacle } from "./types.ts";
+import { rollEquipment } from "./items.ts";
+import type {
+  Decor,
+  Difficulty,
+  DoorState,
+  Enemy,
+  GameState,
+  Item,
+  Obstacle,
+} from "./types.ts";
 
 export function createGame(
   seed: number,
@@ -39,9 +48,11 @@ export function createGame(
       : Math.hypot(def.width, def.height);
 
   // Obstacles go down first so monsters (and their walk-in spawns) never
-  // start wedged inside one. Deliberate walls land before the scatter so
-  // scattered pieces keep their distance from the architecture.
+  // start wedged inside one. Deliberate walls and locked doors land before
+  // the scatter so scattered pieces keep their distance from the
+  // architecture.
   const obstacles = buildWalls(def, () => nextId++);
+  const doors = buildDoors(def, obstacles, () => nextId++);
   obstacles.push(
     ...scatterObstacles(rng, def, playerSpawn, obstacles, () => nextId++),
   );
@@ -97,7 +108,7 @@ export function createGame(
     0,
   );
 
-  return {
+  const state: GameState = {
     phase: def.prelude ? "cutscene" : "intro",
     cutscene: def.prelude ? createCutscene(cutsceneDef(def.prelude)) : null,
     difficulty,
@@ -113,6 +124,9 @@ export function createGame(
     },
     playerSpawn,
     landmarks: def.landmarks.map((l) => ({ kind: l.kind, pos: { ...l.pos } })),
+    dialogue: null,
+    storyItems: [],
+    doors,
     player: {
       pos: { ...playerSpawn },
       z: 0,
@@ -186,6 +200,35 @@ export function createGame(
     nextId,
     rng,
   };
+
+  // Hand-placed pickups (locked-room loot, plot pieces on pedestals) mint
+  // last: equipment rolls draw on the state's rng exactly like drops do.
+  for (const placed of def.placedItems ?? []) {
+    state.items.push(placeItem(state, placed));
+  }
+
+  return state;
+}
+
+/** Mint one of the level def's hand-placed pickups. */
+function placeItem(
+  state: GameState,
+  placed: NonNullable<LevelDef["placedItems"]>[number],
+): Item {
+  const pos = { ...placed.pos };
+  const id = state.nextId++;
+  if (placed.kind === "equipment") {
+    return {
+      id,
+      kind: "equipment",
+      pos,
+      equipment: rollEquipment(state, { defId: placed.defId }),
+    };
+  }
+  if (placed.kind === "story") {
+    return { id, kind: "story", pos, defId: placed.defId };
+  }
+  return { id, kind: placed.kind, pos };
 }
 
 /** Mint one enemy instance (also used by the wave spawner in step.ts).
@@ -217,32 +260,86 @@ export function spawnEnemy(
 }
 
 /**
- * Expand the level's wall segments into chains of solid circles. Centers
- * step by 1.5× the radius, so neighbouring circles overlap enough that no
- * body can slip between them — a segment collides as one continuous wall.
- * Deliberate architecture skips the scatter clearance rules: door gaps are
- * the designer's responsibility, not the sampler's.
+ * Expand one wall/door segment into a chain of solid circles. Centers step
+ * by 1.5× the radius, so neighbouring circles overlap enough that no body
+ * can slip between them — a segment collides as one continuous wall.
+ */
+function expandSegment(
+  kind: string,
+  from: Vec2,
+  to: Vec2,
+  radius: number,
+  jumpable: boolean,
+  takeId: () => number,
+): Obstacle[] {
+  const obstacles: Obstacle[] = [];
+  const length = distance(from, to);
+  const steps = Math.max(1, Math.ceil(length / (radius * 1.5)));
+  for (let i = 0; i <= steps; i++) {
+    const t = i / steps;
+    obstacles.push({
+      id: takeId(),
+      kind,
+      pos: vec(from.x + (to.x - from.x) * t, from.y + (to.y - from.y) * t),
+      radius,
+      jumpable,
+    });
+  }
+  return obstacles;
+}
+
+/**
+ * Expand the level's wall segments into chains of solid circles. Deliberate
+ * architecture skips the scatter clearance rules: door gaps are the
+ * designer's responsibility, not the sampler's.
  */
 function buildWalls(def: LevelDef, takeId: () => number): Obstacle[] {
   const obstacles: Obstacle[] = [];
   for (const wall of def.walls ?? []) {
-    const length = distance(wall.from, wall.to);
-    const steps = Math.max(1, Math.ceil(length / (wall.radius * 1.5)));
-    for (let i = 0; i <= steps; i++) {
-      const t = i / steps;
-      obstacles.push({
-        id: takeId(),
-        kind: wall.kind,
-        pos: vec(
-          wall.from.x + (wall.to.x - wall.from.x) * t,
-          wall.from.y + (wall.to.y - wall.from.y) * t,
-        ),
-        radius: wall.radius,
-        jumpable: wall.jumpable,
-      });
-    }
+    obstacles.push(
+      ...expandSegment(
+        wall.kind,
+        wall.from,
+        wall.to,
+        wall.radius,
+        wall.jumpable,
+        takeId,
+      ),
+    );
   }
   return obstacles;
+}
+
+/**
+ * Expand the level's locked doors into `door_locked` obstacle chains
+ * (appended to `obstacles`) and the DoorState entries that let the key
+ * remove them again. Doors are never jumpable — a hop over a locked door
+ * would make the key a souvenir.
+ */
+function buildDoors(
+  def: LevelDef,
+  obstacles: Obstacle[],
+  takeId: () => number,
+): DoorState[] {
+  const doors: DoorState[] = [];
+  for (const door of def.doors ?? []) {
+    const chain = expandSegment(
+      "door_locked",
+      door.from,
+      door.to,
+      door.radius,
+      false,
+      takeId,
+    );
+    obstacles.push(...chain);
+    doors.push({
+      id: door.id,
+      center: vec((door.from.x + door.to.x) / 2, (door.from.y + door.to.y) / 2),
+      obstacleIds: chain.map((o) => o.id),
+      open: false,
+    });
+  }
+  return doors;
 }
 
 /**

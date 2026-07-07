@@ -11,6 +11,7 @@ import { useEffect, useRef, useState } from "react";
 
 import {
   abilityDef,
+  advanceDialogue,
   allocateStat,
   BOT_STRATEGIES,
   botAct,
@@ -20,6 +21,7 @@ import {
   createGame,
   debug,
   dismissIntro,
+  enemyDef,
   LEVELS,
   openInventory,
   skipCutscene,
@@ -41,6 +43,7 @@ import { trackPointer } from "@ui/lib/pointer.ts";
 import { loadGameAssets, spriteByName, type GameAssets } from "./assets.ts";
 import { synth } from "./audio.ts";
 import { CutsceneOverlay } from "./CutsceneOverlay.tsx";
+import { DialogueOverlay } from "./DialogueOverlay.tsx";
 import { IntroOverlay } from "./IntroOverlay.tsx";
 import { InventoryPanel } from "./InventoryPanel.tsx";
 import { LevelUpOverlay } from "./LevelUpOverlay.tsx";
@@ -209,6 +212,10 @@ export function GameScreen({
         } else if (state.phase === "intro") {
           beginRun();
           bumpUi();
+        } else if (state.phase === "dialogue") {
+          advanceDialogue(state);
+          playUiSound(synth, "move");
+          bumpUi();
         } else {
           jumpQueuedRef.current = true;
         }
@@ -259,6 +266,10 @@ export function GameScreen({
           // phases a human would click through.
           if (state.phase === "cutscene") skipCutscene(state);
           if (state.phase === "intro") beginRun();
+          if (state.phase === "dialogue") {
+            advanceDialogue(state);
+            bumpUi();
+          }
           if (state.phase === "levelup") {
             allocateStat(state, botAllocate(bot, state));
             bumpUi();
@@ -302,6 +313,33 @@ export function GameScreen({
               untilMs: state.stats.timeMs + 130,
             });
           }
+          // Every landed hit sprays the victim's gore (ghosts: ectoplasm)
+          // and floats its damage off the head — crits slam and shake.
+          if (event.type === "enemyHit" || event.type === "enemyKilled") {
+            const def = enemyDef(event.defId);
+            effects.push({
+              kind: "splash",
+              pos: {
+                x: event.pos.x + Math.round((Math.random() - 0.5) * 6),
+                y: event.pos.y + Math.round((Math.random() - 0.5) * 6),
+              },
+              untilMs: state.stats.timeMs + 240,
+              durationMs: 240,
+              sprite: def.gore ?? "blood",
+            });
+            const duration = event.crit ? 900 : 650;
+            effects.push({
+              kind: "damage",
+              pos: {
+                x: event.pos.x + Math.round((Math.random() - 0.5) * 12),
+                y: event.pos.y - def.radius - 2 - Math.round(Math.random() * 4),
+              },
+              untilMs: state.stats.timeMs + duration,
+              durationMs: duration,
+              value: event.damage,
+              crit: event.crit,
+            });
+          }
           if (event.type === "nuke") {
             effects.push({
               kind: "nuke",
@@ -322,7 +360,7 @@ export function GameScreen({
       render(timeMs) {
         const camera = computeCamera(state, canvas.width, canvas.height);
         drawFrame(ctx, state, assets, camera, timeMs);
-        drawEffects(ctx, effects, camera, state.stats.timeMs);
+        drawEffects(ctx, effects, camera, state.stats.timeMs, assets);
 
         // Mirror the slow-moving values into React only when they change.
         const bagCount = state.player.inventory.filter(Boolean).length;
@@ -496,6 +534,19 @@ export function GameScreen({
           onBegin={() => {
             dismissIntro(state);
             playLevelMusic();
+            bumpUi();
+          }}
+        />
+      )}
+
+      {state && hud?.phase === "dialogue" && (
+        <DialogueOverlay
+          state={state}
+          assets={assets}
+          font={font}
+          onAdvance={() => {
+            advanceDialogue(state);
+            playUiSound(synth, "move");
             bumpUi();
           }}
         />

@@ -3,11 +3,12 @@
 // mutates the state in place and records what happened in `state.events` so
 // the app layer can play sounds and flash effects. Order per step: player
 // steering + jump physics → weapon auto-attack → abilities (orbs, storms,
-// stasis) → projectiles → enemies (aggro, boss guard AI, contact damage) →
-// wave spawner (the escalating horde) → item pickups → objective check →
-// win/lose. Kills grant XP proportional to the victim's max hp; level-ups
-// pause the run in the `levelup` phase until `allocateStat` spends the
-// point(s).
+// stasis) → projectiles → enemies (aggro, elite ambush/dialogue, boss guard
+// AI, contact damage) → wave spawner (the escalating horde) → item pickups →
+// locked doors → objective check → win/lose. Kill resolution and loot rolls
+// live in loot.ts; dialogue and door rules in story.ts. Level-ups pause the
+// run in the `levelup` phase until `allocateStat` spends the point(s);
+// dialogue pauses it in `dialogue` until tapped through.
 
 import { stepCutscene } from "@game/lib/cutscene.ts";
 import {
@@ -30,7 +31,6 @@ import {
   HELD_ITEMS,
   JUMP,
   LEVELING,
-  LOOT,
   MEDKIT,
   OBSTACLES,
   PLAYER,
@@ -42,22 +42,26 @@ import { spawnEnemy } from "./create.ts";
 import { abilityDef } from "./defs/abilities.ts";
 import { cutsceneDef } from "./defs/cutscenes.ts";
 import { difficultyDef, scaledMobCount } from "./defs/difficulties.ts";
-import { enemyDef, type EnemyDef } from "./defs/enemies.ts";
+import { enemyDef } from "./defs/enemies.ts";
 import { weaponDef } from "./defs/equipment.ts";
 import { levelDef } from "./defs/levels.ts";
 import {
   addToInventory,
-  dropChance,
   enemyCritChance,
   isBetterEquipment,
-  playerCritChance,
   playerSpeed,
   recomputeMaxHp,
   repairEquippedWeapon,
-  rollEquipment,
   weaponDamage,
   wearEquippedWeapon,
 } from "./items.ts";
+import { grantXp, hitEnemy, unspawnedMinions } from "./loot.ts";
+import {
+  collectStoryItem,
+  startEnemyDialogue,
+  stepDoors,
+  wantsDialogue,
+} from "./story.ts";
 import type { Enemy, GameInput, GameState, Item } from "./types.ts";
 
 /** Advance the simulation by `dtMs` milliseconds. */
@@ -90,6 +94,7 @@ export function step(state: GameState, input: GameInput, dtMs: number): void {
   stepEnemies(state, dt, dtMs);
   stepSpawner(state);
   stepItems(state);
+  stepDoors(state);
 
   if (state.player.hp <= 0) {
     state.player.hp = 0;
@@ -122,19 +127,6 @@ function objectiveCleared(state: GameState): boolean {
   return !state.enemies.some((e) => enemyDef(e.defId).role === "boss");
 }
 
-/** Monsters still owed by the wave budget but not yet streamed in. */
-function unspawnedMinions(state: GameState): number {
-  const waves = levelDef(state.level.id).waves;
-  if (!waves) return 0;
-  return waves.budget.reduce(
-    (sum, entry, i) =>
-      sum +
-      scaledMobCount(entry.count, state.difficulty) -
-      (state.waveSpawned[i] ?? 0),
-    0,
-  );
-}
-
 /**
  * The horde spawner, three pressures stacked. (1) Each wave-budget line
  * streams its count in over its time window, eased quadratically, so the
@@ -159,7 +151,7 @@ function stepSpawner(state: GameState): void {
   let alive = 0;
   let near = 0; // minions close enough to count as "on the player's screen"
   for (const enemy of state.enemies) {
-    if (enemyDef(enemy.defId).role === "boss") continue;
+    if (enemyDef(enemy.defId).role !== "minion") continue;
     alive++;
     if (distance(enemy.pos, state.player.pos) <= ENEMY_AI.nearRadius) near++;
   }
@@ -561,195 +553,6 @@ function stepAbilities(state: GameState, dt: number, dtMs: number): void {
   }
 }
 
-/**
- * Apply one player hit: roll the crit (LUCK), deal damage, and on a kill
- * grant XP proportional to max hp and roll loot. Bosses' guaranteed drops
- * come from their def; the victory countdown starts once the objective
- * clears at the end of the step.
- */
-function hitEnemy(state: GameState, enemy: Enemy, baseDamage: number): void {
-  const crit = state.rng() < playerCritChance(state);
-  const damage = Math.round(baseDamage * (crit ? STATS.critMultiplier : 1));
-  enemy.hp -= damage;
-  state.stats.damageDealt += damage;
-
-  if (enemy.hp > 0) {
-    state.events.push({ type: "enemyHit", pos: { ...enemy.pos }, crit });
-    return;
-  }
-
-  const def = enemyDef(enemy.defId);
-  state.enemies.splice(state.enemies.indexOf(enemy), 1);
-  state.stats.kills++;
-  state.events.push({
-    type: "enemyKilled",
-    pos: { ...enemy.pos },
-    defId: enemy.defId,
-  });
-
-  grantXp(state, def.xp ?? Math.round(enemy.maxHp * LEVELING.xpPerHp));
-
-  // The level's guaranteed early weapon: the rolled kill hands it over.
-  const early = levelDef(state.level.id).loot.earlyWeapon;
-  if (
-    early &&
-    state.earlyWeaponAtKills !== null &&
-    state.stats.kills >= state.earlyWeaponAtKills
-  ) {
-    state.earlyWeaponAtKills = null;
-    const pos = { x: enemy.pos.x + 12, y: enemy.pos.y };
-    state.items.push({
-      id: state.nextId++,
-      kind: "equipment",
-      pos,
-      equipment: rollEquipment(state, { defId: early.defId }),
-    });
-    state.events.push({ type: "itemDropped", pos: { ...pos } });
-  }
-
-  if (def.loot) {
-    dropGuaranteedLoot(state, def, enemy.pos);
-  } else {
-    dropMinionLoot(state, enemy.pos);
-  }
-
-  if (def.role === "boss") {
-    state.events.push({ type: "bossDefeated", pos: { ...enemy.pos } });
-  }
-}
-
-/**
- * A dead regular monster's drop roll: LUCK widens the odds, the loot shares
- * split what falls between equipment, ability pickups, weapon upgrades, and
- * medkits — and a pity rule forces equipment whenever the monsters left
- * alive couldn't otherwise cover the level's guaranteed minimum.
- */
-function dropMinionLoot(state: GameState, at: Vec2): void {
-  const remaining =
-    state.enemies.filter((e) => enemyDef(e.defId).role !== "boss").length +
-    unspawnedMinions(state);
-
-  // The last regular monster standing surrenders the level's trophy weapon.
-  const trophy = levelDef(state.level.id).loot.allClearWeapon;
-  if (remaining === 0 && trophy) {
-    const pos = { x: at.x + 12, y: at.y };
-    state.items.push({
-      id: state.nextId++,
-      kind: "equipment",
-      pos,
-      equipment: rollEquipment(state, {
-        defId: trophy,
-        tierBonus: LOOT.allClearTierBonus,
-      }),
-    });
-    state.events.push({ type: "itemDropped", pos: { ...pos } });
-  }
-
-  const owed = LOOT.minEquipmentPerLevel - state.minionEquipmentDrops;
-  const forced = owed > remaining;
-
-  if (!forced && state.rng() >= dropChance(state)) return;
-
-  const pos = { ...at };
-  const abilities = levelDef(state.level.id).loot.abilityPool;
-  const abilityShare = abilities.length > 0 ? LOOT.abilityShare : 0;
-  // The rare slice first, so tuning the ladder below never dilutes it.
-  const nuked = !forced && state.rng() < LOOT.nukeShare;
-  const roll = state.rng();
-  if (nuked) {
-    state.items.push({
-      id: state.nextId++,
-      kind: "ability",
-      pos,
-      defId: "screen_nuke",
-    });
-  } else if (forced || roll < LOOT.equipmentShare) {
-    state.minionEquipmentDrops++;
-    state.items.push({
-      id: state.nextId++,
-      kind: "equipment",
-      pos,
-      equipment: rollEquipment(state),
-    });
-  } else if (roll < LOOT.equipmentShare + abilityShare) {
-    state.items.push({
-      id: state.nextId++,
-      kind: "ability",
-      pos,
-      defId: abilities[Math.floor(state.rng() * abilities.length)] as string,
-    });
-  } else if (roll < LOOT.equipmentShare + abilityShare + LOOT.xpArrowShare) {
-    state.items.push({ id: state.nextId++, kind: "xp", pos });
-  } else if (
-    roll <
-    LOOT.equipmentShare + abilityShare + LOOT.xpArrowShare + LOOT.repairShare
-  ) {
-    state.items.push({ id: state.nextId++, kind: "repair", pos });
-  } else {
-    state.items.push({ id: state.nextId++, kind: "medkit", pos });
-  }
-  state.events.push({ type: "itemDropped", pos });
-}
-
-/** Bosses always pay out: their def pins the drops, scattered around them. */
-function dropGuaranteedLoot(state: GameState, def: EnemyDef, at: Vec2): void {
-  const loot = def.loot;
-  if (!loot) return;
-  const scatter = (): Vec2 => ({
-    x: clamp(at.x + (state.rng() - 0.5) * 90, 16, state.level.width - 16),
-    y: clamp(at.y + (state.rng() - 0.5) * 90, 16, state.level.height - 16),
-  });
-  for (const defId of loot.items ?? []) {
-    state.items.push({
-      id: state.nextId++,
-      kind: "equipment",
-      pos: scatter(),
-      equipment: rollEquipment(state, { defId, tierBonus: loot.tierBonus }),
-    });
-  }
-  const drops: ("weapon" | "gear")[] = [
-    ...Array<"weapon">(loot.weapons).fill("weapon"),
-    ...Array<"gear">(loot.gear).fill("gear"),
-  ];
-  for (const slot of drops) {
-    state.items.push({
-      id: state.nextId++,
-      kind: "equipment",
-      pos: scatter(),
-      equipment: rollEquipment(state, { slot, tierBonus: loot.tierBonus }),
-    });
-  }
-  for (let i = 0; i < loot.xpArrows; i++) {
-    state.items.push({ id: state.nextId++, kind: "xp", pos: scatter() });
-  }
-  for (let i = 0; i < loot.repairs; i++) {
-    state.items.push({ id: state.nextId++, kind: "repair", pos: scatter() });
-  }
-  for (let i = 0; i < loot.medkits; i++) {
-    state.items.push({ id: state.nextId++, kind: "medkit", pos: scatter() });
-  }
-  state.events.push({ type: "itemDropped", pos: { ...at } });
-}
-
-/** Award XP; each threshold crossed banks a stat point and pauses the run. */
-function grantXp(state: GameState, amount: number): void {
-  const player = state.player;
-  player.xp += amount;
-  state.stats.xpGained += amount;
-  while (player.xp >= player.xpToNext) {
-    player.xp -= player.xpToNext;
-    player.level++;
-    player.xpToNext = Math.round(
-      LEVELING.baseXpToLevel * Math.pow(LEVELING.xpGrowth, player.level - 1),
-    );
-    player.pendingStatPoints += LEVELING.statPointsPerLevel;
-    // A new level starts at full strength: the ding is also the heal.
-    player.hp = player.maxHp;
-    state.events.push({ type: "levelUp", level: player.level });
-  }
-  if (player.pendingStatPoints > 0) state.phase = "levelup";
-}
-
 function stepProjectiles(state: GameState, dt: number, dtMs: number): void {
   const survivors = [];
   for (const projectile of state.projectiles) {
@@ -792,6 +595,9 @@ function stepEnemies(state: GameState, dt: number, dtMs: number): void {
 
   for (const enemy of state.enemies) {
     enemy.contactCooldownMs = Math.max(0, enemy.contactCooldownMs - dtMs);
+    if (enemy.critFlashMs) {
+      enemy.critFlashMs = Math.max(0, enemy.critFlashMs - dtMs);
+    }
     moveEnemy(state, enemy, dt);
   }
 
@@ -811,6 +617,12 @@ function stepEnemies(state: GameState, dt: number, dtMs: number): void {
       def.radius,
       state.level.height - def.radius,
     );
+
+    // Speakers with an unplayed scene stop the world once they're visibly
+    // close: elites at the end of their rush, bosses at the stare-down.
+    if (def.role !== "minion" && wantsDialogue(state, enemy)) {
+      startEnemyDialogue(state, enemy);
+    }
 
     // Monsters drift along the ground — a player at the top of a moon jump
     // sails clean over their grasp.
@@ -884,7 +696,8 @@ function separateEnemies(state: GameState): void {
  * Enemy AI: haunt the spawn point, chase when the player wanders close,
  * drift home when they escape. Bosses guard their post instead — they wake
  * when the player nears it (or once wounded) but never stray past their
- * leash.
+ * leash. Elites sleep at their post until the player comes close (or hurts
+ * them), then rush into view for their scene and hunt forever after.
  */
 function moveEnemy(state: GameState, enemy: Enemy, dt: number): void {
   const player = state.player;
@@ -902,6 +715,27 @@ function moveEnemy(state: GameState, enemy: Enemy, dt: number): void {
       distance(enemy.pos, enemy.home) > def.ai.leashRadius;
     const target = awake && !leashed ? player.pos : enemy.home;
     enemy.pos = moveToward(enemy.pos, target, speed * dt);
+    return;
+  }
+
+  if (def.role === "elite") {
+    if (!enemy.awake) {
+      enemy.awake =
+        enemy.hp < enemy.maxHp ||
+        distance(player.pos, enemy.pos) < def.ai.aggroRadius;
+      if (!enemy.awake) return;
+    }
+    // The rush: an unplayed speaker closes in far faster than it fights,
+    // so the scene starts seconds after the ambush springs. Once it has
+    // spoken (or never had lines) it settles into its fighting speed.
+    const rushing = !enemy.spoke && (def.dialogue?.length ?? 0) > 0;
+    const rushSpeed =
+      (def.ai.rushSpeed ?? def.speed) * stasisFactorAt(player, enemy.pos);
+    enemy.pos = moveToward(
+      enemy.pos,
+      player.pos,
+      (rushing ? rushSpeed : speed) * dt,
+    );
     return;
   }
 
@@ -951,6 +785,13 @@ function stepItems(state: GameState): void {
       if (!repairEquippedWeapon(state)) return true;
       state.stats.itemsCollected++;
       state.events.push({ type: "itemCollected", kind: "repair" });
+      return false;
+    }
+
+    // Story items are plot, not gear: banked in state.storyItems (never
+    // the bag) and their lore plays as a dialogue on the spot.
+    if (item.kind === "story") {
+      collectStoryItem(state, item.defId);
       return false;
     }
 

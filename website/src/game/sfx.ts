@@ -301,6 +301,41 @@ export function playEventSounds(
           }),
         );
         break;
+      case "dialogueStarted":
+        // A speaker takes the stage: two square knocks, "listen up".
+        synth.tone({ type: "square", from: 392, durationMs: 70, volume: 0.05 });
+        synth.tone({
+          type: "square",
+          from: 523,
+          durationMs: 110,
+          volume: 0.05,
+          delayMs: 80,
+        });
+        break;
+      case "storyItemCollected":
+        // A plot piece: a slow, reverent triangle rise — this one matters.
+        [392, 523, 784].forEach((freq, i) =>
+          synth.tone({
+            type: "triangle",
+            from: freq,
+            durationMs: 140,
+            volume: 0.06,
+            delayMs: i * 110,
+          }),
+        );
+        break;
+      case "doorOpened":
+        // The lock giving way: a clunk of noise, then the slide up.
+        synth.noise({ durationMs: 60, volume: 0.06 });
+        synth.tone({
+          type: "square",
+          from: 220,
+          to: 440,
+          durationMs: 260,
+          volume: 0.05,
+          delayMs: 60,
+        });
+        break;
       case "bossDefeated":
         // The giant coming down: a long rumble under descending squares.
         synth.noise({ durationMs: 500, volume: 0.08 });
