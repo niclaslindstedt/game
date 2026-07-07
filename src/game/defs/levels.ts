@@ -5,7 +5,7 @@
 // shipping level 1 (earth) or level 12 means adding an entry here plus its
 // sprites, not touching the simulation.
 
-import type { Tier } from "../types.ts";
+import type { Tier, TileSpec } from "../types.ts";
 import type { Vec2 } from "@game/lib/vec.ts";
 
 /** A monster placement: banded by difficulty distance, or pinned to a spot. */
@@ -66,10 +66,12 @@ export type LevelDef = {
   intro: readonly string[];
   width: number;
   height: number;
-  /** Downward acceleration in world px/s². Earth ≈ 2000, the moon ≈ 1/6. */
+  /** Downward acceleration in world px/s². Lower floats jumps higher. */
   gravity: number;
   /** Tileset/mood key for the renderer. */
   biome: string;
+  /** How the renderer paints this level's ground (sprite names + frequencies). */
+  tiles: TileSpec;
   /**
    * Whether the hero already wears the EVA suit when the level opens. The
    * story starts him in plain clothes at SpaceZ HQ (`false`) — he only
@@ -85,8 +87,17 @@ export type LevelDef = {
    */
   prelude?: string;
   playerSpawn: Vec2;
-  /** Story props the renderer draws (and decor keeps clear of). */
-  landmarks: { kind: string; pos: Vec2 }[];
+  /**
+   * Story props the renderer draws (and decor keeps clear of). `sprite`
+   * defaults to `kind`; `anchor` defaults to `center` (`base` pins a standing
+   * prop's foot to its pos).
+   */
+  landmarks: {
+    kind: string;
+    pos: Vec2;
+    sprite?: string;
+    anchor?: "base" | "center";
+  }[];
   /**
    * What ends the level. `killBoss` also anchors the difficulty axis: bands
    * scale from the player spawn toward the boss.
@@ -103,6 +114,8 @@ export type LevelDef = {
    */
   obstacles: {
     kind: string;
+    /** Sprite name; defaults to `kind`. */
+    sprite?: string;
     count: number;
     radius: number;
     jumpable: boolean;
@@ -115,6 +128,8 @@ export type LevelDef = {
    */
   walls?: {
     kind: string;
+    /** Sprite name; defaults to `kind`. */
+    sprite?: string;
     from: Vec2;
     to: Vec2;
     radius: number;
@@ -141,7 +156,7 @@ export type LevelDef = {
     | { kind: "story" | "equipment"; defId: string; pos: Vec2 }
     | { kind: "medkit" | "xp" | "repair"; pos: Vec2 }
   )[];
-  decor: { kind: string; count: number }[];
+  decor: { kind: string; sprite?: string; count: number }[];
   /** Keep decor at least this far from landmarks. */
   decorClearance: number;
   loot: {
@@ -205,6 +220,11 @@ const SPACEZ_HQ: LevelDef = {
   // z ≈ 36 px) while landing far snappier than the moon's 340 float.
   gravity: 800,
   biome: "spacez",
+  // Polished lab tiles with clustered floor vents; hazard variant is rare.
+  tiles: {
+    ground: { common: "lab_0", rare: "lab_1", rareEvery: 11 },
+    patch: { a: "vent_0", b: "vent_1", every: 9 },
+  },
   // Level 1 opens with the hero in his living-room clothes; the EVA suit is
   // loot here, not a given (an epic drop from the Chief of Security).
   heroSuited: false,
@@ -425,11 +445,17 @@ const MOON: LevelDef = {
   height: 1600,
   gravity: 340,
   biome: "moon",
+  // Regolith with occasional pocks and clustered gravel patches.
+  tiles: {
+    ground: { common: "moon_0", rare: "moon_1", rareEvery: 23 },
+    patch: { a: "gravel_0", b: "gravel_1", every: 7 },
+  },
   foes: "GHOSTS",
   playerSpawn: { x: 340, y: 1320 },
   landmarks: [
     { kind: "lander", pos: { x: 280, y: 1320 } },
-    { kind: "flag", pos: { x: 2130, y: 260 } },
+    // The flag stands on the dust — pin its foot to its pos.
+    { kind: "flag", pos: { x: 2130, y: 260 }, anchor: "base" },
   ],
   objective: { type: "killBoss" },
   spawns: [
@@ -512,8 +538,8 @@ const MOON: LevelDef = {
     { kind: "rock", count: 44, radius: 8, jumpable: true },
   ],
   decor: [
-    { kind: "craterBig", count: 9 },
-    { kind: "craterSmall", count: 16 },
+    { kind: "craterBig", sprite: "crater_big", count: 9 },
+    { kind: "craterSmall", sprite: "crater_small", count: 16 },
     { kind: "rocks", count: 22 },
   ],
   decorClearance: 80,

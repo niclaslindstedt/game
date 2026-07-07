@@ -13,10 +13,11 @@ import {
   LAST_STAND,
   magnetRadius,
   orbPositions,
-  playerSuited,
+  playerAppearance,
   storyItemDef,
   WOUNDS,
   type GameState,
+  type TileSpec,
 } from "@game/core";
 
 import { spriteByName, type GameAssets, type Sprites } from "./assets.ts";
@@ -52,53 +53,21 @@ function tileHash(tx: number, ty: number): number {
 }
 
 /**
- * Pick the ground tile for a cell. The biome comes from the level def:
- * "moon" lays regolith with occasional pocks and clustered gravel patches;
- * "spacez" lays polished lab tiles with clustered floor vents and hazard
- * stripes (patches decided on a coarser grid so they clump instead of
- * speckling).
+ * Pick the ground tile for a cell, entirely from the level's `tiles` spec
+ * (defs/levels.ts): the rare ground variant scatters into the common one,
+ * and an optional `patch` pair clusters on a coarser grid so gravel/vents
+ * clump instead of speckling. A new biome is a new `tiles` entry, no edit
+ * here. `sprite` falls back to the first ground sprite if a name is unknown.
  */
-function groundTile(sprites: Sprites, biome: string, tx: number, ty: number) {
-  const patch = tileHash(tx >> 2, ty >> 2);
-  if (biome === "spacez") {
-    if (patch % 9 === 0) {
-      return tileHash(tx, ty) % 2 === 0 ? sprites.vent_0 : sprites.vent_1;
-    }
-    return tileHash(tx, ty) % 11 === 0 ? sprites.lab_1 : sprites.lab_0;
+function groundTile(sprites: Sprites, tiles: TileSpec, tx: number, ty: number) {
+  const fallback = spriteByName(sprites, tiles.ground.common) ?? sprites.moon_0;
+  const pick = (name: string) => spriteByName(sprites, name) ?? fallback;
+  if (tiles.patch && tileHash(tx >> 2, ty >> 2) % tiles.patch.every === 0) {
+    return pick(tileHash(tx, ty) % 2 === 0 ? tiles.patch.a : tiles.patch.b);
   }
-  if (patch % 7 === 0) {
-    return tileHash(tx, ty) % 2 === 0 ? sprites.gravel_0 : sprites.gravel_1;
-  }
-  return tileHash(tx, ty) % 23 === 0 ? sprites.moon_1 : sprites.moon_0;
+  const { common, rare, rareEvery } = tiles.ground;
+  return pick(tileHash(tx, ty) % rareEvery === 0 ? rare : common);
 }
-
-const DECOR_SPRITES: Record<string, keyof Sprites> = {
-  craterBig: "crater_big",
-  craterSmall: "crater_small",
-  rocks: "rocks",
-  papers: "papers",
-  cable: "cable",
-  stain: "stain",
-  plant: "plant",
-};
-
-const LANDMARK_SPRITES: Record<string, keyof Sprites> = {
-  lander: "lander",
-  flag: "flag",
-  entrance: "entrance",
-  rocket: "rocket",
-};
-
-const OBSTACLE_SPRITES: Record<string, keyof Sprites> = {
-  boulder: "boulder",
-  rock: "rock",
-  wall: "wall",
-  door_locked: "door_locked",
-  server: "server",
-  vending: "vending",
-  desk: "desk",
-  crate: "crate",
-};
 
 export function drawFrame(
   ctx: CanvasRenderingContext2D,
@@ -127,7 +96,7 @@ export function drawFrame(
   for (let ty = y0; ty < y1; ty++) {
     for (let tx = x0; tx < x1; tx++) {
       ctx.drawImage(
-        groundTile(sprites, state.level.biome, tx, ty),
+        groundTile(sprites, state.level.tiles, tx, ty),
         tx * TILE - camera.x,
         ty * TILE - camera.y,
       );
@@ -140,10 +109,11 @@ export function drawFrame(
     y >= camera.y - margin &&
     y <= camera.y + view.height + margin;
 
-  // Decor: craters and rocks under everything else.
+  // Decor: craters and rocks under everything else. Each piece names its own
+  // sprite (defs/levels.ts), so a new decor kind needs no edit here.
   for (const decor of state.decor) {
     if (!inView(decor.pos.x, decor.pos.y, 32)) continue;
-    const sprite = sprites[DECOR_SPRITES[decor.kind] ?? "rocks"];
+    const sprite = spriteByName(sprites, decor.sprite) ?? sprites.rocks;
     ctx.drawImage(
       sprite,
       Math.round(decor.pos.x - sprite.width / 2 - camera.x),
@@ -151,12 +121,13 @@ export function drawFrame(
     );
   }
 
-  // Landmarks: the lander sits on its pos; the flag is anchored at its base.
+  // Landmarks: `anchor` (from the def) decides whether the sprite's foot or
+  // its center sits on the pos — no per-kind special-casing.
   for (const landmark of state.landmarks) {
     if (!inView(landmark.pos.x, landmark.pos.y, 48)) continue;
-    const sprite = sprites[LANDMARK_SPRITES[landmark.kind] ?? "rocks"];
+    const sprite = spriteByName(sprites, landmark.sprite) ?? sprites.rocks;
     const yAnchor =
-      landmark.kind === "flag" ? sprite.height - 2 : sprite.height / 2;
+      landmark.anchor === "base" ? sprite.height - 2 : sprite.height / 2;
     ctx.drawImage(
       sprite,
       Math.round(landmark.pos.x - sprite.width / 2 - camera.x),
@@ -164,10 +135,11 @@ export function drawFrame(
     );
   }
 
-  // Obstacles sit on the ground plane, under everything that moves.
+  // Obstacles sit on the ground plane, under everything that moves. Each
+  // carries its sprite name from the def.
   for (const obstacle of state.obstacles) {
     if (!inView(obstacle.pos.x, obstacle.pos.y, 32)) continue;
-    const sprite = sprites[OBSTACLE_SPRITES[obstacle.kind] ?? "rock"];
+    const sprite = spriteByName(sprites, obstacle.sprite) ?? sprites.rock;
     ctx.drawImage(
       sprite,
       Math.round(obstacle.pos.x - sprite.width / 2 - camera.x),
@@ -478,11 +450,14 @@ function drawPlayer(
 ): void {
   const player = state.player;
   const airborne = player.z > 0;
-  // Plain-clothes hero until he dons the EVA suit; the astronaut set after.
-  const suited = playerSuited(state);
-  const walkA = suited ? assets.sprites.player_0 : assets.sprites.hero_0;
-  const walkB = suited ? assets.sprites.player_1 : assets.sprites.hero_1;
-  const jump = suited ? assets.sprites.player_jump : assets.sprites.hero_jump;
+  // The engine owns the player's costume: `playerAppearance` names the sprite
+  // family (plain-clothes "hero" until the EVA suit, "player" after), so a
+  // sequel's costume changes are data — no branch here.
+  const { sprites } = assets;
+  const family = playerAppearance(state);
+  const walkA = spriteByName(sprites, `${family}_0`) ?? sprites.hero_0;
+  const walkB = spriteByName(sprites, `${family}_1`) ?? sprites.hero_1;
+  const jump = spriteByName(sprites, `${family}_jump`) ?? sprites.hero_jump;
   const sprite = airborne
     ? jump
     : player.moving && Math.floor(timeMs / 160) % 2 === 1

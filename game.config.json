@@ -1,0 +1,27 @@
+{
+  "title": "Gone in Space",
+  "shortName": "Gone in Space",
+  "tagline": "survive the search for your lost love",
+  "description": "Ada went out for a midnight walk and never came back — the trail leads to the moon. Fight the haunting, loot the ghosts, and bring her home. Free and offline in your browser.",
+  "shortDescription": "Ada is gone and the trail leads to the moon. Fight the haunting, loot the ghosts, bring her home — free and offline in your browser.",
+  "siteUrl": "https://game.niclaslindstedt.se",
+  "repoUrl": "https://github.com/niclaslindstedt/game",
+  "author": {
+    "name": "Niclas Lindstedt",
+    "url": "https://github.com/niclaslindstedt"
+  },
+  "storagePrefix": "gone-in-space",
+  "cacheIdPrefix": "game",
+  "ogImageAlt": "Gone in Space — Ada is gone and the trail leads to the moon",
+  "og": {
+    "logo": "GONE IN SPACE",
+    "tagline": "Survive the search for your lost love",
+    "subtitle": "The trail leads to the moon"
+  },
+  "heroParagraphs": [
+    "Ada went out for a midnight walk and never came back. The trail leads to the moon — so build a ship, land in the dust, and take the search to the haunting that keeps it.",
+    "A top-down survival scroller shooter that runs entirely in your browser — no account, no server, fully playable offline once loaded.",
+    "You steer by holding the pointer down (or touching the screen); your character fights on its own, acting according to the weapons and items you pick up along the way. Survive the scroll as long as you can.",
+    "The game is an installable Progressive Web App: add it to your home screen from the browser menu and it launches fullscreen, works offline, and updates itself when a new build ships."
+  ]
+}

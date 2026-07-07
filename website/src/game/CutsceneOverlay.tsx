@@ -20,25 +20,6 @@ import { spriteByName, type GameAssets } from "./assets.ts";
 /** CSS pixels per stage pixel — scenes zoom in closer than gameplay. */
 const STAGE_SCALE = 3;
 
-/** Display names for the cast (actor ids are engine-side keys). */
-const ACTOR_NAMES: Record<string, string> = {
-  hero: "ME",
-  ada: "ADA",
-};
-
-/** Per-backdrop paint: wall, floor, and trim colors. */
-const BACKDROPS: Record<
-  string,
-  { wall: string; floor: string; trim: string; floorY: number }
-> = {
-  livingRoom: {
-    wall: "#262838",
-    floor: "#4a3a2c",
-    trim: "#1a1c28",
-    floorY: 78,
-  },
-};
-
 function drawStage(
   ctx: CanvasRenderingContext2D,
   cutscene: CutsceneState,
@@ -47,11 +28,14 @@ function drawStage(
 ): void {
   const def = cutsceneDef(cutscene.defId);
   const { width, height } = def.stage;
-  const paint = BACKDROPS[def.stage.backdrop] ?? {
-    wall: "#262838",
-    floor: "#3a3c4c",
-    trim: "#1a1c28",
-    floorY: Math.round(height * 0.65),
+  // The scene carries its own backdrop palette (defs/cutscenes.ts); the
+  // renderer only supplies neutral fallbacks for a scene that omits one.
+  const backdrop = def.stage.palette;
+  const paint = {
+    wall: backdrop?.wall ?? "#262838",
+    floor: backdrop?.floor ?? "#3a3c4c",
+    trim: backdrop?.trim ?? "#1a1c28",
+    floorY: backdrop?.floorY ?? Math.round(height * 0.65),
   };
 
   ctx.imageSmoothingEnabled = false;
@@ -179,7 +163,10 @@ export function CutsceneOverlay({
           {line.kind === "say" && line.actor && (
             <PixelText
               font={font}
-              text={ACTOR_NAMES[line.actor] ?? line.actor.toUpperCase()}
+              text={
+                def.actors.find((a) => a.id === line.actor)?.name ??
+                line.actor.toUpperCase()
+              }
               scale={2}
               color="#7ef0c8"
             />

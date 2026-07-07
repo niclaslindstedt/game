@@ -120,10 +120,16 @@ export function createGame(
       height: def.height,
       gravity: def.gravity,
       biome: def.biome,
+      tiles: def.tiles,
       foes: def.foes,
     },
     playerSpawn,
-    landmarks: def.landmarks.map((l) => ({ kind: l.kind, pos: { ...l.pos } })),
+    landmarks: def.landmarks.map((l) => ({
+      kind: l.kind,
+      sprite: l.sprite ?? l.kind,
+      anchor: l.anchor ?? "center",
+      pos: { ...l.pos },
+    })),
     dialogue: null,
     storyItems: [],
     doors,
@@ -266,6 +272,7 @@ export function spawnEnemy(
  */
 function expandSegment(
   kind: string,
+  sprite: string,
   from: Vec2,
   to: Vec2,
   radius: number,
@@ -280,6 +287,7 @@ function expandSegment(
     obstacles.push({
       id: takeId(),
       kind,
+      sprite,
       pos: vec(from.x + (to.x - from.x) * t, from.y + (to.y - from.y) * t),
       radius,
       jumpable,
@@ -299,6 +307,7 @@ function buildWalls(def: LevelDef, takeId: () => number): Obstacle[] {
     obstacles.push(
       ...expandSegment(
         wall.kind,
+        wall.sprite ?? wall.kind,
         wall.from,
         wall.to,
         wall.radius,
@@ -324,6 +333,7 @@ function buildDoors(
   const doors: DoorState[] = [];
   for (const door of def.doors ?? []) {
     const chain = expandSegment(
+      "door_locked",
       "door_locked",
       door.from,
       door.to,
@@ -377,6 +387,7 @@ function scatterObstacles(
         scattered.push({
           id: takeId(),
           kind: spec.kind,
+          sprite: spec.sprite ?? spec.kind,
           pos,
           radius: spec.radius,
           jumpable: spec.jumpable,
@@ -391,7 +402,7 @@ function scatterObstacles(
 /** Scatter the level's decorative features, keeping landmarks clear. */
 function scatterDecor(rng: Rng, def: LevelDef): Decor[] {
   const decor: Decor[] = [];
-  for (const { kind, count } of def.decor) {
+  for (const { kind, sprite, count } of def.decor) {
     for (let i = 0; i < count; i++) {
       let pos = vec(0, 0);
       for (let attempts = 0; attempts < 20; attempts++) {
@@ -404,7 +415,7 @@ function scatterDecor(rng: Rng, def: LevelDef): Decor[] {
         );
         if (clear) break;
       }
-      decor.push({ kind, pos });
+      decor.push({ kind, sprite: sprite ?? kind, pos });
     }
   }
   return decor;

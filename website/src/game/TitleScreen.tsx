@@ -10,6 +10,10 @@ import { DIFFICULTY_ORDER, difficultyDef, type Difficulty } from "@game/core";
 
 import { PixelText } from "@ui/lib/PixelText.tsx";
 
+import { IDENTITY } from "../identity.ts";
+
+import { HELP_LINES } from "./copy.ts";
+
 import { loadGameAssets, spriteDataUrl, type GameAssets } from "./assets.ts";
 import { synth } from "./audio.ts";
 import { playTitleMusic } from "./music/index.ts";
@@ -26,31 +30,6 @@ const DIFFICULTY_COLORS: Record<Difficulty, string> = {
   nightmare: "#ff8c42",
   jesus: "#d83a3a",
 };
-
-const HELP_LINES = [
-  "STEER WITH THE POINTER - ON DESKTOP",
-  "YOUR CHARACTER CHASES THE CURSOR. ON",
-  "TOUCH, HOLD AND DRAG - A JOYSTICK",
-  "APPEARS UNDER YOUR FINGER AND YOU",
-  "WALK THE WAY YOU DRAG.",
-  "",
-  "TAP TO JUMP (WITH THE OTHER HAND",
-  "WHILE STEERING) OR PRESS SPACE -",
-  "MOON GRAVITY CARRIES YOU OVER THE",
-  "GHOSTS.",
-  "",
-  "YOUR CHARACTER FIGHTS ON ITS OWN WITH",
-  "WHATEVER IS EQUIPPED. LOOT THE",
-  "HAUNTING, SPEND LEVEL-UPS, AND TAKE",
-  "THE FIGHT TO THE OLD FLAG.",
-  "",
-  "CLICK (OR THE USE BUTTON, OR E) TO",
-  "USE A CARRIED POWER. PRESS I FOR THE",
-  "BAG. TUNE IT ALL UNDER SETTINGS.",
-  "",
-  "WORKS OFFLINE - INSTALL IT AS AN APP",
-  "FROM YOUR BROWSER MENU.",
-];
 
 const pct = (v: number) => `${Math.round(v * 100)}%`;
 /** 0 → 25 → 50 → 75 → 100 → 0, in quarter steps. */
@@ -81,7 +60,7 @@ export function TitleScreen({
   // Cursor position per screen; the difficulty list opens on MEDIUM.
   const [cursor, setCursor] = useState(0);
   // Landscape phones are short and portrait ones narrow: pick a logo scale
-  // that keeps "GONE IN SPACE" plus the menu inside both.
+  // that keeps the title logo plus the menu inside both.
   const [compact, setCompact] = useState(
     () => window.matchMedia("(max-height: 480px)").matches,
   );
@@ -298,16 +277,16 @@ export function TitleScreen({
       <div className="title-moon" aria-hidden="true" />
 
       <header className="title-logo">
-        <h1 className="visually-hidden">Gone in Space</h1>
+        <h1 className="visually-hidden">{IDENTITY.title}</h1>
         <PixelText
           font={font}
-          text="GONE IN SPACE"
+          text={IDENTITY.title.toUpperCase()}
           scale={logoScale}
           color="#7ef0c8"
         />
         <PixelText
           font={font}
-          text="SURVIVE THE SEARCH FOR YOUR LOST LOVE"
+          text={IDENTITY.tagline.toUpperCase()}
           scale={1}
           color="#9aa3ad"
         />
@@ -391,11 +370,7 @@ export function TitleScreen({
       </nav>
 
       <footer className="title-footer">
-        <a
-          href="https://github.com/niclaslindstedt/game"
-          target="_blank"
-          rel="noreferrer"
-        >
+        <a href={IDENTITY.repoUrl} target="_blank" rel="noreferrer">
           source code
         </a>
         <span>

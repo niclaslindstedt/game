@@ -234,6 +234,16 @@ export function playerSuited(state: GameState): boolean {
   return levelDef(state.level.id).heroSuited ?? true;
 }
 
+/**
+ * The sprite family the player wears right now — the renderer draws
+ * `<appearance>_0` / `_1` / `_jump` from it, so a costume change is data:
+ * a sequel returns different family keys here (and ships their sprites) with
+ * no renderer edit. This game toggles between plain clothes and the EVA suit.
+ */
+export function playerAppearance(state: GameState): string {
+  return playerSuited(state) ? "player" : "hero";
+}
+
 /** The player's walk speed in world px/s: base quickened by SPEED points. */
 export function playerSpeed(state: GameState): number {
   return (

@@ -9,14 +9,15 @@ name: pages
 #   /branch/   a feature branch parked via workflow_dispatch, persisted in
 #              the `branch-deploy` orphan branch so it survives later deploys
 #
-# Served at https://game.niclaslindstedt.se/ — a custom domain (DNS CNAME)
-# on the GitHub Pages origin. The Pages artifact root IS the site root, so
-# the slot directories inside the artifact are `.`, `preview/`, and
-# `branch/`, matching the Vite base paths `/`, `/preview/`, `/branch/`.
+# Served at the custom domain configured as `siteUrl` in game.config.json
+# (the identity source of truth) — a DNS CNAME on the GitHub Pages origin.
+# The Pages artifact root IS the site root, so the slot directories inside
+# the artifact are `.`, `preview/`, and `branch/`, matching the Vite base
+# paths `/`, `/preview/`, `/branch/`.
 #
 # Pre-requisites: the repo's Pages source must be set to "GitHub Actions"
-# and the custom domain to game.niclaslindstedt.se (Settings → Pages); the
-# DNS CNAME record must point at niclaslindstedt.github.io.
+# and the custom domain set to `siteUrl` (Settings → Pages); the DNS CNAME
+# record must point at the GitHub Pages origin (`<owner>.github.io`).
 
 on:
   push:

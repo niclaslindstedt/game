@@ -43,8 +43,8 @@ export type WeaponClass = "melee" | "ranged" | "magic";
 
 /**
  * Item quality, lowest to highest. Every tier exists engine-wide; each
- * level's loot table decides which tiers can actually drop there (the moon
- * rolls regular and magic only).
+ * level's loot table decides which tiers can actually drop there (a level
+ * may cap the rarity it awards).
  */
 export type Tier = "regular" | "magic" | "epic" | "legendary";
 
@@ -153,7 +153,8 @@ export type Enemy = {
   /**
    * Elites sleep at their post until the player wanders close (or wounds
    * them); once true they hunt forever — no drifting back home. Minions use
-   * it as their aggro latch: waking needs line of sight (ghosts excepted),
+   * it as their aggro latch: waking needs line of sight (some minions
+   * excepted),
    * the chase then holds even through walls, and escaping the aggro radius
    * puts them back to sleep. Unused by bosses, whose wakefulness is derived
    * per tick.
@@ -204,7 +205,10 @@ export type Item =
 
 /** A decorative feature scattered at level creation — rendered, no collision. */
 export type Decor = {
+  /** Def key for the piece (debugging/analytics); the renderer draws `sprite`. */
   kind: string;
+  /** Sprite name the renderer blits — resolved from the level def. */
+  sprite: string;
   pos: Vec2;
 };
 
@@ -215,8 +219,10 @@ export type Decor = {
  */
 export type Obstacle = {
   id: number;
-  /** Sprite/kind key for the renderer ("boulder", "rock"). */
+  /** Def key for the piece (analytics/debugging). */
   kind: string;
+  /** Sprite name the renderer blits — resolved from the level def. */
+  sprite: string;
   pos: Vec2;
   /** Collision radius in world px. */
   radius: number;
@@ -224,10 +230,29 @@ export type Obstacle = {
   jumpable: boolean;
 };
 
-/** A fixed story prop (the lander, the flag, …) placed by the level def. */
+/** A fixed story prop (a lander, a flag, …) placed by the level def. */
 export type Landmark = {
   kind: string;
+  /** Sprite name the renderer blits — resolved from the level def. */
+  sprite: string;
+  /**
+   * Where the sprite meets its pos: `base` pins the sprite's foot to `pos`
+   * (a standing prop like a flag or mast), `center` centers it. Data, so the
+   * renderer never special-cases a particular prop kind.
+   */
+  anchor: "base" | "center";
   pos: Vec2;
+};
+
+/**
+ * How the renderer paints a level's ground. Data on the level def, so a new
+ * biome is a new entry — no renderer edit. `ground.rare` scatters into
+ * `ground.common` every `rareEvery`-th cell; an optional `patch` clusters a
+ * second pair on a coarse grid for gravel/vent-style clumps.
+ */
+export type TileSpec = {
+  ground: { common: string; rare: string; rareEvery: number };
+  patch?: { a: string; b: string; every: number };
 };
 
 /**
@@ -371,16 +396,18 @@ export type GameInput = {
 export type LevelInfo = {
   /** Key into LEVELS. */
   id: string;
-  /** Story order (1 = earth, 2 = the moon, …). */
+  /** Story order (1-based). */
   index: number;
   name: string;
   width: number;
   height: number;
-  /** Downward acceleration in world px/s² — per level: moon ≈ earth/6. */
+  /** Downward acceleration in world px/s² — lower gravity floats jumps. */
   gravity: number;
-  /** Tileset/mood key for the renderer ("moon", "earth", …). */
+  /** Tileset/mood key for the renderer. */
   biome: string;
-  /** What the HUD calls this level's hostiles ("GHOSTS", "STAFF"). */
+  /** How the renderer paints the ground for this level. */
+  tiles: TileSpec;
+  /** What the HUD calls this level's hostiles. */
   foes: string;
 };
 

@@ -23,6 +23,11 @@ SPEC_TMP="$(mktemp -t oss-spec.XXXXXX.md)"
 curl -fsSL "$SPEC_URL" -o "$SPEC_TMP"
 ```
 
+> **Sequels / forks outside the org:** the `SPEC_URL` above pins
+> `niclaslindstedt/oss-spec`. A clone that stays under the same org keeps
+> working unchanged; a fork under a different org (or a different spec source)
+> must repoint `SPEC_URL` to its own spec repository.
+
 If `curl` is unavailable, fall back to `wget -qO "$SPEC_TMP" "$SPEC_URL"`. Never proceed with a stale local copy — a failed fetch is a hard stop, not a silent skip.
 
 Record the upstream spec version so every downstream decision is made against a known target:

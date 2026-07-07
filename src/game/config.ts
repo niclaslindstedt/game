@@ -38,13 +38,14 @@ export const PROJECTILE = {
 
 /**
  * Jumping. Tap (screen) or space to hop. Takeoff speed is the player's —
- * gravity belongs to the LEVEL (the moon's ~1/6 g carries the same takeoff
- * six times higher than earth's will).
+ * gravity belongs to the LEVEL, so the same takeoff floats higher under low
+ * gravity and snaps back fast under high gravity.
  */
 export const JUMP = {
   /** Upward takeoff speed in world px/s. */
   velocity: 240,
-  /** While `z` is above this, ghosts drift beneath the player: no contact. */
+  /** While `z` is above this, grounded enemies pass beneath the player: no
+   * contact. */
   dodgeHeight: 12,
 } as const;
 

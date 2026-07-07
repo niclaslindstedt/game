@@ -6,7 +6,9 @@
 
 import { createFlagStore } from "@ui/lib/flag-store.ts";
 
-const seenCutscenes = createFlagStore("gone-in-space:seen-cutscenes");
+import { storageKey } from "../identity.ts";
+
+const seenCutscenes = createFlagStore(storageKey("seen-cutscenes"));
 
 /** Has this scene already played to its end (or been skipped) here? */
 export function hasSeenCutscene(id: string): boolean {

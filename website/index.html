@@ -14,63 +14,39 @@
          the loaded app agree (§11.4.1). -->
     <meta name="theme-color" content="#0b0d10" />
 
-    <title>Gone in Space — survive the search for your lost love</title>
-    <meta
-      name="description"
-      content="Ada went out for a midnight walk and never came back — the trail leads to the moon. Fight the haunting, loot the ghosts, and bring her home. Free and offline in your browser."
-    />
-    <link rel="canonical" href="https://game.niclaslindstedt.se/" />
+    <!-- Brand-shaped strings below are `{{TOKENS}}` filled at build time from
+         the identity config (game.config.json) by website/pwa-plugin.ts, so a
+         rename touches one file, not this shell. -->
+    <title>{{FULL_TITLE}}</title>
+    <meta name="description" content="{{DESCRIPTION}}" />
+    <link rel="canonical" href="{{SITE_URL}}/" />
 
-    <meta property="og:site_name" content="Gone in Space" />
+    <meta property="og:site_name" content="{{TITLE}}" />
     <meta property="og:locale" content="en_US" />
     <meta property="og:type" content="website" />
-    <meta
-      property="og:title"
-      content="Gone in Space — survive the search for your lost love"
-    />
-    <meta
-      property="og:description"
-      content="Ada went out for a midnight walk and never came back — the trail leads to the moon. Fight the haunting, loot the ghosts, and bring her home. Free and offline in your browser."
-    />
-    <meta property="og:url" content="https://game.niclaslindstedt.se/" />
-    <meta
-      property="og:image"
-      content="https://game.niclaslindstedt.se/og-default.png"
-    />
+    <meta property="og:title" content="{{FULL_TITLE}}" />
+    <meta property="og:description" content="{{DESCRIPTION}}" />
+    <meta property="og:url" content="{{SITE_URL}}/" />
+    <meta property="og:image" content="{{SITE_URL}}/og-default.png" />
     <meta property="og:image:width" content="1200" />
     <meta property="og:image:height" content="630" />
-    <meta
-      property="og:image:alt"
-      content="Gone in Space — Ada is gone and the trail leads to the moon"
-    />
+    <meta property="og:image:alt" content="{{OG_IMAGE_ALT}}" />
 
     <meta name="twitter:card" content="summary_large_image" />
-    <meta
-      name="twitter:title"
-      content="Gone in Space — survive the search for your lost love"
-    />
-    <meta
-      name="twitter:description"
-      content="Ada went out for a midnight walk and never came back — the trail leads to the moon. Fight the haunting, loot the ghosts, and bring her home. Free and offline in your browser."
-    />
-    <meta
-      name="twitter:image"
-      content="https://game.niclaslindstedt.se/og-default.png"
-    />
-    <meta
-      name="twitter:image:alt"
-      content="Gone in Space — Ada is gone and the trail leads to the moon"
-    />
+    <meta name="twitter:title" content="{{FULL_TITLE}}" />
+    <meta name="twitter:description" content="{{DESCRIPTION}}" />
+    <meta name="twitter:image" content="{{SITE_URL}}/og-default.png" />
+    <meta name="twitter:image:alt" content="{{OG_IMAGE_ALT}}" />
 
     <script type="application/ld+json">
       {
         "@context": "https://schema.org",
         "@type": "VideoGame",
-        "@id": "https://game.niclaslindstedt.se/#game",
-        "name": "Gone in Space",
-        "url": "https://game.niclaslindstedt.se/",
-        "description": "Ada went out for a midnight walk and never came back — the trail leads to the moon. Fight the haunting, loot the ghosts, and bring her home.",
-        "image": "https://game.niclaslindstedt.se/og-default.png",
+        "@id": "{{SITE_URL}}/#game",
+        "name": "{{TITLE}}",
+        "url": "{{SITE_URL}}/",
+        "description": "{{DESCRIPTION}}",
+        "image": "{{SITE_URL}}/og-default.png",
         "applicationCategory": "GameApplication",
         "operatingSystem": "Any (web browser)",
         "gamePlatform": ["Web browser", "Progressive Web App"],
@@ -78,9 +54,9 @@
         "inLanguage": "en",
         "author": {
           "@type": "Person",
-          "@id": "https://game.niclaslindstedt.se/#author",
-          "name": "Niclas Lindstedt",
-          "sameAs": ["https://github.com/niclaslindstedt"]
+          "@id": "{{SITE_URL}}/#author",
+          "name": "{{AUTHOR_NAME}}",
+          "sameAs": ["{{AUTHOR_URL}}"]
         },
         "offers": { "@type": "Offer", "price": "0", "priceCurrency": "USD" }
       }
@@ -89,32 +65,14 @@
   <body>
     <div id="root">
       <!-- Prerendered shell (§11.3.1): real content crawlers can index without
-           running JavaScript. React replaces it with the live title screen. -->
+           running JavaScript. React replaces it with the live title screen.
+           Copy is injected from the identity config at build time. -->
       <main class="prelaunch">
-        <h1>Gone in Space</h1>
-        <p>
-          Ada went out for a midnight walk and never came back. The trail leads
-          to the moon — so build a ship, land in the dust, and take the search
-          to the haunting that keeps it.
-        </p>
-        <p>
-          A top-down survival scroller shooter that runs entirely in your
-          browser — no account, no server, fully playable offline once loaded.
-        </p>
-        <p>
-          You steer by holding the pointer down (or touching the screen); your
-          character fights on its own, acting according to the weapons and items
-          you pick up along the way. Survive the scroll as long as you can.
-        </p>
-        <p>
-          The game is an installable Progressive Web App: add it to your home
-          screen from the browser menu and it launches fullscreen, works
-          offline, and updates itself when a new build ships.
-        </p>
+        <h1>{{TITLE}}</h1>
+        {{HERO_PARAGRAPHS}}
         <p>
           Source code and development docs live in the
-          <a href="https://github.com/niclaslindstedt/game">GitHub repository</a
-          >.
+          <a href="{{REPO_URL}}">GitHub repository</a>.
         </p>
       </main>
     </div>

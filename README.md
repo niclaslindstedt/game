@@ -180,10 +180,24 @@ demonstrating.
   or close every tab of the app and reopen.
 - More in [docs/troubleshooting.md](docs/troubleshooting.md).
 
+## Making a sequel / new game on this engine
+
+This repo is built to be built on: a new game is a clone with the first
+game's assets and story stripped and new content authored on the same
+engine. The engine (`src/`) is content-agnostic — all levels, enemies,
+equipment, abilities, and story are data under `src/game/defs/`, and the
+brand identity is one file (`game.config.json`). The step-by-step playbook is
+the **`new-game`** agent skill (`.agent/skills/new-game/SKILL.md`): rename via
+the identity config, strip the content catalogs and this game's docs/tests,
+then rebuild with the `engine-system`, `pixel-assets`, `sound-effects`, and
+`playtest` skills. See [Architecture › Extension points](docs/architecture.md)
+for how to add new _mechanics_ (not just new content).
+
 ## Documentation
 
 - [Getting started](docs/getting-started.md)
 - [Architecture](docs/architecture.md)
+- [Game content](docs/game-content.md) — this game's story, levels, and roster
 - [Configuration](docs/configuration.md)
 - [Troubleshooting](docs/troubleshooting.md)
 

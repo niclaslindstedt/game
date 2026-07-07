@@ -3,8 +3,10 @@
 ## In-game settings
 
 The main menu's **SETTINGS** screen holds the player-facing configuration,
-persisted on-device in `localStorage` under `gone-in-space:settings`
-(`website/src/game/settings.ts`):
+persisted on-device in `localStorage` under `<storagePrefix>:settings`
+(`website/src/game/settings.ts`). The `<storagePrefix>` is the `storagePrefix`
+field of the identity config (`game.config.json`) — this game ships it as its
+own namespace, and a sequel changes it there once:
 
 | Setting             | Values                                              | Default                                                     |
 | ------------------- | --------------------------------------------------- | ----------------------------------------------------------- |
@@ -14,7 +16,7 @@ persisted on-device in `localStorage` under `gone-in-space:settings`
 | Sound FX volume     | 0–100% in quarter steps                             | 100%                                                        |
 
 Story progress is persisted the same way: watched cutscenes are recorded
-under `gone-in-space:seen-cutscenes` (`website/src/game/progress.ts`), so a
+under `<storagePrefix>:seen-cutscenes` (`website/src/game/progress.ts`), so a
 level's prelude plays once per device instead of on every retry. Clearing
 site data resets it; the `?cutscene=<id>` workbench replays any scene
 regardless.
@@ -36,7 +38,7 @@ environment.
 | ----------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `?debug`          | Enables debug-level console output (`src/output.ts`, OSS_SPEC §19.3). All levels are always captured in the in-memory buffer regardless; the flag only controls console verbosity. Additionally exposes the live engine state as `window.__game` (`website/src/game/GameScreen.tsx`) so DevTools and the playtest harness (`website/scripts/playtest.mjs`) can inspect real runs.              |
 | `?bot=<strategy>` | Hands the run to the engine autopilot (`src/game/bot.ts`): the bot skips any prelude cutscene, dismisses the intro, steers, jumps, and spends level-up points itself. Strategies: `idle`, `rush`, `kite`, `boss`, `survivor`. Unknown names are ignored (normal input applies). Used by the playtest harness (usually combined with `?debug`) and the seed for an AI-controlled second player. |
-| `?level=<id>`     | Starts runs on a specific catalog level (`src/game/defs/levels.ts`: `spacez_hq`, `moon`, …) instead of the story default (`LEVEL_ORDER[0]`). Unknown ids are ignored.                                                                                                                                                                                                                          |
+| `?level=<id>`     | Starts runs on a specific catalog level (`src/game/defs/levels.ts` — this game's ids: `spacez_hq`, `moon`) instead of the story default (`LEVEL_ORDER[0]`). Unknown ids are ignored.                                                                                                                                                                                                           |
 | `?seed=<n>`       | Pins the run's layout seed (a positive integer) so retries and bug reports lay the level out identically. Absent or invalid, the seed derives from the clock. See the debug-game skill.                                                                                                                                                                                                        |
 | `?cutscene=<id>`  | Opens the cutscene workbench instead of the game: plays one scene from the catalog (`src/game/defs/cutscenes.ts`) with TAP/SKIP/REPLAY controls, for iterating on scene authoring. With `?debug`, exposes the live scene as `window.__cutscene` for the preview harness (`website/scripts/cutscene-preview.mjs`).                                                                              |
 
