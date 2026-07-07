@@ -10,14 +10,14 @@ import {
   allocateStat,
   ENEMY_AI,
   enemyDef,
-  LEVELS,
+  levelDef,
   PLAYER,
   step,
 } from "@game/core";
 import type { GameState } from "@game/core";
 import { DT, idle, startGame } from "./helpers.ts";
 
-const WAVES = LEVELS.moon!.waves!;
+const WAVES = levelDef("test_level").waves!;
 const dist = (a: { x: number; y: number }, b: { x: number; y: number }) =>
   Math.hypot(a.x - b.x, a.y - b.y);
 const isBoss = (defId: string) => enemyDef(defId).role === "boss";

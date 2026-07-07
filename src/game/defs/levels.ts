@@ -572,9 +572,18 @@ export const LEVELS: Record<string, LevelDef> = {
 /** Story order of the levels shipped so far. */
 export const LEVEL_ORDER: string[] = ["spacez_hq", "moon"];
 
+// Active registry the accessor reads (defaults to the shipped catalog;
+// tests swap in fixtures via `registerDefs`). See src/index.ts.
+let activeLevels: Record<string, LevelDef> = LEVELS;
+
+/** Test/authoring hook: replace the active level catalog. */
+export function setLevelDefs(defs: Record<string, LevelDef>): void {
+  activeLevels = defs;
+}
+
 /** Look up a level def; throws on a broken id so bugs surface loudly. */
 export function levelDef(levelId: string): LevelDef {
-  const def = LEVELS[levelId];
+  const def = activeLevels[levelId];
   if (!def) throw new Error(`unknown level "${levelId}"`);
   return def;
 }

@@ -159,21 +159,21 @@ describe("cutscene player", () => {
 
 describe("the prelude in a run", () => {
   it("boots level 1 in the cutscene phase with the sim frozen", () => {
-    const state = createGame(SEED);
-    expect(state.level.id).toBe("spacez_hq");
+    const state = createGame(SEED, "test_prelude_level");
+    expect(state.level.id).toBe("test_prelude_level");
     expect(state.phase).toBe("cutscene");
-    expect(state.cutscene?.defId).toBe("prelude");
+    expect(state.cutscene?.defId).toBe("test_prelude");
     step(state, idle, DT);
     expect(state.stats.timeMs).toBe(0); // frozen under the scene
     expect(state.enemies.length).toBeGreaterThan(0); // world already built
   });
 
   it("idles on a text beat forever — the sim can't play the scene out alone", () => {
-    const state = createGame(SEED);
+    const state = createGame(SEED, "test_prelude_level");
     // Step well past every timed beat: the scene parks on the first text.
     for (let i = 0; i < 1200; i++) step(state, idle, DT);
     expect(state.phase).toBe("cutscene");
-    const def = cutsceneDef("prelude");
+    const def = cutsceneDef("test_prelude");
     expect(def.beats[state.cutscene!.beat]!.kind).toBe("caption");
     const parked = state.cutscene!.beat;
     for (let i = 0; i < 1200; i++) step(state, idle, DT);
@@ -181,8 +181,8 @@ describe("the prelude in a run", () => {
   });
 
   it("taps on the held text carry the scene through to the intro", () => {
-    const state = createGame(SEED);
-    const def = cutsceneDef("prelude");
+    const state = createGame(SEED, "test_prelude_level");
+    const def = cutsceneDef("test_prelude");
     for (let i = 0; i < 20_000 && state.phase === "cutscene"; i++) {
       step(state, idle, DT);
       const beat = state.cutscene && def.beats[state.cutscene.beat];
@@ -196,8 +196,8 @@ describe("the prelude in a run", () => {
   });
 
   it("tapCutscene advances one beat per tap all the way out", () => {
-    const state = createGame(SEED);
-    const beats = cutsceneDef("prelude").beats.length;
+    const state = createGame(SEED, "test_prelude_level");
+    const beats = cutsceneDef("test_prelude").beats.length;
     for (let i = 0; i < beats && state.phase === "cutscene"; i++) {
       tapCutscene(state);
     }
@@ -206,22 +206,22 @@ describe("the prelude in a run", () => {
   });
 
   it("skipCutscene bails straight to the intro", () => {
-    const state = createGame(SEED);
+    const state = createGame(SEED, "test_prelude_level");
     skipCutscene(state);
     expect(state.phase).toBe("intro");
     expect(state.cutscene).toBeNull();
     // …and is a no-op on levels without a prelude.
-    const moon = createGame(SEED, "moon");
+    const moon = createGame(SEED, "test_level");
     expect(moon.phase).toBe("intro");
     skipCutscene(moon);
     expect(moon.phase).toBe("intro");
   });
 
   it("Ada leaves and never comes back", () => {
-    const state = createGame(SEED);
+    const state = createGame(SEED, "test_prelude_level");
     const ada = () => state.cutscene?.actors.find((a) => a.id === "ada");
     expect(ada()?.hidden).toBe(false);
-    const def = cutsceneDef("prelude");
+    const def = cutsceneDef("test_prelude");
     // Run to just before the final beat: Ada must already be gone.
     while (state.cutscene && state.cutscene.beat < def.beats.length - 1) {
       tapCutscene(state);

@@ -4,7 +4,7 @@
 
 import { describe, expect, it } from "vitest";
 
-import { rollEquipment, step, WEAPON_DEFS } from "@game/core";
+import { rollEquipment, step, weaponDef } from "@game/core";
 import type { Equipment, GameState } from "@game/core";
 import { clearStage, DT, idle, makeEnemy, run, startGame } from "./helpers.ts";
 
@@ -15,7 +15,7 @@ function weapon(id: number, defId: string, durability?: number): Equipment {
     slot: "weapon",
     tier: "regular",
     affixes: [],
-    durability: durability ?? WEAPON_DEFS[defId]!.durability,
+    durability: durability ?? weaponDef(defId).durability,
   };
 }
 
@@ -34,10 +34,10 @@ function addPunchingBag(state: GameState): void {
 describe("weapon durability", () => {
   it("rolled weapon drops carry their def's durability", () => {
     const state = startGame();
-    const rolled = rollEquipment(state, { defId: "pipe" });
-    expect(rolled.durability).toBe(WEAPON_DEFS.pipe!.durability);
+    const rolled = rollEquipment(state, { defId: "test_pipe" });
+    expect(rolled.durability).toBe(weaponDef("test_pipe").durability);
     // Gear never wears.
-    const suit = rollEquipment(state, { defId: "suit_plating" });
+    const suit = rollEquipment(state, { defId: "test_suit" });
     expect(suit.durability).toBeUndefined();
   });
 
@@ -55,7 +55,7 @@ describe("weapon durability", () => {
     const state = startGame();
     clearStage(state);
     addPunchingBag(state);
-    state.player.equipment.weapon = weapon(50, "hammer", 10);
+    state.player.equipment.weapon = weapon(50, "test_hammer", 10);
     run(state, idle, 200, (s) => s.stats.damageDealt > 0); // one swing
     expect(state.player.equipment.weapon.durability).toBe(9);
   });
@@ -64,9 +64,9 @@ describe("weapon durability", () => {
     const state = startGame();
     clearStage(state);
     addPunchingBag(state);
-    state.player.equipment.weapon = weapon(50, "wand", 1); // last swing
-    state.player.inventory[0] = weapon(51, "pistol"); // ~17.5 dps
-    state.player.inventory[1] = weapon(52, "hammer"); // ~53 dps — the pick
+    state.player.equipment.weapon = weapon(50, "test_wand", 1); // last swing
+    state.player.inventory[0] = weapon(51, "test_pistol"); // ~17.5 dps
+    state.player.inventory[1] = weapon(52, "test_hammer"); // ~53 dps — the pick
     run(state, idle, 400, (s) =>
       s.events.some((e) => e.type === "weaponBroke"),
     );
@@ -81,7 +81,7 @@ describe("weapon durability", () => {
     const state = startGame();
     clearStage(state);
     addPunchingBag(state);
-    state.player.equipment.weapon = weapon(50, "wand", 1);
+    state.player.equipment.weapon = weapon(50, "test_wand", 1);
     run(state, idle, 400, (s) =>
       s.events.some((e) => e.type === "weaponBroke"),
     );
@@ -94,12 +94,12 @@ describe("repair kits", () => {
   it("restore the equipped weapon to full durability", () => {
     const state = startGame();
     clearStage(state);
-    state.player.equipment.weapon = weapon(50, "hammer", 3);
+    state.player.equipment.weapon = weapon(50, "test_hammer", 3);
     state.items = [{ id: 1, kind: "repair", pos: { ...state.player.pos } }];
     step(state, idle, DT);
     expect(state.items).toHaveLength(0);
     expect(state.player.equipment.weapon.durability).toBe(
-      WEAPON_DEFS.hammer!.durability,
+      weaponDef("test_hammer").durability,
     );
     expect(state.events).toContainEqual(
       expect.objectContaining({
@@ -117,7 +117,7 @@ describe("repair kits", () => {
     expect(state.items).toHaveLength(1);
 
     // A pristine breakable weapon needs no repair either.
-    state.player.equipment.weapon = weapon(50, "hammer");
+    state.player.equipment.weapon = weapon(50, "test_hammer");
     step(state, idle, DT);
     expect(state.items).toHaveLength(1);
   });

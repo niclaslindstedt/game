@@ -102,9 +102,18 @@ export const DIFFICULTY_ORDER: Difficulty[] = [
   "jesus",
 ];
 
+// Active registry the accessor reads (defaults to the shipped ladder;
+// tests swap in fixtures via `registerDefs`). See src/index.ts.
+let activeDifficultyDefs: Record<string, DifficultyDef> = DIFFICULTY_DEFS;
+
+/** Test/authoring hook: replace the active difficulty ladder. */
+export function setDifficultyDefs(defs: Record<string, DifficultyDef>): void {
+  activeDifficultyDefs = defs;
+}
+
 /** Look up a difficulty def; throws on a broken id so bugs surface loudly. */
 export function difficultyDef(difficulty: Difficulty): DifficultyDef {
-  const def = DIFFICULTY_DEFS[difficulty];
+  const def = activeDifficultyDefs[difficulty];
   if (!def) throw new Error(`unknown difficulty "${difficulty as string}"`);
   return def;
 }

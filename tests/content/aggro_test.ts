@@ -9,7 +9,7 @@ import { describe, expect, it } from "vitest";
 
 import { ENEMY_AI, LEVELS, step } from "@game/core";
 import type { GameState, Obstacle } from "@game/core";
-import { clearStage, DT, idle, makeEnemy, run, startGame } from "./helpers.ts";
+import { clearStage, DT, idle, makeEnemy, run, startGame } from "../helpers.ts";
 
 const dist = (a: { x: number; y: number }, b: { x: number; y: number }) =>
   Math.hypot(a.x - b.x, a.y - b.y);

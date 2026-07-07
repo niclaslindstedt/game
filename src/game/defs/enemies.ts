@@ -694,9 +694,18 @@ export const ENEMY_DEFS: Record<string, EnemyDef> = {
   },
 };
 
+// Active registry the accessor reads (defaults to the shipped catalog;
+// tests swap in fixtures via `registerDefs`). See src/index.ts.
+let activeEnemyDefs: Record<string, EnemyDef> = ENEMY_DEFS;
+
+/** Test/authoring hook: replace the active enemy catalog. */
+export function setEnemyDefs(defs: Record<string, EnemyDef>): void {
+  activeEnemyDefs = defs;
+}
+
 /** Look up an enemy's def; throws on a broken id so bugs surface loudly. */
 export function enemyDef(defId: string): EnemyDef {
-  const def = ENEMY_DEFS[defId];
+  const def = activeEnemyDefs[defId];
   if (!def) throw new Error(`unknown enemy def "${defId}"`);
   return def;
 }

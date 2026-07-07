@@ -6,7 +6,7 @@
 import { describe, expect, it } from "vitest";
 
 import {
-  ABILITY_DEFS,
+  abilityDef,
   grantAbility,
   LEVELING,
   magnetRadius,
@@ -87,13 +87,13 @@ describe("the screen nuke", () => {
         id: 1,
         kind: "ability",
         pos: { ...state.player.pos },
-        defId: "screen_nuke",
+        defId: "test_nuke",
       },
     ];
     step(state, idle, DT);
-    expect(state.player.heldAbilities).toContain("screen_nuke");
+    expect(state.player.heldAbilities).toContain("test_nuke");
 
-    const radius = ABILITY_DEFS.screen_nuke!.nuke!.radius;
+    const radius = abilityDef("test_nuke").nuke!.radius;
     const near = makeEnemy({
       id: 9001,
       pos: { x: state.player.pos.x + 100, y: state.player.pos.y },
@@ -125,8 +125,8 @@ describe("the item magnet", () => {
   it("pulls only items inside its radius", () => {
     const state = startGame();
     clearStage(state); // the parked boss keeps the objective open
-    grantAbility(state, "item_magnet");
-    const def = ABILITY_DEFS.item_magnet!;
+    grantAbility(state, "test_magnet");
+    const def = abilityDef("test_magnet");
     const caught: Item = {
       id: 1,
       kind: "medkit",
@@ -153,7 +153,7 @@ describe("the item magnet", () => {
 
   it("INTELLIGENCE widens the pull radius", () => {
     const state = startGame();
-    const def = ABILITY_DEFS.item_magnet!;
+    const def = abilityDef("test_magnet");
     const base = magnetRadius(state, def);
     state.player.stats.intelligence = 5;
     expect(magnetRadius(state, def)).toBe(base + 5 * def.magnet!.radiusPerInt);

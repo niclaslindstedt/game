@@ -94,9 +94,18 @@ export const CUTSCENE_DEFS: Record<string, CutsceneDef> = {
   prelude: PRELUDE,
 };
 
+// Active registry the accessor reads (defaults to the shipped catalog;
+// tests swap in fixtures via `registerDefs`). See src/index.ts.
+let activeCutsceneDefs: Record<string, CutsceneDef> = CUTSCENE_DEFS;
+
+/** Test/authoring hook: replace the active cutscene catalog. */
+export function setCutsceneDefs(defs: Record<string, CutsceneDef>): void {
+  activeCutsceneDefs = defs;
+}
+
 /** Look up a cutscene def; throws on a broken id so bugs surface loudly. */
 export function cutsceneDef(id: string): CutsceneDef {
-  const def = CUTSCENE_DEFS[id];
+  const def = activeCutsceneDefs[id];
   if (!def) throw new Error(`unknown cutscene "${id}"`);
   return def;
 }

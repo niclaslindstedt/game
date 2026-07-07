@@ -19,7 +19,7 @@ import {
   type Equipment,
 } from "@game/core";
 
-import { SEED } from "./helpers.ts";
+import { SEED } from "../helpers.ts";
 
 function spacez() {
   const state = createGame(SEED, "spacez_hq");

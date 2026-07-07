@@ -11,14 +11,13 @@ import {
   createGame,
   dismissIntro,
   ENEMY_AI,
-  ENEMY_DEFS,
   enemyDef,
   JUMP,
-  LEVELS,
+  levelDef,
+  weaponDef,
   PLAYER,
   RUN,
   step,
-  WEAPON_DEFS,
 } from "@game/core";
 import {
   clearStage,
@@ -32,8 +31,9 @@ import {
   steerTo,
   stopWaves,
 } from "./helpers.ts";
+import { FIX_ENEMIES } from "./fixtures.ts";
 
-const MOON = LEVELS.moon!;
+const MOON = levelDef("test_level");
 const dist = (a: { x: number; y: number }, b: { x: number; y: number }) =>
   Math.hypot(a.x - b.x, a.y - b.y);
 const isBoss = (defId: string) => enemyDef(defId).role === "boss";
@@ -41,7 +41,7 @@ const isMinion = (defId: string) => enemyDef(defId).role === "minion";
 
 describe("createGame", () => {
   it("opens on the intro text box and only plays after dismissal", () => {
-    const state = createGame(SEED, "moon");
+    const state = createGame(SEED, "test_level");
     expect(state.phase).toBe("intro");
     expect(MOON.intro.length).toBeGreaterThan(0);
 
@@ -55,7 +55,7 @@ describe("createGame", () => {
   });
 
   it("builds the moonscape: ghosts, boss at the flag, lander-side spawn", () => {
-    const state = createGame(SEED, "moon");
+    const state = createGame(SEED, "test_level");
     const minions = state.enemies.filter((e) => isMinion(e.defId));
     const bosses = state.enemies.filter((e) => isBoss(e.defId));
     const expectedMinions = MOON.spawns
@@ -70,11 +70,11 @@ describe("createGame", () => {
     expect(dist(state.player.pos, state.playerSpawn)).toBe(0);
     expect(state.decor.length).toBeGreaterThan(0);
     expect(state.player.equipment.weapon.defId).toBe("blaster");
-    expect(state.level.biome).toBe("moon");
+    expect(state.level.biome).toBe("test");
   });
 
   it("bands enemy difficulty by distance from the player spawn", () => {
-    const state = createGame(SEED, "moon");
+    const state = createGame(SEED, "test_level");
     const avg = (defId: string) => {
       const list = state.enemies.filter((e) => e.defId === defId);
       return (
@@ -82,13 +82,13 @@ describe("createGame", () => {
         list.length
       );
     };
-    expect(avg("wisp")).toBeLessThan(avg("ghost"));
-    expect(avg("ghost")).toBeLessThan(avg("wraith"));
+    expect(avg("test_fodder")).toBeLessThan(avg("test_minion"));
+    expect(avg("test_minion")).toBeLessThan(avg("test_brute"));
   });
 
   it("is deterministic for a given seed", () => {
-    const a = createGame(SEED, "moon");
-    const b = createGame(SEED, "moon");
+    const a = createGame(SEED, "test_level");
+    const b = createGame(SEED, "test_level");
     expect(a.enemies.map((e) => e.pos)).toEqual(b.enemies.map((e) => e.pos));
     expect(a.decor).toEqual(b.decor);
   });
@@ -201,7 +201,7 @@ describe("jumping", () => {
 describe("weapon", () => {
   it("auto-fires only when a monster is in range", () => {
     const state = startGame();
-    const range = WEAPON_DEFS.blaster!.range;
+    const range = weaponDef("blaster").range;
     state.enemies = [
       makeEnemy({
         pos: { x: state.player.pos.x + range + 100, y: state.player.pos.y },
@@ -271,7 +271,7 @@ describe("weapon", () => {
     const state = startGame();
     state.player.equipment.weapon = {
       id: 777,
-      defId: "wrench",
+      defId: "test_wrench",
       slot: "weapon",
       tier: "regular",
       affixes: [],
@@ -283,7 +283,7 @@ describe("weapon", () => {
     expect(state.projectiles).toHaveLength(0);
     expect(state.events).toContainEqual({ type: "swing" });
     expect(state.stats.damageDealt).toBeGreaterThanOrEqual(
-      WEAPON_DEFS.wrench!.damage,
+      weaponDef("test_wrench").damage,
     );
   });
 });
@@ -291,7 +291,7 @@ describe("weapon", () => {
 describe("enemy AI", () => {
   it("chases inside the aggro radius and drifts home outside it", () => {
     const state = startGame();
-    const aggro = ENEMY_DEFS.ghost!.ai.aggroRadius;
+    const aggro = enemyDef("test_minion").ai.aggroRadius;
     const near = makeEnemy({
       id: 1,
       pos: { x: state.player.pos.x + 100, y: state.player.pos.y },
@@ -318,7 +318,7 @@ describe("enemy AI", () => {
         pos: { x: state.player.pos.x + 40, y: state.player.pos.y },
         hp: 1_000_000,
         maxHp: 1_000_000,
-        speed: ENEMY_DEFS.ghost!.speed,
+        speed: enemyDef("test_minion").speed,
       }),
     ];
     run(state, idle, 300, (s) => s.stats.damageTaken > 0);
@@ -331,7 +331,7 @@ describe("enemy AI", () => {
   });
 
   it("is outpaced by the player: every monster is slower, even with jitter", () => {
-    for (const def of Object.values(ENEMY_DEFS)) {
+    for (const def of Object.values(FIX_ENEMIES)) {
       expect(def.speed * (1 + ENEMY_AI.speedJitter)).toBeLessThan(PLAYER.speed);
     }
   });
@@ -344,7 +344,7 @@ describe("enemy AI", () => {
     expect(dist(boss.pos, flag.pos)).toBeLessThan(4); // still hiding
 
     state.player.pos = {
-      x: flag.pos.x - ENEMY_DEFS.armstrong!.ai.aggroRadius + 40,
+      x: flag.pos.x - enemyDef("test_boss").ai.aggroRadius + 40,
       y: flag.pos.y,
     };
     const before = dist(boss.pos, state.player.pos);

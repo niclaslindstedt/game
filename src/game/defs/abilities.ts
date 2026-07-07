@@ -115,9 +115,18 @@ export const ABILITY_DEFS: Record<string, AbilityDef> = {
   },
 };
 
+// Active registry the accessor reads (defaults to the shipped catalog;
+// tests swap in fixtures via `registerDefs`). See src/index.ts.
+let activeAbilityDefs: Record<string, AbilityDef> = ABILITY_DEFS;
+
+/** Test/authoring hook: replace the active ability catalog. */
+export function setAbilityDefs(defs: Record<string, AbilityDef>): void {
+  activeAbilityDefs = defs;
+}
+
 /** Look up an ability def; throws on a broken id so bugs surface loudly. */
 export function abilityDef(defId: string): AbilityDef {
-  const def = ABILITY_DEFS[defId];
+  const def = activeAbilityDefs[defId];
   if (!def) throw new Error(`unknown ability def "${defId}"`);
   return def;
 }
