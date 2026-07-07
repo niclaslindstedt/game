@@ -18,7 +18,7 @@ own namespace, and a sequel changes it there once:
 | Sound FX volume            | 0–100% in quarter steps                                     | 100%                                                        |
 
 Desktop keyboard controls (when **Keys** is set to WASD): WASD or the arrow
-keys walk, **Shift** runs, **Space** jumps, **1/2/3** fire the powerup dock
+keys run, **Shift** walks, **Space** jumps, **1/2/3** fire the powerup dock
 slots, **Q** opens the weapon switcher (then **1-4** equip a weapon), **E**
 spends the oldest powerup, and **I** toggles the bag.
 

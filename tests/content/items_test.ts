@@ -5,9 +5,11 @@
 import { describe, expect, it } from "vitest";
 
 import {
+  discardFromInventory,
   ENEMY_DEFS,
   enemyDef,
   equipFromInventory,
+  equipmentBaseName,
   equipmentName,
   GEAR_DEFS,
   LEVELS,
@@ -82,26 +84,35 @@ describe("boss loot", () => {
     }
   });
 
-  it("magic-tier drops carry an affix and the MAGIC name prefix", () => {
-    // Max luck forces the tier roll deterministically.
+  it("high-luck drops roll up to RARE, with affixes and a decorated name", () => {
+    // The boss's tierBonus + max luck clears the moon's rare base chance every
+    // time, so every dropped piece rolls the top tier the moon awards.
     const state = startGame();
     state.player.stats.luck = 30;
     state.items = [];
     killTheBoss(state);
-    for (const item of state.items) {
+    const equipment = state.items.filter((i) => i.kind === "equipment");
+    expect(equipment.length).toBeGreaterThan(0);
+    for (const item of equipment) {
       if (item.kind !== "equipment") continue;
-      expect(item.equipment.tier).toBe("magic"); // the moon caps at magic
-      expect(item.equipment.affixes).toHaveLength(TIERS.magic.affixCount);
-      expect(equipmentName(item.equipment).startsWith("MAGIC ")).toBe(true);
+      expect(item.equipment.tier).toBe("rare");
+      expect(item.equipment.affixes.length).toBe(TIERS.rare.affixCount);
+      // The name is decorated from its affixes (a prefix and/or "of the X"
+      // suffix), never the bare tier prefix and always longer than the base.
+      const name = equipmentName(item.equipment);
+      expect(name.startsWith("RARE ")).toBe(false);
+      expect(name.length).toBeGreaterThan(0);
     }
   });
 
   it("epic and legendary never drop on the moon even at max luck", () => {
+    // Rare is the moon's ceiling now (its loot table lists magic + rare);
+    // epic/legendary stay locked behind harder difficulties and later levels.
     const state = startGame();
     state.player.stats.luck = 100;
     for (let i = 0; i < 50; i++) {
       const rolled = rollEquipment(state);
-      expect(["regular", "magic"]).toContain(rolled.tier);
+      expect(["regular", "magic", "rare"]).toContain(rolled.tier);
     }
   });
 });
@@ -378,5 +389,76 @@ describe("inventory", () => {
     moveInventoryItem(state, 0, 2);
     expect(state.player.inventory[0]).toBeNull();
     expect(state.player.inventory[2]?.id).toBe(70);
+  });
+
+  it("discards a bag item for good — no ground drop", () => {
+    const state = startGame();
+    state.items = [];
+    state.player.inventory[2] = makeSuit(77);
+    const removed = discardFromInventory(state, 2);
+    expect(removed?.id).toBe(77);
+    expect(state.player.inventory[2]).toBeNull();
+    // Destroyed, not dropped: nothing lands on the ground to pick back up.
+    expect(state.items.some((i) => i.kind === "equipment")).toBe(false);
+  });
+
+  it("discarding an empty cell is a no-op", () => {
+    const state = startGame();
+    state.player.inventory[1] = null;
+    expect(discardFromInventory(state, 1)).toBeNull();
+  });
+});
+
+describe("Diablo-style item names", () => {
+  function weapon(defId: string, affixes: Equipment["affixes"]): Equipment {
+    return { id: 1, defId, slot: "weapon", tier: "regular", affixes };
+  }
+  function gear(
+    defId: string,
+    slot: Equipment["slot"],
+    affixes: Equipment["affixes"],
+  ): Equipment {
+    return { id: 2, defId, slot, tier: "regular", affixes };
+  }
+
+  it("names an affix-less item by its bare base type", () => {
+    expect(equipmentName(weapon("pipe", []))).toBe(equipmentBaseName("pipe"));
+    expect(equipmentName(weapon("pipe", []))).toBe("PIPE");
+  });
+
+  it("prefixes a damage roll and suffixes a stat roll", () => {
+    // damagePct → a magnitude-scaled prefix.
+    expect(
+      equipmentName(weapon("pipe", [{ kind: "damagePct", value: 0.25 }])),
+    ).toBe("VICIOUS PIPE");
+    // A stat roll → an "of the X" suffix keyed to the stat.
+    expect(
+      equipmentName(
+        weapon("pipe", [{ kind: "stat", value: 1, stat: "dexterity" }]),
+      ),
+    ).toBe("PIPE OF THE FOX");
+    // crit → its own suffix.
+    expect(equipmentName(weapon("pipe", [{ kind: "crit", value: 0.05 }]))).toBe(
+      "PIPE OF DEADLINESS",
+    );
+  });
+
+  it("composes a prefix and a suffix on a multi-affix piece", () => {
+    expect(
+      equipmentName(
+        weapon("pipe", [
+          { kind: "damagePct", value: 0.32 },
+          { kind: "stat", value: 1, stat: "strength" },
+        ]),
+      ),
+    ).toBe("CRUEL PIPE OF THE OX");
+    expect(
+      equipmentName(
+        gear("suit_plating", "suit", [
+          { kind: "maxHp", value: 15 },
+          { kind: "stat", value: 1, stat: "luck" },
+        ]),
+      ),
+    ).toBe("STURDY SUIT PLATING OF FORTUNE");
   });
 });

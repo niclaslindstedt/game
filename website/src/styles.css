@@ -1093,6 +1093,27 @@ body {
   border: 2px solid #1d2530;
 }
 
+/* The item card's title row: the pixel icon beside the (tier-colored) name. */
+.item-card-header {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+/* Floats over the bag while a bag item is dragged clear of the panel, warning
+   that releasing here destroys it for good. */
+.discard-hint {
+  position: fixed;
+  top: 0.75rem;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 60;
+  padding: 0.4rem 0.75rem;
+  background: rgba(11, 13, 16, 0.92);
+  border: 2px solid #e06a6a;
+  pointer-events: none;
+}
+
 /* Landscape (the 844×390 reference phone): sections side by side, the bag
    two rows of six, and everything tightened so CLOSE stays on screen. */
 @media (min-aspect-ratio: 4/3) {
@@ -1144,6 +1165,11 @@ body {
 
 /* Slot labels sit centered over their cells. */
 .equip-col canvas {
+  align-self: center;
+}
+
+/* The item name sits centered against its icon in the card header. */
+.item-card-header canvas {
   align-self: center;
 }
 

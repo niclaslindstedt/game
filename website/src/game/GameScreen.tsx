@@ -142,8 +142,8 @@ function cursorThrottle(dist: number, fullSpeedPx: number): number {
 
 // Desktop WASD/arrow steering (settings.keyboardMove === "on"): each held key
 // contributes a cardinal direction; the vector sum is the heading, projected
-// DPAD_STEER_DISTANCE ahead like the touch dpad. Movement is binary — walk by
-// default, run while Shift is held, stand still with no key down. Keyed by
+// DPAD_STEER_DISTANCE ahead like the touch dpad. Movement is binary — run by
+// default, hold Shift to walk, stand still with no key down. Keyed by
 // `event.code` so it's layout-independent (AZERTY etc.).
 const MOVE_KEYS: Record<string, { x: number; y: number }> = {
   KeyW: { x: 0, y: -1 },
@@ -155,7 +155,8 @@ const MOVE_KEYS: Record<string, { x: number; y: number }> = {
   KeyD: { x: 1, y: 0 },
   ArrowRight: { x: 1, y: 0 },
 };
-// The walk pace without Shift; Shift runs at full speed.
+// The reduced pace while Shift is held; the default (no modifier) runs at full
+// speed.
 const KEYBOARD_WALK_THROTTLE = 0.6;
 
 /** Other carried weapons, strongest first — the switch targets shared by the
@@ -201,9 +202,9 @@ export function GameScreen({
   const jumpQueuedRef = useRef(false);
   const useItemQueuedRef = useRef(false);
   // Desktop keyboard steering: which MOVE_KEYS are held right now, and whether
-  // the run modifier (Shift) is down. Read every sim tick (see the loop).
+  // the walk modifier (Shift) is down. Read every sim tick (see the loop).
   const heldMoveKeysRef = useRef<Set<string>>(new Set());
-  const runningRef = useRef(false);
+  const walkingRef = useRef(false);
   // Mirror of `weaponMenuOpen` so the (closure-captured) key handler can read
   // the live value without re-registering on every toggle.
   const weaponMenuOpenRef = useRef(false);
@@ -368,7 +369,7 @@ export function GameScreen({
         }
       }
       if (event.code === "ShiftLeft" || event.code === "ShiftRight") {
-        runningRef.current = true;
+        walkingRef.current = true;
       }
       if (event.repeat) return;
       if (event.code === "Space") {
@@ -430,13 +431,13 @@ export function GameScreen({
     const onKeyUp = (event: KeyboardEvent) => {
       if (event.code in MOVE_KEYS) heldMoveKeysRef.current.delete(event.code);
       if (event.code === "ShiftLeft" || event.code === "ShiftRight") {
-        runningRef.current = false;
+        walkingRef.current = false;
       }
     };
     // Losing focus (alt-tab, a click on a menu) must not leave a key "stuck".
     const onBlur = () => {
       heldMoveKeysRef.current.clear();
-      runningRef.current = false;
+      walkingRef.current = false;
     };
     window.addEventListener("keydown", onKeyDown);
     window.addEventListener("keyup", onKeyUp);
@@ -505,7 +506,7 @@ export function GameScreen({
             }
           } else if (settings.keyboardMove === "on") {
             // Desktop WASD/arrows: a binary control mode — the held keys sum
-            // to a heading (walk, or run with Shift), no key stands still.
+            // to a heading (run, or walk with Shift), no key stands still.
             // The mouse is freed from steering here (aim stays automatic).
             let dx = 0;
             let dy = 0;
@@ -523,7 +524,7 @@ export function GameScreen({
                 state.player.pos.x + (dx / len) * DPAD_STEER_DISTANCE;
               input.target.y =
                 state.player.pos.y + (dy / len) * DPAD_STEER_DISTANCE;
-              input.throttle = runningRef.current ? 1 : KEYBOARD_WALK_THROTTLE;
+              input.throttle = walkingRef.current ? KEYBOARD_WALK_THROTTLE : 1;
             }
           } else {
             // Cursor-follow steering: a hovering mouse steers with no button.

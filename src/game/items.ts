@@ -13,6 +13,7 @@ import { randomRange } from "@game/lib/rng.ts";
 import { LOOT, MELEE, PLAYER, STATS } from "./config.ts";
 import { cutsceneDef } from "./defs/cutscenes.ts";
 import {
+  affixNaming,
   AFFIX_POOLS,
   gearDef,
   isWeaponDef,
@@ -55,9 +56,25 @@ export const SPEED_STAT: Record<WeaponClass, StatName> = {
   magic: "intelligence",
 };
 
-/** Display name of an equipment instance: tier prefix + catalog name. */
+/**
+ * Display name of an equipment instance, Diablo-style: a plain base type when
+ * it rolled no affixes (regular tier), otherwise decorated with a prefix
+ * and/or "of the X" suffix drawn from its affixes — CRUEL BEAKER OF THE FOX.
+ * The name is derived from the stored affixes, so it is stable for the life of
+ * the item; the tier still shows through the color the app paints it. Only the
+ * first prefix-lending and first suffix-lending affix feed the name (extra
+ * affixes on epic/legendary pieces still list their bonuses in full below it).
+ */
 export function equipmentName(equipment: Equipment): string {
-  return TIERS[equipment.tier].prefix + equipmentBaseName(equipment.defId);
+  const base = equipmentBaseName(equipment.defId);
+  let prefix = "";
+  let suffix = "";
+  for (const affix of equipment.affixes) {
+    const naming = affixNaming(affix);
+    if (naming.prefix && !prefix) prefix = naming.prefix;
+    if (naming.suffix && !suffix) suffix = naming.suffix;
+  }
+  return [prefix, base, suffix].filter(Boolean).join(" ");
 }
 
 // ---- Loot rolls --------------------------------------------------------------
@@ -486,6 +503,23 @@ export function addToInventory(state: GameState, item: Equipment): boolean {
   if (free === -1) return false;
   state.player.inventory[free] = item;
   return true;
+}
+
+/**
+ * Permanently destroy the item in bag cell `index` — the "drag it out and
+ * drop it on the ground" gesture. Returns the discarded item (so the UI can
+ * announce what was trashed), or null on an empty cell. There is no undo and
+ * nothing is left on the ground: the piece is gone for good.
+ */
+export function discardFromInventory(
+  state: GameState,
+  index: number,
+): Equipment | null {
+  const inv = state.player.inventory;
+  const item = inv[index] ?? null;
+  if (!item) return null;
+  inv[index] = null;
+  return item;
 }
 
 // ---- Durability -------------------------------------------------------------------

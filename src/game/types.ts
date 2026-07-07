@@ -45,11 +45,14 @@ export type StatName =
 export type WeaponClass = "melee" | "ranged" | "magic";
 
 /**
- * Item quality, lowest to highest. Every tier exists engine-wide; each
- * level's loot table decides which tiers can actually drop there (a level
- * may cap the rarity it awards).
+ * Item quality, lowest to highest: white regular, blue magic, yellow rare,
+ * purple epic, orange legendary (the colors are the app's, see tiers.ts).
+ * Every tier exists engine-wide; each level's loot table decides which tiers
+ * can actually drop there (a level may cap the rarity it awards), and elites
+ * and bosses sweeten the roll — rares are the reward for the plot fights and
+ * the deeper levels, never the level-1 rank and file.
  */
-export type Tier = "regular" | "magic" | "epic" | "legendary";
+export type Tier = "regular" | "magic" | "rare" | "epic" | "legendary";
 
 export type EquipSlot = "weapon" | "suit" | "charm";
 

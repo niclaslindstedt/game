@@ -58,8 +58,8 @@ and something enormous haunts the old flag.
   on touch, hold and drag: a virtual joystick appears under your finger and
   you walk in the direction you drag — release to stop. (Swap the mouse
   back to classic hold-to-steer under SETTINGS → CONTROLS.)
-- **Or use the keyboard** — on desktop, **WASD / arrow keys** walk, **Shift**
-  runs, and no key stands still (a binary walk/run mode that frees the mouse
+- **Or use the keyboard** — on desktop, **WASD / arrow keys** run, **Shift**
+  walks, and no key stands still (a binary run/walk mode that frees the mouse
   from steering). Toggle it under SETTINGS → CONTROLS.
 - **Tap** (with the other hand while steering, or press Space) to **jump**
   — each level sets its own gravity: HQ hops clear a desk; moon gravity

@@ -82,9 +82,10 @@ run against synthetic fixtures with no shipped content (see
   `skipCutscene` ends the scene outright.
 - **`src/game/defs/equipment.ts`** — weapons (melee/ranged/magic classes,
   each with a durability budget — dropped weapons wear out per attack and
-  break; the starting sidearm is minted unbreakable), gear, the four-tier
-  quality ladder (regular/magic/epic/legendary — later levels unlock the
-  upper tiers), and the affix pools magic+ items roll.
+  break; the starting sidearm is minted unbreakable), gear, the five-tier
+  quality ladder (regular/magic/rare/epic/legendary — later levels and harder
+  difficulties unlock the upper tiers), and the affix pools magic+ items roll
+  (magic+ names are composed Diablo-style from those affixes).
 - **`src/game/defs/abilities.ts`** — the ability pickups: time-limited
   powers (orbiting fire orbs, storm strikes, stasis slow fields, the item
   magnet whose pull radius grows with INTELLIGENCE) plus the instant
@@ -96,7 +97,7 @@ run against synthetic fixtures with no shipped content (see
   MEDIUM → HARD → NIGHTMARE → JESUS CHRIST!), chosen on the main menu and
   layered over every level: multipliers for spawn counts, monster hp, and
   the wave spawner's live cap, plus loot sweeteners (drop-chance bonus and
-  per-tier chance bonuses that unlock epic/legendary on levels whose own
+  per-tier chance bonuses that unlock rare/epic/legendary on levels whose own
   loot table caps lower). MEDIUM is the exact 1.0 baseline.
 - **`src/game/abilities.ts`** — ability activation and the helpers the
   renderer shares (`orbPositions`, `stasisFactorAt`); the per-tick behavior
