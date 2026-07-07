@@ -30,6 +30,7 @@ import {
   ENEMY_AI,
   HELD_ITEMS,
   JUMP,
+  LAST_STAND,
   LEVELING,
   MEDKIT,
   OBSTACLES,
@@ -631,8 +632,13 @@ function stepEnemies(state: GameState, dt: number, dtMs: number): void {
       distance(enemy.pos, player.pos) <= def.radius + PLAYER.radius;
     if (touching && enemy.contactCooldownMs <= 0) {
       const crit = state.rng() < enemyCritChance(state, def.critChance);
+      // A boss backed into its last stand hits like a cornered animal.
+      const lastStand =
+        def.role === "boss" && enemy.hp <= enemy.maxHp * LAST_STAND.hpFraction;
       const damage = Math.round(
-        def.contactDamage * (crit ? STATS.critMultiplier : 1),
+        def.contactDamage *
+          (crit ? STATS.critMultiplier : 1) *
+          (lastStand ? LAST_STAND.damageMultiplier : 1),
       );
       player.hp -= damage;
       player.hurtFlashMs = 250;

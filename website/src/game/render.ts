@@ -10,9 +10,11 @@ import {
   abilityDef,
   enemyDef,
   equipmentIcon,
+  LAST_STAND,
   magnetRadius,
   orbPositions,
   storyItemDef,
+  WOUNDS,
   type GameState,
 } from "@game/core";
 
@@ -234,15 +236,37 @@ export function drawFrame(
     // This same idle bob keeps speakers visibly alive during dialogue —
     // it runs on render time, which never freezes.
     const frame = Math.floor(timeMs / 300 + enemy.id) % 2;
+    // Battle damage: sprites swap to wounded variants as hp falls — every
+    // mob at half, elites and bosses heavier below a quarter, bosses in a
+    // dying last stand at the bottom (thresholds in config.WOUNDS /
+    // LAST_STAND). Missing variants degrade to the base frame.
+    const hpFrac = enemy.hp / enemy.maxHp;
+    const lastStand = def.role === "boss" && hpFrac <= LAST_STAND.hpFraction;
+    const stage = lastStand
+      ? "_dying"
+      : def.role !== "minion" && hpFrac <= WOUNDS.wreckedAt
+        ? "_wrecked"
+        : hpFrac <= WOUNDS.hurtAt
+          ? "_hurt"
+          : "";
     const sprite =
-      spriteByName(sprites, `${def.sprite}_${frame}`) ?? sprites.ghost_0;
+      (stage
+        ? spriteByName(sprites, `${def.sprite}${stage}_${frame}`)
+        : undefined) ??
+      spriteByName(sprites, `${def.sprite}_${frame}`) ??
+      sprites.ghost_0;
     const bob = Math.round(Math.sin(timeMs / 260 + enemy.id) * 1.5);
     const x = Math.round(enemy.pos.x - sprite.width / 2 - camera.x);
     const y = Math.round(enemy.pos.y - sprite.height / 2 - camera.y) + bob;
     // A critical hit blinks the victim — skip alternating 60ms windows.
     const critBlink =
       (enemy.critFlashMs ?? 0) > 0 && Math.floor(timeMs / 60) % 2 === 0;
+    // A boss on its last stand flickers: the tell that it now hits harder.
+    if (lastStand && Math.floor(timeMs / 140) % 2 === 1) {
+      ctx.globalAlpha = 0.55;
+    }
     if (!critBlink) ctx.drawImage(sprite, x, y);
+    ctx.globalAlpha = 1;
 
     // Bosses and elites carry their health over their head once wounded.
     if (def.role !== "minion" && enemy.hp < enemy.maxHp) {

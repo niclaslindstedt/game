@@ -10,6 +10,7 @@
 // palette variants (elite enemies, new level biomes) are a `swapPalette`
 // call away instead of a redraw.
 
+import { woundedFrames } from "./asset-tools/damage.mjs";
 import {
   buildPalette,
   ramp,
@@ -103,6 +104,8 @@ export const PALETTE = buildPalette(
   { h: HAZMAT_SUIT.base, H: HAZMAT_SUIT.dark },
   { J: GUARD_NAVY },
   { B: RAT.base, E: RAT.dark, S: RAT.light },
+  // Dried blood — the dark core of the wounded-sprite gore splats.
+  { i: shade(MEDKIT_COLORS.red, 0.45) },
 );
 
 // ---- Animations -----------------------------------------------------------
@@ -2760,3 +2763,54 @@ export const SPRITES = {
     "............",
   ],
 };
+
+// ---- Battle-damage variants -------------------------------------------------
+// Wounded looks generated from the base frames (asset-tools/damage.mjs) —
+// never hand-drawn, so a retuned base sprite re-wounds itself on the next
+// `make assets`. The renderer swaps them in as hp falls (config.WOUNDS /
+// LAST_STAND): every mob gets `hurt` at half hp, elites and bosses add
+// `wrecked` below a quarter, bosses add `dying` for the last stand.
+//
+// Style per mob: warm-blooded staff (and MUSKRAT) bleed red with dried-blood
+// cores and pick up floor grime; the haunting smears in its own tier's
+// darker ecto instead — ghosts don't bleed, they tatter.
+const WOUND_STYLES = {
+  // SpaceZ HQ minions.
+  intern: { style: { splat: "r", core: "i", scuff: "E" }, stages: 1 },
+  scientist: { style: { splat: "r", core: "i", scuff: "E" }, stages: 1 },
+  engineer: { style: { splat: "r", core: "i", scuff: "E" }, stages: 1 },
+  guard: { style: { splat: "r", core: "i", scuff: "E" }, stages: 1 },
+  hazmat: { style: { splat: "r", core: "i", scuff: "E" }, stages: 1 },
+  // SpaceZ HQ elites.
+  night_manager: { style: { splat: "r", core: "i", scuff: "E" }, stages: 2 },
+  security_chief: { style: { splat: "r", core: "i", scuff: "E" }, stages: 2 },
+  head_scientist: { style: { splat: "r", core: "i", scuff: "E" }, stages: 2 },
+  janitor: { style: { splat: "r", core: "i", scuff: "E" }, stages: 2 },
+  // MUSKRAT — the level-1 boss.
+  muskrat: { style: { splat: "r", core: "i", scuff: "E" }, stages: 3 },
+  // Moon minions: pale-bodied tiers darken, the violet wraith smears in the
+  // pale ecto its hit-splash sprays — dark-on-dark wounds don't read.
+  wisp: { style: { splat: "C" }, stages: 1 },
+  ghost: { style: { splat: "C" }, stages: 1 },
+  wraith: { style: { splat: "c", core: "C" }, stages: 1 },
+  // Moon elites: the suits and whites stain pale, the shrouds glow ecto.
+  apollo_ghost: { style: { splat: "c", core: "C" }, stages: 2 },
+  prospector: { style: { splat: "U", core: "C" }, stages: 2 },
+  quarantine_medic: { style: { splat: "c", core: "C" }, stages: 2 },
+  cartographer: { style: { splat: "c", core: "C" }, stages: 2 },
+  // ARMSTRONG — the level-2 boss.
+  armstrong: { style: { splat: "N" }, stages: 3 },
+};
+
+const WOUND_STAGES = ["hurt", "wrecked", "dying"];
+for (const [name, { style, stages }] of Object.entries(WOUND_STYLES)) {
+  Object.assign(
+    SPRITES,
+    woundedFrames(
+      name,
+      [SPRITES[`${name}_0`], SPRITES[`${name}_1`]],
+      style,
+      WOUND_STAGES.slice(0, stages),
+    ),
+  );
+}

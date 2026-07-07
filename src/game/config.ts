@@ -194,6 +194,32 @@ export const HELD_ITEMS = {
   cap: 3,
 } as const;
 
+/**
+ * Visible battle damage. Enemy sprites swap to wounded variants as hp falls:
+ * every mob shows its "hurt" look at half hp, elites and bosses a heavier
+ * "wrecked" look below a quarter. Purely presentational — the renderer picks
+ * the sprite — but the thresholds live here so the app and any future engine
+ * rule read the same numbers.
+ */
+export const WOUNDS = {
+  /** At or below this hp fraction every mob wears its hurt sprite. */
+  hurtAt: 0.5,
+  /** At or below this, elites and bosses wear the wrecked sprite. */
+  wreckedAt: 0.25,
+} as const;
+
+/**
+ * The boss's last stand: at or below this hp fraction a boss fights like a
+ * cornered animal — contact hits multiply, and the renderer swaps in the
+ * "dying" sprite with a warning flicker so the spike is readable.
+ */
+export const LAST_STAND = {
+  /** Hp fraction at or below which the last stand kicks in. */
+  hpFraction: 0.1,
+  /** Contact-damage multiplier while the last stand runs. */
+  damageMultiplier: 1.5,
+} as const;
+
 /** Run flow. */
 export const RUN = {
   /** Grace period between clearing the objective and the victory splash —
