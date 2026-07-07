@@ -52,8 +52,12 @@ export const SPACEZ_HQ: LevelDef = {
   ],
   objective: { type: "killBoss" },
   spawns: [
-    { enemy: "intern", count: 10, band: [0.05, 0.4] },
-    { enemy: "scientist", count: 8, band: [0.3, 0.65] },
+    // A dense front rank clustered right around the spawn — the night shift is
+    // already on top of the hero when the lockdown drops, so standing still is
+    // a quick way to get swarmed. Interns pack the opening ring; scientists
+    // fill in just behind them.
+    { enemy: "intern", count: 22, band: [0, 0.22] },
+    { enemy: "scientist", count: 14, band: [0.05, 0.35] },
     { enemy: "engineer", count: 6, band: [0.45, 0.8] },
     { enemy: "guard", count: 6, band: [0.55, 0.95] },
     { enemy: "hazmat", count: 4, band: [0.7, 1.05] },
@@ -71,7 +75,10 @@ export const SPACEZ_HQ: LevelDef = {
   waves: {
     rampDurationMs: 280_000,
     maxAlive: 200,
-    minAlive: 16,
+    // Keep a thick field on screen from the first second — a sparse opening
+    // let an idle player pick off the trickle for free; this holds ~24 near
+    // the hero so the crowd has to be routed around, not ignored.
+    minAlive: 24,
     moveSpawnEvery: 60,
     budget: [
       { enemy: "intern", count: 380, window: [0, 0.5] },
