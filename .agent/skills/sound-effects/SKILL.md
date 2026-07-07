@@ -123,9 +123,6 @@ over time.
   gate 1; snare = noise, highpass 1400, vol ~0.038; hat = noise,
   highpass 6500, gate 0.3, vol ~0.011, panned slightly. A 2-bar kick
   pattern + backbeat snare + eighth hats carries a whole action track.
-- **Arrangement shapes that worked (2026-07):** title =
-  intro/verse/chorus/verse/break/chorus/outro at 90 bpm (48 bars ≈
-  128 s); level = intro/A/A2/B/A/break/build/B/A2/turn at 150 bpm
-  (76 bars ≈ 122 s). The break-then-build pair is what makes a 2-minute
-  loop feel composed instead of repeated; the outro's bar of near-silence
-  makes the loop seam read as a phrase, not a glitch.
+- **Arrangement shapes** — this game's proven title/level track structures
+  live in [`GAME_NOTES.md`](./GAME_NOTES.md); record new score-specific
+  arrangements there, and keep reusable synth/mixing recipes here.

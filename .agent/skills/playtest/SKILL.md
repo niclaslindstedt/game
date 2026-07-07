@@ -54,20 +54,13 @@ Judge each run against these expectations, and tune
 they hold:
 
 - **Bots are probes, not proof of winnability** (owner's call, 2026-07):
-  since the horde spawner landed, bot runs are NOT required to survive or
-  win — the repo owner playtests winnability by hand, which is more
-  realistic. Use bot runs to measure pressure (kills, survival time,
-  damage flow), catch regressions, and read screenshots — do not tune the
-  game so a bot wins.
-- The horde must escalate: an early-run minute should be a trickle, and a
-  passive strategy (kite/idle) should eventually be overwhelmed — that is
-  the survivors-style pressure working, not a difficulty bug.
-- A run ends on the order of 30s–5min; sub-10s means enemies are too
-  passive or the weapon too strong.
-- Damage taken should trend > 0 — zero-pressure runs mean spawn distance
-  or enemy speed is off.
-- Pickups should flow at horde scale: if `itemsCollected` stays 0 across
-  strategies, drops are too rare or too far from the action.
+  bot runs are NOT required to survive or win — the repo owner playtests
+  winnability by hand, which is more realistic. Use bot runs to measure
+  pressure (kills, survival time, damage flow), catch regressions, and read
+  screenshots — do not tune the game so a bot wins.
+- **This game's concrete feel targets** (run length, horde escalation,
+  damage/pickup thresholds) live in [`GAME_NOTES.md`](./GAME_NOTES.md); a
+  sequel judges against its own genre's numbers.
 
 For qualitative checks (does steering feel responsive? do sounds mix
 well?), run headed: `make website-dev` and play in the browser.

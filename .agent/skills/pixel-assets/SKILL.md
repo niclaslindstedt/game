@@ -17,7 +17,7 @@ diffable, reviewable, and editable by agents.
 
 | File | Role |
 | --- | --- |
-| `website/scripts/sprite-data/<family>.mjs` | Source of truth: one module per sprite family (`hero`, `moon`, `spacez`, `prelude`, `earth`, `effects`, `icons`), each bundling its grids, LOCAL palette chars, animations, wound overrides, and lint exemptions |
+| `website/scripts/sprite-data/<family>.mjs` | Source of truth: one module per sprite family, each bundling its grids, LOCAL palette chars, animations, wound overrides, and lint exemptions. Discover the families dynamically — `ls website/scripts/sprite-data/*.mjs` (everything but `core.mjs`/`index.mjs`) — rather than assuming a fixed roster; this game's families and per-family learnings are in [`GAME_NOTES.md`](./GAME_NOTES.md) |
 | `website/scripts/sprite-data/core.mjs` | The shared palette core (outline, gore chars, common materials) + exported subject ramps families derive local chars from |
 | `website/scripts/sprite-data/index.mjs` | Merges the families, resolves each sprite's core+local palette, derives battle-damage variants from the enemy catalog |
 | `website/scripts/generate-assets.mjs` | The pipeline: grids + font → `website/src/game/assets/` (`atlas.png` + `atlas.json`, font atlas + metrics) + previews + contrast lint |
@@ -155,12 +155,12 @@ actually looked at**:
 - [ ] **Transparency is clean.** No stray semi-opaque pixels on the checker
       background rows of the sheet.
 - [ ] **Overlays contrast with the LOCAL body color.** Detail painted in
-      the subject's own dark ramp char vanishes (a dark-violet wound on the
-      dark-violet wraith is invisible). Pick a char that separates from the
-      pixels it lands on, and reuse the color of the sibling effect for
-      coherence (ghost wounds = the ecto splash's pale cyan, staff wounds =
-      the blood splash's red). Verify on the @8x preview of EACH family —
-      one style rarely fits all palettes.
+      the subject's own dark ramp char vanishes (a dark wound on a dark
+      body is invisible). Pick a char that separates from the pixels it
+      lands on, and reuse the color of the sibling effect for coherence
+      (this game's specific wound→effect color pairings are in
+      [`GAME_NOTES.md`](./GAME_NOTES.md)). Verify on the @8x preview of EACH
+      family — one style rarely fits all palettes.
 - [ ] **Decorations don't flicker across frames.** For variants derived
       from multi-frame sprites, Read frame `_0` and `_1` previews side by
       side: every added pixel must appear in both, tracking the bob.
