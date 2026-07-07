@@ -168,11 +168,18 @@ body {
   gap: 0.4rem;
 }
 
+/* The clock and foe counter float over the play field, so they carry their
+   own semi-transparent backdrop (matching the xp badge / avatar panels) to
+   stay legible against the bright floor tiles. */
 .hud-center {
   display: flex;
   flex-direction: column;
   align-items: center;
   gap: 0.15rem;
+  padding: 0.2rem 0.6rem 0.3rem;
+  background: rgba(11, 13, 16, 0.55);
+  border: 2px solid #1a1c2c;
+  border-radius: 6px;
   text-shadow: 0 2px 0 rgba(11, 13, 16, 0.6);
 }
 
