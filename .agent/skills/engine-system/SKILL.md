@@ -88,3 +88,21 @@ why, so the next system follows suit.
   input edge (`input.useItem`) consumed by a small `stepX()` — never an
   app-side mutation, so bots (`botAct` sets the edge) and tests drive the
   same path.
+- **Cutscenes (2026-07, the prelude):** the beat-machine player is GENERIC
+  (`src/lib/cutscene.ts`, deterministic, no RNG); scenes are data in
+  `defs/cutscenes.ts`; a level opts in via `LevelDef.prelude`. The run
+  opens in a `cutscene` phase advanced by `step()` on the sim clock (world
+  frozen), with `tapCutscene`/`skipCutscene` mutators beside `dismissIntro`.
+  Iteration tooling lives app-side: the `?cutscene=<id>` workbench + the
+  beat-screenshot harness (`website/scripts/cutscene-preview.mjs`).
+- **Deliberate architecture (2026-07, SPACEZ HQ walls):** hand-placed
+  geometry is `LevelDef.walls` — segments expanded at creation into chains
+  of overlapping obstacle circles (`buildWalls` in create.ts), so walls
+  reuse ALL existing obstacle collision/AI/spawn-avoidance for free. Door
+  gaps are part of the level data; scattered obstacles keep their spacing
+  from walls, and walls skip the scatter clearance rules on purpose.
+- **Engine-rule tests pin the moon (2026-07):** `helpers.startGame`
+  defaults to `"moon"` — the reference level the tuning suites were
+  calibrated against — and skips any prelude first. Level-specific suites
+  (`tests/spacez_test.ts`) pass their own id; `createGame()`'s real default
+  (`LEVEL_ORDER[0]`) is covered there.

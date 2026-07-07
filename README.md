@@ -1,17 +1,18 @@
 # game
 
-**Gone in Space** — survive the search for your lost love. Ada went out for a midnight walk and never came back; the trail leads to the moon. An offline top-down survival scroller shooter that runs entirely in your browser: you steer with the pointer (or touch), and your character fights on its own according to the weapons and items it picks up.
+**Gone in Space** — survive the search for your lost love. Ada went out for chips and soda on movie night and never came back; the trail leads off-planet. An offline top-down survival scroller shooter that runs entirely in your browser: you steer with the pointer (or touch), and your character fights on its own according to the weapons and items it picks up.
 
 [![CI](https://github.com/niclaslindstedt/game/actions/workflows/ci.yml/badge.svg)](https://github.com/niclaslindstedt/game/actions/workflows/ci.yml)
 [![SEO](https://github.com/niclaslindstedt/game/actions/workflows/seo.yml/badge.svg)](https://github.com/niclaslindstedt/game/actions/workflows/seo.yml)
 [![Pages](https://github.com/niclaslindstedt/game/actions/workflows/pages.yml/badge.svg)](https://github.com/niclaslindstedt/game/actions/workflows/pages.yml)
 [![License: PolyForm Noncommercial](https://img.shields.io/badge/license-PolyForm%20Noncommercial%201.0.0-blue.svg)](LICENSE)
 
-> **Status: first playable level.** Pick a difficulty on the Doom-style
-> main menu, steer your character across the haunted moon to a chiptune
-> soundtrack, let the auto-firing weapons thin the ghost horde, loot gear
-> and powers, and take down ARMSTRONG at the old flag. Dying shows a run
-> summary with a retry button.
+> **Status: two playable levels.** Pick a difficulty on the Doom-style
+> main menu, sit through the movie-night prelude (or skip it), raid SPACEZ
+> HQ for the drive ingredient MUSKRAT the mutant rat swallowed, then take
+> the fight to the haunted moon and ARMSTRONG at the old flag — all to a
+> chiptune soundtrack, looting gear and powers while the auto-firing
+> weapons thin the horde. Dying shows a run summary with a retry button.
 
 ## Why?
 
@@ -37,22 +38,30 @@ The deployed game lives at **<https://game.niclaslindstedt.se/>**:
 
 ### How to play
 
-Level 2 — THE MOON: Ada went out for a midnight walk and never came back;
-the trail leads here. Ghosts thicken the further you stray from the lander,
+Level 1 — SPACEZ HQ: Ada went out for chips and soda and never came back.
+Her jacket's beacon points off-planet, and an interplanetary drive needs
+the one ingredient SpaceZ keeps in its cleanroom — the one MUSKRAT, a
+mutant lab rat, just ate. Fight through the night shift (interns,
+scientists, engineers, guards, hazmat techs), through walled offices and
+lab corridors, to his nest under the prototype rocket. Level 2 — THE MOON:
+the beacon's trail. Ghosts thicken the further you stray from the lander,
 and something enormous haunts the old flag.
 
 - Pick **NEW GAME** on the main menu and choose a difficulty — EASY,
   MEDIUM, HARD, NIGHTMARE, or JESUS CHRIST! Harder settings raise the horde
   size and monster health, but drop loot more often and unlock higher item
-  tiers (epic and legendary) that the moon alone never rolls.
+  tiers (epic and legendary) that the early levels never roll on their own.
+- The run opens on a short **cutscene** (the movie night Ada never came
+  back from) — tap to advance a beat, or hit SKIP.
 - **Steer with the pointer** — on desktop the character chases the cursor;
   on touch, hold a finger down and release to stop. (Swap the mouse back to
   classic hold-to-steer under SETTINGS → CONTROLS.)
-- **Tap** (or press Space) to **jump** — moon gravity carries you high
-  enough to sail clean over a ghost's grasp.
-- **Rocks and boulders** litter the moonscape and nothing walks through
-  them — but low rocks can be **jumped over**, and ghosts can't jump: a
-  rock line the horde must flow around is your best friend.
+- **Tap** (or press Space) to **jump** — each level sets its own gravity:
+  HQ hops clear a desk; moon gravity sails you clean over a ghost's grasp.
+- **Obstacles** litter every level and nothing walks through them — desks,
+  crates, and low rocks can be **jumped over**, and monsters can't jump: a
+  barrier the horde must flow around is your best friend. SPACEZ HQ's
+  walls only pass at their doorways — the horde funnels; you decide where.
 - **Ability pickups** (fire orbs, storm cell, stasis field, the item
   magnet — and the rare screen-clearing NUKE) are carried with you — on
   desktop **click** (or press E, or the HUD USE button) to pop one when the
@@ -66,17 +75,18 @@ and something enormous haunts the old flag.
   DEXTERITY (ranged), INTELLECT (magic), or LUCK (crits, loot). Golden
   **XP arrows** drop from the horde and are always worth a fixed share of
   your next level.
-- Ghosts drop **loot** — medkits, weapons, gear, repair kits, and XP
-  arrows, in regular or magic tier. Picking up something **better than
+- The horde drops **loot** — medkits, weapons (staplers, mops, tasers,
+  beakers… whatever the level left lying around), gear, repair kits, and
+  XP arrows, in regular or magic tier. Picking up something **better than
   what you wear equips it instantly**; the rest lands in the **BAG** (press
   I) — a Diablo-style inventory: drag items onto their slot or tap to
   quick-equip.
 - Dropped weapons **wear out** as they fire: when one breaks it is trashed
   and the best weapon left in your bag takes its place (your own sidearm
   never breaks). **Repair kits** restore the equipped weapon's edge.
-- **Kill ARMSTRONG**, the giant astronaut ghost guarding the flag, to clear
-  the level; if your HP reaches zero the run ends with a stats screen and a
-  retry button.
+- **Kill the boss** — MUSKRAT under the rocket, ARMSTRONG at the flag — to
+  clear the level; if your HP reaches zero the run ends with a stats screen
+  and a retry button.
 
 ### Install it as an app
 
@@ -133,11 +143,14 @@ make build         # typecheck everything and produce website/dist
 
 The game has no user-facing configuration yet. Build-time knobs:
 
-| Variable           | Effect                                                                                                                                          |
-| ------------------ | ----------------------------------------------------------------------------------------------------------------------------------------------- |
-| `GITHUB_PAT`       | Auth for GitHub Packages installs (`.npmrc`)                                                                                                    |
-| `VITE_BASE`        | Deploy-slot base path (`/`, `/preview/`, `/branch/`); defaults to `/` for local builds                                                          |
-| `?debug` URL param | Turns on debug-level console output (`src/output.ts`) and exposes the live game state as `window.__game` for inspection and automated playtests |
+| Variable                   | Effect                                                                                                                                          |
+| -------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------- |
+| `GITHUB_PAT`               | Auth for GitHub Packages installs (`.npmrc`)                                                                                                    |
+| `VITE_BASE`                | Deploy-slot base path (`/`, `/preview/`, `/branch/`); defaults to `/` for local builds                                                          |
+| `?debug` URL param         | Turns on debug-level console output (`src/output.ts`) and exposes the live game state as `window.__game` for inspection and automated playtests |
+| `?level=<id>` URL param    | Starts runs on a specific catalog level (`spacez_hq`, `moon`) instead of the story default                                                      |
+| `?seed=<n>` URL param      | Pins the run's layout seed so retries reproduce the same level layout                                                                           |
+| `?cutscene=<id>` URL param | Opens the cutscene workbench: loops one scene from the catalog for authoring iteration (see `docs/configuration.md`)                            |
 
 ## Examples
 

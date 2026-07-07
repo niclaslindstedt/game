@@ -48,12 +48,20 @@ function tileHash(tx: number, ty: number): number {
 }
 
 /**
- * Pick the ground tile for a cell. The biome comes from the level def;
- * "moon" lays regolith with occasional pocks and clustered gravel patches
- * (patches decided on a coarser grid so scree clumps instead of speckling).
+ * Pick the ground tile for a cell. The biome comes from the level def:
+ * "moon" lays regolith with occasional pocks and clustered gravel patches;
+ * "spacez" lays polished lab tiles with clustered floor vents and hazard
+ * stripes (patches decided on a coarser grid so they clump instead of
+ * speckling).
  */
-function groundTile(sprites: Sprites, tx: number, ty: number) {
+function groundTile(sprites: Sprites, biome: string, tx: number, ty: number) {
   const patch = tileHash(tx >> 2, ty >> 2);
+  if (biome === "spacez") {
+    if (patch % 9 === 0) {
+      return tileHash(tx, ty) % 2 === 0 ? sprites.vent_0 : sprites.vent_1;
+    }
+    return tileHash(tx, ty) % 11 === 0 ? sprites.lab_1 : sprites.lab_0;
+  }
   if (patch % 7 === 0) {
     return tileHash(tx, ty) % 2 === 0 ? sprites.gravel_0 : sprites.gravel_1;
   }
@@ -64,16 +72,27 @@ const DECOR_SPRITES: Record<string, keyof Sprites> = {
   craterBig: "crater_big",
   craterSmall: "crater_small",
   rocks: "rocks",
+  papers: "papers",
+  cable: "cable",
+  stain: "stain",
+  plant: "plant",
 };
 
 const LANDMARK_SPRITES: Record<string, keyof Sprites> = {
   lander: "lander",
   flag: "flag",
+  entrance: "entrance",
+  rocket: "rocket",
 };
 
 const OBSTACLE_SPRITES: Record<string, keyof Sprites> = {
   boulder: "boulder",
   rock: "rock",
+  wall: "wall",
+  server: "server",
+  vending: "vending",
+  desk: "desk",
+  crate: "crate",
 };
 
 export function drawFrame(
@@ -103,7 +122,7 @@ export function drawFrame(
   for (let ty = y0; ty < y1; ty++) {
     for (let tx = x0; tx < x1; tx++) {
       ctx.drawImage(
-        groundTile(sprites, tx, ty),
+        groundTile(sprites, state.level.biome, tx, ty),
         tx * TILE - camera.x,
         ty * TILE - camera.y,
       );

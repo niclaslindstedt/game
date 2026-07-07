@@ -416,6 +416,69 @@ body {
   height: 0.75rem;
 }
 
+/* ---- Cutscenes (the prelude scene player) --------------------------------- */
+
+.cutscene-overlay {
+  flex-direction: column;
+  gap: 0.75rem;
+  background: #06070c;
+  cursor: pointer;
+  /* The stage + text must never scroll; they are sized to fit landscape. */
+  overflow: hidden;
+}
+
+/* Neutralize the overlay's safe-center margins: the column centers itself. */
+.cutscene-overlay > * {
+  margin: 0;
+}
+
+.cutscene-canvas {
+  image-rendering: pixelated;
+  border: 3px solid #1d2530;
+  box-shadow: 0 8px 0 rgba(0, 0, 0, 0.4);
+}
+
+/* The stage is real content — exempt it from the PixelText canvas rule
+   (.game-overlay canvas) that parks text canvases at flex-start. */
+.game-overlay canvas.cutscene-canvas {
+  align-self: center;
+}
+
+.cutscene-line {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.4rem;
+  min-height: 3.5rem;
+  padding: 0.6rem 1.2rem;
+  background: #10151c;
+  border: 3px solid #1d2530;
+}
+
+.cutscene-controls {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.cutscene-controls .pixel-button {
+  padding: 0.3rem 0.8rem;
+}
+
+/* The preview workbench's replay button floats over the finished scene. */
+.cutscene-replay {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  pointer-events: none;
+}
+
+.cutscene-replay .pixel-button {
+  pointer-events: auto;
+}
+
 .stat-buttons {
   display: grid;
   grid-template-columns: 1fr;

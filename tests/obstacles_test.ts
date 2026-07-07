@@ -99,7 +99,7 @@ describe("obstacle collision", () => {
 describe("obstacle generation", () => {
   it("scatters the level's obstacles clear of the player spawn", () => {
     for (const seed of [1, 2, 3, 42]) {
-      const state = createGame(seed);
+      const state = createGame(seed, "moon");
       expect(state.obstacles.length).toBeGreaterThan(0);
       for (const obstacle of state.obstacles) {
         const d = Math.hypot(
@@ -113,7 +113,7 @@ describe("obstacle generation", () => {
 
   it("never spawns a monster inside an obstacle", () => {
     for (const seed of [1, 2, 3, 42]) {
-      const state = createGame(seed);
+      const state = createGame(seed, "moon");
       for (const enemy of state.enemies) {
         for (const obstacle of state.obstacles) {
           const d = Math.hypot(

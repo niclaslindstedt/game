@@ -52,10 +52,112 @@ export type EnemyDef = {
 };
 
 /**
- * The moon's haunting, weakest to strongest — plus ARMSTRONG, the giant
+ * Two rosters so far. SpaceZ HQ (level 1): the night shift, weakest to
+ * strongest — interns, lab scientists, propulsion engineers, security
+ * guards, hazmat techs — plus MUSKRAT, the mutant rat who ate the drive
+ * ingredient. The moon (level 2): the haunting, plus ARMSTRONG, the giant
  * astronaut ghost with the enormous arms who guards the flag he planted.
  */
 export const ENEMY_DEFS: Record<string, EnemyDef> = {
+  // ---- SpaceZ HQ ------------------------------------------------------------
+  // Staff speeds sit far below the player's 80 px/s — same rule as the moon:
+  // the crowd is a tide to route around, not a footrace. Guards are the
+  // exception that punishes standing still.
+  intern: {
+    id: "intern",
+    name: "INTERN",
+    role: "minion",
+    sprite: "intern",
+    // One base blaster hit — interns are the front rank that evaporates.
+    hp: 8,
+    speed: 14,
+    radius: 8,
+    contactDamage: 5,
+    critChance: 0.08,
+    contactCooldownMs: 700,
+    ai: { aggroRadius: 900 },
+  },
+  scientist: {
+    id: "scientist",
+    name: "LAB SCIENTIST",
+    role: "minion",
+    sprite: "scientist",
+    hp: 30,
+    speed: 15,
+    radius: 8,
+    contactDamage: 10,
+    critChance: 0.1,
+    contactCooldownMs: 700,
+    ai: { aggroRadius: 950 },
+  },
+  engineer: {
+    id: "engineer",
+    name: "PROPULSION ENGINEER",
+    role: "minion",
+    sprite: "engineer",
+    hp: 55,
+    speed: 18,
+    radius: 9,
+    contactDamage: 14,
+    critChance: 0.1,
+    contactCooldownMs: 700,
+    ai: { aggroRadius: 950 },
+  },
+  guard: {
+    id: "guard",
+    name: "SECURITY GUARD",
+    role: "minion",
+    sprite: "guard",
+    // The fastest thing in the building bar the boss — a guard pack forces
+    // the player to keep moving through the door gaps.
+    hp: 80,
+    speed: 26,
+    radius: 9,
+    contactDamage: 18,
+    critChance: 0.12,
+    contactCooldownMs: 700,
+    ai: { aggroRadius: 1000 },
+  },
+  hazmat: {
+    id: "hazmat",
+    name: "HAZMAT TECH",
+    role: "minion",
+    sprite: "hazmat",
+    // The deep-lab tank: slow enough to sidestep, brutal to touch.
+    hp: 140,
+    speed: 9,
+    radius: 10,
+    contactDamage: 24,
+    critChance: 0.1,
+    contactCooldownMs: 800,
+    ai: { aggroRadius: 900 },
+  },
+  muskrat: {
+    id: "muskrat",
+    name: "MUSKRAT",
+    role: "boss",
+    sprite: "muskrat",
+    hp: 480,
+    speed: 36,
+    radius: 18,
+    contactDamage: 28,
+    critChance: 0.15,
+    contactCooldownMs: 900,
+    ai: { aggroRadius: 260, leashRadius: 440 },
+    // He nests under the prototype rocket, digesting the one ingredient the
+    // interplanetary drive can't ship without. The plasma cutter was the
+    // cleanroom's — he dragged it home as a toothpick.
+    loot: {
+      items: ["plasma_cutter"],
+      weapons: 0,
+      gear: 1,
+      xpArrows: 2,
+      repairs: 1,
+      medkits: 2,
+      tierBonus: 0.3,
+    },
+  },
+  // ---- The moon -------------------------------------------------------------
   // Minion speeds sit far below the player's 80 px/s: the horde is a slow,
   // inevitable tide the player reads and routes around, not a footrace.
   // Aggro radii dwarf the screen — once a monster exists, it is coming.

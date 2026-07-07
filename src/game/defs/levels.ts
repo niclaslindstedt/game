@@ -70,6 +70,13 @@ export type LevelDef = {
   gravity: number;
   /** Tileset/mood key for the renderer. */
   biome: string;
+  /** What the HUD calls this level's hostiles ("GHOSTS", "STAFF"). */
+  foes: string;
+  /**
+   * Cutscene played before the intro text box (key into CUTSCENE_DEFS).
+   * Tap advances a beat; the SKIP button ends it — a rerun costs one tap.
+   */
+  prelude?: string;
   playerSpawn: Vec2;
   /** Story props the renderer draws (and decor keeps clear of). */
   landmarks: { kind: string; pos: Vec2 }[];
@@ -90,6 +97,19 @@ export type LevelDef = {
   obstacles: {
     kind: string;
     count: number;
+    radius: number;
+    jumpable: boolean;
+  }[];
+  /**
+   * Deliberate architecture: each segment is expanded into a chain of solid
+   * circles from `from` to `to` at level creation, so a straight run of
+   * `wall` obstacles reads (and collides) as one wall. Leave door-sized gaps
+   * between segments — walls skip the scatter clearance rules on purpose.
+   */
+  walls?: {
+    kind: string;
+    from: Vec2;
+    to: Vec2;
     radius: number;
     jumpable: boolean;
   }[];
@@ -123,22 +143,184 @@ export type LevelDef = {
 };
 
 /**
- * LEVEL 2 — THE MOON. The trail of Ada's kidnappers leads here first: ghosts
- * thicken with distance from the landing site, and ARMSTRONG haunts the old
- * flag on the far side. Level 1 (earth — the NASA heist) is a future entry.
+ * LEVEL 1 — SPACEZ HQ. Ada's trail points off-planet and our hero builds
+ * spaceships for a living — but the interplanetary drive needs the one
+ * ingredient SpaceZ keeps in its cleanroom, and the night shift is not
+ * letting it leave the building. Office rooms and lab corridors are carved
+ * by solid walls with door gaps; MUSKRAT, the mutant rat who ATE the
+ * ingredient, nests under the prototype rocket on the far side.
+ */
+const SPACEZ_HQ: LevelDef = {
+  id: "spacez_hq",
+  index: 1,
+  name: "SPACEZ HQ",
+  prelude: "prelude",
+  intro: [
+    "ADA WENT OUT FOR CHIPS AND SODA.",
+    "SHE NEVER CAME BACK.",
+    "",
+    "HER JACKET'S TRACKING BEACON POINTS",
+    "STRAIGHT OFF-PLANET. FINE. I BUILD",
+    "SPACESHIPS FOR A LIVING.",
+    "",
+    "BUT AN INTERPLANETARY DRIVE NEEDS",
+    "THE INGREDIENT SPACEZ KEEPS IN ITS",
+    "CLEANROOM - AND SECURITY SAYS NO.",
+    "",
+    "THEN THE LAB RAT THAT ATE IT SAYS",
+    "SQUEAK. WE DO THIS THE HARD WAY.",
+  ],
+  width: 2000,
+  height: 1200,
+  // Story says earth, but 2000 px/s² makes hops useless (peak z ≈ 14 px vs
+  // the 14 px clear height). 800 keeps desks and crates hoppable (peak
+  // z ≈ 36 px) while landing far snappier than the moon's 340 float.
+  gravity: 800,
+  biome: "spacez",
+  foes: "STAFF",
+  playerSpawn: { x: 220, y: 620 },
+  landmarks: [
+    { kind: "entrance", pos: { x: 84, y: 620 } },
+    { kind: "rocket", pos: { x: 1830, y: 520 } },
+  ],
+  objective: { type: "killBoss" },
+  spawns: [
+    { enemy: "intern", count: 10, band: [0.05, 0.4] },
+    { enemy: "scientist", count: 8, band: [0.3, 0.65] },
+    { enemy: "engineer", count: 6, band: [0.45, 0.8] },
+    { enemy: "guard", count: 6, band: [0.55, 0.95] },
+    { enemy: "hazmat", count: 4, band: [0.7, 1.05] },
+    { enemy: "muskrat", at: { x: 1730, y: 620 } },
+  ],
+  // The night shift floods in over ~4.5 minutes — a slightly gentler total
+  // than the moon's haunting, this being the first level.
+  waves: {
+    rampDurationMs: 280_000,
+    maxAlive: 200,
+    minAlive: 16,
+    moveSpawnEvery: 60,
+    budget: [
+      { enemy: "intern", count: 380, window: [0, 0.5] },
+      { enemy: "scientist", count: 300, window: [0.2, 0.7] },
+      { enemy: "engineer", count: 200, window: [0.4, 0.85] },
+      { enemy: "guard", count: 150, window: [0.55, 0.95] },
+      { enemy: "hazmat", count: 90, window: [0.7, 1] },
+    ],
+  },
+  // Three wall lines carve the floor into lobby → labs → cleanroom, each
+  // with door gaps the horde must funnel through. Server racks and vending
+  // machines block outright; desks and crates are the player's hop-overs.
+  walls: [
+    // Lobby wall, two doorways.
+    {
+      kind: "wall",
+      from: { x: 650, y: 8 },
+      to: { x: 650, y: 300 },
+      radius: 8,
+      jumpable: false,
+    },
+    {
+      kind: "wall",
+      from: { x: 650, y: 430 },
+      to: { x: 650, y: 760 },
+      radius: 8,
+      jumpable: false,
+    },
+    {
+      kind: "wall",
+      from: { x: 650, y: 890 },
+      to: { x: 650, y: 1192 },
+      radius: 8,
+      jumpable: false,
+    },
+    // Mid-floor divider between the north lab and the south offices.
+    {
+      kind: "wall",
+      from: { x: 650, y: 600 },
+      to: { x: 980, y: 600 },
+      radius: 8,
+      jumpable: false,
+    },
+    {
+      kind: "wall",
+      from: { x: 1110, y: 600 },
+      to: { x: 1350, y: 600 },
+      radius: 8,
+      jumpable: false,
+    },
+    // Cleanroom wall, two doorways guarding the boss wing.
+    {
+      kind: "wall",
+      from: { x: 1350, y: 8 },
+      to: { x: 1350, y: 340 },
+      radius: 8,
+      jumpable: false,
+    },
+    {
+      kind: "wall",
+      from: { x: 1350, y: 470 },
+      to: { x: 1350, y: 820 },
+      radius: 8,
+      jumpable: false,
+    },
+    {
+      kind: "wall",
+      from: { x: 1350, y: 950 },
+      to: { x: 1350, y: 1192 },
+      radius: 8,
+      jumpable: false,
+    },
+  ],
+  obstacles: [
+    { kind: "server", count: 16, radius: 9, jumpable: false },
+    { kind: "vending", count: 8, radius: 8, jumpable: false },
+    { kind: "desk", count: 18, radius: 8, jumpable: true },
+    { kind: "crate", count: 22, radius: 7, jumpable: true },
+  ],
+  decor: [
+    { kind: "papers", count: 24 },
+    { kind: "cable", count: 16 },
+    { kind: "stain", count: 12 },
+    { kind: "plant", count: 10 },
+  ],
+  decorClearance: 70,
+  loot: {
+    weaponPool: [
+      "stapler",
+      "keyboard",
+      "mop",
+      "taser",
+      "laser_pointer",
+      "beaker",
+      "fire_extinguisher",
+      "pistol",
+    ],
+    gearPool: ["lab_coat", "id_badge"],
+    abilityPool: ["storm_cell", "stasis_field", "item_magnet"],
+    tierChances: { magic: 0.18 },
+    allClearWeapon: "golden_stapler",
+    // The SECURITY BATON arrives within the first eighty kills — the run's
+    // guaranteed melee spine before the crowd thickens.
+    earlyWeapon: { defId: "security_baton", minKills: 30, maxKills: 80 },
+  },
+};
+
+/**
+ * LEVEL 2 — THE MOON. Ada's beacon dies near the old flag: ghosts thicken
+ * with distance from the landing site, and ARMSTRONG haunts the far side.
  */
 const MOON: LevelDef = {
   id: "moon",
   index: 2,
   name: "THE MOON",
   intro: [
-    "ADA WENT OUT FOR A WALK AT MIDNIGHT",
-    "AND NEVER CAME BACK.",
+    "ADA WENT OUT FOR CHIPS AND SODA.",
+    "SHE NEVER CAME BACK.",
     "",
     "THE TRACKING BEACON I SEWED INTO HER",
-    "JACKET POINTS AT THE MOON. I BUILD",
-    "SPACESHIPS FOR A LIVING - SO I BUILT",
-    "ONE FOR MYSELF.",
+    "JACKET POINTS AT THE MOON. THE DRIVE",
+    "INGREDIENT CAME OUT OF THE RAT. THE",
+    "SHIP FLEW. HERE WE ARE.",
     "",
     "THE SIGNAL DIES NEAR THE OLD FLAG.",
     "SOMETHING UP HERE IS NOT DEAD ENOUGH.",
@@ -147,6 +329,7 @@ const MOON: LevelDef = {
   height: 1600,
   gravity: 340,
   biome: "moon",
+  foes: "GHOSTS",
   playerSpawn: { x: 340, y: 1320 },
   landmarks: [
     { kind: "lander", pos: { x: 280, y: 1320 } },
@@ -207,11 +390,12 @@ const MOON: LevelDef = {
 };
 
 export const LEVELS: Record<string, LevelDef> = {
+  spacez_hq: SPACEZ_HQ,
   moon: MOON,
 };
 
 /** Story order of the levels shipped so far. */
-export const LEVEL_ORDER: string[] = ["moon"];
+export const LEVEL_ORDER: string[] = ["spacez_hq", "moon"];
 
 /** Look up a level def; throws on a broken id so bugs surface loudly. */
 export function levelDef(levelId: string): LevelDef {
