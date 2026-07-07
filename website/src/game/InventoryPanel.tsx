@@ -36,7 +36,7 @@ import type { PixelFont } from "@ui/lib/pixel-font.ts";
 
 import { spriteByName, type Sprites } from "./assets.ts";
 import { synth } from "./audio.ts";
-import { playUiSound } from "./sfx.ts";
+import { playUiSound } from "./sfx/index.ts";
 import { TIER_COLORS } from "./tiers.ts";
 
 type DragSource =

@@ -3,8 +3,30 @@
 // website/src/lib/ so it can be extracted into oss-framework once mature.
 // All game sounds are synthesized (tones + filtered noise), so the PWA ships
 // zero audio files and stays fully offline-capable.
+//
+// The voice model is 16-bit-console shaped: every tone can carry an attack
+// envelope, a detuned second oscillator (chorus width), delayed vibrato, a
+// biquad filter, stereo pan, and a send into one shared echo bus — the
+// feedback-delay "hall" that defined SNES-era soundtracks.
 
 export type WaveType = "sine" | "square" | "sawtooth" | "triangle";
+
+export type FilterOptions = {
+  type: "lowpass" | "highpass" | "bandpass";
+  /** Cutoff/center frequency in Hz. */
+  frequency: number;
+  /** Resonance; WebAudio default (~1) when omitted. */
+  q?: number;
+};
+
+export type VibratoOptions = {
+  /** LFO rate in Hz (5–7 reads as a singer, 2–3 as a wobble). */
+  rateHz: number;
+  /** Peak pitch deviation in cents. */
+  depthCents: number;
+  /** Fade the vibrato in after this long — classic 16-bit lead phrasing. */
+  delayMs?: number;
+};
 
 export type ToneOptions = {
   type?: WaveType;
@@ -19,6 +41,17 @@ export type ToneOptions = {
   /** Absolute AudioContext start time in seconds (see `now()`); overrides
    * `delayMs`. Sequencers use this for drift-free scheduling. */
   at?: number;
+  /** Volume ramp-up time; 0 (default) is a hard chip-style onset. */
+  attackMs?: number;
+  /** Layer a second oscillator detuned by ± this many cents — the cheap
+   * chorus that makes one pulse wave sound like a section. */
+  detuneCents?: number;
+  vibrato?: VibratoOptions;
+  /** Stereo position, -1 (left) to 1 (right); 0 = center. */
+  pan?: number;
+  /** 0–1 send level into the shared echo bus. */
+  echo?: number;
+  filter?: FilterOptions;
 };
 
 export type NoiseOptions = {
@@ -27,6 +60,13 @@ export type NoiseOptions = {
   delayMs?: number;
   /** Absolute AudioContext start time in seconds; overrides `delayMs`. */
   at?: number;
+  /** Shape the noise: highpass ≈ hats/sizzle, lowpass ≈ thumps/rumble,
+   * bandpass ≈ snares. Unfiltered white noise when omitted. */
+  filter?: FilterOptions;
+  /** Stereo position, -1 to 1. */
+  pan?: number;
+  /** 0–1 send level into the shared echo bus. */
+  echo?: number;
 };
 
 export type Synth = {
@@ -39,13 +79,77 @@ export type Synth = {
   now: () => number | null;
 };
 
+// The shared echo: a filtered feedback delay every voice can send into.
+// One instance per context keeps overlapping sounds in the same "room".
+const ECHO_DELAY_S = 0.22;
+const ECHO_FEEDBACK = 0.32;
+const ECHO_DAMP_HZ = 2600;
+
 export function createSynth(): Synth {
   let ctx: AudioContext | null = null;
+  let echoInput: GainNode | null = null;
 
   const ensure = (): AudioContext | null => {
     if (typeof AudioContext === "undefined") return null;
     ctx ??= new AudioContext();
     return ctx;
+  };
+
+  const echoBus = (c: AudioContext): GainNode => {
+    if (!echoInput) {
+      echoInput = c.createGain();
+      const delay = c.createDelay(1);
+      delay.delayTime.value = ECHO_DELAY_S;
+      const damp = c.createBiquadFilter();
+      damp.type = "lowpass";
+      damp.frequency.value = ECHO_DAMP_HZ;
+      const feedback = c.createGain();
+      feedback.gain.value = ECHO_FEEDBACK;
+      echoInput.connect(delay);
+      delay.connect(damp);
+      damp.connect(feedback);
+      feedback.connect(delay);
+      damp.connect(c.destination);
+    }
+    return echoInput;
+  };
+
+  /** Envelope → optional pan → destination (+ optional echo send); returns
+   * the node sources should connect into. */
+  const output = (
+    c: AudioContext,
+    gain: GainNode,
+    pan: number,
+    echo: number,
+  ): void => {
+    let tail: AudioNode = gain;
+    if (pan !== 0 && typeof c.createStereoPanner === "function") {
+      const panner = c.createStereoPanner();
+      panner.pan.value = Math.max(-1, Math.min(1, pan));
+      tail.connect(panner);
+      tail = panner;
+    }
+    tail.connect(c.destination);
+    if (echo > 0) {
+      const send = c.createGain();
+      send.gain.value = Math.min(1, echo);
+      tail.connect(send);
+      send.connect(echoBus(c));
+    }
+  };
+
+  const applyFilter = (
+    c: AudioContext,
+    source: AudioNode,
+    filter: FilterOptions | undefined,
+  ): AudioNode => {
+    if (!filter) return source;
+    const node = c.createBiquadFilter();
+    node.type = filter.type;
+    node.frequency.value = filter.frequency;
+    if (filter.q !== undefined) node.Q.value = filter.q;
+    source.connect(node);
+    return node;
   };
 
   return {
@@ -67,27 +171,75 @@ export function createSynth(): Synth {
       volume = 0.06,
       delayMs = 0,
       at,
+      attackMs = 0,
+      detuneCents = 0,
+      vibrato,
+      pan = 0,
+      echo = 0,
+      filter,
     }) {
       const c = ensure();
       if (!c || c.state !== "running") return;
       const t0 = at ?? c.currentTime + delayMs / 1000;
       const t1 = t0 + durationMs / 1000;
 
-      const osc = c.createOscillator();
-      osc.type = type;
-      osc.frequency.setValueAtTime(Math.max(1, from), t0);
-      osc.frequency.exponentialRampToValueAtTime(Math.max(1, to), t1);
+      // A detuned pair plays two half-loud oscillators around the pitch.
+      const detunes = detuneCents > 0 ? [detuneCents, -detuneCents] : [0];
+      const peak = detunes.length > 1 ? volume * 0.6 : volume;
 
       const gain = c.createGain();
-      gain.gain.setValueAtTime(volume, t0);
+      if (attackMs > 0) {
+        const attackEnd = t0 + Math.min(attackMs, durationMs * 0.5) / 1000;
+        gain.gain.setValueAtTime(0.0001, t0);
+        gain.gain.exponentialRampToValueAtTime(peak, attackEnd);
+      } else {
+        gain.gain.setValueAtTime(peak, t0);
+      }
       gain.gain.exponentialRampToValueAtTime(0.0001, t1);
 
-      osc.connect(gain).connect(c.destination);
-      osc.start(t0);
-      osc.stop(t1);
+      const mix = c.createGain(); // oscillators sum here, pre-filter
+      const filtered = applyFilter(c, mix, filter);
+      filtered.connect(gain);
+      output(c, gain, pan, echo);
+
+      for (const cents of detunes) {
+        const osc = c.createOscillator();
+        osc.type = type;
+        osc.detune.value = cents;
+        osc.frequency.setValueAtTime(Math.max(1, from), t0);
+        osc.frequency.exponentialRampToValueAtTime(Math.max(1, to), t1);
+
+        if (vibrato) {
+          const lfo = c.createOscillator();
+          lfo.frequency.value = vibrato.rateHz;
+          const depth = c.createGain();
+          const rise = t0 + (vibrato.delayMs ?? 0) / 1000;
+          depth.gain.setValueAtTime(0, t0);
+          depth.gain.linearRampToValueAtTime(
+            vibrato.depthCents,
+            Math.min(rise + 0.08, t1),
+          );
+          lfo.connect(depth);
+          depth.connect(osc.detune);
+          lfo.start(t0);
+          lfo.stop(t1);
+        }
+
+        osc.connect(mix);
+        osc.start(t0);
+        osc.stop(t1);
+      }
     },
 
-    noise({ durationMs, volume = 0.05, delayMs = 0, at }) {
+    noise({
+      durationMs,
+      volume = 0.05,
+      delayMs = 0,
+      at,
+      filter,
+      pan = 0,
+      echo = 0,
+    }) {
       const c = ensure();
       if (!c || c.state !== "running") return;
       const t0 = at ?? c.currentTime + delayMs / 1000;
@@ -107,7 +259,8 @@ export function createSynth(): Synth {
       source.buffer = buffer;
       const gain = c.createGain();
       gain.gain.setValueAtTime(volume, t0);
-      source.connect(gain).connect(c.destination);
+      applyFilter(c, source, filter).connect(gain);
+      output(c, gain, pan, echo);
       source.start(t0);
     },
   };
