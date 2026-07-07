@@ -274,6 +274,21 @@ export function drawFrame(
     const bob = Math.round(Math.sin(timeMs / 260 + enemy.id) * 1.5);
     const x = Math.round(enemy.pos.x - sprite.width / 2 - camera.x);
     const y = Math.round(enemy.pos.y - sprite.height / 2 - camera.y) + bob;
+    // An evolved minion (menace stage stamped at spawn) wears a pulsing warm
+    // aura that intensifies and reddens with its stage — the readable tell
+    // that a rampage has toughened the horde it lured in.
+    const evo = enemy.evo ?? 0;
+    if (evo > 0) {
+      const cx = Math.round(enemy.pos.x - camera.x);
+      const cy = Math.round(enemy.pos.y - camera.y) + bob;
+      const pulse = 0.5 + 0.5 * Math.sin(timeMs / 200 + enemy.id);
+      ctx.globalAlpha = 0.12 + 0.1 * pulse;
+      ctx.fillStyle = evo >= 4 ? "#ff5030" : evo >= 2 ? "#ff9040" : "#ffd050";
+      ctx.beginPath();
+      ctx.arc(cx, cy, def.radius + 3 + evo, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.globalAlpha = 1;
+    }
     // A critical hit blinks the victim — skip alternating 60ms windows.
     const critBlink =
       (enemy.critFlashMs ?? 0) > 0 && Math.floor(timeMs / 60) % 2 === 0;

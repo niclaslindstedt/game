@@ -6,11 +6,12 @@
 // lot. Extracted from step.ts so the simulation step stays readable.
 
 import { clamp, type Vec2 } from "@game/lib/vec.ts";
-import { LEVELING, LOOT, STATS } from "./config.ts";
+import { LEVELING, LOOT, MENACE, STATS } from "./config.ts";
 import { scaledMobCount } from "./defs/difficulties.ts";
 import { enemyDef, type EnemyDef } from "./defs/enemies/index.ts";
 import { levelDef } from "./defs/levels/index.ts";
 import { dropChance, playerCritChance, rollEquipment } from "./items.ts";
+import { bankMenace, maybePowerScale } from "./menace.ts";
 import { startDeathWords } from "./story.ts";
 import type { Enemy, GameState } from "./types.ts";
 
@@ -38,6 +39,11 @@ export function hitEnemy(
   enemy: Enemy,
   baseDamage: number,
 ): void {
+  // An elite or boss meets the player's power the instant the fight opens —
+  // scale its hp before this blow lands so it can never be one-shot out of a
+  // set piece by a leveled hero. Idempotent (latched by `powerScaled`).
+  maybePowerScale(state, enemy);
+
   const crit = state.rng() < playerCritChance(state);
   const damage = Math.round(baseDamage * (crit ? STATS.critMultiplier : 1));
   enemy.hp -= damage;
@@ -67,6 +73,11 @@ export function hitEnemy(
     crit,
   });
 
+  // Feed the escalation meter: the flat pace tick plus the OVERKILL — the
+  // damage this blow dumped past the mob's last hp — which also lures the
+  // nearby horde in. `enemy.hp` is now ≤ 0, so its magnitude is the overkill.
+  bankMenace(state, -enemy.hp);
+
   grantXp(state, def.xp ?? Math.round(enemy.maxHp * LEVELING.xpPerHp));
 
   // The level's scripted opening drops: hand over every schedule entry this
@@ -77,7 +88,7 @@ export function hitEnemy(
   if (def.loot) {
     dropGuaranteedLoot(state, def, enemy.pos);
   } else {
-    dropMinionLoot(state, enemy.pos);
+    dropMinionLoot(state, enemy.pos, enemy.evo ?? 0);
   }
 
   if (def.role === "boss") {
@@ -138,9 +149,12 @@ function dropEarlyDrops(state: GameState, at: Vec2): void {
  * A dead regular monster's drop roll: LUCK widens the odds, the loot shares
  * split what falls between equipment, ability pickups, weapon upgrades, and
  * medkits — and a pity rule forces equipment whenever the monsters left
- * alive couldn't otherwise cover the level's guaranteed minimum.
+ * alive couldn't otherwise cover the level's guaranteed minimum. `evo` is the
+ * mob's menace evolution stage: an evolved kill drops more often and rolls a
+ * better tier when it does, so a rampaging player who toughens the horde is
+ * paid back in gear.
  */
-function dropMinionLoot(state: GameState, at: Vec2): void {
+function dropMinionLoot(state: GameState, at: Vec2, evo = 0): void {
   const remaining =
     state.enemies.filter((e) => enemyDef(e.defId).role === "minion").length +
     unspawnedMinions(state);
@@ -164,7 +178,11 @@ function dropMinionLoot(state: GameState, at: Vec2): void {
   const owed = LOOT.minEquipmentPerLevel - state.minionEquipmentDrops;
   const forced = owed > remaining;
 
-  if (!forced && state.rng() >= dropChance(state)) return;
+  // An evolved mob is likelier to drop, and its equipment rolls a richer tier.
+  const evoDropBonus = Math.max(0, evo) * MENACE.dropBonusPerStage;
+  const evoTierBonus = Math.max(0, evo) * MENACE.tierBonusPerStage;
+
+  if (!forced && state.rng() >= dropChance(state) + evoDropBonus) return;
 
   const pos = { ...at };
   const abilities = levelDef(state.level.id).loot.abilityPool;
@@ -185,7 +203,7 @@ function dropMinionLoot(state: GameState, at: Vec2): void {
       id: state.nextId++,
       kind: "equipment",
       pos,
-      equipment: rollEquipment(state),
+      equipment: rollEquipment(state, { tierBonus: evoTierBonus }),
     });
   } else if (roll < LOOT.equipmentShare + abilityShare) {
     state.items.push({

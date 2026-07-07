@@ -26,6 +26,18 @@ export const PLAYER = {
   faceFlipMinX: 0.2,
 } as const;
 
+/**
+ * Global weapon cadence. Every weapon's catalog `cooldownMs` is its cadence at
+ * ZERO speed-stat; this multiplier scales all of them at once, the single lever
+ * for "how fast does an un-invested build attack". Kept above 1 so the opening
+ * loadout swings deliberately slowly — a fresh character is NOT a turret — and
+ * the DEX (physical) / INT (magic) speed stat is what earns the fire rate back
+ * (see STATS.attackSpeedPerStat, applied in weaponCooldownFor).
+ */
+export const WEAPON = {
+  baseCooldownMult: 1.2,
+} as const;
+
 /** Projectile rules shared by every weapon (per-weapon numbers in defs). */
 export const PROJECTILE = {
   /**
@@ -101,6 +113,69 @@ export const LEVELING = {
 } as const;
 
 /**
+ * Menace — the escalation meter that answers an overpowered player. Killing
+ * monsters faster than the horde can be replenished, and OVERKILLING them
+ * (dumping far more damage than their remaining hp into the killing blow),
+ * banks menace; standing idle bleeds it back off. Menace is read as a stage
+ * (0…maxStage) that does three things: it LURES more of the horde toward the
+ * player, it EVOLVES freshly-spawned minions (more hp → more xp → better
+ * loot), and — folded in with the player's own level — it scales elites and
+ * bosses when they engage, so the epic fights keep pace with the player's
+ * power instead of melting. Units: raw menace points, world px, hp.
+ */
+export const MENACE = {
+  /** Flat menace banked by every kill — a fast kill streak outruns decay. */
+  perKill: 2,
+  /**
+   * Menace banked per point of OVERKILL on a killing blow — the damage dealt
+   * beyond the mob's remaining hp. Dropping a 10-hp wisp with a 200-damage
+   * swing banks 190 × this: being wildly overpowered is what the meter reads.
+   */
+  perOverkill: 0.04,
+  /** Menace bled off per second: stop the slaughter and the horde cools. */
+  decayPerSec: 3,
+  /** Menace is capped here (also caps the derived stage at maxStage). */
+  max: 60,
+  /** Raw menace per evolution stage: stage = floor(menace / perStage). */
+  perStage: 12,
+  /** Hard cap on the evolution stage (perStage × maxStage should equal max). */
+  maxStage: 5,
+  /**
+   * Extra minion hp per evolution stage (+35% each), stamped when the mob
+   * spawns. Kill XP is hp-proportional, so an evolved mob is worth more xp
+   * automatically; its drops are sweetened separately below.
+   */
+  hpPerStage: 0.35,
+  /** Added to an evolved minion's base drop chance per stage. */
+  dropBonusPerStage: 0.04,
+  /** Added to an evolved minion's drop tier roll per stage (better gear). */
+  tierBonusPerStage: 0.06,
+  /**
+   * The wave spawner's live floor AND cap grow by this fraction per stage —
+   * a rampage pulls a denser, bigger crowd onto the screen.
+   */
+  lurePerStage: 0.25,
+  /**
+   * Overkill also drags the horde over RIGHT NOW: each point of overkill banks
+   * this much of the spawner's move-credit (the same channel walking uses),
+   * so a big hit is a dinner bell the nearby horde answers within seconds.
+   */
+  lureCreditPerOverkill: 0.6,
+  /**
+   * Elite/boss power-match. When one first engages, its hp (and, softened,
+   * its contact damage) scale by `1 + (level-1)·bossLevelWeight +
+   * stage·bossMenaceWeight` — a non-decaying floor from the player's LEVEL
+   * plus the current menace heat — locked in once so a level-20 hero meets a
+   * boss worthy of them instead of one-shotting the set piece.
+   */
+  bossLevelWeight: 0.12,
+  bossMenaceWeight: 0.1,
+  /** Share of the hp power-scale that also applies to contact damage (so a
+   * scaled boss hits harder, but not as steeply as its health grows). */
+  bossContactShare: 0.4,
+} as const;
+
+/**
  * Stat effects. STRENGTH scales physical (melee + ranged) weapon DAMAGE and
  * widens the carry bag; DEXTERITY quickens physical (melee + ranged) ATTACK
  * SPEED; INTELLIGENCE powers magic weapons (their damage AND speed) and, for
@@ -139,6 +214,14 @@ export const STATS = {
    */
   aoePerInt: 0.04,
   /**
+   * INTELLIGENCE also raises the CAP on how many monsters one melee swing can
+   * hit (see MELEE.baseAoeTargets): each point adds one extra foe to the
+   * cleave. Widening the cone (aoePerInt) only lets a swing SEE more of the
+   * crowd; this is what lets it actually strike them, so horde-clearing melee
+   * is an INTELLIGENCE build, not a free STRENGTH perk.
+   */
+  aoeTargetsPerInt: 1,
+  /**
    * Attack-speed gained per point of the weapon's SPEED stat (DEX for melee &
    * ranged, INT for magic — see `SPEED_STAT`): the effective cooldown is
    * divided by `1 + stat * this`, so +4% cadence per point. Base weapons fire
@@ -169,6 +252,15 @@ export const STATS = {
  */
 export const MELEE = {
   defaultSweepDeg: 120,
+  /**
+   * How many monsters a single melee swing can strike, before INTELLIGENCE
+   * widens it (see STATS.aoeTargetsPerInt). Kept deliberately low — a broad
+   * blade cleaving the whole crowd for free made STRENGTH-stacked melee wildly
+   * overpowered — so an un-invested swing only ever catches the two nearest
+   * foes in its cone; reaching more of the horde is what INT buys. Nearest
+   * first, so the locked-on target is always among them.
+   */
+  baseAoeTargets: 2,
 } as const;
 
 /** Loot rules that hold on every level (pools and tier odds are per level). */

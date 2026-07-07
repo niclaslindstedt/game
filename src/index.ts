@@ -70,6 +70,10 @@ export {
   wearEquippedWeapon,
 } from "./game/items.ts";
 
+// The menace meter: the escalation the app reads to draw the rampage gauge
+// and mark evolved mobs (the mechanics live in step()/loot()).
+export { enemyPowerScale, menaceStage } from "./game/menace.ts";
+
 // Time-limited abilities: activation and the helpers the renderer shares.
 export {
   grantAbility,
@@ -169,11 +173,13 @@ export {
   LEVELING,
   LOOT,
   MEDKIT,
+  MENACE,
   OBSTACLES,
   PLAYER,
   PROJECTILE,
   RUN,
   STATS,
+  WEAPON,
   WOUNDS,
 } from "./game/config.ts";
 

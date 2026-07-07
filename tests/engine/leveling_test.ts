@@ -18,6 +18,7 @@ import {
   STATS,
   step,
   syncInventoryCapacity,
+  WEAPON,
   weaponCooldownFor,
   weaponDef,
   weaponDamage,
@@ -160,7 +161,10 @@ describe("stats", () => {
     const state = startGame(); // blaster equipped: ranged
     const weapon = state.player.equipment.weapon;
     const base = weaponCooldownFor(state, weapon);
-    expect(base).toBe(weaponDef("blaster").cooldownMs);
+    // The catalog cadence, slowed by the global base-cooldown lever.
+    expect(base).toBeCloseTo(
+      weaponDef("blaster").cooldownMs * WEAPON.baseCooldownMult,
+    );
 
     // The off-class stats leave the sidearm's cadence untouched.
     state.player.stats.strength = 5;
@@ -185,16 +189,17 @@ describe("stats", () => {
       affixes: [],
       durability: wandDef.durability,
     };
-    expect(weaponCooldownFor(state, wand)).toBe(wandDef.cooldownMs);
+    const wandBase = wandDef.cooldownMs * WEAPON.baseCooldownMult;
+    expect(weaponCooldownFor(state, wand)).toBeCloseTo(wandBase);
 
     // DEX (the equipped blaster's stat) must NOT move the magic wand.
     state.player.stats.dexterity = 4;
-    expect(weaponCooldownFor(state, wand)).toBe(wandDef.cooldownMs);
+    expect(weaponCooldownFor(state, wand)).toBeCloseTo(wandBase);
 
     // INT (the wand's own class stat) does.
     state.player.stats.intelligence = 3;
     expect(weaponCooldownFor(state, wand)).toBeCloseTo(
-      wandDef.cooldownMs / (1 + 3 * STATS.attackSpeedPerStat),
+      wandBase / (1 + 3 * STATS.attackSpeedPerStat),
     );
   });
 
@@ -212,7 +217,7 @@ describe("stats", () => {
           maxHp: 1_000_000,
         }),
       );
-      run(state, idle, 200); // ~3.2s of fire
+      run(state, idle, 500); // ~8s of fire — long enough to resolve the gap
       return state.stats.shotsFired;
     };
     expect(shotsIn(6)).toBeGreaterThan(shotsIn(0));

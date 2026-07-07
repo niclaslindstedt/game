@@ -28,6 +28,8 @@ import {
   equipFromInventory,
   LEVELS,
   levelDef,
+  MENACE,
+  menaceStage,
   openInventory,
   playerAppearance,
   skipCutscene,
@@ -90,6 +92,8 @@ type Hud = {
   xp: number;
   xpToNext: number;
   enemiesLeft: number;
+  /** Current menace/rampage stage (0…MENACE.maxStage) driving the gauge. */
+  menaceStage: number;
   bagCount: number;
   /** Banked ability pickups, oldest first (ABILITY_DEFS ids). */
   heldAbilities: string[];
@@ -180,6 +184,13 @@ function formatTime(ms: number): string {
   const minutes = Math.floor(totalSeconds / 60);
   const seconds = totalSeconds % 60;
   return `${minutes}:${String(seconds).padStart(2, "0")}`;
+}
+
+/** The rampage gauge heats from amber to red as the menace stage climbs. */
+function rampageColor(stage: number): string {
+  if (stage >= 4) return "#ff5030";
+  if (stage >= 2) return "#ff9040";
+  return "#ffd050";
 }
 
 export function GameScreen({
@@ -703,7 +714,8 @@ export function GameScreen({
             ? null
             : weapon.durability / weaponDef(weapon.defId).durability;
         const appearance = playerAppearance(state);
-        const key = `${state.phase}/${state.player.hp}/${state.player.xp}/${state.player.level}/${state.player.pendingStatPoints}/${state.enemies.length}/${bagCount}/${held}/${weapon.defId}/${weaponWear?.toFixed(2) ?? ""}/${appearance}/${Math.floor(state.stats.timeMs / 1000)}`;
+        const stage = menaceStage(state);
+        const key = `${state.phase}/${state.player.hp}/${state.player.xp}/${state.player.level}/${state.player.pendingStatPoints}/${state.enemies.length}/${bagCount}/${held}/${weapon.defId}/${weaponWear?.toFixed(2) ?? ""}/${appearance}/${stage}/${Math.floor(state.stats.timeMs / 1000)}`;
         if (key !== lastHud) {
           lastHud = key;
           setHud({
@@ -714,6 +726,7 @@ export function GameScreen({
             xp: state.player.xp,
             xpToNext: state.player.xpToNext,
             enemiesLeft: state.enemies.length,
+            menaceStage: stage,
             bagCount,
             heldAbilities: [...state.player.heldAbilities],
             weaponDefId: weapon.defId,
@@ -975,6 +988,33 @@ export function GameScreen({
                 scale={2}
                 color="#d9a0f0"
               />
+              {/* Rampage gauge: overkilling and fast kills evolve and lure the
+                  horde. Shown only while the meter is hot, reddening as the
+                  stage climbs so the escalation is legible. */}
+              {hud.menaceStage > 0 && (
+                <div className="hud-rampage" aria-hidden>
+                  <PixelText
+                    font={font}
+                    text="RAMPAGE"
+                    scale={2}
+                    color={rampageColor(hud.menaceStage)}
+                  />
+                  <div className="hud-rampage-pips">
+                    {Array.from({ length: MENACE.maxStage }, (_, i) => (
+                      <span
+                        key={i}
+                        className="hud-rampage-pip"
+                        style={{
+                          background:
+                            i < hud.menaceStage
+                              ? rampageColor(hud.menaceStage)
+                              : "rgba(255,255,255,0.15)",
+                        }}
+                      />
+                    ))}
+                  </div>
+                </div>
+              )}
             </div>
           </div>
         </div>

@@ -10,7 +10,7 @@
 import { advanceCutsceneBeat, finishCutscene } from "@game/lib/cutscene.ts";
 import type { Rng } from "@game/lib/rng.ts";
 import { randomRange } from "@game/lib/rng.ts";
-import { LOOT, MELEE, PLAYER, STATS } from "./config.ts";
+import { LOOT, MELEE, PLAYER, STATS, WEAPON } from "./config.ts";
 import { cutsceneDef } from "./defs/cutscenes.ts";
 import {
   AFFIX_POOLS,
@@ -318,15 +318,20 @@ export function weaponRangeFor(state: GameState, weapon: Equipment): number {
 
 /**
  * The ms between this weapon's attacks for this player — the base cadence
- * quickened by the weapon's SPEED stat (DEX for melee & ranged, INT for magic;
- * see `SPEED_STAT`). This is the single source of truth for stat-scaled fire
- * rate: combat cooldown and the DPS/score math both route through it, so a
- * build's faster attacks raise every surface consistently.
+ * (the catalog cooldown scaled by the global WEAPON.baseCooldownMult, so an
+ * un-invested build attacks deliberately slowly) quickened by the weapon's
+ * SPEED stat (DEX for melee & ranged, INT for magic; see `SPEED_STAT`). This
+ * is the single source of truth for stat-scaled fire rate: combat cooldown and
+ * the DPS/score math both route through it, so a build's faster attacks raise
+ * every surface consistently.
  */
 export function weaponCooldownFor(state: GameState, weapon: Equipment): number {
   const def = weaponDef(weapon.defId);
   const stat = effectiveStat(state, SPEED_STAT[def.class]);
-  return def.cooldownMs / (1 + stat * STATS.attackSpeedPerStat);
+  return (
+    (def.cooldownMs * WEAPON.baseCooldownMult) /
+    (1 + stat * STATS.attackSpeedPerStat)
+  );
 }
 
 /**
@@ -350,6 +355,24 @@ export function weaponSweepHalfAngle(
   // A half-angle of π already sweeps the full circle — clamp so extreme INT
   // saturates instead of wrapping past 360°.
   return Math.min(Math.PI, widened);
+}
+
+/**
+ * How many monsters a single melee swing may strike this player: the low
+ * `MELEE.baseAoeTargets` floor plus `aoeTargetsPerInt` per INTELLIGENCE point,
+ * floored to a whole count (always ≥ 1 so a swing never whiffs its aim). The
+ * cone (weaponSweepHalfAngle) decides which foes are eligible; this caps how
+ * many of them the blow actually lands on, so cleaving the horde is an INT
+ * investment rather than a free perk of a wide STRENGTH weapon.
+ */
+export function maxMeleeTargets(state: GameState): number {
+  return Math.max(
+    1,
+    Math.floor(
+      MELEE.baseAoeTargets +
+        effectiveStat(state, "intelligence") * STATS.aoeTargetsPerInt,
+    ),
+  );
 }
 
 // ---- Auto-equip scoring --------------------------------------------------------

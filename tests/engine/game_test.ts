@@ -20,6 +20,7 @@ import {
   PLAYER,
   RUN,
   step,
+  WEAPON,
 } from "@game/core";
 import {
   clearStage,
@@ -307,10 +308,13 @@ describe("melee sweep AoE", () => {
     };
   };
 
-  it("a blade cleaves every monster in the cone in one swing", () => {
+  it("a blade cleaves every monster in the cone in one swing (INT raises the cap)", () => {
     const state = startGame();
     state.obstacles = [];
     equip(state, "test_wrench"); // default 120° cone, reach 42
+    // The swing's target cap starts at MELEE.baseAoeTargets (2); one point of
+    // INT lifts it to 3 so the whole front rank is cleaved.
+    state.player.stats.intelligence = 1;
     const { x, y } = state.player.pos;
     // Three minions clustered ahead, all within reach and the front cone.
     const front = [
@@ -332,6 +336,26 @@ describe("melee sweep AoE", () => {
     expect(behind.hp).toBe(behind.maxHp);
     // Only one swing was emitted for the whole cleave.
     expect(state.events.filter((e) => e.type === "swing")).toHaveLength(1);
+  });
+
+  it("an un-invested swing strikes only the two nearest of the cone", () => {
+    const state = startGame();
+    state.obstacles = [];
+    equip(state, "test_wrench"); // default 120° cone, reach 42
+    // No INTELLIGENCE: the cap sits at MELEE.baseAoeTargets (2).
+    const { x, y } = state.player.pos;
+    // Three foes in the cone at increasing distance; the swing must land on
+    // the two NEAREST and spare the third even though it is inside the arc.
+    const near = makeEnemy({ pos: { x: x + 16, y } });
+    const mid = makeEnemy({ pos: { x: x + 22, y: y + 8 } });
+    const far = makeEnemy({ pos: { x: x + 30, y: y - 8 } });
+    state.enemies = [near, mid, far];
+
+    step(state, idle, DT);
+
+    expect(near.hp).toBeLessThan(near.maxHp);
+    expect(mid.hp).toBeLessThan(mid.maxHp);
+    expect(far.hp).toBe(far.maxHp); // beyond the two-target cap
   });
 
   it("the swing event carries the weapon's cone angle", () => {
@@ -385,19 +409,20 @@ describe("weapon reach, cadence, and AoE", () => {
     const base = weaponDef("test_wrench");
     const weapon = () => state.player.equipment.weapon;
 
-    // No stats: the plain catalog numbers.
+    // No stats: the plain catalog numbers (cadence via the global lever).
+    const baseCadence = base.cooldownMs * WEAPON.baseCooldownMult;
     expect(weaponRangeFor(state, weapon())).toBeCloseTo(base.range);
-    expect(weaponCooldownFor(state, weapon())).toBeCloseTo(base.cooldownMs);
+    expect(weaponCooldownFor(state, weapon())).toBeCloseTo(baseCadence);
 
     // STRENGTH is a damage stat now — it moves neither reach nor cadence.
     state.player.stats.strength = 20;
     expect(weaponRangeFor(state, weapon())).toBeCloseTo(base.range);
-    expect(weaponCooldownFor(state, weapon())).toBeCloseTo(base.cooldownMs);
+    expect(weaponCooldownFor(state, weapon())).toBeCloseTo(baseCadence);
 
     // INTELLIGENCE lengthens the reach; DEXTERITY quickens the swing.
     state.player.stats.intelligence = 20;
     expect(weaponRangeFor(state, weapon())).toBeGreaterThan(base.range);
-    expect(weaponCooldownFor(state, weapon())).toBeCloseTo(base.cooldownMs); // INT is not a speed stat
+    expect(weaponCooldownFor(state, weapon())).toBeCloseTo(baseCadence); // INT is not a speed stat
     state.player.stats.dexterity = 20;
     expect(weaponCooldownFor(state, weapon())).toBeLessThan(base.cooldownMs);
 

@@ -19,6 +19,7 @@ import {
 import { enemyDef } from "./defs/enemies/index.ts";
 import { LEVEL_ORDER, levelDef, type LevelDef } from "./defs/levels/index.ts";
 import { rollEquipment } from "./items.ts";
+import { evolutionHpMult } from "./menace.ts";
 import type {
   Decor,
   Difficulty,
@@ -121,6 +122,7 @@ export function createGame(
     phase: def.prelude ? "cutscene" : "intro",
     cutscene: def.prelude ? createCutscene(cutsceneDef(def.prelude)) : null,
     difficulty,
+    menace: 0,
     level: {
       id: def.id,
       index: def.index,
@@ -248,21 +250,30 @@ function placeItem(
 
 /** Mint one enemy instance (also used by the wave spawner in step.ts).
  * `hpMult` is the difficulty's monster-hp multiplier — kill XP scales with
- * max hp, so tougher monsters also pay out more. */
+ * max hp, so tougher monsters also pay out more. `evo` is the menace
+ * evolution stage stamped onto a MINION spawned while the horde is rampaging
+ * (see menace.ts): it stacks extra hp (worth more xp) and marks the mob so
+ * its drop rolls better. Elites and bosses ignore `evo` — they instead
+ * power-match the player when they engage (maybePowerScale). */
 export function spawnEnemy(
   defId: string,
   pos: Vec2,
   rng: Rng,
   id: number,
   hpMult = 1,
+  evo = 0,
 ): Enemy {
   const def = enemyDef(defId);
   const jitter =
     def.role === "boss"
       ? 0
       : randomRange(rng, -ENEMY_AI.speedJitter, ENEMY_AI.speedJitter);
-  const hp = Math.max(1, Math.round(def.hp * hpMult));
-  return {
+  const evolved = def.role === "minion" ? Math.max(0, evo) : 0;
+  const hp = Math.max(
+    1,
+    Math.round(def.hp * hpMult * evolutionHpMult(evolved)),
+  );
+  const enemy: Enemy = {
     id,
     defId,
     pos,
@@ -272,6 +283,8 @@ export function spawnEnemy(
     speed: def.speed * (1 + jitter),
     contactCooldownMs: 0,
   };
+  if (evolved > 0) enemy.evo = evolved;
+  return enemy;
 }
 
 /**
