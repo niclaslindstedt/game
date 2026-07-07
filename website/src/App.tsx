@@ -99,6 +99,10 @@ export function App() {
         incomingVersion={pwa.incomingVersion}
         onReload={() => pwa.reload()}
         onDismiss={() => pwa.dismiss()}
+        // `incomingVersion` is already the full label (`v0.1.0 · abc1234`,
+        // see website/vite.config.ts), so drop the framework's default
+        // "Version " prefix to avoid the redundant "Version v0.1.0 …".
+        labels={{ version: (v) => v }}
       />
     </>
   );

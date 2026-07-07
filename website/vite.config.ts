@@ -17,11 +17,11 @@ import { gamePwa } from "./pwa-plugin.ts";
 // quality gates.
 const base = process.env.VITE_BASE ?? "/";
 
-// Label shown by the PWA update toast for the incoming build. Prefer the
-// deploying commit (the workflow exposes GITHUB_SHA); fall back to a build
-// timestamp locally. Embedding it in the generated sw.js also guarantees the
-// worker's bytes change every deploy, so browsers reliably discover updates.
-const version = process.env.GITHUB_SHA
+// Unique reference for the incoming build. Prefer the deploying commit (the
+// workflow exposes GITHUB_SHA); fall back to a build timestamp locally.
+// Embedding it in the generated sw.js also guarantees the worker's bytes
+// change every deploy, so browsers reliably discover updates.
+const buildRef = process.env.GITHUB_SHA
   ? process.env.GITHUB_SHA.slice(0, 7)
   : new Date().toISOString();
 
@@ -46,6 +46,12 @@ const appVersion = (
     version: string;
   }
 ).version;
+
+// Label shown by the PWA update toast for the incoming build. Combine the
+// semantic version with the build ref (`v0.1.0 · abc1234`) — mirroring the
+// title-screen footer — so the toast reads as a real version, not a bare
+// SHA. The build ref keeps every deploy's version.json distinct.
+const version = `v${appVersion} · ${buildRef}`;
 
 export default defineConfig({
   base,
