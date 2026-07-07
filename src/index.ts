@@ -106,6 +106,7 @@ export {
   DIFFICULTY_DEFS,
   DIFFICULTY_ORDER,
   difficultyDef,
+  meetsMinDifficulty,
   scaledMobCount,
   type DifficultyDef,
 } from "./game/defs/difficulties.ts";
@@ -117,13 +118,13 @@ export {
   type SpawnSpec,
   type WaveBudget,
   type WaveSpec,
-} from "./game/defs/levels.ts";
+} from "./game/defs/levels/index.ts";
 export {
   ENEMY_DEFS,
   enemyDef,
   type EnemyDef,
   type EnemyRole,
-} from "./game/defs/enemies.ts";
+} from "./game/defs/enemies/index.ts";
 export {
   AFFIX_POOLS,
   equipmentBaseName,

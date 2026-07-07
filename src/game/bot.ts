@@ -11,7 +11,7 @@
 
 import { clamp, distance } from "@game/lib/vec.ts";
 import type { Vec2 } from "@game/lib/vec.ts";
-import { enemyDef } from "./defs/enemies.ts";
+import { enemyDef } from "./defs/enemies/index.ts";
 import { weaponDef } from "./defs/equipment.ts";
 import type { Enemy, GameInput, GameState, Item, StatName } from "./types.ts";
 

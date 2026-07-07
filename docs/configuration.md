@@ -15,11 +15,14 @@ own namespace, and a sequel changes it there once:
 | Music volume        | 0–100% in quarter steps                             | 80%                                                         |
 | Sound FX volume     | 0–100% in quarter steps                             | 100%                                                        |
 
-Story progress is persisted the same way: watched cutscenes are recorded
-under `<storagePrefix>:seen-cutscenes` (`website/src/game/progress.ts`), so a
-level's prelude plays once per device instead of on every retry. Clearing
-site data resets it; the `?cutscene=<id>` workbench replays any scene
-regardless.
+Story progress is persisted the same way (`website/src/game/progress.ts`):
+watched cutscenes are recorded under `<storagePrefix>:seen-cutscenes`, so a
+level's prelude plays once per device instead of on every retry, and cleared
+levels are recorded under `<storagePrefix>:completed-levels` (keyed per
+difficulty) — that is what unlocks the next level in the menu's level-select
+screen and lights up NEXT LEVEL on the victory splash. Clearing site data
+resets both; the `?cutscene=<id>` workbench replays any scene regardless, and
+`?level=<id>` reaches any level regardless of unlock state.
 
 Everything else configurable concerns the build and the development
 environment.
@@ -34,13 +37,13 @@ environment.
 
 ## URL parameters
 
-| Parameter         | Effect                                                                                                                                                                                                                                                                                                                                                                                         |
-| ----------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `?debug`          | Enables debug-level console output (`src/output.ts`, OSS_SPEC §19.3). All levels are always captured in the in-memory buffer regardless; the flag only controls console verbosity. Additionally exposes the live engine state as `window.__game` (`website/src/game/GameScreen.tsx`) so DevTools and the playtest harness (`website/scripts/playtest.mjs`) can inspect real runs.              |
-| `?bot=<strategy>` | Hands the run to the engine autopilot (`src/game/bot.ts`): the bot skips any prelude cutscene, dismisses the intro, steers, jumps, and spends level-up points itself. Strategies: `idle`, `rush`, `kite`, `boss`, `survivor`. Unknown names are ignored (normal input applies). Used by the playtest harness (usually combined with `?debug`) and the seed for an AI-controlled second player. |
-| `?level=<id>`     | Starts runs on a specific catalog level (`src/game/defs/levels.ts` — this game's ids: `spacez_hq`, `moon`) instead of the story default (`LEVEL_ORDER[0]`). Unknown ids are ignored.                                                                                                                                                                                                           |
-| `?seed=<n>`       | Pins the run's layout seed (a positive integer) so retries and bug reports lay the level out identically. Absent or invalid, the seed derives from the clock. See the debug-game skill.                                                                                                                                                                                                        |
-| `?cutscene=<id>`  | Opens the cutscene workbench instead of the game: plays one scene from the catalog (`src/game/defs/cutscenes.ts`) with TAP/SKIP/REPLAY controls, for iterating on scene authoring. With `?debug`, exposes the live scene as `window.__cutscene` for the preview harness (`website/scripts/cutscene-preview.mjs`).                                                                              |
+| Parameter         | Effect                                                                                                                                                                                                                                                                                                                                                                                                                                    |
+| ----------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `?debug`          | Enables debug-level console output (`src/output.ts`, OSS_SPEC §19.3). All levels are always captured in the in-memory buffer regardless; the flag only controls console verbosity. Additionally exposes the live engine state as `window.__game` (`website/src/game/GameScreen.tsx`) so DevTools and the playtest harness (`website/scripts/playtest.mjs`) can inspect real runs.                                                         |
+| `?bot=<strategy>` | Hands the run to the engine autopilot (`src/game/bot.ts`): the bot skips any prelude cutscene, dismisses the intro, steers, jumps, and spends level-up points itself. Strategies: `idle`, `rush`, `kite`, `boss`, `survivor`. Unknown names are ignored (normal input applies). Used by the playtest harness (usually combined with `?debug`) and the seed for an AI-controlled second player.                                            |
+| `?level=<id>`     | Dev override that starts runs on a specific catalog level (`src/game/defs/levels/` — this game's ids: `spacez_hq`, `moon`) instead of the level picked in the menu's level-select screen. It bypasses the campaign unlock gate, so it reaches any level regardless of saved progress. Unknown ids are ignored (the menu selection applies). Normal play uses the level-select screen; `?level=` is for testing a specific level directly. |
+| `?seed=<n>`       | Pins the run's layout seed (a positive integer) so retries and bug reports lay the level out identically. Absent or invalid, the seed derives from the clock. See the debug-game skill.                                                                                                                                                                                                                                                   |
+| `?cutscene=<id>`  | Opens the cutscene workbench instead of the game: plays one scene from the catalog (`src/game/defs/cutscenes.ts`) with TAP/SKIP/REPLAY controls, for iterating on scene authoring. With `?debug`, exposes the live scene as `window.__cutscene` for the preview harness (`website/scripts/cutscene-preview.mjs`).                                                                                                                         |
 
 ## Gameplay tuning
 

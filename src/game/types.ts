@@ -30,10 +30,13 @@ export type GamePhase =
   | "defeat";
 
 /**
- * The difficulty ladder, gentlest to absurd. Chosen on the main menu before
- * a run; the per-setting numbers live in defs/difficulties.ts.
+ * A difficulty id: a key into DIFFICULTY_DEFS. Deliberately a bare `string`
+ * so the ladder is pure data like every other catalog — adding a difficulty
+ * means adding a def entry (and listing it in DIFFICULTY_ORDER), not editing
+ * this type. The shipped ladder runs easy → medium → hard → nightmare →
+ * jesus; the numbers and menu presentation live in defs/difficulties.ts.
  */
-export type Difficulty = "easy" | "medium" | "hard" | "nightmare" | "jesus";
+export type Difficulty = string;
 
 /** The six trainable stats, one point awarded per level-up. */
 export type StatName =

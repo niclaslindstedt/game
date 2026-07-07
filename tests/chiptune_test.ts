@@ -18,6 +18,7 @@ import {
 import type { NoiseOptions, Synth, ToneOptions } from "@ui/lib/synth.ts";
 
 import { LEVEL_THEME } from "../website/src/game/music/level.ts";
+import { HQ_THEME } from "../website/src/game/music/spacez.ts";
 import { TITLE_THEME } from "../website/src/game/music/title.ts";
 
 /** A fake synth with a hand-cranked clock that records every scheduling. */
@@ -251,6 +252,7 @@ describe("the shipped scores", () => {
   it.each([
     ["title", TITLE_THEME],
     ["level", LEVEL_THEME],
+    ["hq", HQ_THEME],
   ])("arranges the %s score to loop at around two minutes", (_, theme) => {
     const total = loopSeconds(theme);
     expect(total).toBeGreaterThan(100);
@@ -260,6 +262,7 @@ describe("the shipped scores", () => {
   it.each([
     ["title", TITLE_THEME],
     ["level", LEVEL_THEME],
+    ["hq", HQ_THEME],
   ])(
     "plays the %s score through a full loop without a bad note",
     (_, theme) => {
@@ -284,7 +287,7 @@ describe("the shipped scores", () => {
   );
 
   it("keeps every pattern voice aligned to whole bars", () => {
-    for (const theme of [TITLE_THEME, LEVEL_THEME]) {
+    for (const theme of [TITLE_THEME, LEVEL_THEME, HQ_THEME]) {
       const barLength = theme.stepsPerBeat * 4; // four beats to the bar
       for (const pattern of Object.values(theme.patterns)) {
         for (const tokens of Object.values(pattern)) {
@@ -295,7 +298,7 @@ describe("the shipped scores", () => {
   });
 
   it("varies across the loop: several distinct sections per score", () => {
-    for (const theme of [TITLE_THEME, LEVEL_THEME]) {
+    for (const theme of [TITLE_THEME, LEVEL_THEME, HQ_THEME]) {
       expect(Object.keys(theme.patterns).length).toBeGreaterThanOrEqual(4);
       expect(theme.order.length).toBeGreaterThan(
         Object.keys(theme.patterns).length,

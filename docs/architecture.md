@@ -35,10 +35,17 @@ run against synthetic fixtures with no shipped content (see
 
 - **`src/game/config.ts`** — the GLOBAL balance knobs (player, jumping, XP
   curve, stat effects, loot rules), nothing hardcoded in logic.
-- **`src/game/defs/levels.ts`** — the level registry: geometry, per-level
-  gravity (low gravity makes jumps soar), biome (a `tiles` sprite spec the
-  renderer paints from), the story intro text,
-  an optional prelude cutscene id, landmark props, banded enemy spawns, the
+- **`src/game/defs/levels/`** — the level registry: one `LevelDef` per file
+  (`spacez_hq.ts`, `moon.ts`, …) merged and ordered by `levels/index.ts`
+  (which owns `LEVELS`, `LEVEL_ORDER`, `levelDef`; the split keeps each
+  level's ~250 lines under the source-size cap as the campaign grows). A
+  level carries geometry, per-level gravity (low gravity makes jumps soar),
+  biome (a `tiles` sprite spec the renderer paints from), an optional `music`
+  track id (a key into the app's `LEVEL_TRACKS` registry — the engine stays
+  audio-free), the story intro text,
+  an optional prelude cutscene id, landmark props, banded enemy spawns (each
+  spawn/wave line may carry an optional `minDifficulty` so difficulty-gated
+  content lives with the level that uses it), the
   objective (`killBoss` / `clearAll`), solid obstacles (tall pieces block
   everyone; low ones can be jumped by the player but never by monsters),
   deliberate `walls` (segments expanded into chains of solid circles at
@@ -47,7 +54,9 @@ run against synthetic fixtures with no shipped content (see
   `state.doors`, opened by carrying the matching story-item key up to
   them), hand-`placedItems` (locked-room loot, plot pieces on pedestals),
   decor, and the loot table (pools + tier chances).
-- **`src/game/defs/enemies.ts`** — the monster catalog (stats, AI radii,
+- **`src/game/defs/enemies/`** — the monster catalog, split one file per
+  roster (`spacez.ts`, `moon.ts`, …) merged into `ENEMY_DEFS` by
+  `enemies/index.ts` (which throws on a duplicate id): stats, AI radii,
   roles; bosses and elites pin guaranteed drops). Roles: `minion` (the
   horde), `boss` (guards the objective), and `elite` — a unique story mob
   pinned to a spot by the level def, which sleeps until the player nears,
@@ -173,12 +182,16 @@ pixelated`; enemies swap to generated wounded sprite variants as hp falls
   `tiers.ts` (tier name colors), `sfx/` (engine events →
   synthesized 16-bit-palette sounds, organized by domain: `ui.ts`,
   `combat.ts`, `world.ts`, `pickups.ts`, `jingles.ts` behind `index.ts`),
-  `music/` (one score file per track — `title.ts`, `level.ts` — each
-  holding all instruments + notes as tracker-style pattern data, arranged
-  to loop at ~2 minutes; `index.ts` owns the single player), `audio.ts`
-  (one shared synth split into SFX/music volume views), `settings.ts`
-  (persisted control-scheme + volume settings), `progress.ts` (persisted
-  story progress: watched cutscenes, so a prelude plays once per device),
+  `music/` (one score file per track — `title.ts`, `level.ts`,
+  `spacez.ts` — each holding all instruments + notes as tracker-style
+  pattern data, arranged to loop at ~2 minutes; `index.ts` owns the single
+  player and a `LEVEL_TRACKS` registry, so a level's `music` id selects its
+  theme and `playLevelMusic(trackId)` switches cleanly between levels),
+  `audio.ts` (one shared synth split into SFX/music volume views),
+  `settings.ts` (persisted control-scheme + volume settings), `progress.ts`
+  (persisted story progress: watched cutscenes so a prelude plays once per
+  device, and per-difficulty level completion that drives the campaign
+  unlock gate and the victory splash's NEXT LEVEL),
   `assets.ts` (loads the generated sprite atlas — one PNG + JSON source
   rects sliced into per-sprite bitmaps in a single decode — plus the pixel
   font), and `assets/` (the generated atlas + font atlas — never
@@ -271,7 +284,7 @@ site that switches on it. The unions and their handler sites:
 
 | Union (types.ts / defs)           | Members                                                             | Handler sites to extend                                                                                              |
 | --------------------------------- | ------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------- |
-| `EnemyRole` (defs/enemies.ts)     | `minion` \| `elite` \| `boss`                                       | `step.ts` enemy AI (aggro/guard/boss branches, last-stand), `create.ts` boss-spawn detection, `render.ts` hp bars    |
+| `EnemyRole` (defs/enemies/)       | `minion` \| `elite` \| `boss`                                       | `step.ts` enemy AI (aggro/guard/boss branches, last-stand), `create.ts` boss-spawn detection, `render.ts` hp bars    |
 | `AbilityKind` (defs/abilities.ts) | `orbit` \| `storm` \| `stasis` \| `nuke` \| `magnet`                | capability-object dispatch in `abilities.ts` + `step.ts`; visuals in `render.ts` `drawAbilities`                     |
 | `Item["kind"]` (types.ts)         | `medkit` \| `xp` \| `repair` \| `equipment` \| `ability` \| `story` | the pickup switch in `step.ts`; the item-sprite switch in `render.ts`                                                |
 | `Affix["kind"]` (types.ts)        | `damagePct` \| `maxHp` \| `crit` \| `stat`                          | the affix readers in `items.ts` (`effectiveStat`, `computeMaxHp`, `playerCritChance`, `weaponDamage`, `weaponScore`) |

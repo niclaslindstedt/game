@@ -1,0 +1,302 @@
+// SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
+// The moon (level 2) roster: the haunting — wisps, moon ghosts, wraiths —
+// four ghosts with unfinished business (elites), and ARMSTRONG, the giant
+// astronaut ghost who guards the flag he planted (boss). Every moon mob
+// phases (senses through walls, drifts through stone). Registered into
+// ENEMY_DEFS by ./index.ts.
+
+import type { EnemyDef } from "./types.ts";
+
+export const MOON_ENEMIES: Record<string, EnemyDef> = {
+  // Minion speeds sit far below the player's walk: the horde is a slow,
+  // inevitable tide the player reads and routes around, not a footrace.
+  // Aggro radii dwarf the screen — once a monster exists, it is coming.
+  wisp: {
+    id: "wisp",
+    name: "WISP",
+    role: "minion",
+    sprite: "wisp",
+    gore: "ecto",
+    phasing: true,
+    // One base blaster hit: wisps are the horde's fodder — the flood is
+    // only survivable because its front rank evaporates on contact.
+    hp: 10,
+    speed: 13,
+    radius: 8,
+    contactDamage: 6,
+    critChance: 0.1,
+    contactCooldownMs: 700,
+    ai: { aggroRadius: 900 },
+  },
+  ghost: {
+    id: "ghost",
+    name: "MOON GHOST",
+    role: "minion",
+    sprite: "ghost",
+    gore: "ecto",
+    phasing: true,
+    hp: 45,
+    speed: 16,
+    radius: 9,
+    contactDamage: 12,
+    critChance: 0.1,
+    contactCooldownMs: 700,
+    ai: { aggroRadius: 950 },
+  },
+  wraith: {
+    id: "wraith",
+    name: "WRAITH",
+    role: "minion",
+    sprite: "wraith",
+    gore: "ecto",
+    phasing: true,
+    hp: 90,
+    speed: 22,
+    radius: 9,
+    contactDamage: 20,
+    critChance: 0.12,
+    contactCooldownMs: 700,
+    ai: { aggroRadius: 1000 },
+  },
+  // ---- The moon's elites — four ghosts with unfinished business, pinned
+  // along the walk to the flag so the conspiracy unspools in order: the
+  // grave under the dust, the corporate moonbase, the clone, and Ada's
+  // trail going below.
+  apollo_ghost: {
+    id: "apollo_ghost",
+    name: "MISSION SPECIALIST",
+    role: "elite",
+    sprite: "apollo_ghost",
+    gore: "ecto",
+    phasing: true,
+    hp: 220,
+    speed: 20,
+    radius: 12,
+    contactDamage: 20,
+    critChance: 0.1,
+    contactCooldownMs: 700,
+    dialogue: [
+      [
+        "A LIVE ONE. BREATHING AND",
+        "EVERYTHING. WE STOPPED THAT",
+        "HABIT DECADES AGO.",
+      ],
+      [
+        "THE BROADCAST SAID ONE SMALL STEP.",
+        "IT DIDN'T SAY ONTO WHAT. THERE WAS",
+        "A WRECK UNDER THE DUST, KID.",
+      ],
+      [
+        "OLDER THAN THE DUST. WE PLANTED",
+        "THE FLAG ON A GRAVE AND SMILED",
+        "FOR THE CAMERA. SMILE'S OVER.",
+      ],
+    ],
+    lastWords: ["ONE SMALL... STEP...", "ONTO A... GRAVE... HHK"],
+    ai: { aggroRadius: 250, rushSpeed: 115 },
+    loot: {
+      items: ["flare_gun"],
+      storyItems: ["mission_log"],
+      weapons: 0,
+      gear: 0,
+      xpArrows: 1,
+      repairs: 0,
+      medkits: 1,
+      tierBonus: 0.3,
+    },
+  },
+  prospector: {
+    id: "prospector",
+    name: "THE PROSPECTOR",
+    role: "elite",
+    sprite: "prospector",
+    gore: "ecto",
+    phasing: true,
+    hp: 240,
+    speed: 22,
+    radius: 12,
+    contactDamage: 24,
+    critChance: 0.12,
+    contactCooldownMs: 700,
+    dialogue: [
+      [
+        "CLAIM'S TAKEN. WHOLE ROCK'S",
+        "TAKEN. STAMPED, FILED, AND",
+        "PAID FOR BY SPACEZ.",
+      ],
+      [
+        "I DUG THEIR TUNNELS AT SITE T.",
+        "FAR SIDE. YEARS OF FREIGHT RUNS",
+        "NOBODY DOWN THERE EVER TRACKED.",
+      ],
+      [
+        "THEN LAST MONTH THE CARGO",
+        "MANIFESTS CHANGED. THE CRATES",
+        "STARTED BREATHING. I QUIT. BADLY.",
+      ],
+    ],
+    lastWords: ["THE CLAIM'S... URGH...", "...YOURS NOW, KID..."],
+    ai: { aggroRadius: 250, rushSpeed: 120 },
+    loot: {
+      items: ["core_drill"],
+      storyItems: ["spacez_blueprints"],
+      weapons: 0,
+      gear: 1,
+      xpArrows: 1,
+      repairs: 0,
+      medkits: 1,
+      tierBonus: 0.3,
+    },
+  },
+  quarantine_medic: {
+    id: "quarantine_medic",
+    name: "QUARANTINE MEDIC",
+    role: "elite",
+    sprite: "quarantine_medic",
+    gore: "ecto",
+    phasing: true,
+    hp: 260,
+    speed: 20,
+    radius: 12,
+    contactDamage: 24,
+    critChance: 0.1,
+    contactCooldownMs: 700,
+    dialogue: [
+      [
+        "HOLD STILL. ROUTINE SCREENING.",
+        "HEARTBEAT... PRESENT. UNUSUAL.",
+        "YOU'LL WANT THAT LOOKED AT.",
+      ],
+      [
+        "I RAN THE CREW PHYSICALS IN '69.",
+        "TWO CHARTS FOR THE FIRST MAN.",
+        "ONLY ONE OF THEM EVER FLEW HOME.",
+      ],
+      [
+        "THE ONE WHO WAVED AT THE PARADES",
+        "GREW IN A TANK ON THE RIDE BACK.",
+        "THE REAL ONE? STILL ON SHIFT.",
+        "YOU'RE WALKING TOWARD HIM.",
+      ],
+    ],
+    lastWords: ["TWO CHARTS... HHH...", "ONE STILL... BEAT..."],
+    ai: { aggroRadius: 250, rushSpeed: 115 },
+    loot: {
+      items: ["geiger_wand"],
+      storyItems: ["clone_dossier"],
+      weapons: 0,
+      gear: 0,
+      xpArrows: 1,
+      repairs: 1,
+      medkits: 1,
+      tierBonus: 0.3,
+    },
+  },
+  cartographer: {
+    id: "cartographer",
+    name: "THE CARTOGRAPHER",
+    role: "elite",
+    sprite: "cartographer",
+    gore: "ecto",
+    phasing: true,
+    hp: 240,
+    speed: 26,
+    radius: 12,
+    contactDamage: 22,
+    critChance: 0.12,
+    contactCooldownMs: 700,
+    dialogue: [
+      [
+        "SHH. I'M CHARTING. THE MAP",
+        "KEEPS CHANGING UNDERNEATH.",
+        "TUNNELS WHERE NO TUNNELS WERE.",
+      ],
+      [
+        "A SIGNAL CROSSED MY GRID LAST",
+        "NIGHT. SMALL. WARM. A JACKET",
+        "BEACON, MOVING FAST - THEN DOWN.",
+      ],
+      [
+        "STRAIGHT DOWN. INTO THE WRECK",
+        "UNDER THE FLAG. THEY ALL GO",
+        "BELOW, FRIEND. NOBODY MAPS BELOW.",
+      ],
+    ],
+    lastWords: ["SHE WENT... STRAIGHT...", "...DOWN... OFF MY MAP..."],
+    ai: { aggroRadius: 250, rushSpeed: 125 },
+    loot: {
+      items: ["surveyors_pick"],
+      weapons: 0,
+      gear: 0,
+      xpArrows: 1,
+      repairs: 1,
+      medkits: 1,
+      tierBonus: 0.3,
+    },
+  },
+  armstrong: {
+    id: "armstrong",
+    name: "ARMSTRONG",
+    role: "boss",
+    sprite: "armstrong",
+    gore: "ecto",
+    phasing: true,
+    hp: 550,
+    speed: 40,
+    radius: 20,
+    contactDamage: 30,
+    critChance: 0.15,
+    contactCooldownMs: 900,
+    // The longest scene in the game so far: the level-2 reveals converge —
+    // the wreck, the clone, and where Ada went — before the fight.
+    dialogue: [
+      [
+        "YOU SMELL LIKE EARTH.",
+        "RAIN AND CUT GRASS AND",
+        "TELEVISION. GO HOME.",
+      ],
+      [
+        "I PLANTED THIS FLAG. ONE SMALL",
+        "STEP. THEN THEY FOUND THE WRECK",
+        "UNDER MY BOOTS AND EVERYTHING",
+        "AFTER THAT WAS THEATER.",
+      ],
+      [
+        "THEY GREW A SMILING ME ON THE",
+        "RIDE HOME. HE SHOOK THE HANDS.",
+        "HE CUT THE RIBBONS. HE DIED IN",
+        "A BED. LUCKY HIM.",
+      ],
+      [
+        "I STAYED. SOMEBODY HAD TO STAND",
+        "WATCH OVER THE THING DOWN THERE.",
+        "IT SINGS, YOU KNOW. THE COMPANY",
+        "MEN DANCE TO IT NOW.",
+      ],
+      [
+        "THEY CARRIED A GIRL PAST ME LAST",
+        "NIGHT. SNEAKERS. LOUD. SHE BIT",
+        "TWO OF THEM. THEY TOOK HER BELOW,",
+        "TO THE SINGING THING.",
+      ],
+      [
+        "YOU WANT TO FOLLOW? THEN TAKE",
+        "THE WATCH FROM ME, EARTHLING.",
+        "I ONLY EVER LOSE TO THE WORTHY.",
+      ],
+    ],
+    lastWords: ["THE WATCH... HHH...", "IT'S... YOURS... NOW..."],
+    ai: { aggroRadius: 280, leashRadius: 460 },
+    // The machete rode up in his survival kit — Apollo crews really packed
+    // one for jungle splashdowns. Fifty years on, it's for the aliens.
+    loot: {
+      items: ["machete"],
+      weapons: 0,
+      gear: 1,
+      xpArrows: 2,
+      repairs: 1,
+      medkits: 2,
+      tierBonus: 0.35,
+    },
+  },
+};

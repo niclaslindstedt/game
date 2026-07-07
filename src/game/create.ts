@@ -11,9 +11,13 @@ import { createRng, randomRange, type Rng } from "@game/lib/rng.ts";
 import { distance, vec, type Vec2 } from "@game/lib/vec.ts";
 import { ENEMY_AI, LEVELING, LOOT, OBSTACLES, PLAYER } from "./config.ts";
 import { cutsceneDef } from "./defs/cutscenes.ts";
-import { difficultyDef, scaledMobCount } from "./defs/difficulties.ts";
-import { enemyDef } from "./defs/enemies.ts";
-import { LEVEL_ORDER, levelDef, type LevelDef } from "./defs/levels.ts";
+import {
+  difficultyDef,
+  meetsMinDifficulty,
+  scaledMobCount,
+} from "./defs/difficulties.ts";
+import { enemyDef } from "./defs/enemies/index.ts";
+import { LEVEL_ORDER, levelDef, type LevelDef } from "./defs/levels/index.ts";
 import { rollEquipment } from "./items.ts";
 import type {
   Decor,
@@ -61,6 +65,8 @@ export function createGame(
 
   const enemies: Enemy[] = [];
   for (const spawn of def.spawns) {
+    // Difficulty-gated spawns sit out the rungs below their `minDifficulty`.
+    if (!meetsMinDifficulty(difficulty, spawn.minDifficulty)) continue;
     if ("at" in spawn) {
       enemies.push(
         spawnEnemy(
@@ -104,7 +110,10 @@ export function createGame(
   // The wave budget is part of the level's population from the start — the
   // HUD's "ghosts N/total" counts the whole haunting, not just the placed few.
   const waveTotal = (def.waves?.budget ?? []).reduce(
-    (sum, entry) => sum + scaledMobCount(entry.count, difficulty),
+    (sum, entry) =>
+      meetsMinDifficulty(difficulty, entry.minDifficulty)
+        ? sum + scaledMobCount(entry.count, difficulty)
+        : sum,
     0,
   );
 

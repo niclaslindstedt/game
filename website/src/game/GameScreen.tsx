@@ -25,6 +25,7 @@ import {
   dismissIntro,
   enemyDef,
   LEVELS,
+  levelDef,
   openInventory,
   skipCutscene,
   step,
@@ -56,7 +57,12 @@ import {
   PICKUP_TTL_MS,
   type PickupMessage,
 } from "./PickupFeed.tsx";
-import { hasSeenCutscene, markCutsceneSeen } from "./progress.ts";
+import {
+  hasSeenCutscene,
+  markCutsceneSeen,
+  markLevelCompleted,
+  nextLevelId,
+} from "./progress.ts";
 import {
   computeCamera,
   drawEffects,
@@ -124,11 +130,18 @@ function formatTime(ms: number): string {
 
 export function GameScreen({
   difficulty,
+  levelId: initialLevelId,
   onQuit,
 }: {
   difficulty: Difficulty;
+  levelId: string;
   onQuit: () => void;
 }) {
+  // The level this run is on. Retry replays it; the victory splash's NEXT
+  // LEVEL button advances it along LEVEL_ORDER, which re-runs the mount effect
+  // (a fresh createGame) — each run is standalone, carrying only the chosen
+  // difficulty across, per docs/game-content.md.
+  const [levelId, setLevelId] = useState(initialLevelId);
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const dpadRef = useRef<HTMLDivElement>(null);
   const jumpQueuedRef = useRef(false);
@@ -171,9 +184,11 @@ export function GameScreen({
       Number.isInteger(seedParam) && seedParam > 0
         ? seedParam & 0x7fffffff
         : Date.now() & 0x7fffffff;
+    // `?level=` is a dev override that jumps to any catalog level and bypasses
+    // the campaign unlock gate; otherwise the run starts on the picked level.
     const levelParam = params.get("level");
-    const levelId = levelParam && levelParam in LEVELS ? levelParam : undefined;
-    const state = createGame(seed, levelId, difficulty);
+    const devLevel = levelParam && levelParam in LEVELS ? levelParam : null;
+    const state = createGame(seed, devLevel ?? levelId, difficulty);
     // A prelude plays once per device: retries and later runs jump straight
     // to the intro. `pendingCutscene` marks the scene seen however it ends
     // (played out, tapped through, SKIP, Esc, or a bot skipping it) — the
@@ -210,7 +225,7 @@ export function GameScreen({
     // stops for the end-of-run jingles (victory/defeat events below).
     const beginRun = () => {
       dismissIntro(state);
-      playLevelMusic();
+      playLevelMusic(levelDef(state.level.id).music);
     };
 
     // In debug mode (?debug) the live state is reachable from the console /
@@ -454,6 +469,11 @@ export function GameScreen({
           if (event.type === "victory" || event.type === "defeat") {
             stopMusic();
           }
+          // Clearing a level records it (per difficulty) so the campaign
+          // unlocks the next one and the menu marks this one replayable.
+          if (event.type === "victory") {
+            markLevelCompleted(state.level.id, difficulty);
+          }
         }
         if (effects.length > 0) {
           effects = effects.filter((e) => e.untilMs > state.stats.timeMs);
@@ -531,7 +551,7 @@ export function GameScreen({
       canvas.removeEventListener("pointerdown", unlock);
       pickupTimers.forEach(clearTimeout);
     };
-  }, [assets, runId, difficulty]);
+  }, [assets, runId, difficulty, levelId]);
 
   if (!assets) {
     return <div className="game-loading">Loading…</div>;
@@ -680,7 +700,7 @@ export function GameScreen({
           font={font}
           onBegin={() => {
             dismissIntro(state);
-            playLevelMusic();
+            playLevelMusic(levelDef(state.level.id).music);
             bumpUi();
           }}
         />
@@ -762,15 +782,43 @@ export function GameScreen({
             />
           </div>
           <div className="splash-buttons">
+            {hud.phase === "victory" &&
+              state &&
+              (() => {
+                const next = nextLevelId(state.level.id);
+                if (!next) return null;
+                return (
+                  <button
+                    type="button"
+                    className="pixel-button"
+                    onClick={() => {
+                      setHud(null);
+                      setLevelId(next);
+                    }}
+                  >
+                    <PixelText
+                      font={font}
+                      text="NEXT LEVEL"
+                      scale={3}
+                      color="#0b0d10"
+                    />
+                  </button>
+                );
+              })()}
             <button
               type="button"
-              className="pixel-button"
+              className={`pixel-button${hud.phase === "victory" ? " secondary" : ""}`}
               onClick={() => {
                 setHud(null);
                 setRunId((id) => id + 1);
               }}
             >
-              <PixelText font={font} text="RETRY" scale={3} color="#0b0d10" />
+              <PixelText
+                font={font}
+                text="RETRY"
+                scale={3}
+                color={hud.phase === "victory" ? undefined : "#0b0d10"}
+              />
             </button>
             <button
               type="button"
