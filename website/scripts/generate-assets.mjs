@@ -2,15 +2,17 @@
 // SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
 // The asset pipeline (see the `pixel-assets` skill). Renders everything the
 // game draws from its programmatic sources of truth:
-//   sprite-data.mjs grids → website/src/game/assets/*.png     (committed)
-//   asset-tools/font.mjs  → font atlas PNG + metrics JSON      (committed)
-//   previews (8x sprites, contact sheet, film strips, animated WebPs,
-//   palette sheet, font specimen) → website/assets-preview/    (gitignored)
+//   sprite-data/ grids → sprite atlas PNG + source-rect JSON   (committed)
+//   asset-tools/font.mjs → font atlas PNG + metrics JSON       (committed)
+//   previews (8x sprites, contact sheets — one per family plus the full
+//   strip — film strips, animated WebPs, palette sheet, font specimen)
+//   → website/assets-preview/                                  (gitignored)
 
 import { mkdirSync, writeFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 
 import { buildFilmStrip, writeAnimatedWebp } from "./asset-tools/animation.mjs";
+import { packAtlas } from "./asset-tools/atlas.mjs";
 import { buildFontAtlas, renderText } from "./asset-tools/font.mjs";
 import { gridStats, gridToSurface, validateGrid } from "./asset-tools/grid.mjs";
 import { buildPalette } from "./asset-tools/palette.mjs";
@@ -51,10 +53,26 @@ for (const [name, grid] of Object.entries(SPRITES)) {
 }
 
 for (const [name, surface] of Object.entries(surfaces)) {
-  await writePng(surface, `${assetsDir}/${name}.png`);
   await writePng(upscale(surface, 8), `${previewDir}/${name}@8x.png`);
 }
 
+// One committed atlas + source rects instead of one PNG per sprite — the
+// app slices it at load time (website/src/game/assets.ts).
+const { atlas, rects } = packAtlas(surfaces);
+await writePng(atlas, `${assetsDir}/atlas.png`);
+writeFileSync(`${assetsDir}/atlas.json`, `${JSON.stringify(rects, null, 2)}\n`);
+
+// Contact sheets: one per family over ITS ground tile (the reviewable
+// unit), plus the full strip for cross-family sweeps.
+for (const family of FAMILIES) {
+  const familySurfaces = Object.fromEntries(
+    Object.keys(family.sprites).map((name) => [name, surfaces[name]]),
+  );
+  await writePng(
+    buildContactSheet(familySurfaces, surfaces[family.ground]),
+    `${previewDir}/family_${family.name}.png`,
+  );
+}
 await writePng(
   buildContactSheet(surfaces, surfaces.moon_0),
   `${previewDir}/sheet.png`,
@@ -73,9 +91,9 @@ for (const [name, anim] of Object.entries(ANIMATIONS)) {
 
 // ---- Pixel font: committed atlas + metrics, preview specimen ---------------
 
-const { atlas, meta } = buildFontAtlas();
-await writePng(atlas, `${assetsDir}/font.png`);
-writeFileSync(`${assetsDir}/font.json`, JSON.stringify(meta));
+const { atlas: fontAtlas, meta } = buildFontAtlas();
+await writePng(fontAtlas, `${assetsDir}/font.png`);
+writeFileSync(`${assetsDir}/font.json`, `${JSON.stringify(meta, null, 2)}\n`);
 
 const specimenLines = [
   "THE QUICK BROWN FOX JUMPS OVER THE LAZY DOG",
@@ -133,6 +151,6 @@ for (const [scope, map] of scopes) {
 await writePng(upscale(paletteSheet, 4), `${previewDir}/palette.png`);
 
 console.log(
-  `wrote ${Object.keys(surfaces).length} sprites + font atlas → ${assetsDir}`,
+  `wrote ${Object.keys(surfaces).length}-sprite atlas (${atlas.width}x${atlas.height}) + font atlas → ${assetsDir}`,
 );
 console.log(`previews → ${previewDir}`);

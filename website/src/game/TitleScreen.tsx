@@ -10,7 +10,7 @@ import { DIFFICULTY_ORDER, difficultyDef, type Difficulty } from "@game/core";
 
 import { PixelText } from "@ui/lib/PixelText.tsx";
 
-import { loadGameAssets, type GameAssets } from "./assets.ts";
+import { loadGameAssets, spriteDataUrl, type GameAssets } from "./assets.ts";
 import { synth } from "./audio.ts";
 import { playTitleMusic } from "./music/index.ts";
 import { getSettings, updateSettings } from "./settings.ts";
@@ -290,7 +290,7 @@ export function TitleScreen({
     return <div className="game-loading">Loading…</div>;
   }
   const font = assets.font;
-  const cursorSprite = assets.sprites.wisp_0;
+  const cursorSprite = spriteDataUrl(assets.sprites, "wisp_0") ?? "";
 
   return (
     <div className="title-screen" onPointerDown={unlockAudio}>
@@ -364,7 +364,7 @@ export function TitleScreen({
               onClick={entry.action}
             >
               <img
-                src={cursorSprite.src}
+                src={cursorSprite}
                 alt=""
                 className="menu-cursor"
                 style={{ visibility: selected ? "visible" : "hidden" }}
