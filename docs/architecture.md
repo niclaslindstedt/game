@@ -138,9 +138,10 @@ pixelated`), `tiers.ts` (tier name colors), `sfx.ts` (engine events →
   synthesized NES-palette sounds + menu UI sounds), `music.ts` (the
   original chiptune title/level themes as note data), `audio.ts` (one
   shared synth split into SFX/music volume views), `settings.ts`
-  (persisted control-scheme + volume settings), `assets.ts` (loads the
-  generated sprites + pixel font), and `assets/` (generated PNGs + font
-  atlas — never hand-edited).
+  (persisted control-scheme + volume settings), `progress.ts` (persisted
+  story progress: watched cutscenes, so a prelude plays once per device),
+  `assets.ts` (loads the generated sprites + pixel font), and `assets/`
+  (generated PNGs + font atlas — never hand-edited).
 - **`website/src/lib/`** — generic game UI plumbing imported via the
   `@ui/lib/*` alias and earmarked for oss-framework extraction:
   `game-loop.ts` (fixed-timestep rAF loop), `pointer.ts` (pointer gestures:
@@ -148,7 +149,8 @@ pixelated`), `tiers.ts` (tier name colors), `sfx.ts` (engine events →
   `synth.ts` (WebAudio SFX synth — the game ships zero audio files),
   `chiptune.ts` (the NES-style music sequencer scheduling note-data tracks
   on the synth), `pixel-font.ts` + `PixelText.tsx` (runtime renderer for
-  the generated bitmap font), `load-images.ts`.
+  the generated bitmap font), `flag-store.ts` (a persisted string-flag set
+  with graceful no-storage fallback), `load-images.ts`.
 - **`website/scripts/asset-tools/` + `sprite-data.mjs` +
   `generate-assets.mjs`** — the pixel-asset pipeline (`make assets`):
   sprites are character grids with ramp-derived palettes, rendered at build

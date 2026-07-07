@@ -45,6 +45,7 @@ import { IntroOverlay } from "./IntroOverlay.tsx";
 import { InventoryPanel } from "./InventoryPanel.tsx";
 import { LevelUpOverlay } from "./LevelUpOverlay.tsx";
 import { playLevelMusic, stopMusic } from "./music.ts";
+import { hasSeenCutscene, markCutsceneSeen } from "./progress.ts";
 import {
   computeCamera,
   drawEffects,
@@ -126,6 +127,16 @@ export function GameScreen({
     const levelParam = params.get("level");
     const levelId = levelParam && levelParam in LEVELS ? levelParam : undefined;
     const state = createGame(seed, levelId, difficulty);
+    // A prelude plays once per device: retries and later runs jump straight
+    // to the intro. `pendingCutscene` marks the scene seen however it ends
+    // (played out, tapped through, SKIP, Esc, or a bot skipping it) — the
+    // watcher in the loop below catches every exit path in one place.
+    let pendingCutscene =
+      state.phase === "cutscene" ? (state.cutscene?.defId ?? null) : null;
+    if (pendingCutscene && hasSeenCutscene(pendingCutscene)) {
+      skipCutscene(state);
+      pendingCutscene = null;
+    }
     setState(state);
     debug(`run ${runId} started (seed ${seed}, ${difficulty})`);
 
@@ -277,6 +288,10 @@ export function GameScreen({
           useItemQueuedRef.current = false;
         }
         step(state, input, dtMs);
+        if (pendingCutscene && state.phase !== "cutscene") {
+          markCutsceneSeen(pendingCutscene);
+          pendingCutscene = null;
+        }
         playEventSounds(synth, state.events);
 
         for (const event of state.events) {

@@ -13,6 +13,12 @@ persisted on-device in `localStorage` under `gone-in-space:settings`
 | Music volume        | 0–100% in quarter steps                                             | 80%                                                         |
 | Sound FX volume     | 0–100% in quarter steps                                             | 100%                                                        |
 
+Story progress is persisted the same way: watched cutscenes are recorded
+under `gone-in-space:seen-cutscenes` (`website/src/game/progress.ts`), so a
+level's prelude plays once per device instead of on every retry. Clearing
+site data resets it; the `?cutscene=<id>` workbench replays any scene
+regardless.
+
 Everything else configurable concerns the build and the development
 environment.
 

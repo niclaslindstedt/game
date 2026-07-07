@@ -52,7 +52,8 @@ and something enormous haunts the old flag.
   size and monster health, but drop loot more often and unlock higher item
   tiers (epic and legendary) that the early levels never roll on their own.
 - The run opens on a short **cutscene** (the movie night Ada never came
-  back from) — tap to advance a beat, or hit SKIP.
+  back from) — tap to advance a beat, or hit SKIP. It plays **once per
+  device**: retries and later runs jump straight to the level.
 - **Steer with the pointer** — on desktop the character chases the cursor;
   on touch, hold a finger down and release to stop. (Swap the mouse back to
   classic hold-to-steer under SETTINGS → CONTROLS.)
