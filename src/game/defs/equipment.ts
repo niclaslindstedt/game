@@ -60,7 +60,7 @@ export const WEAPON_DEFS: Record<string, WeaponDef> = {
     name: "STAPLER",
     class: "ranged",
     damage: 6,
-    cooldownMs: 380,
+    cooldownMs: 470,
     range: 210,
     durability: 140,
     projectile: { speed: 380, radius: 3, lifetimeMs: 800, sprite: "staple" },
@@ -106,7 +106,7 @@ export const WEAPON_DEFS: Record<string, WeaponDef> = {
     // Security issue: hits hard for its cadence but only across a desk —
     // the short lifetime caps the reach well inside other ranged arms.
     damage: 11,
-    cooldownMs: 480,
+    cooldownMs: 580,
     range: 150,
     durability: 150,
     projectile: { speed: 460, radius: 3, lifetimeMs: 400, sprite: "zap" },
@@ -117,7 +117,7 @@ export const WEAPON_DEFS: Record<string, WeaponDef> = {
     name: "LASER POINTER",
     class: "magic",
     damage: 9,
-    cooldownMs: 280,
+    cooldownMs: 380,
     range: 300,
     durability: 180,
     projectile: { speed: 520, radius: 3, lifetimeMs: 900, sprite: "ray" },
@@ -129,7 +129,7 @@ export const WEAPON_DEFS: Record<string, WeaponDef> = {
     class: "magic",
     // Something unlabeled from the lab shelf. Throws slow, hits like it.
     damage: 17,
-    cooldownMs: 620,
+    cooldownMs: 720,
     range: 230,
     durability: 90,
     projectile: { speed: 300, radius: 4, lifetimeMs: 1100, sprite: "vial" },
@@ -140,11 +140,12 @@ export const WEAPON_DEFS: Record<string, WeaponDef> = {
     id: "blaster",
     name: "BLASTER",
     class: "ranged",
-    // A deliberate starting cadence: each shot is an event the player can
-    // follow, and the first weapon drop is a felt upgrade. Two shots per
-    // wisp — the sidearm holds the line, it doesn't erase it.
+    // A deliberate, slow starting cadence: each shot is an event the player
+    // can follow, and standing still no longer clears the horde on its own —
+    // the sidearm holds one lane, the crowd flows around it. DEX (and the
+    // first weapon drop) is how the fire rate grows back.
     damage: 8,
-    cooldownMs: 650,
+    cooldownMs: 900,
     range: 260,
     durability: 150,
     projectile: { speed: 420, radius: 3, lifetimeMs: 900, sprite: "bolt" },
@@ -155,7 +156,7 @@ export const WEAPON_DEFS: Record<string, WeaponDef> = {
     name: "WAND",
     class: "magic",
     damage: 15,
-    cooldownMs: 500,
+    cooldownMs: 600,
     range: 300,
     durability: 160,
     projectile: { speed: 320, radius: 4, lifetimeMs: 1300, sprite: "spark" },
@@ -198,7 +199,7 @@ export const WEAPON_DEFS: Record<string, WeaponDef> = {
     name: "PISTOL",
     class: "ranged",
     damage: 7,
-    cooldownMs: 400,
+    cooldownMs: 500,
     range: 230,
     durability: 200,
     projectile: { speed: 400, radius: 3, lifetimeMs: 800, sprite: "bolt" },
@@ -231,7 +232,7 @@ export const WEAPON_DEFS: Record<string, WeaponDef> = {
     name: "VOID WAND",
     class: "magic",
     damage: 11,
-    cooldownMs: 340,
+    cooldownMs: 420,
     range: 260,
     durability: 220,
     projectile: { speed: 360, radius: 4, lifetimeMs: 1000, sprite: "spark" },

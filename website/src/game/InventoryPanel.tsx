@@ -24,6 +24,7 @@ import {
   playerCritChance,
   previewEquipped,
   unequipToInventory,
+  weaponCooldownFor,
   weaponDamage,
   weaponDamageFor,
   weaponDef,
@@ -94,7 +95,15 @@ function itemLines(state: GameState, item: Equipment): string[] {
     lines.push(
       bonus > 0 ? `DAMAGE ${effective} (+${bonus})` : `DAMAGE ${effective}`,
     );
-    lines.push(`SPEED ${(1000 / def.cooldownMs).toFixed(1)}/S`);
+    // Fire rate the same way: the governing stat (DEX/INT/STR) quickens the
+    // cadence, so show the effective shots/sec with the bonus over base.
+    const effRate = 1000 / weaponCooldownFor(state, item);
+    const rateBonus = effRate - 1000 / def.cooldownMs;
+    lines.push(
+      rateBonus > 0.05
+        ? `SPEED ${effRate.toFixed(1)}/S (+${rateBonus.toFixed(1)})`
+        : `SPEED ${effRate.toFixed(1)}/S`,
+    );
     lines.push(`RANGE ${def.range}`);
     lines.push(
       item.durability === undefined

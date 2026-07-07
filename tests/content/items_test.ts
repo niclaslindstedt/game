@@ -175,7 +175,7 @@ describe("the guaranteed early weapon", () => {
 
 describe("auto-equip on pickup", () => {
   it("equips a picked-up weapon that out-damages the held one", () => {
-    const state = startGame(); // blaster: 8 dmg / 650 ms
+    const state = startGame(); // blaster: 8 dmg / 900 ms
     clearStage(state);
     const hammer: Equipment = {
       id: 61,
@@ -208,7 +208,7 @@ describe("auto-equip on pickup", () => {
   it("bags a picked-up weapon that is worse than the held one", () => {
     const state = startGame();
     clearStage(state);
-    // A pistol (7 dmg / 400 ms) out-damages the starting blaster, so put a
+    // A pistol (7 dmg / 500 ms) out-damages the starting blaster, so put a
     // hammer (34 dmg / 640 ms) in hand to make the pickup strictly worse.
     const pistol: Equipment = {
       id: 62,

@@ -463,7 +463,8 @@ function stepWeapon(state: GameState, input: GameInput, dtMs: number): void {
   );
   if (!target) return;
 
-  // STRENGTH also quickens melee swings — more hits per second up close.
+  // The governing stat quickens the cadence: DEX (ranged), INT (magic) and
+  // STR (melee) each drop the effective cooldown as they rise.
   player.weaponCooldownMs = weaponCooldownFor(state, equipped);
   const dir = direction(player.pos, target.pos);
   if (!weapon.projectile) {

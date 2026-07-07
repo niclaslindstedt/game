@@ -305,26 +305,25 @@ export function weaponRangeFor(state: GameState, weapon: Equipment): number {
 }
 
 /**
- * The ms between this weapon's attacks for this player. STRENGTH quickens
- * melee swings (higher hit frequency); ranged and magic keep their catalog
- * cadence. Combat cooldown and the DPS/score math both route through it, so
- * a strong build's faster swings raise every surface consistently.
+ * The ms between this weapon's attacks for this player — the base cadence
+ * quickened by the weapon's governing stat (STR melee, DEX ranged, INT magic).
+ * This is the single source of truth for stat-scaled fire rate: combat cooldown
+ * and the DPS/score math both route through it, so a build's faster attacks
+ * raise every surface consistently.
  */
 export function weaponCooldownFor(state: GameState, weapon: Equipment): number {
   const def = weaponDef(weapon.defId);
-  if (def.class !== "melee") return def.cooldownMs;
-  return (
-    def.cooldownMs /
-    (1 + effectiveStat(state, "strength") * STATS.meleeSpeedPerStr)
-  );
+  const stat = effectiveStat(state, CLASS_STAT[def.class]);
+  return def.cooldownMs / (1 + stat * STATS.attackSpeedPerStat);
 }
 
 // ---- Auto-equip scoring --------------------------------------------------------
 
 /**
  * A weapon's expected damage per second in this player's hands — the number
- * auto-equip ranks weapons by, so an INT build genuinely prefers wands and a
- * STR build feels its melee weapons swing faster.
+ * auto-equip ranks weapons by. Both halves fold in the governing stat: STR,
+ * DEX and INT each raise their class's damage AND cadence, so an INT build
+ * genuinely prefers wands and a STR build feels its melee weapons swing faster.
  */
 export function weaponScore(state: GameState, weapon: Equipment): number {
   return (
