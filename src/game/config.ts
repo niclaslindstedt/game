@@ -101,30 +101,49 @@ export const LEVELING = {
 } as const;
 
 /**
- * Stat effects. STRENGTH scales melee weapons, DEXTERITY ranged,
- * INTELLIGENCE magic (wands); SPEED quickens the walk; LUCK finds better
- * items, lands crits, and shrugs off enemies' critical hits; HEALTH is raw
- * max hp.
+ * Stat effects. STRENGTH scales physical (melee + ranged) weapon DAMAGE and
+ * widens the carry bag; DEXTERITY quickens physical (melee + ranged) ATTACK
+ * SPEED; INTELLIGENCE powers magic weapons (their damage AND speed) and, for
+ * every weapon, lengthens RANGE and widens the melee AoE cone (plus the magnet
+ * pull, in abilities.ts); SPEED quickens the walk; LUCK finds better items,
+ * lands crits, and shrugs off enemies' critical hits; HEALTH is raw max hp.
+ * The class→stat maps live in items.ts (`DAMAGE_STAT`, `SPEED_STAT`).
  */
 export const STATS = {
   /** Max hp per HEALTH point (current hp rises along with it). */
   healthPerPoint: 20,
   /** Move-speed multiplier added per SPEED point (+8% each). */
   speedPerPoint: 0.08,
-  /** Damage multiplier per point of the weapon's governing stat. */
+  /** Damage multiplier per point of the weapon's DAMAGE stat (STR for melee &
+   * ranged, INT for magic — see `DAMAGE_STAT`). */
   damageBonusPerPoint: 0.12,
   /**
-   * STRENGTH widens a melee weapon's reach by this fraction of its base range
-   * per point (+2.5% each), so a strong bruiser keeps the crowd a little
-   * further back. Melee-only — ranged and magic keep their catalog range.
+   * STRENGTH also widens the carry bag: each point adds this many inventory
+   * slots on top of the small `LOOT.baseInventorySize` floor, so a bruiser
+   * hauls more loot between the fights (see `inventoryCapacity`). Whole slots
+   * only — the capacity floors the product.
    */
-  meleeRangePerStr: 0.025,
+  bagSlotsPerStr: 1,
   /**
-   * Attack-speed gained per point of the weapon's governing stat (STR for
-   * melee, DEX for ranged, INT for magic): the effective cooldown is divided
-   * by `1 + stat * this`, so +4% cadence per point. Base weapons fire
-   * deliberately slowly now — a build grows the fire rate back by investing in
-   * its class stat, so standing still stops clearing the horde for free.
+   * INTELLIGENCE lengthens EVERY weapon's reach by this fraction of its base
+   * range per point (+3% each) — melee, ranged, and magic alike — so a
+   * high-INT build reaches out and holds the crowd further back.
+   */
+  rangePerInt: 0.03,
+  /**
+   * INTELLIGENCE also widens a melee weapon's AoE cone by this fraction of its
+   * base half-angle per point (+4% each): a sword's slash sweeps a broader arc
+   * and a spear's thrust a slightly wider lane. Scaling the angle keeps each
+   * weapon's shape (a narrow spear stays narrow); a very high-INT wide weapon
+   * saturates to a full circle. Melee-only — ranged/magic have no cone.
+   */
+  aoePerInt: 0.04,
+  /**
+   * Attack-speed gained per point of the weapon's SPEED stat (DEX for melee &
+   * ranged, INT for magic — see `SPEED_STAT`): the effective cooldown is
+   * divided by `1 + stat * this`, so +4% cadence per point. Base weapons fire
+   * deliberately slowly — a build grows the fire rate back by investing in its
+   * speed stat, so standing still stops clearing the horde for free.
    */
   attackSpeedPerStat: 0.04,
   /** Player base crit chance before LUCK and equipment. */
@@ -159,7 +178,7 @@ export const LOOT = {
    * for horde scale: hundreds of kills per run, a drop every ~8 of them —
    * the steady rain of upgrades is what keeps the player ahead of the ramp.
    */
-  dropChance: 0.12,
+  dropChance: 0.09,
   /**
    * The share of drops that is a screen-nuke pickup — checked first, before
    * the ladder below, so it stays rare no matter how the rest is tuned.
@@ -167,8 +186,9 @@ export const LOOT = {
   nukeShare: 0.012,
   /** Of the remaining drops, the share that is equipment. */
   equipmentShare: 0.25,
-  /** …the share that is a time-limited ability pickup… */
-  abilityShare: 0.13,
+  /** …the share that is a time-limited ability pickup (kept lean so the
+   * powerup rain never buries the field — the dock only banks three). */
+  abilityShare: 0.06,
   /** …the share that is a golden XP arrow… */
   xpArrowShare: 0.22,
   /** …the share that is a weapon repair kit (the rest are medkits). */
@@ -181,7 +201,12 @@ export const LOOT = {
   minEquipmentPerLevel: 2,
   /** Tier-chance bonus on the trophy the last regular monster surrenders. */
   allClearTierBonus: 0.35,
-  inventorySize: 12,
+  /**
+   * The carry bag's floor — its size at zero STRENGTH. STRENGTH grows it from
+   * here (`STATS.bagSlotsPerStr`), so the opening bag is deliberately tight
+   * and a STR build is what earns the room to hoard (see `inventoryCapacity`).
+   */
+  baseInventorySize: 3,
 } as const;
 
 /**

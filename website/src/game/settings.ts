@@ -21,10 +21,16 @@ export type ItemUseMode = "auto" | "manual";
  * off hand. Defaults to the lower-left. */
 export type PowerupSide = "left" | "right";
 
+/** Desktop keyboard movement: `on` lets WASD/arrows drive the walk (Shift
+ * runs, no key stands still) and takes over steering from the mouse; `off`
+ * leaves steering to the pointer. Touch devices ignore this. */
+export type KeyboardMove = "on" | "off";
+
 export type GameSettings = {
   steering: SteeringMode;
   itemUse: ItemUseMode;
   powerupSide: PowerupSide;
+  keyboardMove: KeyboardMove;
   /** 0–1 master volumes, applied via audio.ts. */
   musicVolume: number;
   sfxVolume: number;
@@ -44,6 +50,9 @@ function defaults(): GameSettings {
     steering: touchFirst ? "hold" : "hover",
     itemUse: "manual",
     powerupSide: "left",
+    // Fine-pointer devices get WASD out of the box; touch has no keyboard,
+    // so it defaults off and the on-screen dpad stays in charge.
+    keyboardMove: touchFirst ? "off" : "on",
     musicVolume: 0.8,
     sfxVolume: 1,
   };
@@ -70,6 +79,10 @@ function load(): GameSettings {
         stored.powerupSide === "left" || stored.powerupSide === "right"
           ? stored.powerupSide
           : base.powerupSide,
+      keyboardMove:
+        stored.keyboardMove === "on" || stored.keyboardMove === "off"
+          ? stored.keyboardMove
+          : base.keyboardMove,
       musicVolume:
         typeof stored.musicVolume === "number"
           ? clamp01(stored.musicVolume)

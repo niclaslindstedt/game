@@ -35,9 +35,22 @@ import type {
   WeaponClass,
 } from "./types.ts";
 
-/** The stat that governs each weapon class's damage. */
-export const CLASS_STAT: Record<WeaponClass, StatName> = {
+/**
+ * The stat that scales each weapon class's DAMAGE: STRENGTH powers physical
+ * weapons (melee and ranged), INTELLIGENCE powers magic ones.
+ */
+export const DAMAGE_STAT: Record<WeaponClass, StatName> = {
   melee: "strength",
+  ranged: "strength",
+  magic: "intelligence",
+};
+
+/**
+ * The stat that scales each weapon class's ATTACK SPEED: DEXTERITY quickens
+ * physical weapons (melee and ranged), INTELLIGENCE quickens magic ones.
+ */
+export const SPEED_STAT: Record<WeaponClass, StatName> = {
+  melee: "dexterity",
   ranged: "dexterity",
   magic: "intelligence",
 };
@@ -282,7 +295,7 @@ export function weaponDamage(state: GameState): number {
  */
 export function weaponDamageFor(state: GameState, weapon: Equipment): number {
   const def = weaponDef(weapon.defId);
-  const stat = effectiveStat(state, CLASS_STAT[def.class]);
+  const stat = effectiveStat(state, DAMAGE_STAT[def.class]);
   let multiplier = 1 + stat * STATS.damageBonusPerPoint;
   for (const affix of weapon.affixes) {
     if (affix.kind === "damagePct") multiplier += affix.value;
@@ -291,43 +304,52 @@ export function weaponDamageFor(state: GameState, weapon: Equipment): number {
 }
 
 /**
- * A weapon's effective reach for this player. Melee weapons gain range from
- * STRENGTH (a strong bruiser holds the crowd a little further back); ranged
- * and magic weapons use their flat catalog range. This is the single source
- * of truth for reach — targeting and the UI both route through it.
+ * A weapon's effective reach for this player. INTELLIGENCE lengthens every
+ * weapon's reach — melee, ranged, and magic alike (a high-INT build reaches
+ * out and holds the crowd further back). This is the single source of truth
+ * for reach — targeting and the UI both route through it.
  */
 export function weaponRangeFor(state: GameState, weapon: Equipment): number {
   const def = weaponDef(weapon.defId);
-  if (def.class !== "melee") return def.range;
   return (
-    def.range * (1 + effectiveStat(state, "strength") * STATS.meleeRangePerStr)
+    def.range * (1 + effectiveStat(state, "intelligence") * STATS.rangePerInt)
   );
 }
 
 /**
  * The ms between this weapon's attacks for this player — the base cadence
- * quickened by the weapon's governing stat (STR melee, DEX ranged, INT magic).
- * This is the single source of truth for stat-scaled fire rate: combat cooldown
- * and the DPS/score math both route through it, so a build's faster attacks
- * raise every surface consistently.
+ * quickened by the weapon's SPEED stat (DEX for melee & ranged, INT for magic;
+ * see `SPEED_STAT`). This is the single source of truth for stat-scaled fire
+ * rate: combat cooldown and the DPS/score math both route through it, so a
+ * build's faster attacks raise every surface consistently.
  */
 export function weaponCooldownFor(state: GameState, weapon: Equipment): number {
   const def = weaponDef(weapon.defId);
-  const stat = effectiveStat(state, CLASS_STAT[def.class]);
+  const stat = effectiveStat(state, SPEED_STAT[def.class]);
   return def.cooldownMs / (1 + stat * STATS.attackSpeedPerStat);
 }
 
 /**
  * A melee weapon's swing cone as a half-angle in radians — the sector on each
  * side of the aim that the sweep strikes. Wide for a slashing blade, narrow
- * for a thrusting spear (which leans on its long `range` instead). This is the
- * single source of truth for the cone: the sweep's hit test and the arc the
- * app draws both route through it.
+ * for a thrusting spear (which leans on its long `range` instead).
+ * INTELLIGENCE widens the cone (the weapon's AoE) proportionally, so shapes
+ * are preserved and a very high-INT wide weapon saturates to a full circle.
+ * This is the single source of truth for the cone: the sweep's hit test and
+ * the arc the app draws both route through it.
  */
-export function weaponSweepHalfAngle(weapon: Equipment): number {
+export function weaponSweepHalfAngle(
+  state: GameState,
+  weapon: Equipment,
+): number {
   const def = weaponDef(weapon.defId);
   const deg = def.sweepDeg ?? MELEE.defaultSweepDeg;
-  return (deg * Math.PI) / 360;
+  const base = (deg * Math.PI) / 360;
+  const widened =
+    base * (1 + effectiveStat(state, "intelligence") * STATS.aoePerInt);
+  // A half-angle of π already sweeps the full circle — clamp so extreme INT
+  // saturates instead of wrapping past 360°.
+  return Math.min(Math.PI, widened);
 }
 
 // ---- Auto-equip scoring --------------------------------------------------------
@@ -373,6 +395,33 @@ export function isBetterEquipment(
   return current === null || gearScore(candidate) > gearScore(current);
 }
 
+// ---- Inventory capacity (STRENGTH-scaled) --------------------------------------
+
+/**
+ * How many bag cells the player should have right now: the small
+ * `baseInventorySize` floor plus `bagSlotsPerStr` per point of STRENGTH
+ * (affixes folded in, via `effectiveStat`). A STR build is what earns the
+ * room to hoard loot between fights.
+ */
+export function inventoryCapacity(state: GameState): number {
+  return (
+    LOOT.baseInventorySize +
+    Math.floor(effectiveStat(state, "strength") * STATS.bagSlotsPerStr)
+  );
+}
+
+/**
+ * Grow the physical bag array to match `inventoryCapacity` — called whenever
+ * STRENGTH could have changed (a level-up allocation, an equip). Grow-only:
+ * the bag never shrinks below what it already holds, so dropping a
+ * STRENGTH-boosting charm can never strand or discard a carried item.
+ */
+export function syncInventoryCapacity(state: GameState): void {
+  const inv = state.player.inventory;
+  const want = inventoryCapacity(state);
+  while (inv.length < want) inv.push(null);
+}
+
 // ---- Inventory mutations (called by the app's UI) ------------------------------
 
 /**
@@ -394,6 +443,9 @@ export function equipFromInventory(state: GameState, index: number): boolean {
     player.equipment[slot] = item;
   }
   recomputeMaxHp(state);
+  // A +STRENGTH piece can widen the bag; grow it so the swap has somewhere
+  // to land (grow-only — see syncInventoryCapacity).
+  syncInventoryCapacity(state);
   return true;
 }
 
@@ -519,6 +571,8 @@ export function allocateStat(state: GameState, stat: StatName): boolean {
   player.stats[stat]++;
   player.pendingStatPoints--;
   recomputeMaxHp(state);
+  // STRENGTH also widens the carry bag — grow it as the point lands.
+  if (stat === "strength") syncInventoryCapacity(state);
   if (player.pendingStatPoints === 0 && state.phase === "levelup") {
     state.phase = "playing";
   }

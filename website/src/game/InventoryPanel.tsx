@@ -28,6 +28,7 @@ import {
   weaponDamage,
   weaponDamageFor,
   weaponDef,
+  weaponRangeFor,
   WEAPON_DEFS,
   type Affix,
   type EquipSlot,
@@ -95,8 +96,8 @@ function itemLines(state: GameState, item: Equipment): string[] {
     lines.push(
       bonus > 0 ? `DAMAGE ${effective} (+${bonus})` : `DAMAGE ${effective}`,
     );
-    // Fire rate the same way: the governing stat (DEX/INT/STR) quickens the
-    // cadence, so show the effective shots/sec with the bonus over base.
+    // Fire rate the same way: the speed stat (DEX for melee & ranged, INT for
+    // magic) quickens the cadence, so show the effective shots/sec + bonus.
     const effRate = 1000 / weaponCooldownFor(state, item);
     const rateBonus = effRate - 1000 / def.cooldownMs;
     lines.push(
@@ -104,7 +105,14 @@ function itemLines(state: GameState, item: Equipment): string[] {
         ? `SPEED ${effRate.toFixed(1)}/S (+${rateBonus.toFixed(1)})`
         : `SPEED ${effRate.toFixed(1)}/S`,
     );
-    lines.push(`RANGE ${def.range}`);
+    // Reach the same way: INTELLIGENCE lengthens every weapon's range.
+    const effRange = Math.round(weaponRangeFor(state, item));
+    const rangeBonus = effRange - def.range;
+    lines.push(
+      rangeBonus > 0
+        ? `RANGE ${effRange} (+${rangeBonus})`
+        : `RANGE ${effRange}`,
+    );
     lines.push(
       item.durability === undefined
         ? "UNBREAKABLE"

@@ -58,6 +58,9 @@ and something enormous haunts the old flag.
   on touch, hold and drag: a virtual joystick appears under your finger and
   you walk in the direction you drag — release to stop. (Swap the mouse
   back to classic hold-to-steer under SETTINGS → CONTROLS.)
+- **Or use the keyboard** — on desktop, **WASD / arrow keys** walk, **Shift**
+  runs, and no key stands still (a binary walk/run mode that frees the mouse
+  from steering). Toggle it under SETTINGS → CONTROLS.
 - **Tap** (with the other hand while steering, or press Space) to **jump**
   — each level sets its own gravity: HQ hops clear a desk; moon gravity
   sails you clean over a ghost's grasp.
@@ -68,25 +71,30 @@ and something enormous haunts the old flag.
 - **Ability pickups** (fire orbs, storm cell, stasis field, the item
   magnet — and the rare screen-clearing NUKE) are carried with you and
   banked into **three big powerup slots** in a bottom corner, oldest on the
-  left. **Tap a slot** (or on desktop click, or press E) to spend one when
-  the horde closes in — the rest slide left. Prefer the corner on your other
-  thumb, or the old fire-the-instant-you-grab-it behavior? Both live under
-  SETTINGS → CONTROLS, along with music and sound volumes.
+  left. **Tap a slot** (or on desktop click, press E, or hit **1/2/3**) to
+  spend one when the horde closes in — the rest slide left. On desktop **Q**
+  pops the weapon switcher and **1-4** equip a carried weapon. Prefer the
+  corner on your other thumb, or fire powerups the instant you grab them?
+  Both live under SETTINGS → CONTROLS, along with music and sound volumes.
 - The character **fights by itself** with whatever weapon is equipped —
   your job is positioning: kite the haunting, don't get surrounded.
 - Kills grant **XP**; each level-up **restores you to full health** and
-  pauses the run to spend a stat point on HEALTH, STRENGTH (melee),
-  DEXTERITY (ranged), INTELLECT (magic), or LUCK (crits, loot). STRENGTH,
-  DEXTERITY, and INTELLECT each make their class of weapon hit **harder and
-  faster** — the base fire rate is deliberately slow, so a build is what
-  wins the cadence back. Golden
+  pauses the run to spend a stat point. The stats each own an axis:
+  **STRENGTH** raises melee & ranged **damage** and widens your carry bag
+  (which starts at just three slots); **DEXTERITY** speeds up melee & ranged
+  **attacks**; **INTELLECT** powers **magic** weapons and gives every weapon
+  **longer range and a bigger AoE** (so a swing cleaves more of the crowd);
+  **SPEED** quickens the walk; **LUCK** lands crits and finds better loot;
+  **HEALTH** is raw max HP. The base fire rate is deliberately slow, so a
+  build is what wins the cadence back, and a new **(i)** button on the
+  level-up screen spells out exactly what each stat does. Golden
   **XP arrows** drop from the horde and are always worth a fixed share of
   your next level.
 - The horde drops **loot** — medkits, weapons (staplers, mops, tasers,
   beakers… whatever the level left lying around), gear, repair kits, and
   XP arrows, in regular or magic tier. Picking up something **better than
   what you wear equips it instantly**; the rest lands in the **BAG** — open
-  it with the **hero avatar** at the top right (or press I) for a
+  it with the **hero avatar** in the top-left vitals panel (or press I) for a
   Diablo-style inventory: drag items onto their slot or tap to quick-equip.
 - Dropped weapons **wear out** as they fire: when one breaks it is trashed
   and the best weapon left in your bag takes its place (your own sidearm

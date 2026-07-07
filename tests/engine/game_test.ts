@@ -368,7 +368,7 @@ describe("melee sweep AoE", () => {
   });
 });
 
-describe("strength melee", () => {
+describe("weapon reach, cadence, and AoE", () => {
   const equipWrench = (state: ReturnType<typeof startGame>) => {
     state.player.equipment.weapon = {
       id: 777,
@@ -379,30 +379,29 @@ describe("strength melee", () => {
     };
   };
 
-  it("widens melee reach and quickens swings; ranged is untouched", () => {
+  it("INTELLIGENCE widens reach, DEXTERITY quickens swings, STRENGTH does neither", () => {
     const state = startGame();
     equipWrench(state);
     const base = weaponDef("test_wrench");
+    const weapon = () => state.player.equipment.weapon;
 
-    // No STRENGTH: the plain catalog numbers.
-    state.player.stats.strength = 0;
-    expect(weaponRangeFor(state, state.player.equipment.weapon)).toBeCloseTo(
-      base.range,
-    );
-    expect(weaponCooldownFor(state, state.player.equipment.weapon)).toBeCloseTo(
-      base.cooldownMs,
-    );
+    // No stats: the plain catalog numbers.
+    expect(weaponRangeFor(state, weapon())).toBeCloseTo(base.range);
+    expect(weaponCooldownFor(state, weapon())).toBeCloseTo(base.cooldownMs);
 
-    // 20 STRENGTH: reach grows and the swing cooldown shrinks.
+    // STRENGTH is a damage stat now — it moves neither reach nor cadence.
     state.player.stats.strength = 20;
-    expect(
-      weaponRangeFor(state, state.player.equipment.weapon),
-    ).toBeGreaterThan(base.range);
-    expect(
-      weaponCooldownFor(state, state.player.equipment.weapon),
-    ).toBeLessThan(base.cooldownMs);
+    expect(weaponRangeFor(state, weapon())).toBeCloseTo(base.range);
+    expect(weaponCooldownFor(state, weapon())).toBeCloseTo(base.cooldownMs);
 
-    // A ranged weapon ignores STRENGTH entirely — DEX governs it.
+    // INTELLIGENCE lengthens the reach; DEXTERITY quickens the swing.
+    state.player.stats.intelligence = 20;
+    expect(weaponRangeFor(state, weapon())).toBeGreaterThan(base.range);
+    expect(weaponCooldownFor(state, weapon())).toBeCloseTo(base.cooldownMs); // INT is not a speed stat
+    state.player.stats.dexterity = 20;
+    expect(weaponCooldownFor(state, weapon())).toBeLessThan(base.cooldownMs);
+
+    // A ranged weapon's reach also grows with INT and its cadence with DEX.
     const ranged = {
       id: 778,
       defId: "blaster",
@@ -410,20 +409,22 @@ describe("strength melee", () => {
       tier: "regular" as const,
       affixes: [],
     };
-    expect(weaponRangeFor(state, ranged)).toBe(weaponDef("blaster").range);
-    expect(weaponCooldownFor(state, ranged)).toBe(
+    expect(weaponRangeFor(state, ranged)).toBeGreaterThan(
+      weaponDef("blaster").range,
+    );
+    expect(weaponCooldownFor(state, ranged)).toBeLessThan(
       weaponDef("blaster").cooldownMs,
     );
   });
 
-  it("lets a strong bruiser strike a monster its base reach can't touch", () => {
+  it("lets a high-INT character strike a monster its base reach can't touch", () => {
     const base = weaponDef("test_wrench");
-    // A target sat just outside the plain reach but inside the STR-widened one.
+    // A target sat just outside the plain reach but inside the INT-widened one.
     const gap = base.range + 8;
 
     const weak = startGame();
     equipWrench(weak);
-    weak.player.stats.strength = 0;
+    weak.player.stats.intelligence = 0;
     stopWaves(weak);
     weak.enemies = [
       makeEnemy({ pos: { x: weak.player.pos.x + gap, y: weak.player.pos.y } }),
@@ -431,17 +432,40 @@ describe("strength melee", () => {
     step(weak, idle, DT);
     expect(weak.events.some((e) => e.type === "swing")).toBe(false);
 
-    const strong = startGame();
-    equipWrench(strong);
-    strong.player.stats.strength = 20;
-    stopWaves(strong);
-    strong.enemies = [
+    const reachy = startGame();
+    equipWrench(reachy);
+    reachy.player.stats.intelligence = 20;
+    stopWaves(reachy);
+    reachy.enemies = [
       makeEnemy({
-        pos: { x: strong.player.pos.x + gap, y: strong.player.pos.y },
+        pos: { x: reachy.player.pos.x + gap, y: reachy.player.pos.y },
       }),
     ];
-    step(strong, idle, DT);
-    expect(strong.events.some((e) => e.type === "swing")).toBe(true);
+    step(reachy, idle, DT);
+    expect(reachy.events.some((e) => e.type === "swing")).toBe(true);
+  });
+
+  it("INTELLIGENCE's wider AoE cone cleaves a foe off the flank", () => {
+    // A larger area catches more enemies: a foe at 90° off the aim sits
+    // outside the wrench's base 120° cone but inside an INT-widened one.
+    const flankStruck = (intelligence: number) => {
+      const state = startGame();
+      equipWrench(state); // 120° cone (60° half-angle), reach 42
+      state.player.stats.intelligence = intelligence;
+      stopWaves(state);
+      const { x, y } = state.player.pos;
+      // The nearer foe dead ahead fixes the aim along +x; the flank foe is a
+      // quarter-turn off it, well within reach.
+      const flank = makeEnemy({ pos: { x, y: y + 30 }, hp: 500, maxHp: 500 });
+      state.enemies = [
+        makeEnemy({ pos: { x: x + 20, y }, hp: 500, maxHp: 500 }),
+        flank,
+      ];
+      step(state, idle, DT);
+      return flank.hp < flank.maxHp;
+    };
+    expect(flankStruck(0)).toBe(false); // the base cone misses the flank
+    expect(flankStruck(20)).toBe(true); // the widened cone cleaves it
   });
 });
 
