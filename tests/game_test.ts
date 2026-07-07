@@ -6,6 +6,7 @@
 import { describe, expect, it } from "vitest";
 
 import {
+  advanceDialogue,
   allocateStat,
   createGame,
   dismissIntro,
@@ -379,7 +380,7 @@ describe("win and lose", () => {
     const boss = state.enemies.find((e) => isBoss(e.defId))!;
     state.enemies = [boss];
     boss.hp = 1;
-    boss.spoke = true; // skip his scene: this test is about the victory flow
+    boss.spoke = true; // skip his arrival scene: this test is the victory flow
     boss.pos = { x: state.player.pos.x + 60, y: state.player.pos.y };
     boss.speed = 0;
 
@@ -388,7 +389,9 @@ describe("win and lose", () => {
     expect(state.phase).not.toBe("victory"); // grace period first
     expect(state.victoryCountdownMs).toBeGreaterThan(RUN.victoryDelayMs - 100);
 
-    // The boss XP banks level-ups; spend them so time can resume.
+    // The boss gasps his last words as he falls: tap through the death scene,
+    // then spend the level-ups the kill banked, so time can resume.
+    while (state.phase === "dialogue") advanceDialogue(state);
     while (state.player.pendingStatPoints > 0) allocateStat(state, "health");
     expect(state.phase).toBe("playing");
     run(

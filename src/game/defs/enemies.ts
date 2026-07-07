@@ -44,6 +44,14 @@ export type EnemyDef = {
    * line; the run pauses in the `dialogue` phase until tapped through.
    */
   dialogue?: string[][];
+  /**
+   * A dying gasp a unique mob (elite/boss) coughs out as it falls — played
+   * through the same dialogue box as its arrival scene (an `enemyDeath`
+   * source), a single short page tapped through to close. Worded to read
+   * unmistakably as last words (trailing off, choked mid-sentence) so a
+   * story death lands harder than a nameless minion's. One string per line.
+   */
+  lastWords?: string[];
   ai: {
     /** Wakes and chases when the player gets this close. */
     aggroRadius: number;
@@ -187,6 +195,7 @@ export const ENEMY_DEFS: Record<string, EnemyDef> = {
       ],
       ["I SIGN NOTHING. I SEE NOTHING.", "AND YOU - YOU WERE NEVER HERE."],
     ],
+    lastWords: ["HHK... TELL THEM...", "I WAS NEVER... HERE..."],
     ai: { aggroRadius: 240, rushSpeed: 120 },
     loot: {
       items: ["executive_putter"],
@@ -227,6 +236,7 @@ export const ENEMY_DEFS: Record<string, EnemyDef> = {
         "LIKE I WAS PAID TO.",
       ],
     ],
+    lastWords: ["UGH... PAD 2...", "SHE'S ON... PAD... 2..."],
     ai: { aggroRadius: 240, rushSpeed: 130 },
     loot: {
       items: ["riot_taser"],
@@ -267,6 +277,7 @@ export const ENEMY_DEFS: Record<string, EnemyDef> = {
         "IT'S JUST WAITING TO GO HOME.",
       ],
     ],
+    lastWords: ["IT'S STILL... HHH...", "STILL... HUMMING..."],
     ai: { aggroRadius: 240, rushSpeed: 115 },
     loot: {
       items: ["overclocked_laser"],
@@ -307,6 +318,7 @@ export const ENEMY_DEFS: Record<string, EnemyDef> = {
         "THEY SENT UP. NOW DROP THE WEAPON.",
       ],
     ],
+    lastWords: ["AND I JUST... URGH...", "...DID THIS FLOOR..."],
     ai: { aggroRadius: 240, rushSpeed: 110 },
     loot: {
       items: ["wet_floor_sign"],
@@ -358,6 +370,7 @@ export const ENEMY_DEFS: Record<string, EnemyDef> = {
         "COME TAKE IT OUT OF ME.",
       ],
     ],
+    lastWords: ["SQUEAK...? NO...", "SQUEEEAK... AFTER ALL..."],
     ai: { aggroRadius: 260, leashRadius: 440 },
     // He nests under the prototype rocket, digesting the one ingredient the
     // interplanetary drive can't ship without. The plasma cutter was the
@@ -453,6 +466,7 @@ export const ENEMY_DEFS: Record<string, EnemyDef> = {
         "FOR THE CAMERA. SMILE'S OVER.",
       ],
     ],
+    lastWords: ["ONE SMALL... STEP...", "ONTO A... GRAVE... HHK"],
     ai: { aggroRadius: 250, rushSpeed: 115 },
     loot: {
       items: ["flare_gun"],
@@ -494,6 +508,7 @@ export const ENEMY_DEFS: Record<string, EnemyDef> = {
         "STARTED BREATHING. I QUIT. BADLY.",
       ],
     ],
+    lastWords: ["THE CLAIM'S... URGH...", "...YOURS NOW, KID..."],
     ai: { aggroRadius: 250, rushSpeed: 120 },
     loot: {
       items: ["core_drill"],
@@ -536,6 +551,7 @@ export const ENEMY_DEFS: Record<string, EnemyDef> = {
         "YOU'RE WALKING TOWARD HIM.",
       ],
     ],
+    lastWords: ["TWO CHARTS... HHH...", "ONE STILL... BEAT..."],
     ai: { aggroRadius: 250, rushSpeed: 115 },
     loot: {
       items: ["geiger_wand"],
@@ -577,6 +593,7 @@ export const ENEMY_DEFS: Record<string, EnemyDef> = {
         "BELOW, FRIEND. NOBODY MAPS BELOW.",
       ],
     ],
+    lastWords: ["SHE WENT... STRAIGHT...", "...DOWN... OFF MY MAP..."],
     ai: { aggroRadius: 250, rushSpeed: 125 },
     loot: {
       items: ["surveyors_pick"],
@@ -638,6 +655,7 @@ export const ENEMY_DEFS: Record<string, EnemyDef> = {
         "I ONLY EVER LOSE TO THE WORTHY.",
       ],
     ],
+    lastWords: ["THE WATCH... HHH...", "IT'S... YOURS... NOW..."],
     ai: { aggroRadius: 280, leashRadius: 460 },
     // The machete rode up in his survival kit — Apollo crews really packed
     // one for jungle splashdowns. Fifty years on, it's for the aliens.

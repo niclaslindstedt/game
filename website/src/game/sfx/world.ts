@@ -75,6 +75,30 @@ export function playWorldSound(synth: Synth, event: GameEvent): boolean {
       });
       return true;
 
+    case "enemyLastWords":
+      // A unique mob's death scene takes the stage: not the arrival knock but
+      // a parting breath — a soft detuned tone sinking into the echo bus under
+      // a faint high shimmer. Quiet by design; the kill thud already landed.
+      synth.tone({
+        type: "triangle",
+        from: 330,
+        to: 196,
+        durationMs: 440,
+        volume: 0.05,
+        detuneCents: 8,
+        echo: 0.4,
+      });
+      synth.tone({
+        type: "sine",
+        from: 990,
+        to: 660,
+        durationMs: 500,
+        volume: 0.016,
+        delayMs: 40,
+        echo: 0.5,
+      });
+      return true;
+
     default:
       return false;
   }

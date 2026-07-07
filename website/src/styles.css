@@ -518,6 +518,13 @@ body {
   pointer-events: none; /* taps fall through to the overlay */
 }
 
+.dialogue-acquired {
+  align-self: stretch;
+  padding-bottom: 0.3rem;
+  margin-bottom: 0.1rem;
+  border-bottom: 2px solid rgba(127, 227, 160, 0.3);
+}
+
 .dialogue-header {
   display: flex;
   align-items: center;

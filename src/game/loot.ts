@@ -11,6 +11,7 @@ import { scaledMobCount } from "./defs/difficulties.ts";
 import { enemyDef, type EnemyDef } from "./defs/enemies.ts";
 import { levelDef } from "./defs/levels.ts";
 import { dropChance, playerCritChance, rollEquipment } from "./items.ts";
+import { startDeathWords } from "./story.ts";
 import type { Enemy, GameState } from "./types.ts";
 
 /** Monsters still owed by the wave budget but not yet streamed in. */
@@ -95,6 +96,11 @@ export function hitEnemy(
   if (def.role === "boss") {
     state.events.push({ type: "bossDefeated", pos: { ...enemy.pos } });
   }
+
+  // A unique mob's send-off: reuse the dialogue box to gasp its last words
+  // (elites and bosses). Comes after XP and drops so a level-up earned by
+  // the killing blow simply waits its turn behind the death scene.
+  startDeathWords(state, enemy.defId);
 }
 
 /**
