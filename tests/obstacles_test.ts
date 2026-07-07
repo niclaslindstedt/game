@@ -81,18 +81,40 @@ describe("obstacle collision", () => {
     const state = startGame();
     clearStage(state);
     const obstacle = placeObstacle(state, 60, true);
-    // A ghost on the far side must not reach the player through the rock.
+    // A grounded (non-phasing) mob on the far side must not reach the
+    // player through the rock. Low rocks don't hide the player, so it
+    // still aggros — and piles up against the stone.
+    const guard = makeEnemy(
+      {
+        pos: { x: obstacle.pos.x + 30, y: obstacle.pos.y },
+        speed: 40,
+        hp: 1_000_000, // survives the auto-blaster for the whole run
+        maxHp: 1_000_000,
+      },
+      "guard",
+    );
+    state.enemies.push(guard);
+    run(state, idle, 600);
+    expect(guard.pos.x).toBeGreaterThanOrEqual(
+      obstacle.pos.x + obstacle.radius + enemyDef("guard").radius - 0.001,
+    );
+  });
+
+  it("lets a phasing ghost drift straight through solid stone", () => {
+    const state = startGame();
+    clearStage(state);
+    const obstacle = placeObstacle(state, 60, false);
     const ghost = makeEnemy({
       pos: { x: obstacle.pos.x + 30, y: obstacle.pos.y },
       speed: 40,
-      hp: 1_000_000, // survives the auto-blaster for the whole run
+      hp: 1_000_000,
       maxHp: 1_000_000,
     });
     state.enemies.push(ghost);
     run(state, idle, 600);
-    expect(ghost.pos.x).toBeGreaterThanOrEqual(
-      obstacle.pos.x + obstacle.radius + enemyDef("ghost").radius - 0.001,
-    );
+    // Through the boulder and onto the player, stone notwithstanding.
+    expect(ghost.pos.x).toBeLessThan(obstacle.pos.x - obstacle.radius);
+    expect(state.stats.damageTaken).toBeGreaterThan(0);
   });
 });
 

@@ -607,7 +607,8 @@ function stepEnemies(state: GameState, dt: number, dtMs: number): void {
   for (const enemy of state.enemies) {
     const def = enemyDef(enemy.defId);
     // Grounded monsters never clear an obstacle — even the jumpable ones.
-    resolveObstacles(state, enemy.pos, def.radius);
+    // Ghostly monsters drift straight through instead.
+    if (!def.phasing) resolveObstacles(state, enemy.pos, def.radius);
     enemy.pos.x = clamp(
       enemy.pos.x,
       def.radius,
@@ -661,7 +662,9 @@ const separationGrid = new Map<number, Enemy[]>();
  * cell or sits in adjacent ones, so only those pairs are tested.
  */
 function separateEnemies(state: GameState): void {
-  const cell = ENEMY_AI.separation;
+  // Packs may overlap a bit (ENEMY_AI.overlapFraction) so a kited horde
+  // bunches into one clump instead of a rigid crystal.
+  const cell = ENEMY_AI.separation * (1 - ENEMY_AI.overlapFraction);
   // Level width caps near a few thousand px, so cell columns stay < 2¹⁶
   // and this key never collides.
   const keyOf = (x: number, y: number) =>
@@ -700,22 +703,28 @@ function separateEnemies(state: GameState): void {
 
 /**
  * Enemy AI: haunt the spawn point, chase when the player wanders close,
- * drift home when they escape. Bosses guard their post instead — they wake
- * when the player nears it (or once wounded) but never stray past their
- * leash. Elites sleep at their post until the player comes close (or hurts
- * them), then rush into view for their scene and hunt forever after.
+ * drift home when they escape. Waking on proximity needs line of sight —
+ * a wall the player can't jump over also hides them (ghostly monsters
+ * sense straight through; wounds wake anything). Bosses guard their post
+ * instead — they wake when the player nears it (or once wounded) but never
+ * stray past their leash. Elites sleep at their post until the player comes
+ * close (or hurts them), then rush into view for their scene and hunt
+ * forever after.
  */
 function moveEnemy(state: GameState, enemy: Enemy, dt: number): void {
   const player = state.player;
   const def = enemyDef(enemy.defId);
   // Stasis fields slow whatever crawls inside them — bosses included.
   const speed = enemy.speed * stasisFactorAt(player, enemy.pos);
+  const senses = () =>
+    def.phasing === true || lineOfSight(state, enemy.pos, player.pos);
 
   if (def.role === "boss") {
     const awake =
       enemy.hp < enemy.maxHp ||
-      distance(player.pos, enemy.home) < def.ai.aggroRadius ||
-      distance(player.pos, enemy.pos) < def.ai.aggroRadius;
+      ((distance(player.pos, enemy.home) < def.ai.aggroRadius ||
+        distance(player.pos, enemy.pos) < def.ai.aggroRadius) &&
+        senses());
     const leashed =
       def.ai.leashRadius !== undefined &&
       distance(enemy.pos, enemy.home) > def.ai.leashRadius;
@@ -728,7 +737,7 @@ function moveEnemy(state: GameState, enemy: Enemy, dt: number): void {
     if (!enemy.awake) {
       enemy.awake =
         enemy.hp < enemy.maxHp ||
-        distance(player.pos, enemy.pos) < def.ai.aggroRadius;
+        (distance(player.pos, enemy.pos) < def.ai.aggroRadius && senses());
       if (!enemy.awake) return;
     }
     // The rush: an unplayed speaker closes in far faster than it fights,
@@ -745,7 +754,17 @@ function moveEnemy(state: GameState, enemy: Enemy, dt: number): void {
     return;
   }
 
-  if (distance(player.pos, enemy.pos) < def.ai.aggroRadius) {
+  // Minions: an aggro latch. Waking needs the player in range AND in sight;
+  // once awake the chase holds even when a wall breaks line of sight — only
+  // escaping the radius entirely puts the monster back to sleep.
+  const inRange = distance(player.pos, enemy.pos) < def.ai.aggroRadius;
+  if (!inRange) {
+    enemy.awake = false;
+  } else if (!enemy.awake) {
+    enemy.awake = enemy.hp < enemy.maxHp || senses();
+  }
+
+  if (inRange && enemy.awake) {
     enemy.pos = moveToward(enemy.pos, player.pos, speed * dt);
   } else if (distance(enemy.pos, enemy.home) > 4) {
     enemy.pos = moveToward(

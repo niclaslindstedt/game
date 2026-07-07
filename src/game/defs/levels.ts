@@ -449,6 +449,52 @@ const MOON: LevelDef = {
       { enemy: "wraith", count: 300, window: [0.55, 1] },
     ],
   },
+  // Standing stone: ridge walls of moonrock strewn along the walk to the
+  // flag. Solid to the living — bullets and boots stop at them — but the
+  // haunting drifts straight through (every moon mob phases), which is
+  // exactly the horror: stone that shelters you from nothing dead.
+  walls: [
+    // West ridge, above the landing site.
+    {
+      kind: "boulder",
+      from: { x: 280, y: 480 },
+      to: { x: 520, y: 400 },
+      radius: 13,
+      jumpable: false,
+    },
+    // Mid-field ridge between the landing site and the moonbase trail.
+    {
+      kind: "boulder",
+      from: { x: 620, y: 700 },
+      to: { x: 920, y: 640 },
+      radius: 13,
+      jumpable: false,
+    },
+    // Southern ridge below the trail's midpoint.
+    {
+      kind: "boulder",
+      from: { x: 1250, y: 1250 },
+      to: { x: 1550, y: 1340 },
+      radius: 13,
+      jumpable: false,
+    },
+    // Northern ridge on the high route.
+    {
+      kind: "boulder",
+      from: { x: 1180, y: 300 },
+      to: { x: 1440, y: 230 },
+      radius: 13,
+      jumpable: false,
+    },
+    // East ridge on the approach to the flag.
+    {
+      kind: "boulder",
+      from: { x: 1780, y: 820 },
+      to: { x: 2060, y: 920 },
+      radius: 13,
+      jumpable: false,
+    },
+  ],
   // Boulders wall off lanes outright; low rocks only stop what can't jump —
   // hopping a rock line the horde must flow around is the moon's core trick.
   obstacles: [
