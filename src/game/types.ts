@@ -168,6 +168,21 @@ export type Enemy = {
    * the speaker mid-rush). Speakers only ever get one scene.
    */
   spoke?: boolean;
+  /**
+   * Evolution stage stamped on a minion when the menace meter was high at its
+   * spawn (see config MENACE). Its extra hp is already baked into `hp`/`maxHp`;
+   * this field is what the loot roll reads to sweeten an evolved mob's drop,
+   * and the renderer reads to mark it as evolved. 0/undefined = un-evolved.
+   */
+  evo?: number;
+  /**
+   * Elite/boss power-match bookkeeping. `powerScaled` latches true the first
+   * time the fight engages so the scale is applied exactly once;
+   * `contactMult` is the (softened) multiplier its contact damage carries
+   * afterwards. See maybePowerScale in menace.ts.
+   */
+  powerScaled?: boolean;
+  contactMult?: number;
 };
 
 export type Projectile = {
@@ -361,6 +376,12 @@ export type GameEvent =
   | { type: "abilityStarted"; defId: string }
   | { type: "abilityEnded"; defId: string }
   | { type: "levelUp"; level: number }
+  /**
+   * The menace meter crossed into a new evolution stage — the horde has grown
+   * more dangerous in answer to the player's rampage. The app sounds the
+   * escalation and can flash a "the horde evolves" cue.
+   */
+  | { type: "menaceRose"; stage: number }
   | { type: "bossDefeated"; pos: Vec2 }
   /** A speaker took the stage: the run paused into the `dialogue` phase. */
   | { type: "dialogueStarted"; speaker: string }
@@ -444,6 +465,12 @@ export type GameState = {
   level: LevelInfo;
   /** The run's chosen difficulty (scales spawns, hp, and loot). */
   difficulty: Difficulty;
+  /**
+   * The escalation meter (see config MENACE). Overkilling and fast kills bank
+   * it; idling bleeds it off. Read as a stage that lures, evolves, and scales
+   * the horde. Starts at 0.
+   */
+  menace: number;
   /** Where the run begins; also the origin difficulty scales out from. */
   playerSpawn: Vec2;
   /** Story props to draw (the lander, the boss's flag, …). */

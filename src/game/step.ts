@@ -4,9 +4,10 @@
 // the app layer can play sounds and flash effects. Order per step: player
 // steering + jump physics → weapon auto-attack → abilities (orbs, storms,
 // stasis) → projectiles → enemies (aggro, elite ambush/dialogue, boss guard
-// AI, contact damage) → wave spawner (the escalating horde) → item pickups →
-// locked doors → objective check → win/lose. Kill resolution and loot rolls
-// live in loot.ts; dialogue and door rules in story.ts. Level-ups pause the
+// AI, contact damage) → menace decay → wave spawner (the escalating horde) →
+// item pickups → locked doors → objective check → win/lose. Kill resolution,
+// loot rolls, and the menace meter live in loot.ts + menace.ts; dialogue and
+// door rules in story.ts. Level-ups pause the
 // run in the `levelup` phase until `allocateStat` spends the point(s);
 // dialogue pauses it in `dialogue` until tapped through.
 
@@ -55,6 +56,7 @@ import {
   enemyCritChance,
   equipmentName,
   isBetterEquipment,
+  maxMeleeTargets,
   playerSpeed,
   recomputeMaxHp,
   repairEquippedWeapon,
@@ -65,6 +67,12 @@ import {
   wearEquippedWeapon,
 } from "./items.ts";
 import { grantXp, hitEnemy, unspawnedMinions } from "./loot.ts";
+import {
+  decayMenace,
+  lureMult,
+  maybePowerScale,
+  menaceStage,
+} from "./menace.ts";
 import {
   collectStoryItem,
   startEnemyDialogue,
@@ -101,6 +109,7 @@ export function step(state: GameState, input: GameInput, dtMs: number): void {
   stepAbilities(state, dt, dtMs);
   stepProjectiles(state, dt, dtMs);
   stepEnemies(state, dt, dtMs);
+  decayMenace(state, dtMs);
   stepSpawner(state);
   stepItems(state);
   stepDoors(state);
@@ -152,8 +161,10 @@ function stepSpawner(state: GameState): void {
   if (!waves) return;
   // Difficulty scales the horde: every budget line grows by the mob
   // multiplier, and the live cap/floor stretch so the bigger budget can
-  // actually crowd the field instead of queueing behind medium's cap.
-  const aliveMult = difficultyDef(state.difficulty).aliveMult;
+  // actually crowd the field instead of queueing behind medium's cap. Menace
+  // stacks on top — a rampaging player lures a denser, bigger crowd (lureMult
+  // ≥ 1), so the floor and cap both swell with the escalation.
+  const aliveMult = difficultyDef(state.difficulty).aliveMult * lureMult(state);
   const maxAlive = Math.round(waves.maxAlive * aliveMult);
   const minAlive = Math.round(waves.minAlive * aliveMult);
 
@@ -250,6 +261,8 @@ function spawnWaveEnemy(state: GameState, defId: string): boolean {
     };
     if (distance(pos, state.player.pos) < ENEMY_AI.minSpawnDistance) continue;
     if (insideObstacle(state, pos, def.radius)) continue;
+    // Stamp the current menace stage: a mob spawned into a rampage evolves —
+    // more hp, more xp, better loot (see menace.ts / spawnEnemy).
     state.enemies.push(
       spawnEnemy(
         defId,
@@ -257,6 +270,7 @@ function spawnWaveEnemy(state: GameState, defId: string): boolean {
         state.rng,
         state.nextId++,
         difficultyDef(state.difficulty).mobHpMult,
+        menaceStage(state),
       ),
     );
     return true;
@@ -471,7 +485,8 @@ function stepWeapon(state: GameState, input: GameInput, dtMs: number): void {
   if (!weapon.projectile) {
     // A swing cleaves a cone: the nearest monster is the aim, and every other
     // monster within reach and inside the weapon's arc is struck in the same
-    // blow. A blade sweeps a wide slash; a spear thrusts a narrow cone far.
+    // blow — but only the nearest `maxMeleeTargets` of them (INT raises that
+    // cap). A blade sweeps a wide slash; a spear thrusts a narrow cone far.
     const half = weaponSweepHalfAngle(state, equipped);
     state.events.push({
       type: "swing",
@@ -480,7 +495,14 @@ function stepWeapon(state: GameState, input: GameInput, dtMs: number): void {
       range,
       arc: half * 2,
     });
-    meleeSweep(state, dir, range, half, weaponDamage(state));
+    meleeSweep(
+      state,
+      dir,
+      range,
+      half,
+      weaponDamage(state),
+      maxMeleeTargets(state),
+    );
     // Wear AFTER the strike so the blow lands with the weapon that swung.
     wearEquippedWeapon(state);
     return;
@@ -525,11 +547,18 @@ function meleeSweep(
   range: number,
   halfAngle: number,
   damage: number,
+  maxTargets: number,
 ): void {
   const player = state.player;
   const rangeSq = range * range;
   const cosHalf = Math.cos(halfAngle);
-  for (const enemy of [...state.enemies]) {
+  // Gather every foe the cone can reach, then strike only the `maxTargets`
+  // NEAREST of them: the swing catches the crowd closest to the blade, and
+  // the locked-on target (always the nearest) is guaranteed among them.
+  // Collecting first — instead of hitting inside the loop — keeps the cap
+  // honest even though hitEnemy mutates state.enemies as foes fall.
+  const eligible: { enemy: Enemy; distSq: number }[] = [];
+  for (const enemy of state.enemies) {
     const dx = enemy.pos.x - player.pos.x;
     const dy = enemy.pos.y - player.pos.y;
     const distSq = dx * dx + dy * dy;
@@ -543,7 +572,11 @@ function meleeSweep(
       if (dot < cosHalf) continue;
     }
     if (!lineOfSight(state, player.pos, enemy.pos)) continue;
-    hitEnemy(state, enemy, damage);
+    eligible.push({ enemy, distSq });
+  }
+  eligible.sort((a, b) => a.distSq - b.distSq);
+  for (let i = 0; i < eligible.length && i < maxTargets; i++) {
+    hitEnemy(state, (eligible[i] as (typeof eligible)[number]).enemy, damage);
   }
 }
 
@@ -724,8 +757,11 @@ function stepEnemies(state: GameState, dt: number, dtMs: number): void {
       // A boss backed into its last stand hits like a cornered animal.
       const lastStand =
         def.role === "boss" && enemy.hp <= enemy.maxHp * LAST_STAND.hpFraction;
+      // A power-matched elite/boss hits harder too (contactMult, softened —
+      // set once when it engaged; 1 for un-scaled mobs and every minion).
       const damage = Math.round(
         def.contactDamage *
+          (enemy.contactMult ?? 1) *
           (crit ? STATS.critMultiplier : 1) *
           (lastStand ? LAST_STAND.damageMultiplier : 1),
       );
@@ -813,6 +849,9 @@ function moveEnemy(state: GameState, enemy: Enemy, dt: number): void {
       ((distance(player.pos, enemy.home) < def.ai.aggroRadius ||
         distance(player.pos, enemy.pos) < def.ai.aggroRadius) &&
         senses());
+    // The stare-down is the fight starting: match the player's power now, so
+    // the boss is worthy whether the player opens with a shot or a charge.
+    if (awake) maybePowerScale(state, enemy);
     const leashed =
       def.ai.leashRadius !== undefined &&
       distance(enemy.pos, enemy.home) > def.ai.leashRadius;
@@ -827,6 +866,8 @@ function moveEnemy(state: GameState, enemy: Enemy, dt: number): void {
         enemy.hp < enemy.maxHp ||
         (distance(player.pos, enemy.pos) < def.ai.aggroRadius && senses());
       if (!enemy.awake) return;
+      // Just woke: power-match the player before the ambush rush lands.
+      maybePowerScale(state, enemy);
     }
     // The rush: an unplayed speaker closes in far faster than it fights,
     // so the scene starts seconds after the ambush springs. Once it has

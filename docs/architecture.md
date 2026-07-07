@@ -110,8 +110,8 @@ run against synthetic fixtures with no shipped content (see
   player steering + jump physics (+ obstacle push-out) → use-item edge →
   weapon auto-attack (wearing the weapon's durability) → abilities →
   projectiles → enemies (aggro/guard/elite AI, dialogue triggers, contact
-  damage, obstacle push-out) → wave spawner → item pickups → locked doors
-  → objective → win/lose. A boss at or below `LAST_STAND.hpFraction`
+  damage, obstacle push-out) → menace decay → wave spawner → item pickups →
+  locked doors → objective → win/lose. A boss at or below `LAST_STAND.hpFraction`
   multiplies its contact damage — the one-last-stand spike the renderer
   telegraphs with a flickering dying sprite. The character fights autonomously (and only
   targets monsters inside the visible view the app passes in
@@ -124,6 +124,16 @@ run against synthetic fixtures with no shipped content (see
   damage (crit rolls flash the victim), pays out XP, and rolls drops —
   the level's loot table for minions (with the pity rule and the
   all-clear trophy), the def's guaranteed drops for bosses and elites.
+  It also feeds the menace meter on each kill and power-scales an
+  elite/boss to the player on its first blow.
+- **`src/game/menace.ts`** — the escalation system: overkill + kill pace
+  bank `state.menace` (`bankMenace`), which idle time bleeds off
+  (`decayMenace`, run from `step.ts`). Its `menaceStage` lures a denser
+  horde (`lureMult`, read by the wave spawner), evolves freshly-spawned
+  minions (`evolutionHpMult`, stamped in `create.ts`'s `spawnEnemy`), and
+  — with the player's level — power-matches elites/bosses when they engage
+  (`enemyPowerScale`/`maybePowerScale`, called from both `step.ts` wake and
+  `loot.ts` first-hit).
 - **`src/game/story.ts`** — the story systems: dialogue lifecycle
   (`wantsDialogue`/`startEnemyDialogue` inside the step,
   `advanceDialogue` as the player's tap, `dialogueContent` for the
@@ -133,10 +143,12 @@ run against synthetic fixtures with no shipped content (see
 - **`src/game/items.ts`** — equipment instances and the player-driven
   mutations the UI calls into: loot rolls, `equipFromInventory` /
   `unequipToInventory` / `moveInventoryItem`, `allocateStat`, the derived
-  stats (max hp, weapon damage, move speed, crit chance, and — for melee —
-  STRENGTH-scaled reach `weaponRangeFor`, swing cadence `weaponCooldownFor`,
-  and the swing cone `weaponSweepHalfAngle` that makes a swing cleave every
-  monster it faces), the auto-equip scoring (`weaponScore` DPS /
+  stats (max hp, weapon damage, move speed, crit chance, INT-scaled reach
+  `weaponRangeFor`, swing/fire cadence `weaponCooldownFor` — the catalog
+  cooldown slowed by the global `WEAPON.baseCooldownMult` and quickened by the
+  speed stat — and the swing cone `weaponSweepHalfAngle` that, capped by
+  `maxMeleeTargets` (INT raises the cap), makes a swing cleave the nearest few
+  monsters it faces), the auto-equip scoring (`weaponScore` DPS /
   `gearScore`), and the durability cycle
   (`wearEquippedWeapon` — a broken weapon is trashed and the best bag
   weapon takes over — and `repairEquippedWeapon` for repair-kit drops).

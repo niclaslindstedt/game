@@ -56,6 +56,29 @@ export function playJingle(synth: Synth, event: GameEvent): boolean {
       });
       return true;
 
+    case "menaceRose":
+      // The horde evolves: a dark, rising swell — three detuned sawtooth
+      // steps climbing a minor triad under a low growl, so a rampage feels
+      // answered rather than rewarded.
+      synth.noise({
+        durationMs: 320,
+        volume: 0.05,
+        filter: { type: "lowpass", frequency: 420 },
+        echo: 0.2,
+      });
+      [147, 175, 233].forEach((freq, i) =>
+        synth.tone({
+          type: "sawtooth",
+          from: freq,
+          durationMs: 200,
+          volume: 0.055,
+          delayMs: i * 100,
+          detuneCents: 12,
+          echo: 0.3,
+        }),
+      );
+      return true;
+
     case "bossDefeated":
       // The giant coming down: a long rumble under descending detuned
       // saws, ending in a floor-shaking thud.

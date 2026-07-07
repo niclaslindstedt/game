@@ -82,12 +82,14 @@ and something enormous haunts the old flag.
   pauses the run to spend a stat point. The stats each own an axis:
   **STRENGTH** raises melee & ranged **damage** and widens your carry bag
   (which starts at just three slots); **DEXTERITY** speeds up melee & ranged
-  **attacks**; **INTELLECT** powers **magic** weapons and gives every weapon
-  **longer range and a bigger AoE** (so a swing cleaves more of the crowd);
-  **SPEED** quickens the walk; **LUCK** lands crits and finds better loot;
-  **HEALTH** is raw max HP. The base fire rate is deliberately slow, so a
-  build is what wins the cadence back, and a new **(i)** button on the
-  level-up screen spells out exactly what each stat does. Golden
+  **attacks**; **INTELLECT** powers **magic** weapons, gives every weapon
+  **longer range**, and **widens the melee cleave** — a swing only strikes the
+  two nearest foes until INT raises that cap, so mowing down the crowd is an
+  INT build, not a free perk of a wide sword; **SPEED** quickens the walk;
+  **LUCK** lands crits and finds better loot; **HEALTH** is raw max HP. The
+  base fire rate is deliberately slow, so a build is what wins the cadence
+  back, and a new **(i)** button on the level-up screen spells out exactly
+  what each stat does. Golden
   **XP arrows** drop from the horde and are always worth a fixed share of
   your next level.
 - The horde drops **loot** — medkits, weapons (staplers, mops, tasers,
@@ -107,6 +109,12 @@ and something enormous haunts the old flag.
   **signature weapon** (better than the level's pool, shy of the boss's)
   plus **story items**: keycards that open **locked rooms** (spare parts,
   the alien anti-grav unit) and documents that deepen the mystery.
+- **Don't get complacent when you're winning.** Overkilling monsters and
+  killing at a fast clip builds **menace** — a RAMPAGE gauge lights up on the
+  HUD — and the horde answers: it **lures more foes** onto you, **evolves**
+  the mobs it sends into tougher versions (marked by a glowing aura) that pay
+  more XP and drop better gear, and scales elite mobs and bosses to your
+  power so they can't be one-shot. Ease off and the meter cools.
 - **Kill the boss** — MUSKRAT under the rocket, ARMSTRONG at the flag — to
   clear the level; bosses have their own longer stare-down scenes before
   the fight. If your HP reaches zero the run ends with a stats screen and
