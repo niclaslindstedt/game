@@ -382,10 +382,17 @@ export type GameInput = {
   jump: boolean;
   /**
    * True on the step the player asked to use a carried ability pickup
-   * (mouse click / HUD button edge). Spends the oldest
-   * held ability; a no-op with empty hands.
+   * (mouse click / HUD button edge). Spends one held ability; a no-op with
+   * empty hands. `useItemIndex` chooses which one.
    */
   useItem?: boolean;
+  /**
+   * When `useItem` is set, which banked ability to spend (index into
+   * `heldAbilities`, oldest first). Tapping a powerup dock slot names its
+   * index; click / E / auto-use omit it and spend the oldest (index 0). An
+   * out-of-range index falls back to the oldest too.
+   */
+  useItemIndex?: number;
   /**
    * The world rect currently on screen (the camera view). When set, the
    * auto-weapon only targets monsters inside it — the character never

@@ -3,11 +3,12 @@
 // the engine, feeds it pointer input per the player's control settings
 // (touch: a virtual dpad anchored where the finger lands, taps jump —
 // including a second finger while steering; mouse: hold- or cursor-steer,
-// Space jumps; click, E, or the HUD button spends a banked item), plays
-// event sounds, and overlays the DOM UI: HUD, the level intro text box, the
-// level-up stat chooser, the Diablo-style inventory, and the end-of-run
-// splash. One <GameScreen> mount = one session at the menu; one run = one
-// `runId` (retry bumps it).
+// Space jumps; a powerup-dock slot tap, click, or E spends a banked ability),
+// plays event sounds, and overlays the DOM UI: the HUD (top vitals + XP strip
+// + the hero-avatar inventory button, plus the bottom-corner powerup dock),
+// the level intro text box, the level-up stat chooser, the Diablo-style
+// inventory, and the end-of-run splash. One <GameScreen> mount = one session
+// at the menu; one run = one `runId` (retry bumps it).
 
 import { useEffect, useRef, useState } from "react";
 
@@ -27,6 +28,7 @@ import {
   LEVELS,
   levelDef,
   openInventory,
+  playerAppearance,
   skipCutscene,
   step,
   storyItemDef,
@@ -85,8 +87,12 @@ type Hud = {
   bagCount: number;
   /** Banked ability pickups, oldest first (ABILITY_DEFS ids). */
   heldAbilities: string[];
+  /** Equipped weapon def id — drives the always-on weapon widget. */
+  weaponDefId: string;
   /** Equipped weapon's durability 0..1, or null for the unbreakable sidearm. */
   weaponWear: number | null;
+  /** Player sprite family (`playerAppearance`) for the inventory avatar. */
+  appearance: string;
   stats: GameStats;
 };
 
@@ -146,6 +152,9 @@ export function GameScreen({
   const dpadRef = useRef<HTMLDivElement>(null);
   const jumpQueuedRef = useRef(false);
   const useItemQueuedRef = useRef(false);
+  // Which powerup dock slot the player tapped this frame (index into
+  // heldAbilities). null = spend the oldest (click / E / auto-use).
+  const useItemIndexRef = useRef<number | null>(null);
   const [assets, setAssets] = useState<GameAssets | null>(null);
   const [runId, setRunId] = useState(0);
   const [hud, setHud] = useState<Hud | null>(null);
@@ -360,6 +369,7 @@ export function GameScreen({
           input.throttle = 1;
           input.jump = decided.jump;
           input.useItem = decided.useItem ?? false;
+          input.useItemIndex = undefined;
         } else {
           const settings = getSettings();
           if (pointer.state.held && pointer.state.pointerType !== "mouse") {
@@ -396,13 +406,17 @@ export function GameScreen({
           }
           input.jump = jumpQueuedRef.current;
           jumpQueuedRef.current = false;
-          // Instant item use (the touch-first default) pops pickups the
-          // moment they are carried; manual waits for the player's edge.
+          // Instant item use (opt-in) pops pickups the moment they are
+          // carried; manual waits for the player's edge — a dock slot tap
+          // (which names its index), a click, or E. A tapped slot spends
+          // exactly that powerup; everything else spends the oldest.
           input.useItem =
             useItemQueuedRef.current ||
             (settings.itemUse === "auto" &&
               state.player.heldAbilities.length > 0);
+          input.useItemIndex = useItemIndexRef.current ?? undefined;
           useItemQueuedRef.current = false;
+          useItemIndexRef.current = null;
         }
         step(state, input, dtMs);
         if (pendingCutscene && state.phase !== "cutscene") {
@@ -522,7 +536,8 @@ export function GameScreen({
           weapon.durability === undefined
             ? null
             : weapon.durability / weaponDef(weapon.defId).durability;
-        const key = `${state.phase}/${state.player.hp}/${state.player.xp}/${state.player.level}/${state.player.pendingStatPoints}/${state.enemies.length}/${bagCount}/${held}/${weaponWear?.toFixed(2) ?? ""}/${Math.floor(state.stats.timeMs / 1000)}`;
+        const appearance = playerAppearance(state);
+        const key = `${state.phase}/${state.player.hp}/${state.player.xp}/${state.player.level}/${state.player.pendingStatPoints}/${state.enemies.length}/${bagCount}/${held}/${weapon.defId}/${weaponWear?.toFixed(2) ?? ""}/${appearance}/${Math.floor(state.stats.timeMs / 1000)}`;
         if (key !== lastHud) {
           lastHud = key;
           setHud({
@@ -535,7 +550,9 @@ export function GameScreen({
             enemiesLeft: state.enemies.length,
             bagCount,
             heldAbilities: [...state.player.heldAbilities],
+            weaponDefId: weapon.defId,
             weaponWear,
+            appearance,
             stats: { ...state.stats },
           });
         }
@@ -557,6 +574,9 @@ export function GameScreen({
     return <div className="game-loading">Loading…</div>;
   }
   const font = assets.font;
+  // Which bottom corner the powerup dock lives in; the pickup feed takes the
+  // opposite one. Read live so the title-screen toggle applies next run.
+  const powerupSide = getSettings().powerupSide;
 
   return (
     <div className="game-screen">
@@ -574,108 +594,161 @@ export function GameScreen({
 
       {hud && hud.phase === "playing" && (
         <div className="game-hud">
-          <div className="hud-left">
-            <PixelText font={font} text="HP" scale={2} color="#9aa3ad" />
-            <div className="hud-bar">
-              <div
-                className="hud-bar-fill"
-                style={{ width: `${(100 * hud.hp) / hud.maxHp}%` }}
-              />
-            </div>
-            <PixelText font={font} text={String(hud.hp)} scale={2} />
-            <PixelText
-              font={font}
-              text={`LV ${hud.level}`}
-              scale={2}
-              color="#ffd75e"
+          {/* Full-width XP strip along the very top (top-scroller staple). */}
+          <div className="hud-xp">
+            <div
+              className="hud-xp-fill"
+              style={{ width: `${(100 * hud.xp) / hud.xpToNext}%` }}
             />
-            <div className="hud-bar xp-bar">
-              <div
-                className="hud-bar-fill xp-fill"
-                style={{ width: `${(100 * hud.xp) / hud.xpToNext}%` }}
+            <span className="hud-xp-badge">
+              <PixelText
+                font={font}
+                text={`LV ${hud.level}`}
+                scale={2}
+                color="#ffd75e"
               />
-            </div>
-            {hud.weaponWear !== null && (
-              <>
-                <PixelText font={font} text="WPN" scale={2} color="#9aa3ad" />
-                <div className="hud-bar">
+            </span>
+          </div>
+
+          <div className="hud-top">
+            {/* Left: vitals — HP over the always-on weapon widget. */}
+            <div className="hud-status">
+              <div className="hud-stat-row">
+                <PixelText font={font} text="HP" scale={2} color="#9aa3ad" />
+                <div className="hud-bar hp-bar">
                   <div
                     className="hud-bar-fill"
-                    style={{
-                      width: `${Math.round(100 * hud.weaponWear)}%`,
-                      background: hud.weaponWear < 0.25 ? "#d83a3a" : "#9aa3ad",
-                    }}
+                    style={{ width: `${(100 * hud.hp) / hud.maxHp}%` }}
                   />
                 </div>
-              </>
-            )}
-          </div>
-          <div className="hud-right">
-            {hud.heldAbilities.length > 0 && (
-              <button
-                type="button"
-                className="pixel-button use-button"
-                aria-label="use-item"
-                onClick={() => {
-                  useItemQueuedRef.current = true;
-                }}
-              >
+                <PixelText font={font} text={String(hud.hp)} scale={2} />
+              </div>
+              <div className="hud-stat-row">
                 {(() => {
                   const icon = spriteDataUrl(
                     assets.sprites,
-                    abilityDef(hud.heldAbilities[0] as string).icon,
+                    weaponDef(hud.weaponDefId).icon,
                   );
                   return icon ? (
-                    <img src={icon} alt="" className="pixel-img use-icon" />
+                    <img src={icon} alt="" className="pixel-img wpn-icon" />
                   ) : null;
                 })()}
+                <div className="hud-bar wpn-bar">
+                  <div
+                    className="hud-bar-fill wpn-fill"
+                    style={
+                      hud.weaponWear === null
+                        ? { width: "100%", background: "#7ef0c8" }
+                        : {
+                            width: `${Math.max(4, Math.round(100 * hud.weaponWear))}%`,
+                            background:
+                              hud.weaponWear < 0.25 ? "#d83a3a" : "#9aa3ad",
+                          }
+                    }
+                  />
+                </div>
                 <PixelText
                   font={font}
-                  text={
-                    hud.heldAbilities.length > 1
-                      ? `USE x${hud.heldAbilities.length}`
-                      : "USE"
-                  }
+                  text={hud.weaponWear === null ? "∞" : ""}
                   scale={2}
-                  color="#0b0d10"
+                  color="#7ef0c8"
                 />
-              </button>
-            )}
-            <PixelText
-              font={font}
-              text={`${state?.level.foes ?? "FOES"} ${hud.stats.totalEnemies - hud.enemiesLeft}/${hud.stats.totalEnemies}`}
-              scale={2}
-              color="#d9a0f0"
-            />
-            <PixelText
-              font={font}
-              text={formatTime(hud.stats.timeMs)}
-              scale={2}
-            />
+              </div>
+            </div>
+
+            {/* Center: run clock over the foe counter. */}
+            <div className="hud-center">
+              <PixelText
+                font={font}
+                text={formatTime(hud.stats.timeMs)}
+                scale={3}
+              />
+              <PixelText
+                font={font}
+                text={`${state?.level.foes ?? "FOES"} ${hud.stats.totalEnemies - hud.enemiesLeft}/${hud.stats.totalEnemies}`}
+                scale={2}
+                color="#d9a0f0"
+              />
+            </div>
+
+            {/* Right: the hero avatar is the inventory button. */}
             <button
               type="button"
-              className="pixel-button bag-button"
+              className="inventory-avatar"
               aria-label="open-inventory"
               onClick={() => {
                 if (state) {
                   openInventory(state);
+                  playUiSound(synth, "confirm");
                   bumpUi();
                 }
               }}
             >
-              <PixelText
-                font={font}
-                text={`BAG ${hud.bagCount}`}
-                scale={2}
-                color="#0b0d10"
-              />
+              {(() => {
+                const src = spriteDataUrl(
+                  assets.sprites,
+                  `${hud.appearance}_0`,
+                );
+                return src ? (
+                  <img src={src} alt="" className="pixel-img avatar-img" />
+                ) : null;
+              })()}
+              {hud.bagCount > 0 && (
+                <span className="avatar-badge">
+                  <PixelText
+                    font={font}
+                    text={String(hud.bagCount)}
+                    scale={1}
+                    color="#0b0d10"
+                  />
+                </span>
+              )}
             </button>
           </div>
         </div>
       )}
 
+      {/* The powerup dock: three big, thumb-sized slots. Oldest sits leftmost
+          and fills rightward; tapping a slot spends exactly that powerup and
+          the rest shift down. Sits in whichever bottom corner the player
+          picked (settings.powerupSide). */}
       {hud?.phase === "playing" && (
-        <PickupFeed font={font} messages={pickups} />
+        <div className={`powerup-dock dock-${powerupSide}`}>
+          {[0, 1, 2].map((i) => {
+            const defId = hud.heldAbilities[i];
+            const icon = defId
+              ? spriteDataUrl(assets.sprites, abilityDef(defId).icon)
+              : undefined;
+            return (
+              <button
+                key={i}
+                type="button"
+                className={`powerup-slot${defId ? " filled" : ""}`}
+                aria-label={
+                  defId ? `use-powerup-${i}` : `powerup-slot-${i}-empty`
+                }
+                disabled={!defId}
+                onClick={() => {
+                  if (!defId) return;
+                  useItemQueuedRef.current = true;
+                  useItemIndexRef.current = i;
+                }}
+              >
+                {icon && (
+                  <img src={icon} alt="" className="pixel-img powerup-icon" />
+                )}
+              </button>
+            );
+          })}
+        </div>
+      )}
+
+      {hud?.phase === "playing" && (
+        <PickupFeed
+          font={font}
+          messages={pickups}
+          side={powerupSide === "left" ? "right" : "left"}
+        />
       )}
 
       {state && state.cutscene && hud?.phase === "cutscene" && (

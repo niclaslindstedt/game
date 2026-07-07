@@ -63,6 +63,36 @@ describe("held ability items", () => {
     ]);
   });
 
+  it("spends a specific slot with useItemIndex and shifts the rest down", () => {
+    const state = startGame();
+    clearStage(state);
+    state.items = [
+      abilityAt(state, 500, "test_orbit"),
+      abilityAt(state, 501, "test_storm"),
+      abilityAt(state, 502, "test_stasis"),
+    ];
+    step(state, idle, DT);
+
+    // Tap the middle slot (index 1): the storm fires, orbit + stasis close up.
+    step(state, { ...idle, useItem: true, useItemIndex: 1 }, DT);
+    expect(state.player.abilities.map((a) => a.defId)).toEqual(["test_storm"]);
+    expect(state.player.heldAbilities).toEqual(["test_orbit", "test_stasis"]);
+  });
+
+  it("falls back to the oldest when useItemIndex is out of range", () => {
+    const state = startGame();
+    clearStage(state);
+    state.items = [
+      abilityAt(state, 500, "test_storm"),
+      abilityAt(state, 501, "test_stasis"),
+    ];
+    step(state, idle, DT);
+
+    step(state, { ...idle, useItem: true, useItemIndex: 9 }, DT);
+    expect(state.player.abilities.map((a) => a.defId)).toEqual(["test_storm"]);
+    expect(state.player.heldAbilities).toEqual(["test_stasis"]);
+  });
+
   it("ignores useItem with empty hands", () => {
     const state = startGame();
     clearStage(state);

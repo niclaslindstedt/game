@@ -20,13 +20,16 @@ export type PickupMessage = {
 export function PickupFeed({
   font,
   messages,
+  side = "right",
 }: {
   font: PixelFont;
   messages: PickupMessage[];
+  /** Which bottom corner the feed hugs (opposite the powerup dock). */
+  side?: "left" | "right";
 }) {
   if (messages.length === 0) return null;
   return (
-    <div className="pickup-feed" aria-live="polite">
+    <div className={`pickup-feed pickup-${side}`} aria-live="polite">
       {messages.map((m) => (
         <div key={m.id} className="pickup-line">
           <PixelText

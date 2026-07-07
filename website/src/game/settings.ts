@@ -13,13 +13,18 @@ import { setAudioVolumes } from "./audio.ts";
  * (Touch always steers by holding — this only changes mouse behavior.) */
 export type SteeringMode = "hover" | "hold";
 
-/** Ability pickups: pop the moment they are touched, or bank until the
- * player uses them (click / the HUD button / E). */
+/** Ability pickups: pop the moment they are touched, or bank into the
+ * powerup dock until the player taps a slot (or click / E). */
 export type ItemUseMode = "auto" | "manual";
+
+/** Which bottom corner the big powerup dock sits in — mirror it for the
+ * off hand. Defaults to the lower-left. */
+export type PowerupSide = "left" | "right";
 
 export type GameSettings = {
   steering: SteeringMode;
   itemUse: ItemUseMode;
+  powerupSide: PowerupSide;
   /** 0–1 master volumes, applied via audio.ts. */
   musicVolume: number;
   sfxVolume: number;
@@ -29,13 +34,16 @@ const STORAGE_KEY = storageKey("settings");
 
 function defaults(): GameSettings {
   // Touch-first devices (phones, tablets) play best with the classic
-  // scheme and instant items; fine pointers get the aim-and-click scheme.
+  // hold-to-steer scheme; fine pointers get the aim-and-click scheme.
+  // Items default to manual everywhere now that the powerup dock is the
+  // primary way to spend them — a tap on a big slot, timed by the player.
   const touchFirst =
     typeof window !== "undefined" &&
     window.matchMedia("(pointer: coarse)").matches;
   return {
     steering: touchFirst ? "hold" : "hover",
-    itemUse: touchFirst ? "auto" : "manual",
+    itemUse: "manual",
+    powerupSide: "left",
     musicVolume: 0.8,
     sfxVolume: 1,
   };
@@ -58,6 +66,10 @@ function load(): GameSettings {
         stored.itemUse === "auto" || stored.itemUse === "manual"
           ? stored.itemUse
           : base.itemUse,
+      powerupSide:
+        stored.powerupSide === "left" || stored.powerupSide === "right"
+          ? stored.powerupSide
+          : base.powerupSide,
       musicVolume:
         typeof stored.musicVolume === "number"
           ? clamp01(stored.musicVolume)
