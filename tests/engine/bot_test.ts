@@ -13,7 +13,7 @@ import {
   createBot,
   enemyDef,
   step,
-  WEAPON_DEFS,
+  weaponDef,
   type Bot,
   type GameState,
 } from "@game/core";
@@ -68,7 +68,7 @@ describe("bot strategies", () => {
     drive(state, createBot("kite"), 400);
     const ghost = state.enemies.find((e) => enemyDef(e.defId).role !== "boss")!;
     const d = dist(state.player.pos, ghost.pos);
-    expect(d).toBeLessThanOrEqual(WEAPON_DEFS.blaster!.range);
+    expect(d).toBeLessThanOrEqual(weaponDef("blaster").range);
     expect(d).toBeGreaterThan(60);
     expect(state.stats.damageTaken).toBe(0);
     expect(state.stats.shotsFired).toBeGreaterThan(0);

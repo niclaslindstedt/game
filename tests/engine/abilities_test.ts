@@ -5,13 +5,7 @@
 
 import { describe, expect, it } from "vitest";
 
-import {
-  ABILITY_DEFS,
-  abilityDef,
-  ENEMY_DEFS,
-  orbPositions,
-  step,
-} from "@game/core";
+import { abilityDef, enemyDef, orbPositions, step } from "@game/core";
 import type { GameInput, GameState } from "@game/core";
 import { clearStage, DT, idle, makeEnemy, run, startGame } from "./helpers.ts";
 
@@ -38,13 +32,13 @@ describe("ability pickups", () => {
         id: 500,
         kind: "ability",
         pos: { ...state.player.pos },
-        defId: "fire_orbs",
+        defId: "test_orbit",
       },
     ];
     step(state, idle, DT);
     // Banked, not running — and never in the bag.
     expect(state.items).toHaveLength(0);
-    expect(state.player.heldAbilities).toEqual(["fire_orbs"]);
+    expect(state.player.heldAbilities).toEqual(["test_orbit"]);
     expect(state.player.abilities).toHaveLength(0);
     expect(state.player.inventory.every((cell) => cell === null)).toBe(true);
     expect(state.events).toContainEqual(
@@ -56,25 +50,25 @@ describe("ability pickups", () => {
 
     step(state, useItem, DT);
     expect(state.player.heldAbilities).toEqual([]);
-    expect(state.player.abilities.map((a) => a.defId)).toEqual(["fire_orbs"]);
+    expect(state.player.abilities.map((a) => a.defId)).toEqual(["test_orbit"]);
     expect(state.events).toContainEqual({
       type: "abilityStarted",
-      defId: "fire_orbs",
+      defId: "test_orbit",
     });
   });
 
   it("refresh the timer instead of stacking a second copy", () => {
-    const state = pickUp("fire_orbs");
+    const state = pickUp("test_orbit");
     run(state, idle, 60); // burn ~1s off the clock
     const worn = state.player.abilities[0]!.remainingMs;
-    expect(worn).toBeLessThan(abilityDef("fire_orbs").durationMs);
+    expect(worn).toBeLessThan(abilityDef("test_orbit").durationMs);
 
     state.items = [
       {
         id: 501,
         kind: "ability",
         pos: { ...state.player.pos },
-        defId: "fire_orbs",
+        defId: "test_orbit",
       },
     ];
     step(state, idle, DT);
@@ -82,14 +76,14 @@ describe("ability pickups", () => {
     expect(state.player.abilities).toHaveLength(1);
     // Refreshed to (nearly) full — the activating step itself ticks DT off.
     expect(state.player.abilities[0]!.remainingMs).toBeGreaterThanOrEqual(
-      abilityDef("fire_orbs").durationMs - DT,
+      abilityDef("test_orbit").durationMs - DT,
     );
     expect(state.player.abilities[0]!.remainingMs).toBeGreaterThan(worn);
   });
 
   it("expire after their duration, with an event", () => {
-    const state = pickUp("stasis_field");
-    const steps = Math.ceil(abilityDef("stasis_field").durationMs / DT) + 2;
+    const state = pickUp("test_stasis");
+    const steps = Math.ceil(abilityDef("test_stasis").durationMs / DT) + 2;
     run(state, idle, steps);
     expect(state.player.abilities).toHaveLength(0);
   });
@@ -97,8 +91,8 @@ describe("ability pickups", () => {
 
 describe("fire orbs", () => {
   it("mangle a monster parked on the orbit ring", () => {
-    const state = pickUp("fire_orbs");
-    const orbit = ABILITY_DEFS.fire_orbs!.orbit!;
+    const state = pickUp("test_orbit");
+    const orbit = abilityDef("test_orbit").orbit!;
     // Park an unkillable ghost right on an orb so every tick connects.
     const orb = orbPositions(state.player, state.player.abilities[0]!)[0]!;
     state.enemies.push(
@@ -118,7 +112,7 @@ describe("fire orbs", () => {
   });
 
   it("sweep: the orbs' angle advances every step", () => {
-    const state = pickUp("fire_orbs");
+    const state = pickUp("test_orbit");
     const a0 = state.player.abilities[0]!.angle;
     step(state, idle, DT);
     expect(state.player.abilities[0]!.angle).toBeGreaterThan(a0);
@@ -127,8 +121,8 @@ describe("fire orbs", () => {
 
 describe("storm cell", () => {
   it("strikes the nearest monster on its interval", () => {
-    const state = pickUp("storm_cell");
-    const storm = ABILITY_DEFS.storm_cell!.storm!;
+    const state = pickUp("test_storm");
+    const storm = abilityDef("test_storm").storm!;
     state.player.weaponCooldownMs = 1_000_000;
     state.enemies.push(
       makeEnemy({
@@ -144,7 +138,7 @@ describe("storm cell", () => {
   });
 
   it("emits a lightning event for the app to flash", () => {
-    const state = pickUp("storm_cell");
+    const state = pickUp("test_storm");
     state.player.weaponCooldownMs = 1_000_000;
     const pos = { x: state.player.pos.x + 80, y: state.player.pos.y };
     state.enemies.push(makeEnemy({ pos, hp: 1_000_000, maxHp: 1_000_000 }));
@@ -155,9 +149,9 @@ describe("storm cell", () => {
 
 describe("stasis field", () => {
   it("slows monsters inside the field, not outside it", () => {
-    const state = pickUp("stasis_field");
-    const stasis = ABILITY_DEFS.stasis_field!.stasis!;
-    const speed = ENEMY_DEFS.ghost!.speed;
+    const state = pickUp("test_stasis");
+    const stasis = abilityDef("test_stasis").stasis!;
+    const speed = enemyDef("test_minion").speed;
     const inside = makeEnemy({
       id: 9001,
       pos: {

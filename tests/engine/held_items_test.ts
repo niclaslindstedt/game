@@ -20,18 +20,18 @@ describe("held ability items", () => {
     const state = startGame();
     clearStage(state);
     state.items = [
-      abilityAt(state, 500, "fire_orbs"),
-      abilityAt(state, 501, "storm_cell"),
-      abilityAt(state, 502, "stasis_field"),
-      abilityAt(state, 503, "fire_orbs"), // one past the cap of 3
+      abilityAt(state, 500, "test_orbit"),
+      abilityAt(state, 501, "test_storm"),
+      abilityAt(state, 502, "test_stasis"),
+      abilityAt(state, 503, "test_orbit"), // one past the cap of 3
     ];
     step(state, idle, DT);
 
     expect(HELD_ITEMS.cap).toBe(3);
     expect(state.player.heldAbilities).toEqual([
-      "fire_orbs",
-      "storm_cell",
-      "stasis_field",
+      "test_orbit",
+      "test_storm",
+      "test_stasis",
     ]);
     // The overflow pickup is still on the ground, not lost.
     expect(state.items.map((i) => i.id)).toEqual([503]);
@@ -42,24 +42,24 @@ describe("held ability items", () => {
     const state = startGame();
     clearStage(state);
     state.items = [
-      abilityAt(state, 500, "storm_cell"),
-      abilityAt(state, 501, "stasis_field"),
+      abilityAt(state, 500, "test_storm"),
+      abilityAt(state, 501, "test_stasis"),
     ];
     step(state, idle, DT);
 
     step(state, useItem, DT);
-    expect(state.player.abilities.map((a) => a.defId)).toEqual(["storm_cell"]);
-    expect(state.player.heldAbilities).toEqual(["stasis_field"]);
+    expect(state.player.abilities.map((a) => a.defId)).toEqual(["test_storm"]);
+    expect(state.player.heldAbilities).toEqual(["test_stasis"]);
     expect(state.events).toContainEqual({
       type: "abilityStarted",
-      defId: "storm_cell",
+      defId: "test_storm",
     });
 
     step(state, useItem, DT);
     expect(state.player.heldAbilities).toEqual([]);
     expect(state.player.abilities.map((a) => a.defId)).toEqual([
-      "storm_cell",
-      "stasis_field",
+      "test_storm",
+      "test_stasis",
     ]);
   });
 
@@ -75,18 +75,18 @@ describe("held ability items", () => {
     const state = startGame();
     clearStage(state);
     state.items = [
-      abilityAt(state, 500, "fire_orbs"),
-      abilityAt(state, 501, "storm_cell"),
-      abilityAt(state, 502, "stasis_field"),
-      abilityAt(state, 503, "fire_orbs"),
+      abilityAt(state, 500, "test_orbit"),
+      abilityAt(state, 501, "test_storm"),
+      abilityAt(state, 502, "test_stasis"),
+      abilityAt(state, 503, "test_orbit"),
     ];
     step(state, idle, DT); // bank three, one left grounded
     step(state, useItem, DT); // spend one → a slot opens → overflow banks
     expect(state.items).toHaveLength(0);
     expect(state.player.heldAbilities).toEqual([
-      "storm_cell",
-      "stasis_field",
-      "fire_orbs",
+      "test_storm",
+      "test_stasis",
+      "test_orbit",
     ]);
   });
 });

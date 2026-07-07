@@ -16,7 +16,7 @@ import {
   type GameState,
 } from "@game/core";
 
-import { clearStage, DT, idle, makeEnemy, startGame } from "./helpers.ts";
+import { clearStage, DT, idle, makeEnemy, startGame } from "../helpers.ts";
 
 /** Drive the run until `enemyId` is dead, gathering every event emitted. */
 function killAndCollect(state: GameState, enemyId: number): GameEvent[] {

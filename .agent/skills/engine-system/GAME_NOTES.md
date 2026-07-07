@@ -42,8 +42,11 @@ sequel truncates this file to a stub and rebuilds it as its own systems land.
   from a per-level `tiles` spec, and the player costume from
   `playerAppearance(state)` — so a new level/kind/biome/costume is data, not
   a `render.ts` edit.
-- **Engine-rule tests pin the moon (2026-07):** `helpers.startGame`
-  defaults to `"moon"` — the reference level the tuning suites were
-  calibrated against — and skips any prelude first. Level-specific suites
-  (`tests/spacez_test.ts`) pass their own id; `createGame()`'s real default
-  (`LEVEL_ORDER[0]`) is covered there.
+- **Engine tests run on synthetic fixtures (2026-07):** `tests/engine/`
+  suites install content-agnostic fixtures (`tests/engine/fixtures.ts`,
+  plain ids like `test_level`/`test_minion`) via the engine's `registerDefs`
+  hook, so they survive content deletion. The fixtures deliberately mirror
+  the shipped `moon`/`ghost`/`blaster` tuning the suites were calibrated
+  against. This game's content suites live in `tests/content/` and use the
+  shipped catalogs via the root `tests/helpers.ts`. The only shared id is
+  `blaster` — `create.ts`/`items.ts` mint it as the built-in sidearm.

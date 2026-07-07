@@ -488,23 +488,37 @@ export const STAT_NAMES: StatName[] = [
 
 // ---- Lookups -------------------------------------------------------------------
 
+// Active registries the accessors read (default to the shipped catalogs;
+// tests swap in fixtures via `registerDefs`). See src/index.ts.
+let activeWeaponDefs: Record<string, WeaponDef> = WEAPON_DEFS;
+let activeGearDefs: Record<string, GearDef> = GEAR_DEFS;
+
+/** Test/authoring hook: replace the active weapon + gear catalogs. */
+export function setEquipmentDefs(defs: {
+  weapons: Record<string, WeaponDef>;
+  gear: Record<string, GearDef>;
+}): void {
+  activeWeaponDefs = defs.weapons;
+  activeGearDefs = defs.gear;
+}
+
 /** Look up a weapon def; throws on a broken id so bugs surface loudly. */
 export function weaponDef(defId: string): WeaponDef {
-  const def = WEAPON_DEFS[defId];
+  const def = activeWeaponDefs[defId];
   if (!def) throw new Error(`unknown weapon def "${defId}"`);
   return def;
 }
 
 /** Look up a gear def; throws on a broken id so bugs surface loudly. */
 export function gearDef(defId: string): GearDef {
-  const def = GEAR_DEFS[defId];
+  const def = activeGearDefs[defId];
   if (!def) throw new Error(`unknown gear def "${defId}"`);
   return def;
 }
 
 /** True when the def id names a weapon (vs a piece of gear). */
 export function isWeaponDef(defId: string): boolean {
-  return defId in WEAPON_DEFS;
+  return defId in activeWeaponDefs;
 }
 
 /** The display name of an equipment def, without tier prefix. */

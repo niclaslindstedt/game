@@ -28,6 +28,10 @@ Content is data, simulation is code: the game's levels, monsters,
 equipment, and cutscenes live in **catalogs** under `src/game/defs/`, and
 the engine only ever references them by id. Shipping level 12 or the
 hundredth weapon means adding catalog entries, not touching the simulation.
+The def accessors read an overridable registry, so `registerDefs(...)` can
+swap the active catalogs for a custom set — the engine test suites use it to
+run against synthetic fixtures with no shipped content (see
+`tests/engine/fixtures.ts`).
 
 - **`src/game/config.ts`** — the GLOBAL balance knobs (player, jumping, XP
   curve, stat effects, loot rules), nothing hardcoded in logic.

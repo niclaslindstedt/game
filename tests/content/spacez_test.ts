@@ -18,7 +18,7 @@ import {
   weaponDef,
   type LevelDef,
 } from "@game/core";
-import { SEED, startGame } from "./helpers.ts";
+import { SEED, startGame } from "../helpers.ts";
 
 const HQ = LEVELS.spacez_hq!;
 const dist = (a: { x: number; y: number }, b: { x: number; y: number }) =>

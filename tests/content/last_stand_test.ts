@@ -7,7 +7,7 @@ import { enemyDef, LAST_STAND, step } from "@game/core";
 import type { GameState } from "@game/core";
 import { describe, expect, it } from "vitest";
 
-import { clearStage, DT, idle, startGame } from "./helpers.ts";
+import { clearStage, DT, idle, startGame } from "../helpers.ts";
 
 /** The parked moon boss, teleported onto the player and ready to strike. */
 function bossOnPlayer(state: GameState) {

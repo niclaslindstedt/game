@@ -14,7 +14,7 @@ import {
   playerCritChance,
   STATS,
   step,
-  WEAPON_DEFS,
+  weaponDef,
   weaponDamage,
 } from "@game/core";
 import {
@@ -101,7 +101,7 @@ describe("stats", () => {
   it("DEXTERITY scales ranged damage; STRENGTH and INTELLIGENCE do not", () => {
     const state = startGame(); // blaster equipped: ranged
     const base = weaponDamage(state);
-    expect(base).toBe(WEAPON_DEFS.blaster!.damage);
+    expect(base).toBe(weaponDef("blaster").damage);
 
     state.player.stats.strength = 5;
     state.player.stats.intelligence = 5;
@@ -155,7 +155,7 @@ describe("stats", () => {
     );
     run(state, idle, 400, (s) => s.stats.damageDealt > 0);
     expect(state.stats.damageDealt).toBe(
-      Math.round(WEAPON_DEFS.blaster!.damage * STATS.critMultiplier),
+      Math.round(weaponDef("blaster").damage * STATS.critMultiplier),
     );
   });
 

@@ -53,21 +53,17 @@ Delete or empty each of these — they are 100% this-game data:
       with the `sound-effects` skill.
 - [ ] **`website/src/game/copy.ts`** — the loose UI copy (how-to-play lines,
       the level-entry button label).
-- [ ] **Content tests** — this game's story/level/boss suites:
-      `tests/spacez_test.ts`, `story_test.ts`, `last_words_test.ts`,
-      `last_stand_test.ts`, `spacesuit_test.ts`, `aggro_test.ts`, and the
-      boss-loot parts of `items_test.ts`. Delete and rewrite for the new
-      content. (The generic engine suites — `movement`, `game`, `leveling`,
-      `durability`, `powerups`, `obstacles`, `waves`, `abilities`,
-      `held_items`, `bot`, `wounds`, `cutscene`, `difficulty` — are engine
-      rules; keep them. **Note:** they are currently calibrated against the
-      shipped `moon` level via `tests/helpers.ts` `startGame`, so to keep
-      `make test` green with no content, either add a minimal fixture level
-      and point `helpers.startGame` at it, or author your first level early
-      and repoint `helpers.startGame` to its id. Decoupling these onto
-      synthetic fixtures — a `tests/engine/` (fixture-driven) vs
-      `tests/content/` (this game) split — is the recommended hardening
-      described in issue #35 §3.)
+- [ ] **`tests/content/`** — this game's story/level/boss/atlas suites
+      (`spacez_test.ts`, `story_test.ts`, `last_words_test.ts`,
+      `last_stand_test.ts`, `spacesuit_test.ts`, `aggro_test.ts`,
+      `items_test.ts`, `wounds_test.ts`). Delete the directory and rewrite
+      suites for the new content. The **engine** suites in `tests/engine/`
+      are content-agnostic — they run on the synthetic fixtures in
+      `tests/engine/fixtures.ts` (installed via `registerDefs`), so `make
+      test` stays green with the content catalogs empty. Adjust
+      `tests/engine/fixtures.ts` only if the new game changes engine
+      *mechanics* (new archetypes), not for new content. Lib tests at the
+      `tests/` root (`chiptune`, `synth`, …) are untouched.
 - [ ] **`docs/game-content.md`** — this game's story/level/roster
       walkthrough; replace it wholesale. Trim the flavored README sections
       (premise, how-to-play story beats) to the new game.

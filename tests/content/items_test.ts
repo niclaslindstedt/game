@@ -28,7 +28,7 @@ import {
   run,
   startGame,
   stopWaves,
-} from "./helpers.ts";
+} from "../helpers.ts";
 
 function makeSuit(id: number, tier: Tier = "regular"): Equipment {
   return {

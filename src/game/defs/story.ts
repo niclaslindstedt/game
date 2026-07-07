@@ -146,9 +146,18 @@ export const STORY_ITEM_DEFS: Record<string, StoryItemDef> = {
   },
 };
 
+// Active registry the accessor reads (defaults to the shipped catalog;
+// tests swap in fixtures via `registerDefs`). See src/index.ts.
+let activeStoryItemDefs: Record<string, StoryItemDef> = STORY_ITEM_DEFS;
+
+/** Test/authoring hook: replace the active story-item catalog. */
+export function setStoryItemDefs(defs: Record<string, StoryItemDef>): void {
+  activeStoryItemDefs = defs;
+}
+
 /** Look up a story item's def; throws on a broken id so bugs surface loudly. */
 export function storyItemDef(defId: string): StoryItemDef {
-  const def = STORY_ITEM_DEFS[defId];
+  const def = activeStoryItemDefs[defId];
   if (!def) throw new Error(`unknown story item def "${defId}"`);
   return def;
 }

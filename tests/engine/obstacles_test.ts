@@ -93,12 +93,15 @@ describe("obstacle collision", () => {
         hp: 1_000_000, // survives the auto-blaster for the whole run
         maxHp: 1_000_000,
       },
-      "guard",
+      "test_stalker",
     );
     state.enemies.push(guard);
     run(state, idle, 600);
     expect(guard.pos.x).toBeGreaterThanOrEqual(
-      obstacle.pos.x + obstacle.radius + enemyDef("guard").radius - 0.001,
+      obstacle.pos.x +
+        obstacle.radius +
+        enemyDef("test_stalker").radius -
+        0.001,
     );
   });
 
@@ -206,7 +209,7 @@ describe("walls block shots", () => {
 describe("obstacle generation", () => {
   it("scatters the level's obstacles clear of the player spawn", () => {
     for (const seed of [1, 2, 3, 42]) {
-      const state = createGame(seed, "moon");
+      const state = createGame(seed, "test_level");
       expect(state.obstacles.length).toBeGreaterThan(0);
       for (const obstacle of state.obstacles) {
         const d = Math.hypot(
@@ -220,7 +223,7 @@ describe("obstacle generation", () => {
 
   it("never spawns a monster inside an obstacle", () => {
     for (const seed of [1, 2, 3, 42]) {
-      const state = createGame(seed, "moon");
+      const state = createGame(seed, "test_level");
       for (const enemy of state.enemies) {
         for (const obstacle of state.obstacles) {
           const d = Math.hypot(

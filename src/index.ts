@@ -145,6 +145,11 @@ export {
   type StoryItemDef,
 } from "./game/defs/story.ts";
 
+// Test/authoring hook: swap the active content catalogs for synthetic
+// fixtures. Production never calls this; the engine test suites use it to run
+// against content-agnostic fixtures (see tests/engine).
+export { registerDefs, type DefOverrides } from "./game/defs/registry.ts";
+
 // Global tuning.
 export {
   DIALOGUE,

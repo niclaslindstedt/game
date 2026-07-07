@@ -8,13 +8,12 @@ import { describe, expect, it } from "vitest";
 
 import {
   createGame,
-  DIFFICULTY_DEFS,
   DIFFICULTY_ORDER,
   difficultyDef,
   dismissIntro,
   dropChance,
   enemyDef,
-  LEVELS,
+  levelDef,
   rollEquipment,
   scaledMobCount,
   step,
@@ -22,10 +21,10 @@ import {
 import type { Difficulty, GameState, Tier } from "@game/core";
 import { DT, idle, SEED } from "./helpers.ts";
 
-const WAVES = LEVELS.moon!.waves!;
+const WAVES = levelDef("test_level").waves!;
 
 function startOn(difficulty: Difficulty): GameState {
-  const state = createGame(SEED, "moon", difficulty);
+  const state = createGame(SEED, "test_level", difficulty);
   dismissIntro(state);
   return state;
 }
@@ -43,8 +42,8 @@ describe("difficulty catalog", () => {
       "jesus",
     ]);
     DIFFICULTY_ORDER.forEach((id, i) => {
-      expect(DIFFICULTY_DEFS[id].id).toBe(id);
-      expect(DIFFICULTY_DEFS[id].index).toBe(i + 1);
+      expect(difficultyDef(id).id).toBe(id);
+      expect(difficultyDef(id).index).toBe(i + 1);
     });
   });
 
@@ -86,7 +85,7 @@ describe("difficulty catalog", () => {
 
 describe("difficulty scaling in a run", () => {
   it("defaults to medium and matches the level's raw numbers", () => {
-    const state = createGame(SEED, "moon");
+    const state = createGame(SEED, "test_level");
     expect(state.difficulty).toBe("medium");
     const budget = WAVES.budget.reduce((sum, e) => sum + e.count, 0);
     expect(state.stats.totalEnemies).toBe(state.enemies.length + budget);
@@ -118,9 +117,9 @@ describe("difficulty scaling in a run", () => {
     const medium = startOn("medium");
     expect(easy.enemies.length).toBeLessThan(medium.enemies.length);
     expect(easy.stats.totalEnemies).toBeLessThan(medium.stats.totalEnemies);
-    const easyGhost = easy.enemies.find((e) => e.defId === "ghost");
+    const easyGhost = easy.enemies.find((e) => e.defId === "test_minion");
     expect(easyGhost?.maxHp).toBe(
-      Math.round(enemyDef("ghost").hp * difficultyDef("easy").mobHpMult),
+      Math.round(enemyDef("test_minion").hp * difficultyDef("easy").mobHpMult),
     );
   });
 
