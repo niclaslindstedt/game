@@ -191,8 +191,23 @@ export function drawFrame(
                   sprites.medkit)
                 : (spriteByName(sprites, equipmentIcon(item.equipment.defId)) ??
                   sprites.medkit);
+    // Dropped loot hovers and glows so it reads as pickupable, not decor.
+    // Phase by item.id (like enemy bob) so items don't pulse in lockstep.
+    const cx = Math.round(item.pos.x - camera.x);
+    const cy = Math.round(item.pos.y - camera.y);
+    const glowR = sprite.width * 0.9;
+    const glowAlpha = 0.3 + 0.14 * Math.sin(timeMs / 240 + item.id);
+    const glow = ctx.createRadialGradient(cx, cy, 0, cx, cy, glowR);
+    glow.addColorStop(0, `rgba(255, 236, 170, ${glowAlpha})`);
+    glow.addColorStop(1, "rgba(255, 236, 170, 0)");
+    ctx.fillStyle = glow;
+    ctx.beginPath();
+    ctx.arc(cx, cy, glowR, 0, Math.PI * 2);
+    ctx.fill();
+    // Float ~2px off the ground and bob gently; the glow stays anchored below.
+    const hover = Math.round(Math.sin(timeMs / 320 + item.id) * 1.5) - 2;
     const x = Math.round(item.pos.x - sprite.width / 2 - camera.x);
-    const y = Math.round(item.pos.y - sprite.height / 2 - camera.y);
+    const y = Math.round(item.pos.y - sprite.height / 2 - camera.y) + hover;
     // Story items glint gold — the plot should catch the eye from afar.
     if (item.kind === "story") {
       const pulse = Math.floor(timeMs / 300) % 2 === 0;
