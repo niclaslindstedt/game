@@ -36,7 +36,8 @@ export {
 // Player-driven mutations (level-up chooser, inventory UI, phase toggles).
 export {
   allocateStat,
-  CLASS_STAT,
+  DAMAGE_STAT,
+  SPEED_STAT,
   closeInventory,
   dismissIntro,
   skipCutscene,
@@ -46,6 +47,8 @@ export {
   effectiveStat,
   equipFromInventory,
   equipmentName,
+  inventoryCapacity,
+  syncInventoryCapacity,
   gearScore,
   isBetterEquipment,
   moveInventoryItem,

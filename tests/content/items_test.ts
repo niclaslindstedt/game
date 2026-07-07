@@ -375,8 +375,8 @@ describe("inventory", () => {
   it("rearranges bag cells by swapping", () => {
     const state = startGame();
     state.player.inventory[0] = makeSuit(70);
-    moveInventoryItem(state, 0, 5);
+    moveInventoryItem(state, 0, 2);
     expect(state.player.inventory[0]).toBeNull();
-    expect(state.player.inventory[5]?.id).toBe(70);
+    expect(state.player.inventory[2]?.id).toBe(70);
   });
 });

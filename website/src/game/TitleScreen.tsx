@@ -261,14 +261,30 @@ export function TitleScreen({
         },
         {
           label:
+            s.keyboardMove === "on" ? "KEYS: WASD MOVE" : "KEYS: MOUSE ONLY",
+          aria: "controls-keyboard-move",
+          blurb:
+            s.keyboardMove === "on"
+              ? "WASD / ARROWS WALK - SHIFT RUNS - SPACE JUMPS"
+              : "STEERING STAYS ON THE MOUSE",
+          action: () => {
+            playUiSound(synth, "confirm");
+            updateSettings({
+              keyboardMove: s.keyboardMove === "on" ? "off" : "on",
+            });
+            setSettingsTick((t) => t + 1);
+          },
+        },
+        {
+          label:
             s.itemUse === "auto"
-              ? "ITEMS: USE INSTANTLY"
-              : "ITEMS: USE MANUALLY",
+              ? "POWERUPS: USE ON PICKUP"
+              : "POWERUPS: USE MANUALLY",
           aria: "controls-item-use",
           blurb:
             s.itemUse === "auto"
-              ? "POWERS POP THE MOMENT YOU TOUCH THEM"
-              : "TAP A POWERUP SLOT / CLICK / E SPENDS ONE",
+              ? "POWERS FIRE THE MOMENT YOU GRAB THEM"
+              : "TAP A POWERUP SLOT / CLICK / E / 1-3 SPENDS ONE",
           action: () => {
             playUiSound(synth, "confirm");
             updateSettings({

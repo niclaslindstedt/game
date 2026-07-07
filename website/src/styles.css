@@ -149,14 +149,29 @@ body {
   line-height: 0;
 }
 
+/* Three tracks so the center clock unit stays centered even though the
+   right slot is now empty (the avatar moved into the left unit). */
 .hud-top {
-  display: flex;
-  align-items: flex-start;
-  justify-content: space-between;
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;
+  align-items: start;
   gap: 0.5rem;
 }
 
+/* The left vitals are now ONE framed unit — avatar + HP + weapon + durability
+   — sharing the center clock unit's border and backdrop. */
 .hud-status {
+  justify-self: start;
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.25rem 0.45rem;
+  background: rgba(11, 13, 16, 0.55);
+  border: 2px solid #1a1c2c;
+  border-radius: 6px;
+}
+
+.hud-vitals {
   display: flex;
   flex-direction: column;
   gap: 0.3rem;
@@ -275,24 +290,23 @@ body {
   line-height: 0;
 }
 
-/* The hero avatar doubles as the inventory button (top-right). Big enough to
-   thumb; a small badge counts what is stashed in the bag. */
+/* The hero avatar doubles as the inventory button — it opens the run's left
+   HUD unit (see .hud-status). Big enough to thumb; a small badge counts what
+   is stashed in the bag. Framed to read as a portrait inside the unit. */
 .inventory-avatar {
   position: relative;
   appearance: none;
   border: 2px solid #2a3444;
-  border-radius: 6px;
-  padding: 0.25rem;
-  background: rgba(20, 26, 34, 0.72);
+  border-radius: 5px;
+  padding: 0.15rem;
+  background: rgba(20, 26, 34, 0.6);
   cursor: pointer;
   pointer-events: auto;
-  box-shadow: 0 3px 0 rgba(0, 0, 0, 0.4);
   line-height: 0;
 }
 
 .inventory-avatar:active {
-  transform: translateY(3px);
-  box-shadow: 0 0 0 rgba(0, 0, 0, 0.4);
+  transform: translateY(2px);
 }
 
 .avatar-img {
@@ -661,6 +675,28 @@ body {
   height: 2.5rem;
 }
 
+/* The 1/2/3 · 1-4 key caps on the dock and weapon switcher (desktop only,
+   gated on the keyboardMove setting). A small light chip in the top corner. */
+.powerup-slot,
+.wpn-switch-slot {
+  position: relative;
+}
+
+.slot-key {
+  position: absolute;
+  top: -3px;
+  left: -3px;
+  display: grid;
+  place-items: center;
+  min-width: 0.85rem;
+  padding: 1px 2px;
+  line-height: 0;
+  background: #ffd75e;
+  border: 1px solid #0b0d10;
+  border-radius: 3px;
+  pointer-events: none;
+}
+
 /* ---- Full-screen pause overlays (intro, level-up, inventory) ------------- */
 
 .game-overlay {
@@ -839,6 +875,52 @@ body {
 
 .cutscene-replay .pixel-button {
   pointer-events: auto;
+}
+
+/* The LEVEL UP! title with the (i) info toggle riding its right edge. */
+.levelup-header {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.75rem;
+}
+
+.info-button {
+  appearance: none;
+  width: 1.9rem;
+  height: 1.9rem;
+  display: grid;
+  place-items: center;
+  padding: 0;
+  border: 2px solid #b8961e;
+  border-radius: 50%;
+  background: #ffd75e;
+  cursor: pointer;
+  pointer-events: auto;
+  line-height: 0;
+  box-shadow: 0 3px 0 rgba(0, 0, 0, 0.4);
+}
+
+.info-button:active,
+.info-button.active {
+  transform: translateY(2px);
+  box-shadow: 0 1px 0 rgba(0, 0, 0, 0.4);
+}
+
+/* The (i) panel: one row per stat with its full effect breakdown. */
+.stat-info {
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+  width: 100%;
+  max-width: 34rem;
+}
+
+.stat-info-row {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 0.2rem;
 }
 
 .stat-buttons {

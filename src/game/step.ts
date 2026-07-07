@@ -452,8 +452,8 @@ function stepWeapon(state: GameState, input: GameInput, dtMs: number): void {
   const equipped = player.equipment.weapon;
   const weapon = weaponDef(equipped.defId);
   // No target through a wall: the character never wastes a swing or a shot
-  // on a monster it can't actually reach. STRENGTH widens a melee weapon's
-  // reach, so a strong bruiser strikes from a touch further out.
+  // on a monster it can't actually reach. INTELLIGENCE widens every weapon's
+  // reach, so a high-INT build strikes from a touch further out.
   const range = weaponRangeFor(state, equipped);
   const target = nearestEnemy(
     state.enemies,
@@ -464,15 +464,15 @@ function stepWeapon(state: GameState, input: GameInput, dtMs: number): void {
   );
   if (!target) return;
 
-  // The governing stat quickens the cadence: DEX (ranged), INT (magic) and
-  // STR (melee) each drop the effective cooldown as they rise.
+  // The speed stat quickens the cadence: DEX (melee & ranged) and INT (magic)
+  // each drop the effective cooldown as they rise.
   player.weaponCooldownMs = weaponCooldownFor(state, equipped);
   const dir = direction(player.pos, target.pos);
   if (!weapon.projectile) {
     // A swing cleaves a cone: the nearest monster is the aim, and every other
     // monster within reach and inside the weapon's arc is struck in the same
     // blow. A blade sweeps a wide slash; a spear thrusts a narrow cone far.
-    const half = weaponSweepHalfAngle(equipped);
+    const half = weaponSweepHalfAngle(state, equipped);
     state.events.push({
       type: "swing",
       pos: { ...player.pos },

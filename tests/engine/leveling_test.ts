@@ -8,12 +8,16 @@ import { describe, expect, it } from "vitest";
 import {
   allocateStat,
   closeInventory,
+  equipFromInventory,
+  inventoryCapacity,
   LEVELING,
+  LOOT,
   openInventory,
   PLAYER,
   playerCritChance,
   STATS,
   step,
+  syncInventoryCapacity,
   weaponCooldownFor,
   weaponDef,
   weaponDamage,
@@ -101,16 +105,18 @@ describe("stats", () => {
     expect(state.player.hp).toBe(before + STATS.healthPerPoint);
   });
 
-  it("DEXTERITY scales ranged damage; STRENGTH and INTELLIGENCE do not", () => {
+  it("STRENGTH scales physical (melee + ranged) damage; DEX and INT do not", () => {
     const state = startGame(); // blaster equipped: ranged
     const base = weaponDamage(state);
     expect(base).toBe(weaponDef("blaster").damage);
 
-    state.player.stats.strength = 5;
+    // DEX (a speed stat now) and INT (magic/range) leave physical damage alone.
+    state.player.stats.dexterity = 5;
     state.player.stats.intelligence = 5;
     expect(weaponDamage(state)).toBe(base);
 
-    state.player.stats.dexterity = 2;
+    // STRENGTH scales the damage of physical weapons — ranged here, and melee.
+    state.player.stats.strength = 2;
     expect(weaponDamage(state)).toBeCloseTo(
       base * (1 + 2 * STATS.damageBonusPerPoint),
     );
@@ -264,6 +270,55 @@ describe("stats", () => {
     state.enemies = [makeEnemy({ pos: { ...state.player.pos } })];
     step(state, idle, DT);
     expect(state.stats.damageTaken).toBe(12); // ghost's touch, never doubled
+  });
+
+  it("STRENGTH widens the carry bag from the base floor", () => {
+    const state = startGame();
+    // A fresh run starts at the STRENGTH-0 floor.
+    expect(state.player.inventory.length).toBe(LOOT.baseInventorySize);
+    expect(inventoryCapacity(state)).toBe(LOOT.baseInventorySize);
+
+    // Each allocated STRENGTH point adds bagSlotsPerStr cells.
+    state.player.pendingStatPoints = 3;
+    allocateStat(state, "strength");
+    allocateStat(state, "strength");
+    allocateStat(state, "strength");
+    const expected = LOOT.baseInventorySize + 3 * STATS.bagSlotsPerStr;
+    expect(inventoryCapacity(state)).toBe(expected);
+    expect(state.player.inventory.length).toBe(expected);
+    // The extra cells are empty and ready to catch loot.
+    expect(state.player.inventory.every((c) => c === null)).toBe(true);
+  });
+
+  it("the bag only grows — a lost STRENGTH source never strands items", () => {
+    const state = startGame();
+    state.player.stats.strength = 4; // bag grown to the floor + 4
+    syncInventoryCapacity(state);
+    const grown = state.player.inventory.length;
+    expect(grown).toBe(LOOT.baseInventorySize + 4 * STATS.bagSlotsPerStr);
+
+    // Dropping the STRENGTH would lower the target capacity, but the physical
+    // bag must not shrink (grow-only), so nothing carried can be discarded.
+    state.player.stats.strength = 0;
+    syncInventoryCapacity(state);
+    expect(state.player.inventory.length).toBe(grown);
+  });
+
+  it("a +STRENGTH charm widens the bag when equipped", () => {
+    const state = startGame();
+    const before = state.player.inventory.length;
+    const charm: Equipment = {
+      id: 777,
+      defId: "test_charm",
+      slot: "charm",
+      tier: "regular",
+      affixes: [{ kind: "stat", stat: "strength", value: 2 }],
+    };
+    state.player.inventory[0] = charm;
+    expect(equipFromInventory(state, 0)).toBe(true);
+    expect(state.player.inventory.length).toBe(
+      before + 2 * STATS.bagSlotsPerStr,
+    );
   });
 });
 

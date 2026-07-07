@@ -39,6 +39,7 @@ import {
   WEAPON_DEFS,
   type BotStrategy,
   type Difficulty,
+  type Equipment,
   type GameInput,
   type GamePhase,
   type GameState,
@@ -130,6 +131,41 @@ function cursorThrottle(dist: number): number {
   return Math.max(0, Math.min(1, dist / CURSOR_FULL_SPEED_PX));
 }
 
+// Desktop WASD/arrow steering (settings.keyboardMove === "on"): each held key
+// contributes a cardinal direction; the vector sum is the heading, projected
+// DPAD_STEER_DISTANCE ahead like the touch dpad. Movement is binary — walk by
+// default, run while Shift is held, stand still with no key down. Keyed by
+// `event.code` so it's layout-independent (AZERTY etc.).
+const MOVE_KEYS: Record<string, { x: number; y: number }> = {
+  KeyW: { x: 0, y: -1 },
+  ArrowUp: { x: 0, y: -1 },
+  KeyS: { x: 0, y: 1 },
+  ArrowDown: { x: 0, y: 1 },
+  KeyA: { x: -1, y: 0 },
+  ArrowLeft: { x: -1, y: 0 },
+  KeyD: { x: 1, y: 0 },
+  ArrowRight: { x: 1, y: 0 },
+};
+// The walk pace without Shift; Shift runs at full speed.
+const KEYBOARD_WALK_THROTTLE = 0.6;
+
+/** Other carried weapons, strongest first — the switch targets shared by the
+ * Q weapon menu and the 1-4 hotkeys. Damage is stat-scaled (weaponDamageFor)
+ * so the ordering matches the number each slot shows and follows the build. */
+function weaponAlternatives(
+  state: GameState,
+): { item: Equipment; index: number; dmg: number }[] {
+  return state.player.inventory
+    .map((item, index) => ({ item, index }))
+    .filter((e) => e.item !== null && e.item.defId in WEAPON_DEFS)
+    .map((e) => ({
+      item: e.item as Equipment,
+      index: e.index,
+      dmg: Math.round(weaponDamageFor(state, e.item as Equipment)),
+    }))
+    .sort((a, b) => b.dmg - a.dmg);
+}
+
 function formatTime(ms: number): string {
   const totalSeconds = Math.floor(ms / 1000);
   const minutes = Math.floor(totalSeconds / 60);
@@ -155,6 +191,13 @@ export function GameScreen({
   const dpadRef = useRef<HTMLDivElement>(null);
   const jumpQueuedRef = useRef(false);
   const useItemQueuedRef = useRef(false);
+  // Desktop keyboard steering: which MOVE_KEYS are held right now, and whether
+  // the run modifier (Shift) is down. Read every sim tick (see the loop).
+  const heldMoveKeysRef = useRef<Set<string>>(new Set());
+  const runningRef = useRef(false);
+  // Mirror of `weaponMenuOpen` so the (closure-captured) key handler can read
+  // the live value without re-registering on every toggle.
+  const weaponMenuOpenRef = useRef(false);
   // Which powerup dock slot the player tapped this frame (index into
   // heldAbilities). null = spend the oldest (click / E / auto-use).
   const useItemIndexRef = useRef<number | null>(null);
@@ -171,8 +214,11 @@ export function GameScreen({
   // The lower-right pickup feed ("PICKED UP X"). Lines are appended as loot is
   // scooped and expire on individual PICKUP_TTL_MS timers (see the loop).
   const [pickups, setPickups] = useState<PickupMessage[]>([]);
-  // Whether the in-HUD weapon switcher (tap the weapon slot) is expanded.
+  // Whether the in-HUD weapon switcher (tap the weapon slot / Q) is expanded.
   const [weaponMenuOpen, setWeaponMenuOpen] = useState(false);
+  useEffect(() => {
+    weaponMenuOpenRef.current = weaponMenuOpen;
+  }, [weaponMenuOpen]);
 
   useEffect(() => {
     let alive = true;
@@ -297,6 +343,17 @@ export function GameScreen({
     const dpad = dpadRef.current;
     const dpadNub = dpad?.querySelector<HTMLElement>(".dpad-nub") ?? null;
     const onKeyDown = (event: KeyboardEvent) => {
+      // Track held movement keys + the run modifier every keydown (repeats
+      // included — Set.add is idempotent) so the sim loop reads live state.
+      if (event.code in MOVE_KEYS) {
+        heldMoveKeysRef.current.add(event.code);
+        if (getSettings().keyboardMove === "on" && state.phase === "playing") {
+          event.preventDefault(); // arrow keys must not scroll the page
+        }
+      }
+      if (event.code === "ShiftLeft" || event.code === "ShiftRight") {
+        runningRef.current = true;
+      }
       if (event.repeat) return;
       if (event.code === "Space") {
         event.preventDefault();
@@ -330,9 +387,44 @@ export function GameScreen({
         closeInventory(state);
         playUiSound(synth, "back");
         bumpUi();
+      } else if (
+        (event.key === "q" || event.key === "Q") &&
+        state.phase === "playing"
+      ) {
+        // Q brings up the weapon switcher (1-4 then pick from it).
+        setWeaponMenuOpen((open) => !open);
+        playUiSound(synth, "confirm");
+      } else if (state.phase === "playing" && /^[1-9]$/.test(event.key)) {
+        const n = Number(event.key) - 1;
+        if (weaponMenuOpenRef.current) {
+          // The weapon menu is up: 1-4 equip the listed alternatives.
+          const alt = weaponAlternatives(state)[n];
+          if (alt && equipFromInventory(state, alt.index)) {
+            playUiSound(synth, "equip");
+            setWeaponMenuOpen(false);
+            bumpUi();
+          }
+        } else if (n <= 2 && state.player.heldAbilities[n]) {
+          // Otherwise 1/2/3 fire the matching powerup dock slot.
+          useItemQueuedRef.current = true;
+          useItemIndexRef.current = n;
+        }
       }
     };
+    const onKeyUp = (event: KeyboardEvent) => {
+      if (event.code in MOVE_KEYS) heldMoveKeysRef.current.delete(event.code);
+      if (event.code === "ShiftLeft" || event.code === "ShiftRight") {
+        runningRef.current = false;
+      }
+    };
+    // Losing focus (alt-tab, a click on a menu) must not leave a key "stuck".
+    const onBlur = () => {
+      heldMoveKeysRef.current.clear();
+      runningRef.current = false;
+    };
     window.addEventListener("keydown", onKeyDown);
+    window.addEventListener("keyup", onKeyUp);
+    window.addEventListener("blur", onBlur);
 
     const input: GameInput = {
       steering: false,
@@ -377,7 +469,9 @@ export function GameScreen({
           input.useItemIndex = undefined;
         } else {
           const settings = getSettings();
-          if (pointer.state.held && pointer.state.pointerType !== "mouse") {
+          const touchSteering =
+            pointer.state.held && pointer.state.pointerType !== "mouse";
+          if (touchSteering) {
             // Touch virtual dpad: the drag offset from the anchor is a
             // direction, not a destination — steer relative to the player.
             const dx = pointer.state.x - pointer.state.originX;
@@ -392,6 +486,28 @@ export function GameScreen({
               // How far the thumb sits from the dpad center sets the pace: a
               // nudge past the deadzone creeps, a full push to the ring runs.
               input.throttle = dpadThrottle(len);
+            }
+          } else if (settings.keyboardMove === "on") {
+            // Desktop WASD/arrows: a binary control mode — the held keys sum
+            // to a heading (walk, or run with Shift), no key stands still.
+            // The mouse is freed from steering here (aim stays automatic).
+            let dx = 0;
+            let dy = 0;
+            for (const code of heldMoveKeysRef.current) {
+              const v = MOVE_KEYS[code];
+              if (v) {
+                dx += v.x;
+                dy += v.y;
+              }
+            }
+            const len = Math.hypot(dx, dy);
+            input.steering = len > 0;
+            if (input.steering) {
+              input.target.x =
+                state.player.pos.x + (dx / len) * DPAD_STEER_DISTANCE;
+              input.target.y =
+                state.player.pos.y + (dy / len) * DPAD_STEER_DISTANCE;
+              input.throttle = runningRef.current ? 1 : KEYBOARD_WALK_THROTTLE;
             }
           } else {
             // Cursor-follow steering: a hovering mouse steers with no button.
@@ -596,6 +712,8 @@ export function GameScreen({
       pointer.dispose();
       observer.disconnect();
       window.removeEventListener("keydown", onKeyDown);
+      window.removeEventListener("keyup", onKeyUp);
+      window.removeEventListener("blur", onBlur);
       canvas.removeEventListener("pointerdown", unlock);
       pickupTimers.forEach(clearTimeout);
     };
@@ -608,6 +726,9 @@ export function GameScreen({
   // Which bottom corner the powerup dock lives in; the pickup feed takes the
   // opposite one. Read live so the title-screen toggle applies next run.
   const powerupSide = getSettings().powerupSide;
+  // Show 1/2/3 · Q · 1-4 key caps on the dock and weapon switcher only when
+  // desktop keyboard controls are on (touch has no keys to hint).
+  const keyHints = getSettings().keyboardMove === "on";
 
   return (
     <div className="game-screen">
@@ -642,146 +763,183 @@ export function GameScreen({
           </div>
 
           <div className="hud-top">
-            {/* Left: vitals — HP over the always-on weapon widget. */}
+            {/* Left: one framed unit — the hero avatar (inventory button)
+                beside HP over the always-on weapon widget, matching the
+                center clock unit's border + backdrop. */}
             <div className="hud-status">
-              <div className="hud-stat-row">
-                <PixelText font={font} text="HP" scale={2} color="#9aa3ad" />
-                <div className="hud-bar hp-bar">
-                  <div
-                    className="hud-bar-fill"
-                    style={{ width: `${(100 * hud.hp) / hud.maxHp}%` }}
-                  />
-                </div>
-                <PixelText font={font} text={String(hud.hp)} scale={2} />
-              </div>
-              <div className="hud-stat-row hud-weapon-row">
+              <button
+                type="button"
+                className="inventory-avatar"
+                aria-label="open-inventory"
+                onClick={() => {
+                  if (state) {
+                    setWeaponMenuOpen(false);
+                    openInventory(state);
+                    playUiSound(synth, "confirm");
+                    bumpUi();
+                  }
+                }}
+              >
                 {(() => {
-                  if (!state) return null;
-                  const equipped = state.player.equipment.weapon;
-                  const equippedColor =
-                    WEAPON_CLASS_COLORS[weaponDef(equipped.defId).class];
-                  const icon = spriteDataUrl(
+                  const src = spriteDataUrl(
                     assets.sprites,
-                    weaponDef(equipped.defId).icon,
+                    `${hud.appearance}_0`,
                   );
-                  // Other carried weapons, highest damage first — the ones
-                  // you're most likely to want to switch to. Damage is
-                  // stat-scaled (weaponDamageFor), so the ordering matches the
-                  // number shown on each slot and follows your build.
-                  const alternatives = state.player.inventory
-                    .map((item, index) => ({ item, index }))
-                    .filter(
-                      (e) => e.item !== null && e.item.defId in WEAPON_DEFS,
-                    )
-                    .map((e) => ({
-                      item: e.item!,
-                      index: e.index,
-                      dmg: Math.round(weaponDamageFor(state, e.item!)),
-                    }))
-                    .sort((a, b) => b.dmg - a.dmg);
-                  return (
-                    <div className="wpn-control">
-                      <button
-                        type="button"
-                        className="wpn-slot"
-                        aria-label="switch-weapon"
-                        style={{
-                          borderColor: equippedColor.border,
-                          background: equippedColor.bg,
-                        }}
-                        onClick={() => {
-                          setWeaponMenuOpen((open) => !open);
-                          playUiSound(synth, "confirm");
-                        }}
-                      >
-                        {icon ? (
-                          <img
-                            src={icon}
-                            alt=""
-                            className="pixel-img wpn-slot-img"
-                          />
-                        ) : null}
-                      </button>
-                      {weaponMenuOpen && (
-                        <div className="wpn-switcher">
-                          {alternatives.length === 0 ? (
-                            <PixelText
-                              font={font}
-                              text="NO OTHER WEAPONS"
-                              scale={1}
-                              color="#9aa3ad"
-                            />
-                          ) : (
-                            alternatives.map(({ item, index, dmg }) => {
-                              const color =
-                                WEAPON_CLASS_COLORS[
-                                  weaponDef(item.defId).class
-                                ];
-                              const wpnIcon = spriteDataUrl(
-                                assets.sprites,
-                                weaponDef(item.defId).icon,
-                              );
-                              return (
-                                <button
-                                  key={item.id}
-                                  type="button"
-                                  className="wpn-slot wpn-switch-slot"
-                                  aria-label={`equip-${item.defId}`}
-                                  style={{
-                                    borderColor: color.border,
-                                    background: color.bg,
-                                  }}
-                                  onClick={() => {
-                                    if (equipFromInventory(state, index)) {
-                                      playUiSound(synth, "equip");
-                                      setWeaponMenuOpen(false);
-                                      bumpUi();
-                                    }
-                                  }}
-                                >
-                                  {wpnIcon ? (
-                                    <img
-                                      src={wpnIcon}
-                                      alt=""
-                                      className="pixel-img wpn-slot-img"
-                                    />
-                                  ) : null}
-                                  <span className="wpn-switch-dmg">
-                                    <PixelText
-                                      font={font}
-                                      text={String(dmg)}
-                                      scale={1}
-                                    />
-                                  </span>
-                                </button>
-                              );
-                            })
-                          )}
-                        </div>
-                      )}
-                    </div>
-                  );
+                  return src ? (
+                    <img src={src} alt="" className="pixel-img avatar-img" />
+                  ) : null;
                 })()}
-                <div className="hud-bar wpn-bar">
-                  <div
-                    className="hud-bar-fill wpn-fill"
-                    style={
-                      hud.weaponWear === null
-                        ? { width: "100%", background: "#7ef0c8" }
-                        : {
-                            width: `${Math.max(4, Math.round(100 * hud.weaponWear))}%`,
-                            background:
-                              hud.weaponWear < 0.25 ? "#d83a3a" : "#9aa3ad",
-                          }
-                    }
+                {hud.bagCount > 0 && (
+                  <span className="avatar-badge">
+                    <PixelText
+                      font={font}
+                      text={String(hud.bagCount)}
+                      scale={1}
+                      color="#0b0d10"
+                    />
+                  </span>
+                )}
+              </button>
+              <div className="hud-vitals">
+                <div className="hud-stat-row">
+                  <PixelText font={font} text="HP" scale={2} color="#9aa3ad" />
+                  <div className="hud-bar hp-bar">
+                    <div
+                      className="hud-bar-fill"
+                      style={{ width: `${(100 * hud.hp) / hud.maxHp}%` }}
+                    />
+                  </div>
+                  <PixelText font={font} text={String(hud.hp)} scale={2} />
+                </div>
+                <div className="hud-stat-row hud-weapon-row">
+                  {(() => {
+                    if (!state) return null;
+                    const equipped = state.player.equipment.weapon;
+                    const equippedColor =
+                      WEAPON_CLASS_COLORS[weaponDef(equipped.defId).class];
+                    const icon = spriteDataUrl(
+                      assets.sprites,
+                      weaponDef(equipped.defId).icon,
+                    );
+                    // Other carried weapons, highest damage first — the switch
+                    // targets, shared with the Q menu / 1-4 hotkeys.
+                    const alternatives = weaponAlternatives(state);
+                    return (
+                      <div className="wpn-control">
+                        <button
+                          type="button"
+                          className="wpn-slot"
+                          aria-label="switch-weapon"
+                          style={{
+                            borderColor: equippedColor.border,
+                            background: equippedColor.bg,
+                          }}
+                          onClick={() => {
+                            setWeaponMenuOpen((open) => !open);
+                            playUiSound(synth, "confirm");
+                          }}
+                        >
+                          {icon ? (
+                            <img
+                              src={icon}
+                              alt=""
+                              className="pixel-img wpn-slot-img"
+                            />
+                          ) : null}
+                        </button>
+                        {weaponMenuOpen && (
+                          <div className="wpn-switcher">
+                            {alternatives.length === 0 ? (
+                              <PixelText
+                                font={font}
+                                text="NO OTHER WEAPONS"
+                                scale={1}
+                                color="#9aa3ad"
+                              />
+                            ) : (
+                              alternatives.map(
+                                ({ item, index, dmg }, order) => {
+                                  const color =
+                                    WEAPON_CLASS_COLORS[
+                                      weaponDef(item.defId).class
+                                    ];
+                                  const wpnIcon = spriteDataUrl(
+                                    assets.sprites,
+                                    weaponDef(item.defId).icon,
+                                  );
+                                  return (
+                                    <button
+                                      key={item.id}
+                                      type="button"
+                                      className="wpn-slot wpn-switch-slot"
+                                      aria-label={`equip-${item.defId}`}
+                                      style={{
+                                        borderColor: color.border,
+                                        background: color.bg,
+                                      }}
+                                      onClick={() => {
+                                        if (equipFromInventory(state, index)) {
+                                          playUiSound(synth, "equip");
+                                          setWeaponMenuOpen(false);
+                                          bumpUi();
+                                        }
+                                      }}
+                                    >
+                                      {wpnIcon ? (
+                                        <img
+                                          src={wpnIcon}
+                                          alt=""
+                                          className="pixel-img wpn-slot-img"
+                                        />
+                                      ) : null}
+                                      {keyHints && order < 4 && (
+                                        <span className="slot-key">
+                                          <PixelText
+                                            font={font}
+                                            text={String(order + 1)}
+                                            scale={1}
+                                            color="#0b0d10"
+                                          />
+                                        </span>
+                                      )}
+                                      <span className="wpn-switch-dmg">
+                                        <PixelText
+                                          font={font}
+                                          text={String(dmg)}
+                                          scale={1}
+                                        />
+                                      </span>
+                                    </button>
+                                  );
+                                },
+                              )
+                            )}
+                          </div>
+                        )}
+                      </div>
+                    );
+                  })()}
+                  <div className="hud-bar wpn-bar">
+                    <div
+                      className="hud-bar-fill wpn-fill"
+                      style={
+                        hud.weaponWear === null
+                          ? { width: "100%", background: "#7ef0c8" }
+                          : {
+                              width: `${Math.max(4, Math.round(100 * hud.weaponWear))}%`,
+                              background:
+                                hud.weaponWear < 0.25 ? "#d83a3a" : "#9aa3ad",
+                            }
+                      }
+                    />
+                  </div>
+                  <PixelText
+                    font={font}
+                    text={hud.weaponWear === null ? "∞" : ""}
+                    scale={2}
+                    color="#7ef0c8"
                   />
                 </div>
-                <PixelText
-                  font={font}
-                  text={hud.weaponWear === null ? "∞" : ""}
-                  scale={2}
-                  color="#7ef0c8"
-                />
               </div>
             </div>
 
@@ -799,41 +957,6 @@ export function GameScreen({
                 color="#d9a0f0"
               />
             </div>
-
-            {/* Right: the hero avatar is the inventory button. */}
-            <button
-              type="button"
-              className="inventory-avatar"
-              aria-label="open-inventory"
-              onClick={() => {
-                if (state) {
-                  setWeaponMenuOpen(false);
-                  openInventory(state);
-                  playUiSound(synth, "confirm");
-                  bumpUi();
-                }
-              }}
-            >
-              {(() => {
-                const src = spriteDataUrl(
-                  assets.sprites,
-                  `${hud.appearance}_0`,
-                );
-                return src ? (
-                  <img src={src} alt="" className="pixel-img avatar-img" />
-                ) : null;
-              })()}
-              {hud.bagCount > 0 && (
-                <span className="avatar-badge">
-                  <PixelText
-                    font={font}
-                    text={String(hud.bagCount)}
-                    scale={1}
-                    color="#0b0d10"
-                  />
-                </span>
-              )}
-            </button>
           </div>
         </div>
       )}
@@ -866,6 +989,18 @@ export function GameScreen({
               >
                 {icon && (
                   <img src={icon} alt="" className="pixel-img powerup-icon" />
+                )}
+                {/* 1/2/3 fire the dock — but while the weapon stack is open
+                    those keys select weapons, so the hints move over there. */}
+                {keyHints && !weaponMenuOpen && (
+                  <span className="slot-key">
+                    <PixelText
+                      font={font}
+                      text={String(i + 1)}
+                      scale={1}
+                      color="#0b0d10"
+                    />
+                  </span>
                 )}
               </button>
             );

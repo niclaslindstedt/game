@@ -179,7 +179,9 @@ export function createGame(
         suit: null,
         charm: null,
       },
-      inventory: new Array<null>(LOOT.inventorySize).fill(null),
+      // The bag starts at its STRENGTH-0 floor; allocating STRENGTH grows it
+      // (see inventoryCapacity / syncInventoryCapacity).
+      inventory: new Array<null>(LOOT.baseInventorySize).fill(null),
     },
     enemies,
     projectiles: [],
