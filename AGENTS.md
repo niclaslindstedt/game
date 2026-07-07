@@ -112,12 +112,6 @@ This game builds on
 storage, PWA update lifecycle, theming, achievements, i18n, …), installed
 from GitHub Packages. **Prefer the framework over hand-rolling**:
 
-- **Add the framework repo to your session.** When working in this repo with
-  an AI coding agent, add `niclaslindstedt/oss-framework` as a root
-  repository using the agent's repo tool (in Claude Code: the `add_repo`
-  tool) so the framework's source, docs, and demo app are readable alongside
-  this codebase. Its demo (`oss-framework/demo/`) is the reference
-  implementation for the PWA/deploy patterns this repo uses.
 - Before writing app-level UI or infrastructure (settings storage, update
   prompts, sidebars, achievements, encryption, sync, charts), check whether
   the framework already ships it and use that.
