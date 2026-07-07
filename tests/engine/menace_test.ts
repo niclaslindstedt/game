@@ -53,12 +53,13 @@ describe("menace — the meter", () => {
     expect(menaceStage(state)).toBe(MENACE.maxStage);
   });
 
-  it("a kill banks menace and its overkill lures the horde in", () => {
+  it("an overpowered kill jolts the meter and lures the horde in", () => {
     const state = startGame();
     bareStage(state);
     equip(state, "test_hammer"); // melee, 34 dmg, reach 44
     const { x, y } = state.player.pos;
-    // One 10-hp fodder in reach: a 34-damage swing overkills it by ≥ 24.
+    // One 10-hp fodder in reach: a 34-damage swing overkills it by ≥ 24, so the
+    // OVERKILL still triggers the meter on top of the rolling output.
     state.enemies.push(
       makeEnemy({ pos: { x: x + 20, y }, hp: 10, maxHp: 10 }, "test_fodder"),
     );
@@ -68,14 +69,13 @@ describe("menace — the meter", () => {
     step(state, idle, DT);
 
     expect(state.stats.kills).toBe(1);
-    // Flat pace tick plus overkill — strictly positive, and above the bare
-    // per-kill floor because the blow dumped damage past the last hp.
-    expect(state.menace).toBeGreaterThan(MENACE.perKill);
+    // The overkill spike pushed the meter off zero this very step.
+    expect(state.menace).toBeGreaterThan(0);
     // Overkill banked spawn-credit (idle, so nothing else could add it).
     expect(state.moveSpawnCredit).toBeGreaterThan(creditBefore);
   });
 
-  it("crossing a stage boundary emits menaceRose", () => {
+  it("an overkill crossing a stage boundary emits menaceRose", () => {
     const state = startGame();
     bareStage(state);
     equip(state, "test_hammer");
@@ -83,8 +83,9 @@ describe("menace — the meter", () => {
     state.enemies.push(
       makeEnemy({ pos: { x: x + 20, y }, hp: 10, maxHp: 10 }, "test_fodder"),
     );
-    // Park menace just below stage 1: this kill's ≥ 2 banked points tip it over.
-    state.menace = MENACE.perStage - 1;
+    // Park menace just below stage 1: this kill's overkill (≥ 24 × perOverkill)
+    // tips it over — being wildly overpowered escalates on the spot.
+    state.menace = MENACE.perStage - 0.5;
 
     step(state, idle, DT);
 
@@ -92,6 +93,29 @@ describe("menace — the meter", () => {
     expect(rose).toBeDefined();
     expect(rose && rose.type === "menaceRose" && rose.stage).toBe(1);
     expect(menaceStage(state)).toBe(1);
+  });
+
+  it("sustained damage output heats the meter even without overkill", () => {
+    // The rolling DPS/kill-rate driver: grind a tanky mob (no killing blow, so
+    // no overkill spike) and the meter still climbs purely from output.
+    const state = startGame();
+    bareStage(state);
+    equip(state, "test_hammer");
+    const { x, y } = state.player.pos;
+    state.enemies.push(
+      makeEnemy(
+        { pos: { x: x + 20, y }, hp: 100_000, maxHp: 100_000 },
+        "test_fodder",
+      ),
+    );
+    expect(state.menace).toBe(0);
+
+    // A couple of seconds of sustained swings, never landing a kill.
+    run(state, idle, 180, (s) => s.stats.kills > 0);
+
+    expect(state.stats.kills).toBe(0); // never died: no overkill possible
+    expect(state.combatDps).toBeGreaterThan(0); // output was tracked
+    expect(state.menace).toBeGreaterThan(0); // and it heated the meter
   });
 
   it("idling bleeds menace back off over time", () => {

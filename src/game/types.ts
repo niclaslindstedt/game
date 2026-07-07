@@ -469,11 +469,25 @@ export type GameState = {
   /** The run's chosen difficulty (scales spawns, hp, and loot). */
   difficulty: Difficulty;
   /**
-   * The escalation meter (see config MENACE). Overkilling and fast kills bank
-   * it; idling bleeds it off. Read as a stage that lures, evolves, and scales
-   * the horde. Starts at 0.
+   * The escalation meter (see config MENACE). Heated by the player's rolling
+   * combat output (`combatDps` / `combatKillRate`) and jolted by overpowered
+   * kills; idling bleeds it off. Read as a stage that lures, evolves, and
+   * scales the horde. Starts at 0.
    */
   menace: number;
+  /**
+   * Rolling estimate of the player's damage-per-second, an EMA smoothed over
+   * MENACE.rateWindowSec and updated each step from that step's damage. The
+   * main fuel the menace meter reads: sustained high DPS heats it. Starts at 0.
+   */
+  combatDps: number;
+  /**
+   * Rolling estimate of the player's kills-per-second, an EMA smoothed over
+   * MENACE.rateWindowSec and updated each step from that step's kills. Heats
+   * the menace meter alongside `combatDps` — a fast clear rate escalates on top
+   * of raw damage output. Starts at 0.
+   */
+  combatKillRate: number;
   /** Where the run begins; also the origin difficulty scales out from. */
   playerSpawn: Vec2;
   /** Story props to draw (the lander, the boss's flag, …). */

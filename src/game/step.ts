@@ -68,10 +68,10 @@ import {
 } from "./items.ts";
 import { grantXp, hitEnemy, unspawnedMinions } from "./loot.ts";
 import {
-  decayMenace,
   lureMult,
   maybePowerScale,
   menaceStage,
+  tickMenace,
 } from "./menace.ts";
 import {
   collectStoryItem,
@@ -103,13 +103,24 @@ export function step(state: GameState, input: GameInput, dtMs: number): void {
   const dt = dtMs / 1000;
   state.stats.timeMs += dtMs;
 
+  // Snapshot cumulative output so the menace tick can read this step's damage
+  // and kills as rates (see tickMenace) — the meter heats from what the player
+  // is actually putting out, not from any single blow.
+  const damageBefore = state.stats.damageDealt;
+  const killsBefore = state.stats.kills;
+
   stepPlayer(state, input, dt, dtMs);
   stepUseItem(state, input);
   stepWeapon(state, input, dtMs);
   stepAbilities(state, dt, dtMs);
   stepProjectiles(state, dt, dtMs);
   stepEnemies(state, dt, dtMs);
-  decayMenace(state, dtMs);
+  tickMenace(
+    state,
+    dtMs,
+    state.stats.damageDealt - damageBefore,
+    state.stats.kills - killsBefore,
+  );
   stepSpawner(state);
   stepItems(state);
   stepDoors(state);

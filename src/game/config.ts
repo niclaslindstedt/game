@@ -36,6 +36,16 @@ export const PLAYER = {
  */
 export const WEAPON = {
   baseCooldownMult: 1.2,
+  /**
+   * Global damage scale on every weapon's catalog `damage` — the single lever
+   * for "how hard does any weapon hit", the damage counterpart to
+   * `baseCooldownMult`. Applied in `weaponDamageFor` (the one source of truth
+   * for stat-scaled damage), so it moves combat, auto-equip scoring, and the
+   * UI readouts together and preserves every weapon's relative tuning. Kept
+   * below 1 so basic weapons no longer melt the horde on their own — the crowd
+   * has to be out-fought, not out-DPS'd from the first pickup.
+   */
+  damageMult: 0.5,
 } as const;
 
 /** Projectile rules shared by every weapon (per-weapon numbers in defs). */
@@ -113,33 +123,59 @@ export const LEVELING = {
 } as const;
 
 /**
- * Menace — the escalation meter that answers an overpowered player. Killing
- * monsters faster than the horde can be replenished, and OVERKILLING them
- * (dumping far more damage than their remaining hp into the killing blow),
- * banks menace; standing idle bleeds it back off. Menace is read as a stage
- * (0…maxStage) that does three things: it LURES more of the horde toward the
- * player, it EVOLVES freshly-spawned minions (more hp → more xp → better
- * loot), and — folded in with the player's own level — it scales elites and
- * bosses when they engage, so the epic fights keep pace with the player's
- * power instead of melting. Units: raw menace points, world px, hp.
+ * Menace — the escalation meter that answers an overpowered player, driven by
+ * the player's ACTUAL combat output rather than any single lucky blow. The
+ * engine keeps a rolling estimate of the damage-per-second and kills-per-second
+ * the player is putting out right now (`state.combatDps` / `state.combatKillRate`,
+ * smoothed over `rateWindowSec`); the harder and faster you clear, the faster
+ * the meter heats. Standing idle — no damage, no kills — cools it. Menace is
+ * read as a stage (0…maxStage) that does three things: it LURES more of the
+ * horde toward the player, it EVOLVES freshly-spawned minions (more hp → more
+ * xp → better loot), and — folded in with the player's own level — it scales
+ * elites and bosses when they engage, so the epic fights keep pace with the
+ * player's power instead of melting. Units: raw menace points, world px, hp.
  */
 export const MENACE = {
-  /** Flat menace banked by every kill — a fast kill streak outruns decay. */
-  perKill: 2,
   /**
-   * Menace banked per point of OVERKILL on a killing blow — the damage dealt
-   * beyond the mob's remaining hp. Dropping a 10-hp wisp with a 200-damage
-   * swing banks 190 × this: being wildly overpowered is what the meter reads.
+   * Menace banked per second per point of the player's rolling DPS: sustained
+   * damage output is the meter's main fuel, so a hard-hitting build heats it
+   * faster than a plinking one — the meter tracks how overpowered you are, not
+   * how you happened to land the last blow.
+   */
+  perDps: 0.15,
+  /**
+   * Menace banked per second per kill/second of the player's rolling kill rate:
+   * a fast clear heats the meter on top of raw damage, so mowing a crowd down
+   * escalates faster than grinding a single tank.
+   */
+  perKillRate: 2,
+  /**
+   * Menace banked instantly per point of OVERKILL on a killing blow — the
+   * damage dumped past the mob's remaining hp. Dropping a 10-hp wisp with a
+   * 200-damage swing jolts the meter by 190 × this: an overpowered kill is a
+   * spike on TOP of the rolling DPS/kill-rate heat, so being wildly stronger
+   * than the horde escalates it fast even before the rolling average catches up.
    */
   perOverkill: 0.04,
+  /**
+   * The window (seconds) the DPS/kill-rate estimates smooth over — long enough
+   * that one burst doesn't spike the meter, short enough that the heat tracks
+   * the last few seconds of fighting rather than the whole run.
+   */
+  rateWindowSec: 2.5,
   /** Menace bled off per second: stop the slaughter and the horde cools. */
   decayPerSec: 3,
   /** Menace is capped here (also caps the derived stage at maxStage). */
-  max: 60,
+  max: 120,
   /** Raw menace per evolution stage: stage = floor(menace / perStage). */
   perStage: 12,
-  /** Hard cap on the evolution stage (perStage × maxStage should equal max). */
-  maxStage: 5,
+  /**
+   * Hard cap on the evolution stage (perStage × maxStage should equal max).
+   * Ten stages of headroom: the first few are the familiar rampage, but a
+   * player who keeps pushing their output climbs into stages the old five-step
+   * meter never reached — where the lured, evolved horde stacks into a wall.
+   */
+  maxStage: 10,
   /**
    * Extra minion hp per evolution stage (+35% each), stamped when the mob
    * spawns. Kill XP is hp-proportional, so an evolved mob is worth more xp
@@ -281,9 +317,15 @@ export const LOOT = {
   /** …the share that is a time-limited ability pickup (kept lean so the
    * powerup rain never buries the field — the dock only banks three). */
   abilityShare: 0.06,
-  /** …the share that is a golden XP arrow… */
-  xpArrowShare: 0.22,
-  /** …the share that is a weapon repair kit (the rest are medkits). */
+  /**
+   * …the share that is a medkit (heals on touch). Kept deliberately scarce —
+   * a steady medkit rain let a basic loadout tank the horde indefinitely, so
+   * healing is now a lucky find, not a crutch. The rest of the ladder (below)
+   * is unchanged; only this slice was carved out of what used to be the
+   * medkit-heavy remainder.
+   */
+  medkitShare: 0.07,
+  /** …the share that is a weapon repair kit… */
   repairShare: 0.1,
   /**
    * Clearing every regular monster on a level is guaranteed to have dropped

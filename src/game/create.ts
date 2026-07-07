@@ -123,6 +123,8 @@ export function createGame(
     cutscene: def.prelude ? createCutscene(cutsceneDef(def.prelude)) : null,
     difficulty,
     menace: 0,
+    combatDps: 0,
+    combatKillRate: 0,
     level: {
       id: def.id,
       index: def.index,

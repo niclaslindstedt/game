@@ -1,8 +1,10 @@
 // SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
 // The menace system: the escalation meter that answers an overpowered player.
-// Overkilling monsters and killing them faster than the horde is replenished
-// banks menace; idling bleeds it back off. Menace is read as an integer
-// "stage" that drives three responses (all tuned in config MENACE):
+// The meter heats from the player's ACTUAL combat output — rolling
+// damage-per-second and kill rate (tickMenace) — with an extra jolt from
+// OVERKILL on a killing blow (bankOverkill); idling bleeds it back off. Menace
+// is read as an integer "stage" (0…10) that drives three responses (all tuned
+// in config MENACE):
 //   1. LURE — the wave spawner keeps a denser, bigger crowd on the player,
 //      and every overkill drags nearby mobs in through the walk-credit channel.
 //   2. EVOLVE — minions spawned while menace is high carry extra hp (baked in
@@ -36,25 +38,59 @@ export function lureMult(state: GameState): number {
 }
 
 /**
- * Bank the menace from one kill: the flat pace tick plus the overkill (damage
- * dealt beyond the mob's remaining hp on the killing blow). Overkill also
- * dinner-bells the nearby horde in immediately via the spawner's walk-credit.
- * Emits `menaceRose` when the kill tips the meter into a new stage so the app
- * can sound the escalation. Called from hitEnemy on every kill.
+ * An overpowered kill's answer: the OVERKILL (damage the killing blow dumped
+ * past the mob's last hp) both (1) jolts the menace meter up instantly — being
+ * wildly stronger than the horde escalates it on the spot, a spike on top of
+ * the rolling DPS/kill-rate heat in `tickMenace` — and (2) dinner-bells the
+ * nearby horde over RIGHT NOW via spawner walk-credit, so a big hit is answered
+ * within seconds. Emits `menaceRose` if the jolt tips into a new stage. Called
+ * from hitEnemy on every kill.
  */
-export function bankMenace(state: GameState, overkill: number): void {
+export function bankOverkill(state: GameState, overkill: number): void {
+  const spike = Math.max(0, overkill);
+  state.moveSpawnCredit += spike * MENACE.lureCreditPerOverkill;
+  if (spike <= 0) return;
   const before = menaceStage(state);
-  const gain = MENACE.perKill + Math.max(0, overkill) * MENACE.perOverkill;
-  state.menace = Math.min(MENACE.max, state.menace + gain);
-  state.moveSpawnCredit += Math.max(0, overkill) * MENACE.lureCreditPerOverkill;
+  state.menace = Math.min(
+    MENACE.max,
+    state.menace + spike * MENACE.perOverkill,
+  );
   const after = menaceStage(state);
   if (after > before) state.events.push({ type: "menaceRose", stage: after });
 }
 
-/** Bleed menace off over time — stop killing and the horde cools. */
-export function decayMenace(state: GameState, dtMs: number): void {
-  if (state.menace <= 0) return;
-  state.menace = Math.max(0, state.menace - (MENACE.decayPerSec * dtMs) / 1000);
+/**
+ * Advance the meter one step from the player's ACTUAL combat output. The
+ * per-step damage and kills feed rolling DPS / kill-rate estimates (EMAs
+ * smoothed over `rateWindowSec`), and the meter heats in proportion to them:
+ * the harder and faster you are clearing, the faster it climbs; idle output
+ * lets `decayPerSec` bleed it back off. Emits `menaceRose` when the tick tips
+ * the meter into a new stage so the app can sound the escalation. Replaces the
+ * old per-kill banking + separate decay pass — called once per `step()`.
+ */
+export function tickMenace(
+  state: GameState,
+  dtMs: number,
+  damageDealt: number,
+  kills: number,
+): void {
+  const dt = dtMs / 1000;
+  if (dt <= 0) return;
+
+  // Fold this step's output into the rolling estimates. alpha is the fraction
+  // of the window one step covers, so the EMA tracks roughly the last
+  // `rateWindowSec` of fighting and a lone burst can't spike it.
+  const alpha = Math.min(1, dt / MENACE.rateWindowSec);
+  state.combatDps += (damageDealt / dt - state.combatDps) * alpha;
+  state.combatKillRate += (kills / dt - state.combatKillRate) * alpha;
+
+  const before = menaceStage(state);
+  const gain =
+    state.combatDps * MENACE.perDps + state.combatKillRate * MENACE.perKillRate;
+  const next = state.menace + (gain - MENACE.decayPerSec) * dt;
+  state.menace = Math.max(0, Math.min(MENACE.max, next));
+  const after = menaceStage(state);
+  if (after > before) state.events.push({ type: "menaceRose", stage: after });
 }
 
 /**
