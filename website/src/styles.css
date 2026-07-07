@@ -209,9 +209,70 @@ body {
   background: #9aa3ad;
 }
 
-.wpn-icon {
-  width: 1.1rem;
-  height: 1.1rem;
+/* The weapon widget: a prominent bordered slot tinted by the equipped
+   weapon's class (colors in tiers.ts). Tapping it toggles the switcher. */
+.wpn-control {
+  position: relative;
+  display: flex;
+  pointer-events: auto;
+}
+
+.wpn-slot {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  appearance: none;
+  width: 2rem;
+  height: 2rem;
+  padding: 0.2rem;
+  border: 2px solid #2a3444;
+  border-radius: 5px;
+  background: rgba(20, 26, 34, 0.72);
+  cursor: pointer;
+  pointer-events: auto;
+  box-shadow: 0 2px 0 rgba(0, 0, 0, 0.4);
+  line-height: 0;
+}
+
+.wpn-slot:active {
+  transform: translateY(2px);
+  box-shadow: 0 0 0 rgba(0, 0, 0, 0.4);
+}
+
+.wpn-slot-img {
+  width: 1.5rem;
+  height: 1.5rem;
+}
+
+/* The expanded switcher: alternate weapons in a row to the right of the slot,
+   overlaying the field (best damage first). */
+.wpn-switcher {
+  position: absolute;
+  left: calc(100% + 0.3rem);
+  top: 50%;
+  transform: translateY(-50%);
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+  padding: 0.25rem;
+  background: rgba(11, 13, 16, 0.85);
+  border: 2px solid #1a1c2c;
+  border-radius: 6px;
+  pointer-events: auto;
+  white-space: nowrap;
+}
+
+.wpn-switch-slot {
+  flex-direction: column;
+  width: 1.9rem;
+  height: auto;
+  gap: 0.1rem;
+  padding: 0.15rem;
+}
+
+.wpn-switch-dmg {
+  line-height: 0;
 }
 
 /* The hero avatar doubles as the inventory button (top-right). Big enough to

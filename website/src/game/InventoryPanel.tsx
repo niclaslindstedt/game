@@ -25,6 +25,7 @@ import {
   previewEquipped,
   unequipToInventory,
   weaponDamage,
+  weaponDamageFor,
   weaponDef,
   WEAPON_DEFS,
   type Affix,
@@ -81,12 +82,18 @@ function affixLine(affix: Affix): string {
   }
 }
 
-function itemLines(item: Equipment): string[] {
+function itemLines(state: GameState, item: Equipment): string[] {
   const lines: string[] = [];
   if (item.defId in WEAPON_DEFS) {
     const def = weaponDef(item.defId);
     lines.push(`${def.class.toUpperCase()} WEAPON`);
-    lines.push(`DAMAGE ${def.damage}`);
+    // Show the damage this weapon would deal in the player's hands (stats +
+    // affixes folded in), with the bonus over the raw base as a "+x" hint.
+    const effective = Math.round(weaponDamageFor(state, item));
+    const bonus = effective - def.damage;
+    lines.push(
+      bonus > 0 ? `DAMAGE ${effective} (+${bonus})` : `DAMAGE ${effective}`,
+    );
     lines.push(`SPEED ${(1000 / def.cooldownMs).toFixed(1)}/S`);
     lines.push(`RANGE ${def.range}`);
     lines.push(
@@ -435,7 +442,7 @@ export function InventoryPanel({
                     scale={2}
                     color={TIER_COLORS[shown.tier]}
                   />
-                  {itemLines(shown).map((line) => (
+                  {itemLines(state, shown).map((line) => (
                     <PixelText key={line} font={font} text={line} scale={1} />
                   ))}
                   {shown.affixes.map((affix, i) => (

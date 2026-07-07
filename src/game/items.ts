@@ -273,8 +273,14 @@ export function weaponDamage(state: GameState): number {
   return weaponDamageFor(state, state.player.equipment.weapon);
 }
 
-/** Per-hit damage a specific weapon instance would deal for this player. */
-function weaponDamageFor(state: GameState, weapon: Equipment): number {
+/**
+ * Per-hit damage a specific weapon instance would deal for this player,
+ * folding in the governing stat (STR/DEX/INT by class) and `damagePct`
+ * affixes. This is the single source of truth for stat-scaled weapon damage —
+ * combat, auto-equip scoring, and the UI's damage readouts all route through
+ * it, so a stronger build raises every surface consistently.
+ */
+export function weaponDamageFor(state: GameState, weapon: Equipment): number {
   const def = weaponDef(weapon.defId);
   const stat = effectiveStat(state, CLASS_STAT[def.class]);
   let multiplier = 1 + stat * STATS.damageBonusPerPoint;
