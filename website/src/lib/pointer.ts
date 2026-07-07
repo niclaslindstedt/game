@@ -2,24 +2,32 @@
 // Pointer tracking for canvas games. Generic React/UI game code — lives in
 // website/src/lib/ so it can be extracted into oss-framework once mature.
 // Unifies mouse/touch/pen via Pointer Events and reports the raw gestures a
-// control scheme is built from: hold state (steering), mouse hover position
-// (cursor-follow steering), taps with their finger count (jump vs
-// two-finger actions), and button-press edges (click actions).
+// control scheme is built from: hold state with its anchor point (virtual
+// dpad/joystick steering), mouse hover position (cursor-follow steering),
+// taps with their finger count (jump vs second-hand actions), and
+// button-press edges (click actions).
 
 export type PointerState = {
-  /** Exactly one pointer is down. (Two-finger gestures pause steering.) */
+  /** The primary pointer is down. Extra fingers never pause the hold —
+   * each is a gesture of its own (see PointerTap.fingers). */
   held: boolean;
   /** A mouse is over the element — its position is live without buttons. */
   hovering: boolean;
   /** Position in CSS px relative to the element's top-left. */
   x: number;
   y: number;
+  /** Where the current hold began — the virtual-dpad anchor (CSS px). */
+  originX: number;
+  originY: number;
+  /** The current/last primary pointer's type: "mouse" | "touch" | "pen". */
+  pointerType: string;
 };
 
 export type PointerTap = {
-  /** Simultaneous pointers at the gesture's widest (1 = plain tap). */
+  /** 1 = the primary pointer tapped; 2 = a second finger tapped while the
+   * primary kept holding (steering continues through it). */
   fingers: number;
-  /** The primary pointer's type: "mouse" | "touch" | "pen". */
+  /** The tapping pointer's type: "mouse" | "touch" | "pen". */
   pointerType: string;
 };
 
@@ -44,36 +52,42 @@ export function trackPointer(
   element: HTMLElement,
   { onTap, onPress, tapMaxMs = 220, tapMaxDistance = 12 }: PointerOptions = {},
 ): PointerTracker {
-  const state: PointerState = { held: false, hovering: false, x: 0, y: 0 };
-  const active = new Set<number>();
+  const state: PointerState = {
+    held: false,
+    hovering: false,
+    x: 0,
+    y: 0,
+    originX: 0,
+    originY: 0,
+    pointerType: "mouse",
+  };
   let primaryId: number | null = null;
-  let primaryType = "mouse";
   let downAt = 0;
-  let downX = 0;
-  let downY = 0;
-  let maxFingers = 0;
+  // Fingers pressed while the primary holds, keyed by pointer id — each can
+  // tap on its own (the second hand's jump button).
+  const extras = new Map<number, { at: number; x: number; y: number }>();
 
-  const update = (event: PointerEvent) => {
+  const localPos = (event: PointerEvent) => {
     const rect = element.getBoundingClientRect();
-    state.x = event.clientX - rect.left;
-    state.y = event.clientY - rect.top;
+    return { x: event.clientX - rect.left, y: event.clientY - rect.top };
   };
 
   const down = (event: PointerEvent) => {
     // Capture so steering keeps tracking when the pointer leaves the canvas.
     element.setPointerCapture(event.pointerId);
-    active.add(event.pointerId);
-    maxFingers = Math.max(maxFingers, active.size);
-    if (active.size === 1) {
+    const p = localPos(event);
+    if (primaryId === null) {
       primaryId = event.pointerId;
-      primaryType = event.pointerType;
-      update(event);
+      state.pointerType = event.pointerType;
+      state.x = p.x;
+      state.y = p.y;
+      state.originX = p.x;
+      state.originY = p.y;
+      state.held = true;
       downAt = performance.now();
-      downX = state.x;
-      downY = state.y;
+    } else {
+      extras.set(event.pointerId, { at: performance.now(), x: p.x, y: p.y });
     }
-    // A second finger pauses steering (it is a gesture, not a destination).
-    state.held = active.size === 1;
     onPress?.({ pointerType: event.pointerType });
   };
 
@@ -81,32 +95,49 @@ export function trackPointer(
     // Mouse position is live even with no buttons down — cursor-follow
     // steering reads it every tick.
     if (event.pointerType === "mouse") state.hovering = true;
-    if (active.size === 0 && event.pointerType !== "mouse") return;
-    if (primaryId === null || event.pointerId === primaryId) update(event);
+    if (primaryId === null && event.pointerType !== "mouse") return;
+    if (primaryId === null || event.pointerId === primaryId) {
+      const p = localPos(event);
+      state.x = p.x;
+      state.y = p.y;
+    }
   };
 
   const up = (event: PointerEvent) => {
-    if (!active.has(event.pointerId)) return;
-    active.delete(event.pointerId);
-    if (active.size === 0) {
+    if (event.pointerId === primaryId) {
+      const p = localPos(event);
       if (
         onTap &&
         performance.now() - downAt <= tapMaxMs &&
-        Math.hypot(state.x - downX, state.y - downY) <= tapMaxDistance
+        Math.hypot(p.x - state.originX, p.y - state.originY) <= tapMaxDistance
       ) {
-        onTap({ fingers: maxFingers, pointerType: primaryType });
+        onTap({ fingers: 1, pointerType: state.pointerType });
       }
-      maxFingers = 0;
+      // A leftover extra finger never inherits the hold — a new press
+      // re-anchors deliberately instead of steering from a stale origin.
       primaryId = null;
+      state.held = false;
+      return;
     }
-    state.held = active.size === 1;
+    const extra = extras.get(event.pointerId);
+    if (extra) {
+      extras.delete(event.pointerId);
+      const p = localPos(event);
+      if (
+        onTap &&
+        performance.now() - extra.at <= tapMaxMs &&
+        Math.hypot(p.x - extra.x, p.y - extra.y) <= tapMaxDistance
+      ) {
+        onTap({ fingers: 2, pointerType: event.pointerType });
+      }
+    }
   };
 
   const enter = (event: PointerEvent) => {
     if (event.pointerType === "mouse") state.hovering = true;
   };
   const leave = (event: PointerEvent) => {
-    if (event.pointerType === "mouse" && active.size === 0) {
+    if (event.pointerType === "mouse" && primaryId === null) {
       state.hovering = false;
     }
   };

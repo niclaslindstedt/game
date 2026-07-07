@@ -1,9 +1,10 @@
 // SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
-// The Diablo-style inventory: equipment slots on the left (drag an item onto
-// its slot to equip, tap to quick-equip/unequip), the bag grid on the right,
-// an item card for whatever is hovered or dragged, and the character sheet.
-// The panel mutates the (paused) engine state through the inventory API and
-// calls `onChange` so React re-reads it.
+// The Diablo-style inventory: equipment slots (drag an item onto its slot to
+// equip, tap to quick-equip/unequip), the character sheet, the bag grid, and
+// an item card for whatever is hovered or dragged. The two sections sit side
+// by side in landscape and stack in portrait (see styles.css). The panel
+// mutates the (paused) engine state through the inventory API and calls
+// `onChange` so React re-reads it.
 
 import {
   useEffect,
@@ -236,40 +237,46 @@ export function InventoryPanel({
           {/* Equipment slots + character sheet */}
           <div className="inventory-left">
             <PixelText font={font} text="EQUIPPED" scale={2} color="#9aa3ad" />
-            {SLOTS.map(({ slot, label }) => {
-              const item =
-                slot === "weapon"
-                  ? player.equipment.weapon
-                  : player.equipment[slot];
-              return (
-                <div key={slot} className="equip-row">
-                  <PixelText
-                    font={font}
-                    text={label}
-                    scale={1}
-                    color="#9aa3ad"
-                  />
-                  <div
-                    className={`inv-cell equip-cell${
-                      drag && drag.item.slot === slot ? " drop-ok" : ""
-                    }`}
-                    data-drop={`slot:${slot}`}
-                    style={
-                      item ? { borderColor: TIER_COLORS[item.tier] } : undefined
-                    }
-                    onPointerDown={
-                      item ? startDrag(item, { type: "slot", slot }) : undefined
-                    }
-                    onPointerEnter={() => item && setInspected(item)}
-                  >
-                    {item &&
-                      !(
-                        drag?.from.type === "slot" && drag.from.slot === slot
-                      ) && <ItemIcon sprites={sprites} item={item} />}
+            <div className="equip-slots">
+              {SLOTS.map(({ slot, label }) => {
+                const item =
+                  slot === "weapon"
+                    ? player.equipment.weapon
+                    : player.equipment[slot];
+                return (
+                  <div key={slot} className="equip-col">
+                    <PixelText
+                      font={font}
+                      text={label}
+                      scale={1}
+                      color="#9aa3ad"
+                    />
+                    <div
+                      className={`inv-cell equip-cell${
+                        drag && drag.item.slot === slot ? " drop-ok" : ""
+                      }`}
+                      data-drop={`slot:${slot}`}
+                      style={
+                        item
+                          ? { borderColor: TIER_COLORS[item.tier] }
+                          : undefined
+                      }
+                      onPointerDown={
+                        item
+                          ? startDrag(item, { type: "slot", slot })
+                          : undefined
+                      }
+                      onPointerEnter={() => item && setInspected(item)}
+                    >
+                      {item &&
+                        !(
+                          drag?.from.type === "slot" && drag.from.slot === slot
+                        ) && <ItemIcon sprites={sprites} item={item} />}
+                    </div>
                   </div>
-                </div>
-              );
-            })}
+                );
+              })}
+            </div>
 
             <div className="char-sheet">
               <PixelText font={font} text="STATS" scale={2} color="#9aa3ad" />

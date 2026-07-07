@@ -12,7 +12,7 @@ import { setAudioVolumes } from "./audio.ts";
 export type SteeringMode = "hover" | "hold";
 
 /** Ability pickups: pop the moment they are touched, or bank until the
- * player uses them (click / two-finger tap / the HUD button / E). */
+ * player uses them (click / the HUD button / E). */
 export type ItemUseMode = "auto" | "manual";
 
 export type GameSettings = {

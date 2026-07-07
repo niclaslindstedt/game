@@ -55,10 +55,12 @@ and something enormous haunts the old flag.
   back from) — tap to advance a beat, or hit SKIP. It plays **once per
   device**: retries and later runs jump straight to the level.
 - **Steer with the pointer** — on desktop the character chases the cursor;
-  on touch, hold a finger down and release to stop. (Swap the mouse back to
-  classic hold-to-steer under SETTINGS → CONTROLS.)
-- **Tap** (or press Space) to **jump** — each level sets its own gravity:
-  HQ hops clear a desk; moon gravity sails you clean over a ghost's grasp.
+  on touch, hold and drag: a virtual joystick appears under your finger and
+  you walk in the direction you drag — release to stop. (Swap the mouse
+  back to classic hold-to-steer under SETTINGS → CONTROLS.)
+- **Tap** (with the other hand while steering, or press Space) to **jump**
+  — each level sets its own gravity: HQ hops clear a desk; moon gravity
+  sails you clean over a ghost's grasp.
 - **Obstacles** litter every level and nothing walks through them — desks,
   crates, and low rocks can be **jumped over**, and monsters can't jump: a
   barrier the horde must flow around is your best friend. SPACEZ HQ's
@@ -66,8 +68,8 @@ and something enormous haunts the old flag.
 - **Ability pickups** (fire orbs, storm cell, stasis field, the item
   magnet — and the rare screen-clearing NUKE) are carried with you — on
   desktop **click** (or press E, or the HUD USE button) to pop one when the
-  horde closes in; on touch they fire the moment you grab them (two-finger
-  tap uses one manually). Tune it under SETTINGS, along with music and
+  horde closes in; on touch they fire the moment you grab them (the HUD USE
+  button spends one manually). Tune it under SETTINGS, along with music and
   sound volumes.
 - The character **fights by itself** with whatever weapon is equipped —
   your job is positioning: kite the haunting, don't get surrounded.

@@ -1,11 +1,13 @@
 // SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
 // The playable screen: mounts the canvas, runs the fixed-timestep loop over
 // the engine, feeds it pointer input per the player's control settings
-// (hold- or cursor-steer; tap/Space jumps; click, two-finger tap, E, or the
-// HUD button spends a banked item), plays event sounds, and overlays the
-// DOM UI: HUD, the level intro text box, the level-up stat chooser, the
-// Diablo-style inventory, and the end-of-run splash. One <GameScreen> mount
-// = one session at the menu; one run = one `runId` (retry bumps it).
+// (touch: a virtual dpad anchored where the finger lands, taps jump —
+// including a second finger while steering; mouse: hold- or cursor-steer,
+// Space jumps; click, E, or the HUD button spends a banked item), plays
+// event sounds, and overlays the DOM UI: HUD, the level intro text box, the
+// level-up stat chooser, the Diablo-style inventory, and the end-of-run
+// splash. One <GameScreen> mount = one session at the menu; one run = one
+// `runId` (retry bumps it).
 
 import { useEffect, useRef, useState } from "react";
 
@@ -75,6 +77,14 @@ type Hud = {
   stats: GameStats;
 };
 
+// The touch virtual dpad: dragging past the deadzone walks in that direction;
+// the steer target is projected this far ahead (world units, must stay well
+// beyond PLAYER.arriveRadius so the walk never "arrives").
+const DPAD_DEADZONE_PX = 10;
+const DPAD_STEER_DISTANCE = 200;
+// The on-screen dpad hint: arrow ring radius and nub travel (CSS px).
+const DPAD_RING_PX = 36;
+
 function formatTime(ms: number): string {
   const totalSeconds = Math.floor(ms / 1000);
   const minutes = Math.floor(totalSeconds / 60);
@@ -90,6 +100,7 @@ export function GameScreen({
   onQuit: () => void;
 }) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
+  const dpadRef = useRef<HTMLDivElement>(null);
   const jumpQueuedRef = useRef(false);
   const useItemQueuedRef = useRef(false);
   const [assets, setAssets] = useState<GameAssets | null>(null);
@@ -182,18 +193,15 @@ export function GameScreen({
     observer.observe(canvas);
     resize();
 
-    // The control scheme (see settings.ts): touch always steers by holding,
-    // taps jump, and a two-finger tap spends a banked item. A mouse follows
-    // the steering setting — cursor-follow mode turns clicks into item use
+    // The control scheme (see settings.ts): a touch anchors a virtual dpad
+    // where it lands — dragging away from the anchor walks in that
+    // direction, releasing stops. Any tap jumps: a quick solo tap, or the
+    // other hand tapping while the first finger steers. A mouse follows the
+    // steering setting — cursor-follow mode turns clicks into item use
     // (Space jumps), classic mode keeps click-tap = jump.
     const pointer = trackPointer(canvas, {
-      onTap: ({ fingers, pointerType }) => {
-        if (fingers >= 2) {
-          useItemQueuedRef.current = true;
-        } else if (
-          pointerType !== "mouse" ||
-          getSettings().steering === "hold"
-        ) {
+      onTap: ({ pointerType }) => {
+        if (pointerType !== "mouse" || getSettings().steering === "hold") {
           jumpQueuedRef.current = true;
         }
       },
@@ -203,6 +211,10 @@ export function GameScreen({
         }
       },
     });
+    // The dpad hint is drawn by the render loop straight onto DOM styles —
+    // per-frame position/highlight without React re-renders.
+    const dpad = dpadRef.current;
+    const dpadNub = dpad?.querySelector<HTMLElement>(".dpad-nub") ?? null;
     const onKeyDown = (event: KeyboardEvent) => {
       if (event.repeat) return;
       if (event.code === "Space") {
@@ -282,12 +294,27 @@ export function GameScreen({
           input.useItem = decided.useItem ?? false;
         } else {
           const settings = getSettings();
-          // Cursor-follow steering: a hovering mouse steers with no button.
-          const hoverSteer =
-            settings.steering === "hover" && pointer.state.hovering;
-          input.steering = pointer.state.held || hoverSteer;
-          input.target.x = camera.x + pointer.state.x * cssToWorld.x;
-          input.target.y = camera.y + pointer.state.y * cssToWorld.y;
+          if (pointer.state.held && pointer.state.pointerType !== "mouse") {
+            // Touch virtual dpad: the drag offset from the anchor is a
+            // direction, not a destination — steer relative to the player.
+            const dx = pointer.state.x - pointer.state.originX;
+            const dy = pointer.state.y - pointer.state.originY;
+            const len = Math.hypot(dx, dy);
+            input.steering = len >= DPAD_DEADZONE_PX;
+            if (input.steering) {
+              input.target.x =
+                state.player.pos.x + (dx / len) * DPAD_STEER_DISTANCE;
+              input.target.y =
+                state.player.pos.y + (dy / len) * DPAD_STEER_DISTANCE;
+            }
+          } else {
+            // Cursor-follow steering: a hovering mouse steers with no button.
+            const hoverSteer =
+              settings.steering === "hover" && pointer.state.hovering;
+            input.steering = pointer.state.held || hoverSteer;
+            input.target.x = camera.x + pointer.state.x * cssToWorld.x;
+            input.target.y = camera.y + pointer.state.y * cssToWorld.y;
+          }
           input.jump = jumpQueuedRef.current;
           jumpQueuedRef.current = false;
           // Instant item use (the touch-first default) pops pickups the
@@ -362,6 +389,36 @@ export function GameScreen({
         drawFrame(ctx, state, assets, camera, timeMs);
         drawEffects(ctx, effects, camera, state.stats.timeMs, assets);
 
+        // The virtual dpad hint: anchored where the touch landed, arrows
+        // brighten toward the drag direction, the nub trails the finger.
+        if (dpad) {
+          const show =
+            !bot &&
+            pointer.state.held &&
+            pointer.state.pointerType !== "mouse" &&
+            state.phase === "playing";
+          dpad.style.display = show ? "block" : "none";
+          if (show) {
+            dpad.style.left = `${pointer.state.originX}px`;
+            dpad.style.top = `${pointer.state.originY}px`;
+            const dx = pointer.state.x - pointer.state.originX;
+            const dy = pointer.state.y - pointer.state.originY;
+            const len = Math.hypot(dx, dy);
+            const steering = len >= DPAD_DEADZONE_PX;
+            const nx = steering ? dx / len : 0;
+            const ny = steering ? dy / len : 0;
+            // cos(67°) ≈ 0.38: diagonals light up both of their arrows.
+            dpad.dataset.left = nx < -0.38 ? "1" : "";
+            dpad.dataset.right = nx > 0.38 ? "1" : "";
+            dpad.dataset.up = ny < -0.38 ? "1" : "";
+            dpad.dataset.down = ny > 0.38 ? "1" : "";
+            if (dpadNub) {
+              const reach = Math.min(len, DPAD_RING_PX);
+              dpadNub.style.transform = `translate(${nx * reach}px, ${ny * reach}px)`;
+            }
+          }
+        }
+
         // Mirror the slow-moving values into React only when they change.
         const bagCount = state.player.inventory.filter(Boolean).length;
         const held = state.player.heldAbilities.join(",");
@@ -408,6 +465,16 @@ export function GameScreen({
   return (
     <div className="game-screen">
       <canvas ref={canvasRef} className="game-canvas" />
+
+      {/* The touch steering hint (see the render loop): subtle arrows around
+          the finger's anchor point plus a nub that trails the drag. */}
+      <div ref={dpadRef} className="touch-dpad" aria-hidden="true">
+        <span className="dpad-arrow dpad-up" />
+        <span className="dpad-arrow dpad-down" />
+        <span className="dpad-arrow dpad-left" />
+        <span className="dpad-arrow dpad-right" />
+        <span className="dpad-nub" />
+      </div>
 
       {hud && hud.phase === "playing" && (
         <div className="game-hud">

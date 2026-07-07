@@ -328,7 +328,7 @@ export type GameInput = {
   jump: boolean;
   /**
    * True on the step the player asked to use a carried ability pickup
-   * (mouse click / two-finger tap / HUD button edge). Spends the oldest
+   * (mouse click / HUD button edge). Spends the oldest
    * held ability; a no-op with empty hands.
    */
   useItem?: boolean;

@@ -596,16 +596,22 @@ body {
   }
 }
 
-/* ---- Inventory (Diablo-style bag + equipment slots) ----------------------- */
+/* ---- Inventory (Diablo-style bag + equipment slots) -----------------------
+   Portrait stacks the two sections (EQUIPPED+STATS above BAG); the landscape
+   media query below folds them side by side and widens the bag grid so the
+   whole panel fits a 390px-tall phone. The panel itself scrolls as a last
+   resort so nothing can ever be trapped off-screen. */
 
 .inventory-panel {
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 1.25rem;
-  max-width: 46rem;
-  width: 100%;
-  padding: 1.5rem;
+  gap: 1rem;
+  max-width: min(46rem, 100%);
+  max-height: 100%;
+  overflow-y: auto;
+  padding: 1.25rem;
+  box-sizing: border-box;
   background: #10151c;
   border: 3px solid #1d2530;
   box-shadow: 0 8px 0 rgba(0, 0, 0, 0.4);
@@ -614,10 +620,9 @@ body {
 
 .inventory-columns {
   display: flex;
-  gap: 2rem;
-  width: 100%;
-  justify-content: center;
-  flex-wrap: wrap;
+  flex-direction: column;
+  gap: 1.25rem;
+  align-items: center;
 }
 
 .inventory-left,
@@ -627,11 +632,16 @@ body {
   gap: 0.75rem;
 }
 
-.equip-row {
+.equip-slots {
   display: flex;
-  align-items: center;
   gap: 0.75rem;
-  justify-content: space-between;
+}
+
+.equip-col {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.35rem;
 }
 
 .inv-grid {
@@ -660,13 +670,21 @@ body {
   pointer-events: none;
 }
 
+/* The stat lines fold into two columns; the STATS header spans both. */
 .char-sheet {
-  display: flex;
-  flex-direction: column;
-  gap: 0.4rem;
-  margin-top: 1rem;
-  padding-top: 1rem;
+  display: grid;
+  grid-template-columns: repeat(2, minmax(6rem, auto));
+  column-gap: 1.5rem;
+  row-gap: 0.45rem;
+  margin-top: 0.25rem;
+  padding-top: 0.75rem;
   border-top: 2px solid #1d2530;
+  align-self: stretch;
+}
+
+.char-sheet > canvas:first-child {
+  grid-column: 1 / -1;
+  margin-bottom: 0.2rem;
 }
 
 .item-card {
@@ -675,8 +693,33 @@ body {
   gap: 0.4rem;
   min-height: 6.5rem;
   padding: 0.75rem;
+  box-sizing: border-box;
+  align-self: stretch;
   background: #0b0d10;
   border: 2px solid #1d2530;
+}
+
+/* Landscape (the 844×390 reference phone): sections side by side, the bag
+   two rows of six, and everything tightened so CLOSE stays on screen. */
+@media (min-aspect-ratio: 4/3) {
+  .inventory-panel {
+    gap: 0.75rem;
+    padding: 1rem 1.5rem;
+  }
+
+  .inventory-columns {
+    flex-direction: row;
+    align-items: flex-start;
+    gap: 2rem;
+  }
+
+  .inv-grid {
+    grid-template-columns: repeat(6, 3.25rem);
+  }
+
+  .item-card {
+    min-height: 5rem;
+  }
 }
 
 .drag-ghost {
@@ -703,4 +746,89 @@ body {
 .stat-button canvas,
 .pixel-button canvas {
   align-self: center;
+}
+
+/* Slot labels sit centered over their cells. */
+.equip-col canvas {
+  align-self: center;
+}
+
+/* ---- Touch dpad (virtual joystick anchored at the touch point) ------------
+   A zero-size marker positioned by the render loop; four subtle arrows ring
+   the anchor and brighten toward the drag direction, and the nub trails the
+   finger like a joystick head. Pointer-transparent, purely a hint. */
+
+.touch-dpad {
+  position: absolute;
+  display: none;
+  width: 0;
+  height: 0;
+  pointer-events: none;
+  z-index: 4;
+  animation: dpad-in 100ms steps(2);
+}
+
+@keyframes dpad-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+.dpad-arrow {
+  position: absolute;
+  width: 0;
+  height: 0;
+  border: 8px solid transparent;
+  opacity: 0.3;
+  transition: opacity 90ms steps(2);
+  filter: drop-shadow(0 0 2px rgba(11, 13, 16, 0.8));
+}
+
+.dpad-up {
+  left: -8px;
+  top: -52px;
+  border-top-width: 0;
+  border-bottom: 11px solid #e6e8eb;
+}
+
+.dpad-down {
+  left: -8px;
+  top: 41px;
+  border-bottom-width: 0;
+  border-top: 11px solid #e6e8eb;
+}
+
+.dpad-left {
+  left: -52px;
+  top: -8px;
+  border-left-width: 0;
+  border-right: 11px solid #e6e8eb;
+}
+
+.dpad-right {
+  left: 41px;
+  top: -8px;
+  border-right-width: 0;
+  border-left: 11px solid #e6e8eb;
+}
+
+.touch-dpad[data-up="1"] .dpad-up,
+.touch-dpad[data-down="1"] .dpad-down,
+.touch-dpad[data-left="1"] .dpad-left,
+.touch-dpad[data-right="1"] .dpad-right {
+  opacity: 0.95;
+}
+
+.dpad-nub {
+  position: absolute;
+  left: -7px;
+  top: -7px;
+  width: 14px;
+  height: 14px;
+  background: #e6e8eb;
+  opacity: 0.4;
+  box-shadow: 0 0 0 2px rgba(11, 13, 16, 0.5);
 }

@@ -6,12 +6,12 @@ The main menu's **SETTINGS** screen holds the player-facing configuration,
 persisted on-device in `localStorage` under `gone-in-space:settings`
 (`website/src/game/settings.ts`):
 
-| Setting             | Values                                                              | Default                                                     |
-| ------------------- | ------------------------------------------------------------------- | ----------------------------------------------------------- |
-| Controls → Mouse    | follow cursor / hold to steer                                       | follow cursor on fine pointers, hold on touch-first devices |
-| Controls → Item use | use instantly / use manually (click, two-finger tap, E, HUD button) | manual on fine pointers, instant on touch-first devices     |
-| Music volume        | 0–100% in quarter steps                                             | 80%                                                         |
-| Sound FX volume     | 0–100% in quarter steps                                             | 100%                                                        |
+| Setting             | Values                                              | Default                                                     |
+| ------------------- | --------------------------------------------------- | ----------------------------------------------------------- |
+| Controls → Mouse    | follow cursor / hold to steer                       | follow cursor on fine pointers, hold on touch-first devices |
+| Controls → Item use | use instantly / use manually (click, E, HUD button) | manual on fine pointers, instant on touch-first devices     |
+| Music volume        | 0–100% in quarter steps                             | 80%                                                         |
+| Sound FX volume     | 0–100% in quarter steps                             | 100%                                                        |
 
 Story progress is persisted the same way: watched cutscenes are recorded
 under `gone-in-space:seen-cutscenes` (`website/src/game/progress.ts`), so a
