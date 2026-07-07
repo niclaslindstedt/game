@@ -143,6 +143,7 @@ describe("walls block shots", () => {
       damage: 50,
       lifetimeMs: 3000,
       weaponClass: "ranged",
+      sprite: "bolt",
       z: 0,
     });
     run(state, idle, 200);
@@ -169,6 +170,7 @@ describe("walls block shots", () => {
       damage: 50,
       lifetimeMs: 3000,
       weaponClass: "ranged",
+      sprite: "bolt",
       z: 0,
     });
     run(state, idle, 200, (s) => s.projectiles.length === 0);

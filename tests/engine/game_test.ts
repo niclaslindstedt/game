@@ -15,6 +15,8 @@ import {
   JUMP,
   levelDef,
   weaponDef,
+  weaponCooldownFor,
+  weaponRangeFor,
   PLAYER,
   RUN,
   step,
@@ -214,10 +216,11 @@ describe("weapon", () => {
     step(state, idle, DT);
     expect(state.projectiles).toHaveLength(1);
     expect(state.stats.shotsFired).toBe(1);
-    expect(state.events).toContainEqual({
-      type: "shot",
-      weaponClass: "ranged",
-    });
+    const shot = state.events.find((e) => e.type === "shot");
+    expect(shot).toMatchObject({ type: "shot", weaponClass: "ranged" });
+    // The shot carries the muzzle and aim the app draws the flash from.
+    expect(shot).toHaveProperty("pos");
+    expect(shot).toHaveProperty("dir");
   });
 
   it("kills a monster after enough hits and records the kill", () => {
@@ -281,10 +284,92 @@ describe("weapon", () => {
     ];
     step(state, idle, DT);
     expect(state.projectiles).toHaveLength(0);
-    expect(state.events).toContainEqual({ type: "swing" });
+    const swing = state.events.find((e) => e.type === "swing");
+    expect(swing).toMatchObject({ type: "swing" });
+    // The swing carries the pos, aim, and reach the app sweeps the arc over.
+    expect(swing).toHaveProperty("pos");
+    expect(swing).toHaveProperty("dir");
+    expect(swing).toHaveProperty("range");
     expect(state.stats.damageDealt).toBeGreaterThanOrEqual(
       weaponDef("test_wrench").damage,
     );
+  });
+});
+
+describe("strength melee", () => {
+  const equipWrench = (state: ReturnType<typeof startGame>) => {
+    state.player.equipment.weapon = {
+      id: 777,
+      defId: "test_wrench",
+      slot: "weapon",
+      tier: "regular",
+      affixes: [],
+    };
+  };
+
+  it("widens melee reach and quickens swings; ranged is untouched", () => {
+    const state = startGame();
+    equipWrench(state);
+    const base = weaponDef("test_wrench");
+
+    // No STRENGTH: the plain catalog numbers.
+    state.player.stats.strength = 0;
+    expect(weaponRangeFor(state, state.player.equipment.weapon)).toBeCloseTo(
+      base.range,
+    );
+    expect(weaponCooldownFor(state, state.player.equipment.weapon)).toBeCloseTo(
+      base.cooldownMs,
+    );
+
+    // 20 STRENGTH: reach grows and the swing cooldown shrinks.
+    state.player.stats.strength = 20;
+    expect(
+      weaponRangeFor(state, state.player.equipment.weapon),
+    ).toBeGreaterThan(base.range);
+    expect(
+      weaponCooldownFor(state, state.player.equipment.weapon),
+    ).toBeLessThan(base.cooldownMs);
+
+    // A ranged weapon ignores STRENGTH entirely — DEX governs it.
+    const ranged = {
+      id: 778,
+      defId: "blaster",
+      slot: "weapon" as const,
+      tier: "regular" as const,
+      affixes: [],
+    };
+    expect(weaponRangeFor(state, ranged)).toBe(weaponDef("blaster").range);
+    expect(weaponCooldownFor(state, ranged)).toBe(
+      weaponDef("blaster").cooldownMs,
+    );
+  });
+
+  it("lets a strong bruiser strike a monster its base reach can't touch", () => {
+    const base = weaponDef("test_wrench");
+    // A target sat just outside the plain reach but inside the STR-widened one.
+    const gap = base.range + 8;
+
+    const weak = startGame();
+    equipWrench(weak);
+    weak.player.stats.strength = 0;
+    stopWaves(weak);
+    weak.enemies = [
+      makeEnemy({ pos: { x: weak.player.pos.x + gap, y: weak.player.pos.y } }),
+    ];
+    step(weak, idle, DT);
+    expect(weak.events.some((e) => e.type === "swing")).toBe(false);
+
+    const strong = startGame();
+    equipWrench(strong);
+    strong.player.stats.strength = 20;
+    stopWaves(strong);
+    strong.enemies = [
+      makeEnemy({
+        pos: { x: strong.player.pos.x + gap, y: strong.player.pos.y },
+      }),
+    ];
+    step(strong, idle, DT);
+    expect(strong.events.some((e) => e.type === "swing")).toBe(true);
   });
 });
 

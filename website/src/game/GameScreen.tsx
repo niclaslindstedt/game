@@ -438,6 +438,30 @@ export function GameScreen({
               untilMs: state.stats.timeMs + 130,
             });
           }
+          // A melee swing sweeps a slash arc toward the target, sized to the
+          // weapon's (STRENGTH-widened) reach.
+          if (event.type === "swing") {
+            effects.push({
+              kind: "swing",
+              pos: event.pos,
+              angle: Math.atan2(event.dir.y, event.dir.x),
+              radius: event.range,
+              untilMs: state.stats.timeMs + 200,
+              durationMs: 200,
+            });
+          }
+          // A shot flashes at the muzzle — a hot burst for guns, a cool cast
+          // bloom for wands — oriented along the aim.
+          if (event.type === "shot") {
+            effects.push({
+              kind: "muzzle",
+              pos: event.pos,
+              angle: Math.atan2(event.dir.y, event.dir.x),
+              weaponClass: event.weaponClass,
+              untilMs: state.stats.timeMs + 110,
+              durationMs: 110,
+            });
+          }
           // Every landed hit sprays the victim's gore (ghosts: ectoplasm)
           // and floats its damage off the head — crits slam and shake.
           if (event.type === "enemyHit" || event.type === "enemyKilled") {

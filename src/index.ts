@@ -58,8 +58,10 @@ export {
   repairEquippedWeapon,
   rollEquipment,
   unequipToInventory,
+  weaponCooldownFor,
   weaponDamage,
   weaponDamageFor,
+  weaponRangeFor,
   weaponScore,
   wearEquippedWeapon,
 } from "./game/items.ts";

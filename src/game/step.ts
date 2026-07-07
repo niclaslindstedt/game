@@ -58,7 +58,9 @@ import {
   playerSpeed,
   recomputeMaxHp,
   repairEquippedWeapon,
+  weaponCooldownFor,
   weaponDamage,
+  weaponRangeFor,
   wearEquippedWeapon,
 } from "./items.ts";
 import { grantXp, hitEnemy, unspawnedMinions } from "./loot.ts";
@@ -446,21 +448,26 @@ function stepWeapon(state: GameState, input: GameInput, dtMs: number): void {
   player.weaponCooldownMs = Math.max(0, player.weaponCooldownMs - dtMs);
   if (player.weaponCooldownMs > 0) return;
 
-  const weapon = weaponDef(player.equipment.weapon.defId);
+  const equipped = player.equipment.weapon;
+  const weapon = weaponDef(equipped.defId);
   // No target through a wall: the character never wastes a swing or a shot
-  // on a monster it can't actually reach.
+  // on a monster it can't actually reach. STRENGTH widens a melee weapon's
+  // reach, so a strong bruiser strikes from a touch further out.
+  const range = weaponRangeFor(state, equipped);
   const target = nearestEnemy(
     state.enemies,
     player.pos,
-    weapon.range,
+    range,
     input.view,
     (enemy) => lineOfSight(state, player.pos, enemy.pos),
   );
   if (!target) return;
 
-  player.weaponCooldownMs = weapon.cooldownMs;
+  // STRENGTH also quickens melee swings — more hits per second up close.
+  player.weaponCooldownMs = weaponCooldownFor(state, equipped);
+  const dir = direction(player.pos, target.pos);
   if (!weapon.projectile) {
-    state.events.push({ type: "swing" });
+    state.events.push({ type: "swing", pos: { ...player.pos }, dir, range });
     hitEnemy(state, target, weaponDamage(state));
     // Wear AFTER the strike so the blow lands with the weapon that swung.
     wearEquippedWeapon(state);
@@ -470,17 +477,23 @@ function stepWeapon(state: GameState, input: GameInput, dtMs: number): void {
   state.projectiles.push({
     id: state.nextId++,
     pos: { ...player.pos },
-    dir: direction(player.pos, target.pos),
+    dir,
     speed: weapon.projectile.speed,
     radius: weapon.projectile.radius,
     damage: weaponDamage(state),
     lifetimeMs: weapon.projectile.lifetimeMs,
     weaponClass: weapon.class,
+    sprite: weapon.projectile.sprite,
     // The shot leaves from the shooter's height and sinks back in flight.
     z: player.z,
   });
   state.stats.shotsFired++;
-  state.events.push({ type: "shot", weaponClass: weapon.class });
+  state.events.push({
+    type: "shot",
+    weaponClass: weapon.class,
+    pos: { ...player.pos },
+    dir,
+  });
   wearEquippedWeapon(state);
 }
 

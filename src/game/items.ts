@@ -290,15 +290,45 @@ export function weaponDamageFor(state: GameState, weapon: Equipment): number {
   return def.damage * multiplier;
 }
 
+/**
+ * A weapon's effective reach for this player. Melee weapons gain range from
+ * STRENGTH (a strong bruiser holds the crowd a little further back); ranged
+ * and magic weapons use their flat catalog range. This is the single source
+ * of truth for reach — targeting and the UI both route through it.
+ */
+export function weaponRangeFor(state: GameState, weapon: Equipment): number {
+  const def = weaponDef(weapon.defId);
+  if (def.class !== "melee") return def.range;
+  return (
+    def.range * (1 + effectiveStat(state, "strength") * STATS.meleeRangePerStr)
+  );
+}
+
+/**
+ * The ms between this weapon's attacks for this player. STRENGTH quickens
+ * melee swings (higher hit frequency); ranged and magic keep their catalog
+ * cadence. Combat cooldown and the DPS/score math both route through it, so
+ * a strong build's faster swings raise every surface consistently.
+ */
+export function weaponCooldownFor(state: GameState, weapon: Equipment): number {
+  const def = weaponDef(weapon.defId);
+  if (def.class !== "melee") return def.cooldownMs;
+  return (
+    def.cooldownMs /
+    (1 + effectiveStat(state, "strength") * STATS.meleeSpeedPerStr)
+  );
+}
+
 // ---- Auto-equip scoring --------------------------------------------------------
 
 /**
  * A weapon's expected damage per second in this player's hands — the number
- * auto-equip ranks weapons by, so an INT build genuinely prefers wands.
+ * auto-equip ranks weapons by, so an INT build genuinely prefers wands and a
+ * STR build feels its melee weapons swing faster.
  */
 export function weaponScore(state: GameState, weapon: Equipment): number {
   return (
-    (weaponDamageFor(state, weapon) * 1000) / weaponDef(weapon.defId).cooldownMs
+    (weaponDamageFor(state, weapon) * 1000) / weaponCooldownFor(state, weapon)
   );
 }
 
