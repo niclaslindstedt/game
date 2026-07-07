@@ -296,6 +296,78 @@ describe("weapon", () => {
   });
 });
 
+describe("melee sweep AoE", () => {
+  const equip = (state: ReturnType<typeof startGame>, defId: string) => {
+    state.player.equipment.weapon = {
+      id: 777,
+      defId,
+      slot: "weapon",
+      tier: "regular",
+      affixes: [],
+    };
+  };
+
+  it("a blade cleaves every monster in the cone in one swing", () => {
+    const state = startGame();
+    state.obstacles = [];
+    equip(state, "test_wrench"); // default 120° cone, reach 42
+    const { x, y } = state.player.pos;
+    // Three minions clustered ahead, all within reach and the front cone.
+    const front = [
+      makeEnemy({ pos: { x: x + 20, y } }),
+      makeEnemy({ pos: { x: x + 18, y: y + 10 } }),
+      makeEnemy({ pos: { x: x + 18, y: y - 10 } }),
+    ];
+    // One directly behind the swing — in reach, but outside the cone.
+    const behind = makeEnemy({ pos: { x: x - 24, y } });
+    state.enemies = [...front, behind];
+
+    step(state, idle, DT);
+
+    // A single swing bloodied all three in front…
+    for (const enemy of front) {
+      expect(enemy.hp).toBeLessThan(enemy.maxHp);
+    }
+    // …and left the one behind the arc untouched.
+    expect(behind.hp).toBe(behind.maxHp);
+    // Only one swing was emitted for the whole cleave.
+    expect(state.events.filter((e) => e.type === "swing")).toHaveLength(1);
+  });
+
+  it("the swing event carries the weapon's cone angle", () => {
+    const state = startGame();
+    state.obstacles = [];
+    equip(state, "test_wrench");
+    const { x, y } = state.player.pos;
+    state.enemies = [makeEnemy({ pos: { x: x + 20, y } })];
+    step(state, idle, DT);
+    const swing = state.events.find((e) => e.type === "swing");
+    // 120° default cone, in radians.
+    expect(swing).toMatchObject({ arc: expect.closeTo((120 * Math.PI) / 180) });
+  });
+
+  it("a spear thrusts a narrow cone far, sparing what a blade would clip", () => {
+    const state = startGame();
+    state.obstacles = [];
+    equip(state, "test_spear"); // narrow 40° cone, long reach 90
+    const { x, y } = state.player.pos;
+    // Nearest monster straight ahead sets the aim.
+    const near = makeEnemy({ pos: { x: x + 40, y } });
+    // A second monster far down the same line — beyond a blade's reach,
+    // still skewered by the spear.
+    const far = makeEnemy({ pos: { x: x + 80, y } });
+    // Off to the side: inside a wide arc, but outside the narrow thrust.
+    const flank = makeEnemy({ pos: { x: x + 50, y: y + 50 } });
+    state.enemies = [near, far, flank];
+
+    step(state, idle, DT);
+
+    expect(near.hp).toBeLessThan(near.maxHp);
+    expect(far.hp).toBeLessThan(far.maxHp); // reaches far down the line
+    expect(flank.hp).toBe(flank.maxHp); // the flank is spared
+  });
+});
+
 describe("strength melee", () => {
   const equipWrench = (state: ReturnType<typeof startGame>) => {
     state.player.equipment.weapon = {

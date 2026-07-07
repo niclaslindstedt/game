@@ -63,6 +63,7 @@ export {
   weaponDamageFor,
   weaponRangeFor,
   weaponScore,
+  weaponSweepHalfAngle,
   wearEquippedWeapon,
 } from "./game/items.ts";
 

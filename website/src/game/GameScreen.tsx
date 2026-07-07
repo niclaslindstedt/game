@@ -438,14 +438,16 @@ export function GameScreen({
               untilMs: state.stats.timeMs + 130,
             });
           }
-          // A melee swing sweeps a slash arc toward the target, sized to the
-          // weapon's (STRENGTH-widened) reach.
+          // A melee swing sweeps a slash toward the target, sized to the
+          // weapon's (STRENGTH-widened) reach and its cone: a wide arc for a
+          // blade, a narrow thrust for a spear.
           if (event.type === "swing") {
             effects.push({
               kind: "swing",
               pos: event.pos,
               angle: Math.atan2(event.dir.y, event.dir.x),
               radius: event.range,
+              arc: event.arc,
               untilMs: state.stats.timeMs + 200,
               durationMs: 200,
             });

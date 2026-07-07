@@ -363,6 +363,8 @@ export type Effect = {
   angle?: number;
   /** Swing: the arc's reach in world px (the weapon's effective range). */
   radius?: number;
+  /** Swing: the full cone angle in radians (wide blade vs narrow spear). */
+  arc?: number;
   /** Muzzle: ranged fires a hot flash, magic a cool cast burst. */
   weaponClass?: "melee" | "ranged" | "magic";
 };
@@ -427,15 +429,17 @@ export function drawEffects(
     }
 
     if (effect.kind === "swing") {
-      // A crescent slash sweeps through the aim: a bright leading edge
-      // chasing a softer trail, at the weapon's reach. Reads as the arc of
-      // the swing without needing a per-weapon sprite.
+      // The slash sweeps through the aim across the weapon's cone: a bright
+      // leading edge chasing a softer trail, at the weapon's reach. A wide
+      // cone reads as a blade's arc; a narrow one as a spear's thrust straight
+      // down the line. Reads as the swing without a per-weapon sprite.
       const duration = effect.durationMs ?? 200;
       const t = 1 - (effect.untilMs - timeMs) / duration; // 0 → 1
       if (t < 0 || t > 1) continue;
       const aim = effect.angle ?? 0;
       const reach = Math.max(6, (effect.radius ?? 40) - 4);
-      const half = 0.95; // ~54° each side of the aim → ~108° sweep
+      // Half the true cone, clamped so even a pure thrust shows a sliver.
+      const half = Math.max(0.12, (effect.arc ?? 1.9) / 2);
       const start = aim - half;
       // The edge races a touch ahead of the fade so the slash "lands".
       const lead = start + 2 * half * Math.min(1, t * 1.3);

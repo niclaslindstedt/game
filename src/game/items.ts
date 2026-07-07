@@ -10,7 +10,7 @@
 import { advanceCutsceneBeat, finishCutscene } from "@game/lib/cutscene.ts";
 import type { Rng } from "@game/lib/rng.ts";
 import { randomRange } from "@game/lib/rng.ts";
-import { LOOT, PLAYER, STATS } from "./config.ts";
+import { LOOT, MELEE, PLAYER, STATS } from "./config.ts";
 import { cutsceneDef } from "./defs/cutscenes.ts";
 import {
   AFFIX_POOLS,
@@ -315,6 +315,19 @@ export function weaponCooldownFor(state: GameState, weapon: Equipment): number {
   const def = weaponDef(weapon.defId);
   const stat = effectiveStat(state, CLASS_STAT[def.class]);
   return def.cooldownMs / (1 + stat * STATS.attackSpeedPerStat);
+}
+
+/**
+ * A melee weapon's swing cone as a half-angle in radians — the sector on each
+ * side of the aim that the sweep strikes. Wide for a slashing blade, narrow
+ * for a thrusting spear (which leans on its long `range` instead). This is the
+ * single source of truth for the cone: the sweep's hit test and the arc the
+ * app draws both route through it.
+ */
+export function weaponSweepHalfAngle(weapon: Equipment): number {
+  const def = weaponDef(weapon.defId);
+  const deg = def.sweepDeg ?? MELEE.defaultSweepDeg;
+  return (deg * Math.PI) / 360;
 }
 
 // ---- Auto-equip scoring --------------------------------------------------------

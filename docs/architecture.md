@@ -134,8 +134,9 @@ run against synthetic fixtures with no shipped content (see
   mutations the UI calls into: loot rolls, `equipFromInventory` /
   `unequipToInventory` / `moveInventoryItem`, `allocateStat`, the derived
   stats (max hp, weapon damage, move speed, crit chance, and — for melee —
-  STRENGTH-scaled reach `weaponRangeFor` and swing cadence
-  `weaponCooldownFor`), the auto-equip scoring (`weaponScore` DPS /
+  STRENGTH-scaled reach `weaponRangeFor`, swing cadence `weaponCooldownFor`,
+  and the swing cone `weaponSweepHalfAngle` that makes a swing cleave every
+  monster it faces), the auto-equip scoring (`weaponScore` DPS /
   `gearScore`), and the durability cycle
   (`wearEquippedWeapon` — a broken weapon is trashed and the best bag
   weapon takes over — and `repairEquippedWeapon` for repair-kit drops).
