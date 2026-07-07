@@ -205,8 +205,12 @@ export function drawFrame(
   }
 
   for (const projectile of state.projectiles) {
+    // Each weapon names its own shot sprite (staple, zap, vial, ray…) — the
+    // stapler throws staples, the taser arcs, the beaker sloshes. Fall back
+    // to the class default if a name is ever unknown.
     const sprite =
-      projectile.weaponClass === "magic" ? sprites.spark : sprites.bolt;
+      spriteByName(sprites, projectile.sprite) ??
+      (projectile.weaponClass === "magic" ? sprites.spark : sprites.bolt);
     // Shots fired mid-jump draw at their height, sinking back in flight.
     ctx.drawImage(
       sprite,
@@ -344,7 +348,7 @@ function drawAbilities(
  * from engine events and passes what is still alive.
  */
 export type Effect = {
-  kind: "lightning" | "nuke" | "splash" | "damage";
+  kind: "lightning" | "nuke" | "splash" | "damage" | "swing" | "muzzle";
   pos: { x: number; y: number };
   untilMs: number;
   /** Total effect length, for progress-driven animation. */
@@ -355,6 +359,12 @@ export type Effect = {
   value?: number;
   /** Damage number: crits shake, grow, and glow gold. */
   crit?: boolean;
+  /** Swing/muzzle: the aim direction in radians. */
+  angle?: number;
+  /** Swing: the arc's reach in world px (the weapon's effective range). */
+  radius?: number;
+  /** Muzzle: ranged fires a hot flash, magic a cool cast burst. */
+  weaponClass?: "melee" | "ranged" | "magic";
 };
 
 export function drawEffects(
@@ -412,6 +422,85 @@ export function drawEffects(
         groundY - rise - font.height * scale,
         { scale, color: crit ? "#ffd75e" : "#f4f4f4" },
       );
+      ctx.globalAlpha = 1;
+      continue;
+    }
+
+    if (effect.kind === "swing") {
+      // A crescent slash sweeps through the aim: a bright leading edge
+      // chasing a softer trail, at the weapon's reach. Reads as the arc of
+      // the swing without needing a per-weapon sprite.
+      const duration = effect.durationMs ?? 200;
+      const t = 1 - (effect.untilMs - timeMs) / duration; // 0 → 1
+      if (t < 0 || t > 1) continue;
+      const aim = effect.angle ?? 0;
+      const reach = Math.max(6, (effect.radius ?? 40) - 4);
+      const half = 0.95; // ~54° each side of the aim → ~108° sweep
+      const start = aim - half;
+      // The edge races a touch ahead of the fade so the slash "lands".
+      const lead = start + 2 * half * Math.min(1, t * 1.3);
+      ctx.save();
+      ctx.translate(x, groundY);
+      // Softer trailing sweep behind the edge.
+      ctx.globalAlpha = Math.max(0, 0.4 * (1 - t));
+      ctx.strokeStyle = "#9fc4ff";
+      ctx.lineWidth = 2;
+      ctx.beginPath();
+      ctx.arc(0, 0, reach - 1, start, lead);
+      ctx.stroke();
+      // Bright leading edge.
+      ctx.globalAlpha = Math.max(0, 0.9 * (1 - t));
+      ctx.strokeStyle = "#f2f7ff";
+      ctx.lineWidth = 3;
+      ctx.beginPath();
+      ctx.arc(0, 0, reach, Math.max(start, lead - 0.4), lead);
+      ctx.stroke();
+      ctx.restore();
+      ctx.globalAlpha = 1;
+      continue;
+    }
+
+    if (effect.kind === "muzzle") {
+      // A short flash at the weapon's muzzle, a few px ahead along the aim.
+      // Ranged fires a hot yellow starburst; magic blooms a cool arcane ring.
+      const duration = effect.durationMs ?? 110;
+      const t = 1 - (effect.untilMs - timeMs) / duration; // 0 → 1
+      if (t < 0 || t > 1) continue;
+      const aim = effect.angle ?? 0;
+      const fade = 1 - t;
+      const mx = x + Math.round(Math.cos(aim) * 9);
+      // Lift to the weapon's height (the hero holds it mid-body).
+      const my = groundY + Math.round(Math.sin(aim) * 9) - 5;
+      ctx.save();
+      if (effect.weaponClass === "magic") {
+        ctx.globalAlpha = 0.9 * fade;
+        ctx.strokeStyle = "#c9a6ff";
+        ctx.lineWidth = 1;
+        ctx.beginPath();
+        ctx.arc(mx, my, 2 + t * 7, 0, Math.PI * 2);
+        ctx.stroke();
+        ctx.fillStyle = `rgba(230, 214, 255, ${0.9 * fade})`;
+        ctx.fillRect(mx - 1, my - 1, 2, 2);
+      } else {
+        ctx.globalAlpha = fade;
+        ctx.fillStyle = "#fff2c0";
+        ctx.beginPath();
+        ctx.arc(mx, my, 2 + fade * 2, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.strokeStyle = "#ffd36b";
+        ctx.lineWidth = 1;
+        for (const spread of [0, 0.5, -0.5]) {
+          const len = 4 + t * 4;
+          ctx.beginPath();
+          ctx.moveTo(mx, my);
+          ctx.lineTo(
+            mx + Math.cos(aim + spread) * len,
+            my + Math.sin(aim + spread) * len,
+          );
+          ctx.stroke();
+        }
+      }
+      ctx.restore();
       ctx.globalAlpha = 1;
       continue;
     }

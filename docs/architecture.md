@@ -133,8 +133,10 @@ run against synthetic fixtures with no shipped content (see
 - **`src/game/items.ts`** — equipment instances and the player-driven
   mutations the UI calls into: loot rolls, `equipFromInventory` /
   `unequipToInventory` / `moveInventoryItem`, `allocateStat`, the derived
-  stats (max hp, weapon damage, move speed, crit chance), the auto-equip
-  scoring (`weaponScore` DPS / `gearScore`), and the durability cycle
+  stats (max hp, weapon damage, move speed, crit chance, and — for melee —
+  STRENGTH-scaled reach `weaponRangeFor` and swing cadence
+  `weaponCooldownFor`), the auto-equip scoring (`weaponScore` DPS /
+  `gearScore`), and the durability cycle
   (`wearEquippedWeapon` — a broken weapon is trashed and the best bag
   weapon takes over — and `repairEquippedWeapon` for repair-kit drops).
 - **`src/game/bot.ts`** — the autopilot: pure strategies (`idle`, `rush`,

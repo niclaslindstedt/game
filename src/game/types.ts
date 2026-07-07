@@ -181,8 +181,10 @@ export type Projectile = {
   damage: number;
   /** Remaining ms before the projectile despawns. */
   lifetimeMs: number;
-  /** Which weapon class fired it (drives the projectile sprite). */
+  /** Which weapon class fired it (drives sound and hit resolution). */
   weaponClass: WeaponClass;
+  /** The sprite the renderer draws for this shot (staple, zap, vial…). */
+  sprite: string;
   /**
    * Height above the ground at which the shot is drawn — inherited from a
    * jumping shooter, sinking back to 0 in flight. Visual only.
@@ -308,8 +310,17 @@ export type GameStats = {
  * step.
  */
 export type GameEvent =
-  | { type: "shot"; weaponClass: WeaponClass }
-  | { type: "swing" }
+  /**
+   * A projectile weapon fired. `pos` is the muzzle (the shooter), `dir` the
+   * unit aim — the app draws a firing flash (ranged) or a cast burst (magic)
+   * oriented along it.
+   */
+  | { type: "shot"; weaponClass: WeaponClass; pos: Vec2; dir: Vec2 }
+  /**
+   * A melee weapon swung. `pos` is the swinger, `dir` the unit aim, `range`
+   * the effective reach — the app sweeps a slash arc at that radius.
+   */
+  | { type: "swing"; pos: Vec2; dir: Vec2; range: number }
   | { type: "jump" }
   | { type: "land" }
   | {
