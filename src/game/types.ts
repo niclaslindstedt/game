@@ -481,11 +481,19 @@ export type GameState = {
    */
   moveSpawnCredit: number;
   /**
-   * Kill count at which the level's guaranteed early weapon drops (rolled
-   * at creation from loot.earlyWeapon); null once dropped or when the level
-   * has none.
+   * Resolved kill thresholds for the level's `loot.earlyDrops` schedule,
+   * parallel to it: a rolled `[min, max]` entry gets a concrete count here at
+   * creation, a fixed entry keeps its number. Empty when the level has no
+   * schedule.
    */
-  earlyWeaponAtKills: number | null;
+  earlyDropKills: number[];
+  /**
+   * Cursor into the `loot.earlyDrops` schedule: the index of the next unfired
+   * entry (entries are authored in ascending kill order). Advances as each
+   * scripted opening drop is handed over; equals the schedule length once they
+   * have all dropped.
+   */
+  earlyDropCursor: number;
   stats: GameStats;
   /** Events emitted by the most recent `step()`. */
   events: GameEvent[];

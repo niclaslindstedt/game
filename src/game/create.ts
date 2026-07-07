@@ -190,17 +190,15 @@ export function createGame(
     minionEquipmentDrops: 0,
     waveSpawned: (def.waves?.budget ?? []).map(() => 0),
     moveSpawnCredit: 0,
-    // Roll where in [minKills, maxKills] the guaranteed early weapon lands —
-    // fixed per seed, discovered in play.
-    earlyWeaponAtKills: def.loot.earlyWeapon
-      ? Math.floor(
-          randomRange(
-            rng,
-            def.loot.earlyWeapon.minKills,
-            def.loot.earlyWeapon.maxKills + 1,
-          ),
-        )
-      : null,
+    // Resolve the scripted opening drops: a rolled [min, max] threshold picks
+    // a concrete kill discovered in play; a fixed number stands as authored.
+    earlyDropKills: (def.loot.earlyDrops ?? []).map((d) =>
+      Array.isArray(d.atKills)
+        ? Math.floor(randomRange(rng, d.atKills[0], d.atKills[1] + 1))
+        : d.atKills,
+    ),
+    // The scripted opening drops fire in kill order from the first entry.
+    earlyDropCursor: 0,
     stats: {
       kills: 0,
       totalEnemies: enemies.length + waveTotal,

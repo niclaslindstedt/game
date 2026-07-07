@@ -412,7 +412,11 @@ export const FIX_LEVEL: LevelDef = {
     gearPool: ["test_suit", "test_charm"],
     abilityPool: ["test_orbit", "test_storm", "test_stasis", "test_magnet"],
     tierChances: { magic: 0.2 },
-    earlyWeapon: { defId: "test_hammer", minKills: 40, maxKills: 100 },
+    earlyDrops: [
+      { atKills: 2, weapon: "test_hammer" },
+      { atKills: 5, ability: "test_storm" },
+      { atKills: 8, item: "xp" },
+    ],
   },
 };
 

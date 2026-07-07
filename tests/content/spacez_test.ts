@@ -150,8 +150,11 @@ describe("level catalog integrity", () => {
       if (level.loot.allClearWeapon) {
         expect(weaponDef(level.loot.allClearWeapon)).toBeDefined();
       }
-      if (level.loot.earlyWeapon) {
-        expect(weaponDef(level.loot.earlyWeapon.defId)).toBeDefined();
+      for (const entry of level.loot.earlyDrops ?? []) {
+        if ("weapon" in entry) expect(weaponDef(entry.weapon)).toBeDefined();
+        else if ("ability" in entry) {
+          expect(abilityDef(entry.ability)).toBeDefined();
+        }
       }
     }
   });

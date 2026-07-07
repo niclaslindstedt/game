@@ -63,13 +63,24 @@ describe("campaign catalog integrity", () => {
         }
       });
 
-      it("resolves the trophy and early-drop weapons", () => {
+      it("resolves the trophy and scheduled early drops", () => {
         if (level.loot.allClearWeapon) {
           expect(() => weaponDef(level.loot.allClearWeapon!)).not.toThrow();
         }
-        if (level.loot.earlyWeapon) {
-          expect(() => weaponDef(level.loot.earlyWeapon!.defId)).not.toThrow();
+        const drops = level.loot.earlyDrops ?? [];
+        for (const entry of drops) {
+          if ("weapon" in entry) {
+            expect(() => weaponDef(entry.weapon)).not.toThrow();
+          } else if ("ability" in entry) {
+            expect(() => abilityDef(entry.ability)).not.toThrow();
+          }
         }
+        // Entries must be authored in ascending kill order (by the low bound)
+        // — the runtime fires them with a single forward cursor.
+        const kills = drops.map((d) =>
+          Array.isArray(d.atKills) ? d.atKills[0] : d.atKills,
+        );
+        expect(kills).toEqual([...kills].sort((a, b) => a - b));
       });
 
       it("resolves every hand-placed pickup", () => {
