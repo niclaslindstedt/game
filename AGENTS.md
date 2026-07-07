@@ -79,9 +79,17 @@ picked-up weapons and items.
 horizontally: a ~844×390 CSS viewport (≈422×195 world units at the app's
 `VIEW_SCALE` of 2). Design every element — HUD, overlays, spawn distances,
 weapon ranges, anything sized against "the screen" — to fit and feel right
-at that size; larger desktop windows just see more moon. Run playtests and
-visual checks at this viewport (the playtest harness defaults to it), not
-at a desktop size.
+at that size. Run playtests and visual checks at this viewport (the playtest
+harness defaults to it), not at a desktop size.
+
+Large screens render the whole presentation at **2× the phone baseline** so
+the phone-tuned HUD, text, and sprites stay legible instead of shrinking:
+`viewScaleFor` (render.ts) doubles the world zoom, and a `min-width/height:
+700px` media query doubles the root font-size (styles.css) so the rem-sized
+DOM UI — PixelText canvases included — scales in lockstep. Keep the two
+breakpoints in sync (`UI_SCALE_BREAKPOINT_PX`). A desktop still never sees
+_less_ moon than the phone; it just sees it at phone-sized zoom rather than
+zoomed out.
 
 Two layers, one dependency direction:
 

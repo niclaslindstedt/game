@@ -8,6 +8,9 @@ import { useEffect, useRef } from "react";
 
 import type { PixelFont } from "./pixel-font.ts";
 
+/** CSS px per rem at the default root font-size — the 1:1 reference. */
+const REM_BASE_PX = 16;
+
 export type PixelTextProps = {
   font: PixelFont;
   text: string;
@@ -29,8 +32,17 @@ export function PixelText({
   useEffect(() => {
     const canvas = canvasRef.current;
     if (!canvas) return;
-    canvas.width = Math.max(1, font.measure(text) * scale);
-    canvas.height = font.height * scale;
+    const w = Math.max(1, font.measure(text) * scale);
+    const h = font.height * scale;
+    canvas.width = w;
+    canvas.height = h;
+    // Display the crisp bitmap in rem so it tracks the root font-size: at the
+    // default 16px root this is exactly 1:1 (unchanged), and where the root is
+    // bumped for large screens (styles.css) the text scales up with the rest
+    // of the rem-sized UI. `pixelated` keeps that upscale sharp.
+    canvas.style.width = `${w / REM_BASE_PX}rem`;
+    canvas.style.height = `${h / REM_BASE_PX}rem`;
+    canvas.style.imageRendering = "pixelated";
     const ctx = canvas.getContext("2d");
     if (!ctx) return;
     ctx.clearRect(0, 0, canvas.width, canvas.height);
