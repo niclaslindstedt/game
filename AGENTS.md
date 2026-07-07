@@ -36,6 +36,10 @@ make changelog VERSION=X.Y.Z  # preview a release's CHANGELOG section
 - PRs are squash-merged; the **PR title** becomes the single commit on `main`,
   so it must follow conventional-commit format.
 - Breaking changes use `<type>!:` or a `BREAKING CHANGE:` footer.
+- **Do not babysit PRs.** Once a PR is opened, write out its URL and a short
+  summary of what was done, then stop. Don't subscribe to PR activity, poll
+  CI, schedule check-ins, or auto-push follow-up fixes — leave review and
+  merge to a human. Only return to a PR when explicitly asked.
 
 ## Changelog fragments
 
