@@ -152,8 +152,11 @@ export type Enemy = {
   critFlashMs?: number;
   /**
    * Elites sleep at their post until the player wanders close (or wounds
-   * them); once true they hunt forever — no drifting back home. Unused by
-   * minions and bosses, whose wakefulness is derived per tick.
+   * them); once true they hunt forever — no drifting back home. Minions use
+   * it as their aggro latch: waking needs line of sight (ghosts excepted),
+   * the chase then holds even through walls, and escaping the aggro radius
+   * puts them back to sleep. Unused by bosses, whose wakefulness is derived
+   * per tick.
    */
   awake?: boolean;
   /**

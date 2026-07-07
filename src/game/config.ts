@@ -65,6 +65,13 @@ export const ENEMY_AI = {
   /** Pairwise push-apart distance so packs don't stack into one blob. */
   separation: 16,
   /**
+   * Fraction of the separation distance mobs may overlap (0 = shoulder to
+   * shoulder, 0.2 = bodies squeeze 20% into each other). Looser packing
+   * lets a kited horde bunch into one clump the player can finish off
+   * together — the single knob to turn if packs feel too loose or too tight.
+   */
+  overlapFraction: 0.2,
+  /**
    * A minion counts toward the wave floor (waves.minAlive) only within this
    * distance of the player — parked spawns on the far side of the map must
    * not satisfy "there's a pack on screen".

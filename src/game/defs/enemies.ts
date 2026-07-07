@@ -34,6 +34,12 @@ export type EnemyDef = {
   /** Minimum ms between contact hits from the same enemy. */
   contactCooldownMs: number;
   /**
+   * A ghostly monster: senses the player through walls (no line-of-sight
+   * aggro check) and drifts straight through every obstacle. The dead
+   * don't respect stone.
+   */
+  phasing?: boolean;
+  /**
    * XP granted on kill. Omitted = proportional to max hp
    * (LEVELING.xpPerHp) — the standing rule; set only to override it.
    */
@@ -382,6 +388,7 @@ export const ENEMY_DEFS: Record<string, EnemyDef> = {
     role: "minion",
     sprite: "wisp",
     gore: "ecto",
+    phasing: true,
     // One base blaster hit: wisps are the horde's fodder — the flood is
     // only survivable because its front rank evaporates on contact.
     hp: 10,
@@ -398,6 +405,7 @@ export const ENEMY_DEFS: Record<string, EnemyDef> = {
     role: "minion",
     sprite: "ghost",
     gore: "ecto",
+    phasing: true,
     hp: 45,
     speed: 16,
     radius: 9,
@@ -412,6 +420,7 @@ export const ENEMY_DEFS: Record<string, EnemyDef> = {
     role: "minion",
     sprite: "wraith",
     gore: "ecto",
+    phasing: true,
     hp: 90,
     speed: 22,
     radius: 9,
@@ -430,6 +439,7 @@ export const ENEMY_DEFS: Record<string, EnemyDef> = {
     role: "elite",
     sprite: "apollo_ghost",
     gore: "ecto",
+    phasing: true,
     hp: 220,
     speed: 20,
     radius: 12,
@@ -471,6 +481,7 @@ export const ENEMY_DEFS: Record<string, EnemyDef> = {
     role: "elite",
     sprite: "prospector",
     gore: "ecto",
+    phasing: true,
     hp: 240,
     speed: 22,
     radius: 12,
@@ -512,6 +523,7 @@ export const ENEMY_DEFS: Record<string, EnemyDef> = {
     role: "elite",
     sprite: "quarantine_medic",
     gore: "ecto",
+    phasing: true,
     hp: 260,
     speed: 20,
     radius: 12,
@@ -554,6 +566,7 @@ export const ENEMY_DEFS: Record<string, EnemyDef> = {
     role: "elite",
     sprite: "cartographer",
     gore: "ecto",
+    phasing: true,
     hp: 240,
     speed: 26,
     radius: 12,
@@ -594,6 +607,7 @@ export const ENEMY_DEFS: Record<string, EnemyDef> = {
     role: "boss",
     sprite: "armstrong",
     gore: "ecto",
+    phasing: true,
     hp: 550,
     speed: 40,
     radius: 20,
