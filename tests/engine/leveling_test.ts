@@ -16,6 +16,8 @@ import {
   step,
   weaponDef,
   weaponDamage,
+  weaponDamageFor,
+  type Equipment,
 } from "@game/core";
 import {
   clearStage,
@@ -110,6 +112,40 @@ describe("stats", () => {
     state.player.stats.dexterity = 2;
     expect(weaponDamage(state)).toBeCloseTo(
       base * (1 + 2 * STATS.damageBonusPerPoint),
+    );
+  });
+
+  it("weaponDamageFor scales a bag weapon by ITS class stat, plus affixes", () => {
+    // The HUD switcher and inventory readouts rank/label carried (unequipped)
+    // weapons through weaponDamageFor, so it must apply the candidate's own
+    // governing stat — not the equipped weapon's.
+    const state = startGame(); // blaster equipped: ranged
+    const wandDef = weaponDef("test_wand"); // magic
+    const wand: Equipment = {
+      id: 999,
+      defId: "test_wand",
+      slot: "weapon",
+      tier: "regular",
+      affixes: [],
+      durability: wandDef.durability,
+    };
+
+    expect(weaponDamageFor(state, wand)).toBe(wandDef.damage);
+
+    // DEX (the equipped blaster's stat) must NOT move the magic wand.
+    state.player.stats.dexterity = 4;
+    expect(weaponDamageFor(state, wand)).toBe(wandDef.damage);
+
+    // INT (the wand's own class stat) does.
+    state.player.stats.intelligence = 3;
+    expect(weaponDamageFor(state, wand)).toBeCloseTo(
+      wandDef.damage * (1 + 3 * STATS.damageBonusPerPoint),
+    );
+
+    // A damagePct affix stacks into the same multiplier.
+    wand.affixes = [{ kind: "damagePct", value: 0.5 }];
+    expect(weaponDamageFor(state, wand)).toBeCloseTo(
+      wandDef.damage * (1 + 3 * STATS.damageBonusPerPoint + 0.5),
     );
   });
 

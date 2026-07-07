@@ -59,6 +59,7 @@ export {
   rollEquipment,
   unequipToInventory,
   weaponDamage,
+  weaponDamageFor,
   weaponScore,
   wearEquippedWeapon,
 } from "./game/items.ts";

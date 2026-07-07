@@ -25,6 +25,7 @@ import {
   debug,
   dismissIntro,
   enemyDef,
+  equipFromInventory,
   LEVELS,
   levelDef,
   openInventory,
@@ -33,7 +34,9 @@ import {
   step,
   storyItemDef,
   tapCutscene,
+  weaponDamageFor,
   weaponDef,
+  WEAPON_DEFS,
   type BotStrategy,
   type Difficulty,
   type GameInput,
@@ -74,7 +77,7 @@ import {
 } from "./render.ts";
 import { getSettings } from "./settings.ts";
 import { playEventSounds, playUiSound } from "./sfx/index.ts";
-import { TIER_COLORS } from "./tiers.ts";
+import { TIER_COLORS, WEAPON_CLASS_COLORS } from "./tiers.ts";
 
 type Hud = {
   phase: GamePhase;
@@ -168,6 +171,8 @@ export function GameScreen({
   // The lower-right pickup feed ("PICKED UP X"). Lines are appended as loot is
   // scooped and expire on individual PICKUP_TTL_MS timers (see the loop).
   const [pickups, setPickups] = useState<PickupMessage[]>([]);
+  // Whether the in-HUD weapon switcher (tap the weapon slot) is expanded.
+  const [weaponMenuOpen, setWeaponMenuOpen] = useState(false);
 
   useEffect(() => {
     let alive = true;
@@ -623,15 +628,113 @@ export function GameScreen({
                 </div>
                 <PixelText font={font} text={String(hud.hp)} scale={2} />
               </div>
-              <div className="hud-stat-row">
+              <div className="hud-stat-row hud-weapon-row">
                 {(() => {
+                  if (!state) return null;
+                  const equipped = state.player.equipment.weapon;
+                  const equippedColor =
+                    WEAPON_CLASS_COLORS[weaponDef(equipped.defId).class];
                   const icon = spriteDataUrl(
                     assets.sprites,
-                    weaponDef(hud.weaponDefId).icon,
+                    weaponDef(equipped.defId).icon,
                   );
-                  return icon ? (
-                    <img src={icon} alt="" className="pixel-img wpn-icon" />
-                  ) : null;
+                  // Other carried weapons, highest damage first — the ones
+                  // you're most likely to want to switch to. Damage is
+                  // stat-scaled (weaponDamageFor), so the ordering matches the
+                  // number shown on each slot and follows your build.
+                  const alternatives = state.player.inventory
+                    .map((item, index) => ({ item, index }))
+                    .filter(
+                      (e) => e.item !== null && e.item.defId in WEAPON_DEFS,
+                    )
+                    .map((e) => ({
+                      item: e.item!,
+                      index: e.index,
+                      dmg: Math.round(weaponDamageFor(state, e.item!)),
+                    }))
+                    .sort((a, b) => b.dmg - a.dmg);
+                  return (
+                    <div className="wpn-control">
+                      <button
+                        type="button"
+                        className="wpn-slot"
+                        aria-label="switch-weapon"
+                        style={{
+                          borderColor: equippedColor.border,
+                          background: equippedColor.bg,
+                        }}
+                        onClick={() => {
+                          setWeaponMenuOpen((open) => !open);
+                          playUiSound(synth, "confirm");
+                        }}
+                      >
+                        {icon ? (
+                          <img
+                            src={icon}
+                            alt=""
+                            className="pixel-img wpn-slot-img"
+                          />
+                        ) : null}
+                      </button>
+                      {weaponMenuOpen && (
+                        <div className="wpn-switcher">
+                          {alternatives.length === 0 ? (
+                            <PixelText
+                              font={font}
+                              text="NO OTHER WEAPONS"
+                              scale={1}
+                              color="#9aa3ad"
+                            />
+                          ) : (
+                            alternatives.map(({ item, index, dmg }) => {
+                              const color =
+                                WEAPON_CLASS_COLORS[
+                                  weaponDef(item.defId).class
+                                ];
+                              const wpnIcon = spriteDataUrl(
+                                assets.sprites,
+                                weaponDef(item.defId).icon,
+                              );
+                              return (
+                                <button
+                                  key={item.id}
+                                  type="button"
+                                  className="wpn-slot wpn-switch-slot"
+                                  aria-label={`equip-${item.defId}`}
+                                  style={{
+                                    borderColor: color.border,
+                                    background: color.bg,
+                                  }}
+                                  onClick={() => {
+                                    if (equipFromInventory(state, index)) {
+                                      playUiSound(synth, "equip");
+                                      setWeaponMenuOpen(false);
+                                      bumpUi();
+                                    }
+                                  }}
+                                >
+                                  {wpnIcon ? (
+                                    <img
+                                      src={wpnIcon}
+                                      alt=""
+                                      className="pixel-img wpn-slot-img"
+                                    />
+                                  ) : null}
+                                  <span className="wpn-switch-dmg">
+                                    <PixelText
+                                      font={font}
+                                      text={String(dmg)}
+                                      scale={1}
+                                    />
+                                  </span>
+                                </button>
+                              );
+                            })
+                          )}
+                        </div>
+                      )}
+                    </div>
+                  );
                 })()}
                 <div className="hud-bar wpn-bar">
                   <div
@@ -678,6 +781,7 @@ export function GameScreen({
               aria-label="open-inventory"
               onClick={() => {
                 if (state) {
+                  setWeaponMenuOpen(false);
                   openInventory(state);
                   playUiSound(synth, "confirm");
                   bumpUi();
