@@ -15,6 +15,7 @@ import { buildFilmStrip, writeAnimatedWebp } from "./asset-tools/animation.mjs";
 import { packAtlas } from "./asset-tools/atlas.mjs";
 import { buildFontAtlas, renderText } from "./asset-tools/font.mjs";
 import { gridStats, gridToSurface, validateGrid } from "./asset-tools/grid.mjs";
+import { groundContrast, woundVisibility } from "./asset-tools/lint.mjs";
 import { buildPalette } from "./asset-tools/palette.mjs";
 import { buildContactSheet, writePng } from "./asset-tools/preview.mjs";
 import { blit, createSurface, fill, upscale } from "./asset-tools/surface.mjs";
@@ -22,8 +23,10 @@ import { CORE_PALETTE } from "./sprite-data/core.mjs";
 import {
   ANIMATIONS,
   FAMILIES,
+  SPRITE_FAMILY,
   SPRITE_PALETTES,
   SPRITES,
+  WOUND_PLANS,
 } from "./sprite-data/index.mjs";
 
 const here = (p) => fileURLToPath(new URL(p, import.meta.url));
@@ -63,15 +66,51 @@ await writePng(atlas, `${assetsDir}/atlas.png`);
 writeFileSync(`${assetsDir}/atlas.json`, `${JSON.stringify(rects, null, 2)}\n`);
 
 // Contact sheets: one per family over ITS ground tile (the reviewable
-// unit), plus the full strip for cross-family sweeps.
+// unit — wounded variants included), plus the full strip for cross-family
+// sweeps. Cells grow to the family's biggest sprite so bosses don't
+// overflow their neighbors. The contrast lint runs alongside: a silhouette
+// dissolving into the family's ground is flagged here instead of during
+// playtesting.
 for (const family of FAMILIES) {
+  const names = Object.keys(SPRITES).filter(
+    (name) => SPRITE_FAMILY[name] === family.name,
+  );
   const familySurfaces = Object.fromEntries(
-    Object.keys(family.sprites).map((name) => [name, surfaces[name]]),
+    names.map((name) => [name, surfaces[name]]),
+  );
+  const cell = Math.max(
+    24,
+    ...names.map((n) => Math.max(surfaces[n].width, surfaces[n].height) + 4),
   );
   await writePng(
-    buildContactSheet(familySurfaces, surfaces[family.ground]),
+    buildContactSheet(familySurfaces, surfaces[family.ground], { cell }),
     `${previewDir}/family_${family.name}.png`,
   );
+  for (const name of names) {
+    if (family.contrastExempt.includes(name)) continue;
+    const failing = groundContrast(surfaces[name], surfaces[family.ground]);
+    if (failing !== null) {
+      console.warn(
+        `! ${name}: edge contrast ${failing.toFixed(0)} vs ${family.ground} — check family_${family.name}.png`,
+      );
+    }
+  }
+}
+
+// Wound visibility: a wound painted in colors the body already wears is
+// invisible (the #24 wraith case) — flag it before anyone squints at 200
+// previews.
+for (const [sprite, plan] of Object.entries(WOUND_PLANS)) {
+  const failing = woundVisibility(
+    SPRITES[`${sprite}_0`],
+    SPRITES[`${sprite}_hurt_0`],
+    SPRITE_PALETTES[`${sprite}_0`],
+  );
+  if (failing !== null) {
+    console.warn(
+      `! ${sprite}: hurt overlay visibly changes only ${failing} px — pick a splat char that separates from the body (style: ${JSON.stringify(plan.style)})`,
+    );
+  }
 }
 await writePng(
   buildContactSheet(surfaces, surfaces.moon_0),
