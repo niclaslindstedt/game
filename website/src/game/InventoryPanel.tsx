@@ -14,6 +14,7 @@ import {
 } from "react";
 
 import {
+  computeMaxHp,
   effectiveStat,
   equipFromInventory,
   equipmentIcon,
@@ -21,6 +22,7 @@ import {
   gearDef,
   moveInventoryItem,
   playerCritChance,
+  previewEquipped,
   unequipToInventory,
   weaponDamage,
   weaponDef,
@@ -101,6 +103,64 @@ function itemLines(item: Equipment): string[] {
     }
   }
   return lines;
+}
+
+/** Positive = upgrade (green), negative = downgrade (red). */
+const DELTA_UP = "#5fd97a";
+const DELTA_DOWN = "#e06a6a";
+
+/**
+ * Format a stat delta for the "(+3)" upgrade hint. `unit: "%"` renders the
+ * change in percentage points (crit); everything else is a whole number.
+ * Returns null when the change rounds to nothing, so unaffected stats stay
+ * clean.
+ */
+function deltaChip(
+  delta: number,
+  unit: "" | "%" = "",
+): { text: string; color: string } | null {
+  const rounded = unit === "%" ? Math.round(delta * 100) : Math.round(delta);
+  if (rounded === 0) return null;
+  const sign = rounded > 0 ? "+" : "";
+  return {
+    text: `${sign}${rounded}${unit}`,
+    color: rounded > 0 ? DELTA_UP : DELTA_DOWN,
+  };
+}
+
+/** One row of the character sheet: `LABEL VALUE` with an optional green/red
+ * upgrade delta trailing it. */
+function StatLine({
+  font,
+  label,
+  value,
+  chip,
+  color,
+}: {
+  font: PixelFont;
+  label: string;
+  value: string;
+  chip: { text: string; color: string } | null;
+  color?: string;
+}) {
+  return (
+    <div className="stat-row">
+      <PixelText
+        font={font}
+        text={`${label} ${value}`}
+        scale={1}
+        color={color}
+      />
+      {chip && (
+        <PixelText
+          font={font}
+          text={`(${chip.text})`}
+          scale={1}
+          color={chip.color}
+        />
+      )}
+    </div>
+  );
 }
 
 function ItemIcon({
@@ -229,6 +289,12 @@ export function InventoryPanel({
 
   const player = state.player;
   const shown = inspected;
+  // Holding/hovering an item previews it in the character sheet: the stat
+  // getters read a throwaway loadout with `shown` slotted in, and the
+  // per-line difference from the live loadout drives the green/red upgrade
+  // hints. Inspecting the piece already worn shows no deltas (it equals
+  // itself).
+  const preview = shown ? previewEquipped(state, shown) : null;
 
   return (
     <div className="game-overlay inventory-overlay">
@@ -281,24 +347,55 @@ export function InventoryPanel({
             <div className="char-sheet">
               <PixelText font={font} text="STATS" scale={2} color="#9aa3ad" />
               {(Object.keys(STAT_LABELS) as StatName[]).map((stat) => (
-                <PixelText
+                <StatLine
                   key={stat}
                   font={font}
-                  text={`${STAT_LABELS[stat]} ${effectiveStat(state, stat)}`}
-                  scale={1}
+                  label={STAT_LABELS[stat]}
+                  value={String(effectiveStat(state, stat))}
+                  chip={
+                    preview
+                      ? deltaChip(
+                          effectiveStat(preview, stat) -
+                            effectiveStat(state, stat),
+                        )
+                      : null
+                  }
                 />
               ))}
-              <PixelText
+              <StatLine
                 font={font}
-                text={`DMG ${Math.round(weaponDamage(state))}`}
-                scale={1}
-                color="#7ef0c8"
+                label="MAX HP"
+                value={String(computeMaxHp(state))}
+                chip={
+                  preview
+                    ? deltaChip(computeMaxHp(preview) - computeMaxHp(state))
+                    : null
+                }
               />
-              <PixelText
+              <StatLine
                 font={font}
-                text={`CRIT ${Math.round(playerCritChance(state) * 100)}%`}
-                scale={1}
+                label="DMG"
+                value={String(Math.round(weaponDamage(state)))}
                 color="#7ef0c8"
+                chip={
+                  preview
+                    ? deltaChip(weaponDamage(preview) - weaponDamage(state))
+                    : null
+                }
+              />
+              <StatLine
+                font={font}
+                label="CRIT"
+                value={`${Math.round(playerCritChance(state) * 100)}%`}
+                color="#7ef0c8"
+                chip={
+                  preview
+                    ? deltaChip(
+                        playerCritChance(preview) - playerCritChance(state),
+                        "%",
+                      )
+                    : null
+                }
               />
             </div>
           </div>

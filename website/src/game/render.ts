@@ -13,6 +13,7 @@ import {
   LAST_STAND,
   magnetRadius,
   orbPositions,
+  playerSuited,
   storyItemDef,
   WOUNDS,
   type GameState,
@@ -477,11 +478,16 @@ function drawPlayer(
 ): void {
   const player = state.player;
   const airborne = player.z > 0;
+  // Plain-clothes hero until he dons the EVA suit; the astronaut set after.
+  const suited = playerSuited(state);
+  const walkA = suited ? assets.sprites.player_0 : assets.sprites.hero_0;
+  const walkB = suited ? assets.sprites.player_1 : assets.sprites.hero_1;
+  const jump = suited ? assets.sprites.player_jump : assets.sprites.hero_jump;
   const sprite = airborne
-    ? assets.sprites.player_jump
+    ? jump
     : player.moving && Math.floor(timeMs / 160) % 2 === 1
-      ? assets.sprites.player_1
-      : assets.sprites.player_0;
+      ? walkB
+      : walkA;
   const x = Math.round(player.pos.x - TILE / 2 - camera.x);
   const y = Math.round(player.pos.y - TILE / 2 - camera.y - player.z);
 

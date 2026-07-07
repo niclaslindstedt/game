@@ -101,10 +101,12 @@ describe("repair kits", () => {
     expect(state.player.equipment.weapon.durability).toBe(
       WEAPON_DEFS.hammer!.durability,
     );
-    expect(state.events).toContainEqual({
-      type: "itemCollected",
-      kind: "repair",
-    });
+    expect(state.events).toContainEqual(
+      expect.objectContaining({
+        type: "itemCollected",
+        kind: "repair",
+      }),
+    );
   });
 
   it("stay on the ground when there is nothing to repair", () => {

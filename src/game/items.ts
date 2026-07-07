@@ -104,7 +104,14 @@ function rollTier(state: GameState, tierBonus: number): Tier {
  */
 export function rollEquipment(
   state: GameState,
-  opts: { slot?: "weapon" | "gear"; tierBonus?: number; defId?: string } = {},
+  opts: {
+    slot?: "weapon" | "gear";
+    tierBonus?: number;
+    defId?: string;
+    /** Force a specific tier instead of rolling one (story-guaranteed
+     * uniques like the epic space suit the moon level can't otherwise roll). */
+    tier?: Tier;
+  } = {},
 ): Equipment {
   const rng = state.rng;
   const loot = levelDef(state.level.id).loot;
@@ -117,7 +124,7 @@ export function rollEquipment(
   const defId = opts.defId ?? (pool[Math.floor(rng() * pool.length)] as string);
   const slot: EquipSlot = family === "weapon" ? "weapon" : gearDef(defId).slot;
 
-  const tier = rollTier(state, opts.tierBonus ?? 0);
+  const tier = opts.tier ?? rollTier(state, opts.tierBonus ?? 0);
   const affixes: Affix[] = [];
   const available = [...AFFIX_POOLS[family]];
   for (let i = 0; i < TIERS[tier].affixCount && available.length > 0; i++) {
@@ -137,6 +144,25 @@ export function rollEquipment(
 function equippedPieces(state: GameState): Equipment[] {
   const { weapon, suit, charm } = state.player.equipment;
   return [weapon, suit, charm].filter((e): e is Equipment => e !== null);
+}
+
+/**
+ * A shallow view of `state` with `candidate` slotted into its equip slot —
+ * for previewing what a bag item would do to the derived stats (the "+3
+ * DAMAGE" upgrade hints in the inventory) without disturbing the real
+ * loadout. Only `player.equipment` is replaced; everything else is shared, so
+ * the stat getters below read straight through it.
+ */
+export function previewEquipped(
+  state: GameState,
+  candidate: Equipment,
+): GameState {
+  const player = state.player;
+  const equipment = { ...player.equipment };
+  if (candidate.slot === "weapon") equipment.weapon = candidate;
+  else if (candidate.slot === "suit") equipment.suit = candidate;
+  else equipment.charm = candidate;
+  return { ...state, player: { ...player, equipment } };
 }
 
 /** Stat points from level-ups plus any equipped `+N <stat>` affixes. */
@@ -192,6 +218,20 @@ export function playerCritChance(state: GameState): number {
     }
   }
   return chance;
+}
+
+/**
+ * Whether the hero is drawn as the astronaut. He wears the EVA suit once he
+ * has looted and donned the SpaceZ space suit; on every level but SpaceZ HQ
+ * he starts suited (the story picks up mid-mission). The renderer reads this
+ * to choose the plain-clothes or astronaut sprite set.
+ */
+export function playerSuited(state: GameState): boolean {
+  const suit = state.player.equipment.suit;
+  if (suit && !isWeaponDef(suit.defId) && gearDef(suit.defId).spacesuit) {
+    return true;
+  }
+  return levelDef(state.level.id).heroSuited ?? true;
 }
 
 /** The player's walk speed in world px/s: base quickened by SPEED points. */

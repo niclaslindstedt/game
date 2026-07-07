@@ -180,12 +180,17 @@ function dropGuaranteedLoot(state: GameState, def: EnemyDef, at: Vec2): void {
     x: clamp(at.x + (state.rng() - 0.5) * 90, 16, state.level.width - 16),
     y: clamp(at.y + (state.rng() - 0.5) * 90, 16, state.level.height - 16),
   });
-  for (const defId of loot.items ?? []) {
+  for (const entry of loot.items ?? []) {
+    const spec = typeof entry === "string" ? { defId: entry } : entry;
     state.items.push({
       id: state.nextId++,
       kind: "equipment",
       pos: scatter(),
-      equipment: rollEquipment(state, { defId, tierBonus: loot.tierBonus }),
+      equipment: rollEquipment(state, {
+        defId: spec.defId,
+        tier: spec.tier,
+        tierBonus: loot.tierBonus,
+      }),
     });
   }
   for (const defId of loot.storyItems ?? []) {

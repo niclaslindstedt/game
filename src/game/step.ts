@@ -49,6 +49,7 @@ import { levelDef } from "./defs/levels.ts";
 import {
   addToInventory,
   enemyCritChance,
+  equipmentName,
   isBetterEquipment,
   playerSpeed,
   recomputeMaxHp,
@@ -268,7 +269,15 @@ function stepPlayer(
     distance(player.pos, input.target) > PLAYER.arriveRadius
   ) {
     const before = player.pos;
-    const next = moveToward(player.pos, input.target, playerSpeed(state) * dt);
+    // A gentle nudge of the dpad walks slowly; a full push runs. The throttle
+    // never fully stops the walk (a held-but-centered finger still creeps)
+    // and defaults to full speed for headless callers that omit it.
+    const throttle = clamp(input.throttle ?? 1, 0, 1);
+    const next = moveToward(
+      player.pos,
+      input.target,
+      playerSpeed(state) * throttle * dt,
+    );
     player.facing = direction(before, input.target);
     // The sprite flip only follows decisively horizontal movement —
     // near-vertical steering would otherwise mirror-flicker every step.
@@ -769,7 +778,11 @@ function stepItems(state: GameState): void {
     if (item.kind === "medkit") {
       player.hp = Math.min(player.maxHp, player.hp + MEDKIT.heal);
       state.stats.itemsCollected++;
-      state.events.push({ type: "itemCollected", kind: "medkit" });
+      state.events.push({
+        type: "itemCollected",
+        kind: "medkit",
+        name: "MEDKIT",
+      });
       return false;
     }
 
@@ -777,7 +790,11 @@ function stepItems(state: GameState): void {
     // with the threshold, so arrows keep paying toward level-ups all run.
     if (item.kind === "xp") {
       state.stats.itemsCollected++;
-      state.events.push({ type: "itemCollected", kind: "xp" });
+      state.events.push({
+        type: "itemCollected",
+        kind: "xp",
+        name: "GOLDEN ARROW",
+      });
       grantXp(
         state,
         Math.max(1, Math.round(player.xpToNext * LEVELING.arrowXpShare)),
@@ -790,7 +807,11 @@ function stepItems(state: GameState): void {
     if (item.kind === "repair") {
       if (!repairEquippedWeapon(state)) return true;
       state.stats.itemsCollected++;
-      state.events.push({ type: "itemCollected", kind: "repair" });
+      state.events.push({
+        type: "itemCollected",
+        kind: "repair",
+        name: "REPAIR KIT",
+      });
       return false;
     }
 
@@ -807,7 +828,11 @@ function stepItems(state: GameState): void {
       if (state.player.heldAbilities.length >= HELD_ITEMS.cap) return true;
       state.player.heldAbilities.push(item.defId);
       state.stats.itemsCollected++;
-      state.events.push({ type: "itemCollected", kind: "ability" });
+      state.events.push({
+        type: "itemCollected",
+        kind: "ability",
+        name: abilityDef(item.defId).name,
+      });
       return false;
     }
 
@@ -838,6 +863,7 @@ function stepItems(state: GameState): void {
         type: "itemCollected",
         kind: "equipment",
         tier: item.equipment.tier,
+        name: equipmentName(item.equipment),
       });
       state.events.push({ type: "autoEquipped", defId: item.equipment.defId });
       return false;
@@ -848,6 +874,7 @@ function stepItems(state: GameState): void {
       type: "itemCollected",
       kind: "equipment",
       tier: item.equipment.tier,
+      name: equipmentName(item.equipment),
     });
     return false;
   });

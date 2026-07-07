@@ -294,7 +294,13 @@ export type GameEvent =
       crit: boolean;
     }
   | { type: "playerHurt"; crit: boolean }
-  | { type: "itemCollected"; kind: Item["kind"]; tier?: Tier }
+  | {
+      type: "itemCollected";
+      kind: Item["kind"];
+      tier?: Tier;
+      /** Human-readable label for the "picked up X" pickup feed. */
+      name?: string;
+    }
   | { type: "itemDropped"; pos: Vec2 }
   /** A picked-up piece was better than the equipped one and replaced it. */
   | { type: "autoEquipped"; defId: string }
@@ -324,6 +330,13 @@ export type GameInput = {
   steering: boolean;
   /** Steering target in world coordinates (meaningful while steering). */
   target: Vec2;
+  /**
+   * Walk throttle in [0, 1]: how hard the player is pushing the dpad (or how
+   * far the cursor sits from the character). 1 = full speed; smaller values
+   * ease the character into a gentle walk when the finger barely leaves the
+   * dpad center. Absent (headless tests, bots) defaults to full speed.
+   */
+  throttle?: number;
   /** True on the step a jump was requested (tap / space edge, not hold). */
   jump: boolean;
   /**

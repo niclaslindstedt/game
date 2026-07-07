@@ -135,7 +135,8 @@ describe("steering", () => {
   it("clamps the player inside the finite level", () => {
     const state = startGame();
     clearStage(state);
-    run(state, steerTo(-5000, -5000), 1800);
+    // Long enough for the slower walk to cover the diagonal to the corner.
+    run(state, steerTo(-5000, -5000), 4000);
     expect(state.player.pos.x).toBe(PLAYER.radius);
     expect(state.player.pos.y).toBe(PLAYER.radius);
   });
