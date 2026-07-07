@@ -12,9 +12,9 @@ import { PixelText } from "@ui/lib/PixelText.tsx";
 
 import { loadGameAssets, type GameAssets } from "./assets.ts";
 import { synth } from "./audio.ts";
-import { playTitleMusic } from "./music.ts";
+import { playTitleMusic } from "./music/index.ts";
 import { getSettings, updateSettings } from "./settings.ts";
-import { playUiSound } from "./sfx.ts";
+import { playUiSound } from "./sfx/index.ts";
 
 type MenuScreen = "main" | "difficulty" | "settings" | "controls" | "help";
 

@@ -26,7 +26,7 @@ what makes every game rule unit-testable in plain Node.
 | Public surface | `src/index.ts` — export new types/constants the app needs |
 | Tests | `tests/<system>_test.ts` (Vitest, `_test` suffix mandatory) |
 | Drawing | `website/src/game/render.ts` (+ new sprites via the `pixel-assets` skill) |
-| Sound | `website/src/game/sfx.ts` (+ the `sound-effects` skill) |
+| Sound | `website/src/game/sfx/` (+ the `sound-effects` skill) |
 | HUD/overlay | `website/src/game/GameScreen.tsx` |
 
 ## Workflow

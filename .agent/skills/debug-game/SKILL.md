@@ -31,7 +31,7 @@ route over clicking around in a browser.
    - input bug → `GameInput` wrong (check the steering target the app
      computes from the pointer + camera in `GameScreen.tsx`)
    - audio bug → events right (log `state.events`), sound wrong
-     (`sfx.ts`/`synth.ts`; remember audio needs a user gesture to unlock)
+     (`sfx/`/`synth.ts`; remember audio needs a user gesture to unlock)
 2. **Engine bugs: write the failing test BEFORE the fix.** Arrange the
    exact scenario in `tests/`, step until the bad state appears, assert
    the correct behavior, watch it fail, then fix `src/game/*`. The test
