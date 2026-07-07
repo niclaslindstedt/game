@@ -148,6 +148,7 @@ export {
   ENEMY_AI,
   HELD_ITEMS,
   JUMP,
+  LAST_STAND,
   LEVELING,
   LOOT,
   MEDKIT,
@@ -156,6 +157,7 @@ export {
   PROJECTILE,
   RUN,
   STATS,
+  WOUNDS,
 } from "./game/config.ts";
 
 export type {

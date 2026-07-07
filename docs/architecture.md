@@ -100,7 +100,9 @@ hundredth weapon means adding catalog entries, not touching the simulation.
   weapon auto-attack (wearing the weapon's durability) → abilities →
   projectiles → enemies (aggro/guard/elite AI, dialogue triggers, contact
   damage, obstacle push-out) → wave spawner → item pickups → locked doors
-  → objective → win/lose. The character fights autonomously (and only
+  → objective → win/lose. A boss at or below `LAST_STAND.hpFraction`
+  multiplies its contact damage — the one-last-stand spike the renderer
+  telegraphs with a flickering dying sprite. The character fights autonomously (and only
   targets monsters inside the visible view the app passes in
   `input.view`); the player steers, jumps (tap/Space), spends banked
   ability pickups (`input.useItem`), spends level-up stat points, and
@@ -164,7 +166,9 @@ deploy-shaped:
   `InventoryPanel.tsx` (the Diablo-style bag: drag-to-equip slots,
   tier-colored borders, item card, character sheet), `render.ts` (camera +
   sprite drawing onto a world-unit canvas upscaled with `image-rendering:
-pixelated`), `tiers.ts` (tier name colors), `sfx.ts` (engine events →
+pixelated`; enemies swap to generated wounded sprite variants as hp falls
+  per `config.WOUNDS`, and a boss in its last stand flickers),
+  `tiers.ts` (tier name colors), `sfx.ts` (engine events →
   synthesized NES-palette sounds + menu UI sounds), `music.ts` (the
   original chiptune title/level themes as note data), `audio.ts` (one
   shared synth split into SFX/music volume views), `settings.ts`
