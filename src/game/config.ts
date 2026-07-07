@@ -186,7 +186,7 @@ export const MEDKIT = {
 
 /**
  * Ability pickups are carried, not auto-used: touching one banks it, and the
- * `useItem` input (mouse click / two-finger tap / the HUD button) spends the
+ * `useItem` input (mouse click / the HUD button) spends the
  * oldest banked one. Timing the storm for the flood is the player's call.
  */
 export const HELD_ITEMS = {

@@ -89,9 +89,31 @@ export function createSynth(): Synth {
   let ctx: AudioContext | null = null;
   let echoInput: GainNode | null = null;
 
+  // iOS puts the context into a non-standard "interrupted" state on app
+  // switch / lock; treat anything that isn't running or closed as resumable.
+  const resume = (c: AudioContext): void => {
+    if (c.state !== "running" && c.state !== "closed") {
+      c.resume().catch(() => {});
+    }
+  };
+
   const ensure = (): AudioContext | null => {
     if (typeof AudioContext === "undefined") return null;
-    ctx ??= new AudioContext();
+    if (!ctx) {
+      ctx = new AudioContext();
+      const c = ctx;
+      // iOS PWA: returning from another app leaves the context interrupted
+      // and no user gesture is guaranteed — resume on foreground transitions.
+      const onVisible = (): void => {
+        if (document.visibilityState === "visible") resume(c);
+      };
+      document.addEventListener("visibilitychange", onVisible);
+      window.addEventListener("pageshow", onVisible);
+      window.addEventListener("focus", onVisible);
+      c.addEventListener("statechange", () => {
+        if (document.visibilityState === "visible") resume(c);
+      });
+    }
     return ctx;
   };
 
@@ -155,7 +177,7 @@ export function createSynth(): Synth {
   return {
     unlock() {
       const c = ensure();
-      if (c && c.state === "suspended") void c.resume();
+      if (c) resume(c);
     },
 
     now() {
