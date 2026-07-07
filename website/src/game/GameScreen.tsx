@@ -74,6 +74,7 @@ import {
   drawFrame,
   VIEW_SCALE,
   viewScaleFor,
+  uiScaleFor,
   type Effect,
 } from "./render.ts";
 import { getSettings } from "./settings.ts";
@@ -114,7 +115,11 @@ const PICKUP_MAX = 6;
 // speed, so a barely-off-center thumb walks instead of standing still.
 const MIN_WALK_THROTTLE = 0.35;
 // Cursor-follow reaches full speed once the target leads the character by this
-// many world px; nearer than that the character eases down to a walk.
+// many world px; nearer than that the character eases down to a walk. This is
+// the phone baseline: desktop renders the world at 2× zoom (uiScaleFor), which
+// would otherwise double the physical cursor travel needed to sprint, so the
+// live throttle divides that extra zoom back out (see the render loop) — the
+// on-screen distance to full speed stays constant across viewports.
 const CURSOR_FULL_SPEED_PX = 90;
 
 /** Map a dpad thumb distance (CSS px) to a walk throttle in [MIN_WALK, 1]. */
@@ -126,9 +131,12 @@ function dpadThrottle(len: number): number {
   );
 }
 
-/** Map a cursor-to-character distance (world px) to a walk throttle in [0, 1]. */
-function cursorThrottle(dist: number): number {
-  return Math.max(0, Math.min(1, dist / CURSOR_FULL_SPEED_PX));
+/** Map a cursor-to-character distance (world px) to a walk throttle in [0, 1].
+ * `fullSpeedPx` is the distance at which the throttle saturates; callers shrink
+ * it by the viewport's UI scale so the character sprints after the same CSS
+ * cursor travel whether or not the desktop 2× zoom is active. */
+function cursorThrottle(dist: number, fullSpeedPx: number): number {
+  return Math.max(0, Math.min(1, dist / fullSpeedPx));
 }
 
 function formatTime(ms: number): string {
@@ -267,12 +275,16 @@ export function GameScreen({
     // (pixelated). The scale is the phone baseline (VIEW_SCALE), doubled on
     // large/desktop viewports so the world matches the 2×-scaled DOM UI.
     const cssToWorld = { x: 1 / VIEW_SCALE, y: 1 / VIEW_SCALE };
+    // Extra desktop zoom (1 on phones, 2 on large screens); cursor-follow
+    // divides it out so a sprint takes the same CSS mouse travel everywhere.
+    let uiScale = uiScaleFor(window.innerWidth, window.innerHeight);
     const resize = () => {
       const scale = viewScaleFor(window.innerWidth, window.innerHeight);
       canvas.width = Math.max(1, Math.ceil(canvas.clientWidth / scale));
       canvas.height = Math.max(1, Math.ceil(canvas.clientHeight / scale));
       cssToWorld.x = canvas.width / canvas.clientWidth;
       cssToWorld.y = canvas.height / canvas.clientHeight;
+      uiScale = uiScaleFor(window.innerWidth, window.innerHeight);
     };
     const observer = new ResizeObserver(resize);
     observer.observe(canvas);
@@ -406,11 +418,14 @@ export function GameScreen({
             input.target.y = camera.y + pointer.state.y * cssToWorld.y;
             // On desktop the pace scales with how far the cursor leads the
             // character — hold it close to stroll, throw it wide to sprint.
+            // Divide the desktop 2× zoom out of the full-speed distance so the
+            // sprint threshold stays fixed in CSS px, not doubled by the zoom.
             input.throttle = cursorThrottle(
               Math.hypot(
                 input.target.x - state.player.pos.x,
                 input.target.y - state.player.pos.y,
               ),
+              CURSOR_FULL_SPEED_PX / uiScale,
             );
           }
           input.jump = jumpQueuedRef.current;
