@@ -426,9 +426,8 @@ export function InventoryPanel({
   }, [dragActive, state, onChange]);
 
   // Raise (or update) the item tooltip, anchored to the cell under the pointer.
-  const inspectItem =
-    (item: Equipment) => (e: ReactPointerEvent) =>
-      setInspect({ item, anchor: e.currentTarget.getBoundingClientRect() });
+  const inspectItem = (item: Equipment) => (e: ReactPointerEvent) =>
+    setInspect({ item, anchor: e.currentTarget.getBoundingClientRect() });
 
   const startDrag =
     (item: Equipment, from: DragSource) => (e: ReactPointerEvent) => {
