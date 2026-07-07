@@ -164,10 +164,13 @@ deploy-shaped:
   `InventoryPanel.tsx` (the Diablo-style bag: drag-to-equip slots,
   tier-colored borders, item card, character sheet), `render.ts` (camera +
   sprite drawing onto a world-unit canvas upscaled with `image-rendering:
-pixelated`), `tiers.ts` (tier name colors), `sfx.ts` (engine events →
-  synthesized NES-palette sounds + menu UI sounds), `music.ts` (the
-  original chiptune title/level themes as note data), `audio.ts` (one
-  shared synth split into SFX/music volume views), `settings.ts`
+pixelated`), `tiers.ts` (tier name colors), `sfx/` (engine events →
+  synthesized 16-bit-palette sounds, organized by domain: `ui.ts`,
+  `combat.ts`, `world.ts`, `pickups.ts`, `jingles.ts` behind `index.ts`),
+  `music/` (one score file per track — `title.ts`, `level.ts` — each
+  holding all instruments + notes as tracker-style pattern data, arranged
+  to loop at ~2 minutes; `index.ts` owns the single player), `audio.ts`
+  (one shared synth split into SFX/music volume views), `settings.ts`
   (persisted control-scheme + volume settings), `progress.ts` (persisted
   story progress: watched cutscenes, so a prelude plays once per device),
   `assets.ts` (loads the generated sprites + pixel font), and `assets/`
@@ -176,9 +179,12 @@ pixelated`), `tiers.ts` (tier name colors), `sfx.ts` (engine events →
   `@ui/lib/*` alias and earmarked for oss-framework extraction:
   `game-loop.ts` (fixed-timestep rAF loop), `pointer.ts` (pointer gestures:
   hold/hover steering state, taps with finger count, press edges),
-  `synth.ts` (WebAudio SFX synth — the game ships zero audio files),
-  `chiptune.ts` (the NES-style music sequencer scheduling note-data tracks
-  on the synth), `pixel-font.ts` + `PixelText.tsx` (runtime renderer for
+  `synth.ts` (WebAudio SFX synth with 16-bit voice features — attack
+  envelopes, detuned dual oscillators, vibrato, stereo pan, biquad
+  filters, and a shared SNES-style echo bus; the game ships zero audio
+  files), `chiptune.ts` (the 16-bit-style music sequencer: named
+  instrument patches + patterns + an order arrangement, scheduled on the
+  synth), `pixel-font.ts` + `PixelText.tsx` (runtime renderer for
   the generated bitmap font), `flag-store.ts` (a persisted string-flag set
   with graceful no-storage fallback), `load-images.ts`.
 - **`website/scripts/asset-tools/` + `sprite-data.mjs` +
@@ -262,7 +268,8 @@ Every PR that touches user-visible code must add a fragment under
   (pixel grids, palette ramps, glyph definitions) rendered by
   `make assets`. Art is diffable and agent-editable like any other code.
 - **Synthesized audio over audio files** — every sound is a handful of
-  WebAudio oscillator/noise parameters in `website/src/game/sfx.ts`, and
-  the background music is note data (`website/src/game/music.ts`) played
-  by a small sequencer (`@ui/lib/chiptune.ts`) on the same synth — the
-  offline PWA payload stays tiny and both tunes are diffable code.
+  WebAudio oscillator/noise parameters in `website/src/game/sfx/`, and
+  the background music is tracker-style score data (one file per track
+  under `website/src/game/music/`, instruments + patterns + arrangement)
+  played by a small sequencer (`@ui/lib/chiptune.ts`) on the same synth —
+  the offline PWA payload stays tiny and every tune is diffable code.

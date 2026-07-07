@@ -47,7 +47,7 @@ import { DialogueOverlay } from "./DialogueOverlay.tsx";
 import { IntroOverlay } from "./IntroOverlay.tsx";
 import { InventoryPanel } from "./InventoryPanel.tsx";
 import { LevelUpOverlay } from "./LevelUpOverlay.tsx";
-import { playLevelMusic, stopMusic } from "./music.ts";
+import { playLevelMusic, stopMusic } from "./music/index.ts";
 import { hasSeenCutscene, markCutsceneSeen } from "./progress.ts";
 import {
   computeCamera,
@@ -57,7 +57,7 @@ import {
   type Effect,
 } from "./render.ts";
 import { getSettings } from "./settings.ts";
-import { playEventSounds, playUiSound } from "./sfx.ts";
+import { playEventSounds, playUiSound } from "./sfx/index.ts";
 
 type Hud = {
   phase: GamePhase;
