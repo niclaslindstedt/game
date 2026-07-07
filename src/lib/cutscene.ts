@@ -1,7 +1,8 @@
 // SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
 // A tiny declarative cutscene player, generic enough for any game: a scene
 // is a stage (backdrop + props), a cast of actors, and a sequential list of
-// timed beats (captions, dialogue, walks, poses, fades). The player is a
+// beats (captions, dialogue, walks, poses, fades). Motion beats run on the
+// step clock; text beats hold until the player advances them. The player is a
 // pure state machine — `stepCutscene(state, def, dtMs)` advances it with no
 // wall clock, DOM, or randomness, so scenes are unit-testable headlessly and
 // replay identically. Rendering is the caller's job: it reads the actors,
@@ -37,15 +38,19 @@ export type CutsceneActorDef = {
 /**
  * One step of the scene's timeline. Beats run strictly in order; each beat
  * finishes before the next starts. Timed beats can be cut short by
- * `advanceCutsceneBeat` (the player's tap).
+ * `advanceCutsceneBeat` (the player's tap); text beats have no timer at all —
+ * they hold the frame until that tap, JRPG-style, so the player reads at
+ * their own pace and the scene idles between clicks.
  */
 export type CutsceneBeat =
   /** Hold the frame. */
   | { kind: "wait"; ms: number }
-  /** Narrator text, no speaker ("TWO HOURS LATER."). One entry per line. */
-  | { kind: "caption"; text: string[]; ms: number }
-  /** A speech bubble anchored to an actor. One entry per line. */
-  | { kind: "say"; actor: string; text: string[]; ms: number }
+  /** Narrator text, no speaker ("TWO HOURS LATER."). One entry per line.
+   *  Holds until the player advances the beat. */
+  | { kind: "caption"; text: string[] }
+  /** A speech bubble anchored to an actor. One entry per line.
+   *  Holds until the player advances the beat. */
+  | { kind: "say"; actor: string; text: string[] }
   /** Walk an actor to a point at `speed` world px/s (facing follows). */
   | { kind: "move"; actor: string; to: Vec2; speed: number }
   /** Swap an actor's sprite (sitting → standing…). Instant. */
@@ -183,9 +188,11 @@ export function stepCutscene(
 
   switch (beat.kind) {
     case "wait":
+      if (state.beatMs >= beat.ms) nextBeat(state, def, beat);
+      return;
     case "caption":
     case "say":
-      if (state.beatMs >= beat.ms) nextBeat(state, def, beat);
+      // Text waits for the player: only advanceCutsceneBeat moves past it.
       return;
     case "fade": {
       const t = Math.min(1, state.beatMs / Math.max(1, beat.ms));

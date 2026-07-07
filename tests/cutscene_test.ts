@@ -30,9 +30,9 @@ const SCENE: CutsceneDef = {
   ],
   beats: [
     { kind: "wait", ms: 100 },
-    { kind: "caption", text: ["ONCE UPON A TIME."], ms: 200 },
+    { kind: "caption", text: ["ONCE UPON A TIME."] },
     { kind: "enter", actor: "b" },
-    { kind: "say", actor: "b", text: ["HI."], ms: 200 },
+    { kind: "say", actor: "b", text: ["HI."] },
     { kind: "move", actor: "a", to: { x: 90, y: 20 }, speed: 100 },
     { kind: "pose", actor: "a", sprite: "a_sit" },
     { kind: "face", actor: "a", faceLeft: true },
@@ -71,7 +71,7 @@ describe("cutscene player", () => {
       kind: "caption",
       text: ["ONCE UPON A TIME."],
     });
-    runScene(cs, 200); // caption over → instant enter → b speaks
+    advanceCutsceneBeat(cs, SCENE); // dismiss caption → instant enter → say
     expect(cs.actors[1]!.hidden).toBe(false);
     expect(currentLine(cs, SCENE)).toEqual({
       kind: "say",
@@ -80,10 +80,23 @@ describe("cutscene player", () => {
     });
   });
 
+  it("holds text beats indefinitely until the player advances them", () => {
+    const cs = createCutscene(SCENE);
+    runScene(cs, 112); // the caption is on screen
+    runScene(cs, 30_000); // …and the scene idles under it, however long
+    expect(cs.beat).toBe(1);
+    expect(currentLine(cs, SCENE)?.kind).toBe("caption");
+    advanceCutsceneBeat(cs, SCENE);
+    expect(cs.beat).toBe(3); // the instant enter collapsed into the say
+  });
+
   it("walks a move beat at its speed and faces the walk direction", () => {
     const cs = createCutscene(SCENE);
-    runScene(cs, 560); // wait + caption + say consumed; move running
+    runScene(cs, 112); // wait consumed; the caption holds
+    advanceCutsceneBeat(cs, SCENE); // dismiss the caption
+    advanceCutsceneBeat(cs, SCENE); // dismiss the line; the move begins
     const a = cs.actors[0]!;
+    stepCutscene(cs, SCENE, DT);
     expect(a.moving).toBe(true);
     expect(a.faceLeft).toBe(false); // walking right
     const before = a.pos.x;
@@ -100,7 +113,10 @@ describe("cutscene player", () => {
 
   it("interpolates fades and finishes the scene", () => {
     const cs = createCutscene(SCENE);
-    runScene(cs, 1500); // deep into the closing fade
+    runScene(cs, 112);
+    advanceCutsceneBeat(cs, SCENE); // caption
+    advanceCutsceneBeat(cs, SCENE); // say
+    runScene(cs, 850); // walk lands (~800ms); the closing fade is mid-flight
     expect(cs.fade).toBeGreaterThan(0);
     runScene(cs, 300);
     expect(cs.fade).toBe(1);
@@ -112,7 +128,10 @@ describe("cutscene player", () => {
 
   it("advanceCutsceneBeat cuts the running beat short with its end state", () => {
     const cs = createCutscene(SCENE);
-    runScene(cs, 560); // mid-move
+    runScene(cs, 112);
+    advanceCutsceneBeat(cs, SCENE); // caption
+    advanceCutsceneBeat(cs, SCENE); // say
+    runScene(cs, 300); // mid-move
     advanceCutsceneBeat(cs, SCENE);
     expect(cs.actors[0]!.pos).toEqual({ x: 90, y: 20 }); // snapped to mark
     expect(cs.actors[0]!.sprite).toBe("a_sit"); // instant tail ran too
@@ -149,15 +168,31 @@ describe("the prelude in a run", () => {
     expect(state.enemies.length).toBeGreaterThan(0); // world already built
   });
 
-  it("plays the whole prelude on the step clock, then lands on the intro", () => {
+  it("idles on a text beat forever — the sim can't play the scene out alone", () => {
     const state = createGame(SEED);
-    // The scene is finite: well under two minutes of stepping ends it.
-    for (let i = 0; i < 7500 && state.phase === "cutscene"; i++) {
+    // Step well past every timed beat: the scene parks on the first text.
+    for (let i = 0; i < 1200; i++) step(state, idle, DT);
+    expect(state.phase).toBe("cutscene");
+    const def = cutsceneDef("prelude");
+    expect(def.beats[state.cutscene!.beat]!.kind).toBe("caption");
+    const parked = state.cutscene!.beat;
+    for (let i = 0; i < 1200; i++) step(state, idle, DT);
+    expect(state.cutscene!.beat).toBe(parked); // still waiting for the tap
+  });
+
+  it("taps on the held text carry the scene through to the intro", () => {
+    const state = createGame(SEED);
+    const def = cutsceneDef("prelude");
+    for (let i = 0; i < 20_000 && state.phase === "cutscene"; i++) {
       step(state, idle, DT);
+      const beat = state.cutscene && def.beats[state.cutscene.beat];
+      if (beat && (beat.kind === "caption" || beat.kind === "say")) {
+        tapCutscene(state);
+      }
     }
     expect(state.phase).toBe("intro");
     expect(state.cutscene).toBeNull();
-    expect(state.stats.timeMs).toBe(0);
+    expect(state.stats.timeMs).toBe(0); // frozen throughout
   });
 
   it("tapCutscene advances one beat per tap all the way out", () => {

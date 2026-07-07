@@ -419,15 +419,14 @@ body {
 /* ---- Cutscenes (the prelude scene player) --------------------------------- */
 
 .cutscene-overlay {
-  flex-direction: column;
-  gap: 0.75rem;
   background: #06070c;
   cursor: pointer;
-  /* The stage + text must never scroll; they are sized to fit landscape. */
+  padding: 0;
+  /* The stage never scrolls; the dialogue box floats over it. */
   overflow: hidden;
 }
 
-/* Neutralize the overlay's safe-center margins: the column centers itself. */
+/* Neutralize the overlay's safe-center margins: the stage centers itself. */
 .cutscene-overlay > * {
   margin: 0;
 }
@@ -444,24 +443,45 @@ body {
   align-self: center;
 }
 
+/* The FF-style dialogue box: pinned to the screen bottom OVER the stage —
+   a line appearing must never reflow or push the scene. */
 .cutscene-line {
+  position: absolute;
+  left: 50%;
+  transform: translateX(-50%);
+  bottom: max(0.75rem, env(safe-area-inset-bottom));
+  width: min(92vw, 36rem);
   display: flex;
   flex-direction: column;
-  align-items: center;
+  align-items: flex-start;
   gap: 0.4rem;
   min-height: 3.5rem;
-  padding: 0.6rem 1.2rem;
-  background: #10151c;
+  padding: 0.6rem 1.2rem 0.75rem;
+  background: rgba(16, 21, 28, 0.92);
   border: 3px solid #1d2530;
+  pointer-events: none; /* taps fall through to the overlay */
 }
 
-.cutscene-controls {
-  display: flex;
-  align-items: center;
-  gap: 1rem;
+/* Text waits for a tap — blink the cue like a JRPG's continue arrow. */
+.cutscene-continue {
+  align-self: flex-end;
+  animation: cutscene-blink 1.2s steps(2, jump-none) infinite;
 }
 
-.cutscene-controls .pixel-button {
+@keyframes cutscene-blink {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0;
+  }
+}
+
+.cutscene-skip {
+  position: absolute;
+  top: max(0.6rem, env(safe-area-inset-top));
+  right: max(0.6rem, env(safe-area-inset-right));
   padding: 0.3rem 0.8rem;
 }
 

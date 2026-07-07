@@ -49,8 +49,9 @@ hundredth weapon means adding catalog entries, not touching the simulation.
   (a stage of props, a cast, a beat timeline) played by the generic
   `@game/lib/cutscene` state machine. A level references a scene via its
   `prelude` field; the run then opens in the `cutscene` phase (the sim
-  frozen underneath), advanced by `step()` on the same clock, tapped
-  through with `tapCutscene` or ended with `skipCutscene`.
+  frozen underneath), advanced by `step()` on the same clock. Motion beats
+  run on that clock; text beats hold until `tapCutscene` (JRPG-style), and
+  `skipCutscene` ends the scene outright.
 - **`src/game/defs/equipment.ts`** — weapons (melee/ranged/magic classes,
   each with a durability budget — dropped weapons wear out per attack and
   break; the starting sidearm is minted unbreakable), gear, the four-tier
@@ -126,8 +127,9 @@ deploy-shaped:
   bars and the banked-item USE button, end-of-run splash),
   `IntroOverlay.tsx` (the level's story text box + chosen difficulty),
   `CutsceneOverlay.tsx` (draws a running scene — backdrop, props, cast,
-  fade, dialogue — while the engine sits in the `cutscene` phase; TAP
-  advances a beat, SKIP ends the scene) and `CutscenePreview.tsx` (the
+  fade — while the engine sits in the `cutscene` phase; dialogue floats in
+  a box over the stage bottom and waits for TAP, SKIP ends the scene) and
+  `CutscenePreview.tsx` (the
   `?cutscene=<id>` workbench that loops one scene outside any run),
   `LevelUpOverlay.tsx` (the stat chooser shown while the engine pauses in
   `levelup`; folds into a 3×2 grid on landscape phones),

@@ -2,9 +2,11 @@
 // Renders a running cutscene (see @game/lib/cutscene + defs/cutscenes.ts):
 // a letterboxed side-view stage drawn on its own canvas — backdrop, props,
 // actors (bottom-anchored, painter-sorted by y), fade — with the current
-// caption/dialogue line as DOM pixel text. The overlay only DRAWS; advancing
-// the scene is the caller's job (the game loop steps it, the preview page
-// steps its own copy), so one component serves both.
+// caption/dialogue line as DOM pixel text in a JRPG dialogue box floating
+// over the stage bottom (never pushing the stage around). Text beats hold
+// until the player taps. The overlay only DRAWS; advancing the scene is the
+// caller's job (the game loop steps it, the preview page steps its own
+// copy), so one component serves both.
 
 import { useEffect, useRef, useState } from "react";
 
@@ -161,9 +163,9 @@ export function CutsceneOverlay({
         ref={canvasRef}
         className="cutscene-canvas"
         style={{
-          // Native size, shrunk to fit the viewport with room for the text
-          // box — the aspect ratio always holds.
-          width: `min(${def.stage.width * STAGE_SCALE}px, 92vw, calc((100vh - 9rem) * ${def.stage.width / def.stage.height}))`,
+          // Native size, shrunk to fit the whole viewport — the dialogue box
+          // floats OVER the stage (never pushing it), so no room is reserved.
+          width: `min(${def.stage.width * STAGE_SCALE}px, 100vw, calc(100vh * ${def.stage.width / def.stage.height}))`,
           aspectRatio: `${def.stage.width} / ${def.stage.height}`,
           height: "auto",
         }}
@@ -185,28 +187,29 @@ export function CutsceneOverlay({
           {line.text.map((row, i) => (
             <PixelText key={i} font={font} text={row} scale={2} />
           ))}
+          {/* Text waits for the player — the blink is the "your move" cue. */}
+          <div className="cutscene-continue">
+            <PixelText
+              font={font}
+              text="TAP TO CONTINUE"
+              scale={1}
+              color="#9aa3ad"
+            />
+          </div>
         </div>
       )}
-      <div className="cutscene-controls">
-        <PixelText
-          font={font}
-          text="TAP TO CONTINUE"
-          scale={1}
-          color="#9aa3ad"
-        />
-        <button
-          type="button"
-          className="pixel-button secondary"
-          aria-label="skip-cutscene"
-          onClick={(event) => {
-            event.stopPropagation();
-            onSkip();
-          }}
-          onPointerDown={(event) => event.stopPropagation()}
-        >
-          <PixelText font={font} text="SKIP" scale={2} />
-        </button>
-      </div>
+      <button
+        type="button"
+        className="pixel-button secondary cutscene-skip"
+        aria-label="skip-cutscene"
+        onClick={(event) => {
+          event.stopPropagation();
+          onSkip();
+        }}
+        onPointerDown={(event) => event.stopPropagation()}
+      >
+        <PixelText font={font} text="SKIP" scale={2} />
+      </button>
     </div>
   );
 }
