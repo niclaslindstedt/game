@@ -403,6 +403,12 @@ export type GearDef = {
   bonuses: { maxHp?: number; critChance?: number };
   /** Inventory icon sprite. */
   icon: string;
+  /**
+   * The EVA space suit: equipping it turns the plain-clothes hero into the
+   * astronaut (the renderer swaps his sprite). Only the SpaceZ suit sets
+   * this; ordinary armor leaves the hero's look alone.
+   */
+  spacesuit?: boolean;
 };
 
 export const GEAR_DEFS: Record<string, GearDef> = {
@@ -427,6 +433,17 @@ export const GEAR_DEFS: Record<string, GearDef> = {
     slot: "suit",
     bonuses: { maxHp: 20 },
     icon: "icon_suit",
+  },
+  // The prize of SpaceZ HQ: the EVA suit the hero needs to follow Ada
+  // off-planet. An epic drop that both armors him and, once worn, makes him
+  // the astronaut he is for the rest of the game.
+  space_suit: {
+    id: "space_suit",
+    name: "SPACE SUIT",
+    slot: "suit",
+    bonuses: { maxHp: 40 },
+    icon: "icon_suit",
+    spacesuit: true,
   },
   moon_charm: {
     id: "moon_charm",

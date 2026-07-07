@@ -47,10 +47,12 @@ describe("ability pickups", () => {
     expect(state.player.heldAbilities).toEqual(["fire_orbs"]);
     expect(state.player.abilities).toHaveLength(0);
     expect(state.player.inventory.every((cell) => cell === null)).toBe(true);
-    expect(state.events).toContainEqual({
-      type: "itemCollected",
-      kind: "ability",
-    });
+    expect(state.events).toContainEqual(
+      expect.objectContaining({
+        type: "itemCollected",
+        kind: "ability",
+      }),
+    );
 
     step(state, useItem, DT);
     expect(state.player.heldAbilities).toEqual([]);

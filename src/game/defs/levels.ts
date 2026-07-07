@@ -70,6 +70,13 @@ export type LevelDef = {
   gravity: number;
   /** Tileset/mood key for the renderer. */
   biome: string;
+  /**
+   * Whether the hero already wears the EVA suit when the level opens. The
+   * story starts him in plain clothes at SpaceZ HQ (`false`) — he only
+   * becomes the astronaut once he loots the space suit — and every later
+   * level picks up mid-mission with the suit on. Omitted = suited.
+   */
+  heroSuited?: boolean;
   /** What the HUD calls this level's hostiles ("GHOSTS", "STAFF"). */
   foes: string;
   /**
@@ -198,6 +205,9 @@ const SPACEZ_HQ: LevelDef = {
   // z ≈ 36 px) while landing far snappier than the moon's 340 float.
   gravity: 800,
   biome: "spacez",
+  // Level 1 opens with the hero in his living-room clothes; the EVA suit is
+  // loot here, not a given (an epic drop from the Chief of Security).
+  heroSuited: false,
   foes: "STAFF",
   playerSpawn: { x: 220, y: 620 },
   landmarks: [

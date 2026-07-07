@@ -28,6 +28,7 @@ import {
   openInventory,
   skipCutscene,
   step,
+  storyItemDef,
   tapCutscene,
   weaponDef,
   type BotStrategy,
@@ -50,6 +51,11 @@ import { IntroOverlay } from "./IntroOverlay.tsx";
 import { InventoryPanel } from "./InventoryPanel.tsx";
 import { LevelUpOverlay } from "./LevelUpOverlay.tsx";
 import { playLevelMusic, stopMusic } from "./music/index.ts";
+import {
+  PickupFeed,
+  PICKUP_TTL_MS,
+  type PickupMessage,
+} from "./PickupFeed.tsx";
 import { hasSeenCutscene, markCutsceneSeen } from "./progress.ts";
 import {
   computeCamera,
@@ -60,6 +66,7 @@ import {
 } from "./render.ts";
 import { getSettings } from "./settings.ts";
 import { playEventSounds, playUiSound } from "./sfx/index.ts";
+import { TIER_COLORS } from "./tiers.ts";
 
 type Hud = {
   phase: GamePhase;
@@ -84,6 +91,29 @@ const DPAD_DEADZONE_PX = 10;
 const DPAD_STEER_DISTANCE = 200;
 // The on-screen dpad hint: arrow ring radius and nub travel (CSS px).
 const DPAD_RING_PX = 36;
+// At most this many pickup lines show at once; older ones drop off the top so
+// a loot flood never buries the screen.
+const PICKUP_MAX = 6;
+// The gentlest push past the deadzone still creeps at this fraction of full
+// speed, so a barely-off-center thumb walks instead of standing still.
+const MIN_WALK_THROTTLE = 0.35;
+// Cursor-follow reaches full speed once the target leads the character by this
+// many world px; nearer than that the character eases down to a walk.
+const CURSOR_FULL_SPEED_PX = 90;
+
+/** Map a dpad thumb distance (CSS px) to a walk throttle in [MIN_WALK, 1]. */
+function dpadThrottle(len: number): number {
+  const span = DPAD_RING_PX - DPAD_DEADZONE_PX;
+  const t = span > 0 ? (len - DPAD_DEADZONE_PX) / span : 1;
+  return (
+    MIN_WALK_THROTTLE + (1 - MIN_WALK_THROTTLE) * Math.max(0, Math.min(1, t))
+  );
+}
+
+/** Map a cursor-to-character distance (world px) to a walk throttle in [0, 1]. */
+function cursorThrottle(dist: number): number {
+  return Math.max(0, Math.min(1, dist / CURSOR_FULL_SPEED_PX));
+}
 
 function formatTime(ms: number): string {
   const totalSeconds = Math.floor(ms / 1000);
@@ -113,6 +143,9 @@ export function GameScreen({
   // so React re-reads the frozen state.
   const [, setUiTick] = useState(0);
   const bumpUi = () => setUiTick((t) => t + 1);
+  // The lower-right pickup feed ("PICKED UP X"). Lines are appended as loot is
+  // scooped and expire on individual PICKUP_TTL_MS timers (see the loop).
+  const [pickups, setPickups] = useState<PickupMessage[]>([]);
 
   useEffect(() => {
     let alive = true;
@@ -153,6 +186,25 @@ export function GameScreen({
     }
     setState(state);
     debug(`run ${runId} started (seed ${seed}, ${difficulty})`);
+
+    // The lower-right pickup feed: a fresh run starts with an empty log, and
+    // each line schedules its own expiry so rows fade independently (WoW's
+    // loot toast: newest at the bottom, oldest drops off the top first).
+    setPickups([]);
+    const pickupTimers = new Set<ReturnType<typeof setTimeout>>();
+    let pickupSeq = 0;
+    const pushPickup = (text: string, color?: string) => {
+      const id = ++pickupSeq;
+      setPickups((prev) => {
+        const next = [...prev, { id, text, color }];
+        return next.length > PICKUP_MAX ? next.slice(-PICKUP_MAX) : next;
+      });
+      const timer = setTimeout(() => {
+        pickupTimers.delete(timer);
+        setPickups((prev) => prev.filter((p) => p.id !== id));
+      }, PICKUP_TTL_MS);
+      pickupTimers.add(timer);
+    };
 
     // The run's music: the level theme rolls once the intro is dismissed and
     // stops for the end-of-run jingles (victory/defeat events below).
@@ -290,6 +342,7 @@ export function GameScreen({
           input.steering = decided.steering;
           input.target.x = decided.target.x;
           input.target.y = decided.target.y;
+          input.throttle = 1;
           input.jump = decided.jump;
           input.useItem = decided.useItem ?? false;
         } else {
@@ -306,6 +359,9 @@ export function GameScreen({
                 state.player.pos.x + (dx / len) * DPAD_STEER_DISTANCE;
               input.target.y =
                 state.player.pos.y + (dy / len) * DPAD_STEER_DISTANCE;
+              // How far the thumb sits from the dpad center sets the pace: a
+              // nudge past the deadzone creeps, a full push to the ring runs.
+              input.throttle = dpadThrottle(len);
             }
           } else {
             // Cursor-follow steering: a hovering mouse steers with no button.
@@ -314,6 +370,14 @@ export function GameScreen({
             input.steering = pointer.state.held || hoverSteer;
             input.target.x = camera.x + pointer.state.x * cssToWorld.x;
             input.target.y = camera.y + pointer.state.y * cssToWorld.y;
+            // On desktop the pace scales with how far the cursor leads the
+            // character — hold it close to stroll, throw it wide to sprint.
+            input.throttle = cursorThrottle(
+              Math.hypot(
+                input.target.x - state.player.pos.x,
+                input.target.y - state.player.pos.y,
+              ),
+            );
           }
           input.jump = jumpQueuedRef.current;
           jumpQueuedRef.current = false;
@@ -374,6 +438,17 @@ export function GameScreen({
               untilMs: state.stats.timeMs + 450,
               durationMs: 450,
             });
+          }
+          // Loot and powerups announce themselves in the lower-right feed;
+          // equipment carries its tier color, plot pieces glow gold.
+          if (event.type === "itemCollected" && event.name) {
+            pushPickup(
+              event.name,
+              event.tier ? TIER_COLORS[event.tier] : undefined,
+            );
+          }
+          if (event.type === "storyItemCollected") {
+            pushPickup(storyItemDef(event.defId).name, "#ffd75e");
           }
           // The run is over: silence the loop so the jingle stands alone.
           if (event.type === "victory" || event.type === "defeat") {
@@ -454,6 +529,7 @@ export function GameScreen({
       observer.disconnect();
       window.removeEventListener("keydown", onKeyDown);
       canvas.removeEventListener("pointerdown", unlock);
+      pickupTimers.forEach(clearTimeout);
     };
   }, [assets, runId, difficulty]);
 
@@ -576,6 +652,10 @@ export function GameScreen({
             </button>
           </div>
         </div>
+      )}
+
+      {hud?.phase === "playing" && (
+        <PickupFeed font={font} messages={pickups} />
       )}
 
       {state && state.cutscene && hud?.phase === "cutscene" && (

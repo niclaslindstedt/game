@@ -12,6 +12,8 @@ import {
   dialogueContent,
   ENEMY_DEFS,
   enemyDef,
+  gearDef,
+  isWeaponDef,
   LEVELS,
   step,
   STORY_ITEM_DEFS,
@@ -339,12 +341,20 @@ describe("catalog integrity", () => {
     }
   });
 
-  it("keeps elite signature weapons out of the random pools", () => {
+  it("keeps elite signature gear out of the random pools", () => {
     for (const def of elites) {
-      for (const weaponId of def.loot?.items ?? []) {
-        expect(WEAPON_DEFS[weaponId], weaponId).toBeDefined();
-        for (const level of Object.values(LEVELS)) {
-          expect(level.loot.weaponPool).not.toContain(weaponId);
+      for (const entry of def.loot?.items ?? []) {
+        const id = typeof entry === "string" ? entry : entry.defId;
+        if (isWeaponDef(id)) {
+          expect(WEAPON_DEFS[id], id).toBeDefined();
+          for (const level of Object.values(LEVELS)) {
+            expect(level.loot.weaponPool).not.toContain(id);
+          }
+        } else {
+          expect(gearDef(id), id).toBeDefined();
+          for (const level of Object.values(LEVELS)) {
+            expect(level.loot.gearPool).not.toContain(id);
+          }
         }
       }
     }

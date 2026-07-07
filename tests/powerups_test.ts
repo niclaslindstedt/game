@@ -35,7 +35,9 @@ describe("xp arrows", () => {
     expect(state.player.xp).toBe(
       Math.round(state.player.xpToNext * LEVELING.arrowXpShare),
     );
-    expect(state.events).toContainEqual({ type: "itemCollected", kind: "xp" });
+    expect(state.events).toContainEqual(
+      expect.objectContaining({ type: "itemCollected", kind: "xp" }),
+    );
 
     // At a later level the same arrow is worth more raw XP — it tracks the
     // threshold instead of fading into noise.

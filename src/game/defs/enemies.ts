@@ -3,6 +3,8 @@
 // reference entries by id in their spawn lists (defs/levels.ts). Adding a
 // monster = adding an entry + a sprite named after it — no engine changes.
 
+import type { Tier } from "../types.ts";
+
 /**
  * `minion` is the horde, `boss` guards the objective — and `elite` is a
  * unique story mob: it sleeps at a hand-placed spot, rushes into view when
@@ -75,8 +77,12 @@ export type EnemyDef = {
   /** Guaranteed drops (bosses, elites). Rolled drops are the level's loot
    * table. */
   loot?: {
-    /** Specific equipment def ids always dropped, on top of the counts. */
-    items?: string[];
+    /**
+     * Specific equipment always dropped, on top of the counts. A bare id
+     * rolls its tier like any drop; `{ defId, tier }` forces the tier for
+     * story-guaranteed uniques (the epic space suit the level can't roll).
+     */
+    items?: (string | { defId: string; tier?: Tier })[];
     /** Story items always dropped (STORY_ITEM_DEFS ids — keys, dossiers). */
     storyItems?: string[];
     weapons: number;
@@ -100,7 +106,7 @@ export type EnemyDef = {
  */
 export const ENEMY_DEFS: Record<string, EnemyDef> = {
   // ---- SpaceZ HQ ------------------------------------------------------------
-  // Staff speeds sit far below the player's 80 px/s — same rule as the moon:
+  // Staff speeds sit far below the player's walk — same rule as the moon:
   // the crowd is a tide to route around, not a footrace. Guards are the
   // exception that punishes standing still.
   intern: {
@@ -245,7 +251,10 @@ export const ENEMY_DEFS: Record<string, EnemyDef> = {
     lastWords: ["UGH... PAD 2...", "SHE'S ON... PAD... 2..."],
     ai: { aggroRadius: 240, rushSpeed: 130 },
     loot: {
-      items: ["riot_taser"],
+      // The Chief guards the way off-planet — and surrenders the EVA suit
+      // the hero needs to take it. Forced epic so it lands as the run's
+      // standout suit even though SpaceZ only rolls up to magic.
+      items: ["riot_taser", { defId: "space_suit", tier: "epic" }],
       storyItems: ["cargo_manifest"],
       weapons: 0,
       gear: 1,
@@ -392,7 +401,7 @@ export const ENEMY_DEFS: Record<string, EnemyDef> = {
     },
   },
   // ---- The moon -------------------------------------------------------------
-  // Minion speeds sit far below the player's 80 px/s: the horde is a slow,
+  // Minion speeds sit far below the player's walk: the horde is a slow,
   // inevitable tide the player reads and routes around, not a footrace.
   // Aggro radii dwarf the screen — once a monster exists, it is coming.
   wisp: {

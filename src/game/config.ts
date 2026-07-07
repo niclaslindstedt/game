@@ -8,8 +8,12 @@
 export const PLAYER = {
   /** Base max hp before HEALTH stat points and equipment bonuses. */
   maxHp: 100,
-  /** Base world units per second while the pointer is held (SPEED adds). */
-  speed: 80,
+  /**
+   * Base world units per second while the pointer is held (SPEED adds). Kept
+   * deliberately low to keep the horde tense — the crowd is a tide to route
+   * around, not a footrace the player wins by holding one direction.
+   */
+  speed: 56,
   /** Collision radius. */
   radius: 10,
   /** Steering closer than this to the pointer target stops jitter. */

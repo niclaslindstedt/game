@@ -10,6 +10,7 @@ import {
   createGame,
   enemyDef,
   gearDef,
+  isWeaponDef,
   LEVEL_ORDER,
   LEVELS,
   OBSTACLES,
@@ -159,8 +160,10 @@ describe("level catalog integrity", () => {
     for (const level of levels) {
       for (const spawn of level.spawns) {
         const def = enemyDef(spawn.enemy);
-        for (const id of def.loot?.items ?? []) {
-          expect(weaponDef(id)).toBeDefined();
+        for (const entry of def.loot?.items ?? []) {
+          const id = typeof entry === "string" ? entry : entry.defId;
+          const resolved = isWeaponDef(id) ? weaponDef(id) : gearDef(id);
+          expect(resolved).toBeDefined();
         }
       }
     }

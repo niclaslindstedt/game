@@ -123,6 +123,61 @@ body {
   transition: width 120ms steps(4);
 }
 
+/* Pickup feed: WoW-style "PICKED UP X" lines stacked in the lower-right.
+   Newest sits at the bottom; each line fades on its own timer (kept in sync
+   with PICKUP_TTL_MS in GameScreen). Never eats pointer events so steering
+   passes straight through. */
+.pickup-feed {
+  position: absolute;
+  right: 1rem;
+  bottom: max(0.75rem, env(safe-area-inset-bottom));
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 0.25rem;
+  pointer-events: none;
+  text-align: right;
+}
+
+.pickup-line {
+  animation: pickup-line 10s ease-out forwards;
+  will-change: opacity, transform;
+}
+
+@keyframes pickup-line {
+  0% {
+    opacity: 0;
+    transform: translateX(0.5rem);
+  }
+  6% {
+    opacity: 1;
+    transform: translateX(0);
+  }
+  70% {
+    opacity: 1;
+    transform: translateX(0);
+  }
+  100% {
+    opacity: 0;
+    transform: translateX(0);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .pickup-line {
+    animation: pickup-fade 10s linear forwards;
+  }
+  @keyframes pickup-fade {
+    0%,
+    80% {
+      opacity: 1;
+    }
+    100% {
+      opacity: 0;
+    }
+  }
+}
+
 /* End-of-run splash: stats + retry. */
 .game-splash {
   position: absolute;
@@ -692,6 +747,14 @@ body {
 .char-sheet > canvas:first-child {
   grid-column: 1 / -1;
   margin-bottom: 0.2rem;
+}
+
+/* A character-sheet row: `LABEL VALUE` with an optional trailing upgrade
+   delta ("(+3)"), the two pixel-text canvases kept on one baseline. */
+.stat-row {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
 }
 
 .item-card {
