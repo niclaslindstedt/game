@@ -168,3 +168,60 @@ describe("difficulty scaling in a run", () => {
     );
   });
 });
+
+describe("difficulty-gated content (minDifficulty)", () => {
+  // `test_gated_level` copies `test_level` and adds one placed spawn line and
+  // one wave-budget line tagged `minDifficulty: "hard"`. Comparing the two
+  // levels at the same difficulty isolates the gate from the mob multiplier.
+  const placedCount = (levelId: string, difficulty: Difficulty) =>
+    createGame(SEED, levelId, difficulty).enemies.length;
+
+  it("omits a gated placed spawn on the rungs below its gate", () => {
+    expect(placedCount("test_gated_level", "easy")).toBe(
+      placedCount("test_level", "easy"),
+    );
+    expect(placedCount("test_gated_level", "medium")).toBe(
+      placedCount("test_level", "medium"),
+    );
+  });
+
+  it("adds the gated placed spawn from its gate up", () => {
+    const extra =
+      placedCount("test_gated_level", "hard") -
+      placedCount("test_level", "hard");
+    expect(extra).toBe(scaledMobCount(5, "hard"));
+  });
+
+  it("counts a gated wave line in totalEnemies only from the gate up", () => {
+    const mediumDelta =
+      createGame(SEED, "test_gated_level", "medium").stats.totalEnemies -
+      createGame(SEED, "test_level", "medium").stats.totalEnemies;
+    expect(mediumDelta).toBe(0);
+
+    const hardDelta =
+      createGame(SEED, "test_gated_level", "hard").stats.totalEnemies -
+      createGame(SEED, "test_level", "hard").stats.totalEnemies;
+    expect(hardDelta).toBe(
+      scaledMobCount(5, "hard") + scaledMobCount(200, "hard"),
+    );
+  });
+
+  it("never streams a gated wave line below its gate", () => {
+    // The gated line is last in a priority-ordered spawner, so the earlier
+    // lines would saturate the live cap first; exhaust them so the gated line
+    // is the only one left to spawn, then the gate is what decides.
+    const gatedIdx =
+      createGame(SEED, "test_gated_level").waveSpawned.length - 1;
+    const ramped = (difficulty: Difficulty): GameState => {
+      const state = createGame(SEED, "test_gated_level", difficulty);
+      dismissIntro(state);
+      for (let i = 0; i < gatedIdx; i++) state.waveSpawned[i] = 1e9;
+      state.stats.timeMs = WAVES.rampDurationMs; // the gated line is due
+      state.player.z = 100; // untouchable, so the run can't end mid-check
+      step(state, idle, DT);
+      return state;
+    };
+    expect(ramped("medium").waveSpawned[gatedIdx] ?? 0).toBe(0);
+    expect(ramped("hard").waveSpawned[gatedIdx] ?? 0).toBeGreaterThan(0);
+  });
+});

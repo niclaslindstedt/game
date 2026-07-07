@@ -10,9 +10,9 @@
 import { setAbilityDefs, type AbilityDef } from "./abilities.ts";
 import { setCutsceneDefs } from "./cutscenes.ts";
 import { setDifficultyDefs, type DifficultyDef } from "./difficulties.ts";
-import { setEnemyDefs, type EnemyDef } from "./enemies.ts";
+import { setEnemyDefs, type EnemyDef } from "./enemies/index.ts";
 import { setEquipmentDefs, type GearDef, type WeaponDef } from "./equipment.ts";
-import { setLevelDefs, type LevelDef } from "./levels.ts";
+import { setLevelDefs, type LevelDef } from "./levels/index.ts";
 import { setStoryItemDefs, type StoryItemDef } from "./story.ts";
 import type { CutsceneDef } from "@game/lib/cutscene.ts";
 

@@ -6,7 +6,13 @@
 
 import { useEffect, useMemo, useState } from "react";
 
-import { DIFFICULTY_ORDER, difficultyDef, type Difficulty } from "@game/core";
+import {
+  DIFFICULTY_ORDER,
+  difficultyDef,
+  LEVEL_ORDER,
+  levelDef,
+  type Difficulty,
+} from "@game/core";
 
 import { PixelText } from "@ui/lib/PixelText.tsx";
 
@@ -17,19 +23,12 @@ import { HELP_LINES } from "./copy.ts";
 import { loadGameAssets, spriteDataUrl, type GameAssets } from "./assets.ts";
 import { synth } from "./audio.ts";
 import { playTitleMusic } from "./music/index.ts";
+import { hasCompletedLevel, isLevelUnlocked } from "./progress.ts";
 import { getSettings, updateSettings } from "./settings.ts";
 import { playUiSound } from "./sfx/index.ts";
 
-type MenuScreen = "main" | "difficulty" | "settings" | "controls" | "help";
-
-/** Per-difficulty menu color: the ladder heats up as it descends. */
-const DIFFICULTY_COLORS: Record<Difficulty, string> = {
-  easy: "#7ef0c8",
-  medium: "#4da6ff",
-  hard: "#ffd75e",
-  nightmare: "#ff8c42",
-  jesus: "#d83a3a",
-};
+type MenuScreen =
+  "main" | "difficulty" | "levels" | "settings" | "controls" | "help";
 
 const pct = (v: number) => `${Math.round(v * 100)}%`;
 /** 0 → 25 → 50 → 75 → 100 → 0, in quarter steps. */
@@ -40,6 +39,9 @@ type MenuEntry = {
   aria: string;
   color?: string;
   blurb?: string;
+  /** A shown-but-not-yet-playable entry (a locked level): the cursor still
+   * lands on it, but choosing it just buzzes instead of starting. */
+  locked?: boolean;
   action: () => void;
 };
 
@@ -53,12 +55,16 @@ function unlockAudio() {
 export function TitleScreen({
   onStart,
 }: {
-  onStart: (difficulty: Difficulty) => void;
+  onStart: (difficulty: Difficulty, levelId: string) => void;
 }) {
   const [assets, setAssets] = useState<GameAssets | null>(null);
   const [screen, setScreen] = useState<MenuScreen>("main");
   // Cursor position per screen; the difficulty list opens on MEDIUM.
   const [cursor, setCursor] = useState(0);
+  // The difficulty picked on the ladder — the level-select screen that
+  // follows reads it to decide which levels are unlocked (progress is per
+  // difficulty), and it carries into the run.
+  const [difficulty, setDifficulty] = useState<Difficulty>("medium");
   // Landscape phones are short and portrait ones narrow: pick a logo scale
   // that keeps the title logo plus the menu inside both.
   const [compact, setCompact] = useState(
@@ -149,15 +155,52 @@ export function TitleScreen({
           return {
             label: def.name,
             aria: `difficulty-${id}`,
-            color: DIFFICULTY_COLORS[id],
+            color: def.color,
             blurb: def.tagline,
             action: () => {
-              playUiSound(synth, "start");
-              onStart(id);
+              playUiSound(synth, "confirm");
+              setDifficulty(id);
+              setScreen("levels");
+              // Open on the furthest level still reachable at this difficulty.
+              const furthest = LEVEL_ORDER.reduce(
+                (best, levelId, i) => (isLevelUnlocked(levelId, id) ? i : best),
+                0,
+              );
+              setCursor(furthest);
             },
           };
         }),
         backTo("main", 0),
+      ];
+    }
+    if (screen === "levels") {
+      return [
+        ...LEVEL_ORDER.map((id, i) => {
+          const def = levelDef(id);
+          const unlocked = isLevelUnlocked(id, difficulty);
+          const cleared = hasCompletedLevel(id, difficulty);
+          const blurb = !unlocked
+            ? "LOCKED - CLEAR THE PREVIOUS LEVEL"
+            : cleared
+              ? "CLEARED - REPLAY"
+              : "NEW";
+          return {
+            label: `${i + 1}. ${def.name}`,
+            aria: `level-${id}`,
+            color: unlocked ? "#7ef0c8" : "#5a6068",
+            locked: !unlocked,
+            blurb,
+            action: () => {
+              if (!unlocked) {
+                playUiSound(synth, "back");
+                return;
+              }
+              playUiSound(synth, "start");
+              onStart(difficulty, id);
+            },
+          };
+        }),
+        backTo("difficulty", DIFFICULTY_ORDER.indexOf(difficulty)),
       ];
     }
     if (screen === "settings") {
@@ -238,7 +281,7 @@ export function TitleScreen({
       ];
     }
     return [backTo("main", 2)];
-  }, [screen, onStart, settingsTick]);
+  }, [screen, onStart, settingsTick, difficulty]);
 
   // Doom menus live on the keyboard: arrows move, Enter/Space picks,
   // Escape backs out.
@@ -257,7 +300,11 @@ export function TitleScreen({
       } else if (event.key === "Escape" && screen !== "main") {
         unlockAudio();
         playUiSound(synth, "back");
-        setScreen(screen === "controls" ? "settings" : "main");
+        const back: Record<string, MenuScreen> = {
+          controls: "settings",
+          levels: "difficulty",
+        };
+        setScreen(back[screen] ?? "main");
         setCursor(0);
       }
     };
@@ -300,6 +347,14 @@ export function TitleScreen({
           color="#d9a0f0"
         />
       )}
+      {screen === "levels" && (
+        <PixelText
+          font={font}
+          text="CHOOSE YOUR MISSION"
+          scale={2}
+          color="#d9a0f0"
+        />
+      )}
       {screen === "settings" && (
         <PixelText font={font} text="SETTINGS" scale={2} color="#d9a0f0" />
       )}
@@ -324,15 +379,29 @@ export function TitleScreen({
         </div>
       )}
 
-      <nav className="title-menu" aria-label="main menu">
+      <nav
+        className={`title-menu${screen === "levels" ? " scrollable" : ""}`}
+        aria-label="main menu"
+      >
         {entries.map((entry, i) => {
           const selected = i === cursor;
-          const color = selected ? (entry.color ?? "#ffd75e") : "#9aa3ad";
+          const baseColor = entry.color ?? "#ffd75e";
+          const color = selected
+            ? baseColor
+            : entry.locked
+              ? "#5a6068"
+              : "#9aa3ad";
           return (
             <button
               key={entry.aria}
               type="button"
-              className={`menu-item${selected ? " selected" : ""}`}
+              // Keep the highlighted row in view as the level list scrolls.
+              ref={
+                selected
+                  ? (el) => el?.scrollIntoView({ block: "nearest" })
+                  : undefined
+              }
+              className={`menu-item${selected ? " selected" : ""}${entry.locked ? " locked" : ""}`}
               aria-label={entry.aria}
               onPointerEnter={() => {
                 if (i !== cursor) {
@@ -370,9 +439,6 @@ export function TitleScreen({
       </nav>
 
       <footer className="title-footer">
-        <a href={IDENTITY.repoUrl} target="_blank" rel="noreferrer">
-          source code
-        </a>
         <span>
           v{__APP_VERSION__} · {__BUILD_COMMIT__}
         </span>

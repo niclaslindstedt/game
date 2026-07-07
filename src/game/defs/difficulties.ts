@@ -16,8 +16,12 @@ export type DifficultyDef = {
   index: number;
   /** Menu label. */
   name: string;
-  /** One-line menu blurb under the label. */
+  /** One-line menu blurb under the label. Level-agnostic — it describes the
+   * difficulty, not any one level's flavor (the ladder is shown globally). */
   tagline: string;
+  /** Menu color for this rung; the ladder heats up as it descends. Lives with
+   * the def so a new difficulty is pure data (no TitleScreen edit). */
+  color: string;
   /** Multiplies every spawn count: placed spawns and wave budgets alike. */
   mobCountMult: number;
   /** Multiplies every monster's hp (bosses included; XP scales with it). */
@@ -40,7 +44,8 @@ export const DIFFICULTY_DEFS: Record<Difficulty, DifficultyDef> = {
     id: "easy",
     index: 1,
     name: "EASY",
-    tagline: "A QUIET NIGHT ON THE MOON",
+    tagline: "A GENTLE WARM-UP",
+    color: "#7ef0c8",
     mobCountMult: 0.7,
     mobHpMult: 0.8,
     aliveMult: 0.7,
@@ -51,7 +56,8 @@ export const DIFFICULTY_DEFS: Record<Difficulty, DifficultyDef> = {
     id: "medium",
     index: 2,
     name: "MEDIUM",
-    tagline: "THE HAUNTING AS INTENDED",
+    tagline: "THE FIGHT AS INTENDED",
+    color: "#4da6ff",
     mobCountMult: 1,
     mobHpMult: 1,
     aliveMult: 1,
@@ -62,7 +68,8 @@ export const DIFFICULTY_DEFS: Record<Difficulty, DifficultyDef> = {
     id: "hard",
     index: 3,
     name: "HARD",
-    tagline: "THE GRAVES RUN DEEP",
+    tagline: "NO ROOM FOR MISTAKES",
+    color: "#ffd75e",
     mobCountMult: 1.4,
     mobHpMult: 1.35,
     aliveMult: 1.3,
@@ -74,6 +81,7 @@ export const DIFFICULTY_DEFS: Record<Difficulty, DifficultyDef> = {
     index: 4,
     name: "NIGHTMARE",
     tagline: "THEY NEVER STOP COMING",
+    color: "#ff8c42",
     mobCountMult: 1.9,
     mobHpMult: 1.75,
     aliveMult: 1.65,
@@ -84,7 +92,8 @@ export const DIFFICULTY_DEFS: Record<Difficulty, DifficultyDef> = {
     id: "jesus",
     index: 5,
     name: "JESUS CHRIST!",
-    tagline: "THE MOON IS ONE BIG GRAVE",
+    tagline: "ABANDON ALL HOPE",
+    color: "#d83a3a",
     mobCountMult: 2.6,
     mobHpMult: 2.25,
     aliveMult: 2.1,
@@ -126,4 +135,19 @@ export function scaledMobCount(count: number, difficulty: Difficulty): number {
     1,
     Math.round(count * difficultyDef(difficulty).mobCountMult),
   );
+}
+
+/**
+ * Does `current` sit at or above `min` on the ladder? The ordering is a def's
+ * `index`, so this is how difficulty-gated content (a level's
+ * `minDifficulty` spawn/wave lines) decides whether to appear: a line tagged
+ * `minDifficulty: "hard"` is skipped on easy/medium and included from hard up.
+ * An omitted `min` always passes.
+ */
+export function meetsMinDifficulty(
+  current: Difficulty,
+  min: Difficulty | undefined,
+): boolean {
+  if (!min) return true;
+  return difficultyDef(current).index >= difficultyDef(min).index;
 }

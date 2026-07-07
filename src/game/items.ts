@@ -24,7 +24,7 @@ import {
   equipmentBaseName,
 } from "./defs/equipment.ts";
 import { difficultyDef } from "./defs/difficulties.ts";
-import { levelDef } from "./defs/levels.ts";
+import { levelDef } from "./defs/levels/index.ts";
 import type {
   Affix,
   EquipSlot,

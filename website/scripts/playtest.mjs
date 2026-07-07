@@ -13,7 +13,8 @@
 //   npx vite --port 5199 &            # dev server (from website/)
 //   node scripts/playtest.mjs [--url http://localhost:5199] \
 //     [--strategy idle|rush|kite|boss|survivor] [--timeout 120] \
-//     [--difficulty easy|medium|hard|nightmare|jesus]
+//     [--difficulty easy|medium|hard|nightmare|jesus] \
+//     [--level spacez_hq|moon]
 //
 // Playwright is intentionally NOT a dependency of this repo; install it
 // ephemerally when playtesting: `npm install --no-save playwright`.
@@ -36,6 +37,9 @@ const url = opt("url", "http://localhost:5199");
 const strategy = opt("strategy", "survivor");
 const timeoutMs = Number(opt("timeout", "120")) * 1000;
 const difficulty = opt("difficulty", "medium");
+// Which level to start on; the first level is always unlocked, so the bot
+// can reach any level regardless of saved progress via the level-select menu.
+const level = opt("level", "spacez_hq");
 
 const shotDir = fileURLToPath(
   new URL("../assets-preview/playtest", import.meta.url),
@@ -54,13 +58,14 @@ page.on("pageerror", (e) => console.error("PAGE ERROR:", e.message));
 // `?bot=` hands the run to the engine autopilot: it dismisses the intro,
 // steers, jumps, and spends level-ups on its own.
 await page.goto(`${url}/?debug&bot=${strategy}`);
-// The Doom-style menu: NEW GAME, then the chosen difficulty rung. Wait for
-// the menu (asset load) before shooting the splash.
+// The Doom-style menu: NEW GAME, the chosen difficulty rung, then the level.
+// Wait for the menu (asset load) before shooting the splash.
 await page.getByRole("button", { name: "new-game" }).waitFor();
 await page.screenshot({ path: `${shotDir}/title.png` });
 await page.getByRole("button", { name: "new-game" }).click();
 await page.screenshot({ path: `${shotDir}/difficulty.png` });
 await page.getByRole("button", { name: `difficulty-${difficulty}` }).click();
+await page.getByRole("button", { name: `level-${level}` }).click();
 await page.waitForFunction(() => window.__game !== undefined);
 
 const snapshot = () =>

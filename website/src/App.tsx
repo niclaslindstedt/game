@@ -14,8 +14,12 @@ import { TitleScreen } from "./game/TitleScreen.tsx";
 // owns the PWA update lifecycle so a new deploy can never silently reload
 // mid-run.
 export function App() {
-  // The run's difficulty, chosen on the menu; null = still on the menu.
-  const [difficulty, setDifficulty] = useState<Difficulty | null>(null);
+  // The pending run: the difficulty and starting level chosen on the menu.
+  // null = still on the menu.
+  const [run, setRun] = useState<{
+    difficulty: Difficulty;
+    levelId: string;
+  } | null>(null);
 
   // Register the deploy slot's service worker (§11.4.3) and track its update
   // lifecycle. The framework hook performs the actual
@@ -71,15 +75,21 @@ export function App() {
     return <CutscenePreview id={sceneId} />;
   }
 
-  if (difficulty) {
+  if (run) {
     return (
-      <GameScreen difficulty={difficulty} onQuit={() => setDifficulty(null)} />
+      <GameScreen
+        difficulty={run.difficulty}
+        levelId={run.levelId}
+        onQuit={() => setRun(null)}
+      />
     );
   }
 
   return (
     <>
-      <TitleScreen onStart={setDifficulty} />
+      <TitleScreen
+        onStart={(difficulty, levelId) => setRun({ difficulty, levelId })}
+      />
 
       {/* The framework's "a new version is ready" prompt (§11.4.4), fed from
           the service worker reaching `waiting`. Applying reloads onto the new

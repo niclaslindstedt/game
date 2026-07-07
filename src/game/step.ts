@@ -42,10 +42,14 @@ import {
 import { spawnEnemy } from "./create.ts";
 import { abilityDef } from "./defs/abilities.ts";
 import { cutsceneDef } from "./defs/cutscenes.ts";
-import { difficultyDef, scaledMobCount } from "./defs/difficulties.ts";
-import { enemyDef } from "./defs/enemies.ts";
+import {
+  difficultyDef,
+  meetsMinDifficulty,
+  scaledMobCount,
+} from "./defs/difficulties.ts";
+import { enemyDef } from "./defs/enemies/index.ts";
 import { weaponDef } from "./defs/equipment.ts";
-import { levelDef } from "./defs/levels.ts";
+import { levelDef } from "./defs/levels/index.ts";
 import {
   addToInventory,
   enemyCritChance,
@@ -161,6 +165,8 @@ function stepSpawner(state: GameState): void {
   const t = state.stats.timeMs;
   outer: for (let i = 0; i < waves.budget.length; i++) {
     const entry = waves.budget[i] as (typeof waves.budget)[number];
+    // A budget line below its difficulty gate never streams in.
+    if (!meetsMinDifficulty(state.difficulty, entry.minDifficulty)) continue;
     const count = scaledMobCount(entry.count, state.difficulty);
     const spawned = state.waveSpawned[i] ?? 0;
     if (spawned >= count) continue;
@@ -206,6 +212,7 @@ function spawnFromBudget(
 ): boolean {
   for (let i = 0; i < waves.budget.length; i++) {
     const entry = waves.budget[i] as (typeof waves.budget)[number];
+    if (!meetsMinDifficulty(state.difficulty, entry.minDifficulty)) continue;
     const spawned = state.waveSpawned[i] ?? 0;
     if (spawned >= scaledMobCount(entry.count, state.difficulty)) continue;
     if (!spawnWaveEnemy(state, entry.enemy)) return false;

@@ -8,7 +8,7 @@
 
 import { distance } from "@game/lib/vec.ts";
 import { DIALOGUE, DOORS } from "./config.ts";
-import { enemyDef } from "./defs/enemies.ts";
+import { enemyDef } from "./defs/enemies/index.ts";
 import { storyItemDef } from "./defs/story.ts";
 import type { DialogueState, Enemy, GameState } from "./types.ts";
 

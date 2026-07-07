@@ -12,7 +12,7 @@
 // Sizes: characters/enemies 16×16 (elites 24×24, bosses 48×48), projectiles
 // 8×8, icons 12×12, tiles 16×16, lander 32×32, flag 16×24.
 
-import { ENEMY_DEFS } from "../../../src/game/defs/enemies.ts";
+import { ENEMY_DEFS } from "../../../src/game/defs/enemies/index.ts";
 import { woundedFrames } from "../asset-tools/damage.mjs";
 import { buildPalette } from "../asset-tools/palette.mjs";
 import { CORE_PALETTE } from "./core.mjs";

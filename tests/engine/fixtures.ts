@@ -265,6 +265,7 @@ export const FIX_DIFFICULTIES: Record<string, DifficultyDef> = {
     index: 1,
     name: "EASY",
     tagline: "TEST EASY",
+    color: "#7ef0c8",
     mobCountMult: 0.7,
     mobHpMult: 0.8,
     aliveMult: 0.7,
@@ -276,6 +277,7 @@ export const FIX_DIFFICULTIES: Record<string, DifficultyDef> = {
     index: 2,
     name: "MEDIUM",
     tagline: "TEST MEDIUM",
+    color: "#4da6ff",
     mobCountMult: 1,
     mobHpMult: 1,
     aliveMult: 1,
@@ -287,6 +289,7 @@ export const FIX_DIFFICULTIES: Record<string, DifficultyDef> = {
     index: 3,
     name: "HARD",
     tagline: "TEST HARD",
+    color: "#ffd75e",
     mobCountMult: 1.4,
     mobHpMult: 1.35,
     aliveMult: 1.3,
@@ -298,6 +301,7 @@ export const FIX_DIFFICULTIES: Record<string, DifficultyDef> = {
     index: 4,
     name: "NIGHTMARE",
     tagline: "TEST NIGHTMARE",
+    color: "#ff8c42",
     mobCountMult: 1.9,
     mobHpMult: 1.75,
     aliveMult: 1.65,
@@ -309,6 +313,7 @@ export const FIX_DIFFICULTIES: Record<string, DifficultyDef> = {
     index: 5,
     name: "JESUS CHRIST!",
     tagline: "TEST JESUS",
+    color: "#d83a3a",
     mobCountMult: 2.6,
     mobHpMult: 2.25,
     aliveMult: 2.1,
@@ -398,6 +403,32 @@ export const FIX_LEVEL: LevelDef = {
   },
 };
 
+// A level with difficulty-gated content: a placed spawn line and a wave
+// budget line that only appear from HARD up (`minDifficulty`). Used to test
+// that create.ts and the wave spawner honor the gate.
+export const FIX_GATED_LEVEL: LevelDef = {
+  ...FIX_LEVEL,
+  id: "test_gated_level",
+  spawns: [
+    ...FIX_LEVEL.spawns,
+    // Five extra brutes reserved for HARD and above.
+    { enemy: "test_brute", count: 5, band: [0.4, 0.8], minDifficulty: "hard" },
+  ],
+  waves: {
+    ...FIX_LEVEL.waves!,
+    budget: [
+      ...FIX_LEVEL.waves!.budget,
+      // A wraith surge that only the harder rungs face.
+      {
+        enemy: "test_brute",
+        count: 200,
+        window: [0.4, 0.9],
+        minDifficulty: "hard",
+      },
+    ],
+  },
+};
+
 // A prelude scene for the cutscene-in-a-run tests: a timed beat, then a text
 // beat the sim parks on, an actor that exits (and never returns), and a
 // closing caption.
@@ -437,7 +468,11 @@ let installed = false;
 export function installFixtures(): void {
   if (installed) return;
   registerDefs({
-    levels: { test_level: FIX_LEVEL, test_prelude_level: FIX_PRELUDE_LEVEL },
+    levels: {
+      test_level: FIX_LEVEL,
+      test_prelude_level: FIX_PRELUDE_LEVEL,
+      test_gated_level: FIX_GATED_LEVEL,
+    },
     enemies: FIX_ENEMIES,
     weapons: FIX_WEAPONS,
     gear: FIX_GEAR,

@@ -8,8 +8,8 @@
 import { clamp, type Vec2 } from "@game/lib/vec.ts";
 import { LEVELING, LOOT, STATS } from "./config.ts";
 import { scaledMobCount } from "./defs/difficulties.ts";
-import { enemyDef, type EnemyDef } from "./defs/enemies.ts";
-import { levelDef } from "./defs/levels.ts";
+import { enemyDef, type EnemyDef } from "./defs/enemies/index.ts";
+import { levelDef } from "./defs/levels/index.ts";
 import { dropChance, playerCritChance, rollEquipment } from "./items.ts";
 import { startDeathWords } from "./story.ts";
 import type { Enemy, GameState } from "./types.ts";
