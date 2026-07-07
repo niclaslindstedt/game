@@ -971,7 +971,7 @@ export function GameScreen({
               />
               <PixelText
                 font={font}
-                text={`${state?.level.foes ?? "FOES"} ${hud.stats.totalEnemies - hud.enemiesLeft}/${hud.stats.totalEnemies}`}
+                text={`${state?.level.foes ?? "FOES"} ${hud.stats.kills}/${hud.stats.totalEnemies}`}
                 scale={2}
                 color="#d9a0f0"
               />
