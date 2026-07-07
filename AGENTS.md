@@ -186,9 +186,10 @@ fails if `src/version.ts` and `package.json` disagree.
   must match; `tests/version_test.ts` and the extract script both enforce it.
 - Icons are generated from `website/public/icon.svg` only (`make icons`) —
   never edit the PNGs.
-- In-game pixel assets (sprites, tiles, the UI font atlas) are generated
-  from `website/scripts/sprite-data.mjs` + `asset-tools/` only
-  (`make assets`) — never edit the PNGs under `website/src/game/assets/`.
+- In-game pixel assets (the sprite atlas, tiles, the UI font atlas) are
+  generated from the `website/scripts/sprite-data/` family modules +
+  `asset-tools/` only (`make assets`) — never edit the files under
+  `website/src/game/assets/`.
 
 ## Game development skills
 

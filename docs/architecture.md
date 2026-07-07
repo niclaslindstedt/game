@@ -177,8 +177,10 @@ pixelated`; enemies swap to generated wounded sprite variants as hp falls
   (one shared synth split into SFX/music volume views), `settings.ts`
   (persisted control-scheme + volume settings), `progress.ts` (persisted
   story progress: watched cutscenes, so a prelude plays once per device),
-  `assets.ts` (loads the generated sprites + pixel font), and `assets/`
-  (generated PNGs + font atlas — never hand-edited).
+  `assets.ts` (loads the generated sprite atlas — one PNG + JSON source
+  rects sliced into per-sprite bitmaps in a single decode — plus the pixel
+  font), and `assets/` (the generated atlas + font atlas — never
+  hand-edited).
 - **`website/src/lib/`** — generic game UI plumbing imported via the
   `@ui/lib/*` alias and earmarked for oss-framework extraction:
   `game-loop.ts` (fixed-timestep rAF loop), `pointer.ts` (pointer gestures:
@@ -191,11 +193,16 @@ pixelated`; enemies swap to generated wounded sprite variants as hp falls
   synth), `pixel-font.ts` + `PixelText.tsx` (runtime renderer for
   the generated bitmap font), `flag-store.ts` (a persisted string-flag set
   with graceful no-storage fallback), `load-images.ts`.
-- **`website/scripts/asset-tools/` + `sprite-data.mjs` +
+- **`website/scripts/asset-tools/` + `sprite-data/` +
   `generate-assets.mjs`** — the pixel-asset pipeline (`make assets`):
-  sprites are character grids with ramp-derived palettes, rendered at build
-  time to committed PNGs plus gitignored previews (contact sheet, film
-  strips, palette sheet, font specimen). See the `pixel-assets` skill.
+  sprites are character grids organized in per-family modules, each with a
+  local palette scope merged with a shared core (`sprite-data/core.mjs`),
+  rendered at build time into one committed sprite atlas (PNG + JSON
+  source rects) plus gitignored previews (per-family contact sheets, film
+  strips, palette sheet, font specimen). Wound styles derive from the
+  enemy catalog's `gore` field and role; contrast lints flag sprites that
+  dissolve into their family's ground and wound overlays that don't read.
+  See the `pixel-assets` skill.
 - **`website/scripts/playtest.mjs`** — the autoplay bot that drives real
   runs headlessly through the `?debug` state hook. See the `playtest`
   skill.
@@ -267,10 +274,11 @@ Every PR that touches user-visible code must add a fragment under
   (`GameEvent[]` per step) and the app decides how to present it. Sound,
   screen flashes, and future particles hang off the same channel without
   the engine growing presentation hooks.
-- **Generated assets over binaries** — sprites, tiles, and the UI font are
-  committed PNGs, but their sources of truth are reviewable text
-  (pixel grids, palette ramps, glyph definitions) rendered by
-  `make assets`. Art is diffable and agent-editable like any other code.
+- **Generated assets over binaries** — sprites, tiles, and the UI font
+  ship as two committed atlases (sprite atlas + font atlas), but their
+  sources of truth are reviewable text (pixel grids, palette ramps, glyph
+  definitions) rendered by `make assets`. Art is diffable and
+  agent-editable like any other code.
 - **Synthesized audio over audio files** — every sound is a handful of
   WebAudio oscillator/noise parameters in `website/src/game/sfx/`, and
   the background music is tracker-style score data (one file per track
