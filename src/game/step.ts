@@ -16,6 +16,7 @@ import {
   distance,
   distanceSq,
   moveToward,
+  segmentDistanceSq,
   type Vec2,
 } from "@game/lib/vec.ts";
 import {
@@ -357,6 +358,30 @@ function insideObstacle(state: GameState, pos: Vec2, radius: number): boolean {
 }
 
 /**
+ * Does a straight shot from `from` to `to` clear every TALL obstacle? Walls,
+ * server racks, and boulders eat bullets; the low, jumpable ones (desks,
+ * rocks) never block — shots fly over them just like a jumping player.
+ */
+function lineOfSight(state: GameState, from: Vec2, to: Vec2): boolean {
+  return !blockedByObstacle(state, from, to, 0);
+}
+
+/** Does the swept path `from`→`to` (a circle of `radius`) hit a tall obstacle? */
+function blockedByObstacle(
+  state: GameState,
+  from: Vec2,
+  to: Vec2,
+  radius: number,
+): boolean {
+  for (const obstacle of state.obstacles) {
+    if (obstacle.jumpable) continue;
+    const min = obstacle.radius + radius;
+    if (segmentDistanceSq(from, to, obstacle.pos) < min * min) return true;
+  }
+  return false;
+}
+
+/**
  * Spend one carried ability pickup on the `useItem` input edge: the oldest
  * banked ability kicks in (grantAbility emits the abilityStarted event).
  * With empty hands the input is a quiet no-op.
@@ -404,11 +429,14 @@ function stepWeapon(state: GameState, input: GameInput, dtMs: number): void {
   if (player.weaponCooldownMs > 0) return;
 
   const weapon = weaponDef(player.equipment.weapon.defId);
+  // No target through a wall: the character never wastes a swing or a shot
+  // on a monster it can't actually reach.
   const target = nearestEnemy(
     state.enemies,
     player.pos,
     weapon.range,
     input.view,
+    (enemy) => lineOfSight(state, player.pos, enemy.pos),
   );
   if (!target) return;
 
@@ -443,13 +471,17 @@ function nearestEnemy(
   from: Vec2,
   range: number,
   view?: GameInput["view"],
+  clear?: (enemy: Enemy) => boolean,
 ): Enemy | undefined {
   let best: Enemy | undefined;
   let bestDistSq = range * range;
   for (const enemy of enemies) {
     if (view && !insideView(enemy.pos, view)) continue;
     const d = distanceSq(from, enemy.pos);
-    if (d <= bestDistSq) {
+    // `clear` (line of sight) is checked lazily — only for candidates that
+    // would actually win — so its cost scales with improvements, not with
+    // the whole horde.
+    if (d <= bestDistSq && (!clear || clear(enemy))) {
       best = enemy;
       bestDistSq = d;
     }
@@ -721,6 +753,7 @@ function grantXp(state: GameState, amount: number): void {
 function stepProjectiles(state: GameState, dt: number, dtMs: number): void {
   const survivors = [];
   for (const projectile of state.projectiles) {
+    const from = { x: projectile.pos.x, y: projectile.pos.y };
     projectile.pos.x += projectile.dir.x * projectile.speed * dt;
     projectile.pos.y += projectile.dir.y * projectile.speed * dt;
     // Shots fired mid-jump sink back to ground level (visual only).
@@ -733,6 +766,12 @@ function stepProjectiles(state: GameState, dt: number, dtMs: number): void {
       projectile.pos.x > state.level.width ||
       projectile.pos.y > state.level.height;
     if (projectile.lifetimeMs <= 0 || outOfBounds) continue;
+
+    // Tall obstacles eat shots — swept over the whole tick's travel so a
+    // fast bullet can't tunnel through a thin wall between two ticks.
+    if (blockedByObstacle(state, from, projectile.pos, projectile.radius)) {
+      continue;
+    }
 
     const hit = state.enemies.find(
       (enemy) =>

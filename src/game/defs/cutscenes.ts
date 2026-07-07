@@ -50,19 +50,17 @@ const PRELUDE: CutsceneDef = {
   beats: [
     { kind: "fade", to: 1, ms: 0 }, // open on black…
     { kind: "fade", to: 0, ms: 900 }, // …and reveal the living room
-    { kind: "caption", text: ["FRIDAY NIGHT. MOVIE NIGHT."], ms: 2200 },
+    { kind: "caption", text: ["FRIDAY NIGHT. MOVIE NIGHT."] },
     {
       kind: "say",
       actor: "ada",
       text: ["WE'RE OUT OF CHIPS.", "AND SODA."],
-      ms: 2400,
     },
-    { kind: "say", actor: "hero", text: ["MOVIE'S STARTING."], ms: 2000 },
+    { kind: "say", actor: "hero", text: ["MOVIE'S STARTING."] },
     {
       kind: "say",
       actor: "ada",
       text: ["FIVE MINUTES.", "KEEP MY SPOT WARM."],
-      ms: 2400,
     },
     { kind: "move", actor: "ada", to: { x: 156, y: 110 }, speed: 40 },
     { kind: "move", actor: "ada", to: { x: 195, y: 88 }, speed: 40 },
@@ -72,15 +70,14 @@ const PRELUDE: CutsceneDef = {
     {
       kind: "caption",
       text: ["SHE TOOK HER JACKET.", "THE ONE I FIXED THE ZIPPER ON."],
-      ms: 2600,
     },
     { kind: "fade", to: 0.85, ms: 700 },
-    { kind: "caption", text: ["TWO HOURS LATER."], ms: 2000 },
+    { kind: "caption", text: ["TWO HOURS LATER."] },
     { kind: "fade", to: 0, ms: 700 },
-    { kind: "say", actor: "hero", text: ["..."], ms: 1400 },
-    { kind: "say", actor: "hero", text: ["ADA?"], ms: 1800 },
+    { kind: "say", actor: "hero", text: ["..."] },
+    { kind: "say", actor: "hero", text: ["ADA?"] },
     { kind: "wait", ms: 600 },
-    { kind: "caption", text: ["SHE NEVER CAME BACK."], ms: 2600 },
+    { kind: "caption", text: ["SHE NEVER CAME BACK."] },
     { kind: "fade", to: 1, ms: 1300 },
   ],
 };

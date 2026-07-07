@@ -3,8 +3,9 @@
 // Automated cutscene review harness — the visual half of the scene-authoring
 // loop (the headless half is tests/cutscene_test.ts). Loads the app's
 // cutscene workbench (`?cutscene=<id>&debug`, see CutscenePreview.tsx) in
-// headless Chromium, lets the scene play in real time, and screenshots the
-// stage at the START OF EVERY BEAT into
+// headless Chromium, lets the scene play in real time (tapping through the
+// text beats, which hold for the player), and screenshots the stage at the
+// START OF EVERY BEAT into
 // website/assets-preview/cutscenes/<id>/beat-NN-<kind>.png — one image per
 // storyboard panel, so a scene edit is reviewed like a contact sheet:
 // edit defs/cutscenes.ts → run this → LOOK at the beats.
@@ -56,18 +57,27 @@ const snapshot = () =>
 
 // Screenshot each beat as it starts. Polling at 100ms can hop over beats
 // shorter than that (instant beats collapse anyway); every timed beat lands.
+// Text beats hold for the player's tap (JRPG-style), so once a beat idles
+// longer than any timed beat runs (~1.3s), tap through it like a player.
+const HOLD_MS = 2000;
 const beats = [];
 let last = -1;
 const t0 = Date.now();
+let heldSince = t0;
 let s = await snapshot();
 while (!s.done && Date.now() - t0 < timeoutMs) {
   if (s.beat !== last) {
     last = s.beat;
+    heldSince = Date.now();
     const name = `beat-${String(s.beat).padStart(2, "0")}.png`;
     // Give the new beat one frame to draw before shooting it.
     await page.waitForTimeout(120);
     await page.screenshot({ path: `${shotDir}/${name}` });
     beats.push(name);
+  }
+  if (Date.now() - heldSince > HOLD_MS) {
+    await page.mouse.click(422, 195); // the player's tap: advance the text
+    heldSince = Date.now();
   }
   await page.waitForTimeout(100);
   s = await snapshot();
