@@ -96,6 +96,89 @@ describe("obstacle collision", () => {
   });
 });
 
+describe("walls block shots", () => {
+  it("a projectile dies at a tall obstacle instead of passing through", () => {
+    const state = startGame();
+    clearStage(state);
+    const obstacle = placeObstacle(state, 60, false);
+    const victim = makeEnemy({
+      pos: { x: obstacle.pos.x + 60, y: obstacle.pos.y },
+      hp: 1000,
+      maxHp: 1000,
+    });
+    state.enemies.push(victim);
+    state.projectiles.push({
+      id: 7000,
+      pos: { ...state.player.pos },
+      dir: { x: 1, y: 0 },
+      speed: 400, // fast enough that only the swept check can catch the wall
+      radius: 2,
+      damage: 50,
+      lifetimeMs: 3000,
+      weaponClass: "ranged",
+      z: 0,
+    });
+    run(state, idle, 200);
+    expect(state.projectiles).toHaveLength(0); // eaten by the wall
+    expect(victim.hp).toBe(1000); // never touched
+  });
+
+  it("a projectile flies clean over a low, jumpable obstacle", () => {
+    const state = startGame();
+    clearStage(state);
+    const obstacle = placeObstacle(state, 60, true);
+    const victim = makeEnemy({
+      pos: { x: obstacle.pos.x + 60, y: obstacle.pos.y },
+      hp: 1000,
+      maxHp: 1000,
+    });
+    state.enemies.push(victim);
+    state.projectiles.push({
+      id: 7000,
+      pos: { ...state.player.pos },
+      dir: { x: 1, y: 0 },
+      speed: 400,
+      radius: 2,
+      damage: 50,
+      lifetimeMs: 3000,
+      weaponClass: "ranged",
+      z: 0,
+    });
+    run(state, idle, 200, (s) => s.projectiles.length === 0);
+    expect(victim.hp).toBeLessThan(1000); // the shot connected
+  });
+
+  it("auto-aim never targets a monster behind a wall", () => {
+    const state = startGame();
+    clearStage(state);
+    const obstacle = placeObstacle(state, 60, false);
+    // In range of the starting blaster, but walled off.
+    const hidden = makeEnemy({
+      pos: { x: obstacle.pos.x + 40, y: obstacle.pos.y },
+      hp: 1000,
+      maxHp: 1000,
+    });
+    state.enemies.push(hidden);
+    run(state, idle, 300);
+    expect(state.stats.shotsFired).toBe(0);
+    expect(hidden.hp).toBe(1000);
+  });
+
+  it("auto-aim still fires over a jumpable obstacle", () => {
+    const state = startGame();
+    clearStage(state);
+    const obstacle = placeObstacle(state, 60, true);
+    const target = makeEnemy({
+      pos: { x: obstacle.pos.x + 40, y: obstacle.pos.y },
+      hp: 1000,
+      maxHp: 1000,
+    });
+    state.enemies.push(target);
+    run(state, idle, 300);
+    expect(state.stats.shotsFired).toBeGreaterThan(0);
+  });
+});
+
 describe("obstacle generation", () => {
   it("scatters the level's obstacles clear of the player spawn", () => {
     for (const seed of [1, 2, 3, 42]) {

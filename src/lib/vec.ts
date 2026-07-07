@@ -34,6 +34,20 @@ export function clamp(value: number, min: number, max: number): number {
   return Math.min(max, Math.max(min, value));
 }
 
+/** Squared distance from point `p` to the segment `a`→`b`. */
+export function segmentDistanceSq(a: Vec2, b: Vec2, p: Vec2): number {
+  const abx = b.x - a.x;
+  const aby = b.y - a.y;
+  const lenSq = abx * abx + aby * aby;
+  const t =
+    lenSq === 0
+      ? 0
+      : clamp(((p.x - a.x) * abx + (p.y - a.y) * aby) / lenSq, 0, 1);
+  const dx = p.x - (a.x + abx * t);
+  const dy = p.y - (a.y + aby * t);
+  return dx * dx + dy * dy;
+}
+
 /** Move `pos` up to `maxStep` toward `target`, never overshooting. */
 export function moveToward(pos: Vec2, target: Vec2, maxStep: number): Vec2 {
   const dist = distance(pos, target);
