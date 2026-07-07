@@ -36,6 +36,7 @@ const MOON = LEVELS.moon!;
 const dist = (a: { x: number; y: number }, b: { x: number; y: number }) =>
   Math.hypot(a.x - b.x, a.y - b.y);
 const isBoss = (defId: string) => enemyDef(defId).role === "boss";
+const isMinion = (defId: string) => enemyDef(defId).role === "minion";
 
 describe("createGame", () => {
   it("opens on the intro text box and only plays after dismissal", () => {
@@ -54,7 +55,7 @@ describe("createGame", () => {
 
   it("builds the moonscape: ghosts, boss at the flag, lander-side spawn", () => {
     const state = createGame(SEED, "moon");
-    const minions = state.enemies.filter((e) => !isBoss(e.defId));
+    const minions = state.enemies.filter((e) => isMinion(e.defId));
     const bosses = state.enemies.filter((e) => isBoss(e.defId));
     const expectedMinions = MOON.spawns
       .filter((s) => "band" in s)
@@ -378,6 +379,7 @@ describe("win and lose", () => {
     const boss = state.enemies.find((e) => isBoss(e.defId))!;
     state.enemies = [boss];
     boss.hp = 1;
+    boss.spoke = true; // skip his scene: this test is about the victory flow
     boss.pos = { x: state.player.pos.x + 60, y: state.player.pos.y };
     boss.speed = 0;
 

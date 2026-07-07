@@ -67,6 +67,11 @@ export {
   stasisFactorAt,
 } from "./game/abilities.ts";
 
+// In-world dialogue (elite ambushes, boss confrontations, story-item lore):
+// `advanceDialogue` is the player's tap; `dialogueContent` is what the app
+// draws while `phase === "dialogue"`.
+export { advanceDialogue, dialogueContent } from "./game/story.ts";
+
 // Cutscenes: the generic player (@game/lib) plus the scene catalog. The app
 // renders scenes from CutsceneState + def; `currentLine` is the text on
 // screen this frame.
@@ -130,9 +135,16 @@ export {
   type GearDef,
   type WeaponDef,
 } from "./game/defs/equipment.ts";
+export {
+  STORY_ITEM_DEFS,
+  storyItemDef,
+  type StoryItemDef,
+} from "./game/defs/story.ts";
 
 // Global tuning.
 export {
+  DIALOGUE,
+  DOORS,
   ENEMY_AI,
   HELD_ITEMS,
   JUMP,
@@ -150,7 +162,9 @@ export type {
   ActiveAbility,
   Affix,
   Decor,
+  DialogueState,
   Difficulty,
+  DoorState,
   Enemy,
   EquipSlot,
   Equipment,

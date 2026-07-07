@@ -21,6 +21,7 @@ const WAVES = LEVELS.moon!.waves!;
 const dist = (a: { x: number; y: number }, b: { x: number; y: number }) =>
   Math.hypot(a.x - b.x, a.y - b.y);
 const isBoss = (defId: string) => enemyDef(defId).role === "boss";
+const isMinion = (defId: string) => enemyDef(defId).role === "minion";
 const spawnedSoFar = (state: GameState) =>
   state.waveSpawned.reduce((sum, n) => sum + n, 0);
 
@@ -68,7 +69,7 @@ describe("wave spawner", () => {
     const firstNewId = state.nextId;
     step(state, idle, DT);
 
-    const minions = state.enemies.filter((e) => !isBoss(e.defId));
+    const minions = state.enemies.filter((e) => isMinion(e.defId));
     expect(minions.length).toBe(WAVES.maxAlive);
     for (const enemy of state.enemies) {
       if (enemy.id < firstNewId) continue;
@@ -91,7 +92,7 @@ describe("wave spawner", () => {
     step(state, idle, DT);
     expect(spawnedSoFar(state)).toBeGreaterThan(afterCap);
     expect(
-      state.enemies.filter((e) => !isBoss(e.defId)).length,
+      state.enemies.filter((e) => isMinion(e.defId)).length,
     ).toBeLessThanOrEqual(WAVES.maxAlive);
   });
 
@@ -109,7 +110,7 @@ describe("wave spawner", () => {
     // Strip the placed spawns: the floor alone must repopulate the screen.
     state.enemies = state.enemies.filter((e) => isBoss(e.defId));
     step(state, idle, DT);
-    expect(state.enemies.filter((e) => !isBoss(e.defId)).length).toBe(
+    expect(state.enemies.filter((e) => isMinion(e.defId)).length).toBe(
       WAVES.minAlive,
     );
   });

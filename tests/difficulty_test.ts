@@ -31,6 +31,7 @@ function startOn(difficulty: Difficulty): GameState {
 }
 
 const isBoss = (defId: string) => enemyDef(defId).role === "boss";
+const isMinion = (defId: string) => enemyDef(defId).role === "minion";
 
 describe("difficulty catalog", () => {
   it("registers every ladder entry, gentlest first", () => {
@@ -128,7 +129,7 @@ describe("difficulty scaling in a run", () => {
     state.stats.timeMs = WAVES.rampDurationMs; // the whole budget is due
     state.player.z = 100; // untouchable, so the run can't end mid-check
     step(state, idle, DT);
-    const minions = state.enemies.filter((e) => !isBoss(e.defId)).length;
+    const minions = state.enemies.filter((e) => isMinion(e.defId)).length;
     expect(minions).toBe(
       Math.round(WAVES.maxAlive * difficultyDef("jesus").aliveMult),
     );

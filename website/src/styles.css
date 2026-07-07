@@ -26,6 +26,11 @@ body {
     Roboto,
     sans-serif;
   line-height: 1.6;
+  /* This is a game: selectable text only causes accidental highlights and
+     long-press callouts on mobile. Nothing here needs copying. */
+  user-select: none;
+  -webkit-user-select: none;
+  -webkit-touch-callout: none;
 }
 
 .prelaunch {
@@ -483,6 +488,52 @@ body {
   top: max(0.6rem, env(safe-area-inset-top));
   right: max(0.6rem, env(safe-area-inset-right));
   padding: 0.3rem 0.8rem;
+}
+
+/* ---- In-world dialogue (elites, bosses, story-item lore) ------------------ */
+
+/* Barely dim the world: the speaker keeps bobbing behind the box, and that
+   idle motion is what sells "alive but waiting". */
+.dialogue-overlay {
+  background: rgba(11, 13, 16, 0.35);
+  cursor: pointer;
+  overflow: hidden;
+}
+
+.dialogue-box {
+  position: absolute;
+  left: 50%;
+  transform: translateX(-50%);
+  bottom: max(0.75rem, env(safe-area-inset-bottom));
+  width: min(92vw, 36rem);
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 0.4rem;
+  min-height: 4.5rem;
+  padding: 0.6rem 1.2rem 0.75rem;
+  background: rgba(16, 21, 28, 0.92);
+  border: 3px solid #1d2530;
+  box-shadow: 0 8px 0 rgba(0, 0, 0, 0.4);
+  pointer-events: none; /* taps fall through to the overlay */
+}
+
+.dialogue-header {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+}
+
+.dialogue-portrait {
+  width: 2rem;
+  height: 2rem;
+  object-fit: contain;
+  image-rendering: pixelated;
+}
+
+.dialogue-continue {
+  align-self: flex-end;
+  animation: cutscene-blink 1.2s steps(2, jump-none) infinite;
 }
 
 /* The preview workbench's replay button floats over the finished scene. */

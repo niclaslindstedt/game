@@ -38,13 +38,30 @@ hundredth weapon means adding catalog entries, not touching the simulation.
   everyone; low ones can be jumped by the player but never by monsters),
   deliberate `walls` (segments expanded into chains of solid circles at
   creation — door gaps between segments are how SPACEZ HQ carves its rooms),
+  locked `doors` (chains of `door_locked` obstacles tracked in
+  `state.doors`, opened by carrying the matching story-item key up to
+  them), hand-`placedItems` (locked-room loot, plot pieces on pedestals),
   decor, and the loot table (pools + tier chances).
 - **`src/game/defs/enemies.ts`** — the monster catalog (stats, AI radii,
-  roles; bosses pin guaranteed drops). Level 1 ships the SpaceZ night shift
-  (intern → lab scientist → propulsion engineer → security guard → hazmat
-  tech) plus MUSKRAT, the mutant rat under the prototype rocket; level 2
-  ships wisp → moon ghost → wraith plus ARMSTRONG, the giant astronaut
-  ghost guarding the flag.
+  roles; bosses and elites pin guaranteed drops). Roles: `minion` (the
+  horde), `boss` (guards the objective), and `elite` — a unique story mob
+  pinned to a spot by the level def, which sleeps until the player nears,
+  rushes into view at `ai.rushSpeed`, delivers its `dialogue` pages (the
+  run pauses in the `dialogue` phase), then fights like a mid-boss and
+  drops a signature weapon plus story items. Bosses carry longer
+  `dialogue` for the stare-down before the fight. Level 1 ships the SpaceZ
+  night shift (intern → lab scientist → propulsion engineer → security
+  guard → hazmat tech), four elites who know too much (THE NIGHT MANAGER,
+  CHIEF OF SECURITY, DR. NOVA, THE JANITOR), plus MUSKRAT, the mutant rat
+  under the prototype rocket; level 2 ships wisp → moon ghost → wraith,
+  four ghost elites (MISSION SPECIALIST, THE PROSPECTOR, QUARANTINE
+  MEDIC, THE CARTOGRAPHER), plus ARMSTRONG, the giant astronaut ghost
+  guarding the flag.
+- **`src/game/defs/story.ts`** — the story-item catalog: plot pieces
+  (keycards, dossiers, recovered hardware) dropped by elites or placed in
+  locked rooms. Pickups bank into `state.storyItems` (never the bag) and
+  play their `lore` pages as a dialogue; an `unlocks` entry makes the item
+  the key for the matching level door.
 - **`src/game/defs/cutscenes.ts`** — the cutscene catalog: pure-data scenes
   (a stage of props, a cast, a beat timeline) played by the generic
   `@game/lib/cutscene` state machine. A level references a scene via its
@@ -81,14 +98,25 @@ hundredth weapon means adding catalog entries, not touching the simulation.
 - **`src/game/step.ts`** — the per-tick pipeline, in documented order:
   player steering + jump physics (+ obstacle push-out) → use-item edge →
   weapon auto-attack (wearing the weapon's durability) → abilities →
-  projectiles → enemies (aggro/guard AI, contact damage, obstacle
-  push-out) → wave spawner → item pickups → objective → win/lose. The
-  character fights autonomously (and only targets monsters inside the
-  visible view the app passes in `input.view`); the player steers, jumps
-  (tap/Space), spends banked ability pickups (`input.useItem`), spends
-  level-up stat points, and manages the inventory. Level-ups restore full
-  health; golden XP arrows grant a fixed share of the current threshold.
-  Picked-up equipment that beats what is worn is equipped on the spot.
+  projectiles → enemies (aggro/guard/elite AI, dialogue triggers, contact
+  damage, obstacle push-out) → wave spawner → item pickups → locked doors
+  → objective → win/lose. The character fights autonomously (and only
+  targets monsters inside the visible view the app passes in
+  `input.view`); the player steers, jumps (tap/Space), spends banked
+  ability pickups (`input.useItem`), spends level-up stat points, and
+  manages the inventory. Level-ups restore full health; golden XP arrows
+  grant a fixed share of the current threshold. Picked-up equipment that
+  beats what is worn is equipped on the spot.
+- **`src/game/loot.ts`** — kill resolution: `hitEnemy` applies player
+  damage (crit rolls flash the victim), pays out XP, and rolls drops —
+  the level's loot table for minions (with the pity rule and the
+  all-clear trophy), the def's guaranteed drops for bosses and elites.
+- **`src/game/story.ts`** — the story systems: dialogue lifecycle
+  (`wantsDialogue`/`startEnemyDialogue` inside the step,
+  `advanceDialogue` as the player's tap, `dialogueContent` for the
+  renderer), story-item collection, and `stepDoors` (a carried key
+  removes its door's obstacle chain). Dialogue freezes the run in the
+  `dialogue` phase exactly like the level-up chooser.
 - **`src/game/items.ts`** — equipment instances and the player-driven
   mutations the UI calls into: loot rolls, `equipFromInventory` /
   `unequipToInventory` / `moveInventoryItem`, `allocateStat`, the derived

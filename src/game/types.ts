@@ -16,7 +16,8 @@ import type { Vec2 } from "@game/lib/vec.ts";
 /**
  * `cutscene` plays the level's prelude scene, `intro` shows the story text
  * box, `levelup` waits for a stat choice, `inventory` pauses for bag
- * management; the simulation only advances while `playing`.
+ * management, `dialogue` holds the world while a character (or a found
+ * story item) speaks; the simulation only advances while `playing`.
  */
 export type GamePhase =
   | "cutscene"
@@ -24,6 +25,7 @@ export type GamePhase =
   | "playing"
   | "levelup"
   | "inventory"
+  | "dialogue"
   | "victory"
   | "defeat";
 
@@ -143,6 +145,22 @@ export type Enemy = {
   speed: number;
   /** Remaining ms until this enemy may deal contact damage again. */
   contactCooldownMs: number;
+  /**
+   * Remaining ms of the "that was a CRIT" flash — the renderer blinks the
+   * sprite while this runs. Visual only, set by critical player hits.
+   */
+  critFlashMs?: number;
+  /**
+   * Elites sleep at their post until the player wanders close (or wounds
+   * them); once true they hunt forever — no drifting back home. Unused by
+   * minions and bosses, whose wakefulness is derived per tick.
+   */
+  awake?: boolean;
+  /**
+   * True once this enemy's dialogue has played (or been skipped by killing
+   * the speaker mid-rush). Speakers only ever get one scene.
+   */
+  spoke?: boolean;
 };
 
 export type Projectile = {
@@ -173,7 +191,13 @@ export type Item =
   | { id: number; kind: "repair"; pos: Vec2 }
   | { id: number; kind: "equipment"; pos: Vec2; equipment: Equipment }
   /** A time-limited power pickup; `defId` keys into ABILITY_DEFS. */
-  | { id: number; kind: "ability"; pos: Vec2; defId: string };
+  | { id: number; kind: "ability"; pos: Vec2; defId: string }
+  /**
+   * A plot piece — a keycard, a dossier, the anti-grav unit. `defId` keys
+   * into STORY_ITEM_DEFS; picking one up banks it in `state.storyItems`
+   * (never the bag) and plays its lore as a dialogue.
+   */
+  | { id: number; kind: "story"; pos: Vec2; defId: string };
 
 /** A decorative feature scattered at level creation — rendered, no collision. */
 export type Decor = {
@@ -203,6 +227,35 @@ export type Landmark = {
   pos: Vec2;
 };
 
+/**
+ * A locked door from the level def: a wall segment of `door_locked`
+ * obstacles that vanishes when the player brings the matching key (a story
+ * item whose `unlocks` names this door) up to it.
+ */
+export type DoorState = {
+  /** The LevelDef door id story items reference via `unlocks`. */
+  id: string;
+  /** Midpoint of the door segment (event anchor, proximity checks). */
+  center: Vec2;
+  /** The obstacle ids to remove from `state.obstacles` when it opens. */
+  obstacleIds: number[];
+  open: boolean;
+};
+
+/**
+ * The running conversation while `phase === "dialogue"`: an elite or boss
+ * delivering its scene, or a picked-up story item revealing its lore. The
+ * pages live on the def (EnemyDef.dialogue / StoryItemDef.lore); this
+ * tracks only who speaks and how far the player has tapped.
+ */
+export type DialogueState = {
+  source:
+    | { kind: "enemy"; enemyId: number; defId: string }
+    | { kind: "story"; defId: string };
+  /** Index of the page currently on screen. */
+  page: number;
+};
+
 export type GameStats = {
   kills: number;
   totalEnemies: number;
@@ -225,8 +278,21 @@ export type GameEvent =
   | { type: "swing" }
   | { type: "jump" }
   | { type: "land" }
-  | { type: "enemyHit"; pos: Vec2; crit: boolean }
-  | { type: "enemyKilled"; pos: Vec2; defId: string }
+  | {
+      type: "enemyHit";
+      pos: Vec2;
+      crit: boolean;
+      damage: number;
+      defId: string;
+    }
+  | {
+      type: "enemyKilled";
+      pos: Vec2;
+      defId: string;
+      /** The killing blow, so death also floats a damage number. */
+      damage: number;
+      crit: boolean;
+    }
   | { type: "playerHurt"; crit: boolean }
   | { type: "itemCollected"; kind: Item["kind"]; tier?: Tier }
   | { type: "itemDropped"; pos: Vec2 }
@@ -243,6 +309,12 @@ export type GameEvent =
   | { type: "abilityEnded"; defId: string }
   | { type: "levelUp"; level: number }
   | { type: "bossDefeated"; pos: Vec2 }
+  /** A speaker took the stage: the run paused into the `dialogue` phase. */
+  | { type: "dialogueStarted"; speaker: string }
+  /** A plot piece was picked up (`defId` keys into STORY_ITEM_DEFS). */
+  | { type: "storyItemCollected"; defId: string }
+  /** A locked door recognized its key and slid open. */
+  | { type: "doorOpened"; pos: Vec2 }
   | { type: "victory" }
   | { type: "defeat" };
 
@@ -300,6 +372,12 @@ export type GameState = {
   playerSpawn: Vec2;
   /** Story props to draw (the lander, the boss's flag, …). */
   landmarks: Landmark[];
+  /** The running conversation while `phase === "dialogue"`; null otherwise. */
+  dialogue: DialogueState | null;
+  /** Collected story items (STORY_ITEM_DEFS ids) — keys, dossiers, the lot. */
+  storyItems: string[];
+  /** Locked doors built from the level def, open or not. */
+  doors: DoorState[];
   player: Player;
   enemies: Enemy[];
   projectiles: Projectile[];

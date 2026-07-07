@@ -158,6 +158,26 @@ export const OBSTACLES = {
   spacing: 28,
 } as const;
 
+/**
+ * In-world dialogue (elite ambushes, boss confrontations, story-item lore).
+ * Speakers hold their scene until the player has tapped through every page;
+ * the world freezes in the `dialogue` phase meanwhile.
+ */
+export const DIALOGUE = {
+  /**
+   * An awake speaker opens its scene once within this distance of the
+   * player (world px) — inside the phone-landscape half-view (≈211×97), so
+   * the speaker is visibly on screen when the world stops.
+   */
+  speakRadius: 96,
+} as const;
+
+/** Locked doors (LevelDef.doors), opened by story-item keys. */
+export const DOORS = {
+  /** Carrying the key within this distance of the door slides it open. */
+  openRadius: 40,
+} as const;
+
 /** The medkit consumable: picked up on touch, never enters the inventory. */
 export const MEDKIT = {
   heal: 35,

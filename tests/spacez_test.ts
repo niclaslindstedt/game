@@ -99,8 +99,11 @@ describe("SPACEZ HQ level def", () => {
 
   it("keeps scattered furniture clear of the architecture", () => {
     const state = startGame(SEED, "spacez_hq");
+    const architecture = ["wall", "door_locked"];
     const walls = state.obstacles.filter((o) => o.kind === "wall");
-    const scattered = state.obstacles.filter((o) => o.kind !== "wall");
+    const scattered = state.obstacles.filter(
+      (o) => !architecture.includes(o.kind),
+    );
     expect(scattered.length).toBeGreaterThan(0);
     for (const piece of scattered) {
       for (const wall of walls) {
