@@ -8,12 +8,13 @@ persisted on-device in `localStorage` under `<storagePrefix>:settings`
 field of the identity config (`game.config.json`) — this game ships it as its
 own namespace, and a sequel changes it there once:
 
-| Setting             | Values                                              | Default                                                     |
-| ------------------- | --------------------------------------------------- | ----------------------------------------------------------- |
-| Controls → Mouse    | follow cursor / hold to steer                       | follow cursor on fine pointers, hold on touch-first devices |
-| Controls → Item use | use instantly / use manually (click, E, HUD button) | manual on fine pointers, instant on touch-first devices     |
-| Music volume        | 0–100% in quarter steps                             | 80%                                                         |
-| Sound FX volume     | 0–100% in quarter steps                             | 100%                                                        |
+| Setting             | Values                                                 | Default                                                     |
+| ------------------- | ------------------------------------------------------ | ----------------------------------------------------------- |
+| Controls → Mouse    | follow cursor / hold to steer                          | follow cursor on fine pointers, hold on touch-first devices |
+| Controls → Item use | use instantly / use manually (tap a slot, click, or E) | manual everywhere                                           |
+| Controls → Powerups | lower left / lower right                               | lower left                                                  |
+| Music volume        | 0–100% in quarter steps                                | 80%                                                         |
+| Sound FX volume     | 0–100% in quarter steps                                | 100%                                                        |
 
 Story progress is persisted the same way: watched cutscenes are recorded
 under `<storagePrefix>:seen-cutscenes` (`website/src/game/progress.ts`), so a

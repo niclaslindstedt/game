@@ -66,11 +66,12 @@ and something enormous haunts the old flag.
   barrier the horde must flow around is your best friend. SPACEZ HQ's
   walls only pass at their doorways — the horde funnels; you decide where.
 - **Ability pickups** (fire orbs, storm cell, stasis field, the item
-  magnet — and the rare screen-clearing NUKE) are carried with you — on
-  desktop **click** (or press E, or the HUD USE button) to pop one when the
-  horde closes in; on touch they fire the moment you grab them (the HUD USE
-  button spends one manually). Tune it under SETTINGS, along with music and
-  sound volumes.
+  magnet — and the rare screen-clearing NUKE) are carried with you and
+  banked into **three big powerup slots** in a bottom corner, oldest on the
+  left. **Tap a slot** (or on desktop click, or press E) to spend one when
+  the horde closes in — the rest slide left. Prefer the corner on your other
+  thumb, or the old fire-the-instant-you-grab-it behavior? Both live under
+  SETTINGS → CONTROLS, along with music and sound volumes.
 - The character **fights by itself** with whatever weapon is equipped —
   your job is positioning: kite the haunting, don't get surrounded.
 - Kills grant **XP**; each level-up **restores you to full health** and
@@ -81,9 +82,9 @@ and something enormous haunts the old flag.
 - The horde drops **loot** — medkits, weapons (staplers, mops, tasers,
   beakers… whatever the level left lying around), gear, repair kits, and
   XP arrows, in regular or magic tier. Picking up something **better than
-  what you wear equips it instantly**; the rest lands in the **BAG** (press
-  I) — a Diablo-style inventory: drag items onto their slot or tap to
-  quick-equip.
+  what you wear equips it instantly**; the rest lands in the **BAG** — open
+  it with the **hero avatar** at the top right (or press I) for a
+  Diablo-style inventory: drag items onto their slot or tap to quick-equip.
 - Dropped weapons **wear out** as they fire: when one breaks it is trashed
   and the best weapon left in your bag takes its place (your own sidearm
   never breaks). **Repair kits** restore the equipped weapon's edge.

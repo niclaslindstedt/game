@@ -106,31 +106,90 @@ body {
   color: #7a8088;
 }
 
-/* HUD overlay: ignores the pointer so it never blocks steering. */
+/* HUD overlay: pinned to the top, ignores the pointer so it never blocks
+   steering (the few interactive children opt back in). A full-width XP strip
+   caps the screen; a three-column status row sits just beneath it. */
 .game-hud {
   position: absolute;
   top: 0;
   left: 0;
   right: 0;
   display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: max(0.75rem, env(safe-area-inset-top)) 1rem 0;
+  flex-direction: column;
+  gap: 0.4rem;
+  padding: max(0.5rem, env(safe-area-inset-top))
+    max(0.6rem, env(safe-area-inset-right)) 0
+    max(0.6rem, env(safe-area-inset-left));
   pointer-events: none;
 }
 
-.hud-left,
-.hud-right {
+/* The XP strip: a slim bar spanning the top edge with the level badge on it. */
+.hud-xp {
+  position: relative;
+  height: 0.6rem;
+  background: #1d2530;
+  border: 2px solid #1a1c2c;
+}
+
+.hud-xp-fill {
+  height: 100%;
+  background: linear-gradient(180deg, #ffd75e, #d8a018);
+  transition: width 120ms steps(4);
+}
+
+.hud-xp-badge {
+  position: absolute;
+  top: 50%;
+  left: 0.3rem;
+  transform: translateY(-50%);
+  padding: 0.15rem 0.3rem;
+  background: #0b0d10;
+  border: 2px solid #1a1c2c;
+  border-radius: 4px;
+  line-height: 0;
+}
+
+.hud-top {
   display: flex;
-  align-items: center;
+  align-items: flex-start;
+  justify-content: space-between;
   gap: 0.5rem;
 }
 
+.hud-status {
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+}
+
+.hud-stat-row {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+}
+
+.hud-center {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.15rem;
+  text-shadow: 0 2px 0 rgba(11, 13, 16, 0.6);
+}
+
 .hud-bar {
-  width: 8rem;
+  width: 7rem;
   height: 0.75rem;
   background: #1d2530;
   border: 2px solid #1a1c2c;
+}
+
+.hud-bar.hp-bar {
+  width: 6rem;
+}
+
+.hud-bar.wpn-bar {
+  width: 4.5rem;
+  height: 0.55rem;
 }
 
 .hud-bar-fill {
@@ -139,20 +198,74 @@ body {
   transition: width 120ms steps(4);
 }
 
+.hud-bar-fill.wpn-fill {
+  background: #9aa3ad;
+}
+
+.wpn-icon {
+  width: 1.1rem;
+  height: 1.1rem;
+}
+
+/* The hero avatar doubles as the inventory button (top-right). Big enough to
+   thumb; a small badge counts what is stashed in the bag. */
+.inventory-avatar {
+  position: relative;
+  appearance: none;
+  border: 2px solid #2a3444;
+  border-radius: 6px;
+  padding: 0.25rem;
+  background: rgba(20, 26, 34, 0.72);
+  cursor: pointer;
+  pointer-events: auto;
+  box-shadow: 0 3px 0 rgba(0, 0, 0, 0.4);
+  line-height: 0;
+}
+
+.inventory-avatar:active {
+  transform: translateY(3px);
+  box-shadow: 0 0 0 rgba(0, 0, 0, 0.4);
+}
+
+.avatar-img {
+  width: 2.25rem;
+  height: 2.25rem;
+}
+
+.avatar-badge {
+  position: absolute;
+  top: -0.4rem;
+  right: -0.4rem;
+  min-width: 1rem;
+  padding: 0.1rem 0.2rem;
+  background: #ffd75e;
+  border-radius: 999px;
+  line-height: 0;
+}
+
 /* Pickup feed: WoW-style "PICKED UP X" lines stacked in the lower-right.
    Newest sits at the bottom; each line fades on its own timer (kept in sync
    with PICKUP_TTL_MS in GameScreen). Never eats pointer events so steering
    passes straight through. */
 .pickup-feed {
   position: absolute;
-  right: 1rem;
   bottom: max(0.75rem, env(safe-area-inset-bottom));
   display: flex;
   flex-direction: column;
-  align-items: flex-end;
   gap: 0.25rem;
   pointer-events: none;
+}
+
+.pickup-feed.pickup-right {
+  right: 1rem;
+  align-items: flex-end;
   text-align: right;
+}
+
+.pickup-feed.pickup-left {
+  left: 1rem;
+  align-items: flex-start;
+  text-align: left;
 }
 
 .pickup-line {
@@ -408,44 +521,65 @@ body {
   border: 0;
 }
 
-/* HUD widgets added for the moon level: XP bar + the bag button. */
-.hud-bar.xp-bar {
-  width: 5rem;
-}
-
-.hud-bar-fill.xp-fill {
-  background: linear-gradient(180deg, #ffd75e, #d8a018);
-}
-
-.bag-button {
+.game-hud .pixel-button {
   pointer-events: auto;
-  padding: 0.4rem 0.75rem;
 }
 
-/* The banked-item button: icon + USE, purple to read as "power". */
-.use-button {
-  pointer-events: auto;
+/* ---- Powerup dock -------------------------------------------------------- */
+/* Three big, thumb-sized slots parked in a bottom corner. The oldest banked
+   powerup sits leftmost and the row fills rightward; tapping a slot spends
+   exactly that powerup and the rest shift down (see GameScreen). Purple reads
+   as "power"; empty slots are quiet dashed outlines. */
+.powerup-dock {
+  position: absolute;
+  bottom: max(0.75rem, env(safe-area-inset-bottom));
   display: flex;
-  align-items: center;
-  gap: 0.4rem;
-  padding: 0.4rem 0.75rem;
+  gap: 0.6rem;
+  pointer-events: none;
+}
+
+.powerup-dock.dock-left {
+  left: max(0.75rem, env(safe-area-inset-left));
+}
+
+.powerup-dock.dock-right {
+  right: max(0.75rem, env(safe-area-inset-right));
+}
+
+.powerup-slot {
+  appearance: none;
+  width: 3.75rem;
+  height: 3.75rem;
+  display: grid;
+  place-items: center;
+  padding: 0;
+  border: 2px dashed #39435a;
+  border-radius: 8px;
+  background: rgba(20, 26, 34, 0.5);
+  cursor: default;
+  image-rendering: pixelated;
+}
+
+/* Only filled slots take taps and show the raised "ready" chrome. */
+.powerup-slot.filled {
+  pointer-events: auto;
+  cursor: pointer;
+  border-style: solid;
+  border-color: #9a5fc0;
   background: #d9a0f0;
   box-shadow:
     0 4px 0 #9a5fc0,
     0 6px 0 rgba(0, 0, 0, 0.4);
 }
 
-.use-button:active {
+.powerup-slot.filled:active {
+  transform: translateY(4px);
   box-shadow: 0 0 0 #9a5fc0;
 }
 
-.use-icon {
-  width: 1.25rem;
-  height: 1.25rem;
-}
-
-.game-hud .pixel-button {
-  pointer-events: auto;
+.powerup-icon {
+  width: 2.5rem;
+  height: 2.5rem;
 }
 
 /* ---- Full-screen pause overlays (intro, level-up, inventory) ------------- */

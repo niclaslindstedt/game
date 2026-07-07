@@ -225,11 +225,26 @@ export function TitleScreen({
           blurb:
             s.itemUse === "auto"
               ? "POWERS POP THE MOMENT YOU TOUCH THEM"
-              : "CLICK / THE USE BUTTON / E SPENDS ONE",
+              : "TAP A POWERUP SLOT / CLICK / E SPENDS ONE",
           action: () => {
             playUiSound(synth, "confirm");
             updateSettings({
               itemUse: s.itemUse === "auto" ? "manual" : "auto",
+            });
+            setSettingsTick((t) => t + 1);
+          },
+        },
+        {
+          label:
+            s.powerupSide === "right"
+              ? "POWERUPS: LOWER RIGHT"
+              : "POWERUPS: LOWER LEFT",
+          aria: "controls-powerup-side",
+          blurb: "WHICH CORNER THE BIG POWERUP SLOTS SIT IN",
+          action: () => {
+            playUiSound(synth, "confirm");
+            updateSettings({
+              powerupSide: s.powerupSide === "right" ? "left" : "right",
             });
             setSettingsTick((t) => t + 1);
           },

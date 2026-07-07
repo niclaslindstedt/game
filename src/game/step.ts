@@ -384,13 +384,22 @@ function blockedByObstacle(
 }
 
 /**
- * Spend one carried ability pickup on the `useItem` input edge: the oldest
- * banked ability kicks in (grantAbility emits the abilityStarted event).
- * With empty hands the input is a quiet no-op.
+ * Spend one carried ability pickup on the `useItem` input edge. By default
+ * the oldest banked ability kicks in; `useItemIndex` names a specific slot
+ * (the powerup dock), and removing it shifts the rest down so the dock stays
+ * packed oldest-first. grantAbility emits the abilityStarted event. With
+ * empty hands, or an out-of-range index, the input is a quiet no-op / oldest.
  */
 function stepUseItem(state: GameState, input: GameInput): void {
   if (!input.useItem) return;
-  const defId = state.player.heldAbilities.shift();
+  const held = state.player.heldAbilities;
+  const index =
+    input.useItemIndex !== undefined &&
+    input.useItemIndex >= 0 &&
+    input.useItemIndex < held.length
+      ? input.useItemIndex
+      : 0;
+  const [defId] = held.splice(index, 1);
   if (!defId) return;
   const def = abilityDef(defId);
   if (def.nuke) {
