@@ -110,6 +110,12 @@ const SWIPE_THRESHOLD = 36;
  * deliberately long, secret gesture so it never fires by accident. */
 const MOON_HOLD_MS = 7000;
 
+/** How long the moon's detonation plays before the warp picker opens. Must
+ * match the `.moon-boom` keyframe durations in styles.css. A short cut is used
+ * instead under prefers-reduced-motion. */
+const MOON_BOOM_MS = 900;
+const MOON_BOOM_MS_REDUCED = 200;
+
 type MenuEntry = {
   label: string;
   aria: string;
@@ -151,6 +157,9 @@ export function TitleScreen({
   // The moon is mid-charge (held but not yet at MOON_HOLD_MS) — drives the
   // "charging up" glow so the long-press has visible feedback.
   const [moonCharging, setMoonCharging] = useState(false);
+  // The moon has reached full charge and is detonating: a one-shot blast that
+  // plays before the warp picker opens (see startMoonHold / MOON_BOOM_MS).
+  const [moonExploding, setMoonExploding] = useState(false);
   // The HIGH SCORES board's axes: left/right picks the difficulty column,
   // up/down flips between the survival-time and kills-per-minute rankings.
   const [scoreDifficulty, setScoreDifficulty] = useState<Difficulty>("medium");
@@ -635,31 +644,59 @@ export function TitleScreen({
   // level can be tried without finishing the current campaign. A running glow
   // (moonCharging) shows the hold is building; releasing early cancels it.
   const moonHold = useRef<number | null>(null);
+  // The pending "blast finished → open warp picker" timer, so we can drop it
+  // if the menu unmounts mid-detonation.
+  const moonBoom = useRef<number | null>(null);
   const cancelMoonHold = useCallback(() => {
     if (moonHold.current !== null) {
       window.clearTimeout(moonHold.current);
       moonHold.current = null;
     }
+    // A release once the moon is already detonating no longer cancels: the
+    // blast is committed and runs to the warp picker on its own.
     setMoonCharging(false);
   }, []);
   const startMoonHold = useCallback((event: ReactPointerEvent) => {
     unlockAudio();
     // Only a primary press charges; a mouse right/middle button is ignored.
     if (event.pointerType === "mouse" && event.button !== 0) return;
-    if (moonHold.current !== null) return;
+    if (moonHold.current !== null || moonBoom.current !== null) return;
     setMoonCharging(true);
     moonHold.current = window.setTimeout(() => {
       moonHold.current = null;
       setMoonCharging(false);
-      playUiSound(synth, "start");
-      haptics.vibrate(40);
-      setWarp(true);
-      setScreen("levels");
-      setCursor(0);
+      // Blow the moon up first, then hand off to the warp picker once the
+      // blast has played out.
+      setMoonExploding(true);
+      playUiSound(synth, "boom");
+      haptics.vibrate([30, 40, 90]);
+      const reduce =
+        typeof window.matchMedia === "function" &&
+        window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+      moonBoom.current = window.setTimeout(
+        () => {
+          moonBoom.current = null;
+          setMoonExploding(false);
+          playUiSound(synth, "start");
+          setWarp(true);
+          setScreen("levels");
+          setCursor(0);
+        },
+        reduce ? MOON_BOOM_MS_REDUCED : MOON_BOOM_MS,
+      );
     }, MOON_HOLD_MS);
   }, []);
-  // Drop the pending timer if the menu unmounts mid-charge.
-  useEffect(() => cancelMoonHold, [cancelMoonHold]);
+  // Drop any pending timers if the menu unmounts mid-charge or mid-blast.
+  useEffect(
+    () => () => {
+      cancelMoonHold();
+      if (moonBoom.current !== null) {
+        window.clearTimeout(moonBoom.current);
+        moonBoom.current = null;
+      }
+    },
+    [cancelMoonHold],
+  );
 
   if (!assets) {
     return <div className="game-loading">Loading…</div>;
@@ -701,7 +738,9 @@ export function TitleScreen({
           secret, pointer-only Easter egg, not an announced control. */}
       <div
         ref={moonRef}
-        className={`title-moon${moonCharging ? " charging" : ""}`}
+        className={`title-moon${moonCharging ? " charging" : ""}${
+          moonExploding ? " exploding" : ""
+        }`}
         aria-hidden="true"
         onPointerDown={startMoonHold}
         onPointerUp={cancelMoonHold}
@@ -709,6 +748,24 @@ export function TitleScreen({
         onPointerCancel={cancelMoonHold}
         onContextMenu={(event) => event.preventDefault()}
       />
+      {/* The detonation, drawn as a sibling of the moon (which clips to its own
+          disc) so the flash, shockwave and debris can spill across the sky.
+          Anchored over the moon and mounted only for the blast. */}
+      {moonExploding && (
+        <div className="moon-boom" aria-hidden="true">
+          <span className="moon-boom-flash" />
+          <span className="moon-boom-ring" />
+          <span className="moon-boom-ring moon-boom-ring-2" />
+          <span className="moon-boom-core" />
+          {[0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11].map((n) => (
+            <span
+              key={n}
+              className="moon-boom-shard"
+              style={{ "--shard": n } as CSSProperties}
+            />
+          ))}
+        </div>
+      )}
       {/* Easter egg: a lone sun slowly arcs across the sky roughly every few
           minutes. The moon is dark while it is up and swells to full once it
           has set — always lit from the sun's true direction. Driven by

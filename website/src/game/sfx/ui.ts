@@ -6,7 +6,14 @@
 
 import type { Synth } from "@ui/lib/synth.ts";
 
-export type UiSound = "move" | "confirm" | "back" | "start" | "equip" | "blip";
+export type UiSound =
+  | "move"
+  | "confirm"
+  | "back"
+  | "start"
+  | "equip"
+  | "blip"
+  | "boom";
 
 export function playUiSound(synth: Synth, sound: UiSound): void {
   switch (sound) {
@@ -85,6 +92,43 @@ export function playUiSound(synth: Synth, sound: UiSound): void {
         volume: 0.04,
         delayMs: 280,
         filter: { type: "highpass", frequency: 1600 },
+      });
+      break;
+    case "boom":
+      // The moon going up: a cracking sub-detonation, a long lowpass rumble,
+      // and a falling scream, all pushed into the echo bus so the blast hangs
+      // in the air before the warp picker opens. The title screen's loudest
+      // moment by design — a secret payoff, not a menu tick.
+      synth.noise({
+        durationMs: 260,
+        volume: 0.09,
+        filter: { type: "highpass", frequency: 900 },
+        echo: 0.3,
+      });
+      synth.noise({
+        durationMs: 900,
+        volume: 0.08,
+        delayMs: 40,
+        filter: { type: "lowpass", frequency: 700 },
+        echo: 0.45,
+      });
+      synth.tone({
+        type: "sawtooth",
+        from: 260,
+        to: 28,
+        durationMs: 700,
+        volume: 0.07,
+        detuneCents: 12,
+        echo: 0.4,
+      });
+      synth.tone({
+        type: "sine",
+        from: 1600,
+        to: 160,
+        durationMs: 520,
+        volume: 0.05,
+        delayMs: 70,
+        echo: 0.45,
       });
       break;
     case "equip":
