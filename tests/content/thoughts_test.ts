@@ -1,8 +1,9 @@
 // SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
 // First-kill inner monologues: a story beat pinned to a kill rather than a
-// speaker. The first OPTIMUSK the hero downs on the moon stops the run for his
-// own read on it — SpaceZ's night-shift robots followed the trail up here —
-// and only that once, only on the moon.
+// speaker. The first INTERN at SpaceZ HQ stops the run for the hero's read on
+// a building fully staffed at midnight; the first wisp and the first OPTIMUSK
+// on the moon do the same for the haunting and for the night-shift robots
+// that followed the trail up here — each exactly once, each only on its level.
 
 import { describe, expect, it } from "vitest";
 
@@ -75,6 +76,36 @@ describe("first-kill thoughts", () => {
     expect(state.dialogue).toBeNull(); // no encore
     expect(state.phase).toBe("playing");
     expect(state.thoughtsSeen).toEqual(["moon_optimusk"]);
+  });
+
+  it("opens the hero's read on the night shift on the first HQ INTERN kill", () => {
+    const state = startGame(undefined, "spacez_hq");
+    clearStage(state);
+    const staffer = placeDying(state, "intern");
+
+    killAndCollect(state, staffer.id);
+    expect(state.phase).toBe("dialogue");
+    expect(state.dialogue?.source).toEqual({
+      kind: "playerThought",
+      defId: "spacez_staff",
+    });
+    const content = dialogueContent(state.dialogue!);
+    const def = thoughtDef("spacez_staff");
+    expect(content.speaker).toBe(def.speaker);
+    expect(content.pages).toEqual(def.pages);
+  });
+
+  it("opens the hero's read on the haunting on the first moon wisp kill", () => {
+    const state = startGame(); // the moon
+    clearStage(state);
+    const spirit = placeDying(state, "wisp");
+
+    killAndCollect(state, spirit.id);
+    expect(state.phase).toBe("dialogue");
+    expect(state.dialogue?.source).toEqual({
+      kind: "playerThought",
+      defId: "moon_wisp",
+    });
   });
 
   it("does not fire for OPTIMUSK killed at SpaceZ HQ", () => {

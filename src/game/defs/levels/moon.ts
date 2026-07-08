@@ -160,9 +160,14 @@ export const MOON: LevelDef = {
   ],
   decor: [{ kind: "rocks", count: 20 }],
   decorClearance: 80,
-  // The first SpaceZ robot he kills up here stops him cold — the night shift
-  // followed the trail all the way to the moon.
-  firstKillThoughts: [{ enemy: "optimusk", thought: "moon_optimusk" }],
+  // Arrival and pursuit beats, each pinned to a first kill: the first wisp
+  // proves the dust walks (somebody lied about the moon), and the first
+  // SpaceZ robot stops him cold — the night shift followed the trail all the
+  // way to the moon.
+  firstKillThoughts: [
+    { enemy: "wisp", thought: "moon_wisp" },
+    { enemy: "optimusk", thought: "moon_optimusk" },
+  ],
   loot: {
     weaponPool: [
       "blaster",

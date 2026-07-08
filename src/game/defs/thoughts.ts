@@ -17,6 +17,44 @@ export type ThoughtDef = {
 };
 
 export const THOUGHT_DEFS: Record<string, ThoughtDef> = {
+  // Killing the first INTERN at SpaceZ HQ: it's past midnight and the building
+  // is packed like a product launch. He worked here — nights were never
+  // staffed like this. The surprise seeds the NIGHT MANAGER's reveal (the
+  // secret night shift) a few rooms later.
+  spacez_staff: {
+    id: "spacez_staff",
+    speaker: "ME",
+    portrait: "player",
+    pages: [
+      [
+        "LOOK AT THIS PLACE. PAST",
+        "MIDNIGHT AND EVERY DESK IS",
+        "MANNED. EVERY LAB LIT.",
+      ],
+      [
+        "I WORKED HERE. WE NEVER",
+        "STAFFED NIGHTS LIKE THIS.",
+        "SOMETHING MUST BE BREWING.",
+      ],
+      ["OH WELL.", "GOOD THING I BROUGHT THE SWORD."],
+    ],
+  },
+  // Killing the first wisp on the moon: the dead walking the dust is the
+  // hero's first proof the broadcast history is a lie — somebody knew.
+  moon_wisp: {
+    id: "moon_wisp",
+    speaker: "ME",
+    portrait: "player",
+    pages: [
+      ["IT CAME OUT OF THE DUST.", "NO SUIT. NO SHIP.", "NO FOOTPRINTS."],
+      [
+        "NOBODY EVER SAID THE MOON",
+        "HAD DEAD PEOPLE ON IT.",
+        "SOMEBODY MUST HAVE KNOWN.",
+      ],
+      ["OKAY. THEY GO DOWN LIKE", "ANYTHING ELSE.", "THAT'LL HAVE TO DO."],
+    ],
+  },
   // Killing the first OPTIMUSK on the moon: the night-shift tin men from SpaceZ
   // HQ have followed the trail all the way up here — the conspiracy isn't just
   // shipping Ada moonward, it built a garrison to receive her.
