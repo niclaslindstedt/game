@@ -1,10 +1,11 @@
 // SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
 // The player-thought catalog: the hero's own inner monologues, played through
-// the dialogue box when a level's `firstKillThoughts` fires (the first time he
-// kills a given enemy there). Unlike an elite's arrival scene there is no
-// speaker on the board — the box shows the hero's face and his private read on
-// what he just saw. Adding a beat = adding an entry here + referencing its id
-// from a LevelDef; no engine changes.
+// the dialogue box when a level's `firstKillThoughts` (the first time he kills
+// a given enemy there) or `firstSightThoughts` (the first time one comes into
+// view) fires. Unlike an elite's arrival scene there is no speaker on the
+// board — the box shows the hero's face and his private read on what he just
+// saw. Adding a beat = adding an entry here + referencing its id from a
+// LevelDef; no engine changes.
 
 export type ThoughtDef = {
   id: string;
@@ -17,10 +18,11 @@ export type ThoughtDef = {
 };
 
 export const THOUGHT_DEFS: Record<string, ThoughtDef> = {
-  // Killing the first INTERN at SpaceZ HQ: it's past midnight and the building
-  // is packed like a product launch. He worked here — nights were never
-  // staffed like this. The surprise seeds the NIGHT MANAGER's reveal (the
-  // secret night shift) a few rooms later.
+  // Sighting the first INTERN at SpaceZ HQ: it's past midnight and the
+  // building is packed like a product launch. He worked here — nights were
+  // never staffed like this. Fires on view, before any blow (a sight pin),
+  // and seeds the NIGHT MANAGER's reveal (the secret night shift) a few
+  // rooms later.
   spacez_staff: {
     id: "spacez_staff",
     speaker: "ME",
@@ -39,10 +41,10 @@ export const THOUGHT_DEFS: Record<string, ThoughtDef> = {
       ["OH WELL.", "GOOD THING I BROUGHT THE SWORD."],
     ],
   },
-  // Killing the first wisp on the moon: the dead walking the dust is the
+  // Sighting the first wisp on the moon: the dead walking the dust is the
   // hero's first proof the broadcast history is a lie — somebody knew.
-  moon_wisp: {
-    id: "moon_wisp",
+  moon_wisp_sight: {
+    id: "moon_wisp_sight",
     speaker: "ME",
     portrait: "player",
     pages: [
@@ -52,6 +54,16 @@ export const THOUGHT_DEFS: Record<string, ThoughtDef> = {
         "HAD DEAD PEOPLE ON IT.",
         "SOMEBODY MUST HAVE KNOWN.",
       ],
+    ],
+  },
+  // Downing the first wisp: the payoff of the sighting beat above (its
+  // `after` gate keeps this from ever playing first) — the dead can fall,
+  // and that will have to be enough.
+  moon_wisp_kill: {
+    id: "moon_wisp_kill",
+    speaker: "ME",
+    portrait: "player",
+    pages: [
       ["OKAY. THEY GO DOWN LIKE", "ANYTHING ELSE.", "THAT'LL HAVE TO DO."],
     ],
   },

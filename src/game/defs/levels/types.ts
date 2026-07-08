@@ -203,7 +203,14 @@ export type LevelDef = {
    * THOUGHT_DEFS entry named by `thought`. A story beat pinned to a kill
    * rather than to a speaker rushing into view.
    */
-  firstKillThoughts?: { enemy: string; thought: string }[];
+  firstKillThoughts?: ThoughtTrigger[];
+  /**
+   * Like `firstKillThoughts`, but pinned to a sighting: the first time an
+   * `enemy` comes within DIALOGUE.sightRadius of the hero on this level, the
+   * run pauses into the `playerThought` dialogue — before a single blow. For
+   * beats that are a reaction to seeing something, not to killing it.
+   */
+  firstSightThoughts?: ThoughtTrigger[];
   loot: {
     /** WEAPON_DEFS ids this level's drops draw from. */
     weaponPool: string[];
@@ -231,6 +238,26 @@ export type LevelDef = {
      */
     earlyDrops?: EarlyDrop[];
   };
+};
+
+/**
+ * One pinned inner monologue (`firstKillThoughts` / `firstSightThoughts`):
+ * the first qualifying kill/sighting of `enemy` plays the THOUGHT_DEFS entry
+ * named by `thought`, once per run.
+ */
+export type ThoughtTrigger = {
+  /** Key into ENEMY_DEFS. */
+  enemy: string;
+  /** Key into THOUGHT_DEFS. */
+  thought: string;
+  /**
+   * Ordering gate: this beat holds until the thought named here has played.
+   * A held trigger isn't spent — it retries on the next qualifying
+   * kill/sighting — so a two-part beat (see the wisp, then down one) always
+   * reads in order, even when a long-ranged weapon downs the first mob from
+   * beyond sight range.
+   */
+  after?: string;
 };
 
 /**

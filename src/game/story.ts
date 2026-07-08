@@ -9,6 +9,7 @@
 import { distance } from "@game/lib/vec.ts";
 import { DIALOGUE, DOORS } from "./config.ts";
 import { enemyDef } from "./defs/enemies/index.ts";
+import type { ThoughtTrigger } from "./defs/levels/types.ts";
 import { storyItemDef } from "./defs/story.ts";
 import { thoughtDef } from "./defs/thoughts.ts";
 import type { DialogueState, Enemy, GameState } from "./types.ts";
@@ -124,17 +125,50 @@ export function startPlayerThought(state: GameState, thoughtId: string): void {
  * hero downs `enemyId` on this level, fire its inner monologue exactly once
  * (tracked in `state.thoughtsSeen`). Called from loot.ts after the kill is
  * booked, so the thought stacks ahead of any level-up the blow just earned.
+ * A trigger gated by `after` holds (unspent) until its prerequisite thought
+ * has played, then fires on the next qualifying kill.
  */
 export function maybeFirstKillThought(
   state: GameState,
   enemyId: string,
-  triggers: { enemy: string; thought: string }[] | undefined,
+  triggers: ThoughtTrigger[] | undefined,
 ): void {
   if (state.dialogue !== null || !triggers) return;
   const trigger = triggers.find((t) => t.enemy === enemyId);
   if (!trigger || state.thoughtsSeen.includes(trigger.thought)) return;
+  if (trigger.after && !state.thoughtsSeen.includes(trigger.after)) return;
   state.thoughtsSeen.push(trigger.thought);
   startPlayerThought(state, trigger.thought);
+}
+
+/**
+ * The per-tick hook for a level's `firstSightThoughts`: the first time a
+ * pinned mob comes within DIALOGUE.sightRadius of the hero, fire its inner
+ * monologue exactly once (tracked in `state.thoughtsSeen`, same ledger as
+ * the kill-pinned beats). Called from step() after the enemies have moved,
+ * so the sighting is judged on this tick's positions; if another scene is
+ * already on stage, the sighting simply retries on a later playing tick.
+ * A trigger gated by `after` holds the same way until its prerequisite
+ * thought has played.
+ */
+export function stepSightThoughts(
+  state: GameState,
+  triggers: ThoughtTrigger[] | undefined,
+): void {
+  if (state.dialogue !== null || !triggers) return;
+  for (const trigger of triggers) {
+    if (state.thoughtsSeen.includes(trigger.thought)) continue;
+    if (trigger.after && !state.thoughtsSeen.includes(trigger.after)) continue;
+    const seen = state.enemies.some(
+      (e) =>
+        e.defId === trigger.enemy &&
+        distance(e.pos, state.player.pos) <= DIALOGUE.sightRadius,
+    );
+    if (!seen) continue;
+    state.thoughtsSeen.push(trigger.thought);
+    startPlayerThought(state, trigger.thought);
+    return;
+  }
 }
 
 /**
