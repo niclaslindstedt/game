@@ -233,7 +233,10 @@ body {
     transform: translate(0, 0) rotate(0);
   }
   20% {
-    transform: translate(calc(var(--shake-amp) * -1), calc(var(--shake-amp) * 0.5))
+    transform: translate(
+        calc(var(--shake-amp) * -1),
+        calc(var(--shake-amp) * 0.5)
+      )
       rotate(calc(var(--shake-rot) * -1));
   }
   40% {
