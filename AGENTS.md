@@ -190,6 +190,7 @@ from GitHub Packages. **Prefer the framework over hand-rolling**:
 | game identity (title, domain, …)      | `game.config.json` only — the single source of truth; then `make icons` (OG art)       |
 | engine public API (`src/index.ts`)    | `docs/architecture.md`, `README.md` Usage                                              |
 | game content (levels, enemies, story) | `docs/game-content.md` (this game's walkthrough; a sequel replaces it wholesale)       |
+| story or dialogue text (any line)     | `docs/manuscript.md` — the story's source of truth (see **Story & dialogue** below)    |
 | Make targets / npm scripts            | `README.md` Usage, `CONTRIBUTING.md`, this file                                        |
 | deploy slots / pages workflow         | `docs/architecture.md`, `README.md` Play table, `website/pwa-plugin.ts` `DEPLOY_SLOTS` |
 | config knobs (env vars, URL params)   | `docs/configuration.md`, `README.md` Configuration                                     |
@@ -199,6 +200,46 @@ from GitHub Packages. **Prefer the framework over hand-rolling**:
 The website must be regenerated whenever source-derived content changes
 (§11.2): `website/scripts/extract-source-data.mjs` runs on every build and
 fails if `src/version.ts` and `package.json` disagree.
+
+## Story & dialogue — the manuscript is the source of truth
+
+[`docs/manuscript.md`](docs/manuscript.md) is the **single source of truth for
+the game's story and dialogue**. It transcribes every spoken line, monologue,
+caption, and piece of found lore verbatim, in narrative order. Treat it as
+canonical: when the shipped content and the manuscript disagree, the manuscript
+is right and the data must be corrected to match.
+
+**Changing the story is a two-step commitment:**
+
+- If a change you make to the game conflicts with what the manuscript says, the
+  manuscript must be updated too — but **only after the user confirms the
+  manuscript change**. The user may grant that confirmation ahead of time (e.g.
+  "rewrite ARMSTRONG's speech and update the manuscript" pre-approves the
+  manuscript edit); otherwise, ask before rewriting it.
+- Never silently edit story/dialogue in the data files and leave the manuscript
+  stale, and never rewrite the manuscript without that confirmation. A PR that
+  touches any dialogue/story text updates `docs/manuscript.md` in the same
+  change so the two never drift.
+
+**Where the actual story/dialogue data lives** (the manuscript's implementation
+— its own "Where the data lives" table is the authoritative map):
+
+- `src/game/defs/cutscenes.ts` — cutscene beats: `caption` and `say` lines (the
+  prelude).
+- `src/game/defs/levels/*.ts` — each `LevelDef`'s `intro` (the hero's opening
+  monologue) and `foes` label.
+- `src/game/defs/enemies/*.ts` — every elite/boss `dialogue` (arrival scene) and
+  `lastWords` (spoken on death).
+- `src/game/defs/thoughts.ts` — the hero's inner monologues, pinned to a kill via
+  a `LevelDef.firstKillThoughts` entry.
+- `src/game/defs/story.ts` — `lore` pages on story items (keycards, dossiers,
+  recovered hardware).
+- `website/src/game/copy.ts` — loose UI copy (how-to-play); flavor, not story.
+- Brand strings (title, tagline) are **not** story — they live in
+  `game.config.json` (see Parity rules below).
+
+The engine that plays these lines is `src/game/story.ts`; the overlays that
+render them are `website/src/game/DialogueOverlay.tsx` and `CutsceneOverlay.tsx`.
 
 ## Parity / cross-cutting rules
 
