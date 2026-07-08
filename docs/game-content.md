@@ -13,9 +13,14 @@ tracking beacon sewn into her jacket points off-planet. The hero, a
 spaceship builder who once worked at SpaceZ until an AI replaced him — so he
 knows the building cold — raids SpaceZ for the drive ingredient, then follows
 the beacon to the moon, where something is not dead enough. The prelude
-cutscene (`defs/cutscenes.ts`) sets up that night — the crude sword hanging on
+cutscene (`defs/cutscenes.ts`) sets up that night — the weapon hanging on
 the living-room wall is the one thing he takes off it to go after her, and it
-is the weapon he starts the game with. Each level then opens on the hero's
+is the weapon he starts the game with. WHICH weapon hangs there is the chosen
+difficulty's call (`DifficultyDef.startingWeapon`, mirrored by a
+per-difficulty prelude variant so the wall always shows the run's actual
+starter): HAIRY POTTER'S WAND on EASY, the MEDIEVAL SWORD on MEDIUM, the
+COMBAT KNIFE on HARD, BRASS KNUCKLES on NIGHTMARE, and A STICK on JESUS
+CHRIST!. Each level then opens on the hero's
 `intro` monologue (a black-screen dialogue, one page at a time, the hero
 standing above the box) before the level-name card drops the run in, and its
 elites' `dialogue` carry the thread forward. Skipping the prelude skips the
@@ -60,9 +65,11 @@ names its in-run music with an optional `music` id (a key into the app's
 ### Campaign progression & what carries across levels
 
 The hero's progress **carries through the campaign**. On the opener he
-starts at level 1 with the CRUDE SWORD (the melee blade off the hero's wall
-in the prelude — his default weapon; it carries durability and wears out, so
-the run's first job is to scavenge a replacement). Clearing a level banks a
+starts at level 1 with the difficulty's starting weapon (the piece off the
+hero's wall in the prelude; it carries durability and wears out, so the
+run's first job is to scavenge a replacement — and any looted weapon
+auto-supplants the wall piece). The gentler rungs also bank a few
+pre-allocated stat points (`DifficultyDef.startingStats`). Clearing a level banks a
 **loadout snapshot** — his level, stats, worn equipment, bag, and pocketed
 powerups (`extractLoadout`, persisted per difficulty by
 `website/src/game/progress.ts`) — and starting the next level hands it back
@@ -94,6 +101,19 @@ the menu's **HIGH SCORES** board ranks the runs four ways (survival time,
 kills-per-minute, mobs killed, level reached) and opens any banked run into a
 detail card of the whole session.
 
+Clearing a level also mints a **LEVEL TOKEN** for it at that difficulty
+(`website/src/game/progress.ts`). A token is spent — once, it can't be used
+again — to unlock the **same level at a higher difficulty** ahead of the
+campaign there: the fast lane into the harder rungs' richer loot (their
+tier/unique bonuses), while playing the difficulties in order remains the
+full-reward path. The title menu surfaces it: a rung with a spendable token
+opens its mission list ("LEVEL TOKEN READY"), and the locked mission shows
+"SPEND THE <RUNG> LEVEL TOKEN" in gold. A token jump carries the hero's
+loadout from the highest lower rung that banked one (mobs scale relative to
+his level either way, via the difficulty's `mobLevelOffset`), and the unlock
+persists — dying doesn't revoke it; a spent token is re-minted only by
+re-clearing the level.
+
 Difficulty-exclusive content lives with the level that uses it: a `spawns` or
 `waves.budget` line can carry an optional `minDifficulty`, and it only appears
 from that rung of the ladder up (see `meetsMinDifficulty`).
@@ -115,10 +135,11 @@ The roster is split one file per level/biome under `src/game/defs/enemies/`
   superintelligence; he begs off the plea to quit ("humans are obsolete") and
   drops the **PASSAGE CHIP** he cut into his own skull — a passive `+1 INT`
   trinket that pays out while it merely rides in the bag (`GearDef.passive`).
-  The hero walks in with his sword **holstered** (`LevelDef.openingStrike` —
+  The hero walks in with his weapon **holstered** (`LevelDef.openingStrike` —
   `player.disarmed`): the auto-attack sits out until a lone VANGUARD scientist
-  sprints ahead of the pack and lands a harmless first swing, which draws the
-  blade ("good thing I brought the sword") and turns combat on. Two
+  sprints ahead of the pack and lands a harmless first swing, which draws
+  whatever he took off the wall ("good thing I came armed") and turns combat
+  on. Two
   sight-pinned inner monologues also fire here (`firstSightThoughts` — on view,
   before any blow): the first intern the hero SEES plays his arrival read on a
   building fully staffed at midnight, and the first OPTIMUSK he SEES plays the

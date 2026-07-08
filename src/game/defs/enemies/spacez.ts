@@ -85,11 +85,11 @@ export const SPACEZ_ENEMIES: Record<string, EnemyDef> = {
   // The VANGUARD: a single lab scientist that breaks from the pack the moment
   // the level opens and sprints the hero down (see SpaceZ HQ's `openingStrike`).
   // Its first touch is harmless — it deals no contact damage — but it is what
-  // draws the hero's holstered sword: that swing fires his "good thing I
-  // brought the sword" beat and turns the auto-attack on. It `rushSpeed`s in
+  // draws the hero's holstered weapon: that swing fires his "good thing I
+  // came armed" beat and turns the auto-attack on. It `rushSpeed`s in
   // fast so it clearly outruns the slow intern rank, then STOPS the instant
   // it's next to the hero rather than shoving through him (see step.ts
-  // `moveEnemy`); once the blade is drawn it folds back into the pack at its
+  // `moveEnemy`); once the weapon is drawn it folds back into the pack at its
   // normal `speed` — a plain LAB SCIENTIST the newly-armed hero cuts down.
   // Same sprite as the rank and file, thin (a couple of swings), and nothing
   // marks it out but that opening sprint.

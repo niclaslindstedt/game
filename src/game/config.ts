@@ -264,10 +264,12 @@ export const MENACE = {
    * scaled boss hits harder, but not as steeply as its health grows). */
   bossContactShare: 0.4,
   /**
-   * The rank-and-file's answer to a LEVELLING hero. Every regular minion locks
-   * in extra hp at spawn — this fraction per player level above 1 (+8% each) —
-   * so the horde keeps pace as the hero grows and leftover levels don't turn
-   * the swarm into a walkover. Kill xp is hp-proportional, so a tougher mob is
+   * The size of one horde "level" in hp terms. Every monster spawns at the
+   * player's level plus the difficulty's `mobLevelOffset` (EASY three under,
+   * JESUS two over — see mobHpScaleFor in menace.ts), and each level off the
+   * baseline shifts its hp by this fraction (±8% each). Because the offset is
+   * RELATIVE, the horde keeps pace as the hero grows and the difficulty gap
+   * never closes. Kill xp is hp-proportional, so a tougher mob is
    * automatically worth more xp; its drops sweeten separately below. This is a
    * NON-DECAYING floor from progression alone, distinct from (and stacking with)
    * the menace EVOLUTION stage that answers moment-to-moment overkill — the two
@@ -277,6 +279,12 @@ export const MENACE = {
    * rate a set-piece does.
    */
   mobHpPerLevel: 0.08,
+  /**
+   * The floor under `mobHpScaleFor`: no relative-level deficit can scale a
+   * monster below half its catalog hp, so a deep negative offset (EASY, level
+   * 1) weakens the horde without turning it into paper.
+   */
+  mobHpScaleFloor: 0.5,
   /**
    * Better gear as the hero levels: added to a minion's drop tier roll per
    * player level above 1 (+1.5% each), so a higher-level hero's kills yield

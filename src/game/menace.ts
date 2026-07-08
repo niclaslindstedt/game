@@ -53,23 +53,42 @@ export function menaceSensitivity(state: GameState): number {
   return difficultyDef(state.difficulty).menaceMult * menaceWarmup(state);
 }
 
-/** The hp multiplier a minion spawned at evolution `stage` carries. */
-export function evolutionHpMult(stage: number): number {
-  return 1 + Math.max(0, stage) * MENACE.hpPerStage;
+/** The hp multiplier a minion spawned at evolution `stage` carries.
+ * `effectMult` is the difficulty's `menaceEffectMult` — how hard a rampage
+ * lands on the mobs on this rung (1 = the tuned baseline). */
+export function evolutionHpMult(stage: number, effectMult = 1): number {
+  return 1 + Math.max(0, stage) * MENACE.hpPerStage * effectMult;
 }
 
 /**
- * The toughness the whole horde — rank-and-file minions included — locks in
- * from the player's LEVEL alone: a non-decaying floor of `mobHpPerLevel` extra
- * hp per level above 1. Stamped at spawn (see spawnEnemy), so a levelled hero
- * meets a proportionally sturdier swarm instead of mowing it down, and — since
- * kill xp is hp-proportional — is paid more xp per kill for the trouble. This
- * is the progression half of keeping the fight honest; the menace EVOLUTION
- * stage (`evolutionHpMult`) is the moment-to-moment overkill half, and the two
- * multiply together. Always ≥ 1.
+ * The hp scale a monster locks in at spawn, from the horde's RELATIVE LEVEL:
+ * every mob spawns at `playerLevel + mobLevelOffset` (the difficulty's knob —
+ * EASY fields mobs three levels under the hero, JESUS two levels above), and
+ * each level off the baseline shifts hp by `mobHpPerLevel`. This folds the old
+ * "the horde keeps pace as the hero grows" rule and the difficulty's toughness
+ * into ONE number: the offset keeps the gap constant as the player levels, so
+ * a JESUS horde never falls behind and an EASY one never catches up. Kill xp
+ * is hp-proportional, so a higher-level horde also pays more per kill.
+ * Floored at `mobHpScaleFloor` so a deep negative offset can't zero a mob out.
+ */
+export function mobHpScaleFor(playerLevel: number, difficulty: string): number {
+  const offset = difficultyDef(difficulty).mobLevelOffset;
+  const mobLevel = playerLevel + offset;
+  return Math.max(
+    MENACE.mobHpScaleFloor,
+    1 + (mobLevel - 1) * MENACE.mobHpPerLevel,
+  );
+}
+
+/**
+ * The live-state view of `mobHpScaleFor`: the toughness the whole horde —
+ * rank-and-file minions included — locks in from the player's CURRENT level
+ * and the run's difficulty. Stamped at spawn (see spawnEnemy); the menace
+ * EVOLUTION stage (`evolutionHpMult`) is the moment-to-moment overkill half,
+ * and the two multiply together.
  */
 export function mobLevelScale(state: GameState): number {
-  return 1 + Math.max(0, state.player.level - 1) * MENACE.mobHpPerLevel;
+  return mobHpScaleFor(state.player.level, state.difficulty);
 }
 
 /**
@@ -85,9 +104,15 @@ export function mobLevelTierBonus(state: GameState): number {
 /**
  * The live-crowd multiplier the menace stage applies to the wave spawner's
  * floor and cap — a rampage pulls a bigger, denser horde onto the screen.
+ * The difficulty's `menaceEffectMult` scales how hard the pull lands.
  */
 export function lureMult(state: GameState): number {
-  return 1 + menaceStage(state) * MENACE.lurePerStage;
+  return (
+    1 +
+    menaceStage(state) *
+      MENACE.lurePerStage *
+      difficultyDef(state.difficulty).menaceEffectMult
+  );
 }
 
 /**
@@ -153,7 +178,11 @@ export function tickMenace(
     (state.combatDps * MENACE.perDps +
       state.combatKillRate * MENACE.perKillRate) *
     menaceSensitivity(state);
-  const next = state.menace + (gain - MENACE.decayPerSec) * dt;
+  // The cooler is per-difficulty: EASY bleeds a hot streak off fast, the
+  // hardest rungs let a rampage linger (menaceDecayMult below 1).
+  const decay =
+    MENACE.decayPerSec * difficultyDef(state.difficulty).menaceDecayMult;
+  const next = state.menace + (gain - decay) * dt;
   state.menace = Math.max(0, Math.min(MENACE.max, next));
   const after = menaceStage(state);
   if (after > before) state.events.push({ type: "menaceRose", stage: after });

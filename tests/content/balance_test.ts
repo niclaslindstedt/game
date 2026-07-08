@@ -8,7 +8,7 @@
 // not by CI, so the suite MEASURES and PRINTS the full time-to-death table (so a
 // tuning change's effect is visible in the test log) but only ASSERTS the broad,
 // tuning-robust shape: idle death arrives within the window, isn't instant, and
-// no difficulty turns standing still into a safe haven. Retune the crude sword,
+// no difficulty turns standing still into a safe haven. Retune the wall weapons,
 // the horde, or the stats freely; read the printed table to see where the feel
 // landed rather than chasing a red X.
 
@@ -30,8 +30,8 @@ const SEED = 42;
 
 /**
  * In-game milliseconds until a stationary player dies on `level`/`difficulty`.
- * The character holds still (idle input) and lets the starting crude sword
- * auto-swing; any level-up that lands is banked into LUCK so the measurement
+ * The character holds still (idle input) and lets the difficulty's starting
+ * weapon auto-attack; any level-up that lands is banked into LUCK so the measurement
  * stays about the starting loadout rather than a chosen build. No loadout is
  * passed, so the benchmark pins the HORDE's pressure against the bare
  * authored hero — not whatever kit a campaign carry-over would hand him.

@@ -8,6 +8,8 @@ export type FlagStore = {
   has(flag: string): boolean;
   /** Idempotent; persists immediately. */
   add(flag: string): void;
+  /** Drop one flag (a spendable token, a re-armable hint). Idempotent. */
+  remove(flag: string): void;
   /** Forget everything (a future "reset progress" button). */
   clear(): void;
 };
@@ -56,6 +58,10 @@ export function createFlagStore(key: string, storage?: Storage): FlagStore {
     add(flag) {
       if (flags.has(flag)) return;
       flags.add(flag);
+      persist();
+    },
+    remove(flag) {
+      if (!flags.delete(flag)) return;
       persist();
     },
     clear() {

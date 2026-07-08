@@ -5,7 +5,11 @@
 // CORE_PALETTE (sprite-data/core.mjs) or this family's local palette.
 
 /** Chars only this family draws with — merged with the core at build time. */
-const PALETTE = {};
+const PALETTE = {
+  // Billionaire black (same value as the icons family's local N): the
+  // combat knife's tactical grip on the wall mount.
+  N: [48, 52, 68],
+};
 
 const SPRITES = {
   // ---- The prelude: living-room props ---------------------------------------
@@ -145,10 +149,13 @@ const SPRITES = {
     ".OOOOOOOOOOOOOOOOOO.",
     "....................",
   ],
-  // The crude sword on the wall: dull steel blade (point up), a plain
-  // crossguard and a wrapped grip, resting on two small mount pegs. The one
-  // thing the hero takes with him — his default weapon on the moon.
-  wall_sword: [
+  // ---- The wall arsenal: ONE of these hangs on the back wall, picked by the
+  // difficulty (the prelude scene has a per-difficulty variant — see
+  // defs/cutscenes.ts WALL_ARMS). All rest on the same small mount pegs so
+  // the wall reads the same however the run is armed.
+  // MEDIUM: the medieval sword — dull steel blade (point up), a plain
+  // crossguard and a wrapped grip.
+  wall_medieval_sword: [
     "....OO....",
     "...OVvO...",
     "...OVvO...",
@@ -170,6 +177,110 @@ const SPRITES = {
     "...OOOO...",
     "...OaaO...",
     "...OOOO...",
+    "..........",
+  ],
+  // EASY: HAIRY POTTER'S WAND — a gold-glow tip on a slim shaft, the grip end
+  // bristling with fur. Mount pegs mid-shaft.
+  wall_hairy_wand: [
+    "..........",
+    "...OOOO...",
+    "..OYyyYO..",
+    "..OyyyyO..",
+    "...OyyO...",
+    "...OkkO...",
+    "...OkkO...",
+    "..ObkkbO..",
+    "...OkkO...",
+    "...OkkO...",
+    "...OkkO...",
+    "...OkkO...",
+    "...OkkO...",
+    "..OBkkBO..",
+    "..OBBBBO..",
+    "..OBBBBO..",
+    "...OBBO...",
+    "....OO....",
+    "..........",
+    "..........",
+    "..........",
+    "..........",
+  ],
+  // HARD: the COMBAT KNIFE — a short bright blade over a dark bar guard and
+  // a black grip, on the same pegs.
+  wall_combat_knife: [
+    "..........",
+    "..........",
+    "....OO....",
+    "...OVvO...",
+    "...OVvO...",
+    "...OVvO...",
+    "..OOVvOO..",
+    "..ObVvbO..",
+    "...OVvO...",
+    "...OVvO...",
+    "..OVVvvO..",
+    "..OOOOOO..",
+    "..OaaaaO..",
+    "..OOOOOO..",
+    "...ONNO...",
+    "...ONNO...",
+    "...ONNO...",
+    "....OO....",
+    "..........",
+    "..........",
+    "..........",
+    "..........",
+  ],
+  // NIGHTMARE: the BRASS KNUCKLES — a gold duster hung flat, palm bar down,
+  // resting on one peg.
+  wall_brass_knuckles: [
+    "............",
+    "............",
+    "............",
+    "............",
+    "............",
+    ".OOOOOOOOOO.",
+    "OYYyyyyyyyyO",
+    "OyOyOyOyOyyO",
+    "OyOyOyOyOyyO",
+    "OyyyyyyyyyyO",
+    ".OOqqqqqqOO.",
+    "..OqqqqqqO..",
+    "...OOOOOO...",
+    "....ObbO....",
+    "....ObbO....",
+    "....OOOO....",
+    "............",
+    "............",
+    "............",
+    "............",
+    "............",
+    "............",
+  ],
+  // JESUS CHRIST!: A STICK — crooked, knotted, proudly mounted like an
+  // heirloom. Pegs and all.
+  wall_stick: [
+    "..........",
+    "....OO....",
+    "...OBBO...",
+    "...OBBO...",
+    "...OBEO...",
+    "...OBBO...",
+    "..ObBBbO..",
+    "...OBEO...",
+    "...OBBO...",
+    "..OBBO....",
+    "..OBEO....",
+    "..OBBO....",
+    "..OBBO....",
+    "...OBEO...",
+    "...OBBO...",
+    "...OBBO...",
+    "....OO....",
+    "..........",
+    "..........",
+    "..........",
+    "..........",
     "..........",
   ],
   // ---- The prelude: the cast ------------------------------------------------

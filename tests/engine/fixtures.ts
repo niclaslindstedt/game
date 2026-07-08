@@ -11,9 +11,11 @@
 // hold unchanged — only the ids are synthetic. `installFixtures()` registers
 // them; call it once at module load from the engine test helper.
 //
-// NOTE: the id `blaster` is intentional — `create.ts` mints it as the
-// starting sidearm and `items.ts` falls back to it when a weapon breaks, so
-// the fixture keeps that one shared id (the rest are `test_*`).
+// NOTE: the id `blaster` is intentional — `items.ts` falls back to it when a
+// weapon breaks with an empty bag, so the fixture keeps that one shared id.
+// `crude_sword` is simply this ladder's default (medium) starting weapon —
+// the engine itself no longer hardcodes any starting-weapon id (the
+// difficulty def carries it).
 
 import {
   registerDefs,
@@ -166,9 +168,9 @@ export const FIX_ENEMIES: Record<string, EnemyDef> = {
 };
 
 export const FIX_WEAPONS: Record<string, WeaponDef> = {
-  // Shared id: the engine mints `crude_sword` as the default STARTING weapon
-  // (create.ts) — a breakable melee blade — so the fixture catalog must carry
-  // it. Mirrors the shipped `crude_sword`: melee, damage 20, finite durability.
+  // The fixture ladder's default (medium) STARTING weapon — a breakable melee
+  // blade the default-difficulty suites were calibrated on. Mirrors the old
+  // shipped starter: melee, damage 20, finite durability.
   crude_sword: {
     id: "crude_sword",
     name: "CRUDE SWORD",
@@ -178,7 +180,7 @@ export const FIX_WEAPONS: Record<string, WeaponDef> = {
     range: 44,
     durability: 120,
     baseAoeTargets: 1,
-    icon: "icon_crude_sword",
+    icon: "icon_medieval_sword",
   },
   // Shared id: the engine draws `blaster` as the unbreakable FALLBACK sidearm
   // when a breakable weapon shatters with an empty bag (items.ts). On the moon
@@ -344,8 +346,12 @@ export const FIX_ABILITIES: Record<string, AbilityDef> = {
   },
 };
 
-// The difficulty ladder mirrors the shipped values exactly (difficulty tests
-// assert specific multipliers like jesus ×2.6 and the epic/legendary unlocks).
+// The difficulty ladder mirrors the shipped SHAPE (counts flat-ish, toughness
+// via the relative mobLevelOffset, leaner medkits/armor/powerups and a faster
+// stamina burn up the rungs, richer tiers as the reward) with fixture weapon
+// ids: MEDIUM starts with the fixture `crude_sword` so the default-difficulty
+// suites stay put, and EASY starts with `test_wand` so the per-difficulty
+// starting-weapon rule has a distinct id to assert on.
 export const FIX_DIFFICULTIES: Record<string, DifficultyDef> = {
   easy: {
     id: "easy",
@@ -353,12 +359,24 @@ export const FIX_DIFFICULTIES: Record<string, DifficultyDef> = {
     name: "EASY",
     tagline: "TEST EASY",
     color: "#7ef0c8",
-    mobCountMult: 0.7,
-    mobHpMult: 0.8,
-    aliveMult: 0.7,
+    startingWeapon: "test_wand",
+    startingStats: { stamina: 1, strength: 1, dexterity: 1, intelligence: 1 },
+    mobCountMult: 0.9,
+    mobLevelOffset: -3,
+    aliveMult: 0.9,
     menaceMult: 0.05,
+    menaceDecayMult: 1.5,
+    menaceEffectMult: 0.5,
     dropChanceBonus: 0,
+    medkitDropMult: 1.05,
+    armorDropMult: 1.05,
+    powerupDropMult: 1.05,
+    uniqueDropChance: 0,
     tierChanceBonus: {},
+    staminaDrainMult: 0.95,
+    playerDodgeMult: 1.3,
+    playerMissMult: 0.5,
+    enemyDodgeMult: 0.5,
   },
   medium: {
     id: "medium",
@@ -366,12 +384,24 @@ export const FIX_DIFFICULTIES: Record<string, DifficultyDef> = {
     name: "MEDIUM",
     tagline: "TEST MEDIUM",
     color: "#4da6ff",
+    startingWeapon: "crude_sword",
+    startingStats: {},
     mobCountMult: 1,
-    mobHpMult: 1,
+    mobLevelOffset: -2,
     aliveMult: 1,
-    menaceMult: 0.6,
+    menaceMult: 0.7,
+    menaceDecayMult: 1,
+    menaceEffectMult: 1,
     dropChanceBonus: 0,
+    medkitDropMult: 1,
+    armorDropMult: 1,
+    powerupDropMult: 1,
+    uniqueDropChance: 0,
     tierChanceBonus: {},
+    staminaDrainMult: 1,
+    playerDodgeMult: 1,
+    playerMissMult: 1,
+    enemyDodgeMult: 1,
   },
   hard: {
     id: "hard",
@@ -379,12 +409,24 @@ export const FIX_DIFFICULTIES: Record<string, DifficultyDef> = {
     name: "HARD",
     tagline: "TEST HARD",
     color: "#ffd75e",
-    mobCountMult: 1.4,
-    mobHpMult: 1.35,
-    aliveMult: 1.3,
-    menaceMult: 1.1,
+    startingWeapon: "crude_sword",
+    startingStats: {},
+    mobCountMult: 1.1,
+    mobLevelOffset: -1,
+    aliveMult: 1.1,
+    menaceMult: 1.5,
+    menaceDecayMult: 0.85,
+    menaceEffectMult: 1.15,
     dropChanceBonus: 0.03,
-    tierChanceBonus: { magic: 0.1, epic: 0.06 },
+    medkitDropMult: 0.95,
+    armorDropMult: 0.95,
+    powerupDropMult: 0.95,
+    uniqueDropChance: 0.01,
+    tierChanceBonus: { magic: 0.1, epic: 0.06, legendary: 0.01 },
+    staminaDrainMult: 1.05,
+    playerDodgeMult: 0.9,
+    playerMissMult: 1.1,
+    enemyDodgeMult: 1.1,
   },
   nightmare: {
     id: "nightmare",
@@ -392,12 +434,24 @@ export const FIX_DIFFICULTIES: Record<string, DifficultyDef> = {
     name: "NIGHTMARE",
     tagline: "TEST NIGHTMARE",
     color: "#ff8c42",
-    mobCountMult: 1.9,
-    mobHpMult: 1.75,
-    aliveMult: 1.65,
-    menaceMult: 2.5,
+    startingWeapon: "crude_sword",
+    startingStats: {},
+    mobCountMult: 1.2,
+    mobLevelOffset: 0,
+    aliveMult: 1.2,
+    menaceMult: 3.0,
+    menaceDecayMult: 0.7,
+    menaceEffectMult: 1.3,
     dropChanceBonus: 0.06,
-    tierChanceBonus: { magic: 0.18, epic: 0.14, legendary: 0.04 },
+    medkitDropMult: 0.9,
+    armorDropMult: 0.9,
+    powerupDropMult: 0.9,
+    uniqueDropChance: 0.02,
+    tierChanceBonus: { magic: 0.18, epic: 0.14, legendary: 0.05 },
+    staminaDrainMult: 1.1,
+    playerDodgeMult: 0.8,
+    playerMissMult: 1.25,
+    enemyDodgeMult: 1.25,
   },
   jesus: {
     id: "jesus",
@@ -405,12 +459,24 @@ export const FIX_DIFFICULTIES: Record<string, DifficultyDef> = {
     name: "JESUS CHRIST!",
     tagline: "TEST JESUS",
     color: "#d83a3a",
-    mobCountMult: 2.6,
-    mobHpMult: 2.25,
-    aliveMult: 2.1,
-    menaceMult: 6.0,
+    startingWeapon: "crude_sword",
+    startingStats: {},
+    mobCountMult: 1.8,
+    mobLevelOffset: 2,
+    aliveMult: 1.8,
+    menaceMult: 7.0,
+    menaceDecayMult: 0.5,
+    menaceEffectMult: 1.5,
     dropChanceBonus: 0.1,
-    tierChanceBonus: { magic: 0.26, epic: 0.22, legendary: 0.09 },
+    medkitDropMult: 0.77,
+    armorDropMult: 0.77,
+    powerupDropMult: 0.77,
+    uniqueDropChance: 0.04,
+    tierChanceBonus: { magic: 0.26, epic: 0.22, legendary: 0.12 },
+    staminaDrainMult: 1.1,
+    playerDodgeMult: 0.7,
+    playerMissMult: 1.4,
+    enemyDodgeMult: 1.4,
   },
 };
 
@@ -566,12 +632,23 @@ export const FIX_PRELUDE_LEVEL: LevelDef = {
   prelude: "test_prelude",
 };
 
+// A per-difficulty VARIANT of the prelude (`<id>_<difficulty>`), as the
+// shipped game uses to hang the run's actual starting weapon on the wall:
+// starting `test_prelude_level` on JESUS must resolve to this scene
+// (cutsceneVariant), every other rung to the base `test_prelude`.
+export const FIX_CUTSCENE_JESUS: CutsceneDef = {
+  ...FIX_CUTSCENE,
+  id: "test_prelude_jesus",
+  beats: [{ kind: "caption", text: ["JESUS VARIANT."] }],
+};
+
 let installed = false;
 
 /** Register the synthetic fixtures as the engine's active catalogs. Idempotent
- * (per test-file module isolation, this runs once per file). */
-export function installFixtures(): void {
-  if (installed) return;
+ * (per test-file module isolation, this runs once per file); pass `force` to
+ * re-install after a suite swapped in a custom catalog via registerDefs. */
+export function installFixtures(force = false): void {
+  if (installed && !force) return;
   registerDefs({
     levels: {
       test_level: FIX_LEVEL,
@@ -585,7 +662,10 @@ export function installFixtures(): void {
     abilities: FIX_ABILITIES,
     difficulties: FIX_DIFFICULTIES,
     storyItems: FIX_STORY_ITEMS,
-    cutscenes: { test_prelude: FIX_CUTSCENE },
+    cutscenes: {
+      test_prelude: FIX_CUTSCENE,
+      test_prelude_jesus: FIX_CUTSCENE_JESUS,
+    },
   });
   installed = true;
 }

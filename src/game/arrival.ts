@@ -12,7 +12,7 @@
 // saved state.
 
 import { ARRIVAL, HELD_ITEMS, LEVELING } from "./config.ts";
-import { meetsMinDifficulty } from "./defs/difficulties.ts";
+import { difficultyDef, meetsMinDifficulty } from "./defs/difficulties.ts";
 import { enemyDef } from "./defs/enemies/index.ts";
 import { gearDef, weaponDef } from "./defs/equipment.ts";
 import { levelsBefore, type LevelDef } from "./defs/levels/index.ts";
@@ -205,9 +205,11 @@ export function deriveArrivalLoadout(
     stats[order[i % order.length] as StatName]++;
   }
 
-  // The previous level's parting kit.
+  // The previous level's parting kit; with no pool to draw from, fall back
+  // to the difficulty's own starting weapon (the piece off the wall).
   const previous = cleared[cleared.length - 1] as LevelDef;
-  const weaponId = signatureWeapon(previous) ?? "crude_sword";
+  const weaponId =
+    signatureWeapon(previous) ?? difficultyDef(difficulty).startingWeapon;
   const suitId = issueGear(previous, "suit");
   const charmId = issueGear(previous, "charm");
   return {

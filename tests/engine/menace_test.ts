@@ -15,6 +15,7 @@ import {
   MENACE,
   menaceStage,
   menaceWarmup,
+  mobHpScaleFor,
   skipCutscene,
   step,
 } from "@game/core";
@@ -191,6 +192,10 @@ describe("menace — difficulty and warmup gate the heat", () => {
     state.enemies.push(
       makeEnemy({ pos: { x: x + 20, y }, hp: 10, maxHp: 10 }, "test_fodder"),
     );
+    // Pin the rng high so the blow neither misses, is dodged, nor crits (and
+    // no drop rolls) — the jolt is then the pure overkill formula, and the
+    // rungs compare on their menace knobs alone instead of per-seed luck.
+    state.rng = () => 0.99;
     step(state, idle, DT);
     expect(state.stats.kills).toBe(1);
     return state.menace;
@@ -254,7 +259,11 @@ describe("menace — evolution of the horde", () => {
     expect(spawned.length).toBeGreaterThan(0);
     for (const e of spawned) {
       expect(e.evo).toBeUndefined();
-      expect(e.maxHp).toBe(enemyDef(e.defId).hp); // medium mobHpMult = 1
+      // No evolution — just the horde's relative-level scale (medium fields
+      // mobs two levels under a level-1 hero).
+      expect(e.maxHp).toBe(
+        Math.round(enemyDef(e.defId).hp * mobHpScaleFor(1, "medium")),
+      );
     }
   });
 
@@ -268,11 +277,17 @@ describe("menace — evolution of the horde", () => {
     expect(evolved.length).toBeGreaterThan(0);
     for (const e of evolved) {
       expect(e.evo).toBeGreaterThanOrEqual(1);
-      // Each mob's hp is consistent with its OWN stamped stage.
+      // Each mob's hp is consistent with its OWN stamped stage, on top of
+      // the relative-level scale (medium menaceEffectMult is 1).
       const mult = 1 + (e.evo ?? 0) * MENACE.hpPerStage;
-      expect(e.maxHp).toBe(Math.round(enemyDef(e.defId).hp * mult));
-      // An evolved mob is worth more xp (xp is hp-proportional).
-      expect(e.maxHp).toBeGreaterThan(enemyDef(e.defId).hp);
+      expect(e.maxHp).toBe(
+        Math.round(enemyDef(e.defId).hp * mobHpScaleFor(1, "medium") * mult),
+      );
+      // An evolved mob is worth more xp (xp is hp-proportional) than an
+      // un-evolved spawn of its kind.
+      expect(e.maxHp).toBeGreaterThan(
+        Math.round(enemyDef(e.defId).hp * mobHpScaleFor(1, "medium")),
+      );
     }
   });
 

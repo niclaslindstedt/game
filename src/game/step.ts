@@ -297,17 +297,19 @@ function spawnWaveEnemy(state: GameState, defId: string): boolean {
     if (distance(pos, state.player.pos) < ENEMY_AI.minSpawnDistance) continue;
     if (insideObstacle(state, pos, def.radius)) continue;
     // Stamp the current menace stage: a mob spawned into a rampage evolves —
-    // more hp, more xp, better loot (see menace.ts / spawnEnemy). On top of the
-    // difficulty's flat hp lever, fold in the player-LEVEL toughness floor so a
-    // levelled hero meets a sturdier swarm even when the meter is cold.
+    // more hp, more xp, better loot (see menace.ts / spawnEnemy), hitting as
+    // hard as the difficulty's menaceEffectMult says. The base hp is the
+    // horde's RELATIVE level: the player's live level plus the difficulty's
+    // offset (mobLevelScale), so the swarm keeps its distance as he grows.
     state.enemies.push(
       spawnEnemy(
         defId,
         pos,
         state.rng,
         state.nextId++,
-        difficultyDef(state.difficulty).mobHpMult * mobLevelScale(state),
+        mobLevelScale(state),
         menaceStage(state),
+        difficultyDef(state.difficulty).menaceEffectMult,
       ),
     );
     return true;
@@ -361,8 +363,10 @@ function stepPlayer(
   const staminaStat = effectiveStat(state, "stamina");
   const running = player.moving && throttle > STAMINA.runThreshold;
   if (running) {
+    // Harder difficulties wind the hero a touch faster (staminaDrainMult).
     const drain =
-      STAMINA.drainPerSec / (1 + staminaStat * STAMINA.drainReductionPerPoint);
+      (STAMINA.drainPerSec * difficultyDef(state.difficulty).staminaDrainMult) /
+      (1 + staminaStat * STAMINA.drainReductionPerPoint);
     player.stamina = Math.max(0, player.stamina - drain * dt);
   } else {
     const walkFactor = player.moving ? STAMINA.walkRegenFactor : 1;

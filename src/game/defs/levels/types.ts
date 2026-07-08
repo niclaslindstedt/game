@@ -218,7 +218,7 @@ export type LevelDef = {
    * and land a harmless first swing. That swing (no HP lost) fires the
    * `thought` and arms the weapon; combat is normal from then on. The `after`
    * gate holds the arming until its thought has played, so the "look at this
-   * place" read always lands before the "good thing I brought the sword"
+   * place" read always lands before the "good thing I came armed"
    * reaction. Omitted = the hero opens armed, as on every later level.
    */
   openingStrike?: OpeningStrike;
@@ -234,6 +234,13 @@ export type LevelDef = {
     tierChances: Partial<Record<Tier, number>>;
     /** ABILITY_DEFS ids this level's drops draw from. */
     abilityPool: string[];
+    /**
+     * One-of-a-kind equipment ids only the harder difficulties can rain: a
+     * minion's equipment drop is drawn from here with the difficulty's
+     * `uniqueDropChance` (see dropMinionLoot). Omitted/empty = the slice is a
+     * no-op — plumbing that waits until this game ships unique items.
+     */
+    uniquePool?: string[];
     /**
      * Trophy weapon def dropped by the last regular monster standing —
      * clearing every mob on the level always earns it.
@@ -285,8 +292,8 @@ export type OpeningStrike = {
   thought: string;
   /**
    * Ordering gate: the arming holds until this thought has played, so the
-   * hero's first read on the level lands before the "good thing I brought the
-   * sword" reaction. Same semantics as ThoughtTrigger.after.
+   * hero's first read on the level lands before the "good thing I came
+   * armed" reaction. Same semantics as ThoughtTrigger.after.
    */
   after?: string;
 };

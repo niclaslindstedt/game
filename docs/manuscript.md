@@ -44,9 +44,12 @@ into a rift; the hero follows.
 
 ## Prelude (cutscene)
 
-_The night everything started. Movie night in the living room. The crude sword
-mounted on the back wall is the one thing the hero takes off it to go after her —
-his starting weapon on the moon._
+_The night everything started. Movie night in the living room. The weapon
+mounted on the back wall — which one depends on the chosen difficulty — is the
+one thing the hero takes off it to go after her: his starting weapon for the
+whole run. The scene is identical on every difficulty except for the mounted
+piece and the closing caption (the per-difficulty variants live in
+`defs/cutscenes.ts` `WALL_ARMS`)._
 
 > **CAPTION:** FRIDAY NIGHT. MOVIE NIGHT.
 
@@ -67,8 +70,19 @@ _(Ada crosses to the door and exits.)_
 **ME:** ADA?
 
 > **CAPTION:** SHE NEVER CAME BACK.
->
-> **CAPTION:** THE OLD SWORD OFF THE WALL. / IT'S ALL I NEED TO BRING HER HOME.
+
+_(The closing caption names the wall weapon, per difficulty:)_
+
+- **EASY** (HAIRY POTTER'S WAND):
+  > **CAPTION:** HAIRY POTTER'S WAND, OFF THE WALL. / IT'S ALL I NEED TO BRING HER HOME.
+- **MEDIUM** (MEDIEVAL SWORD):
+  > **CAPTION:** THE OLD SWORD OFF THE WALL. / IT'S ALL I NEED TO BRING HER HOME.
+- **HARD** (COMBAT KNIFE):
+  > **CAPTION:** THE COMBAT KNIFE OFF THE WALL. / IT'LL HAVE TO BE ENOUGH.
+- **NIGHTMARE** (BRASS KNUCKLES):
+  > **CAPTION:** THE KNUCKLES OFF THE WALL. / THEY'LL HAVE TO BE ENOUGH.
+- **JESUS CHRIST!** (A STICK):
+  > **CAPTION:** THE STICK OFF THE WALL. / GOD HELP US BOTH.
 
 _(Fade to black.)_
 
@@ -98,16 +112,17 @@ few rooms later._
 - LOOK AT THIS PLACE. PAST / MIDNIGHT, AND EVERY DESK'S / MANNED. EVERY LAB LIT.
 - WE NEVER RAN NIGHTS LIKE THIS. / SOMETHING'S GOT THE WHOLE / BUILDING UP AFTER DARK.
 
-### Hero's thought — the vanguard's first strike (draws the sword)
+### Hero's thought — the vanguard's first strike (draws the weapon)
 
-_The level opens with the hero's sword holstered — he walks in like it's still
+_The level opens with the hero's weapon holstered — he walks in like it's still
 his old job. A lone LAB SCIENTIST breaks from the pack and takes a harmless
-swing at him; staff don't fight, and that wrongness is what makes him draw the
-blade. Fires once, on that first strike (gated to play after the sighting read
-above), and arms the auto-attack for the rest of the run._
+swing at him; staff don't fight, and that wrongness is what makes him draw
+whatever he took off the wall. Fires once, on that first strike (gated to play
+after the sighting read above), and arms the auto-attack for the rest of the
+run. Weapon-agnostic on purpose — the wall piece differs per difficulty._
 
 - A SCIENTIST JUST TOOK A SWING / AT ME. BARELY FELT IT - BUT / THEY DON'T FIGHT. NEVER DID.
-- SO THE NIGHT SHIFT BITES NOW. / GOOD THING I BROUGHT THE SWORD.
+- SO THE NIGHT SHIFT BITES NOW. / GOOD THING I CAME ARMED.
 
 ### Hero's thought — first OPTIMUSK sighted at SpaceZ HQ
 

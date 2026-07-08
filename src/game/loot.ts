@@ -7,7 +7,7 @@
 
 import { clamp, type Vec2 } from "@game/lib/vec.ts";
 import { ACCURACY, LEVELING, LOOT, MENACE, STATS } from "./config.ts";
-import { scaledMobCount } from "./defs/difficulties.ts";
+import { difficultyDef, scaledMobCount } from "./defs/difficulties.ts";
 import { enemyDef, type EnemyDef } from "./defs/enemies/index.ts";
 import { levelDef } from "./defs/levels/index.ts";
 import {
@@ -21,15 +21,20 @@ import { bankOverkill, maybePowerScale, mobLevelTierBonus } from "./menace.ts";
 import { maybeFirstKillThought, startDeathWords } from "./story.ts";
 import type { Enemy, GameState, WeaponClass } from "./types.ts";
 
-/** Monsters still owed by the wave budget but not yet streamed in. */
+/** Monsters still owed by the wave budget but not yet streamed in. Each line
+ * clamps at zero so an over-counted line (tests exhaust budgets by maxing
+ * `waveSpawned`) can never drag the total negative and trip the pity rule. */
 export function unspawnedMinions(state: GameState): number {
   const waves = levelDef(state.level.id).waves;
   if (!waves) return 0;
   return waves.budget.reduce(
     (sum, entry, i) =>
       sum +
-      scaledMobCount(entry.count, state.difficulty) -
-      (state.waveSpawned[i] ?? 0),
+      Math.max(
+        0,
+        scaledMobCount(entry.count, state.difficulty) -
+          (state.waveSpawned[i] ?? 0),
+      ),
     0,
   );
 }
@@ -273,10 +278,25 @@ function dropMinionLoot(
   if (!forced && state.rng() >= dropChance(state) + dropBonus) return;
 
   const pos = { ...at };
+  const diff = difficultyDef(state.difficulty);
   const abilities = levelDef(state.level.id).loot.abilityPool;
-  const abilityShare = abilities.length > 0 ? LOOT.abilityShare : 0;
+  // The difficulty leans on the drop ladder: medkits and powerups thin out a
+  // few percent per rung (the equipment/repair slices stay as authored).
+  const abilityShare =
+    abilities.length > 0 ? LOOT.abilityShare * diff.powerupDropMult : 0;
+  const medkitShare = LOOT.medkitShare * diff.medkitDropMult;
   // The rare slice first, so tuning the ladder below never dilutes it.
   const nuked = !forced && state.rng() < LOOT.nukeShare;
+  // The unique slice: the harder rungs' shot at one-of-a-kind gear, drawn
+  // from the level's `uniquePool`. No level ships one yet, so the guard makes
+  // this a clean no-op (not even a roll is drawn) until unique items exist.
+  const uniques = levelDef(state.level.id).loot.uniquePool ?? [];
+  const unique =
+    !nuked &&
+    !forced &&
+    uniques.length > 0 &&
+    diff.uniqueDropChance > 0 &&
+    state.rng() < diff.uniqueDropChance;
   const roll = state.rng();
   if (nuked) {
     state.items.push({
@@ -284,6 +304,16 @@ function dropMinionLoot(
       kind: "ability",
       pos,
       defId: "screen_nuke",
+    });
+  } else if (unique) {
+    state.items.push({
+      id: state.nextId++,
+      kind: "equipment",
+      pos,
+      equipment: rollEquipment(state, {
+        defId: uniques[Math.floor(state.rng() * uniques.length)] as string,
+        tierBonus,
+      }),
     });
   } else if (forced || roll < LOOT.equipmentShare) {
     state.minionEquipmentDrops++;
@@ -300,11 +330,11 @@ function dropMinionLoot(
       pos,
       defId: abilities[Math.floor(state.rng() * abilities.length)] as string,
     });
-  } else if (roll < LOOT.equipmentShare + abilityShare + LOOT.medkitShare) {
+  } else if (roll < LOOT.equipmentShare + abilityShare + medkitShare) {
     state.items.push({ id: state.nextId++, kind: "medkit", pos });
   } else if (
     roll <
-    LOOT.equipmentShare + abilityShare + LOOT.medkitShare + LOOT.repairShare
+    LOOT.equipmentShare + abilityShare + medkitShare + LOOT.repairShare
   ) {
     state.items.push({ id: state.nextId++, kind: "repair", pos });
   } else {

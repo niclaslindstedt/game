@@ -151,9 +151,27 @@ const SPRITES = {
     "OkkO........",
     ".OO.........",
   ],
-  // The CRUDE SWORD: the hero's own blade off the wall, the default starting
-  // weapon. Dull steel, a gold crossguard, a wrapped grip — rough but his.
-  icon_crude_sword: [
+  // ---- The wall arsenal: one starting weapon per difficulty (the piece the
+  // prelude hangs on the hero's living-room wall — see prelude.mjs for the
+  // mounted versions). EASY's HAIRY POTTER'S WAND: a licensed-adjacent wand,
+  // gold glow at the tip, fur bristling off the grip end.
+  icon_hairy_wand: [
+    "............",
+    "........OO..",
+    ".......OyYO.",
+    "......OyYYO.",
+    "......OyyO..",
+    ".....OkkO...",
+    "....OkkO....",
+    "...OkkO.....",
+    "..OkkO......",
+    ".BOkOB......",
+    ".BBOBB......",
+    "............",
+  ],
+  // MEDIUM's MEDIEVAL SWORD: a proper knight's blade — bright steel, a wide
+  // gold crossguard, wrapped grip, gold pommel.
+  icon_medieval_sword: [
     "............",
     ".......OOO..",
     "......OVvO..",
@@ -161,10 +179,57 @@ const SPRITES = {
     "....OVvvO...",
     "...OVvvO....",
     "..OVvvO.....",
-    ".OqOvOqO....",
+    ".OoqOvOqoO..",
     "..OkkO......",
-    "..OkkO......",
-    "...OO.......",
+    ".OyOkO......",
+    "..OOO.......",
+    "............",
+  ],
+  // HARD's COMBAT KNIFE: a short tactical blade over a dark bar guard and a
+  // billionaire-black grip.
+  icon_combat_knife: [
+    "............",
+    "............",
+    ".......OO...",
+    "......OVvO..",
+    ".....OVvO...",
+    "....OVvO....",
+    "...OVvO.....",
+    "..OaaaO.....",
+    "..ONNO......",
+    ".ONNO.......",
+    "..OO........",
+    "............",
+  ],
+  // NIGHTMARE's BRASS KNUCKLES: four finger slots in a gold duster, the palm
+  // bar shaded below.
+  icon_knuckles: [
+    "............",
+    ".OOOOOOOOOO.",
+    "OYYyyyyyyyyO",
+    "OyOyOyOyOyyO",
+    "OyOyOyOyOyyO",
+    "OyyyyyyyyyyO",
+    ".OOqqqqqqOO.",
+    "..OqqqqqqO..",
+    "...OOOOOO...",
+    "............",
+    "............",
+    "............",
+  ],
+  // JESUS CHRIST!'s STICK: a stick. Crooked, knotted, bark-shaded. A stick.
+  icon_stick: [
+    "............",
+    ".........O..",
+    "........OBO.",
+    ".......OBO..",
+    "......OBO...",
+    ".....OBEO...",
+    "....OBEO....",
+    "...OBEO.....",
+    "..OBEO......",
+    "..OBO.......",
+    "...O........",
     "............",
   ],
   // Inventory icons, 12×12.

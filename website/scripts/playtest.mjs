@@ -65,8 +65,24 @@ await page.screenshot({ path: `${shotDir}/title.png` });
 await page.getByRole("button", { name: "new-game" }).click();
 await page.screenshot({ path: `${shotDir}/difficulty.png` });
 await page.getByRole("button", { name: `difficulty-${difficulty}` }).click();
-await page.getByRole("button", { name: `level-${level}` }).click();
+// An unbeaten difficulty walks straight into the campaign (no mission list) —
+// the list only opens once the rung is cleared or a level token is spendable.
+// Click the level when the list shows; otherwise trust the walk-in (fresh
+// storage always lands on the first uncleared level).
+try {
+  await page
+    .getByRole("button", { name: `level-${level}` })
+    .click({ timeout: 3000 });
+} catch {
+  // Auto-started — verified against the requested level below.
+}
 await page.waitForFunction(() => window.__game !== undefined);
+const startedLevel = await page.evaluate(() => window.__game.level.id);
+if (startedLevel !== level) {
+  console.error(
+    `PLAYTEST: requested level "${level}" but the menu started "${startedLevel}"`,
+  );
+}
 
 const snapshot = () =>
   page.evaluate(() => {
@@ -88,12 +104,19 @@ while (
   (s.phase === "cutscene" ||
     s.phase === "intro" ||
     s.phase === "playing" ||
-    s.phase === "levelup") &&
+    s.phase === "levelup" ||
+    s.phase === "dialogue") &&
   Date.now() - t0 < timeoutMs
 ) {
   if (!shotTaken && Date.now() - t0 > 1500) {
     await page.screenshot({ path: `${shotDir}/gameplay.png` });
     shotTaken = true;
+  }
+  // Story scenes (elite dialogue, the hero's thoughts) park the run for the
+  // player's tap — tap through so a bot run measures fighting, not reading
+  // (the first tap finishes the letter crawl, the next turns the page).
+  if (s.phase === "dialogue") {
+    await page.mouse.click(422, 195);
   }
   await page.waitForTimeout(200);
   s = await snapshot();
