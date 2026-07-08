@@ -27,6 +27,7 @@ import {
 import { enemyDef } from "./defs/enemies/index.ts";
 import { weaponDef } from "./defs/equipment.ts";
 import { LEVEL_ORDER, levelDef, type LevelDef } from "./defs/levels/index.ts";
+import { buildWells } from "./hazards.ts";
 import {
   recomputeMaxHp,
   recomputeMaxStamina,
@@ -148,6 +149,10 @@ export function createGame(
 
   const decor = scatterDecor(rng, def);
 
+  // Untouchable dialogue figures are not foes: they can never be killed, so
+  // counting them would leave the HUD's total forever out of reach.
+  const foeCount = enemies.filter((e) => !enemyDef(e.defId).apparition).length;
+
   // The wave budget is part of the level's population from the start — the
   // HUD's "ghosts N/total" counts the whole haunting, not just the placed few.
   const waveTotal = (def.waves?.budget ?? []).reduce(
@@ -256,6 +261,13 @@ export function createGame(
     items: [],
     decor,
     obstacles,
+    wells: buildWells(def, () => nextId++),
+    asteroids: [],
+    // The first rock is owed a full interval; 0 on levels without the rain.
+    asteroidTimerMs: def.asteroids
+      ? randomRange(rng, def.asteroids.everyMs[0], def.asteroids.everyMs[1])
+      : 0,
+    wellTickMs: 0,
     victoryCountdownMs: null,
     minionEquipmentDrops: 0,
     waveSpawned: (def.waves?.budget ?? []).map(() => 0),
@@ -271,7 +283,7 @@ export function createGame(
     earlyDropCursor: 0,
     stats: {
       kills: 0,
-      totalEnemies: enemies.length + waveTotal,
+      totalEnemies: foeCount + waveTotal,
       shotsFired: 0,
       damageDealt: 0,
       damageTaken: 0,

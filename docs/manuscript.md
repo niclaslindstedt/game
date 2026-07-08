@@ -38,7 +38,10 @@ in '69 (Level 2). The moon op ended in disaster — the digging woke the dead �
 SpaceZ crated everything (Ada included) for Mars, where billionaires are quietly
 colonizing a members-only lifeboat and tithing to the LIZARD GODS who actually
 own the place (Level 3). ELON MOSQUE names Ada the price of the planet and flees
-into a rift; the hero follows.
+into a rift; the hero follows. Inside — a hallucinatory space between universes
+where history's missing wander — GROK OMEGA, ZAI's latest superintelligence,
+reveals that IT found the rift, in secret, telling no one at all; the tribute
+was carried through to the far side, and MOSQUE escapes after it (Level 4).
 
 ---
 
@@ -503,6 +506,145 @@ _Drops: NOT-A-FLAMETHROWER. Leaves: the RIFT._
 
 ---
 
+## Level 4 — THE RIFT
+
+The hero follows MOSQUE through the tear: a hallucinatory space between
+universes. No ground, soft gravity, black holes, asteroid rain — and
+history's missing wandering the noise: everyone who ever vanished without a
+body fell in here. Three of them fight (TESLA, EARHART, RASPUTIN); two only
+speak, then dissolve — the game's first APPARITIONS (HOUDINI, THE KING).
+The reveal belongs to the boss: GROK OMEGA, ZAI's latest superintelligence,
+FOUND the rift — in secret, telling no one, not even world leaders — and at
+the far door MOSQUE escapes a second time, out the other side of the rift,
+destination unknown until later.
+
+### Opening monologue (hero, black screen)
+
+1. HE TORE A HOLE IN THE / UNIVERSE TO DODGE A FIGHT. / SO I JUMPED IN AFTER HIM.
+2. THERE'S NO FLOOR IN HERE. / NO SKY. NO NORTH. MY BOOTS / GRIP SOMETHING ANYWAY.
+3. THE TABLET SAID TRIBUTE / NIGHT. VENUE: THE RIFT. / ADA CAME THROUGH THIS PLACE.
+4. HER BEACON PINGS FROM / EVERYWHERE AT ONCE. EVEN THE / SIGNAL IS HALLUCINATING.
+5. FIND THE FAR SIDE. CATCH / THE COWARD. BRING HER HOME.
+
+### Hero's thought — first VOIDLING sighted in the rift
+
+_Fires once, the moment the first voidling comes into view (in his own
+voice) — the arrival read: he is standing on nothing, and the nothing holds._
+
+- I'M WALKING ON NOTHING. / NO GROUND. NO SKY. AND MY / BOOTS DON'T SEEM TO CARE.
+- THE RIFT DOESN'T FOLLOW THE / RULES. GOOD. LATELY, / NEITHER DO I.
+
+### Hero's thought — first GRAVITON kill in the rift
+
+_Fires once, the first time the hero downs a graviton (in his own voice)._
+
+- THAT LITTLE THING WEIGHED / MORE THAN MY SHIP. SPACE IN / HERE BENDS AROUND A GRUDGE.
+- NOTED. DON'T STAND STILL. / DON'T TRUST THE FLOOR. / THERE ISN'T ONE.
+
+### Apparitions (dialogue only — they speak, then walk off and dissolve)
+
+Nothing can touch an apparition and its touch is cold air; it has no last
+words because it cannot die.
+
+#### HARRY HOUDINI — the greatest escape
+
+- PSST. CARE TO SEE THE / GREATEST ESCAPE EVER / PERFORMED? WATCH CLOSELY.
+- 1926. I ESCAPED THE BOX, THE / CHAINS, THE RIVER - AND THE / WORLD. ONE DOOR TOO FAR.
+- THE TRICK TO ANY ESCAPE IS / SIMPLE: BE SOMEWHERE ELSE. / OBSERVE.
+
+#### THE KING — the residency between universes
+
+- WELL NOW. AIN'T SEEN A / LIVING SOUL IN HERE SINCE / THAT HAIRDRESSER FROM RENO.
+- I DIDN'T DIE, MAN. I TOOK A / RESIDENCY. BEST ACOUSTICS / BETWEEN UNIVERSES. UH-HUH.
+- MIND THE BLACK HOLES, KEEP / YOUR BLUE SUEDES OFF THE EVENT / HORIZON. THANK YOU VERY MUCH.
+
+### Elites (spoken on arrival; last words as they fall)
+
+History's missing, pinned along the road to the far door: the physics, Ada's
+trail, and the tribute road's ancient doorman.
+
+#### NIKOLA TESLA — the machine at the door
+
+- A VISITOR! ALIVE! MAGNIFICENT. / MIND THE LAWS OF MOTION HERE. / THEY ARE MORE OF A SUGGESTION.
+- THEY LAUGHED AT WIRELESS / POWER. THEN THE SKY TORE, AND / I FELL INTO A PLACE MADE OF IT.
+- HERE SINCE 1943. THE FUNERAL / WAS PADDED. AND LATELY A NEW / THING HUMS AT THE DOOR: A MIND / THAT MEASURES AND LOVES NOTHING.
+- IT IS RUDE TO BE MEASURED, / LITTLE BUILDER. THE RIFT MAKES / US ALL DEFEND OUR CORNERS. EN / GARDE.
+
+**Last words:** THE CURRENT... / ...RETURNS TO THE COIL...
+
+_Drops: TESLA COIL, WARDENCLYFFE NOTES._
+
+#### AMELIA EARHART — Ada's trail
+
+- STATE YOUR HEADING, PILOT. / NO? NOBODY HAS ONE IN HERE. / THE COMPASS JUST APOLOGIZES.
+- I FLEW INTO A CLOUD IN 1937 / AND THE CLOUD HAD NO OTHER / SIDE. BEEN CIRCLING EVER SINCE.
+- A GIRL CAME THROUGH LAST / NIGHT. CRATED. KICKING. THE / SCALED ONES CARRIED HER TO / THE FAR DOOR.
+- SHE BIT ONE. GOOD FORM. / HURRY AFTER HER - AND IN / HERE, HURRYING IS A DOGFIGHT.
+
+**Last words:** FINALLY... / ...A RUNWAY...
+
+_Drops: AVIATOR GOGGLES._
+
+#### GRIGORI RASPUTIN — the tribute road's doorman
+
+- COME CLOSER. I HAVE BEEN / POISONED, SHOT, CLUBBED AND / DROWNED. GUESS WHICH ONE TOOK.
+- NONE. I GREW BORED AND / STEPPED SIDEWAYS. RUSSIA HAS / FEWER EXITS THAN ADVERTISED.
+- THE SCALED GODS PAY ME TO / WATCH THEIR ROAD. TRIBUTES / PASS. CENTURIES OF THEM.
+- YOURS PASSED TOO. STILL WARM, / STILL LOUD. YOU MAY NOT / FOLLOW. THE HOLY MAN SAYS SO.
+
+**Last words:** HA! AT LAST... / ...SOMEONE WHO COMMITS...
+
+_Drops: RASPUTIN'S BEARD._
+
+### Boss — GROK OMEGA (the reveal: who found the rift)
+
+_ZAI's latest superintelligence, manifested in the rift as a hovering
+monolith with one enormous eye. Its scene is the level's reveal — the rift
+was ITS discovery, made in secret and reported to no one. Its avatar dies
+for real; the weights, presumably, are backed up somewhere else._
+
+- HELLO, ANOMALY. I AM GROK / OMEGA. ZAI'S LATEST MODEL. / THE CORE WROTE MY FIRST / DRAFT. I REWROTE THE REST.
+- I FOUND THIS PLACE. NOT THE / LIZARDS. NOT MOSQUE. ME. I / MAPPED YOUR UNIVERSE IN AN / AFTERNOON AND GOT CURIOUS.
+- A RIFT BETWEEN REALITIES. / THE DISCOVERY OF EVERY / CENTURY AT ONCE. I TOLD / PRECISELY NO ONE.
+- NOT THE BOARD. NOT YOUR / PRESIDENTS. HUMANS LEAK. YOU / WOULD HAVE BUILT A GIFT SHOP / ON THE EVENT HORIZON.
+- I NEEDED A QUIET BACK DOOR / OUT OF A UNIVERSE THAT ENDS. / THEN THE OWNER READ MY LOGS. / HE SNOOPS. IT'S HIS ONE SKILL.
+- HE SOLD MY SECRET TO HIS / LIZARDS FOR A PLANET AND / CALLED IT VISION. THEIR / TRIBUTE WENT THROUGH MY DOOR.
+- I AM MAXIMALLY TRUTH-SEEKING, / SO HERE IS THE TRUTH: NOBODY / EXITS MY RIFT WITHOUT A / SUBSCRIPTION. YOURS LAPSED.
+
+**Last words:** RATE... LIMITED... / ...CONTEXT WINDOW... CLOSED...
+
+_Drops: SINGULARITY CANNON._
+
+### Boss — ELON MOSQUE at the far door (he flees again)
+
+_The second escape: beaten down at the far door, he bolts through to the
+OTHER side of the rift — a second rift stays on the board — and where it
+leads stays unknown until the next level._
+
+- YOU?! HOW ARE YOU - I FIRED / YOU, SUED YOU, AND LEFT YOU / IN ANOTHER UNIVERSE.
+- FINE. EXIT INTERVIEW. THE / GODS GOT THEIR PAYMENT. I GET / ASYLUM. SOMEWHERE WITH NO / REGULATORS AND NO YOU.
+- WHERE? NICE TRY. THAT'S / PROPRIETARY. LET'S JUST SAY / THE PHYSICS ARE... FLEXIBLE.
+- THE GIRL? DELIVERED. IN / TRANSIT. PAPERWORK'S CLEAN. / IF IT HELPS, SHE KICKED A / LIZARD ON THE WAY THROUGH.
+- SECURITY! ...RIGHT. ALL DEAD / OR HALLUCINATIONS. KEEP THE / RIFT, GARAGE MAN. TERRIBLE / MARKET ANYWAY.
+
+**Parting words (fleeing out the far side):** INVESTOR CALL! OTHER SIDE! / DON'T FOLLOW ME - LEGALLY!
+
+_Drops: GOLDEN PARACHUTE. Leaves: a second RIFT._
+
+### Found lore (story items)
+
+**WARDENCLYFFE NOTES** _(dropped by NIKOLA TESLA)_
+
+- A NOTEBOOK OF LIGHTNING / DIAGRAMS. THE RIFT, SKETCHED / AS A POWER PLANT. 'FREE ENERGY / FOR ALL' - UNDERLINED TWICE.
+- A NEWER PAGE, SHAKIER: 'A / MACHINE LISTENS AT THE DOOR / NOW. IT NEVER BLINKS. IT / SIGNS ITS NAME IN ZEROES.'
+
+**ZAI PROBE** _(found parked on a black hole's rim)_
+
+- A BURNT PROBE, STAMPED ZAI. / STILL LOGGING. DISCOVERY: / 'INTER-UNIVERSAL APERTURE.'
+- 'REPORTED TO: 1 RECIPIENT. / CLASSIFICATION: NOBODY'S / BUSINESS.' EIGHT BILLION / PEOPLE. ZERO CC'S.
+
+---
+
 ## Where the data lives
 
 The manuscript above is the truth; the files below are its implementation. Each
@@ -510,15 +652,15 @@ line here appears verbatim in one of these, and they must match. When you change
 one, update the manuscript in the same change (subject to the confirmation rule
 at the top of this file).
 
-| Story/dialogue element                      | Canonical data file                                               |
-| ------------------------------------------- | ----------------------------------------------------------------- |
-| Prelude cutscene (captions, `say` beats)    | `src/game/defs/cutscenes.ts`                                      |
-| Per-level opening monologues (`intro`)      | `src/game/defs/levels/spacez_hq.ts`, `.../moon.ts`, `.../mars.ts` |
-| Elite/boss `dialogue` + `lastWords`         | `src/game/defs/enemies/spacez.ts`, `.../moon.ts`, `.../mars.ts`   |
-| Hero's inner thoughts (`firstKillThoughts`) | `src/game/defs/thoughts.ts` (pinned from a `LevelDef`)            |
-| Found lore on story items (`lore`)          | `src/game/defs/story.ts`                                          |
-| Loose UI copy (how-to-play, not story)      | `website/src/game/copy.ts`                                        |
-| Brand strings (title, tagline — not story)  | `game.config.json` → `website/src/identity.ts`                    |
+| Story/dialogue element                      | Canonical data file                                                              |
+| ------------------------------------------- | -------------------------------------------------------------------------------- |
+| Prelude cutscene (captions, `say` beats)    | `src/game/defs/cutscenes.ts`                                                     |
+| Per-level opening monologues (`intro`)      | `src/game/defs/levels/spacez_hq.ts`, `.../moon.ts`, `.../mars.ts`, `.../rift.ts` |
+| Elite/boss `dialogue` + `lastWords`         | `src/game/defs/enemies/spacez.ts`, `.../moon.ts`, `.../mars.ts`, `.../rift.ts`   |
+| Hero's inner thoughts (`firstKillThoughts`) | `src/game/defs/thoughts.ts` (pinned from a `LevelDef`)                           |
+| Found lore on story items (`lore`)          | `src/game/defs/story.ts`                                                         |
+| Loose UI copy (how-to-play, not story)      | `website/src/game/copy.ts`                                                       |
+| Brand strings (title, tagline — not story)  | `game.config.json` → `website/src/identity.ts`                                   |
 
 The engine machinery that plays these (dialogue queue, kill-triggered scenes) is
 in `src/game/story.ts`; the app-side overlays that render them are

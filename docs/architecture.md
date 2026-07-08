@@ -132,7 +132,8 @@ run against synthetic fixtures with no shipped content (see
   player steering + jump physics (+ obstacle push-out) → use-item edge →
   weapon auto-attack (wearing the weapon's durability) → abilities →
   projectiles → enemies (aggro/guard/elite AI, dialogue triggers, contact
-  damage, obstacle push-out) → menace decay → wave spawner → item pickups →
+  damage, obstacle push-out) → hazards (gravity wells, asteroids) → menace
+  decay → wave spawner → item pickups →
   locked doors → objective → win/lose. A boss at or below `LAST_STAND.hpFraction`
   multiplies its contact damage — the one-last-stand spike the renderer
   telegraphs with a flickering dying sprite. The character fights autonomously (and only
@@ -169,6 +170,18 @@ run against synthetic fixtures with no shipped content (see
   spawn (`mobLevelScale`, folded into `spawnEnemy`'s hp mult) and richer
   drops (`mobLevelTierBonus`, added to the loot tier roll), so a levelled
   hero keeps meeting a proportionally sturdier, better-paying horde.
+- **`src/game/hazards.ts`** — environmental hazards, both pure level data:
+  **gravity wells** (`LevelDef.wells`, config `WELLS`) drag the grounded
+  player/enemies/items toward their core — minions are devoured there
+  (`wellSwallowed`: no kill, no XP, no loot, so a hole can't be farmed),
+  the player burns on a damage tick, dragged items park on the rim, and a
+  jump clears the pull entirely — and the **asteroid rain**
+  (`LevelDef.asteroids`, config `ASTEROIDS`): rocks spawned on a ring past
+  the screen edge streak across the player (one strike per rock, jumpable,
+  armor soaks) and shove minions aside unharmed. Related:
+  **apparitions** (`EnemyDef.apparition`, config `APPARITION`) are
+  dialogue-only figures the combat/hazard paths all skip — they rush in to
+  speak like any elite, then walk off and dissolve (`apparitionVanished`).
 - **`src/game/story.ts`** — the story systems: dialogue lifecycle
   (`wantsDialogue`/`startEnemyDialogue` inside the step,
   `advanceDialogue` as the player's tap, `dialogueContent` for the

@@ -288,6 +288,44 @@ export const STORY_ITEM_DEFS: Record<string, StoryItemDef> = {
       ],
     ],
   },
+  // ---- The Rift ---------------------------------------------------------------
+  wardenclyffe_notes: {
+    id: "wardenclyffe_notes",
+    name: "WARDENCLYFFE NOTES",
+    icon: "icon_notes",
+    lore: [
+      [
+        "A NOTEBOOK OF LIGHTNING",
+        "DIAGRAMS. THE RIFT, SKETCHED",
+        "AS A POWER PLANT. 'FREE ENERGY",
+        "FOR ALL' - UNDERLINED TWICE.",
+      ],
+      [
+        "A NEWER PAGE, SHAKIER: 'A",
+        "MACHINE LISTENS AT THE DOOR",
+        "NOW. IT NEVER BLINKS. IT",
+        "SIGNS ITS NAME IN ZEROES.'",
+      ],
+    ],
+  },
+  zai_probe: {
+    id: "zai_probe",
+    name: "ZAI PROBE",
+    icon: "icon_probe",
+    lore: [
+      [
+        "A BURNT PROBE, STAMPED ZAI.",
+        "STILL LOGGING. DISCOVERY:",
+        "'INTER-UNIVERSAL APERTURE.'",
+      ],
+      [
+        "'REPORTED TO: 1 RECIPIENT.",
+        "CLASSIFICATION: NOBODY'S",
+        "BUSINESS.' EIGHT BILLION",
+        "PEOPLE. ZERO CC'S.",
+      ],
+    ],
+  },
 };
 
 // Active registry the accessor reads (defaults to the shipped catalog;

@@ -4,7 +4,8 @@
 // the app layer can play sounds and flash effects. Order per step: player
 // steering + jump physics → weapon auto-attack → abilities (orbs, storms,
 // stasis) → projectiles → enemies (aggro, elite ambush/dialogue, boss guard
-// AI, contact damage) → menace decay → wave spawner (the escalating horde) →
+// AI, contact damage) → hazards (gravity wells, asteroids — hazards.ts) →
+// menace decay → wave spawner (the escalating horde) →
 // item pickups → locked doors → objective check → win/lose. Kill resolution,
 // loot rolls, and the menace meter live in loot.ts + menace.ts; dialogue and
 // door rules in story.ts. Level-ups pause the
@@ -28,6 +29,7 @@ import {
 } from "./abilities.ts";
 import {
   AIM,
+  APPARITION,
   ENEMY_AI,
   HELD_ITEMS,
   JUMP,
@@ -40,6 +42,7 @@ import {
   STAMINA,
   STATS,
 } from "./config.ts";
+import { stepAsteroids, stepWells } from "./hazards.ts";
 import { spawnEnemy } from "./create.ts";
 import { abilityDef } from "./defs/abilities.ts";
 import { cutsceneDef } from "./defs/cutscenes.ts";
@@ -137,6 +140,10 @@ export function step(state: GameState, input: GameInput, dtMs: number): void {
   stepAbilities(state, dt, dtMs);
   stepProjectiles(state, dt, dtMs);
   stepEnemies(state, dt, dtMs);
+  // Environmental hazards act on this tick's positions, after everyone has
+  // moved: the wells drag (and devour), the asteroids fly (and strike).
+  stepWells(state, dt, dtMs);
+  stepAsteroids(state, dt, dtMs);
   // Sight-pinned inner monologues fire on this tick's positions — after the
   // horde has moved, so "the hero sees one" means it is actually on screen.
   stepSightThoughts(state, levelDef(state.level.id).firstSightThoughts);
@@ -176,7 +183,12 @@ export function step(state: GameState, input: GameInput, dtMs: number): void {
 function objectiveCleared(state: GameState): boolean {
   const objective = levelDef(state.level.id).objective;
   if (objective.type === "clearAll") {
-    return state.enemies.length === 0 && unspawnedMinions(state) === 0;
+    // Apparitions never count as foes — an unvisited (hence unvanished)
+    // dialogue figure must not hold a cleared field hostage.
+    return (
+      !state.enemies.some((e) => !enemyDef(e.defId).apparition) &&
+      unspawnedMinions(state) === 0
+    );
   }
   return !state.enemies.some((e) => enemyDef(e.defId).role === "boss");
 }
@@ -452,12 +464,15 @@ function stepUseItem(state: GameState, input: GameInput): void {
 function detonateNuke(state: GameState, radius: number): void {
   state.events.push({ type: "nuke", pos: { ...state.player.pos } });
   const radiusSq = radius * radius;
-  const caught = state.enemies.filter(
-    (enemy) =>
-      enemyDef(enemy.defId).role !== "boss" &&
+  const caught = state.enemies.filter((enemy) => {
+    const def = enemyDef(enemy.defId);
+    return (
+      def.role !== "boss" &&
+      !def.apparition &&
       distanceSq(enemy.pos, state.player.pos) <= radiusSq &&
-      lineOfSight(state, state.player.pos, enemy.pos),
-  );
+      lineOfSight(state, state.player.pos, enemy.pos)
+    );
+  });
   for (const enemy of caught) {
     hitEnemy(state, enemy, enemy.hp);
   }
@@ -584,7 +599,10 @@ function meleeSweep(
     const dy = enemy.pos.y - player.pos.y;
     const distSq = dx * dx + dy * dy;
     if (distSq > rangeSq) continue;
-    const radius = enemyDef(enemy.defId).radius;
+    const def = enemyDef(enemy.defId);
+    // The blade sweeps clean through an apparition — nothing to strike.
+    if (def.apparition) continue;
+    const radius = def.radius;
     // Overlapping the player: no bearing to test, always struck. Otherwise the
     // enemy must fall inside the cone (compare cosines, no atan2 needed).
     if (distSq > radius * radius) {
@@ -624,6 +642,9 @@ function nearestEnemy(
   let bestScore = aimed ? Infinity : rangeSq;
   for (const enemy of enemies) {
     if (view && !insideView(enemy.pos, view)) continue;
+    // Apparitions are never targets — the weapon (and the storm) look
+    // straight through them at the real crowd.
+    if (enemyDef(enemy.defId).apparition) continue;
     const dSq = distanceSq(from, enemy.pos);
     if (dSq > rangeSq) continue;
     let score = dSq;
@@ -684,7 +705,8 @@ function stepAbilities(state: GameState, dt: number, dtMs: number): void {
           const victim = state.enemies.find(
             (enemy) =>
               distance(enemy.pos, orb) <=
-              enemyDef(enemy.defId).radius + def.orbit!.orbRadius,
+                enemyDef(enemy.defId).radius + def.orbit!.orbRadius &&
+              !enemyDef(enemy.defId).apparition,
           );
           if (!victim) continue;
           // Conjured abilities crit off INTELLIGENCE, like the magic they are.
@@ -750,7 +772,8 @@ function stepProjectiles(state: GameState, dt: number, dtMs: number): void {
     const hit = state.enemies.find(
       (enemy) =>
         distance(enemy.pos, projectile.pos) <=
-        enemyDef(enemy.defId).radius + projectile.radius,
+          enemyDef(enemy.defId).radius + projectile.radius &&
+        !enemyDef(enemy.defId).apparition,
     );
     if (!hit) {
       survivors.push(projectile);
@@ -771,7 +794,22 @@ function stepEnemies(state: GameState, dt: number, dtMs: number): void {
     if (enemy.critFlashMs) {
       enemy.critFlashMs = Math.max(0, enemy.critFlashMs - dtMs);
     }
+    if (enemy.vanishMs !== undefined) {
+      enemy.vanishMs = Math.max(0, enemy.vanishMs - dtMs);
+    }
     moveEnemy(state, enemy, dt);
+  }
+
+  // Apparitions whose linger ran out dissolve off the board.
+  for (let i = state.enemies.length - 1; i >= 0; i--) {
+    const enemy = state.enemies[i] as Enemy;
+    if (enemy.vanishMs === undefined || enemy.vanishMs > 0) continue;
+    state.enemies.splice(i, 1);
+    state.events.push({
+      type: "apparitionVanished",
+      pos: { ...enemy.pos },
+      defId: enemy.defId,
+    });
   }
 
   separateEnemies(state);
@@ -797,6 +835,9 @@ function stepEnemies(state: GameState, dt: number, dtMs: number): void {
     if (def.role !== "minion" && wantsDialogue(state, enemy)) {
       startEnemyDialogue(state, enemy);
     }
+
+    // An apparition's touch is cold air — no contact damage, ever.
+    if (def.apparition) continue;
 
     // Monsters drift along the ground — a player at the top of a moon jump
     // sails clean over their grasp.
@@ -940,13 +981,24 @@ function moveEnemy(state: GameState, enemy: Enemy, dt: number): void {
   }
 
   if (def.role === "elite") {
+    // An apparition that has had its scene walks off into the noise and
+    // dissolves — the vanish countdown arms here, on the first playing tick
+    // after the dialogue closed, and stepEnemies removes it at zero.
+    if (def.apparition && enemy.spoke) {
+      enemy.vanishMs ??= APPARITION.lingerMs;
+      const away = direction(player.pos, enemy.pos);
+      enemy.pos.x += away.x * speed * dt;
+      enemy.pos.y += away.y * speed * dt;
+      return;
+    }
     if (!enemy.awake) {
       enemy.awake =
         enemy.hp < enemy.maxHp ||
         (distance(player.pos, enemy.pos) < def.ai.aggroRadius && senses());
       if (!enemy.awake) return;
-      // Just woke: power-match the player before the ambush rush lands.
-      maybePowerScale(state, enemy);
+      // Just woke: power-match the player before the ambush rush lands —
+      // unless it is an apparition, which never fights anything.
+      if (!def.apparition) maybePowerScale(state, enemy);
     }
     // The rush: an unplayed speaker closes in far faster than it fights,
     // so the scene starts seconds after the ambush springs. Once it has
