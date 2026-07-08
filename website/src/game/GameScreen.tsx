@@ -49,6 +49,7 @@ import {
   resumeGame,
   skipCutscene,
   skipIntro,
+  STAMINA,
   step,
   storyItemDef,
   tapCutscene,
@@ -229,8 +230,11 @@ const MOVE_KEYS: Record<string, { x: number; y: number }> = {
   ArrowRight: { x: 1, y: 0 },
 };
 // The reduced pace while Shift is held; the default (no modifier) runs at full
-// speed.
-const KEYBOARD_WALK_THROTTLE = 0.6;
+// speed. Pinned to the engine's run threshold so a Shift-walk stays a *walk*
+// for the stamina system: `running = throttle > STAMINA.runThreshold`, so a
+// throttle at (not above) the threshold recovers stamina instead of draining
+// it. A bare 0.6 tipped over the 0.5 threshold and drained like a run.
+const KEYBOARD_WALK_THROTTLE = STAMINA.runThreshold;
 
 /** Other carried weapons, strongest first — the switch targets shared by the
  * Q weapon menu and the 1-4 hotkeys. Damage is stat-scaled (weaponDamageFor)
