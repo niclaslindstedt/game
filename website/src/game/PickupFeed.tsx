@@ -13,9 +13,15 @@ export const PICKUP_TTL_MS = 10_000;
 export type PickupMessage = {
   id: number;
   text: string;
-  /** Tier/quality color for the line (defaults to a neutral off-white). */
+  /**
+   * Quality color for the ITEM NAME only, set for special items (magic/rare/…
+   * gear, plot pieces). Left undefined for ordinary loot, which stays neutral.
+   */
   color?: string;
 };
+
+/** The "PICKED UP" prefix and ordinary items share this neutral off-white. */
+const NEUTRAL_COLOR = "#f4f4f4";
 
 export function PickupFeed({
   font,
@@ -34,9 +40,15 @@ export function PickupFeed({
         <div key={m.id} className="pickup-line">
           <PixelText
             font={font}
-            text={`PICKED UP ${m.text}`}
+            text="PICKED UP"
             scale={2}
-            color={m.color ?? "#e8ecf0"}
+            color={NEUTRAL_COLOR}
+          />
+          <PixelText
+            font={font}
+            text={m.text}
+            scale={2}
+            color={m.color ?? NEUTRAL_COLOR}
           />
         </div>
       ))}

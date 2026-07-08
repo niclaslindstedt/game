@@ -471,8 +471,21 @@ body {
 }
 
 .pickup-line {
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+  /* A 1px dark outline lifts the feed off the light moon floor so both the
+     neutral "PICKED UP" prefix and any tinted item name stay legible. */
+  filter: drop-shadow(1px 0 0 rgba(0, 0, 0, 0.85))
+    drop-shadow(-1px 0 0 rgba(0, 0, 0, 0.85))
+    drop-shadow(0 1px 0 rgba(0, 0, 0, 0.85))
+    drop-shadow(0 -1px 0 rgba(0, 0, 0, 0.85));
   animation: pickup-line 10s ease-out forwards;
   will-change: opacity, transform;
+}
+
+.pickup-feed.pickup-right .pickup-line {
+  justify-content: flex-end;
 }
 
 @keyframes pickup-line {
