@@ -41,9 +41,16 @@ export type Difficulty = string;
 
 /** The six trainable stats, one point awarded per level-up. */
 export type StatName =
-  "health" | "strength" | "dexterity" | "intelligence" | "speed" | "luck";
+  "stamina" | "strength" | "dexterity" | "intelligence" | "speed" | "luck";
 
 export type WeaponClass = "melee" | "ranged" | "magic";
+
+/**
+ * A suit's armor grade: how tough its plating is. Each grade maps to a soak
+ * fraction and a pool size in config `ARMOR`; higher grades soak more of each
+ * hit from a deeper pool. Data on the suit's gear def.
+ */
+export type ArmorGrade = "green" | "yellow" | "red";
 
 /**
  * Item quality, lowest to highest: white regular, blue magic, yellow rare,
@@ -102,6 +109,20 @@ export type Player = {
   vz: number;
   hp: number;
   maxHp: number;
+  /**
+   * Current armor points — the suit's plating pool. Soaks a grade-dependent
+   * share of every physical hit until spent (see config `ARMOR`); 0 with no
+   * armored suit worn. The grade and full pool are derived from the equipped
+   * suit (see `armorInfo`); this is only the running remainder.
+   */
+  armor: number;
+  /**
+   * Current stamina — the sprint pool. Running spends it, walking/idling
+   * refills it; an empty pool caps the top speed (see config `STAMINA`).
+   */
+  stamina: number;
+  /** Max stamina, from the base pool + STAMINA stat (see `computeMaxStamina`). */
+  maxStamina: number;
   /** Unit vector of the last movement direction; drives sprite facing. */
   facing: Vec2;
   /**

@@ -224,6 +224,8 @@ export const FIX_GEAR: Record<string, GearDef> = {
     name: "TEST SUIT",
     slot: "suit",
     bonuses: { maxHp: 20 },
+    // A mid-grade plated suit, so the armor-split rule has a pool to soak into.
+    armor: "yellow",
     icon: "icon_suit",
   },
   test_charm: {

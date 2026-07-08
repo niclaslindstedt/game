@@ -10,7 +10,15 @@
 import { advanceCutsceneBeat, finishCutscene } from "@game/lib/cutscene.ts";
 import type { Rng } from "@game/lib/rng.ts";
 import { randomRange } from "@game/lib/rng.ts";
-import { LOOT, MELEE, PLAYER, STATS, WEAPON } from "./config.ts";
+import {
+  ARMOR,
+  LOOT,
+  MELEE,
+  PLAYER,
+  STAMINA,
+  STATS,
+  WEAPON,
+} from "./config.ts";
 import { cutsceneDef } from "./defs/cutscenes.ts";
 import {
   affixNaming,
@@ -28,6 +36,7 @@ import { difficultyDef } from "./defs/difficulties.ts";
 import { levelDef } from "./defs/levels/index.ts";
 import type {
   Affix,
+  ArmorGrade,
   EquipSlot,
   Equipment,
   GameState,
@@ -206,10 +215,10 @@ export function effectiveStat(state: GameState, stat: StatName): number {
   return value;
 }
 
-/** Max hp from base + HEALTH stat + gear bonuses and affixes. */
+/** Max hp from the base pool + gear bonuses and affixes (STAMINA no longer
+ * feeds hp — it drives the sprint pool instead; see `computeMaxStamina`). */
 export function computeMaxHp(state: GameState): number {
-  let max =
-    PLAYER.maxHp + effectiveStat(state, "health") * STATS.healthPerPoint;
+  let max = PLAYER.maxHp;
   for (const piece of equippedPieces(state)) {
     if (!isWeaponDef(piece.defId)) {
       max += gearDef(piece.defId).bonuses.maxHp ?? 0;
@@ -232,6 +241,51 @@ export function recomputeMaxHp(state: GameState): void {
   const delta = next - player.maxHp;
   player.maxHp = next;
   player.hp = delta > 0 ? player.hp + delta : Math.min(player.hp, next);
+}
+
+/**
+ * The equipped suit's armor grade, soak fraction, and full pool — or null when
+ * no armored suit is worn (a bare hero, or a suit with no `armor` grade). The
+ * single source of truth the damage split, the armor-refill on equip, and the
+ * HUD/stat readouts all route through.
+ */
+export function armorInfo(
+  state: GameState,
+): { grade: ArmorGrade; max: number; reduction: number } | null {
+  const suit = state.player.equipment.suit;
+  if (!suit || isWeaponDef(suit.defId)) return null;
+  const grade = gearDef(suit.defId).armor;
+  if (!grade) return null;
+  const { amount, reduction } = ARMOR[grade];
+  return { grade, max: amount, reduction };
+}
+
+/**
+ * Re-arm the player to the equipped suit's full armor pool (0 when no armored
+ * suit is worn). Called whenever the suit changes — donning fresh plating
+ * fills the bar, shedding it empties it.
+ */
+export function refreshArmor(state: GameState): void {
+  state.player.armor = armorInfo(state)?.max ?? 0;
+}
+
+/** Max stamina from the base pool + the STAMINA stat (affixes folded in). */
+export function computeMaxStamina(state: GameState): number {
+  return STAMINA.base + effectiveStat(state, "stamina") * STAMINA.maxPerPoint;
+}
+
+/**
+ * Re-derive max stamina after the STAMINA stat changed. A deeper pool lifts
+ * the current reserve by the same amount (a level-up feels good); a shallower
+ * one only clamps.
+ */
+export function recomputeMaxStamina(state: GameState): void {
+  const player = state.player;
+  const next = computeMaxStamina(state);
+  const delta = next - player.maxStamina;
+  player.maxStamina = next;
+  player.stamina =
+    delta > 0 ? player.stamina + delta : Math.min(player.stamina, next);
 }
 
 /** The player's crit chance: base + LUCK + gear bonuses and affixes. */
@@ -508,6 +562,9 @@ export function equipFromInventory(state: GameState, index: number): boolean {
     player.equipment[slot] = item;
   }
   recomputeMaxHp(state);
+  recomputeMaxStamina(state);
+  // A fresh suit re-arms the plating pool to its grade's full size.
+  if (slot === "suit") refreshArmor(state);
   // A +STRENGTH piece can widen the bag; grow it so the swap has somewhere
   // to land (grow-only — see syncInventoryCapacity).
   syncInventoryCapacity(state);
@@ -529,6 +586,9 @@ export function unequipToInventory(state: GameState, slot: EquipSlot): boolean {
   player.inventory[free] = item;
   player.equipment[slot] = null;
   recomputeMaxHp(state);
+  recomputeMaxStamina(state);
+  // Shedding the suit strips the plating.
+  if (slot === "suit") refreshArmor(state);
   return true;
 }
 
@@ -653,6 +713,7 @@ export function allocateStat(state: GameState, stat: StatName): boolean {
   player.stats[stat]++;
   player.pendingStatPoints--;
   recomputeMaxHp(state);
+  recomputeMaxStamina(state);
   // STRENGTH also widens the carry bag — grow it as the point lands.
   if (stat === "strength") syncInventoryCapacity(state);
   if (player.pendingStatPoints === 0 && state.phase === "levelup") {

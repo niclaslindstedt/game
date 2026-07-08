@@ -9,7 +9,14 @@
 import { createCutscene } from "@game/lib/cutscene.ts";
 import { createRng, randomRange, type Rng } from "@game/lib/rng.ts";
 import { distance, vec, type Vec2 } from "@game/lib/vec.ts";
-import { ENEMY_AI, LEVELING, LOOT, OBSTACLES, PLAYER } from "./config.ts";
+import {
+  ENEMY_AI,
+  LEVELING,
+  LOOT,
+  OBSTACLES,
+  PLAYER,
+  STAMINA,
+} from "./config.ts";
 import { cutsceneDef } from "./defs/cutscenes.ts";
 import {
   difficultyDef,
@@ -153,6 +160,12 @@ export function createGame(
       vz: 0,
       hp: PLAYER.maxHp,
       maxHp: PLAYER.maxHp,
+      // No suit worn at the start of a level, so no plating yet (a looted
+      // armored suit fills the bar on equip — see refreshArmor).
+      armor: 0,
+      // The sprint pool starts full at its STAMINA-0 base.
+      stamina: STAMINA.base,
+      maxStamina: STAMINA.base,
       facing: vec(1, 0),
       faceLeft: false,
       abilities: [],
@@ -165,7 +178,7 @@ export function createGame(
       xpToNext: LEVELING.baseXpToLevel,
       pendingStatPoints: 0,
       stats: {
-        health: 0,
+        stamina: 0,
         strength: 0,
         dexterity: 0,
         intelligence: 0,

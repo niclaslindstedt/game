@@ -6,6 +6,7 @@
 
 import type {
   Affix,
+  ArmorGrade,
   EquipSlot,
   StatName,
   Tier,
@@ -453,6 +454,13 @@ export type GearDef = {
   slot: Exclude<EquipSlot, "weapon">;
   /** Flat bonuses baked into the item before tier affixes. */
   bonuses: { maxHp?: number; critChance?: number };
+  /**
+   * Suits only: the armor grade the plating grants. Equipping the suit fills
+   * an armor pool of the grade's size (config `ARMOR`) that soaks its share of
+   * every physical hit until spent. Absent = the piece has no plating (charms,
+   * and cloth suits like the lab coat that lean on `maxHp` instead).
+   */
+  armor?: ArmorGrade;
   /** Inventory icon sprite. */
   icon: string;
   /**
@@ -469,6 +477,8 @@ export const GEAR_DEFS: Record<string, GearDef> = {
     name: "LAB COAT",
     slot: "suit",
     bonuses: { maxHp: 15 },
+    // The lightest plating: a lab coat turns a few hits, no more.
+    armor: "green",
     icon: "icon_lab_coat",
   },
   id_badge: {
@@ -484,6 +494,8 @@ export const GEAR_DEFS: Record<string, GearDef> = {
     name: "SUIT PLATING",
     slot: "suit",
     bonuses: { maxHp: 20 },
+    // Bolted-on plates: a solid mid-grade shell.
+    armor: "yellow",
     icon: "icon_suit",
   },
   // The prize of SpaceZ HQ: the EVA suit the hero needs to follow Ada
@@ -494,6 +506,8 @@ export const GEAR_DEFS: Record<string, GearDef> = {
     name: "SPACE SUIT",
     slot: "suit",
     bonuses: { maxHp: 40 },
+    // Rated for the void: the heaviest plating in the game.
+    armor: "red",
     icon: "icon_suit",
     spacesuit: true,
   },
@@ -539,7 +553,7 @@ export const AFFIX_POOLS: Record<"weapon" | "gear", AffixDef[]> = {
 };
 
 export const STAT_NAMES: StatName[] = [
-  "health",
+  "stamina",
   "strength",
   "dexterity",
   "intelligence",
@@ -556,7 +570,7 @@ export const STAT_NAMES: StatName[] = [
  * roll.
  */
 const STAT_SUFFIX: Record<StatName, string> = {
-  health: "OF THE WHALE",
+  stamina: "OF THE BEAR",
   strength: "OF THE OX",
   dexterity: "OF THE FOX",
   intelligence: "OF THE OWL",

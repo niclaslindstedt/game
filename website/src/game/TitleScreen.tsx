@@ -4,7 +4,14 @@
 // picking a difficulty starts the run. Menu structure is data (MENU/HELP
 // arrays); the wisp sprite plays the part of Doom's skull cursor.
 
-import { useEffect, useMemo, useState } from "react";
+import {
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+  type PointerEvent as ReactPointerEvent,
+} from "react";
 
 import {
   DIFFICULTY_ORDER,
@@ -20,6 +27,8 @@ import { IDENTITY } from "../identity.ts";
 
 import { HELP_LINES } from "./copy.ts";
 
+import { topScores, type ScoreMetric } from "./highscores.ts";
+
 import { loadGameAssets, spriteDataUrl, type GameAssets } from "./assets.ts";
 import { synth } from "./audio.ts";
 import { playTitleMusic } from "./music/index.ts";
@@ -33,11 +42,37 @@ import { getSettings, updateSettings } from "./settings.ts";
 import { playUiSound } from "./sfx/index.ts";
 
 type MenuScreen =
-  "main" | "difficulty" | "levels" | "settings" | "controls" | "help";
+  | "main"
+  | "difficulty"
+  | "levels"
+  | "scores"
+  | "settings"
+  | "controls"
+  | "help";
 
 const pct = (v: number) => `${Math.round(v * 100)}%`;
 /** 0 → 25 → 50 → 75 → 100 → 0, in quarter steps. */
 const cycleVolume = (v: number) => ((Math.round(v * 4) + 1) % 5) / 4;
+
+/** m:ss survival time (mirrors the HUD/splash formatter). */
+const formatTime = (ms: number): string => {
+  const total = Math.floor(ms / 1000);
+  return `${Math.floor(total / 60)}:${String(total % 60).padStart(2, "0")}`;
+};
+
+/** Kills-per-minute, kept to one decimal below 10 and whole above (a
+ * double-digit rate reads cleaner without the noise of a trailing decimal). */
+const formatKpm = (v: number): string =>
+  v >= 10 ? String(Math.round(v)) : v.toFixed(1);
+
+/** The high-score board's two rankings, in swipe/arrow order. */
+const SCORE_METRICS: { id: ScoreMetric; label: string }[] = [
+  { id: "time", label: "SURVIVAL TIME" },
+  { id: "kpm", label: "KILLS / MIN" },
+];
+
+/** A minimum travel (CSS px) before a pointer drag counts as a swipe. */
+const SWIPE_THRESHOLD = 36;
 
 type MenuEntry = {
   label: string;
@@ -70,6 +105,10 @@ export function TitleScreen({
   // follows reads it to decide which levels are unlocked (progress is per
   // difficulty), and it carries into the run.
   const [difficulty, setDifficulty] = useState<Difficulty>("medium");
+  // The HIGH SCORES board's axes: left/right picks the difficulty column,
+  // up/down flips between the survival-time and kills-per-minute rankings.
+  const [scoreDifficulty, setScoreDifficulty] = useState<Difficulty>("medium");
+  const [scoreMetric, setScoreMetric] = useState<ScoreMetric>("time");
   // Landscape phones are short and portrait ones narrow: pick a logo scale
   // that keeps the title logo plus the menu inside both.
   const [compact, setCompact] = useState(
@@ -131,6 +170,15 @@ export function TitleScreen({
             playUiSound(synth, "confirm");
             setScreen("difficulty");
             setCursor(DIFFICULTY_ORDER.indexOf("medium"));
+          },
+        },
+        {
+          label: "HIGH SCORES",
+          aria: "high-scores",
+          action: () => {
+            playUiSound(synth, "confirm");
+            setScreen("scores");
+            setCursor(0);
           },
         },
         {
@@ -327,12 +375,61 @@ export function TitleScreen({
       ];
     }
     return [backTo("main", 2)];
+    // `settingsTick` is an intentional invalidation key: the menu reads the
+    // non-React settings store through getSettings(), so bumping the tick after
+    // updateSettings is what rebuilds this list with the fresh values. eslint
+    // can't see that dependency through getSettings(), so it wrongly flags the
+    // tick as unnecessary — keep it and silence the false positive.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [screen, onStart, settingsTick, difficulty]);
 
+  // The HIGH SCORES board is steered on two axes rather than a cursor list:
+  // left/right walks the difficulty ladder, up/down flips the ranking. Both
+  // are driven from arrows (below) and from swipes (the pointer handlers).
+  const stepScoreDifficulty = useCallback((delta: number) => {
+    unlockAudio();
+    playUiSound(synth, "move");
+    setScoreDifficulty((d) => {
+      const n = DIFFICULTY_ORDER.length;
+      const i = (DIFFICULTY_ORDER.indexOf(d) + delta + n) % n;
+      return DIFFICULTY_ORDER[i] as Difficulty;
+    });
+  }, []);
+  const stepScoreMetric = useCallback((delta: number) => {
+    unlockAudio();
+    playUiSound(synth, "move");
+    setScoreMetric((m) => {
+      const n = SCORE_METRICS.length;
+      const i = (SCORE_METRICS.findIndex((x) => x.id === m) + delta + n) % n;
+      return (SCORE_METRICS[i] as { id: ScoreMetric }).id;
+    });
+  }, []);
+
   // Doom menus live on the keyboard: arrows move, Enter/Space picks,
-  // Escape backs out.
+  // Escape backs out. The scores board reinterprets the arrows as its two
+  // axes (see above) instead of a cursor.
   useEffect(() => {
     const onKeyDown = (event: KeyboardEvent) => {
+      if (screen === "scores") {
+        if (event.key === "ArrowLeft" || event.key === "ArrowRight") {
+          event.preventDefault();
+          stepScoreDifficulty(event.key === "ArrowRight" ? 1 : -1);
+        } else if (event.key === "ArrowUp" || event.key === "ArrowDown") {
+          event.preventDefault();
+          stepScoreMetric(event.key === "ArrowDown" ? 1 : -1);
+        } else if (
+          event.key === "Escape" ||
+          event.key === "Enter" ||
+          event.key === " "
+        ) {
+          event.preventDefault();
+          unlockAudio();
+          playUiSound(synth, "back");
+          setScreen("main");
+          setCursor(1);
+        }
+        return;
+      }
       if (event.key === "ArrowDown" || event.key === "ArrowUp") {
         event.preventDefault();
         unlockAudio();
@@ -356,17 +453,49 @@ export function TitleScreen({
     };
     window.addEventListener("keydown", onKeyDown);
     return () => window.removeEventListener("keydown", onKeyDown);
-  }, [entries, cursor, screen]);
+  }, [entries, cursor, screen, stepScoreDifficulty, stepScoreMetric]);
+
+  // Touch: a swipe on the board picks its axis by the dominant direction —
+  // horizontal walks the difficulty ladder, vertical flips the ranking.
+  const swipeStart = useRef<{ x: number; y: number } | null>(null);
+  const onScorePointerDown = (event: ReactPointerEvent) => {
+    unlockAudio();
+    swipeStart.current = { x: event.clientX, y: event.clientY };
+  };
+  const onScorePointerUp = (event: ReactPointerEvent) => {
+    const start = swipeStart.current;
+    swipeStart.current = null;
+    if (!start) return;
+    const dx = event.clientX - start.x;
+    const dy = event.clientY - start.y;
+    if (Math.max(Math.abs(dx), Math.abs(dy)) < SWIPE_THRESHOLD) return;
+    if (Math.abs(dx) >= Math.abs(dy)) {
+      // Swipe left advances the ladder (next difficulty), right steps back.
+      stepScoreDifficulty(dx < 0 ? 1 : -1);
+    } else {
+      // Swipe up advances the ranking, down steps back.
+      stepScoreMetric(dy < 0 ? 1 : -1);
+    }
+  };
 
   if (!assets) {
     return <div className="game-loading">Loading…</div>;
   }
   const font = assets.font;
   const cursorSprite = spriteDataUrl(assets.sprites, "wisp_0") ?? "";
+  const scoreRows = topScores(scoreDifficulty, scoreMetric);
+  const scoreDef = difficultyDef(scoreDifficulty);
 
   return (
     <div className="title-screen" onPointerDown={unlockAudio}>
       <div className="title-stars" aria-hidden="true" />
+      {/* Asteroids drift across the backdrop now and then, so the menu feels
+          alive rather than a static painting. */}
+      <div className="title-asteroids" aria-hidden="true">
+        <span className="title-asteroid title-asteroid-1" />
+        <span className="title-asteroid title-asteroid-2" />
+        <span className="title-asteroid title-asteroid-3" />
+      </div>
       <div className="title-moon" aria-hidden="true" />
 
       <header className="title-logo">
@@ -425,64 +554,167 @@ export function TitleScreen({
         </div>
       )}
 
-      <nav
-        className={`title-menu${screen === "levels" ? " scrollable" : ""}`}
-        aria-label="main menu"
-      >
-        {entries.map((entry, i) => {
-          const selected = i === cursor;
-          const baseColor = entry.color ?? "#ffd75e";
-          const color = selected
-            ? baseColor
-            : entry.locked
-              ? "#5a6068"
-              : "#9aa3ad";
-          return (
+      {screen === "scores" && (
+        <>
+          <PixelText font={font} text="HIGH SCORES" scale={2} color="#d9a0f0" />
+          <div
+            className="score-board"
+            onPointerDown={onScorePointerDown}
+            onPointerUp={onScorePointerUp}
+          >
             <button
-              key={entry.aria}
               type="button"
-              // Keep the highlighted row in view as the level list scrolls.
-              ref={
-                selected
-                  ? (el) => el?.scrollIntoView({ block: "nearest" })
-                  : undefined
-              }
-              className={`menu-item${selected ? " selected" : ""}${entry.locked ? " locked" : ""}`}
-              aria-label={entry.aria}
-              onPointerEnter={() => {
-                if (i !== cursor) {
-                  playUiSound(synth, "move");
-                  setCursor(i);
-                }
-              }}
-              onClick={entry.action}
+              className="score-axis score-bob"
+              aria-label="score-difficulty"
+              onClick={() => stepScoreDifficulty(1)}
             >
-              <img
-                src={cursorSprite}
-                alt=""
-                className="menu-cursor"
-                style={{ visibility: selected ? "visible" : "hidden" }}
+              <PixelText
+                font={font}
+                text={scoreDef.name}
+                scale={3}
+                color={scoreDef.color}
               />
-              <span className="menu-item-text">
+            </button>
+
+            <button
+              type="button"
+              className="score-metric score-bob score-bob-delay"
+              aria-label="score-metric"
+              onClick={() => stepScoreMetric(1)}
+            >
+              <PixelText
+                font={font}
+                text={
+                  SCORE_METRICS.find((m) => m.id === scoreMetric)?.label ?? ""
+                }
+                scale={2}
+                color="#7ef0c8"
+              />
+            </button>
+
+            <div className="score-list">
+              {scoreRows.length === 0 ? (
                 <PixelText
                   font={font}
-                  text={entry.label}
-                  scale={3}
-                  color={color}
+                  text="NO RUNS YET"
+                  scale={2}
+                  color="#5a6068"
                 />
-                {entry.blurb && selected && (
+              ) : (
+                scoreRows.map((row, i) => {
+                  const medal =
+                    ["#ffd75e", "#c8cdd4", "#cd7f4b"][i] ?? "#7ef0c8";
+                  const primary =
+                    scoreMetric === "time"
+                      ? formatTime(row.timeMs)
+                      : `${formatKpm(row.kpm)} KPM`;
+                  const secondary =
+                    scoreMetric === "time"
+                      ? `${formatKpm(row.kpm)} KPM`
+                      : formatTime(row.timeMs);
+                  return (
+                    <div className="score-row" key={i}>
+                      <PixelText
+                        font={font}
+                        text={`${i + 1}.`}
+                        scale={3}
+                        color={medal}
+                      />
+                      <PixelText font={font} text={primary} scale={3} />
+                      <PixelText
+                        font={font}
+                        text={secondary}
+                        scale={1}
+                        color="#9aa3ad"
+                      />
+                    </div>
+                  );
+                })
+              )}
+            </div>
+
+            <PixelText
+              font={font}
+              text="SWIPE OR ARROWS TO SWITCH"
+              scale={1}
+              color="#7a8088"
+            />
+            <button
+              type="button"
+              className="score-back"
+              aria-label="score-back"
+              onClick={() => {
+                playUiSound(synth, "back");
+                setScreen("main");
+                setCursor(1);
+              }}
+            >
+              <PixelText font={font} text="BACK" scale={3} color="#ffd75e" />
+            </button>
+          </div>
+        </>
+      )}
+
+      {screen !== "scores" && (
+        <nav
+          className={`title-menu${screen === "levels" ? " scrollable" : ""}`}
+          aria-label="main menu"
+        >
+          {entries.map((entry, i) => {
+            const selected = i === cursor;
+            const baseColor = entry.color ?? "#ffd75e";
+            const color = selected
+              ? baseColor
+              : entry.locked
+                ? "#5a6068"
+                : "#9aa3ad";
+            return (
+              <button
+                key={entry.aria}
+                type="button"
+                // Keep the highlighted row in view as the level list scrolls.
+                ref={
+                  selected
+                    ? (el) => el?.scrollIntoView({ block: "nearest" })
+                    : undefined
+                }
+                className={`menu-item${selected ? " selected" : ""}${entry.locked ? " locked" : ""}`}
+                aria-label={entry.aria}
+                onPointerEnter={() => {
+                  if (i !== cursor) {
+                    playUiSound(synth, "move");
+                    setCursor(i);
+                  }
+                }}
+                onClick={entry.action}
+              >
+                <img
+                  src={cursorSprite}
+                  alt=""
+                  className="menu-cursor"
+                  style={{ visibility: selected ? "visible" : "hidden" }}
+                />
+                <span className="menu-item-text">
                   <PixelText
                     font={font}
-                    text={entry.blurb}
-                    scale={1}
-                    color="#9aa3ad"
+                    text={entry.label}
+                    scale={3}
+                    color={color}
                   />
-                )}
-              </span>
-            </button>
-          );
-        })}
-      </nav>
+                  {entry.blurb && selected && (
+                    <PixelText
+                      font={font}
+                      text={entry.blurb}
+                      scale={1}
+                      color="#9aa3ad"
+                    />
+                  )}
+                </span>
+              </button>
+            );
+          })}
+        </nav>
+      )}
 
       <footer className="title-footer">
         <span>

@@ -74,7 +74,7 @@ export type TypewriterReveal = {
  * and line breaks are silent.
  */
 export function useTypewriter(
-  page: string[],
+  page: readonly string[],
   onType?: (visibleIndex: number, char: string) => void,
 ): TypewriterReveal {
   const full = page.join("\n");

@@ -104,7 +104,11 @@ const STAPLER_ICON = [
 ];
 
 /** Chars only this family draws with — merged with the core at build time. */
-const PALETTE = {};
+const PALETTE = {
+  // Electric blue + charged white-blue core for the storm bolt.
+  e: [90, 180, 255],
+  s: [214, 240, 255],
+};
 
 const SPRITES = {
   // ARMSTRONG's Apollo survival-kit machete: broad steel blade, wood grip.
@@ -318,19 +322,21 @@ const SPRITES = {
     "............",
     "............",
   ],
-  // STORM CELL: a jagged golden bolt.
+  // STORM CELL: the classic thunderbolt silhouette in electric blue — a broad
+  // top flag slanting down-left, the signature notch kicking right, then a
+  // lower stroke tapering to a point at the bottom-left. Clean outline.
   icon_storm: [
-    "............",
-    "......OOO...",
-    ".....OyyO...",
-    "....OyyO....",
-    "...OyyOO....",
-    "..OyyyyO....",
-    "...OOyyO....",
-    "....OyyO....",
-    "...OyyO.....",
-    "...OyO......",
-    "...OO.......",
+    ".....OOOO...",
+    "....OOseO...",
+    "...OOeeOO...",
+    "..OOeeOOOO..",
+    "..OeesseeO..",
+    "..OOOOeseO..",
+    "...OOeeeOO..",
+    "..OOeeeOO...",
+    ".OOeseOO....",
+    ".OeeeOO.....",
+    ".OOOOO......",
     "............",
   ],
   // STASIS FIELD: a pale ring holding still around a speck of astronaut.

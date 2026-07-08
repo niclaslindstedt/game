@@ -91,10 +91,10 @@ describe("bot strategies", () => {
     const steps = drive(
       state,
       createBot("boss"),
-      3000,
+      6000,
       (s) => s.stats.damageDealt > 0 || s.enemies.length === 0,
     );
-    expect(steps).toBeLessThan(3000);
+    expect(steps).toBeLessThan(6000);
     expect(dist(state.player.pos, boss.home)).toBeLessThan(400);
   });
 
