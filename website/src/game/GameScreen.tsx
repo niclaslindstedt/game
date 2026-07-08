@@ -43,6 +43,7 @@ import {
   menaceStage,
   openInventory,
   pauseGame,
+  PLAYER,
   playerAppearance,
   resumeGame,
   skipCutscene,
@@ -856,6 +857,17 @@ export function GameScreen({
               pos: event.pos,
               untilMs: state.stats.timeMs + 450,
               durationMs: 450,
+            });
+          }
+          // A sidestep: float a "DODGE" tag off the hero so the whiff reads.
+          if (event.type === "playerDodge") {
+            effects.push({
+              kind: "text",
+              pos: { x: event.pos.x, y: event.pos.y - PLAYER.radius },
+              untilMs: state.stats.timeMs + 650,
+              durationMs: 650,
+              text: "DODGE",
+              color: "#7ecbff",
             });
           }
           // Loot and powerups announce themselves in the lower-right feed. Only

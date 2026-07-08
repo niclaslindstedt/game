@@ -1972,7 +1972,10 @@ body {
 }
 
 .stat-button canvas,
-.pixel-button canvas {
+.pixel-button canvas,
+/* The round (i) toggle centers its glyph both ways; without this the
+   `.game-overlay canvas` rule above pins the "i" to the top of the circle. */
+.info-button canvas {
   align-self: center;
 }
 

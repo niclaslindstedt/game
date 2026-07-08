@@ -30,8 +30,8 @@ const CHOICES: {
   {
     stat: "stamina",
     label: "STAMINA",
-    blurb: "SPRINT + LEGS",
-    info: "DEEPER SPRINT POOL, SLOWER DRAIN & FASTER RECOVERY. RUN AT FULL SPEED LONGER.",
+    blurb: "SPRINT + HP",
+    info: "DEEPER SPRINT POOL, SLOWER DRAIN & FASTER RECOVERY. ALSO RAISES MAX HP.",
   },
   {
     stat: "strength",
@@ -42,14 +42,14 @@ const CHOICES: {
   {
     stat: "dexterity",
     label: "DEXTERITY",
-    blurb: "ATTACK SPEED",
-    info: "FASTER MELEE & RANGED ATTACK SPEED.",
+    blurb: "SPEED + CRIT",
+    info: "FASTER MELEE & RANGED ATTACK SPEED, MORE MELEE & RANGED CRITS, AND MORE DODGE.",
   },
   {
     stat: "intelligence",
     label: "INTELLECT",
-    blurb: "RANGE + AOE",
-    info: "MAGIC POWER, LONGER RANGE & BIGGER AOE (HITS MORE).",
+    blurb: "MAGIC + AOE",
+    info: "MAGIC POWER & CRITS. LONGER RANGE & A BIGGER MELEE AOE CONE (HITS MORE).",
   },
   {
     stat: "speed",
@@ -61,7 +61,7 @@ const CHOICES: {
     stat: "luck",
     label: "LUCK",
     blurb: "CRIT + LOOT",
-    info: "MORE CRITS, DODGE ENEMY CRITS, MORE & BETTER LOOT.",
+    info: "A LITTLE MORE CRIT & DODGE, DODGE ENEMY CRITS, MORE & BETTER LOOT.",
   },
 ];
 

@@ -238,12 +238,14 @@ export const MENACE = {
 /**
  * Stat effects. STRENGTH scales physical (melee + ranged) weapon DAMAGE and
  * widens the carry bag; DEXTERITY quickens physical (melee + ranged) ATTACK
- * SPEED; INTELLIGENCE powers magic weapons (their damage AND speed) and, for
- * every weapon, lengthens RANGE and widens the melee AoE cone (plus the magnet
- * pull, in abilities.ts); SPEED quickens the walk; LUCK finds better items,
- * lands crits, and shrugs off enemies' critical hits; STAMINA deepens the
- * sprint pool and quickens its recovery (see STAMINA below). The class→stat
- * maps live in items.ts (`DAMAGE_STAT`, `SPEED_STAT`).
+ * SPEED, lands physical CRITS, and sharpens DODGE; INTELLIGENCE powers magic
+ * weapons (their damage AND speed), lands magic CRITS, and for every weapon
+ * lengthens RANGE and widens the melee AoE cone (plus the magnet pull, in
+ * abilities.ts); SPEED quickens the walk; LUCK finds better items, nudges
+ * crits and dodge up MARGINALLY (a quarter of DEX/INT's effect), and shrugs
+ * off enemies' critical hits; STAMINA deepens the sprint pool, quickens its
+ * recovery (see STAMINA below), AND raises max hp. The class→stat maps live in
+ * items.ts (`DAMAGE_STAT`, `SPEED_STAT`, `CRIT_STAT`).
  */
 export const STATS = {
   /** Move-speed multiplier added per SPEED point (+8% each). */
@@ -288,9 +290,21 @@ export const STATS = {
    * speed stat, so standing still stops clearing the horde for free.
    */
   attackSpeedPerStat: 0.04,
-  /** Player base crit chance before LUCK and equipment. */
+  /** Player base crit chance before stats and equipment. */
   baseCritChance: 0.05,
-  critChancePerLuck: 0.04,
+  /**
+   * Crit chance gained per point of the weapon's CRIT stat — DEXTERITY for
+   * melee & ranged, INTELLIGENCE for magic (see `CRIT_STAT`). This is the main
+   * driver of a build's crit rate: a nimble knife-fighter crits with DEX, a
+   * mage crits with INT.
+   */
+  critChancePerStat: 0.04,
+  /**
+   * LUCK also nudges crit up, but only MARGINALLY — a quarter of a primary
+   * point (critChancePerStat), so LUCK sweetens any build's crits without
+   * replacing the class stat that actually earns them.
+   */
+  critChancePerLuck: 0.01,
   /** Reduction of enemy crit chance per LUCK point (floored at 0). */
   critAvoidPerLuck: 0.02,
   /** Extra drop chance per LUCK point. */
@@ -298,6 +312,22 @@ export const STATS = {
   /** Extra chance per LUCK point that a drop upgrades its tier roll. */
   tierChancePerLuck: 0.04,
   critMultiplier: 2,
+} as const;
+
+/**
+ * Dodge — the chance to sidestep an enemy's blow entirely, taking NO damage
+ * (and no armor hit) at all. Every hero has a small innate `base` chance;
+ * DEXTERITY sharpens the reflexes that drive it (`perDex`), and LUCK nudges it
+ * up MARGINALLY (`perLuck`, a quarter of a DEX point — matching LUCK's light
+ * touch on crit). Capped at `max` so no build ever becomes untouchable. The
+ * roll lives in `playerDodgeChance` (items.ts) and fires in the contact-damage
+ * path (step.ts).
+ */
+export const DODGE = {
+  base: 0.05,
+  perDex: 0.02,
+  perLuck: 0.005,
+  max: 0.6,
 } as const;
 
 /**
@@ -331,6 +361,12 @@ export const STAMINA = {
   base: 100,
   /** Extra max stamina per STAMINA point (current rises with it). */
   maxPerPoint: 8,
+  /**
+   * Extra max HP per STAMINA point (current hp rises with it, like a fresh
+   * suit). A hardy sprinter is also a sturdier one, so STAMINA now grows the
+   * health bar alongside the sprint pool — see `computeMaxHp`.
+   */
+  hpPerPoint: 6,
   /** Drained per second at a full run, at zero STAMINA stat. Eased down from
    * 22 so the pool lasts ~33% longer — a fresh hero can sprint noticeably
    * further before the winded jog kicks in. */

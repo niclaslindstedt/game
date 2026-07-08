@@ -160,7 +160,9 @@ run against synthetic fixtures with no shipped content (see
 - **`src/game/items.ts`** — equipment instances and the player-driven
   mutations the UI calls into: loot rolls, `equipFromInventory` /
   `unequipToInventory` / `moveInventoryItem`, `allocateStat`, the derived
-  stats (max hp, weapon damage, move speed, crit chance, INT-scaled reach
+  stats (max hp — now STAMINA-scaled, class-aware crit chance
+  `playerCritChance` — DEX for physical, INT for magic, LUCK marginal — the
+  `playerDodgeChance` sidestep, weapon damage, move speed, INT-scaled reach
   `weaponRangeFor`, swing/fire cadence `weaponCooldownFor` — the catalog
   cooldown slowed by the global `WEAPON.baseCooldownMult` and quickened by the
   speed stat — and the swing cone `weaponSweepHalfAngle` that, capped by

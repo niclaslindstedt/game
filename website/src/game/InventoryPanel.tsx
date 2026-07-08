@@ -29,6 +29,7 @@ import {
   moveInventoryItem,
   playerAppearance,
   playerCritChance,
+  playerDodgeChance,
   previewEquipped,
   unequipToInventory,
   weaponCooldownFor,
@@ -604,6 +605,20 @@ export function InventoryPanel({
                   preview
                     ? deltaChip(
                         playerCritChance(preview) - playerCritChance(state),
+                        "%",
+                      )
+                    : null
+                }
+              />
+              <StatLine
+                font={font}
+                label="DODGE"
+                value={`${Math.round(playerDodgeChance(state) * 100)}%`}
+                color="#7ecbff"
+                chip={
+                  preview
+                    ? deltaChip(
+                        playerDodgeChance(preview) - playerDodgeChance(state),
                         "%",
                       )
                     : null

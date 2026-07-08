@@ -13,7 +13,7 @@ import { levelDef } from "./defs/levels/index.ts";
 import { dropChance, playerCritChance, rollEquipment } from "./items.ts";
 import { bankOverkill, maybePowerScale } from "./menace.ts";
 import { maybeFirstKillThought, startDeathWords } from "./story.ts";
-import type { Enemy, GameState } from "./types.ts";
+import type { Enemy, GameState, WeaponClass } from "./types.ts";
 
 /** Monsters still owed by the wave budget but not yet streamed in. */
 export function unspawnedMinions(state: GameState): number {
@@ -29,22 +29,26 @@ export function unspawnedMinions(state: GameState): number {
 }
 
 /**
- * Apply one player hit: roll the crit (LUCK), deal damage, and on a kill
- * grant XP proportional to max hp and roll loot. Bosses' and elites'
- * guaranteed drops come from their def; the victory countdown starts once
- * the objective clears at the end of the step.
+ * Apply one player hit: roll the crit (the weapon class's CRIT stat plus a
+ * marginal LUCK nudge), deal damage, and on a kill grant XP proportional to
+ * max hp and roll loot. `weaponClass` names the blow that landed so the crit
+ * uses the right stat (DEX for melee & ranged, INT for magic); it defaults to
+ * the equipped weapon's class for hits that don't carry one (e.g. the nuke).
+ * Bosses' and elites' guaranteed drops come from their def; the victory
+ * countdown starts once the objective clears at the end of the step.
  */
 export function hitEnemy(
   state: GameState,
   enemy: Enemy,
   baseDamage: number,
+  weaponClass?: WeaponClass,
 ): void {
   // An elite or boss meets the player's power the instant the fight opens —
   // scale its hp before this blow lands so it can never be one-shot out of a
   // set piece by a leveled hero. Idempotent (latched by `powerScaled`).
   maybePowerScale(state, enemy);
 
-  const crit = state.rng() < playerCritChance(state);
+  const crit = state.rng() < playerCritChance(state, weaponClass);
   const damage = Math.round(baseDamage * (crit ? STATS.critMultiplier : 1));
   enemy.hp -= damage;
   state.stats.damageDealt += damage;

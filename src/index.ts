@@ -38,6 +38,7 @@ export {
   allocateStat,
   DAMAGE_STAT,
   SPEED_STAT,
+  CRIT_STAT,
   closeInventory,
   advanceIntro,
   skipIntro,
@@ -64,6 +65,7 @@ export {
   resumeGame,
   playerAppearance,
   playerCritChance,
+  playerDodgeChance,
   playerSpeed,
   playerSuited,
   previewEquipped,
@@ -187,6 +189,7 @@ export { registerDefs, type DefOverrides } from "./game/defs/registry.ts";
 export {
   ARMOR,
   DIALOGUE,
+  DODGE,
   DOORS,
   ENEMY_AI,
   HELD_ITEMS,
