@@ -54,22 +54,29 @@ export function UpdateModal({
       role="alertdialog"
       aria-label="a new version is ready"
     >
-      <img src={icon} alt="" className="update-modal-icon" aria-hidden="true" />
-      <div className="update-modal-copy">
-        <PixelText
-          font={font}
-          text="A NEW VERSION IS READY"
-          scale={2}
-          color="#7ef0c8"
+      <div className="update-modal-main">
+        <img
+          src={icon}
+          alt=""
+          className="update-modal-icon"
+          aria-hidden="true"
         />
-        {incomingVersion && (
+        <div className="update-modal-copy">
           <PixelText
             font={font}
-            text={forPixelFont(incomingVersion)}
-            scale={1}
-            color="#9aa3ad"
+            text="A NEW VERSION IS READY"
+            scale={2}
+            color="#7ef0c8"
           />
-        )}
+          {incomingVersion && (
+            <PixelText
+              font={font}
+              text={forPixelFont(incomingVersion)}
+              scale={1}
+              color="#9aa3ad"
+            />
+          )}
+        </div>
       </div>
       <div className="update-modal-actions">
         <button

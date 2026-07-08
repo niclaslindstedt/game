@@ -988,8 +988,21 @@ body {
   }
 }
 
+/* Arrow + copy travel together as one block so the sprite always sits to the
+   left of the text — in portrait, where the actions wrap onto their own line,
+   and in landscape, where everything shares a single row. */
+.update-modal-main {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem 1rem;
+  /* Grow to fill the row so the actions sit hard right when they share the
+     line; when the row wraps, this drops the actions onto their own line. */
+  flex: 1 1 auto;
+}
+
 .update-modal-icon {
   width: 2.75rem;
+  flex: none;
   image-rendering: pixelated;
   /* Reuse the menu cursor's bob so the upgrade sprite feels alive. */
   animation: menu-cursor-bob 0.8s steps(2) infinite;
@@ -1000,8 +1013,6 @@ body {
   flex-direction: column;
   align-items: flex-start;
   gap: 0.4rem;
-  /* Grow to fill the row so the actions sit hard right when they share the
-     line; when the row wraps, this drops the actions onto their own line. */
   flex: 1 1 auto;
 }
 
@@ -1011,21 +1022,42 @@ body {
   gap: 0.6rem;
 }
 
+/* Portrait phones have the width to spare: broaden the panel so the arrow,
+   copy, and buttons breathe instead of hugging the text column, and let the
+   primary button stretch across the wrapped action row. */
+@media (orientation: portrait) {
+  .update-modal {
+    width: min(94vw, 42rem);
+  }
+
+  .update-modal-actions {
+    flex: 1 1 100%;
+  }
+
+  .update-modal-actions .pixel-button:not(.update-modal-dismiss) {
+    flex: 1 1 auto;
+  }
+}
+
 /* A tight square X next to the chunky UPDATE button. */
 .update-modal-dismiss {
   padding: 0.75rem 1rem;
 }
 
-/* Landscape phones are short: drop the bobbing icon and tighten the panel so
-   it never eats the menu at the reference 844×390 viewport. */
+/* Landscape phones are short: keep the panel a single compact row so it never
+   eats the menu at the reference 844×390 viewport. Allow the extra width the
+   arrow needs and hold everything on one line, with a smaller bobbing arrow to
+   the left of the text so it doesn't steal vertical space. */
 @media (max-height: 480px) {
   .update-modal {
     gap: 0.75rem;
     padding: 0.75rem 1rem;
+    flex-wrap: nowrap;
+    max-width: 96vw;
   }
 
   .update-modal-icon {
-    display: none;
+    width: 2rem;
   }
 }
 
