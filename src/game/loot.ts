@@ -12,7 +12,7 @@ import { enemyDef, type EnemyDef } from "./defs/enemies/index.ts";
 import { levelDef } from "./defs/levels/index.ts";
 import { dropChance, playerCritChance, rollEquipment } from "./items.ts";
 import { bankOverkill, maybePowerScale } from "./menace.ts";
-import { startDeathWords } from "./story.ts";
+import { maybeFirstKillThought, startDeathWords } from "./story.ts";
 import type { Enemy, GameState } from "./types.ts";
 
 /** Monsters still owed by the wave budget but not yet streamed in. */
@@ -101,6 +101,14 @@ export function hitEnemy(
   // (elites and bosses). Comes after XP and drops so a level-up earned by
   // the killing blow simply waits its turn behind the death scene.
   startDeathWords(state, enemy.defId);
+
+  // A story beat pinned to this kill: the first of its kind on this level
+  // stops the run for the hero's own read on it (once per run).
+  maybeFirstKillThought(
+    state,
+    def.id,
+    levelDef(state.level.id).firstKillThoughts,
+  );
 }
 
 /**

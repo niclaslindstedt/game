@@ -42,6 +42,10 @@ export const MOON: LevelDef = {
     { enemy: "wisp", count: 8, band: [0.05, 0.45] },
     { enemy: "ghost", count: 6, band: [0.4, 0.8] },
     { enemy: "wraith", count: 4, band: [0.75, 1.05] },
+    // OPTIMUS — SpaceZ shipped the night-shift robots up here to garrison the
+    // moon. Solid metal, so unlike the haunting they respect the rock and the
+    // craters: hunt them through the terrain, not around it.
+    { enemy: "optimus", count: 6, band: [0.3, 0.95] },
     // Four ghosts with unfinished business, pinned along the walk to the
     // flag: the grave under the dust, the moonbase, the clone, and Ada's
     // trail — each rushes in, talks, then joins the haunting.
@@ -63,6 +67,9 @@ export const MOON: LevelDef = {
       { enemy: "wisp", count: 500, window: [0, 0.55] },
       { enemy: "ghost", count: 400, window: [0.3, 0.85] },
       { enemy: "wraith", count: 300, window: [0.55, 1] },
+      // A steady trickle of robots laced through the back half of the haunting
+      // — a heavy that forces the terrain to matter, not a second flood.
+      { enemy: "optimus", count: 30, window: [0.45, 1] },
     ],
   },
   // Standing stone: ridge walls of moonrock strewn along the walk to the
@@ -111,18 +118,48 @@ export const MOON: LevelDef = {
       jumpable: false,
     },
   ],
-  // Boulders wall off lanes outright; low rocks only stop what can't jump —
-  // hopping a rock line the horde must flow around is the moon's core trick.
   obstacles: [
-    { kind: "boulder", count: 26, radius: 13, jumpable: false },
-    { kind: "rock", count: 44, radius: 8, jumpable: true },
+    // MOONROCK — solid slabs of stone in 1×1, 1×2 and 2×2 footprints. They
+    // wall off sight, shots, AND a nuke's blast: a living thing behind one is
+    // hidden and safe. The haunting phases straight through them; SpaceZ's
+    // robots do not, so the rock is cover against the metal, never the dead.
+    {
+      kind: "moonrock",
+      count: 30,
+      radius: 8,
+      jumpable: false,
+      rockSizes: [
+        [1, 1],
+        [1, 1],
+        [1, 2],
+        [2, 2],
+      ],
+      cell: 16,
+    },
+    // CRATERS — pits punched in the regolith. You can't cross one on foot, but
+    // a jump clears it (come up short and you land on the near lip), and shots
+    // fly straight across. Grounded robots pile up at the rim; ghosts drift
+    // over. Jumpable so the player treats them as gaps, not walls.
+    {
+      kind: "crater",
+      sprite: "crater_small",
+      count: 14,
+      radius: 7,
+      jumpable: true,
+    },
+    {
+      kind: "crater",
+      sprite: "crater_big",
+      count: 8,
+      radius: 12,
+      jumpable: true,
+    },
   ],
-  decor: [
-    { kind: "craterBig", sprite: "crater_big", count: 9 },
-    { kind: "craterSmall", sprite: "crater_small", count: 16 },
-    { kind: "rocks", count: 22 },
-  ],
+  decor: [{ kind: "rocks", count: 20 }],
   decorClearance: 80,
+  // The first SpaceZ robot he kills up here stops him cold — the night shift
+  // followed the trail all the way to the moon.
+  firstKillThoughts: [{ enemy: "optimus", thought: "moon_optimus" }],
   loot: {
     weaponPool: [
       "blaster",

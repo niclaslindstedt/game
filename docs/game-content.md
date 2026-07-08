@@ -32,8 +32,12 @@ names its in-run music with an optional `music` id (a key into the app's
   here. Music: `hq_lockdown` ("LOCKDOWN", a tense infiltration theme).
 - **Level 2 — THE MOON** (`levels/moon.ts`). The beacon dies near the old
   flag. `moon` biome (regolith + gravel patches), ~340 px/s² gravity (jumps
-  soar), moonrock ridge `walls` the haunting phases straight through. Music:
-  `regolith_ride` ("REGOLITH RIDE", the heroic action theme).
+  soar), moonrock ridge `walls` the haunting phases straight through. Scattered
+  **moonrock** slabs (1×1/1×2/2×2 rectangular obstacles) wall off sight, shots
+  and even a nuke's blast — cover against SpaceZ's grounded robots, useless
+  against the phasing dead — while jumpable **craters** are gaps the player
+  hops (landing on the near lip when short) but the horde must route around.
+  Music: `regolith_ride` ("REGOLITH RIDE", the heroic action theme).
 
 ### Campaign progression & what carries across levels
 
@@ -75,13 +79,21 @@ The roster is split one file per level/biome under `src/game/defs/enemies/`
   (`dropProfile`) when downed; four elites who know too much (THE NIGHT
   MANAGER, CHIEF OF SECURITY, DR. NOVA, THE JANITOR), plus MUSKRAT, the mutant
   rat under the prototype rocket (the boss).
-- **Level 2** ships wisp → moon ghost → wraith, four ghost elites (MISSION
-  SPECIALIST, THE PROSPECTOR, QUARANTINE MEDIC, THE CARTOGRAPHER), plus
-  ARMSTRONG, the giant astronaut ghost guarding the flag (the boss).
+- **Level 2** ships wisp → moon ghost → wraith and the OPTIMUS robots SpaceZ
+  shipped up to garrison the moon (the same heavy from level 1, now laced
+  through the haunting) — four ghost elites (MISSION SPECIALIST, THE
+  PROSPECTOR, QUARANTINE MEDIC, THE CARTOGRAPHER), plus ARMSTRONG, the giant
+  astronaut ghost guarding the flag (the boss). The first OPTIMUS the hero
+  downs here fires a one-time inner monologue (`firstKillThoughts` →
+  `THOUGHT_DEFS`, played through the dialogue box in his own voice).
 
 Every unique mob (elite/boss) carries `dialogue` played on arrival and
 `lastWords` played as it dies; minions are the nameless horde streamed in by
-each level's `waves` spawner.
+each level's `waves` spawner. A level can also pin a **player thought** to a
+kill: `LevelDef.firstKillThoughts` maps an enemy id to a `THOUGHT_DEFS` entry
+that plays once, the first time the hero downs that enemy there — the same
+dialogue box, but in the hero's own voice and portrait (a `playerThought`
+dialogue source) instead of a speaker on the board.
 
 ## Story items & costume
 

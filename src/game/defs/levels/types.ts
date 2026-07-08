@@ -141,6 +141,16 @@ export type LevelDef = {
     count: number;
     radius: number;
     jumpable: boolean;
+    /**
+     * Rectangular rocks: each placement rolls one footprint from this list,
+     * sized `[wCells, hCells]` at `cell` world px per cell. The rock collides
+     * as that box (blocking sight, shots and blasts) and is drawn with the
+     * per-size sprite `<sprite|kind>_<w>x<h>`. Omitted = the plain circular
+     * obstacle of `radius`.
+     */
+    rockSizes?: [number, number][];
+    /** World px per grid cell for `rockSizes` (footprint = size × cell). */
+    cell?: number;
   }[];
   /**
    * Deliberate architecture: each segment is expanded into a chain of solid
@@ -181,6 +191,13 @@ export type LevelDef = {
   decor: { kind: string; sprite?: string; count: number }[];
   /** Keep decor at least this far from landmarks. */
   decorClearance: number;
+  /**
+   * One-time inner monologues: the first time the hero kills `enemy` on this
+   * level, the run pauses into a `playerThought` dialogue that plays the
+   * THOUGHT_DEFS entry named by `thought`. A story beat pinned to a kill
+   * rather than to a speaker rushing into view.
+   */
+  firstKillThoughts?: { enemy: string; thought: string }[];
   loot: {
     /** WEAPON_DEFS ids this level's drops draw from. */
     weaponPool: string[];

@@ -175,11 +175,10 @@ describe("moon stone ridges", () => {
 
   it("expands the ridges into obstacle chains at creation", () => {
     const state = startGame();
-    const scattered = LEVELS.moon!.obstacles.find(
-      (o) => o.kind === "boulder",
-    )!.count;
+    const segments = LEVELS.moon!.walls!.length;
     const boulders = state.obstacles.filter((o) => o.kind === "boulder");
-    // Far more boulders than the scatter alone: the ridge chains are in.
-    expect(boulders.length).toBeGreaterThan(scattered);
+    // Every ridge segment becomes a chain of overlapping boulders, so the
+    // count dwarfs the handful of authored segments.
+    expect(boulders.length).toBeGreaterThan(segments * 2);
   });
 });

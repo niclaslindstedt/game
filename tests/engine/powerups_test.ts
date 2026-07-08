@@ -119,6 +119,35 @@ describe("the screen nuke", () => {
     // The kill pays out like any other: XP flowed.
     expect(state.stats.xpGained).toBeGreaterThan(xpBefore);
   });
+
+  it("a rock shields the monster behind it from the blast", () => {
+    const state = startGame();
+    clearStage(state);
+    state.player.heldAbilities = ["test_nuke"];
+
+    // A tall rock right beside the player; a mob hides just behind it, well
+    // inside the blast, and a second mob stands in the open the same distance
+    // out. Same radius, opposite fates — only the sheltered one rides it out.
+    const px = state.player.pos.x;
+    const py = state.player.pos.y;
+    state.obstacles = [
+      {
+        id: 8100,
+        kind: "boulder",
+        sprite: "boulder",
+        pos: { x: px + 30, y: py },
+        radius: 14,
+        jumpable: false,
+      },
+    ];
+    const sheltered = makeEnemy({ id: 9101, pos: { x: px + 60, y: py } });
+    const exposed = makeEnemy({ id: 9102, pos: { x: px, y: py + 60 } });
+    state.enemies.push(sheltered, exposed);
+
+    step(state, useItem, DT);
+    expect(state.enemies).toContain(sheltered); // the rock ate the blast
+    expect(state.enemies).not.toContain(exposed); // no cover, no mercy
+  });
 });
 
 describe("the item magnet", () => {

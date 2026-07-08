@@ -10,6 +10,7 @@ import { distance } from "@game/lib/vec.ts";
 import { DIALOGUE, DOORS } from "./config.ts";
 import { enemyDef } from "./defs/enemies/index.ts";
 import { storyItemDef } from "./defs/story.ts";
+import { thoughtDef } from "./defs/thoughts.ts";
 import type { DialogueState, Enemy, GameState } from "./types.ts";
 
 /**
@@ -37,6 +38,12 @@ export function dialogueContent(dialogue: DialogueState): {
           : []
         : (def.dialogue ?? []);
     return { speaker: def.name, portrait: def.sprite, pages };
+  }
+  // The hero's own head: his face in the portrait box, his private read on
+  // stage.
+  if (dialogue.source.kind === "playerThought") {
+    const def = thoughtDef(dialogue.source.defId);
+    return { speaker: def.speaker, portrait: def.portrait, pages: def.pages };
   }
   const def = storyItemDef(dialogue.source.defId);
   return { speaker: def.name, portrait: def.icon, pages: def.lore };
@@ -92,6 +99,42 @@ export function startDeathWords(state: GameState, defId: string): void {
   state.dialogue = { source: { kind: "enemyDeath", defId }, page: 0 };
   state.phase = "dialogue";
   state.events.push({ type: "enemyLastWords", defId });
+}
+
+/**
+ * Play a one-time inner monologue: put the hero's own thought on stage and
+ * freeze the run in the `dialogue` phase. Silent for an empty/unknown thought
+ * and it yields to any scene already up (a death gasp keeps the stage). The
+ * `dialogueStarted` event lets the app cue it; the box resumes play — or a
+ * pending level-up — when tapped through, like every other dialogue.
+ */
+export function startPlayerThought(state: GameState, thoughtId: string): void {
+  const def = thoughtDef(thoughtId);
+  if (def.pages.length === 0 || state.dialogue !== null) return;
+  state.dialogue = {
+    source: { kind: "playerThought", defId: thoughtId },
+    page: 0,
+  };
+  state.phase = "dialogue";
+  state.events.push({ type: "dialogueStarted", speaker: def.speaker });
+}
+
+/**
+ * The kill-path hook for a level's `firstKillThoughts`: the first time the
+ * hero downs `enemyId` on this level, fire its inner monologue exactly once
+ * (tracked in `state.thoughtsSeen`). Called from loot.ts after the kill is
+ * booked, so the thought stacks ahead of any level-up the blow just earned.
+ */
+export function maybeFirstKillThought(
+  state: GameState,
+  enemyId: string,
+  triggers: { enemy: string; thought: string }[] | undefined,
+): void {
+  if (state.dialogue !== null || !triggers) return;
+  const trigger = triggers.find((t) => t.enemy === enemyId);
+  if (!trigger || state.thoughtsSeen.includes(trigger.thought)) return;
+  state.thoughtsSeen.push(trigger.thought);
+  startPlayerThought(state, trigger.thought);
 }
 
 /**
