@@ -187,6 +187,24 @@ export const SPACEZ_HQ: LevelDef = {
       radius: 8,
       jumpable: false,
     },
+    // The AI CORE: NE corner of the boss wing, where the superintelligence THE
+    // ARCHITECT built hums to itself. Only his CORE KEYCARD opens it. Map
+    // edges close the top and right; these walls close the left and bottom,
+    // with the locked door as the only way in.
+    {
+      kind: "wall",
+      from: { x: 1770, y: 8 },
+      to: { x: 1770, y: 186 },
+      radius: 8,
+      jumpable: false,
+    },
+    {
+      kind: "wall",
+      from: { x: 1834, y: 180 },
+      to: { x: 1994, y: 180 },
+      radius: 8,
+      jumpable: false,
+    },
   ],
   doors: [
     {
@@ -201,6 +219,12 @@ export const SPACEZ_HQ: LevelDef = {
       to: { x: 1992, y: 1030 },
       radius: 8,
     },
+    {
+      id: "core",
+      from: { x: 1776, y: 180 },
+      to: { x: 1830, y: 180 },
+      radius: 8,
+    },
   ],
   placedItems: [
     // Supply bay B — spare parts for a ship-builder: tools and kits.
@@ -212,6 +236,11 @@ export const SPACEZ_HQ: LevelDef = {
     { kind: "story", defId: "antigrav_unit", pos: { x: 1870, y: 1120 } },
     { kind: "xp", pos: { x: 1820, y: 1100 } },
     { kind: "xp", pos: { x: 1920, y: 1100 } },
+    // The AI CORE — the superintelligence's own logs, and the plot payoff for
+    // spending THE ARCHITECT's keycard.
+    { kind: "story", defId: "core_log", pos: { x: 1885, y: 90 } },
+    { kind: "xp", pos: { x: 1810, y: 60 } },
+    { kind: "medkit", pos: { x: 1960, y: 60 } },
   ],
   obstacles: [
     { kind: "server", count: 16, radius: 9, jumpable: false },

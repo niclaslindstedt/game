@@ -279,7 +279,9 @@ export const SPACEZ_ENEMIES: Record<string, EnemyDef> = {
   // superintelligence program, and he has cut a PASSAGE CHIP into his own
   // skull to badge through the cyborg locks and pass as a machine. The player
   // begs him to quit — this is an evil company — and the old friend only
-  // smiles: humans are obsolete. He drops the chip he operated into himself.
+  // smiles: humans are obsolete. He drops the chip he operated into himself,
+  // and the CORE KEYCARD that badges into the AI CORE — the superintelligence
+  // he tends, and the only room on the floor a plain hand can't open.
   architect: {
     id: "architect",
     name: "THE ARCHITECT",
@@ -316,6 +318,10 @@ export const SPACEZ_ENEMIES: Record<string, EnemyDef> = {
       // pays out from the bag. Forced regular so it lands as the plain,
       // affix-free "+1 INT" the story promises, not a rolled MAGIC variant.
       items: [{ defId: "passage_chip", tier: "regular" }],
+      // …and his machine badge: the key to the AI CORE room the whole night
+      // shift answers to. No plain hand opens that door — only the man who
+      // cut himself into a machine could, and now the hero carries it.
+      storyItems: ["keycard_core"],
       weapons: 0,
       gear: 0,
       xpArrows: 1,
