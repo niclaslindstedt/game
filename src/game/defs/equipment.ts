@@ -461,6 +461,14 @@ export type GearDef = {
    * and cloth suits like the lab coat that lean on `maxHp` instead).
    */
   armor?: ArmorGrade;
+  /**
+   * A passive trinket's flat stat bonuses, paid out while the piece is merely
+   * CARRIED — the effect rides in the bag, so a passive item never needs an
+   * equip slot to work (see `effectiveStat`). This is what a `+1 INT` chip
+   * grants sitting in a pocket, as distinct from a suit or charm that must be
+   * worn. Absent on ordinary gear, whose bonuses only count once equipped.
+   */
+  passive?: Partial<Record<StatName, number>>;
   /** Inventory icon sprite. */
   icon: string;
   /**
@@ -517,6 +525,20 @@ export const GEAR_DEFS: Record<string, GearDef> = {
     slot: "charm",
     bonuses: { critChance: 0.03 },
     icon: "icon_charm",
+  },
+  // THE ARCHITECT's PASSAGE CHIP: the implant the old coworker cut into his own
+  // skull to badge through the cyborg locks and pass as a machine. In the
+  // hero's bag it is a passive trinket — its `+1 INT` applies while merely
+  // carried, never occupying an equip slot (see `isPassiveItem`). A `charm`
+  // slot only so it is a well-formed piece of gear should the player ever drag
+  // it onto the body; either way the mind sharpens exactly once.
+  passage_chip: {
+    id: "passage_chip",
+    name: "PASSAGE CHIP",
+    slot: "charm",
+    bonuses: {},
+    passive: { intelligence: 1 },
+    icon: "icon_passage_chip",
   },
 };
 

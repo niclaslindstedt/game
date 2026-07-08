@@ -62,10 +62,13 @@ export const SPACEZ_HQ: LevelDef = {
     // OPTIMUS units patrol the deep floor: a handful of tanks seeded through
     // the labs and cleanroom approach, replacing some of the human muscle.
     { enemy: "optimus", count: 4, band: [0.5, 1.0] },
-    // The four staffers who know too much, pinned along the route so the
-    // plot unspools in walking order: launches → Ada → the vault → the
-    // Armstrong tease. Each rushes into view and talks before it fights.
+    // The five staffers who know too much, pinned along the route so the
+    // plot unspools in walking order: launches → the old friend → Ada → the
+    // vault → the Armstrong tease. Each rushes into view and talks before it
+    // fights. THE ARCHITECT nests in the north lab, between the lobby door and
+    // the deeper rooms, so the hero meets his brainwashed bench partner early.
     { enemy: "night_manager", at: { x: 560, y: 370 } },
+    { enemy: "architect", at: { x: 950, y: 240 } },
     { enemy: "security_chief", at: { x: 1050, y: 700 } },
     { enemy: "head_scientist", at: { x: 1270, y: 400 } },
     { enemy: "janitor", at: { x: 900, y: 1000 } },

@@ -496,6 +496,22 @@ const SPRITES = {
     "............",
     "............",
   ],
+  // THE ARCHITECT's PASSAGE CHIP: a microprocessor die, gold contact pins on
+  // every side, a glowing cyan core — the implant he cut into his own skull.
+  icon_passage_chip: [
+    "............",
+    "...y.yy.y...",
+    "..OOOOOOOO..",
+    "..OvvvvvvO..",
+    "..OvOccOvO..",
+    "y.OvcxxcvO.y",
+    "y.OvcxxcvO.y",
+    "..OvOccOvO..",
+    "..OvvvvvvO..",
+    "..OOOOOOOO..",
+    "...y.yy.y...",
+    "............",
+  ],
   // The ID BADGE charm: photo, smudged name, gold clip.
   icon_badge: [
     "............",

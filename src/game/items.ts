@@ -204,7 +204,48 @@ export function previewEquipped(
   return { ...state, player: { ...player, equipment } };
 }
 
-/** Stat points from level-ups plus any equipped `+N <stat>` affixes. */
+/**
+ * Everything the player is currently holding: the worn pieces plus every
+ * occupied bag cell. The reach a passive trinket's bonus is summed over —
+ * worn or stowed, it counts once, since the two sets are disjoint (an item is
+ * either equipped or in the bag, never both).
+ */
+function carriedPieces(state: GameState): Equipment[] {
+  return [
+    ...equippedPieces(state),
+    ...state.player.inventory.filter((e): e is Equipment => e !== null),
+  ];
+}
+
+/**
+ * Flat passive stat bonus from carried trinkets — the PASSAGE CHIP pays out
+ * its `+INT` just by riding in the bag (or a slot; either way, once). Weapons
+ * carry no passive; gear opts in via `GearDef.passive`.
+ */
+function passiveStatBonus(state: GameState, stat: StatName): number {
+  let total = 0;
+  for (const piece of carriedPieces(state)) {
+    if (isWeaponDef(piece.defId)) continue;
+    total += gearDef(piece.defId).passive?.[stat] ?? 0;
+  }
+  return total;
+}
+
+/**
+ * True when the def id names a passive trinket — gear that pays its bonus
+ * while merely carried (a PASSAGE CHIP). Such an item is banked in the bag
+ * like ordinary loot rather than auto-equipped into a slot, since the effect
+ * needs no slot to land (and grabbing the charm slot would block a real
+ * charm).
+ */
+export function isPassiveItem(defId: string): boolean {
+  return !isWeaponDef(defId) && gearDef(defId).passive !== undefined;
+}
+
+/**
+ * Stat points from level-ups, any equipped `+N <stat>` affixes, and the flat
+ * bonus of every passive trinket carried (bag or worn).
+ */
 export function effectiveStat(state: GameState, stat: StatName): number {
   let value = state.player.stats[stat];
   for (const piece of equippedPieces(state)) {
@@ -212,7 +253,7 @@ export function effectiveStat(state: GameState, stat: StatName): number {
       if (affix.kind === "stat" && affix.stat === stat) value += affix.value;
     }
   }
-  return value;
+  return value + passiveStatBonus(state, stat);
 }
 
 /** Max hp from the base pool + gear bonuses and affixes (STAMINA no longer
@@ -523,6 +564,10 @@ export function isBetterEquipment(
     }
     return false;
   }
+  // A passive trinket pays out from the bag, so it is never auto-equipped —
+  // it heads for a bag cell like ordinary loot, leaving the charm slot free
+  // for a piece that actually wants wearing.
+  if (isPassiveItem(candidate.defId)) return false;
   const current = state.player.equipment[candidate.slot];
   return current === null || gearScore(candidate) > gearScore(current);
 }

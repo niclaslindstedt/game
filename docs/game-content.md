@@ -80,9 +80,13 @@ The roster is split one file per level/biome under `src/game/defs/enemies/`
   propulsion engineer → security guard → hazmat tech) reinforced by OPTIMUS
   units — humanoid robots that are not story uniques but hit far harder and
   tank far more than any of the staff, and pay out a sweetened drop roll
-  (`dropProfile`) when downed; four elites who know too much (THE NIGHT
-  MANAGER, CHIEF OF SECURITY, DR. NOVA, THE JANITOR), plus MUSKRAT, the mutant
-  rat under the prototype rocket (the boss).
+  (`dropProfile`) when downed; five elites who know too much (THE NIGHT
+  MANAGER, THE ARCHITECT, CHIEF OF SECURITY, DR. NOVA, THE JANITOR), plus
+  MUSKRAT, the mutant rat under the prototype rocket (the boss). THE ARCHITECT
+  is the hero's old bench partner, now brainwashed into building SpaceZ's
+  superintelligence; he begs off the plea to quit ("humans are obsolete") and
+  drops the **PASSAGE CHIP** he cut into his own skull — a passive `+1 INT`
+  trinket that pays out while it merely rides in the bag (`GearDef.passive`).
 - **Level 2** ships wisp → moon ghost → wraith and the OPTIMUS robots SpaceZ
   shipped up to garrison the moon (the same heavy from level 1, now laced
   through the haunting) — four ghost elites (MISSION SPECIALIST, THE
