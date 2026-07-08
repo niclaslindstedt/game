@@ -60,9 +60,12 @@ The roster is split one file per level/biome under `src/game/defs/enemies/`
 (which throws on a duplicate id).
 
 - **Level 1** ships the SpaceZ night shift (intern → lab scientist →
-  propulsion engineer → security guard → hazmat tech), four elites who know
-  too much (THE NIGHT MANAGER, CHIEF OF SECURITY, DR. NOVA, THE JANITOR),
-  plus MUSKRAT, the mutant rat under the prototype rocket (the boss).
+  propulsion engineer → security guard → hazmat tech) reinforced by OPTIMUS
+  units — humanoid robots that are not story uniques but hit far harder and
+  tank far more than any of the staff, and pay out a sweetened drop roll
+  (`dropProfile`) when downed; four elites who know too much (THE NIGHT
+  MANAGER, CHIEF OF SECURITY, DR. NOVA, THE JANITOR), plus MUSKRAT, the mutant
+  rat under the prototype rocket (the boss).
 - **Level 2** ships wisp → moon ghost → wraith, four ghost elites (MISSION
   SPECIALIST, THE PROSPECTOR, QUARANTINE MEDIC, THE CARTOGRAPHER), plus
   ARMSTRONG, the giant astronaut ghost guarding the flag (the boss).

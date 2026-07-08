@@ -91,6 +91,8 @@ const ROLE_STAGES = {
 const GORE_STYLES = {
   blood: { splat: "r", core: "i", scuff: "E" },
   ecto: { splat: "c", core: "C" },
+  // Machines throw sparks, not blood: hot gold splats with a white-hot core.
+  sparks: { splat: "y", core: "Y" },
 };
 
 /** Wound plans by sprite name — the lint checks splat-vs-body contrast. */

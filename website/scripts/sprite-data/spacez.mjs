@@ -5,7 +5,9 @@
 // other char must exist in CORE_PALETTE (sprite-data/core.mjs) or this
 // family's local palette.
 
+import { swapPalette } from "../asset-tools/palette.mjs";
 import { LAB } from "./core.mjs";
+import { BLOOD_0, BLOOD_1 } from "./effects.mjs";
 
 /** Chars only this family draws with — merged with the core at build time. */
 const PALETTE = {
@@ -203,6 +205,52 @@ const SPRITES = {
     "................",
     "................",
   ],
+  // OPTIMUS — SpaceZ's humanoid robot, the toughest thing on the floor short
+  // of the elites. Same 16px footprint as the staff so it marches in the same
+  // ranks, but built from white armor panels (W/w) over steel joints (v/V/b)
+  // with a black visor and a cyan optic + chest core (x/c) — reads as a
+  // machine, not a coworker. Frames alternate the leg stride like the crowd.
+  optimus_0: [
+    "................",
+    ".....OWWWWO.....",
+    "....OWWWWWWO....",
+    "....OOxxxxOO....",
+    "....OwWWWWwO....",
+    "...OvWWWWWWvO...",
+    "..OvvWWccWWvvO..",
+    "..OvVWWWWWWVvO..",
+    "..OvOWWWWWWOvO..",
+    "...OwWWWWWWwO...",
+    "...OvvO..OvvO...",
+    "...OvbO..OvbO...",
+    "...OOOO..OOOO...",
+    "................",
+    "................",
+    "................",
+  ],
+  optimus_1: [
+    "................",
+    ".....OWWWWO.....",
+    "....OWWWWWWO....",
+    "....OOxxxxOO....",
+    "....OwWWWWwO....",
+    "...OvWWWWWWvO...",
+    "..OvvWWccWWvvO..",
+    "..OvVWWWWWWVvO..",
+    "..OvOWWWWWWOvO..",
+    "...OwWWWWWWwO...",
+    "..OvvO....OvvO..",
+    "..OvbO....OvbO..",
+    "..OOOO....OOOO..",
+    "................",
+    "................",
+    "................",
+  ],
+  // SPARKS — the machine-tier hit splash (OPTIMUS bleeds electricity, not
+  // blood): the blood droplets recolored to hot gold, base frames shared with
+  // the other gore in sprite-data/effects.mjs.
+  sparks_0: swapPalette(BLOOD_0, { r: "y" }),
+  sparks_1: swapPalette(BLOOD_1, { r: "Y" }),
   // ---- SpaceZ HQ floor tiles (16×16) ----------------------------------------
   // Polished lab tiles with a seam along the top/left edge — every tile
   // carries the same seam, so the grid pattern is continuous when tiled.
@@ -859,6 +907,7 @@ export default {
     engineer_walk: { frames: ["engineer_0", "engineer_1"], delayMs: 280 },
     guard_walk: { frames: ["guard_0", "guard_1"], delayMs: 220 },
     hazmat_walk: { frames: ["hazmat_0", "hazmat_1"], delayMs: 380 },
+    optimus_walk: { frames: ["optimus_0", "optimus_1"], delayMs: 300 },
     muskrat_loom: { frames: ["muskrat_0", "muskrat_1"], delayMs: 400 },
     night_manager_walk: {
       frames: ["night_manager_0", "night_manager_1"],

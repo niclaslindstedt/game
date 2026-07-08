@@ -90,7 +90,7 @@ export function hitEnemy(
   if (def.loot) {
     dropGuaranteedLoot(state, def, enemy.pos);
   } else {
-    dropMinionLoot(state, enemy.pos, enemy.evo ?? 0);
+    dropMinionLoot(state, def, enemy.pos, enemy.evo ?? 0);
   }
 
   if (def.role === "boss") {
@@ -154,9 +154,15 @@ function dropEarlyDrops(state: GameState, at: Vec2): void {
  * alive couldn't otherwise cover the level's guaranteed minimum. `evo` is the
  * mob's menace evolution stage: an evolved kill drops more often and rolls a
  * better tier when it does, so a rampaging player who toughens the horde is
- * paid back in gear.
+ * paid back in gear. A tougher mob's `dropProfile` sweetens the same two
+ * knobs by a fixed amount, so a heavy hitter is worth the effort of dropping.
  */
-function dropMinionLoot(state: GameState, at: Vec2, evo = 0): void {
+function dropMinionLoot(
+  state: GameState,
+  def: EnemyDef,
+  at: Vec2,
+  evo = 0,
+): void {
   const remaining =
     state.enemies.filter((e) => enemyDef(e.defId).role === "minion").length +
     unspawnedMinions(state);
@@ -180,11 +186,16 @@ function dropMinionLoot(state: GameState, at: Vec2, evo = 0): void {
   const owed = LOOT.minEquipmentPerLevel - state.minionEquipmentDrops;
   const forced = owed > remaining;
 
-  // An evolved mob is likelier to drop, and its equipment rolls a richer tier.
+  // An evolved mob is likelier to drop, and its equipment rolls a richer tier;
+  // a tougher mob's own drop profile stacks the same bonuses on top.
   const evoDropBonus = Math.max(0, evo) * MENACE.dropBonusPerStage;
   const evoTierBonus = Math.max(0, evo) * MENACE.tierBonusPerStage;
+  const profileDropBonus = def.dropProfile?.dropBonus ?? 0;
+  const profileTierBonus = def.dropProfile?.tierBonus ?? 0;
+  const dropBonus = evoDropBonus + profileDropBonus;
+  const tierBonus = evoTierBonus + profileTierBonus;
 
-  if (!forced && state.rng() >= dropChance(state) + evoDropBonus) return;
+  if (!forced && state.rng() >= dropChance(state) + dropBonus) return;
 
   const pos = { ...at };
   const abilities = levelDef(state.level.id).loot.abilityPool;
@@ -205,7 +216,7 @@ function dropMinionLoot(state: GameState, at: Vec2, evo = 0): void {
       id: state.nextId++,
       kind: "equipment",
       pos,
-      equipment: rollEquipment(state, { tierBonus: evoTierBonus }),
+      equipment: rollEquipment(state, { tierBonus }),
     });
   } else if (roll < LOOT.equipmentShare + abilityShare) {
     state.items.push({
