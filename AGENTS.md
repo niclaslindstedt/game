@@ -36,10 +36,19 @@ make changelog VERSION=X.Y.Z  # preview a release's CHANGELOG section
 - PRs are squash-merged; the **PR title** becomes the single commit on `main`,
   so it must follow conventional-commit format.
 - Breaking changes use `<type>!:` or a `BREAKING CHANGE:` footer.
-- **Do not babysit PRs.** Once a PR is opened, write out its URL and a short
-  summary of what was done, then stop. Don't subscribe to PR activity, poll
-  CI, schedule check-ins, or auto-push follow-up fixes — leave review and
-  merge to a human. Only return to a PR when explicitly asked.
+- **Do not babysit PRs — but do fix what breaks.** Once a PR is opened, write
+  out its URL and a short summary of what was done, then stop. Don't
+  proactively subscribe to PR activity, poll CI, or schedule check-ins, and
+  leave code review and the merge decision to a human.
+  - **Never call the PR-activity subscription tools** — in particular don't
+    `unsubscribe_pr_activity`. If the harness auto-subscribes the session,
+    leave the subscription alone: every such tool call burns tokens and delays
+    the human review that is the whole point of opening the PR.
+  - **Act on the events that subscription delivers when they're actionable:**
+    if a CI failure or a merge conflict arrives for the PR and you can fix it,
+    push the fix. Leave everything else (review comments, questions, style
+    nits) to the human — don't auto-push follow-up fixes for those. Only
+    otherwise return to a PR when explicitly asked.
 
 ## Changelog fragments
 

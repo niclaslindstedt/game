@@ -52,7 +52,6 @@ export {
   syncInventoryCapacity,
   gearScore,
   isBetterEquipment,
-  isWeaponDurabilityRefresh,
   moveInventoryItem,
   openInventory,
   pauseGame,

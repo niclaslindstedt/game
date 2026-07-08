@@ -56,7 +56,6 @@ import {
   enemyCritChance,
   equipmentName,
   isBetterEquipment,
-  isWeaponDurabilityRefresh,
   maxMeleeTargets,
   playerSpeed,
   recomputeMaxHp,
@@ -985,17 +984,6 @@ function stepItems(state: GameState): void {
         name: abilityDef(item.defId).name,
       });
       return false;
-    }
-
-    // A same-weapon durability refresh must never cost you the worn copy: it
-    // swaps in only when the bag has a free cell to keep that copy as a spare.
-    // If the bag is full, leave the fresh copy on the ground to grab once room
-    // opens up — a refresh is pure upside, never a trade that loses a weapon.
-    if (
-      isWeaponDurabilityRefresh(state, item.equipment) &&
-      !player.inventory.includes(null)
-    ) {
-      return true;
     }
 
     // Equipment better than what's worn is equipped on the spot; the old
