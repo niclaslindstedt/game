@@ -17,7 +17,13 @@ import {
   type Bot,
   type GameState,
 } from "@game/core";
-import { clearStage, DT, makeEnemy, startGame } from "./helpers.ts";
+import {
+  clearStage,
+  DT,
+  equipBlaster,
+  makeEnemy,
+  startGame,
+} from "./helpers.ts";
 
 const dist = (a: { x: number; y: number }, b: { x: number; y: number }) =>
   Math.hypot(a.x - b.x, a.y - b.y);
@@ -55,7 +61,9 @@ describe("bot strategies", () => {
   });
 
   it("kite settles inside weapon range but outside the pack's grasp", () => {
-    const state = startGame();
+    // Kiting is a ranged tactic — hold the crowd at bolt reach — so give the
+    // bot the blaster rather than the default melee sword.
+    const state = equipBlaster(startGame());
     clearStage(state);
     state.enemies.push(
       makeEnemy({
@@ -75,7 +83,9 @@ describe("bot strategies", () => {
   });
 
   it("boss strategy crosses the map and engages ARMSTRONG", () => {
-    const state = startGame();
+    // Kiting the boss across the map is a ranged tactic; the melee default
+    // would have to shove through the ridge terrain to touch him.
+    const state = equipBlaster(startGame());
     clearStage(state); // just the parked boss at the flag
     const boss = state.enemies.find((e) => enemyDef(e.defId).role === "boss")!;
     const steps = drive(
@@ -133,8 +143,9 @@ describe("bot strategies", () => {
     const state = startGame();
     drive(state, createBot("survivor"), 1875); // 30 seconds
     // No survival requirement (the owner playtests winnability by hand) —
-    // the bot just has to genuinely play: move, shoot, kill.
-    expect(state.stats.shotsFired).toBeGreaterThan(0);
+    // the bot just has to genuinely play: move, attack, kill. The default
+    // sword is melee, so measure damage dealt rather than bolts fired.
+    expect(state.stats.damageDealt).toBeGreaterThan(0);
     expect(state.stats.kills).toBeGreaterThan(0);
   });
 });

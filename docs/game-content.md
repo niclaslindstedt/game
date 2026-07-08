@@ -12,8 +12,10 @@ Ada went out for chips and soda on movie night and never came back — the
 tracking beacon sewn into her jacket points off-planet. The hero, a
 spaceship builder, raids SpaceZ for the drive ingredient, then follows the
 beacon to the moon, where something is not dead enough. The prelude cutscene
-(`defs/cutscenes.ts`) sets up that night; each level's `intro` text and its
-elites' `dialogue` carry the thread forward.
+(`defs/cutscenes.ts`) sets up that night — the crude sword hanging on the
+living-room wall is the one thing he takes off it to go after her, and it is
+the weapon he starts the game with. Each level's `intro` text and its elites'
+`dialogue` carry the thread forward.
 
 ## Levels (`src/game/defs/levels/`)
 
@@ -36,8 +38,11 @@ names its in-run music with an optional `music` id (a key into the app's
 ### Campaign progression & what carries across levels
 
 Each run is **standalone**: `createGame(seed, levelId, difficulty)` builds a
-fresh state — the player starts back at level 1 stats with the plain blaster,
-and nothing (XP, gear, inventory) carries between levels. The only thing
+fresh state — the player starts back at level 1 stats with the CRUDE SWORD
+(the melee blade off the hero's wall in the prelude — his default weapon; it
+carries durability and wears out, so the run's first job is to scavenge a
+replacement like the moon's BLASTER), and nothing (XP, gear, inventory)
+carries between levels. The only thing
 threaded across a session is the chosen **difficulty**. This is deliberate —
 a survivors-style run is a self-contained arc — and stays this way unless the
 story later demands a persistent loadout.

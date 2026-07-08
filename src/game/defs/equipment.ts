@@ -56,6 +56,13 @@ export type WeaponDef = {
    * rather than sweeping sideways. Defaults to `MELEE.defaultSweepDeg`.
    */
   sweepDeg?: number;
+  /**
+   * Melee only: how many foes a single swing may strike before INTELLIGENCE
+   * widens the cleave (see `STATS.aoeTargetsPerInt`). Defaults to
+   * `MELEE.baseAoeTargets`. A rough, unbalanced blade sets this to 1 — it
+   * bites one enemy at a time until INT earns it a cleave.
+   */
+  baseAoeTargets?: number;
   /** Melee weapons hit directly and omit this. */
   projectile?: {
     speed: number;
@@ -69,6 +76,29 @@ export type WeaponDef = {
 };
 
 export const WEAPON_DEFS: Record<string, WeaponDef> = {
+  // ---- The hero's own. The CRUDE SWORD hangs on his wall the night Ada
+  // vanishes; it is the one thing he takes off it to go save her, so it is
+  // what he lands with — the game's default starting weapon (create.ts mints
+  // it in hand). Unlike the old sidearm it is finite: a rough blade that
+  // wears out, pushing the player to scavenge a real weapon (the blaster and
+  // the rest of the moon pool) once it chips. Melee, so the opening fight is
+  // fought up close, in the crowd, until something better turns up.
+  crude_sword: {
+    id: "crude_sword",
+    name: "CRUDE SWORD",
+    class: "melee",
+    damage: 20,
+    // A deliberate swing — a stationary hero is still overrun (the single
+    // target melee cone only faces one way, so the crowd flanks a player who
+    // won't move). DEXTERITY is how the tempo grows back.
+    cooldownMs: 600,
+    range: 44,
+    durability: 120,
+    // A crude blade bites ONE foe per swing — no wide cleave until the hero
+    // grows some INTELLIGENCE (STATS.aoeTargetsPerInt lifts the cap).
+    baseAoeTargets: 1,
+    icon: "icon_crude_sword",
+  },
   // ---- SpaceZ HQ (level 1): whatever the office and the lab left lying
   // around. Numbers sit a notch under the moon pool — this is the run where
   // a MAGIC KEYBOARD is a genuine find.

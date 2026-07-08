@@ -145,6 +145,33 @@ const SPRITES = {
     ".OOOOOOOOOOOOOOOOOO.",
     "....................",
   ],
+  // The crude sword on the wall: dull steel blade (point up), a plain
+  // crossguard and a wrapped grip, resting on two small mount pegs. The one
+  // thing the hero takes with him — his default weapon on the moon.
+  wall_sword: [
+    "....OO....",
+    "...OVvO...",
+    "...OVvO...",
+    "...OVvO...",
+    "...OVvO...",
+    "..OOVvOO..",
+    "..ObVvbO..",
+    "...OVvO...",
+    "...OVvO...",
+    "...OVvO...",
+    "...OVvO...",
+    "..OVVvvO..",
+    ".OOOOOOOO.",
+    ".OqqqqqqO.",
+    ".OOOOOOOO.",
+    "...OkkO...",
+    "...OkkO...",
+    "...OkkO...",
+    "...OOOO...",
+    "...OaaO...",
+    "...OOOO...",
+    "..........",
+  ],
   // ---- The prelude: the cast ------------------------------------------------
   // ADA — red jacket (the one with the beacon in it), off to the store.
   ada_0: [

@@ -85,8 +85,8 @@ export function botAct(bot: Bot, state: GameState): GameInput {
 
 /**
  * The level-up build a bot spends its points on: alternate the starting
- * blaster's damage stat and HEALTH — horde play needs the damage AND the
- * hp to wade through the pack. Called whenever `pendingStatPoints > 0`.
+ * weapon's speed stat and HEALTH — horde play needs the faster attacks AND
+ * the hp to wade through the pack. Called whenever `pendingStatPoints > 0`.
  */
 export function botAllocate(bot: Bot, state: GameState): StatName {
   void bot; // strategy-specific builds can key off this later
@@ -95,15 +95,22 @@ export function botAllocate(bot: Bot, state: GameState): StatName {
 
 // ---- Strategy bodies -------------------------------------------------------
 
-/** Beeline for the boss (or his landmark), kite him once in close. */
+/**
+ * Beeline for the boss (or his landmark), then hold at the equipped weapon's
+ * reach and fight him from there. Deriving the hold distance from the weapon
+ * (rather than a fixed 180) is what lets a MELEE loadout — the default crude
+ * sword included — actually close to swinging range instead of kiting a boss
+ * it can never touch; a ranged loadout still keeps its distance.
+ */
 function pushBoss(state: GameState, jumpTravel = false): GameInput {
   const boss = state.enemies.find((e) => enemyDef(e.defId).role === "boss");
   const target = boss?.pos ?? furthestLandmark(state);
   if (!target) return idleInput();
   const d = distance(state.player.pos, target);
   const jump = jumpTravel && state.player.z === 0;
-  if (d > 240) return steer(state, target, jump);
-  return steer(state, holdOff(state, target, 180), jump);
+  const hold = weaponDef(state.player.equipment.weapon.defId).range * 0.7;
+  if (d > hold + 60) return steer(state, target, jump);
+  return steer(state, holdOff(state, target, hold), jump);
 }
 
 /**

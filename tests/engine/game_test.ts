@@ -25,6 +25,7 @@ import {
 import {
   clearStage,
   DT,
+  equipBlaster,
   idle,
   jumpOnce,
   makeEnemy,
@@ -72,7 +73,7 @@ describe("createGame", () => {
     expect(state.landmarks.some((l) => l.kind === "lander")).toBe(true);
     expect(dist(state.player.pos, state.playerSpawn)).toBe(0);
     expect(state.decor.length).toBeGreaterThan(0);
-    expect(state.player.equipment.weapon.defId).toBe("blaster");
+    expect(state.player.equipment.weapon.defId).toBe("crude_sword");
     expect(state.level.biome).toBe("test");
   });
 
@@ -182,7 +183,7 @@ describe("jumping", () => {
     step(state, jumpOnce, DT);
     run(state, idle, 100, (s) => s.player.z > JUMP.dodgeHeight + 10);
     expect(state.player.z).toBeGreaterThan(JUMP.dodgeHeight);
-    // Unkillable so the auto-blaster can't clear it before the landing.
+    // Unkillable so the auto-attack can't clear it before the landing.
     const ghost = makeEnemy({
       pos: { ...state.player.pos },
       hp: 1_000_000,
@@ -203,7 +204,7 @@ describe("jumping", () => {
 
 describe("weapon", () => {
   it("auto-fires only when a monster is in range", () => {
-    const state = startGame();
+    const state = equipBlaster(startGame());
     const range = weaponDef("blaster").range;
     state.enemies = [
       makeEnemy({
@@ -225,10 +226,10 @@ describe("weapon", () => {
   });
 
   it("kills a monster after enough hits and records the kill", () => {
-    const state = startGame();
+    const state = startGame(); // default crude sword: melee, so keep it close
     stopWaves(state);
     state.enemies = [
-      makeEnemy({ pos: { x: state.player.pos.x + 80, y: state.player.pos.y } }),
+      makeEnemy({ pos: { x: state.player.pos.x + 30, y: state.player.pos.y } }),
     ];
     state.items = [];
     run(state, idle, 2000, (s) => s.enemies.length === 0);
@@ -238,7 +239,7 @@ describe("weapon", () => {
   });
 
   it("fires from the player's height mid-jump and the shot sinks back", () => {
-    const state = startGame();
+    const state = equipBlaster(startGame());
     clearStage(state);
     state.player.z = 40; // mid-jump
     state.enemies.push(
@@ -256,7 +257,7 @@ describe("weapon", () => {
   });
 
   it("ignores monsters outside the given view — they aren't on screen yet", () => {
-    const state = startGame();
+    const state = equipBlaster(startGame());
     clearStage(state);
     const { x, y } = state.player.pos;
     state.enemies.push(makeEnemy({ pos: { x: x + 150, y } }));
@@ -588,7 +589,8 @@ describe("win and lose", () => {
     state.enemies = [boss];
     boss.hp = 1;
     boss.spoke = true; // skip his arrival scene: this test is the victory flow
-    boss.pos = { x: state.player.pos.x + 60, y: state.player.pos.y };
+    // Within the default crude sword's melee reach so a swing finishes him.
+    boss.pos = { x: state.player.pos.x + 30, y: state.player.pos.y };
     boss.speed = 0;
 
     run(state, idle, 500, (s) => s.enemies.length === 0);

@@ -17,6 +17,7 @@ import {
   scaledMobCount,
 } from "./defs/difficulties.ts";
 import { enemyDef } from "./defs/enemies/index.ts";
+import { weaponDef } from "./defs/equipment.ts";
 import { LEVEL_ORDER, levelDef, type LevelDef } from "./defs/levels/index.ts";
 import { rollEquipment } from "./items.ts";
 import { evolutionHpMult } from "./menace.ts";
@@ -172,13 +173,19 @@ export function createGame(
         luck: 0,
       },
       equipment: {
-        // The starting sidearm: a plain blaster.
+        // The default starting weapon: the CRUDE SWORD off the hero's wall —
+        // what he grabs to go after Ada. Melee, and unlike the old sidearm it
+        // is FINITE: minted with its catalog durability so it wears out and
+        // has to be replaced by whatever the moon yields (see wearEquipped
+        // weapon). When it finally shatters with an empty bag the engine draws
+        // the unbreakable blaster fallback.
         weapon: {
           id: nextId++,
-          defId: "blaster",
+          defId: "crude_sword",
           slot: "weapon",
           tier: "regular",
           affixes: [],
+          durability: weaponDef("crude_sword").durability,
         },
         suit: null,
         charm: null,

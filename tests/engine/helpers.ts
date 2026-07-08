@@ -22,6 +22,7 @@ export {
   stopWaves,
   clearStage,
   run,
+  equipBlaster,
 } from "../helpers.ts";
 
 /**

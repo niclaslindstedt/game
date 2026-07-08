@@ -6,7 +6,15 @@ import { describe, expect, it } from "vitest";
 
 import { isBetterEquipment, rollEquipment, step, weaponDef } from "@game/core";
 import type { Equipment, GameState } from "@game/core";
-import { clearStage, DT, idle, makeEnemy, run, startGame } from "./helpers.ts";
+import {
+  clearStage,
+  DT,
+  equipBlaster,
+  idle,
+  makeEnemy,
+  run,
+  startGame,
+} from "./helpers.ts";
 
 function weapon(id: number, defId: string, durability?: number): Equipment {
   return {
@@ -41,14 +49,18 @@ describe("weapon durability", () => {
     expect(suit.durability).toBeUndefined();
   });
 
-  it("the starting sidearm is unbreakable", () => {
+  it("the default starting weapon is the breakable crude sword", () => {
     const state = startGame();
-    expect(state.player.equipment.weapon.durability).toBeUndefined();
+    const weapon = state.player.equipment.weapon;
+    expect(weapon.defId).toBe("crude_sword");
+    // Unlike the old unbreakable sidearm, the crude sword carries finite
+    // durability — it is a rough blade that wears out.
+    expect(weapon.durability).toBe(weaponDef("crude_sword").durability);
+    // And every swing spends it (the punching bag sits in melee reach).
     clearStage(state);
     addPunchingBag(state);
-    run(state, idle, 500);
-    expect(state.player.equipment.weapon.defId).toBe("blaster");
-    expect(state.events.every((e) => e.type !== "weaponBroke")).toBe(true);
+    run(state, idle, 200, (s) => s.stats.damageDealt > 0); // one swing
+    expect(weapon.durability).toBeLessThan(weaponDef("crude_sword").durability);
   });
 
   it("each attack spends one point of durability", () => {
@@ -155,8 +167,9 @@ describe("same-weapon pickups refresh durability", () => {
   });
 
   it("the unbreakable sidearm is never traded for a breakable copy", () => {
-    const state = startGame(); // blaster sidearm, durability undefined
+    const state = equipBlaster(startGame()); // unbreakable blaster in hand
     expect(state.player.equipment.weapon.defId).toBe("blaster");
+    expect(state.player.equipment.weapon.durability).toBeUndefined();
     const looted = weapon(60, "blaster", weaponDef("blaster").durability);
     expect(isBetterEquipment(state, looted)).toBe(false);
   });

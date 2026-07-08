@@ -27,6 +27,7 @@ import {
 import {
   clearStage,
   DT,
+  equipBlaster,
   idle,
   makeEnemy,
   run,
@@ -165,7 +166,7 @@ describe("elite ambushes", () => {
   });
 
   it("forfeits the arrival scene — never the drops or last words — mid-rush", () => {
-    const state = startGame();
+    const state = equipBlaster(startGame()); // ranged: kill the rush at reach
     clearStage(state);
     // Inside blaster range but outside the speak radius: the bolt reaches
     // the rushing speaker well before the speaker reaches its mark.
