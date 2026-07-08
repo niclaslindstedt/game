@@ -1096,6 +1096,101 @@ body {
   filter: drop-shadow(0 0 4px rgba(140, 205, 255, 0.95));
 }
 
+/* The active-powerup strip: a used ability lights up here just above the dock
+   and counts down like a WoW cooldown. Same size/corner as the dock so the two
+   read as one cluster; purely informational, so it never takes pointer input. */
+.active-powerups {
+  position: absolute;
+  bottom: calc(max(0.75rem, env(safe-area-inset-bottom)) + 4.35rem);
+  display: flex;
+  gap: 0.6rem;
+  pointer-events: none;
+}
+
+.active-powerups.dock-left {
+  left: max(0.75rem, env(safe-area-inset-left));
+}
+
+.active-powerups.dock-right {
+  right: max(0.75rem, env(safe-area-inset-right));
+}
+
+/* One running ability: a glowing amber socket (distinct from the dock's blue
+   "banked" chrome) that pops in when the powerup fires. `--cd` is the fraction
+   of time remaining (1 → just used, 0 → expiring), written each frame by the
+   render loop. */
+.active-powerup {
+  --cd: 1;
+  position: relative;
+  width: 3.75rem;
+  height: 3.75rem;
+  display: grid;
+  place-items: center;
+  border: 2px solid #ffcf4d;
+  border-radius: 8px;
+  background: #4a3a12;
+  box-shadow:
+    0 0 12px rgba(255, 207, 77, 0.85),
+    inset 0 0 8px rgba(255, 207, 77, 0.35);
+  image-rendering: pixelated;
+  overflow: hidden;
+  animation: active-powerup-pop 220ms ease-out;
+}
+
+.active-powerup .powerup-icon {
+  filter: drop-shadow(0 0 4px rgba(255, 224, 150, 0.95));
+}
+
+/* The cooldown sweep: a translucent dark wedge over the icon that unwinds
+   clockwise from 12 o'clock as `--cd` runs down, revealing the icon as the
+   ability expires — the WoW cooldown look. */
+.active-powerup-sweep {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background: conic-gradient(
+    transparent calc((1 - var(--cd)) * 360deg),
+    rgba(6, 8, 12, 0.62) 0
+  );
+}
+
+/* Whole-second countdown in the corner, filled in by the render loop. */
+.active-powerup-secs {
+  position: absolute;
+  right: 2px;
+  bottom: 1px;
+  padding: 0 2px;
+  font-size: 0.85rem;
+  font-weight: 700;
+  line-height: 1;
+  color: #fff4d6;
+  text-shadow:
+    0 0 2px #0b0d10,
+    0 1px 1px #0b0d10,
+    0 0 4px rgba(0, 0, 0, 0.9);
+  pointer-events: none;
+}
+
+@keyframes active-powerup-pop {
+  0% {
+    transform: scale(0.4);
+    opacity: 0;
+  }
+  60% {
+    transform: scale(1.12);
+    opacity: 1;
+  }
+  100% {
+    transform: scale(1);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .active-powerup {
+    animation-duration: 90ms;
+  }
+}
+
 /* While a powerup is being dragged out of its slot, the slot reads as an empty
    red-dashed socket — the icon has "lifted off" and follows the pointer, and
    the red warns the release will trash it. */
@@ -1113,7 +1208,8 @@ body {
    their icons) so a vertical grip keeps them tappable without dominating the
    screen. Matches the HUD's portrait breakpoint above. */
 @media (max-aspect-ratio: 4/3) {
-  .powerup-slot {
+  .powerup-slot,
+  .active-powerup {
     width: 1.9rem;
     height: 1.9rem;
     border-radius: 5px;
@@ -1124,8 +1220,18 @@ body {
     height: 1.3rem;
   }
 
-  .powerup-dock {
+  .powerup-dock,
+  .active-powerups {
     gap: 0.4rem;
+  }
+
+  /* Riding just above the shrunken dock (1.9rem slot + 0.4rem gap). */
+  .active-powerups {
+    bottom: calc(max(0.75rem, env(safe-area-inset-bottom)) + 2.3rem);
+  }
+
+  .active-powerup-secs {
+    font-size: 0.6rem;
   }
 
   .powerup-discard-hint {
