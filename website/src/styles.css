@@ -12,11 +12,12 @@
 :root {
   color-scheme: dark;
 
-  /* The framework's UI components (e.g. the PWA UpdateToast) paint with slot
-     tokens — bg-surface, text-fg, border-line, text-muted, text-accent. Those
-     are only defined under a `[data-theme]` palette, which this game never
-     sets, so without defaults they resolve to nothing and the toast renders
-     transparent. Pin solid, on-brand values so framework surfaces are opaque. */
+  /* Any framework UI component paints with slot tokens — bg-surface, text-fg,
+     border-line, text-muted, text-accent. Those are only defined under a
+     `[data-theme]` palette, which this game never sets, so without defaults
+     they resolve to nothing and the surface renders transparent. Pin solid,
+     on-brand values so framework surfaces are opaque. (The PWA update prompt
+     is now the game's own sprite-styled UpdateModal, not a framework surface.) */
   --surface: #161b22;
   --surface-2: #1f262e;
   --surface-3: #0b0d10;
@@ -663,6 +664,88 @@ body {
   color: #7a8088;
   font-variant-numeric: tabular-nums;
   z-index: 1;
+}
+
+/* ---- PWA update prompt (sprite-styled "a new version is ready") ---------- */
+
+/* A bottom-anchored pixel panel in the same dressing as the intro/pause
+   boxes: solid slab, 3px border, chunky drop shadow. Non-blocking, so the
+   menu stays usable while it sits parked. */
+.update-modal {
+  position: fixed;
+  left: 50%;
+  bottom: max(1rem, env(safe-area-inset-bottom));
+  transform: translateX(-50%);
+  z-index: 20;
+  display: flex;
+  align-items: center;
+  gap: 0.75rem 1rem;
+  /* Wrap the actions below the copy when the row can't fit — e.g. large
+     screens render the whole UI at 2× (styles.css breakpoint), which can
+     outgrow the width cap. Wrapping keeps the buttons off the text instead
+     of overlapping it. */
+  flex-wrap: wrap;
+  justify-content: center;
+  max-width: min(94vw, 42rem);
+  padding: 1rem 1.25rem;
+  background: #10151c;
+  border: 3px solid #1d2530;
+  box-shadow: 0 8px 0 rgba(0, 0, 0, 0.4);
+  animation: update-modal-in 0.24s steps(4) both;
+}
+
+/* Slide up in stepped frames so the entrance reads as pixel-art, not a
+   smooth CSS ease. */
+@keyframes update-modal-in {
+  from {
+    opacity: 0;
+    transform: translate(-50%, 1.5rem);
+  }
+  to {
+    opacity: 1;
+    transform: translate(-50%, 0);
+  }
+}
+
+.update-modal-icon {
+  width: 2.75rem;
+  image-rendering: pixelated;
+  /* Reuse the menu cursor's bob so the upgrade sprite feels alive. */
+  animation: menu-cursor-bob 0.8s steps(2) infinite;
+}
+
+.update-modal-copy {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 0.4rem;
+  /* Grow to fill the row so the actions sit hard right when they share the
+     line; when the row wraps, this drops the actions onto their own line. */
+  flex: 1 1 auto;
+}
+
+.update-modal-actions {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+}
+
+/* A tight square X next to the chunky UPDATE button. */
+.update-modal-dismiss {
+  padding: 0.75rem 1rem;
+}
+
+/* Landscape phones are short: drop the bobbing icon and tighten the panel so
+   it never eats the menu at the reference 844×390 viewport. */
+@media (max-height: 480px) {
+  .update-modal {
+    gap: 0.75rem;
+    padding: 0.75rem 1rem;
+  }
+
+  .update-modal-icon {
+    display: none;
+  }
 }
 
 .visually-hidden {
