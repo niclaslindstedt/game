@@ -102,7 +102,10 @@ run against synthetic fixtures with no shipped content (see
   `loot.abilityPool`. Pickups are banked into `player.heldAbilities` (up
   to `HELD_ITEMS.cap`) and spent with the `useItem` input, or dragged out
   of their dock slot to be discarded (`discardHeldAbility`) when the bank
-  is full of powers you don't want.
+  is full of powers you don't want. A `stackable` power (fire orbs, storm
+  cell) runs several copies at once — each activation adds a fresh instance,
+  so two storm cells strike twice as often; a non-stackable one (the magnet)
+  refuses to re-enable while a copy is running, keeping the pickup banked.
 - **`src/game/defs/difficulties.ts`** — the difficulty ladder (EASY →
   MEDIUM → HARD → NIGHTMARE → JESUS CHRIST!), chosen on the main menu and
   layered over every level. A rung turns a whole rack of knobs: the hero's

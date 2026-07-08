@@ -417,6 +417,8 @@ function stepPlayer(
  * (the powerup dock), and removing it shifts the rest down so the dock stays
  * packed oldest-first. grantAbility emits the abilityStarted event. With
  * empty hands, or an out-of-range index, the input is a quiet no-op / oldest.
+ * A non-stackable power that is already running refuses to re-activate
+ * (grantAbility returns false), so its pickup stays banked rather than wasted.
  */
 function stepUseItem(state: GameState, input: GameInput): void {
   if (!input.useItem) return;
@@ -427,14 +429,17 @@ function stepUseItem(state: GameState, input: GameInput): void {
     input.useItemIndex < held.length
       ? input.useItemIndex
       : 0;
-  const [defId] = held.splice(index, 1);
+  const defId = held[index];
   if (!defId) return;
   const def = abilityDef(defId);
   if (def.nuke) {
+    held.splice(index, 1);
     detonateNuke(state, def.nuke.radius);
     return;
   }
-  grantAbility(state, defId);
+  // Only consume the banked pickup if the power actually started; a refused
+  // re-activation (a running non-stackable power) leaves the dock untouched.
+  if (grantAbility(state, defId)) held.splice(index, 1);
 }
 
 /**

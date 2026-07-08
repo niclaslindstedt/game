@@ -10,23 +10,29 @@ import { effectiveStat } from "./items.ts";
 import type { ActiveAbility, GameState, Player } from "./types.ts";
 
 /**
- * Start (or refresh) an ability on the player. Picking up an ability that is
- * already running resets its timer instead of stacking a second copy.
+ * Activate an ability on the player. A `stackable` power adds a fresh copy on
+ * every activation, so two STORM CELLs strike twice as often and two rings of
+ * FIRE ORBS interleave into a denser sweep. A non-stackable power refuses to
+ * start a second copy while one is still running (the MAGNET — its pull can't
+ * stack), leaving nothing changed. Returns whether a copy actually started, so
+ * the caller can keep a refused pickup banked instead of consuming it.
  */
-export function grantAbility(state: GameState, defId: string): void {
+export function grantAbility(state: GameState, defId: string): boolean {
   const def = abilityDef(defId);
-  const running = state.player.abilities.find((a) => a.defId === defId);
-  if (running) {
-    running.remainingMs = def.durationMs;
-  } else {
-    state.player.abilities.push({
-      defId,
-      remainingMs: def.durationMs,
-      angle: 0,
-      cooldownMs: 0,
-    });
-  }
+  const running = state.player.abilities.filter((a) => a.defId === defId);
+  if (running.length > 0 && !def.stackable) return false;
+  state.player.abilities.push({
+    defId,
+    remainingMs: def.durationMs,
+    // Phase a stacked orbit half a step off the copies already up so its orbs
+    // interleave with the existing ring instead of hiding right behind it.
+    angle: def.orbit
+      ? ((Math.PI / def.orbit.count) * running.length) % (Math.PI * 2)
+      : 0,
+    cooldownMs: 0,
+  });
   state.events.push({ type: "abilityStarted", defId });
+  return true;
 }
 
 /**
