@@ -37,7 +37,7 @@ function stepThrough(state: GameState, steps: number): void {
     state.player.vz = 0;
     state.player.weaponCooldownMs = 1_000_000;
     step(state, idle, DT);
-    while (state.player.pendingStatPoints > 0) allocateStat(state, "health");
+    while (state.player.pendingStatPoints > 0) allocateStat(state, "stamina");
   }
 }
 

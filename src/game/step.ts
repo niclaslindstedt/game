@@ -38,6 +38,7 @@ import {
   PLAYER,
   PROJECTILE,
   RUN,
+  STAMINA,
   STATS,
 } from "./config.ts";
 import { spawnEnemy } from "./create.ts";
@@ -53,6 +54,8 @@ import { weaponDef } from "./defs/equipment.ts";
 import { levelDef } from "./defs/levels/index.ts";
 import {
   addToInventory,
+  armorInfo,
+  effectiveStat,
   enemyCritChance,
   equipmentName,
   isBetterEquipment,
@@ -299,19 +302,22 @@ function stepPlayer(
   player.hurtFlashMs = Math.max(0, player.hurtFlashMs - dtMs);
   player.moving = false;
 
+  // A gentle nudge of the dpad walks slowly; a full push runs. The throttle
+  // never fully stops the walk (a held-but-centered finger still creeps) and
+  // defaults to full speed for headless callers that omit it.
+  const throttle = clamp(input.throttle ?? 1, 0, 1);
+  // An empty stamina pool caps the top speed to a winded jog until it recovers.
+  const staminaFactor = player.stamina > 0 ? 1 : STAMINA.emptySpeedFactor;
+
   if (
     input.steering &&
     distance(player.pos, input.target) > PLAYER.arriveRadius
   ) {
     const before = player.pos;
-    // A gentle nudge of the dpad walks slowly; a full push runs. The throttle
-    // never fully stops the walk (a held-but-centered finger still creeps)
-    // and defaults to full speed for headless callers that omit it.
-    const throttle = clamp(input.throttle ?? 1, 0, 1);
     const next = moveToward(
       player.pos,
       input.target,
-      playerSpeed(state) * throttle * dt,
+      playerSpeed(state) * throttle * staminaFactor * dt,
     );
     player.facing = direction(before, input.target);
     // The sprite flip only follows decisively horizontal movement —
@@ -323,6 +329,21 @@ function stepPlayer(
     state.moveSpawnCredit += distance(before, next);
     player.pos = next;
     player.moving = true;
+  }
+
+  // Stamina: a decisive run spends it, walking or standing recovers it. The
+  // STAMINA stat deepens the reserve (computeMaxStamina) and, here, both slows
+  // the drain and quickens the regen.
+  const staminaStat = effectiveStat(state, "stamina");
+  const running = player.moving && throttle > STAMINA.runThreshold;
+  if (running) {
+    const drain =
+      STAMINA.drainPerSec / (1 + staminaStat * STAMINA.drainReductionPerPoint);
+    player.stamina = Math.max(0, player.stamina - drain * dt);
+  } else {
+    const regen =
+      STAMINA.regenPerSec * (1 + staminaStat * STAMINA.regenPerPoint);
+    player.stamina = Math.min(player.maxStamina, player.stamina + regen * dt);
   }
 
   // Jump: only from the ground. Gravity is the level's — the moon's low g
@@ -776,7 +797,20 @@ function stepEnemies(state: GameState, dt: number, dtMs: number): void {
           (crit ? STATS.critMultiplier : 1) *
           (lastStand ? LAST_STAND.damageMultiplier : 1),
       );
-      player.hp -= damage;
+      // The suit's plating soaks its grade's share of the physical hit, up to
+      // whatever armor is left; the rest bites into HP. A bare hero (no
+      // armored suit) takes the blow in full.
+      const armor = armorInfo(state);
+      let hpDamage = damage;
+      if (armor && player.armor > 0) {
+        const soaked = Math.min(
+          Math.round(damage * armor.reduction),
+          player.armor,
+        );
+        player.armor -= soaked;
+        hpDamage = damage - soaked;
+      }
+      player.hp -= hpDamage;
       player.hurtFlashMs = 250;
       enemy.contactCooldownMs = def.contactCooldownMs;
       state.stats.damageTaken += damage;

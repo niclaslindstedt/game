@@ -6,7 +6,8 @@
 // at scale 1), milliseconds, hit points.
 
 export const PLAYER = {
-  /** Base max hp before HEALTH stat points and equipment bonuses. */
+  /** Base max hp before equipment bonuses (no stat feeds hp — STAMINA now
+   * drives the sprint pool instead; see STAMINA / computeMaxStamina). */
   maxHp: 100,
   /**
    * Base world units per second while the pointer is held (SPEED adds). Kept
@@ -240,12 +241,11 @@ export const MENACE = {
  * SPEED; INTELLIGENCE powers magic weapons (their damage AND speed) and, for
  * every weapon, lengthens RANGE and widens the melee AoE cone (plus the magnet
  * pull, in abilities.ts); SPEED quickens the walk; LUCK finds better items,
- * lands crits, and shrugs off enemies' critical hits; HEALTH is raw max hp.
- * The class→stat maps live in items.ts (`DAMAGE_STAT`, `SPEED_STAT`).
+ * lands crits, and shrugs off enemies' critical hits; STAMINA deepens the
+ * sprint pool and quickens its recovery (see STAMINA below). The class→stat
+ * maps live in items.ts (`DAMAGE_STAT`, `SPEED_STAT`).
  */
 export const STATS = {
-  /** Max hp per HEALTH point (current hp rises along with it). */
-  healthPerPoint: 20,
   /** Move-speed multiplier added per SPEED point (+8% each). */
   speedPerPoint: 0.08,
   /** Damage multiplier per point of the weapon's DAMAGE stat (STR for melee &
@@ -298,6 +298,51 @@ export const STATS = {
   /** Extra chance per LUCK point that a drop upgrades its tier roll. */
   tierChancePerLuck: 0.04,
   critMultiplier: 2,
+} as const;
+
+/**
+ * Armor grades a suit can carry. Each grade SOAKS `reduction` of every
+ * incoming physical hit — the soaked share comes off the armor bar, the rest
+ * off HP — until the pool (`amount`) is spent, after which the suit is bare
+ * and every hit lands in full. A 100-damage blow against a full GREEN (100,
+ * 25%) suit takes 75 to HP and 25 off the armor, exactly as designed. The
+ * three grades are tuned to compare cleanly; retune one line to rebalance.
+ */
+export const ARMOR: Record<
+  "green" | "yellow" | "red",
+  { amount: number; reduction: number }
+> = {
+  green: { amount: 100, reduction: 0.25 },
+  yellow: { amount: 150, reduction: 0.5 },
+  red: { amount: 200, reduction: 0.75 },
+} as const;
+
+/**
+ * Stamina — the sprint pool. Running (a decisive push, throttle above
+ * `runThreshold`) drains it; walking or standing still lets it recover.
+ * While any stamina is left the player runs at full speed; once it hits zero
+ * the top speed is capped at `emptySpeedFactor` until it recovers. The
+ * STAMINA stat deepens the pool AND — matching "drains slower, regains
+ * faster" — cuts the drain rate and quickens the regen. Units: stamina points
+ * (pool), points/second (rates).
+ */
+export const STAMINA = {
+  /** Pool at zero STAMINA stat. */
+  base: 100,
+  /** Extra max stamina per STAMINA point (current rises with it). */
+  maxPerPoint: 8,
+  /** Drained per second at a full run, at zero STAMINA stat. */
+  drainPerSec: 22,
+  /** Each STAMINA point divides the drain by `1 + points·this` (drains slower). */
+  drainReductionPerPoint: 0.12,
+  /** Regained per second while walking/idle, at zero STAMINA stat. */
+  regenPerSec: 18,
+  /** Each STAMINA point multiplies the regen by `1 + points·this` (regains faster). */
+  regenPerPoint: 0.12,
+  /** Throttle above which movement counts as a run that drains stamina. */
+  runThreshold: 0.5,
+  /** Top-speed multiplier once the pool is empty (a winded jog). */
+  emptySpeedFactor: 0.5,
 } as const;
 
 /**

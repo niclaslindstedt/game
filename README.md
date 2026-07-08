@@ -92,7 +92,9 @@ and something enormous haunts the old flag.
   **longer range**, and **widens the melee cleave** — a swing only strikes the
   two nearest foes until INT raises that cap, so mowing down the crowd is an
   INT build, not a free perk of a wide sword; **SPEED** quickens the walk;
-  **LUCK** lands crits and finds better loot; **HEALTH** is raw max HP. The
+  **LUCK** lands crits and finds better loot; **STAMINA** deepens your sprint
+  pool and quickens its recovery, so you run at full speed longer before the
+  winded half-speed jog. The
   base fire rate is deliberately slow, so a build is what wins the cadence
   back, and a new **(i)** button on the level-up screen spells out exactly
   what each stat does. Golden

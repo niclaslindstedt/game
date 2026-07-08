@@ -281,6 +281,12 @@ body {
   background: #9aa3ad;
 }
 
+/* Stamina: a cool cyan sprint gauge, distinct from the red HP and the
+   grade-tinted armor above it. */
+.hud-bar-fill.stamina-fill {
+  background: linear-gradient(180deg, #5fd0e8, #2f8fb0);
+}
+
 /* The weapon widget: a prominent bordered slot tinted by the equipped
    weapon's class (colors in tiers.ts). Tapping it toggles the switcher. */
 .wpn-control {
@@ -881,26 +887,33 @@ body {
   image-rendering: pixelated;
 }
 
-/* Only filled slots take taps and show the raised "ready" chrome. */
+/* Only filled slots take taps and show the raised "ready" chrome — a charged
+   electric-blue socket with a blue glow so a banked powerup reads as "live". */
 .powerup-slot.filled {
   pointer-events: auto;
   cursor: pointer;
   border-style: solid;
-  border-color: #9a5fc0;
-  background: #d9a0f0;
+  border-color: #4da6ff;
+  background: #7cc4ff;
   box-shadow:
-    0 4px 0 #9a5fc0,
-    0 6px 0 rgba(0, 0, 0, 0.4);
+    0 4px 0 #2f6fb0,
+    0 6px 0 rgba(0, 0, 0, 0.4),
+    0 0 12px rgba(77, 166, 255, 0.85);
 }
 
 .powerup-slot.filled:active {
   transform: translateY(4px);
-  box-shadow: 0 0 0 #9a5fc0;
+  box-shadow: 0 0 10px rgba(77, 166, 255, 0.85);
 }
 
 .powerup-icon {
   width: 2.5rem;
   height: 2.5rem;
+}
+
+/* The banked powerup icon itself glows blue. */
+.powerup-slot.filled .powerup-icon {
+  filter: drop-shadow(0 0 4px rgba(140, 205, 255, 0.95));
 }
 
 /* While a powerup is being dragged out of its slot, the slot reads as an empty

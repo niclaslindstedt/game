@@ -375,6 +375,12 @@ export function TitleScreen({
       ];
     }
     return [backTo("main", 2)];
+    // `settingsTick` is an intentional invalidation key: the menu reads the
+    // non-React settings store through getSettings(), so bumping the tick after
+    // updateSettings is what rebuilds this list with the fresh values. eslint
+    // can't see that dependency through getSettings(), so it wrongly flags the
+    // tick as unnecessary — keep it and silence the false positive.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [screen, onStart, settingsTick, difficulty]);
 
   // The HIGH SCORES board is steered on two axes rather than a cursor list:

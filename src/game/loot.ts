@@ -307,8 +307,10 @@ export function grantXp(state: GameState, amount: number): void {
       LEVELING.baseXpToLevel * Math.pow(LEVELING.xpGrowth, player.level - 1),
     );
     player.pendingStatPoints += LEVELING.statPointsPerLevel;
-    // A new level starts at full strength: the ding is also the heal.
+    // A new level starts at full strength: the ding is also the heal, and it
+    // tops off the sprint pool too.
     player.hp = player.maxHp;
+    player.stamina = player.maxStamina;
     state.events.push({ type: "levelUp", level: player.level });
   }
   if (player.pendingStatPoints > 0) state.phase = "levelup";

@@ -17,6 +17,7 @@ import {
 import { createPortal } from "react-dom";
 
 import {
+  armorInfo,
   computeMaxHp,
   discardFromInventory,
   effectiveStat,
@@ -68,7 +69,7 @@ const SLOTS: { slot: EquipSlot; label: string }[] = [
 ];
 
 const STAT_LABELS: Record<StatName, string> = {
-  health: "HEALTH",
+  stamina: "STAMINA",
   strength: "STRENGTH",
   dexterity: "DEXTERITY",
   intelligence: "INTELLECT",
@@ -556,6 +557,30 @@ export function InventoryPanel({
                     : null
                 }
               />
+              {(() => {
+                const armor = armorInfo(state);
+                const previewArmor = preview ? armorInfo(preview) : null;
+                const armorColor = armor
+                  ? { green: "#5fd97a", yellow: "#ffe14d", red: "#e0603a" }[
+                      armor.grade
+                    ]
+                  : "#9aa3ad";
+                return (
+                  <StatLine
+                    font={font}
+                    label="ARMOR"
+                    value={String(armor?.max ?? 0)}
+                    color={armorColor}
+                    chip={
+                      preview
+                        ? deltaChip(
+                            (previewArmor?.max ?? 0) - (armor?.max ?? 0),
+                          )
+                        : null
+                    }
+                  />
+                );
+              })()}
               <StatLine
                 font={font}
                 label="DMG"
