@@ -58,9 +58,12 @@ export const SPACEZ_HQ: LevelDef = {
     // fill in just behind them.
     { enemy: "intern", count: 22, band: [0, 0.22] },
     { enemy: "scientist", count: 14, band: [0.05, 0.35] },
-    { enemy: "engineer", count: 6, band: [0.45, 0.8] },
-    { enemy: "guard", count: 6, band: [0.55, 0.95] },
-    { enemy: "hazmat", count: 4, band: [0.7, 1.05] },
+    { enemy: "engineer", count: 5, band: [0.45, 0.8] },
+    { enemy: "guard", count: 4, band: [0.55, 0.95] },
+    { enemy: "hazmat", count: 3, band: [0.7, 1.05] },
+    // OPTIMUS units patrol the deep floor: a handful of tanks seeded through
+    // the labs and cleanroom approach, replacing some of the human muscle.
+    { enemy: "optimus", count: 4, band: [0.5, 1.0] },
     // The four staffers who know too much, pinned along the route so the
     // plot unspools in walking order: launches → Ada → the vault → the
     // Armstrong tease. Each rushes into view and talks before it fights.
@@ -84,8 +87,11 @@ export const SPACEZ_HQ: LevelDef = {
       { enemy: "intern", count: 380, window: [0, 0.5] },
       { enemy: "scientist", count: 300, window: [0.2, 0.7] },
       { enemy: "engineer", count: 200, window: [0.4, 0.85] },
-      { enemy: "guard", count: 150, window: [0.55, 0.95] },
-      { enemy: "hazmat", count: 90, window: [0.7, 1] },
+      { enemy: "guard", count: 110, window: [0.55, 0.95] },
+      { enemy: "hazmat", count: 70, window: [0.7, 1] },
+      // The robot reinforcements ramp in with the back half of the shift —
+      // fewer bodies than the staff lines, but each one is a wall that hits.
+      { enemy: "optimus", count: 55, window: [0.55, 1] },
     ],
   },
   // Three wall lines carve the floor into lobby → labs → cleanroom, each

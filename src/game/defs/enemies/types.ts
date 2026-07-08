@@ -24,9 +24,10 @@ export type EnemyDef = {
   sprite: string;
   /**
    * Hit-splash family: what sprays when this enemy is struck. Ghosts
-   * splash "ecto"; everything warm-blooded defaults to "blood".
+   * splash "ecto", machines throw "sparks"; everything warm-blooded
+   * defaults to "blood".
    */
-  gore?: "blood" | "ecto";
+  gore?: "blood" | "ecto" | "sparks";
   hp: number;
   /** World px/s before per-instance jitter. */
   speed: number;
@@ -75,6 +76,21 @@ export type EnemyDef = {
      * `speed`.
      */
     rushSpeed?: number;
+  };
+  /**
+   * A tougher regular monster's richer drop profile. Minions with no `loot`
+   * roll the level's loot table (see loot.ts `dropMinionLoot`); this sweetens
+   * that roll for a heavy hitter without promoting it to guaranteed
+   * elite-style drops — `dropBonus` is added to the roll chance and
+   * `tierBonus` to the tier roll when it lands, the same knobs the menace
+   * evolution applies. Ignored when `loot` is set (elites/bosses pay their
+   * pinned drops instead).
+   */
+  dropProfile?: {
+    /** Added to the base drop chance for this mob's kills. */
+    dropBonus?: number;
+    /** Added to the tier roll when this mob's kill drops equipment. */
+    tierBonus?: number;
   };
   /** Guaranteed drops (bosses, elites). Rolled drops are the level's loot
    * table. */

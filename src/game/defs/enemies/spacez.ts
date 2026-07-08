@@ -1,9 +1,10 @@
 // SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
 // SpaceZ HQ (level 1) roster: the night shift, weakest to strongest —
 // interns, lab scientists, propulsion engineers, security guards, hazmat
-// techs — the four staffers who know too much (elites), and MUSKRAT, the
-// mutant rat who ate the drive ingredient (boss). Registered into ENEMY_DEFS
-// by ./index.ts.
+// techs, and the OPTIMUS units SpaceZ rolled out to replace the humans that
+// asked too many questions — the four staffers who know too much (elites),
+// and MUSKRAT, the mutant rat who ate the drive ingredient (boss). Registered
+// into ENEMY_DEFS by ./index.ts.
 
 import type { EnemyDef } from "./types.ts";
 
@@ -79,6 +80,30 @@ export const SPACEZ_ENEMIES: Record<string, EnemyDef> = {
     critChance: 0.1,
     contactCooldownMs: 800,
     ai: { aggroRadius: 900 },
+  },
+  // OPTIMUS — the humanoid robots SpaceZ swapped in for the night shift it no
+  // longer trusts. Not a story unique (no dialogue, no keycard) — just a
+  // regular monster built like a tank and swinging like a wrecking ball: the
+  // toughest thing on the floor short of the elites, and it HITS HARD. It
+  // marches at a steady, unbothered pace, so it's a threat to walk around
+  // rather than outrun. The reward for taking one down is a fat, richer-tier
+  // drop (`dropProfile`) — worth going out of your way for.
+  optimus: {
+    id: "optimus",
+    name: "OPTIMUS",
+    role: "minion",
+    sprite: "optimus",
+    gore: "sparks",
+    hp: 185,
+    speed: 20,
+    radius: 10,
+    contactDamage: 34,
+    critChance: 0.16,
+    contactCooldownMs: 650,
+    ai: { aggroRadius: 1050 },
+    // A regular monster with an elite's payoff: ~5× the base drop rate and a
+    // meaningfully richer tier when it lands.
+    dropProfile: { dropBonus: 0.4, tierBonus: 0.3 },
   },
   // ---- SpaceZ HQ elites — the four staffers who know too much. Each is a
   // hand-placed unique (LevelDef pins them), rushes the player on approach,
