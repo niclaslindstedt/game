@@ -511,6 +511,11 @@ export function TitleScreen({
         <span className="title-asteroid title-asteroid-3" />
       </div>
       <div className="title-moon" aria-hidden="true" />
+      {/* Easter egg: a lone sun slowly glares across the sky roughly every few
+          minutes, lifting the moon from new to full before it sets again. All
+          pure CSS (see .title-sun / .title-moon phase animations in styles). */}
+      <div className="title-sun" aria-hidden="true" />
+      <div className="title-sun-glare" aria-hidden="true" />
 
       <header className="title-logo">
         <h1 className="visually-hidden">{IDENTITY.title}</h1>

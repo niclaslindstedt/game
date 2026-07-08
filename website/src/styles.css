@@ -624,7 +624,17 @@ body {
   }
 }
 
-/* The moon the trail leads to, hanging in the corner. */
+/* The full sweep of the sun-glare Easter egg — the sun's slow arc, the moon's
+   new→full phase, and the warm screen wash all share this one period so they
+   stay in lockstep. Long and unhurried: the sun is only overhead for a slice
+   of it, so most of the time the menu just shows a resting moon. */
+.title-screen {
+  --sky-cycle: 200s;
+}
+
+/* The moon the trail leads to, hanging in the corner. Normally full, but the
+   sun Easter egg (below) drags it through its phases: a shadow disc slides
+   across the face (::after) while the halo warms and dims (title-moon-glow). */
 .title-moon {
   position: absolute;
   top: max(6%, env(safe-area-inset-top));
@@ -632,6 +642,7 @@ body {
   width: clamp(64px, 14vmin, 130px);
   height: clamp(64px, 14vmin, 130px);
   border-radius: 50%;
+  overflow: hidden;
   pointer-events: none;
   background:
     radial-gradient(circle at 64% 28%, #8f96a0 0 7%, transparent 8%),
@@ -640,6 +651,204 @@ body {
     radial-gradient(circle at 52% 82%, #8f96a0 0 4%, transparent 5%),
     radial-gradient(circle at 35% 35%, #f4f6f8, #c3c9d1 55%, #99a0aa);
   box-shadow: 0 0 24px rgba(230, 232, 235, 0.25);
+  animation: title-moon-glow var(--sky-cycle) linear infinite;
+}
+
+/* The terminator: a soft-edged shadow disc, clipped to the moon by the
+   parent's overflow. Parked over the face it reads as a new moon; slid off to
+   the sun-lit side (right → left) it uncovers a growing crescent up to full. */
+.title-moon::after {
+  content: "";
+  position: absolute;
+  inset: -3%;
+  border-radius: 50%;
+  background: radial-gradient(circle at 60% 42%, #141a24 0 68%, #0a0e14 100%);
+  filter: blur(1.5px);
+  animation: title-moon-phase var(--sky-cycle) linear infinite;
+  will-change: transform;
+}
+
+/* new (disc covers) → grows to full as the sun climbs → lingers full → wanes
+   back to new to close the loop. Percentages line up with title-sun-arc. */
+@keyframes title-moon-phase {
+  0%,
+  8% {
+    transform: translateX(0);
+  }
+  30%,
+  85% {
+    transform: translateX(-112%);
+  }
+  100% {
+    transform: translateX(0);
+  }
+}
+
+@keyframes title-moon-glow {
+  0%,
+  8% {
+    box-shadow: 0 0 10px rgba(120, 130, 140, 0.12);
+    filter: brightness(0.72);
+  }
+  30% {
+    box-shadow:
+      0 0 34px rgba(255, 234, 186, 0.5),
+      0 0 12px rgba(230, 232, 235, 0.4);
+    filter: brightness(1.12) saturate(1.05);
+  }
+  45%,
+  85% {
+    box-shadow: 0 0 24px rgba(230, 232, 235, 0.28);
+    filter: brightness(1);
+  }
+  100% {
+    box-shadow: 0 0 10px rgba(120, 130, 140, 0.12);
+    filter: brightness(0.72);
+  }
+}
+
+/* The Easter-egg sun. It creeps up out of the right horizon, glares overhead,
+   and sinks back — staying in the right half so the moon is always lit from
+   the sun's side. Core disc + rotating rays (::before) + a lens streak
+   (::after), with a bloom in the box-shadow. */
+.title-sun {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: clamp(46px, 11vmin, 104px);
+  height: clamp(46px, 11vmin, 104px);
+  border-radius: 50%;
+  pointer-events: none;
+  opacity: 0;
+  background: radial-gradient(
+    circle at 50% 50%,
+    #fffdf5 0 18%,
+    #fff0b0 34%,
+    #ffcf66 52%,
+    rgba(255, 168, 60, 0.55) 70%,
+    transparent 78%
+  );
+  box-shadow:
+    0 0 60px 18px rgba(255, 196, 90, 0.5),
+    0 0 150px 70px rgba(255, 150, 50, 0.26);
+  animation: title-sun-arc var(--sky-cycle) linear infinite;
+  will-change: transform, opacity;
+}
+
+/* Slow-turning spokes of glare, masked to a soft halo so they fade out. */
+.title-sun::before {
+  content: "";
+  position: absolute;
+  inset: -55%;
+  border-radius: 50%;
+  background: repeating-conic-gradient(
+    from 0deg,
+    rgba(255, 224, 130, 0.34) 0deg 5deg,
+    transparent 5deg 30deg
+  );
+  -webkit-mask: radial-gradient(circle, #000 26%, transparent 70%);
+  mask: radial-gradient(circle, #000 26%, transparent 70%);
+  animation: title-sun-rays 40s linear infinite;
+}
+
+/* A horizontal lens streak across the core. */
+.title-sun::after {
+  content: "";
+  position: absolute;
+  top: 50%;
+  left: -150%;
+  width: 400%;
+  height: 7%;
+  transform: translateY(-50%);
+  background: linear-gradient(
+    90deg,
+    transparent,
+    rgba(255, 240, 200, 0.55),
+    transparent
+  );
+  filter: blur(1px);
+}
+
+/* Rises from lower-right, peaks high and right-of-centre, sinks back down —
+   opacity gated so it is only visible for the up-and-over slice. */
+@keyframes title-sun-arc {
+  0%,
+  8% {
+    transform: translate(92vw, 72vh);
+    opacity: 0;
+  }
+  12% {
+    opacity: 0.85;
+  }
+  20% {
+    transform: translate(78vw, 20vh);
+  }
+  30% {
+    transform: translate(64vw, 6vh);
+    opacity: 1;
+  }
+  40% {
+    transform: translate(80vw, 40vh);
+    opacity: 0.45;
+  }
+  45%,
+  100% {
+    transform: translate(92vw, 72vh);
+    opacity: 0;
+  }
+}
+
+@keyframes title-sun-rays {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* A warm wash over the whole backdrop that swells as the sun crests — the
+   "glare" bleeding across the sky. Screen-blended and behind the menu. */
+.title-sun-glare {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  opacity: 0;
+  background: radial-gradient(
+    120% 90% at 78% 10%,
+    rgba(255, 210, 120, 0.24),
+    rgba(255, 170, 80, 0.09) 42%,
+    transparent 68%
+  );
+  mix-blend-mode: screen;
+  animation: title-sun-wash var(--sky-cycle) linear infinite;
+}
+
+@keyframes title-sun-wash {
+  0%,
+  8% {
+    opacity: 0;
+  }
+  30% {
+    opacity: 1;
+  }
+  45%,
+  100% {
+    opacity: 0;
+  }
+}
+
+/* Reduced motion: skip the whole show and just sit on the familiar full moon. */
+@media (prefers-reduced-motion: reduce) {
+  .title-sun,
+  .title-sun-glare {
+    display: none;
+  }
+  .title-moon {
+    animation: none;
+    box-shadow: 0 0 24px rgba(230, 232, 235, 0.25);
+    filter: none;
+  }
+  .title-moon::after {
+    display: none;
+  }
 }
 
 /* Occasional asteroids streaking past the backdrop. Each spends most of its
