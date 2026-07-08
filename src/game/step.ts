@@ -61,8 +61,11 @@ import {
   playerDodgeChance,
   playerSpeed,
   recomputeMaxHp,
+  recomputeMaxStamina,
+  refreshArmor,
   repairEquippedWeapon,
   restoreArmor,
+  syncInventoryCapacity,
   weaponCooldownFor,
   weaponDamage,
   weaponRangeFor,
@@ -80,6 +83,7 @@ import {
   lureMult,
   maybePowerScale,
   menaceStage,
+  mobLevelScale,
   tickMenace,
 } from "./menace.ts";
 import {
@@ -288,14 +292,16 @@ function spawnWaveEnemy(state: GameState, defId: string): boolean {
     if (distance(pos, state.player.pos) < ENEMY_AI.minSpawnDistance) continue;
     if (insideObstacle(state, pos, def.radius)) continue;
     // Stamp the current menace stage: a mob spawned into a rampage evolves —
-    // more hp, more xp, better loot (see menace.ts / spawnEnemy).
+    // more hp, more xp, better loot (see menace.ts / spawnEnemy). On top of the
+    // difficulty's flat hp lever, fold in the player-LEVEL toughness floor so a
+    // levelled hero meets a sturdier swarm even when the meter is cold.
     state.enemies.push(
       spawnEnemy(
         defId,
         pos,
         state.rng,
         state.nextId++,
-        difficultyDef(state.difficulty).mobHpMult,
+        difficultyDef(state.difficulty).mobHpMult * mobLevelScale(state),
         menaceStage(state),
       ),
     );
@@ -1007,6 +1013,13 @@ function stepItems(state: GameState): void {
         player.equipment[slot] = item.equipment;
       }
       recomputeMaxHp(state);
+      recomputeMaxStamina(state);
+      // Donning a fresh suit on pickup must re-arm its plating, or the armor bar
+      // stays stuck at 0 until the next manual equip — the same refresh the
+      // inventory equip path runs. A +STRENGTH piece can also widen the bag, so
+      // grow it to match (both mirror `equipFromInventory`).
+      if (slot === "suit") refreshArmor(state);
+      syncInventoryCapacity(state);
       if (previous && !addToInventory(state, previous)) {
         displaced.push({
           id: state.nextId++,

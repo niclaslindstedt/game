@@ -76,6 +76,7 @@ export {
   weaponCooldownFor,
   weaponDamage,
   weaponDamageFor,
+  weaponDps,
   weaponRangeFor,
   weaponScore,
   weaponSweepHalfAngle,

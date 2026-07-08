@@ -39,6 +39,26 @@ describe("armor", () => {
     expect(armorInfo(state)).toBeNull();
   });
 
+  it("re-arms its plating when auto-equipped straight off the ground", () => {
+    // Regression: the pickup/auto-equip path (step.ts) equipped a better suit
+    // without refilling the armor pool, so a suit grabbed off the ground read
+    // 0 armor until it was manually re-equipped in the bag. Walking over one —
+    // a strict upgrade for a bare hero, so it auto-equips — must fill the bar.
+    const state = startGame();
+    expect(state.player.armor).toBe(0); // bare hero
+    state.items = [
+      {
+        id: 1,
+        kind: "equipment",
+        pos: { ...state.player.pos },
+        equipment: fixtureSuit(88),
+      },
+    ];
+    step(state, idle, DT);
+    expect(state.player.equipment.suit?.id).toBe(88);
+    expect(state.player.armor).toBe(ARMOR.yellow.amount);
+  });
+
   it("soaks its grade's share of a hit, the rest bites HP", () => {
     const state = startGame();
     // A big LUCK pool zeroes the enemy's crit chance, so the hit is exactly

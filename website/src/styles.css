@@ -331,10 +331,10 @@ body {
   background: #9aa3ad;
 }
 
-/* Stamina: a cool cyan sprint gauge, distinct from the red HP and the
+/* Stamina: a bright white sprint gauge, distinct from the red HP and the
    grade-tinted armor above it. */
 .hud-bar-fill.stamina-fill {
-  background: linear-gradient(180deg, #5fd0e8, #2f8fb0);
+  background: linear-gradient(180deg, #ffffff, #c8ced6);
 }
 
 /* The weapon widget: a prominent bordered slot tinted by the equipped
@@ -638,7 +638,13 @@ body {
   height: clamp(64px, 14vmin, 130px);
   border-radius: 50%;
   overflow: hidden;
-  pointer-events: none;
+  /* Interactive: a long hold on the moon opens the warp picker (TitleScreen).
+     It stays a pointer-only secret; the cursor hints nothing on purpose. */
+  pointer-events: auto;
+  -webkit-tap-highlight-color: transparent;
+  -webkit-touch-callout: none;
+  user-select: none;
+  touch-action: none;
   background:
     radial-gradient(circle at 64% 28%, #8f96a0 0 7%, transparent 8%),
     radial-gradient(circle at 38% 58%, #8f96a0 0 10%, transparent 11%),
@@ -646,6 +652,41 @@ body {
     radial-gradient(circle at 52% 82%, #8f96a0 0 4%, transparent 5%),
     radial-gradient(circle at 35% 35%, #f4f6f8, #c3c9d1 55%, #99a0aa);
   box-shadow: 0 0 24px rgba(230, 232, 235, 0.25);
+  /* Snap back gently when a charge is released early (the .charging class is
+     dropped); the halo itself is driven inline by startTitleSky each frame, so
+     the charge glow rides on filter/transform, which the driver never sets. */
+  transition:
+    filter 260ms ease-out,
+    transform 260ms ease-out;
+}
+
+/* The moon "charging up" while it is held: over MOON_HOLD_MS it brightens and
+   swells, so the secret long-press has visible feedback and its completion is
+   readable. Kept to filter/transform so it never fights the inline box-shadow
+   halo the sky driver writes every frame. */
+.title-moon.charging {
+  animation: moon-charge 7000ms ease-in forwards;
+}
+
+@keyframes moon-charge {
+  0% {
+    filter: brightness(1);
+    transform: scale(1);
+  }
+  100% {
+    filter: brightness(2.3) saturate(1.15);
+    transform: scale(1.16);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .title-moon {
+    transition: none;
+  }
+  .title-moon.charging {
+    animation: none;
+    filter: brightness(1.6);
+  }
 }
 
 /* The terminator: a soft-edged shadow disc, clipped to the moon by the parent's
@@ -1869,6 +1910,18 @@ body {
   gap: 0.2rem;
 }
 
+/* Label row of an info entry: the stat glyph sits left of the name. */
+.stat-info-head {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+}
+
+.stat-info-head .stat-icon {
+  width: 1.1rem;
+  height: 1.1rem;
+}
+
 .stat-buttons {
   display: grid;
   grid-template-columns: 1fr;
@@ -1878,13 +1931,27 @@ body {
 
 .stat-button {
   display: flex;
-  flex-direction: column;
-  align-items: flex-start;
-  gap: 0.35rem;
+  flex-direction: row;
+  align-items: center;
+  gap: 0.6rem;
   background: #ffd75e;
   box-shadow:
     0 4px 0 #b8961e,
     0 6px 0 rgba(0, 0, 0, 0.4);
+}
+
+/* The stat glyph on each level-up button; the text stacks beside it. */
+.stat-button .stat-icon {
+  width: 2rem;
+  height: 2rem;
+  flex: 0 0 auto;
+}
+
+.stat-button-text {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 0.35rem;
 }
 
 .stat-button:active {
@@ -1911,6 +1978,12 @@ body {
 
   .stat-button {
     padding: 0.5rem 0.75rem;
+    gap: 0.45rem;
+  }
+
+  .stat-button .stat-icon {
+    width: 1.6rem;
+    height: 1.6rem;
   }
 }
 

@@ -59,6 +59,30 @@ export function evolutionHpMult(stage: number): number {
 }
 
 /**
+ * The toughness the whole horde — rank-and-file minions included — locks in
+ * from the player's LEVEL alone: a non-decaying floor of `mobHpPerLevel` extra
+ * hp per level above 1. Stamped at spawn (see spawnEnemy), so a levelled hero
+ * meets a proportionally sturdier swarm instead of mowing it down, and — since
+ * kill xp is hp-proportional — is paid more xp per kill for the trouble. This
+ * is the progression half of keeping the fight honest; the menace EVOLUTION
+ * stage (`evolutionHpMult`) is the moment-to-moment overkill half, and the two
+ * multiply together. Always ≥ 1.
+ */
+export function mobLevelScale(state: GameState): number {
+  return 1 + Math.max(0, state.player.level - 1) * MENACE.mobHpPerLevel;
+}
+
+/**
+ * The tier bonus a minion's drop rolls from the player's LEVEL — better gear to
+ * match the tougher horde `mobLevelScale` produces (`tierBonusPerLevel` per
+ * level above 1). Stacks with the menace evolution stage's `tierBonusPerStage`
+ * and the mob's own `dropProfile`, read in `dropMinionLoot`.
+ */
+export function mobLevelTierBonus(state: GameState): number {
+  return Math.max(0, state.player.level - 1) * MENACE.tierBonusPerLevel;
+}
+
+/**
  * The live-crowd multiplier the menace stage applies to the wave spawner's
  * floor and cap — a rampage pulls a bigger, denser horde onto the screen.
  */

@@ -262,6 +262,27 @@ export const MENACE = {
   /** Share of the hp power-scale that also applies to contact damage (so a
    * scaled boss hits harder, but not as steeply as its health grows). */
   bossContactShare: 0.4,
+  /**
+   * The rank-and-file's answer to a LEVELLING hero. Every regular minion locks
+   * in extra hp at spawn — this fraction per player level above 1 (+8% each) —
+   * so the horde keeps pace as the hero grows and leftover levels don't turn
+   * the swarm into a walkover. Kill xp is hp-proportional, so a tougher mob is
+   * automatically worth more xp; its drops sweeten separately below. This is a
+   * NON-DECAYING floor from progression alone, distinct from (and stacking with)
+   * the menace EVOLUTION stage that answers moment-to-moment overkill — the two
+   * are the "you got stronger" and the "you're steamrolling right now" halves of
+   * keeping the fight honest. Gentler than `bossLevelWeight`: a swarm at full
+   * boss scaling would be a wall, so the mass of mobs ramps at two-thirds the
+   * rate a set-piece does.
+   */
+  mobHpPerLevel: 0.08,
+  /**
+   * Better gear as the hero levels: added to a minion's drop tier roll per
+   * player level above 1 (+1.5% each), so a higher-level hero's kills yield
+   * richer loot to match the tougher mobs they came off — the drop-quality
+   * companion to `mobHpPerLevel`, stacking with the menace `tierBonusPerStage`.
+   */
+  tierBonusPerLevel: 0.015,
 } as const;
 
 /**
@@ -279,9 +300,31 @@ export const MENACE = {
 export const STATS = {
   /** Move-speed multiplier added per SPEED point (+8% each). */
   speedPerPoint: 0.08,
-  /** Damage multiplier per point of the weapon's DAMAGE stat (STR for melee &
-   * ranged, INT for magic — see `DAMAGE_STAT`). */
-  damageBonusPerPoint: 0.12,
+  /**
+   * Damage multiplier per point of the weapon's DAMAGE stat, keyed by that stat
+   * (STRENGTH for melee & ranged, INTELLIGENCE for magic — see `DAMAGE_STAT`).
+   * STRENGTH scales harder than INTELLIGENCE on purpose: raw damage is STR's
+   * ONE payoff, whereas INT already buys reach (`rangePerInt`), the melee cleave
+   * (`aoePerInt`/`aoeTargetsPerInt`), magic attack speed and magic crit — so a
+   * gentler damage slope keeps a mage's total package from dwarfing a bruiser.
+   * A high STR build is now the honest glass-cannon: it hits the hardest per
+   * point, and pays for it with the walk-speed penalty below.
+   */
+  damageBonusPerPoint: { strength: 0.2, intelligence: 0.12 } as Record<
+    "strength" | "intelligence",
+    number
+  >,
+  /**
+   * STRENGTH's downside: every point of muscle to haul slows the walk by this
+   * fraction (−1% each), floored at `strengthSlowFloor` so even a pure bruiser
+   * still moves. It is a gentle tax — a few points are unnoticeable, but a build
+   * that dumps everything into STR trades genuine mobility for its firepower,
+   * so STR and SPEED pull against each other instead of stacking for free.
+   */
+  strengthSlowPerPoint: 0.01,
+  /** The slowest STRENGTH can drag the walk (a 50% floor on the penalty above),
+   * so no amount of muscle roots the hero in place. */
+  strengthSlowFloor: 0.5,
   /**
    * STRENGTH also widens the carry bag: each point adds this many inventory
    * slots on top of the small `LOOT.baseInventorySize` floor, so a bruiser

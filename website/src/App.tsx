@@ -20,6 +20,9 @@ export function App() {
   const [run, setRun] = useState<{
     difficulty: Difficulty;
     levelId: string;
+    // Warp-in from the title moon's long-press: skip the prelude and intro
+    // monologue and drop straight into the level.
+    skipIntro?: boolean;
   } | null>(null);
 
   // Register the deploy slot's service worker (§11.4.3) and track its update
@@ -81,6 +84,7 @@ export function App() {
       <GameScreen
         difficulty={run.difficulty}
         levelId={run.levelId}
+        skipIntro={run.skipIntro}
         onQuit={() => setRun(null)}
       />
     );
@@ -89,7 +93,9 @@ export function App() {
   return (
     <>
       <TitleScreen
-        onStart={(difficulty, levelId) => setRun({ difficulty, levelId })}
+        onStart={(difficulty, levelId, opts) =>
+          setRun({ difficulty, levelId, skipIntro: opts?.skipIntro })
+        }
       />
 
       {/* The "a new version is ready" prompt (§11.4.4), fed from the service

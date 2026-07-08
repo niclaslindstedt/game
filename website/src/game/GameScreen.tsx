@@ -325,10 +325,14 @@ export function GameScreen({
   difficulty,
   levelId: initialLevelId,
   onQuit,
+  skipIntro: skipOpening = false,
 }: {
   difficulty: Difficulty;
   levelId: string;
   onQuit: () => void;
+  /** Warp-in (the title moon's long-press): drop straight into play, skipping
+   * the prelude cutscene and the hero's level-intro monologue. */
+  skipIntro?: boolean;
 }) {
   // The level this run is on. Retry replays it; the victory splash's NEXT
   // LEVEL button advances it along LEVEL_ORDER, which re-runs the mount effect
@@ -482,6 +486,15 @@ export function GameScreen({
     synth.unlock();
     const unlock = () => synth.unlock();
     canvas.addEventListener("pointerdown", unlock);
+
+    // Warp-in from the title moon's long-press: bail the whole opening and
+    // drop straight into play. skipCutscene lands the prelude on the level
+    // `title` card, then beginRun's dismissIntro carries it into `playing` —
+    // the same shortcut the keyboard and headless bot use, done up front.
+    if (skipOpening) {
+      if (state.phase === "cutscene") skipCutscene(state);
+      beginRun();
+    }
 
     // Backing store in world units; CSS upscales by the view scale
     // (pixelated). The scale is the phone baseline (VIEW_SCALE), doubled on
@@ -1028,7 +1041,7 @@ export function GameScreen({
       canvas.removeEventListener("pointerdown", unlock);
       pickupTimers.forEach(clearTimeout);
     };
-  }, [assets, runId, difficulty, levelId]);
+  }, [assets, runId, difficulty, levelId, skipOpening]);
 
   if (!assets) {
     return <div className="game-loading">Loading…</div>;
@@ -1625,7 +1638,12 @@ export function GameScreen({
       )}
 
       {state && hud?.phase === "levelup" && (
-        <LevelUpOverlay state={state} font={font} onChange={bumpUi} />
+        <LevelUpOverlay
+          state={state}
+          font={font}
+          sprites={assets.sprites}
+          onChange={bumpUi}
+        />
       )}
 
       {state && hud?.phase === "inventory" && (
