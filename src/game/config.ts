@@ -468,10 +468,16 @@ export const STAMINA = {
   drainPerSec: 16.5,
   /** Each STAMINA point divides the drain by `1 + points·this` (drains slower). */
   drainReductionPerPoint: 0.12,
-  /** Regained per second while walking/idle, at zero STAMINA stat. */
+  /** Regained per second while standing still, at zero STAMINA stat. */
   regenPerSec: 18,
   /** Each STAMINA point multiplies the regen by `1 + points·this` (regains faster). */
   regenPerPoint: 0.12,
+  /**
+   * Regen multiplier while walking (moving below `runThreshold`). A walk still
+   * recovers stamina — it never drains — but only half as fast as standing
+   * still, so a stroll is a partial breather rather than a full one.
+   */
+  walkRegenFactor: 0.5,
   /** Throttle above which movement counts as a run that drains stamina. */
   runThreshold: 0.5,
   /** Top-speed multiplier once the pool is empty (a winded jog). */
