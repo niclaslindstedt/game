@@ -28,6 +28,7 @@ import {
   stasisFactorAt,
 } from "./abilities.ts";
 import {
+  AIM,
   APPARITION,
   ENEMY_AI,
   HELD_ITEMS,
@@ -428,6 +429,8 @@ function stepPlayer(
  * (the powerup dock), and removing it shifts the rest down so the dock stays
  * packed oldest-first. grantAbility emits the abilityStarted event. With
  * empty hands, or an out-of-range index, the input is a quiet no-op / oldest.
+ * A non-stackable power that is already running refuses to re-activate
+ * (grantAbility returns false), so its pickup stays banked rather than wasted.
  */
 function stepUseItem(state: GameState, input: GameInput): void {
   if (!input.useItem) return;
@@ -438,14 +441,17 @@ function stepUseItem(state: GameState, input: GameInput): void {
     input.useItemIndex < held.length
       ? input.useItemIndex
       : 0;
-  const [defId] = held.splice(index, 1);
+  const defId = held[index];
   if (!defId) return;
   const def = abilityDef(defId);
   if (def.nuke) {
+    held.splice(index, 1);
     detonateNuke(state, def.nuke.radius);
     return;
   }
-  grantAbility(state, defId);
+  // Only consume the banked pickup if the power actually started; a refused
+  // re-activation (a running non-stackable power) leaves the dock untouched.
+  if (grantAbility(state, defId)) held.splice(index, 1);
 }
 
 /**
@@ -492,12 +498,17 @@ function stepWeapon(state: GameState, input: GameInput, dtMs: number): void {
   // on a monster it can't actually reach. INTELLIGENCE widens every weapon's
   // reach, so a high-INT build strikes from a touch further out.
   const range = weaponRangeFor(state, equipped);
+  // A desktop mouse tilts the pick toward whatever the cursor points at (a unit
+  // bearing from the hero); a pointer resting on the hero has no bearing, so the
+  // zero vector below falls straight back to the nearest foe.
+  const aim = input.aim ? direction(player.pos, input.aim) : undefined;
   const target = nearestEnemy(
     state.enemies,
     player.pos,
     range,
     input.view,
     (enemy) => lineOfSight(state, player.pos, enemy.pos),
+    aim,
   );
   if (!target) return;
 
@@ -620,21 +631,42 @@ function nearestEnemy(
   range: number,
   view?: GameInput["view"],
   clear?: (enemy: Enemy) => boolean,
+  aim?: Vec2,
 ): Enemy | undefined {
+  const rangeSq = range * range;
+  // With a pointer bearing (desktop mouse) the pick is scored by distance
+  // AND alignment with the cursor, so the aimed-at foe wins over a closer one
+  // off to the side; without it (or a zero bearing) it's the plain nearest.
+  const aimed = aim !== undefined && (aim.x !== 0 || aim.y !== 0);
   let best: Enemy | undefined;
-  let bestDistSq = range * range;
+  let bestScore = aimed ? Infinity : rangeSq;
   for (const enemy of enemies) {
     if (view && !insideView(enemy.pos, view)) continue;
     // Apparitions are never targets — the weapon (and the storm) look
     // straight through them at the real crowd.
     if (enemyDef(enemy.defId).apparition) continue;
-    const d = distanceSq(from, enemy.pos);
+    const dSq = distanceSq(from, enemy.pos);
+    if (dSq > rangeSq) continue;
+    let score = dSq;
+    if (aimed) {
+      const dist = Math.sqrt(dSq);
+      // Alignment of the foe's bearing with the cursor's: 1 dead ahead of the
+      // pointer, −1 directly behind the hero from it. A foe on top of the hero
+      // has no bearing — count it perfectly aligned so a point-blank threat is
+      // never pushed away by the bias.
+      const dot =
+        dist === 0
+          ? 1
+          : ((enemy.pos.x - from.x) * aim.x + (enemy.pos.y - from.y) * aim.y) /
+            dist;
+      score = dist * (1 + AIM.biasStrength * (1 - dot) * 0.5);
+    }
     // `clear` (line of sight) is checked lazily — only for candidates that
     // would actually win — so its cost scales with improvements, not with
     // the whole horde.
-    if (d <= bestDistSq && (!clear || clear(enemy))) {
+    if (score <= bestScore && (!clear || clear(enemy))) {
       best = enemy;
-      bestDistSq = d;
+      bestScore = score;
     }
   }
   return best;

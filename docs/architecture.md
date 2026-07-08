@@ -102,7 +102,10 @@ run against synthetic fixtures with no shipped content (see
   `loot.abilityPool`. Pickups are banked into `player.heldAbilities` (up
   to `HELD_ITEMS.cap`) and spent with the `useItem` input, or dragged out
   of their dock slot to be discarded (`discardHeldAbility`) when the bank
-  is full of powers you don't want.
+  is full of powers you don't want. A `stackable` power (fire orbs, storm
+  cell) runs several copies at once — each activation adds a fresh instance,
+  so two storm cells strike twice as often; a non-stackable one (the magnet)
+  refuses to re-enable while a copy is running, keeping the pickup banked.
 - **`src/game/defs/difficulties.ts`** — the difficulty ladder (EASY →
   MEDIUM → HARD → NIGHTMARE → JESUS CHRIST!), chosen on the main menu and
   layered over every level. A rung turns a whole rack of knobs: the hero's
@@ -135,7 +138,11 @@ run against synthetic fixtures with no shipped content (see
   multiplies its contact damage — the one-last-stand spike the renderer
   telegraphs with a flickering dying sprite. The character fights autonomously (and only
   targets monsters inside the visible view the app passes in
-  `input.view`); the player steers, jumps (tap/Space), spends banked
+  `input.view`) — it locks the nearest visible foe, but a desktop mouse adds an
+  aim dimension: `input.aim` (the pointer's world position) biases the pick
+  toward whatever the cursor points at (`AIM.biasStrength`), so foes in the
+  pointer's direction outrank merely-closer ones elsewhere; the player steers,
+  jumps (tap/Space), spends banked
   ability pickups (`input.useItem`), spends level-up stat points, and
   manages the inventory. Level-ups restore full health; golden XP arrows
   grant a fixed share of the current threshold. Picked-up equipment that

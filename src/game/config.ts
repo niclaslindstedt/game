@@ -49,6 +49,24 @@ export const WEAPON = {
   damageMult: 0.5,
 } as const;
 
+/**
+ * Desktop mouse aim. The character fights autonomously — it locks onto the
+ * nearest visible foe — but a desktop mouse adds a second steering dimension:
+ * the pointer nudges that choice toward whatever the cursor is aimed at. Each
+ * reachable foe's distance is scaled by `1 + biasStrength · (1 − alignment)/2`,
+ * where `alignment` is the dot product of the cursor's bearing (from the hero)
+ * and the bearing to the foe: 1 = the foe sits dead along the cursor, −1 =
+ * opposite it. So a foe in the pointer's direction outranks a merely-closer one
+ * elsewhere — the cursor carries the priority when foes stand in several
+ * directions. It is only ever a bias: with no mouse (touch, keyboard-only,
+ * bots) or the pointer resting on the hero, targeting falls back to the plain
+ * nearest foe, so the hero is never left unable to fire at empty space.
+ */
+export const AIM = {
+  /** At 4 a pointer-aligned foe outranks one up to ~5× closer behind the hero. */
+  biasStrength: 4,
+} as const;
+
 /** Projectile rules shared by every weapon (per-weapon numbers in defs). */
 export const PROJECTILE = {
   /**

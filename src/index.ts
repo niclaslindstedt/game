@@ -206,6 +206,7 @@ export { registerDefs, type DefOverrides } from "./game/defs/registry.ts";
 // Global tuning.
 export {
   ACCURACY,
+  AIM,
   APPARITION,
   ARMOR,
   ARRIVAL,

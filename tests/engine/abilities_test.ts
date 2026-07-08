@@ -57,28 +57,57 @@ describe("ability pickups", () => {
     });
   });
 
-  it("refresh the timer instead of stacking a second copy", () => {
-    const state = pickUp("test_orbit");
-    run(state, idle, 60); // burn ~1s off the clock
+  it("stack a second copy when the power is stackable", () => {
+    const state = pickUp("test_storm"); // stackable in the fixtures
+    run(state, idle, 60); // burn ~1s off the first copy's clock
     const worn = state.player.abilities[0]!.remainingMs;
-    expect(worn).toBeLessThan(abilityDef("test_orbit").durationMs);
 
+    // Bank and spend a second STORM CELL: it adds a fresh copy rather than
+    // refreshing (or being blocked), so both run side by side.
     state.items = [
       {
         id: 501,
         kind: "ability",
         pos: { ...state.player.pos },
-        defId: "test_orbit",
+        defId: "test_storm",
       },
     ];
     step(state, idle, DT);
     step(state, useItem, DT);
+    expect(state.player.abilities.map((a) => a.defId)).toEqual([
+      "test_storm",
+      "test_storm",
+    ]);
+    expect(state.player.heldAbilities).toEqual([]);
+    // The first copy keeps its worn clock; the second starts (nearly) full.
+    expect(state.player.abilities[0]!.remainingMs).toBeLessThanOrEqual(worn);
+    expect(state.player.abilities[1]!.remainingMs).toBeGreaterThan(worn);
+  });
+
+  it("refuse to re-enable a non-stackable power already running", () => {
+    const state = pickUp("test_magnet"); // non-stackable in the fixtures
     expect(state.player.abilities).toHaveLength(1);
-    // Refreshed to (nearly) full — the activating step itself ticks DT off.
-    expect(state.player.abilities[0]!.remainingMs).toBeGreaterThanOrEqual(
-      abilityDef("test_orbit").durationMs - DT,
-    );
-    expect(state.player.abilities[0]!.remainingMs).toBeGreaterThan(worn);
+
+    // Bank a second MAGNET and try to spend it while the first still runs.
+    state.items = [
+      {
+        id: 501,
+        kind: "ability",
+        pos: { ...state.player.pos },
+        defId: "test_magnet",
+      },
+    ];
+    step(state, idle, DT);
+    expect(state.player.heldAbilities).toEqual(["test_magnet"]);
+
+    step(state, useItem, DT);
+    // Refused: no second copy, and the pickup stays banked rather than wasted.
+    expect(state.player.abilities).toHaveLength(1);
+    expect(state.player.heldAbilities).toEqual(["test_magnet"]);
+    expect(state.events).not.toContainEqual({
+      type: "abilityStarted",
+      defId: "test_magnet",
+    });
   });
 
   it("expire after their duration, with an event", () => {
@@ -144,6 +173,35 @@ describe("storm cell", () => {
     state.enemies.push(makeEnemy({ pos, hp: 1_000_000, maxHp: 1_000_000 }));
     step(state, idle, DT);
     expect(state.events).toContainEqual({ type: "lightning", pos });
+  });
+
+  it("two stacked copies strike twice as often", () => {
+    // Bank + spend a second STORM CELL: two copies run at once, each with its
+    // own strike cooldown, so a single step fires both bolts.
+    const state = pickUp("test_storm");
+    state.items = [
+      {
+        id: 502,
+        kind: "ability",
+        pos: { ...state.player.pos },
+        defId: "test_storm",
+      },
+    ];
+    step(state, idle, DT);
+    step(state, useItem, DT);
+    expect(state.player.abilities).toHaveLength(2);
+
+    state.player.weaponCooldownMs = 1_000_000;
+    state.enemies.push(
+      makeEnemy({
+        pos: { x: state.player.pos.x + 80, y: state.player.pos.y },
+        hp: 1_000_000,
+        maxHp: 1_000_000,
+      }),
+    );
+    step(state, idle, DT);
+    const bolts = state.events.filter((e) => e.type === "lightning");
+    expect(bolts).toHaveLength(2);
   });
 });
 

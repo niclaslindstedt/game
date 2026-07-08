@@ -1433,6 +1433,24 @@ body {
   );
 }
 
+/* Stack badge (×2, ×3…) for a powerup running several copies at once — the
+   top-left corner, opposite the countdown seconds so the two never collide. */
+.active-powerup-stack {
+  position: absolute;
+  left: 2px;
+  top: 1px;
+  padding: 0 2px;
+  font-size: 0.85rem;
+  font-weight: 700;
+  line-height: 1;
+  color: #ffe08a;
+  text-shadow:
+    0 0 2px #0b0d10,
+    0 1px 1px #0b0d10,
+    0 0 4px rgba(0, 0, 0, 0.9);
+  pointer-events: none;
+}
+
 /* Whole-second countdown in the corner, filled in by the render loop. */
 .active-powerup-secs {
   position: absolute;
@@ -2328,4 +2346,16 @@ body {
   background: #e6e8eb;
   opacity: 0.4;
   box-shadow: 0 0 0 2px rgba(11, 13, 16, 0.5);
+}
+
+/* The main menu's mouse pointer is a 16-bit Mickey glove. TitleScreen sets
+   --menu-cursor from the sprite atlas; before assets load (or if the slice
+   fails) it falls back to the plain arrow. Descendants inherit it so the
+   buttons and the backdrop share one pointer, while a more specific rule
+   (a locked level's not-allowed) still wins for its own affordance. */
+.title-screen {
+  cursor: var(--menu-cursor, default);
+}
+.title-screen * {
+  cursor: inherit;
 }

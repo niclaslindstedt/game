@@ -320,6 +320,7 @@ export const FIX_ABILITIES: Record<string, AbilityDef> = {
     name: "TEST ORBIT",
     kind: "orbit",
     durationMs: 12_000,
+    stackable: true,
     icon: "icon_orbit",
     orbit: {
       count: 3,
@@ -336,6 +337,7 @@ export const FIX_ABILITIES: Record<string, AbilityDef> = {
     name: "TEST STORM",
     kind: "storm",
     durationMs: 10_000,
+    stackable: true,
     icon: "icon_storm",
     storm: { intervalMs: 450, damage: 25, range: 220 },
   },
