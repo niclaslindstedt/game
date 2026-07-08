@@ -20,6 +20,11 @@ export const SPACEZ_HQ: LevelDef = {
     ["SO I'M BUILDING A SHIP.", "THE DRIVE NEEDS ONE INGREDIENT."],
     ["SPACEZ KEEPS IT IN THE CLEANROOM.", "I USED TO KEEP IT THERE MYSELF."],
     ["I DESIGNED HALF THESE ENGINES.", "THEN THEY REPLACED ME WITH AN AI."],
+    [
+      "SAME STORY EVERYWHERE. THE WHOLE",
+      "BLOCK'S ON WELFARE NOW. ADA AND",
+      "ME TOO. BUT HEY - WEBFLIX.",
+    ],
     ["SO I KNOW EVERY DOOR AND KEYCARD.", "THEY SHOULD'VE CHANGED THE LOCKS."],
     ["THE INGREDIENT'S IN THE VAULT.", "WE DO THIS THE HARD WAY."],
   ],
@@ -258,8 +263,13 @@ export const SPACEZ_HQ: LevelDef = {
   // The first staffer he SEES stops him cold: the whole building is manned
   // at midnight. Pinned to sighting an intern because the opening ring is
   // packed with them — it fires the moment one is on screen, before a single
-  // blow lands. An arrival beat, not a kill beat.
-  firstSightThoughts: [{ enemy: "intern", thought: "spacez_staff" }],
+  // blow lands. An arrival beat, not a kill beat. Deeper in, the first
+  // OPTIMUSK he sees is personal: he helped build the first one, and the
+  // line took everyone's jobs — his included.
+  firstSightThoughts: [
+    { enemy: "intern", thought: "spacez_staff" },
+    { enemy: "optimusk", thought: "spacez_optimusk" },
+  ],
   loot: {
     weaponPool: [
       "stapler",

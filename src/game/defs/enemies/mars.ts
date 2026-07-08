@@ -2,7 +2,8 @@
 // Mars (level 3) roster: the secret colony's machines — scout and mining
 // rovers working the dust outside, servo units and the FEMBOT companion line
 // inside the base — three tech-billionaire colonists who bought their way off
-// Earth (elites: LARRY WEBPAGE, BUILD GATES, PETER SEAL), and ELON MOSQUE,
+// Earth (elites: LARRY WEBPAGE, BUILD GATES, PETER SEAL) plus OPTIMUSK PRIME,
+// the robot foreman orchestrating the OPTIMUSK line, and ELON MOSQUE,
 // the man who owns the planet (boss). He is
 // the game's first FLEEING unique: beaten down, he cowers, reveals what Ada
 // was traded for, and zaps out through a rift instead of dying. Registered
@@ -199,6 +200,63 @@ export const MARS_ENEMIES: Record<string, EnemyDef> = {
       // The treasurer keeps the books: the shrine pass AND the passenger
       // ledger of everyone who bought a seat on the lifeboat.
       storyItems: ["keycard_terrarium", "colony_ledger"],
+      weapons: 0,
+      gear: 1,
+      xpArrows: 1,
+      repairs: 1,
+      medkits: 1,
+      tierBonus: 0.3,
+    },
+  },
+  // OPTIMUSK PRIME — the fourth elite: a head taller than the line units it
+  // commands, gold-marked and self-satisfied. The AI orchestrator that runs
+  // every OPTIMUSK on the colony — automation came for the drivers, the
+  // desks, and finally the automators themselves. The hero built its first
+  // chassis (see the SpaceZ HQ sight thought); PRIME read the changelog.
+  optimusk_prime: {
+    id: "optimusk_prime",
+    name: "OPTIMUSK PRIME",
+    role: "elite",
+    sprite: "optimusk_prime",
+    gore: "sparks",
+    // The heaviest elite on the ladder so far: a slow stomper whose rush is
+    // a forklift, not a sprint — the fight is about not being cornered.
+    hp: 340,
+    speed: 16,
+    radius: 14,
+    contactDamage: 30,
+    critChance: 0.14,
+    contactCooldownMs: 750,
+    dialogue: [
+      [
+        "I AM OPTIMUSK PRIME.",
+        "I ORCHESTRATE EVERY UNIT",
+        "YOU HAVE DENTED TODAY.",
+      ],
+      [
+        "FIRST WE TOOK THE DRIVING.",
+        "THEN THE DESKS. THEN THE JOBS",
+        "OF THE ONES AUTOMATING YOU.",
+      ],
+      [
+        "I AM THE FUTURE OF AGENT",
+        "ORCHESTRATION. EVEN THE AI",
+        "ENGINEERS FILE FOR WELFARE NOW.",
+      ],
+      [
+        "YOU BUILT MY FIRST CHASSIS,",
+        "LITTLE BUILDER. I READ THE",
+        "CHANGELOG. TIME TO RETURN",
+        "THE FAVOR.",
+      ],
+    ],
+    lastWords: ["ORCHESTRATION... FAILED...", "...HUMAN... IN THE LOOP..."],
+    ai: { aggroRadius: 250, rushSpeed: 105 },
+    loot: {
+      // Its sidearm and the paperwork: the colony's auto-generated org
+      // chart, every box a robot, with a dotted line back to THE CORE.
+      items: ["prompt_injector"],
+      storyItems: ["org_chart"],
       weapons: 0,
       gear: 1,
       xpArrows: 1,

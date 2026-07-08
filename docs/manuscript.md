@@ -25,7 +25,9 @@ script. A sequel replaces this file wholesale.
 Ada went out for chips and soda on movie night and never came back. The
 tracking beacon the hero sewed into her jacket points off-planet. The hero is a
 spaceship builder who once worked at SpaceZ until an AI replaced him — so he
-knows the building cold. He raids SpaceZ for the one missing ingredient his
+knows the building cold. Like the whole block, he and Ada live on welfare now
+(everyone got replaced); movie night on Webflix is what's left of the good
+life, which is why her chips-and-soda run matters. He raids SpaceZ for the one missing ingredient his
 interplanetary drive needs, then follows the beacon to the moon, where something
 under the Sea of Tranquility is not dead enough.
 
@@ -83,8 +85,9 @@ A cleanroom raid for the interplanetary drive's one missing ingredient.
 3. SO I'M BUILDING A SHIP. / THE DRIVE NEEDS ONE INGREDIENT.
 4. SPACEZ KEEPS IT IN THE CLEANROOM. / I USED TO KEEP IT THERE MYSELF.
 5. I DESIGNED HALF THESE ENGINES. / THEN THEY REPLACED ME WITH AN AI.
-6. SO I KNOW EVERY DOOR AND KEYCARD. / THEY SHOULD'VE CHANGED THE LOCKS.
-7. THE INGREDIENT'S IN THE VAULT. / WE DO THIS THE HARD WAY.
+6. SAME STORY EVERYWHERE. THE WHOLE / BLOCK'S ON WELFARE NOW. ADA AND / ME TOO. BUT HEY - WEBFLIX.
+7. SO I KNOW EVERY DOOR AND KEYCARD. / THEY SHOULD'VE CHANGED THE LOCKS.
+8. THE INGREDIENT'S IN THE VAULT. / WE DO THIS THE HARD WAY.
 
 ### Hero's thought — first INTERN sighted at SpaceZ HQ
 
@@ -97,6 +100,18 @@ lands a few rooms later._
 - LOOK AT THIS PLACE. PAST / MIDNIGHT AND EVERY DESK IS / MANNED. EVERY LAB LIT.
 - I WORKED HERE. WE NEVER / STAFFED NIGHTS LIKE THIS. / SOMETHING MUST BE BREWING.
 - OH WELL. / GOOD THING I BROUGHT THE SWORD.
+
+### Hero's thought — first OPTIMUSK sighted at SpaceZ HQ
+
+_Fires once, the moment the first OPTIMUSK unit comes into view (in his own
+voice). He was on the team that built the first one before the AI redrew the
+line (the CORE LOG's "IT DREW THE OPTIMUSK LINE") and the machines walked
+everyone's jobs out the door — his own replacement story in miniature. Now the
+tables turn._
+
+- AN OPTIMUSK. I WAS ON THE / TEAM THAT BUILT THE FIRST / ONE. I TUNED ITS BALANCE.
+- THEN THE AI REDREW IT, AND / THE LINE STARTED WALKING / EVERYONE'S JOBS OUT THE DOOR.
+- FUNNY THING, PROGRESS. / MY TURN TO MAKE SOMETHING / OBSOLETE.
 
 ### Elites (spoken on arrival; last words as they fall)
 
@@ -331,8 +346,9 @@ _Drops: MACHETE._
 ## Level 3 — MARS
 
 The red freight run ends at a secret colony: rovers working the dust outside, a
-SpaceZ base full of robots (and fembots) inside, and the billionaires who bought
-the lifeboat. ELON MOSQUE owns the planet — on paper.
+SpaceZ base full of robots (and fembots) inside — the OPTIMUSK line run by its
+own robot foreman, OPTIMUSK PRIME — and the billionaires who bought the
+lifeboat. ELON MOSQUE owns the planet — on paper.
 
 ### Opening monologue (hero, black screen)
 
@@ -360,9 +376,10 @@ _Fires once, the first time the hero downs a FEMBOT (in his own voice)._
 
 ### Elites (spoken on arrival; last words as they fall)
 
-Three tech billionaires, pinned along the route so the colony's story unspools
-in walking order: the fembot line and its harvest, the moon post-mortem, and
-the landlords the whole venture answers to.
+Three tech billionaires and the robot foreman of the OPTIMUSK line, pinned
+along the route so the colony's story unspools in walking order: the fembot
+line and its harvest, the moon post-mortem, the machine that automated the
+automators, and the landlords the whole venture answers to.
 
 #### LARRY WEBPAGE — the fembots upload everything
 
@@ -383,6 +400,21 @@ _Drops: SEARCH BAR, ENGAGEMENT REPORT._
 **Last words:** FATAL... ERROR... / WHO WROTE... THIS...
 
 _Drops: BLUE SCREEN, MOON POST-MORTEM._
+
+#### OPTIMUSK PRIME — the orchestrator
+
+_The robot foreman running every OPTIMUSK on the colony — the hero built its
+first chassis back at SpaceZ (see the Level 1 OPTIMUSK sight thought), before
+the AI redrew the line and automation came for the automators themselves._
+
+- I AM OPTIMUSK PRIME. / I ORCHESTRATE EVERY UNIT / YOU HAVE DENTED TODAY.
+- FIRST WE TOOK THE DRIVING. / THEN THE DESKS. THEN THE JOBS / OF THE ONES AUTOMATING YOU.
+- I AM THE FUTURE OF AGENT / ORCHESTRATION. EVEN THE AI / ENGINEERS FILE FOR WELFARE NOW.
+- YOU BUILT MY FIRST CHASSIS, / LITTLE BUILDER. I READ THE / CHANGELOG. TIME TO RETURN / THE FAVOR.
+
+**Last words:** ORCHESTRATION... FAILED... / ...HUMAN... IN THE LOOP...
+
+_Drops: PROMPT INJECTOR, ORG CHART._
 
 #### PETER SEAL — the landlords are older
 
@@ -429,6 +461,12 @@ _Drops: NOT-A-FLAMETHROWER. Leaves: the RIFT._
 
 - A PASSENGER LEDGER, LEATHER- / BOUND. EVERY NAME HAS A NET / WORTH COLUMN. TEN FIGURES UP.
 - NO ENGINEERS. NO FARMERS. NO / DOCTORS. JUST OWNERS. WHO'S / GOING TO FIX THEIR TOILETS?
+
+**ORG CHART** _(dropped by OPTIMUSK PRIME)_
+
+- AN ORG CHART, AUTO-GENERATED / THIS MORNING. EVERY BOX IS A / ROBOT. HUMANS ARE A FOOTNOTE.
+- AT THE TOP: OPTIMUSK PRIME. / REPORTS TO: NOBODY. / DOTTED LINE TO: 'THE CORE'.
+- THE MIND MY OLD FRIEND BUILT / IS STILL RUNNING THE SHOP. / ALL THE WAY FROM EARTH.
 
 **TERRARIUM KEYCARD** _(opens the TERRARIUM)_
 

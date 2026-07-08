@@ -831,9 +831,40 @@ const SPRITES = {
     "............",
     "............",
   ],
+  // OPTIMUSK PRIME's sidearm: a syringe that injects prompts. Steel barrel,
+  // cyan payload window, needle down-right like the other diagonal arms.
+  icon_prompt_injector: [
+    "............",
+    ".OvO........",
+    "OvOvO.......",
+    ".OvOvvO.....",
+    "..OOvccvO...",
+    "....OccvvO..",
+    ".....OvvvO..",
+    "......OvObO.",
+    ".......ObO..",
+    "........b...",
+    "............",
+    "............",
+  ],
   // ---- Mars story items -------------------------------------------------------
   // The shrine pass: green glass, warm to the touch.
   icon_keycard_green: swapPalette(KEYCARD_ICON, { W: "G", j: "W" }),
+  // The ORG CHART: one cyan box on top, every report a robot-white box.
+  icon_orgchart: [
+    "............",
+    "....OOOO....",
+    "....OccO....",
+    "....OOOO....",
+    "......v.....",
+    "...vvvvvv...",
+    "...v....v...",
+    ".OOOO..OOOO.",
+    ".OWWO..OWWO.",
+    ".OOOO..OOOO.",
+    "............",
+    "............",
+  ],
   // The passenger ledger: leather-bound, net-worth column included.
   icon_ledger: [
     "............",

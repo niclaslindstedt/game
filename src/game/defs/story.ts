@@ -235,6 +235,28 @@ export const STORY_ITEM_DEFS: Record<string, StoryItemDef> = {
       ["THAT'S MY GIRL.", "...ALL OF IT. THAT'S MY GIRL."],
     ],
   },
+  org_chart: {
+    id: "org_chart",
+    name: "ORG CHART",
+    icon: "icon_orgchart",
+    lore: [
+      [
+        "AN ORG CHART, AUTO-GENERATED",
+        "THIS MORNING. EVERY BOX IS A",
+        "ROBOT. HUMANS ARE A FOOTNOTE.",
+      ],
+      [
+        "AT THE TOP: OPTIMUSK PRIME.",
+        "REPORTS TO: NOBODY.",
+        "DOTTED LINE TO: 'THE CORE'.",
+      ],
+      [
+        "THE MIND MY OLD FRIEND BUILT",
+        "IS STILL RUNNING THE SHOP.",
+        "ALL THE WAY FROM EARTH.",
+      ],
+    ],
+  },
   keycard_terrarium: {
     id: "keycard_terrarium",
     name: "TERRARIUM KEYCARD",

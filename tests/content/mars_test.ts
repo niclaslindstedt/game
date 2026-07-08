@@ -72,12 +72,17 @@ describe("MARS level def", () => {
     expect(MARS.tiles.zones![0]!.ground.common).toBe("deck_0");
   });
 
-  it("pins the three billionaires along the route and MOSQUE in the boss wing", () => {
+  it("pins the four elites along the route and MOSQUE in the boss wing", () => {
     const elites = MARS.spawns
       .filter((s) => enemyDef(s.enemy).role === "elite")
       .map((s) => s.enemy)
       .sort();
-    expect(elites).toEqual(["build_gates", "larry_webpage", "peter_seal"]);
+    expect(elites).toEqual([
+      "build_gates",
+      "larry_webpage",
+      "optimusk_prime",
+      "peter_seal",
+    ]);
 
     const state = startGame(SEED, "mars");
     const boss = state.enemies.find((e) => enemyDef(e.defId).role === "boss")!;

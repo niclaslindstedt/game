@@ -73,12 +73,13 @@ export const MARS: LevelDef = {
     // The OPTIMUSK garrison came along from the moon — the same tin men,
     // now wearing colony dust.
     { enemy: "optimusk", count: 5, band: [0.4, 1.0] },
-    // The three billionaires, pinned along the route so the colony's story
-    // unspools in walking order: LARRY WEBPAGE indexing the dust outside,
-    // BUILD GATES just inside the airlock, PETER SEAL by his shrine — then
-    // the owner himself.
+    // The four elites, pinned along the route so the colony's story unspools
+    // in walking order: LARRY WEBPAGE indexing the dust outside, BUILD GATES
+    // just inside the airlock, OPTIMUSK PRIME running its line from the
+    // north chamber, PETER SEAL by his shrine — then the owner himself.
     { enemy: "larry_webpage", at: { x: 1100, y: 520 } },
     { enemy: "build_gates", at: { x: 1760, y: 920 } },
+    { enemy: "optimusk_prime", at: { x: 1950, y: 380 } },
     { enemy: "peter_seal", at: { x: 2340, y: 1240 } },
     { enemy: "elon_mosque", at: { x: 2620, y: 700 } },
   ],

@@ -41,6 +41,29 @@ export const THOUGHT_DEFS: Record<string, ThoughtDef> = {
       ["OH WELL.", "GOOD THING I BROUGHT THE SWORD."],
     ],
   },
+  // Sighting the first OPTIMUSK at SpaceZ HQ: he was on the team that built
+  // the first one, before the AI redrew the line (the CORE LOG's "IT DREW
+  // THE OPTIMUSK LINE") and the machines started walking everyone's jobs out
+  // the door — his own story in miniature. Now one is between him and Ada,
+  // and the tables turn.
+  spacez_optimusk: {
+    id: "spacez_optimusk",
+    speaker: "ME",
+    portrait: "player",
+    pages: [
+      [
+        "AN OPTIMUSK. I WAS ON THE",
+        "TEAM THAT BUILT THE FIRST",
+        "ONE. I TUNED ITS BALANCE.",
+      ],
+      [
+        "THEN THE AI REDREW IT, AND",
+        "THE LINE STARTED WALKING",
+        "EVERYONE'S JOBS OUT THE DOOR.",
+      ],
+      ["FUNNY THING, PROGRESS.", "MY TURN TO MAKE SOMETHING", "OBSOLETE."],
+    ],
+  },
   // Sighting the first wisp on the moon: the dead walking the dust is the
   // hero's first proof the broadcast history is a lie — somebody knew.
   moon_wisp_sight: {
