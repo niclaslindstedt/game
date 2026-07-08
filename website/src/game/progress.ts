@@ -2,10 +2,18 @@
 // Story progress persisted on-device (same policy as settings.ts): which
 // levels the player has cleared, per difficulty, which drives the campaign —
 // the victory splash's NEXT LEVEL button and the title menu's level-select
-// unlock state. The `?level=` dev override ignores the unlock gate. (Cutscenes
-// always play now — there is no "already watched" record to skip them.)
+// unlock state — plus the hero's banked LOADOUT per cleared level, so the
+// level, stats and items he finished with carry into the next level. The
+// `?level=` dev override ignores the unlock gate (and falls back to a
+// derived loadout when nothing is banked). (Cutscenes always play now —
+// there is no "already watched" record to skip them.)
 
-import { LEVEL_ORDER, type Difficulty } from "@game/core";
+import {
+  deriveArrivalLoadout,
+  LEVEL_ORDER,
+  type Difficulty,
+  type Loadout,
+} from "@game/core";
 
 import { createFlagStore } from "@ui/lib/flag-store.ts";
 
@@ -76,4 +84,63 @@ export function hasBeatenDifficulty(difficulty: Difficulty): boolean {
 export function firstUnclearedLevel(difficulty: Difficulty): string {
   const opener = LEVEL_ORDER[0] as string;
   return LEVEL_ORDER.find((id) => !hasCompletedLevel(id, difficulty)) ?? opener;
+}
+
+// ---- Loadout carry-over -------------------------------------------------------
+// Victory banks a snapshot of the hero (level, stats, items — the engine's
+// `extractLoadout`), keyed by the CLEARED level and difficulty; starting the
+// following level hands it back to `createGame`, so progress genuinely
+// carries through the campaign. Plain JSON in localStorage, same policy as
+// the high scores.
+
+const loadoutKey = (levelId: string, difficulty: Difficulty): string =>
+  storageKey(`loadout:${difficulty}:${levelId}`);
+
+/** Bank the hero's end-of-level snapshot for the level just cleared. */
+export function saveLoadout(
+  levelId: string,
+  difficulty: Difficulty,
+  loadout: Loadout,
+): void {
+  try {
+    window.localStorage.setItem(
+      loadoutKey(levelId, difficulty),
+      JSON.stringify(loadout),
+    );
+  } catch {
+    // Storage full or unavailable: the run still plays, it just won't carry.
+  }
+}
+
+/** The snapshot banked when `levelId` was cleared at `difficulty`, if any. */
+export function loadLoadout(
+  levelId: string,
+  difficulty: Difficulty,
+): Loadout | null {
+  try {
+    const raw = window.localStorage.getItem(loadoutKey(levelId, difficulty));
+    return raw ? (JSON.parse(raw) as Loadout) : null;
+  } catch {
+    return null;
+  }
+}
+
+/**
+ * The loadout to start `levelId` with at `difficulty`: the snapshot banked
+ * by clearing the previous story level — the real campaign carry-over — or,
+ * when nothing is banked (dev `?level=` jumps, wiped storage), the engine's
+ * derived stand-in. Null on the opener and on ids outside LEVEL_ORDER: those
+ * start fresh as authored.
+ */
+export function startingLoadout(
+  levelId: string,
+  difficulty: Difficulty,
+): Loadout | null {
+  const index = LEVEL_ORDER.indexOf(levelId);
+  if (index <= 0) return null;
+  const previous = LEVEL_ORDER[index - 1] as string;
+  return (
+    loadLoadout(previous, difficulty) ??
+    deriveArrivalLoadout(levelId, difficulty)
+  );
 }

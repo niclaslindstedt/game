@@ -72,16 +72,22 @@ sequel truncates this file to a stub and rebuilds it as its own systems land.
   landmark path with zero renderer edits. `killBoss` objectives clear because
   the boss is simply gone. Fixture: `test_coward`; suite:
   `tests/engine/flee_test.ts`.
-- **Seasoned arrival (2026-07, Mars):** a mid-campaign start needs no saved
-  state — `src/game/arrival.ts` derives the hero's level from the earlier
-  levels' rosters (spawn + wave XP × `ARRIVAL.clearShare` through the real
-  curve, difficulty-gated lines excluded), auto-spends the stat points
-  round-robin, and grants the previous level's signature weapon / issue gear
-  / powerups. Called once at the end of `createGame`; a no-op on the opener.
-  `levelsBefore` (levels/index.ts) reads the ACTIVE catalog and arrival
-  dedupes by story index, so fixture catalogs with several index-1 levels
-  behave. The shared test helper `bareHero` strips the seasoning so legacy
-  engine-rule suites keep staging from the authored level-1 baseline.
+- **Loadout carry-over (2026-07, Mars):** cross-level persistence is a plain
+  data snapshot, not engine state — `Loadout` (types.ts) holds level, stats,
+  equipment, bag and held powerups; `extractLoadout(state)` snapshots a
+  finished run, `createGame(seed, level, difficulty, loadout)` dresses the
+  next one in it (`applyLoadout`: ids re-minted, bag re-sized to carried
+  STRENGTH, hero rested). The APP owns persistence
+  (website progress.ts banks JSON per cleared level × difficulty on the
+  victory event and resolves `startingLoadout` on run start). Dev jumps with
+  nothing banked fall back to `deriveArrivalLoadout` — the hero's level
+  derived from the earlier levels' rosters (spawn + wave XP ×
+  `ARRIVAL.clearShare` through the real curve, difficulty-gated lines
+  excluded), stats auto-spent round-robin, the previous level's signature
+  kit. `levelsBefore` (levels/index.ts) reads the ACTIVE catalog and the
+  derivation dedupes by story index, so fixture catalogs with several
+  index-1 levels behave. With no loadout passed, createGame starts exactly
+  as authored — engine suites stage bare without any helper.
 - **Zoned terrain (2026-07, Mars desert→base):** one level with two grounds is
   presentation data, not engine work — `TileSpec.zones` (rects in world px,
   each with its own ground/patch pair) checked first by `groundTile` in

@@ -501,6 +501,29 @@ export type GameInput = {
   view?: { x: number; y: number; width: number; height: number };
 };
 
+/**
+ * The hero's carry-over between levels: the snapshot `extractLoadout` takes
+ * from a finished run — level, stats, worn equipment, bag, pocketed
+ * powerups — and `createGame` dresses the next run in via `applyLoadout`.
+ * The app banks one per cleared level (per difficulty); dev jumps with
+ * nothing banked use `deriveArrivalLoadout`'s stand-in instead. Plain JSON
+ * data so it persists in storage as-is.
+ */
+export type Loadout = {
+  level: number;
+  /** Progress into the current level (clamped below its threshold on apply). */
+  xp: number;
+  stats: Record<StatName, number>;
+  equipment: {
+    weapon: Equipment;
+    suit: Equipment | null;
+    charm: Equipment | null;
+  };
+  inventory: (Equipment | null)[];
+  /** Banked ability pickups (ABILITY_DEFS ids). */
+  heldAbilities: string[];
+};
+
 /** Static facts about the running level, snapshotted from its LevelDef. */
 export type LevelInfo = {
   /** Key into LEVELS. */

@@ -37,6 +37,7 @@ import {
   dismissIntro,
   enemyDef,
   equipFromInventory,
+  extractLoadout,
   LEVELS,
   levelDef,
   MENACE,
@@ -90,7 +91,12 @@ import {
   type PickupMessage,
 } from "./PickupFeed.tsx";
 import { bestTime, recordRun } from "./highscores.ts";
-import { markLevelCompleted, nextLevelId } from "./progress.ts";
+import {
+  markLevelCompleted,
+  nextLevelId,
+  saveLoadout,
+  startingLoadout,
+} from "./progress.ts";
 import {
   computeCamera,
   drawEffects,
@@ -433,7 +439,16 @@ export function GameScreen({
     // the campaign unlock gate; otherwise the run starts on the picked level.
     const levelParam = params.get("level");
     const devLevel = levelParam && levelParam in LEVELS ? levelParam : null;
-    const state = createGame(seed, devLevel ?? levelId, difficulty);
+    const runLevelId = devLevel ?? levelId;
+    // The carry-over: the loadout banked when the previous level was cleared
+    // (or a derived stand-in for dev jumps with nothing banked). The hero
+    // arrives with the level, stats and items he finished the last level with.
+    const state = createGame(
+      seed,
+      runLevelId,
+      difficulty,
+      startingLoadout(runLevelId, difficulty) ?? undefined,
+    );
     // The prelude always plays — every run opens on its cutscene (the player
     // can dismiss it with the SKIP button or Esc). It is never auto-skipped on
     // replay.
@@ -919,9 +934,12 @@ export function GameScreen({
               setNewRecord(true);
           }
           // Clearing a level records it (per difficulty) so the campaign
-          // unlocks the next one and the menu marks this one replayable.
+          // unlocks the next one and the menu marks this one replayable —
+          // and banks the hero's snapshot (level, stats, items) so the next
+          // level starts with everything he finished this one with.
           if (event.type === "victory") {
             markLevelCompleted(state.level.id, difficulty);
+            saveLoadout(state.level.id, difficulty, extractLoadout(state));
           }
         }
         if (effects.length > 0) {

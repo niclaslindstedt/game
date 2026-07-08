@@ -8,6 +8,7 @@ import { describe, expect, it } from "vitest";
 
 import {
   createGame,
+  deriveArrivalLoadout,
   dialogueContent,
   enemyDef,
   LEVEL_ORDER,
@@ -113,20 +114,25 @@ describe("MARS level def", () => {
     expect(peak).toBeGreaterThan(OBSTACLES.clearHeight + 10);
   });
 
-  it("spawns the hero seasoned: moon kit in hand, level derived from the campaign", () => {
-    // The raw createGame state (the test helper strips the seasoning for
-    // surgical staging; here the seasoning itself is under test).
-    const state = createGame(SEED, "mars");
-    const player = state.player;
+  it("derives a seasoned dev-jump loadout: moon kit, level from the campaign", () => {
+    // With nothing banked (dev jumps, playtests) the derived stand-in makes
+    // arriving on Mars realistic; a real campaign passes the ACTUAL loadout
+    // banked by the moon's victory instead (see website progress.ts).
+    const loadout = deriveArrivalLoadout("mars", "medium");
+    expect(loadout).not.toBeNull();
     // Two cleared levels behind him: he arrives genuinely leveled...
-    expect(player.level).toBeGreaterThan(5);
-    expect(player.pendingStatPoints).toBe(0);
-    // ...carrying the moon's signature kit, plating fastened.
-    expect(player.equipment.weapon.defId).toBe("moons_blade");
-    expect(player.equipment.suit?.defId).toBe("suit_plating");
-    expect(player.equipment.charm?.defId).toBe("moon_charm");
-    expect(player.armor).toBeGreaterThan(0);
-    expect(player.heldAbilities).toEqual(["fire_orbs", "storm_cell"]);
+    expect(loadout!.level).toBeGreaterThan(5);
+    // ...carrying the moon's signature kit and a couple of its powerups.
+    expect(loadout!.equipment.weapon.defId).toBe("moons_blade");
+    expect(loadout!.equipment.suit?.defId).toBe("suit_plating");
+    expect(loadout!.equipment.charm?.defId).toBe("moon_charm");
+    expect(loadout!.heldAbilities).toEqual(["fire_orbs", "storm_cell"]);
+
+    // And a run dressed in it arrives rested, plating fastened.
+    const state = createGame(SEED, "mars", "medium", loadout!);
+    expect(state.player.level).toBe(loadout!.level);
+    expect(state.player.hp).toBe(state.player.maxHp);
+    expect(state.player.armor).toBeGreaterThan(0);
   });
 });
 

@@ -124,13 +124,14 @@ export const LEVELING = {
 } as const;
 
 /**
- * The seasoned arrival: starting any level past the first spawns the hero as
- * if he actually cleared the earlier levels — a player level derived from
- * their rosters (mob count × hp through the XP curve), the banked stat points
- * auto-spent, and a loadout carried over from the previous level (its
- * signature weapon and colony-issue gear, plus a couple of its powerups).
- * See arrival.ts. Story realism, not persistence: the derivation is
- * deterministic data, so a fresh mid-campaign run needs no saved state.
+ * The DERIVED arrival loadout (`deriveArrivalLoadout` in arrival.ts): the
+ * realistic stand-in used when a mid-campaign level starts with nothing
+ * banked — dev `?level=` jumps, playtest bots, wiped storage. In the real
+ * campaign the player's actual progress persists instead: victory banks an
+ * `extractLoadout` snapshot the app hands back to `createGame` for the next
+ * level. The derivation estimates that snapshot from data alone: a player
+ * level from the earlier levels' rosters (mob count × hp through the XP
+ * curve), stat points auto-spent, and the previous level's signature kit.
  */
 export const ARRIVAL = {
   /**

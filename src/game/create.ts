@@ -9,7 +9,7 @@
 import { createCutscene } from "@game/lib/cutscene.ts";
 import { createRng, randomRange, type Rng } from "@game/lib/rng.ts";
 import { distance, vec, type Vec2 } from "@game/lib/vec.ts";
-import { applyArrival } from "./arrival.ts";
+import { applyLoadout } from "./arrival.ts";
 import {
   ENEMY_AI,
   LEVELING,
@@ -37,6 +37,7 @@ import type {
   Enemy,
   GameState,
   Item,
+  Loadout,
   Obstacle,
 } from "./types.ts";
 
@@ -44,6 +45,10 @@ export function createGame(
   seed: number,
   levelId: string = LEVEL_ORDER[0] as string,
   difficulty: Difficulty = "medium",
+  // The hero's carry-over from the previous level (see arrival.ts): the app
+  // passes the loadout it banked on the last victory — or a derived stand-in
+  // for dev jumps. Omitted = the authored fresh start (level 1, crude sword).
+  loadout?: Loadout,
 ): GameState {
   const def = levelDef(levelId);
   const diff = difficultyDef(difficulty);
@@ -250,9 +255,9 @@ export function createGame(
     state.items.push(placeItem(state, placed));
   }
 
-  // A mid-campaign start arrives seasoned: a derived player level, auto-spent
-  // stats, and the previous level's kit (see arrival.ts). No-op on level 1.
-  applyArrival(state);
+  // Dress the run in the carried-over progress, when there is any: level,
+  // stats, equipment, bag, and powerups from the previous level's clear.
+  if (loadout) applyLoadout(state, loadout);
 
   return state;
 }

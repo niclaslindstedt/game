@@ -59,22 +59,25 @@ names its in-run music with an optional `music` id (a key into the app's
 
 ### Campaign progression & what carries across levels
 
-Each run is **standalone** — `createGame(seed, levelId, difficulty)` builds a
-fresh state, and nothing is literally saved between levels. On the campaign
-opener the player starts at level 1 with the CRUDE SWORD (the melee blade off
-the hero's wall in the prelude — his default weapon; it carries durability
-and wears out, so the run's first job is to scavenge a replacement). Any
-level past the opener spawns the hero **seasoned** instead
-(`src/game/arrival.ts`, tuned by config `ARRIVAL`): his player level is
-DERIVED from the earlier levels' rosters — every spawn and wave mob's XP
-yield through the real leveling curve, discounted by `ARRIVAL.clearShare` —
-the banked stat points are auto-spent round-robin, and the previous level
-hands over its signature weapon (its scripted early-drop blade, else its
-trophy, else its hardest-hitting pool entry), its issue suit and charm, and
-a couple of its powerups as held abilities. The derivation is deterministic
-data, so a mid-campaign start arrives realistically equipped (the moon's
-blade on Mars, plating fastened) with no cross-run persistence. The only
-thing threaded across a session is the chosen **difficulty**.
+The hero's progress **carries through the campaign**. On the opener he
+starts at level 1 with the CRUDE SWORD (the melee blade off the hero's wall
+in the prelude — his default weapon; it carries durability and wears out, so
+the run's first job is to scavenge a replacement). Clearing a level banks a
+**loadout snapshot** — his level, stats, worn equipment, bag, and pocketed
+powerups (`extractLoadout`, persisted per difficulty by
+`website/src/game/progress.ts`) — and starting the next level hands it back
+to `createGame(seed, levelId, difficulty, loadout)`, which dresses the run
+in it (`applyLoadout` in `src/game/arrival.ts`): ids re-minted, bag re-sized
+to the carried STRENGTH, and the hero arriving rested (full health/stamina,
+plating fastened). A **dev jump** to a mid-campaign level with nothing
+banked (`?level=`, playtest bots, wiped storage) falls back to
+`deriveArrivalLoadout` — a realistic stand-in derived from the earlier
+levels' rosters (every mob's XP through the real leveling curve, discounted
+by config `ARRIVAL.clearShare`; stat points auto-spent round-robin; the
+previous level's signature weapon, issue gear, and a couple of its powerups)
+— so testing Mars means arriving with roughly what a moon clear would have
+banked. Losing a run never erases the banked loadout: retry restarts the
+level with the same carry-over.
 
 What the campaign _does_ persist is **completion**, on-device and per
 difficulty (`website/src/game/progress.ts`): clearing a level records it, and

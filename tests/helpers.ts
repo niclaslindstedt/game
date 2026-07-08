@@ -6,16 +6,11 @@ import {
   createGame,
   dismissIntro,
   enemyDef,
-  LEVELING,
   levelDef,
-  LOOT,
-  PLAYER,
   skipCutscene,
-  STAMINA,
   step,
-  weaponDef,
 } from "@game/core";
-import type { Enemy, GameInput, GameState, StatName } from "@game/core";
+import type { Enemy, GameInput, GameState } from "@game/core";
 
 export const SEED = 42;
 export const DT = 16;
@@ -40,48 +35,14 @@ export const jumpOnce: GameInput = {
  * A run already past the prelude scene and the intro text box. The moon is
  * the reference level for the engine-rule suites — their geometry and
  * tuning assertions were calibrated against it; level-specific suites pass
- * their own id. The seasoned arrival (a mid-campaign start's derived level
- * and inherited kit — see src/game/arrival.ts) is stripped back to the
- * authored level-1 baseline, so every suite stages from the same bare hero
- * it was calibrated against; the arrival itself is covered by
- * `tests/engine/arrival_test.ts` and the mars content suite.
+ * their own id. No loadout is passed, so every suite stages from the same
+ * authored level-1 hero (crude sword, bare hands); the loadout carry-over
+ * itself is covered by `tests/engine/arrival_test.ts` and the mars suite.
  */
 export function startGame(seed: number = SEED, levelId = "moon"): GameState {
   const state = createGame(seed, levelId);
-  bareHero(state);
   skipCutscene(state);
   dismissIntro(state);
-  return state;
-}
-
-/** Reset a run's hero to the authored level-1 baseline: crude sword, bare
- * hands, empty bag — undoing the seasoned arrival for surgical staging. */
-export function bareHero(state: GameState): GameState {
-  const player = state.player;
-  player.level = 1;
-  player.xp = 0;
-  player.xpToNext = LEVELING.baseXpToLevel;
-  player.pendingStatPoints = 0;
-  for (const stat of Object.keys(player.stats) as StatName[]) {
-    player.stats[stat] = 0;
-  }
-  player.equipment.weapon = {
-    id: state.nextId++,
-    defId: "crude_sword",
-    slot: "weapon",
-    tier: "regular",
-    affixes: [],
-    durability: weaponDef("crude_sword").durability,
-  };
-  player.equipment.suit = null;
-  player.equipment.charm = null;
-  player.heldAbilities = [];
-  player.inventory = new Array<null>(LOOT.baseInventorySize).fill(null);
-  player.maxHp = PLAYER.maxHp;
-  player.hp = PLAYER.maxHp;
-  player.armor = 0;
-  player.maxStamina = STAMINA.base;
-  player.stamina = STAMINA.base;
   return state;
 }
 

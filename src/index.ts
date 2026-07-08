@@ -22,6 +22,15 @@ export {
 export { createGame } from "./game/create.ts";
 export { step } from "./game/step.ts";
 
+// Loadout carry-over between levels: snapshot a finished run's progress,
+// dress the next run in it (via createGame's `loadout` parameter), or derive
+// a realistic stand-in for dev jumps with nothing banked.
+export {
+  applyLoadout,
+  deriveArrivalLoadout,
+  extractLoadout,
+} from "./game/arrival.ts";
+
 // The autopilot: bot strategies producing player input (tests, ?bot=, and
 // the future AI second player).
 export {
@@ -231,6 +240,7 @@ export type {
   Item,
   Landmark,
   LevelInfo,
+  Loadout,
   Obstacle,
   Player,
   Projectile,
