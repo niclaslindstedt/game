@@ -166,6 +166,49 @@ const SPRITES = {
   // ---- Gore splashes (12x12 effect frames, drawn by drawEffects) -------------
   blood_0: BLOOD_0,
   blood_1: BLOOD_1,
+  // ---- UI cursors (16×16) ----------------------------------------------------
+  // Not drawn in the world — these are lifted out of the atlas into CSS cursors
+  // (see GameScreen / TitleScreen), so they read as 16-bit gfx like everything
+  // else. The in-play mouse reticle: four white outlined arms around a red
+  // aiming dot (the aim dimension made visible).
+  crosshair: [
+    "......OOOO......",
+    "......OWWO......",
+    "......OWWO......",
+    "......OWWO......",
+    "......OWWO......",
+    "......OOOO......",
+    "OOOOOOOOOOOOOOOO",
+    "OWWWWOOrrOOWWWWO",
+    "OWWWWOOrrOOWWWWO",
+    "OOOOOOOOOOOOOOOO",
+    "......OOOO......",
+    "......OWWO......",
+    "......OWWO......",
+    "......OWWO......",
+    "......OWWO......",
+    "......OOOO......",
+  ],
+  // The menu pointer: a puffy Mickey-Mouse white glove pointing up, three back
+  // seams on the mitt, a rolled cuff. Hotspot is the fingertip (top).
+  glove: [
+    "...OO...........",
+    "..OWWO..........",
+    "..OWWO..........",
+    "..OWWO..........",
+    "..OWWO.OO.OO....",
+    "..OWWOOWWOWWWO..",
+    "..OWWWWWWWWWWWO.",
+    "OOOOWWWWWWWWWWWO",
+    "OWWWWWWWWWWWWWWO",
+    "OWWWOWWOWWOWWWWO",
+    ".OWWWWWWWWWWWWWO",
+    ".OWWWWWWWWWWWWO.",
+    ".OWWWWWWWWWWWO..",
+    ".OWOOOOOOOOOWO..",
+    ".OWWWWWWWWWWWO..",
+    "..OOOOOOOOOOO...",
+  ],
 };
 
 // The ecto recolors (sprite-data/moon.mjs) swap these grids' palette.

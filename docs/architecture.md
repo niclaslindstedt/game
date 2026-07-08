@@ -134,7 +134,11 @@ run against synthetic fixtures with no shipped content (see
   multiplies its contact damage — the one-last-stand spike the renderer
   telegraphs with a flickering dying sprite. The character fights autonomously (and only
   targets monsters inside the visible view the app passes in
-  `input.view`); the player steers, jumps (tap/Space), spends banked
+  `input.view`) — it locks the nearest visible foe, but a desktop mouse adds an
+  aim dimension: `input.aim` (the pointer's world position) biases the pick
+  toward whatever the cursor points at (`AIM.biasStrength`), so foes in the
+  pointer's direction outrank merely-closer ones elsewhere; the player steers,
+  jumps (tap/Space), spends banked
   ability pickups (`input.useItem`), spends level-up stat points, and
   manages the inventory. Level-ups restore full health; golden XP arrows
   grant a fixed share of the current threshold. Picked-up equipment that

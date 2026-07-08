@@ -2329,3 +2329,15 @@ body {
   opacity: 0.4;
   box-shadow: 0 0 0 2px rgba(11, 13, 16, 0.5);
 }
+
+/* The main menu's mouse pointer is a 16-bit Mickey glove. TitleScreen sets
+   --menu-cursor from the sprite atlas; before assets load (or if the slice
+   fails) it falls back to the plain arrow. Descendants inherit it so the
+   buttons and the backdrop share one pointer, while a more specific rule
+   (a locked level's not-allowed) still wins for its own affordance. */
+.title-screen {
+  cursor: var(--menu-cursor, default);
+}
+.title-screen * {
+  cursor: inherit;
+}

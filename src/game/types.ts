@@ -519,6 +519,14 @@ export type GameInput = {
    * bots) targeting falls back to weapon range alone.
    */
   view?: { x: number; y: number; width: number; height: number };
+  /**
+   * The desktop mouse pointer's world position — the aim dimension. When set,
+   * the auto-weapon prefers the monster in the pointer's direction over a
+   * merely-closer one elsewhere (see `AIM.biasStrength`), so a desktop player
+   * steers where the hero fires. Absent (touch, keyboard-only, bots) or
+   * resting on the hero: targeting stays the plain nearest foe.
+   */
+  aim?: Vec2;
 };
 
 /**
