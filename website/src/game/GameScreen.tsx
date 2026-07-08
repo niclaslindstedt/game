@@ -1385,6 +1385,7 @@ export function GameScreen({
         <IntroOverlay
           state={state}
           font={font}
+          onBlip={() => playUiSound(synth, "blip")}
           onBegin={() => {
             dismissIntro(state);
             playLevelMusic(levelDef(state.level.id).music);
