@@ -73,11 +73,12 @@ export function hitEnemy(
     crit,
   });
 
-  // An overpowered kill's answer: the OVERKILL — the damage this blow dumped
-  // past the mob's last hp — jolts the menace meter and lures the nearby horde
-  // in. `enemy.hp` is now ≤ 0, so its magnitude is the overkill. The meter also
-  // heats continuously from the player's rolling output (see tickMenace).
-  bankOverkill(state, -enemy.hp, enemy.maxHp);
+  // An overpowered kill's answer: the OVERKILL — this blow's damage beyond the
+  // mob's FULL health (damage − maxHp) — jolts the menace meter and lures the
+  // nearby horde in. A blow that only finished a wounded mob isn't overkill;
+  // one that could have dropped it several times over is. The meter also heats
+  // continuously from the player's rolling output (see tickMenace).
+  bankOverkill(state, damage, enemy.maxHp);
 
   grantXp(state, def.xp ?? Math.round(enemy.maxHp * LEVELING.xpPerHp));
 

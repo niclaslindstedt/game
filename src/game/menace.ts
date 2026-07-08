@@ -67,24 +67,26 @@ export function lureMult(state: GameState): number {
 }
 
 /**
- * An overpowered kill's answer: the OVERKILL (damage the killing blow dumped
- * past the mob's last hp) both (1) jolts the menace meter up instantly and (2)
- * dinner-bells the nearby horde over RIGHT NOW via spawner walk-credit, so a big
- * hit is answered within seconds. `maxHp` is the victim's max hp: the meter jolt
- * is measured in HEALTHBARS of overkill (overkill ÷ maxHp) and scaled by
- * `menaceSensitivity`, so a fair, level-appropriate kill barely moves it while
- * one-shotting a mob for several times its health — being wildly stronger than
- * the horde — escalates on the spot, a spike on top of the rolling DPS/kill-rate
- * heat in `tickMenace`. The lure credit stays keyed to raw overkill (a big hit
- * is a big dinner bell regardless of difficulty). Emits `menaceRose` if the jolt
- * tips into a new stage. Called from hitEnemy on every kill.
+ * An overpowered kill's answer, keyed to the killing blow's OVERKILL. Overkill
+ * is the blow's `damage` beyond the mob's FULL health (`damage − maxHp`), so a
+ * hit that merely finishes off an already-wounded mob is NOT overkill — only a
+ * blow big enough to have dropped the mob outright, with power to spare, counts.
+ * It both (1) jolts the menace meter up instantly and (2) dinner-bells the
+ * nearby horde over RIGHT NOW via spawner walk-credit, so a big hit is answered
+ * within seconds. The meter jolt is measured in HEALTHBARS of overkill
+ * (overkill ÷ maxHp) and scaled by `menaceSensitivity`, so a fair,
+ * level-appropriate kill barely moves it while one-shotting a mob for several
+ * times its health — being wildly stronger than the horde — escalates on the
+ * spot, a spike on top of the rolling DPS/kill-rate heat in `tickMenace`. Emits
+ * `menaceRose` if the jolt tips into a new stage. Called from hitEnemy on every
+ * kill with the (crit-adjusted) killing-blow damage and the victim's max hp.
  */
 export function bankOverkill(
   state: GameState,
-  overkill: number,
+  damage: number,
   maxHp: number,
 ): void {
-  const spike = Math.max(0, overkill);
+  const spike = Math.max(0, damage - maxHp);
   state.moveSpawnCredit += spike * MENACE.lureCreditPerOverkill;
   if (spike <= 0 || maxHp <= 0) return;
   const healths = spike / maxHp;

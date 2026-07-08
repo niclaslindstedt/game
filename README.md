@@ -112,7 +112,7 @@ and something enormous haunts the old flag.
 - **Don't get complacent when you're winning.** Once you're outclassing the
   horde — **one-shotting mobs for far more than they're worth** and clearing at
   a blistering pace — you build **menace** and a RAMPAGE gauge lights up on the
-  HUD. It reads how *overpowered* you are, not just how fast you swing, so a
+  HUD. It reads how _overpowered_ you are, not just how fast you swing, so a
   fresh hero can't trip it in the opening levels; it takes a genuinely lopsided
   build. How touchy it is depends on the difficulty: **EASY** barely reacts,
   **MEDIUM** answers only a truly dominant run, and each harder rung is more

@@ -88,6 +88,37 @@ describe("menace — the meter", () => {
     expect(state.moveSpawnCredit).toBeGreaterThan(creditBefore);
   });
 
+  it("overkill is damage beyond FULL hp — finishing a wounded mob doesn't count", () => {
+    // Overkill is the blow's damage minus the mob's MAX hp, not the hp it had
+    // left. A modest hit that finishes an almost-dead mob banks nothing; the
+    // same hit that dwarfs a mob's whole bar banks overkill.
+    const kill = (hp: number, maxHp: number) => {
+      const state = startGame();
+      bareStage(state);
+      state.player.level = 6; // warmed up so any overkill lands at full weight
+      equip(state, "test_hammer"); // ~34 dmg — far under a 500-hp bar
+      const { x, y } = state.player.pos;
+      state.enemies.push(
+        makeEnemy({ pos: { x: x + 20, y }, hp, maxHp }, "test_fodder"),
+      );
+      const creditBefore = state.moveSpawnCredit;
+      step(state, idle, DT);
+      expect(state.stats.kills).toBe(1);
+      return {
+        menace: state.menace,
+        credit: state.moveSpawnCredit - creditBefore,
+      };
+    };
+    // Finishing a 5/500 mob: the 34-dmg blow is far below its 500 max, so
+    // damage − maxHp < 0 → no overkill at all.
+    const wounded = kill(5, 500);
+    // Crushing a 10/10 mob: 34 − 10 = 24 of overkill → a real jolt.
+    const crushed = kill(10, 10);
+    expect(wounded.credit).toBe(0);
+    expect(crushed.credit).toBeGreaterThan(0);
+    expect(crushed.menace).toBeGreaterThan(wounded.menace);
+  });
+
   it("an overkill crossing a stage boundary emits menaceRose", () => {
     const state = startGame();
     bareStage(state);

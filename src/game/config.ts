@@ -156,13 +156,13 @@ export const MENACE = {
   perKillRate: 1.5,
   /**
    * Menace banked instantly per HEALTHBAR of OVERKILL on a killing blow — the
-   * damage dumped past the mob's hp, measured as a fraction of its MAX hp
-   * (overkill ÷ maxHp), not raw points. A fair kill wastes a sliver of a bar and
-   * barely registers; one-shotting a mob for several times its health wastes
-   * multiple bars — the signature of an overpowered build — and jolts the meter.
-   * Measuring it relative to the mob's hp is what keeps early, level-appropriate
-   * kills cool while genuinely lopsided ones escalate. Scaled by
-   * `menaceSensitivity` like the rolling heat.
+   * blow's damage beyond the mob's FULL health (damage − maxHp), measured as a
+   * fraction of its max hp (overkill ÷ maxHp), not raw points. A hit that only
+   * finishes a wounded mob isn't overkill at all; one that could have dropped
+   * the mob several times over wastes multiple bars — the signature of an
+   * overpowered build — and jolts the meter. Measuring it relative to the mob's
+   * hp is what keeps early, level-appropriate kills cool while genuinely
+   * lopsided ones escalate. Scaled by `menaceSensitivity` like the rolling heat.
    */
   perOverkill: 1.4,
   /**
