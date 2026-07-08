@@ -815,12 +815,15 @@ export function GameScreen({
               durationMs: 450,
             });
           }
-          // Loot and powerups announce themselves in the lower-right feed;
-          // equipment carries its tier color, plot pieces glow gold.
+          // Loot and powerups announce themselves in the lower-right feed. Only
+          // SPECIAL items tint their name — magic/rare/… gear carries its tier
+          // color; ordinary (regular) loot stays neutral. Plot pieces glow gold.
           if (event.type === "itemCollected" && event.name) {
             pushPickup(
               event.name,
-              event.tier ? TIER_COLORS[event.tier] : undefined,
+              event.tier && event.tier !== "regular"
+                ? TIER_COLORS[event.tier]
+                : undefined,
             );
           }
           if (event.type === "storyItemCollected") {
