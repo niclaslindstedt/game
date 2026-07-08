@@ -857,7 +857,12 @@ body {
 .moon-boom-shard {
   width: 0.55rem;
   height: 0.55rem;
-  background: radial-gradient(circle at 45% 40%, #ffe9c4 0%, #ff9a44 60%, #b5471a 100%);
+  background: radial-gradient(
+    circle at 45% 40%,
+    #ffe9c4 0%,
+    #ff9a44 60%,
+    #b5471a 100%
+  );
   transform: translate(-50%, -50%) rotate(calc(var(--shard) * 30deg))
     translateY(0) scale(0.4);
   animation: moon-shard 900ms ease-out forwards;
@@ -866,7 +871,12 @@ body {
 .moon-boom-shard:nth-child(even) {
   width: 0.35rem;
   height: 0.35rem;
-  background: radial-gradient(circle at 45% 40%, #d7dce4 0%, #9099a6 60%, #565f6d 100%);
+  background: radial-gradient(
+    circle at 45% 40%,
+    #d7dce4 0%,
+    #9099a6 60%,
+    #565f6d 100%
+  );
   animation-duration: 820ms;
 }
 

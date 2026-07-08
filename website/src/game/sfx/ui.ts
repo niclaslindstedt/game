@@ -7,13 +7,7 @@
 import type { Synth } from "@ui/lib/synth.ts";
 
 export type UiSound =
-  | "move"
-  | "confirm"
-  | "back"
-  | "start"
-  | "equip"
-  | "blip"
-  | "boom";
+  "move" | "confirm" | "back" | "start" | "equip" | "blip" | "boom";
 
 export function playUiSound(synth: Synth, sound: UiSound): void {
   switch (sound) {
