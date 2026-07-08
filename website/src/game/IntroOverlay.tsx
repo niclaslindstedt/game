@@ -1,11 +1,14 @@
 // SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
 // The level's story text box: why the player has arrived here. Shown while
-// the engine sits in the `intro` phase; dismissing it starts the run.
+// the engine sits in the `intro` phase; dismissing it starts the run. The
+// briefing prints letter by letter with a 16-bit blip and dramatic pauses —
+// a tap finishes the crawl, the START button drops the player in.
 
 import { difficultyDef, levelDef, type GameState } from "@game/core";
 
 import { PixelText } from "@ui/lib/PixelText.tsx";
 import type { PixelFont } from "@ui/lib/pixel-font.ts";
+import { useTypewriter } from "@ui/lib/typewriter.ts";
 
 import { ENTER_LABEL } from "./copy.ts";
 
@@ -13,15 +16,32 @@ export function IntroOverlay({
   state,
   font,
   onBegin,
+  onBlip,
 }: {
   state: GameState;
   font: PixelFont;
   onBegin: () => void;
+  /** Play the letter-print blip — fired as briefing characters land. */
+  onBlip?: () => void;
 }) {
   const def = levelDef(state.level.id);
+  // The briefing crawls in; the title, difficulty, and controls stay instant —
+  // only the story lines carry the drama. Blank lines are gaps: they hold a
+  // beat (the "\n" between rows) but print nothing.
+  const { rows, done, skip } = useTypewriter(def.intro, (visibleIndex) => {
+    if (visibleIndex % 2 === 0) onBlip?.();
+  });
   return (
     <div className="game-overlay intro-overlay">
-      <div className="intro-box">
+      <div
+        className="intro-box"
+        // A tap on the briefing finishes the crawl without starting the run
+        // (the START button owns that); the pointerdown fires before the
+        // button's click, so tapping START still drops straight in.
+        onPointerDown={() => {
+          if (!done) skip();
+        }}
+      >
         <PixelText
           font={font}
           text={`LEVEL ${def.index} - ${def.name}`}
@@ -39,7 +59,7 @@ export function IntroOverlay({
             line === "" ? (
               <div key={i} className="intro-gap" />
             ) : (
-              <PixelText key={i} font={font} text={line} scale={2} />
+              <PixelText key={i} font={font} text={rows[i] ?? ""} scale={2} />
             ),
           )}
         </div>

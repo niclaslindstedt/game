@@ -6,7 +6,7 @@
 
 import { describe, expect, it } from "vitest";
 
-import { ENEMY_DEFS, STORY_ITEM_DEFS } from "@game/core";
+import { ENEMY_DEFS, LEVELS, STORY_ITEM_DEFS } from "@game/core";
 
 import { pauseAfter } from "@ui/lib/typewriter.ts";
 
@@ -55,10 +55,14 @@ function pageDurationMs(page: string[]): number {
 }
 
 describe("dialogue sweep", () => {
-  // Every spoken page across the shipped catalogs: elite arrivals, last words,
-  // and story-item lore. The sweep proves the timing is sane on real content —
-  // not a single stall, and every page delivered inside a patient bound.
+  // Every crawled page across the shipped catalogs: level-intro briefings,
+  // elite arrivals, last words, and story-item lore. The sweep proves the
+  // timing is sane on real content — not a single stall, and every page
+  // delivered inside a patient bound.
   const pages: { who: string; page: string[] }[] = [];
+  for (const def of Object.values(LEVELS)) {
+    pages.push({ who: `intro:${def.id}`, page: [...def.intro] });
+  }
   for (const def of Object.values(ENEMY_DEFS)) {
     for (const page of def.dialogue ?? []) pages.push({ who: def.name, page });
     if (def.lastWords) pages.push({ who: def.name, page: def.lastWords });
