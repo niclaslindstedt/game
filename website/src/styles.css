@@ -638,7 +638,13 @@ body {
   height: clamp(64px, 14vmin, 130px);
   border-radius: 50%;
   overflow: hidden;
-  pointer-events: none;
+  /* Interactive: a long hold on the moon opens the warp picker (TitleScreen).
+     It stays a pointer-only secret; the cursor hints nothing on purpose. */
+  pointer-events: auto;
+  -webkit-tap-highlight-color: transparent;
+  -webkit-touch-callout: none;
+  user-select: none;
+  touch-action: none;
   background:
     radial-gradient(circle at 64% 28%, #8f96a0 0 7%, transparent 8%),
     radial-gradient(circle at 38% 58%, #8f96a0 0 10%, transparent 11%),
@@ -646,6 +652,41 @@ body {
     radial-gradient(circle at 52% 82%, #8f96a0 0 4%, transparent 5%),
     radial-gradient(circle at 35% 35%, #f4f6f8, #c3c9d1 55%, #99a0aa);
   box-shadow: 0 0 24px rgba(230, 232, 235, 0.25);
+  /* Snap back gently when a charge is released early (the .charging class is
+     dropped); the halo itself is driven inline by startTitleSky each frame, so
+     the charge glow rides on filter/transform, which the driver never sets. */
+  transition:
+    filter 260ms ease-out,
+    transform 260ms ease-out;
+}
+
+/* The moon "charging up" while it is held: over MOON_HOLD_MS it brightens and
+   swells, so the secret long-press has visible feedback and its completion is
+   readable. Kept to filter/transform so it never fights the inline box-shadow
+   halo the sky driver writes every frame. */
+.title-moon.charging {
+  animation: moon-charge 7000ms ease-in forwards;
+}
+
+@keyframes moon-charge {
+  0% {
+    filter: brightness(1);
+    transform: scale(1);
+  }
+  100% {
+    filter: brightness(2.3) saturate(1.15);
+    transform: scale(1.16);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .title-moon {
+    transition: none;
+  }
+  .title-moon.charging {
+    animation: none;
+    filter: brightness(1.6);
+  }
 }
 
 /* The terminator: a soft-edged shadow disc, clipped to the moon by the parent's

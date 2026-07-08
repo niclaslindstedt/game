@@ -94,6 +94,10 @@ const SCORE_METRICS: { id: ScoreMetric; label: string }[] = [
 /** A minimum travel (CSS px) before a pointer drag counts as a swipe. */
 const SWIPE_THRESHOLD = 36;
 
+/** How long the title moon must be held to open the warp picker — a
+ * deliberately long, secret gesture so it never fires by accident. */
+const MOON_HOLD_MS = 7000;
+
 type MenuEntry = {
   label: string;
   aria: string;
@@ -115,7 +119,11 @@ function unlockAudio() {
 export function TitleScreen({
   onStart,
 }: {
-  onStart: (difficulty: Difficulty, levelId: string) => void;
+  onStart: (
+    difficulty: Difficulty,
+    levelId: string,
+    opts?: { skipIntro?: boolean },
+  ) => void;
 }) {
   const [assets, setAssets] = useState<GameAssets | null>(null);
   const [screen, setScreen] = useState<MenuScreen>("main");
@@ -125,6 +133,12 @@ export function TitleScreen({
   // follows reads it to decide which levels are unlocked (progress is per
   // difficulty), and it carries into the run.
   const [difficulty, setDifficulty] = useState<Difficulty>("medium");
+  // Warp mode: the level list was opened by the moon's long-press, so every
+  // level is reachable regardless of progress and picking one skips the intro.
+  const [warp, setWarp] = useState(false);
+  // The moon is mid-charge (held but not yet at MOON_HOLD_MS) — drives the
+  // "charging up" glow so the long-press has visible feedback.
+  const [moonCharging, setMoonCharging] = useState(false);
   // The HIGH SCORES board's axes: left/right picks the difficulty column,
   // up/down flips between the survival-time and kills-per-minute rankings.
   const [scoreDifficulty, setScoreDifficulty] = useState<Difficulty>("medium");
@@ -274,16 +288,31 @@ export function TitleScreen({
       ];
     }
     if (screen === "levels") {
+      // Warp mode (opened by the moon's long-press) ignores the unlock gate:
+      // every level is reachable so you can try any of them, and picking one
+      // drops straight into play with no intro.
+      const warpBack: MenuEntry = {
+        label: "BACK",
+        aria: "menu-back",
+        action: () => {
+          playUiSound(synth, "back");
+          setWarp(false);
+          setScreen("main");
+          setCursor(0);
+        },
+      };
       return [
         ...LEVEL_ORDER.map((id, i) => {
           const def = levelDef(id);
-          const unlocked = isLevelUnlocked(id, difficulty);
+          const unlocked = warp || isLevelUnlocked(id, difficulty);
           const cleared = hasCompletedLevel(id, difficulty);
-          const blurb = !unlocked
-            ? "LOCKED - CLEAR THE PREVIOUS LEVEL"
-            : cleared
-              ? "CLEARED - REPLAY"
-              : "NEW";
+          const blurb = warp
+            ? "WARP - DROPS STRAIGHT IN"
+            : !unlocked
+              ? "LOCKED - CLEAR THE PREVIOUS LEVEL"
+              : cleared
+                ? "CLEARED - REPLAY"
+                : "NEW";
           return {
             label: `${i + 1}. ${def.name}`,
             aria: `level-${id}`,
@@ -296,11 +325,13 @@ export function TitleScreen({
                 return;
               }
               playUiSound(synth, "start");
-              onStart(difficulty, id);
+              onStart(difficulty, id, warp ? { skipIntro: true } : undefined);
             },
           };
         }),
-        backTo("difficulty", DIFFICULTY_ORDER.indexOf(difficulty)),
+        warp
+          ? warpBack
+          : backTo("difficulty", DIFFICULTY_ORDER.indexOf(difficulty)),
       ];
     }
     if (screen === "settings") {
@@ -431,7 +462,7 @@ export function TitleScreen({
     // can't see that dependency through getSettings(), so it wrongly flags the
     // tick as unnecessary — keep it and silence the false positive.
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [screen, onStart, settingsTick, difficulty]);
+  }, [screen, onStart, settingsTick, difficulty, warp]);
 
   // The HIGH SCORES board is steered on two axes rather than a cursor list:
   // left/right walks the difficulty ladder, up/down flips the ranking. Both
@@ -511,9 +542,12 @@ export function TitleScreen({
       } else if (event.key === "Escape" && screen !== "main") {
         unlockAudio();
         playUiSound(synth, "back");
+        // The warp picker isn't reached through the difficulty ladder, so its
+        // back-out returns to the main menu and leaves warp mode.
+        if (screen === "levels" && warp) setWarp(false);
         const back: Record<string, MenuScreen> = {
           controls: "settings",
-          levels: "difficulty",
+          levels: warp ? "main" : "difficulty",
         };
         setScreen(back[screen] ?? "main");
         setCursor(0);
@@ -528,6 +562,7 @@ export function TitleScreen({
     scoreDetail,
     stepScoreDifficulty,
     stepScoreMetric,
+    warp,
   ]);
 
   // Touch: a swipe on the board picks its axis by the dominant direction —
@@ -556,6 +591,37 @@ export function TitleScreen({
     }
   };
 
+  // The moon's hidden long-press: hold it for MOON_HOLD_MS to open the warp
+  // picker — a level-select that ignores progress and skips the intro, so any
+  // level can be tried without finishing the current campaign. A running glow
+  // (moonCharging) shows the hold is building; releasing early cancels it.
+  const moonHold = useRef<number | null>(null);
+  const cancelMoonHold = useCallback(() => {
+    if (moonHold.current !== null) {
+      window.clearTimeout(moonHold.current);
+      moonHold.current = null;
+    }
+    setMoonCharging(false);
+  }, []);
+  const startMoonHold = useCallback((event: ReactPointerEvent) => {
+    unlockAudio();
+    // Only a primary press charges; a mouse right/middle button is ignored.
+    if (event.pointerType === "mouse" && event.button !== 0) return;
+    if (moonHold.current !== null) return;
+    setMoonCharging(true);
+    moonHold.current = window.setTimeout(() => {
+      moonHold.current = null;
+      setMoonCharging(false);
+      playUiSound(synth, "start");
+      haptics.vibrate(40);
+      setWarp(true);
+      setScreen("levels");
+      setCursor(0);
+    }, MOON_HOLD_MS);
+  }, []);
+  // Drop the pending timer if the menu unmounts mid-charge.
+  useEffect(() => cancelMoonHold, [cancelMoonHold]);
+
   if (!assets) {
     return <div className="game-loading">Loading…</div>;
   }
@@ -580,7 +646,19 @@ export function TitleScreen({
         <span className="title-asteroid title-asteroid-2" />
         <span className="title-asteroid title-asteroid-3" />
       </div>
-      <div ref={moonRef} className="title-moon" aria-hidden="true" />
+      {/* Hidden warp gesture: hold the moon for MOON_HOLD_MS to open the
+          all-levels picker (see startMoonHold). aria-hidden stays — it is a
+          secret, pointer-only Easter egg, not an announced control. */}
+      <div
+        ref={moonRef}
+        className={`title-moon${moonCharging ? " charging" : ""}`}
+        aria-hidden="true"
+        onPointerDown={startMoonHold}
+        onPointerUp={cancelMoonHold}
+        onPointerLeave={cancelMoonHold}
+        onPointerCancel={cancelMoonHold}
+        onContextMenu={(event) => event.preventDefault()}
+      />
       {/* Easter egg: a lone sun slowly arcs across the sky roughly every few
           minutes. The moon is dark while it is up and swells to full once it
           has set — always lit from the sun's true direction. Driven by
@@ -615,9 +693,9 @@ export function TitleScreen({
       {screen === "levels" && (
         <PixelText
           font={font}
-          text="CHOOSE YOUR MISSION"
+          text={warp ? "WARP TO ANY MISSION" : "CHOOSE YOUR MISSION"}
           scale={2}
-          color="#d9a0f0"
+          color={warp ? "#7ef0c8" : "#d9a0f0"}
         />
       )}
       {screen === "settings" && (
