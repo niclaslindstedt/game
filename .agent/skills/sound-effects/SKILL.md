@@ -119,6 +119,14 @@ over time.
   0.32, lowpass 2600) in `synth.ts`; `echo:` on any tone/noise is a send
   level into it. It is the single biggest "sounds 16-bit now" knob —
   and the easiest to overdose: keep combat SFX ≤0.3.
+- **Master limiter + per-step dedupe (2026-07):** every voice and the echo
+  bus sum into one `DynamicsCompressor` limiter (threshold −12 dB, knee 6,
+  ratio 20, attack 2 ms, release 180 ms) in `synth.ts` before the
+  destination — single sounds (peaks ≤ 0.12 ≈ −18 dBFS) pass untouched,
+  overlapping stacks stop hard-clipping. And `playEventSounds` plays
+  identical sounds once per step (keyed on type/weaponClass/crit/kind/tier):
+  N same-frame kills are sample-aligned copies of one waveform, i.e. one
+  sound at N× amplitude, never "N kills".
 - **Drum kit recipes (2026-07):** kick = triangle A2, `slide 0.25`,
   gate 1; snare = noise, highpass 1400, vol ~0.038; hat = noise,
   highpass 6500, gate 0.3, vol ~0.011, panned slightly. A 2-bar kick

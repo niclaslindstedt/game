@@ -85,9 +85,23 @@ const ECHO_DELAY_S = 0.22;
 const ECHO_FEEDBACK = 0.32;
 const ECHO_DAMP_HZ = 2600;
 
+// The master limiter: every voice (and the echo bus) sums into this
+// compressor instead of connecting straight to the destination. Combat
+// stacks many simultaneous voices — shots, hits, kills, all over the music —
+// and their sum regularly exceeds full scale, which the destination renders
+// as hard clipping. The threshold sits above any single sound's peak
+// (volumes live in 0.03–0.12 ≈ −30…−18 dBFS), so isolated sounds pass
+// untouched and only overlapping stacks get squeezed.
+const LIMITER_THRESHOLD_DB = -12;
+const LIMITER_KNEE_DB = 6;
+const LIMITER_RATIO = 20;
+const LIMITER_ATTACK_S = 0.002;
+const LIMITER_RELEASE_S = 0.18;
+
 export function createSynth(): Synth {
   let ctx: AudioContext | null = null;
   let echoInput: GainNode | null = null;
+  let master: AudioNode | null = null;
 
   // iOS puts the context into a non-standard "interrupted" state on app
   // switch / lock; treat anything that isn't running or closed as resumable.
@@ -117,6 +131,24 @@ export function createSynth(): Synth {
     return ctx;
   };
 
+  const masterBus = (c: AudioContext): AudioNode => {
+    if (!master) {
+      if (typeof c.createDynamicsCompressor === "function") {
+        const limiter = c.createDynamicsCompressor();
+        limiter.threshold.value = LIMITER_THRESHOLD_DB;
+        limiter.knee.value = LIMITER_KNEE_DB;
+        limiter.ratio.value = LIMITER_RATIO;
+        limiter.attack.value = LIMITER_ATTACK_S;
+        limiter.release.value = LIMITER_RELEASE_S;
+        limiter.connect(c.destination);
+        master = limiter;
+      } else {
+        master = c.destination;
+      }
+    }
+    return master;
+  };
+
   const echoBus = (c: AudioContext): GainNode => {
     if (!echoInput) {
       echoInput = c.createGain();
@@ -131,13 +163,13 @@ export function createSynth(): Synth {
       delay.connect(damp);
       damp.connect(feedback);
       feedback.connect(delay);
-      damp.connect(c.destination);
+      damp.connect(masterBus(c));
     }
     return echoInput;
   };
 
-  /** Envelope → optional pan → destination (+ optional echo send); returns
-   * the node sources should connect into. */
+  /** Envelope → optional pan → master limiter (+ optional echo send);
+   * returns the node sources should connect into. */
   const output = (
     c: AudioContext,
     gain: GainNode,
@@ -151,7 +183,7 @@ export function createSynth(): Synth {
       tail.connect(panner);
       tail = panner;
     }
-    tail.connect(c.destination);
+    tail.connect(masterBus(c));
     if (echo > 0) {
       const send = c.createGain();
       send.gain.value = Math.min(1, echo);
