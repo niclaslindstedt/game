@@ -31,8 +31,11 @@ const SEED = 42;
  * In-game milliseconds until a stationary player dies on `level`/`difficulty`.
  * The character holds still (idle input) and lets the starting crude sword
  * auto-swing; any level-up that lands is banked into LUCK so the measurement
- * stays about the starting loadout rather than a chosen build. Returns `capMs`
- * if the run survives the window (used to show EASY outlasts the benchmark).
+ * stays about the starting loadout rather than a chosen build. No loadout is
+ * passed, so the benchmark pins the HORDE's pressure against the bare
+ * authored hero — not whatever kit a campaign carry-over would hand him.
+ * Returns `capMs` if the run survives the window (used to show EASY outlasts
+ * the benchmark).
  */
 function timeToDeathMs(
   level: string,

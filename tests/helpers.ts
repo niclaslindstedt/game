@@ -35,7 +35,9 @@ export const jumpOnce: GameInput = {
  * A run already past the prelude scene and the intro text box. The moon is
  * the reference level for the engine-rule suites — their geometry and
  * tuning assertions were calibrated against it; level-specific suites pass
- * their own id.
+ * their own id. No loadout is passed, so every suite stages from the same
+ * authored level-1 hero (crude sword, bare hands); the loadout carry-over
+ * itself is covered by `tests/engine/arrival_test.ts` and the mars suite.
  */
 export function startGame(seed: number = SEED, levelId = "moon"): GameState {
   const state = createGame(seed, levelId);

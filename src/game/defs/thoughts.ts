@@ -17,11 +17,11 @@ export type ThoughtDef = {
 };
 
 export const THOUGHT_DEFS: Record<string, ThoughtDef> = {
-  // Killing the first OPTIMUS on the moon: the night-shift tin men from SpaceZ
+  // Killing the first OPTIMUSK on the moon: the night-shift tin men from SpaceZ
   // HQ have followed the trail all the way up here — the conspiracy isn't just
   // shipping Ada moonward, it built a garrison to receive her.
-  moon_optimus: {
-    id: "moon_optimus",
+  moon_optimusk: {
+    id: "moon_optimusk",
     speaker: "ME",
     portrait: "player",
     pages: [
@@ -37,6 +37,48 @@ export const THOUGHT_DEFS: Record<string, ThoughtDef> = {
         "GUARDING WHATEVER'S DOWN THERE.",
       ],
       ["OKAY. ONE BOLT AT A TIME.", "KEEP MOVING. FIND ADA."],
+    ],
+  },
+  // Killing the first scout rover on Mars: the tire tracks say the colony
+  // has been running for years while everyone watched the moon.
+  mars_rover: {
+    id: "mars_rover",
+    speaker: "ME",
+    portrait: "player",
+    pages: [
+      [
+        "A ROVER. FRESH PAINT, WORN",
+        "WHEELS. AND THE DUST IS FULL",
+        "OF TIRE TRACKS. YEARS OF THEM.",
+      ],
+      [
+        "THE PLAQUE SAYS 'FOR ALL",
+        "MANKIND'. THE FIRMWARE SAYS",
+        "PROPERTY OF SPACEZ. FIGURES.",
+      ],
+    ],
+  },
+  // Killing the first FEMBOT: the hero's read on the colony's... amenities.
+  mars_fembot: {
+    id: "mars_fembot",
+    speaker: "ME",
+    portrait: "player",
+    pages: [
+      [
+        "...IT BLEW ME A KISS.",
+        "THE ROBOT. IN THE NIGHTGOWN.",
+        "IT BLEW ME A KISS AND FIRED.",
+      ],
+      [
+        "WHO BUILDS A DOOMSDAY COLONY",
+        "AND BUDGETS FOR... THESE?",
+        "BILLIONAIRES. RIGHT.",
+      ],
+      [
+        "EYES FRONT, BUILDER. YOU HAVE",
+        "A GIRLFRIEND. SHE IS GOING TO",
+        "THINK THIS IS HILARIOUS.",
+      ],
     ],
   },
 };

@@ -124,6 +124,36 @@ export const LEVELING = {
 } as const;
 
 /**
+ * The DERIVED arrival loadout (`deriveArrivalLoadout` in arrival.ts): the
+ * realistic stand-in used when a mid-campaign level starts with nothing
+ * banked — dev `?level=` jumps, playtest bots, wiped storage. In the real
+ * campaign the player's actual progress persists instead: victory banks an
+ * `extractLoadout` snapshot the app hands back to `createGame` for the next
+ * level. The derivation estimates that snapshot from data alone: a player
+ * level from the earlier levels' rosters (mob count × hp through the XP
+ * curve), stat points auto-spent, and the previous level's signature kit.
+ */
+export const ARRIVAL = {
+  /**
+   * Fraction of the earlier levels' total roster XP the derivation assumes a
+   * clear actually banked — nobody kills every last wave mob before the boss
+   * falls.
+   */
+  clearShare: 0.5,
+  /** Round-robin order the banked stat points are auto-spent in. */
+  statOrder: [
+    "strength",
+    "dexterity",
+    "stamina",
+    "speed",
+    "intelligence",
+    "luck",
+  ],
+  /** How many of the previous level's abilities ride along as held powerups. */
+  heldAbilities: 2,
+} as const;
+
+/**
  * Menace — the escalation meter that answers an overpowered player, driven by
  * the player's ACTUAL combat output rather than any single lucky blow. The
  * engine keeps a rolling estimate of the damage-per-second and kills-per-second

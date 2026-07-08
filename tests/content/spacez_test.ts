@@ -42,7 +42,7 @@ describe("SPACEZ HQ level def", () => {
     expect(state.level.biome).toBe("spacez");
   });
 
-  it("fields the night shift: five staff types plus the OPTIMUS units and MUSKRAT at the rocket", () => {
+  it("fields the night shift: five staff types plus the OPTIMUSK units and MUSKRAT at the rocket", () => {
     const minionIds = HQ.spawns
       .filter((s) => "band" in s)
       .map((s) => s.enemy)
@@ -52,7 +52,7 @@ describe("SPACEZ HQ level def", () => {
       "guard",
       "hazmat",
       "intern",
-      "optimus",
+      "optimusk",
       "scientist",
     ]);
 
@@ -125,25 +125,25 @@ describe("SPACEZ HQ level def", () => {
     }
   });
 
-  it("fields OPTIMUS as a hard-hitting regular monster, not an elite", () => {
-    const optimus = enemyDef("optimus");
-    expect(optimus.role).toBe("minion");
+  it("fields OPTIMUSK as a hard-hitting regular monster, not an elite", () => {
+    const optimusk = enemyDef("optimusk");
+    expect(optimusk.role).toBe("minion");
     // Not a story unique: no guaranteed elite/boss loot block, no dialogue.
-    expect(optimus.loot).toBeUndefined();
-    expect(optimus.dialogue).toBeUndefined();
+    expect(optimusk.loot).toBeUndefined();
+    expect(optimusk.dialogue).toBeUndefined();
     // Tougher and harder-hitting than every human on the floor.
     for (const id of ["intern", "scientist", "engineer", "guard", "hazmat"]) {
       const staff = enemyDef(id);
-      expect(optimus.hp).toBeGreaterThan(staff.hp);
-      expect(optimus.contactDamage).toBeGreaterThan(staff.contactDamage);
+      expect(optimusk.hp).toBeGreaterThan(staff.hp);
+      expect(optimusk.contactDamage).toBeGreaterThan(staff.contactDamage);
     }
     // …but its payoff is a sweetened drop roll, not a pinned drop.
-    expect(optimus.dropProfile?.dropBonus).toBeGreaterThan(0);
+    expect(optimusk.dropProfile?.dropBonus).toBeGreaterThan(0);
   });
 
   it("drops far more often than a plain staffer (its dropProfile)", () => {
     // Kill a stack of 1-hp mobs parked in blaster reach but out of pickup
-    // range, and count what falls; OPTIMUS's dropProfile should rain gear
+    // range, and count what falls; OPTIMUSK's dropProfile should rain gear
     // where an intern trickles it. Averaged over seeds so one unlucky run
     // can't flip the comparison.
     const dropsFrom = (defId: string, seed: number): number => {
@@ -172,14 +172,16 @@ describe("SPACEZ HQ level def", () => {
       return state.items.length;
     };
 
-    let optimusTotal = 0;
+    let optimuskTotal = 0;
     let internTotal = 0;
     for (const seed of [1, 2, 3]) {
-      optimusTotal += dropsFrom("optimus", seed);
+      optimuskTotal += dropsFrom("optimusk", seed);
       internTotal += dropsFrom("intern", seed);
     }
-    expect(optimusTotal).toBeGreaterThan(internTotal + 20);
-  });
+    expect(optimuskTotal).toBeGreaterThan(internTotal + 20);
+    // Six full sim runs of statistics: give the sampling headroom over the
+    // 5 s default — CI runners cross it while the assertion itself is sound.
+  }, 20_000);
 
   it("spawns the player clear of every wall", () => {
     const state = startGame(SEED, "spacez_hq");

@@ -1,0 +1,170 @@
+// SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
+// Loadout carry-over (src/game/arrival.ts): in the campaign the hero's real
+// progress persists — victory banks an `extractLoadout` snapshot and
+// `createGame(seed, level, difficulty, loadout)` dresses the next run in it.
+// For dev jumps with nothing banked, `deriveArrivalLoadout` builds a
+// realistic stand-in from the earlier levels' rosters. Both paths share
+// `applyLoadout`; with no loadout at all a run starts exactly as authored.
+
+import { describe, expect, it } from "vitest";
+
+import {
+  ARRIVAL,
+  createGame,
+  deriveArrivalLoadout,
+  extractLoadout,
+  HELD_ITEMS,
+  LEVELING,
+  PLAYER,
+  type Loadout,
+} from "@game/core";
+// Importing the helper installs the fixture catalogs as a side effect.
+import { SEED } from "./helpers.ts";
+
+// The fixture reference level's total roster XP (spawns + wave budget), the
+// number the derivation discounts by ARRIVAL.clearShare:
+//   spawns  8×10 + 6×45 + 4×90 + 550(boss) = 1 260
+//   waves   500×10 + 400×45 + 300×90       = 50 000
+const FIX_LEVEL_XP = 51_260;
+
+/** A hand-built snapshot, as if banked by a previous level's victory. */
+function sampleLoadout(): Loadout {
+  return {
+    level: 7,
+    xp: 40,
+    stats: {
+      stamina: 1,
+      strength: 2,
+      dexterity: 1,
+      intelligence: 1,
+      speed: 1,
+      luck: 0,
+    },
+    equipment: {
+      weapon: {
+        id: 1,
+        defId: "test_wrench",
+        slot: "weapon",
+        tier: "magic",
+        affixes: [{ kind: "damagePct", value: 0.2 }],
+        durability: 77,
+      },
+      suit: {
+        id: 2,
+        defId: "test_suit",
+        slot: "suit",
+        tier: "regular",
+        affixes: [],
+      },
+      charm: null,
+    },
+    inventory: [
+      {
+        id: 3,
+        defId: "test_pipe",
+        slot: "weapon",
+        tier: "regular",
+        affixes: [],
+        durability: 100,
+      },
+      null,
+    ],
+    heldAbilities: ["test_storm"],
+  };
+}
+
+describe("loadout carry-over", () => {
+  it("starts exactly as authored when no loadout is passed", () => {
+    const state = createGame(SEED, "test_level_2");
+    expect(state.player.level).toBe(1);
+    expect(state.player.equipment.weapon.defId).toBe("crude_sword");
+    expect(state.player.equipment.suit).toBeNull();
+    expect(state.player.heldAbilities).toEqual([]);
+    expect(Object.values(state.player.stats).every((v) => v === 0)).toBe(true);
+  });
+
+  it("dresses the run in a passed loadout, re-minted and rested", () => {
+    const state = createGame(SEED, "test_level_2", "medium", sampleLoadout());
+    const player = state.player;
+    expect(player.level).toBe(7);
+    expect(player.xp).toBe(40);
+    expect(player.stats.strength).toBe(2);
+    expect(player.pendingStatPoints).toBe(0);
+    // The carried kit, worn wear and affixes included...
+    expect(player.equipment.weapon.defId).toBe("test_wrench");
+    expect(player.equipment.weapon.tier).toBe("magic");
+    expect(player.equipment.weapon.durability).toBe(77);
+    expect(player.equipment.suit?.defId).toBe("test_suit");
+    // ...with ids re-minted so nothing collides with this run's drops.
+    expect(player.equipment.weapon.id).not.toBe(1);
+    // The bag survives, the powerups stay pocketed (within the cap).
+    expect(player.inventory[0]?.defId).toBe("test_pipe");
+    expect(player.heldAbilities).toEqual(
+      ["test_storm"].slice(0, HELD_ITEMS.cap),
+    );
+    // He arrives rested: full (grown) health, full sprint, plating fastened.
+    expect(player.maxHp).toBeGreaterThan(PLAYER.maxHp);
+    expect(player.hp).toBe(player.maxHp);
+    expect(player.armor).toBeGreaterThan(0);
+  });
+
+  it("round-trips: extractLoadout of one run seeds the next", () => {
+    const first = createGame(SEED, "test_level", "medium", sampleLoadout());
+    first.player.xp = 12; // some progress made during the run
+    const carried = extractLoadout(first);
+    const next = createGame(SEED + 1, "test_level_2", "medium", carried);
+    expect(next.player.level).toBe(first.player.level);
+    expect(next.player.stats).toEqual(first.player.stats);
+    expect(next.player.xp).toBe(12);
+    expect(next.player.equipment.weapon.defId).toBe(
+      first.player.equipment.weapon.defId,
+    );
+    // The snapshot is a deep copy: mutating the old run can't reach it.
+    first.player.stats.luck = 99;
+    expect(carried.stats.luck).toBe(0);
+  });
+
+  it("derives the dev-jump stand-in from the cleared rosters' XP curve", () => {
+    const loadout = deriveArrivalLoadout("test_level_2");
+    expect(loadout).not.toBeNull();
+
+    // Walk the same curve the derivation walks, from the known roster total.
+    let xp = Math.round(FIX_LEVEL_XP * ARRIVAL.clearShare);
+    let level = 1;
+    let xpToNext: number = LEVELING.baseXpToLevel;
+    while (xp >= xpToNext) {
+      xp -= xpToNext;
+      level++;
+      xpToNext = Math.round(
+        LEVELING.baseXpToLevel * Math.pow(LEVELING.xpGrowth, level - 1),
+      );
+    }
+    expect(loadout!.level).toBe(level);
+    expect(loadout!.level).toBeGreaterThan(5); // sanity: genuinely seasoned
+    expect(loadout!.xp).toBe(xp);
+    // Every banked point spent, round-robin flat: no stat more than one ahead.
+    const values = Object.values(loadout!.stats);
+    expect(values.reduce((a, b) => a + b, 0)).toBe(
+      (level - 1) * LEVELING.statPointsPerLevel,
+    );
+    expect(Math.max(...values) - Math.min(...values)).toBeLessThanOrEqual(1);
+    // The previous level's kit: its scripted early-drop weapon, issue gear,
+    // and a couple of its powerups.
+    expect(loadout!.equipment.weapon.defId).toBe("test_hammer");
+    expect(loadout!.equipment.suit?.defId).toBe("test_suit");
+    expect(loadout!.equipment.charm?.defId).toBe("test_charm");
+    expect(loadout!.heldAbilities).toEqual(
+      ["test_orbit", "test_storm"].slice(0, ARRIVAL.heldAbilities),
+    );
+  });
+
+  it("derives nothing on the campaign opener", () => {
+    expect(deriveArrivalLoadout("test_level")).toBeNull();
+  });
+
+  it("keeps the derivation deterministic per (level, difficulty)", () => {
+    const a = deriveArrivalLoadout("test_level_2");
+    const b = deriveArrivalLoadout("test_level_2");
+    expect(a).toEqual(b);
+  });
+});

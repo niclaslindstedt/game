@@ -26,6 +26,8 @@ export type StoryItemDef = {
  * SPACEZ has been flying to the moon in secret on hardware nobody built;
  * level 2 (the moon) reveals why: the wreck under the Sea of Tranquility,
  * the moonbase feeding off it, and the man who never came home in '69.
+ * Level 3 (Mars) reveals where it all went after the moon op failed: a
+ * billionaires-only colony — and the lizard gods the whole venture tithes to.
  */
 export const STORY_ITEM_DEFS: Record<string, StoryItemDef> = {
   // ---- SpaceZ HQ ------------------------------------------------------------
@@ -112,7 +114,7 @@ export const STORY_ITEM_DEFS: Record<string, StoryItemDef> = {
       ],
       [
         "IT SIGNED THE MIDNIGHT LAUNCHES.",
-        "IT DREW THE OPTIMUS LINE. IT",
+        "IT DREW THE OPTIMUSK LINE. IT",
         "FILED ADA UNDER 'CARGO'.",
       ],
       [
@@ -177,6 +179,90 @@ export const STORY_ITEM_DEFS: Record<string, StoryItemDef> = {
         "THE MAN ON EVERY POSTER BACK",
         "HOME WAS THE COPY. THE REAL ONE",
         "IS STILL UP HERE. GUARDING.",
+      ],
+    ],
+  },
+  // ---- Mars -------------------------------------------------------------------
+  colony_ledger: {
+    id: "colony_ledger",
+    name: "COLONY LEDGER",
+    icon: "icon_ledger",
+    lore: [
+      [
+        "A PASSENGER LEDGER, LEATHER-",
+        "BOUND. EVERY NAME HAS A NET",
+        "WORTH COLUMN. TEN FIGURES UP.",
+      ],
+      [
+        "NO ENGINEERS. NO FARMERS. NO",
+        "DOCTORS. JUST OWNERS. WHO'S",
+        "GOING TO FIX THEIR TOILETS?",
+      ],
+    ],
+  },
+  moon_postmortem: {
+    id: "moon_postmortem",
+    name: "MOON POST-MORTEM",
+    icon: "icon_postmortem",
+    lore: [
+      [
+        "'COLONY OS 1.0 POST-MORTEM.'",
+        "CAUSE OF FAILURE: THE SUBSTRATE",
+        "WAS ALREADY OCCUPIED.",
+      ],
+      [
+        "'THE TENANT OBJECTED. STAFF",
+        "LOSSES: TOTAL. RECOMMEND MARS.",
+        "RECOMMEND NEVER DIGGING AGAIN.'",
+      ],
+    ],
+  },
+  engagement_report: {
+    id: "engagement_report",
+    name: "ENGAGEMENT REPORT",
+    icon: "icon_report",
+    lore: [
+      [
+        "A DASHBOARD, STILL LIVE.",
+        "'COMPANION UNITS: 2,400.",
+        "SENTIMENT: POSITIVE. COMPLIANT.'",
+      ],
+      [
+        "ONE ROW BLINKS RED. 'SPECIMEN 7:",
+        "REFUSES COMPANIONSHIP. BIT UNIT",
+        "0034. RECOMMEND EARLY TRIBUTE.'",
+      ],
+      ["THAT'S MY GIRL.", "...ALL OF IT. THAT'S MY GIRL."],
+    ],
+  },
+  keycard_terrarium: {
+    id: "keycard_terrarium",
+    name: "TERRARIUM KEYCARD",
+    icon: "icon_keycard_green",
+    unlocks: "terrarium",
+    lore: [
+      [
+        "A KEYCARD OF GREEN GLASS.",
+        "SCALES ETCHED UNDER THE FOIL.",
+        "IT'S WARM. IT SHOULDN'T BE.",
+      ],
+      ["ONE WORD, EMBOSSED:", "'TERRARIUM. TITHE-KEEPERS ONLY.'"],
+    ],
+  },
+  tribute_schedule: {
+    id: "tribute_schedule",
+    name: "TRIBUTE SCHEDULE",
+    icon: "icon_tablet",
+    lore: [
+      [
+        "A STONE TABLET WITH A GANTT",
+        "CHART CHISELED INTO IT. ONE",
+        "MILESTONE GLOWS: 'TRIBUTE NIGHT.'",
+      ],
+      [
+        "'OFFERING: SPECIMEN 7. VENUE:",
+        "THE RIFT. DRESS CODE: SCALES.'",
+        "SHE'S ALIVE. AND I'M NOT LATE.",
       ],
     ],
   },

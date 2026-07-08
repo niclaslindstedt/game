@@ -309,6 +309,19 @@ export type Landmark = {
 export type TileSpec = {
   ground: { common: string; rare: string; rareEvery: number };
   patch?: { a: string; b: string; every: number };
+  /**
+   * Regional overrides: inside `rect` (world px) the zone's own ground/patch
+   * pair replaces the level-wide one — how a single level shifts terrain, e.g.
+   * martian dust outside giving way to deck plating inside the base. Zones are
+   * checked in order; the first rect containing the tile wins. Purely
+   * presentational (the renderer picks tiles from it) — collision never reads
+   * tiles.
+   */
+  zones?: {
+    rect: { x: number; y: number; width: number; height: number };
+    ground: { common: string; rare: string; rareEvery: number };
+    patch?: { a: string; b: string; every: number };
+  }[];
 };
 
 /**
@@ -428,6 +441,13 @@ export type GameEvent =
    */
   | { type: "menaceRose"; stage: number }
   | { type: "bossDefeated"; pos: Vec2 }
+  /**
+   * A fleeing unique (see `EnemyDef.flees`) was beaten down to 0 hp and
+   * escaped instead of dying — off the board, loot paid, and a landmark (the
+   * rift it tore open) left at `pos`. Distinct from `bossDefeated` so the app
+   * can play the escape as a warp, not a death.
+   */
+  | { type: "bossFled"; pos: Vec2; defId: string }
   /** A speaker took the stage: the run paused into the `dialogue` phase. */
   | { type: "dialogueStarted"; speaker: string }
   /**
@@ -479,6 +499,29 @@ export type GameInput = {
    * bots) targeting falls back to weapon range alone.
    */
   view?: { x: number; y: number; width: number; height: number };
+};
+
+/**
+ * The hero's carry-over between levels: the snapshot `extractLoadout` takes
+ * from a finished run — level, stats, worn equipment, bag, pocketed
+ * powerups — and `createGame` dresses the next run in via `applyLoadout`.
+ * The app banks one per cleared level (per difficulty); dev jumps with
+ * nothing banked use `deriveArrivalLoadout`'s stand-in instead. Plain JSON
+ * data so it persists in storage as-is.
+ */
+export type Loadout = {
+  level: number;
+  /** Progress into the current level (clamped below its threshold on apply). */
+  xp: number;
+  stats: Record<StatName, number>;
+  equipment: {
+    weapon: Equipment;
+    suit: Equipment | null;
+    charm: Equipment | null;
+  };
+  inventory: (Equipment | null)[];
+  /** Banked ability pickups (ABILITY_DEFS ids). */
+  heldAbilities: string[];
 };
 
 /** Static facts about the running level, snapshotted from its LevelDef. */

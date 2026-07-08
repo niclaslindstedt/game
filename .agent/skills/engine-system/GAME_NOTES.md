@@ -53,7 +53,7 @@ sequel truncates this file to a stub and rebuilds it as its own systems land.
   rocks with a `rockSizes`/`cell` obstacle spec; one sprite per footprint,
   named `<base>_<w>x<h>`, drawn centered — no render edit. The screen nuke now
   gates each kill on `lineOfSight`, so a rock shelters the mob behind it.
-- **Event-pinned player monologue (2026-07, first moon OPTIMUS kill):** a
+- **Event-pinned player monologue (2026-07, first moon OPTIMUSK kill):** a
   dialogue that is the HERO thinking, not a speaker on the board, is a new
   `DialogueState` source (`{ kind: "playerThought", defId }`) keyed into a
   content catalog (`defs/thoughts.ts`, same setter/accessor shape as story
@@ -62,6 +62,38 @@ sequel truncates this file to a stub and rebuilds it as its own systems land.
   kill path in `loot.ts` after `startDeathWords`, guarded once-per-run by
   `state.thoughtsSeen`. `dialogueContent` grew a branch; the app's dialogue
   overlay needed no change (it renders whatever `dialogueContent` returns).
+- **Fleeing uniques (2026-07, ELON MOSQUE):** a boss that escapes instead of
+  dying is data — `EnemyDef.flees: { landmark }`. The kill path in `loot.ts`
+  branches before booking the kill: the mob leaves the board, XP and
+  guaranteed drops still pay, `lastWords` still play (worded as the flight),
+  but the engine emits `bossFled` (never `enemyKilled`/`bossDefeated`, never
+  a kill stat) and pushes the named landmark (its sprite = the landmark kind)
+  where it vanished — so the rift renders through the existing data-driven
+  landmark path with zero renderer edits. `killBoss` objectives clear because
+  the boss is simply gone. Fixture: `test_coward`; suite:
+  `tests/engine/flee_test.ts`.
+- **Loadout carry-over (2026-07, Mars):** cross-level persistence is a plain
+  data snapshot, not engine state — `Loadout` (types.ts) holds level, stats,
+  equipment, bag and held powerups; `extractLoadout(state)` snapshots a
+  finished run, `createGame(seed, level, difficulty, loadout)` dresses the
+  next one in it (`applyLoadout`: ids re-minted, bag re-sized to carried
+  STRENGTH, hero rested). The APP owns persistence
+  (website progress.ts banks JSON per cleared level × difficulty on the
+  victory event and resolves `startingLoadout` on run start). Dev jumps with
+  nothing banked fall back to `deriveArrivalLoadout` — the hero's level
+  derived from the earlier levels' rosters (spawn + wave XP ×
+  `ARRIVAL.clearShare` through the real curve, difficulty-gated lines
+  excluded), stats auto-spent round-robin, the previous level's signature
+  kit. `levelsBefore` (levels/index.ts) reads the ACTIVE catalog and the
+  derivation dedupes by story index, so fixture catalogs with several
+  index-1 levels behave. With no loadout passed, createGame starts exactly
+  as authored — engine suites stage bare without any helper.
+- **Zoned terrain (2026-07, Mars desert→base):** one level with two grounds is
+  presentation data, not engine work — `TileSpec.zones` (rects in world px,
+  each with its own ground/patch pair) checked first by `groundTile` in
+  render.ts. Collision never reads tiles, so zones are purely visual; the
+  gameplay transition comes from the walls/spawn bands laid along the same
+  boundary.
 - **Engine tests run on synthetic fixtures (2026-07):** `tests/engine/`
   suites install content-agnostic fixtures (`tests/engine/fixtures.ts`,
   plain ids like `test_level`/`test_minion`) via the engine's `registerDefs`

@@ -68,6 +68,29 @@ export function hitEnemy(
 
   const def = enemyDef(enemy.defId);
   state.enemies.splice(state.enemies.indexOf(enemy), 1);
+
+  // A fleeing unique escapes at 0 hp instead of dying: no kill is booked and
+  // no corpse hits the floor — it tears open its escape landmark on the spot,
+  // pays its guaranteed drops in the scramble, and gasps its parting words
+  // through the same death-scene box. XP still flows: the fight was won.
+  if (def.flees) {
+    state.landmarks.push({
+      kind: def.flees.landmark,
+      sprite: def.flees.landmark,
+      anchor: "center",
+      pos: { ...enemy.pos },
+    });
+    state.events.push({
+      type: "bossFled",
+      pos: { ...enemy.pos },
+      defId: enemy.defId,
+    });
+    grantXp(state, def.xp ?? Math.round(enemy.maxHp * LEVELING.xpPerHp));
+    if (def.loot) dropGuaranteedLoot(state, def, enemy.pos);
+    startDeathWords(state, enemy.defId);
+    return;
+  }
+
   state.stats.kills++;
   state.events.push({
     type: "enemyKilled",

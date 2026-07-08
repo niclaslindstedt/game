@@ -248,7 +248,7 @@ export const MOON_ENEMIES: Record<string, EnemyDef> = {
     critChance: 0.15,
     contactCooldownMs: 900,
     // The longest scene in the game so far: the level-2 reveals converge —
-    // the wreck, the clone, and where Ada went — before the fight.
+    // the wreck, the clone, SpaceZ's disaster — and the trail bends to Mars.
     dialogue: [
       [
         "YOU SMELL LIKE EARTH.",
@@ -270,14 +270,26 @@ export const MOON_ENEMIES: Record<string, EnemyDef> = {
       [
         "I STAYED. SOMEBODY HAD TO STAND",
         "WATCH OVER THE THING DOWN THERE.",
-        "IT SINGS, YOU KNOW. THE COMPANY",
-        "MEN DANCE TO IT NOW.",
+        "IT SINGS, YOU KNOW. SPACEZ",
+        "PLUGGED RIGHT INTO IT.",
       ],
       [
-        "THEY CARRIED A GIRL PAST ME LAST",
-        "NIGHT. SNEAKERS. LOUD. SHE BIT",
-        "TWO OF THEM. THEY TOOK HER BELOW,",
-        "TO THE SINGING THING.",
+        "THAT WAS THEIR GREAT MISTAKE.",
+        "IT SANG, AND THE GRAVES OPENED.",
+        "NOW THE COMPANY MEN CRATE UP",
+        "EVERYTHING AND RUN.",
+      ],
+      [
+        "BIG PLANS FOR MARS, THE CRATES",
+        "SAY. DOMES. MACHINES. RICH MEN.",
+        "THE FREIGHT RUNS RED NOW -",
+        "EVERYTHING GOES TO MARS.",
+      ],
+      [
+        "THEY CARRIED A GIRL PAST ME",
+        "LAST NIGHT. SNEAKERS. LOUD.",
+        "SHE BIT TWO OF THEM. THEY",
+        "CRATED HER FOR THE RED RUN.",
       ],
       [
         "YOU WANT TO FOLLOW? THEN TAKE",
