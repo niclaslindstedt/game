@@ -47,9 +47,11 @@ run against synthetic fixtures with no shipped content (see
   spawn/wave line may carry an optional `minDifficulty` so difficulty-gated
   content lives with the level that uses it), the
   objective (`killBoss` / `clearAll`), solid obstacles (tall pieces block
-  everyone; low ones can be jumped by the player but never by monsters),
-  deliberate `walls` (segments expanded into chains of solid circles at
-  creation — door gaps between segments carve rooms),
+  everyone — including sight, shots and a nuke's blast; low/jumpable ones like
+  craters can be cleared by the player but never by monsters; a `rockSizes`
+  spec scatters rectangular rock footprints that collide as a box, not a
+  circle), deliberate `walls` (segments expanded into chains of solid circles
+  at creation — door gaps between segments carve rooms),
   locked `doors` (chains of `door_locked` obstacles tracked in
   `state.doors`, opened by carrying the matching story-item key up to
   them), hand-`placedItems` (locked-room loot, plot pieces on pedestals),

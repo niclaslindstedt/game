@@ -28,6 +28,7 @@ import { weaponDef } from "./defs/equipment.ts";
 import { LEVEL_ORDER, levelDef, type LevelDef } from "./defs/levels/index.ts";
 import { rollEquipment } from "./items.ts";
 import { evolutionHpMult } from "./menace.ts";
+import { boundingRadius, rockHalf } from "./obstacles.ts";
 import type {
   Decor,
   Difficulty,
@@ -153,6 +154,7 @@ export function createGame(
     })),
     dialogue: null,
     storyItems: [],
+    thoughtsSeen: [],
     doors,
     player: {
       pos: { ...playerSpawn },
@@ -415,27 +417,44 @@ function scatterObstacles(
     );
   for (const spec of def.obstacles) {
     for (let i = 0; i < spec.count; i++) {
+      // Sized rocks roll a footprint once per placement (retries keep it): the
+      // box's half-extents drive collision, its circumradius the placement.
+      const base = spec.sprite ?? spec.kind;
+      let half: Vec2 | undefined;
+      let radius = spec.radius;
+      let sprite = base;
+      if (spec.rockSizes && spec.rockSizes.length > 0) {
+        const cell = spec.cell ?? 16;
+        const [w, h] = spec.rockSizes[
+          Math.floor(rng() * spec.rockSizes.length)
+        ] as [number, number];
+        half = rockHalf(w, h, cell);
+        radius = boundingRadius(half);
+        sprite = `${base}_${w}x${h}`;
+      }
       for (let attempts = 0; attempts < 30; attempts++) {
         const pos = vec(
-          randomRange(rng, spec.radius + 8, def.width - spec.radius - 8),
-          randomRange(rng, spec.radius + 8, def.height - spec.radius - 8),
+          randomRange(rng, radius + 8, def.width - radius - 8),
+          randomRange(rng, radius + 8, def.height - radius - 8),
         );
         const clear =
-          distance(pos, playerSpawn) > OBSTACLES.spawnClearance + spec.radius &&
+          distance(pos, playerSpawn) > OBSTACLES.spawnClearance + radius &&
           def.landmarks.every(
-            (l) => distance(pos, l.pos) > def.decorClearance + spec.radius,
+            (l) => distance(pos, l.pos) > def.decorClearance + radius,
           ) &&
-          clearOf(walls, pos, spec.radius) &&
-          clearOf(scattered, pos, spec.radius);
+          clearOf(walls, pos, radius) &&
+          clearOf(scattered, pos, radius);
         if (!clear) continue;
-        scattered.push({
+        const obstacle: Obstacle = {
           id: takeId(),
           kind: spec.kind,
-          sprite: spec.sprite ?? spec.kind,
+          sprite,
           pos,
-          radius: spec.radius,
+          radius,
           jumpable: spec.jumpable,
-        });
+        };
+        if (half) obstacle.half = half;
+        scattered.push(obstacle);
         break;
       }
     }

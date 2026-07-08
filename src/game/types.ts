@@ -269,8 +269,17 @@ export type Obstacle = {
   /** Sprite name the renderer blits — resolved from the level def. */
   sprite: string;
   pos: Vec2;
-  /** Collision radius in world px. */
+  /**
+   * Bounding radius in world px — the collision radius for a round obstacle,
+   * and the coarse cull/spacing radius for a rectangular one (see `half`).
+   */
   radius: number;
+  /**
+   * Rectangular footprint (half-extents in world px), present on sized rocks.
+   * When set, collision, line-of-sight and shots test the box; when absent the
+   * obstacle is the plain circle of `radius`.
+   */
+  half?: Vec2;
   /** True when a jumping player sails over it. */
   jumpable: boolean;
 };
@@ -327,7 +336,13 @@ export type DialogueState = {
   source:
     | { kind: "enemy"; enemyId: number; defId: string }
     | { kind: "enemyDeath"; defId: string }
-    | { kind: "story"; defId: string };
+    | { kind: "story"; defId: string }
+    /**
+     * The hero's own inner monologue — a story beat pinned to an event (the
+     * first kill of a given enemy on a level), not to a speaker on the board.
+     * `defId` keys THOUGHT_DEFS.
+     */
+    | { kind: "playerThought"; defId: string };
   /** Index of the page currently on screen. */
   page: number;
 };
@@ -518,6 +533,11 @@ export type GameState = {
   dialogue: DialogueState | null;
   /** Collected story items (STORY_ITEM_DEFS ids) — keys, dossiers, the lot. */
   storyItems: string[];
+  /**
+   * THOUGHT_DEFS ids the hero has already thought through — each first-kill
+   * inner monologue plays exactly once per run.
+   */
+  thoughtsSeen: string[];
   /** Locked doors built from the level def, open or not. */
   doors: DoorState[];
   player: Player;

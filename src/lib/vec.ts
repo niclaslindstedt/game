@@ -55,3 +55,61 @@ export function moveToward(pos: Vec2, target: Vec2, maxStep: number): Vec2 {
   const dir = direction(pos, target);
   return { x: pos.x + dir.x * maxStep, y: pos.y + dir.y * maxStep };
 }
+
+/** The point on the axis-aligned box (center `c`, half-extents `half`)
+ * closest to `p` — `p` itself when it lies inside the box. */
+export function closestPointOnRect(p: Vec2, c: Vec2, half: Vec2): Vec2 {
+  return {
+    x: clamp(p.x, c.x - half.x, c.x + half.x),
+    y: clamp(p.y, c.y - half.y, c.y + half.y),
+  };
+}
+
+/** Squared distance from point `p` to the axis-aligned box (center `c`,
+ * half-extents `half`); 0 when `p` is inside it. */
+export function pointRectDistanceSq(p: Vec2, c: Vec2, half: Vec2): number {
+  const q = closestPointOnRect(p, c, half);
+  const dx = p.x - q.x;
+  const dy = p.y - q.y;
+  return dx * dx + dy * dy;
+}
+
+/**
+ * Does the segment `a`→`b` intersect the axis-aligned box (center `c`,
+ * half-extents `half`)? Liang–Barsky slab clipping; a segment that starts
+ * inside the box counts as intersecting.
+ */
+export function segmentIntersectsRect(
+  a: Vec2,
+  b: Vec2,
+  c: Vec2,
+  half: Vec2,
+): boolean {
+  const dx = b.x - a.x;
+  const dy = b.y - a.y;
+  let t0 = 0;
+  let t1 = 1;
+  // Each slab clips the parametric range [t0, t1]; a fully-rejected slab
+  // means the segment misses the box entirely.
+  const edges: [number, number][] = [
+    [-dx, a.x - (c.x - half.x)],
+    [dx, c.x + half.x - a.x],
+    [-dy, a.y - (c.y - half.y)],
+    [dy, c.y + half.y - a.y],
+  ];
+  for (const [p, q] of edges) {
+    if (p === 0) {
+      if (q < 0) return false; // parallel to this slab and outside it
+      continue;
+    }
+    const r = q / p;
+    if (p < 0) {
+      if (r > t1) return false;
+      if (r > t0) t0 = r;
+    } else {
+      if (r < t0) return false;
+      if (r < t1) t1 = r;
+    }
+  }
+  return true;
+}

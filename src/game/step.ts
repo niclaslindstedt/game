@@ -18,7 +18,6 @@ import {
   distance,
   distanceSq,
   moveToward,
-  segmentDistanceSq,
   type Vec2,
 } from "@game/lib/vec.ts";
 import {
@@ -34,7 +33,6 @@ import {
   LAST_STAND,
   LEVELING,
   MEDKIT,
-  OBSTACLES,
   PLAYER,
   PROJECTILE,
   RUN,
@@ -70,6 +68,12 @@ import {
   wearEquippedWeapon,
 } from "./items.ts";
 import { grantXp, hitEnemy, unspawnedMinions } from "./loot.ts";
+import {
+  blockedByObstacle,
+  insideObstacle,
+  lineOfSight,
+  resolveObstacles,
+} from "./obstacles.ts";
 import {
   lureMult,
   maybePowerScale,
@@ -380,66 +384,6 @@ function stepPlayer(
 }
 
 /**
- * Push a circular body out of every obstacle it overlaps. A body at height
- * `z` above OBSTACLES.clearHeight sails over jumpable obstacles; nothing
- * clears the tall ones. Monsters never leave the ground, so every obstacle
- * blocks them.
- */
-function resolveObstacles(
-  state: GameState,
-  pos: Vec2,
-  radius: number,
-  z = 0,
-): void {
-  for (const obstacle of state.obstacles) {
-    if (obstacle.jumpable && z > OBSTACLES.clearHeight) continue;
-    const min = obstacle.radius + radius;
-    if (distanceSq(pos, obstacle.pos) >= min * min) continue;
-    const d = distance(pos, obstacle.pos);
-    if (d === 0) {
-      pos.x = obstacle.pos.x + min; // dead-center: pick a side, any side
-      continue;
-    }
-    const dir = direction(obstacle.pos, pos);
-    pos.x = obstacle.pos.x + dir.x * min;
-    pos.y = obstacle.pos.y + dir.y * min;
-  }
-}
-
-/** Is a circle at `pos` overlapping any obstacle (spawn placement check)? */
-function insideObstacle(state: GameState, pos: Vec2, radius: number): boolean {
-  for (const obstacle of state.obstacles) {
-    const min = obstacle.radius + radius;
-    if (distanceSq(pos, obstacle.pos) < min * min) return true;
-  }
-  return false;
-}
-
-/**
- * Does a straight shot from `from` to `to` clear every TALL obstacle? Walls,
- * server racks, and boulders eat bullets; the low, jumpable ones (desks,
- * rocks) never block — shots fly over them just like a jumping player.
- */
-function lineOfSight(state: GameState, from: Vec2, to: Vec2): boolean {
-  return !blockedByObstacle(state, from, to, 0);
-}
-
-/** Does the swept path `from`→`to` (a circle of `radius`) hit a tall obstacle? */
-function blockedByObstacle(
-  state: GameState,
-  from: Vec2,
-  to: Vec2,
-  radius: number,
-): boolean {
-  for (const obstacle of state.obstacles) {
-    if (obstacle.jumpable) continue;
-    const min = obstacle.radius + radius;
-    if (segmentDistanceSq(from, to, obstacle.pos) < min * min) return true;
-  }
-  return false;
-}
-
-/**
  * Spend one carried ability pickup on the `useItem` input edge. By default
  * the oldest banked ability kicks in; `useItemIndex` names a specific slot
  * (the powerup dock), and removing it shifts the rest down so the dock stays
@@ -466,10 +410,11 @@ function stepUseItem(state: GameState, input: GameInput): void {
 }
 
 /**
- * The screen-nuke pickup: every non-boss monster within the radius dies on
- * the spot. Kills flow through hitEnemy, so XP, loot rolls, the pity rule,
- * and the all-clear trophy all behave exactly as if the player had done it
- * the hard way.
+ * The screen-nuke pickup: every non-boss monster within the radius, and not
+ * behind a rock, dies on the spot. A tall obstacle stops the blast the same
+ * way it stops a shot — a mob sheltered behind the stone rides it out. Kills
+ * flow through hitEnemy, so XP, loot rolls, the pity rule, and the all-clear
+ * trophy all behave exactly as if the player had done it the hard way.
  */
 function detonateNuke(state: GameState, radius: number): void {
   state.events.push({ type: "nuke", pos: { ...state.player.pos } });
@@ -477,7 +422,8 @@ function detonateNuke(state: GameState, radius: number): void {
   const caught = state.enemies.filter(
     (enemy) =>
       enemyDef(enemy.defId).role !== "boss" &&
-      distanceSq(enemy.pos, state.player.pos) <= radiusSq,
+      distanceSq(enemy.pos, state.player.pos) <= radiusSq &&
+      lineOfSight(state, state.player.pos, enemy.pos),
   );
   for (const enemy of caught) {
     hitEnemy(state, enemy, enemy.hp);

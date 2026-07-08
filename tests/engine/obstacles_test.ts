@@ -124,6 +124,92 @@ describe("obstacle collision", () => {
   });
 });
 
+describe("rectangular rocks", () => {
+  function placeRock(
+    state: GameState,
+    dx: number,
+    half: { x: number; y: number },
+  ): Obstacle {
+    const obstacle: Obstacle = {
+      id: 8500,
+      kind: "moonrock",
+      sprite: "moonrock_2x2",
+      pos: { x: state.player.pos.x + dx, y: state.player.pos.y },
+      radius: Math.hypot(half.x, half.y),
+      half,
+      jumpable: false,
+    };
+    state.obstacles = [obstacle];
+    return obstacle;
+  }
+
+  it("stops the player at the box face, not the bounding circle", () => {
+    const state = startGame();
+    clearStage(state);
+    const half = { x: 20, y: 20 };
+    const rock = placeRock(state, 60, half);
+    run(state, steerTo(state.player.pos.x + 300, state.player.pos.y), 400);
+    // Pinned against the flat left face (pos.x - half.x), not the circumcircle
+    // — a square rock is walkable right up to its edge.
+    expect(state.player.pos.x).toBeLessThanOrEqual(
+      rock.pos.x - half.x - PLAYER.radius + 0.001,
+    );
+    expect(state.player.pos.x).toBeGreaterThan(
+      rock.pos.x - rock.radius - PLAYER.radius,
+    );
+  });
+
+  it("eats a shot aimed through the footprint", () => {
+    const state = startGame();
+    clearStage(state);
+    const rock = placeRock(state, 60, { x: 18, y: 18 });
+    const victim = makeEnemy({
+      pos: { x: rock.pos.x + 60, y: rock.pos.y },
+      hp: 1000,
+      maxHp: 1000,
+    });
+    state.enemies.push(victim);
+    state.projectiles.push({
+      id: 7100,
+      pos: { ...state.player.pos },
+      dir: { x: 1, y: 0 },
+      speed: 400,
+      radius: 2,
+      damage: 50,
+      lifetimeMs: 3000,
+      weaponClass: "ranged",
+      sprite: "bolt",
+      z: 0,
+    });
+    run(state, idle, 200);
+    expect(state.projectiles).toHaveLength(0); // stopped at the rock
+    expect(victim.hp).toBe(1000);
+  });
+
+  it("hides a grounded mob from auto-aim and blocks its rush", () => {
+    const state = startGame();
+    clearStage(state);
+    const rock = placeRock(state, 70, { x: 20, y: 20 });
+    const guard = makeEnemy(
+      {
+        pos: { x: rock.pos.x + 30, y: rock.pos.y },
+        speed: 40,
+        hp: 1_000_000,
+        maxHp: 1_000_000,
+      },
+      "test_stalker",
+    );
+    state.enemies.push(guard);
+    run(state, idle, 600);
+    // No line of sight through the rock, so the blaster never fires...
+    expect(state.stats.shotsFired).toBe(0);
+    // ...and the solid mob can't cross it to reach the player.
+    expect(guard.pos.x).toBeGreaterThanOrEqual(
+      rock.pos.x + rock.half!.x + enemyDef("test_stalker").radius - 0.001,
+    );
+  });
+});
+
 describe("walls block shots", () => {
   it("a projectile dies at a tall obstacle instead of passing through", () => {
     const state = startGame();

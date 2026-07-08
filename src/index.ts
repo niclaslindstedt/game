@@ -167,6 +167,11 @@ export {
   storyItemDef,
   type StoryItemDef,
 } from "./game/defs/story.ts";
+export {
+  THOUGHT_DEFS,
+  thoughtDef,
+  type ThoughtDef,
+} from "./game/defs/thoughts.ts";
 
 // Test/authoring hook: swap the active content catalogs for synthetic
 // fixtures. Production never calls this; the engine test suites use it to run
