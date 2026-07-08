@@ -10,12 +10,16 @@ file wholesale** — none of it is engine, all of it is data under
 
 Ada went out for chips and soda on movie night and never came back — the
 tracking beacon sewn into her jacket points off-planet. The hero, a
-spaceship builder, raids SpaceZ for the drive ingredient, then follows the
-beacon to the moon, where something is not dead enough. The prelude cutscene
-(`defs/cutscenes.ts`) sets up that night — the crude sword hanging on the
-living-room wall is the one thing he takes off it to go after her, and it is
-the weapon he starts the game with. Each level's `intro` text and its elites'
-`dialogue` carry the thread forward.
+spaceship builder who once worked at SpaceZ until an AI replaced him — so he
+knows the building cold — raids SpaceZ for the drive ingredient, then follows
+the beacon to the moon, where something is not dead enough. The prelude
+cutscene (`defs/cutscenes.ts`) sets up that night — the crude sword hanging on
+the living-room wall is the one thing he takes off it to go after her, and it
+is the weapon he starts the game with. Each level then opens on the hero's
+`intro` monologue (a black-screen dialogue, one page at a time, the hero
+standing above the box) before the level-name card drops the run in, and its
+elites' `dialogue` carry the thread forward. Skipping the prelude skips the
+monologue too.
 
 ## Levels (`src/game/defs/levels/`)
 

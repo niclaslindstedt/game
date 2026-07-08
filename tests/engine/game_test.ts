@@ -7,10 +7,12 @@ import { describe, expect, it } from "vitest";
 
 import {
   advanceDialogue,
+  advanceIntro,
   allocateStat,
   createGame,
   dismissIntro,
   ENEMY_AI,
+  skipIntro,
   enemyDef,
   JUMP,
   levelDef,
@@ -44,9 +46,10 @@ const isBoss = (defId: string) => enemyDef(defId).role === "boss";
 const isMinion = (defId: string) => enemyDef(defId).role === "minion";
 
 describe("createGame", () => {
-  it("opens on the intro text box and only plays after dismissal", () => {
+  it("opens on the intro monologue and only plays after dismissal", () => {
     const state = createGame(SEED, "test_level");
     expect(state.phase).toBe("intro");
+    expect(state.introPage).toBe(0);
     expect(MOON.intro.length).toBeGreaterThan(0);
 
     step(state, steerTo(0, 0), DT);
@@ -56,6 +59,35 @@ describe("createGame", () => {
     expect(state.phase).toBe("playing");
     step(state, idle, DT);
     expect(state.stats.timeMs).toBe(DT);
+  });
+
+  it("pages the intro monologue, then flashes the title before the drop", () => {
+    const state = createGame(SEED, "test_level");
+    const pages = MOON.intro.length;
+    // Turning past every page lands on the title card, not straight into play.
+    for (let i = 0; i < pages - 1; i++) {
+      advanceIntro(state);
+      expect(state.phase).toBe("intro");
+      expect(state.introPage).toBe(i + 1);
+    }
+    advanceIntro(state); // past the last page
+    expect(state.phase).toBe("title");
+
+    step(state, idle, DT);
+    expect(state.stats.timeMs).toBe(0); // the title card still freezes the world
+
+    dismissIntro(state); // the card's drop into play
+    expect(state.phase).toBe("playing");
+  });
+
+  it("skipIntro jumps the whole monologue straight to the title card", () => {
+    const state = createGame(SEED, "test_level");
+    skipIntro(state);
+    expect(state.phase).toBe("title");
+    // …and is a no-op once the run is underway.
+    dismissIntro(state);
+    skipIntro(state);
+    expect(state.phase).toBe("playing");
   });
 
   it("builds the moonscape: ghosts, boss at the flag, lander-side spawn", () => {

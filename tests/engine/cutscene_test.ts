@@ -205,10 +205,12 @@ describe("the prelude in a run", () => {
     expect(state.cutscene).toBeNull();
   });
 
-  it("skipCutscene bails straight to the intro", () => {
+  it("skipCutscene bails past the intro straight to the title card", () => {
     const state = createGame(SEED, "test_prelude_level");
     skipCutscene(state);
-    expect(state.phase).toBe("intro");
+    // Skipping the prelude skips the hero's level-intro monologue too — the
+    // whole opening bails to the level-name card just before the drop.
+    expect(state.phase).toBe("title");
     expect(state.cutscene).toBeNull();
     // …and is a no-op on levels without a prelude.
     const moon = createGame(SEED, "test_level");

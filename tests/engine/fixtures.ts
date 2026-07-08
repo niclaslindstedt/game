@@ -375,7 +375,7 @@ export const FIX_LEVEL: LevelDef = {
   id: "test_level",
   index: 1,
   name: "TEST LEVEL",
-  intro: ["TEST INTRO LINE."],
+  intro: [["TEST INTRO LINE."]],
   width: 2400,
   height: 1600,
   gravity: 340,

@@ -130,6 +130,7 @@ export function createGame(
   const state: GameState = {
     phase: def.prelude ? "cutscene" : "intro",
     cutscene: def.prelude ? createCutscene(cutsceneDef(def.prelude)) : null,
+    introPage: 0,
     difficulty,
     menace: 0,
     combatDps: 0,

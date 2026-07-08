@@ -4,7 +4,7 @@
 // Brand identity (title, tagline, links) lives in the identity config
 // (game.config.json / identity.ts); per-level story text lives on the level
 // defs (intro, foes). This module is for the loose UI strings that are
-// neither: the how-to-play screen and the level-entry button.
+// neither: the how-to-play screen.
 
 /** The HOW TO PLAY screen, one entry per rendered line ("" = a blank gap). */
 export const HELP_LINES = [
@@ -31,6 +31,3 @@ export const HELP_LINES = [
   "WORKS OFFLINE - INSTALL IT AS AN APP",
   "FROM YOUR BROWSER MENU.",
 ];
-
-/** Label on the button that dismisses a level's intro and starts the run. */
-export const ENTER_LABEL = "DESCEND";

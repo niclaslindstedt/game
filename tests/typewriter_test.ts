@@ -61,7 +61,8 @@ describe("dialogue sweep", () => {
   // delivered inside a patient bound.
   const pages: { who: string; page: string[] }[] = [];
   for (const def of Object.values(LEVELS)) {
-    pages.push({ who: `intro:${def.id}`, page: [...def.intro] });
+    for (const page of def.intro)
+      pages.push({ who: `intro:${def.id}`, page: [...page] });
   }
   for (const def of Object.values(ENEMY_DEFS)) {
     for (const page of def.dialogue ?? []) pages.push({ who: def.name, page });

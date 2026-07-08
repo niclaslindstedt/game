@@ -78,8 +78,14 @@ export type LevelDef = {
   /** Story order (1 = earth, 2 = the moon, …). */
   index: number;
   name: string;
-  /** Intro text box: why the player arrived here. One entry per line. */
-  intro: readonly string[];
+  /**
+   * The hero's opening monologue: why he came here, in his own voice. Shown
+   * as a black-screen dialogue with the hero standing above the box, one page
+   * at a time. Each entry is a page; each page is its own array of lines
+   * ("" is a blank spacer line). Turning past the last page flashes the level
+   * name and drops into the run.
+   */
+  intro: readonly (readonly string[])[];
   width: number;
   height: number;
   /** Downward acceleration in world px/s². Lower floats jumps higher. */
