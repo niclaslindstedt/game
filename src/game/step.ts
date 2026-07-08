@@ -926,6 +926,27 @@ function moveEnemy(state: GameState, enemy: Enemy, dt: number): void {
     return;
   }
 
+  // The scripted vanguard (openingStrike): it sprints ahead of the slow rank
+  // to reach the still-holstered hero, then STOPS the instant it's next to him
+  // — its harmless swing is what draws the blade (story.ts). Parking at contact
+  // instead of charging on means it can't clip through the hero and shove him
+  // around while it waits to strike. Once the blade is out (`!disarmed`) it
+  // drops the sprint and falls through to the normal minion chase at its plain
+  // `speed`, a lab scientist the armed hero cuts down.
+  if (enemy.vanguard && player.disarmed) {
+    const rushSpeed =
+      (def.ai.rushSpeed ?? def.speed) * stasisFactorAt(player, enemy.pos);
+    const gap = distance(enemy.pos, player.pos) - (def.radius + PLAYER.radius);
+    if (gap > 0) {
+      enemy.pos = moveToward(
+        enemy.pos,
+        player.pos,
+        Math.min(rushSpeed * dt, gap),
+      );
+    }
+    return;
+  }
+
   // Minions: an aggro latch. Waking needs the player in range AND in sight;
   // once awake the chase holds even when a wall breaks line of sight — only
   // escaping the radius entirely puts the monster back to sleep.

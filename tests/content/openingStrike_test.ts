@@ -14,6 +14,7 @@ import {
   createGame,
   dismissIntro,
   enemyDef,
+  PLAYER,
   skipCutscene,
   step,
   type Enemy,
@@ -67,8 +68,54 @@ describe("SpaceZ HQ opening strike", () => {
     const v = vanguard(disarmedHQ());
     const def = enemyDef(v.defId);
     expect(def.role).toBe("minion");
-    expect(def.speed).toBeGreaterThan(enemyDef("intern").speed);
+    // The opening SPRINT outruns the pack; its plain speed is a normal mob's
+    // (so it folds back in once the blade is drawn, not a permanent glue).
+    expect(def.ai.rushSpeed).toBeGreaterThan(enemyDef("intern").speed);
+    expect(def.speed).toBeLessThanOrEqual(enemyDef("scientist").speed);
     expect(def.contactDamage).toBe(0);
+  });
+
+  it("stops next to the disarmed hero instead of clipping into him", () => {
+    const state = disarmedHQ();
+    const v = isolateVanguard(state);
+    const def = enemyDef(v.defId);
+    // Sighting gate held shut (no interns to fire spacez_staff), so the strike
+    // never lands — this isolates the pure approach: the vanguard must park at
+    // contact rather than shove through the hero and glue to his center.
+    v.pos = { x: state.player.pos.x + 120, y: state.player.pos.y };
+    for (let i = 0; i < 400; i++) step(state, idle, DT);
+    expect(state.player.disarmed).toBe(true); // gate held, still holstered
+    const dist = Math.hypot(
+      v.pos.x - state.player.pos.x,
+      v.pos.y - state.player.pos.y,
+    );
+    // Parked right up against the hero — up to the two collision radii apart,
+    // never overlapping his center.
+    expect(dist).toBeGreaterThan(def.radius);
+    expect(dist).toBeLessThanOrEqual(def.radius + PLAYER.radius + 2);
+  });
+
+  it("drops the sprint to normal mob speed once the blade is drawn", () => {
+    const state = disarmedHQ();
+    const v = isolateVanguard(state);
+    state.thoughtsSeen.push("spacez_staff"); // gate open
+    v.pos = { ...state.player.pos };
+    step(state, idle, DT); // strike lands, arms the hero
+    tapThrough(state);
+    expect(state.player.disarmed).toBe(false);
+    // Now it chases like any minion: one tick advances at most its plain
+    // snapshot `speed`, nowhere near the opening rushSpeed. Place it a clear
+    // stretch away in the open lobby and measure a single tick's travel.
+    v.awake = true;
+    v.pos = { x: state.player.pos.x + 300, y: state.player.pos.y };
+    const before = v.pos.x;
+    step(state, idle, DT);
+    const moved = before - v.pos.x; // travelled toward the hero (leftward)
+    expect(moved).toBeGreaterThan(0);
+    expect(moved).toBeLessThanOrEqual(v.speed * (DT / 1000) + 0.01);
+    // …and unmistakably below what the opening sprint would have covered.
+    const rushSpeed = enemyDef(v.defId).ai.rushSpeed ?? 0;
+    expect(moved).toBeLessThan(rushSpeed * (DT / 1000));
   });
 
   it("holsters the weapon: no swing while disarmed, even point-blank", () => {
