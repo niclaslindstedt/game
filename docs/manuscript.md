@@ -219,14 +219,21 @@ Ada's beacon dies near the old flag. Something up here isn't dead.
 4. SO I KNOW THIS SITE COLD. / EVERY CRATER. THE FAST LINE / STRAIGHT TO THAT FLAG.
 5. STAY ON THE DUST. KEEP MOVING. / I'M COMING, ADA.
 
-### Hero's thought — first wisp kill on the moon
+### Hero's thought — first wisp sighted on the moon
 
-_Fires once, the first time the hero downs a wisp here (in his own voice) — his
+_Fires once, the moment the first wisp comes into view (in his own voice) — his
 arrival read on the haunting: the dead walking the dust means the broadcast
 history is a lie._
 
 - IT CAME OUT OF THE DUST. / NO SUIT. NO SHIP. / NO FOOTPRINTS.
 - NOBODY EVER SAID THE MOON / HAD DEAD PEOPLE ON IT. / SOMEBODY MUST HAVE KNOWN.
+
+### Hero's thought — first wisp kill on the moon
+
+_Fires once, the first time the hero downs a wisp — and never before the
+sighting beat above has played, so the read always lands in order: see them,
+then learn they can fall._
+
 - OKAY. THEY GO DOWN LIKE / ANYTHING ELSE. / THAT'LL HAVE TO DO.
 
 ### Hero's thought — first OPTIMUSK kill on the moon

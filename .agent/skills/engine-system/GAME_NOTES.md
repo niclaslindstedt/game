@@ -68,7 +68,12 @@ sequel truncates this file to a stub and rebuilds it as its own systems land.
   `stepEnemies` (so the sighting is judged on this tick's positions),
   radius-gated by `DIALOGUE.sightRadius` and sharing the `thoughtsSeen`
   ledger. Pick the pin by what the beat reacts to: seeing a thing → sight
-  pin; having fought/examined it → kill pin.
+  pin; having fought/examined it → kill pin. Two-part beats (moon wisps:
+  see them, then down one) order themselves with `ThoughtTrigger.after` —
+  a gated trigger holds UNSPENT until the prerequisite thought has played,
+  then fires on the next qualifying kill/sighting. The gate matters because
+  ranged weapons out-reach `sightRadius` (blaster 210 vs 96), so a snipe
+  kill can legitimately precede the first sighting.
 - **Fleeing uniques (2026-07, ELON MOSQUE):** a boss that escapes instead of
   dying is data — `EnemyDef.flees: { landmark }`. The kill path in `loot.ts`
   branches before booking the kill: the mob leaves the board, XP and

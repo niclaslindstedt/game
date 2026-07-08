@@ -160,12 +160,15 @@ export const MOON: LevelDef = {
   ],
   decor: [{ kind: "rocks", count: 20 }],
   decorClearance: 80,
-  // Arrival and pursuit beats, each pinned to a first kill: the first wisp
-  // proves the dust walks (somebody lied about the moon), and the first
-  // SpaceZ robot stops him cold — the night shift followed the trail all the
-  // way to the moon.
+  // The haunting reads in two beats: SEEING the first wisp proves the dust
+  // walks (somebody lied about the moon), and DOWNING one closes the read —
+  // they can fall. The kill beat's `after` gate keeps that order even when a
+  // carried-over ranged weapon snipes the first wisp from beyond sight range.
+  // The first SpaceZ robot he kills stays its own beat — the night shift
+  // followed the trail all the way to the moon.
+  firstSightThoughts: [{ enemy: "wisp", thought: "moon_wisp_sight" }],
   firstKillThoughts: [
-    { enemy: "wisp", thought: "moon_wisp" },
+    { enemy: "wisp", thought: "moon_wisp_kill", after: "moon_wisp_sight" },
     { enemy: "optimusk", thought: "moon_optimusk" },
   ],
   loot: {

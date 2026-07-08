@@ -41,10 +41,10 @@ export const THOUGHT_DEFS: Record<string, ThoughtDef> = {
       ["OH WELL.", "GOOD THING I BROUGHT THE SWORD."],
     ],
   },
-  // Killing the first wisp on the moon: the dead walking the dust is the
+  // Sighting the first wisp on the moon: the dead walking the dust is the
   // hero's first proof the broadcast history is a lie — somebody knew.
-  moon_wisp: {
-    id: "moon_wisp",
+  moon_wisp_sight: {
+    id: "moon_wisp_sight",
     speaker: "ME",
     portrait: "player",
     pages: [
@@ -54,6 +54,16 @@ export const THOUGHT_DEFS: Record<string, ThoughtDef> = {
         "HAD DEAD PEOPLE ON IT.",
         "SOMEBODY MUST HAVE KNOWN.",
       ],
+    ],
+  },
+  // Downing the first wisp: the payoff of the sighting beat above (its
+  // `after` gate keeps this from ever playing first) — the dead can fall,
+  // and that will have to be enough.
+  moon_wisp_kill: {
+    id: "moon_wisp_kill",
+    speaker: "ME",
+    portrait: "player",
+    pages: [
       ["OKAY. THEY GO DOWN LIKE", "ANYTHING ELSE.", "THAT'LL HAVE TO DO."],
     ],
   },
