@@ -610,13 +610,16 @@ const SPRITES = {
     "............",
   ],
   // ---- Story item icons (12x12) ----------------------------------------------
-  // Keycards: supply bay white, cleanroom-vault red.
+  // Keycards: supply bay white, cleanroom-vault red, AI-core electric blue.
   icon_keycard: KEYCARD_ICON,
   icon_keycard_red: swapPalette(KEYCARD_ICON, { W: "r", j: "W" }),
-  // The paper trail: manifest, redacted Apollo log, blueprints.
+  icon_keycard_blue: swapPalette(KEYCARD_ICON, { W: "e", j: "s" }),
+  // The paper trail: manifest, redacted Apollo log, blueprints — and the AI
+  // CORE's own terminal readout, electric-blue glyphs on a dark screen.
   icon_manifest: MANIFEST_ICON,
   icon_log: swapPalette(MANIFEST_ICON, { b: "O", r: "b" }),
   icon_blueprint: swapPalette(MANIFEST_ICON, { W: "j", b: "W", r: "W" }),
+  icon_corelog: swapPalette(MANIFEST_ICON, { W: "b", b: "e", r: "s" }),
   // PROJECT SECOND MAN, in its manila folder.
   icon_dossier: [
     "............",

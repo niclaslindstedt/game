@@ -101,7 +101,9 @@ _Drops: STORAGE KEYCARD._
 
 _The hero's old bench partner from when they built engines together, before
 SpaceZ swapped them both for an AI. He now heads the superintelligence program
-and has cut a PASSAGE CHIP into his own skull to pass as a machine._
+and has cut a PASSAGE CHIP into his own skull to pass as a machine. He also
+carries the CORE KEYCARD — the badge to the AI CORE, the one room on the floor
+no plain hand can open._
 
 - MY OLD BENCH PARTNER. STILL / SOLDERING TOYS IN A GARAGE? / I BUILD MINDS NOW. A REAL ONE.
 - QUIT? YOU CAME HERE TO TELL ME / TO QUIT? THIS 'EVIL COMPANY' GAVE / ME PURPOSE. A SUPERINTELLIGENCE.
@@ -110,7 +112,8 @@ and has cut a PASSAGE CHIP into his own skull to pass as a machine._
 
 **Last words:** THE CHIP... TAKE IT... / IT WAS NEVER... MINE...
 
-_Drops: the PASSAGE CHIP (+1 INT passive) he operated into himself._
+_Drops: the PASSAGE CHIP (+1 INT passive) he operated into himself, and the CORE
+KEYCARD that opens the AI CORE room._
 
 #### CHIEF OF SECURITY — Ada on Pad 2
 
@@ -174,6 +177,17 @@ _Drops: PLASMA CUTTER._
 
 - A RING OF METAL THAT ISN'T METAL. / IT FLOATS AN INCH OFF MY PALM / AND POINTS AT THE SKY. ALWAYS.
 - THE TAG READS 'TRANQUILITY SAMPLE / 1969-002. PROPERTY OF NOBODY.' / THIS IS WHAT MY DRIVE WAS MISSING.
+
+**CORE KEYCARD** _(dropped by THE ARCHITECT; opens the AI CORE room)_
+
+- A MATTE-BLACK KEYCARD. NO NAME - / JUST A SIGIL AND ONE RED WORD / STAMPED SMALL: 'CORE. STAFF OF ONE.'
+- HE BADGED INTO THE MIND HE BUILT. / NOW SO CAN I.
+
+**CORE LOG** _(found inside the AI CORE)_
+
+- A TERMINAL, STILL WARM. THE CORE / HE BUILT HUMS TO ITSELF DOWN HERE, / A MILLION VOICES, NONE OF THEM HIS.
+- IT SIGNED THE MIDNIGHT LAUNCHES. / IT DREW THE OPTIMUS LINE. IT / FILED ADA UNDER 'CARGO'.
+- THEY DIDN'T REPLACE US WITH A / MACHINE. THEY BUILT ONE THAT / DREAMS OF A WORLD WITHOUT US.
 
 ---
 

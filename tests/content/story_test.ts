@@ -269,6 +269,21 @@ describe("story items", () => {
     );
     expect(unit).toBeDefined();
   });
+
+  it("locks the AI CORE's log behind THE ARCHITECT's keycard", () => {
+    const state = startGame(SEED, "spacez_hq");
+    // The payoff sits inside the CORE room…
+    const log = state.items.find(
+      (i) => i.kind === "story" && i.defId === "core_log",
+    );
+    expect(log).toBeDefined();
+    // …and the only key to it is the keycard THE ARCHITECT drops.
+    const key = storyItemDef("keycard_core");
+    expect(key.unlocks).toBe("core");
+    expect(state.doors.some((d) => d.id === "core")).toBe(true);
+    const architectKeys = enemyDef("architect").loot?.storyItems ?? [];
+    expect(architectKeys).toContain("keycard_core");
+  });
 });
 
 describe("locked doors", () => {
@@ -309,7 +324,7 @@ describe("locked doors", () => {
 
   it("builds every level-1 door as a solid, unjumpable chain", () => {
     const state = startGame(SEED, "spacez_hq");
-    expect(state.doors).toHaveLength(2);
+    expect(state.doors).toHaveLength(3);
     for (const door of state.doors) {
       const chain = state.obstacles.filter((o) =>
         door.obstacleIds.includes(o.id),

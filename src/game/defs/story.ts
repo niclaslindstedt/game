@@ -86,6 +86,42 @@ export const STORY_ITEM_DEFS: Record<string, StoryItemDef> = {
       ],
     ],
   },
+  keycard_core: {
+    id: "keycard_core",
+    name: "CORE KEYCARD",
+    icon: "icon_keycard_blue",
+    unlocks: "core",
+    lore: [
+      [
+        "A MATTE-BLACK KEYCARD. NO NAME -",
+        "JUST A SIGIL AND ONE RED WORD",
+        "STAMPED SMALL: 'CORE. STAFF OF ONE.'",
+      ],
+      ["HE BADGED INTO THE MIND HE BUILT.", "NOW SO CAN I."],
+    ],
+  },
+  core_log: {
+    id: "core_log",
+    name: "CORE LOG",
+    icon: "icon_corelog",
+    lore: [
+      [
+        "A TERMINAL, STILL WARM. THE CORE",
+        "HE BUILT HUMS TO ITSELF DOWN HERE,",
+        "A MILLION VOICES, NONE OF THEM HIS.",
+      ],
+      [
+        "IT SIGNED THE MIDNIGHT LAUNCHES.",
+        "IT DREW THE OPTIMUS LINE. IT",
+        "FILED ADA UNDER 'CARGO'.",
+      ],
+      [
+        "THEY DIDN'T REPLACE US WITH A",
+        "MACHINE. THEY BUILT ONE THAT",
+        "DREAMS OF A WORLD WITHOUT US.",
+      ],
+    ],
+  },
   // ---- The moon ---------------------------------------------------------------
   mission_log: {
     id: "mission_log",

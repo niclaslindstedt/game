@@ -31,9 +31,10 @@ names its in-run music with an optional `music` id (a key into the app's
 - **Level 1 — SPACEZ HQ** (`levels/spacez_hq.ts`). A cleanroom raid for the
   interplanetary drive's one missing ingredient. `spacez` biome (polished lab
   tiles + floor vents), ~800 px/s² gravity (hoppable desks and crates), rooms
-  carved by `walls` with door gaps and two locked `doors` (storage, vault).
-  The hero opens in plain clothes (`heroSuited: false`) and loots the EVA suit
-  here. Music: `hq_lockdown` ("LOCKDOWN", a tense infiltration theme).
+  carved by `walls` with door gaps and three locked `doors` (storage, vault,
+  and the AI CORE — THE ARCHITECT's keycard opens the last). The hero opens in
+  plain clothes (`heroSuited: false`) and loots the EVA suit here. Music:
+  `hq_lockdown` ("LOCKDOWN", a tense infiltration theme).
 - **Level 2 — THE MOON** (`levels/moon.ts`). The beacon dies near the old
   flag. `moon` biome (regolith + gravel patches), ~340 px/s² gravity (jumps
   soar), moonrock ridge `walls` the haunting phases straight through. Scattered

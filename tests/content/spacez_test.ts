@@ -15,6 +15,7 @@ import {
   LEVELS,
   OBSTACLES,
   PLAYER,
+  STORY_ITEM_DEFS,
   weaponDef,
   type LevelDef,
 } from "@game/core";
@@ -226,6 +227,15 @@ describe("THE ARCHITECT and the PASSAGE CHIP", () => {
     expect(chip).toBeDefined();
     // Forced regular so it lands as the plain, affix-free "+1 INT".
     expect(typeof chip === "string" ? undefined : chip?.tier).toBe("regular");
+  });
+
+  it("also drops the CORE KEYCARD that opens the AI CORE room", () => {
+    const storyItems = enemyDef("architect").loot?.storyItems ?? [];
+    expect(storyItems).toContain("keycard_core");
+    // The card is a real key: it names the CORE door, and the level fields it.
+    const key = STORY_ITEM_DEFS.keycard_core!;
+    expect(key.unlocks).toBe("core");
+    expect((HQ.doors ?? []).some((d) => d.id === "core")).toBe(true);
   });
 
   it("makes the PASSAGE CHIP a passive +1 INT trinket", () => {
