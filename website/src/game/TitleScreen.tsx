@@ -27,7 +27,7 @@ import { IDENTITY } from "../identity.ts";
 
 import { HELP_LINES } from "./copy.ts";
 
-import { topScores, type ScoreMetric } from "./highscores.ts";
+import { topScores, type ScoreMetric, type ScoreRow } from "./highscores.ts";
 
 import { loadGameAssets, spriteDataUrl, type GameAssets } from "./assets.ts";
 import { synth } from "./audio.ts";
@@ -65,6 +65,24 @@ const formatTime = (ms: number): string => {
  * double-digit rate reads cleaner without the noise of a trailing decimal). */
 const formatKpm = (v: number): string =>
   v >= 10 ? String(Math.round(v)) : v.toFixed(1);
+
+/** YYYY-MM-DD for a banked run's timestamp — the detail card's date line. */
+const formatScoreDate = (at: number): string => {
+  const d = new Date(at);
+  const pad = (n: number) => String(n).padStart(2, "0");
+  return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
+};
+
+/** Resolve a banked run's level id to its display name and hostile label,
+ * tolerating an id a later content revision may have retired. */
+const scoreLevelInfo = (levelId: string): { name: string; foes: string } => {
+  try {
+    const level = levelDef(levelId);
+    return { name: level.name, foes: level.foes };
+  } catch {
+    return { name: levelId.toUpperCase(), foes: "FOES" };
+  }
+};
 
 /** The high-score board's two rankings, in swipe/arrow order. */
 const SCORE_METRICS: { id: ScoreMetric; label: string }[] = [
@@ -110,6 +128,9 @@ export function TitleScreen({
   // up/down flips between the survival-time and kills-per-minute rankings.
   const [scoreDifficulty, setScoreDifficulty] = useState<Difficulty>("medium");
   const [scoreMetric, setScoreMetric] = useState<ScoreMetric>("time");
+  // The board row currently opened into its full-session detail card, or null
+  // for the ranked list. Only rows banked with a detail snapshot can open.
+  const [scoreDetail, setScoreDetail] = useState<ScoreRow | null>(null);
   // Landscape phones are short and portrait ones narrow: pick a logo scale
   // that keeps the title logo plus the menu inside both.
   const [compact, setCompact] = useState(
@@ -403,6 +424,7 @@ export function TitleScreen({
   const stepScoreDifficulty = useCallback((delta: number) => {
     unlockAudio();
     playUiSound(synth, "move");
+    setScoreDetail(null);
     setScoreDifficulty((d) => {
       const n = DIFFICULTY_ORDER.length;
       const i = (DIFFICULTY_ORDER.indexOf(d) + delta + n) % n;
@@ -412,6 +434,7 @@ export function TitleScreen({
   const stepScoreMetric = useCallback((delta: number) => {
     unlockAudio();
     playUiSound(synth, "move");
+    setScoreDetail(null);
     setScoreMetric((m) => {
       const n = SCORE_METRICS.length;
       const i = (SCORE_METRICS.findIndex((x) => x.id === m) + delta + n) % n;
@@ -425,6 +448,22 @@ export function TitleScreen({
   useEffect(() => {
     const onKeyDown = (event: KeyboardEvent) => {
       if (screen === "scores") {
+        // While a detail card is open the whole board's navigation collapses to
+        // "close it" — any steer/confirm/back key returns to the ranked list.
+        if (scoreDetail) {
+          if (
+            event.key === "Escape" ||
+            event.key === "Enter" ||
+            event.key === " " ||
+            event.key.startsWith("Arrow")
+          ) {
+            event.preventDefault();
+            unlockAudio();
+            playUiSound(synth, "back");
+            setScoreDetail(null);
+          }
+          return;
+        }
         if (event.key === "ArrowLeft" || event.key === "ArrowRight") {
           event.preventDefault();
           stepScoreDifficulty(event.key === "ArrowRight" ? 1 : -1);
@@ -467,7 +506,14 @@ export function TitleScreen({
     };
     window.addEventListener("keydown", onKeyDown);
     return () => window.removeEventListener("keydown", onKeyDown);
-  }, [entries, cursor, screen, stepScoreDifficulty, stepScoreMetric]);
+  }, [
+    entries,
+    cursor,
+    screen,
+    scoreDetail,
+    stepScoreDifficulty,
+    stepScoreMetric,
+  ]);
 
   // Touch: a swipe on the board picks its axis by the dominant direction —
   // horizontal walks the difficulty ladder, vertical flips the ranking.
@@ -480,6 +526,9 @@ export function TitleScreen({
     const start = swipeStart.current;
     swipeStart.current = null;
     if (!start) return;
+    // A detail card owns its own BACK button; don't let a swipe behind it
+    // quietly walk the difficulty ladder or flip the ranking.
+    if (scoreDetail) return;
     const dx = event.clientX - start.x;
     const dy = event.clientY - start.y;
     if (Math.max(Math.abs(dx), Math.abs(dy)) < SWIPE_THRESHOLD) return;
@@ -499,6 +548,12 @@ export function TitleScreen({
   const cursorSprite = spriteDataUrl(assets.sprites, "wisp_0") ?? "";
   const scoreRows = topScores(scoreDifficulty, scoreMetric);
   const scoreDef = difficultyDef(scoreDifficulty);
+  // When a row with a banked session is opened, this holds it (with `detail`
+  // narrowed non-null) so the board swaps its list for the full-session card.
+  const openScore =
+    scoreDetail && scoreDetail.detail
+      ? { row: scoreDetail, detail: scoreDetail.detail }
+      : null;
 
   return (
     <div className="title-screen" onPointerDown={unlockAudio}>
@@ -595,81 +650,185 @@ export function TitleScreen({
               />
             </button>
 
-            <button
-              type="button"
-              className="score-metric score-bob score-bob-delay"
-              aria-label="score-metric"
-              onClick={() => stepScoreMetric(1)}
-            >
-              <PixelText
-                font={font}
-                text={
-                  SCORE_METRICS.find((m) => m.id === scoreMetric)?.label ?? ""
-                }
-                scale={2}
-                color="#7ef0c8"
-              />
-            </button>
+            {openScore ? (
+              (() => {
+                const { detail } = openScore;
+                const { name: levelName, foes } = scoreLevelInfo(
+                  detail.levelId,
+                );
+                const cleared = detail.outcome === "victory";
+                const kpm =
+                  detail.stats.timeMs > 0
+                    ? detail.stats.kills / (detail.stats.timeMs / 60_000)
+                    : 0;
+                // Every field of the run, headline numbers and all: a big kill
+                // count reads very differently beside the shots and damage it
+                // cost to earn.
+                const lines: [string, string][] = [
+                  ["TIME", formatTime(detail.stats.timeMs)],
+                  [foes, `${detail.stats.kills}/${detail.stats.totalEnemies}`],
+                  ["KILLS / MIN", formatKpm(kpm)],
+                  ["LEVEL REACHED", String(detail.level)],
+                  ["XP GAINED", String(detail.stats.xpGained)],
+                  ["SHOTS FIRED", String(detail.stats.shotsFired)],
+                  ["DAMAGE DEALT", String(detail.stats.damageDealt)],
+                  ["DAMAGE TAKEN", String(detail.stats.damageTaken)],
+                  ["ITEMS", String(detail.stats.itemsCollected)],
+                ];
+                return (
+                  <div className="score-detail">
+                    <PixelText
+                      font={font}
+                      text={cleared ? "LEVEL CLEAR!" : "YOU DIED"}
+                      scale={3}
+                      color={cleared ? "#7ef0c8" : "#d83a3a"}
+                    />
+                    <PixelText font={font} text={levelName} scale={2} />
+                    <PixelText
+                      font={font}
+                      text={formatScoreDate(detail.at)}
+                      scale={1}
+                      color="#7a8088"
+                    />
+                    <div className="score-detail-stats">
+                      {lines.map(([label, value]) => (
+                        <div className="score-detail-row" key={label}>
+                          <PixelText
+                            font={font}
+                            text={label}
+                            scale={1}
+                            color="#9aa3ad"
+                          />
+                          <PixelText font={font} text={value} scale={2} />
+                        </div>
+                      ))}
+                    </div>
+                    <button
+                      type="button"
+                      className="score-back"
+                      aria-label="score-back"
+                      onClick={() => {
+                        playUiSound(synth, "back");
+                        setScoreDetail(null);
+                      }}
+                    >
+                      <PixelText
+                        font={font}
+                        text="BACK"
+                        scale={3}
+                        color="#ffd75e"
+                      />
+                    </button>
+                  </div>
+                );
+              })()
+            ) : (
+              <>
+                <button
+                  type="button"
+                  className="score-metric score-bob score-bob-delay"
+                  aria-label="score-metric"
+                  onClick={() => stepScoreMetric(1)}
+                >
+                  <PixelText
+                    font={font}
+                    text={
+                      SCORE_METRICS.find((m) => m.id === scoreMetric)?.label ??
+                      ""
+                    }
+                    scale={2}
+                    color="#7ef0c8"
+                  />
+                </button>
 
-            <div className="score-list">
-              {scoreRows.length === 0 ? (
+                <div className="score-list">
+                  {scoreRows.length === 0 ? (
+                    <PixelText
+                      font={font}
+                      text="NO RUNS YET"
+                      scale={2}
+                      color="#5a6068"
+                    />
+                  ) : (
+                    scoreRows.map((row, i) => {
+                      const medal =
+                        ["#ffd75e", "#c8cdd4", "#cd7f4b"][i] ?? "#7ef0c8";
+                      const primary =
+                        scoreMetric === "time"
+                          ? formatTime(row.timeMs)
+                          : `${formatKpm(row.kpm)} KPM`;
+                      const secondary =
+                        scoreMetric === "time"
+                          ? `${formatKpm(row.kpm)} KPM`
+                          : formatTime(row.timeMs);
+                      // A row opens into its full session only when one was
+                      // banked; legacy time-only runs stay inert (no arrow).
+                      const openable = Boolean(row.detail);
+                      return (
+                        <button
+                          type="button"
+                          className="score-row"
+                          key={i}
+                          disabled={!openable}
+                          aria-label={`score-row-${i + 1}`}
+                          onClick={() => {
+                            if (!openable) return;
+                            playUiSound(synth, "move");
+                            setScoreDetail(row);
+                          }}
+                        >
+                          <PixelText
+                            font={font}
+                            text={`${i + 1}.`}
+                            scale={3}
+                            color={medal}
+                          />
+                          <PixelText font={font} text={primary} scale={3} />
+                          <PixelText
+                            font={font}
+                            text={secondary}
+                            scale={1}
+                            color="#9aa3ad"
+                          />
+                          {openable && (
+                            <PixelText
+                              font={font}
+                              text=">"
+                              scale={2}
+                              color="#5a6068"
+                            />
+                          )}
+                        </button>
+                      );
+                    })
+                  )}
+                </div>
+
                 <PixelText
                   font={font}
-                  text="NO RUNS YET"
-                  scale={2}
-                  color="#5a6068"
+                  text="SWIPE OR ARROWS TO SWITCH"
+                  scale={1}
+                  color="#7a8088"
                 />
-              ) : (
-                scoreRows.map((row, i) => {
-                  const medal =
-                    ["#ffd75e", "#c8cdd4", "#cd7f4b"][i] ?? "#7ef0c8";
-                  const primary =
-                    scoreMetric === "time"
-                      ? formatTime(row.timeMs)
-                      : `${formatKpm(row.kpm)} KPM`;
-                  const secondary =
-                    scoreMetric === "time"
-                      ? `${formatKpm(row.kpm)} KPM`
-                      : formatTime(row.timeMs);
-                  return (
-                    <div className="score-row" key={i}>
-                      <PixelText
-                        font={font}
-                        text={`${i + 1}.`}
-                        scale={3}
-                        color={medal}
-                      />
-                      <PixelText font={font} text={primary} scale={3} />
-                      <PixelText
-                        font={font}
-                        text={secondary}
-                        scale={1}
-                        color="#9aa3ad"
-                      />
-                    </div>
-                  );
-                })
-              )}
-            </div>
-
-            <PixelText
-              font={font}
-              text="SWIPE OR ARROWS TO SWITCH"
-              scale={1}
-              color="#7a8088"
-            />
-            <button
-              type="button"
-              className="score-back"
-              aria-label="score-back"
-              onClick={() => {
-                playUiSound(synth, "back");
-                setScreen("main");
-                setCursor(1);
-              }}
-            >
-              <PixelText font={font} text="BACK" scale={3} color="#ffd75e" />
-            </button>
+                <button
+                  type="button"
+                  className="score-back"
+                  aria-label="score-back"
+                  onClick={() => {
+                    playUiSound(synth, "back");
+                    setScreen("main");
+                    setCursor(1);
+                  }}
+                >
+                  <PixelText
+                    font={font}
+                    text="BACK"
+                    scale={3}
+                    color="#ffd75e"
+                  />
+                </button>
+              </>
+            )}
           </div>
         </>
       )}

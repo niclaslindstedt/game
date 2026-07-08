@@ -62,9 +62,12 @@ carrying the difficulty). A first-timer is walked through the story in order —
 choosing a difficulty (NEW GAME → difficulty) drops them straight into the
 next unbeaten level, no picker. Only once the whole campaign is cleared at a
 difficulty does the title menu's **level-select** screen open, as a replay
-picker. The `?level=` dev override bypasses the gate entirely. Best survival
-time per difficulty is persisted alongside completion
-(`website/src/game/highscores.ts`) and shown on the end-of-run screen.
+picker. The `?level=` dev override bypasses the gate entirely. Every finished
+run is banked per difficulty (`website/src/game/highscores.ts`) with its
+survival time, kills, and a full end-of-run session snapshot; the end-of-run
+screen shows that difficulty's best survival time, and the menu's **HIGH
+SCORES** board ranks the runs two ways (survival time, kills-per-minute) and
+opens any banked run into a detail card of the whole session.
 
 Difficulty-exclusive content lives with the level that uses it: a `spawns` or
 `waves.budget` line can carry an optional `minDifficulty`, and it only appears

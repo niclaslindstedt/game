@@ -29,9 +29,12 @@ cleared levels are recorded under `<storagePrefix>:completed-levels` (keyed
 per difficulty). Until the whole campaign is cleared at a difficulty, choosing
 that difficulty drops you straight into the next unbeaten level (the story
 runs in order); clearing the last level opens the menu's level-select screen
-as a replay picker and lights up NEXT LEVEL on the victory splash. Your best
-survival time per difficulty is saved under `<storagePrefix>:highscores` and
-shown on the end-of-run screen (`website/src/game/highscores.ts`). Cutscenes
+as a replay picker and lights up NEXT LEVEL on the victory splash. Every
+finished run is banked per difficulty under `<storagePrefix>:highscores` with
+its survival time, kills, and a full end-of-run session snapshot
+(`website/src/game/highscores.ts`); the end-of-run screen shows that
+difficulty's best survival time, and the menu's HIGH SCORES board ranks the
+runs and opens any banked run into a full-session detail card. Cutscenes
 always play at the start of a run (dismiss with the top-right SKIP button).
 Clearing site data resets all of it; the `?cutscene=<id>` workbench replays
 any scene regardless, and `?level=<id>` reaches any level regardless of

@@ -1,11 +1,12 @@
 // SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
 // The on-device high-score book (same storage policy as settings.ts /
-// progress.ts). Each finished run banks its survival time and kill count per
-// difficulty; the menu's HIGH SCORES board ranks them two ways — longest
-// survived and highest kills-per-minute — and the end-of-run splash still
-// reads the single best survival time for the difficulty just played.
+// progress.ts). Each finished run banks its survival time, kill count, and a
+// full end-of-run session snapshot per difficulty; the menu's HIGH SCORES
+// board ranks them two ways — longest survived and highest kills-per-minute —
+// lets a row be opened to reveal that whole session, and the end-of-run splash
+// still reads the single best survival time for the difficulty just played.
 
-import { type Difficulty } from "@game/core";
+import { type Difficulty, type GameStats } from "@game/core";
 
 import { storageKey } from "../identity.ts";
 
@@ -15,8 +16,34 @@ const STORAGE_KEY = storageKey("highscores");
  * board without letting the store grow without bound. */
 const KEEP_PER_METRIC = 10;
 
-/** One banked run: how long it lasted and how many foes it felled. */
-export type ScoreEntry = { timeMs: number; kills: number };
+/**
+ * The full end-of-run session banked alongside a ranked run, so a board entry
+ * can be opened to reveal the whole story — a big kill count is far less
+ * impressive next to a huge shots-fired or damage-taken tally. Optional: the
+ * bare-time legacy format and pre-feature entries predate it, so any consumer
+ * must treat it as possibly absent.
+ */
+export type ScoreDetail = {
+  /** The complete session stats snapshot at the moment the run ended. */
+  stats: GameStats;
+  /** Player level reached when the run ended. */
+  level: number;
+  /** Which level was played (id — resolve to a name via `levelDef`). */
+  levelId: string;
+  /** How the run ended. */
+  outcome: "victory" | "defeat";
+  /** Epoch ms when the run was banked (for the detail view's date line). */
+  at: number;
+};
+
+/** One banked run: how long it lasted, how many foes it felled, and — for
+ * runs banked since the detail feature — the full session behind those two
+ * headline numbers. */
+export type ScoreEntry = {
+  timeMs: number;
+  kills: number;
+  detail?: ScoreDetail;
+};
 
 /** A board row: an entry with its derived kills-per-minute precomputed. */
 export type ScoreRow = ScoreEntry & { kpm: number };
@@ -46,6 +73,44 @@ function trim(list: ScoreEntry[]): ScoreEntry[] {
   return [...kept];
 }
 
+/** The numeric fields every `GameStats` snapshot must carry — a stored detail
+ * that is missing or malforms any of them is dropped rather than trusted. */
+const STAT_KEYS: (keyof GameStats)[] = [
+  "kills",
+  "totalEnemies",
+  "shotsFired",
+  "damageDealt",
+  "damageTaken",
+  "itemsCollected",
+  "xpGained",
+  "timeMs",
+];
+
+function isStats(value: unknown): value is GameStats {
+  if (!value || typeof value !== "object") return false;
+  const stats = value as Record<string, unknown>;
+  return STAT_KEYS.every(
+    (key) => typeof stats[key] === "number" && Number.isFinite(stats[key]),
+  );
+}
+
+function isDetail(value: unknown): value is ScoreDetail {
+  if (!value || typeof value !== "object") return false;
+  const { stats, level, levelId, outcome, at } = value as Record<
+    string,
+    unknown
+  >;
+  return (
+    isStats(stats) &&
+    typeof level === "number" &&
+    Number.isFinite(level) &&
+    typeof levelId === "string" &&
+    (outcome === "victory" || outcome === "defeat") &&
+    typeof at === "number" &&
+    Number.isFinite(at)
+  );
+}
+
 function isEntry(value: unknown): value is ScoreEntry {
   if (!value || typeof value !== "object") return false;
   const { timeMs, kills } = value as Record<string, unknown>;
@@ -57,6 +122,15 @@ function isEntry(value: unknown): value is ScoreEntry {
     Number.isFinite(kills) &&
     kills >= 0
   );
+}
+
+/** Reduce an entry to just its trusted fields: the two ranking numbers, plus
+ * the detail blob only when it fully validates (a partial/corrupt detail is
+ * discarded, leaving the run itself intact on the board). */
+function sanitize(entry: ScoreEntry): ScoreEntry {
+  const clean: ScoreEntry = { timeMs: entry.timeMs, kills: entry.kills };
+  if (isDetail(entry.detail)) clean.detail = entry.detail;
+  return clean;
 }
 
 function load(): HighScores {
@@ -74,7 +148,7 @@ function load(): HighScores {
       if (typeof value === "number" && Number.isFinite(value) && value > 0) {
         out[id] = [{ timeMs: value, kills: 0 }];
       } else if (Array.isArray(value)) {
-        const entries = value.filter(isEntry);
+        const entries = value.filter(isEntry).map(sanitize);
         if (entries.length) out[id] = trim(entries);
       }
     }
@@ -110,8 +184,10 @@ export function recordRun(difficulty: Difficulty, run: ScoreEntry): boolean {
   if (!Number.isFinite(run.timeMs) || run.timeMs <= 0) return false;
   const kills = Number.isFinite(run.kills) ? Math.max(0, run.kills) : 0;
   const record = run.timeMs > bestTime(difficulty);
+  const entry: ScoreEntry = { timeMs: run.timeMs, kills };
+  if (isDetail(run.detail)) entry.detail = run.detail;
   const list = scores[difficulty] ?? [];
-  scores[difficulty] = trim([...list, { timeMs: run.timeMs, kills }]);
+  scores[difficulty] = trim([...list, entry]);
   persist();
   return record;
 }
