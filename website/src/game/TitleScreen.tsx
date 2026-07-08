@@ -31,6 +31,7 @@ import { topScores, type ScoreMetric } from "./highscores.ts";
 
 import { loadGameAssets, spriteDataUrl, type GameAssets } from "./assets.ts";
 import { synth } from "./audio.ts";
+import { haptics } from "./haptics.ts";
 import { playTitleMusic } from "./music/index.ts";
 import {
   firstUnclearedLevel,
@@ -368,6 +369,19 @@ export function TitleScreen({
             updateSettings({
               powerupSide: s.powerupSide === "right" ? "left" : "right",
             });
+            setSettingsTick((t) => t + 1);
+          },
+        },
+        {
+          label: s.vibration === "on" ? "VIBRATION: ON" : "VIBRATION: OFF",
+          aria: "controls-vibration",
+          blurb: "BUZZ ON KILLS & DIALOGUE - BIGGER MOBS HIT HARDER (NO IOS)",
+          action: () => {
+            playUiSound(synth, "confirm");
+            const next = s.vibration === "on" ? "off" : "on";
+            updateSettings({ vibration: next });
+            // Audition the new state — a firm tap confirms it's live.
+            if (next === "on") haptics.vibrate(28);
             setSettingsTick((t) => t + 1);
           },
         },

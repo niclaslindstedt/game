@@ -67,6 +67,11 @@ and something enormous haunts the old flag.
 - **Tap** (with the other hand while steering, or press Space) to **jump**
   — each level sets its own gravity: HQ hops clear a desk; moon gravity
   sails you clean over a ghost's grasp.
+- **Feel the game** — on phones with a vibration motor, every takedown
+  buzzes, and the bigger the mob the harder it hits (a minion flicks, a boss
+  rumbles); dialogue is felt too, each letter of the crawl ticking under your
+  thumb. Turn it off under SETTINGS → CONTROLS. (iOS has no web vibration, so
+  it's silently inert there.)
 - **Pause** any time with **P** on desktop — the game and its music freeze on
   a pause screen; click or press P again to resume. The run also auto-pauses
   when you switch away (on a phone, just leave the app).

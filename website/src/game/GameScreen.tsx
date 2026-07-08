@@ -67,6 +67,7 @@ import { trackPointer } from "@ui/lib/pointer.ts";
 
 import { loadGameAssets, spriteDataUrl, type GameAssets } from "./assets.ts";
 import { synth } from "./audio.ts";
+import { playEventHaptics, playTypewriterHaptic } from "./haptics.ts";
 import { CutsceneOverlay } from "./CutsceneOverlay.tsx";
 import { DialogueOverlay, type DialogueReveal } from "./DialogueOverlay.tsx";
 import { IntroOverlay } from "./IntroOverlay.tsx";
@@ -745,6 +746,7 @@ export function GameScreen({
         }
         step(state, input, dtMs);
         playEventSounds(synth, state.events);
+        playEventHaptics(state.events);
 
         for (const event of state.events) {
           if (event.type === "lightning") {
@@ -1446,7 +1448,10 @@ export function GameScreen({
         <IntroOverlay
           state={state}
           font={font}
-          onBlip={() => playUiSound(synth, "blip")}
+          onBlip={() => {
+            playUiSound(synth, "blip");
+            playTypewriterHaptic();
+          }}
           onBegin={() => {
             dismissIntro(state);
             playLevelMusic(levelDef(state.level.id).music);
@@ -1461,7 +1466,10 @@ export function GameScreen({
           assets={assets}
           font={font}
           revealRef={dialogueRevealRef}
-          onBlip={() => playUiSound(synth, "blip")}
+          onBlip={() => {
+            playUiSound(synth, "blip");
+            playTypewriterHaptic();
+          }}
           onAdvance={() => {
             advanceDialogue(state);
             playUiSound(synth, "move");
