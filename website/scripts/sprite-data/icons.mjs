@@ -108,6 +108,12 @@ const PALETTE = {
   // Electric blue + charged white-blue core for the storm bolt.
   e: [90, 180, 255],
   s: [214, 240, 255],
+  // Level-up stat glyphs: a darker flesh shade for the strength arm and a
+  // pink brain ramp for intellect. Skin base `p`, greens `G`/`g`/`l`, red
+  // `r`/`i`, gold `y`/`Y` and the electric blue above are reused from the core.
+  d: [176, 120, 92], // strength: skin shadow
+  u: [232, 150, 172], // intellect: brain pink
+  U: [196, 104, 132], // intellect: brain fold shadow
 };
 
 const SPRITES = {
@@ -633,6 +639,101 @@ const SPRITES = {
     ".OooooooooO.",
     ".OOOOOOOOOO.",
     "............",
+    "............",
+  ],
+  // ---- Level-up stat glyphs (12x12) ------------------------------------------
+  // Drawn on the gold LEVEL UP! buttons — the dark navy outline carries them
+  // against the yellow, so each keeps a bold silhouette and 2–3 fill colors.
+  // STAMINA (SPRINT + HP): a red heart with a top-left shine.
+  icon_stat_stamina: [
+    "............",
+    "..OO..OO....",
+    ".OrrOOrrO...",
+    "OrrrrrrrrO..",
+    "OrWrrrrrrO..",
+    ".OrrrrrrO...",
+    "..OrrrrO....",
+    "...OrrO.....",
+    "....OO......",
+    "............",
+    "............",
+    "............",
+  ],
+  // STRENGTH (DAMAGE + BAG): a flexed arm — fist up on a vertical forearm,
+  // the bicep bulging up from the horizontal upper arm below.
+  icon_stat_strength: [
+    "............",
+    "......OOO...",
+    ".....OpppO..",
+    ".OO..OpppO..",
+    "OppO.OpppO..",
+    "OppOOOpppO..",
+    "OpppppppO...",
+    "OppddddpO...",
+    ".OOOOOOO....",
+    "............",
+    "............",
+    "............",
+  ],
+  // DEXTERITY (SPEED + CRIT): a crosshair reticle over a red bullseye.
+  icon_stat_dexterity: [
+    "............",
+    "....OOO.....",
+    "..OO...OO...",
+    ".O..OOO..O..",
+    ".O.OrrrO.O..",
+    "OO.OrrrO.OO.",
+    ".O.OrrrO.O..",
+    ".O..OOO..O..",
+    "..OO...OO...",
+    "....OOO.....",
+    "............",
+    "............",
+  ],
+  // INTELLECT (MAGIC + AOE): a wizard's hat — a bent purple cone with a gold
+  // hatband, widening to a broad brim.
+  icon_stat_intelligence: [
+    "............",
+    "......OO....",
+    ".....OmO....",
+    ".....OMO....",
+    "....OmmO....",
+    "....OMyO....",
+    "...OmmmO....",
+    "...OMmmMO...",
+    "..OmmmmmO...",
+    "..OMmmmMO...",
+    ".OOOOOOOOO..",
+    "............",
+  ],
+  // SPEED (MOVE SPEED): an electric-blue lightning bolt.
+  icon_stat_speed: [
+    "............",
+    ".......OO...",
+    "......OsO...",
+    ".....OsO....",
+    "....OseO....",
+    "...OeeeeO...",
+    "...OOOeeO...",
+    ".....OeO....",
+    "....OeO.....",
+    "...OeO......",
+    "...OO.......",
+    "............",
+  ],
+  // LUCK (CRIT + LOOT): a four-leaf clover on a short stem.
+  icon_stat_luck: [
+    "............",
+    "..OO..OO....",
+    ".OlGOOGlO...",
+    ".OGGGGGGO...",
+    "..OGGGGO....",
+    ".OGGGGGGO...",
+    ".OlGOOGlO...",
+    "..OO..OO....",
+    "....Og......",
+    "....Og......",
+    "....OO......",
     "............",
   ],
   // The anti-grav unit: a ring of not-metal, hovering over its own glow.
