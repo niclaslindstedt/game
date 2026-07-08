@@ -12,7 +12,29 @@ import {
   bestTime,
   recordRun,
   topScores,
+  type ScoreDetail,
 } from "../website/src/game/highscores.ts";
+
+/** A full end-of-run session snapshot for the detail-banking tests. */
+function detail(over: Partial<ScoreDetail> = {}): ScoreDetail {
+  return {
+    stats: {
+      kills: 12,
+      totalEnemies: 30,
+      shotsFired: 88,
+      damageDealt: 640,
+      damageTaken: 210,
+      itemsCollected: 4,
+      xpGained: 320,
+      timeMs: 120_000,
+    },
+    level: 6,
+    levelId: "moon",
+    outcome: "victory",
+    at: 1_700_000_000_000,
+    ...over,
+  };
+}
 
 describe("high scores", () => {
   it("banks runs and ranks them by survival time, longest first", () => {
@@ -50,6 +72,42 @@ describe("high scores", () => {
     expect(recordRun("nightmare", { timeMs: -1, kills: 5 })).toBe(false);
     expect(topScores("nightmare", "time")).toHaveLength(0);
     expect(bestTime("nightmare")).toBe(0);
+  });
+
+  it("banks the full session detail and returns it on the board row", () => {
+    recordRun("detail-full", {
+      timeMs: 120_000,
+      kills: 12,
+      detail: detail({ level: 9, outcome: "defeat" }),
+    });
+    const [row] = topScores("detail-full", "time");
+    if (!row) throw new Error("expected a banked row");
+    expect(row.detail?.level).toBe(9);
+    expect(row.detail?.outcome).toBe("defeat");
+    expect(row.detail?.levelId).toBe("moon");
+    expect(row.detail?.stats.damageDealt).toBe(640);
+    expect(row.detail?.stats.shotsFired).toBe(88);
+  });
+
+  it("banks a detail-less run and leaves its row without detail", () => {
+    recordRun("detail-none", { timeMs: 30_000, kills: 5 });
+    const [row] = topScores("detail-none", "time");
+    if (!row) throw new Error("expected a banked row");
+    expect(row.timeMs).toBe(30_000);
+    expect(row.detail).toBeUndefined();
+  });
+
+  it("drops a malformed detail but still banks the run", () => {
+    recordRun("detail-bad", {
+      timeMs: 45_000,
+      kills: 7,
+      // A partial/corrupt snapshot must not be trusted onto the board.
+      detail: { level: 3 } as unknown as ScoreDetail,
+    });
+    const [row] = topScores("detail-bad", "time");
+    if (!row) throw new Error("expected a banked row");
+    expect(row.kills).toBe(7);
+    expect(row.detail).toBeUndefined();
   });
 
   it("caps the board at the requested limit", () => {

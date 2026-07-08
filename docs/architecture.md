@@ -228,8 +228,10 @@ pixelated`; enemies swap to generated wounded sprite variants as hp falls
   (persisted per-difficulty level completion that drives the campaign: it
   walks a first-timer through the story in order and only unlocks the
   level-select picker once the campaign is cleared, and lights up the victory
-  splash's NEXT LEVEL), `highscores.ts` (persisted best survival time per
-  difficulty, shown on the end-of-run screen),
+  splash's NEXT LEVEL), `highscores.ts` (per-difficulty banked runs — survival
+  time, kills, and a full end-of-run session snapshot — feeding the end-of-run
+  best time and the menu's browsable HIGH SCORES board with its per-run detail
+  card),
   `assets.ts` (loads the generated sprite atlas — one PNG + JSON source
   rects sliced into per-sprite bitmaps in a single decode — plus the pixel
   font), and `assets/` (the generated atlas + font atlas — never

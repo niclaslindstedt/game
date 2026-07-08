@@ -885,13 +885,22 @@ export function GameScreen({
             pushPickup(storyItemDef(event.defId).name, "#ffd75e");
           }
           // The run is over: silence the loop so the jingle stands alone, and
-          // bank the survival time as this difficulty's high score.
+          // bank the run as this difficulty's high score — the survival time
+          // and kills rank it, and the full session snapshot rides along so the
+          // board can later reveal the whole story behind those two numbers.
           if (event.type === "victory" || event.type === "defeat") {
             stopMusic();
             if (
               recordRun(difficulty, {
                 timeMs: state.stats.timeMs,
                 kills: state.stats.kills,
+                detail: {
+                  stats: { ...state.stats },
+                  level: state.player.level,
+                  levelId: state.level.id,
+                  outcome: event.type,
+                  at: Date.now(),
+                },
               })
             )
               setNewRecord(true);

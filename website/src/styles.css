@@ -919,10 +919,56 @@ body {
   scrollbar-width: thin;
 }
 
+/* A row is a button now: clicking one opens its full-session detail card. The
+   button resets keep it looking like the plain row it replaced. */
 .score-row {
+  appearance: none;
+  border: 0;
+  background: none;
+  font: inherit;
+  cursor: pointer;
   display: flex;
   align-items: baseline;
   gap: 0.75rem;
+  padding: 0.15rem 0.4rem;
+  border-radius: 0.35rem;
+}
+
+.score-row:hover:not(:disabled) {
+  background: rgba(126, 240, 200, 0.12);
+}
+
+/* A legacy time-only run has nothing to open — it stays put and un-hinted. */
+.score-row:disabled {
+  cursor: default;
+}
+
+/* The opened run: outcome, level, date, then every stat of the session. */
+.score-detail {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.6rem;
+  min-height: 4rem;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  scrollbar-width: thin;
+}
+
+.score-detail-stats {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 0.4rem;
+  width: 100%;
+}
+
+/* Label left, value right — the stat table reads down its two columns. */
+.score-detail-row {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 1.5rem;
 }
 
 .score-back {
