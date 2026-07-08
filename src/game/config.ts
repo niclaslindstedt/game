@@ -285,11 +285,13 @@ export const STATS = {
   /**
    * Attack-speed gained per point of the weapon's SPEED stat (DEX for melee &
    * ranged, INT for magic — see `SPEED_STAT`): the effective cooldown is
-   * divided by `1 + stat * this`, so +4% cadence per point. Base weapons fire
+   * divided by `1 + stat * this`, so +2% cadence per point. Base weapons fire
    * deliberately slowly — a build grows the fire rate back by investing in its
-   * speed stat, so standing still stops clearing the horde for free.
+   * speed stat, so standing still stops clearing the horde for free. Kept
+   * gentle so the speed stat sweetens cadence rather than dominating a build:
+   * pumping DEX/INT ramps fire rate roughly half as fast as damage climbs.
    */
-  attackSpeedPerStat: 0.04,
+  attackSpeedPerStat: 0.02,
   /** Player base crit chance before stats and equipment. */
   baseCritChance: 0.05,
   /**

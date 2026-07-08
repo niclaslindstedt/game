@@ -495,30 +495,42 @@ export function drawEffects(
     }
 
     if (effect.kind === "swing") {
-      // The slash sweeps through the aim across the weapon's cone: a bright
-      // leading edge chasing a softer trail, at the weapon's reach. A wide
-      // cone reads as a blade's arc; a narrow one as a spear's thrust straight
-      // down the line. Reads as the swing without a per-weapon sprite.
+      // Draw the EXACT region the swing strikes: a filled sector centred on the
+      // player, out to the weapon's reach, spanning the weapon's full cone (see
+      // `meleeSweep`/`weaponSweepHalfAngle` — the engine ships `radius` = the
+      // true reach and `arc` = the full cone here, so the visual and the hit
+      // test share one geometry). A bright edge sweeps across that footprint so
+      // it still reads as a slash: a wide cone is a blade's arc, a narrow one a
+      // spear's thrust straight down the line.
       const duration = effect.durationMs ?? 200;
       const t = 1 - (effect.untilMs - timeMs) / duration; // 0 → 1
       if (t < 0 || t > 1) continue;
       const aim = effect.angle ?? 0;
-      const reach = Math.max(6, (effect.radius ?? 40) - 4);
-      // Half the true cone, clamped so even a pure thrust shows a sliver.
-      const half = Math.max(0.12, (effect.arc ?? 1.9) / 2);
+      const reach = Math.max(6, effect.radius ?? 40);
+      // The true half-cone — no minimum, so a thrust draws exactly the thin
+      // wedge it hits and a saturated (π) cone fills the whole disc.
+      const half = Math.min(Math.PI, (effect.arc ?? 1.9) / 2);
       const start = aim - half;
-      // The edge races a touch ahead of the fade so the slash "lands".
-      const lead = start + 2 * half * Math.min(1, t * 1.3);
+      const end = aim + half;
       ctx.save();
       ctx.translate(x, groundY);
-      // Softer trailing sweep behind the edge.
-      ctx.globalAlpha = Math.max(0, 0.4 * (1 - t));
-      ctx.strokeStyle = "#9fc4ff";
-      ctx.lineWidth = 2;
+      // The footprint: the filled pie-slice the blow actually covers, faded so
+      // it flashes and clears as the swing lands.
+      ctx.globalAlpha = Math.max(0, 0.26 * (1 - t));
+      ctx.fillStyle = "#9fc4ff";
       ctx.beginPath();
-      ctx.arc(0, 0, reach - 1, start, lead);
+      ctx.moveTo(0, 0);
+      ctx.arc(0, 0, reach, start, end);
+      ctx.closePath();
+      ctx.fill();
+      // A thin outline traces the wedge's radial edges and rim so its shape
+      // stays legible even at a glance.
+      ctx.globalAlpha = Math.max(0, 0.5 * (1 - t));
+      ctx.strokeStyle = "#c7ddff";
+      ctx.lineWidth = 1;
       ctx.stroke();
-      // Bright leading edge.
+      // Bright leading edge racing across the cone — the "slash" landing.
+      const lead = start + 2 * half * Math.min(1, t * 1.3);
       ctx.globalAlpha = Math.max(0, 0.9 * (1 - t));
       ctx.strokeStyle = "#f2f7ff";
       ctx.lineWidth = 3;
