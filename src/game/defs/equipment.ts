@@ -503,6 +503,20 @@ export const WEAPON_DEFS: Record<string, WeaponDef> = {
     durability: 240,
     icon: "icon_contrarian_dagger",
   },
+  prompt_injector: {
+    id: "prompt_injector",
+    name: "PROMPT INJECTOR",
+    class: "magic",
+    // OPTIMUSK PRIME's sidearm: it injects a prompt and the target does the
+    // rest to itself. A notch over the BLUE SCREEN — PRIME sits deepest of
+    // the Mars elites.
+    damage: 20,
+    cooldownMs: 380,
+    range: 280,
+    durability: 220,
+    projectile: { speed: 380, radius: 4, lifetimeMs: 1000, sprite: "spark" },
+    icon: "icon_prompt_injector",
+  },
   not_a_flamethrower: {
     id: "not_a_flamethrower",
     name: "NOT-A-FLAMETHROWER",

@@ -349,6 +349,65 @@ const SPRITES = {
     "........................",
     "........................",
   ],
+  // OPTIMUSK PRIME — the robot foreman (elite): the OPTIMUSK silhouette
+  // scaled to the 24px elite frame so the family resemblance reads at a
+  // glance — same white armor panels (W/w) over steel joints (v/V/b), same
+  // black-cyan visor band (x) and chest core (c) — plus what the line units
+  // lack: a gold command crest on the helmet and gold epaulettes (y), the
+  // middle-management markings. Frames alternate the leg stride; the torso
+  // holds still like the rank and file.
+  optimusk_prime_0: [
+    "........................",
+    "..........OyyO..........",
+    ".........OWWWWO.........",
+    "........OWWWWWWO........",
+    "........OOxxxxOO........",
+    "........OwWWWWwO........",
+    ".........OWWWWO.........",
+    "......OOwWWWWWWwOO......",
+    "....OyvWWWWWWWWWWvyO....",
+    "...OvvvWWWWWWWWWwvvvO...",
+    "...OvVvWWWccccWWwvVvO...",
+    "...OvVvWWWccccWWwvVvO...",
+    "...OvOvWWWWWWWWWwvOvO...",
+    "...OvbvWWWWWWWWWwvbvO...",
+    "...ObbOwWWWWWWWWwObbO...",
+    "......OwWWWWWWWWwO......",
+    "......OvvvO..OvvvO......",
+    "......OvvvO..OvvvO......",
+    "......ObbbO..ObbbO......",
+    "......OOOOO..OOOOO......",
+    "........................",
+    "........................",
+    "........................",
+    "........................",
+  ],
+  optimusk_prime_1: [
+    "........................",
+    "..........OyyO..........",
+    ".........OWWWWO.........",
+    "........OWWWWWWO........",
+    "........OOxxxxOO........",
+    "........OwWWWWwO........",
+    ".........OWWWWO.........",
+    "......OOwWWWWWWwOO......",
+    "....OyvWWWWWWWWWWvyO....",
+    "...OvvvWWWWWWWWWwvvvO...",
+    "...OvVvWWWccccWWwvVvO...",
+    "...OvVvWWWccccWWwvVvO...",
+    "...OvOvWWWWWWWWWwvOvO...",
+    "...OvbvWWWWWWWWWwvbvO...",
+    "...ObbOwWWWWWWWWwObbO...",
+    "......OwWWWWWWWWwO......",
+    ".....OvvvO....OvvvO.....",
+    ".....OvvvO....OvvvO.....",
+    ".....ObbbO....ObbbO.....",
+    ".....OOOOO....OOOOO.....",
+    "........................",
+    "........................",
+    "........................",
+    "........................",
+  ],
   // ELON MOSQUE — the boss: the man who owns the planet. A giant smug head
   // over a black bomber jacket with a gold Z, white sneakers. 48×48;
   // frames alternate the stance and the raised chin.
@@ -756,6 +815,10 @@ export default {
     build_gates_walk: {
       frames: ["build_gates_0", "build_gates_1"],
       delayMs: 300,
+    },
+    optimusk_prime_walk: {
+      frames: ["optimusk_prime_0", "optimusk_prime_1"],
+      delayMs: 340,
     },
     peter_seal_walk: {
       frames: ["peter_seal_0", "peter_seal_1"],

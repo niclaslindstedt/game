@@ -2,10 +2,12 @@
 // Pinned inner monologues: a story beat pinned to a kill or a sighting rather
 // than a speaker. The first INTERN the hero SEES at SpaceZ HQ stops the run
 // for his read on a building fully staffed at midnight (a sight pin — no blow
-// struck). The moon's haunting reads in two ordered beats — SEEING the first
-// wisp, then DOWNING one (its `after` gate holds the kill beat until the
-// sighting has played) — and the first OPTIMUSK he downs is its own beat.
-// Each fires exactly once, each only on its level.
+// struck), and the first OPTIMUSK he SEES there is personal — he helped build
+// the line that took everyone's jobs. The moon's haunting reads in two
+// ordered beats — SEEING the first wisp, then DOWNING one (its `after` gate
+// holds the kill beat until the sighting has played) — and the first OPTIMUSK
+// he DOWNS up there is its own beat. Each fires exactly once, each only on
+// its level.
 
 import { describe, expect, it } from "vitest";
 
@@ -214,16 +216,37 @@ describe("first-kill thoughts", () => {
     });
   });
 
-  it("does not fire for OPTIMUSK killed at SpaceZ HQ", () => {
+  it("opens the hero's read on his old robot when the first HQ OPTIMUSK comes into view", () => {
     const state = startGame(undefined, "spacez_hq");
     clearStage(state);
-    const bot = placeDying(state, "optimusk");
+    // Parked beyond the sight radius: no reaction yet.
+    const bot = makeEnemy(
+      {
+        pos: { x: state.player.pos.x + 200, y: state.player.pos.y },
+        hp: 1,
+        maxHp: 10,
+      },
+      "optimusk",
+    );
+    state.enemies.push(bot);
+    step(state, idle, DT);
+    expect(state.dialogue).toBeNull();
 
+    // It stomps into view — the beat fires on sight, before any blow.
+    bot.pos = { x: state.player.pos.x + 60, y: state.player.pos.y };
+    step(state, idle, DT);
+    expect(state.dialogue?.source).toEqual({
+      kind: "playerThought",
+      defId: "spacez_optimusk",
+    });
+    tapThrough(state);
+
+    // Downing it here plays nothing more: the KILL beat (moon_optimusk)
+    // belongs to the moon, where the tin men have no business being.
+    bot.pos = { ...state.player.pos };
     killAndCollect(state, bot.id);
-    // SpaceZ HQ pins no first-kill thought to its own robots — they belong
-    // there, so downing one is just another kill.
     expect(state.dialogue).toBeNull();
     expect(state.phase).toBe("playing");
-    expect(state.thoughtsSeen).toEqual([]);
+    expect(state.thoughtsSeen).toEqual(["spacez_optimusk"]);
   });
 });

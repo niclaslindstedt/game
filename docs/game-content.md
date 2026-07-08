@@ -114,9 +114,12 @@ The roster is split one file per level/biome under `src/game/defs/enemies/`
   superintelligence; he begs off the plea to quit ("humans are obsolete") and
   drops the **PASSAGE CHIP** he cut into his own skull — a passive `+1 INT`
   trinket that pays out while it merely rides in the bag (`GearDef.passive`).
-  The first intern the hero SEES fires a one-time inner monologue
-  (`firstSightThoughts` — on view, before any blow) — his arrival read on a
-  building fully staffed at midnight ("good thing I brought the sword").
+  Two sight-pinned inner monologues fire here (`firstSightThoughts` — on
+  view, before any blow): the first intern the hero SEES plays his arrival
+  read on a building fully staffed at midnight ("good thing I brought the
+  sword"), and the first OPTIMUSK he SEES plays the personal one — he helped
+  build the first unit before the AI redrew the line and it took everyone's
+  jobs, his included.
 - **Level 2** ships wisp → moon ghost → wraith and the OPTIMUSK robots SpaceZ
   shipped up to garrison the moon (the same heavy from level 1, now laced
   through the haunting) — four ghost elites (MISSION SPECIALIST, THE
@@ -132,8 +135,11 @@ The roster is split one file per level/biome under `src/game/defs/enemies/`
 - **Level 3** ships the colony's machines — scout rover (fodder) → servo unit
   → FEMBOT (the quick, high-crit companion line) → mining rover (the outdoor
   heavy with a sweetened `dropProfile`), plus the OPTIMUSK garrison carried
-  over — three tech-billionaire elites (LARRY WEBPAGE, BUILD GATES, PETER
-  SEAL), and ELON MOSQUE, the boss who **flees instead of dying**
+  over — four elites: three tech billionaires (LARRY WEBPAGE, BUILD GATES,
+  PETER SEAL) and OPTIMUSK PRIME, the robot foreman orchestrating the
+  OPTIMUSK line (it drops the PROMPT INJECTOR and the ORG CHART, whose
+  dotted line points back to the level-1 CORE), and ELON MOSQUE, the boss
+  who **flees instead of dying**
   (`EnemyDef.flees`): at 0 hp he still pays XP and his guaranteed drops and
   gasps his parting words, but the engine books a `bossFled` event (never a
   kill) and leaves a `rift` landmark on the board; a `killBoss` objective

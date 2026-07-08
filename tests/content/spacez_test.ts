@@ -151,6 +151,9 @@ describe("SPACEZ HQ level def", () => {
       clearStage(state); // just the parked boss remains, waves silenced
       state.items = [];
       state.player.stats.luck = 0; // isolate the base rate + the profile bonus
+      // The parked stack sits inside the sight radius — mute the level's
+      // sight-pinned story beats so the run measures drops, not dialogue.
+      state.thoughtsSeen.push("spacez_staff", "spacez_optimusk");
       const N = 40;
       for (let i = 0; i < N; i++) {
         state.enemies.push(
