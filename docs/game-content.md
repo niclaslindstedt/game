@@ -43,18 +43,38 @@ names its in-run music with an optional `music` id (a key into the app's
   against the phasing dead — while jumpable **craters** are gaps the player
   hops (landing on the near lip when short) but the horde must route around.
   Music: `regolith_ride` ("REGOLITH RIDE", the heroic action theme).
+- **Level 3 — MARS** (`levels/mars.ts`). The trail from the moon: SpaceZ wrote
+  the moon off as a disaster and moved everything — Ada included — to a secret
+  colony. `mars` biome, ~520 px/s² gravity. The level TRANSITIONS mid-map: red
+  regolith with oxide-gravel patches on the western desert half, and the first
+  use of **tile zones** (`TileSpec.zones`) swaps everything east of the dome
+  wall to the base's deck plating. The dome wall (two airlock gaps) and an
+  interior divider carve the base into chambers; the **TERRARIUM** — a locked
+  lizard-shrine room in the SE corner — opens with PETER SEAL's keycard and
+  holds the TRIBUTE SCHEDULE. Scattered **marsrock** slabs and red craters
+  mirror the moon's cover rules. The boss doesn't die: ELON MOSQUE **flees**
+  at 0 hp (the engine's `EnemyDef.flees`), leaving a **rift** landmark where
+  he vanished — the doorway the story follows next. Music: `red_dust` ("RED
+  DUST", a galloping desert-western drive).
 
 ### Campaign progression & what carries across levels
 
-Each run is **standalone**: `createGame(seed, levelId, difficulty)` builds a
-fresh state — the player starts back at level 1 stats with the CRUDE SWORD
-(the melee blade off the hero's wall in the prelude — his default weapon; it
-carries durability and wears out, so the run's first job is to scavenge a
-replacement like the moon's BLASTER), and nothing (XP, gear, inventory)
-carries between levels. The only thing
-threaded across a session is the chosen **difficulty**. This is deliberate —
-a survivors-style run is a self-contained arc — and stays this way unless the
-story later demands a persistent loadout.
+Each run is **standalone** — `createGame(seed, levelId, difficulty)` builds a
+fresh state, and nothing is literally saved between levels. On the campaign
+opener the player starts at level 1 with the CRUDE SWORD (the melee blade off
+the hero's wall in the prelude — his default weapon; it carries durability
+and wears out, so the run's first job is to scavenge a replacement). Any
+level past the opener spawns the hero **seasoned** instead
+(`src/game/arrival.ts`, tuned by config `ARRIVAL`): his player level is
+DERIVED from the earlier levels' rosters — every spawn and wave mob's XP
+yield through the real leveling curve, discounted by `ARRIVAL.clearShare` —
+the banked stat points are auto-spent round-robin, and the previous level
+hands over its signature weapon (its scripted early-drop blade, else its
+trophy, else its hardest-hitting pool entry), its issue suit and charm, and
+a couple of its powerups as held abilities. The derivation is deterministic
+data, so a mid-campaign start arrives realistically equipped (the moon's
+blade on Mars, plating fastened) with no cross-run persistence. The only
+thing threaded across a session is the chosen **difficulty**.
 
 What the campaign _does_ persist is **completion**, on-device and per
 difficulty (`website/src/game/progress.ts`): clearing a level records it, and
@@ -81,7 +101,7 @@ The roster is split one file per level/biome under `src/game/defs/enemies/`
 (which throws on a duplicate id).
 
 - **Level 1** ships the SpaceZ night shift (intern → lab scientist →
-  propulsion engineer → security guard → hazmat tech) reinforced by OPTIMUS
+  propulsion engineer → security guard → hazmat tech) reinforced by OPTIMUSK
   units — humanoid robots that are not story uniques but hit far harder and
   tank far more than any of the staff, and pay out a sweetened drop roll
   (`dropProfile`) when downed; five elites who know too much (THE NIGHT
@@ -91,13 +111,25 @@ The roster is split one file per level/biome under `src/game/defs/enemies/`
   superintelligence; he begs off the plea to quit ("humans are obsolete") and
   drops the **PASSAGE CHIP** he cut into his own skull — a passive `+1 INT`
   trinket that pays out while it merely rides in the bag (`GearDef.passive`).
-- **Level 2** ships wisp → moon ghost → wraith and the OPTIMUS robots SpaceZ
+- **Level 2** ships wisp → moon ghost → wraith and the OPTIMUSK robots SpaceZ
   shipped up to garrison the moon (the same heavy from level 1, now laced
   through the haunting) — four ghost elites (MISSION SPECIALIST, THE
   PROSPECTOR, QUARANTINE MEDIC, THE CARTOGRAPHER), plus ARMSTRONG, the giant
-  astronaut ghost guarding the flag (the boss). The first OPTIMUS the hero
+  astronaut ghost guarding the flag (the boss). The first OPTIMUSK the hero
   downs here fires a one-time inner monologue (`firstKillThoughts` →
   `THOUGHT_DEFS`, played through the dialogue box in his own voice).
+  ARMSTRONG's boss scene ends the moon pointing at Mars: the moon was SpaceZ's
+  disastrous mistake, and everything rides the red freight run out.
+- **Level 3** ships the colony's machines — scout rover (fodder) → servo unit
+  → FEMBOT (the quick, high-crit companion line) → mining rover (the outdoor
+  heavy with a sweetened `dropProfile`), plus the OPTIMUSK garrison carried
+  over — three tech-billionaire elites (LARRY WEBPAGE, BUILD GATES, PETER
+  SEAL), and ELON MOSQUE, the boss who **flees instead of dying**
+  (`EnemyDef.flees`): at 0 hp he still pays XP and his guaranteed drops and
+  gasps his parting words, but the engine books a `bossFled` event (never a
+  kill) and leaves a `rift` landmark on the board; a `killBoss` objective
+  still clears. First-kill thoughts fire for the scout rover (the tire
+  tracks) and the fembot (the hero's flustered inner monologue).
 
 Every unique mob (elite/boss) carries `dialogue` played on arrival and
 `lastWords` played as it dies; minions are the nameless horde streamed in by

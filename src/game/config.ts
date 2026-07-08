@@ -124,6 +124,35 @@ export const LEVELING = {
 } as const;
 
 /**
+ * The seasoned arrival: starting any level past the first spawns the hero as
+ * if he actually cleared the earlier levels — a player level derived from
+ * their rosters (mob count × hp through the XP curve), the banked stat points
+ * auto-spent, and a loadout carried over from the previous level (its
+ * signature weapon and colony-issue gear, plus a couple of its powerups).
+ * See arrival.ts. Story realism, not persistence: the derivation is
+ * deterministic data, so a fresh mid-campaign run needs no saved state.
+ */
+export const ARRIVAL = {
+  /**
+   * Fraction of the earlier levels' total roster XP the derivation assumes a
+   * clear actually banked — nobody kills every last wave mob before the boss
+   * falls.
+   */
+  clearShare: 0.5,
+  /** Round-robin order the banked stat points are auto-spent in. */
+  statOrder: [
+    "strength",
+    "dexterity",
+    "stamina",
+    "speed",
+    "intelligence",
+    "luck",
+  ],
+  /** How many of the previous level's abilities ride along as held powerups. */
+  heldAbilities: 2,
+} as const;
+
+/**
  * Menace — the escalation meter that answers an overpowered player, driven by
  * the player's ACTUAL combat output rather than any single lucky blow. The
  * engine keeps a rolling estimate of the damage-per-second and kills-per-second

@@ -309,6 +309,19 @@ export type Landmark = {
 export type TileSpec = {
   ground: { common: string; rare: string; rareEvery: number };
   patch?: { a: string; b: string; every: number };
+  /**
+   * Regional overrides: inside `rect` (world px) the zone's own ground/patch
+   * pair replaces the level-wide one — how a single level shifts terrain, e.g.
+   * martian dust outside giving way to deck plating inside the base. Zones are
+   * checked in order; the first rect containing the tile wins. Purely
+   * presentational (the renderer picks tiles from it) — collision never reads
+   * tiles.
+   */
+  zones?: {
+    rect: { x: number; y: number; width: number; height: number };
+    ground: { common: string; rare: string; rareEvery: number };
+    patch?: { a: string; b: string; every: number };
+  }[];
 };
 
 /**
@@ -428,6 +441,13 @@ export type GameEvent =
    */
   | { type: "menaceRose"; stage: number }
   | { type: "bossDefeated"; pos: Vec2 }
+  /**
+   * A fleeing unique (see `EnemyDef.flees`) was beaten down to 0 hp and
+   * escaped instead of dying — off the board, loot paid, and a landmark (the
+   * rift it tore open) left at `pos`. Distinct from `bossDefeated` so the app
+   * can play the escape as a warp, not a death.
+   */
+  | { type: "bossFled"; pos: Vec2; defId: string }
   /** A speaker took the stage: the run paused into the `dialogue` phase. */
   | { type: "dialogueStarted"; speaker: string }
   /**

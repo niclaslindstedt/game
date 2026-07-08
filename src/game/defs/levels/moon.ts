@@ -45,10 +45,10 @@ export const MOON: LevelDef = {
     { enemy: "wisp", count: 8, band: [0.05, 0.45] },
     { enemy: "ghost", count: 6, band: [0.4, 0.8] },
     { enemy: "wraith", count: 4, band: [0.75, 1.05] },
-    // OPTIMUS — SpaceZ shipped the night-shift robots up here to garrison the
+    // OPTIMUSK — SpaceZ shipped the night-shift robots up here to garrison the
     // moon. Solid metal, so unlike the haunting they respect the rock and the
     // craters: hunt them through the terrain, not around it.
-    { enemy: "optimus", count: 6, band: [0.3, 0.95] },
+    { enemy: "optimusk", count: 6, band: [0.3, 0.95] },
     // Four ghosts with unfinished business, pinned along the walk to the
     // flag: the grave under the dust, the moonbase, the clone, and Ada's
     // trail — each rushes in, talks, then joins the haunting.
@@ -72,7 +72,7 @@ export const MOON: LevelDef = {
       { enemy: "wraith", count: 300, window: [0.55, 1] },
       // A steady trickle of robots laced through the back half of the haunting
       // — a heavy that forces the terrain to matter, not a second flood.
-      { enemy: "optimus", count: 30, window: [0.45, 1] },
+      { enemy: "optimusk", count: 30, window: [0.45, 1] },
     ],
   },
   // Standing stone: ridge walls of moonrock strewn along the walk to the
@@ -162,7 +162,7 @@ export const MOON: LevelDef = {
   decorClearance: 80,
   // The first SpaceZ robot he kills up here stops him cold — the night shift
   // followed the trail all the way to the moon.
-  firstKillThoughts: [{ enemy: "optimus", thought: "moon_optimus" }],
+  firstKillThoughts: [{ enemy: "optimusk", thought: "moon_optimusk" }],
   loot: {
     weaponPool: [
       "blaster",

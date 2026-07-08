@@ -108,6 +108,10 @@ const PALETTE = {
   // Electric blue + charged white-blue core for the storm bolt.
   e: [90, 180, 255],
   s: [214, 240, 255],
+  // PETER SEAL's teal — grip of the contrarian dagger.
+  C: [82, 158, 168],
+  // Billionaire black (matches the mars family): grips and gun bodies.
+  N: [48, 52, 68],
 };
 
 const SPRITES = {
@@ -648,6 +652,132 @@ const SPRITES = {
     "....OOOO....",
     "..cc....cc..",
     "....cccc....",
+    "............",
+  ],
+  // ---- Mars (level 3) --------------------------------------------------------
+  // The CYBER KATANA: angular chrome blade, allegedly shatterproof.
+  icon_cyber_katana: [
+    "............",
+    ".......OOO..",
+    "......OVxO..",
+    ".....OVxxO..",
+    "....OVxxO...",
+    "...OVxxO....",
+    "..OVxxO.....",
+    ".OVxxO......",
+    ".OVxO.......",
+    "ONNO........",
+    "ONNO........",
+    ".OO.........",
+  ],
+  // LARRY WEBPAGE's crawler pole: a literal search bar.
+  icon_search_bar: [
+    "............",
+    ".........OO.",
+    "........OyO.",
+    ".......OrO..",
+    "......OjO...",
+    ".....OrO....",
+    "....OjO.....",
+    "...OkO......",
+    "..OkO.......",
+    ".OkO........",
+    "..O.........",
+    "............",
+  ],
+  // BUILD GATES's tablet: it crashes whatever it's pointed at.
+  icon_blue_screen: [
+    "............",
+    ".OOOOOOOOO..",
+    ".OeeeeeeeO..",
+    ".OesssseeO..",
+    ".OeeeeeeeO..",
+    ".OessseeeO..",
+    ".OeeeeeeeO..",
+    ".OesseeeeO..",
+    ".OeeeeeeeO..",
+    ".OOOOOOOOO..",
+    "............",
+    "............",
+  ],
+  // PETER SEAL's letter opener: short, fast, contrarian.
+  icon_contrarian_dagger: [
+    "............",
+    "......OO....",
+    ".....OVvO...",
+    "....OVvO....",
+    "...OVvO.....",
+    "..OVvO......",
+    ".OOvOO......",
+    ".OCCO.......",
+    "OCCO........",
+    ".OO.........",
+    "............",
+    "............",
+  ],
+  // MOSQUE's parting gift. Legally, not a flamethrower.
+  icon_not_a_flamethrower: [
+    "............",
+    ".........y..",
+    ".......yry..",
+    "..OOOOOOry..",
+    "..ONNNNNOy..",
+    "..OOONNO....",
+    "....ONNO....",
+    "....ONNO....",
+    "....OOO.....",
+    "............",
+    "............",
+    "............",
+  ],
+  // ---- Mars story items -------------------------------------------------------
+  // The shrine pass: green glass, warm to the touch.
+  icon_keycard_green: swapPalette(KEYCARD_ICON, { W: "G", j: "W" }),
+  // The passenger ledger: leather-bound, net-worth column included.
+  icon_ledger: [
+    "............",
+    "............",
+    ".OOOOOOOOO..",
+    ".OEEEEEEEO..",
+    ".OEWWWWWEO..",
+    ".OEWbbWWEO..",
+    ".OEWWWWWEO..",
+    ".OEWbyWWEO..",
+    ".OEWWWWWEO..",
+    ".OOOOOOOOO..",
+    "............",
+    "............",
+  ],
+  // The MOON POST-MORTEM: a crash report, appropriately blue.
+  icon_postmortem: swapPalette(MANIFEST_ICON, { W: "e", b: "W", r: "W" }),
+  // The ENGAGEMENT REPORT: a dashboard still live, one row blinking red.
+  icon_report: [
+    "............",
+    ".OOOOOOOOO..",
+    ".ObbbbbbbO..",
+    ".ObGGGbbbO..",
+    ".ObbbbbbbO..",
+    ".ObGGGGbbO..",
+    ".ObbbbbbbO..",
+    ".ObrrbbbbO..",
+    ".ObbbbbbbO..",
+    ".OOOOOOOOO..",
+    "............",
+    "............",
+  ],
+  // The TRIBUTE SCHEDULE: a Gantt chart chiseled in stone, one milestone lit.
+  icon_tablet: [
+    "............",
+    "..OOOOOOO...",
+    ".OvvvvvvvO..",
+    ".OvbbbvvvO..",
+    ".OvvvvvvvO..",
+    ".OvbbbbvvO..",
+    ".OvvvvvvvO..",
+    ".OvGGvvvvO..",
+    ".OvvvvvvvO..",
+    ".OOOOOOOOO..",
+    "............",
     "............",
   ],
 };

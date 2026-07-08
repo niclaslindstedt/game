@@ -45,6 +45,16 @@ export type EnemyDef = {
    */
   phasing?: boolean;
   /**
+   * A unique mob that ESCAPES instead of dying: beaten to 0 hp it leaves the
+   * board like a kill — XP granted, guaranteed drops paid, `lastWords` played
+   * (worded as the flight, not a death rattle) — but the engine books a
+   * `bossFled` event in place of `enemyKilled`/`bossDefeated`, never counts
+   * it as a kill, and drops a `landmark` prop (the rift it tore open, drawn
+   * by the sprite of the same name) where it vanished. A `killBoss` objective
+   * still clears — the field is rid of it either way.
+   */
+  flees?: { landmark: string };
+  /**
    * XP granted on kill. Omitted = proportional to max hp
    * (LEVELING.xpPerHp) — the standing rule; set only to override it.
    */

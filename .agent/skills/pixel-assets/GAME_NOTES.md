@@ -9,8 +9,14 @@ file (and its `sprite-data/*` families).
 
 Discover the live set with `ls website/scripts/sprite-data/*.mjs` (all but
 `core.mjs` / `index.mjs`). As of 2026-07 this game ships: `hero`, `moon`,
-`spacez`, `prelude`, `earth`, `effects`, `icons`. A new roster or biome is a
-new family module registered in `sprite-data/index.mjs`.
+`spacez`, `prelude`, `earth`, `effects`, `icons`, `mars`. A new roster or
+biome is a new family module registered in `sprite-data/index.mjs`.
+
+The `mars` family shows the cheap-recolor path for a sibling biome: its
+rocks/craters are `swapPalette` calls over the moon family's grids (import
+the moon module and remap only the chars that differ; chars shared by name
+resolve to THIS family's palette automatically), so a red desert cost zero
+redraws for its terrain furniture.
 
 ## Wound-overlay contrast (derived from `ENEMY_DEFS`)
 

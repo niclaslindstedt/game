@@ -452,6 +452,68 @@ export const WEAPON_DEFS: Record<string, WeaponDef> = {
     durability: 260,
     icon: "icon_moons_blade",
   },
+  // ---- Mars (level 3) uniques — the billionaires' signatures and the run's
+  // scheduled blade. All guaranteed drops, never in the random pool.
+  cyber_katana: {
+    id: "cyber_katana",
+    name: "CYBER KATANA",
+    class: "melee",
+    // Mars's scheduled early blade (earlyDrops): angular, allegedly
+    // shatterproof, definitely shipped before testing finished.
+    damage: 34,
+    cooldownMs: 400,
+    range: 48,
+    durability: 260,
+    icon: "icon_cyber_katana",
+  },
+  search_bar: {
+    id: "search_bar",
+    name: "SEARCH BAR",
+    class: "melee",
+    // LARRY WEBPAGE's crawler pole — a literal bar that searches the line
+    // ahead. Results in about 0.26 seconds.
+    damage: 17,
+    cooldownMs: 260,
+    range: 56,
+    sweepDeg: 40,
+    durability: 220,
+    icon: "icon_search_bar",
+  },
+  blue_screen: {
+    id: "blue_screen",
+    name: "BLUE SCREEN",
+    class: "magic",
+    // BUILD GATES's tablet: it crashes whatever it's pointed at.
+    damage: 18,
+    cooldownMs: 420,
+    range: 280,
+    durability: 200,
+    projectile: { speed: 380, radius: 4, lifetimeMs: 1000, sprite: "glitch" },
+    icon: "icon_blue_screen",
+  },
+  contrarian_dagger: {
+    id: "contrarian_dagger",
+    name: "CONTRARIAN DAGGER",
+    class: "melee",
+    // PETER SEAL's letter opener: short, fast, and always against the crowd.
+    damage: 23,
+    cooldownMs: 300,
+    range: 40,
+    durability: 240,
+    icon: "icon_contrarian_dagger",
+  },
+  not_a_flamethrower: {
+    id: "not_a_flamethrower",
+    name: "NOT-A-FLAMETHROWER",
+    class: "ranged",
+    // MOSQUE drops it as he bolts. Legally, it is not a flamethrower.
+    damage: 24,
+    cooldownMs: 520,
+    range: 240,
+    durability: 260,
+    projectile: { speed: 320, radius: 4, lifetimeMs: 900, sprite: "fireball" },
+    icon: "icon_not_a_flamethrower",
+  },
 };
 
 // ---- Gear -------------------------------------------------------------------
@@ -547,6 +609,24 @@ export const GEAR_DEFS: Record<string, GearDef> = {
     bonuses: {},
     passive: { intelligence: 1 },
     icon: "icon_passage_chip",
+  },
+  // ---- Mars gear: colony-issue kit in the level's drop pool.
+  pressure_plating: {
+    id: "pressure_plating",
+    name: "PRESSURE PLATING",
+    slot: "suit",
+    bonuses: { maxHp: 25 },
+    // Dome-rated hull panels, restrapped as armor.
+    armor: "yellow",
+    icon: "icon_suit",
+  },
+  red_dust_charm: {
+    id: "red_dust_charm",
+    name: "RED DUST CHARM",
+    slot: "charm",
+    // A vial of the regolith the colony is built on. Lucky, probably.
+    bonuses: { critChance: 0.03 },
+    icon: "icon_charm",
   },
 };
 

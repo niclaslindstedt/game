@@ -205,12 +205,12 @@ const SPRITES = {
     "................",
     "................",
   ],
-  // OPTIMUS — SpaceZ's humanoid robot, the toughest thing on the floor short
+  // OPTIMUSK — SpaceZ's humanoid robot, the toughest thing on the floor short
   // of the elites. Same 16px footprint as the staff so it marches in the same
   // ranks, but built from white armor panels (W/w) over steel joints (v/V/b)
   // with a black visor and a cyan optic + chest core (x/c) — reads as a
   // machine, not a coworker. Frames alternate the leg stride like the crowd.
-  optimus_0: [
+  optimusk_0: [
     "................",
     ".....OWWWWO.....",
     "....OWWWWWWO....",
@@ -228,7 +228,7 @@ const SPRITES = {
     "................",
     "................",
   ],
-  optimus_1: [
+  optimusk_1: [
     "................",
     ".....OWWWWO.....",
     "....OWWWWWWO....",
@@ -246,7 +246,7 @@ const SPRITES = {
     "................",
     "................",
   ],
-  // SPARKS — the machine-tier hit splash (OPTIMUS bleeds electricity, not
+  // SPARKS — the machine-tier hit splash (OPTIMUSK bleeds electricity, not
   // blood): the blood droplets recolored to hot gold, base frames shared with
   // the other gore in sprite-data/effects.mjs.
   sparks_0: swapPalette(BLOOD_0, { r: "y" }),
@@ -874,7 +874,7 @@ const SPRITES = {
   ],
   // THE ARCHITECT - the hero's old bench partner, half-converted: a steel
   // skullcap implant over a still-human face, cyan optic eyes and a matching
-  // chest core (c/x) echoing the OPTIMUS machines he worships, the rest a dark
+  // chest core (c/x) echoing the OPTIMUSK machines he worships, the rest a dark
   // tech tunic (steel v/V). Same 24px elite footprint and stride as the staff.
   architect_0: [
     "........................",
@@ -963,7 +963,7 @@ export default {
     engineer_walk: { frames: ["engineer_0", "engineer_1"], delayMs: 280 },
     guard_walk: { frames: ["guard_0", "guard_1"], delayMs: 220 },
     hazmat_walk: { frames: ["hazmat_0", "hazmat_1"], delayMs: 380 },
-    optimus_walk: { frames: ["optimus_0", "optimus_1"], delayMs: 300 },
+    optimusk_walk: { frames: ["optimusk_0", "optimusk_1"], delayMs: 300 },
     muskrat_loom: { frames: ["muskrat_0", "muskrat_1"], delayMs: 400 },
     night_manager_walk: {
       frames: ["night_manager_0", "night_manager_1"],

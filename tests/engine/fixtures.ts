@@ -118,6 +118,33 @@ export const FIX_ENEMIES: Record<string, EnemyDef> = {
       tierBonus: 0.35,
     },
   },
+  // A FLEEING unique (mirrors a boss like the shipped ELON MOSQUE): beaten to
+  // 0 hp it escapes through a rift instead of dying — `flees` books a
+  // `bossFled` (never a kill) and leaves the named landmark behind.
+  test_coward: {
+    id: "test_coward",
+    name: "TEST COWARD",
+    role: "boss",
+    sprite: "test_coward",
+    hp: 100,
+    speed: 30,
+    radius: 14,
+    contactDamage: 20,
+    critChance: 0.1,
+    contactCooldownMs: 900,
+    lastWords: ["NOT THE FACE...", "GOODBYE..."],
+    flees: { landmark: "test_rift" },
+    ai: { aggroRadius: 280, leashRadius: 460 },
+    loot: {
+      items: ["test_hammer"],
+      weapons: 0,
+      gear: 0,
+      xpArrows: 1,
+      repairs: 0,
+      medkits: 1,
+      tierBonus: 0,
+    },
+  },
 };
 
 export const FIX_WEAPONS: Record<string, WeaponDef> = {
@@ -454,6 +481,15 @@ export const FIX_LEVEL: LevelDef = {
   },
 };
 
+// A SECOND-CHAPTER level (index 2) for the seasoned-arrival rules: starting
+// here must derive the player's level from test_level's roster and hand over
+// its kit (see src/game/arrival.ts). Geometry is the reference level's.
+export const FIX_LEVEL_2: LevelDef = {
+  ...FIX_LEVEL,
+  id: "test_level_2",
+  index: 2,
+};
+
 // A level with difficulty-gated content: a placed spawn line and a wave
 // budget line that only appear from HARD up (`minDifficulty`). Used to test
 // that create.ts and the wave spawner honor the gate.
@@ -521,6 +557,7 @@ export function installFixtures(): void {
   registerDefs({
     levels: {
       test_level: FIX_LEVEL,
+      test_level_2: FIX_LEVEL_2,
       test_prelude_level: FIX_PRELUDE_LEVEL,
       test_gated_level: FIX_GATED_LEVEL,
     },

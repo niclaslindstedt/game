@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
 // SpaceZ HQ (level 1) roster: the night shift, weakest to strongest —
 // interns, lab scientists, propulsion engineers, security guards, hazmat
-// techs, and the OPTIMUS units SpaceZ rolled out to replace the humans that
+// techs, and the OPTIMUSK units SpaceZ rolled out to replace the humans that
 // asked too many questions — the five staffers who know too much (elites,
 // including THE ARCHITECT, the hero's old bench partner now building the
 // superintelligence that replaced them), and MUSKRAT, the mutant rat who ate
@@ -82,18 +82,18 @@ export const SPACEZ_ENEMIES: Record<string, EnemyDef> = {
     contactCooldownMs: 800,
     ai: { aggroRadius: 900 },
   },
-  // OPTIMUS — the humanoid robots SpaceZ swapped in for the night shift it no
+  // OPTIMUSK — the humanoid robots SpaceZ swapped in for the night shift it no
   // longer trusts. Not a story unique (no dialogue, no keycard) — just a
   // regular monster built like a tank and swinging like a wrecking ball: the
   // toughest thing on the floor short of the elites, and it HITS HARD. It
   // marches at a steady, unbothered pace, so it's a threat to walk around
   // rather than outrun. The reward for taking one down is a fat, richer-tier
   // drop (`dropProfile`) — worth going out of your way for.
-  optimus: {
-    id: "optimus",
-    name: "OPTIMUS",
+  optimusk: {
+    id: "optimusk",
+    name: "OPTIMUSK",
     role: "minion",
-    sprite: "optimus",
+    sprite: "optimusk",
     gore: "sparks",
     hp: 185,
     speed: 20,

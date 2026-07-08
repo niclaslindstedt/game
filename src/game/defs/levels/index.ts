@@ -7,6 +7,7 @@
 
 import type { LevelDef } from "./types.ts";
 
+import { MARS } from "./mars.ts";
 import { MOON } from "./moon.ts";
 import { SPACEZ_HQ } from "./spacez_hq.ts";
 
@@ -17,7 +18,7 @@ export type { LevelDef, SpawnSpec, WaveBudget, WaveSpec } from "./types.ts";
  * `index.ts` keeps the order and the merged map in one place so the app,
  * the campaign progression, and the tests all read the same source.
  */
-const ORDERED: LevelDef[] = [SPACEZ_HQ, MOON];
+const ORDERED: LevelDef[] = [SPACEZ_HQ, MOON, MARS];
 
 /** Merge the ordered defs into one registry, failing loudly on a duplicate
  * id so a clash surfaces at module load, not as a silently shadowed level. */
@@ -51,4 +52,17 @@ export function levelDef(levelId: string): LevelDef {
   const def = activeLevels[levelId];
   if (!def) throw new Error(`unknown level "${levelId}"`);
   return def;
+}
+
+/**
+ * Every active level with a LOWER story index than `levelId`, ascending —
+ * the campaign the hero has already cleared by the time this level opens.
+ * Reads the active registry, so tests that install fixture catalogs get
+ * fixture answers.
+ */
+export function levelsBefore(levelId: string): LevelDef[] {
+  const target = levelDef(levelId);
+  return Object.values(activeLevels)
+    .filter((def) => def.index < target.index)
+    .sort((a, b) => a.index - b.index);
 }

@@ -143,6 +143,7 @@ export {
   LEVEL_ORDER,
   LEVELS,
   levelDef,
+  levelsBefore,
   type LevelDef,
   type SpawnSpec,
   type WaveBudget,
@@ -188,6 +189,7 @@ export { registerDefs, type DefOverrides } from "./game/defs/registry.ts";
 // Global tuning.
 export {
   ARMOR,
+  ARRIVAL,
   DIALOGUE,
   DODGE,
   DOORS,

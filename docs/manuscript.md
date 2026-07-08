@@ -32,7 +32,11 @@ under the Sea of Tranquility is not dead enough.
 The conspiracy, one find at a time: SpaceZ has been flying to the moon in secret
 on hardware nobody built (Level 1), because of the wreck under the Sea of
 Tranquility, the moonbase feeding off it, and the man who never really came home
-in '69 (Level 2).
+in '69 (Level 2). The moon op ended in disaster — the digging woke the dead — so
+SpaceZ crated everything (Ada included) for Mars, where billionaires are quietly
+colonizing a members-only lifeboat and tithing to the LIZARD GODS who actually
+own the place (Level 3). ELON MOSQUE names Ada the price of the planet and flees
+into a rift; the hero follows.
 
 ---
 
@@ -186,7 +190,7 @@ _Drops: PLASMA CUTTER._
 **CORE LOG** _(found inside the AI CORE)_
 
 - A TERMINAL, STILL WARM. THE CORE / HE BUILT HUMS TO ITSELF DOWN HERE, / A MILLION VOICES, NONE OF THEM HIS.
-- IT SIGNED THE MIDNIGHT LAUNCHES. / IT DREW THE OPTIMUS LINE. IT / FILED ADA UNDER 'CARGO'.
+- IT SIGNED THE MIDNIGHT LAUNCHES. / IT DREW THE OPTIMUSK LINE. IT / FILED ADA UNDER 'CARGO'.
 - THEY DIDN'T REPLACE US WITH A / MACHINE. THEY BUILT ONE THAT / DREAMS OF A WORLD WITHOUT US.
 
 ---
@@ -203,9 +207,9 @@ Ada's beacon dies near the old flag. Something up here isn't dead.
 4. SO I KNOW THIS SITE COLD. / EVERY CRATER. THE FAST LINE / STRAIGHT TO THAT FLAG.
 5. STAY ON THE DUST. KEEP MOVING. / I'M COMING, ADA.
 
-### Hero's thought — first OPTIMUS kill on the moon
+### Hero's thought — first OPTIMUSK kill on the moon
 
-_Fires once, the first time the hero downs an OPTIMUS here (in his own voice)._
+_Fires once, the first time the hero downs an OPTIMUSK here (in his own voice)._
 
 - A SPACEZ UNIT. UP HERE. / SAME TIN MAN FROM THE NIGHT / SHIFT, WALKING THE DUST.
 - THEY DIDN'T JUST SHIP HER / MOONWARD. THEY BUILT A STAFF / TO MEET HER. COMPANY METAL, / GUARDING WHATEVER'S DOWN THERE.
@@ -257,11 +261,17 @@ _Drops: SECOND MAN DOSSIER._
 
 ### Boss — ARMSTRONG (the giant astronaut ghost guarding the flag)
 
+_The moon's ending points to Mars: SpaceZ's moon operation was a disastrous
+mistake — the digging woke the dead — and the company has packed everything,
+Ada included, onto the red freight run to its real project._
+
 - YOU SMELL LIKE EARTH. / RAIN AND CUT GRASS AND / TELEVISION. GO HOME.
 - I PLANTED THIS FLAG. ONE SMALL / STEP. THEN THEY FOUND THE WRECK / UNDER MY BOOTS AND EVERYTHING / AFTER THAT WAS THEATER.
 - THEY GREW A SMILING ME ON THE / RIDE HOME. HE SHOOK THE HANDS. / HE CUT THE RIBBONS. HE DIED IN / A BED. LUCKY HIM.
-- I STAYED. SOMEBODY HAD TO STAND / WATCH OVER THE THING DOWN THERE. / IT SINGS, YOU KNOW. THE COMPANY / MEN DANCE TO IT NOW.
-- THEY CARRIED A GIRL PAST ME LAST / NIGHT. SNEAKERS. LOUD. SHE BIT / TWO OF THEM. THEY TOOK HER BELOW, / TO THE SINGING THING.
+- I STAYED. SOMEBODY HAD TO STAND / WATCH OVER THE THING DOWN THERE. / IT SINGS, YOU KNOW. SPACEZ / PLUGGED RIGHT INTO IT.
+- THAT WAS THEIR GREAT MISTAKE. / IT SANG, AND THE GRAVES OPENED. / NOW THE COMPANY MEN CRATE UP / EVERYTHING AND RUN.
+- BIG PLANS FOR MARS, THE CRATES / SAY. DOMES. MACHINES. RICH MEN. / THE FREIGHT RUNS RED NOW - / EVERYTHING GOES TO MARS.
+- THEY CARRIED A GIRL PAST ME / LAST NIGHT. SNEAKERS. LOUD. / SHE BIT TWO OF THEM. THEY / CRATED HER FOR THE RED RUN.
 - YOU WANT TO FOLLOW? THEN TAKE / THE WATCH FROM ME, EARTHLING. / I ONLY EVER LOSE TO THE WORTHY.
 
 **Last words:** THE WATCH... HHH... / IT'S... YOURS... NOW...
@@ -289,6 +299,120 @@ _Drops: MACHETE._
 
 ---
 
+## Level 3 — MARS
+
+The red freight run ends at a secret colony: rovers working the dust outside, a
+SpaceZ base full of robots (and fembots) inside, and the billionaires who bought
+the lifeboat. ELON MOSQUE owns the planet — on paper.
+
+### Opening monologue (hero, black screen)
+
+1. THE GHOST KEPT HIS WORD. / THE MOON LET ME GO.
+2. HE SAID THE MOON WAS THEIR / MISTAKE. THAT THE COMPANY PACKED / UP AND RAN. EVERYTHING GOES / TO MARS NOW.
+3. SO DOES ADA'S BEACON. / ONE PING. RED PLANET. FAINT.
+4. I REBUILT THEIR LANDER ONCE. / I KNOW WHAT A SPACEZ COLONY / NEEDS. DOMES. ROBOTS. SECRETS.
+5. WHOEVER'S RUNNING THIS PLACE / BOUGHT MY GIRL WITH IT. / BAD TRADE.
+
+### Hero's thought — first SCOUT ROVER kill on Mars
+
+_Fires once, the first time the hero downs a SCOUT ROVER here (in his own
+voice)._
+
+- A ROVER. FRESH PAINT, WORN / WHEELS. AND THE DUST IS FULL / OF TIRE TRACKS. YEARS OF THEM.
+- THE PLAQUE SAYS 'FOR ALL / MANKIND'. THE FIRMWARE SAYS / PROPERTY OF SPACEZ. FIGURES.
+
+### Hero's thought — first FEMBOT kill on Mars
+
+_Fires once, the first time the hero downs a FEMBOT (in his own voice)._
+
+- ...IT BLEW ME A KISS. / THE ROBOT. IN THE NIGHTGOWN. / IT BLEW ME A KISS AND FIRED.
+- WHO BUILDS A DOOMSDAY COLONY / AND BUDGETS FOR... THESE? / BILLIONAIRES. RIGHT.
+- EYES FRONT, BUILDER. YOU HAVE / A GIRLFRIEND. SHE IS GOING TO / THINK THIS IS HILARIOUS.
+
+### Elites (spoken on arrival; last words as they fall)
+
+Three tech billionaires, pinned along the route so the colony's story unspools
+in walking order: the fembot line and its harvest, the moon post-mortem, and
+the landlords the whole venture answers to.
+
+#### LARRY WEBPAGE — the fembots upload everything
+
+- DON'T BE EVIL. THAT'S FREE / ADVICE. I INDEXED THIS WHOLE / PLANET BEFORE BREAKFAST.
+- THE FEMBOTS? COMPANION UNITS. / THEY SMILE. THEY LISTEN. THEY / UPLOAD EVERYTHING YOU SAY.
+- YOUR SEARCH HISTORY WALKED IN / WITH YOU. I KNOW WHY YOU'RE / HERE. THE ANSWER IS NO.
+
+**Last words:** 404... / ...NOT... FOUND...
+
+_Drops: SEARCH BAR, ENGAGEMENT REPORT._
+
+#### BUILD GATES — the moon was version one
+
+- PLEASE HOLD. YOUR INTRUSION IS / IMPORTANT TO US. HAVE YOU TRIED / TURNING YOURSELF OFF AND ON?
+- I WROTE THE COLONY OS. THE MOON / RAN VERSION ONE. IT PLUGGED INTO / THE THING UNDER THE DUST AND...
+- WELL. YOU'VE MET THE GHOSTS. / A DISASTER. WE PATCHED IT BY / LEAVING. MARS IS VERSION TWO.
+
+**Last words:** FATAL... ERROR... / WHO WROTE... THIS...
+
+_Drops: BLUE SCREEN, MOON POST-MORTEM._
+
+#### PETER SEAL — the landlords are older
+
+- FASCINATING. EVERYONE FLEES / SOMETHING. I FUND WHAT THEY / FLEE TO. AND WHAT THEY FLEE.
+- MOSQUE THINKS HE OWNS MARS. / HE RENTS IT. THE LANDLORDS ARE / OLDER. SCALED. COLD-BLOODED.
+- I KEEP THEIR SHRINE. I COUNT / THEIR TITHE. LATELY THE PRICE / WENT UP. IT WANTS WARM THINGS.
+
+**Last words:** THE TITHE... IS DUE... / ...IT'S ALWAYS... DUE...
+
+_Drops: CONTRARIAN DAGGER, TERRARIUM KEYCARD, COLONY LEDGER._
+
+### Boss — ELON MOSQUE (he doesn't die; he flees)
+
+_The game's first fleeing boss: beaten to 0 hp he cowers, drops everything,
+and zaps away through a rift — which stays on the board, and is where the
+story goes next (a parallel universe). His scene ties off the level: the
+colony, the moon's disaster, the lizard gods — and what Ada was traded for._
+
+- AH. THE GARAGE INVENTOR. / YOU'RE TRENDING, YOU KNOW. / MOSTLY LAUGHING EMOJIS.
+- LOOK AT ALL THIS. A WHOLE / PLANET, ZERO REGULATORS. / I AM THE LAW HERE. ALSO HR.
+- THE MOON? A ROUNDING ERROR. / WE PLUGGED INTO SOMETHING OLD / AND IT SANG BACK. OFF-BRAND.
+- BUT IT INTRODUCED US TO THE / ACTUAL OWNERS OUT HERE. THE / LIZARD GODS. GREAT GUYS. HUGE.
+- YOUR GIRLFRIEND? THE BEACON / GIRL? SHE'S NOT CARGO. SHE'S / THE DOWN PAYMENT ON MARS.
+- A NECESSARY SACRIFICE. THE / GODS NAMED THEIR PRICE, AND I / ALWAYS CLOSE. SECURITY!
+
+**Parting words (fleeing into the rift):** OKAY! OKAY! NOT THE FACE! / BOARD MEETING. OTHER UNIVERSE.
+
+_Drops: NOT-A-FLAMETHROWER. Leaves: the RIFT._
+
+### Found lore (story items)
+
+**ENGAGEMENT REPORT**
+
+- A DASHBOARD, STILL LIVE. / 'COMPANION UNITS: 2,400. / SENTIMENT: POSITIVE. COMPLIANT.'
+- ONE ROW BLINKS RED. 'SPECIMEN 7: / REFUSES COMPANIONSHIP. BIT UNIT / 0034. RECOMMEND EARLY TRIBUTE.'
+- THAT'S MY GIRL. / ...ALL OF IT. THAT'S MY GIRL.
+
+**MOON POST-MORTEM**
+
+- 'COLONY OS 1.0 POST-MORTEM.' / CAUSE OF FAILURE: THE SUBSTRATE / WAS ALREADY OCCUPIED.
+- 'THE TENANT OBJECTED. STAFF / LOSSES: TOTAL. RECOMMEND MARS. / RECOMMEND NEVER DIGGING AGAIN.'
+
+**COLONY LEDGER**
+
+- A PASSENGER LEDGER, LEATHER- / BOUND. EVERY NAME HAS A NET / WORTH COLUMN. TEN FIGURES UP.
+- NO ENGINEERS. NO FARMERS. NO / DOCTORS. JUST OWNERS. WHO'S / GOING TO FIX THEIR TOILETS?
+
+**TERRARIUM KEYCARD** _(opens the TERRARIUM)_
+
+- A KEYCARD OF GREEN GLASS. / SCALES ETCHED UNDER THE FOIL. / IT'S WARM. IT SHOULDN'T BE.
+- ONE WORD, EMBOSSED: / 'TERRARIUM. TITHE-KEEPERS ONLY.'
+
+**TRIBUTE SCHEDULE** _(found inside the TERRARIUM)_
+
+- A STONE TABLET WITH A GANTT / CHART CHISELED INTO IT. ONE / MILESTONE GLOWS: 'TRIBUTE NIGHT.'
+- 'OFFERING: SPECIMEN 7. VENUE: / THE RIFT. DRESS CODE: SCALES.' / SHE'S ALIVE. AND I'M NOT LATE.
+
+---
+
 ## Where the data lives
 
 The manuscript above is the truth; the files below are its implementation. Each
@@ -296,15 +420,15 @@ line here appears verbatim in one of these, and they must match. When you change
 one, update the manuscript in the same change (subject to the confirmation rule
 at the top of this file).
 
-| Story/dialogue element                      | Canonical data file                                       |
-| ------------------------------------------- | --------------------------------------------------------- |
-| Prelude cutscene (captions, `say` beats)    | `src/game/defs/cutscenes.ts`                              |
-| Per-level opening monologues (`intro`)      | `src/game/defs/levels/spacez_hq.ts`, `.../levels/moon.ts` |
-| Elite/boss `dialogue` + `lastWords`         | `src/game/defs/enemies/spacez.ts`, `.../enemies/moon.ts`  |
-| Hero's inner thoughts (`firstKillThoughts`) | `src/game/defs/thoughts.ts` (pinned from a `LevelDef`)    |
-| Found lore on story items (`lore`)          | `src/game/defs/story.ts`                                  |
-| Loose UI copy (how-to-play, not story)      | `website/src/game/copy.ts`                                |
-| Brand strings (title, tagline — not story)  | `game.config.json` → `website/src/identity.ts`            |
+| Story/dialogue element                      | Canonical data file                                               |
+| ------------------------------------------- | ----------------------------------------------------------------- |
+| Prelude cutscene (captions, `say` beats)    | `src/game/defs/cutscenes.ts`                                      |
+| Per-level opening monologues (`intro`)      | `src/game/defs/levels/spacez_hq.ts`, `.../moon.ts`, `.../mars.ts` |
+| Elite/boss `dialogue` + `lastWords`         | `src/game/defs/enemies/spacez.ts`, `.../moon.ts`, `.../mars.ts`   |
+| Hero's inner thoughts (`firstKillThoughts`) | `src/game/defs/thoughts.ts` (pinned from a `LevelDef`)            |
+| Found lore on story items (`lore`)          | `src/game/defs/story.ts`                                          |
+| Loose UI copy (how-to-play, not story)      | `website/src/game/copy.ts`                                        |
+| Brand strings (title, tagline — not story)  | `game.config.json` → `website/src/identity.ts`                    |
 
 The engine machinery that plays these (dialogue queue, kill-triggered scenes) is
 in `src/game/story.ts`; the app-side overlays that render them are

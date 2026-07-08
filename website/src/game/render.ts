@@ -84,12 +84,24 @@ function tileHash(tx: number, ty: number): number {
  * here. `sprite` falls back to the first ground sprite if a name is unknown.
  */
 function groundTile(sprites: Sprites, tiles: TileSpec, tx: number, ty: number) {
-  const fallback = spriteByName(sprites, tiles.ground.common) ?? sprites.moon_0;
+  // Zoned terrain: the first zone rect containing this tile supplies its own
+  // ground/patch pair (martian dust outside, deck plating inside the base) —
+  // still all data from the level def, no per-biome code.
+  const zone = tiles.zones?.find(
+    (z) =>
+      tx * TILE >= z.rect.x &&
+      tx * TILE < z.rect.x + z.rect.width &&
+      ty * TILE >= z.rect.y &&
+      ty * TILE < z.rect.y + z.rect.height,
+  );
+  const ground = zone?.ground ?? tiles.ground;
+  const patch = zone ? zone.patch : tiles.patch;
+  const fallback = spriteByName(sprites, ground.common) ?? sprites.moon_0;
   const pick = (name: string) => spriteByName(sprites, name) ?? fallback;
-  if (tiles.patch && tileHash(tx >> 2, ty >> 2) % tiles.patch.every === 0) {
-    return pick(tileHash(tx, ty) % 2 === 0 ? tiles.patch.a : tiles.patch.b);
+  if (patch && tileHash(tx >> 2, ty >> 2) % patch.every === 0) {
+    return pick(tileHash(tx, ty) % 2 === 0 ? patch.a : patch.b);
   }
-  const { common, rare, rareEvery } = tiles.ground;
+  const { common, rare, rareEvery } = ground;
   return pick(tileHash(tx, ty) % rareEvery === 0 ? rare : common);
 }
 

@@ -18,7 +18,7 @@ import {
   step,
 } from "@game/core";
 
-import { DT, idle } from "../helpers.ts";
+import { bareHero, DT, idle } from "../helpers.ts";
 
 // A fixed seed keeps the horde arrangement deterministic.
 const SEED = 42;
@@ -27,15 +27,18 @@ const SEED = 42;
  * In-game milliseconds until a stationary player dies on `level`/`difficulty`.
  * The character holds still (idle input) and lets the starting crude sword
  * auto-swing; any level-up that lands is banked into LUCK so the measurement
- * stays about the starting loadout rather than a chosen build. Returns `capMs`
- * if the run survives the window (used to show EASY outlasts the benchmark).
+ * stays about the starting loadout rather than a chosen build. The seasoned
+ * arrival is stripped (`bareHero`) so the benchmark pins the HORDE's
+ * pressure, calibrated once against the bare hero — not the inherited kit a
+ * mid-campaign start hands over. Returns `capMs` if the run survives the
+ * window (used to show EASY outlasts the benchmark).
  */
 function timeToDeathMs(
   level: string,
   difficulty: string,
   capMs = 60_000,
 ): number {
-  const state = createGame(SEED, level, difficulty);
+  const state = bareHero(createGame(SEED, level, difficulty));
   skipCutscene(state);
   dismissIntro(state);
   let guard = 0;

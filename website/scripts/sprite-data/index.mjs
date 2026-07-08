@@ -20,6 +20,7 @@ import earth from "./earth.mjs";
 import effects from "./effects.mjs";
 import hero from "./hero.mjs";
 import icons from "./icons.mjs";
+import mars from "./mars.mjs";
 import moon from "./moon.mjs";
 import prelude from "./prelude.mjs";
 import spacez from "./spacez.mjs";
@@ -33,6 +34,7 @@ export const FAMILIES = [
   effects,
   icons,
   spacez,
+  mars,
 ].map((family) => ({
   ...family,
   // Throws on a char defined both locally and in the core — a family may

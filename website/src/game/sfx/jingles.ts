@@ -107,6 +107,37 @@ export function playJingle(synth: Synth, event: GameEvent): boolean {
       });
       return true;
 
+    case "bossFled":
+      // The coward's exit: reality unzipping — a long rising saw sweep with
+      // a glassy shimmer on top, snapped shut by a bright crack instead of
+      // a corpse hitting the floor.
+      synth.tone({
+        type: "sawtooth",
+        from: 110,
+        to: 1760,
+        durationMs: 600,
+        volume: 0.055,
+        detuneCents: 14,
+        echo: 0.35,
+      });
+      synth.tone({
+        type: "sine",
+        from: 1568,
+        to: 3136,
+        durationMs: 420,
+        volume: 0.025,
+        delayMs: 180,
+        echo: 0.5,
+      });
+      synth.noise({
+        durationMs: 140,
+        volume: 0.06,
+        delayMs: 600,
+        filter: { type: "highpass", frequency: 2400 },
+        echo: 0.3,
+      });
+      return true;
+
     case "victory":
       // The triumph fanfare: brass squares over a held triangle root,
       // capped with a snare — the full parade.

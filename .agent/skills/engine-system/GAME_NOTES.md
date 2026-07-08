@@ -53,7 +53,7 @@ sequel truncates this file to a stub and rebuilds it as its own systems land.
   rocks with a `rockSizes`/`cell` obstacle spec; one sprite per footprint,
   named `<base>_<w>x<h>`, drawn centered — no render edit. The screen nuke now
   gates each kill on `lineOfSight`, so a rock shelters the mob behind it.
-- **Event-pinned player monologue (2026-07, first moon OPTIMUS kill):** a
+- **Event-pinned player monologue (2026-07, first moon OPTIMUSK kill):** a
   dialogue that is the HERO thinking, not a speaker on the board, is a new
   `DialogueState` source (`{ kind: "playerThought", defId }`) keyed into a
   content catalog (`defs/thoughts.ts`, same setter/accessor shape as story
@@ -62,6 +62,32 @@ sequel truncates this file to a stub and rebuilds it as its own systems land.
   kill path in `loot.ts` after `startDeathWords`, guarded once-per-run by
   `state.thoughtsSeen`. `dialogueContent` grew a branch; the app's dialogue
   overlay needed no change (it renders whatever `dialogueContent` returns).
+- **Fleeing uniques (2026-07, ELON MOSQUE):** a boss that escapes instead of
+  dying is data — `EnemyDef.flees: { landmark }`. The kill path in `loot.ts`
+  branches before booking the kill: the mob leaves the board, XP and
+  guaranteed drops still pay, `lastWords` still play (worded as the flight),
+  but the engine emits `bossFled` (never `enemyKilled`/`bossDefeated`, never
+  a kill stat) and pushes the named landmark (its sprite = the landmark kind)
+  where it vanished — so the rift renders through the existing data-driven
+  landmark path with zero renderer edits. `killBoss` objectives clear because
+  the boss is simply gone. Fixture: `test_coward`; suite:
+  `tests/engine/flee_test.ts`.
+- **Seasoned arrival (2026-07, Mars):** a mid-campaign start needs no saved
+  state — `src/game/arrival.ts` derives the hero's level from the earlier
+  levels' rosters (spawn + wave XP × `ARRIVAL.clearShare` through the real
+  curve, difficulty-gated lines excluded), auto-spends the stat points
+  round-robin, and grants the previous level's signature weapon / issue gear
+  / powerups. Called once at the end of `createGame`; a no-op on the opener.
+  `levelsBefore` (levels/index.ts) reads the ACTIVE catalog and arrival
+  dedupes by story index, so fixture catalogs with several index-1 levels
+  behave. The shared test helper `bareHero` strips the seasoning so legacy
+  engine-rule suites keep staging from the authored level-1 baseline.
+- **Zoned terrain (2026-07, Mars desert→base):** one level with two grounds is
+  presentation data, not engine work — `TileSpec.zones` (rects in world px,
+  each with its own ground/patch pair) checked first by `groundTile` in
+  render.ts. Collision never reads tiles, so zones are purely visual; the
+  gameplay transition comes from the walls/spawn bands laid along the same
+  boundary.
 - **Engine tests run on synthetic fixtures (2026-07):** `tests/engine/`
   suites install content-agnostic fixtures (`tests/engine/fixtures.ts`,
   plain ids like `test_level`/`test_minion`) via the engine's `registerDefs`

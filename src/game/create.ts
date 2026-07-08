@@ -9,6 +9,7 @@
 import { createCutscene } from "@game/lib/cutscene.ts";
 import { createRng, randomRange, type Rng } from "@game/lib/rng.ts";
 import { distance, vec, type Vec2 } from "@game/lib/vec.ts";
+import { applyArrival } from "./arrival.ts";
 import {
   ENEMY_AI,
   LEVELING,
@@ -248,6 +249,10 @@ export function createGame(
   for (const placed of def.placedItems ?? []) {
     state.items.push(placeItem(state, placed));
   }
+
+  // A mid-campaign start arrives seasoned: a derived player level, auto-spent
+  // stats, and the previous level's kit (see arrival.ts). No-op on level 1.
+  applyArrival(state);
 
   return state;
 }
