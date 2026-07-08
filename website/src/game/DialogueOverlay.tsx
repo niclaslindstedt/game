@@ -10,7 +10,7 @@
 
 import { useEffect, type MutableRefObject } from "react";
 
-import { dialogueContent, type GameState } from "@game/core";
+import { dialogueContent, playerAppearance, type GameState } from "@game/core";
 
 import { PixelText } from "@ui/lib/PixelText.tsx";
 import type { PixelFont } from "@ui/lib/pixel-font.ts";
@@ -63,12 +63,20 @@ export function DialogueOverlay({
   // A story-item find gets a banner so the box unmistakably reads as "you
   // picked this up — here's what it is", not another mob talking at you.
   const isStoryItem = dialogue.source.kind === "story";
+  // The hero's inner monologue shows HIS face — and his face is whatever he is
+  // wearing right now, so resolve it live (plain clothes until he loots the EVA
+  // suit, the astronaut after) exactly like the world sprite does. Otherwise
+  // his SpaceZ-HQ thoughts would flash the spacesuit before he ever finds it.
+  const portraitFamily =
+    dialogue.source.kind === "playerThought"
+      ? playerAppearance(state)
+      : content.portrait;
   // Enemy speakers bob live on the canvas behind the box; story items show
   // their icon as a portrait so the find stays on screen while it talks.
   const portrait =
     dialogue.source.kind === "story"
       ? spriteDataUrl(assets.sprites, content.portrait)
-      : (spriteDataUrl(assets.sprites, `${content.portrait}_0`) ?? null);
+      : (spriteDataUrl(assets.sprites, `${portraitFamily}_0`) ?? null);
 
   const hasNext = dialogue.page + 1 < content.pages.length;
   const continueText = !done

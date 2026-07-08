@@ -68,7 +68,7 @@ _(Ada crosses to the door and exits.)_
 
 > **CAPTION:** SHE NEVER CAME BACK.
 >
-> **CAPTION:** THE OLD SWORD OFF THE WALL. / IT'S WHAT I BRING TO SAVE HER.
+> **CAPTION:** THE OLD SWORD OFF THE WALL. / IT'S ALL I NEED TO BRING HER HOME.
 
 _(Fade to black.)_
 
@@ -80,26 +80,34 @@ A cleanroom raid for the interplanetary drive's one missing ingredient.
 
 ### Opening monologue (hero, black screen)
 
-1. ADA WENT OUT FOR CHIPS AND SODA. / SHE NEVER CAME BACK.
-2. THE BEACON I SEWED INTO HER JACKET / POINTS STRAIGHT OFF-PLANET.
-3. SO I'M BUILDING A SHIP. / THE DRIVE NEEDS ONE INGREDIENT.
-4. SPACEZ KEEPS IT IN THE CLEANROOM. / I USED TO KEEP IT THERE MYSELF.
-5. I DESIGNED HALF THESE ENGINES. / THEN THEY REPLACED ME WITH AN AI.
-6. SAME STORY EVERYWHERE. THE WHOLE / BLOCK'S ON WELFARE NOW. ADA AND / ME TOO. BUT HEY - WEBFLIX.
-7. SO I KNOW EVERY DOOR AND KEYCARD. / THEY SHOULD'VE CHANGED THE LOCKS.
-8. THE INGREDIENT'S IN THE VAULT. / WE DO THIS THE HARD WAY.
+1. ADA WENT FOR CHIPS. TWO HOURS. / THEN THE BEACON IN HER JACKET / PINGED - STRAIGHT OFF-PLANET.
+2. OFF-PLANET MEANS A SHIP. / A SHIP MEANS A DRIVE, AND THE / DRIVE'S MISSING ONE PART.
+3. SPACEZ KEEPS THAT PART IN THE / CLEANROOM VAULT. I KNOW - / I USED TO BUILD IT FOR THEM.
+4. HALF THESE ENGINES ARE MINE. / THEN AN AI DREW THEM BETTER / AND WALKED ME OUT THE DOOR.
+5. THE WHOLE BLOCK'S ON WELFARE / NOW. ME AND ADA TOO. / ALL WE'VE GOT LEFT IS WEBFLIX.
+6. THEY NEVER CHANGED THE LOCKS. / EVERY DOOR STILL KNOWS MY HAND.
+7. THE PART'S IN THE VAULT. / ADA'S OUT THERE SOMEWHERE. / WE DO THIS THE HARD WAY.
 
 ### Hero's thought — first INTERN sighted at SpaceZ HQ
 
 _Fires once, the moment the first INTERN comes into view (in his own voice) —
-before a single blow, within the level's opening seconds, since the interns
-pack the ring around the spawn. He worked in this building; a fully manned
-floor at midnight is wrong, and the NIGHT MANAGER's secret-night-shift reveal
-lands a few rooms later._
+before a single blow. He worked in this building; a fully manned floor at
+midnight is wrong, and the NIGHT MANAGER's secret-night-shift reveal lands a
+few rooms later._
 
-- LOOK AT THIS PLACE. PAST / MIDNIGHT AND EVERY DESK IS / MANNED. EVERY LAB LIT.
-- I WORKED HERE. WE NEVER / STAFFED NIGHTS LIKE THIS. / SOMETHING MUST BE BREWING.
-- OH WELL. / GOOD THING I BROUGHT THE SWORD.
+- LOOK AT THIS PLACE. PAST / MIDNIGHT, AND EVERY DESK'S / MANNED. EVERY LAB LIT.
+- WE NEVER RAN NIGHTS LIKE THIS. / SOMETHING'S GOT THE WHOLE / BUILDING UP AFTER DARK.
+
+### Hero's thought — the vanguard's first strike (draws the sword)
+
+_The level opens with the hero's sword holstered — he walks in like it's still
+his old job. A lone LAB SCIENTIST breaks from the pack and takes a harmless
+swing at him; staff don't fight, and that wrongness is what makes him draw the
+blade. Fires once, on that first strike (gated to play after the sighting read
+above), and arms the auto-attack for the rest of the run._
+
+- A SCIENTIST JUST TOOK A SWING / AT ME. BARELY FELT IT - BUT / THEY DON'T FIGHT. NEVER DID.
+- SO THE NIGHT SHIFT BITES NOW. / GOOD THING I BROUGHT THE SWORD.
 
 ### Hero's thought — first OPTIMUSK sighted at SpaceZ HQ
 

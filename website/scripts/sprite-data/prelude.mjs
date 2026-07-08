@@ -210,6 +210,46 @@ const SPRITES = {
     "................",
     "................",
   ],
+  // ADA, couch mode: same seated silhouette as the hero, red jacket (the one
+  // with the beacon) instead of the white tee, so the two read as a matched
+  // pair on the sofa. A `pose` beat swaps her to the standing `ada` sprite
+  // when she gets up for the store. Frame 1 blinks with the TV light.
+  ada_couch_0: [
+    "................",
+    "................",
+    "......OOOOO.....",
+    ".....OkkkkkO....",
+    ".....OpOpppO....",
+    ".....OppppkO....",
+    ".....OrrrrrO....",
+    "....OrrWWrrrO...",
+    "....OrrWWrrrO...",
+    "...OjjjjOrrrO...",
+    "..OjjjjjjrrrO...",
+    "..OjjOOjjOOO....",
+    "..OOO..OOO......",
+    "................",
+    "................",
+    "................",
+  ],
+  ada_couch_1: [
+    "................",
+    "................",
+    "......OOOOO.....",
+    ".....OkkkkkO....",
+    ".....OpppppO....",
+    ".....OppppkO....",
+    ".....OrrrrrO....",
+    "....OrrWWrrrO...",
+    "....OrrWWrrrO...",
+    "...OjjjjOrrrO...",
+    "..OjjjjjjrrrO...",
+    "..OjjOOjjOOO....",
+    "..OOO..OOO......",
+    "................",
+    "................",
+    "................",
+  ],
   // Our hero, couch mode: white tee, knees up, movie face. Frame 1 blinks
   // with the TV light.
   hero_couch_0: [
@@ -258,6 +298,7 @@ export default {
   sprites: SPRITES,
   animations: {
     ada_walk: { frames: ["ada_0", "ada_1"], delayMs: 220 },
+    ada_couch_idle: { frames: ["ada_couch_0", "ada_couch_1"], delayMs: 600 },
     hero_couch_idle: { frames: ["hero_couch_0", "hero_couch_1"], delayMs: 600 },
   },
   contrastExempt: [],

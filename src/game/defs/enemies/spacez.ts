@@ -82,6 +82,27 @@ export const SPACEZ_ENEMIES: Record<string, EnemyDef> = {
     contactCooldownMs: 800,
     ai: { aggroRadius: 900 },
   },
+  // The VANGUARD: a single lab scientist that breaks from the pack the moment
+  // the level opens and sprints the hero down (see SpaceZ HQ's `openingStrike`).
+  // Its first touch is harmless — it deals no contact damage — but it is what
+  // draws the hero's holstered sword: that swing fires his "good thing I
+  // brought the sword" beat and turns the auto-attack on. Fast so it clearly
+  // outruns the slow intern rank, and thin (a couple of swings) so it's the
+  // first thing the newly-armed hero cuts down. Same LAB SCIENTIST sprite as
+  // the rank and file — nothing marks it out but its sprint.
+  vanguard_scientist: {
+    id: "vanguard_scientist",
+    name: "LAB SCIENTIST",
+    role: "minion",
+    sprite: "scientist",
+    hp: 24,
+    speed: 50,
+    radius: 8,
+    contactDamage: 0,
+    critChance: 0,
+    contactCooldownMs: 700,
+    ai: { aggroRadius: 1200 },
+  },
   // OPTIMUSK — the humanoid robots SpaceZ swapped in for the night shift it no
   // longer trusts. Not a story unique (no dialogue, no keycard) — just a
   // regular monster built like a tank and swinging like a wrecking ball: the

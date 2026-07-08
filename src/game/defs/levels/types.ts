@@ -211,6 +211,17 @@ export type LevelDef = {
    * beats that are a reaction to seeing something, not to killing it.
    */
   firstSightThoughts?: ThoughtTrigger[];
+  /**
+   * A scripted opening beat that draws the hero's weapon. When present, the
+   * hero starts the level DISARMED — his weapon won't attack — and a lone
+   * "vanguard" monster is placed at `at`, way ahead of the pack, to rush him
+   * and land a harmless first swing. That swing (no HP lost) fires the
+   * `thought` and arms the weapon; combat is normal from then on. The `after`
+   * gate holds the arming until its thought has played, so the "look at this
+   * place" read always lands before the "good thing I brought the sword"
+   * reaction. Omitted = the hero opens armed, as on every later level.
+   */
+  openingStrike?: OpeningStrike;
   loot: {
     /** WEAPON_DEFS ids this level's drops draw from. */
     weaponPool: string[];
@@ -256,6 +267,26 @@ export type ThoughtTrigger = {
    * kill/sighting — so a two-part beat (see the wisp, then down one) always
    * reads in order, even when a long-ranged weapon downs the first mob from
    * beyond sight range.
+   */
+  after?: string;
+};
+
+/**
+ * The scripted "draw your weapon" beat (`LevelDef.openingStrike`): the level
+ * opens with the hero disarmed and a lone vanguard placed to rush him, and its
+ * first (harmless) contact arms him and plays a thought.
+ */
+export type OpeningStrike = {
+  /** ENEMY_DEFS id of the vanguard placed way ahead of the pack. */
+  enemy: string;
+  /** Where the vanguard is placed (near the spawn, ahead toward the goal). */
+  at: Vec2;
+  /** THOUGHT_DEFS id fired when the vanguard lands its soft first strike. */
+  thought: string;
+  /**
+   * Ordering gate: the arming holds until this thought has played, so the
+   * hero's first read on the level lands before the "good thing I brought the
+   * sword" reaction. Same semantics as ThoughtTrigger.after.
    */
   after?: string;
 };

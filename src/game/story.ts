@@ -9,6 +9,7 @@
 import { distance } from "@game/lib/vec.ts";
 import { DIALOGUE, DOORS } from "./config.ts";
 import { enemyDef } from "./defs/enemies/index.ts";
+import { levelDef } from "./defs/levels/index.ts";
 import type { ThoughtTrigger } from "./defs/levels/types.ts";
 import { storyItemDef } from "./defs/story.ts";
 import { thoughtDef } from "./defs/thoughts.ts";
@@ -169,6 +170,31 @@ export function stepSightThoughts(
     startPlayerThought(state, trigger.thought);
     return;
   }
+}
+
+/**
+ * The scripted opening strike (a level's `openingStrike`): the hero starts
+ * disarmed, and the FIRST contact from the pinned vanguard draws his weapon.
+ * Called from the enemy-contact path while `player.disarmed` — every other
+ * touch in that window is a harmless bump. The vanguard's swing costs no HP
+ * (the caller withholds damage); this arms the hero, fires the pinned thought
+ * once (tracked in `thoughtsSeen`), and flashes the soft hit. Held until the
+ * `after` gate's thought has played — so the "look at this place" read always
+ * lands before the "good thing I brought the sword" reaction — and a no-op if
+ * a scene is already up (it simply retries on a later contact).
+ */
+export function tryOpeningStrike(state: GameState, enemy: Enemy): void {
+  if (state.dialogue !== null) return;
+  const opening = levelDef(state.level.id).openingStrike;
+  if (!opening || !enemy.vanguard) return;
+  if (opening.after && !state.thoughtsSeen.includes(opening.after)) return;
+  if (state.thoughtsSeen.includes(opening.thought)) return;
+  // Draw the blade: combat is live from here on.
+  state.player.disarmed = false;
+  state.player.hurtFlashMs = 250;
+  state.events.push({ type: "playerHurt", crit: false });
+  state.thoughtsSeen.push(opening.thought);
+  startPlayerThought(state, opening.thought);
 }
 
 /**

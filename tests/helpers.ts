@@ -43,6 +43,12 @@ export function startGame(seed: number = SEED, levelId = "moon"): GameState {
   const state = createGame(seed, levelId);
   skipCutscene(state);
   dismissIntro(state);
+  // SpaceZ HQ opens the hero DISARMED (his sword is drawn by the scripted
+  // vanguard's first swing — see LevelDef.openingStrike). The engine- and
+  // content-rule suites assume a hero who can already fight, so arm him here;
+  // the opening-strike beat has its own suite (openingStrike_test.ts) that
+  // stages from `createGame` to exercise the disarmed state directly.
+  state.player.disarmed = false;
   return state;
 }
 
