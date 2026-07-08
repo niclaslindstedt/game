@@ -331,10 +331,10 @@ body {
   background: #9aa3ad;
 }
 
-/* Stamina: a cool cyan sprint gauge, distinct from the red HP and the
+/* Stamina: a bright white sprint gauge, distinct from the red HP and the
    grade-tinted armor above it. */
 .hud-bar-fill.stamina-fill {
-  background: linear-gradient(180deg, #5fd0e8, #2f8fb0);
+  background: linear-gradient(180deg, #ffffff, #c8ced6);
 }
 
 /* The weapon widget: a prominent bordered slot tinted by the equipped
