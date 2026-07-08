@@ -264,8 +264,11 @@ pixelated`; enemies swap to generated wounded sprite variants as hp falls
 
 The app consumes
 [`@niclaslindstedt/oss-framework`](https://github.com/niclaslindstedt/oss-framework)
-for local-first PWA plumbing (today: `usePwaUpdate` + `UpdateToast`; more as
-the game grows). Game-agnostic code is kept in the dedicated `src/lib/` and
+for local-first PWA plumbing (today: the `usePwaUpdate` lifecycle hook; the
+"a new version is ready" prompt itself is the game's own sprite-styled
+`website/src/game/UpdateModal.tsx`, in place of the framework's plain
+`UpdateToast`, so it matches the pixel-art dressing). Game-agnostic code is
+kept in the dedicated `src/lib/` and
 `website/src/lib/` areas so it can be extracted into the framework for reuse
 in later games once it has matured through playtesting — see `AGENTS.md` for
 the policy.

@@ -3,12 +3,13 @@ import { useEffect, useRef, useState } from "react";
 
 import { CUTSCENE_DEFS, type Difficulty } from "@game/core";
 
-import { UpdateToast, usePwaUpdate } from "@niclaslindstedt/oss-framework/pwa";
+import { usePwaUpdate } from "@niclaslindstedt/oss-framework/pwa";
 
 import { cacheIdForBase } from "./app/pwa.ts";
 import { CutscenePreview } from "./game/CutscenePreview.tsx";
 import { GameScreen } from "./game/GameScreen.tsx";
 import { TitleScreen } from "./game/TitleScreen.tsx";
+import { UpdateModal } from "./game/UpdateModal.tsx";
 
 // The app shell: splash main menu ↔ the playable game. The menu screen also
 // owns the PWA update lifecycle so a new deploy can never silently reload
@@ -91,18 +92,17 @@ export function App() {
         onStart={(difficulty, levelId) => setRun({ difficulty, levelId })}
       />
 
-      {/* The framework's "a new version is ready" prompt (§11.4.4), fed from
-          the service worker reaching `waiting`. Applying reloads onto the new
-          build; dismissing leaves it parked. */}
-      <UpdateToast
+      {/* The "a new version is ready" prompt (§11.4.4), fed from the service
+          worker reaching `waiting`. A sprite-based panel (pixel font, upgrade
+          sprite, chunky buttons) in place of the framework's plain toast so
+          it fits the game. Applying reloads onto the new build; dismissing
+          leaves it parked. `incomingVersion` is already the full label
+          (`v0.1.0 · abc1234`, see website/vite.config.ts). */}
+      <UpdateModal
         needRefresh={pwa.needRefresh}
         incomingVersion={pwa.incomingVersion}
         onReload={() => pwa.reload()}
         onDismiss={() => pwa.dismiss()}
-        // `incomingVersion` is already the full label (`v0.1.0 · abc1234`,
-        // see website/vite.config.ts), so drop the framework's default
-        // "Version " prefix to avoid the redundant "Version v0.1.0 …".
-        labels={{ version: (v) => v }}
       />
     </>
   );
