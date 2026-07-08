@@ -162,7 +162,9 @@ run against synthetic fixtures with no shipped content (see
   monsters it faces), the auto-equip scoring (`weaponScore` DPS /
   `gearScore`), and the durability cycle
   (`wearEquippedWeapon` — a broken weapon is trashed and the best bag
-  weapon takes over — and `repairEquippedWeapon` for repair-kit drops).
+  weapon takes over — and `repairEquippedWeapon` + `restoreArmor` for
+  repair-kit drops, which mend the weapon's edge and top up a worn suit's
+  plating together).
 - **`src/game/bot.ts`** — the autopilot: pure strategies (`idle`, `rush`,
   `kite`, `boss`, `survivor`) that turn the live state into ordinary
   `GameInput`, so a bot can sit anywhere a player does — headless tests,
