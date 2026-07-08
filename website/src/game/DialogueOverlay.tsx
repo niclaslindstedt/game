@@ -4,32 +4,62 @@
 // revealing its lore. Unlike the full-screen pause overlays this one barely
 // dims the world — the speaker keeps bobbing behind it (the render loop
 // still draws frames on the frozen state), which is the whole point of the
-// idle animation. A tap anywhere turns the page; the engine resumes play
-// after the last one.
+// idle animation. The line prints letter by letter with a 16-bit blip and
+// dramatic pauses; the first tap finishes the crawl, the next turns the page,
+// and the engine resumes play after the last one.
+
+import { useEffect, type MutableRefObject } from "react";
 
 import { dialogueContent, type GameState } from "@game/core";
 
 import { PixelText } from "@ui/lib/PixelText.tsx";
 import type { PixelFont } from "@ui/lib/pixel-font.ts";
+import { useTypewriter } from "@ui/lib/typewriter.ts";
 
 import { spriteDataUrl, type GameAssets } from "./assets.ts";
+
+/** The reveal state the overlay publishes so the app's keyboard/gamepad
+ * advance can share the tap's two-step semantics (finish, then turn). */
+export type DialogueReveal = { done: boolean; skip: () => void };
+
+const EMPTY_PAGE: string[] = [];
 
 export function DialogueOverlay({
   state,
   assets,
   font,
   onAdvance,
+  onBlip,
+  revealRef,
 }: {
   state: GameState;
   assets: GameAssets;
   font: PixelFont;
-  /** Player tap: turn the page (the engine ends the scene on the last). */
+  /** Turn the page (the engine ends the scene on the last). */
   onAdvance: () => void;
+  /** Play the letter-print blip — fired as characters land. */
+  onBlip?: () => void;
+  /** Mirror of the live reveal state for out-of-overlay advance handlers. */
+  revealRef?: MutableRefObject<DialogueReveal>;
 }) {
   const dialogue = state.dialogue;
-  if (!dialogue) return null;
-  const content = dialogueContent(dialogue);
-  const page = content.pages[dialogue.page] ?? [];
+  const content = dialogue ? dialogueContent(dialogue) : null;
+  const page = content?.pages[dialogue!.page] ?? EMPTY_PAGE;
+
+  // Blip on every other printed character — a dense-enough "typing" chatter
+  // without a machine-gun at the per-character crawl rate.
+  const { rows, done, skip } = useTypewriter(page, (visibleIndex) => {
+    if (visibleIndex % 2 === 0) onBlip?.();
+  });
+
+  // Publish the reveal so keyboard/gamepad advance matches the tap: the first
+  // input finishes the crawl, the next turns the page.
+  useEffect(() => {
+    if (revealRef) revealRef.current = { done, skip };
+  }, [revealRef, done, skip]);
+
+  if (!dialogue || !content) return null;
+
   // A story-item find gets a banner so the box unmistakably reads as "you
   // picked this up — here's what it is", not another mob talking at you.
   const isStoryItem = dialogue.source.kind === "story";
@@ -40,10 +70,17 @@ export function DialogueOverlay({
       ? spriteDataUrl(assets.sprites, content.portrait)
       : (spriteDataUrl(assets.sprites, `${content.portrait}_0`) ?? null);
 
+  const hasNext = dialogue.page + 1 < content.pages.length;
+  const continueText = !done
+    ? "TAP TO SKIP"
+    : hasNext
+      ? `TAP TO CONTINUE (${dialogue.page + 1}/${content.pages.length})`
+      : "TAP TO CLOSE";
+
   return (
     <div
       className="game-overlay dialogue-overlay"
-      onPointerDown={onAdvance}
+      onPointerDown={() => (done ? onAdvance() : skip())}
       role="presentation"
     >
       <div className="dialogue-box">
@@ -73,16 +110,14 @@ export function DialogueOverlay({
           />
         </div>
         {page.map((row, i) => (
-          <PixelText key={i} font={font} text={row} scale={2} />
+          // Reserve each row's full height (PixelText is fixed-height even when
+          // empty) so the box never reflows as the crawl fills it in.
+          <PixelText key={i} font={font} text={rows[i] ?? ""} scale={2} />
         ))}
         <div className="dialogue-continue">
           <PixelText
             font={font}
-            text={
-              dialogue.page + 1 < content.pages.length
-                ? `TAP TO CONTINUE (${dialogue.page + 1}/${content.pages.length})`
-                : "TAP TO CLOSE"
-            }
+            text={continueText}
             scale={1}
             color="#9aa3ad"
           />

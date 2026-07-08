@@ -66,7 +66,7 @@ import { trackPointer } from "@ui/lib/pointer.ts";
 import { loadGameAssets, spriteDataUrl, type GameAssets } from "./assets.ts";
 import { synth } from "./audio.ts";
 import { CutsceneOverlay } from "./CutsceneOverlay.tsx";
-import { DialogueOverlay } from "./DialogueOverlay.tsx";
+import { DialogueOverlay, type DialogueReveal } from "./DialogueOverlay.tsx";
 import { IntroOverlay } from "./IntroOverlay.tsx";
 import { InventoryPanel } from "./InventoryPanel.tsx";
 import { LevelUpOverlay } from "./LevelUpOverlay.tsx";
@@ -271,6 +271,13 @@ export function GameScreen({
   // itself after the CSS animation (see the .powerup-poof layer).
   const [poofs, setPoofs] = useState<Poof[]>([]);
   const poofIdRef = useRef(0);
+  // Live mirror of the dialogue crawl so keyboard advance shares the tap's
+  // two-step feel: the first press finishes the reveal, the next turns the
+  // page. Defaults to "done" so an advance before any scene is a plain turn.
+  const dialogueRevealRef = useRef<DialogueReveal>({
+    done: true,
+    skip: () => {},
+  });
   const [assets, setAssets] = useState<GameAssets | null>(null);
   const [runId, setRunId] = useState(0);
   const [hud, setHud] = useState<Hud | null>(null);
@@ -455,8 +462,12 @@ export function GameScreen({
           beginRun();
           bumpUi();
         } else if (state.phase === "dialogue") {
-          advanceDialogue(state);
-          playUiSound(synth, "move");
+          if (!dialogueRevealRef.current.done) {
+            dialogueRevealRef.current.skip();
+          } else {
+            advanceDialogue(state);
+            playUiSound(synth, "move");
+          }
           bumpUi();
         } else {
           jumpQueuedRef.current = true;
@@ -1318,6 +1329,8 @@ export function GameScreen({
           state={state}
           assets={assets}
           font={font}
+          revealRef={dialogueRevealRef}
+          onBlip={() => playUiSound(synth, "blip")}
           onAdvance={() => {
             advanceDialogue(state);
             playUiSound(synth, "move");

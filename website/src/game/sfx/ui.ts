@@ -6,10 +6,17 @@
 
 import type { Synth } from "@ui/lib/synth.ts";
 
-export type UiSound = "move" | "confirm" | "back" | "start" | "equip";
+export type UiSound = "move" | "confirm" | "back" | "start" | "equip" | "blip";
 
 export function playUiSound(synth: Synth, sound: UiSound): void {
   switch (sound) {
+    case "blip":
+      // The letter-print tick: the dry, quiet square pip heard under scrolling
+      // 16-bit dialogue as each character lands. Fired many times per line, so
+      // it stays the shortest and softest voice in the set — a whisper of a
+      // chip pulse, never a menu blip's full "blip".
+      synth.tone({ type: "square", from: 640, durationMs: 16, volume: 0.02 });
+      break;
     case "move":
       // A dry cursor blip with a glassy octave on top.
       synth.tone({ type: "square", from: 880, durationMs: 40, volume: 0.035 });
