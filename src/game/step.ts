@@ -583,6 +583,7 @@ function meleeSweep(
       (eligible[i] as (typeof eligible)[number]).enemy,
       damage,
       weaponClass,
+      { rollAccuracy: true },
     );
   }
 }
@@ -715,7 +716,9 @@ function stepProjectiles(state: GameState, dt: number, dtMs: number): void {
       survivors.push(projectile);
       continue;
     }
-    hitEnemy(state, hit, projectile.damage, projectile.weaponClass);
+    hitEnemy(state, hit, projectile.damage, projectile.weaponClass, {
+      rollAccuracy: true,
+    });
   }
   state.projectiles = survivors;
 }

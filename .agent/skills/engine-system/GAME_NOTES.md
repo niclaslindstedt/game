@@ -106,6 +106,27 @@ sequel truncates this file to a stub and rebuilds it as its own systems land.
   render.ts. Collision never reads tiles, so zones are purely visual; the
   gameplay transition comes from the walls/spawn bands laid along the same
   boundary.
+- **Symmetric combat rolls (2026-07, enemy dodge & miss):** the mirror of an
+  existing player-side roll (hero dodges enemy → enemy dodges hero / hero
+  whiffs) lives in the ONE place all player damage funnels through
+  (`hitEnemy` in loot.ts), gated by an `opts.rollAccuracy` flag so only the
+  WEAPON paths (`meleeSweep`, projectile hit in step.ts) roll it and conjured
+  abilities (orbit/storm/nuke) bypass it and always connect. The chance
+  functions (`playerMissChance`, `enemyDodgeChance`) sit beside their kin in
+  items.ts and reuse the `max(0, base − stat·per)` shape of `enemyCritChance`;
+  DEX drives BOTH so one stat can't zero one without the other (deliberate —
+  it's a single "hit rate"). Per-enemy variation is a new optional `EnemyDef`
+  field (`dodgeChance`) defaulted from config (`ACCURACY.enemyDodge`), so no
+  roster edit is forced. No-damage outcomes are their own `GameEvent`s
+  (`enemyMiss`/`enemyDodge`, carrying `pos`+`defId`) that the app floats as
+  "MISS"/"DODGE" text (reusing the `kind:"text"` effect) with a light whiff
+  sfx. Testing the dodge branch in isolation needed a nimble fixture
+  (`test_dodger`, dodgeChance 0.9) because DEX trims miss and dodge together —
+  you can't pin one off with a constant rng and leave the other live on a
+  default-dodge foe. Adding the accuracy roll consumes rng in the weapon path,
+  so content tests that relied on a point-blank/rushing elite dying on the
+  first swing had to pin `state.rng = () => 0.99` (the always-land value) to
+  stay deterministic.
 - **Engine tests run on synthetic fixtures (2026-07):** `tests/engine/`
   suites install content-agnostic fixtures (`tests/engine/fixtures.ts`,
   plain ids like `test_level`/`test_minion`) via the engine's `registerDefs`

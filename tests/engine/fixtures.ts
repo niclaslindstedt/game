@@ -118,6 +118,24 @@ export const FIX_ENEMIES: Record<string, EnemyDef> = {
       tierBonus: 0.35,
     },
   },
+  // A NIMBLE minion for accuracy tests: a high `dodgeChance` so the player's
+  // weapon blow is sidestepped unless DEXTERITY (hit rate) trims it away.
+  test_dodger: {
+    id: "test_dodger",
+    name: "TEST DODGER",
+    role: "minion",
+    sprite: "test_dodger",
+    gore: "ecto",
+    phasing: true,
+    hp: 45,
+    speed: 16,
+    radius: 9,
+    contactDamage: 12,
+    critChance: 0.1,
+    dodgeChance: 0.9,
+    contactCooldownMs: 700,
+    ai: { aggroRadius: 950 },
+  },
   // A FLEEING unique (mirrors a boss like the shipped ELON MOSQUE): beaten to
   // 0 hp it escapes through a rift instead of dying — `flees` books a
   // `bossFled` (never a kill) and leaves the named landmark behind.

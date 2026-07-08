@@ -289,7 +289,8 @@ export const MENACE = {
 /**
  * Stat effects. STRENGTH scales physical (melee + ranged) weapon DAMAGE and
  * widens the carry bag; DEXTERITY quickens physical (melee + ranged) ATTACK
- * SPEED, lands physical CRITS, and sharpens DODGE; INTELLIGENCE powers magic
+ * SPEED, lifts the HIT RATE (fewer weapon MISSES and enemy DODGES — see
+ * ACCURACY), lands physical CRITS, and sharpens DODGE; INTELLIGENCE powers magic
  * weapons (their damage AND speed), lands magic CRITS, and for every weapon
  * lengthens RANGE and widens the melee AoE cone (plus the magnet pull, in
  * abilities.ts); SPEED quickens the walk; LUCK finds better items, nudges
@@ -403,6 +404,25 @@ export const DODGE = {
   perDex: 0.02,
   perLuck: 0.005,
   max: 0.6,
+} as const;
+
+/**
+ * Accuracy — the chance the player's WEAPON blow actually lands. A strike comes
+ * to nothing two ways: the hero's own MISS (an innate `baseMiss` whiff) or the
+ * foe's DODGE (its `EnemyDef.dodgeChance`, defaulting to `enemyDodge`).
+ * DEXTERITY is the hero's hit rate — every point trims BOTH the miss chance and
+ * the enemy's dodge chance by `perDex`, so a nimble build rarely whiffs and is
+ * rarely sidestepped. Miss floors at `minMiss` and dodge at 0, so no build is
+ * ever perfectly accurate against an evasive foe. Only WEAPON attacks (melee
+ * swings, ranged/magic shots) roll this; conjured abilities (orbit, storm,
+ * nuke) bypass it and always connect. The rolls live in `playerMissChance` /
+ * `enemyDodgeChance` (items.ts) and fire in `hitEnemy` (loot.ts).
+ */
+export const ACCURACY = {
+  baseMiss: 0.05,
+  enemyDodge: 0.05,
+  perDex: 0.02,
+  minMiss: 0,
 } as const;
 
 /**

@@ -6,11 +6,17 @@
 // lot. Extracted from step.ts so the simulation step stays readable.
 
 import { clamp, type Vec2 } from "@game/lib/vec.ts";
-import { LEVELING, LOOT, MENACE, STATS } from "./config.ts";
+import { ACCURACY, LEVELING, LOOT, MENACE, STATS } from "./config.ts";
 import { scaledMobCount } from "./defs/difficulties.ts";
 import { enemyDef, type EnemyDef } from "./defs/enemies/index.ts";
 import { levelDef } from "./defs/levels/index.ts";
-import { dropChance, playerCritChance, rollEquipment } from "./items.ts";
+import {
+  dropChance,
+  enemyDodgeChance,
+  playerCritChance,
+  playerMissChance,
+  rollEquipment,
+} from "./items.ts";
 import { bankOverkill, maybePowerScale, mobLevelTierBonus } from "./menace.ts";
 import { maybeFirstKillThought, startDeathWords } from "./story.ts";
 import type { Enemy, GameState, WeaponClass } from "./types.ts";
@@ -36,17 +42,50 @@ export function unspawnedMinions(state: GameState): number {
  * the equipped weapon's class for hits that don't carry one (e.g. the nuke).
  * Bosses' and elites' guaranteed drops come from their def; the victory
  * countdown starts once the objective clears at the end of the step.
+ *
+ * `rollAccuracy` gates the miss/dodge roll: WEAPON attacks (melee swings,
+ * ranged/magic shots) pass it, so DEXTERITY governs whether the blow lands;
+ * conjured abilities (orbit, storm, nuke) omit it and always connect.
  */
 export function hitEnemy(
   state: GameState,
   enemy: Enemy,
   baseDamage: number,
   weaponClass?: WeaponClass,
+  opts?: { rollAccuracy?: boolean },
 ): void {
   // An elite or boss meets the player's power the instant the fight opens —
   // scale its hp before this blow lands so it can never be one-shot out of a
   // set piece by a leveled hero. Idempotent (latched by `powerScaled`).
   maybePowerScale(state, enemy);
+
+  const def = enemyDef(enemy.defId);
+
+  // A weapon blow can come to nothing two ways, both trimmed by DEXTERITY (the
+  // hero's hit rate): the hero's own MISS, then — if it would have landed — the
+  // foe's DODGE. Either spends the swing and deals nothing. Rolled only for
+  // weapon attacks; abilities skip it (`rollAccuracy` unset) and always hit.
+  if (opts?.rollAccuracy) {
+    if (state.rng() < playerMissChance(state)) {
+      state.events.push({
+        type: "enemyMiss",
+        pos: { ...enemy.pos },
+        defId: enemy.defId,
+      });
+      return;
+    }
+    if (
+      state.rng() <
+      enemyDodgeChance(state, def.dodgeChance ?? ACCURACY.enemyDodge)
+    ) {
+      state.events.push({
+        type: "enemyDodge",
+        pos: { ...enemy.pos },
+        defId: enemy.defId,
+      });
+      return;
+    }
+  }
 
   const crit = state.rng() < playerCritChance(state, weaponClass);
   const damage = Math.round(baseDamage * (crit ? STATS.critMultiplier : 1));
@@ -66,7 +105,6 @@ export function hitEnemy(
     return;
   }
 
-  const def = enemyDef(enemy.defId);
   state.enemies.splice(state.enemies.indexOf(enemy), 1);
 
   // A fleeing unique escapes at 0 hp instead of dying: no kill is booked and

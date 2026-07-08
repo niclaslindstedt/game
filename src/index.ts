@@ -61,6 +61,7 @@ export {
   discardFromInventory,
   discardEquipped,
   effectiveStat,
+  enemyDodgeChance,
   equipFromInventory,
   equipmentName,
   inventoryCapacity,
@@ -75,6 +76,7 @@ export {
   playerAppearance,
   playerCritChance,
   playerDodgeChance,
+  playerMissChance,
   playerSpeed,
   playerSuited,
   previewEquipped,
@@ -198,6 +200,7 @@ export { registerDefs, type DefOverrides } from "./game/defs/registry.ts";
 
 // Global tuning.
 export {
+  ACCURACY,
   ARMOR,
   ARRIVAL,
   DIALOGUE,
