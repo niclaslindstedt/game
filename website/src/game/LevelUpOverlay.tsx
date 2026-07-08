@@ -48,8 +48,8 @@ const CHOICES: {
   {
     stat: "dexterity",
     label: "DEXTERITY",
-    blurb: "SPEED + CRIT",
-    info: "FASTER MELEE & RANGED ATTACK SPEED, MORE MELEE & RANGED CRITS, AND MORE DODGE.",
+    blurb: "SPEED + HIT",
+    info: "FASTER MELEE & RANGED ATTACK SPEED, HIGHER HIT RATE (FEWER MISSES & ENEMY DODGES), MORE MELEE & RANGED CRITS, AND MORE DODGE.",
     icon: "icon_stat_dexterity",
   },
   {

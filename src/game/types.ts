@@ -428,6 +428,12 @@ export type GameEvent =
   /** The player sidestepped a blow entirely (see `playerDodgeChance`). `pos`
    * is the hero — the app floats a "DODGE" tag and pips a light whiff. */
   | { type: "playerDodge"; pos: Vec2 }
+  /** An enemy sidestepped the player's weapon blow (see `enemyDodgeChance`).
+   * `pos` is the foe — the app floats a "DODGE" tag off it. */
+  | { type: "enemyDodge"; pos: Vec2; defId: string }
+  /** The player's weapon blow whiffed of its own accord (see
+   * `playerMissChance`). `pos` is the foe — the app floats a "MISS" tag. */
+  | { type: "enemyMiss"; pos: Vec2; defId: string }
   | {
       type: "itemCollected";
       kind: Item["kind"];

@@ -17,11 +17,13 @@ import {
 import { createPortal } from "react-dom";
 
 import {
+  ACCURACY,
   armorInfo,
   computeMaxHp,
   discardEquipped,
   discardFromInventory,
   effectiveStat,
+  enemyDodgeChance,
   equipFromInventory,
   equipmentIcon,
   equipmentName,
@@ -30,6 +32,7 @@ import {
   playerAppearance,
   playerCritChance,
   playerDodgeChance,
+  playerMissChance,
   previewEquipped,
   unequipToInventory,
   weaponCooldownFor,
@@ -91,6 +94,19 @@ function affixLine(affix: Affix): string {
     case "stat":
       return `+${affix.value} ${STAT_LABELS[affix.stat]}`;
   }
+}
+
+/**
+ * The hero's effective HIT rate against a standing foe: the chance a weapon
+ * blow both clears the hero's own MISS and isn't DODGED by a default-evasion
+ * enemy. DEXTERITY lifts both terms, so the panel shows the accuracy a build
+ * actually plays with. Nimble mobs dodge more than this reference number.
+ */
+function hitRate(state: GameState): number {
+  return (
+    (1 - playerMissChance(state)) *
+    (1 - enemyDodgeChance(state, ACCURACY.enemyDodge))
+  );
 }
 
 /** A stat line in the item card: text with an optional accent color (the
@@ -616,6 +632,17 @@ export function InventoryPanel({
                         playerCritChance(preview) - playerCritChance(state),
                         "%",
                       )
+                    : null
+                }
+              />
+              <StatLine
+                font={font}
+                label="HIT"
+                value={`${Math.round(hitRate(state) * 100)}%`}
+                color="#7ef0c8"
+                chip={
+                  preview
+                    ? deltaChip(hitRate(preview) - hitRate(state), "%")
                     : null
                 }
               />

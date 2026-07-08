@@ -898,6 +898,19 @@ export function GameScreen({
               color: "#7ecbff",
             });
           }
+          // A blow that never landed: the foe sidestepped it ("DODGE") or the
+          // hero's own aim whiffed ("MISS"). Float the tag off the target.
+          if (event.type === "enemyDodge" || event.type === "enemyMiss") {
+            const def = enemyDef(event.defId);
+            effects.push({
+              kind: "text",
+              pos: { x: event.pos.x, y: event.pos.y - def.radius - 2 },
+              untilMs: state.stats.timeMs + 650,
+              durationMs: 650,
+              text: event.type === "enemyDodge" ? "DODGE" : "MISS",
+              color: event.type === "enemyDodge" ? "#cfd6df" : "#9aa3ad",
+            });
+          }
           // Loot and powerups announce themselves in the lower-right feed. Only
           // SPECIAL items tint their name — magic/rare/… gear carries its tier
           // color; ordinary (regular) loot stays neutral. Plot pieces glow gold.

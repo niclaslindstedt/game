@@ -11,6 +11,7 @@ import { advanceCutsceneBeat, finishCutscene } from "@game/lib/cutscene.ts";
 import type { Rng } from "@game/lib/rng.ts";
 import { randomRange } from "@game/lib/rng.ts";
 import {
+  ACCURACY,
   ARMOR,
   DODGE,
   LOOT,
@@ -395,6 +396,33 @@ export function playerDodgeChance(state: GameState): number {
     DODGE.base +
       effectiveStat(state, "dexterity") * DODGE.perDex +
       effectiveStat(state, "luck") * DODGE.perLuck,
+  );
+}
+
+/**
+ * The player's MISS chance for a weapon blow: an innate `ACCURACY.baseMiss`
+ * whiff trimmed by DEXTERITY's aim (`perDex`), floored at `minMiss`. This is
+ * the hero's own accuracy — independent of the target — and is surfaced on the
+ * stat panel (as HIT rate) and rolled in `hitEnemy` for weapon attacks.
+ */
+export function playerMissChance(state: GameState): number {
+  return Math.max(
+    ACCURACY.minMiss,
+    ACCURACY.baseMiss - effectiveStat(state, "dexterity") * ACCURACY.perDex,
+  );
+}
+
+/**
+ * An enemy's chance to DODGE the player's weapon blow: its `base` evasion (the
+ * def's `dodgeChance`, or the `ACCURACY.enemyDodge` default) trimmed by the
+ * player's DEXTERITY hit rate (`perDex`), floored at 0. Rolled in `hitEnemy`
+ * after the miss check, so a build that pumps DEX both whiffs and gets dodged
+ * less. Mirror of `enemyCritChance`'s LUCK-avoidance shape.
+ */
+export function enemyDodgeChance(state: GameState, base: number): number {
+  return Math.max(
+    0,
+    base - effectiveStat(state, "dexterity") * ACCURACY.perDex,
   );
 }
 

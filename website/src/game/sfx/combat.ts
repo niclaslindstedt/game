@@ -140,6 +140,18 @@ export function playCombatSound(synth: Synth, event: GameEvent): boolean {
       });
       return true;
 
+    case "enemyDodge":
+    case "enemyMiss":
+      // A blow that hit only air: a short dry whiff, no impact body. Quieter
+      // and higher than the hero's own dodge so a whiffed swing reads as a
+      // near-miss, not a takedown — it fires often, so it stays out of the way.
+      synth.noise({
+        durationMs: 60,
+        volume: 0.022,
+        filter: { type: "bandpass", frequency: 2200, q: 0.8 },
+      });
+      return true;
+
     case "lightning":
       // The storm strike: a bright crack, a falling zap, thunder in the echo.
       synth.noise({

@@ -95,7 +95,8 @@ and something enormous haunts the old flag.
   than any other stat lifts its class) and widens your carry bag (which starts
   at just three slots), but the muscle to haul **slows your walk** a touch per
   point; **DEXTERITY** speeds up melee & ranged
-  **attacks**; **INTELLECT** powers **magic** weapons, gives every weapon
+  **attacks** and raises your **hit rate** — a nimble hero's blows miss or get
+  dodged far less often; **INTELLECT** powers **magic** weapons, gives every weapon
   **longer range**, and **widens the melee cleave** — a swing only strikes the
   two nearest foes until INT raises that cap, so mowing down the crowd is an
   INT build, not a free perk of a wide sword; **SPEED** quickens the walk;

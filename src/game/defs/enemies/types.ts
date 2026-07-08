@@ -36,6 +36,13 @@ export type EnemyDef = {
   contactDamage: number;
   /** Chance a touch lands critically (2×); the player's LUCK reduces it. */
   critChance: number;
+  /**
+   * Chance this enemy DODGES the player's weapon blow entirely (no damage). The
+   * player's DEXTERITY (hit rate) trims it toward 0. Omitted = the standing
+   * `ACCURACY.enemyDodge` default; set higher for a nimble mob, lower (or 0)
+   * for a lumbering one. Ignored by conjured abilities, which always connect.
+   */
+  dodgeChance?: number;
   /** Minimum ms between contact hits from the same enemy. */
   contactCooldownMs: number;
   /**

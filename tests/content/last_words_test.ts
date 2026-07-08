@@ -31,6 +31,10 @@ function killAndCollect(state: GameState, enemyId: number): GameEvent[] {
 
 /** A point-blank, one-hit-from-death mob of the given def, on the player. */
 function placeDying(state: GameState, defId: string) {
+  // Pin the combat rolls off so the very next swing lands the kill: never a
+  // miss, a dodge, or a crit. Without this the hero could whiff the killing
+  // blow and the elite would reach its arrival scene before dying.
+  state.rng = () => 0.99;
   const mob = makeEnemy(
     { pos: { ...state.player.pos }, hp: 1, maxHp: 10, speed: 0 },
     defId,
@@ -88,6 +92,7 @@ describe("last words on death", () => {
   it("banks a pending level-up behind the death scene", () => {
     const state = startGame();
     clearStage(state);
+    state.rng = () => 0.99; // land the killing blow deterministically
     // A fat XP payout: the killing blow both banks a level-up AND opens the
     // death scene — the scene wins the phase, the level-up waits its turn.
     const elite = makeEnemy(
