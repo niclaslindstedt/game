@@ -20,16 +20,22 @@ own namespace, and a sequel changes it there once:
 Desktop keyboard controls (when **Keys** is set to WASD): WASD or the arrow
 keys run, **Shift** walks, **Space** jumps, **1/2/3** fire the powerup dock
 slots, **Q** opens the weapon switcher (then **1-4** equip a weapon), **E**
-spends the oldest powerup, and **I** toggles the bag.
+spends the oldest powerup, **I** toggles the bag, and **P** pauses the run
+(and its music). The run also auto-pauses when the tab or app loses focus;
+clicking the screen or pressing **P** again resumes.
 
 Story progress is persisted the same way (`website/src/game/progress.ts`):
-watched cutscenes are recorded under `<storagePrefix>:seen-cutscenes`, so a
-level's prelude plays once per device instead of on every retry, and cleared
-levels are recorded under `<storagePrefix>:completed-levels` (keyed per
-difficulty) — that is what unlocks the next level in the menu's level-select
-screen and lights up NEXT LEVEL on the victory splash. Clearing site data
-resets both; the `?cutscene=<id>` workbench replays any scene regardless, and
-`?level=<id>` reaches any level regardless of unlock state.
+cleared levels are recorded under `<storagePrefix>:completed-levels` (keyed
+per difficulty). Until the whole campaign is cleared at a difficulty, choosing
+that difficulty drops you straight into the next unbeaten level (the story
+runs in order); clearing the last level opens the menu's level-select screen
+as a replay picker and lights up NEXT LEVEL on the victory splash. Your best
+survival time per difficulty is saved under `<storagePrefix>:highscores` and
+shown on the end-of-run screen (`website/src/game/highscores.ts`). Cutscenes
+always play at the start of a run (dismiss with the top-right SKIP button).
+Clearing site data resets all of it; the `?cutscene=<id>` workbench replays
+any scene regardless, and `?level=<id>` reaches any level regardless of
+unlock state.
 
 Everything else configurable concerns the build and the development
 environment.

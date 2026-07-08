@@ -23,7 +23,12 @@ import { HELP_LINES } from "./copy.ts";
 import { loadGameAssets, spriteDataUrl, type GameAssets } from "./assets.ts";
 import { synth } from "./audio.ts";
 import { playTitleMusic } from "./music/index.ts";
-import { hasCompletedLevel, isLevelUnlocked } from "./progress.ts";
+import {
+  firstUnclearedLevel,
+  hasBeatenDifficulty,
+  hasCompletedLevel,
+  isLevelUnlocked,
+} from "./progress.ts";
 import { getSettings, updateSettings } from "./settings.ts";
 import { playUiSound } from "./sfx/index.ts";
 
@@ -156,10 +161,20 @@ export function TitleScreen({
             label: def.name,
             aria: `difficulty-${id}`,
             color: def.color,
-            blurb: def.tagline,
+            blurb: hasBeatenDifficulty(id)
+              ? "CLEARED - CHOOSE ANY MISSION"
+              : def.tagline,
             action: () => {
-              playUiSound(synth, "confirm");
               setDifficulty(id);
+              // The level select stays locked until the whole story is
+              // cleared at this difficulty — first-timers are walked straight
+              // through the campaign, dropped into the next unbeaten level.
+              if (!hasBeatenDifficulty(id)) {
+                playUiSound(synth, "start");
+                onStart(id, firstUnclearedLevel(id));
+                return;
+              }
+              playUiSound(synth, "confirm");
               setScreen("levels");
               // Open on the furthest level still reachable at this difficulty.
               const furthest = LEVEL_ORDER.reduce(

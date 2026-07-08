@@ -72,3 +72,14 @@ export function stopMusic(): void {
   current = null;
   player?.stop();
 }
+
+/** Freeze the current theme in place (the pause screen) — keeps `current` so
+ * a repeated request for the same track after resume stays a no-op. */
+export function pauseMusic(): void {
+  player?.pause();
+}
+
+/** Pick the frozen theme back up where `pauseMusic` left it. */
+export function resumeMusic(): void {
+  player?.resume();
+}

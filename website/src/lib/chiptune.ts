@@ -71,6 +71,12 @@ export type ChiptunePlayer = {
   /** Start looping `track`, replacing whatever was playing. */
   play: (track: ChiptuneTrack) => void;
   stop: () => void;
+  /** Halt the scheduler without forgetting the track or losing the play
+   * position — `resume()` picks the arrangement back up where it left off.
+   * A no-op when nothing is playing. */
+  pause: () => void;
+  /** Re-arm the scheduler after a `pause()`; a no-op when not paused. */
+  resume: () => void;
   playing: () => boolean;
 };
 
@@ -256,6 +262,22 @@ export function createChiptunePlayer(synth: Synth): ChiptunePlayer {
         clearInterval(interval);
         interval = null;
       }
+    },
+
+    pause() {
+      // Keep `flat`, `stepIndex`, `bpm` — only the scheduler stops. The stale
+      // `nextStepTime` is re-anchored to the live clock on resume (the tick's
+      // "long stall" guard), so the arrangement continues from this step.
+      if (interval !== null) {
+        clearInterval(interval);
+        interval = null;
+      }
+    },
+
+    resume() {
+      if (flat === null || interval !== null) return; // nothing paused
+      interval = setInterval(tick, TICK_MS);
+      tick();
     },
 
     playing() {
