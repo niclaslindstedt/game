@@ -130,10 +130,11 @@ describe("stats", () => {
     state.player.stats.intelligence = 5;
     expect(weaponDamage(state)).toBe(base);
 
-    // STRENGTH scales the damage of physical weapons — ranged here, and melee.
+    // STRENGTH scales the damage of physical weapons — ranged here, and melee —
+    // by its own (steeper) per-point slope.
     state.player.stats.strength = 2;
     expect(weaponDamage(state)).toBeCloseTo(
-      base * (1 + 2 * STATS.damageBonusPerPoint),
+      base * (1 + 2 * STATS.damageBonusPerPoint.strength),
     );
   });
 
@@ -162,10 +163,12 @@ describe("stats", () => {
       wandDef.damage * WEAPON.damageMult,
     );
 
-    // INT (the wand's own class stat) does.
+    // INT (the wand's own class stat) does, by INT's per-point slope.
     state.player.stats.intelligence = 3;
     expect(weaponDamageFor(state, wand)).toBeCloseTo(
-      wandDef.damage * WEAPON.damageMult * (1 + 3 * STATS.damageBonusPerPoint),
+      wandDef.damage *
+        WEAPON.damageMult *
+        (1 + 3 * STATS.damageBonusPerPoint.intelligence),
     );
 
     // A damagePct affix stacks into the same multiplier.
@@ -173,7 +176,7 @@ describe("stats", () => {
     expect(weaponDamageFor(state, wand)).toBeCloseTo(
       wandDef.damage *
         WEAPON.damageMult *
-        (1 + 3 * STATS.damageBonusPerPoint + 0.5),
+        (1 + 3 * STATS.damageBonusPerPoint.intelligence + 0.5),
     );
   });
 

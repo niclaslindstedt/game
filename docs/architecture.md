@@ -150,7 +150,11 @@ run against synthetic fixtures with no shipped content (see
   minions (`evolutionHpMult`, stamped in `create.ts`'s `spawnEnemy`), and
   — with the player's level — power-matches elites/bosses when they engage
   (`enemyPowerScale`/`maybePowerScale`, called from both `step.ts` wake and
-  `loot.ts` first-hit).
+  `loot.ts` first-hit). Separately from that moment-to-moment heat, the
+  player's LEVEL alone gives every minion a non-decaying toughness floor at
+  spawn (`mobLevelScale`, folded into `spawnEnemy`'s hp mult) and richer
+  drops (`mobLevelTierBonus`, added to the loot tier roll), so a levelled
+  hero keeps meeting a proportionally sturdier, better-paying horde.
 - **`src/game/story.ts`** — the story systems: dialogue lifecycle
   (`wantsDialogue`/`startEnemyDialogue` inside the step,
   `advanceDialogue` as the player's tap, `dialogueContent` for the
@@ -162,13 +166,15 @@ run against synthetic fixtures with no shipped content (see
   `unequipToInventory` / `moveInventoryItem`, `allocateStat`, the derived
   stats (max hp — now STAMINA-scaled, class-aware crit chance
   `playerCritChance` — DEX for physical, INT for magic, LUCK marginal — the
-  `playerDodgeChance` sidestep, weapon damage, move speed, INT-scaled reach
+  `playerDodgeChance` sidestep, weapon damage (STR scales physical harder than
+  INT scales magic), STR-taxed move speed, INT-scaled reach
   `weaponRangeFor`, swing/fire cadence `weaponCooldownFor` — the catalog
   cooldown slowed by the global `WEAPON.baseCooldownMult` and quickened by the
   speed stat — and the swing cone `weaponSweepHalfAngle` that, capped by
   `maxMeleeTargets` (INT raises the cap), makes a swing cleave the nearest few
   monsters it faces), the auto-equip scoring (`weaponScore` DPS /
-  `gearScore`), and the durability cycle
+  `gearScore`) and the crit-inclusive `weaponDps` the item cards lead with,
+  and the durability cycle
   (`wearEquippedWeapon` — a broken weapon is trashed and the best bag
   weapon takes over — and `repairEquippedWeapon` + `restoreArmor` for
   repair-kit drops, which mend the weapon's edge and top up a worn suit's
