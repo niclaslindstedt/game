@@ -31,10 +31,11 @@ that difficulty drops you straight into the next unbeaten level (the story
 runs in order); clearing the last level opens the menu's level-select screen
 as a replay picker and lights up NEXT LEVEL on the victory splash. Every
 finished run is banked per difficulty under `<storagePrefix>:highscores` with
-its survival time, kills, and a full end-of-run session snapshot
-(`website/src/game/highscores.ts`); the end-of-run screen shows that
+its survival time, kills, player level reached, and a full end-of-run session
+snapshot (`website/src/game/highscores.ts`); the end-of-run screen shows that
 difficulty's best survival time, and the menu's HIGH SCORES board ranks the
-runs and opens any banked run into a full-session detail card. Cutscenes
+runs four ways (survival time, kills-per-minute, mobs killed, level reached) and
+opens any banked run into a full-session detail card. Cutscenes
 always play at the start of a run (dismiss with the top-right SKIP button).
 Clearing site data resets all of it; the `?cutscene=<id>` workbench replays
 any scene regardless, and `?level=<id>` reaches any level regardless of

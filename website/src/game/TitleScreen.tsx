@@ -85,10 +85,12 @@ const scoreLevelInfo = (levelId: string): { name: string; foes: string } => {
   }
 };
 
-/** The high-score board's two rankings, in swipe/arrow order. */
+/** The high-score board's rankings, in swipe/arrow order. */
 const SCORE_METRICS: { id: ScoreMetric; label: string }[] = [
   { id: "time", label: "SURVIVAL TIME" },
   { id: "kpm", label: "KILLS / MIN" },
+  { id: "kills", label: "MOBS KILLED" },
+  { id: "level", label: "LEVEL REACHED" },
 ];
 
 /** A minimum travel (CSS px) before a pointer drag counts as a swipe. */
@@ -847,14 +849,26 @@ export function TitleScreen({
                     scoreRows.map((row, i) => {
                       const medal =
                         ["#ffd75e", "#c8cdd4", "#cd7f4b"][i] ?? "#7ef0c8";
-                      const primary =
-                        scoreMetric === "time"
-                          ? formatTime(row.timeMs)
-                          : `${formatKpm(row.kpm)} KPM`;
+                      // Each ranking leads with its own metric; the smaller
+                      // secondary line keeps survival time in view (or KPM,
+                      // when time itself is the headline).
+                      const metricValue = (m: ScoreMetric): string => {
+                        switch (m) {
+                          case "time":
+                            return formatTime(row.timeMs);
+                          case "kpm":
+                            return `${formatKpm(row.kpm)} KPM`;
+                          case "kills":
+                            return `${row.kills} KILLS`;
+                          case "level":
+                            return `LV ${row.level}`;
+                        }
+                      };
+                      const primary = metricValue(scoreMetric);
                       const secondary =
                         scoreMetric === "time"
-                          ? `${formatKpm(row.kpm)} KPM`
-                          : formatTime(row.timeMs);
+                          ? metricValue("kpm")
+                          : metricValue("time");
                       // A row opens into its full session only when one was
                       // banked; legacy time-only runs stay inert (no arrow).
                       const openable = Boolean(row.detail);

@@ -935,6 +935,7 @@ export function GameScreen({
               recordRun(difficulty, {
                 timeMs: state.stats.timeMs,
                 kills: state.stats.kills,
+                level: state.player.level,
                 detail: {
                   stats: { ...state.stats },
                   level: state.player.level,
