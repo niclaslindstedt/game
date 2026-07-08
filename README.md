@@ -239,6 +239,7 @@ for how to add new _mechanics_ (not just new content).
 - [Getting started](docs/getting-started.md)
 - [Architecture](docs/architecture.md)
 - [Game content](docs/game-content.md) — this game's story, levels, and roster
+- [Manuscript](docs/manuscript.md) — the source of truth for all story and dialogue
 - [Configuration](docs/configuration.md)
 - [Troubleshooting](docs/troubleshooting.md)
 
