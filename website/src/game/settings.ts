@@ -8,6 +8,7 @@
 import { storageKey } from "../identity.ts";
 
 import { setAudioVolumes } from "./audio.ts";
+import { setHapticsEnabled } from "./haptics.ts";
 
 /** How the mouse steers: chase the cursor, or classic hold-to-steer.
  * (Touch always steers by holding — this only changes mouse behavior.) */
@@ -26,11 +27,16 @@ export type PowerupSide = "left" | "right";
  * leaves steering to the pointer. Touch devices ignore this. */
 export type KeyboardMove = "on" | "off";
 
+/** Vibration feedback on kills (scaled by mob rarity). `off` silences it;
+ * on iOS — no Vibration API — it is a noop regardless (see haptics.ts). */
+export type Vibration = "on" | "off";
+
 export type GameSettings = {
   steering: SteeringMode;
   itemUse: ItemUseMode;
   powerupSide: PowerupSide;
   keyboardMove: KeyboardMove;
+  vibration: Vibration;
   /** 0–1 master volumes, applied via audio.ts. */
   musicVolume: number;
   sfxVolume: number;
@@ -53,6 +59,9 @@ function defaults(): GameSettings {
     // Fine-pointer devices get WASD out of the box; touch has no keyboard,
     // so it defaults off and the on-screen dpad stays in charge.
     keyboardMove: touchFirst ? "off" : "on",
+    // Vibration is a touch-device affordance — on out of the box where a
+    // motor exists, and inert on iOS and pointer devices anyway.
+    vibration: "on",
     musicVolume: 0.8,
     sfxVolume: 1,
   };
@@ -83,6 +92,10 @@ function load(): GameSettings {
         stored.keyboardMove === "on" || stored.keyboardMove === "off"
           ? stored.keyboardMove
           : base.keyboardMove,
+      vibration:
+        stored.vibration === "on" || stored.vibration === "off"
+          ? stored.vibration
+          : base.vibration,
       musicVolume:
         typeof stored.musicVolume === "number"
           ? clamp01(stored.musicVolume)
@@ -99,6 +112,7 @@ function load(): GameSettings {
 
 const settings: GameSettings = load();
 setAudioVolumes({ music: settings.musicVolume, sfx: settings.sfxVolume });
+setHapticsEnabled(settings.vibration === "on");
 
 /** The live settings singleton — cheap to read every simulation tick. */
 export function getSettings(): GameSettings {
@@ -111,6 +125,7 @@ export function updateSettings(patch: Partial<GameSettings>): GameSettings {
   settings.musicVolume = clamp01(settings.musicVolume);
   settings.sfxVolume = clamp01(settings.sfxVolume);
   setAudioVolumes({ music: settings.musicVolume, sfx: settings.sfxVolume });
+  setHapticsEnabled(settings.vibration === "on");
   try {
     window.localStorage.setItem(STORAGE_KEY, JSON.stringify(settings));
   } catch {
