@@ -224,6 +224,36 @@ describe("sequencer", () => {
     expect(tones.length).toBe(afterStop); // stopped players stay silent
   });
 
+  it("pause halts scheduling and resume continues in place", () => {
+    const { synth, tones, clock } = makeFakeSynth();
+    const player = createChiptunePlayer(synth);
+    player.play(track(["A4", ".", ".", "."]));
+
+    for (let t = 0; t < 1; t += 0.08) {
+      clock.t = t;
+      vi.advanceTimersByTime(100);
+    }
+    player.pause();
+    expect(player.playing()).toBe(true); // still holds the track, just frozen
+    const atPause = tones.length;
+
+    // Time marches on, but a paused scheduler books nothing.
+    for (let t = 1; t < 3; t += 0.08) {
+      clock.t = t;
+      vi.advanceTimersByTime(100);
+    }
+    expect(tones.length).toBe(atPause);
+
+    // Resuming re-arms the scheduler and it keeps booking notes again.
+    player.resume();
+    for (let t = 3; t < 4; t += 0.08) {
+      clock.t = t;
+      vi.advanceTimersByTime(100);
+    }
+    expect(tones.length).toBeGreaterThan(atPause);
+    player.stop();
+  });
+
   it("waits quietly while the audio context is still locked", () => {
     const { synth, tones, clock } = makeFakeSynth();
     clock.t = null; // locked

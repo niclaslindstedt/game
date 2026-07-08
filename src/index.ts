@@ -54,6 +54,8 @@ export {
   isBetterEquipment,
   moveInventoryItem,
   openInventory,
+  pauseGame,
+  resumeGame,
   playerAppearance,
   playerCritChance,
   playerSpeed,

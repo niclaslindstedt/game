@@ -428,6 +428,12 @@ export function gearScore(gear: Equipment): number {
   return score;
 }
 
+/** Remaining attacks left on a weapon; the unbreakable sidearm never wears
+ * out, so it counts as effectively infinite durability. */
+function remainingDurability(weapon: Equipment): number {
+  return weapon.durability ?? Infinity;
+}
+
 /** Is `candidate` strictly better than the piece occupying its slot? */
 export function isBetterEquipment(
   state: GameState,
@@ -435,7 +441,16 @@ export function isBetterEquipment(
 ): boolean {
   if (candidate.slot === "weapon") {
     const current = state.player.equipment.weapon;
-    return weaponScore(state, candidate) > weaponScore(state, current);
+    const candidateScore = weaponScore(state, candidate);
+    const currentScore = weaponScore(state, current);
+    if (candidateScore !== currentScore) return candidateScore > currentScore;
+    // Equal firepower: picking up the same weapon you already wield is worth
+    // swapping to when the fresh copy has more durability left — it refreshes
+    // the durability bar, and the worn copy banks to the bag as a spare.
+    if (candidate.defId === current.defId) {
+      return remainingDurability(candidate) > remainingDurability(current);
+    }
+    return false;
   }
   const current = state.player.equipment[candidate.slot];
   return current === null || gearScore(candidate) > gearScore(current);
@@ -681,4 +696,15 @@ export function openInventory(state: GameState): void {
 export function closeInventory(state: GameState): void {
   if (state.phase !== "inventory") return;
   state.phase = state.player.pendingStatPoints > 0 ? "levelup" : "playing";
+}
+
+/** Freeze the run into the pause screen. Only possible mid-run — end-of-run
+ * splashes and other overlays are already their own frozen phases. */
+export function pauseGame(state: GameState): void {
+  if (state.phase === "playing") state.phase = "paused";
+}
+
+/** Leave the pause screen and resume the run. */
+export function resumeGame(state: GameState): void {
+  if (state.phase === "paused") state.phase = "playing";
 }

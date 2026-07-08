@@ -213,9 +213,11 @@ pixelated`; enemies swap to generated wounded sprite variants as hp falls
   theme and `playLevelMusic(trackId)` switches cleanly between levels),
   `audio.ts` (one shared synth split into SFX/music volume views),
   `settings.ts` (persisted control-scheme + volume settings), `progress.ts`
-  (persisted story progress: watched cutscenes so a prelude plays once per
-  device, and per-difficulty level completion that drives the campaign
-  unlock gate and the victory splash's NEXT LEVEL),
+  (persisted per-difficulty level completion that drives the campaign: it
+  walks a first-timer through the story in order and only unlocks the
+  level-select picker once the campaign is cleared, and lights up the victory
+  splash's NEXT LEVEL), `highscores.ts` (persisted best survival time per
+  difficulty, shown on the end-of-run screen),
   `assets.ts` (loads the generated sprite atlas — one PNG + JSON source
   rects sliced into per-sprite bitmaps in a single decode — plus the pixel
   font), and `assets/` (the generated atlas + font atlas — never

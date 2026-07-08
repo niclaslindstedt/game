@@ -1,30 +1,15 @@
 // SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
 // Story progress persisted on-device (same policy as settings.ts): which
-// cutscenes the player has already watched — a prelude plays once, not on
-// every retry — and which levels they have cleared, per difficulty, which
-// drives the campaign: the victory splash's NEXT LEVEL button and the title
-// menu's level-select unlock state. Rewatching a cutscene is always available
-// through the `?cutscene=<id>` workbench, which deliberately bypasses this
-// record; the `?level=` dev override likewise ignores the unlock gate.
+// levels the player has cleared, per difficulty, which drives the campaign —
+// the victory splash's NEXT LEVEL button and the title menu's level-select
+// unlock state. The `?level=` dev override ignores the unlock gate. (Cutscenes
+// always play now — there is no "already watched" record to skip them.)
 
 import { LEVEL_ORDER, type Difficulty } from "@game/core";
 
 import { createFlagStore } from "@ui/lib/flag-store.ts";
 
 import { storageKey } from "../identity.ts";
-
-const seenCutscenes = createFlagStore(storageKey("seen-cutscenes"));
-
-/** Has this scene already played to its end (or been skipped) here? */
-export function hasSeenCutscene(id: string): boolean {
-  return seenCutscenes.has(id);
-}
-
-/** Record a scene as watched — called however it ended (played out,
- * tapped through, SKIP, Esc, or a bot skipping it). */
-export function markCutsceneSeen(id: string): void {
-  seenCutscenes.add(id);
-}
 
 // Level completion is tracked per difficulty: clearing THE MOON on EASY does
 // not unlock the next level on NIGHTMARE. Each flag is `${difficulty}:${id}`.
@@ -70,4 +55,25 @@ export function nextLevelId(levelId: string): string | null {
   const index = LEVEL_ORDER.indexOf(levelId);
   if (index < 0 || index + 1 >= LEVEL_ORDER.length) return null;
   return LEVEL_ORDER[index + 1] as string;
+}
+
+/**
+ * Has the whole campaign been cleared at this difficulty? True once the last
+ * level in LEVEL_ORDER has been beaten there. This is what unlocks free level
+ * selection — until then the player is walked straight through the story.
+ */
+export function hasBeatenDifficulty(difficulty: Difficulty): boolean {
+  const last = LEVEL_ORDER[LEVEL_ORDER.length - 1];
+  return last !== undefined && hasCompletedLevel(last, difficulty);
+}
+
+/**
+ * The story level to drop the player into next at this difficulty: the first
+ * one along LEVEL_ORDER they have not yet cleared (falling back to the opener
+ * once everything is done). Drives "continue the story" when the level select
+ * is still locked.
+ */
+export function firstUnclearedLevel(difficulty: Difficulty): string {
+  const opener = LEVEL_ORDER[0] as string;
+  return LEVEL_ORDER.find((id) => !hasCompletedLevel(id, difficulty)) ?? opener;
 }

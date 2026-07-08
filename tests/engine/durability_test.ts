@@ -4,7 +4,7 @@
 
 import { describe, expect, it } from "vitest";
 
-import { rollEquipment, step, weaponDef } from "@game/core";
+import { isBetterEquipment, rollEquipment, step, weaponDef } from "@game/core";
 import type { Equipment, GameState } from "@game/core";
 import { clearStage, DT, idle, makeEnemy, run, startGame } from "./helpers.ts";
 
@@ -87,6 +87,48 @@ describe("weapon durability", () => {
     );
     expect(state.player.equipment.weapon.defId).toBe("blaster");
     expect(state.player.equipment.weapon.durability).toBeUndefined();
+  });
+});
+
+describe("same-weapon pickups refresh durability", () => {
+  it("a fresher copy of the current weapon counts as an upgrade", () => {
+    const state = startGame();
+    const full = weaponDef("test_hammer").durability;
+    state.player.equipment.weapon = weapon(50, "test_hammer", 3); // worn
+    // A pristine identical weapon beats the worn one on durability alone…
+    expect(isBetterEquipment(state, weapon(60, "test_hammer", full))).toBe(
+      true,
+    );
+    // …but an equally-worn or more-worn copy is not worth the swap.
+    expect(isBetterEquipment(state, weapon(61, "test_hammer", 3))).toBe(false);
+    expect(isBetterEquipment(state, weapon(62, "test_hammer", 1))).toBe(false);
+  });
+
+  it("picking up the same weapon swaps it in and banks the worn copy", () => {
+    const state = startGame();
+    clearStage(state);
+    const full = weaponDef("test_hammer").durability;
+    state.player.equipment.weapon = weapon(50, "test_hammer", 4);
+    state.items = [
+      {
+        id: 1,
+        kind: "equipment",
+        pos: { ...state.player.pos },
+        equipment: weapon(60, "test_hammer", full),
+      },
+    ];
+    step(state, idle, DT);
+    // The fresh copy is now in hand; the worn one lands in the bag as a spare.
+    expect(state.player.equipment.weapon.id).toBe(60);
+    expect(state.player.equipment.weapon.durability).toBe(full);
+    expect(state.player.inventory.some((i) => i?.id === 50)).toBe(true);
+  });
+
+  it("the unbreakable sidearm is never traded for a breakable copy", () => {
+    const state = startGame(); // blaster sidearm, durability undefined
+    expect(state.player.equipment.weapon.defId).toBe("blaster");
+    const looted = weapon(60, "blaster", weaponDef("blaster").durability);
+    expect(isBetterEquipment(state, looted)).toBe(false);
   });
 });
 

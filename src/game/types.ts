@@ -23,6 +23,7 @@ export type GamePhase =
   | "cutscene"
   | "intro"
   | "playing"
+  | "paused"
   | "levelup"
   | "inventory"
   | "dialogue"

@@ -43,11 +43,15 @@ a survivors-style run is a self-contained arc — and stays this way unless the
 story later demands a persistent loadout.
 
 What the campaign _does_ persist is **completion**, on-device and per
-difficulty (`website/src/game/progress.ts`): clearing a level records it, the
-victory splash offers **NEXT LEVEL** (advancing along `LEVEL_ORDER` carrying
-the difficulty), and the title menu's level-select screen (NEW GAME →
-difficulty → level) unlocks the next level once its predecessor is cleared at
-that difficulty. The `?level=` dev override bypasses the unlock gate.
+difficulty (`website/src/game/progress.ts`): clearing a level records it, and
+the victory splash offers **NEXT LEVEL** (advancing along `LEVEL_ORDER`
+carrying the difficulty). A first-timer is walked through the story in order —
+choosing a difficulty (NEW GAME → difficulty) drops them straight into the
+next unbeaten level, no picker. Only once the whole campaign is cleared at a
+difficulty does the title menu's **level-select** screen open, as a replay
+picker. The `?level=` dev override bypasses the gate entirely. Best survival
+time per difficulty is persisted alongside completion
+(`website/src/game/highscores.ts`) and shown on the end-of-run screen.
 
 Difficulty-exclusive content lives with the level that uses it: a `spawns` or
 `waves.budget` line can carry an optional `minDifficulty`, and it only appears

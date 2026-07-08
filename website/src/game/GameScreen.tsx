@@ -30,6 +30,7 @@ import {
   createBot,
   createGame,
   debug,
+  difficultyDef,
   discardHeldAbility,
   dismissIntro,
   enemyDef,
@@ -39,7 +40,9 @@ import {
   MENACE,
   menaceStage,
   openInventory,
+  pauseGame,
   playerAppearance,
+  resumeGame,
   skipCutscene,
   step,
   storyItemDef,
@@ -67,18 +70,20 @@ import { DialogueOverlay } from "./DialogueOverlay.tsx";
 import { IntroOverlay } from "./IntroOverlay.tsx";
 import { InventoryPanel } from "./InventoryPanel.tsx";
 import { LevelUpOverlay } from "./LevelUpOverlay.tsx";
-import { playLevelMusic, stopMusic } from "./music/index.ts";
+import { PauseOverlay } from "./PauseOverlay.tsx";
+import {
+  pauseMusic,
+  playLevelMusic,
+  resumeMusic,
+  stopMusic,
+} from "./music/index.ts";
 import {
   PickupFeed,
   PICKUP_TTL_MS,
   type PickupMessage,
 } from "./PickupFeed.tsx";
-import {
-  hasSeenCutscene,
-  markCutsceneSeen,
-  markLevelCompleted,
-  nextLevelId,
-} from "./progress.ts";
+import { bestTime, recordTime } from "./highscores.ts";
+import { markLevelCompleted, nextLevelId } from "./progress.ts";
 import {
   computeCamera,
   drawEffects,
@@ -269,6 +274,9 @@ export function GameScreen({
   const [assets, setAssets] = useState<GameAssets | null>(null);
   const [runId, setRunId] = useState(0);
   const [hud, setHud] = useState<Hud | null>(null);
+  // Whether the just-ended run set a new best survival time on this
+  // difficulty — flagged on the end-of-run splash's high-score line.
+  const [newRecord, setNewRecord] = useState(false);
   // The live engine state object for this run. Mutable (the loop advances it
   // in place); stored in React state so overlays can read it during render.
   const [state, setState] = useState<GameState | null>(null);
@@ -314,17 +322,11 @@ export function GameScreen({
     const levelParam = params.get("level");
     const devLevel = levelParam && levelParam in LEVELS ? levelParam : null;
     const state = createGame(seed, devLevel ?? levelId, difficulty);
-    // A prelude plays once per device: retries and later runs jump straight
-    // to the intro. `pendingCutscene` marks the scene seen however it ends
-    // (played out, tapped through, SKIP, Esc, or a bot skipping it) — the
-    // watcher in the loop below catches every exit path in one place.
-    let pendingCutscene =
-      state.phase === "cutscene" ? (state.cutscene?.defId ?? null) : null;
-    if (pendingCutscene && hasSeenCutscene(pendingCutscene)) {
-      skipCutscene(state);
-      pendingCutscene = null;
-    }
+    // The prelude always plays — every run opens on its cutscene (the player
+    // can dismiss it with the SKIP button or Esc). It is never auto-skipped on
+    // replay.
     setState(state);
+    setNewRecord(false);
     debug(`run ${runId} started (seed ${seed}, ${difficulty})`);
 
     // The lower-right pickup feed: a fresh run starts with an empty log, and
@@ -414,6 +416,24 @@ export function GameScreen({
     // per-frame position/highlight without React re-renders.
     const dpad = dpadRef.current;
     const dpadNub = dpad?.querySelector<HTMLElement>(".dpad-nub") ?? null;
+
+    // Pause freezes the sim (the engine's "paused" phase) and the music
+    // together; resume lifts both. Music truly resumes in place — the chiptune
+    // player keeps its position across the pause. Guarded so it only toggles
+    // mid-run, never over an intro/level-up/end splash.
+    const pause = () => {
+      if (state.phase !== "playing") return;
+      pauseGame(state);
+      pauseMusic();
+      bumpUi();
+    };
+    const resume = () => {
+      if (state.phase !== "paused") return;
+      resumeGame(state);
+      resumeMusic();
+      bumpUi();
+    };
+
     const onKeyDown = (event: KeyboardEvent) => {
       // Track held movement keys + the run modifier every keydown (repeats
       // included — Set.add is idempotent) so the sim loop reads live state.
@@ -459,6 +479,15 @@ export function GameScreen({
         closeInventory(state);
         playUiSound(synth, "back");
         bumpUi();
+      } else if (event.key === "p" || event.key === "P") {
+        // P toggles the pause screen (desktop). Music pauses with the sim.
+        if (state.phase === "playing") {
+          pause();
+          playUiSound(synth, "confirm");
+        } else if (state.phase === "paused") {
+          resume();
+          playUiSound(synth, "back");
+        }
       } else if (
         (event.key === "q" || event.key === "Q") &&
         state.phase === "playing"
@@ -489,14 +518,23 @@ export function GameScreen({
         walkingRef.current = false;
       }
     };
-    // Losing focus (alt-tab, a click on a menu) must not leave a key "stuck".
+    // Losing focus (alt-tab, switching tab/app) must not leave a key "stuck",
+    // and auto-pauses the run — the world (and music) freeze until the player
+    // comes back and clicks in. A no-op mid-overlay (pause() is guarded).
     const onBlur = () => {
       heldMoveKeysRef.current.clear();
       walkingRef.current = false;
+      pause();
+    };
+    // Tab hidden (mobile app-switch, backgrounded tab): same auto-pause. Both
+    // signals fire in different browsers, and pause() is idempotent.
+    const onVisibility = () => {
+      if (document.hidden) pause();
     };
     window.addEventListener("keydown", onKeyDown);
     window.addEventListener("keyup", onKeyUp);
     window.addEventListener("blur", onBlur);
+    document.addEventListener("visibilitychange", onVisibility);
 
     const input: GameInput = {
       steering: false,
@@ -520,7 +558,9 @@ export function GameScreen({
         };
         if (bot) {
           // The bot is a drop-in input source; it also clears the paused
-          // phases a human would click through.
+          // phases a human would click through (including an auto-pause from
+          // the headless tab reporting itself hidden/unfocused).
+          if (state.phase === "paused") resumeGame(state);
           if (state.phase === "cutscene") skipCutscene(state);
           if (state.phase === "intro") beginRun();
           if (state.phase === "dialogue") {
@@ -615,10 +655,6 @@ export function GameScreen({
           useItemIndexRef.current = null;
         }
         step(state, input, dtMs);
-        if (pendingCutscene && state.phase !== "cutscene") {
-          markCutsceneSeen(pendingCutscene);
-          pendingCutscene = null;
-        }
         playEventSounds(synth, state.events);
 
         for (const event of state.events) {
@@ -701,9 +737,11 @@ export function GameScreen({
           if (event.type === "storyItemCollected") {
             pushPickup(storyItemDef(event.defId).name, "#ffd75e");
           }
-          // The run is over: silence the loop so the jingle stands alone.
+          // The run is over: silence the loop so the jingle stands alone, and
+          // bank the survival time as this difficulty's high score.
           if (event.type === "victory" || event.type === "defeat") {
             stopMusic();
+            if (recordTime(difficulty, state.stats.timeMs)) setNewRecord(true);
           }
           // Clearing a level records it (per difficulty) so the campaign
           // unlocks the next one and the menu marks this one replayable.
@@ -791,6 +829,7 @@ export function GameScreen({
       window.removeEventListener("keydown", onKeyDown);
       window.removeEventListener("keyup", onKeyUp);
       window.removeEventListener("blur", onBlur);
+      document.removeEventListener("visibilitychange", onVisibility);
       canvas.removeEventListener("pointerdown", unlock);
       pickupTimers.forEach(clearTimeout);
     };
@@ -1304,6 +1343,19 @@ export function GameScreen({
         />
       )}
 
+      {state && hud?.phase === "paused" && (
+        <PauseOverlay
+          font={font}
+          onResume={() => {
+            if (state.phase !== "paused") return;
+            resumeGame(state);
+            resumeMusic();
+            bumpUi();
+          }}
+          onQuit={onQuit}
+        />
+      )}
+
       {hud && (hud.phase === "victory" || hud.phase === "defeat") && (
         <div className="game-splash">
           <PixelText
@@ -1312,11 +1364,25 @@ export function GameScreen({
             scale={6}
             color={hud.phase === "victory" ? "#7ef0c8" : "#d83a3a"}
           />
+          {newRecord && (
+            <PixelText
+              font={font}
+              text="NEW RECORD!"
+              scale={3}
+              color="#ffd75e"
+            />
+          )}
           <div className="splash-stats">
             <PixelText
               font={font}
               text={`TIME ${formatTime(hud.stats.timeMs)}`}
               scale={3}
+            />
+            <PixelText
+              font={font}
+              text={`BEST (${difficultyDef(difficulty).name}) ${formatTime(bestTime(difficulty))}`}
+              scale={3}
+              color="#9aa3ad"
             />
             <PixelText
               font={font}

@@ -8,11 +8,14 @@
 [![License: PolyForm Noncommercial](https://img.shields.io/badge/license-PolyForm%20Noncommercial%201.0.0-blue.svg)](LICENSE)
 
 > **Status: two playable levels.** Pick a difficulty on the Doom-style
-> main menu, sit through the movie-night prelude (or skip it), raid SPACEZ
-> HQ for the drive ingredient MUSKRAT the mutant rat swallowed, then take
-> the fight to the haunted moon and ARMSTRONG at the old flag — all to a
-> chiptune soundtrack, looting gear and powers while the auto-firing
-> weapons thin the horde. Dying shows a run summary with a retry button.
+> main menu and you drop straight into the story (the mission picker only
+> unlocks once you have cleared the campaign at that difficulty), sit through
+> the movie-night prelude (or hit SKIP, top right), raid SPACEZ HQ for the
+> drive ingredient MUSKRAT the mutant rat swallowed, then take the fight to
+> the haunted moon and ARMSTRONG at the old flag — all to a chiptune
+> soundtrack, looting gear and powers while the auto-firing weapons thin the
+> horde. Each run's end screen shows a summary with a retry button and your
+> best survival time on that difficulty.
 
 ## Why?
 
@@ -64,6 +67,9 @@ and something enormous haunts the old flag.
 - **Tap** (with the other hand while steering, or press Space) to **jump**
   — each level sets its own gravity: HQ hops clear a desk; moon gravity
   sails you clean over a ghost's grasp.
+- **Pause** any time with **P** on desktop — the game and its music freeze on
+  a pause screen; click or press P again to resume. The run also auto-pauses
+  when you switch away (on a phone, just leave the app).
 - **Obstacles** litter every level and nothing walks through them — desks,
   crates, and low rocks can be **jumped over**, and monsters can't jump: a
   barrier the horde must flow around is your best friend. SPACEZ HQ's
@@ -100,7 +106,9 @@ and something enormous haunts the old flag.
   Diablo-style inventory: drag items onto their slot or tap to quick-equip.
 - Dropped weapons **wear out** as they fire: when one breaks it is trashed
   and the best weapon left in your bag takes its place (your own sidearm
-  never breaks). **Repair kits** restore the equipped weapon's edge.
+  never breaks). **Repair kits** restore the equipped weapon's edge, and
+  grabbing a **fresh copy of the weapon you already hold** swaps it in for
+  the extra durability, banking the worn one as a spare.
 - **Unique mobs** wait at set spots on every level — larger, named
   characters (the NIGHT MANAGER, DR. NOVA, the ghost of an Apollo MISSION
   SPECIALIST…) that **rush into view and talk**: each scene reveals a
