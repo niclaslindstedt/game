@@ -63,6 +63,7 @@ import {
   playerSpeed,
   recomputeMaxHp,
   repairEquippedWeapon,
+  restoreArmor,
   weaponCooldownFor,
   weaponDamage,
   weaponRangeFor,
@@ -986,10 +987,13 @@ function stepItems(state: GameState): void {
       return false;
     }
 
-    // Repair kits mend the equipped weapon; with nothing to repair they
-    // stay on the ground for when the edge has actually dulled.
+    // Repair kits mend the equipped weapon and top up a worn suit's plating;
+    // with neither to restore they stay on the ground for when something has
+    // actually taken a beating.
     if (item.kind === "repair") {
-      if (!repairEquippedWeapon(state)) return true;
+      const mended = repairEquippedWeapon(state);
+      const rearmored = restoreArmor(state);
+      if (!mended && !rearmored) return true;
       state.stats.itemsCollected++;
       state.events.push({
         type: "itemCollected",

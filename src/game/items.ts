@@ -269,6 +269,19 @@ export function refreshArmor(state: GameState): void {
   state.player.armor = armorInfo(state)?.max ?? 0;
 }
 
+/**
+ * Top the equipped suit's plating back up to its full pool — the repair kit
+ * mends worn armor alongside the weapon's edge. False when there is nothing
+ * to restore (no armored suit worn, or the plating is already full) so the
+ * kit isn't spent on intact armor.
+ */
+export function restoreArmor(state: GameState): boolean {
+  const info = armorInfo(state);
+  if (!info || state.player.armor >= info.max) return false;
+  state.player.armor = info.max;
+  return true;
+}
+
 /** Max stamina from the base pool + the STAMINA stat (affixes folded in). */
 export function computeMaxStamina(state: GameState): number {
   return STAMINA.base + effectiveStat(state, "stamina") * STAMINA.maxPerPoint;
@@ -627,6 +640,28 @@ export function discardFromInventory(
   const item = inv[index] ?? null;
   if (!item) return null;
   inv[index] = null;
+  return item;
+}
+
+/**
+ * Permanently destroy the piece worn in `slot` — the drag-it-off-the-body,
+ * drop-it-on-the-ground gesture. The weapon slot is never emptied (the hero
+ * always fights with something), so only a suit or charm is trashed this way.
+ * Returns the discarded piece, or null when the slot is the weapon or already
+ * bare. Shedding the suit strips the plating, just like unequipping.
+ */
+export function discardEquipped(
+  state: GameState,
+  slot: EquipSlot,
+): Equipment | null {
+  if (slot === "weapon") return null;
+  const player = state.player;
+  const item = player.equipment[slot];
+  if (!item) return null;
+  player.equipment[slot] = null;
+  recomputeMaxHp(state);
+  recomputeMaxStamina(state);
+  if (slot === "suit") refreshArmor(state);
   return item;
 }
 

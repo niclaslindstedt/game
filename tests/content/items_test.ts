@@ -5,6 +5,7 @@
 import { describe, expect, it } from "vitest";
 
 import {
+  discardEquipped,
   discardFromInventory,
   ENEMY_DEFS,
   enemyDef,
@@ -409,6 +410,25 @@ describe("inventory", () => {
     const state = startGame();
     state.player.inventory[1] = null;
     expect(discardFromInventory(state, 1)).toBeNull();
+  });
+
+  it("discards an equipped suit — strips it off the body and clears armor", () => {
+    const state = startGame();
+    state.player.inventory[0] = makeSuit(88);
+    expect(equipFromInventory(state, 0)).toBe(true);
+    expect(state.player.equipment.suit?.id).toBe(88);
+    expect(state.player.armor).toBeGreaterThan(0);
+    const removed = discardEquipped(state, "suit");
+    expect(removed?.id).toBe(88);
+    expect(state.player.equipment.suit).toBeNull();
+    expect(state.player.armor).toBe(0); // plating stripped with the suit
+  });
+
+  it("never discards the equipped weapon — the holster is never empty", () => {
+    const state = startGame();
+    const held = state.player.equipment.weapon;
+    expect(discardEquipped(state, "weapon")).toBeNull();
+    expect(state.player.equipment.weapon).toBe(held);
   });
 });
 

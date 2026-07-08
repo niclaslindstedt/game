@@ -19,6 +19,7 @@ import { createPortal } from "react-dom";
 import {
   armorInfo,
   computeMaxHp,
+  discardEquipped,
   discardFromInventory,
   effectiveStat,
   equipFromInventory,
@@ -349,13 +350,15 @@ export function InventoryPanel({
       if (target) {
         const [kind, arg] = target.split(":");
         if (kind === "ground") {
-          // Dropped clear of the bag and slots: destroy a carried item. Only
-          // bag pieces can be trashed this way (the equipped weapon is never
-          // parked in the bag, and unequipping is the safe way off a slot).
-          if (
-            d.from.type === "inv" &&
-            discardFromInventory(state, d.from.index)
-          ) {
+          // Dropped clear of the bag and slots: destroy the dragged piece.
+          // A bag item is trashed from its cell; an equipped suit or charm is
+          // stripped straight off the body (the weapon slot is never emptied,
+          // so a held weapon can't be trashed this way).
+          const trashed =
+            d.from.type === "inv"
+              ? discardFromInventory(state, d.from.index)
+              : discardEquipped(state, d.from.slot);
+          if (trashed) {
             playUiSound(synth, "back");
           }
         } else if (d.from.type === "inv" && kind === "inv") {
@@ -651,18 +654,22 @@ export function InventoryPanel({
         </button>
       </div>
 
-      {/* Discard warning: only a bag item dragged clear of the panel is at
-          risk, so only then does the "destroy" prompt appear. */}
-      {drag && drag.moved && drag.from.type === "inv" && (
-        <div className="discard-hint">
-          <PixelText
-            font={font}
-            text="DROP OUTSIDE THE BAG TO DESTROY"
-            scale={1}
-            color="#e06a6a"
-          />
-        </div>
-      )}
+      {/* Discard warning: a bag item or an equipped suit/charm dragged clear
+          of the panel is at risk, so only then does the "destroy" prompt
+          appear. The held weapon is never trashable, so dragging it shows no
+          warning. */}
+      {drag &&
+        drag.moved &&
+        (drag.from.type === "inv" || drag.from.slot !== "weapon") && (
+          <div className="discard-hint">
+            <PixelText
+              font={font}
+              text="DROP OUTSIDE TO DESTROY"
+              scale={1}
+              color="#e06a6a"
+            />
+          </div>
+        )}
 
       {/* WoW-style tooltip for the hovered / tapped item, hidden while a drag
           is in flight (the drag ghost speaks for the item instead). */}

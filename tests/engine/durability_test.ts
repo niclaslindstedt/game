@@ -4,7 +4,13 @@
 
 import { describe, expect, it } from "vitest";
 
-import { isBetterEquipment, rollEquipment, step, weaponDef } from "@game/core";
+import {
+  armorInfo,
+  isBetterEquipment,
+  rollEquipment,
+  step,
+  weaponDef,
+} from "@game/core";
 import type { Equipment, GameState } from "@game/core";
 import {
   clearStage,
@@ -194,6 +200,24 @@ describe("repair kits", () => {
     );
   });
 
+  it("also top up a worn suit's plating, kit consumed even with no weapon to mend", () => {
+    const state = equipBlaster(startGame()); // unbreakable weapon: nothing to mend
+    clearStage(state);
+    state.player.equipment.suit = {
+      id: 70,
+      defId: "test_suit",
+      slot: "suit",
+      tier: "regular",
+      affixes: [],
+    };
+    const max = armorInfo(state)!.max;
+    state.player.armor = 10; // battered plating
+    state.items = [{ id: 1, kind: "repair", pos: { ...state.player.pos } }];
+    step(state, idle, DT);
+    expect(state.items).toHaveLength(0);
+    expect(state.player.armor).toBe(max);
+  });
+
   it("stay on the ground when there is nothing to repair", () => {
     const state = startGame(); // unbreakable sidearm in hand
     clearStage(state);
@@ -203,6 +227,18 @@ describe("repair kits", () => {
 
     // A pristine breakable weapon needs no repair either.
     state.player.equipment.weapon = weapon(50, "test_hammer");
+    step(state, idle, DT);
+    expect(state.items).toHaveLength(1);
+
+    // Nor does a suit whose plating is already full.
+    state.player.equipment.suit = {
+      id: 70,
+      defId: "test_suit",
+      slot: "suit",
+      tier: "regular",
+      affixes: [],
+    };
+    state.player.armor = armorInfo(state)!.max;
     step(state, idle, DT);
     expect(state.items).toHaveLength(1);
   });
