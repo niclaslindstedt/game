@@ -179,7 +179,9 @@ describe("SPACEZ HQ level def", () => {
       internTotal += dropsFrom("intern", seed);
     }
     expect(optimuskTotal).toBeGreaterThan(internTotal + 20);
-  });
+    // Six full sim runs of statistics: give the sampling headroom over the
+    // 5 s default — CI runners cross it while the assertion itself is sound.
+  }, 20_000);
 
   it("spawns the player clear of every wall", () => {
     const state = startGame(SEED, "spacez_hq");
