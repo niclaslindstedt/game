@@ -7,82 +7,13 @@
 
 import { useState } from "react";
 
-import {
-  allocateStat,
-  effectiveStat,
-  type GameState,
-  type StatName,
-} from "@game/core";
+import { allocateStat, effectiveStat, type GameState } from "@game/core";
 
 import { PixelText } from "@ui/lib/PixelText.tsx";
 import type { PixelFont } from "@ui/lib/pixel-font.ts";
 
-import { spriteDataUrl, type Sprites } from "./assets.ts";
-
-// The short blurb sits on each button; `info` is the full breakdown shown
-// under the (i) toggle. Both must track what the stats actually do
-// (src/game/config.ts STATS + src/game/items.ts) — every stat now touches
-// more than damage, so keep these honest. `icon` is the stat's pixel glyph
-// (sprite-data/icons.mjs) shown on the button and in the info panel.
-const CHOICES: {
-  stat: StatName;
-  label: string;
-  blurb: string;
-  info: string;
-  icon: string;
-}[] = [
-  {
-    stat: "stamina",
-    label: "STAMINA",
-    blurb: "SPRINT + HP",
-    info: "DEEPER SPRINT POOL, SLOWER DRAIN & FASTER RECOVERY. ALSO RAISES MAX HP.",
-    icon: "icon_stat_stamina",
-  },
-  {
-    stat: "strength",
-    label: "STRENGTH",
-    blurb: "DAMAGE + BAG",
-    info: "MELEE & RANGED WEAPON DAMAGE. +1 BAG SLOT EACH.",
-    icon: "icon_stat_strength",
-  },
-  {
-    stat: "dexterity",
-    label: "DEXTERITY",
-    blurb: "SPEED + HIT",
-    info: "FASTER MELEE & RANGED ATTACK SPEED, HIGHER HIT RATE (FEWER MISSES & ENEMY DODGES), MORE MELEE & RANGED CRITS, AND MORE DODGE.",
-    icon: "icon_stat_dexterity",
-  },
-  {
-    stat: "intelligence",
-    label: "INTELLECT",
-    blurb: "MAGIC + AOE",
-    info: "MAGIC POWER & CRITS. LONGER RANGE & A BIGGER MELEE AOE CONE (HITS MORE).",
-    icon: "icon_stat_intelligence",
-  },
-  {
-    stat: "speed",
-    label: "SPEED",
-    blurb: "MOVE SPEED",
-    info: "+8% MOVE SPEED EACH.",
-    icon: "icon_stat_speed",
-  },
-  {
-    stat: "luck",
-    label: "LUCK",
-    blurb: "CRIT + LOOT",
-    info: "A LITTLE MORE CRIT & DODGE, DODGE ENEMY CRITS, MORE & BETTER LOOT.",
-    icon: "icon_stat_luck",
-  },
-];
-
-/** The stat's pixel glyph, or nothing if the sprite is missing. */
-function StatGlyph({ sprites, icon }: { sprites: Sprites; icon: string }) {
-  const src = spriteDataUrl(sprites, icon);
-  if (!src) return null;
-  return (
-    <img src={src} alt="" className="pixel-img stat-icon" draggable={false} />
-  );
-}
+import { type Sprites } from "./assets.ts";
+import { STAT_CHOICES as CHOICES, StatGlyph } from "./statChoices.tsx";
 
 export function LevelUpOverlay({
   state,

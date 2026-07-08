@@ -928,9 +928,78 @@ export function allocateStat(state: GameState, stat: StatName): boolean {
   recomputeMaxStamina(state);
   // STRENGTH also widens the carry bag — grow it as the point lands.
   if (stat === "strength") syncInventoryCapacity(state);
+  // A level-up resumes the moment its last point lands; a respec never
+  // auto-closes — the chooser stays open (points can be moved back and forth)
+  // until the player confirms the build (`confirmRespec`).
   if (player.pendingStatPoints === 0 && state.phase === "levelup") {
     state.phase = "playing";
   }
+  return true;
+}
+
+// ---- Respec (LEVEL TOKEN reallocation) ----------------------------------------
+
+/**
+ * Open the from-scratch respec the way a spent LEVEL TOKEN owes it (see
+ * progress.ts): refund every banked stat point back into a single pool and
+ * zero the six stats, then freeze the run in the `respec` phase so the player
+ * re-places the whole build. Idempotent guard aside, this is the one-shot the
+ * pending flag arms — clear it so a later `dismissIntro` can't re-open the
+ * chooser. The refunded total is the hero's carried-in level (plus any
+ * difficulty head-start already folded into his stats).
+ */
+export function beginRespec(state: GameState): void {
+  const player = state.player;
+  state.respecPending = false;
+  let pool = player.pendingStatPoints;
+  for (const stat of STAT_NAMES) {
+    pool += player.stats[stat];
+    player.stats[stat] = 0;
+  }
+  player.pendingStatPoints = pool;
+  recomputeMaxHp(state);
+  recomputeMaxStamina(state);
+  syncInventoryCapacity(state);
+  // Refunding STRENGTH shrinks the bag; keep current hp/stamina inside the
+  // freshly-zeroed pools so the readouts never show an over-full bar.
+  player.hp = Math.min(player.hp, player.maxHp);
+  player.stamina = Math.min(player.stamina, player.maxStamina);
+  state.phase = "respec";
+}
+
+/**
+ * Put one point back into the pool during a respec: the inverse of
+ * `allocateStat`, floored at zero and live only while the `respec` chooser is
+ * open. Returns false when the stat is already at zero (nothing to refund) or
+ * the run is not respeccing.
+ */
+export function deallocateStat(state: GameState, stat: StatName): boolean {
+  if (state.phase !== "respec") return false;
+  const player = state.player;
+  if (player.stats[stat] <= 0) return false;
+  player.stats[stat]--;
+  player.pendingStatPoints++;
+  recomputeMaxHp(state);
+  recomputeMaxStamina(state);
+  if (stat === "strength") syncInventoryCapacity(state);
+  player.hp = Math.min(player.hp, player.maxHp);
+  player.stamina = Math.min(player.stamina, player.maxStamina);
+  return true;
+}
+
+/**
+ * Commit the respec and drop into play — only once every refunded point has
+ * been re-spent, so the build is never left with points on the table. The run
+ * arrives rested, exactly like a fresh drop: full health and a full sprint
+ * pool over the newly-chosen stats. False (nothing happens) while points
+ * remain or the run is not respeccing.
+ */
+export function confirmRespec(state: GameState): boolean {
+  const player = state.player;
+  if (state.phase !== "respec" || player.pendingStatPoints > 0) return false;
+  player.hp = player.maxHp;
+  player.stamina = player.maxStamina;
+  state.phase = "playing";
   return true;
 }
 
@@ -963,7 +1032,13 @@ export function skipIntro(state: GameState): void {
  */
 export function dismissIntro(state: GameState): void {
   if (state.phase === "intro" || state.phase === "title") {
-    state.phase = "playing";
+    // A LEVEL TOKEN jump owes a respec before the first step: open the
+    // reallocation chooser in place of dropping straight into play.
+    if (state.respecPending) {
+      beginRespec(state);
+    } else {
+      state.phase = "playing";
+    }
   }
 }
 

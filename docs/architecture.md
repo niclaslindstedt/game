@@ -190,7 +190,9 @@ run against synthetic fixtures with no shipped content (see
   `dialogue` phase exactly like the level-up chooser.
 - **`src/game/items.ts`** — equipment instances and the player-driven
   mutations the UI calls into: loot rolls, `equipFromInventory` /
-  `unequipToInventory` / `moveInventoryItem`, `allocateStat`, the derived
+  `unequipToInventory` / `moveInventoryItem`, `allocateStat` (plus the
+  LEVEL TOKEN respec trio `beginRespec` / `deallocateStat` / `confirmRespec`),
+  the derived
   stats (max hp — now STAMINA-scaled, class-aware crit chance
   `playerCritChance` — DEX for physical, INT for magic, LUCK marginal — the
   `playerDodgeChance` sidestep, weapon damage (STR scales physical harder than
@@ -243,6 +245,10 @@ deploy-shaped:
   `?cutscene=<id>` workbench that loops one scene outside any run),
   `LevelUpOverlay.tsx` (the stat chooser shown while the engine pauses in
   `levelup`; folds into a 3×2 grid on landscape phones),
+  `RespecOverlay.tsx` (the LEVEL TOKEN respec — a Diablo-style attribute
+  screen shown in the `respec` phase, with a −/+ stepper per stat and a
+  CONFIRM gate; shares the stat catalog with the level-up chooser via
+  `statChoices.tsx`),
   `InventoryPanel.tsx` (the Diablo-style bag: drag-to-equip slots,
   tier-colored borders, item card, character sheet), `render.ts` (camera +
   sprite drawing onto a world-unit canvas upscaled with `image-rendering:

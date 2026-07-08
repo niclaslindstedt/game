@@ -2035,6 +2035,138 @@ body {
   }
 }
 
+/* ---- LEVEL TOKEN respec (Diablo-style attribute screen) --------------------
+   Shares the level-up box/header/(i)-panel; the body swaps the one-shot stat
+   buttons for a −/+ stepper per stat plus a CONFIRM gate, so the whole refunded
+   pool is placed deliberately (points move both ways until committed). */
+.respec-rows {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  width: 100%;
+  max-width: 34rem;
+}
+
+/* One stat: glyph, name+value+blurb, then the stepper pair on the right. */
+.respec-row {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: 0.6rem;
+  padding: 0.4rem 0.6rem;
+  background: #10151c;
+  border: 2px solid #1d2530;
+}
+
+.respec-row .stat-icon {
+  width: 1.8rem;
+  height: 1.8rem;
+  flex: 0 0 auto;
+}
+
+.respec-row-text {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 0.25rem;
+  /* Eat the free space so the steppers sit hard against the right edge. */
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+.respec-steppers {
+  display: flex;
+  flex-direction: row;
+  gap: 0.4rem;
+  flex: 0 0 auto;
+}
+
+/* Square −/+ chips; the amber matches the stat labels and the CONFIRM. */
+.respec-step {
+  width: 2.4rem;
+  height: 2.4rem;
+  padding: 0;
+  display: grid;
+  place-items: center;
+  background: #ffd75e;
+  box-shadow:
+    0 4px 0 #b8961e,
+    0 6px 0 rgba(0, 0, 0, 0.4);
+}
+
+.respec-step:active {
+  box-shadow: 0 0 0 #b8961e;
+}
+
+.respec-confirm {
+  background: #ffd75e;
+  box-shadow:
+    0 4px 0 #b8961e,
+    0 6px 0 rgba(0, 0, 0, 0.4);
+}
+
+.respec-confirm:active {
+  box-shadow: 0 0 0 #b8961e;
+}
+
+/* A stepper or CONFIRM with nothing to do reads as spent, not pressable. */
+.respec-step:disabled,
+.respec-confirm:disabled {
+  background: #3a4048;
+  box-shadow:
+    0 4px 0 #23272d,
+    0 6px 0 rgba(0, 0, 0, 0.4);
+  cursor: default;
+  opacity: 0.7;
+}
+
+.respec-step:disabled:active,
+.respec-confirm:disabled:active {
+  transform: none;
+  box-shadow:
+    0 4px 0 #23272d,
+    0 6px 0 rgba(0, 0, 0, 0.4);
+}
+
+.respec-step canvas,
+.respec-confirm canvas {
+  display: block;
+}
+
+/* Landscape (the 844×390 phone reference): tighten the box and rows so all
+   six steppers plus the CONFIRM stay on screen without scrolling. */
+@media (min-aspect-ratio: 4/3) {
+  .respec-box {
+    gap: 0.6rem;
+    padding: 1rem 1.5rem;
+    max-width: 40rem;
+  }
+
+  .respec-rows {
+    /* Two columns of stats halves the stack height on the short landscape
+       viewport (three rows instead of six). */
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 0.4rem 0.6rem;
+    max-width: none;
+  }
+
+  .respec-row {
+    padding: 0.3rem 0.45rem;
+    gap: 0.45rem;
+  }
+
+  .respec-row .stat-icon {
+    width: 1.5rem;
+    height: 1.5rem;
+  }
+
+  .respec-step {
+    width: 2rem;
+    height: 2rem;
+  }
+}
+
 /* ---- Inventory (Diablo-style bag + equipment slots) -----------------------
    Portrait stacks the two sections (EQUIPPED+STATS above BAG); the landscape
    media query below folds them side by side and widens the bag grid so the

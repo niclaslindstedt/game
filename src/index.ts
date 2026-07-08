@@ -45,6 +45,9 @@ export {
 // Player-driven mutations (level-up chooser, inventory UI, phase toggles).
 export {
   allocateStat,
+  beginRespec,
+  deallocateStat,
+  confirmRespec,
   DAMAGE_STAT,
   SPEED_STAT,
   CRIT_STAT,
@@ -179,6 +182,7 @@ export {
   GEAR_DEFS,
   gearDef,
   isWeaponDef,
+  STAT_NAMES,
   TIER_ROLL_ORDER,
   TIERS,
   WEAPON_DEFS,

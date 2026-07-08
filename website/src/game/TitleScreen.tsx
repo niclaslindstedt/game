@@ -134,7 +134,7 @@ export function TitleScreen({
   onStart: (
     difficulty: Difficulty,
     levelId: string,
-    opts?: { skipIntro?: boolean },
+    opts?: { skipIntro?: boolean; respec?: boolean },
   ) => void;
 }) {
   const [assets, setAssets] = useState<GameAssets | null>(null);
@@ -356,7 +356,10 @@ export function TitleScreen({
                   return;
                 }
                 playUiSound(synth, "start");
-                onStart(difficulty, id);
+                // The token jump carries the earning rung's build into a
+                // tougher one — hand the player a full respec on arrival so the
+                // build can be re-tuned for the harder fight (see progress.ts).
+                onStart(difficulty, id, { respec: true });
                 return;
               }
               if (!unlocked) {

@@ -131,6 +131,15 @@ his level either way, via the difficulty's `mobLevelOffset`), and the unlock
 persists — dying doesn't revoke it; a spent token is re-minted only by
 re-clearing the level.
 
+Because the jump drops the carried build into a tougher rung, spending a
+token also hands the hero a **respec**: once the intro clears, the whole
+banked build is refunded into a single pool and the run freezes on a
+Diablo-style attribute screen (the `respec` phase, engine `beginRespec` →
+`RespecOverlay`) where every point is re-placed from scratch — points move
+both ways (`allocateStat` / `deallocateStat`) until CONFIRM commits the build
+(`confirmRespec`). Only the token-jumped level respecs; advancing to the next
+level does not.
+
 Difficulty-exclusive content lives with the level that uses it: a `spawns` or
 `waves.budget` line can carry an optional `minDifficulty`, and it only appears
 from that rung of the ladder up (see `meetsMinDifficulty`).

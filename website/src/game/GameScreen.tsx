@@ -25,6 +25,7 @@ import {
   advanceIntro,
   allocateStat,
   armorInfo,
+  confirmRespec,
   BOT_STRATEGIES,
   botAct,
   botAllocate,
@@ -84,6 +85,7 @@ import { IntroOverlay, type IntroReveal } from "./IntroOverlay.tsx";
 import { TitleCard } from "./TitleCard.tsx";
 import { InventoryPanel } from "./InventoryPanel.tsx";
 import { LevelUpOverlay } from "./LevelUpOverlay.tsx";
+import { RespecOverlay } from "./RespecOverlay.tsx";
 import { PauseOverlay } from "./PauseOverlay.tsx";
 import {
   pauseMusic,
@@ -343,6 +345,7 @@ export function GameScreen({
   levelId: initialLevelId,
   onQuit,
   skipIntro: skipOpening = false,
+  respec = false,
 }: {
   difficulty: Difficulty;
   levelId: string;
@@ -350,6 +353,10 @@ export function GameScreen({
   /** Warp-in (the title moon's long-press): drop straight into play, skipping
    * the prelude cutscene and the hero's level-intro monologue. */
   skipIntro?: boolean;
+  /** Cashed a LEVEL TOKEN: refund the carried build into a from-scratch stat
+   * respec once the intro clears (see the engine's `beginRespec`). Only the
+   * token-jumped level itself respecs — advancing to the NEXT LEVEL does not. */
+  respec?: boolean;
 }) {
   // The level this run is on. Retry replays it; the victory splash's NEXT
   // LEVEL button advances it along LEVEL_ORDER, which re-runs the mount effect
@@ -465,6 +472,9 @@ export function GameScreen({
       runLevelId,
       difficulty,
       startingLoadout(runLevelId, difficulty) ?? undefined,
+      // The token respec is owed only on the jumped-into level; once the run
+      // advances along the campaign (a fresh levelId) it no longer applies.
+      respec && levelId === initialLevelId,
     );
     // The prelude always plays — every run opens on its cutscene (the player
     // can dismiss it with the SKIP button or Esc). It is never auto-skipped on
@@ -746,6 +756,15 @@ export function GameScreen({
           }
           if (state.phase === "levelup") {
             allocateStat(state, botAllocate(bot, state));
+            bumpUi();
+          }
+          if (state.phase === "respec") {
+            // Spend the refunded pool point-by-point, then commit and drop in.
+            if (state.player.pendingStatPoints > 0) {
+              allocateStat(state, botAllocate(bot, state));
+            } else {
+              confirmRespec(state);
+            }
             bumpUi();
           }
           const decided = botAct(bot, state);
@@ -1119,7 +1138,7 @@ export function GameScreen({
       canvas.removeEventListener("pointerdown", unlock);
       pickupTimers.forEach(clearTimeout);
     };
-  }, [assets, runId, difficulty, levelId, skipOpening]);
+  }, [assets, runId, difficulty, levelId, initialLevelId, respec, skipOpening]);
 
   if (!assets) {
     return <div className="game-loading">Loading…</div>;
@@ -1724,6 +1743,21 @@ export function GameScreen({
           font={font}
           sprites={assets.sprites}
           onChange={bumpUi}
+        />
+      )}
+
+      {state && hud?.phase === "respec" && (
+        <RespecOverlay
+          state={state}
+          font={font}
+          sprites={assets.sprites}
+          onChange={bumpUi}
+          onConfirm={() => {
+            if (confirmRespec(state)) {
+              playUiSound(synth, "start");
+              bumpUi();
+            }
+          }}
         />
       )}
 
