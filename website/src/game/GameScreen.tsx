@@ -82,7 +82,7 @@ import {
   PICKUP_TTL_MS,
   type PickupMessage,
 } from "./PickupFeed.tsx";
-import { bestTime, recordTime } from "./highscores.ts";
+import { bestTime, recordRun } from "./highscores.ts";
 import { markLevelCompleted, nextLevelId } from "./progress.ts";
 import {
   computeCamera,
@@ -752,7 +752,13 @@ export function GameScreen({
           // bank the survival time as this difficulty's high score.
           if (event.type === "victory" || event.type === "defeat") {
             stopMusic();
-            if (recordTime(difficulty, state.stats.timeMs)) setNewRecord(true);
+            if (
+              recordRun(difficulty, {
+                timeMs: state.stats.timeMs,
+                kills: state.stats.kills,
+              })
+            )
+              setNewRecord(true);
           }
           // Clearing a level records it (per difficulty) so the campaign
           // unlocks the next one and the menu marks this one replayable.

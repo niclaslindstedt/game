@@ -653,6 +653,88 @@ body {
   z-index: 1;
 }
 
+/* ---- High-score board ---------------------------------------------------- */
+
+/* Two-axis board: left/right (or a horizontal swipe) walks the difficulty
+   ladder, up/down flips the ranking. The whole slab is the swipe surface. */
+.score-board {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: clamp(0.5rem, 2vh, 1rem);
+  z-index: 1;
+  padding: 0.75rem 1.25rem;
+  max-height: 62vh;
+  touch-action: pan-y;
+}
+
+.score-axis {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+/* The difficulty chevrons flanking the current rung's name. */
+.score-arrow {
+  appearance: none;
+  border: 0;
+  background: none;
+  color: #9aa3ad;
+  cursor: pointer;
+  font-size: 2rem;
+  line-height: 1;
+  padding: 0 0.5rem;
+}
+
+.score-arrow:hover {
+  color: #7ef0c8;
+}
+
+/* The ranking selector — a button that cycles the metric, with a hint of the
+   up/down axis it also answers to. */
+.score-metric {
+  appearance: none;
+  border: 0;
+  background: none;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  cursor: pointer;
+  font: inherit;
+}
+
+.score-metric-arrows {
+  color: #7a8088;
+  font-size: 0.7rem;
+  letter-spacing: 0.15em;
+}
+
+.score-list {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 0.4rem;
+  min-height: 4rem;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  scrollbar-width: thin;
+}
+
+.score-row {
+  display: flex;
+  align-items: baseline;
+  gap: 0.75rem;
+}
+
+.score-back {
+  appearance: none;
+  border: 0;
+  background: none;
+  cursor: pointer;
+  padding: 0.25rem 0.5rem;
+  font: inherit;
+}
+
 .title-footer {
   position: absolute;
   left: 1rem;
