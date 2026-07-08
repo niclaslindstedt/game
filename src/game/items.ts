@@ -434,26 +434,6 @@ function remainingDurability(weapon: Equipment): number {
   return weapon.durability ?? Infinity;
 }
 
-/**
- * Is this pickup a same-weapon durability refresh: an identical copy of the
- * weapon already in hand (same def, equal firepower) but with more durability
- * left? These swap in to top up the durability bar — the worn copy is banked
- * as a spare, never consumed. The swap only happens when the bag has room to
- * keep that copy (see `stepItems`), so a refresh can never cost you a weapon.
- */
-export function isWeaponDurabilityRefresh(
-  state: GameState,
-  candidate: Equipment,
-): boolean {
-  if (candidate.slot !== "weapon") return false;
-  const current = state.player.equipment.weapon;
-  if (candidate.defId !== current.defId) return false;
-  if (weaponScore(state, candidate) !== weaponScore(state, current)) {
-    return false;
-  }
-  return remainingDurability(candidate) > remainingDurability(current);
-}
-
 /** Is `candidate` strictly better than the piece occupying its slot? */
 export function isBetterEquipment(
   state: GameState,
@@ -464,10 +444,14 @@ export function isBetterEquipment(
     const candidateScore = weaponScore(state, candidate);
     const currentScore = weaponScore(state, current);
     if (candidateScore !== currentScore) return candidateScore > currentScore;
-    // Equal firepower: the same weapon you already wield is worth swapping to
-    // only when the fresh copy has more durability left — refreshing the bar
-    // while the worn copy banks to the bag as a spare.
-    return isWeaponDurabilityRefresh(state, candidate);
+    // Equal firepower: picking up the same weapon you already wield is worth
+    // swapping to when the fresh copy has more durability left — it refreshes
+    // the durability bar. The worn copy heads to the bag, or drops to the
+    // ground when the bag is full (like dropping it to grab the new one).
+    if (candidate.defId === current.defId) {
+      return remainingDurability(candidate) > remainingDurability(current);
+    }
+    return false;
   }
   const current = state.player.equipment[candidate.slot];
   return current === null || gearScore(candidate) > gearScore(current);

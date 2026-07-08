@@ -124,12 +124,12 @@ describe("same-weapon pickups refresh durability", () => {
     expect(state.player.inventory.some((i) => i?.id === 50)).toBe(true);
   });
 
-  it("keeps the worn copy: a full bag leaves the fresh one grounded", () => {
+  it("with a full bag it still swaps in, dropping the worn copy on the ground", () => {
     const state = startGame();
     clearStage(state);
     const full = weaponDef("test_hammer").durability;
     state.player.equipment.weapon = weapon(50, "test_hammer", 4);
-    // Fill every bag cell so a swap would have nowhere to bank the worn copy.
+    // Fill every bag cell so the worn copy has nowhere to bank.
     for (let i = 0; i < state.player.inventory.length; i++) {
       state.player.inventory[i] = weapon(100 + i, "test_pistol");
     }
@@ -142,13 +142,14 @@ describe("same-weapon pickups refresh durability", () => {
       },
     ];
     step(state, idle, DT);
-    // No swap happened: the worn weapon is still in hand — never dropped or
-    // consumed — and the fresh copy waits on the ground for a free slot.
-    expect(state.player.equipment.weapon.id).toBe(50);
-    expect(state.player.equipment.weapon.durability).toBe(4);
+    // The fresh copy is equipped just like dropping the current one to grab
+    // the new: the worn copy is displaced to the ground, not into the (full)
+    // bag, and not into a hand slot.
+    expect(state.player.equipment.weapon.id).toBe(60);
+    expect(state.player.inventory.some((i) => i?.id === 50)).toBe(false);
     expect(
       state.items.some(
-        (it) => it.kind === "equipment" && it.equipment.id === 60,
+        (it) => it.kind === "equipment" && it.equipment.id === 50,
       ),
     ).toBe(true);
   });
