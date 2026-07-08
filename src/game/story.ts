@@ -180,7 +180,7 @@ export function stepSightThoughts(
  * (the caller withholds damage); this arms the hero, fires the pinned thought
  * once (tracked in `thoughtsSeen`), and flashes the soft hit. Held until the
  * `after` gate's thought has played — so the "look at this place" read always
- * lands before the "good thing I brought the sword" reaction — and a no-op if
+ * lands before the "good thing I came armed" reaction — and a no-op if
  * a scene is already up (it simply retries on a later contact).
  */
 export function tryOpeningStrike(state: GameState, enemy: Enemy): void {

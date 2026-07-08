@@ -105,10 +105,17 @@ run against synthetic fixtures with no shipped content (see
   is full of powers you don't want.
 - **`src/game/defs/difficulties.ts`** — the difficulty ladder (EASY →
   MEDIUM → HARD → NIGHTMARE → JESUS CHRIST!), chosen on the main menu and
-  layered over every level: multipliers for spawn counts, monster hp, and
-  the wave spawner's live cap, plus loot sweeteners (drop-chance bonus and
-  per-tier chance bonuses that unlock rare/epic/legendary on levels whose own
-  loot table caps lower). MEDIUM is the exact 1.0 baseline.
+  layered over every level. A rung turns a whole rack of knobs: the hero's
+  opening kit (`startingWeapon` — the wall weapon, mirrored by a
+  per-difficulty prelude variant — and `startingStats`), spawn counts and
+  the wave spawner's live cap, the horde's RELATIVE level (`mobLevelOffset`
+  — every monster spawns at player level + offset, hp shifted per level by
+  `MENACE.mobHpPerLevel`), the drop economy (medkit/armor/powerup
+  multipliers down, drop-chance/tier/unique bonuses up — per-tier bonuses
+  unlock rare/epic/legendary on levels whose own loot table caps lower, and
+  `uniqueDropChance` draws from a level's `loot.uniquePool` once unique
+  items exist), the stamina burn, dodge/miss accuracy multipliers, and the
+  menace meter's trigger/decay/effect. MEDIUM is the exact 1.0 baseline.
 - **`src/game/abilities.ts`** — ability activation (`grantAbility`),
   discarding a banked pickup (`discardHeldAbility`), and the helpers the
   renderer shares (`orbPositions`, `stasisFactorAt`); the per-tick behavior

@@ -10,6 +10,8 @@
 
 import {
   deriveArrivalLoadout,
+  DIFFICULTY_ORDER,
+  difficultyDef,
   LEVEL_ORDER,
   type Difficulty,
   type Loadout,
@@ -26,12 +28,14 @@ const completedLevels = createFlagStore(storageKey("completed-levels"));
 const levelKey = (levelId: string, difficulty: Difficulty): string =>
   `${difficulty}:${levelId}`;
 
-/** Record a level as cleared at this difficulty (called on victory). */
+/** Record a level as cleared at this difficulty (called on victory) — and
+ * mint the clear's LEVEL TOKEN (see the token section below). */
 export function markLevelCompleted(
   levelId: string,
   difficulty: Difficulty,
 ): void {
   completedLevels.add(levelKey(levelId, difficulty));
+  tokens.add(levelKey(levelId, difficulty));
 }
 
 /** Has this level been cleared at this difficulty on this device? */
@@ -45,8 +49,9 @@ export function hasCompletedLevel(
 /**
  * Is this level reachable at this difficulty? The first level in LEVEL_ORDER
  * is always open; every later one unlocks when the level before it has been
- * cleared at the same difficulty. An id not in LEVEL_ORDER (a dev `?level=`)
- * counts as open so the override never gets gated out.
+ * cleared at the same difficulty — or when a LEVEL TOKEN was spent to jump
+ * in ahead of the campaign (see spendTokenFor). An id not in LEVEL_ORDER (a
+ * dev `?level=`) counts as open so the override never gets gated out.
  */
 export function isLevelUnlocked(
   levelId: string,
@@ -54,6 +59,7 @@ export function isLevelUnlocked(
 ): boolean {
   const index = LEVEL_ORDER.indexOf(levelId);
   if (index <= 0) return true;
+  if (tokenUnlocks.has(levelKey(levelId, difficulty))) return true;
   return hasCompletedLevel(LEVEL_ORDER[index - 1] as string, difficulty);
 }
 
@@ -84,6 +90,70 @@ export function hasBeatenDifficulty(difficulty: Difficulty): boolean {
 export function firstUnclearedLevel(difficulty: Difficulty): string {
   const opener = LEVEL_ORDER[0] as string;
   return LEVEL_ORDER.find((id) => !hasCompletedLevel(id, difficulty)) ?? opener;
+}
+
+// ---- Level tokens -------------------------------------------------------------
+// Clearing a level at a difficulty mints a LEVEL TOKEN for that level (one
+// per level × difficulty; a spent token is re-minted only by re-clearing).
+// Spending a token unlocks the SAME level at a HIGHER difficulty ahead of
+// the campaign there — the fast lane to the harder rungs' richer loot,
+// while playing the difficulties in order stays the full-reward path. The
+// unlock persists (dying doesn't revoke it); the token itself is one-shot.
+
+// Unspent tokens, keyed by the level and the difficulty they were EARNED at.
+const tokens = createFlagStore(storageKey("level-tokens"));
+// Levels opened by a spent token, keyed by the level and the TARGET
+// difficulty it was unlocked at.
+const tokenUnlocks = createFlagStore(storageKey("token-unlocks"));
+
+/** Ladder position, for "is this rung higher than that one" checks. */
+const rung = (difficulty: Difficulty): number =>
+  difficultyDef(difficulty).index;
+
+/**
+ * The difficulty an unspent token for `levelId` could be paid from, targeting
+ * `target` — the LOWEST earning rung first, so the cheapest clear is spent
+ * before a harder-won one. Null when no lower-rung token exists.
+ */
+export function tokenSourceFor(
+  levelId: string,
+  target: Difficulty,
+): Difficulty | null {
+  return (
+    DIFFICULTY_ORDER.find(
+      (earned) =>
+        rung(earned) < rung(target) && tokens.has(levelKey(levelId, earned)),
+    ) ?? null
+  );
+}
+
+/** Can a token open `levelId` at `target` right now? Only meaningful while
+ * the level is still locked there — an unlocked level needs no token. */
+export function hasTokenFor(levelId: string, target: Difficulty): boolean {
+  return (
+    !isLevelUnlocked(levelId, target) &&
+    tokenSourceFor(levelId, target) !== null
+  );
+}
+
+/** Does any locked level at `difficulty` have a token ready to spend? Drives
+ * the title menu: an unbeaten rung with spendable tokens opens the level
+ * select instead of dropping straight into the campaign. */
+export function hasSpendableTokens(difficulty: Difficulty): boolean {
+  return LEVEL_ORDER.some((id) => hasTokenFor(id, difficulty));
+}
+
+/**
+ * Spend a token on `levelId` at `target`: the earning rung's token is
+ * consumed (it can't be used again) and the level unlocks there permanently.
+ * False when no token was available — nothing is consumed.
+ */
+export function spendTokenFor(levelId: string, target: Difficulty): boolean {
+  const source = tokenSourceFor(levelId, target);
+  if (source === null || isLevelUnlocked(levelId, target)) return false;
+  tokens.remove(levelKey(levelId, source));
+  tokenUnlocks.add(levelKey(levelId, target));
+  return true;
 }
 
 // ---- Loadout carry-over -------------------------------------------------------
@@ -129,8 +199,12 @@ export function loadLoadout(
  * The loadout to start `levelId` with at `difficulty`: the snapshot banked
  * by clearing the previous story level — the real campaign carry-over — or,
  * when nothing is banked (dev `?level=` jumps, wiped storage), the engine's
- * derived stand-in. Null on the opener and on ids outside LEVEL_ORDER: those
- * start fresh as authored.
+ * derived stand-in. A TOKEN jump lands between the two: the target rung has
+ * nothing banked yet, so the hero carries the previous level's snapshot from
+ * the highest LOWER rung that has one — he arrives as the character who
+ * earned the token, and the horde scales relative to his level regardless.
+ * Null on the opener and on ids outside LEVEL_ORDER: those start fresh as
+ * authored.
  */
 export function startingLoadout(
   levelId: string,
@@ -139,8 +213,12 @@ export function startingLoadout(
   const index = LEVEL_ORDER.indexOf(levelId);
   if (index <= 0) return null;
   const previous = LEVEL_ORDER[index - 1] as string;
-  return (
-    loadLoadout(previous, difficulty) ??
-    deriveArrivalLoadout(levelId, difficulty)
-  );
+  const banked = loadLoadout(previous, difficulty);
+  if (banked) return banked;
+  for (const lower of [...DIFFICULTY_ORDER].reverse()) {
+    if (rung(lower) >= rung(difficulty)) continue;
+    const carried = loadLoadout(previous, lower);
+    if (carried) return carried;
+  }
+  return deriveArrivalLoadout(levelId, difficulty);
 }

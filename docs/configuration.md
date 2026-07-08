@@ -29,7 +29,11 @@ cleared levels are recorded under `<storagePrefix>:completed-levels` (keyed
 per difficulty). Until the whole campaign is cleared at a difficulty, choosing
 that difficulty drops you straight into the next unbeaten level (the story
 runs in order); clearing the last level opens the menu's level-select screen
-as a replay picker and lights up NEXT LEVEL on the victory splash. Every
+as a replay picker and lights up NEXT LEVEL on the victory splash. Clearing a
+level also mints a one-shot LEVEL TOKEN (`<storagePrefix>:level-tokens`) that
+can be spent to unlock the same level at a higher difficulty ahead of the
+campaign there (`<storagePrefix>:token-unlocks`); the unlock persists, the
+token doesn't. Every
 finished run is banked per difficulty under `<storagePrefix>:highscores` with
 its survival time, kills, and a full end-of-run session snapshot
 (`website/src/game/highscores.ts`); the end-of-run screen shows that

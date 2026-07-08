@@ -66,6 +66,20 @@ describe("flag store", () => {
     expect(mixed.has("7")).toBe(false);
   });
 
+  it("remove() drops one flag, persistently and idempotently", () => {
+    const backend = memoryStorage();
+    const store = createFlagStore("test:flags", backend);
+    store.add("token-a");
+    store.add("token-b");
+    store.remove("token-a");
+    store.remove("token-a"); // spending twice is a no-op
+    expect(store.has("token-a")).toBe(false);
+    expect(store.has("token-b")).toBe(true);
+    const reloaded = createFlagStore("test:flags", backend);
+    expect(reloaded.has("token-a")).toBe(false);
+    expect(reloaded.has("token-b")).toBe(true);
+  });
+
   it("clear() forgets everything, persistently", () => {
     const backend = memoryStorage();
     const store = createFlagStore("test:flags", backend);

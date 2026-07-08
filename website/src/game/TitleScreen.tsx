@@ -37,7 +37,11 @@ import {
   firstUnclearedLevel,
   hasBeatenDifficulty,
   hasCompletedLevel,
+  hasSpendableTokens,
+  hasTokenFor,
   isLevelUnlocked,
+  spendTokenFor,
+  tokenSourceFor,
 } from "./progress.ts";
 import { getSettings, updateSettings } from "./settings.ts";
 import { playUiSound } from "./sfx/index.ts";
@@ -256,19 +260,27 @@ export function TitleScreen({
       return [
         ...DIFFICULTY_ORDER.map((id) => {
           const def = difficultyDef(id);
+          const beaten = hasBeatenDifficulty(id);
+          // A lower rung's clears mint LEVEL TOKENS; when one is spendable
+          // here, this rung opens its mission list even before it's beaten so
+          // the token can be cashed in (see progress.ts).
+          const tokensReady = !beaten && hasSpendableTokens(id);
           return {
             label: def.name,
             aria: `difficulty-${id}`,
             color: def.color,
-            blurb: hasBeatenDifficulty(id)
+            blurb: beaten
               ? "CLEARED - CHOOSE ANY MISSION"
-              : def.tagline,
+              : tokensReady
+                ? "LEVEL TOKEN READY - PICK YOUR MISSION"
+                : def.tagline,
             action: () => {
               setDifficulty(id);
               // The level select stays locked until the whole story is
               // cleared at this difficulty — first-timers are walked straight
-              // through the campaign, dropped into the next unbeaten level.
-              if (!hasBeatenDifficulty(id)) {
+              // through the campaign, dropped into the next unbeaten level —
+              // unless a level token is waiting to be spent here.
+              if (!beaten && !tokensReady) {
                 playUiSound(synth, "start");
                 onStart(id, firstUnclearedLevel(id));
                 return;
@@ -306,20 +318,39 @@ export function TitleScreen({
           const def = levelDef(id);
           const unlocked = warp || isLevelUnlocked(id, difficulty);
           const cleared = hasCompletedLevel(id, difficulty);
+          // A locked mission a LEVEL TOKEN can open: earned by clearing this
+          // level on a lower rung, spent (once) to start it here — the jump
+          // into the harder rung's richer loot (see progress.ts).
+          const tokenable = !warp && !unlocked && hasTokenFor(id, difficulty);
+          const tokenSource = tokenable ? tokenSourceFor(id, difficulty) : null;
           const blurb = warp
             ? "WARP - DROPS STRAIGHT IN"
-            : !unlocked
-              ? "LOCKED - CLEAR THE PREVIOUS LEVEL"
-              : cleared
-                ? "CLEARED - REPLAY"
-                : "NEW";
+            : tokenable
+              ? `SPEND THE ${
+                  tokenSource ? difficultyDef(tokenSource).name : ""
+                } LEVEL TOKEN`
+              : !unlocked
+                ? "LOCKED - CLEAR THE PREVIOUS LEVEL"
+                : cleared
+                  ? "CLEARED - REPLAY"
+                  : "NEW";
           return {
             label: `${i + 1}. ${def.name}`,
             aria: `level-${id}`,
-            color: unlocked ? "#7ef0c8" : "#5a6068",
-            locked: !unlocked,
+            color: unlocked ? "#7ef0c8" : tokenable ? "#ffd75e" : "#5a6068",
+            locked: !unlocked && !tokenable,
             blurb,
             action: () => {
+              if (tokenable) {
+                // Cash the token in: consumed for good, the unlock persists.
+                if (!spendTokenFor(id, difficulty)) {
+                  playUiSound(synth, "back");
+                  return;
+                }
+                playUiSound(synth, "start");
+                onStart(difficulty, id);
+                return;
+              }
               if (!unlocked) {
                 playUiSound(synth, "back");
                 return;

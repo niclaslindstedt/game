@@ -127,6 +127,22 @@ sequel truncates this file to a stub and rebuilds it as its own systems land.
   so content tests that relied on a point-blank/rushing elite dying on the
   first swing had to pin `state.rng = () => 0.99` (the always-land value) to
   stay deterministic.
+- **Difficulty as a knob RACK (2026-07, ladder rework):** a difficulty rung
+  owns the hero's opening kit (`startingWeapon`/`startingStats`, applied in
+  create.ts), the horde's RELATIVE level (`mobLevelOffset` folded into
+  `mobHpScaleFor` in menace.ts — one function for "difficulty toughness"
+  and "the horde keeps pace with the hero"), drop-economy multipliers read
+  at the roll sites (loot.ts shares, rollEquipment's armor damping),
+  accuracy multipliers (dodge/miss in items.ts), and the menace meter's
+  trigger/decay/effect. Per-difficulty CONTENT variants (the prelude's wall
+  weapon) are separate defs resolved once by `cutsceneVariant(id,
+  difficulty)` — `<id>_<difficulty>` when registered, the base otherwise —
+  so the state carries a plain resolved id and renderers stay untouched.
+  Plumbing knobs guard their rng draws (`uniqueDropChance` draws nothing on
+  an empty `loot.uniquePool`), so a future feature costs no determinism
+  churn today. App-side meta-progression (LEVEL TOKENS: clear a level, spend
+  the token to unlock it on a higher rung) lives entirely in the website's
+  progress store — the engine never learns tokens exist.
 - **Engine tests run on synthetic fixtures (2026-07):** `tests/engine/`
   suites install content-agnostic fixtures (`tests/engine/fixtures.ts`,
   plain ids like `test_level`/`test_minion`) via the engine's `registerDefs`

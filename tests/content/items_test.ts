@@ -200,7 +200,7 @@ describe("the scripted opening drops", () => {
 
 describe("auto-equip on pickup", () => {
   it("equips a picked-up weapon that out-damages the held one", () => {
-    const state = startGame(); // default crude sword: melee, single-target
+    const state = startGame(); // default medieval sword: melee, short cleave
     clearStage(state);
     const hammer: Equipment = {
       id: 61,
@@ -221,9 +221,9 @@ describe("auto-equip on pickup", () => {
     step(state, idle, DT);
     expect(state.player.equipment.weapon.id).toBe(61);
     // The old starting weapon went into the bag, not into the void.
-    expect(state.player.inventory.some((i) => i?.defId === "crude_sword")).toBe(
-      true,
-    );
+    expect(
+      state.player.inventory.some((i) => i?.defId === "medieval_sword"),
+    ).toBe(true);
     expect(state.events).toContainEqual({
       type: "autoEquipped",
       defId: "hammer",
@@ -288,10 +288,10 @@ describe("auto-equip on pickup", () => {
     ];
     step(state, idle, DT);
     expect(state.player.equipment.weapon.id).toBe(64);
-    // The crude sword had nowhere to go: it lies at the player's feet.
+    // The medieval sword had nowhere to go: it lies at the player's feet.
     expect(
       state.items.some(
-        (i) => i.kind === "equipment" && i.equipment.defId === "crude_sword",
+        (i) => i.kind === "equipment" && i.equipment.defId === "medieval_sword",
       ),
     ).toBe(true);
   });
@@ -380,7 +380,7 @@ describe("inventory", () => {
     state.player.inventory[0] = wand;
     expect(equipFromInventory(state, 0)).toBe(true);
     expect(state.player.equipment.weapon.defId).toBe("wand");
-    expect(state.player.inventory[0]?.defId).toBe("crude_sword"); // swapped back
+    expect(state.player.inventory[0]?.defId).toBe("medieval_sword"); // swapped back
 
     // The equipped weapon can never be parked in the bag.
     expect(unequipToInventory(state, "weapon")).toBe(false);

@@ -292,8 +292,8 @@ export const SPACEZ_HQ: LevelDef = {
   // The sword is holstered at the drop: the hero walks in like it's still his
   // old job, not a fight. A lone VANGUARD scientist sprints out ahead of the
   // slow rank and takes a harmless swing at him — and THAT is what draws the
-  // blade. The soft hit fires `spacez_armed` ("good thing I brought the
-  // sword") and turns the auto-attack on. Gated `after` the "look at this
+  // weapon. The soft hit fires `spacez_armed` ("good thing I came
+  // armed") and turns the auto-attack on. Gated `after` the "look at this
   // place" sighting so the two beats always read in order. Placed a short
   // sprint ahead in the open lobby so it reaches him fast and in clear view.
   openingStrike: {

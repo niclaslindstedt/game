@@ -100,7 +100,20 @@ const GORE_STYLES = {
 /** Wound plans by sprite name — the lint checks splat-vs-body contrast. */
 export const WOUND_PLANS = {};
 
+// Two defs may share one sprite (the SpaceZ vanguard reuses "scientist"), so
+// plans are derived per unique SPRITE: the def with the widest stage set wins,
+// and each sprite's wound frames register exactly once.
+const bySprite = new Map();
 for (const def of Object.values(ENEMY_DEFS)) {
+  const current = bySprite.get(def.sprite);
+  if (
+    !current ||
+    ROLE_STAGES[def.role].length > ROLE_STAGES[current.role].length
+  ) {
+    bySprite.set(def.sprite, def);
+  }
+}
+for (const def of bySprite.values()) {
   const frames = [SPRITES[`${def.sprite}_0`], SPRITES[`${def.sprite}_1`]];
   if (!frames[0] || !frames[1]) {
     throw new Error(`enemy "${def.id}": no sprite "${def.sprite}_0/_1"`);

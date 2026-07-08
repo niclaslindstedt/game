@@ -101,6 +101,7 @@ export {
   menaceSensitivity,
   menaceStage,
   menaceWarmup,
+  mobHpScaleFor,
 } from "./game/menace.ts";
 
 // Time-limited abilities: activation and the helpers the renderer shares.
@@ -134,7 +135,11 @@ export {
   type CutsceneStage,
   type CutsceneState,
 } from "@game/lib/cutscene.ts";
-export { CUTSCENE_DEFS, cutsceneDef } from "./game/defs/cutscenes.ts";
+export {
+  CUTSCENE_DEFS,
+  cutsceneDef,
+  cutsceneVariant,
+} from "./game/defs/cutscenes.ts";
 
 // Content catalogs: levels, monsters, equipment, tiers, difficulties.
 export {

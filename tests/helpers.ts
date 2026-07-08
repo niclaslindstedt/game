@@ -36,7 +36,7 @@ export const jumpOnce: GameInput = {
  * the reference level for the engine-rule suites — their geometry and
  * tuning assertions were calibrated against it; level-specific suites pass
  * their own id. No loadout is passed, so every suite stages from the same
- * authored level-1 hero (crude sword, bare hands); the loadout carry-over
+ * authored level-1 hero (the difficulty's wall weapon, bare hands); the loadout carry-over
  * itself is covered by `tests/engine/arrival_test.ts` and the mars suite.
  */
 export function startGame(seed: number = SEED, levelId = "moon"): GameState {
@@ -53,7 +53,7 @@ export function startGame(seed: number = SEED, levelId = "moon"): GameState {
 }
 
 /**
- * Swap the default melee `crude_sword` starting weapon for the unbreakable
+ * Swap the default melee starting weapon (the difficulty's wall piece) for the unbreakable
  * ranged blaster sidearm. Suites that calibrate on ranged-at-distance
  * behaviour (fire an aimed bolt, kite at reach, pick mobs off across a gap)
  * use this so they test that behaviour explicitly rather than depending on

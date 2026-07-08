@@ -174,7 +174,21 @@ export function rollEquipment(
       : ("gear" as const)
     : (opts.slot ?? (rng() < 0.6 ? ("weapon" as const) : ("gear" as const)));
   const pool = family === "weapon" ? loot.weaponPool : loot.gearPool;
-  const defId = opts.defId ?? (pool[Math.floor(rng() * pool.length)] as string);
+  let defId = opts.defId ?? (pool[Math.floor(rng() * pool.length)] as string);
+  // Harder difficulties find fewer PLATED suits: when a random gear pick
+  // lands on armor, the difficulty's `armorDropMult` is its chance to stand —
+  // a failed roll re-picks among the pool's unplated pieces (if any). Minted
+  // pieces (opts.defId — boss trophies, placed items) are never dampened, and
+  // a mult at/above 1 draws nothing, so the baseline stream is untouched.
+  if (family === "gear" && !opts.defId) {
+    const armorMult = difficultyDef(state.difficulty).armorDropMult;
+    if (armorMult < 1 && gearDef(defId).armor && rng() >= armorMult) {
+      const unplated = pool.filter((id) => !gearDef(id).armor);
+      if (unplated.length > 0) {
+        defId = unplated[Math.floor(rng() * unplated.length)] as string;
+      }
+    }
+  }
   const slot: EquipSlot = family === "weapon" ? "weapon" : gearDef(defId).slot;
 
   const tier = opts.tier ?? rollTier(state, opts.tierBonus ?? 0);
@@ -386,43 +400,49 @@ export function playerCritChance(
 
 /**
  * The player's chance to sidestep an incoming blow entirely: the innate `base`
- * plus DEXTERITY's reflexes and a marginal LUCK nudge, capped at `DODGE.max`
- * so no build becomes untouchable. Rolled in the contact-damage path (step.ts)
- * and surfaced on the stat panel.
+ * plus DEXTERITY's reflexes and a marginal LUCK nudge, scaled by the
+ * difficulty's `playerDodgeMult` (the gentle rungs slip more hits, the hard
+ * rungs fewer) and capped at `DODGE.max` so no build becomes untouchable.
+ * Rolled in the contact-damage path (step.ts) and surfaced on the stat panel.
  */
 export function playerDodgeChance(state: GameState): number {
   return Math.min(
     DODGE.max,
-    DODGE.base +
+    (DODGE.base +
       effectiveStat(state, "dexterity") * DODGE.perDex +
-      effectiveStat(state, "luck") * DODGE.perLuck,
+      effectiveStat(state, "luck") * DODGE.perLuck) *
+      difficultyDef(state.difficulty).playerDodgeMult,
   );
 }
 
 /**
  * The player's MISS chance for a weapon blow: an innate `ACCURACY.baseMiss`
- * whiff trimmed by DEXTERITY's aim (`perDex`), floored at `minMiss`. This is
+ * whiff trimmed by DEXTERITY's aim (`perDex`), scaled by the difficulty's
+ * `playerMissMult` (the hard rungs whiff more), floored at `minMiss`. This is
  * the hero's own accuracy — independent of the target — and is surfaced on the
  * stat panel (as HIT rate) and rolled in `hitEnemy` for weapon attacks.
  */
 export function playerMissChance(state: GameState): number {
   return Math.max(
     ACCURACY.minMiss,
-    ACCURACY.baseMiss - effectiveStat(state, "dexterity") * ACCURACY.perDex,
+    (ACCURACY.baseMiss - effectiveStat(state, "dexterity") * ACCURACY.perDex) *
+      difficultyDef(state.difficulty).playerMissMult,
   );
 }
 
 /**
  * An enemy's chance to DODGE the player's weapon blow: its `base` evasion (the
  * def's `dodgeChance`, or the `ACCURACY.enemyDodge` default) trimmed by the
- * player's DEXTERITY hit rate (`perDex`), floored at 0. Rolled in `hitEnemy`
- * after the miss check, so a build that pumps DEX both whiffs and gets dodged
- * less. Mirror of `enemyCritChance`'s LUCK-avoidance shape.
+ * player's DEXTERITY hit rate (`perDex`), scaled by the difficulty's
+ * `enemyDodgeMult` (slipperier monsters up the ladder), floored at 0. Rolled
+ * in `hitEnemy` after the miss check, so a build that pumps DEX both whiffs
+ * and gets dodged less. Mirror of `enemyCritChance`'s LUCK-avoidance shape.
  */
 export function enemyDodgeChance(state: GameState, base: number): number {
   return Math.max(
     0,
-    base - effectiveStat(state, "dexterity") * ACCURACY.perDex,
+    (base - effectiveStat(state, "dexterity") * ACCURACY.perDex) *
+      difficultyDef(state.difficulty).enemyDodgeMult,
   );
 }
 
@@ -655,11 +675,13 @@ export function isBetterEquipment(
 ): boolean {
   if (candidate.slot === "weapon") {
     const current = state.player.equipment.weapon;
-    // The CRUDE SWORD is the starter floor: any real weapon the world yields is
-    // an upgrade over the wall blade, so a fresh pickup always supplants it —
-    // even a slow sidearm whose raw DPS score would otherwise rank below the
-    // sword. Once a proper weapon is in hand the usual score comparison rules.
-    if (current.defId === "crude_sword" && candidate.defId !== "crude_sword") {
+    // The difficulty's STARTING WEAPON is the pickup floor: any real weapon
+    // the world yields is an upgrade over the piece off the wall, so a fresh
+    // pickup always supplants it — even a slow sidearm whose raw DPS score
+    // would otherwise rank below it. Once a proper weapon is in hand the
+    // usual score comparison rules.
+    const starter = difficultyDef(state.difficulty).startingWeapon;
+    if (current.defId === starter && candidate.defId !== starter) {
       return true;
     }
     const candidateScore = weaponScore(state, candidate);

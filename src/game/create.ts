@@ -18,7 +18,7 @@ import {
   PLAYER,
   STAMINA,
 } from "./config.ts";
-import { cutsceneDef } from "./defs/cutscenes.ts";
+import { cutsceneDef, cutsceneVariant } from "./defs/cutscenes.ts";
 import {
   difficultyDef,
   meetsMinDifficulty,
@@ -27,8 +27,13 @@ import {
 import { enemyDef } from "./defs/enemies/index.ts";
 import { weaponDef } from "./defs/equipment.ts";
 import { LEVEL_ORDER, levelDef, type LevelDef } from "./defs/levels/index.ts";
-import { rollEquipment } from "./items.ts";
-import { evolutionHpMult } from "./menace.ts";
+import {
+  recomputeMaxHp,
+  recomputeMaxStamina,
+  rollEquipment,
+  syncInventoryCapacity,
+} from "./items.ts";
+import { evolutionHpMult, mobHpScaleFor } from "./menace.ts";
 import { boundingRadius, rockHalf } from "./obstacles.ts";
 import type {
   Decor,
@@ -39,6 +44,7 @@ import type {
   Item,
   Loadout,
   Obstacle,
+  StatName,
 } from "./types.ts";
 
 export function createGame(
@@ -47,11 +53,16 @@ export function createGame(
   difficulty: Difficulty = "medium",
   // The hero's carry-over from the previous level (see arrival.ts): the app
   // passes the loadout it banked on the last victory — or a derived stand-in
-  // for dev jumps. Omitted = the authored fresh start (level 1, crude sword).
+  // for dev jumps. Omitted = the authored fresh start (level 1, the
+  // difficulty's wall weapon in hand).
   loadout?: Loadout,
 ): GameState {
   const def = levelDef(levelId);
   const diff = difficultyDef(difficulty);
+  // Every monster spawns at the horde's RELATIVE level (player level + the
+  // difficulty's offset). Placed spawns mint at the authored level-1 baseline;
+  // the wave spawner tracks the player's live level instead (mobLevelScale).
+  const mobHp = mobHpScaleFor(1, difficulty);
   const rng = createRng(seed);
   const playerSpawn = vec(def.playerSpawn.x, def.playerSpawn.y);
   let nextId = 1;
@@ -90,7 +101,7 @@ export function createGame(
           vec(spawn.at.x, spawn.at.y),
           rng,
           nextId++,
-          diff.mobHpMult,
+          mobHp,
         ),
       );
       continue;
@@ -117,7 +128,7 @@ export function createGame(
           break;
         }
       }
-      enemies.push(spawnEnemy(spawn.enemy, pos, rng, nextId++, diff.mobHpMult));
+      enemies.push(spawnEnemy(spawn.enemy, pos, rng, nextId++, mobHp));
     }
   }
 
@@ -129,7 +140,7 @@ export function createGame(
       vec(def.openingStrike.at.x, def.openingStrike.at.y),
       rng,
       nextId++,
-      diff.mobHpMult,
+      mobHp,
     );
     rusher.vanguard = true;
     enemies.push(rusher);
@@ -149,7 +160,12 @@ export function createGame(
 
   const state: GameState = {
     phase: def.prelude ? "cutscene" : "intro",
-    cutscene: def.prelude ? createCutscene(cutsceneDef(def.prelude)) : null,
+    // The prelude plays its per-difficulty variant when one is registered
+    // (`<id>_<difficulty>`), so the weapon on the living-room wall is always
+    // the one this run actually starts with.
+    cutscene: def.prelude
+      ? createCutscene(cutsceneDef(cutsceneVariant(def.prelude, difficulty)))
+      : null,
     introPage: 0,
     difficulty,
     menace: 0,
@@ -213,19 +229,20 @@ export function createGame(
         luck: 0,
       },
       equipment: {
-        // The default starting weapon: the CRUDE SWORD off the hero's wall —
-        // what he grabs to go after Ada. Melee, and unlike the old sidearm it
-        // is FINITE: minted with its catalog durability so it wears out and
-        // has to be replaced by whatever the moon yields (see wearEquipped
-        // weapon). When it finally shatters with an empty bag the engine draws
-        // the unbreakable blaster fallback.
+        // The starting weapon: whatever the DIFFICULTY hangs on the hero's
+        // wall (an heirloom wand down the ladder, a bare stick at the top) —
+        // the one thing he grabs to go after Ada. FINITE: minted with its
+        // catalog durability so it wears out and has to be replaced by
+        // whatever the run yields (see wearEquippedWeapon). When it finally
+        // shatters with an empty bag the engine draws the unbreakable
+        // blaster fallback.
         weapon: {
           id: nextId++,
-          defId: "crude_sword",
+          defId: diff.startingWeapon,
           slot: "weapon",
           tier: "regular",
           affixes: [],
-          durability: weaponDef("crude_sword").durability,
+          durability: weaponDef(diff.startingWeapon).durability,
         },
         suit: null,
         charm: null,
@@ -267,6 +284,18 @@ export function createGame(
     rng,
   };
 
+  // The difficulty's head start: pre-allocated stat points (the gentler rungs
+  // open with a few level-ups' worth of training banked). Applied before any
+  // loadout, which simply overwrites them with the hero's own earned stats.
+  for (const [stat, points] of Object.entries(diff.startingStats)) {
+    state.player.stats[stat as StatName] += points ?? 0;
+  }
+  recomputeMaxHp(state);
+  recomputeMaxStamina(state);
+  syncInventoryCapacity(state);
+  state.player.hp = state.player.maxHp;
+  state.player.stamina = state.player.maxStamina;
+
   // Hand-placed pickups (locked-room loot, plot pieces on pedestals) mint
   // last: equipment rolls draw on the state's rng exactly like drops do.
   for (const placed of def.placedItems ?? []) {
@@ -302,12 +331,14 @@ function placeItem(
 }
 
 /** Mint one enemy instance (also used by the wave spawner in step.ts).
- * `hpMult` is the difficulty's monster-hp multiplier — kill XP scales with
- * max hp, so tougher monsters also pay out more. `evo` is the menace
- * evolution stage stamped onto a MINION spawned while the horde is rampaging
- * (see menace.ts): it stacks extra hp (worth more xp) and marks the mob so
- * its drop rolls better. Elites and bosses ignore `evo` — they instead
- * power-match the player when they engage (maybePowerScale). */
+ * `hpMult` is the horde's relative-level hp scale the caller resolved
+ * (mobHpScaleFor / mobLevelScale) — kill XP scales with max hp, so tougher
+ * monsters also pay out more. `evo` is the menace evolution stage stamped
+ * onto a MINION spawned while the horde is rampaging (see menace.ts): it
+ * stacks extra hp (worth more xp, scaled by the difficulty's
+ * `menaceEffectMult` via `evoEffect`) and marks the mob so its drop rolls
+ * better. Elites and bosses ignore `evo` — they instead power-match the
+ * player when they engage (maybePowerScale). */
 export function spawnEnemy(
   defId: string,
   pos: Vec2,
@@ -315,6 +346,7 @@ export function spawnEnemy(
   id: number,
   hpMult = 1,
   evo = 0,
+  evoEffect = 1,
 ): Enemy {
   const def = enemyDef(defId);
   const jitter =
@@ -324,7 +356,7 @@ export function spawnEnemy(
   const evolved = def.role === "minion" ? Math.max(0, evo) : 0;
   const hp = Math.max(
     1,
-    Math.round(def.hp * hpMult * evolutionHpMult(evolved)),
+    Math.round(def.hp * hpMult * evolutionHpMult(evolved, evoEffect)),
   );
   const enemy: Enemy = {
     id,

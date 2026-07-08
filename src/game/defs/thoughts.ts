@@ -44,9 +44,10 @@ export const THOUGHT_DEFS: Record<string, ThoughtDef> = {
   // The scripted first strike: a lone scientist breaks from the pack and
   // takes a harmless swing (see the level's `openingStrike`). It doesn't hurt
   // — but staff don't fight, so the swing tells the hero the night shift has
-  // teeth now. This is the beat that ARMS his sword; the "good thing I brought
-  // the sword" line lands here, as a reaction, not a boast. Portrait is "hero"
-  // (still unsuited at HQ).
+  // teeth now. This is the beat that ARMS his weapon; the "good thing I came
+  // armed" line lands here, as a reaction, not a boast. Weapon-agnostic on
+  // purpose — the piece off the wall differs per difficulty. Portrait is
+  // "hero" (still unsuited at HQ).
   spacez_armed: {
     id: "spacez_armed",
     speaker: "ME",
@@ -57,7 +58,7 @@ export const THOUGHT_DEFS: Record<string, ThoughtDef> = {
         "AT ME. BARELY FELT IT - BUT",
         "THEY DON'T FIGHT. NEVER DID.",
       ],
-      ["SO THE NIGHT SHIFT BITES NOW.", "GOOD THING I BROUGHT THE SWORD."],
+      ["SO THE NIGHT SHIFT BITES NOW.", "GOOD THING I CAME ARMED."],
     ],
   },
   // Sighting the first OPTIMUSK at SpaceZ HQ: he was on the team that built

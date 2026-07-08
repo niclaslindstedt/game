@@ -77,37 +77,89 @@ export type WeaponDef = {
 };
 
 export const WEAPON_DEFS: Record<string, WeaponDef> = {
-  // ---- The hero's own. The CRUDE SWORD hangs on his wall the night Ada
-  // vanishes; it is the one thing he takes off it to go save her, so it is
-  // what he lands with — the game's default starting weapon (create.ts mints
-  // it in hand). Unlike the old sidearm it is finite: a rough blade that
-  // wears out, pushing the player to scavenge a real weapon (the blaster and
-  // the rest of the moon pool) once it chips. Melee, so the opening fight is
-  // fought up close, in the crowd, until something better turns up.
-  crude_sword: {
-    id: "crude_sword",
-    name: "CRUDE SWORD",
+  // ---- The hero's wall arsenal. ONE of these hangs on his living-room wall
+  // the night Ada vanishes — which one is the DIFFICULTY's call
+  // (DifficultyDef.startingWeapon; the prelude's per-difficulty variant shows
+  // the same piece mounted on the wall) — and it is the one thing he takes
+  // with him. All of them are finite (they wear out, pushing the player to
+  // scavenge a real weapon) and all of them are the pickup FLOOR: any looted
+  // weapon supplants the starter (see isBetterEquipment). The ladder runs
+  // from EASY's genuinely decent wand down to the JESUS stick.
+  //
+  // EASY: a ranged magic starter that holds a lane from safety — the kindest
+  // opening loadout in the game. Bought at a licensing discount.
+  hairy_potters_wand: {
+    id: "hairy_potters_wand",
+    name: "HAIRY POTTER'S WAND",
+    class: "magic",
+    damage: 14,
+    cooldownMs: 550,
+    range: 280,
+    durability: 150,
+    projectile: { speed: 340, radius: 4, lifetimeMs: 1200, sprite: "spark" },
+    icon: "icon_hairy_wand",
+  },
+  // MEDIUM: the baseline the levels are tuned at — a proper blade with a real
+  // (if modest) cleave. A slow-ish, heavy swing; DEXTERITY earns the tempo
+  // back.
+  medieval_sword: {
+    id: "medieval_sword",
+    name: "MEDIEVAL SWORD",
     class: "melee",
-    damage: 20,
-    // A slow, heaving swing — the wall blade is unbalanced and hard to bring
-    // back around, so a stationary hero is overrun all the sooner (the single
-    // target melee cone only faces one way, so the crowd flanks a player who
-    // won't move). DEXTERITY is how the tempo grows back.
-    cooldownMs: 800,
-    // The wall blade is the WORST weapon in the game and reads like it: a
-    // short reach and a tighter arc than any real blade, so it only bites the
-    // foe more or less right in front of the hero. A picked-up weapon is a
-    // strict upgrade (isBetterEquipment treats the crude sword as the pickup
-    // floor), and INTELLIGENCE is what grows this cramped swing into a real
-    // cleave — its reach (rangePerInt), its cone (aoePerInt), and how many it
-    // hits (aoeTargetsPerInt).
+    damage: 18,
+    cooldownMs: 720,
     range: 38,
-    sweepDeg: 85,
-    durability: 120,
-    // A crude blade bites ONE foe per swing — no wide cleave until the hero
-    // grows some INTELLIGENCE (STATS.aoeTargetsPerInt lifts the cap).
+    // A genuine slash: a broad arc that catches a pair of foes per swing —
+    // the AoE yardstick the knife (narrower) and knuckles (none) sit under.
+    sweepDeg: 100,
+    baseAoeTargets: 2,
+    durability: 130,
+    icon: "icon_medieval_sword",
+  },
+  // HARD: quick and mean, but short and SHALLOW — light per-hit damage means
+  // most mobs take several stabs, so despite the tempo it holds a crowd worse
+  // than the sword (matching DPS, worse control), and its tighter arc and
+  // reach mean the fight happens closer and flanks sooner.
+  combat_knife: {
+    id: "combat_knife",
+    name: "COMBAT KNIFE",
+    class: "melee",
+    damage: 10,
+    cooldownMs: 400,
+    range: 32,
+    sweepDeg: 70,
+    baseAoeTargets: 2,
+    durability: 150,
+    icon: "icon_combat_knife",
+  },
+  // NIGHTMARE: one target, real hurt. Each punch lands like a brick — and
+  // then nothing for over a second, no cleave at any INT-less swing, and
+  // knuckle range means standing INSIDE the horde to throw it.
+  brass_knuckles: {
+    id: "brass_knuckles",
+    name: "BRASS KNUCKLES",
+    class: "melee",
+    damage: 30,
+    cooldownMs: 1100,
+    range: 24,
+    sweepDeg: 60,
     baseAoeTargets: 1,
-    icon: "icon_crude_sword",
+    durability: 170,
+    icon: "icon_knuckles",
+  },
+  // JESUS CHRIST!: a stick. It sweeps a wide, whippy arc — genuine AoE — and
+  // each blow means almost nothing. Kite, or perish.
+  stick: {
+    id: "stick",
+    name: "A STICK",
+    class: "melee",
+    damage: 7,
+    cooldownMs: 520,
+    range: 36,
+    sweepDeg: 130,
+    baseAoeTargets: 3,
+    durability: 100,
+    icon: "icon_stick",
   },
   // ---- SpaceZ HQ (level 1): whatever the office and the lab left lying
   // around. Numbers sit a notch under the moon pool — this is the run where
