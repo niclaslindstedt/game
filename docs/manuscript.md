@@ -86,6 +86,17 @@ A cleanroom raid for the interplanetary drive's one missing ingredient.
 6. SO I KNOW EVERY DOOR AND KEYCARD. / THEY SHOULD'VE CHANGED THE LOCKS.
 7. THE INGREDIENT'S IN THE VAULT. / WE DO THIS THE HARD WAY.
 
+### Hero's thought — first INTERN kill at SpaceZ HQ
+
+_Fires once, the first time the hero downs an INTERN here (in his own voice) —
+within the level's opening seconds, since the interns pack the ring around the
+spawn. He worked in this building; a fully manned floor at midnight is wrong,
+and the NIGHT MANAGER's secret-night-shift reveal lands a few rooms later._
+
+- LOOK AT THIS PLACE. PAST / MIDNIGHT AND EVERY DESK IS / MANNED. EVERY LAB LIT.
+- I WORKED HERE. WE NEVER / STAFFED NIGHTS LIKE THIS. / SOMETHING MUST BE BREWING.
+- OH WELL. / GOOD THING I BROUGHT THE SWORD.
+
 ### Elites (spoken on arrival; last words as they fall)
 
 The five staffers who know too much, pinned along the route so the plot unspools
@@ -206,6 +217,16 @@ Ada's beacon dies near the old flag. Something up here isn't dead.
 3. I DREW THE LANDER THAT BROUGHT THE / LAST CREW HOME - BEFORE THE AI / REDREW IT WITHOUT ME.
 4. SO I KNOW THIS SITE COLD. / EVERY CRATER. THE FAST LINE / STRAIGHT TO THAT FLAG.
 5. STAY ON THE DUST. KEEP MOVING. / I'M COMING, ADA.
+
+### Hero's thought — first wisp kill on the moon
+
+_Fires once, the first time the hero downs a wisp here (in his own voice) — his
+arrival read on the haunting: the dead walking the dust means the broadcast
+history is a lie._
+
+- IT CAME OUT OF THE DUST. / NO SUIT. NO SHIP. / NO FOOTPRINTS.
+- NOBODY EVER SAID THE MOON / HAD DEAD PEOPLE ON IT. / SOMEBODY MUST HAVE KNOWN.
+- OKAY. THEY GO DOWN LIKE / ANYTHING ELSE. / THAT'LL HAVE TO DO.
 
 ### Hero's thought — first OPTIMUSK kill on the moon
 

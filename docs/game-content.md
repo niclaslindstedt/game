@@ -114,13 +114,17 @@ The roster is split one file per level/biome under `src/game/defs/enemies/`
   superintelligence; he begs off the plea to quit ("humans are obsolete") and
   drops the **PASSAGE CHIP** he cut into his own skull — a passive `+1 INT`
   trinket that pays out while it merely rides in the bag (`GearDef.passive`).
+  The first intern the hero downs fires a one-time inner monologue — his
+  arrival read on a building fully staffed at midnight ("good thing I brought
+  the sword").
 - **Level 2** ships wisp → moon ghost → wraith and the OPTIMUSK robots SpaceZ
   shipped up to garrison the moon (the same heavy from level 1, now laced
   through the haunting) — four ghost elites (MISSION SPECIALIST, THE
   PROSPECTOR, QUARANTINE MEDIC, THE CARTOGRAPHER), plus ARMSTRONG, the giant
-  astronaut ghost guarding the flag (the boss). The first OPTIMUSK the hero
-  downs here fires a one-time inner monologue (`firstKillThoughts` →
-  `THOUGHT_DEFS`, played through the dialogue box in his own voice).
+  astronaut ghost guarding the flag (the boss). First-kill thoughts fire for
+  the wisp (the hero's arrival read on the haunting) and the OPTIMUSK
+  (`firstKillThoughts` → `THOUGHT_DEFS`, played through the dialogue box in
+  his own voice).
   ARMSTRONG's boss scene ends the moon pointing at Mars: the moon was SpaceZ's
   disastrous mistake, and everything rides the red freight run out.
 - **Level 3** ships the colony's machines — scout rover (fodder) → servo unit

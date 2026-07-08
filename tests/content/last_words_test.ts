@@ -107,9 +107,11 @@ describe("last words on death", () => {
   it("stays silent for nameless minions", () => {
     const state = startGame();
     clearStage(state);
-    const wisp = placeDying(state, "wisp");
+    // A ghost, not a wisp — the moon pins a first-kill thought to the wisp,
+    // and this test is about last-words silence, not player thoughts.
+    const minion = placeDying(state, "ghost");
 
-    const events = killAndCollect(state, wisp.id);
+    const events = killAndCollect(state, minion.id);
     expect(events.some((e) => e.type === "enemyKilled")).toBe(true);
     expect(events.some((e) => e.type === "enemyLastWords")).toBe(false);
     expect(state.phase).toBe("playing");

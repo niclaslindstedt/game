@@ -255,6 +255,10 @@ export const SPACEZ_HQ: LevelDef = {
     { kind: "plant", count: 10 },
   ],
   decorClearance: 70,
+  // The first staffer he downs stops him cold: the whole building is manned
+  // at midnight. Pinned to the intern because the opening ring is packed with
+  // them — it fires within the level's first seconds, an arrival beat.
+  firstKillThoughts: [{ enemy: "intern", thought: "spacez_staff" }],
   loot: {
     weaponPool: [
       "stapler",
