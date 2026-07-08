@@ -62,6 +62,7 @@ import {
 
 import { startGameLoop } from "@ui/lib/game-loop.ts";
 import { PixelText } from "@ui/lib/PixelText.tsx";
+import type { PixelFont } from "@ui/lib/pixel-font.ts";
 import { trackPointer } from "@ui/lib/pointer.ts";
 
 import { loadGameAssets, spriteDataUrl, type GameAssets } from "./assets.ts";
@@ -246,6 +247,67 @@ function rampageColor(stage: number): string {
   if (stage >= 5) return "#ff5030";
   if (stage >= 2) return "#ff9040";
   return "#ffd050";
+}
+
+/** The live kill tally, which jolts on every kill so a fresh frag is felt.
+ * The jolt scales with the recent kill rate: a lone kill is a small nudge,
+ * but a burst — several mobs downed inside a one-second window (a nuke, a
+ * cleaving swing) — stacks into a hard, wide shake. Amplitude/rotation/duration
+ * all ride the burst count so a rampage reads as chaos, not a metronome. */
+function KillCounter({
+  font,
+  label,
+  kills,
+}: {
+  font: PixelFont;
+  label: string;
+  kills: number;
+}) {
+  const ref = useRef<HTMLDivElement>(null);
+  const prevKills = useRef(kills);
+  // Timestamps of kills landed within the last second — its length is the
+  // burst size that drives how hard the counter shakes.
+  const recent = useRef<number[]>([]);
+
+  useEffect(() => {
+    const delta = kills - prevKills.current;
+    prevKills.current = kills;
+    // Ignore resets (retry) and no-ops; only a rising tally shakes.
+    if (delta <= 0) return;
+    const el = ref.current;
+    if (!el) return;
+
+    const now = performance.now();
+    for (let i = 0; i < delta; i++) recent.current.push(now);
+    recent.current = recent.current.filter((t) => now - t <= 1000);
+    const burst = recent.current.length;
+
+    // Map the burst onto a felt shake: a single kill nudges ~3px, and each
+    // further kill this second widens the throw and tilt toward a hard cap.
+    const amp = Math.min(3 + (burst - 1) * 1.6, 12);
+    const rot = Math.min(1.5 + (burst - 1) * 1.1, 9);
+    const dur = Math.min(160 + (burst - 1) * 24, 420);
+    el.style.setProperty("--shake-amp", `${amp}px`);
+    el.style.setProperty("--shake-rot", `${rot}deg`);
+    el.style.setProperty("--shake-dur", `${dur}ms`);
+
+    // Restart the animation from the top on every kill: drop the class, force a
+    // reflow so the browser sees a genuine state change, then re-add it.
+    el.classList.remove("kill-shake");
+    void el.offsetWidth;
+    el.classList.add("kill-shake");
+  }, [kills]);
+
+  return (
+    <div ref={ref} className="hud-kills">
+      <PixelText
+        font={font}
+        text={`${label} ${kills}`}
+        scale={2}
+        color="#d9a0f0"
+      />
+    </div>
+  );
 }
 
 export function GameScreen({
@@ -832,7 +894,7 @@ export function GameScreen({
         const appearance = playerAppearance(state);
         const stage = menaceStage(state);
         const armor = armorInfo(state);
-        const key = `${state.phase}/${state.player.hp}/${Math.ceil(state.player.armor)}/${Math.ceil(state.player.stamina)}/${state.player.xp}/${state.player.level}/${state.player.pendingStatPoints}/${state.enemies.length}/${bagCount}/${held}/${weapon.defId}/${weaponWear?.toFixed(2) ?? ""}/${appearance}/${stage}/${Math.floor(state.stats.timeMs / 1000)}`;
+        const key = `${state.phase}/${state.player.hp}/${Math.ceil(state.player.armor)}/${Math.ceil(state.player.stamina)}/${state.player.xp}/${state.player.level}/${state.player.pendingStatPoints}/${state.enemies.length}/${bagCount}/${held}/${weapon.defId}/${weaponWear?.toFixed(2) ?? ""}/${appearance}/${stage}/${state.stats.kills}/${Math.floor(state.stats.timeMs / 1000)}`;
         if (key !== lastHud) {
           lastHud = key;
           setHud({
@@ -1220,11 +1282,10 @@ export function GameScreen({
                 text={formatTime(hud.stats.timeMs)}
                 scale={3}
               />
-              <PixelText
+              <KillCounter
                 font={font}
-                text={`${state?.level.foes ?? "FOES"} ${hud.stats.kills}/${hud.stats.totalEnemies}`}
-                scale={2}
-                color="#d9a0f0"
+                label={state?.level.foes ?? "FOES"}
+                kills={hud.stats.kills}
               />
               {/* Rampage gauge: overkilling and fast kills evolve and lure the
                   horde. Shown only while the meter is hot, reddening as the
