@@ -174,6 +174,26 @@ export type LevelDef = {
     jumpable: boolean;
   }[];
   /**
+   * Black holes: static gravity wells that drag the grounded player,
+   * enemies and loose items toward their core — minions are devoured
+   * there, the player burns, items pile up on the rim (a jump clears the
+   * pull entirely). Omitted numbers fall back to the config WELLS
+   * defaults; see GravityWell for what each means.
+   */
+  wells?: {
+    pos: Vec2;
+    pullRadius?: number;
+    coreRadius?: number;
+    pullSpeed?: number;
+    coreDps?: number;
+  }[];
+  /**
+   * Flying rocks: presence turns the asteroid spawner on. Every `everyMs`
+   * (rolled per rock) one streaks across the player's surroundings — dodge
+   * it or jump it. The shared tuning lives in config ASTEROIDS.
+   */
+  asteroids?: { everyMs: [number, number] };
+  /**
    * Locked doors: built exactly like walls (chains of solid `door_locked`
    * circles) but tracked in `state.doors` — carrying the story-item key
    * whose `unlocks` names the door's `id` up to it slides it open. Pair

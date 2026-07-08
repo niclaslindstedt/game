@@ -138,6 +138,25 @@ export const FIX_ENEMIES: Record<string, EnemyDef> = {
     contactCooldownMs: 700,
     ai: { aggroRadius: 950 },
   },
+  // A dialogue-only APPARITION (mirrors the rift's historic residents): an
+  // elite-role speaker nothing can hit — it rushes in, delivers its scene,
+  // then walks off and dissolves (config APPARITION.lingerMs).
+  test_apparition: {
+    id: "test_apparition",
+    name: "TEST APPARITION",
+    role: "elite",
+    sprite: "test_apparition",
+    apparition: true,
+    phasing: true,
+    hp: 60,
+    speed: 20,
+    radius: 9,
+    contactDamage: 0,
+    critChance: 0,
+    contactCooldownMs: 700,
+    dialogue: [["TEST APPARITION LINE ONE."], ["TEST APPARITION LINE TWO."]],
+    ai: { aggroRadius: 250, rushSpeed: 110 },
+  },
   // A FLEEING unique (mirrors a boss like the shipped ELON MOSQUE): beaten to
   // 0 hp it escapes through a rift instead of dying — `flees` books a
   // `bossFled` (never a kill) and leaves the named landmark behind.
@@ -600,6 +619,49 @@ export const FIX_GATED_LEVEL: LevelDef = {
   },
 };
 
+/**
+ * A bare hazard arena: the reference level with no waves, no obstacles and
+ * only the parked far-away boss, so hazard suites keep surgical control of
+ * the stage. `extra` layers the hazard (wells, asteroids, an apparition)
+ * onto it.
+ */
+function hazardLevel(id: string, extra: Partial<LevelDef>): LevelDef {
+  const base: LevelDef = {
+    ...FIX_LEVEL,
+    id,
+    spawns: [{ enemy: "test_boss", at: { x: 2130, y: 260 } }],
+    obstacles: [],
+    decor: [],
+    // Clone the loot table before pruning it, or the delete below would
+    // reach through the shared reference into FIX_LEVEL itself.
+    loot: { ...FIX_LEVEL.loot },
+  };
+  delete base.waves;
+  delete base.loot.earlyDrops;
+  return { ...base, ...extra };
+}
+
+// A level with one black hole parked mid-field (config-default numbers).
+export const FIX_WELL_LEVEL: LevelDef = hazardLevel("test_well_level", {
+  wells: [{ pos: { x: 1200, y: 800 } }],
+});
+
+// A level with the asteroid rain on, at a fixed cadence for determinism.
+export const FIX_ASTEROID_LEVEL: LevelDef = hazardLevel("test_asteroid_level", {
+  asteroids: { everyMs: [800, 800] },
+});
+
+// A level with a dialogue-only apparition parked ahead of the spawn.
+export const FIX_APPARITION_LEVEL: LevelDef = hazardLevel(
+  "test_apparition_level",
+  {
+    spawns: [
+      { enemy: "test_apparition", at: { x: 700, y: 1320 } },
+      { enemy: "test_boss", at: { x: 2130, y: 260 } },
+    ],
+  },
+);
+
 // A prelude scene for the cutscene-in-a-run tests: a timed beat, then a text
 // beat the sim parks on, an actor that exits (and never returns), and a
 // closing caption.
@@ -655,6 +717,9 @@ export function installFixtures(force = false): void {
       test_level_2: FIX_LEVEL_2,
       test_prelude_level: FIX_PRELUDE_LEVEL,
       test_gated_level: FIX_GATED_LEVEL,
+      test_well_level: FIX_WELL_LEVEL,
+      test_asteroid_level: FIX_ASTEROID_LEVEL,
+      test_apparition_level: FIX_APPARITION_LEVEL,
     },
     enemies: FIX_ENEMIES,
     weapons: FIX_WEAPONS,

@@ -131,6 +131,11 @@ describe("last-words catalog", () => {
         expect(def.lastWords, def.id).toBeUndefined();
         continue;
       }
+      // Apparitions never die, so a parting line would be dead data.
+      if (def.apparition) {
+        expect(def.lastWords, def.id).toBeUndefined();
+        continue;
+      }
       expect(def.lastWords?.length ?? 0, def.id).toBeGreaterThan(0);
       // A gasp, not a paragraph: at most two short lines.
       expect((def.lastWords ?? []).length, def.id).toBeLessThanOrEqual(2);

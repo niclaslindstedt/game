@@ -52,6 +52,17 @@ export type EnemyDef = {
    */
   phasing?: boolean;
   /**
+   * A dialogue-only figure: it seeks the player out for its scene like any
+   * elite speaker, but it CANNOT be hit — weapons, abilities, nukes and
+   * hazards all pass through it — its own touch deals no contact damage,
+   * and it never counts toward the level's foes or objectives. Once its
+   * scene has played it walks away and dissolves (config APPARITION,
+   * `apparitionVanished` event). Give an apparition the `elite` role (so it
+   * sleeps at its post and rushes into view to speak) plus `dialogue`;
+   * `lastWords` and `loot` are meaningless on one — it cannot die.
+   */
+  apparition?: boolean;
+  /**
    * A unique mob that ESCAPES instead of dying: beaten to 0 hp it leaves the
    * board like a kill — XP granted, guaranteed drops paid, `lastWords` played
    * (worded as the flight, not a death rattle) — but the engine books a

@@ -7,15 +7,19 @@
 [![Pages](https://github.com/niclaslindstedt/game/actions/workflows/pages.yml/badge.svg)](https://github.com/niclaslindstedt/game/actions/workflows/pages.yml)
 [![License: PolyForm Noncommercial](https://img.shields.io/badge/license-PolyForm%20Noncommercial%201.0.0-blue.svg)](LICENSE)
 
-> **Status: two playable levels.** Pick a difficulty on the Doom-style
+> **Status: four playable levels.** Pick a difficulty on the Doom-style
 > main menu and you drop straight into the story (the mission picker only
 > unlocks once you have cleared the campaign at that difficulty), sit through
 > the movie-night prelude (or hit SKIP, top right), raid SPACEZ HQ for the
-> drive ingredient MUSKRAT the mutant rat swallowed, then take the fight to
-> the haunted moon and ARMSTRONG at the old flag — all to a chiptune
-> soundtrack, looting gear and powers while the auto-firing weapons thin the
-> horde. Each run's end screen shows a summary with a retry button and your
-> best survival time on that difficulty.
+> drive ingredient MUSKRAT the mutant rat swallowed, take the fight to
+> the haunted moon and ARMSTRONG at the old flag, storm the secret Mars
+> colony ELON MOSQUE owns (he flees into a rift rather than lose), then
+> follow him into THE RIFT itself — a hallucinatory void of black holes,
+> asteroid rain, and history's missing, guarded by GROK OMEGA, ZAI's secret
+> superintelligence — all to a chiptune soundtrack, looting gear and powers
+> while the auto-firing weapons thin the horde. Each run's end screen shows
+> a summary with a retry button and your best survival time on that
+> difficulty.
 
 ## Why?
 
@@ -204,7 +208,7 @@ The game has no user-facing configuration yet. Build-time knobs:
 | `GITHUB_PAT`               | Auth for GitHub Packages installs (`.npmrc`)                                                                                                    |
 | `VITE_BASE`                | Deploy-slot base path (`/`, `/preview/`, `/branch/`); defaults to `/` for local builds                                                          |
 | `?debug` URL param         | Turns on debug-level console output (`src/output.ts`) and exposes the live game state as `window.__game` for inspection and automated playtests |
-| `?level=<id>` URL param    | Starts runs on a specific catalog level (`spacez_hq`, `moon`) instead of the story default                                                      |
+| `?level=<id>` URL param    | Starts runs on a specific catalog level (`spacez_hq`, `moon`, `mars`, `the_rift`) instead of the story default                                  |
 | `?seed=<n>` URL param      | Pins the run's layout seed so retries reproduce the same level layout                                                                           |
 | `?cutscene=<id>` URL param | Opens the cutscene workbench: loops one scene from the catalog for authoring iteration (see `docs/configuration.md`)                            |
 

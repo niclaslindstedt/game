@@ -58,16 +58,17 @@ export function botAct(bot: Bot, state: GameState): GameInput {
     return idleInput();
   }
   const decided = ((): GameInput => {
+    // With only untouchable apparitions left on the board there is no foe
+    // to fight — push for the objective instead of chasing a hallucination.
+    const foe = nearestEnemy(state);
     switch (bot.strategy) {
       case "rush":
-        return steer(state, nearestEnemy(state)!.pos);
+        return foe ? steer(state, foe.pos) : pushBoss(state);
       case "kite": {
+        if (!foe) return pushBoss(state);
         // Hold inside weapon range, outside the pack's grasp.
         const range = weaponDef(state.player.equipment.weapon.defId).range;
-        return steer(
-          state,
-          holdOff(state, nearestEnemy(state)!.pos, range * 0.7),
-        );
+        return steer(state, holdOff(state, foe.pos, range * 0.7));
       }
       case "boss":
         return pushBoss(state);
@@ -122,7 +123,8 @@ function pushBoss(state: GameState, jumpTravel = false): GameInput {
 function survive(state: GameState): GameInput {
   if (state.player.level >= SURVIVOR_PUSH_LEVEL) return pushBoss(state, true);
 
-  const enemy = nearestEnemy(state)!;
+  const enemy = nearestEnemy(state);
+  if (!enemy) return pushBoss(state, true);
   const enemyDist = distance(state.player.pos, enemy.pos);
   const item = nearestItem(state);
   if (
@@ -170,6 +172,8 @@ function nearestEnemy(state: GameState): Enemy | undefined {
   let best: Enemy | undefined;
   let bestD = Infinity;
   for (const enemy of state.enemies) {
+    // Apparitions are untouchable scenery — a bot never fights or flees one.
+    if (enemyDef(enemy.defId).apparition) continue;
     const d = distance(enemy.pos, state.player.pos);
     if (d < bestD) {
       best = enemy;

@@ -8,6 +8,7 @@
 
 import {
   abilityDef,
+  APPARITION,
   enemyDef,
   equipmentIcon,
   LAST_STAND,
@@ -183,6 +184,40 @@ export function drawFrame(
     );
   }
 
+  // Gravity wells: a darkening funnel over the ground plane (the visual
+  // warning of the pull's reach) around the animated hole itself. Drawn
+  // before items/enemies so the loot hoarded on the rim sits readable on
+  // top of the swirl.
+  for (const well of state.wells) {
+    if (!inView(well.pos.x, well.pos.y, well.pullRadius)) continue;
+    const cx = Math.round(well.pos.x - camera.x);
+    const cy = Math.round(well.pos.y - camera.y);
+    const funnel = ctx.createRadialGradient(
+      cx,
+      cy,
+      well.coreRadius,
+      cx,
+      cy,
+      well.pullRadius,
+    );
+    funnel.addColorStop(0, "rgba(8, 6, 20, 0.55)");
+    funnel.addColorStop(0.6, "rgba(20, 12, 44, 0.28)");
+    funnel.addColorStop(1, "rgba(20, 12, 44, 0)");
+    ctx.fillStyle = funnel;
+    ctx.beginPath();
+    ctx.arc(cx, cy, well.pullRadius, 0, Math.PI * 2);
+    ctx.fill();
+    const frame = Math.floor(timeMs / 240 + well.id) % 2;
+    const sprite = spriteByName(sprites, `blackhole_${frame}`);
+    if (sprite) {
+      ctx.drawImage(
+        sprite,
+        Math.round(well.pos.x - sprite.width / 2 - camera.x),
+        Math.round(well.pos.y - sprite.height / 2 - camera.y),
+      );
+    }
+  }
+
   for (const item of state.items) {
     if (!inView(item.pos.x, item.pos.y, 16)) continue;
     const sprite =
@@ -310,6 +345,13 @@ export function drawFrame(
     if (lastStand && Math.floor(timeMs / 140) % 2 === 1) {
       ctx.globalAlpha = 0.55;
     }
+    // A departing apparition dissolves: fade with its linger countdown.
+    if (enemy.vanishMs !== undefined) {
+      ctx.globalAlpha = Math.min(
+        ctx.globalAlpha,
+        Math.max(0, enemy.vanishMs / APPARITION.lingerMs),
+      );
+    }
     if (!critBlink) ctx.drawImage(sprite, x, y);
     ctx.globalAlpha = 1;
 
@@ -327,6 +369,24 @@ export function drawFrame(
 
   drawAbilities(ctx, state, assets, camera, timeMs);
   drawPlayer(ctx, state, assets, camera, timeMs);
+
+  // Asteroids fly over everything on the ground plane — they're rocks in
+  // transit, not furniture. Scaled to each rock's rolled radius; the frame
+  // flip (offset by id) reads as a tumble.
+  for (const rock of state.asteroids) {
+    if (!inView(rock.pos.x, rock.pos.y, 32)) continue;
+    const frame = Math.floor(timeMs / 220 + rock.id) % 2;
+    const sprite = spriteByName(sprites, `asteroid_${frame}`);
+    if (!sprite) continue;
+    const size = Math.max(12, Math.round(rock.radius * 2 + 4));
+    ctx.drawImage(
+      sprite,
+      Math.round(rock.pos.x - size / 2 - camera.x),
+      Math.round(rock.pos.y - size / 2 - camera.y),
+      size,
+      size,
+    );
+  }
 
   // Red flash while recently hurt.
   if (state.player.hurtFlashMs > 0) {

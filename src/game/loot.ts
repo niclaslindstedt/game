@@ -59,12 +59,17 @@ export function hitEnemy(
   weaponClass?: WeaponClass,
   opts?: { rollAccuracy?: boolean },
 ): void {
+  const def = enemyDef(enemy.defId);
+
+  // Apparitions cannot be hit — every attack path already looks through
+  // them, but this is the one funnel all damage flows through, so no future
+  // caller can hurt one by accident.
+  if (def.apparition) return;
+
   // An elite or boss meets the player's power the instant the fight opens —
   // scale its hp before this blow lands so it can never be one-shot out of a
   // set piece by a leveled hero. Idempotent (latched by `powerScaled`).
   maybePowerScale(state, enemy);
-
-  const def = enemyDef(enemy.defId);
 
   // A weapon blow can come to nothing two ways, both trimmed by DEXTERITY (the
   // hero's hit rate): the hero's own MISS, then — if it would have landed — the

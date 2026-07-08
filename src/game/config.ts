@@ -598,6 +598,90 @@ export const DOORS = {
   openRadius: 40,
 } as const;
 
+/**
+ * Gravity wells — black holes placed by a level (LevelDef.wells). Each well
+ * drags whatever crosses its pull radius toward the core: the grounded
+ * player (a jump sails clean over the pull, same rule as enemy contact),
+ * enemies, and loose items — which pile up on the rim instead of being
+ * destroyed, a dare to dash in. A MINION dragged into the core is devoured
+ * outright: off the board with no kill, no XP and no loot — the hole pays
+ * nobody. Elites and bosses are too massive to swallow (their set pieces
+ * survive a bad camp spot) and apparitions too immaterial; both only suffer
+ * the drag. A player in the core burns hp at `coreDps`, ticked every
+ * `tickMs`. These are the per-well DEFAULTS — a level's well spec may
+ * override each number. Units: world px, world px/s, hp/s, ms.
+ */
+export const WELLS = {
+  /** Reach of the pull. */
+  pullRadius: 130,
+  /** Inside this the hole devours minions and burns the player. */
+  coreRadius: 16,
+  /**
+   * Peak pull at the core's edge (px/s), falling off linearly to 0 at
+   * `pullRadius`. Deliberately above the hero's base walk (PLAYER.speed 56):
+   * the outer band is a lean he can walk out of, the inner third a genuine
+   * fight — SPEED, the sprint, or a jump is what gets him clear.
+   */
+  pullSpeed: 96,
+  /** Hp per second burned while the player stands in the core. */
+  coreDps: 40,
+  /**
+   * Core damage lands in ticks of this cadence (one `playerHurt` per tick,
+   * not per frame, so the flash and sfx read as a burn, not a buzzer).
+   */
+  tickMs: 250,
+  /**
+   * Dragged items park this far from the center — just outside the core, so
+   * the loot hoard on the event horizon is grabbable at a price.
+   */
+  itemRestRadius: 22,
+} as const;
+
+/**
+ * Asteroids — the flying rocks a level turns on with LevelDef.asteroids.
+ * Each spawns on a ring just past the phone screen edge (the enemy-spawn
+ * rationale), streaks across the player's surroundings with a little aim
+ * scatter, shoves minions out of its path without hurting them, and deals
+ * the player `damage` once on contact — jumping (z above JUMP.dodgeHeight)
+ * sails over a rock exactly like it clears enemy contact. Rocks ignore
+ * obstacles and level bounds (nothing in the void stops one) and despawn
+ * once they have left the player's stage. Units: world px, px/s, hp.
+ */
+export const ASTEROIDS = {
+  /** Spawn distance from the player — just past the screen edge. */
+  ringDistance: 240,
+  /** Aim scatter around the player (px): rocks threaten, they don't home. */
+  targetJitter: 110,
+  /** Flight speed, rolled per rock (px/s). */
+  speed: [110, 190] as [number, number],
+  /** Collision radius, rolled per rock (px). */
+  radius: [8, 13] as [number, number],
+  /**
+   * Contact damage to the player. The suit's armor soaks its grade's share
+   * like any physical hit, but there is no crit and no dodge roll — an
+   * asteroid is dodged with the feet, not the reflexes.
+   */
+  damage: 26,
+  /** Rocks in flight are capped here; the spawner defers above it. */
+  maxAlive: 5,
+  /** A rock this far from the player despawns — it has left the stage. */
+  despawnDistance: 640,
+} as const;
+
+/**
+ * Apparitions — dialogue-only figures (EnemyDef.apparition). One seeks the
+ * player out for its scene like any elite speaker, but nothing in the world
+ * touches it (weapons, abilities, hazards) and its own touch is cold air.
+ * Once its scene has played it walks off and dissolves.
+ */
+export const APPARITION = {
+  /**
+   * Ms between the scene ending and the figure leaving the board (the
+   * renderer reads the enemy's `vanishMs` against this for the fade-out).
+   */
+  lingerMs: 2600,
+} as const;
+
 /** The medkit consumable: picked up on touch, never enters the inventory. */
 export const MEDKIT = {
   heal: 35,

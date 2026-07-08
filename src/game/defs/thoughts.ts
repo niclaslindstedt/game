@@ -174,6 +174,39 @@ export const THOUGHT_DEFS: Record<string, ThoughtDef> = {
       ],
     ],
   },
+  // Sighting the first voidling in the rift: the hero's arrival read — he
+  // is standing on nothing, and the nothing holds.
+  rift_arrival: {
+    id: "rift_arrival",
+    speaker: "ME",
+    portrait: "player",
+    pages: [
+      [
+        "I'M WALKING ON NOTHING.",
+        "NO GROUND. NO SKY. AND MY",
+        "BOOTS DON'T SEEM TO CARE.",
+      ],
+      ["THE RIFT DOESN'T FOLLOW THE", "RULES. GOOD. LATELY,", "NEITHER DO I."],
+    ],
+  },
+  // Downing the first graviton: the physics of this place, in one grudge.
+  rift_graviton: {
+    id: "rift_graviton",
+    speaker: "ME",
+    portrait: "player",
+    pages: [
+      [
+        "THAT LITTLE THING WEIGHED",
+        "MORE THAN MY SHIP. SPACE IN",
+        "HERE BENDS AROUND A GRUDGE.",
+      ],
+      [
+        "NOTED. DON'T STAND STILL.",
+        "DON'T TRUST THE FLOOR.",
+        "THERE ISN'T ONE.",
+      ],
+    ],
+  },
 };
 
 // Active registry the accessor reads (defaults to the shipped catalog).

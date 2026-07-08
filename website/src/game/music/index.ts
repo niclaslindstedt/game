@@ -19,11 +19,13 @@ import { musicSynth } from "../audio.ts";
 
 import { LEVEL_THEME } from "./level.ts";
 import { MARS_THEME } from "./mars.ts";
+import { RIFT_THEME } from "./rift.ts";
 import { HQ_THEME } from "./spacez.ts";
 import { TITLE_THEME } from "./title.ts";
 
 export { LEVEL_THEME } from "./level.ts";
 export { MARS_THEME } from "./mars.ts";
+export { RIFT_THEME } from "./rift.ts";
 export { HQ_THEME } from "./spacez.ts";
 export { TITLE_THEME } from "./title.ts";
 
@@ -32,6 +34,7 @@ export const LEVEL_TRACKS: Record<string, ChiptuneTrack> = {
   regolith_ride: LEVEL_THEME,
   hq_lockdown: HQ_THEME,
   red_dust: MARS_THEME,
+  rift_drift: RIFT_THEME,
 };
 
 /** Played when a level names no `music` id (or an id we don't ship). */

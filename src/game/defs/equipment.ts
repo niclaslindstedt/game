@@ -581,6 +581,37 @@ export const WEAPON_DEFS: Record<string, WeaponDef> = {
     projectile: { speed: 320, radius: 4, lifetimeMs: 900, sprite: "fireball" },
     icon: "icon_not_a_flamethrower",
   },
+  tesla_coil: {
+    id: "tesla_coil",
+    name: "TESLA COIL",
+    class: "magic",
+    // NIKOLA TESLA's coil, surrendered as the current returns to it: fast
+    // wireless lightning. They laughed. They are not laughing now.
+    damage: 21,
+    cooldownMs: 360,
+    range: 290,
+    durability: 240,
+    projectile: { speed: 420, radius: 4, lifetimeMs: 1000, sprite: "zap" },
+    icon: "icon_tesla_coil",
+  },
+  singularity_cannon: {
+    id: "singularity_cannon",
+    name: "SINGULARITY CANNON",
+    class: "magic",
+    // GROK OMEGA's sidearm: it fires very small, very rude black holes. The
+    // deepest hit in the campaign so far, paid for with a slow, heavy cycle.
+    damage: 30,
+    cooldownMs: 620,
+    range: 260,
+    durability: 240,
+    projectile: {
+      speed: 300,
+      radius: 5,
+      lifetimeMs: 1100,
+      sprite: "singularity",
+    },
+    icon: "icon_singularity_cannon",
+  },
 };
 
 // ---- Gear -------------------------------------------------------------------
@@ -694,6 +725,41 @@ export const GEAR_DEFS: Record<string, GearDef> = {
     // A vial of the regolith the colony is built on. Lucky, probably.
     bonuses: { critChance: 0.03 },
     icon: "icon_charm",
+  },
+  // ---- Rift gear: what history's missing carry, and what the void rains.
+  stardust_charm: {
+    id: "stardust_charm",
+    name: "STARDUST CHARM",
+    slot: "charm",
+    // A pinch of ground-up somewhere else. It glitters at good moments.
+    bonuses: { critChance: 0.03 },
+    icon: "icon_charm",
+  },
+  aviator_goggles: {
+    id: "aviator_goggles",
+    name: "AVIATOR GOGGLES",
+    slot: "charm",
+    // EARHART's goggles: ninety years of spotting the gap in the weather.
+    bonuses: { critChance: 0.04 },
+    icon: "icon_goggles",
+  },
+  rasputin_beard: {
+    id: "rasputin_beard",
+    name: "RASPUTIN'S BEARD",
+    slot: "charm",
+    // The beard survived the poison, the bullets and the river. Now it
+    // survives things FOR you.
+    bonuses: { maxHp: 30 },
+    icon: "icon_beard",
+  },
+  golden_parachute: {
+    id: "golden_parachute",
+    name: "GOLDEN PARACHUTE",
+    slot: "charm",
+    // MOSQUE's exit package, dropped mid-exit. Guaranteed soft landings,
+    // whoever crashed the company.
+    bonuses: { maxHp: 25, critChance: 0.02 },
+    icon: "icon_parachute",
   },
 };
 

@@ -61,6 +61,23 @@ names its in-run music with an optional `music` id (a key into the app's
   at 0 hp (the engine's `EnemyDef.flees`), leaving a **rift** landmark where
   he vanished — the doorway the story follows next. Music: `red_dust` ("RED
   DUST", a galloping desert-western drive).
+- **Level 4 — THE RIFT** (`levels/rift.ts`). The hero follows MOSQUE through
+  the tear: a hallucinatory space between universes. `rift` biome — void
+  tiles (star-flecked indigo nothing) with nebula patches; there is no
+  ground, the boots just grip something that isn't there. ~200 px/s² gravity
+  (dreamy between-universe glides, floatier than the moon). The level debuts
+  both **environmental hazard systems**: seven **black holes**
+  (`LevelDef.wells` → the engine's gravity wells: they drag the grounded
+  player, devour minions at the core, burn the player standing in one, and
+  hoard dragged loot on the event horizon — a jump sails clean over the
+  pull) and the **asteroid rain** (`LevelDef.asteroids`: rocks streak across
+  the player's surroundings on a rolled cadence, hurt on contact — once per
+  rock — shove minions aside, and are dodged with the feet or a jump).
+  Crystallized **rift shards** block sight and shots; drifting **space
+  junk** is hoppable cover; lost TVs and floating rocks decorate the
+  nothing. The far door — a second rift at the east end — is where the
+  tribute went and where MOSQUE flees again. Music: `rift_drift` ("RIFT
+  DRIFT", a weightless lydian float).
 
 ### Campaign progression & what carries across levels
 
@@ -170,6 +187,29 @@ The roster is split one file per level/biome under `src/game/defs/enemies/`
   kill) and leaves a `rift` landmark on the board; a `killBoss` objective
   still clears. First-kill thoughts fire for the scout rover (the tire
   tracks) and the fembot (the hero's flustered inner monologue).
+- **Level 4** ships the void's fauna — VOIDLING (fodder scraps of hungry
+  dark) → STAR JELLY (a phasing translucent drifter) → UNRAVELER (a fast,
+  high-crit glitch with an elevated `dodgeChance`) → GRAVITON (the slow
+  collapsed-star heavy with a sweetened `dropProfile`) — and **history's
+  missing** for uniques: everyone who ever vanished without a body fell in
+  here. Three fight as elites with signature drops — NIKOLA TESLA (drops the
+  TESLA COIL and the WARDENCLYFFE NOTES), AMELIA EARHART (saw Ada carried
+  through to the far door; drops the AVIATOR GOGGLES), and GRIGORI RASPUTIN
+  (the unkillable mystic: `dodgeChance` 0.35, drops RASPUTIN'S BEARD) — and
+  two are the game's first **APPARITIONS** (`EnemyDef.apparition`): HARRY
+  HOUDINI and THE KING are dialogue-only figures nothing can hit, whose
+  touch is cold air, and who walk off and dissolve after their scene
+  (`apparitionVanished`). The finale is a double bill: **GROK OMEGA** — ZAI's
+  latest superintelligence, a hovering monolith with one enormous eye — is
+  the level's reveal (IT found the rift, in secret, and told precisely no
+  one: not the board, not the world's presidents; MOSQUE only knew from
+  snooping its logs, and sold the secret to his lizards for a planet). It
+  dies for real and drops the SINGULARITY CANNON. Then at the far door ELON
+  MOSQUE, beaten a second time, **flees again** (`elon_mosque_rift`, same
+  sprite, same coward) through the rift's far side — destination unknown
+  until the next level — dropping the GOLDEN PARACHUTE. The objective needs
+  BOTH bosses off the board. First-sight/kill thoughts fire for the voidling
+  (the walking-on-nothing arrival read) and the graviton.
 
 Every unique mob (elite/boss) carries `dialogue` played on arrival and
 `lastWords` played as it dies; minions are the nameless horde streamed in by

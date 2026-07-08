@@ -99,6 +99,48 @@ export function playWorldSound(synth: Synth, event: GameEvent): boolean {
       });
       return true;
 
+    case "wellSwallowed":
+      // A black hole swallows a mob: a deep spiral down into nothing —
+      // a sine dive with a swallowed puff of filtered noise.
+      synth.tone({
+        type: "sine",
+        from: 320,
+        to: 48,
+        durationMs: 320,
+        volume: 0.05,
+        detuneCents: 10,
+        echo: 0.3,
+      });
+      synth.noise({
+        durationMs: 160,
+        volume: 0.025,
+        delayMs: 120,
+        filter: { type: "lowpass", frequency: 320 },
+      });
+      return true;
+
+    case "apparitionVanished":
+      // An apparition dissolves: a glassy shimmer rising out of hearing,
+      // more sigh than event — the figure was never really there.
+      synth.tone({
+        type: "sine",
+        from: 880,
+        to: 1760,
+        durationMs: 420,
+        volume: 0.022,
+        echo: 0.5,
+      });
+      synth.tone({
+        type: "triangle",
+        from: 440,
+        to: 660,
+        durationMs: 300,
+        volume: 0.018,
+        delayMs: 60,
+        echo: 0.4,
+      });
+      return true;
+
     default:
       return false;
   }

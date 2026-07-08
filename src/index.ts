@@ -206,8 +206,10 @@ export { registerDefs, type DefOverrides } from "./game/defs/registry.ts";
 // Global tuning.
 export {
   ACCURACY,
+  APPARITION,
   ARMOR,
   ARRIVAL,
+  ASTEROIDS,
   DIALOGUE,
   DODGE,
   DOORS,
@@ -226,6 +228,7 @@ export {
   STAMINA,
   STATS,
   WEAPON,
+  WELLS,
   WOUNDS,
 } from "./game/config.ts";
 
@@ -233,6 +236,7 @@ export type {
   ActiveAbility,
   Affix,
   ArmorGrade,
+  Asteroid,
   Decor,
   DialogueState,
   Difficulty,
@@ -245,6 +249,7 @@ export type {
   GamePhase,
   GameState,
   GameStats,
+  GravityWell,
   Item,
   Landmark,
   LevelInfo,

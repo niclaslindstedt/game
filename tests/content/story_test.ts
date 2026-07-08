@@ -344,10 +344,12 @@ describe("catalog integrity", () => {
 
   it("fields 3-5 speaking, loot-bearing elites per level", () => {
     for (const level of Object.values(LEVELS)) {
+      // Apparitions are dialogue-only figures, not the loot-bearing story
+      // fights this rule counts — they have their own rule below.
       const placed = level.spawns
         .filter((s) => "at" in s)
         .map((s) => enemyDef(s.enemy))
-        .filter((d) => d.role === "elite");
+        .filter((d) => d.role === "elite" && !d.apparition);
       expect(placed.length).toBeGreaterThanOrEqual(3);
       expect(placed.length).toBeLessThanOrEqual(5);
       for (const def of placed) {
@@ -355,6 +357,18 @@ describe("catalog integrity", () => {
         expect(def.loot?.items?.length ?? 0).toBeGreaterThan(0);
         expect(def.ai.rushSpeed ?? 0).toBeGreaterThan(def.speed);
       }
+    }
+  });
+
+  it("keeps every apparition a pure dialogue figure", () => {
+    for (const def of Object.values(ENEMY_DEFS)) {
+      if (!def.apparition) continue;
+      // It exists to speak — and to do nothing else.
+      expect(def.dialogue?.length ?? 0, def.id).toBeGreaterThan(0);
+      expect(def.loot, def.id).toBeUndefined();
+      expect(def.lastWords, def.id).toBeUndefined();
+      expect(def.contactDamage, def.id).toBe(0);
+      expect(def.role, def.id).toBe("elite");
     }
   });
 

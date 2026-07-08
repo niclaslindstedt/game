@@ -224,6 +224,49 @@ export type Enemy = {
    * the hero's holstered weapon. Set at creation; only this mob can arm him.
    */
   vanguard?: boolean;
+  /**
+   * An apparition's dissolve countdown (config APPARITION.lingerMs), armed on
+   * the first playing tick after its scene ends. At 0 the figure leaves the
+   * board with an `apparitionVanished` event. Absent on everything else.
+   */
+  vanishMs?: number;
+};
+
+/**
+ * A black hole built from the level def (LevelDef.wells): a static gravity
+ * well that drags the grounded player, enemies, and loose items toward
+ * `pos`. Numbers are resolved from the config WELLS defaults at creation.
+ */
+export type GravityWell = {
+  id: number;
+  pos: Vec2;
+  /** Reach of the pull (world px). */
+  pullRadius: number;
+  /** Inside this the hole devours minions and burns the player. */
+  coreRadius: number;
+  /** Peak pull at the core's edge (px/s), linear falloff to the reach. */
+  pullSpeed: number;
+  /** Hp per second burned while the player stands in the core. */
+  coreDps: number;
+};
+
+/**
+ * A flying rock (config ASTEROIDS; a level turns the rain on with
+ * LevelDef.asteroids): crosses the field in a straight line, hurts the
+ * player once on contact, shoves minions aside, and despawns once far
+ * enough from the player. Ignores obstacles and level bounds.
+ */
+export type Asteroid = {
+  id: number;
+  pos: Vec2;
+  /** Unit direction of travel. */
+  dir: Vec2;
+  speed: number;
+  radius: number;
+  /** Visual spin rate in radians/s (rolled at spawn; renderer only). */
+  spin: number;
+  /** Latched once it has hit the player — one blow per rock. */
+  struck: boolean;
 };
 
 export type Projectile = {
@@ -481,6 +524,17 @@ export type GameEvent =
   | { type: "storyItemCollected"; defId: string }
   /** A locked door recognized its key and slid open. */
   | { type: "doorOpened"; pos: Vec2 }
+  /**
+   * A minion was dragged into a black hole's core and devoured — off the
+   * board with no kill, no XP and no loot. `defId` names the meal; the app
+   * plays the gulp and the swirl at `pos`.
+   */
+  | { type: "wellSwallowed"; pos: Vec2; defId: string }
+  /**
+   * An apparition finished its scene, walked off, and dissolved (see
+   * `EnemyDef.apparition`). The app sparkles it out at `pos`.
+   */
+  | { type: "apparitionVanished"; pos: Vec2; defId: string }
   | { type: "victory" }
   | { type: "defeat" };
 
@@ -621,6 +675,14 @@ export type GameState = {
   decor: Decor[];
   /** Solid features scattered at level creation — see Obstacle. */
   obstacles: Obstacle[];
+  /** Black holes built from the level def's `wells` — static all run. */
+  wells: GravityWell[];
+  /** Rocks currently in flight (levels with LevelDef.asteroids). */
+  asteroids: Asteroid[];
+  /** Ms until the next asteroid spawns (levels with LevelDef.asteroids). */
+  asteroidTimerMs: number;
+  /** Ms until the next gravity-well core-damage tick may land. */
+  wellTickMs: number;
   /** Counts down once the objective clears; the level ends at 0. */
   victoryCountdownMs: number | null;
   /**
