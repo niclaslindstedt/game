@@ -389,13 +389,18 @@ function drawAbilities(
  * from engine events and passes what is still alive.
  */
 export type Effect = {
-  kind: "lightning" | "nuke" | "splash" | "damage" | "swing" | "muzzle";
+  kind:
+    "lightning" | "nuke" | "splash" | "damage" | "swing" | "muzzle" | "text";
   pos: { x: number; y: number };
   untilMs: number;
   /** Total effect length, for progress-driven animation. */
   durationMs?: number;
   /** Splash: sprite family ("blood", "ecto") — frames `<family>_0/_1`. */
   sprite?: string;
+  /** Text float: the word to rise off the spot (e.g. "DODGE"). */
+  text?: string;
+  /** Text float: the glyph color. */
+  color?: string;
   /** Damage number: the hit's rounded damage. */
   value?: number;
   /** Damage number: crits shake, grow, and glow gold. */
@@ -464,6 +469,26 @@ export function drawEffects(
         x - Math.round(width / 2) + shake,
         groundY - rise - font.height * scale,
         { scale, color: crit ? "#ffd75e" : "#f4f4f4" },
+      );
+      ctx.globalAlpha = 1;
+      continue;
+    }
+
+    if (effect.kind === "text") {
+      // A short word (e.g. "DODGE") rises and fades off the spot, like a
+      // damage number but spelled out.
+      const duration = effect.durationMs ?? 650;
+      const t = 1 - (effect.untilMs - timeMs) / duration; // 0 → 1
+      const rise = Math.round(16 * t);
+      const text = effect.text ?? "";
+      const width = font.measure(text);
+      ctx.globalAlpha = t > 0.6 ? 1 - (t - 0.6) / 0.4 : 1;
+      font.draw(
+        ctx,
+        text,
+        x - Math.round(width / 2),
+        groundY - rise - font.height,
+        { scale: 1, color: effect.color ?? "#7ecbff" },
       );
       ctx.globalAlpha = 1;
       continue;

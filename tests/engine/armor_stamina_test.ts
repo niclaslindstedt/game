@@ -42,8 +42,10 @@ describe("armor", () => {
   it("soaks its grade's share of a hit, the rest bites HP", () => {
     const state = startGame();
     // A big LUCK pool zeroes the enemy's crit chance, so the hit is exactly
-    // the brute's contact damage (20) with no doubling.
+    // the brute's contact damage (20) with no doubling. Pin the RNG high so
+    // the hero's dodge (which LUCK also feeds) can't swallow the blow.
     state.player.stats.luck = 100;
+    state.rng = () => 0.99;
     state.player.inventory[0] = fixtureSuit();
     equipFromInventory(state, 0); // yellow: 150 pool, soaks 50%
     const maxHp = state.player.maxHp;
@@ -65,6 +67,7 @@ describe("armor", () => {
   it("a bare hero takes the whole blow in HP", () => {
     const state = startGame();
     state.player.stats.luck = 100;
+    state.rng = () => 0.99; // pin dodge (and crit) off, like above
     const maxHp = state.player.maxHp;
     state.enemies = [
       makeEnemy(

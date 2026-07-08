@@ -58,6 +58,7 @@ import {
   equipmentName,
   isBetterEquipment,
   maxMeleeTargets,
+  playerDodgeChance,
   playerSpeed,
   recomputeMaxHp,
   repairEquippedWeapon,
@@ -87,7 +88,13 @@ import {
   stepDoors,
   wantsDialogue,
 } from "./story.ts";
-import type { Enemy, GameInput, GameState, Item } from "./types.ts";
+import type {
+  Enemy,
+  GameInput,
+  GameState,
+  Item,
+  WeaponClass,
+} from "./types.ts";
 
 /** Advance the simulation by `dtMs` milliseconds. */
 export function step(state: GameState, input: GameInput, dtMs: number): void {
@@ -481,6 +488,7 @@ function stepWeapon(state: GameState, input: GameInput, dtMs: number): void {
       half,
       weaponDamage(state),
       maxMeleeTargets(state),
+      weapon.class,
     );
     // Wear AFTER the strike so the blow lands with the weapon that swung.
     wearEquippedWeapon(state);
@@ -527,6 +535,7 @@ function meleeSweep(
   halfAngle: number,
   damage: number,
   maxTargets: number,
+  weaponClass: WeaponClass,
 ): void {
   const player = state.player;
   const rangeSq = range * range;
@@ -555,7 +564,12 @@ function meleeSweep(
   }
   eligible.sort((a, b) => a.distSq - b.distSq);
   for (let i = 0; i < eligible.length && i < maxTargets; i++) {
-    hitEnemy(state, (eligible[i] as (typeof eligible)[number]).enemy, damage);
+    hitEnemy(
+      state,
+      (eligible[i] as (typeof eligible)[number]).enemy,
+      damage,
+      weaponClass,
+    );
   }
 }
 
@@ -618,7 +632,8 @@ function stepAbilities(state: GameState, dt: number, dtMs: number): void {
               enemyDef(enemy.defId).radius + def.orbit!.orbRadius,
           );
           if (!victim) continue;
-          hitEnemy(state, victim, def.orbit.damage);
+          // Conjured abilities crit off INTELLIGENCE, like the magic they are.
+          hitEnemy(state, victim, def.orbit.damage, "magic");
           struck = true;
         }
         if (struck) ability.cooldownMs = def.orbit.hitCooldownMs;
@@ -630,7 +645,7 @@ function stepAbilities(state: GameState, dt: number, dtMs: number): void {
       if (victim) {
         ability.cooldownMs = def.storm.intervalMs;
         state.events.push({ type: "lightning", pos: { ...victim.pos } });
-        hitEnemy(state, victim, def.storm.damage);
+        hitEnemy(state, victim, def.storm.damage, "magic");
       }
     }
 
@@ -686,7 +701,7 @@ function stepProjectiles(state: GameState, dt: number, dtMs: number): void {
       survivors.push(projectile);
       continue;
     }
-    hitEnemy(state, hit, projectile.damage);
+    hitEnemy(state, hit, projectile.damage, projectile.weaponClass);
   }
   state.projectiles = survivors;
 }
@@ -732,6 +747,15 @@ function stepEnemies(state: GameState, dt: number, dtMs: number): void {
       player.z <= JUMP.dodgeHeight &&
       distance(enemy.pos, player.pos) <= def.radius + PLAYER.radius;
     if (touching && enemy.contactCooldownMs <= 0) {
+      // The swing is spent whether it lands or is dodged, so the same foe
+      // can't re-swing next frame after a sidestep.
+      enemy.contactCooldownMs = def.contactCooldownMs;
+      // A nimble hero sidesteps the blow entirely: no HP, no armor, no hit.
+      // DEXTERITY drives it, LUCK nudges it (see `playerDodgeChance`).
+      if (state.rng() < playerDodgeChance(state)) {
+        state.events.push({ type: "playerDodge", pos: { ...player.pos } });
+        continue;
+      }
       const crit = state.rng() < enemyCritChance(state, def.critChance);
       // A boss backed into its last stand hits like a cornered animal.
       const lastStand =
@@ -759,7 +783,6 @@ function stepEnemies(state: GameState, dt: number, dtMs: number): void {
       }
       player.hp -= hpDamage;
       player.hurtFlashMs = 250;
-      enemy.contactCooldownMs = def.contactCooldownMs;
       state.stats.damageTaken += damage;
       state.events.push({ type: "playerHurt", crit });
     }

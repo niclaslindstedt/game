@@ -8,6 +8,7 @@ import { describe, expect, it } from "vitest";
 import {
   allocateStat,
   closeInventory,
+  DODGE,
   equipFromInventory,
   inventoryCapacity,
   LEVELING,
@@ -15,6 +16,7 @@ import {
   openInventory,
   PLAYER,
   playerCritChance,
+  playerDodgeChance,
   STAMINA,
   STATS,
   step,
@@ -101,16 +103,19 @@ describe("xp", () => {
 });
 
 describe("stats", () => {
-  it("STAMINA raises max stamina and current stamina together, not max hp", () => {
+  it("STAMINA raises max stamina and current stamina together, and max hp", () => {
     const state = startGame();
     state.player.pendingStatPoints = 1;
     const beforeStamina = state.player.maxStamina;
     const beforeHp = state.player.maxHp;
+    const beforeCurHp = state.player.hp;
     allocateStat(state, "stamina");
     expect(state.player.maxStamina).toBe(beforeStamina + STAMINA.maxPerPoint);
     expect(state.player.stamina).toBe(beforeStamina + STAMINA.maxPerPoint);
-    // STAMINA feeds the sprint pool now, no longer max hp.
-    expect(state.player.maxHp).toBe(beforeHp);
+    // STAMINA now deepens the sprint pool AND the health bar; the gain heals
+    // current hp along with it (like a fresh suit).
+    expect(state.player.maxHp).toBe(beforeHp + STAMINA.hpPerPoint);
+    expect(state.player.hp).toBe(beforeCurHp + STAMINA.hpPerPoint);
   });
 
   it("STRENGTH scales physical (melee + ranged) damage; DEX and INT do not", () => {
@@ -257,19 +262,42 @@ describe("stats", () => {
     );
   });
 
-  it("LUCK raises the player's crit chance", () => {
+  it("DEXTERITY lands physical crits, INTELLIGENCE lands magic crits, LUCK nudges both", () => {
+    // Crude sword is melee → its crit rides DEXTERITY. Bare base first.
     const state = startGame();
-    const base = playerCritChance(state);
-    expect(base).toBeCloseTo(STATS.baseCritChance);
-    state.player.stats.luck = 3;
-    expect(playerCritChance(state)).toBeCloseTo(
-      STATS.baseCritChance + 3 * STATS.critChancePerLuck,
+    expect(playerCritChance(state)).toBeCloseTo(STATS.baseCritChance);
+
+    // DEX raises the melee/ranged crit; INT does NOT touch a physical swing.
+    state.player.stats.dexterity = 4;
+    state.player.stats.intelligence = 7;
+    expect(playerCritChance(state, "melee")).toBeCloseTo(
+      STATS.baseCritChance + 4 * STATS.critChancePerStat,
     );
+    expect(playerCritChance(state, "ranged")).toBeCloseTo(
+      STATS.baseCritChance + 4 * STATS.critChancePerStat,
+    );
+    // A magic swing rides INT instead (DEX leaves it alone).
+    expect(playerCritChance(state, "magic")).toBeCloseTo(
+      STATS.baseCritChance + 7 * STATS.critChancePerStat,
+    );
+
+    // LUCK adds a MARGINAL crit on top of whichever stat governs — a quarter
+    // of a primary point, so it never replaces the class stat.
+    state.player.stats.luck = 3;
+    expect(playerCritChance(state, "melee")).toBeCloseTo(
+      STATS.baseCritChance +
+        4 * STATS.critChancePerStat +
+        3 * STATS.critChancePerLuck,
+    );
+    expect(STATS.critChancePerLuck).toBeCloseTo(STATS.critChancePerStat / 4);
   });
 
   it("a guaranteed crit doubles the damage dealt", () => {
     const state = equipBlaster(startGame()); // unbreakable blaster: full damage
-    state.player.stats.luck = 30; // crit chance > 1 → every hit crits
+    // Blaster is ranged → DEXTERITY drives its crit. Stack it far past 1 so
+    // every shot crits (DEX also quickens cadence, which only lands the crit
+    // sooner — the first hit's damage is what we measure).
+    state.player.stats.dexterity = 40;
     clearStage(state);
     state.enemies.push(
       makeEnemy({
@@ -289,9 +317,54 @@ describe("stats", () => {
   it("LUCK shrugs off the ghosts' critical grips", () => {
     const state = startGame();
     state.player.stats.luck = 5; // 0.1 ghost crit − 5×0.02 → 0
+    // Pin the RNG high so neither the hero's 5% base dodge nor the (already
+    // zeroed) ghost crit can fire — this isolates the "touch lands at base 12,
+    // never doubled" promise from the new dodge roll.
+    state.rng = () => 0.99;
     state.enemies = [makeEnemy({ pos: { ...state.player.pos } })];
     step(state, idle, DT);
     expect(state.stats.damageTaken).toBe(12); // ghost's touch, never doubled
+  });
+
+  it("DEXTERITY and LUCK raise the dodge chance off its base", () => {
+    const state = startGame();
+    expect(playerDodgeChance(state)).toBeCloseTo(DODGE.base);
+    // DEX sharpens the sidestep; LUCK nudges it MARGINALLY (a quarter of DEX).
+    state.player.stats.dexterity = 4;
+    state.player.stats.luck = 6;
+    expect(playerDodgeChance(state)).toBeCloseTo(
+      DODGE.base + 4 * DODGE.perDex + 6 * DODGE.perLuck,
+    );
+    expect(DODGE.perLuck).toBeCloseTo(DODGE.perDex / 4);
+    // Capped so no build becomes untouchable.
+    state.player.stats.dexterity = 1000;
+    expect(playerDodgeChance(state)).toBe(DODGE.max);
+  });
+
+  it("a high-dodge hero eventually sidesteps a blow entirely (no damage)", () => {
+    const state = startGame();
+    state.player.stats.dexterity = 20; // dodge well up off base
+    // An unkillable brute glued to the hero so it keeps swinging (the crude
+    // sword can chip it, but 1e6 hp means it never dies and the loop runs).
+    state.enemies = [
+      makeEnemy({
+        pos: { ...state.player.pos },
+        hp: 1_000_000,
+        maxHp: 1_000_000,
+      }),
+    ];
+    let dodged = false;
+    for (let i = 0; i < 300 && !dodged; i++) {
+      const taken = state.stats.damageTaken;
+      state.enemies[0]!.contactCooldownMs = 0; // let it swing every step
+      step(state, idle, DT);
+      if (state.events.some((e) => e.type === "playerDodge")) {
+        dodged = true;
+        // A dodged blow deals no damage that step.
+        expect(state.stats.damageTaken).toBe(taken);
+      }
+    }
+    expect(dodged).toBe(true);
   });
 
   it("STRENGTH widens the carry bag from the base floor", () => {

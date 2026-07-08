@@ -93,7 +93,15 @@ export const WEAPON_DEFS: Record<string, WeaponDef> = {
     // target melee cone only faces one way, so the crowd flanks a player who
     // won't move). DEXTERITY is how the tempo grows back.
     cooldownMs: 600,
-    range: 44,
+    // The wall blade is the WORST weapon in the game and reads like it: a
+    // short reach and a tighter arc than any real blade, so it only bites the
+    // foe more or less right in front of the hero. A picked-up weapon is a
+    // strict upgrade (isBetterEquipment treats the crude sword as the pickup
+    // floor), and INTELLIGENCE is what grows this cramped swing into a real
+    // cleave — its reach (rangePerInt), its cone (aoePerInt), and how many it
+    // hits (aoeTargetsPerInt).
+    range: 38,
+    sweepDeg: 85,
     durability: 120,
     // A crude blade bites ONE foe per swing — no wide cleave until the hero
     // grows some INTELLIGENCE (STATS.aoeTargetsPerInt lifts the cap).

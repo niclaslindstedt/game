@@ -398,6 +398,9 @@ export type GameEvent =
       crit: boolean;
     }
   | { type: "playerHurt"; crit: boolean }
+  /** The player sidestepped a blow entirely (see `playerDodgeChance`). `pos`
+   * is the hero — the app floats a "DODGE" tag and pips a light whiff. */
+  | { type: "playerDodge"; pos: Vec2 }
   | {
       type: "itemCollected";
       kind: Item["kind"];

@@ -123,6 +123,23 @@ export function playCombatSound(synth: Synth, event: GameEvent): boolean {
       });
       return true;
 
+    case "playerDodge":
+      // A clean sidestep: a short airy whiff sweeping up and out of the way,
+      // no impact body — the blow that never landed.
+      synth.noise({
+        durationMs: 110,
+        volume: 0.05,
+        filter: { type: "bandpass", frequency: 1600, q: 0.7 },
+      });
+      synth.tone({
+        type: "sine",
+        from: 320,
+        to: 760,
+        durationMs: 120,
+        volume: 0.035,
+      });
+      return true;
+
     case "lightning":
       // The storm strike: a bright crack, a falling zap, thunder in the echo.
       synth.noise({

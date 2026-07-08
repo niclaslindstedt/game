@@ -12,6 +12,7 @@ import type { Rng } from "@game/lib/rng.ts";
 import { randomRange } from "@game/lib/rng.ts";
 import {
   ARMOR,
+  DODGE,
   LOOT,
   MELEE,
   PLAYER,
@@ -60,6 +61,18 @@ export const DAMAGE_STAT: Record<WeaponClass, StatName> = {
  * physical weapons (melee and ranged), INTELLIGENCE quickens magic ones.
  */
 export const SPEED_STAT: Record<WeaponClass, StatName> = {
+  melee: "dexterity",
+  ranged: "dexterity",
+  magic: "intelligence",
+};
+
+/**
+ * The stat that sharpens each weapon class's CRIT chance: DEXTERITY for
+ * physical weapons (melee and ranged), INTELLIGENCE for magic ones. LUCK adds
+ * a marginal crit on top of whichever of these governs the swing (see
+ * `playerCritChance`).
+ */
+export const CRIT_STAT: Record<WeaponClass, StatName> = {
   melee: "dexterity",
   ranged: "dexterity",
   magic: "intelligence",
@@ -256,10 +269,11 @@ export function effectiveStat(state: GameState, stat: StatName): number {
   return value + passiveStatBonus(state, stat);
 }
 
-/** Max hp from the base pool + gear bonuses and affixes (STAMINA no longer
- * feeds hp — it drives the sprint pool instead; see `computeMaxStamina`). */
+/** Max hp from the base pool + the STAMINA stat + gear bonuses and affixes.
+ * STAMINA now feeds BOTH the sprint pool (see `computeMaxStamina`) and the
+ * health bar — a hardy sprinter is a sturdier hero. */
 export function computeMaxHp(state: GameState): number {
-  let max = PLAYER.maxHp;
+  let max = PLAYER.maxHp + effectiveStat(state, "stamina") * STAMINA.hpPerPoint;
   for (const piece of equippedPieces(state)) {
     if (!isWeaponDef(piece.defId)) {
       max += gearDef(piece.defId).bonuses.maxHp ?? 0;
@@ -342,10 +356,21 @@ export function recomputeMaxStamina(state: GameState): void {
     delta > 0 ? player.stamina + delta : Math.min(player.stamina, next);
 }
 
-/** The player's crit chance: base + LUCK + gear bonuses and affixes. */
-export function playerCritChance(state: GameState): number {
+/**
+ * The player's crit chance for a swing of the given weapon class: the base
+ * chance plus the class's CRIT stat (DEX for melee & ranged, INT for magic —
+ * see `CRIT_STAT`), a MARGINAL LUCK nudge, and every gear/affix crit bonus.
+ * `weaponClass` defaults to the equipped weapon's class, so the HUD readout
+ * reflects what's in hand; combat passes the class of the blow that landed.
+ */
+export function playerCritChance(
+  state: GameState,
+  weaponClass: WeaponClass = weaponDef(state.player.equipment.weapon.defId)
+    .class,
+): number {
   let chance =
     STATS.baseCritChance +
+    effectiveStat(state, CRIT_STAT[weaponClass]) * STATS.critChancePerStat +
     effectiveStat(state, "luck") * STATS.critChancePerLuck;
   for (const piece of equippedPieces(state)) {
     if (!isWeaponDef(piece.defId)) {
@@ -356,6 +381,21 @@ export function playerCritChance(state: GameState): number {
     }
   }
   return chance;
+}
+
+/**
+ * The player's chance to sidestep an incoming blow entirely: the innate `base`
+ * plus DEXTERITY's reflexes and a marginal LUCK nudge, capped at `DODGE.max`
+ * so no build becomes untouchable. Rolled in the contact-damage path (step.ts)
+ * and surfaced on the stat panel.
+ */
+export function playerDodgeChance(state: GameState): number {
+  return Math.min(
+    DODGE.max,
+    DODGE.base +
+      effectiveStat(state, "dexterity") * DODGE.perDex +
+      effectiveStat(state, "luck") * DODGE.perLuck,
+  );
 }
 
 /**
@@ -552,6 +592,13 @@ export function isBetterEquipment(
 ): boolean {
   if (candidate.slot === "weapon") {
     const current = state.player.equipment.weapon;
+    // The CRUDE SWORD is the starter floor: any real weapon the world yields is
+    // an upgrade over the wall blade, so a fresh pickup always supplants it —
+    // even a slow sidearm whose raw DPS score would otherwise rank below the
+    // sword. Once a proper weapon is in hand the usual score comparison rules.
+    if (current.defId === "crude_sword" && candidate.defId !== "crude_sword") {
+      return true;
+    }
     const candidateScore = weaponScore(state, candidate);
     const currentScore = weaponScore(state, current);
     if (candidateScore !== currentScore) return candidateScore > currentScore;
