@@ -140,31 +140,54 @@ export const MENACE = {
    * Menace banked per second per point of the player's rolling DPS: sustained
    * damage output is the meter's main fuel, so a hard-hitting build heats it
    * faster than a plinking one — the meter tracks how overpowered you are, not
-   * how you happened to land the last blow.
+   * how you happened to land the last blow. Scaled by `menaceSensitivity`
+   * (difficulty × early-game warmup) before it lands. Kept deliberately low:
+   * raw DPS climbs for every build as the run goes on, so leaning on it would
+   * heat the meter for fair late-game play too. The meter leans instead on
+   * relative OVERKILL and kill RATE, which single out a genuinely lopsided
+   * build; DPS is only a gentle supporting term.
    */
-  perDps: 0.15,
+  perDps: 0.07,
   /**
    * Menace banked per second per kill/second of the player's rolling kill rate:
    * a fast clear heats the meter on top of raw damage, so mowing a crowd down
    * escalates faster than grinding a single tank.
    */
-  perKillRate: 2,
+  perKillRate: 1.5,
   /**
-   * Menace banked instantly per point of OVERKILL on a killing blow — the
-   * damage dumped past the mob's remaining hp. Dropping a 10-hp wisp with a
-   * 200-damage swing jolts the meter by 190 × this: an overpowered kill is a
-   * spike on TOP of the rolling DPS/kill-rate heat, so being wildly stronger
-   * than the horde escalates it fast even before the rolling average catches up.
+   * Menace banked instantly per HEALTHBAR of OVERKILL on a killing blow — the
+   * blow's damage beyond the mob's FULL health (damage − maxHp), measured as a
+   * fraction of its max hp (overkill ÷ maxHp), not raw points. A hit that only
+   * finishes a wounded mob isn't overkill at all; one that could have dropped
+   * the mob several times over wastes multiple bars — the signature of an
+   * overpowered build — and jolts the meter. Measuring it relative to the mob's
+   * hp is what keeps early, level-appropriate kills cool while genuinely
+   * lopsided ones escalate. Scaled by `menaceSensitivity` like the rolling heat.
    */
-  perOverkill: 0.04,
+  perOverkill: 1.4,
   /**
    * The window (seconds) the DPS/kill-rate estimates smooth over — long enough
    * that one burst doesn't spike the meter, short enough that the heat tracks
    * the last few seconds of fighting rather than the whole run.
    */
   rateWindowSec: 2.5,
-  /** Menace bled off per second: stop the slaughter and the horde cools. */
-  decayPerSec: 3,
+  /**
+   * Menace bled off per second: stop the slaughter and the horde cools. This is
+   * the constant cooler the (sensitivity-scaled) gain must beat to climb, so on
+   * a gentle difficulty ordinary fighting trends the meter back to zero.
+   */
+  decayPerSec: 4,
+  /**
+   * Early-game warmup. Menace gain (rolling heat AND overkill jolts) is damped
+   * by a factor that eases from `warmupFloor` at level 1 up to 1.0 by player
+   * level `1 + warmupLevels`, so a fresh hero on a fair difficulty simply cannot
+   * rampage in the opening levels — the meter can't build faster than it decays
+   * until the player has grown into some real power. The residual `warmupFloor`
+   * is deliberately non-zero so a very sensitive difficulty (high `menaceMult`,
+   * e.g. JESUS) multiplies through it and still bites from the first few kills.
+   */
+  warmupLevels: 5,
+  warmupFloor: 0.12,
   /** Menace is capped here (also caps the derived stage at maxStage). */
   max: 120,
   /** Raw menace per evolution stage: stage = floor(menace / perStage). */

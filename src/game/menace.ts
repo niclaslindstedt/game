@@ -16,12 +16,41 @@
 // Kept out of step.ts/loot.ts so both stay lean and this rule reads in one place.
 
 import { MENACE } from "./config.ts";
+import { difficultyDef } from "./defs/difficulties.ts";
 import { enemyDef } from "./defs/enemies/index.ts";
 import type { Enemy, GameState } from "./types.ts";
 
 /** The current evolution stage: menace bucketed into [0, MENACE.maxStage]. */
 export function menaceStage(state: GameState): number {
   return Math.min(MENACE.maxStage, Math.floor(state.menace / MENACE.perStage));
+}
+
+/**
+ * The early-game warmup factor, easing from `warmupFloor` at level 1 up to 1.0
+ * by player level `1 + warmupLevels`. A fresh hero's menace gain is damped so
+ * hard that (on a fair difficulty) the meter can't outrun its decay in the
+ * opening levels — reaching rampage stage 1 is effectively impossible until the
+ * player has grown into real power. The non-zero floor is what a very sensitive
+ * difficulty multiplies through so JESUS still bites from the first kills.
+ */
+export function menaceWarmup(state: GameState): number {
+  const t = Math.min(
+    1,
+    Math.max(0, (state.player.level - 1) / MENACE.warmupLevels),
+  );
+  return MENACE.warmupFloor + (1 - MENACE.warmupFloor) * t;
+}
+
+/**
+ * How hard the meter reacts to the player's output right now: the difficulty's
+ * `menaceMult` (EASY barely reacts; JESUS is scalding) times the early-game
+ * `menaceWarmup`. All menace gain — the rolling DPS/kill-rate heat in
+ * `tickMenace` and the overkill jolt in `bankOverkill` — is scaled by this, so
+ * whether an overpowered run rampages, and how fast, is set by difficulty and
+ * progression rather than raw output alone.
+ */
+export function menaceSensitivity(state: GameState): number {
+  return difficultyDef(state.difficulty).menaceMult * menaceWarmup(state);
 }
 
 /** The hp multiplier a minion spawned at evolution `stage` carries. */
@@ -38,22 +67,33 @@ export function lureMult(state: GameState): number {
 }
 
 /**
- * An overpowered kill's answer: the OVERKILL (damage the killing blow dumped
- * past the mob's last hp) both (1) jolts the menace meter up instantly — being
- * wildly stronger than the horde escalates it on the spot, a spike on top of
- * the rolling DPS/kill-rate heat in `tickMenace` — and (2) dinner-bells the
+ * An overpowered kill's answer, keyed to the killing blow's OVERKILL. Overkill
+ * is the blow's `damage` beyond the mob's FULL health (`damage − maxHp`), so a
+ * hit that merely finishes off an already-wounded mob is NOT overkill — only a
+ * blow big enough to have dropped the mob outright, with power to spare, counts.
+ * It both (1) jolts the menace meter up instantly and (2) dinner-bells the
  * nearby horde over RIGHT NOW via spawner walk-credit, so a big hit is answered
- * within seconds. Emits `menaceRose` if the jolt tips into a new stage. Called
- * from hitEnemy on every kill.
+ * within seconds. The meter jolt is measured in HEALTHBARS of overkill
+ * (overkill ÷ maxHp) and scaled by `menaceSensitivity`, so a fair,
+ * level-appropriate kill barely moves it while one-shotting a mob for several
+ * times its health — being wildly stronger than the horde — escalates on the
+ * spot, a spike on top of the rolling DPS/kill-rate heat in `tickMenace`. Emits
+ * `menaceRose` if the jolt tips into a new stage. Called from hitEnemy on every
+ * kill with the (crit-adjusted) killing-blow damage and the victim's max hp.
  */
-export function bankOverkill(state: GameState, overkill: number): void {
-  const spike = Math.max(0, overkill);
+export function bankOverkill(
+  state: GameState,
+  damage: number,
+  maxHp: number,
+): void {
+  const spike = Math.max(0, damage - maxHp);
   state.moveSpawnCredit += spike * MENACE.lureCreditPerOverkill;
-  if (spike <= 0) return;
+  if (spike <= 0 || maxHp <= 0) return;
+  const healths = spike / maxHp;
   const before = menaceStage(state);
   state.menace = Math.min(
     MENACE.max,
-    state.menace + spike * MENACE.perOverkill,
+    state.menace + healths * MENACE.perOverkill * menaceSensitivity(state),
   );
   const after = menaceStage(state);
   if (after > before) state.events.push({ type: "menaceRose", stage: after });
@@ -86,7 +126,9 @@ export function tickMenace(
 
   const before = menaceStage(state);
   const gain =
-    state.combatDps * MENACE.perDps + state.combatKillRate * MENACE.perKillRate;
+    (state.combatDps * MENACE.perDps +
+      state.combatKillRate * MENACE.perKillRate) *
+    menaceSensitivity(state);
   const next = state.menace + (gain - MENACE.decayPerSec) * dt;
   state.menace = Math.max(0, Math.min(MENACE.max, next));
   const after = menaceStage(state);

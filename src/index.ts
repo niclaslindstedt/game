@@ -73,7 +73,12 @@ export {
 
 // The menace meter: the escalation the app reads to draw the rampage gauge
 // and mark evolved mobs (the mechanics live in step()/loot()).
-export { enemyPowerScale, menaceStage } from "./game/menace.ts";
+export {
+  enemyPowerScale,
+  menaceSensitivity,
+  menaceStage,
+  menaceWarmup,
+} from "./game/menace.ts";
 
 // Time-limited abilities: activation and the helpers the renderer shares.
 export {

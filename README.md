@@ -109,12 +109,18 @@ and something enormous haunts the old flag.
   **signature weapon** (better than the level's pool, shy of the boss's)
   plus **story items**: keycards that open **locked rooms** (spare parts,
   the alien anti-grav unit) and documents that deepen the mystery.
-- **Don't get complacent when you're winning.** Overkilling monsters and
-  killing at a fast clip builds **menace** — a RAMPAGE gauge lights up on the
-  HUD — and the horde answers: it **lures more foes** onto you, **evolves**
-  the mobs it sends into tougher versions (marked by a glowing aura) that pay
-  more XP and drop better gear, and scales elite mobs and bosses to your
-  power so they can't be one-shot. Ease off and the meter cools.
+- **Don't get complacent when you're winning.** Once you're outclassing the
+  horde — **one-shotting mobs for far more than they're worth** and clearing at
+  a blistering pace — you build **menace** and a RAMPAGE gauge lights up on the
+  HUD. It reads how _overpowered_ you are, not just how fast you swing, so a
+  fresh hero can't trip it in the opening levels; it takes a genuinely lopsided
+  build. How touchy it is depends on the difficulty: **EASY** barely reacts,
+  **MEDIUM** answers only a truly dominant run, and each harder rung is more
+  sensitive up to **JESUS CHRIST!**, where a handful of kills is enough. When it
+  lights, the horde answers: it **lures more foes** onto you, **evolves** the
+  mobs it sends into tougher versions (marked by a glowing aura) that pay more
+  XP and drop better gear, and scales elite mobs and bosses to your power so
+  they can't be one-shot. Ease off and the meter cools.
 - **Kill the boss** — MUSKRAT under the rocket, ARMSTRONG at the flag — to
   clear the level; bosses have their own longer stare-down scenes before
   the fight. If your HP reaches zero the run ends with a stats screen and
