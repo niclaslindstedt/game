@@ -292,9 +292,9 @@ export const SPACEZ_ENEMIES: Record<string, EnemyDef> = {
         "THE THING I ATE FIXED MY TONGUE.",
       ],
       [
-        "THEY KEPT THE DRIVE CORE IN A",
-        "CHEESE-COLORED BOX. THAT IS ON",
-        "THEM, FRANKLY.",
+        "THE INGREDIENT YOU CAME FOR?",
+        "THEY KEPT IT IN A CHEESE-COLORED",
+        "BOX. OF COURSE I ATE IT.",
       ],
       [
         "NOW IT HUMS IN MY BELLY AND I",
