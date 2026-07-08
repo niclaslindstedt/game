@@ -131,6 +131,12 @@ type Hud = {
   bagCount: number;
   /** Banked ability pickups, oldest first (ABILITY_DEFS ids). */
   heldAbilities: string[];
+  /**
+   * Currently running powerups (ABILITY_DEFS ids, in activation order). Drives
+   * the highlighted active-powerup strip; the per-frame countdown/radial for
+   * each is written to the DOM directly by the render loop, not through here.
+   */
+  activeAbilities: string[];
   /** Equipped weapon def id — drives the always-on weapon widget. */
   weaponDefId: string;
   /** Equipped weapon's durability 0..1, or null for the unbreakable sidearm. */
@@ -330,6 +336,10 @@ export function GameScreen({
   const [levelId, setLevelId] = useState(initialLevelId);
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const dpadRef = useRef<HTMLDivElement>(null);
+  // The active-powerup strip: its radial cooldown sweeps and countdown numbers
+  // are written straight to the DOM by the render loop (like the dpad), so the
+  // timer stays smooth without a React re-render every frame.
+  const activePowerupsRef = useRef<HTMLDivElement>(null);
   const jumpQueuedRef = useRef(false);
   const useItemQueuedRef = useRef(false);
   // Desktop keyboard steering: which MOVE_KEYS are held right now, and whether
@@ -919,9 +929,35 @@ export function GameScreen({
           }
         }
 
+        // Drive each active powerup's WoW-style cooldown: a conic sweep that
+        // unwinds as the ability runs out, plus a whole-second countdown. Both
+        // are written to the DOM here so they tick every frame without a React
+        // re-render (React only owns which slots exist — see the `active` key).
+        const activeRow = activePowerupsRef.current;
+        if (activeRow) {
+          for (const ability of state.player.abilities) {
+            const slot = activeRow.querySelector<HTMLElement>(
+              `[data-ability="${ability.defId}"]`,
+            );
+            if (!slot) continue;
+            const total = abilityDef(ability.defId).durationMs;
+            const remaining = Math.max(0, ability.remainingMs);
+            const frac = total > 0 ? Math.min(1, remaining / total) : 0;
+            slot.style.setProperty("--cd", frac.toFixed(4));
+            const secs = slot.querySelector<HTMLElement>(
+              ".active-powerup-secs",
+            );
+            if (secs) secs.textContent = String(Math.ceil(remaining / 1000));
+          }
+        }
+
         // Mirror the slow-moving values into React only when they change.
         const bagCount = state.player.inventory.filter(Boolean).length;
         const held = state.player.heldAbilities.join(",");
+        // Only the *set* of running powerups mounts/unmounts slots; the ticking
+        // timer itself is animated straight on the DOM, so it stays out of the
+        // change-key (which would otherwise thrash React state every frame).
+        const active = state.player.abilities.map((a) => a.defId).join(",");
         const weapon = state.player.equipment.weapon;
         const weaponWear =
           weapon.durability === undefined
@@ -930,7 +966,7 @@ export function GameScreen({
         const appearance = playerAppearance(state);
         const stage = menaceStage(state);
         const armor = armorInfo(state);
-        const key = `${state.phase}/${state.player.hp}/${Math.ceil(state.player.armor)}/${Math.ceil(state.player.stamina)}/${state.player.xp}/${state.player.level}/${state.player.pendingStatPoints}/${state.enemies.length}/${bagCount}/${held}/${weapon.defId}/${weaponWear?.toFixed(2) ?? ""}/${appearance}/${stage}/${state.stats.kills}/${Math.floor(state.stats.timeMs / 1000)}`;
+        const key = `${state.phase}/${state.player.hp}/${Math.ceil(state.player.armor)}/${Math.ceil(state.player.stamina)}/${state.player.xp}/${state.player.level}/${state.player.pendingStatPoints}/${state.enemies.length}/${bagCount}/${held}/${active}/${weapon.defId}/${weaponWear?.toFixed(2) ?? ""}/${appearance}/${stage}/${state.stats.kills}/${Math.floor(state.stats.timeMs / 1000)}`;
         if (key !== lastHud) {
           lastHud = key;
           setHud({
@@ -949,6 +985,7 @@ export function GameScreen({
             menaceStage: stage,
             bagCount,
             heldAbilities: [...state.player.heldAbilities],
+            activeAbilities: state.player.abilities.map((a) => a.defId),
             weaponDefId: weapon.defId,
             weaponWear,
             appearance,
@@ -1352,6 +1389,34 @@ export function GameScreen({
               )}
             </div>
           </div>
+        </div>
+      )}
+
+      {/* Active powerups: a used ability lights up here (just above the dock)
+          and counts down like a WoW cooldown — the icon glows and a translucent
+          radial sweep unwinds over the ability's duration, with the remaining
+          seconds in the corner. The sweep + number are animated by the render
+          loop straight on the DOM (see activePowerupsRef); React only mounts and
+          unmounts a slot as an ability starts/ends. Nukes are instant (duration
+          0) so they never appear here. */}
+      {hud?.phase === "playing" && hud.activeAbilities.length > 0 && (
+        <div
+          ref={activePowerupsRef}
+          className={`active-powerups dock-${powerupSide}`}
+          aria-hidden="true"
+        >
+          {hud.activeAbilities.map((defId) => {
+            const icon = spriteDataUrl(assets.sprites, abilityDef(defId).icon);
+            return (
+              <div key={defId} className="active-powerup" data-ability={defId}>
+                {icon && (
+                  <img src={icon} alt="" className="pixel-img powerup-icon" />
+                )}
+                <span className="active-powerup-sweep" />
+                <span className="active-powerup-secs" />
+              </div>
+            );
+          })}
         </div>
       )}
 
