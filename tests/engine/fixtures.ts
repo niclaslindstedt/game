@@ -235,6 +235,17 @@ export const FIX_GEAR: Record<string, GearDef> = {
     bonuses: { critChance: 0.03 },
     icon: "icon_charm",
   },
+  // A passive trinket (mirrors the shipped `passage_chip`): its `+1 INT`
+  // applies while merely carried in the bag, so the engine's passive-stat
+  // rule has a content-agnostic piece to exercise.
+  test_chip: {
+    id: "test_chip",
+    name: "TEST CHIP",
+    slot: "charm",
+    bonuses: {},
+    passive: { intelligence: 1 },
+    icon: "icon_charm",
+  },
 };
 
 export const FIX_ABILITIES: Record<string, AbilityDef> = {

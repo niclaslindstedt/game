@@ -190,6 +190,54 @@ describe("SPACEZ HQ level def", () => {
   });
 });
 
+describe("THE ARCHITECT and the PASSAGE CHIP", () => {
+  it("pins the old bench partner as a fifth speaking elite on the level", () => {
+    const architect = HQ.spawns.find(
+      (s) => "at" in s && s.enemy === "architect",
+    );
+    expect(architect).toBeDefined();
+    const def = enemyDef("architect");
+    expect(def.role).toBe("elite");
+    expect(def.dialogue?.length ?? 0).toBeGreaterThan(0);
+    expect(def.lastWords?.length ?? 0).toBeGreaterThan(0);
+    // Rushes into view like the other uniques before it talks.
+    expect(def.ai.rushSpeed ?? 0).toBeGreaterThan(def.speed);
+  });
+
+  it("stays a shorter scene than the boss's confrontation", () => {
+    expect(enemyDef("architect").dialogue!.length).toBeLessThan(
+      enemyDef("muskrat").dialogue!.length,
+    );
+  });
+
+  it("hits the meeting's beats: the plea, the obsolescence, the threat", () => {
+    const script = enemyDef("architect").dialogue!.flat().join(" ");
+    expect(script).toContain("QUIT");
+    expect(script).toContain("SUPERINTELLIGENCE");
+    expect(script).toContain("OBSOLETE");
+    expect(script).toContain("NOW YOU WILL DIE");
+  });
+
+  it("drops the chip he operated into himself", () => {
+    const items = enemyDef("architect").loot?.items ?? [];
+    const chip = items.find(
+      (e) => (typeof e === "string" ? e : e.defId) === "passage_chip",
+    );
+    expect(chip).toBeDefined();
+    // Forced regular so it lands as the plain, affix-free "+1 INT".
+    expect(typeof chip === "string" ? undefined : chip?.tier).toBe("regular");
+  });
+
+  it("makes the PASSAGE CHIP a passive +1 INT trinket", () => {
+    const chip = gearDef("passage_chip");
+    expect(chip.slot).toBe("charm");
+    expect(chip.passive?.intelligence).toBe(1);
+    // Purely passive: no worn bonuses, no plating.
+    expect(chip.bonuses).toEqual({});
+    expect(chip.armor).toBeUndefined();
+  });
+});
+
 describe("level catalog integrity", () => {
   const levels = Object.values(LEVELS) as LevelDef[];
 

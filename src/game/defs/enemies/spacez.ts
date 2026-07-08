@@ -2,9 +2,10 @@
 // SpaceZ HQ (level 1) roster: the night shift, weakest to strongest —
 // interns, lab scientists, propulsion engineers, security guards, hazmat
 // techs, and the OPTIMUS units SpaceZ rolled out to replace the humans that
-// asked too many questions — the four staffers who know too much (elites),
-// and MUSKRAT, the mutant rat who ate the drive ingredient (boss). Registered
-// into ENEMY_DEFS by ./index.ts.
+// asked too many questions — the five staffers who know too much (elites,
+// including THE ARCHITECT, the hero's old bench partner now building the
+// superintelligence that replaced them), and MUSKRAT, the mutant rat who ate
+// the drive ingredient (boss). Registered into ENEMY_DEFS by ./index.ts.
 
 import type { EnemyDef } from "./types.ts";
 
@@ -269,6 +270,57 @@ export const SPACEZ_ENEMIES: Record<string, EnemyDef> = {
       xpArrows: 1,
       repairs: 1,
       medkits: 2,
+      tierBonus: 0.25,
+    },
+  },
+  // THE ARCHITECT — the hero's old bench partner from back when they built
+  // engines together, before SpaceZ swapped them both for an AI. Where the
+  // hero walked out bitter, THE ARCHITECT drank it in: now he heads the
+  // superintelligence program, and he has cut a PASSAGE CHIP into his own
+  // skull to badge through the cyborg locks and pass as a machine. The player
+  // begs him to quit — this is an evil company — and the old friend only
+  // smiles: humans are obsolete. He drops the chip he operated into himself.
+  architect: {
+    id: "architect",
+    name: "THE ARCHITECT",
+    role: "elite",
+    sprite: "architect",
+    hp: 190,
+    speed: 20,
+    radius: 12,
+    contactDamage: 18,
+    critChance: 0.11,
+    contactCooldownMs: 700,
+    dialogue: [
+      [
+        "MY OLD BENCH PARTNER. STILL",
+        "SOLDERING TOYS IN A GARAGE?",
+        "I BUILD MINDS NOW. A REAL ONE.",
+      ],
+      [
+        "QUIT? YOU CAME HERE TO TELL ME",
+        "TO QUIT? THIS 'EVIL COMPANY' GAVE",
+        "ME PURPOSE. A SUPERINTELLIGENCE.",
+      ],
+      [
+        "I CUT THE CHIP IN MYSELF. FLESH",
+        "IS A ROUGH DRAFT. HUMANS ARE",
+        "OBSOLETE - YOU MOST OF ALL.",
+      ],
+      ["NO MORE TALKING, OLD FRIEND.", "NOW YOU WILL DIE."],
+    ],
+    lastWords: ["THE CHIP... TAKE IT...", "IT WAS NEVER... MINE..."],
+    ai: { aggroRadius: 240, rushSpeed: 120 },
+    loot: {
+      // The chip he operated into himself — a passive `+1 INT` trinket that
+      // pays out from the bag. Forced regular so it lands as the plain,
+      // affix-free "+1 INT" the story promises, not a rolled MAGIC variant.
+      items: [{ defId: "passage_chip", tier: "regular" }],
+      weapons: 0,
+      gear: 0,
+      xpArrows: 1,
+      repairs: 1,
+      medkits: 1,
       tierBonus: 0.25,
     },
   },

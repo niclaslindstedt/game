@@ -326,14 +326,14 @@ describe("locked doors", () => {
 describe("catalog integrity", () => {
   const elites = Object.values(ENEMY_DEFS).filter((d) => d.role === "elite");
 
-  it("fields 3-4 speaking, loot-bearing elites per level", () => {
+  it("fields 3-5 speaking, loot-bearing elites per level", () => {
     for (const level of Object.values(LEVELS)) {
       const placed = level.spawns
         .filter((s) => "at" in s)
         .map((s) => enemyDef(s.enemy))
         .filter((d) => d.role === "elite");
       expect(placed.length).toBeGreaterThanOrEqual(3);
-      expect(placed.length).toBeLessThanOrEqual(4);
+      expect(placed.length).toBeLessThanOrEqual(5);
       for (const def of placed) {
         expect(def.dialogue?.length ?? 0).toBeGreaterThan(0);
         expect(def.loot?.items?.length ?? 0).toBeGreaterThan(0);
