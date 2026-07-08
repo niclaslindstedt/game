@@ -139,8 +139,13 @@ describe("steering", () => {
   it("clamps the player inside the finite level", () => {
     const state = startGame();
     clearStage(state);
-    // Long enough for the slower walk to cover the diagonal to the corner.
-    run(state, steerTo(-5000, -5000), 4000);
+    // Clear the seeded obstacle field so this exercises boundary clamping, not
+    // squeezing between rocks — a winded (half-speed) approach otherwise pins
+    // on a solid block the full-speed run happened to skirt.
+    state.obstacles = [];
+    // Long enough for the diagonal to the corner even once the sprint pool
+    // drains and the run drops to its winded half-speed floor.
+    run(state, steerTo(-5000, -5000), 8000);
     expect(state.player.pos.x).toBe(PLAYER.radius);
     expect(state.player.pos.y).toBe(PLAYER.radius);
   });
@@ -599,7 +604,7 @@ describe("win and lose", () => {
     // The boss gasps his last words as he falls: tap through the death scene,
     // then spend the level-ups the kill banked, so time can resume.
     while (state.phase === "dialogue") advanceDialogue(state);
-    while (state.player.pendingStatPoints > 0) allocateStat(state, "health");
+    while (state.player.pendingStatPoints > 0) allocateStat(state, "stamina");
     expect(state.phase).toBe("playing");
     run(
       state,

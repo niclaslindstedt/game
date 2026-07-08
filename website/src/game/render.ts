@@ -194,9 +194,11 @@ export function drawFrame(
     const cy = Math.round(item.pos.y - camera.y);
     const glowR = sprite.width * 0.9;
     const glowAlpha = 0.3 + 0.14 * Math.sin(timeMs / 240 + item.id);
+    // Powerup pickups glow electric blue; everything else keeps the warm gold.
+    const glowRgb = item.kind === "ability" ? "120, 190, 255" : "255, 236, 170";
     const glow = ctx.createRadialGradient(cx, cy, 0, cx, cy, glowR);
-    glow.addColorStop(0, `rgba(255, 236, 170, ${glowAlpha})`);
-    glow.addColorStop(1, "rgba(255, 236, 170, 0)");
+    glow.addColorStop(0, `rgba(${glowRgb}, ${glowAlpha})`);
+    glow.addColorStop(1, `rgba(${glowRgb}, 0)`);
     ctx.fillStyle = glow;
     ctx.beginPath();
     ctx.arc(cx, cy, glowR, 0, Math.PI * 2);

@@ -143,6 +143,41 @@ export function playPickupSound(synth: Synth, event: GameEvent): boolean {
       });
       return true;
 
+    case "abilityStarted": {
+      // Enabling a powerup: a bright ascending power-up flourish. A rising saw
+      // sweep swells underneath a four-note arpeggio (C–E–G–C), capped with a
+      // shimmering bell — the unmistakable "power ON" moment.
+      [523, 659, 784, 1047].forEach((freq, i) =>
+        synth.tone({
+          type: "square",
+          from: freq,
+          durationMs: 90,
+          volume: 0.05,
+          delayMs: i * 55,
+          detuneCents: 7,
+          echo: 0.3,
+        }),
+      );
+      synth.tone({
+        type: "sawtooth",
+        from: 180,
+        to: 900,
+        durationMs: 240,
+        volume: 0.04,
+        detuneCents: 10,
+        echo: 0.3,
+      });
+      synth.tone({
+        type: "sine",
+        from: 2093,
+        durationMs: 260,
+        volume: 0.025,
+        delayMs: 230,
+        echo: 0.45,
+      });
+      return true;
+    }
+
     case "abilityEnded":
       // The power winding down: a soft falling sigh into the echo.
       synth.tone({

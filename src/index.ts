@@ -42,7 +42,9 @@ export {
   dismissIntro,
   skipCutscene,
   tapCutscene,
+  armorInfo,
   computeMaxHp,
+  computeMaxStamina,
   dropChance,
   discardFromInventory,
   effectiveStat,
@@ -174,6 +176,7 @@ export { registerDefs, type DefOverrides } from "./game/defs/registry.ts";
 
 // Global tuning.
 export {
+  ARMOR,
   DIALOGUE,
   DOORS,
   ENEMY_AI,
@@ -188,6 +191,7 @@ export {
   PLAYER,
   PROJECTILE,
   RUN,
+  STAMINA,
   STATS,
   WEAPON,
   WOUNDS,
@@ -196,6 +200,7 @@ export {
 export type {
   ActiveAbility,
   Affix,
+  ArmorGrade,
   Decor,
   DialogueState,
   Difficulty,

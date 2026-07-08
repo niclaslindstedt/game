@@ -15,6 +15,7 @@ import {
   openInventory,
   PLAYER,
   playerCritChance,
+  STAMINA,
   STATS,
   step,
   syncInventoryCapacity,
@@ -89,7 +90,7 @@ describe("xp", () => {
     const state = killGhostWorth(toLevel2 + toLevel3 + 10); // 10 into level 3
     expect(state.player.level).toBe(3);
     expect(state.player.pendingStatPoints).toBe(2);
-    allocateStat(state, "health");
+    allocateStat(state, "stamina");
     expect(state.phase).toBe("levelup"); // one point still pending
     allocateStat(state, "dexterity");
     expect(state.phase).toBe("playing");
@@ -97,13 +98,16 @@ describe("xp", () => {
 });
 
 describe("stats", () => {
-  it("HEALTH raises max hp and current hp together", () => {
+  it("STAMINA raises max stamina and current stamina together, not max hp", () => {
     const state = startGame();
     state.player.pendingStatPoints = 1;
-    const before = state.player.maxHp;
-    allocateStat(state, "health");
-    expect(state.player.maxHp).toBe(before + STATS.healthPerPoint);
-    expect(state.player.hp).toBe(before + STATS.healthPerPoint);
+    const beforeStamina = state.player.maxStamina;
+    const beforeHp = state.player.maxHp;
+    allocateStat(state, "stamina");
+    expect(state.player.maxStamina).toBe(beforeStamina + STAMINA.maxPerPoint);
+    expect(state.player.stamina).toBe(beforeStamina + STAMINA.maxPerPoint);
+    // STAMINA feeds the sprint pool now, no longer max hp.
+    expect(state.player.maxHp).toBe(beforeHp);
   });
 
   it("STRENGTH scales physical (melee + ranged) damage; DEX and INT do not", () => {

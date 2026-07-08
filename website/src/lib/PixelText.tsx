@@ -4,7 +4,7 @@
 // canvas. Generic React/UI game code — lives in website/src/lib/ so it can
 // be extracted into oss-framework once mature.
 
-import { useEffect, useRef } from "react";
+import { useLayoutEffect, useRef } from "react";
 
 import type { PixelFont } from "./pixel-font.ts";
 
@@ -29,7 +29,14 @@ export function PixelText({
 }: PixelTextProps) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
 
-  useEffect(() => {
+  // Size AND draw the canvas in a layout effect (not a plain effect): a parent
+  // that measures this text's box in its own useLayoutEffect — e.g. the
+  // inventory item tooltip positioning itself next to the hovered slot — runs
+  // AFTER its children's layout effects, so the canvas must already carry its
+  // real width/height by then. A plain useEffect leaves the canvas at its
+  // intrinsic 300×150 for that first measurement, which flung the tooltip into
+  // the top-left corner until the next click.
+  useLayoutEffect(() => {
     const canvas = canvasRef.current;
     if (!canvas) return;
     const w = Math.max(1, font.measure(text) * scale);

@@ -23,6 +23,7 @@ import {
   abilityDef,
   advanceDialogue,
   allocateStat,
+  armorInfo,
   BOT_STRATEGIES,
   botAct,
   botAllocate,
@@ -97,10 +98,25 @@ import { getSettings } from "./settings.ts";
 import { playEventSounds, playUiSound } from "./sfx/index.ts";
 import { TIER_COLORS, WEAPON_CLASS_COLORS } from "./tiers.ts";
 
+/** Armor-bar fill color per suit grade (green → yellow → red). */
+const ARMOR_BAR_COLORS: Record<"green" | "yellow" | "red", string> = {
+  green: "#5fd97a",
+  yellow: "#ffe14d",
+  red: "#e0603a",
+};
+
 type Hud = {
   phase: GamePhase;
   hp: number;
   maxHp: number;
+  /** Current armor points and the equipped suit's full pool (0 = no plating). */
+  armor: number;
+  maxArmor: number;
+  /** The suit's armor grade, for the bar's color; null with no armored suit. */
+  armorGrade: "green" | "yellow" | "red" | null;
+  /** Current sprint pool and its max. */
+  stamina: number;
+  maxStamina: number;
   level: number;
   xp: number;
   xpToNext: number;
@@ -798,13 +814,19 @@ export function GameScreen({
             : weapon.durability / weaponDef(weapon.defId).durability;
         const appearance = playerAppearance(state);
         const stage = menaceStage(state);
-        const key = `${state.phase}/${state.player.hp}/${state.player.xp}/${state.player.level}/${state.player.pendingStatPoints}/${state.enemies.length}/${bagCount}/${held}/${weapon.defId}/${weaponWear?.toFixed(2) ?? ""}/${appearance}/${stage}/${Math.floor(state.stats.timeMs / 1000)}`;
+        const armor = armorInfo(state);
+        const key = `${state.phase}/${state.player.hp}/${Math.ceil(state.player.armor)}/${Math.ceil(state.player.stamina)}/${state.player.xp}/${state.player.level}/${state.player.pendingStatPoints}/${state.enemies.length}/${bagCount}/${held}/${weapon.defId}/${weaponWear?.toFixed(2) ?? ""}/${appearance}/${stage}/${Math.floor(state.stats.timeMs / 1000)}`;
         if (key !== lastHud) {
           lastHud = key;
           setHud({
             phase: state.phase,
             hp: state.player.hp,
             maxHp: state.player.maxHp,
+            armor: state.player.armor,
+            maxArmor: armor?.max ?? 0,
+            armorGrade: armor?.grade ?? null,
+            stamina: state.player.stamina,
+            maxStamina: state.player.maxStamina,
             level: state.player.level,
             xp: state.player.xp,
             xpToNext: state.player.xpToNext,
@@ -1000,6 +1022,47 @@ export function GameScreen({
                     />
                   </div>
                   <PixelText font={font} text={String(hud.hp)} scale={2} />
+                </div>
+                {hud.maxArmor > 0 && (
+                  <div className="hud-stat-row">
+                    <PixelText
+                      font={font}
+                      text="AR"
+                      scale={2}
+                      color="#9aa3ad"
+                    />
+                    <div className="hud-bar hp-bar">
+                      <div
+                        className="hud-bar-fill"
+                        style={{
+                          width: `${(100 * hud.armor) / hud.maxArmor}%`,
+                          background:
+                            ARMOR_BAR_COLORS[hud.armorGrade ?? "green"],
+                        }}
+                      />
+                    </div>
+                    <PixelText
+                      font={font}
+                      text={String(Math.ceil(hud.armor))}
+                      scale={2}
+                    />
+                  </div>
+                )}
+                <div className="hud-stat-row">
+                  <PixelText font={font} text="ST" scale={2} color="#9aa3ad" />
+                  <div className="hud-bar hp-bar">
+                    <div
+                      className="hud-bar-fill stamina-fill"
+                      style={{
+                        width: `${(100 * hud.stamina) / hud.maxStamina}%`,
+                      }}
+                    />
+                  </div>
+                  <PixelText
+                    font={font}
+                    text={String(Math.ceil(hud.stamina))}
+                    scale={2}
+                  />
                 </div>
                 <div className="hud-stat-row hud-weapon-row">
                   {(() => {

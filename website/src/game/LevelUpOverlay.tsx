@@ -28,10 +28,10 @@ const CHOICES: {
   info: string;
 }[] = [
   {
-    stat: "health",
-    label: "HEALTH",
-    blurb: "+20 MAX HP",
-    info: "+20 MAX HP EACH. A LEVEL-UP ALSO HEALS YOU FULL.",
+    stat: "stamina",
+    label: "STAMINA",
+    blurb: "SPRINT + LEGS",
+    info: "DEEPER SPRINT POOL, SLOWER DRAIN & FASTER RECOVERY. RUN AT FULL SPEED LONGER.",
   },
   {
     stat: "strength",

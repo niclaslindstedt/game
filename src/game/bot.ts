@@ -85,12 +85,12 @@ export function botAct(bot: Bot, state: GameState): GameInput {
 
 /**
  * The level-up build a bot spends its points on: alternate the starting
- * blaster's damage stat and HEALTH — horde play needs the damage AND the
- * hp to wade through the pack. Called whenever `pendingStatPoints > 0`.
+ * blaster's damage stat and STAMINA — horde play needs the damage AND the
+ * legs to keep kiting the pack. Called whenever `pendingStatPoints > 0`.
  */
 export function botAllocate(bot: Bot, state: GameState): StatName {
   void bot; // strategy-specific builds can key off this later
-  return state.player.level % 2 === 0 ? "dexterity" : "health";
+  return state.player.level % 2 === 0 ? "dexterity" : "stamina";
 }
 
 // ---- Strategy bodies -------------------------------------------------------
