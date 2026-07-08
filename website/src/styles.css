@@ -212,6 +212,53 @@ body {
   text-shadow: 0 2px 0 rgba(11, 13, 16, 0.6);
 }
 
+/* The kill tally jolts on every frag (see KillCounter). The throw distance,
+   tilt, and duration are fed in as custom properties per shake so a burst of
+   kills reads harder than a lone one; defaults keep a stray render calm. */
+.hud-kills {
+  --shake-amp: 0px;
+  --shake-rot: 0deg;
+  --shake-dur: 160ms;
+  display: inline-block;
+  transform-origin: center;
+  will-change: transform;
+}
+
+.hud-kills.kill-shake {
+  animation: kill-shake var(--shake-dur) ease-out;
+}
+
+@keyframes kill-shake {
+  0% {
+    transform: translate(0, 0) rotate(0);
+  }
+  20% {
+    transform: translate(calc(var(--shake-amp) * -1), calc(var(--shake-amp) * 0.5))
+      rotate(calc(var(--shake-rot) * -1));
+  }
+  40% {
+    transform: translate(var(--shake-amp), calc(var(--shake-amp) * -0.5))
+      rotate(var(--shake-rot));
+  }
+  60% {
+    transform: translate(calc(var(--shake-amp) * -0.6), 0)
+      rotate(calc(var(--shake-rot) * -0.6));
+  }
+  80% {
+    transform: translate(calc(var(--shake-amp) * 0.5), 0)
+      rotate(calc(var(--shake-rot) * 0.4));
+  }
+  100% {
+    transform: translate(0, 0) rotate(0);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .hud-kills.kill-shake {
+    animation: none;
+  }
+}
+
 .hud-rampage {
   display: flex;
   flex-direction: column;
