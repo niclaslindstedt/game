@@ -22,23 +22,42 @@ export const THOUGHT_DEFS: Record<string, ThoughtDef> = {
   // building is packed like a product launch. He worked here — nights were
   // never staffed like this. Fires on view, before any blow (a sight pin),
   // and seeds the NIGHT MANAGER's reveal (the secret night shift) a few
-  // rooms later.
+  // rooms later. Portrait is "hero" (plain clothes) — the EVA suit is loot
+  // he hasn't found yet; the overlay resolves it live regardless.
   spacez_staff: {
     id: "spacez_staff",
     speaker: "ME",
-    portrait: "player",
+    portrait: "hero",
     pages: [
       [
         "LOOK AT THIS PLACE. PAST",
-        "MIDNIGHT AND EVERY DESK IS",
+        "MIDNIGHT, AND EVERY DESK'S",
         "MANNED. EVERY LAB LIT.",
       ],
       [
-        "I WORKED HERE. WE NEVER",
-        "STAFFED NIGHTS LIKE THIS.",
-        "SOMETHING MUST BE BREWING.",
+        "WE NEVER RAN NIGHTS LIKE THIS.",
+        "SOMETHING'S GOT THE WHOLE",
+        "BUILDING UP AFTER DARK.",
       ],
-      ["OH WELL.", "GOOD THING I BROUGHT THE SWORD."],
+    ],
+  },
+  // The scripted first strike: a lone scientist breaks from the pack and
+  // takes a harmless swing (see the level's `openingStrike`). It doesn't hurt
+  // — but staff don't fight, so the swing tells the hero the night shift has
+  // teeth now. This is the beat that ARMS his sword; the "good thing I brought
+  // the sword" line lands here, as a reaction, not a boast. Portrait is "hero"
+  // (still unsuited at HQ).
+  spacez_armed: {
+    id: "spacez_armed",
+    speaker: "ME",
+    portrait: "hero",
+    pages: [
+      [
+        "A SCIENTIST JUST TOOK A SWING",
+        "AT ME. BARELY FELT IT - BUT",
+        "THEY DON'T FIGHT. NEVER DID.",
+      ],
+      ["SO THE NIGHT SHIFT BITES NOW.", "GOOD THING I BROUGHT THE SWORD."],
     ],
   },
   // Sighting the first OPTIMUSK at SpaceZ HQ: he was on the team that built
@@ -49,7 +68,7 @@ export const THOUGHT_DEFS: Record<string, ThoughtDef> = {
   spacez_optimusk: {
     id: "spacez_optimusk",
     speaker: "ME",
-    portrait: "player",
+    portrait: "hero",
     pages: [
       [
         "AN OPTIMUSK. I WAS ON THE",

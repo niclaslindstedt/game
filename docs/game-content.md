@@ -114,12 +114,15 @@ The roster is split one file per level/biome under `src/game/defs/enemies/`
   superintelligence; he begs off the plea to quit ("humans are obsolete") and
   drops the **PASSAGE CHIP** he cut into his own skull — a passive `+1 INT`
   trinket that pays out while it merely rides in the bag (`GearDef.passive`).
-  Two sight-pinned inner monologues fire here (`firstSightThoughts` — on
-  view, before any blow): the first intern the hero SEES plays his arrival
-  read on a building fully staffed at midnight ("good thing I brought the
-  sword"), and the first OPTIMUSK he SEES plays the personal one — he helped
-  build the first unit before the AI redrew the line and it took everyone's
-  jobs, his included.
+  The hero walks in with his sword **holstered** (`LevelDef.openingStrike` —
+  `player.disarmed`): the auto-attack sits out until a lone VANGUARD scientist
+  sprints ahead of the pack and lands a harmless first swing, which draws the
+  blade ("good thing I brought the sword") and turns combat on. Two
+  sight-pinned inner monologues also fire here (`firstSightThoughts` — on view,
+  before any blow): the first intern the hero SEES plays his arrival read on a
+  building fully staffed at midnight, and the first OPTIMUSK he SEES plays the
+  personal one — he helped build the first unit before the AI redrew the line
+  and it took everyone's jobs, his included.
 - **Level 2** ships wisp → moon ghost → wraith and the OPTIMUSK robots SpaceZ
   shipped up to garrison the moon (the same heavy from level 1, now laced
   through the haunting) — four ghost elites (MISSION SPECIALIST, THE

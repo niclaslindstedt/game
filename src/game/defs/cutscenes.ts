@@ -17,8 +17,9 @@ import type { CutsceneDef } from "@game/lib/cutscene.ts";
  * Stage is 224×126 world px, drawn ×3 — a tight interior so the 16px cast
  * has real presence. Side view: positions are bottom-anchored (pos.y is
  * where a thing meets the floor; the renderer paints back to front by y).
- * The couch faces the TV on the left; the front door is on the far right;
- * the moon hangs in the window, waiting for level 2.
+ * The couch sits center-stage with BOTH of them on it, watching the TV off
+ * to the left; the coffee table sits between the sofa and the set; the front
+ * door is on the far right; the moon hangs in the window, waiting for level 2.
  */
 const PRELUDE: CutsceneDef = {
   id: "prelude",
@@ -28,34 +29,39 @@ const PRELUDE: CutsceneDef = {
     backdrop: "livingRoom",
     palette: { wall: "#262838", floor: "#4a3a2c", trim: "#1a1c28", floorY: 78 },
     props: [
-      { kind: "window", pos: { x: 112, y: 52 } },
+      { kind: "window", pos: { x: 150, y: 52 } },
       // The crude sword, mounted on the back wall the whole scene — the one
       // thing the hero owns worth taking, and what he lands on the moon with
       // (his starting weapon; see defs/equipment.ts `crude_sword`).
-      { kind: "wall_sword", pos: { x: 140, y: 54 } },
-      { kind: "door", pos: { x: 196, y: 80 } },
-      { kind: "tv", pos: { x: 36, y: 92 } },
-      { kind: "couch", pos: { x: 104, y: 96 } },
-      { kind: "lamp", pos: { x: 160, y: 88 } },
-      { kind: "table", pos: { x: 66, y: 112 } },
+      { kind: "wall_sword", pos: { x: 178, y: 54 } },
+      { kind: "door", pos: { x: 202, y: 80 } },
+      // The set they are watching, hard left; the couch faces it, the coffee
+      // table sits in the gap between them.
+      { kind: "tv", pos: { x: 30, y: 94 } },
+      { kind: "table", pos: { x: 74, y: 108 } },
+      { kind: "couch", pos: { x: 116, y: 96 } },
+      { kind: "lamp", pos: { x: 168, y: 90 } },
     ],
   },
   actors: [
-    // The hero never leaves the couch — that is the whole joke.
+    // Both of them on the sofa for movie night, side by side, watching the TV
+    // off to the left — the hero never gets up, which is the whole joke. Their
+    // pos.y sits a hair below the couch's floor anchor so they paint just in
+    // front of the backrest (seated on it, not hidden behind the cushions).
     {
       id: "hero",
       name: "ME",
       sprite: "hero_couch",
-      // One px below the couch anchor: painted after it, reading as seated
-      // in front of the backrest instead of hidden behind the cushions.
-      at: { x: 98, y: 97 },
+      at: { x: 108, y: 97 },
       faceLeft: true,
     },
     {
       id: "ada",
       name: "ADA",
-      sprite: "ada",
-      at: { x: 130, y: 102 },
+      // Seated beside him in her red jacket; a `pose` beat stands her up
+      // (swapping to the walking `ada` sprite) when she heads for the store.
+      sprite: "ada_couch",
+      at: { x: 124, y: 97 },
       faceLeft: true,
     },
   ],
@@ -74,8 +80,10 @@ const PRELUDE: CutsceneDef = {
       actor: "ada",
       text: ["FIVE MINUTES.", "KEEP MY SPOT WARM."],
     },
-    { kind: "move", actor: "ada", to: { x: 156, y: 110 }, speed: 40 },
-    { kind: "move", actor: "ada", to: { x: 195, y: 88 }, speed: 40 },
+    // Up off the couch (swap to the standing/walking sprite) and out the door.
+    { kind: "pose", actor: "ada", sprite: "ada" },
+    { kind: "move", actor: "ada", to: { x: 150, y: 112 }, speed: 42 },
+    { kind: "move", actor: "ada", to: { x: 201, y: 88 }, speed: 42 },
     { kind: "wait", ms: 350 },
     { kind: "exit", actor: "ada" },
     { kind: "wait", ms: 900 },
@@ -95,7 +103,10 @@ const PRELUDE: CutsceneDef = {
     // brings to save her — his default weapon when the moon level opens.
     {
       kind: "caption",
-      text: ["THE OLD SWORD OFF THE WALL.", "IT'S WHAT I BRING TO SAVE HER."],
+      text: [
+        "THE OLD SWORD OFF THE WALL.",
+        "IT'S ALL I NEED TO BRING HER HOME.",
+      ],
     },
     { kind: "fade", to: 1, ms: 1300 },
   ],

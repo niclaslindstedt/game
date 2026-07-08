@@ -143,6 +143,14 @@ export type Player = {
   moving: boolean;
   /** Remaining ms until the weapon may fire again. */
   weaponCooldownMs: number;
+  /**
+   * True while the hero's weapon is holstered — set on levels with a scripted
+   * `openingStrike` (SpaceZ HQ). The auto-attack sits out entirely until the
+   * vanguard's soft first swing arms him (see story.ts `tryOpeningStrike`);
+   * cleared for good once armed. Absent/false everywhere else — the hero opens
+   * ready to fight.
+   */
+  disarmed?: boolean;
   /** Remaining ms of post-hit invulnerability flash (visual only). */
   hurtFlashMs: number;
   level: number;
@@ -210,6 +218,12 @@ export type Enemy = {
    */
   powerScaled?: boolean;
   contactMult?: number;
+  /**
+   * The scripted opening striker (a level's `openingStrike`): a lone vanguard
+   * that rushes ahead of the pack, and whose first contact — harmless — draws
+   * the hero's holstered weapon. Set at creation; only this mob can arm him.
+   */
+  vanguard?: boolean;
 };
 
 export type Projectile = {

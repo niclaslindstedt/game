@@ -121,6 +121,20 @@ export function createGame(
     }
   }
 
+  // The scripted vanguard (see LevelDef.openingStrike): a lone rusher placed
+  // ahead of the pack, marked so only ITS first touch arms the holstered hero.
+  if (def.openingStrike) {
+    const rusher = spawnEnemy(
+      def.openingStrike.enemy,
+      vec(def.openingStrike.at.x, def.openingStrike.at.y),
+      rng,
+      nextId++,
+      diff.mobHpMult,
+    );
+    rusher.vanguard = true;
+    enemies.push(rusher);
+  }
+
   const decor = scatterDecor(rng, def);
 
   // The wave budget is part of the level's population from the start — the
@@ -181,6 +195,10 @@ export function createGame(
       heldAbilities: [],
       moving: false,
       weaponCooldownMs: 0,
+      // Levels with a scripted opening strike (SpaceZ HQ) start the hero with
+      // his weapon holstered — the vanguard's first swing draws it. Every
+      // other level opens armed.
+      disarmed: def.openingStrike !== undefined,
       hurtFlashMs: 0,
       level: 1,
       xp: 0,

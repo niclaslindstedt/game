@@ -91,6 +91,7 @@ import {
   startEnemyDialogue,
   stepDoors,
   stepSightThoughts,
+  tryOpeningStrike,
   wantsDialogue,
 } from "./story.ts";
 import type {
@@ -456,6 +457,9 @@ function detonateNuke(state: GameState, radius: number): void {
  */
 function stepWeapon(state: GameState, input: GameInput, dtMs: number): void {
   const player = state.player;
+  // Holstered on levels with a scripted opening strike: the auto-attack sits
+  // out entirely until the vanguard's first swing draws the blade (story.ts).
+  if (player.disarmed) return;
   player.weaponCooldownMs = Math.max(0, player.weaponCooldownMs - dtMs);
   if (player.weaponCooldownMs > 0) return;
 
@@ -760,6 +764,13 @@ function stepEnemies(state: GameState, dt: number, dtMs: number): void {
       // The swing is spent whether it lands or is dodged, so the same foe
       // can't re-swing next frame after a sidestep.
       enemy.contactCooldownMs = def.contactCooldownMs;
+      // Pre-combat grace while the weapon is holstered: no blow lands until the
+      // scripted vanguard's soft first swing draws it. That swing arms the hero
+      // and plays his thought (story.ts); every other touch here is harmless.
+      if (player.disarmed) {
+        tryOpeningStrike(state, enemy);
+        continue;
+      }
       // A nimble hero sidesteps the blow entirely: no HP, no armor, no hit.
       // DEXTERITY drives it, LUCK nudges it (see `playerDodgeChance`).
       if (state.rng() < playerDodgeChance(state)) {

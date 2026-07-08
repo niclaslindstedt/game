@@ -15,18 +15,37 @@ export const SPACEZ_HQ: LevelDef = {
   prelude: "prelude",
   music: "hq_lockdown",
   intro: [
-    ["ADA WENT OUT FOR CHIPS AND SODA.", "SHE NEVER CAME BACK."],
-    ["THE BEACON I SEWED INTO HER JACKET", "POINTS STRAIGHT OFF-PLANET."],
-    ["SO I'M BUILDING A SHIP.", "THE DRIVE NEEDS ONE INGREDIENT."],
-    ["SPACEZ KEEPS IT IN THE CLEANROOM.", "I USED TO KEEP IT THERE MYSELF."],
-    ["I DESIGNED HALF THESE ENGINES.", "THEN THEY REPLACED ME WITH AN AI."],
     [
-      "SAME STORY EVERYWHERE. THE WHOLE",
-      "BLOCK'S ON WELFARE NOW. ADA AND",
-      "ME TOO. BUT HEY - WEBFLIX.",
+      "ADA WENT FOR CHIPS. TWO HOURS.",
+      "THEN THE BEACON IN HER JACKET",
+      "PINGED - STRAIGHT OFF-PLANET.",
     ],
-    ["SO I KNOW EVERY DOOR AND KEYCARD.", "THEY SHOULD'VE CHANGED THE LOCKS."],
-    ["THE INGREDIENT'S IN THE VAULT.", "WE DO THIS THE HARD WAY."],
+    [
+      "OFF-PLANET MEANS A SHIP.",
+      "A SHIP MEANS A DRIVE, AND THE",
+      "DRIVE'S MISSING ONE PART.",
+    ],
+    [
+      "SPACEZ KEEPS THAT PART IN THE",
+      "CLEANROOM VAULT. I KNOW -",
+      "I USED TO BUILD IT FOR THEM.",
+    ],
+    [
+      "HALF THESE ENGINES ARE MINE.",
+      "THEN AN AI DREW THEM BETTER",
+      "AND WALKED ME OUT THE DOOR.",
+    ],
+    [
+      "THE WHOLE BLOCK'S ON WELFARE",
+      "NOW. ME AND ADA TOO.",
+      "ALL WE'VE GOT LEFT IS WEBFLIX.",
+    ],
+    ["THEY NEVER CHANGED THE LOCKS.", "EVERY DOOR STILL KNOWS MY HAND."],
+    [
+      "THE PART'S IN THE VAULT.",
+      "ADA'S OUT THERE SOMEWHERE.",
+      "WE DO THIS THE HARD WAY.",
+    ],
   ],
   width: 2000,
   height: 1200,
@@ -270,6 +289,19 @@ export const SPACEZ_HQ: LevelDef = {
     { enemy: "intern", thought: "spacez_staff" },
     { enemy: "optimusk", thought: "spacez_optimusk" },
   ],
+  // The sword is holstered at the drop: the hero walks in like it's still his
+  // old job, not a fight. A lone VANGUARD scientist sprints out ahead of the
+  // slow rank and takes a harmless swing at him — and THAT is what draws the
+  // blade. The soft hit fires `spacez_armed` ("good thing I brought the
+  // sword") and turns the auto-attack on. Gated `after` the "look at this
+  // place" sighting so the two beats always read in order. Placed a short
+  // sprint ahead in the open lobby so it reaches him fast and in clear view.
+  openingStrike: {
+    enemy: "vanguard_scientist",
+    at: { x: 400, y: 620 },
+    thought: "spacez_armed",
+    after: "spacez_staff",
+  },
   loot: {
     weaponPool: [
       "stapler",
