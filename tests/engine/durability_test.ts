@@ -124,6 +124,35 @@ describe("same-weapon pickups refresh durability", () => {
     expect(state.player.inventory.some((i) => i?.id === 50)).toBe(true);
   });
 
+  it("keeps the worn copy: a full bag leaves the fresh one grounded", () => {
+    const state = startGame();
+    clearStage(state);
+    const full = weaponDef("test_hammer").durability;
+    state.player.equipment.weapon = weapon(50, "test_hammer", 4);
+    // Fill every bag cell so a swap would have nowhere to bank the worn copy.
+    for (let i = 0; i < state.player.inventory.length; i++) {
+      state.player.inventory[i] = weapon(100 + i, "test_pistol");
+    }
+    state.items = [
+      {
+        id: 1,
+        kind: "equipment",
+        pos: { ...state.player.pos },
+        equipment: weapon(60, "test_hammer", full),
+      },
+    ];
+    step(state, idle, DT);
+    // No swap happened: the worn weapon is still in hand — never dropped or
+    // consumed — and the fresh copy waits on the ground for a free slot.
+    expect(state.player.equipment.weapon.id).toBe(50);
+    expect(state.player.equipment.weapon.durability).toBe(4);
+    expect(
+      state.items.some(
+        (it) => it.kind === "equipment" && it.equipment.id === 60,
+      ),
+    ).toBe(true);
+  });
+
   it("the unbreakable sidearm is never traded for a breakable copy", () => {
     const state = startGame(); // blaster sidearm, durability undefined
     expect(state.player.equipment.weapon.defId).toBe("blaster");
