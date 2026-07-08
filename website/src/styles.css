@@ -456,6 +456,20 @@ body {
   flex-direction: column;
   gap: 0.25rem;
   pointer-events: none;
+  /* Cap the feed so long item names wrap into an upward-growing column instead
+     of sprawling across the bottom edge and colliding with the powerup dock in
+     the far corner. Landscape (the reference) fits a wide column; the dock is
+     full-size (~13rem incl. margin), so leave that band clear. */
+  max-width: min(40rem, calc(100vw - 15rem));
+}
+
+/* Portrait (phone held vertically): the dock slots are halved (see the powerup
+   breakpoint below), so the dock only claims ~7rem of the narrow bottom edge —
+   hand the feed the wider strip that's left, but still short of the dock. */
+@media (max-aspect-ratio: 4/3) {
+  .pickup-feed {
+    max-width: calc(100vw - 9rem);
+  }
 }
 
 .pickup-feed.pickup-right {
@@ -472,8 +486,8 @@ body {
 
 .pickup-line {
   display: flex;
-  align-items: center;
-  gap: 0.25rem;
+  flex-direction: column;
+  gap: 0.1rem;
   /* A 1px dark outline lifts the feed off the light moon floor so both the
      neutral "PICKED UP" prefix and any tinted item name stay legible. */
   filter: drop-shadow(1px 0 0 rgba(0, 0, 0, 0.85))
@@ -484,8 +498,24 @@ body {
   will-change: opacity, transform;
 }
 
+/* Each wrapped visual row within a message; neutral prefix run sits left of the
+   tinted item-name run (spacing carried by a trailing space on the neutral
+   canvas), so no inter-child gap. */
+.pickup-line-row {
+  display: flex;
+  align-items: center;
+}
+
 .pickup-feed.pickup-right .pickup-line {
+  align-items: flex-end;
+}
+
+.pickup-feed.pickup-right .pickup-line-row {
   justify-content: flex-end;
+}
+
+.pickup-feed.pickup-left .pickup-line {
+  align-items: flex-start;
 }
 
 @keyframes pickup-line {
