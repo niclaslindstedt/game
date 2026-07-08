@@ -1638,7 +1638,12 @@ export function GameScreen({
       )}
 
       {state && hud?.phase === "levelup" && (
-        <LevelUpOverlay state={state} font={font} onChange={bumpUi} />
+        <LevelUpOverlay
+          state={state}
+          font={font}
+          sprites={assets.sprites}
+          onChange={bumpUi}
+        />
       )}
 
       {state && hud?.phase === "inventory" && (
