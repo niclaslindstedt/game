@@ -894,9 +894,9 @@ body {
   cursor: pointer;
   border-style: solid;
   border-color: #4da6ff;
-  background: #7cc4ff;
+  background: #234f86;
   box-shadow:
-    0 4px 0 #2f6fb0,
+    0 4px 0 #142f4f,
     0 6px 0 rgba(0, 0, 0, 0.4),
     0 0 12px rgba(77, 166, 255, 0.85);
 }
@@ -926,6 +926,31 @@ body {
   box-shadow: none;
   transform: none;
   opacity: 0.75;
+}
+
+/* Portrait (phone held vertically): the reference is landscape, and a full-size
+   row of dock slots eats too much of the short bottom edge. Halve the slots (and
+   their icons) so a vertical grip keeps them tappable without dominating the
+   screen. Matches the HUD's portrait breakpoint above. */
+@media (max-aspect-ratio: 4/3) {
+  .powerup-slot {
+    width: 1.9rem;
+    height: 1.9rem;
+    border-radius: 5px;
+  }
+
+  .powerup-icon {
+    width: 1.3rem;
+    height: 1.3rem;
+  }
+
+  .powerup-dock {
+    gap: 0.4rem;
+  }
+
+  .powerup-discard-hint {
+    bottom: calc(max(0.75rem, env(safe-area-inset-bottom)) + 2.4rem);
+  }
 }
 
 /* The lifted powerup icon trailing the finger/cursor mid-discard. Fixed to the

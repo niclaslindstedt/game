@@ -331,8 +331,10 @@ export const STAMINA = {
   base: 100,
   /** Extra max stamina per STAMINA point (current rises with it). */
   maxPerPoint: 8,
-  /** Drained per second at a full run, at zero STAMINA stat. */
-  drainPerSec: 22,
+  /** Drained per second at a full run, at zero STAMINA stat. Eased down from
+   * 22 so the pool lasts ~33% longer — a fresh hero can sprint noticeably
+   * further before the winded jog kicks in. */
+  drainPerSec: 16.5,
   /** Each STAMINA point divides the drain by `1 + points·this` (drains slower). */
   drainReductionPerPoint: 0.12,
   /** Regained per second while walking/idle, at zero STAMINA stat. */
