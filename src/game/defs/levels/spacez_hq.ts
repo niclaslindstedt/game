@@ -255,10 +255,11 @@ export const SPACEZ_HQ: LevelDef = {
     { kind: "plant", count: 10 },
   ],
   decorClearance: 70,
-  // The first staffer he downs stops him cold: the whole building is manned
-  // at midnight. Pinned to the intern because the opening ring is packed with
-  // them — it fires within the level's first seconds, an arrival beat.
-  firstKillThoughts: [{ enemy: "intern", thought: "spacez_staff" }],
+  // The first staffer he SEES stops him cold: the whole building is manned
+  // at midnight. Pinned to sighting an intern because the opening ring is
+  // packed with them — it fires the moment one is on screen, before a single
+  // blow lands. An arrival beat, not a kill beat.
+  firstSightThoughts: [{ enemy: "intern", thought: "spacez_staff" }],
   loot: {
     weaponPool: [
       "stapler",

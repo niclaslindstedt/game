@@ -62,6 +62,13 @@ sequel truncates this file to a stub and rebuilds it as its own systems land.
   kill path in `loot.ts` after `startDeathWords`, guarded once-per-run by
   `state.thoughtsSeen`. `dialogueContent` grew a branch; the app's dialogue
   overlay needed no change (it renders whatever `dialogueContent` returns).
+  A second trigger flavor landed later (2026-07, SpaceZ HQ intern):
+  `LevelDef.firstSightThoughts` fires the same catalog on PROXIMITY instead
+  of a kill — a `stepSightThoughts` pass in `step()` right after
+  `stepEnemies` (so the sighting is judged on this tick's positions),
+  radius-gated by `DIALOGUE.sightRadius` and sharing the `thoughtsSeen`
+  ledger. Pick the pin by what the beat reacts to: seeing a thing → sight
+  pin; having fought/examined it → kill pin.
 - **Fleeing uniques (2026-07, ELON MOSQUE):** a boss that escapes instead of
   dying is data — `EnemyDef.flees: { landmark }`. The kill path in `loot.ts`
   branches before booking the kill: the mob leaves the board, XP and

@@ -1,10 +1,11 @@
 // SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
 // The player-thought catalog: the hero's own inner monologues, played through
-// the dialogue box when a level's `firstKillThoughts` fires (the first time he
-// kills a given enemy there). Unlike an elite's arrival scene there is no
-// speaker on the board — the box shows the hero's face and his private read on
-// what he just saw. Adding a beat = adding an entry here + referencing its id
-// from a LevelDef; no engine changes.
+// the dialogue box when a level's `firstKillThoughts` (the first time he kills
+// a given enemy there) or `firstSightThoughts` (the first time one comes into
+// view) fires. Unlike an elite's arrival scene there is no speaker on the
+// board — the box shows the hero's face and his private read on what he just
+// saw. Adding a beat = adding an entry here + referencing its id from a
+// LevelDef; no engine changes.
 
 export type ThoughtDef = {
   id: string;
@@ -17,10 +18,11 @@ export type ThoughtDef = {
 };
 
 export const THOUGHT_DEFS: Record<string, ThoughtDef> = {
-  // Killing the first INTERN at SpaceZ HQ: it's past midnight and the building
-  // is packed like a product launch. He worked here — nights were never
-  // staffed like this. The surprise seeds the NIGHT MANAGER's reveal (the
-  // secret night shift) a few rooms later.
+  // Sighting the first INTERN at SpaceZ HQ: it's past midnight and the
+  // building is packed like a product launch. He worked here — nights were
+  // never staffed like this. Fires on view, before any blow (a sight pin),
+  // and seeds the NIGHT MANAGER's reveal (the secret night shift) a few
+  // rooms later.
   spacez_staff: {
     id: "spacez_staff",
     speaker: "ME",

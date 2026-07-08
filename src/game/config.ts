@@ -549,6 +549,13 @@ export const DIALOGUE = {
    * the speaker is visibly on screen when the world stops.
    */
   speakRadius: 96,
+  /**
+   * A level's `firstSightThoughts` fire once a pinned mob is within this
+   * distance of the player (world px). Same rationale as `speakRadius`:
+   * inside the phone half-view, so the mob the hero is reacting to is
+   * actually on screen when his thought stops the world.
+   */
+  sightRadius: 96,
 } as const;
 
 /** Locked doors (LevelDef.doors), opened by story-item keys. */

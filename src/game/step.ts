@@ -90,6 +90,7 @@ import {
   collectStoryItem,
   startEnemyDialogue,
   stepDoors,
+  stepSightThoughts,
   wantsDialogue,
 } from "./story.ts";
 import type {
@@ -134,6 +135,9 @@ export function step(state: GameState, input: GameInput, dtMs: number): void {
   stepAbilities(state, dt, dtMs);
   stepProjectiles(state, dt, dtMs);
   stepEnemies(state, dt, dtMs);
+  // Sight-pinned inner monologues fire on this tick's positions — after the
+  // horde has moved, so "the hero sees one" means it is actually on screen.
+  stepSightThoughts(state, levelDef(state.level.id).firstSightThoughts);
   tickMenace(
     state,
     dtMs,

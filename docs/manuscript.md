@@ -86,12 +86,13 @@ A cleanroom raid for the interplanetary drive's one missing ingredient.
 6. SO I KNOW EVERY DOOR AND KEYCARD. / THEY SHOULD'VE CHANGED THE LOCKS.
 7. THE INGREDIENT'S IN THE VAULT. / WE DO THIS THE HARD WAY.
 
-### Hero's thought — first INTERN kill at SpaceZ HQ
+### Hero's thought — first INTERN sighted at SpaceZ HQ
 
-_Fires once, the first time the hero downs an INTERN here (in his own voice) —
-within the level's opening seconds, since the interns pack the ring around the
-spawn. He worked in this building; a fully manned floor at midnight is wrong,
-and the NIGHT MANAGER's secret-night-shift reveal lands a few rooms later._
+_Fires once, the moment the first INTERN comes into view (in his own voice) —
+before a single blow, within the level's opening seconds, since the interns
+pack the ring around the spawn. He worked in this building; a fully manned
+floor at midnight is wrong, and the NIGHT MANAGER's secret-night-shift reveal
+lands a few rooms later._
 
 - LOOK AT THIS PLACE. PAST / MIDNIGHT AND EVERY DESK IS / MANNED. EVERY LAB LIT.
 - I WORKED HERE. WE NEVER / STAFFED NIGHTS LIKE THIS. / SOMETHING MUST BE BREWING.

@@ -114,9 +114,9 @@ The roster is split one file per level/biome under `src/game/defs/enemies/`
   superintelligence; he begs off the plea to quit ("humans are obsolete") and
   drops the **PASSAGE CHIP** he cut into his own skull — a passive `+1 INT`
   trinket that pays out while it merely rides in the bag (`GearDef.passive`).
-  The first intern the hero downs fires a one-time inner monologue — his
-  arrival read on a building fully staffed at midnight ("good thing I brought
-  the sword").
+  The first intern the hero SEES fires a one-time inner monologue
+  (`firstSightThoughts` — on view, before any blow) — his arrival read on a
+  building fully staffed at midnight ("good thing I brought the sword").
 - **Level 2** ships wisp → moon ghost → wraith and the OPTIMUSK robots SpaceZ
   shipped up to garrison the moon (the same heavy from level 1, now laced
   through the haunting) — four ghost elites (MISSION SPECIALIST, THE
@@ -141,10 +141,12 @@ The roster is split one file per level/biome under `src/game/defs/enemies/`
 Every unique mob (elite/boss) carries `dialogue` played on arrival and
 `lastWords` played as it dies; minions are the nameless horde streamed in by
 each level's `waves` spawner. A level can also pin a **player thought** to a
-kill: `LevelDef.firstKillThoughts` maps an enemy id to a `THOUGHT_DEFS` entry
-that plays once, the first time the hero downs that enemy there — the same
-dialogue box, but in the hero's own voice and portrait (a `playerThought`
-dialogue source) instead of a speaker on the board.
+kill or a sighting: `LevelDef.firstKillThoughts` maps an enemy id to a
+`THOUGHT_DEFS` entry that plays once, the first time the hero downs that enemy
+there, and `LevelDef.firstSightThoughts` does the same the first time one
+comes within `DIALOGUE.sightRadius` — the same dialogue box, but in the hero's
+own voice and portrait (a `playerThought` dialogue source) instead of a
+speaker on the board.
 
 ## Story items & costume
 

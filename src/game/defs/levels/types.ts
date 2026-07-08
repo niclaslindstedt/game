@@ -204,6 +204,13 @@ export type LevelDef = {
    * rather than to a speaker rushing into view.
    */
   firstKillThoughts?: { enemy: string; thought: string }[];
+  /**
+   * Like `firstKillThoughts`, but pinned to a sighting: the first time an
+   * `enemy` comes within DIALOGUE.sightRadius of the hero on this level, the
+   * run pauses into the `playerThought` dialogue — before a single blow. For
+   * beats that are a reaction to seeing something, not to killing it.
+   */
+  firstSightThoughts?: { enemy: string; thought: string }[];
   loot: {
     /** WEAPON_DEFS ids this level's drops draw from. */
     weaponPool: string[];

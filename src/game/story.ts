@@ -138,6 +138,33 @@ export function maybeFirstKillThought(
 }
 
 /**
+ * The per-tick hook for a level's `firstSightThoughts`: the first time a
+ * pinned mob comes within DIALOGUE.sightRadius of the hero, fire its inner
+ * monologue exactly once (tracked in `state.thoughtsSeen`, same ledger as
+ * the kill-pinned beats). Called from step() after the enemies have moved,
+ * so the sighting is judged on this tick's positions; if another scene is
+ * already on stage, the sighting simply retries on a later playing tick.
+ */
+export function stepSightThoughts(
+  state: GameState,
+  triggers: { enemy: string; thought: string }[] | undefined,
+): void {
+  if (state.dialogue !== null || !triggers) return;
+  for (const trigger of triggers) {
+    if (state.thoughtsSeen.includes(trigger.thought)) continue;
+    const seen = state.enemies.some(
+      (e) =>
+        e.defId === trigger.enemy &&
+        distance(e.pos, state.player.pos) <= DIALOGUE.sightRadius,
+    );
+    if (!seen) continue;
+    state.thoughtsSeen.push(trigger.thought);
+    startPlayerThought(state, trigger.thought);
+    return;
+  }
+}
+
+/**
  * Should this enemy open its scene right now? Only speakers with unplayed
  * dialogue, only while the run is actually playing (a mid-step level-up
  * defers the scene to a later tick), only one scene at a time, and only
