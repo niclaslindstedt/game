@@ -8,14 +8,21 @@
 // caller's job (the game loop steps it, the preview page steps its own
 // copy), so one component serves both.
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState, type MutableRefObject } from "react";
 
 import { currentLine, cutsceneDef, type CutsceneState } from "@game/core";
 
 import { PixelText } from "@ui/lib/PixelText.tsx";
 import type { PixelFont } from "@ui/lib/pixel-font.ts";
+import { useTypewriter } from "@ui/lib/typewriter.ts";
 
 import { spriteByName, type GameAssets } from "./assets.ts";
+
+/** The reveal state the overlay publishes so the app's keyboard advance can
+ * share the tap's two-step semantics (finish the crawl, then turn the beat). */
+export type CutsceneReveal = { done: boolean; skip: () => void };
+
+const EMPTY_LINE: string[] = [];
 
 /** CSS pixels per stage pixel — scenes zoom in closer than gameplay. */
 const STAGE_SCALE = 3;
@@ -102,14 +109,20 @@ export function CutsceneOverlay({
   font,
   onTap,
   onSkip,
+  onBlip,
+  revealRef,
 }: {
   cutscene: CutsceneState;
   assets: GameAssets;
   font: PixelFont;
-  /** Player tap: cut the running beat short. */
+  /** Player tap: advance the running beat (turn the page). */
   onTap: () => void;
   /** The SKIP button: end the scene outright. */
   onSkip: () => void;
+  /** Play the letter-print blip — fired as characters land. */
+  onBlip?: () => void;
+  /** Mirror of the live reveal state for the out-of-overlay advance handler. */
+  revealRef?: MutableRefObject<CutsceneReveal>;
 }) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   // Re-render the DOM text when the running beat changes under us — the
@@ -117,6 +130,24 @@ export function CutsceneOverlay({
   const [, setBeat] = useState(-1);
 
   const def = cutsceneDef(cutscene.defId);
+  const line = currentLine(cutscene, def);
+
+  // The line prints letter by letter like the in-world dialogue: blip on every
+  // other character, and the tap finishes the crawl before it turns the beat.
+  // Motion/fade beats carry no line — an empty page reveals as instantly done,
+  // so a tap through them still cuts the beat short.
+  const { rows, done, skip } = useTypewriter(
+    line?.text ?? EMPTY_LINE,
+    (visibleIndex) => {
+      if (visibleIndex % 2 === 0) onBlip?.();
+    },
+  );
+
+  // Publish the reveal so keyboard advance matches the tap: the first input
+  // finishes the crawl, the next advances the beat.
+  useEffect(() => {
+    if (revealRef) revealRef.current = { done, skip };
+  }, [revealRef, done, skip]);
 
   useEffect(() => {
     const canvas = canvasRef.current;
@@ -135,12 +166,12 @@ export function CutsceneOverlay({
     return () => cancelAnimationFrame(raf);
   }, [cutscene, assets, def]);
 
-  const line = currentLine(cutscene, def);
-
   return (
     <div
       className="game-overlay cutscene-overlay"
-      onPointerDown={onTap}
+      // A tap finishes the crawl if it's still printing; once the whole line is
+      // up (or there's no line — a motion beat), it advances the beat.
+      onPointerDown={() => (line && !done ? skip() : onTap())}
       role="presentation"
     >
       <canvas
@@ -172,13 +203,15 @@ export function CutsceneOverlay({
             />
           )}
           {line.text.map((row, i) => (
-            <PixelText key={i} font={font} text={row} scale={2} />
+            // Reserve each row's full height (PixelText is fixed-height even
+            // when empty) so the box never reflows as the crawl fills it in.
+            <PixelText key={i} font={font} text={rows[i] ?? ""} scale={2} />
           ))}
           {/* Text waits for the player — the blink is the "your move" cue. */}
           <div className="cutscene-continue">
             <PixelText
               font={font}
-              text="TAP TO CONTINUE"
+              text={done ? "TAP TO CONTINUE" : "TAP TO SKIP"}
               scale={1}
               color="#9aa3ad"
             />

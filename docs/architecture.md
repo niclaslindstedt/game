@@ -42,7 +42,9 @@ run against synthetic fixtures with no shipped content (see
   level carries geometry, per-level gravity (low gravity makes jumps soar),
   biome (a `tiles` sprite spec the renderer paints from), an optional `music`
   track id (a key into the app's `LEVEL_TRACKS` registry — the engine stays
-  audio-free), the story intro text,
+  audio-free), the hero's opening monologue (`intro`, one array of lines per
+  page — a black-screen dialogue the hero speaks over before the level-name
+  card drops the run in),
   an optional prelude cutscene id, landmark props, banded enemy spawns (each
   spawn/wave line may carry an optional `minDifficulty` so difficulty-gated
   content lives with the level that uses it), the
@@ -80,8 +82,12 @@ run against synthetic fixtures with no shipped content (see
   `@game/lib/cutscene` state machine. A level references a scene via its
   `prelude` field; the run then opens in the `cutscene` phase (the sim
   frozen underneath), advanced by `step()` on the same clock. Motion beats
-  run on that clock; text beats hold until `tapCutscene` (JRPG-style), and
-  `skipCutscene` ends the scene outright.
+  run on that clock; text beats crawl in letter by letter and hold until
+  `tapCutscene` (JRPG-style), and `skipCutscene` bails the whole opening —
+  the prelude _and_ the hero's level-intro monologue that follows — landing
+  on the level-name `title` card just before the drop. The opening flow is
+  `cutscene` (if any) → `intro` (the hero's monologue) → `title` (the level
+  name alone on black) → `playing`.
 - **`src/game/defs/equipment.ts`** — weapons (melee/ranged/magic classes,
   each with a durability budget — dropped weapons wear out per attack and
   break; the starting sidearm is minted unbreakable), gear, the five-tier

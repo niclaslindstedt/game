@@ -759,9 +759,35 @@ export function allocateStat(state: GameState, stat: StatName): boolean {
 
 // ---- Phase toggles (called by the app's UI) -----------------------------------
 
-/** Dismiss the story intro and start the run. */
+/**
+ * The player's tap through the level-intro monologue: turn the page. Past the
+ * last page the briefing is over — flash the level-name `title` card before
+ * the drop.
+ */
+export function advanceIntro(state: GameState): void {
+  if (state.phase !== "intro") return;
+  const pages = levelDef(state.level.id).intro;
+  state.introPage++;
+  if (state.introPage >= pages.length) {
+    state.introPage = pages.length;
+    state.phase = "title";
+  }
+}
+
+/** The intro's SKIP button: cut the monologue short, straight to the title. */
+export function skipIntro(state: GameState): void {
+  if (state.phase === "intro") state.phase = "title";
+}
+
+/**
+ * Leave the intro flow and start the run. From the `title` card it is the
+ * drop into play; from `intro` it skips the remaining monologue and the card
+ * both (the "start now" shortcut the keyboard and headless bot use).
+ */
 export function dismissIntro(state: GameState): void {
-  if (state.phase === "intro") state.phase = "playing";
+  if (state.phase === "intro" || state.phase === "title") {
+    state.phase = "playing";
+  }
 }
 
 /**
@@ -777,14 +803,19 @@ export function tapCutscene(state: GameState): void {
   }
 }
 
-/** The SKIP button: end the prelude outright and land on the intro box. */
+/**
+ * The prelude's SKIP button: end the opening scene outright. Skipping the
+ * prelude also skips the hero's level-intro monologue that would follow —
+ * one press bails the whole opening, landing on the level-name `title` card
+ * just before the drop.
+ */
 export function skipCutscene(state: GameState): void {
   if (state.phase !== "cutscene") return;
   if (state.cutscene) {
     finishCutscene(state.cutscene, cutsceneDef(state.cutscene.defId));
   }
   state.cutscene = null;
-  state.phase = "intro";
+  state.phase = "title";
 }
 
 /** Pause into the bag. Only possible mid-run. */

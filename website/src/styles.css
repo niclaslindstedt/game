@@ -1276,7 +1276,6 @@ body {
   cursor: pointer;
 }
 
-.intro-box,
 .levelup-box {
   display: flex;
   flex-direction: column;
@@ -1289,15 +1288,89 @@ body {
   box-shadow: 0 8px 0 rgba(0, 0, 0, 0.4);
 }
 
-.intro-lines {
-  display: flex;
+/* ---- Level-intro monologue (the hero, alone on black, over a dialogue box) - */
+
+/* A full black screen: the hero stands in the open space above a JRPG box
+   that crawls his briefing. Stack the stage and box top-to-bottom. */
+.intro-overlay {
+  background: #06070c;
+  cursor: pointer;
   flex-direction: column;
-  align-items: flex-start;
-  gap: 0.5rem;
+  justify-content: flex-end;
+  gap: 1rem;
+  overflow: hidden;
 }
 
-.intro-gap {
-  height: 0.75rem;
+/* Neutralize the overlay's safe-center margins: the stage and box stack. */
+.intro-overlay > * {
+  margin: 0;
+}
+
+/* The hero fills the open space above the box, centered and idly bobbing. */
+.intro-stage {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 0;
+}
+
+.intro-hero {
+  width: 5rem;
+  height: 5rem;
+  object-fit: contain;
+  image-rendering: pixelated;
+  animation: intro-hero-bob 2.4s ease-in-out infinite;
+}
+
+@keyframes intro-hero-bob {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-6px);
+  }
+}
+
+/* Reuse the in-world dialogue box's look, but sit in the flow above nothing —
+   not pinned to the viewport bottom — so the hero can stand over it. */
+.intro-dialogue-box {
+  position: static;
+  left: auto;
+  bottom: auto;
+  transform: none;
+  margin: 0 auto;
+}
+
+/* ---- The level-name card (name alone on black before the drop) ------------ */
+
+/* Opaque from the first frame — the world keeps rendering underneath, so a
+   fade on the card itself would let it bleed through. Only the text animates. */
+.title-card {
+  background: #06070c;
+  cursor: pointer;
+  overflow: hidden;
+}
+
+.title-card-inner {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.9rem;
+  text-align: center;
+  animation: title-card-rise 460ms ease-out;
+}
+
+@keyframes title-card-rise {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
 /* ---- Cutscenes (the prelude scene player) --------------------------------- */
@@ -1508,7 +1581,6 @@ body {
    stat buttons cannot fit 390px — fold them into a 3×2 grid and tighten
    the box so the whole chooser stays on screen without scrolling. */
 @media (min-aspect-ratio: 4/3) {
-  .intro-box,
   .levelup-box {
     gap: 0.75rem;
     padding: 1rem 1.5rem;

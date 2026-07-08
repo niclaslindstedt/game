@@ -39,6 +39,8 @@ export {
   DAMAGE_STAT,
   SPEED_STAT,
   closeInventory,
+  advanceIntro,
+  skipIntro,
   dismissIntro,
   skipCutscene,
   tapCutscene,

@@ -15,13 +15,15 @@ import type { Vec2 } from "@game/lib/vec.ts";
 
 /**
  * `cutscene` plays the level's prelude scene, `intro` shows the story text
- * box, `levelup` waits for a stat choice, `inventory` pauses for bag
- * management, `dialogue` holds the world while a character (or a found
- * story item) speaks; the simulation only advances while `playing`.
+ * box, `title` flashes the level name alone before the drop, `levelup` waits
+ * for a stat choice, `inventory` pauses for bag management, `dialogue` holds
+ * the world while a character (or a found story item) speaks; the simulation
+ * only advances while `playing`.
  */
 export type GamePhase =
   | "cutscene"
   | "intro"
+  | "title"
   | "playing"
   | "paused"
   | "levelup"
@@ -502,6 +504,12 @@ export type GameState = {
    * @game/lib/cutscene and defs/cutscenes.ts); null once it played out.
    */
   cutscene: CutsceneState | null;
+  /**
+   * Which page of the level's opening monologue is on screen while
+   * `phase === "intro"` — the hero's black-screen briefing dialogue. Turning
+   * past the last page drops into the `title` card; unused in other phases.
+   */
+  introPage: number;
   level: LevelInfo;
   /** The run's chosen difficulty (scales spawns, hp, and loot). */
   difficulty: Difficulty;

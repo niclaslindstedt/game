@@ -22,6 +22,7 @@ import {
 import {
   abilityDef,
   advanceDialogue,
+  advanceIntro,
   allocateStat,
   armorInfo,
   BOT_STRATEGIES,
@@ -45,6 +46,7 @@ import {
   playerAppearance,
   resumeGame,
   skipCutscene,
+  skipIntro,
   step,
   storyItemDef,
   tapCutscene,
@@ -68,9 +70,10 @@ import { trackPointer } from "@ui/lib/pointer.ts";
 import { loadGameAssets, spriteDataUrl, type GameAssets } from "./assets.ts";
 import { synth } from "./audio.ts";
 import { playEventHaptics, playTypewriterHaptic } from "./haptics.ts";
-import { CutsceneOverlay } from "./CutsceneOverlay.tsx";
+import { CutsceneOverlay, type CutsceneReveal } from "./CutsceneOverlay.tsx";
 import { DialogueOverlay, type DialogueReveal } from "./DialogueOverlay.tsx";
-import { IntroOverlay } from "./IntroOverlay.tsx";
+import { IntroOverlay, type IntroReveal } from "./IntroOverlay.tsx";
+import { TitleCard } from "./TitleCard.tsx";
 import { InventoryPanel } from "./InventoryPanel.tsx";
 import { LevelUpOverlay } from "./LevelUpOverlay.tsx";
 import { PauseOverlay } from "./PauseOverlay.tsx";
@@ -357,6 +360,14 @@ export function GameScreen({
     done: true,
     skip: () => {},
   });
+  // Same mirror for the level-intro monologue crawl, so Space shares the tap's
+  // two-step feel: the first press finishes the reveal, the next turns the page.
+  const introRevealRef = useRef<IntroReveal>({ done: true, skip: () => {} });
+  // …and for the prelude cutscene's crawling lines.
+  const cutsceneRevealRef = useRef<CutsceneReveal>({
+    done: true,
+    skip: () => {},
+  });
   const [assets, setAssets] = useState<GameAssets | null>(null);
   const [runId, setRunId] = useState(0);
   const [hud, setHud] = useState<Hud | null>(null);
@@ -536,8 +547,23 @@ export function GameScreen({
       if (event.code === "Space") {
         event.preventDefault();
         if (state.phase === "cutscene") {
-          tapCutscene(state);
+          // Two-step like the dialogue crawl: finish the line, then turn it.
+          if (!cutsceneRevealRef.current.done) {
+            cutsceneRevealRef.current.skip();
+          } else {
+            tapCutscene(state);
+          }
         } else if (state.phase === "intro") {
+          // Two-step like the dialogue crawl: finish the reveal, then turn the
+          // page (past the last page the engine flashes the level name).
+          if (!introRevealRef.current.done) {
+            introRevealRef.current.skip();
+          } else {
+            advanceIntro(state);
+            playUiSound(synth, "move");
+          }
+          bumpUi();
+        } else if (state.phase === "title") {
           beginRun();
           bumpUi();
         } else if (state.phase === "dialogue") {
@@ -554,6 +580,10 @@ export function GameScreen({
       } else if (event.key === "Escape" && state.phase === "cutscene") {
         skipCutscene(state);
         playUiSound(synth, "back");
+      } else if (event.key === "Escape" && state.phase === "intro") {
+        skipIntro(state);
+        playUiSound(synth, "back");
+        bumpUi();
       } else if (event.key === "e" || event.key === "E") {
         useItemQueuedRef.current = true;
       } else if (event.key === "i" || event.key === "I") {
@@ -652,7 +682,8 @@ export function GameScreen({
           // the headless tab reporting itself hidden/unfocused).
           if (state.phase === "paused") resumeGame(state);
           if (state.phase === "cutscene") skipCutscene(state);
-          if (state.phase === "intro") beginRun();
+          if (state.phase === "intro") skipIntro(state);
+          if (state.phase === "title") beginRun();
           if (state.phase === "dialogue") {
             advanceDialogue(state);
             bumpUi();
@@ -1433,6 +1464,11 @@ export function GameScreen({
           cutscene={state.cutscene}
           assets={assets}
           font={font}
+          revealRef={cutsceneRevealRef}
+          onBlip={() => {
+            playUiSound(synth, "blip");
+            playTypewriterHaptic();
+          }}
           onTap={() => {
             tapCutscene(state);
             playUiSound(synth, "move");
@@ -1447,12 +1483,33 @@ export function GameScreen({
       {state && hud?.phase === "intro" && (
         <IntroOverlay
           state={state}
+          assets={assets}
           font={font}
+          revealRef={introRevealRef}
           onBlip={() => {
             playUiSound(synth, "blip");
             playTypewriterHaptic();
           }}
+          onAdvance={() => {
+            advanceIntro(state);
+            playUiSound(synth, "move");
+            bumpUi();
+          }}
+          onSkip={() => {
+            skipIntro(state);
+            playUiSound(synth, "back");
+            bumpUi();
+          }}
+        />
+      )}
+
+      {state && hud?.phase === "title" && (
+        <TitleCard
+          state={state}
+          font={font}
           onBegin={() => {
+            // Leave the level-name card and drop into the run — the level
+            // music rolls the moment play begins.
             dismissIntro(state);
             playLevelMusic(levelDef(state.level.id).music);
             bumpUi();
