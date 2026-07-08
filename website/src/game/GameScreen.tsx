@@ -70,7 +70,12 @@ import { PixelText } from "@ui/lib/PixelText.tsx";
 import type { PixelFont } from "@ui/lib/pixel-font.ts";
 import { trackPointer } from "@ui/lib/pointer.ts";
 
-import { loadGameAssets, spriteDataUrl, type GameAssets } from "./assets.ts";
+import {
+  loadGameAssets,
+  spriteCursor,
+  spriteDataUrl,
+  type GameAssets,
+} from "./assets.ts";
 import { synth } from "./audio.ts";
 import { playEventHaptics, playTypewriterHaptic } from "./haptics.ts";
 import { CutsceneOverlay, type CutsceneReveal } from "./CutsceneOverlay.tsx";
@@ -431,6 +436,12 @@ export function GameScreen({
     const ctx = canvas.getContext("2d");
     if (!ctx) return;
 
+    // Desktop mouse: the pointer becomes the 16-bit crosshair reticle over the
+    // play field (the aim dimension made visible). Touch never shows a cursor.
+    canvas.style.cursor =
+      spriteCursor(assets.sprites, "crosshair", { fallback: "crosshair" }) ??
+      "crosshair";
+
     // Dev/playtest handles: `?seed=` pins the run's layout, `?level=` jumps
     // to any catalog level (see docs/configuration.md).
     const params = new URLSearchParams(window.location.search);
@@ -743,8 +754,21 @@ export function GameScreen({
           input.jump = decided.jump;
           input.useItem = decided.useItem ?? false;
           input.useItemIndex = undefined;
+          input.aim = undefined;
         } else {
           const settings = getSettings();
+          // Desktop mouse aim: the pointer adds a second steering dimension —
+          // the hero prefers the foe the cursor points at. Live in every mouse
+          // mode (freed WASD steering, cursor-follow, hold); touch/pen never
+          // aim, so it stays the plain nearest foe there.
+          input.aim =
+            pointer.state.pointerType === "mouse" &&
+            (pointer.state.hovering || pointer.state.held)
+              ? {
+                  x: camera.x + pointer.state.x * cssToWorld.x,
+                  y: camera.y + pointer.state.y * cssToWorld.y,
+                }
+              : undefined;
           const touchSteering =
             pointer.state.held && pointer.state.pointerType !== "mouse";
           if (touchSteering) {

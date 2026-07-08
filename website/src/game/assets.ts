@@ -55,6 +55,42 @@ export function spriteDataUrl(
   return url;
 }
 
+/**
+ * Build a CSS `cursor` value from a sprite, upscaled by an integer factor with
+ * smoothing off so it stays crisp 16-bit pixels — a browser can't pixelate a
+ * cursor image at display time, so the chunkiness is baked into the PNG. The
+ * hotspot defaults to the sprite's centre. Cached per (name, scale).
+ */
+export function spriteCursor(
+  sprites: Sprites,
+  name: string,
+  {
+    scale = 2,
+    hotX,
+    hotY,
+    fallback = "auto",
+  }: { scale?: number; hotX?: number; hotY?: number; fallback?: string } = {},
+): string | undefined {
+  const sprite = spriteByName(sprites, name);
+  if (!sprite) return undefined;
+  const cacheKey = `cursor:${name}@${scale}`;
+  let url = dataUrls.get(cacheKey);
+  if (!url) {
+    const canvas = document.createElement("canvas");
+    canvas.width = sprite.width * scale;
+    canvas.height = sprite.height * scale;
+    const ctx = canvas.getContext("2d");
+    if (!ctx) return undefined;
+    ctx.imageSmoothingEnabled = false;
+    ctx.drawImage(sprite, 0, 0, canvas.width, canvas.height);
+    url = canvas.toDataURL();
+    dataUrls.set(cacheKey, url);
+  }
+  const hx = Math.round((hotX ?? sprite.width / 2) * scale);
+  const hy = Math.round((hotY ?? sprite.height / 2) * scale);
+  return `url(${url}) ${hx} ${hy}, ${fallback}`;
+}
+
 let loaded: Promise<GameAssets> | null = null;
 
 export function loadGameAssets(): Promise<GameAssets> {

@@ -10,6 +10,7 @@ import {
   useMemo,
   useRef,
   useState,
+  type CSSProperties,
   type PointerEvent as ReactPointerEvent,
 } from "react";
 
@@ -29,7 +30,12 @@ import { HELP_LINES } from "./copy.ts";
 
 import { topScores, type ScoreMetric, type ScoreRow } from "./highscores.ts";
 
-import { loadGameAssets, spriteDataUrl, type GameAssets } from "./assets.ts";
+import {
+  loadGameAssets,
+  spriteCursor,
+  spriteDataUrl,
+  type GameAssets,
+} from "./assets.ts";
 import { synth } from "./audio.ts";
 import { haptics } from "./haptics.ts";
 import { playTitleMusic } from "./music/index.ts";
@@ -660,6 +666,13 @@ export function TitleScreen({
   }
   const font = assets.font;
   const cursorSprite = spriteDataUrl(assets.sprites, "wisp_0") ?? "";
+  // The menu's mouse pointer: a 16-bit Mickey glove, hotspot on the fingertip.
+  // Fed to the whole screen through the --menu-cursor CSS var (see styles.css).
+  const menuCursor = spriteCursor(assets.sprites, "glove", {
+    hotX: 3.5,
+    hotY: 0.5,
+    fallback: "default",
+  });
   const scoreRows = topScores(scoreDifficulty, scoreMetric);
   const scoreDef = difficultyDef(scoreDifficulty);
   // When a row with a banked session is opened, this holds it (with `detail`
@@ -670,7 +683,11 @@ export function TitleScreen({
       : null;
 
   return (
-    <div className="title-screen" onPointerDown={unlockAudio}>
+    <div
+      className="title-screen"
+      onPointerDown={unlockAudio}
+      style={{ "--menu-cursor": menuCursor } as CSSProperties}
+    >
       <div className="title-stars" aria-hidden="true" />
       {/* Asteroids drift across the backdrop now and then, so the menu feels
           alive rather than a static painting. */}
