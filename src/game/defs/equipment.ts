@@ -89,10 +89,11 @@ export const WEAPON_DEFS: Record<string, WeaponDef> = {
     name: "CRUDE SWORD",
     class: "melee",
     damage: 20,
-    // A deliberate swing — a stationary hero is still overrun (the single
+    // A slow, heaving swing — the wall blade is unbalanced and hard to bring
+    // back around, so a stationary hero is overrun all the sooner (the single
     // target melee cone only faces one way, so the crowd flanks a player who
     // won't move). DEXTERITY is how the tempo grows back.
-    cooldownMs: 600,
+    cooldownMs: 800,
     // The wall blade is the WORST weapon in the game and reads like it: a
     // short reach and a tighter arc than any real blade, so it only bites the
     // foe more or less right in front of the hero. A picked-up weapon is a

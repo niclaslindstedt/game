@@ -91,8 +91,10 @@ and something enormous haunts the old flag.
   your job is positioning: kite the haunting, don't get surrounded.
 - Kills grant **XP**; each level-up **restores you to full health** and
   pauses the run to spend a stat point. The stats each own an axis:
-  **STRENGTH** raises melee & ranged **damage** and widens your carry bag
-  (which starts at just three slots); **DEXTERITY** speeds up melee & ranged
+  **STRENGTH** hits the hardest for **damage** (melee & ranged — more per point
+  than any other stat lifts its class) and widens your carry bag (which starts
+  at just three slots), but the muscle to haul **slows your walk** a touch per
+  point; **DEXTERITY** speeds up melee & ranged
   **attacks**; **INTELLECT** powers **magic** weapons, gives every weapon
   **longer range**, and **widens the melee cleave** — a swing only strikes the
   two nearest foes until INT raises that cap, so mowing down the crowd is an

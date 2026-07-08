@@ -36,6 +36,7 @@ import {
   weaponDamage,
   weaponDamageFor,
   weaponDef,
+  weaponDps,
   weaponRangeFor,
   WEAPON_DEFS,
   type Affix,
@@ -106,6 +107,14 @@ function itemLines(state: GameState, item: Equipment): CardLine[] {
     lines.push({
       text: `${def.class.toUpperCase()} WEAPON`,
       color: WEAPON_CLASS_COLORS[def.class].border,
+    });
+    // Lead with DPS — the one figure that folds damage, attack speed, and crit
+    // into "how hard this hits over time", so a slow heavy weapon and a quick
+    // light one compare at a glance. Tinted the same accent as the character
+    // sheet's derived combat stats.
+    lines.push({
+      text: `DPS ${Math.round(weaponDps(state, item))}`,
+      color: "#7ef0c8",
     });
     // Show the damage this weapon would deal in the player's hands (stats +
     // affixes folded in), with the bonus over the raw base as a "+x" hint.

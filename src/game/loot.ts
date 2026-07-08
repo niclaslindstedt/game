@@ -11,7 +11,7 @@ import { scaledMobCount } from "./defs/difficulties.ts";
 import { enemyDef, type EnemyDef } from "./defs/enemies/index.ts";
 import { levelDef } from "./defs/levels/index.ts";
 import { dropChance, playerCritChance, rollEquipment } from "./items.ts";
-import { bankOverkill, maybePowerScale } from "./menace.ts";
+import { bankOverkill, maybePowerScale, mobLevelTierBonus } from "./menace.ts";
 import { maybeFirstKillThought, startDeathWords } from "./story.ts";
 import type { Enemy, GameState, WeaponClass } from "./types.ts";
 
@@ -199,13 +199,15 @@ function dropMinionLoot(
   const forced = owed > remaining;
 
   // An evolved mob is likelier to drop, and its equipment rolls a richer tier;
-  // a tougher mob's own drop profile stacks the same bonuses on top.
+  // a tougher mob's own drop profile stacks the same bonuses on top. The
+  // player's LEVEL sweetens the tier too, so a higher-level hero's kills yield
+  // richer gear to match the sturdier horde they came off (see mobLevelScale).
   const evoDropBonus = Math.max(0, evo) * MENACE.dropBonusPerStage;
   const evoTierBonus = Math.max(0, evo) * MENACE.tierBonusPerStage;
   const profileDropBonus = def.dropProfile?.dropBonus ?? 0;
   const profileTierBonus = def.dropProfile?.tierBonus ?? 0;
   const dropBonus = evoDropBonus + profileDropBonus;
-  const tierBonus = evoTierBonus + profileTierBonus;
+  const tierBonus = evoTierBonus + profileTierBonus + mobLevelTierBonus(state);
 
   if (!forced && state.rng() >= dropChance(state) + dropBonus) return;
 

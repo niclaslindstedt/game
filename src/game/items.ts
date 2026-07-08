@@ -422,11 +422,20 @@ export function playerAppearance(state: GameState): string {
   return playerSuited(state) ? "player" : "hero";
 }
 
-/** The player's walk speed in world px/s: base quickened by SPEED points. */
+/**
+ * The player's walk speed in world px/s: the base quickened by SPEED points and
+ * dragged back by STRENGTH — a heavily-muscled hero hauls that bulk around, so
+ * STR shaves a little off the walk (`strengthSlowPerPoint`, floored at
+ * `strengthSlowFloor`). The two stats pull against each other, so a glass-cannon
+ * bruiser gives up some mobility for its firepower rather than getting both.
+ */
 export function playerSpeed(state: GameState): number {
-  return (
-    PLAYER.speed * (1 + effectiveStat(state, "speed") * STATS.speedPerPoint)
+  const quickness = 1 + effectiveStat(state, "speed") * STATS.speedPerPoint;
+  const burden = Math.max(
+    STATS.strengthSlowFloor,
+    1 - effectiveStat(state, "strength") * STATS.strengthSlowPerPoint,
   );
+  return PLAYER.speed * quickness * burden;
 }
 
 /** Enemy crit chance against the player, after LUCK's avoidance. */
@@ -460,8 +469,14 @@ export function weaponDamage(state: GameState): number {
  */
 export function weaponDamageFor(state: GameState, weapon: Equipment): number {
   const def = weaponDef(weapon.defId);
-  const stat = effectiveStat(state, DAMAGE_STAT[def.class]);
-  let multiplier = 1 + stat * STATS.damageBonusPerPoint;
+  const damageStat = DAMAGE_STAT[def.class];
+  const stat = effectiveStat(state, damageStat);
+  // STRENGTH scales physical weapons harder than INTELLIGENCE scales magic ones
+  // (see STATS.damageBonusPerPoint) — a bruiser's damage is their one payoff,
+  // while a mage's INT is already buying reach, cleave, cadence, and crit.
+  const perPoint =
+    STATS.damageBonusPerPoint[damageStat as "strength" | "intelligence"];
+  let multiplier = 1 + stat * perPoint;
   for (const affix of weapon.affixes) {
     if (affix.kind === "damagePct") multiplier += affix.value;
   }
@@ -561,6 +576,26 @@ export function weaponScore(state: GameState, weapon: Equipment): number {
   return (
     (weaponDamageFor(state, weapon) * 1000) / weaponCooldownFor(state, weapon)
   );
+}
+
+/**
+ * A weapon's expected DAMAGE PER SECOND in this player's hands — the single
+ * figure that folds a weapon's three combat stats into one: per-hit damage
+ * (stats + `damagePct` affixes), attacks per second (the stat-scaled cadence),
+ * and the average lift from its crit chance (`critChance × (critMultiplier−1)`
+ * for its class). It is the honest "how hard does this hit over time" number
+ * the item card leads with, so two weapons — a slow heavy hitter and a quick
+ * light one — can be compared at a glance. Unlike `weaponScore` (the raw
+ * damage/cadence ratio auto-equip ranks by) this includes crit, so it reads as
+ * true sustained output rather than a ranking heuristic.
+ */
+export function weaponDps(state: GameState, weapon: Equipment): number {
+  const def = weaponDef(weapon.defId);
+  const perHit = weaponDamageFor(state, weapon);
+  const attacksPerSec = 1000 / weaponCooldownFor(state, weapon);
+  const critLift =
+    1 + playerCritChance(state, def.class) * (STATS.critMultiplier - 1);
+  return perHit * attacksPerSec * critLift;
 }
 
 /**
