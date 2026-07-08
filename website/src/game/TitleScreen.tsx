@@ -41,6 +41,7 @@ import {
 } from "./progress.ts";
 import { getSettings, updateSettings } from "./settings.ts";
 import { playUiSound } from "./sfx/index.ts";
+import { startTitleSky } from "./titleSky.ts";
 
 type MenuScreen =
   | "main"
@@ -168,6 +169,20 @@ export function TitleScreen({
       alive = false;
     };
   }, []);
+
+  // The backdrop's sun/moon Easter egg — a rAF loop that keeps the moon lit
+  // from the sun's real position. Starts once the menu (and its elements) has
+  // mounted after the assets load.
+  const moonRef = useRef<HTMLDivElement>(null);
+  const sunRef = useRef<HTMLDivElement>(null);
+  const glareRef = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    const moon = moonRef.current;
+    const sun = sunRef.current;
+    const glare = glareRef.current;
+    if (!moon || !sun || !glare) return;
+    return startTitleSky({ moon, sun, glare });
+  }, [assets]);
 
   // Settings live in a plain singleton; mirror a tick so labels re-render.
   const [settingsTick, setSettingsTick] = useState(0);
@@ -565,12 +580,13 @@ export function TitleScreen({
         <span className="title-asteroid title-asteroid-2" />
         <span className="title-asteroid title-asteroid-3" />
       </div>
-      <div className="title-moon" aria-hidden="true" />
-      {/* Easter egg: a lone sun slowly glares across the sky roughly every few
-          minutes, lifting the moon from new to full before it sets again. All
-          pure CSS (see .title-sun / .title-moon phase animations in styles). */}
-      <div className="title-sun" aria-hidden="true" />
-      <div className="title-sun-glare" aria-hidden="true" />
+      <div ref={moonRef} className="title-moon" aria-hidden="true" />
+      {/* Easter egg: a lone sun slowly arcs across the sky roughly every few
+          minutes. The moon is dark while it is up and swells to full once it
+          has set — always lit from the sun's true direction. Driven by
+          startTitleSky (titleSky.ts); the CSS only supplies the static look. */}
+      <div ref={sunRef} className="title-sun" aria-hidden="true" />
+      <div ref={glareRef} className="title-sun-glare" aria-hidden="true" />
 
       <header className="title-logo">
         <h1 className="visually-hidden">{IDENTITY.title}</h1>

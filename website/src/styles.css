@@ -624,17 +624,12 @@ body {
   }
 }
 
-/* The full sweep of the sun-glare Easter egg — the sun's slow arc, the moon's
-   new→full phase, and the warm screen wash all share this one period so they
-   stay in lockstep. Long and unhurried: the sun is only overhead for a slice
-   of it, so most of the time the menu just shows a resting moon. */
-.title-screen {
-  --sky-cycle: 200s;
-}
-
-/* The moon the trail leads to, hanging in the corner. Normally full, but the
-   sun Easter egg (below) drags it through its phases: a shadow disc slides
-   across the face (::after) while the halo warms and dims (title-moon-glow). */
+/* The moon the trail leads to, hanging in the corner. Its phase and halo are
+   driven each frame by startTitleSky (titleSky.ts): a shadow disc (::after) is
+   pushed *away from the sun* via --sky-sx/--sky-sy so the lit limb always faces
+   the sun, and the box-shadow halo brightens as the moon fills. The defaults
+   below (shadow slid fully off, cool halo) rest on a plain full moon before the
+   driver starts and under prefers-reduced-motion. */
 .title-moon {
   position: absolute;
   top: max(6%, env(safe-area-inset-top));
@@ -651,12 +646,11 @@ body {
     radial-gradient(circle at 52% 82%, #8f96a0 0 4%, transparent 5%),
     radial-gradient(circle at 35% 35%, #f4f6f8, #c3c9d1 55%, #99a0aa);
   box-shadow: 0 0 24px rgba(230, 232, 235, 0.25);
-  animation: title-moon-glow var(--sky-cycle) linear infinite;
 }
 
-/* The terminator: a soft-edged shadow disc, clipped to the moon by the
-   parent's overflow. Parked over the face it reads as a new moon; slid off to
-   the sun-lit side (right → left) it uncovers a growing crescent up to full. */
+/* The terminator: a soft-edged shadow disc, clipped to the moon by the parent's
+   overflow. Centred it reads as a new moon; slid off (by the JS-set offset) it
+   uncovers a crescent facing the sun, up to a full moon. */
 .title-moon::after {
   content: "";
   position: absolute;
@@ -664,53 +658,14 @@ body {
   border-radius: 50%;
   background: radial-gradient(circle at 60% 42%, #141a24 0 68%, #0a0e14 100%);
   filter: blur(1.5px);
-  animation: title-moon-phase var(--sky-cycle) linear infinite;
+  transform: translate(var(--sky-sx, -140%), var(--sky-sy, 0));
   will-change: transform;
 }
 
-/* new (disc covers) → grows to full as the sun climbs → lingers full → wanes
-   back to new to close the loop. Percentages line up with title-sun-arc. */
-@keyframes title-moon-phase {
-  0%,
-  8% {
-    transform: translateX(0);
-  }
-  30%,
-  85% {
-    transform: translateX(-112%);
-  }
-  100% {
-    transform: translateX(0);
-  }
-}
-
-@keyframes title-moon-glow {
-  0%,
-  8% {
-    box-shadow: 0 0 10px rgba(120, 130, 140, 0.12);
-    filter: brightness(0.72);
-  }
-  30% {
-    box-shadow:
-      0 0 34px rgba(255, 234, 186, 0.5),
-      0 0 12px rgba(230, 232, 235, 0.4);
-    filter: brightness(1.12) saturate(1.05);
-  }
-  45%,
-  85% {
-    box-shadow: 0 0 24px rgba(230, 232, 235, 0.28);
-    filter: brightness(1);
-  }
-  100% {
-    box-shadow: 0 0 10px rgba(120, 130, 140, 0.12);
-    filter: brightness(0.72);
-  }
-}
-
-/* The Easter-egg sun. It creeps up out of the right horizon, glares overhead,
-   and sinks back — staying in the right half so the moon is always lit from
-   the sun's side. Core disc + rotating rays (::before) + a lens streak
-   (::after), with a bloom in the box-shadow. */
+/* The Easter-egg sun. Position and opacity are set each frame by the driver as
+   it arcs across the sky; the styles here are just its look — a glowing core,
+   rotating rays (::before), a lens streak (::after) and a bloom in the
+   box-shadow. */
 .title-sun {
   position: absolute;
   top: 0;
@@ -731,7 +686,6 @@ body {
   box-shadow:
     0 0 60px 18px rgba(255, 196, 90, 0.5),
     0 0 150px 70px rgba(255, 150, 50, 0.26);
-  animation: title-sun-arc var(--sky-cycle) linear infinite;
   will-change: transform, opacity;
 }
 
@@ -769,82 +723,36 @@ body {
   filter: blur(1px);
 }
 
-/* Rises from lower-right, peaks high and right-of-centre, sinks back down —
-   opacity gated so it is only visible for the up-and-over slice. */
-@keyframes title-sun-arc {
-  0%,
-  8% {
-    transform: translate(92vw, 72vh);
-    opacity: 0;
-  }
-  12% {
-    opacity: 0.85;
-  }
-  20% {
-    transform: translate(78vw, 20vh);
-  }
-  30% {
-    transform: translate(64vw, 6vh);
-    opacity: 1;
-  }
-  40% {
-    transform: translate(80vw, 40vh);
-    opacity: 0.45;
-  }
-  45%,
-  100% {
-    transform: translate(92vw, 72vh);
-    opacity: 0;
-  }
-}
-
 @keyframes title-sun-rays {
   to {
     transform: rotate(360deg);
   }
 }
 
-/* A warm wash over the whole backdrop that swells as the sun crests — the
-   "glare" bleeding across the sky. Screen-blended and behind the menu. */
+/* A warm wash over the whole backdrop that swells as the sun crests and is
+   centred on the sun (--glare-x/--glare-y, set by the driver) — the "glare"
+   bleeding across the sky. Screen-blended and behind the menu. */
 .title-sun-glare {
   position: absolute;
   inset: 0;
   pointer-events: none;
   opacity: 0;
   background: radial-gradient(
-    120% 90% at 78% 10%,
+    120% 90% at var(--glare-x, 78%) var(--glare-y, 10%),
     rgba(255, 210, 120, 0.24),
     rgba(255, 170, 80, 0.09) 42%,
     transparent 68%
   );
   mix-blend-mode: screen;
-  animation: title-sun-wash var(--sky-cycle) linear infinite;
 }
 
-@keyframes title-sun-wash {
-  0%,
-  8% {
-    opacity: 0;
-  }
-  30% {
-    opacity: 1;
-  }
-  45%,
-  100% {
-    opacity: 0;
-  }
-}
-
-/* Reduced motion: skip the whole show and just sit on the familiar full moon. */
+/* Reduced motion: the driver never starts, so the defaults already rest on a
+   plain full moon; make doubly sure by hiding the sun and dropping the
+   shadow. */
 @media (prefers-reduced-motion: reduce) {
   .title-sun,
   .title-sun-glare {
     display: none;
-  }
-  .title-moon {
-    animation: none;
-    box-shadow: 0 0 24px rgba(230, 232, 235, 0.25);
-    filter: none;
   }
   .title-moon::after {
     display: none;
