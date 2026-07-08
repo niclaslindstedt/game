@@ -145,11 +145,13 @@ type Hud = {
   /** Banked ability pickups, oldest first (ABILITY_DEFS ids). */
   heldAbilities: string[];
   /**
-   * Currently running powerups (ABILITY_DEFS ids, in activation order). Drives
-   * the highlighted active-powerup strip; the per-frame countdown/radial for
-   * each is written to the DOM directly by the render loop, not through here.
+   * Currently running powerups, one entry per distinct id (in activation
+   * order) with how many copies of it are stacked. Drives the highlighted
+   * active-powerup strip — a stack of two shows a ×2 badge, sharing one slot;
+   * the per-frame countdown/radial for each is written to the DOM directly by
+   * the render loop (off the freshest copy), not through here.
    */
-  activeAbilities: string[];
+  activeAbilities: { defId: string; count: number }[];
   /** Equipped weapon def id — drives the always-on weapon widget. */
   weaponDefId: string;
   /** Equipped weapon's durability 0..1, or null for the unbreakable sidearm. */
@@ -1029,13 +1031,22 @@ export function GameScreen({
         // re-render (React only owns which slots exist — see the `active` key).
         const activeRow = activePowerupsRef.current;
         if (activeRow) {
+          // Stacked copies share one slot, so drive it off the freshest (most
+          // time left) copy of each id — that's the sweep the player reads as
+          // "how long until this power lapses".
+          const freshestMs = new Map<string, number>();
           for (const ability of state.player.abilities) {
+            const prev = freshestMs.get(ability.defId) ?? 0;
+            if (ability.remainingMs > prev)
+              freshestMs.set(ability.defId, ability.remainingMs);
+          }
+          for (const [defId, remainingMs] of freshestMs) {
             const slot = activeRow.querySelector<HTMLElement>(
-              `[data-ability="${ability.defId}"]`,
+              `[data-ability="${defId}"]`,
             );
             if (!slot) continue;
-            const total = abilityDef(ability.defId).durationMs;
-            const remaining = Math.max(0, ability.remainingMs);
+            const total = abilityDef(defId).durationMs;
+            const remaining = Math.max(0, remainingMs);
             const frac = total > 0 ? Math.min(1, remaining / total) : 0;
             slot.style.setProperty("--cd", frac.toFixed(4));
             const secs = slot.querySelector<HTMLElement>(
@@ -1079,7 +1090,14 @@ export function GameScreen({
             menaceStage: stage,
             bagCount,
             heldAbilities: [...state.player.heldAbilities],
-            activeAbilities: state.player.abilities.map((a) => a.defId),
+            activeAbilities: state.player.abilities.reduce<
+              { defId: string; count: number }[]
+            >((rows, a) => {
+              const row = rows.find((r) => r.defId === a.defId);
+              if (row) row.count++;
+              else rows.push({ defId: a.defId, count: 1 });
+              return rows;
+            }, []),
             weaponDefId: weapon.defId,
             weaponWear,
             appearance,
@@ -1499,7 +1517,7 @@ export function GameScreen({
           className={`active-powerups dock-${powerupSide}`}
           aria-hidden="true"
         >
-          {hud.activeAbilities.map((defId) => {
+          {hud.activeAbilities.map(({ defId, count }) => {
             const icon = spriteDataUrl(assets.sprites, abilityDef(defId).icon);
             return (
               <div key={defId} className="active-powerup" data-ability={defId}>
@@ -1507,6 +1525,9 @@ export function GameScreen({
                   <img src={icon} alt="" className="pixel-img powerup-icon" />
                 )}
                 <span className="active-powerup-sweep" />
+                {count > 1 && (
+                  <span className="active-powerup-stack">×{count}</span>
+                )}
                 <span className="active-powerup-secs" />
               </div>
             );

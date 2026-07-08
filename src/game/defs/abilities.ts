@@ -1,7 +1,10 @@
 // SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
 // The ability catalog: time-limited powers granted by pickups, Diablo-style.
-// An ability item activates on touch (it never enters the inventory) and
-// runs for its duration; picking the same one up again refreshes the timer.
+// An ability item is banked on touch (it never enters the inventory) and runs
+// for its duration when spent. A `stackable` power can run several copies at
+// once — activating a second STORM CELL doubles the lightning; a non-stackable
+// one (the MAGNET) refuses to re-enable while a copy is already running, so its
+// pickup stays banked for later instead of being wasted.
 // Levels choose which abilities can drop via their loot.abilityPool.
 
 export type AbilityKind = "orbit" | "storm" | "stasis" | "nuke" | "magnet";
@@ -13,6 +16,13 @@ export type AbilityDef = {
   kind: AbilityKind;
   /** How long one pickup lasts. */
   durationMs: number;
+  /**
+   * Whether several copies may run simultaneously. When true, each activation
+   * adds a fresh instance (two STORM CELLs strike twice as often); when false
+   * (the default), a copy already running blocks re-activation — the pickup is
+   * kept banked rather than wasted (the MAGNET, whose pull can't stack).
+   */
+  stackable?: boolean;
   /** Ground-item icon sprite. */
   icon: string;
   /** `orbit`: projectiles circling the player, mangling what they touch. */
@@ -68,6 +78,7 @@ export const ABILITY_DEFS: Record<string, AbilityDef> = {
     name: "FIRE ORBS",
     kind: "orbit",
     durationMs: 12_000,
+    stackable: true,
     icon: "icon_fire_orbs",
     orbit: {
       count: 3,
@@ -84,6 +95,7 @@ export const ABILITY_DEFS: Record<string, AbilityDef> = {
     name: "STORM CELL",
     kind: "storm",
     durationMs: 10_000,
+    stackable: true,
     icon: "icon_storm",
     storm: { intervalMs: 450, damage: 25, range: 220 },
   },
