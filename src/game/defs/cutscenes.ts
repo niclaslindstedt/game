@@ -29,6 +29,10 @@ const PRELUDE: CutsceneDef = {
     palette: { wall: "#262838", floor: "#4a3a2c", trim: "#1a1c28", floorY: 78 },
     props: [
       { kind: "window", pos: { x: 112, y: 52 } },
+      // The crude sword, mounted on the back wall the whole scene — the one
+      // thing the hero owns worth taking, and what he lands on the moon with
+      // (his starting weapon; see defs/equipment.ts `crude_sword`).
+      { kind: "wall_sword", pos: { x: 140, y: 54 } },
       { kind: "door", pos: { x: 196, y: 80 } },
       { kind: "tv", pos: { x: 36, y: 92 } },
       { kind: "couch", pos: { x: 104, y: 96 } },
@@ -86,6 +90,13 @@ const PRELUDE: CutsceneDef = {
     { kind: "say", actor: "hero", text: ["ADA?"] },
     { kind: "wait", ms: 600 },
     { kind: "caption", text: ["SHE NEVER CAME BACK."] },
+    { kind: "wait", ms: 500 },
+    // He takes the one thing off the wall worth taking. The blade is what he
+    // brings to save her — his default weapon when the moon level opens.
+    {
+      kind: "caption",
+      text: ["THE OLD SWORD OFF THE WALL.", "IT'S WHAT I BRING TO SAVE HER."],
+    },
     { kind: "fade", to: 1, ms: 1300 },
   ],
 };

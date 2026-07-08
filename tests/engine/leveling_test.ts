@@ -29,6 +29,7 @@ import {
 import {
   clearStage,
   DT,
+  equipBlaster,
   idle,
   makeEnemy,
   run,
@@ -38,7 +39,9 @@ import {
 
 /** Kill one hand-placed ghost of the given max hp and return the state. */
 function killGhostWorth(maxHp: number) {
-  const state = startGame();
+  // Ranged blaster: the XP maths is about the victim's hp, not the weapon, so
+  // pick it off from a fixed distance rather than closing with the melee sword.
+  const state = equipBlaster(startGame());
   state.player.stats.luck = 0;
   clearStage(state); // keep the parked boss so the objective stays open
   state.enemies.push(
@@ -111,11 +114,11 @@ describe("stats", () => {
   });
 
   it("STRENGTH scales physical (melee + ranged) damage; DEX and INT do not", () => {
-    const state = startGame(); // blaster equipped: ranged
+    const state = startGame(); // default crude sword: melee (STR-scaled)
     const base = weaponDamage(state);
-    // The starting sidearm is the unbreakable baseline — exempt from the global
-    // damage lever (which only cuts looted weapons), so it keeps full damage.
-    expect(base).toBe(weaponDef("blaster").damage);
+    // The crude sword is finite (it carries durability), so — unlike the old
+    // unbreakable sidearm — the global damage lever cuts it like any weapon.
+    expect(base).toBe(weaponDef("crude_sword").damage * WEAPON.damageMult);
 
     // DEX (a speed stat now) and INT (magic/range) leave physical damage alone.
     state.player.stats.dexterity = 5;
@@ -169,13 +172,13 @@ describe("stats", () => {
     );
   });
 
-  it("DEXTERITY quickens ranged fire; STRENGTH and INTELLIGENCE do not", () => {
-    const state = startGame(); // blaster equipped: ranged
+  it("DEXTERITY quickens physical fire; STRENGTH and INTELLIGENCE do not", () => {
+    const state = startGame(); // default crude sword: melee (DEX-quickened)
     const weapon = state.player.equipment.weapon;
     const base = weaponCooldownFor(state, weapon);
     // The catalog cadence, slowed by the global base-cooldown lever.
     expect(base).toBeCloseTo(
-      weaponDef("blaster").cooldownMs * WEAPON.baseCooldownMult,
+      weaponDef("crude_sword").cooldownMs * WEAPON.baseCooldownMult,
     );
 
     // The off-class stats leave the sidearm's cadence untouched.
@@ -219,7 +222,7 @@ describe("stats", () => {
     // End-to-end: the quicker cadence shows up as extra bolts downrange, not
     // just a smaller number. Park an unkillable target in range and count.
     const shotsIn = (dex: number) => {
-      const state = startGame();
+      const state = equipBlaster(startGame()); // ranged: bolts are countable
       state.player.stats.dexterity = dex;
       clearStage(state);
       state.enemies.push(
@@ -265,7 +268,7 @@ describe("stats", () => {
   });
 
   it("a guaranteed crit doubles the damage dealt", () => {
-    const state = startGame();
+    const state = equipBlaster(startGame()); // unbreakable blaster: full damage
     state.player.stats.luck = 30; // crit chance > 1 → every hit crits
     clearStage(state);
     state.enemies.push(
@@ -276,7 +279,7 @@ describe("stats", () => {
       }),
     );
     run(state, idle, 400, (s) => s.stats.damageDealt > 0);
-    // The starting sidearm keeps full damage (looted-only lever), so a
+    // The unbreakable blaster keeps full damage (looted-only lever), so a
     // guaranteed crit deals exactly double its catalog damage.
     expect(state.stats.damageDealt).toBe(
       Math.round(weaponDef("blaster").damage * STATS.critMultiplier),

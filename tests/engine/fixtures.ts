@@ -121,7 +121,23 @@ export const FIX_ENEMIES: Record<string, EnemyDef> = {
 };
 
 export const FIX_WEAPONS: Record<string, WeaponDef> = {
-  // Shared id: the engine mints `blaster` as the starting sidearm.
+  // Shared id: the engine mints `crude_sword` as the default STARTING weapon
+  // (create.ts) — a breakable melee blade — so the fixture catalog must carry
+  // it. Mirrors the shipped `crude_sword`: melee, damage 20, finite durability.
+  crude_sword: {
+    id: "crude_sword",
+    name: "CRUDE SWORD",
+    class: "melee",
+    damage: 20,
+    cooldownMs: 600,
+    range: 44,
+    durability: 120,
+    baseAoeTargets: 1,
+    icon: "icon_crude_sword",
+  },
+  // Shared id: the engine draws `blaster` as the unbreakable FALLBACK sidearm
+  // when a breakable weapon shatters with an empty bag (items.ts). On the moon
+  // it is also a scavengeable drop.
   blaster: {
     id: "blaster",
     name: "BLASTER",

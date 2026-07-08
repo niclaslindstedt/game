@@ -25,6 +25,7 @@ import {
   run,
   SEED,
   startGame,
+  equipBlaster,
 } from "../helpers.ts";
 
 const HQ = LEVELS.spacez_hq!;
@@ -145,7 +146,7 @@ describe("SPACEZ HQ level def", () => {
     // where an intern trickles it. Averaged over seeds so one unlucky run
     // can't flip the comparison.
     const dropsFrom = (defId: string, seed: number): number => {
-      const state = startGame(seed, "spacez_hq");
+      const state = equipBlaster(startGame(seed, "spacez_hq")); // pick off at range
       clearStage(state); // just the parked boss remains, waves silenced
       state.items = [];
       state.player.stats.luck = 0; // isolate the base rate + the profile bonus

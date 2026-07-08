@@ -45,6 +45,26 @@ export function startGame(seed: number = SEED, levelId = "moon"): GameState {
 }
 
 /**
+ * Swap the default melee `crude_sword` starting weapon for the unbreakable
+ * ranged blaster sidearm. Suites that calibrate on ranged-at-distance
+ * behaviour (fire an aimed bolt, kite at reach, pick mobs off across a gap)
+ * use this so they test that behaviour explicitly rather than depending on
+ * whatever the game's default starting weapon happens to be. Minted without
+ * durability, so it matches the old exempt-from-the-loot-lever baseline.
+ */
+export function equipBlaster(state: GameState): GameState {
+  state.player.equipment.weapon = {
+    id: state.nextId++,
+    defId: "blaster",
+    slot: "weapon",
+    tier: "regular",
+    affixes: [],
+  };
+  state.player.weaponCooldownMs = 0;
+  return state;
+}
+
+/**
  * Exhaust the level's wave budget so the horde spawner stays quiet and
  * tests keep surgical control over `state.enemies`.
  */

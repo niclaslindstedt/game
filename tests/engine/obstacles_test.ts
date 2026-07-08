@@ -10,6 +10,7 @@ import type { GameState, Obstacle } from "@game/core";
 import {
   clearStage,
   DT,
+  equipBlaster,
   idle,
   makeEnemy,
   run,
@@ -90,7 +91,7 @@ describe("obstacle collision", () => {
       {
         pos: { x: obstacle.pos.x + 30, y: obstacle.pos.y },
         speed: 40,
-        hp: 1_000_000, // survives the auto-blaster for the whole run
+        hp: 1_000_000, // survives the auto-attack for the whole run
         maxHp: 1_000_000,
       },
       "test_stalker",
@@ -178,10 +179,10 @@ describe("walls block shots", () => {
   });
 
   it("auto-aim never targets a monster behind a wall", () => {
-    const state = startGame();
+    const state = equipBlaster(startGame()); // ranged, so a clear shot would fire
     clearStage(state);
     const obstacle = placeObstacle(state, 60, false);
-    // In range of the starting blaster, but walled off.
+    // In range of the blaster, but walled off.
     const hidden = makeEnemy({
       pos: { x: obstacle.pos.x + 40, y: obstacle.pos.y },
       hp: 1000,
@@ -194,7 +195,7 @@ describe("walls block shots", () => {
   });
 
   it("auto-aim still fires over a jumpable obstacle", () => {
-    const state = startGame();
+    const state = equipBlaster(startGame()); // ranged: the shot clears the rock
     clearStage(state);
     const obstacle = placeObstacle(state, 60, true);
     const target = makeEnemy({

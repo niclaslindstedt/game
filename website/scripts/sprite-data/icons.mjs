@@ -141,6 +141,22 @@ const SPRITES = {
     "OkkO........",
     ".OO.........",
   ],
+  // The CRUDE SWORD: the hero's own blade off the wall, the default starting
+  // weapon. Dull steel, a gold crossguard, a wrapped grip — rough but his.
+  icon_crude_sword: [
+    "............",
+    ".......OOO..",
+    "......OVvO..",
+    ".....OVvvO..",
+    "....OVvvO...",
+    "...OVvvO....",
+    "..OVvvO.....",
+    ".OqOvOqO....",
+    "..OkkO......",
+    "..OkkO......",
+    "...OO.......",
+    "............",
+  ],
   // Inventory icons, 12×12.
   icon_blaster: [
     "............",

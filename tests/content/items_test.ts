@@ -25,6 +25,7 @@ import type { Equipment, GameState, Tier } from "@game/core";
 import {
   clearStage,
   DT,
+  equipBlaster,
   idle,
   makeEnemy,
   run,
@@ -43,6 +44,7 @@ function makeSuit(id: number, tier: Tier = "regular"): Equipment {
 }
 
 function killTheBoss(state: GameState): void {
+  equipBlaster(state); // pick the boss off at range, past the loot scatter
   stopWaves(state);
   const boss = state.enemies.find((e) => enemyDef(e.defId).role === "boss")!;
   state.enemies = [boss];
@@ -119,7 +121,7 @@ describe("boss loot", () => {
 
 describe("ghost drops", () => {
   it("max LUCK guarantees a drop from a regular ghost", () => {
-    const state = startGame();
+    const state = equipBlaster(startGame()); // drop-rate test: kill at range
     state.player.stats.luck = 100; // dropChance ≥ 1
     state.items = [];
     clearStage(state);
@@ -134,7 +136,7 @@ describe("ghost drops", () => {
     // Three 1-hp minions can miss their rolls at most once: the pity rule
     // must still land at least LOOT.minEquipmentPerLevel equipment drops.
     for (const seed of [1, 2, 3, 4, 5]) {
-      const state = startGame(seed);
+      const state = equipBlaster(startGame(seed)); // clear the fodder at range
       clearStage(state); // only the parked boss remains
       state.items = [];
       for (let i = 0; i < 3; i++) {
@@ -161,6 +163,7 @@ describe("the scripted opening drops", () => {
   // one short, then let the blaster finish a stray minion. Returns once the
   // minion is down (the boss clearStage keeps stays parked and alive).
   function killAt(state: GameState, atKills: number): void {
+    equipBlaster(state); // finish the stray minion from range
     state.items = [];
     state.stats.kills = atKills - 1;
     state.enemies.push(
@@ -196,7 +199,7 @@ describe("the scripted opening drops", () => {
 
 describe("auto-equip on pickup", () => {
   it("equips a picked-up weapon that out-damages the held one", () => {
-    const state = startGame(); // blaster: 8 dmg / 900 ms
+    const state = startGame(); // default crude sword: melee, single-target
     clearStage(state);
     const hammer: Equipment = {
       id: 61,
@@ -216,8 +219,8 @@ describe("auto-equip on pickup", () => {
     ];
     step(state, idle, DT);
     expect(state.player.equipment.weapon.id).toBe(61);
-    // The old sidearm went into the bag, not into the void.
-    expect(state.player.inventory.some((i) => i?.defId === "blaster")).toBe(
+    // The old starting weapon went into the bag, not into the void.
+    expect(state.player.inventory.some((i) => i?.defId === "crude_sword")).toBe(
       true,
     );
     expect(state.events).toContainEqual({
@@ -229,8 +232,8 @@ describe("auto-equip on pickup", () => {
   it("bags a picked-up weapon that is worse than the held one", () => {
     const state = startGame();
     clearStage(state);
-    // A pistol (7 dmg / 500 ms) out-damages the starting blaster, so put a
-    // hammer (34 dmg / 640 ms) in hand to make the pickup strictly worse.
+    // A pistol (7 dmg / 500 ms) is a marginal pickup, so put a hammer
+    // (34 dmg / 640 ms) in hand to make it strictly worse and force the bag.
     const pistol: Equipment = {
       id: 62,
       defId: "pistol",
@@ -284,10 +287,10 @@ describe("auto-equip on pickup", () => {
     ];
     step(state, idle, DT);
     expect(state.player.equipment.weapon.id).toBe(64);
-    // The blaster had nowhere to go: it lies at the player's feet.
+    // The crude sword had nowhere to go: it lies at the player's feet.
     expect(
       state.items.some(
-        (i) => i.kind === "equipment" && i.equipment.defId === "blaster",
+        (i) => i.kind === "equipment" && i.equipment.defId === "crude_sword",
       ),
     ).toBe(true);
   });
@@ -376,7 +379,7 @@ describe("inventory", () => {
     state.player.inventory[0] = wand;
     expect(equipFromInventory(state, 0)).toBe(true);
     expect(state.player.equipment.weapon.defId).toBe("wand");
-    expect(state.player.inventory[0]?.defId).toBe("blaster"); // swapped back
+    expect(state.player.inventory[0]?.defId).toBe("crude_sword"); // swapped back
 
     // The equipped weapon can never be parked in the bag.
     expect(unequipToInventory(state, "weapon")).toBe(false);

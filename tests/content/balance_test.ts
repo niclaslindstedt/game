@@ -25,8 +25,8 @@ const SEED = 42;
 
 /**
  * In-game milliseconds until a stationary player dies on `level`/`difficulty`.
- * The character holds still (idle input) and lets the starting blaster
- * auto-fire; any level-up that lands is banked into LUCK so the measurement
+ * The character holds still (idle input) and lets the starting crude sword
+ * auto-swing; any level-up that lands is banked into LUCK so the measurement
  * stays about the starting loadout rather than a chosen build. Returns `capMs`
  * if the run survives the window (used to show EASY outlasts the benchmark).
  */

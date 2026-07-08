@@ -435,19 +435,22 @@ export function weaponSweepHalfAngle(
 }
 
 /**
- * How many monsters a single melee swing may strike this player: the low
- * `MELEE.baseAoeTargets` floor plus `aoeTargetsPerInt` per INTELLIGENCE point,
- * floored to a whole count (always ≥ 1 so a swing never whiffs its aim). The
- * cone (weaponSweepHalfAngle) decides which foes are eligible; this caps how
- * many of them the blow actually lands on, so cleaving the horde is an INT
- * investment rather than a free perk of a wide STRENGTH weapon.
+ * How many monsters a single melee swing of the EQUIPPED weapon may strike:
+ * the weapon's own base cap (`WeaponDef.baseAoeTargets`, defaulting to the
+ * global `MELEE.baseAoeTargets` floor) plus `aoeTargetsPerInt` per
+ * INTELLIGENCE point, floored to a whole count (always ≥ 1 so a swing never
+ * whiffs its aim). The cone (weaponSweepHalfAngle) decides which foes are
+ * eligible; this caps how many of them the blow actually lands on, so cleaving
+ * the horde is an INT investment — and a crude single-target blade only ever
+ * bites one foe until that investment lands.
  */
 export function maxMeleeTargets(state: GameState): number {
+  const def = weaponDef(state.player.equipment.weapon.defId);
+  const base = def.baseAoeTargets ?? MELEE.baseAoeTargets;
   return Math.max(
     1,
     Math.floor(
-      MELEE.baseAoeTargets +
-        effectiveStat(state, "intelligence") * STATS.aoeTargetsPerInt,
+      base + effectiveStat(state, "intelligence") * STATS.aoeTargetsPerInt,
     ),
   );
 }
