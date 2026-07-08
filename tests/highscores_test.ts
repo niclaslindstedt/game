@@ -1,10 +1,11 @@
 // SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
 // The on-device high-score book behind the menu's HIGH SCORES board: runs are
-// banked per difficulty, ranked two ways (longest survival, highest
-// kills-per-minute), and the end-of-run splash learns whether a run set a new
-// best time. Runs in plain Node (no window) — the store degrades to an
-// in-memory session, which is exactly what these assertions exercise. Each
-// test uses its own difficulty so the shared singleton never bleeds across.
+// banked per difficulty, ranked four ways (longest survival, highest
+// kills-per-minute, most mobs killed, highest level reached), and the end-of-run
+// splash learns whether a run set a new best time. Runs in plain Node (no
+// window) — the store degrades to an in-memory session, which is exactly what
+// these assertions exercise. Each test uses its own difficulty so the shared
+// singleton never bleeds across.
 
 import { describe, expect, it } from "vitest";
 
@@ -58,6 +59,44 @@ describe("high scores", () => {
     ]);
     expect(topScores("medium", "kpm").map((r) => Math.round(r.kpm))).toEqual([
       60, 12,
+    ]);
+  });
+
+  it("ranks by mobs killed independently of survival time", () => {
+    // The longest run is not the deadliest: a short, frantic run can out-kill a
+    // long, cautious one — the two rankings disagree, by design.
+    recordRun("kills-rank", { timeMs: 300_000, kills: 20 });
+    recordRun("kills-rank", { timeMs: 60_000, kills: 75 });
+    recordRun("kills-rank", { timeMs: 120_000, kills: 40 });
+
+    expect(topScores("kills-rank", "time").map((r) => r.timeMs)).toEqual([
+      300_000, 120_000, 60_000,
+    ]);
+    expect(topScores("kills-rank", "kills").map((r) => r.kills)).toEqual([
+      75, 40, 20,
+    ]);
+  });
+
+  it("ranks by player level reached, resolving from the detail when needed", () => {
+    recordRun("level-rank", { timeMs: 60_000, kills: 5, level: 3 });
+    // A run banked with the level only inside its detail still ranks by it.
+    recordRun("level-rank", {
+      timeMs: 90_000,
+      kills: 8,
+      detail: detail({ level: 11 }),
+    });
+    recordRun("level-rank", { timeMs: 30_000, kills: 2, level: 7 });
+
+    expect(topScores("level-rank", "level").map((r) => r.level)).toEqual([
+      11, 7, 3,
+    ]);
+  });
+
+  it("ranks a detail-less, level-less run last on level (resolves to 0)", () => {
+    recordRun("level-zero", { timeMs: 60_000, kills: 5, level: 4 });
+    recordRun("level-zero", { timeMs: 90_000, kills: 8 });
+    expect(topScores("level-zero", "level").map((r) => r.level)).toEqual([
+      4, 0,
     ]);
   });
 

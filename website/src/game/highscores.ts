@@ -1,10 +1,11 @@
 // SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
 // The on-device high-score book (same storage policy as settings.ts /
-// progress.ts). Each finished run banks its survival time, kill count, and a
-// full end-of-run session snapshot per difficulty; the menu's HIGH SCORES
-// board ranks them two ways — longest survived and highest kills-per-minute —
-// lets a row be opened to reveal that whole session, and the end-of-run splash
-// still reads the single best survival time for the difficulty just played.
+// progress.ts). Each finished run banks its survival time, kill count, player
+// level reached, and a full end-of-run session snapshot per difficulty; the
+// menu's HIGH SCORES board ranks them four ways — longest survived, highest
+// kills-per-minute, most mobs killed, and highest level reached — lets a row be
+// opened to reveal that whole session, and the end-of-run splash still reads the
+// single best survival time for the difficulty just played.
 
 import { type Difficulty, type GameStats } from "@game/core";
 
@@ -36,20 +37,23 @@ export type ScoreDetail = {
   at: number;
 };
 
-/** One banked run: how long it lasted, how many foes it felled, and — for
- * runs banked since the detail feature — the full session behind those two
- * headline numbers. */
+/** One banked run: how long it lasted, how many foes it felled, the player
+ * level it reached, and — for runs banked since the detail feature — the full
+ * session behind those headline numbers. `level` is optional: runs banked
+ * before it was ranked carry it only inside `detail` (or not at all). */
 export type ScoreEntry = {
   timeMs: number;
   kills: number;
+  level?: number;
   detail?: ScoreDetail;
 };
 
-/** A board row: an entry with its derived kills-per-minute precomputed. */
-export type ScoreRow = ScoreEntry & { kpm: number };
+/** A board row: an entry with its kills-per-minute and resolved player level
+ * precomputed (level falls back to the detail snapshot, then 0). */
+export type ScoreRow = ScoreEntry & { kpm: number; level: number };
 
-/** The two ways the board ranks runs. */
-export type ScoreMetric = "time" | "kpm";
+/** The four ways the board ranks runs. */
+export type ScoreMetric = "time" | "kpm" | "kills" | "level";
 
 /** Banked runs keyed by difficulty id; a missing key = no run yet. */
 type HighScores = Record<string, ScoreEntry[]>;
@@ -60,15 +64,26 @@ function killsPerMinute(entry: ScoreEntry): number {
   return entry.kills / (entry.timeMs / 60_000);
 }
 
+/** The player level a run reached: the top-level field when present, else the
+ * detail snapshot's, else 0 (legacy/detail-less runs rank last on level). */
+function entryLevel(entry: ScoreEntry): number {
+  return entry.level ?? entry.detail?.level ?? 0;
+}
+
 /** Keep only the runs worth ranking: the top KEEP_PER_METRIC by each metric,
  * unioned — so a great sprint (high KPM) survives next to a long grind (high
- * time) even though neither tops the other's list. */
+ * time), a slaughter (most kills), or a deep dive (highest level) even though
+ * none tops another's list. */
 function trim(list: ScoreEntry[]): ScoreEntry[] {
   const byTime = [...list].sort((a, b) => b.timeMs - a.timeMs);
   const byKpm = [...list].sort((a, b) => killsPerMinute(b) - killsPerMinute(a));
+  const byKills = [...list].sort((a, b) => b.kills - a.kills);
+  const byLevel = [...list].sort((a, b) => entryLevel(b) - entryLevel(a));
   const kept = new Set<ScoreEntry>([
     ...byTime.slice(0, KEEP_PER_METRIC),
     ...byKpm.slice(0, KEEP_PER_METRIC),
+    ...byKills.slice(0, KEEP_PER_METRIC),
+    ...byLevel.slice(0, KEEP_PER_METRIC),
   ]);
   return [...kept];
 }
@@ -111,6 +126,13 @@ function isDetail(value: unknown): value is ScoreDetail {
   );
 }
 
+/** A trusted, finite, non-negative player level, or undefined if absent/bad. */
+function cleanLevel(value: unknown): number | undefined {
+  return typeof value === "number" && Number.isFinite(value) && value >= 0
+    ? value
+    : undefined;
+}
+
 function isEntry(value: unknown): value is ScoreEntry {
   if (!value || typeof value !== "object") return false;
   const { timeMs, kills } = value as Record<string, unknown>;
@@ -124,11 +146,13 @@ function isEntry(value: unknown): value is ScoreEntry {
   );
 }
 
-/** Reduce an entry to just its trusted fields: the two ranking numbers, plus
- * the detail blob only when it fully validates (a partial/corrupt detail is
- * discarded, leaving the run itself intact on the board). */
+/** Reduce an entry to just its trusted fields: the ranking numbers, the level
+ * when it validates, plus the detail blob only when it fully validates (a
+ * partial/corrupt detail is discarded, leaving the run itself intact). */
 function sanitize(entry: ScoreEntry): ScoreEntry {
   const clean: ScoreEntry = { timeMs: entry.timeMs, kills: entry.kills };
+  const level = cleanLevel(entry.level);
+  if (level !== undefined) clean.level = level;
   if (isDetail(entry.detail)) clean.detail = entry.detail;
   return clean;
 }
@@ -185,6 +209,8 @@ export function recordRun(difficulty: Difficulty, run: ScoreEntry): boolean {
   const kills = Number.isFinite(run.kills) ? Math.max(0, run.kills) : 0;
   const record = run.timeMs > bestTime(difficulty);
   const entry: ScoreEntry = { timeMs: run.timeMs, kills };
+  const level = cleanLevel(run.level);
+  if (level !== undefined) entry.level = level;
   if (isDetail(run.detail)) entry.detail = run.detail;
   const list = scores[difficulty] ?? [];
   scores[difficulty] = trim([...list, entry]);
@@ -192,9 +218,24 @@ export function recordRun(difficulty: Difficulty, run: ScoreEntry): boolean {
   return record;
 }
 
+/** Order two rows for a ranking metric, best first. */
+function compareRows(metric: ScoreMetric, a: ScoreRow, b: ScoreRow): number {
+  switch (metric) {
+    case "time":
+      return b.timeMs - a.timeMs;
+    case "kpm":
+      return b.kpm - a.kpm;
+    case "kills":
+      return b.kills - a.kills;
+    case "level":
+      return b.level - a.level;
+  }
+}
+
 /**
- * The board for a difficulty, ranked by `metric` (longest survival, or highest
- * kills-per-minute), best first and capped at `limit` rows.
+ * The board for a difficulty, ranked by `metric` (longest survival, highest
+ * kills-per-minute, most mobs killed, or highest level reached), best first and
+ * capped at `limit` rows.
  */
 export function topScores(
   difficulty: Difficulty,
@@ -204,9 +245,8 @@ export function topScores(
   const rows: ScoreRow[] = (scores[difficulty] ?? []).map((entry) => ({
     ...entry,
     kpm: killsPerMinute(entry),
+    level: entryLevel(entry),
   }));
-  rows.sort((a, b) =>
-    metric === "time" ? b.timeMs - a.timeMs : b.kpm - a.kpm,
-  );
+  rows.sort((a, b) => compareRows(metric, a, b));
   return rows.slice(0, limit);
 }
