@@ -573,6 +573,117 @@ body {
   box-shadow: 0 0 24px rgba(230, 232, 235, 0.25);
 }
 
+/* Occasional asteroids streaking past the backdrop. Each spends most of its
+   cycle parked off-screen and only crosses briefly, so they read as a rare
+   fly-by rather than a constant conveyor belt. Staggered delays keep them from
+   arriving together. */
+.title-asteroids {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  pointer-events: none;
+}
+
+.title-asteroid {
+  position: absolute;
+  width: clamp(10px, 2.4vmin, 20px);
+  height: clamp(10px, 2.4vmin, 20px);
+  border-radius: 50%;
+  background:
+    radial-gradient(circle at 62% 30%, #4c525c 0 14%, transparent 15%),
+    radial-gradient(circle at 34% 60%, #4c525c 0 18%, transparent 19%),
+    radial-gradient(circle at 40% 38%, #8f96a0, #5a616b 60%, #3a3f47);
+  box-shadow: 0 0 6px rgba(180, 190, 200, 0.25);
+  image-rendering: pixelated;
+  opacity: 0;
+  will-change: transform, opacity;
+}
+
+/* Top-third, larger, slow drift right-to-left. */
+.title-asteroid-1 {
+  top: 18%;
+  animation: title-asteroid-drift-a 21s linear infinite;
+  animation-delay: -3s;
+}
+
+/* Mid screen, smaller and quicker. */
+.title-asteroid-2 {
+  top: 46%;
+  transform: scale(0.7);
+  animation: title-asteroid-drift-b 17s linear infinite;
+  animation-delay: -11s;
+}
+
+/* Lower band, left-to-right the other way. */
+.title-asteroid-3 {
+  top: 70%;
+  transform: scale(0.85);
+  animation: title-asteroid-drift-c 27s linear infinite;
+  animation-delay: -19s;
+}
+
+/* Only the first slice of each cycle is a visible crossing; the rest parks it
+   off-screen so fly-bys stay occasional. */
+@keyframes title-asteroid-drift-a {
+  0% {
+    transform: translate(108vw, 0) rotate(0deg);
+    opacity: 0;
+  }
+  2% {
+    opacity: 0.85;
+  }
+  20% {
+    opacity: 0.85;
+  }
+  22%,
+  100% {
+    transform: translate(-16vw, 6vh) rotate(140deg);
+    opacity: 0;
+  }
+}
+
+@keyframes title-asteroid-drift-b {
+  0% {
+    transform: translate(110vw, 0) scale(0.7) rotate(0deg);
+    opacity: 0;
+  }
+  3% {
+    opacity: 0.7;
+  }
+  16% {
+    opacity: 0.7;
+  }
+  18%,
+  100% {
+    transform: translate(-14vw, -5vh) scale(0.7) rotate(-120deg);
+    opacity: 0;
+  }
+}
+
+@keyframes title-asteroid-drift-c {
+  0% {
+    transform: translate(-16vw, 0) scale(0.85) rotate(0deg);
+    opacity: 0;
+  }
+  3% {
+    opacity: 0.75;
+  }
+  17% {
+    opacity: 0.75;
+  }
+  19%,
+  100% {
+    transform: translate(110vw, -7vh) scale(0.85) rotate(160deg);
+    opacity: 0;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .title-asteroid {
+    animation: none;
+  }
+}
+
 .title-logo {
   display: flex;
   flex-direction: column;
@@ -668,30 +779,22 @@ body {
   touch-action: pan-y;
 }
 
+/* The difficulty name is itself the control: click (or swipe) walks the
+   ladder — no chevrons. */
 .score-axis {
-  display: flex;
-  align-items: center;
-  gap: 1rem;
-}
-
-/* The difficulty chevrons flanking the current rung's name. */
-.score-arrow {
   appearance: none;
   border: 0;
   background: none;
-  color: #9aa3ad;
+  display: flex;
+  align-items: center;
+  gap: 1rem;
   cursor: pointer;
-  font-size: 2rem;
-  line-height: 1;
-  padding: 0 0.5rem;
+  padding: 0.25rem 0.75rem;
+  font: inherit;
 }
 
-.score-arrow:hover {
-  color: #7ef0c8;
-}
-
-/* The ranking selector — a button that cycles the metric, with a hint of the
-   up/down axis it also answers to. */
+/* The ranking selector — click (or an up/down swipe) cycles the metric. The
+   name is the whole control; no arrows. */
 .score-metric {
   appearance: none;
   border: 0;
@@ -700,13 +803,40 @@ body {
   align-items: center;
   gap: 0.5rem;
   cursor: pointer;
+  padding: 0.25rem 0.75rem;
   font: inherit;
 }
 
-.score-metric-arrows {
-  color: #7a8088;
-  font-size: 0.7rem;
-  letter-spacing: 0.15em;
+/* Both selectors drift gently so they read as live, tappable controls; the
+   metric is offset so the pair doesn't bob in lockstep. A hover lifts them a
+   touch more. Motion-averse users get a still menu. */
+.score-bob {
+  animation: score-bob-float 3.2s ease-in-out infinite;
+}
+
+.score-bob-delay {
+  animation-duration: 3.8s;
+  animation-delay: -1.4s;
+}
+
+.score-bob:hover {
+  filter: brightness(1.25);
+}
+
+@keyframes score-bob-float {
+  0%,
+  100% {
+    transform: translateY(-2px);
+  }
+  50% {
+    transform: translateY(2px);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .score-bob {
+    animation: none;
+  }
 }
 
 .score-list {

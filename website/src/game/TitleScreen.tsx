@@ -483,6 +483,13 @@ export function TitleScreen({
   return (
     <div className="title-screen" onPointerDown={unlockAudio}>
       <div className="title-stars" aria-hidden="true" />
+      {/* Asteroids drift across the backdrop now and then, so the menu feels
+          alive rather than a static painting. */}
+      <div className="title-asteroids" aria-hidden="true">
+        <span className="title-asteroid title-asteroid-1" />
+        <span className="title-asteroid title-asteroid-2" />
+        <span className="title-asteroid title-asteroid-3" />
+      </div>
       <div className="title-moon" aria-hidden="true" />
 
       <header className="title-logo">
@@ -549,46 +556,32 @@ export function TitleScreen({
             onPointerDown={onScorePointerDown}
             onPointerUp={onScorePointerUp}
           >
-            <div className="score-axis" aria-label="score-difficulty">
-              <button
-                type="button"
-                className="score-arrow"
-                aria-label="score-difficulty-prev"
-                onClick={() => stepScoreDifficulty(-1)}
-              >
-                ‹
-              </button>
+            <button
+              type="button"
+              className="score-axis score-bob"
+              aria-label="score-difficulty"
+              onClick={() => stepScoreDifficulty(1)}
+            >
               <PixelText
                 font={font}
                 text={scoreDef.name}
                 scale={3}
                 color={scoreDef.color}
               />
-              <button
-                type="button"
-                className="score-arrow"
-                aria-label="score-difficulty-next"
-                onClick={() => stepScoreDifficulty(1)}
-              >
-                ›
-              </button>
-            </div>
+            </button>
 
             <button
               type="button"
-              className="score-metric"
+              className="score-metric score-bob score-bob-delay"
               aria-label="score-metric"
               onClick={() => stepScoreMetric(1)}
             >
-              <span className="score-metric-arrows" aria-hidden="true">
-                ▲▼
-              </span>
               <PixelText
                 font={font}
                 text={
                   SCORE_METRICS.find((m) => m.id === scoreMetric)?.label ?? ""
                 }
-                scale={1}
+                scale={2}
                 color="#7ef0c8"
               />
             </button>
