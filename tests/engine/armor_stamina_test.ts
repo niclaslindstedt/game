@@ -114,6 +114,29 @@ describe("stamina", () => {
     expect(state.player.stamina).toBeGreaterThan(0);
   });
 
+  it("recovers while walking — never drains — but slower than standing still", () => {
+    const state = startGame();
+    state.obstacles = []; // a clear lane so the walk never stalls on a rock
+    // A gentle nudge below the run threshold is a walk, not a run.
+    const walk = { ...steerTo(5000, 5000), throttle: STAMINA.runThreshold };
+
+    // Spend the pool with a sustained run, then confirm a walk refills it.
+    run(state, steerTo(5000, 5000), 600);
+    expect(state.player.stamina).toBe(0);
+
+    run(state, walk, 60);
+    const afterWalk = state.player.stamina;
+    expect(afterWalk).toBeGreaterThan(0); // a walk regains, it does not drain
+
+    // The same number of idle steps from empty refills strictly faster.
+    state.player.stamina = 0;
+    run(state, idle, 60);
+    const afterIdle = state.player.stamina;
+    expect(afterIdle).toBeGreaterThan(afterWalk);
+    // Walking recovers at walkRegenFactor of the standing rate.
+    expect(afterWalk).toBeCloseTo(afterIdle * STAMINA.walkRegenFactor, 4);
+  });
+
   it("halves the top speed once the pool is empty", () => {
     const state = startGame();
     state.obstacles = [];

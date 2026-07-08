@@ -354,9 +354,10 @@ function stepPlayer(
     player.moving = true;
   }
 
-  // Stamina: a decisive run spends it, walking or standing recovers it. The
-  // STAMINA stat deepens the reserve (computeMaxStamina) and, here, both slows
-  // the drain and quickens the regen.
+  // Stamina: a decisive run spends it; a walk and standing both recover it,
+  // but a walk only half as fast (walkRegenFactor) since a stroll is a lesser
+  // breather than a full stop. The STAMINA stat deepens the reserve
+  // (computeMaxStamina) and, here, both slows the drain and quickens the regen.
   const staminaStat = effectiveStat(state, "stamina");
   const running = player.moving && throttle > STAMINA.runThreshold;
   if (running) {
@@ -364,8 +365,11 @@ function stepPlayer(
       STAMINA.drainPerSec / (1 + staminaStat * STAMINA.drainReductionPerPoint);
     player.stamina = Math.max(0, player.stamina - drain * dt);
   } else {
+    const walkFactor = player.moving ? STAMINA.walkRegenFactor : 1;
     const regen =
-      STAMINA.regenPerSec * (1 + staminaStat * STAMINA.regenPerPoint);
+      STAMINA.regenPerSec *
+      (1 + staminaStat * STAMINA.regenPerPoint) *
+      walkFactor;
     player.stamina = Math.min(player.maxStamina, player.stamina + regen * dt);
   }
 
