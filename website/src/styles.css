@@ -429,6 +429,34 @@ body {
   transform: translateY(2px);
 }
 
+/* The bag just turned away loot: pulse the button's border (and a soft ring)
+   to draw the eye here and hint the player to open the bag and make room.
+   Lit for BAG_FULL_HINT_MS from GameScreen, then the .bag-full class drops. */
+.inventory-avatar.bag-full {
+  border-color: #ffcf6b;
+  animation: bag-full-pulse 0.9s ease-in-out infinite;
+}
+
+@keyframes bag-full-pulse {
+  0%,
+  100% {
+    border-color: #ffcf6b;
+    box-shadow: 0 0 0 0 rgba(255, 207, 107, 0.55);
+  }
+  50% {
+    border-color: #ffe6a8;
+    box-shadow: 0 0 0 4px rgba(255, 207, 107, 0);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .inventory-avatar.bag-full {
+    animation: none;
+    border-color: #ffcf6b;
+    box-shadow: 0 0 0 2px rgba(255, 207, 107, 0.5);
+  }
+}
+
 .avatar-img {
   width: 2.25rem;
   height: 2.25rem;
