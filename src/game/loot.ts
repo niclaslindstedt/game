@@ -80,6 +80,26 @@ export function crowdBombChance(state: GameState): number {
 }
 
 /**
+ * The per-kill chance a stranded hero's kill coughs up an ENERGY DRINK — the
+ * empty-sprint bailout (a MERCY DROP). Zero unless the pool is BONE-DRY (exactly
+ * empty, "not close to 0"), then ramps with TIME spent stranded: from zero the
+ * instant stamina hits empty up to the difficulty's `mercy.staminaDrinkChanceMax`
+ * at `MERCY.staminaEmptyDrinkRampMs`. Easy tops out at 15%, medium 10%; hard and
+ * up cap it at zero, so this never fires there. The ramp resets the moment any
+ * stamina returns (see `GameState.staminaEmptyMs`), so a hero who catches his
+ * breath drops straight back to the baseline drink rain.
+ */
+export function staminaDrinkChance(state: GameState): number {
+  const max = difficultyDef(state.difficulty).mercy.staminaDrinkChanceMax;
+  if (max <= 0) return 0;
+  // Only a bone-dry pool pulls a drink; a merely low reserve does not.
+  if (state.player.stamina > 0) return 0;
+  const ramp = MERCY.staminaEmptyDrinkRampMs;
+  if (ramp <= 0) return max;
+  return max * Math.min(1, state.staminaEmptyMs / ramp);
+}
+
+/**
  * Apply one player hit: roll the crit (the weapon class's CRIT stat plus a
  * marginal LUCK nudge), deal damage, and on a kill grant XP proportional to
  * max hp and roll loot. `weaponClass` names the blow that landed so the crit
@@ -313,6 +333,19 @@ function dropMinionLoot(
     return;
   }
 
+  // The empty-sprint bailout: a hero stranded with a bone-dry pool has a
+  // rising chance, per kill, to be thrown an energy drink — the way back out
+  // of a winded jog. Like the crowd bomb it is rolled ahead of the normal drop
+  // gate so the rescue isn't buried under it, and it stands in for this kill's
+  // drop. `staminaDrinkChance` is zero unless the pool is genuinely empty, so
+  // no roll is drawn on a rested kill (the RNG stream is untouched).
+  const drinkChance = staminaDrinkChance(state);
+  if (drinkChance > 0 && state.rng() < drinkChance) {
+    state.items.push({ id: state.nextId++, kind: "drink", pos: { ...at } });
+    state.events.push({ type: "itemDropped", pos: { ...at } });
+    return;
+  }
+
   const remaining =
     state.enemies.filter((e) => enemyDef(e.defId).role === "minion").length +
     unspawnedMinions(state);
@@ -422,6 +455,18 @@ function dropMinionLoot(
     LOOT.equipmentShare + abilityShare + medkitShare + repairShare
   ) {
     state.items.push({ id: state.nextId++, kind: "repair", pos });
+  } else if (
+    roll <
+    LOOT.equipmentShare +
+      abilityShare +
+      medkitShare +
+      repairShare +
+      LOOT.drinkShare
+  ) {
+    // A plain energy drink in the ordinary rain — worth nothing to a rested
+    // hero (it stays grounded until he's run himself winded), but the winded
+    // one is far likelier to find one through the stamina-empty mercy roll above.
+    state.items.push({ id: state.nextId++, kind: "drink", pos });
   } else {
     // The remainder are golden XP arrows — the field still rains pickups, but
     // they buy levels (points to spend on a build) rather than free healing.

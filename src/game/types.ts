@@ -344,6 +344,10 @@ export type Item =
   | { id: number; kind: "xp"; pos: Vec2 }
   /** A repair kit: restores the equipped weapon's durability to full. */
   | { id: number; kind: "repair"; pos: Vec2 }
+  /** An energy drink: resets the sprint pool to full on touch. Like the repair
+   * kit it stays grounded when there is nothing to top up (stamina already
+   * full), so it is never wasted on a rested hero. */
+  | { id: number; kind: "drink"; pos: Vec2 }
   | { id: number; kind: "equipment"; pos: Vec2; equipment: Equipment }
   /** A time-limited power pickup; `defId` keys into ABILITY_DEFS. */
   | { id: number; kind: "ability"; pos: Vec2; defId: string }
@@ -767,6 +771,15 @@ export type GameState = {
    * resets it to `LOOT.bagFullHintCooldownMs` (see `stepItems`).
    */
   bagFullHintCooldownMs: number;
+  /**
+   * Ms the sprint pool has sat BONE-DRY — exactly empty, not merely low. Counts
+   * up each step while `player.stamina` is 0 and resets to 0 the instant any
+   * stamina returns. Drives the stamina-drink MERCY DROP: the longer the hero is
+   * stranded winded, the higher each kill's chance of coughing up an energy
+   * drink, ramping to the rung's cap over `MERCY.staminaEmptyDrinkRampMs` (see
+   * `staminaDrinkChance`).
+   */
+  staminaEmptyMs: number;
   /** Counts down once the objective clears; the level ends at 0. */
   victoryCountdownMs: number | null;
   /**

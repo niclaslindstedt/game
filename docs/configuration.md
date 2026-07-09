@@ -85,9 +85,12 @@ constants by design; tuning happens by editing that file and playtesting
 MEDIUM is the exact 1.0 baseline the levels are tuned at.
 
 **Mercy drops** ease the gentle rungs without making them un-losable: on EASY
-and MEDIUM a packed screen (20+ mobs) starts dropping screen-nuke bombs, and
-low health or a near-broken weapon makes medkits, plated armor, and repair kits
-rain harder. The ramp _shapes_ (where each signal starts and maxes) are the
+and MEDIUM a packed screen (20+ mobs) starts dropping screen-nuke bombs, low
+health or a near-broken weapon makes medkits, plated armor, and repair kits rain
+harder, and a hero stranded with a bone-dry sprint pool (stamina at exactly 0,
+not merely low) is thrown ENERGY DRINKS — a per-kill chance that ramps with the
+time spent winded up to 15% on EASY / 10% on MEDIUM (the drink resets stamina to
+full on touch). The ramp _shapes_ (where each signal starts and maxes) are the
 `MERCY` block in `config.ts`; each rung's _strength_ is its `mercy` object in
 `difficulties.ts` (`MercyTuning`), zeroed on HARD and up so death stays on the
 table there.

@@ -71,6 +71,7 @@ import {
   refreshArmor,
   repairEquippedWeapon,
   restoreArmor,
+  restoreStamina,
   syncInventoryCapacity,
   weaponCooldownFor,
   weaponDamage,
@@ -402,6 +403,11 @@ function stepPlayer(
       walkFactor;
     player.stamina = Math.min(player.maxStamina, player.stamina + regen * dt);
   }
+
+  // Track how long the pool has sat BONE-DRY so the stamina-drink mercy roll can
+  // ramp its chance with time stranded (see `staminaDrinkChance`); any stamina
+  // back resets it, so catching a breath drops straight back to the baseline.
+  state.staminaEmptyMs = player.stamina <= 0 ? state.staminaEmptyMs + dtMs : 0;
 
   // Jump: only from the ground. Gravity is the level's — the moon's low g
   // turns the same takeoff into a high, floaty arc.
@@ -1227,6 +1233,20 @@ function stepItems(state: GameState): void {
         type: "itemCollected",
         kind: "repair",
         name: "REPAIR KIT",
+      });
+      return false;
+    }
+
+    // Energy drinks reset the sprint pool to full; with nothing to top up (a
+    // rested hero) they stay on the ground, like a repair kit on a pristine
+    // weapon, so the drink waits for when the legs have actually gone.
+    if (item.kind === "drink") {
+      if (!restoreStamina(state)) return true;
+      state.stats.itemsCollected++;
+      state.events.push({
+        type: "itemCollected",
+        kind: "drink",
+        name: "ENERGY DRINK",
       });
       return false;
     }
