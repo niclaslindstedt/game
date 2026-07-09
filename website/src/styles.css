@@ -2385,10 +2385,17 @@ body {
 
 .cutscene-overlay {
   background: #06070c;
-  cursor: pointer;
+  /* The desktop pointer over a scene is the main menu's Mickey glove, fed from
+     the sprite atlas by CutsceneOverlay through --menu-cursor; before assets
+     load (or if the slice fails) it falls back to a plain pointer. Descendants
+     inherit it so the stage and the SKIP button share one pointer. */
+  cursor: var(--menu-cursor, pointer);
   padding: 0;
   /* The stage never scrolls; the dialogue box floats over it. */
   overflow: hidden;
+}
+.cutscene-overlay * {
+  cursor: inherit;
 }
 
 /* Neutralize the overlay's safe-center margins: the stage centers itself. */

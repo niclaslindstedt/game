@@ -8,7 +8,13 @@
 // caller's job (the game loop steps it, the preview page steps its own
 // copy), so one component serves both.
 
-import { useEffect, useRef, useState, type MutableRefObject } from "react";
+import {
+  useEffect,
+  useRef,
+  useState,
+  type CSSProperties,
+  type MutableRefObject,
+} from "react";
 
 import { currentLine, cutsceneDef, type CutsceneState } from "@game/core";
 
@@ -16,7 +22,7 @@ import { PixelText } from "@ui/lib/PixelText.tsx";
 import type { PixelFont } from "@ui/lib/pixel-font.ts";
 import { useTypewriter } from "@ui/lib/typewriter.ts";
 
-import { spriteByName, type GameAssets } from "./assets.ts";
+import { spriteByName, spriteCursor, type GameAssets } from "./assets.ts";
 
 /** The reveal state the overlay publishes so the app's keyboard advance can
  * share the tap's two-step semantics (finish the crawl, then turn the beat). */
@@ -140,6 +146,17 @@ export function CutsceneOverlay({
   const def = cutsceneDef(cutscene.defId);
   const line = currentLine(cutscene, def);
 
+  // The desktop mouse pointer over the scene is the same 16-bit Mickey glove
+  // the main menu uses (hotspot on the fingertip), fed through --menu-cursor so
+  // the whole overlay — stage and SKIP button — shares one pointer. Falls back
+  // to a plain pointer before assets load or if the slice fails; touch shows
+  // no cursor at all. Keep in step with TitleScreen's menu cursor.
+  const menuCursor = spriteCursor(assets.sprites, "glove", {
+    hotX: 3.5,
+    hotY: 0.5,
+    fallback: "pointer",
+  });
+
   // The line prints letter by letter like the in-world dialogue: blip on every
   // other character, and the tap finishes the crawl before it turns the beat.
   // Motion/fade beats carry no line — an empty page reveals as instantly done,
@@ -177,6 +194,7 @@ export function CutsceneOverlay({
   return (
     <div
       className="game-overlay cutscene-overlay"
+      style={{ "--menu-cursor": menuCursor } as CSSProperties}
       // A tap finishes the crawl if it's still printing; once the whole line is
       // up (or there's no line — a motion beat), it advances the beat.
       onPointerDown={() => (line && !done ? skip() : onTap())}
