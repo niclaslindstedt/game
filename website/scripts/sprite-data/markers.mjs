@@ -2,7 +2,8 @@
 // The map markers family (see the `pixel-assets` skill): the little glyphs the
 // level-map modal pins on the fog to tell the run's story back — where the
 // hero stands, where story was found, where rare loot dropped, where an elite
-// or boss fell, where the merchant wanders. Each is a 12×12 UI icon (never
+// or boss fell. (The merchant pin reuses the icons family's gold `icon_coin`.)
+// Each is a 12×12 UI icon (never
 // drawn on the ground — only in the MapOverlay and its legend), one string per
 // pixel row, one character per pixel; `.` is transparent and every other char
 // must exist in CORE_PALETTE (sprite-data/core.mjs) or this family's palette.
@@ -27,9 +28,6 @@ const PALETTE = {
   // BOSS — a bone skull.
   X: [230, 232, 238],
   Z: [248, 250, 252],
-  // MERCHANT — a green coin.
-  N: [95, 217, 122],
-  Q: [165, 238, 185],
 };
 
 const SPRITES = {
@@ -114,22 +112,8 @@ const SPRITES = {
     "............",
     "............",
   ],
-  // MERCHANT: a coin with a stamped center — the wandering vendor. Green, the
-  // old merchant swatch.
-  map_merchant: [
-    "............",
-    "...OOOOO....",
-    "..OQNNNNO...",
-    ".OQNNNNNNO..",
-    ".ONNNNNNNO..",
-    ".ONNNOONNO..",
-    ".ONNNOONNO..",
-    ".ONNNNNNNO..",
-    "..ONNNNNO...",
-    "...OOOOO....",
-    "............",
-    "............",
-  ],
+  // MERCHANT reuses the icons family's gold `icon_coin` (the coin that bobs
+  // over the vendor's head), so it lives there, not here.
 };
 
 export default {
@@ -142,12 +126,5 @@ export default {
   animations: {},
   // UI-only markers: they live on the dark map modal and its legend, never on a
   // level's ground, so the ground-contrast lint doesn't apply.
-  contrastExempt: [
-    "map_you",
-    "map_story",
-    "map_loot",
-    "map_elite",
-    "map_boss",
-    "map_merchant",
-  ],
+  contrastExempt: ["map_you", "map_story", "map_loot", "map_elite", "map_boss"],
 };

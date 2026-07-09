@@ -42,7 +42,9 @@ const MARKER_SPRITE: Record<MapMarkerKind, string> = {
   loot: "map_loot",
   elite: "map_elite",
   boss: "map_boss",
-  merchant: "map_merchant",
+  // The wandering vendor's gold coin — the same sprite that bobs over his
+  // head in-game, from the icons family.
+  merchant: "icon_coin",
 };
 
 /** The hero's own "you are here" pin. */
