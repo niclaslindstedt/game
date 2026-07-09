@@ -273,6 +273,7 @@ relevant `SKILL.md` before starting that kind of work:
 | --------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------ |
 | `new-game`      | Turning a clone of this repo into a new game/sequel — the ordered bootstrap: rename via `game.config.json`, strip content, rebuild on the same engine. |
 | `engine-system` | Adding/changing gameplay systems (enemies, weapons, items, rules) — the engine-first workflow: config → types → step → events → tests → presentation.  |
+| `weapon-system` | Adding/rebalancing weapons and loot (bases, level requirements, tiers/affixes, drop rules, projectile behaviors) — the def-first workflow with two verification loops: the stat checker (`scripts/weapon-stats.mjs`) and the arsenal sheet (`website/scripts/weapon-sheet.mjs`). |
 | `pixel-assets`  | Creating or changing sprites, tiles, palettes, animations, or pixel-font glyphs — the generate → look → evaluate → loop cycle.                         |
 | `sound-effects` | Adding or tuning synthesized WebAudio SFX — the sound vocabulary, mixing rules, and audition loop.                                                     |
 | `playtest`      | Verifying changes in the running game and tuning game feel with the autoplay bot (`website/scripts/playtest.mjs`).                                     |
