@@ -116,6 +116,19 @@ export {
 // helpers the map overlay draws from (`state.explored` + MAP.cellSize).
 export { closeMap, isExplored, mapCols, mapRows, openMap } from "./game/map.ts";
 
+// The wandering merchant and his coin economy: the shop pause phase, the
+// buy/sell mutators the shop UI calls, and the valuation every price tag
+// reads (see merchant.ts / config MERCHANT + ECONOMY).
+export {
+  buyStock,
+  canBuyStock,
+  closeShop,
+  merchantName,
+  openShop,
+  sellItem,
+  sellValue,
+} from "./game/merchant.ts";
+
 // The menace meter: the escalation the app reads to draw the rampage gauge
 // and mark evolved mobs (the mechanics live in step()/loot()).
 export {
@@ -240,6 +253,7 @@ export {
   DIALOGUE,
   DODGE,
   DOORS,
+  ECONOMY,
   ENEMY_AI,
   HELD_ITEMS,
   JUMP,
@@ -249,6 +263,7 @@ export {
   MAP,
   MEDKIT,
   MENACE,
+  MERCHANT,
   MERCY,
   OBSTACLES,
   PLAYER,
@@ -285,6 +300,8 @@ export type {
   Loadout,
   MapMarker,
   MapMarkerKind,
+  Merchant,
+  MerchantStock,
   Obstacle,
   Player,
   Projectile,

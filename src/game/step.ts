@@ -2,7 +2,8 @@
 // The simulation step. Called with a fixed timestep by the app's game loop;
 // mutates the state in place and records what happened in `state.events` so
 // the app layer can play sounds and flash effects. Order per step: player
-// steering + jump physics → weapon auto-attack → abilities (orbs, storms,
+// steering + jump physics → the wandering merchant (stroll / the meeting —
+// merchant.ts) → weapon auto-attack → abilities (orbs, storms,
 // stasis) → projectiles → enemies (aggro, elite ambush/dialogue, boss guard
 // AI, contact damage) → hazards (gravity wells, asteroids — hazards.ts) →
 // menace decay → wave spawner (the escalating horde) →
@@ -81,6 +82,7 @@ import {
 } from "./items.ts";
 import { grantXp, hitEnemy, unspawnedMinions } from "./loot.ts";
 import { addMapMarker, revealAround } from "./map.ts";
+import { repelFromMerchant, stepMerchant } from "./merchant.ts";
 import {
   blockedByObstacle,
   insideObstacle,
@@ -151,6 +153,10 @@ export function step(state: GameState, input: GameInput, dtMs: number): void {
   stepPlayer(state, input, dt, dtMs);
   // Walking lifts the fog of war around wherever the hero now stands.
   revealAround(state, state.player.pos);
+  // The wandering merchant strolls (and may be MET) on this tick's player
+  // position — right after the hero moves, so the meeting judges what the
+  // player actually sees.
+  stepMerchant(state, dt, dtMs);
   stepUseItem(state, input);
   stepWeapon(state, input, dtMs);
   stepAbilities(state, dt, dtMs);
@@ -1015,6 +1021,12 @@ function stepEnemies(state: GameState, dt: number, dtMs: number): void {
     // Grounded monsters never clear an obstacle — even the jumpable ones.
     // Ghostly monsters drift straight through instead.
     if (!def.phasing) resolveObstacles(state, enemy.pos, def.radius);
+    // The merchant's ward shoos the horde off his stall (ghosts included —
+    // the ward is not a wall). Bosses are too massive, apparitions too
+    // immaterial; everything else keeps its distance.
+    if (def.role !== "boss" && !def.apparition) {
+      repelFromMerchant(state, enemy.pos);
+    }
     enemy.pos.x = clamp(
       enemy.pos.x,
       def.radius,

@@ -878,6 +878,89 @@ export const RUN = {
   victoryDelayMs: 5000,
 } as const;
 
+/**
+ * The WANDERING MERCHANT (see merchant.ts): a lone trader who roams every
+ * level, ignored by the horde. Until the hero meets him he drifts between
+ * short wander legs; the first close-up ENCOUNTER (within `discoverRadius`,
+ * in line of sight) roots him to the spot for the rest of the run, pins him
+ * on the level map, and stocks his shop against the hero he just met.
+ * Tapping him within `tradeRadius` opens the shop (the `shop` phase — the
+ * world freezes like the bag). Units: world px, px/s, ms.
+ */
+export const MERCHANT = {
+  /** Body radius (collision vs obstacles, and the tap target's core). */
+  radius: 10,
+  /** Wander pace — a stroll, well under the hero's walk (PLAYER.speed 56). */
+  speed: 26,
+  /** Each wander leg heads this far from where he stands, rolled per leg. */
+  wanderRange: [50, 150] as [number, number],
+  /** Pause between wander legs, rolled per pause. */
+  idleMs: [900, 2800] as [number, number],
+  /** Spawns at least this far from the player spawn — he is met, not given. */
+  minSpawnDistance: 400,
+  /**
+   * Meeting distance: within this (and in line of sight) the merchant is
+   * DISCOVERED — he stops wandering for good and his stall pins the map.
+   * Inside the phone half-view (≈211×97), same rationale as speakRadius.
+   */
+  discoverRadius: 90,
+  /** The shop only opens with the hero this close — walk up to trade. */
+  tradeRadius: 52,
+  /**
+   * The merchant's WARD: monsters cannot come closer to him than this —
+   * about two mob-widths — so his stall never drowns in the horde and the
+   * hero can always reach the counter. Bosses are too massive to shoo and
+   * apparitions too immaterial; everything else is pushed out to the rim.
+   */
+  repelRadius: 40,
+  /** Weapons on the stall (rolled at discovery, one-off purchases). */
+  stockWeapons: 2,
+  /** Powerups on the stall (restocked — buy as many as you can afford). */
+  stockAbilities: 3,
+  /** Tier-roll bonus on the stall's weapons: merchant stock skews magic+,
+   * like Diablo 2's gamble screen. */
+  stockTierBonus: 0.35,
+} as const;
+
+/**
+ * The COIN ECONOMY the merchant trades in. Coins enter the run one way —
+ * selling loot to a discovered merchant — and leave it on his powerups and
+ * weapons, so the economy is a loot-recycling loop, not a faucet.
+ *
+ * An item's SELL VALUE is `(itemBase + itemPerIlvl · ilvl) × tier × material`:
+ * the item's LEVEL carries the base worth (a deep find genuinely sells
+ * higher), the TIER multiplies it by ORDERS OF MAGNITUDE (a magic item is
+ * worth 10× a regular, a rare 100×, …), and the MATERIAL sweetens it — METAL
+ * items melt down for double, PRECIOUS ones (gold, gems, the genuinely
+ * magical) fetch four times. BUY prices hang off the same scale: a stall
+ * weapon costs its own sell value × `weaponBuyMarkup` (≈ selling a few magic
+ * items, ×10 — the Diablo 2 vendor gap), and powerups are priced off the
+ * hero's level so they stay a meaningful spend all campaign.
+ */
+export const ECONOMY = {
+  /** Flat floor of an item's worth, in coins. */
+  itemBase: 2,
+  /** Coins of worth per point of the item's level (ilvl). */
+  itemPerIlvl: 1,
+  /** The tier ladder in coin terms — each rung an order of magnitude. */
+  tierValueMult: {
+    regular: 1,
+    magic: 10,
+    rare: 100,
+    unique: 1_000,
+    legendary: 10_000,
+  } as Record<"regular" | "magic" | "rare" | "unique" | "legendary", number>,
+  /** Metal items melt down: worth double (see EquipmentDef.material). */
+  metalMult: 2,
+  /** Precious items (gold, gems, true magic) fetch four times. */
+  preciousMult: 4,
+  /** A stall weapon costs its own sell value × this — the vendor's cut. */
+  weaponBuyMarkup: 10,
+  /** A stall powerup's price: base + perLevel × the hero's level. */
+  abilityBase: 40,
+  abilityPerLevel: 12,
+} as const;
+
 /** The level map and its fog of war (see map.ts). */
 export const MAP = {
   /** Fog-of-war grid cell size (world px). Coarse on purpose: the map reads

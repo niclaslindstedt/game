@@ -204,6 +204,23 @@ run against synthetic fixtures with no shipped content (see
   victories including fled uniques (loot.ts). `openMap`/`closeMap` toggle the
   `map` pause phase (frozen sim, level-up priority on close) for the HUD's
   MAP button / the M key.
+- **`src/game/merchant.ts`** — the WANDERING MERCHANT and his coin economy
+  (config `MERCHANT` / `ECONOMY`): one trader per level (`state.merchant`,
+  minted at creation on his own seeded rng stream — parked as a plain
+  `rngState` number so a saved run freezes him losslessly — and never
+  drawing the run's stream, so his existence reshuffles no loot roll).
+  He wanders until met; the first close encounter (`stepMerchant`, inside
+  the step) roots him for good, pins the map (`merchant` marker), rolls his
+  stall against the hero's level, emits `merchantDiscovered`, and plays the
+  level's greeting scene (`LevelDef.merchant` — sprite, name, and pages;
+  the words live in `docs/manuscript.md`). His ward (`repelFromMerchant`,
+  called from the enemy pass) keeps the horde `MERCHANT.repelRadius` off
+  the stall — bosses and apparitions excepted. `openShop`/`closeShop`
+  toggle the `shop` pause phase (proximity-gated); `sellItem`/`buyStock`
+  are the UI's trade mutators, and `sellValue` is the one valuation every
+  price tag reads — item level × tier orders of magnitude × material
+  (metal ×2, precious ×4, from the equipment defs). Coins live on the
+  player and ride the loadout between levels.
 - **`src/game/items.ts`** — equipment instances and the player-driven
   mutations the UI calls into: loot rolls, `equipFromInventory` /
   `unequipToInventory` / `moveInventoryItem`, `allocateStat` (plus the

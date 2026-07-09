@@ -63,6 +63,24 @@ export const SPACEZ_HQ: LevelDef = {
   // loot here, not a given (an epic drop from the Chief of Security).
   heroSuited: false,
   foes: "STAFF",
+  // THE MERCHANT, venue one: the vending-machine restocker, still on his
+  // round in the middle of the lockdown. (Ada was last seen at the vending
+  // machines — this is his floor.) Lines in docs/manuscript.md.
+  merchant: {
+    sprite: "merchant_vendor",
+    greeting: [
+      [
+        "EASY, FRIEND. I'M NOT STAFF.",
+        "I STOCK THE VENDING MACHINES.",
+        "SOMEBODY HAS TO, EVEN TONIGHT.",
+      ],
+      [
+        "A LOCKDOWN IS A SELLER'S MARKET.",
+        "I'LL BUY WHAT WEIGHS YOU DOWN",
+        "AND SELL WHAT KEEPS YOU UPRIGHT.",
+      ],
+    ],
+  },
   playerSpawn: { x: 220, y: 620 },
   landmarks: [
     { kind: "entrance", pos: { x: 84, y: 620 } },

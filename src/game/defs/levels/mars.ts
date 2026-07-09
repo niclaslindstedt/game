@@ -51,6 +51,24 @@ export const MARS: LevelDef = {
     ],
   },
   foes: "MACHINES",
+  // THE MERCHANT, venue three: the colony's commissary keeper, replaced by
+  // the same AI that replaced everyone — he kept the scales. Lines in
+  // docs/manuscript.md.
+  merchant: {
+    sprite: "merchant_mars",
+    greeting: [
+      [
+        "A BREATHING CUSTOMER. AT LAST.",
+        "I RAN THE COLONY COMMISSARY",
+        "TILL THE AI RAN THE NUMBERS.",
+      ],
+      [
+        "IT KEPT THE DOME. I KEPT THE",
+        "SCALES. SELL ME WHAT THE",
+        "MACHINES DROP - BUY WHAT HELPS.",
+      ],
+    ],
+  },
   playerSpawn: { x: 300, y: 750 },
   landmarks: [
     // The hero's ship, parked where the run begins.

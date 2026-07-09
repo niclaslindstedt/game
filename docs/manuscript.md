@@ -246,6 +246,16 @@ _Drops: PLASMA CUTTER._
 - IT SIGNED THE MIDNIGHT LAUNCHES. / IT DREW THE OPTIMUSK LINE. IT / FILED ADA UNDER 'CARGO'.
 - THEY DIDN'T REPLACE US WITH A / MACHINE. THEY BUILT ONE THAT / DREAMS OF A WORLD WITHOUT US.
 
+### The wandering merchant — the vending-machine man
+
+_THE MERCHANT's first venue (see `merchant.ts` — he roams the level until met,
+then stays put and opens shop). A vending-machine restocker still on his round
+in the middle of the lockdown; Ada was last seen at the vending machines — this
+is his floor. Spoken once, on the first meeting._
+
+- EASY, FRIEND. I'M NOT STAFF. / I STOCK THE VENDING MACHINES. / SOMEBODY HAS TO, EVEN TONIGHT.
+- A LOCKDOWN IS A SELLER'S MARKET. / I'LL BUY WHAT WEIGHS YOU DOWN / AND SELL WHAT KEEPS YOU UPRIGHT.
+
 ---
 
 ## Level 2 — THE MOON
@@ -366,6 +376,15 @@ _Drops: MACHETE._
 - A FILE: 'PROJECT SECOND MAN'. / MEDICAL CHARTS FOR N. ARMSTRONG. / TWO SETS. IDENTICAL. ALMOST.
 - 'ORIGINAL DECLINED TO RETURN. / REPLACEMENT GREW NICELY IN / TRANSIT. WAVED ON CUE.'
 - THE MAN ON EVERY POSTER BACK / HOME WAS THE COPY. THE REAL ONE / IS STILL UP HERE. GUARDING.
+
+### The wandering merchant — the salvage-run trader
+
+_THE MERCHANT, somehow, again: a trader in a patched 70s suit who came up on
+the secret salvage runs — the moonward launches had room for his stock, never
+his return ticket. Spoken once, on the first meeting._
+
+- YOU'RE SOLID. THAT'S NEW. / I CAME UP WITH THE '76 SALVAGE / RUN. MISSED THE RIDE HOME.
+- THE GHOSTS DON'T CARRY COIN, / SO YOU'RE MY WHOLE MARKET NOW. / SELL ME SCRAP. BUY WHAT WORKS.
 
 ---
 
@@ -503,6 +522,15 @@ _Drops: NOT-A-FLAMETHROWER. Leaves: the RIFT._
 
 - A STONE TABLET WITH A GANTT / CHART CHISELED INTO IT. ONE / MILESTONE GLOWS: 'TRIBUTE NIGHT.'
 - 'OFFERING: SPECIMEN 7. VENUE: / THE RIFT. DRESS CODE: SCALES.' / SHE'S ALIVE. AND I'M NOT LATE.
+
+### The wandering merchant — the commissary keeper
+
+_THE MERCHANT, a third time: the colony's commissary keeper, replaced by the
+same AI that replaced everyone — it kept the dome, he kept the scales. Spoken
+once, on the first meeting._
+
+- A BREATHING CUSTOMER. AT LAST. / I RAN THE COLONY COMMISSARY / TILL THE AI RAN THE NUMBERS.
+- IT KEPT THE DOME. I KEPT THE / SCALES. SELL ME WHAT THE / MACHINES DROP - BUY WHAT HELPS.
 
 ---
 
@@ -652,6 +680,16 @@ _Drops: GOLDEN PARACHUTE. Leaves: a second RIFT._
 - A BURNT PROBE, STAMPED ZAI. / STILL LOGGING. DISCOVERY: / 'INTER-UNIVERSAL APERTURE.'
 - 'REPORTED TO: 1 RECIPIENT. / CLASSIFICATION: NOBODY'S / BUSINESS.' EIGHT BILLION / PEOPLE. ZERO CC'S.
 
+### The wandering merchant — the trader between worlds
+
+_The reveal: the hooded trader between universes has been every shopkeeper the
+hero met — every market he ever ran fell through here eventually. Spoken once,
+on the first meeting._
+
+- AH. YOU AGAIN. DON'T LOOK SO / SURPRISED - EVERY MARKET I EVER / RAN FELL THROUGH HERE, IN THE END.
+- THE VENDING MACHINES. THE MOON. / THE DOME. ALL ROADS LEAD HERE - / AND COIN SPENDS ON ALL OF THEM.
+- BRING ME RELICS, TRAVELER. / TAKE WHAT YOU NEED. / WE'RE BOTH FAR FROM HOME.
+
 ---
 
 ## Where the data lives
@@ -661,15 +699,16 @@ line here appears verbatim in one of these, and they must match. When you change
 one, update the manuscript in the same change (subject to the confirmation rule
 at the top of this file).
 
-| Story/dialogue element                      | Canonical data file                                                              |
-| ------------------------------------------- | -------------------------------------------------------------------------------- |
-| Prelude cutscene (captions, `say` beats)    | `src/game/defs/cutscenes.ts`                                                     |
-| Per-level opening monologues (`intro`)      | `src/game/defs/levels/spacez_hq.ts`, `.../moon.ts`, `.../mars.ts`, `.../rift.ts` |
-| Elite/boss `dialogue` + `lastWords`         | `src/game/defs/enemies/spacez.ts`, `.../moon.ts`, `.../mars.ts`, `.../rift.ts`   |
-| Hero's inner thoughts (`firstKillThoughts`) | `src/game/defs/thoughts.ts` (pinned from a `LevelDef`)                           |
-| Found lore on story items (`lore`)          | `src/game/defs/story.ts`                                                         |
-| Loose UI copy (how-to-play, not story)      | `website/src/game/copy.ts`                                                       |
-| Brand strings (title, tagline — not story)  | `game.config.json` → `website/src/identity.ts`                                   |
+| Story/dialogue element                      | Canonical data file                                                                 |
+| ------------------------------------------- | ----------------------------------------------------------------------------------- |
+| Prelude cutscene (captions, `say` beats)    | `src/game/defs/cutscenes.ts`                                                        |
+| Per-level opening monologues (`intro`)      | `src/game/defs/levels/spacez_hq.ts`, `.../moon.ts`, `.../mars.ts`, `.../rift.ts`    |
+| Elite/boss `dialogue` + `lastWords`         | `src/game/defs/enemies/spacez.ts`, `.../moon.ts`, `.../mars.ts`, `.../rift.ts`      |
+| Hero's inner thoughts (`firstKillThoughts`) | `src/game/defs/thoughts.ts` (pinned from a `LevelDef`)                              |
+| Found lore on story items (`lore`)          | `src/game/defs/story.ts`                                                            |
+| The wandering merchant's greetings          | `src/game/defs/levels/*.ts` (`merchant.greeting`; played by `src/game/merchant.ts`) |
+| Loose UI copy (how-to-play, not story)      | `website/src/game/copy.ts`                                                          |
+| Brand strings (title, tagline — not story)  | `game.config.json` → `website/src/identity.ts`                                      |
 
 The engine machinery that plays these (dialogue queue, kill-triggered scenes) is
 in `src/game/story.ts`; the app-side overlays that render them are

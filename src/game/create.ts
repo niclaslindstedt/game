@@ -35,6 +35,7 @@ import {
   syncInventoryCapacity,
 } from "./items.ts";
 import { createExplored, revealAround } from "./map.ts";
+import { createMerchant } from "./merchant.ts";
 import { evolutionHpMult, mobHpScaleFor, mobLevelFor } from "./menace.ts";
 import { boundingRadius, rockHalf } from "./obstacles.ts";
 import type {
@@ -216,6 +217,9 @@ export function createGame(
     storyItems: [],
     thoughtsSeen: [],
     doors,
+    // The wandering merchant: placed (and forever rolled) on his own seeded
+    // stream, so the run's rng sequence is exactly what it was without him.
+    merchant: createMerchant(seed, def, playerSpawn, blocked),
     explored: createExplored(def),
     mapMarkers: [],
     player: {
@@ -245,6 +249,9 @@ export function createGame(
       xp: 0,
       xpToNext: LEVELING.baseXpToLevel,
       pendingStatPoints: 0,
+      // The purse opens empty — coins come from selling loot to the merchant
+      // (a carried loadout restores its banked purse below).
+      coins: 0,
       stats: {
         stamina: 0,
         strength: 0,

@@ -71,6 +71,12 @@ export type WeaponDef = {
    */
   critMult?: number;
   /**
+   * What the piece is made of, for the merchant's scales (config ECONOMY):
+   * `metal` melts down and sells for double, `precious` (gold, gems, the
+   * genuinely magical) for four times. Omitted = ordinary matter, base value.
+   */
+  material?: "metal" | "precious";
+  /**
    * Melee only: the full angle (degrees) of the swing's cone of effect. Every
    * monster within `range` and inside this arc of the aim is struck at once,
    * so a swing cleaves the crowd. A wide arc is a blade's slash; a narrow arc
@@ -145,6 +151,7 @@ export const WEAPON_DEFS: Record<string, WeaponDef> = {
   // back.
   medieval_sword: {
     id: "medieval_sword",
+    material: "metal",
     name: "MEDIEVAL SWORD",
     class: "melee",
     levelReq: 1,
@@ -163,6 +170,7 @@ export const WEAPON_DEFS: Record<string, WeaponDef> = {
   // reach mean the fight happens closer and flanks sooner.
   combat_knife: {
     id: "combat_knife",
+    material: "metal",
     name: "COMBAT KNIFE",
     class: "melee",
     levelReq: 1,
@@ -178,6 +186,7 @@ export const WEAPON_DEFS: Record<string, WeaponDef> = {
   // knuckle range means standing INSIDE the horde to throw it.
   brass_knuckles: {
     id: "brass_knuckles",
+    material: "metal",
     name: "BRASS KNUCKLES",
     class: "melee",
     levelReq: 1,
@@ -224,6 +233,7 @@ export const WEAPON_DEFS: Record<string, WeaponDef> = {
   // A desk drawer's 9mm — this is America, even in the space business.
   nine_mm: {
     id: "nine_mm",
+    material: "metal",
     name: "9MM PISTOL",
     class: "ranged",
     levelReq: 2,
@@ -238,6 +248,7 @@ export const WEAPON_DEFS: Record<string, WeaponDef> = {
   // run's scripted second-kill drop, so its levelReq must stay at 1.
   security_baton: {
     id: "security_baton",
+    material: "metal",
     name: "SECURITY BATON",
     class: "melee",
     levelReq: 1,
@@ -268,6 +279,7 @@ export const WEAPON_DEFS: Record<string, WeaponDef> = {
   // single swing and a spread at range still stings the crowd.
   pump_shotgun: {
     id: "pump_shotgun",
+    material: "metal",
     name: "PUMP SHOTGUN",
     class: "ranged",
     levelReq: 5,
@@ -308,6 +320,7 @@ export const WEAPON_DEFS: Record<string, WeaponDef> = {
   // The lander's chunky chrome service wrench: heavy, honest, everywhere.
   lunar_wrench: {
     id: "lunar_wrench",
+    material: "metal",
     name: "LUNAR WRENCH",
     class: "melee",
     levelReq: 5,
@@ -321,6 +334,7 @@ export const WEAPON_DEFS: Record<string, WeaponDef> = {
   // A .38 out of a crew survival kit — the space race packed for bears.
   service_revolver: {
     id: "service_revolver",
+    material: "metal",
     name: "SERVICE REVOLVER",
     class: "ranged",
     levelReq: 6,
@@ -335,6 +349,7 @@ export const WEAPON_DEFS: Record<string, WeaponDef> = {
   // that pays its patience back in deep dents.
   geology_hammer: {
     id: "geology_hammer",
+    material: "metal",
     name: "GEOLOGY HAMMER",
     class: "melee",
     levelReq: 8,
@@ -349,6 +364,7 @@ export const WEAPON_DEFS: Record<string, WeaponDef> = {
   // one deliberate tracer at a time.
   surplus_carbine: {
     id: "surplus_carbine",
+    material: "metal",
     name: "SURPLUS CARBINE",
     class: "ranged",
     levelReq: 9,
@@ -414,6 +430,7 @@ export const WEAPON_DEFS: Record<string, WeaponDef> = {
   // the first body — it holds a whole lane.
   railgun: {
     id: "railgun",
+    material: "metal",
     name: "RAILGUN",
     class: "ranged",
     levelReq: 13,
@@ -453,6 +470,7 @@ export const WEAPON_DEFS: Record<string, WeaponDef> = {
   // than the arm — the Mars pool's slow, enormous exclamation mark.
   gravity_maul: {
     id: "gravity_maul",
+    material: "metal",
     name: "GRAVITY MAUL",
     class: "melee",
     levelReq: 16,
@@ -473,6 +491,7 @@ export const WEAPON_DEFS: Record<string, WeaponDef> = {
   // that didn't have years.
   gladius: {
     id: "gladius",
+    material: "metal",
     name: "GLADIUS",
     class: "melee",
     levelReq: 15,
@@ -501,6 +520,7 @@ export const WEAPON_DEFS: Record<string, WeaponDef> = {
   // down the muzzle.
   blunderbuss: {
     id: "blunderbuss",
+    material: "metal",
     name: "BLUNDERBUSS",
     class: "ranged",
     levelReq: 19,
@@ -522,6 +542,7 @@ export const WEAPON_DEFS: Record<string, WeaponDef> = {
   // ladder.
   executioners_axe: {
     id: "executioners_axe",
+    material: "metal",
     name: "EXECUTIONER'S AXE",
     class: "melee",
     levelReq: 21,
@@ -536,6 +557,7 @@ export const WEAPON_DEFS: Record<string, WeaponDef> = {
   // The base ladder's magic capstone.
   sorcerers_staff: {
     id: "sorcerers_staff",
+    material: "precious",
     name: "SORCERER'S STAFF",
     class: "magic",
     levelReq: 23,
@@ -566,6 +588,7 @@ export const WEAPON_DEFS: Record<string, WeaponDef> = {
   // UNIQUE tier once it ships.
   golden_stapler: {
     id: "golden_stapler",
+    material: "precious",
     name: "GOLDEN STAPLER",
     class: "ranged",
     levelReq: 4,
@@ -580,6 +603,7 @@ export const WEAPON_DEFS: Record<string, WeaponDef> = {
   },
   plasma_cutter: {
     id: "plasma_cutter",
+    material: "metal",
     name: "PLASMA CUTTER",
     class: "melee",
     levelReq: 5,
@@ -593,6 +617,7 @@ export const WEAPON_DEFS: Record<string, WeaponDef> = {
   },
   machete: {
     id: "machete",
+    material: "metal",
     name: "MACHETE",
     class: "melee",
     levelReq: 7,
@@ -607,6 +632,7 @@ export const WEAPON_DEFS: Record<string, WeaponDef> = {
   // pool but under the boss trophies, so the plot fights pay in power too.
   executive_putter: {
     id: "executive_putter",
+    material: "metal",
     name: "EXECUTIVE PUTTER",
     class: "melee",
     levelReq: 3,
@@ -672,6 +698,7 @@ export const WEAPON_DEFS: Record<string, WeaponDef> = {
   },
   core_drill: {
     id: "core_drill",
+    material: "metal",
     name: "CORE DRILL",
     class: "melee",
     levelReq: 6,
@@ -698,6 +725,7 @@ export const WEAPON_DEFS: Record<string, WeaponDef> = {
   },
   surveyors_pick: {
     id: "surveyors_pick",
+    material: "metal",
     name: "SURVEYOR'S PICK",
     class: "melee",
     levelReq: 8,
@@ -711,6 +739,7 @@ export const WEAPON_DEFS: Record<string, WeaponDef> = {
   },
   moons_blade: {
     id: "moons_blade",
+    material: "metal",
     name: "MOON'S BLADE",
     class: "melee",
     levelReq: 8,
@@ -724,6 +753,7 @@ export const WEAPON_DEFS: Record<string, WeaponDef> = {
   // scheduled blade. All guaranteed drops, never in the random pool.
   cyber_katana: {
     id: "cyber_katana",
+    material: "metal",
     name: "CYBER KATANA",
     class: "melee",
     levelReq: 11,
@@ -737,6 +767,7 @@ export const WEAPON_DEFS: Record<string, WeaponDef> = {
   },
   search_bar: {
     id: "search_bar",
+    material: "metal",
     name: "SEARCH BAR",
     class: "melee",
     levelReq: 11,
@@ -764,6 +795,7 @@ export const WEAPON_DEFS: Record<string, WeaponDef> = {
   },
   contrarian_dagger: {
     id: "contrarian_dagger",
+    material: "metal",
     name: "CONTRARIAN DAGGER",
     class: "melee",
     levelReq: 13,
@@ -874,6 +906,11 @@ export type GearDef = {
    * as new defs carrying a larger count.
    */
   bagSlots?: number;
+  /**
+   * Merchant material, same scale as a weapon's (see WeaponDef.material):
+   * metal sells for double, precious for four times. Omitted = base value.
+   */
+  material?: "metal" | "precious";
   /** Inventory icon sprite. */
   icon: string;
   /**
@@ -916,6 +953,7 @@ export const GEAR_DEFS: Record<string, GearDef> = {
   },
   suit_plating: {
     id: "suit_plating",
+    material: "metal",
     name: "SUIT PLATING",
     slot: "suit",
     bonuses: { maxHp: 20 },
@@ -960,6 +998,7 @@ export const GEAR_DEFS: Record<string, GearDef> = {
   // ---- Mars gear: colony-issue kit in the level's drop pool.
   pressure_plating: {
     id: "pressure_plating",
+    material: "metal",
     name: "PRESSURE PLATING",
     slot: "suit",
     bonuses: { maxHp: 25 },
@@ -978,6 +1017,7 @@ export const GEAR_DEFS: Record<string, GearDef> = {
   // ---- Rift gear: what history's missing carry, and what the void rains.
   stardust_charm: {
     id: "stardust_charm",
+    material: "precious",
     name: "STARDUST CHARM",
     slot: "charm",
     // A pinch of ground-up somewhere else. It glitters at good moments.
@@ -1003,6 +1043,7 @@ export const GEAR_DEFS: Record<string, GearDef> = {
   },
   golden_parachute: {
     id: "golden_parachute",
+    material: "precious",
     name: "GOLDEN PARACHUTE",
     slot: "charm",
     // MOSQUE's exit package, dropped mid-exit. Guaranteed soft landings,
@@ -1025,6 +1066,7 @@ export const GEAR_DEFS: Record<string, GearDef> = {
   },
   crystal_orb: {
     id: "crystal_orb",
+    material: "precious",
     name: "CRYSTAL ORB",
     slot: "charm",
     levelReq: 16,
@@ -1034,6 +1076,7 @@ export const GEAR_DEFS: Record<string, GearDef> = {
   },
   grimoire: {
     id: "grimoire",
+    material: "precious",
     name: "GRIMOIRE",
     slot: "charm",
     levelReq: 18,
@@ -1044,6 +1087,7 @@ export const GEAR_DEFS: Record<string, GearDef> = {
   },
   enchanted_ring: {
     id: "enchanted_ring",
+    material: "precious",
     name: "ENCHANTED RING",
     slot: "charm",
     levelReq: 20,
@@ -1053,6 +1097,7 @@ export const GEAR_DEFS: Record<string, GearDef> = {
   },
   dragonscale_cloak: {
     id: "dragonscale_cloak",
+    material: "precious",
     name: "DRAGONSCALE CLOAK",
     slot: "suit",
     levelReq: 22,
