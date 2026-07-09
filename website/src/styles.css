@@ -1188,6 +1188,15 @@ body {
   display: block;
 }
 
+/* A modal's dismiss button — the inventory, map, and shop panels used to end
+   with a huge full-width CLOSE bar; instead park a compact button in the
+   panel's bottom-right corner (align-self wins over the column's stretch/center
+   so it hugs the right edge). */
+.modal-close-btn {
+  align-self: flex-end;
+  padding: 0.45rem 0.9rem;
+}
+
 /* ---- Splash title screen (Doom-style main menu) --------------------------- */
 
 .title-screen {

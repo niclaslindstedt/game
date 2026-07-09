@@ -971,11 +971,11 @@ export function InventoryPanel({
 
         <button
           type="button"
-          className="pixel-button"
+          className="pixel-button modal-close-btn"
           aria-label="close-inventory"
           onClick={onClose}
         >
-          <PixelText font={font} text="CLOSE" scale={2} color="#0b0d10" />
+          <PixelText font={font} text="CLOSE" scale={1} color="#0b0d10" />
         </button>
       </div>
 

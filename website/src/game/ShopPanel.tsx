@@ -346,11 +346,11 @@ export function ShopPanel({
 
         <button
           type="button"
-          className="pixel-button secondary"
+          className="pixel-button secondary modal-close-btn"
           aria-label="close-shop"
           onClick={onClose}
         >
-          <PixelText font={font} text="CLOSE" scale={2} />
+          <PixelText font={font} text="CLOSE" scale={1} />
         </button>
       </div>
     </div>
