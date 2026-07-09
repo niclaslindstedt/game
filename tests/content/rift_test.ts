@@ -62,7 +62,7 @@ describe("THE RIFT level def", () => {
     ]);
   });
 
-  it("pins history's missing along the road: three fights, two apparitions", () => {
+  it("pins history's missing along the road: four fights, two apparitions", () => {
     const placed = RIFT.spawns
       .filter((s) => "at" in s)
       .map((s) => enemyDef(s.enemy));
@@ -73,6 +73,7 @@ describe("THE RIFT level def", () => {
     expect(fighters).toEqual([
       "amelia_earhart",
       "grigori_rasputin",
+      "lucky",
       "nikola_tesla",
     ]);
     const apparitions = placed

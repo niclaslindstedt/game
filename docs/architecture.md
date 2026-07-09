@@ -71,8 +71,17 @@ run against synthetic fixtures with no shipped content (see
   `dialogue` for the stare-down before the fight. Every unique mob also
   carries `lastWords` — a short dying gasp replayed through the same
   dialogue box (an `enemyDeath` scene) as it falls, so a story death lands
-  harder than a nameless minion's. This game's actual roster (and the
-  story it tells) is in [`game-content.md`](./game-content.md).
+  harder than a nameless minion's. A unique may instead be `spareable`: at
+  0 hp it kneels for the SPARE-or-KILL verdict, and spared it joins the
+  party as the named companion (see `companions.ts` below). This game's
+  actual roster (and the story it tells) is in
+  [`game-content.md`](./game-content.md).
+- **`src/game/defs/companions.ts`** — the companion catalog: who a spared
+  unique becomes. Each def carries the sprite family (the enemy twin's), a
+  base hp that grows with the hero's level, a signature starting weapon, an
+  optional party-wide `aura` (LUCKY's +50% magic find), the `joinWords`
+  scene played the moment the SPARE verdict lands, and the `killQuotes`
+  banter floated over the companion when its blow downs a mob.
 - **`src/game/defs/story.ts`** — the story-item catalog: plot pieces
   (keycards, dossiers, recovered hardware) dropped by elites or placed in
   locked rooms. Pickups bank into `state.storyItems` (never the bag) and
@@ -203,6 +212,24 @@ run against synthetic fixtures with no shipped content (see
   renderer), story-item collection, and `stepDoors` (a carried key
   removes its door's obstacle chain). Dialogue freezes the run in the
   `dialogue` phase exactly like the level-up chooser.
+- **`src/game/companions.ts`** — the COMPANION system and the SPARE-or-KILL
+  verdict (config `COMPANIONS`): a spareable unique (`EnemyDef.spareable`)
+  beaten to 0 hp kneels and pauses the run in the `choice` phase (the
+  interception lives in `hitEnemy`); `resolveChoice` lands the call — KILL
+  books the withheld blow through `killEnemy`, SPARE recruits the figure as
+  a party companion (`recruitCompanion`, its `joinWords` scene via story.ts).
+  `stepCompanions` (right after the enemy pass) walks the party's formation,
+  picks fights inside the hero's engagement bubble, strikes/shoots on the
+  weapon's cadence (shots ride the ordinary projectile pass, tagged
+  `companionId` for kill-quote attribution), soaks the horde's contact
+  swings against helmet+chest armor, and beats companions DOWN — never
+  dead — until they stand back up on their own. Companion auras
+  (`CompanionDef.aura` — LUCKY's +50% magic find, read by items.ts
+  `magicFindBonus` inside every tier roll) go silent while downed. The UI's
+  mutators are `equipCompanionFromInventory` / `unequipCompanionToInventory`
+  (weapon/helmet/chest only) and the `companion` pause-phase toggles
+  `openCompanionPanel` / `closeCompanionPanel`; the party rides the loadout
+  (`Loadout.companions`) between levels.
 - **`src/game/map.ts`** — the level map and its fog of war: run-scoped
   exploration as a coarse byte grid on the state (`state.explored`, one cell
   per config `MAP.cellSize` world px), stamped around the hero every step

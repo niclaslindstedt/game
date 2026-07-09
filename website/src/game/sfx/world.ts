@@ -141,6 +141,91 @@ export function playWorldSound(synth: Synth, event: GameEvent): boolean {
       });
       return true;
 
+    case "spareOffered":
+      // A beaten unique kneels and the verdict lands on the table: a held
+      // low question mark — two slow detuned steps that don't resolve,
+      // hanging in the echo until the player answers.
+      synth.tone({
+        type: "triangle",
+        from: 262,
+        durationMs: 220,
+        volume: 0.05,
+        detuneCents: 8,
+        echo: 0.35,
+      });
+      synth.tone({
+        type: "triangle",
+        from: 370,
+        durationMs: 320,
+        volume: 0.045,
+        delayMs: 200,
+        detuneCents: 8,
+        echo: 0.45,
+      });
+      return true;
+
+    case "companionJoined":
+      // A spared figure takes the hero's side: a warm little oath — a rising
+      // third with a glassy top, brighter than the dialogue knock but far
+      // short of a jingle (the joining scene follows anyway).
+      synth.tone({ type: "square", from: 523, durationMs: 90, volume: 0.045 });
+      synth.tone({
+        type: "square",
+        from: 659,
+        durationMs: 150,
+        volume: 0.045,
+        delayMs: 90,
+        detuneCents: 5,
+        echo: 0.25,
+      });
+      synth.tone({
+        type: "sine",
+        from: 1318,
+        durationMs: 120,
+        volume: 0.018,
+        delayMs: 90,
+        echo: 0.3,
+      });
+      return true;
+
+    case "companionDowned":
+      // A companion beaten to its knees: a dull body-drop thud under a short
+      // falling tone — heavy, but under playerHurt's ceiling (an ally, not
+      // the hero).
+      synth.noise({
+        durationMs: 90,
+        volume: 0.05,
+        filter: { type: "lowpass", frequency: 500 },
+      });
+      synth.tone({
+        type: "triangle",
+        from: 330,
+        to: 165,
+        durationMs: 260,
+        volume: 0.045,
+        detuneCents: 8,
+      });
+      return true;
+
+    case "companionRevived":
+      // Back on its feet: the downed thud inverted — a quick rising triangle
+      // with a soft top, more relief than fanfare.
+      synth.tone({
+        type: "triangle",
+        from: 196,
+        to: 392,
+        durationMs: 200,
+        volume: 0.04,
+      });
+      synth.tone({
+        type: "sine",
+        from: 784,
+        durationMs: 90,
+        volume: 0.016,
+        delayMs: 140,
+      });
+      return true;
+
     default:
       return false;
   }

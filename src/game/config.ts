@@ -785,6 +785,53 @@ export const DIALOGUE = {
   sightRadius: 96,
 } as const;
 
+/**
+ * COMPANIONS — the recruited party (see companions.ts). A spareable unique
+ * (`EnemyDef.spareable`) beaten to 0 hp offers the SPARE-or-KILL choice;
+ * spared, it joins the hero as a companion: follows him, fights with its own
+ * equipped weapon, wears a helmet and chest piece (never legs or feet), and
+ * rides the loadout to the next level. Companions are beaten DOWN, never
+ * killed — at 0 hp one kneels out of the fight and recovers on its own.
+ */
+export const COMPANIONS = {
+  /** How far behind the hero the formation point sits (world px). */
+  followDistance: 34,
+  /** Sideways gap between companions in the follow formation (world px). */
+  spacing: 24,
+  /** Companions only engage foes within this distance of the HERO (world
+   * px) — the party fights around him, it never runs off to clear the map. */
+  engageRadius: 230,
+  /** Beyond this distance from the hero a companion abandons its target and
+   * regroups (world px). */
+  leashRadius: 320,
+  /** Left further behind than this (world px, off-screen at phone zoom), a
+   * companion slips through the noise and rejoins the formation outright —
+   * a party member, never an escort quest. */
+  catchUpDistance: 420,
+  /** A companion holds at this share of its weapon's range, like the bots. */
+  holdFraction: 0.75,
+  /** How many foes a companion's melee swing may cleave at once. */
+  meleeTargets: 2,
+  /**
+   * Global scale on a companion's weapon damage — the party fights at the
+   * looted-weapon damper (WEAPON.damageMult's sibling) so a recruited elite
+   * supports the hero instead of clearing the field for him.
+   */
+  damageMult: 0.5,
+  /** Companion damage grows with the hero's level (they train together). */
+  damagePerLevel: 0.04,
+  /** Companion max hp grows with the hero's level, same rationale. */
+  hpPerLevel: 0.1,
+  /** Ms a downed companion kneels before getting back up on its own. */
+  reviveMs: 12_000,
+  /** Fraction of max hp a companion stands back up with. */
+  reviveHpFraction: 0.5,
+  /** Chance a companion's kill floats one of its def's `killQuotes`. */
+  quoteChance: 0.35,
+  /** Minimum ms between one companion's quotes — banter, not a ticker. */
+  quoteCooldownMs: 6_000,
+} as const;
+
 /** Locked doors (LevelDef.doors), opened by story-item keys. */
 export const DOORS = {
   /** Carrying the key within this distance of the door slides it open. */

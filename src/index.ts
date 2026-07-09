@@ -92,6 +92,7 @@ export {
   isScrappableLoot,
   isArmorBroken,
   isSpecialItem,
+  magicFindBonus,
   meetsLevelReq,
   scrapInferiorLoot,
   moveInventoryItem,
@@ -128,6 +129,23 @@ export {
   wearWornArmor,
   wouldUpgradeSlot,
 } from "./game/items.ts";
+
+// Companions: the SPARE-or-KILL verdict, the recruited party's equip screen
+// mutators, and the derived numbers the UI reads (see companions.ts).
+export {
+  COMPANION_SLOTS,
+  closeCompanionPanel,
+  companionArmorReduction,
+  companionById,
+  companionMaxHp,
+  companionWeaponCooldown,
+  companionWeaponDamage,
+  equipCompanionFromInventory,
+  openCompanionPanel,
+  recruitCompanion,
+  resolveChoice,
+  unequipCompanionToInventory,
+} from "./game/companions.ts";
 
 // The level map: fog-of-war queries, the map pause phase, and the grid
 // helpers the map overlay draws from (`state.explored` + MAP.cellSize).
@@ -256,6 +274,12 @@ export {
   type Grade,
 } from "./game/defs/grades.ts";
 export {
+  COMPANION_DEFS,
+  companionDef,
+  isCompanionDef,
+  type CompanionDef,
+} from "./game/defs/companions.ts";
+export {
   STORY_ITEM_DEFS,
   storyItemDef,
   type StoryItemDef,
@@ -279,6 +303,7 @@ export {
   ARMOR,
   ARRIVAL,
   ASTEROIDS,
+  COMPANIONS,
   DIALOGUE,
   DODGE,
   DOORS,
@@ -311,6 +336,9 @@ export type {
   Affix,
   ArmorSlot,
   Asteroid,
+  ChoiceState,
+  Companion,
+  CompanionSlot,
   Decor,
   DialogueState,
   Difficulty,

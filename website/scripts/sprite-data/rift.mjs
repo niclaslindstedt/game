@@ -30,6 +30,7 @@ const PALETTE = {
   N: [42, 46, 70], // entity shell: lost TV, dark suits
   Q: [96, 240, 208], // AI glow cyan
   X: [236, 82, 190], // glitch magenta
+  t: [204, 112, 40], // LUCKY's ginger beard
 };
 
 const SPRITES = {
@@ -345,6 +346,63 @@ const SPRITES = {
     "....ONNNNNNNNNNNNNO.....",
     "....ONNNNNNNNNNNNNO.....",
     "....OOOOOOOOOOOOOOO.....",
+    "........................",
+    "........................",
+    "........................",
+    "........................",
+  ],
+  // LUCKY — folklore's missing: the little man with the pot of gold. Green
+  // top hat with a gold band buckle, ginger beard past his chest, emerald
+  // coat, gold belt buckle. Deliberately small for an elite — a head and a
+  // half shorter than history's missing, same foot anchor. Frame 1 spreads
+  // the jig.
+  lucky_0: [
+    "........................",
+    "........................",
+    "........................",
+    ".........OOOOOO.........",
+    ".........OGGGGO.........",
+    ".........OGGGGO.........",
+    ".........OgyyGO.........",
+    ".......OGGGGGGGGO.......",
+    "........OppppppO........",
+    "........OpOppOpO........",
+    ".......OttppppttO.......",
+    ".......OttttttttO.......",
+    "......OGGttttttGGO......",
+    "......OGGGttttGGGO......",
+    "......OGpOGttGOpGO......",
+    "......OGGGGyyGGGGO......",
+    ".......OGGGGGGGGO.......",
+    ".......OggO..OggO.......",
+    ".......OggO..OggO.......",
+    ".......OOOO..OOOO.......",
+    "........................",
+    "........................",
+    "........................",
+    "........................",
+  ],
+  lucky_1: [
+    "........................",
+    "........................",
+    "........................",
+    ".........OOOOOO.........",
+    ".........OGGGGO.........",
+    ".........OGGGGO.........",
+    ".........OgyyGO.........",
+    ".......OGGGGGGGGO.......",
+    "........OppppppO........",
+    "........OpOppOpO........",
+    ".......OttppppttO.......",
+    ".......OttttttttO.......",
+    "......OGGttttttGGO......",
+    "......OGGGttttGGGO......",
+    "......OGpOGttGOpGO......",
+    "......OGGGGyyGGGGO......",
+    ".......OGGGGGGGGO.......",
+    "......OggO....OggO......",
+    "......OggO....OggO......",
+    "......OOOO....OOOO......",
     "........................",
     "........................",
     "........................",
@@ -983,6 +1041,7 @@ export default {
     },
     unraveler_glitch: { frames: ["unraveler_0", "unraveler_1"], delayMs: 200 },
     graviton_orbit: { frames: ["graviton_0", "graviton_1"], delayMs: 260 },
+    lucky_jig: { frames: ["lucky_0", "lucky_1"], delayMs: 280 },
     grok_omega_hum: { frames: ["grok_omega_0", "grok_omega_1"], delayMs: 380 },
     blackhole_spin: { frames: ["blackhole_0", "blackhole_1"], delayMs: 240 },
     asteroid_tumble: { frames: ["asteroid_0", "asteroid_1"], delayMs: 220 },

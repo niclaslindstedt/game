@@ -24,6 +24,7 @@ import {
   STATS,
   WEAPON,
 } from "./config.ts";
+import { companionDef } from "./defs/companions.ts";
 import { cutsceneDef } from "./defs/cutscenes.ts";
 import {
   affixNaming,
@@ -215,23 +216,40 @@ function rollAffix(rng: Rng, def: AffixDef, ilvl: number): Affix {
 }
 
 /**
+ * The party's MAGIC FIND: the summed `aura.magicFind` of every companion on
+ * its feet (a downed companion's aura is silent until it stands back up).
+ * Multiplies every loot-tier roll's chance in `rollTier` — LUCKY's +50% aura
+ * makes each magic/rare/unique gate half again as likely to open.
+ */
+export function magicFindBonus(state: GameState): number {
+  let bonus = 0;
+  for (const companion of state.companions) {
+    if (companion.downedMs !== undefined) continue;
+    bonus += companionDef(companion.defId).aura?.magicFind ?? 0;
+  }
+  return bonus;
+}
+
+/**
  * Roll the tier for a drop off a level-`mlvl` monster: best tier first, each
  * gated by the monster-level unlock (`LOOT.tierUnlockMlvl` — below the gate a
  * tier simply cannot drop, whatever the chances say), then rolled at the
  * global base chance plus the difficulty's bonus, sweetened by LUCK and any
- * per-enemy/menace bonus.
+ * per-enemy/menace bonus — the whole chance scaled by the party's MAGIC FIND
+ * aura (see `magicFindBonus`).
  */
 function rollTier(state: GameState, mlvl: number, tierBonus: number): Tier {
   const difficultyChances = difficultyDef(state.difficulty).tierChanceBonus;
   const luckBonus =
     effectiveStat(state, "luck") * STATS.tierChancePerLuck + tierBonus;
+  const magicFind = 1 + magicFindBonus(state);
   // TIER_ROLL_ORDER never contains "regular" (the fall-through), so the
   // rolled-tier config maps index safely.
   for (const tier of TIER_ROLL_ORDER as Exclude<Tier, "regular">[]) {
     if (mlvl < LOOT.tierUnlockMlvl[tier]) continue;
     const base = LOOT.tierChances[tier] + (difficultyChances[tier] ?? 0);
     if (base <= 0) continue;
-    if (state.rng() < base + luckBonus) return tier;
+    if (state.rng() < (base + luckBonus) * magicFind) return tier;
   }
   return "regular";
 }

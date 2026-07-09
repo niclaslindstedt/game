@@ -8,6 +8,7 @@
 
 import { distance, type Vec2 } from "@game/lib/vec.ts";
 import { DIALOGUE, DOORS } from "./config.ts";
+import { companionDef } from "./defs/companions.ts";
 import { enemyDef } from "./defs/enemies/index.ts";
 import { levelDef } from "./defs/levels/index.ts";
 import type { ThoughtTrigger } from "./defs/levels/types.ts";
@@ -47,6 +48,16 @@ export function dialogueContent(dialogue: DialogueState): {
   if (dialogue.source.kind === "playerThought") {
     const def = thoughtDef(dialogue.source.defId);
     return { speaker: def.speaker, portrait: def.portrait, pages: def.pages };
+  }
+  // A spared figure's joining scene: its companion def carries the thanks —
+  // same face in the portrait box it fought the hero with.
+  if (dialogue.source.kind === "companionJoin") {
+    const def = companionDef(dialogue.source.defId);
+    return {
+      speaker: def.name,
+      portrait: def.sprite,
+      pages: def.joinWords ?? [],
+    };
   }
   // The wandering merchant's meeting scene: the level def carries his
   // persona — look, name, and his own story for setting up shop here.
@@ -112,6 +123,26 @@ export function startDeathWords(state: GameState, defId: string): void {
   state.dialogue = { source: { kind: "enemyDeath", defId }, page: 0 };
   state.phase = "dialogue";
   state.events.push({ type: "enemyLastWords", defId });
+}
+
+/**
+ * Open a spared figure's JOINING scene: the short thanks — a life owed, a
+ * promise to follow and protect — played through the same dialogue box its
+ * ambush ran in, the moment the SPARE verdict lands (see `resolveChoice` in
+ * companions.ts). Silent for a def without `joinWords`, and it yields to any
+ * scene already on stage, exactly like a death gasp.
+ */
+export function startJoinWords(state: GameState, companionId: string): void {
+  const def = companionDef(companionId);
+  if (!def.joinWords || def.joinWords.length === 0 || state.dialogue !== null) {
+    return;
+  }
+  state.dialogue = {
+    source: { kind: "companionJoin", defId: companionId },
+    page: 0,
+  };
+  state.phase = "dialogue";
+  state.events.push({ type: "dialogueStarted", speaker: def.name });
 }
 
 /**

@@ -22,7 +22,9 @@ const KEY = storageKey("current-run");
 // snapshot can't be read into. A mismatched (or unparseable) blob is dropped
 // rather than resumed, so a stale run from a previous build never crashes the
 // thaw — the CONTINUE button simply doesn't appear, as it wouldn't have before.
-const SAVE_VERSION = 1;
+// v2: companions/choice/companionFocus joined the state (a v1 run would thaw
+// without the party fields and crash the companion pass).
+const SAVE_VERSION = 2;
 
 /** A run parked between sessions: enough to drop the player straight back in. */
 export type ParkedRun = {
@@ -109,6 +111,18 @@ function adoptRunEquipment(state: GameState): void {
     item.equipment = adopted;
     return true;
   });
+  // The party's kit adopts the same way — a companion can never resume
+  // weaponless, and an unresolvable armor piece is simply left behind.
+  for (const companion of state.companions) {
+    companion.equipment.weapon =
+      adoptEquipment(companion.equipment.weapon) ?? fallbackWeapon();
+    companion.equipment.head = companion.equipment.head
+      ? adoptEquipment(companion.equipment.head)
+      : null;
+    companion.equipment.chest = companion.equipment.chest
+      ? adoptEquipment(companion.equipment.chest)
+      : null;
+  }
 }
 
 /** Drop any parked run — called when one is resumed, abandoned, or replaced. */
