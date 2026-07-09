@@ -24,6 +24,15 @@ export type DialogueReveal = { done: boolean; skip: () => void };
 
 const EMPTY_PAGE: string[] = [];
 
+/**
+ * Wrap width for the dialogue text, in rem. The `.dialogue-box` caps at 36rem,
+ * less its padding and the portrait column — this is the widest the text column
+ * ever gets, so authored lines (which already fit) never rewrap, while a stray
+ * over-long line folds instead of running off the box. Keep in step with
+ * `.dialogue-box` in styles.css.
+ */
+const DIALOGUE_TEXT_REM = 28;
+
 export function DialogueOverlay({
   state,
   assets,
@@ -115,13 +124,20 @@ export function DialogueOverlay({
                 text={content.speaker}
                 scale={2}
                 color="#ffd75e"
+                maxWidth={DIALOGUE_TEXT_REM}
               />
             </div>
             <div className="dialogue-body">
               {page.map((row, i) => (
                 // Reserve each row's full height (PixelText is fixed-height
                 // even when empty) so the box never reflows as it fills in.
-                <PixelText key={i} font={font} text={rows[i] ?? ""} scale={2} />
+                <PixelText
+                  key={i}
+                  font={font}
+                  text={rows[i] ?? ""}
+                  scale={2}
+                  maxWidth={DIALOGUE_TEXT_REM}
+                />
               ))}
             </div>
           </div>

@@ -27,6 +27,14 @@ const EMPTY_LINE: string[] = [];
 /** CSS pixels per stage pixel — scenes zoom in closer than gameplay. */
 const STAGE_SCALE = 3;
 
+/**
+ * Wrap width for a cutscene line, in rem: the `.cutscene-line` box caps at
+ * 36rem, less its 1.2rem side padding — so authored beats (already fitting)
+ * keep their line breaks while a stray over-long line folds instead of running
+ * off the box. Keep in step with `.cutscene-line` in styles.css.
+ */
+const CUTSCENE_TEXT_REM = 33;
+
 function drawStage(
   ctx: CanvasRenderingContext2D,
   cutscene: CutsceneState,
@@ -200,12 +208,19 @@ export function CutsceneOverlay({
               }
               scale={2}
               color="#7ef0c8"
+              maxWidth={CUTSCENE_TEXT_REM}
             />
           )}
           {line.text.map((row, i) => (
             // Reserve each row's full height (PixelText is fixed-height even
             // when empty) so the box never reflows as the crawl fills it in.
-            <PixelText key={i} font={font} text={rows[i] ?? ""} scale={2} />
+            <PixelText
+              key={i}
+              font={font}
+              text={rows[i] ?? ""}
+              scale={2}
+              maxWidth={CUTSCENE_TEXT_REM}
+            />
           ))}
         </div>
       )}

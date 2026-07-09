@@ -19,6 +19,14 @@ import type { PixelFont } from "@ui/lib/pixel-font.ts";
  * the `.pickup-card` animation duration in styles.css. */
 export const PICKUP_CARD_TTL_MS = 2600;
 
+/**
+ * Wrap width for the pickup name, in rem: the `.pickup-card` caps at 22rem,
+ * less the icon, gap, and padding — so a long, affix-built weapon name wraps
+ * within the card instead of stretching it off both edges of the screen. Keep
+ * in step with `.pickup-card` in styles.css.
+ */
+const PICKUP_NAME_REM = 17;
+
 export type PickupCard = {
   /** Bumped per pickup; used as the mount key so the pop/spark restart. */
   id: number;
@@ -47,7 +55,13 @@ export function PickupModal({
       {card.icon && (
         <img src={card.icon} alt="" className="pixel-img pickup-card-icon" />
       )}
-      <PixelText font={font} text={card.name} scale={2} color={card.color} />
+      <PixelText
+        font={font}
+        text={card.name}
+        scale={2}
+        color={card.color}
+        maxWidth={PICKUP_NAME_REM}
+      />
     </div>
   );
 }
