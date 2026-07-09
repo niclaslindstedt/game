@@ -12,9 +12,9 @@ import { PixelText } from "@ui/lib/PixelText.tsx";
 
 import { loadGameAssets, spriteDataUrl, type GameAssets } from "./assets.ts";
 
-// The pixel font has no middle-dot glyph (it renders as "?"), so swap the
-// framework's `v0.1.0 · 97868a7` separator for one the atlas ships.
-const forPixelFont = (version: string) => version.replace(/[·•]/g, "/");
+// The atlas ships a middle-dot glyph (·) but no bullet (•), so normalize the
+// framework's `v0.1.0 · 97868a7` separator to the one the font renders.
+const forPixelFont = (version: string) => version.replace(/•/g, "·");
 
 export function UpdateModal({
   needRefresh,
