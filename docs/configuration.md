@@ -22,7 +22,8 @@ Desktop keyboard controls (when **Keys** is set to WASD): WASD or the arrow
 keys run, **Shift** walks, **Space** jumps, **1/2/3** fire the powerup dock
 slots, **Q** opens the weapon switcher (then **1-4** equip a weapon), **E**
 spends the oldest powerup, **I** toggles the bag, and **P** or **Escape**
-pauses the run (and its music). The run also auto-pauses when the tab or app
+pauses the run (and its music). On touch, tapping the on-screen clock / foe
+counter in the HUD pauses too. The run also auto-pauses when the tab or app
 loses focus; clicking the screen or pressing **P**/**Escape** again resumes.
 During a cutscene, intro, or dialogue, **Space** or **Enter** turns the page
 (the first press finishes the letter crawl, the next advances) and **Escape**
@@ -49,9 +50,15 @@ difficulty's best survival time, and the menu's HIGH SCORES board ranks the
 runs four ways (survival time, kills-per-minute, mobs killed, level reached) and
 opens any banked run into a full-session detail card. Cutscenes
 always play at the start of a run (dismiss with the top-right SKIP button).
-Clearing site data resets all of it; the `?cutscene=<id>` workbench replays
-any scene regardless, and `?level=<id>` reaches any level regardless of
-unlock state.
+An in-progress run is parked to storage too: exiting to the menu from the
+pause screen freezes the whole run under `<storagePrefix>:current-run`
+(`website/src/game/saved-run.ts`), so the menu's **CONTINUE** button survives a
+page reload — the one an app update forces included — instead of vanishing with
+the wiped memory. The snapshot is dropped once the run is resumed, abandoned
+(victory/defeat MENU), or replaced by a fresh game, and a snapshot written by
+an incompatible older build is discarded rather than resumed. Clearing site
+data resets all of it; the `?cutscene=<id>` workbench replays any scene
+regardless, and `?level=<id>` reaches any level regardless of unlock state.
 
 Everything else configurable concerns the build and the development
 environment.

@@ -8,6 +8,12 @@ import { usePwaUpdate } from "@niclaslindstedt/oss-framework/pwa";
 import { cacheIdForBase } from "./app/pwa.ts";
 import { CutscenePreview } from "./game/CutscenePreview.tsx";
 import { GameScreen } from "./game/GameScreen.tsx";
+import {
+  clearSavedRun,
+  loadSavedRun,
+  saveRun,
+  type ParkedRun,
+} from "./game/saved-run.ts";
 import { TitleScreen } from "./game/TitleScreen.tsx";
 import { UpdateModal } from "./game/UpdateModal.tsx";
 
@@ -31,16 +37,15 @@ export function App() {
     resume?: GameState;
   } | null>(null);
 
-  // A run parked in memory: the player exited to the menu from the pause
-  // screen, and the frozen engine state is kept here so CONTINUE can drop
-  // them straight back in (e.g. after nudging the volume in SETTINGS). Held
-  // apart from `run` — which is null while the menu shows — and cleared the
-  // moment the run is resumed or a fresh one is started.
-  const [parked, setParked] = useState<{
-    difficulty: Difficulty;
-    levelId: string;
-    state: GameState;
-  } | null>(null);
+  // A run parked between the menu and the game: the player exited to the menu
+  // from the pause screen, and the frozen engine state is kept here so CONTINUE
+  // can drop them straight back in (e.g. after nudging the volume in SETTINGS).
+  // Held apart from `run` — which is null while the menu shows — and cleared
+  // the moment the run is resumed or a fresh one is started. It is also
+  // mirrored to storage (see saved-run.ts), so it survives a page reload — the
+  // one an app update forces included — and CONTINUE is restored on load rather
+  // than lost with the wiped memory.
+  const [parked, setParked] = useState<ParkedRun | null>(() => loadSavedRun());
 
   // Register the deploy slot's service worker (§11.4.3) and track its update
   // lifecycle. The framework hook performs the actual
@@ -109,18 +114,23 @@ export function App() {
         // menu. The run tracks its own current level, so park the state's
         // level id (which may have advanced past where the run began).
         onExitToMenu={(state) => {
-          setParked({
+          const nextParked: ParkedRun = {
             difficulty: run.difficulty,
             levelId: state.level.id,
             state,
-          });
+          };
+          setParked(nextParked);
+          // Persist it too, so an app update (which reloads and wipes memory)
+          // leaves CONTINUE intact instead of dropping the run on the floor.
+          saveRun(nextParked);
           setRun(null);
         }}
         // Ended for good (victory/defeat splash MENU): abandon the run. Any
-        // parked run is already gone (parking nulls `run`), but clear it to
-        // be safe.
+        // parked run is already gone (parking nulls `run`), but clear both the
+        // memory and the stored copy to be safe.
         onQuit={() => {
           setParked(null);
+          clearSavedRun();
           setRun(null);
         }}
       />
@@ -131,8 +141,9 @@ export function App() {
     <>
       <TitleScreen
         onStart={(difficulty, levelId, opts) => {
-          // Starting fresh abandons whatever was parked in memory.
+          // Starting fresh abandons whatever was parked (in memory and storage).
           setParked(null);
+          clearSavedRun();
           setRun({
             difficulty,
             levelId,
@@ -148,7 +159,12 @@ export function App() {
                   levelId: parked.levelId,
                   resume: parked.state,
                 });
+                // Consume the parked run: resuming re-arms it live, and keeping
+                // the now-stale storage snapshot would only restore old
+                // progress on a later reload. Re-parked (and re-saved) if the
+                // player exits to the menu again.
                 setParked(null);
+                clearSavedRun();
               }
             : undefined
         }

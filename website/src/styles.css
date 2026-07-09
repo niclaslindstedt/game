@@ -231,6 +231,8 @@ body {
 /* The clock and foe counter float over the play field, so they carry their
    own semi-transparent backdrop (matching the xp badge / avatar panels) to
    stay legible against the bright floor tiles. */
+/* A <button> so tapping the clock/foe unit pauses the run — reset the native
+   chrome and opt back into pointer events (the HUD itself is pass-through). */
 .hud-center {
   display: flex;
   flex-direction: column;
@@ -241,6 +243,16 @@ body {
   border: 2px solid #1a1c2c;
   border-radius: 6px;
   text-shadow: 0 2px 0 rgba(11, 13, 16, 0.6);
+  font: inherit;
+  color: inherit;
+  appearance: none;
+  -webkit-tap-highlight-color: transparent;
+  pointer-events: auto;
+  cursor: pointer;
+}
+
+.hud-center:active {
+  transform: translateY(1px);
 }
 
 /* The kill tally jolts on every frag (see KillCounter). The throw distance,
