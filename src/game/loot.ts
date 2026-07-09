@@ -23,6 +23,7 @@ import {
   enemyDodgeChance,
   lowDurabilityDesperation,
   lowHealthDesperation,
+  mercyRescueWaiting,
   playerCritChance,
   playerMissChance,
   rollEquipment,
@@ -73,6 +74,9 @@ function onScreenMinions(state: GameState): number {
 export function crowdBombChance(state: GameState): number {
   const max = difficultyDef(state.difficulty).mercy.crowdBombChanceMax;
   if (max <= 0) return 0;
+  // One rope at a time: while an un-collected screen-nuke already waits in
+  // view, the packed field holds fire (see mercyRescueWaiting).
+  if (mercyRescueWaiting(state, "bomb")) return 0;
   const { crowdBombThreshold: lo, crowdBombFull: hi } = MERCY;
   if (hi <= lo) return 0;
   const crowd = onScreenMinions(state);
@@ -95,6 +99,9 @@ export function staminaDrinkChance(state: GameState): number {
   if (max <= 0) return 0;
   // Only a bone-dry pool pulls a drink; a merely low reserve does not.
   if (state.player.stamina > 0) return 0;
+  // One rope at a time: while an un-collected drink already waits in view,
+  // the stranded hero is not thrown another (see mercyRescueWaiting).
+  if (mercyRescueWaiting(state, "drink")) return 0;
   const ramp = MERCY.staminaEmptyDrinkRampMs;
   if (ramp <= 0) return max;
   return max * Math.min(1, state.staminaEmptyMs / ramp);
@@ -407,14 +414,19 @@ function dropMinionLoot(
   // hero's health drains, medkits and plated armor rain harder; as his weapon
   // nears breaking, repair kits do. Each boost scales the slice by
   // `1 + desperation * strength`, so it's a smooth lean-in, not a cliff. Full
-  // health / full durability leaves the slices exactly as authored.
+  // health / full durability leaves the slices exactly as authored — and a
+  // boost holds fire while the rescue it already threw waits un-collected in
+  // view (mercyRescueWaiting), so a signal keeps at most one rope on the
+  // ground however long the player sits on it.
+  const medkitBoost = mercyRescueWaiting(state, "medkit")
+    ? 0
+    : lowHealthDesperation(state) * diff.mercy.medkitBonus;
   const medkitShare =
-    LOOT.medkitShare *
-    diff.medkitDropMult *
-    (1 + lowHealthDesperation(state) * diff.mercy.medkitBonus);
-  const repairShare =
-    LOOT.repairShare *
-    (1 + lowDurabilityDesperation(state) * diff.mercy.repairBonus);
+    LOOT.medkitShare * diff.medkitDropMult * (1 + medkitBoost);
+  const repairBoost = mercyRescueWaiting(state, "repair")
+    ? 0
+    : lowDurabilityDesperation(state) * diff.mercy.repairBonus;
+  const repairShare = LOOT.repairShare * (1 + repairBoost);
   // The rare slice first, so tuning the ladder below never dilutes it.
   const nuked = !forced && state.rng() < LOOT.nukeShare;
   // The unique slice: the harder rungs' shot at one-of-a-kind gear, drawn
