@@ -130,6 +130,22 @@ body {
   background: #0b0d10;
 }
 
+/* iOS edge-to-edge: since iOS 26 (Liquid Glass), 100vh spans the whole screen
+   — including behind the floating address bar and the home-indicator area —
+   while `inset: 0` on a fixed, non-scrollable shell stops at the layout
+   viewport and leaves a dead black band at the bottom. Overriding the height
+   lets the game paint the full screen; controls stay reachable because they
+   are anchored with env(safe-area-inset-*). Scoped to iOS via the
+   -webkit-touch-callout probe (no other engine supports it) so
+   Android/desktop keep the plain viewport-tracking shell. */
+@supports (-webkit-touch-callout: none) {
+  .game-screen,
+  .game-loading,
+  .title-screen {
+    height: 100vh;
+  }
+}
+
 .game-canvas {
   width: 100%;
   height: 100%;

@@ -109,7 +109,14 @@ function renderManifest(): string {
     id: "./",
     start_url: "./",
     scope: "./",
-    display: "fullscreen",
+    // iOS has no fullscreen display mode — a manifest asking for it gets the
+    // app letterboxed with a dead black band over the home-indicator area
+    // instead of falling back cleanly. `standalone` (+ viewport-fit=cover and
+    // the black-translucent status bar meta) is what actually draws
+    // edge-to-edge on iOS; Chromium browsers that do support true fullscreen
+    // still get it via display_override.
+    display: "standalone",
+    display_override: ["fullscreen", "standalone"],
     orientation: "any",
     lang: "en",
     categories: ["games", "entertainment"],
