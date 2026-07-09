@@ -10,9 +10,11 @@
 import { randomRange } from "@game/lib/rng.ts";
 import { direction, distance, moveToward, vec } from "@game/lib/vec.ts";
 import { ASTEROIDS, JUMP, PLAYER, WELLS } from "./config.ts";
+import { difficultyDef } from "./defs/difficulties.ts";
 import { enemyDef } from "./defs/enemies/index.ts";
 import { levelDef, type LevelDef } from "./defs/levels/index.ts";
 import { armorInfo } from "./items.ts";
+import { startPlayerThought } from "./story.ts";
 import type { Asteroid, Enemy, GameState, GravityWell } from "./types.ts";
 
 /** Resolve the level def's well specs against the config WELLS defaults. */
@@ -159,13 +161,18 @@ export function stepAsteroids(
     rock.pos.y += rock.dir.y * rock.speed * dt;
 
     // One blow per rock; a jump sails over it like it clears enemy contact.
+    // The bite scales with the rung — a fraction of the hero's max hp, never
+    // less than a point (see DifficultyDef.asteroidDamageFrac).
     if (
       !rock.struck &&
       player.z <= JUMP.dodgeHeight &&
       distance(rock.pos, player.pos) <= rock.radius + PLAYER.radius
     ) {
       rock.struck = true;
-      hurtPlayer(state, ASTEROIDS.damage);
+      const frac = difficultyDef(state.difficulty).asteroidDamageFrac;
+      hurtPlayer(state, Math.max(1, Math.round(player.maxHp * frac)));
+      // First rock to land this run pauses for the "watch out for these" read.
+      maybeAsteroidThought(state, spec?.struckThought);
     }
 
     // Minions in the path are shoved aside, not hurt — the rock plows the
@@ -186,6 +193,23 @@ export function stepAsteroids(
     }
   }
   state.asteroids = survivors;
+}
+
+/**
+ * The first asteroid strike's inner monologue (a level's
+ * `asteroids.struckThought`): the first time a rock lands on the hero this
+ * run, fire its thought exactly once (tracked in `state.thoughtsSeen`, the
+ * same ledger as the kill/sight pins). Silent for a level with no
+ * `struckThought`, once it has already played, or while a scene is up.
+ */
+function maybeAsteroidThought(
+  state: GameState,
+  thought: string | undefined,
+): void {
+  if (!thought || state.dialogue !== null) return;
+  if (state.thoughtsSeen.includes(thought)) return;
+  state.thoughtsSeen.push(thought);
+  startPlayerThought(state, thought);
 }
 
 /** Mint one rock on the spawn ring, aimed across the player with scatter. */

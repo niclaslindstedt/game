@@ -190,9 +190,14 @@ export type LevelDef = {
   /**
    * Flying rocks: presence turns the asteroid spawner on. Every `everyMs`
    * (rolled per rock) one streaks across the player's surroundings — dodge
-   * it or jump it. The shared tuning lives in config ASTEROIDS.
+   * it or jump it. Each strike takes a difficulty-scaled bite of the hero's
+   * max hp (DifficultyDef.asteroidDamageFrac); the shared tuning lives in
+   * config ASTEROIDS. `struckThought` (a THOUGHT_DEFS id) fires a one-time
+   * inner monologue the first time a rock lands on the hero this run — the
+   * "watch out for these" beat, tracked in the same `thoughtsSeen` ledger as
+   * the kill/sight pins.
    */
-  asteroids?: { everyMs: [number, number] };
+  asteroids?: { everyMs: [number, number]; struckThought?: string };
   /**
    * Locked doors: built exactly like walls (chains of solid `door_locked`
    * circles) but tracked in `state.doors` — carrying the story-item key

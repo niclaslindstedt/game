@@ -398,6 +398,7 @@ export const FIX_DIFFICULTIES: Record<string, DifficultyDef> = {
     playerDodgeMult: 1.3,
     playerMissMult: 0.5,
     enemyDodgeMult: 0.5,
+    asteroidDamageFrac: 0.2,
   },
   medium: {
     id: "medium",
@@ -423,6 +424,7 @@ export const FIX_DIFFICULTIES: Record<string, DifficultyDef> = {
     playerDodgeMult: 1,
     playerMissMult: 1,
     enemyDodgeMult: 1,
+    asteroidDamageFrac: 0.3,
   },
   hard: {
     id: "hard",
@@ -448,6 +450,7 @@ export const FIX_DIFFICULTIES: Record<string, DifficultyDef> = {
     playerDodgeMult: 0.9,
     playerMissMult: 1.1,
     enemyDodgeMult: 1.1,
+    asteroidDamageFrac: 0.4,
   },
   nightmare: {
     id: "nightmare",
@@ -473,6 +476,7 @@ export const FIX_DIFFICULTIES: Record<string, DifficultyDef> = {
     playerDodgeMult: 0.8,
     playerMissMult: 1.25,
     enemyDodgeMult: 1.25,
+    asteroidDamageFrac: 0.5,
   },
   jesus: {
     id: "jesus",
@@ -498,6 +502,7 @@ export const FIX_DIFFICULTIES: Record<string, DifficultyDef> = {
     playerDodgeMult: 0.7,
     playerMissMult: 1.4,
     enemyDodgeMult: 1.4,
+    asteroidDamageFrac: 0.75,
   },
 };
 

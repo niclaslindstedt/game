@@ -71,8 +71,10 @@ names its in-run music with an optional `music` id (a key into the app's
   player, devour minions at the core, burn the player standing in one, and
   hoard dragged loot on the event horizon — a jump sails clean over the
   pull) and the **asteroid rain** (`LevelDef.asteroids`: rocks streak across
-  the player's surroundings on a rolled cadence, hurt on contact — once per
-  rock — shove minions aside, and are dodged with the feet or a jump).
+  the player's surroundings on a rolled cadence, take a difficulty-scaled
+  bite of the hero's health on contact — once per rock, from 20% on EASY up
+  to 75% on JESUS — shove minions aside, and are dodged with the feet or a
+  jump; the first strike pauses for the hero's "watch out for these" read).
   Crystallized **rift shards** block sight and shots; drifting **space
   junk** is hoppable cover; lost TVs and floating rocks decorate the
   nothing. The far door — a second rift at the east end — is where the

@@ -189,6 +189,21 @@ export const THOUGHT_DEFS: Record<string, ThoughtDef> = {
       ["THE RIFT DOESN'T FOLLOW THE", "RULES. GOOD. LATELY,", "NEITHER DO I."],
     ],
   },
+  // The first asteroid to land on the hero in the rift: the rock rain has
+  // teeth, and he only learns it the hard way. Fires once, on the strike.
+  rift_asteroid: {
+    id: "rift_asteroid",
+    speaker: "ME",
+    portrait: "player",
+    pages: [
+      [
+        "SOMETHING CAME OUT OF THE",
+        "DARK AND HIT LIKE A TRUCK.",
+        "A ROCK. A FLYING ROCK.",
+      ],
+      ["BETTER WATCH OUT FOR THESE", "ASTEROIDS. THEY HURT."],
+    ],
+  },
   // Downing the first graviton: the physics of this place, in one grudge.
   rift_graviton: {
     id: "rift_graviton",

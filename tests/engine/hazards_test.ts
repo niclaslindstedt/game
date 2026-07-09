@@ -7,9 +7,37 @@
 
 import { describe, expect, it } from "vitest";
 
-import { ASTEROIDS, JUMP, step, WELLS } from "@game/core";
-import type { Asteroid, GameState, GravityWell } from "@game/core";
+import {
+  ASTEROIDS,
+  createGame,
+  difficultyDef,
+  dismissIntro,
+  JUMP,
+  skipCutscene,
+  step,
+  WELLS,
+} from "@game/core";
+import type { Asteroid, Difficulty, GameState, GravityWell } from "@game/core";
 import { clearStage, DT, idle, makeEnemy, run, startGame } from "./helpers.ts";
+
+/** An asteroid-rain run started on a given rung, staged clean. */
+function startAsteroidsOn(difficulty: Difficulty): GameState {
+  const state = createGame(42, "test_asteroid_level", difficulty);
+  skipCutscene(state);
+  dismissIntro(state);
+  clearStage(state);
+  return state;
+}
+
+/** The bite one rock takes at `difficulty`, from the ladder's fraction. */
+function asteroidBite(state: GameState, difficulty: Difficulty): number {
+  return Math.max(
+    1,
+    Math.round(
+      state.player.maxHp * difficultyDef(difficulty).asteroidDamageFrac,
+    ),
+  );
+}
 
 /** The well level's hole (config-default numbers), staged clean. */
 function stageWell(state: GameState): GravityWell {
@@ -150,20 +178,42 @@ describe("asteroids", () => {
   });
 
   it("strikes the grounded player once per rock", () => {
-    const state = startGame(42, "test_asteroid_level");
-    clearStage(state);
+    const state = startAsteroidsOn("medium");
     state.asteroidTimerMs = 999_999; // the hand-built rock is the only one
     const hpBefore = state.player.hp;
+    const bite = asteroidBite(state, "medium");
     state.asteroids.push(
       makeRock({
         pos: { x: state.player.pos.x - 2, y: state.player.pos.y },
       }),
     );
     step(state, idle, DT);
-    expect(state.player.hp).toBe(hpBefore - ASTEROIDS.damage);
+    expect(state.player.hp).toBe(hpBefore - bite);
     // The latch holds: the same rock never strikes twice.
     run(state, idle, 10);
-    expect(state.player.hp).toBe(hpBefore - ASTEROIDS.damage);
+    expect(state.player.hp).toBe(hpBefore - bite);
+  });
+
+  it("scales the bite by difficulty: a fraction of the hero's max hp", () => {
+    // The ladder's asteroid fractions, gentlest first.
+    const rungs: [Difficulty, number][] = [
+      ["easy", 0.2],
+      ["medium", 0.3],
+      ["hard", 0.4],
+      ["nightmare", 0.5],
+      ["jesus", 0.75],
+    ];
+    for (const [difficulty, frac] of rungs) {
+      const state = startAsteroidsOn(difficulty);
+      state.asteroidTimerMs = 999_999;
+      const hpBefore = state.player.hp;
+      state.asteroids.push(
+        makeRock({ pos: { x: state.player.pos.x - 2, y: state.player.pos.y } }),
+      );
+      step(state, idle, DT);
+      const expected = Math.max(1, Math.round(state.player.maxHp * frac));
+      expect(state.player.hp, difficulty).toBe(hpBefore - expected);
+    }
   });
 
   it("a jumping player sails over a rock", () => {

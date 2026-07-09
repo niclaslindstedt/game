@@ -117,6 +117,43 @@ describe("THE RIFT level def", () => {
     expect(RIFT.firstKillThoughts![0]!.enemy).toBe("graviton");
   });
 
+  it("wires the asteroid-strike monologue — 'watch out for these'", () => {
+    const thought = RIFT.asteroids!.struckThought!;
+    expect(thought).toBe("rift_asteroid");
+    const def = THOUGHT_DEFS[thought]!;
+    expect(def).toBeDefined();
+    // The requested read: he had better watch out, they hurt.
+    const text = def.pages.flat().join(" ");
+    expect(text).toContain("WATCH OUT");
+    expect(text).toContain("ASTEROIDS");
+    expect(text).toContain("THEY HURT");
+  });
+
+  it("the first rift rock to land pauses for the hero's read, once", () => {
+    const state = startGame(SEED, "the_rift");
+    clearStage(state);
+    state.asteroidTimerMs = 999_999; // the hand-built rock is the only one
+    const hpBefore = state.player.hp;
+    state.asteroids.push({
+      id: state.nextId++,
+      pos: { x: state.player.pos.x - 2, y: state.player.pos.y },
+      dir: { x: 1, y: 0 },
+      speed: 0,
+      radius: 10,
+      spin: 0,
+      struck: false,
+    });
+    step(state, idle, DT);
+    // It hurt (a fraction of max hp) and stopped the run for the monologue.
+    expect(state.player.hp).toBeLessThan(hpBefore);
+    expect(state.phase).toBe("dialogue");
+    expect(state.dialogue?.source).toEqual({
+      kind: "playerThought",
+      defId: "rift_asteroid",
+    });
+    expect(state.thoughtsSeen).toContain("rift_asteroid");
+  });
+
   it("parks the ZAI probe — the reveal's paper trail — inside a well's pull", () => {
     const probe = RIFT.placedItems!.find(
       (p) => p.kind === "story" && p.defId === "zai_probe",
