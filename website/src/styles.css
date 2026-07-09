@@ -2912,16 +2912,77 @@ body {
   gap: 0.5rem;
 }
 
+/* The text column's scroll viewport. Stretches to the full content width (so
+   the overlay can measure it and wrap lines to fit — a portrait box is far
+   narrower than the authored lines assume) and clips the scroll-in slide when
+   a long speech pages to its next screen. `position: relative` anchors the
+   "more" chevron. */
+.dialogue-body {
+  position: relative;
+  align-self: stretch;
+  overflow: hidden;
+}
+
 /* Each spoken line is its own fixed-height PixelText canvas. A <canvas> is
    inline by default, so a plain block parent lays the lines out on shared
    line-boxes and — because the pixel canvases are taller than the default
    line-height — they OVERLAP (two rows print on top of each other). Making
-   the body a flex column stacks each line in its own row with real spacing. */
-.dialogue-body {
+   the line block a flex column stacks each line in its own row with spacing.
+   Keyed by screen in the overlay, so paging to the next screen replays the
+   slide. */
+.dialogue-lines {
   display: flex;
   flex-direction: column;
   align-items: flex-start;
   gap: 0.4rem;
+  animation: dialogue-scroll-in 200ms ease-out;
+}
+
+@keyframes dialogue-scroll-in {
+  from {
+    transform: translateY(0.7rem);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+/* A tap-to-scroll hint: a small chevron in the box corner while more of the
+   speech waits below the fold, bobbing so it reads as "tap for more". */
+.dialogue-more {
+  position: absolute;
+  right: 0.1rem;
+  bottom: 0.05rem;
+  width: 0;
+  height: 0;
+  border-left: 0.3rem solid transparent;
+  border-right: 0.3rem solid transparent;
+  border-top: 0.36rem solid #ffd75e;
+  animation: dialogue-more-bounce 0.85s ease-in-out infinite;
+}
+
+@keyframes dialogue-more-bounce {
+  0%,
+  100% {
+    transform: translateY(0);
+    opacity: 0.9;
+  }
+  50% {
+    transform: translateY(0.15rem);
+    opacity: 0.35;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .dialogue-lines {
+    animation: none;
+  }
+  .dialogue-more {
+    animation: none;
+    opacity: 0.9;
+  }
 }
 
 /* The preview workbench's replay button floats over the finished scene. */
