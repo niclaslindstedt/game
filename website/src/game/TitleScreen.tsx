@@ -1198,13 +1198,23 @@ export function TitleScreen({
                     scale={3}
                     color={color}
                   />
-                  {entry.blurb && selected && (
-                    <PixelText
-                      font={font}
-                      text={entry.blurb}
-                      scale={2}
-                      color="#9aa3ad"
-                    />
+                  {entry.blurb && (
+                    // Always occupy the blurb's row so selecting an item never
+                    // changes its height. The menu is vertically centered, so a
+                    // grow-on-hover row would shift every label (including the
+                    // hovered one) — the flicker. Hidden when unselected keeps
+                    // the space reserved without showing the text.
+                    <span
+                      className="menu-item-blurb"
+                      style={{ visibility: selected ? "visible" : "hidden" }}
+                    >
+                      <PixelText
+                        font={font}
+                        text={entry.blurb}
+                        scale={2}
+                        color="#9aa3ad"
+                      />
+                    </span>
                   )}
                 </span>
               </button>
