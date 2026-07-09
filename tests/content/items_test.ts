@@ -251,8 +251,9 @@ describe("auto-equip on pickup", () => {
   it("bags a picked-up weapon that is worse than the held one", () => {
     const state = startGame();
     clearStage(state);
-    // A box cutter (8 dmg / 300 ms) is a marginal pickup, so put the baton
-    // (16 dmg / 400 ms) in hand to make it strictly worse and force the bag.
+    // A box cutter (req-1 budget) is a marginal pickup, so put the geology
+    // hammer (req-8 budget, single-target like the cutter) in hand to make
+    // it strictly worse and force the bag.
     const cutter: Equipment = {
       id: 62,
       defId: "box_cutter",
@@ -264,12 +265,12 @@ describe("auto-equip on pickup", () => {
     };
     state.player.equipment.weapon = {
       id: 63,
-      defId: "security_baton",
+      defId: "geology_hammer",
       slot: "weapon",
       tier: "regular",
-      ilvl: 5,
+      ilvl: 8,
       affixes: [],
-      durability: WEAPON_DEFS.security_baton!.durability,
+      durability: WEAPON_DEFS.geology_hammer!.durability,
     };
     state.items = [
       {
@@ -280,7 +281,7 @@ describe("auto-equip on pickup", () => {
       },
     ];
     step(state, idle, DT);
-    expect(state.player.equipment.weapon.id).toBe(63); // baton stays
+    expect(state.player.equipment.weapon.id).toBe(63); // hammer stays
     expect(state.player.inventory.some((i) => i?.id === 62)).toBe(true);
   });
 

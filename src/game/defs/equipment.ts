@@ -78,13 +78,6 @@ export type WeaponDef = {
    * rather than sweeping sideways. Defaults to `MELEE.defaultSweepDeg`.
    */
   sweepDeg?: number;
-  /**
-   * Melee only: how many foes a single swing may strike before INTELLIGENCE
-   * widens the cleave (see `STATS.aoeTargetsPerInt`). Defaults to
-   * `MELEE.baseAoeTargets`. A rough, unbalanced blade sets this to 1 — it
-   * bites one enemy at a time until INT earns it a cleave.
-   */
-  baseAoeTargets?: number;
   /** Melee weapons hit directly and omit this. */
   projectile?: {
     speed: number;
@@ -161,7 +154,6 @@ export const WEAPON_DEFS: Record<string, WeaponDef> = {
     // A genuine slash: a broad arc that catches a pair of foes per swing —
     // the AoE yardstick the knife (narrower) and knuckles (none) sit under.
     sweepDeg: 100,
-    baseAoeTargets: 2,
     durability: 130,
     icon: "icon_medieval_sword",
   },
@@ -178,7 +170,6 @@ export const WEAPON_DEFS: Record<string, WeaponDef> = {
     cooldownMs: 400,
     range: 32,
     sweepDeg: 70,
-    baseAoeTargets: 2,
     durability: 150,
     icon: "icon_combat_knife",
   },
@@ -194,7 +185,6 @@ export const WEAPON_DEFS: Record<string, WeaponDef> = {
     cooldownMs: 1100,
     range: 24,
     sweepDeg: 60,
-    baseAoeTargets: 1,
     durability: 170,
     icon: "icon_knuckles",
   },
@@ -209,7 +199,6 @@ export const WEAPON_DEFS: Record<string, WeaponDef> = {
     cooldownMs: 520,
     range: 36,
     sweepDeg: 130,
-    baseAoeTargets: 3,
     durability: 100,
     icon: "icon_stick",
   },
@@ -229,7 +218,6 @@ export const WEAPON_DEFS: Record<string, WeaponDef> = {
     cooldownMs: 300,
     range: 32,
     sweepDeg: 60,
-    baseAoeTargets: 1,
     durability: 130,
     icon: "icon_box_cutter",
   },
@@ -259,7 +247,6 @@ export const WEAPON_DEFS: Record<string, WeaponDef> = {
     // A cone-AoE base: light per blow, but the arc catches four at once —
     // the swing "achieves its damage" with a full cleave (budget model).
     sweepDeg: 100,
-    baseAoeTargets: 4,
     durability: 220,
     icon: "icon_baton",
   },
@@ -324,9 +311,10 @@ export const WEAPON_DEFS: Record<string, WeaponDef> = {
     name: "LUNAR WRENCH",
     class: "melee",
     levelReq: 5,
-    damage: 12,
+    damage: 23,
     cooldownMs: 480,
     range: 42,
+    sweepDeg: 70,
     durability: 180,
     icon: "icon_lunar_wrench",
   },
@@ -354,7 +342,6 @@ export const WEAPON_DEFS: Record<string, WeaponDef> = {
     cooldownMs: 650,
     range: 40,
     sweepDeg: 70,
-    baseAoeTargets: 1,
     durability: 150,
     icon: "icon_geology_hammer",
   },
@@ -420,7 +407,6 @@ export const WEAPON_DEFS: Record<string, WeaponDef> = {
     cooldownMs: 380,
     range: 44,
     sweepDeg: 110,
-    baseAoeTargets: 4,
     durability: 220,
     icon: "icon_plasma_blade",
   },
@@ -476,7 +462,6 @@ export const WEAPON_DEFS: Record<string, WeaponDef> = {
     // The full-AoE slam: the shockwave rings the hero all the way around
     // and catches five foes — per-blow damage carries a fifth of the budget.
     sweepDeg: 360,
-    baseAoeTargets: 5,
     durability: 160,
     icon: "icon_gravity_maul",
   },
@@ -491,11 +476,10 @@ export const WEAPON_DEFS: Record<string, WeaponDef> = {
     name: "GLADIUS",
     class: "melee",
     levelReq: 15,
-    damage: 18,
+    damage: 37,
     cooldownMs: 420,
     range: 40,
-    sweepDeg: 90,
-    baseAoeTargets: 2,
+    sweepDeg: 70,
     durability: 240,
     icon: "icon_gladius",
   },
@@ -545,7 +529,6 @@ export const WEAPON_DEFS: Record<string, WeaponDef> = {
     cooldownMs: 1000,
     range: 46,
     sweepDeg: 100,
-    baseAoeTargets: 4,
     durability: 170,
     icon: "icon_executioners_axe",
   },
@@ -601,9 +584,10 @@ export const WEAPON_DEFS: Record<string, WeaponDef> = {
     class: "melee",
     levelReq: 5,
     // MUSKRAT's hoard piece — cleanroom tooling rated for rocket hulls.
-    damage: 10,
+    damage: 20,
     cooldownMs: 340,
     range: 44,
+    sweepDeg: 70,
     durability: 260,
     icon: "icon_plasma_cutter",
   },
@@ -612,7 +596,7 @@ export const WEAPON_DEFS: Record<string, WeaponDef> = {
     name: "MACHETE",
     class: "melee",
     levelReq: 7,
-    damage: 13,
+    damage: 7,
     cooldownMs: 380,
     range: 46,
     durability: 220,
@@ -627,7 +611,7 @@ export const WEAPON_DEFS: Record<string, WeaponDef> = {
     class: "melee",
     levelReq: 3,
     // The NIGHT MANAGER's back-nine special: crisp tempo, real reach.
-    damage: 10,
+    damage: 5,
     cooldownMs: 380,
     range: 46,
     durability: 200,
@@ -666,7 +650,7 @@ export const WEAPON_DEFS: Record<string, WeaponDef> = {
     levelReq: 4,
     // THE JANITOR's halberd: light, fast, and the longest reach on level 1.
     // A polearm's thrust — a narrow cone that reaches far down the line.
-    damage: 7,
+    damage: 13,
     cooldownMs: 240,
     range: 54,
     sweepDeg: 44,
@@ -692,9 +676,10 @@ export const WEAPON_DEFS: Record<string, WeaponDef> = {
     class: "melee",
     levelReq: 6,
     // The PROSPECTOR's tunneler — chews rock, chews ghosts.
-    damage: 10,
+    damage: 21,
     cooldownMs: 330,
     range: 42,
+    sweepDeg: 50,
     durability: 240,
     icon: "icon_core_drill",
   },
@@ -717,9 +702,10 @@ export const WEAPON_DEFS: Record<string, WeaponDef> = {
     class: "melee",
     levelReq: 8,
     // THE CARTOGRAPHER's stake hammer: heavy arcs, deep dents.
-    damage: 15,
+    damage: 31,
     cooldownMs: 450,
     range: 44,
+    sweepDeg: 60,
     durability: 220,
     icon: "icon_surveyors_pick",
   },
@@ -728,7 +714,7 @@ export const WEAPON_DEFS: Record<string, WeaponDef> = {
     name: "MOON'S BLADE",
     class: "melee",
     levelReq: 8,
-    damage: 14,
+    damage: 7,
     cooldownMs: 400,
     range: 48,
     durability: 260,
@@ -743,7 +729,7 @@ export const WEAPON_DEFS: Record<string, WeaponDef> = {
     levelReq: 11,
     // Mars's scheduled early blade (earlyDrops): angular, allegedly
     // shatterproof, definitely shipped before testing finished.
-    damage: 17,
+    damage: 8,
     cooldownMs: 400,
     range: 48,
     durability: 260,
@@ -756,7 +742,7 @@ export const WEAPON_DEFS: Record<string, WeaponDef> = {
     levelReq: 11,
     // LARRY WEBPAGE's crawler pole — a literal bar that searches the line
     // ahead. Results in about 0.26 seconds.
-    damage: 11,
+    damage: 22,
     cooldownMs: 260,
     range: 56,
     sweepDeg: 40,
@@ -782,9 +768,10 @@ export const WEAPON_DEFS: Record<string, WeaponDef> = {
     class: "melee",
     levelReq: 13,
     // PETER SEAL's letter opener: short, fast, and always against the crowd.
-    damage: 14,
+    damage: 28,
     cooldownMs: 300,
     range: 40,
+    sweepDeg: 60,
     durability: 240,
     icon: "icon_contrarian_dagger",
   },
@@ -1237,11 +1224,12 @@ export function weaponCritMult(def: WeaponDef): number {
 /**
  * How many targets a weapon is BUDGETED to hit at once — the AoE
  * normalization of the damage-budget model: a weapon's effective DPS is its
- * per-target DPS × this, so a cone-AoE weapon (4 assumed targets) carries a
+ * per-target DPS × this, so a cone-AoE weapon (assumed 4 targets) carries a
  * quarter of a single-target weapon's per-hit damage at the same level and
- * "achieves its damage" when its cleave is full. Melee reads its cleave cap
- * (`baseAoeTargets`); volleys count their pellets, a piercing round its
- * line, chain lightning its (damage-weighted) leaps.
+ * "achieves its damage" once INTELLIGENCE has grown the cleave to match
+ * (the actual count hit is INT's, not the weapon's — see maxMeleeTargets).
+ * Volleys count their pellets, a piercing round its line, chain lightning
+ * its (damage-weighted) leaps.
  */
 export function weaponAssumedTargets(def: WeaponDef): number {
   const p = def.projectile;
@@ -1251,5 +1239,12 @@ export function weaponAssumedTargets(def: WeaponDef): number {
     if (p.chain) return 1 + p.chain * WEAPON.chainDamageFrac;
     return 1;
   }
-  return def.baseAoeTargets ?? MELEE.baseAoeTargets;
+  // Melee is classified by SHAPE alone: the arc says whether it is a
+  // thrust, a cone, or a full-circle sweep. How many foes a swing actually
+  // strikes is INTELLIGENCE's business (maxMeleeTargets) — these counts are
+  // the balance assumption the per-hit damage is divided by.
+  const arc = def.sweepDeg ?? MELEE.defaultSweepDeg;
+  if (arc >= WEAPON.aoeFullFromDeg) return WEAPON.assumedTargets.full;
+  if (arc >= WEAPON.aoeConeFromDeg) return WEAPON.assumedTargets.cone;
+  return 1;
 }

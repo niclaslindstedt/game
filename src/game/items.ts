@@ -654,22 +654,22 @@ export function weaponSweepHalfAngle(
 }
 
 /**
- * How many monsters a single melee swing of the EQUIPPED weapon may strike:
- * the weapon's own base cap (`WeaponDef.baseAoeTargets`, defaulting to the
- * global `MELEE.baseAoeTargets` floor) plus `aoeTargetsPerInt` per
- * INTELLIGENCE point, floored to a whole count (always ≥ 1 so a swing never
- * whiffs its aim). The cone (weaponSweepHalfAngle) decides which foes are
- * eligible; this caps how many of them the blow actually lands on, so cleaving
- * the horde is an INT investment — and a crude single-target blade only ever
- * bites one foe until that investment lands.
+ * How many monsters a single melee swing may strike — INTELLIGENCE's call,
+ * not the weapon's: the global `MELEE.baseAoeTargets` floor plus
+ * `aoeTargetsPerInt` per INT point, floored to a whole count (always ≥ 1 so
+ * a swing never whiffs its aim). The weapon only contributes its SHAPE: the
+ * cone (weaponSweepHalfAngle) decides which foes are eligible, and a narrow
+ * thrust geometrically holds few however sharp the mind. Cleaving the horde
+ * is an INT investment — which is also why AoE weapons carry budget-divided
+ * per-hit damage (see weaponAssumedTargets): they start deliberately weak
+ * and grow into their assumption.
  */
 export function maxMeleeTargets(state: GameState): number {
-  const def = weaponDef(state.player.equipment.weapon.defId);
-  const base = def.baseAoeTargets ?? MELEE.baseAoeTargets;
   return Math.max(
     1,
     Math.floor(
-      base + effectiveStat(state, "intelligence") * STATS.aoeTargetsPerInt,
+      MELEE.baseAoeTargets +
+        effectiveStat(state, "intelligence") * STATS.aoeTargetsPerInt,
     ),
   );
 }
@@ -689,10 +689,19 @@ export function weaponScore(state: GameState, weapon: Equipment): number {
   const def = weaponDef(weapon.defId);
   const critLift =
     1 + playerCritChance(state, def.class) * (weaponCritMult(def) - 1);
+  // Melee AoE is only worth what THIS build's INTELLIGENCE can realize: a
+  // cone budgeted at 4 counts for 2 in untrained hands (maxMeleeTargets),
+  // so auto-equip won't trade a solid single-target hit for potential the
+  // hero can't cash yet. Ranged multipliers (pellets, pierce, chain) are
+  // the weapon's own physics and count in full.
+  const assumed = weaponAssumedTargets(def);
+  const targets = def.projectile
+    ? assumed
+    : Math.min(assumed, maxMeleeTargets(state));
   return (
     ((weaponDamageFor(state, weapon) * 1000) /
       weaponCooldownFor(state, weapon)) *
-    weaponAssumedTargets(def) *
+    targets *
     critLift
   );
 }

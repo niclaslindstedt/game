@@ -198,8 +198,10 @@ export const FIX_WEAPONS: Record<string, WeaponDef> = {
     damage: 20,
     cooldownMs: 600,
     range: 44,
+    // A narrow single-target arc (the field that used to cap the cleave is
+    // gone — INTELLIGENCE owns the count now; shape is the weapon's say).
+    sweepDeg: 70,
     durability: 120,
-    baseAoeTargets: 1,
     icon: "icon_medieval_sword",
   },
   // Shared id: the engine draws `blaster` as the unbreakable FALLBACK sidearm

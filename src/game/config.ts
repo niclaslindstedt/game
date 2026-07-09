@@ -59,6 +59,20 @@ export const WEAPON = {
   /** …slow at/above this one; medium in between. */
   critSlowFromMs: 800,
   /**
+   * The AoE side of the damage-budget model — BALANCING assumptions, not
+   * gameplay caps (how many foes a swing ACTUALLY hits is INTELLIGENCE's
+   * business — see maxMeleeTargets). A melee weapon is classified by its
+   * arc: below `aoeConeFromDeg` it is a single-target thrust budgeted at 1
+   * target; from there a cone budgeted at `assumedTargets.cone`; from
+   * `aoeFullFromDeg` a full-circle sweep budgeted at `assumedTargets.full`.
+   * An AoE weapon therefore carries budget ÷ 4 (or ÷ 5) per hit — weaker
+   * than a single-target weapon from the start, by design, until INT grows
+   * the cleave into the assumption.
+   */
+  aoeConeFromDeg: 80,
+  aoeFullFromDeg: 300,
+  assumedTargets: { cone: 4, full: 5 },
+  /**
    * Global damage scale on every weapon's catalog `damage` — the single lever
    * for "how hard does any weapon hit", the damage counterpart to
    * `baseCooldownMult`. Applied in `weaponDamageFor` (the one source of truth
