@@ -1629,78 +1629,87 @@ export function GameScreen({
               </div>
             </div>
 
-            {/* Center: run clock over the foe counter. Tapping the unit pauses
-                the run (the same freeze as P/Escape) — a big, thumb-reachable
-                target for the phone, where there's no keyboard. */}
-            <button
-              type="button"
-              className="hud-center"
-              aria-label="pause"
-              onClick={() => {
-                if (state?.phase === "playing") {
-                  pauseGame(state);
-                  pauseMusic();
-                  playUiSound(synth, "confirm");
-                  bumpUi();
-                }
-              }}
-            >
-              <PixelText
-                font={font}
-                text={formatTime(hud.stats.timeMs)}
-                scale={3}
-              />
-              <KillCounter
-                font={font}
-                label={state?.level.foes ?? "FOES"}
-                kills={hud.stats.kills}
-              />
-              {/* Rampage gauge: overkilling and fast kills evolve and lure the
+            {/* Top-right: run clock over the foe counter, with the MAP button
+                tucked underneath in the same column so the pair reads as one
+                unit. Tapping the clock pauses the run (the same freeze as
+                P/Escape) — a big, thumb-reachable target for the phone, where
+                there's no keyboard. */}
+            <div className="hud-clock-stack">
+              <button
+                type="button"
+                className="hud-center"
+                aria-label="pause"
+                onClick={() => {
+                  if (state?.phase === "playing") {
+                    pauseGame(state);
+                    pauseMusic();
+                    playUiSound(synth, "confirm");
+                    bumpUi();
+                  }
+                }}
+              >
+                <PixelText
+                  font={font}
+                  text={formatTime(hud.stats.timeMs)}
+                  scale={3}
+                />
+                <KillCounter
+                  font={font}
+                  label={state?.level.foes ?? "FOES"}
+                  kills={hud.stats.kills}
+                />
+                {/* Rampage gauge: overkilling and fast kills evolve and lure the
                   horde. Shown only while the meter is hot, reddening as the
                   stage climbs so the escalation is legible. */}
-              {hud.menaceStage > 0 && (
-                <div className="hud-rampage" aria-hidden>
-                  <PixelText
-                    font={font}
-                    text="RAMPAGE"
-                    scale={2}
-                    color={rampageColor(hud.menaceStage)}
-                  />
-                  <div className="hud-rampage-pips">
-                    {Array.from({ length: MENACE.maxStage }, (_, i) => (
-                      <span
-                        key={i}
-                        className="hud-rampage-pip"
-                        style={{
-                          background:
-                            i < hud.menaceStage
-                              ? rampageColor(hud.menaceStage)
-                              : "rgba(255,255,255,0.15)",
-                        }}
-                      />
-                    ))}
+                {hud.menaceStage > 0 && (
+                  <div className="hud-rampage" aria-hidden>
+                    <PixelText
+                      font={font}
+                      text="RAMPAGE"
+                      scale={2}
+                      color={rampageColor(hud.menaceStage)}
+                    />
+                    <div className="hud-rampage-pips">
+                      {Array.from({ length: MENACE.maxStage }, (_, i) => (
+                        <span
+                          key={i}
+                          className="hud-rampage-pip"
+                          style={{
+                            background:
+                              i < hud.menaceStage
+                                ? rampageColor(hud.menaceStage)
+                                : "rgba(255,255,255,0.15)",
+                          }}
+                        />
+                      ))}
+                    </div>
                   </div>
-                </div>
-              )}
-            </button>
+                )}
+              </button>
 
-            {/* Right: the MAP button — opens the fog-of-war level map (M on
-                desktop) and pauses the run under it, like the bag. */}
-            <button
-              type="button"
-              className="hud-map-btn"
-              aria-label="open-map"
-              onClick={() => {
-                if (state?.phase === "playing") {
-                  setWeaponMenuOpen(false);
-                  openMap(state);
-                  playUiSound(synth, "confirm");
-                  bumpUi();
-                }
-              }}
-            >
-              <PixelText font={font} text="MAP" scale={2} color="#9fc4ff" />
-            </button>
+              {/* The MAP button — a treasure map that opens the fog-of-war
+                level map (M on desktop) and pauses the run under it, like
+                the bag. Stretched to the clock unit's width by the stack. */}
+              <button
+                type="button"
+                className="hud-map-btn"
+                aria-label="open-map"
+                onClick={() => {
+                  if (state?.phase === "playing") {
+                    setWeaponMenuOpen(false);
+                    openMap(state);
+                    playUiSound(synth, "confirm");
+                    bumpUi();
+                  }
+                }}
+              >
+                <img
+                  src={spriteDataUrl(assets.sprites, "icon_treasure_map") ?? ""}
+                  alt=""
+                  className="pixel-img hud-map-icon"
+                />
+              </button>
+            </div>
           </div>
         </div>
       )}
