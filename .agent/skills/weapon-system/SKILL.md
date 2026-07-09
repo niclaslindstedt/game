@@ -53,7 +53,8 @@ hardcore death burns the stash, banked uniques, and all level tokens.
 ## Adding or changing a weapon
 
 1. **Def first** (`equipment.ts`): id, name, class, `levelReq`, damage,
-   cooldown, range, durability, melee cone (`sweepDeg`/`baseAoeTargets`) or
+   cooldown, range, durability, melee cone (`sweepDeg` — the SHAPE; how many
+   it hits is INT's business, see maxMeleeTargets) or
    `projectile` (sprite + optional `count`/`spreadDeg`/`pierce`/`homing`/
    `chain`). Add to the right level's `weaponPool` (bases) or to an enemy's
    `loot.items` / a level's `earlyDrops`/`allClearWeapon` (specials).
@@ -64,10 +65,14 @@ hardcore death burns the stash, banked uniques, and all level tokens.
    `eff dps = per-target dps × assumed targets × crit lift`
 
    - **Assumed targets** (`weaponAssumedTargets` in equipment.ts): single 1,
-     cone AoE 4, full-circle AoE 5 — melee reads its `baseAoeTargets` cap,
-     volleys their pellet count, pierce its line (1+pierce), chain its
-     damage-weighted leaps. So 40 eff = 10 dps/target on a cone, 8 on a
-     full circle: an AoE weapon "achieves its damage" with a full cleave.
+     cone AoE 4, full-circle AoE 5 — BALANCING assumptions only. Melee is
+     classified by its ARC (<80° thrust = 1, ≥80° cone = 4, ≥300° full = 5;
+     WEAPON.aoeConeFromDeg/aoeFullFromDeg); how many a swing ACTUALLY hits
+     is INTELLIGENCE's alone (maxMeleeTargets: global floor 2 + 1/INT).
+     Volleys count their pellet count, pierce its line (1+pierce), chain
+     its damage-weighted leaps. So 40 eff = 10 dps/target on a cone, 8 on
+     a full circle: an AoE weapon is deliberately weaker per hit from the
+     start and grows into its assumption as INT rises.
    - **Crit lift** (`weaponCritMult`): cadence-weighted crit damage — fast
      (<450ms) ×1.6, medium ×2.0, slow (≥800ms) ×2.5, priced at a reference
      15% crit chance. Slow weapons crit like trucks and pay per-hit budget

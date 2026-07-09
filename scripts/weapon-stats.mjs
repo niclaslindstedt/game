@@ -85,7 +85,6 @@ for (const levelId of LEVEL_ORDER) {
       p?.homing && `homing ${p.homing}`,
       p?.chain && `chain ${p.chain}`,
       !p && def.sweepDeg && `sweep ${def.sweepDeg}°`,
-      !p && def.baseAoeTargets && `cleave ${def.baseAoeTargets}`,
     ]
       .filter(Boolean)
       .join(", ");
