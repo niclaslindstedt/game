@@ -53,6 +53,18 @@ export function viewScaleFor(width: number, height: number): number {
 
 const TILE = 16;
 
+/**
+ * The rift has no floor — the hero stands on nothing between universes, so the
+ * renderer floats him with a slow vertical bob whenever he's grounded. Purely
+ * cosmetic (world position is unchanged); the jump arc (`player.z`) takes over
+ * the moment he leaves the "ground". Amplitude is in world units (doubled on
+ * screen by VIEW_SCALE); the long period matches the level's dreamy, floaty
+ * gravity.
+ */
+const RIFT_HOVER_BIOME = "rift";
+const RIFT_HOVER_AMPLITUDE = 2;
+const RIFT_HOVER_PERIOD_MS = 2400;
+
 export type Camera = { x: number; y: number };
 
 /** Top-left of the view rect: player-centered, clamped to the level. */
@@ -706,8 +718,16 @@ function drawPlayer(
     : player.moving && Math.floor(timeMs / 160) % 2 === 1
       ? walkB
       : walkA;
+  // In the rift the ground isn't there — bob the grounded hero so he reads as
+  // floating. The jump height (`player.z`) already lifts him in the air, so the
+  // hover only applies while grounded to avoid fighting the arc.
+  const hover =
+    !airborne && state.level.biome === RIFT_HOVER_BIOME
+      ? Math.sin((timeMs / RIFT_HOVER_PERIOD_MS) * Math.PI * 2) *
+        RIFT_HOVER_AMPLITUDE
+      : 0;
   const x = Math.round(player.pos.x - TILE / 2 - camera.x);
-  const y = Math.round(player.pos.y - TILE / 2 - camera.y - player.z);
+  const y = Math.round(player.pos.y - TILE / 2 - camera.y - player.z - hover);
 
   // Grounding shadow while airborne — the only cue for jump height.
   if (airborne) {
