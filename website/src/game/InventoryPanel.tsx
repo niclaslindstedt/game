@@ -29,6 +29,7 @@ import {
   equipFromInventory,
   equipmentIcon,
   equipmentLevelReq,
+  equipmentMaxDurability,
   equipmentName,
   gearDef,
   isArmorBroken,
@@ -286,14 +287,14 @@ function itemLines(
           : null,
       });
     }
+    const maxDur = equipmentMaxDurability(item);
     lines.push(
       item.durability === undefined
         ? { text: "UNBREAKABLE" }
         : {
-            text: `DURABILITY ${item.durability}/${def.durability}`,
+            text: `DURABILITY ${item.durability}/${maxDur}`,
             // A near-broken weapon warns in red.
-            color:
-              item.durability <= def.durability * 0.25 ? "#e06a6a" : undefined,
+            color: item.durability <= maxDur * 0.25 ? "#e06a6a" : undefined,
           },
     );
   } else {
@@ -335,15 +336,13 @@ function itemLines(
       });
     }
     if (def.durability !== undefined && item.durability !== undefined) {
+      const maxDur = equipmentMaxDurability(item);
       lines.push(
         item.durability <= 0
           ? { text: "BROKEN - REPAIR TO RESTORE", color: "#e06a6a" }
           : {
-              text: `DURABILITY ${item.durability}/${def.durability}`,
-              color:
-                item.durability <= def.durability * 0.25
-                  ? "#e06a6a"
-                  : undefined,
+              text: `DURABILITY ${item.durability}/${maxDur}`,
+              color: item.durability <= maxDur * 0.25 ? "#e06a6a" : undefined,
             },
       );
     }

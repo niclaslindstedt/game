@@ -181,9 +181,12 @@ describe("armor", () => {
   it("rolls bigger armor the deeper it drops (ilvl growth), stamped on the instance", () => {
     const state = startGame();
     const base = FIX_GEAR.test_vest!.armor!;
+    // Pin the make quality so the growth rule is measured alone (a rolled
+    // BROKEN/PERFECT make would scale the stamp — the quality suite's beat).
     const deep = rollEquipment(state, {
       defId: "test_vest",
       tier: "regular",
+      quality: "normal",
       mlvl: 20,
     });
     // ilvl rolls at most a few under the mob, so a mlvl-20 find grew well

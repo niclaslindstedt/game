@@ -18,7 +18,7 @@ import { clamp, distance, moveToward, type Vec2 } from "@game/lib/vec.ts";
 import { ECONOMY, HELD_ITEMS, MERCHANT } from "./config.ts";
 import { gearDef, isWeaponDef, weaponDef } from "./defs/equipment.ts";
 import { levelDef } from "./defs/levels/index.ts";
-import { addToInventory, rollEquipment } from "./items.ts";
+import { addToInventory, qualityMult, rollEquipment } from "./items.ts";
 import { addMapMarker } from "./map.ts";
 import { lineOfSight, resolveObstacles } from "./obstacles.ts";
 import type { Equipment, GameState, Merchant } from "./types.ts";
@@ -287,7 +287,10 @@ export function sellValue(item: Equipment): number {
   return Math.round(
     (ECONOMY.itemBase + ECONOMY.itemPerIlvl * item.ilvl) *
       ECONOMY.tierValueMult[item.tier] *
-      materialMult,
+      materialMult *
+      // Craftsmanship carries to the scales: a BROKEN find melts down for
+      // less, a PERFECT one commands its premium (config QUALITY.mults).
+      qualityMult(item),
   );
 }
 

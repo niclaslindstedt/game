@@ -19,6 +19,7 @@ import {
   MELEE,
   MERCY,
   PLAYER,
+  QUALITY,
   STAMINA,
   STATS,
   WEAPON,
@@ -31,6 +32,8 @@ import {
   gearDef,
   isGearDef,
   isWeaponDef,
+  QUALITY_ORDER,
+  QUALITY_PREFIX,
   registerFrozenDef,
   STAT_NAMES,
   TIER_ROLL_ORDER,
@@ -41,6 +44,7 @@ import {
   type AffixDef,
   equipmentBaseName,
 } from "./defs/equipment.ts";
+import { gradeVariantIds } from "./defs/grades.ts";
 import { difficultyDef } from "./defs/difficulties.ts";
 import { levelDef } from "./defs/levels/index.ts";
 import { storyItemDef } from "./defs/story.ts";
@@ -52,6 +56,7 @@ import type {
   Equipment,
   GameState,
   Item,
+  Quality,
   StatName,
   Tier,
   WeaponClass,
@@ -115,7 +120,58 @@ export function equipmentName(equipment: Equipment): string {
     if (naming.prefix && !prefix) prefix = naming.prefix;
     if (naming.suffix && !suffix) suffix = naming.suffix;
   }
-  return [prefix, base, suffix].filter(Boolean).join(" ");
+  // The make quality leads the whole name (BROKEN JAGGED PIPE OF THE FOX) —
+  // the craftsmanship is the first thing a scavenger sees.
+  const quality = QUALITY_PREFIX[qualityOf(equipment)].trim();
+  return [quality, prefix, base, suffix].filter(Boolean).join(" ");
+}
+
+// ---- Make quality --------------------------------------------------------------
+
+/** An instance's make quality; pieces from before quality shipped (and
+ * hand-minted ones — starting gear, the fallback sidearm) read as normal. */
+export function qualityOf(equipment: Equipment): Quality {
+  return equipment.quality ?? "normal";
+}
+
+/** The stat scale an instance's make quality applies to its base's numbers
+ * (damage, armor, durability, merchant value) — config `QUALITY.mults`. */
+export function qualityMult(equipment: Equipment): number {
+  return QUALITY.mults[qualityOf(equipment)];
+}
+
+/**
+ * The FULL wear budget of an equipment instance: the def's authored
+ * durability scaled by the instance's make quality — the same number the
+ * mint stamped (see `rollEquipment`). The one figure repair kits refill to
+ * and every durability readout calls "max", so a CRUDE piece never repairs
+ * past what it was built with. Zero when the def carries no durability
+ * (charms, bags).
+ */
+export function equipmentMaxDurability(piece: Equipment): number {
+  const base = isWeaponDef(piece.defId)
+    ? weaponDef(piece.defId).durability
+    : (gearDef(piece.defId).durability ?? 0);
+  if (!base || base <= 0) return 0;
+  return Math.max(1, Math.round(base * qualityMult(piece)));
+}
+
+/**
+ * Roll a drop's MAKE QUALITY off a level-`mlvl` killer: one weighted pick
+ * whose odds slide with the monster level — `QUALITY.weightsLow` at mlvl 1,
+ * `QUALITY.weightsHigh` from `QUALITY.highMlvl` up, lerped between. The
+ * level-1 rank and file hand out mostly BROKEN and CRUDE work; the deep
+ * campaign's monsters carry SUPERIOR and PERFECT pieces.
+ */
+export function rollQuality(rng: Rng, mlvl: number): Quality {
+  const t = Math.min(1, Math.max(0, (mlvl - 1) / (QUALITY.highMlvl - 1)));
+  const pool = QUALITY_ORDER.map((quality) => ({
+    quality,
+    weight:
+      QUALITY.weightsLow[quality] +
+      (QUALITY.weightsHigh[quality] - QUALITY.weightsLow[quality]) * t,
+  }));
+  return pickWeighted(rng, pool).quality;
 }
 
 // ---- Loot rolls --------------------------------------------------------------
@@ -220,6 +276,9 @@ export function rollEquipment(
     /** Force a specific tier instead of rolling one (story-guaranteed
      * pieces like the space suit; a boss's `tierDrops` payouts). */
     tier?: Tier;
+    /** Force a specific MAKE QUALITY instead of rolling one — scripted
+     * story drops (a level's `earlyDrops`) arrive exactly as tuned. */
+    quality?: Quality;
     /** The killer's monster level; omitted = the live horde level. */
     mlvl?: number;
   } = {},
@@ -232,7 +291,18 @@ export function rollEquipment(
       ? ("weapon" as const)
       : ("gear" as const)
     : (opts.slot ?? (rng() < 0.6 ? ("weapon" as const) : ("gear" as const)));
-  const fullPool = family === "weapon" ? loot.weaponPool : loot.gearPool;
+  // Levels author their pools in NORMAL bases only; each entry implies its
+  // exceptional/elite versions (defs/grades.ts), folded in here so the base
+  // ladder keeps unfolding to level 100. The levelReq gate below decides
+  // which grades this killer can actually pay. Filtered against the active
+  // catalog so a swapped-in fixture catalog (tests) sees no phantom ids.
+  const authoredPool = family === "weapon" ? loot.weaponPool : loot.gearPool;
+  const fullPool = authoredPool.flatMap((id) => [
+    id,
+    ...gradeVariantIds(id).filter((variantId) =>
+      family === "weapon" ? isWeaponDef(variantId) : isGearDef(variantId),
+    ),
+  ]);
   // The levelReq drop gate: a base whose requirement the killer's level
   // hasn't reached stays out of the draw. If the whole pool is still out of
   // reach (a fresh run on a late-game pool), the lowest-requirement bases
@@ -281,6 +351,18 @@ export function rollEquipment(
 
   const tier = opts.tier ?? rollTier(state, mlvl, opts.tierBonus ?? 0);
   const ilvl = rollItemLevel(state, mlvl, tier);
+  // The MAKE QUALITY roll: PLAIN (regular-tier) weapons and armor only —
+  // the D2 rule that craftsmanship and magic are exclusive. A magic-or-
+  // better find is already well made, so every tier above white mints at
+  // normal make (no draw is spent), the same way unique/legendary already
+  // mint unbreakable. Charms and bags carry no number for craftsmanship to
+  // scale, so they never roll one either. Odds slide with the monster level
+  // (see rollQuality).
+  const gradeable = family === "weapon" || gearDef(defId).armor !== undefined;
+  const quality: Quality =
+    opts.quality ??
+    (gradeable && tier === "regular" ? rollQuality(rng, mlvl) : "normal");
+  const qMult = QUALITY.mults[quality];
   const affixes: Affix[] = [];
   const available = [...AFFIX_POOLS[family]];
   for (let i = 0; i < TIERS[tier].affixCount && available.length > 0; i++) {
@@ -295,6 +377,7 @@ export function rollEquipment(
     slot,
     tier,
     ilvl,
+    quality,
     affixes,
     // Freeze the birth-version def onto the instance so a later catalog edit
     // (rebalance or deletion) can never reach back and change THIS item — the
@@ -303,25 +386,33 @@ export function rollEquipment(
       family === "weapon" ? weaponDef(defId) : gearDef(defId),
     ),
   };
-  // Dropped weapons arrive fresh but finite — they wear out per attack.
-  // Unique and legendary finds are the exception: very well built, they
-  // never break (no durability also exempts them from the looted-weapon
+  // Dropped weapons arrive fresh but finite — they wear out per attack, and
+  // the make quality sizes the wear budget (a CRUDE blade also breaks
+  // sooner). Unique and legendary finds are the exception: very well built,
+  // they never break (no durability also exempts them from the looted-weapon
   // damage damper, the way the built-in sidearm is exempt).
   if (family === "weapon" && tier !== "unique" && tier !== "legendary") {
-    rolled.durability = weaponDef(defId).durability;
+    rolled.durability = Math.max(
+      1,
+      Math.round(weaponDef(defId).durability * qMult),
+    );
   }
   if (family === "gear") {
     const def = gearDef(defId);
     if (def.armor !== undefined) {
       // The WoW growth rule: the authored armor is the base's value AT ITS
       // OWN levelReq; every item level above it grows the roll, so the same
-      // vest found deep is genuinely better. Stamped once, frozen for life.
+      // vest found deep is genuinely better. The make quality then scales
+      // the whole roll (a PERFECT vest turns more than the catalog says).
+      // Stamped once, frozen for life.
       const growth = Math.max(0, ilvl - (def.levelReq ?? 1));
-      rolled.armor = Math.round(def.armor * (1 + ARMOR.armorPerIlvl * growth));
+      rolled.armor = Math.round(
+        def.armor * (1 + ARMOR.armorPerIlvl * growth) * qMult,
+      );
       // Armor wears per hit taken and merely goes INACTIVE at zero (never
       // trashed); unique/legendary pieces mint unbreakable, like weapons.
       if (tier !== "unique" && tier !== "legendary" && def.durability) {
-        rolled.durability = def.durability;
+        rolled.durability = Math.max(1, Math.round(def.durability * qMult));
       }
     }
   }
@@ -576,7 +667,7 @@ export function repairWornArmor(state: GameState): boolean {
   for (const slot of ARMOR_SLOTS) {
     const piece = state.player.equipment[slot];
     if (!piece || piece.durability === undefined) continue;
-    const max = gearDef(piece.defId).durability ?? 0;
+    const max = equipmentMaxDurability(piece);
     if (piece.durability >= max) continue;
     if (piece.durability === 0) revived = true;
     piece.durability = max;
@@ -792,7 +883,7 @@ export function lowDurabilityDesperation(state: GameState): number {
   let worst = 0;
   const weapon = state.player.equipment.weapon;
   if (weapon.durability !== undefined) {
-    const max = weaponDef(weapon.defId).durability;
+    const max = equipmentMaxDurability(weapon);
     if (max > 0) {
       worst = desperationRamp(
         weapon.durability / max,
@@ -804,7 +895,7 @@ export function lowDurabilityDesperation(state: GameState): number {
   for (const slot of ARMOR_SLOTS) {
     const piece = state.player.equipment[slot];
     if (!piece || piece.durability === undefined) continue;
-    const max = gearDef(piece.defId).durability ?? 0;
+    const max = equipmentMaxDurability(piece);
     if (max <= 0) continue;
     worst = Math.max(
       worst,
@@ -890,7 +981,11 @@ export function weaponDamageFor(state: GameState, weapon: Equipment): number {
   // baseline the difficulty ladder is calibrated on — is exempt and keeps its
   // full catalog damage, so the opening fight stays exactly as tuned.
   const lootMult = weapon.durability === undefined ? 1 : WEAPON.damageMult;
-  return def.damage * multiplier * lootMult;
+  // The instance's MAKE QUALITY scales the blow: a BROKEN pipe swings soft,
+  // a PERFECT one over its catalog weight (config QUALITY.mults). Routed
+  // here — the one source of stat-scaled damage — so combat, auto-equip
+  // scoring, and every DPS readout agree on what craftsmanship is worth.
+  return def.damage * multiplier * lootMult * qualityMult(weapon);
 }
 
 /**
@@ -1411,7 +1506,7 @@ export function wearEquippedWeapon(state: GameState): void {
 export function repairEquippedWeapon(state: GameState): boolean {
   const weapon = state.player.equipment.weapon;
   if (weapon.durability === undefined) return false;
-  const max = weaponDef(weapon.defId).durability;
+  const max = equipmentMaxDurability(weapon);
   if (weapon.durability >= max) return false;
   weapon.durability = max;
   return true;

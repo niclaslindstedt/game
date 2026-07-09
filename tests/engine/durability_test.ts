@@ -49,7 +49,12 @@ function addPunchingBag(state: GameState): void {
 describe("weapon durability", () => {
   it("rolled weapon drops carry their def's durability", () => {
     const state = startGame();
-    const rolled = rollEquipment(state, { defId: "test_pipe" });
+    // Pin the make quality: BROKEN/PERFECT scale the wear budget (the
+    // quality suite's beat) — this asserts the plain def carry-over.
+    const rolled = rollEquipment(state, {
+      defId: "test_pipe",
+      quality: "normal",
+    });
     expect(rolled.durability).toBe(weaponDef("test_pipe").durability);
     // Charms never wear; armor carries its own durability (armor suite).
     const charm = rollEquipment(state, { defId: "test_charm" });

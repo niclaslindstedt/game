@@ -71,6 +71,10 @@ const pooled = new Set();
 for (const levelId of LEVEL_ORDER) {
   for (const id of LEVELS[levelId]?.loot.weaponPool ?? []) pooled.add(id);
 }
+// Grade variants (defs/grades.ts) ride their base's pool membership: pools
+// author normal bases only and the engine expands the family at roll time,
+// so an exceptional/elite version of a pooled base is pooled, not special.
+const pooledOrBase = (def) => pooled.has(def.gradeBase ?? def.id);
 // Exempt: the difficulty ladder's wall weapons (its calibration) and the
 // engine's unbreakable fallback sidearm (deliberately under budget).
 const exempt = new Set([
@@ -93,7 +97,7 @@ for (const def of defs) {
     );
     continue;
   }
-  const special = !pooled.has(def.id);
+  const special = !pooledOrBase(def);
   const budget = budgetFor(def.levelReq, special);
   const suggested = suggestedDamage(def, special);
   const lo = suggested * (1 - TOLERANCE);

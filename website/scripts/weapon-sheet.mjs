@@ -47,16 +47,18 @@ const spriteSurface = (name) => {
   return grid ? gridToSurface(grid, SPRITE_PALETTES[name]) : null;
 };
 
-/** The sheet's row groups: each level's pool (sorted by levelReq), then every
- * weapon in no pool — the starters, signatures, and trophies. */
+/** The sheet's row groups: each level's pool (sorted by levelReq) — the
+ * generated exceptional/elite versions of its bases folded in, since they
+ * drop from the same pool (defs/grades.ts) — then every weapon in no pool:
+ * the starters, signatures, and trophies. */
 const groups = [];
 const pooled = new Set();
 for (const levelId of LEVEL_ORDER) {
   const level = LEVELS[levelId];
   if (!level) continue;
-  const defs = level.loot.weaponPool
-    .map((id) => WEAPON_DEFS[id])
-    .filter(Boolean)
+  const poolIds = new Set(level.loot.weaponPool);
+  const defs = Object.values(WEAPON_DEFS)
+    .filter((d) => poolIds.has(d.gradeBase ?? d.id))
     .sort((a, b) => a.levelReq - b.levelReq);
   defs.forEach((d) => pooled.add(d.id));
   groups.push({ title: `${level.name} — BASE POOL`, defs });

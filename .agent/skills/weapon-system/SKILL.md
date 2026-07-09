@@ -16,6 +16,8 @@ projectile sprite — no engine edits unless you're adding a new BEHAVIOR.
 | Piece | File |
 | --- | --- |
 | Weapon/gear defs, tier ladder, affix pools, naming | `src/game/defs/equipment.ts` |
+| Base GRADES (Normal → Exceptional → Elite): per-base names + generated variant defs | `src/game/defs/grades.ts` |
+| MAKE QUALITY (broken → perfect): multipliers + mlvl-sliding roll odds | `src/game/config.ts` (`QUALITY`); the roll in `items.ts` (`rollQuality`) |
 | Loot config: tier gates (`tierUnlockMlvl`), base tier chances, ilvl deficit weights, drop shares | `src/game/config.ts` (`LOOT`) |
 | Chain/cooldown/damage globals | `src/game/config.ts` (`WEAPON`) |
 | Which bases drop on a level (thematic pools) | `src/game/defs/levels/<level>.ts` `loot.weaponPool` |
@@ -49,6 +51,22 @@ tooltip paints the requirement red. Unique/legendary mint with NO
 durability (and thereby skip the looted-weapon damage damper) and, off
 hardcore, join the forever keepsake stash when a difficulty is beaten;
 hardcore death burns the stash, banked uniques, and all level tokens.
+
+Two more axes ride the same roll. **Base grades** (`defs/grades.ts`): every
+POOL base ships generated EXCEPTIONAL (reqs 25–52) and ELITE (reqs 55–100)
+versions — same look/behavior, hand-authored names, damage re-derived
+straight on the budget line, armor grown along `ARMOR.armorPerIlvl` plus a
+native edge (×1.1/×1.2), durability ×1.25/×1.5. `rollEquipment` expands each
+pool entry to its grade family (`gradeVariantIds`), so level defs keep
+authoring normal bases only. **Make quality** (config `QUALITY`): each
+PLAIN (regular-tier) weapon/armor drop rolls BROKEN ×0.7 / CRUDE ×0.85 /
+NORMAL / SUPERIOR ×1.15 / PERFECT ×1.3 per instance — odds lerp with mlvl
+from `weightsLow` (1) to `weightsHigh` (100) — scaling damage (via
+`weaponDamageFor`), the armor stamp, durability (max reads via
+`equipmentMaxDurability`, NOT the def), and sell value; the prefix leads
+the name. Craftsmanship and magic are exclusive (the D2 rule): a
+magic-or-better find is always normal make, charms and bags never roll
+one, and scripted `earlyDrops` pin `quality: "normal"`.
 
 ## Adding or changing a weapon
 
@@ -147,6 +165,28 @@ hardcore death burns the stash, banked uniques, and all level tokens.
   weapon hafts/stocks read better in the warm `B` brown. Verify every icon
   at @8x — first drafts of "obvious" silhouettes (rayguns, revolvers) read
   as crosses and blobs; two or three iterations is normal.
+
+## Lessons learned (2026-07 quality + grade ladders)
+
+- **Generated variants must be classified through `gradeBase`.** Both
+  scripts (`weapon-budget.mjs` special-vs-pooled, `weapon-stats.mjs` class
+  ladder) and the weapon sheet group by pool membership — a variant rides
+  its base's (`pooled.has(def.gradeBase ?? def.id)`), or every generated
+  def reads as a "special" and fails the ×1.15 premium budget.
+- **Derive variant damage from the budget FORMULA, not by scaling the
+  base's damage.** Ratio-scaling carries the base's within-tolerance drift
+  into the variant, and rounding can push it over the band (riot_baton did).
+  Computing `budget(newReq) × cd/1000 ÷ targets ÷ critLift` directly puts
+  every variant dead-center by construction.
+- **Any new per-drop rng draw shifts every seeded content test** — the
+  quality roll surfaced a latent fixture gap: the loot rain hardcodes the
+  `screen_nuke` id (LOOT.nukeShare), so the fixture catalog must register a
+  `screen_nuke` ability (like the shared `blaster`) or a long headless run
+  crashes when the slice finally hits.
+- **Durability "max" is an instance question now.** Anything comparing or
+  refilling against `def.durability` (repair kits, mercy desperation, UI
+  bars) must go through `equipmentMaxDurability` or a CRUDE piece repairs
+  past what it minted with.
 
 ## After you're done — the checklist
 

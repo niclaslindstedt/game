@@ -8,7 +8,8 @@
 
 import { MELEE, WEAPON } from "../config.ts";
 import { GEAR_DEFS, type GearDef } from "./gear.ts";
-import type { Affix, StatName, Tier, WeaponClass } from "../types.ts";
+import { weaponGradeVariants, type Grade } from "./grades.ts";
+import type { Affix, Quality, StatName, Tier, WeaponClass } from "../types.ts";
 
 // ---- Tiers -----------------------------------------------------------------
 
@@ -33,6 +34,34 @@ export const TIERS: Record<Tier, { prefix: string; affixCount: number }> = {
 
 /** Roll order: try the best tier first, fall through to regular. */
 export const TIER_ROLL_ORDER: Tier[] = ["legendary", "unique", "rare", "magic"];
+
+// ---- Make quality ------------------------------------------------------------
+
+/**
+ * The MAKE-QUALITY ladder, worst to best — the second axis every PLAIN
+ * (regular-tier) weapon and armor drop rolls (see `rollQuality` in
+ * items.ts): the craftsmanship of the individual piece. Craftsmanship and
+ * magic are exclusive, the D2 rule — a magic-or-better find is always
+ * normal make. The prefix leads the item's display name (BROKEN GLADIUS,
+ * PERFECT KEVLAR VEST); the numbers it scales live in config
+ * `QUALITY.mults`, the mlvl-shifting odds in `QUALITY.weightsLow/High`.
+ */
+export const QUALITY_ORDER: readonly Quality[] = [
+  "broken",
+  "crude",
+  "normal",
+  "superior",
+  "perfect",
+];
+
+/** The word each make quality lends an item's name ("" for normal). */
+export const QUALITY_PREFIX: Record<Quality, string> = {
+  broken: "BROKEN ",
+  crude: "CRUDE ",
+  normal: "",
+  superior: "SUPERIOR ",
+  perfect: "PERFECT ",
+};
 
 // ---- Weapons ----------------------------------------------------------------
 
@@ -64,6 +93,15 @@ export type WeaponDef = {
    * this only as a deliberate exception to that rule.
    */
   critMult?: number;
+  /**
+   * Set on a GENERATED base-grade variant (see defs/grades.ts): which rung
+   * of the Normal → Exceptional → Elite ladder this def is. Absent on every
+   * hand-authored (normal) base.
+   */
+  grade?: Grade;
+  /** A grade variant's normal ancestor — the pool base it was generated
+   * from. The budget/stat scripts classify variants through it. */
+  gradeBase?: string;
   /**
    * What the piece is made of, for the merchant's scales (config ECONOMY):
    * `metal` melts down and sells for double, `precious` (gold, gems, the
@@ -863,6 +901,19 @@ export const WEAPON_DEFS: Record<string, WeaponDef> = {
     icon: "icon_singularity_cannon",
   },
 };
+
+// The generated EXCEPTIONAL/ELITE versions of every pool base — same look,
+// higher numbers and requirements (see defs/grades.ts). Merged into the
+// catalog at load so every surface (lookups, scripts, the weapon sheet)
+// sees them as ordinary defs. The budget model's shape readers are injected
+// (they live below in this module) so grades.ts stays import-cycle-free.
+Object.assign(
+  WEAPON_DEFS,
+  weaponGradeVariants(WEAPON_DEFS, {
+    assumedTargets: (def) => weaponAssumedTargets(def),
+    critMult: (def) => weaponCritMult(def),
+  }),
+);
 
 // ---- Gear -------------------------------------------------------------------
 // The gear catalog (armor, charms, bags) lives in its own module purely by

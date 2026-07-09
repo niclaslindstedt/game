@@ -122,6 +122,26 @@ near its killer's (plus the difficulty's `lootIlvlBonus` on the harder
 rungs) that sizes its affixes — see the `weapon-system` skill for the full
 economy and its tuning tools.
 
+Two more axes complete the item tables (`src/game/defs/grades.ts`, config
+`QUALITY`). **Base grades**: every pool weapon and armor piece exists in
+three versions, D2-style — the NORMAL base, an **EXCEPTIONAL** version
+(requirements 25–52), and an **ELITE** version (requirements 55–100) — same
+look, renamed (GLADIUS → SPATHA → FALCATA; CHAINMAIL HAUBERK → LINKED MAIL
+→ TIGULATED MAIL), with damage re-derived on the damage-budget line and
+armor grown along the ilvl curve plus a native edge. The upgraded versions
+are GENERATED from the normal defs and folded into each level's pool at
+roll time, so the drop economy keeps introducing new bases to level 100
+without the level defs naming them. **Make quality**: every PLAIN
+(regular-tier) weapon/armor drop also rolls the craftsmanship of the
+individual piece — BROKEN → CRUDE → NORMAL → SUPERIOR → PERFECT — which
+scales its damage/armor/durability and merchant value (config
+`QUALITY.mults`) and leads its name. The odds slide with the killer's
+monster level (`QUALITY.weightsLow/High`): the level-1 rank and file drop
+mostly shabby make, the deep campaign pays out superior and perfect work.
+Craftsmanship and magic are exclusive, the D2 rule — a magic-or-better
+find is always normal make, as are charms and bags; scripted story drops
+(a level's `earlyDrops`) are pinned normal so the opening plays as tuned.
+
 Alongside the weapon, the hero wears **four ARMOR slots — head, chest,
 legs, feet — plus a charm and a bag** (seven equip slots). Every armor
 piece carries flat **armor points** that sum into a physical damage
