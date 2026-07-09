@@ -719,6 +719,201 @@ body {
   }
 }
 
+/* The moon detonating at full charge: it flares white, blows apart and gutters
+   out just before the warp picker opens (see MOON_BOOM_MS in TitleScreen). */
+.title-moon.exploding {
+  animation: moon-blast 900ms ease-out forwards;
+}
+
+@keyframes moon-blast {
+  0% {
+    filter: brightness(2.4) saturate(1.2);
+    transform: scale(1.16);
+  }
+  12% {
+    filter: brightness(6) saturate(0);
+    transform: scale(1.45);
+  }
+  55% {
+    filter: brightness(4) saturate(0.4);
+    transform: scale(0.5);
+    opacity: 0.5;
+  }
+  100% {
+    filter: brightness(1) saturate(1);
+    transform: scale(0.15);
+    opacity: 0;
+  }
+}
+
+/* The blast layer — a sibling of the moon so it can spill past the moon's own
+   clipped disc. Anchored over the moon; its children fire from the centre. */
+.moon-boom {
+  position: absolute;
+  top: max(6%, env(safe-area-inset-top));
+  right: 7%;
+  width: clamp(64px, 14vmin, 130px);
+  height: clamp(64px, 14vmin, 130px);
+  pointer-events: none;
+  z-index: 3;
+}
+
+.moon-boom span {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  border-radius: 50%;
+  transform: translate(-50%, -50%);
+  will-change: transform, opacity;
+}
+
+/* The white-out flash — a huge soft disc that floods the sky for a beat. */
+.moon-boom-flash {
+  width: 3.2rem;
+  height: 3.2rem;
+  background: radial-gradient(
+    circle,
+    #ffffff 0%,
+    #fff4d6 30%,
+    rgba(255, 210, 130, 0.5) 55%,
+    rgba(255, 170, 90, 0) 72%
+  );
+  animation: moon-flash 620ms ease-out forwards;
+}
+
+@keyframes moon-flash {
+  0% {
+    opacity: 0;
+    transform: translate(-50%, -50%) scale(0.2);
+  }
+  10% {
+    opacity: 1;
+    transform: translate(-50%, -50%) scale(1.4);
+  }
+  100% {
+    opacity: 0;
+    transform: translate(-50%, -50%) scale(4.2);
+  }
+}
+
+/* The molten core: a small, dense fireball that lingers a touch longer. */
+.moon-boom-core {
+  width: 1.4rem;
+  height: 1.4rem;
+  background: radial-gradient(
+    circle at 45% 40%,
+    #fffdf5 0%,
+    #ffd27a 35%,
+    #ff8a3c 62%,
+    rgba(196, 64, 24, 0) 80%
+  );
+  animation: moon-core 820ms ease-out forwards;
+}
+
+@keyframes moon-core {
+  0% {
+    opacity: 0;
+    transform: translate(-50%, -50%) scale(0.3);
+  }
+  18% {
+    opacity: 1;
+    transform: translate(-50%, -50%) scale(1.9);
+  }
+  100% {
+    opacity: 0;
+    transform: translate(-50%, -50%) scale(0.6);
+  }
+}
+
+/* Expanding shockwave rings — thin bright circles racing outward. */
+.moon-boom-ring {
+  width: 1.6rem;
+  height: 1.6rem;
+  border: 0.16rem solid rgba(255, 236, 196, 0.9);
+  background: transparent;
+  animation: moon-ring 720ms cubic-bezier(0.1, 0.7, 0.3, 1) forwards;
+}
+
+.moon-boom-ring-2 {
+  border-color: rgba(255, 176, 108, 0.7);
+  animation-delay: 110ms;
+  animation-duration: 760ms;
+}
+
+@keyframes moon-ring {
+  0% {
+    opacity: 0.9;
+    border-width: 0.28rem;
+    transform: translate(-50%, -50%) scale(0.2);
+  }
+  100% {
+    opacity: 0;
+    border-width: 0.02rem;
+    transform: translate(-50%, -50%) scale(6.5);
+  }
+}
+
+/* Debris — chunks of the moon flung radially outward, fading as they go. */
+.moon-boom-shard {
+  width: 0.55rem;
+  height: 0.55rem;
+  background: radial-gradient(
+    circle at 45% 40%,
+    #ffe9c4 0%,
+    #ff9a44 60%,
+    #b5471a 100%
+  );
+  transform: translate(-50%, -50%) rotate(calc(var(--shard) * 30deg))
+    translateY(0) scale(0.4);
+  animation: moon-shard 900ms ease-out forwards;
+}
+
+.moon-boom-shard:nth-child(even) {
+  width: 0.35rem;
+  height: 0.35rem;
+  background: radial-gradient(
+    circle at 45% 40%,
+    #d7dce4 0%,
+    #9099a6 60%,
+    #565f6d 100%
+  );
+  animation-duration: 820ms;
+}
+
+@keyframes moon-shard {
+  0% {
+    opacity: 0;
+    transform: translate(-50%, -50%) rotate(calc(var(--shard) * 30deg))
+      translateY(0) scale(0.5);
+  }
+  15% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0;
+    transform: translate(-50%, -50%) rotate(calc(var(--shard) * 30deg))
+      translateY(-7rem) scale(1);
+  }
+}
+
+/* Under reduced motion the blast collapses to a brief static flash — the moon
+   simply blinks out and the warp picker opens (MOON_BOOM_MS_REDUCED). */
+@media (prefers-reduced-motion: reduce) {
+  .title-moon.exploding {
+    animation: none;
+    opacity: 0;
+    filter: brightness(4);
+  }
+  .moon-boom-flash {
+    animation: moon-flash 200ms ease-out forwards;
+  }
+  .moon-boom-core,
+  .moon-boom-ring,
+  .moon-boom-shard {
+    display: none;
+  }
+}
+
 /* The terminator: a soft-edged shadow disc, clipped to the moon by the parent's
    overflow. Centred it reads as a new moon; slid off (by the JS-set offset) it
    uncovers a crescent facing the sun, up to a full moon. */
