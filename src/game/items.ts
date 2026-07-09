@@ -271,8 +271,8 @@ export function rollEquipment(
 // ---- Derived stats -----------------------------------------------------------
 
 function equippedPieces(state: GameState): Equipment[] {
-  const { weapon, suit, charm } = state.player.equipment;
-  return [weapon, suit, charm].filter((e): e is Equipment => e !== null);
+  const { weapon, suit, charm, bag } = state.player.equipment;
+  return [weapon, suit, charm, bag].filter((e): e is Equipment => e !== null);
 }
 
 /**
@@ -290,6 +290,7 @@ export function previewEquipped(
   const equipment = { ...player.equipment };
   if (candidate.slot === "weapon") equipment.weapon = candidate;
   else if (candidate.slot === "suit") equipment.suit = candidate;
+  else if (candidate.slot === "bag") equipment.bag = candidate;
   else equipment.charm = candidate;
   return { ...state, player: { ...player, equipment } };
 }
@@ -734,7 +735,12 @@ export function weaponDps(state: GameState, weapon: Equipment): number {
  */
 export function gearScore(gear: Equipment): number {
   const def = gearDef(gear.defId);
-  let score = (def.bonuses.maxHp ?? 0) + (def.bonuses.critChance ?? 0) * 300;
+  // A bag's worth is the room it buys — score its cells so auto-equip fills an
+  // empty bag slot and a roomier bag supplants a smaller one (each cell ≈ 10).
+  let score =
+    (def.bonuses.maxHp ?? 0) +
+    (def.bonuses.critChance ?? 0) * 300 +
+    (def.bagSlots ?? 0) * 10;
   for (const affix of gear.affixes) {
     if (affix.kind === "maxHp") score += affix.value;
     else if (affix.kind === "crit") score += affix.value * 300;
@@ -798,15 +804,27 @@ export function isBetterEquipment(
 // ---- Inventory capacity (STRENGTH-scaled) --------------------------------------
 
 /**
+ * Extra cells granted by the BAG worn in the bag slot (its `GearDef.bagSlots`),
+ * or 0 when no bag is worn. A bag only pays out from the slot — one sitting in
+ * a cell is just loot until it's equipped.
+ */
+export function equippedBagSlots(state: GameState): number {
+  const bag = state.player.equipment.bag;
+  if (!bag || isWeaponDef(bag.defId)) return 0;
+  return gearDef(bag.defId).bagSlots ?? 0;
+}
+
+/**
  * How many bag cells the player should have right now: the small
  * `baseInventorySize` floor plus `bagSlotsPerStr` per point of STRENGTH
- * (affixes folded in, via `effectiveStat`). A STR build is what earns the
- * room to hoard loot between fights.
+ * (affixes folded in, via `effectiveStat`) plus whatever a worn BAG adds. A STR
+ * build and a roomy bag are both ways to earn the room to hoard loot.
  */
 export function inventoryCapacity(state: GameState): number {
   return (
     LOOT.baseInventorySize +
-    Math.floor(effectiveStat(state, "strength") * STATS.bagSlotsPerStr)
+    Math.floor(effectiveStat(state, "strength") * STATS.bagSlotsPerStr) +
+    equippedBagSlots(state)
   );
 }
 

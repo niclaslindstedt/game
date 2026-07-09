@@ -184,7 +184,7 @@ export const MOON: LevelDef = {
       "surplus_carbine",
       "retro_raygun",
     ],
-    gearPool: ["suit_plating", "moon_charm"],
+    gearPool: ["suit_plating", "moon_charm", "bag"],
     abilityPool: ["fire_orbs", "storm_cell", "stasis_field", "item_magnet"],
     // MOON'S BLADE arrives early — at a kill rolled in the first hundred,
     // discovered in play — so the run's signature weapon shapes the run

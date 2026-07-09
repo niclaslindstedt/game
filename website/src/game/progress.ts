@@ -279,9 +279,9 @@ function bankKeepsakes(loadout: Loadout): void {
 export function restoreKeepsakes(state: GameState): void {
   const stash = loadKeepsakes();
   if (stash.length === 0) return;
-  const { weapon, suit, charm } = state.player.equipment;
+  const { weapon, suit, charm, bag } = state.player.equipment;
   const carried = new Set(
-    [weapon, suit, charm, ...state.player.inventory]
+    [weapon, suit, charm, bag, ...state.player.inventory]
       .filter((p): p is Equipment => p !== null)
       .map(keepsakeSignature),
   );
@@ -317,6 +317,7 @@ function stripBankedKeepsakes(): void {
           weapon,
           suit: keep(banked.equipment.suit),
           charm: keep(banked.equipment.charm),
+          bag: keep(banked.equipment.bag ?? null),
         },
         inventory: banked.inventory.map(keep),
       });
@@ -377,6 +378,7 @@ function migrateLoadout(loadout: Loadout): Loadout {
       weapon,
       suit: fix(loadout.equipment.suit),
       charm: fix(loadout.equipment.charm),
+      bag: fix(loadout.equipment.bag ?? null),
     },
     inventory: loadout.inventory.map(fix),
   };

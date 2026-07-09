@@ -68,6 +68,7 @@ export {
   enemyDodgeChance,
   equipFromInventory,
   equipmentName,
+  equippedBagSlots,
   inventoryCapacity,
   syncInventoryCapacity,
   gearScore,

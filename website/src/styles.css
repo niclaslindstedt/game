@@ -26,6 +26,37 @@
   --muted: #7a8088;
   --line: #2a2f36;
   --accent: #7ef0c8;
+
+  /* ---- FF6-style window skin -------------------------------------------
+     The shared "pipe border + gradient fill" look every dialogue box and
+     modal wears, modelled on the HUD status unit (which reads great). A
+     subtle dark-grey → darker-grey vertical gradient inside a rounded frame
+     that reads as rounded tubing: a light top rail, a dark bottom rail, and
+     an inset dark channel just inside the rail (the second "pipe" line).
+     Kept deliberately restrained — the frame should whisper, not shout. */
+  --panel-fill: linear-gradient(180deg, #2b313a 0%, #1a1f27 48%, #0e1219 100%);
+  --panel-rail: #3d4653;
+  --panel-rail-top: #4d5766;
+  --panel-rail-bottom: #262c35;
+  --panel-groove: #0b0e13;
+  --panel-radius: 9px;
+  /* The two-line frame: a light top sheen, the dark inner groove, and a
+     grounded base shadow so the window sits ON the world rather than floating. */
+  --panel-shadow:
+    inset 0 0 0 2px var(--panel-groove),
+    inset 0 1px 0 rgba(150, 164, 184, 0.14), 0 3px 0 rgba(0, 0, 0, 0.5),
+    0 8px 20px rgba(0, 0, 0, 0.45);
+}
+
+/* The window skin, factored out so every modal/dialogue shares one look.
+   Applied via the existing selectors below (not a utility class on the JSX). */
+.pixel-panel {
+  background: var(--panel-fill);
+  border: 2px solid var(--panel-rail);
+  border-top-color: var(--panel-rail-top);
+  border-bottom-color: var(--panel-rail-bottom);
+  border-radius: var(--panel-radius);
+  box-shadow: var(--panel-shadow);
 }
 
 /* Large screens (desktop, big tablets): render the whole UI at 2× the
@@ -2000,16 +2031,39 @@ body {
   cursor: pointer;
 }
 
+/* The pause card — same FF6 window skin as the other modals. */
+.intro-box {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1.25rem;
+  max-width: min(32rem, 94vw);
+  padding: 1.75rem 1.5rem;
+  cursor: default;
+  background: var(--panel-fill);
+  border: 2px solid var(--panel-rail);
+  border-top-color: var(--panel-rail-top);
+  border-bottom-color: var(--panel-rail-bottom);
+  border-radius: var(--panel-radius);
+  box-shadow: var(--panel-shadow);
+}
+
 .levelup-box {
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 1.5rem;
-  max-width: 42rem;
-  padding: 2rem;
-  background: #10151c;
-  border: 3px solid #1d2530;
-  box-shadow: 0 8px 0 rgba(0, 0, 0, 0.4);
+  gap: 1.25rem;
+  /* Never wider than the viewport on a vertical phone — the info breakdown
+     wraps inside this, so the box must stay on screen. */
+  max-width: min(42rem, 94vw);
+  padding: 1.5rem 1.25rem;
+  /* FF6 window skin (see --panel-* tokens). */
+  background: var(--panel-fill);
+  border: 2px solid var(--panel-rail);
+  border-top-color: var(--panel-rail-top);
+  border-bottom-color: var(--panel-rail-bottom);
+  border-radius: var(--panel-radius);
+  box-shadow: var(--panel-shadow);
 }
 
 /* ---- Level-intro monologue (the hero, alone on black, over a dialogue box) - */
@@ -2137,9 +2191,14 @@ body {
   align-items: flex-start;
   gap: 0.4rem;
   min-height: 3.5rem;
-  padding: 0.6rem 1.2rem 0.75rem;
-  background: rgba(16, 21, 28, 0.92);
-  border: 3px solid #1d2530;
+  padding: 0.8rem 1.2rem 0.9rem;
+  /* FF6 window skin (see --panel-* tokens). */
+  background: var(--panel-fill);
+  border: 2px solid var(--panel-rail);
+  border-top-color: var(--panel-rail-top);
+  border-bottom-color: var(--panel-rail-bottom);
+  border-radius: var(--panel-radius);
+  box-shadow: var(--panel-shadow);
   pointer-events: none; /* taps fall through to the overlay */
 }
 
@@ -2169,12 +2228,16 @@ body {
   display: flex;
   flex-direction: column;
   align-items: flex-start;
-  gap: 0.4rem;
+  gap: 0.5rem;
   min-height: 4.5rem;
-  padding: 0.6rem 1.2rem 0.75rem;
-  background: rgba(16, 21, 28, 0.92);
-  border: 3px solid #1d2530;
-  box-shadow: 0 8px 0 rgba(0, 0, 0, 0.4);
+  padding: 0.85rem 1.2rem 0.95rem;
+  /* FF6 window skin (see --panel-* tokens). */
+  background: var(--panel-fill);
+  border: 2px solid var(--panel-rail);
+  border-top-color: var(--panel-rail-top);
+  border-bottom-color: var(--panel-rail-bottom);
+  border-radius: var(--panel-radius);
+  box-shadow: var(--panel-shadow);
   pointer-events: none; /* taps fall through to the overlay */
 }
 
@@ -2234,6 +2297,18 @@ body {
   display: flex;
   flex-direction: column;
   justify-content: center;
+  gap: 0.5rem;
+}
+
+/* Each spoken line is its own fixed-height PixelText canvas. A <canvas> is
+   inline by default, so a plain block parent lays the lines out on shared
+   line-boxes and — because the pixel canvases are taller than the default
+   line-height — they OVERLAP (two rows print on top of each other). Making
+   the body a flex column stacks each line in its own row with real spacing. */
+.dialogue-body {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
   gap: 0.4rem;
 }
 
@@ -2307,6 +2382,13 @@ body {
 .stat-info-head .stat-icon {
   width: 1.1rem;
   height: 1.1rem;
+}
+
+/* The wrapped description lines sit UNDER the label, not under the glyph —
+   indent them by the icon width + its gap so the subtitle lines up with the
+   stat name above them. */
+.stat-info-row > canvas {
+  margin-left: 1.5rem;
 }
 
 .stat-buttons {
@@ -2515,35 +2597,55 @@ body {
 .inventory-panel {
   display: flex;
   flex-direction: column;
-  align-items: center;
-  gap: 1rem;
-  max-width: min(46rem, 100%);
-  max-height: 100%;
+  gap: 0.85rem;
+  /* Claim most of the screen — the bag needs the room. */
+  width: min(94vw, 40rem);
+  max-width: 100%;
+  max-height: 94vh;
   overflow-y: auto;
-  padding: 1.25rem;
+  padding: 1rem 1.1rem 1.15rem;
   box-sizing: border-box;
-  background: #10151c;
-  border: 3px solid #1d2530;
-  box-shadow: 0 8px 0 rgba(0, 0, 0, 0.4);
+  /* FF6 window skin (see --panel-* tokens). */
+  background: var(--panel-fill);
+  border: 2px solid var(--panel-rail);
+  border-top-color: var(--panel-rail-top);
+  border-bottom-color: var(--panel-rail-bottom);
+  border-radius: var(--panel-radius);
+  box-shadow: var(--panel-shadow);
   touch-action: none;
 }
 
-.inventory-columns {
+/* Top bar: the hero portrait + its stat popover on the left, the equipment
+   slots filling the rest (wrapping on the very narrowest phones). */
+.inv-topbar {
   display: flex;
-  flex-direction: column;
-  gap: 1.25rem;
-  align-items: center;
+  flex-direction: row;
+  align-items: flex-start;
+  gap: 1rem;
+  flex-wrap: wrap;
 }
 
-.inventory-left,
-.inventory-right {
+/* The portrait column doubles as the position anchor for the stats popover. */
+.inv-hero {
+  position: relative;
   display: flex;
   flex-direction: column;
-  gap: 0.75rem;
+  align-items: center;
+  gap: 0.25rem;
+  flex: 0 0 auto;
+}
+
+.equip-area {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+  flex: 1 1 auto;
+  min-width: 0;
 }
 
 .equip-slots {
   display: flex;
+  flex-wrap: wrap;
   gap: 0.5rem;
 }
 
@@ -2554,28 +2656,45 @@ body {
   gap: 0.3rem;
 }
 
-/* Diablo-style compact grid: small square cells packed tightly. */
+/* The bag: the dominant area of the modal. */
+.inv-bag {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  align-items: flex-start;
+  align-self: stretch;
+  flex: 1 1 auto;
+  min-height: 0;
+}
+
+/* A dense grid of small square cells that fills the width and scrolls past
+   the visible rows — sized so a vertical phone shows 5+ columns and ten rows
+   (50 slots) without cramming. */
 .inv-grid {
   display: grid;
-  grid-template-columns: repeat(4, 2.4rem);
-  gap: 0.3rem;
+  grid-template-columns: repeat(auto-fill, minmax(2rem, 1fr));
+  gap: 0.35rem;
+  width: 100%;
+  align-content: start;
+  overflow-y: auto;
 }
 
 .inv-cell {
-  width: 2.4rem;
-  height: 2.4rem;
+  aspect-ratio: 1 / 1;
   display: grid;
   place-items: center;
-  background: #0b0d10;
-  border: 2px solid #1d2530;
+  background: rgba(6, 8, 12, 0.6);
+  border: 2px solid #232b35;
+  border-radius: 3px;
   cursor: grab;
   touch-action: none;
 }
 
-/* The equipped slots sit a touch larger than bag cells for hierarchy. */
+/* The equipped slots sit larger than bag cells for hierarchy. */
 .equip-cell {
   width: 2.9rem;
   height: 2.9rem;
+  aspect-ratio: auto;
 }
 
 .inv-cell.drop-ok {
@@ -2590,8 +2709,8 @@ body {
 /* Item icons size in rem so they scale with the root-font UI breakpoint
    instead of staying a fixed pixel size on large screens. */
 .inv-item-icon {
-  width: 1.7rem;
-  height: 1.7rem;
+  width: 78%;
+  height: 78%;
 }
 
 .equip-cell .inv-item-icon {
@@ -2604,15 +2723,26 @@ body {
   height: 2rem;
 }
 
-/* Character portrait heading the equipment column (Diablo/WoW-style). */
+/* The hero portrait doubles as the STATS toggle: hover (desktop) or tap
+   (touch) it to raise the sheet. A plain framed button, lit when open. */
 .char-portrait {
+  appearance: none;
   display: grid;
   place-items: center;
   width: 3.4rem;
   height: 3.4rem;
-  background: #0b0d10;
+  padding: 0;
+  background: rgba(6, 8, 12, 0.7);
   border: 2px solid #2a3542;
+  border-radius: 4px;
   box-shadow: inset 0 0 0 1px rgba(0, 0, 0, 0.5);
+  cursor: pointer;
+  pointer-events: auto;
+  line-height: 0;
+}
+
+.char-portrait.active {
+  border-color: #7ef0c8;
 }
 
 .char-avatar-img {
@@ -2620,16 +2750,27 @@ body {
   height: 2.6rem;
 }
 
+/* The stat sheet popover: floats out from under the portrait so it never
+   steals the bag's space. Scrolls if it would run off a short screen. */
+.char-stats-popover {
+  position: absolute;
+  top: calc(100% + 0.35rem);
+  left: 0;
+  z-index: 20;
+  width: max-content;
+  max-width: min(80vw, 22rem);
+  max-height: 60vh;
+  overflow-y: auto;
+  padding: 0.75rem 0.85rem;
+  pointer-events: auto;
+}
+
 /* The stat lines fold into two columns; the STATS header spans both. */
 .char-sheet {
   display: grid;
-  grid-template-columns: repeat(2, minmax(6rem, auto));
-  column-gap: 1.5rem;
-  row-gap: 0.45rem;
-  margin-top: 0.25rem;
-  padding-top: 0.75rem;
-  border-top: 2px solid #1d2530;
-  align-self: stretch;
+  grid-template-columns: repeat(2, minmax(5.5rem, auto));
+  column-gap: 1.25rem;
+  row-gap: 0.4rem;
 }
 
 .char-sheet > canvas:first-child {
@@ -2660,10 +2801,12 @@ body {
   padding: 0.6rem 0.7rem;
   box-sizing: border-box;
   pointer-events: none;
-  background: rgba(6, 9, 13, 0.96);
+  /* Same gradient fill as the windows; the tier-colored border is set inline. */
+  background: var(--panel-fill);
   border: 2px solid #1d2530;
+  border-radius: 6px;
   box-shadow:
-    0 0 0 1px rgba(0, 0, 0, 0.6),
+    inset 0 0 0 1px var(--panel-groove),
     0 6px 18px rgba(0, 0, 0, 0.65);
 }
 
@@ -2686,22 +2829,23 @@ body {
   pointer-events: none;
 }
 
-/* Landscape (the 844×390 reference phone): sections side by side, the bag
-   two rows of six, and everything tightened so CLOSE stays on screen. */
+/* Landscape (the 844×390 reference phone): the panel is short, so tighten the
+   chrome tighter and let the bag spread WIDE (many small columns) but only
+   four rows tall before it scrolls, so a big carry can't stretch the short
+   landscape modal and CLOSE stays on screen. */
 @media (min-aspect-ratio: 4/3) {
   .inventory-panel {
-    gap: 0.75rem;
-    padding: 1rem 1.5rem;
-  }
-
-  .inventory-columns {
-    flex-direction: row;
-    align-items: flex-start;
-    gap: 2rem;
+    gap: 0.5rem;
+    padding: 0.7rem 1.1rem 0.8rem;
+    width: min(92vw, 46rem);
   }
 
   .inv-grid {
-    grid-template-columns: repeat(6, 2.4rem);
+    grid-template-columns: repeat(auto-fill, 1.8rem);
+    grid-auto-rows: 1.8rem;
+    gap: 0.3rem;
+    justify-content: center;
+    max-height: calc(4 * 1.8rem + 3 * 0.3rem);
   }
 }
 
@@ -2714,9 +2858,8 @@ body {
 }
 
 /* PixelText renders to a <canvas>; never let flex stretch it. */
-.inventory-left,
-.inventory-right,
-.char-sheet {
+.equip-area,
+.inv-bag {
   align-items: flex-start;
 }
 
@@ -2732,6 +2875,13 @@ body {
    `.game-overlay canvas` rule above pins the "i" to the top of the circle. */
 .info-button canvas {
   align-self: center;
+}
+
+/* ...but the level-up button's LABEL + BLURB stack is a left-aligned column,
+   not centered — otherwise the shorter subtitle floats centered under the
+   title and reads as ragged. Overrides `.stat-button canvas` above. */
+.stat-button-text canvas {
+  align-self: flex-start;
 }
 
 /* Slot labels sit centered over their cells. */

@@ -40,8 +40,14 @@ export function RespecOverlay({
   const points = state.player.pendingStatPoints;
   const ready = points === 0;
   return (
-    <div className="game-overlay levelup-overlay respec-overlay">
-      <div className="levelup-box respec-box">
+    <div
+      className="game-overlay levelup-overlay respec-overlay"
+      onPointerDown={showInfo ? () => setShowInfo(false) : undefined}
+    >
+      <div
+        className="levelup-box respec-box"
+        onPointerDown={(e) => e.stopPropagation()}
+      >
         <div className="levelup-header">
           <PixelText font={font} text="RESPEC" scale={5} color="#ffd75e" />
           <button
@@ -76,7 +82,15 @@ export function RespecOverlay({
                     color="#ffd75e"
                   />
                 </div>
-                <PixelText font={font} text={info} scale={1} color="#c7ccd1" />
+                {info.map((line, i) => (
+                  <PixelText
+                    key={i}
+                    font={font}
+                    text={line}
+                    scale={1}
+                    color="#c7ccd1"
+                  />
+                ))}
               </div>
             ))}
           </div>

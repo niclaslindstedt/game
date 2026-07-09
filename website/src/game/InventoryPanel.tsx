@@ -76,6 +76,7 @@ const SLOTS: { slot: EquipSlot; label: string }[] = [
   { slot: "weapon", label: "WEAPON" },
   { slot: "suit", label: "SUIT" },
   { slot: "charm", label: "CHARM" },
+  { slot: "bag", label: "BAG" },
 ];
 
 const STAT_LABELS: Record<StatName, string> = {
@@ -402,6 +403,10 @@ export function InventoryPanel({
     item: Equipment;
     anchor: DOMRect;
   } | null>(null);
+  // The character sheet is tucked behind the portrait now — hovering it
+  // (desktop) or tapping it (touch) raises the STATS popover, so the modal can
+  // give the bag the room. Kept out of the way until asked for.
+  const [statsOpen, setStatsOpen] = useState(false);
   // Written only from event handlers (start/move/up), never during render:
   // the up-handler needs the freshest drag without re-subscribing per move.
   const dragRef = useRef<Drag | null>(null);
@@ -532,26 +537,167 @@ export function InventoryPanel({
       className="game-overlay inventory-overlay"
       data-drop="ground"
       // Tapping empty space (outside any item cell) dismisses the tooltip —
-      // the touch equivalent of moving the mouse off an item.
+      // the touch equivalent of moving the mouse off an item — and a tap clear
+      // of the portrait/popover closes the stat sheet.
       onPointerDown={(e) => {
-        if (!(e.target as HTMLElement).closest(".inv-cell")) setInspect(null);
+        const target = e.target as HTMLElement;
+        if (!target.closest(".inv-cell")) setInspect(null);
+        if (!target.closest(".inv-hero")) setStatsOpen(false);
       }}
     >
       <div className="inventory-panel" data-drop="none">
-        <div className="inventory-columns">
-          {/* Character portrait + equipment slots + character sheet */}
-          <div className="inventory-left">
-            {avatarSrc && (
-              <div className="char-portrait">
+        {/* Top bar: the hero portrait (hover on desktop / tap on touch raises
+            the full stat sheet) beside the four equipment slots. The character
+            sheet lives in a popover now, so the bag below owns the modal. */}
+        <div className="inv-topbar">
+          <div
+            className="inv-hero"
+            // Hover anywhere over the portrait OR its popover keeps the sheet
+            // up (the popover is a child, so crossing into it isn't a leave).
+            onPointerEnter={(e) => {
+              if (e.pointerType !== "touch") setStatsOpen(true);
+            }}
+            onPointerLeave={(e) => {
+              if (e.pointerType !== "touch") setStatsOpen(false);
+            }}
+          >
+            <button
+              type="button"
+              className={`char-portrait${statsOpen ? " active" : ""}`}
+              aria-label="toggle-stats"
+              // Touch has no hover, so a tap toggles the sheet; a mouse leaves
+              // it to the wrapper's hover (a click here would just fight it).
+              onPointerDown={(e) => {
+                if (e.pointerType === "touch") setStatsOpen((v) => !v);
+              }}
+            >
+              {avatarSrc && (
                 <img
                   src={avatarSrc}
                   alt="character"
                   className="pixel-img char-avatar-img"
                   draggable={false}
                 />
+              )}
+            </button>
+            <PixelText font={font} text="STATS" scale={1} color="#7a828b" />
+            {statsOpen && (
+              <div className="char-stats-popover pixel-panel">
+                <div className="char-sheet">
+                  <PixelText
+                    font={font}
+                    text="STATS"
+                    scale={2}
+                    color="#9aa3ad"
+                  />
+                  {(Object.keys(STAT_LABELS) as StatName[]).map((stat) => (
+                    <StatLine
+                      key={stat}
+                      font={font}
+                      label={STAT_LABELS[stat]}
+                      value={String(effectiveStat(state, stat))}
+                      chip={
+                        preview
+                          ? deltaChip(
+                              effectiveStat(preview, stat) -
+                                effectiveStat(state, stat),
+                            )
+                          : null
+                      }
+                    />
+                  ))}
+                  <StatLine
+                    font={font}
+                    label="MAX HP"
+                    value={String(computeMaxHp(state))}
+                    chip={
+                      preview
+                        ? deltaChip(computeMaxHp(preview) - computeMaxHp(state))
+                        : null
+                    }
+                  />
+                  {(() => {
+                    const armor = armorInfo(state);
+                    const previewArmor = preview ? armorInfo(preview) : null;
+                    const armorColor = armor
+                      ? { green: "#5fd97a", yellow: "#ffe14d", red: "#e0603a" }[
+                          armor.grade
+                        ]
+                      : "#9aa3ad";
+                    return (
+                      <StatLine
+                        font={font}
+                        label="ARMOR"
+                        value={String(armor?.max ?? 0)}
+                        color={armorColor}
+                        chip={
+                          preview
+                            ? deltaChip(
+                                (previewArmor?.max ?? 0) - (armor?.max ?? 0),
+                              )
+                            : null
+                        }
+                      />
+                    );
+                  })()}
+                  <StatLine
+                    font={font}
+                    label="DMG"
+                    value={String(Math.round(weaponDamage(state)))}
+                    color="#7ef0c8"
+                    chip={
+                      preview
+                        ? deltaChip(weaponDamage(preview) - weaponDamage(state))
+                        : null
+                    }
+                  />
+                  <StatLine
+                    font={font}
+                    label="CRIT"
+                    value={`${Math.round(playerCritChance(state) * 100)}%`}
+                    color="#7ef0c8"
+                    chip={
+                      preview
+                        ? deltaChip(
+                            playerCritChance(preview) - playerCritChance(state),
+                            "%",
+                          )
+                        : null
+                    }
+                  />
+                  <StatLine
+                    font={font}
+                    label="HIT"
+                    value={`${Math.round(hitRate(state) * 100)}%`}
+                    color="#7ef0c8"
+                    chip={
+                      preview
+                        ? deltaChip(hitRate(preview) - hitRate(state), "%")
+                        : null
+                    }
+                  />
+                  <StatLine
+                    font={font}
+                    label="DODGE"
+                    value={`${Math.round(playerDodgeChance(state) * 100)}%`}
+                    color="#7ecbff"
+                    chip={
+                      preview
+                        ? deltaChip(
+                            playerDodgeChance(preview) -
+                              playerDodgeChance(state),
+                            "%",
+                          )
+                        : null
+                    }
+                  />
+                </div>
               </div>
             )}
-            <PixelText font={font} text="EQUIPPED" scale={2} color="#9aa3ad" />
+          </div>
+
+          <div className="equip-area">
+            <PixelText font={font} text="EQUIPPED" scale={1} color="#9aa3ad" />
             <div className="equip-slots">
               {SLOTS.map(({ slot, label }) => {
                 const item =
@@ -597,141 +743,38 @@ export function InventoryPanel({
                 );
               })}
             </div>
-
-            <div className="char-sheet">
-              <PixelText font={font} text="STATS" scale={2} color="#9aa3ad" />
-              {(Object.keys(STAT_LABELS) as StatName[]).map((stat) => (
-                <StatLine
-                  key={stat}
-                  font={font}
-                  label={STAT_LABELS[stat]}
-                  value={String(effectiveStat(state, stat))}
-                  chip={
-                    preview
-                      ? deltaChip(
-                          effectiveStat(preview, stat) -
-                            effectiveStat(state, stat),
-                        )
-                      : null
-                  }
-                />
-              ))}
-              <StatLine
-                font={font}
-                label="MAX HP"
-                value={String(computeMaxHp(state))}
-                chip={
-                  preview
-                    ? deltaChip(computeMaxHp(preview) - computeMaxHp(state))
-                    : null
-                }
-              />
-              {(() => {
-                const armor = armorInfo(state);
-                const previewArmor = preview ? armorInfo(preview) : null;
-                const armorColor = armor
-                  ? { green: "#5fd97a", yellow: "#ffe14d", red: "#e0603a" }[
-                      armor.grade
-                    ]
-                  : "#9aa3ad";
-                return (
-                  <StatLine
-                    font={font}
-                    label="ARMOR"
-                    value={String(armor?.max ?? 0)}
-                    color={armorColor}
-                    chip={
-                      preview
-                        ? deltaChip(
-                            (previewArmor?.max ?? 0) - (armor?.max ?? 0),
-                          )
-                        : null
-                    }
-                  />
-                );
-              })()}
-              <StatLine
-                font={font}
-                label="DMG"
-                value={String(Math.round(weaponDamage(state)))}
-                color="#7ef0c8"
-                chip={
-                  preview
-                    ? deltaChip(weaponDamage(preview) - weaponDamage(state))
-                    : null
-                }
-              />
-              <StatLine
-                font={font}
-                label="CRIT"
-                value={`${Math.round(playerCritChance(state) * 100)}%`}
-                color="#7ef0c8"
-                chip={
-                  preview
-                    ? deltaChip(
-                        playerCritChance(preview) - playerCritChance(state),
-                        "%",
-                      )
-                    : null
-                }
-              />
-              <StatLine
-                font={font}
-                label="HIT"
-                value={`${Math.round(hitRate(state) * 100)}%`}
-                color="#7ef0c8"
-                chip={
-                  preview
-                    ? deltaChip(hitRate(preview) - hitRate(state), "%")
-                    : null
-                }
-              />
-              <StatLine
-                font={font}
-                label="DODGE"
-                value={`${Math.round(playerDodgeChance(state) * 100)}%`}
-                color="#7ecbff"
-                chip={
-                  preview
-                    ? deltaChip(
-                        playerDodgeChance(preview) - playerDodgeChance(state),
-                        "%",
-                      )
-                    : null
-                }
-              />
-            </div>
           </div>
+        </div>
 
-          {/* The bag */}
-          <div className="inventory-right">
-            <PixelText font={font} text="BAG" scale={2} color="#9aa3ad" />
-            <div className="inv-grid">
-              {player.inventory.map((item, index) => (
-                <div
-                  key={index}
-                  className="inv-cell"
-                  data-drop={`inv:${index}`}
-                  style={
-                    item ? { borderColor: TIER_COLORS[item.tier] } : undefined
+        {/* The bag — the dominant area of the modal: a compact grid of small
+            cells that scrolls, sized to hold plenty on a vertical phone. */}
+        <div className="inv-bag">
+          <PixelText font={font} text="BAG" scale={2} color="#9aa3ad" />
+          <div className="inv-grid">
+            {player.inventory.map((item, index) => (
+              <div
+                key={index}
+                className="inv-cell"
+                data-drop={`inv:${index}`}
+                style={
+                  item ? { borderColor: TIER_COLORS[item.tier] } : undefined
+                }
+                onPointerDown={
+                  item ? startDrag(item, { type: "inv", index }) : undefined
+                }
+                onPointerEnter={item ? inspectItem(item) : undefined}
+                onPointerLeave={(e) => {
+                  if (e.pointerType !== "touch" && !dragRef.current) {
+                    setInspect(null);
                   }
-                  onPointerDown={
-                    item ? startDrag(item, { type: "inv", index }) : undefined
-                  }
-                  onPointerEnter={item ? inspectItem(item) : undefined}
-                  onPointerLeave={(e) => {
-                    if (e.pointerType !== "touch" && !dragRef.current) {
-                      setInspect(null);
-                    }
-                  }}
-                >
-                  {item &&
-                    !(
-                      drag?.from.type === "inv" && drag.from.index === index
-                    ) && <ItemIcon sprites={sprites} item={item} />}
-                </div>
-              ))}
-            </div>
+                }}
+              >
+                {item &&
+                  !(drag?.from.type === "inv" && drag.from.index === index) && (
+                    <ItemIcon sprites={sprites} item={item} />
+                  )}
+              </div>
+            ))}
           </div>
         </div>
 

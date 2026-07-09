@@ -314,7 +314,7 @@ export const SPACEZ_HQ: LevelDef = {
       "prototype_laser",
       "pump_shotgun",
     ],
-    gearPool: ["lab_coat", "id_badge"],
+    gearPool: ["lab_coat", "id_badge", "bag"],
     abilityPool: ["storm_cell", "stasis_field", "item_magnet"],
     allClearWeapon: "golden_stapler",
     // The opening loot loop, on a schedule the rain can't promise: the

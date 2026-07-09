@@ -867,6 +867,13 @@ export type GearDef = {
    * worn. Absent on ordinary gear, whose bonuses only count once equipped.
    */
   passive?: Partial<Record<StatName, number>>;
+  /**
+   * BAGS only (`slot: "bag"`): how many extra inventory cells this bag adds on
+   * top of the STRENGTH-scaled floor while it is worn in the bag slot (see
+   * `inventoryCapacity`). Absent on every other piece. Bigger bags ship later
+   * as new defs carrying a larger count.
+   */
+  bagSlots?: number;
   /** Inventory icon sprite. */
   icon: string;
   /**
@@ -878,6 +885,18 @@ export type GearDef = {
 };
 
 export const GEAR_DEFS: Record<string, GearDef> = {
+  // The starter BAG: the plainest carry-all, worn in the bag slot to widen the
+  // inventory by two cells. It is the first of a family — bigger bags arrive
+  // later as their own defs with a larger `bagSlots`. Carries no combat stats,
+  // so it never competes with a charm or suit for a body slot.
+  bag: {
+    id: "bag",
+    name: "BAG",
+    slot: "bag",
+    bonuses: {},
+    bagSlots: 2,
+    icon: "icon_bag",
+  },
   lab_coat: {
     id: "lab_coat",
     name: "LAB COAT",

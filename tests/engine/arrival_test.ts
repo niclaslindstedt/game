@@ -59,6 +59,7 @@ function sampleLoadout(): Loadout {
         affixes: [],
       },
       charm: null,
+      bag: null,
     },
     inventory: [
       {

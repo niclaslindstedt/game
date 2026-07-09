@@ -322,6 +322,26 @@ export const FIX_GEAR: Record<string, GearDef> = {
     passive: { intelligence: 1 },
     icon: "icon_charm",
   },
+  // A worn BAG (mirrors the shipped `bag`): +2 carry cells while equipped in
+  // the bag slot, so the engine's bag-capacity rule has a content-agnostic
+  // piece to exercise.
+  test_bag: {
+    id: "test_bag",
+    name: "TEST BAG",
+    slot: "bag",
+    bonuses: {},
+    bagSlots: 2,
+    icon: "icon_bag",
+  },
+  // A roomier bag for the "bigger bag wins the slot" auto-equip test.
+  test_big_bag: {
+    id: "test_big_bag",
+    name: "TEST BIG BAG",
+    slot: "bag",
+    bonuses: {},
+    bagSlots: 5,
+    icon: "icon_bag",
+  },
 };
 
 export const FIX_ABILITIES: Record<string, AbilityDef> = {
