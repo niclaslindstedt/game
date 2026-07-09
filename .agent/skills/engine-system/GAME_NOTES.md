@@ -202,3 +202,21 @@ sequel truncates this file to a stub and rebuilds it as its own systems land.
   `weapon-system` (stat checker + arsenal sheet). App-side permanence
   (keepsake stash, hardcore death) lives entirely in website progress.ts —
   the engine never learns hardcore exists.
+- **Level-scaled armor (2026-07, armor revamp):** armor is four body slots
+  (`ArmorSlot`, `ARMOR_SLOTS`) whose worn pieces sum flat armor points into a
+  reduction judged against the ATTACKER's level (`armorReduction`, config
+  `ARMOR` — attacker level from `enemy.mlvl` in the contact path,
+  `currentMobLevel` for hazards), the WoW shape where standing still means
+  decaying. Instance stats that grow with the drop (`Equipment.armor`) are
+  stamped in `rollEquipment` and frozen for life like affixes; the def's
+  authored value is its worth AT ITS OWN levelReq. Durability-on-the-receiving
+  end wears via `wearWornArmor` in the two damage sites; a piece at zero goes
+  INACTIVE, not trashed — every derived-stat read routes through
+  `activePieces()` so its bonuses/affixes go silent, and repair
+  (`repairWornArmor`) recomputes them back. Difficulty reward knob:
+  `lootIlvlBonus` added in `rollItemLevel` sweetens ALL drops through one
+  number. The gear catalog moved to `defs/gear.ts` (size split; re-exported
+  through `defs/equipment.ts` so imports never changed). A COSTUME granted by
+  plot is a story item flag (`StoryItemDef.suitsHero` read by `playerSuited`),
+  never an equipment slot — the space suit is worn over everything. Suites:
+  `tests/engine/armor_stamina_test.ts`, `tests/content/spacesuit_test.ts`.
