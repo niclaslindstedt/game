@@ -1157,9 +1157,12 @@ export function TitleScreen({
       )}
 
       <footer className="title-footer">
-        <span>
-          v{__APP_VERSION__} · {__BUILD_COMMIT__}
-        </span>
+        <PixelText
+          font={font}
+          text={`v${__APP_VERSION__} · ${__BUILD_COMMIT__}`}
+          scale={1}
+          color="#7a8088"
+        />
       </footer>
     </div>
   );

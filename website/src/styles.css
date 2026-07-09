@@ -1707,9 +1707,6 @@ body {
   bottom: max(0.6rem, env(safe-area-inset-bottom));
   display: flex;
   justify-content: flex-end;
-  font-size: 0.75rem;
-  color: #7a8088;
-  font-variant-numeric: tabular-nums;
   z-index: 1;
 }
 
