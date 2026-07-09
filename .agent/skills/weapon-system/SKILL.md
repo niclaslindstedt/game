@@ -86,8 +86,9 @@ hardcore death burns the stash, banked uniques, and all level tokens.
    flags out-of-band reqs, missing sprites, and dangling ids. Starters and
    the fallback blaster are exempt from both (the difficulty ladder is
    calibrated on them). `weaponScore` (auto-equip) and the item card's
-   extra lines (HITS UP TO N / PELLETS / PIERCES / CHAINS, CRIT DAMAGE)
-   speak the same model — keep all three in agreement.
+   extra lines (PELLETS / PIERCES / CHAINS, CRIT DAMAGE — melee cleave is
+   INTELLIGENCE's, not a per-weapon count, so it carries no line) speak the
+   same model — keep all three in agreement.
 3. **Sprites** (the `pixel-assets` skill has the full loop): icon in
    `icons.mjs`, projectile in `effects.mjs`, `make assets`, then LOOK at
    `website/assets-preview/<name>@8x.png` — and at the arsenal in one

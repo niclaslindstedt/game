@@ -2937,6 +2937,14 @@ body {
   align-self: flex-start;
 }
 
+/* A tooltip stat line paired with its comparison delta ("(+3)") versus the
+   equipped piece, the two pixel-text canvases kept on one baseline. */
+.tooltip-row {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+}
+
 /* Floats over the bag while a bag item is dragged clear of the panel, warning
    that releasing here destroys it for good. */
 .discard-hint {
