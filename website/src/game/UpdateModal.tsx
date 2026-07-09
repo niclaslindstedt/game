@@ -72,7 +72,7 @@ export function UpdateModal({
             <PixelText
               font={font}
               text={forPixelFont(incomingVersion)}
-              scale={1}
+              scale={2}
               color="#9aa3ad"
             />
           )}

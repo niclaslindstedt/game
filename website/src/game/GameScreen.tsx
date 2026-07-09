@@ -1539,7 +1539,7 @@ export function GameScreen({
                               <PixelText
                                 font={font}
                                 text="NO OTHER WEAPONS"
-                                scale={1}
+                                scale={2}
                                 color="#9aa3ad"
                               />
                             ) : (
@@ -1818,7 +1818,7 @@ export function GameScreen({
                 <PixelText
                   font={font}
                   text="DRAG OFF TO DISCARD"
-                  scale={1}
+                  scale={2}
                   color="#e06a6a"
                 />
               </div>

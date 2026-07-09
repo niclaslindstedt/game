@@ -99,7 +99,7 @@ export function DialogueOverlay({
             <PixelText
               font={font}
               text="STORY ITEM ACQUIRED"
-              scale={1}
+              scale={2}
               color="#7fe3a0"
             />
           </div>
