@@ -102,6 +102,7 @@ import { TitleCard } from "./TitleCard.tsx";
 import { InventoryPanel } from "./InventoryPanel.tsx";
 import { LevelUpOverlay } from "./LevelUpOverlay.tsx";
 import { MapOverlay } from "./MapOverlay.tsx";
+import { dollDataUrl, playerDollLayers } from "./paper-doll.ts";
 import { RespecOverlay } from "./RespecOverlay.tsx";
 import { PauseOverlay } from "./PauseOverlay.tsx";
 import { ShopPanel } from "./ShopPanel.tsx";
@@ -1511,6 +1512,12 @@ export function GameScreen({
             ? null
             : weapon.durability / equipmentMaxDurability(weapon);
         const appearance = playerAppearance(state);
+        // The worn armor pieces, so the avatar portrait re-renders when the
+        // outfit changes (the weapon is already keyed via `weapon.defId`).
+        const { head, chest, legs, feet } = state.player.equipment;
+        const outfit = [head, chest, legs, feet]
+          .map((piece) => piece?.defId ?? "")
+          .join(",");
         const stage = menaceStage(state);
         // The party portraits re-render on membership, coarse health (tenths
         // — the sliver bar's resolution), and the downed flag.
@@ -1520,7 +1527,7 @@ export function GameScreen({
               `${c.id}:${Math.ceil((10 * c.hp) / Math.max(1, c.maxHp))}:${c.downedMs !== undefined ? 1 : 0}`,
           )
           .join(",");
-        const key = `${state.phase}/${state.player.hp}/${Math.ceil(state.player.stamina)}/${state.player.xp}/${state.player.level}/${state.player.pendingStatPoints}/${state.enemies.length}/${bagCount}/${bagFree}/${bagFullHint ? 1 : 0}/${held}/${active}/${weapon.defId}/${weaponWear?.toFixed(2) ?? ""}/${state.player.coins}/${appearance}/${stage}/${party}/${state.stats.kills}/${Math.floor(state.stats.timeMs / 1000)}`;
+        const key = `${state.phase}/${state.player.hp}/${Math.ceil(state.player.stamina)}/${state.player.xp}/${state.player.level}/${state.player.pendingStatPoints}/${state.enemies.length}/${bagCount}/${bagFree}/${bagFullHint ? 1 : 0}/${held}/${active}/${weapon.defId}/${weaponWear?.toFixed(2) ?? ""}/${state.player.coins}/${appearance}/${outfit}/${stage}/${party}/${state.stats.kills}/${Math.floor(state.stats.timeMs / 1000)}`;
         if (key !== lastHud) {
           lastHud = key;
           setHud({
@@ -1710,10 +1717,14 @@ export function GameScreen({
                   }}
                 >
                   {(() => {
-                    const src = spriteDataUrl(
-                      assets.sprites,
-                      `${hud.appearance}_0`,
-                    );
+                    // The dressed paper-doll (worn armor + held weapon), so
+                    // the portrait always matches the character on the field.
+                    const src = state
+                      ? dollDataUrl(
+                          assets.sprites,
+                          playerDollLayers(state, "0"),
+                        )
+                      : spriteDataUrl(assets.sprites, `${hud.appearance}_0`);
                     return src ? (
                       <img src={src} alt="" className="pixel-img avatar-img" />
                     ) : null;

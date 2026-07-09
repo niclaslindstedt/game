@@ -68,6 +68,7 @@ import type { PixelFont } from "@ui/lib/pixel-font.ts";
 
 import { spriteDataUrl, type Sprites } from "./assets.ts";
 import { synth } from "./audio.ts";
+import { dollDataUrl, playerDollLayers } from "./paper-doll.ts";
 import { playUiSound } from "./sfx/index.ts";
 import { AFFIX_COLORS, TIER_COLORS, WEAPON_CLASS_COLORS } from "./tiers.ts";
 
@@ -700,7 +701,12 @@ export function InventoryPanel({
   // hints. Inspecting the piece already worn shows no deltas (it equals
   // itself).
   const preview = shown ? previewEquipped(state, shown) : null;
-  const avatarSrc = spriteDataUrl(sprites, `${playerAppearance(state)}_0`);
+  // The dressed paper-doll: worn armor + held weapon over the body sprite,
+  // matching the character on the field (and re-composed as pieces move
+  // between the bag and the body — this component re-renders per equip).
+  const avatarSrc =
+    dollDataUrl(sprites, playerDollLayers(state, "0")) ??
+    spriteDataUrl(sprites, `${playerAppearance(state)}_0`);
 
   // The backdrop is the "ground": releasing a bag item over it destroys the
   // item. The panel itself absorbs drops (data-drop="none") so a miss between
