@@ -141,6 +141,15 @@ export type DifficultyDef = {
    * "your blows land less up the ladder".
    */
   enemyDodgeMult: number;
+  /**
+   * The bite an ASTEROID strike takes out of the hero, as a fraction of his
+   * MAX hp — the rift's rock rain scales its blow by the rung, not by a flat
+   * number (see stepAsteroids). The suit's plating still soaks its grade's
+   * share of the result like any physical hit, but there is no crit and no
+   * dodge roll — a rock is dodged with the feet. EASY loses a fifth of the
+   * bar to a hit; JESUS loses three quarters, two rocks from dead.
+   */
+  asteroidDamageFrac: number;
 };
 
 export const DIFFICULTY_DEFS: Record<Difficulty, DifficultyDef> = {
@@ -169,6 +178,7 @@ export const DIFFICULTY_DEFS: Record<Difficulty, DifficultyDef> = {
     playerDodgeMult: 1.3,
     playerMissMult: 0.5,
     enemyDodgeMult: 0.5,
+    asteroidDamageFrac: 0.2,
   },
   medium: {
     id: "medium",
@@ -194,6 +204,7 @@ export const DIFFICULTY_DEFS: Record<Difficulty, DifficultyDef> = {
     playerDodgeMult: 1,
     playerMissMult: 1,
     enemyDodgeMult: 1,
+    asteroidDamageFrac: 0.3,
   },
   hard: {
     id: "hard",
@@ -219,6 +230,7 @@ export const DIFFICULTY_DEFS: Record<Difficulty, DifficultyDef> = {
     playerDodgeMult: 0.9,
     playerMissMult: 1.1,
     enemyDodgeMult: 1.1,
+    asteroidDamageFrac: 0.4,
   },
   nightmare: {
     id: "nightmare",
@@ -244,6 +256,7 @@ export const DIFFICULTY_DEFS: Record<Difficulty, DifficultyDef> = {
     playerDodgeMult: 0.8,
     playerMissMult: 1.25,
     enemyDodgeMult: 1.25,
+    asteroidDamageFrac: 0.5,
   },
   jesus: {
     id: "jesus",
@@ -272,6 +285,7 @@ export const DIFFICULTY_DEFS: Record<Difficulty, DifficultyDef> = {
     playerDodgeMult: 0.7,
     playerMissMult: 1.4,
     enemyDodgeMult: 1.4,
+    asteroidDamageFrac: 0.75,
   },
 };
 

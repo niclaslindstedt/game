@@ -541,6 +541,15 @@ _Fires once, the first time the hero downs a graviton (in his own voice)._
 - THAT LITTLE THING WEIGHED / MORE THAN MY SHIP. SPACE IN / HERE BENDS AROUND A GRUDGE.
 - NOTED. DON'T STAND STILL. / DON'T TRUST THE FLOOR. / THERE ISN'T ONE.
 
+### Hero's thought — first ASTEROID strike in the rift
+
+_Fires once, the first time a rock actually lands on the hero (in his own
+voice) — the rock rain has teeth, and he learns it the hard way. Each strike
+takes a difficulty-scaled bite of his health (20% on EASY up to 75% on JESUS)._
+
+- SOMETHING CAME OUT OF THE / DARK AND HIT LIKE A TRUCK. / A ROCK. A FLYING ROCK.
+- BETTER WATCH OUT FOR THESE / ASTEROIDS. THEY HURT.
+
 ### Apparitions (dialogue only — they speak, then walk off and dissolve)
 
 Nothing can touch an apparition and its touch is cold air; it has no last

@@ -659,11 +659,13 @@ export const WELLS = {
  * Asteroids — the flying rocks a level turns on with LevelDef.asteroids.
  * Each spawns on a ring just past the phone screen edge (the enemy-spawn
  * rationale), streaks across the player's surroundings with a little aim
- * scatter, shoves minions out of its path without hurting them, and deals
- * the player `damage` once on contact — jumping (z above JUMP.dodgeHeight)
- * sails over a rock exactly like it clears enemy contact. Rocks ignore
- * obstacles and level bounds (nothing in the void stops one) and despawn
- * once they have left the player's stage. Units: world px, px/s, hp.
+ * scatter, shoves minions out of its path without hurting them, and takes a
+ * difficulty-scaled bite of the player's MAX hp once on contact (the fraction
+ * is DifficultyDef.asteroidDamageFrac, 20%→75% up the ladder) — jumping (z
+ * above JUMP.dodgeHeight) sails over a rock exactly like it clears enemy
+ * contact. Rocks ignore obstacles and level bounds (nothing in the void stops
+ * one) and despawn once they have left the player's stage. Units: world px,
+ * px/s.
  */
 export const ASTEROIDS = {
   /** Spawn distance from the player — just past the screen edge. */
@@ -674,12 +676,6 @@ export const ASTEROIDS = {
   speed: [110, 190] as [number, number],
   /** Collision radius, rolled per rock (px). */
   radius: [8, 13] as [number, number],
-  /**
-   * Contact damage to the player. The suit's armor soaks its grade's share
-   * like any physical hit, but there is no crit and no dodge roll — an
-   * asteroid is dodged with the feet, not the reflexes.
-   */
-  damage: 26,
   /** Rocks in flight are capped here; the spawner defers above it. */
   maxAlive: 5,
   /** A rock this far from the player despawns — it has left the stage. */

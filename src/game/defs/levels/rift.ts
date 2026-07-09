@@ -74,8 +74,10 @@ export const THE_RIFT: LevelDef = {
     { pos: { x: 2600, y: 450 } },
   ],
   // The rock rain: every few seconds an asteroid streaks across the hero's
-  // patch of nothing. Dodge with the feet or the jump.
-  asteroids: { everyMs: [2800, 5200] },
+  // patch of nothing. Dodge with the feet or the jump — each strike takes a
+  // difficulty-scaled bite of his health (20%→75% up the ladder). The first
+  // one to land pauses for his "watch out for these" read.
+  asteroids: { everyMs: [2800, 5200], struckThought: "rift_asteroid" },
   spawns: [
     // The void wakes up shallow: voidlings thick around the entry rift,
     // jellies and unravelers deeper in, gravitons bending the back half.
