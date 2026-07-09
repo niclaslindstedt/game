@@ -57,12 +57,32 @@ hardcore death burns the stash, banked uniques, and all level tokens.
    `projectile` (sprite + optional `count`/`spreadDeg`/`pierce`/`homing`/
    `chain`). Add to the right level's `weaponPool` (bases) or to an enemy's
    `loot.items` / a level's `earlyDrops`/`allClearWeapon` (specials).
-2. **Check the numbers**: `node scripts/weapon-stats.mjs` — it prints every
-   pool's ladder and flags DPS regressions along the levelReq ladder,
-   reqs outside the level's mlvl band, missing sprites, and dangling ids.
-   `--strict` exits non-zero for CI-ish use. Tune until clean (the bands at
-   the top of the script are the campaign's expected mlvl ranges — update
-   them when pacing changes).
+2. **Check the numbers — the damage-budget model.** Every weapon owes an
+   EFFECTIVE DPS set by its levelReq (`scripts/weapon-budget.mjs`, knobs at
+   the top: BASE 40 at req 1, +4/level, specials ×1.15):
+
+   `eff dps = per-target dps × assumed targets × crit lift`
+
+   - **Assumed targets** (`weaponAssumedTargets` in equipment.ts): single 1,
+     cone AoE 4, full-circle AoE 5 — melee reads its `baseAoeTargets` cap,
+     volleys their pellet count, pierce its line (1+pierce), chain its
+     damage-weighted leaps. So 40 eff = 10 dps/target on a cone, 8 on a
+     full circle: an AoE weapon "achieves its damage" with a full cleave.
+   - **Crit lift** (`weaponCritMult`): cadence-weighted crit damage — fast
+     (<450ms) ×1.6, medium ×2.0, slow (≥800ms) ×2.5, priced at a reference
+     15% crit chance. Slow weapons crit like trucks and pay per-hit budget
+     for it; a def may pin `critMult` as a deliberate exception.
+   - `damage = budget(levelReq) × cooldown/1000 ÷ targets ÷ critLift` —
+     the budget script prints current vs suggested range (±12%) for every
+     weapon and `--strict` fails on drift.
+
+   Then `node scripts/weapon-stats.mjs` — its class ladders now run on the
+   same effective DPS (must never step DOWN along levelReq) and it still
+   flags out-of-band reqs, missing sprites, and dangling ids. Starters and
+   the fallback blaster are exempt from both (the difficulty ladder is
+   calibrated on them). `weaponScore` (auto-equip) and the item card's
+   extra lines (HITS UP TO N / PELLETS / PIERCES / CHAINS, CRIT DAMAGE)
+   speak the same model — keep all three in agreement.
 3. **Sprites** (the `pixel-assets` skill has the full loop): icon in
    `icons.mjs`, projectile in `effects.mjs`, `make assets`, then LOOK at
    `website/assets-preview/<name>@8x.png` — and at the arsenal in one
@@ -109,8 +129,14 @@ hardcore death burns the stash, banked uniques, and all level tokens.
 - **Multi-pellet volleys carry damage PER PELLET** — compare volleys at
   ~60% pellet connect rate (what weapon-stats.mjs does), and remember the
   `shot` event fires once per pull (SFX) while `shotsFired` counts pulls.
-- **AoE trades single-target DPS** (maul vs gladius), but keep the gap
-  under ~20% along the req ladder or the "upgrade" feels like a downgrade.
+- **AoE trades single-target DPS** by design — the budget model makes the
+  trade exact (per-target damage = budget ÷ assumed targets), and the
+  effective ladder is what must climb with levelReq, never the raw one.
+- **Auto-equip must speak the balance model.** When per-target damage was
+  budget-normalized, raw dps ranking (`weaponScore`) started shunning every
+  AoE weapon; the score folds in assumed targets and the crit lift now. Any
+  future model change lands in `weaponScore`, `weaponDps`, and the budget
+  scripts together.
 - **Wood-dark pixels vanish**: the core `k` wood char is near-outline dark;
   weapon hafts/stocks read better in the warm `B` brown. Verify every icon
   at @8x — first drafts of "obvious" silhouettes (rayguns, revolvers) read
@@ -118,6 +144,8 @@ hardcore death burns the stash, banked uniques, and all level tokens.
 
 ## After you're done — the checklist
 
+- [ ] `node scripts/weapon-budget.mjs --strict` clean — every weapon on its
+      damage budget (or the drift is a deliberate, commented exception).
 - [ ] `node scripts/weapon-stats.mjs` clean (or the warnings are deliberate).
 - [ ] `node website/scripts/weapon-sheet.mjs` and LOOK at the sheet.
 - [ ] `make assets` committed together with the sprite-data change

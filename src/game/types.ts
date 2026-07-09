@@ -321,6 +321,10 @@ export type Projectile = {
   /** Enemy ids already struck by this shot, so a piercing round never bills
    * the same body twice while passing through it. */
   hitIds?: number[];
+  /** The firing weapon's crit-damage multiplier (see `weaponCritMult`) —
+   * carried so the hit resolves with the cadence-weighted crit. Absent =
+   * the global `STATS.critMultiplier`. */
+  critMult?: number;
   /**
    * Height above the ground at which the shot is drawn — inherited from a
    * jumping shooter, sinking back to 0 in flight. Visual only.

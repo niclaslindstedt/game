@@ -29,6 +29,9 @@ import {
   equipmentLevelReq,
   equipmentName,
   gearDef,
+  STATS,
+  weaponAssumedTargets,
+  weaponCritMult,
   moveInventoryItem,
   playerAppearance,
   playerCritChance,
@@ -176,6 +179,27 @@ function itemLines(state: GameState, item: Equipment): CardLine[] {
           ? `RANGE ${effRange} (+${rangeBonus})`
           : `RANGE ${effRange}`,
     });
+    // The AoE story: how many foes one blow reaches (the budget the light
+    // per-hit damage is spread across), and the cadence-weighted crit when
+    // it differs from the global default — slow weapons crit like trucks.
+    const targets = weaponAssumedTargets(def);
+    if (targets > 1) {
+      const label = def.projectile?.count
+        ? `${def.projectile.count} PELLETS`
+        : def.projectile?.pierce
+          ? `PIERCES ${def.projectile.pierce + 1}`
+          : def.projectile?.chain
+            ? `CHAINS TO ${def.projectile.chain}`
+            : `HITS UP TO ${targets}`;
+      lines.push({ text: label, color: "#7ecbff" });
+    }
+    const critMult = weaponCritMult(def);
+    if (critMult !== STATS.critMultiplier) {
+      lines.push({
+        text: `CRIT DAMAGE X${critMult.toFixed(1)}`,
+        color: AFFIX_COLORS.crit,
+      });
+    }
     lines.push(
       item.durability === undefined
         ? { text: "UNBREAKABLE" }

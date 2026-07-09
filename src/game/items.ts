@@ -31,6 +31,8 @@ import {
   STAT_NAMES,
   TIER_ROLL_ORDER,
   TIERS,
+  weaponAssumedTargets,
+  weaponCritMult,
   weaponDef,
   type AffixDef,
   equipmentBaseName,
@@ -675,14 +677,23 @@ export function maxMeleeTargets(state: GameState): number {
 // ---- Auto-equip scoring --------------------------------------------------------
 
 /**
- * A weapon's expected damage per second in this player's hands — the number
- * auto-equip ranks weapons by. Both halves fold in the governing stat: STR,
- * DEX and INT each raise their class's damage AND cadence, so an INT build
- * genuinely prefers wands and a STR build feels its melee weapons swing faster.
+ * A weapon's expected EFFECTIVE output in this player's hands — the number
+ * auto-equip ranks weapons by. Per-target DPS (stats folded in: STR/DEX/INT
+ * raise their class's damage AND cadence) × the weapon's assumed target
+ * count (the damage-budget model's AoE normalization — a cone cleaver's
+ * light blows are worth their crowd) × the cadence-weighted crit lift. The
+ * same math the balance budget is authored in, so "better" here matches the
+ * design's intent.
  */
 export function weaponScore(state: GameState, weapon: Equipment): number {
+  const def = weaponDef(weapon.defId);
+  const critLift =
+    1 + playerCritChance(state, def.class) * (weaponCritMult(def) - 1);
   return (
-    (weaponDamageFor(state, weapon) * 1000) / weaponCooldownFor(state, weapon)
+    ((weaponDamageFor(state, weapon) * 1000) /
+      weaponCooldownFor(state, weapon)) *
+    weaponAssumedTargets(def) *
+    critLift
   );
 }
 
@@ -695,14 +706,16 @@ export function weaponScore(state: GameState, weapon: Equipment): number {
  * the item card leads with, so two weapons — a slow heavy hitter and a quick
  * light one — can be compared at a glance. Unlike `weaponScore` (the raw
  * damage/cadence ratio auto-equip ranks by) this includes crit, so it reads as
- * true sustained output rather than a ranking heuristic.
+ * true sustained output rather than a ranking heuristic. Per TARGET — an
+ * AoE weapon reads low here and earns it back across the crowd (see
+ * `weaponAssumedTargets`).
  */
 export function weaponDps(state: GameState, weapon: Equipment): number {
   const def = weaponDef(weapon.defId);
   const perHit = weaponDamageFor(state, weapon);
   const attacksPerSec = 1000 / weaponCooldownFor(state, weapon);
   const critLift =
-    1 + playerCritChance(state, def.class) * (STATS.critMultiplier - 1);
+    1 + playerCritChance(state, def.class) * (weaponCritMult(def) - 1);
   return perHit * attacksPerSec * critLift;
 }
 
@@ -747,15 +760,12 @@ export function isBetterEquipment(
   if (!meetsLevelReq(state, candidate)) return false;
   if (candidate.slot === "weapon") {
     const current = state.player.equipment.weapon;
-    // The difficulty's STARTING WEAPON is the pickup floor: any real weapon
-    // the world yields is an upgrade over the piece off the wall, so a fresh
-    // pickup always supplants it — even a slow sidearm whose raw DPS score
-    // would otherwise rank below it. Once a proper weapon is in hand the
-    // usual score comparison rules.
-    const starter = difficultyDef(state.difficulty).startingWeapon;
-    if (current.defId === starter && candidate.defId !== starter) {
-      return true;
-    }
+    // No starter special case anymore: weaponScore speaks the damage-budget
+    // model (AoE targets + crit weight folded in), so the wall weapon holds
+    // its slot until a find genuinely out-scores it — a budget-normalized
+    // cone cleaver is a DOWNGRADE in a sparse field, and force-equipping it
+    // (the old "pickup floor" rule) collapsed early runs. The starter still
+    // leaves the story soon enough: it wears out.
     const candidateScore = weaponScore(state, candidate);
     const currentScore = weaponScore(state, current);
     if (candidateScore !== currentScore) return candidateScore > currentScore;

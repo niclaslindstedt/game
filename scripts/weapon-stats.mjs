@@ -23,9 +23,8 @@ import { fileURLToPath } from "node:url";
 const here = path.dirname(fileURLToPath(import.meta.url));
 const root = path.join(here, "..");
 
-const { WEAPON_DEFS, GEAR_DEFS } = await import(
-  path.join(root, "src/game/defs/equipment.ts")
-);
+const { WEAPON_DEFS, GEAR_DEFS, weaponAssumedTargets, weaponCritMult } =
+  await import(path.join(root, "src/game/defs/equipment.ts"));
 const { LEVELS, LEVEL_ORDER } = await import(
   path.join(root, "src/game/defs/levels/index.ts")
 );
@@ -56,6 +55,13 @@ const warnings = [];
 const warn = (msg) => warnings.push(msg);
 
 const dps = (def) => (def.damage * 1000) / def.cooldownMs;
+// EFFECTIVE dps — the damage-budget model's number (see weapon-budget.mjs):
+// per-target dps × assumed targets × cadence-weighted crit lift.
+const REF_CRIT = 0.15;
+const effDps = (def) =>
+  dps(def) *
+  weaponAssumedTargets(def) *
+  (1 + REF_CRIT * (weaponCritMult(def) - 1));
 const fmt = (n, w) => String(n).padStart(w);
 
 // ---- Per-level base pool tables -------------------------------------------
@@ -126,7 +132,7 @@ for (const levelId of LEVEL_ORDER) {
 
 // ---- The DPS ladder across the whole base roster ---------------------------
 
-console.log("\n=== Base ladder by class (all pools merged) ===");
+console.log("\n=== Base ladder by class (all pools merged, EFFECTIVE dps) ===");
 const byClass = { melee: [], ranged: [], magic: [] };
 for (const id of inPools) byClass[WEAPON_DEFS[id].class].push(WEAPON_DEFS[id]);
 for (const [cls, defs] of Object.entries(byClass)) {
@@ -134,22 +140,17 @@ for (const [cls, defs] of Object.entries(byClass)) {
   console.log(
     `  ${cls}: ` +
       defs
-        .map((d) => `${d.id}(${d.levelReq}) ${dps(d).toFixed(0)}dps`)
+        .map((d) => `${d.id}(${d.levelReq}) ${effDps(d).toFixed(0)}eff`)
         .join(" → "),
   );
+  // Leveling up should pay: the EFFECTIVE ladder (AoE- and crit-normalized,
+  // the same math as weapon-budget.mjs) must not step down along levelReq.
   for (let i = 1; i < defs.length; i++) {
     const prev = defs[i - 1];
     const cur = defs[i];
-    // Multi-pellet volleys carry damage per PELLET; credit a volley at 60%
-    // of its pellets (the realistic connect rate outside point-blank) so a
-    // shotgun is neither flagged against nor flattering the single shots.
-    const volley = (d) => {
-      const count = d.projectile?.count ?? 1;
-      return dps(d) * (count > 1 ? count * 0.6 : 1);
-    };
-    if (volley(cur) < volley(prev) * 0.8) {
+    if (effDps(cur) < effDps(prev) * 0.95) {
       warn(
-        `${cls} ladder: ${cur.id} (req ${cur.levelReq}, ${volley(cur).toFixed(0)} dps) undercuts ${prev.id} (req ${prev.levelReq}, ${volley(prev).toFixed(0)} dps) by >20% — leveling up should pay`,
+        `${cls} ladder: ${cur.id} (req ${cur.levelReq}, eff ${effDps(cur).toFixed(0)}) undercuts ${prev.id} (req ${prev.levelReq}, eff ${effDps(prev).toFixed(0)}) — leveling up should pay (see weapon-budget.mjs)`,
       );
     }
   }

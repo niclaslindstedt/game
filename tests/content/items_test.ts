@@ -215,24 +215,25 @@ describe("the scripted opening drops", () => {
 });
 
 describe("auto-equip on pickup", () => {
-  it("equips a picked-up weapon that out-damages the held one", () => {
+  it("equips a picked-up weapon that out-scores the held one", () => {
     const state = startGame(); // default medieval sword: melee, short cleave
     clearStage(state);
-    const baton: Equipment = {
+    state.player.level = 8; // grown into the hammer's requirement
+    const hammer: Equipment = {
       id: 61,
-      defId: "security_baton", // 16 dmg / 400 ms — clearly better DPS
+      defId: "geology_hammer", // 38 dmg — out-scores the sword's cleave
       slot: "weapon",
       tier: "regular",
-      ilvl: 5,
+      ilvl: 8,
       affixes: [],
-      durability: WEAPON_DEFS.security_baton!.durability,
+      durability: WEAPON_DEFS.geology_hammer!.durability,
     };
     state.items = [
       {
         id: 1,
         kind: "equipment",
         pos: { ...state.player.pos },
-        equipment: baton,
+        equipment: hammer,
       },
     ];
     step(state, idle, DT);
@@ -243,7 +244,7 @@ describe("auto-equip on pickup", () => {
     ).toBe(true);
     expect(state.events).toContainEqual({
       type: "autoEquipped",
-      defId: "security_baton",
+      defId: "geology_hammer",
     });
   });
 
@@ -286,24 +287,25 @@ describe("auto-equip on pickup", () => {
   it("drops the displaced piece on the ground when the bag is full", () => {
     const state = startGame();
     clearStage(state);
+    state.player.level = 8;
     state.player.inventory = state.player.inventory.map((_, i) =>
       makeSuit(100 + i),
     );
-    const baton: Equipment = {
+    const hammer: Equipment = {
       id: 64,
-      defId: "security_baton",
+      defId: "geology_hammer",
       slot: "weapon",
       tier: "regular",
-      ilvl: 5,
+      ilvl: 8,
       affixes: [],
-      durability: WEAPON_DEFS.security_baton!.durability,
+      durability: WEAPON_DEFS.geology_hammer!.durability,
     };
     state.items = [
       {
         id: 1,
         kind: "equipment",
         pos: { ...state.player.pos },
-        equipment: baton,
+        equipment: hammer,
       },
     ];
     step(state, idle, DT);

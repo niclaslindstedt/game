@@ -57,7 +57,13 @@ export function hitEnemy(
   enemy: Enemy,
   baseDamage: number,
   weaponClass?: WeaponClass,
-  opts?: { rollAccuracy?: boolean },
+  opts?: {
+    rollAccuracy?: boolean;
+    /** The blow's crit-damage multiplier — weapon attacks pass their
+     * cadence-weighted `weaponCritMult` (quick blades crit light, slow
+     * heavy hitters crit hard); abilities omit it and use the global. */
+    critMult?: number;
+  },
 ): void {
   const def = enemyDef(enemy.defId);
 
@@ -98,7 +104,9 @@ export function hitEnemy(
   }
 
   const crit = state.rng() < playerCritChance(state, weaponClass);
-  const damage = Math.round(baseDamage * (crit ? STATS.critMultiplier : 1));
+  const damage = Math.round(
+    baseDamage * (crit ? (opts?.critMult ?? STATS.critMultiplier) : 1),
+  );
   enemy.hp -= damage;
   state.stats.damageDealt += damage;
 

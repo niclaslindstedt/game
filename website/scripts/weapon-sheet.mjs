@@ -23,7 +23,7 @@ import { SPRITES, SPRITE_PALETTES } from "./sprite-data/index.mjs";
 const here = path.dirname(fileURLToPath(import.meta.url));
 const root = path.join(here, "../..");
 
-const { WEAPON_DEFS } = await import(
+const { WEAPON_DEFS, weaponAssumedTargets, weaponCritMult } = await import(
   path.join(root, "src/game/defs/equipment.ts")
 );
 const { LEVELS, LEVEL_ORDER } = await import(
@@ -95,12 +95,16 @@ for (const group of groups) {
       .filter(Boolean)
       .join("  ");
     const dps = Math.round((def.damage * 1000) / def.cooldownMs);
+    // The budget model's number: per-target dps × targets × crit lift.
+    const eff = Math.round(
+      dps * weaponAssumedTargets(def) * (1 + 0.15 * (weaponCritMult(def) - 1)),
+    );
     blit(sheet, upscale(renderText(def.name, NAME), 2), TEXT_X, y + 2);
     blit(
       sheet,
       upscale(
         renderText(
-          `REQ ${def.levelReq}  ${def.class.toUpperCase()}  DMG ${def.damage}  ${def.cooldownMs}MS  DPS ${dps}  RANGE ${def.range}`,
+          `REQ ${def.levelReq}  ${def.class.toUpperCase()}  DMG ${def.damage}  ${def.cooldownMs}MS  DPS ${dps}  EFF ${eff}  RANGE ${def.range}`,
           STAT,
         ),
         2,

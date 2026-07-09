@@ -46,6 +46,19 @@ export const WEAPON = {
   chainRange: 80,
   chainDamageFrac: 0.6,
   /**
+   * CRIT WEIGHT BY CADENCE: a weapon's crit-damage multiplier follows how it
+   * swings — a quick blade crits lighter, a slow heavy hitter crits like a
+   * truck (`weaponCritMult` in defs/equipment.ts derives it; a def may pin
+   * its own `critMult`). This is the crit half of the damage-budget model:
+   * effective DPS folds the lift in, so the slow archetypes pay for their
+   * spikes with per-hit budget rather than getting them for free.
+   */
+  critMultByCadence: { fast: 1.6, medium: 2, slow: 2.5 },
+  /** Cadence classes: fast below this cooldown… */
+  critFastBelowMs: 450,
+  /** …slow at/above this one; medium in between. */
+  critSlowFromMs: 800,
+  /**
    * Global damage scale on every weapon's catalog `damage` — the single lever
    * for "how hard does any weapon hit", the damage counterpart to
    * `baseCooldownMult`. Applied in `weaponDamageFor` (the one source of truth

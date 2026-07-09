@@ -182,6 +182,8 @@ export {
   equipmentBaseName,
   equipmentIcon,
   equipmentLevelReq,
+  weaponAssumedTargets,
+  weaponCritMult,
   GEAR_DEFS,
   gearDef,
   isWeaponDef,

@@ -6,6 +6,7 @@
 // config LOOT.tierUnlockMlvl — so growing this file to hundreds of items
 // never touches the engine.
 
+import { MELEE, WEAPON } from "../config.ts";
 import type {
   Affix,
   ArmorGrade,
@@ -63,6 +64,12 @@ export type WeaponDef = {
    * own starting sidearm is minted without durability and never breaks.
    */
   durability: number;
+  /**
+   * Crit-damage multiplier override. Omitted, the cadence rule applies
+   * (`weaponCritMult`): fast weapons crit light, slow ones crit heavy — set
+   * this only as a deliberate exception to that rule.
+   */
+  critMult?: number;
   /**
    * Melee only: the full angle (degrees) of the swing's cone of effect. Every
    * monster within `range` and inside this arc of the aim is struck at once,
@@ -218,7 +225,7 @@ export const WEAPON_DEFS: Record<string, WeaponDef> = {
     name: "BOX CUTTER",
     class: "melee",
     levelReq: 1,
-    damage: 8,
+    damage: 11,
     cooldownMs: 300,
     range: 32,
     sweepDeg: 60,
@@ -232,7 +239,7 @@ export const WEAPON_DEFS: Record<string, WeaponDef> = {
     name: "9MM PISTOL",
     class: "ranged",
     levelReq: 2,
-    damage: 9,
+    damage: 18,
     cooldownMs: 480,
     range: 230,
     durability: 170,
@@ -246,11 +253,13 @@ export const WEAPON_DEFS: Record<string, WeaponDef> = {
     name: "SECURITY BATON",
     class: "melee",
     levelReq: 1,
-    damage: 16,
+    damage: 4,
     cooldownMs: 400,
     range: 42,
+    // A cone-AoE base: light per blow, but the arc catches four at once —
+    // the swing "achieves its damage" with a full cleave (budget model).
     sweepDeg: 100,
-    baseAoeTargets: 2,
+    baseAoeTargets: 4,
     durability: 220,
     icon: "icon_baton",
   },
@@ -260,7 +269,7 @@ export const WEAPON_DEFS: Record<string, WeaponDef> = {
     name: "PROTOTYPE LASER",
     class: "magic",
     levelReq: 4,
-    damage: 10,
+    damage: 18,
     cooldownMs: 380,
     range: 300,
     durability: 180,
@@ -275,7 +284,7 @@ export const WEAPON_DEFS: Record<string, WeaponDef> = {
     name: "PUMP SHOTGUN",
     class: "ranged",
     levelReq: 5,
-    damage: 7,
+    damage: 11,
     cooldownMs: 950,
     range: 150,
     durability: 140,
@@ -284,7 +293,7 @@ export const WEAPON_DEFS: Record<string, WeaponDef> = {
       radius: 3,
       lifetimeMs: 420,
       sprite: "pellet",
-      count: 5,
+      count: 4,
       spreadDeg: 24,
     },
     icon: "icon_pump_shotgun",
@@ -315,7 +324,7 @@ export const WEAPON_DEFS: Record<string, WeaponDef> = {
     name: "LUNAR WRENCH",
     class: "melee",
     levelReq: 5,
-    damage: 22,
+    damage: 12,
     cooldownMs: 480,
     range: 42,
     durability: 180,
@@ -327,7 +336,7 @@ export const WEAPON_DEFS: Record<string, WeaponDef> = {
     name: "SERVICE REVOLVER",
     class: "ranged",
     levelReq: 6,
-    damage: 14,
+    damage: 29,
     cooldownMs: 550,
     range: 240,
     durability: 190,
@@ -341,10 +350,11 @@ export const WEAPON_DEFS: Record<string, WeaponDef> = {
     name: "GEOLOGY HAMMER",
     class: "melee",
     levelReq: 8,
-    damage: 30,
+    damage: 38,
     cooldownMs: 650,
     range: 40,
     sweepDeg: 70,
+    baseAoeTargets: 1,
     durability: 150,
     icon: "icon_geology_hammer",
   },
@@ -355,7 +365,7 @@ export const WEAPON_DEFS: Record<string, WeaponDef> = {
     name: "SURPLUS CARBINE",
     class: "ranged",
     levelReq: 9,
-    damage: 20,
+    damage: 50,
     cooldownMs: 850,
     range: 320,
     durability: 140,
@@ -369,7 +379,7 @@ export const WEAPON_DEFS: Record<string, WeaponDef> = {
     name: "RETRO RAYGUN",
     class: "magic",
     levelReq: 10,
-    damage: 17,
+    damage: 40,
     cooldownMs: 600,
     range: 290,
     durability: 170,
@@ -386,7 +396,7 @@ export const WEAPON_DEFS: Record<string, WeaponDef> = {
     name: "SMART PISTOL",
     class: "ranged",
     levelReq: 10,
-    damage: 13,
+    damage: 26,
     cooldownMs: 380,
     range: 250,
     durability: 200,
@@ -406,11 +416,11 @@ export const WEAPON_DEFS: Record<string, WeaponDef> = {
     name: "PLASMA BLADE",
     class: "melee",
     levelReq: 12,
-    damage: 24,
+    damage: 7,
     cooldownMs: 380,
     range: 44,
     sweepDeg: 110,
-    baseAoeTargets: 3,
+    baseAoeTargets: 4,
     durability: 220,
     icon: "icon_plasma_blade",
   },
@@ -421,7 +431,7 @@ export const WEAPON_DEFS: Record<string, WeaponDef> = {
     name: "RAILGUN",
     class: "ranged",
     levelReq: 13,
-    damage: 34,
+    damage: 18,
     cooldownMs: 1000,
     range: 340,
     durability: 150,
@@ -440,7 +450,7 @@ export const WEAPON_DEFS: Record<string, WeaponDef> = {
     name: "ARC PROJECTOR",
     class: "magic",
     levelReq: 14,
-    damage: 16,
+    damage: 25,
     cooldownMs: 500,
     range: 280,
     durability: 190,
@@ -460,11 +470,13 @@ export const WEAPON_DEFS: Record<string, WeaponDef> = {
     name: "GRAVITY MAUL",
     class: "melee",
     levelReq: 16,
-    damage: 48,
+    damage: 14,
     cooldownMs: 850,
     range: 46,
-    sweepDeg: 130,
-    baseAoeTargets: 3,
+    // The full-AoE slam: the shockwave rings the hero all the way around
+    // and catches five foes — per-blow damage carries a fifth of the budget.
+    sweepDeg: 360,
+    baseAoeTargets: 5,
     durability: 160,
     icon: "icon_gravity_maul",
   },
@@ -479,7 +491,7 @@ export const WEAPON_DEFS: Record<string, WeaponDef> = {
     name: "GLADIUS",
     class: "melee",
     levelReq: 15,
-    damage: 26,
+    damage: 18,
     cooldownMs: 420,
     range: 40,
     sweepDeg: 90,
@@ -494,7 +506,7 @@ export const WEAPON_DEFS: Record<string, WeaponDef> = {
     name: "LONGBOW",
     class: "ranged",
     levelReq: 17,
-    damage: 28,
+    damage: 68,
     cooldownMs: 800,
     range: 360,
     durability: 180,
@@ -508,7 +520,7 @@ export const WEAPON_DEFS: Record<string, WeaponDef> = {
     name: "BLUNDERBUSS",
     class: "ranged",
     levelReq: 19,
-    damage: 9,
+    damage: 20,
     cooldownMs: 1100,
     range: 160,
     durability: 150,
@@ -517,7 +529,7 @@ export const WEAPON_DEFS: Record<string, WeaponDef> = {
       radius: 3,
       lifetimeMs: 470,
       sprite: "pellet",
-      count: 6,
+      count: 5,
       spreadDeg: 32,
     },
     icon: "icon_blunderbuss",
@@ -529,11 +541,11 @@ export const WEAPON_DEFS: Record<string, WeaponDef> = {
     name: "EXECUTIONER'S AXE",
     class: "melee",
     levelReq: 21,
-    damage: 48,
+    damage: 24,
     cooldownMs: 1000,
     range: 46,
     sweepDeg: 100,
-    baseAoeTargets: 2,
+    baseAoeTargets: 4,
     durability: 170,
     icon: "icon_executioners_axe",
   },
@@ -544,7 +556,7 @@ export const WEAPON_DEFS: Record<string, WeaponDef> = {
     name: "SORCERER'S STAFF",
     class: "magic",
     levelReq: 23,
-    damage: 30,
+    damage: 72,
     cooldownMs: 650,
     range: 320,
     durability: 200,
@@ -557,7 +569,7 @@ export const WEAPON_DEFS: Record<string, WeaponDef> = {
     name: "VOID WAND",
     class: "magic",
     levelReq: 14,
-    damage: 11,
+    damage: 41,
     cooldownMs: 420,
     range: 260,
     durability: 220,
@@ -576,7 +588,7 @@ export const WEAPON_DEFS: Record<string, WeaponDef> = {
     levelReq: 4,
     // The all-clear trophy: the CEO's desk ornament, and somehow the best
     // stapler in the building.
-    damage: 14,
+    damage: 15,
     cooldownMs: 280,
     range: 240,
     durability: 260,
@@ -589,7 +601,7 @@ export const WEAPON_DEFS: Record<string, WeaponDef> = {
     class: "melee",
     levelReq: 5,
     // MUSKRAT's hoard piece — cleanroom tooling rated for rocket hulls.
-    damage: 26,
+    damage: 10,
     cooldownMs: 340,
     range: 44,
     durability: 260,
@@ -600,7 +612,7 @@ export const WEAPON_DEFS: Record<string, WeaponDef> = {
     name: "MACHETE",
     class: "melee",
     levelReq: 7,
-    damage: 26,
+    damage: 13,
     cooldownMs: 380,
     range: 46,
     durability: 220,
@@ -615,7 +627,7 @@ export const WEAPON_DEFS: Record<string, WeaponDef> = {
     class: "melee",
     levelReq: 3,
     // The NIGHT MANAGER's back-nine special: crisp tempo, real reach.
-    damage: 21,
+    damage: 10,
     cooldownMs: 380,
     range: 46,
     durability: 200,
@@ -627,7 +639,7 @@ export const WEAPON_DEFS: Record<string, WeaponDef> = {
     class: "ranged",
     levelReq: 3,
     // The CHIEF's issue model: the desk taser with the export firmware.
-    damage: 13,
+    damage: 21,
     cooldownMs: 420,
     range: 220,
     durability: 190,
@@ -640,7 +652,7 @@ export const WEAPON_DEFS: Record<string, WeaponDef> = {
     class: "magic",
     levelReq: 4,
     // DR. NOVA's conference pointer, three safety screws short of legal.
-    damage: 12,
+    damage: 14,
     cooldownMs: 260,
     range: 300,
     durability: 200,
@@ -654,7 +666,7 @@ export const WEAPON_DEFS: Record<string, WeaponDef> = {
     levelReq: 4,
     // THE JANITOR's halberd: light, fast, and the longest reach on level 1.
     // A polearm's thrust — a narrow cone that reaches far down the line.
-    damage: 15,
+    damage: 7,
     cooldownMs: 240,
     range: 54,
     sweepDeg: 44,
@@ -667,7 +679,7 @@ export const WEAPON_DEFS: Record<string, WeaponDef> = {
     class: "ranged",
     levelReq: 7,
     // The MISSION SPECIALIST's survival kit piece: slow, bright, brutal.
-    damage: 22,
+    damage: 48,
     cooldownMs: 800,
     range: 300,
     durability: 160,
@@ -680,7 +692,7 @@ export const WEAPON_DEFS: Record<string, WeaponDef> = {
     class: "melee",
     levelReq: 6,
     // The PROSPECTOR's tunneler — chews rock, chews ghosts.
-    damage: 21,
+    damage: 10,
     cooldownMs: 330,
     range: 42,
     durability: 240,
@@ -692,7 +704,7 @@ export const WEAPON_DEFS: Record<string, WeaponDef> = {
     class: "magic",
     levelReq: 7,
     // The MEDIC's screening probe, clicking well past the safe band.
-    damage: 16,
+    damage: 26,
     cooldownMs: 380,
     range: 290,
     durability: 200,
@@ -705,7 +717,7 @@ export const WEAPON_DEFS: Record<string, WeaponDef> = {
     class: "melee",
     levelReq: 8,
     // THE CARTOGRAPHER's stake hammer: heavy arcs, deep dents.
-    damage: 24,
+    damage: 15,
     cooldownMs: 450,
     range: 44,
     durability: 220,
@@ -716,7 +728,7 @@ export const WEAPON_DEFS: Record<string, WeaponDef> = {
     name: "MOON'S BLADE",
     class: "melee",
     levelReq: 8,
-    damage: 32,
+    damage: 14,
     cooldownMs: 400,
     range: 48,
     durability: 260,
@@ -731,7 +743,7 @@ export const WEAPON_DEFS: Record<string, WeaponDef> = {
     levelReq: 11,
     // Mars's scheduled early blade (earlyDrops): angular, allegedly
     // shatterproof, definitely shipped before testing finished.
-    damage: 34,
+    damage: 17,
     cooldownMs: 400,
     range: 48,
     durability: 260,
@@ -744,7 +756,7 @@ export const WEAPON_DEFS: Record<string, WeaponDef> = {
     levelReq: 11,
     // LARRY WEBPAGE's crawler pole — a literal bar that searches the line
     // ahead. Results in about 0.26 seconds.
-    damage: 17,
+    damage: 11,
     cooldownMs: 260,
     range: 56,
     sweepDeg: 40,
@@ -757,7 +769,7 @@ export const WEAPON_DEFS: Record<string, WeaponDef> = {
     class: "magic",
     levelReq: 12,
     // BUILD GATES's tablet: it crashes whatever it's pointed at.
-    damage: 18,
+    damage: 37,
     cooldownMs: 420,
     range: 280,
     durability: 200,
@@ -770,7 +782,7 @@ export const WEAPON_DEFS: Record<string, WeaponDef> = {
     class: "melee",
     levelReq: 13,
     // PETER SEAL's letter opener: short, fast, and always against the crowd.
-    damage: 23,
+    damage: 14,
     cooldownMs: 300,
     range: 40,
     durability: 240,
@@ -784,7 +796,7 @@ export const WEAPON_DEFS: Record<string, WeaponDef> = {
     // OPTIMUSK PRIME's sidearm: it injects a prompt and the target does the
     // rest to itself. A notch over the BLUE SCREEN — PRIME sits deepest of
     // the Mars elites.
-    damage: 20,
+    damage: 37,
     cooldownMs: 380,
     range: 280,
     durability: 220,
@@ -797,7 +809,7 @@ export const WEAPON_DEFS: Record<string, WeaponDef> = {
     class: "ranged",
     levelReq: 14,
     // MOSQUE drops it as he bolts. Legally, it is not a flamethrower.
-    damage: 24,
+    damage: 48,
     cooldownMs: 520,
     range: 240,
     durability: 260,
@@ -811,7 +823,7 @@ export const WEAPON_DEFS: Record<string, WeaponDef> = {
     levelReq: 16,
     // NIKOLA TESLA's coil, surrendered as the current returns to it: fast
     // wireless lightning. They laughed. They are not laughing now.
-    damage: 21,
+    damage: 38,
     cooldownMs: 360,
     range: 290,
     durability: 240,
@@ -825,7 +837,7 @@ export const WEAPON_DEFS: Record<string, WeaponDef> = {
     levelReq: 16,
     // GROK OMEGA's sidearm: it fires very small, very rude black holes. The
     // deepest hit in the campaign so far, paid for with a slow, heavy cycle.
-    damage: 30,
+    damage: 62,
     cooldownMs: 620,
     range: 260,
     durability: 240,
@@ -1200,4 +1212,44 @@ export function equipmentLevelReq(defId: string): number {
 /** The icon sprite of an equipment def. */
 export function equipmentIcon(defId: string): string {
   return isWeaponDef(defId) ? weaponDef(defId).icon : gearDef(defId).icon;
+}
+
+// ---- The damage-budget model (see the weapon-system skill) --------------------
+
+/**
+ * A weapon's crit-damage multiplier: its own `critMult` override, else the
+ * cadence rule (config `WEAPON.critMultByCadence`) — a quick blade crits
+ * light (many rolls of the dice), a slow heavy hitter crits like a truck.
+ * The one source every crit-damage surface reads: the blow itself
+ * (hitEnemy via step.ts), the DPS readouts, and auto-equip scoring.
+ */
+export function weaponCritMult(def: WeaponDef): number {
+  if (def.critMult !== undefined) return def.critMult;
+  if (def.cooldownMs < WEAPON.critFastBelowMs) {
+    return WEAPON.critMultByCadence.fast;
+  }
+  if (def.cooldownMs >= WEAPON.critSlowFromMs) {
+    return WEAPON.critMultByCadence.slow;
+  }
+  return WEAPON.critMultByCadence.medium;
+}
+
+/**
+ * How many targets a weapon is BUDGETED to hit at once — the AoE
+ * normalization of the damage-budget model: a weapon's effective DPS is its
+ * per-target DPS × this, so a cone-AoE weapon (4 assumed targets) carries a
+ * quarter of a single-target weapon's per-hit damage at the same level and
+ * "achieves its damage" when its cleave is full. Melee reads its cleave cap
+ * (`baseAoeTargets`); volleys count their pellets, a piercing round its
+ * line, chain lightning its (damage-weighted) leaps.
+ */
+export function weaponAssumedTargets(def: WeaponDef): number {
+  const p = def.projectile;
+  if (p) {
+    if (p.count && p.count > 1) return p.count;
+    if (p.pierce) return 1 + p.pierce;
+    if (p.chain) return 1 + p.chain * WEAPON.chainDamageFrac;
+    return 1;
+  }
+  return def.baseAoeTargets ?? MELEE.baseAoeTargets;
 }

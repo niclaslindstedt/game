@@ -53,7 +53,7 @@ import {
   scaledMobCount,
 } from "./defs/difficulties.ts";
 import { enemyDef } from "./defs/enemies/index.ts";
-import { weaponDef } from "./defs/equipment.ts";
+import { weaponCritMult, weaponDef } from "./defs/equipment.ts";
 import { levelDef } from "./defs/levels/index.ts";
 import {
   addToInventory,
@@ -541,6 +541,7 @@ function stepWeapon(state: GameState, input: GameInput, dtMs: number): void {
       weaponDamage(state),
       maxMeleeTargets(state),
       weapon.class,
+      weaponCritMult(weapon),
     );
     // Wear AFTER the strike so the blow lands with the weapon that swung.
     wearEquippedWeapon(state);
@@ -578,6 +579,7 @@ function stepWeapon(state: GameState, input: GameInput, dtMs: number): void {
     if (spec.pierce) projectile.pierceLeft = spec.pierce;
     if (spec.homing) projectile.homing = spec.homing;
     if (spec.chain) projectile.chain = spec.chain;
+    projectile.critMult = weaponCritMult(weapon);
     state.projectiles.push(projectile);
   }
   state.stats.shotsFired++;
@@ -608,6 +610,7 @@ function meleeSweep(
   damage: number,
   maxTargets: number,
   weaponClass: WeaponClass,
+  critMult: number,
 ): void {
   const player = state.player;
   const rangeSq = range * range;
@@ -644,7 +647,7 @@ function meleeSweep(
       (eligible[i] as (typeof eligible)[number]).enemy,
       damage,
       weaponClass,
-      { rollAccuracy: true },
+      { rollAccuracy: true, critMult },
     );
   }
 }
@@ -812,6 +815,7 @@ function stepProjectiles(state: GameState, dt: number, dtMs: number): void {
     }
     hitEnemy(state, hit, projectile.damage, projectile.weaponClass, {
       rollAccuracy: true,
+      critMult: projectile.critMult,
     });
     // Chain lightning: the first body grounds the bolt, and the current
     // leaps on to the nearest fresh foes in range — each leap softened by
@@ -890,6 +894,7 @@ function chainLightning(
       target,
       projectile.damage * WEAPON.chainDamageFrac,
       projectile.weaponClass,
+      { critMult: projectile.critMult },
     );
   }
 }

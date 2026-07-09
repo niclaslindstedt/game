@@ -262,20 +262,31 @@ describe("the opening kit (startingWeapon / startingStats)", () => {
     );
   });
 
-  it("treats the starting weapon as the pickup floor on every rung", () => {
+  it("swaps off the starting weapon only for a genuinely better find", () => {
+    // No pickup floor anymore: weaponScore (the damage-budget model — AoE
+    // targets and crit weight folded in) decides, so a weak sidearm no
+    // longer supplants a decent wall weapon just for being loot.
     const easy = startOn("easy");
-    // Any real weapon supplants the wall piece — even one whose DPS score
-    // would rank below it.
-    const pickup = {
+    const weak = {
       id: 999,
-      defId: "test_pistol",
+      defId: "test_pistol", // 7 dmg / 400 ms, single target
       slot: "weapon" as const,
       tier: "regular" as const,
       ilvl: 1,
       affixes: [],
       durability: 10,
     };
-    expect(isBetterEquipment(easy, pickup)).toBe(true);
+    expect(isBetterEquipment(easy, weak)).toBe(false);
+    const strong = {
+      id: 998,
+      defId: "test_hammer", // 34 dmg / 640 ms — clearly out-scores the wand
+      slot: "weapon" as const,
+      tier: "regular" as const,
+      ilvl: 1,
+      affixes: [],
+      durability: 120,
+    };
+    expect(isBetterEquipment(easy, strong)).toBe(true);
   });
 
   it("banks the difficulty's stat head-start and recomputes the pools", () => {
