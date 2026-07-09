@@ -50,6 +50,7 @@ import { gradeVariantIds } from "./defs/grades.ts";
 import { difficultyDef } from "./defs/difficulties.ts";
 import { levelDef } from "./defs/levels/index.ts";
 import { storyItemDef } from "./defs/story.ts";
+import { baseStatBonus } from "./leveling.ts";
 import { currentMobLevel } from "./menace.ts";
 import type {
   Affix,
@@ -559,11 +560,14 @@ export function isPassiveItem(defId: string): boolean {
 }
 
 /**
- * Stat points from level-ups, any equipped `+N <stat>` affixes, and the flat
- * bonus of every passive trinket carried (bag or worn).
+ * Stat points from level-ups — the AUTOMATIC base growth leveling itself
+ * grants (`baseStatBonus`, WoW-style) plus the points the player chose —
+ * any equipped `+N <stat>` affixes, and the flat bonus of every passive
+ * trinket carried (bag or worn).
  */
 export function effectiveStat(state: GameState, stat: StatName): number {
-  let value = state.player.stats[stat];
+  let value =
+    state.player.stats[stat] + baseStatBonus(state.player.level, stat);
   for (const piece of activePieces(state)) {
     for (const affix of piece.affixes) {
       if (affix.kind === "stat" && affix.stat === stat) value += affix.value;

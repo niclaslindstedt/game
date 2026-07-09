@@ -312,6 +312,7 @@ export function createGame(
     bagFullHintCooldownMs: 0,
     staminaEmptyMs: 0,
     victoryCountdownMs: null,
+    levelUpFxMs: 0,
     minionEquipmentDrops: 0,
     waveSpawned: (def.waves?.budget ?? []).map(() => 0),
     moveSpawnCredit: 0,

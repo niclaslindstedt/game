@@ -188,6 +188,31 @@ export const LEVELING = {
    * chasing at level 20 exactly as much as at level 2.
    */
   arrowXpShare: 0.25,
+  /**
+   * Ms the level-up celebration plays before the stat chooser interrupts:
+   * the ding's golden burn wreathes the hero, the fanfare rings, the gains
+   * tick into the feed — and only then does the modal open. The reward
+   * lands before the bookkeeping (the WoW ding moment). The burn renders
+   * off `GameState.levelUpFxMs`, which counts this window down.
+   */
+  dingCelebrationMs: 1000,
+  /**
+   * Automatic base-attribute growth (WoW-style): crossing into level L
+   * grants `round(rate × L)` points of each stat listed here, on its own,
+   * underneath the chosen stat points — so every ding is felt in the body,
+   * not just in the chooser, and the gain itself grows with the level.
+   * Derived from `player.level` (see leveling.ts), never written into
+   * `player.stats`: a respec refunds only the CHOSEN points. The horde's
+   * hp scaling multiplies by the damage curve these rates produce
+   * (`autoPowerScale` folded into `mobHpScaleFor`/`enemyPowerScale`), so
+   * automatic growth alone never turns mobs into one-hit kills — chosen
+   * points and gear remain what pushes the player ahead of the curve.
+   */
+  autoGainsPerLevel: {
+    stamina: 0.4,
+    strength: 0.25,
+    dexterity: 0.2,
+  },
 } as const;
 
 /**

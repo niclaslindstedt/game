@@ -38,6 +38,12 @@ export type PickupMessage = {
    * gear, plot pieces). Left undefined for ordinary loot, which stays neutral.
    */
   color?: string;
+  /**
+   * Lead-in words rendered in the neutral color before `text`. Undefined
+   * means the classic "PICKED UP"; an empty string drops the lead-in
+   * entirely (the level-up stat lines are the whole message themselves).
+   */
+  prefix?: string;
 };
 
 /** The "PICKED UP" prefix and ordinary items share this neutral off-white. */
@@ -84,8 +90,12 @@ function useWrapBudget(ref: RefObject<HTMLElement | null>): number {
 /** Split a message into its neutral prefix words plus its item-name words. */
 function messageWords(m: PickupMessage): FeedWord[] {
   const itemNeutral = m.color == null;
+  const prefix = m.prefix ?? PICKUP_PREFIX;
   return [
-    ...PICKUP_PREFIX.split(" ").map((text) => ({ text, neutral: true })),
+    ...prefix
+      .split(" ")
+      .filter(Boolean)
+      .map((text) => ({ text, neutral: true })),
     ...m.text
       .split(/\s+/)
       .filter(Boolean)

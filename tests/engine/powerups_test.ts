@@ -9,11 +9,19 @@ import {
   abilityDef,
   grantAbility,
   LEVELING,
+  levelStatGains,
   magnetRadius,
   step,
 } from "@game/core";
 import type { GameInput, GameState, Item } from "@game/core";
-import { clearStage, DT, idle, makeEnemy, startGame } from "./helpers.ts";
+import {
+  clearStage,
+  DT,
+  idle,
+  makeEnemy,
+  runUntilChooser,
+  startGame,
+} from "./helpers.ts";
 
 const useItem: GameInput = {
   steering: false,
@@ -59,8 +67,15 @@ describe("xp arrows", () => {
     );
     step(state, idle, DT);
     expect(state.player.level).toBe(2);
+    expect(state.events).toContainEqual({
+      type: "levelUp",
+      level: 2,
+      gains: levelStatGains(2),
+    });
+    // The ding celebrates for a beat first; the chooser opens after the burn.
+    expect(state.phase).toBe("playing");
+    runUntilChooser(state);
     expect(state.phase).toBe("levelup");
-    expect(state.events).toContainEqual({ type: "levelUp", level: 2 });
   });
 });
 

@@ -138,6 +138,16 @@ export function step(state: GameState, input: GameInput, dtMs: number): void {
 
   const dt = dtMs / 1000;
   state.stats.timeMs += dtMs;
+  // The ding celebration: a fresh level-up burns on the hero for a beat
+  // (golden pillar + fanfare) before the stat chooser pauses the run. The
+  // window only ticks while `playing`, so a dialogue or pause that cuts in
+  // merely postpones the chooser rather than racing it.
+  if (state.levelUpFxMs > 0) {
+    state.levelUpFxMs = Math.max(0, state.levelUpFxMs - dtMs);
+    if (state.levelUpFxMs === 0 && state.player.pendingStatPoints > 0) {
+      state.phase = "levelup";
+    }
+  }
   // Cool down the "bags are full" nudge so a player parked on uncarriable loot
   // gets one cue, not one per frame (see stepItems).
   if (state.bagFullHintCooldownMs > 0) {

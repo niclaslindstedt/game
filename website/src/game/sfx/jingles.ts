@@ -12,24 +12,71 @@ import type { Synth } from "@ui/lib/synth.ts";
 export function playJingle(synth: Synth, event: GameEvent): boolean {
   switch (event.type) {
     case "levelUp":
-      // Five steps up the major scale, each with a glass octave on top.
-      [392, 523, 659, 784, 1047].forEach((freq, i) => {
+      // The DING — sized to fill the engine's ding-celebration window
+      // (LEVELING.dingCelebrationMs) while the golden burn plays, so sound
+      // and light are one moment. Anatomy of the triumph:
+      // 1. A warm root swell underneath — the ground the fanfare stands on.
+      synth.tone({
+        type: "triangle",
+        from: 131, // C3
+        durationMs: 950,
+        volume: 0.045,
+        attackMs: 40,
+        detuneCents: 6,
+        echo: 0.2,
+      });
+      // 2. A holy-light shimmer washing over — filtered air, not a note
+      //    (noise fades over its length, so it rides under the flourish).
+      synth.noise({
+        durationMs: 620,
+        volume: 0.016,
+        delayMs: 90,
+        filter: { type: "highpass", frequency: 6200 },
+        echo: 0.4,
+      });
+      // 3. The harp flourish: a fast C-major run skyward, glass octaves on
+      //    top — the "burst" of the ding.
+      [523, 659, 784, 1047, 1319].forEach((freq, i) => {
         synth.tone({
           type: "triangle",
           from: freq,
-          durationMs: 110,
-          volume: 0.065,
-          delayMs: i * 90,
-          echo: 0.25,
+          durationMs: 130,
+          volume: 0.06,
+          delayMs: i * 55,
+          echo: 0.3,
         });
         synth.tone({
           type: "sine",
           from: freq * 2,
-          durationMs: 90,
+          durationMs: 110,
           volume: 0.02,
-          delayMs: i * 90,
-          echo: 0.3,
+          delayMs: i * 55,
+          echo: 0.35,
         });
+      });
+      // 4. The landing: a held, brassy C-major chord blooming where the run
+      //    tops out, detuned into a section.
+      [523, 659, 784].forEach((freq) => {
+        synth.tone({
+          type: "square",
+          from: freq,
+          durationMs: 480,
+          volume: 0.032,
+          delayMs: 330,
+          attackMs: 25,
+          detuneCents: 8,
+          echo: 0.35,
+        });
+      });
+      // 5. A last high sparkle drifting off in the echo as the burn fades.
+      synth.tone({
+        type: "sine",
+        from: 2093,
+        to: 3136,
+        durationMs: 320,
+        volume: 0.016,
+        delayMs: 620,
+        echo: 0.5,
       });
       return true;
 

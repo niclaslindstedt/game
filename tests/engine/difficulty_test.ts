@@ -8,6 +8,7 @@
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
 
 import {
+  autoPowerScale,
   createGame,
   DIFFICULTY_ORDER,
   difficultyDef,
@@ -137,19 +138,22 @@ describe("difficulty catalog", () => {
 
 describe("the horde's relative level (mobLevelOffset)", () => {
   it("scales hp per level off the baseline, keyed to the player's level", () => {
-    // NIGHTMARE matches the hero: catalog hp at player level 1.
+    // NIGHTMARE matches the hero: catalog hp at player level 1 (no automatic
+    // gains have landed yet, so autoPowerScale(1) is 1 and drops out).
     expect(mobHpScaleFor(1, "nightmare")).toBe(1);
     // EASY fields mobs three levels under a level-1 hero: −4 × 8%.
     expect(mobHpScaleFor(1, "easy")).toBeCloseTo(0.76, 10);
     expect(mobHpScaleFor(1, "medium")).toBeCloseTo(0.84, 10);
     // JESUS stays two levels ahead however far the hero climbs.
     expect(mobHpScaleFor(1, "jesus")).toBeCloseTo(1.16, 10);
-    expect(mobHpScaleFor(5, "jesus")).toBeCloseTo(1.48, 10);
-    // The gap is CONSTANT: leveling shifts every rung by the same 8%.
-    expect(mobHpScaleFor(6, "easy") - mobHpScaleFor(5, "easy")).toBeCloseTo(
-      MENACE.mobHpPerLevel,
-      10,
-    );
+    expect(mobHpScaleFor(5, "jesus")).toBeCloseTo(1.48 * autoPowerScale(5), 10);
+    // The gap is CONSTANT once the automatic-growth curve is factored out:
+    // relative to what leveling hands the hero for free (autoPowerScale),
+    // leveling shifts every rung by the same 8%.
+    expect(
+      mobHpScaleFor(6, "easy") / autoPowerScale(6) -
+        mobHpScaleFor(5, "easy") / autoPowerScale(5),
+    ).toBeCloseTo(MENACE.mobHpPerLevel, 10);
   });
 
   it("stamps placed monsters (bosses included) with the level-1 scale", () => {

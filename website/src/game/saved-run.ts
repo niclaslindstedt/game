@@ -24,7 +24,8 @@ const KEY = storageKey("current-run");
 // thaw — the CONTINUE button simply doesn't appear, as it wouldn't have before.
 // v2: companions/choice/companionFocus joined the state (a v1 run would thaw
 // without the party fields and crash the companion pass).
-const SAVE_VERSION = 2;
+// v3: levelUpFxMs (the ding-celebration countdown) joined the state.
+const SAVE_VERSION = 3;
 
 /** A run parked between sessions: enough to drop the player straight back in. */
 export type ParkedRun = {

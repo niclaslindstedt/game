@@ -801,7 +801,19 @@ export type GameEvent =
   /** An ability pickup kicked in (or refreshed its timer). */
   | { type: "abilityStarted"; defId: string }
   | { type: "abilityEnded"; defId: string }
-  | { type: "levelUp"; level: number }
+  /**
+   * The hero crossed a level threshold. `gains` lists the AUTOMATIC base
+   * attribute growth this ding granted (config LEVELING.autoGainsPerLevel —
+   * on top of the chooser's point), so the app can print them in the feed.
+   * The run does NOT pause here: the celebration window
+   * (`GameState.levelUpFxMs`) burns first, and the `levelup` phase opens
+   * when it runs out.
+   */
+  | {
+      type: "levelUp";
+      level: number;
+      gains: { stat: StatName; amount: number }[];
+    }
   /**
    * The menace meter crossed into a new evolution stage — the horde has grown
    * more dangerous in answer to the player's rampage. The app sounds the
@@ -1088,6 +1100,15 @@ export type GameState = {
   staminaEmptyMs: number;
   /** Counts down once the objective clears; the level ends at 0. */
   victoryCountdownMs: number | null;
+  /**
+   * Ms left of the level-up celebration: set to `LEVELING.dingCelebrationMs`
+   * when a level lands (grantXp), counted down each playing step, and the
+   * `levelup` stat-chooser phase only opens when it reaches 0 — the golden
+   * burn (drawn off this field) and the fanfare get their moment before the
+   * modal interrupts. Ticks only while `playing`, so a dialogue that cuts in
+   * merely postpones the chooser.
+   */
+  levelUpFxMs: number;
   /**
    * Equipment dropped by regular monsters so far — the pity counter behind
    * LOOT.minEquipmentPerLevel (boss drops don't count toward it).
