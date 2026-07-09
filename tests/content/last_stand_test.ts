@@ -63,6 +63,7 @@ describe("boss last stand", () => {
       // auto-attack landing first in the same step.
       hp: 40,
       maxHp: 4000,
+      mlvl: 99,
       speed: 0,
       contactCooldownMs: 0,
     };

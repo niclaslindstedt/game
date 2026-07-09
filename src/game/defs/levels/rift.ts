@@ -145,12 +145,27 @@ export const THE_RIFT: LevelDef = {
     { enemy: "graviton", thought: "rift_graviton" },
   ],
   loot: {
-    weaponPool: ["blaster", "rifle", "star_wand", "void_wand", "cyber_katana"],
-    gearPool: ["suit_plating", "pressure_plating", "stardust_charm"],
+    // The historic pool: all of history falls through the rift — a Roman
+    // blade, an English warbow, powder arms, and things history never had.
+    // Introduced at level requirements 15 → 23, the base ladder's top; the
+    // rift is also the one MAGICAL level, so the fantasy gear (clover, orb,
+    // grimoire, ring, dragonscale) drops only here.
+    weaponPool: [
+      "gladius",
+      "longbow",
+      "blunderbuss",
+      "executioners_axe",
+      "sorcerers_staff",
+    ],
+    gearPool: [
+      "stardust_charm",
+      "lucky_clover",
+      "crystal_orb",
+      "grimoire",
+      "enchanted_ring",
+      "dragonscale_cloak",
+    ],
     abilityPool: ["fire_orbs", "storm_cell", "stasis_field", "item_magnet"],
-    // Level 4 widens the rare band, opens epic properly — and cracks the
-    // legendary door for the first time in the campaign.
-    tierChances: { magic: 0.24, rare: 0.1, epic: 0.03, legendary: 0.005 },
     // The VOID WAND arrives early at a kill discovered in play — the level's
     // signature caster, same cadence as Mars's katana.
     earlyDrops: [{ atKills: [35, 90], weapon: "void_wand" }],

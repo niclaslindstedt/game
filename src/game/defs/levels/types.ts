@@ -6,7 +6,7 @@
 // ./index.ts) plus its sprites, not touching the simulation. The per-level
 // defs live one to a file; ./index.ts merges them.
 
-import type { Difficulty, Tier, TileSpec } from "../../types.ts";
+import type { Difficulty, TileSpec } from "../../types.ts";
 import type { Vec2 } from "@game/lib/vec.ts";
 
 /** A monster placement: banded by difficulty distance, or pinned to a spot. */
@@ -248,15 +248,17 @@ export type LevelDef = {
    */
   openingStrike?: OpeningStrike;
   loot: {
-    /** WEAPON_DEFS ids this level's drops draw from. */
+    /**
+     * WEAPON_DEFS ids this level's drops draw from — the bases this level
+     * INTRODUCES, thematically (office arms on earth, 70s hardware on the
+     * moon, …). Within the pool, each base's own `levelReq` decides when it
+     * actually starts dropping (a mob below the requirement never drops it),
+     * and tier availability is the global monster-level gate
+     * (config LOOT.tierUnlockMlvl) — not per-level data anymore.
+     */
     weaponPool: string[];
     /** GEAR_DEFS ids this level's drops draw from. */
     gearPool: string[];
-    /**
-     * Chance per tier that a drop rolls it (checked best-first; LUCK adds
-     * to each). Omitted tiers cannot drop here — the moon caps at magic.
-     */
-    tierChances: Partial<Record<Tier, number>>;
     /** ABILITY_DEFS ids this level's drops draw from. */
     abilityPool: string[];
     /**

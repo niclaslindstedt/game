@@ -9,17 +9,24 @@
 // there is no "already watched" record to skip them.)
 
 import {
+  addToInventory,
   deriveArrivalLoadout,
   DIFFICULTY_ORDER,
   difficultyDef,
+  equipmentLevelReq,
+  GEAR_DEFS,
   LEVEL_ORDER,
+  WEAPON_DEFS,
   type Difficulty,
+  type Equipment,
+  type GameState,
   type Loadout,
 } from "@game/core";
 
 import { createFlagStore } from "@ui/lib/flag-store.ts";
 
 import { storageKey } from "../identity.ts";
+import { getSettings } from "./settings.ts";
 
 // Level completion is tracked per difficulty: clearing THE MOON on EASY does
 // not unlock the next level on NIGHTMARE. Each flag is `${difficulty}:${id}`.
@@ -182,6 +189,199 @@ export function saveLoadout(
   }
 }
 
+// ---- Keepsakes (unique/legendary permanence) -----------------------------
+// Unique and legendary finds are once-per-game treasures, so they can outlive
+// the run economy: BEAT a difficulty with them in your possession and they
+// are stashed forever (`bankKeepsakesOnVictory`), poured back into the bag of
+// every later run (`restoreKeepsakes`). HARDCORE mode (settings) puts them
+// back on the table: DYING burns the stash, strips every banked loadout of
+// its unique/legendary pieces, and revokes the LEVEL TOKENS and their
+// unlocks (`noteHardcoreDeath`) — back to easy to earn it all again.
+// Softcore death loses nothing.
+
+const KEEPSAKES_KEY = storageKey("keepsakes");
+
+function isKeepsake(piece: Equipment): boolean {
+  return piece.tier === "unique" || piece.tier === "legendary";
+}
+
+/** Identity for dedupe: two rolls of the same base can coexist, but the SAME
+ * find (same base, level, and rolled bonuses) is stashed once. */
+function keepsakeSignature(piece: Equipment): string {
+  return JSON.stringify({
+    defId: piece.defId,
+    tier: piece.tier,
+    ilvl: piece.ilvl,
+    affixes: piece.affixes,
+  });
+}
+
+/** The stashed unique/legendary pieces, oldest first. */
+export function loadKeepsakes(): Equipment[] {
+  try {
+    const raw = window.localStorage.getItem(KEEPSAKES_KEY);
+    const parsed: unknown = raw ? JSON.parse(raw) : [];
+    return Array.isArray(parsed) ? (parsed as Equipment[]) : [];
+  } catch {
+    return [];
+  }
+}
+
+function saveKeepsakes(pieces: Equipment[]): void {
+  try {
+    window.localStorage.setItem(KEEPSAKES_KEY, JSON.stringify(pieces));
+  } catch {
+    // Storage unavailable — the hoard just doesn't persist this session.
+  }
+}
+
+/**
+ * The forever-bank, called on every level victory: once the cleared level is
+ * the difficulty's LAST — the difficulty is beaten — every unique/legendary
+ * the hero holds at that moment joins the permanent stash. Mid-campaign
+ * victories don't bank (the pieces still carry level-to-level in the banked
+ * loadout; hardcore death can still take them).
+ */
+export function bankKeepsakesOnVictory(
+  levelId: string,
+  loadout: Loadout,
+): void {
+  if (levelId !== LEVEL_ORDER[LEVEL_ORDER.length - 1]) return;
+  bankKeepsakes(loadout);
+}
+
+/** Copy every unique/legendary piece the loadout carries into the stash. */
+function bankKeepsakes(loadout: Loadout): void {
+  const carried = [
+    loadout.equipment.weapon,
+    loadout.equipment.suit,
+    loadout.equipment.charm,
+    ...loadout.inventory,
+  ].filter((p): p is Equipment => p !== null && isKeepsake(p));
+  if (carried.length === 0) return;
+  const stash = loadKeepsakes();
+  const seen = new Set(stash.map(keepsakeSignature));
+  for (const piece of carried) {
+    const sig = keepsakeSignature(piece);
+    if (seen.has(sig)) continue;
+    seen.add(sig);
+    stash.push(piece);
+  }
+  saveKeepsakes(stash);
+}
+
+/**
+ * Pour the keepsake stash back into a freshly created run: every stashed
+ * unique/legendary the hero isn't already carrying lands in the bag (the bag
+ * grows a cell when full — treasures are never dropped at the door). Applies
+ * in hardcore too: the stash exists until a death burns it.
+ */
+export function restoreKeepsakes(state: GameState): void {
+  const stash = loadKeepsakes();
+  if (stash.length === 0) return;
+  const { weapon, suit, charm } = state.player.equipment;
+  const carried = new Set(
+    [weapon, suit, charm, ...state.player.inventory]
+      .filter((p): p is Equipment => p !== null)
+      .map(keepsakeSignature),
+  );
+  for (const piece of stash) {
+    if (carried.has(keepsakeSignature(piece))) continue;
+    const minted: Equipment = { ...piece, id: state.nextId++ };
+    if (!addToInventory(state, minted)) {
+      state.player.inventory.push(minted);
+    }
+  }
+}
+
+/** Strip unique/legendary pieces out of every banked loadout — the hardcore
+ * burn, so a lower rung's carry-over can't resurrect the hoard. */
+function stripBankedKeepsakes(): void {
+  for (const difficulty of DIFFICULTY_ORDER) {
+    for (const levelId of LEVEL_ORDER) {
+      const banked = loadLoadout(levelId, difficulty);
+      if (!banked) continue;
+      const keep = (p: Equipment | null): Equipment | null =>
+        p && isKeepsake(p) ? null : p;
+      const weapon = keep(banked.equipment.weapon) ?? {
+        id: 0,
+        defId: "blaster",
+        slot: "weapon" as const,
+        tier: "regular" as const,
+        ilvl: 1,
+        affixes: [],
+      };
+      saveLoadout(levelId, difficulty, {
+        ...banked,
+        equipment: {
+          weapon,
+          suit: keep(banked.equipment.suit),
+          charm: keep(banked.equipment.charm),
+        },
+        inventory: banked.inventory.map(keep),
+      });
+    }
+  }
+}
+
+/**
+ * The hardcore reckoning, called when the hero DIES. Off hardcore it is a
+ * no-op — softcore death loses nothing. On hardcore, death takes everything
+ * that made the shortcut possible: the keepsake stash burns, every banked
+ * loadout is stripped of its unique/legendary pieces, and the LEVEL TOKENS —
+ * unspent ones and the unlocks already bought with them — are revoked. The
+ * respec jump is gone with them: the ladder is climbed again from the rungs
+ * still cleared.
+ */
+export function noteHardcoreDeath(): void {
+  if (getSettings().hardcore !== "on") return;
+  saveKeepsakes([]);
+  stripBankedKeepsakes();
+  tokens.clear();
+  tokenUnlocks.clear();
+}
+
+/**
+ * Bring a loadout banked by an older build up to the current item system —
+ * the Diablo loot rework retired the epic tier, added the item level, and
+ * replaced the base weapon roster wholesale, and a stale snapshot must not
+ * crash `createGame`. Pieces referencing deleted defs are dropped (the
+ * weapon slot falls back to the engine's unbreakable sidearm); an epic tier
+ * reads as rare; a missing `ilvl` is backfilled from the base's requirement.
+ */
+function migrateLoadout(loadout: Loadout): Loadout {
+  const fix = (piece: Equipment | null): Equipment | null => {
+    if (!piece) return null;
+    if (!(piece.defId in WEAPON_DEFS) && !(piece.defId in GEAR_DEFS)) {
+      return null;
+    }
+    const tier =
+      (piece.tier as string) === "epic" ? ("rare" as const) : piece.tier;
+    return {
+      ...piece,
+      tier,
+      ilvl: piece.ilvl ?? equipmentLevelReq(piece.defId),
+    };
+  };
+  const weapon = fix(loadout.equipment.weapon) ?? {
+    id: 0,
+    defId: "blaster",
+    slot: "weapon" as const,
+    tier: "regular" as const,
+    ilvl: 1,
+    affixes: [],
+  };
+  return {
+    ...loadout,
+    equipment: {
+      weapon,
+      suit: fix(loadout.equipment.suit),
+      charm: fix(loadout.equipment.charm),
+    },
+    inventory: loadout.inventory.map(fix),
+  };
+}
+
 /** The snapshot banked when `levelId` was cleared at `difficulty`, if any. */
 export function loadLoadout(
   levelId: string,
@@ -189,7 +389,7 @@ export function loadLoadout(
 ): Loadout | null {
   try {
     const raw = window.localStorage.getItem(loadoutKey(levelId, difficulty));
-    return raw ? (JSON.parse(raw) as Loadout) : null;
+    return raw ? migrateLoadout(JSON.parse(raw) as Loadout) : null;
   } catch {
     return null;
   }

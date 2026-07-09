@@ -40,6 +40,7 @@ function makeSuit(id: number, tier: Tier = "regular"): Equipment {
     defId: "suit_plating",
     slot: "suit",
     tier,
+    ilvl: 5,
     affixes: tier === "magic" ? [{ kind: "maxHp", value: 20 }] : [],
   };
 }
@@ -70,9 +71,10 @@ describe("boss loot", () => {
         i.kind === "equipment" ? i.equipment.slot : "",
       );
       expect(slots).toContain("weapon");
-      expect(slots.filter((s) => s === "suit" || s === "charm")).toHaveLength(
-        1,
-      );
+      // The def's pinned gear count plus whatever his tierDrops paid out.
+      expect(
+        slots.filter((s) => s === "suit" || s === "charm").length,
+      ).toBeGreaterThanOrEqual(1);
       expect(medkits.length).toBeGreaterThan(0);
       // His weapon drop is the survival-kit machete, always.
       expect(
@@ -88,18 +90,31 @@ describe("boss loot", () => {
   });
 
   it("high-luck drops roll up to RARE, with affixes and a decorated name", () => {
-    // The boss's tierBonus + max luck clears the moon's rare base chance every
-    // time, so every dropped piece rolls the top tier the moon awards.
+    // At player level 7 the boss's levelBonus lifts him to monster level 10 —
+    // the rare gate — and his tierBonus + max luck then clear the rare chance
+    // every time, so every TIER-ROLLED piece (the machete, the pinned gear)
+    // lands rare. His `tierDrops` pieces keep their forced tier — that's the
+    // point of the pledge — so the haul reads rare + guaranteed magic.
     const state = startGame();
+    state.player.level = 7;
     state.player.stats.luck = 30;
     state.items = [];
     killTheBoss(state);
     const equipment = state.items.filter((i) => i.kind === "equipment");
     expect(equipment.length).toBeGreaterThan(0);
+    const machete = equipment.find(
+      (i) => i.kind === "equipment" && i.equipment.defId === "machete",
+    );
+    expect(machete?.kind === "equipment" && machete.equipment.tier).toBe(
+      "rare",
+    );
     for (const item of equipment) {
       if (item.kind !== "equipment") continue;
-      expect(item.equipment.tier).toBe("rare");
-      expect(item.equipment.affixes.length).toBe(TIERS.rare.affixCount);
+      // Nothing plain off a boss at these odds — rare, or a pledged magic.
+      expect(["rare", "magic"]).toContain(item.equipment.tier);
+      expect(item.equipment.affixes.length).toBe(
+        TIERS[item.equipment.tier].affixCount,
+      );
       // The name is decorated from its affixes (a prefix and/or "of the X"
       // suffix), never the bare tier prefix and always longer than the base.
       const name = equipmentName(item.equipment);
@@ -108,10 +123,11 @@ describe("boss loot", () => {
     }
   });
 
-  it("epic and legendary never drop on the moon even at max luck", () => {
-    // Rare is the moon's ceiling now (its loot table lists magic + rare);
-    // epic/legendary stay locked behind harder difficulties and later levels.
+  it("unique and legendary never drop even at max luck", () => {
+    // Their base chances sit at zero until their one-of-a-kind defs ship;
+    // only the harder difficulties' tierChanceBonus will open them.
     const state = startGame();
+    state.player.level = 30; // past every mlvl gate — chance is the only lock
     state.player.stats.luck = 100;
     for (let i = 0; i < 50; i++) {
       const rolled = rollEquipment(state);
@@ -199,16 +215,18 @@ describe("the scripted opening drops", () => {
 });
 
 describe("auto-equip on pickup", () => {
-  it("equips a picked-up weapon that out-damages the held one", () => {
+  it("equips a picked-up weapon that out-scores the held one", () => {
     const state = startGame(); // default medieval sword: melee, short cleave
     clearStage(state);
+    state.player.level = 8; // grown into the hammer's requirement
     const hammer: Equipment = {
       id: 61,
-      defId: "hammer", // 34 dmg / 640 ms — clearly better DPS
+      defId: "geology_hammer", // 38 dmg — out-scores the sword's cleave
       slot: "weapon",
       tier: "regular",
+      ilvl: 8,
       affixes: [],
-      durability: WEAPON_DEFS.hammer!.durability,
+      durability: WEAPON_DEFS.geology_hammer!.durability,
     };
     state.items = [
       {
@@ -226,37 +244,40 @@ describe("auto-equip on pickup", () => {
     ).toBe(true);
     expect(state.events).toContainEqual({
       type: "autoEquipped",
-      defId: "hammer",
+      defId: "geology_hammer",
     });
   });
 
   it("bags a picked-up weapon that is worse than the held one", () => {
     const state = startGame();
     clearStage(state);
-    // A pistol (7 dmg / 500 ms) is a marginal pickup, so put a hammer
-    // (34 dmg / 640 ms) in hand to make it strictly worse and force the bag.
-    const pistol: Equipment = {
+    // A box cutter (req-1 budget) is a marginal pickup, so put the geology
+    // hammer (req-8 budget, single-target like the cutter) in hand to make
+    // it strictly worse and force the bag.
+    const cutter: Equipment = {
       id: 62,
-      defId: "pistol",
+      defId: "box_cutter",
       slot: "weapon",
       tier: "regular",
+      ilvl: 5,
       affixes: [],
-      durability: WEAPON_DEFS.pistol!.durability,
+      durability: WEAPON_DEFS.box_cutter!.durability,
     };
     state.player.equipment.weapon = {
       id: 63,
-      defId: "hammer",
+      defId: "geology_hammer",
       slot: "weapon",
       tier: "regular",
+      ilvl: 8,
       affixes: [],
-      durability: WEAPON_DEFS.hammer!.durability,
+      durability: WEAPON_DEFS.geology_hammer!.durability,
     };
     state.items = [
       {
         id: 1,
         kind: "equipment",
         pos: { ...state.player.pos },
-        equipment: pistol,
+        equipment: cutter,
       },
     ];
     step(state, idle, DT);
@@ -267,16 +288,18 @@ describe("auto-equip on pickup", () => {
   it("drops the displaced piece on the ground when the bag is full", () => {
     const state = startGame();
     clearStage(state);
+    state.player.level = 8;
     state.player.inventory = state.player.inventory.map((_, i) =>
       makeSuit(100 + i),
     );
     const hammer: Equipment = {
       id: 64,
-      defId: "hammer",
+      defId: "geology_hammer",
       slot: "weapon",
       tier: "regular",
+      ilvl: 8,
       affixes: [],
-      durability: WEAPON_DEFS.hammer!.durability,
+      durability: WEAPON_DEFS.geology_hammer!.durability,
     };
     state.items = [
       {
@@ -401,21 +424,22 @@ describe("inventory", () => {
 
   it("swaps weapons — the weapon slot is never empty", () => {
     const state = startGame();
-    const wand: Equipment = {
+    const cutter: Equipment = {
       id: 60,
-      defId: "wand",
+      defId: "box_cutter",
       slot: "weapon",
       tier: "regular",
+      ilvl: 5,
       affixes: [],
     };
-    state.player.inventory[0] = wand;
+    state.player.inventory[0] = cutter;
     expect(equipFromInventory(state, 0)).toBe(true);
-    expect(state.player.equipment.weapon.defId).toBe("wand");
+    expect(state.player.equipment.weapon.defId).toBe("box_cutter");
     expect(state.player.inventory[0]?.defId).toBe("medieval_sword"); // swapped back
 
     // The equipped weapon can never be parked in the bag.
     expect(unequipToInventory(state, "weapon")).toBe(false);
-    expect(state.player.equipment.weapon.defId).toBe("wand");
+    expect(state.player.equipment.weapon.defId).toBe("box_cutter");
   });
 
   it("rearranges bag cells by swapping", () => {
@@ -465,47 +489,51 @@ describe("inventory", () => {
 
 describe("Diablo-style item names", () => {
   function weapon(defId: string, affixes: Equipment["affixes"]): Equipment {
-    return { id: 1, defId, slot: "weapon", tier: "regular", affixes };
+    return { id: 1, defId, slot: "weapon", tier: "regular", ilvl: 5, affixes };
   }
   function gear(
     defId: string,
     slot: Equipment["slot"],
     affixes: Equipment["affixes"],
   ): Equipment {
-    return { id: 2, defId, slot, tier: "regular", affixes };
+    return { id: 2, defId, slot, tier: "regular", ilvl: 5, affixes };
   }
 
   it("names an affix-less item by its bare base type", () => {
-    expect(equipmentName(weapon("pipe", []))).toBe(equipmentBaseName("pipe"));
-    expect(equipmentName(weapon("pipe", []))).toBe("PIPE");
+    expect(equipmentName(weapon("lunar_wrench", []))).toBe(
+      equipmentBaseName("lunar_wrench"),
+    );
+    expect(equipmentName(weapon("lunar_wrench", []))).toBe("LUNAR WRENCH");
   });
 
   it("prefixes a damage roll and suffixes a stat roll", () => {
     // damagePct → a magnitude-scaled prefix.
     expect(
-      equipmentName(weapon("pipe", [{ kind: "damagePct", value: 0.25 }])),
-    ).toBe("VICIOUS PIPE");
+      equipmentName(
+        weapon("lunar_wrench", [{ kind: "damagePct", value: 0.3 }]),
+      ),
+    ).toBe("VICIOUS LUNAR WRENCH");
     // A stat roll → an "of the X" suffix keyed to the stat.
     expect(
       equipmentName(
-        weapon("pipe", [{ kind: "stat", value: 1, stat: "dexterity" }]),
+        weapon("lunar_wrench", [{ kind: "stat", value: 1, stat: "dexterity" }]),
       ),
-    ).toBe("PIPE OF THE FOX");
+    ).toBe("LUNAR WRENCH OF THE FOX");
     // crit → its own suffix.
-    expect(equipmentName(weapon("pipe", [{ kind: "crit", value: 0.05 }]))).toBe(
-      "PIPE OF DEADLINESS",
-    );
+    expect(
+      equipmentName(weapon("lunar_wrench", [{ kind: "crit", value: 0.08 }])),
+    ).toBe("LUNAR WRENCH OF DEADLINESS");
   });
 
   it("composes a prefix and a suffix on a multi-affix piece", () => {
     expect(
       equipmentName(
-        weapon("pipe", [
-          { kind: "damagePct", value: 0.32 },
+        weapon("lunar_wrench", [
+          { kind: "damagePct", value: 0.6 },
           { kind: "stat", value: 1, stat: "strength" },
         ]),
       ),
-    ).toBe("CRUEL PIPE OF THE OX");
+    ).toBe("CRUEL LUNAR WRENCH OF THE OX");
     expect(
       equipmentName(
         gear("suit_plating", "suit", [

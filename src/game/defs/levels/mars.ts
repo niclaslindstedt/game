@@ -228,21 +228,19 @@ export const MARS: LevelDef = {
     { enemy: "fembot", thought: "mars_fembot" },
   ],
   loot: {
+    // The AI-forged pool: weapons the colony machines printed overnight —
+    // self-aiming darts, plasma edges, rails, arcs, and a cube on a stick.
+    // Introduced at level requirements 10 → 16; rares are properly in season
+    // here (the mlvl-10 gate opened late on the moon).
     weaponPool: [
-      "blaster",
-      "pistol",
-      "rifle",
-      "wrench",
-      "pipe",
-      "hammer",
-      "star_wand",
-      "void_wand",
+      "smart_pistol",
+      "plasma_blade",
+      "railgun",
+      "arc_projector",
+      "gravity_maul",
     ],
     gearPool: ["suit_plating", "pressure_plating", "red_dust_charm"],
     abilityPool: ["fire_orbs", "storm_cell", "stasis_field", "item_magnet"],
-    // Level 3 opens the rare band properly and cracks the epic door: the
-    // elites' and boss's tierBonus (and LUCK) lift these into real finds.
-    tierChances: { magic: 0.22, rare: 0.08, epic: 0.02 },
     // The CYBER KATANA arrives early at a kill discovered in play — the
     // run's signature blade, same cadence as the moon's blade.
     earlyDrops: [{ atKills: [40, 100], weapon: "cyber_katana" }],

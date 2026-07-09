@@ -100,8 +100,11 @@ import {
 } from "./PickupFeed.tsx";
 import { bestTime, recordRun } from "./highscores.ts";
 import {
+  bankKeepsakesOnVictory,
   markLevelCompleted,
   nextLevelId,
+  noteHardcoreDeath,
+  restoreKeepsakes,
   saveLoadout,
   startingLoadout,
 } from "./progress.ts";
@@ -504,6 +507,11 @@ export function GameScreen({
         // advances along the campaign (a fresh levelId) it no longer applies.
         respec && levelId === initialLevelId,
       );
+    // The forever-hoard follows the hero into every FRESH run: any stashed
+    // unique/legendary he isn't already carrying lands in the bag. (In
+    // hardcore the stash exists too — right up until a death burns it.) A
+    // resumed run already carries whatever its own creation restored.
+    if (!resumed) restoreKeepsakes(state);
     // The prelude always plays — every run opens on its cutscene (the player
     // can dismiss it with the SKIP button or Esc). It is never auto-skipped on
     // replay.
@@ -1067,10 +1075,20 @@ export function GameScreen({
           // Clearing a level records it (per difficulty) so the campaign
           // unlocks the next one and the menu marks this one replayable —
           // and banks the hero's snapshot (level, stats, items) so the next
-          // level starts with everything he finished this one with.
+          // level starts with everything he finished this one with. Beating
+          // the difficulty's LAST level also banks any unique/legendary
+          // finds into the forever-stash.
           if (event.type === "victory") {
             markLevelCompleted(state.level.id, difficulty);
-            saveLoadout(state.level.id, difficulty, extractLoadout(state));
+            const loadout = extractLoadout(state);
+            saveLoadout(state.level.id, difficulty, loadout);
+            bankKeepsakesOnVictory(state.level.id, loadout);
+          }
+          // A hardcore death takes the hoard and the shortcuts with it —
+          // keepsakes, banked unique/legendary pieces, tokens and their
+          // unlocks all burn (a softcore death loses nothing).
+          if (event.type === "defeat") {
+            noteHardcoreDeath();
           }
         }
         if (effects.length > 0) {

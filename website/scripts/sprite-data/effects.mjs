@@ -38,7 +38,12 @@ const BLOOD_1 = [
 ];
 
 /** Chars only this family draws with — merged with the core at build time. */
-const PALETTE = {};
+const PALETTE = {
+  // Electric blue + charged white-blue: the dart, the rail slug's sheath
+  // (same values as the icons family's storm chars — chars are per-family).
+  e: [90, 180, 255],
+  s: [214, 240, 255],
+};
 
 const SPRITES = {
   // Projectiles: the blaster bolt and the wand spark.
@@ -59,6 +64,73 @@ const SPRITES = {
     ".OLPPLO.",
     ".OLPPLO.",
     "..OLLO..",
+    "...OO...",
+    "........",
+  ],
+  // Shotgun/blunderbuss shot: a tight pair of lead-and-brass pellets — the
+  // volley is several of these fanned across the spread.
+  pellet: [
+    "........",
+    "..OO....",
+    ".OoqO...",
+    "..OO....",
+    "....OO..",
+    "...OoqO.",
+    "....OO..",
+    "........",
+  ],
+  // The SMART PISTOL's self-correcting dart: a cyan sliver.
+  dart: [
+    "........",
+    "...OO...",
+    "..OseO..",
+    ".OseeeO.",
+    "..OeeO..",
+    "...OO...",
+    "........",
+    "........",
+  ],
+  // The RAILGUN slug: a white-hot shard in a blue sheath.
+  rail: [
+    "........",
+    "...OO...",
+    "..OsWO..",
+    ".OsWWeO.",
+    ".OeWWeO.",
+    "..OeeO..",
+    "...OO...",
+    "........",
+  ],
+  // The RETRO RAYGUN's wobbling charge ring — hollow, pulp-cover green.
+  ring: [
+    "........",
+    "..OOOO..",
+    ".OllllO.",
+    ".Ol..lO.",
+    ".Ol..lO.",
+    ".OllllO.",
+    "..OOOO..",
+    "........",
+  ],
+  // The LONGBOW's arrow: steel tip, yew shaft, white fletching.
+  arrow: [
+    "........",
+    ".....OO.",
+    "....OaO.",
+    "...OBO..",
+    "..OBO...",
+    ".OBO....",
+    ".WWO....",
+    ".WW.....",
+  ],
+  // The SORCERER'S STAFF's violet orb: slime-purple rim, white heart.
+  orb: [
+    "........",
+    "...OO...",
+    "..OLPO..",
+    ".OLWWPO.",
+    ".OPWWPO.",
+    "..OPPO..",
     "...OO...",
     "........",
   ],

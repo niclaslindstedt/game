@@ -1,8 +1,8 @@
 // SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
 // Presentation for the item-quality ladder. The engine defines what tiers
 // ARE (defs/equipment.ts); how they LOOK — the Diablo-style name colors —
-// is the app's business. All four tiers are styled now even though the moon
-// only drops the first two.
+// is the app's business. The whole ladder is styled even though unique and
+// legendary items don't ship yet (their monster-level gates are plumbed).
 
 import type { Affix, Tier, WeaponClass } from "@game/core";
 
@@ -10,7 +10,8 @@ export const TIER_COLORS: Record<Tier, string> = {
   regular: "#e6e8eb",
   magic: "#4da6ff",
   rare: "#ffe14d",
-  epic: "#b45df0",
+  // The Diablo palette: gold uniques, orange legendaries.
+  unique: "#c7a25a",
   legendary: "#ffa726",
 };
 

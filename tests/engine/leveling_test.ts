@@ -149,6 +149,7 @@ describe("stats", () => {
       defId: "test_wand",
       slot: "weapon",
       tier: "regular",
+      ilvl: 5,
       affixes: [],
       durability: wandDef.durability,
     };
@@ -209,6 +210,7 @@ describe("stats", () => {
       defId: "test_wand",
       slot: "weapon",
       tier: "regular",
+      ilvl: 5,
       affixes: [],
       durability: wandDef.durability,
     };
@@ -410,6 +412,7 @@ describe("stats", () => {
       defId: "test_charm",
       slot: "charm",
       tier: "regular",
+      ilvl: 5,
       affixes: [{ kind: "stat", stat: "strength", value: 2 }],
     };
     state.player.inventory[0] = charm;

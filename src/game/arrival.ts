@@ -14,7 +14,7 @@
 import { ARRIVAL, HELD_ITEMS, LEVELING } from "./config.ts";
 import { difficultyDef, meetsMinDifficulty } from "./defs/difficulties.ts";
 import { enemyDef } from "./defs/enemies/index.ts";
-import { gearDef, weaponDef } from "./defs/equipment.ts";
+import { equipmentLevelReq, gearDef, weaponDef } from "./defs/equipment.ts";
 import { levelsBefore, type LevelDef } from "./defs/levels/index.ts";
 import {
   inventoryCapacity,
@@ -144,13 +144,22 @@ function issueGear(def: LevelDef, slot: "suit" | "charm"): string | undefined {
   return def.loot.gearPool.find((id) => gearDef(id).slot === slot);
 }
 
-/** A plain regular-tier instance of `defId` (ids are re-minted on apply). */
+/** A plain regular-tier instance of `defId` (ids are re-minted on apply).
+ * Minted at the base's own requirement as its item level — the natural level
+ * such a piece would have dropped at (cosmetic on an affixless regular). */
 function regularPiece(
   defId: string,
   slot: Equipment["slot"],
   durability?: number,
 ): Equipment {
-  const piece: Equipment = { id: 0, defId, slot, tier: "regular", affixes: [] };
+  const piece: Equipment = {
+    id: 0,
+    defId,
+    slot,
+    tier: "regular",
+    ilvl: equipmentLevelReq(defId),
+    affixes: [],
+  };
   if (durability !== undefined) piece.durability = durability;
   return piece;
 }

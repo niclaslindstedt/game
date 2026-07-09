@@ -34,7 +34,7 @@ import {
   rollEquipment,
   syncInventoryCapacity,
 } from "./items.ts";
-import { evolutionHpMult, mobHpScaleFor } from "./menace.ts";
+import { evolutionHpMult, mobHpScaleFor, mobLevelFor } from "./menace.ts";
 import { boundingRadius, rockHalf } from "./obstacles.ts";
 import type {
   Decor,
@@ -64,9 +64,14 @@ export function createGame(
   const def = levelDef(levelId);
   const diff = difficultyDef(difficulty);
   // Every monster spawns at the horde's RELATIVE level (player level + the
-  // difficulty's offset). Placed spawns mint at the authored level-1 baseline;
-  // the wave spawner tracks the player's live level instead (mobLevelScale).
+  // difficulty's offset). Placed spawns mint their HP at the authored level-1
+  // baseline — the opening ring is deliberately a warm-up — while the wave
+  // spawner tracks the player's live level (mobLevelScale). Their MONSTER
+  // LEVEL for loot, though, follows the hero who actually arrives (the
+  // carried loadout's level): a level-14 arrival's warm-up mobs still drop
+  // level-appropriate finds, not the opener's ilvl-1 castoffs.
   const mobHp = mobHpScaleFor(1, difficulty);
+  const mobLvl = mobLevelFor(loadout?.level ?? 1, difficulty);
   const rng = createRng(seed);
   const playerSpawn = vec(def.playerSpawn.x, def.playerSpawn.y);
   let nextId = 1;
@@ -106,6 +111,9 @@ export function createGame(
           rng,
           nextId++,
           mobHp,
+          0,
+          1,
+          mobLvl,
         ),
       );
       continue;
@@ -132,7 +140,9 @@ export function createGame(
           break;
         }
       }
-      enemies.push(spawnEnemy(spawn.enemy, pos, rng, nextId++, mobHp));
+      enemies.push(
+        spawnEnemy(spawn.enemy, pos, rng, nextId++, mobHp, 0, 1, mobLvl),
+      );
     }
   }
 
@@ -145,6 +155,9 @@ export function createGame(
       rng,
       nextId++,
       mobHp,
+      0,
+      1,
+      mobLvl,
     );
     rusher.vanguard = true;
     enemies.push(rusher);
@@ -250,6 +263,7 @@ export function createGame(
           defId: diff.startingWeapon,
           slot: "weapon",
           tier: "regular",
+          ilvl: 1,
           affixes: [],
           durability: weaponDef(diff.startingWeapon).durability,
         },
@@ -364,6 +378,7 @@ export function spawnEnemy(
   hpMult = 1,
   evo = 0,
   evoEffect = 1,
+  mlvl = 1,
 ): Enemy {
   const def = enemyDef(defId);
   const jitter =
@@ -382,6 +397,12 @@ export function spawnEnemy(
     home: { ...pos },
     hp,
     maxHp: hp,
+    // The MONSTER LEVEL the loot system reads (base levelReq gates, tier
+    // unlock gates, the dropped item's own level): the horde baseline the
+    // caller resolved (mobLevelFor) plus this def's own head start. Elites
+    // and bosses re-stamp it the moment their fight engages
+    // (maybePowerScale), so their drops match the hero who beat them.
+    mlvl: Math.max(1, mlvl + (def.levelBonus ?? 0)),
     speed: def.speed * (1 + jitter),
     contactCooldownMs: 0,
   };

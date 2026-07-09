@@ -29,6 +29,14 @@ export type EnemyDef = {
    */
   gore?: "blood" | "ecto" | "sparks";
   hp: number;
+  /**
+   * Levels ABOVE the horde's baseline this mob runs at: its monster level is
+   * `player level + difficulty offset + this` (see spawnEnemy /
+   * maybePowerScale). Elites and bosses set it so the set-piece fights reach
+   * the loot tier gates (`LOOT.tierUnlockMlvl`) — and drop higher-level
+   * items — a few levels before the rank and file do. Omitted = 0.
+   */
+  levelBonus?: number;
   /** World px/s before per-instance jitter. */
   speed: number;
   /** Collision radius in world px. */
@@ -131,6 +139,17 @@ export type EnemyDef = {
     items?: (string | { defId: string; tier?: Tier })[];
     /** Story items always dropped (STORY_ITEM_DEFS ids — keys, dossiers). */
     storyItems?: string[];
+    /**
+     * Per-tier drop CHANCES for this mob's kill, and they may exceed 1: each
+     * whole 1.0 is a guaranteed drop of that tier and the remainder is the
+     * chance of one more — a boss at `{ magic: 1.5, rare: 0.5 }` always drops
+     * one magic item, half the time a second, and half the time a rare on
+     * top. Each drop is a random piece from the level's pools forced to that
+     * tier. The monster-level gates still hold: a tier the mob's level hasn't
+     * unlocked (`LOOT.tierUnlockMlvl`) is skipped outright, so the same boss
+     * def pays better on harder difficulties (where its mlvl runs higher).
+     */
+    tierDrops?: Partial<Record<Tier, number>>;
     weapons: number;
     gear: number;
     /** Golden XP arrows (see LEVELING.arrowXpShare). */

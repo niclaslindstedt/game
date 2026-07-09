@@ -16,6 +16,7 @@ own namespace, and a sequel changes it there once:
 | Controls → Powerups (side) | lower left / lower right                                    | lower left                                                  |
 | Music volume               | 0–100% in quarter steps                                     | 80%                                                         |
 | Sound FX volume            | 0–100% in quarter steps                                     | 100%                                                        |
+| Hardcore                   | on / off                                                    | off (softcore: death loses nothing)                         |
 
 Desktop keyboard controls (when **Keys** is set to WASD): WASD or the arrow
 keys run, **Shift** walks, **Space** jumps, **1/2/3** fire the powerup dock
@@ -36,7 +37,11 @@ as a replay picker and lights up NEXT LEVEL on the victory splash. Clearing a
 level also mints a one-shot LEVEL TOKEN (`<storagePrefix>:level-tokens`) that
 can be spent to unlock the same level at a higher difficulty ahead of the
 campaign there (`<storagePrefix>:token-unlocks`); the unlock persists, the
-token doesn't. Every
+token doesn't. Unique/legendary items carried through a difficulty's final
+victory join the forever-stash (`<storagePrefix>:keepsakes`) and are poured
+back into every later run's bag. With **Hardcore** on, DYING burns that
+stash, strips banked loadouts of their unique/legendary pieces, and revokes
+the level tokens and their unlocks — softcore death loses nothing. Every
 finished run is banked per difficulty under `<storagePrefix>:highscores` with
 its survival time, kills, player level reached, and a full end-of-run session
 snapshot (`website/src/game/highscores.ts`); the end-of-run screen shows that

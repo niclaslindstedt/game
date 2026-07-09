@@ -172,23 +172,20 @@ export const MOON: LevelDef = {
     { enemy: "optimusk", thought: "moon_optimusk" },
   ],
   loot: {
+    // The 70s pool: hardware the space race ferried up — lander tools, a
+    // survival-kit revolver, surplus arms, one atomic-age prototype.
+    // Introduced at level requirements 5 → 10, so the pool unfolds across
+    // the run; the global tier gates (magic at mlvl 5, rare at 10) mean the
+    // moon is where blues become routine and the first yellows land.
     weaponPool: [
-      "blaster",
-      "wand",
-      "wrench",
-      "pipe",
-      "hammer",
-      "pistol",
-      "rifle",
-      "star_wand",
-      "void_wand",
+      "lunar_wrench",
+      "service_revolver",
+      "geology_hammer",
+      "surplus_carbine",
+      "retro_raygun",
     ],
     gearPool: ["suit_plating", "moon_charm"],
     abilityPool: ["fire_orbs", "storm_cell", "stasis_field", "item_magnet"],
-    // The moon is where yellow rares start turning up: a slim base chance for
-    // the rank-and-file ghosts, which the elites' and boss's tierBonus (and
-    // LUCK) lift into a real reward. Level 1 stays rare-free.
-    tierChances: { magic: 0.2, rare: 0.05 },
     // MOON'S BLADE arrives early — at a kill rolled in the first hundred,
     // discovered in play — so the run's signature weapon shapes the run
     // instead of capping it.

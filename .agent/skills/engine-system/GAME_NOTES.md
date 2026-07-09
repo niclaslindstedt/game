@@ -151,3 +151,21 @@ sequel truncates this file to a stub and rebuilds it as its own systems land.
   against. This game's content suites live in `tests/content/` and use the
   shipped catalogs via the root `tests/helpers.ts`. The only shared id is
   `blaster` — `create.ts`/`items.ts` mint it as the built-in sidearm.
+- **Diablo loot economy (2026-07, weapon rework):** progression-shaped loot
+  is three numbers threaded through the existing catalogs, not a new system:
+  a MONSTER LEVEL stamped on every enemy at spawn (`spawnEnemy` param,
+  re-stamped for elites/bosses in `maybePowerScale`), a per-def `levelReq`
+  gating both the drop pool and the hero's hands (`meetsLevelReq` checked in
+  auto-equip, bag-equip, and the broken-weapon fallback scan), and an ITEM
+  LEVEL on each drop (mlvl − weighted deficit) that scales affix magnitudes
+  (`AffixDef.perIlvl`). Tier availability became ONE config gate
+  (`LOOT.tierUnlockMlvl`) + global base chances instead of per-level
+  tierChances — per-level data now only says WHICH bases are thematic.
+  Elite/boss "richer drops" are declarative per-tier chances that may exceed
+  1.0 (`EnemyDef.loot.tierDrops`; whole part guaranteed, fraction rolled).
+  Projectile identity (spread volleys, pierce, homing, chain) is data on
+  `WeaponDef.projectile` handled in stepWeapon/stepProjectiles — a pierce
+  shot tracks `hitIds` so it never bills a body twice. Dedicated skill:
+  `weapon-system` (stat checker + arsenal sheet). App-side permanence
+  (keepsake stash, hardcore death) lives entirely in website progress.ts —
+  the engine never learns hardcore exists.

@@ -38,6 +38,7 @@ function equip(state: GameState, defId: string): void {
     defId,
     slot: "weapon",
     tier: "regular",
+    ilvl: 5,
     affixes: [],
   };
   state.player.equipment.weapon = weapon;

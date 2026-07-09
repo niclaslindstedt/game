@@ -92,6 +92,24 @@ export function mobLevelScale(state: GameState): number {
 }
 
 /**
+ * The horde's MONSTER LEVEL for a given player level: `playerLevel + the
+ * difficulty's mobLevelOffset`, floored at 1. The same number `mobHpScaleFor`
+ * scales hp from, surfaced as a level so the loot system can read it — which
+ * base items may drop (`levelReq`), which tiers are unlocked
+ * (`LOOT.tierUnlockMlvl`), and what level the dropped item itself carries.
+ * A def's own `levelBonus` (elites/bosses run hot) is added by the caller.
+ */
+export function mobLevelFor(playerLevel: number, difficulty: string): number {
+  return Math.max(1, playerLevel + difficultyDef(difficulty).mobLevelOffset);
+}
+
+/** `mobLevelFor` off the live state: the monster level a mob spawned right
+ * now would carry (before its def's `levelBonus`). */
+export function currentMobLevel(state: GameState): number {
+  return mobLevelFor(state.player.level, state.difficulty);
+}
+
+/**
  * The tier bonus a minion's drop rolls from the player's LEVEL — better gear to
  * match the tougher horde `mobLevelScale` produces (`tierBonusPerLevel` per
  * level above 1). Stacks with the menace evolution stage's `tierBonusPerStage`
@@ -211,8 +229,14 @@ export function enemyPowerScale(state: GameState): number {
  */
 export function maybePowerScale(state: GameState, enemy: Enemy): void {
   if (enemy.powerScaled) return;
-  if (enemyDef(enemy.defId).role === "minion") return;
+  const def = enemyDef(enemy.defId);
+  if (def.role === "minion") return;
   enemy.powerScaled = true;
+  // The fight opening is also when the mob's MONSTER LEVEL is settled: an
+  // elite/boss met deep into a run drops loot worthy of the hero who beat it,
+  // not of the level it was placed at. Its `levelBonus` keeps it a few levels
+  // above the rank and file, so the set pieces reach the tier gates first.
+  enemy.mlvl = Math.max(1, currentMobLevel(state) + (def.levelBonus ?? 0));
   const scale = enemyPowerScale(state);
   enemy.contactMult = 1 + (scale - 1) * MENACE.bossContactShare;
   if (scale <= 1) return;

@@ -25,17 +25,21 @@ import { cutsceneDef } from "./defs/cutscenes.ts";
 import {
   affixNaming,
   AFFIX_POOLS,
+  equipmentLevelReq,
   gearDef,
   isWeaponDef,
   STAT_NAMES,
   TIER_ROLL_ORDER,
   TIERS,
+  weaponAssumedTargets,
+  weaponCritMult,
   weaponDef,
   type AffixDef,
   equipmentBaseName,
 } from "./defs/equipment.ts";
 import { difficultyDef } from "./defs/difficulties.ts";
 import { levelDef } from "./defs/levels/index.ts";
+import { currentMobLevel } from "./menace.ts";
 import type {
   Affix,
   ArmorGrade,
@@ -112,37 +116,47 @@ function pickWeighted<T extends { weight: number }>(rng: Rng, pool: T[]): T {
   return pool[pool.length - 1] as T;
 }
 
-function rollAffix(rng: Rng, def: AffixDef): Affix {
-  const [min, max] = def.range;
+/**
+ * Roll one affix: its magnitude is `ilvl × randomRange(perIlvl)` — the
+ * Diablo rule that a deeper drop rolls bigger. Stat and hp affixes round to
+ * whole points and never fall below 1, so even an ilvl-1 magic find pays
+ * something.
+ */
+function rollAffix(rng: Rng, def: AffixDef, ilvl: number): Affix {
+  const [min, max] = def.perIlvl;
+  const value = ilvl * randomRange(rng, min, max);
   switch (def.kind) {
     case "damagePct":
-      return { kind: "damagePct", value: randomRange(rng, min, max) };
+      return { kind: "damagePct", value };
     case "crit":
-      return { kind: "crit", value: randomRange(rng, min, max) };
+      return { kind: "crit", value };
     case "maxHp":
-      return { kind: "maxHp", value: Math.round(randomRange(rng, min, max)) };
+      return { kind: "maxHp", value: Math.max(1, Math.round(value)) };
     case "stat":
       return {
         kind: "stat",
-        value: Math.round(randomRange(rng, min, max)),
+        value: Math.max(1, Math.round(value)),
         stat: STAT_NAMES[Math.floor(rng() * STAT_NAMES.length)] as StatName,
       };
   }
 }
 
 /**
- * Roll the tier for a drop: best tier first, each gated by the level's loot
- * table plus the difficulty's bonus (absent from both = cannot drop here —
- * harder difficulties unlock tiers the level alone doesn't), sweetened by
- * LUCK and any per-enemy bonus.
+ * Roll the tier for a drop off a level-`mlvl` monster: best tier first, each
+ * gated by the monster-level unlock (`LOOT.tierUnlockMlvl` — below the gate a
+ * tier simply cannot drop, whatever the chances say), then rolled at the
+ * global base chance plus the difficulty's bonus, sweetened by LUCK and any
+ * per-enemy/menace bonus.
  */
-function rollTier(state: GameState, tierBonus: number): Tier {
-  const chances = levelDef(state.level.id).loot.tierChances;
+function rollTier(state: GameState, mlvl: number, tierBonus: number): Tier {
   const difficultyChances = difficultyDef(state.difficulty).tierChanceBonus;
   const luckBonus =
     effectiveStat(state, "luck") * STATS.tierChancePerLuck + tierBonus;
-  for (const tier of TIER_ROLL_ORDER) {
-    const base = (chances[tier] ?? 0) + (difficultyChances[tier] ?? 0);
+  // TIER_ROLL_ORDER never contains "regular" (the fall-through), so the
+  // rolled-tier config maps index safely.
+  for (const tier of TIER_ROLL_ORDER as Exclude<Tier, "regular">[]) {
+    if (mlvl < LOOT.tierUnlockMlvl[tier]) continue;
+    const base = LOOT.tierChances[tier] + (difficultyChances[tier] ?? 0);
     if (base <= 0) continue;
     if (state.rng() < base + luckBonus) return tier;
   }
@@ -150,10 +164,33 @@ function rollTier(state: GameState, tierBonus: number): Tier {
 }
 
 /**
+ * Roll a dropped item's own LEVEL off a level-`mlvl` killer: the mob's level
+ * minus a small weighted deficit (config `LOOT.ilvlDeltaWeights` — full-level
+ * drops are the rare end of the band). Rare-and-better finds use the tighter
+ * `ilvlDeltaWeightsRare` band (0–1 below), so a yellow is generally a
+ * high-level item. Floored at 1.
+ */
+function rollItemLevel(state: GameState, mlvl: number, tier: Tier): number {
+  const weights: readonly number[] =
+    tier === "rare" || tier === "unique" || tier === "legendary"
+      ? LOOT.ilvlDeltaWeightsRare
+      : LOOT.ilvlDeltaWeights;
+  const delta = pickWeighted(
+    state.rng,
+    weights.map((weight, i) => ({ weight, delta: i })),
+  ).delta;
+  return Math.max(1, mlvl - delta);
+}
+
+/**
  * Roll a fresh equipment instance from the level's loot pools — or, with
- * `defId`, mint a specific piece (uniques like boss trophies). Tier affix
- * counts come from the tier ladder (regular 0, magic 1, epic 2, legendary
- * 3); affix kinds never repeat on one item.
+ * `defId`, mint a specific piece (signature drops, placed items). `mlvl` is
+ * the killer's MONSTER LEVEL (defaulting to the live horde level) and drives
+ * the whole Diablo shape of the drop: bases with a `levelReq` above it never
+ * roll, tiers it hasn't unlocked never roll, and the item's own level (which
+ * sizes its affixes) hangs off it. Tier affix counts come from the ladder
+ * (regular 0, magic 1, rare 2, unique 3, legendary 4); affix kinds never
+ * repeat on one item.
  */
 export function rollEquipment(
   state: GameState,
@@ -162,18 +199,30 @@ export function rollEquipment(
     tierBonus?: number;
     defId?: string;
     /** Force a specific tier instead of rolling one (story-guaranteed
-     * uniques like the epic space suit the moon level can't otherwise roll). */
+     * pieces like the space suit; a boss's `tierDrops` payouts). */
     tier?: Tier;
+    /** The killer's monster level; omitted = the live horde level. */
+    mlvl?: number;
   } = {},
 ): Equipment {
   const rng = state.rng;
+  const mlvl = opts.mlvl ?? currentMobLevel(state);
   const loot = levelDef(state.level.id).loot;
   const family = opts.defId
     ? isWeaponDef(opts.defId)
       ? ("weapon" as const)
       : ("gear" as const)
     : (opts.slot ?? (rng() < 0.6 ? ("weapon" as const) : ("gear" as const)));
-  const pool = family === "weapon" ? loot.weaponPool : loot.gearPool;
+  const fullPool = family === "weapon" ? loot.weaponPool : loot.gearPool;
+  // The levelReq drop gate: a base whose requirement the killer's level
+  // hasn't reached stays out of the draw. If the whole pool is still out of
+  // reach (a fresh run on a late-game pool), the lowest-requirement bases
+  // stand in so a drop is never a dead roll.
+  let pool = fullPool.filter((id) => equipmentLevelReq(id) <= mlvl);
+  if (pool.length === 0 && fullPool.length > 0) {
+    const minReq = Math.min(...fullPool.map((id) => equipmentLevelReq(id)));
+    pool = fullPool.filter((id) => equipmentLevelReq(id) === minReq);
+  }
   let defId = opts.defId ?? (pool[Math.floor(rng() * pool.length)] as string);
   // Harder difficulties find fewer PLATED suits: when a random gear pick
   // lands on armor, the difficulty's `armorDropMult` is its chance to stand —
@@ -191,18 +240,31 @@ export function rollEquipment(
   }
   const slot: EquipSlot = family === "weapon" ? "weapon" : gearDef(defId).slot;
 
-  const tier = opts.tier ?? rollTier(state, opts.tierBonus ?? 0);
+  const tier = opts.tier ?? rollTier(state, mlvl, opts.tierBonus ?? 0);
+  const ilvl = rollItemLevel(state, mlvl, tier);
   const affixes: Affix[] = [];
   const available = [...AFFIX_POOLS[family]];
   for (let i = 0; i < TIERS[tier].affixCount && available.length > 0; i++) {
     const affixDef = pickWeighted(rng, available);
     available.splice(available.indexOf(affixDef), 1);
-    affixes.push(rollAffix(rng, affixDef));
+    affixes.push(rollAffix(rng, affixDef, ilvl));
   }
 
-  const rolled: Equipment = { id: state.nextId++, defId, slot, tier, affixes };
+  const rolled: Equipment = {
+    id: state.nextId++,
+    defId,
+    slot,
+    tier,
+    ilvl,
+    affixes,
+  };
   // Dropped weapons arrive fresh but finite — they wear out per attack.
-  if (family === "weapon") rolled.durability = weaponDef(defId).durability;
+  // Unique and legendary finds are the exception: very well built, they
+  // never break (no durability also exempts them from the looted-weapon
+  // damage damper, the way the built-in sidearm is exempt).
+  if (family === "weapon" && tier !== "unique" && tier !== "legendary") {
+    rolled.durability = weaponDef(defId).durability;
+  }
   return rolled;
 }
 
@@ -592,22 +654,22 @@ export function weaponSweepHalfAngle(
 }
 
 /**
- * How many monsters a single melee swing of the EQUIPPED weapon may strike:
- * the weapon's own base cap (`WeaponDef.baseAoeTargets`, defaulting to the
- * global `MELEE.baseAoeTargets` floor) plus `aoeTargetsPerInt` per
- * INTELLIGENCE point, floored to a whole count (always ≥ 1 so a swing never
- * whiffs its aim). The cone (weaponSweepHalfAngle) decides which foes are
- * eligible; this caps how many of them the blow actually lands on, so cleaving
- * the horde is an INT investment — and a crude single-target blade only ever
- * bites one foe until that investment lands.
+ * How many monsters a single melee swing may strike — INTELLIGENCE's call,
+ * not the weapon's: the global `MELEE.baseAoeTargets` floor plus
+ * `aoeTargetsPerInt` per INT point, floored to a whole count (always ≥ 1 so
+ * a swing never whiffs its aim). The weapon only contributes its SHAPE: the
+ * cone (weaponSweepHalfAngle) decides which foes are eligible, and a narrow
+ * thrust geometrically holds few however sharp the mind. Cleaving the horde
+ * is an INT investment — which is also why AoE weapons carry budget-divided
+ * per-hit damage (see weaponAssumedTargets): they start deliberately weak
+ * and grow into their assumption.
  */
 export function maxMeleeTargets(state: GameState): number {
-  const def = weaponDef(state.player.equipment.weapon.defId);
-  const base = def.baseAoeTargets ?? MELEE.baseAoeTargets;
   return Math.max(
     1,
     Math.floor(
-      base + effectiveStat(state, "intelligence") * STATS.aoeTargetsPerInt,
+      MELEE.baseAoeTargets +
+        effectiveStat(state, "intelligence") * STATS.aoeTargetsPerInt,
     ),
   );
 }
@@ -615,14 +677,32 @@ export function maxMeleeTargets(state: GameState): number {
 // ---- Auto-equip scoring --------------------------------------------------------
 
 /**
- * A weapon's expected damage per second in this player's hands — the number
- * auto-equip ranks weapons by. Both halves fold in the governing stat: STR,
- * DEX and INT each raise their class's damage AND cadence, so an INT build
- * genuinely prefers wands and a STR build feels its melee weapons swing faster.
+ * A weapon's expected EFFECTIVE output in this player's hands — the number
+ * auto-equip ranks weapons by. Per-target DPS (stats folded in: STR/DEX/INT
+ * raise their class's damage AND cadence) × the weapon's assumed target
+ * count (the damage-budget model's AoE normalization — a cone cleaver's
+ * light blows are worth their crowd) × the cadence-weighted crit lift. The
+ * same math the balance budget is authored in, so "better" here matches the
+ * design's intent.
  */
 export function weaponScore(state: GameState, weapon: Equipment): number {
+  const def = weaponDef(weapon.defId);
+  const critLift =
+    1 + playerCritChance(state, def.class) * (weaponCritMult(def) - 1);
+  // Melee AoE is only worth what THIS build's INTELLIGENCE can realize: a
+  // cone budgeted at 4 counts for 2 in untrained hands (maxMeleeTargets),
+  // so auto-equip won't trade a solid single-target hit for potential the
+  // hero can't cash yet. Ranged multipliers (pellets, pierce, chain) are
+  // the weapon's own physics and count in full.
+  const assumed = weaponAssumedTargets(def);
+  const targets = def.projectile
+    ? assumed
+    : Math.min(assumed, maxMeleeTargets(state));
   return (
-    (weaponDamageFor(state, weapon) * 1000) / weaponCooldownFor(state, weapon)
+    ((weaponDamageFor(state, weapon) * 1000) /
+      weaponCooldownFor(state, weapon)) *
+    targets *
+    critLift
   );
 }
 
@@ -635,14 +715,16 @@ export function weaponScore(state: GameState, weapon: Equipment): number {
  * the item card leads with, so two weapons — a slow heavy hitter and a quick
  * light one — can be compared at a glance. Unlike `weaponScore` (the raw
  * damage/cadence ratio auto-equip ranks by) this includes crit, so it reads as
- * true sustained output rather than a ranking heuristic.
+ * true sustained output rather than a ranking heuristic. Per TARGET — an
+ * AoE weapon reads low here and earns it back across the crowd (see
+ * `weaponAssumedTargets`).
  */
 export function weaponDps(state: GameState, weapon: Equipment): number {
   const def = weaponDef(weapon.defId);
   const perHit = weaponDamageFor(state, weapon);
   const attacksPerSec = 1000 / weaponCooldownFor(state, weapon);
   const critLift =
-    1 + playerCritChance(state, def.class) * (STATS.critMultiplier - 1);
+    1 + playerCritChance(state, def.class) * (weaponCritMult(def) - 1);
   return perHit * attacksPerSec * critLift;
 }
 
@@ -668,22 +750,31 @@ function remainingDurability(weapon: Equipment): number {
   return weapon.durability ?? Infinity;
 }
 
+/**
+ * Can the hero WEAR this piece yet? The Diablo level gate: an item whose
+ * base `levelReq` outruns the player's level is a find to bank, not a weapon
+ * to swing — auto-equip skips it, the bag refuses to equip it, and the UI
+ * paints the requirement red until the hero grows into it.
+ */
+export function meetsLevelReq(state: GameState, equipment: Equipment): boolean {
+  return state.player.level >= equipmentLevelReq(equipment.defId);
+}
+
 /** Is `candidate` strictly better than the piece occupying its slot? */
 export function isBetterEquipment(
   state: GameState,
   candidate: Equipment,
 ): boolean {
+  // An under-leveled find is never worn, however strong — it banks instead.
+  if (!meetsLevelReq(state, candidate)) return false;
   if (candidate.slot === "weapon") {
     const current = state.player.equipment.weapon;
-    // The difficulty's STARTING WEAPON is the pickup floor: any real weapon
-    // the world yields is an upgrade over the piece off the wall, so a fresh
-    // pickup always supplants it — even a slow sidearm whose raw DPS score
-    // would otherwise rank below it. Once a proper weapon is in hand the
-    // usual score comparison rules.
-    const starter = difficultyDef(state.difficulty).startingWeapon;
-    if (current.defId === starter && candidate.defId !== starter) {
-      return true;
-    }
+    // No starter special case anymore: weaponScore speaks the damage-budget
+    // model (AoE targets + crit weight folded in), so the wall weapon holds
+    // its slot until a find genuinely out-scores it — a budget-normalized
+    // cone cleaver is a DOWNGRADE in a sparse field, and force-equipping it
+    // (the old "pickup floor" rule) collapsed early runs. The starter still
+    // leaves the story soon enough: it wears out.
     const candidateScore = weaponScore(state, candidate);
     const currentScore = weaponScore(state, current);
     if (candidateScore !== currentScore) return candidateScore > currentScore;
@@ -741,6 +832,8 @@ export function equipFromInventory(state: GameState, index: number): boolean {
   const player = state.player;
   const item = player.inventory[index];
   if (!item) return false;
+  // The level gate holds in the bag too: an under-leveled find stays banked.
+  if (!meetsLevelReq(state, item)) return false;
   const slot = item.slot;
   const previous =
     slot === "weapon" ? player.equipment.weapon : player.equipment[slot];
@@ -871,6 +964,8 @@ export function wearEquippedWeapon(state: GameState): void {
       player.inventory[i] = null;
       continue;
     }
+    // A banked find the hero hasn't grown into can't be drawn yet.
+    if (!meetsLevelReq(state, item)) continue;
     const score = weaponScore(state, item);
     if (score > bestScore) {
       bestScore = score;
@@ -889,6 +984,7 @@ export function wearEquippedWeapon(state: GameState): void {
       defId: "blaster",
       slot: "weapon",
       tier: "regular",
+      ilvl: 1,
       affixes: [],
     };
   }

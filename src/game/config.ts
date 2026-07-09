@@ -38,6 +38,41 @@ export const PLAYER = {
 export const WEAPON = {
   baseCooldownMult: 1.2,
   /**
+   * Chain lightning (a projectile def's `chain`): how far a bolt leaps from
+   * the struck foe to the next (world px), and the fraction of the blow each
+   * leap carries. Leaps always connect (no miss/dodge roll — the current has
+   * already found its path).
+   */
+  chainRange: 80,
+  chainDamageFrac: 0.6,
+  /**
+   * CRIT WEIGHT BY CADENCE: a weapon's crit-damage multiplier follows how it
+   * swings — a quick blade crits lighter, a slow heavy hitter crits like a
+   * truck (`weaponCritMult` in defs/equipment.ts derives it; a def may pin
+   * its own `critMult`). This is the crit half of the damage-budget model:
+   * effective DPS folds the lift in, so the slow archetypes pay for their
+   * spikes with per-hit budget rather than getting them for free.
+   */
+  critMultByCadence: { fast: 1.6, medium: 2, slow: 2.5 },
+  /** Cadence classes: fast below this cooldown… */
+  critFastBelowMs: 450,
+  /** …slow at/above this one; medium in between. */
+  critSlowFromMs: 800,
+  /**
+   * The AoE side of the damage-budget model — BALANCING assumptions, not
+   * gameplay caps (how many foes a swing ACTUALLY hits is INTELLIGENCE's
+   * business — see maxMeleeTargets). A melee weapon is classified by its
+   * arc: below `aoeConeFromDeg` it is a single-target thrust budgeted at 1
+   * target; from there a cone budgeted at `assumedTargets.cone`; from
+   * `aoeFullFromDeg` a full-circle sweep budgeted at `assumedTargets.full`.
+   * An AoE weapon therefore carries budget ÷ 4 (or ÷ 5) per hit — weaker
+   * than a single-target weapon from the start, by design, until INT grows
+   * the cleave into the assumption.
+   */
+  aoeConeFromDeg: 80,
+  aoeFullFromDeg: 300,
+  assumedTargets: { cone: 4, full: 5 },
+  /**
    * Global damage scale on every weapon's catalog `damage` — the single lever
    * for "how hard does any weapon hit", the damage counterpart to
    * `baseCooldownMult`. Applied in `weaponDamageFor` (the one source of truth
@@ -568,6 +603,36 @@ export const LOOT = {
   minEquipmentPerLevel: 2,
   /** Tier-chance bonus on the trophy the last regular monster surrenders. */
   allClearTierBonus: 0.35,
+  /**
+   * The MONSTER LEVEL each tier unlocks at — a tier can never drop off a mob
+   * below its gate, whatever the chances say. The one dial for "when does the
+   * campaign start paying blues/yellows/golds": magic from mlvl 5, rare from
+   * 10, unique from 15, legendary from 25. (Monster level = player level +
+   * the difficulty's `mobLevelOffset`, so harder rungs reach each tier
+   * earlier in the story.)
+   */
+  tierUnlockMlvl: { magic: 5, rare: 10, unique: 15, legendary: 25 },
+  /**
+   * Base chance per tier that an equipment drop rolls it, checked best-first
+   * (see `rollTier`). Global — the campaign's progression now lives in the
+   * mlvl gates above, not in per-level tables. LUCK, the difficulty's
+   * `tierChanceBonus`, menace evolution, and per-enemy bonuses all add to
+   * each. Unique/legendary sit at 0 until their one-of-a-kind defs ship.
+   */
+  tierChances: { magic: 0.2, rare: 0.06, unique: 0, legendary: 0 },
+  /**
+   * How far below the killer's monster level a dropped item's LEVEL lands:
+   * index i is the relative weight of dropping exactly i levels short, so
+   * `[1, 2, 3, 4]` makes a −3 item four times likelier than a full-level one.
+   * Longer/shorter arrays widen/narrow the band. Item level floors at 1.
+   */
+  ilvlDeltaWeights: [1, 2, 3, 4],
+  /**
+   * The same weights for RARE-and-better drops: the big finds roll only 0–1
+   * below the mob (equal odds), so a yellow is generally a high-level item,
+   * not a lucky low roll.
+   */
+  ilvlDeltaWeightsRare: [1, 1],
   /**
    * The carry bag's floor — its size at zero STRENGTH. STRENGTH grows it from
    * here (`STATS.bagSlotsPerStr`), so the opening bag is deliberately tight

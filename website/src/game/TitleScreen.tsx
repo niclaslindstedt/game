@@ -437,6 +437,19 @@ export function TitleScreen({
             playUiSound(synth, "confirm"); // audition the new level
           },
         },
+        {
+          label: s.hardcore === "on" ? "HARDCORE: ON" : "HARDCORE: OFF",
+          aria: "settings-hardcore",
+          blurb:
+            s.hardcore === "on"
+              ? "DEATH BURNS UNIQUE FINDS, TOKENS AND UNLOCKS"
+              : "DEATH LOSES NOTHING - BEATEN FINDS ARE FOREVER",
+          action: () => {
+            playUiSound(synth, "confirm");
+            updateSettings({ hardcore: s.hardcore === "on" ? "off" : "on" });
+            setSettingsTick((t) => t + 1);
+          },
+        },
         backTo("main", onResume ? 2 : 1),
       ];
     }

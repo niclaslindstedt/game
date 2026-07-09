@@ -42,6 +42,7 @@ import {
   RUN,
   STAMINA,
   STATS,
+  WEAPON,
 } from "./config.ts";
 import { stepAsteroids, stepWells } from "./hazards.ts";
 import { spawnEnemy } from "./create.ts";
@@ -53,7 +54,7 @@ import {
   scaledMobCount,
 } from "./defs/difficulties.ts";
 import { enemyDef } from "./defs/enemies/index.ts";
-import { weaponDef } from "./defs/equipment.ts";
+import { weaponCritMult, weaponDef } from "./defs/equipment.ts";
 import { levelDef } from "./defs/levels/index.ts";
 import {
   addToInventory,
@@ -85,6 +86,7 @@ import {
   resolveObstacles,
 } from "./obstacles.ts";
 import {
+  currentMobLevel,
   lureMult,
   maybePowerScale,
   menaceStage,
@@ -104,6 +106,7 @@ import type {
   GameInput,
   GameState,
   Item,
+  Projectile,
   WeaponClass,
 } from "./types.ts";
 
@@ -332,6 +335,7 @@ function spawnWaveEnemy(state: GameState, defId: string): boolean {
         mobLevelScale(state),
         menaceStage(state),
         difficultyDef(state.difficulty).menaceEffectMult,
+        currentMobLevel(state),
       ),
     );
     return true;
@@ -546,25 +550,47 @@ function stepWeapon(state: GameState, input: GameInput, dtMs: number): void {
       weaponDamage(state),
       maxMeleeTargets(state),
       weapon.class,
+      weaponCritMult(weapon),
     );
     // Wear AFTER the strike so the blow lands with the weapon that swung.
     wearEquippedWeapon(state);
     return;
   }
 
-  state.projectiles.push({
-    id: state.nextId++,
-    pos: { ...player.pos },
-    dir,
-    speed: weapon.projectile.speed,
-    radius: weapon.projectile.radius,
-    damage: weaponDamage(state),
-    lifetimeMs: weapon.projectile.lifetimeMs,
-    weaponClass: weapon.class,
-    sprite: weapon.projectile.sprite,
-    // The shot leaves from the shooter's height and sinks back in flight.
-    z: player.z,
-  });
+  // One trigger pull, `count` projectiles: a single shot flies straight at
+  // the aim; a shotgun's volley fans its pellets evenly across `spreadDeg`
+  // around it. Every pellet carries the weapon's full per-hit damage — the
+  // spread itself is the falloff (fewer pellets connect at range).
+  const spec = weapon.projectile;
+  const count = Math.max(1, spec.count ?? 1);
+  const spread = ((spec.spreadDeg ?? 0) * Math.PI) / 180;
+  for (let i = 0; i < count; i++) {
+    const offset = count > 1 ? (i / (count - 1) - 0.5) * spread : 0;
+    const cos = Math.cos(offset);
+    const sin = Math.sin(offset);
+    const pelletDir = {
+      x: dir.x * cos - dir.y * sin,
+      y: dir.x * sin + dir.y * cos,
+    };
+    const projectile: Projectile = {
+      id: state.nextId++,
+      pos: { ...player.pos },
+      dir: pelletDir,
+      speed: spec.speed,
+      radius: spec.radius,
+      damage: weaponDamage(state),
+      lifetimeMs: spec.lifetimeMs,
+      weaponClass: weapon.class,
+      sprite: spec.sprite,
+      // The shot leaves from the shooter's height and sinks back in flight.
+      z: player.z,
+    };
+    if (spec.pierce) projectile.pierceLeft = spec.pierce;
+    if (spec.homing) projectile.homing = spec.homing;
+    if (spec.chain) projectile.chain = spec.chain;
+    projectile.critMult = weaponCritMult(weapon);
+    state.projectiles.push(projectile);
+  }
   state.stats.shotsFired++;
   state.events.push({
     type: "shot",
@@ -593,6 +619,7 @@ function meleeSweep(
   damage: number,
   maxTargets: number,
   weaponClass: WeaponClass,
+  critMult: number,
 ): void {
   const player = state.player;
   const rangeSq = range * range;
@@ -629,7 +656,7 @@ function meleeSweep(
       (eligible[i] as (typeof eligible)[number]).enemy,
       damage,
       weaponClass,
-      { rollAccuracy: true },
+      { rollAccuracy: true, critMult },
     );
   }
 }
@@ -758,6 +785,12 @@ function stepAbilities(state: GameState, dt: number, dtMs: number): void {
 function stepProjectiles(state: GameState, dt: number, dtMs: number): void {
   const survivors = [];
   for (const projectile of state.projectiles) {
+    // A homing shot steers toward the nearest living foe each tick, its turn
+    // capped by the def's rate — a smart dart curves onto a strafing target,
+    // it doesn't teleport. Foes already pierced through are dead to it.
+    if (projectile.homing) {
+      steerProjectile(state, projectile, dt);
+    }
     const from = { x: projectile.pos.x, y: projectile.pos.y };
     projectile.pos.x += projectile.dir.x * projectile.speed * dt;
     projectile.pos.y += projectile.dir.y * projectile.speed * dt;
@@ -782,7 +815,8 @@ function stepProjectiles(state: GameState, dt: number, dtMs: number): void {
       (enemy) =>
         distance(enemy.pos, projectile.pos) <=
           enemyDef(enemy.defId).radius + projectile.radius &&
-        !enemyDef(enemy.defId).apparition,
+        !enemyDef(enemy.defId).apparition &&
+        !projectile.hitIds?.includes(enemy.id),
     );
     if (!hit) {
       survivors.push(projectile);
@@ -790,9 +824,88 @@ function stepProjectiles(state: GameState, dt: number, dtMs: number): void {
     }
     hitEnemy(state, hit, projectile.damage, projectile.weaponClass, {
       rollAccuracy: true,
+      critMult: projectile.critMult,
     });
+    // Chain lightning: the first body grounds the bolt, and the current
+    // leaps on to the nearest fresh foes in range — each leap softened by
+    // `chainDamageFrac` and always connecting (the arc found its own path).
+    if (projectile.chain) {
+      chainLightning(state, projectile, hit);
+    }
+    // A piercing round spends one body and keeps flying; anything else is
+    // done. The struck foe is remembered (it may survive the blow) so the
+    // shot never bills the same body twice while passing through it.
+    if (projectile.pierceLeft && projectile.pierceLeft > 0) {
+      projectile.pierceLeft--;
+      (projectile.hitIds ??= []).push(hit.id);
+      survivors.push(projectile);
+    }
   }
   state.projectiles = survivors;
+}
+
+/** Curve a homing projectile toward the nearest living, un-pierced foe: the
+ * heading turns at most `homing` radians/s toward the bearing. */
+function steerProjectile(
+  state: GameState,
+  projectile: Projectile,
+  dt: number,
+): void {
+  let best: Enemy | undefined;
+  let bestDistSq = Infinity;
+  for (const enemy of state.enemies) {
+    if (enemyDef(enemy.defId).apparition) continue;
+    if (projectile.hitIds?.includes(enemy.id)) continue;
+    const dSq = distanceSq(enemy.pos, projectile.pos);
+    if (dSq < bestDistSq) {
+      bestDistSq = dSq;
+      best = enemy;
+    }
+  }
+  if (!best) return;
+  const want = direction(projectile.pos, best.pos);
+  const current = Math.atan2(projectile.dir.y, projectile.dir.x);
+  const target = Math.atan2(want.y, want.x);
+  // Shortest angular route, clamped to this tick's turn budget.
+  let delta = target - current;
+  while (delta > Math.PI) delta -= 2 * Math.PI;
+  while (delta < -Math.PI) delta += 2 * Math.PI;
+  const maxTurn = (projectile.homing ?? 0) * dt;
+  const turned = current + Math.max(-maxTurn, Math.min(maxTurn, delta));
+  projectile.dir = { x: Math.cos(turned), y: Math.sin(turned) };
+}
+
+/** Leap a struck bolt's current to the nearest fresh foes within
+ * `WEAPON.chainRange` of the body it grounded in — up to `chain` of them,
+ * each for `chainDamageFrac` of the blow, always connecting. Emits a
+ * `lightning` event per leap so the app flashes the arc. */
+function chainLightning(
+  state: GameState,
+  projectile: Projectile,
+  hit: Enemy,
+): void {
+  const leaps = projectile.chain ?? 0;
+  const rangeSq = WEAPON.chainRange * WEAPON.chainRange;
+  const targets = state.enemies
+    .filter(
+      (enemy) =>
+        enemy !== hit &&
+        !enemyDef(enemy.defId).apparition &&
+        !projectile.hitIds?.includes(enemy.id) &&
+        distanceSq(enemy.pos, hit.pos) <= rangeSq,
+    )
+    .sort((a, b) => distanceSq(a.pos, hit.pos) - distanceSq(b.pos, hit.pos))
+    .slice(0, leaps);
+  for (const target of targets) {
+    state.events.push({ type: "lightning", pos: { ...target.pos } });
+    hitEnemy(
+      state,
+      target,
+      projectile.damage * WEAPON.chainDamageFrac,
+      projectile.weaponClass,
+      { critMult: projectile.critMult },
+    );
+  }
 }
 
 function stepEnemies(state: GameState, dt: number, dtMs: number): void {

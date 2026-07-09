@@ -57,7 +57,8 @@ run against synthetic fixtures with no shipped content (see
   locked `doors` (chains of `door_locked` obstacles tracked in
   `state.doors`, opened by carrying the matching story-item key up to
   them), hand-`placedItems` (locked-room loot, plot pieces on pedestals),
-  decor, and the loot table (pools + tier chances).
+  decor, and the loot table (the level's thematic base pools — tier
+  availability is the global monster-level gate, not per-level data).
 - **`src/game/defs/enemies/`** — the monster catalog, split one file per
   roster (`spacez.ts`, `moon.ts`, …) merged into `ENEMY_DEFS` by
   `enemies/index.ts` (which throws on a duplicate id): stats, AI radii,
@@ -89,11 +90,16 @@ run against synthetic fixtures with no shipped content (see
   `cutscene` (if any) → `intro` (the hero's monologue) → `title` (the level
   name alone on black) → `playing`.
 - **`src/game/defs/equipment.ts`** — weapons (melee/ranged/magic classes,
-  each with a durability budget — dropped weapons wear out per attack and
-  break; the starting sidearm is minted unbreakable), gear, the five-tier
-  quality ladder (regular/magic/rare/epic/legendary — later levels and harder
-  difficulties unlock the upper tiers), and the affix pools magic+ items roll
-  (magic+ names are composed Diablo-style from those affixes).
+  each with a Diablo-style `levelReq` that gates both the drop — no monster
+  below it drops the base — and the hero's own hands, plus a durability
+  budget: dropped weapons wear out per attack and break, though the starting
+  sidearm and every unique/legendary find are minted unbreakable; ranged
+  bases can fire pellet volleys, pierce, home, or chain), gear, the
+  five-tier quality ladder (regular/magic/rare/unique/legendary — each tier
+  unlocks at a MONSTER LEVEL, config `LOOT.tierUnlockMlvl`), and the affix
+  pools magic+ items roll, whose magnitudes scale with the drop's ITEM LEVEL
+  (the killer's monster level minus a small weighted deficit; magic+ names
+  are composed Diablo-style from those affixes).
 - **`src/game/defs/abilities.ts`** — the ability pickups: time-limited
   powers (orbiting fire orbs, storm strikes, stasis slow fields, the item
   magnet whose pull radius grows with INTELLIGENCE) plus the instant
@@ -114,10 +120,10 @@ run against synthetic fixtures with no shipped content (see
   the wave spawner's live cap, the horde's RELATIVE level (`mobLevelOffset`
   — every monster spawns at player level + offset, hp shifted per level by
   `MENACE.mobHpPerLevel`), the drop economy (medkit/armor/powerup
-  multipliers down, drop-chance/tier/unique bonuses up — per-tier bonuses
-  unlock rare/epic/legendary on levels whose own loot table caps lower, and
-  `uniqueDropChance` draws from a level's `loot.uniquePool` once unique
-  items exist), the stamina burn, dodge/miss accuracy multipliers, and the
+  multipliers down, drop-chance/tier bonuses up — and since a rung's
+  `mobLevelOffset` raises MONSTER level, the hard rungs also reach every
+  tier's unlock gate earlier; `uniqueDropChance` draws from a level's
+  `loot.uniquePool` once unique items exist), the stamina burn, dodge/miss accuracy multipliers, and the
   menace meter's trigger/decay/effect. MEDIUM is the exact 1.0 baseline.
 - **`src/game/abilities.ts`** — ability activation (`grantAbility`),
   discarding a banked pickup (`discardHeldAbility`), and the helpers the

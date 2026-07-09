@@ -26,8 +26,12 @@ import {
   enemyDodgeChance,
   equipFromInventory,
   equipmentIcon,
+  equipmentLevelReq,
   equipmentName,
   gearDef,
+  STATS,
+  weaponAssumedTargets,
+  weaponCritMult,
   moveInventoryItem,
   playerAppearance,
   playerCritChance,
@@ -115,6 +119,19 @@ type CardLine = { text: string; color?: string };
 
 function itemLines(state: GameState, item: Equipment): CardLine[] {
   const lines: CardLine[] = [];
+  // The Diablo birth certificate: the item's own LEVEL (which sized its
+  // affixes) and the base's requirement — red while the hero hasn't grown
+  // into it (the engine refuses to equip it until then, see meetsLevelReq).
+  const meta: CardLine[] = [
+    { text: `ITEM LEVEL ${item.ilvl}`, color: "#9aa3ad" },
+  ];
+  const req = equipmentLevelReq(item.defId);
+  if (req > 1) {
+    meta.push({
+      text: `REQUIRES LEVEL ${req}`,
+      color: state.player.level < req ? "#e06a6a" : "#9aa3ad",
+    });
+  }
   if (item.defId in WEAPON_DEFS) {
     const def = weaponDef(item.defId);
     // The weapon's class, tinted by class (magic=purple, melee=gold,
@@ -162,6 +179,27 @@ function itemLines(state: GameState, item: Equipment): CardLine[] {
           ? `RANGE ${effRange} (+${rangeBonus})`
           : `RANGE ${effRange}`,
     });
+    // The AoE story: how many foes one blow reaches (the budget the light
+    // per-hit damage is spread across), and the cadence-weighted crit when
+    // it differs from the global default — slow weapons crit like trucks.
+    const targets = weaponAssumedTargets(def);
+    if (targets > 1) {
+      const label = def.projectile?.count
+        ? `${def.projectile.count} PELLETS`
+        : def.projectile?.pierce
+          ? `PIERCES ${def.projectile.pierce + 1}`
+          : def.projectile?.chain
+            ? `CHAINS TO ${def.projectile.chain}`
+            : `HITS UP TO ${targets}`;
+      lines.push({ text: label, color: "#7ecbff" });
+    }
+    const critMult = weaponCritMult(def);
+    if (critMult !== STATS.critMultiplier) {
+      lines.push({
+        text: `CRIT DAMAGE X${critMult.toFixed(1)}`,
+        color: AFFIX_COLORS.crit,
+      });
+    }
     lines.push(
       item.durability === undefined
         ? { text: "UNBREAKABLE" }
@@ -188,6 +226,8 @@ function itemLines(state: GameState, item: Equipment): CardLine[] {
       });
     }
   }
+  // The class/slot headline stays first; the level lines slide in under it.
+  lines.splice(1, 0, ...meta);
   return lines;
 }
 
