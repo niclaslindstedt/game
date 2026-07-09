@@ -255,6 +255,7 @@ export const MARS: LevelDef = {
       "plasma_blade",
       "railgun",
       "arc_projector",
+      "graviton_maw",
       "gravity_maul",
     ],
     // The colony printer's wardrobe: monocle to exoplate, introduced at

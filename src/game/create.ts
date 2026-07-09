@@ -76,6 +76,9 @@ export function createGame(
   const mobHp = mobHpScaleFor(1, difficulty);
   const mobLvl = mobLevelFor(loadout?.level ?? 1, difficulty);
   const rng = createRng(seed);
+  // The flavor stream: seeded off the same seed (so a run replays identically)
+  // but a separate sequence, so damage variance never disturbs the loot stream.
+  const fxRng = createRng((seed ^ 0x9e3779b9) >>> 0);
   const playerSpawn = vec(def.playerSpawn.x, def.playerSpawn.y);
   let nextId = 1;
 
@@ -331,6 +334,7 @@ export function createGame(
     events: [],
     nextId,
     rng,
+    fxRng,
   };
 
   // The hero has seen where he lands: the map opens with the spawn uncovered.

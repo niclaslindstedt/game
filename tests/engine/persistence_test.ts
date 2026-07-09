@@ -14,20 +14,29 @@ import type { GameState } from "@game/core";
 import { DT, idle, run, startGame } from "./helpers.ts";
 
 // Everything the app persists: the state minus its (unserializable) rng
-// closure, with the rng's internal position snapshotted alongside.
+// closures, with each stream's internal position snapshotted alongside.
 function freeze(state: GameState): string {
-  const { rng, ...rest } = state;
-  return JSON.stringify({ rngState: rngState(rng), state: { ...rest } });
+  const { rng, fxRng, ...rest } = state;
+  return JSON.stringify({
+    rngState: rngState(rng),
+    fxRngState: rngState(fxRng),
+    state: { ...rest },
+  });
 }
 
-// Rehydrate a frozen run: parse the plain data and rebuild the rng at the
-// snapshotted position, exactly like saved-run.ts does.
+// Rehydrate a frozen run: parse the plain data and rebuild both rng streams at
+// their snapshotted positions, exactly like saved-run.ts does.
 function thaw(json: string): GameState {
   const parsed = JSON.parse(json) as {
     rngState: number;
-    state: Omit<GameState, "rng">;
+    fxRngState: number;
+    state: Omit<GameState, "rng" | "fxRng">;
   };
-  return { ...parsed.state, rng: createRngFromState(parsed.rngState) };
+  return {
+    ...parsed.state,
+    rng: createRngFromState(parsed.rngState),
+    fxRng: createRngFromState(parsed.fxRngState),
+  };
 }
 
 // A stable fingerprint of the sim's observable state. JSON.stringify drops the
