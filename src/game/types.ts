@@ -358,6 +358,10 @@ export type Projectile = {
   radius: number;
   /** Damage before the on-hit crit roll. */
   damage: number;
+  /** Where `damage` landed in the weapon's variance band, in [0, 1] (see
+   * `rollWeaponHit`) — carried so a crit's popup can be sized by how hard the
+   * shot rolled. */
+  damageRoll?: number;
   /** Remaining ms before the projectile despawns. */
   lifetimeMs: number;
   /** Which weapon class fired it (drives sound and hit resolution). */
@@ -636,14 +640,21 @@ export type GameEvent =
       crit: boolean;
       damage: number;
       defId: string;
+      /** On a crit, how strong the blow was in [0, 1] (its position in the
+       * weapon's damage-variance band) — the app sizes the crit popup by it, so
+       * a top-of-band crit slams a bigger figure. Absent when the source has no
+       * variance (abilities); ignored for non-crits. */
+      critPower?: number;
     }
   | {
       type: "enemyKilled";
       pos: Vec2;
       defId: string;
-      /** The killing blow, so death also floats a damage number. */
+      /** The killing blow, so death also pops a damage number. */
       damage: number;
       crit: boolean;
+      /** See `enemyHit.critPower`. */
+      critPower?: number;
       /** XP this kill awarded — the app floats it as rising blue combat text. */
       xp: number;
     }

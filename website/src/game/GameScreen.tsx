@@ -1100,7 +1100,8 @@ export function GameScreen({
             });
           }
           // Every landed hit sprays the victim's gore (ghosts: ectoplasm)
-          // and floats its damage off the head — crits slam and shake.
+          // and pops a static damage number on the head — crits are bigger,
+          // gold, and shake in place. Only XP floats up.
           if (event.type === "enemyHit" || event.type === "enemyKilled") {
             const def = enemyDef(event.defId);
             effects.push({
@@ -1124,6 +1125,7 @@ export function GameScreen({
               durationMs: duration,
               value: event.damage,
               crit: event.crit,
+              critPower: event.critPower,
             });
             // The kill's XP reward flows up off the corpse as blue combat text
             // (WoW's floating "+N"), starting above the damage number and

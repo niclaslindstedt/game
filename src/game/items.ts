@@ -999,9 +999,26 @@ export function weaponDamageFor(state: GameState, weapon: Equipment): number {
  * keeps using the deterministic average so a weapon still reads as one number.
  */
 export function rollWeaponDamage(state: GameState, weapon: Equipment): number {
+  return rollWeaponHit(state, weapon).damage;
+}
+
+/**
+ * As `rollWeaponDamage`, but also reports where the blow landed inside the
+ * weapon's variance band as a normalized `roll` in [0, 1] (0 = the softest
+ * end, 1 = the hardest). Combat carries this out on the hit event so the app
+ * can size a crit's popup by how strong the blow was — a top-of-band crit
+ * slams a bigger figure than a glancing one. A weapon with no variance has no
+ * "how good" to report, so it lands at a neutral 0.5. Drawn off `fxRng` exactly
+ * as before, so the loot/crit sequence is untouched.
+ */
+export function rollWeaponHit(
+  state: GameState,
+  weapon: Equipment,
+): { damage: number; roll: number } {
   const v = weaponDamageVariance(weaponDef(weapon.defId));
   const factor = v <= 0 ? 1 : randomRange(state.fxRng, 1 - v, 1 + v);
-  return weaponDamageFor(state, weapon) * factor;
+  const roll = v <= 0 ? 0.5 : (factor - (1 - v)) / (2 * v);
+  return { damage: weaponDamageFor(state, weapon) * factor, roll };
 }
 
 /**
