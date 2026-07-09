@@ -29,6 +29,8 @@ import {
   equipmentLevelReq,
   equipmentName,
   gearDef,
+  isScrappableLoot,
+  scrapInferiorLoot,
   STATS,
   weaponCritMult,
   moveInventoryItem,
@@ -630,6 +632,13 @@ export function InventoryPanel({
     };
 
   const player = state.player;
+  // How many bag pieces the SCRAP sweep would clear right now — loot the hero
+  // has outgrown (worse than what's worn, and not a trinket/trophy the engine
+  // spares). Drives the button's count and its disabled state so it never
+  // destroys anything when there's nothing junk to cull.
+  const scrapCount = player.inventory.filter(
+    (item): item is Equipment => item !== null && isScrappableLoot(state, item),
+  ).length;
   const shown = inspect?.item ?? null;
   // Holding/hovering an item previews it in the character sheet: the stat
   // getters read a throwaway loadout with `shown` slotted in, and the
@@ -860,7 +869,33 @@ export function InventoryPanel({
         {/* The bag — the dominant area of the modal: a compact grid of small
             cells that scrolls, sized to hold plenty on a vertical phone. */}
         <div className="inv-bag">
-          <PixelText font={font} text="BAG" scale={2} color="#9aa3ad" />
+          {/* BAG header, with a one-tap cleanup: SCRAP clears every piece the
+              hero has outgrown (worse than what's worn) while sparing keepers —
+              upgrades, side-grades, trinkets, and unique/legendary trophies.
+              Disabled when nothing qualifies so it can't destroy a clean bag. */}
+          <div className="inv-bag-header">
+            <PixelText font={font} text="BAG" scale={2} color="#9aa3ad" />
+            <button
+              type="button"
+              className="pixel-button secondary inv-scrap-btn"
+              aria-label="scrap-junk"
+              disabled={scrapCount === 0}
+              onClick={() => {
+                if (scrapInferiorLoot(state).length > 0) {
+                  playUiSound(synth, "back");
+                  setInspect(null);
+                  onChange();
+                }
+              }}
+            >
+              <PixelText
+                font={font}
+                text={scrapCount > 0 ? `SCRAP ${scrapCount}` : "SCRAP"}
+                scale={1}
+                color={scrapCount > 0 ? "#e6e8eb" : "#5a6470"}
+              />
+            </button>
+          </div>
           <div className="inv-grid">
             {player.inventory.map((item, index) => (
               <div

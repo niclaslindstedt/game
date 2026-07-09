@@ -803,6 +803,18 @@ body {
     0 6px 0 rgba(0, 0, 0, 0.4);
 }
 
+.pixel-button:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+.pixel-button:disabled:active {
+  transform: none;
+  box-shadow:
+    0 4px 0 #10151c,
+    0 6px 0 rgba(0, 0, 0, 0.4);
+}
+
 .pixel-button canvas {
   display: block;
 }
@@ -2792,6 +2804,23 @@ body {
   flex-direction: column;
   align-items: center;
   gap: 0.3rem;
+}
+
+/* The bag header: the BAG title on the left, the SCRAP-junk button on the
+   right, on one baseline. */
+.inv-bag-header {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  gap: 0.75rem;
+}
+
+/* The SCRAP button rides in the header, so it's tighter than the big CLOSE. */
+.inv-scrap-btn {
+  padding: 0.4rem 0.7rem;
+  flex: 0 0 auto;
 }
 
 /* The bag: the dominant area of the modal. */
