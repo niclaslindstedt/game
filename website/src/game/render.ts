@@ -405,6 +405,47 @@ export function drawFrame(
     ctx.fillStyle = `rgba(216, 58, 58, ${(0.25 * state.player.hurtFlashMs) / 250})`;
     ctx.fillRect(0, 0, view.width, view.height);
   }
+
+  // The carry gauge over the hero's head — how many bag cells are still free.
+  drawCarrySlots(ctx, state, assets, camera);
+}
+
+/**
+ * Float the free-bag-slot count over the hero's head: white while there's room
+ * to hoard, red the instant the bag fills (0) so it reads at a glance that
+ * fresh loot will start bouncing off a full pack. A dark 1px halo lifts the
+ * glyphs off the bright floor. Play-only — scenes and splashes hide it.
+ */
+function drawCarrySlots(
+  ctx: CanvasRenderingContext2D,
+  state: GameState,
+  assets: GameAssets,
+  camera: Camera,
+): void {
+  if (state.phase !== "playing") return;
+  const player = state.player;
+  let free = 0;
+  for (const cell of player.inventory) if (cell === null) free++;
+  const text = String(free);
+  const scale = 2;
+  const { font } = assets;
+  const width = font.measure(text) * scale;
+  const x = Math.round(player.pos.x - camera.x - width / 2);
+  // Clear the head: sprite top sits a half-tile above the position, then the
+  // jump height and a small gap before the glyphs.
+  const y = Math.round(
+    player.pos.y - camera.y - TILE / 2 - player.z - 4 - font.height * scale,
+  );
+  const color = free === 0 ? "#d83a3a" : "#f4f4f4";
+  for (const [dx, dy] of [
+    [-1, 0],
+    [1, 0],
+    [0, -1],
+    [0, 1],
+  ] as const) {
+    font.draw(ctx, text, x + dx, y + dy, { scale, color: "#0b0d10" });
+  }
+  font.draw(ctx, text, x, y, { scale, color });
 }
 
 /**

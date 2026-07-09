@@ -530,6 +530,12 @@ export type GameEvent =
       tier?: Tier;
       /** Human-readable label for the "picked up X" pickup feed. */
       name?: string;
+      /**
+       * The equipment's def id (equipment pickups only) — lets the app resolve
+       * the piece's icon for the framed pickup card. Absent for loose pickups
+       * (medkits, arrows, powerups), which never carry an inventory icon.
+       */
+      defId?: string;
     }
   | { type: "itemDropped"; pos: Vec2 }
   /**
