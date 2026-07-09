@@ -96,7 +96,11 @@ function buildPrelude(
       // TV off to the left — the hero never gets up, which is the whole joke.
       // Their pos.y sits a hair below the couch's floor anchor so they paint
       // just in front of the backrest (seated on it, not hidden behind the
-      // cushions).
+      // cushions). pos.y drives paint order AND floor placement together, so
+      // it can't be raised to lift them onto the cushions without dropping
+      // them behind the couch — instead the seated sprites carry a tall
+      // transparent footer (sprite-data/prelude.mjs) that lifts the figure up
+      // onto the seat while the anchor stays at floor level.
       {
         id: "hero",
         name: "ME",
