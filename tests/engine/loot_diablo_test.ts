@@ -244,6 +244,30 @@ describe("level requirements", () => {
   });
 });
 
+describe("unique/legendary build quality", () => {
+  it("mints unique and legendary weapons without durability — they never break", () => {
+    const state = startGame();
+    const uniquePiece = rollEquipment(state, {
+      slot: "weapon",
+      tier: "unique",
+      mlvl: 20,
+    });
+    const legendaryPiece = rollEquipment(state, {
+      slot: "weapon",
+      tier: "legendary",
+      mlvl: 30,
+    });
+    const rarePiece = rollEquipment(state, {
+      slot: "weapon",
+      tier: "rare",
+      mlvl: 20,
+    });
+    expect(uniquePiece.durability).toBeUndefined();
+    expect(legendaryPiece.durability).toBeUndefined();
+    expect(rarePiece.durability).toBeGreaterThan(0); // lesser tiers still wear
+  });
+});
+
 describe("elite/boss tierDrops", () => {
   /** Stage the fixture boss for a one-blow kill with a pinned rng, past
    * (or below) the tier gates via `mlvl`. */

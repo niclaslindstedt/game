@@ -257,7 +257,12 @@ export function rollEquipment(
     affixes,
   };
   // Dropped weapons arrive fresh but finite — they wear out per attack.
-  if (family === "weapon") rolled.durability = weaponDef(defId).durability;
+  // Unique and legendary finds are the exception: very well built, they
+  // never break (no durability also exempts them from the looted-weapon
+  // damage damper, the way the built-in sidearm is exempt).
+  if (family === "weapon" && tier !== "unique" && tier !== "legendary") {
+    rolled.durability = weaponDef(defId).durability;
+  }
   return rolled;
 }
 

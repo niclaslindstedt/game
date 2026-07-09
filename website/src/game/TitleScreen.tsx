@@ -417,6 +417,19 @@ export function TitleScreen({
             playUiSound(synth, "confirm"); // audition the new level
           },
         },
+        {
+          label: s.hardcore === "on" ? "HARDCORE: ON" : "HARDCORE: OFF",
+          aria: "settings-hardcore",
+          blurb:
+            s.hardcore === "on"
+              ? "A NEW DIFFICULTY BURNS TOKENS AND UNIQUE FINDS"
+              : "TOKENS AND UNIQUE FINDS ARE YOURS FOREVER",
+          action: () => {
+            playUiSound(synth, "confirm");
+            updateSettings({ hardcore: s.hardcore === "on" ? "off" : "on" });
+            setSettingsTick((t) => t + 1);
+          },
+        },
         backTo("main", 1),
       ];
     }

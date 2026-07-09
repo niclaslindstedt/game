@@ -9,6 +9,7 @@
 // there is no "already watched" record to skip them.)
 
 import {
+  addToInventory,
   deriveArrivalLoadout,
   DIFFICULTY_ORDER,
   difficultyDef,
@@ -18,12 +19,14 @@ import {
   WEAPON_DEFS,
   type Difficulty,
   type Equipment,
+  type GameState,
   type Loadout,
 } from "@game/core";
 
 import { createFlagStore } from "@ui/lib/flag-store.ts";
 
 import { storageKey } from "../identity.ts";
+import { getSettings } from "./settings.ts";
 
 // Level completion is tracked per difficulty: clearing THE MOON on EASY does
 // not unlock the next level on NIGHTMARE. Each flag is `${difficulty}:${id}`.
@@ -170,12 +173,16 @@ export function spendTokenFor(levelId: string, target: Difficulty): boolean {
 const loadoutKey = (levelId: string, difficulty: Difficulty): string =>
   storageKey(`loadout:${difficulty}:${levelId}`);
 
-/** Bank the hero's end-of-level snapshot for the level just cleared. */
+/** Bank the hero's end-of-level snapshot for the level just cleared. Any
+ * unique/legendary pieces in it also land in the KEEPSAKE stash — the
+ * forever-hoard that follows the player into every run (unless hardcore
+ * mode later burns it — see `noteDifficultyPicked`). */
 export function saveLoadout(
   levelId: string,
   difficulty: Difficulty,
   loadout: Loadout,
 ): void {
+  bankKeepsakes(loadout);
   try {
     window.localStorage.setItem(
       loadoutKey(levelId, difficulty),
@@ -183,6 +190,157 @@ export function saveLoadout(
     );
   } catch {
     // Storage full or unavailable: the run still plays, it just won't carry.
+  }
+}
+
+// ---- Keepsakes (unique/legendary permanence) -----------------------------
+// Unique and legendary finds are once-per-game treasures, so they outlive the
+// run economy: every one that reaches a banked loadout is copied into a
+// device-wide stash, and every new run gets the stash poured back into its
+// bag (`restoreKeepsakes`). HARDCORE mode (settings) is the opt-out: there
+// the hoard — and the unspent LEVEL TOKENS — burn the moment a NEW difficulty
+// is picked (`noteDifficultyPicked`), so each ladder rung is its own game.
+
+const KEEPSAKES_KEY = storageKey("keepsakes");
+const LAST_DIFFICULTY_KEY = storageKey("last-difficulty");
+
+function isKeepsake(piece: Equipment): boolean {
+  return piece.tier === "unique" || piece.tier === "legendary";
+}
+
+/** Identity for dedupe: two rolls of the same base can coexist, but the SAME
+ * find (same base, level, and rolled bonuses) is stashed once. */
+function keepsakeSignature(piece: Equipment): string {
+  return JSON.stringify({
+    defId: piece.defId,
+    tier: piece.tier,
+    ilvl: piece.ilvl,
+    affixes: piece.affixes,
+  });
+}
+
+/** The stashed unique/legendary pieces, oldest first. */
+export function loadKeepsakes(): Equipment[] {
+  try {
+    const raw = window.localStorage.getItem(KEEPSAKES_KEY);
+    const parsed: unknown = raw ? JSON.parse(raw) : [];
+    return Array.isArray(parsed) ? (parsed as Equipment[]) : [];
+  } catch {
+    return [];
+  }
+}
+
+function saveKeepsakes(pieces: Equipment[]): void {
+  try {
+    window.localStorage.setItem(KEEPSAKES_KEY, JSON.stringify(pieces));
+  } catch {
+    // Storage unavailable — the hoard just doesn't persist this session.
+  }
+}
+
+/** Copy every unique/legendary piece the loadout carries into the stash. */
+function bankKeepsakes(loadout: Loadout): void {
+  const carried = [
+    loadout.equipment.weapon,
+    loadout.equipment.suit,
+    loadout.equipment.charm,
+    ...loadout.inventory,
+  ].filter((p): p is Equipment => p !== null && isKeepsake(p));
+  if (carried.length === 0) return;
+  const stash = loadKeepsakes();
+  const seen = new Set(stash.map(keepsakeSignature));
+  for (const piece of carried) {
+    const sig = keepsakeSignature(piece);
+    if (seen.has(sig)) continue;
+    seen.add(sig);
+    stash.push(piece);
+  }
+  saveKeepsakes(stash);
+}
+
+/**
+ * Pour the keepsake stash back into a freshly created run: every stashed
+ * unique/legendary the hero isn't already carrying lands in the bag (the bag
+ * grows a cell when full — treasures are never dropped at the door). A no-op
+ * in hardcore mode, where nothing is forever.
+ */
+export function restoreKeepsakes(state: GameState): void {
+  if (getSettings().hardcore === "on") return;
+  const stash = loadKeepsakes();
+  if (stash.length === 0) return;
+  const { weapon, suit, charm } = state.player.equipment;
+  const carried = new Set(
+    [weapon, suit, charm, ...state.player.inventory]
+      .filter((p): p is Equipment => p !== null)
+      .map(keepsakeSignature),
+  );
+  for (const piece of stash) {
+    if (carried.has(keepsakeSignature(piece))) continue;
+    const minted: Equipment = { ...piece, id: state.nextId++ };
+    if (!addToInventory(state, minted)) {
+      state.player.inventory.push(minted);
+    }
+  }
+}
+
+/** Strip unique/legendary pieces out of every banked loadout — the hardcore
+ * burn, so a lower rung's carry-over can't resurrect the hoard. */
+function stripBankedKeepsakes(): void {
+  for (const difficulty of DIFFICULTY_ORDER) {
+    for (const levelId of LEVEL_ORDER) {
+      const banked = loadLoadout(levelId, difficulty);
+      if (!banked) continue;
+      const keep = (p: Equipment | null): Equipment | null =>
+        p && isKeepsake(p) ? null : p;
+      const weapon = keep(banked.equipment.weapon) ?? {
+        id: 0,
+        defId: "blaster",
+        slot: "weapon" as const,
+        tier: "regular" as const,
+        ilvl: 1,
+        affixes: [],
+      };
+      saveLoadout(levelId, difficulty, {
+        ...banked,
+        equipment: {
+          weapon,
+          suit: keep(banked.equipment.suit),
+          charm: keep(banked.equipment.charm),
+        },
+        inventory: banked.inventory.map(keep),
+      });
+    }
+  }
+}
+
+/**
+ * Called as every run starts, with the difficulty it starts on. In HARDCORE
+ * mode, picking a difficulty DIFFERENT from the last one played is the reset:
+ * unspent LEVEL TOKENS are discarded, the keepsake stash burns, and every
+ * banked loadout is stripped of its unique/legendary pieces. Off hardcore
+ * this only records the rung (so flipping hardcore on later doesn't
+ * immediately torch a hoard over an old difficulty change).
+ */
+export function noteDifficultyPicked(difficulty: Difficulty): void {
+  let last: string | null;
+  try {
+    last = window.localStorage.getItem(LAST_DIFFICULTY_KEY);
+  } catch {
+    return; // no storage, nothing tracked — nothing to burn either
+  }
+  if (
+    getSettings().hardcore === "on" &&
+    last !== null &&
+    last !== difficulty
+  ) {
+    tokens.clear();
+    saveKeepsakes([]);
+    stripBankedKeepsakes();
+  }
+  try {
+    window.localStorage.setItem(LAST_DIFFICULTY_KEY, difficulty);
+  } catch {
+    // Storage unavailable — the rung just isn't remembered.
   }
 }
 

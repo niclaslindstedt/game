@@ -102,6 +102,8 @@ import { bestTime, recordRun } from "./highscores.ts";
 import {
   markLevelCompleted,
   nextLevelId,
+  noteDifficultyPicked,
+  restoreKeepsakes,
   saveLoadout,
   startingLoadout,
 } from "./progress.ts";
@@ -464,6 +466,10 @@ export function GameScreen({
     const levelParam = params.get("level");
     const devLevel = levelParam && levelParam in LEVELS ? levelParam : null;
     const runLevelId = devLevel ?? levelId;
+    // Hardcore accounting first: in hardcore mode, picking a NEW difficulty
+    // burns the unspent tokens, the keepsake stash, and every banked
+    // unique/legendary — so the loadout read below is already post-burn.
+    noteDifficultyPicked(difficulty);
     // The carry-over: the loadout banked when the previous level was cleared
     // (or a derived stand-in for dev jumps with nothing banked). The hero
     // arrives with the level, stats and items he finished the last level with.
@@ -476,6 +482,9 @@ export function GameScreen({
       // advances along the campaign (a fresh levelId) it no longer applies.
       respec && levelId === initialLevelId,
     );
+    // Off hardcore, the forever-hoard follows the hero into every run: any
+    // stashed unique/legendary he isn't already carrying lands in the bag.
+    restoreKeepsakes(state);
     // The prelude always plays — every run opens on its cutscene (the player
     // can dismiss it with the SKIP button or Esc). It is never auto-skipped on
     // replay.

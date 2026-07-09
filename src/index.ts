@@ -52,6 +52,7 @@ export {
   SPEED_STAT,
   CRIT_STAT,
   closeInventory,
+  addToInventory,
   advanceIntro,
   skipIntro,
   dismissIntro,
