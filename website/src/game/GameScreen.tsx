@@ -41,6 +41,7 @@ import {
   enemyDef,
   equipFromInventory,
   equipmentIcon,
+  equipmentLevelReq,
   extractLoadout,
   LEVELS,
   levelDef,
@@ -70,6 +71,7 @@ import {
   type GamePhase,
   type GameState,
   type GameStats,
+  type Tier,
 } from "@game/core";
 
 import { formatCompact } from "@ui/lib/format-number.ts";
@@ -568,11 +570,62 @@ export function GameScreen({
     setPickupCard(null);
     let pickupCardTimer: ReturnType<typeof setTimeout> | undefined;
     let pickupCardSeq = 0;
-    const showPickupCard = (name: string, color: string, defId?: string) => {
+    const showPickupCard = (opts: {
+      name: string;
+      tier: Tier;
+      defId?: string;
+      itemId?: number;
+      equipped: boolean;
+      upgrade: boolean;
+    }) => {
+      const { name, tier, defId, itemId, equipped, upgrade } = opts;
       const icon = defId
         ? spriteDataUrl(assets.sprites, equipmentIcon(defId))
         : undefined;
-      setPickupCard({ id: ++pickupCardSeq, icon, name, color });
+      const color = TIER_COLORS[tier] ?? TIER_COLORS.regular;
+      const id = ++pickupCardSeq;
+      // Tap-to-equip is offered only for a bagged find the hero can wear right
+      // now — an auto-equipped upgrade is already worn, and an under-leveled
+      // find would be refused. The item is located by its stable id so a bag
+      // rearranged while the card is up still equips the right piece.
+      const canEquip =
+        !equipped &&
+        itemId != null &&
+        defId != null &&
+        state.player.level >= equipmentLevelReq(defId);
+      const onEquip = canEquip
+        ? () => {
+            const index = state.player.inventory.findIndex(
+              (it) => it?.id === itemId,
+            );
+            if (index >= 0 && equipFromInventory(state, index)) {
+              playUiSound(synth, "equip");
+              bumpUi();
+              // Flip the live card to its worn state — the find is now equipped,
+              // no longer an upgrade to chase or a tap target.
+              setPickupCard((prev) =>
+                prev && prev.id === id
+                  ? {
+                      ...prev,
+                      equipped: true,
+                      upgrade: false,
+                      onEquip: undefined,
+                    }
+                  : prev,
+              );
+            }
+          }
+        : undefined;
+      setPickupCard({
+        id,
+        icon,
+        name,
+        color,
+        tier,
+        upgrade,
+        equipped,
+        onEquip,
+      });
       if (pickupCardTimer) clearTimeout(pickupCardTimer);
       pickupCardTimer = setTimeout(
         () => setPickupCard(null),
@@ -1132,11 +1185,14 @@ export function GameScreen({
           // lower-corner feed; only special tiers tint their name there.
           if (event.type === "itemCollected" && event.name) {
             if (event.kind === "equipment") {
-              showPickupCard(
-                event.name,
-                event.tier ? TIER_COLORS[event.tier] : TIER_COLORS.regular,
-                event.defId,
-              );
+              showPickupCard({
+                name: event.name,
+                tier: event.tier ?? "regular",
+                defId: event.defId,
+                itemId: event.itemId,
+                equipped: event.equipped === true,
+                upgrade: event.upgrade === true,
+              });
             } else {
               pushPickup(
                 event.name,

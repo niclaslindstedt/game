@@ -920,6 +920,29 @@ export function isBetterEquipment(
   return current === null || gearScore(candidate) > gearScore(current);
 }
 
+/**
+ * Would wearing `candidate` improve its slot over what's equipped right now?
+ * A purely informational cousin of `isBetterEquipment` for the pickup card's
+ * "UPGRADE" marker: it drops the auto-equip rule's exclusions (passive charms,
+ * the equal-firepower durability tiebreak) so a stronger passive still reads as
+ * an upgrade, but keeps the level gate — a piece the hero can't wear yet is
+ * not an upgrade he can act on. Never mutates state.
+ */
+export function wouldUpgradeSlot(
+  state: GameState,
+  candidate: Equipment,
+): boolean {
+  if (!meetsLevelReq(state, candidate)) return false;
+  if (candidate.slot === "weapon") {
+    return (
+      weaponScore(state, candidate) >
+      weaponScore(state, state.player.equipment.weapon)
+    );
+  }
+  const current = state.player.equipment[candidate.slot];
+  return current === null || gearScore(candidate) > gearScore(current);
+}
+
 // ---- Inventory capacity (STRENGTH-scaled) --------------------------------------
 
 /**

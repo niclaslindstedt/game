@@ -681,8 +681,10 @@ body {
 /* The framed pickup card (see PickupModal): a loot toast that pops in above the
    hero when a weapon or item lands in the bag. Mirrors the HUD clock/kill
    units' border + backdrop, tinted to the find's rarity (--rarity), with a
-   spark that laps the frame so a fresh drop sparkles. Never eats pointer events
-   — steering passes straight through. */
+   spark that laps the frame and a sheen that glimmers across the face so a fresh
+   drop sparkles. Special tiers get a reveal burst on top (see below). The card
+   only eats pointer events when it is a tap-to-equip button (--clickable);
+   otherwise steering passes straight through. */
 .pickup-card {
   position: absolute;
   top: 22%;
@@ -695,6 +697,14 @@ body {
   max-width: min(22rem, 92vw);
   box-sizing: border-box;
   padding: 0.35rem 0.6rem;
+  /* Button reset (the card is always a <button>, inert when nothing to equip):
+     it owns its own background, border, font, and text alignment below. */
+  margin: 0;
+  font: inherit;
+  text-align: left;
+  color: inherit;
+  -webkit-appearance: none;
+  appearance: none;
   background: rgba(11, 13, 16, 0.72);
   border: 2px solid var(--rarity, #e6e8eb);
   border-radius: 6px;
@@ -703,14 +713,92 @@ body {
     0 0.2rem 0.5rem rgba(11, 13, 16, 0.55);
   text-shadow: 0 2px 0 rgba(11, 13, 16, 0.6);
   pointer-events: none;
+  overflow: visible;
   isolation: isolate;
-  animation: pickup-card 2600ms ease-out forwards;
+  animation: pickup-card 5200ms ease-out forwards;
   will-change: transform, opacity;
+}
+
+/* The tap-to-equip variant: it IS a button, so it must take pointer events and
+   invite the tap. A gentle lift on press confirms the equip. */
+/* Inert (nothing to equip): a disabled button, but styled exactly like an
+   informational card — no UA dimming, no not-allowed cursor. */
+.pickup-card:disabled {
+  opacity: 1;
+  cursor: default;
+}
+.pickup-card--clickable {
+  pointer-events: auto;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+}
+/* The pop-in animation owns `transform` for the card's whole life, so press
+   feedback rides a property it doesn't touch: a quick brightness kick. */
+.pickup-card--clickable:active {
+  filter: brightness(1.25);
+}
+
+/* An upgrade (or freshly worn) find pulses a green halo so the win reads at a
+   glance, layered over the rarity glow. */
+.pickup-card--upgrade {
+  animation:
+    pickup-card 5200ms ease-out forwards,
+    pickup-card-upgrade 900ms ease-in-out 3;
 }
 
 .pickup-card-icon {
   width: 1.75rem;
   height: 1.75rem;
+  flex: none;
+}
+
+/* Name stacked over its status tag (UPGRADE / EQUIPPED / TAP TO EQUIP). */
+.pickup-card-body {
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+  min-width: 0;
+}
+
+.pickup-card-tag {
+  display: inline-flex;
+  align-self: flex-start;
+  padding: 0.05rem 0.25rem;
+  border-radius: 3px;
+  line-height: 1;
+}
+.pickup-card-tag--upgrade,
+.pickup-card-tag--equipped {
+  background: rgba(95, 217, 122, 0.16);
+  box-shadow: 0 0 0.35rem rgba(95, 217, 122, 0.4);
+}
+.pickup-card-tag--upgrade {
+  animation: pickup-tag-blink 700ms steps(2, jump-none) infinite;
+}
+.pickup-card-tag--hint {
+  background: rgba(207, 211, 216, 0.1);
+  animation: pickup-tag-blink 1100ms ease-in-out infinite;
+}
+
+@keyframes pickup-tag-blink {
+  50% {
+    opacity: 0.55;
+  }
+}
+
+@keyframes pickup-card-upgrade {
+  0%,
+  100% {
+    box-shadow:
+      0 0 0.5rem color-mix(in srgb, var(--rarity, #fff) 55%, transparent),
+      0 0.2rem 0.5rem rgba(11, 13, 16, 0.55);
+  }
+  50% {
+    box-shadow:
+      0 0 0.9rem rgba(95, 217, 122, 0.75),
+      0 0 0.5rem color-mix(in srgb, var(--rarity, #fff) 55%, transparent),
+      0 0.2rem 0.5rem rgba(11, 13, 16, 0.55);
+  }
 }
 
 /* The traveling border spark: a conic sweep masked down to the frame ring so a
@@ -754,19 +842,65 @@ body {
   }
 }
 
+/* The glimmer: a bright diagonal sheen that sweeps across the card face on
+   arrival and again on a slow loop, like light catching foil. Clipped to the
+   card's rounded rect. */
+.pickup-card-sheen {
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  border-radius: inherit;
+  overflow: hidden;
+  pointer-events: none;
+}
+.pickup-card-sheen::before {
+  content: "";
+  position: absolute;
+  top: -60%;
+  left: -40%;
+  width: 40%;
+  height: 220%;
+  background: linear-gradient(
+    100deg,
+    transparent,
+    rgba(255, 255, 255, 0.55),
+    transparent
+  );
+  transform: rotate(8deg);
+  animation: pickup-card-sheen 2600ms ease-in-out 200ms infinite;
+}
+
+@keyframes pickup-card-sheen {
+  0% {
+    left: -50%;
+    opacity: 0;
+  }
+  12% {
+    opacity: 1;
+  }
+  40% {
+    left: 130%;
+    opacity: 0;
+  }
+  100% {
+    left: 130%;
+    opacity: 0;
+  }
+}
+
 @keyframes pickup-card {
   0% {
     opacity: 0;
     transform: translateX(-50%) translateY(0.4rem) scale(0.85);
   }
-  8% {
+  4% {
     opacity: 1;
     transform: translateX(-50%) translateY(0) scale(1.06);
   }
-  16% {
+  8% {
     transform: translateX(-50%) translateY(0) scale(1);
   }
-  82% {
+  90% {
     opacity: 1;
     transform: translateX(-50%) translateY(0) scale(1);
   }
@@ -776,23 +910,197 @@ body {
   }
 }
 
+/* ---- Rarity reveal (magic → legendary): the Hearthstone-style "card turns
+   over" flourish. All layers live behind the card face (z-index -2) and play
+   once on mount; the flames loop so a legendary keeps burning. --------------- */
+.pickup-card-reveal {
+  position: absolute;
+  inset: 0;
+  z-index: -2;
+  pointer-events: none;
+}
+
+/* The bloom: a radial flash that blows out from the card's heart and fades. */
+.pickup-card-flash {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: 120%;
+  aspect-ratio: 1;
+  transform: translate(-50%, -50%) scale(0.2);
+  border-radius: 50%;
+  background: radial-gradient(
+    circle,
+    rgba(255, 255, 255, 0.95) 0%,
+    color-mix(in srgb, var(--rarity, #fff) 80%, transparent) 32%,
+    transparent 70%
+  );
+  opacity: 0;
+  animation: pickup-flash 720ms ease-out forwards;
+}
+
+@keyframes pickup-flash {
+  0% {
+    opacity: 0;
+    transform: translate(-50%, -50%) scale(0.2);
+  }
+  20% {
+    opacity: 0.95;
+  }
+  100% {
+    opacity: 0;
+    transform: translate(-50%, -50%) scale(1.9);
+  }
+}
+
+/* Rays (rare+): a conic starburst that flares out from behind the card. */
+.pickup-card-rays {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: 260%;
+  aspect-ratio: 1;
+  transform: translate(-50%, -50%) scale(0.4) rotate(0deg);
+  background: repeating-conic-gradient(
+    from 0deg,
+    color-mix(in srgb, var(--rarity, #fff) 65%, transparent) 0deg 6deg,
+    transparent 6deg 24deg
+  );
+  -webkit-mask: radial-gradient(circle, #000 8%, transparent 62%);
+  mask: radial-gradient(circle, #000 8%, transparent 62%);
+  opacity: 0;
+  animation: pickup-rays 900ms ease-out forwards;
+}
+
+@keyframes pickup-rays {
+  0% {
+    opacity: 0;
+    transform: translate(-50%, -50%) scale(0.4) rotate(-20deg);
+  }
+  25% {
+    opacity: 0.85;
+  }
+  100% {
+    opacity: 0;
+    transform: translate(-50%, -50%) scale(1.15) rotate(30deg);
+  }
+}
+
+/* Sparkle motes (magic+): little glints that shoot outward from the frame. */
+.pickup-card-spark-mote {
+  position: absolute;
+  width: 0.32rem;
+  height: 0.32rem;
+  margin: -0.16rem;
+  border-radius: 50%;
+  background: #fff;
+  box-shadow: 0 0 0.35rem 0.08rem
+    color-mix(in srgb, var(--rarity, #fff) 85%, #fff);
+  opacity: 0;
+  animation: pickup-mote 820ms ease-out var(--mote-delay, 0ms) forwards;
+}
+
+@keyframes pickup-mote {
+  0% {
+    opacity: 0;
+    transform: scale(0.2);
+  }
+  30% {
+    opacity: 1;
+    transform: scale(1.3);
+  }
+  100% {
+    opacity: 0;
+    transform: scale(0.4) translateY(-0.5rem);
+  }
+}
+
+/* Flames (unique/legendary): tongues of fire licking up from the base, colored
+   from the rarity through orange to white-hot, flickering on a loop. */
+.pickup-card-flames {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+.pickup-card-flame {
+  position: absolute;
+  bottom: -0.35rem;
+  width: 0.5rem;
+  height: 1.1rem;
+  margin-left: -0.25rem;
+  border-radius: 45% 45% 50% 50% / 65% 65% 40% 40%;
+  background: linear-gradient(
+    to top,
+    color-mix(in srgb, var(--rarity, #ffa726) 70%, #ff5b1e),
+    #ffcf47 55%,
+    rgba(255, 255, 255, 0.9)
+  );
+  filter: blur(0.4px);
+  transform-origin: bottom center;
+  opacity: 0.9;
+  mix-blend-mode: screen;
+  animation: pickup-flame 480ms ease-in-out var(--flame-delay, 0ms) infinite
+    alternate;
+}
+
+@keyframes pickup-flame {
+  0% {
+    transform: scaleY(0.7) scaleX(1.05) translateY(0);
+    opacity: 0.65;
+  }
+  100% {
+    transform: scaleY(1.15) scaleX(0.85) translateY(-0.15rem);
+    opacity: 1;
+  }
+}
+
 @media (prefers-reduced-motion: reduce) {
-  .pickup-card {
-    animation: pickup-card-fade 2600ms linear forwards;
+  .pickup-card,
+  .pickup-card--upgrade {
+    animation: pickup-card-fade 5200ms linear forwards;
     transform: translateX(-50%);
   }
   @keyframes pickup-card-fade {
     0%,
-    85% {
+    90% {
       opacity: 1;
     }
     100% {
       opacity: 0;
     }
   }
+  /* Drop the motion-heavy flourishes; keep a still tint so rarity still reads. */
   .pickup-card-spark {
     animation: none;
     opacity: 0.6;
+  }
+  .pickup-card-sheen::before,
+  .pickup-card-rays,
+  .pickup-card-spark-mote,
+  .pickup-card-tag--upgrade,
+  .pickup-card-tag--hint {
+    animation: none;
+  }
+  .pickup-card-spark-mote,
+  .pickup-card-rays {
+    opacity: 0;
+  }
+  .pickup-card-flash {
+    animation: pickup-flash-fade 500ms ease-out forwards;
+  }
+  @keyframes pickup-flash-fade {
+    0% {
+      opacity: 0.5;
+      transform: translate(-50%, -50%) scale(1);
+    }
+    100% {
+      opacity: 0;
+      transform: translate(-50%, -50%) scale(1);
+    }
+  }
+  .pickup-card-flame {
+    animation: none;
+    opacity: 0.7;
   }
 }
 

@@ -110,6 +110,7 @@ export {
   weaponScore,
   weaponSweepHalfAngle,
   wearEquippedWeapon,
+  wouldUpgradeSlot,
 } from "./game/items.ts";
 
 // The level map: fog-of-war queries, the map pause phase, and the grid
