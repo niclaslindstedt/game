@@ -2143,22 +2143,6 @@ body {
   pointer-events: none; /* taps fall through to the overlay */
 }
 
-/* Text waits for a tap — blink the cue like a JRPG's continue arrow. */
-.cutscene-continue {
-  align-self: flex-end;
-  animation: cutscene-blink 1.2s steps(2, jump-none) infinite;
-}
-
-@keyframes cutscene-blink {
-  0%,
-  100% {
-    opacity: 1;
-  }
-  50% {
-    opacity: 0;
-  }
-}
-
 .cutscene-skip {
   position: absolute;
   top: max(0.6rem, env(safe-area-inset-top));
@@ -2207,16 +2191,50 @@ body {
   gap: 0.6rem;
 }
 
+/* The VN row inside the box: a full-height portrait beside the name + line.
+   The box keeps its old footprint — the portrait just claims the height the
+   "tap to continue" hint used to waste. */
+.dialogue-vn {
+  align-self: stretch;
+  display: flex;
+  flex-direction: row;
+  align-items: stretch;
+  gap: 0.7rem;
+  min-height: 0;
+}
+
+/* A square face-panel as tall as the line block — its side tracks the box
+   height (stretch), so a longer speech grows a bigger portrait. */
+.dialogue-portrait-frame {
+  flex: 0 0 auto;
+  align-self: stretch;
+  aspect-ratio: 1 / 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 3rem;
+  padding: 0.15rem;
+  background: rgba(6, 8, 12, 0.55);
+  border: 2px solid #2a3340;
+  overflow: hidden;
+}
+
 .dialogue-portrait {
-  width: 2rem;
-  height: 2rem;
+  width: 100%;
+  height: 100%;
   object-fit: contain;
   image-rendering: pixelated;
 }
 
-.dialogue-continue {
-  align-self: flex-end;
-  animation: cutscene-blink 1.2s steps(2, jump-none) infinite;
+/* Name + line stack in the remaining width, vertically centered against the
+   portrait so short lines don't float at the top of a tall face-panel. */
+.dialogue-content {
+  flex: 1 1 auto;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 0.4rem;
 }
 
 /* The preview workbench's replay button floats over the finished scene. */

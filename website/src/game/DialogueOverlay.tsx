@@ -78,13 +78,6 @@ export function DialogueOverlay({
       ? spriteDataUrl(assets.sprites, content.portrait)
       : (spriteDataUrl(assets.sprites, `${portraitFamily}_0`) ?? null);
 
-  const hasNext = dialogue.page + 1 < content.pages.length;
-  const continueText = !done
-    ? "TAP TO SKIP"
-    : hasNext
-      ? `TAP TO CONTINUE (${dialogue.page + 1}/${content.pages.length})`
-      : "TAP TO CLOSE";
-
   return (
     <div
       className="game-overlay dialogue-overlay"
@@ -102,33 +95,36 @@ export function DialogueOverlay({
             />
           </div>
         )}
-        <div className="dialogue-header">
+        {/* VN layout: the speaker's face fills the box's full height on the
+            left, name + line stacked beside it — no wasted rows now that the
+            "tap to continue" hint is gone. */}
+        <div className="dialogue-vn">
           {portrait && (
-            <img
-              src={portrait}
-              alt=""
-              className="pixel-img dialogue-portrait"
-            />
+            <div className="dialogue-portrait-frame">
+              <img
+                src={portrait}
+                alt=""
+                className="pixel-img dialogue-portrait"
+              />
+            </div>
           )}
-          <PixelText
-            font={font}
-            text={content.speaker}
-            scale={2}
-            color="#ffd75e"
-          />
-        </div>
-        {page.map((row, i) => (
-          // Reserve each row's full height (PixelText is fixed-height even when
-          // empty) so the box never reflows as the crawl fills it in.
-          <PixelText key={i} font={font} text={rows[i] ?? ""} scale={2} />
-        ))}
-        <div className="dialogue-continue">
-          <PixelText
-            font={font}
-            text={continueText}
-            scale={1}
-            color="#9aa3ad"
-          />
+          <div className="dialogue-content">
+            <div className="dialogue-header">
+              <PixelText
+                font={font}
+                text={content.speaker}
+                scale={2}
+                color="#ffd75e"
+              />
+            </div>
+            <div className="dialogue-body">
+              {page.map((row, i) => (
+                // Reserve each row's full height (PixelText is fixed-height
+                // even when empty) so the box never reflows as it fills in.
+                <PixelText key={i} font={font} text={rows[i] ?? ""} scale={2} />
+              ))}
+            </div>
+          </div>
         </div>
       </div>
     </div>
