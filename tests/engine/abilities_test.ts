@@ -49,8 +49,11 @@ describe("ability pickups", () => {
     );
 
     step(state, useItem, DT);
-    expect(state.player.heldAbilities).toEqual([]);
+    // The spent power keeps its dock slot (running, linked back to slot 0) and
+    // counts down there rather than vacating it.
+    expect(state.player.heldAbilities).toEqual(["test_orbit"]);
     expect(state.player.abilities.map((a) => a.defId)).toEqual(["test_orbit"]);
+    expect(state.player.abilities[0]!.slot).toBe(0);
     expect(state.events).toContainEqual({
       type: "abilityStarted",
       defId: "test_orbit",
@@ -63,7 +66,8 @@ describe("ability pickups", () => {
     const worn = state.player.abilities[0]!.remainingMs;
 
     // Bank and spend a second STORM CELL: it adds a fresh copy rather than
-    // refreshing (or being blocked), so both run side by side.
+    // refreshing (or being blocked), so both run side by side — each holding
+    // its own dock slot while it counts down.
     state.items = [
       {
         id: 501,
@@ -78,7 +82,9 @@ describe("ability pickups", () => {
       "test_storm",
       "test_storm",
     ]);
-    expect(state.player.heldAbilities).toEqual([]);
+    // Both copies run, so both slots stay full and linked (slots 0 and 1).
+    expect(state.player.heldAbilities).toEqual(["test_storm", "test_storm"]);
+    expect(state.player.abilities.map((a) => a.slot)).toEqual([0, 1]);
     // The first copy keeps its worn clock; the second starts (nearly) full.
     expect(state.player.abilities[0]!.remainingMs).toBeLessThanOrEqual(worn);
     expect(state.player.abilities[1]!.remainingMs).toBeGreaterThan(worn);
@@ -87,8 +93,10 @@ describe("ability pickups", () => {
   it("refuse to re-enable a non-stackable power already running", () => {
     const state = pickUp("test_magnet"); // non-stackable in the fixtures
     expect(state.player.abilities).toHaveLength(1);
+    // The running copy holds slot 0.
+    expect(state.player.heldAbilities).toEqual(["test_magnet"]);
 
-    // Bank a second MAGNET and try to spend it while the first still runs.
+    // Bank a second MAGNET (slot 1) and try to spend it while the first runs.
     state.items = [
       {
         id: 501,
@@ -98,23 +106,24 @@ describe("ability pickups", () => {
       },
     ];
     step(state, idle, DT);
-    expect(state.player.heldAbilities).toEqual(["test_magnet"]);
+    expect(state.player.heldAbilities).toEqual(["test_magnet", "test_magnet"]);
 
     step(state, useItem, DT);
-    // Refused: no second copy, and the pickup stays banked rather than wasted.
+    // Refused: no second copy, and the banked pickup stays put (slot 1) rather
+    // than being wasted — only the first copy is running.
     expect(state.player.abilities).toHaveLength(1);
-    expect(state.player.heldAbilities).toEqual(["test_magnet"]);
-    expect(state.events).not.toContainEqual({
-      type: "abilityStarted",
-      defId: "test_magnet",
-    });
+    expect(state.player.abilities[0]!.slot).toBe(0);
+    expect(state.player.heldAbilities).toEqual(["test_magnet", "test_magnet"]);
   });
 
-  it("expire after their duration, with an event", () => {
+  it("expire after their duration, freeing the slot at last", () => {
     const state = pickUp("test_stasis");
+    expect(state.player.heldAbilities).toEqual(["test_stasis"]);
     const steps = Math.ceil(abilityDef("test_stasis").durationMs / DT) + 2;
     run(state, idle, steps);
     expect(state.player.abilities).toHaveLength(0);
+    // Only now — once the power lapses — does the slot free.
+    expect(state.player.heldAbilities).toEqual([]);
   });
 });
 

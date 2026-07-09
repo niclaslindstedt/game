@@ -16,8 +16,16 @@ import type { ActiveAbility, GameState, Player } from "./types.ts";
  * start a second copy while one is still running (the MAGNET — its pull can't
  * stack), leaving nothing changed. Returns whether a copy actually started, so
  * the caller can keep a refused pickup banked instead of consuming it.
+ *
+ * `slot` links the copy back to the dock slot it was spent from — that slot
+ * keeps the powerup, counting down in place, until the copy lapses (see
+ * ActiveAbility.slot). Omit it for a scripted grant with no dock slot.
  */
-export function grantAbility(state: GameState, defId: string): boolean {
+export function grantAbility(
+  state: GameState,
+  defId: string,
+  slot?: number,
+): boolean {
   const def = abilityDef(defId);
   const running = state.player.abilities.filter((a) => a.defId === defId);
   if (running.length > 0 && !def.stackable) return false;
@@ -30,9 +38,32 @@ export function grantAbility(state: GameState, defId: string): boolean {
       ? ((Math.PI / def.orbit.count) * running.length) % (Math.PI * 2)
       : 0,
     cooldownMs: 0,
+    slot,
   });
   state.events.push({ type: "abilityStarted", defId });
   return true;
+}
+
+/**
+ * Pull the dock slot at `index` out of `heldAbilities` and close the row up,
+ * keeping every running copy's `slot` link pointed at its powerup as the tail
+ * shifts down. Returns the removed def-id (or null when `index` is empty /
+ * out of range). The one place `heldAbilities` shrinks — a lapsed power, a
+ * spent nuke, or a discard all route through here so the links never drift.
+ */
+export function removeHeldSlot(state: GameState, index: number): string | null {
+  const held = state.player.heldAbilities;
+  if (index < 0 || index >= held.length) return null;
+  const [defId] = held.splice(index, 1);
+  for (const ability of state.player.abilities) {
+    if (ability.slot !== undefined && ability.slot > index) ability.slot -= 1;
+  }
+  return defId ?? null;
+}
+
+/** Whether the dock slot at `index` is holding a power that is running now. */
+export function isSlotActive(state: GameState, index: number): boolean {
+  return state.player.abilities.some((a) => a.slot === index);
 }
 
 /**
@@ -40,18 +71,17 @@ export function grantAbility(state: GameState, defId: string): boolean {
  * it out of its slot to make room for new loot" gesture. The rest of the row
  * shifts down so the dock stays packed oldest-first. Returns the discarded
  * def-id (so the UI can announce/poof it), or null on an empty or out-of-range
- * slot. There is no undo and nothing is left on the ground: the powerup is
- * gone for good. Safe to call outside step() (the dock discards while paused-
- * free play continues).
+ * slot. A slot whose power is already running can't be discarded (it counts
+ * down in place until it lapses) — that returns null too. There is no undo and
+ * nothing is left on the ground: the powerup is gone for good. Safe to call
+ * outside step() (the dock discards while paused-free play continues).
  */
 export function discardHeldAbility(
   state: GameState,
   index: number,
 ): string | null {
-  const held = state.player.heldAbilities;
-  if (index < 0 || index >= held.length) return null;
-  const [defId] = held.splice(index, 1);
-  return defId ?? null;
+  if (isSlotActive(state, index)) return null;
+  return removeHeldSlot(state, index);
 }
 
 /** World positions of an orbit ability's orbs, spread evenly on the ring. */
