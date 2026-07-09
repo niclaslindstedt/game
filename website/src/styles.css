@@ -643,6 +643,10 @@ body {
   display: flex;
   align-items: center;
   gap: 0.5rem;
+  /* Cap the width so a long, affix-built name wraps (PixelText maxWidth) rather
+     than stretching the centered card off both screen edges. */
+  max-width: min(22rem, 92vw);
+  box-sizing: border-box;
   padding: 0.35rem 0.6rem;
   background: rgba(11, 13, 16, 0.72);
   border: 2px solid var(--rarity, #e6e8eb);

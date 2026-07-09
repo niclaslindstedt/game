@@ -21,6 +21,15 @@ export type IntroReveal = { done: boolean; skip: () => void };
 
 const EMPTY_PAGE: readonly string[] = [];
 
+/**
+ * Wrap width for the monologue text, in rem: the box caps at 36rem, less its
+ * 1.2rem side padding — this box carries no portrait, so the text owns the full
+ * width. Authored briefings (already fitting) keep their line breaks; a stray
+ * over-long line folds instead of running off. Keep in step with
+ * `.dialogue-box` in styles.css.
+ */
+const INTRO_TEXT_REM = 33;
+
 export function IntroOverlay({
   state,
   assets,
@@ -78,7 +87,13 @@ export function IntroOverlay({
           {page.map((row, i) => (
             // Reserve each row's full height (PixelText is fixed-height even
             // when empty) so the box never reflows as the crawl fills it in.
-            <PixelText key={i} font={font} text={rows[i] ?? ""} scale={2} />
+            <PixelText
+              key={i}
+              font={font}
+              text={rows[i] ?? ""}
+              scale={2}
+              maxWidth={INTRO_TEXT_REM}
+            />
           ))}
         </div>
       </div>

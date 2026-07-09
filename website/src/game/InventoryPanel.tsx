@@ -382,6 +382,14 @@ function ItemIcon({ sprites, item }: { sprites: Sprites; item: Equipment }) {
 }
 
 /**
+ * Wrap width for the tooltip's text, in rem: the `.item-tooltip` box caps at
+ * 16rem, less its 0.7rem side padding and 2px borders — so the longest,
+ * affix-built weapon name folds onto extra lines instead of spilling off the
+ * card's edge. Keep in step with `.item-tooltip` in styles.css.
+ */
+const TOOLTIP_TEXT_REM = 14.3;
+
+/**
  * WoW-style item tooltip: name (in tier color) plus the stat/affix lines,
  * floated next to the item that raised it. Portaled to <body> and positioned
  * in viewport coordinates from the anchoring cell's rect, flipping to the
@@ -440,6 +448,7 @@ function ItemTooltip({
         text={equipmentName(item)}
         scale={2}
         color={TIER_COLORS[item.tier]}
+        maxWidth={TOOLTIP_TEXT_REM}
       />
       {itemLines(state, item, compareTo).map((line) =>
         line.delta ? (
@@ -449,6 +458,7 @@ function ItemTooltip({
               text={line.text}
               scale={1}
               color={line.color}
+              maxWidth={TOOLTIP_TEXT_REM}
             />
             <PixelText
               font={font}
@@ -464,6 +474,7 @@ function ItemTooltip({
             text={line.text}
             scale={1}
             color={line.color}
+            maxWidth={TOOLTIP_TEXT_REM}
           />
         ),
       )}
@@ -474,6 +485,7 @@ function ItemTooltip({
           text={affixLine(affix)}
           scale={1}
           color={AFFIX_COLORS[affix.kind]}
+          maxWidth={TOOLTIP_TEXT_REM}
         />
       ))}
     </div>,

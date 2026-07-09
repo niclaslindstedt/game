@@ -18,7 +18,18 @@ export type PixelTextProps = {
   scale?: number;
   color?: string;
   className?: string;
+  /**
+   * Wrap the text to at most this width, in **rem** — the parent modal's inner
+   * content width. The canvas grows downward into as many lines as it takes so
+   * a long, data-driven string (an affix-built weapon name, a stat blurb) stays
+   * inside its box instead of spilling off the edge. Omitted → the classic
+   * single-line canvas, sized to the text.
+   */
+  maxWidth?: number;
 };
+
+/** Extra vertical space between wrapped lines, as a fraction of glyph height. */
+const LINE_GAP_RATIO = 0.3;
 
 export function PixelText({
   font,
@@ -26,6 +37,7 @@ export function PixelText({
   scale = 3,
   color = "#f4f4f4",
   className,
+  maxWidth,
 }: PixelTextProps) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
 
@@ -39,8 +51,23 @@ export function PixelText({
   useLayoutEffect(() => {
     const canvas = canvasRef.current;
     if (!canvas) return;
-    const w = Math.max(1, font.measure(text) * scale);
-    const h = font.height * scale;
+    // A rem cap converts to unscaled font pixels (the units `measure`/`wrap`
+    // speak): rem → CSS px (×16) → font px (÷scale). Wrapping stays keyed to
+    // rem so it tracks the root-font bump on large screens automatically.
+    const lines =
+      maxWidth && maxWidth > 0
+        ? font.wrap(text, (maxWidth * REM_BASE_PX) / scale)
+        : [text];
+    const lineH = font.height * scale;
+    const gap =
+      lines.length > 1 ? Math.round(font.height * scale * LINE_GAP_RATIO) : 0;
+    const step = lineH + gap;
+    const textW = lines.reduce(
+      (max, line) => Math.max(max, font.measure(line)),
+      0,
+    );
+    const w = Math.max(1, textW * scale);
+    const h = step * lines.length - gap;
     canvas.width = w;
     canvas.height = h;
     // Display the crisp bitmap in rem so it tracks the root font-size: at the
@@ -53,8 +80,10 @@ export function PixelText({
     const ctx = canvas.getContext("2d");
     if (!ctx) return;
     ctx.clearRect(0, 0, canvas.width, canvas.height);
-    font.draw(ctx, text, 0, 0, { scale, color });
-  }, [font, text, scale, color]);
+    lines.forEach((line, i) => {
+      font.draw(ctx, line, 0, i * step, { scale, color });
+    });
+  }, [font, text, scale, color, maxWidth]);
 
   return (
     <canvas

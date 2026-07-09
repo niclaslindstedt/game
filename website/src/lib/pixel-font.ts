@@ -21,6 +21,12 @@ export type PixelFont = {
   height: number;
   /** Width of `text` in unscaled font pixels. */
   measure: (text: string) => number;
+  /**
+   * Greedily break `text` into lines no wider than `maxWidthPx` unscaled font
+   * pixels — word wrap for the DOM overlays, which draw one canvas per line and
+   * so can't reflow on their own. See {@link wrapLines}.
+   */
+  wrap: (text: string, maxWidthPx: number) => string[];
   draw: (
     ctx: CanvasRenderingContext2D,
     text: string,
@@ -29,6 +35,56 @@ export type PixelFont = {
     options?: DrawTextOptions,
   ) => void;
 };
+
+/**
+ * Word-wrap `text` to lines no wider than `maxWidthPx` (in the same unscaled
+ * font pixels `measure` returns). Breaks on whitespace; a single word too wide
+ * to fit on its own line is hard-broken character by character so nothing ever
+ * overflows. A non-positive or non-finite width disables wrapping (returns the
+ * text as one line). Pure and DOM-free so it's unit-testable without a canvas.
+ */
+export function wrapLines(
+  text: string,
+  maxWidthPx: number,
+  measure: (text: string) => number,
+): string[] {
+  if (!(maxWidthPx > 0) || !Number.isFinite(maxWidthPx)) return [text];
+  const words = text.split(/\s+/).filter((word) => word.length > 0);
+  if (words.length === 0) return [text];
+
+  const lines: string[] = [];
+  let line = "";
+
+  // Split a word wider than an empty line into chunks that each fit, pushing
+  // all but the trailing chunk; the caller adopts the returned tail as the new
+  // current line. The first character of a chunk is always taken (even if it
+  // alone exceeds the width) so the loop can't stall.
+  const hardBreak = (word: string): string => {
+    let chunk = "";
+    for (const ch of word) {
+      if (chunk !== "" && measure(chunk + ch) > maxWidthPx) {
+        lines.push(chunk);
+        chunk = ch;
+      } else {
+        chunk += ch;
+      }
+    }
+    return chunk;
+  };
+
+  for (const word of words) {
+    if (line === "") {
+      line = measure(word) <= maxWidthPx ? word : hardBreak(word);
+    } else if (measure(`${line} ${word}`) <= maxWidthPx) {
+      line = `${line} ${word}`;
+    } else {
+      lines.push(line);
+      line = measure(word) <= maxWidthPx ? word : hardBreak(word);
+    }
+  }
+  lines.push(line);
+  return lines;
+}
 
 export function createPixelFont(
   atlas: HTMLImageElement,
@@ -55,17 +111,21 @@ export function createPixelFont(
   const glyphFor = (char: string) =>
     meta.glyphs[char.toUpperCase()] ?? meta.glyphs["?"];
 
+  const measure = (text: string): number => {
+    let width = 0;
+    for (const char of text) {
+      const glyph = glyphFor(char);
+      if (glyph) width += glyph.width + meta.spacing;
+    }
+    return Math.max(0, width - meta.spacing);
+  };
+
   return {
     height: meta.height,
 
-    measure(text) {
-      let width = 0;
-      for (const char of text) {
-        const glyph = glyphFor(char);
-        if (glyph) width += glyph.width + meta.spacing;
-      }
-      return Math.max(0, width - meta.spacing);
-    },
+    measure,
+
+    wrap: (text, maxWidthPx) => wrapLines(text, maxWidthPx, measure),
 
     draw(ctx, text, x, y, { scale = 1, color = "#f4f4f4" } = {}) {
       const source = atlasFor(color);
