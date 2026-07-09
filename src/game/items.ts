@@ -1025,6 +1025,73 @@ export function discardEquipped(
   return item;
 }
 
+// ---- Bulk scrap (the "clear out junk" sweep) -----------------------------------
+
+/**
+ * A "special" bag piece the bulk-scrap sweep always spares, whatever the raw
+ * numbers say: a passive trinket (it pays its bonus just by riding in the bag,
+ * so a plain stat comparison misses its worth), a top-tier find (unique or
+ * legendary — the rarest drops, kept as trophies and for their fat affix
+ * rolls), or the story spacesuit (plot gear, not loot). Everything else is
+ * ordinary loot the sweep may cull.
+ */
+export function isSpecialItem(item: Equipment): boolean {
+  if (item.tier === "unique" || item.tier === "legendary") return true;
+  if (isWeaponDef(item.defId)) return false;
+  const def = gearDef(item.defId);
+  return def.passive !== undefined || def.spacesuit === true;
+}
+
+/**
+ * Is this bag piece at least as good as whatever is worn in its slot? Weapons
+ * rank by `weaponScore` (the auto-equip model — damage-budget AoE and crit
+ * folded in), gear by `gearScore`; an empty gear slot has nothing to beat, so
+ * any piece bound for it counts as worth keeping. Equal worth is kept too — a
+ * side-grade or a spare of the same weapon (a durability refresh) is not "worse
+ * than equipped".
+ */
+function isAtLeastAsGoodAsEquipped(state: GameState, item: Equipment): boolean {
+  if (item.slot === "weapon") {
+    return (
+      weaponScore(state, item) >=
+      weaponScore(state, state.player.equipment.weapon)
+    );
+  }
+  const current = state.player.equipment[item.slot];
+  if (!current) return true;
+  return gearScore(item) >= gearScore(current);
+}
+
+/**
+ * True when the bulk-scrap sweep would destroy this bag piece: it is neither
+ * special (see `isSpecialItem`) nor as good as what's already worn in its slot
+ * (see `isAtLeastAsGoodAsEquipped`) — the loot the hero has outgrown. The UI
+ * reads this to count the cull and enable the SCRAP button.
+ */
+export function isScrappableLoot(state: GameState, item: Equipment): boolean {
+  return !isSpecialItem(item) && !isAtLeastAsGoodAsEquipped(state, item);
+}
+
+/**
+ * The SCRAP-JUNK sweep: permanently destroy every bag piece the hero has
+ * outgrown — loot that is neither special nor at least as good as what's worn
+ * in its slot (see `isScrappableLoot`). Keepers stay: upgrades, side-grades,
+ * trinkets, trophies, and anything bound for an empty slot. Returns the culled
+ * pieces (empty when nothing was junk) so the UI can announce the count; there
+ * is no undo, exactly like a single `discardFromInventory`.
+ */
+export function scrapInferiorLoot(state: GameState): Equipment[] {
+  const inv = state.player.inventory;
+  const scrapped: Equipment[] = [];
+  for (let i = 0; i < inv.length; i++) {
+    const item = inv[i];
+    if (!item || !isScrappableLoot(state, item)) continue;
+    inv[i] = null;
+    scrapped.push(item);
+  }
+  return scrapped;
+}
+
 // ---- Durability -------------------------------------------------------------------
 
 /**
