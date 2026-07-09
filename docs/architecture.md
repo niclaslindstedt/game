@@ -294,7 +294,7 @@ deploy-shaped:
   tier-colored borders, item card, character sheet), `MapOverlay.tsx` (the
   fog-of-war level map shown in the `map` phase — one chunky pixel of
   terrain per explored fog cell, dark where the hero hasn't been, with a
-  legend of event pins: story finds, rare loot, elite/boss kills, and the
+  legend of event pins: story finds, elite/boss kills, the merchant, and the
   hero's own position), `render.ts` (camera +
   sprite drawing onto a world-unit canvas upscaled with `image-rendering:
 pixelated`; enemies swap to generated wounded sprite variants as hp falls

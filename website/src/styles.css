@@ -2556,6 +2556,13 @@ body {
   align-self: flex-start;
 }
 
+/* Center the level-name text on the chart icon — the blanket
+   `.game-overlay canvas` rule otherwise parks the shorter title canvas at the
+   top of the row, leaving it visibly high beside the taller icon. */
+.map-header canvas {
+  align-self: center;
+}
+
 /* The 20×14 treasure-map sprite at a crisp 2x, matching the HUD button. */
 .map-title-icon {
   width: 2.5rem;

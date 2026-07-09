@@ -2,7 +2,7 @@
 // The level map: fog-of-war exploration (revealAround from the hero's steps,
 // spawn pre-revealed, the rest fogged), the `map` pause phase (frozen sim,
 // openMap/closeMap toggles, level-up priority), and the map markers pinned by
-// story finds, unique/legendary loot, and elite/boss victories.
+// story finds and elite/boss victories.
 
 import { describe, expect, it } from "vitest";
 
@@ -113,7 +113,7 @@ describe("map markers", () => {
     });
   });
 
-  it("pins a story item and a unique find where they were picked up", () => {
+  it("pins a story item where it was picked up, but never a loot find", () => {
     const state = startGame();
     clearStage(state);
     const at = { x: state.player.pos.x, y: state.player.pos.y };
@@ -131,12 +131,10 @@ describe("map markers", () => {
       },
     );
     run(state, idle, 1);
+    // The story piece pins the map; the unique find is picked up but no longer
+    // leaves a loot marker.
     expect(state.mapMarkers.some((m) => m.kind === "story")).toBe(true);
-    expect(
-      state.mapMarkers.some(
-        (m) => m.kind === "loot" && m.defId === "test_hammer",
-      ),
-    ).toBe(true);
+    expect(state.mapMarkers.every((m) => m.defId !== "test_hammer")).toBe(true);
   });
 
   it("regular-tier pickups and minion kills leave no marker", () => {
