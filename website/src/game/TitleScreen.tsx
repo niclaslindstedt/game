@@ -61,6 +61,7 @@ type MenuScreen =
   | "scores"
   | "settings"
   | "controls"
+  | "developer"
   | "help";
 
 const pct = (v: number) => `${Math.round(v * 100)}%`;
@@ -107,11 +108,11 @@ const SCORE_METRICS: { id: ScoreMetric; label: string }[] = [
 /** A minimum travel (CSS px) before a pointer drag counts as a swipe. */
 const SWIPE_THRESHOLD = 36;
 
-/** How long the title moon must be held to open the warp picker — a
- * deliberately long, secret gesture so it never fires by accident. */
+/** How long the title moon must be held to reveal the hidden DEVELOPER menu —
+ * a deliberately long, secret gesture so it never fires by accident. */
 const MOON_HOLD_MS = 7000;
 
-/** How long the moon's detonation plays before the warp picker opens. Must
+/** How long the moon's detonation plays before the developer unlock lands. Must
  * match the `.moon-boom` keyframe durations in styles.css. A short cut is used
  * instead under prefers-reduced-motion. */
 const MOON_BOOM_MS = 900;
@@ -157,14 +158,16 @@ export function TitleScreen({
   // follows reads it to decide which levels are unlocked (progress is per
   // difficulty), and it carries into the run.
   const [difficulty, setDifficulty] = useState<Difficulty>("medium");
-  // Warp mode: the level list was opened by the moon's long-press, so every
-  // level is reachable regardless of progress and picking one skips the intro.
+  // Warp mode: the level list was opened via the developer menu's SELECT LEVEL,
+  // so every level is reachable regardless of progress and picking one skips
+  // the intro.
   const [warp, setWarp] = useState(false);
   // The moon is mid-charge (held but not yet at MOON_HOLD_MS) — drives the
   // "charging up" glow so the long-press has visible feedback.
   const [moonCharging, setMoonCharging] = useState(false);
   // The moon has reached full charge and is detonating: a one-shot blast that
-  // plays before the warp picker opens (see startMoonHold / MOON_BOOM_MS).
+  // plays before the developer menu is unlocked (see startMoonHold /
+  // MOON_BOOM_MS).
   const [moonExploding, setMoonExploding] = useState(false);
   // The HIGH SCORES board's axes: left/right picks the difficulty column,
   // up/down flips between the survival-time and kills-per-minute rankings.
@@ -338,16 +341,17 @@ export function TitleScreen({
       ];
     }
     if (screen === "levels") {
-      // Warp mode (opened by the moon's long-press) ignores the unlock gate:
-      // every level is reachable so you can try any of them, and picking one
-      // drops straight into play with no intro.
+      // Warp mode (opened from the developer menu's SELECT LEVEL) ignores the
+      // unlock gate: every level is reachable so you can try any of them, and
+      // picking one drops straight into play with no intro. Backing out returns
+      // to the developer menu it was launched from.
       const warpBack: MenuEntry = {
         label: "BACK",
         aria: "menu-back",
         action: () => {
           playUiSound(synth, "back");
           setWarp(false);
-          setScreen("main");
+          setScreen("developer");
           setCursor(0);
         },
       };
@@ -451,7 +455,53 @@ export function TitleScreen({
             setSettingsTick((t) => t + 1);
           },
         },
+        // The DEVELOPER row is hidden until the title moon's secret long-press
+        // unlocks it (see startMoonHold); once found it stays put across
+        // launches (persisted via `developerUnlocked`).
+        ...(s.developerUnlocked
+          ? [
+              {
+                label: "DEVELOPER",
+                aria: "settings-developer",
+                blurb: "LEVEL SELECT AND DEBUG MODE",
+                action: () => {
+                  playUiSound(synth, "confirm");
+                  setScreen("developer");
+                  setCursor(0);
+                },
+              },
+            ]
+          : []),
         backTo("main", onResume ? 2 : 1),
+      ];
+    }
+    if (screen === "developer") {
+      const s = getSettings();
+      return [
+        {
+          label: "SELECT LEVEL",
+          aria: "developer-select-level",
+          blurb: "WARP TO ANY MISSION - SKIPS THE INTRO",
+          action: () => {
+            playUiSound(synth, "confirm");
+            setWarp(true);
+            setScreen("levels");
+            setCursor(0);
+          },
+        },
+        {
+          label: s.debug === "on" ? "DEBUG MODE: ON" : "DEBUG MODE: OFF",
+          aria: "developer-debug",
+          blurb: "DEVELOPER DIAGNOSTICS (NOT WIRED UP YET)",
+          action: () => {
+            playUiSound(synth, "confirm");
+            updateSettings({ debug: s.debug === "on" ? "off" : "on" });
+            setSettingsTick((t) => t + 1);
+          },
+        },
+        // Land back on the DEVELOPER row in SETTINGS — it sits just above BACK,
+        // after CONTROLS / MUSIC / SOUND FX / HARDCORE.
+        backTo("settings", 4),
       ];
     }
     if (screen === "controls") {
@@ -628,11 +678,13 @@ export function TitleScreen({
         unlockAudio();
         playUiSound(synth, "back");
         // The warp picker isn't reached through the difficulty ladder, so its
-        // back-out returns to the main menu and leaves warp mode.
+        // back-out returns to the developer menu it was opened from and leaves
+        // warp mode.
         if (screen === "levels" && warp) setWarp(false);
         const back: Record<string, MenuScreen> = {
           controls: "settings",
-          levels: warp ? "main" : "difficulty",
+          developer: "settings",
+          levels: warp ? "developer" : "difficulty",
         };
         setScreen(back[screen] ?? "main");
         setCursor(0);
@@ -677,13 +729,14 @@ export function TitleScreen({
     }
   };
 
-  // The moon's hidden long-press: hold it for MOON_HOLD_MS to open the warp
-  // picker — a level-select that ignores progress and skips the intro, so any
-  // level can be tried without finishing the current campaign. A running glow
-  // (moonCharging) shows the hold is building; releasing early cancels it.
+  // The moon's hidden long-press: hold it for MOON_HOLD_MS to reveal the
+  // DEVELOPER menu — a settings entry with level select and a debug toggle.
+  // Nothing else happens; the player finds the new row in SETTINGS on their
+  // own. A running glow (moonCharging) shows the hold is building; releasing
+  // early cancels it.
   const moonHold = useRef<number | null>(null);
-  // The pending "blast finished → open warp picker" timer, so we can drop it
-  // if the menu unmounts mid-detonation.
+  // The pending "blast finished → unlock developer menu" timer, so we can drop
+  // it if the menu unmounts mid-detonation.
   const moonBoom = useRef<number | null>(null);
   const cancelMoonHold = useCallback(() => {
     if (moonHold.current !== null) {
@@ -703,8 +756,9 @@ export function TitleScreen({
     moonHold.current = window.setTimeout(() => {
       moonHold.current = null;
       setMoonCharging(false);
-      // Blow the moon up first, then hand off to the warp picker once the
-      // blast has played out.
+      // Blow the moon up first, then latch the developer unlock once the blast
+      // has played out. Nothing navigates: the DEVELOPER row simply appears in
+      // SETTINGS for the player to discover.
       setMoonExploding(true);
       playUiSound(synth, "boom");
       haptics.vibrate([30, 40, 90]);
@@ -715,10 +769,10 @@ export function TitleScreen({
         () => {
           moonBoom.current = null;
           setMoonExploding(false);
-          playUiSound(synth, "start");
-          setWarp(true);
-          setScreen("levels");
-          setCursor(0);
+          updateSettings({ developerUnlocked: true });
+          // Rebuild the menu so the SETTINGS list picks up the new row even if
+          // it happens to be open already.
+          setSettingsTick((t) => t + 1);
         },
         reduce ? MOON_BOOM_MS_REDUCED : MOON_BOOM_MS,
       );
@@ -782,9 +836,9 @@ export function TitleScreen({
         <span className="title-twinkle title-twinkle-6" />
         <span className="title-twinkle title-twinkle-7" />
       </div>
-      {/* Hidden warp gesture: hold the moon for MOON_HOLD_MS to open the
-          all-levels picker (see startMoonHold). aria-hidden stays — it is a
-          secret, pointer-only Easter egg, not an announced control. */}
+      {/* Hidden developer gesture: hold the moon for MOON_HOLD_MS to reveal the
+          DEVELOPER row in SETTINGS (see startMoonHold). aria-hidden stays — it
+          is a secret, pointer-only Easter egg, not an announced control. */}
       <div
         ref={moonRef}
         className={`title-moon${moonCharging ? " charging" : ""}${
@@ -864,6 +918,9 @@ export function TitleScreen({
           scale={2}
           color="#d9a0f0"
         />
+      )}
+      {screen === "developer" && (
+        <PixelText font={font} text="DEVELOPER" scale={2} color="#7ef0c8" />
       )}
 
       {screen === "help" && (

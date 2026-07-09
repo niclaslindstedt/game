@@ -125,6 +125,21 @@ the `branch-deploy` orphan branch. `.github/workflows/pages.yml` builds all
 slots into a single Pages artifact; each slot gets its own service worker and
 a disjoint precache cache id (`website/src/app/pwa.ts`).
 
+## Developer menu (hidden)
+
+The title screen hides a **DEVELOPER menu** behind the moon Easter egg: a
+long-press on the title moon (`MOON_HOLD_MS` in
+`website/src/game/TitleScreen.tsx`) detonates it and latches
+`developerUnlocked` in the persisted settings (`website/src/game/settings.ts`).
+The detonation does nothing else — the player then opens SETTINGS on their own,
+where a **DEVELOPER** row now appears (it stays available across launches once
+unlocked). That screen offers **SELECT LEVEL** (the warp picker: jump into any
+mission, skipping the intro) and a **DEBUG MODE** toggle (`debug: "on" | "off"`,
+also persisted). DEBUG MODE is currently an inert flag — a hook reserved for
+future developer diagnostics — so wire real behavior to `getSettings().debug`
+when adding it, and keep it distinct from the `?debug` URL param (which drives
+console verbosity and `window.__game`, see `docs/configuration.md`).
+
 ## Reuse through oss-framework
 
 This game builds on
