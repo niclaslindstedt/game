@@ -654,6 +654,104 @@ body {
   }
 }
 
+/* A few named stars that twinkle over the tiled field. Each rests dim and
+   flares bright for a brief slice of its own long cycle; staggered durations
+   and negative delays keep them out of sync, so the blinks land "every now and
+   then" across the sky rather than in a chorus. */
+.title-twinkles {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  z-index: 0;
+}
+
+.title-twinkle {
+  position: absolute;
+  width: 3px;
+  height: 3px;
+  border-radius: 50%;
+  background: var(--tw, #e6e8eb);
+  box-shadow: 0 0 6px 1px var(--tw, #e6e8eb);
+  opacity: 0.15;
+  will-change: transform, opacity;
+  animation: title-twinkle var(--tw-dur, 7s) ease-in-out var(--tw-delay, 0s)
+    infinite;
+}
+
+/* Rest dim most of the cycle, then a quick bright flare — one twinkle per
+   loop. */
+@keyframes title-twinkle {
+  0%,
+  12%,
+  100% {
+    opacity: 0.15;
+    transform: scale(0.5);
+  }
+  5% {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+.title-twinkle-1 {
+  top: 15%;
+  left: 12%;
+  --tw: #e6e8eb;
+  --tw-dur: 6s;
+  --tw-delay: -1s;
+}
+.title-twinkle-2 {
+  top: 23%;
+  left: 83%;
+  --tw: #7ef0c8;
+  --tw-dur: 7.5s;
+  --tw-delay: -4s;
+}
+.title-twinkle-3 {
+  top: 34%;
+  left: 28%;
+  --tw: #d9a0f0;
+  --tw-dur: 9s;
+  --tw-delay: -2.5s;
+}
+.title-twinkle-4 {
+  top: 11%;
+  left: 56%;
+  --tw: #e6e8eb;
+  --tw-dur: 5.5s;
+  --tw-delay: -6s;
+}
+.title-twinkle-5 {
+  top: 68%;
+  left: 15%;
+  --tw: #7ef0c8;
+  --tw-dur: 8s;
+  --tw-delay: -3s;
+}
+.title-twinkle-6 {
+  top: 74%;
+  left: 87%;
+  --tw: #e6e8eb;
+  --tw-dur: 6.5s;
+  --tw-delay: -5s;
+}
+.title-twinkle-7 {
+  top: 42%;
+  left: 92%;
+  --tw: #d9a0f0;
+  --tw-dur: 10s;
+  --tw-delay: -0.5s;
+}
+
+/* Motion-sensitive visitors keep the stars, just static and faint. */
+@media (prefers-reduced-motion: reduce) {
+  .title-twinkle {
+    animation: none;
+    opacity: 0.4;
+    transform: none;
+  }
+}
+
 /* The moon the trail leads to, hanging in the corner. Its phase and halo are
    driven each frame by startTitleSky (titleSky.ts): a shadow disc (::after) is
    pushed *away from the sun* via --sky-sx/--sky-sy so the lit limb always faces
