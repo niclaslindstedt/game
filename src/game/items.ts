@@ -16,6 +16,7 @@ import {
   DODGE,
   LOOT,
   MELEE,
+  MERCY,
   PLAYER,
   STAMINA,
   STATS,
@@ -230,11 +231,27 @@ export function rollEquipment(
   // pieces (opts.defId — boss trophies, placed items) are never dampened, and
   // a mult at/above 1 draws nothing, so the baseline stream is untouched.
   if (family === "gear" && !opts.defId) {
-    const armorMult = difficultyDef(state.difficulty).armorDropMult;
-    if (armorMult < 1 && gearDef(defId).armor && rng() >= armorMult) {
-      const unplated = pool.filter((id) => !gearDef(id).armor);
-      if (unplated.length > 0) {
-        defId = unplated[Math.floor(rng() * unplated.length)] as string;
+    const diff = difficultyDef(state.difficulty);
+    const picked = gearDef(defId).armor;
+    // A hurting hero on the gentle rungs pulls plated suits IN — armor is
+    // life-saving gear, so it rains harder the closer he is to death (the
+    // mirror image of the dampening below, and only ever a mercy on
+    // easy/medium: `mercy.armorBonus` is zero from hard up). No draw is
+    // spent at full health (desperation 0), so the baseline stream is intact.
+    const armorPull = lowHealthDesperation(state) * diff.mercy.armorBonus;
+    if (picked) {
+      // Harder rungs find fewer plated suits: a landed-on-armor pick re-rolls
+      // to an unplated piece at `1 - armorDropMult`.
+      if (diff.armorDropMult < 1 && rng() >= diff.armorDropMult) {
+        const unplated = pool.filter((id) => !gearDef(id).armor);
+        if (unplated.length > 0) {
+          defId = unplated[Math.floor(rng() * unplated.length)] as string;
+        }
+      }
+    } else if (armorPull > 0 && rng() < armorPull) {
+      const plated = pool.filter((id) => gearDef(id).armor);
+      if (plated.length > 0) {
+        defId = plated[Math.floor(rng() * plated.length)] as string;
       }
     }
   }
@@ -563,6 +580,48 @@ export function dropChance(state: GameState): number {
     LOOT.dropChance +
     difficultyDef(state.difficulty).dropChanceBonus +
     effectiveStat(state, "luck") * STATS.dropChancePerLuck
+  );
+}
+
+/**
+ * The shared shape of every MERCY DROP: a 0→1 "desperation" that a signal
+ * (health, weapon durability, crowd size) turns into as it worsens. Zero at or
+ * above `start`, one at or below `full`, linear between — so the drop rolls
+ * that read it only need to multiply by a strength knob. One function so all
+ * three ramps behave identically and stay easy to reason about.
+ */
+export function desperationRamp(
+  fraction: number,
+  start: number,
+  full: number,
+): number {
+  if (fraction >= start) return 0;
+  if (fraction <= full) return 1;
+  return (start - fraction) / (start - full);
+}
+
+/** How close to death the hero is, as a 0→1 mercy-drop desperation (see
+ * `desperationRamp`): 0 above `MERCY.lowHealthStart` of max hp, 1 at/under
+ * `MERCY.lowHealthFull`. Drives the low-health medkit and armor boosts. */
+export function lowHealthDesperation(state: GameState): number {
+  const { hp, maxHp } = state.player;
+  if (maxHp <= 0) return 0;
+  return desperationRamp(hp / maxHp, MERCY.lowHealthStart, MERCY.lowHealthFull);
+}
+
+/** How close the equipped weapon is to snapping, as a 0→1 mercy-drop
+ * desperation: 0 above `MERCY.lowDurabilityStart` of its max, 1 at/under
+ * `MERCY.lowDurabilityFull`. The unbreakable sidearm (no durability, no def
+ * maximum) never triggers it. Drives the low-durability repair boost. */
+export function lowDurabilityDesperation(state: GameState): number {
+  const weapon = state.player.equipment.weapon;
+  if (weapon.durability === undefined) return 0;
+  const max = weaponDef(weapon.defId).durability;
+  if (!max || max <= 0) return 0;
+  return desperationRamp(
+    weapon.durability / max,
+    MERCY.lowDurabilityStart,
+    MERCY.lowDurabilityFull,
   );
 }
 

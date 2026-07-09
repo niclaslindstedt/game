@@ -17,7 +17,15 @@ import {
   type Equipment,
 } from "@game/core";
 
-import { DT, idle, makeEnemy, run, startGame, steerTo } from "./helpers.ts";
+import {
+  clearStage,
+  DT,
+  idle,
+  makeEnemy,
+  run,
+  startGame,
+  steerTo,
+} from "./helpers.ts";
 
 function fixtureSuit(id = 77): Equipment {
   return {
@@ -111,6 +119,10 @@ describe("armor", () => {
 describe("stamina", () => {
   it("drains under a sustained run and refills while idle", () => {
     const state = startGame();
+    // Isolate the sprint pool: no live horde, so no stray kill can grant XP
+    // and refill stamina on a level-up mid-measurement (the run is deterministic
+    // stamina math, not a combat scenario).
+    clearStage(state);
     state.obstacles = []; // a clear lane so the run never stalls on a rock
     expect(state.player.stamina).toBe(state.player.maxStamina);
 
@@ -123,6 +135,7 @@ describe("stamina", () => {
 
   it("recovers while walking — never drains — but slower than standing still", () => {
     const state = startGame();
+    clearStage(state); // isolate the pool from combat XP/level-up refills
     state.obstacles = []; // a clear lane so the walk never stalls on a rock
     // A gentle nudge below the run threshold is a walk, not a run.
     const walk = { ...steerTo(5000, 5000), throttle: STAMINA.runThreshold };
@@ -146,6 +159,7 @@ describe("stamina", () => {
 
   it("halves the top speed once the pool is empty", () => {
     const state = startGame();
+    clearStage(state); // isolate movement from a horde blocking the lane
     state.obstacles = [];
     const target = steerTo(5000, 5000);
 

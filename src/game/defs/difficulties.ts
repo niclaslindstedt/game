@@ -10,6 +10,41 @@
 
 import type { Difficulty, StatName, Tier } from "../types.ts";
 
+/**
+ * A rung's MERCY strengths — how forcefully the easy/medium rope pulls (the
+ * ramp SHAPES that turn each signal into a 0→1 desperation live in the `MERCY`
+ * config). Every field is zero on hard and up, so no mercy reaches them.
+ */
+export type MercyTuning = {
+  /**
+   * The most a PACKED FIELD adds to each kill's chance of dropping a
+   * screen-nuke — the bomb-in-a-swarm bailout. Ramps in from zero once the
+   * on-screen crowd passes `MERCY.crowdBombThreshold`, reaching this cap at
+   * `MERCY.crowdBombFull`. Easy tops out at 5%, medium 3%, the rest 0.
+   */
+  crowdBombChanceMax: number;
+  /**
+   * Extra medkit-slice multiplier at full low-health desperation (hp at/under
+   * `MERCY.lowHealthFull`): the medkit share is scaled by `1 + this *
+   * desperation`, so healing rains harder the closer the hero is to death.
+   */
+  medkitBonus: number;
+  /**
+   * Chance, at full low-health desperation, that an otherwise-UNPLATED random
+   * gear drop is swapped for a PLATED suit from the same pool — armor is
+   * life-saving gear too, so a hurting hero finds it more often. Scaled by the
+   * same hp desperation as `medkitBonus`.
+   */
+  armorBonus: number;
+  /**
+   * Extra repair-slice multiplier at full low-durability desperation (equipped
+   * weapon at/under `MERCY.lowDurabilityFull` of its max): the repair share is
+   * scaled by `1 + this * desperation`, so a near-broken weapon draws repair
+   * kits before it snaps.
+   */
+  repairBonus: number;
+};
+
 export type DifficultyDef = {
   /** Registry key. */
   id: Difficulty;
@@ -100,6 +135,14 @@ export type DifficultyDef = {
    */
   powerupDropMult: number;
   /**
+   * MERCY DROPS (see the `MERCY` config for the ramp shapes) — the per-rung
+   * STRENGTH of the easy/medium rope: how hard a packed field, a bleeding
+   * hero, or a near-broken weapon bends the drops in the player's favor. The
+   * gentle rungs set these; hard and up zero every one, so death stays on the
+   * table. A nudge, never a safety net.
+   */
+  mercy: MercyTuning;
+  /**
    * Chance that a minion's equipment drop is drawn from the level's
    * `loot.uniquePool` instead of the regular pools — the harder rungs' shot
    * at one-of-a-kind gear. PLUMBING for now: no level ships a unique pool
@@ -175,6 +218,15 @@ export const DIFFICULTY_DEFS: Record<Difficulty, DifficultyDef> = {
     medkitDropMult: 1.05,
     armorDropMult: 1.05,
     powerupDropMult: 1.05,
+    // The most forgiving rung: a full screen tops out at a 5%-per-kill bomb,
+    // a dying hero triples his medkit odds and coin-flips gear into armor, and
+    // a near-broken weapon draws repairs three times as hard.
+    mercy: {
+      crowdBombChanceMax: 0.05,
+      medkitBonus: 2,
+      armorBonus: 0.5,
+      repairBonus: 2,
+    },
     uniqueDropChance: 0,
     tierChanceBonus: {},
     staminaDrainMult: 0.95,
@@ -201,6 +253,15 @@ export const DIFFICULTY_DEFS: Record<Difficulty, DifficultyDef> = {
     medkitDropMult: 1,
     armorDropMult: 1,
     powerupDropMult: 1,
+    // The fight as intended, with a lighter touch than easy: a packed field
+    // caps at 3% bomb, and the low-health/low-durability boosts are dialed
+    // back so the rope is thinner.
+    mercy: {
+      crowdBombChanceMax: 0.03,
+      medkitBonus: 1.3,
+      armorBonus: 0.35,
+      repairBonus: 1.3,
+    },
     uniqueDropChance: 0,
     tierChanceBonus: {},
     staminaDrainMult: 1,
@@ -227,6 +288,14 @@ export const DIFFICULTY_DEFS: Record<Difficulty, DifficultyDef> = {
     medkitDropMult: 0.95,
     armorDropMult: 0.95,
     powerupDropMult: 0.95,
+    // No mercy from hard up: no crowd bomb, no low-health or low-durability
+    // help. The struggle is the point.
+    mercy: {
+      crowdBombChanceMax: 0,
+      medkitBonus: 0,
+      armorBonus: 0,
+      repairBonus: 0,
+    },
     uniqueDropChance: 0.01,
     tierChanceBonus: { magic: 0.08, rare: 0.05 },
     staminaDrainMult: 1.05,
@@ -253,6 +322,12 @@ export const DIFFICULTY_DEFS: Record<Difficulty, DifficultyDef> = {
     medkitDropMult: 0.9,
     armorDropMult: 0.9,
     powerupDropMult: 0.9,
+    mercy: {
+      crowdBombChanceMax: 0,
+      medkitBonus: 0,
+      armorBonus: 0,
+      repairBonus: 0,
+    },
     uniqueDropChance: 0.02,
     tierChanceBonus: { magic: 0.14, rare: 0.08 },
     staminaDrainMult: 1.1,
@@ -281,6 +356,12 @@ export const DIFFICULTY_DEFS: Record<Difficulty, DifficultyDef> = {
     medkitDropMult: 0.77,
     armorDropMult: 0.77,
     powerupDropMult: 0.77,
+    mercy: {
+      crowdBombChanceMax: 0,
+      medkitBonus: 0,
+      armorBonus: 0,
+      repairBonus: 0,
+    },
     uniqueDropChance: 0.04,
     tierChanceBonus: { magic: 0.2, rare: 0.12 },
     // No extra burn past nightmare — JESUS is kited or not survived at all.

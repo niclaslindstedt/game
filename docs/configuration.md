@@ -84,6 +84,14 @@ constants by design; tuning happens by editing that file and playtesting
 [`src/game/defs/difficulties.ts`](../src/game/defs/difficulties.ts) —
 MEDIUM is the exact 1.0 baseline the levels are tuned at.
 
+**Mercy drops** ease the gentle rungs without making them un-losable: on EASY
+and MEDIUM a packed screen (20+ mobs) starts dropping screen-nuke bombs, and
+low health or a near-broken weapon makes medkits, plated armor, and repair kits
+rain harder. The ramp _shapes_ (where each signal starts and maxes) are the
+`MERCY` block in `config.ts`; each rung's _strength_ is its `mercy` object in
+`difficulties.ts` (`MercyTuning`), zeroed on HARD and up so death stays on the
+table there.
+
 ## Repository pins
 
 | File                          | Pins                                                                                                           |
