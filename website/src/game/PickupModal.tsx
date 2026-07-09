@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
 // The pickup card: a bordered panel — dressed like the HUD clock/kill units —
-// that pops in mid-screen when a weapon or item drops into the bag, showing the
+// that pops in the lower part of the screen (below the centered hero, in the
+// thumb-reach zone) when a weapon or item drops into the bag, showing the
 // piece's icon and its rarity-tinted name. A spark laps the frame and a sheen
 // glimmers across the face so a fresh find reads as "new and shiny", not chrome.
 // Special tiers (magic → legendary) get a flashy reveal on top — a rarity bloom,

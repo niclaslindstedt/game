@@ -686,7 +686,11 @@ body {
    otherwise steering passes straight through. */
 .pickup-card {
   position: absolute;
-  top: 22%;
+  /* Anchored to the lower part of the screen, below the centered hero, so the
+     tap-to-equip button lands in the thumb-reach zone on a phone held in
+     landscape. Bottom-anchored so a tall card (wrapped name + status tag +
+     reveal flames) grows upward and keeps the tap target near the bottom. */
+  bottom: 15%;
   left: 50%;
   display: flex;
   align-items: center;
