@@ -82,6 +82,20 @@ export const WEAPON = {
    * has to be out-fought, not out-DPS'd from the first pickup.
    */
   damageMult: 0.5,
+  /**
+   * DAMAGE VARIANCE — every blow rolls its damage inside a band around the
+   * weapon's catalog `damage` (the average) rather than landing a fixed
+   * number, so combat reads with a little life: a weapon written at 10 hits
+   * for 8–12, and a crit off that lands anywhere up to 24. This is the
+   * DEFAULT half-width, as a fraction of the average; a def may widen (or
+   * tighten) its own swing with `damageVariance` — a wild, chaotic weapon
+   * (a blunderbuss, a black-hole gun) rolls a much bigger band for the fun
+   * of it. The average is untouched, so the whole damage-budget model
+   * (budgets, DPS readouts, auto-equip, grade generation) is unaffected —
+   * variance is spread around the same mean. Rolled off the run's `fxRng`
+   * flavor stream (not the loot stream), so it never perturbs drop rolls.
+   */
+  damageVariance: 0.2,
 } as const;
 
 /**

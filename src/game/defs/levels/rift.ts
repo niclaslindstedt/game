@@ -182,6 +182,7 @@ export const THE_RIFT: LevelDef = {
       "blunderbuss",
       "executioners_axe",
       "sorcerers_staff",
+      "ember_wand",
     ],
     // History's armory, leaning medieval — legion sandals to the great
     // helm (levelReqs 15 → 22) — plus the fantasy charms only the rift rains.

@@ -20,6 +20,8 @@ import {
   ACCURACY,
   armorReduction,
   armorValueOf,
+  autoEquipBest,
+  autoEquipUpgradeCount,
   currentMobLevel,
   computeMaxHp,
   discardEquipped,
@@ -49,6 +51,7 @@ import {
   weaponCooldownFor,
   weaponDamage,
   weaponDamageFor,
+  weaponDamageRange,
   weaponDef,
   weaponDps,
   weaponRangeFor,
@@ -59,6 +62,7 @@ import {
   type StatName,
 } from "@game/core";
 
+import { formatCompact } from "@ui/lib/format-number.ts";
 import { PixelText } from "@ui/lib/PixelText.tsx";
 import type { PixelFont } from "@ui/lib/pixel-font.ts";
 
@@ -210,17 +214,22 @@ function itemLines(
     // sheet's derived combat stats.
     const dps = Math.round(weaponDps(state, item));
     lines.push({
-      text: `DPS ${dps}`,
+      text: `DPS ${formatCompact(dps)}`,
       color: "#7ef0c8",
       delta: eq ? compareChip(dps - Math.round(weaponDps(state, eq))) : null,
     });
-    // Show the damage this weapon would deal in the player's hands (stats +
-    // affixes folded in), with the bonus over the raw base as a "+x" hint.
+    // Show the damage this weapon would deal in the player's hands as the RANGE
+    // every blow rolls inside (stats + affixes folded in), with the bonus of
+    // the average over the raw base as a "+x" hint. A range, not a fixed
+    // figure, because that is how the weapon actually hits.
     const effective = Math.round(weaponDamageFor(state, item));
+    const { min, max } = weaponDamageRange(state, item);
     const bonus = effective - def.damage;
     lines.push({
       text:
-        bonus > 0 ? `DAMAGE ${effective} (+${bonus})` : `DAMAGE ${effective}`,
+        bonus > 0
+          ? `DAMAGE ${formatCompact(min)}-${formatCompact(max)} (+${formatCompact(bonus)})`
+          : `DAMAGE ${formatCompact(min)}-${formatCompact(max)}`,
       delta: eq
         ? compareChip(effective - Math.round(weaponDamageFor(state, eq)))
         : null,
@@ -679,6 +688,11 @@ export function InventoryPanel({
   const scrapCount = player.inventory.filter(
     (item): item is Equipment => item !== null && isScrappableLoot(state, item),
   ).length;
+  // How many slots AUTO-EQUIP would improve right now — drives the button's
+  // count and its disabled state so it never runs on an already-optimal
+  // loadout (the sweep folds the hero's build into the weapon pick, so a melee
+  // hero lands a melee weapon and a mage a wand).
+  const autoCount = autoEquipUpgradeCount(state);
   const shown = inspect?.item ?? null;
   // Holding/hovering an item previews it in the character sheet: the stat
   // getters read a throwaway loadout with `shown` slotted in, and the
@@ -799,7 +813,7 @@ export function InventoryPanel({
                   <StatLine
                     font={font}
                     label="DMG"
-                    value={String(Math.round(weaponDamage(state)))}
+                    value={formatCompact(Math.round(weaponDamage(state)))}
                     color="#7ef0c8"
                     chip={
                       preview
@@ -905,32 +919,75 @@ export function InventoryPanel({
         {/* The bag — the dominant area of the modal: a compact grid of small
             cells that scrolls, sized to hold plenty on a vertical phone. */}
         <div className="inv-bag">
-          {/* BAG header, with a one-tap cleanup: SCRAP clears every piece the
-              hero has outgrown (worse than what's worn) while sparing keepers —
-              upgrades, side-grades, trinkets, and unique/legendary trophies.
-              Disabled when nothing qualifies so it can't destroy a clean bag. */}
+          {/* BAG header with two one-tap tools:
+              • AUTO-EQUIP (crossed swords) wears the best piece the bag holds
+                in every slot at once, folding the hero's build into the weapon
+                pick. Disabled when the loadout is already optimal.
+              • DROP-ALL (trash can) clears every piece the hero has outgrown
+                (worse than what's worn) while sparing keepers — upgrades,
+                side-grades, trinkets, and unique/legendary trophies. Disabled
+                when nothing qualifies so it can't destroy a clean bag.
+              Each button shows the count it would act on beside its icon. */}
           <div className="inv-bag-header">
             <PixelText font={font} text="BAG" scale={2} color="#9aa3ad" />
-            <button
-              type="button"
-              className="pixel-button secondary inv-scrap-btn"
-              aria-label="scrap-junk"
-              disabled={scrapCount === 0}
-              onClick={() => {
-                if (scrapInferiorLoot(state).length > 0) {
-                  playUiSound(synth, "back");
-                  setInspect(null);
-                  onChange();
-                }
-              }}
-            >
-              <PixelText
-                font={font}
-                text={scrapCount > 0 ? `SCRAP ${scrapCount}` : "SCRAP"}
-                scale={1}
-                color={scrapCount > 0 ? "#e6e8eb" : "#5a6470"}
-              />
-            </button>
+            <div className="inv-bag-actions">
+              <button
+                type="button"
+                className="pixel-button secondary inv-icon-btn"
+                aria-label="auto-equip"
+                disabled={autoCount === 0}
+                onClick={() => {
+                  if (autoEquipBest(state) > 0) {
+                    playUiSound(synth, "equip");
+                    setInspect(null);
+                    onChange();
+                  }
+                }}
+              >
+                <img
+                  src={spriteDataUrl(sprites, "icon_swords")}
+                  alt="auto-equip"
+                  className="pixel-img inv-btn-icon"
+                  draggable={false}
+                />
+                {autoCount > 0 && (
+                  <PixelText
+                    font={font}
+                    text={String(autoCount)}
+                    scale={1}
+                    color="#e6e8eb"
+                  />
+                )}
+              </button>
+              <button
+                type="button"
+                className="pixel-button secondary inv-icon-btn"
+                aria-label="drop-all"
+                disabled={scrapCount === 0}
+                onClick={() => {
+                  if (scrapInferiorLoot(state).length > 0) {
+                    playUiSound(synth, "back");
+                    setInspect(null);
+                    onChange();
+                  }
+                }}
+              >
+                <img
+                  src={spriteDataUrl(sprites, "icon_trash")}
+                  alt="drop-all"
+                  className="pixel-img inv-btn-icon"
+                  draggable={false}
+                />
+                {scrapCount > 0 && (
+                  <PixelText
+                    font={font}
+                    text={String(scrapCount)}
+                    scale={1}
+                    color="#e6e8eb"
+                  />
+                )}
+              </button>
+            </div>
           </div>
           <div className="inv-grid">
             {player.inventory.map((item, index) => (
@@ -964,11 +1021,11 @@ export function InventoryPanel({
 
         <button
           type="button"
-          className="pixel-button"
+          className="pixel-button modal-close-btn"
           aria-label="close-inventory"
           onClick={onClose}
         >
-          <PixelText font={font} text="CLOSE" scale={2} color="#0b0d10" />
+          <PixelText font={font} text="CLOSE" scale={1} color="#0b0d10" />
         </button>
       </div>
 

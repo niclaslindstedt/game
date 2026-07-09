@@ -41,6 +41,7 @@ import {
   TIERS,
   weaponAssumedTargets,
   weaponCritMult,
+  weaponDamageVariance,
   weaponDef,
   type AffixDef,
   equipmentBaseName,
@@ -1007,6 +1008,52 @@ export function weaponDamageFor(state: GameState, weapon: Equipment): number {
 }
 
 /**
+ * The damage a specific weapon instance would deal on THIS blow: its average
+ * output (`weaponDamageFor`) scaled by a random factor inside the weapon's
+ * variance band, so a swing written at 10 lands anywhere in ~8–12 (and a crit
+ * off it, higher still). Rolled off the run's `fxRng` flavor stream — never
+ * `rng` — so damage spread can't perturb the loot/crit sequence. This is the
+ * value combat feeds into `hitEnemy`; every readout (item card, DPS, scoring)
+ * keeps using the deterministic average so a weapon still reads as one number.
+ */
+export function rollWeaponDamage(state: GameState, weapon: Equipment): number {
+  return rollWeaponHit(state, weapon).damage;
+}
+
+/**
+ * As `rollWeaponDamage`, but also reports where the blow landed inside the
+ * weapon's variance band as a normalized `roll` in [0, 1] (0 = the softest
+ * end, 1 = the hardest). Combat carries this out on the hit event so the app
+ * can size a crit's popup by how strong the blow was — a top-of-band crit
+ * slams a bigger figure than a glancing one. A weapon with no variance has no
+ * "how good" to report, so it lands at a neutral 0.5. Drawn off `fxRng` exactly
+ * as before, so the loot/crit sequence is untouched.
+ */
+export function rollWeaponHit(
+  state: GameState,
+  weapon: Equipment,
+): { damage: number; roll: number } {
+  const v = weaponDamageVariance(weaponDef(weapon.defId));
+  const factor = v <= 0 ? 1 : randomRange(state.fxRng, 1 - v, 1 + v);
+  const roll = v <= 0 ? 0.5 : (factor - (1 - v)) / (2 * v);
+  return { damage: weaponDamageFor(state, weapon) * factor, roll };
+}
+
+/**
+ * The min/max a weapon's blow can roll for this player (its average ± its
+ * variance band), rounded for display. The item card leads with this range —
+ * "DMG 8–12" — so the spread the player feels in combat is legible up front.
+ */
+export function weaponDamageRange(
+  state: GameState,
+  weapon: Equipment,
+): { min: number; max: number } {
+  const avg = weaponDamageFor(state, weapon);
+  const v = weaponDamageVariance(weaponDef(weapon.defId));
+  return { min: Math.round(avg * (1 - v)), max: Math.round(avg * (1 + v)) };
+}
+
+/**
  * A weapon's effective reach for this player. INTELLIGENCE lengthens every
  * weapon's reach — melee, ranged, and magic alike (a high-INT build reaches
  * out and holds the crowd further back). This is the single source of truth
@@ -1454,6 +1501,101 @@ export function scrapInferiorLoot(state: GameState): Equipment[] {
     scrapped.push(item);
   }
   return scrapped;
+}
+
+// ---- Auto-equip everything (the "optimize my gear" sweep) ----------------------
+
+/** The wearable slots the auto-equip sweep fills, in paperdoll order after the
+ * weapon: the four armor slots plus the charm and bag. */
+const GEAR_SLOTS: readonly Exclude<EquipSlot, "weapon">[] = [
+  ...ARMOR_SLOTS,
+  "charm",
+  "bag",
+];
+
+/**
+ * Plan the auto-equip sweep without mutating: the bag cell indices to equip so
+ * every slot ends up holding its best wearable piece. The weapon is decided
+ * first, on the build the hero plays right now (allocated STATS drive the melee
+ * vs magic choice through `weaponScore` — a STRENGTH hero lands a heavier melee
+ * blow, an INTELLIGENCE hero a stronger spell), then each gear slot takes the
+ * highest `gearScore` find that beats what's worn. Under-leveled banked finds,
+ * broken weapons, and passive trinkets (they pay out from the bag, so the charm
+ * slot is left free) are skipped — the same rule the pickup auto-equip follows.
+ * Every returned index points at a distinct piece in a distinct slot, so the
+ * cells stay valid as they are equipped one after another.
+ */
+function planAutoEquip(state: GameState): number[] {
+  const player = state.player;
+  const inv = player.inventory;
+  const plan: number[] = [];
+
+  // Weapon: the bag weapon that most out-scores what's held for this build.
+  let bestWeapon = -1;
+  let bestWeaponScore = weaponScore(state, player.equipment.weapon);
+  for (let i = 0; i < inv.length; i++) {
+    const item = inv[i];
+    if (!item || item.slot !== "weapon") continue;
+    if (item.durability !== undefined && item.durability <= 0) continue;
+    if (!meetsLevelReq(state, item)) continue;
+    const score = weaponScore(state, item);
+    if (score > bestWeaponScore) {
+      bestWeaponScore = score;
+      bestWeapon = i;
+    }
+  }
+  if (bestWeapon >= 0) plan.push(bestWeapon);
+
+  // Gear: the highest-worth wearable find for each body/charm/bag slot,
+  // provided it beats what that slot wears now (an empty slot takes anything).
+  for (const slot of GEAR_SLOTS) {
+    const current = player.equipment[slot];
+    let bestGear = -1;
+    let bestGearScore = current ? gearScore(current) : -Infinity;
+    for (let i = 0; i < inv.length; i++) {
+      const item = inv[i];
+      if (!item || item.slot !== slot) continue;
+      if (!meetsLevelReq(state, item)) continue;
+      // A passive trinket earns its bonus just by riding in the bag, so it is
+      // never worn — the charm slot stays open for an active piece.
+      if (isPassiveItem(item.defId)) continue;
+      const score = gearScore(item);
+      if (score > bestGearScore) {
+        bestGearScore = score;
+        bestGear = i;
+      }
+    }
+    if (bestGear >= 0) plan.push(bestGear);
+  }
+
+  return plan;
+}
+
+/**
+ * The AUTO-EQUIP sweep: wear the best piece the bag can offer in every slot at
+ * once. Weapons rank by the build-aware `weaponScore` (so the hero's stats pick
+ * melee, ranged, or magic for them), gear by `gearScore` (armor, HP, crit, and
+ * stat affixes — the health/armor the sweep maximizes). Each displaced piece
+ * swaps back into the bag via `equipFromInventory`, so nothing is destroyed.
+ * Returns how many slots actually changed, so the UI can stay quiet when the
+ * loadout was already optimal.
+ */
+export function autoEquipBest(state: GameState): number {
+  let changed = 0;
+  for (const index of planAutoEquip(state)) {
+    if (equipFromInventory(state, index)) changed++;
+  }
+  return changed;
+}
+
+/**
+ * How many slots the auto-equip sweep would improve right now, without touching
+ * a thing — the count the inventory reads to label the button and disable it on
+ * an already-optimal loadout. Mirrors `autoEquipBest` exactly (it plans the same
+ * swaps), so the badge never promises a change the sweep won't make.
+ */
+export function autoEquipUpgradeCount(state: GameState): number {
+  return planAutoEquip(state).length;
 }
 
 // ---- Durability -------------------------------------------------------------------

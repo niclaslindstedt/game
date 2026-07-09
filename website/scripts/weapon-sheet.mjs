@@ -23,12 +23,26 @@ import { SPRITES, SPRITE_PALETTES } from "./sprite-data/index.mjs";
 const here = path.dirname(fileURLToPath(import.meta.url));
 const root = path.join(here, "../..");
 
-const { WEAPON_DEFS, weaponAssumedTargets, weaponCritMult } = await import(
-  path.join(root, "src/game/defs/equipment.ts")
-);
+const {
+  WEAPON_DEFS,
+  weaponAssumedTargets,
+  weaponCritMult,
+  weaponDamageVariance,
+} = await import(path.join(root, "src/game/defs/equipment.ts"));
 const { LEVELS, LEVEL_ORDER } = await import(
   path.join(root, "src/game/defs/levels/index.ts")
 );
+
+// The catalog average IS the mean of the weapon's range; the band half-width
+// comes from the variance model, so the sheet shows the same "8-12" the item
+// card does.
+const dmgRange = (def) => {
+  const v = weaponDamageVariance(def);
+  return {
+    min: Math.round(def.damage * (1 - v)),
+    max: Math.round(def.damage * (1 + v)),
+  };
+};
 
 const SCALE = 4;
 const ROW_H = 12 * SCALE + 10;
@@ -71,6 +85,70 @@ groups.push({
 });
 
 const rows = groups.reduce((n, g) => n + g.defs.length, 0);
+
+// ---- Text list mode --------------------------------------------------------
+// `--list` (or `--md`) skips the image and prints a full markdown catalog of
+// the arsenal — every weapon with its rolled DAMAGE RANGE, cadence, effective
+// DPS, and behaviors, grouped exactly as the sheet is, plus a per-class
+// coverage ladder across levelReq 1-100. The single textual answer to "what
+// weapons do we have, and is the 1-100 climb covered for each playstyle".
+if (process.argv.includes("--list") || process.argv.includes("--md")) {
+  const behaviorsOf = (def) => {
+    const p = def.projectile;
+    return [
+      p?.count && `×${p.count} spread ${p.spreadDeg}°`,
+      p?.pierce && `pierce ${p.pierce}`,
+      p?.homing && "homing",
+      p?.chain && `chain ${p.chain}`,
+      !p && def.sweepDeg && `sweep ${def.sweepDeg}°`,
+    ]
+      .filter(Boolean)
+      .join(", ");
+  };
+  const out = [];
+  out.push("# Arsenal — full weapon list\n");
+  out.push(
+    "Damage is the range each blow rolls (crits multiply the rolled value). " +
+      "EFF is the damage-budget model's effective DPS (per-target × assumed " +
+      "targets × crit lift).\n",
+  );
+  for (const group of groups) {
+    out.push(`\n## ${group.title}\n`);
+    out.push(
+      "| req | class | name | dmg | cadence | dps | eff | range | behaviors |",
+    );
+    out.push("| --: | :-- | :-- | :-- | --: | --: | --: | --: | :-- |");
+    for (const def of group.defs) {
+      const { min, max } = dmgRange(def);
+      const dps = Math.round((def.damage * 1000) / def.cooldownMs);
+      const eff = Math.round(
+        dps *
+          weaponAssumedTargets(def) *
+          (1 + 0.15 * (weaponCritMult(def) - 1)),
+      );
+      out.push(
+        `| ${def.levelReq} | ${def.class} | ${def.name} | ${min}-${max} | ${def.cooldownMs}ms | ${dps} | ${eff} | ${def.range} | ${behaviorsOf(def)} |`,
+      );
+    }
+  }
+  // Per-class coverage ladder — every pool weapon (bases + grade variants),
+  // sorted by requirement, so a thin stretch for a playstyle is visible.
+  out.push("\n## Coverage ladder by class (pool weapons, by levelReq)\n");
+  const byClass = { melee: [], ranged: [], magic: [] };
+  for (const def of Object.values(WEAPON_DEFS)) {
+    if (pooled.has(def.id)) byClass[def.class].push(def);
+  }
+  for (const [cls, defs] of Object.entries(byClass)) {
+    defs.sort((a, b) => a.levelReq - b.levelReq);
+    out.push(
+      `- **${cls}** (${defs.length}): ` +
+        defs.map((d) => `${d.name.toLowerCase()}(${d.levelReq})`).join(" → "),
+    );
+  }
+  console.log(out.join("\n"));
+  process.exit(0);
+}
+
 const sheet = createSurface(WIDTH, groups.length * 24 + rows * ROW_H + 16);
 fill(sheet, BG);
 
@@ -101,12 +179,13 @@ for (const group of groups) {
     const eff = Math.round(
       dps * weaponAssumedTargets(def) * (1 + 0.15 * (weaponCritMult(def) - 1)),
     );
+    const { min, max } = dmgRange(def);
     blit(sheet, upscale(renderText(def.name, NAME), 2), TEXT_X, y + 2);
     blit(
       sheet,
       upscale(
         renderText(
-          `REQ ${def.levelReq}  ${def.class.toUpperCase()}  DMG ${def.damage}  ${def.cooldownMs}MS  DPS ${dps}  EFF ${eff}  RANGE ${def.range}`,
+          `REQ ${def.levelReq}  ${def.class.toUpperCase()}  DMG ${min}-${max}  ${def.cooldownMs}MS  DPS ${dps}  EFF ${eff}  RANGE ${def.range}`,
           STAT,
         ),
         2,

@@ -696,6 +696,74 @@ const SPRITES = {
     "..O.........",
     "............",
   ],
+  // ---- Second-magic bases, one per level pool (INT-scaled energy weapons):
+  // the wand ladder that brings the caster's climb up to the melee/ranged
+  // density. Each shares a projectile sprite with an existing shot.
+  //
+  // SPACEZ HQ: the MICROWAVE EMITTER — a repurposed break-room magnetron in a
+  // steel body, spitting a blue lattice from the muzzle dish.
+  icon_microwave_emitter: [
+    "............",
+    "............",
+    "..OOOOOOO...",
+    ".OVvvvvvsO..",
+    ".OVvvvveesO.",
+    ".OVvvvvvsO..",
+    ".OOOOVvOOO..",
+    "....OVvO....",
+    "....OVvO....",
+    "....OOOO....",
+    "............",
+    "............",
+  ],
+  // THE MOON: the PULSAR ROD — a dark survey rod capped by a pulsing
+  // white-blue star, ticking out a beat the 70s mistook for aliens.
+  icon_pulsar_rod: [
+    "............",
+    "....OOO.....",
+    "...OsWsO....",
+    "...OWWsO....",
+    "...OsseO....",
+    "....OeO.....",
+    "....ObO.....",
+    "....ObO.....",
+    "....ObO.....",
+    "....ObO.....",
+    "....OO......",
+    "............",
+  ],
+  // MARS: the GRAVITON MAW — a printed black housing cupping a magenta well
+  // of bent space, heavy in the hand.
+  icon_graviton_maw: [
+    "............",
+    "...OOOOO....",
+    "..ONNNNNO...",
+    "..ONzZzNO...",
+    "..ONZzZNO...",
+    "..ONzZzNO...",
+    "...ONNNO....",
+    "....ONO.....",
+    "....ONO.....",
+    "....ONO.....",
+    "....OO......",
+    "............",
+  ],
+  // THE RIFT: the EMBER WAND — a knotted wand crowned with a live flame,
+  // gold at the heart, red at the crown.
+  icon_ember_wand: [
+    "............",
+    ".......OO...",
+    "......OrO...",
+    ".....OriO...",
+    ".....OyrO...",
+    "......OyO...",
+    ".....OBO....",
+    "....OBO.....",
+    "...OBEO.....",
+    "..OBEO......",
+    "..OEO.......",
+    "...O........",
+  ],
   // Ability pickups: time-limited powers.
   // FIRE ORBS: three fireballs mid-orbit.
   icon_fire_orbs: [
@@ -1055,6 +1123,38 @@ const SPRITES = {
     "....Og......",
     "....Og......",
     "....OO......",
+    "............",
+  ],
+  // UI action — DROP ALL: a steel waste bin with an overhanging lid, a top
+  // handle, and three vertical ribs. The inventory's "trash the junk" button.
+  icon_trash: [
+    "............",
+    "....OOOO....",
+    "..OOOOOOOO..",
+    "..OVVVVVVO..",
+    ".OOOOOOOOOO.",
+    "..OvbvbvbO..",
+    "..OvbvbvbO..",
+    "..OvbvbvbO..",
+    "..OvbvbvbO..",
+    "..OOOOOOOO..",
+    "............",
+    "............",
+  ],
+  // UI action — AUTO-EQUIP: two steel blades crossed in an X, gold guards and
+  // pommels at the hilts. The inventory's "optimize my gear" button.
+  icon_swords: [
+    "............",
+    "..VV....VV..",
+    "...VV..VV...",
+    "....VVVV....",
+    ".....VV.....",
+    "....VVVV....",
+    "...VV..VV...",
+    "..VV....VV..",
+    ".oooo..oooo.",
+    ".qq......qq.",
+    ".OO......OO.",
     "............",
   ],
   // The anti-grav unit: a ring of not-metal, hovering over its own glow.

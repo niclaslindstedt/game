@@ -75,8 +75,8 @@ import {
   restoreStamina,
   syncInventoryCapacity,
   weaponCooldownFor,
-  weaponDamage,
   weaponRangeFor,
+  rollWeaponHit,
   weaponSweepHalfAngle,
   wearEquippedWeapon,
   wearWornArmor,
@@ -109,6 +109,7 @@ import {
 } from "./story.ts";
 import type {
   Enemy,
+  Equipment,
   GameInput,
   GameState,
   Item,
@@ -568,7 +569,7 @@ function stepWeapon(state: GameState, input: GameInput, dtMs: number): void {
       dir,
       range,
       half,
-      weaponDamage(state),
+      equipped,
       maxMeleeTargets(state),
       weapon.class,
       weaponCritMult(weapon),
@@ -580,8 +581,10 @@ function stepWeapon(state: GameState, input: GameInput, dtMs: number): void {
 
   // One trigger pull, `count` projectiles: a single shot flies straight at
   // the aim; a shotgun's volley fans its pellets evenly across `spreadDeg`
-  // around it. Every pellet carries the weapon's full per-hit damage — the
-  // spread itself is the falloff (fewer pellets connect at range).
+  // around it. Every pellet carries the weapon's full per-hit damage, each
+  // rolled INDEPENDENTLY inside the weapon's variance band — so a volley's
+  // pellets bite for a spread of numbers, not one repeated figure. The fan
+  // itself is the falloff (fewer pellets connect at range).
   const spec = weapon.projectile;
   const count = Math.max(1, spec.count ?? 1);
   const spread = ((spec.spreadDeg ?? 0) * Math.PI) / 180;
@@ -593,13 +596,15 @@ function stepWeapon(state: GameState, input: GameInput, dtMs: number): void {
       x: dir.x * cos - dir.y * sin,
       y: dir.x * sin + dir.y * cos,
     };
+    const hit = rollWeaponHit(state, equipped);
     const projectile: Projectile = {
       id: state.nextId++,
       pos: { ...player.pos },
       dir: pelletDir,
       speed: spec.speed,
       radius: spec.radius,
-      damage: weaponDamage(state),
+      damage: hit.damage,
+      damageRoll: hit.roll,
       lifetimeMs: spec.lifetimeMs,
       weaponClass: weapon.class,
       sprite: spec.sprite,
@@ -624,20 +629,22 @@ function stepWeapon(state: GameState, input: GameInput, dtMs: number): void {
 
 /**
  * Resolve a melee swing's cone: strike every monster within `range` of the
- * player and inside `halfAngle` of the aim `dir`, each for `damage` (crits
- * roll per hit inside hitEnemy). The nearest monster — the aim — always sits
- * at the cone's centre, so a swing never whiffs the target it locked onto;
- * the arc just lets it cleave whatever else it faces. A monster touching the
- * player has no meaningful bearing and is always in reach. Walls still block:
- * a monster behind cover is spared even inside the cone. Iterates a snapshot
- * because hitEnemy removes the slain from state.enemies.
+ * player and inside `halfAngle` of the aim `dir`. Each body takes its OWN
+ * damage roll (crits roll per hit inside hitEnemy too), so one swing bites a
+ * crowd for a spread of numbers rather than stamping the same figure on all of
+ * them. The nearest monster — the aim — always sits at the cone's centre, so a
+ * swing never whiffs the target it locked onto; the arc just lets it cleave
+ * whatever else it faces. A monster touching the player has no meaningful
+ * bearing and is always in reach. Walls still block: a monster behind cover is
+ * spared even inside the cone. Iterates a snapshot because hitEnemy removes the
+ * slain from state.enemies.
  */
 function meleeSweep(
   state: GameState,
   dir: Vec2,
   range: number,
   halfAngle: number,
-  damage: number,
+  weapon: Equipment,
   maxTargets: number,
   weaponClass: WeaponClass,
   critMult: number,
@@ -672,12 +679,14 @@ function meleeSweep(
   }
   eligible.sort((a, b) => a.distSq - b.distSq);
   for (let i = 0; i < eligible.length && i < maxTargets; i++) {
+    // Roll each body's blow on its own so a cleave lands a spread of numbers.
+    const { damage, roll } = rollWeaponHit(state, weapon);
     hitEnemy(
       state,
       (eligible[i] as (typeof eligible)[number]).enemy,
       damage,
       weaponClass,
-      { rollAccuracy: true, critMult },
+      { rollAccuracy: true, critMult, damageRoll: roll },
     );
   }
 }
@@ -914,6 +923,7 @@ function stepProjectiles(state: GameState, dt: number, dtMs: number): void {
     hitEnemy(state, hit, projectile.damage, projectile.weaponClass, {
       rollAccuracy: projectile.companionId === undefined,
       critMult: projectile.critMult,
+      damageRoll: projectile.damageRoll,
     });
     if (
       projectile.companionId !== undefined &&
@@ -1001,7 +1011,7 @@ function chainLightning(
       target,
       projectile.damage * WEAPON.chainDamageFrac,
       projectile.weaponClass,
-      { critMult: projectile.critMult },
+      { critMult: projectile.critMult, damageRoll: projectile.damageRoll },
     );
   }
 }

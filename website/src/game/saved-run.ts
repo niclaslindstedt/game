@@ -37,23 +37,26 @@ type Serialized = {
   v: number;
   difficulty: Difficulty;
   levelId: string;
-  // The rng closure can't be serialized; its position is snapshotted here and
-  // the generator rebuilt on load.
+  // The rng closures can't be serialized; each stream's position is snapshotted
+  // here and the generators rebuilt on load, so a resumed run replays the exact
+  // same loot AND damage-variance sequence a live one would.
   rngState: number;
-  // The GameState verbatim minus its rng (restored on load). `events` is
-  // transient per-step chatter, blanked so a resume doesn't replay stale sfx.
-  state: Omit<GameState, "rng">;
+  fxRngState: number;
+  // The GameState verbatim minus its rng streams (restored on load). `events`
+  // is transient per-step chatter, blanked so a resume doesn't replay stale sfx.
+  state: Omit<GameState, "rng" | "fxRng">;
 };
 
 /** Freeze the parked run to storage. Best-effort — a storage failure is logged, not thrown. */
 export function saveRun(run: ParkedRun): void {
   try {
-    const { rng, ...rest } = run.state;
+    const { rng, fxRng, ...rest } = run.state;
     const payload: Serialized = {
       v: SAVE_VERSION,
       difficulty: run.difficulty,
       levelId: run.levelId,
       rngState: rngState(rng),
+      fxRngState: rngState(fxRng),
       // `events` is transient per-step chatter; blank it so a resume doesn't
       // replay stale sfx (it's overwritten again on the first step anyway).
       state: { ...rest, events: [] },
@@ -162,6 +165,11 @@ export function loadSavedRun(): ParkedRun | null {
       ...payload.state,
       events: [],
       rng: createRngFromState(payload.rngState),
+      // Restore the flavor stream too (older saves predate it — fall back to a
+      // seed derived from the loot position so they resume without a crash).
+      fxRng: createRngFromState(
+        payload.fxRngState ?? (payload.rngState ^ 0x9e3779b9) >>> 0,
+      ),
     };
     // Freeze every kept item to its dropped-with stats before the run resumes,
     // so a catalog edge that landed while the run was parked can't reach it.

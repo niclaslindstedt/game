@@ -758,16 +758,26 @@ export type Effect = {
   untilMs: number;
   /** Total effect length, for progress-driven animation. */
   durationMs?: number;
+  /** World-clock ms before the effect begins drawing — lets a float lag behind
+   * the hit that spawned it (the XP popup trails the damage number). */
+  startMs?: number;
   /** Splash: sprite family ("blood", "ecto") — frames `<family>_0/_1`. */
   sprite?: string;
   /** Text float: the word to rise off the spot (e.g. "DODGE"). */
   text?: string;
   /** Text float: the glyph color. */
   color?: string;
+  /** Text float: how far the word climbs over its life, in world px
+   * (default 16). XP popups rise further so they read as "flowing up". */
+  rise?: number;
   /** Damage number: the hit's rounded damage. */
   value?: number;
   /** Damage number: crits shake, grow, and glow gold. */
   crit?: boolean;
+  /** Damage number: on a crit, how hard the blow rolled in [0, 1] — scales the
+   * popup from a modest 1.5× (a glancing crit) up to a fat 3× (a top-of-band
+   * slam). Absent = a neutral mid-size crit. */
+  critPower?: number;
   /** Swing/muzzle: the aim direction in radians. */
   angle?: number;
   /** Swing: the arc's reach in world px (the weapon's effective range). */
@@ -788,6 +798,9 @@ export function drawEffects(
   const font = assets.font;
   for (const effect of effects) {
     if (timeMs > effect.untilMs) continue;
+    // A delayed float (e.g. the XP popup trailing its damage number) stays
+    // hidden until its start tick, then animates from t=0 as usual.
+    if (effect.startMs != null && timeMs < effect.startMs) continue;
     const x = Math.round(effect.pos.x - camera.x);
     const groundY = Math.round(effect.pos.y - camera.y);
 
@@ -811,18 +824,18 @@ export function drawEffects(
     }
 
     if (effect.kind === "damage") {
-      // The hit's number rises off the victim's head. Crits slam first —
-      // a fat gold figure shaking in place — then float up with the rest.
+      // The hit's number pops on the victim's head and stays pinned there —
+      // only XP floats now. A crit is a fat gold figure shaking in place; a
+      // normal hit is a plain static number. A crit's size tracks how hard it
+      // rolled: a glancing crit grows a modest 1.5×, a top-of-band slam a fat
+      // 3× (quantized to half-steps so the pixel glyphs stay crisp). It shakes
+      // harder the bigger it is.
       const duration = effect.durationMs ?? 650;
       const t = 1 - (effect.untilMs - timeMs) / duration; // 0 → 1
       const crit = effect.crit ?? false;
-      const shakePhase = crit ? Math.min(1, t / 0.25) : 1;
-      const rise = Math.round(
-        (crit ? 26 : 18) * Math.max(0, t - (crit ? 0.25 : 0)),
-      );
-      const shake =
-        crit && shakePhase < 1 ? Math.round(Math.sin(timeMs / 14) * 2) : 0;
-      const scale = crit ? 2 : 1;
+      const power = effect.critPower ?? 0.5;
+      const scale = crit ? Math.round((1.5 + 1.5 * power) * 2) / 2 : 1;
+      const shake = crit ? Math.round(Math.sin(timeMs / 14) * scale) : 0;
       const text = formatCompact(effect.value ?? 0);
       const width = font.measure(text) * scale;
       ctx.globalAlpha = t > 0.7 ? 1 - (t - 0.7) / 0.3 : 1;
@@ -830,7 +843,7 @@ export function drawEffects(
         ctx,
         text,
         x - Math.round(width / 2) + shake,
-        groundY - rise - font.height * scale,
+        groundY - font.height * scale,
         { scale, color: crit ? "#ffd75e" : "#f4f4f4" },
       );
       ctx.globalAlpha = 1;
@@ -842,17 +855,19 @@ export function drawEffects(
       // damage number but spelled out.
       const duration = effect.durationMs ?? 650;
       const t = 1 - (effect.untilMs - timeMs) / duration; // 0 → 1
-      const rise = Math.round(16 * t);
+      const rise = Math.round((effect.rise ?? 16) * t);
       const text = effect.text ?? "";
       const width = font.measure(text);
+      const tx = x - Math.round(width / 2);
+      const ty = groundY - rise - font.height;
       ctx.globalAlpha = t > 0.6 ? 1 - (t - 0.6) / 0.4 : 1;
-      font.draw(
-        ctx,
-        text,
-        x - Math.round(width / 2),
-        groundY - rise - font.height,
-        { scale: 1, color: effect.color ?? "#7ecbff" },
-      );
+      // A hard 1px drop-shadow first so the word keeps contrast on both the
+      // bright floor and the dark sky — the colored glyphs ride on top.
+      font.draw(ctx, text, tx + 1, ty + 1, { scale: 1, color: "#0b0d10" });
+      font.draw(ctx, text, tx, ty, {
+        scale: 1,
+        color: effect.color ?? "#7ecbff",
+      });
       ctx.globalAlpha = 1;
       continue;
     }

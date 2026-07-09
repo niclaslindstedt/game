@@ -176,7 +176,7 @@ export function resolveChoice(state: GameState, spare: boolean): boolean {
   const enemy = state.enemies.find((e) => e.id === choice.enemyId);
   if (!enemy) return true; // already off the board — just resume
   if (!spare) {
-    killEnemy(state, enemy, choice.damage, choice.crit);
+    killEnemy(state, enemy, choice.damage, choice.crit, choice.critPower);
     return true;
   }
 

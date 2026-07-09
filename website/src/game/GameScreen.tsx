@@ -1098,7 +1098,10 @@ export function GameScreen({
           if (event.type === "swing") {
             effects.push({
               kind: "swing",
-              pos: event.pos,
+              // These blows leave the hero's hands, so lift the arc by his
+              // current jump height (player.z) — otherwise a swing thrown
+              // mid-air draws down at his grounded feet, not up where he is.
+              pos: { x: event.pos.x, y: event.pos.y - state.player.z },
               angle: Math.atan2(event.dir.y, event.dir.x),
               radius: event.range,
               arc: event.arc,
@@ -1111,7 +1114,9 @@ export function GameScreen({
           if (event.type === "shot") {
             effects.push({
               kind: "muzzle",
-              pos: event.pos,
+              // Lift to the hero's airborne height so the muzzle flash fires
+              // from the weapon in his hands, not from the ground below him.
+              pos: { x: event.pos.x, y: event.pos.y - state.player.z },
               angle: Math.atan2(event.dir.y, event.dir.x),
               weaponClass: event.weaponClass,
               untilMs: state.stats.timeMs + 110,
@@ -1119,7 +1124,8 @@ export function GameScreen({
             });
           }
           // Every landed hit sprays the victim's gore (ghosts: ectoplasm)
-          // and floats its damage off the head — crits slam and shake.
+          // and pops a static damage number on the head — crits are bigger,
+          // gold, and shake in place. Only XP floats up.
           if (event.type === "enemyHit" || event.type === "enemyKilled") {
             const def = enemyDef(event.defId);
             effects.push({
@@ -1143,7 +1149,29 @@ export function GameScreen({
               durationMs: duration,
               value: event.damage,
               crit: event.crit,
+              critPower: event.critPower,
             });
+            // The kill's XP reward flows up off the corpse as blue combat text
+            // (WoW's floating "+N"), starting above the damage number and
+            // climbing higher/longer so the two don't overlap.
+            if (event.type === "enemyKilled" && event.xp > 0) {
+              // Trail the popup half a second behind the kill's damage number so
+              // the two read in sequence — the hit lands, then the XP flows up.
+              const xpDelayMs = 500;
+              effects.push({
+                kind: "text",
+                pos: {
+                  x: event.pos.x,
+                  y: event.pos.y - def.radius - 12,
+                },
+                startMs: state.stats.timeMs + xpDelayMs,
+                untilMs: state.stats.timeMs + xpDelayMs + 1100,
+                durationMs: 1100,
+                text: `+${formatCompact(event.xp)} XP`,
+                color: "#6cc4ff",
+                rise: 30,
+              });
+            }
           }
           if (event.type === "nuke") {
             effects.push({
@@ -1620,7 +1648,9 @@ export function GameScreen({
                         style={{ width: `${(100 * hud.hp) / hud.maxHp}%` }}
                       />
                     </div>
-                    <PixelText font={font} text={String(hud.hp)} scale={2} />
+                    <span className="hud-stat-val">
+                      <PixelText font={font} text={String(hud.hp)} scale={2} />
+                    </span>
                   </div>
                   <div className="hud-stat-row">
                     <PixelText
@@ -1637,11 +1667,13 @@ export function GameScreen({
                         }}
                       />
                     </div>
-                    <PixelText
-                      font={font}
-                      text={String(Math.ceil(hud.stamina))}
-                      scale={2}
-                    />
+                    <span className="hud-stat-val">
+                      <PixelText
+                        font={font}
+                        text={String(Math.ceil(hud.stamina))}
+                        scale={2}
+                      />
+                    </span>
                   </div>
                   <div className="hud-stat-row hud-weapon-row">
                     {(() => {
@@ -1739,7 +1771,7 @@ export function GameScreen({
                                         <span className="wpn-switch-dmg">
                                           <PixelText
                                             font={font}
-                                            text={String(dmg)}
+                                            text={formatCompact(dmg)}
                                             scale={1}
                                           />
                                         </span>

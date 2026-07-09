@@ -131,6 +131,11 @@ export function hitEnemy(
      * cadence-weighted `weaponCritMult` (quick blades crit light, slow
      * heavy hitters crit hard); abilities omit it and use the global. */
     critMult?: number;
+    /** Where this blow landed in the weapon's damage-variance band, in [0, 1]
+     * (see `rollWeaponHit`). Rides out on the hit event as `critPower` so the
+     * app can size a crit's popup by how strong it was. Omitted by sources with
+     * no variance (abilities). */
+    damageRoll?: number;
   },
 ): void {
   const def = enemyDef(enemy.defId);
@@ -192,6 +197,7 @@ export function hitEnemy(
       crit,
       damage,
       defId: enemy.defId,
+      critPower: crit ? opts?.damageRoll : undefined,
     });
     return;
   }
@@ -216,6 +222,7 @@ export function hitEnemy(
       defId: enemy.defId,
       damage,
       crit,
+      critPower: crit ? opts?.damageRoll : undefined,
     };
     state.phase = "choice";
     state.events.push({
@@ -257,7 +264,7 @@ export function hitEnemy(
     return;
   }
 
-  killEnemy(state, enemy, damage, crit);
+  killEnemy(state, enemy, damage, crit, crit ? opts?.damageRoll : undefined);
 }
 
 /**
@@ -265,25 +272,34 @@ export function hitEnemy(
  * last words played. The tail of `hitEnemy`'s 0-hp path, extracted so the
  * SPARE-or-KILL verdict (`resolveChoice` in companions.ts) can land the
  * withheld killing blow through the exact same rails. Splicing is idempotent
- * — an enemy already off the board isn't removed twice.
+ * — an enemy already off the board isn't removed twice. `critPower` is the
+ * blow's damage-variance roll (only meaningful on a crit) — it rides out on
+ * the `enemyKilled` event so the app can size the popup.
  */
 export function killEnemy(
   state: GameState,
   enemy: Enemy,
   damage: number,
   crit: boolean,
+  critPower?: number,
 ): void {
   const def = enemyDef(enemy.defId);
   const index = state.enemies.indexOf(enemy);
   if (index >= 0) state.enemies.splice(index, 1);
 
   state.stats.kills++;
+  // The kill's XP reward, resolved once so the same figure both credits the
+  // hero (grantXp below) and rides the event out to the app, which floats it
+  // off the corpse as rising blue combat text (WoW's "+42" xp popup).
+  const xpGain = def.xp ?? Math.round(enemy.maxHp * LEVELING.xpPerHp);
   state.events.push({
     type: "enemyKilled",
     pos: { ...enemy.pos },
     defId: enemy.defId,
     damage,
     crit,
+    critPower: crit ? critPower : undefined,
+    xp: xpGain,
   });
 
   // A fallen elite or boss pins the level map where it went down.
@@ -298,7 +314,7 @@ export function killEnemy(
   // continuously from the player's rolling output (see tickMenace).
   bankOverkill(state, damage, enemy.maxHp);
 
-  grantXp(state, def.xp ?? Math.round(enemy.maxHp * LEVELING.xpPerHp));
+  grantXp(state, xpGain);
 
   // The level's scripted opening drops: hand over every schedule entry this
   // kill has reached, in author order — the guaranteed weapon → powerup → item

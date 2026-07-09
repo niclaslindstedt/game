@@ -299,6 +299,9 @@ export type ChoiceState = {
   defId: string;
   damage: number;
   crit: boolean;
+  /** The withheld blow's damage-variance roll (crits only) — carried so an
+   * execution's popup sizes exactly as the blow would have. */
+  critPower?: number;
 };
 
 export type Enemy = {
@@ -419,6 +422,10 @@ export type Projectile = {
   radius: number;
   /** Damage before the on-hit crit roll. */
   damage: number;
+  /** Where `damage` landed in the weapon's variance band, in [0, 1] (see
+   * `rollWeaponHit`) — carried so a crit's popup can be sized by how hard the
+   * shot rolled. */
+  damageRoll?: number;
   /** Remaining ms before the projectile despawns. */
   lifetimeMs: number;
   /** Which weapon class fired it (drives sound and hit resolution). */
@@ -710,14 +717,23 @@ export type GameEvent =
       crit: boolean;
       damage: number;
       defId: string;
+      /** On a crit, how strong the blow was in [0, 1] (its position in the
+       * weapon's damage-variance band) — the app sizes the crit popup by it, so
+       * a top-of-band crit slams a bigger figure. Absent when the source has no
+       * variance (abilities); ignored for non-crits. */
+      critPower?: number;
     }
   | {
       type: "enemyKilled";
       pos: Vec2;
       defId: string;
-      /** The killing blow, so death also floats a damage number. */
+      /** The killing blow, so death also pops a damage number. */
       damage: number;
       crit: boolean;
+      /** See `enemyHit.critPower`. */
+      critPower?: number;
+      /** XP this kill awarded — the app floats it as rising blue combat text. */
+      xp: number;
     }
   | { type: "playerHurt"; crit: boolean }
   /** The player sidestepped a blow entirely (see `playerDodgeChance`). `pos`
@@ -1110,4 +1126,14 @@ export type GameState = {
   nextId: number;
   /** Seeded stream for in-run rolls (crits, drops) — keeps runs replayable. */
   rng: Rng;
+  /**
+   * A SECOND seeded stream, for combat FLAVOR only — currently the per-blow
+   * damage-range roll (see `rollWeaponDamage`). Kept apart from `rng` on
+   * purpose: damage variance must never advance the loot/crit stream, so drop
+   * determinism (and every seeded loot test) is unaffected by how a swing rolls.
+   * Not serialized — re-seeded on resume; a reloaded run rolling slightly
+   * different flavor damage is invisible, while a fresh run from a seed stays
+   * fully reproducible.
+   */
+  fxRng: Rng;
 };

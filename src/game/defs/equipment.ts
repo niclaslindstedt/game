@@ -70,7 +70,26 @@ export type WeaponDef = {
   name: string;
   /** Governs which stat scales it: melee=STR, ranged=DEX, magic=INT. */
   class: WeaponClass;
+  /**
+   * The weapon's AVERAGE per-hit damage — the mean of the range it rolls, not
+   * a fixed number. Every blow lands somewhere inside a band centred here
+   * (see `damageVariance`): a weapon written at 10 hits for ~8–12. Keeping the
+   * def's `damage` the MEAN is deliberate — the whole damage-budget model
+   * (budgets, DPS, auto-equip, grade generation) reasons about expected output,
+   * so the spread rides on top without shifting any of it.
+   */
   damage: number;
+  /**
+   * The half-width of this weapon's damage range, as a fraction of `damage`:
+   * a blow rolls uniformly in `[damage·(1−v), damage·(1+v)]`. Omitted, the
+   * global `WEAPON.damageVariance` (±20%) applies. Set a bigger value for a
+   * deliberately WILD weapon — a scattergun or a physics-defying gun whose
+   * swings-for-the-fences unpredictability is the whole appeal (a blunderbuss
+   * at 0.5 hits for anywhere in ±50%) — or a smaller one for a precise,
+   * metronomic tool. The average is unchanged whatever the width, so a wide
+   * band trades consistency for excitement without breaking the budget.
+   */
+  damageVariance?: number;
   cooldownMs: number;
   range: number;
   /**
@@ -300,11 +319,31 @@ export const WEAPON_DEFS: Record<string, WeaponDef> = {
     class: "magic",
     levelReq: 4,
     damage: 18,
+    // A calibrated beam: metronomic, near-identical every pulse.
+    damageVariance: 0.1,
     cooldownMs: 380,
     range: 300,
     durability: 180,
     projectile: { speed: 520, radius: 3, lifetimeMs: 900, sprite: "ray" },
     icon: "icon_prototype_laser",
+  },
+  // The break-room magnetron someone in R&D turned into a sidearm: a slow,
+  // heavy blue pulse — the pool's second caster, giving an INT build an early
+  // option that isn't the thin prototype beam.
+  microwave_emitter: {
+    id: "microwave_emitter",
+    name: "MICROWAVE EMITTER",
+    class: "magic",
+    levelReq: 6,
+    damage: 37,
+    // A rebuilt magnetron fires as evenly as its salvaged capacitor allows —
+    // which is to say, not very.
+    damageVariance: 0.3,
+    cooldownMs: 700,
+    range: 260,
+    durability: 190,
+    projectile: { speed: 400, radius: 4, lifetimeMs: 1000, sprite: "spark" },
+    icon: "icon_microwave_emitter",
   },
   // The armory's pump gun: slow, brutal, short — five pellets a pull, each
   // carrying the full hit, so a point-blank blast is the building's hardest
@@ -316,6 +355,9 @@ export const WEAPON_DEFS: Record<string, WeaponDef> = {
     class: "ranged",
     levelReq: 5,
     damage: 11,
+    // A scattergun's load is never quite even — each pellet bites for its own
+    // number, and the volley as a whole swings wider than a rifled round.
+    damageVariance: 0.3,
     cooldownMs: 950,
     range: 150,
     durability: 140,
@@ -415,11 +457,29 @@ export const WEAPON_DEFS: Record<string, WeaponDef> = {
     class: "magic",
     levelReq: 10,
     damage: 40,
+    // Atomic-age chrome with a temperamental capacitor — the bolt varies.
+    damageVariance: 0.3,
     cooldownMs: 600,
     range: 290,
     durability: 170,
     projectile: { speed: 340, radius: 4, lifetimeMs: 1100, sprite: "ring" },
     icon: "icon_retro_raygun",
+  },
+  // A survey rod that ticks out a fast, bright pulse — the crews swore the
+  // beat was a signal from somewhere. Quick cadence, the moon pool's nimble
+  // caster next to the raygun's heavier ring.
+  pulsar_rod: {
+    id: "pulsar_rod",
+    name: "PULSAR ROD",
+    class: "magic",
+    levelReq: 12,
+    damage: 32,
+    damageVariance: 0.25,
+    cooldownMs: 420,
+    range: 280,
+    durability: 180,
+    projectile: { speed: 380, radius: 4, lifetimeMs: 1100, sprite: "orb" },
+    icon: "icon_pulsar_rod",
   },
   // ---- MARS (level 3) base pool: printed overnight by the colony AI.
   // Nothing a human armory would recognize — self-correcting darts, plasma
@@ -432,6 +492,8 @@ export const WEAPON_DEFS: Record<string, WeaponDef> = {
     class: "ranged",
     levelReq: 10,
     damage: 26,
+    // Machine-perfect fire control — every dart lands within a hair of the last.
+    damageVariance: 0.1,
     cooldownMs: 380,
     range: 250,
     durability: 200,
@@ -467,6 +529,8 @@ export const WEAPON_DEFS: Record<string, WeaponDef> = {
     class: "ranged",
     levelReq: 13,
     damage: 18,
+    // A magnetically-launched slug at a fixed charge: consistent to the joule.
+    damageVariance: 0.1,
     cooldownMs: 1000,
     range: 340,
     durability: 150,
@@ -486,6 +550,8 @@ export const WEAPON_DEFS: Record<string, WeaponDef> = {
     class: "magic",
     levelReq: 14,
     damage: 25,
+    // Live current never takes quite the same path twice — the jolt varies.
+    damageVariance: 0.3,
     cooldownMs: 500,
     range: 280,
     durability: 190,
@@ -498,6 +564,23 @@ export const WEAPON_DEFS: Record<string, WeaponDef> = {
     },
     icon: "icon_arc_projector",
   },
+  // Printed overnight by the colony AI: a black housing cupping a well of bent
+  // space. Slow, enormously heavy single hits — the Mars pool's caster answer
+  // to the gravity maul, at arm's length.
+  graviton_maw: {
+    id: "graviton_maw",
+    name: "GRAVITON MAW",
+    class: "magic",
+    levelReq: 18,
+    damage: 72,
+    // Tidal forces are not a precise art — the well bites for whatever it grips.
+    damageVariance: 0.35,
+    cooldownMs: 820,
+    range: 270,
+    durability: 210,
+    projectile: { speed: 300, radius: 5, lifetimeMs: 1100, sprite: "glitch" },
+    icon: "icon_graviton_maw",
+  },
   // A black cube floating on a handle. Swinging it moves the ground more
   // than the arm — the Mars pool's slow, enormous exclamation mark.
   gravity_maul: {
@@ -507,6 +590,9 @@ export const WEAPON_DEFS: Record<string, WeaponDef> = {
     class: "melee",
     levelReq: 16,
     damage: 14,
+    // The shockwave lands as hard as the ground under it decides to buckle —
+    // a heavy, wildly swingy slam.
+    damageVariance: 0.4,
     cooldownMs: 850,
     range: 46,
     // The full-AoE slam: the shockwave rings the hero all the way around
@@ -557,6 +643,9 @@ export const WEAPON_DEFS: Record<string, WeaponDef> = {
     class: "ranged",
     levelReq: 19,
     damage: 20,
+    // Loaded with whatever fit down the muzzle: gravel, nails, a spare button.
+    // The widest, most gleefully unpredictable spread on the ladder.
+    damageVariance: 0.5,
     cooldownMs: 1100,
     range: 160,
     durability: 150,
@@ -579,6 +668,9 @@ export const WEAPON_DEFS: Record<string, WeaponDef> = {
     class: "melee",
     levelReq: 21,
     damage: 24,
+    // The slowest, hardest chop on the ladder — all-or-nothing, and it rolls
+    // like it: a glancing bite or a clean cleave.
+    damageVariance: 0.35,
     cooldownMs: 1000,
     range: 46,
     sweepDeg: 100,
@@ -594,11 +686,31 @@ export const WEAPON_DEFS: Record<string, WeaponDef> = {
     class: "magic",
     levelReq: 23,
     damage: 72,
+    // A crystal older than physics, and about as reliable — the orb hits for
+    // whatever the staff feels like channelling.
+    damageVariance: 0.35,
     cooldownMs: 650,
     range: 320,
     durability: 200,
     projectile: { speed: 360, radius: 5, lifetimeMs: 1200, sprite: "orb" },
     icon: "icon_sorcerers_staff",
+  },
+  // A knotted wand crowned with a live flame — the rift's classic caster, a
+  // medium-cadence fireball the sorcerer's-staff student grows up alongside.
+  ember_wand: {
+    id: "ember_wand",
+    material: "precious",
+    name: "EMBER WAND",
+    class: "magic",
+    levelReq: 21,
+    damage: 58,
+    // Fire keeps its own counsel — the flame flares hot or gutters low.
+    damageVariance: 0.35,
+    cooldownMs: 560,
+    range: 300,
+    durability: 200,
+    projectile: { speed: 320, radius: 4, lifetimeMs: 1000, sprite: "fireball" },
+    icon: "icon_ember_wand",
   },
   // The rift's scheduled early caster (earlyDrops) — a special, not a base.
   void_wand: {
@@ -627,6 +739,8 @@ export const WEAPON_DEFS: Record<string, WeaponDef> = {
     // The all-clear trophy: the CEO's desk ornament, and somehow the best
     // stapler in the building.
     damage: 15,
+    // Executive precision: it staples exactly where, and how hard, it means to.
+    damageVariance: 0.08,
     cooldownMs: 280,
     range: 240,
     durability: 260,
@@ -695,6 +809,8 @@ export const WEAPON_DEFS: Record<string, WeaponDef> = {
     levelReq: 4,
     // DR. NOVA's conference pointer, three safety screws short of legal.
     damage: 14,
+    // Overclocked past spec — the beam surges and sags run to run.
+    damageVariance: 0.3,
     cooldownMs: 260,
     range: 300,
     durability: 200,
@@ -722,6 +838,8 @@ export const WEAPON_DEFS: Record<string, WeaponDef> = {
     levelReq: 7,
     // The MISSION SPECIALIST's survival kit piece: slow, bright, brutal.
     damage: 48,
+    // A signal flare fired in anger — it burns as hot as it burns.
+    damageVariance: 0.35,
     cooldownMs: 800,
     range: 300,
     durability: 160,
@@ -861,6 +979,8 @@ export const WEAPON_DEFS: Record<string, WeaponDef> = {
     levelReq: 14,
     // MOSQUE drops it as he bolts. Legally, it is not a flamethrower.
     damage: 48,
+    // A gout of not-fire licks for wildly different bites tick to tick.
+    damageVariance: 0.4,
     cooldownMs: 520,
     range: 240,
     durability: 260,
@@ -875,6 +995,8 @@ export const WEAPON_DEFS: Record<string, WeaponDef> = {
     // NIKOLA TESLA's coil, surrendered as the current returns to it: fast
     // wireless lightning. They laughed. They are not laughing now.
     damage: 38,
+    // Wireless current arcs where it will — the jolt lands unevenly.
+    damageVariance: 0.3,
     cooldownMs: 360,
     range: 290,
     durability: 240,
@@ -889,6 +1011,9 @@ export const WEAPON_DEFS: Record<string, WeaponDef> = {
     // GROK OMEGA's sidearm: it fires very small, very rude black holes. The
     // deepest hit in the campaign so far, paid for with a slow, heavy cycle.
     damage: 62,
+    // Very small, very rude black holes — tidal forces are not a precise art.
+    // The wildest swing in the game: a whiff or an annihilation.
+    damageVariance: 0.55,
     cooldownMs: 620,
     range: 260,
     durability: 240,
@@ -1155,6 +1280,16 @@ export function weaponCritMult(def: WeaponDef): number {
     return WEAPON.critMultByCadence.slow;
   }
   return WEAPON.critMultByCadence.medium;
+}
+
+/**
+ * A weapon's damage-range half-width as a fraction of its average `damage`:
+ * its own `damageVariance` override, else the global `WEAPON.damageVariance`.
+ * The one source every range surface reads — the per-hit roll (rollWeaponDamage
+ * in items.ts), the item card's "DMG min–max", and the arsenal sheet.
+ */
+export function weaponDamageVariance(def: WeaponDef): number {
+  return def.damageVariance ?? WEAPON.damageVariance;
 }
 
 /**
