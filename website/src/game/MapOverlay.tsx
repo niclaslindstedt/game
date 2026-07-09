@@ -39,7 +39,6 @@ const CELL_PX = 4;
  * sprite family (website/scripts/sprite-data/markers.mjs). */
 const MARKER_SPRITE: Record<MapMarkerKind, string> = {
   story: "map_story",
-  loot: "map_loot",
   elite: "map_elite",
   boss: "map_boss",
   // The wandering vendor's gold coin — the same sprite that bobs over his
@@ -222,7 +221,6 @@ export function MapOverlay({
   const legend: { sprite: string; label: string }[] = [
     { sprite: PLAYER_SPRITE, label: "YOU" },
     { sprite: MARKER_SPRITE.story, label: "STORY" },
-    { sprite: MARKER_SPRITE.loot, label: "RARE LOOT" },
     { sprite: MARKER_SPRITE.elite, label: "ELITE" },
     { sprite: MARKER_SPRITE.boss, label: "BOSS" },
     { sprite: MARKER_SPRITE.merchant, label: "MERCHANT" },
