@@ -17,7 +17,62 @@ import {
   type Vec2,
 } from "@game/lib/vec.ts";
 import { OBSTACLES } from "./config.ts";
-import type { GameState } from "./types.ts";
+import type { GameState, Obstacle } from "./types.ts";
+
+// ---- Spatial index --------------------------------------------------------
+// Levels carry hundreds of obstacles and the queries below run per enemy (or
+// per projectile) per tick, so a linear scan is O(enemies × obstacles) — the
+// tick's hotspot at horde scale. The grid maps each cell to the obstacles
+// whose footprint, inflated by MAX_QUERY_RADIUS, overlaps it: any query with
+// radius ≤ MAX_QUERY_RADIUS then only reads the cells it touches. Obstacles
+// never move; the cache keys on the array's identity, and every mutation in
+// the codebase REPLACES the array (doors filter it), which invalidates the
+// grid for free. Mutate-in-place would go stale — replace instead.
+
+const GRID_CELL = 64;
+/** Largest collision radius a query may pass (the biggest boss is 20). */
+const MAX_QUERY_RADIUS = 32;
+
+type ObstacleGrid = Map<number, Obstacle[]>;
+const gridCache = new WeakMap<Obstacle[], ObstacleGrid>();
+
+/** Cell key — level widths stay far below 2¹⁶ cells, so this never collides
+ * (same scheme as the enemy grids in step.ts). */
+function cellKey(cx: number, cy: number): number {
+  return cx * 65536 + cy;
+}
+
+function gridFor(obstacles: Obstacle[]): ObstacleGrid {
+  let grid = gridCache.get(obstacles);
+  if (grid) return grid;
+  grid = new Map();
+  for (const obstacle of obstacles) {
+    const hx = (obstacle.half?.x ?? obstacle.radius) + MAX_QUERY_RADIUS;
+    const hy = (obstacle.half?.y ?? obstacle.radius) + MAX_QUERY_RADIUS;
+    const x0 = Math.floor((obstacle.pos.x - hx) / GRID_CELL);
+    const x1 = Math.floor((obstacle.pos.x + hx) / GRID_CELL);
+    const y0 = Math.floor((obstacle.pos.y - hy) / GRID_CELL);
+    const y1 = Math.floor((obstacle.pos.y + hy) / GRID_CELL);
+    for (let cx = x0; cx <= x1; cx++) {
+      for (let cy = y0; cy <= y1; cy++) {
+        const key = cellKey(cx, cy);
+        const bucket = grid.get(key);
+        if (bucket) bucket.push(obstacle);
+        else grid.set(key, [obstacle]);
+      }
+    }
+  }
+  gridCache.set(obstacles, grid);
+  return grid;
+}
+
+/** The obstacles that can matter to a point query at `pos` (radius ≤
+ * MAX_QUERY_RADIUS): the one cell containing it. */
+function bucketAt(state: GameState, pos: Vec2): Obstacle[] | undefined {
+  return gridFor(state.obstacles).get(
+    cellKey(Math.floor(pos.x / GRID_CELL), Math.floor(pos.y / GRID_CELL)),
+  );
+}
 
 /**
  * Push a circular body out of every obstacle it overlaps. A body at height
@@ -31,7 +86,9 @@ export function resolveObstacles(
   radius: number,
   z = 0,
 ): void {
-  for (const obstacle of state.obstacles) {
+  const bucket = bucketAt(state, pos);
+  if (!bucket) return;
+  for (const obstacle of bucket) {
     if (obstacle.jumpable && z > OBSTACLES.clearHeight) continue;
     if (obstacle.half) {
       resolveRect(pos, radius, obstacle.pos, obstacle.half);
@@ -88,7 +145,9 @@ export function insideObstacle(
   pos: Vec2,
   radius: number,
 ): boolean {
-  for (const obstacle of state.obstacles) {
+  const bucket = bucketAt(state, pos);
+  if (!bucket) return false;
+  for (const obstacle of bucket) {
     if (obstacle.half) {
       if (
         pointRectDistanceSq(pos, obstacle.pos, obstacle.half) <
@@ -122,21 +181,37 @@ export function blockedByObstacle(
   to: Vec2,
   radius: number,
 ): boolean {
-  for (const obstacle of state.obstacles) {
-    if (obstacle.jumpable) continue;
-    if (obstacle.half) {
-      // The swept circle vs the box: inflate the box by the radius (rounded
-      // corners squared off — a hair conservative there, which only ever
-      // stops a shot a touch early).
-      const inflated = {
-        x: obstacle.half.x + radius,
-        y: obstacle.half.y + radius,
-      };
-      if (segmentIntersectsRect(from, to, obstacle.pos, inflated)) return true;
-      continue;
+  // Sweep the cells the segment's bounding box overlaps. An obstacle can sit
+  // in several of them and get re-tested — harmless for a boolean query, and
+  // line-of-sight spans stay a handful of cells.
+  const grid = gridFor(state.obstacles);
+  const x0 = Math.floor(Math.min(from.x, to.x) / GRID_CELL);
+  const x1 = Math.floor(Math.max(from.x, to.x) / GRID_CELL);
+  const y0 = Math.floor(Math.min(from.y, to.y) / GRID_CELL);
+  const y1 = Math.floor(Math.max(from.y, to.y) / GRID_CELL);
+  for (let cx = x0; cx <= x1; cx++) {
+    for (let cy = y0; cy <= y1; cy++) {
+      const bucket = grid.get(cellKey(cx, cy));
+      if (!bucket) continue;
+      for (const obstacle of bucket) {
+        if (obstacle.jumpable) continue;
+        if (obstacle.half) {
+          // The swept circle vs the box: inflate the box by the radius
+          // (rounded corners squared off — a hair conservative there, which
+          // only ever stops a shot a touch early).
+          const inflated = {
+            x: obstacle.half.x + radius,
+            y: obstacle.half.y + radius,
+          };
+          if (segmentIntersectsRect(from, to, obstacle.pos, inflated)) {
+            return true;
+          }
+          continue;
+        }
+        const min = obstacle.radius + radius;
+        if (segmentDistanceSq(from, to, obstacle.pos) < min * min) return true;
+      }
     }
-    const min = obstacle.radius + radius;
-    if (segmentDistanceSq(from, to, obstacle.pos) < min * min) return true;
   }
   return false;
 }
