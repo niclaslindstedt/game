@@ -30,7 +30,6 @@ import {
   equipmentName,
   gearDef,
   STATS,
-  weaponAssumedTargets,
   weaponCritMult,
   moveInventoryItem,
   playerAppearance,
@@ -115,10 +114,47 @@ function hitRate(state: GameState): number {
 }
 
 /** A stat line in the item card: text with an optional accent color (the
- * default white reads as a plain fact; a color flags a class or a bonus). */
-type CardLine = { text: string; color?: string };
+ * default white reads as a plain fact; a color flags a class or a bonus), plus
+ * an optional green/red `(+3)` delta comparing this stat to the equipped
+ * piece — only set on the lines that differ from what's worn. */
+type CardLine = {
+  text: string;
+  color?: string;
+  delta?: { text: string; color: string } | null;
+};
 
-function itemLines(state: GameState, item: Equipment): CardLine[] {
+/**
+ * Format the difference between an inspected stat and the equipped piece's for
+ * the tooltip's `(+3)` comparison chip: green when the change is an upgrade,
+ * red when it's a downgrade, null when it rounds to nothing (so identical
+ * stats stay clean). `lowerBetter` flips the coloring for stats where less is
+ * more — attack cadence, where a shorter time between swings is faster.
+ */
+function compareChip(
+  delta: number,
+  opts: { lowerBetter?: boolean; digits?: number } = {},
+): { text: string; color: string } | null {
+  const digits = opts.digits ?? 0;
+  const rounded = Number(delta.toFixed(digits));
+  if (rounded === 0) return null;
+  const good = opts.lowerBetter ? rounded < 0 : rounded > 0;
+  const sign = rounded > 0 ? "+" : "";
+  return {
+    text: `${sign}${rounded.toFixed(digits)}`,
+    color: good ? DELTA_UP : DELTA_DOWN,
+  };
+}
+
+/**
+ * The item card's stat lines. When `equipped` is a different piece in the same
+ * slot, each comparable stat carries a green/red `(+N)` delta versus what's
+ * worn, so a bag find reads as an upgrade or a downgrade at a glance.
+ */
+function itemLines(
+  state: GameState,
+  item: Equipment,
+  equipped: Equipment | null,
+): CardLine[] {
   const lines: CardLine[] = [];
   // The Diablo birth certificate: the item's own LEVEL (which sized its
   // affixes) and the base's requirement — red while the hero hasn't grown
@@ -135,6 +171,10 @@ function itemLines(state: GameState, item: Equipment): CardLine[] {
   }
   if (item.defId in WEAPON_DEFS) {
     const def = weaponDef(item.defId);
+    // Compare against the equipped weapon (only when inspecting a different
+    // one) — the deltas below read this game's stats in the SAME hands, so a
+    // bag find's numbers stack fairly against what's currently held.
+    const eq = equipped && equipped.defId in WEAPON_DEFS ? equipped : null;
     // The weapon's class, tinted by class (magic=purple, melee=gold,
     // ranged=orange) so it reads as "what kind of weapon" — never confused
     // with the blue MAGIC quality tier the name color carries.
@@ -146,9 +186,11 @@ function itemLines(state: GameState, item: Equipment): CardLine[] {
     // into "how hard this hits over time", so a slow heavy weapon and a quick
     // light one compare at a glance. Tinted the same accent as the character
     // sheet's derived combat stats.
+    const dps = Math.round(weaponDps(state, item));
     lines.push({
-      text: `DPS ${Math.round(weaponDps(state, item))}`,
+      text: `DPS ${dps}`,
       color: "#7ef0c8",
+      delta: eq ? compareChip(dps - Math.round(weaponDps(state, eq))) : null,
     });
     // Show the damage this weapon would deal in the player's hands (stats +
     // affixes folded in), with the bonus over the raw base as a "+x" hint.
@@ -157,6 +199,9 @@ function itemLines(state: GameState, item: Equipment): CardLine[] {
     lines.push({
       text:
         bonus > 0 ? `DAMAGE ${effective} (+${bonus})` : `DAMAGE ${effective}`,
+      delta: eq
+        ? compareChip(effective - Math.round(weaponDamageFor(state, eq)))
+        : null,
     });
     // Attack speed as plain seconds between attacks (lower is faster). The
     // unit is spelled " SEC" — never a bare trailing "S", which the pixel font
@@ -170,6 +215,13 @@ function itemLines(state: GameState, item: Equipment): CardLine[] {
         saved > 0.005
           ? `SPEED ${secs.toFixed(2)} SEC (-${saved.toFixed(2)})`
           : `SPEED ${secs.toFixed(2)} SEC`,
+      // Shorter cadence is faster, so a smaller number is the upgrade.
+      delta: eq
+        ? compareChip(secs - weaponCooldownFor(state, eq) / 1000, {
+            lowerBetter: true,
+            digits: 2,
+          })
+        : null,
     });
     // Reach the same way: INTELLIGENCE lengthens every weapon's range.
     const effRange = Math.round(weaponRangeFor(state, item));
@@ -179,26 +231,38 @@ function itemLines(state: GameState, item: Equipment): CardLine[] {
         rangeBonus > 0
           ? `RANGE ${effRange} (+${rangeBonus})`
           : `RANGE ${effRange}`,
+      delta: eq
+        ? compareChip(effRange - Math.round(weaponRangeFor(state, eq)))
+        : null,
     });
-    // The AoE story: how many foes one blow reaches (the budget the light
-    // per-hit damage is spread across), and the cadence-weighted crit when
-    // it differs from the global default — slow weapons crit like trucks.
-    const targets = weaponAssumedTargets(def);
-    if (targets > 1) {
-      const label = def.projectile?.count
-        ? `${def.projectile.count} PELLETS`
-        : def.projectile?.pierce
-          ? `PIERCES ${def.projectile.pierce + 1}`
-          : def.projectile?.chain
-            ? `CHAINS TO ${def.projectile.chain}`
-            : `HITS UP TO ${targets}`;
+    // Projectile physics that multiply a shot's reach across the crowd — the
+    // weapon's own, fixed count. (How many foes a MELEE swing cleaves is
+    // INTELLIGENCE's business, not the weapon's — see maxMeleeTargets — so a
+    // melee weapon carries no "hits up to" line here.)
+    const p = def.projectile;
+    const label =
+      p?.count && p.count > 1
+        ? `${p.count} PELLETS`
+        : p?.pierce
+          ? `PIERCES ${p.pierce + 1}`
+          : p?.chain
+            ? `CHAINS TO ${p.chain}`
+            : null;
+    if (label) {
       lines.push({ text: label, color: "#7ecbff" });
     }
+    // The cadence-weighted crit when it differs from the global default —
+    // slow weapons crit like trucks.
     const critMult = weaponCritMult(def);
     if (critMult !== STATS.critMultiplier) {
       lines.push({
         text: `CRIT DAMAGE X${critMult.toFixed(1)}`,
         color: AFFIX_COLORS.crit,
+        delta: eq
+          ? compareChip(critMult - weaponCritMult(weaponDef(eq.defId)), {
+              digits: 1,
+            })
+          : null,
       });
     }
     lines.push(
@@ -213,17 +277,31 @@ function itemLines(state: GameState, item: Equipment): CardLine[] {
     );
   } else {
     const def = gearDef(item.defId);
+    // Compare against the gear worn in the same slot (suit/charm/bag).
+    const eqGear =
+      equipped && !(equipped.defId in WEAPON_DEFS)
+        ? gearDef(equipped.defId)
+        : null;
     lines.push({ text: def.slot === "suit" ? "SUIT ARMOR" : "CHARM" });
     if (def.bonuses.maxHp) {
       lines.push({
         text: `+${def.bonuses.maxHp} MAX HP`,
         color: AFFIX_COLORS.maxHp,
+        delta: eqGear
+          ? compareChip((def.bonuses.maxHp ?? 0) - (eqGear.bonuses.maxHp ?? 0))
+          : null,
       });
     }
     if (def.bonuses.critChance) {
       lines.push({
         text: `+${Math.round(def.bonuses.critChance * 100)}% CRIT`,
         color: AFFIX_COLORS.crit,
+        delta: eqGear
+          ? compareChip(
+              Math.round(def.bonuses.critChance * 100) -
+                Math.round((eqGear.bonuses.critChance ?? 0) * 100),
+            )
+          : null,
       });
     }
   }
@@ -324,6 +402,10 @@ function ItemTooltip({
 }) {
   const ref = useRef<HTMLDivElement>(null);
   const [pos, setPos] = useState<{ left: number; top: number } | null>(null);
+  // The piece worn in this item's slot, for the per-stat comparison — unless
+  // we're inspecting that very piece (an item never compares to itself).
+  const equipped = state.player.equipment[item.slot];
+  const compareTo = equipped && equipped.id !== item.id ? equipped : null;
 
   useLayoutEffect(() => {
     const el = ref.current;
@@ -359,15 +441,32 @@ function ItemTooltip({
         scale={2}
         color={TIER_COLORS[item.tier]}
       />
-      {itemLines(state, item).map((line) => (
-        <PixelText
-          key={line.text}
-          font={font}
-          text={line.text}
-          scale={1}
-          color={line.color}
-        />
-      ))}
+      {itemLines(state, item, compareTo).map((line) =>
+        line.delta ? (
+          <div key={line.text} className="tooltip-row">
+            <PixelText
+              font={font}
+              text={line.text}
+              scale={1}
+              color={line.color}
+            />
+            <PixelText
+              font={font}
+              text={`(${line.delta.text})`}
+              scale={1}
+              color={line.delta.color}
+            />
+          </div>
+        ) : (
+          <PixelText
+            key={line.text}
+            font={font}
+            text={line.text}
+            scale={1}
+            color={line.color}
+          />
+        ),
+      )}
       {item.affixes.map((affix, i) => (
         <PixelText
           key={i}
