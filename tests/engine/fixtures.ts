@@ -276,6 +276,8 @@ export const FIX_WEAPONS: Record<string, WeaponDef> = {
     id: "test_pipe",
     name: "TEST PIPE",
     class: "melee",
+    // Merchant-scales material: metal melts down for double (economy tests).
+    material: "metal",
     levelReq: 1,
     damage: 16,
     cooldownMs: 320,
@@ -334,6 +336,8 @@ export const FIX_GEAR: Record<string, GearDef> = {
     id: "test_charm",
     name: "TEST CHARM",
     slot: "charm",
+    // Merchant-scales material: precious fetches four times (economy tests).
+    material: "precious",
     bonuses: { critChance: 0.03 },
     icon: "icon_charm",
   },
@@ -681,6 +685,19 @@ export const FIX_LEVEL: LevelDef = {
   },
 };
 
+// A level whose wandering merchant has a full persona — look, name, and a
+// meeting scene — for the discovery-dialogue rules. (The reference FIX_LEVEL
+// keeps the default silent merchant so no other suite trips a greeting.)
+export const FIX_MERCHANT_LEVEL: LevelDef = {
+  ...FIX_LEVEL,
+  id: "test_merchant_level",
+  merchant: {
+    sprite: "merchant_test",
+    name: "TEST MERCHANT",
+    greeting: [["TEST MERCHANT LINE ONE."], ["TEST MERCHANT LINE TWO."]],
+  },
+};
+
 // A SECOND-CHAPTER level (index 2) for the seasoned-arrival rules: starting
 // here must derive the player's level from test_level's roster and hand over
 // its kit (see src/game/arrival.ts). Geometry is the reference level's.
@@ -812,6 +829,7 @@ export function installFixtures(force = false): void {
     levels: {
       test_level: FIX_LEVEL,
       test_level_2: FIX_LEVEL_2,
+      test_merchant_level: FIX_MERCHANT_LEVEL,
       test_prelude_level: FIX_PRELUDE_LEVEL,
       test_gated_level: FIX_GATED_LEVEL,
       test_well_level: FIX_WELL_LEVEL,

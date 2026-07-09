@@ -533,6 +533,7 @@ export function drawFrame(
     }
   }
 
+  drawMerchant(ctx, state, assets, camera, timeMs);
   drawAbilities(ctx, state, assets, camera, timeMs);
   drawPlayer(ctx, state, assets, camera, timeMs);
 
@@ -558,6 +559,59 @@ export function drawFrame(
   if (state.player.hurtFlashMs > 0) {
     ctx.fillStyle = `rgba(216, 58, 58, ${(0.25 * state.player.hurtFlashMs) / 250})`;
     ctx.fillRect(0, 0, view.width, view.height);
+  }
+}
+
+/**
+ * The wandering merchant: the trader in this level's costume (the engine
+ * resolves his sprite family from the level def), striding his wander legs
+ * until met. Once discovered a gold coin bobs over the stall — the "open
+ * for business" tell that also makes him findable again from across a
+ * screen.
+ */
+function drawMerchant(
+  ctx: CanvasRenderingContext2D,
+  state: GameState,
+  assets: GameAssets,
+  camera: Camera,
+  timeMs: number,
+): void {
+  const merchant = state.merchant;
+  if (
+    merchant.pos.x < camera.x - 48 ||
+    merchant.pos.x > camera.x + ctx.canvas.width + 48 ||
+    merchant.pos.y < camera.y - 48 ||
+    merchant.pos.y > camera.y + ctx.canvas.height + 48
+  ) {
+    return;
+  }
+  const { sprites } = assets;
+  const frame = merchant.moving && Math.floor(timeMs / 200) % 2 === 1 ? 1 : 0;
+  const sprite =
+    spriteByName(sprites, `${merchant.sprite}_${frame}`) ??
+    spriteByName(sprites, `merchant_${frame}`);
+  if (!sprite) return;
+  const x = Math.round(merchant.pos.x - sprite.width / 2 - camera.x);
+  const y = Math.round(merchant.pos.y - sprite.height / 2 - camera.y);
+  if (merchant.faceLeft) {
+    ctx.save();
+    ctx.translate(x + sprite.width, y);
+    ctx.scale(-1, 1);
+    ctx.drawImage(sprite, 0, 0);
+    ctx.restore();
+  } else {
+    ctx.drawImage(sprite, x, y);
+  }
+  if (merchant.discovered) {
+    const coin = spriteByName(sprites, "icon_coin");
+    if (coin) {
+      const bob = Math.round(Math.sin(timeMs / 320) * 1.5);
+      ctx.drawImage(
+        coin,
+        Math.round(merchant.pos.x - coin.width / 2 - camera.x),
+        y - coin.height - 1 + bob,
+      );
+    }
   }
 }
 

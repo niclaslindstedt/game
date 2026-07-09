@@ -34,6 +34,24 @@ export const MOON: LevelDef = {
     patch: { a: "gravel_0", b: "gravel_1", every: 7 },
   },
   foes: "GHOSTS",
+  // THE MERCHANT, venue two: a trader off the secret salvage runs, in a
+  // patched 70s suit — the moonward launches had room for his stock, never
+  // his return ticket. Lines in docs/manuscript.md.
+  merchant: {
+    sprite: "merchant_moon",
+    greeting: [
+      [
+        "YOU'RE SOLID. THAT'S NEW.",
+        "I CAME UP WITH THE '76 SALVAGE",
+        "RUN. MISSED THE RIDE HOME.",
+      ],
+      [
+        "THE GHOSTS DON'T CARRY COIN,",
+        "SO YOU'RE MY WHOLE MARKET NOW.",
+        "SELL ME SCRAP. BUY WHAT WORKS.",
+      ],
+    ],
+  },
   playerSpawn: { x: 340, y: 1320 },
   landmarks: [
     { kind: "lander", pos: { x: 280, y: 1320 } },

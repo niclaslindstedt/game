@@ -30,6 +30,7 @@ export type GamePhase =
   | "respec"
   | "inventory"
   | "map"
+  | "shop"
   | "dialogue"
   | "victory"
   | "defeat";
@@ -172,6 +173,12 @@ export type Player = {
   xpToNext: number;
   /** Stat points awarded but not yet spent (spent via `allocateStat`). */
   pendingStatPoints: number;
+  /**
+   * COINS — the merchant economy's currency (see merchant.ts / config
+   * ECONOMY). Earned by selling loot to a discovered merchant, spent on his
+   * stall; carried between levels via the loadout.
+   */
+  coins: number;
   stats: Record<StatName, number>;
   equipment: {
     /** Never empty — the character always fights with something. */
@@ -466,17 +473,25 @@ export type DialogueState = {
      * first kill of a given enemy on a level), not to a speaker on the board.
      * `defId` keys THOUGHT_DEFS.
      */
-    | { kind: "playerThought"; defId: string };
+    | { kind: "playerThought"; defId: string }
+    /**
+     * The wandering merchant's meeting scene — played once, the moment he is
+     * first discovered. `levelId` keys the level whose `merchant` def carries
+     * the greeting (each level's trader has his own story for being there).
+     */
+    | { kind: "merchant"; levelId: string };
   /** Index of the page currently on screen. */
   page: number;
 };
 
 /**
  * What a level-map pin commemorates: a `story` plot piece picked up, a
- * `loot` find of unique/legendary gear, an `elite` slain, or a `boss`
- * beaten (a fleeing unique counts — the fight was won where it fled).
+ * `loot` find of unique/legendary gear, an `elite` slain, a `boss`
+ * beaten (a fleeing unique counts — the fight was won where it fled), or a
+ * `merchant` met (his stall stays put once discovered, so the pin leads
+ * straight back to the shop).
  */
-export type MapMarkerKind = "story" | "loot" | "elite" | "boss";
+export type MapMarkerKind = "story" | "loot" | "elite" | "boss" | "merchant";
 
 /**
  * A pin on the level map (see map.ts): something memorable happened at
@@ -489,6 +504,54 @@ export type MapMarker = {
   kind: MapMarkerKind;
   pos: Vec2;
   defId: string;
+};
+
+/**
+ * One entry on the merchant's stall (see merchant.ts). Powerups restock —
+ * buy as many as the purse allows; a weapon is a one-off piece, latched
+ * `sold` once bought (Diablo 2 style: the stall empties, the run moves on).
+ */
+export type MerchantStock = { id: number; price: number } & (
+  | { kind: "ability"; defId: string }
+  | { kind: "weapon"; equipment: Equipment; sold: boolean }
+);
+
+/**
+ * The WANDERING MERCHANT: one per level, roaming until met (config
+ * MERCHANT). The horde ignores him and nothing hurts him — he is a trader,
+ * not a combatant. `discovered` latches on the first close encounter: he
+ * stays put from then on, pinned on the level map, his stall stocked
+ * against the hero he just met. `rng` is his own seeded stream so his
+ * wandering never perturbs the run's roll sequence.
+ */
+export type Merchant = {
+  pos: Vec2;
+  /**
+   * Sprite family the renderer draws (`<sprite>_0/_1` walk frames) — resolved
+   * from the level def at creation, so the trader dresses for the venue (a
+   * vendor's uniform at HQ, a patched 70s suit on the moon, …).
+   */
+  sprite: string;
+  /** Where the current wander leg heads; null while idling (or discovered). */
+  wanderTarget: Vec2 | null;
+  /** Ms of idling left before the next wander leg starts. */
+  idleMs: number;
+  /** Ms left on the current leg — a leg blocked by terrain gives up here. */
+  legMs: number;
+  /** Sprite mirror, following the walk direction like the player's. */
+  faceLeft: boolean;
+  /** True while he walked this step; drives the walk animation. */
+  moving: boolean;
+  /** Latched on the first encounter: rooted, mapped, shop open for business. */
+  discovered: boolean;
+  /** The stall (empty until discovered — stock is rolled at the meeting). */
+  stock: MerchantStock[];
+  /**
+   * Private seeded stream for wander legs and stall rolls, parked as its
+   * plain uint32 state (not a closure) so the whole merchant serializes with
+   * the run — see `createRngFromState` and saved-run.ts.
+   */
+  rngState: number;
 };
 
 export type GameStats = {
@@ -611,6 +674,12 @@ export type GameEvent =
   /** A locked door recognized its key and slid open. */
   | { type: "doorOpened"; pos: Vec2 }
   /**
+   * The hero met the wandering merchant for the first time: he stops
+   * wandering, pins the level map, and his stall is now open at `pos`. The
+   * app toasts the meeting and can chime a till.
+   */
+  | { type: "merchantDiscovered"; pos: Vec2 }
+  /**
    * A minion was dragged into a black hole's core and devoured — off the
    * board with no kill, no XP and no loot. `defId` names the meal; the app
    * plays the gulp and the swirl at `pos`.
@@ -691,6 +760,9 @@ export type Loadout = {
   inventory: (Equipment | null)[];
   /** Banked ability pickups (ABILITY_DEFS ids). */
   heldAbilities: string[];
+  /** The purse — merchant coins ride along between levels. Optional so
+   * loadouts banked before the economy shipped load as an empty purse. */
+  coins?: number;
 };
 
 /** Static facts about the running level, snapshotted from its LevelDef. */
@@ -771,6 +843,8 @@ export type GameState = {
   thoughtsSeen: string[];
   /** Locked doors built from the level def, open or not. */
   doors: DoorState[];
+  /** The level's wandering merchant (see merchant.ts). */
+  merchant: Merchant;
   /**
    * The fog of war: one byte per `MAP.cellSize` grid cell, row-major
    * (`mapCols(level)` cells per row), 1 once the hero has walked within

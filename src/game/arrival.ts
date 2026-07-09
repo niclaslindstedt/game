@@ -62,6 +62,7 @@ export function extractLoadout(state: GameState): Loadout {
     },
     inventory: player.inventory.map(copyPiece),
     heldAbilities: [...player.heldAbilities],
+    coins: player.coins,
   };
 }
 
@@ -101,6 +102,9 @@ export function applyLoadout(state: GameState, loadout: Loadout): void {
     .fill(null)
     .map((_, i) => mint(loadout.inventory[i] ?? null));
   player.heldAbilities = loadout.heldAbilities.slice(0, HELD_ITEMS.cap);
+  // The purse rides along; loadouts banked before the economy existed carry
+  // no coins field and load as an empty purse.
+  player.coins = Math.max(0, loadout.coins ?? 0);
 
   recomputeMaxHp(state);
   recomputeMaxStamina(state);

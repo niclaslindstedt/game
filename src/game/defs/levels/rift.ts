@@ -51,6 +51,29 @@ export const THE_RIFT: LevelDef = {
     patch: { a: "nebula_0", b: "nebula_1", every: 8 },
   },
   foes: "ENTITIES",
+  // THE MERCHANT, final venue — and the reveal: the hooded trader between
+  // universes has been every shopkeeper the hero met. Every market he ever
+  // ran fell through here eventually. Lines in docs/manuscript.md.
+  merchant: {
+    sprite: "merchant",
+    greeting: [
+      [
+        "AH. YOU AGAIN. DON'T LOOK SO",
+        "SURPRISED - EVERY MARKET I EVER",
+        "RAN FELL THROUGH HERE, IN THE END.",
+      ],
+      [
+        "THE VENDING MACHINES. THE MOON.",
+        "THE DOME. ALL ROADS LEAD HERE -",
+        "AND COIN SPENDS ON ALL OF THEM.",
+      ],
+      [
+        "BRING ME RELICS, TRAVELER.",
+        "TAKE WHAT YOU NEED.",
+        "WE'RE BOTH FAR FROM HOME.",
+      ],
+    ],
+  },
   playerSpawn: { x: 300, y: 800 },
   landmarks: [
     // The way in: the rift MOSQUE tore open on Mars, still hanging behind

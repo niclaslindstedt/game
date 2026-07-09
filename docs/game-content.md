@@ -170,6 +170,35 @@ Difficulty-exclusive content lives with the level that uses it: a `spawns` or
 `waves.budget` line can carry an optional `minDifficulty`, and it only appears
 from that rung of the ladder up (see `meetsMinDifficulty`).
 
+### The wandering merchant & the coin economy
+
+Every level has a **WANDERING MERCHANT** (`src/game/merchant.ts`, config
+`MERCHANT`/`ECONOMY`) — the same impossible trader in a different costume per
+venue (`LevelDef.merchant`): the vending-machine man at SpaceZ HQ, the '76
+salvage-run trader on the moon, the colony commissary keeper on Mars, and the
+hooded trader between universes in the rift, where he admits every market he
+ever ran fell through eventually (his lines are in
+[`manuscript.md`](./manuscript.md)). The horde ignores him and his ward keeps
+mobs two body-widths off his stall. He roams the level until the hero first
+walks up to him: the **meeting** roots him to the spot for the rest of the
+run, pins him on the level map (green MERCHANT marker), plays his greeting,
+and stocks his stall. A gold coin bobs over his head from then on; tapping him
+at the counter opens the **shop** (the run freezes like the bag).
+
+The shop trades in **coins**, earned one way — selling loot across the
+counter — and spent on the stall, so the economy recycles the loot rain
+rather than printing money. An item's sell value is its **item level** times
+its **tier** in orders of magnitude (magic ×10, rare ×100, unique ×1,000,
+legendary ×10,000) times its **material** — METAL pieces melt down for
+double, PRECIOUS ones (gold, gems, the genuinely magical) fetch four times
+(`material` on the equipment defs). The stall sells the level's **powerups**
+(restocked, priced off the hero's level) and a couple of one-off **weapons**
+rolled with a magic-skewed tier bonus, Diablo 2 gamble style, priced at ten
+times their own sell value — a purchase costs roughly what selling a handful
+of magic finds brings in. The shop's SELL JUNK button clears every outgrown
+piece (the inventory's scrap rule) in one tap. Coins ride the loadout
+between levels like everything else the hero carries.
+
 ## Enemy roster (`src/game/defs/enemies/`)
 
 The roster is split one file per level/biome under `src/game/defs/enemies/`

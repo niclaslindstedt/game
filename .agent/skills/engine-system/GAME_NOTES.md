@@ -166,6 +166,24 @@ sequel truncates this file to a stub and rebuilds it as its own systems land.
   per explored cell (zones honored), fog = the dark backdrop plus a
   half-shade penumbra on frontier cells — since the sim is frozen there is
   nothing to animate. Fixture: `test_elite`; suite: `tests/engine/map_test.ts`.
+- **Wandering merchant (2026-07, coin economy):** a friendly NPC is NOT an
+  Enemy — he is his own state slice (`state.merchant`, merchant.ts) stepped
+  right after the player, so combat/loot never see him. Two determinism
+  rules made him cheap to add: he rolls EVERYTHING on his own rng stream
+  (parked as a plain `rngState` uint32, not a closure, so the JSON
+  freeze/thaw persistence keeps working — a closure on a sub-object broke
+  `persistence_test`), and his stall rolls reuse `rollEquipment` by
+  swapping `state.rng` for a generator built at his parked state (park it
+  back after). His discovery latch mirrors elite dialogue (radius + LOS →
+  root, map pin, event, greeting via a new `DialogueState` source keyed by
+  levelId); per-level persona is level DATA (`LevelDef.merchant`: sprite /
+  name / greeting — manuscript rules apply to the words). The mob-repel
+  ward is a radial push-out in the enemy pass beside `resolveObstacles`
+  (bosses/apparitions exempt). The `shop` phase freezes like `inventory`;
+  buy/sell are plain mutators; coins live on the player and ride the
+  Loadout (optional field, `?? 0` for old saves). Suite:
+  `tests/engine/merchant_test.ts` (incl. a counting-rng test proving zero
+  main-stream draws).
 - **Diablo loot economy (2026-07, weapon rework):** progression-shaped loot
   is three numbers threaded through the existing catalogs, not a new system:
   a MONSTER LEVEL stamped on every enemy at spawn (`spawnEnemy` param,

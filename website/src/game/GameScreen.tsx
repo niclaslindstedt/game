@@ -31,6 +31,7 @@ import {
   botAllocate,
   closeInventory,
   closeMap,
+  closeShop,
   createBot,
   createGame,
   debug,
@@ -44,9 +45,11 @@ import {
   LEVELS,
   levelDef,
   MENACE,
+  MERCHANT,
   menaceStage,
   openInventory,
   openMap,
+  openShop,
   pauseGame,
   PLAYER,
   playerAppearance,
@@ -92,6 +95,7 @@ import { LevelUpOverlay } from "./LevelUpOverlay.tsx";
 import { MapOverlay } from "./MapOverlay.tsx";
 import { RespecOverlay } from "./RespecOverlay.tsx";
 import { PauseOverlay } from "./PauseOverlay.tsx";
+import { ShopPanel } from "./ShopPanel.tsx";
 import {
   pauseMusic,
   playLevelMusic,
@@ -175,6 +179,8 @@ type Hud = {
   weaponDefId: string;
   /** Equipped weapon's durability 0..1, or null for the unbreakable sidearm. */
   weaponWear: number | null;
+  /** The purse — coins earned selling loot to the merchant. */
+  coins: number;
   /** Player sprite family (`playerAppearance`) for the inventory avatar. */
   appearance: string;
   stats: GameStats;
@@ -406,6 +412,10 @@ export function GameScreen({
   const activePowerupsRef = useRef<HTMLDivElement>(null);
   const jumpQueuedRef = useRef(false);
   const useItemQueuedRef = useRef(false);
+  // Where the last tap/click landed (CSS px on the canvas): the sim loop
+  // checks it against the discovered merchant — a tap on him at the counter
+  // opens the shop instead of jumping.
+  const shopTapRef = useRef<{ x: number; y: number } | null>(null);
   // Desktop keyboard steering: which MOVE_KEYS are held right now, and whether
   // the walk modifier (Shift) is down. Read every sim tick (see the loop).
   const heldMoveKeysRef = useRef<Set<string>>(new Set());
@@ -640,6 +650,9 @@ export function GameScreen({
     // (Space jumps), classic mode keeps click-tap = jump.
     const pointer = trackPointer(canvas, {
       onTap: ({ pointerType }) => {
+        // Remember where the tap landed (CSS px): the sim loop checks it
+        // against the merchant before letting it act as a jump.
+        shopTapRef.current = { x: pointer.state.x, y: pointer.state.y };
         if (pointerType !== "mouse" || getSettings().steering === "hold") {
           jumpQueuedRef.current = true;
         }
@@ -763,6 +776,10 @@ export function GameScreen({
           closeMap(state);
           playUiSound(synth, "back");
         }
+        bumpUi();
+      } else if (event.key === "Escape" && state.phase === "shop") {
+        closeShop(state);
+        playUiSound(synth, "back");
         bumpUi();
       } else if (event.key === "Escape" && state.phase === "map") {
         closeMap(state);
@@ -974,6 +991,30 @@ export function GameScreen({
           useItemQueuedRef.current = false;
           useItemIndexRef.current = null;
         }
+        // A tap that lands on the DISCOVERED merchant (and the hero close
+        // enough to trade — openShop checks the counter distance) opens the
+        // shop instead of acting as a jump or an item use.
+        const shopTap = shopTapRef.current;
+        shopTapRef.current = null;
+        if (
+          shopTap &&
+          !bot &&
+          state.phase === "playing" &&
+          state.merchant.discovered
+        ) {
+          const wx = camera.x + shopTap.x * cssToWorld.x;
+          const wy = camera.y + shopTap.y * cssToWorld.y;
+          const m = state.merchant.pos;
+          if (
+            Math.hypot(wx - m.x, wy - m.y) <= MERCHANT.radius * 2.5 &&
+            openShop(state)
+          ) {
+            input.jump = false;
+            input.useItem = false;
+            playUiSound(synth, "confirm");
+            bumpUi();
+          }
+        }
         step(state, input, dtMs);
         playEventSounds(synth, state.events);
         playEventHaptics(state.events);
@@ -1108,6 +1149,11 @@ export function GameScreen({
           if (event.type === "storyItemCollected") {
             pushPickup(storyItemDef(event.defId).name, "#ffd75e");
           }
+          // The merchant met: toast it — his greeting scene (if the level
+          // has one) takes the stage through the ordinary dialogue overlay.
+          if (event.type === "merchantDiscovered") {
+            pushPickup("MERCHANT DISCOVERED", "#ffd75e");
+          }
           // The run is over: silence the loop so the jingle stands alone, and
           // bank the run as this difficulty's high score — the survival time
           // and kills rank it, and the full session snapshot rides along so the
@@ -1238,7 +1284,7 @@ export function GameScreen({
         const appearance = playerAppearance(state);
         const stage = menaceStage(state);
         const armor = armorInfo(state);
-        const key = `${state.phase}/${state.player.hp}/${Math.ceil(state.player.armor)}/${Math.ceil(state.player.stamina)}/${state.player.xp}/${state.player.level}/${state.player.pendingStatPoints}/${state.enemies.length}/${bagCount}/${bagFree}/${bagFullHint ? 1 : 0}/${held}/${active}/${weapon.defId}/${weaponWear?.toFixed(2) ?? ""}/${appearance}/${stage}/${state.stats.kills}/${Math.floor(state.stats.timeMs / 1000)}`;
+        const key = `${state.phase}/${state.player.hp}/${Math.ceil(state.player.armor)}/${Math.ceil(state.player.stamina)}/${state.player.xp}/${state.player.level}/${state.player.pendingStatPoints}/${state.enemies.length}/${bagCount}/${bagFree}/${bagFullHint ? 1 : 0}/${held}/${active}/${weapon.defId}/${weaponWear?.toFixed(2) ?? ""}/${state.player.coins}/${appearance}/${stage}/${state.stats.kills}/${Math.floor(state.stats.timeMs / 1000)}`;
         if (key !== lastHud) {
           lastHud = key;
           setHud({
@@ -1268,6 +1314,7 @@ export function GameScreen({
             }, []),
             weaponDefId: weapon.defId,
             weaponWear,
+            coins: state.player.coins,
             appearance,
             stats: { ...state.stats },
           });
@@ -1626,6 +1673,21 @@ export function GameScreen({
                     color="#7ef0c8"
                   />
                 </div>
+                {/* The purse: coins earned selling loot to the merchant. */}
+                <div className="hud-stat-row hud-coin-row">
+                  {(() => {
+                    const coin = spriteDataUrl(assets.sprites, "icon_coin");
+                    return coin ? (
+                      <img src={coin} alt="" className="pixel-img hud-coin" />
+                    ) : null;
+                  })()}
+                  <PixelText
+                    font={font}
+                    text={formatCompact(hud.coins)}
+                    scale={2}
+                    color="#ffd75e"
+                  />
+                </div>
               </div>
             </div>
 
@@ -1966,6 +2028,20 @@ export function GameScreen({
           onChange={bumpUi}
           onClose={() => {
             closeInventory(state);
+            bumpUi();
+          }}
+        />
+      )}
+
+      {state && hud?.phase === "shop" && (
+        <ShopPanel
+          state={state}
+          font={font}
+          sprites={assets.sprites}
+          onChange={bumpUi}
+          onClose={() => {
+            closeShop(state);
+            playUiSound(synth, "back");
             bumpUi();
           }}
         />

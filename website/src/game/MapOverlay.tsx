@@ -35,6 +35,7 @@ const MARKER_COLORS: Record<MapMarkerKind, string> = {
   loot: "#ff8c42",
   elite: "#d9a0f0",
   boss: "#d83a3a",
+  merchant: "#5fd97a",
 };
 
 const PLAYER_COLOR = "#7ef0c8";
@@ -215,6 +216,7 @@ export function MapOverlay({
     { color: MARKER_COLORS.loot, label: "RARE LOOT" },
     { color: MARKER_COLORS.elite, label: "ELITE" },
     { color: MARKER_COLORS.boss, label: "BOSS" },
+    { color: MARKER_COLORS.merchant, label: "MERCHANT" },
   ];
 
   return (

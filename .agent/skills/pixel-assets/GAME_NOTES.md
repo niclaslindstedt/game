@@ -9,8 +9,14 @@ file (and its `sprite-data/*` families).
 
 Discover the live set with `ls website/scripts/sprite-data/*.mjs` (all but
 `core.mjs` / `index.mjs`). As of 2026-07 this game ships: `hero`, `moon`,
-`spacez`, `prelude`, `earth`, `effects`, `icons`, `mars`. A new roster or
-biome is a new family module registered in `sprite-data/index.mjs`.
+`spacez`, `prelude`, `earth`, `effects`, `icons`, `mars`, `rift`,
+`merchant`. A new roster or biome is a new family module registered in
+`sprite-data/index.mjs`.
+
+The `merchant` family shows the one-subject-many-costumes path: all four
+looks (hooded default, vendor, moon, mars) share the hero's 16×16 body plan
+and foot anchor, so the per-level costume swap (`Merchant.sprite`, from
+`LevelDef.merchant`) needs no renderer or anchor work — only new grids.
 
 The `mars` family shows the cheap-recolor path for a sibling biome: its
 rocks/craters are `swapPalette` calls over the moon family's grids (import

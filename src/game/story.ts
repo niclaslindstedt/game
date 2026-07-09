@@ -48,6 +48,16 @@ export function dialogueContent(dialogue: DialogueState): {
     const def = thoughtDef(dialogue.source.defId);
     return { speaker: def.speaker, portrait: def.portrait, pages: def.pages };
   }
+  // The wandering merchant's meeting scene: the level def carries his
+  // persona — look, name, and his own story for setting up shop here.
+  if (dialogue.source.kind === "merchant") {
+    const def = levelDef(dialogue.source.levelId).merchant;
+    return {
+      speaker: def?.name ?? "THE MERCHANT",
+      portrait: def?.sprite ?? "merchant",
+      pages: def?.greeting ?? [],
+    };
+  }
   const def = storyItemDef(dialogue.source.defId);
   return { speaker: def.name, portrait: def.icon, pages: def.lore };
 }

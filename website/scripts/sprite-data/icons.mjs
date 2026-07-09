@@ -296,6 +296,22 @@ const SPRITES = {
     "............",
     "............",
   ],
+  // The merchant's COIN: gold with a square mint-hole, lit top-left. The
+  // shop UI's currency mark and the HUD's purse badge.
+  icon_coin: [
+    "............",
+    "...OOOOOO...",
+    "..OyyooooO..",
+    ".OyyoooooqO.",
+    ".OyooooooqO.",
+    ".OyooOOooqO.",
+    ".OyooOOooqO.",
+    ".OoooooooqO.",
+    ".OooooooqqO.",
+    "..OooooqqO..",
+    "...OOOOOO...",
+    "............",
+  ],
   // The starter BAG: a leather satchel — a top carry handle over a rounded
   // body, a brass clasp down the middle, right and bottom edges shaded.
   icon_bag: [

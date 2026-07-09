@@ -237,6 +237,22 @@ export type LevelDef = {
    */
   firstSightThoughts?: ThoughtTrigger[];
   /**
+   * This level's WANDERING MERCHANT persona (see merchant.ts / config
+   * MERCHANT). The trader roams every level; this names how he dresses for
+   * THIS one (`sprite`, walk frames `<sprite>_0/_1`), what the dialogue box
+   * calls him, and his meeting scene — the once-only `greeting` played when
+   * the hero first discovers him, in his own voice: why he is here, and that
+   * he'd like to do business. Omitted = the default hooded look, no scene.
+   */
+  merchant?: {
+    /** Sprite family; defaults to `merchant`. */
+    sprite?: string;
+    /** Dialogue-box name; defaults to THE MERCHANT. */
+    name?: string;
+    /** Pages of the meeting scene (same shape as an elite's `dialogue`). */
+    greeting?: string[][];
+  };
+  /**
    * A scripted opening beat that draws the hero's weapon. When present, the
    * hero starts the level DISARMED — his weapon won't attack — and a lone
    * "vanguard" monster is placed at `at`, way ahead of the pack, to rush him

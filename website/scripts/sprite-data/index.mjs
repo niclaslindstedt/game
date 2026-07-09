@@ -21,6 +21,7 @@ import effects from "./effects.mjs";
 import hero from "./hero.mjs";
 import icons from "./icons.mjs";
 import mars from "./mars.mjs";
+import merchant from "./merchant.mjs";
 import moon from "./moon.mjs";
 import prelude from "./prelude.mjs";
 import rift from "./rift.mjs";
@@ -29,6 +30,7 @@ import spacez from "./spacez.mjs";
 /** Every sprite family, each with its core-merged palette attached. */
 export const FAMILIES = [
   hero,
+  merchant,
   prelude,
   earth,
   moon,
