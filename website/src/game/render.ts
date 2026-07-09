@@ -9,6 +9,8 @@
 import {
   abilityDef,
   APPARITION,
+  COMPANIONS,
+  companionDef,
   enemyDef,
   equipmentIcon,
   LAST_STAND,
@@ -534,6 +536,7 @@ export function drawFrame(
   }
 
   drawMerchant(ctx, state, assets, camera, timeMs);
+  drawCompanions(ctx, state, assets, camera, timeMs);
   drawAbilities(ctx, state, assets, camera, timeMs);
   drawPlayer(ctx, state, assets, camera, timeMs);
 
@@ -610,6 +613,74 @@ function drawMerchant(
         coin,
         Math.round(merchant.pos.x - coin.width / 2 - camera.x),
         y - coin.height - 1 + bob,
+      );
+    }
+  }
+}
+
+/**
+ * The recruited party: each companion in its own sprite family (the same
+ * frames its enemy twin wore), walk-animated like the merchant. A DOWNED
+ * companion kneels as a faded still with a rising recovery sliver; a hurt
+ * one shows a small green health bar, mirroring the elites' readout.
+ */
+function drawCompanions(
+  ctx: CanvasRenderingContext2D,
+  state: GameState,
+  assets: GameAssets,
+  camera: Camera,
+  timeMs: number,
+): void {
+  for (const companion of state.companions) {
+    if (
+      companion.pos.x < camera.x - 48 ||
+      companion.pos.x > camera.x + ctx.canvas.width + 48 ||
+      companion.pos.y < camera.y - 48 ||
+      companion.pos.y > camera.y + ctx.canvas.height + 48
+    ) {
+      continue;
+    }
+    const def = companionDef(companion.defId);
+    const downed = companion.downedMs !== undefined;
+    const frame =
+      !downed && companion.moving && Math.floor(timeMs / 200) % 2 === 1 ? 1 : 0;
+    const sprite =
+      spriteByName(assets.sprites, `${def.sprite}_${frame}`) ??
+      spriteByName(assets.sprites, `${def.sprite}_0`);
+    if (!sprite) continue;
+    const x = Math.round(companion.pos.x - sprite.width / 2 - camera.x);
+    const y = Math.round(companion.pos.y - sprite.height / 2 - camera.y);
+    ctx.save();
+    if (downed) ctx.globalAlpha = 0.55;
+    if (companion.faceLeft) {
+      ctx.translate(x + sprite.width, y);
+      ctx.scale(-1, 1);
+      ctx.drawImage(sprite, 0, 0);
+    } else {
+      ctx.drawImage(sprite, x, y);
+    }
+    ctx.restore();
+
+    // The readout above the head: recovery while down, health while hurt.
+    const barWidth = 16;
+    const bx = Math.round(companion.pos.x - barWidth / 2 - camera.x);
+    const by = y - 6;
+    if (downed) {
+      const frac =
+        1 - Math.min(1, (companion.downedMs ?? 0) / COMPANIONS.reviveMs);
+      ctx.fillStyle = "#0b0d10";
+      ctx.fillRect(bx - 1, by - 1, barWidth + 2, 5);
+      ctx.fillStyle = "#9aa3ad";
+      ctx.fillRect(bx, by, Math.round(barWidth * frac), 3);
+    } else if (companion.hp < companion.maxHp) {
+      ctx.fillStyle = "#0b0d10";
+      ctx.fillRect(bx - 1, by - 1, barWidth + 2, 5);
+      ctx.fillStyle = "#7ef0c8";
+      ctx.fillRect(
+        bx,
+        by,
+        Math.round((barWidth * companion.hp) / companion.maxHp),
+        3,
       );
     }
   }

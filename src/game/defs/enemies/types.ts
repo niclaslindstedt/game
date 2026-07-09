@@ -81,6 +81,16 @@ export type EnemyDef = {
    */
   flees?: { landmark: string };
   /**
+   * A SPAREABLE unique: beaten to 0 hp it kneels instead of dying, and the
+   * run pauses into the `choice` phase for the SPARE-or-KILL verdict
+   * (`resolveChoice` in companions.ts). Spared, it joins the party as the
+   * named COMPANION_DEFS entry — handing over its story items but keeping
+   * its equipment loot (the gear IS the companion's kit). Killed, the
+   * withheld blow lands and the normal kill path runs: loot, last words,
+   * the lot. Meaningless combined with `flees` or `apparition`.
+   */
+  spareable?: { companion: string };
+  /**
    * XP granted on kill. Omitted = proportional to max hp
    * (LEVELING.xpPerHp) — the standing rule; set only to override it.
    */

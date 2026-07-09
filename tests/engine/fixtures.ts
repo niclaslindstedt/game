@@ -20,6 +20,7 @@
 import {
   registerDefs,
   type AbilityDef,
+  type CompanionDef,
   type CutsceneDef,
   type DifficultyDef,
   type EnemyDef,
@@ -209,6 +210,55 @@ export const FIX_ENEMIES: Record<string, EnemyDef> = {
       medkits: 1,
       tierBonus: 0,
     },
+  },
+};
+
+// A SPAREABLE unique (mirrors the rift's historic residents): beaten to 0 hp
+// it kneels for the SPARE-or-KILL verdict — spared it joins the party as
+// `test_companion`, killed it pays its pinned loot and gasps its last words.
+FIX_ENEMIES.test_spareable = {
+  id: "test_spareable",
+  name: "TEST SPAREABLE",
+  role: "elite",
+  sprite: "test_spareable",
+  gore: "ecto",
+  phasing: true,
+  hp: 150,
+  speed: 24,
+  radius: 11,
+  contactDamage: 18,
+  critChance: 0.12,
+  contactCooldownMs: 800,
+  lastWords: ["TEST...", "SPARED NOT..."],
+  spareable: { companion: "test_companion" },
+  ai: { aggroRadius: 260, rushSpeed: 90 },
+  loot: {
+    items: ["test_hammer"],
+    storyItems: ["test_key"],
+    weapons: 0,
+    gear: 0,
+    xpArrows: 1,
+    repairs: 0,
+    medkits: 1,
+    tierBonus: 0.2,
+  },
+};
+
+/** The companion the fixture spareable becomes: a melee fighter with a
+ * magic-find aura, a joining scene, and kill-quote banter — one def that
+ * exercises every companion rule. */
+export const FIX_COMPANIONS: Record<string, CompanionDef> = {
+  test_companion: {
+    id: "test_companion",
+    name: "TEST COMPANION",
+    sprite: "test_companion",
+    hp: 150,
+    speed: 52,
+    radius: 11,
+    weapon: "test_wrench",
+    aura: { magicFind: 0.5 },
+    joinWords: [["TEST JOIN LINE."]],
+    killQuotes: ["TEST QUOTE."],
   },
 };
 
@@ -894,6 +944,7 @@ export function installFixtures(force = false): void {
       test_apparition_level: FIX_APPARITION_LEVEL,
     },
     enemies: FIX_ENEMIES,
+    companions: FIX_COMPANIONS,
     weapons: FIX_WEAPONS,
     gear: FIX_GEAR,
     abilities: FIX_ABILITIES,

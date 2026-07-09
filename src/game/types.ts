@@ -19,7 +19,9 @@ import type { Vec2 } from "@game/lib/vec.ts";
  * box, `title` flashes the level name alone before the drop, `levelup` waits
  * for a stat choice, `inventory` pauses for bag management, `map` pauses over
  * the fog-of-war level map, `dialogue` holds the world while a character (or
- * a found story item) speaks; the simulation only advances while `playing`.
+ * a found story item) speaks, `choice` holds it while a beaten spareable
+ * unique awaits the SPARE-or-KILL verdict, `companion` pauses into a
+ * companion's equip screen; the simulation only advances while `playing`.
  */
 export type GamePhase =
   | "cutscene"
@@ -33,6 +35,8 @@ export type GamePhase =
   | "map"
   | "shop"
   | "dialogue"
+  | "choice"
+  | "companion"
   | "victory"
   | "defeat";
 
@@ -240,6 +244,63 @@ export type Player = {
   inventory: (Equipment | null)[];
 };
 
+/** The three slots a companion can be equipped in: a weapon, a helmet, and a
+ * chest piece — never legs or feet (their own boots carried them through
+ * whatever they fell out of). */
+export type CompanionSlot = "weapon" | "head" | "chest";
+
+/**
+ * A recruited COMPANION (see companions.ts): a spareable unique the player
+ * chose to SPARE joins the party, follows the hero, and fights with whatever
+ * is in its weapon slot. `defId` keys COMPANION_DEFS (name, sprite, starting
+ * weapon, aura, kill quotes). Companions are never killed — at 0 hp one goes
+ * DOWN (kneels out of the fight, aura silent) and stands back up on its own
+ * after `COMPANIONS.reviveMs`.
+ */
+export type Companion = {
+  id: number;
+  /** Key into COMPANION_DEFS. */
+  defId: string;
+  pos: Vec2;
+  hp: number;
+  maxHp: number;
+  /**
+   * The hero's level this companion is currently scaled to — hp and damage
+   * grow with it (config `COMPANIONS.hpPerLevel` / `damagePerLevel`), and
+   * stepCompanions re-scales the moment the hero levels up.
+   */
+  level: number;
+  /** Sprite mirror, following the walk direction like the player's. */
+  faceLeft: boolean;
+  /** True while it walked this step; drives the walk animation. */
+  moving: boolean;
+  /** Remaining ms until its weapon may strike again. */
+  weaponCooldownMs: number;
+  /** Ms left kneeling; undefined while up and fighting. See COMPANIONS. */
+  downedMs?: number;
+  /** Ms until this companion may float another kill quote. */
+  quoteCooldownMs: number;
+  equipment: {
+    /** Never empty — a companion always fights with something. */
+    weapon: Equipment;
+    head: Equipment | null;
+    chest: Equipment | null;
+  };
+};
+
+/**
+ * The pending SPARE-or-KILL verdict while `phase === "choice"`: a spareable
+ * unique (`EnemyDef.spareable`) was beaten to 0 hp and kneels awaiting the
+ * player's call (`resolveChoice`). `damage`/`crit` remember the withheld
+ * killing blow so an execution books it exactly as it landed.
+ */
+export type ChoiceState = {
+  enemyId: number;
+  defId: string;
+  damage: number;
+  crit: boolean;
+};
+
 export type Enemy = {
   id: number;
   /** Key into ENEMY_DEFS (hp/speed/damage/AI live on the def). */
@@ -379,6 +440,13 @@ export type Projectile = {
   /** Enemy ids already struck by this shot, so a piercing round never bills
    * the same body twice while passing through it. */
   hitIds?: number[];
+  /**
+   * The COMPANION that fired this shot (a `Companion.id`) — carried so a
+   * kill downstream can float its quote (see maybeCompanionQuote), and so
+   * the hit skips the hero's accuracy roll (companions never miss; they
+   * have no DEXTERITY to earn it back with). Absent on the hero's shots.
+   */
+  companionId?: number;
   /** The firing weapon's crit-damage multiplier (see `weaponCritMult`) —
    * carried so the hit resolves with the cadence-weighted crit. Absent =
    * the global `STATS.critMultiplier`. */
@@ -523,7 +591,13 @@ export type DialogueState = {
      * first discovered. `levelId` keys the level whose `merchant` def carries
      * the greeting (each level's trader has his own story for being there).
      */
-    | { kind: "merchant"; levelId: string };
+    | { kind: "merchant"; levelId: string }
+    /**
+     * A spared figure's joining scene — the thanks, the life owed, the
+     * promise to follow — played the moment the SPARE verdict lands. `defId`
+     * keys COMPANION_DEFS (its `joinWords` pages).
+     */
+    | { kind: "companionJoin"; defId: string };
   /** Index of the page currently on screen. */
   page: number;
 };
@@ -756,6 +830,26 @@ export type GameEvent =
    * `EnemyDef.apparition`). The app sparkles it out at `pos`.
    */
   | { type: "apparitionVanished"; pos: Vec2; defId: string }
+  /**
+   * A spareable unique was beaten to 0 hp and the run paused into the
+   * `choice` phase: the player must SPARE it (it joins the party) or KILL it
+   * (the withheld killing blow lands). The app raises the verdict overlay.
+   */
+  | { type: "spareOffered"; defId: string; pos: Vec2 }
+  /** A spared unique joined the party as a companion (`defId` keys
+   * COMPANION_DEFS). The app can toast the recruitment. */
+  | { type: "companionJoined"; defId: string; pos: Vec2 }
+  /** A companion was beaten down (0 hp): it kneels out of the fight until
+   * `COMPANIONS.reviveMs` runs out. Its aura goes silent meanwhile. */
+  | { type: "companionDowned"; defId: string; pos: Vec2 }
+  /** A downed companion got back up (at `COMPANIONS.reviveHpFraction`). */
+  | { type: "companionRevived"; defId: string; pos: Vec2 }
+  /**
+   * A companion's kill earned one of its def's `killQuotes`: the app floats
+   * `text` above the companion at `pos` — banter, not a dialogue scene, so
+   * the run never pauses for it.
+   */
+  | { type: "companionQuote"; defId: string; text: string; pos: Vec2 }
   | { type: "victory" }
   | { type: "defeat" };
 
@@ -832,6 +926,20 @@ export type Loadout = {
   /** The purse — merchant coins ride along between levels. Optional so
    * loadouts banked before the economy shipped load as an empty purse. */
   coins?: number;
+  /**
+   * The recruited party rides along between levels: each companion's def and
+   * worn equipment (they arrive rested — hp re-derives from the carried
+   * level on apply). Optional so loadouts banked before companions shipped
+   * load as an empty party.
+   */
+  companions?: {
+    defId: string;
+    equipment: {
+      weapon: Equipment;
+      head: Equipment | null;
+      chest: Equipment | null;
+    };
+  }[];
 };
 
 /** Static facts about the running level, snapshotted from its LevelDef. */
@@ -903,6 +1011,15 @@ export type GameState = {
   landmarks: Landmark[];
   /** The running conversation while `phase === "dialogue"`; null otherwise. */
   dialogue: DialogueState | null;
+  /** The pending SPARE-or-KILL verdict while `phase === "choice"`. */
+  choice: ChoiceState | null;
+  /** The recruited party, in join order (see companions.ts). */
+  companions: Companion[];
+  /**
+   * Which companion's equip screen is open while `phase === "companion"`
+   * (a `Companion.id`); null otherwise.
+   */
+  companionFocus: number | null;
   /** Collected story items (STORY_ITEM_DEFS ids) — keys, dossiers, the lot. */
   storyItems: string[];
   /**

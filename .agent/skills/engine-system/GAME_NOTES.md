@@ -202,6 +202,29 @@ sequel truncates this file to a stub and rebuilds it as its own systems land.
   `weapon-system` (stat checker + arsenal sheet). App-side permanence
   (keepsake stash, hardcore death) lives entirely in website progress.ts —
   the engine never learns hardcore exists.
+- **Companions & the SPARE-or-KILL verdict (2026-07, the rift's legends):** an
+  ALLY who fights is its own state slice (`state.companions`, companions.ts)
+  stepped right after `stepEnemies` — never an Enemy, so combat/loot stay
+  player-vs-horde (the merchant precedent, but armed). Who a spared unique
+  becomes is a defs catalog (`defs/companions.ts`: sprite, signature weapon,
+  aura, joinWords, killQuotes) wired from the enemy def by
+  `EnemyDef.spareable`; the verdict is a `choice` GamePhase entered by an
+  interception in `hitEnemy`'s 0-hp path (enemy parked at 1 hp, killing blow
+  remembered in `state.choice`, untouchable via a pending-choice guard), and
+  `resolveChoice` lands it — the KILL branch reuses `killEnemy`, extracted
+  from hitEnemy for exactly this. Companion shots ride the ordinary
+  projectile pass tagged `companionId` (kill-quote attribution = compare
+  `stats.kills` around the hit; companions skip the accuracy roll like
+  abilities). Auras are read at the roll site (`magicFindBonus` in items.ts
+  scaling `rollTier`'s chances), silent while the companion is DOWNED —
+  companions kneel and self-revive rather than die. The party rides
+  `Loadout.companions`; the app-side panel is tap-to-equip (slot subset:
+  weapon/head/chest), and a NEW GamePhase needs a `SAVE_VERSION` bump in
+  website saved-run.ts (old snapshots lack the new state fields). Gotcha:
+  never call an `onClose` mutator during a React render — the hud snapshot
+  lags the engine phase by a frame, so a stale panel must render null, not
+  self-close. Fixtures: `test_spareable`/`test_companion`; suite:
+  `tests/engine/companion_test.ts`.
 - **Level-scaled armor (2026-07, armor revamp):** armor is four body slots
   (`ArmorSlot`, `ARMOR_SLOTS`) whose worn pieces sum flat armor points into a
   reduction judged against the ATTACKER's level (`armorReduction`, config

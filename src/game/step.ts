@@ -45,6 +45,7 @@ import {
   STATS,
   WEAPON,
 } from "./config.ts";
+import { maybeCompanionQuote, stepCompanions } from "./companions.ts";
 import { stepAsteroids, stepWells } from "./hazards.ts";
 import { spawnEnemy } from "./create.ts";
 import { abilityDef } from "./defs/abilities.ts";
@@ -163,6 +164,9 @@ export function step(state: GameState, input: GameInput, dtMs: number): void {
   stepAbilities(state, dt, dtMs);
   stepProjectiles(state, dt, dtMs);
   stepEnemies(state, dt, dtMs);
+  // The party acts on the tick's final enemy positions: regroup, fight,
+  // soak contact blows, stand back up (see companions.ts).
+  stepCompanions(state, dt, dtMs);
   // Environmental hazards act on this tick's positions, after everyone has
   // moved: the wells drag (and devour), the asteroids fly (and strike).
   stepWells(state, dt, dtMs);
@@ -903,10 +907,23 @@ function stepProjectiles(state: GameState, dt: number, dtMs: number): void {
       survivors.push(projectile);
       continue;
     }
+    // A companion's shot never misses (no DEXTERITY to earn accuracy back
+    // with — see Projectile.companionId); the hero's rolls as always. Kills
+    // by a tagged shot may float the shooter's quote.
+    const killsBefore = state.stats.kills;
     hitEnemy(state, hit, projectile.damage, projectile.weaponClass, {
-      rollAccuracy: true,
+      rollAccuracy: projectile.companionId === undefined,
       critMult: projectile.critMult,
     });
+    if (
+      projectile.companionId !== undefined &&
+      state.stats.kills > killsBefore
+    ) {
+      const shooter = state.companions.find(
+        (c) => c.id === projectile.companionId,
+      );
+      if (shooter) maybeCompanionQuote(state, shooter);
+    }
     // Chain lightning: the first body grounds the bolt, and the current
     // leaps on to the nearest fresh foes in range — each leap softened by
     // `chainDamageFrac` and always connecting (the arc found its own path).

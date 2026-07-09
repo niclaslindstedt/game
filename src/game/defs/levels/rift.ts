@@ -120,6 +120,9 @@ export const THE_RIFT: LevelDef = {
     { enemy: "amelia_earhart", at: { x: 1500, y: 1050 } },
     { enemy: "the_king", at: { x: 1800, y: 850 } },
     { enemy: "grigori_rasputin", at: { x: 2150, y: 700 } },
+    // Folklore's missing: LUCKY guards his pot off the main road — a detour
+    // reward. Spare him for the magic-find aura, or kill him for the clover.
+    { enemy: "lucky", at: { x: 1150, y: 1280 } },
   ],
   // The rift pours for ~5.7 minutes, a touch over Mars — this is level 4.
   waves: {
@@ -194,7 +197,8 @@ export const THE_RIFT: LevelDef = {
       "legionary_sandals",
       "sabatons",
       "stardust_charm",
-      "lucky_clover",
+      // (The LUCKY CLOVER is LUCKY's signature drop now — kill him for it,
+      // or spare him and take the magic-find aura instead.)
       "crystal_orb",
       "grimoire",
       "enchanted_ring",

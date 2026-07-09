@@ -401,6 +401,17 @@ function migrateLoadout(loadout: Loadout): Loadout {
       bag: fix(loadout.equipment.bag ?? null),
     },
     inventory: loadout.inventory.map(fix),
+    // The party's kit adopts like the hero's; a companion whose banked weapon
+    // is unresolvable simply re-arms from its def on apply (arrival.ts mints
+    // the signature piece when the carried weapon is missing).
+    companions: (loadout.companions ?? []).map((companion) => ({
+      ...companion,
+      equipment: {
+        weapon: fix(companion.equipment.weapon) as Equipment,
+        head: fix(companion.equipment.head),
+        chest: fix(companion.equipment.chest),
+      },
+    })),
   };
 }
 
