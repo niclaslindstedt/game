@@ -55,7 +55,9 @@ describe("crit power", () => {
 
   it("rides the blow's roll out as critPower on a crit", () => {
     const state = startGame();
-    state.enemies = [makeEnemy({ pos: { x: 500, y: 500 }, hp: 100, maxHp: 100 })];
+    state.enemies = [
+      makeEnemy({ pos: { x: 500, y: 500 }, hp: 100, maxHp: 100 }),
+    ];
     state.rng = () => 0.001; // force the crit roll (below base crit chance)
     hitEnemy(state, state.enemies[0]!, 10, "melee", {
       critMult: 2,
@@ -67,7 +69,9 @@ describe("crit power", () => {
 
   it("omits critPower when the blow is not a crit", () => {
     const state = startGame();
-    state.enemies = [makeEnemy({ pos: { x: 500, y: 500 }, hp: 100, maxHp: 100 })];
+    state.enemies = [
+      makeEnemy({ pos: { x: 500, y: 500 }, hp: 100, maxHp: 100 }),
+    ];
     state.rng = () => 0.99; // no crit
     hitEnemy(state, state.enemies[0]!, 10, "melee", {
       critMult: 2,
