@@ -58,6 +58,7 @@ export function extractLoadout(state: GameState): Loadout {
       weapon: copyPiece(player.equipment.weapon) as Equipment,
       suit: copyPiece(player.equipment.suit),
       charm: copyPiece(player.equipment.charm),
+      bag: copyPiece(player.equipment.bag),
     },
     inventory: player.inventory.map(copyPiece),
     heldAbilities: [...player.heldAbilities],
@@ -90,9 +91,12 @@ export function applyLoadout(state: GameState, loadout: Loadout): void {
   if (weapon) player.equipment.weapon = weapon;
   player.equipment.suit = mint(loadout.equipment.suit);
   player.equipment.charm = mint(loadout.equipment.charm);
+  // The worn bag must be restored BEFORE the carry is sized — it is part of
+  // what `inventoryCapacity` counts (older saves without a bag mint null).
+  player.equipment.bag = mint(loadout.equipment.bag ?? null);
 
-  // The bag re-sizes to the carried STRENGTH, then refills in order;
-  // anything past the capacity (shrunken saves) stays behind.
+  // The bag re-sizes to the carried STRENGTH and worn bag, then refills in
+  // order; anything past the capacity (shrunken saves) stays behind.
   player.inventory = new Array<Equipment | null>(inventoryCapacity(state))
     .fill(null)
     .map((_, i) => mint(loadout.inventory[i] ?? null));
@@ -229,6 +233,8 @@ export function deriveArrivalLoadout(
       weapon: regularPiece(weaponId, "weapon", weaponDef(weaponId).durability),
       suit: suitId ? regularPiece(suitId, "suit") : null,
       charm: charmId ? regularPiece(charmId, "charm") : null,
+      // No stand-in bag: the derived arrival kit leans on the STRENGTH floor.
+      bag: null,
     },
     inventory: [],
     heldAbilities: previous.loot.abilityPool.slice(0, ARRIVAL.heldAbilities),

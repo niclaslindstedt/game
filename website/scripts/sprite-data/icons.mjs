@@ -293,6 +293,22 @@ const SPRITES = {
     "............",
     "............",
   ],
+  // The starter BAG: a leather satchel — a top carry handle over a rounded
+  // body, a brass clasp down the middle, right and bottom edges shaded.
+  icon_bag: [
+    "....OOOO....",
+    "...OB..BO...",
+    "..OB....BO..",
+    ".OOOOOOOOOO.",
+    ".OBBBooBBEO.",
+    ".OBBBooBBEO.",
+    ".OBBBBBBBEO.",
+    ".OBBBBBBBEO.",
+    ".OBBBBBBBEO.",
+    ".OBEEEEEEEO.",
+    ".OOOOOOOOOO.",
+    "............",
+  ],
   // ---- The base weapon roster (Diablo-style bases, 5 per level) -----------
   // SPACEZ HQ: a shipping desk's yellow snap-blade knife.
   icon_box_cutter: [

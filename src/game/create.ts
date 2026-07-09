@@ -269,6 +269,9 @@ export function createGame(
         },
         suit: null,
         charm: null,
+        // No bag worn to start — the base carry is all the hero has until he
+        // loots one (see the BAG gear + inventoryCapacity).
+        bag: null,
       },
       // The bag starts at its STRENGTH-0 floor; allocating STRENGTH grows it
       // (see inventoryCapacity / syncInventoryCapacity).

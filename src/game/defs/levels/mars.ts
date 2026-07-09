@@ -239,7 +239,7 @@ export const MARS: LevelDef = {
       "arc_projector",
       "gravity_maul",
     ],
-    gearPool: ["suit_plating", "pressure_plating", "red_dust_charm"],
+    gearPool: ["suit_plating", "pressure_plating", "red_dust_charm", "bag"],
     abilityPool: ["fire_orbs", "storm_cell", "stasis_field", "item_magnet"],
     // The CYBER KATANA arrives early at a kill discovered in play — the
     // run's signature blade, same cadence as the moon's blade.

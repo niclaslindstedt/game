@@ -164,6 +164,7 @@ export const THE_RIFT: LevelDef = {
       "grimoire",
       "enchanted_ring",
       "dragonscale_cloak",
+      "bag",
     ],
     abilityPool: ["fire_orbs", "storm_cell", "stasis_field", "item_magnet"],
     // The VOID WAND arrives early at a kill discovered in play — the level's

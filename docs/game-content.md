@@ -121,6 +121,14 @@ level (config `LOOT.tierUnlockMlvl`), and every drop carries an item level
 near its killer's that sizes its affixes — see the `weapon-system` skill
 for the full economy and its tuning tools.
 
+Alongside weapons, the hero wears a **weapon, a suit, a charm, and a bag**
+(the four equip slots). The **BAG** is a gear piece that widens the carry
+by two cells while worn (`GearDef.bagSlots`, on top of the STRENGTH-scaled
+floor); it drops from every level's gear pool and is the first of a family —
+roomier bags arrive later as their own defs. The character modal keeps the
+stat sheet tucked behind the portrait (hover or tap it) so the bag grid
+owns the screen.
+
 What the campaign _does_ persist is **completion**, on-device and per
 difficulty (`website/src/game/progress.ts`): clearing a level records it, and
 the victory splash offers **NEXT LEVEL** (advancing along `LEVEL_ORDER`

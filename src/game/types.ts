@@ -68,7 +68,7 @@ export type ArmorGrade = "green" | "yellow" | "red";
  */
 export type Tier = "regular" | "magic" | "rare" | "unique" | "legendary";
 
-export type EquipSlot = "weapon" | "suit" | "charm";
+export type EquipSlot = "weapon" | "suit" | "charm" | "bag";
 
 /** One rolled bonus on a magic+ item. Higher tiers roll more of them. */
 export type Affix =
@@ -177,6 +177,12 @@ export type Player = {
     weapon: Equipment;
     suit: Equipment | null;
     charm: Equipment | null;
+    /**
+     * A worn BAG that widens the carry (its `GearDef.bagSlots` add cells on
+     * top of the STRENGTH-scaled floor — see `inventoryCapacity`). Null = no
+     * bag; the base bag is all the hero has. More bag types arrive later.
+     */
+    bag: Equipment | null;
   };
   /** Fixed-size bag; `null` cells are empty. */
   inventory: (Equipment | null)[];
@@ -649,6 +655,7 @@ export type Loadout = {
     weapon: Equipment;
     suit: Equipment | null;
     charm: Equipment | null;
+    bag: Equipment | null;
   };
   inventory: (Equipment | null)[];
   /** Banked ability pickups (ABILITY_DEFS ids). */

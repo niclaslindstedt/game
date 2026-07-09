@@ -180,7 +180,7 @@
     "h": 48
   },
   "arrow": {
-    "x": 197,
+    "x": 210,
     "y": 893,
     "w": 8,
     "h": 8
@@ -228,7 +228,7 @@
     "h": 12
   },
   "bolt": {
-    "x": 206,
+    "x": 219,
     "y": 893,
     "w": 8,
     "h": 8
@@ -276,7 +276,7 @@
     "h": 24
   },
   "cable": {
-    "x": 125,
+    "x": 134,
     "y": 906,
     "w": 14,
     "h": 5
@@ -360,7 +360,7 @@
     "h": 16
   },
   "dart": {
-    "x": 215,
+    "x": 228,
     "y": 893,
     "w": 8,
     "h": 8
@@ -510,7 +510,7 @@
     "h": 16
   },
   "fireball": {
-    "x": 224,
+    "x": 237,
     "y": 893,
     "w": 8,
     "h": 8
@@ -552,7 +552,7 @@
     "h": 16
   },
   "glitch": {
-    "x": 233,
+    "x": 246,
     "y": 893,
     "w": 8,
     "h": 8
@@ -863,512 +863,518 @@
     "w": 12,
     "h": 12
   },
-  "icon_baton": {
+  "icon_bag": {
     "x": 213,
     "y": 824,
     "w": 12,
     "h": 12
   },
-  "icon_beard": {
+  "icon_baton": {
     "x": 226,
     "y": 824,
     "w": 12,
     "h": 12
   },
-  "icon_blaster": {
+  "icon_beard": {
     "x": 239,
     "y": 824,
     "w": 12,
     "h": 12
   },
-  "icon_blue_screen": {
+  "icon_blaster": {
     "x": 1,
+    "y": 841,
+    "w": 12,
+    "h": 12
+  },
+  "icon_blue_screen": {
+    "x": 14,
     "y": 841,
     "w": 12,
     "h": 12
   },
   "icon_blueprint": {
-    "x": 14,
+    "x": 27,
     "y": 841,
     "w": 12,
     "h": 12
   },
   "icon_blunderbuss": {
-    "x": 27,
+    "x": 40,
     "y": 841,
     "w": 12,
     "h": 12
   },
   "icon_box_cutter": {
-    "x": 40,
+    "x": 53,
     "y": 841,
     "w": 12,
     "h": 12
   },
   "icon_charm": {
-    "x": 53,
+    "x": 66,
     "y": 841,
     "w": 12,
     "h": 12
   },
   "icon_clover": {
-    "x": 66,
+    "x": 79,
     "y": 841,
     "w": 12,
     "h": 12
   },
   "icon_combat_knife": {
-    "x": 79,
+    "x": 92,
     "y": 841,
     "w": 12,
     "h": 12
   },
   "icon_contrarian_dagger": {
-    "x": 92,
+    "x": 105,
     "y": 841,
     "w": 12,
     "h": 12
   },
   "icon_core_drill": {
-    "x": 105,
+    "x": 118,
     "y": 841,
     "w": 12,
     "h": 12
   },
   "icon_corelog": {
-    "x": 118,
+    "x": 131,
     "y": 841,
     "w": 12,
     "h": 12
   },
   "icon_crystal_orb": {
-    "x": 131,
+    "x": 144,
     "y": 841,
     "w": 12,
     "h": 12
   },
   "icon_cyber_katana": {
-    "x": 144,
+    "x": 157,
     "y": 841,
     "w": 12,
     "h": 12
   },
   "icon_dossier": {
-    "x": 157,
+    "x": 170,
     "y": 841,
     "w": 12,
     "h": 12
   },
   "icon_dragonscale_cloak": {
-    "x": 170,
+    "x": 183,
     "y": 841,
     "w": 12,
     "h": 12
   },
   "icon_enchanted_ring": {
-    "x": 183,
+    "x": 196,
     "y": 841,
     "w": 12,
     "h": 12
   },
   "icon_executioners_axe": {
-    "x": 196,
+    "x": 209,
     "y": 841,
     "w": 12,
     "h": 12
   },
   "icon_fire_orbs": {
-    "x": 209,
+    "x": 222,
     "y": 841,
     "w": 12,
     "h": 12
   },
   "icon_flare_gun": {
-    "x": 222,
+    "x": 235,
     "y": 841,
     "w": 12,
     "h": 12
   },
   "icon_floor_sign": {
-    "x": 235,
-    "y": 841,
+    "x": 1,
+    "y": 854,
     "w": 12,
     "h": 12
   },
   "icon_geiger_wand": {
-    "x": 1,
+    "x": 14,
     "y": 854,
     "w": 12,
     "h": 12
   },
   "icon_geology_hammer": {
-    "x": 14,
+    "x": 27,
     "y": 854,
     "w": 12,
     "h": 12
   },
   "icon_gladius": {
-    "x": 27,
+    "x": 40,
     "y": 854,
     "w": 12,
     "h": 12
   },
   "icon_goggles": {
-    "x": 40,
+    "x": 53,
     "y": 854,
     "w": 12,
     "h": 12
   },
   "icon_golden_stapler": {
-    "x": 53,
+    "x": 66,
     "y": 854,
     "w": 12,
     "h": 12
   },
   "icon_gravity_maul": {
-    "x": 66,
+    "x": 79,
     "y": 854,
     "w": 12,
     "h": 12
   },
   "icon_grimoire": {
-    "x": 79,
+    "x": 92,
     "y": 854,
     "w": 12,
     "h": 12
   },
   "icon_hairy_wand": {
-    "x": 92,
+    "x": 105,
     "y": 854,
     "w": 12,
     "h": 12
   },
   "icon_keycard": {
-    "x": 105,
+    "x": 118,
     "y": 854,
     "w": 12,
     "h": 12
   },
   "icon_keycard_blue": {
-    "x": 118,
+    "x": 131,
     "y": 854,
     "w": 12,
     "h": 12
   },
   "icon_keycard_green": {
-    "x": 131,
+    "x": 144,
     "y": 854,
     "w": 12,
     "h": 12
   },
   "icon_keycard_red": {
-    "x": 144,
+    "x": 157,
     "y": 854,
     "w": 12,
     "h": 12
   },
   "icon_knuckles": {
-    "x": 157,
+    "x": 170,
     "y": 854,
     "w": 12,
     "h": 12
   },
   "icon_lab_coat": {
-    "x": 170,
+    "x": 183,
     "y": 854,
     "w": 12,
     "h": 12
   },
   "icon_ledger": {
-    "x": 183,
+    "x": 196,
     "y": 854,
     "w": 12,
     "h": 12
   },
   "icon_log": {
-    "x": 196,
+    "x": 209,
     "y": 854,
     "w": 12,
     "h": 12
   },
   "icon_longbow": {
-    "x": 209,
+    "x": 222,
     "y": 854,
     "w": 12,
     "h": 12
   },
   "icon_lunar_wrench": {
-    "x": 222,
+    "x": 235,
     "y": 854,
     "w": 12,
     "h": 12
   },
   "icon_machete": {
-    "x": 235,
-    "y": 854,
+    "x": 1,
+    "y": 867,
     "w": 12,
     "h": 12
   },
   "icon_magnet": {
-    "x": 1,
+    "x": 14,
     "y": 867,
     "w": 12,
     "h": 12
   },
   "icon_manifest": {
-    "x": 14,
+    "x": 27,
     "y": 867,
     "w": 12,
     "h": 12
   },
   "icon_medieval_sword": {
-    "x": 27,
+    "x": 40,
     "y": 867,
     "w": 12,
     "h": 12
   },
   "icon_moons_blade": {
-    "x": 40,
+    "x": 53,
     "y": 867,
     "w": 12,
     "h": 12
   },
   "icon_nine_mm": {
-    "x": 53,
+    "x": 66,
     "y": 867,
     "w": 12,
     "h": 12
   },
   "icon_not_a_flamethrower": {
-    "x": 66,
+    "x": 79,
     "y": 867,
     "w": 12,
     "h": 12
   },
   "icon_notes": {
-    "x": 79,
+    "x": 92,
     "y": 867,
     "w": 12,
     "h": 12
   },
   "icon_nuke": {
-    "x": 92,
+    "x": 105,
     "y": 867,
     "w": 12,
     "h": 12
   },
   "icon_orgchart": {
-    "x": 105,
+    "x": 118,
     "y": 867,
     "w": 12,
     "h": 12
   },
   "icon_overclocked_laser": {
-    "x": 118,
+    "x": 131,
     "y": 867,
     "w": 12,
     "h": 12
   },
   "icon_parachute": {
-    "x": 131,
+    "x": 144,
     "y": 867,
     "w": 12,
     "h": 12
   },
   "icon_passage_chip": {
-    "x": 144,
+    "x": 157,
     "y": 867,
     "w": 12,
     "h": 12
   },
   "icon_plasma_blade": {
-    "x": 157,
+    "x": 170,
     "y": 867,
     "w": 12,
     "h": 12
   },
   "icon_plasma_cutter": {
-    "x": 170,
+    "x": 183,
     "y": 867,
     "w": 12,
     "h": 12
   },
   "icon_postmortem": {
-    "x": 183,
+    "x": 196,
     "y": 867,
     "w": 12,
     "h": 12
   },
   "icon_probe": {
-    "x": 196,
+    "x": 209,
     "y": 867,
     "w": 12,
     "h": 12
   },
   "icon_prompt_injector": {
-    "x": 209,
+    "x": 222,
     "y": 867,
     "w": 12,
     "h": 12
   },
   "icon_prototype_laser": {
-    "x": 222,
+    "x": 235,
     "y": 867,
     "w": 12,
     "h": 12
   },
   "icon_pump_shotgun": {
-    "x": 235,
-    "y": 867,
+    "x": 1,
+    "y": 880,
     "w": 12,
     "h": 12
   },
   "icon_putter": {
-    "x": 1,
+    "x": 14,
     "y": 880,
     "w": 12,
     "h": 12
   },
   "icon_railgun": {
-    "x": 14,
+    "x": 27,
     "y": 880,
     "w": 12,
     "h": 12
   },
   "icon_report": {
-    "x": 27,
+    "x": 40,
     "y": 880,
     "w": 12,
     "h": 12
   },
   "icon_retro_raygun": {
-    "x": 40,
+    "x": 53,
     "y": 880,
     "w": 12,
     "h": 12
   },
   "icon_riot_taser": {
-    "x": 53,
+    "x": 66,
     "y": 880,
     "w": 12,
     "h": 12
   },
   "icon_search_bar": {
-    "x": 66,
-    "y": 880,
-    "w": 12,
-    "h": 12
-  },
-  "icon_service_revolver": {
     "x": 79,
     "y": 880,
     "w": 12,
     "h": 12
   },
-  "icon_singularity_cannon": {
+  "icon_service_revolver": {
     "x": 92,
     "y": 880,
     "w": 12,
     "h": 12
   },
-  "icon_smart_pistol": {
+  "icon_singularity_cannon": {
     "x": 105,
     "y": 880,
     "w": 12,
     "h": 12
   },
-  "icon_sorcerers_staff": {
+  "icon_smart_pistol": {
     "x": 118,
     "y": 880,
     "w": 12,
     "h": 12
   },
-  "icon_stasis": {
+  "icon_sorcerers_staff": {
     "x": 131,
     "y": 880,
     "w": 12,
     "h": 12
   },
-  "icon_stat_dexterity": {
+  "icon_stasis": {
     "x": 144,
     "y": 880,
     "w": 12,
     "h": 12
   },
-  "icon_stat_intelligence": {
+  "icon_stat_dexterity": {
     "x": 157,
     "y": 880,
     "w": 12,
     "h": 12
   },
-  "icon_stat_luck": {
+  "icon_stat_intelligence": {
     "x": 170,
     "y": 880,
     "w": 12,
     "h": 12
   },
-  "icon_stat_speed": {
+  "icon_stat_luck": {
     "x": 183,
     "y": 880,
     "w": 12,
     "h": 12
   },
-  "icon_stat_stamina": {
+  "icon_stat_speed": {
     "x": 196,
     "y": 880,
     "w": 12,
     "h": 12
   },
-  "icon_stat_strength": {
+  "icon_stat_stamina": {
     "x": 209,
     "y": 880,
     "w": 12,
     "h": 12
   },
-  "icon_stick": {
+  "icon_stat_strength": {
     "x": 222,
     "y": 880,
     "w": 12,
     "h": 12
   },
-  "icon_storm": {
+  "icon_stick": {
     "x": 235,
     "y": 880,
     "w": 12,
     "h": 12
   },
-  "icon_suit": {
+  "icon_storm": {
     "x": 1,
     "y": 893,
     "w": 12,
     "h": 12
   },
-  "icon_surplus_carbine": {
+  "icon_suit": {
     "x": 14,
     "y": 893,
     "w": 12,
     "h": 12
   },
-  "icon_surveyors_pick": {
+  "icon_surplus_carbine": {
     "x": 27,
     "y": 893,
     "w": 12,
     "h": 12
   },
-  "icon_tablet": {
+  "icon_surveyors_pick": {
     "x": 40,
     "y": 893,
     "w": 12,
     "h": 12
   },
-  "icon_tesla_coil": {
+  "icon_tablet": {
     "x": 53,
     "y": 893,
     "w": 12,
     "h": 12
   },
-  "icon_void_wand": {
+  "icon_tesla_coil": {
     "x": 66,
+    "y": 893,
+    "w": 12,
+    "h": 12
+  },
+  "icon_void_wand": {
+    "x": 79,
     "y": 893,
     "w": 12,
     "h": 12
@@ -1530,7 +1536,7 @@
     "h": 32
   },
   "medkit": {
-    "x": 79,
+    "x": 92,
     "y": 893,
     "w": 12,
     "h": 12
@@ -1782,19 +1788,19 @@
     "h": 24
   },
   "orb": {
-    "x": 242,
-    "y": 893,
+    "x": 1,
+    "y": 906,
     "w": 8,
     "h": 8
   },
   "papers": {
-    "x": 1,
+    "x": 10,
     "y": 906,
     "w": 12,
     "h": 8
   },
   "pellet": {
-    "x": 14,
+    "x": 23,
     "y": 906,
     "w": 8,
     "h": 8
@@ -1836,7 +1842,7 @@
     "h": 24
   },
   "plant": {
-    "x": 92,
+    "x": 105,
     "y": 893,
     "w": 12,
     "h": 12
@@ -1932,13 +1938,13 @@
     "h": 24
   },
   "rail": {
-    "x": 23,
+    "x": 32,
     "y": 906,
     "w": 8,
     "h": 8
   },
   "ray": {
-    "x": 32,
+    "x": 41,
     "y": 906,
     "w": 8,
     "h": 8
@@ -1950,7 +1956,7 @@
     "h": 16
   },
   "repair": {
-    "x": 105,
+    "x": 118,
     "y": 893,
     "w": 12,
     "h": 12
@@ -1968,13 +1974,13 @@
     "h": 16
   },
   "ring": {
-    "x": 41,
+    "x": 50,
     "y": 906,
     "w": 8,
     "h": 8
   },
   "rock": {
-    "x": 118,
+    "x": 131,
     "y": 893,
     "w": 18,
     "h": 12
@@ -2118,7 +2124,7 @@
     "h": 16
   },
   "shadow": {
-    "x": 140,
+    "x": 149,
     "y": 906,
     "w": 12,
     "h": 4
@@ -2130,7 +2136,7 @@
     "h": 24
   },
   "singularity": {
-    "x": 50,
+    "x": 59,
     "y": 906,
     "w": 8,
     "h": 8
@@ -2154,31 +2160,31 @@
     "h": 16
   },
   "spark": {
-    "x": 59,
+    "x": 68,
     "y": 906,
     "w": 8,
     "h": 8
   },
   "sparks_0": {
-    "x": 137,
-    "y": 893,
-    "w": 12,
-    "h": 12
-  },
-  "sparks_1": {
     "x": 150,
     "y": 893,
     "w": 12,
     "h": 12
   },
+  "sparks_1": {
+    "x": 163,
+    "y": 893,
+    "w": 12,
+    "h": 12
+  },
   "stain": {
-    "x": 68,
+    "x": 77,
     "y": 906,
     "w": 12,
     "h": 8
   },
   "staple": {
-    "x": 81,
+    "x": 90,
     "y": 906,
     "w": 8,
     "h": 8
@@ -2220,7 +2226,7 @@
     "h": 32
   },
   "table": {
-    "x": 176,
+    "x": 189,
     "y": 893,
     "w": 20,
     "h": 10
@@ -2262,7 +2268,7 @@
     "h": 24
   },
   "tracks": {
-    "x": 90,
+    "x": 99,
     "y": 906,
     "w": 16,
     "h": 8
@@ -2298,7 +2304,7 @@
     "h": 16
   },
   "upgrade": {
-    "x": 163,
+    "x": 176,
     "y": 893,
     "w": 12,
     "h": 12
@@ -2322,7 +2328,7 @@
     "h": 16
   },
   "vial": {
-    "x": 107,
+    "x": 116,
     "y": 906,
     "w": 8,
     "h": 8
@@ -2454,7 +2460,7 @@
     "h": 16
   },
   "zap": {
-    "x": 116,
+    "x": 125,
     "y": 906,
     "w": 8,
     "h": 8

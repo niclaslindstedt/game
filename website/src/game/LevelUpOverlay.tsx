@@ -29,8 +29,13 @@ export function LevelUpOverlay({
   const [showInfo, setShowInfo] = useState(false);
   const points = state.player.pendingStatPoints;
   return (
-    <div className="game-overlay levelup-overlay">
-      <div className="levelup-box">
+    <div
+      className="game-overlay levelup-overlay"
+      // While the (i) breakdown is open a tap anywhere off the box closes it —
+      // the box swallows its own taps so a mis-tap between buttons never does.
+      onPointerDown={showInfo ? () => setShowInfo(false) : undefined}
+    >
+      <div className="levelup-box" onPointerDown={(e) => e.stopPropagation()}>
         <div className="levelup-header">
           <PixelText font={font} text="LEVEL UP!" scale={5} color="#ffd75e" />
           <button
@@ -63,7 +68,15 @@ export function LevelUpOverlay({
                     color="#ffd75e"
                   />
                 </div>
-                <PixelText font={font} text={info} scale={1} color="#c7ccd1" />
+                {info.map((line, i) => (
+                  <PixelText
+                    key={i}
+                    font={font}
+                    text={line}
+                    scale={1}
+                    color="#c7ccd1"
+                  />
+                ))}
               </div>
             ))}
           </div>

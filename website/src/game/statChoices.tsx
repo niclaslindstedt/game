@@ -15,49 +15,69 @@ export const STAT_CHOICES: {
   stat: StatName;
   label: string;
   blurb: string;
-  info: string;
+  /** The (i)-panel breakdown, pre-wrapped into short lines so it fits a
+   * vertical phone (PixelText draws one canvas per line, no auto-wrap). */
+  info: string[];
   icon: string;
 }[] = [
   {
     stat: "stamina",
     label: "STAMINA",
     blurb: "SPRINT + HP",
-    info: "DEEPER SPRINT POOL, SLOWER DRAIN & FASTER RECOVERY. ALSO RAISES MAX HP.",
+    info: [
+      "DEEPER SPRINT POOL, SLOWER",
+      "DRAIN & FASTER RECOVERY.",
+      "ALSO RAISES MAX HP.",
+    ],
     icon: "icon_stat_stamina",
   },
   {
     stat: "strength",
     label: "STRENGTH",
     blurb: "DAMAGE + BAG",
-    info: "MELEE & RANGED WEAPON DAMAGE. +1 BAG SLOT EACH.",
+    info: ["MELEE & RANGED WEAPON DAMAGE.", "+1 BAG SLOT EACH."],
     icon: "icon_stat_strength",
   },
   {
     stat: "dexterity",
     label: "DEXTERITY",
     blurb: "SPEED + HIT",
-    info: "FASTER MELEE & RANGED ATTACK SPEED, HIGHER HIT RATE (FEWER MISSES & ENEMY DODGES), MORE MELEE & RANGED CRITS, AND MORE DODGE.",
+    info: [
+      "FASTER MELEE & RANGED ATTACK",
+      "SPEED, HIGHER HIT RATE (FEWER",
+      "MISSES & ENEMY DODGES), MORE",
+      "MELEE & RANGED CRITS, AND",
+      "MORE DODGE.",
+    ],
     icon: "icon_stat_dexterity",
   },
   {
     stat: "intelligence",
     label: "INTELLECT",
     blurb: "MAGIC + AOE",
-    info: "MAGIC POWER & CRITS. LONGER RANGE & A BIGGER MELEE AOE CONE (HITS MORE).",
+    info: [
+      "MAGIC POWER & CRITS. LONGER",
+      "RANGE & A BIGGER MELEE AOE",
+      "CONE (HITS MORE).",
+    ],
     icon: "icon_stat_intelligence",
   },
   {
     stat: "speed",
     label: "SPEED",
     blurb: "MOVE SPEED",
-    info: "+8% MOVE SPEED EACH.",
+    info: ["+8% MOVE SPEED EACH."],
     icon: "icon_stat_speed",
   },
   {
     stat: "luck",
     label: "LUCK",
     blurb: "CRIT + LOOT",
-    info: "A LITTLE MORE CRIT & DODGE, DODGE ENEMY CRITS, MORE & BETTER LOOT.",
+    info: [
+      "A LITTLE MORE CRIT & DODGE,",
+      "DODGE ENEMY CRITS, MORE &",
+      "BETTER LOOT.",
+    ],
     icon: "icon_stat_luck",
   },
 ];
