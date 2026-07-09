@@ -1485,6 +1485,101 @@ export function scrapInferiorLoot(state: GameState): Equipment[] {
   return scrapped;
 }
 
+// ---- Auto-equip everything (the "optimize my gear" sweep) ----------------------
+
+/** The wearable slots the auto-equip sweep fills, in paperdoll order after the
+ * weapon: the four armor slots plus the charm and bag. */
+const GEAR_SLOTS: readonly Exclude<EquipSlot, "weapon">[] = [
+  ...ARMOR_SLOTS,
+  "charm",
+  "bag",
+];
+
+/**
+ * Plan the auto-equip sweep without mutating: the bag cell indices to equip so
+ * every slot ends up holding its best wearable piece. The weapon is decided
+ * first, on the build the hero plays right now (allocated STATS drive the melee
+ * vs magic choice through `weaponScore` — a STRENGTH hero lands a heavier melee
+ * blow, an INTELLIGENCE hero a stronger spell), then each gear slot takes the
+ * highest `gearScore` find that beats what's worn. Under-leveled banked finds,
+ * broken weapons, and passive trinkets (they pay out from the bag, so the charm
+ * slot is left free) are skipped — the same rule the pickup auto-equip follows.
+ * Every returned index points at a distinct piece in a distinct slot, so the
+ * cells stay valid as they are equipped one after another.
+ */
+function planAutoEquip(state: GameState): number[] {
+  const player = state.player;
+  const inv = player.inventory;
+  const plan: number[] = [];
+
+  // Weapon: the bag weapon that most out-scores what's held for this build.
+  let bestWeapon = -1;
+  let bestWeaponScore = weaponScore(state, player.equipment.weapon);
+  for (let i = 0; i < inv.length; i++) {
+    const item = inv[i];
+    if (!item || item.slot !== "weapon") continue;
+    if (item.durability !== undefined && item.durability <= 0) continue;
+    if (!meetsLevelReq(state, item)) continue;
+    const score = weaponScore(state, item);
+    if (score > bestWeaponScore) {
+      bestWeaponScore = score;
+      bestWeapon = i;
+    }
+  }
+  if (bestWeapon >= 0) plan.push(bestWeapon);
+
+  // Gear: the highest-worth wearable find for each body/charm/bag slot,
+  // provided it beats what that slot wears now (an empty slot takes anything).
+  for (const slot of GEAR_SLOTS) {
+    const current = player.equipment[slot];
+    let bestGear = -1;
+    let bestGearScore = current ? gearScore(current) : -Infinity;
+    for (let i = 0; i < inv.length; i++) {
+      const item = inv[i];
+      if (!item || item.slot !== slot) continue;
+      if (!meetsLevelReq(state, item)) continue;
+      // A passive trinket earns its bonus just by riding in the bag, so it is
+      // never worn — the charm slot stays open for an active piece.
+      if (isPassiveItem(item.defId)) continue;
+      const score = gearScore(item);
+      if (score > bestGearScore) {
+        bestGearScore = score;
+        bestGear = i;
+      }
+    }
+    if (bestGear >= 0) plan.push(bestGear);
+  }
+
+  return plan;
+}
+
+/**
+ * The AUTO-EQUIP sweep: wear the best piece the bag can offer in every slot at
+ * once. Weapons rank by the build-aware `weaponScore` (so the hero's stats pick
+ * melee, ranged, or magic for them), gear by `gearScore` (armor, HP, crit, and
+ * stat affixes — the health/armor the sweep maximizes). Each displaced piece
+ * swaps back into the bag via `equipFromInventory`, so nothing is destroyed.
+ * Returns how many slots actually changed, so the UI can stay quiet when the
+ * loadout was already optimal.
+ */
+export function autoEquipBest(state: GameState): number {
+  let changed = 0;
+  for (const index of planAutoEquip(state)) {
+    if (equipFromInventory(state, index)) changed++;
+  }
+  return changed;
+}
+
+/**
+ * How many slots the auto-equip sweep would improve right now, without touching
+ * a thing — the count the inventory reads to label the button and disable it on
+ * an already-optimal loadout. Mirrors `autoEquipBest` exactly (it plans the same
+ * swaps), so the badge never promises a change the sweep won't make.
+ */
+export function autoEquipUpgradeCount(state: GameState): number {
+  return planAutoEquip(state).length;
+}
+
 // ---- Durability -------------------------------------------------------------------
 
 /**

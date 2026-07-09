@@ -1125,6 +1125,38 @@ const SPRITES = {
     "....OO......",
     "............",
   ],
+  // UI action — DROP ALL: a steel waste bin with an overhanging lid, a top
+  // handle, and three vertical ribs. The inventory's "trash the junk" button.
+  icon_trash: [
+    "............",
+    "....OOOO....",
+    "..OOOOOOOO..",
+    "..OVVVVVVO..",
+    ".OOOOOOOOOO.",
+    "..OvbvbvbO..",
+    "..OvbvbvbO..",
+    "..OvbvbvbO..",
+    "..OvbvbvbO..",
+    "..OOOOOOOO..",
+    "............",
+    "............",
+  ],
+  // UI action — AUTO-EQUIP: two steel blades crossed in an X, gold guards and
+  // pommels at the hilts. The inventory's "optimize my gear" button.
+  icon_swords: [
+    "............",
+    "..VV....VV..",
+    "...VV..VV...",
+    "....VVVV....",
+    ".....VV.....",
+    "....VVVV....",
+    "...VV..VV...",
+    "..VV....VV..",
+    ".oooo..oooo.",
+    ".qq......qq.",
+    ".OO......OO.",
+    "............",
+  ],
   // The anti-grav unit: a ring of not-metal, hovering over its own glow.
   icon_antigrav: [
     "............",

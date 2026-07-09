@@ -232,7 +232,10 @@ run against synthetic fixtures with no shipped content (see
   player and ride the loadout between levels.
 - **`src/game/items.ts`** — equipment instances and the player-driven
   mutations the UI calls into: loot rolls, `equipFromInventory` /
-  `unequipToInventory` / `moveInventoryItem`, `allocateStat` (plus the
+  `unequipToInventory` / `moveInventoryItem`, the one-tap bag tools
+  (`autoEquipBest` — wear the best wearable piece in every slot at once,
+  weapons by the build-aware `weaponScore`; `scrapInferiorLoot` — cull every
+  outgrown find), `allocateStat` (plus the
   LEVEL TOKEN respec trio `beginRespec` / `deallocateStat` / `confirmRespec`),
   the derived
   stats (max hp — now STAMINA-scaled, class-aware crit chance

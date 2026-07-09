@@ -68,6 +68,8 @@ export {
   ARMOR_SLOTS,
   armorReduction,
   armorValueOf,
+  autoEquipBest,
+  autoEquipUpgradeCount,
   computeMaxHp,
   computeMaxStamina,
   dropChance,
