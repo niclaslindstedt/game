@@ -21,6 +21,8 @@ import {
   type TileSpec,
 } from "@game/core";
 
+import { formatCompact } from "@ui/lib/format-number.ts";
+
 import { spriteByName, type GameAssets, type Sprites } from "./assets.ts";
 import { TIER_COLORS } from "./tiers.ts";
 
@@ -548,7 +550,7 @@ export function drawEffects(
       const shake =
         crit && shakePhase < 1 ? Math.round(Math.sin(timeMs / 14) * 2) : 0;
       const scale = crit ? 2 : 1;
-      const text = String(effect.value ?? 0);
+      const text = formatCompact(effect.value ?? 0);
       const width = font.measure(text) * scale;
       ctx.globalAlpha = t > 0.7 ? 1 - (t - 0.7) / 0.3 : 1;
       font.draw(
