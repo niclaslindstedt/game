@@ -256,6 +256,17 @@ body {
   gap: 0.4rem;
 }
 
+/* The trailing HP/ST readout: a fixed-width, right-aligned slot so a 2-digit
+   value ("85") reserves the same room as a 3-digit one ("100"/"126"). Without
+   it the whole vitals panel widened and narrowed as the numbers changed
+   digits. Sized for three scale-2 digits (11 font px × 2 = 1.375rem). */
+.hud-stat-val {
+  min-width: 1.4rem;
+  display: flex;
+  justify-content: flex-end;
+  flex: none;
+}
+
 /* The clock and foe counter float over the play field, so they carry their
    own semi-transparent backdrop (matching the xp badge / avatar panels) to
    stay legible against the bright floor tiles. */

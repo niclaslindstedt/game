@@ -60,6 +60,7 @@ import {
   type StatName,
 } from "@game/core";
 
+import { formatCompact } from "@ui/lib/format-number.ts";
 import { PixelText } from "@ui/lib/PixelText.tsx";
 import type { PixelFont } from "@ui/lib/pixel-font.ts";
 
@@ -211,7 +212,7 @@ function itemLines(
     // sheet's derived combat stats.
     const dps = Math.round(weaponDps(state, item));
     lines.push({
-      text: `DPS ${dps}`,
+      text: `DPS ${formatCompact(dps)}`,
       color: "#7ef0c8",
       delta: eq ? compareChip(dps - Math.round(weaponDps(state, eq))) : null,
     });
@@ -224,7 +225,9 @@ function itemLines(
     const bonus = effective - def.damage;
     lines.push({
       text:
-        bonus > 0 ? `DAMAGE ${min}-${max} (+${bonus})` : `DAMAGE ${min}-${max}`,
+        bonus > 0
+          ? `DAMAGE ${formatCompact(min)}-${formatCompact(max)} (+${formatCompact(bonus)})`
+          : `DAMAGE ${formatCompact(min)}-${formatCompact(max)}`,
       delta: eq
         ? compareChip(effective - Math.round(weaponDamageFor(state, eq)))
         : null,
@@ -803,7 +806,7 @@ export function InventoryPanel({
                   <StatLine
                     font={font}
                     label="DMG"
-                    value={String(Math.round(weaponDamage(state)))}
+                    value={formatCompact(Math.round(weaponDamage(state)))}
                     color="#7ef0c8"
                     chip={
                       preview

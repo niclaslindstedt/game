@@ -223,12 +223,17 @@ export function hitEnemy(
   }
 
   state.stats.kills++;
+  // The kill's XP reward, resolved once so the same figure both credits the
+  // hero (grantXp below) and rides the event out to the app, which floats it
+  // off the corpse as rising blue combat text (WoW's "+42" xp popup).
+  const xpGain = def.xp ?? Math.round(enemy.maxHp * LEVELING.xpPerHp);
   state.events.push({
     type: "enemyKilled",
     pos: { ...enemy.pos },
     defId: enemy.defId,
     damage,
     crit,
+    xp: xpGain,
   });
 
   // A fallen elite or boss pins the level map where it went down.
@@ -243,7 +248,7 @@ export function hitEnemy(
   // continuously from the player's rolling output (see tickMenace).
   bankOverkill(state, damage, enemy.maxHp);
 
-  grantXp(state, def.xp ?? Math.round(enemy.maxHp * LEVELING.xpPerHp));
+  grantXp(state, xpGain);
 
   // The level's scripted opening drops: hand over every schedule entry this
   // kill has reached, in author order — the guaranteed weapon → powerup → item
