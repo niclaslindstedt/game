@@ -152,7 +152,8 @@ type Hud = {
   enemiesLeft: number;
   /** Current menace/rampage stage (0…MENACE.maxStage) driving the gauge. */
   menaceStage: number;
-  bagCount: number;
+  /** Free (empty) bag cells — shown on the avatar badge, red at 0. */
+  bagFree: number;
   /** True for a short window after the full bag turned away loot — pulses the
    * inventory button to nudge the player to open it and make room. */
   bagFullHint: boolean;
@@ -1199,6 +1200,9 @@ export function GameScreen({
 
         // Mirror the slow-moving values into React only when they change.
         const bagCount = state.player.inventory.filter(Boolean).length;
+        // Empty cells: the capacity (which grows with STRENGTH / a worn bag)
+        // minus what's carried — shown on the avatar badge, red at 0.
+        const bagFree = state.player.inventory.length - bagCount;
         const bagFullHint = state.stats.timeMs < bagFullHintUntilMs;
         const held = state.player.heldAbilities.join(",");
         // Only the *set* of running powerups mounts/unmounts slots; the ticking
@@ -1213,7 +1217,7 @@ export function GameScreen({
         const appearance = playerAppearance(state);
         const stage = menaceStage(state);
         const armor = armorInfo(state);
-        const key = `${state.phase}/${state.player.hp}/${Math.ceil(state.player.armor)}/${Math.ceil(state.player.stamina)}/${state.player.xp}/${state.player.level}/${state.player.pendingStatPoints}/${state.enemies.length}/${bagCount}/${bagFullHint ? 1 : 0}/${held}/${active}/${weapon.defId}/${weaponWear?.toFixed(2) ?? ""}/${appearance}/${stage}/${state.stats.kills}/${Math.floor(state.stats.timeMs / 1000)}`;
+        const key = `${state.phase}/${state.player.hp}/${Math.ceil(state.player.armor)}/${Math.ceil(state.player.stamina)}/${state.player.xp}/${state.player.level}/${state.player.pendingStatPoints}/${state.enemies.length}/${bagCount}/${bagFree}/${bagFullHint ? 1 : 0}/${held}/${active}/${weapon.defId}/${weaponWear?.toFixed(2) ?? ""}/${appearance}/${stage}/${state.stats.kills}/${Math.floor(state.stats.timeMs / 1000)}`;
         if (key !== lastHud) {
           lastHud = key;
           setHud({
@@ -1230,7 +1234,7 @@ export function GameScreen({
             xpToNext: state.player.xpToNext,
             enemiesLeft: state.enemies.length,
             menaceStage: stage,
-            bagCount,
+            bagFree,
             bagFullHint,
             heldAbilities: [...state.player.heldAbilities],
             activeAbilities: state.player.abilities.reduce<
@@ -1409,16 +1413,16 @@ export function GameScreen({
                     <img src={src} alt="" className="pixel-img avatar-img" />
                   ) : null;
                 })()}
-                {hud.bagCount > 0 && (
-                  <span className="avatar-badge">
-                    <PixelText
-                      font={font}
-                      text={String(hud.bagCount)}
-                      scale={1}
-                      color="#0b0d10"
-                    />
-                  </span>
-                )}
+                {/* Empty bag slots, always shown — dark on the white badge,
+                    flipping red the moment the bag is full (0). */}
+                <span className="avatar-badge">
+                  <PixelText
+                    font={font}
+                    text={String(hud.bagFree)}
+                    scale={1}
+                    color={hud.bagFree === 0 ? "#d83a3a" : "#0b0d10"}
+                  />
+                </span>
               </button>
               <div className="hud-vitals">
                 <div className="hud-stat-row">
