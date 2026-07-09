@@ -119,6 +119,7 @@ export {
   weaponDps,
   weaponRangeFor,
   rollWeaponDamage,
+  rollWeaponHit,
   weaponScore,
   weaponSweepHalfAngle,
   wearEquippedWeapon,

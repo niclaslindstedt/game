@@ -131,6 +131,11 @@ export function hitEnemy(
      * cadence-weighted `weaponCritMult` (quick blades crit light, slow
      * heavy hitters crit hard); abilities omit it and use the global. */
     critMult?: number;
+    /** Where this blow landed in the weapon's damage-variance band, in [0, 1]
+     * (see `rollWeaponHit`). Rides out on the hit event as `critPower` so the
+     * app can size a crit's popup by how strong it was. Omitted by sources with
+     * no variance (abilities). */
+    damageRoll?: number;
   },
 ): void {
   const def = enemyDef(enemy.defId);
@@ -187,6 +192,7 @@ export function hitEnemy(
       crit,
       damage,
       defId: enemy.defId,
+      critPower: crit ? opts?.damageRoll : undefined,
     });
     return;
   }
@@ -233,6 +239,7 @@ export function hitEnemy(
     defId: enemy.defId,
     damage,
     crit,
+    critPower: crit ? opts?.damageRoll : undefined,
     xp: xpGain,
   });
 
