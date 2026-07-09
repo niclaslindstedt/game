@@ -1198,7 +1198,7 @@ body {
   align-items: center;
   justify-content: center;
   gap: clamp(0.75rem, 3.5vh, 2rem);
-  overflow: hidden auto;
+  overflow: hidden;
   background: radial-gradient(ellipse at 50% 130%, #172030 0%, #0b0d10 65%);
   user-select: none;
   -webkit-user-select: none;
