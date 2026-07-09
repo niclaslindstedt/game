@@ -38,6 +38,7 @@ import {
   dismissIntro,
   enemyDef,
   equipFromInventory,
+  equipmentIcon,
   extractLoadout,
   LEVELS,
   levelDef,
@@ -98,6 +99,11 @@ import {
   PICKUP_TTL_MS,
   type PickupMessage,
 } from "./PickupFeed.tsx";
+import {
+  PickupModal,
+  PICKUP_CARD_TTL_MS,
+  type PickupCard,
+} from "./PickupModal.tsx";
 import { bestTime, recordRun } from "./highscores.ts";
 import {
   bankKeepsakesOnVictory,
@@ -447,6 +453,9 @@ export function GameScreen({
   // The lower-right pickup feed ("PICKED UP X"). Lines are appended as loot is
   // scooped and expire on individual PICKUP_TTL_MS timers (see the loop).
   const [pickups, setPickups] = useState<PickupMessage[]>([]);
+  // The framed pickup card ("PICKED UP <gear>") for bag gear — one at a time,
+  // the newest replacing the last, cleared on its own PICKUP_CARD_TTL_MS timer.
+  const [pickupCard, setPickupCard] = useState<PickupCard | null>(null);
   // Whether the in-HUD weapon switcher (tap the weapon slot / Q) is expanded.
   const [weaponMenuOpen, setWeaponMenuOpen] = useState(false);
   useEffect(() => {
@@ -536,6 +545,24 @@ export function GameScreen({
         setPickups((prev) => prev.filter((p) => p.id !== id));
       }, PICKUP_TTL_MS);
       pickupTimers.add(timer);
+    };
+
+    // The framed pickup card for bag gear: the newest find pops in and replaces
+    // whatever is showing (its id keys the mount, restarting the pop + spark),
+    // then clears itself after PICKUP_CARD_TTL_MS.
+    setPickupCard(null);
+    let pickupCardTimer: ReturnType<typeof setTimeout> | undefined;
+    let pickupCardSeq = 0;
+    const showPickupCard = (name: string, color: string, defId?: string) => {
+      const icon = defId
+        ? spriteDataUrl(assets.sprites, equipmentIcon(defId))
+        : undefined;
+      setPickupCard({ id: ++pickupCardSeq, icon, name, color });
+      if (pickupCardTimer) clearTimeout(pickupCardTimer);
+      pickupCardTimer = setTimeout(
+        () => setPickupCard(null),
+        PICKUP_CARD_TTL_MS,
+      );
     };
 
     // The run's music: the level theme rolls once the intro is dismissed and
@@ -1036,16 +1063,25 @@ export function GameScreen({
             });
             bagFullHintUntilMs = state.stats.timeMs + BAG_FULL_HINT_MS;
           }
-          // Loot and powerups announce themselves in the lower-right feed. Only
-          // SPECIAL items tint their name — magic/rare/… gear carries its tier
-          // color; ordinary (regular) loot stays neutral. Plot pieces glow gold.
+          // Bag gear (weapons + equipment) pops the framed pickup card, tinted
+          // to its rarity and carrying its icon — the "new and shiny" highlight.
+          // Loose pickups (medkits, arrows, repair kits, powerups) stay in the
+          // lower-corner feed; only special tiers tint their name there.
           if (event.type === "itemCollected" && event.name) {
-            pushPickup(
-              event.name,
-              event.tier && event.tier !== "regular"
-                ? TIER_COLORS[event.tier]
-                : undefined,
-            );
+            if (event.kind === "equipment") {
+              showPickupCard(
+                event.name,
+                event.tier ? TIER_COLORS[event.tier] : TIER_COLORS.regular,
+                event.defId,
+              );
+            } else {
+              pushPickup(
+                event.name,
+                event.tier && event.tier !== "regular"
+                  ? TIER_COLORS[event.tier]
+                  : undefined,
+              );
+            }
           }
           if (event.type === "storyItemCollected") {
             pushPickup(storyItemDef(event.defId).name, "#ffd75e");
@@ -1225,6 +1261,7 @@ export function GameScreen({
       document.removeEventListener("visibilitychange", onVisibility);
       canvas.removeEventListener("pointerdown", unlock);
       pickupTimers.forEach(clearTimeout);
+      if (pickupCardTimer) clearTimeout(pickupCardTimer);
     };
   }, [assets, runId, difficulty, levelId, initialLevelId, respec, skipOpening]);
 
@@ -1747,6 +1784,12 @@ export function GameScreen({
           messages={pickups}
           side={powerupSide === "left" ? "right" : "left"}
         />
+      )}
+
+      {/* The framed pickup card for freshly bagged gear. Keyed by the card id
+          so a new find remounts the box and restarts its pop + border spark. */}
+      {hud?.phase === "playing" && pickupCard && (
+        <PickupModal key={pickupCard.id} font={font} card={pickupCard} />
       )}
 
       {state && state.cutscene && hud?.phase === "cutscene" && (

@@ -580,6 +580,120 @@ body {
   }
 }
 
+/* The framed pickup card (see PickupModal): a loot toast that pops in above the
+   hero when a weapon or item lands in the bag. Mirrors the HUD clock/kill
+   units' border + backdrop, tinted to the find's rarity (--rarity), with a
+   spark that laps the frame so a fresh drop sparkles. Never eats pointer events
+   — steering passes straight through. */
+.pickup-card {
+  position: absolute;
+  top: 22%;
+  left: 50%;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.35rem 0.6rem;
+  background: rgba(11, 13, 16, 0.72);
+  border: 2px solid var(--rarity, #e6e8eb);
+  border-radius: 6px;
+  box-shadow:
+    0 0 0.5rem color-mix(in srgb, var(--rarity, #fff) 55%, transparent),
+    0 0.2rem 0.5rem rgba(11, 13, 16, 0.55);
+  text-shadow: 0 2px 0 rgba(11, 13, 16, 0.6);
+  pointer-events: none;
+  isolation: isolate;
+  animation: pickup-card 2600ms ease-out forwards;
+  will-change: transform, opacity;
+}
+
+.pickup-card-icon {
+  width: 1.75rem;
+  height: 1.75rem;
+}
+
+/* The traveling border spark: a conic sweep masked down to the frame ring so a
+   bright glint laps the card. The animatable --pickup-spin angle needs an
+   @property registration (a plain custom property can't tween). */
+@property --pickup-spin {
+  syntax: "<angle>";
+  inherits: false;
+  initial-value: 0deg;
+}
+
+.pickup-card-spark {
+  position: absolute;
+  inset: -2px;
+  z-index: -1;
+  border-radius: inherit;
+  padding: 2px;
+  background: conic-gradient(
+    from var(--pickup-spin),
+    transparent 0deg,
+    #ffffff 16deg,
+    var(--rarity, #fff) 34deg,
+    transparent 62deg,
+    transparent 360deg
+  );
+  -webkit-mask:
+    linear-gradient(#000 0 0) content-box,
+    linear-gradient(#000 0 0);
+  -webkit-mask-composite: xor;
+  mask:
+    linear-gradient(#000 0 0) content-box,
+    linear-gradient(#000 0 0);
+  mask-composite: exclude;
+  animation: pickup-card-spark 1200ms linear infinite;
+  pointer-events: none;
+}
+
+@keyframes pickup-card-spark {
+  to {
+    --pickup-spin: 360deg;
+  }
+}
+
+@keyframes pickup-card {
+  0% {
+    opacity: 0;
+    transform: translateX(-50%) translateY(0.4rem) scale(0.85);
+  }
+  8% {
+    opacity: 1;
+    transform: translateX(-50%) translateY(0) scale(1.06);
+  }
+  16% {
+    transform: translateX(-50%) translateY(0) scale(1);
+  }
+  82% {
+    opacity: 1;
+    transform: translateX(-50%) translateY(0) scale(1);
+  }
+  100% {
+    opacity: 0;
+    transform: translateX(-50%) translateY(-0.3rem) scale(1);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .pickup-card {
+    animation: pickup-card-fade 2600ms linear forwards;
+    transform: translateX(-50%);
+  }
+  @keyframes pickup-card-fade {
+    0%,
+    85% {
+      opacity: 1;
+    }
+    100% {
+      opacity: 0;
+    }
+  }
+  .pickup-card-spark {
+    animation: none;
+    opacity: 0.6;
+  }
+}
+
 /* End-of-run splash: stats + retry. */
 .game-splash {
   position: absolute;

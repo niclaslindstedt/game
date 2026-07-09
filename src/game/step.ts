@@ -1287,6 +1287,7 @@ function stepItems(state: GameState): void {
         kind: "equipment",
         tier: item.equipment.tier,
         name: equipmentName(item.equipment),
+        defId: item.equipment.defId,
       });
       state.events.push({ type: "autoEquipped", defId: item.equipment.defId });
       return false;
@@ -1311,6 +1312,7 @@ function stepItems(state: GameState): void {
       kind: "equipment",
       tier: item.equipment.tier,
       name: equipmentName(item.equipment),
+      defId: item.equipment.defId,
     });
     return false;
   });
