@@ -1215,6 +1215,48 @@ export function affixNaming(affix: Affix): {
 let activeWeaponDefs: Record<string, WeaponDef> = WEAPON_DEFS;
 let activeGearDefs: Record<string, GearDef> = GEAR_DEFS;
 
+// ---- Frozen def snapshots (version immunity) --------------------------------
+// A kept item must not be nerfed or broken when we later rebalance or delete
+// its base — only new drops should feel a catalog edit. Each item instance
+// carries a frozen copy of its def (`Equipment.def`, snapshotted at mint); on
+// load `adoptEquipment` (items.ts) parks that snapshot HERE, under a stable
+// synthetic id derived from its content, and re-homes the instance onto it.
+// These overlays are a separate namespace from the live catalog: the shipped
+// pools never see them, so a frozen id can't leak into a fresh drop, and
+// swapping the active catalog (tests) doesn't touch them.
+const frozenWeaponDefs: Record<string, WeaponDef> = {};
+const frozenGearDefs: Record<string, GearDef> = {};
+
+/** The prefix marking a synthetic id minted for a frozen def snapshot. */
+export const FROZEN_DEF_PREFIX = "frozen:";
+
+/** A small, stable, dependency-free hash (djb2) of a snapshot's JSON, so an
+ * identical def always frozen to the SAME id — re-registration is idempotent
+ * and the id survives round-trips through storage. */
+function hashJson(json: string): string {
+  let h = 5381;
+  for (let i = 0; i < json.length; i++) {
+    h = (((h << 5) + h) ^ json.charCodeAt(i)) >>> 0;
+  }
+  return h.toString(36);
+}
+
+/**
+ * Park a frozen def snapshot in the overlay and return the synthetic id it
+ * lives under. Content-addressed (`frozen:<origId>:<hash>`), so two instances
+ * that dropped with identical stats share one id and one registry entry, while
+ * the same base rebalanced across versions freezes to distinct ids. Idempotent.
+ */
+export function registerFrozenDef(
+  def: WeaponDef | GearDef,
+  family: "weapon" | "gear",
+): string {
+  const id = `${FROZEN_DEF_PREFIX}${def.id}:${hashJson(JSON.stringify(def))}`;
+  if (family === "weapon") frozenWeaponDefs[id] = def as WeaponDef;
+  else frozenGearDefs[id] = def as GearDef;
+  return id;
+}
+
 /** Test/authoring hook: replace the active weapon + gear catalogs. */
 export function setEquipmentDefs(defs: {
   weapons: Record<string, WeaponDef>;
@@ -1224,23 +1266,32 @@ export function setEquipmentDefs(defs: {
   activeGearDefs = defs.gear;
 }
 
-/** Look up a weapon def; throws on a broken id so bugs surface loudly. */
+/** Look up a weapon def; throws on a broken id so bugs surface loudly. Frozen
+ * snapshots (kept items whose base changed/vanished) resolve from the overlay. */
 export function weaponDef(defId: string): WeaponDef {
-  const def = activeWeaponDefs[defId];
+  const def = activeWeaponDefs[defId] ?? frozenWeaponDefs[defId];
   if (!def) throw new Error(`unknown weapon def "${defId}"`);
   return def;
 }
 
-/** Look up a gear def; throws on a broken id so bugs surface loudly. */
+/** Look up a gear def; throws on a broken id so bugs surface loudly. Frozen
+ * snapshots (kept items whose base changed/vanished) resolve from the overlay. */
 export function gearDef(defId: string): GearDef {
-  const def = activeGearDefs[defId];
+  const def = activeGearDefs[defId] ?? frozenGearDefs[defId];
   if (!def) throw new Error(`unknown gear def "${defId}"`);
   return def;
 }
 
-/** True when the def id names a weapon (vs a piece of gear). */
+/** True when the def id names a weapon (vs a piece of gear) — including a
+ * frozen weapon snapshot. */
 export function isWeaponDef(defId: string): boolean {
-  return defId in activeWeaponDefs;
+  return defId in activeWeaponDefs || defId in frozenWeaponDefs;
+}
+
+/** True when the def id names a piece of gear — including a frozen gear
+ * snapshot. */
+export function isGearDef(defId: string): boolean {
+  return defId in activeGearDefs || defId in frozenGearDefs;
 }
 
 /** The display name of an equipment def, without tier prefix. */

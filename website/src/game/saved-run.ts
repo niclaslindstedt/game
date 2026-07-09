@@ -9,8 +9,8 @@
 // rebuilding the generator on load so a resumed run picks up the exact same
 // stream (proven in tests/engine/persistence_test.ts).
 
-import { LEVELS, warn } from "@game/core";
-import type { Difficulty, GameState } from "@game/core";
+import { adoptEquipment, LEVELS, warn } from "@game/core";
+import type { Difficulty, Equipment, GameState } from "@game/core";
 
 import { createRngFromState, rngState } from "@game/lib/rng.ts";
 
@@ -62,6 +62,45 @@ export function saveRun(run: ParkedRun): void {
   }
 }
 
+/** The engine's unbreakable sidearm — the floor a thawed loadout falls back to
+ * when its equipped weapon is a legacy piece whose base the catalog has since
+ * dropped (a run can never resume weaponless). */
+function fallbackWeapon(): Equipment {
+  return {
+    id: 0,
+    defId: "blaster",
+    slot: "weapon",
+    tier: "regular",
+    ilvl: 1,
+    affixes: [],
+  };
+}
+
+/**
+ * Re-home every kept item in a thawed run onto its frozen def snapshot, so a
+ * base we rebalanced or deleted since the run was parked can neither nerf the
+ * player's gear nor crash the resume. The equipped weapon can never adopt to
+ * nothing (it falls back to the sidearm); a bag cell or ground drop that can't
+ * be resolved (a legacy piece whose base is gone) is simply cleared/removed.
+ */
+function adoptRunEquipment(state: GameState): void {
+  const equip = state.player.equipment;
+  equip.weapon = adoptEquipment(equip.weapon) ?? fallbackWeapon();
+  equip.suit = equip.suit && adoptEquipment(equip.suit);
+  equip.charm = equip.charm && adoptEquipment(equip.charm);
+  equip.bag = equip.bag && adoptEquipment(equip.bag);
+  state.player.inventory = state.player.inventory.map((cell) =>
+    cell ? adoptEquipment(cell) : null,
+  );
+  state.items = state.items.filter((item) => {
+    if (item.kind !== "equipment") return true;
+    const adopted = adoptEquipment(item.equipment);
+    if (!adopted) return false;
+    item.equipment = adopted;
+    return true;
+  });
+}
+
 /** Drop any parked run — called when one is resumed, abandoned, or replaced. */
 export function clearSavedRun(): void {
   try {
@@ -103,6 +142,9 @@ export function loadSavedRun(): ParkedRun | null {
       events: [],
       rng: createRngFromState(payload.rngState),
     };
+    // Freeze every kept item to its dropped-with stats before the run resumes,
+    // so a catalog edge that landed while the run was parked can't reach it.
+    adoptRunEquipment(state);
     return {
       difficulty: payload.difficulty,
       levelId: payload.levelId,

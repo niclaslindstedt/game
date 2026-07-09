@@ -49,7 +49,9 @@ export {
 
 // Player-driven mutations (level-up chooser, inventory UI, phase toggles).
 export {
+  adoptEquipment,
   allocateStat,
+  baseDefId,
   beginRespec,
   deallocateStat,
   confirmRespec,

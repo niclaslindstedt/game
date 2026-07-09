@@ -9,6 +9,7 @@
 // `defId` into ENEMY_DEFS, an Equipment a `defId` into WEAPON_DEFS/GEAR_DEFS.
 // The catalogs scale to hundreds of entries without these shapes changing.
 
+import type { GearDef, WeaponDef } from "./defs/equipment.ts";
 import type { CutsceneState } from "@game/lib/cutscene.ts";
 import type { Rng } from "@game/lib/rng.ts";
 import type { Vec2 } from "@game/lib/vec.ts";
@@ -102,6 +103,17 @@ export type Equipment = {
    * wears out, so the run can never be left weaponless.
    */
   durability?: number;
+  /**
+   * A FROZEN copy of the item's catalog def, captured the instant it was
+   * minted (see `rollEquipment`). This is what makes a kept item version-proof:
+   * an item a test player carries keeps the stats it dropped with even after we
+   * rebalance or delete its `defId` from the live catalog — only NEW drops feel
+   * the change. On load, `adoptEquipment` re-homes the instance onto this
+   * snapshot (registered under a synthetic frozen id), so every stat read
+   * resolves the item AS DROPPED. Absent only on instances minted by a build
+   * from before snapshots existed (handled best-effort on load).
+   */
+  def?: WeaponDef | GearDef;
 };
 
 /**
