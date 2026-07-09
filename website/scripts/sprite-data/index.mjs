@@ -20,6 +20,7 @@ import earth from "./earth.mjs";
 import effects from "./effects.mjs";
 import hero from "./hero.mjs";
 import icons from "./icons.mjs";
+import markers from "./markers.mjs";
 import mars from "./mars.mjs";
 import merchant from "./merchant.mjs";
 import moon from "./moon.mjs";
@@ -36,6 +37,7 @@ export const FAMILIES = [
   moon,
   effects,
   icons,
+  markers,
   spacez,
   mars,
   rift,
