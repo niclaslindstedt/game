@@ -3354,10 +3354,31 @@ body {
   gap: 0.75rem;
 }
 
-/* The SCRAP button rides in the header, so it's tighter than the big CLOSE. */
-.inv-scrap-btn {
-  padding: 0.4rem 0.7rem;
+/* The header's action buttons (AUTO-EQUIP + DROP-ALL) cluster to the right,
+   opposite the BAG title. */
+.inv-bag-actions {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: 0.5rem;
   flex: 0 0 auto;
+}
+
+/* The icon buttons ride in the header, so they're tighter than the big CLOSE.
+   Squared off around a single pixel-art glyph, with room for a count beside
+   it. */
+.inv-icon-btn {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: 0.3rem;
+  padding: 0.35rem 0.5rem;
+  flex: 0 0 auto;
+}
+
+.inv-btn-icon {
+  width: 1.5rem;
+  height: 1.5rem;
 }
 
 /* The bag: the dominant area of the modal. */
