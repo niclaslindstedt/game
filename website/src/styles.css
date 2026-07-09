@@ -2239,6 +2239,28 @@ body {
   max-width: 96vw;
 }
 
+/* Title row: the treasure-map chart sits beside the level name, echoing the
+   HUD button that opened the map. */
+.map-header {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  align-self: flex-start;
+}
+
+/* The 20×14 treasure-map sprite at a crisp 2x, matching the HUD button. */
+.map-title-icon {
+  width: 2.5rem;
+  height: 1.75rem;
+}
+
+/* Positions the pixel-icon marker layer directly over the canvas. */
+.map-canvas-wrap {
+  position: relative;
+  align-self: center;
+  line-height: 0;
+}
+
 /* One canvas backing px per map "pixel", upscaled crisp. The component sets
    the display width/height itself (level shape × what fits the viewport), so
    the card hugs the canvas instead of the canvas overflowing the card. */
@@ -2247,6 +2269,31 @@ body {
   border: 2px solid #2a3444;
   border-radius: 3px;
   background: #0b0d10;
+}
+
+/* The pins ride here, above the canvas, each absolutely placed by percentage
+   of the level extent so they land on the right spot at any fit-scale. */
+.map-markers {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+
+.map-marker {
+  position: absolute;
+  width: 0.9rem;
+  height: 0.9rem;
+  /* Center the icon on the marked spot. */
+  transform: translate(-50%, -50%);
+  /* A dark rim so a bright pin separates from the terrain under it. */
+  filter: drop-shadow(0 0 1px rgba(0, 0, 0, 0.9));
+}
+
+/* The hero's pin reads a touch larger and glows in its mint. */
+.map-marker.is-you {
+  width: 1.05rem;
+  height: 1.05rem;
+  filter: drop-shadow(0 0 3px rgba(126, 240, 200, 0.75));
 }
 
 .map-legend {
@@ -2262,17 +2309,15 @@ body {
   gap: 0.3rem;
 }
 
-/* The legend labels must center on their swatches — the blanket
+/* The legend labels must center on their icons — the blanket
    `.game-overlay canvas` rule would park them at flex-start. */
 .map-legend-item canvas {
   align-self: center;
 }
 
-.map-legend-swatch {
-  width: 0.55rem;
-  height: 0.55rem;
-  border: 1px solid #0b0d10;
-  box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.12);
+.map-legend-icon {
+  width: 0.85rem;
+  height: 0.85rem;
 }
 
 /* The pause card — same FF6 window skin as the other modals. */

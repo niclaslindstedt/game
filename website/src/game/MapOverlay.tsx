@@ -24,21 +24,30 @@ import {
 import { PixelText } from "@ui/lib/PixelText.tsx";
 import type { PixelFont } from "@ui/lib/pixel-font.ts";
 
-import { spriteByName, type GameAssets, type Sprites } from "./assets.ts";
+import {
+  spriteByName,
+  spriteDataUrl,
+  type GameAssets,
+  type Sprites,
+} from "./assets.ts";
 
 /** Backing-store pixels per fog cell — the map's chunky "pixel" size. */
 const CELL_PX = 4;
 
-/** Pin colors per marker kind (legend swatches share them). */
-const MARKER_COLORS: Record<MapMarkerKind, string> = {
-  story: "#ffd75e",
-  loot: "#ff8c42",
-  elite: "#d9a0f0",
-  boss: "#d83a3a",
-  merchant: "#5fd97a",
+/** The marker icon each event kind pins on the map (and shows in the legend) —
+ * shapes carry the meaning now, not colored dots. Generated in the `markers`
+ * sprite family (website/scripts/sprite-data/markers.mjs). */
+const MARKER_SPRITE: Record<MapMarkerKind, string> = {
+  story: "map_story",
+  loot: "map_loot",
+  elite: "map_elite",
+  boss: "map_boss",
+  merchant: "map_merchant",
 };
 
-const PLAYER_COLOR = "#7ef0c8";
+/** The hero's own "you are here" pin. */
+const PLAYER_SPRITE = "map_you";
+
 const FOG_COLOR = "#0b0d10";
 
 /** The ground sprite for a world position — the level-wide pair, or the
@@ -171,22 +180,9 @@ function drawMap(
     }
   }
 
-  // Event pins — drawn over the fog: the hero was there when they happened,
-  // so they show even where the surrounding fog still stands.
-  const pin = (pos: { x: number; y: number }, color: string) => {
-    const x = Math.round(pos.x * s);
-    const y = Math.round(pos.y * s);
-    ctx.fillStyle = FOG_COLOR;
-    ctx.fillRect(x - 2, y - 2, 5, 5);
-    ctx.fillStyle = color;
-    ctx.fillRect(x - 1, y - 1, 3, 3);
-  };
-  for (const marker of state.mapMarkers) {
-    pin(marker.pos, MARKER_COLORS[marker.kind]);
-  }
-
-  // The hero, last so nothing covers him.
-  pin(state.player.pos, PLAYER_COLOR);
+  // Event pins and the hero are no longer painted here — they ride above the
+  // canvas as pixel-icon markers (see the overlay in the component), so they
+  // read at a legible size regardless of how zoomed-out the level is.
 }
 
 export function MapOverlay({
@@ -210,13 +206,24 @@ export function MapOverlay({
   const stop = (event: { stopPropagation: () => void }) =>
     event.stopPropagation();
 
-  const legend: { color: string; label: string }[] = [
-    { color: PLAYER_COLOR, label: "YOU" },
-    { color: MARKER_COLORS.story, label: "STORY" },
-    { color: MARKER_COLORS.loot, label: "RARE LOOT" },
-    { color: MARKER_COLORS.elite, label: "ELITE" },
-    { color: MARKER_COLORS.boss, label: "BOSS" },
-    { color: MARKER_COLORS.merchant, label: "MERCHANT" },
+  // Marker position → percentage of the level's extent, so a pixel-icon can be
+  // absolutely placed over the canvas no matter what size it fits to.
+  const worldW = mapCols(state.level) * MAP.cellSize;
+  const worldH = mapRows(state.level) * MAP.cellSize;
+  const at = (pos: { x: number; y: number }) => ({
+    left: `${(100 * pos.x) / worldW}%`,
+    top: `${(100 * pos.y) / worldH}%`,
+  });
+  const iconUrl = (name: string) =>
+    spriteDataUrl(assets.sprites, name) ?? undefined;
+
+  const legend: { sprite: string; label: string }[] = [
+    { sprite: PLAYER_SPRITE, label: "YOU" },
+    { sprite: MARKER_SPRITE.story, label: "STORY" },
+    { sprite: MARKER_SPRITE.loot, label: "RARE LOOT" },
+    { sprite: MARKER_SPRITE.elite, label: "ELITE" },
+    { sprite: MARKER_SPRITE.boss, label: "BOSS" },
+    { sprite: MARKER_SPRITE.merchant, label: "MERCHANT" },
   ];
 
   return (
@@ -227,19 +234,49 @@ export function MapOverlay({
       role="presentation"
     >
       <div className="intro-box map-box" onPointerDown={stop}>
-        <PixelText
-          font={font}
-          text={state.level.name}
-          scale={2}
-          color="#7ef0c8"
-        />
-        <canvas ref={canvasRef} className="map-canvas" />
+        <div className="map-header">
+          <img
+            className="pixel-img map-title-icon"
+            src={iconUrl("icon_treasure_map")}
+            alt=""
+          />
+          <PixelText
+            font={font}
+            text={state.level.name}
+            scale={2}
+            color="#7ef0c8"
+          />
+        </div>
+        <div className="map-canvas-wrap">
+          <canvas ref={canvasRef} className="map-canvas" />
+          {/* Pins ride above the canvas as pixel icons: story/loot/elite/boss/
+              merchant where they happened, and the hero's own pin last (on
+              top). They show even over standing fog — the hero was there. */}
+          <div className="map-markers">
+            {state.mapMarkers.map((marker, index) => (
+              <img
+                key={`${marker.kind}-${index}`}
+                className="pixel-img map-marker"
+                src={iconUrl(MARKER_SPRITE[marker.kind])}
+                alt=""
+                style={at(marker.pos)}
+              />
+            ))}
+            <img
+              className="pixel-img map-marker is-you"
+              src={iconUrl(PLAYER_SPRITE)}
+              alt=""
+              style={at(state.player.pos)}
+            />
+          </div>
+        </div>
         <div className="map-legend">
-          {legend.map(({ color, label }) => (
+          {legend.map(({ sprite, label }) => (
             <span key={label} className="map-legend-item">
-              <span
-                className="map-legend-swatch"
-                style={{ background: color }}
+              <img
+                className="pixel-img map-legend-icon"
+                src={iconUrl(sprite)}
+                alt=""
               />
               <PixelText font={font} text={label} scale={2} color="#9aa3ad" />
             </span>

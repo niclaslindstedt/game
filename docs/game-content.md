@@ -181,7 +181,7 @@ ever ran fell through eventually (his lines are in
 [`manuscript.md`](./manuscript.md)). The horde ignores him and his ward keeps
 mobs two body-widths off his stall. He roams the level until the hero first
 walks up to him: the **meeting** roots him to the spot for the rest of the
-run, pins him on the level map (green MERCHANT marker), plays his greeting,
+run, pins him on the level map (a green MERCHANT coin marker), plays his greeting,
 and stocks his stall. A gold coin bobs over his head from then on; tapping him
 at the counter opens the **shop** (the run freezes like the bag).
 
