@@ -30,8 +30,8 @@ export type MercyTuning = {
    */
   medkitBonus: number;
   /**
-   * Chance, at full low-health desperation, that an otherwise-UNPLATED random
-   * gear drop is swapped for a PLATED suit from the same pool — armor is
+   * Chance, at full low-health desperation, that an otherwise-armorless random
+   * gear drop is swapped for an ARMOR piece from the same pool — armor is
    * life-saving gear too, so a hurting hero finds it more often. Scaled by the
    * same hp desperation as `medkitBonus`.
    */
@@ -82,6 +82,13 @@ export type DifficultyDef = {
    * earned stats). Empty = the bare authored start.
    */
   startingStats: Partial<Record<StatName, number>>;
+  /**
+   * The clothes on the hero's back: GEAR_DEFS ids minted onto the body when
+   * a run starts fresh (create.ts), each into its def's slot. The shipped
+   * ladder dresses every rung in the same street clothes — a t-shirt, jeans
+   * and worn boots, no bonuses and a whisper of armor. Omitted = bare.
+   */
+  startingGear?: string[];
   /** Multiplies every spawn count: placed spawns and wave budgets alike. */
   mobCountMult: number;
   /**
@@ -130,9 +137,9 @@ export type DifficultyDef = {
    */
   medkitDropMult: number;
   /**
-   * Multiplies the odds that a random GEAR drop is a PLATED suit (one with an
-   * armor grade): when the gear pick lands on armor, this is its chance to
-   * stand — a failed roll re-picks among the pool's unplated pieces. The
+   * Multiplies the odds that a random GEAR drop is an ARMOR piece (one worn
+   * in a body slot): when the gear pick lands on armor, this is its chance to
+   * stand — a failed roll re-picks among the pool's non-armor pieces. The
    * armor half of the "medkits and armor thin out" rule (see rollEquipment).
    */
   armorDropMult: number;
@@ -168,6 +175,13 @@ export type DifficultyDef = {
    * gate earlier in the campaign.
    */
   tierChanceBonus: Partial<Record<Tier, number>>;
+  /**
+   * Levels ADDED to every drop's rolled ITEM LEVEL (see `rollItemLevel`) —
+   * the "harder difficulties roll BIGGER" half of the reward, beside the
+   * rarer-tier odds above. Ilvl sizes both affix magnitudes and an armor
+   * piece's rolled armor points, so one knob sweetens the whole drop.
+   */
+  lootIlvlBonus: number;
   /**
    * Multiplies the sprint pool's drain rate (STAMINA.drainPerSec): the harder
    * rungs wind the hero a touch faster. JESUS deliberately matches NIGHTMARE —
@@ -216,6 +230,7 @@ export const DIFFICULTY_DEFS: Record<Difficulty, DifficultyDef> = {
     startingWeapon: "hairy_potters_wand",
     // Four banked points — a broad head start, one in each combat stat.
     startingStats: { stamina: 1, strength: 1, dexterity: 1, intelligence: 1 },
+    startingGear: ["t_shirt", "jeans", "leather_boots"],
     mobCountMult: 0.9,
     mobLevelOffset: -3,
     aliveMult: 0.9,
@@ -237,6 +252,7 @@ export const DIFFICULTY_DEFS: Record<Difficulty, DifficultyDef> = {
       staminaDrinkChanceMax: 0.15,
     },
     uniqueDropChance: 0,
+    lootIlvlBonus: 0,
     tierChanceBonus: {},
     staminaDrainMult: 0.95,
     playerDodgeMult: 1.3,
@@ -252,6 +268,7 @@ export const DIFFICULTY_DEFS: Record<Difficulty, DifficultyDef> = {
     color: "#4da6ff",
     startingWeapon: "medieval_sword",
     startingStats: {},
+    startingGear: ["t_shirt", "jeans", "leather_boots"],
     mobCountMult: 1,
     mobLevelOffset: -2,
     aliveMult: 1,
@@ -273,6 +290,7 @@ export const DIFFICULTY_DEFS: Record<Difficulty, DifficultyDef> = {
       staminaDrinkChanceMax: 0.1,
     },
     uniqueDropChance: 0,
+    lootIlvlBonus: 0,
     tierChanceBonus: {},
     staminaDrainMult: 1,
     playerDodgeMult: 1,
@@ -288,6 +306,7 @@ export const DIFFICULTY_DEFS: Record<Difficulty, DifficultyDef> = {
     color: "#ffd75e",
     startingWeapon: "combat_knife",
     startingStats: {},
+    startingGear: ["t_shirt", "jeans", "leather_boots"],
     mobCountMult: 1.1,
     mobLevelOffset: -1,
     aliveMult: 1.1,
@@ -308,6 +327,7 @@ export const DIFFICULTY_DEFS: Record<Difficulty, DifficultyDef> = {
       staminaDrinkChanceMax: 0,
     },
     uniqueDropChance: 0.01,
+    lootIlvlBonus: 1,
     tierChanceBonus: { magic: 0.08, rare: 0.05 },
     staminaDrainMult: 1.05,
     playerDodgeMult: 0.9,
@@ -323,6 +343,7 @@ export const DIFFICULTY_DEFS: Record<Difficulty, DifficultyDef> = {
     color: "#ff8c42",
     startingWeapon: "brass_knuckles",
     startingStats: {},
+    startingGear: ["t_shirt", "jeans", "leather_boots"],
     mobCountMult: 1.2,
     mobLevelOffset: 0,
     aliveMult: 1.2,
@@ -341,6 +362,7 @@ export const DIFFICULTY_DEFS: Record<Difficulty, DifficultyDef> = {
       staminaDrinkChanceMax: 0,
     },
     uniqueDropChance: 0.02,
+    lootIlvlBonus: 2,
     tierChanceBonus: { magic: 0.14, rare: 0.08 },
     staminaDrainMult: 1.1,
     playerDodgeMult: 0.8,
@@ -356,6 +378,7 @@ export const DIFFICULTY_DEFS: Record<Difficulty, DifficultyDef> = {
     color: "#d83a3a",
     startingWeapon: "stick",
     startingStats: {},
+    startingGear: ["t_shirt", "jeans", "leather_boots"],
     // One extra step of count PLUS the +50% pile-on: 1.2 × 1.5.
     mobCountMult: 1.8,
     mobLevelOffset: 2,
@@ -376,6 +399,7 @@ export const DIFFICULTY_DEFS: Record<Difficulty, DifficultyDef> = {
       staminaDrinkChanceMax: 0,
     },
     uniqueDropChance: 0.04,
+    lootIlvlBonus: 4,
     tierChanceBonus: { magic: 0.2, rare: 0.12 },
     // No extra burn past nightmare — JESUS is kited or not survived at all.
     staminaDrainMult: 1.1,

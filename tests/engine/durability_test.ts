@@ -5,7 +5,7 @@
 import { describe, expect, it } from "vitest";
 
 import {
-  armorInfo,
+  gearDef,
   isBetterEquipment,
   rollEquipment,
   step,
@@ -51,9 +51,9 @@ describe("weapon durability", () => {
     const state = startGame();
     const rolled = rollEquipment(state, { defId: "test_pipe" });
     expect(rolled.durability).toBe(weaponDef("test_pipe").durability);
-    // Gear never wears.
-    const suit = rollEquipment(state, { defId: "test_suit" });
-    expect(suit.durability).toBeUndefined();
+    // Charms never wear; armor carries its own durability (armor suite).
+    const charm = rollEquipment(state, { defId: "test_charm" });
+    expect(charm.durability).toBeUndefined();
   });
 
   it("the default starting weapon is the breakable crude sword", () => {
@@ -201,23 +201,24 @@ describe("repair kits", () => {
     );
   });
 
-  it("also top up a worn suit's plating, kit consumed even with no weapon to mend", () => {
+  it("also mend worn armor, kit consumed even with no weapon to mend", () => {
     const state = equipBlaster(startGame()); // unbreakable weapon: nothing to mend
     clearStage(state);
-    state.player.equipment.suit = {
+    state.player.equipment.chest = {
       id: 70,
-      defId: "test_suit",
-      slot: "suit",
+      defId: "test_vest",
+      slot: "chest",
       tier: "regular",
       ilvl: 5,
       affixes: [],
+      durability: 10, // battered
     };
-    const max = armorInfo(state)!.max;
-    state.player.armor = 10; // battered plating
     state.items = [{ id: 1, kind: "repair", pos: { ...state.player.pos } }];
     step(state, idle, DT);
     expect(state.items).toHaveLength(0);
-    expect(state.player.armor).toBe(max);
+    expect(state.player.equipment.chest.durability).toBe(
+      gearDef("test_vest").durability,
+    );
   });
 
   it("stay on the ground when there is nothing to repair", () => {
@@ -232,16 +233,16 @@ describe("repair kits", () => {
     step(state, idle, DT);
     expect(state.items).toHaveLength(1);
 
-    // Nor does a suit whose plating is already full.
-    state.player.equipment.suit = {
+    // Nor does armor at full durability.
+    state.player.equipment.chest = {
       id: 70,
-      defId: "test_suit",
-      slot: "suit",
+      defId: "test_vest",
+      slot: "chest",
       tier: "regular",
       ilvl: 5,
       affixes: [],
+      durability: gearDef("test_vest").durability,
     };
-    state.player.armor = armorInfo(state)!.max;
     step(state, idle, DT);
     expect(state.items).toHaveLength(1);
   });

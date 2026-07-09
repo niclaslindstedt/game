@@ -209,11 +209,12 @@ export const SPACEZ_ENEMIES: Record<string, EnemyDef> = {
     ai: { aggroRadius: 240, rushSpeed: 130 },
     loot: {
       // The Chief guards the way off-planet — and surrenders the EVA suit
-      // the hero needs to take it. Forced UNIQUE so it lands as the run's
-      // standout suit long before the unique tier's own gate opens.
-      items: ["riot_taser", { defId: "space_suit", tier: "unique" }],
+      // the hero needs to take it. The suit is STORY gear, not equipment: it
+      // goes on OVER the clothes and armor (no slot, no stats) and turns the
+      // hero into the astronaut for good (StoryItemDef.suitsHero).
+      items: ["riot_taser"],
       tierDrops: { magic: 1 },
-      storyItems: ["cargo_manifest"],
+      storyItems: ["cargo_manifest", "space_suit"],
       weapons: 0,
       gear: 1,
       xpArrows: 1,

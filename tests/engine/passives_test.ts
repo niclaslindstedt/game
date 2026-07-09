@@ -26,7 +26,7 @@ describe("passive trinkets", () => {
   it("flags a passive gear def, and only it", () => {
     expect(isPassiveItem("test_chip")).toBe(true);
     expect(isPassiveItem("test_charm")).toBe(false);
-    expect(isPassiveItem("test_suit")).toBe(false);
+    expect(isPassiveItem("test_vest")).toBe(false);
     // A weapon id is never a passive trinket.
     expect(isPassiveItem("test_wrench")).toBe(false);
   });

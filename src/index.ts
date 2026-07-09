@@ -65,7 +65,9 @@ export {
   dismissIntro,
   skipCutscene,
   tapCutscene,
-  armorInfo,
+  ARMOR_SLOTS,
+  armorReduction,
+  armorValueOf,
   computeMaxHp,
   computeMaxStamina,
   dropChance,
@@ -85,6 +87,7 @@ export {
   isBetterEquipment,
   isPassiveItem,
   isScrappableLoot,
+  isArmorBroken,
   isSpecialItem,
   meetsLevelReq,
   scrapInferiorLoot,
@@ -100,8 +103,9 @@ export {
   playerSuited,
   previewEquipped,
   repairEquippedWeapon,
-  restoreArmor,
+  repairWornArmor,
   restoreStamina,
+  totalArmor,
   rollEquipment,
   unequipToInventory,
   weaponCooldownFor,
@@ -112,6 +116,7 @@ export {
   weaponScore,
   weaponSweepHalfAngle,
   wearEquippedWeapon,
+  wearWornArmor,
   wouldUpgradeSlot,
 } from "./game/items.ts";
 
@@ -136,6 +141,7 @@ export {
 // and mark evolved mobs (the mechanics live in step()/loot()).
 export {
   enemyPowerScale,
+  currentMobLevel,
   menaceSensitivity,
   menaceStage,
   menaceWarmup,
@@ -154,7 +160,11 @@ export {
 // In-world dialogue (elite ambushes, boss confrontations, story-item lore):
 // `advanceDialogue` is the player's tap; `dialogueContent` is what the app
 // draws while `phase === "dialogue"`.
-export { advanceDialogue, dialogueContent } from "./game/story.ts";
+export {
+  advanceDialogue,
+  collectStoryItem,
+  dialogueContent,
+} from "./game/story.ts";
 
 // Cutscenes: the generic player (@game/lib) plus the scene catalog. The app
 // renders scenes from CutsceneState + def; `currentLine` is the text on
@@ -282,7 +292,7 @@ export {
 export type {
   ActiveAbility,
   Affix,
-  ArmorGrade,
+  ArmorSlot,
   Asteroid,
   Decor,
   DialogueState,

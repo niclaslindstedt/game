@@ -43,10 +43,11 @@ import {
 } from "./defs/equipment.ts";
 import { difficultyDef } from "./defs/difficulties.ts";
 import { levelDef } from "./defs/levels/index.ts";
+import { storyItemDef } from "./defs/story.ts";
 import { currentMobLevel } from "./menace.ts";
 import type {
   Affix,
-  ArmorGrade,
+  ArmorSlot,
   EquipSlot,
   Equipment,
   GameState,
@@ -55,6 +56,14 @@ import type {
   Tier,
   WeaponClass,
 } from "./types.ts";
+
+/** The four body slots armor is worn in, in paperdoll order. */
+export const ARMOR_SLOTS: readonly ArmorSlot[] = [
+  "head",
+  "chest",
+  "legs",
+  "feet",
+];
 
 /**
  * The stat that scales each weapon class's DAMAGE: STRENGTH powers physical
@@ -137,6 +146,8 @@ function rollAffix(rng: Rng, def: AffixDef, ilvl: number): Affix {
       return { kind: "crit", value };
     case "maxHp":
       return { kind: "maxHp", value: Math.max(1, Math.round(value)) };
+    case "armor":
+      return { kind: "armor", value: Math.max(1, Math.round(value)) };
     case "stat":
       return {
         kind: "stat",
@@ -173,7 +184,9 @@ function rollTier(state: GameState, mlvl: number, tierBonus: number): Tier {
  * minus a small weighted deficit (config `LOOT.ilvlDeltaWeights` — full-level
  * drops are the rare end of the band). Rare-and-better finds use the tighter
  * `ilvlDeltaWeightsRare` band (0–1 below), so a yellow is generally a
- * high-level item. Floored at 1.
+ * high-level item. The difficulty's `lootIlvlBonus` is added on top — the
+ * harder rungs' drops roll a few levels deep, sizing both their affixes and
+ * an armor piece's rolled armor. Floored at 1.
  */
 function rollItemLevel(state: GameState, mlvl: number, tier: Tier): number {
   const weights: readonly number[] =
@@ -184,7 +197,8 @@ function rollItemLevel(state: GameState, mlvl: number, tier: Tier): number {
     state.rng,
     weights.map((weight, i) => ({ weight, delta: i })),
   ).delta;
-  return Math.max(1, mlvl - delta);
+  const bonus = difficultyDef(state.difficulty).lootIlvlBonus;
+  return Math.max(1, mlvl + bonus - delta);
 }
 
 /**
@@ -229,37 +243,37 @@ export function rollEquipment(
     pool = fullPool.filter((id) => equipmentLevelReq(id) === minReq);
   }
   let defId = opts.defId ?? (pool[Math.floor(rng() * pool.length)] as string);
-  // Harder difficulties find fewer PLATED suits: when a random gear pick
+  // Harder difficulties find fewer ARMOR pieces: when a random gear pick
   // lands on armor, the difficulty's `armorDropMult` is its chance to stand —
-  // a failed roll re-picks among the pool's unplated pieces (if any). Minted
+  // a failed roll re-picks among the pool's non-armor pieces (if any). Minted
   // pieces (opts.defId — boss trophies, placed items) are never dampened, and
   // a mult at/above 1 draws nothing, so the baseline stream is untouched.
   if (family === "gear" && !opts.defId) {
     const diff = difficultyDef(state.difficulty);
     const picked = gearDef(defId).armor;
-    // A hurting hero on the gentle rungs pulls plated suits IN — armor is
+    // A hurting hero on the gentle rungs pulls armor pieces IN — armor is
     // life-saving gear, so it rains harder the closer he is to death (the
     // mirror image of the dampening below, and only ever a mercy on
     // easy/medium: `mercy.armorBonus` is zero from hard up). No draw is
     // spent at full health (desperation 0), so the baseline stream is intact.
-    // One rope at a time: while a plated piece already waits un-collected in
+    // One rope at a time: while an armor piece already waits un-collected in
     // view, the pull holds fire (see mercyRescueWaiting).
     const armorPull = mercyRescueWaiting(state, "armor")
       ? 0
       : lowHealthDesperation(state) * diff.mercy.armorBonus;
-    if (picked) {
-      // Harder rungs find fewer plated suits: a landed-on-armor pick re-rolls
-      // to an unplated piece at `1 - armorDropMult`.
+    if (picked !== undefined) {
+      // Harder rungs find fewer armor pieces: a landed-on-armor pick re-rolls
+      // to a non-armor piece at `1 - armorDropMult`.
       if (diff.armorDropMult < 1 && rng() >= diff.armorDropMult) {
-        const unplated = pool.filter((id) => !gearDef(id).armor);
-        if (unplated.length > 0) {
-          defId = unplated[Math.floor(rng() * unplated.length)] as string;
+        const bare = pool.filter((id) => gearDef(id).armor === undefined);
+        if (bare.length > 0) {
+          defId = bare[Math.floor(rng() * bare.length)] as string;
         }
       }
     } else if (armorPull > 0 && rng() < armorPull) {
-      const plated = pool.filter((id) => gearDef(id).armor);
-      if (plated.length > 0) {
-        defId = plated[Math.floor(rng() * plated.length)] as string;
+      const armored = pool.filter((id) => gearDef(id).armor !== undefined);
+      if (armored.length > 0) {
+        defId = armored[Math.floor(rng() * armored.length)] as string;
       }
     }
   }
@@ -295,6 +309,21 @@ export function rollEquipment(
   // damage damper, the way the built-in sidearm is exempt).
   if (family === "weapon" && tier !== "unique" && tier !== "legendary") {
     rolled.durability = weaponDef(defId).durability;
+  }
+  if (family === "gear") {
+    const def = gearDef(defId);
+    if (def.armor !== undefined) {
+      // The WoW growth rule: the authored armor is the base's value AT ITS
+      // OWN levelReq; every item level above it grows the roll, so the same
+      // vest found deep is genuinely better. Stamped once, frozen for life.
+      const growth = Math.max(0, ilvl - (def.levelReq ?? 1));
+      rolled.armor = Math.round(def.armor * (1 + ARMOR.armorPerIlvl * growth));
+      // Armor wears per hit taken and merely goes INACTIVE at zero (never
+      // trashed); unique/legendary pieces mint unbreakable, like weapons.
+      if (tier !== "unique" && tier !== "legendary" && def.durability) {
+        rolled.durability = def.durability;
+      }
+    }
   }
   return rolled;
 }
@@ -335,8 +364,34 @@ export function adoptEquipment(piece: Equipment): Equipment | null {
 // ---- Derived stats -----------------------------------------------------------
 
 function equippedPieces(state: GameState): Equipment[] {
-  const { weapon, suit, charm, bag } = state.player.equipment;
-  return [weapon, suit, charm, bag].filter((e): e is Equipment => e !== null);
+  const { weapon, head, chest, legs, feet, charm, bag } =
+    state.player.equipment;
+  return [weapon, head, chest, legs, feet, charm, bag].filter(
+    (e): e is Equipment => e !== null,
+  );
+}
+
+/**
+ * True when this worn piece is a BROKEN armor piece: its durability has hit
+ * zero, so it stays on the body but counts for NOTHING — no armor, no flat
+ * bonuses, no affixes — until a repair kit restores it. Only armor breaks
+ * this way; a weapon at zero is trashed instead (see `wearEquippedWeapon`),
+ * and charms/bags never wear.
+ */
+export function isArmorBroken(piece: Equipment): boolean {
+  return (
+    piece.slot !== "weapon" &&
+    piece.slot !== "charm" &&
+    piece.slot !== "bag" &&
+    piece.durability === 0
+  );
+}
+
+/** The worn pieces whose bonuses/affixes actually apply right now — everything
+ * equipped minus broken armor. Every derived-stat read routes through this so
+ * a worn-out piece goes silent the moment it breaks. */
+function activePieces(state: GameState): Equipment[] {
+  return equippedPieces(state).filter((piece) => !isArmorBroken(piece));
 }
 
 /**
@@ -351,11 +406,7 @@ export function previewEquipped(
   candidate: Equipment,
 ): GameState {
   const player = state.player;
-  const equipment = { ...player.equipment };
-  if (candidate.slot === "weapon") equipment.weapon = candidate;
-  else if (candidate.slot === "suit") equipment.suit = candidate;
-  else if (candidate.slot === "bag") equipment.bag = candidate;
-  else equipment.charm = candidate;
+  const equipment = { ...player.equipment, [candidate.slot]: candidate };
   return { ...state, player: { ...player, equipment } };
 }
 
@@ -403,7 +454,7 @@ export function isPassiveItem(defId: string): boolean {
  */
 export function effectiveStat(state: GameState, stat: StatName): number {
   let value = state.player.stats[stat];
-  for (const piece of equippedPieces(state)) {
+  for (const piece of activePieces(state)) {
     for (const affix of piece.affixes) {
       if (affix.kind === "stat" && affix.stat === stat) value += affix.value;
     }
@@ -416,7 +467,7 @@ export function effectiveStat(state: GameState, stat: StatName): number {
  * health bar — a hardy sprinter is a sturdier hero. */
 export function computeMaxHp(state: GameState): number {
   let max = PLAYER.maxHp + effectiveStat(state, "stamina") * STAMINA.hpPerPoint;
-  for (const piece of equippedPieces(state)) {
+  for (const piece of activePieces(state)) {
     if (!isWeaponDef(piece.defId)) {
       max += gearDef(piece.defId).bonuses.maxHp ?? 0;
     }
@@ -441,42 +492,102 @@ export function recomputeMaxHp(state: GameState): void {
 }
 
 /**
- * The equipped suit's armor grade, soak fraction, and full pool — or null when
- * no armored suit is worn (a bare hero, or a suit with no `armor` grade). The
- * single source of truth the damage split, the armor-refill on equip, and the
- * HUD/stat readouts all route through.
+ * The armor points ONE piece contributes while worn: the instance's rolled
+ * value (stamped at mint — the def's base grown by item level), falling back
+ * to the def's base for pieces minted before the stamp existed, plus any
+ * rolled `+armor` affixes. Zero for weapons and for BROKEN armor — a piece
+ * at durability 0 hangs silent until repaired.
  */
-export function armorInfo(
+export function armorValueOf(piece: Equipment): number {
+  if (isWeaponDef(piece.defId) || isArmorBroken(piece)) return 0;
+  let value = piece.armor ?? gearDef(piece.defId).armor ?? 0;
+  for (const affix of piece.affixes) {
+    if (affix.kind === "armor") value += affix.value;
+  }
+  return Math.round(value);
+}
+
+/**
+ * The player's TOTAL armor points: every worn piece's contribution summed
+ * (see `armorValueOf` — broken pieces count zero). The single number the
+ * damage reduction, the stat panel, and gear comparisons read.
+ */
+export function totalArmor(state: GameState): number {
+  let total = 0;
+  for (const piece of equippedPieces(state)) total += armorValueOf(piece);
+  return total;
+}
+
+/**
+ * The fraction of a physical hit the worn armor turns, AGAINST an attacker of
+ * `attackerLevel` — the D2/WoW diminishing-returns curve (config `ARMOR`):
+ *
+ *   armor / (armor + kBase + kPerLevel × attackerLevel)
+ *
+ * capped at `maxReduction`. Leveling the horde grows the denominator, so a
+ * set that turned a third of every blow decays to a shrug unless the armor
+ * keeps pace — the reason armor drops matter all campaign.
+ */
+export function armorReduction(
   state: GameState,
-): { grade: ArmorGrade; max: number; reduction: number } | null {
-  const suit = state.player.equipment.suit;
-  if (!suit || isWeaponDef(suit.defId)) return null;
-  const grade = gearDef(suit.defId).armor;
-  if (!grade) return null;
-  const { amount, reduction } = ARMOR[grade];
-  return { grade, max: amount, reduction };
+  attackerLevel: number,
+): number {
+  const armor = totalArmor(state);
+  if (armor <= 0) return 0;
+  const k = ARMOR.kBase + ARMOR.kPerLevel * Math.max(1, attackerLevel);
+  return Math.min(ARMOR.maxReduction, armor / (armor + k));
 }
 
 /**
- * Re-arm the player to the equipped suit's full armor pool (0 when no armored
- * suit is worn). Called whenever the suit changes — donning fresh plating
- * fills the bar, shedding it empties it.
+ * Spend one hit's worth of every worn armor piece's durability — called when
+ * an enemy's blow or a hazard actually LANDS (a dodged hit costs nothing).
+ * A piece reaching zero goes INACTIVE (still worn, contributing nothing —
+ * see `isArmorBroken`) and announces itself with an `armorBroke` event; the
+ * derived stats are re-derived since its bonuses just went silent.
  */
-export function refreshArmor(state: GameState): void {
-  state.player.armor = armorInfo(state)?.max ?? 0;
+export function wearWornArmor(state: GameState): void {
+  let broke = false;
+  for (const slot of ARMOR_SLOTS) {
+    const piece = state.player.equipment[slot];
+    if (!piece || piece.durability === undefined || piece.durability <= 0) {
+      continue;
+    }
+    piece.durability--;
+    if (piece.durability === 0) {
+      broke = true;
+      state.events.push({ type: "armorBroke", defId: piece.defId });
+    }
+  }
+  if (broke) {
+    recomputeMaxHp(state);
+    recomputeMaxStamina(state);
+  }
 }
 
 /**
- * Top the equipped suit's plating back up to its full pool — the repair kit
- * mends worn armor alongside the weapon's edge. False when there is nothing
- * to restore (no armored suit worn, or the plating is already full) so the
- * kit isn't spent on intact armor.
+ * Restore every worn armor piece to full durability — the repair kit mends
+ * the wardrobe alongside the weapon's edge, waking any broken piece back up.
+ * False when there is nothing to mend (no worn piece is short) so the kit
+ * isn't spent on an intact set.
  */
-export function restoreArmor(state: GameState): boolean {
-  const info = armorInfo(state);
-  if (!info || state.player.armor >= info.max) return false;
-  state.player.armor = info.max;
-  return true;
+export function repairWornArmor(state: GameState): boolean {
+  let mended = false;
+  let revived = false;
+  for (const slot of ARMOR_SLOTS) {
+    const piece = state.player.equipment[slot];
+    if (!piece || piece.durability === undefined) continue;
+    const max = gearDef(piece.defId).durability ?? 0;
+    if (piece.durability >= max) continue;
+    if (piece.durability === 0) revived = true;
+    piece.durability = max;
+    mended = true;
+  }
+  // A revived piece's bonuses just came back online.
+  if (revived) {
+    recomputeMaxHp(state);
+    recomputeMaxStamina(state);
+  }
+  return mended;
 }
 
 /**
@@ -527,7 +638,7 @@ export function playerCritChance(
     STATS.baseCritChance +
     effectiveStat(state, CRIT_STAT[weaponClass]) * STATS.critChancePerStat +
     effectiveStat(state, "luck") * STATS.critChancePerLuck;
-  for (const piece of equippedPieces(state)) {
+  for (const piece of activePieces(state)) {
     if (!isWeaponDef(piece.defId)) {
       chance += gearDef(piece.defId).bonuses.critChance ?? 0;
     }
@@ -587,15 +698,17 @@ export function enemyDodgeChance(state: GameState, base: number): number {
 }
 
 /**
- * Whether the hero is drawn as the astronaut. He wears the EVA suit once he
- * has looted and donned the SpaceZ space suit; on every level but SpaceZ HQ
- * he starts suited (the story picks up mid-mission). The renderer reads this
- * to choose the plain-clothes or astronaut sprite set.
+ * Whether the hero is drawn as the astronaut. The EVA suit is STORY gear,
+ * not equipment — it is worn OVER his clothes and armor, carries no slot and
+ * no stats, and latches the moment its story item is picked up (a
+ * `StoryItemDef.suitsHero` entry — SpaceZ HQ's recovered space suit). On
+ * every level but SpaceZ HQ he starts suited (the story picks up
+ * mid-mission). The renderer reads this to choose the plain-clothes or
+ * astronaut sprite set.
  */
 export function playerSuited(state: GameState): boolean {
-  const suit = state.player.equipment.suit;
-  if (suit && !isWeaponDef(suit.defId) && gearDef(suit.defId).spacesuit) {
-    return true;
+  for (const defId of state.storyItems) {
+    if (storyItemDef(defId).suitsHero) return true;
   }
   return levelDef(state.level.id).heroSuited ?? true;
 }
@@ -669,20 +782,40 @@ export function lowHealthDesperation(state: GameState): number {
   return desperationRamp(hp / maxHp, MERCY.lowHealthStart, MERCY.lowHealthFull);
 }
 
-/** How close the equipped weapon is to snapping, as a 0→1 mercy-drop
- * desperation: 0 above `MERCY.lowDurabilityStart` of its max, 1 at/under
- * `MERCY.lowDurabilityFull`. The unbreakable sidearm (no durability, no def
- * maximum) never triggers it. Drives the low-durability repair boost. */
+/** How close the hero's kit is to giving out, as a 0→1 mercy-drop
+ * desperation: the WORST of the equipped weapon's and every worn armor
+ * piece's durability fraction, ramped between `MERCY.lowDurabilityStart`
+ * and `MERCY.lowDurabilityFull`. Unbreakable pieces (no durability) never
+ * trigger it. Drives the low-durability repair boost — a repair kit mends
+ * weapon and wardrobe alike, so either running dry may call one in. */
 export function lowDurabilityDesperation(state: GameState): number {
+  let worst = 0;
   const weapon = state.player.equipment.weapon;
-  if (weapon.durability === undefined) return 0;
-  const max = weaponDef(weapon.defId).durability;
-  if (!max || max <= 0) return 0;
-  return desperationRamp(
-    weapon.durability / max,
-    MERCY.lowDurabilityStart,
-    MERCY.lowDurabilityFull,
-  );
+  if (weapon.durability !== undefined) {
+    const max = weaponDef(weapon.defId).durability;
+    if (max > 0) {
+      worst = desperationRamp(
+        weapon.durability / max,
+        MERCY.lowDurabilityStart,
+        MERCY.lowDurabilityFull,
+      );
+    }
+  }
+  for (const slot of ARMOR_SLOTS) {
+    const piece = state.player.equipment[slot];
+    if (!piece || piece.durability === undefined) continue;
+    const max = gearDef(piece.defId).durability ?? 0;
+    if (max <= 0) continue;
+    worst = Math.max(
+      worst,
+      desperationRamp(
+        piece.durability / max,
+        MERCY.lowDurabilityStart,
+        MERCY.lowDurabilityFull,
+      ),
+    );
+  }
+  return worst;
 }
 
 /** The rescue pickups a mercy signal can answer with: the low-health medkit,
@@ -699,7 +832,7 @@ function answersMercy(item: Item, rescue: MercyRescue): boolean {
       return (
         item.kind === "equipment" &&
         item.equipment.slot !== "weapon" &&
-        Boolean(gearDef(item.equipment.defId).armor)
+        gearDef(item.equipment.defId).armor !== undefined
       );
     default:
       return item.kind === rescue;
@@ -891,7 +1024,10 @@ export function weaponDps(state: GameState, weapon: Equipment): number {
 
 /**
  * A rough single number for a gear piece's worth, so pickups can be
- * compared to what is worn. Crit is worth ~3 hp per 1%, a stat point ~15.
+ * compared to what is worn. An armor point is worth ~2 hp, crit ~3 hp per
+ * 1%, a stat point ~15. Armor counts the INSTANCE roll (the ilvl-grown
+ * stamp), so a deep find of the same base genuinely out-scores an early one;
+ * a broken piece still scores its full worth — it is one repair kit from it.
  */
 export function gearScore(gear: Equipment): number {
   const def = gearDef(gear.defId);
@@ -900,11 +1036,13 @@ export function gearScore(gear: Equipment): number {
   let score =
     (def.bonuses.maxHp ?? 0) +
     (def.bonuses.critChance ?? 0) * 300 +
+    (gear.armor ?? def.armor ?? 0) * 2 +
     (def.bagSlots ?? 0) * 10;
   for (const affix of gear.affixes) {
     if (affix.kind === "maxHp") score += affix.value;
     else if (affix.kind === "crit") score += affix.value * 300;
     else if (affix.kind === "stat") score += affix.value * 15;
+    else if (affix.kind === "armor") score += affix.value * 2;
     else score += affix.value * 100;
   }
   return score;
@@ -1055,8 +1193,6 @@ export function equipFromInventory(state: GameState, index: number): boolean {
   }
   recomputeMaxHp(state);
   recomputeMaxStamina(state);
-  // A fresh suit re-arms the plating pool to its grade's full size.
-  if (slot === "suit") refreshArmor(state);
   // A +STRENGTH piece can widen the bag; grow it so the swap has somewhere
   // to land (grow-only — see syncInventoryCapacity).
   syncInventoryCapacity(state);
@@ -1079,8 +1215,6 @@ export function unequipToInventory(state: GameState, slot: EquipSlot): boolean {
   player.equipment[slot] = null;
   recomputeMaxHp(state);
   recomputeMaxStamina(state);
-  // Shedding the suit strips the plating.
-  if (slot === "suit") refreshArmor(state);
   return true;
 }
 
@@ -1125,9 +1259,9 @@ export function discardFromInventory(
 /**
  * Permanently destroy the piece worn in `slot` — the drag-it-off-the-body,
  * drop-it-on-the-ground gesture. The weapon slot is never emptied (the hero
- * always fights with something), so only a suit or charm is trashed this way.
- * Returns the discarded piece, or null when the slot is the weapon or already
- * bare. Shedding the suit strips the plating, just like unequipping.
+ * always fights with something), so only worn gear — armor, a charm, a bag —
+ * is trashed this way. Returns the discarded piece, or null when the slot is
+ * the weapon or already bare.
  */
 export function discardEquipped(
   state: GameState,
@@ -1140,7 +1274,6 @@ export function discardEquipped(
   player.equipment[slot] = null;
   recomputeMaxHp(state);
   recomputeMaxStamina(state);
-  if (slot === "suit") refreshArmor(state);
   return item;
 }
 
@@ -1149,16 +1282,15 @@ export function discardEquipped(
 /**
  * A "special" bag piece the bulk-scrap sweep always spares, whatever the raw
  * numbers say: a passive trinket (it pays its bonus just by riding in the bag,
- * so a plain stat comparison misses its worth), a top-tier find (unique or
+ * so a plain stat comparison misses its worth) or a top-tier find (unique or
  * legendary — the rarest drops, kept as trophies and for their fat affix
- * rolls), or the story spacesuit (plot gear, not loot). Everything else is
- * ordinary loot the sweep may cull.
+ * rolls). Everything else is ordinary loot the sweep may cull.
  */
 export function isSpecialItem(item: Equipment): boolean {
   if (item.tier === "unique" || item.tier === "legendary") return true;
   if (isWeaponDef(item.defId)) return false;
   const def = gearDef(item.defId);
-  return def.passive !== undefined || def.spacesuit === true;
+  return def.passive !== undefined;
 }
 
 /**

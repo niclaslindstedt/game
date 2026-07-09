@@ -323,14 +323,45 @@ export const FIX_WEAPONS: Record<string, WeaponDef> = {
 };
 
 export const FIX_GEAR: Record<string, GearDef> = {
-  test_suit: {
-    id: "test_suit",
-    name: "TEST SUIT",
-    slot: "suit",
+  // The four-slot armor wardrobe: one piece per body slot so the armor rules
+  // (summed reduction, per-hit wear, inactive-at-zero, repair) have a full
+  // set to exercise. The vest keeps the old test suit's +20 maxHp so the
+  // "gear grants life" assertions carry over unchanged.
+  test_helmet: {
+    id: "test_helmet",
+    name: "TEST HELMET",
+    slot: "head",
+    bonuses: {},
+    armor: 10,
+    durability: 80,
+    icon: "icon_hard_hat",
+  },
+  test_vest: {
+    id: "test_vest",
+    name: "TEST VEST",
+    slot: "chest",
     bonuses: { maxHp: 20 },
-    // A mid-grade plated suit, so the armor-split rule has a pool to soak into.
-    armor: "yellow",
-    icon: "icon_suit",
+    armor: 16,
+    durability: 90,
+    icon: "icon_kevlar_vest",
+  },
+  test_greaves: {
+    id: "test_greaves",
+    name: "TEST GREAVES",
+    slot: "legs",
+    bonuses: {},
+    armor: 10,
+    durability: 80,
+    icon: "icon_cargo_pants",
+  },
+  test_boots: {
+    id: "test_boots",
+    name: "TEST BOOTS",
+    slot: "feet",
+    bonuses: {},
+    armor: 8,
+    durability: 80,
+    icon: "icon_leather_boots",
   },
   test_charm: {
     id: "test_charm",
@@ -460,6 +491,7 @@ export const FIX_DIFFICULTIES: Record<string, DifficultyDef> = {
       staminaDrinkChanceMax: 0.15,
     },
     uniqueDropChance: 0,
+    lootIlvlBonus: 0,
     tierChanceBonus: {},
     staminaDrainMult: 0.95,
     playerDodgeMult: 1.3,
@@ -493,6 +525,7 @@ export const FIX_DIFFICULTIES: Record<string, DifficultyDef> = {
       staminaDrinkChanceMax: 0.1,
     },
     uniqueDropChance: 0,
+    lootIlvlBonus: 0,
     tierChanceBonus: {},
     staminaDrainMult: 1,
     playerDodgeMult: 1,
@@ -526,6 +559,7 @@ export const FIX_DIFFICULTIES: Record<string, DifficultyDef> = {
       staminaDrinkChanceMax: 0,
     },
     uniqueDropChance: 0.01,
+    lootIlvlBonus: 1,
     tierChanceBonus: { magic: 0.1, unique: 0.06, legendary: 0.01 },
     staminaDrainMult: 1.05,
     playerDodgeMult: 0.9,
@@ -559,6 +593,7 @@ export const FIX_DIFFICULTIES: Record<string, DifficultyDef> = {
       staminaDrinkChanceMax: 0,
     },
     uniqueDropChance: 0.02,
+    lootIlvlBonus: 2,
     tierChanceBonus: { magic: 0.18, unique: 0.14, legendary: 0.05 },
     staminaDrainMult: 1.1,
     playerDodgeMult: 0.8,
@@ -592,6 +627,7 @@ export const FIX_DIFFICULTIES: Record<string, DifficultyDef> = {
       staminaDrinkChanceMax: 0,
     },
     uniqueDropChance: 0.04,
+    lootIlvlBonus: 4,
     tierChanceBonus: { magic: 0.26, unique: 0.22, legendary: 0.12 },
     staminaDrainMult: 1.1,
     playerDodgeMult: 0.7,
@@ -602,6 +638,15 @@ export const FIX_DIFFICULTIES: Record<string, DifficultyDef> = {
 };
 
 export const FIX_STORY_ITEMS: Record<string, StoryItemDef> = {
+  // An EVA-suit plot piece (mirrors the shipped space suit): picking it up
+  // dresses the hero as the astronaut for the rest of the run.
+  test_eva: {
+    id: "test_eva",
+    name: "TEST EVA SUIT",
+    icon: "icon_suit",
+    suitsHero: true,
+    lore: [["A TEST EVA SUIT."]],
+  },
   test_key: {
     id: "test_key",
     name: "TEST KEY",
@@ -675,7 +720,7 @@ export const FIX_LEVEL: LevelDef = {
   decorClearance: 80,
   loot: {
     weaponPool: ["blaster", "test_pistol", "test_wand", "test_wrench"],
-    gearPool: ["test_suit", "test_charm"],
+    gearPool: ["test_vest", "test_charm"],
     abilityPool: ["test_orbit", "test_storm", "test_stasis", "test_magnet"],
     earlyDrops: [
       { atKills: 2, weapon: "test_hammer" },

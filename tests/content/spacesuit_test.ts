@@ -1,22 +1,20 @@
 // SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
-// The SpaceZ space suit: the hero starts in plain clothes at HQ, becomes the
-// astronaut once he dons the (epic) EVA suit, and is suited by default on
-// every later level. Also covers the forced-tier loot roll that mints the
-// suit as epic even though SpaceZ only rolls up to magic.
+// The SpaceZ space suit: STORY gear, not equipment. The hero starts in plain
+// clothes at HQ, becomes the astronaut the moment he picks the suit up off
+// the CHIEF OF SECURITY (a `suitsHero` story item worn OVER his clothes and
+// armor — no slot, no stats), and is suited by default on every later level.
 
 import { describe, expect, it } from "vitest";
 
 import {
-  computeMaxHp,
+  collectStoryItem,
   createGame,
   dismissIntro,
   ENEMY_DEFS,
-  gearDef,
+  playerAppearance,
   playerSuited,
-  previewEquipped,
-  rollEquipment,
   skipCutscene,
-  type Equipment,
+  storyItemDef,
 } from "@game/core";
 
 import { SEED } from "../helpers.ts";
@@ -28,26 +26,25 @@ function spacez() {
   return state;
 }
 
-function suit(state: ReturnType<typeof spacez>, tier: Equipment["tier"]) {
-  return rollEquipment(state, { defId: "space_suit", tier });
-}
-
 describe("space suit", () => {
-  it("leaves the hero unsuited at SpaceZ HQ until he equips it", () => {
+  it("leaves the hero unsuited at SpaceZ HQ until he picks it up", () => {
     const state = spacez();
     expect(playerSuited(state)).toBe(false);
+    expect(playerAppearance(state)).toBe("hero"); // plain clothes
 
-    state.player.equipment.suit = suit(state, "unique");
+    collectStoryItem(state, "space_suit", { ...state.player.pos });
     expect(playerSuited(state)).toBe(true);
+    expect(playerAppearance(state)).toBe("player"); // the astronaut
   });
 
-  it("does not turn ordinary suit armor into the astronaut", () => {
+  it("banks as a story item and plays its lore, never entering the bag", () => {
     const state = spacez();
-    state.player.equipment.suit = rollEquipment(state, {
-      defId: "lab_coat",
-      tier: "regular",
-    });
-    expect(playerSuited(state)).toBe(false);
+    const bagBefore = state.player.inventory.filter(Boolean).length;
+    collectStoryItem(state, "space_suit", { ...state.player.pos });
+    expect(state.storyItems).toContain("space_suit");
+    expect(state.player.inventory.filter(Boolean).length).toBe(bagBefore);
+    expect(storyItemDef("space_suit").suitsHero).toBe(true);
+    expect(storyItemDef("space_suit").lore.length).toBeGreaterThan(0);
   });
 
   it("keeps the hero suited by default on later levels", () => {
@@ -57,31 +54,7 @@ describe("space suit", () => {
     expect(playerSuited(state)).toBe(true);
   });
 
-  it("mints as unique with its full affix count even at a gated monster level", () => {
-    const state = spacez();
-    const rolled = suit(state, "unique");
-    expect(rolled.tier).toBe("unique");
-    // Unique gear carries three affixes (the TIERS ladder, capped by the gear
-    // pool's three kinds) — the forced tier ignores the monster-level gates.
-    expect(rolled.affixes).toHaveLength(3);
-    expect(gearDef(rolled.defId).spacesuit).toBe(true);
-  });
-
-  it("is the Chief of Security's forced-epic guaranteed drop", () => {
-    const drop = ENEMY_DEFS.security_chief!.loot!.items!.find(
-      (entry) => typeof entry !== "string" && entry.defId === "space_suit",
-    );
-    expect(drop).toEqual({ defId: "space_suit", tier: "unique" });
-  });
-
-  it("previews its max-hp gain as an inventory upgrade delta", () => {
-    const state = spacez();
-    // A plain regular roll has no affixes, so the delta is exactly the def's
-    // flat bonus — the number the inventory shows in green.
-    const candidate = suit(state, "regular");
-    const preview = previewEquipped(state, candidate);
-    expect(computeMaxHp(preview) - computeMaxHp(state)).toBe(
-      gearDef("space_suit").bonuses.maxHp,
-    );
+  it("is the Chief of Security's guaranteed story drop", () => {
+    expect(ENEMY_DEFS.security_chief!.loot!.storyItems).toContain("space_suit");
   });
 });

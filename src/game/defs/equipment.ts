@@ -7,14 +7,8 @@
 // never touches the engine.
 
 import { MELEE, WEAPON } from "../config.ts";
-import type {
-  Affix,
-  ArmorGrade,
-  EquipSlot,
-  StatName,
-  Tier,
-  WeaponClass,
-} from "../types.ts";
+import { GEAR_DEFS, type GearDef } from "./gear.ts";
+import type { Affix, StatName, Tier, WeaponClass } from "../types.ts";
 
 // ---- Tiers -----------------------------------------------------------------
 
@@ -871,247 +865,16 @@ export const WEAPON_DEFS: Record<string, WeaponDef> = {
 };
 
 // ---- Gear -------------------------------------------------------------------
+// The gear catalog (armor, charms, bags) lives in its own module purely by
+// size; re-exported here so `defs/equipment.ts` stays the one import surface
+// for the whole equipment catalog.
 
-export type GearDef = {
-  id: string;
-  name: string;
-  slot: Exclude<EquipSlot, "weapon">;
-  /**
-   * Level requirement, same two-way gate as a weapon's (see
-   * WeaponDef.levelReq): never drops off a mob below it, never worn by a
-   * hero below it. Omitted = 1 (no gate).
-   */
-  levelReq?: number;
-  /** Flat bonuses baked into the item before tier affixes. */
-  bonuses: { maxHp?: number; critChance?: number };
-  /**
-   * Suits only: the armor grade the plating grants. Equipping the suit fills
-   * an armor pool of the grade's size (config `ARMOR`) that soaks its share of
-   * every physical hit until spent. Absent = the piece has no plating (charms,
-   * and cloth suits like the lab coat that lean on `maxHp` instead).
-   */
-  armor?: ArmorGrade;
-  /**
-   * A passive trinket's flat stat bonuses, paid out while the piece is merely
-   * CARRIED — the effect rides in the bag, so a passive item never needs an
-   * equip slot to work (see `effectiveStat`). This is what a `+1 INT` chip
-   * grants sitting in a pocket, as distinct from a suit or charm that must be
-   * worn. Absent on ordinary gear, whose bonuses only count once equipped.
-   */
-  passive?: Partial<Record<StatName, number>>;
-  /**
-   * BAGS only (`slot: "bag"`): how many extra inventory cells this bag adds on
-   * top of the STRENGTH-scaled floor while it is worn in the bag slot (see
-   * `inventoryCapacity`). Absent on every other piece. Bigger bags ship later
-   * as new defs carrying a larger count.
-   */
-  bagSlots?: number;
-  /**
-   * Merchant material, same scale as a weapon's (see WeaponDef.material):
-   * metal sells for double, precious for four times. Omitted = base value.
-   */
-  material?: "metal" | "precious";
-  /** Inventory icon sprite. */
-  icon: string;
-  /**
-   * The EVA space suit: equipping it turns the plain-clothes hero into the
-   * astronaut (the renderer swaps his sprite). Only the SpaceZ suit sets
-   * this; ordinary armor leaves the hero's look alone.
-   */
-  spacesuit?: boolean;
-};
-
-export const GEAR_DEFS: Record<string, GearDef> = {
-  // The starter BAG: the plainest carry-all, worn in the bag slot to widen the
-  // inventory by two cells. It is the first of a family — bigger bags arrive
-  // later as their own defs with a larger `bagSlots`. Carries no combat stats,
-  // so it never competes with a charm or suit for a body slot.
-  bag: {
-    id: "bag",
-    name: "BAG",
-    slot: "bag",
-    bonuses: {},
-    bagSlots: 2,
-    icon: "icon_bag",
-  },
-  lab_coat: {
-    id: "lab_coat",
-    name: "LAB COAT",
-    slot: "suit",
-    bonuses: { maxHp: 15 },
-    // The lightest plating: a lab coat turns a few hits, no more.
-    armor: "green",
-    icon: "icon_lab_coat",
-  },
-  id_badge: {
-    id: "id_badge",
-    name: "ID BADGE",
-    slot: "charm",
-    // All-areas access reads as luck: doors you should not have opened.
-    bonuses: { critChance: 0.03 },
-    icon: "icon_badge",
-  },
-  suit_plating: {
-    id: "suit_plating",
-    material: "metal",
-    name: "SUIT PLATING",
-    slot: "suit",
-    bonuses: { maxHp: 20 },
-    // Bolted-on plates: a solid mid-grade shell.
-    armor: "yellow",
-    icon: "icon_suit",
-  },
-  // The prize of SpaceZ HQ: the EVA suit the hero needs to follow Ada
-  // off-planet. An epic drop that both armors him and, once worn, makes him
-  // the astronaut he is for the rest of the game.
-  space_suit: {
-    id: "space_suit",
-    name: "SPACE SUIT",
-    slot: "suit",
-    bonuses: { maxHp: 40 },
-    // Rated for the void: the heaviest plating in the game.
-    armor: "red",
-    icon: "icon_suit",
-    spacesuit: true,
-  },
-  moon_charm: {
-    id: "moon_charm",
-    name: "MOON CHARM",
-    slot: "charm",
-    bonuses: { critChance: 0.03 },
-    icon: "icon_charm",
-  },
-  // THE ARCHITECT's PASSAGE CHIP: the implant the old coworker cut into his own
-  // skull to badge through the cyborg locks and pass as a machine. In the
-  // hero's bag it is a passive trinket — its `+1 INT` applies while merely
-  // carried, never occupying an equip slot (see `isPassiveItem`). A `charm`
-  // slot only so it is a well-formed piece of gear should the player ever drag
-  // it onto the body; either way the mind sharpens exactly once.
-  passage_chip: {
-    id: "passage_chip",
-    name: "PASSAGE CHIP",
-    slot: "charm",
-    bonuses: {},
-    passive: { intelligence: 1 },
-    icon: "icon_passage_chip",
-  },
-  // ---- Mars gear: colony-issue kit in the level's drop pool.
-  pressure_plating: {
-    id: "pressure_plating",
-    material: "metal",
-    name: "PRESSURE PLATING",
-    slot: "suit",
-    bonuses: { maxHp: 25 },
-    // Dome-rated hull panels, restrapped as armor.
-    armor: "yellow",
-    icon: "icon_suit",
-  },
-  red_dust_charm: {
-    id: "red_dust_charm",
-    name: "RED DUST CHARM",
-    slot: "charm",
-    // A vial of the regolith the colony is built on. Lucky, probably.
-    bonuses: { critChance: 0.03 },
-    icon: "icon_charm",
-  },
-  // ---- Rift gear: what history's missing carry, and what the void rains.
-  stardust_charm: {
-    id: "stardust_charm",
-    material: "precious",
-    name: "STARDUST CHARM",
-    slot: "charm",
-    // A pinch of ground-up somewhere else. It glitters at good moments.
-    bonuses: { critChance: 0.03 },
-    icon: "icon_charm",
-  },
-  aviator_goggles: {
-    id: "aviator_goggles",
-    name: "AVIATOR GOGGLES",
-    slot: "charm",
-    // EARHART's goggles: ninety years of spotting the gap in the weather.
-    bonuses: { critChance: 0.04 },
-    icon: "icon_goggles",
-  },
-  rasputin_beard: {
-    id: "rasputin_beard",
-    name: "RASPUTIN'S BEARD",
-    slot: "charm",
-    // The beard survived the poison, the bullets and the river. Now it
-    // survives things FOR you.
-    bonuses: { maxHp: 30 },
-    icon: "icon_beard",
-  },
-  golden_parachute: {
-    id: "golden_parachute",
-    material: "precious",
-    name: "GOLDEN PARACHUTE",
-    slot: "charm",
-    // MOSQUE's exit package, dropped mid-exit. Guaranteed soft landings,
-    // whoever crashed the company.
-    bonuses: { maxHp: 25, critChance: 0.02 },
-    icon: "icon_parachute",
-  },
-  // ---- Rift FANTASY gear: things that fell through from stories rather
-  // than history. Only the rift's pool carries them — it's the one magical
-  // level so far.
-  lucky_clover: {
-    id: "lucky_clover",
-    name: "LUCKY CLOVER",
-    slot: "charm",
-    levelReq: 15,
-    // Four leaves, pressed flat by something enormous. Pays out from the bag.
-    bonuses: {},
-    passive: { luck: 2 },
-    icon: "icon_clover",
-  },
-  crystal_orb: {
-    id: "crystal_orb",
-    material: "precious",
-    name: "CRYSTAL ORB",
-    slot: "charm",
-    levelReq: 16,
-    // It shows you the blow before it lands.
-    bonuses: { critChance: 0.04 },
-    icon: "icon_crystal_orb",
-  },
-  grimoire: {
-    id: "grimoire",
-    material: "precious",
-    name: "GRIMOIRE",
-    slot: "charm",
-    levelReq: 18,
-    // A book that reads YOU. Sharpens the mind just riding in the bag.
-    bonuses: {},
-    passive: { intelligence: 2 },
-    icon: "icon_grimoire",
-  },
-  enchanted_ring: {
-    id: "enchanted_ring",
-    material: "precious",
-    name: "ENCHANTED RING",
-    slot: "charm",
-    levelReq: 20,
-    // One ring. It wants to be worn — and it earns it.
-    bonuses: { critChance: 0.05 },
-    icon: "icon_enchanted_ring",
-  },
-  dragonscale_cloak: {
-    id: "dragonscale_cloak",
-    material: "precious",
-    name: "DRAGONSCALE CLOAK",
-    slot: "suit",
-    levelReq: 22,
-    // Shed, not taken — nobody skins a dragon. The rift's heaviest plating.
-    bonuses: { maxHp: 35 },
-    armor: "red",
-    icon: "icon_dragonscale_cloak",
-  },
-};
+export { GEAR_DEFS, type GearDef };
 
 // ---- Affixes ------------------------------------------------------------------
 
 export type AffixDef = {
-  kind: "damagePct" | "maxHp" | "crit" | "stat";
+  kind: "damagePct" | "maxHp" | "crit" | "stat" | "armor";
   /**
    * Roll size PER ITEM LEVEL: the affix's value is
    * `ilvl × randomRange(min, max)` (stat/maxHp rounded, floored at 1 point).
@@ -1147,6 +910,11 @@ export const AFFIX_POOLS: Record<"weapon" | "gear", AffixDef[]> = {
     { kind: "maxHp", perIlvl: [2, 3.4], weight: 4 },
     { kind: "crit", perIlvl: [0.004, 0.006], weight: 3 },
     { kind: "stat", perIlvl: [1, 1], weight: 3 },
+    // +0.8–1.4 armor per ilvl: an ilvl-10 roll adds 8–14 armor — the scale
+    // of a mid-band base piece, so a MAGIC find can genuinely out-armor a
+    // plain one a slot up. Rolls on any gear (a +armor charm is a fine
+    // Diablo tradition), stacking into the same worn total.
+    { kind: "armor", perIlvl: [0.8, 1.4], weight: 3 },
   ],
 };
 
@@ -1203,6 +971,8 @@ export function affixNaming(affix: Affix): {
       return { suffix: affix.value < 0.06 ? "OF PRECISION" : "OF DEADLINESS" };
     case "maxHp":
       return { prefix: affix.value < 35 ? "STURDY" : "REINFORCED" };
+    case "armor":
+      return { prefix: affix.value < 20 ? "STUDDED" : "PLATED" };
     case "stat":
       return { suffix: STAT_SUFFIX[affix.stat] };
   }

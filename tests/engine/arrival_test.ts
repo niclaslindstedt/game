@@ -16,6 +16,7 @@ import {
   HELD_ITEMS,
   LEVELING,
   PLAYER,
+  totalArmor,
   type Loadout,
 } from "@game/core";
 // Importing the helper installs the fixture catalogs as a side effect.
@@ -50,14 +51,18 @@ function sampleLoadout(): Loadout {
         affixes: [{ kind: "damagePct", value: 0.2 }],
         durability: 77,
       },
-      suit: {
+      head: null,
+      chest: {
         id: 2,
-        defId: "test_suit",
-        slot: "suit",
+        defId: "test_vest",
+        slot: "chest",
         tier: "regular",
         ilvl: 5,
         affixes: [],
+        durability: 90,
       },
+      legs: null,
+      feet: null,
       charm: null,
       bag: null,
     },
@@ -82,7 +87,8 @@ describe("loadout carry-over", () => {
     const state = createGame(SEED, "test_level_2");
     expect(state.player.level).toBe(1);
     expect(state.player.equipment.weapon.defId).toBe("crude_sword");
-    expect(state.player.equipment.suit).toBeNull();
+    // The fixture ladder mints no starting clothes, so the body is bare.
+    expect(state.player.equipment.chest).toBeNull();
     expect(state.player.heldAbilities).toEqual([]);
     expect(Object.values(state.player.stats).every((v) => v === 0)).toBe(true);
   });
@@ -98,7 +104,7 @@ describe("loadout carry-over", () => {
     expect(player.equipment.weapon.defId).toBe("test_wrench");
     expect(player.equipment.weapon.tier).toBe("magic");
     expect(player.equipment.weapon.durability).toBe(77);
-    expect(player.equipment.suit?.defId).toBe("test_suit");
+    expect(player.equipment.chest?.defId).toBe("test_vest");
     // ...with ids re-minted so nothing collides with this run's drops.
     expect(player.equipment.weapon.id).not.toBe(1);
     // The bag survives, the powerups stay pocketed (within the cap).
@@ -106,10 +112,10 @@ describe("loadout carry-over", () => {
     expect(player.heldAbilities).toEqual(
       ["test_storm"].slice(0, HELD_ITEMS.cap),
     );
-    // He arrives rested: full (grown) health, full sprint, plating fastened.
+    // He arrives rested: full (grown) health, full sprint, armor worn.
     expect(player.maxHp).toBeGreaterThan(PLAYER.maxHp);
     expect(player.hp).toBe(player.maxHp);
-    expect(player.armor).toBeGreaterThan(0);
+    expect(totalArmor(state)).toBeGreaterThan(0);
   });
 
   it("round-trips: extractLoadout of one run seeds the next", () => {
@@ -155,7 +161,7 @@ describe("loadout carry-over", () => {
     // The previous level's kit: its scripted early-drop weapon, issue gear,
     // and a couple of its powerups.
     expect(loadout!.equipment.weapon.defId).toBe("test_hammer");
-    expect(loadout!.equipment.suit?.defId).toBe("test_suit");
+    expect(loadout!.equipment.chest?.defId).toBe("test_vest");
     expect(loadout!.equipment.charm?.defId).toBe("test_charm");
     expect(loadout!.heldAbilities).toEqual(
       ["test_orbit", "test_storm"].slice(0, ARRIVAL.heldAbilities),

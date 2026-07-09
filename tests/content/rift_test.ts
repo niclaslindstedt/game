@@ -179,7 +179,8 @@ describe("THE RIFT level def", () => {
     expect(loadout!.level).toBeGreaterThan(7);
     // Carrying Mars's signature kit.
     expect(loadout!.equipment.weapon.defId).toBe("cyber_katana");
-    expect(loadout!.equipment.suit?.defId).toBe("suit_plating");
+    // Mars's best wardrobe rides along.
+    expect(loadout!.equipment.chest?.defId).toBe("aegis_exoplate");
     expect(loadout!.equipment.charm?.defId).toBe("red_dust_charm");
   });
 });

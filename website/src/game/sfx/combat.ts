@@ -171,8 +171,10 @@ export function playCombatSound(synth: Synth, event: GameEvent): boolean {
       return true;
 
     case "weaponBroke":
-      // The blade snapping: a metallic crack, a ping of shrapnel, and the
-      // pieces sagging away down a saw drop.
+    case "armorBroke":
+      // Something giving out: a metallic crack, a ping of shrapnel, and the
+      // pieces sagging away down a saw drop. Armor wearing through shares the
+      // weapon's snap — same "your kit just failed" alarm, same urgency.
       synth.noise({
         durationMs: 80,
         volume: 0.07,

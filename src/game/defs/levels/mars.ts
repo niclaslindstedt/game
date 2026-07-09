@@ -257,7 +257,22 @@ export const MARS: LevelDef = {
       "arc_projector",
       "gravity_maul",
     ],
-    gearPool: ["suit_plating", "pressure_plating", "red_dust_charm", "bag"],
+    // The colony printer's wardrobe: monocle to exoplate, introduced at
+    // levelReqs 10 → 15 alongside the weapons.
+    gearPool: [
+      "targeting_monocle",
+      "neural_visor",
+      "printed_helm",
+      "polymer_shell",
+      "nanoweave_plate",
+      "aegis_exoplate",
+      "carbon_leggings",
+      "servo_greaves",
+      "gecko_soles",
+      "mag_boots",
+      "red_dust_charm",
+      "bag",
+    ],
     abilityPool: ["fire_orbs", "storm_cell", "stasis_field", "item_magnet"],
     // The CYBER KATANA arrives early at a kill discovered in play — the
     // run's signature blade, same cadence as the moon's blade.

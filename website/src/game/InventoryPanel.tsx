@@ -18,7 +18,9 @@ import { createPortal } from "react-dom";
 
 import {
   ACCURACY,
-  armorInfo,
+  armorReduction,
+  armorValueOf,
+  currentMobLevel,
   computeMaxHp,
   discardEquipped,
   discardFromInventory,
@@ -29,6 +31,7 @@ import {
   equipmentLevelReq,
   equipmentName,
   gearDef,
+  isArmorBroken,
   isScrappableLoot,
   isWeaponDef,
   scrapInferiorLoot,
@@ -40,6 +43,7 @@ import {
   playerDodgeChance,
   playerMissChance,
   previewEquipped,
+  totalArmor,
   unequipToInventory,
   weaponCooldownFor,
   weaponDamage,
@@ -75,10 +79,23 @@ type Drag = {
 
 const SLOTS: { slot: EquipSlot; label: string }[] = [
   { slot: "weapon", label: "WEAPON" },
-  { slot: "suit", label: "SUIT" },
+  { slot: "head", label: "HEAD" },
+  { slot: "chest", label: "CHEST" },
+  { slot: "legs", label: "LEGS" },
+  { slot: "feet", label: "FEET" },
   { slot: "charm", label: "CHARM" },
   { slot: "bag", label: "BAG" },
 ];
+
+/** The item card's headline per gear slot (weapons headline their class). */
+const SLOT_HEADLINES: Record<Exclude<EquipSlot, "weapon">, string> = {
+  head: "HEAD ARMOR",
+  chest: "CHEST ARMOR",
+  legs: "LEG ARMOR",
+  feet: "FOOT ARMOR",
+  charm: "CHARM",
+  bag: "BAG",
+};
 
 const STAT_LABELS: Record<StatName, string> = {
   stamina: "STAMINA",
@@ -97,6 +114,8 @@ function affixLine(affix: Affix): string {
       return `+${affix.value} MAX HP`;
     case "crit":
       return `+${Math.round(affix.value * 100)}% CRIT`;
+    case "armor":
+      return `+${affix.value} ARMOR`;
     case "stat":
       return `+${affix.value} ${STAT_LABELS[affix.stat]}`;
   }
@@ -279,10 +298,21 @@ function itemLines(
     );
   } else {
     const def = gearDef(item.defId);
-    // Compare against the gear worn in the same slot (suit/charm/bag).
+    // Compare against the gear worn in the same slot.
     const eqGear =
       equipped && !isWeaponDef(equipped.defId) ? gearDef(equipped.defId) : null;
-    lines.push({ text: def.slot === "suit" ? "SUIT ARMOR" : "CHARM" });
+    lines.push({ text: SLOT_HEADLINES[def.slot] });
+    // An armor piece leads with its rolled armor points (the ilvl-grown
+    // stamp), compared against what the same slot wears now.
+    if (def.armor !== undefined) {
+      const value = armorValueOf({ ...item, durability: undefined });
+      const worn = equipped ? armorValueOf(equipped) : 0;
+      lines.push({
+        text: `${value} ARMOR`,
+        color: AFFIX_COLORS.armor,
+        delta: equipped ? compareChip(value - worn) : null,
+      });
+    }
     if (def.bonuses.maxHp) {
       lines.push({
         text: `+${def.bonuses.maxHp} MAX HP`,
@@ -303,6 +333,19 @@ function itemLines(
             )
           : null,
       });
+    }
+    if (def.durability !== undefined && item.durability !== undefined) {
+      lines.push(
+        item.durability <= 0
+          ? { text: "BROKEN - REPAIR TO RESTORE", color: "#e06a6a" }
+          : {
+              text: `DURABILITY ${item.durability}/${def.durability}`,
+              color:
+                item.durability <= def.durability * 0.25
+                  ? "#e06a6a"
+                  : undefined,
+            },
+      );
     }
   }
   // The class/slot headline stays first; the level lines slide in under it.
@@ -735,26 +778,22 @@ export function InventoryPanel({
                     }
                   />
                   {(() => {
-                    const armor = armorInfo(state);
-                    const previewArmor = preview ? armorInfo(preview) : null;
-                    const armorColor = armor
-                      ? { green: "#5fd97a", yellow: "#ffe14d", red: "#e0603a" }[
-                          armor.grade
-                        ]
-                      : "#9aa3ad";
+                    // Total worn armor and what it turns of the CURRENT
+                    // horde's blows — the same number the damage math reads,
+                    // so the panel decays as the mobs outlevel the wardrobe.
+                    const worn = totalArmor(state);
+                    const reduction = armorReduction(
+                      state,
+                      currentMobLevel(state),
+                    );
+                    const previewWorn = preview ? totalArmor(preview) : worn;
                     return (
                       <StatLine
                         font={font}
                         label="ARMOR"
-                        value={String(armor?.max ?? 0)}
-                        color={armorColor}
-                        chip={
-                          preview
-                            ? deltaChip(
-                                (previewArmor?.max ?? 0) - (armor?.max ?? 0),
-                              )
-                            : null
-                        }
+                        value={`${worn} (-${Math.round(reduction * 100)}%)`}
+                        color={worn > 0 ? "#9ab3c9" : "#9aa3ad"}
+                        chip={preview ? deltaChip(previewWorn - worn) : null}
                       />
                     );
                   })()}
@@ -833,7 +872,7 @@ export function InventoryPanel({
                     <div
                       className={`inv-cell equip-cell${
                         drag && drag.item.slot === slot ? " drop-ok" : ""
-                      }`}
+                      }${item && isArmorBroken(item) ? " broken" : ""}`}
                       data-drop={`slot:${slot}`}
                       style={
                         item
@@ -898,7 +937,9 @@ export function InventoryPanel({
             {player.inventory.map((item, index) => (
               <div
                 key={index}
-                className="inv-cell"
+                className={`inv-cell${
+                  item && isArmorBroken(item) ? " broken" : ""
+                }`}
                 data-drop={`inv:${index}`}
                 style={
                   item ? { borderColor: TIER_COLORS[item.tier] } : undefined
@@ -932,7 +973,7 @@ export function InventoryPanel({
         </button>
       </div>
 
-      {/* Discard warning: a bag item or an equipped suit/charm dragged clear
+      {/* Discard warning: a bag item or equipped gear dragged clear
           of the panel is at risk, so only then does the "destroy" prompt
           appear. The held weapon is never trashable, so dragging it shows no
           warning. */}

@@ -184,7 +184,7 @@ run against synthetic fixtures with no shipped content (see
   jump clears the pull entirely — and the **asteroid rain**
   (`LevelDef.asteroids`, config `ASTEROIDS`): rocks spawned on a ring past
   the screen edge streak across the player (one strike per rock, jumpable,
-  armor soaks) and shove minions aside unharmed. Related:
+  armor reduces) and shove minions aside unharmed. Related:
   **apparitions** (`EnemyDef.apparition`, config `APPARITION`) are
   dialogue-only figures the combat/hazard paths all skip — they rush in to
   speak like any elite, then walk off and dissolve (`apparitionVanished`).
@@ -238,9 +238,12 @@ run against synthetic fixtures with no shipped content (see
   `gearScore`) and the crit-inclusive `weaponDps` the item cards lead with,
   and the durability cycle
   (`wearEquippedWeapon` — a broken weapon is trashed and the best bag
-  weapon takes over — and `repairEquippedWeapon` + `restoreArmor` for
-  repair-kit drops, which mend the weapon's edge and top up a worn suit's
-  plating together). Every drop is minted with a FROZEN snapshot of its
+  weapon takes over; `wearWornArmor` — armor spends a point per landed hit
+  and a piece at zero goes INACTIVE (`isArmorBroken`), never trashed — and
+  `repairEquippedWeapon` + `repairWornArmor` for repair-kit drops, which
+  mend the weapon's edge and the whole wardrobe together). Worn armor sums
+  into a level-scaled physical reduction (`totalArmor`/`armorReduction`,
+  config `ARMOR` — the D2/WoW diminishing-returns curve). Every drop is minted with a FROZEN snapshot of its
   catalog def (`Equipment.def`), so a kept item is version-proof: rebalancing
   or deleting a base changes only new drops, never one a player already holds.
   On load the app runs each persisted instance through `adoptEquipment`, which

@@ -13,7 +13,8 @@ import { ASTEROIDS, JUMP, PLAYER, WELLS } from "./config.ts";
 import { difficultyDef } from "./defs/difficulties.ts";
 import { enemyDef } from "./defs/enemies/index.ts";
 import { levelDef, type LevelDef } from "./defs/levels/index.ts";
-import { armorInfo } from "./items.ts";
+import { armorReduction, wearWornArmor } from "./items.ts";
+import { currentMobLevel } from "./menace.ts";
 import { startPlayerThought } from "./story.ts";
 import type { Asteroid, Enemy, GameState, GravityWell } from "./types.ts";
 
@@ -36,20 +37,19 @@ function pullAt(well: GravityWell, d: number): number {
 }
 
 /**
- * Environmental damage to the player: the suit's plating soaks its grade's
- * share like any physical hit, the rest bites into HP — but there is no
+ * Environmental damage to the player: worn armor turns its share like any
+ * physical hit (judged against the live horde level — a hazard has no level
+ * of its own) and wears a point, the rest bites into HP — but there is no
  * crit, no dodge and no last-stand math; a hazard is impartial. Shared by
  * the well core burn and the asteroid strike.
  */
 function hurtPlayer(state: GameState, damage: number): void {
   const player = state.player;
-  const armor = armorInfo(state);
-  let hpDamage = damage;
-  if (armor && player.armor > 0) {
-    const soaked = Math.min(Math.round(damage * armor.reduction), player.armor);
-    player.armor -= soaked;
-    hpDamage = damage - soaked;
-  }
+  const hpDamage = Math.max(
+    0,
+    Math.round(damage * (1 - armorReduction(state, currentMobLevel(state)))),
+  );
+  wearWornArmor(state);
   player.hp -= hpDamage;
   player.hurtFlashMs = 250;
   state.stats.damageTaken += damage;

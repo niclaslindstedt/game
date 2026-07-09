@@ -261,10 +261,15 @@ export function bankKeepsakesOnVictory(
 function bankKeepsakes(loadout: Loadout): void {
   const carried = [
     loadout.equipment.weapon,
-    loadout.equipment.suit,
+    loadout.equipment.head,
+    loadout.equipment.chest,
+    loadout.equipment.legs,
+    loadout.equipment.feet,
     loadout.equipment.charm,
     ...loadout.inventory,
-  ].filter((p): p is Equipment => p !== null && isKeepsake(p));
+  ].filter(
+    (p): p is Equipment => p !== null && p !== undefined && isKeepsake(p),
+  );
   if (carried.length === 0) return;
   const stash = loadKeepsakes();
   const seen = new Set(stash.map(keepsakeSignature));
@@ -286,9 +291,10 @@ function bankKeepsakes(loadout: Loadout): void {
 export function restoreKeepsakes(state: GameState): void {
   const stash = loadKeepsakes();
   if (stash.length === 0) return;
-  const { weapon, suit, charm, bag } = state.player.equipment;
+  const { weapon, head, chest, legs, feet, charm, bag } =
+    state.player.equipment;
   const carried = new Set(
-    [weapon, suit, charm, bag, ...state.player.inventory]
+    [weapon, head, chest, legs, feet, charm, bag, ...state.player.inventory]
       .filter((p): p is Equipment => p !== null)
       .map(keepsakeSignature),
   );
@@ -322,7 +328,10 @@ function stripBankedKeepsakes(): void {
         ...banked,
         equipment: {
           weapon,
-          suit: keep(banked.equipment.suit),
+          head: keep(banked.equipment.head ?? null),
+          chest: keep(banked.equipment.chest ?? null),
+          legs: keep(banked.equipment.legs ?? null),
+          feet: keep(banked.equipment.feet ?? null),
           charm: keep(banked.equipment.charm),
           bag: keep(banked.equipment.bag ?? null),
         },
@@ -384,7 +393,10 @@ function migrateLoadout(loadout: Loadout): Loadout {
     ...loadout,
     equipment: {
       weapon,
-      suit: fix(loadout.equipment.suit),
+      head: fix(loadout.equipment.head ?? null),
+      chest: fix(loadout.equipment.chest ?? null),
+      legs: fix(loadout.equipment.legs ?? null),
+      feet: fix(loadout.equipment.feet ?? null),
       charm: fix(loadout.equipment.charm),
       bag: fix(loadout.equipment.bag ?? null),
     },

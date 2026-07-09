@@ -180,8 +180,9 @@ KEYCARD that opens the AI CORE room._
 
 **Last words:** UGH... PAD 2... / SHE'S ON... PAD... 2...
 
-_Drops: CARGO MANIFEST, and the EVA space suit (forced unique) the hero needs to
-leave the planet._
+_Drops: CARGO MANIFEST, and the SPACE SUIT — the EVA suit the hero needs to
+leave the planet, picked up as a story item and worn over his clothes and armor
+from then on._
 
 #### DR. NOVA — the drive is alien
 
@@ -223,6 +224,11 @@ _Drops: PLASMA CUTTER._
 
 - A RED KEYCARD MARKED 'CLEANROOM / VAULT - R&D DIRECTOR ONLY'.
 - UNDER THE CLEARANCE STRIPE, TINY / PRINT: 'IF IT HUMS, DO NOT ANSWER.'
+
+**SPACE SUIT** _(the Chief's EVA suit — suits the hero for the rest of the game)_
+
+- THE CHIEF'S EVA SUIT, RATED FOR / THE VOID. IT GOES ON OVER / EVERYTHING - CLOTHES, ARMOR, ALL.
+- SHE'S ON PAD 2. / NOW I CAN FOLLOW HER / OFF THE PLANET.
 
 **CARGO MANIFEST**
 
