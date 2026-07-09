@@ -466,9 +466,17 @@ body {
   position: absolute;
   top: -0.4rem;
   right: -0.4rem;
-  min-width: 1rem;
-  padding: 0.1rem 0.2rem;
-  background: #ffd75e;
+  box-sizing: border-box;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  /* A snug circle for one digit; the min-width matching the height keeps it
+     round for "4" and only stretches into a pill once a second digit arrives.
+     Side padding gives that two-digit case a little breathing room. */
+  min-width: 0.85rem;
+  height: 0.85rem;
+  padding: 0 0.15rem;
+  background: #f4f4f4;
   border-radius: 999px;
   line-height: 0;
 }
