@@ -17,6 +17,16 @@ own namespace, and a sequel changes it there once:
 | Music volume               | 0–100% in quarter steps                                     | 80%                                                         |
 | Sound FX volume            | 0–100% in quarter steps                                     | 100%                                                        |
 | Hardcore                   | on / off                                                    | off (softcore: death loses nothing)                         |
+| Developer → Debug mode     | on / off                                                    | off (inert flag; the row itself is hidden until unlocked)   |
+
+A hidden **DEVELOPER** row unlocks at the bottom of SETTINGS after the title
+screen's moon Easter egg is found — a long-press on the title moon detonates it
+and latches `developerUnlocked` (persisted, so the row then survives launches).
+The player opens SETTINGS themselves to find it; the detonation does nothing
+else. The developer screen offers **SELECT LEVEL** (the warp picker — jump into
+any mission regardless of unlock state, skipping the intro) and a **DEBUG MODE**
+toggle. DEBUG MODE is a persisted flag with no wired-up behavior yet, distinct
+from the `?debug` URL parameter below.
 
 Desktop keyboard controls (when **Keys** is set to WASD): WASD or the arrow
 keys run, **Shift** walks, **Space** jumps, **1/2/3** fire the powerup dock

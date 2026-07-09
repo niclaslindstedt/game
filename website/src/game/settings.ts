@@ -42,6 +42,12 @@ export type Vibration = "on" | "off";
  */
 export type Hardcore = "on" | "off";
 
+/** DEBUG mode: a developer-only toggle. `on` is reserved for future
+ * developer diagnostics (a live-state overlay, extra logging); today it is a
+ * plain persisted flag that does nothing on its own yet. Reached through the
+ * hidden DEVELOPER menu (see `developerUnlocked`). */
+export type DebugMode = "on" | "off";
+
 export type GameSettings = {
   steering: SteeringMode;
   itemUse: ItemUseMode;
@@ -52,6 +58,12 @@ export type GameSettings = {
   /** 0–1 master volumes, applied via audio.ts. */
   musicVolume: number;
   sfxVolume: number;
+  /** The DEVELOPER menu is hidden until the title moon's secret long-press
+   * detonates it (see TitleScreen `startMoonHold`); this latches that unlock so
+   * the menu stays available across launches once discovered. */
+  developerUnlocked: boolean;
+  /** Developer DEBUG toggle — persisted but inert for now (see DebugMode). */
+  debug: DebugMode;
 };
 
 const STORAGE_KEY = storageKey("settings");
@@ -78,6 +90,9 @@ function defaults(): GameSettings {
     hardcore: "off",
     musicVolume: 0.8,
     sfxVolume: 1,
+    // The developer menu stays hidden until the moon Easter egg is found.
+    developerUnlocked: false,
+    debug: "off",
   };
 }
 
@@ -122,6 +137,14 @@ function load(): GameSettings {
         typeof stored.sfxVolume === "number"
           ? clamp01(stored.sfxVolume)
           : base.sfxVolume,
+      developerUnlocked:
+        typeof stored.developerUnlocked === "boolean"
+          ? stored.developerUnlocked
+          : base.developerUnlocked,
+      debug:
+        stored.debug === "on" || stored.debug === "off"
+          ? stored.debug
+          : base.debug,
     };
   } catch {
     return base; // private mode / corrupt JSON — play with defaults

@@ -222,6 +222,7 @@ The game has no user-facing configuration yet. Build-time knobs:
 | `?level=<id>` URL param    | Starts runs on a specific catalog level (`spacez_hq`, `moon`, `mars`, `the_rift`) instead of the story default                                  |
 | `?seed=<n>` URL param      | Pins the run's layout seed so retries reproduce the same level layout                                                                           |
 | `?cutscene=<id>` URL param | Opens the cutscene workbench: loops one scene from the catalog for authoring iteration (see `docs/configuration.md`)                            |
+| Hidden DEVELOPER menu      | Long-press the title moon to unlock a DEVELOPER row in SETTINGS: level select (warp) and a (currently inert) debug-mode toggle                  |
 
 ## Examples
 
