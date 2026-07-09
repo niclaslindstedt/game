@@ -144,6 +144,18 @@ body {
   .title-screen {
     height: 100vh;
   }
+
+  /* Installed-PWA (standalone) letterboxing: iOS only extends the page under
+     the home indicator when the root elements have a fixed 100vh height —
+     with percentage heights (`min-height: 100%`) the document stops at the
+     letterboxed viewport and iOS paints the remainder as a dead black band.
+     (See the "height: 100% breaks safe area extension" gotcha in iPhone PWA
+     game guides.) The prelaunch/no-JS page still scrolls: its content simply
+     overflows the fixed-height body. */
+  html,
+  body {
+    height: 100vh;
+  }
 }
 
 .game-canvas {
