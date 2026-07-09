@@ -271,9 +271,10 @@ The roster is split one file per level/biome under `src/game/defs/enemies/`
   trinket that pays out while it merely rides in the bag (`GearDef.passive`).
   The hero walks in with his weapon **holstered** (`LevelDef.openingStrike` —
   `player.disarmed`): the auto-attack sits out until a lone VANGUARD scientist
-  sprints ahead of the pack and lands a harmless first swing, which draws
-  whatever he took off the wall ("good thing I came armed") and turns combat
-  on. Two
+  sprints ahead of the pack and closes to within `openingStrike.radius` of him,
+  which draws whatever he took off the wall ("good thing I came armed") and
+  turns combat on. It fires on that proximity (not on contact), so a hero
+  circling the rusher can't stall the opening beat forever. Two
   sight-pinned inner monologues also fire here (`firstSightThoughts` — on view,
   before any blow): the first intern the hero SEES plays his arrival read on a
   building fully staffed at midnight, and the first OPTIMUSK he SEES plays the

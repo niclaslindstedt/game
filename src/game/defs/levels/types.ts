@@ -323,16 +323,23 @@ export type ThoughtTrigger = {
 
 /**
  * The scripted "draw your weapon" beat (`LevelDef.openingStrike`): the level
- * opens with the hero disarmed and a lone vanguard placed to rush him, and its
- * first (harmless) contact arms him and plays a thought.
+ * opens with the hero disarmed and a lone vanguard placed to rush him, and the
+ * vanguard closing to within `radius` (a proximity trigger, not a contact one)
+ * arms him and plays a thought.
  */
 export type OpeningStrike = {
   /** ENEMY_DEFS id of the vanguard placed way ahead of the pack. */
   enemy: string;
   /** Where the vanguard is placed (near the spawn, ahead toward the goal). */
   at: Vec2;
-  /** THOUGHT_DEFS id fired when the vanguard lands its soft first strike. */
+  /** THOUGHT_DEFS id fired when the vanguard closes in and draws the blade. */
   thought: string;
+  /**
+   * How close (world px) the vanguard must get before the blade comes out.
+   * Omitted falls back to `DIALOGUE.strikeRadius` — the phone-half-view default,
+   * so the rusher is on screen and bearing down when the hero reacts.
+   */
+  radius?: number;
   /**
    * Ordering gate: the arming holds until this thought has played, so the
    * hero's first read on the level lands before the "good thing I came
