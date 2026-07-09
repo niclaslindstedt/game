@@ -1138,6 +1138,27 @@ export function GameScreen({
               durationMs: 240,
               sprite: def.gore ?? "blood",
             });
+            // A slain mob keels over where it fell — the engine removed the
+            // live enemy this tick, so the corpse takes over its spot. Minions
+            // are a 2s send-off (fall → lie → blink out); epic bodies (elites
+            // and bosses) are few, so they keel over and simply stay down for
+            // the rest of the level. Rolls a topple side so the horde doesn't
+            // all fall the same way.
+            if (event.type === "enemyKilled") {
+              const epic = def.role !== "minion";
+              // Epics linger the whole level; a day of run-clock outlives any
+              // level, and `persist` keeps them from blinking out.
+              const lifeMs = epic ? 86_400_000 : 2000;
+              effects.push({
+                kind: "corpse",
+                pos: { x: event.pos.x, y: event.pos.y },
+                untilMs: state.stats.timeMs + lifeMs,
+                durationMs: lifeMs,
+                sprite: def.sprite,
+                angle: (Math.random() < 0.5 ? -1 : 1) * (Math.PI / 2),
+                persist: epic || undefined,
+              });
+            }
             const duration = event.crit ? 900 : 650;
             effects.push({
               kind: "damage",
