@@ -574,6 +574,13 @@ export const LOOT = {
    * and a STR build is what earns the room to hoard (see `inventoryCapacity`).
    */
   baseInventorySize: 3,
+  /**
+   * Minimum gap between "bags are full" nudges. Loot the player can't pick up
+   * stays on the ground, so `stepItems` re-hits the same overlap every frame he
+   * stands on it — this throttles the `pickupBlocked` cue (the hero's thought,
+   * the bag-button pulse) so it fires once, not once per tick.
+   */
+  bagFullHintCooldownMs: 2500,
 } as const;
 
 /**

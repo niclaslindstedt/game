@@ -144,6 +144,9 @@ type Hud = {
   /** Current menace/rampage stage (0…MENACE.maxStage) driving the gauge. */
   menaceStage: number;
   bagCount: number;
+  /** True for a short window after the full bag turned away loot — pulses the
+   * inventory button to nudge the player to open it and make room. */
+  bagFullHint: boolean;
   /** Banked ability pickups, oldest first (ABILITY_DEFS ids). */
   heldAbilities: string[];
   /**
@@ -195,6 +198,10 @@ const DOCK_DRAG_THRESHOLD_PX = 16;
 // How long a discard smoke poof lives before it clears itself (ms) — matches
 // the .powerup-poof CSS animation.
 const POOF_TTL_MS = 600;
+// How long the inventory button keeps pulsing after the bag turns away loot,
+// nudging the player to open it and make room (ms). A few pulse cycles — long
+// enough to notice without nagging.
+const BAG_FULL_HINT_MS = 4000;
 // The gentlest push past the deadzone still creeps at this fraction of full
 // speed, so a barely-off-center thumb walks instead of standing still.
 const MIN_WALK_THROTTLE = 0.35;
@@ -731,6 +738,9 @@ export function GameScreen({
     let lastHud = "";
     // Transient visuals driven by engine events (lightning strikes).
     let effects: Effect[] = [];
+    // Run-clock ms through which the "bags are full" nudge stays lit — set when
+    // a `pickupBlocked` event fires, drives the inventory button's pulse.
+    let bagFullHintUntilMs = 0;
 
     const stop = startGameLoop({
       simulate(dtMs) {
@@ -960,6 +970,20 @@ export function GameScreen({
               color: event.type === "enemyDodge" ? "#cfd6df" : "#9aa3ad",
             });
           }
+          // The bag is full and turned away a piece of loot: float a "BAG
+          // FULL" thought over the hero's hair and light the inventory button's
+          // pulse so the player knows to open it and make room.
+          if (event.type === "pickupBlocked") {
+            effects.push({
+              kind: "text",
+              pos: { x: event.pos.x, y: event.pos.y - PLAYER.radius - 6 },
+              untilMs: state.stats.timeMs + 900,
+              durationMs: 900,
+              text: "BAG FULL",
+              color: "#ffcf6b",
+            });
+            bagFullHintUntilMs = state.stats.timeMs + BAG_FULL_HINT_MS;
+          }
           // Loot and powerups announce themselves in the lower-right feed. Only
           // SPECIAL items tint their name — magic/rare/… gear carries its tier
           // color; ordinary (regular) loot stays neutral. Plot pieces glow gold.
@@ -1077,6 +1101,7 @@ export function GameScreen({
 
         // Mirror the slow-moving values into React only when they change.
         const bagCount = state.player.inventory.filter(Boolean).length;
+        const bagFullHint = state.stats.timeMs < bagFullHintUntilMs;
         const held = state.player.heldAbilities.join(",");
         // Only the *set* of running powerups mounts/unmounts slots; the ticking
         // timer itself is animated straight on the DOM, so it stays out of the
@@ -1090,7 +1115,7 @@ export function GameScreen({
         const appearance = playerAppearance(state);
         const stage = menaceStage(state);
         const armor = armorInfo(state);
-        const key = `${state.phase}/${state.player.hp}/${Math.ceil(state.player.armor)}/${Math.ceil(state.player.stamina)}/${state.player.xp}/${state.player.level}/${state.player.pendingStatPoints}/${state.enemies.length}/${bagCount}/${held}/${active}/${weapon.defId}/${weaponWear?.toFixed(2) ?? ""}/${appearance}/${stage}/${state.stats.kills}/${Math.floor(state.stats.timeMs / 1000)}`;
+        const key = `${state.phase}/${state.player.hp}/${Math.ceil(state.player.armor)}/${Math.ceil(state.player.stamina)}/${state.player.xp}/${state.player.level}/${state.player.pendingStatPoints}/${state.enemies.length}/${bagCount}/${bagFullHint ? 1 : 0}/${held}/${active}/${weapon.defId}/${weaponWear?.toFixed(2) ?? ""}/${appearance}/${stage}/${state.stats.kills}/${Math.floor(state.stats.timeMs / 1000)}`;
         if (key !== lastHud) {
           lastHud = key;
           setHud({
@@ -1108,6 +1133,7 @@ export function GameScreen({
             enemiesLeft: state.enemies.length,
             menaceStage: stage,
             bagCount,
+            bagFullHint,
             heldAbilities: [...state.player.heldAbilities],
             activeAbilities: state.player.abilities.reduce<
               { defId: string; count: number }[]
@@ -1264,7 +1290,7 @@ export function GameScreen({
             <div className="hud-status">
               <button
                 type="button"
-                className="inventory-avatar"
+                className={`inventory-avatar${hud.bagFullHint ? " bag-full" : ""}`}
                 aria-label="open-inventory"
                 onClick={() => {
                   if (state) {
