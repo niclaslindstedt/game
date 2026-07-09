@@ -215,7 +215,13 @@ describe("the stamina-drink chance (empty-sprint bailout)", () => {
 // melee crude_sword (a magic starter would not connect in a single step).
 const killForItems = (
   rolls: number[],
-  opts: { hp?: number; durability?: number; crowd?: number } = {},
+  opts: {
+    hp?: number;
+    durability?: number;
+    crowd?: number;
+    /** Last-minute surgery (e.g. pre-placing ground items) before the kill. */
+    arrange?: (state: GameState) => void;
+  } = {},
 ): Item[] => {
   const state = startOn("medium");
   clearStage(state);
@@ -241,6 +247,7 @@ const killForItems = (
   if (opts.durability !== undefined) {
     state.player.equipment.weapon.durability = opts.durability;
   }
+  opts.arrange?.(state);
   state.player.weaponCooldownMs = 0;
   scriptRng(state, rolls);
   step(state, idle, DT);
@@ -365,5 +372,95 @@ describe("the energy drink drop and pickup", () => {
     ];
     step(state, idle, DT);
     expect(state.items.some((i) => i.kind === "drink")).toBe(true);
+  });
+});
+
+describe("one rope at a time (a waiting rescue holds its signal's fire)", () => {
+  // A ground item `dx` to the player's right — inside MERCY.rescueRadius when
+  // dx says so, but always outside the pickup overlap so it stays grounded.
+  const groundItem = (
+    state: GameState,
+    item: Partial<Item>,
+    dx = 100,
+  ): void => {
+    state.items.push({
+      id: state.nextId++,
+      pos: { x: state.player.pos.x + dx, y: state.player.pos.y },
+      ...item,
+    } as Item);
+  };
+
+  it("holds the crowd bomb while an un-collected nuke waits in view", () => {
+    const state = startOn("easy");
+    clearStage(state);
+    packField(state, 45); // would be the full 5% cap…
+    groundItem(state, { kind: "ability", defId: "screen_nuke" });
+    expect(crowdBombChance(state)).toBe(0);
+  });
+
+  it("throws the bomb again once the waiting nuke is out of view", () => {
+    const state = startOn("easy");
+    clearStage(state);
+    packField(state, 45);
+    groundItem(
+      state,
+      { kind: "ability", defId: "screen_nuke" },
+      MERCY.rescueRadius + 1,
+    );
+    expect(crowdBombChance(state)).toBeCloseTo(0.05, 5);
+  });
+
+  it("holds the stamina drink while one waits — but not for other kinds", () => {
+    const state = startOn("easy");
+    state.player.stamina = 0;
+    state.staminaEmptyMs = MERCY.staminaEmptyDrinkRampMs;
+    groundItem(state, { kind: "drink" });
+    expect(staminaDrinkChance(state)).toBe(0);
+    // A medkit answers a different signal: it never suppresses the drink.
+    state.items = [];
+    groundItem(state, { kind: "medkit" });
+    expect(staminaDrinkChance(state)).toBeCloseTo(0.15, 5);
+  });
+
+  it("stops widening the medkit slice while a medkit waits in view", () => {
+    // The same ladder that rains a medkit at hp 1 (roll 0.45 inside the
+    // widened slice) — with one already on the ground, the boost holds fire
+    // and the roll falls through, so the waiting medkit stays the only one.
+    const ladder = [0.9, 0.9, 0.9, 0.0, 0.9, 0.45];
+    const items = killForItems(ladder, {
+      hp: 1,
+      arrange: (state) => groundItem(state, { kind: "medkit" }, -100),
+    });
+    expect(items.filter((i) => i.kind === "medkit")).toHaveLength(1);
+  });
+
+  it("stops widening the repair slice while a repair kit waits in view", () => {
+    const ladder = [0.9, 0.9, 0.9, 0.0, 0.9, 0.55];
+    const items = killForItems(ladder, {
+      durability: 1,
+      arrange: (state) => groundItem(state, { kind: "repair" }, -100),
+    });
+    expect(items.filter((i) => i.kind === "repair")).toHaveLength(1);
+  });
+
+  it("holds the plated-armor pull while a plated piece waits in view", () => {
+    const state = startOn("easy");
+    state.player.maxHp = 100;
+    state.player.hp = 1; // full desperation — the pull would fire…
+    groundItem(state, {
+      kind: "equipment",
+      equipment: {
+        id: state.nextId++,
+        defId: "test_suit", // plated (armor: yellow)
+        slot: "suit",
+        tier: "regular",
+        ilvl: 1,
+        affixes: [],
+      },
+    });
+    // gear (0.7 >= 0.6), pool pick charm; with the pull held no extra roll is
+    // drawn (the 0.99 fallback would defeat it anyway) and the charm stands.
+    scriptRng(state, [0.7, 0.7]);
+    expect(rollEquipment(state).defId).toBe("test_charm");
   });
 });

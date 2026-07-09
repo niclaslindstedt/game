@@ -10,6 +10,7 @@
 import { advanceCutsceneBeat, finishCutscene } from "@game/lib/cutscene.ts";
 import type { Rng } from "@game/lib/rng.ts";
 import { randomRange } from "@game/lib/rng.ts";
+import { distance } from "@game/lib/vec.ts";
 import {
   ACCURACY,
   ARMOR,
@@ -47,6 +48,7 @@ import type {
   EquipSlot,
   Equipment,
   GameState,
+  Item,
   StatName,
   Tier,
   WeaponClass,
@@ -238,7 +240,11 @@ export function rollEquipment(
     // mirror image of the dampening below, and only ever a mercy on
     // easy/medium: `mercy.armorBonus` is zero from hard up). No draw is
     // spent at full health (desperation 0), so the baseline stream is intact.
-    const armorPull = lowHealthDesperation(state) * diff.mercy.armorBonus;
+    // One rope at a time: while a plated piece already waits un-collected in
+    // view, the pull holds fire (see mercyRescueWaiting).
+    const armorPull = mercyRescueWaiting(state, "armor")
+      ? 0
+      : lowHealthDesperation(state) * diff.mercy.armorBonus;
     if (picked) {
       // Harder rungs find fewer plated suits: a landed-on-armor pick re-rolls
       // to an unplated piece at `1 - armorDropMult`.
@@ -635,6 +641,47 @@ export function lowDurabilityDesperation(state: GameState): number {
     weapon.durability / max,
     MERCY.lowDurabilityStart,
     MERCY.lowDurabilityFull,
+  );
+}
+
+/** The rescue pickups a mercy signal can answer with: the low-health medkit,
+ * the low-durability repair kit, the empty-sprint energy drink, the
+ * packed-field screen-nuke, and the low-health plated-armor pull. */
+export type MercyRescue = "medkit" | "repair" | "drink" | "bomb" | "armor";
+
+/** Whether a ground item answers the given mercy signal. */
+function answersMercy(item: Item, rescue: MercyRescue): boolean {
+  switch (rescue) {
+    case "bomb":
+      return item.kind === "ability" && item.defId === "screen_nuke";
+    case "armor":
+      return (
+        item.kind === "equipment" &&
+        item.equipment.slot !== "weapon" &&
+        Boolean(gearDef(item.equipment.defId).armor)
+      );
+    default:
+      return item.kind === rescue;
+  }
+}
+
+/**
+ * ONE ROPE AT A TIME: true while an un-collected pickup answering the given
+ * mercy signal already lies within `MERCY.rescueRadius` of the hero. Every
+ * mercy path checks this before throwing another rescue, so a distress signal
+ * keeps at most ONE rope on the ground — a hero who ignores the medkit at his
+ * feet is not buried under more, while one who left it behind out of view is
+ * still thrown another. Ordinary-rain pickups count too: a rescue is a
+ * rescue, however it fell.
+ */
+export function mercyRescueWaiting(
+  state: GameState,
+  rescue: MercyRescue,
+): boolean {
+  return state.items.some(
+    (item) =>
+      answersMercy(item, rescue) &&
+      distance(item.pos, state.player.pos) <= MERCY.rescueRadius,
   );
 }
 

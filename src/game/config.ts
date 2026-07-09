@@ -695,6 +695,18 @@ export const MERCY = {
    * `staminaDrinkChance` and `GameState.staminaEmptyMs`.
    */
   staminaEmptyDrinkRampMs: 6000,
+  /**
+   * ONE ROPE AT A TIME — how near (world px) an un-collected rescue pickup
+   * must lie for its mercy signal to hold fire. While the medkit, repair kit,
+   * drink, screen-nuke, or plated suit a signal already threw is still waiting
+   * within this radius, that signal drops nothing more (see
+   * `mercyRescueWaiting`) — a hero who parks at low health is not buried under
+   * medkits he never picks up. Matches `ENEMY_AI.nearRadius` (the "on screen"
+   * yardstick) so a rescue counts as waiting exactly while the player can see
+   * it; one left behind out of view stops suppressing, and the rope comes
+   * again.
+   */
+  rescueRadius: 340,
 } as const;
 
 /**
