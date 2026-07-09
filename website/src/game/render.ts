@@ -120,6 +120,146 @@ function groundTile(sprites: Sprites, tiles: TileSpec, tx: number, ty: number) {
   return pick(tileHash(tx, ty) % rareEvery === 0 ? rare : common);
 }
 
+// ---- Per-frame render caches ---------------------------------------------
+// All keyed off the (memoized, singleton) Sprites instance: a fresh instance
+// — e.g. after a hot reload — drops everything.
+
+let cachesFor: Sprites | null = null;
+
+/** The whole level's ground baked into one offscreen canvas. Tiles are a pure
+ * function of the level def and the tile hash, so the layer never changes
+ * during a run — blitting it is one draw call per frame instead of ~1,000
+ * per-tile draws (each with a zone scan) re-composed every frame. */
+let groundCache: { levelId: string; canvas: HTMLCanvasElement } | null = null;
+
+/** Pre-rendered radial glows, keyed by `rgb/radius`. Loot glows pulse every
+ * frame, and building a CanvasGradient per item per frame is the single most
+ * expensive thing a loot-covered floor does — the pulse instead scales a
+ * baked full-alpha glow via globalAlpha (identical output, both stops scale
+ * linearly). */
+const glowCache = new Map<string, HTMLCanvasElement>();
+
+/** A monster's resolved sprite variants (base/hurt/wrecked/dying × 2 frames),
+ * keyed by the def's sprite family — saves 1-2 string builds and up to 3
+ * atlas probes per enemy per frame at horde scale. */
+type EnemyFrames = [ImageBitmap, ImageBitmap];
+type EnemyVariants = {
+  base: EnemyFrames;
+  hurt: EnemyFrames;
+  wrecked: EnemyFrames;
+  dying: EnemyFrames;
+};
+const enemySpriteCache = new Map<string, EnemyVariants>();
+
+function ensureCaches(sprites: Sprites): void {
+  if (cachesFor === sprites) return;
+  cachesFor = sprites;
+  groundCache = null;
+  glowCache.clear();
+  enemySpriteCache.clear();
+}
+
+function groundLayer(
+  state: GameState,
+  sprites: Sprites,
+): HTMLCanvasElement | null {
+  if (groundCache && groundCache.levelId === state.level.id) {
+    return groundCache.canvas;
+  }
+  const canvas = document.createElement("canvas");
+  canvas.width = state.level.width;
+  canvas.height = state.level.height;
+  const ctx = canvas.getContext("2d");
+  if (!ctx) return null;
+  ctx.imageSmoothingEnabled = false;
+  const tilesX = Math.ceil(state.level.width / TILE);
+  const tilesY = Math.ceil(state.level.height / TILE);
+  for (let ty = 0; ty < tilesY; ty++) {
+    for (let tx = 0; tx < tilesX; tx++) {
+      ctx.drawImage(
+        groundTile(sprites, state.level.tiles, tx, ty),
+        tx * TILE,
+        ty * TILE,
+      );
+    }
+  }
+  groundCache = { levelId: state.level.id, canvas };
+  return canvas;
+}
+
+/** A soft radial glow fading `rgb` from full alpha at the center to clear at
+ * `radius`, rendered once and reused. Draw with globalAlpha for the pulse. */
+function glowSprite(rgb: string, radius: number): HTMLCanvasElement | null {
+  const key = `${rgb}/${radius}`;
+  const cached = glowCache.get(key);
+  if (cached) return cached;
+  const canvas = document.createElement("canvas");
+  const size = Math.max(2, Math.ceil(radius * 2));
+  canvas.width = size;
+  canvas.height = size;
+  const ctx = canvas.getContext("2d");
+  if (!ctx) return null;
+  const r = size / 2;
+  const glow = ctx.createRadialGradient(r, r, 0, r, r, r);
+  glow.addColorStop(0, `rgba(${rgb}, 1)`);
+  glow.addColorStop(1, `rgba(${rgb}, 0)`);
+  ctx.fillStyle = glow;
+  ctx.fillRect(0, 0, size, size);
+  glowCache.set(key, canvas);
+  return canvas;
+}
+
+/** A gravity well's darkening funnel (three fixed stops between the core and
+ * the pull rim), rendered once per (core, pull) radius pair and reused. */
+function funnelSprite(
+  coreRadius: number,
+  pullRadius: number,
+): HTMLCanvasElement | null {
+  const key = `funnel/${coreRadius}/${pullRadius}`;
+  const cached = glowCache.get(key);
+  if (cached) return cached;
+  const canvas = document.createElement("canvas");
+  const size = Math.max(2, Math.ceil(pullRadius * 2));
+  canvas.width = size;
+  canvas.height = size;
+  const ctx = canvas.getContext("2d");
+  if (!ctx) return null;
+  const r = size / 2;
+  const funnel = ctx.createRadialGradient(r, r, coreRadius, r, r, pullRadius);
+  funnel.addColorStop(0, "rgba(8, 6, 20, 0.55)");
+  funnel.addColorStop(0.6, "rgba(20, 12, 44, 0.28)");
+  funnel.addColorStop(1, "rgba(20, 12, 44, 0)");
+  ctx.fillStyle = funnel;
+  ctx.beginPath();
+  ctx.arc(r, r, pullRadius, 0, Math.PI * 2);
+  ctx.fill();
+  glowCache.set(key, canvas);
+  return canvas;
+}
+
+function enemySprites(sprites: Sprites, family: string): EnemyVariants {
+  const cached = enemySpriteCache.get(family);
+  if (cached) return cached;
+  // Faithful to the old per-frame fallbacks: a missing stage variant degrades
+  // to the base frame of the same index, a missing base frame to the ghost.
+  const base: EnemyFrames = [
+    spriteByName(sprites, `${family}_0`) ?? sprites.ghost_0,
+    spriteByName(sprites, `${family}_1`) ?? sprites.ghost_0,
+  ];
+  const stage = (suffix: string): EnemyFrames => [
+    spriteByName(sprites, `${family}${suffix}_0`) ?? base[0],
+    spriteByName(sprites, `${family}${suffix}_1`) ?? base[1],
+  ];
+  const variants: EnemyVariants = {
+    base,
+    hurt: stage("_hurt"),
+    wrecked: stage("_wrecked"),
+    dying: stage("_dying"),
+  };
+  enemySpriteCache.set(family, variants);
+  return variants;
+}
+
 export function drawFrame(
   ctx: CanvasRenderingContext2D,
   state: GameState,
@@ -128,6 +268,7 @@ export function drawFrame(
   timeMs: number,
 ): void {
   const { sprites } = assets;
+  ensureCaches(sprites);
   const view = { width: ctx.canvas.width, height: ctx.canvas.height };
   ctx.imageSmoothingEnabled = false;
 
@@ -135,22 +276,36 @@ export function drawFrame(
   ctx.fillStyle = "#0b0d10";
   ctx.fillRect(0, 0, view.width, view.height);
 
-  // Ground: only the tiles overlapping the view.
-  const x0 = Math.floor(Math.max(camera.x, 0) / TILE);
-  const y0 = Math.floor(Math.max(camera.y, 0) / TILE);
-  const x1 = Math.ceil(
-    Math.min(camera.x + view.width, state.level.width) / TILE,
-  );
-  const y1 = Math.ceil(
-    Math.min(camera.y + view.height, state.level.height) / TILE,
-  );
-  for (let ty = y0; ty < y1; ty++) {
-    for (let tx = x0; tx < x1; tx++) {
-      ctx.drawImage(
-        groundTile(sprites, state.level.tiles, tx, ty),
-        tx * TILE - camera.x,
-        ty * TILE - camera.y,
-      );
+  // Ground: one blit of the visible rect from the baked level layer.
+  const ground = groundLayer(state, sprites);
+  if (ground) {
+    const sx = Math.max(0, camera.x);
+    const sy = Math.max(0, camera.y);
+    const dx = sx - camera.x;
+    const dy = sy - camera.y;
+    const sw = Math.min(view.width - dx, state.level.width - sx);
+    const sh = Math.min(view.height - dy, state.level.height - sy);
+    if (sw > 0 && sh > 0) {
+      ctx.drawImage(ground, sx, sy, sw, sh, dx, dy, sw, sh);
+    }
+  } else {
+    // No 2D context for the offscreen layer: tile the view directly.
+    const x0 = Math.floor(Math.max(camera.x, 0) / TILE);
+    const y0 = Math.floor(Math.max(camera.y, 0) / TILE);
+    const x1 = Math.ceil(
+      Math.min(camera.x + view.width, state.level.width) / TILE,
+    );
+    const y1 = Math.ceil(
+      Math.min(camera.y + view.height, state.level.height) / TILE,
+    );
+    for (let ty = y0; ty < y1; ty++) {
+      for (let tx = x0; tx < x1; tx++) {
+        ctx.drawImage(
+          groundTile(sprites, state.level.tiles, tx, ty),
+          tx * TILE - camera.x,
+          ty * TILE - camera.y,
+        );
+      }
     }
   }
 
@@ -206,21 +361,14 @@ export function drawFrame(
     if (!inView(well.pos.x, well.pos.y, well.pullRadius)) continue;
     const cx = Math.round(well.pos.x - camera.x);
     const cy = Math.round(well.pos.y - camera.y);
-    const funnel = ctx.createRadialGradient(
-      cx,
-      cy,
-      well.coreRadius,
-      cx,
-      cy,
-      well.pullRadius,
-    );
-    funnel.addColorStop(0, "rgba(8, 6, 20, 0.55)");
-    funnel.addColorStop(0.6, "rgba(20, 12, 44, 0.28)");
-    funnel.addColorStop(1, "rgba(20, 12, 44, 0)");
-    ctx.fillStyle = funnel;
-    ctx.beginPath();
-    ctx.arc(cx, cy, well.pullRadius, 0, Math.PI * 2);
-    ctx.fill();
+    const funnel = funnelSprite(well.coreRadius, well.pullRadius);
+    if (funnel) {
+      ctx.drawImage(
+        funnel,
+        cx - Math.round(funnel.width / 2),
+        cy - Math.round(funnel.height / 2),
+      );
+    }
     const frame = Math.floor(timeMs / 240 + well.id) % 2;
     const sprite = spriteByName(sprites, `blackhole_${frame}`);
     if (sprite) {
@@ -261,13 +409,16 @@ export function drawFrame(
     const glowAlpha = 0.3 + 0.14 * Math.sin(timeMs / 240 + item.id);
     // Powerup pickups glow electric blue; everything else keeps the warm gold.
     const glowRgb = item.kind === "ability" ? "120, 190, 255" : "255, 236, 170";
-    const glow = ctx.createRadialGradient(cx, cy, 0, cx, cy, glowR);
-    glow.addColorStop(0, `rgba(${glowRgb}, ${glowAlpha})`);
-    glow.addColorStop(1, `rgba(${glowRgb}, 0)`);
-    ctx.fillStyle = glow;
-    ctx.beginPath();
-    ctx.arc(cx, cy, glowR, 0, Math.PI * 2);
-    ctx.fill();
+    const glow = glowSprite(glowRgb, glowR);
+    if (glow) {
+      ctx.globalAlpha = glowAlpha;
+      ctx.drawImage(
+        glow,
+        cx - Math.round(glow.width / 2),
+        cy - Math.round(glow.height / 2),
+      );
+      ctx.globalAlpha = 1;
+    }
     // Float ~2px off the ground and bob gently; the glow stays anchored below.
     const hover = Math.round(Math.sin(timeMs / 320 + item.id) * 1.5) - 2;
     const x = Math.round(item.pos.x - sprite.width / 2 - camera.x);
@@ -296,6 +447,7 @@ export function drawFrame(
   }
 
   for (const projectile of state.projectiles) {
+    if (!inView(projectile.pos.x, projectile.pos.y, 16)) continue;
     // Each weapon names its own shot sprite (staple, zap, vial, ray…) — the
     // stapler throws staples, the taser arcs, the beaker sloshes. Fall back
     // to the class default if a name is ever unknown.
@@ -325,19 +477,15 @@ export function drawFrame(
     // LAST_STAND). Missing variants degrade to the base frame.
     const hpFrac = enemy.hp / enemy.maxHp;
     const lastStand = def.role === "boss" && hpFrac <= LAST_STAND.hpFraction;
+    const variants = enemySprites(sprites, def.sprite);
     const stage = lastStand
-      ? "_dying"
+      ? variants.dying
       : def.role !== "minion" && hpFrac <= WOUNDS.wreckedAt
-        ? "_wrecked"
+        ? variants.wrecked
         : hpFrac <= WOUNDS.hurtAt
-          ? "_hurt"
-          : "";
-    const sprite =
-      (stage
-        ? spriteByName(sprites, `${def.sprite}${stage}_${frame}`)
-        : undefined) ??
-      spriteByName(sprites, `${def.sprite}_${frame}`) ??
-      sprites.ghost_0;
+          ? variants.hurt
+          : variants.base;
+    const sprite = stage[frame] ?? sprites.ghost_0;
     const bob = Math.round(Math.sin(timeMs / 260 + enemy.id) * 1.5);
     const x = Math.round(enemy.pos.x - sprite.width / 2 - camera.x);
     const y = Math.round(enemy.pos.y - sprite.height / 2 - camera.y) + bob;

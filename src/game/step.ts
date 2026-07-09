@@ -231,10 +231,11 @@ function stepSpawner(state: GameState): void {
 
   let alive = 0;
   let near = 0; // minions close enough to count as "on the player's screen"
+  const nearRadiusSq = ENEMY_AI.nearRadius * ENEMY_AI.nearRadius;
   for (const enemy of state.enemies) {
     if (enemyDef(enemy.defId).role !== "minion") continue;
     alive++;
-    if (distance(enemy.pos, state.player.pos) <= ENEMY_AI.nearRadius) near++;
+    if (distanceSq(enemy.pos, state.player.pos) <= nearRadiusSq) near++;
   }
 
   const t = state.stats.timeMs;
@@ -744,12 +745,16 @@ function stepAbilities(state: GameState, dt: number, dtMs: number): void {
       if (ability.cooldownMs <= 0) {
         let struck = false;
         for (const orb of orbPositions(player, ability)) {
-          const victim = state.enemies.find(
-            (enemy) =>
-              distance(enemy.pos, orb) <=
-                enemyDef(enemy.defId).radius + def.orbit!.orbRadius &&
-              !enemyDef(enemy.defId).apparition,
-          );
+          let victim: Enemy | undefined;
+          for (const enemy of state.enemies) {
+            const enemyDefData = enemyDef(enemy.defId);
+            if (enemyDefData.apparition) continue;
+            const reach = enemyDefData.radius + def.orbit.orbRadius;
+            if (distanceSq(enemy.pos, orb) <= reach * reach) {
+              victim = enemy;
+              break;
+            }
+          }
           if (!victim) continue;
           // Conjured abilities crit off INTELLIGENCE, like the magic they are.
           hitEnemy(state, victim, def.orbit.damage, "magic");
@@ -772,9 +777,10 @@ function stepAbilities(state: GameState, dt: number, dtMs: number): void {
     // pickup stays stepItems' job once they arrive within reach.
     if (def.magnet) {
       const reach = magnetRadius(state, def);
+      const reachSq = reach * reach;
       const pull = def.magnet.pullSpeed * dt;
       for (const item of state.items) {
-        if (distance(item.pos, player.pos) > reach) continue;
+        if (distanceSq(item.pos, player.pos) > reachSq) continue;
         item.pos = moveToward(item.pos, player.pos, pull);
       }
     }
@@ -788,7 +794,68 @@ function stepAbilities(state: GameState, dt: number, dtMs: number): void {
   }
 }
 
+// Spatial hash for the projectile↔enemy hit tests, rebuilt on each tick that
+// has projectiles in flight and shared by every projectile that tick. Without
+// it each projectile scans the whole horde (O(projectiles × enemies) with a
+// sqrt and two def lookups per candidate) — the tick's hotspot under a
+// shotgun volley at horde scale.
+const hitGrid = new Map<number, Enemy[]>();
+const HIT_CELL = 32;
+// Largest enemy radius seen while building the grid — sets how many
+// neighboring cells a query must sweep to be exhaustive.
+let hitGridMaxRadius = 0;
+
+function buildHitGrid(state: GameState): void {
+  hitGrid.clear();
+  hitGridMaxRadius = 0;
+  for (const enemy of state.enemies) {
+    const def = enemyDef(enemy.defId);
+    // Apparitions can't be hit — leaving them out makes every query skip-free.
+    if (def.apparition) continue;
+    if (def.radius > hitGridMaxRadius) hitGridMaxRadius = def.radius;
+    // Same collision-free key as the separation grid: positions are clamped
+    // to the level, so cell columns stay well under 2¹⁶.
+    const key =
+      Math.floor(enemy.pos.x / HIT_CELL) * 65536 +
+      Math.floor(enemy.pos.y / HIT_CELL);
+    const bucket = hitGrid.get(key);
+    if (bucket) bucket.push(enemy);
+    else hitGrid.set(key, [enemy]);
+  }
+}
+
+/** The first live enemy within `radius` of `pos` (grid query), skipping ids
+ * in `skip` (a piercing shot's already-billed bodies). */
+function hitGridFind(
+  pos: Vec2,
+  radius: number,
+  skip: number[] | undefined,
+): Enemy | undefined {
+  const range = Math.max(1, Math.ceil((hitGridMaxRadius + radius) / HIT_CELL));
+  const kx = Math.floor(pos.x / HIT_CELL);
+  const ky = Math.floor(pos.y / HIT_CELL);
+  for (let dx = -range; dx <= range; dx++) {
+    for (let dy = -range; dy <= range; dy++) {
+      const bucket = hitGrid.get((kx + dx) * 65536 + (ky + dy));
+      if (!bucket) continue;
+      for (const enemy of bucket) {
+        // Slain earlier this tick: spliced from state.enemies (hitEnemy) but
+        // still in the bucket — hp ≤ 0 marks the stale entry.
+        if (enemy.hp <= 0) continue;
+        const reach = enemyDef(enemy.defId).radius + radius;
+        if (distanceSq(enemy.pos, pos) > reach * reach) continue;
+        if (skip?.includes(enemy.id)) continue;
+        return enemy;
+      }
+    }
+  }
+  return undefined;
+}
+
 function stepProjectiles(state: GameState, dt: number, dtMs: number): void {
+  if (state.projectiles.length === 0) return;
+  // Enemies don't move during this step, so one grid serves every projectile.
+  buildHitGrid(state);
   const survivors = [];
   for (const projectile of state.projectiles) {
     // A homing shot steers toward the nearest living foe each tick, its turn
@@ -817,12 +884,10 @@ function stepProjectiles(state: GameState, dt: number, dtMs: number): void {
       continue;
     }
 
-    const hit = state.enemies.find(
-      (enemy) =>
-        distance(enemy.pos, projectile.pos) <=
-          enemyDef(enemy.defId).radius + projectile.radius &&
-        !enemyDef(enemy.defId).apparition &&
-        !projectile.hitIds?.includes(enemy.id),
+    const hit = hitGridFind(
+      projectile.pos,
+      projectile.radius,
+      projectile.hitIds,
     );
     if (!hit) {
       survivors.push(projectile);
@@ -969,9 +1034,10 @@ function stepEnemies(state: GameState, dt: number, dtMs: number): void {
 
     // Monsters drift along the ground — a player at the top of a moon jump
     // sails clean over their grasp.
+    const touchReach = def.radius + PLAYER.radius;
     const touching =
       player.z <= JUMP.dodgeHeight &&
-      distance(enemy.pos, player.pos) <= def.radius + PLAYER.radius;
+      distanceSq(enemy.pos, player.pos) <= touchReach * touchReach;
     if (touching && enemy.contactCooldownMs <= 0) {
       // The swing is spent whether it lands or is dodged, so the same foe
       // can't re-swing next frame after a sidestep.
@@ -1059,14 +1125,17 @@ function separateEnemies(state: GameState): void {
         if (!bucket) continue;
         for (const b of bucket) {
           if (b.id <= a.id) continue; // handle each pair once
-          const d = distance(a.pos, b.pos);
-          if (d >= cell || d === 0) continue;
-          const push = (cell - d) / 2;
-          const dir = direction(a.pos, b.pos);
-          a.pos.x -= dir.x * push;
-          a.pos.y -= dir.y * push;
-          b.pos.x += dir.x * push;
-          b.pos.y += dir.y * push;
+          const dx = b.pos.x - a.pos.x;
+          const dy = b.pos.y - a.pos.y;
+          const dSq = dx * dx + dy * dy;
+          if (dSq >= cell * cell || dSq === 0) continue;
+          const d = Math.sqrt(dSq);
+          // Push strength divided by d folds the direction normalization in.
+          const push = (cell - d) / 2 / d;
+          a.pos.x -= dx * push;
+          a.pos.y -= dy * push;
+          b.pos.x += dx * push;
+          b.pos.y += dy * push;
         }
       }
     }
@@ -1166,7 +1235,8 @@ function moveEnemy(state: GameState, enemy: Enemy, dt: number): void {
   // Minions: an aggro latch. Waking needs the player in range AND in sight;
   // once awake the chase holds even when a wall breaks line of sight — only
   // escaping the radius entirely puts the monster back to sleep.
-  const inRange = distance(player.pos, enemy.pos) < def.ai.aggroRadius;
+  const inRange =
+    distanceSq(player.pos, enemy.pos) < def.ai.aggroRadius * def.ai.aggroRadius;
   if (!inRange) {
     enemy.awake = false;
   } else if (!enemy.awake) {
@@ -1175,7 +1245,7 @@ function moveEnemy(state: GameState, enemy: Enemy, dt: number): void {
 
   if (inRange && enemy.awake) {
     enemy.pos = moveToward(enemy.pos, player.pos, speed * dt);
-  } else if (distance(enemy.pos, enemy.home) > 4) {
+  } else if (distanceSq(enemy.pos, enemy.home) > 16) {
     enemy.pos = moveToward(
       enemy.pos,
       enemy.home,
@@ -1189,9 +1259,10 @@ function stepItems(state: GameState): void {
   // Pieces displaced by an auto-equip with a full bag fall back to the
   // ground — collected here so the filter pass isn't mutated mid-flight.
   const displaced: Item[] = [];
+  const pickupReach = MEDKIT.radius + PLAYER.radius;
+  const pickupReachSq = pickupReach * pickupReach;
   state.items = state.items.filter((item) => {
-    const overlapping =
-      distance(item.pos, player.pos) <= MEDKIT.radius + PLAYER.radius;
+    const overlapping = distanceSq(item.pos, player.pos) <= pickupReachSq;
     if (!overlapping) return true;
 
     if (item.kind === "medkit") {
