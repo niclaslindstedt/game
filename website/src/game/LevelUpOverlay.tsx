@@ -73,7 +73,7 @@ export function LevelUpOverlay({
                     key={i}
                     font={font}
                     text={line}
-                    scale={1}
+                    scale={2}
                     color="#c7ccd1"
                   />
                 ))}
@@ -104,7 +104,7 @@ export function LevelUpOverlay({
                   <PixelText
                     font={font}
                     text={blurb}
-                    scale={1}
+                    scale={2}
                     color="#3a4048"
                   />
                 </span>

@@ -887,7 +887,7 @@ export function TitleScreen({
         <PixelText
           font={font}
           text={IDENTITY.tagline.toUpperCase()}
-          scale={1}
+          scale={2}
           color="#9aa3ad"
         />
       </header>
@@ -929,7 +929,7 @@ export function TitleScreen({
             line === "" ? (
               <div key={i} className="intro-gap" />
             ) : (
-              <PixelText key={i} font={font} text={line} scale={1} />
+              <PixelText key={i} font={font} text={line} scale={2} />
             ),
           )}
         </div>
@@ -1126,7 +1126,7 @@ export function TitleScreen({
                 <PixelText
                   font={font}
                   text="SWIPE OR ARROWS TO SWITCH"
-                  scale={1}
+                  scale={2}
                   color="#7a8088"
                 />
                 <button
@@ -1202,7 +1202,7 @@ export function TitleScreen({
                     <PixelText
                       font={font}
                       text={entry.blurb}
-                      scale={1}
+                      scale={2}
                       color="#9aa3ad"
                     />
                   )}

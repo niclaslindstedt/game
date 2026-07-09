@@ -87,7 +87,7 @@ export function RespecOverlay({
                     key={i}
                     font={font}
                     text={line}
-                    scale={1}
+                    scale={2}
                     color="#c7ccd1"
                   />
                 ))}
@@ -113,7 +113,7 @@ export function RespecOverlay({
                     <PixelText
                       font={font}
                       text={blurb}
-                      scale={1}
+                      scale={2}
                       color="#7a8088"
                     />
                   </span>

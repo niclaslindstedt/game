@@ -33,7 +33,7 @@ export function PauseOverlay({
         <PixelText
           font={font}
           text="CLICK OR PRESS P TO RESUME"
-          scale={1}
+          scale={2}
           color="#9aa3ad"
         />
         <div className="splash-buttons">

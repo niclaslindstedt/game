@@ -241,7 +241,7 @@ export function MapOverlay({
                 className="map-legend-swatch"
                 style={{ background: color }}
               />
-              <PixelText font={font} text={label} scale={1} color="#9aa3ad" />
+              <PixelText font={font} text={label} scale={2} color="#9aa3ad" />
             </span>
           ))}
         </div>
