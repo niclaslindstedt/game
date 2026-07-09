@@ -11,7 +11,9 @@
 // level's signature kit. The derivation is deterministic data — no RNG, no
 // saved state.
 
+import { companionMaxHp } from "./companions.ts";
 import { ARRIVAL, HELD_ITEMS, LEVELING } from "./config.ts";
+import { companionDef, isCompanionDef } from "./defs/companions.ts";
 import { difficultyDef, meetsMinDifficulty } from "./defs/difficulties.ts";
 import { enemyDef } from "./defs/enemies/index.ts";
 import { equipmentLevelReq, gearDef, weaponDef } from "./defs/equipment.ts";
@@ -66,6 +68,16 @@ export function extractLoadout(state: GameState): Loadout {
     inventory: player.inventory.map(copyPiece),
     heldAbilities: [...player.heldAbilities],
     coins: player.coins,
+    // The party rides along: each companion's def and worn kit. Health and
+    // level re-derive on apply — companions arrive rested like the hero.
+    companions: state.companions.map((companion) => ({
+      defId: companion.defId,
+      equipment: {
+        weapon: copyPiece(companion.equipment.weapon) as Equipment,
+        head: copyPiece(companion.equipment.head),
+        chest: copyPiece(companion.equipment.chest),
+      },
+    })),
   };
 }
 
@@ -123,6 +135,45 @@ export function applyLoadout(state: GameState, loadout: Loadout): void {
   recomputeMaxStamina(state);
   player.hp = player.maxHp;
   player.stamina = player.maxStamina;
+
+  // The party walks in with him: each carried companion re-minted at the
+  // hero's side, rested (full hp at his level), wearing its carried kit. A
+  // since-deleted companion def is simply left behind, like legacy gear.
+  state.companions = [];
+  for (const carried of loadout.companions ?? []) {
+    if (!isCompanionDef(carried.defId)) continue;
+    const def = companionDef(carried.defId);
+    const maxHp = companionMaxHp(def, player.level);
+    const index = state.companions.length;
+    const weapon = mint(carried.equipment.weapon) ?? {
+      id: state.nextId++,
+      defId: def.weapon,
+      slot: "weapon" as const,
+      tier: "regular" as const,
+      ilvl: Math.max(1, player.level),
+      affixes: [],
+    };
+    state.companions.push({
+      id: state.nextId++,
+      defId: carried.defId,
+      pos: {
+        x: state.playerSpawn.x - 20 - index * 14,
+        y: state.playerSpawn.y + 14,
+      },
+      hp: maxHp,
+      maxHp,
+      level: Math.max(1, player.level),
+      faceLeft: false,
+      moving: false,
+      weaponCooldownMs: 0,
+      quoteCooldownMs: 0,
+      equipment: {
+        weapon,
+        head: mint(carried.equipment.head),
+        chest: mint(carried.equipment.chest),
+      },
+    });
+  }
 }
 
 /** The XP a full clear of `def`'s roster pays at this difficulty: every

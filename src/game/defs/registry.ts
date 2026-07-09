@@ -8,6 +8,7 @@
 // shipped catalog until a call here replaces it.
 
 import { setAbilityDefs, type AbilityDef } from "./abilities.ts";
+import { setCompanionDefs, type CompanionDef } from "./companions.ts";
 import { setCutsceneDefs } from "./cutscenes.ts";
 import { setDifficultyDefs, type DifficultyDef } from "./difficulties.ts";
 import { setEnemyDefs, type EnemyDef } from "./enemies/index.ts";
@@ -21,6 +22,7 @@ import type { CutsceneDef } from "@game/lib/cutscene.ts";
 export type DefOverrides = {
   levels?: Record<string, LevelDef>;
   enemies?: Record<string, EnemyDef>;
+  companions?: Record<string, CompanionDef>;
   weapons?: Record<string, WeaponDef>;
   gear?: Record<string, GearDef>;
   abilities?: Record<string, AbilityDef>;
@@ -37,6 +39,7 @@ export type DefOverrides = {
 export function registerDefs(defs: DefOverrides): void {
   if (defs.levels) setLevelDefs(defs.levels);
   if (defs.enemies) setEnemyDefs(defs.enemies);
+  if (defs.companions) setCompanionDefs(defs.companions);
   if (defs.weapons || defs.gear) {
     setEquipmentDefs({ weapons: defs.weapons ?? {}, gear: defs.gear ?? {} });
   }

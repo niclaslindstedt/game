@@ -545,12 +545,17 @@ once, on the first meeting._
 The hero follows MOSQUE through the tear: a hallucinatory space between
 universes. No ground, soft gravity, black holes, asteroid rain — and
 history's missing wandering the noise: everyone who ever vanished without a
-body fell in here. Three of them fight (TESLA, EARHART, RASPUTIN); two only
-speak, then dissolve — the game's first APPARITIONS (HOUDINI, THE KING).
-The reveal belongs to the boss: GROK OMEGA, ZAI's latest superintelligence,
-FOUND the rift — in secret, telling no one, not even world leaders — and at
-the far door MOSQUE escapes a second time, out the other side of the rift,
-destination unknown until later.
+body fell in here. Four of them fight (TESLA, EARHART, RASPUTIN — and LUCKY,
+folklore's missing); two only speak, then dissolve — the game's first
+APPARITIONS (HOUDINI, THE KING). Each fighter, beaten to its knees, offers
+the game's first moral fork: the SPARE-or-KILL verdict. Killed, it pays its
+drops and gasps its last words; SPARED, it swears a life debt (its joining
+words below) and follows the hero as a COMPANION — fighting at his side,
+floating its kill-quote banter over the fray, and walking with him into the
+next level. The reveal belongs to the boss: GROK OMEGA, ZAI's latest
+superintelligence, FOUND the rift — in secret, telling no one, not even
+world leaders — and at the far door MOSQUE escapes a second time, out the
+other side of the rift, destination unknown until later.
 
 ### Opening monologue (hero, black screen)
 
@@ -601,10 +606,15 @@ words because it cannot die.
 - I DIDN'T DIE, MAN. I TOOK A / RESIDENCY. BEST ACOUSTICS / BETWEEN UNIVERSES. UH-HUH.
 - MIND THE BLACK HOLES, KEEP / YOUR BLUE SUEDES OFF THE EVENT / HORIZON. THANK YOU VERY MUCH.
 
-### Elites (spoken on arrival; last words as they fall)
+### Elites (spoken on arrival; last words as they fall — or joining words if spared)
 
 History's missing, pinned along the road to the far door: the physics, Ada's
-trail, and the tribute road's ancient doorman.
+trail, the tribute road's ancient doorman — and, off the main road, the
+little man with the pot of gold. Every one of them is SPAREABLE: beaten to
+0 hp it kneels for the verdict. **Last words** play only on a kill;
+**joining words** play only on a spare; **kill quotes** are the hovering
+banter a recruited companion floats when its own blow downs a mob (never a
+dialogue scene — the run doesn't pause for banter).
 
 #### NIKOLA TESLA — the machine at the door
 
@@ -615,7 +625,17 @@ trail, and the tribute road's ancient doorman.
 
 **Last words:** THE CURRENT... / ...RETURNS TO THE COIL...
 
-_Drops: TESLA COIL, WARDENCLYFFE NOTES._
+**Joining words (spared):**
+
+- YOU HELD THE CURRENT AND / GAVE IT BACK. I OWE YOU A / LIFE, LITTLE BUILDER.
+- MY COIL WALKS WITH YOU NOW. / STAY CLOSE - I AM AT MY BEST / NEAR A GOOD CONDUCTOR.
+
+**Kill quotes (as a companion):** SCIENCE! · ALTERNATING CURRENT. DIRECT
+RESULTS. · EDISON COULD NEVER. · WIRELESS. PATENT PENDING. · THE PIGEONS
+WOULD BE PROUD.
+
+_Drops (killed): TESLA COIL, WARDENCLYFFE NOTES. Spared, he keeps the coil —
+it fights for the hero now — and hands over the notes either way._
 
 #### AMELIA EARHART — Ada's trail
 
@@ -626,7 +646,15 @@ _Drops: TESLA COIL, WARDENCLYFFE NOTES._
 
 **Last words:** FINALLY... / ...A RUNWAY...
 
-_Drops: AVIATOR GOGGLES._
+**Joining words (spared):**
+
+- YOU HAD ME GROUNDED AND / LET ME BACK UP. THAT'S A / DEBT, PILOT. I PAY THOSE.
+- I'LL FLY YOUR WING TO THE / FAR DOOR AND PAST IT. / NOBODY TOUCHES MY LEAD.
+
+**Kill quotes (as a companion):** CLEARED FOR DEPARTURE. · THAT ONE'S
+GROUNDED. · SMOOTH LANDING. · FLIGHT PLAN? NEVER FILED ONE.
+
+_Drops (killed): AVIATOR GOGGLES._
 
 #### GRIGORI RASPUTIN — the tribute road's doorman
 
@@ -637,7 +665,40 @@ _Drops: AVIATOR GOGGLES._
 
 **Last words:** HA! AT LAST... / ...SOMEONE WHO COMMITS...
 
-_Drops: RASPUTIN'S BEARD._
+**Joining words (spared):**
+
+- POISON. BULLETS. RIVERS. / ONLY YOU EVER MADE ME KNEEL, / AND YOU LET ME STAND.
+- MY LIFE IS YOURS NOW, WARM / ONE. I WILL WATCH YOUR BACK. / PITY WHATEVER COMES AT IT.
+
+**Kill quotes (as a companion):** NOW YOU TRY DYING. · I MAKE IT LOOK EASY. ·
+STAY DOWN. I NEVER DID. · THE HOLY MAN SENDS REGARDS.
+
+_Drops (killed): RASPUTIN'S BEARD._
+
+#### LUCKY — folklore's missing
+
+_Not everyone who fell through was ever in a history book: the little man
+with the pot of gold stepped sideways out of a fairy ring centuries ago and
+has been fleecing the rift's travelers since. He guards his pot off the main
+road — a detour. Killed, he finally pays out the LUCKY CLOVER; spared, his
+luck rubs off on the whole party: +50% MAGIC FIND while he's on his feet._
+
+- WELL WELL. A BIG ONE, WALKED / RIGHT INTO ME RING. THAT'S / THREE CENTURIES OF BAD LUCK.
+- YOURS, NOT MINE. I DON'T / HAVE BAD LUCK. I RELOCATED / IT. INTO EVERYONE ELSE.
+- THE GOLD? OH, THE GOLD'S / REAL. FELL THROUGH WITH ME. / FINDERS KEEPERS, WASN'T IT?
+- TELL YOU WHAT. BEAT ME AND / IT'S YOURS. NOBODY'S MANAGED / YET. FEELING LUCKY?
+
+**Last words:** AH WELL... / ...LUCK ALWAYS RUNS OUT...
+
+**Joining words (spared):**
+
+- YE BEAT ME FAIR AND LET ME / KEEP ME HEAD. THAT'S A LIFE / DEBT, THAT IS. BINDING.
+- SO I'M YOURS NOW - ME, ME / LUCK, AND ME GOLD... WELL. / THE LUCK, ANYWAY. C'MON.
+
+**Kill quotes (as a companion):** OOPS. BAD LUCK. · NOT YOUR DAY, FRIEND. ·
+FORTUNE FAVORS ME. · THAT'S ME GOLD NOW. · SHOULDA RUBBED A CLOVER.
+
+_Drops (killed): LUCKY CLOVER._
 
 ### Boss — GROK OMEGA (the reveal: who found the rift)
 
@@ -705,16 +766,17 @@ line here appears verbatim in one of these, and they must match. When you change
 one, update the manuscript in the same change (subject to the confirmation rule
 at the top of this file).
 
-| Story/dialogue element                      | Canonical data file                                                                 |
-| ------------------------------------------- | ----------------------------------------------------------------------------------- |
-| Prelude cutscene (captions, `say` beats)    | `src/game/defs/cutscenes.ts`                                                        |
-| Per-level opening monologues (`intro`)      | `src/game/defs/levels/spacez_hq.ts`, `.../moon.ts`, `.../mars.ts`, `.../rift.ts`    |
-| Elite/boss `dialogue` + `lastWords`         | `src/game/defs/enemies/spacez.ts`, `.../moon.ts`, `.../mars.ts`, `.../rift.ts`      |
-| Hero's inner thoughts (`firstKillThoughts`) | `src/game/defs/thoughts.ts` (pinned from a `LevelDef`)                              |
-| Found lore on story items (`lore`)          | `src/game/defs/story.ts`                                                            |
-| The wandering merchant's greetings          | `src/game/defs/levels/*.ts` (`merchant.greeting`; played by `src/game/merchant.ts`) |
-| Loose UI copy (how-to-play, not story)      | `website/src/game/copy.ts`                                                          |
-| Brand strings (title, tagline — not story)  | `game.config.json` → `website/src/identity.ts`                                      |
+| Story/dialogue element                      | Canonical data file                                                                                  |
+| ------------------------------------------- | ---------------------------------------------------------------------------------------------------- |
+| Prelude cutscene (captions, `say` beats)    | `src/game/defs/cutscenes.ts`                                                                         |
+| Per-level opening monologues (`intro`)      | `src/game/defs/levels/spacez_hq.ts`, `.../moon.ts`, `.../mars.ts`, `.../rift.ts`                     |
+| Elite/boss `dialogue` + `lastWords`         | `src/game/defs/enemies/spacez.ts`, `.../moon.ts`, `.../mars.ts`, `.../rift.ts`                       |
+| Hero's inner thoughts (`firstKillThoughts`) | `src/game/defs/thoughts.ts` (pinned from a `LevelDef`)                                               |
+| Companion joining words + kill quotes       | `src/game/defs/companions.ts` (`joinWords`, `killQuotes`; spare verdict in `src/game/companions.ts`) |
+| Found lore on story items (`lore`)          | `src/game/defs/story.ts`                                                                             |
+| The wandering merchant's greetings          | `src/game/defs/levels/*.ts` (`merchant.greeting`; played by `src/game/merchant.ts`)                  |
+| Loose UI copy (how-to-play, not story)      | `website/src/game/copy.ts`                                                                           |
+| Brand strings (title, tagline — not story)  | `game.config.json` → `website/src/identity.ts`                                                       |
 
 The engine machinery that plays these (dialogue queue, kill-triggered scenes) is
 in `src/game/story.ts`; the app-side overlays that render them are

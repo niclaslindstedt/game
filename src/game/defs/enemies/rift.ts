@@ -122,6 +122,8 @@ export const RIFT_ENEMIES: Record<string, EnemyDef> = {
       ],
     ],
     lastWords: ["THE CURRENT...", "...RETURNS TO THE COIL..."],
+    // Beaten, he kneels: SPARE him and the coil joins the party's side.
+    spareable: { companion: "nikola_tesla" },
     ai: { aggroRadius: 250, rushSpeed: 115 },
     loot: {
       // His coil, and the notebook that heard ZAI's machine at the door.
@@ -172,6 +174,8 @@ export const RIFT_ENEMIES: Record<string, EnemyDef> = {
       ],
     ],
     lastWords: ["FINALLY...", "...A RUNWAY..."],
+    // Beaten, she kneels: SPARE her and the rift finally has a wingman.
+    spareable: { companion: "amelia_earhart" },
     ai: { aggroRadius: 250, rushSpeed: 120 },
     loot: {
       items: ["aviator_goggles"],
@@ -222,6 +226,8 @@ export const RIFT_ENEMIES: Record<string, EnemyDef> = {
       ],
     ],
     lastWords: ["HA! AT LAST...", "...SOMEONE WHO COMMITS..."],
+    // Beaten, he kneels: SPARE the unkillable and he simply switches sides.
+    spareable: { companion: "grigori_rasputin" },
     ai: { aggroRadius: 250, rushSpeed: 110 },
     loot: {
       items: ["rasputin_beard"],
@@ -232,6 +238,64 @@ export const RIFT_ENEMIES: Record<string, EnemyDef> = {
       repairs: 1,
       medkits: 1,
       tierBonus: 0.3,
+    },
+  },
+  // LUCKY — folklore's missing. Not everyone who fell through was ever in a
+  // history book: the little man with the pot of gold stepped sideways out
+  // of a fairy ring centuries ago and has been fleecing the rift's travelers
+  // since. Beaten, he kneels like the rest of history's missing — SPARE him
+  // and his luck rubs off on the whole party: +50% MAGIC FIND while he's on
+  // his feet (see COMPANION_DEFS.lucky). Kill him and the clover is yours.
+  lucky: {
+    id: "lucky",
+    name: "LUCKY",
+    role: "elite",
+    levelBonus: 3,
+    sprite: "lucky",
+    hp: 300,
+    speed: 22,
+    radius: 9,
+    contactDamage: 20,
+    critChance: 0.12,
+    // Slippery little man: half your swings find only a giggle and a puff
+    // of glitter. DEXTERITY earns the hits that land.
+    dodgeChance: 0.25,
+    contactCooldownMs: 700,
+    dialogue: [
+      [
+        "WELL WELL. A BIG ONE, WALKED",
+        "RIGHT INTO ME RING. THAT'S",
+        "THREE CENTURIES OF BAD LUCK.",
+      ],
+      [
+        "YOURS, NOT MINE. I DON'T",
+        "HAVE BAD LUCK. I RELOCATED",
+        "IT. INTO EVERYONE ELSE.",
+      ],
+      [
+        "THE GOLD? OH, THE GOLD'S",
+        "REAL. FELL THROUGH WITH ME.",
+        "FINDERS KEEPERS, WASN'T IT?",
+      ],
+      [
+        "TELL YOU WHAT. BEAT ME AND",
+        "IT'S YOURS. NOBODY'S MANAGED",
+        "YET. FEELING LUCKY?",
+      ],
+    ],
+    lastWords: ["AH WELL...", "...LUCK ALWAYS RUNS OUT..."],
+    spareable: { companion: "lucky" },
+    ai: { aggroRadius: 250, rushSpeed: 120 },
+    loot: {
+      // His pot pays out: the clover, and gold-tier odds on the rest.
+      items: ["lucky_clover"],
+      tierDrops: { magic: 1.5, rare: 0.5 },
+      weapons: 0,
+      gear: 1,
+      xpArrows: 2,
+      repairs: 0,
+      medkits: 1,
+      tierBonus: 0.5,
     },
   },
   // ---- The apparitions: dialogue-only residents. They seek the hero out,

@@ -145,6 +145,11 @@ export function hitEnemy(
   // caller can hurt one by accident.
   if (def.apparition) return;
 
+  // A kneeling spareable awaiting its verdict is out of the fight: a
+  // same-tick second pellet (or an orbiting orb) must not finish what the
+  // choice overlay is about to ask about.
+  if (state.choice !== null && state.choice.enemyId === enemy.id) return;
+
   // An elite or boss meets the player's power the instant the fight opens —
   // scale its hp before this blow lands so it can never be one-shot out of a
   // set piece by a leveled hero. Idempotent (latched by `powerScaled`).
@@ -197,6 +202,37 @@ export function hitEnemy(
     return;
   }
 
+  // A SPAREABLE unique kneels at 0 hp instead of dying: the run pauses into
+  // the `choice` phase and the killing blow is withheld until the verdict
+  // (`resolveChoice` in companions.ts — spare recruits it, kill lands the
+  // blow through `killEnemy` exactly as rolled here). The figure stays on
+  // the board at 1 hp, untouchable via the pending-choice guard above. A
+  // twin already in the party can't be re-recruited, so its double dies
+  // like anything else.
+  if (
+    def.spareable &&
+    state.choice === null &&
+    !state.companions.some(
+      (c) => c.defId === (def.spareable as { companion: string }).companion,
+    )
+  ) {
+    enemy.hp = 1;
+    state.choice = {
+      enemyId: enemy.id,
+      defId: enemy.defId,
+      damage,
+      crit,
+      critPower: crit ? opts?.damageRoll : undefined,
+    };
+    state.phase = "choice";
+    state.events.push({
+      type: "spareOffered",
+      defId: enemy.defId,
+      pos: { ...enemy.pos },
+    });
+    return;
+  }
+
   state.enemies.splice(state.enemies.indexOf(enemy), 1);
 
   // A fleeing unique escapes at 0 hp instead of dying: no kill is booked and
@@ -228,6 +264,29 @@ export function hitEnemy(
     return;
   }
 
+  killEnemy(state, enemy, damage, crit, crit ? opts?.damageRoll : undefined);
+}
+
+/**
+ * Book one enemy's death: off the board, kill counted, XP paid, loot rolled,
+ * last words played. The tail of `hitEnemy`'s 0-hp path, extracted so the
+ * SPARE-or-KILL verdict (`resolveChoice` in companions.ts) can land the
+ * withheld killing blow through the exact same rails. Splicing is idempotent
+ * — an enemy already off the board isn't removed twice. `critPower` is the
+ * blow's damage-variance roll (only meaningful on a crit) — it rides out on
+ * the `enemyKilled` event so the app can size the popup.
+ */
+export function killEnemy(
+  state: GameState,
+  enemy: Enemy,
+  damage: number,
+  crit: boolean,
+  critPower?: number,
+): void {
+  const def = enemyDef(enemy.defId);
+  const index = state.enemies.indexOf(enemy);
+  if (index >= 0) state.enemies.splice(index, 1);
+
   state.stats.kills++;
   // The kill's XP reward, resolved once so the same figure both credits the
   // hero (grantXp below) and rides the event out to the app, which floats it
@@ -239,7 +298,7 @@ export function hitEnemy(
     defId: enemy.defId,
     damage,
     crit,
-    critPower: crit ? opts?.damageRoll : undefined,
+    critPower: crit ? critPower : undefined,
     xp: xpGain,
   });
 

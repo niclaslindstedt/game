@@ -9,6 +9,8 @@
 import {
   abilityDef,
   APPARITION,
+  COMPANIONS,
+  companionDef,
   enemyDef,
   equipmentIcon,
   LAST_STAND,
@@ -534,6 +536,7 @@ export function drawFrame(
   }
 
   drawMerchant(ctx, state, assets, camera, timeMs);
+  drawCompanions(ctx, state, assets, camera, timeMs);
   drawAbilities(ctx, state, assets, camera, timeMs);
   drawPlayer(ctx, state, assets, camera, timeMs);
 
@@ -616,6 +619,74 @@ function drawMerchant(
 }
 
 /**
+ * The recruited party: each companion in its own sprite family (the same
+ * frames its enemy twin wore), walk-animated like the merchant. A DOWNED
+ * companion kneels as a faded still with a rising recovery sliver; a hurt
+ * one shows a small green health bar, mirroring the elites' readout.
+ */
+function drawCompanions(
+  ctx: CanvasRenderingContext2D,
+  state: GameState,
+  assets: GameAssets,
+  camera: Camera,
+  timeMs: number,
+): void {
+  for (const companion of state.companions) {
+    if (
+      companion.pos.x < camera.x - 48 ||
+      companion.pos.x > camera.x + ctx.canvas.width + 48 ||
+      companion.pos.y < camera.y - 48 ||
+      companion.pos.y > camera.y + ctx.canvas.height + 48
+    ) {
+      continue;
+    }
+    const def = companionDef(companion.defId);
+    const downed = companion.downedMs !== undefined;
+    const frame =
+      !downed && companion.moving && Math.floor(timeMs / 200) % 2 === 1 ? 1 : 0;
+    const sprite =
+      spriteByName(assets.sprites, `${def.sprite}_${frame}`) ??
+      spriteByName(assets.sprites, `${def.sprite}_0`);
+    if (!sprite) continue;
+    const x = Math.round(companion.pos.x - sprite.width / 2 - camera.x);
+    const y = Math.round(companion.pos.y - sprite.height / 2 - camera.y);
+    ctx.save();
+    if (downed) ctx.globalAlpha = 0.55;
+    if (companion.faceLeft) {
+      ctx.translate(x + sprite.width, y);
+      ctx.scale(-1, 1);
+      ctx.drawImage(sprite, 0, 0);
+    } else {
+      ctx.drawImage(sprite, x, y);
+    }
+    ctx.restore();
+
+    // The readout above the head: recovery while down, health while hurt.
+    const barWidth = 16;
+    const bx = Math.round(companion.pos.x - barWidth / 2 - camera.x);
+    const by = y - 6;
+    if (downed) {
+      const frac =
+        1 - Math.min(1, (companion.downedMs ?? 0) / COMPANIONS.reviveMs);
+      ctx.fillStyle = "#0b0d10";
+      ctx.fillRect(bx - 1, by - 1, barWidth + 2, 5);
+      ctx.fillStyle = "#9aa3ad";
+      ctx.fillRect(bx, by, Math.round(barWidth * frac), 3);
+    } else if (companion.hp < companion.maxHp) {
+      ctx.fillStyle = "#0b0d10";
+      ctx.fillRect(bx - 1, by - 1, barWidth + 2, 5);
+      ctx.fillStyle = "#7ef0c8";
+      ctx.fillRect(
+        bx,
+        by,
+        Math.round((barWidth * companion.hp) / companion.maxHp),
+        3,
+      );
+    }
+  }
+}
+
+/**
  * Running ability visuals: stasis draws its slow-field ring, orbit abilities
  * draw their fireballs at the engine's own orb positions.
  */
@@ -682,7 +753,14 @@ function drawAbilities(
  */
 export type Effect = {
   kind:
-    "lightning" | "nuke" | "splash" | "damage" | "swing" | "muzzle" | "text";
+    | "lightning"
+    | "nuke"
+    | "splash"
+    | "damage"
+    | "swing"
+    | "muzzle"
+    | "text"
+    | "corpse";
   pos: { x: number; y: number };
   untilMs: number;
   /** Total effect length, for progress-driven animation. */
@@ -690,7 +768,8 @@ export type Effect = {
   /** World-clock ms before the effect begins drawing — lets a float lag behind
    * the hit that spawned it (the XP popup trails the damage number). */
   startMs?: number;
-  /** Splash: sprite family ("blood", "ecto") — frames `<family>_0/_1`. */
+  /** Splash: gore family ("blood", "ecto") — frames `<family>_0/_1`.
+   * Corpse: the slain enemy's sprite family, drawn as it keels over. */
   sprite?: string;
   /** Text float: the word to rise off the spot (e.g. "DODGE"). */
   text?: string;
@@ -701,14 +780,21 @@ export type Effect = {
   rise?: number;
   /** Damage number: the hit's rounded damage. */
   value?: number;
-  /** Damage number: crits shake, grow, and glow gold. */
+  /** Damage number: crits jolt left-right-center, grow, and glow gold. */
   crit?: boolean;
   /** Damage number: on a crit, how hard the blow rolled in [0, 1] — scales the
    * popup from a modest 1.5× (a glancing crit) up to a fat 3× (a top-of-band
    * slam). Absent = a neutral mid-size crit. */
   critPower?: number;
-  /** Swing/muzzle: the aim direction in radians. */
+  /** Swing/muzzle: the aim direction in radians.
+   * Corpse: the signed angle it keels over to (±π/2), rolled at spawn so
+   * the horde doesn't topple in lockstep. */
   angle?: number;
+  /** Corpse: an epic (elite/boss) body — it keels over and then simply lies
+   * there for the rest of the level instead of blinking out. There are only
+   * ever a handful, so leaving them on the field reads as a battlefield of
+   * fallen giants rather than clutter. */
+  persist?: boolean;
   /** Swing: the arc's reach in world px (the weapon's effective range). */
   radius?: number;
   /** Swing: the full cone angle in radians (wide blade vs narrow spear). */
@@ -752,19 +838,67 @@ export function drawEffects(
       continue;
     }
 
+    if (effect.kind === "corpse") {
+      // A slain mob's send-off: it keels over flat to the ground with a little
+      // hop, lies there a beat, then blinks out and is gone. Purely cosmetic —
+      // the engine already removed the live enemy the tick it died, so this
+      // plays on top at the spot it fell. Timeline over `duration` (2s):
+      // keel-over (first ~260ms) → lie still → blink for the final second.
+      const duration = effect.durationMs ?? 2000;
+      const age = duration - (effect.untilMs - timeMs); // ms since death
+      // A single fixed frame (dying, frame 0) — a corpse never walks or bobs,
+      // it just keels over once and lies still. The dead don't animate.
+      const sprite = enemySprites(assets.sprites, effect.sprite ?? "ghost")
+        .dying[0];
+      // Blink out over the final second: skip alternate ~90ms windows so it
+      // flickers before it disappears. Epic bodies (persist) never blink —
+      // they just keel over and stay down.
+      const blinkAt = duration - 1000;
+      if (
+        !effect.persist &&
+        age >= blinkAt &&
+        Math.floor(timeMs / 90) % 2 === 0
+      )
+        continue;
+      // Keel-over: rotate 0 → the rolled ±90° over the first 260ms (ease-out),
+      // with a brief hop as it topples.
+      const fall = Math.min(1, age / 260);
+      const eased = fall * (2 - fall);
+      const tip = (effect.angle ?? Math.PI / 2) * eased;
+      const hop = Math.round(Math.sin(fall * Math.PI) * 4);
+      const w = sprite.width;
+      const h = sprite.height;
+      ctx.save();
+      // Pivot about the sprite's feet (bottom-centre) so it falls flat with its
+      // base planted, then draw the body rising from that pivot.
+      ctx.translate(x, groundY + Math.round(h / 2) - hop);
+      ctx.rotate(tip);
+      ctx.drawImage(sprite, -Math.round(w / 2), -h);
+      ctx.restore();
+      continue;
+    }
+
     if (effect.kind === "damage") {
       // The hit's number pops on the victim's head and stays pinned there —
-      // only XP floats now. A crit is a fat gold figure shaking in place; a
-      // normal hit is a plain static number. A crit's size tracks how hard it
-      // rolled: a glancing crit grows a modest 1.5×, a top-of-band slam a fat
-      // 3× (quantized to half-steps so the pixel glyphs stay crisp). It shakes
-      // harder the bigger it is.
+      // only XP floats now. A crit is a fat gold figure that jolts once —
+      // a beat left, a beat right, then dead center for the rest of its
+      // life — not a continuous buzz. A normal hit is a plain static number.
+      // A crit's size tracks how hard it rolled: a glancing crit grows a
+      // modest 1.5×, a top-of-band slam a fat 3× (quantized to half-steps so
+      // the pixel glyphs stay crisp). It jolts harder the bigger it is.
       const duration = effect.durationMs ?? 650;
       const t = 1 - (effect.untilMs - timeMs) / duration; // 0 → 1
       const crit = effect.crit ?? false;
       const power = effect.critPower ?? 0.5;
       const scale = crit ? Math.round((1.5 + 1.5 * power) * 2) / 2 : 1;
-      const shake = crit ? Math.round(Math.sin(timeMs / 14) * scale) : 0;
+      const elapsedMs = t * duration;
+      const shake = !crit
+        ? 0
+        : elapsedMs < 70
+          ? -Math.round(scale)
+          : elapsedMs < 140
+            ? Math.round(scale)
+            : 0;
       const text = formatCompact(effect.value ?? 0);
       const width = font.measure(text) * scale;
       ctx.globalAlpha = t > 0.7 ? 1 - (t - 0.7) / 0.3 : 1;

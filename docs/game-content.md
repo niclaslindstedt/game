@@ -271,9 +271,10 @@ The roster is split one file per level/biome under `src/game/defs/enemies/`
   trinket that pays out while it merely rides in the bag (`GearDef.passive`).
   The hero walks in with his weapon **holstered** (`LevelDef.openingStrike` —
   `player.disarmed`): the auto-attack sits out until a lone VANGUARD scientist
-  sprints ahead of the pack and lands a harmless first swing, which draws
-  whatever he took off the wall ("good thing I came armed") and turns combat
-  on. Two
+  sprints ahead of the pack and closes to within `openingStrike.radius` of him,
+  which draws whatever he took off the wall ("good thing I came armed") and
+  turns combat on. It fires on that proximity (not on contact), so a hero
+  circling the rusher can't stall the opening beat forever. Two
   sight-pinned inner monologues also fire here (`firstSightThoughts` — on view,
   before any blow): the first intern the hero SEES plays his arrival read on a
   building fully staffed at midnight, and the first OPTIMUSK he SEES plays the
@@ -309,11 +310,15 @@ The roster is split one file per level/biome under `src/game/defs/enemies/`
   high-crit glitch with an elevated `dodgeChance`) → GRAVITON (the slow
   collapsed-star heavy with a sweetened `dropProfile`) — and **history's
   missing** for uniques: everyone who ever vanished without a body fell in
-  here. Three fight as elites with signature drops — NIKOLA TESLA (drops the
+  here. Four fight as elites with signature drops — NIKOLA TESLA (drops the
   TESLA COIL and the WARDENCLYFFE NOTES), AMELIA EARHART (saw Ada carried
-  through to the far door; drops the AVIATOR GOGGLES), and GRIGORI RASPUTIN
-  (the unkillable mystic: `dodgeChance` 0.35, drops RASPUTIN'S BEARD) — and
-  two are the game's first **APPARITIONS** (`EnemyDef.apparition`): HARRY
+  through to the far door; drops the AVIATOR GOGGLES), GRIGORI RASPUTIN
+  (the unkillable mystic: `dodgeChance` 0.35, drops RASPUTIN'S BEARD), and
+  LUCKY — folklore's missing, a slippery leprechaun parked off the main
+  road who drops the LUCKY CLOVER — and every fighter is **SPAREABLE**
+  (`EnemyDef.spareable`): beaten to 0 hp it kneels for the SPARE-or-KILL
+  verdict (see **Companions** below). Two more are the game's first
+  **APPARITIONS** (`EnemyDef.apparition`): HARRY
   HOUDINI and THE KING are dialogue-only figures nothing can hit, whose
   touch is cold air, and who walk off and dissolve after their scene
   (`apparitionVanished`). The finale is a double bill: **GROK OMEGA** — ZAI's
@@ -339,6 +344,32 @@ own voice and portrait (a `playerThought` dialogue source) instead of a
 speaker on the board. A trigger can name a prerequisite thought (`after`) that
 holds it, unspent, until that thought has played — how a two-part beat (see
 the wisp, then down one) keeps its reading order.
+
+## Companions — the SPARE-or-KILL verdict
+
+The rift's four fighting uniques are the game's first **companions**
+(`src/game/defs/companions.ts`, engine in `src/game/companions.ts`). Beating
+a spareable unique to 0 hp pauses the run in the `choice` phase: **KILL**
+lands the withheld blow through the ordinary kill rails (loot, last words,
+the lot); **SPARE** recruits the figure — it hands over its STORY items (the
+plot must flow) but keeps its equipment loot as its own kit, swears a life
+debt (its `joinWords`, played through the dialogue box), and joins the party.
+
+A companion follows the hero in formation, fights autonomously with whatever
+is in its weapon slot (its signature piece at first — Tesla's coil, Lucky's
+staff), and can be dressed from the hero's own bag in a **weapon, helmet,
+and chest piece only** — never legs or feet (tap its portrait under the HUD
+avatar for the Diablo-2-style equip screen). Companions are never killed:
+at 0 hp one goes DOWN, kneels out of the fight (its aura silent), and stands
+back up on its own. When its blow kills a mob it may float one of its
+`killQuotes` — hovering banter, never a dialogue pause.
+
+**LUCKY's aura** is the recruitment pitch: +50% MAGIC FIND for the whole
+party while he's on his feet — every loot-tier roll's chance is half again
+as likely (kill him instead and the clover is a one-off drop). The party
+**rides the loadout** between levels (`Loadout.companions`), so the choice
+made in the rift walks through the far door with the hero — the level beyond
+it is built with a companion at his side in mind.
 
 ## Story items & costume
 

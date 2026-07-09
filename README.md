@@ -17,9 +17,13 @@
 > follow him into THE RIFT itself — a hallucinatory void of black holes,
 > asteroid rain, and history's missing, guarded by GROK OMEGA, ZAI's secret
 > superintelligence — all to a chiptune soundtrack, looting gear and powers
-> while the auto-firing weapons thin the horde. Each run's end screen shows
-> a summary with a retry button and your best survival time on that
-> difficulty.
+> while the auto-firing weapons thin the horde. Beat one of the rift's
+> legends (TESLA, EARHART, RASPUTIN — or LUCKY the leprechaun) and choose:
+> KILL for the loot, or SPARE them and they join you as a companion —
+> fighting at your side, dressable from your bag (weapon, helmet, chest),
+> and walking with you into the next level; sparing LUCKY buys his +50%
+> magic-find aura. Each run's end screen shows a summary with a retry
+> button and your best survival time on that difficulty.
 
 ## Why?
 

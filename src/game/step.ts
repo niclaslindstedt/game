@@ -24,8 +24,10 @@ import {
 } from "@game/lib/vec.ts";
 import {
   grantAbility,
+  isSlotActive,
   magnetRadius,
   orbPositions,
+  removeHeldSlot,
   stasisFactorAt,
 } from "./abilities.ts";
 import {
@@ -45,6 +47,7 @@ import {
   STATS,
   WEAPON,
 } from "./config.ts";
+import { maybeCompanionQuote, stepCompanions } from "./companions.ts";
 import { stepAsteroids, stepWells } from "./hazards.ts";
 import { spawnEnemy } from "./create.ts";
 import { abilityDef } from "./defs/abilities.ts";
@@ -102,8 +105,8 @@ import {
   collectStoryItem,
   startEnemyDialogue,
   stepDoors,
+  stepOpeningStrike,
   stepSightThoughts,
-  tryOpeningStrike,
   wantsDialogue,
 } from "./story.ts";
 import type {
@@ -164,6 +167,9 @@ export function step(state: GameState, input: GameInput, dtMs: number): void {
   stepAbilities(state, dt, dtMs);
   stepProjectiles(state, dt, dtMs);
   stepEnemies(state, dt, dtMs);
+  // The party acts on the tick's final enemy positions: regroup, fight,
+  // soak contact blows, stand back up (see companions.ts).
+  stepCompanions(state, dt, dtMs);
   // Environmental hazards act on this tick's positions, after everyone has
   // moved: the wells drag (and devour), the asteroids fly (and strike).
   stepWells(state, dt, dtMs);
@@ -171,6 +177,10 @@ export function step(state: GameState, input: GameInput, dtMs: number): void {
   // Sight-pinned inner monologues fire on this tick's positions — after the
   // horde has moved, so "the hero sees one" means it is actually on screen.
   stepSightThoughts(state, levelDef(state.level.id).firstSightThoughts);
+  // The scripted vanguard's proximity draws the blade (SpaceZ HQ's
+  // `openingStrike`) — judged after the horde has moved and after the sighting
+  // beat above, so the "look at this place" read always lands first.
+  stepOpeningStrike(state);
   tickMenace(
     state,
     dtMs,
@@ -455,34 +465,44 @@ function stepPlayer(
 }
 
 /**
- * Spend one carried ability pickup on the `useItem` input edge. By default
- * the oldest banked ability kicks in; `useItemIndex` names a specific slot
- * (the powerup dock), and removing it shifts the rest down so the dock stays
- * packed oldest-first. grantAbility emits the abilityStarted event. With
- * empty hands, or an out-of-range index, the input is a quiet no-op / oldest.
- * A non-stackable power that is already running refuses to re-activate
- * (grantAbility returns false), so its pickup stays banked rather than wasted.
+ * Spend one banked ability pickup on the `useItem` input edge. By default the
+ * oldest still-banked slot kicks in; `useItemIndex` names a specific dock slot.
+ * A slot whose power is already running is skipped (it counts down in place),
+ * and an index landing on one — or out of range — falls back to the oldest
+ * banked slot; with none banked the input is a quiet no-op.
+ *
+ * A spent power does NOT leave its slot: it keeps counting down there (linked
+ * via ActiveAbility.slot) and only frees the slot when it lapses, so the dock
+ * stays full while it runs. The instant NUKE is the exception — it fires and
+ * vacates its slot at once. grantAbility emits the abilityStarted event; a
+ * non-stackable power already running refuses to re-activate (grantAbility
+ * returns false), leaving its pickup banked rather than wasted.
  */
 function stepUseItem(state: GameState, input: GameInput): void {
   if (!input.useItem) return;
   const held = state.player.heldAbilities;
-  const index =
-    input.useItemIndex !== undefined &&
-    input.useItemIndex >= 0 &&
-    input.useItemIndex < held.length
-      ? input.useItemIndex
-      : 0;
+  const wanted = input.useItemIndex;
+  const usable =
+    wanted !== undefined &&
+    wanted >= 0 &&
+    wanted < held.length &&
+    !isSlotActive(state, wanted);
+  const index = usable
+    ? wanted
+    : held.findIndex((_, i) => !isSlotActive(state, i));
+  if (index < 0) return;
   const defId = held[index];
   if (!defId) return;
   const def = abilityDef(defId);
   if (def.nuke) {
-    held.splice(index, 1);
+    removeHeldSlot(state, index);
     detonateNuke(state, def.nuke.radius);
     return;
   }
-  // Only consume the banked pickup if the power actually started; a refused
-  // re-activation (a running non-stackable power) leaves the dock untouched.
-  if (grantAbility(state, defId)) held.splice(index, 1);
+  // The slot keeps its powerup while the copy runs; grantAbility links the copy
+  // to `index`. A refused re-activation (a running non-stackable power) starts
+  // nothing and leaves the slot as it was.
+  grantAbility(state, defId, index);
 }
 
 /**
@@ -810,6 +830,9 @@ function stepAbilities(state: GameState, dt: number, dtMs: number): void {
     if (ability.remainingMs > 0) continue;
     player.abilities.splice(i, 1);
     state.events.push({ type: "abilityEnded", defId: ability.defId });
+    // The power is done: free its dock slot at last, closing the row up so the
+    // rest shift down (and keeping every other running copy's slot link true).
+    if (ability.slot !== undefined) removeHeldSlot(state, ability.slot);
   }
 }
 
@@ -912,11 +935,24 @@ function stepProjectiles(state: GameState, dt: number, dtMs: number): void {
       survivors.push(projectile);
       continue;
     }
+    // A companion's shot never misses (no DEXTERITY to earn accuracy back
+    // with — see Projectile.companionId); the hero's rolls as always. Kills
+    // by a tagged shot may float the shooter's quote.
+    const killsBefore = state.stats.kills;
     hitEnemy(state, hit, projectile.damage, projectile.weaponClass, {
-      rollAccuracy: true,
+      rollAccuracy: projectile.companionId === undefined,
       critMult: projectile.critMult,
       damageRoll: projectile.damageRoll,
     });
+    if (
+      projectile.companionId !== undefined &&
+      state.stats.kills > killsBefore
+    ) {
+      const shooter = state.companions.find(
+        (c) => c.id === projectile.companionId,
+      );
+      if (shooter) maybeCompanionQuote(state, shooter);
+    }
     // Chain lightning: the first body grounds the bolt, and the current
     // leaps on to the nearest fresh foes in range — each leap softened by
     // `chainDamageFrac` and always connecting (the arc found its own path).
@@ -1068,11 +1104,12 @@ function stepEnemies(state: GameState, dt: number, dtMs: number): void {
       // The swing is spent whether it lands or is dodged, so the same foe
       // can't re-swing next frame after a sidestep.
       enemy.contactCooldownMs = def.contactCooldownMs;
-      // Pre-combat grace while the weapon is holstered: no blow lands until the
-      // scripted vanguard's soft first swing draws it. That swing arms the hero
-      // and plays his thought (story.ts); every other touch here is harmless.
+      // Pre-combat grace while the weapon is holstered: no blow lands. The
+      // blade is drawn by the scripted vanguard's PROXIMITY, not its touch (see
+      // stepOpeningStrike, run each tick above), so every contact in this window
+      // is a harmless bump — including the vanguard's own, until it has closed
+      // in and armed the hero.
       if (player.disarmed) {
-        tryOpeningStrike(state, enemy);
         continue;
       }
       // A nimble hero sidesteps the blow entirely: no HP, no armor, no hit.

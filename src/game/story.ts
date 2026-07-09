@@ -8,6 +8,7 @@
 
 import { distance, type Vec2 } from "@game/lib/vec.ts";
 import { DIALOGUE, DOORS } from "./config.ts";
+import { companionDef } from "./defs/companions.ts";
 import { enemyDef } from "./defs/enemies/index.ts";
 import { levelDef } from "./defs/levels/index.ts";
 import type { ThoughtTrigger } from "./defs/levels/types.ts";
@@ -47,6 +48,16 @@ export function dialogueContent(dialogue: DialogueState): {
   if (dialogue.source.kind === "playerThought") {
     const def = thoughtDef(dialogue.source.defId);
     return { speaker: def.speaker, portrait: def.portrait, pages: def.pages };
+  }
+  // A spared figure's joining scene: its companion def carries the thanks —
+  // same face in the portrait box it fought the hero with.
+  if (dialogue.source.kind === "companionJoin") {
+    const def = companionDef(dialogue.source.defId);
+    return {
+      speaker: def.name,
+      portrait: def.sprite,
+      pages: def.joinWords ?? [],
+    };
   }
   // The wandering merchant's meeting scene: the level def carries his
   // persona — look, name, and his own story for setting up shop here.
@@ -112,6 +123,26 @@ export function startDeathWords(state: GameState, defId: string): void {
   state.dialogue = { source: { kind: "enemyDeath", defId }, page: 0 };
   state.phase = "dialogue";
   state.events.push({ type: "enemyLastWords", defId });
+}
+
+/**
+ * Open a spared figure's JOINING scene: the short thanks — a life owed, a
+ * promise to follow and protect — played through the same dialogue box its
+ * ambush ran in, the moment the SPARE verdict lands (see `resolveChoice` in
+ * companions.ts). Silent for a def without `joinWords`, and it yields to any
+ * scene already on stage, exactly like a death gasp.
+ */
+export function startJoinWords(state: GameState, companionId: string): void {
+  const def = companionDef(companionId);
+  if (!def.joinWords || def.joinWords.length === 0 || state.dialogue !== null) {
+    return;
+  }
+  state.dialogue = {
+    source: { kind: "companionJoin", defId: companionId },
+    page: 0,
+  };
+  state.phase = "dialogue";
+  state.events.push({ type: "dialogueStarted", speaker: def.name });
 }
 
 /**
@@ -184,22 +215,30 @@ export function stepSightThoughts(
 }
 
 /**
- * The scripted opening strike (a level's `openingStrike`): the hero starts
- * disarmed, and the FIRST contact from the pinned vanguard draws his weapon.
- * Called from the enemy-contact path while `player.disarmed` — every other
- * touch in that window is a harmless bump. The vanguard's swing costs no HP
- * (the caller withholds damage); this arms the hero, fires the pinned thought
- * once (tracked in `thoughtsSeen`), and flashes the soft hit. Held until the
- * `after` gate's thought has played — so the "look at this place" read always
- * lands before the "good thing I came armed" reaction — and a no-op if
- * a scene is already up (it simply retries on a later contact).
+ * The per-tick hook for a level's `openingStrike`: the hero starts disarmed,
+ * and the pinned vanguard closing to within `openingStrike.radius` (falling
+ * back to `DIALOGUE.strikeRadius`) draws his weapon. A PROXIMITY trigger, not a
+ * contact one — so a hero who runs circles around the rusher can't stall the
+ * opening beat forever (the old contact rule let a kited vanguard never land
+ * its swing, leaving the level un-armed). Called from step() after the enemies
+ * have moved, so the sighting is judged on this tick's positions. This arms the
+ * hero, fires the pinned thought once (tracked in `thoughtsSeen`), and flashes
+ * the soft hit. Held until the `after` gate's thought has played — so the "look
+ * at this place" read always lands before the "good thing I came armed"
+ * reaction — a no-op once armed, and it simply retries on a later tick if a
+ * scene is already on stage.
  */
-export function tryOpeningStrike(state: GameState, enemy: Enemy): void {
-  if (state.dialogue !== null) return;
+export function stepOpeningStrike(state: GameState): void {
+  if (state.dialogue !== null || !state.player.disarmed) return;
   const opening = levelDef(state.level.id).openingStrike;
-  if (!opening || !enemy.vanguard) return;
+  if (!opening) return;
   if (opening.after && !state.thoughtsSeen.includes(opening.after)) return;
   if (state.thoughtsSeen.includes(opening.thought)) return;
+  const radius = opening.radius ?? DIALOGUE.strikeRadius;
+  const near = state.enemies.some(
+    (e) => e.vanguard && distance(e.pos, state.player.pos) <= radius,
+  );
+  if (!near) return;
   // Draw the blade: combat is live from here on.
   state.player.disarmed = false;
   state.player.hurtFlashMs = 250;

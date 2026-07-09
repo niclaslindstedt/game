@@ -1,0 +1,633 @@
+// SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
+// The COMPANION system: recruited allies and the SPARE-or-KILL verdict that
+// creates them. A spareable unique (`EnemyDef.spareable`) beaten to 0 hp
+// kneels and pauses the run in the `choice` phase (see hitEnemy in loot.ts);
+// `resolveChoice` lands the player's call — KILL books the withheld blow
+// through the normal kill rails, SPARE recruits the figure into the party.
+// Companions follow the hero in a loose formation, fight autonomously with
+// whatever is in their weapon slot (helmet and chest piece on top — never
+// legs or feet), radiate their def's aura (LUCKY's +50% magic find), float
+// their kill-quote banter, and go DOWN instead of dying — a beaten companion
+// kneels out of the fight and stands back up on its own. The party rides the
+// loadout between levels (see arrival.ts).
+//
+// Ordering: `stepCompanions` runs right after `stepEnemies`, so the party
+// acts on the tick's final enemy positions; its melee lands directly through
+// `hitEnemy`, its shots ride the ordinary projectile pass (tagged with
+// `companionId` for kill-quote attribution in step.ts).
+
+import { clamp, direction, distance, distanceSq } from "@game/lib/vec.ts";
+import { ARMOR, COMPANIONS, LEVELING, MELEE, WEAPON } from "./config.ts";
+import { companionDef, type CompanionDef } from "./defs/companions.ts";
+import { enemyDef } from "./defs/enemies/index.ts";
+import { weaponDef } from "./defs/equipment.ts";
+import {
+  armorValueOf,
+  meetsLevelReq,
+  playerSpeed,
+  qualityMult,
+} from "./items.ts";
+import { grantXp, hitEnemy, killEnemy } from "./loot.ts";
+import { addMapMarker } from "./map.ts";
+import { startJoinWords } from "./story.ts";
+import { lineOfSight, resolveObstacles } from "./obstacles.ts";
+import type {
+  Companion,
+  CompanionSlot,
+  Enemy,
+  Equipment,
+  GameState,
+  Projectile,
+} from "./types.ts";
+
+/** A companion's three equip slots, in paperdoll order. */
+export const COMPANION_SLOTS: readonly CompanionSlot[] = [
+  "weapon",
+  "head",
+  "chest",
+];
+
+/** A companion's max hp at the hero's `level` (they train together). */
+export function companionMaxHp(def: CompanionDef, level: number): number {
+  return Math.round(def.hp * (1 + COMPANIONS.hpPerLevel * (level - 1)));
+}
+
+/**
+ * A companion's per-hit weapon damage: the weapon's catalog damage times its
+ * `damagePct` affixes and make quality, held at the party damper
+ * (`COMPANIONS.damageMult` — support, not a replacement hero) and grown with
+ * the hero's level. Companions carry no stats of their own; the gear IS the
+ * build.
+ */
+export function companionWeaponDamage(companion: Companion): number {
+  const weapon = companion.equipment.weapon;
+  const def = weaponDef(weapon.defId);
+  let multiplier = 1;
+  for (const affix of weapon.affixes) {
+    if (affix.kind === "damagePct") multiplier += affix.value;
+  }
+  const trained = 1 + COMPANIONS.damagePerLevel * (companion.level - 1);
+  return (
+    def.damage *
+    multiplier *
+    qualityMult(weapon) *
+    COMPANIONS.damageMult *
+    trained
+  );
+}
+
+/** The ms between a companion's attacks — the catalog cadence at the global
+ * baseline (companions have no speed stat to quicken it). */
+export function companionWeaponCooldown(companion: Companion): number {
+  return (
+    weaponDef(companion.equipment.weapon.defId).cooldownMs *
+    WEAPON.baseCooldownMult
+  );
+}
+
+/** The fraction of a physical blow a companion's worn armor turns — the same
+ * D2 curve the hero's plating uses, over its helmet + chest points. */
+export function companionArmorReduction(
+  companion: Companion,
+  attackerLevel: number,
+): number {
+  let armor = 0;
+  for (const piece of [companion.equipment.head, companion.equipment.chest]) {
+    if (piece) armor += armorValueOf(piece);
+  }
+  if (armor <= 0) return 0;
+  const k = ARMOR.kBase + ARMOR.kPerLevel * Math.max(1, attackerLevel);
+  return Math.min(ARMOR.maxReduction, armor / (armor + k));
+}
+
+/** The companion carrying this id, if it is in the party. */
+export function companionById(
+  state: GameState,
+  companionId: number,
+): Companion | undefined {
+  return state.companions.find((c) => c.id === companionId);
+}
+
+/** Mint a companion's own signature weapon: a plain, UNBREAKABLE instance of
+ * its def's `weapon` — the piece it fought the hero with, minted at his
+ * level. No durability: a companion's own kit never wears out. */
+function mintCompanionWeapon(state: GameState, weaponId: string): Equipment {
+  return {
+    id: state.nextId++,
+    defId: weaponId,
+    slot: "weapon",
+    tier: "regular",
+    ilvl: Math.max(1, state.player.level),
+    affixes: [],
+    def: structuredClone(weaponDef(weaponId)),
+  };
+}
+
+/**
+ * Recruit `defId` into the party at `pos`: full health at the hero's level,
+ * its signature weapon in hand, helmet and chest bare (the hero dresses it
+ * from his own bag — see `equipCompanionFromInventory`).
+ */
+export function recruitCompanion(
+  state: GameState,
+  defId: string,
+  pos: { x: number; y: number },
+): Companion {
+  const def = companionDef(defId);
+  const level = Math.max(1, state.player.level);
+  const maxHp = companionMaxHp(def, level);
+  const companion: Companion = {
+    id: state.nextId++,
+    defId,
+    pos: { ...pos },
+    hp: maxHp,
+    maxHp,
+    level,
+    faceLeft: false,
+    moving: false,
+    weaponCooldownMs: 0,
+    quoteCooldownMs: 0,
+    equipment: {
+      weapon: mintCompanionWeapon(state, def.weapon),
+      head: null,
+      chest: null,
+    },
+  };
+  state.companions.push(companion);
+  state.events.push({ type: "companionJoined", defId, pos: { ...pos } });
+  return companion;
+}
+
+/**
+ * Land the SPARE-or-KILL verdict on the kneeling spareable (see
+ * `EnemyDef.spareable` and the interception in hitEnemy). KILL books the
+ * withheld blow through `killEnemy` — loot, last words, the lot, exactly as
+ * it would have landed. SPARE takes the figure off the board alive: the
+ * fight still pays its XP and pins the map, its STORY items are handed over
+ * (the plot must flow), but its equipment loot stays with it — the gear is
+ * the companion's kit now — and it joins the party on the spot. Safe to call
+ * from the app outside `step()`, like every other phase mutator.
+ */
+export function resolveChoice(state: GameState, spare: boolean): boolean {
+  if (state.phase !== "choice" || !state.choice) return false;
+  const choice = state.choice;
+  state.choice = null;
+  state.phase = "playing";
+  const enemy = state.enemies.find((e) => e.id === choice.enemyId);
+  if (!enemy) return true; // already off the board — just resume
+  if (!spare) {
+    killEnemy(state, enemy, choice.damage, choice.crit, choice.critPower);
+    return true;
+  }
+
+  const def = enemyDef(enemy.defId);
+  const index = state.enemies.indexOf(enemy);
+  if (index >= 0) state.enemies.splice(index, 1);
+  // The fight was won either way: the map remembers it, the XP flows.
+  addMapMarker(
+    state,
+    def.role === "boss" ? "boss" : "elite",
+    enemy.pos,
+    enemy.defId,
+  );
+  for (const storyId of def.loot?.storyItems ?? []) {
+    state.items.push({
+      id: state.nextId++,
+      kind: "story",
+      pos: { ...enemy.pos },
+      defId: storyId,
+    });
+  }
+  if (def.spareable) {
+    recruitCompanion(state, def.spareable.companion, enemy.pos);
+  }
+  grantXp(state, def.xp ?? Math.round(enemy.maxHp * LEVELING.xpPerHp));
+  // The joining scene — the thanks, the life owed — takes the stage last,
+  // so a level-up earned by the fight waits its turn behind it, the same
+  // ordering a death gasp gets.
+  if (def.spareable) startJoinWords(state, def.spareable.companion);
+  return true;
+}
+
+/**
+ * Float one of the companion's kill quotes, sometimes: rolled at
+ * `COMPANIONS.quoteChance` per kill, throttled by `quoteCooldownMs` so the
+ * banter stays banter. Called from the companion's own melee (below) and
+ * from the projectile pass in step.ts for its tagged shots.
+ */
+export function maybeCompanionQuote(
+  state: GameState,
+  companion: Companion,
+): void {
+  const def = companionDef(companion.defId);
+  if (def.killQuotes.length === 0 || companion.quoteCooldownMs > 0) return;
+  if (state.rng() >= COMPANIONS.quoteChance) return;
+  companion.quoteCooldownMs = COMPANIONS.quoteCooldownMs;
+  const text = def.killQuotes[
+    Math.floor(state.rng() * def.killQuotes.length)
+  ] as string;
+  state.events.push({
+    type: "companionQuote",
+    defId: companion.defId,
+    text,
+    pos: { ...companion.pos },
+  });
+}
+
+// ---- The per-tick companion pass ------------------------------------------------
+
+/**
+ * Advance the party one tick: regroup on the hero, pick fights inside his
+ * engagement bubble, strike/shoot on the weapon's cadence, soak the horde's
+ * contact swings, and get back up from a beating. Runs right after
+ * stepEnemies, so everything is judged on this tick's final positions.
+ */
+export function stepCompanions(
+  state: GameState,
+  dt: number,
+  dtMs: number,
+): void {
+  const count = state.companions.length;
+  if (count === 0) return;
+  for (let i = 0; i < count; i++) {
+    stepCompanion(state, state.companions[i] as Companion, i, count, dt, dtMs);
+  }
+  separateCompanions(state);
+}
+
+function stepCompanion(
+  state: GameState,
+  companion: Companion,
+  index: number,
+  count: number,
+  dt: number,
+  dtMs: number,
+): void {
+  const def = companionDef(companion.defId);
+  const player = state.player;
+  companion.moving = false;
+  companion.quoteCooldownMs = Math.max(0, companion.quoteCooldownMs - dtMs);
+  companion.weaponCooldownMs = Math.max(0, companion.weaponCooldownMs - dtMs);
+
+  // Downed: kneel out the count, then stand back up on your own.
+  if (companion.downedMs !== undefined) {
+    companion.downedMs = Math.max(0, companion.downedMs - dtMs);
+    if (companion.downedMs > 0) return;
+    delete companion.downedMs;
+    companion.hp = Math.max(
+      1,
+      Math.round(companion.maxHp * COMPANIONS.reviveHpFraction),
+    );
+    state.events.push({
+      type: "companionRevived",
+      defId: companion.defId,
+      pos: { ...companion.pos },
+    });
+  }
+
+  // The party trains with the hero: a level-up re-scales hp in place,
+  // keeping the wound fraction (a hurt companion stays hurt, just sturdier).
+  if (companion.level !== player.level) {
+    const fraction = companion.maxHp > 0 ? companion.hp / companion.maxHp : 1;
+    companion.level = Math.max(1, player.level);
+    companion.maxHp = companionMaxHp(def, companion.level);
+    companion.hp = Math.max(1, Math.round(companion.maxHp * fraction));
+  }
+
+  // Fallen far behind (a jump chase, a teleporting fight): slip through the
+  // noise and rejoin — a companion is a party member, never an escort quest.
+  const playerGap = distance(companion.pos, player.pos);
+  if (playerGap > COMPANIONS.catchUpDistance) {
+    companion.pos = { ...formationSpot(state, index, count) };
+  }
+
+  const weapon = weaponDef(companion.equipment.weapon.defId);
+  const target =
+    playerGap > COMPANIONS.leashRadius ? undefined : pickTarget(state);
+
+  if (playerGap > COMPANIONS.leashRadius) {
+    // Regroup at whatever it takes to keep up with a stat-built hero.
+    moveCompanion(
+      state,
+      companion,
+      player.pos,
+      Math.max(def.speed, playerSpeed(state) * 1.1) * dt,
+    );
+  } else if (target) {
+    const gap = distance(companion.pos, target.pos);
+    const hold = weapon.range * COMPANIONS.holdFraction;
+    if (gap > hold) {
+      moveCompanion(state, companion, target.pos, def.speed * dt);
+    }
+    companion.faceLeft = target.pos.x < companion.pos.x;
+    if (
+      companion.weaponCooldownMs <= 0 &&
+      distance(companion.pos, target.pos) <= weapon.range &&
+      lineOfSight(state, companion.pos, target.pos)
+    ) {
+      companionAttack(state, companion, target);
+    }
+  } else {
+    const spot = formationSpot(state, index, count);
+    if (distance(companion.pos, spot) > 6) {
+      moveCompanion(
+        state,
+        companion,
+        spot,
+        Math.max(def.speed, playerSpeed(state) * 1.1) * dt,
+      );
+    }
+  }
+
+  // Ground rules: solid features stop companions, the level bounds hold.
+  resolveObstacles(state, companion.pos, def.radius);
+  companion.pos.x = clamp(
+    companion.pos.x,
+    def.radius,
+    state.level.width - def.radius,
+  );
+  companion.pos.y = clamp(
+    companion.pos.y,
+    def.radius,
+    state.level.height - def.radius,
+  );
+
+  // The horde swings at whoever it touches: a companion in the pack soaks
+  // contact blows on the same cooldown the hero would have. Armor (helmet +
+  // chest) turns its share; at 0 hp the companion goes DOWN, never dead.
+  for (const enemy of state.enemies) {
+    if (enemy.contactCooldownMs > 0) continue;
+    const edef = enemyDef(enemy.defId);
+    if (edef.apparition) continue;
+    const reach = edef.radius + def.radius;
+    if (distanceSq(enemy.pos, companion.pos) > reach * reach) continue;
+    enemy.contactCooldownMs = edef.contactCooldownMs;
+    const raw = edef.contactDamage * (enemy.contactMult ?? 1);
+    const hpDamage = Math.max(
+      0,
+      Math.round(raw * (1 - companionArmorReduction(companion, enemy.mlvl))),
+    );
+    companion.hp -= hpDamage;
+    if (companion.hp <= 0) {
+      companion.hp = 0;
+      companion.downedMs = COMPANIONS.reviveMs;
+      state.events.push({
+        type: "companionDowned",
+        defId: companion.defId,
+        pos: { ...companion.pos },
+      });
+      return;
+    }
+  }
+}
+
+/** The nearest fightable foe inside the hero's engagement bubble — the party
+ * fights around him, it never runs off to clear the map. */
+function pickTarget(state: GameState): Enemy | undefined {
+  const radiusSq = COMPANIONS.engageRadius * COMPANIONS.engageRadius;
+  let best: Enemy | undefined;
+  let bestD = Infinity;
+  for (const enemy of state.enemies) {
+    if (enemyDef(enemy.defId).apparition) continue;
+    // A kneeling spareable awaiting its verdict is out of the fight.
+    if (state.choice !== null && state.choice.enemyId === enemy.id) continue;
+    if (distanceSq(enemy.pos, state.player.pos) > radiusSq) continue;
+    const d = distanceSq(enemy.pos, state.player.pos);
+    if (d < bestD) {
+      best = enemy;
+      bestD = d;
+    }
+  }
+  return best;
+}
+
+/** This companion's slot in the follow formation: a rank behind the hero,
+ * fanned sideways so the party never stacks into one sprite. */
+function formationSpot(
+  state: GameState,
+  index: number,
+  count: number,
+): { x: number; y: number } {
+  const player = state.player;
+  const facing = player.facing;
+  const perp = { x: -facing.y, y: facing.x };
+  const offset = (index - (count - 1) / 2) * COMPANIONS.spacing;
+  return {
+    x: player.pos.x - facing.x * COMPANIONS.followDistance + perp.x * offset,
+    y: player.pos.y - facing.y * COMPANIONS.followDistance + perp.y * offset,
+  };
+}
+
+/** Walk a companion toward `target`, updating facing and the walk flag. */
+function moveCompanion(
+  state: GameState,
+  companion: Companion,
+  target: { x: number; y: number },
+  step: number,
+): void {
+  const gap = distance(companion.pos, target);
+  if (gap <= 0.01) return;
+  const t = Math.min(1, step / gap);
+  const before = companion.pos;
+  const next = {
+    x: before.x + (target.x - before.x) * t,
+    y: before.y + (target.y - before.y) * t,
+  };
+  if (Math.abs(target.x - before.x) > 1) {
+    companion.faceLeft = target.x < before.x;
+  }
+  companion.pos = next;
+  companion.moving = true;
+}
+
+/**
+ * One attack on the weapon's cadence. Melee cleaves a small cone through the
+ * pack (`COMPANIONS.meleeTargets` foes at most); anything else fires the
+ * weapon's ordinary projectile volley, tagged with the companion's id so a
+ * kill downstream can float its quote. Companion blows never miss and never
+ * crit — no stats to roll them off — and the shared `swing`/`shot` events
+ * drive the app's slashes and muzzle flashes exactly as the hero's do.
+ */
+function companionAttack(
+  state: GameState,
+  companion: Companion,
+  target: Enemy,
+): void {
+  const weapon = weaponDef(companion.equipment.weapon.defId);
+  const dir = direction(companion.pos, target.pos);
+  companion.weaponCooldownMs = companionWeaponCooldown(companion);
+  const damage = companionWeaponDamage(companion);
+
+  if (!weapon.projectile) {
+    const half = ((weapon.sweepDeg ?? MELEE.defaultSweepDeg) * Math.PI) / 360;
+    state.events.push({
+      type: "swing",
+      pos: { ...companion.pos },
+      dir,
+      range: weapon.range,
+      arc: half * 2,
+    });
+    const rangeSq = weapon.range * weapon.range;
+    const cosHalf = Math.cos(half);
+    const eligible: { enemy: Enemy; distSq: number }[] = [];
+    for (const enemy of state.enemies) {
+      const edef = enemyDef(enemy.defId);
+      if (edef.apparition) continue;
+      if (state.choice !== null && state.choice.enemyId === enemy.id) continue;
+      const dx = enemy.pos.x - companion.pos.x;
+      const dy = enemy.pos.y - companion.pos.y;
+      const distSq = dx * dx + dy * dy;
+      if (distSq > rangeSq) continue;
+      if (distSq > edef.radius * edef.radius) {
+        const dist = Math.sqrt(distSq);
+        const dot = (dx * dir.x + dy * dir.y) / dist;
+        if (dot < cosHalf) continue;
+      }
+      if (!lineOfSight(state, companion.pos, enemy.pos)) continue;
+      eligible.push({ enemy, distSq });
+    }
+    eligible.sort((a, b) => a.distSq - b.distSq);
+    const killsBefore = state.stats.kills;
+    for (let i = 0; i < eligible.length && i < COMPANIONS.meleeTargets; i++) {
+      hitEnemy(
+        state,
+        (eligible[i] as (typeof eligible)[number]).enemy,
+        damage,
+        weapon.class,
+      );
+    }
+    if (state.stats.kills > killsBefore) {
+      maybeCompanionQuote(state, companion);
+    }
+    return;
+  }
+
+  const spec = weapon.projectile;
+  const pellets = Math.max(1, spec.count ?? 1);
+  const spread = ((spec.spreadDeg ?? 0) * Math.PI) / 180;
+  for (let i = 0; i < pellets; i++) {
+    const offset = pellets > 1 ? (i / (pellets - 1) - 0.5) * spread : 0;
+    const cos = Math.cos(offset);
+    const sin = Math.sin(offset);
+    const projectile: Projectile = {
+      id: state.nextId++,
+      pos: { ...companion.pos },
+      dir: { x: dir.x * cos - dir.y * sin, y: dir.x * sin + dir.y * cos },
+      speed: spec.speed,
+      radius: spec.radius,
+      damage,
+      lifetimeMs: spec.lifetimeMs,
+      weaponClass: weapon.class,
+      sprite: spec.sprite,
+      companionId: companion.id,
+      z: 0,
+    };
+    if (spec.pierce) projectile.pierceLeft = spec.pierce;
+    if (spec.homing) projectile.homing = spec.homing;
+    if (spec.chain) projectile.chain = spec.chain;
+    state.projectiles.push(projectile);
+  }
+  state.events.push({
+    type: "shot",
+    weaponClass: weapon.class,
+    pos: { ...companion.pos },
+    dir,
+  });
+}
+
+/** Push overlapping companions apart so the formation never stacks. The
+ * party caps at a handful, so plain pairwise is fine. */
+function separateCompanions(state: GameState): void {
+  const companions = state.companions;
+  for (let i = 0; i < companions.length; i++) {
+    for (let j = i + 1; j < companions.length; j++) {
+      const a = companions[i] as Companion;
+      const b = companions[j] as Companion;
+      const minGap =
+        companionDef(a.defId).radius + companionDef(b.defId).radius;
+      const dx = b.pos.x - a.pos.x;
+      const dy = b.pos.y - a.pos.y;
+      const dSq = dx * dx + dy * dy;
+      if (dSq >= minGap * minGap || dSq === 0) continue;
+      const d = Math.sqrt(dSq);
+      const push = (minGap - d) / 2 / d;
+      a.pos.x -= dx * push;
+      a.pos.y -= dy * push;
+      b.pos.x += dx * push;
+      b.pos.y += dy * push;
+    }
+  }
+}
+
+// ---- Companion equipment (called by the app's UI) --------------------------------
+
+/**
+ * Equip the item in the hero's bag cell `index` onto this companion,
+ * swapping whatever occupied the slot back into that cell. Companions only
+ * dress in a weapon, a helmet, and a chest piece — legs, feet, charms and
+ * bags are refused — and the hero's own level gates the piece exactly as it
+ * gates his own hands.
+ */
+export function equipCompanionFromInventory(
+  state: GameState,
+  companionId: number,
+  index: number,
+): boolean {
+  const companion = companionById(state, companionId);
+  if (!companion) return false;
+  const item = state.player.inventory[index];
+  if (!item) return false;
+  if (item.slot !== "weapon" && item.slot !== "head" && item.slot !== "chest") {
+    return false;
+  }
+  if (!meetsLevelReq(state, item)) return false;
+  const slot = item.slot as CompanionSlot;
+  const previous = companion.equipment[slot];
+  state.player.inventory[index] = previous ?? null;
+  companion.equipment[slot] = item;
+  if (slot === "weapon") companion.weaponCooldownMs = 0;
+  return true;
+}
+
+/**
+ * Move a companion's worn piece back into the hero's first free bag cell.
+ * The weapon slot is never emptied — a companion always fights with
+ * something — so weapons only leave via an `equipCompanionFromInventory`
+ * swap.
+ */
+export function unequipCompanionToInventory(
+  state: GameState,
+  companionId: number,
+  slot: CompanionSlot,
+): boolean {
+  if (slot === "weapon") return false;
+  const companion = companionById(state, companionId);
+  if (!companion) return false;
+  const item = companion.equipment[slot];
+  if (!item) return false;
+  const free = state.player.inventory.indexOf(null);
+  if (free === -1) return false;
+  state.player.inventory[free] = item;
+  companion.equipment[slot] = null;
+  return true;
+}
+
+// ---- Phase toggles (called by the app's UI) --------------------------------------
+
+/** Pause into a companion's equip screen. Only possible mid-run. */
+export function openCompanionPanel(
+  state: GameState,
+  companionId: number,
+): void {
+  if (state.phase !== "playing") return;
+  if (!companionById(state, companionId)) return;
+  state.companionFocus = companionId;
+  state.phase = "companion";
+}
+
+/** Close the companion screen and resume (pending level-ups take priority). */
+export function closeCompanionPanel(state: GameState): void {
+  if (state.phase !== "companion") return;
+  state.companionFocus = null;
+  state.phase = state.player.pendingStatPoints > 0 ? "levelup" : "playing";
+}
