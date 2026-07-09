@@ -682,7 +682,14 @@ function drawAbilities(
  */
 export type Effect = {
   kind:
-    "lightning" | "nuke" | "splash" | "damage" | "swing" | "muzzle" | "text";
+    | "lightning"
+    | "nuke"
+    | "splash"
+    | "damage"
+    | "swing"
+    | "muzzle"
+    | "text"
+    | "corpse";
   pos: { x: number; y: number };
   untilMs: number;
   /** Total effect length, for progress-driven animation. */
@@ -690,7 +697,8 @@ export type Effect = {
   /** World-clock ms before the effect begins drawing — lets a float lag behind
    * the hit that spawned it (the XP popup trails the damage number). */
   startMs?: number;
-  /** Splash: sprite family ("blood", "ecto") — frames `<family>_0/_1`. */
+  /** Splash: gore family ("blood", "ecto") — frames `<family>_0/_1`.
+   * Corpse: the slain enemy's sprite family, drawn as it keels over. */
   sprite?: string;
   /** Text float: the word to rise off the spot (e.g. "DODGE"). */
   text?: string;
@@ -707,8 +715,15 @@ export type Effect = {
    * popup from a modest 1.5× (a glancing crit) up to a fat 3× (a top-of-band
    * slam). Absent = a neutral mid-size crit. */
   critPower?: number;
-  /** Swing/muzzle: the aim direction in radians. */
+  /** Swing/muzzle: the aim direction in radians.
+   * Corpse: the signed angle it keels over to (±π/2), rolled at spawn so
+   * the horde doesn't topple in lockstep. */
   angle?: number;
+  /** Corpse: an epic (elite/boss) body — it keels over and then simply lies
+   * there for the rest of the level instead of blinking out. There are only
+   * ever a handful, so leaving them on the field reads as a battlefield of
+   * fallen giants rather than clutter. */
+  persist?: boolean;
   /** Swing: the arc's reach in world px (the weapon's effective range). */
   radius?: number;
   /** Swing: the full cone angle in radians (wide blade vs narrow spear). */
@@ -749,6 +764,46 @@ export function drawEffects(
           groundY - Math.round(sprite.height / 2),
         );
       }
+      continue;
+    }
+
+    if (effect.kind === "corpse") {
+      // A slain mob's send-off: it keels over flat to the ground with a little
+      // hop, lies there a beat, then blinks out and is gone. Purely cosmetic —
+      // the engine already removed the live enemy the tick it died, so this
+      // plays on top at the spot it fell. Timeline over `duration` (2s):
+      // keel-over (first ~260ms) → lie still → blink for the final second.
+      const duration = effect.durationMs ?? 2000;
+      const age = duration - (effect.untilMs - timeMs); // ms since death
+      // A single fixed frame (dying, frame 0) — a corpse never walks or bobs,
+      // it just keels over once and lies still. The dead don't animate.
+      const sprite = enemySprites(assets.sprites, effect.sprite ?? "ghost")
+        .dying[0];
+      // Blink out over the final second: skip alternate ~90ms windows so it
+      // flickers before it disappears. Epic bodies (persist) never blink —
+      // they just keel over and stay down.
+      const blinkAt = duration - 1000;
+      if (
+        !effect.persist &&
+        age >= blinkAt &&
+        Math.floor(timeMs / 90) % 2 === 0
+      )
+        continue;
+      // Keel-over: rotate 0 → the rolled ±90° over the first 260ms (ease-out),
+      // with a brief hop as it topples.
+      const fall = Math.min(1, age / 260);
+      const eased = fall * (2 - fall);
+      const tip = (effect.angle ?? Math.PI / 2) * eased;
+      const hop = Math.round(Math.sin(fall * Math.PI) * 4);
+      const w = sprite.width;
+      const h = sprite.height;
+      ctx.save();
+      // Pivot about the sprite's feet (bottom-centre) so it falls flat with its
+      // base planted, then draw the body rising from that pivot.
+      ctx.translate(x, groundY + Math.round(h / 2) - hop);
+      ctx.rotate(tip);
+      ctx.drawImage(sprite, -Math.round(w / 2), -h);
+      ctx.restore();
       continue;
     }
 
