@@ -1608,8 +1608,22 @@ export function GameScreen({
               </div>
             </div>
 
-            {/* Center: run clock over the foe counter. */}
-            <div className="hud-center">
+            {/* Center: run clock over the foe counter. Tapping the unit pauses
+                the run (the same freeze as P/Escape) — a big, thumb-reachable
+                target for the phone, where there's no keyboard. */}
+            <button
+              type="button"
+              className="hud-center"
+              aria-label="pause"
+              onClick={() => {
+                if (state?.phase === "playing") {
+                  pauseGame(state);
+                  pauseMusic();
+                  playUiSound(synth, "confirm");
+                  bumpUi();
+                }
+              }}
+            >
               <PixelText
                 font={font}
                 text={formatTime(hud.stats.timeMs)}
@@ -1647,7 +1661,7 @@ export function GameScreen({
                   </div>
                 </div>
               )}
-            </div>
+            </button>
           </div>
         </div>
       )}
