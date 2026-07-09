@@ -584,10 +584,10 @@ export function GameScreen({
     setPickups([]);
     const pickupTimers = new Set<ReturnType<typeof setTimeout>>();
     let pickupSeq = 0;
-    const pushPickup = (text: string, color?: string) => {
+    const pushPickup = (text: string, color?: string, prefix?: string) => {
       const id = ++pickupSeq;
       setPickups((prev) => {
-        const next = [...prev, { id, text, color }];
+        const next = [...prev, { id, text, color, prefix }];
         return next.length > PICKUP_MAX ? next.slice(-PICKUP_MAX) : next;
       });
       const timer = setTimeout(() => {
@@ -1292,6 +1292,32 @@ export function GameScreen({
               text: event.text,
               color: "#ffd75e",
             });
+          }
+          // The DING: a "LEVEL UP!" tag rises off the hero while the golden
+          // burn plays (the stat chooser waits out the celebration), and the
+          // automatic base gains tick into the lower-right feed in gold so
+          // the level is FELT in the body, not just in the chooser.
+          if (event.type === "levelUp") {
+            effects.push({
+              kind: "text",
+              pos: {
+                x: state.player.pos.x,
+                y: state.player.pos.y - PLAYER.radius - 8,
+              },
+              untilMs: state.stats.timeMs + 1100,
+              durationMs: 1100,
+              text: "LEVEL UP!",
+              color: "#ffd75e",
+              rise: 26,
+            });
+            pushPickup(`LEVEL ${event.level}!`, "#ffd75e", "");
+            for (const gain of event.gains) {
+              pushPickup(
+                `+${gain.amount} ${gain.stat.toUpperCase()}`,
+                "#ffd75e",
+                "",
+              );
+            }
           }
           // A spared figure joined the party: toast the recruitment (its
           // joining scene follows through the dialogue overlay).

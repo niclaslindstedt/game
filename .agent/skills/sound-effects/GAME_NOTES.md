@@ -15,3 +15,12 @@ sequel resets this file and rewrites its scores.
 The break-then-build pair is what makes a 2-minute loop feel composed
 instead of repeated; the outro's bar of near-silence makes the loop seam
 read as a phrase, not a glitch.
+
+## Jingle recipes
+
+- **The ding (2026-07):** sized to the engine's 1s celebration window —
+  triangle C3 root swell (950 ms, attack 40, detune 6) + delayed highpass-6200
+  shimmer noise + a 5-note C-major harp run (triangle 523→1319, 55 ms apart,
+  sine octaves on top) landing on a held detuned-square C-major chord at
+  330 ms, capped by a 2093→3136 sine sparkle at 620 ms, echo 0.3–0.5. Reads
+  as "holy light burst" while staying chip.

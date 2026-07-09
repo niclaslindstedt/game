@@ -7,12 +7,21 @@ import { describe, expect, it } from "vitest";
 
 import {
   allocateStat,
+  autoGainAt,
+  autoPowerScale,
+  baseStatBonus,
+  beginRespec,
   closeInventory,
   DODGE,
+  effectiveStat,
   equipFromInventory,
+  grantXp,
   inventoryCapacity,
   LEVELING,
+  levelStatGains,
   LOOT,
+  MENACE,
+  mobHpScaleFor,
   openInventory,
   PLAYER,
   playerCritChance,
@@ -35,6 +44,7 @@ import {
   idle,
   makeEnemy,
   run,
+  runUntilChooser,
   startGame,
   steerTo,
 } from "./helpers.ts";
@@ -67,16 +77,28 @@ describe("xp", () => {
     expect(big.stats.xpGained).toBe(Math.round(50 * LEVELING.xpPerHp));
   });
 
-  it("levels up at the threshold, pauses, and banks a stat point", () => {
+  it("levels up at the threshold, celebrates, then pauses on a stat point", () => {
     const state = killGhostWorth(LEVELING.baseXpToLevel);
     expect(state.player.level).toBe(2);
     expect(state.player.pendingStatPoints).toBe(1);
-    expect(state.phase).toBe("levelup");
-    expect(state.events).toContainEqual({ type: "levelUp", level: 2 });
+    // The ding does NOT pause the run on the spot: the celebration window
+    // (the golden burn + fanfare) is armed and burns down first.
+    expect(state.phase).toBe("playing");
+    expect(state.levelUpFxMs).toBe(LEVELING.dingCelebrationMs);
+    expect(state.events).toContainEqual({
+      type: "levelUp",
+      level: 2,
+      gains: levelStatGains(2),
+    });
     // The next level costs more.
     expect(state.player.xpToNext).toBe(
       Math.round(LEVELING.baseXpToLevel * LEVELING.xpGrowth),
     );
+
+    // The chooser opens only once the celebration has burned down.
+    runUntilChooser(state);
+    expect(state.levelUpFxMs).toBe(0);
+    expect(state.phase).toBe("levelup");
 
     // The pause is real: time stands still until the point is spent.
     const time = state.stats.timeMs;
@@ -95,10 +117,85 @@ describe("xp", () => {
     const state = killGhostWorth(toLevel2 + toLevel3 + 10); // 10 into level 3
     expect(state.player.level).toBe(3);
     expect(state.player.pendingStatPoints).toBe(2);
+    runUntilChooser(state); // burn the celebration down
+    expect(state.phase).toBe("levelup");
     allocateStat(state, "stamina");
     expect(state.phase).toBe("levelup"); // one point still pending
     allocateStat(state, "dexterity");
     expect(state.phase).toBe("playing");
+  });
+});
+
+describe("the ding: automatic base gains and the celebration window", () => {
+  it("each ding grants automatic base stats whose size scales with the level", () => {
+    // The per-ding gain is the configured rate × the new level, rounded…
+    expect(autoGainAt(2, "stamina")).toBe(
+      Math.round(LEVELING.autoGainsPerLevel.stamina * 2),
+    );
+    // …so a later ding pays more than an early one.
+    expect(autoGainAt(12, "stamina")).toBeGreaterThan(autoGainAt(2, "stamina"));
+    // The cumulative bonus is every ding summed from level 2 up.
+    let sum = 0;
+    for (let l = 2; l <= 6; l++) sum += autoGainAt(l, "strength");
+    expect(baseStatBonus(6, "strength")).toBe(sum);
+    // Stats off the auto-growth list never grow on their own.
+    expect(baseStatBonus(20, "luck")).toBe(0);
+    // A level-1 hero has banked nothing.
+    expect(baseStatBonus(1, "stamina")).toBe(0);
+  });
+
+  it("auto gains raise effective stats and the pools without touching chosen points", () => {
+    const state = killGhostWorth(LEVELING.baseXpToLevel); // ding to level 2
+    // The chosen-points record is untouched — the growth is derived…
+    expect(state.player.stats.stamina).toBe(0);
+    // …but the effective stat carries it.
+    expect(effectiveStat(state, "stamina")).toBe(baseStatBonus(2, "stamina"));
+    // The deeper pools landed with the ding (and the ding heals to full).
+    expect(state.player.maxHp).toBe(
+      PLAYER.maxHp + effectiveStat(state, "stamina") * STAMINA.hpPerPoint,
+    );
+    expect(state.player.hp).toBe(state.player.maxHp);
+    expect(state.player.maxStamina).toBe(
+      STAMINA.base + effectiveStat(state, "stamina") * STAMINA.maxPerPoint,
+    );
+  });
+
+  it("a respec refunds only the CHOSEN points — never the automatic growth", () => {
+    const state = killGhostWorth(LEVELING.baseXpToLevel); // 1 pending point
+    runUntilChooser(state);
+    allocateStat(state, "luck");
+    beginRespec(state);
+    // The pool holds exactly the chosen point; the auto gains stay derived.
+    expect(state.player.pendingStatPoints).toBe(1);
+    expect(effectiveStat(state, "stamina")).toBe(baseStatBonus(2, "stamina"));
+  });
+
+  it("the horde's hp answers the free damage growth — no one-hit-kill drift", () => {
+    const state = startGame();
+    const hitsToKill = (level: number) => {
+      state.player.level = level;
+      const mobHp = 20 * mobHpScaleFor(level, state.difficulty);
+      return Math.ceil(mobHp / weaponDamage(state));
+    };
+    // The automatic gains alone never shrink the hits a mob takes: the hp
+    // scale rides the same curve (autoPowerScale) the free stats produce.
+    expect(hitsToKill(12)).toBeGreaterThanOrEqual(hitsToKill(1));
+    // And the compensation is exact by construction: stripped of the auto
+    // curve, the ladder is the same linear ramp as ever.
+    expect(mobHpScaleFor(12, "nightmare") / autoPowerScale(12)).toBeCloseTo(
+      1 + 11 * MENACE.mobHpPerLevel,
+      10,
+    );
+  });
+
+  it("xp gained during the celebration window never yanks the chooser open early", () => {
+    const state = killGhostWorth(LEVELING.baseXpToLevel); // window armed
+    expect(state.phase).toBe("playing");
+    // More xp lands mid-celebration (below the next threshold): still playing.
+    grantXp(state, 1);
+    expect(state.phase).toBe("playing");
+    runUntilChooser(state);
+    expect(state.phase).toBe("levelup");
   });
 });
 

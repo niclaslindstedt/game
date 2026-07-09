@@ -5,9 +5,10 @@
 // this game's shipped content. `startGame`/`makeEnemy` default to the fixture
 // ids; the pure helpers are re-exported from the shared root helper.
 
-import { createGame, dismissIntro, skipCutscene } from "@game/core";
+import { createGame, dismissIntro, LEVELING, skipCutscene } from "@game/core";
 import type { Enemy, GameState } from "@game/core";
 
+import { DT, idle, run } from "../helpers.ts";
 import { installFixtures } from "./fixtures.ts";
 
 // Register fixtures before any test builds a game.
@@ -35,6 +36,20 @@ export function startGame(seed = 42, levelId = "test_level"): GameState {
   skipCutscene(state);
   dismissIntro(state);
   return state;
+}
+
+/**
+ * Idle through the ding celebration until the stat chooser opens — a fresh
+ * level-up burns for `LEVELING.dingCelebrationMs` before the `levelup`
+ * phase pauses the run (see grantXp/step).
+ */
+export function runUntilChooser(state: GameState): void {
+  run(
+    state,
+    idle,
+    Math.ceil(LEVELING.dingCelebrationMs / DT) + 2,
+    (s) => s.phase === "levelup",
+  );
 }
 
 /**

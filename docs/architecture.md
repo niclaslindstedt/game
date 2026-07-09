@@ -175,7 +175,11 @@ run against synthetic fixtures with no shipped content (see
   pointer's direction outrank merely-closer ones elsewhere; the player steers,
   jumps (tap/Space), spends banked
   ability pickups (`input.useItem`), spends level-up stat points, and
-  manages the inventory. Level-ups restore full health; golden XP arrows
+  manages the inventory. Level-ups restore full health, land automatic
+  base-attribute gains (see `leveling.ts` below), and celebrate first: the
+  ding arms `state.levelUpFxMs` (config `LEVELING.dingCelebrationMs`) — the
+  app draws the golden burn off it — and the `levelup` stat-chooser phase
+  only opens once the window has burned down. Golden XP arrows
   grant a fixed share of the current threshold. Picked-up equipment that
   beats what is worn is equipped on the spot.
 - **`src/game/loot.ts`** — kill resolution: `hitEnemy` applies player
@@ -184,6 +188,14 @@ run against synthetic fixtures with no shipped content (see
   all-clear trophy), the def's guaranteed drops for bosses and elites.
   It also feeds the menace meter on each kill and power-scales an
   elite/boss to the player on its first blow.
+- **`src/game/leveling.ts`** — the automatic base-attribute growth (the
+  WoW-style ding gains, config `LEVELING.autoGainsPerLevel`): each level
+  grants `round(rate × level)` points of the listed stats on its own,
+  underneath the chosen point. Everything is DERIVED from `player.level`
+  (`baseStatBonus`, folded into `effectiveStat`) — never written into
+  `player.stats`, so a respec refunds only chosen points — and
+  `autoPowerScale` expresses the damage curve those free gains produce so
+  the horde's scaling can cancel it out.
 - **`src/game/menace.ts`** — the escalation system: the player's rolling
   DPS/kill-rate (`tickMenace`) plus relative-overkill jolts on a killing
   blow (`bankOverkill`) bank `state.menace`, which idle time bleeds off (a
@@ -200,7 +212,10 @@ run against synthetic fixtures with no shipped content (see
   player's LEVEL alone gives every minion a non-decaying toughness floor at
   spawn (`mobLevelScale`, folded into `spawnEnemy`'s hp mult) and richer
   drops (`mobLevelTierBonus`, added to the loot tier roll), so a levelled
-  hero keeps meeting a proportionally sturdier, better-paying horde.
+  hero keeps meeting a proportionally sturdier, better-paying horde. Both
+  the minion floor and the elite/boss power-match multiply by
+  `autoPowerScale` (leveling.ts) — the free per-level stat gains cancel out
+  against the crowd, so only chosen points, gear, and skill pull ahead.
 - **`src/game/hazards.ts`** — environmental hazards, both pure level data:
   **gravity wells** (`LevelDef.wells`, config `WELLS`) drag the grounded
   player/enemies/items toward their core — minions are devoured there

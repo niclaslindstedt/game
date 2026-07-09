@@ -243,3 +243,17 @@ sequel truncates this file to a stub and rebuilds it as its own systems land.
   plot is a story item flag (`StoryItemDef.suitsHero` read by `playerSuited`),
   never an equipment slot — the space suit is worn over everything. Suites:
   `tests/engine/armor_stamina_test.ts`, `tests/content/spacesuit_test.ts`.
+- **Ding celebration window (2026-07, level-up revamp):** a presentation
+  beat BEFORE a pause phase is an engine countdown, not an app timer:
+  `grantXp` arms `state.levelUpFxMs = LEVELING.dingCelebrationMs` and the
+  `levelup` chooser phase only opens when `step()` ticks it to 0 (playing
+  ticks only, so an interrupting dialogue postpones — never races — the
+  chooser). The renderer draws the golden burn straight off the field, so
+  effect and phase can never drift apart; a new required GameState field
+  again means a website `SAVE_VERSION` bump. Automatic per-level stat
+  growth lives DERIVED-ONLY in `leveling.ts` (`baseStatBonus` folded into
+  `effectiveStat`; per-ding gain = `round(rate × level)`), so respec
+  refunds stay honest, and the horde cancels the free power via
+  `autoPowerScale` multiplied into `mobHpScaleFor`/`enemyPowerScale` —
+  keyed to the PLAYER's level so difficulty offsets stay linear. Suite:
+  `tests/engine/leveling_test.ts` ("the ding" describe block).

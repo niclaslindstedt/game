@@ -24,7 +24,7 @@ export { step } from "./game/step.ts";
 
 // MERCY DROP queries — exposed so the app can surface "the swarm is about to
 // cough up a bomb" / "a drink is coming" and tests can assert the ramps.
-export { crowdBombChance, staminaDrinkChance } from "./game/loot.ts";
+export { crowdBombChance, grantXp, staminaDrinkChance } from "./game/loot.ts";
 export { mercyRescueWaiting, type MercyRescue } from "./game/items.ts";
 
 // Loadout carry-over between levels: snapshot a finished run's progress,
@@ -174,6 +174,16 @@ export {
   menaceWarmup,
   mobHpScaleFor,
 } from "./game/menace.ts";
+
+// Automatic per-level base-attribute growth (the WoW-style ding gains): the
+// derived bonuses the app can read to break "base + chosen" apart, and the
+// power curve the horde's hp scaling mirrors.
+export {
+  autoGainAt,
+  autoPowerScale,
+  baseStatBonus,
+  levelStatGains,
+} from "./game/leveling.ts";
 
 // Time-limited abilities: activation and the helpers the renderer shares.
 export {

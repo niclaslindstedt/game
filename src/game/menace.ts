@@ -18,6 +18,7 @@
 import { MENACE } from "./config.ts";
 import { difficultyDef } from "./defs/difficulties.ts";
 import { enemyDef } from "./defs/enemies/index.ts";
+import { autoPowerScale } from "./leveling.ts";
 import type { Enemy, GameState } from "./types.ts";
 
 /** The current evolution stage: menace bucketed into [0, MENACE.maxStage]. */
@@ -74,9 +75,16 @@ export function evolutionHpMult(stage: number, effectMult = 1): number {
 export function mobHpScaleFor(playerLevel: number, difficulty: string): number {
   const offset = difficultyDef(difficulty).mobLevelOffset;
   const mobLevel = playerLevel + offset;
+  // Multiplied by `autoPowerScale` — the damage curve the AUTOMATIC per-level
+  // stat gains (LEVELING.autoGainsPerLevel) hand the hero for free — so that
+  // free growth cancels out against the crowd instead of turning it into
+  // one-hit kills. Keyed to the PLAYER's level (what the hero actually has),
+  // not the offset mob level, so a difficulty's gap stays the same linear
+  // offset as before; the `mobHpPerLevel` term keeps answering the CHOSEN
+  // points, exactly as it always did.
   return Math.max(
     MENACE.mobHpScaleFloor,
-    1 + (mobLevel - 1) * MENACE.mobHpPerLevel,
+    (1 + (mobLevel - 1) * MENACE.mobHpPerLevel) * autoPowerScale(playerLevel),
   );
 }
 
@@ -212,10 +220,14 @@ export function tickMenace(
  * plus the current menace heat. Always ≥ 1.
  */
 export function enemyPowerScale(state: GameState): number {
+  // Like the rank and file (`mobHpScaleFor`), the set pieces also ride the
+  // automatic stat-gain damage curve, so a boss met at level 12 doesn't melt
+  // under growth the player never chose.
   return (
-    1 +
-    Math.max(0, state.player.level - 1) * MENACE.bossLevelWeight +
-    menaceStage(state) * MENACE.bossMenaceWeight
+    (1 +
+      Math.max(0, state.player.level - 1) * MENACE.bossLevelWeight +
+      menaceStage(state) * MENACE.bossMenaceWeight) *
+    autoPowerScale(state.player.level)
   );
 }
 

@@ -14,6 +14,7 @@ import {
   enemyDef,
   equipmentIcon,
   LAST_STAND,
+  LEVELING,
   magnetRadius,
   orbPositions,
   playerAppearance,
@@ -538,7 +539,12 @@ export function drawFrame(
   drawMerchant(ctx, state, assets, camera, timeMs);
   drawCompanions(ctx, state, assets, camera, timeMs);
   drawAbilities(ctx, state, assets, camera, timeMs);
+  // The ding burn wraps the hero: the pillar and ground ring glow behind the
+  // sprite, the rising embers float over it, so the light reads as engulfing
+  // the character rather than a decal pasted on top.
+  drawLevelUpBurn(ctx, state, camera, timeMs, "under");
   drawPlayer(ctx, state, assets, camera, timeMs);
+  drawLevelUpBurn(ctx, state, camera, timeMs, "over");
 
   // Asteroids fly over everything on the ground plane — they're rocks in
   // transit, not furniture. Scaled to each rock's rolled radius; the frame
@@ -1051,6 +1057,106 @@ export function drawEffects(
     ctx.fillStyle = "rgba(255, 245, 200, 0.9)";
     ctx.fillRect(x - 2, groundY - 2, 4, 4);
   }
+}
+
+/** Cheap deterministic hash → [0, 1) for particle variety (no Math.random —
+ * the burn must draw identically for a given time, like every effect). */
+function fract(n: number): number {
+  const s = Math.sin(n * 12.9898) * 43758.5453;
+  return s - Math.floor(s);
+}
+
+/**
+ * The level-up "burn": while the engine's ding-celebration window
+ * (`state.levelUpFxMs`) is live, the hero is wreathed in golden light —
+ * a shockwave ring on the ground, a pillar of light rising off him, and
+ * embers floating up — the WoW ding, in pixels. The `under` layer (ring +
+ * pillar) draws behind the player sprite, the `over` layer (embers) in
+ * front, so the glow engulfs the character.
+ */
+function drawLevelUpBurn(
+  ctx: CanvasRenderingContext2D,
+  state: GameState,
+  camera: Camera,
+  timeMs: number,
+  layer: "under" | "over",
+): void {
+  const left = state.levelUpFxMs;
+  if (left <= 0) return;
+  const duration = LEVELING.dingCelebrationMs;
+  const t = 1 - left / duration; // 0 → 1 across the celebration
+  const x = Math.round(state.player.pos.x - camera.x);
+  const y = Math.round(state.player.pos.y - camera.y - state.player.z);
+  // Snap in fast, hold, fade over the last quarter — the modal takes the
+  // stage the moment this dies down.
+  const fade = Math.min(1, t / 0.12) * Math.min(1, (1 - t) / 0.25);
+  ctx.save();
+
+  if (layer === "under") {
+    // The ground shockwave: a squashed golden ring bursting outward in the
+    // opening beats, the "something big just happened" footprint.
+    if (t < 0.45) {
+      const ring = t / 0.45; // 0 → 1
+      ctx.globalAlpha = 0.85 * (1 - ring);
+      ctx.strokeStyle = "#ffd75e";
+      ctx.lineWidth = 2;
+      ctx.beginPath();
+      ctx.ellipse(
+        x,
+        y + 6,
+        8 + ring * 30,
+        (8 + ring * 30) * 0.4,
+        0,
+        0,
+        Math.PI * 2,
+      );
+      ctx.stroke();
+    }
+    // The pillar of light: a gold column rising off the hero, breathing
+    // slightly so it reads as living flame rather than a static decal.
+    const flicker = 1 + 0.12 * Math.sin(timeMs / 55);
+    const w = 15 * flicker;
+    const top = y - 58;
+    const glow = ctx.createLinearGradient(0, top, 0, y + 8);
+    glow.addColorStop(0, "rgba(255, 215, 94, 0)");
+    glow.addColorStop(0.55, "rgba(255, 215, 94, 0.5)");
+    glow.addColorStop(1, "rgba(255, 242, 192, 0.85)");
+    ctx.globalAlpha = 0.6 * fade;
+    ctx.fillStyle = glow;
+    ctx.fillRect(Math.round(x - w), top, Math.round(w * 2), y + 8 - top);
+    // A hot white-gold core, half as wide, twice as bright.
+    ctx.globalAlpha = 0.7 * fade;
+    const core = ctx.createLinearGradient(0, top + 18, 0, y + 6);
+    core.addColorStop(0, "rgba(255, 246, 214, 0)");
+    core.addColorStop(1, "rgba(255, 246, 214, 0.9)");
+    ctx.fillStyle = core;
+    ctx.fillRect(
+      Math.round(x - w / 2),
+      top + 18,
+      Math.round(w),
+      y + 6 - (top + 18),
+    );
+  } else {
+    // Rising embers: a dozen golden motes climbing lanes around the hero,
+    // each on its own deterministic phase/speed so the column shimmers.
+    const EMBERS = 12;
+    const palette = ["#ffd75e", "#fff2c0", "#ff9d3b"];
+    for (let i = 0; i < EMBERS; i++) {
+      const lane = (fract(i * 17.31) - 0.5) * 26; // x offset in the column
+      const phase = fract(i * 7.77);
+      const speed = 0.9 + fract(i * 3.33) * 0.9; // climbs per celebration
+      const climb = (t * speed + phase) % 1; // 0 (feet) → 1 (top)
+      const ex = x + Math.round(lane + Math.sin(timeMs / 90 + i) * 2);
+      const ey = Math.round(y + 8 - climb * 58);
+      const size = climb < 0.3 ? 2 : 1; // embers shrink as they rise
+      ctx.globalAlpha = (1 - climb) * fade;
+      ctx.fillStyle = palette[i % palette.length]!;
+      ctx.fillRect(ex, ey, size, size);
+    }
+  }
+
+  ctx.restore();
+  ctx.globalAlpha = 1;
 }
 
 function drawPlayer(

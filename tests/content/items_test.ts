@@ -18,6 +18,7 @@ import {
   moveInventoryItem,
   rollEquipment,
   step,
+  syncInventoryCapacity,
   TIERS,
   totalArmor,
   unequipToInventory,
@@ -290,6 +291,9 @@ describe("auto-equip on pickup", () => {
     const state = startGame();
     clearStage(state);
     state.player.level = 8;
+    // Level 8 brings automatic STRENGTH gains that widen the bag — grow it
+    // first, then fill EVERY slot so the bag is genuinely full.
+    syncInventoryCapacity(state);
     state.player.inventory = state.player.inventory.map((_, i) =>
       makeVest(100 + i),
     );

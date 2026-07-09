@@ -26,8 +26,12 @@ import {
   mercyRescueWaiting,
   playerCritChance,
   playerMissChance,
+  recomputeMaxHp,
+  recomputeMaxStamina,
   rollEquipment,
+  syncInventoryCapacity,
 } from "./items.ts";
+import { levelStatGains } from "./leveling.ts";
 import { addMapMarker } from "./map.ts";
 import { bankOverkill, maybePowerScale, mobLevelTierBonus } from "./menace.ts";
 import { maybeFirstKillThought, startDeathWords } from "./story.ts";
@@ -665,23 +669,45 @@ function dropGuaranteedLoot(
   state.events.push({ type: "itemDropped", pos: { ...at } });
 }
 
-/** Award XP; each threshold crossed banks a stat point and pauses the run. */
+/**
+ * Award XP; each threshold crossed banks a stat point, lands the automatic
+ * base-attribute gains, and arms the ding celebration — the stat chooser
+ * only pauses the run once `levelUpFxMs` has burned down (see step()).
+ */
 export function grantXp(state: GameState, amount: number): void {
   const player = state.player;
   player.xp += amount;
   state.stats.xpGained += amount;
+  let leveled = false;
   while (player.xp >= player.xpToNext) {
     player.xp -= player.xpToNext;
     player.level++;
+    leveled = true;
     player.xpToNext = Math.round(
       LEVELING.baseXpToLevel * Math.pow(LEVELING.xpGrowth, player.level - 1),
     );
     player.pendingStatPoints += LEVELING.statPointsPerLevel;
+    // The automatic base gains land with the level itself (they derive from
+    // `player.level` — see leveling.ts), so re-derive everything they feed:
+    // the hp/stamina pools (STAMINA) and the carry bag (STRENGTH).
+    recomputeMaxHp(state);
+    recomputeMaxStamina(state);
+    syncInventoryCapacity(state);
     // A new level starts at full strength: the ding is also the heal, and it
     // tops off the sprint pool too.
     player.hp = player.maxHp;
     player.stamina = player.maxStamina;
-    state.events.push({ type: "levelUp", level: player.level });
+    state.events.push({
+      type: "levelUp",
+      level: player.level,
+      gains: levelStatGains(player.level),
+    });
   }
-  if (player.pendingStatPoints > 0) state.phase = "levelup";
+  if (leveled) {
+    // The chooser waits out the celebration: the golden burn wreathes the
+    // hero and the fanfare rings for this long before the modal interrupts.
+    state.levelUpFxMs = LEVELING.dingCelebrationMs;
+  } else if (player.pendingStatPoints > 0 && state.levelUpFxMs <= 0) {
+    state.phase = "levelup";
+  }
 }
