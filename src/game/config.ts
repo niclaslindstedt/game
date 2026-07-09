@@ -865,3 +865,14 @@ export const RUN = {
    * time enough to scoop up what the boss dropped. */
   victoryDelayMs: 5000,
 } as const;
+
+/** The level map and its fog of war (see map.ts). */
+export const MAP = {
+  /** Fog-of-war grid cell size (world px). Coarse on purpose: the map reads
+   * as chunky pixel terrain, and the whole grid stays a few thousand cells
+   * even on the widest level. */
+  cellSize: 32,
+  /** Radius around the hero uncovered as he moves (world px) — roughly what
+   * the phone view shows around him, so "walked past it" ≈ "on the map". */
+  revealRadius: 120,
+} as const;

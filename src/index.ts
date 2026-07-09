@@ -108,6 +108,10 @@ export {
   wearEquippedWeapon,
 } from "./game/items.ts";
 
+// The level map: fog-of-war queries, the map pause phase, and the grid
+// helpers the map overlay draws from (`state.explored` + MAP.cellSize).
+export { closeMap, isExplored, mapCols, mapRows, openMap } from "./game/map.ts";
+
 // The menace meter: the escalation the app reads to draw the rampage gauge
 // and mark evolved mobs (the mechanics live in step()/loot()).
 export {
@@ -238,6 +242,7 @@ export {
   LAST_STAND,
   LEVELING,
   LOOT,
+  MAP,
   MEDKIT,
   MENACE,
   MERCY,
@@ -274,6 +279,8 @@ export type {
   Landmark,
   LevelInfo,
   Loadout,
+  MapMarker,
+  MapMarkerKind,
   Obstacle,
   Player,
   Projectile,

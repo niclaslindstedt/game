@@ -151,6 +151,21 @@ sequel truncates this file to a stub and rebuilds it as its own systems land.
   against. This game's content suites live in `tests/content/` and use the
   shipped catalogs via the root `tests/helpers.ts`. The only shared id is
   `blaster` — `create.ts`/`items.ts` mint it as the built-in sidearm.
+- **Fog-of-war level map (2026-07):** run-scoped exploration is a coarse
+  byte grid on the state (`state.explored`, one cell per `MAP.cellSize`,
+  stamped by `revealAround` right after `stepPlayer` each tick + once at
+  creation around the spawn) living in a cohesive `src/game/map.ts` next to
+  its phase toggles — `openMap`/`closeMap` and a `map` GamePhase that
+  freezes like `inventory` (close yields to a pending level-up). Memorable
+  events pin `state.mapMarkers` at their existing source of truth, not via
+  events: elite/boss kills and flees in loot.ts's kill funnel, story
+  pickups in `collectStoryItem` (which grew a `pos` param), unique/legendary
+  pickups in stepItems' equipment branch (guarded so a bag-full refusal
+  never pins). The app draws the whole map in ONE static canvas pass on
+  open (`MapOverlay.tsx`) — terrain = the level's `ground.common` sprite
+  per explored cell (zones honored), fog = the dark backdrop plus a
+  half-shade penumbra on frontier cells — since the sim is frozen there is
+  nothing to animate. Fixture: `test_elite`; suite: `tests/engine/map_test.ts`.
 - **Diablo loot economy (2026-07, weapon rework):** progression-shaped loot
   is three numbers threaded through the existing catalogs, not a new system:
   a MONSTER LEVEL stamped on every enemy at spawn (`spawnEnemy` param,

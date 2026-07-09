@@ -6,13 +6,14 @@
 // `playing` — and `advanceDialogue` is the player's tap, safe to call from
 // the app outside `step()` exactly like the inventory mutators.
 
-import { distance } from "@game/lib/vec.ts";
+import { distance, type Vec2 } from "@game/lib/vec.ts";
 import { DIALOGUE, DOORS } from "./config.ts";
 import { enemyDef } from "./defs/enemies/index.ts";
 import { levelDef } from "./defs/levels/index.ts";
 import type { ThoughtTrigger } from "./defs/levels/types.ts";
 import { storyItemDef } from "./defs/story.ts";
 import { thoughtDef } from "./defs/thoughts.ts";
+import { addMapMarker } from "./map.ts";
 import type { DialogueState, Enemy, GameState } from "./types.ts";
 
 /**
@@ -217,12 +218,18 @@ export function wantsDialogue(state: GameState, enemy: Enemy): boolean {
 
 /**
  * Bank a picked-up story item and play its lore. Story items never enter
- * the bag — they are plot, not gear — so pickup always succeeds.
+ * the bag — they are plot, not gear — so pickup always succeeds. `pos` is
+ * where it lay: the find is pinned to the level map there.
  */
-export function collectStoryItem(state: GameState, defId: string): void {
+export function collectStoryItem(
+  state: GameState,
+  defId: string,
+  pos: Vec2,
+): void {
   state.storyItems.push(defId);
   state.stats.itemsCollected++;
   state.events.push({ type: "storyItemCollected", defId });
+  addMapMarker(state, "story", pos, defId);
   const def = storyItemDef(defId);
   if (def.lore.length === 0 || state.dialogue !== null) return;
   state.dialogue = { source: { kind: "story", defId }, page: 0 };

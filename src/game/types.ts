@@ -16,9 +16,9 @@ import type { Vec2 } from "@game/lib/vec.ts";
 /**
  * `cutscene` plays the level's prelude scene, `intro` shows the story text
  * box, `title` flashes the level name alone before the drop, `levelup` waits
- * for a stat choice, `inventory` pauses for bag management, `dialogue` holds
- * the world while a character (or a found story item) speaks; the simulation
- * only advances while `playing`.
+ * for a stat choice, `inventory` pauses for bag management, `map` pauses over
+ * the fog-of-war level map, `dialogue` holds the world while a character (or
+ * a found story item) speaks; the simulation only advances while `playing`.
  */
 export type GamePhase =
   | "cutscene"
@@ -29,6 +29,7 @@ export type GamePhase =
   | "levelup"
   | "respec"
   | "inventory"
+  | "map"
   | "dialogue"
   | "victory"
   | "defeat";
@@ -470,6 +471,26 @@ export type DialogueState = {
   page: number;
 };
 
+/**
+ * What a level-map pin commemorates: a `story` plot piece picked up, a
+ * `loot` find of unique/legendary gear, an `elite` slain, or a `boss`
+ * beaten (a fleeing unique counts — the fight was won where it fled).
+ */
+export type MapMarkerKind = "story" | "loot" | "elite" | "boss";
+
+/**
+ * A pin on the level map (see map.ts): something memorable happened at
+ * `pos`. `defId` keys the catalog its `kind` implies — STORY_ITEM_DEFS for
+ * `story`, WEAPON_DEFS/GEAR_DEFS for `loot`, ENEMY_DEFS for `elite`/`boss` —
+ * so the app can resolve a name or icon. Markers are shown even where the
+ * fog still stands: the player was there when it happened.
+ */
+export type MapMarker = {
+  kind: MapMarkerKind;
+  pos: Vec2;
+  defId: string;
+};
+
 export type GameStats = {
   kills: number;
   totalEnemies: number;
@@ -750,6 +771,15 @@ export type GameState = {
   thoughtsSeen: string[];
   /** Locked doors built from the level def, open or not. */
   doors: DoorState[];
+  /**
+   * The fog of war: one byte per `MAP.cellSize` grid cell, row-major
+   * (`mapCols(level)` cells per row), 1 once the hero has walked within
+   * `MAP.revealRadius` of the cell. Stamped by `revealAround` each step and
+   * once at creation around the spawn; never re-fogged. See map.ts.
+   */
+  explored: Uint8Array;
+  /** Pins on the level map: story finds, rare loot, elite/boss victories. */
+  mapMarkers: MapMarker[];
   player: Player;
   enemies: Enemy[];
   projectiles: Projectile[];

@@ -138,6 +138,32 @@ export const FIX_ENEMIES: Record<string, EnemyDef> = {
     contactCooldownMs: 700,
     ai: { aggroRadius: 950 },
   },
+  // A plain fightable ELITE (no dialogue, no flee): the mid-boss shape the
+  // map-marker and power-scale rules pin down without a scene in the way.
+  test_elite: {
+    id: "test_elite",
+    name: "TEST ELITE",
+    role: "elite",
+    sprite: "test_elite",
+    gore: "ecto",
+    phasing: true,
+    hp: 150,
+    speed: 24,
+    radius: 11,
+    contactDamage: 18,
+    critChance: 0.12,
+    contactCooldownMs: 800,
+    ai: { aggroRadius: 260, rushSpeed: 90 },
+    loot: {
+      items: [],
+      weapons: 1,
+      gear: 0,
+      xpArrows: 1,
+      repairs: 0,
+      medkits: 1,
+      tierBonus: 0.2,
+    },
+  },
   // A dialogue-only APPARITION (mirrors the rift's historic residents): an
   // elite-role speaker nothing can hit — it rushes in, delivers its scene,
   // then walks off and dissolves (config APPARITION.lingerMs).
