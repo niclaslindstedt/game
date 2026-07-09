@@ -56,8 +56,10 @@ and something enormous haunts the old flag.
 
 - Pick **NEW GAME** on the main menu and choose a difficulty — EASY,
   MEDIUM, HARD, NIGHTMARE, or JESUS CHRIST! Harder settings raise the horde
-  size and monster health, but drop loot more often and unlock higher item
-  tiers (epic and legendary) that the early levels never roll on their own.
+  size and monster LEVEL — and since item tiers unlock by monster level
+  (magic, then rare, with unique and legendary plumbed in above), the hard
+  rungs drop more loot, reach every tier earlier, and add their own bonus
+  odds on top.
 - The run opens on a short **cutscene** (the movie night Ada never came
   back from) — tap to advance a beat, or hit SKIP. It plays **once per
   device**: retries and later runs jump straight to the level.
@@ -112,12 +114,18 @@ and something enormous haunts the old flag.
   what each stat does. Golden
   **XP arrows** drop from the horde and are always worth a fixed share of
   your next level.
-- The horde drops **loot** — medkits, weapons (staplers, mops, tasers,
-  beakers… whatever the level left lying around), gear, repair kits, and
-  XP arrows, in regular or magic tier. Picking up something **better than
-  what you wear equips it instantly**; the rest lands in the **BAG** — open
-  it with the **hero avatar** in the top-left vitals panel (or press I) for a
-  Diablo-style inventory: drag items onto their slot or tap to quick-equip.
+- The horde drops **loot**, Diablo-style — medkits, gear, repair kits, XP
+  arrows, and **base weapons themed to each level** (a box cutter or the
+  armory's pump shotgun on earth, 70s hardware on the moon, AI-forged
+  railguns and plasma blades on Mars, historic and fantasy arms in the
+  rift). Each base has a **level requirement** — it neither drops from
+  monsters below it nor equips before you reach it — and each drop carries
+  an **item level** near its killer's that sizes its magic bonuses, so a
+  deep find genuinely outrolls an early one. Picking up something **better
+  than what you wear equips it instantly**; the rest lands in the **BAG** —
+  open it with the **hero avatar** in the top-left vitals panel (or press I)
+  for a Diablo-style inventory: drag items onto their slot or tap to
+  quick-equip.
 - Dropped weapons **wear out** as they fire: when one breaks it is trashed
   and the best weapon left in your bag takes its place (your own sidearm
   never breaks). **Repair kits** restore the equipped weapon's edge, and

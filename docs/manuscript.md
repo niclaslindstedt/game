@@ -180,7 +180,7 @@ KEYCARD that opens the AI CORE room._
 
 **Last words:** UGH... PAD 2... / SHE'S ON... PAD... 2...
 
-_Drops: CARGO MANIFEST, and the EVA space suit (forced epic) the hero needs to
+_Drops: CARGO MANIFEST, and the EVA space suit (forced unique) the hero needs to
 leave the planet._
 
 #### DR. NOVA — the drive is alien

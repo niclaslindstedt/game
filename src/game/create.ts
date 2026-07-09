@@ -64,10 +64,14 @@ export function createGame(
   const def = levelDef(levelId);
   const diff = difficultyDef(difficulty);
   // Every monster spawns at the horde's RELATIVE level (player level + the
-  // difficulty's offset). Placed spawns mint at the authored level-1 baseline;
-  // the wave spawner tracks the player's live level instead (mobLevelScale).
+  // difficulty's offset). Placed spawns mint their HP at the authored level-1
+  // baseline — the opening ring is deliberately a warm-up — while the wave
+  // spawner tracks the player's live level (mobLevelScale). Their MONSTER
+  // LEVEL for loot, though, follows the hero who actually arrives (the
+  // carried loadout's level): a level-14 arrival's warm-up mobs still drop
+  // level-appropriate finds, not the opener's ilvl-1 castoffs.
   const mobHp = mobHpScaleFor(1, difficulty);
-  const mobLvl = mobLevelFor(1, difficulty);
+  const mobLvl = mobLevelFor(loadout?.level ?? 1, difficulty);
   const rng = createRng(seed);
   const playerSpawn = vec(def.playerSpawn.x, def.playerSpawn.y);
   let nextId = 1;

@@ -105,6 +105,22 @@ previous level's signature weapon, issue gear, and a couple of its powerups)
 banked. Losing a run never erases the banked loadout: retry restarts the
 level with the same carry-over.
 
+The **loot is Diablo-shaped, and each level introduces its own base
+weapons** (`LevelDef.loot.weaponPool`, five per level at stepped level
+requirements): SpaceZ HQ scavenges earthly arms (BOX CUTTER, SECURITY
+BATON, 9MM PISTOL, PROTOTYPE LASER, PUMP SHOTGUN), the moon yields the 70s
+hardware the space race ferried up (LUNAR WRENCH, SERVICE REVOLVER, GEOLOGY
+HAMMER, SURPLUS CARBINE, RETRO RAYGUN), Mars prints AI-forged weapons
+(SMART PISTOL with homing darts, PLASMA BLADE, piercing RAILGUN,
+chain-lightning ARC PROJECTOR, GRAVITY MAUL), and the rift rains history
+and fantasy (GLADIUS, LONGBOW, BLUNDERBUSS, EXECUTIONER'S AXE, SORCERER'S
+STAFF — plus the rift-only fantasy gear: LUCKY CLOVER, CRYSTAL ORB,
+GRIMOIRE, ENCHANTED RING, DRAGONSCALE CLOAK). A base only drops from
+monsters whose LEVEL has reached its requirement, tiers unlock by monster
+level (config `LOOT.tierUnlockMlvl`), and every drop carries an item level
+near its killer's that sizes its affixes — see the `weapon-system` skill
+for the full economy and its tuning tools.
+
 What the campaign _does_ persist is **completion**, on-device and per
 difficulty (`website/src/game/progress.ts`): clearing a level records it, and
 the victory splash offers **NEXT LEVEL** (advancing along `LEVEL_ORDER`
