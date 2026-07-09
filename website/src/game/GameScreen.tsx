@@ -351,12 +351,18 @@ export function GameScreen({
   difficulty,
   levelId: initialLevelId,
   onQuit,
+  onExitToMenu,
   skipIntro: skipOpening = false,
   respec = false,
+  resume,
 }: {
   difficulty: Difficulty;
   levelId: string;
+  /** Abandon the run for good (the end-of-run splash's MENU button). */
   onQuit: () => void;
+  /** Leave to the main menu mid-run (the pause screen's MENU button), handing
+   * the live engine state up so it can be parked in memory and resumed. */
+  onExitToMenu: (state: GameState) => void;
   /** Warp-in (the title moon's long-press): drop straight into play, skipping
    * the prelude cutscene and the hero's level-intro monologue. */
   skipIntro?: boolean;
@@ -364,12 +370,20 @@ export function GameScreen({
    * respec once the intro clears (see the engine's `beginRespec`). Only the
    * token-jumped level itself respecs — advancing to the NEXT LEVEL does not. */
   respec?: boolean;
+  /** Resuming a run parked in memory: adopt this frozen (paused) engine state
+   * as-is instead of starting fresh. Consumed once — a later RETRY / NEXT
+   * LEVEL in this same mount recreates the game normally. */
+  resume?: GameState;
 }) {
   // The level this run is on. Retry replays it; the victory splash's NEXT
   // LEVEL button advances it along LEVEL_ORDER, which re-runs the mount effect
   // (a fresh createGame) — each run is standalone, carrying only the chosen
   // difficulty across, per docs/game-content.md.
   const [levelId, setLevelId] = useState(initialLevelId);
+  // The parked engine state to adopt on this mount (a run resumed from the
+  // menu), consumed the first time the run effect fires so a later RETRY /
+  // NEXT LEVEL recreates the game from scratch instead of re-adopting it.
+  const resumeRef = useRef<GameState | null>(resume ?? null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const dpadRef = useRef<HTMLDivElement>(null);
   // The active-powerup strip: its radial cooldown sweeps and countdown numbers
@@ -471,18 +485,25 @@ export function GameScreen({
     const levelParam = params.get("level");
     const devLevel = levelParam && levelParam in LEVELS ? levelParam : null;
     const runLevelId = devLevel ?? levelId;
+    // Resuming a run parked in memory (exited to the menu from the pause
+    // screen): adopt the frozen engine state as-is. Consumed once — a RETRY /
+    // NEXT LEVEL later in this mount falls back to a fresh createGame.
+    const resumed = resumeRef.current;
+    resumeRef.current = null;
     // The carry-over: the loadout banked when the previous level was cleared
     // (or a derived stand-in for dev jumps with nothing banked). The hero
     // arrives with the level, stats and items he finished the last level with.
-    const state = createGame(
-      seed,
-      runLevelId,
-      difficulty,
-      startingLoadout(runLevelId, difficulty) ?? undefined,
-      // The token respec is owed only on the jumped-into level; once the run
-      // advances along the campaign (a fresh levelId) it no longer applies.
-      respec && levelId === initialLevelId,
-    );
+    const state =
+      resumed ??
+      createGame(
+        seed,
+        runLevelId,
+        difficulty,
+        startingLoadout(runLevelId, difficulty) ?? undefined,
+        // The token respec is owed only on the jumped-into level; once the run
+        // advances along the campaign (a fresh levelId) it no longer applies.
+        respec && levelId === initialLevelId,
+      );
     // The prelude always plays — every run opens on its cutscene (the player
     // can dismiss it with the SKIP button or Esc). It is never auto-skipped on
     // replay.
@@ -536,11 +557,18 @@ export function GameScreen({
     const unlock = () => synth.unlock();
     canvas.addEventListener("pointerdown", unlock);
 
-    // Warp-in from the title moon's long-press: bail the whole opening and
-    // drop straight into play. skipCutscene lands the prelude on the level
-    // `title` card, then beginRun's dismissIntro carries it into `playing` —
-    // the same shortcut the keyboard and headless bot use, done up front.
-    if (skipOpening) {
+    if (resumed) {
+      // Back from the menu: the run was frozen on the pause screen and the
+      // menu played the title theme over it. Re-arm this level's theme but
+      // keep it paused, so the player lands on the same PAUSED overlay and one
+      // tap resumes both the sim and the music in place.
+      playLevelMusic(levelDef(state.level.id).music);
+      pauseMusic();
+    } else if (skipOpening) {
+      // Warp-in from the title moon's long-press: bail the whole opening and
+      // drop straight into play. skipCutscene lands the prelude on the level
+      // `title` card, then beginRun's dismissIntro carries it into `playing` —
+      // the same shortcut the keyboard and headless bot use, done up front.
       if (state.phase === "cutscene") skipCutscene(state);
       beginRun();
     }
@@ -1809,7 +1837,9 @@ export function GameScreen({
             resumeMusic();
             bumpUi();
           }}
-          onQuit={onQuit}
+          // Leave to the menu but keep the frozen run in memory — CONTINUE
+          // resumes it. The state is already in the `paused` phase here.
+          onExit={() => onExitToMenu(state)}
         />
       )}
 
