@@ -201,6 +201,7 @@ export const MOON: LevelDef = {
       "geology_hammer",
       "surplus_carbine",
       "retro_raygun",
+      "pulsar_rod",
     ],
     // The 70s kit lockers: mission cotton to the gold Apollo visor,
     // introduced at levelReqs 5 → 9 alongside the weapons.

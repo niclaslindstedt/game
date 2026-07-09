@@ -106,21 +106,34 @@ banked. Losing a run never erases the banked loadout: retry restarts the
 level with the same carry-over.
 
 The **loot is Diablo-shaped, and each level introduces its own base
-weapons** (`LevelDef.loot.weaponPool`, five per level at stepped level
-requirements): SpaceZ HQ scavenges earthly arms (BOX CUTTER, SECURITY
-BATON, 9MM PISTOL, PROTOTYPE LASER, PUMP SHOTGUN), the moon yields the 70s
-hardware the space race ferried up (LUNAR WRENCH, SERVICE REVOLVER, GEOLOGY
-HAMMER, SURPLUS CARBINE, RETRO RAYGUN), Mars prints AI-forged weapons
-(SMART PISTOL with homing darts, PLASMA BLADE, piercing RAILGUN,
-chain-lightning ARC PROJECTOR, GRAVITY MAUL), and the rift rains history
-and fantasy (GLADIUS, LONGBOW, BLUNDERBUSS, EXECUTIONER'S AXE, SORCERER'S
-STAFF — plus the rift-only fantasy gear: LUCKY CLOVER, CRYSTAL ORB,
-GRIMOIRE, ENCHANTED RING, DRAGONSCALE CLOAK). A base only drops from
+weapons** (`LevelDef.loot.weaponPool`, six per level at stepped level
+requirements — two melee, two ranged, two magic, so a melee, ranged, or
+caster build all find a steady climb): SpaceZ HQ scavenges earthly arms
+(BOX CUTTER, SECURITY BATON, 9MM PISTOL, PROTOTYPE LASER, MICROWAVE
+EMITTER, PUMP SHOTGUN), the moon yields the 70s hardware the space race
+ferried up (LUNAR WRENCH, SERVICE REVOLVER, GEOLOGY HAMMER, SURPLUS
+CARBINE, RETRO RAYGUN, PULSAR ROD), Mars prints AI-forged weapons (SMART
+PISTOL with homing darts, PLASMA BLADE, piercing RAILGUN, chain-lightning
+ARC PROJECTOR, GRAVITON MAW, GRAVITY MAUL), and the rift rains history and
+fantasy (GLADIUS, LONGBOW, BLUNDERBUSS, EXECUTIONER'S AXE, SORCERER'S
+STAFF, EMBER WAND — plus the rift-only fantasy gear: LUCKY CLOVER, CRYSTAL
+ORB, GRIMOIRE, ENCHANTED RING, DRAGONSCALE CLOAK). A base only drops from
 monsters whose LEVEL has reached its requirement, tiers unlock by monster
 level (config `LOOT.tierUnlockMlvl`), and every drop carries an item level
 near its killer's (plus the difficulty's `lootIlvlBonus` on the harder
 rungs) that sizes its affixes — see the `weapon-system` skill for the full
 economy and its tuning tools.
+
+Every weapon deals its damage as a **range**, not a fixed number: each
+blow rolls inside a band around the catalog average (config
+`WEAPON.damageVariance`, ±20% by default; a def may widen its own with
+`damageVariance`), so a weapon written at 10 hits for ~8–12 and a crit off
+it lands higher still. Chaotic pieces roll wide for the fun of it — the
+BLUNDERBUSS (±50%) and the SINGULARITY CANNON (±55%) swing for the
+fences — while precision tools (the SMART PISTOL, the RAILGUN) hold a
+tight ±10%. The average is unchanged, so the whole damage-budget model is
+untouched; the spread is rolled off a separate `fxRng` flavor stream so it
+never perturbs loot rolls.
 
 Two more axes complete the item tables (`src/game/defs/grades.ts`, config
 `QUALITY`). **Base grades**: every pool weapon and armor piece exists in

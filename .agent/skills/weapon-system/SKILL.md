@@ -188,6 +188,31 @@ one, and scripted `earlyDrops` pin `quality: "normal"`.
   bars) must go through `equipmentMaxDurability` or a CRUDE piece repairs
   past what it minted with.
 
+## Lessons learned (2026-07 damage ranges + magic parity)
+
+- **`def.damage` is the MEAN of a range, not a fixed hit.** Every blow rolls
+  inside a band (`WEAPON.damageVariance` default, per-def `damageVariance`
+  override) around the average. Keep authoring `damage` as the average —
+  the budget model, DPS readouts, auto-equip, and grade generation all
+  reason about expected output, so the spread rides on top and none of them
+  change. `weaponDamageFor` stays the deterministic average (UI/scoring);
+  `rollWeaponDamage` is the combat-time roll; `weaponDamageRange` is the
+  item-card min–max. Melee rolls once per swing, projectiles once PER PELLET.
+- **Per-hit variance draws off `state.fxRng`, a SECOND stream — never
+  `state.rng`.** This is the trick that let the whole change land with zero
+  seeded-loot-test churn: the loot/crit stream sequence is untouched, so
+  drop determinism holds. `fxRng` is seeded off the same seed (repro-safe)
+  and IS persisted (saved-run snapshots `fxRngState` too, so resume is
+  lossless — the persistence test enforces exact-sequence resume). Any
+  future combat-flavor randomness (screen shake, spark counts) belongs on
+  `fxRng`, not `rng`.
+- **A pool is `2 melee / 2 ranged / 2 magic` now.** Magic shipped
+  half-served (one base per level → 12 rungs vs 24). Bringing a class to
+  parity is: add one base per level pool at a stepped `levelReq`, grade
+  names in `grades.ts`, wire the pool array, `make assets`, LOOK. The grade
+  bands ([25,52] exceptional, [55,100] elite) unfold the rest — check the
+  `weapon-stats.mjs` per-class ladder afterwards (it must never step down).
+
 ## After you're done — the checklist
 
 - [ ] `node scripts/weapon-budget.mjs --strict` clean — every weapon on its

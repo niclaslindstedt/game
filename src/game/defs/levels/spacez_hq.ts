@@ -330,6 +330,7 @@ export const SPACEZ_HQ: LevelDef = {
       "security_baton",
       "nine_mm",
       "prototype_laser",
+      "microwave_emitter",
       "pump_shotgun",
     ],
     // The campus wardrobe: office cotton up to the armory's riot kit,

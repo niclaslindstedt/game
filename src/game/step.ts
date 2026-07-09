@@ -74,8 +74,8 @@ import {
   restoreStamina,
   syncInventoryCapacity,
   weaponCooldownFor,
-  weaponDamage,
   weaponRangeFor,
+  rollWeaponDamage,
   weaponSweepHalfAngle,
   wearEquippedWeapon,
   wearWornArmor,
@@ -564,7 +564,7 @@ function stepWeapon(state: GameState, input: GameInput, dtMs: number): void {
       dir,
       range,
       half,
-      weaponDamage(state),
+      rollWeaponDamage(state, equipped),
       maxMeleeTargets(state),
       weapon.class,
       weaponCritMult(weapon),
@@ -576,8 +576,10 @@ function stepWeapon(state: GameState, input: GameInput, dtMs: number): void {
 
   // One trigger pull, `count` projectiles: a single shot flies straight at
   // the aim; a shotgun's volley fans its pellets evenly across `spreadDeg`
-  // around it. Every pellet carries the weapon's full per-hit damage — the
-  // spread itself is the falloff (fewer pellets connect at range).
+  // around it. Every pellet carries the weapon's full per-hit damage, each
+  // rolled INDEPENDENTLY inside the weapon's variance band — so a volley's
+  // pellets bite for a spread of numbers, not one repeated figure. The fan
+  // itself is the falloff (fewer pellets connect at range).
   const spec = weapon.projectile;
   const count = Math.max(1, spec.count ?? 1);
   const spread = ((spec.spreadDeg ?? 0) * Math.PI) / 180;
@@ -595,7 +597,7 @@ function stepWeapon(state: GameState, input: GameInput, dtMs: number): void {
       dir: pelletDir,
       speed: spec.speed,
       radius: spec.radius,
-      damage: weaponDamage(state),
+      damage: rollWeaponDamage(state, equipped),
       lifetimeMs: spec.lifetimeMs,
       weaponClass: weapon.class,
       sprite: spec.sprite,

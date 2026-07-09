@@ -49,6 +49,7 @@ import {
   weaponCooldownFor,
   weaponDamage,
   weaponDamageFor,
+  weaponDamageRange,
   weaponDef,
   weaponDps,
   weaponRangeFor,
@@ -214,13 +215,16 @@ function itemLines(
       color: "#7ef0c8",
       delta: eq ? compareChip(dps - Math.round(weaponDps(state, eq))) : null,
     });
-    // Show the damage this weapon would deal in the player's hands (stats +
-    // affixes folded in), with the bonus over the raw base as a "+x" hint.
+    // Show the damage this weapon would deal in the player's hands as the RANGE
+    // every blow rolls inside (stats + affixes folded in), with the bonus of
+    // the average over the raw base as a "+x" hint. A range, not a fixed
+    // figure, because that is how the weapon actually hits.
     const effective = Math.round(weaponDamageFor(state, item));
+    const { min, max } = weaponDamageRange(state, item);
     const bonus = effective - def.damage;
     lines.push({
       text:
-        bonus > 0 ? `DAMAGE ${effective} (+${bonus})` : `DAMAGE ${effective}`,
+        bonus > 0 ? `DAMAGE ${min}-${max} (+${bonus})` : `DAMAGE ${min}-${max}`,
       delta: eq
         ? compareChip(effective - Math.round(weaponDamageFor(state, eq)))
         : null,

@@ -993,4 +993,14 @@ export type GameState = {
   nextId: number;
   /** Seeded stream for in-run rolls (crits, drops) — keeps runs replayable. */
   rng: Rng;
+  /**
+   * A SECOND seeded stream, for combat FLAVOR only — currently the per-blow
+   * damage-range roll (see `rollWeaponDamage`). Kept apart from `rng` on
+   * purpose: damage variance must never advance the loot/crit stream, so drop
+   * determinism (and every seeded loot test) is unaffected by how a swing rolls.
+   * Not serialized — re-seeded on resume; a reloaded run rolling slightly
+   * different flavor damage is invisible, while a fresh run from a seed stays
+   * fully reproducible.
+   */
+  fxRng: Rng;
 };

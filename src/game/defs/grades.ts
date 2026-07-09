@@ -112,6 +112,10 @@ const WEAPON_GRADE_NAMES: Record<string, GradeNames> = {
     exceptional: { id: "combat_shotgun", name: "COMBAT SHOTGUN" },
     elite: { id: "auto_shotgun", name: "AUTO SHOTGUN" },
   },
+  microwave_emitter: {
+    exceptional: { id: "phase_emitter", name: "PHASE EMITTER" },
+    elite: { id: "maser_lance", name: "MASER LANCE" },
+  },
   // THE MOON
   lunar_wrench: {
     exceptional: { id: "torque_wrench", name: "TORQUE WRENCH" },
@@ -132,6 +136,10 @@ const WEAPON_GRADE_NAMES: Record<string, GradeNames> = {
   retro_raygun: {
     exceptional: { id: "atomic_raygun", name: "ATOMIC RAYGUN" },
     elite: { id: "cosmic_raygun", name: "COSMIC RAYGUN" },
+  },
+  pulsar_rod: {
+    exceptional: { id: "magnetar_rod", name: "MAGNETAR ROD" },
+    elite: { id: "quasar_rod", name: "QUASAR ROD" },
   },
   // MARS
   smart_pistol: {
@@ -154,6 +162,10 @@ const WEAPON_GRADE_NAMES: Record<string, GradeNames> = {
     exceptional: { id: "neutron_maul", name: "NEUTRON MAUL" },
     elite: { id: "quasar_maul", name: "QUASAR MAUL" },
   },
+  graviton_maw: {
+    exceptional: { id: "tidal_maw", name: "TIDAL MAW" },
+    elite: { id: "horizon_maw", name: "EVENT HORIZON MAW" },
+  },
   // THE RIFT
   gladius: {
     exceptional: { id: "spatha", name: "SPATHA" },
@@ -174,6 +186,10 @@ const WEAPON_GRADE_NAMES: Record<string, GradeNames> = {
   sorcerers_staff: {
     exceptional: { id: "archmage_staff", name: "ARCHMAGE STAFF" },
     elite: { id: "eldritch_staff", name: "ELDRITCH STAFF" },
+  },
+  ember_wand: {
+    exceptional: { id: "inferno_wand", name: "INFERNO WAND" },
+    elite: { id: "solar_wand", name: "SOLAR WAND" },
   },
 };
 

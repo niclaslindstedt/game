@@ -40,6 +40,7 @@ import {
   TIERS,
   weaponAssumedTargets,
   weaponCritMult,
+  weaponDamageVariance,
   weaponDef,
   type AffixDef,
   equipmentBaseName,
@@ -986,6 +987,35 @@ export function weaponDamageFor(state: GameState, weapon: Equipment): number {
   // here — the one source of stat-scaled damage — so combat, auto-equip
   // scoring, and every DPS readout agree on what craftsmanship is worth.
   return def.damage * multiplier * lootMult * qualityMult(weapon);
+}
+
+/**
+ * The damage a specific weapon instance would deal on THIS blow: its average
+ * output (`weaponDamageFor`) scaled by a random factor inside the weapon's
+ * variance band, so a swing written at 10 lands anywhere in ~8–12 (and a crit
+ * off it, higher still). Rolled off the run's `fxRng` flavor stream — never
+ * `rng` — so damage spread can't perturb the loot/crit sequence. This is the
+ * value combat feeds into `hitEnemy`; every readout (item card, DPS, scoring)
+ * keeps using the deterministic average so a weapon still reads as one number.
+ */
+export function rollWeaponDamage(state: GameState, weapon: Equipment): number {
+  const v = weaponDamageVariance(weaponDef(weapon.defId));
+  const factor = v <= 0 ? 1 : randomRange(state.fxRng, 1 - v, 1 + v);
+  return weaponDamageFor(state, weapon) * factor;
+}
+
+/**
+ * The min/max a weapon's blow can roll for this player (its average ± its
+ * variance band), rounded for display. The item card leads with this range —
+ * "DMG 8–12" — so the spread the player feels in combat is legible up front.
+ */
+export function weaponDamageRange(
+  state: GameState,
+  weapon: Equipment,
+): { min: number; max: number } {
+  const avg = weaponDamageFor(state, weapon);
+  const v = weaponDamageVariance(weaponDef(weapon.defId));
+  return { min: Math.round(avg * (1 - v)), max: Math.round(avg * (1 + v)) };
 }
 
 /**
