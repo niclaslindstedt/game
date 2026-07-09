@@ -239,14 +239,18 @@ export function drawFrame(
           ? sprites.upgrade
           : item.kind === "repair"
             ? sprites.repair
-            : item.kind === "ability"
-              ? (spriteByName(sprites, abilityDef(item.defId).icon) ??
-                sprites.medkit)
-              : item.kind === "story"
-                ? (spriteByName(sprites, storyItemDef(item.defId).icon) ??
+            : item.kind === "drink"
+              ? sprites.drink
+              : item.kind === "ability"
+                ? (spriteByName(sprites, abilityDef(item.defId).icon) ??
                   sprites.medkit)
-                : (spriteByName(sprites, equipmentIcon(item.equipment.defId)) ??
-                  sprites.medkit);
+                : item.kind === "story"
+                  ? (spriteByName(sprites, storyItemDef(item.defId).icon) ??
+                    sprites.medkit)
+                  : (spriteByName(
+                      sprites,
+                      equipmentIcon(item.equipment.defId),
+                    ) ?? sprites.medkit);
     // Dropped loot hovers and glows so it reads as pickupable, not decor.
     // Phase by item.id (like enemy bob) so items don't pulse in lockstep.
     const cx = Math.round(item.pos.x - camera.x);

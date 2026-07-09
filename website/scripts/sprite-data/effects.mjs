@@ -175,6 +175,22 @@ const SPRITES = {
     "............",
     "............",
   ],
+  // The energy-drink consumable: a green can, steel lid and pull-tab, with a
+  // yellow lightning bolt down the label — resets the sprint pool on touch.
+  drink: [
+    "............",
+    "....OOOO....",
+    "...OVVVVO...",
+    "..OVbbbbVO..",
+    "..OGGyyGGO..",
+    "..OGyyyGGO..",
+    "..OGGyyyGO..",
+    "..OGGyyyGO..",
+    "..OGyyyGGO..",
+    "..OGGGGGGO..",
+    "..OOOOOOOO..",
+    "............",
+  ],
   // The weapon-upgrade pickup: a golden up arrow.
   upgrade: [
     "............",

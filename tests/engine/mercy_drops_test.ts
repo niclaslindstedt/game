@@ -15,11 +15,13 @@ import {
   dismissIntro,
   lowDurabilityDesperation,
   lowHealthDesperation,
+  MERCY,
   rollEquipment,
+  staminaDrinkChance,
   step,
 } from "@game/core";
 import type { Difficulty, GameState, Item } from "@game/core";
-import { clearStage, DT, idle, makeEnemy, SEED } from "./helpers.ts";
+import { clearStage, DT, idle, makeEnemy, SEED, steerTo } from "./helpers.ts";
 
 // A run past the intro on the synthetic level, at the given rung.
 const startOn = (difficulty: Difficulty): GameState => {
@@ -147,6 +149,67 @@ describe("the crowd bomb chance (bomb-in-a-swarm)", () => {
   });
 });
 
+describe("the stamina-drink chance (empty-sprint bailout)", () => {
+  it("stays at zero while any stamina is left, however low", () => {
+    const state = startOn("easy");
+    state.staminaEmptyMs = 1e9; // even long-stranded time can't fire it…
+    state.player.stamina = 1; // …because the pool is not bone-dry
+    expect(staminaDrinkChance(state)).toBe(0);
+  });
+
+  it("is still zero the instant the pool empties, then ramps over time", () => {
+    const state = startOn("easy");
+    state.player.stamina = 0;
+    state.staminaEmptyMs = 0; // just hit empty this frame
+    expect(staminaDrinkChance(state)).toBe(0);
+    // Halfway through the ramp window → half the rung's cap.
+    state.staminaEmptyMs = MERCY.staminaEmptyDrinkRampMs / 2;
+    expect(staminaDrinkChance(state)).toBeCloseTo(0.075, 5);
+  });
+
+  it("tops out at 15% on easy and 10% on medium once fully stranded", () => {
+    const easy = startOn("easy");
+    easy.player.stamina = 0;
+    easy.staminaEmptyMs = MERCY.staminaEmptyDrinkRampMs;
+    expect(staminaDrinkChance(easy)).toBeCloseTo(0.15, 5);
+    // Past the window it holds the cap, never climbing beyond it.
+    easy.staminaEmptyMs = MERCY.staminaEmptyDrinkRampMs * 10;
+    expect(staminaDrinkChance(easy)).toBeCloseTo(0.15, 5);
+
+    const medium = startOn("medium");
+    medium.player.stamina = 0;
+    medium.staminaEmptyMs = MERCY.staminaEmptyDrinkRampMs;
+    expect(staminaDrinkChance(medium)).toBeCloseTo(0.1, 5);
+  });
+
+  it("gives no stamina drink from hard up, however long stranded", () => {
+    for (const rung of ["hard", "nightmare", "jesus"] as Difficulty[]) {
+      const state = startOn(rung);
+      state.player.stamina = 0;
+      state.staminaEmptyMs = MERCY.staminaEmptyDrinkRampMs * 5;
+      expect(staminaDrinkChance(state)).toBe(0);
+    }
+  });
+
+  it("accrues empty time while winded and resets the moment stamina returns", () => {
+    const state = startOn("easy");
+    clearStage(state);
+    state.player.stamina = 0;
+    // A running step (throttle 1, decisively steering) keeps the pool empty and
+    // banks empty time.
+    step(
+      state,
+      { ...steerTo(state.player.pos.x + 400, state.player.pos.y) },
+      DT,
+    );
+    expect(state.staminaEmptyMs).toBe(DT);
+    // Standing still recovers stamina, which zeroes the accumulator again.
+    step(state, idle, DT);
+    expect(state.player.stamina).toBeGreaterThan(0);
+    expect(state.staminaEmptyMs).toBe(0);
+  });
+});
+
 // Kill one adjacent minion via a real step so the drop rolls run through the
 // actual loot path, then return what fell. Drives MEDIUM, whose starter is the
 // melee crude_sword (a magic starter would not connect in a single step).
@@ -242,5 +305,65 @@ describe("armor pull toward plated suits when hurt (easy)", () => {
     // At full health desperation is zero: the pull branch never fires, so no
     // extra roll is drawn and the charm stands.
     expect(rollGear(100)).toBe("test_charm");
+  });
+});
+
+describe("the energy drink drop and pickup", () => {
+  it("throws a stranded, winded hero a drink through a real kill", () => {
+    const state = startOn("medium"); // 10% stamina-drink cap
+    clearStage(state);
+    state.waveSpawned = state.waveSpawned.map(() => 1e9);
+    state.items = [];
+    const p = state.player.pos;
+    // Four far minions so the equipment pity rule stays out of the way.
+    for (let i = 0; i < 4; i++) {
+      state.enemies.push(
+        makeEnemy({ id: 9100 + i, pos: { x: p.x + 5000, y: p.y + i * 30 } }),
+      );
+    }
+    state.enemies.push(
+      makeEnemy({ id: 9000, pos: { x: p.x + 20, y: p.y }, hp: 1, maxHp: 45 }),
+    );
+    // Bone-dry and long stranded → the full 10% cap; running through the kill
+    // keeps stepPlayer from refilling the pool before the drop rolls.
+    state.player.stamina = 0;
+    state.staminaEmptyMs = MERCY.staminaEmptyDrinkRampMs;
+    state.player.weaponCooldownMs = 0;
+    // rolls: miss no, dodge no, crit no, drink YES (the pre-gate mercy roll).
+    scriptRng(state, [0.9, 0.9, 0.9, 0.0]);
+    step(state, steerTo(p.x + 20, p.y), DT);
+    expect(state.enemies.find((e) => e.id === 9000)).toBeUndefined();
+    expect(state.player.stamina).toBe(0); // still winded after the kill
+    expect(state.items.some((i) => i.kind === "drink")).toBe(true);
+  });
+
+  it("resets the sprint pool to full on touch and is consumed", () => {
+    const state = startOn("easy");
+    clearStage(state);
+    state.waveSpawned = state.waveSpawned.map(() => 1e9);
+    state.items = [
+      { id: state.nextId++, kind: "drink", pos: { ...state.player.pos } },
+    ];
+    state.player.stamina = 0;
+    step(state, idle, DT);
+    expect(state.player.stamina).toBe(state.player.maxStamina);
+    expect(state.items.some((i) => i.kind === "drink")).toBe(false);
+    expect(
+      state.events.some(
+        (e) => e.type === "itemCollected" && e.kind === "drink",
+      ),
+    ).toBe(true);
+  });
+
+  it("stays on the ground for a rested hero (nothing to top up)", () => {
+    const state = startOn("easy");
+    clearStage(state);
+    state.waveSpawned = state.waveSpawned.map(() => 1e9);
+    state.player.stamina = state.player.maxStamina;
+    state.items = [
+      { id: state.nextId++, kind: "drink", pos: { ...state.player.pos } },
+    ];
+    step(state, idle, DT);
+    expect(state.items.some((i) => i.kind === "drink")).toBe(true);
   });
 });

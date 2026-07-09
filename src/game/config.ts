@@ -596,6 +596,14 @@ export const LOOT = {
   /** …the share that is a weapon repair kit… */
   repairShare: 0.1,
   /**
+   * …the share that is an ENERGY DRINK (resets the sprint pool on touch). Kept
+   * lean — a drink is only worth anything to a winded hero, and the gentle
+   * rungs rain them far harder through the stamina-empty MERCY DROP (see
+   * `staminaDrinkChance`), so the baseline slice is just a chance for one to
+   * turn up in the ordinary rain.
+   */
+  drinkShare: 0.05,
+  /**
    * Clearing every regular monster on a level is guaranteed to have dropped
    * at least this much equipment (a pity roll forces the tail end; boss
    * drops come on top of it).
@@ -650,11 +658,13 @@ export const LOOT = {
 
 /**
  * MERCY DROPS — the gentle rungs (easy/medium) throw a drowning player a rope,
- * and the fight eases without ever becoming un-losable. Three independent
- * signals feed it: a PACKED FIELD (crowd of on-screen mobs), LOW HEALTH, and a
- * near-BROKEN WEAPON. Each turns into a 0→1 "desperation" as it worsens — zero
- * at its `*Start` mark, one at its `*Full` mark, linear between (see
- * `desperationRamp`). This namespace owns the RAMP SHAPES (where help begins
+ * and the fight eases without ever becoming un-losable. Four independent
+ * signals feed it: a PACKED FIELD (crowd of on-screen mobs), LOW HEALTH, a
+ * near-BROKEN WEAPON, and an EMPTY SPRINT POOL (stamina bone-dry). The first
+ * three turn into a 0→1 "desperation" as they worsen — zero at their `*Start`
+ * mark, one at their `*Full` mark, linear between (see `desperationRamp`); the
+ * stamina rope instead ramps over TIME the pool sits empty (see
+ * `staminaDrinkChance`). This namespace owns the RAMP SHAPES (where help begins
  * and maxes); each rung owns its STRENGTH via `DifficultyDef.mercy`
  * (`MercyTuning`), and hard-and-up zero every strength so none of this reaches
  * them. Tune the two together: shape here, per-rung force on the ladder.
@@ -675,6 +685,16 @@ export const MERCY = {
    * `mercy.repairBonus`. The unbreakable sidearm never triggers it. */
   lowDurabilityStart: 0.5,
   lowDurabilityFull: 0.1,
+  /**
+   * How long (ms) the sprint pool must sit BONE-DRY (exactly empty, not merely
+   * low) before the stamina-drink drop reaches its full per-kill chance. The
+   * boost ramps linearly from zero the instant stamina hits empty up to the
+   * rung's `mercy.staminaDrinkChanceMax` at this mark, and resets the moment
+   * any stamina returns — so a stranded hero is thrown an energy drink the
+   * longer he stays winded, capped at 15% (easy) / 10% (medium). See
+   * `staminaDrinkChance` and `GameState.staminaEmptyMs`.
+   */
+  staminaEmptyDrinkRampMs: 6000,
 } as const;
 
 /**

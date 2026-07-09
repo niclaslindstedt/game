@@ -22,9 +22,9 @@ export {
 export { createGame } from "./game/create.ts";
 export { step } from "./game/step.ts";
 
-// The crowd-pressure bomb chance (a MERCY DROP query) — exposed so the app can
-// surface "the swarm is about to cough up a bomb" and tests can assert the ramp.
-export { crowdBombChance } from "./game/loot.ts";
+// MERCY DROP queries — exposed so the app can surface "the swarm is about to
+// cough up a bomb" / "a drink is coming" and tests can assert the ramps.
+export { crowdBombChance, staminaDrinkChance } from "./game/loot.ts";
 
 // Loadout carry-over between levels: snapshot a finished run's progress,
 // dress the next run in it (via createGame's `loadout` parameter), or derive
@@ -95,6 +95,7 @@ export {
   previewEquipped,
   repairEquippedWeapon,
   restoreArmor,
+  restoreStamina,
   rollEquipment,
   unequipToInventory,
   weaponCooldownFor,
@@ -239,6 +240,7 @@ export {
   LOOT,
   MEDKIT,
   MENACE,
+  MERCY,
   OBSTACLES,
   PLAYER,
   PROJECTILE,

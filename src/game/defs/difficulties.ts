@@ -43,6 +43,14 @@ export type MercyTuning = {
    * kits before it snaps.
    */
   repairBonus: number;
+  /**
+   * The per-kill chance a stranded hero is thrown an ENERGY DRINK once his
+   * sprint pool is BONE-DRY (exactly empty, not merely low). Zero the instant
+   * stamina hits empty, ramping to this cap over `MERCY.staminaEmptyDrinkRampMs`
+   * — 15% on easy, 10% on medium, zero from hard up (a winded hero on the hard
+   * rungs recovers by backing off, not by looting his way out).
+   */
+  staminaDrinkChanceMax: number;
 };
 
 export type DifficultyDef = {
@@ -226,6 +234,7 @@ export const DIFFICULTY_DEFS: Record<Difficulty, DifficultyDef> = {
       medkitBonus: 2,
       armorBonus: 0.5,
       repairBonus: 2,
+      staminaDrinkChanceMax: 0.15,
     },
     uniqueDropChance: 0,
     tierChanceBonus: {},
@@ -261,6 +270,7 @@ export const DIFFICULTY_DEFS: Record<Difficulty, DifficultyDef> = {
       medkitBonus: 1.3,
       armorBonus: 0.35,
       repairBonus: 1.3,
+      staminaDrinkChanceMax: 0.1,
     },
     uniqueDropChance: 0,
     tierChanceBonus: {},
@@ -295,6 +305,7 @@ export const DIFFICULTY_DEFS: Record<Difficulty, DifficultyDef> = {
       medkitBonus: 0,
       armorBonus: 0,
       repairBonus: 0,
+      staminaDrinkChanceMax: 0,
     },
     uniqueDropChance: 0.01,
     tierChanceBonus: { magic: 0.08, rare: 0.05 },
@@ -327,6 +338,7 @@ export const DIFFICULTY_DEFS: Record<Difficulty, DifficultyDef> = {
       medkitBonus: 0,
       armorBonus: 0,
       repairBonus: 0,
+      staminaDrinkChanceMax: 0,
     },
     uniqueDropChance: 0.02,
     tierChanceBonus: { magic: 0.14, rare: 0.08 },
@@ -361,6 +373,7 @@ export const DIFFICULTY_DEFS: Record<Difficulty, DifficultyDef> = {
       medkitBonus: 0,
       armorBonus: 0,
       repairBonus: 0,
+      staminaDrinkChanceMax: 0,
     },
     uniqueDropChance: 0.04,
     tierChanceBonus: { magic: 0.2, rare: 0.12 },

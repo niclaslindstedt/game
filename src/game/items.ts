@@ -432,6 +432,19 @@ export function restoreArmor(state: GameState): boolean {
   return true;
 }
 
+/**
+ * Refill the sprint pool to full — the energy-drink pickup. False when there
+ * is nothing to top up (already at max) so, like the repair kit on a pristine
+ * weapon, the drink stays on the ground for a hero who has actually run himself
+ * winded rather than being spent on a rested one.
+ */
+export function restoreStamina(state: GameState): boolean {
+  const player = state.player;
+  if (player.stamina >= player.maxStamina) return false;
+  player.stamina = player.maxStamina;
+  return true;
+}
+
 /** Max stamina from the base pool + the STAMINA stat (affixes folded in). */
 export function computeMaxStamina(state: GameState): number {
   return STAMINA.base + effectiveStat(state, "stamina") * STAMINA.maxPerPoint;

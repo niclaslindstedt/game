@@ -72,6 +72,31 @@ export function playPickupSound(synth: Synth, event: GameEvent): boolean {
           volume: 0.05,
           delayMs: 140,
         });
+      } else if (event.kind === "drink") {
+        // The energy drink: a fizzy hiss cracking open, then a quick two-note
+        // lift as the legs come back under the hero.
+        synth.noise({
+          durationMs: 90,
+          volume: 0.03,
+          filter: { type: "highpass", frequency: 3200 },
+        });
+        synth.tone({
+          type: "square",
+          from: 588,
+          to: 784,
+          durationMs: 120,
+          volume: 0.045,
+          delayMs: 60,
+          detuneCents: 6,
+        });
+        synth.tone({
+          type: "sine",
+          from: 1568,
+          durationMs: 120,
+          volume: 0.025,
+          delayMs: 150,
+          echo: 0.25,
+        });
       } else if (event.kind === "ability") {
         // A power surging on: a wide rising sweep into a hanging shimmer.
         synth.tone({
