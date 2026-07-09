@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
 import { useEffect, useRef, useState } from "react";
 
-import { CUTSCENE_DEFS, type Difficulty } from "@game/core";
+import { CUTSCENE_DEFS, type Difficulty, type GameState } from "@game/core";
 
 import { usePwaUpdate } from "@niclaslindstedt/oss-framework/pwa";
 
@@ -26,6 +26,20 @@ export function App() {
     // Cashed a LEVEL TOKEN: open the from-scratch stat respec once the intro
     // clears (see GameScreen / engine `beginRespec`).
     respec?: boolean;
+    // Resuming a run parked in memory: GameScreen adopts this live engine
+    // state instead of starting a fresh one (see `parked` below).
+    resume?: GameState;
+  } | null>(null);
+
+  // A run parked in memory: the player exited to the menu from the pause
+  // screen, and the frozen engine state is kept here so CONTINUE can drop
+  // them straight back in (e.g. after nudging the volume in SETTINGS). Held
+  // apart from `run` — which is null while the menu shows — and cleared the
+  // moment the run is resumed or a fresh one is started.
+  const [parked, setParked] = useState<{
+    difficulty: Difficulty;
+    levelId: string;
+    state: GameState;
   } | null>(null);
 
   // Register the deploy slot's service worker (§11.4.3) and track its update
@@ -89,7 +103,26 @@ export function App() {
         levelId={run.levelId}
         skipIntro={run.skipIntro}
         respec={run.respec}
-        onQuit={() => setRun(null)}
+        resume={run.resume}
+        // Exited to the menu from the pause screen: keep the frozen run in
+        // memory (still paused) so CONTINUE can resume it, and drop to the
+        // menu. The run tracks its own current level, so park the state's
+        // level id (which may have advanced past where the run began).
+        onExitToMenu={(state) => {
+          setParked({
+            difficulty: run.difficulty,
+            levelId: state.level.id,
+            state,
+          });
+          setRun(null);
+        }}
+        // Ended for good (victory/defeat splash MENU): abandon the run. Any
+        // parked run is already gone (parking nulls `run`), but clear it to
+        // be safe.
+        onQuit={() => {
+          setParked(null);
+          setRun(null);
+        }}
       />
     );
   }
@@ -97,13 +130,27 @@ export function App() {
   return (
     <>
       <TitleScreen
-        onStart={(difficulty, levelId, opts) =>
+        onStart={(difficulty, levelId, opts) => {
+          // Starting fresh abandons whatever was parked in memory.
+          setParked(null);
           setRun({
             difficulty,
             levelId,
             skipIntro: opts?.skipIntro,
             respec: opts?.respec,
-          })
+          });
+        }}
+        onResume={
+          parked
+            ? () => {
+                setRun({
+                  difficulty: parked.difficulty,
+                  levelId: parked.levelId,
+                  resume: parked.state,
+                });
+                setParked(null);
+              }
+            : undefined
         }
       />
 
