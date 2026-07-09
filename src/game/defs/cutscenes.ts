@@ -83,11 +83,13 @@ function buildPrelude(
         // the run yields better (DifficultyDef.startingWeapon).
         { kind: arms.prop, pos: { x: 178, y: 54 } },
         { kind: "door", pos: { x: 202, y: 80 } },
-        // The set they are watching, hard left; the couch faces it, the
-        // coffee table sits in the gap between them.
-        { kind: "tv", pos: { x: 30, y: 94 } },
-        { kind: "table", pos: { x: 74, y: 108 } },
-        { kind: "couch", pos: { x: 116, y: 96 } },
+        // The set they are watching, off to the left; the couch faces it, the
+        // coffee table sits in the gap between them. TV and couch are pulled
+        // toward each other so the pair reads as actually watching it, not
+        // marooned across the room.
+        { kind: "tv", pos: { x: 44, y: 94 } },
+        { kind: "table", pos: { x: 76, y: 108 } },
+        { kind: "couch", pos: { x: 104, y: 96 } },
         { kind: "lamp", pos: { x: 168, y: 90 } },
       ],
     },
@@ -96,12 +98,16 @@ function buildPrelude(
       // TV off to the left — the hero never gets up, which is the whole joke.
       // Their pos.y sits a hair below the couch's floor anchor so they paint
       // just in front of the backrest (seated on it, not hidden behind the
-      // cushions).
+      // cushions). pos.y drives paint order AND floor placement together, so
+      // it can't be raised to lift them onto the cushions without dropping
+      // them behind the couch — instead the seated sprites carry a tall
+      // transparent footer (sprite-data/prelude.mjs) that lifts the figure up
+      // onto the seat while the anchor stays at floor level.
       {
         id: "hero",
         name: "ME",
         sprite: "hero_couch",
-        at: { x: 108, y: 97 },
+        at: { x: 96, y: 97 },
         faceLeft: true,
       },
       {
@@ -110,7 +116,7 @@ function buildPrelude(
         // Seated beside him in her red jacket; a `pose` beat stands her up
         // (swapping to the walking `ada` sprite) when she heads for the store.
         sprite: "ada_couch",
-        at: { x: 124, y: 97 },
+        at: { x: 112, y: 97 },
         faceLeft: true,
       },
     ],
