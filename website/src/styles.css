@@ -558,7 +558,10 @@ body {
 }
 
 .avatar-img {
-  width: 2.25rem;
+  /* The dressed paper-doll (paper-doll.ts) is wider than the 16px body —
+     the held weapon overhangs to the right — so only the height is pinned
+     and the width follows the composed image's aspect. */
+  width: auto;
   height: 2.25rem;
 }
 
@@ -3602,7 +3605,8 @@ body {
 }
 
 .char-avatar-img {
-  width: 2.6rem;
+  /* Same paper-doll aspect rule as the HUD's .avatar-img. */
+  width: auto;
   height: 2.6rem;
 }
 

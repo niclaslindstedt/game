@@ -13,8 +13,10 @@
 // 8×8, icons 12×12, tiles 16×16, lander 32×32, flag 16×24.
 
 import { ENEMY_DEFS } from "../../../src/game/defs/enemies/index.ts";
+import { GEAR_DEFS } from "../../../src/game/defs/gear.ts";
 import { woundedFrames } from "../asset-tools/damage.mjs";
 import { buildPalette } from "../asset-tools/palette.mjs";
+import { wornFrames, wornRamp } from "../asset-tools/worn.mjs";
 import { CORE_PALETTE } from "./core.mjs";
 import earth from "./earth.mjs";
 import effects from "./effects.mjs";
@@ -134,5 +136,42 @@ for (const def of bySprite.values()) {
     woundedFrames(def.sprite, frames, style, stages),
   )) {
     register(family, name, grid);
+  }
+}
+
+// ---- Worn-gear overlays -----------------------------------------------------
+// On-body looks generated from the gear catalog (asset-tools/worn.mjs) —
+// never hand-drawn. Every hand-authored armor piece derives `worn_<id>`
+// overlays: the slot's silhouette template (head pieces pick a style via
+// `GearDef.worn`) recolored with a ramp off its inventory icon's dominant
+// color, so re-theming the icon re-themes the worn look on the next
+// `make assets`. Grade variants share their base's look (grades.ts keeps
+// the icon) and derive nothing — the renderer resolves them via `gradeBase`.
+
+const ARMOR_SLOTS = new Set(["head", "chest", "legs", "feet"]);
+
+const worn = {
+  name: "worn",
+  ground: "moon_0",
+  palette: buildPalette(CORE_PALETTE),
+  localPalette: buildPalette({}),
+  sprites: {},
+  animations: {},
+  // Overlays repaint clothing pixels of the hero body, not standalone
+  // silhouettes — the ground-contrast lint doesn't apply to any of them.
+  contrastExempt: [],
+};
+FAMILIES.push(worn);
+
+for (const def of Object.values(GEAR_DEFS)) {
+  if (def.grade || !ARMOR_SLOTS.has(def.slot)) continue;
+  const icon = SPRITES[def.icon];
+  if (!icon) throw new Error(`gear "${def.id}": no icon sprite "${def.icon}"`);
+  const ramp = wornRamp(icon, SPRITE_PALETTES[def.icon], def.wornChar);
+  for (const [suffix, grid] of Object.entries(wornFrames(def.slot, def.worn))) {
+    const name = `worn_${def.id}${suffix}`;
+    register(worn, name, grid);
+    SPRITE_PALETTES[name] = ramp; // per-piece colors, not a family scope
+    worn.contrastExempt.push(name);
   }
 }

@@ -72,7 +72,26 @@ export type GearDef = {
   gradeBase?: string;
   /** Inventory icon sprite. */
   icon: string;
+  /**
+   * HEAD pieces only: which on-body silhouette the paper-doll draws when the
+   * piece is worn — a brimmed `cap`, a full `helm` (the default), a mirrored
+   * eye-band `visor`, or a face-covering `mask`. The overlay sprite itself is
+   * generated from this style plus the icon's colors (`make assets`); other
+   * slots have one silhouette each, so only heads carry a style.
+   */
+  worn?: WornStyle;
+  /**
+   * The icon palette char the worn overlay's color ramp derives from.
+   * Defaults to the icon's dominant color, which is right for almost every
+   * piece — set this when the piece's signature color is an accent rather
+   * than its main material (the APOLLO VISOR is a white bubble whose
+   * identity is the gold mirror).
+   */
+  wornChar?: string;
 };
+
+/** Head-slot silhouette styles for the generated worn-gear overlays. */
+export type WornStyle = "cap" | "helm" | "visor" | "mask";
 
 export const GEAR_DEFS: Record<string, GearDef> = {
   // ---- The hero's own clothes: what he is wearing the night Ada vanishes.
@@ -131,6 +150,7 @@ export const GEAR_DEFS: Record<string, GearDef> = {
     armor: 2,
     durability: 60,
     icon: "icon_baseball_cap",
+    worn: "cap",
   },
   hard_hat: {
     id: "hard_hat",
@@ -142,6 +162,7 @@ export const GEAR_DEFS: Record<string, GearDef> = {
     armor: 5,
     durability: 70,
     icon: "icon_hard_hat",
+    worn: "cap",
   },
   welding_mask: {
     id: "welding_mask",
@@ -154,6 +175,7 @@ export const GEAR_DEFS: Record<string, GearDef> = {
     armor: 8,
     durability: 80,
     icon: "icon_welding_mask",
+    worn: "mask",
   },
   riot_helmet: {
     id: "riot_helmet",
@@ -251,6 +273,7 @@ export const GEAR_DEFS: Record<string, GearDef> = {
     armor: 8,
     durability: 80,
     icon: "icon_mission_cap",
+    worn: "cap",
   },
   apollo_visor: {
     id: "apollo_visor",
@@ -263,6 +286,8 @@ export const GEAR_DEFS: Record<string, GearDef> = {
     armor: 16,
     durability: 100,
     icon: "icon_apollo_visor",
+    worn: "visor",
+    wornChar: "y", // the gold mirror, not the white bubble around it
   },
   flight_jacket: {
     id: "flight_jacket",
@@ -341,6 +366,7 @@ export const GEAR_DEFS: Record<string, GearDef> = {
     armor: 16,
     durability: 100,
     icon: "icon_monocle",
+    worn: "visor",
   },
   neural_visor: {
     id: "neural_visor",
@@ -351,6 +377,7 @@ export const GEAR_DEFS: Record<string, GearDef> = {
     armor: 20,
     durability: 110,
     icon: "icon_neural_visor",
+    worn: "visor",
   },
   printed_helm: {
     id: "printed_helm",

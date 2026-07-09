@@ -14,7 +14,6 @@ import {
   LAST_STAND,
   magnetRadius,
   orbPositions,
-  playerAppearance,
   storyItemDef,
   WOUNDS,
   type GameState,
@@ -24,6 +23,7 @@ import {
 import { formatCompact } from "@ui/lib/format-number.ts";
 
 import { spriteByName, type GameAssets, type Sprites } from "./assets.ts";
+import { playerDollLayers } from "./paper-doll.ts";
 import { TIER_COLORS } from "./tiers.ts";
 
 /**
@@ -928,19 +928,16 @@ function drawPlayer(
 ): void {
   const player = state.player;
   const airborne = player.z > 0;
-  // The engine owns the player's costume: `playerAppearance` names the sprite
-  // family (plain-clothes "hero" until the EVA suit, "player" after), so a
-  // sequel's costume changes are data — no branch here.
+  // The paper-doll owns the costume: body sprite (from `playerAppearance`),
+  // worn-armor overlays, and the held weapon, as one ordered layer stack
+  // shared with the DOM avatars (paper-doll.ts).
   const { sprites } = assets;
-  const family = playerAppearance(state);
-  const walkA = spriteByName(sprites, `${family}_0`) ?? sprites.hero_0;
-  const walkB = spriteByName(sprites, `${family}_1`) ?? sprites.hero_1;
-  const jump = spriteByName(sprites, `${family}_jump`) ?? sprites.hero_jump;
-  const sprite = airborne
-    ? jump
+  const frame = airborne
+    ? "jump"
     : player.moving && Math.floor(timeMs / 160) % 2 === 1
-      ? walkB
-      : walkA;
+      ? "1"
+      : "0";
+  const layers = playerDollLayers(state, frame);
   // In the rift the ground isn't there — bob the grounded hero so he reads as
   // floating. The jump height (`player.z`) already lifts him in the air, so the
   // hover only applies while grounded to avoid fighting the arc.
@@ -965,13 +962,29 @@ function drawPlayer(
   // Blink during the post-hit flash so damage is legible on the character.
   if (player.hurtFlashMs > 0 && Math.floor(timeMs / 60) % 2 === 0) return;
 
+  // Facing is a whole-doll horizontal mirror, so every layer — body, worn
+  // overlays, held weapon — draws inside one flipped transform and the
+  // outfit stays glued to the body. A layer's own `flip` mirrors the sprite
+  // in place (left-pointing weapon icons) on top of whichever facing holds.
+  ctx.save();
   if (player.faceLeft) {
-    ctx.save();
     ctx.translate(x + TILE, y);
     ctx.scale(-1, 1);
-    ctx.drawImage(sprite, 0, 0);
-    ctx.restore();
   } else {
-    ctx.drawImage(sprite, x, y);
+    ctx.translate(x, y);
   }
+  for (const layer of layers) {
+    const image = spriteByName(sprites, layer.sprite);
+    if (!image) continue; // unknown def or stale save: skip, never crash
+    if (layer.flip) {
+      ctx.save();
+      ctx.translate(layer.dx + image.width, layer.dy);
+      ctx.scale(-1, 1);
+      ctx.drawImage(image, 0, 0);
+      ctx.restore();
+    } else {
+      ctx.drawImage(image, layer.dx, layer.dy);
+    }
+  }
+  ctx.restore();
 }

@@ -24,6 +24,44 @@ export async function sliceAtlas<K extends string>(
   return Object.fromEntries(entries) as Record<K, ImageBitmap>;
 }
 
+/** One sprite in a `composeDataUrl` stack, offset inside the canvas. */
+export type ComposeLayer = {
+  image: ImageBitmap;
+  dx?: number;
+  dy?: number;
+  /** Mirror this layer horizontally in place. */
+  flip?: boolean;
+};
+
+/**
+ * Compose sprite layers, in order, onto one canvas and return it as a data
+ * URL — for DOM `<img>` portraits assembled from several atlas sprites
+ * (a character wearing its equipment, an icon with an overlay badge).
+ */
+export function composeDataUrl(
+  layers: ComposeLayer[],
+  width: number,
+  height: number,
+): string {
+  const canvas = document.createElement("canvas");
+  canvas.width = width;
+  canvas.height = height;
+  const ctx = canvas.getContext("2d");
+  if (!ctx) return "";
+  for (const { image, dx = 0, dy = 0, flip } of layers) {
+    if (flip) {
+      ctx.save();
+      ctx.translate(dx + image.width, dy);
+      ctx.scale(-1, 1);
+      ctx.drawImage(image, 0, 0);
+      ctx.restore();
+    } else {
+      ctx.drawImage(image, dx, dy);
+    }
+  }
+  return canvas.toDataURL();
+}
+
 /**
  * Render a sliced sprite back to a standalone data URL, for the few places
  * that need a DOM `<img>` (inventory icons, dialogue portraits) rather than

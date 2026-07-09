@@ -24,6 +24,26 @@ the moon module and remap only the chars that differ; chars shared by name
 resolve to THIS family's palette automatically), so a red desert cost zero
 redraws for its terrain furniture.
 
+## Worn-gear overlays (derived from `GEAR_DEFS`)
+
+The hero's outfit is generated, never drawn per piece: every armor def
+derives `worn_<defId>` overlays (asset-tools/worn.mjs, applied in
+`sprite-data/index.mjs`) — a per-slot silhouette template on the shared
+16×16 hero body plan, recolored with a ramp off the piece's inventory
+icon's dominant color (`GearDef.wornChar` overrides the pick when the
+signature color is an accent, like the Apollo visor's gold mirror).
+Head pieces choose their silhouette via `GearDef.worn`
+(`cap`/`helm`/`visor`/`mask`); legs/feet ship `_0`/`_1` stride frames
+(jump reuses `_0` legs and hides the feet). The app-side stacking order
+and the held-weapon hand anchor live in `website/src/game/paper-doll.ts`
+— evaluate changes on a composited hero, not on the bare overlays (the
+family_worn sheet shows floating clothes; that is expected). A NEW ARMOR
+PIECE therefore needs no sprite work — def + icon, then `make assets`;
+`tests/content/worn_test.ts` fails until the overlays land in the atlas.
+Weapon icons double as the in-hand sprites: draw them grip lower-left /
+business end upper-right, or add left-pointing ones to
+`LEFT_POINTING_ICONS` in paper-doll.ts.
+
 ## Wound-overlay contrast (derived from `ENEMY_DEFS`)
 
 Battle-damage variants are derived from the enemy catalog, so the overlay
