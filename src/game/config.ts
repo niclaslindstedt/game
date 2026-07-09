@@ -649,6 +649,35 @@ export const LOOT = {
 } as const;
 
 /**
+ * MERCY DROPS — the gentle rungs (easy/medium) throw a drowning player a rope,
+ * and the fight eases without ever becoming un-losable. Three independent
+ * signals feed it: a PACKED FIELD (crowd of on-screen mobs), LOW HEALTH, and a
+ * near-BROKEN WEAPON. Each turns into a 0→1 "desperation" as it worsens — zero
+ * at its `*Start` mark, one at its `*Full` mark, linear between (see
+ * `desperationRamp`). This namespace owns the RAMP SHAPES (where help begins
+ * and maxes); each rung owns its STRENGTH via `DifficultyDef.mercy`
+ * (`MercyTuning`), and hard-and-up zero every strength so none of this reaches
+ * them. Tune the two together: shape here, per-rung force on the ladder.
+ */
+export const MERCY = {
+  /** On-screen minions before a packed field starts coughing up screen-nukes,
+   * and where that per-kill chance tops out — the bomb-in-a-swarm rescue scales
+   * linearly between them, capped by the rung's `mercy.crowdBombChanceMax`. */
+  crowdBombThreshold: 20,
+  crowdBombFull: 45,
+  /** HP fraction below which life-saving gear (medkits, plated suits) starts
+   * raining harder, and where the boost maxes — the lower the bar, the more of
+   * the rung's `mercy.medkitBonus` / `mercy.armorBonus` applies. */
+  lowHealthStart: 0.6,
+  lowHealthFull: 0.15,
+  /** Equipped-weapon durability fraction below which repair kits start dropping
+   * more often, and where that boost maxes — scaled by the rung's
+   * `mercy.repairBonus`. The unbreakable sidearm never triggers it. */
+  lowDurabilityStart: 0.5,
+  lowDurabilityFull: 0.1,
+} as const;
+
+/**
  * Solid obstacles. Levels scatter them at creation (see LevelDef.obstacles);
  * nothing walks through one, and only jumpable ones can be cleared mid-air.
  */

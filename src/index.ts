@@ -22,6 +22,10 @@ export {
 export { createGame } from "./game/create.ts";
 export { step } from "./game/step.ts";
 
+// The crowd-pressure bomb chance (a MERCY DROP query) — exposed so the app can
+// surface "the swarm is about to cough up a bomb" and tests can assert the ramp.
+export { crowdBombChance } from "./game/loot.ts";
+
 // Loadout carry-over between levels: snapshot a finished run's progress,
 // dress the next run in it (via createGame's `loadout` parameter), or derive
 // a realistic stand-in for dev jumps with nothing banked.
@@ -62,6 +66,9 @@ export {
   computeMaxHp,
   computeMaxStamina,
   dropChance,
+  desperationRamp,
+  lowHealthDesperation,
+  lowDurabilityDesperation,
   discardFromInventory,
   discardEquipped,
   effectiveStat,

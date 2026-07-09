@@ -5,14 +5,24 @@
 // and elites pay their def's guaranteed drops — equipment, story items, the
 // lot. Extracted from step.ts so the simulation step stays readable.
 
-import { clamp, type Vec2 } from "@game/lib/vec.ts";
-import { ACCURACY, LEVELING, LOOT, MENACE, STATS } from "./config.ts";
+import { clamp, distance, type Vec2 } from "@game/lib/vec.ts";
+import {
+  ACCURACY,
+  ENEMY_AI,
+  LEVELING,
+  LOOT,
+  MENACE,
+  MERCY,
+  STATS,
+} from "./config.ts";
 import { difficultyDef, scaledMobCount } from "./defs/difficulties.ts";
 import { enemyDef, type EnemyDef } from "./defs/enemies/index.ts";
 import { levelDef } from "./defs/levels/index.ts";
 import {
   dropChance,
   enemyDodgeChance,
+  lowDurabilityDesperation,
+  lowHealthDesperation,
   playerCritChance,
   playerMissChance,
   rollEquipment,
@@ -37,6 +47,36 @@ export function unspawnedMinions(state: GameState): number {
       ),
     0,
   );
+}
+
+/** Minions close enough to crowd the screen — the same `ENEMY_AI.nearRadius`
+ * the spawner uses for "there's a pack on screen", so the crowd-bomb rescue
+ * reads the field the player actually sees, not parked spawns across the map. */
+function onScreenMinions(state: GameState): number {
+  let count = 0;
+  for (const enemy of state.enemies) {
+    if (enemyDef(enemy.defId).role !== "minion") continue;
+    if (distance(enemy.pos, state.player.pos) <= ENEMY_AI.nearRadius) count++;
+  }
+  return count;
+}
+
+/**
+ * The per-kill chance a PACKED FIELD coughs up a screen-nuke — the
+ * bomb-in-a-swarm bailout (a MERCY DROP). Zero until the on-screen crowd
+ * passes `MERCY.crowdBombThreshold`, then ramps linearly to the difficulty's
+ * `mercy.crowdBombChanceMax` at `MERCY.crowdBombFull`. Easy tops out at 5%,
+ * medium 3%; hard and up cap it at zero, so this never fires there. Tune the
+ * ramp shape in the `MERCY` config and the per-rung strength on the ladder.
+ */
+export function crowdBombChance(state: GameState): number {
+  const max = difficultyDef(state.difficulty).mercy.crowdBombChanceMax;
+  if (max <= 0) return 0;
+  const { crowdBombThreshold: lo, crowdBombFull: hi } = MERCY;
+  if (hi <= lo) return 0;
+  const crowd = onScreenMinions(state);
+  if (crowd <= lo) return 0;
+  return max * Math.min(1, (crowd - lo) / (hi - lo));
 }
 
 /**
@@ -255,6 +295,24 @@ function dropMinionLoot(
   evo = 0,
   mlvl = 1,
 ): void {
+  // The crowd-pressure bailout: on the gentle rungs a packed field has a
+  // rising chance, per kill, to drop a screen-nuke — the way out of a swarm.
+  // Rolled ahead of the normal drop gate so the rescue isn't buried under it,
+  // and it stands in for this kill's drop (a bomb instead of the usual rain).
+  // `crowdBombChance` is zero unless the field is genuinely packed, so no roll
+  // is even drawn on a normal kill (the RNG stream is untouched).
+  const bombChance = crowdBombChance(state);
+  if (bombChance > 0 && state.rng() < bombChance) {
+    state.items.push({
+      id: state.nextId++,
+      kind: "ability",
+      pos: { ...at },
+      defId: "screen_nuke",
+    });
+    state.events.push({ type: "itemDropped", pos: { ...at } });
+    return;
+  }
+
   const remaining =
     state.enemies.filter((e) => enemyDef(e.defId).role === "minion").length +
     unspawnedMinions(state);
@@ -299,7 +357,18 @@ function dropMinionLoot(
   // few percent per rung (the equipment/repair slices stay as authored).
   const abilityShare =
     abilities.length > 0 ? LOOT.abilityShare * diff.powerupDropMult : 0;
-  const medkitShare = LOOT.medkitShare * diff.medkitDropMult;
+  // MERCY DROPS (gentle rungs only — the bonuses are zero from hard up): as the
+  // hero's health drains, medkits and plated armor rain harder; as his weapon
+  // nears breaking, repair kits do. Each boost scales the slice by
+  // `1 + desperation * strength`, so it's a smooth lean-in, not a cliff. Full
+  // health / full durability leaves the slices exactly as authored.
+  const medkitShare =
+    LOOT.medkitShare *
+    diff.medkitDropMult *
+    (1 + lowHealthDesperation(state) * diff.mercy.medkitBonus);
+  const repairShare =
+    LOOT.repairShare *
+    (1 + lowDurabilityDesperation(state) * diff.mercy.repairBonus);
   // The rare slice first, so tuning the ladder below never dilutes it.
   const nuked = !forced && state.rng() < LOOT.nukeShare;
   // The unique slice: the harder rungs' shot at one-of-a-kind gear, drawn
@@ -350,7 +419,7 @@ function dropMinionLoot(
     state.items.push({ id: state.nextId++, kind: "medkit", pos });
   } else if (
     roll <
-    LOOT.equipmentShare + abilityShare + medkitShare + LOOT.repairShare
+    LOOT.equipmentShare + abilityShare + medkitShare + repairShare
   ) {
     state.items.push({ id: state.nextId++, kind: "repair", pos });
   } else {
