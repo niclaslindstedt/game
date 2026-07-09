@@ -422,8 +422,8 @@ export function TitleScreen({
           aria: "settings-hardcore",
           blurb:
             s.hardcore === "on"
-              ? "A NEW DIFFICULTY BURNS TOKENS AND UNIQUE FINDS"
-              : "TOKENS AND UNIQUE FINDS ARE YOURS FOREVER",
+              ? "DEATH BURNS UNIQUE FINDS, TOKENS AND UNLOCKS"
+              : "DEATH LOSES NOTHING - BEATEN FINDS ARE FOREVER",
           action: () => {
             playUiSound(synth, "confirm");
             updateSettings({ hardcore: s.hardcore === "on" ? "off" : "on" });

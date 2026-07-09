@@ -100,9 +100,10 @@ import {
 } from "./PickupFeed.tsx";
 import { bestTime, recordRun } from "./highscores.ts";
 import {
+  bankKeepsakesOnVictory,
   markLevelCompleted,
   nextLevelId,
-  noteDifficultyPicked,
+  noteHardcoreDeath,
   restoreKeepsakes,
   saveLoadout,
   startingLoadout,
@@ -466,10 +467,6 @@ export function GameScreen({
     const levelParam = params.get("level");
     const devLevel = levelParam && levelParam in LEVELS ? levelParam : null;
     const runLevelId = devLevel ?? levelId;
-    // Hardcore accounting first: in hardcore mode, picking a NEW difficulty
-    // burns the unspent tokens, the keepsake stash, and every banked
-    // unique/legendary — so the loadout read below is already post-burn.
-    noteDifficultyPicked(difficulty);
     // The carry-over: the loadout banked when the previous level was cleared
     // (or a derived stand-in for dev jumps with nothing banked). The hero
     // arrives with the level, stats and items he finished the last level with.
@@ -482,8 +479,9 @@ export function GameScreen({
       // advances along the campaign (a fresh levelId) it no longer applies.
       respec && levelId === initialLevelId,
     );
-    // Off hardcore, the forever-hoard follows the hero into every run: any
-    // stashed unique/legendary he isn't already carrying lands in the bag.
+    // The forever-hoard follows the hero into every run: any stashed
+    // unique/legendary he isn't already carrying lands in the bag. (In
+    // hardcore the stash exists too — right up until a death burns it.)
     restoreKeepsakes(state);
     // The prelude always plays — every run opens on its cutscene (the player
     // can dismiss it with the SKIP button or Esc). It is never auto-skipped on
@@ -1008,10 +1006,20 @@ export function GameScreen({
           // Clearing a level records it (per difficulty) so the campaign
           // unlocks the next one and the menu marks this one replayable —
           // and banks the hero's snapshot (level, stats, items) so the next
-          // level starts with everything he finished this one with.
+          // level starts with everything he finished this one with. Beating
+          // the difficulty's LAST level also banks any unique/legendary
+          // finds into the forever-stash.
           if (event.type === "victory") {
             markLevelCompleted(state.level.id, difficulty);
-            saveLoadout(state.level.id, difficulty, extractLoadout(state));
+            const loadout = extractLoadout(state);
+            saveLoadout(state.level.id, difficulty, loadout);
+            bankKeepsakesOnVictory(state.level.id, loadout);
+          }
+          // A hardcore death takes the hoard and the shortcuts with it —
+          // keepsakes, banked unique/legendary pieces, tokens and their
+          // unlocks all burn (a softcore death loses nothing).
+          if (event.type === "defeat") {
+            noteHardcoreDeath();
           }
         }
         if (effects.length > 0) {

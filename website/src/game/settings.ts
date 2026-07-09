@@ -32,12 +32,13 @@ export type KeyboardMove = "on" | "off";
 export type Vibration = "on" | "off";
 
 /**
- * HARDCORE mode: `on` means switching to a NEW difficulty costs you your
- * hoard — unspent LEVEL TOKENS are discarded and every unique/legendary item
- * you've found is removed (see progress.ts `noteDifficultyPicked`). `off`
- * (the default) is the keeper's game: tokens stick across difficulties and
- * unique/legendary finds are yours forever (the keepsake stash follows you
- * into every run).
+ * HARDCORE mode: `on` means DEATH costs you your hoard — the keepsake stash
+ * burns, every banked loadout loses its unique/legendary pieces, and the
+ * LEVEL TOKENS (unspent ones and the respec unlocks bought with them) are
+ * revoked, so the ladder is climbed again from the rungs still cleared (see
+ * progress.ts `noteHardcoreDeath`). `off` (the default) is softcore: death
+ * loses nothing — tokens stick, and unique/legendary finds carried through a
+ * beaten difficulty are yours forever.
  */
 export type Hardcore = "on" | "off";
 

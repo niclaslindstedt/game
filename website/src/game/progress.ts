@@ -173,16 +173,12 @@ export function spendTokenFor(levelId: string, target: Difficulty): boolean {
 const loadoutKey = (levelId: string, difficulty: Difficulty): string =>
   storageKey(`loadout:${difficulty}:${levelId}`);
 
-/** Bank the hero's end-of-level snapshot for the level just cleared. Any
- * unique/legendary pieces in it also land in the KEEPSAKE stash — the
- * forever-hoard that follows the player into every run (unless hardcore
- * mode later burns it — see `noteDifficultyPicked`). */
+/** Bank the hero's end-of-level snapshot for the level just cleared. */
 export function saveLoadout(
   levelId: string,
   difficulty: Difficulty,
   loadout: Loadout,
 ): void {
-  bankKeepsakes(loadout);
   try {
     window.localStorage.setItem(
       loadoutKey(levelId, difficulty),
@@ -194,15 +190,16 @@ export function saveLoadout(
 }
 
 // ---- Keepsakes (unique/legendary permanence) -----------------------------
-// Unique and legendary finds are once-per-game treasures, so they outlive the
-// run economy: every one that reaches a banked loadout is copied into a
-// device-wide stash, and every new run gets the stash poured back into its
-// bag (`restoreKeepsakes`). HARDCORE mode (settings) is the opt-out: there
-// the hoard — and the unspent LEVEL TOKENS — burn the moment a NEW difficulty
-// is picked (`noteDifficultyPicked`), so each ladder rung is its own game.
+// Unique and legendary finds are once-per-game treasures, so they can outlive
+// the run economy: BEAT a difficulty with them in your possession and they
+// are stashed forever (`bankKeepsakesOnVictory`), poured back into the bag of
+// every later run (`restoreKeepsakes`). HARDCORE mode (settings) puts them
+// back on the table: DYING burns the stash, strips every banked loadout of
+// its unique/legendary pieces, and revokes the LEVEL TOKENS and their
+// unlocks (`noteHardcoreDeath`) — back to easy to earn it all again.
+// Softcore death loses nothing.
 
 const KEEPSAKES_KEY = storageKey("keepsakes");
-const LAST_DIFFICULTY_KEY = storageKey("last-difficulty");
 
 function isKeepsake(piece: Equipment): boolean {
   return piece.tier === "unique" || piece.tier === "legendary";
@@ -238,6 +235,21 @@ function saveKeepsakes(pieces: Equipment[]): void {
   }
 }
 
+/**
+ * The forever-bank, called on every level victory: once the cleared level is
+ * the difficulty's LAST — the difficulty is beaten — every unique/legendary
+ * the hero holds at that moment joins the permanent stash. Mid-campaign
+ * victories don't bank (the pieces still carry level-to-level in the banked
+ * loadout; hardcore death can still take them).
+ */
+export function bankKeepsakesOnVictory(
+  levelId: string,
+  loadout: Loadout,
+): void {
+  if (levelId !== LEVEL_ORDER[LEVEL_ORDER.length - 1]) return;
+  bankKeepsakes(loadout);
+}
+
 /** Copy every unique/legendary piece the loadout carries into the stash. */
 function bankKeepsakes(loadout: Loadout): void {
   const carried = [
@@ -261,11 +273,10 @@ function bankKeepsakes(loadout: Loadout): void {
 /**
  * Pour the keepsake stash back into a freshly created run: every stashed
  * unique/legendary the hero isn't already carrying lands in the bag (the bag
- * grows a cell when full — treasures are never dropped at the door). A no-op
- * in hardcore mode, where nothing is forever.
+ * grows a cell when full — treasures are never dropped at the door). Applies
+ * in hardcore too: the stash exists until a death burns it.
  */
 export function restoreKeepsakes(state: GameState): void {
-  if (getSettings().hardcore === "on") return;
   const stash = loadKeepsakes();
   if (stash.length === 0) return;
   const { weapon, suit, charm } = state.player.equipment;
@@ -314,34 +325,20 @@ function stripBankedKeepsakes(): void {
 }
 
 /**
- * Called as every run starts, with the difficulty it starts on. In HARDCORE
- * mode, picking a difficulty DIFFERENT from the last one played is the reset:
- * unspent LEVEL TOKENS are discarded, the keepsake stash burns, and every
- * banked loadout is stripped of its unique/legendary pieces. Off hardcore
- * this only records the rung (so flipping hardcore on later doesn't
- * immediately torch a hoard over an old difficulty change).
+ * The hardcore reckoning, called when the hero DIES. Off hardcore it is a
+ * no-op — softcore death loses nothing. On hardcore, death takes everything
+ * that made the shortcut possible: the keepsake stash burns, every banked
+ * loadout is stripped of its unique/legendary pieces, and the LEVEL TOKENS —
+ * unspent ones and the unlocks already bought with them — are revoked. The
+ * respec jump is gone with them: the ladder is climbed again from the rungs
+ * still cleared.
  */
-export function noteDifficultyPicked(difficulty: Difficulty): void {
-  let last: string | null;
-  try {
-    last = window.localStorage.getItem(LAST_DIFFICULTY_KEY);
-  } catch {
-    return; // no storage, nothing tracked — nothing to burn either
-  }
-  if (
-    getSettings().hardcore === "on" &&
-    last !== null &&
-    last !== difficulty
-  ) {
-    tokens.clear();
-    saveKeepsakes([]);
-    stripBankedKeepsakes();
-  }
-  try {
-    window.localStorage.setItem(LAST_DIFFICULTY_KEY, difficulty);
-  } catch {
-    // Storage unavailable — the rung just isn't remembered.
-  }
+export function noteHardcoreDeath(): void {
+  if (getSettings().hardcore !== "on") return;
+  saveKeepsakes([]);
+  stripBankedKeepsakes();
+  tokens.clear();
+  tokenUnlocks.clear();
 }
 
 /**
