@@ -22,6 +22,7 @@ import {
   type Difficulty,
 } from "@game/core";
 
+import { formatCompact } from "@ui/lib/format-number.ts";
 import { PixelText } from "@ui/lib/PixelText.tsx";
 
 import { IDENTITY } from "../identity.ts";
@@ -918,10 +919,10 @@ export function TitleScreen({
                   [foes, `${detail.stats.kills}/${detail.stats.totalEnemies}`],
                   ["KILLS / MIN", formatKpm(kpm)],
                   ["LEVEL REACHED", String(detail.level)],
-                  ["XP GAINED", String(detail.stats.xpGained)],
-                  ["SHOTS FIRED", String(detail.stats.shotsFired)],
-                  ["DAMAGE DEALT", String(detail.stats.damageDealt)],
-                  ["DAMAGE TAKEN", String(detail.stats.damageTaken)],
+                  ["XP GAINED", formatCompact(detail.stats.xpGained)],
+                  ["SHOTS FIRED", formatCompact(detail.stats.shotsFired)],
+                  ["DAMAGE DEALT", formatCompact(detail.stats.damageDealt)],
+                  ["DAMAGE TAKEN", formatCompact(detail.stats.damageTaken)],
                   ["ITEMS", String(detail.stats.itemsCollected)],
                 ];
                 return (

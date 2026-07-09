@@ -67,6 +67,7 @@ import {
   type GameStats,
 } from "@game/core";
 
+import { formatCompact } from "@ui/lib/format-number.ts";
 import { startGameLoop } from "@ui/lib/game-loop.ts";
 import { PixelText } from "@ui/lib/PixelText.tsx";
 import type { PixelFont } from "@ui/lib/pixel-font.ts";
@@ -1964,17 +1965,17 @@ export function GameScreen({
             />
             <PixelText
               font={font}
-              text={`XP ${hud.stats.xpGained}`}
+              text={`XP ${formatCompact(hud.stats.xpGained)}`}
               scale={3}
             />
             <PixelText
               font={font}
-              text={`DAMAGE DEALT ${hud.stats.damageDealt}`}
+              text={`DAMAGE DEALT ${formatCompact(hud.stats.damageDealt)}`}
               scale={3}
             />
             <PixelText
               font={font}
-              text={`DAMAGE TAKEN ${hud.stats.damageTaken}`}
+              text={`DAMAGE TAKEN ${formatCompact(hud.stats.damageTaken)}`}
               scale={3}
             />
             <PixelText
