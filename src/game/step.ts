@@ -80,6 +80,7 @@ import {
   wearEquippedWeapon,
 } from "./items.ts";
 import { grantXp, hitEnemy, unspawnedMinions } from "./loot.ts";
+import { addMapMarker, revealAround } from "./map.ts";
 import {
   blockedByObstacle,
   insideObstacle,
@@ -148,6 +149,8 @@ export function step(state: GameState, input: GameInput, dtMs: number): void {
   const killsBefore = state.stats.kills;
 
   stepPlayer(state, input, dt, dtMs);
+  // Walking lifts the fog of war around wherever the hero now stands.
+  revealAround(state, state.player.pos);
   stepUseItem(state, input);
   stepWeapon(state, input, dtMs);
   stepAbilities(state, dt, dtMs);
@@ -1254,7 +1257,7 @@ function stepItems(state: GameState): void {
     // Story items are plot, not gear: banked in state.storyItems (never
     // the bag) and their lore plays as a dialogue on the spot.
     if (item.kind === "story") {
-      collectStoryItem(state, item.defId);
+      collectStoryItem(state, item.defId, item.pos);
       return false;
     }
 
@@ -1275,6 +1278,11 @@ function stepItems(state: GameState): void {
     // Equipment better than what's worn is equipped on the spot; the old
     // piece heads for the bag, or the ground when the bag is full. Lesser
     // finds go into the bag, staying grounded when it's full.
+    // Either way, a one-of-a-kind find (unique/legendary) pins the level map
+    // — but only once actually picked up, so the marker below waits for the
+    // branch to succeed.
+    const rareFind =
+      item.equipment.tier === "unique" || item.equipment.tier === "legendary";
     if (isBetterEquipment(state, item.equipment)) {
       const slot = item.equipment.slot;
       const previous =
@@ -1293,6 +1301,7 @@ function stepItems(state: GameState): void {
       // grow it to match (both mirror `equipFromInventory`).
       if (slot === "suit") refreshArmor(state);
       syncInventoryCapacity(state);
+      if (rareFind) addMapMarker(state, "loot", item.pos, item.equipment.defId);
       if (previous && !addToInventory(state, previous)) {
         displaced.push({
           id: state.nextId++,
@@ -1326,6 +1335,7 @@ function stepItems(state: GameState): void {
       }
       return true;
     }
+    if (rareFind) addMapMarker(state, "loot", item.pos, item.equipment.defId);
     state.stats.itemsCollected++;
     state.events.push({
       type: "itemCollected",

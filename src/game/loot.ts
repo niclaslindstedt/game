@@ -27,6 +27,7 @@ import {
   playerMissChance,
   rollEquipment,
 } from "./items.ts";
+import { addMapMarker } from "./map.ts";
 import { bankOverkill, maybePowerScale, mobLevelTierBonus } from "./menace.ts";
 import { maybeFirstKillThought, startDeathWords } from "./story.ts";
 import type { Enemy, GameState, Tier, WeaponClass } from "./types.ts";
@@ -201,6 +202,13 @@ export function hitEnemy(
       pos: { ...enemy.pos },
       defId: enemy.defId,
     });
+    // The fight was won where it fled: the map remembers it like a kill.
+    addMapMarker(
+      state,
+      def.role === "boss" ? "boss" : "elite",
+      enemy.pos,
+      enemy.defId,
+    );
     grantXp(state, def.xp ?? Math.round(enemy.maxHp * LEVELING.xpPerHp));
     if (def.loot) dropGuaranteedLoot(state, def, enemy.pos, enemy.mlvl);
     startDeathWords(state, enemy.defId);
@@ -215,6 +223,11 @@ export function hitEnemy(
     damage,
     crit,
   });
+
+  // A fallen elite or boss pins the level map where it went down.
+  if (def.role !== "minion") {
+    addMapMarker(state, def.role, enemy.pos, enemy.defId);
+  }
 
   // An overpowered kill's answer: the OVERKILL — this blow's damage beyond the
   // mob's FULL health (damage − maxHp) — jolts the menace meter and lures the

@@ -194,6 +194,16 @@ run against synthetic fixtures with no shipped content (see
   renderer), story-item collection, and `stepDoors` (a carried key
   removes its door's obstacle chain). Dialogue freezes the run in the
   `dialogue` phase exactly like the level-up chooser.
+- **`src/game/map.ts`** — the level map and its fog of war: run-scoped
+  exploration as a coarse byte grid on the state (`state.explored`, one cell
+  per config `MAP.cellSize` world px), stamped around the hero every step
+  (`revealAround`, called from `step()`; the spawn is pre-revealed at
+  creation) and queried with `isExplored`. Memorable events pin
+  `state.mapMarkers` via `addMapMarker` — story-item finds (story.ts),
+  unique/legendary pickups (the pickup switch in step.ts), and elite/boss
+  victories including fled uniques (loot.ts). `openMap`/`closeMap` toggle the
+  `map` pause phase (frozen sim, level-up priority on close) for the HUD's
+  MAP button / the M key.
 - **`src/game/items.ts`** — equipment instances and the player-driven
   mutations the UI calls into: loot rolls, `equipFromInventory` /
   `unequipToInventory` / `moveInventoryItem`, `allocateStat` (plus the
@@ -256,7 +266,11 @@ deploy-shaped:
   CONFIRM gate; shares the stat catalog with the level-up chooser via
   `statChoices.tsx`),
   `InventoryPanel.tsx` (the Diablo-style bag: drag-to-equip slots,
-  tier-colored borders, item card, character sheet), `render.ts` (camera +
+  tier-colored borders, item card, character sheet), `MapOverlay.tsx` (the
+  fog-of-war level map shown in the `map` phase — one chunky pixel of
+  terrain per explored fog cell, dark where the hero hasn't been, with a
+  legend of event pins: story finds, rare loot, elite/boss kills, and the
+  hero's own position), `render.ts` (camera +
   sprite drawing onto a world-unit canvas upscaled with `image-rendering:
 pixelated`; enemies swap to generated wounded sprite variants as hp falls
   per `config.WOUNDS`, and a boss in its last stand flickers),

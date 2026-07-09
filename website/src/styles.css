@@ -255,6 +255,30 @@ body {
   transform: translateY(1px);
 }
 
+/* The MAP button: the upper HUD's right-hand unit — opens the fog-of-war
+   level map (M on desktop) and pauses the run under it. Framed like the
+   clock unit so the top row reads as one family. */
+.hud-map-btn {
+  grid-column: 3;
+  justify-self: end;
+  display: flex;
+  align-items: center;
+  padding: 0.45rem 0.6rem;
+  background: rgba(11, 13, 16, 0.55);
+  border: 2px solid #1a1c2c;
+  border-radius: 6px;
+  font: inherit;
+  color: inherit;
+  appearance: none;
+  -webkit-tap-highlight-color: transparent;
+  pointer-events: auto;
+  cursor: pointer;
+}
+
+.hud-map-btn:active {
+  transform: translateY(1px);
+}
+
 /* The kill tally jolts on every frag (see KillCounter). The throw distance,
    tilt, and duration are fed in as custom properties per shake so a burst of
    kills reads harder than a lone one; defaults keep a stray render calm. */
@@ -341,6 +365,12 @@ body {
     justify-self: end;
     align-items: flex-end;
     text-align: right;
+  }
+
+  /* Portrait hands the top-right cell to the clock unit; the MAP button
+     drops to the row below it, still hugging the right edge. */
+  .hud-map-btn {
+    grid-row: 2;
   }
 
   .hud-rampage {
@@ -2179,6 +2209,56 @@ body {
    pointer cursor (the box's own buttons keep their default). */
 .pause-overlay {
   cursor: pointer;
+}
+
+/* The level map (see MapOverlay.tsx): the backdrop is a click-to-close
+   target like the pause screen; the card itself holds the fog-of-war canvas
+   between the level name and the marker legend. */
+.map-overlay {
+  cursor: pointer;
+}
+
+.map-box {
+  gap: 0.6rem;
+  padding: 0.75rem 1rem 1rem;
+  width: fit-content;
+  max-width: 96vw;
+}
+
+/* One canvas backing px per map "pixel", upscaled crisp. The component sets
+   the display width/height itself (level shape × what fits the viewport), so
+   the card hugs the canvas instead of the canvas overflowing the card. */
+.map-canvas {
+  image-rendering: pixelated;
+  border: 2px solid #2a3444;
+  border-radius: 3px;
+  background: #0b0d10;
+}
+
+.map-legend {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 0.4rem 0.9rem;
+}
+
+.map-legend-item {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+}
+
+/* The legend labels must center on their swatches — the blanket
+   `.game-overlay canvas` rule would park them at flex-start. */
+.map-legend-item canvas {
+  align-self: center;
+}
+
+.map-legend-swatch {
+  width: 0.55rem;
+  height: 0.55rem;
+  border: 1px solid #0b0d10;
+  box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.12);
 }
 
 /* The pause card — same FF6 window skin as the other modals. */

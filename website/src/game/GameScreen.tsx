@@ -30,6 +30,7 @@ import {
   botAct,
   botAllocate,
   closeInventory,
+  closeMap,
   createBot,
   createGame,
   debug,
@@ -45,6 +46,7 @@ import {
   MENACE,
   menaceStage,
   openInventory,
+  openMap,
   pauseGame,
   PLAYER,
   playerAppearance,
@@ -87,6 +89,7 @@ import { IntroOverlay, type IntroReveal } from "./IntroOverlay.tsx";
 import { TitleCard } from "./TitleCard.tsx";
 import { InventoryPanel } from "./InventoryPanel.tsx";
 import { LevelUpOverlay } from "./LevelUpOverlay.tsx";
+import { MapOverlay } from "./MapOverlay.tsx";
 import { RespecOverlay } from "./RespecOverlay.tsx";
 import { PauseOverlay } from "./PauseOverlay.tsx";
 import {
@@ -746,6 +749,23 @@ export function GameScreen({
         bumpUi();
       } else if (event.key === "Escape" && state.phase === "inventory") {
         closeInventory(state);
+        playUiSound(synth, "back");
+        bumpUi();
+      } else if (
+        (event.key === "m" || event.key === "M") &&
+        (state.phase === "playing" || state.phase === "map")
+      ) {
+        // M toggles the fog-of-war level map (same freeze as the bag).
+        if (state.phase === "playing") {
+          openMap(state);
+          playUiSound(synth, "confirm");
+        } else {
+          closeMap(state);
+          playUiSound(synth, "back");
+        }
+        bumpUi();
+      } else if (event.key === "Escape" && state.phase === "map") {
+        closeMap(state);
         playUiSound(synth, "back");
         bumpUi();
       } else if (
@@ -1663,6 +1683,24 @@ export function GameScreen({
                 </div>
               )}
             </button>
+
+            {/* Right: the MAP button — opens the fog-of-war level map (M on
+                desktop) and pauses the run under it, like the bag. */}
+            <button
+              type="button"
+              className="hud-map-btn"
+              aria-label="open-map"
+              onClick={() => {
+                if (state?.phase === "playing") {
+                  setWeaponMenuOpen(false);
+                  openMap(state);
+                  playUiSound(synth, "confirm");
+                  bumpUi();
+                }
+              }}
+            >
+              <PixelText font={font} text="MAP" scale={2} color="#9fc4ff" />
+            </button>
           </div>
         </div>
       )}
@@ -1919,6 +1957,19 @@ export function GameScreen({
           onChange={bumpUi}
           onClose={() => {
             closeInventory(state);
+            bumpUi();
+          }}
+        />
+      )}
+
+      {state && hud?.phase === "map" && (
+        <MapOverlay
+          state={state}
+          assets={assets}
+          font={font}
+          onClose={() => {
+            closeMap(state);
+            playUiSound(synth, "back");
             bumpUi();
           }}
         />

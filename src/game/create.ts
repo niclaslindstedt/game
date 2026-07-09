@@ -34,6 +34,7 @@ import {
   rollEquipment,
   syncInventoryCapacity,
 } from "./items.ts";
+import { createExplored, revealAround } from "./map.ts";
 import { evolutionHpMult, mobHpScaleFor, mobLevelFor } from "./menace.ts";
 import { boundingRadius, rockHalf } from "./obstacles.ts";
 import type {
@@ -215,6 +216,8 @@ export function createGame(
     storyItems: [],
     thoughtsSeen: [],
     doors,
+    explored: createExplored(def),
+    mapMarkers: [],
     player: {
       pos: { ...playerSpawn },
       z: 0,
@@ -318,6 +321,9 @@ export function createGame(
     nextId,
     rng,
   };
+
+  // The hero has seen where he lands: the map opens with the spawn uncovered.
+  revealAround(state, playerSpawn);
 
   // The difficulty's head start: pre-allocated stat points (the gentler rungs
   // open with a few level-ups' worth of training banked). Applied before any
