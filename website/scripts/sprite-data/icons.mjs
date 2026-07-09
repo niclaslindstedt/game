@@ -121,6 +121,9 @@ const PALETTE = {
   Z: [252, 168, 226],
   u: [232, 150, 172], // intellect: brain pink
   U: [196, 104, 132], // intellect: brain fold shadow
+  // Aged parchment for the HUD's treasure map: sun-bleached tan + shadow.
+  t: [222, 192, 138],
+  D: [178, 142, 92],
 };
 
 const SPRITES = {
@@ -1162,6 +1165,27 @@ const SPRITES = {
     ".OOOOOOOOO..",
     "............",
     "............",
+  ],
+  // ---- HUD widgets -----------------------------------------------------------
+  // The TREASURE MAP: the HUD's map button, drawn like a pirate chart —
+  // torn parchment (20×14, wider than the inventory icons so it fills the
+  // clock-width button), a bold red X, a dashed ink trail walking up from
+  // the corner, a compass cross top-left, and a blue wave under the X.
+  icon_treasure_map: [
+    "....................",
+    "..OOOOOOOOOOOOOOOO..",
+    ".OttttttttttttttttO.",
+    ".OtkttttttttrtttrtO.",
+    "OtkkkttttttttrtrttO.",
+    "OttkttttttttttrtttO.",
+    ".OtttttttttttrtrtDO.",
+    ".OttttttttttrtttrDO.",
+    "OttttttttkkttttttDO.",
+    "OtttttkktttttjjjtDO.",
+    ".OtkktttttttttttDDO.",
+    ".OtttttttttttDDDDO..",
+    "..OOOOOOOOOOOOOOO...",
+    "....................",
   ],
   // The TRIBUTE SCHEDULE: a Gantt chart chiseled in stone, one milestone lit.
   icon_tablet: [

@@ -194,11 +194,11 @@ body {
   line-height: 0;
 }
 
-/* Three tracks so the center clock unit stays centered even though the
-   right slot is now empty (the avatar moved into the left unit). */
+/* Status unit left, clock stack (clock + MAP) far right; the flexible
+   middle track keeps the two units apart in both orientations. */
 .hud-top {
   display: grid;
-  grid-template-columns: 1fr auto 1fr;
+  grid-template-columns: auto 1fr auto;
   align-items: start;
   gap: 0.5rem;
 }
@@ -236,7 +236,8 @@ body {
 .hud-center {
   display: flex;
   flex-direction: column;
-  align-items: center;
+  align-items: flex-end;
+  text-align: right;
   gap: 0.15rem;
   padding: 0.2rem 0.6rem 0.3rem;
   background: rgba(11, 13, 16, 0.55);
@@ -255,15 +256,26 @@ body {
   transform: translateY(1px);
 }
 
-/* The MAP button: the upper HUD's right-hand unit — opens the fog-of-war
-   level map (M on desktop) and pauses the run under it. Framed like the
-   clock unit so the top row reads as one family. */
-.hud-map-btn {
+/* The clock unit and the MAP button share one column stack anchored to the
+   top-right; stretch alignment makes the button exactly as wide as the
+   clock box so the pair reads as a single HUD unit. */
+.hud-clock-stack {
   grid-column: 3;
   justify-self: end;
   display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 0.3rem;
+}
+
+/* The MAP button: a treasure map tucked under the clock unit — opens the
+   fog-of-war level map (M on desktop) and pauses the run under it. Framed
+   like the clock unit so the stack reads as one family. */
+.hud-map-btn {
+  display: flex;
   align-items: center;
-  padding: 0.45rem 0.6rem;
+  justify-content: center;
+  padding: 0.2rem 0.6rem;
   background: rgba(11, 13, 16, 0.55);
   border: 2px solid #1a1c2c;
   border-radius: 6px;
@@ -273,6 +285,12 @@ body {
   -webkit-tap-highlight-color: transparent;
   pointer-events: auto;
   cursor: pointer;
+}
+
+/* The 20×14 treasure-map sprite at a crisp 2x. */
+.hud-map-icon {
+  width: 2.5rem;
+  height: 1.75rem;
 }
 
 .hud-map-btn:active {
@@ -332,7 +350,7 @@ body {
 .hud-rampage {
   display: flex;
   flex-direction: column;
-  align-items: center;
+  align-items: flex-end;
   gap: 0.12rem;
   margin-top: 0.1rem;
 }
@@ -347,35 +365,6 @@ body {
   height: 0.4rem;
   border-radius: 1px;
   box-shadow: 0 1px 0 rgba(11, 13, 16, 0.6);
-}
-
-/* Portrait (phone held vertically): the reference is landscape, so the
-   centered clock unit assumes there is spare width on either side of the left
-   status unit. A narrow viewport has none — the wider status unit overflows
-   its track and collides with the centered clock. Anchor the clock + foe
-   counter to the top-right instead, with the flexible middle track keeping
-   the two units apart. */
-@media (max-aspect-ratio: 4/3) {
-  .hud-top {
-    grid-template-columns: auto 1fr auto;
-  }
-
-  .hud-center {
-    grid-column: 3;
-    justify-self: end;
-    align-items: flex-end;
-    text-align: right;
-  }
-
-  /* Portrait hands the top-right cell to the clock unit; the MAP button
-     drops to the row below it, still hugging the right edge. */
-  .hud-map-btn {
-    grid-row: 2;
-  }
-
-  .hud-rampage {
-    align-items: flex-end;
-  }
 }
 
 .hud-bar {
