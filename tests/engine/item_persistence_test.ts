@@ -28,7 +28,7 @@ import { startGame } from "./helpers.ts";
 afterEach(() => installFixtures(true));
 
 const WRENCH = FIX_WEAPONS.test_wrench!;
-const SUIT = FIX_GEAR.test_suit!;
+const VEST = FIX_GEAR.test_vest!;
 
 /** Re-register the equipment catalog with `test_wrench` rebalanced, or dropped
  * entirely when `damage` is null — the "we changed/removed loot" event. */
@@ -44,9 +44,9 @@ describe("item version immunity", () => {
     const state = startGame();
     const weapon = rollEquipment(state, { defId: "test_wrench" });
     expect(weapon.def).toEqual(weaponDef("test_wrench"));
-    const gear = rollEquipment(state, { defId: "test_suit" });
+    const gear = rollEquipment(state, { defId: "test_vest" });
     expect(gear.def).toBeDefined();
-    expect(gear.def).toEqual(SUIT);
+    expect(gear.def).toEqual(VEST);
   });
 
   it("keeps a dropped item's stats when its base is nerfed; new drops feel it", () => {

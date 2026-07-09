@@ -487,20 +487,26 @@ export const ACCURACY = {
 } as const;
 
 /**
- * Armor grades a suit can carry. Each grade SOAKS `reduction` of every
- * incoming physical hit — the soaked share comes off the armor bar, the rest
- * off HP — until the pool (`amount`) is spent, after which the suit is bare
- * and every hit lands in full. A 100-damage blow against a full GREEN (100,
- * 25%) suit takes 75 to HP and 25 off the armor, exactly as designed. The
- * three grades are tuned to compare cleanly; retune one line to rebalance.
+ * Armor — the D2/WoW-shaped physical mitigation. Every worn armor piece
+ * (head/chest/legs/feet) carries flat armor points; the ACTIVE pieces sum
+ * (a broken piece counts zero — see `isArmorBroken`), and the total turns
+ * into a damage reduction AGAINST THE ATTACKER'S LEVEL:
+ *
+ *   reduction = armor / (armor + kBase + kPerLevel × attackerLevel)
+ *
+ * capped at `maxReduction` (the classic 75% wall). A full set of
+ * level-appropriate armor lands around a third off every physical hit; the
+ * same set decays as the horde levels past it, which is what keeps armor
+ * drops interesting all campaign. `armorPerIlvl` is the drop-side growth:
+ * a base's authored armor is its value AT ITS OWN levelReq, and a rolled
+ * instance grows by this fraction per item level above that (so deep finds
+ * of an old base stay wearable without out-arming native pools).
  */
-export const ARMOR: Record<
-  "green" | "yellow" | "red",
-  { amount: number; reduction: number }
-> = {
-  green: { amount: 100, reduction: 0.25 },
-  yellow: { amount: 150, reduction: 0.5 },
-  red: { amount: 200, reduction: 0.75 },
+export const ARMOR = {
+  kBase: 40,
+  kPerLevel: 12,
+  maxReduction: 0.75,
+  armorPerIlvl: 0.06,
 } as const;
 
 /**

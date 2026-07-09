@@ -86,11 +86,18 @@ function fallbackWeapon(): Equipment {
 function adoptRunEquipment(state: GameState): void {
   const equip = state.player.equipment;
   equip.weapon = adoptEquipment(equip.weapon) ?? fallbackWeapon();
-  equip.suit = equip.suit && adoptEquipment(equip.suit);
-  equip.charm = equip.charm && adoptEquipment(equip.charm);
-  equip.bag = equip.bag && adoptEquipment(equip.bag);
+  // A pre-revamp run may carry a `suit`-slot piece the four-slot body can't
+  // wear anymore — adopt what fits, leave the rest behind.
+  const adoptWorn = (piece: Equipment | null | undefined): Equipment | null =>
+    piece && piece.slot in equip ? adoptEquipment(piece) : null;
+  equip.head = adoptWorn(equip.head);
+  equip.chest = adoptWorn(equip.chest);
+  equip.legs = adoptWorn(equip.legs);
+  equip.feet = adoptWorn(equip.feet);
+  equip.charm = adoptWorn(equip.charm);
+  equip.bag = adoptWorn(equip.bag);
   state.player.inventory = state.player.inventory.map((cell) =>
-    cell ? adoptEquipment(cell) : null,
+    cell && cell.slot in equip ? adoptEquipment(cell) : null,
   );
   state.items = state.items.filter((item) => {
     if (item.kind !== "equipment") return true;

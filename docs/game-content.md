@@ -38,7 +38,7 @@ names its in-run music with an optional `music` id (a key into the app's
   tiles + floor vents), ~800 px/s² gravity (hoppable desks and crates), rooms
   carved by `walls` with door gaps and three locked `doors` (storage, vault,
   and the AI CORE — THE ARCHITECT's keycard opens the last). The hero opens in
-  plain clothes (`heroSuited: false`) and loots the EVA suit here. Music:
+  plain clothes (`heroSuited: false`) and recovers the EVA suit here. Music:
   `hq_lockdown` ("LOCKDOWN", a tense infiltration theme).
 - **Level 2 — THE MOON** (`levels/moon.ts`). The beacon dies near the old
   flag. `moon` biome (regolith + gravel patches), ~340 px/s² gravity (jumps
@@ -118,11 +118,31 @@ STAFF — plus the rift-only fantasy gear: LUCKY CLOVER, CRYSTAL ORB,
 GRIMOIRE, ENCHANTED RING, DRAGONSCALE CLOAK). A base only drops from
 monsters whose LEVEL has reached its requirement, tiers unlock by monster
 level (config `LOOT.tierUnlockMlvl`), and every drop carries an item level
-near its killer's that sizes its affixes — see the `weapon-system` skill
-for the full economy and its tuning tools.
+near its killer's (plus the difficulty's `lootIlvlBonus` on the harder
+rungs) that sizes its affixes — see the `weapon-system` skill for the full
+economy and its tuning tools.
 
-Alongside weapons, the hero wears a **weapon, a suit, a charm, and a bag**
-(the four equip slots). The **BAG** is a gear piece that widens the carry
+Alongside the weapon, the hero wears **four ARMOR slots — head, chest,
+legs, feet — plus a charm and a bag** (seven equip slots). Every armor
+piece carries flat **armor points** that sum into a physical damage
+reduction judged against the attacker's level (`armor / (armor + 40 + 12 ×
+level)`, capped at 75% — config `ARMOR`), so a set that turns a third of
+every blow decays as the horde outlevels it, WoW-style; a rolled instance
+grows its base armor with its item level (`ARMOR.armorPerIlvl`), so deep
+drops genuinely out-arm early ones. Armor **wears**: each landed hit costs
+every worn piece a durability point, and a piece at zero goes INACTIVE —
+still worn, contributing nothing — until a repair kit (which now mends
+weapon and wardrobe together) restores it. Each level drops its own
+wardrobe, cut from the same cloth as its weapon pool: HQ's office/security
+kit (BASEBALL CAP → RIOT HELMET, LAB COAT, KEVLAR VEST, STEEL-TOE BOOTS),
+the moon's 70s program surplus (MISSION CAP, APOLLO VISOR, FLIGHT JACKET,
+MICROMETEOROID VEST, MOON BOOTS), Mars's AI-printed shells (TARGETING
+MONOCLE, NEURAL VISOR, PRINTED HELM, NANOWEAVE PLATE, AEGIS EXOPLATE, MAG
+BOOTS), and the rift's medieval armory (VIKING/KNIGHT'S/GREAT HELM,
+CENTURION CUIRASS, CHAINMAIL HAUBERK, PLATE GREAVES, SABATONS). The hero
+starts in his own street clothes — a T-SHIRT, JEANS, and LEATHER BOOTS
+(`DifficultyDef.startingGear`): no bonuses, a whisper of armor, head bare.
+The **BAG** is a gear piece that widens the carry
 by two cells while worn (`GearDef.bagSlots`, on top of the STRENGTH-scaled
 floor); it drops from every level's gear pool and is the first of a family —
 roomier bags arrive later as their own defs. The character modal keeps the
@@ -291,6 +311,8 @@ the wisp, then down one) keeps its reading order.
 
 Plot pieces (`src/game/defs/story.ts`) — keycards that open the locked doors,
 the recovered anti-grav unit — bank into `state.storyItems` and play their
-`lore`. The EVA space suit is looted gear (`spacesuit`); once worn, the
-player's `playerAppearance` flips from the plain-clothes `hero` sprites to
-the astronaut `player` sprites.
+`lore`. The EVA space suit is itself a story item
+(`StoryItemDef.suitsHero`, dropped by the CHIEF OF SECURITY) — worn OVER
+the hero's clothes and armor with no equip slot and no stats; picking it
+up flips `playerAppearance` from the plain-clothes `hero` sprites to the
+astronaut `player` sprites for good.

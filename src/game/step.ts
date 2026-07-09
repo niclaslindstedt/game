@@ -59,7 +59,7 @@ import { weaponCritMult, weaponDef } from "./defs/equipment.ts";
 import { levelDef } from "./defs/levels/index.ts";
 import {
   addToInventory,
-  armorInfo,
+  armorReduction,
   effectiveStat,
   enemyCritChance,
   equipmentName,
@@ -69,9 +69,8 @@ import {
   playerSpeed,
   recomputeMaxHp,
   recomputeMaxStamina,
-  refreshArmor,
   repairEquippedWeapon,
-  restoreArmor,
+  repairWornArmor,
   restoreStamina,
   syncInventoryCapacity,
   weaponCooldownFor,
@@ -79,6 +78,7 @@ import {
   weaponRangeFor,
   weaponSweepHalfAngle,
   wearEquippedWeapon,
+  wearWornArmor,
   wouldUpgradeSlot,
 } from "./items.ts";
 import { grantXp, hitEnemy, unspawnedMinions } from "./loot.ts";
@@ -1083,19 +1083,14 @@ function stepEnemies(state: GameState, dt: number, dtMs: number): void {
           (crit ? STATS.critMultiplier : 1) *
           (lastStand ? LAST_STAND.damageMultiplier : 1),
       );
-      // The suit's plating soaks its grade's share of the physical hit, up to
-      // whatever armor is left; the rest bites into HP. A bare hero (no
-      // armored suit) takes the blow in full.
-      const armor = armorInfo(state);
-      let hpDamage = damage;
-      if (armor && player.armor > 0) {
-        const soaked = Math.min(
-          Math.round(damage * armor.reduction),
-          player.armor,
-        );
-        player.armor -= soaked;
-        hpDamage = damage - soaked;
-      }
+      // Worn armor turns its share of the physical blow — the D2 curve
+      // against THIS attacker's level (see armorReduction) — and the hit
+      // wears every worn piece a point, whether or not it turned much.
+      const hpDamage = Math.max(
+        0,
+        Math.round(damage * (1 - armorReduction(state, enemy.mlvl))),
+      );
+      wearWornArmor(state);
       player.hp -= hpDamage;
       player.hurtFlashMs = 250;
       state.stats.damageTaken += damage;
@@ -1308,12 +1303,12 @@ function stepItems(state: GameState): void {
       return false;
     }
 
-    // Repair kits mend the equipped weapon and top up a worn suit's plating;
-    // with neither to restore they stay on the ground for when something has
-    // actually taken a beating.
+    // Repair kits mend the equipped weapon and every worn armor piece —
+    // waking any broken piece back up. With nothing short they stay on the
+    // ground for when something has actually taken a beating.
     if (item.kind === "repair") {
       const mended = repairEquippedWeapon(state);
-      const rearmored = restoreArmor(state);
+      const rearmored = repairWornArmor(state);
       if (!mended && !rearmored) return true;
       state.stats.itemsCollected++;
       state.events.push({
@@ -1374,11 +1369,8 @@ function stepItems(state: GameState): void {
       }
       recomputeMaxHp(state);
       recomputeMaxStamina(state);
-      // Donning a fresh suit on pickup must re-arm its plating, or the armor bar
-      // stays stuck at 0 until the next manual equip — the same refresh the
-      // inventory equip path runs. A +STRENGTH piece can also widen the bag, so
-      // grow it to match (both mirror `equipFromInventory`).
-      if (slot === "suit") refreshArmor(state);
+      // A +STRENGTH piece can widen the bag, so grow it to match (mirrors
+      // `equipFromInventory`).
       syncInventoryCapacity(state);
       if (previous && !addToInventory(state, previous)) {
         displaced.push({

@@ -202,7 +202,20 @@ export const MOON: LevelDef = {
       "surplus_carbine",
       "retro_raygun",
     ],
-    gearPool: ["suit_plating", "moon_charm", "bag"],
+    // The 70s kit lockers: mission cotton to the gold Apollo visor,
+    // introduced at levelReqs 5 → 9 alongside the weapons.
+    gearPool: [
+      "mission_cap",
+      "apollo_visor",
+      "flight_jacket",
+      "micrometeoroid_vest",
+      "thermal_leggings",
+      "pressure_trousers",
+      "lunar_overshoes",
+      "moon_boots",
+      "moon_charm",
+      "bag",
+    ],
     abilityPool: ["fire_orbs", "storm_cell", "stasis_field", "item_magnet"],
     // MOON'S BLADE arrives early — at a kill rolled in the first hundred,
     // discovered in play — so the run's signature weapon shapes the run

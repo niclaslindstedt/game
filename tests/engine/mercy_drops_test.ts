@@ -289,11 +289,11 @@ describe("mercy drops through a real kill (medium)", () => {
   });
 });
 
-describe("armor pull toward plated suits when hurt (easy)", () => {
+describe("armor pull toward armor pieces when hurt (easy)", () => {
   // rollEquipment on a gear drop: family gear (rng >= 0.6), then the pool pick
-  // lands on the UNPLATED test_charm (index 1 of [test_suit, test_charm]).
-  // A hurting hero re-rolls it toward the plated test_suit; a healthy one keeps
-  // the charm. Later rolls (tier/ilvl/affixes) fall through to the 0.99 default.
+  // lands on the armorless test_charm (index 1 of [test_vest, test_charm]).
+  // A hurting hero re-rolls it toward the armored test_vest; a healthy one
+  // keeps the charm. Later rolls (tier/ilvl/affixes) fall through to 0.99.
   const rollGear = (hp: number, extra: number[] = []): string => {
     const state = startOn("easy");
     state.player.maxHp = 100;
@@ -303,12 +303,12 @@ describe("armor pull toward plated suits when hurt (easy)", () => {
     return rollEquipment(state).defId;
   };
 
-  it("swaps an unplated gear pick for a plated suit at low health", () => {
-    // extra: [pull success 0.1 < 0.5, plated pick 0.0]. desperation 1 × 0.5.
-    expect(rollGear(1, [0.1, 0.0])).toBe("test_suit");
+  it("swaps an armorless gear pick for an armor piece at low health", () => {
+    // extra: [pull success 0.1 < 0.5, armored pick 0.0]. desperation 1 × 0.5.
+    expect(rollGear(1, [0.1, 0.0])).toBe("test_vest");
   });
 
-  it("keeps the unplated pick at full health (no pull, no wasted roll)", () => {
+  it("keeps the armorless pick at full health (no pull, no wasted roll)", () => {
     // At full health desperation is zero: the pull branch never fires, so no
     // extra roll is drawn and the charm stands.
     expect(rollGear(100)).toBe("test_charm");
@@ -443,7 +443,7 @@ describe("one rope at a time (a waiting rescue holds its signal's fire)", () => 
     expect(items.filter((i) => i.kind === "repair")).toHaveLength(1);
   });
 
-  it("holds the plated-armor pull while a plated piece waits in view", () => {
+  it("holds the armor pull while an armor piece waits in view", () => {
     const state = startOn("easy");
     state.player.maxHp = 100;
     state.player.hp = 1; // full desperation — the pull would fire…
@@ -451,8 +451,8 @@ describe("one rope at a time (a waiting rescue holds its signal's fire)", () => 
       kind: "equipment",
       equipment: {
         id: state.nextId++,
-        defId: "test_suit", // plated (armor: yellow)
-        slot: "suit",
+        defId: "test_vest", // an armor piece
+        slot: "chest",
         tier: "regular",
         ilvl: 1,
         affixes: [],

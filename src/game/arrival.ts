@@ -17,10 +17,10 @@ import { enemyDef } from "./defs/enemies/index.ts";
 import { equipmentLevelReq, gearDef, weaponDef } from "./defs/equipment.ts";
 import { levelsBefore, type LevelDef } from "./defs/levels/index.ts";
 import {
+  ARMOR_SLOTS,
   inventoryCapacity,
   recomputeMaxHp,
   recomputeMaxStamina,
-  refreshArmor,
 } from "./items.ts";
 import type {
   Difficulty,
@@ -56,7 +56,10 @@ export function extractLoadout(state: GameState): Loadout {
     stats: { ...player.stats },
     equipment: {
       weapon: copyPiece(player.equipment.weapon) as Equipment,
-      suit: copyPiece(player.equipment.suit),
+      head: copyPiece(player.equipment.head),
+      chest: copyPiece(player.equipment.chest),
+      legs: copyPiece(player.equipment.legs),
+      feet: copyPiece(player.equipment.feet),
       charm: copyPiece(player.equipment.charm),
       bag: copyPiece(player.equipment.bag),
     },
@@ -90,7 +93,17 @@ export function applyLoadout(state: GameState, loadout: Loadout): void {
   };
   const weapon = mint(loadout.equipment.weapon);
   if (weapon) player.equipment.weapon = weapon;
-  player.equipment.suit = mint(loadout.equipment.suit);
+  // Pre-revamp saves carry a `suit` slot (and suit-slot pieces) the four-slot
+  // body can't wear — those pieces are simply left behind, so a legacy
+  // loadout loads bare-chested rather than crashing. `stillWearable` also
+  // guards every armor/charm cell below the same way.
+  const stillWearable = (piece: Equipment | null): Equipment | null =>
+    piece && piece.slot in player.equipment ? piece : null;
+  for (const slot of ARMOR_SLOTS) {
+    player.equipment[slot] = stillWearable(
+      mint(loadout.equipment[slot] ?? null),
+    );
+  }
   player.equipment.charm = mint(loadout.equipment.charm);
   // The worn bag must be restored BEFORE the carry is sized — it is part of
   // what `inventoryCapacity` counts (older saves without a bag mint null).
@@ -100,7 +113,7 @@ export function applyLoadout(state: GameState, loadout: Loadout): void {
   // order; anything past the capacity (shrunken saves) stays behind.
   player.inventory = new Array<Equipment | null>(inventoryCapacity(state))
     .fill(null)
-    .map((_, i) => mint(loadout.inventory[i] ?? null));
+    .map((_, i) => stillWearable(mint(loadout.inventory[i] ?? null)));
   player.heldAbilities = loadout.heldAbilities.slice(0, HELD_ITEMS.cap);
   // The purse rides along; loadouts banked before the economy existed carry
   // no coins field and load as an empty purse.
@@ -108,7 +121,6 @@ export function applyLoadout(state: GameState, loadout: Loadout): void {
 
   recomputeMaxHp(state);
   recomputeMaxStamina(state);
-  refreshArmor(state);
   player.hp = player.maxHp;
   player.stamina = player.maxStamina;
 }
@@ -147,14 +159,21 @@ function signatureWeapon(def: LevelDef): string | undefined {
   )[0];
 }
 
-/** The first entry of `def`'s gear pool worn in `slot`, if any. */
-function issueGear(def: LevelDef, slot: "suit" | "charm"): string | undefined {
-  return def.loot.gearPool.find((id) => gearDef(id).slot === slot);
+/** The best piece of `def`'s gear pool worn in `slot` — highest armor for a
+ * body slot (a cleared level is assumed to have yielded its best wardrobe),
+ * first entry otherwise (charms). Undefined when the pool has none. */
+function issueGear(def: LevelDef, slot: string): string | undefined {
+  const fits = def.loot.gearPool.filter((id) => gearDef(id).slot === slot);
+  if (fits.length === 0) return undefined;
+  return fits.reduce((best, id) =>
+    (gearDef(id).armor ?? 0) > (gearDef(best).armor ?? 0) ? id : best,
+  );
 }
 
 /** A plain regular-tier instance of `defId` (ids are re-minted on apply).
  * Minted at the base's own requirement as its item level — the natural level
- * such a piece would have dropped at (cosmetic on an affixless regular). */
+ * such a piece would have dropped at (cosmetic on an affixless regular).
+ * Gear stamps its base armor and full durability, like a fresh drop. */
 function regularPiece(
   defId: string,
   slot: Equipment["slot"],
@@ -168,6 +187,13 @@ function regularPiece(
     ilvl: equipmentLevelReq(defId),
     affixes: [],
   };
+  if (slot !== "weapon") {
+    const def = gearDef(defId);
+    if (def.armor !== undefined) piece.armor = def.armor;
+    if (durability === undefined && def.durability !== undefined) {
+      piece.durability = def.durability;
+    }
+  }
   if (durability !== undefined) piece.durability = durability;
   return piece;
 }
@@ -227,15 +253,23 @@ export function deriveArrivalLoadout(
   const previous = cleared[cleared.length - 1] as LevelDef;
   const weaponId =
     signatureWeapon(previous) ?? difficultyDef(difficulty).startingWeapon;
-  const suitId = issueGear(previous, "suit");
   const charmId = issueGear(previous, "charm");
+  // The previous level's best wardrobe, one piece per body slot (a slot its
+  // pool never dressed stays bare — the campaign's own gaps carry through).
+  const armorPiece = (slot: (typeof ARMOR_SLOTS)[number]) => {
+    const id = issueGear(previous, slot);
+    return id ? regularPiece(id, slot) : null;
+  };
   return {
     level,
     xp,
     stats,
     equipment: {
       weapon: regularPiece(weaponId, "weapon", weaponDef(weaponId).durability),
-      suit: suitId ? regularPiece(suitId, "suit") : null,
+      head: armorPiece("head"),
+      chest: armorPiece("chest"),
+      legs: armorPiece("legs"),
+      feet: armorPiece("feet"),
       charm: charmId ? regularPiece(charmId, "charm") : null,
       // No stand-in bag: the derived arrival kit leans on the STRENGTH floor.
       bag: null,

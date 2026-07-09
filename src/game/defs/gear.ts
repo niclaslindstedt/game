@@ -1,0 +1,668 @@
+// SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
+// The gear catalog: everything equippable that is not a weapon — the four
+// ARMOR slots (head/chest/legs/feet), charms, and bags. Split out of
+// equipment.ts (which keeps the weapons, tiers, and affix machinery) purely
+// by size; the lookups and active-registry plumbing still live there, and
+// this module is re-exported through it. Levels pick which pieces can drop
+// via their `gearPool`s; WHEN a base can drop is its `levelReq` against the
+// killer's monster level, exactly like a weapon's.
+
+import type { EquipSlot, StatName } from "../types.ts";
+
+export type GearDef = {
+  id: string;
+  name: string;
+  slot: Exclude<EquipSlot, "weapon">;
+  /**
+   * Level requirement, same two-way gate as a weapon's (see
+   * WeaponDef.levelReq): never drops off a mob below it, never worn by a
+   * hero below it. Omitted = 1 (no gate).
+   */
+  levelReq?: number;
+  /** Flat bonuses baked into the item before tier affixes. */
+  bonuses: { maxHp?: number; critChance?: number };
+  /**
+   * Armor pieces only (head/chest/legs/feet): the BASE armor points the
+   * piece carries at its own `levelReq`. Worn pieces sum, and the total
+   * reduces every physical hit against the attacker's level (config `ARMOR`
+   * — the D2/WoW diminishing-returns curve). A rolled instance GROWS this
+   * base with its item level (`ARMOR.armorPerIlvl`, stamped at mint), so a
+   * deep drop of an old base is genuinely better than an early one. Absent =
+   * the piece is not armor (charms, bags).
+   */
+  armor?: number;
+  /**
+   * Armor pieces only: hits taken before the piece wears out. Worn armor
+   * spends one point per landed hit; at zero the piece goes INACTIVE —
+   * still worn, contributing no armor/bonuses/affixes — until a repair kit
+   * restores it (armor is never trashed, unlike a broken weapon). Absent =
+   * unbreakable, like a charm or bag; unique/legendary drops also mint
+   * without durability, the same "very well built" rule as weapons.
+   */
+  durability?: number;
+  /**
+   * A passive trinket's flat stat bonuses, paid out while the piece is merely
+   * CARRIED — the effect rides in the bag, so a passive item never needs an
+   * equip slot to work (see `effectiveStat`). This is what a `+1 INT` chip
+   * grants sitting in a pocket, as distinct from armor or a charm that must
+   * be worn. Absent on ordinary gear, whose bonuses only count once equipped.
+   */
+  passive?: Partial<Record<StatName, number>>;
+  /**
+   * BAGS only (`slot: "bag"`): how many extra inventory cells this bag adds on
+   * top of the STRENGTH-scaled floor while it is worn in the bag slot (see
+   * `inventoryCapacity`). Absent on every other piece. Bigger bags ship later
+   * as new defs carrying a larger count.
+   */
+  bagSlots?: number;
+  /**
+   * Merchant material, same scale as a weapon's (see WeaponDef.material):
+   * metal sells for double, precious for four times. Omitted = base value.
+   */
+  material?: "metal" | "precious";
+  /** Inventory icon sprite. */
+  icon: string;
+};
+
+export const GEAR_DEFS: Record<string, GearDef> = {
+  // ---- The hero's own clothes: what he is wearing the night Ada vanishes.
+  // Never in a drop pool — minted onto the body at creation (see create.ts /
+  // DifficultyDef.startingGear). No bonuses, a whisper of armor, and honest
+  // cotton durability: the first real find outclasses all three.
+  t_shirt: {
+    id: "t_shirt",
+    name: "T-SHIRT",
+    slot: "chest",
+    bonuses: {},
+    armor: 1,
+    durability: 60,
+    icon: "icon_tshirt",
+  },
+  jeans: {
+    id: "jeans",
+    name: "JEANS",
+    slot: "legs",
+    bonuses: {},
+    armor: 2,
+    durability: 60,
+    icon: "icon_jeans",
+  },
+  leather_boots: {
+    id: "leather_boots",
+    name: "LEATHER BOOTS",
+    slot: "feet",
+    bonuses: {},
+    armor: 2,
+    durability: 60,
+    icon: "icon_leather_boots",
+  },
+  // The starter BAG: the plainest carry-all, worn in the bag slot to widen the
+  // inventory by two cells. It is the first of a family — bigger bags arrive
+  // later as their own defs with a larger `bagSlots`. Carries no combat stats,
+  // so it never competes with a charm or armor for a body slot.
+  bag: {
+    id: "bag",
+    name: "BAG",
+    slot: "bag",
+    bonuses: {},
+    bagSlots: 2,
+    icon: "icon_bag",
+  },
+  // ---- SPACEZ HQ (level 1) armor: what an American space company's campus
+  // yields — the office, the shipping floor, the security desk, the lab.
+  // Inspired by the same rooms as the level's weapon pool (the box cutter's
+  // warehouse, the 9mm's desk, the pump gun's armory).
+  baseball_cap: {
+    id: "baseball_cap",
+    name: "BASEBALL CAP",
+    slot: "head",
+    // The company softball team's. Morale mandatory, protection minimal.
+    bonuses: {},
+    armor: 2,
+    durability: 60,
+    icon: "icon_baseball_cap",
+  },
+  hard_hat: {
+    id: "hard_hat",
+    name: "HARD HAT",
+    slot: "head",
+    levelReq: 2,
+    // Shipping-floor issue, box-cutter country.
+    bonuses: {},
+    armor: 5,
+    durability: 70,
+    icon: "icon_hard_hat",
+  },
+  welding_mask: {
+    id: "welding_mask",
+    material: "metal",
+    name: "WELDING MASK",
+    slot: "head",
+    levelReq: 4,
+    // The fab shop's spare face. Sparks bounce; so do teeth.
+    bonuses: {},
+    armor: 8,
+    durability: 80,
+    icon: "icon_welding_mask",
+  },
+  riot_helmet: {
+    id: "riot_helmet",
+    name: "RIOT HELMET",
+    slot: "head",
+    levelReq: 5,
+    // The armory shelf above the pump gun. HQ's hardest hat.
+    bonuses: {},
+    armor: 10,
+    durability: 90,
+    icon: "icon_riot_helmet",
+  },
+  lab_coat: {
+    id: "lab_coat",
+    name: "LAB COAT",
+    slot: "chest",
+    // Thin cotton, deep pockets — it turns a scratch and buys a little life.
+    bonuses: { maxHp: 15 },
+    armor: 4,
+    durability: 60,
+    icon: "icon_lab_coat",
+  },
+  coveralls: {
+    id: "coveralls",
+    name: "COVERALLS",
+    slot: "chest",
+    levelReq: 2,
+    // Maintenance issue, one size fits most.
+    bonuses: {},
+    armor: 8,
+    durability: 70,
+    icon: "icon_coveralls",
+  },
+  kevlar_vest: {
+    id: "kevlar_vest",
+    name: "KEVLAR VEST",
+    slot: "chest",
+    levelReq: 4,
+    // The security desk's other drawer — the 9mm's counterpart.
+    bonuses: {},
+    armor: 16,
+    durability: 90,
+    icon: "icon_kevlar_vest",
+  },
+  cargo_pants: {
+    id: "cargo_pants",
+    name: "CARGO PANTS",
+    slot: "legs",
+    levelReq: 2,
+    bonuses: {},
+    armor: 6,
+    durability: 70,
+    icon: "icon_cargo_pants",
+  },
+  padded_work_pants: {
+    id: "padded_work_pants",
+    name: "PADDED WORK PANTS",
+    slot: "legs",
+    levelReq: 4,
+    // Knee pads sewn in — the warehouse knows its floors.
+    bonuses: {},
+    armor: 10,
+    durability: 80,
+    icon: "icon_work_pants",
+  },
+  sneakers: {
+    id: "sneakers",
+    name: "SNEAKERS",
+    slot: "feet",
+    bonuses: {},
+    armor: 3,
+    durability: 60,
+    icon: "icon_sneakers",
+  },
+  steel_toe_boots: {
+    id: "steel_toe_boots",
+    material: "metal",
+    name: "STEEL-TOE BOOTS",
+    slot: "feet",
+    levelReq: 3,
+    bonuses: {},
+    armor: 8,
+    durability: 80,
+    icon: "icon_steel_boots",
+  },
+  // ---- THE MOON (level 2) armor: what the 70s ferried up, cut from the
+  // same cloth as the pool's wrench and revolver — nothing made after 1979.
+  mission_cap: {
+    id: "mission_cap",
+    name: "MISSION CAP",
+    slot: "head",
+    levelReq: 5,
+    // Ground-crew cotton with the patch still on.
+    bonuses: {},
+    armor: 8,
+    durability: 80,
+    icon: "icon_mission_cap",
+  },
+  apollo_visor: {
+    id: "apollo_visor",
+    material: "precious",
+    name: "APOLLO VISOR",
+    slot: "head",
+    levelReq: 7,
+    // The gold-mirrored bubble. Fifty years of glare, turned.
+    bonuses: {},
+    armor: 16,
+    durability: 100,
+    icon: "icon_apollo_visor",
+  },
+  flight_jacket: {
+    id: "flight_jacket",
+    name: "FLIGHT JACKET",
+    slot: "chest",
+    levelReq: 6,
+    // Crew survival kit — packed beside the service revolver.
+    bonuses: {},
+    armor: 16,
+    durability: 90,
+    icon: "icon_flight_jacket",
+  },
+  micrometeoroid_vest: {
+    id: "micrometeoroid_vest",
+    name: "MICROMETEOROID VEST",
+    slot: "chest",
+    levelReq: 9,
+    // Layered like the landers: whipple shielding, tailored.
+    bonuses: {},
+    armor: 24,
+    durability: 110,
+    icon: "icon_micro_vest",
+  },
+  thermal_leggings: {
+    id: "thermal_leggings",
+    name: "THERMAL LEGGINGS",
+    slot: "legs",
+    levelReq: 6,
+    bonuses: {},
+    armor: 12,
+    durability: 80,
+    icon: "icon_thermal_leggings",
+  },
+  pressure_trousers: {
+    id: "pressure_trousers",
+    name: "PRESSURE TROUSERS",
+    slot: "legs",
+    levelReq: 8,
+    // The lower half of a suit that never got its top back.
+    bonuses: {},
+    armor: 16,
+    durability: 100,
+    icon: "icon_pressure_trousers",
+  },
+  lunar_overshoes: {
+    id: "lunar_overshoes",
+    name: "LUNAR OVERSHOES",
+    slot: "feet",
+    levelReq: 6,
+    // Galoshes rated for the Sea of Tranquility.
+    bonuses: {},
+    armor: 10,
+    durability: 80,
+    icon: "icon_lunar_overshoes",
+  },
+  moon_boots: {
+    id: "moon_boots",
+    name: "MOON BOOTS",
+    slot: "feet",
+    levelReq: 8,
+    // The classic print-leaving kind. Big soles, bigger history.
+    bonuses: {},
+    armor: 14,
+    durability: 100,
+    icon: "icon_moon_boots",
+  },
+  // ---- MARS (level 3) armor: printed overnight by the colony AI, kin to
+  // the pool's smart pistol and railgun. No seams, no straps, no manuals.
+  targeting_monocle: {
+    id: "targeting_monocle",
+    name: "TARGETING MONOCLE",
+    slot: "head",
+    levelReq: 10,
+    // The smart pistol's other half: it watches where the darts go.
+    bonuses: {},
+    armor: 16,
+    durability: 100,
+    icon: "icon_monocle",
+  },
+  neural_visor: {
+    id: "neural_visor",
+    name: "NEURAL VISOR",
+    slot: "head",
+    levelReq: 12,
+    bonuses: {},
+    armor: 20,
+    durability: 110,
+    icon: "icon_neural_visor",
+  },
+  printed_helm: {
+    id: "printed_helm",
+    name: "PRINTED HELM",
+    slot: "head",
+    levelReq: 14,
+    // One seamless ceramic piece. The printer refused to explain it.
+    bonuses: {},
+    armor: 26,
+    durability: 120,
+    icon: "icon_printed_helm",
+  },
+  polymer_shell: {
+    id: "polymer_shell",
+    name: "POLYMER SHELL",
+    slot: "chest",
+    levelReq: 10,
+    bonuses: {},
+    armor: 22,
+    durability: 100,
+    icon: "icon_polymer_shell",
+  },
+  nanoweave_plate: {
+    id: "nanoweave_plate",
+    name: "NANOWEAVE PLATE",
+    slot: "chest",
+    levelReq: 12,
+    // Woven at a scale nobody audits.
+    bonuses: {},
+    armor: 28,
+    durability: 110,
+    icon: "icon_nanoweave",
+  },
+  aegis_exoplate: {
+    id: "aegis_exoplate",
+    name: "AEGIS EXOPLATE",
+    slot: "chest",
+    levelReq: 15,
+    // The colony pool's capstone: it braces before you know you're hit.
+    bonuses: { maxHp: 20 },
+    armor: 34,
+    durability: 130,
+    icon: "icon_aegis_plate",
+  },
+  carbon_leggings: {
+    id: "carbon_leggings",
+    name: "CARBON LEGGINGS",
+    slot: "legs",
+    levelReq: 11,
+    bonuses: {},
+    armor: 18,
+    durability: 100,
+    icon: "icon_carbon_leggings",
+  },
+  servo_greaves: {
+    id: "servo_greaves",
+    material: "metal",
+    name: "SERVO GREAVES",
+    slot: "legs",
+    levelReq: 13,
+    // They walk part of the walk for you.
+    bonuses: {},
+    armor: 24,
+    durability: 120,
+    icon: "icon_servo_greaves",
+  },
+  gecko_soles: {
+    id: "gecko_soles",
+    name: "GECKO SOLES",
+    slot: "feet",
+    levelReq: 11,
+    bonuses: {},
+    armor: 14,
+    durability: 100,
+    icon: "icon_gecko_soles",
+  },
+  mag_boots: {
+    id: "mag_boots",
+    material: "metal",
+    name: "MAG BOOTS",
+    slot: "feet",
+    levelReq: 14,
+    bonuses: {},
+    armor: 20,
+    durability: 120,
+    icon: "icon_mag_boots",
+  },
+  // ---- THE RIFT (level 4) armor: everything history's armories dropped
+  // through, leaning medieval — the gladius and the executioner's axe get
+  // the wardrobe they deserve.
+  viking_helm: {
+    id: "viking_helm",
+    material: "metal",
+    name: "VIKING HELM",
+    slot: "head",
+    levelReq: 15,
+    // No horns. The horns were never real.
+    bonuses: {},
+    armor: 22,
+    durability: 110,
+    icon: "icon_viking_helm",
+  },
+  knights_helm: {
+    id: "knights_helm",
+    material: "metal",
+    name: "KNIGHT'S HELM",
+    slot: "head",
+    levelReq: 18,
+    bonuses: {},
+    armor: 30,
+    durability: 130,
+    icon: "icon_knights_helm",
+  },
+  great_helm: {
+    id: "great_helm",
+    material: "metal",
+    name: "GREAT HELM",
+    slot: "head",
+    levelReq: 21,
+    // The executioner's era: a bucket that outlived every argument.
+    bonuses: {},
+    armor: 38,
+    durability: 140,
+    icon: "icon_great_helm",
+  },
+  centurion_cuirass: {
+    id: "centurion_cuirass",
+    material: "metal",
+    name: "CENTURION CUIRASS",
+    slot: "chest",
+    levelReq: 15,
+    // The gladius's partner, still legion-polished.
+    bonuses: {},
+    armor: 28,
+    durability: 110,
+    icon: "icon_cuirass",
+  },
+  chainmail_hauberk: {
+    id: "chainmail_hauberk",
+    material: "metal",
+    name: "CHAINMAIL HAUBERK",
+    slot: "chest",
+    levelReq: 19,
+    bonuses: {},
+    armor: 40,
+    durability: 130,
+    icon: "icon_chainmail",
+  },
+  dragonscale_cloak: {
+    id: "dragonscale_cloak",
+    material: "precious",
+    name: "DRAGONSCALE CLOAK",
+    slot: "chest",
+    levelReq: 22,
+    // Shed, not taken — nobody skins a dragon. The rift's heaviest hide.
+    bonuses: { maxHp: 35 },
+    armor: 50,
+    durability: 150,
+    icon: "icon_dragonscale_cloak",
+  },
+  chausses: {
+    id: "chausses",
+    material: "metal",
+    name: "CHAUSSES",
+    slot: "legs",
+    levelReq: 16,
+    // Mail for the legs, ring by patient ring.
+    bonuses: {},
+    armor: 24,
+    durability: 110,
+    icon: "icon_chausses",
+  },
+  plate_greaves: {
+    id: "plate_greaves",
+    material: "metal",
+    name: "PLATE GREAVES",
+    slot: "legs",
+    levelReq: 18,
+    bonuses: {},
+    armor: 34,
+    durability: 130,
+    icon: "icon_plate_greaves",
+  },
+  legionary_sandals: {
+    id: "legionary_sandals",
+    name: "LEGIONARY SANDALS",
+    slot: "feet",
+    levelReq: 15,
+    // Caligae: two thousand years broken-in.
+    bonuses: {},
+    armor: 18,
+    durability: 100,
+    icon: "icon_sandals",
+  },
+  sabatons: {
+    id: "sabatons",
+    material: "metal",
+    name: "SABATONS",
+    slot: "feet",
+    levelReq: 20,
+    bonuses: {},
+    armor: 28,
+    durability: 130,
+    icon: "icon_sabatons",
+  },
+  // ---- Charms and trinkets (unchanged by the armor revamp) -------------------
+  id_badge: {
+    id: "id_badge",
+    name: "ID BADGE",
+    slot: "charm",
+    // All-areas access reads as luck: doors you should not have opened.
+    bonuses: { critChance: 0.03 },
+    icon: "icon_badge",
+  },
+  moon_charm: {
+    id: "moon_charm",
+    name: "MOON CHARM",
+    slot: "charm",
+    bonuses: { critChance: 0.03 },
+    icon: "icon_charm",
+  },
+  // THE ARCHITECT's PASSAGE CHIP: the implant the old coworker cut into his own
+  // skull to badge through the cyborg locks and pass as a machine. In the
+  // hero's bag it is a passive trinket — its `+1 INT` applies while merely
+  // carried, never occupying an equip slot (see `isPassiveItem`). A `charm`
+  // slot only so it is a well-formed piece of gear should the player ever drag
+  // it onto the body; either way the mind sharpens exactly once.
+  passage_chip: {
+    id: "passage_chip",
+    name: "PASSAGE CHIP",
+    slot: "charm",
+    bonuses: {},
+    passive: { intelligence: 1 },
+    icon: "icon_passage_chip",
+  },
+  red_dust_charm: {
+    id: "red_dust_charm",
+    name: "RED DUST CHARM",
+    slot: "charm",
+    // A vial of the regolith the colony is built on. Lucky, probably.
+    bonuses: { critChance: 0.03 },
+    icon: "icon_charm",
+  },
+  // ---- Rift charms: what history's missing carry, and what the void rains.
+  stardust_charm: {
+    id: "stardust_charm",
+    material: "precious",
+    name: "STARDUST CHARM",
+    slot: "charm",
+    // A pinch of ground-up somewhere else. It glitters at good moments.
+    bonuses: { critChance: 0.03 },
+    icon: "icon_charm",
+  },
+  aviator_goggles: {
+    id: "aviator_goggles",
+    name: "AVIATOR GOGGLES",
+    slot: "charm",
+    // EARHART's goggles: ninety years of spotting the gap in the weather.
+    bonuses: { critChance: 0.04 },
+    icon: "icon_goggles",
+  },
+  rasputin_beard: {
+    id: "rasputin_beard",
+    name: "RASPUTIN'S BEARD",
+    slot: "charm",
+    // The beard survived the poison, the bullets and the river. Now it
+    // survives things FOR you.
+    bonuses: { maxHp: 30 },
+    icon: "icon_beard",
+  },
+  golden_parachute: {
+    id: "golden_parachute",
+    material: "precious",
+    name: "GOLDEN PARACHUTE",
+    slot: "charm",
+    // MOSQUE's exit package, dropped mid-exit. Guaranteed soft landings,
+    // whoever crashed the company.
+    bonuses: { maxHp: 25, critChance: 0.02 },
+    icon: "icon_parachute",
+  },
+  // ---- Rift FANTASY gear: things that fell through from stories rather
+  // than history. Only the rift's pool carries them — it's the one magical
+  // level so far.
+  lucky_clover: {
+    id: "lucky_clover",
+    name: "LUCKY CLOVER",
+    slot: "charm",
+    levelReq: 15,
+    // Four leaves, pressed flat by something enormous. Pays out from the bag.
+    bonuses: {},
+    passive: { luck: 2 },
+    icon: "icon_clover",
+  },
+  crystal_orb: {
+    id: "crystal_orb",
+    material: "precious",
+    name: "CRYSTAL ORB",
+    slot: "charm",
+    levelReq: 16,
+    // It shows you the blow before it lands.
+    bonuses: { critChance: 0.04 },
+    icon: "icon_crystal_orb",
+  },
+  grimoire: {
+    id: "grimoire",
+    material: "precious",
+    name: "GRIMOIRE",
+    slot: "charm",
+    levelReq: 18,
+    // A book that reads YOU. Sharpens the mind just riding in the bag.
+    bonuses: {},
+    passive: { intelligence: 2 },
+    icon: "icon_grimoire",
+  },
+  enchanted_ring: {
+    id: "enchanted_ring",
+    material: "precious",
+    name: "ENCHANTED RING",
+    slot: "charm",
+    levelReq: 20,
+    // One ring. It wants to be worn — and it earns it.
+    bonuses: { critChance: 0.05 },
+    icon: "icon_enchanted_ring",
+  },
+};

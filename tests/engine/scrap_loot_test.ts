@@ -20,7 +20,7 @@ function weapon(defId: string, tier: Tier = "regular"): Equipment {
 
 function gear(
   defId: string,
-  slot: "suit" | "charm" | "bag",
+  slot: "chest" | "charm" | "bag",
   tier: Tier = "regular",
 ): Equipment {
   return { id: nextId++, defId, slot, tier, ilvl: 1, affixes: [] };

@@ -25,7 +25,7 @@ import {
   scaledMobCount,
 } from "./defs/difficulties.ts";
 import { enemyDef } from "./defs/enemies/index.ts";
-import { weaponDef } from "./defs/equipment.ts";
+import { gearDef, weaponDef } from "./defs/equipment.ts";
 import { LEVEL_ORDER, levelDef, type LevelDef } from "./defs/levels/index.ts";
 import { buildWells } from "./hazards.ts";
 import {
@@ -43,6 +43,7 @@ import type {
   Difficulty,
   DoorState,
   Enemy,
+  Equipment,
   GameState,
   Item,
   Loadout,
@@ -228,9 +229,6 @@ export function createGame(
       vz: 0,
       hp: PLAYER.maxHp,
       maxHp: PLAYER.maxHp,
-      // No suit worn at the start of a level, so no plating yet (a looted
-      // armored suit fills the bar on equip — see refreshArmor).
-      armor: 0,
       // The sprint pool starts full at its STAMINA-0 base.
       stamina: STAMINA.base,
       maxStamina: STAMINA.base,
@@ -277,7 +275,13 @@ export function createGame(
           affixes: [],
           durability: weaponDef(diff.startingWeapon).durability,
         },
-        suit: null,
+        // The clothes on his back (DifficultyDef.startingGear): a t-shirt,
+        // jeans and worn boots — no bonuses, a whisper of armor, honest
+        // cotton durability. Filled in below; the head stays bare.
+        head: null,
+        chest: null,
+        legs: null,
+        feet: null,
         charm: null,
         // No bag worn to start — the base carry is all the hero has until he
         // loots one (see the BAG gear + inventoryCapacity).
@@ -337,6 +341,24 @@ export function createGame(
   // loadout, which simply overwrites them with the hero's own earned stats.
   for (const [stat, points] of Object.entries(diff.startingStats)) {
     state.player.stats[stat as StatName] += points ?? 0;
+  }
+  // The clothes on his back: each startingGear def minted plain into its
+  // slot — base armor, full durability, no affixes. A loadout (below) simply
+  // overwrites them with whatever the hero actually wore out of the last run.
+  for (const gearId of diff.startingGear ?? []) {
+    const def = gearDef(gearId);
+    if (def.slot === "charm" || def.slot === "bag") continue;
+    const piece: Equipment = {
+      id: state.nextId++,
+      defId: gearId,
+      slot: def.slot,
+      tier: "regular",
+      ilvl: def.levelReq ?? 1,
+      affixes: [],
+    };
+    if (def.armor !== undefined) piece.armor = def.armor;
+    if (def.durability !== undefined) piece.durability = def.durability;
+    state.player.equipment[def.slot] = piece;
   }
   recomputeMaxHp(state);
   recomputeMaxStamina(state);

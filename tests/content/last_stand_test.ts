@@ -20,6 +20,11 @@ function bossOnPlayer(state: GameState) {
   boss.contactCooldownMs = 0;
   boss.spoke = true; // skip the confrontation scene — this is a damage test
   state.rng = () => 0.999; // never crit, never drop: deterministic numbers
+  // Strip the starting clothes: bare skin, so the blow lands unturned and
+  // the numbers below are exactly the def's (armor has its own suite).
+  state.player.equipment.chest = null;
+  state.player.equipment.legs = null;
+  state.player.equipment.feet = null;
   return boss;
 }
 

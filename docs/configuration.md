@@ -103,13 +103,13 @@ MEDIUM is the exact 1.0 baseline the levels are tuned at.
 
 **Mercy drops** ease the gentle rungs without making them un-losable: on EASY
 and MEDIUM a packed screen (20+ mobs) starts dropping screen-nuke bombs, low
-health or a near-broken weapon makes medkits, plated armor, and repair kits rain
+health or worn-down gear makes medkits, armor pieces, and repair kits rain
 harder, and a hero stranded with a bone-dry sprint pool (stamina at exactly 0,
 not merely low) is thrown ENERGY DRINKS — a per-kill chance that ramps with the
 time spent winded up to 15% on EASY / 10% on MEDIUM (the drink resets stamina to
 full on touch). Each signal keeps at most ONE rope on the ground: while the
-rescue it answers with (a medkit, repair kit, drink, screen-nuke, or plated
-suit) already lies un-collected within `MERCY.rescueRadius` of the hero, that
+rescue it answers with (a medkit, repair kit, drink, screen-nuke, or armor
+piece) already lies un-collected within `MERCY.rescueRadius` of the hero, that
 signal holds fire — picking it up (or leaving it behind out of view) re-arms
 the rope. The ramp _shapes_ (where each signal starts and maxes) are the
 `MERCY` block in `config.ts`; each rung's _strength_ is its `mercy` object in

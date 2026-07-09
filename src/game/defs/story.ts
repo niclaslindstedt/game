@@ -19,6 +19,13 @@ export type StoryItemDef = {
   lore: string[][];
   /** LevelDef door id this item opens (keycards). */
   unlocks?: string;
+  /**
+   * Picking this up dresses the hero as the ASTRONAUT for the rest of the
+   * run: the EVA suit is worn OVER his clothes and armor — plot gear with no
+   * equip slot and no stats (see `playerSuited`). Only SpaceZ HQ's recovered
+   * space suit sets it.
+   */
+  suitsHero?: boolean;
 };
 
 /**
@@ -55,6 +62,20 @@ export const STORY_ITEM_DEFS: Record<string, StoryItemDef> = {
         "UNDER THE CLEARANCE STRIPE, TINY",
         "PRINT: 'IF IT HUMS, DO NOT ANSWER.'",
       ],
+    ],
+  },
+  space_suit: {
+    id: "space_suit",
+    name: "SPACE SUIT",
+    icon: "icon_suit",
+    suitsHero: true,
+    lore: [
+      [
+        "THE CHIEF'S EVA SUIT, RATED FOR",
+        "THE VOID. IT GOES ON OVER",
+        "EVERYTHING - CLOTHES, ARMOR, ALL.",
+      ],
+      ["SHE'S ON PAD 2.", "NOW I CAN FOLLOW HER", "OFF THE PLANET."],
     ],
   },
   cargo_manifest: {

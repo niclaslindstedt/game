@@ -17,6 +17,7 @@ import {
   step,
   storyItemDef,
   THOUGHT_DEFS,
+  totalArmor,
   type GameEvent,
   type GameState,
 } from "@game/core";
@@ -129,15 +130,19 @@ describe("MARS level def", () => {
     expect(loadout!.level).toBeGreaterThan(5);
     // ...carrying the moon's signature kit and a couple of its powerups.
     expect(loadout!.equipment.weapon.defId).toBe("moons_blade");
-    expect(loadout!.equipment.suit?.defId).toBe("suit_plating");
+    // The moon's best wardrobe, one piece per body slot.
+    expect(loadout!.equipment.head?.defId).toBe("apollo_visor");
+    expect(loadout!.equipment.chest?.defId).toBe("micrometeoroid_vest");
+    expect(loadout!.equipment.legs?.defId).toBe("pressure_trousers");
+    expect(loadout!.equipment.feet?.defId).toBe("moon_boots");
     expect(loadout!.equipment.charm?.defId).toBe("moon_charm");
     expect(loadout!.heldAbilities).toEqual(["fire_orbs", "storm_cell"]);
 
-    // And a run dressed in it arrives rested, plating fastened.
+    // And a run dressed in it arrives rested, armor worn.
     const state = createGame(SEED, "mars", "medium", loadout!);
     expect(state.player.level).toBe(loadout!.level);
     expect(state.player.hp).toBe(state.player.maxHp);
-    expect(state.player.armor).toBeGreaterThan(0);
+    expect(totalArmor(state)).toBeGreaterThan(0);
   });
 });
 

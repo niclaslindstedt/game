@@ -48,8 +48,8 @@ describe("wouldUpgradeSlot", () => {
 
   it("an empty non-weapon slot is always an upgrade to fill", () => {
     const state = startGame();
-    expect(state.player.equipment.suit).toBeNull();
-    expect(wouldUpgradeSlot(state, gear(1, "test_suit", "suit"))).toBe(true);
+    expect(state.player.equipment.chest).toBeNull();
+    expect(wouldUpgradeSlot(state, gear(1, "test_vest", "chest"))).toBe(true);
   });
 });
 

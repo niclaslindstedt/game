@@ -52,11 +52,12 @@ export type StatName =
 export type WeaponClass = "melee" | "ranged" | "magic";
 
 /**
- * A suit's armor grade: how tough its plating is. Each grade maps to a soak
- * fraction and a pool size in config `ARMOR`; higher grades soak more of each
- * hit from a deeper pool. Data on the suit's gear def.
+ * The four BODY slots armor is worn in. Each worn piece carries flat armor
+ * points; the pieces sum, and the total turns into a physical-damage
+ * reduction against the attacker's level (see `armorReduction` and config
+ * `ARMOR`) — the Diablo/WoW shape where standing still means decaying.
  */
-export type ArmorGrade = "green" | "yellow" | "red";
+export type ArmorSlot = "head" | "chest" | "legs" | "feet";
 
 /**
  * Item quality, lowest to highest: white regular, blue magic, yellow rare,
@@ -71,13 +72,14 @@ export type ArmorGrade = "green" | "yellow" | "red";
  */
 export type Tier = "regular" | "magic" | "rare" | "unique" | "legendary";
 
-export type EquipSlot = "weapon" | "suit" | "charm" | "bag";
+export type EquipSlot = "weapon" | ArmorSlot | "charm" | "bag";
 
 /** One rolled bonus on a magic+ item. Higher tiers roll more of them. */
 export type Affix =
   | { kind: "damagePct"; value: number }
   | { kind: "maxHp"; value: number }
   | { kind: "crit"; value: number }
+  | { kind: "armor"; value: number }
   | { kind: "stat"; value: number; stat: StatName };
 
 /** A droppable, equippable item instance (medkits are consumables, not this). */
@@ -98,11 +100,21 @@ export type Equipment = {
   /** Rolled bonuses; count is dictated by the tier, size by `ilvl`. */
   affixes: Affix[];
   /**
-   * Attacks left before this weapon breaks (weapons only; the def carries
-   * the maximum). Undefined = unbreakable — the player's own sidearm never
-   * wears out, so the run can never be left weaponless.
+   * Wear left before this piece gives out (the def carries the maximum).
+   * Weapons spend one point per attack and are TRASHED at zero; armor spends
+   * one per hit taken and merely goes INACTIVE at zero — it stays worn,
+   * contributing nothing, until a repair kit restores it. Undefined =
+   * unbreakable (the built-in sidearm, unique/legendary finds).
    */
   durability?: number;
+  /**
+   * Armor pieces only: the rolled armor points this instance carries — the
+   * def's base value grown by the drop's item level (see `rollEquipment` and
+   * config `ARMOR.armorPerIlvl`), stamped at mint and frozen for life like an
+   * affix. Absent on weapons, charms, bags, and pre-revamp instances (which
+   * fall back to the def's base value — see `armorValueOf`).
+   */
+  armor?: number;
   /**
    * A FROZEN copy of the item's catalog def, captured the instant it was
    * minted (see `rollEquipment`). This is what makes a kept item version-proof:
@@ -137,13 +149,6 @@ export type Player = {
   vz: number;
   hp: number;
   maxHp: number;
-  /**
-   * Current armor points — the suit's plating pool. Soaks a grade-dependent
-   * share of every physical hit until spent (see config `ARMOR`); 0 with no
-   * armored suit worn. The grade and full pool are derived from the equipped
-   * suit (see `armorInfo`); this is only the running remainder.
-   */
-  armor: number;
   /**
    * Current stamina — the sprint pool. Running spends it, walking/idling
    * refills it; an empty pool caps the top speed (see config `STAMINA`).
@@ -195,7 +200,12 @@ export type Player = {
   equipment: {
     /** Never empty — the character always fights with something. */
     weapon: Equipment;
-    suit: Equipment | null;
+    /** The four armor slots. Broken pieces stay worn but count for nothing
+     * until repaired (see `isArmorBroken`). */
+    head: Equipment | null;
+    chest: Equipment | null;
+    legs: Equipment | null;
+    feet: Equipment | null;
     charm: Equipment | null;
     /**
      * A worn BAG that widens the carry (its `GearDef.bagSlots` add cells on
@@ -669,6 +679,9 @@ export type GameEvent =
   | { type: "autoEquipped"; defId: string }
   /** The equipped weapon's durability ran out; `defId` is the broken one. */
   | { type: "weaponBroke"; defId: string }
+  /** A worn armor piece's durability ran out. It stays worn but INACTIVE
+   * (no armor, no bonuses) until a repair kit restores it. */
+  | { type: "armorBroke"; defId: string }
   /** A screen-nuke pickup went off at the player's position. */
   | { type: "nuke"; pos: Vec2 }
   /** A storm ability bolt struck at `pos` (drives the flash + crack). */
@@ -784,7 +797,10 @@ export type Loadout = {
   stats: Record<StatName, number>;
   equipment: {
     weapon: Equipment;
-    suit: Equipment | null;
+    head: Equipment | null;
+    chest: Equipment | null;
+    legs: Equipment | null;
+    feet: Equipment | null;
     charm: Equipment | null;
     bag: Equipment | null;
   };

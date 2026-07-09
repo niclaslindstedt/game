@@ -25,6 +25,7 @@ export const AFFIX_COLORS: Record<Affix["kind"], string> = {
   damagePct: "#e0603a",
   crit: "#e8b93e",
   maxHp: "#5fd97a",
+  armor: "#9ab3c9",
   stat: "#4da6ff",
 };
 

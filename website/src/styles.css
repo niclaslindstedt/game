@@ -421,8 +421,7 @@ body {
   background: #9aa3ad;
 }
 
-/* Stamina: a bright white sprint gauge, distinct from the red HP and the
-   grade-tinted armor above it. */
+/* Stamina: a bright white sprint gauge, distinct from the red HP bar. */
 .hud-bar-fill.stamina-fill {
   background: linear-gradient(180deg, #ffffff, #c8ced6);
 }
@@ -3328,6 +3327,18 @@ body {
 
 .inv-cell.drop-ok {
   border-color: #7ef0c8;
+}
+
+/* A BROKEN armor piece: worn out (durability 0), contributing nothing until
+   a repair kit restores it. It stays visible but reads dead — greyed icon,
+   ember border — so the "why am I taking so much damage" answer is one
+   glance at the paperdoll. */
+.inv-cell.broken {
+  border-color: #e06a6a;
+}
+
+.inv-cell.broken .inv-item-icon {
+  filter: grayscale(1) brightness(0.55);
 }
 
 /* The HUD purse: the coin icon sized to the stat-row text. */

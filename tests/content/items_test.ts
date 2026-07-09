@@ -19,6 +19,7 @@ import {
   rollEquipment,
   step,
   TIERS,
+  totalArmor,
   unequipToInventory,
   WEAPON_DEFS,
 } from "@game/core";
@@ -34,11 +35,11 @@ import {
   stopWaves,
 } from "../helpers.ts";
 
-function makeSuit(id: number, tier: Tier = "regular"): Equipment {
+function makeVest(id: number, tier: Tier = "regular"): Equipment {
   return {
     id,
-    defId: "suit_plating",
-    slot: "suit",
+    defId: "kevlar_vest",
+    slot: "chest",
     tier,
     ilvl: 5,
     affixes: tier === "magic" ? [{ kind: "maxHp", value: 20 }] : [],
@@ -72,9 +73,9 @@ describe("boss loot", () => {
       );
       expect(slots).toContain("weapon");
       // The def's pinned gear count plus whatever his tierDrops paid out.
-      expect(
-        slots.filter((s) => s === "suit" || s === "charm").length,
-      ).toBeGreaterThanOrEqual(1);
+      expect(slots.filter((s) => s !== "weapon").length).toBeGreaterThanOrEqual(
+        1,
+      );
       expect(medkits.length).toBeGreaterThan(0);
       // His weapon drop is the survival-kit machete, always.
       expect(
@@ -290,7 +291,7 @@ describe("auto-equip on pickup", () => {
     clearStage(state);
     state.player.level = 8;
     state.player.inventory = state.player.inventory.map((_, i) =>
-      makeSuit(100 + i),
+      makeVest(100 + i),
     );
     const hammer: Equipment = {
       id: 64,
@@ -321,52 +322,59 @@ describe("auto-equip on pickup", () => {
 });
 
 describe("inventory", () => {
-  it("auto-equips gear picked up onto an empty slot", () => {
+  it("auto-equips armor picked up over the starter clothes", () => {
     const state = startGame();
     state.enemies = [];
+    state.player.level = 5; // grown into the vest's requirement
     state.items = [
       {
         id: 1,
         kind: "equipment",
         pos: { ...state.player.pos },
-        equipment: makeSuit(2),
+        equipment: makeVest(2), // out-armors the starting T-SHIRT
       },
     ];
     step(state, idle, DT);
     expect(state.items).toHaveLength(0);
-    expect(state.player.equipment.suit?.id).toBe(2);
+    expect(state.player.equipment.chest?.id).toBe(2);
+    // The displaced tee went into the bag, not into the void.
+    expect(state.player.inventory.some((i) => i?.defId === "t_shirt")).toBe(
+      true,
+    );
   });
 
   it("bags gear that is worse than what is worn", () => {
     const state = startGame();
     state.enemies = [];
-    state.player.equipment.suit = makeSuit(90, "magic"); // +20 hp affix
+    state.player.level = 5;
+    state.player.equipment.chest = makeVest(90, "magic"); // +20 hp affix
     state.items = [
       {
         id: 1,
         kind: "equipment",
         pos: { ...state.player.pos },
-        equipment: makeSuit(2), // plain — strictly worse
+        equipment: makeVest(2), // plain — strictly worse
       },
     ];
     step(state, idle, DT);
-    expect(state.player.equipment.suit?.id).toBe(90);
+    expect(state.player.equipment.chest?.id).toBe(90);
     expect(state.player.inventory[0]?.id).toBe(2);
   });
 
   it("leaves lesser loot on the ground when the bag is full", () => {
     const state = startGame();
     state.enemies = [];
-    state.player.equipment.suit = makeSuit(90, "magic");
+    state.player.level = 5;
+    state.player.equipment.chest = makeVest(90, "magic");
     state.player.inventory = state.player.inventory.map((_, i) =>
-      makeSuit(100 + i),
+      makeVest(100 + i),
     );
     state.items = [
       {
         id: 1,
         kind: "equipment",
         pos: { ...state.player.pos },
-        equipment: makeSuit(2),
+        equipment: makeVest(2),
       },
     ];
     step(state, idle, DT);
@@ -376,16 +384,17 @@ describe("inventory", () => {
   it("nudges once when a full bag turns away loot, then throttles the cue", () => {
     const state = startGame();
     state.enemies = [];
-    state.player.equipment.suit = makeSuit(90, "magic");
+    state.player.level = 5;
+    state.player.equipment.chest = makeVest(90, "magic");
     state.player.inventory = state.player.inventory.map((_, i) =>
-      makeSuit(100 + i),
+      makeVest(100 + i),
     );
     state.items = [
       {
         id: 1,
         kind: "equipment",
         pos: { ...state.player.pos },
-        equipment: makeSuit(2),
+        equipment: makeVest(2),
       },
     ];
     // First brush with the loot fires the "bags are full" nudge.
@@ -406,20 +415,27 @@ describe("inventory", () => {
 
   it("equips gear from the bag and applies its bonuses", () => {
     const state = startGame();
+    state.player.level = 5;
+    // Bare the chest first so the swap math below is a plain add/remove.
+    discardEquipped(state, "chest");
     const before = state.player.maxHp;
-    const suitBase = GEAR_DEFS.suit_plating!.bonuses.maxHp!;
-    state.player.inventory[3] = makeSuit(50, "magic"); // +20 base, +20 affix
+    const vestBase = GEAR_DEFS.kevlar_vest!.bonuses.maxHp ?? 0;
+    state.player.inventory[3] = makeVest(50, "magic"); // +20 affix
     expect(equipFromInventory(state, 3)).toBe(true);
-    expect(state.player.equipment.suit?.id).toBe(50);
+    expect(state.player.equipment.chest?.id).toBe(50);
     expect(state.player.inventory[3]).toBeNull();
-    expect(state.player.maxHp).toBe(before + suitBase + 20);
+    expect(state.player.maxHp).toBe(before + vestBase + 20);
     expect(state.player.hp).toBe(state.player.maxHp); // gains heal along
+    // The worn vest counts its armor into the total.
+    expect(totalArmor(state)).toBeGreaterThanOrEqual(
+      GEAR_DEFS.kevlar_vest!.armor!,
+    );
 
     // Unequip: bonuses come back off, hp clamps.
-    expect(unequipToInventory(state, "suit")).toBe(true);
+    expect(unequipToInventory(state, "chest")).toBe(true);
     expect(state.player.maxHp).toBe(before);
     expect(state.player.hp).toBe(before);
-    expect(state.player.equipment.suit).toBeNull();
+    expect(state.player.equipment.chest).toBeNull();
   });
 
   it("swaps weapons — the weapon slot is never empty", () => {
@@ -444,7 +460,7 @@ describe("inventory", () => {
 
   it("rearranges bag cells by swapping", () => {
     const state = startGame();
-    state.player.inventory[0] = makeSuit(70);
+    state.player.inventory[0] = makeVest(70);
     moveInventoryItem(state, 0, 2);
     expect(state.player.inventory[0]).toBeNull();
     expect(state.player.inventory[2]?.id).toBe(70);
@@ -453,7 +469,7 @@ describe("inventory", () => {
   it("discards a bag item for good — no ground drop", () => {
     const state = startGame();
     state.items = [];
-    state.player.inventory[2] = makeSuit(77);
+    state.player.inventory[2] = makeVest(77);
     const removed = discardFromInventory(state, 2);
     expect(removed?.id).toBe(77);
     expect(state.player.inventory[2]).toBeNull();
@@ -467,16 +483,18 @@ describe("inventory", () => {
     expect(discardFromInventory(state, 1)).toBeNull();
   });
 
-  it("discards an equipped suit — strips it off the body and clears armor", () => {
+  it("discards worn armor — strips it off the body, armor total drops", () => {
     const state = startGame();
-    state.player.inventory[0] = makeSuit(88);
+    state.player.level = 5;
+    state.player.inventory[0] = makeVest(88);
     expect(equipFromInventory(state, 0)).toBe(true);
-    expect(state.player.equipment.suit?.id).toBe(88);
-    expect(state.player.armor).toBeGreaterThan(0);
-    const removed = discardEquipped(state, "suit");
+    expect(state.player.equipment.chest?.id).toBe(88);
+    const armored = totalArmor(state);
+    expect(armored).toBeGreaterThanOrEqual(GEAR_DEFS.kevlar_vest!.armor!);
+    const removed = discardEquipped(state, "chest");
     expect(removed?.id).toBe(88);
-    expect(state.player.equipment.suit).toBeNull();
-    expect(state.player.armor).toBe(0); // plating stripped with the suit
+    expect(state.player.equipment.chest).toBeNull();
+    expect(totalArmor(state)).toBeLessThan(armored); // the vest's points left
   });
 
   it("never discards the equipped weapon — the holster is never empty", () => {
@@ -536,11 +554,17 @@ describe("Diablo-style item names", () => {
     ).toBe("CRUEL LUNAR WRENCH OF THE OX");
     expect(
       equipmentName(
-        gear("suit_plating", "suit", [
+        gear("kevlar_vest", "chest", [
           { kind: "maxHp", value: 15 },
           { kind: "stat", value: 1, stat: "luck" },
         ]),
       ),
-    ).toBe("STURDY SUIT PLATING OF FORTUNE");
+    ).toBe("STURDY KEVLAR VEST OF FORTUNE");
+    // The armor affix lends its own prefix.
+    expect(
+      equipmentName(
+        gear("kevlar_vest", "chest", [{ kind: "armor", value: 12 }]),
+      ),
+    ).toBe("STUDDED KEVLAR VEST");
   });
 });
