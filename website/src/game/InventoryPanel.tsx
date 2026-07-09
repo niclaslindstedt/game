@@ -26,6 +26,7 @@ import {
   enemyDodgeChance,
   equipFromInventory,
   equipmentIcon,
+  equipmentLevelReq,
   equipmentName,
   gearDef,
   moveInventoryItem,
@@ -115,6 +116,17 @@ type CardLine = { text: string; color?: string };
 
 function itemLines(state: GameState, item: Equipment): CardLine[] {
   const lines: CardLine[] = [];
+  // The Diablo birth certificate: the item's own LEVEL (which sized its
+  // affixes) and the base's requirement — red while the hero hasn't grown
+  // into it (the engine refuses to equip it until then, see meetsLevelReq).
+  const meta: CardLine[] = [{ text: `ITEM LEVEL ${item.ilvl}`, color: "#9aa3ad" }];
+  const req = equipmentLevelReq(item.defId);
+  if (req > 1) {
+    meta.push({
+      text: `REQUIRES LEVEL ${req}`,
+      color: state.player.level < req ? "#e06a6a" : "#9aa3ad",
+    });
+  }
   if (item.defId in WEAPON_DEFS) {
     const def = weaponDef(item.defId);
     // The weapon's class, tinted by class (magic=purple, melee=gold,
@@ -188,6 +200,8 @@ function itemLines(state: GameState, item: Equipment): CardLine[] {
       });
     }
   }
+  // The class/slot headline stays first; the level lines slide in under it.
+  lines.splice(1, 0, ...meta);
   return lines;
 }
 

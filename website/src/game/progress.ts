@@ -12,8 +12,12 @@ import {
   deriveArrivalLoadout,
   DIFFICULTY_ORDER,
   difficultyDef,
+  equipmentLevelReq,
+  GEAR_DEFS,
   LEVEL_ORDER,
+  WEAPON_DEFS,
   type Difficulty,
+  type Equipment,
   type Loadout,
 } from "@game/core";
 
@@ -182,6 +186,43 @@ export function saveLoadout(
   }
 }
 
+/**
+ * Bring a loadout banked by an older build up to the current item system —
+ * the Diablo loot rework retired the epic tier, added the item level, and
+ * replaced the base weapon roster wholesale, and a stale snapshot must not
+ * crash `createGame`. Pieces referencing deleted defs are dropped (the
+ * weapon slot falls back to the engine's unbreakable sidearm); an epic tier
+ * reads as rare; a missing `ilvl` is backfilled from the base's requirement.
+ */
+function migrateLoadout(loadout: Loadout): Loadout {
+  const fix = (piece: Equipment | null): Equipment | null => {
+    if (!piece) return null;
+    if (!(piece.defId in WEAPON_DEFS) && !(piece.defId in GEAR_DEFS)) {
+      return null;
+    }
+    const tier =
+      (piece.tier as string) === "epic" ? ("rare" as const) : piece.tier;
+    return { ...piece, tier, ilvl: piece.ilvl ?? equipmentLevelReq(piece.defId) };
+  };
+  const weapon = fix(loadout.equipment.weapon) ?? {
+    id: 0,
+    defId: "blaster",
+    slot: "weapon" as const,
+    tier: "regular" as const,
+    ilvl: 1,
+    affixes: [],
+  };
+  return {
+    ...loadout,
+    equipment: {
+      weapon,
+      suit: fix(loadout.equipment.suit),
+      charm: fix(loadout.equipment.charm),
+    },
+    inventory: loadout.inventory.map(fix),
+  };
+}
+
 /** The snapshot banked when `levelId` was cleared at `difficulty`, if any. */
 export function loadLoadout(
   levelId: string,
@@ -189,7 +230,7 @@ export function loadLoadout(
 ): Loadout | null {
   try {
     const raw = window.localStorage.getItem(loadoutKey(levelId, difficulty));
-    return raw ? (JSON.parse(raw) as Loadout) : null;
+    return raw ? migrateLoadout(JSON.parse(raw) as Loadout) : null;
   } catch {
     return null;
   }
