@@ -99,7 +99,16 @@ run against synthetic fixtures with no shipped content (see
   unlocks at a MONSTER LEVEL, config `LOOT.tierUnlockMlvl`), and the affix
   pools magic+ items roll, whose magnitudes scale with the drop's ITEM LEVEL
   (the killer's monster level minus a small weighted deficit; magic+ names
-  are composed Diablo-style from those affixes).
+  are composed Diablo-style from those affixes). Two more axes complete the
+  tables: **base grades** (`defs/grades.ts` — every pool base ships
+  generated EXCEPTIONAL and ELITE versions, same look, new names, level
+  requirements remapped up to 100, damage/armor re-derived on the balance
+  curves; `rollEquipment` folds them into each level's pool at roll time)
+  and **make quality** (every PLAIN regular-tier weapon/armor drop rolls
+  BROKEN → CRUDE → NORMAL → SUPERIOR → PERFECT per instance, odds sliding
+  with the killer's monster level, scaling its damage/armor/durability/value
+  — config `QUALITY`; craftsmanship and magic are exclusive D2-style, so
+  magic-or-better finds, charms, and bags stay normal make).
 - **`src/game/defs/abilities.ts`** — the ability pickups: time-limited
   powers (orbiting fire orbs, storm strikes, stasis slow fields, the item
   magnet whose pull radius grows with INTELLIGENCE) plus the instant
@@ -418,6 +427,7 @@ site that switches on it. The unions and their handler sites:
 | `AbilityKind` (defs/abilities.ts) | `orbit` \| `storm` \| `stasis` \| `nuke` \| `magnet`                | capability-object dispatch in `abilities.ts` + `step.ts`; visuals in `render.ts` `drawAbilities`                     |
 | `Item["kind"]` (types.ts)         | `medkit` \| `xp` \| `repair` \| `equipment` \| `ability` \| `story` | the pickup switch in `step.ts`; the item-sprite switch in `render.ts`                                                |
 | `Affix["kind"]` (types.ts)        | `damagePct` \| `maxHp` \| `crit` \| `stat`                          | the affix readers in `items.ts` (`effectiveStat`, `computeMaxHp`, `playerCritChance`, `weaponDamage`, `weaponScore`) |
+| `Quality` (types.ts)              | `broken` \| `crude` \| `normal` \| `superior` \| `perfect`          | config `QUALITY.mults`/weights, `QUALITY_PREFIX` (defs/equipment.ts), the roll in `items.ts` `rollQuality`           |
 
 **Checklist to add an archetype:** union entry → def field(s) it needs → the
 `step.ts` (or `items.ts`/`abilities.ts`) handler branch → a `GameEvent`

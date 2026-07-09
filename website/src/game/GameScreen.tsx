@@ -52,6 +52,7 @@ import {
   openMap,
   openShop,
   pauseGame,
+  equipmentMaxDurability,
   PLAYER,
   playerAppearance,
   resumeGame,
@@ -1323,7 +1324,7 @@ export function GameScreen({
         const weaponWear =
           weapon.durability === undefined
             ? null
-            : weapon.durability / weaponDef(weapon.defId).durability;
+            : weapon.durability / equipmentMaxDurability(weapon);
         const appearance = playerAppearance(state);
         const stage = menaceStage(state);
         const key = `${state.phase}/${state.player.hp}/${Math.ceil(state.player.stamina)}/${state.player.xp}/${state.player.level}/${state.player.pendingStatPoints}/${state.enemies.length}/${bagCount}/${bagFree}/${bagFullHint ? 1 : 0}/${held}/${active}/${weapon.defId}/${weaponWear?.toFixed(2) ?? ""}/${state.player.coins}/${appearance}/${stage}/${state.stats.kills}/${Math.floor(state.stats.timeMs / 1000)}`;

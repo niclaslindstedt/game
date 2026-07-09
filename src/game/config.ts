@@ -663,6 +663,28 @@ export const LOOT = {
 } as const;
 
 /**
+ * MAKE QUALITY — the craftsmanship axis every PLAIN (regular-tier) weapon
+ * and armor drop rolls at mint (see `rollEquipment`): BROKEN and CRUDE work
+ * below the authored numbers, NORMAL at them, SUPERIOR and PERFECT above.
+ * `mults` scales the base's damage (weapons), armor points (armor),
+ * durability, and merchant value; the roll's odds shift with the killer's
+ * MONSTER LEVEL — `weightsLow` are the relative odds at mlvl 1, `weightsHigh`
+ * at `highMlvl`, lerped linearly between, so the level-1 rank and file drop
+ * mostly shabby make and the deep campaign pays out superior and perfect
+ * work. Craftsmanship and magic are exclusive (the D2 rule): MAGIC-or-better
+ * finds, charms, and bags never roll one — they are always normal make.
+ */
+export const QUALITY = {
+  mults: { broken: 0.7, crude: 0.85, normal: 1, superior: 1.15, perfect: 1.3 },
+  /** Relative quality odds off a monster-level-1 kill… */
+  weightsLow: { broken: 20, crude: 25, normal: 52, superior: 3, perfect: 0 },
+  /** …and off a monster at/above `highMlvl`; lerped linearly between. */
+  weightsHigh: { broken: 0, crude: 6, normal: 54, superior: 28, perfect: 12 },
+  /** The monster level at which the odds reach `weightsHigh`. */
+  highMlvl: 100,
+} as const;
+
+/**
  * MERCY DROPS — the gentle rungs (easy/medium) throw a drowning player a rope,
  * and the fight eases without ever becoming un-losable. Four independent
  * signals feed it: a PACKED FIELD (crowd of on-screen mobs), LOW HEALTH, a

@@ -7,6 +7,7 @@
 // via their `gearPool`s; WHEN a base can drop is its `levelReq` against the
 // killer's monster level, exactly like a weapon's.
 
+import { gearGradeVariants, type Grade } from "./grades.ts";
 import type { EquipSlot, StatName } from "../types.ts";
 
 export type GearDef = {
@@ -60,6 +61,15 @@ export type GearDef = {
    * metal sells for double, precious for four times. Omitted = base value.
    */
   material?: "metal" | "precious";
+  /**
+   * Set on a GENERATED base-grade variant (see defs/grades.ts): which rung
+   * of the Normal → Exceptional → Elite ladder this def is. Absent on every
+   * hand-authored (normal) base.
+   */
+  grade?: Grade;
+  /** A grade variant's normal ancestor — the pool base it was generated
+   * from. Only armor pieces grade up; charms and bags never do. */
+  gradeBase?: string;
   /** Inventory icon sprite. */
   icon: string;
 };
@@ -666,3 +676,8 @@ export const GEAR_DEFS: Record<string, GearDef> = {
     icon: "icon_enchanted_ring",
   },
 };
+
+// The generated EXCEPTIONAL/ELITE versions of every pool armor piece — same
+// look, higher numbers and requirements (see defs/grades.ts). Merged into
+// the catalog at load so every surface sees them as ordinary defs.
+Object.assign(GEAR_DEFS, gearGradeVariants(GEAR_DEFS));

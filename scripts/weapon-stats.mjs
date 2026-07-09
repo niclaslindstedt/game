@@ -134,6 +134,12 @@ for (const levelId of LEVEL_ORDER) {
 console.log("\n=== Base ladder by class (all pools merged, EFFECTIVE dps) ===");
 const byClass = { melee: [], ranged: [], magic: [] };
 for (const id of inPools) byClass[WEAPON_DEFS[id].class].push(WEAPON_DEFS[id]);
+// Grade variants ride their base's pool membership (defs/grades.ts), so the
+// exceptional/elite versions join the ladder — the never-step-down rule now
+// holds across the whole 1–100 requirement span.
+for (const def of Object.values(WEAPON_DEFS)) {
+  if (def.gradeBase && inPools.has(def.gradeBase)) byClass[def.class].push(def);
+}
 for (const [cls, defs] of Object.entries(byClass)) {
   defs.sort((a, b) => a.levelReq - b.levelReq);
   console.log(

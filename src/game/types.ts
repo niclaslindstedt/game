@@ -74,6 +74,20 @@ export type Tier = "regular" | "magic" | "rare" | "unique" | "legendary";
 
 export type EquipSlot = "weapon" | ArmorSlot | "charm" | "bag";
 
+/**
+ * Item MAKE quality, worst to best — the D2-style craftsmanship roll: every
+ * PLAIN (regular-tier) weapon and armor drop rolls one at mint (see
+ * `rollQuality`), and the rank scales the numbers the piece was authored
+ * with (a weapon's damage, an armor piece's points, the durability — config
+ * `QUALITY.mults`). Low-level monsters mostly drop broken/crude make; the
+ * deeper the killer's monster level, the more superior/perfect work falls
+ * (config `QUALITY.weightsLow/High`). Craftsmanship and magic are exclusive,
+ * the D2 rule: a MAGIC-or-better find is always normal make (already well
+ * built — unique/legendary even mint unbreakable), as are charms and bags
+ * (nothing to scale).
+ */
+export type Quality = "broken" | "crude" | "normal" | "superior" | "perfect";
+
 /** One rolled bonus on a magic+ item. Higher tiers roll more of them. */
 export type Affix =
   | { kind: "damagePct"; value: number }
@@ -99,6 +113,14 @@ export type Equipment = {
   ilvl: number;
   /** Rolled bonuses; count is dictated by the tier, size by `ilvl`. */
   affixes: Affix[];
+  /**
+   * The MAKE quality this instance rolled at mint (see `Quality`): scales the
+   * base's damage/armor/durability and prefixes the name (CRUDE …, PERFECT
+   * …). Absent = normal — the default for hand-minted pieces (starting gear)
+   * and every instance from before quality shipped, so old saves read
+   * unchanged.
+   */
+  quality?: Quality;
   /**
    * Wear left before this piece gives out (the def carries the maximum).
    * Weapons spend one point per attack and are TRASHED at zero; armor spends

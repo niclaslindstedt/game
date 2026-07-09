@@ -406,6 +406,18 @@ export const FIX_GEAR: Record<string, GearDef> = {
 };
 
 export const FIX_ABILITIES: Record<string, AbilityDef> = {
+  // Shared id, like `blaster`: the loot rain hardcodes a `screen_nuke` slice
+  // (LOOT.nukeShare and the crowd-bomb mercy drop both mint this id), so the
+  // fixture catalog must carry it or a long headless run crashes the moment
+  // the slice hits. Mirrors the shipped nuke's numbers.
+  screen_nuke: {
+    id: "screen_nuke",
+    name: "SCREEN NUKE",
+    kind: "nuke",
+    durationMs: 0,
+    icon: "icon_nuke",
+    nuke: { radius: 240 },
+  },
   test_orbit: {
     id: "test_orbit",
     name: "TEST ORBIT",

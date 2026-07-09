@@ -302,7 +302,13 @@ function dropEarlyDrops(state: GameState, at: Vec2): void {
         id: state.nextId++,
         kind: "equipment",
         pos,
-        equipment: rollEquipment(state, { defId: entry.weapon }),
+        // Scripted story drops arrive exactly as tuned — the make-quality
+        // roll would let a BROKEN one undercut the opening the schedule
+        // promises (HQ's baton on kill 2), so it is pinned to normal.
+        equipment: rollEquipment(state, {
+          defId: entry.weapon,
+          quality: "normal",
+        }),
       });
     } else if ("ability" in entry) {
       state.items.push({
