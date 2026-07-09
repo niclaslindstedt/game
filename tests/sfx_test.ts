@@ -38,6 +38,7 @@ const kill = (x: number): GameEvent => ({
   defId: "test_minion",
   damage: 10,
   crit: false,
+  xp: 5,
 });
 
 describe("playEventSounds per-step dedupe", () => {

@@ -644,6 +644,8 @@ export type GameEvent =
       /** The killing blow, so death also floats a damage number. */
       damage: number;
       crit: boolean;
+      /** XP this kill awarded — the app floats it as rising blue combat text. */
+      xp: number;
     }
   | { type: "playerHurt"; crit: boolean }
   /** The player sidestepped a blow entirely (see `playerDodgeChance`). `pos`

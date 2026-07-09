@@ -687,12 +687,18 @@ export type Effect = {
   untilMs: number;
   /** Total effect length, for progress-driven animation. */
   durationMs?: number;
+  /** World-clock ms before the effect begins drawing — lets a float lag behind
+   * the hit that spawned it (the XP popup trails the damage number). */
+  startMs?: number;
   /** Splash: sprite family ("blood", "ecto") — frames `<family>_0/_1`. */
   sprite?: string;
   /** Text float: the word to rise off the spot (e.g. "DODGE"). */
   text?: string;
   /** Text float: the glyph color. */
   color?: string;
+  /** Text float: how far the word climbs over its life, in world px
+   * (default 16). XP popups rise further so they read as "flowing up". */
+  rise?: number;
   /** Damage number: the hit's rounded damage. */
   value?: number;
   /** Damage number: crits shake, grow, and glow gold. */
@@ -717,6 +723,9 @@ export function drawEffects(
   const font = assets.font;
   for (const effect of effects) {
     if (timeMs > effect.untilMs) continue;
+    // A delayed float (e.g. the XP popup trailing its damage number) stays
+    // hidden until its start tick, then animates from t=0 as usual.
+    if (effect.startMs != null && timeMs < effect.startMs) continue;
     const x = Math.round(effect.pos.x - camera.x);
     const groundY = Math.round(effect.pos.y - camera.y);
 
@@ -771,17 +780,19 @@ export function drawEffects(
       // damage number but spelled out.
       const duration = effect.durationMs ?? 650;
       const t = 1 - (effect.untilMs - timeMs) / duration; // 0 → 1
-      const rise = Math.round(16 * t);
+      const rise = Math.round((effect.rise ?? 16) * t);
       const text = effect.text ?? "";
       const width = font.measure(text);
+      const tx = x - Math.round(width / 2);
+      const ty = groundY - rise - font.height;
       ctx.globalAlpha = t > 0.6 ? 1 - (t - 0.6) / 0.4 : 1;
-      font.draw(
-        ctx,
-        text,
-        x - Math.round(width / 2),
-        groundY - rise - font.height,
-        { scale: 1, color: effect.color ?? "#7ecbff" },
-      );
+      // A hard 1px drop-shadow first so the word keeps contrast on both the
+      // bright floor and the dark sky — the colored glyphs ride on top.
+      font.draw(ctx, text, tx + 1, ty + 1, { scale: 1, color: "#0b0d10" });
+      font.draw(ctx, text, tx, ty, {
+        scale: 1,
+        color: effect.color ?? "#7ecbff",
+      });
       ctx.globalAlpha = 1;
       continue;
     }
