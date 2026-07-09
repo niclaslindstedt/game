@@ -624,6 +624,26 @@ export type GameEvent =
        * (medkits, arrows, powerups), which never carry an inventory icon.
        */
       defId?: string;
+      /**
+       * The picked-up piece's stable `Equipment.id` (equipment pickups only) —
+       * lets the app find it in the bag to click-equip straight from the pickup
+       * card, robust to the bag being rearranged while the card is up.
+       */
+      itemId?: number;
+      /**
+       * True when the piece was good enough to be worn on the spot (the
+       * auto-equip path). The pickup card reads it to badge the find
+       * "EQUIPPED" rather than offering a tap-to-equip.
+       */
+      equipped?: boolean;
+      /**
+       * True when wearing this piece would improve its slot over what's there
+       * now (equipment pickups only). Auto-equipped finds are always upgrades;
+       * a bagged find is an upgrade only when it out-scores the worn piece yet
+       * wasn't force-equipped (a passive charm, say). Drives the card's
+       * "UPGRADE" marker.
+       */
+      upgrade?: boolean;
     }
   | { type: "itemDropped"; pos: Vec2 }
   /**

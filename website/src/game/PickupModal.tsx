@@ -1,23 +1,33 @@
 // SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
 // The pickup card: a bordered panel — dressed like the HUD clock/kill units —
 // that pops in mid-screen when a weapon or item drops into the bag, showing the
-// piece's icon and its rarity-tinted name. A spark laps the frame so a fresh
-// find reads as "new and shiny", not chrome. Only bag gear triggers it; loose
-// pickups (medkits, arrows, powerups) stay in the lower-corner PickupFeed.
+// piece's icon and its rarity-tinted name. A spark laps the frame and a sheen
+// glimmers across the face so a fresh find reads as "new and shiny", not chrome.
+// Special tiers (magic → legendary) get a flashy reveal on top — a rarity bloom,
+// rays, sparkles, and flames for the top tiers — the way an epic card turns over
+// in Hearthstone. Only bag gear triggers the card; loose pickups (medkits,
+// arrows, powerups) stay in the lower-corner PickupFeed.
+//
+// The card is clickable: tapping a bagged find equips it on the spot (the
+// caller wires `onEquip`), so a good drop is one tap from being worn. Auto-
+// equipped upgrades arrive already worn and badge themselves EQUIPPED instead.
 //
 // One card shows at a time — the newest replaces whatever is on screen. The
-// caller keys the mount by the card's id so a new pickup restarts the pop and
-// spark, and clears it after PICKUP_CARD_TTL_MS (kept in sync with the CSS
-// animation length in styles.css).
+// caller keys the mount by the card's id so a new pickup restarts the pop,
+// spark, and reveal, and clears it after PICKUP_CARD_TTL_MS (kept in sync with
+// the CSS animation length in styles.css).
 
 import type { CSSProperties } from "react";
+
+import type { Tier } from "@game/core";
 
 import { PixelText } from "@ui/lib/PixelText.tsx";
 import type { PixelFont } from "@ui/lib/pixel-font.ts";
 
 /** How long a pickup card stays on screen before it clears, in ms. Must match
- * the `.pickup-card` animation duration in styles.css. */
-export const PICKUP_CARD_TTL_MS = 2600;
+ * the `.pickup-card` animation duration in styles.css. Longer than a glance so
+ * a tap-to-equip find has time to be acted on. */
+export const PICKUP_CARD_TTL_MS = 5200;
 
 /**
  * Wrap width for the pickup name, in rem: the `.pickup-card` caps at 22rem,
@@ -27,16 +37,136 @@ export const PICKUP_CARD_TTL_MS = 2600;
  */
 const PICKUP_NAME_REM = 17;
 
+/** Rarity ladder rank — drives how much reveal spectacle a tier earns. */
+const TIER_RANK: Record<Tier, number> = {
+  regular: 0,
+  magic: 1,
+  rare: 2,
+  unique: 3,
+  legendary: 4,
+};
+
+/** Green worn by the UPGRADE / EQUIPPED status tags (matches AFFIX vitality). */
+const UPGRADE_COLOR = "#5fd97a";
+/** Neutral off-white for the tap-to-equip affordance. */
+const HINT_COLOR = "#cfd3d8";
+
 export type PickupCard = {
-  /** Bumped per pickup; used as the mount key so the pop/spark restart. */
+  /** Bumped per pickup; used as the mount key so the pop/spark/reveal restart. */
   id: number;
   /** The piece's icon as a data URL (equipmentIcon → spriteDataUrl), if any. */
   icon?: string;
   /** The item's display name. */
   name: string;
-  /** Rarity (tier) color — tints both the name and the frame. */
+  /** Rarity (tier) color — tints the name, the frame, and the reveal. */
   color: string;
+  /** Rarity tier — selects which reveal spectacle plays. */
+  tier: Tier;
+  /** Wearing this piece would improve its slot — badge it as an upgrade. */
+  upgrade: boolean;
+  /** The piece is already worn (auto-equipped on pickup) — badge EQUIPPED. */
+  equipped: boolean;
+  /**
+   * Equip this bagged find. Present only when the piece is in the bag and the
+   * hero can wear it right now; absent for already-worn or under-leveled finds.
+   * Wired by the caller to `equipFromInventory` + a click sound.
+   */
+  onEquip?: () => void;
 };
+
+/** A handful of sparkle motes for magic+ reveals — fixed offsets so the burst
+ * reads the same every time (no per-render randomness that could jitter). */
+const SPARKS = [
+  { x: 8, y: 18, d: 0 },
+  { x: 88, y: 12, d: 90 },
+  { x: 22, y: 84, d: 160 },
+  { x: 72, y: 82, d: 60 },
+  { x: 50, y: 6, d: 120 },
+  { x: 96, y: 54, d: 200 },
+] as const;
+
+/** Flame tongues along the base for the top tiers (unique/legendary). */
+const FLAMES = [20, 38, 50, 62, 80] as const;
+
+function RarityReveal({ tier }: { tier: Tier }) {
+  const rank = TIER_RANK[tier];
+  if (rank === 0) return null;
+  return (
+    <span className="pickup-card-reveal" aria-hidden="true">
+      <span className="pickup-card-flash" />
+      {rank >= TIER_RANK.rare && <span className="pickup-card-rays" />}
+      {SPARKS.map((s, i) => (
+        <span
+          key={i}
+          className="pickup-card-spark-mote"
+          style={
+            {
+              left: `${s.x}%`,
+              top: `${s.y}%`,
+              "--mote-delay": `${s.d}ms`,
+            } as CSSProperties
+          }
+        />
+      ))}
+      {rank >= TIER_RANK.unique && (
+        <span className="pickup-card-flames">
+          {FLAMES.map((x, i) => (
+            <span
+              key={i}
+              className="pickup-card-flame"
+              style={
+                {
+                  left: `${x}%`,
+                  "--flame-delay": `${i * 90}ms`,
+                } as CSSProperties
+              }
+            />
+          ))}
+        </span>
+      )}
+    </span>
+  );
+}
+
+function StatusTag({ card, font }: { card: PickupCard; font: PixelFont }) {
+  if (card.equipped) {
+    return (
+      <div className="pickup-card-tag pickup-card-tag--equipped">
+        <PixelText
+          font={font}
+          text="EQUIPPED"
+          scale={1}
+          color={UPGRADE_COLOR}
+        />
+      </div>
+    );
+  }
+  if (card.upgrade) {
+    return (
+      <div className="pickup-card-tag pickup-card-tag--upgrade">
+        <PixelText
+          font={font}
+          text="▲ UPGRADE"
+          scale={1}
+          color={UPGRADE_COLOR}
+        />
+      </div>
+    );
+  }
+  if (card.onEquip) {
+    return (
+      <div className="pickup-card-tag pickup-card-tag--hint">
+        <PixelText
+          font={font}
+          text="TAP TO EQUIP"
+          scale={1}
+          color={HINT_COLOR}
+        />
+      </div>
+    );
+  }
+  return null;
+}
 
 export function PickupModal({
   font,
@@ -45,23 +175,40 @@ export function PickupModal({
   font: PixelFont;
   card: PickupCard;
 }) {
+  const clickable = card.onEquip != null;
+  const className = `pickup-card${clickable ? " pickup-card--clickable" : ""}${
+    card.upgrade || card.equipped ? " pickup-card--upgrade" : ""
+  }`;
+  const style = { "--rarity": card.color } as CSSProperties;
+  // Always a <button>, inert (disabled) when there's nothing to equip. Keeping
+  // the element type stable means tapping to equip updates the card in place
+  // rather than remounting it and replaying the whole pop + reveal.
   return (
-    <div
-      className="pickup-card"
-      style={{ "--rarity": card.color } as CSSProperties}
+    <button
+      type="button"
+      className={className}
+      style={style}
+      disabled={!clickable}
+      aria-label={clickable ? `Equip ${card.name}` : card.name}
       aria-live="polite"
+      onClick={card.onEquip}
     >
+      <RarityReveal tier={card.tier} />
       <span className="pickup-card-spark" aria-hidden="true" />
+      <span className="pickup-card-sheen" aria-hidden="true" />
       {card.icon && (
         <img src={card.icon} alt="" className="pixel-img pickup-card-icon" />
       )}
-      <PixelText
-        font={font}
-        text={card.name}
-        scale={2}
-        color={card.color}
-        maxWidth={PICKUP_NAME_REM}
-      />
-    </div>
+      <div className="pickup-card-body">
+        <PixelText
+          font={font}
+          text={card.name}
+          scale={2}
+          color={card.color}
+          maxWidth={PICKUP_NAME_REM}
+        />
+        <StatusTag card={card} font={font} />
+      </div>
+    </button>
   );
 }

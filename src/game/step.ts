@@ -79,6 +79,7 @@ import {
   weaponRangeFor,
   weaponSweepHalfAngle,
   wearEquippedWeapon,
+  wouldUpgradeSlot,
 } from "./items.ts";
 import { grantXp, hitEnemy, unspawnedMinions } from "./loot.ts";
 import { addMapMarker, revealAround } from "./map.ts";
@@ -1400,10 +1401,19 @@ function stepItems(state: GameState): void {
         tier: item.equipment.tier,
         name: equipmentName(item.equipment),
         defId: item.equipment.defId,
+        itemId: item.equipment.id,
+        // Worn on the spot — the auto-equip path only ever fires on a genuine
+        // upgrade, so the card badges it EQUIPPED, not tap-to-equip.
+        equipped: true,
+        upgrade: true,
       });
       state.events.push({ type: "autoEquipped", defId: item.equipment.defId });
       return false;
     }
+    // A bagged find might still out-score the worn piece (a passive charm the
+    // auto-equip rule leaves alone) — probe before it lands so the card can
+    // flag it as an upgrade to tap.
+    const bagUpgrade = wouldUpgradeSlot(state, item.equipment);
     if (!addToInventory(state, item.equipment)) {
       // Bag full: the piece stays grounded. Nudge the player to make room —
       // a thought over the hero and a pulse on the bag button — throttled so
@@ -1426,6 +1436,9 @@ function stepItems(state: GameState): void {
       tier: item.equipment.tier,
       name: equipmentName(item.equipment),
       defId: item.equipment.defId,
+      itemId: item.equipment.id,
+      equipped: false,
+      upgrade: bagUpgrade,
     });
     return false;
   });
