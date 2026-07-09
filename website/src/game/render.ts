@@ -701,7 +701,7 @@ export type Effect = {
   rise?: number;
   /** Damage number: the hit's rounded damage. */
   value?: number;
-  /** Damage number: crits shake, grow, and glow gold. */
+  /** Damage number: crits jolt left-right-center, grow, and glow gold. */
   crit?: boolean;
   /** Damage number: on a crit, how hard the blow rolled in [0, 1] — scales the
    * popup from a modest 1.5× (a glancing crit) up to a fat 3× (a top-of-band
@@ -754,17 +754,25 @@ export function drawEffects(
 
     if (effect.kind === "damage") {
       // The hit's number pops on the victim's head and stays pinned there —
-      // only XP floats now. A crit is a fat gold figure shaking in place; a
-      // normal hit is a plain static number. A crit's size tracks how hard it
-      // rolled: a glancing crit grows a modest 1.5×, a top-of-band slam a fat
-      // 3× (quantized to half-steps so the pixel glyphs stay crisp). It shakes
-      // harder the bigger it is.
+      // only XP floats now. A crit is a fat gold figure that jolts once —
+      // a beat left, a beat right, then dead center for the rest of its
+      // life — not a continuous buzz. A normal hit is a plain static number.
+      // A crit's size tracks how hard it rolled: a glancing crit grows a
+      // modest 1.5×, a top-of-band slam a fat 3× (quantized to half-steps so
+      // the pixel glyphs stay crisp). It jolts harder the bigger it is.
       const duration = effect.durationMs ?? 650;
       const t = 1 - (effect.untilMs - timeMs) / duration; // 0 → 1
       const crit = effect.crit ?? false;
       const power = effect.critPower ?? 0.5;
       const scale = crit ? Math.round((1.5 + 1.5 * power) * 2) / 2 : 1;
-      const shake = crit ? Math.round(Math.sin(timeMs / 14) * scale) : 0;
+      const elapsedMs = t * duration;
+      const shake = !crit
+        ? 0
+        : elapsedMs < 70
+          ? -Math.round(scale)
+          : elapsedMs < 140
+            ? Math.round(scale)
+            : 0;
       const text = formatCompact(effect.value ?? 0);
       const width = font.measure(text) * scale;
       ctx.globalAlpha = t > 0.7 ? 1 - (t - 0.7) / 0.3 : 1;
