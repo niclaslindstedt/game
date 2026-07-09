@@ -119,7 +119,9 @@ function itemLines(state: GameState, item: Equipment): CardLine[] {
   // The Diablo birth certificate: the item's own LEVEL (which sized its
   // affixes) and the base's requirement — red while the hero hasn't grown
   // into it (the engine refuses to equip it until then, see meetsLevelReq).
-  const meta: CardLine[] = [{ text: `ITEM LEVEL ${item.ilvl}`, color: "#9aa3ad" }];
+  const meta: CardLine[] = [
+    { text: `ITEM LEVEL ${item.ilvl}`, color: "#9aa3ad" },
+  ];
   const req = equipmentLevelReq(item.defId);
   if (req > 1) {
     meta.push({

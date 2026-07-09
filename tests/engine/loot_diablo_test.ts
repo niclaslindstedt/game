@@ -276,7 +276,10 @@ describe("elite/boss tierDrops", () => {
     mlvl: number,
     rng: () => number,
   ): void {
-    const boss = makeEnemy({ pos: { x: 500, y: 500 }, hp: 1, mlvl }, "test_boss");
+    const boss = makeEnemy(
+      { pos: { x: 500, y: 500 }, hp: 1, mlvl },
+      "test_boss",
+    );
     boss.powerScaled = true; // keep the staged mlvl — no re-stamp on engage
     state.enemies = [boss];
     state.items = [];

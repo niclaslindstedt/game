@@ -357,7 +357,11 @@ function migrateLoadout(loadout: Loadout): Loadout {
     }
     const tier =
       (piece.tier as string) === "epic" ? ("rare" as const) : piece.tier;
-    return { ...piece, tier, ilvl: piece.ilvl ?? equipmentLevelReq(piece.defId) };
+    return {
+      ...piece,
+      tier,
+      ilvl: piece.ilvl ?? equipmentLevelReq(piece.defId),
+    };
   };
   const weapon = fix(loadout.equipment.weapon) ?? {
     id: 0,

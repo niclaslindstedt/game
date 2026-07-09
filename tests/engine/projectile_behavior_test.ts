@@ -101,7 +101,9 @@ describe("multi-pellet volleys", () => {
     state.player.weaponCooldownMs = 0;
     // One sturdy target well inside range but outside a single tick's travel.
     state.enemies = [
-      makeEnemy({ pos: { x: state.player.pos.x + 150, y: state.player.pos.y } }),
+      makeEnemy({
+        pos: { x: state.player.pos.x + 150, y: state.player.pos.y },
+      }),
     ];
     step(state, idle, DT);
     expect(state.projectiles).toHaveLength(3);
@@ -122,7 +124,12 @@ describe("piercing rounds", () => {
     for (let i = 0; i < 3; i++) {
       state.enemies.push(
         makeEnemy(
-          { id: 9100 + i, pos: { x: p.x + 40 + i * 40, y: p.y }, hp: 1, maxHp: 1 },
+          {
+            id: 9100 + i,
+            pos: { x: p.x + 40 + i * 40, y: p.y },
+            hp: 1,
+            maxHp: 1,
+          },
           "test_fodder",
         ),
       );

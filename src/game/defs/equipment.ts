@@ -1130,7 +1130,11 @@ export function affixNaming(affix: Affix): {
     case "damagePct":
       return {
         prefix:
-          affix.value < 0.25 ? "JAGGED" : affix.value < 0.5 ? "VICIOUS" : "CRUEL",
+          affix.value < 0.25
+            ? "JAGGED"
+            : affix.value < 0.5
+              ? "VICIOUS"
+              : "CRUEL",
       };
     case "crit":
       return { suffix: affix.value < 0.06 ? "OF PRECISION" : "OF DEADLINESS" };

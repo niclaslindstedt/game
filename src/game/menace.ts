@@ -100,10 +100,7 @@ export function mobLevelScale(state: GameState): number {
  * A def's own `levelBonus` (elites/bosses run hot) is added by the caller.
  */
 export function mobLevelFor(playerLevel: number, difficulty: string): number {
-  return Math.max(
-    1,
-    playerLevel + difficultyDef(difficulty).mobLevelOffset,
-  );
+  return Math.max(1, playerLevel + difficultyDef(difficulty).mobLevelOffset);
 }
 
 /** `mobLevelFor` off the live state: the monster level a mob spawned right

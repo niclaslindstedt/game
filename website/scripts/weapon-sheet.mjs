@@ -109,12 +109,7 @@ for (const group of groups) {
       y + 16,
     );
     if (behaviors) {
-      blit(
-        sheet,
-        upscale(renderText(behaviors, STAT), 2),
-        TEXT_X,
-        y + 30,
-      );
+      blit(sheet, upscale(renderText(behaviors, STAT), 2), TEXT_X, y + 30);
     }
     // Loud markers for the two mistakes a sheet exists to catch.
     if (!icon) {

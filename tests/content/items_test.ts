@@ -466,14 +466,18 @@ describe("Diablo-style item names", () => {
   }
 
   it("names an affix-less item by its bare base type", () => {
-    expect(equipmentName(weapon("lunar_wrench", []))).toBe(equipmentBaseName("lunar_wrench"));
+    expect(equipmentName(weapon("lunar_wrench", []))).toBe(
+      equipmentBaseName("lunar_wrench"),
+    );
     expect(equipmentName(weapon("lunar_wrench", []))).toBe("LUNAR WRENCH");
   });
 
   it("prefixes a damage roll and suffixes a stat roll", () => {
     // damagePct → a magnitude-scaled prefix.
     expect(
-      equipmentName(weapon("lunar_wrench", [{ kind: "damagePct", value: 0.3 }])),
+      equipmentName(
+        weapon("lunar_wrench", [{ kind: "damagePct", value: 0.3 }]),
+      ),
     ).toBe("VICIOUS LUNAR WRENCH");
     // A stat roll → an "of the X" suffix keyed to the stat.
     expect(

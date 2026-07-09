@@ -734,10 +734,7 @@ function remainingDurability(weapon: Equipment): number {
  * to swing — auto-equip skips it, the bag refuses to equip it, and the UI
  * paints the requirement red until the hero grows into it.
  */
-export function meetsLevelReq(
-  state: GameState,
-  equipment: Equipment,
-): boolean {
+export function meetsLevelReq(state: GameState, equipment: Equipment): boolean {
   return state.player.level >= equipmentLevelReq(equipment.defId);
 }
 

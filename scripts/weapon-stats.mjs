@@ -70,9 +70,7 @@ for (const levelId of LEVEL_ORDER) {
   for (const def of pool) inPools.add(def.id);
 
   console.log(`\n=== ${level.name} (${levelId}) — base weapon pool ===`);
-  console.log(
-    "  req  class   dmg    cd    dps  range  dur  behaviors",
-  );
+  console.log("  req  class   dmg    cd    dps  range  dur  behaviors");
   for (const def of [...pool].sort((a, b) => a.levelReq - b.levelReq)) {
     const p = def.projectile;
     const behaviors = [
@@ -121,7 +119,8 @@ for (const levelId of LEVEL_ORDER) {
     );
   }
   for (const id of level.loot.gearPool) {
-    if (!GEAR_DEFS[id]) warn(`${levelId}: gearPool references unknown gear "${id}"`);
+    if (!GEAR_DEFS[id])
+      warn(`${levelId}: gearPool references unknown gear "${id}"`);
   }
 }
 
@@ -134,7 +133,9 @@ for (const [cls, defs] of Object.entries(byClass)) {
   defs.sort((a, b) => a.levelReq - b.levelReq);
   console.log(
     `  ${cls}: ` +
-      defs.map((d) => `${d.id}(${d.levelReq}) ${dps(d).toFixed(0)}dps`).join(" → "),
+      defs
+        .map((d) => `${d.id}(${d.levelReq}) ${dps(d).toFixed(0)}dps`)
+        .join(" → "),
   );
   for (let i = 1; i < defs.length; i++) {
     const prev = defs[i - 1];
@@ -159,7 +160,9 @@ for (const [cls, defs] of Object.entries(byClass)) {
 for (const def of Object.values(WEAPON_DEFS)) {
   if (!atlasHas(def.icon)) warn(`${def.id}: icon "${def.icon}" not in atlas`);
   if (def.projectile && !atlasHas(def.projectile.sprite)) {
-    warn(`${def.id}: projectile sprite "${def.projectile.sprite}" not in atlas`);
+    warn(
+      `${def.id}: projectile sprite "${def.projectile.sprite}" not in atlas`,
+    );
   }
 }
 for (const def of Object.values(GEAR_DEFS)) {
