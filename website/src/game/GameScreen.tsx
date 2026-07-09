@@ -617,7 +617,16 @@ export function GameScreen({
         walkingRef.current = true;
       }
       if (event.repeat) return;
-      if (event.code === "Space") {
+      // Space and Enter both turn the page through any waiting scene (cutscene,
+      // intro, title card, in-world dialogue). Space alone doubles as jump once
+      // the run is live; Enter is scene-only so it never fires an action.
+      const advanceKey = event.code === "Space" || event.key === "Enter";
+      const inScene =
+        state.phase === "cutscene" ||
+        state.phase === "intro" ||
+        state.phase === "title" ||
+        state.phase === "dialogue";
+      if (advanceKey && inScene) {
         event.preventDefault();
         if (state.phase === "cutscene") {
           // Two-step like the dialogue crawl: finish the line, then turn it.
@@ -647,9 +656,11 @@ export function GameScreen({
             playUiSound(synth, "move");
           }
           bumpUi();
-        } else {
-          jumpQueuedRef.current = true;
         }
+      } else if (event.code === "Space") {
+        // No scene up: Space is the jump.
+        event.preventDefault();
+        jumpQueuedRef.current = true;
       } else if (event.key === "Escape" && state.phase === "cutscene") {
         skipCutscene(state);
         playUiSound(synth, "back");
@@ -672,12 +683,17 @@ export function GameScreen({
         closeInventory(state);
         playUiSound(synth, "back");
         bumpUi();
-      } else if (event.key === "p" || event.key === "P") {
-        // P toggles the pause screen (desktop). Music pauses with the sim.
+      } else if (
+        (event.key === "p" || event.key === "P" || event.key === "Escape") &&
+        (state.phase === "playing" || state.phase === "paused")
+      ) {
+        // P or Escape toggles the pause screen (desktop). Music pauses with the
+        // sim. Escape does double duty — it skips the scenes above, and pauses
+        // once the run is live.
         if (state.phase === "playing") {
           pause();
           playUiSound(synth, "confirm");
-        } else if (state.phase === "paused") {
+        } else {
           resume();
           playUiSound(synth, "back");
         }

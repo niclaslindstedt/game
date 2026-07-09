@@ -59,7 +59,8 @@ and something enormous haunts the old flag.
   size and monster health, but drop loot more often and unlock higher item
   tiers (epic and legendary) that the early levels never roll on their own.
 - The run opens on a short **cutscene** (the movie night Ada never came
-  back from) — tap to advance a beat, or hit SKIP. It plays **once per
+  back from) — tap (or press **Space** / **Enter**) to advance a beat, hit
+  SKIP, or press **Escape** to skip the whole scene. It plays **once per
   device**: retries and later runs jump straight to the level.
 - **Steer with the pointer** — on desktop the character chases the cursor;
   on touch, hold and drag: a virtual joystick appears under your finger and
@@ -76,9 +77,10 @@ and something enormous haunts the old flag.
   rumbles); dialogue is felt too, each letter of the crawl ticking under your
   thumb. Turn it off under SETTINGS → CONTROLS. (iOS has no web vibration, so
   it's silently inert there.)
-- **Pause** any time with **P** on desktop — the game and its music freeze on
-  a pause screen; click or press P again to resume. The run also auto-pauses
-  when you switch away (on a phone, just leave the app).
+- **Pause** any time with **P** or **Escape** on desktop — the game and its
+  music freeze on a pause screen; click or press **P**/**Escape** again to
+  resume. The run also auto-pauses when you switch away (on a phone, just
+  leave the app).
 - **Obstacles** litter every level and nothing walks through them — desks,
   crates, and low rocks can be **jumped over**, and monsters can't jump: a
   barrier the horde must flow around is your best friend. SPACEZ HQ's

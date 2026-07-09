@@ -61,13 +61,6 @@ export function IntroOverlay({
   // clothes at SpaceZ HQ, the EVA suit on the moon) — his idle frame, bobbing.
   const hero = spriteDataUrl(assets.sprites, `${playerAppearance(state)}_0`);
 
-  const hasNext = state.introPage + 1 < pages.length;
-  const continueText = !done
-    ? "TAP TO SKIP"
-    : hasNext
-      ? `TAP TO CONTINUE (${state.introPage + 1}/${pages.length})`
-      : "TAP TO BEGIN";
-
   return (
     <div
       className="game-overlay intro-overlay"
@@ -81,18 +74,12 @@ export function IntroOverlay({
         <div className="dialogue-header">
           <PixelText font={font} text="ME" scale={2} color="#7ef0c8" />
         </div>
-        {page.map((row, i) => (
-          // Reserve each row's full height (PixelText is fixed-height even when
-          // empty) so the box never reflows as the crawl fills it in.
-          <PixelText key={i} font={font} text={rows[i] ?? ""} scale={2} />
-        ))}
-        <div className="dialogue-continue">
-          <PixelText
-            font={font}
-            text={continueText}
-            scale={1}
-            color="#9aa3ad"
-          />
+        <div className="dialogue-body">
+          {page.map((row, i) => (
+            // Reserve each row's full height (PixelText is fixed-height even
+            // when empty) so the box never reflows as the crawl fills it in.
+            <PixelText key={i} font={font} text={rows[i] ?? ""} scale={2} />
+          ))}
         </div>
       </div>
       <button
