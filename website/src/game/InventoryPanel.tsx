@@ -30,6 +30,7 @@ import {
   equipmentName,
   gearDef,
   isScrappableLoot,
+  isWeaponDef,
   scrapInferiorLoot,
   STATS,
   weaponCritMult,
@@ -46,7 +47,6 @@ import {
   weaponDef,
   weaponDps,
   weaponRangeFor,
-  WEAPON_DEFS,
   type Affix,
   type EquipSlot,
   type Equipment,
@@ -171,12 +171,12 @@ function itemLines(
       color: state.player.level < req ? "#e06a6a" : "#9aa3ad",
     });
   }
-  if (item.defId in WEAPON_DEFS) {
+  if (isWeaponDef(item.defId)) {
     const def = weaponDef(item.defId);
     // Compare against the equipped weapon (only when inspecting a different
     // one) — the deltas below read this game's stats in the SAME hands, so a
     // bag find's numbers stack fairly against what's currently held.
-    const eq = equipped && equipped.defId in WEAPON_DEFS ? equipped : null;
+    const eq = equipped && isWeaponDef(equipped.defId) ? equipped : null;
     // The weapon's class, tinted by class (magic=purple, melee=gold,
     // ranged=orange) so it reads as "what kind of weapon" — never confused
     // with the blue MAGIC quality tier the name color carries.
@@ -281,9 +281,7 @@ function itemLines(
     const def = gearDef(item.defId);
     // Compare against the gear worn in the same slot (suit/charm/bag).
     const eqGear =
-      equipped && !(equipped.defId in WEAPON_DEFS)
-        ? gearDef(equipped.defId)
-        : null;
+      equipped && !isWeaponDef(equipped.defId) ? gearDef(equipped.defId) : null;
     lines.push({ text: def.slot === "suit" ? "SUIT ARMOR" : "CHARM" });
     if (def.bonuses.maxHp) {
       lines.push({

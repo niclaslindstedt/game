@@ -240,7 +240,15 @@ run against synthetic fixtures with no shipped content (see
   (`wearEquippedWeapon` — a broken weapon is trashed and the best bag
   weapon takes over — and `repairEquippedWeapon` + `restoreArmor` for
   repair-kit drops, which mend the weapon's edge and top up a worn suit's
-  plating together).
+  plating together). Every drop is minted with a FROZEN snapshot of its
+  catalog def (`Equipment.def`), so a kept item is version-proof: rebalancing
+  or deleting a base changes only new drops, never one a player already holds.
+  On load the app runs each persisted instance through `adoptEquipment`, which
+  parks that snapshot under a synthetic frozen id (`registerFrozenDef`) and
+  re-homes the item onto it — so every stat read (`weaponDef`/`gearDef` and
+  everything routing through them) resolves the item exactly as it dropped,
+  even when its original base is gone. `baseDefId` sees back through the
+  re-homing to the item's original base id.
 - **`src/game/bot.ts`** — the autopilot: pure strategies (`idle`, `rush`,
   `kite`, `boss`, `survivor`) that turn the live state into ordinary
   `GameInput`, so a bot can sit anywhere a player does — headless tests,

@@ -43,6 +43,7 @@ import {
   equipmentIcon,
   equipmentLevelReq,
   extractLoadout,
+  isWeaponDef,
   LEVELS,
   levelDef,
   MENACE,
@@ -63,7 +64,6 @@ import {
   tapCutscene,
   weaponDamageFor,
   weaponDef,
-  WEAPON_DEFS,
   type BotStrategy,
   type Difficulty,
   type Equipment,
@@ -282,7 +282,7 @@ function weaponAlternatives(
 ): { item: Equipment; index: number; dmg: number }[] {
   return state.player.inventory
     .map((item, index) => ({ item, index }))
-    .filter((e) => e.item !== null && e.item.defId in WEAPON_DEFS)
+    .filter((e) => e.item !== null && isWeaponDef(e.item.defId))
     .map((e) => ({
       item: e.item as Equipment,
       index: e.index,

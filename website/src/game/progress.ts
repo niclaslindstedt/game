@@ -10,13 +10,13 @@
 
 import {
   addToInventory,
+  adoptEquipment,
+  baseDefId,
   deriveArrivalLoadout,
   DIFFICULTY_ORDER,
   difficultyDef,
   equipmentLevelReq,
-  GEAR_DEFS,
   LEVEL_ORDER,
-  WEAPON_DEFS,
   type Difficulty,
   type Equipment,
   type GameState,
@@ -209,19 +209,26 @@ function isKeepsake(piece: Equipment): boolean {
  * find (same base, level, and rolled bonuses) is stashed once. */
 function keepsakeSignature(piece: Equipment): string {
   return JSON.stringify({
-    defId: piece.defId,
+    // The ORIGINAL base id, not the (possibly re-homed) frozen id, so a stashed
+    // keepsake and a fresh drop of the same find dedupe as one.
+    defId: baseDefId(piece),
     tier: piece.tier,
     ilvl: piece.ilvl,
     affixes: piece.affixes,
   });
 }
 
-/** The stashed unique/legendary pieces, oldest first. */
+/** The stashed unique/legendary pieces, oldest first. Each is adopted into the
+ * live catalog so a base we later rebalanced or retired can't nerf or break a
+ * treasure a test player earned. */
 export function loadKeepsakes(): Equipment[] {
   try {
     const raw = window.localStorage.getItem(KEEPSAKES_KEY);
     const parsed: unknown = raw ? JSON.parse(raw) : [];
-    return Array.isArray(parsed) ? (parsed as Equipment[]) : [];
+    if (!Array.isArray(parsed)) return [];
+    return (parsed as Equipment[])
+      .map((piece) => adoptEquipment(piece))
+      .filter((piece): piece is Equipment => piece !== null);
   } catch {
     return [];
   }
@@ -346,22 +353,23 @@ export function noteHardcoreDeath(): void {
  * Bring a loadout banked by an older build up to the current item system —
  * the Diablo loot rework retired the epic tier, added the item level, and
  * replaced the base weapon roster wholesale, and a stale snapshot must not
- * crash `createGame`. Pieces referencing deleted defs are dropped (the
- * weapon slot falls back to the engine's unbreakable sidearm); an epic tier
+ * crash `createGame`. Each piece is ADOPTED into the live catalog, so a base
+ * we later rebalanced or deleted keeps the item exactly as it dropped rather
+ * than nerfing or discarding it; only a legacy piece (banked before item
+ * snapshots) whose base is also gone is unresolvable and dropped (the weapon
+ * slot then falls back to the engine's unbreakable sidearm). An epic tier
  * reads as rare; a missing `ilvl` is backfilled from the base's requirement.
  */
 function migrateLoadout(loadout: Loadout): Loadout {
   const fix = (piece: Equipment | null): Equipment | null => {
     if (!piece) return null;
-    if (!(piece.defId in WEAPON_DEFS) && !(piece.defId in GEAR_DEFS)) {
-      return null;
-    }
     const tier =
       (piece.tier as string) === "epic" ? ("rare" as const) : piece.tier;
+    const adopted = adoptEquipment({ ...piece, tier });
+    if (!adopted) return null;
     return {
-      ...piece,
-      tier,
-      ilvl: piece.ilvl ?? equipmentLevelReq(piece.defId),
+      ...adopted,
+      ilvl: adopted.ilvl ?? equipmentLevelReq(adopted.defId),
     };
   };
   const weapon = fix(loadout.equipment.weapon) ?? {

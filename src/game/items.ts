@@ -29,7 +29,9 @@ import {
   AFFIX_POOLS,
   equipmentLevelReq,
   gearDef,
+  isGearDef,
   isWeaponDef,
+  registerFrozenDef,
   STAT_NAMES,
   TIER_ROLL_ORDER,
   TIERS,
@@ -280,6 +282,12 @@ export function rollEquipment(
     tier,
     ilvl,
     affixes,
+    // Freeze the birth-version def onto the instance so a later catalog edit
+    // (rebalance or deletion) can never reach back and change THIS item — the
+    // player keeps what they picked up. See `Equipment.def` / `adoptEquipment`.
+    def: structuredClone(
+      family === "weapon" ? weaponDef(defId) : gearDef(defId),
+    ),
   };
   // Dropped weapons arrive fresh but finite — they wear out per attack.
   // Unique and legendary finds are the exception: very well built, they
@@ -289,6 +297,39 @@ export function rollEquipment(
     rolled.durability = weaponDef(defId).durability;
   }
   return rolled;
+}
+
+/**
+ * Bring a persisted item into the live catalog so a rebalanced or DELETED base
+ * can neither nerf it nor crash the load — the guarantee that a kept drop stays
+ * exactly as it dropped. Every item minted since snapshots shipped carries a
+ * frozen copy of its def (`Equipment.def`); here we park that snapshot under a
+ * stable synthetic id (`registerFrozenDef`) and re-home the instance onto it,
+ * so from now on every stat read (`weaponDef`/`gearDef` and everything routing
+ * through them) resolves the item AS DROPPED, independent of the shipped
+ * catalog. Newly rolled items still reference the live def, so catalog edits
+ * land on new drops alone.
+ *
+ * Idempotent — an already-adopted piece re-registers to the same id. Returns
+ * `null` only for a LEGACY piece (minted before snapshots) whose base is also
+ * gone from the catalog: with neither a snapshot nor a live def there is
+ * nothing left to resolve, the same unrecoverable case the loader dropped
+ * before. A legacy piece whose base still exists is frozen at the current def,
+ * protecting it from here on.
+ */
+export function adoptEquipment(piece: Equipment): Equipment | null {
+  const family: "weapon" | "gear" = piece.slot === "weapon" ? "weapon" : "gear";
+  let def = piece.def;
+  if (!def) {
+    const present =
+      family === "weapon" ? isWeaponDef(piece.defId) : isGearDef(piece.defId);
+    if (!present) return null;
+    def = structuredClone(
+      family === "weapon" ? weaponDef(piece.defId) : gearDef(piece.defId),
+    );
+  }
+  const defId = registerFrozenDef(def, family);
+  return { ...piece, defId, def };
 }
 
 // ---- Derived stats -----------------------------------------------------------
@@ -875,6 +916,14 @@ function remainingDurability(weapon: Equipment): number {
   return weapon.durability ?? Infinity;
 }
 
+/** The original catalog id a piece was minted from — the frozen snapshot's own
+ * id when the instance has been re-homed onto a synthetic frozen id, else the
+ * live `defId`. Lets "is this the same base?" checks see through re-homing so a
+ * kept item and a fresh drop of the same base still read as one base. */
+export function baseDefId(piece: Equipment): string {
+  return piece.def?.id ?? piece.defId;
+}
+
 /**
  * Can the hero WEAR this piece yet? The Diablo level gate: an item whose
  * base `levelReq` outruns the player's level is a find to bank, not a weapon
@@ -907,7 +956,7 @@ export function isBetterEquipment(
     // swapping to when the fresh copy has more durability left — it refreshes
     // the durability bar. The worn copy heads to the bag, or drops to the
     // ground when the bag is full (like dropping it to grab the new one).
-    if (candidate.defId === current.defId) {
+    if (baseDefId(candidate) === baseDefId(current)) {
       return remainingDurability(candidate) > remainingDurability(current);
     }
     return false;
