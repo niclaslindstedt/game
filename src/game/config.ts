@@ -783,6 +783,15 @@ export const DIALOGUE = {
    * actually on screen when his thought stops the world.
    */
   sightRadius: 96,
+  /**
+   * A level's `openingStrike` arms the hero once its scripted vanguard closes
+   * to within this distance of the player (world px) — a proximity trigger, not
+   * a contact one, so kiting the rusher around can't stall the opening beat
+   * forever. Same phone-half-view rationale as `speakRadius`: the vanguard is
+   * on screen and bearing down when the blade comes out. A level may override
+   * it per-strike via `OpeningStrike.radius`.
+   */
+  strikeRadius: 96,
 } as const;
 
 /**

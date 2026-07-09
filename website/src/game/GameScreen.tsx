@@ -91,6 +91,7 @@ import {
   type GameAssets,
 } from "./assets.ts";
 import { synth } from "./audio.ts";
+import { cloneGameState } from "./checkpoint.ts";
 import { playEventHaptics, playTypewriterHaptic } from "./haptics.ts";
 import { ChoiceOverlay } from "./ChoiceOverlay.tsx";
 import { CompanionPanel } from "./CompanionPanel.tsx";
@@ -412,6 +413,14 @@ export function GameScreen({
   // menu), consumed the first time the run effect fires so a later RETRY /
   // NEXT LEVEL recreates the game from scratch instead of re-adopting it.
   const resumeRef = useRef<GameState | null>(resume ?? null);
+  // The retry checkpoint: a snapshot of THIS level taken the instant combat
+  // began (see the simulate loop), kept across RETRY re-runs of the run effect.
+  // A death's RETRY adopts a fresh copy so the player drops back into the
+  // action instead of replaying the prelude + intro; NEXT LEVEL (a new levelId)
+  // supersedes it with the new level's own checkpoint. See checkpoint.ts.
+  const checkpointRef = useRef<{ levelId: string; state: GameState } | null>(
+    null,
+  );
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const dpadRef = useRef<HTMLDivElement>(null);
   // The active-powerup strip: its radial cooldown sweeps and countdown numbers
@@ -525,25 +534,42 @@ export function GameScreen({
     // NEXT LEVEL later in this mount falls back to a fresh createGame.
     const resumed = resumeRef.current;
     resumeRef.current = null;
+    // A retry checkpoint captured for THIS level: RETRY after a death adopts a
+    // fresh copy of it (combat-start of this level) rather than replaying the
+    // whole opening. Only consulted when not resuming a parked run from the
+    // menu; a checkpoint for a different level (a stale one from before NEXT
+    // LEVEL) does not apply and is left to be superseded.
+    const checkpoint =
+      !resumed && checkpointRef.current?.levelId === runLevelId
+        ? checkpointRef.current.state
+        : null;
     // The carry-over: the loadout banked when the previous level was cleared
     // (or a derived stand-in for dev jumps with nothing banked). The hero
     // arrives with the level, stats and items he finished the last level with.
     const state =
       resumed ??
-      createGame(
-        seed,
-        runLevelId,
-        difficulty,
-        startingLoadout(runLevelId, difficulty) ?? undefined,
-        // The token respec is owed only on the jumped-into level; once the run
-        // advances along the campaign (a fresh levelId) it no longer applies.
-        respec && levelId === initialLevelId,
-      );
+      (checkpoint
+        ? cloneGameState(checkpoint)
+        : createGame(
+            seed,
+            runLevelId,
+            difficulty,
+            startingLoadout(runLevelId, difficulty) ?? undefined,
+            // The token respec is owed only on the jumped-into level; once the
+            // run advances along the campaign (a fresh levelId) it no longer
+            // applies.
+            respec && levelId === initialLevelId,
+          ));
+    // A run started from scratch (not resumed from the menu, not adopted from a
+    // checkpoint that already froze it): capture the combat-start checkpoint
+    // once this mount, superseding any stale one from an earlier level.
+    const captureCheckpoint = !resumed && !checkpoint;
     // The forever-hoard follows the hero into every FRESH run: any stashed
     // unique/legendary he isn't already carrying lands in the bag. (In
     // hardcore the stash exists too — right up until a death burns it.) A
-    // resumed run already carries whatever its own creation restored.
-    if (!resumed) restoreKeepsakes(state);
+    // resumed or checkpoint-adopted run already carries whatever its own
+    // creation restored.
+    if (captureCheckpoint) restoreKeepsakes(state);
     // The prelude always plays — every run opens on its cutscene (the player
     // can dismiss it with the SKIP button or Esc). It is never auto-skipped on
     // replay.
@@ -673,6 +699,11 @@ export function GameScreen({
       // tap resumes both the sim and the music in place.
       playLevelMusic(levelDef(state.level.id).music);
       pauseMusic();
+    } else if (checkpoint) {
+      // Straight back into the fight: the checkpoint is already in the
+      // `playing` phase, past the prelude and intro, so just roll the level
+      // theme — no cutscene, no monologue, no scripted strike to sit through.
+      playLevelMusic(levelDef(state.level.id).music);
     } else if (skipOpening) {
       // Warp-in from the title moon's long-press: bail the whole opening and
       // drop straight into play. skipCutscene lands the prelude on the level
@@ -1081,6 +1112,23 @@ export function GameScreen({
           }
         }
         step(state, input, dtMs);
+        // The first instant the run is truly in the player's hands — armed and
+        // playing, past the prelude, the intro monologue, and (on SpaceZ HQ)
+        // the scripted opening strike that draws the blade. Snapshot it once so
+        // a later RETRY drops the hero back HERE, into the action, instead of
+        // replaying the whole opening. NEXT LEVEL runs this on its own fresh
+        // run, superseding the previous level's checkpoint.
+        if (
+          captureCheckpoint &&
+          checkpointRef.current?.levelId !== runLevelId &&
+          state.phase === "playing" &&
+          !state.player.disarmed
+        ) {
+          checkpointRef.current = {
+            levelId: runLevelId,
+            state: cloneGameState(state),
+          };
+        }
         playEventSounds(synth, state.events);
         playEventHaptics(state.events);
 

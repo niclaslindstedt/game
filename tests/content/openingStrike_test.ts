@@ -145,6 +145,36 @@ describe("SpaceZ HQ opening strike", () => {
     expect(state.thoughtsSeen).toContain("spacez_armed");
   });
 
+  it("draws the blade on proximity — no contact needed", () => {
+    const state = disarmedHQ();
+    const v = isolateVanguard(state);
+    state.thoughtsSeen.push("spacez_staff"); // gate open
+    // A clear gap away — nowhere near touching (two radii), but inside the
+    // strike radius. The old contact rule would have left him holstered here;
+    // proximity draws the blade.
+    v.pos = { x: state.player.pos.x + 80, y: state.player.pos.y };
+    step(state, idle, DT);
+    expect(state.player.disarmed).toBe(false);
+    expect(state.dialogue?.source).toEqual({
+      kind: "playerThought",
+      defId: "spacez_armed",
+    });
+  });
+
+  it("stays holstered while the vanguard is beyond the strike radius", () => {
+    const state = disarmedHQ();
+    const v = isolateVanguard(state);
+    state.thoughtsSeen.push("spacez_staff"); // gate open
+    // Far outside the strike radius (96 px): a single tick's rush can't close
+    // the ~300 px gap, so the blade stays holstered — the beat waits on
+    // distance, not on time or contact.
+    v.pos = { x: state.player.pos.x + 400, y: state.player.pos.y };
+    step(state, idle, DT);
+    expect(state.player.disarmed).toBe(true);
+    expect(state.thoughtsSeen).not.toContain("spacez_armed");
+    expect(state.dialogue).toBeNull();
+  });
+
   it("holds the arming until the sighting beat has played (the gate)", () => {
     const state = disarmedHQ();
     const v = isolateVanguard(state);

@@ -103,8 +103,8 @@ import {
   collectStoryItem,
   startEnemyDialogue,
   stepDoors,
+  stepOpeningStrike,
   stepSightThoughts,
-  tryOpeningStrike,
   wantsDialogue,
 } from "./story.ts";
 import type {
@@ -175,6 +175,10 @@ export function step(state: GameState, input: GameInput, dtMs: number): void {
   // Sight-pinned inner monologues fire on this tick's positions — after the
   // horde has moved, so "the hero sees one" means it is actually on screen.
   stepSightThoughts(state, levelDef(state.level.id).firstSightThoughts);
+  // The scripted vanguard's proximity draws the blade (SpaceZ HQ's
+  // `openingStrike`) — judged after the horde has moved and after the sighting
+  // beat above, so the "look at this place" read always lands first.
+  stepOpeningStrike(state);
   tickMenace(
     state,
     dtMs,
@@ -1085,11 +1089,12 @@ function stepEnemies(state: GameState, dt: number, dtMs: number): void {
       // The swing is spent whether it lands or is dodged, so the same foe
       // can't re-swing next frame after a sidestep.
       enemy.contactCooldownMs = def.contactCooldownMs;
-      // Pre-combat grace while the weapon is holstered: no blow lands until the
-      // scripted vanguard's soft first swing draws it. That swing arms the hero
-      // and plays his thought (story.ts); every other touch here is harmless.
+      // Pre-combat grace while the weapon is holstered: no blow lands. The
+      // blade is drawn by the scripted vanguard's PROXIMITY, not its touch (see
+      // stepOpeningStrike, run each tick above), so every contact in this window
+      // is a harmless bump — including the vanguard's own, until it has closed
+      // in and armed the hero.
       if (player.disarmed) {
-        tryOpeningStrike(state, enemy);
         continue;
       }
       // A nimble hero sidesteps the blow entirely: no HP, no armor, no hit.
