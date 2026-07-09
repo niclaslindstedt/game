@@ -736,6 +736,17 @@ export function TitleScreen({
         <span className="title-asteroid title-asteroid-2" />
         <span className="title-asteroid title-asteroid-3" />
       </div>
+      {/* A handful of stars twinkle on their own long cycles, out of sync, so
+          the sky flickers with life rather than sitting as a flat backdrop. */}
+      <div className="title-twinkles" aria-hidden="true">
+        <span className="title-twinkle title-twinkle-1" />
+        <span className="title-twinkle title-twinkle-2" />
+        <span className="title-twinkle title-twinkle-3" />
+        <span className="title-twinkle title-twinkle-4" />
+        <span className="title-twinkle title-twinkle-5" />
+        <span className="title-twinkle title-twinkle-6" />
+        <span className="title-twinkle title-twinkle-7" />
+      </div>
       {/* Hidden warp gesture: hold the moon for MOON_HOLD_MS to open the
           all-levels picker (see startMoonHold). aria-hidden stays — it is a
           secret, pointer-only Easter egg, not an announced control. */}
