@@ -2146,16 +2146,26 @@ body {
   padding: 0.75rem 1rem;
 }
 
-/* Landscape phones are short: keep the panel a single compact row so it never
-   eats the menu at the reference 844×390 viewport. Allow the extra width the
-   arrow needs and hold everything on one line, with a smaller bobbing arrow to
-   the left of the text so it doesn't steal vertical space. */
+/* In landscape there's always horizontal room to spare: keep the panel a
+   single row so the actions sit to the RIGHT of the text instead of wrapping
+   underneath it. Widen the cap past the default 42rem so the arrow + copy +
+   buttons hold one line — at the reference 844×390 phone and equally on a large
+   screen rendered at 2×, where the default max-width would otherwise force a
+   wrap even with plenty of width going unused. */
+@media (orientation: landscape) {
+  .update-modal {
+    flex-wrap: nowrap;
+    max-width: 96vw;
+  }
+}
+
+/* Short landscape phones are also cramped vertically: tighten the padding and
+   shrink the bobbing arrow so the panel never eats the menu at the reference
+   844×390 viewport. */
 @media (max-height: 480px) {
   .update-modal {
     gap: 0.75rem;
     padding: 0.75rem 1rem;
-    flex-wrap: nowrap;
-    max-width: 96vw;
   }
 
   .update-modal-icon {
