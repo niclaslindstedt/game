@@ -162,16 +162,16 @@ type Hud = {
   /** True for a short window after the full bag turned away loot — pulses the
    * inventory button to nudge the player to open it and make room. */
   bagFullHint: boolean;
-  /** Banked ability pickups, oldest first (ABILITY_DEFS ids). */
+  /** The powerup dock, oldest first (ABILITY_DEFS ids) — banked and running. */
   heldAbilities: string[];
   /**
-   * Currently running powerups, one entry per distinct id (in activation
-   * order) with how many copies of it are stacked. Drives the highlighted
-   * active-powerup strip — a stack of two shows a ×2 badge, sharing one slot;
-   * the per-frame countdown/radial for each is written to the DOM directly by
-   * the render loop (off the freshest copy), not through here.
+   * Which dock slots (indices into `heldAbilities`) hold a powerup that is
+   * running right now: those slots show the countdown radial in place and take
+   * no taps until they lapse, while the rest stay banked and spendable. The
+   * per-frame countdown/radial for each is written to the DOM directly by the
+   * render loop (keyed on the slot), not through here.
    */
-  activeAbilities: { defId: string; count: number }[];
+  activeSlots: number[];
   /** Equipped weapon def id — drives the always-on weapon widget. */
   weaponDefId: string;
   /** Equipped weapon's durability 0..1, or null for the unbreakable sidearm. */
@@ -423,10 +423,11 @@ export function GameScreen({
   );
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const dpadRef = useRef<HTMLDivElement>(null);
-  // The active-powerup strip: its radial cooldown sweeps and countdown numbers
-  // are written straight to the DOM by the render loop (like the dpad), so the
-  // timer stays smooth without a React re-render every frame.
-  const activePowerupsRef = useRef<HTMLDivElement>(null);
+  // The powerup dock: a spent powerup keeps its slot and counts down in place,
+  // its radial cooldown sweep and countdown numbers written straight to the DOM
+  // by the render loop (like the dpad), so the timer stays smooth without a
+  // React re-render every frame.
+  const powerupDockRef = useRef<HTMLDivElement>(null);
   const jumpQueuedRef = useRef(false);
   const useItemQueuedRef = useRef(false);
   // Where the last tap/click landed (CSS px on the canvas): the sim loop
@@ -906,8 +907,13 @@ export function GameScreen({
             setWeaponMenuOpen(false);
             bumpUi();
           }
-        } else if (n <= 2 && state.player.heldAbilities[n]) {
-          // Otherwise 1/2/3 fire the matching powerup dock slot.
+        } else if (
+          n <= 2 &&
+          state.player.heldAbilities[n] &&
+          !state.player.abilities.some((a) => a.slot === n)
+        ) {
+          // Otherwise 1/2/3 fire the matching powerup dock slot — but a slot
+          // already counting down a running power isn't spendable.
           useItemQueuedRef.current = true;
           useItemIndexRef.current = n;
         }
@@ -1432,28 +1438,22 @@ export function GameScreen({
           }
         }
 
-        // Drive each active powerup's WoW-style cooldown: a conic sweep that
-        // unwinds as the ability runs out, plus a whole-second countdown. Both
-        // are written to the DOM here so they tick every frame without a React
-        // re-render (React only owns which slots exist — see the `active` key).
-        const activeRow = activePowerupsRef.current;
-        if (activeRow) {
-          // Stacked copies share one slot, so drive it off the freshest (most
-          // time left) copy of each id — that's the sweep the player reads as
-          // "how long until this power lapses".
-          const freshestMs = new Map<string, number>();
+        // Drive each running powerup's WoW-style cooldown right on its dock
+        // slot: a conic sweep that unwinds as the ability runs out, plus a
+        // whole-second countdown. Both are written to the DOM here so they tick
+        // every frame without a React re-render (React only owns which slots
+        // are banked vs running — see the `active` key). Each running copy owns
+        // its own slot, so there's no stacking to reconcile here.
+        const dock = powerupDockRef.current;
+        if (dock) {
           for (const ability of state.player.abilities) {
-            const prev = freshestMs.get(ability.defId) ?? 0;
-            if (ability.remainingMs > prev)
-              freshestMs.set(ability.defId, ability.remainingMs);
-          }
-          for (const [defId, remainingMs] of freshestMs) {
-            const slot = activeRow.querySelector<HTMLElement>(
-              `[data-ability="${defId}"]`,
+            if (ability.slot === undefined) continue;
+            const slot = dock.querySelector<HTMLElement>(
+              `[data-slot="${ability.slot}"]`,
             );
             if (!slot) continue;
-            const total = abilityDef(defId).durationMs;
-            const remaining = Math.max(0, remainingMs);
+            const total = abilityDef(ability.defId).durationMs;
+            const remaining = Math.max(0, ability.remainingMs);
             const frac = total > 0 ? Math.min(1, remaining / total) : 0;
             slot.style.setProperty("--cd", frac.toFixed(4));
             const secs = slot.querySelector<HTMLElement>(
@@ -1470,10 +1470,15 @@ export function GameScreen({
         const bagFree = state.player.inventory.length - bagCount;
         const bagFullHint = state.stats.timeMs < bagFullHintUntilMs;
         const held = state.player.heldAbilities.join(",");
-        // Only the *set* of running powerups mounts/unmounts slots; the ticking
-        // timer itself is animated straight on the DOM, so it stays out of the
-        // change-key (which would otherwise thrash React state every frame).
-        const active = state.player.abilities.map((a) => a.defId).join(",");
+        // Only *which* slots are banked vs running mounts/unmounts dock chrome;
+        // the ticking timer itself is animated straight on the DOM, so it stays
+        // out of the change-key (which would otherwise thrash React state every
+        // frame).
+        const active = state.player.abilities
+          .map((a) => a.slot)
+          .filter((s) => s !== undefined)
+          .sort((a, b) => a - b)
+          .join(",");
         const weapon = state.player.equipment.weapon;
         const weaponWear =
           weapon.durability === undefined
@@ -1506,14 +1511,9 @@ export function GameScreen({
             bagFree,
             bagFullHint,
             heldAbilities: [...state.player.heldAbilities],
-            activeAbilities: state.player.abilities.reduce<
-              { defId: string; count: number }[]
-            >((rows, a) => {
-              const row = rows.find((r) => r.defId === a.defId);
-              if (row) row.count++;
-              else rows.push({ defId: a.defId, count: 1 });
-              return rows;
-            }, []),
+            activeSlots: state.player.abilities
+              .map((a) => a.slot)
+              .filter((s): s is number => s !== undefined),
             weaponDefId: weapon.defId,
             weaponWear,
             coins: state.player.coins,
@@ -2023,50 +2023,48 @@ export function GameScreen({
         </div>
       )}
 
-      {/* Active powerups: a used ability lights up here (just above the dock)
-          and counts down like a WoW cooldown — the icon glows and a translucent
-          radial sweep unwinds over the ability's duration, with the remaining
-          seconds in the corner. The sweep + number are animated by the render
-          loop straight on the DOM (see activePowerupsRef); React only mounts and
-          unmounts a slot as an ability starts/ends. Nukes are instant (duration
-          0) so they never appear here. */}
-      {hud?.phase === "playing" && hud.activeAbilities.length > 0 && (
-        <div
-          ref={activePowerupsRef}
-          className={`active-powerups dock-${powerupSide}`}
-          aria-hidden="true"
-        >
-          {hud.activeAbilities.map(({ defId, count }) => {
-            const icon = spriteDataUrl(assets.sprites, abilityDef(defId).icon);
-            return (
-              <div key={defId} className="active-powerup" data-ability={defId}>
-                {icon && (
-                  <img src={icon} alt="" className="pixel-img powerup-icon" />
-                )}
-                <span className="active-powerup-sweep" />
-                {count > 1 && (
-                  <span className="active-powerup-stack">×{count}</span>
-                )}
-                <span className="active-powerup-secs" />
-              </div>
-            );
-          })}
-        </div>
-      )}
-
       {/* The powerup dock: three big, thumb-sized slots. Oldest sits leftmost
-          and fills rightward; tapping a slot spends exactly that powerup and
-          the rest shift down. Dragging a slot clear of the dock trashes that
-          powerup in a poof of smoke — a fast way to free a slot for new loot.
-          Sits in whichever bottom corner the player picked
-          (settings.powerupSide). */}
+          and fills rightward; tapping a slot spends exactly that powerup, which
+          then STAYS in its slot and counts down like a WoW cooldown — the icon
+          glows amber and a translucent radial sweep unwinds over its duration,
+          the remaining seconds in the corner. Only when it lapses does the slot
+          free and the rest shift down, so the dock stays full (no new pickup)
+          while a power runs. The sweep + number are animated by the render loop
+          straight on the DOM (see powerupDockRef). A banked slot can also be
+          dragged clear of the dock to trash it in a poof of smoke; a running
+          one can't (it's spent). Sits in whichever bottom corner the player
+          picked (settings.powerupSide). */}
       {hud?.phase === "playing" && (
-        <div className={`powerup-dock dock-${powerupSide}`}>
+        <div
+          ref={powerupDockRef}
+          className={`powerup-dock dock-${powerupSide}`}
+        >
           {[0, 1, 2].map((i) => {
             const defId = hud.heldAbilities[i];
+            const active = defId ? hud.activeSlots.includes(i) : false;
             const icon = defId
               ? spriteDataUrl(assets.sprites, abilityDef(defId).icon)
               : undefined;
+
+            // A running powerup: inert, counting down in place. No taps, no
+            // drag — it holds the slot until it lapses.
+            if (active) {
+              return (
+                <div
+                  key={i}
+                  className="powerup-slot active"
+                  data-slot={i}
+                  aria-label={`active-powerup-${i}`}
+                >
+                  {icon && (
+                    <img src={icon} alt="" className="pixel-img powerup-icon" />
+                  )}
+                  <span className="active-powerup-sweep" />
+                  <span className="active-powerup-secs" />
+                </div>
+              );
+            }
+
             const dragging = dockDrag?.moved && dockDrag.index === i;
             return (
               <button

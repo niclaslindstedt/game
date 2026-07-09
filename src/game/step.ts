@@ -24,8 +24,10 @@ import {
 } from "@game/lib/vec.ts";
 import {
   grantAbility,
+  isSlotActive,
   magnetRadius,
   orbPositions,
+  removeHeldSlot,
   stasisFactorAt,
 } from "./abilities.ts";
 import {
@@ -463,34 +465,44 @@ function stepPlayer(
 }
 
 /**
- * Spend one carried ability pickup on the `useItem` input edge. By default
- * the oldest banked ability kicks in; `useItemIndex` names a specific slot
- * (the powerup dock), and removing it shifts the rest down so the dock stays
- * packed oldest-first. grantAbility emits the abilityStarted event. With
- * empty hands, or an out-of-range index, the input is a quiet no-op / oldest.
- * A non-stackable power that is already running refuses to re-activate
- * (grantAbility returns false), so its pickup stays banked rather than wasted.
+ * Spend one banked ability pickup on the `useItem` input edge. By default the
+ * oldest still-banked slot kicks in; `useItemIndex` names a specific dock slot.
+ * A slot whose power is already running is skipped (it counts down in place),
+ * and an index landing on one — or out of range — falls back to the oldest
+ * banked slot; with none banked the input is a quiet no-op.
+ *
+ * A spent power does NOT leave its slot: it keeps counting down there (linked
+ * via ActiveAbility.slot) and only frees the slot when it lapses, so the dock
+ * stays full while it runs. The instant NUKE is the exception — it fires and
+ * vacates its slot at once. grantAbility emits the abilityStarted event; a
+ * non-stackable power already running refuses to re-activate (grantAbility
+ * returns false), leaving its pickup banked rather than wasted.
  */
 function stepUseItem(state: GameState, input: GameInput): void {
   if (!input.useItem) return;
   const held = state.player.heldAbilities;
-  const index =
-    input.useItemIndex !== undefined &&
-    input.useItemIndex >= 0 &&
-    input.useItemIndex < held.length
-      ? input.useItemIndex
-      : 0;
+  const wanted = input.useItemIndex;
+  const usable =
+    wanted !== undefined &&
+    wanted >= 0 &&
+    wanted < held.length &&
+    !isSlotActive(state, wanted);
+  const index = usable
+    ? wanted
+    : held.findIndex((_, i) => !isSlotActive(state, i));
+  if (index < 0) return;
   const defId = held[index];
   if (!defId) return;
   const def = abilityDef(defId);
   if (def.nuke) {
-    held.splice(index, 1);
+    removeHeldSlot(state, index);
     detonateNuke(state, def.nuke.radius);
     return;
   }
-  // Only consume the banked pickup if the power actually started; a refused
-  // re-activation (a running non-stackable power) leaves the dock untouched.
-  if (grantAbility(state, defId)) held.splice(index, 1);
+  // The slot keeps its powerup while the copy runs; grantAbility links the copy
+  // to `index`. A refused re-activation (a running non-stackable power) starts
+  // nothing and leaves the slot as it was.
+  grantAbility(state, defId, index);
 }
 
 /**
@@ -818,6 +830,9 @@ function stepAbilities(state: GameState, dt: number, dtMs: number): void {
     if (ability.remainingMs > 0) continue;
     player.abilities.splice(i, 1);
     state.events.push({ type: "abilityEnded", defId: ability.defId });
+    // The power is done: free its dock slot at last, closing the row up so the
+    // rest shift down (and keeping every other running copy's slot link true).
+    if (ability.slot !== undefined) removeHeldSlot(state, ability.slot);
   }
 }
 

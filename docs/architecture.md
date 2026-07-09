@@ -126,10 +126,16 @@ run against synthetic fixtures with no shipped content (see
   `loot.abilityPool`. Pickups are banked into `player.heldAbilities` (up
   to `HELD_ITEMS.cap`) and spent with the `useItem` input, or dragged out
   of their dock slot to be discarded (`discardHeldAbility`) when the bank
-  is full of powers you don't want. A `stackable` power (fire orbs, storm
-  cell) runs several copies at once — each activation adds a fresh instance,
-  so two storm cells strike twice as often; a non-stackable one (the magnet)
-  refuses to re-enable while a copy is running, keeping the pickup banked.
+  is full of powers you don't want. A spent power does not vacate its slot:
+  it keeps counting down in place (`ActiveAbility.slot` links a running copy
+  to its dock slot), and only when it lapses does the slot free and the rest
+  shift down (`removeHeldSlot`) — so the dock stays full while a power runs
+  and no new pickup can bank over it. The instant screen nuke is the
+  exception: it fires and frees its slot at once. A `stackable` power (fire
+  orbs, storm cell) runs several copies at once — each activation adds a
+  fresh instance from its own slot, so two storm cells strike twice as often;
+  a non-stackable one (the magnet) refuses to re-enable while a copy is
+  running, keeping the pickup banked.
 - **`src/game/defs/difficulties.ts`** — the difficulty ladder (EASY →
   MEDIUM → HARD → NIGHTMARE → JESUS CHRIST!), chosen on the main menu and
   layered over every level. A rung turns a whole rack of knobs: the hero's
@@ -143,10 +149,11 @@ run against synthetic fixtures with no shipped content (see
   tier's unlock gate earlier; `uniqueDropChance` draws from a level's
   `loot.uniquePool` once unique items exist), the stamina burn, dodge/miss accuracy multipliers, and the
   menace meter's trigger/decay/effect. MEDIUM is the exact 1.0 baseline.
-- **`src/game/abilities.ts`** — ability activation (`grantAbility`),
-  discarding a banked pickup (`discardHeldAbility`), and the helpers the
-  renderer shares (`orbPositions`, `stasisFactorAt`); the per-tick behavior
-  runs inside `step.ts` so all damage flows through one path.
+- **`src/game/abilities.ts`** — ability activation (`grantAbility`, which
+  links the running copy to the dock slot it was spent from), freeing a slot
+  when a power lapses or is discarded (`removeHeldSlot`, `discardHeldAbility`),
+  and the helpers the renderer shares (`orbPositions`, `stasisFactorAt`); the
+  per-tick behavior runs inside `step.ts` so all damage flows through one path.
 - **`src/game/types.ts`** — state shapes plus the `GameEvent` union: events
   are the only channel from simulation to presentation (sound, flashes);
   the engine never knows a renderer or speaker exists.

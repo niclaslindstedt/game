@@ -79,8 +79,13 @@ export function botAct(bot: Bot, state: GameState): GameInput {
     }
   })();
   // Bots pop ability pickups the moment they carry one — no tactical
-  // hoarding, matching how these items auto-activated before banking.
-  decided.useItem = state.player.heldAbilities.length > 0;
+  // hoarding, matching how these items auto-activated before banking. A slot
+  // still counting down a running power isn't spendable, so only a banked
+  // (not-yet-running) slot trips the input.
+  const running = state.player.abilities.filter(
+    (a) => a.slot !== undefined,
+  ).length;
+  decided.useItem = state.player.heldAbilities.length > running;
   return decided;
 }
 

@@ -166,6 +166,15 @@ export type ActiveAbility = {
   angle: number;
   /** Ms until the ability's next damage tick / strike. */
   cooldownMs: number;
+  /**
+   * Index into `heldAbilities` of the dock slot this running copy occupies. A
+   * spent powerup keeps its slot — showing its countdown in place — until it
+   * lapses, and only then does the slot free and the rest shift down; so the
+   * dock stays full while a power runs and no new pickup can bank over it.
+   * `undefined` for a copy granted straight to the player (tests, scripted
+   * grants) with no originating dock slot.
+   */
+  slot?: number;
 };
 
 export type Player = {
@@ -192,8 +201,13 @@ export type Player = {
   /** Time-limited powers currently running (spent ability pickups). */
   abilities: ActiveAbility[];
   /**
-   * Ability pickups carried but not yet used (ABILITY_DEFS ids, oldest
-   * first). The `useItem` input spends the head; HELD_ITEMS.cap bounds it.
+   * The powerup dock (ABILITY_DEFS ids, oldest first, HELD_ITEMS.cap deep). A
+   * slot holds a pickup from the moment it is scooped: first as a banked power
+   * the `useItem` input can spend, then — once spent — as the running copy,
+   * which keeps its slot and counts down in place until it lapses. Only then is
+   * the slot freed and the rest shift down (`ActiveAbility.slot` links a running
+   * copy back to its slot). A slot occupied by a running power can neither be
+   * re-spent nor banked over, so the dock stays full while a power runs.
    */
   heldAbilities: string[];
   /** True while the player moved this step; drives the walk animation. */
