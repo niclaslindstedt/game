@@ -87,6 +87,7 @@ export const MARS_ENEMIES: Record<string, EnemyDef> = {
     id: "larry_webpage",
     name: "LARRY WEBPAGE",
     role: "elite",
+    levelBonus: 3,
     sprite: "larry_webpage",
     hp: 260,
     speed: 22,
@@ -115,6 +116,7 @@ export const MARS_ENEMIES: Record<string, EnemyDef> = {
     ai: { aggroRadius: 250, rushSpeed: 120 },
     loot: {
       items: ["search_bar"],
+      tierDrops: { magic: 1, rare: 0.35 },
       storyItems: ["engagement_report"],
       weapons: 0,
       gear: 0,
@@ -128,6 +130,7 @@ export const MARS_ENEMIES: Record<string, EnemyDef> = {
     id: "build_gates",
     name: "BUILD GATES",
     role: "elite",
+    levelBonus: 3,
     sprite: "build_gates",
     hp: 250,
     speed: 18,
@@ -156,6 +159,7 @@ export const MARS_ENEMIES: Record<string, EnemyDef> = {
     ai: { aggroRadius: 250, rushSpeed: 110 },
     loot: {
       items: ["blue_screen"],
+      tierDrops: { magic: 1, rare: 0.35 },
       storyItems: ["moon_postmortem"],
       weapons: 0,
       gear: 0,
@@ -169,6 +173,7 @@ export const MARS_ENEMIES: Record<string, EnemyDef> = {
     id: "peter_seal",
     name: "PETER SEAL",
     role: "elite",
+    levelBonus: 3,
     sprite: "peter_seal",
     hp: 280,
     speed: 20,
@@ -197,6 +202,7 @@ export const MARS_ENEMIES: Record<string, EnemyDef> = {
     ai: { aggroRadius: 250, rushSpeed: 115 },
     loot: {
       items: ["contrarian_dagger"],
+      tierDrops: { magic: 1, rare: 0.35 },
       // The treasurer keeps the books: the shrine pass AND the passenger
       // ledger of everyone who bought a seat on the lifeboat.
       storyItems: ["keycard_terrarium", "colony_ledger"],
@@ -217,6 +223,7 @@ export const MARS_ENEMIES: Record<string, EnemyDef> = {
     id: "optimusk_prime",
     name: "OPTIMUSK PRIME",
     role: "elite",
+    levelBonus: 3,
     sprite: "optimusk_prime",
     gore: "sparks",
     // The heaviest elite on the ladder so far: a slow stomper whose rush is
@@ -256,6 +263,7 @@ export const MARS_ENEMIES: Record<string, EnemyDef> = {
       // Its sidearm and the paperwork: the colony's auto-generated org
       // chart, every box a robot, with a dotted line back to THE CORE.
       items: ["prompt_injector"],
+      tierDrops: { magic: 1, rare: 0.35 },
       storyItems: ["org_chart"],
       weapons: 0,
       gear: 1,
@@ -276,6 +284,7 @@ export const MARS_ENEMIES: Record<string, EnemyDef> = {
     id: "elon_mosque",
     name: "ELON MOSQUE",
     role: "boss",
+    levelBonus: 5,
     sprite: "elon_mosque",
     hp: 700,
     speed: 42,
@@ -323,6 +332,7 @@ export const MARS_ENEMIES: Record<string, EnemyDef> = {
     // He drops the NOT-A-FLAMETHROWER as he bolts — of course he brought it.
     loot: {
       items: ["not_a_flamethrower"],
+      tierDrops: { magic: 1.5, rare: 0.75 },
       weapons: 0,
       gear: 1,
       xpArrows: 2,

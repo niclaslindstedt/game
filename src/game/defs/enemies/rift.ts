@@ -89,6 +89,7 @@ export const RIFT_ENEMIES: Record<string, EnemyDef> = {
     id: "nikola_tesla",
     name: "NIKOLA TESLA",
     role: "elite",
+    levelBonus: 3,
     sprite: "nikola_tesla",
     hp: 320,
     speed: 20,
@@ -125,6 +126,7 @@ export const RIFT_ENEMIES: Record<string, EnemyDef> = {
     loot: {
       // His coil, and the notebook that heard ZAI's machine at the door.
       items: ["tesla_coil"],
+      tierDrops: { magic: 1, rare: 0.5 },
       storyItems: ["wardenclyffe_notes"],
       weapons: 0,
       gear: 0,
@@ -138,6 +140,7 @@ export const RIFT_ENEMIES: Record<string, EnemyDef> = {
     id: "amelia_earhart",
     name: "AMELIA EARHART",
     role: "elite",
+    levelBonus: 3,
     sprite: "amelia_earhart",
     hp: 290,
     speed: 24,
@@ -172,6 +175,7 @@ export const RIFT_ENEMIES: Record<string, EnemyDef> = {
     ai: { aggroRadius: 250, rushSpeed: 120 },
     loot: {
       items: ["aviator_goggles"],
+      tierDrops: { magic: 1, rare: 0.5 },
       weapons: 0,
       gear: 1,
       xpArrows: 1,
@@ -184,6 +188,7 @@ export const RIFT_ENEMIES: Record<string, EnemyDef> = {
     id: "grigori_rasputin",
     name: "GRIGORI RASPUTIN",
     role: "elite",
+    levelBonus: 3,
     sprite: "grigori_rasputin",
     hp: 360,
     speed: 18,
@@ -220,6 +225,7 @@ export const RIFT_ENEMIES: Record<string, EnemyDef> = {
     ai: { aggroRadius: 250, rushSpeed: 110 },
     loot: {
       items: ["rasputin_beard"],
+      tierDrops: { magic: 1, rare: 0.5 },
       weapons: 0,
       gear: 1,
       xpArrows: 1,
@@ -235,6 +241,7 @@ export const RIFT_ENEMIES: Record<string, EnemyDef> = {
     id: "harry_houdini",
     name: "HARRY HOUDINI",
     role: "elite",
+    levelBonus: 3,
     sprite: "harry_houdini",
     apparition: true,
     phasing: true,
@@ -263,6 +270,7 @@ export const RIFT_ENEMIES: Record<string, EnemyDef> = {
     id: "the_king",
     name: "THE KING",
     role: "elite",
+    levelBonus: 3,
     sprite: "the_king",
     apparition: true,
     phasing: true,
@@ -301,6 +309,7 @@ export const RIFT_ENEMIES: Record<string, EnemyDef> = {
     id: "grok_omega",
     name: "GROK OMEGA",
     role: "boss",
+    levelBonus: 5,
     sprite: "grok_omega",
     gore: "sparks",
     hp: 850,
@@ -358,6 +367,7 @@ export const RIFT_ENEMIES: Record<string, EnemyDef> = {
     loot: {
       // Its sidearm: a cannon that fires very small, very rude black holes.
       items: ["singularity_cannon"],
+      tierDrops: { magic: 2, rare: 1 },
       weapons: 0,
       gear: 1,
       xpArrows: 2,
@@ -374,6 +384,7 @@ export const RIFT_ENEMIES: Record<string, EnemyDef> = {
     id: "elon_mosque_rift",
     name: "ELON MOSQUE",
     role: "boss",
+    levelBonus: 5,
     // The same man, the same sprite — he just runs faster now.
     sprite: "elon_mosque",
     hp: 750,
@@ -419,6 +430,7 @@ export const RIFT_ENEMIES: Record<string, EnemyDef> = {
     loot: {
       // He cuts the cord and floats away on it: the GOLDEN PARACHUTE.
       items: ["golden_parachute"],
+      tierDrops: { magic: 2, rare: 1 },
       weapons: 0,
       gear: 1,
       xpArrows: 2,

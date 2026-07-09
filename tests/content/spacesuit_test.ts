@@ -37,7 +37,7 @@ describe("space suit", () => {
     const state = spacez();
     expect(playerSuited(state)).toBe(false);
 
-    state.player.equipment.suit = suit(state, "epic");
+    state.player.equipment.suit = suit(state, "unique");
     expect(playerSuited(state)).toBe(true);
   });
 
@@ -57,13 +57,12 @@ describe("space suit", () => {
     expect(playerSuited(state)).toBe(true);
   });
 
-  it("mints as epic with its full affix count even on a magic-capped level", () => {
+  it("mints as unique with its full affix count even at a gated monster level", () => {
     const state = spacez();
-    const rolled = suit(state, "epic");
-    expect(rolled.tier).toBe("epic");
-    // Epic gear carries three affixes (the TIERS ladder, capped by the gear
-    // pool's three kinds) — the forced tier ignores the level's magic-only
-    // tier table.
+    const rolled = suit(state, "unique");
+    expect(rolled.tier).toBe("unique");
+    // Unique gear carries three affixes (the TIERS ladder, capped by the gear
+    // pool's three kinds) — the forced tier ignores the monster-level gates.
     expect(rolled.affixes).toHaveLength(3);
     expect(gearDef(rolled.defId).spacesuit).toBe(true);
   });
@@ -72,7 +71,7 @@ describe("space suit", () => {
     const drop = ENEMY_DEFS.security_chief!.loot!.items!.find(
       (entry) => typeof entry !== "string" && entry.defId === "space_suit",
     );
-    expect(drop).toEqual({ defId: "space_suit", tier: "epic" });
+    expect(drop).toEqual({ defId: "space_suit", tier: "unique" });
   });
 
   it("previews its max-hp gain as an inventory upgrade delta", () => {

@@ -57,13 +57,16 @@ export type ArmorGrade = "green" | "yellow" | "red";
 
 /**
  * Item quality, lowest to highest: white regular, blue magic, yellow rare,
- * purple epic, orange legendary (the colors are the app's, see tiers.ts).
- * Every tier exists engine-wide; each level's loot table decides which tiers
- * can actually drop there (a level may cap the rarity it awards), and elites
- * and bosses sweeten the roll — rares are the reward for the plot fights and
- * the deeper levels, never the level-1 rank and file.
+ * gold unique, orange legendary (the colors are the app's, see tiers.ts) —
+ * the Diablo ladder. Every tier exists engine-wide, but a tier only drops
+ * off a monster whose LEVEL has reached its unlock (config
+ * `LOOT.tierUnlockMlvl`): magic from monster level 5, rare from 10, unique
+ * from 15, legendary from 25 — so rares are the reward of the deeper levels
+ * and harder difficulties, never the level-1 rank and file. Unique and
+ * legendary are plumbing for now: no base rolls them until their one-of-a-kind
+ * defs ship.
  */
-export type Tier = "regular" | "magic" | "rare" | "epic" | "legendary";
+export type Tier = "regular" | "magic" | "rare" | "unique" | "legendary";
 
 export type EquipSlot = "weapon" | "suit" | "charm";
 
@@ -81,7 +84,15 @@ export type Equipment = {
   defId: string;
   slot: EquipSlot;
   tier: Tier;
-  /** Rolled bonuses; length is dictated by the tier. */
+  /**
+   * The ITEM LEVEL this piece dropped at: the killer's monster level minus a
+   * small rolled deficit (see `rollItemLevel` — rare+ drops sit closer to the
+   * mob). Affix magnitudes scale with it, so a deep find genuinely outrolls
+   * an early one of the same tier. Purely a birth certificate — it never
+   * changes after the drop.
+   */
+  ilvl: number;
+  /** Rolled bonuses; count is dictated by the tier, size by `ilvl`. */
   affixes: Affix[];
   /**
    * Attacks left before this weapon breaks (weapons only; the def carries
@@ -180,6 +191,16 @@ export type Enemy = {
   home: Vec2;
   hp: number;
   maxHp: number;
+  /**
+   * MONSTER LEVEL, stamped at spawn: the player's level plus the difficulty's
+   * `mobLevelOffset` (plus the def's own `levelBonus` — elites and bosses run
+   * a few levels hot). Loot reads it for everything Diablo-shaped: which base
+   * items may drop (`levelReq` gate), which tiers are unlocked
+   * (`LOOT.tierUnlockMlvl`), and the dropped item's own level (see
+   * `rollItemLevel`). Elites/bosses re-stamp it when their fight engages
+   * (maybePowerScale), so their loot matches the hero who actually beat them.
+   */
+  mlvl: number;
   /** Snapshot of def speed × per-instance jitter. */
   speed: number;
   /** Remaining ms until this enemy may deal contact damage again. */
@@ -285,6 +306,21 @@ export type Projectile = {
   weaponClass: WeaponClass;
   /** The sprite the renderer draws for this shot (staple, zap, vial…). */
   sprite: string;
+  /**
+   * Foes this shot may still punch THROUGH (a railgun's line) — decremented
+   * per body; the shot dies when a hit lands with this at 0. Absent = 0.
+   */
+  pierceLeft?: number;
+  /** Homing turn rate in radians/s (a smart pistol's darts); absent = 0. */
+  homing?: number;
+  /**
+   * Chain-lightning leaps still owed on the first hit (see
+   * `WEAPON.chainRange` / `chainDamageFrac`). Absent = no chaining.
+   */
+  chain?: number;
+  /** Enemy ids already struck by this shot, so a piercing round never bills
+   * the same body twice while passing through it. */
+  hitIds?: number[];
   /**
    * Height above the ground at which the shot is drawn — inherited from a
    * jumping shooter, sinking back to 0 in flight. Visual only.

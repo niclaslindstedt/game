@@ -20,7 +20,14 @@ import {
 import { DT, idle, makeEnemy, run, startGame, steerTo } from "./helpers.ts";
 
 function fixtureSuit(id = 77): Equipment {
-  return { id, defId: "test_suit", slot: "suit", tier: "regular", affixes: [] };
+  return {
+    id,
+    defId: "test_suit",
+    slot: "suit",
+    tier: "regular",
+    ilvl: 1,
+    affixes: [],
+  };
 }
 
 describe("armor", () => {

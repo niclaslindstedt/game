@@ -216,20 +216,25 @@ describe("difficulty scaling in a run", () => {
     );
   });
 
-  it("unlocks epic and legendary tiers the level alone never rolls", () => {
+  it("unlocks unique and legendary tiers the base chances never roll", () => {
     const mediumTiers = new Set<Tier>();
     const jesusTiers = new Set<Tier>();
     const medium = startOn("medium");
     const jesus = startOn("jesus");
+    // Past every monster-level gate (LOOT.tierUnlockMlvl), so the roll is
+    // purely about the chances — the gates have their own suite.
+    medium.player.level = 40;
+    jesus.player.level = 40;
     for (let i = 0; i < 600; i++) {
       mediumTiers.add(rollEquipment(medium).tier);
       jesusTiers.add(rollEquipment(jesus).tier);
     }
-    // The reference level's own loot table caps at magic…
-    expect(mediumTiers.has("epic")).toBe(false);
+    // MEDIUM carries no tier bonus, so the top tiers stay at their zero
+    // base chance…
+    expect(mediumTiers.has("unique")).toBe(false);
     expect(mediumTiers.has("legendary")).toBe(false);
-    // …but JESUS CHRIST! pays for its horde in epics and legendaries.
-    expect(jesusTiers.has("epic")).toBe(true);
+    // …but JESUS CHRIST! pays for its horde in uniques and legendaries.
+    expect(jesusTiers.has("unique")).toBe(true);
     expect(jesusTiers.has("legendary")).toBe(true);
   });
 
@@ -266,6 +271,7 @@ describe("the opening kit (startingWeapon / startingStats)", () => {
       defId: "test_pistol",
       slot: "weapon" as const,
       tier: "regular" as const,
+      ilvl: 1,
       affixes: [],
       durability: 10,
     };
@@ -372,6 +378,7 @@ describe("the drop economy (medkit/powerup mults, the unique slice)", () => {
         home: { x: 40, y: 40 + i * 30 },
         hp: 45,
         maxHp: 45,
+        mlvl: 99,
         speed: 0,
         contactCooldownMs: 0,
       });
@@ -383,6 +390,7 @@ describe("the drop economy (medkit/powerup mults, the unique slice)", () => {
       home: { x: state.player.pos.x + 20, y: state.player.pos.y },
       hp: 1,
       maxHp: 45,
+      mlvl: 99,
       speed: 0,
       contactCooldownMs: 0,
     };
@@ -473,6 +481,7 @@ describe("unique drops and the hp floor (custom catalog)", () => {
         home: { x: 40, y: 40 + i * 30 },
         hp: 45,
         maxHp: 45,
+        mlvl: 99,
         speed: 0,
         contactCooldownMs: 0,
       });
@@ -484,6 +493,7 @@ describe("unique drops and the hp floor (custom catalog)", () => {
       home: { x: state.player.pos.x + 20, y: state.player.pos.y },
       hp: 1,
       maxHp: 45,
+      mlvl: 99,
       speed: 0,
       contactCooldownMs: 0,
     });

@@ -141,6 +141,7 @@ export const SPACEZ_ENEMIES: Record<string, EnemyDef> = {
     id: "night_manager",
     name: "THE NIGHT MANAGER",
     role: "elite",
+    levelBonus: 3,
     sprite: "night_manager",
     hp: 150,
     speed: 22,
@@ -165,6 +166,7 @@ export const SPACEZ_ENEMIES: Record<string, EnemyDef> = {
     ai: { aggroRadius: 240, rushSpeed: 120 },
     loot: {
       items: ["executive_putter"],
+      tierDrops: { magic: 1 },
       storyItems: ["keycard_storage"],
       weapons: 0,
       gear: 0,
@@ -178,6 +180,7 @@ export const SPACEZ_ENEMIES: Record<string, EnemyDef> = {
     id: "security_chief",
     name: "CHIEF OF SECURITY",
     role: "elite",
+    levelBonus: 3,
     sprite: "security_chief",
     hp: 210,
     speed: 30,
@@ -206,9 +209,10 @@ export const SPACEZ_ENEMIES: Record<string, EnemyDef> = {
     ai: { aggroRadius: 240, rushSpeed: 130 },
     loot: {
       // The Chief guards the way off-planet — and surrenders the EVA suit
-      // the hero needs to take it. Forced epic so it lands as the run's
-      // standout suit even though SpaceZ only rolls up to magic.
-      items: ["riot_taser", { defId: "space_suit", tier: "epic" }],
+      // the hero needs to take it. Forced UNIQUE so it lands as the run's
+      // standout suit long before the unique tier's own gate opens.
+      items: ["riot_taser", { defId: "space_suit", tier: "unique" }],
+      tierDrops: { magic: 1 },
       storyItems: ["cargo_manifest"],
       weapons: 0,
       gear: 1,
@@ -222,6 +226,7 @@ export const SPACEZ_ENEMIES: Record<string, EnemyDef> = {
     id: "head_scientist",
     name: "DR. NOVA",
     role: "elite",
+    levelBonus: 3,
     sprite: "head_scientist",
     hp: 170,
     speed: 18,
@@ -250,6 +255,7 @@ export const SPACEZ_ENEMIES: Record<string, EnemyDef> = {
     ai: { aggroRadius: 240, rushSpeed: 115 },
     loot: {
       items: ["overclocked_laser"],
+      tierDrops: { magic: 1 },
       storyItems: ["keycard_vault"],
       weapons: 0,
       gear: 0,
@@ -263,6 +269,7 @@ export const SPACEZ_ENEMIES: Record<string, EnemyDef> = {
     id: "janitor",
     name: "THE JANITOR",
     role: "elite",
+    levelBonus: 3,
     sprite: "janitor",
     hp: 230,
     speed: 16,
@@ -291,6 +298,7 @@ export const SPACEZ_ENEMIES: Record<string, EnemyDef> = {
     ai: { aggroRadius: 240, rushSpeed: 110 },
     loot: {
       items: ["wet_floor_sign"],
+      tierDrops: { magic: 1 },
       weapons: 0,
       gear: 0,
       xpArrows: 1,
@@ -312,6 +320,7 @@ export const SPACEZ_ENEMIES: Record<string, EnemyDef> = {
     id: "architect",
     name: "THE ARCHITECT",
     role: "elite",
+    levelBonus: 3,
     sprite: "architect",
     hp: 190,
     speed: 20,
@@ -344,6 +353,7 @@ export const SPACEZ_ENEMIES: Record<string, EnemyDef> = {
       // pays out from the bag. Forced regular so it lands as the plain,
       // affix-free "+1 INT" the story promises, not a rolled MAGIC variant.
       items: [{ defId: "passage_chip", tier: "regular" }],
+      tierDrops: { magic: 1 },
       // …and his machine badge: the key to the AI CORE room the whole night
       // shift answers to. No plain hand opens that door — only the man who
       // cut himself into a machine could, and now the hero carries it.
@@ -360,6 +370,7 @@ export const SPACEZ_ENEMIES: Record<string, EnemyDef> = {
     id: "muskrat",
     name: "MUSKRAT",
     role: "boss",
+    levelBonus: 5,
     sprite: "muskrat",
     hp: 480,
     speed: 36,
@@ -403,6 +414,7 @@ export const SPACEZ_ENEMIES: Record<string, EnemyDef> = {
     // cleanroom's — he dragged it home as a toothpick.
     loot: {
       items: ["plasma_cutter"],
+      tierDrops: { magic: 1.5, rare: 0.25 },
       weapons: 0,
       gear: 1,
       xpArrows: 2,

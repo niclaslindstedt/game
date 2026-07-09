@@ -1,8 +1,10 @@
 // SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
 // The equipment catalog: weapon defs, gear defs, the tier ladder, and the
 // affix pools that magic+ items roll from. Levels pick which defs can drop
-// via their loot pools and which tiers are unlocked via their tier chances —
-// so growing this file to hundreds of items never touches the engine.
+// via their loot pools; WHEN a base can drop is its own `levelReq` against
+// the killer's monster level, and WHEN a tier can drop is the mlvl gate in
+// config LOOT.tierUnlockMlvl — so growing this file to hundreds of items
+// never touches the engine.
 
 import type {
   Affix,
@@ -16,23 +18,26 @@ import type {
 // ---- Tiers -----------------------------------------------------------------
 
 /**
- * The full quality ladder, defined engine-wide from day one. The moon level
- * unlocks regular+magic plus a slim chance of rare; harder difficulties and
- * later levels raise the rare/epic/legendary chances. `affixCount` is how many
- * bonuses an item of that tier rolls — an upper bound, since a family never
- * repeats an affix kind, so a piece can only carry as many as its pool holds
- * (a legendary weapon caps at the weapon pool's size, gear at the gear pool's).
+ * The full quality ladder — the Diablo ladder — defined engine-wide from day
+ * one. WHEN each tier can drop is the monster-level gate in config
+ * `LOOT.tierUnlockMlvl` (magic from mlvl 5, rare from 10, …); harder
+ * difficulties sweeten the chances. `affixCount` is how many bonuses an item
+ * of that tier rolls — an upper bound, since a family never repeats an affix
+ * kind, so a piece can only carry as many as its pool holds. Affix SIZE
+ * scales with the item's level (see AFFIX_POOLS), so a rare pays out twice a
+ * magic's points at the same ilvl. Unique and legendary are plumbing: their
+ * one-of-a-kind defs don't ship yet.
  */
 export const TIERS: Record<Tier, { prefix: string; affixCount: number }> = {
   regular: { prefix: "", affixCount: 0 },
   magic: { prefix: "MAGIC ", affixCount: 1 },
   rare: { prefix: "RARE ", affixCount: 2 },
-  epic: { prefix: "EPIC ", affixCount: 3 },
+  unique: { prefix: "UNIQUE ", affixCount: 3 },
   legendary: { prefix: "LEGENDARY ", affixCount: 4 },
 };
 
 /** Roll order: try the best tier first, fall through to regular. */
-export const TIER_ROLL_ORDER: Tier[] = ["legendary", "epic", "rare", "magic"];
+export const TIER_ROLL_ORDER: Tier[] = ["legendary", "unique", "rare", "magic"];
 
 // ---- Weapons ----------------------------------------------------------------
 
@@ -44,6 +49,15 @@ export type WeaponDef = {
   damage: number;
   cooldownMs: number;
   range: number;
+  /**
+   * The base item's LEVEL REQUIREMENT, Diablo-style. Gates both ends of the
+   * economy: this weapon never drops off a monster whose level is below it
+   * (see `rollEquipment`), and the player can't wield it until his own level
+   * reaches it (see `meetsLevelReq` — an early lucky find waits in the bag).
+   * The campaign's power curve is authored here: each level's base pool
+   * introduces its five weapons at stepped requirements.
+   */
+  levelReq: number;
   /**
    * Attacks before a dropped instance of this weapon breaks. The player's
    * own starting sidearm is minted without durability and never breaks.
@@ -71,6 +85,32 @@ export type WeaponDef = {
     lifetimeMs: number;
     /** Sprite the renderer draws for the shot. */
     sprite: string;
+    /**
+     * Pellets per trigger pull (a shotgun's blast). Each pellet is its own
+     * projectile carrying the def's full `damage`; the volley fans across
+     * `spreadDeg`. Omitted = 1 (a single straight shot).
+     */
+    count?: number;
+    /** Full fan angle (degrees) a multi-pellet volley spreads across. */
+    spreadDeg?: number;
+    /**
+     * How many extra foes the shot punches THROUGH (a railgun's line): the
+     * projectile survives this many hits beyond the first before it spends
+     * itself. Omitted = 0 (dies on the first body).
+     */
+    pierce?: number;
+    /**
+     * Homing turn rate in radians/s: the shot steers toward the nearest foe
+     * ahead of it each tick (a smart pistol's self-correcting darts).
+     * Omitted = 0 (flies straight).
+     */
+    homing?: number;
+    /**
+     * Chain lightning: on a hit, the bolt leaps to this many further foes
+     * (nearest first, within `WEAPON.chainRange`), each leap dealing
+     * `WEAPON.chainDamageFrac` of the blow before it. Omitted = no chaining.
+     */
+    chain?: number;
   };
   /** Inventory icon sprite. */
   icon: string;
@@ -92,6 +132,7 @@ export const WEAPON_DEFS: Record<string, WeaponDef> = {
     id: "hairy_potters_wand",
     name: "HAIRY POTTER'S WAND",
     class: "magic",
+    levelReq: 1,
     damage: 14,
     cooldownMs: 550,
     range: 280,
@@ -106,6 +147,7 @@ export const WEAPON_DEFS: Record<string, WeaponDef> = {
     id: "medieval_sword",
     name: "MEDIEVAL SWORD",
     class: "melee",
+    levelReq: 1,
     damage: 18,
     cooldownMs: 720,
     range: 38,
@@ -124,6 +166,7 @@ export const WEAPON_DEFS: Record<string, WeaponDef> = {
     id: "combat_knife",
     name: "COMBAT KNIFE",
     class: "melee",
+    levelReq: 1,
     damage: 10,
     cooldownMs: 400,
     range: 32,
@@ -139,6 +182,7 @@ export const WEAPON_DEFS: Record<string, WeaponDef> = {
     id: "brass_knuckles",
     name: "BRASS KNUCKLES",
     class: "melee",
+    levelReq: 1,
     damage: 30,
     cooldownMs: 1100,
     range: 24,
@@ -153,6 +197,7 @@ export const WEAPON_DEFS: Record<string, WeaponDef> = {
     id: "stick",
     name: "A STICK",
     class: "melee",
+    levelReq: 1,
     damage: 7,
     cooldownMs: 520,
     range: 36,
@@ -161,100 +206,98 @@ export const WEAPON_DEFS: Record<string, WeaponDef> = {
     durability: 100,
     icon: "icon_stick",
   },
-  // ---- SpaceZ HQ (level 1): whatever the office and the lab left lying
-  // around. Numbers sit a notch under the moon pool — this is the run where
-  // a MAGIC KEYBOARD is a genuine find.
-  stapler: {
-    id: "stapler",
-    name: "STAPLER",
-    class: "ranged",
-    damage: 6,
-    cooldownMs: 470,
-    range: 210,
-    durability: 140,
-    projectile: { speed: 380, radius: 3, lifetimeMs: 800, sprite: "staple" },
-    icon: "icon_stapler",
-  },
-  keyboard: {
-    id: "keyboard",
-    name: "KEYBOARD",
+  // ---- SPACEZ HQ (level 1) base pool: earthly weapons an American space
+  // company keeps around — the office, the security desk, the lab. The base
+  // ladder starts here; each entry's `levelReq` is where it enters the drop
+  // economy (mobs below it never drop it).
+  //
+  // The utility knife off a shipping desk: fast, weak, one foe at a time —
+  // the base ladder's first rung.
+  box_cutter: {
+    id: "box_cutter",
+    name: "BOX CUTTER",
     class: "melee",
-    damage: 13,
+    levelReq: 1,
+    damage: 8,
     cooldownMs: 300,
-    range: 38,
-    // Keyboards were not built for this. Keys everywhere.
-    durability: 100,
-    icon: "icon_keyboard",
+    range: 32,
+    sweepDeg: 60,
+    baseAoeTargets: 1,
+    durability: 130,
+    icon: "icon_box_cutter",
   },
-  mop: {
-    id: "mop",
-    name: "MOP",
-    class: "melee",
-    // The janitor's reach weapon: weak per swing, but it keeps the crowd at
-    // arm's length — the longest melee range in the building. A thrust, not a
-    // slash: a narrow cone that skewers the line directly ahead.
-    damage: 11,
-    cooldownMs: 260,
-    range: 52,
-    sweepDeg: 44,
-    durability: 160,
-    icon: "icon_mop",
-  },
-  fire_extinguisher: {
-    id: "fire_extinguisher",
-    name: "FIRE EXTINGUISHER",
-    class: "melee",
-    damage: 28,
-    cooldownMs: 680,
-    range: 42,
-    durability: 110,
-    icon: "icon_extinguisher",
-  },
-  taser: {
-    id: "taser",
-    name: "TASER",
+  // A desk drawer's 9mm — this is America, even in the space business.
+  nine_mm: {
+    id: "nine_mm",
+    name: "9MM PISTOL",
     class: "ranged",
-    // Security issue: hits hard for its cadence but only across a desk —
-    // the short lifetime caps the reach well inside other ranged arms.
-    damage: 11,
-    cooldownMs: 580,
-    range: 150,
-    durability: 150,
-    projectile: { speed: 460, radius: 3, lifetimeMs: 400, sprite: "zap" },
-    icon: "icon_taser",
-  },
-  laser_pointer: {
-    id: "laser_pointer",
-    name: "LASER POINTER",
-    class: "magic",
+    levelReq: 2,
     damage: 9,
+    cooldownMs: 480,
+    range: 230,
+    durability: 170,
+    projectile: { speed: 420, radius: 3, lifetimeMs: 800, sprite: "bolt" },
+    icon: "icon_nine_mm",
+  },
+  // The guards' telescoping baton: real reach, honest tempo — and the HQ
+  // run's scripted second-kill drop, so its levelReq must stay at 1.
+  security_baton: {
+    id: "security_baton",
+    name: "SECURITY BATON",
+    class: "melee",
+    levelReq: 1,
+    damage: 16,
+    cooldownMs: 400,
+    range: 42,
+    sweepDeg: 100,
+    baseAoeTargets: 2,
+    durability: 220,
+    icon: "icon_baton",
+  },
+  // A lab bench rig three review meetings from approval. Thin fast beam.
+  prototype_laser: {
+    id: "prototype_laser",
+    name: "PROTOTYPE LASER",
+    class: "magic",
+    levelReq: 4,
+    damage: 10,
     cooldownMs: 380,
     range: 300,
     durability: 180,
     projectile: { speed: 520, radius: 3, lifetimeMs: 900, sprite: "ray" },
-    icon: "icon_laser_pointer",
+    icon: "icon_prototype_laser",
   },
-  beaker: {
-    id: "beaker",
-    name: "BEAKER",
-    class: "magic",
-    // Something unlabeled from the lab shelf. Throws slow, hits like it.
-    damage: 17,
-    cooldownMs: 720,
-    range: 230,
-    durability: 90,
-    projectile: { speed: 300, radius: 4, lifetimeMs: 1100, sprite: "vial" },
-    icon: "icon_beaker",
+  // The armory's pump gun: slow, brutal, short — five pellets a pull, each
+  // carrying the full hit, so a point-blank blast is the building's hardest
+  // single swing and a spread at range still stings the crowd.
+  pump_shotgun: {
+    id: "pump_shotgun",
+    name: "PUMP SHOTGUN",
+    class: "ranged",
+    levelReq: 5,
+    damage: 7,
+    cooldownMs: 950,
+    range: 150,
+    durability: 140,
+    projectile: {
+      speed: 380,
+      radius: 3,
+      lifetimeMs: 420,
+      sprite: "pellet",
+      count: 5,
+      spreadDeg: 24,
+    },
+    icon: "icon_pump_shotgun",
   },
-  // ---- The moon (level 2) pool.
+  // The engine's built-in sidearm — never in a pool, minted unbreakable when
+  // the holster would otherwise be empty. A deliberate, slow cadence: each
+  // shot is an event the player can follow; DEX (and the first weapon drop)
+  // is how the fire rate grows back.
   blaster: {
     id: "blaster",
     name: "BLASTER",
     class: "ranged",
-    // A deliberate, slow starting cadence: each shot is an event the player
-    // can follow, and standing still no longer clears the horde on its own —
-    // the sidearm holds one lane, the crowd flows around it. DEX (and the
-    // first weapon drop) is how the fire rate grows back.
+    levelReq: 1,
     damage: 8,
     cooldownMs: 900,
     range: 260,
@@ -262,86 +305,258 @@ export const WEAPON_DEFS: Record<string, WeaponDef> = {
     projectile: { speed: 420, radius: 3, lifetimeMs: 900, sprite: "bolt" },
     icon: "icon_blaster",
   },
-  wand: {
-    id: "wand",
-    name: "WAND",
-    class: "magic",
-    damage: 15,
-    cooldownMs: 600,
-    range: 300,
-    durability: 160,
-    projectile: { speed: 320, radius: 4, lifetimeMs: 1300, sprite: "spark" },
-    icon: "icon_wand",
-  },
-  wrench: {
-    id: "wrench",
-    name: "WRENCH",
+  // ---- THE MOON (level 2) base pool: what the 70s ferried up — hand tools
+  // off the landers and the sidearms of a space race that planned for the
+  // worst. Nothing here was made after 1979.
+  //
+  // The lander's chunky chrome service wrench: heavy, honest, everywhere.
+  lunar_wrench: {
+    id: "lunar_wrench",
+    name: "LUNAR WRENCH",
     class: "melee",
+    levelReq: 5,
     damage: 22,
-    cooldownMs: 420,
+    cooldownMs: 480,
     range: 42,
-    durability: 160,
-    icon: "icon_wrench",
-  },
-  // The plain drop pool — simple, unnamed base types Diablo-style. Tier
-  // affixes (MAGIC …) are what make one PIPE better than another.
-  pipe: {
-    id: "pipe",
-    name: "PIPE",
-    class: "melee",
-    damage: 16,
-    cooldownMs: 320,
-    range: 40,
     durability: 180,
-    icon: "icon_pipe",
+    icon: "icon_lunar_wrench",
   },
-  hammer: {
-    id: "hammer",
-    name: "HAMMER",
+  // A .38 out of a crew survival kit — the space race packed for bears.
+  service_revolver: {
+    id: "service_revolver",
+    name: "SERVICE REVOLVER",
+    class: "ranged",
+    levelReq: 6,
+    damage: 14,
+    cooldownMs: 550,
+    range: 240,
+    durability: 190,
+    projectile: { speed: 440, radius: 3, lifetimeMs: 800, sprite: "bolt" },
+    icon: "icon_service_revolver",
+  },
+  // The geologist's pick hammer: slow, spiked, single-minded — a narrow arc
+  // that pays its patience back in deep dents.
+  geology_hammer: {
+    id: "geology_hammer",
+    name: "GEOLOGY HAMMER",
     class: "melee",
-    damage: 34,
-    cooldownMs: 640,
-    range: 44,
-    durability: 120,
-    icon: "icon_hammer",
+    levelReq: 8,
+    damage: 30,
+    cooldownMs: 650,
+    range: 40,
+    sweepDeg: 70,
+    durability: 150,
+    icon: "icon_geology_hammer",
   },
-  pistol: {
-    id: "pistol",
-    name: "PISTOL",
+  // Military surplus that hitched a ride: the longest reach of the 70s pool,
+  // one deliberate tracer at a time.
+  surplus_carbine: {
+    id: "surplus_carbine",
+    name: "SURPLUS CARBINE",
     class: "ranged",
-    damage: 7,
-    cooldownMs: 500,
-    range: 230,
-    durability: 200,
-    projectile: { speed: 400, radius: 3, lifetimeMs: 800, sprite: "bolt" },
-    icon: "icon_pistol",
-  },
-  rifle: {
-    id: "rifle",
-    name: "RIFLE",
-    class: "ranged",
-    damage: 18,
-    cooldownMs: 950,
+    levelReq: 9,
+    damage: 20,
+    cooldownMs: 850,
     range: 320,
-    durability: 120,
-    projectile: { speed: 540, radius: 3, lifetimeMs: 900, sprite: "bolt" },
-    icon: "icon_rifle",
+    durability: 140,
+    projectile: { speed: 560, radius: 3, lifetimeMs: 900, sprite: "bolt" },
+    icon: "icon_surplus_carbine",
   },
-  star_wand: {
-    id: "star_wand",
-    name: "STAR WAND",
+  // An atomic-age lab prototype, all fins and chrome, straight off a pulp
+  // cover. The moon pool's magic capstone.
+  retro_raygun: {
+    id: "retro_raygun",
+    name: "RETRO RAYGUN",
     class: "magic",
-    damage: 21,
-    cooldownMs: 700,
+    levelReq: 10,
+    damage: 17,
+    cooldownMs: 600,
     range: 290,
-    durability: 130,
-    projectile: { speed: 340, radius: 4, lifetimeMs: 1200, sprite: "spark" },
-    icon: "icon_star_wand",
+    durability: 170,
+    projectile: { speed: 340, radius: 4, lifetimeMs: 1100, sprite: "ring" },
+    icon: "icon_retro_raygun",
   },
+  // ---- MARS (level 3) base pool: printed overnight by the colony AI.
+  // Nothing a human armory would recognize — self-correcting darts, plasma
+  // edges, rails. The machines design better weapons than we do.
+  //
+  // White ceramic, no visible trigger. The darts do the aiming.
+  smart_pistol: {
+    id: "smart_pistol",
+    name: "SMART PISTOL",
+    class: "ranged",
+    levelReq: 10,
+    damage: 13,
+    cooldownMs: 380,
+    range: 250,
+    durability: 200,
+    projectile: {
+      speed: 380,
+      radius: 3,
+      lifetimeMs: 900,
+      sprite: "dart",
+      homing: 3.5,
+    },
+    icon: "icon_smart_pistol",
+  },
+  // A humming magenta edge that cauterizes as it cuts: quick, wide, and
+  // genuinely mean in a crowd.
+  plasma_blade: {
+    id: "plasma_blade",
+    name: "PLASMA BLADE",
+    class: "melee",
+    levelReq: 12,
+    damage: 24,
+    cooldownMs: 380,
+    range: 44,
+    sweepDeg: 110,
+    baseAoeTargets: 3,
+    durability: 220,
+    icon: "icon_plasma_blade",
+  },
+  // Twin rails and a capacitor bank: one slow slug that refuses to stop at
+  // the first body — it holds a whole lane.
+  railgun: {
+    id: "railgun",
+    name: "RAILGUN",
+    class: "ranged",
+    levelReq: 13,
+    damage: 34,
+    cooldownMs: 1000,
+    range: 340,
+    durability: 150,
+    projectile: {
+      speed: 700,
+      radius: 3,
+      lifetimeMs: 700,
+      sprite: "rail",
+      pierce: 3,
+    },
+    icon: "icon_railgun",
+  },
+  // A fork of blue-white current that refuses to stay in one target.
+  arc_projector: {
+    id: "arc_projector",
+    name: "ARC PROJECTOR",
+    class: "magic",
+    levelReq: 14,
+    damage: 16,
+    cooldownMs: 500,
+    range: 280,
+    durability: 190,
+    projectile: {
+      speed: 420,
+      radius: 4,
+      lifetimeMs: 900,
+      sprite: "zap",
+      chain: 1,
+    },
+    icon: "icon_arc_projector",
+  },
+  // A black cube floating on a handle. Swinging it moves the ground more
+  // than the arm — the Mars pool's slow, enormous exclamation mark.
+  gravity_maul: {
+    id: "gravity_maul",
+    name: "GRAVITY MAUL",
+    class: "melee",
+    levelReq: 16,
+    damage: 40,
+    cooldownMs: 900,
+    range: 46,
+    sweepDeg: 130,
+    baseAoeTargets: 3,
+    durability: 160,
+    icon: "icon_gravity_maul",
+  },
+  // ---- THE RIFT (level 4) base pool: everything history has ever dropped
+  // falls through here — antiquity to the age of powder, plus the odd thing
+  // history never had.
+  //
+  // A legionary's short sword, still keen after two thousand years somewhere
+  // that didn't have years.
+  gladius: {
+    id: "gladius",
+    name: "GLADIUS",
+    class: "melee",
+    levelReq: 15,
+    damage: 26,
+    cooldownMs: 420,
+    range: 40,
+    sweepDeg: 90,
+    baseAoeTargets: 2,
+    durability: 240,
+    icon: "icon_gladius",
+  },
+  // An English yew warbow: the longest lane in the game, one feathered
+  // arrow at a time.
+  longbow: {
+    id: "longbow",
+    name: "LONGBOW",
+    class: "ranged",
+    levelReq: 17,
+    damage: 28,
+    cooldownMs: 800,
+    range: 360,
+    durability: 180,
+    projectile: { speed: 520, radius: 3, lifetimeMs: 1000, sprite: "arrow" },
+    icon: "icon_longbow",
+  },
+  // The shotgun's flared-brass great-grandfather, loaded with whatever fit
+  // down the muzzle.
+  blunderbuss: {
+    id: "blunderbuss",
+    name: "BLUNDERBUSS",
+    class: "ranged",
+    levelReq: 19,
+    damage: 9,
+    cooldownMs: 1100,
+    range: 160,
+    durability: 150,
+    projectile: {
+      speed: 360,
+      radius: 3,
+      lifetimeMs: 470,
+      sprite: "pellet",
+      count: 6,
+      spreadDeg: 32,
+    },
+    icon: "icon_blunderbuss",
+  },
+  // The hooded era's argument-ender: the slowest, hardest melee blow on the
+  // ladder.
+  executioners_axe: {
+    id: "executioners_axe",
+    name: "EXECUTIONER'S AXE",
+    class: "melee",
+    levelReq: 21,
+    damage: 48,
+    cooldownMs: 1000,
+    range: 46,
+    sweepDeg: 100,
+    baseAoeTargets: 2,
+    durability: 170,
+    icon: "icon_executioners_axe",
+  },
+  // A gnarled staff with a crystal that predates the concept of physics.
+  // The base ladder's magic capstone.
+  sorcerers_staff: {
+    id: "sorcerers_staff",
+    name: "SORCERER'S STAFF",
+    class: "magic",
+    levelReq: 23,
+    damage: 30,
+    cooldownMs: 650,
+    range: 320,
+    durability: 200,
+    projectile: { speed: 360, radius: 5, lifetimeMs: 1200, sprite: "orb" },
+    icon: "icon_sorcerers_staff",
+  },
+  // The rift's scheduled early caster (earlyDrops) — a special, not a base.
   void_wand: {
     id: "void_wand",
     name: "VOID WAND",
     class: "magic",
+    levelReq: 14,
     damage: 11,
     cooldownMs: 420,
     range: 260,
@@ -349,25 +564,16 @@ export const WEAPON_DEFS: Record<string, WeaponDef> = {
     projectile: { speed: 360, radius: 4, lifetimeMs: 1000, sprite: "spark" },
     icon: "icon_void_wand",
   },
-  // Uniques — never in a level's random weapon pool; they arrive via
+  // Specials — never in a level's random base pool; they arrive via
   // guaranteed drops (a boss's `loot.items`, a level's `allClearWeapon`,
-  // a level's `earlyDrops` schedule).
-  security_baton: {
-    id: "security_baton",
-    name: "SECURITY BATON",
-    class: "melee",
-    // HQ's guaranteed early drop: a real weapon within the first dozens of
-    // kills, so the run's melee spine arrives before the crowd thickens.
-    damage: 18,
-    cooldownMs: 360,
-    range: 42,
-    durability: 220,
-    icon: "icon_baton",
-  },
+  // a level's `earlyDrops` schedule). Their levelReq is tuned to the hero's
+  // level when the story hands them over, and they're the seed stock for the
+  // UNIQUE tier once it ships.
   golden_stapler: {
     id: "golden_stapler",
     name: "GOLDEN STAPLER",
     class: "ranged",
+    levelReq: 4,
     // The all-clear trophy: the CEO's desk ornament, and somehow the best
     // stapler in the building.
     damage: 14,
@@ -381,6 +587,7 @@ export const WEAPON_DEFS: Record<string, WeaponDef> = {
     id: "plasma_cutter",
     name: "PLASMA CUTTER",
     class: "melee",
+    levelReq: 5,
     // MUSKRAT's hoard piece — cleanroom tooling rated for rocket hulls.
     damage: 26,
     cooldownMs: 340,
@@ -392,6 +599,7 @@ export const WEAPON_DEFS: Record<string, WeaponDef> = {
     id: "machete",
     name: "MACHETE",
     class: "melee",
+    levelReq: 7,
     damage: 26,
     cooldownMs: 380,
     range: 46,
@@ -405,6 +613,7 @@ export const WEAPON_DEFS: Record<string, WeaponDef> = {
     id: "executive_putter",
     name: "EXECUTIVE PUTTER",
     class: "melee",
+    levelReq: 3,
     // The NIGHT MANAGER's back-nine special: crisp tempo, real reach.
     damage: 21,
     cooldownMs: 380,
@@ -416,6 +625,7 @@ export const WEAPON_DEFS: Record<string, WeaponDef> = {
     id: "riot_taser",
     name: "RIOT TASER",
     class: "ranged",
+    levelReq: 3,
     // The CHIEF's issue model: the desk taser with the export firmware.
     damage: 13,
     cooldownMs: 420,
@@ -428,6 +638,7 @@ export const WEAPON_DEFS: Record<string, WeaponDef> = {
     id: "overclocked_laser",
     name: "OVERCLOCKED LASER",
     class: "magic",
+    levelReq: 4,
     // DR. NOVA's conference pointer, three safety screws short of legal.
     damage: 12,
     cooldownMs: 260,
@@ -440,6 +651,7 @@ export const WEAPON_DEFS: Record<string, WeaponDef> = {
     id: "wet_floor_sign",
     name: "WET FLOOR SIGN",
     class: "melee",
+    levelReq: 4,
     // THE JANITOR's halberd: light, fast, and the longest reach on level 1.
     // A polearm's thrust — a narrow cone that reaches far down the line.
     damage: 15,
@@ -453,6 +665,7 @@ export const WEAPON_DEFS: Record<string, WeaponDef> = {
     id: "flare_gun",
     name: "FLARE GUN",
     class: "ranged",
+    levelReq: 7,
     // The MISSION SPECIALIST's survival kit piece: slow, bright, brutal.
     damage: 22,
     cooldownMs: 800,
@@ -465,6 +678,7 @@ export const WEAPON_DEFS: Record<string, WeaponDef> = {
     id: "core_drill",
     name: "CORE DRILL",
     class: "melee",
+    levelReq: 6,
     // The PROSPECTOR's tunneler — chews rock, chews ghosts.
     damage: 21,
     cooldownMs: 330,
@@ -476,6 +690,7 @@ export const WEAPON_DEFS: Record<string, WeaponDef> = {
     id: "geiger_wand",
     name: "GEIGER WAND",
     class: "magic",
+    levelReq: 7,
     // The MEDIC's screening probe, clicking well past the safe band.
     damage: 16,
     cooldownMs: 380,
@@ -488,6 +703,7 @@ export const WEAPON_DEFS: Record<string, WeaponDef> = {
     id: "surveyors_pick",
     name: "SURVEYOR'S PICK",
     class: "melee",
+    levelReq: 8,
     // THE CARTOGRAPHER's stake hammer: heavy arcs, deep dents.
     damage: 24,
     cooldownMs: 450,
@@ -499,6 +715,7 @@ export const WEAPON_DEFS: Record<string, WeaponDef> = {
     id: "moons_blade",
     name: "MOON'S BLADE",
     class: "melee",
+    levelReq: 8,
     damage: 32,
     cooldownMs: 400,
     range: 48,
@@ -511,6 +728,7 @@ export const WEAPON_DEFS: Record<string, WeaponDef> = {
     id: "cyber_katana",
     name: "CYBER KATANA",
     class: "melee",
+    levelReq: 11,
     // Mars's scheduled early blade (earlyDrops): angular, allegedly
     // shatterproof, definitely shipped before testing finished.
     damage: 34,
@@ -523,6 +741,7 @@ export const WEAPON_DEFS: Record<string, WeaponDef> = {
     id: "search_bar",
     name: "SEARCH BAR",
     class: "melee",
+    levelReq: 11,
     // LARRY WEBPAGE's crawler pole — a literal bar that searches the line
     // ahead. Results in about 0.26 seconds.
     damage: 17,
@@ -536,6 +755,7 @@ export const WEAPON_DEFS: Record<string, WeaponDef> = {
     id: "blue_screen",
     name: "BLUE SCREEN",
     class: "magic",
+    levelReq: 12,
     // BUILD GATES's tablet: it crashes whatever it's pointed at.
     damage: 18,
     cooldownMs: 420,
@@ -548,6 +768,7 @@ export const WEAPON_DEFS: Record<string, WeaponDef> = {
     id: "contrarian_dagger",
     name: "CONTRARIAN DAGGER",
     class: "melee",
+    levelReq: 13,
     // PETER SEAL's letter opener: short, fast, and always against the crowd.
     damage: 23,
     cooldownMs: 300,
@@ -559,6 +780,7 @@ export const WEAPON_DEFS: Record<string, WeaponDef> = {
     id: "prompt_injector",
     name: "PROMPT INJECTOR",
     class: "magic",
+    levelReq: 14,
     // OPTIMUSK PRIME's sidearm: it injects a prompt and the target does the
     // rest to itself. A notch over the BLUE SCREEN — PRIME sits deepest of
     // the Mars elites.
@@ -573,6 +795,7 @@ export const WEAPON_DEFS: Record<string, WeaponDef> = {
     id: "not_a_flamethrower",
     name: "NOT-A-FLAMETHROWER",
     class: "ranged",
+    levelReq: 14,
     // MOSQUE drops it as he bolts. Legally, it is not a flamethrower.
     damage: 24,
     cooldownMs: 520,
@@ -585,6 +808,7 @@ export const WEAPON_DEFS: Record<string, WeaponDef> = {
     id: "tesla_coil",
     name: "TESLA COIL",
     class: "magic",
+    levelReq: 16,
     // NIKOLA TESLA's coil, surrendered as the current returns to it: fast
     // wireless lightning. They laughed. They are not laughing now.
     damage: 21,
@@ -598,6 +822,7 @@ export const WEAPON_DEFS: Record<string, WeaponDef> = {
     id: "singularity_cannon",
     name: "SINGULARITY CANNON",
     class: "magic",
+    levelReq: 16,
     // GROK OMEGA's sidearm: it fires very small, very rude black holes. The
     // deepest hit in the campaign so far, paid for with a slow, heavy cycle.
     damage: 30,
@@ -620,6 +845,12 @@ export type GearDef = {
   id: string;
   name: string;
   slot: Exclude<EquipSlot, "weapon">;
+  /**
+   * Level requirement, same two-way gate as a weapon's (see
+   * WeaponDef.levelReq): never drops off a mob below it, never worn by a
+   * hero below it. Omitted = 1 (no gate).
+   */
+  levelReq?: number;
   /** Flat bonuses baked into the item before tier affixes. */
   bonuses: { maxHp?: number; critChance?: number };
   /**
@@ -761,14 +992,73 @@ export const GEAR_DEFS: Record<string, GearDef> = {
     bonuses: { maxHp: 25, critChance: 0.02 },
     icon: "icon_parachute",
   },
+  // ---- Rift FANTASY gear: things that fell through from stories rather
+  // than history. Only the rift's pool carries them — it's the one magical
+  // level so far.
+  lucky_clover: {
+    id: "lucky_clover",
+    name: "LUCKY CLOVER",
+    slot: "charm",
+    levelReq: 15,
+    // Four leaves, pressed flat by something enormous. Pays out from the bag.
+    bonuses: {},
+    passive: { luck: 2 },
+    icon: "icon_clover",
+  },
+  crystal_orb: {
+    id: "crystal_orb",
+    name: "CRYSTAL ORB",
+    slot: "charm",
+    levelReq: 16,
+    // It shows you the blow before it lands.
+    bonuses: { critChance: 0.04 },
+    icon: "icon_crystal_orb",
+  },
+  grimoire: {
+    id: "grimoire",
+    name: "GRIMOIRE",
+    slot: "charm",
+    levelReq: 18,
+    // A book that reads YOU. Sharpens the mind just riding in the bag.
+    bonuses: {},
+    passive: { intelligence: 2 },
+    icon: "icon_grimoire",
+  },
+  enchanted_ring: {
+    id: "enchanted_ring",
+    name: "ENCHANTED RING",
+    slot: "charm",
+    levelReq: 20,
+    // One ring. It wants to be worn — and it earns it.
+    bonuses: { critChance: 0.05 },
+    icon: "icon_enchanted_ring",
+  },
+  dragonscale_cloak: {
+    id: "dragonscale_cloak",
+    name: "DRAGONSCALE CLOAK",
+    slot: "suit",
+    levelReq: 22,
+    // Shed, not taken — nobody skins a dragon. The rift's heaviest plating.
+    bonuses: { maxHp: 35 },
+    armor: "red",
+    icon: "icon_dragonscale_cloak",
+  },
 };
 
 // ---- Affixes ------------------------------------------------------------------
 
 export type AffixDef = {
   kind: "damagePct" | "maxHp" | "crit" | "stat";
-  /** Rolled uniformly; `stat` affixes use the integer value as points. */
-  range: [number, number];
+  /**
+   * Roll size PER ITEM LEVEL: the affix's value is
+   * `ilvl × randomRange(min, max)` (stat/maxHp rounded, floored at 1 point).
+   * Tying magnitude to ilvl is the Diablo rule "deeper drops roll bigger":
+   * a stat affix at [1, 1] pays exactly +1 point per item level, so an
+   * ilvl-12 magic find carries +12 in one stat — and a rare, rolling TWO
+   * affixes, pays out twice the points at the same ilvl (unique three,
+   * legendary four).
+   */
+  perIlvl: [number, number];
   /** Relative weight within the pool. */
   weight: number;
 };
@@ -776,22 +1066,24 @@ export type AffixDef = {
 /** What magic+ items can roll, per slot family. */
 export const AFFIX_POOLS: Record<"weapon" | "gear", AffixDef[]> = {
   weapon: [
-    { kind: "damagePct", range: [0.15, 0.35], weight: 7 },
-    { kind: "crit", range: [0.03, 0.06], weight: 3 },
-    // A weapon can also carry a stat point (STRENGTH, DEXTERITY, …) or a little
-    // life, so a multi-affix rare/epic/legendary weapon reads like a Diablo
+    // +2.4–3.6% damage per ilvl: an ilvl-10 roll is the old mid-band (~30%),
+    // and the band keeps growing where the flat roll used to plateau.
+    { kind: "damagePct", perIlvl: [0.024, 0.036], weight: 7 },
+    { kind: "crit", perIlvl: [0.004, 0.006], weight: 3 },
+    // A weapon can also carry stat points (STRENGTH, DEXTERITY, …) or a little
+    // life, so a multi-affix rare/unique/legendary weapon reads like a Diablo
     // yellow — "CRUEL PIPE OF THE FOX" — not just raw damage (the engine folds
     // an equipped weapon's maxHp/crit/stat affixes into the player like any
     // other worn piece). Weighted below the offensive rolls so damage stays a
     // weapon's headline, and four kinds let a legendary weapon fill all four
     // affix slots.
-    { kind: "stat", range: [1, 1], weight: 2 },
-    { kind: "maxHp", range: [8, 20], weight: 2 },
+    { kind: "stat", perIlvl: [1, 1], weight: 2 },
+    { kind: "maxHp", perIlvl: [1.6, 2.6], weight: 2 },
   ],
   gear: [
-    { kind: "maxHp", range: [10, 30], weight: 4 },
-    { kind: "crit", range: [0.03, 0.06], weight: 3 },
-    { kind: "stat", range: [1, 1], weight: 3 },
+    { kind: "maxHp", perIlvl: [2, 3.4], weight: 4 },
+    { kind: "crit", perIlvl: [0.004, 0.006], weight: 3 },
+    { kind: "stat", perIlvl: [1, 1], weight: 3 },
   ],
 };
 
@@ -833,19 +1125,17 @@ export function affixNaming(affix: Affix): {
   suffix?: string;
 } {
   switch (affix.kind) {
+    // Wording thresholds track the ilvl-scaled magnitudes: the low band is
+    // an early find, the top band only rolls deep in the campaign.
     case "damagePct":
       return {
         prefix:
-          affix.value < 0.22
-            ? "JAGGED"
-            : affix.value < 0.3
-              ? "VICIOUS"
-              : "CRUEL",
+          affix.value < 0.25 ? "JAGGED" : affix.value < 0.5 ? "VICIOUS" : "CRUEL",
       };
     case "crit":
-      return { suffix: affix.value < 0.045 ? "OF PRECISION" : "OF DEADLINESS" };
+      return { suffix: affix.value < 0.06 ? "OF PRECISION" : "OF DEADLINESS" };
     case "maxHp":
-      return { prefix: affix.value < 20 ? "STURDY" : "REINFORCED" };
+      return { prefix: affix.value < 35 ? "STURDY" : "REINFORCED" };
     case "stat":
       return { suffix: STAT_SUFFIX[affix.stat] };
   }
@@ -889,6 +1179,18 @@ export function isWeaponDef(defId: string): boolean {
 /** The display name of an equipment def, without tier prefix. */
 export function equipmentBaseName(defId: string): string {
   return isWeaponDef(defId) ? weaponDef(defId).name : gearDef(defId).name;
+}
+
+/**
+ * The LEVEL REQUIREMENT of an equipment def — a weapon's authored `levelReq`,
+ * a gear piece's optional one (1 = ungated). The single accessor both gates
+ * read through: the drop side (a mob below it never drops the base) and the
+ * wear side (a hero below it banks the find instead of wielding it).
+ */
+export function equipmentLevelReq(defId: string): number {
+  return isWeaponDef(defId)
+    ? weaponDef(defId).levelReq
+    : (gearDef(defId).levelReq ?? 1);
 }
 
 /** The icon sprite of an equipment def. */

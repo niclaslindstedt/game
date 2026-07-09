@@ -19,7 +19,7 @@ import {
 } from "./items.ts";
 import { bankOverkill, maybePowerScale, mobLevelTierBonus } from "./menace.ts";
 import { maybeFirstKillThought, startDeathWords } from "./story.ts";
-import type { Enemy, GameState, WeaponClass } from "./types.ts";
+import type { Enemy, GameState, Tier, WeaponClass } from "./types.ts";
 
 /** Monsters still owed by the wave budget but not yet streamed in. Each line
  * clamps at zero so an over-counted line (tests exhaust budgets by maxing
@@ -134,7 +134,7 @@ export function hitEnemy(
       defId: enemy.defId,
     });
     grantXp(state, def.xp ?? Math.round(enemy.maxHp * LEVELING.xpPerHp));
-    if (def.loot) dropGuaranteedLoot(state, def, enemy.pos);
+    if (def.loot) dropGuaranteedLoot(state, def, enemy.pos, enemy.mlvl);
     startDeathWords(state, enemy.defId);
     return;
   }
@@ -163,9 +163,9 @@ export function hitEnemy(
   dropEarlyDrops(state, enemy.pos);
 
   if (def.loot) {
-    dropGuaranteedLoot(state, def, enemy.pos);
+    dropGuaranteedLoot(state, def, enemy.pos, enemy.mlvl);
   } else {
-    dropMinionLoot(state, def, enemy.pos, enemy.evo ?? 0);
+    dropMinionLoot(state, def, enemy.pos, enemy.evo ?? 0, enemy.mlvl);
   }
 
   if (def.role === "boss") {
@@ -245,6 +245,7 @@ function dropMinionLoot(
   def: EnemyDef,
   at: Vec2,
   evo = 0,
+  mlvl = 1,
 ): void {
   const remaining =
     state.enemies.filter((e) => enemyDef(e.defId).role === "minion").length +
@@ -261,6 +262,7 @@ function dropMinionLoot(
       equipment: rollEquipment(state, {
         defId: trophy,
         tierBonus: LOOT.allClearTierBonus,
+        mlvl,
       }),
     });
     state.events.push({ type: "itemDropped", pos: { ...pos } });
@@ -318,6 +320,7 @@ function dropMinionLoot(
       equipment: rollEquipment(state, {
         defId: uniques[Math.floor(state.rng() * uniques.length)] as string,
         tierBonus,
+        mlvl,
       }),
     });
   } else if (forced || roll < LOOT.equipmentShare) {
@@ -326,7 +329,7 @@ function dropMinionLoot(
       id: state.nextId++,
       kind: "equipment",
       pos,
-      equipment: rollEquipment(state, { tierBonus }),
+      equipment: rollEquipment(state, { tierBonus, mlvl }),
     });
   } else if (roll < LOOT.equipmentShare + abilityShare) {
     state.items.push({
@@ -351,9 +354,15 @@ function dropMinionLoot(
 }
 
 /** Bosses and elites always pay out: their def pins the drops, scattered
- * around them — signature weapons, story items (keys, dossiers), and the
- * usual consumables. */
-function dropGuaranteedLoot(state: GameState, def: EnemyDef, at: Vec2): void {
+ * around them — signature weapons, story items (keys, dossiers), per-tier
+ * chance drops (`tierDrops`), and the usual consumables. `mlvl` is the
+ * fallen mob's monster level — every equipment roll here inherits it. */
+function dropGuaranteedLoot(
+  state: GameState,
+  def: EnemyDef,
+  at: Vec2,
+  mlvl = 1,
+): void {
   const loot = def.loot;
   if (!loot) return;
   const scatter = (): Vec2 => ({
@@ -370,6 +379,7 @@ function dropGuaranteedLoot(state: GameState, def: EnemyDef, at: Vec2): void {
         defId: spec.defId,
         tier: spec.tier,
         tierBonus: loot.tierBonus,
+        mlvl,
       }),
     });
   }
@@ -381,6 +391,28 @@ function dropGuaranteedLoot(state: GameState, def: EnemyDef, at: Vec2): void {
       defId,
     });
   }
+  // The per-tier chance payouts, and they may exceed 100%: each whole 1.0 is
+  // a guaranteed drop of that tier, the remainder a chance of one more — a
+  // boss at { magic: 1.5, rare: 0.5 } always pays a magic item, half the time
+  // a second, and half the time a rare on top. The monster-level gates still
+  // hold, so the same def only pays a tier its mlvl has unlocked — which is
+  // why elites/bosses carry a `levelBonus` (they reach the gates first).
+  for (const [tier, chance] of Object.entries(loot.tierDrops ?? {}) as [
+    Exclude<Tier, "regular">,
+    number,
+  ][]) {
+    if (mlvl < LOOT.tierUnlockMlvl[tier]) continue;
+    let count = Math.floor(chance);
+    if (state.rng() < chance - count) count++;
+    for (let i = 0; i < count; i++) {
+      state.items.push({
+        id: state.nextId++,
+        kind: "equipment",
+        pos: scatter(),
+        equipment: rollEquipment(state, { tier, mlvl }),
+      });
+    }
+  }
   const drops: ("weapon" | "gear")[] = [
     ...Array<"weapon">(loot.weapons).fill("weapon"),
     ...Array<"gear">(loot.gear).fill("gear"),
@@ -390,7 +422,11 @@ function dropGuaranteedLoot(state: GameState, def: EnemyDef, at: Vec2): void {
       id: state.nextId++,
       kind: "equipment",
       pos: scatter(),
-      equipment: rollEquipment(state, { slot, tierBonus: loot.tierBonus }),
+      equipment: rollEquipment(state, {
+        slot,
+        tierBonus: loot.tierBonus,
+        mlvl,
+      }),
     });
   }
   for (let i = 0; i < loot.xpArrows; i++) {

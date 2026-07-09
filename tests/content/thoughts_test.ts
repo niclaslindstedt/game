@@ -29,10 +29,19 @@ import {
   startGame,
 } from "../helpers.ts";
 
-/** Drop a point-blank, one-hit-from-death mob of `defId` on the player. */
+/** Park a one-hit-from-death mob of `defId` at arm's length: inside the
+ * blaster's reach but outside contact range, so the kill lands without the
+ * hero trading hp for it (pair with `equipBlaster`). Point-blank parking made
+ * these scenarios hostage to the rng stream — a couple of unlucky whiffs and
+ * the mob's contact damage decided the test, not the story pin. */
 function placeDying(state: GameState, defId: string) {
   const mob = makeEnemy(
-    { pos: { ...state.player.pos }, hp: 1, maxHp: 10, speed: 0 },
+    {
+      pos: { x: state.player.pos.x + 80, y: state.player.pos.y },
+      hp: 1,
+      maxHp: 10,
+      speed: 0,
+    },
     defId,
   );
   state.enemies.push(mob);
@@ -45,10 +54,12 @@ function tapThrough(state: GameState): void {
   while (state.dialogue) advanceDialogue(state);
 }
 
-/** Auto-fire until `enemyId` is dead, gathering every event emitted. */
+/** Auto-fire until `enemyId` is dead, gathering every event emitted. The
+ * generous step budget rides out unlucky miss/dodge streaks (the rng stream
+ * shifts whenever loot rolls change). */
 function killAndCollect(state: GameState, enemyId: number): GameEvent[] {
   const collected: GameEvent[] = [];
-  for (let i = 0; i < 120; i++) {
+  for (let i = 0; i < 400; i++) {
     step(state, idle, DT);
     collected.push(...state.events);
     if (!state.enemies.some((e) => e.id === enemyId)) break;
@@ -60,6 +71,7 @@ describe("first-kill thoughts", () => {
   it("opens the hero's monologue on the first moon OPTIMUSK kill", () => {
     const state = startGame(); // the moon
     clearStage(state);
+    equipBlaster(state); // kill at range — no hp traded for the story beat
     const bot = placeDying(state, "optimusk");
 
     killAndCollect(state, bot.id);
@@ -79,6 +91,7 @@ describe("first-kill thoughts", () => {
   it("plays once — a later OPTIMUSK kill is silent", () => {
     const state = startGame();
     clearStage(state);
+    equipBlaster(state); // kill at range — no hp traded for the story beat
 
     const first = placeDying(state, "optimusk");
     killAndCollect(state, first.id);

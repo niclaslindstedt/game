@@ -66,6 +66,7 @@ export const MOON_ENEMIES: Record<string, EnemyDef> = {
     id: "apollo_ghost",
     name: "MISSION SPECIALIST",
     role: "elite",
+    levelBonus: 3,
     sprite: "apollo_ghost",
     gore: "ecto",
     phasing: true,
@@ -96,6 +97,7 @@ export const MOON_ENEMIES: Record<string, EnemyDef> = {
     ai: { aggroRadius: 250, rushSpeed: 115 },
     loot: {
       items: ["flare_gun"],
+      tierDrops: { magic: 1 },
       storyItems: ["mission_log"],
       weapons: 0,
       gear: 0,
@@ -109,6 +111,7 @@ export const MOON_ENEMIES: Record<string, EnemyDef> = {
     id: "prospector",
     name: "THE PROSPECTOR",
     role: "elite",
+    levelBonus: 3,
     sprite: "prospector",
     gore: "ecto",
     phasing: true,
@@ -139,6 +142,7 @@ export const MOON_ENEMIES: Record<string, EnemyDef> = {
     ai: { aggroRadius: 250, rushSpeed: 120 },
     loot: {
       items: ["core_drill"],
+      tierDrops: { magic: 1 },
       storyItems: ["spacez_blueprints"],
       weapons: 0,
       gear: 1,
@@ -152,6 +156,7 @@ export const MOON_ENEMIES: Record<string, EnemyDef> = {
     id: "quarantine_medic",
     name: "QUARANTINE MEDIC",
     role: "elite",
+    levelBonus: 3,
     sprite: "quarantine_medic",
     gore: "ecto",
     phasing: true,
@@ -183,6 +188,7 @@ export const MOON_ENEMIES: Record<string, EnemyDef> = {
     ai: { aggroRadius: 250, rushSpeed: 115 },
     loot: {
       items: ["geiger_wand"],
+      tierDrops: { magic: 1 },
       storyItems: ["clone_dossier"],
       weapons: 0,
       gear: 0,
@@ -196,6 +202,7 @@ export const MOON_ENEMIES: Record<string, EnemyDef> = {
     id: "cartographer",
     name: "THE CARTOGRAPHER",
     role: "elite",
+    levelBonus: 3,
     sprite: "cartographer",
     gore: "ecto",
     phasing: true,
@@ -226,6 +233,7 @@ export const MOON_ENEMIES: Record<string, EnemyDef> = {
     ai: { aggroRadius: 250, rushSpeed: 125 },
     loot: {
       items: ["surveyors_pick"],
+      tierDrops: { magic: 1 },
       weapons: 0,
       gear: 0,
       xpArrows: 1,
@@ -238,6 +246,7 @@ export const MOON_ENEMIES: Record<string, EnemyDef> = {
     id: "armstrong",
     name: "ARMSTRONG",
     role: "boss",
+    levelBonus: 5,
     sprite: "armstrong",
     gore: "ecto",
     phasing: true,
@@ -303,6 +312,7 @@ export const MOON_ENEMIES: Record<string, EnemyDef> = {
     // one for jungle splashdowns. Fifty years on, it's for the aliens.
     loot: {
       items: ["machete"],
+      tierDrops: { magic: 1.5, rare: 0.5 },
       weapons: 0,
       gear: 1,
       xpArrows: 2,

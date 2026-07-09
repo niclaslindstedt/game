@@ -47,6 +47,7 @@ function placeElite(state: GameState, away: number): Enemy {
       pos: { x: state.player.pos.x + away, y: state.player.pos.y },
       hp: 150,
       maxHp: 150,
+      mlvl: 99,
       speed: 22,
     },
     "night_manager",

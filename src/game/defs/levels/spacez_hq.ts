@@ -251,8 +251,8 @@ export const SPACEZ_HQ: LevelDef = {
     },
   ],
   placedItems: [
-    // Supply bay B — spare parts for a ship-builder: tools and kits.
-    { kind: "equipment", defId: "wrench", pos: { x: 100, y: 80 } },
+    // Supply bay B — the armory cage: the building's big gun and its kits.
+    { kind: "equipment", defId: "pump_shotgun", pos: { x: 100, y: 80 } },
     { kind: "repair", pos: { x: 150, y: 60 } },
     { kind: "repair", pos: { x: 190, y: 100 } },
     { kind: "medkit", pos: { x: 245, y: 80 } },
@@ -303,19 +303,19 @@ export const SPACEZ_HQ: LevelDef = {
     after: "spacez_staff",
   },
   loot: {
+    // The base ladder's first five: earthly weapons an American space company
+    // keeps around — a shipping desk's knife, a drawer 9mm, the guards' baton,
+    // a lab prototype, the armory's pump gun — introduced at stepped level
+    // requirements (1 → 5).
     weaponPool: [
-      "stapler",
-      "keyboard",
-      "mop",
-      "taser",
-      "laser_pointer",
-      "beaker",
-      "fire_extinguisher",
-      "pistol",
+      "box_cutter",
+      "security_baton",
+      "nine_mm",
+      "prototype_laser",
+      "pump_shotgun",
     ],
     gearPool: ["lab_coat", "id_badge"],
     abilityPool: ["storm_cell", "stasis_field", "item_magnet"],
-    tierChances: { magic: 0.18 },
     allClearWeapon: "golden_stapler",
     // The opening loot loop, on a schedule the rain can't promise: the
     // SECURITY BATON drops on the second kill — a real weapon in hand before

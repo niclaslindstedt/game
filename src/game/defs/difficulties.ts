@@ -108,10 +108,13 @@ export type DifficultyDef = {
    */
   uniqueDropChance: number;
   /**
-   * Added per tier to the level's loot-table chances. A tier absent from
-   * BOTH the level and this map cannot drop; a bonus here unlocks it — this
-   * is how the harder rungs reach epic and LEGENDARY gear on levels whose own
-   * table caps lower, the reward side of the ladder.
+   * Added per tier to the global base chances (config LOOT.tierChances) —
+   * the reward side of the ladder: richer blues/yellows per rung, and (once
+   * unique/legendary items ship) the harder rungs' better odds at them. The
+   * monster-level gates (LOOT.tierUnlockMlvl) still hold: no bonus makes a
+   * tier drop off a mob whose level hasn't unlocked it — but since mobs run
+   * at `player level + mobLevelOffset`, the harder rungs also reach every
+   * gate earlier in the campaign.
    */
   tierChanceBonus: Partial<Record<Tier, number>>;
   /**
@@ -225,7 +228,7 @@ export const DIFFICULTY_DEFS: Record<Difficulty, DifficultyDef> = {
     armorDropMult: 0.95,
     powerupDropMult: 0.95,
     uniqueDropChance: 0.01,
-    tierChanceBonus: { magic: 0.1, rare: 0.08, epic: 0.06, legendary: 0.01 },
+    tierChanceBonus: { magic: 0.08, rare: 0.05 },
     staminaDrainMult: 1.05,
     playerDodgeMult: 0.9,
     playerMissMult: 1.1,
@@ -251,7 +254,7 @@ export const DIFFICULTY_DEFS: Record<Difficulty, DifficultyDef> = {
     armorDropMult: 0.9,
     powerupDropMult: 0.9,
     uniqueDropChance: 0.02,
-    tierChanceBonus: { magic: 0.18, rare: 0.1, epic: 0.14, legendary: 0.05 },
+    tierChanceBonus: { magic: 0.14, rare: 0.08 },
     staminaDrainMult: 1.1,
     playerDodgeMult: 0.8,
     playerMissMult: 1.25,
@@ -279,7 +282,7 @@ export const DIFFICULTY_DEFS: Record<Difficulty, DifficultyDef> = {
     armorDropMult: 0.77,
     powerupDropMult: 0.77,
     uniqueDropChance: 0.04,
-    tierChanceBonus: { magic: 0.26, rare: 0.14, epic: 0.22, legendary: 0.12 },
+    tierChanceBonus: { magic: 0.2, rare: 0.12 },
     // No extra burn past nightmare — JESUS is kited or not survived at all.
     staminaDrainMult: 1.1,
     playerDodgeMult: 0.7,

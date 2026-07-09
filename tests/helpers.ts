@@ -66,6 +66,7 @@ export function equipBlaster(state: GameState): GameState {
     defId: "blaster",
     slot: "weapon",
     tier: "regular",
+    ilvl: 5,
     affixes: [],
   };
   state.player.weaponCooldownMs = 0;
@@ -110,6 +111,7 @@ export function makeEnemy(
     home: { ...overrides.pos },
     hp: 45,
     maxHp: 45,
+    mlvl: 99,
     speed: 0,
     contactCooldownMs: 0,
     ...overrides,

@@ -316,6 +316,7 @@ describe("weapon", () => {
       defId: "test_wrench",
       slot: "weapon",
       tier: "regular",
+      ilvl: 5,
       affixes: [],
     };
     state.enemies = [
@@ -342,6 +343,7 @@ describe("melee sweep AoE", () => {
       defId,
       slot: "weapon",
       tier: "regular",
+      ilvl: 5,
       affixes: [],
     };
   };
@@ -437,6 +439,7 @@ describe("weapon reach, cadence, and AoE", () => {
       defId: "test_wrench",
       slot: "weapon",
       tier: "regular",
+      ilvl: 5,
       affixes: [],
     };
   };
@@ -470,6 +473,7 @@ describe("weapon reach, cadence, and AoE", () => {
       defId: "blaster",
       slot: "weapon" as const,
       tier: "regular" as const,
+      ilvl: 1,
       affixes: [],
     };
     expect(weaponRangeFor(state, ranged)).toBeGreaterThan(
@@ -562,6 +566,7 @@ describe("enemy AI", () => {
         pos: { x: state.player.pos.x + 40, y: state.player.pos.y },
         hp: 1_000_000,
         maxHp: 1_000_000,
+        mlvl: 99,
         speed: enemyDef("test_minion").speed,
       }),
     ];

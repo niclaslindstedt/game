@@ -70,6 +70,7 @@ describe("bot strategies", () => {
         pos: { x: state.player.pos.x + 220, y: state.player.pos.y },
         hp: 1_000_000,
         maxHp: 1_000_000,
+        mlvl: 99,
         speed: 42, // it chases; the bot must keep backing off
       }),
     );

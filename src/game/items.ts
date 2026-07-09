@@ -25,6 +25,7 @@ import { cutsceneDef } from "./defs/cutscenes.ts";
 import {
   affixNaming,
   AFFIX_POOLS,
+  equipmentLevelReq,
   gearDef,
   isWeaponDef,
   STAT_NAMES,
@@ -36,6 +37,7 @@ import {
 } from "./defs/equipment.ts";
 import { difficultyDef } from "./defs/difficulties.ts";
 import { levelDef } from "./defs/levels/index.ts";
+import { currentMobLevel } from "./menace.ts";
 import type {
   Affix,
   ArmorGrade,
@@ -112,37 +114,47 @@ function pickWeighted<T extends { weight: number }>(rng: Rng, pool: T[]): T {
   return pool[pool.length - 1] as T;
 }
 
-function rollAffix(rng: Rng, def: AffixDef): Affix {
-  const [min, max] = def.range;
+/**
+ * Roll one affix: its magnitude is `ilvl × randomRange(perIlvl)` — the
+ * Diablo rule that a deeper drop rolls bigger. Stat and hp affixes round to
+ * whole points and never fall below 1, so even an ilvl-1 magic find pays
+ * something.
+ */
+function rollAffix(rng: Rng, def: AffixDef, ilvl: number): Affix {
+  const [min, max] = def.perIlvl;
+  const value = ilvl * randomRange(rng, min, max);
   switch (def.kind) {
     case "damagePct":
-      return { kind: "damagePct", value: randomRange(rng, min, max) };
+      return { kind: "damagePct", value };
     case "crit":
-      return { kind: "crit", value: randomRange(rng, min, max) };
+      return { kind: "crit", value };
     case "maxHp":
-      return { kind: "maxHp", value: Math.round(randomRange(rng, min, max)) };
+      return { kind: "maxHp", value: Math.max(1, Math.round(value)) };
     case "stat":
       return {
         kind: "stat",
-        value: Math.round(randomRange(rng, min, max)),
+        value: Math.max(1, Math.round(value)),
         stat: STAT_NAMES[Math.floor(rng() * STAT_NAMES.length)] as StatName,
       };
   }
 }
 
 /**
- * Roll the tier for a drop: best tier first, each gated by the level's loot
- * table plus the difficulty's bonus (absent from both = cannot drop here —
- * harder difficulties unlock tiers the level alone doesn't), sweetened by
- * LUCK and any per-enemy bonus.
+ * Roll the tier for a drop off a level-`mlvl` monster: best tier first, each
+ * gated by the monster-level unlock (`LOOT.tierUnlockMlvl` — below the gate a
+ * tier simply cannot drop, whatever the chances say), then rolled at the
+ * global base chance plus the difficulty's bonus, sweetened by LUCK and any
+ * per-enemy/menace bonus.
  */
-function rollTier(state: GameState, tierBonus: number): Tier {
-  const chances = levelDef(state.level.id).loot.tierChances;
+function rollTier(state: GameState, mlvl: number, tierBonus: number): Tier {
   const difficultyChances = difficultyDef(state.difficulty).tierChanceBonus;
   const luckBonus =
     effectiveStat(state, "luck") * STATS.tierChancePerLuck + tierBonus;
-  for (const tier of TIER_ROLL_ORDER) {
-    const base = (chances[tier] ?? 0) + (difficultyChances[tier] ?? 0);
+  // TIER_ROLL_ORDER never contains "regular" (the fall-through), so the
+  // rolled-tier config maps index safely.
+  for (const tier of TIER_ROLL_ORDER as Exclude<Tier, "regular">[]) {
+    if (mlvl < LOOT.tierUnlockMlvl[tier]) continue;
+    const base = LOOT.tierChances[tier] + (difficultyChances[tier] ?? 0);
     if (base <= 0) continue;
     if (state.rng() < base + luckBonus) return tier;
   }
@@ -150,10 +162,33 @@ function rollTier(state: GameState, tierBonus: number): Tier {
 }
 
 /**
+ * Roll a dropped item's own LEVEL off a level-`mlvl` killer: the mob's level
+ * minus a small weighted deficit (config `LOOT.ilvlDeltaWeights` — full-level
+ * drops are the rare end of the band). Rare-and-better finds use the tighter
+ * `ilvlDeltaWeightsRare` band (0–1 below), so a yellow is generally a
+ * high-level item. Floored at 1.
+ */
+function rollItemLevel(state: GameState, mlvl: number, tier: Tier): number {
+  const weights: readonly number[] =
+    tier === "rare" || tier === "unique" || tier === "legendary"
+      ? LOOT.ilvlDeltaWeightsRare
+      : LOOT.ilvlDeltaWeights;
+  const delta = pickWeighted(
+    state.rng,
+    weights.map((weight, i) => ({ weight, delta: i })),
+  ).delta;
+  return Math.max(1, mlvl - delta);
+}
+
+/**
  * Roll a fresh equipment instance from the level's loot pools — or, with
- * `defId`, mint a specific piece (uniques like boss trophies). Tier affix
- * counts come from the tier ladder (regular 0, magic 1, epic 2, legendary
- * 3); affix kinds never repeat on one item.
+ * `defId`, mint a specific piece (signature drops, placed items). `mlvl` is
+ * the killer's MONSTER LEVEL (defaulting to the live horde level) and drives
+ * the whole Diablo shape of the drop: bases with a `levelReq` above it never
+ * roll, tiers it hasn't unlocked never roll, and the item's own level (which
+ * sizes its affixes) hangs off it. Tier affix counts come from the ladder
+ * (regular 0, magic 1, rare 2, unique 3, legendary 4); affix kinds never
+ * repeat on one item.
  */
 export function rollEquipment(
   state: GameState,
@@ -162,18 +197,30 @@ export function rollEquipment(
     tierBonus?: number;
     defId?: string;
     /** Force a specific tier instead of rolling one (story-guaranteed
-     * uniques like the epic space suit the moon level can't otherwise roll). */
+     * pieces like the space suit; a boss's `tierDrops` payouts). */
     tier?: Tier;
+    /** The killer's monster level; omitted = the live horde level. */
+    mlvl?: number;
   } = {},
 ): Equipment {
   const rng = state.rng;
+  const mlvl = opts.mlvl ?? currentMobLevel(state);
   const loot = levelDef(state.level.id).loot;
   const family = opts.defId
     ? isWeaponDef(opts.defId)
       ? ("weapon" as const)
       : ("gear" as const)
     : (opts.slot ?? (rng() < 0.6 ? ("weapon" as const) : ("gear" as const)));
-  const pool = family === "weapon" ? loot.weaponPool : loot.gearPool;
+  const fullPool = family === "weapon" ? loot.weaponPool : loot.gearPool;
+  // The levelReq drop gate: a base whose requirement the killer's level
+  // hasn't reached stays out of the draw. If the whole pool is still out of
+  // reach (a fresh run on a late-game pool), the lowest-requirement bases
+  // stand in so a drop is never a dead roll.
+  let pool = fullPool.filter((id) => equipmentLevelReq(id) <= mlvl);
+  if (pool.length === 0 && fullPool.length > 0) {
+    const minReq = Math.min(...fullPool.map((id) => equipmentLevelReq(id)));
+    pool = fullPool.filter((id) => equipmentLevelReq(id) === minReq);
+  }
   let defId = opts.defId ?? (pool[Math.floor(rng() * pool.length)] as string);
   // Harder difficulties find fewer PLATED suits: when a random gear pick
   // lands on armor, the difficulty's `armorDropMult` is its chance to stand —
@@ -191,16 +238,24 @@ export function rollEquipment(
   }
   const slot: EquipSlot = family === "weapon" ? "weapon" : gearDef(defId).slot;
 
-  const tier = opts.tier ?? rollTier(state, opts.tierBonus ?? 0);
+  const tier = opts.tier ?? rollTier(state, mlvl, opts.tierBonus ?? 0);
+  const ilvl = rollItemLevel(state, mlvl, tier);
   const affixes: Affix[] = [];
   const available = [...AFFIX_POOLS[family]];
   for (let i = 0; i < TIERS[tier].affixCount && available.length > 0; i++) {
     const affixDef = pickWeighted(rng, available);
     available.splice(available.indexOf(affixDef), 1);
-    affixes.push(rollAffix(rng, affixDef));
+    affixes.push(rollAffix(rng, affixDef, ilvl));
   }
 
-  const rolled: Equipment = { id: state.nextId++, defId, slot, tier, affixes };
+  const rolled: Equipment = {
+    id: state.nextId++,
+    defId,
+    slot,
+    tier,
+    ilvl,
+    affixes,
+  };
   // Dropped weapons arrive fresh but finite — they wear out per attack.
   if (family === "weapon") rolled.durability = weaponDef(defId).durability;
   return rolled;
@@ -668,11 +723,26 @@ function remainingDurability(weapon: Equipment): number {
   return weapon.durability ?? Infinity;
 }
 
+/**
+ * Can the hero WEAR this piece yet? The Diablo level gate: an item whose
+ * base `levelReq` outruns the player's level is a find to bank, not a weapon
+ * to swing — auto-equip skips it, the bag refuses to equip it, and the UI
+ * paints the requirement red until the hero grows into it.
+ */
+export function meetsLevelReq(
+  state: GameState,
+  equipment: Equipment,
+): boolean {
+  return state.player.level >= equipmentLevelReq(equipment.defId);
+}
+
 /** Is `candidate` strictly better than the piece occupying its slot? */
 export function isBetterEquipment(
   state: GameState,
   candidate: Equipment,
 ): boolean {
+  // An under-leveled find is never worn, however strong — it banks instead.
+  if (!meetsLevelReq(state, candidate)) return false;
   if (candidate.slot === "weapon") {
     const current = state.player.equipment.weapon;
     // The difficulty's STARTING WEAPON is the pickup floor: any real weapon
@@ -741,6 +811,8 @@ export function equipFromInventory(state: GameState, index: number): boolean {
   const player = state.player;
   const item = player.inventory[index];
   if (!item) return false;
+  // The level gate holds in the bag too: an under-leveled find stays banked.
+  if (!meetsLevelReq(state, item)) return false;
   const slot = item.slot;
   const previous =
     slot === "weapon" ? player.equipment.weapon : player.equipment[slot];
@@ -871,6 +943,8 @@ export function wearEquippedWeapon(state: GameState): void {
       player.inventory[i] = null;
       continue;
     }
+    // A banked find the hero hasn't grown into can't be drawn yet.
+    if (!meetsLevelReq(state, item)) continue;
     const score = weaponScore(state, item);
     if (score > bestScore) {
       bestScore = score;
@@ -889,6 +963,7 @@ export function wearEquippedWeapon(state: GameState): void {
       defId: "blaster",
       slot: "weapon",
       tier: "regular",
+      ilvl: 1,
       affixes: [],
     };
   }

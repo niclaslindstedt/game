@@ -28,6 +28,7 @@ function weapon(id: number, defId: string, durability?: number): Equipment {
     defId,
     slot: "weapon",
     tier: "regular",
+    ilvl: 5,
     affixes: [],
     durability: durability ?? weaponDef(defId).durability,
   };
@@ -208,6 +209,7 @@ describe("repair kits", () => {
       defId: "test_suit",
       slot: "suit",
       tier: "regular",
+      ilvl: 5,
       affixes: [],
     };
     const max = armorInfo(state)!.max;
@@ -236,6 +238,7 @@ describe("repair kits", () => {
       defId: "test_suit",
       slot: "suit",
       tier: "regular",
+      ilvl: 5,
       affixes: [],
     };
     state.player.armor = armorInfo(state)!.max;

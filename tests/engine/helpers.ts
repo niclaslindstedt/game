@@ -52,6 +52,10 @@ export function makeEnemy(
     home: { ...overrides.pos },
     hp: 45,
     maxHp: 45,
+    // A hand-placed mob's monster level defaults past every tier gate, so
+    // loot-shape suites written before the gates keep their behavior; gate
+    // tests override it downward explicitly.
+    mlvl: 99,
     speed: 0,
     contactCooldownMs: 0,
     ...overrides,
