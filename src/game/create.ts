@@ -57,6 +57,9 @@ export function createGame(
   // for dev jumps. Omitted = the authored fresh start (level 1, the
   // difficulty's wall weapon in hand).
   loadout?: Loadout,
+  // A LEVEL TOKEN jump: refund the carried build into a respec pool once the
+  // intro clears (see items.ts `beginRespec`). Off for every ordinary run.
+  respec = false,
 ): GameState {
   const def = levelDef(levelId);
   const diff = difficultyDef(difficulty);
@@ -165,6 +168,7 @@ export function createGame(
 
   const state: GameState = {
     phase: def.prelude ? "cutscene" : "intro",
+    respecPending: respec,
     // The prelude plays its per-difficulty variant when one is registered
     // (`<id>_<difficulty>`), so the weapon on the living-room wall is always
     // the one this run actually starts with.

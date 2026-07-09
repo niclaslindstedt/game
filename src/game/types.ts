@@ -27,6 +27,7 @@ export type GamePhase =
   | "playing"
   | "paused"
   | "levelup"
+  | "respec"
   | "inventory"
   | "dialogue"
   | "victory"
@@ -638,6 +639,14 @@ export type GameState = {
    * past the last page drops into the `title` card; unused in other phases.
    */
   introPage: number;
+  /**
+   * A LEVEL TOKEN respec is owed at this run's start: the hero jumped a rung
+   * on a spent token, so before play begins the whole banked build is refunded
+   * into a pool for a from-scratch reallocation (a Diablo-style respec). Set at
+   * creation, consumed by `dismissIntro` (which enters the `respec` phase in
+   * its place) and cleared by `beginRespec`; false on every ordinary run.
+   */
+  respecPending: boolean;
   level: LevelInfo;
   /** The run's chosen difficulty (scales spawns, hp, and loot). */
   difficulty: Difficulty;

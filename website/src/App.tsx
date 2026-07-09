@@ -23,6 +23,9 @@ export function App() {
     // Warp-in from the title moon's long-press: skip the prelude and intro
     // monologue and drop straight into the level.
     skipIntro?: boolean;
+    // Cashed a LEVEL TOKEN: open the from-scratch stat respec once the intro
+    // clears (see GameScreen / engine `beginRespec`).
+    respec?: boolean;
   } | null>(null);
 
   // Register the deploy slot's service worker (§11.4.3) and track its update
@@ -85,6 +88,7 @@ export function App() {
         difficulty={run.difficulty}
         levelId={run.levelId}
         skipIntro={run.skipIntro}
+        respec={run.respec}
         onQuit={() => setRun(null)}
       />
     );
@@ -94,7 +98,12 @@ export function App() {
     <>
       <TitleScreen
         onStart={(difficulty, levelId, opts) =>
-          setRun({ difficulty, levelId, skipIntro: opts?.skipIntro })
+          setRun({
+            difficulty,
+            levelId,
+            skipIntro: opts?.skipIntro,
+            respec: opts?.respec,
+          })
         }
       />
 
