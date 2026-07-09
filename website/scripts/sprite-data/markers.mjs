@@ -1,8 +1,8 @@
 // SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
 // The map markers family (see the `pixel-assets` skill): the little glyphs the
 // level-map modal pins on the fog to tell the run's story back — where the
-// hero stands, where story was found, where rare loot dropped, where an elite
-// or boss fell. (The merchant pin reuses the icons family's gold `icon_coin`.)
+// hero stands, where story was found, where an elite or boss fell. (The
+// merchant pin reuses the icons family's gold `icon_coin`.)
 // Each is a 12×12 UI icon (never
 // drawn on the ground — only in the MapOverlay and its legend), one string per
 // pixel row, one character per pixel; `.` is transparent and every other char
@@ -19,9 +19,6 @@ const PALETTE = {
   // STORY — a golden dossier page.
   d: [255, 213, 90],
   e: [255, 235, 150],
-  // RARE LOOT — a cut orange gem.
-  u: [255, 140, 66],
-  z: [255, 184, 120],
   // ELITE — a magenta star.
   C: [214, 150, 240],
   D: [238, 205, 252],
@@ -61,22 +58,6 @@ const SPRITES = {
     ".OddddddddO.",
     ".OdOOOOdddO.",
     ".OOOOOOOOOO.",
-    "............",
-    "............",
-  ],
-  // RARE LOOT: a cut gem — flat table up top, faceted highlight, tapering to a
-  // point. Unique/legendary drops.
-  map_loot: [
-    "............",
-    "....OOOO....",
-    "...OuzzuO...",
-    "..OuzzzzuO..",
-    ".OuuzzzzuuO.",
-    ".OuuuuuuuuO.",
-    "..OuuuuuuO..",
-    "...OuuuuO...",
-    "....OuuO....",
-    ".....OO.....",
     "............",
     "............",
   ],
@@ -126,5 +107,5 @@ export default {
   animations: {},
   // UI-only markers: they live on the dark map modal and its legend, never on a
   // level's ground, so the ground-contrast lint doesn't apply.
-  contrastExempt: ["map_you", "map_story", "map_loot", "map_elite", "map_boss"],
+  contrastExempt: ["map_you", "map_story", "map_elite", "map_boss"],
 };

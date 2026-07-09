@@ -497,13 +497,12 @@ export type DialogueState = {
 };
 
 /**
- * What a level-map pin commemorates: a `story` plot piece picked up, a
- * `loot` find of unique/legendary gear, an `elite` slain, a `boss`
- * beaten (a fleeing unique counts — the fight was won where it fled), or a
- * `merchant` met (his stall stays put once discovered, so the pin leads
- * straight back to the shop).
+ * What a level-map pin commemorates: a `story` plot piece picked up, an
+ * `elite` slain, a `boss` beaten (a fleeing unique counts — the fight was won
+ * where it fled), or a `merchant` met (his stall stays put once discovered, so
+ * the pin leads straight back to the shop).
  */
-export type MapMarkerKind = "story" | "loot" | "elite" | "boss" | "merchant";
+export type MapMarkerKind = "story" | "elite" | "boss" | "merchant";
 
 /**
  * A pin on the level map (see map.ts): something memorable happened at

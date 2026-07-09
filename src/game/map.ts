@@ -3,8 +3,8 @@
 // state (`state.explored`, one cell per MAP.cellSize world px): walking
 // uncovers everything within MAP.revealRadius of the hero, and what has been
 // uncovered stays uncovered for the rest of the run — Warcraft-style, minus
-// the re-fogging. Memorable events pin `state.mapMarkers` (story finds, rare
-// loot, elite/boss victories) so the map tells the run's story back. The
+// the re-fogging. Memorable events pin `state.mapMarkers` (story finds,
+// elite/boss victories, the merchant) so the map tells the run's story back. The
 // `map` phase freezes the simulation exactly like the bag or the pause
 // screen; `openMap`/`closeMap` are the app's toggles, safe outside `step()`.
 
