@@ -147,6 +147,9 @@ type Hud = {
   /** Current menace/rampage stage (0…MENACE.maxStage) driving the gauge. */
   menaceStage: number;
   bagCount: number;
+  /** True for a short window after the full bag turned away loot — pulses the
+   * inventory button to nudge the player to open it and make room. */
+  bagFullHint: boolean;
   /** Banked ability pickups, oldest first (ABILITY_DEFS ids). */
   heldAbilities: string[];
   /**
@@ -198,6 +201,10 @@ const DOCK_DRAG_THRESHOLD_PX = 16;
 // How long a discard smoke poof lives before it clears itself (ms) — matches
 // the .powerup-poof CSS animation.
 const POOF_TTL_MS = 600;
+// How long the inventory button keeps pulsing after the bag turns away loot,
+// nudging the player to open it and make room (ms). A few pulse cycles — long
+// enough to notice without nagging.
+const BAG_FULL_HINT_MS = 4000;
 // The gentlest push past the deadzone still creeps at this fraction of full
 // speed, so a barely-off-center thumb walks instead of standing still.
 const MIN_WALK_THROTTLE = 0.35;
@@ -347,12 +354,18 @@ export function GameScreen({
   difficulty,
   levelId: initialLevelId,
   onQuit,
+  onExitToMenu,
   skipIntro: skipOpening = false,
   respec = false,
+  resume,
 }: {
   difficulty: Difficulty;
   levelId: string;
+  /** Abandon the run for good (the end-of-run splash's MENU button). */
   onQuit: () => void;
+  /** Leave to the main menu mid-run (the pause screen's MENU button), handing
+   * the live engine state up so it can be parked in memory and resumed. */
+  onExitToMenu: (state: GameState) => void;
   /** Warp-in (the title moon's long-press): drop straight into play, skipping
    * the prelude cutscene and the hero's level-intro monologue. */
   skipIntro?: boolean;
@@ -360,12 +373,20 @@ export function GameScreen({
    * respec once the intro clears (see the engine's `beginRespec`). Only the
    * token-jumped level itself respecs — advancing to the NEXT LEVEL does not. */
   respec?: boolean;
+  /** Resuming a run parked in memory: adopt this frozen (paused) engine state
+   * as-is instead of starting fresh. Consumed once — a later RETRY / NEXT
+   * LEVEL in this same mount recreates the game normally. */
+  resume?: GameState;
 }) {
   // The level this run is on. Retry replays it; the victory splash's NEXT
   // LEVEL button advances it along LEVEL_ORDER, which re-runs the mount effect
   // (a fresh createGame) — each run is standalone, carrying only the chosen
   // difficulty across, per docs/game-content.md.
   const [levelId, setLevelId] = useState(initialLevelId);
+  // The parked engine state to adopt on this mount (a run resumed from the
+  // menu), consumed the first time the run effect fires so a later RETRY /
+  // NEXT LEVEL recreates the game from scratch instead of re-adopting it.
+  const resumeRef = useRef<GameState | null>(resume ?? null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const dpadRef = useRef<HTMLDivElement>(null);
   // The active-powerup strip: its radial cooldown sweeps and countdown numbers
@@ -467,22 +488,30 @@ export function GameScreen({
     const levelParam = params.get("level");
     const devLevel = levelParam && levelParam in LEVELS ? levelParam : null;
     const runLevelId = devLevel ?? levelId;
+    // Resuming a run parked in memory (exited to the menu from the pause
+    // screen): adopt the frozen engine state as-is. Consumed once — a RETRY /
+    // NEXT LEVEL later in this mount falls back to a fresh createGame.
+    const resumed = resumeRef.current;
+    resumeRef.current = null;
     // The carry-over: the loadout banked when the previous level was cleared
     // (or a derived stand-in for dev jumps with nothing banked). The hero
     // arrives with the level, stats and items he finished the last level with.
-    const state = createGame(
-      seed,
-      runLevelId,
-      difficulty,
-      startingLoadout(runLevelId, difficulty) ?? undefined,
-      // The token respec is owed only on the jumped-into level; once the run
-      // advances along the campaign (a fresh levelId) it no longer applies.
-      respec && levelId === initialLevelId,
-    );
-    // The forever-hoard follows the hero into every run: any stashed
+    const state =
+      resumed ??
+      createGame(
+        seed,
+        runLevelId,
+        difficulty,
+        startingLoadout(runLevelId, difficulty) ?? undefined,
+        // The token respec is owed only on the jumped-into level; once the run
+        // advances along the campaign (a fresh levelId) it no longer applies.
+        respec && levelId === initialLevelId,
+      );
+    // The forever-hoard follows the hero into every FRESH run: any stashed
     // unique/legendary he isn't already carrying lands in the bag. (In
-    // hardcore the stash exists too — right up until a death burns it.)
-    restoreKeepsakes(state);
+    // hardcore the stash exists too — right up until a death burns it.) A
+    // resumed run already carries whatever its own creation restored.
+    if (!resumed) restoreKeepsakes(state);
     // The prelude always plays — every run opens on its cutscene (the player
     // can dismiss it with the SKIP button or Esc). It is never auto-skipped on
     // replay.
@@ -536,11 +565,18 @@ export function GameScreen({
     const unlock = () => synth.unlock();
     canvas.addEventListener("pointerdown", unlock);
 
-    // Warp-in from the title moon's long-press: bail the whole opening and
-    // drop straight into play. skipCutscene lands the prelude on the level
-    // `title` card, then beginRun's dismissIntro carries it into `playing` —
-    // the same shortcut the keyboard and headless bot use, done up front.
-    if (skipOpening) {
+    if (resumed) {
+      // Back from the menu: the run was frozen on the pause screen and the
+      // menu played the title theme over it. Re-arm this level's theme but
+      // keep it paused, so the player lands on the same PAUSED overlay and one
+      // tap resumes both the sim and the music in place.
+      playLevelMusic(levelDef(state.level.id).music);
+      pauseMusic();
+    } else if (skipOpening) {
+      // Warp-in from the title moon's long-press: bail the whole opening and
+      // drop straight into play. skipCutscene lands the prelude on the level
+      // `title` card, then beginRun's dismissIntro carries it into `playing` —
+      // the same shortcut the keyboard and headless bot use, done up front.
       if (state.phase === "cutscene") skipCutscene(state);
       beginRun();
     }
@@ -617,7 +653,16 @@ export function GameScreen({
         walkingRef.current = true;
       }
       if (event.repeat) return;
-      if (event.code === "Space") {
+      // Space and Enter both turn the page through any waiting scene (cutscene,
+      // intro, title card, in-world dialogue). Space alone doubles as jump once
+      // the run is live; Enter is scene-only so it never fires an action.
+      const advanceKey = event.code === "Space" || event.key === "Enter";
+      const inScene =
+        state.phase === "cutscene" ||
+        state.phase === "intro" ||
+        state.phase === "title" ||
+        state.phase === "dialogue";
+      if (advanceKey && inScene) {
         event.preventDefault();
         if (state.phase === "cutscene") {
           // Two-step like the dialogue crawl: finish the line, then turn it.
@@ -647,9 +692,11 @@ export function GameScreen({
             playUiSound(synth, "move");
           }
           bumpUi();
-        } else {
-          jumpQueuedRef.current = true;
         }
+      } else if (event.code === "Space") {
+        // No scene up: Space is the jump.
+        event.preventDefault();
+        jumpQueuedRef.current = true;
       } else if (event.key === "Escape" && state.phase === "cutscene") {
         skipCutscene(state);
         playUiSound(synth, "back");
@@ -672,12 +719,17 @@ export function GameScreen({
         closeInventory(state);
         playUiSound(synth, "back");
         bumpUi();
-      } else if (event.key === "p" || event.key === "P") {
-        // P toggles the pause screen (desktop). Music pauses with the sim.
+      } else if (
+        (event.key === "p" || event.key === "P" || event.key === "Escape") &&
+        (state.phase === "playing" || state.phase === "paused")
+      ) {
+        // P or Escape toggles the pause screen (desktop). Music pauses with the
+        // sim. Escape does double duty — it skips the scenes above, and pauses
+        // once the run is live.
         if (state.phase === "playing") {
           pause();
           playUiSound(synth, "confirm");
-        } else if (state.phase === "paused") {
+        } else {
           resume();
           playUiSound(synth, "back");
         }
@@ -738,6 +790,9 @@ export function GameScreen({
     let lastHud = "";
     // Transient visuals driven by engine events (lightning strikes).
     let effects: Effect[] = [];
+    // Run-clock ms through which the "bags are full" nudge stays lit — set when
+    // a `pickupBlocked` event fires, drives the inventory button's pulse.
+    let bagFullHintUntilMs = 0;
 
     const stop = startGameLoop({
       simulate(dtMs) {
@@ -967,6 +1022,20 @@ export function GameScreen({
               color: event.type === "enemyDodge" ? "#cfd6df" : "#9aa3ad",
             });
           }
+          // The bag is full and turned away a piece of loot: float a "BAG
+          // FULL" thought over the hero's hair and light the inventory button's
+          // pulse so the player knows to open it and make room.
+          if (event.type === "pickupBlocked") {
+            effects.push({
+              kind: "text",
+              pos: { x: event.pos.x, y: event.pos.y - PLAYER.radius - 6 },
+              untilMs: state.stats.timeMs + 900,
+              durationMs: 900,
+              text: "BAG FULL",
+              color: "#ffcf6b",
+            });
+            bagFullHintUntilMs = state.stats.timeMs + BAG_FULL_HINT_MS;
+          }
           // Loot and powerups announce themselves in the lower-right feed. Only
           // SPECIAL items tint their name — magic/rare/… gear carries its tier
           // color; ordinary (regular) loot stays neutral. Plot pieces glow gold.
@@ -1094,6 +1163,7 @@ export function GameScreen({
 
         // Mirror the slow-moving values into React only when they change.
         const bagCount = state.player.inventory.filter(Boolean).length;
+        const bagFullHint = state.stats.timeMs < bagFullHintUntilMs;
         const held = state.player.heldAbilities.join(",");
         // Only the *set* of running powerups mounts/unmounts slots; the ticking
         // timer itself is animated straight on the DOM, so it stays out of the
@@ -1107,7 +1177,7 @@ export function GameScreen({
         const appearance = playerAppearance(state);
         const stage = menaceStage(state);
         const armor = armorInfo(state);
-        const key = `${state.phase}/${state.player.hp}/${Math.ceil(state.player.armor)}/${Math.ceil(state.player.stamina)}/${state.player.xp}/${state.player.level}/${state.player.pendingStatPoints}/${state.enemies.length}/${bagCount}/${held}/${active}/${weapon.defId}/${weaponWear?.toFixed(2) ?? ""}/${appearance}/${stage}/${state.stats.kills}/${Math.floor(state.stats.timeMs / 1000)}`;
+        const key = `${state.phase}/${state.player.hp}/${Math.ceil(state.player.armor)}/${Math.ceil(state.player.stamina)}/${state.player.xp}/${state.player.level}/${state.player.pendingStatPoints}/${state.enemies.length}/${bagCount}/${bagFullHint ? 1 : 0}/${held}/${active}/${weapon.defId}/${weaponWear?.toFixed(2) ?? ""}/${appearance}/${stage}/${state.stats.kills}/${Math.floor(state.stats.timeMs / 1000)}`;
         if (key !== lastHud) {
           lastHud = key;
           setHud({
@@ -1125,6 +1195,7 @@ export function GameScreen({
             enemiesLeft: state.enemies.length,
             menaceStage: stage,
             bagCount,
+            bagFullHint,
             heldAbilities: [...state.player.heldAbilities],
             activeAbilities: state.player.abilities.reduce<
               { defId: string; count: number }[]
@@ -1281,7 +1352,7 @@ export function GameScreen({
             <div className="hud-status">
               <button
                 type="button"
-                className="inventory-avatar"
+                className={`inventory-avatar${hud.bagFullHint ? " bag-full" : ""}`}
                 aria-label="open-inventory"
                 onClick={() => {
                   if (state) {
@@ -1800,7 +1871,9 @@ export function GameScreen({
             resumeMusic();
             bumpUi();
           }}
-          onQuit={onQuit}
+          // Leave to the menu but keep the frozen run in memory — CONTINUE
+          // resumes it. The state is already in the `paused` phase here.
+          onExit={() => onExitToMenu(state)}
         />
       )}
 

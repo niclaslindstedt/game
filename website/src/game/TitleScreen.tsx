@@ -136,12 +136,17 @@ function unlockAudio() {
 
 export function TitleScreen({
   onStart,
+  onResume,
 }: {
   onStart: (
     difficulty: Difficulty,
     levelId: string,
     opts?: { skipIntro?: boolean; respec?: boolean },
   ) => void;
+  /** Present only while a run sits parked in memory (the player exited to the
+   * menu from the pause screen). When set, the menu offers CONTINUE, which
+   * drops straight back into the frozen run. */
+  onResume?: () => void;
 }) {
   const [assets, setAssets] = useState<GameAssets | null>(null);
   const [screen, setScreen] = useState<MenuScreen>("main");
@@ -235,6 +240,20 @@ export function TitleScreen({
 
     if (screen === "main") {
       return [
+        // Offered only when a run is parked in memory; sits at the top so it's
+        // the default highlight when the player ducked out to the menu.
+        ...(onResume
+          ? [
+              {
+                label: "CONTINUE",
+                aria: "continue",
+                action: () => {
+                  playUiSound(synth, "confirm");
+                  onResume();
+                },
+              },
+            ]
+          : []),
         {
           label: "NEW GAME",
           aria: "new-game",
@@ -313,7 +332,8 @@ export function TitleScreen({
             },
           };
         }),
-        backTo("main", 0),
+        // Re-home on NEW GAME — one lower when CONTINUE tops the menu.
+        backTo("main", onResume ? 1 : 0),
       ];
     }
     if (screen === "levels") {
@@ -430,7 +450,7 @@ export function TitleScreen({
             setSettingsTick((t) => t + 1);
           },
         },
-        backTo("main", 1),
+        backTo("main", onResume ? 2 : 1),
       ];
     }
     if (screen === "controls") {
@@ -519,14 +539,14 @@ export function TitleScreen({
         backTo("settings", 0),
       ];
     }
-    return [backTo("main", 2)];
+    return [backTo("main", onResume ? 3 : 2)];
     // `settingsTick` is an intentional invalidation key: the menu reads the
     // non-React settings store through getSettings(), so bumping the tick after
     // updateSettings is what rebuilds this list with the fresh values. eslint
     // can't see that dependency through getSettings(), so it wrongly flags the
     // tick as unnecessary — keep it and silence the false positive.
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [screen, onStart, settingsTick, difficulty, warp]);
+  }, [screen, onStart, onResume, settingsTick, difficulty, warp]);
 
   // The HIGH SCORES board is steered on two axes rather than a cursor list:
   // left/right walks the difficulty ladder, up/down flips the ranking. Both
@@ -589,7 +609,7 @@ export function TitleScreen({
           unlockAudio();
           playUiSound(synth, "back");
           setScreen("main");
-          setCursor(1);
+          setCursor(onResume ? 2 : 1);
         }
         return;
       }
@@ -627,6 +647,7 @@ export function TitleScreen({
     stepScoreDifficulty,
     stepScoreMetric,
     warp,
+    onResume,
   ]);
 
   // Touch: a swipe on the board picks its axis by the dominant direction —
@@ -748,6 +769,17 @@ export function TitleScreen({
         <span className="title-asteroid title-asteroid-1" />
         <span className="title-asteroid title-asteroid-2" />
         <span className="title-asteroid title-asteroid-3" />
+      </div>
+      {/* A handful of stars twinkle on their own long cycles, out of sync, so
+          the sky flickers with life rather than sitting as a flat backdrop. */}
+      <div className="title-twinkles" aria-hidden="true">
+        <span className="title-twinkle title-twinkle-1" />
+        <span className="title-twinkle title-twinkle-2" />
+        <span className="title-twinkle title-twinkle-3" />
+        <span className="title-twinkle title-twinkle-4" />
+        <span className="title-twinkle title-twinkle-5" />
+        <span className="title-twinkle title-twinkle-6" />
+        <span className="title-twinkle title-twinkle-7" />
       </div>
       {/* Hidden warp gesture: hold the moon for MOON_HOLD_MS to open the
           all-levels picker (see startMoonHold). aria-hidden stays — it is a
@@ -1046,7 +1078,7 @@ export function TitleScreen({
                   onClick={() => {
                     playUiSound(synth, "back");
                     setScreen("main");
-                    setCursor(1);
+                    setCursor(onResume ? 2 : 1);
                   }}
                 >
                   <PixelText

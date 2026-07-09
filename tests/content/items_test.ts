@@ -373,6 +373,37 @@ describe("inventory", () => {
     expect(state.items).toHaveLength(1);
   });
 
+  it("nudges once when a full bag turns away loot, then throttles the cue", () => {
+    const state = startGame();
+    state.enemies = [];
+    state.player.equipment.suit = makeSuit(90, "magic");
+    state.player.inventory = state.player.inventory.map((_, i) =>
+      makeSuit(100 + i),
+    );
+    state.items = [
+      {
+        id: 1,
+        kind: "equipment",
+        pos: { ...state.player.pos },
+        equipment: makeSuit(2),
+      },
+    ];
+    // First brush with the loot fires the "bags are full" nudge.
+    step(state, idle, DT);
+    expect(state.items).toHaveLength(1);
+    const blocked = state.events.filter((e) => e.type === "pickupBlocked");
+    expect(blocked).toHaveLength(1);
+    expect(blocked[0]).toMatchObject({ reason: "bagFull" });
+
+    // Standing on it the very next tick doesn't spam a second cue.
+    step(state, idle, DT);
+    expect(state.events.some((e) => e.type === "pickupBlocked")).toBe(false);
+
+    // Once the cooldown lapses, another brush nudges again.
+    step(state, idle, LOOT.bagFullHintCooldownMs);
+    expect(state.events.some((e) => e.type === "pickupBlocked")).toBe(true);
+  });
+
   it("equips gear from the bag and applies its bonuses", () => {
     const state = startGame();
     const before = state.player.maxHp;

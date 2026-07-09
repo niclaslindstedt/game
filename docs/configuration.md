@@ -21,9 +21,12 @@ own namespace, and a sequel changes it there once:
 Desktop keyboard controls (when **Keys** is set to WASD): WASD or the arrow
 keys run, **Shift** walks, **Space** jumps, **1/2/3** fire the powerup dock
 slots, **Q** opens the weapon switcher (then **1-4** equip a weapon), **E**
-spends the oldest powerup, **I** toggles the bag, and **P** pauses the run
-(and its music). The run also auto-pauses when the tab or app loses focus;
-clicking the screen or pressing **P** again resumes.
+spends the oldest powerup, **I** toggles the bag, and **P** or **Escape**
+pauses the run (and its music). The run also auto-pauses when the tab or app
+loses focus; clicking the screen or pressing **P**/**Escape** again resumes.
+During a cutscene, intro, or dialogue, **Space** or **Enter** turns the page
+(the first press finishes the letter crawl, the next advances) and **Escape**
+skips the whole scene.
 
 Story progress is persisted the same way (`website/src/game/progress.ts`):
 cleared levels are recorded under `<storagePrefix>:completed-levels` (keyed

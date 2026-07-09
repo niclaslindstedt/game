@@ -207,15 +207,6 @@ export function CutsceneOverlay({
             // when empty) so the box never reflows as the crawl fills it in.
             <PixelText key={i} font={font} text={rows[i] ?? ""} scale={2} />
           ))}
-          {/* Text waits for the player — the blink is the "your move" cue. */}
-          <div className="cutscene-continue">
-            <PixelText
-              font={font}
-              text={done ? "TAP TO CONTINUE" : "TAP TO SKIP"}
-              scale={1}
-              color="#9aa3ad"
-            />
-          </div>
         </div>
       )}
       <button

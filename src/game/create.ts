@@ -286,6 +286,7 @@ export function createGame(
       ? randomRange(rng, def.asteroids.everyMs[0], def.asteroids.everyMs[1])
       : 0,
     wellTickMs: 0,
+    bagFullHintCooldownMs: 0,
     victoryCountdownMs: null,
     minionEquipmentDrops: 0,
     waveSpawned: (def.waves?.budget ?? []).map(() => 0),

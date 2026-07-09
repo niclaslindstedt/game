@@ -35,6 +35,7 @@ import {
   JUMP,
   LAST_STAND,
   LEVELING,
+  LOOT,
   MEDKIT,
   PLAYER,
   PROJECTILE,
@@ -130,6 +131,14 @@ export function step(state: GameState, input: GameInput, dtMs: number): void {
 
   const dt = dtMs / 1000;
   state.stats.timeMs += dtMs;
+  // Cool down the "bags are full" nudge so a player parked on uncarriable loot
+  // gets one cue, not one per frame (see stepItems).
+  if (state.bagFullHintCooldownMs > 0) {
+    state.bagFullHintCooldownMs = Math.max(
+      0,
+      state.bagFullHintCooldownMs - dtMs,
+    );
+  }
 
   // Snapshot cumulative output so the menace tick can read this step's damage
   // and kills as rates (see tickMenace) — the meter heats from what the player
@@ -1282,7 +1291,20 @@ function stepItems(state: GameState): void {
       state.events.push({ type: "autoEquipped", defId: item.equipment.defId });
       return false;
     }
-    if (!addToInventory(state, item.equipment)) return true;
+    if (!addToInventory(state, item.equipment)) {
+      // Bag full: the piece stays grounded. Nudge the player to make room —
+      // a thought over the hero and a pulse on the bag button — throttled so
+      // standing on the loot doesn't fire it every tick.
+      if (state.bagFullHintCooldownMs <= 0) {
+        state.bagFullHintCooldownMs = LOOT.bagFullHintCooldownMs;
+        state.events.push({
+          type: "pickupBlocked",
+          reason: "bagFull",
+          pos: { ...player.pos },
+        });
+      }
+      return true;
+    }
     state.stats.itemsCollected++;
     state.events.push({
       type: "itemCollected",

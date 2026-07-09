@@ -429,6 +429,34 @@ body {
   transform: translateY(2px);
 }
 
+/* The bag just turned away loot: pulse the button's border (and a soft ring)
+   to draw the eye here and hint the player to open the bag and make room.
+   Lit for BAG_FULL_HINT_MS from GameScreen, then the .bag-full class drops. */
+.inventory-avatar.bag-full {
+  border-color: #ffcf6b;
+  animation: bag-full-pulse 0.9s ease-in-out infinite;
+}
+
+@keyframes bag-full-pulse {
+  0%,
+  100% {
+    border-color: #ffcf6b;
+    box-shadow: 0 0 0 0 rgba(255, 207, 107, 0.55);
+  }
+  50% {
+    border-color: #ffe6a8;
+    box-shadow: 0 0 0 4px rgba(255, 207, 107, 0);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .inventory-avatar.bag-full {
+    animation: none;
+    border-color: #ffcf6b;
+    box-shadow: 0 0 0 2px rgba(255, 207, 107, 0.5);
+  }
+}
+
 .avatar-img {
   width: 2.25rem;
   height: 2.25rem;
@@ -651,6 +679,104 @@ body {
   }
   to {
     background-position: -260px 260px;
+  }
+}
+
+/* A few named stars that twinkle over the tiled field. Each rests dim and
+   flares bright for a brief slice of its own long cycle; staggered durations
+   and negative delays keep them out of sync, so the blinks land "every now and
+   then" across the sky rather than in a chorus. */
+.title-twinkles {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  z-index: 0;
+}
+
+.title-twinkle {
+  position: absolute;
+  width: 3px;
+  height: 3px;
+  border-radius: 50%;
+  background: var(--tw, #e6e8eb);
+  box-shadow: 0 0 6px 1px var(--tw, #e6e8eb);
+  opacity: 0.15;
+  will-change: transform, opacity;
+  animation: title-twinkle var(--tw-dur, 7s) ease-in-out var(--tw-delay, 0s)
+    infinite;
+}
+
+/* Rest dim most of the cycle, then a quick bright flare — one twinkle per
+   loop. */
+@keyframes title-twinkle {
+  0%,
+  12%,
+  100% {
+    opacity: 0.15;
+    transform: scale(0.5);
+  }
+  5% {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+.title-twinkle-1 {
+  top: 15%;
+  left: 12%;
+  --tw: #e6e8eb;
+  --tw-dur: 6s;
+  --tw-delay: -1s;
+}
+.title-twinkle-2 {
+  top: 23%;
+  left: 83%;
+  --tw: #7ef0c8;
+  --tw-dur: 7.5s;
+  --tw-delay: -4s;
+}
+.title-twinkle-3 {
+  top: 34%;
+  left: 28%;
+  --tw: #d9a0f0;
+  --tw-dur: 9s;
+  --tw-delay: -2.5s;
+}
+.title-twinkle-4 {
+  top: 11%;
+  left: 56%;
+  --tw: #e6e8eb;
+  --tw-dur: 5.5s;
+  --tw-delay: -6s;
+}
+.title-twinkle-5 {
+  top: 68%;
+  left: 15%;
+  --tw: #7ef0c8;
+  --tw-dur: 8s;
+  --tw-delay: -3s;
+}
+.title-twinkle-6 {
+  top: 74%;
+  left: 87%;
+  --tw: #e6e8eb;
+  --tw-dur: 6.5s;
+  --tw-delay: -5s;
+}
+.title-twinkle-7 {
+  top: 42%;
+  left: 92%;
+  --tw: #d9a0f0;
+  --tw-dur: 10s;
+  --tw-delay: -0.5s;
+}
+
+/* Motion-sensitive visitors keep the stars, just static and faint. */
+@media (prefers-reduced-motion: reduce) {
+  .title-twinkle {
+    animation: none;
+    opacity: 0.4;
+    transform: none;
   }
 }
 
@@ -2017,22 +2143,6 @@ body {
   pointer-events: none; /* taps fall through to the overlay */
 }
 
-/* Text waits for a tap — blink the cue like a JRPG's continue arrow. */
-.cutscene-continue {
-  align-self: flex-end;
-  animation: cutscene-blink 1.2s steps(2, jump-none) infinite;
-}
-
-@keyframes cutscene-blink {
-  0%,
-  100% {
-    opacity: 1;
-  }
-  50% {
-    opacity: 0;
-  }
-}
-
 .cutscene-skip {
   position: absolute;
   top: max(0.6rem, env(safe-area-inset-top));
@@ -2081,16 +2191,50 @@ body {
   gap: 0.6rem;
 }
 
+/* The VN row inside the box: a full-height portrait beside the name + line.
+   The box keeps its old footprint — the portrait just claims the height the
+   "tap to continue" hint used to waste. */
+.dialogue-vn {
+  align-self: stretch;
+  display: flex;
+  flex-direction: row;
+  align-items: stretch;
+  gap: 0.7rem;
+  min-height: 0;
+}
+
+/* A square face-panel as tall as the line block — its side tracks the box
+   height (stretch), so a longer speech grows a bigger portrait. */
+.dialogue-portrait-frame {
+  flex: 0 0 auto;
+  align-self: stretch;
+  aspect-ratio: 1 / 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 3rem;
+  padding: 0.15rem;
+  background: rgba(6, 8, 12, 0.55);
+  border: 2px solid #2a3340;
+  overflow: hidden;
+}
+
 .dialogue-portrait {
-  width: 2rem;
-  height: 2rem;
+  width: 100%;
+  height: 100%;
   object-fit: contain;
   image-rendering: pixelated;
 }
 
-.dialogue-continue {
-  align-self: flex-end;
-  animation: cutscene-blink 1.2s steps(2, jump-none) infinite;
+/* Name + line stack in the remaining width, vertically centered against the
+   portrait so short lines don't float at the top of a tall face-panel. */
+.dialogue-content {
+  flex: 1 1 auto;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 0.4rem;
 }
 
 /* The preview workbench's replay button floats over the finished scene. */

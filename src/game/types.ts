@@ -526,6 +526,14 @@ export type GameEvent =
       name?: string;
     }
   | { type: "itemDropped"; pos: Vec2 }
+  /**
+   * The player walked over loot he couldn't carry — the bag is full, so the
+   * piece stays on the ground. `pos` is the hero (the app floats a "bags full"
+   * thought over him and pulses the inventory button to nudge a cleanup).
+   * Throttled by `LOOT.bagFullHintCooldownMs` so standing on the loot fires it
+   * once, not every frame.
+   */
+  | { type: "pickupBlocked"; reason: "bagFull"; pos: Vec2 }
   /** A picked-up piece was better than the equipped one and replaced it. */
   | { type: "autoEquipped"; defId: string }
   /** The equipped weapon's durability ran out; `defId` is the broken one. */
@@ -740,6 +748,12 @@ export type GameState = {
   asteroidTimerMs: number;
   /** Ms until the next gravity-well core-damage tick may land. */
   wellTickMs: number;
+  /**
+   * Ms until another "bags are full" nudge may fire. Counts down each step;
+   * a blocked pickup emits `pickupBlocked` only when this reaches 0, then
+   * resets it to `LOOT.bagFullHintCooldownMs` (see `stepItems`).
+   */
+  bagFullHintCooldownMs: number;
   /** Counts down once the objective clears; the level ends at 0. */
   victoryCountdownMs: number | null;
   /**
