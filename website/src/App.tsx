@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
-import { useEffect, useRef, useState } from "react";
+import { lazy, Suspense, useEffect, useRef, useState } from "react";
 
 import { CUTSCENE_DEFS, type Difficulty, type GameState } from "@game/core";
 
@@ -13,7 +13,6 @@ import {
   type Character,
 } from "./game/characters.ts";
 import { CutscenePreview } from "./game/CutscenePreview.tsx";
-import { GameScreen } from "./game/GameScreen.tsx";
 import {
   clearSavedRun,
   loadSavedRun,
@@ -22,6 +21,13 @@ import {
 } from "./game/saved-run.ts";
 import { TitleScreen } from "./game/TitleScreen.tsx";
 import { UpdateModal } from "./game/UpdateModal.tsx";
+
+// Lazy for the SEO critical-path budget: the title menu is startup; the
+// playable game (and the engine renderer it pulls in) is only reached once a
+// run begins, so it loads on demand rather than in the entry chunk.
+const GameScreen = lazy(() =>
+  import("./game/GameScreen.tsx").then((m) => ({ default: m.GameScreen })),
+);
 
 // The app shell: splash main menu ↔ the playable game. The menu screen also
 // owns the PWA update lifecycle so a new deploy can never silently reload
@@ -126,55 +132,57 @@ export function App() {
   // needs a character.)
   if (run && character) {
     return (
-      <GameScreen
-        character={character}
-        difficulty={run.difficulty}
-        levelId={run.levelId}
-        skipIntro={run.skipIntro}
-        resume={run.resume}
-        // Exited to the menu from the pause screen: keep the frozen run in
-        // memory (still paused) so CONTINUE can resume it, and drop to the
-        // menu. The run tracks its own current level, so park the state's
-        // level id (which may have advanced past where the run began).
-        onExitToMenu={(state) => {
-          const nextParked: ParkedRun = {
-            characterId: character.id,
-            difficulty: run.difficulty,
-            levelId: state.level.id,
-            state,
-          };
-          setParked(nextParked);
-          // Persist it too, so an app update (which reloads and wipes memory)
-          // leaves CONTINUE intact instead of dropping the run on the floor.
-          saveRun(nextParked);
-          // Re-read the hero: the run may have banked a victory (new level,
-          // beaten difficulty) onto them since the menu was last shown.
-          setCharacter(getActiveCharacter());
-          setRun(null);
-        }}
-        // Ended for good (victory/defeat splash MENU): abandon the run and go
-        // back to the menu, refreshing the hero (a hardcore death has retired
-        // them; a softcore death banked the run; a victory advanced them).
-        onQuit={() => {
-          setParked(null);
-          clearSavedRun();
-          setRun(null);
-          // Re-read the hero: a victory advanced them, a softcore death kept
-          // their run, a hardcore death retired them. A fallen (or missing)
-          // hero can't play on — clear the active selection and drop onto the
-          // roster so the player sees their fate and picks another; a living
-          // hero stays on the title menu for another run.
-          const refreshed = getActiveCharacter();
-          if (!refreshed || refreshed.dead) {
-            setActiveCharacterId(null);
-            setCharacter(null);
-            setStartOnDifficulty(false);
-            setPicking("manage");
-          } else {
-            setCharacter(refreshed);
-          }
-        }}
-      />
+      <Suspense fallback={null}>
+        <GameScreen
+          character={character}
+          difficulty={run.difficulty}
+          levelId={run.levelId}
+          skipIntro={run.skipIntro}
+          resume={run.resume}
+          // Exited to the menu from the pause screen: keep the frozen run in
+          // memory (still paused) so CONTINUE can resume it, and drop to the
+          // menu. The run tracks its own current level, so park the state's
+          // level id (which may have advanced past where the run began).
+          onExitToMenu={(state) => {
+            const nextParked: ParkedRun = {
+              characterId: character.id,
+              difficulty: run.difficulty,
+              levelId: state.level.id,
+              state,
+            };
+            setParked(nextParked);
+            // Persist it too, so an app update (which reloads and wipes memory)
+            // leaves CONTINUE intact instead of dropping the run on the floor.
+            saveRun(nextParked);
+            // Re-read the hero: the run may have banked a victory (new level,
+            // beaten difficulty) onto them since the menu was last shown.
+            setCharacter(getActiveCharacter());
+            setRun(null);
+          }}
+          // Ended for good (victory/defeat splash MENU): abandon the run and go
+          // back to the menu, refreshing the hero (a hardcore death has retired
+          // them; a softcore death banked the run; a victory advanced them).
+          onQuit={() => {
+            setParked(null);
+            clearSavedRun();
+            setRun(null);
+            // Re-read the hero: a victory advanced them, a softcore death kept
+            // their run, a hardcore death retired them. A fallen (or missing)
+            // hero can't play on — clear the active selection and drop onto the
+            // roster so the player sees their fate and picks another; a living
+            // hero stays on the title menu for another run.
+            const refreshed = getActiveCharacter();
+            if (!refreshed || refreshed.dead) {
+              setActiveCharacterId(null);
+              setCharacter(null);
+              setStartOnDifficulty(false);
+              setPicking("manage");
+            } else {
+              setCharacter(refreshed);
+            }
+          }}
+        />
+      </Suspense>
     );
   }
 
