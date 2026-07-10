@@ -706,11 +706,21 @@ export const LOOT = {
    * The MONSTER LEVEL each tier unlocks at — a tier can never drop off a mob
    * below its gate, whatever the chances say. The one dial for "when does the
    * campaign start paying blues/yellows/golds": magic from mlvl 5, rare from
-   * 10, unique from 15, legendary from 25. (Monster level = player level +
+   * 10, unique from 15, legendary from 40. (Monster level = player level +
    * the difficulty's `mobLevelOffset`, so harder rungs reach each tier
    * earlier in the story.)
    */
   tierUnlockMlvl: { magic: 5, rare: 10, unique: 15, legendary: 40 },
+  /**
+   * BASE-LEVEL drop floor: a base whose `levelReq` is more than this many
+   * levels under the killer's monster level is retired from the drop pool, so a
+   * high mob stops dropping low-tier bases (a weak base with affixes on it is
+   * still a weak item). Kept as a WINDOW, not a hard match, so a band of bases
+   * still drops for variety; below it the whole eligible pool stands (the early
+   * game, and as a fallback when nothing sits in the band). D2 area-level
+   * flooring — the base scales with where you kill, the affixes with the ilvl.
+   */
+  dropLevelWindow: 15,
   /**
    * Base chance per tier that an equipment drop rolls it, checked best-first
    * (see `rollTier`). Global — the campaign's progression now lives in the
