@@ -50,6 +50,7 @@ import type { PixelFont } from "@ui/lib/pixel-font.ts";
 
 import { spriteDataUrl, type Sprites } from "./assets.ts";
 import { synth } from "./audio.ts";
+import { playEquipHaptic } from "./haptics.ts";
 import {
   DELTA_DOWN,
   DELTA_UP,
@@ -71,6 +72,10 @@ type Drag = {
   x: number;
   y: number;
   moved: boolean;
+  // Whether this item's tooltip was already up when the press began. On touch
+  // (no hover) that means the FIRST tap raised the tooltip and this is the
+  // SECOND tap on the same item — the signal to commit the equip.
+  wasInspected: boolean;
 };
 
 const SLOTS: { slot: EquipSlot; label: string }[] = [
@@ -298,17 +303,20 @@ export function InventoryPanel({
       const d = dragRef.current;
       if (!d) return;
       if (!d.moved) {
-        // A plain click: on desktop, quick-equip from the bag / quick-unequip
-        // from a slot. On touch there is no hover, so a tap instead raises the
-        // item tooltip (already set on pointer-down) and leaves it up —
-        // equipping on touch is done by dragging.
-        if (e.pointerType !== "touch") {
+        // A plain click/tap: quick-equip from the bag, quick-unequip from a
+        // slot. Desktop equips on a single click (the item is already shown on
+        // hover). Touch has no hover, so the first tap only raises the tooltip
+        // and a SECOND tap on the same item — already inspected — commits it;
+        // that lands the equip in two taps instead of forcing a drag.
+        const commit = e.pointerType !== "touch" || d.wasInspected;
+        if (commit) {
           const swapped =
             d.from.type === "inv"
               ? equipFromInventory(state, d.from.index)
               : unequipToInventory(state, d.from.slot);
           if (swapped) {
             playUiSound(synth, "equip");
+            playEquipHaptic();
             setInspect(null);
           }
         }
@@ -338,6 +346,10 @@ export function InventoryPanel({
   const startDrag =
     (item: Equipment, from: DragSource) => (e: ReactPointerEvent) => {
       e.preventDefault();
+      // Captured BEFORE we overwrite the tooltip below: was this same item
+      // already inspected? On touch that marks the second tap (commit); on
+      // desktop it's moot since a click equips regardless.
+      const wasInspected = inspect?.item.id === item.id;
       setInspect({ item, anchor: e.currentTarget.getBoundingClientRect() });
       dragRef.current = {
         item,
@@ -345,6 +357,7 @@ export function InventoryPanel({
         x: e.clientX,
         y: e.clientY,
         moved: false,
+        wasInspected,
       };
       setDrag(dragRef.current);
     };

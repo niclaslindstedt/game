@@ -125,21 +125,51 @@ export function playUiSound(synth: Synth, sound: UiSound): void {
         echo: 0.45,
       });
       break;
-    case "equip":
-      // Gear clacking into its slot: a filtered snap, then a bright ring.
-      synth.noise({
-        durationMs: 35,
-        volume: 0.045,
-        filter: { type: "bandpass", frequency: 2200, q: 1.2 },
-      });
-      synth.tone({
-        type: "square",
-        from: 784,
-        durationMs: 90,
-        volume: 0.045,
-        delayMs: 30,
-        detuneCents: 6,
-      });
+    case "equip": {
+      // Two blades crossing: a metallic double-clang. Each strike is a bright
+      // bandpass noise chink under a pair of inharmonic steel partials (the
+      // non-octave 3:2-ish ratio is what reads as "metal", not "note"); the
+      // parry lands a beat after the first strike and rings out into the echo
+      // bus for the WoW-style "shiiing".
+      const clash = (delayMs: number, ring: number) => {
+        synth.noise({
+          durationMs: 40,
+          volume: 0.05,
+          delayMs,
+          filter: { type: "bandpass", frequency: 3200, q: 1.4 },
+        });
+        synth.tone({
+          type: "square",
+          from: 1560,
+          to: 1480,
+          durationMs: 70,
+          volume: 0.04,
+          delayMs,
+          detuneCents: 9,
+          echo: ring,
+        });
+        synth.tone({
+          type: "sawtooth",
+          from: 2340,
+          to: 2210,
+          durationMs: 90,
+          volume: 0.03,
+          delayMs: delayMs + 4,
+          detuneCents: 12,
+          echo: ring,
+        });
+        synth.tone({
+          type: "sine",
+          from: 3130,
+          durationMs: 120,
+          volume: 0.02,
+          delayMs: delayMs + 8,
+          echo: ring,
+        });
+      };
+      clash(0, 0.18);
+      clash(85, 0.3);
       break;
+    }
   }
 }
