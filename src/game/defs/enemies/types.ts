@@ -15,6 +15,14 @@ import type { Difficulty, Tier } from "../../types.ts";
  */
 export type EnemyRole = "minion" | "elite" | "boss";
 
+/**
+ * One page of a unique's arrival scene. A plain `string[]` is the speaker's
+ * own page (one string per line); `{ hero: [...] }` is the HERO talking back
+ * mid-scene — the app swaps in his name and portrait for that page, so a
+ * story reveal lands as a conversation instead of a lecture.
+ */
+export type DialoguePage = string[] | { hero: string[] };
+
 export type EnemyDef = {
   id: string;
   /** Display name (HUD, boss bar). */
@@ -132,11 +140,13 @@ export type EnemyDef = {
    */
   xp?: number;
   /**
-   * What this enemy says the first time it closes to DIALOGUE.speakRadius
-   * of the player (elites and bosses). One entry per page, one string per
-   * line; the run pauses in the `dialogue` phase until tapped through.
+   * The scene played the first time this enemy closes to
+   * DIALOGUE.speakRadius of the player (elites and bosses). One entry per
+   * page; the run pauses in the `dialogue` phase until tapped through. A
+   * page is the speaker's own lines, or `{ hero: [...] }` — the hero's
+   * reply, shown with his name and portrait (see DialoguePage).
    */
-  dialogue?: string[][];
+  dialogue?: DialoguePage[];
   /**
    * A dying gasp a unique mob (elite/boss) coughs out as it falls — played
    * through the same dialogue box as its arrival scene (an `enemyDeath`

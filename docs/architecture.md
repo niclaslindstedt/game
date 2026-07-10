@@ -246,7 +246,9 @@ run against synthetic fixtures with no shipped content (see
 - **`src/game/story.ts`** — the story systems: dialogue lifecycle
   (`wantsDialogue`/`startEnemyDialogue` inside the step,
   `advanceDialogue` as the player's tap, `dialogueContent` for the
-  renderer), story-item collection, and `stepDoors` (a carried key
+  renderer — its `heroPages` flags mark the pages the HERO speaks in a
+  two-way arrival scene, authored as `{ hero: [...] }` entries in
+  `EnemyDef.dialogue`), story-item collection, and `stepDoors` (a carried key
   removes its door's obstacle chain). Dialogue freezes the run in the
   `dialogue` phase exactly like the level-up chooser. An elite/boss
   ARRIVAL scene additionally lends the stage to the bag

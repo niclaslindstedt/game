@@ -11,7 +11,8 @@ file wholesale** — none of it is engine, all of it is data under
 Ada went out for chips and soda on movie night and never came back — the
 tracking beacon sewn into her jacket points off-planet. The hero, a
 spaceship builder who once worked at SpaceZ until an AI replaced him — so he
-knows the building cold — raids SpaceZ for the drive ingredient, then follows
+knows the building cold — raids SpaceZ for the one engine part his
+garage-built ship still needs, then follows
 the beacon to the moon, where something is not dead enough. The prelude
 cutscene (`defs/cutscenes.ts`) sets up that night — the weapon hanging on
 the living-room wall is the one thing he takes off it to go after her, and it
@@ -23,8 +24,9 @@ COMBAT KNIFE on HARD, BRASS KNUCKLES on NIGHTMARE, and A STICK on JESUS
 CHRIST!. Each level then opens on the hero's
 `intro` monologue (a black-screen dialogue, one page at a time, the hero
 standing above the box) before the level-name card drops the run in, and its
-elites' `dialogue` carry the thread forward. Skipping the prelude skips the
-monologue too.
+elites' `dialogue` carry the thread forward as two-way exchanges — a page is
+the speaker's own lines or a `{ hero: [...] }` reply the hero talks back with
+(`DialoguePage`). Skipping the prelude skips the monologue too.
 
 ## Levels (`src/game/defs/levels/`)
 
@@ -34,7 +36,7 @@ names its in-run music with an optional `music` id (a key into the app's
 `LEVEL_TRACKS` registry; omitted falls back to the default theme).
 
 - **Level 1 — SPACEZ HQ** (`levels/spacez_hq.ts`). A cleanroom raid for the
-  interplanetary drive's one missing ingredient. `spacez` biome (polished lab
+  ship engine's one missing part. `spacez` biome (polished lab
   tiles + floor vents), ~800 px/s² gravity (hoppable desks and crates), rooms
   carved by `walls` with door gaps and three locked `doors` (storage, vault,
   and the AI CORE — THE ARCHITECT's keycard opens the last). The hero opens in

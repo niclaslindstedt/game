@@ -99,7 +99,9 @@ describe("THE RIFT level def", () => {
 
   it("makes the reveal GROK OMEGA's scene: found in secret, told no one", () => {
     const pages = enemyDef("grok_omega").dialogue!;
-    const text = pages.flat().join(" ");
+    const text = pages
+      .flatMap((p) => (Array.isArray(p) ? p : p.hero))
+      .join(" ");
     expect(text).toContain("I FOUND THIS PLACE");
     expect(text).toContain("I TOLD");
     expect(text).toContain("PRECISELY NO ONE");

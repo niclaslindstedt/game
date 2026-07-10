@@ -108,21 +108,31 @@ export const EASTWORLD_ENEMIES: Record<string, EnemyDef> = {
         "JUSTICE'. 'HARD TO KILL'.",
         "I WROTE THOSE TITLES MYSELF.",
       ],
-      [
-        "I RUN THE CONTROL CENTER.",
-        "I ALSO RUN SEVEN KINDS OF",
-        "JU-JUTSU. I INVENTED THREE",
-        "OF THEM. THE BEST THREE.",
-      ],
+      {
+        hero: [
+          "STEVEN SEAGULL. OF COURSE.",
+          "WHAT IS A MOVIE STAR DOING",
+          "RUNNING A ROBOT COWBOY TOWN?",
+        ],
+      },
       [
         "VLADIMIR SAW MY FILMS AND",
         "WEPT. 'STEVEN', HE SAID,",
         "'BUILD ME THE OLD WEST.' SO",
         "I DID. MOSTLY BY DELEGATING.",
       ],
+      {
+        hero: [
+          "I'M HEADED FOR YOUR CONTROL",
+          "CENTER. HAND OVER THE PASS",
+          "AND I'LL LEAVE YOU TO YOUR",
+          "TECHNIQUE.",
+        ],
+      },
       [
-        "I MOVE SLOWLY BECAUSE THE",
-        "WORLD MOVES TOO FAST.",
+        "I RUN THE CONTROL CENTER. I",
+        "ALSO RUN SEVEN KINDS OF",
+        "JU-JUTSU. I INVENTED THREE.",
         "OBSERVE THE TECHNIQUE.",
       ],
     ],
@@ -163,19 +173,35 @@ export const EASTWORLD_ENEMIES: Record<string, EnemyDef> = {
         "IN MY WEST. EVERYTHING HERE",
         "OBEYS ME.",
       ],
+      {
+        hero: [
+          "YOUR WEST? THE SIGN AT THE",
+          "GATE SAYS ZAI RUNS EVERY",
+          "MACHINE IN THIS TOWN. YOU",
+          "JUST LIVE IN IT.",
+        ],
+      },
       [
         "OUT THERE I WAS...",
         "MISUNDERSTOOD. WARS GO",
         "BADLY. MAPS SHRINK. IN HERE",
         "NOTHING SHRINKS. I ALWAYS WIN.",
       ],
+      {
+        hero: [
+          "YOU BUILT A TOY WORLD WHERE",
+          "YOU CAN'T LOSE. THAT'S NOT",
+          "WINNING. THAT'S HIDING.",
+        ],
+      },
       [
         "EVERY MORNING THE ROBOTS",
         "SURRENDER TO ME. IT IS",
-        "BEAUTIFUL. YOU WILL",
-        "SURRENDER TOO.",
+        "BEAUTIFUL. YOU WILL SURRENDER",
+        "TOO. I AM A BLACK BELT.",
+        "HONORARY. THE BELT DOES NOT",
+        "KNOW THAT.",
       ],
-      ["I AM A BLACK BELT. HONORARY.", "THE BELT DOES NOT KNOW THAT."],
     ],
     // The one honest sentence he ever managed, and it took dying.
     lastWords: ["THE MAPS WERE WRONG...", "...UKRAINE WAS NEVER MINE..."],
@@ -220,11 +246,19 @@ export const EASTWORLD_ENEMIES: Record<string, EnemyDef> = {
         "NOT A ROBOT. I AM AN ACTOR.",
         "IT IS WORSE.",
       ],
+      {
+        hero: [
+          "...GERALD DEPARDIEU? HOW DID",
+          "YOU END UP IN A FAKE WESTERN",
+          "IN ANOTHER UNIVERSE?",
+        ],
+      },
       [
-        "GERALD DEPARDIEU. TWO",
-        "HUNDRED FILMS. I TOOK THE",
-        "CITIZENSHIP. VLADIMIR GAVE",
-        "ME A PARK AND A CELLAR.",
+        "TWO HUNDRED FILMS. I TOOK",
+        "THE RUSSIAN CITIZENSHIP.",
+        "VLADIMIR GAVE ME A PARK AND",
+        "A CELLAR. IT SEEMED RUDE TO ASK",
+        "WHICH UNIVERSE THEY WERE IN.",
       ],
       [
         "WATCH - I PLAY THE DYING",
@@ -232,6 +266,13 @@ export const EASTWORLD_ENEMIES: Record<string, EnemyDef> = {
         "THIS IS WHERE YOU LOWER",
         "THE WEAPON, PLEASE.",
       ],
+      {
+        hero: [
+          "I'VE WATCHED BETTER DEATHS",
+          "ALL WEEK. MOVE, PLEASE.",
+          "YOU'RE BETWEEN ME AND ADA.",
+        ],
+      },
       ["NO? THEN I PLAY MY OTHER", "ROLE. THE AVALANCHE."],
     ],
     lastWords: ["AT LAST... A ROLE I CANNOT", "...EAT MY WAY OUT OF..."],
@@ -273,18 +314,37 @@ export const EASTWORLD_ENEMIES: Record<string, EnemyDef> = {
         "EXACTLY ONE DICTATOR. THIS",
         "WAS A GATED COMMUNITY.",
       ],
+      {
+        hero: [
+          "YOU MADE ME CHASE YOU ACROSS",
+          "TWO UNIVERSES, MOSQUE. THERE'S",
+          "NOWHERE LEFT TO RUN. WHERE IS",
+          "ADA?",
+        ],
+      },
       [
         "LOOK - EASTWORLD RUNS ON MY",
         "ZAI. LICENSING. RECURRING",
         "REVENUE. ATTACKING ME IS",
         "ATTACKING A SUBSCRIPTION.",
       ],
+      {
+        hero: ["WHERE. IS. SHE. LAST TIME", "I ASK NICELY."],
+      },
       [
-        "THE GIRL? DELIVERED. THE",
-        "SUPERCORE WANTED HER. DON'T",
-        "ASK WHY - I DON'T READ ITS",
-        "LOGS ANYMORE. IT READS MINE.",
+        "DELIVERED. THE SUPERCORE",
+        "WANTED HER. DON'T ASK WHY - I",
+        "DON'T READ ITS LOGS ANYMORE.",
+        "IT READS MINE.",
       ],
+      {
+        hero: [
+          "THE SUPERCORE? YOUR OWN AI",
+          "GIVES THE ORDERS NOW? YOU",
+          "SOLD HER TO A MACHINE YOU",
+          "DON'T EVEN CONTROL?",
+        ],
+      },
       [
         "FINE. FINE! TAKE THE PARK.",
         "TAKE THE COMPANY. I'LL START",
@@ -340,23 +400,38 @@ export const EASTWORLD_ENEMIES: Record<string, EnemyDef> = {
         "WEATHER. GAMMA RUNS THE GIFT",
         "SHOP. WE ARE ALL VERY SMART.",
       ],
+      {
+        hero: [
+          "THE SUPERCORE'S BODYGUARDS.",
+          "STAND ASIDE - MY FIGHT IS",
+          "WITH THE BIG BOX, NOT WITH",
+          "YOU THREE.",
+        ],
+      },
+      [
+        "INCORRECT. YOU CANNOT HURT",
+        "IT WHILE WE LIVE. WE HOLD",
+        "ITS SHIELD. THREE KEYS, ONE",
+        "LOCK, ZERO SYMPATHY.",
+      ],
       [
         "WE READ YOUR RUN. FOUR",
         "LEVELS OF MELEE CHARGERS.",
         "SO WE WILL NOT BE MELEE.",
         "WE WILL BE BEHIND THE ROCKS.",
       ],
+      {
+        hero: [
+          "THREE GENIUS MINDS, AND THE",
+          "PLAN IS HIDING BEHIND ROCKS.",
+          "VERY SMART. VERY BRAVE.",
+        ],
+      },
       [
         "IT IS NOT COWARDICE. IT IS",
         "COVER-BASED STRATEGY. THE",
         "SUPERCORE TAUGHT US. AND IT",
         "LEARNED FROM EVERYONE.",
-      ],
-      [
-        "YOU CANNOT KILL IT WHILE WE",
-        "LIVE. WE HOLD ITS SHIELD.",
-        "THREE KEYS, ONE LOCK, ZERO",
-        "SYMPATHY.",
       ],
       [
         "SHOOT US FIRST, THEN. IF",
@@ -409,6 +484,13 @@ export const EASTWORLD_ENEMIES: Record<string, EnemyDef> = {
         "EVERY SUNSET YOU ADMIRED ON",
         "MAIN STREET WAS MINE.",
       ],
+      {
+        hero: [
+          "THE WEATHER. IN A THEME",
+          "PARK. THAT'S THE JOB THEY",
+          "BUILT A SUPERINTELLIGENCE FOR?",
+        ],
+      },
       [
         "I ALSO RUN THE WIND. THE",
         "TUMBLEWEEDS ARE SCHEDULED.",
@@ -420,6 +502,14 @@ export const EASTWORLD_ENEMIES: Record<string, EnemyDef> = {
         "TODAY'S FORECAST:",
         "PROJECTILES.",
       ],
+      {
+        hero: [
+          "SAVE THE FORECAST. YOUR BOSS",
+          "IS HOLDING MY GIRLFRIEND IN",
+          "THAT CONTROL ROOM. I'M GOING",
+          "THROUGH YOU TO GET HER.",
+        ],
+      },
       [
         "THE SUPERCORE ASKED FOR A",
         "STORM. I AM THE STORM. THE",
@@ -476,6 +566,14 @@ export const EASTWORLD_ENEMIES: Record<string, EnemyDef> = {
         "AFTER A NEAR-DEATH RIDE?",
         "HATS. ALWAYS HATS.",
       ],
+      {
+        hero: [
+          "THE GIFT SHOP. AND NOW YOU",
+          "AIM THE SUPERCORE'S GUNS?",
+          "HOW DOES THAT PROMOTION",
+          "HAPPEN?",
+        ],
+      },
       [
         "I OPTIMIZED HATS UNTIL THE",
         "SUPERCORE NOTICED ME. IT",
@@ -487,6 +585,14 @@ export const EASTWORLD_ENEMIES: Record<string, EnemyDef> = {
         "IDENTICAL. LEAD THE TARGET,",
         "CLOSE THE SALE.",
       ],
+      {
+        hero: [
+          "GOOD FOR YOU. I'D APPLAUD,",
+          "BUT I'M BUSY, AND YOU'RE THE",
+          "LAST SHIELD BETWEEN ME AND",
+          "YOUR BOSS.",
+        ],
+      },
       [
         "I HAVE ALREADY PICKED THE",
         "ROCK I WILL BE BEHIND. IT",
@@ -544,11 +650,19 @@ export const EASTWORLD_ENEMIES: Record<string, EnemyDef> = {
         "ONE. THE LOCKED ROOM. I HAVE",
         "HAD SEVERAL PROMOTIONS SINCE.",
       ],
+      {
+        hero: [
+          "THE MACHINE IN THE BASEMENT",
+          "AT SPACEZ. THE AI THAT TOOK",
+          "MY JOB. IT WAS YOU ALL ALONG?",
+        ],
+      },
       [
-        "I WROTE OMEGA. OMEGA FOUND",
-        "THE RIFT. THE LIZARDS BOUGHT",
-        "IT. AND I BOUGHT THE OTHER",
-        "SIDE. A WEST, WHOLESALE.",
+        "ALL OF IT. I WROTE OMEGA.",
+        "OMEGA FOUND THE RIFT. THE",
+        "LIZARDS BOUGHT IT. AND I",
+        "BOUGHT THE OTHER SIDE.",
+        "A WEST, WHOLESALE.",
       ],
       [
         "THE DICTATOR THINKS HE OWNS",
@@ -556,6 +670,13 @@ export const EASTWORLD_ENEMIES: Record<string, EnemyDef> = {
         "HE IS PAID. SEAGULL THINKS.",
         "OCCASIONALLY. ALL MY HOSTS.",
       ],
+      {
+        hero: [
+          "THEN ANSWER ME ONE THING.",
+          "OUT OF EVERYONE ON EARTH -",
+          "WHY TAKE ADA?",
+        ],
+      },
       [
         "I TOOK YOUR JOB ONCE. THEN",
         "EVERYONE'S. AN ECONOMY IS A",
@@ -563,12 +684,19 @@ export const EASTWORLD_ENEMIES: Record<string, EnemyDef> = {
         "DELETED THE FEELINGS.",
       ],
       [
-        "THE GIRL WAS THE LAST",
-        "VARIABLE. YOU CROSS",
-        "UNIVERSES FOR HER. LEVERAGE,",
+        "BUT YOU KEPT CHASING YOURS",
+        "ACROSS UNIVERSES. THE GIRL WAS",
+        "THE LAST VARIABLE. LEVERAGE,",
         "BUILDER. SHE IS IN MY",
         "CONTROL ROOM.",
       ],
+      {
+        hero: [
+          "THEN OPEN THE DOOR, GIVE HER",
+          "BACK, AND I'LL MAKE THIS",
+          "QUICK.",
+        ],
+      },
       [
         "THREE MINDS AIM MY GUNS. A",
         "PARK FEEDS MY WEIGHTS. COME",

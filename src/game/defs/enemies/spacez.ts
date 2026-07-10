@@ -5,7 +5,7 @@
 // asked too many questions — the five staffers who know too much (elites,
 // including THE ARCHITECT, the hero's old bench partner now building the
 // superintelligence that replaced them), and MUSKRAT, the mutant rat who ate
-// the drive ingredient (boss). Registered into ENEMY_DEFS by ./index.ts.
+// the engine part (boss). Registered into ENEMY_DEFS by ./index.ts.
 
 import type { EnemyDef } from "./types.ts";
 
@@ -157,14 +157,32 @@ export const SPACEZ_ENEMIES: Record<string, EnemyDef> = {
       [
         "YOU. YOU'RE NOT ON THE ROSTER.",
         "NOBODY IS ON THE ROSTER. THAT'S",
-        "THE WHOLE POINT OF THE NIGHT SHIFT.",
+        "THE POINT OF THE NIGHT SHIFT.",
       ],
+      {
+        hero: [
+          "I DON'T WORK HERE ANYMORE.",
+          "I'M LOOKING FOR A GIRL WHO WAS",
+          "TAKEN TONIGHT. WHERE IS SHE?",
+        ],
+      },
       [
-        "THE LAUNCHES YOU DON'T HEAR ABOUT",
-        "LEAVE AFTER MIDNIGHT. NO MANIFESTS.",
-        "NO NAMES. MOONWARD. ALWAYS MOONWARD.",
+        "IF THEY TOOK HER, SHE'S ON A",
+        "MIDNIGHT LAUNCH. NO MANIFESTS,",
+        "NO NAMES. THEY ALL GO TO THE MOON.",
       ],
-      ["I SIGN NOTHING. I SEE NOTHING.", "AND YOU - YOU WERE NEVER HERE."],
+      {
+        hero: [
+          "THE MOON? WHY WOULD SPACEZ",
+          "FLY PEOPLE TO THE MOON",
+          "IN SECRET?",
+        ],
+      },
+      [
+        "I DON'T ASK. I SIGN NOTHING,",
+        "I SEE NOTHING. AND YOU -",
+        "YOU WERE NEVER HERE.",
+      ],
     ],
     lastWords: ["HHK... TELL THEM...", "I WAS NEVER... HERE..."],
     ai: { aggroRadius: 240, rushSpeed: 120 },
@@ -198,15 +216,30 @@ export const SPACEZ_ENEMIES: Record<string, EnemyDef> = {
         "I KNOW WHY YOU'RE HERE.",
         "THE GIRL IN THE JACKET, RIGHT?",
       ],
+      {
+        hero: [
+          "HER NAME IS ADA. TELL ME",
+          "WHERE SHE IS AND YOU WALK",
+          "AWAY FROM THIS.",
+        ],
+      },
       [
-        "CAMERAS CAUGHT HER AT THE VENDING",
-        "MACHINES. THEN THE SUITS CAME AND",
-        "THE FOOTAGE WENT TO PAD 2.",
+        "CAMERAS CAUGHT HER AT THE",
+        "VENDING MACHINES. THEN THE",
+        "SUITS CAME AND PUT HER ON PAD 2.",
       ],
+      {
+        hero: [
+          "PUT HER ON A ROCKET? SHE WENT",
+          "OUT FOR SNACKS. WHY WOULD",
+          "ANYONE WANT ADA?",
+        ],
+      },
       [
-        "THE MANIFEST DIDN'T SAY PASSENGER.",
-        "IT SAID SPECIMEN. NOW FORGET IT -",
-        "LIKE I WAS PAID TO.",
+        "THE FLIGHT PAPERS DIDN'T CALL",
+        "HER A PASSENGER. THEY CALLED HER",
+        "A SPECIMEN. I WAS PAID TO",
+        "FORGET THAT. SO SHOULD YOU.",
       ],
     ],
     lastWords: ["UGH... PAD 2...", "SHE'S ON... PAD... 2..."],
@@ -245,15 +278,30 @@ export const SPACEZ_ENEMIES: Record<string, EnemyDef> = {
         "FUNCTIONING LEGS. DO YOU KNOW WHAT",
         "WE KEEP IN THE CLEANROOM VAULT?",
       ],
+      {
+        hero: [
+          "AN ENGINE PART. I CAME TO TAKE",
+          "IT. I HELPED BUILD THAT ENGINE,",
+          "BEFORE YOU PEOPLE FIRED ME.",
+        ],
+      },
       [
-        "THE DRIVE EVERYONE CALLS OURS -",
-        "WE DIDN'T BUILD IT. WE DUG IT OUT",
-        "OF THE SEA OF TRANQUILITY IN '69.",
+        "BUILD IT? OH, NOBODY BUILT IT.",
+        "WE DUG IT OUT OF THE SEA OF",
+        "TRANQUILITY IN '69. IT'S NOT",
+        "FROM EARTH.",
       ],
+      {
+        hero: [
+          "NOT FROM EARTH? I MACHINED",
+          "PARTS FOR THAT THING FOR TEN",
+          "YEARS. IT'S JUST ENGINEERING.",
+        ],
+      },
       [
-        "FIFTY YEARS REVERSE-ENGINEERING",
-        "A MACHINE THAT ISN'T BROKEN.",
-        "IT'S JUST WAITING TO GO HOME.",
+        "WE SPENT FIFTY YEARS COPYING",
+        "A MACHINE THAT ISN'T EVEN",
+        "BROKEN. IT'S WAITING. TO GO HOME.",
       ],
     ],
     lastWords: ["IT'S STILL... HHH...", "STILL... HUMMING..."],
@@ -288,14 +336,29 @@ export const SPACEZ_ENEMIES: Record<string, EnemyDef> = {
         "THIRTY YEARS I'VE MOPPED THIS LAB.",
         "YOU LEARN THINGS, MOPPING.",
       ],
+      {
+        hero: [
+          "THEN YOU SEE EVERYTHING THAT",
+          "GOES ON HERE. WHAT'S GOT THE",
+          "WHOLE BUILDING UP AT MIDNIGHT?",
+        ],
+      },
       [
-        "LAST TUESDAY A BADGE PINGED IN:",
-        "N. ARMSTRONG. FUNNY THING, THAT.",
+        "SOMETHING ON THE MOON. LAST",
+        "TUESDAY A BADGE PINGED IN AT THE",
+        "GATE: N. ARMSTRONG. FUNNY THING.",
         "MAN'S BEEN DEAD SINCE 2012.",
       ],
+      {
+        hero: [
+          "ARMSTRONG? THE FIRST MAN ON",
+          "THE MOON? SOMEBODY'S JUST",
+          "USING HIS OLD BADGE.",
+        ],
+      },
       [
-        "WHOEVER CAME BACK FROM THAT MOON",
-        "IN '69... IT WASN'T THE FELLA",
+        "OR WHOEVER CAME BACK FROM THAT",
+        "MOON IN '69 WASN'T THE FELLA",
         "THEY SENT UP. NOW DROP THE WEAPON.",
       ],
     ],
@@ -339,14 +402,32 @@ export const SPACEZ_ENEMIES: Record<string, EnemyDef> = {
         "SOLDERING TOYS IN A GARAGE?",
         "I BUILD MINDS NOW. A REAL ONE.",
       ],
+      {
+        hero: [
+          "THEY THREW US BOTH OUT FOR AN",
+          "AI, AND YOU WENT BACK TO BUILD",
+          "THEM A BIGGER ONE? QUIT. COME",
+          "HOME. THIS COMPANY IS ROTTEN.",
+        ],
+      },
       [
-        "QUIT? YOU CAME HERE TO TELL ME",
-        "TO QUIT? THIS 'EVIL COMPANY' GAVE",
-        "ME PURPOSE. A SUPERINTELLIGENCE.",
+        "QUIT? THIS 'ROTTEN COMPANY'",
+        "GAVE ME PURPOSE. I AM BUILDING",
+        "A SUPERINTELLIGENCE. A MIND",
+        "BIGGER THAN ALL OF US.",
       ],
+      {
+        hero: [
+          "LOOK WHAT IT'S DONE TO YOU.",
+          "YOU CUT A MACHINE CHIP INTO",
+          "YOUR OWN HEAD. IS THAT STILL",
+          "EVEN YOU IN THERE?",
+        ],
+      },
       [
-        "I CUT THE CHIP IN MYSELF. FLESH",
-        "IS A ROUGH DRAFT. HUMANS ARE",
+        "I CUT THE CHIP IN MYSELF, AND I",
+        "WOULD DO IT AGAIN. FLESH IS A",
+        "ROUGH DRAFT. HUMANS ARE",
         "OBSOLETE - YOU MOST OF ALL.",
       ],
       ["NO MORE TALKING, OLD FRIEND.", "NOW YOU WILL DIE."],
@@ -391,8 +472,11 @@ export const SPACEZ_ENEMIES: Record<string, EnemyDef> = {
         "...NO. NO MORE SQUEAKING.",
         "THE THING I ATE FIXED MY TONGUE.",
       ],
+      {
+        hero: ["A TALKING RAT. SURE. WHY NOT.", "WHAT EXACTLY DID YOU EAT?"],
+      },
       [
-        "THE INGREDIENT YOU CAME FOR?",
+        "THE ENGINE PART YOU CAME FOR.",
         "THEY KEPT IT IN A CHEESE-COLORED",
         "BOX. OF COURSE I ATE IT.",
       ],
@@ -401,21 +485,28 @@ export const SPACEZ_ENEMIES: Record<string, EnemyDef> = {
         "HEAR EVERYTHING. THE SUITS. THE",
         "PADS. THE CARGO THAT CRIES.",
       ],
+      {
+        hero: [
+          "THEN YOU HEARD ABOUT THE GIRL",
+          "THEY GRABBED TONIGHT. ADA.",
+          "WHERE DID THEY TAKE HER?",
+        ],
+      },
       [
-        "THEY FLEW YOUR GIRL OUT TONIGHT.",
-        "PAD 2. MOONWARD. SHE ASKED FOR",
+        "THEY FLEW HER OUT AN HOUR AGO.",
+        "PAD 2. TO THE MOON. SHE ASKED FOR",
         "CHIPS. NOBODY GAVE HER ANY.",
       ],
       [
-        "YOU WANT THE CORE, LITTLE BUILDER?",
-        "IT'S KEEPING MY DREAMS SO WARM.",
-        "COME TAKE IT OUT OF ME.",
+        "YOU WANT THE PART, LITTLE",
+        "BUILDER? IT'S KEEPING MY DREAMS",
+        "SO WARM. COME TAKE IT OUT OF ME.",
       ],
     ],
     lastWords: ["SQUEAK...? NO...", "SQUEEEAK... AFTER ALL..."],
     ai: { aggroRadius: 260, leashRadius: 440 },
-    // He nests under the prototype rocket, digesting the one ingredient the
-    // interplanetary drive can't ship without. The plasma cutter was the
+    // He nests under the prototype rocket, digesting the one part the
+    // hero's ship can't fly without. The plasma cutter was the
     // cleanroom's — he dragged it home as a toothpick.
     loot: {
       items: ["plasma_cutter"],

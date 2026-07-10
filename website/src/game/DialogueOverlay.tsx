@@ -172,16 +172,20 @@ export function DialogueOverlay({
   // A story-item find gets a banner so the box unmistakably reads as "you
   // picked this up — here's what it is", not another mob talking at you.
   const isStoryItem = dialogue.source.kind === "story";
-  // The hero's inner monologue shows HIM — the dressed paper-doll (worn armor +
-  // held weapon over the body), the same avatar the HUD and inventory portray,
-  // so his private read on the fight is delivered by the character the player
-  // actually recognizes, gear and all. Resolved live from the loadout: plain
-  // clothes and empty hands until he loots them, so his SpaceZ-HQ thoughts never
-  // flash gear he hasn't found. (This is the in-world dialogue only — the level
-  // intro monologue keeps its bare hero.) Enemy speakers bob live on the canvas
-  // behind the box; story items show their icon so the find stays on screen.
+  // A two-way arrival scene: on the pages the HERO speaks, the box swaps to
+  // his name and face so the exchange reads as a conversation.
+  const heroSpeaks = content.heroPages[dialogue.page] ?? false;
+  // The hero's inner monologue — and his replies in a two-way scene — show
+  // HIM: the dressed paper-doll (worn armor + held weapon over the body), the
+  // same avatar the HUD and inventory portray, so his lines are delivered by
+  // the character the player actually recognizes, gear and all. Resolved live
+  // from the loadout: plain clothes and empty hands until he loots them, so
+  // his SpaceZ-HQ appearances never flash gear he hasn't found. (This is the
+  // in-world dialogue only — the level intro monologue keeps its bare hero.)
+  // Enemy speakers bob live on the canvas behind the box; story items show
+  // their icon so the find stays on screen.
   const portrait =
-    dialogue.source.kind === "playerThought"
+    dialogue.source.kind === "playerThought" || heroSpeaks
       ? (dollDataUrl(assets.sprites, playerDollLayers(state, "0")) ??
         spriteDataUrl(assets.sprites, `${playerAppearance(state)}_0`) ??
         null)
@@ -231,7 +235,7 @@ export function DialogueOverlay({
             <div className="dialogue-header">
               <PixelText
                 font={font}
-                text={content.speaker}
+                text={heroSpeaks ? "ME" : content.speaker}
                 scale={2}
                 color="#ffd75e"
                 maxWidth={DIALOGUE_TEXT_REM}
