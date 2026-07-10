@@ -1,10 +1,10 @@
 // SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
 // LEVEL 1 — SPACEZ HQ. Ada's trail points off-planet and our hero builds
-// spaceships for a living — but the interplanetary drive needs the one
-// ingredient SpaceZ keeps in its cleanroom, and the night shift is not
+// spaceships for a living — but his garage ship's engine needs the one
+// part SpaceZ keeps in its cleanroom, and the night shift is not
 // letting it leave the building. Office rooms and lab corridors are carved
 // by solid walls with door gaps; MUSKRAT, the mutant rat who ATE the
-// ingredient, nests under the prototype rocket on the far side.
+// part, nests under the prototype rocket on the far side.
 
 import type { LevelDef } from "./types.ts";
 
@@ -16,36 +16,41 @@ export const SPACEZ_HQ: LevelDef = {
   music: "hq_lockdown",
   intro: [
     [
-      "ADA WENT FOR CHIPS. TWO HOURS.",
-      "THEN THE BEACON IN HER JACKET",
-      "PINGED - STRAIGHT OFF-PLANET.",
+      "ADA WENT OUT FOR CHIPS AND",
+      "SODA TWO HOURS AGO.",
+      "SHE NEVER CAME BACK.",
     ],
     [
-      "OFF-PLANET MEANS A SHIP.",
-      "A SHIP MEANS A DRIVE, AND THE",
-      "DRIVE'S MISSING ONE PART.",
+      "THE TRACKER I SEWED INTO HER",
+      "JACKET JUST PINGED - FROM",
+      "SPACE. SOMEONE IS TAKING HER",
+      "OFF THE PLANET.",
     ],
     [
-      "SPACEZ KEEPS THAT PART IN THE",
-      "CLEANROOM VAULT. I KNOW -",
-      "I USED TO BUILD IT FOR THEM.",
+      "TO FOLLOW HER I NEED A SHIP.",
+      "I'VE BEEN BUILDING ONE IN THE",
+      "GARAGE FOR YEARS. IT'S ALMOST",
+      "DONE.",
     ],
     [
-      "HALF THESE ENGINES ARE MINE.",
-      "THEN AN AI DREW THEM BETTER",
-      "AND WALKED ME OUT THE DOOR.",
+      "ALMOST. THE ENGINE STILL NEEDS",
+      "ONE PART I COULD NEVER GET.",
+      "SPACEZ KEEPS IT IN THEIR",
+      "CLEANROOM VAULT.",
     ],
     [
-      "THE WHOLE BLOCK'S ON WELFARE",
-      "NOW. ME AND ADA TOO.",
-      "ALL WE'VE GOT LEFT IS WEBFLIX.",
+      "I KNOW, BECAUSE I WORKED",
+      "THERE. I BUILT THEIR ENGINES -",
+      "UNTIL AN AI LEARNED MY JOB AND",
+      "THEY WALKED ME OUT THE DOOR.",
+    ],
+    [
+      "THE WHOLE BLOCK LOST ITS JOBS",
+      "THE SAME WAY. NOW WE ALL LIVE",
+      "ON WELFARE AND MOVIE NIGHTS.",
     ],
     ["THEY NEVER CHANGED THE LOCKS.", "EVERY DOOR STILL KNOWS MY HAND."],
-    [
-      "THE PART'S IN THE VAULT.",
-      "ADA'S OUT THERE SOMEWHERE.",
-      "WE DO THIS THE HARD WAY.",
-    ],
+    ["SO TONIGHT I TAKE THE PART,", "FINISH THE SHIP, AND GO GET", "ADA BACK."],
   ],
   width: 2000,
   height: 1200,

@@ -10,6 +10,7 @@ import { distance, type Vec2 } from "@game/lib/vec.ts";
 import { DIALOGUE, DOORS } from "./config.ts";
 import { companionDef } from "./defs/companions.ts";
 import { enemyDef } from "./defs/enemies/index.ts";
+import type { DialoguePage } from "./defs/enemies/types.ts";
 import { levelDef } from "./defs/levels/index.ts";
 import type { ThoughtTrigger } from "./defs/levels/types.ts";
 import { storyItemDef } from "./defs/story.ts";
@@ -17,37 +18,61 @@ import { thoughtDef } from "./defs/thoughts.ts";
 import { addMapMarker } from "./map.ts";
 import type { DialogueState, Enemy, GameState } from "./types.ts";
 
+/** A single-speaker scene: every page belongs to the named speaker. */
+function soloPages(pages: string[][]): {
+  pages: string[][];
+  heroPages: boolean[];
+} {
+  return { pages, heroPages: pages.map(() => false) };
+}
+
 /**
  * The text behind a running dialogue: who is on stage and every page of
  * what they say. The app renders `pages[dialogue.page]`; tests assert on
- * the lot.
+ * the lot. `heroPages` runs parallel to `pages` and marks the pages the
+ * HERO speaks (his replies in a two-way arrival scene) — the app swaps in
+ * his name and portrait for those.
  */
 export function dialogueContent(dialogue: DialogueState): {
   speaker: string;
   /** Sprite/icon key for the speaker's portrait. */
   portrait: string;
   pages: string[][];
+  heroPages: boolean[];
 } {
   if (
     dialogue.source.kind === "enemy" ||
     dialogue.source.kind === "enemyDeath"
   ) {
     const def = enemyDef(dialogue.source.defId);
-    // The arrival scene runs the def's `dialogue`; the death scene runs its
-    // `lastWords` as a single page — same speaker, same portrait box.
-    const pages =
-      dialogue.source.kind === "enemyDeath"
-        ? def.lastWords
-          ? [def.lastWords]
-          : []
-        : (def.dialogue ?? []);
-    return { speaker: def.name, portrait: def.sprite, pages };
+    // The death scene runs the def's `lastWords` as a single page — same
+    // speaker, same portrait box as the arrival.
+    if (dialogue.source.kind === "enemyDeath") {
+      return {
+        speaker: def.name,
+        portrait: def.sprite,
+        ...soloPages(def.lastWords ? [def.lastWords] : []),
+      };
+    }
+    // The arrival scene runs the def's `dialogue` — the one scene kind that
+    // can interleave the hero's replies (see DialoguePage).
+    const authored: DialoguePage[] = def.dialogue ?? [];
+    return {
+      speaker: def.name,
+      portrait: def.sprite,
+      pages: authored.map((p) => (Array.isArray(p) ? p : p.hero)),
+      heroPages: authored.map((p) => !Array.isArray(p)),
+    };
   }
   // The hero's own head: his face in the portrait box, his private read on
   // stage.
   if (dialogue.source.kind === "playerThought") {
     const def = thoughtDef(dialogue.source.defId);
-    return { speaker: def.speaker, portrait: def.portrait, pages: def.pages };
+    return {
+      speaker: def.speaker,
+      portrait: def.portrait,
+      ...soloPages(def.pages),
+    };
   }
   // A spared figure's joining scene: its companion def carries the thanks —
   // same face in the portrait box it fought the hero with.
@@ -56,7 +81,7 @@ export function dialogueContent(dialogue: DialogueState): {
     return {
       speaker: def.name,
       portrait: def.sprite,
-      pages: def.joinWords ?? [],
+      ...soloPages(def.joinWords ?? []),
     };
   }
   // The wandering merchant's meeting scene: the level def carries his
@@ -66,11 +91,11 @@ export function dialogueContent(dialogue: DialogueState): {
     return {
       speaker: def?.name ?? "THE MERCHANT",
       portrait: def?.sprite ?? "merchant",
-      pages: def?.greeting ?? [],
+      ...soloPages(def?.greeting ?? []),
     };
   }
   const def = storyItemDef(dialogue.source.defId);
-  return { speaker: def.name, portrait: def.icon, pages: def.lore };
+  return { speaker: def.name, portrait: def.icon, ...soloPages(def.lore) };
 }
 
 /**

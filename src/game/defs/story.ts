@@ -105,7 +105,7 @@ export const STORY_ITEM_DEFS: Record<string, StoryItemDef> = {
       [
         "THE TAG READS 'TRANQUILITY SAMPLE",
         "1969-002. PROPERTY OF NOBODY.'",
-        "THIS IS WHAT MY DRIVE WAS MISSING.",
+        "THE PART MY SHIP WAS MISSING.",
       ],
     ],
   },

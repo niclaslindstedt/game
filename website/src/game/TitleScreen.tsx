@@ -12,6 +12,7 @@ import {
   type PointerEvent as ReactPointerEvent,
   useCallback,
   useEffect,
+  useLayoutEffect,
   useMemo,
   useRef,
   useState,
@@ -325,6 +326,15 @@ export function TitleScreen({
   const moonRef = useRef<HTMLDivElement>(null);
   const sunRef = useRef<HTMLDivElement>(null);
   const glareRef = useRef<HTMLDivElement>(null);
+
+  // The level list only needs to scroll when it genuinely can't fit — a long
+  // ladder (20+ levels) on a short viewport. With the handful of levels this
+  // game ships it fits with room to spare, so an unconditional cap would show
+  // a needless scrollbar (and clip the top row). Measure the list against the
+  // space the centered column leaves it and only cap+scroll on real overflow.
+  const screenRef = useRef<HTMLDivElement>(null);
+  const menuRef = useRef<HTMLElement>(null);
+  const [levelsOverflow, setLevelsOverflow] = useState(false);
   useEffect(() => {
     const moon = moonRef.current;
     const sun = sunRef.current;
@@ -1127,6 +1137,51 @@ export function TitleScreen({
     [cancelMoonHold],
   );
 
+  // Decide whether the level list overflows the room the centered column
+  // leaves it. Runs when the list or viewport changes; the measurement reads
+  // the list's full natural height (`scrollHeight`, independent of any cap) and
+  // the space left over after the title/heading, so it never oscillates once a
+  // cap is applied. Off the levels screen it stays false.
+  useLayoutEffect(() => {
+    const measure = () => {
+      if (screen !== "levels") {
+        setLevelsOverflow(false);
+        return;
+      }
+      // The menu rows live in the .title-content scroll column now — measure
+      // against IT (it owns the row gap and the height cap), not the screen
+      // root, whose only in-flow child is that column.
+      const host = contentRef.current;
+      const nav = menuRef.current;
+      if (!host || !nav) return;
+      const hostStyle = getComputedStyle(host);
+      const gap = parseFloat(hostStyle.rowGap) || 0;
+      const pad =
+        (parseFloat(hostStyle.paddingTop) || 0) +
+        (parseFloat(hostStyle.paddingBottom) || 0);
+      let siblings = 0;
+      let inFlow = 0;
+      for (const child of Array.from(host.children)) {
+        const el = child as HTMLElement;
+        // Skip the absolutely-positioned decorative layers (stars, asteroids).
+        if (getComputedStyle(el).position === "absolute") continue;
+        inFlow += 1;
+        if (el !== nav) siblings += el.offsetHeight;
+      }
+      const avail =
+        host.clientHeight - pad - siblings - gap * Math.max(0, inFlow - 1);
+      setLevelsOverflow(nav.scrollHeight > avail + 1);
+    };
+    // Measure on the next frame (not synchronously in the effect) so the pass
+    // reads settled layout and React owns the resulting class toggle.
+    const raf = requestAnimationFrame(measure);
+    window.addEventListener("resize", measure);
+    return () => {
+      cancelAnimationFrame(raf);
+      window.removeEventListener("resize", measure);
+    };
+  }, [screen, entries]);
+
   if (!assets) {
     return <div className="game-loading">Loading…</div>;
   }
@@ -1157,6 +1212,7 @@ export function TitleScreen({
 
   return (
     <div
+      ref={screenRef}
       className="title-screen"
       onPointerDown={unlockAudio}
       style={{ "--menu-cursor": menuCursor } as CSSProperties}
@@ -1542,7 +1598,8 @@ export function TitleScreen({
               content column is skipped while a full-screen browser is up. */}
           {screen !== "scores" && (
             <nav
-              className={`title-menu${screen === "levels" ? " scrollable" : ""}`}
+              ref={menuRef}
+              className={`title-menu${screen === "levels" && levelsOverflow ? " scrollable" : ""}`}
               aria-label="main menu"
             >
               {entries.map((entry, i) => {

@@ -26,9 +26,10 @@ export const THE_RIFT: LevelDef = {
       "GRIP SOMETHING ANYWAY.",
     ],
     [
-      "THE TABLET SAID TRIBUTE",
-      "NIGHT. VENUE: THE RIFT.",
-      "ADA CAME THROUGH THIS PLACE.",
+      "THE STONE TABLET ON MARS SAID",
+      "IT PLAIN: ADA IS THE TRIBUTE,",
+      "AND THE HANDOVER HAPPENS IN",
+      "HERE. SHE CAME THROUGH THIS PLACE.",
     ],
     [
       "HER BEACON PINGS FROM",
