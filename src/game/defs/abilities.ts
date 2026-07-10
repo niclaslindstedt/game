@@ -55,8 +55,9 @@ export type AbilityDef = {
     slowFactor: number;
   };
   /**
-   * `nuke`: instant, not timed — using it kills every non-boss monster
-   * within the radius (roughly the visible screen) on the spot.
+   * `nuke`: instant, not timed — using it kills every horde minion within
+   * the radius (roughly the visible screen) on the spot. Elites and bosses
+   * are immune; the set-piece fights still have to be fought.
    */
   nuke?: {
     radius: number;

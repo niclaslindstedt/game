@@ -121,8 +121,9 @@ run against synthetic fixtures with no shipped content (see
 - **`src/game/defs/abilities.ts`** — the ability pickups: time-limited
   powers (orbiting fire orbs, storm strikes, stasis slow fields, the item
   magnet whose pull radius grows with INTELLIGENCE) plus the instant
-  screen nuke (kills every non-boss monster on screen, its drop rate kept
-  rare by `LOOT.nukeShare`); levels choose which can drop via their
+  screen nuke (wipes every horde minion on screen — elites and bosses are
+  immune — its drop rate kept rare by `LOOT.nukeShare`); levels choose which
+  can drop via their
   `loot.abilityPool`. Pickups are banked into `player.heldAbilities` (up
   to `HELD_ITEMS.cap`) and spent with the `useItem` input, or dragged out
   of their dock slot to be discarded (`discardHeldAbility`) when the bank
