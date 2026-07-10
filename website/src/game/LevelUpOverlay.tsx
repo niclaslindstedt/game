@@ -4,8 +4,13 @@
 // `allocateStat`, and play resumes automatically when the last point is
 // spent. Each button carries a short blurb; the (i) toggle opens a panel with
 // the full per-stat effects (kept in sync with the engine's STATS rules).
+//
+// Keyboard: a cursor highlights one stat; the arrow keys (and WASD) move it and
+// Enter/Space spends a point on it. GameScreen cedes the keyboard to this
+// overlay while the `levelup` phase is up, so these keys never leak to steering
+// or the jump.
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 
 import {
   allocateStat,
@@ -32,7 +37,65 @@ export function LevelUpOverlay({
   onChange: () => void;
 }) {
   const [showInfo, setShowInfo] = useState(false);
+  // Which stat the keyboard cursor sits on; also synced by pointer hover so the
+  // mouse and keyboard never disagree about the highlight. `active` gates the
+  // highlight ring so a touch-only phone (no keyboard, no hover) keeps its
+  // ring-free look until the player actually engages the cursor.
+  const [cursor, setCursor] = useState(0);
+  const [active, setActive] = useState(false);
   const points = state.player.pendingStatPoints;
+
+  useEffect(() => {
+    const onKeyDown = (event: KeyboardEvent) => {
+      if (showInfo) {
+        // While the (i) breakdown is open the buttons are hidden — any
+        // confirm/cancel key just closes it back to the chooser.
+        if (
+          event.key === "Escape" ||
+          event.key === "Enter" ||
+          event.key === " "
+        ) {
+          event.preventDefault();
+          setShowInfo(false);
+        }
+        return;
+      }
+      const code = event.code;
+      const n = CHOICES.length;
+      // Match the CSS: a single vertical column on a phone, a 3-wide grid on
+      // wider screens (styles.css `min-aspect-ratio: 4/3`). Left/right step one
+      // stat; up/down jump a whole row (± the column count), so both axes read
+      // the way the grid looks. Everything wraps.
+      const cols = window.matchMedia("(min-aspect-ratio: 4/3)").matches ? 3 : 1;
+      const step = (delta: number) => {
+        event.preventDefault();
+        setActive(true);
+        setCursor((c) => (c + delta + n) % n);
+      };
+      if (code === "ArrowLeft" || code === "KeyA") {
+        step(-1);
+      } else if (code === "ArrowRight" || code === "KeyD") {
+        step(1);
+      } else if (code === "ArrowUp" || code === "KeyW") {
+        step(-cols);
+      } else if (code === "ArrowDown" || code === "KeyS") {
+        step(cols);
+      } else if (
+        code === "Enter" ||
+        code === "NumpadEnter" ||
+        code === "Space"
+      ) {
+        const choice = CHOICES[cursor];
+        if (!choice) return;
+        event.preventDefault();
+        allocateStat(state, choice.stat);
+        onChange();
+      }
+    };
+    window.addEventListener("keydown", onKeyDown);
+    return () => window.removeEventListener("keydown", onKeyDown);
+  }, [showInfo, cursor, state, onChange]);
+
   return (
     <div
       className="game-overlay levelup-overlay"
@@ -87,7 +150,7 @@ export function LevelUpOverlay({
           </div>
         ) : (
           <div className="stat-buttons">
-            {CHOICES.map(({ stat, label, blurb, icon }) => {
+            {CHOICES.map(({ stat, label, blurb, icon }, i) => {
               // The free base growth this ding already handed the stat (see
               // leveling.ts); surfaced as a gold "+N" so the chooser shows the
               // automatic gains alongside the point the player is spending.
@@ -96,9 +159,19 @@ export function LevelUpOverlay({
                 <button
                   key={stat}
                   type="button"
-                  className="pixel-button stat-button"
+                  className={`pixel-button stat-button${
+                    active && cursor === i ? " selected" : ""
+                  }`}
                   aria-label={`stat-${stat}`}
+                  // Hover with a mouse tracks the cursor; a bare touch (which
+                  // also fires pointerenter) shouldn't light the ring, so only
+                  // a real mouse activates it.
+                  onPointerEnter={(e) => {
+                    if (e.pointerType === "mouse") setActive(true);
+                    setCursor(i);
+                  }}
                   onClick={() => {
+                    setCursor(i);
                     allocateStat(state, stat);
                     onChange();
                   }}
