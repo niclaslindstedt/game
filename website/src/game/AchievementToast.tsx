@@ -20,9 +20,12 @@ import { spriteDataUrl, type Sprites } from "./assets.ts";
  * over, in ms. Must match the `achievement-toast` animation in styles.css. */
 export const ACHIEVEMENT_TOAST_TTL_MS = 4000;
 
-/** Wrap width (rem) for the badge name — long generated names (GREAVES OF THE
- * WALLED GARDEN) fold instead of stretching the banner off-screen. */
-const NAME_REM = 11;
+/** Wrap width (rem) for the badge name — the pickup card's cap
+ * (PICKUP_NAME_REM), which playtesting proved out: a long name (ARMED AND
+ * DANGEROUS, GREAVES OF THE WALLED GARDEN) folds onto more lines and the
+ * banner grows TALLER instead of spilling past its frame. Keep in step with
+ * `.achievement-toast`'s max-width in styles.css. */
+const NAME_REM = 9;
 
 /** Achievement gold — the frame, the title, the sparkles. */
 const GOLD = "#ffd75e";

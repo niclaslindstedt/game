@@ -4513,7 +4513,10 @@ body {
   display: flex;
   align-items: center;
   gap: 0.55rem;
-  max-width: min(16rem, 92vw);
+  /* Caps just above the wrapped name column (NAME_REM in AchievementToast
+     at 2× scale, plus icon, gap and padding) — the pickup card's recipe: a
+     long badge name folds and the banner grows taller, never wider. */
+  max-width: min(14rem, 92vw);
   box-sizing: border-box;
   padding: 0.4rem 0.7rem;
   background: rgba(11, 13, 16, 0.78);
@@ -4564,6 +4567,10 @@ body {
   flex-direction: column;
   align-items: flex-start;
   gap: 0.22rem;
+  /* Let the name column actually shrink to the frame so PixelText's rem cap
+     is what decides the fold — a flex child's auto min-width would otherwise
+     hold the canvas wide and shove it through the border. */
+  min-width: 0;
 }
 
 /* A sheen sweeping the banner face once as it lands (the pickup card's
