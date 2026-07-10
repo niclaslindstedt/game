@@ -3762,9 +3762,14 @@ body {
 
 /* ---- The merchant's shop (ShopPanel.tsx) --------------------------------- */
 
-/* Reuses the inventory panel's window skin; its own rows below. */
+/* Reuses the inventory panel's window skin; its own rows below. A STABLE
+   height (not content-sized) so selecting a short armor card vs a tall weapon
+   card doesn't grow and shrink the whole modal — the detail row absorbs the
+   difference by filling and scrolling. Capped to the viewport on a short
+   landscape screen. */
 .shop-panel {
   gap: 0.7rem;
+  height: min(92vh, 33rem);
 }
 
 /* Merchant name on the left, the purse on the right. */
@@ -3844,16 +3849,19 @@ body {
 }
 
 /* The deal bar: the selection's full stat card on the left, the one BUY/SELL
-   action on the right. The card can run tall, so the button pins to the top
-   rather than floating to the middle of a long list. */
+   action on the right. It FILLS the panel's leftover height (so the modal
+   stays one stable size) and the card side scrolls inside it when an item runs
+   taller than the box — the deal button never wraps below and pins to the top.
+   No `flex-wrap`: the button always sits to the card's right, never jumping
+   under it on a long, wrapped item name. */
 .shop-detail {
   display: flex;
   flex-direction: row;
   align-items: flex-start;
   justify-content: space-between;
-  flex-wrap: wrap;
   gap: 0.6rem;
-  min-height: 2.6rem;
+  flex: 1 1 auto;
+  min-height: 0;
   padding: 0.55rem 0.7rem;
   background: rgba(6, 8, 12, 0.6);
   border: 2px solid #232b35;
@@ -3861,15 +3869,19 @@ body {
 }
 
 /* The card side: the item's icon beside its stat lines (same reading as the
-   inventory tooltip). Grows to take the bar's width; the deal button holds its
-   own size on the right. */
+   inventory tooltip). Grows to take the bar's width and scrolls on its own
+   when the card is taller than the box; the deal button holds its own size on
+   the right and stays put. */
 .shop-detail-info {
   display: flex;
   flex-direction: row;
   align-items: flex-start;
   gap: 0.6rem;
   flex: 1 1 auto;
+  align-self: stretch;
   min-width: 0;
+  min-height: 0;
+  overflow-y: auto;
 }
 
 .shop-detail-icon {
@@ -3891,6 +3903,22 @@ body {
 .shop-deal-btn {
   padding: 0.4rem 0.7rem;
   flex: 0 0 auto;
+}
+
+/* Portrait / narrow: the side-by-side row leaves the card too little width and
+   a long item name clips at the button's edge. Stack instead — the stat card
+   spans the full panel width (names wrap cleanly) with the deal button as a
+   full-width tap target beneath it. Consistent within the orientation, so the
+   modal still never jumps. */
+@media (max-aspect-ratio: 4/3) {
+  .shop-detail {
+    flex-direction: column;
+  }
+
+  .shop-detail .shop-deal-btn {
+    align-self: stretch;
+    justify-content: center;
+  }
 }
 
 /* The deal button's face: verb, coin, amount on one baseline. */
