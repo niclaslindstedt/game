@@ -152,6 +152,20 @@ export type Equipment = {
    */
   armor?: number;
   /**
+   * A hand-authored UNIQUE's fixed display name (BOUNDSTRIDE), overriding the
+   * base/affix-composed name. Absent on rolled items, which name themselves
+   * from their affixes (see `equipmentName`).
+   */
+  name?: string;
+  /**
+   * A UNIQUE's per-drop base ROLL: a small ±band on the base damage (weapons,
+   * read in `weaponDamageFor`) or armor (baked into `armor` at mint), so two
+   * copies of the same unique differ slightly and a better-rolled one is worth
+   * chasing. The FIXED bonuses are identical on every copy. Absent (= 1) on
+   * everything else.
+   */
+  baseRoll?: number;
+  /**
    * A FROZEN copy of the item's catalog def, captured the instant it was
    * minted (see `rollEquipment`). This is what makes a kept item version-proof:
    * an item a test player carries keeps the stats it dropped with even after we

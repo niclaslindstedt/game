@@ -251,6 +251,17 @@ export const LEVELING = {
 } as const;
 
 /**
+ * UNIQUE items — hand-authored named drops (see `defs/uniques.ts`). Their
+ * bonuses are fixed, but each drop rolls a small ±band on the BASE damage
+ * (weapons) / armor so two copies differ and a better-rolled one is worth
+ * chasing; the fixed bonuses are identical on every copy.
+ */
+export const UNIQUE = {
+  /** Half-width of the base-stat roll: a ±10% band around the base value. */
+  baseRollBand: 0.1,
+} as const;
+
+/**
  * The DERIVED arrival loadout (`deriveArrivalLoadout` in arrival.ts): the
  * realistic stand-in used when a mid-campaign level starts with nothing
  * banked — dev `?level=` jumps, playtest bots, wiped storage. In the real
