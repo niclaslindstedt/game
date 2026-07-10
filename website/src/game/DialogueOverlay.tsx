@@ -35,6 +35,7 @@ import { paginateLines } from "@ui/lib/textPager.ts";
 import { useTypewriter } from "@ui/lib/typewriter.ts";
 
 import { spriteDataUrl, type GameAssets } from "./assets.ts";
+import { dollDataUrl, playerDollLayers } from "./paper-doll.ts";
 
 /** The reveal state the overlay publishes so the app's keyboard/gamepad
  * advance can share the tap's semantics (finish, scroll, then turn). */
@@ -171,20 +172,22 @@ export function DialogueOverlay({
   // A story-item find gets a banner so the box unmistakably reads as "you
   // picked this up — here's what it is", not another mob talking at you.
   const isStoryItem = dialogue.source.kind === "story";
-  // The hero's inner monologue shows HIS face — and his face is whatever he is
-  // wearing right now, so resolve it live (plain clothes until he loots the EVA
-  // suit, the astronaut after) exactly like the world sprite does. Otherwise
-  // his SpaceZ-HQ thoughts would flash the spacesuit before he ever finds it.
-  const portraitFamily =
-    dialogue.source.kind === "playerThought"
-      ? playerAppearance(state)
-      : content.portrait;
-  // Enemy speakers bob live on the canvas behind the box; story items show
-  // their icon as a portrait so the find stays on screen while it talks.
+  // The hero's inner monologue shows HIM — the dressed paper-doll (worn armor +
+  // held weapon over the body), the same avatar the HUD and inventory portray,
+  // so his private read on the fight is delivered by the character the player
+  // actually recognizes, gear and all. Resolved live from the loadout: plain
+  // clothes and empty hands until he loots them, so his SpaceZ-HQ thoughts never
+  // flash gear he hasn't found. (This is the in-world dialogue only — the level
+  // intro monologue keeps its bare hero.) Enemy speakers bob live on the canvas
+  // behind the box; story items show their icon so the find stays on screen.
   const portrait =
-    dialogue.source.kind === "story"
-      ? spriteDataUrl(assets.sprites, content.portrait)
-      : (spriteDataUrl(assets.sprites, `${portraitFamily}_0`) ?? null);
+    dialogue.source.kind === "playerThought"
+      ? (dollDataUrl(assets.sprites, playerDollLayers(state, "0")) ??
+        spriteDataUrl(assets.sprites, `${playerAppearance(state)}_0`) ??
+        null)
+      : dialogue.source.kind === "story"
+        ? spriteDataUrl(assets.sprites, content.portrait)
+        : (spriteDataUrl(assets.sprites, `${content.portrait}_0`) ?? null);
 
   // Reserve a stable row count for the whole page (the tallest screen) so the
   // box never resizes as the speech scrolls; the last, short screen pads with
