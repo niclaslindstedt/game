@@ -1214,14 +1214,22 @@ export function weaponScore(state: GameState, weapon: Equipment): number {
   const def = weaponDef(weapon.defId);
   const critLift =
     1 + playerCritChance(state, def.class) * (weaponCritMult(def) - 1);
-  // Melee AoE is only worth what THIS build's INTELLIGENCE can realize: a
-  // cone budgeted at 4 counts for 2 in untrained hands (maxMeleeTargets),
-  // so auto-equip won't trade a solid single-target hit for potential the
-  // hero can't cash yet. Ranged multipliers (pellets, pierce, chain) are
-  // the weapon's own physics and count in full.
+  // AoE is only worth what's realistically REALIZED, never its theoretical
+  // ceiling — otherwise a spread weapon whose per-target damage is a quarter of
+  // a single-target's (budget ÷ 4, by design) reads as an even trade and
+  // auto-equip swaps away a reliable weapon for one that's horrible against any
+  // lone tough foe. Two kinds of AoE, realized differently:
+  //   • Melee: a sweep reliably strikes everything in its arc in the close
+  //     press of the horde, so it counts at the number INTELLIGENCE can cleave
+  //     (maxMeleeTargets) — a cone budgeted at 4 is worth 2 in untrained hands.
+  //   • Ranged: pellets/pierce/chain are CONDITIONAL — a shotgun's spread fans
+  //     wide and, in the common sparse field, overlaps on one foe rather than
+  //     splitting across four. Credit only a fraction of that potential beyond
+  //     the first sure hit (WEAPON.aoeRealization), so a spread weapon must
+  //     genuinely out-budget the held one to win its slot, not merely tie it.
   const assumed = weaponAssumedTargets(def);
   const targets = def.projectile
-    ? assumed
+    ? 1 + (assumed - 1) * WEAPON.aoeRealization
     : Math.min(assumed, maxMeleeTargets(state));
   return (
     ((weaponDamageFor(state, weapon) * 1000) /

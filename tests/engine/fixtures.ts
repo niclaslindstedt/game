@@ -370,6 +370,45 @@ export const FIX_WEAPONS: Record<string, WeaponDef> = {
     projectile: { speed: 400, radius: 3, lifetimeMs: 800, sprite: "bolt" },
     icon: "icon_pistol",
   },
+  // A hard-hitting single-target sidearm — the RELIABLE ranged baseline the
+  // spread-weapon auto-equip test measures against (mirrors a service revolver).
+  test_revolver: {
+    id: "test_revolver",
+    name: "TEST REVOLVER",
+    class: "ranged",
+    levelReq: 1,
+    damage: 24,
+    cooldownMs: 500,
+    range: 240,
+    durability: 180,
+    projectile: { speed: 440, radius: 3, lifetimeMs: 900, sprite: "bolt" },
+    icon: "icon_pistol",
+  },
+  // A spread pellet gun (mirrors the pump shotgun): its damage budget rides on
+  // FOUR pellets, so its per-hit damage is a quarter of a single-target's —
+  // fearsome in a packed crowd, feeble against one foe. Its budget-authored
+  // effective DPS TIES (even slightly beats) test_revolver's, so under the old
+  // full-pellet-credit scoring auto-equip swapped the revolver away for it; the
+  // realization discount (WEAPON.aoeRealization) is what now holds the slot.
+  test_scattergun: {
+    id: "test_scattergun",
+    name: "TEST SCATTERGUN",
+    class: "ranged",
+    levelReq: 1,
+    damage: 13,
+    cooldownMs: 950,
+    range: 160,
+    durability: 140,
+    projectile: {
+      speed: 380,
+      radius: 3,
+      lifetimeMs: 420,
+      sprite: "pellet",
+      count: 4,
+      spreadDeg: 24,
+    },
+    icon: "icon_pistol",
+  },
 };
 
 export const FIX_GEAR: Record<string, GearDef> = {
