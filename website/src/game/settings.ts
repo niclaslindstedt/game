@@ -25,8 +25,10 @@ export type ItemUseMode = "auto" | "manual";
 export type PowerupSide = "left" | "right";
 
 /** Desktop keyboard movement: `on` lets WASD/arrows drive the walk (Shift
- * runs, no key stands still) and takes over steering from the mouse; `off`
- * leaves steering to the pointer. Touch devices ignore this. */
+ * runs) — while a key is held it steers, and the moment no key is down the
+ * mouse takes back over (cursor-follow or hold per the steering setting), so
+ * the two coexist. `off` leaves steering to the pointer alone. Touch devices
+ * ignore this. */
 export type KeyboardMove = "on" | "off";
 
 /** Vibration feedback on kills (scaled by mob rarity). `off` silences it;

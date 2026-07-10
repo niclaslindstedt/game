@@ -1031,46 +1031,52 @@ export function GameScreen({
               // nudge past the deadzone creeps, a full push to the ring runs.
               input.throttle = dpadThrottle(len);
             }
-          } else if (settings.keyboardMove === "on") {
-            // Desktop WASD/arrows: a binary control mode — the held keys sum
-            // to a heading (run, or walk with Shift), no key stands still.
-            // The mouse is freed from steering here (aim stays automatic).
+          } else {
+            // Desktop WASD/arrows and the mouse coexist. While any movement
+            // key is held (keyboardMove === "on"), the summed keys are the
+            // heading (run, or walk with Shift). The instant no key is down,
+            // steering falls back to the mouse so "just hold the cursor where
+            // you want to go" keeps working alongside the keyboard — the
+            // keyboard only takes over for as long as a key is actually held.
             let dx = 0;
             let dy = 0;
-            for (const code of heldMoveKeysRef.current) {
-              const v = MOVE_KEYS[code];
-              if (v) {
-                dx += v.x;
-                dy += v.y;
+            if (settings.keyboardMove === "on") {
+              for (const code of heldMoveKeysRef.current) {
+                const v = MOVE_KEYS[code];
+                if (v) {
+                  dx += v.x;
+                  dy += v.y;
+                }
               }
             }
-            const len = Math.hypot(dx, dy);
-            input.steering = len > 0;
-            if (input.steering) {
+            const keyLen = Math.hypot(dx, dy);
+            if (keyLen > 0) {
+              input.steering = true;
               input.target.x =
-                state.player.pos.x + (dx / len) * DPAD_STEER_DISTANCE;
+                state.player.pos.x + (dx / keyLen) * DPAD_STEER_DISTANCE;
               input.target.y =
-                state.player.pos.y + (dy / len) * DPAD_STEER_DISTANCE;
+                state.player.pos.y + (dy / keyLen) * DPAD_STEER_DISTANCE;
               input.throttle = walkingRef.current ? KEYBOARD_WALK_THROTTLE : 1;
+            } else {
+              // Cursor-follow steering: a hovering mouse steers with no button
+              // (hover mode); hold mode steers only while a button is down.
+              const hoverSteer =
+                settings.steering === "hover" && pointer.state.hovering;
+              input.steering = pointer.state.held || hoverSteer;
+              input.target.x = camera.x + pointer.state.x * cssToWorld.x;
+              input.target.y = camera.y + pointer.state.y * cssToWorld.y;
+              // On desktop the pace scales with how far the cursor leads the
+              // character — hold it close to stroll, throw it wide to sprint.
+              // Divide the desktop 2× zoom out of the full-speed distance so the
+              // sprint threshold stays fixed in CSS px, not doubled by the zoom.
+              input.throttle = cursorThrottle(
+                Math.hypot(
+                  input.target.x - state.player.pos.x,
+                  input.target.y - state.player.pos.y,
+                ),
+                CURSOR_FULL_SPEED_PX / uiScale,
+              );
             }
-          } else {
-            // Cursor-follow steering: a hovering mouse steers with no button.
-            const hoverSteer =
-              settings.steering === "hover" && pointer.state.hovering;
-            input.steering = pointer.state.held || hoverSteer;
-            input.target.x = camera.x + pointer.state.x * cssToWorld.x;
-            input.target.y = camera.y + pointer.state.y * cssToWorld.y;
-            // On desktop the pace scales with how far the cursor leads the
-            // character — hold it close to stroll, throw it wide to sprint.
-            // Divide the desktop 2× zoom out of the full-speed distance so the
-            // sprint threshold stays fixed in CSS px, not doubled by the zoom.
-            input.throttle = cursorThrottle(
-              Math.hypot(
-                input.target.x - state.player.pos.x,
-                input.target.y - state.player.pos.y,
-              ),
-              CURSOR_FULL_SPEED_PX / uiScale,
-            );
           }
           input.jump = jumpQueuedRef.current;
           jumpQueuedRef.current = false;
