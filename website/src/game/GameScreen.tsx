@@ -76,6 +76,7 @@ import {
   type BotStrategy,
   type Difficulty,
   type Equipment,
+  type GameEvent,
   type GameInput,
   type GamePhase,
   type GameState,
@@ -84,6 +85,7 @@ import {
   type Tier,
 } from "@game/core";
 
+import { clusterByTouch } from "@ui/lib/cluster.ts";
 import { formatCompact } from "@ui/lib/format-number.ts";
 import { startGameLoop } from "@ui/lib/game-loop.ts";
 import { PixelText } from "@ui/lib/PixelText.tsx";
@@ -120,7 +122,11 @@ const AchievementsScreen = lazy(() =>
   })),
 );
 import { cloneGameState } from "./checkpoint.ts";
-import { playEventHaptics, playTypewriterHaptic } from "./haptics.ts";
+import {
+  playAchievementHaptic,
+  playEventHaptics,
+  playTypewriterHaptic,
+} from "./haptics.ts";
 import { ChoiceOverlay } from "./ChoiceOverlay.tsx";
 import { CompanionPanel } from "./CompanionPanel.tsx";
 import { CutsceneOverlay, type CutsceneReveal } from "./CutsceneOverlay.tsx";
@@ -279,6 +285,18 @@ const MIN_WALK_THROTTLE = 0.35;
 // live throttle divides that extra zoom back out (see the render loop) — the
 // on-screen distance to full speed stays constant across viewports.
 const CURSOR_FULL_SPEED_PX = 90;
+
+// Merged pack-kill XP floats. When one attack drops this many foes at once and
+// their bodies touch, their XP drips fuse into a single oversized "+N XP" pop
+// that jolts like a crit — one big satisfying number instead of a smear of
+// overlapping drips. The pack size sets the glyph scale: count/10 (20 mobs →
+// 2×, 30 → 3×), floored so even a small merge reads as bigger and capped so a
+// monster pull can't swallow the screen. `SLACK` lets near-touching bodies
+// still count as one knot.
+const XP_MERGE_MIN_KILLS = 3;
+const XP_MERGE_SLACK_PX = 4;
+const XP_MERGE_MIN_SCALE = 1.4;
+const XP_MERGE_MAX_SCALE = 4;
 
 /** Map a dpad thumb distance (CSS px) to a walk throttle in [MIN_WALK, 1]. */
 function dpadThrottle(len: number): number {
@@ -568,6 +586,7 @@ export function GameScreen({
   useEffect(() => {
     if (!achievementToast) return;
     playAchievementJingle(synth);
+    playAchievementHaptic();
     const timer = setTimeout(
       () => setAchievementToast(null),
       ACHIEVEMENT_TOAST_TTL_MS,
@@ -1376,6 +1395,58 @@ export function GameScreen({
           celebrateAchievements(recordWornEquipment(worn));
         }
 
+        // Big kills merge their XP: when one step drops a knot of foes packed
+        // body-to-body, fuse their per-kill "+N XP" drips into a single
+        // oversized pop that jolts like a crit — the bigger the pack, the
+        // bigger and shakier the number (see render.ts's text float). The
+        // events in a step already share the same instant (one swing, one AoE),
+        // so proximity alone tells the pack apart from unrelated stray kills.
+        // `mergedKills` marks the drips that were folded in so the per-kill
+        // float below skips them. Honors the same `xpFloat` DISPLAY preference.
+        const mergedKills = new Set<GameEvent>();
+        if (getSettings().xpFloat === "on") {
+          const kills = state.events.filter(
+            (e): e is Extract<GameEvent, { type: "enemyKilled" }> =>
+              e.type === "enemyKilled" && e.xp > 0,
+          );
+          if (kills.length >= XP_MERGE_MIN_KILLS) {
+            const bodies = kills.map((e) => ({
+              x: e.pos.x,
+              y: e.pos.y,
+              radius: enemyDef(e.defId).radius,
+            }));
+            for (const group of clusterByTouch(bodies, XP_MERGE_SLACK_PX)) {
+              if (group.length < XP_MERGE_MIN_KILLS) continue;
+              let xpSum = 0;
+              let cx = 0;
+              let headY = Infinity; // float above the pack's highest head
+              for (const idx of group) {
+                const e = kills[idx]!;
+                mergedKills.add(e);
+                xpSum += e.xp;
+                cx += e.pos.x;
+                headY = Math.min(headY, e.pos.y - enemyDef(e.defId).radius);
+              }
+              cx /= group.length;
+              const scale = Math.max(
+                XP_MERGE_MIN_SCALE,
+                Math.min(XP_MERGE_MAX_SCALE, group.length / 10),
+              );
+              effects.push({
+                kind: "text",
+                pos: { x: cx, y: headY - 12 },
+                untilMs: state.stats.timeMs + 1400,
+                durationMs: 1400,
+                text: `+${formatCompact(xpSum)} XP`,
+                color: "#6cc4ff",
+                rise: 34,
+                scale,
+                shake: true,
+              });
+            }
+          }
+        }
+
         for (const event of state.events) {
           if (event.type === "lightning") {
             effects.push({
@@ -1471,6 +1542,7 @@ export function GameScreen({
             if (
               event.type === "enemyKilled" &&
               event.xp > 0 &&
+              !mergedKills.has(event) &&
               getSettings().xpFloat === "on"
             ) {
               // Trail the popup half a second behind the kill's damage number so

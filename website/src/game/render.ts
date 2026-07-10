@@ -785,13 +785,16 @@ export type Effect = {
   /** Text float: how far the word climbs over its life, in world px
    * (default 16). XP popups rise further so they read as "flowing up". */
   rise?: number;
-  /** Text float: glyph scale (default 1). A golden-arrow XP popup doubles it
-   * so the found level reads as bigger than a per-kill drip. */
+  /** Text float: glyph scale (default 1). A golden-arrow XP popup doubles it,
+   * and a merged pack-kill float grows it with the pack (≈count/10 — 20 mobs →
+   * 2×, 30 → 3×), so a bigger gain reads as a bigger number. */
   scale?: number;
-  /** Text float: crit-style jolt. The word shakes left–right–center in place
-   * for a couple of opening beats, THEN lifts off — an arrow's XP is basically
-   * a crit's worth of levels, so it hits like one before it floats. Plain
-   * floats (DODGE/MISS) leave this off and rise from the first frame. */
+  /** Text float: crit-style jolt. The word shakes left–right–centre in place
+   * for a run of opening beats, THEN lifts off — an arrow's (or a whole pack's)
+   * XP is basically a crit's worth of levels, so it hits like one before it
+   * floats. The beat count and throw grow with `scale`, so a bigger pop rattles
+   * longer and wider. Plain floats (DODGE/MISS) leave this off and rise from
+   * the first frame. */
   shake?: boolean;
   /** Damage number: the hit's rounded damage. */
   value?: number;
@@ -935,18 +938,25 @@ export function drawEffects(
       const t = 1 - (effect.untilMs - timeMs) / duration; // 0 → 1
       const scale = effect.scale ?? 1;
       const elapsedMs = t * duration;
-      // A crit-style float shakes in place for the opening beats (a
-      // left–right–center jolt, wider for bigger text) and holds down there,
-      // THEN lifts off and rises over the remainder. Plain floats skip the
-      // shake and rise from the first frame.
-      const shakeMs = 140;
-      const jolt = !effect.shake
-        ? 0
-        : elapsedMs < 55
-          ? -Math.round(scale)
-          : elapsedMs < 110
-            ? Math.round(scale)
-            : 0;
+      // A crit-style float jolts in place before it lifts off: it snaps
+      // left–right for a run of beats, settles to centre, THEN rises over the
+      // remainder. The bigger the gain (the higher `scale`), the more beats it
+      // throws and the wider it throws them — a 2× pop goes left–right–centre,
+      // a 3× goes left–right–left–centre, and so on up. Plain floats
+      // (DODGE/MISS) leave `shake` off and rise from the first frame.
+      const stepMs = 55;
+      // One alternating beat per unit of scale (min two so the smallest jolt
+      // still reads as a shake), then a trailing centre beat, then the rise.
+      const shakeBeats = effect.shake ? Math.max(2, Math.round(scale)) : 0;
+      const settleMs = shakeBeats * stepMs; // alternation ends → centre
+      const shakeMs = settleMs + stepMs; // centre beat held, then lift off
+      // A touch more throw for bigger gains — past 2× the swing widens faster
+      // than the glyph so a huge pull visibly rattles harder.
+      const amp = Math.round(scale + Math.max(0, scale - 2) * 0.5);
+      const jolt =
+        shakeBeats === 0 || elapsedMs >= settleMs
+          ? 0
+          : (Math.floor(elapsedMs / stepMs) % 2 === 0 ? -1 : 1) * amp;
       const riseT = effect.shake
         ? Math.max(0, (elapsedMs - shakeMs) / (duration - shakeMs))
         : t;
