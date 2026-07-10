@@ -5,7 +5,7 @@
 // hold-to-steer with instant item use, mouse players get cursor steering
 // with click-to-use.
 
-import { setAutoStatGainsEnabled } from "@game/core";
+import { setAutoEquipEnabled, setAutoStatGainsEnabled } from "@game/core";
 
 import { storageKey } from "../identity.ts";
 
@@ -19,6 +19,12 @@ export type SteeringMode = "hover" | "hold";
 /** Ability pickups: pop the moment they are touched, or bank into the
  * powerup dock until the player taps a slot (or click / E). */
 export type ItemUseMode = "auto" | "manual";
+
+/** Gear finds: `on` equips a picked-up piece that beats what's worn on the
+ * spot (the default); `off` banks every find to the bag so the player equips
+ * by hand. Applied to the engine via `setAutoEquipEnabled` — it gates the
+ * on-pickup path only, so the inventory AUTO-EQUIP button still works. */
+export type AutoEquip = "on" | "off";
 
 /** Which bottom corner the big powerup dock sits in — mirror it for the
  * off hand. Defaults to the lower-left. */
@@ -65,6 +71,8 @@ export type XpFloat = "on" | "off";
 export type GameSettings = {
   steering: SteeringMode;
   itemUse: ItemUseMode;
+  /** Equip stronger finds on pickup, or bank them to the bag (see AutoEquip). */
+  autoEquip: AutoEquip;
   powerupSide: PowerupSide;
   keyboardMove: KeyboardMove;
   vibration: Vibration;
@@ -98,6 +106,9 @@ function defaults(): GameSettings {
   return {
     steering: touchFirst ? "hold" : "hover",
     itemUse: "manual",
+    // Auto-equip on out of the box — a stronger find is worn the moment it's
+    // grabbed; a player who prefers to curate their loadout turns it off.
+    autoEquip: "on",
     powerupSide: "left",
     // Fine-pointer devices get WASD out of the box; touch has no keyboard,
     // so it defaults off and the on-screen dpad stays in charge.
@@ -136,6 +147,10 @@ function load(): GameSettings {
         stored.itemUse === "auto" || stored.itemUse === "manual"
           ? stored.itemUse
           : base.itemUse,
+      autoEquip:
+        stored.autoEquip === "on" || stored.autoEquip === "off"
+          ? stored.autoEquip
+          : base.autoEquip,
       powerupSide:
         stored.powerupSide === "left" || stored.powerupSide === "right"
           ? stored.powerupSide
@@ -186,6 +201,7 @@ const settings: GameSettings = load();
 setAudioVolumes({ music: settings.musicVolume, sfx: settings.sfxVolume });
 setHapticsEnabled(settings.vibration === "on");
 setAutoStatGainsEnabled(settings.autoLevelStats === "on");
+setAutoEquipEnabled(settings.autoEquip === "on");
 
 /** The live settings singleton — cheap to read every simulation tick. */
 export function getSettings(): GameSettings {
@@ -200,6 +216,7 @@ export function updateSettings(patch: Partial<GameSettings>): GameSettings {
   setAudioVolumes({ music: settings.musicVolume, sfx: settings.sfxVolume });
   setHapticsEnabled(settings.vibration === "on");
   setAutoStatGainsEnabled(settings.autoLevelStats === "on");
+  setAutoEquipEnabled(settings.autoEquip === "on");
   try {
     window.localStorage.setItem(STORAGE_KEY, JSON.stringify(settings));
   } catch {

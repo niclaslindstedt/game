@@ -66,6 +66,7 @@ import {
   effectiveStat,
   enemyCritChance,
   equipmentName,
+  isAutoEquipEnabled,
   isBetterEquipment,
   maxMeleeTargets,
   playerDodgeChance,
@@ -1425,8 +1426,10 @@ function stepItems(state: GameState): void {
 
     // Equipment better than what's worn is equipped on the spot; the old
     // piece heads for the bag, or the ground when the bag is full. Lesser
-    // finds go into the bag, staying grounded when it's full.
-    if (isBetterEquipment(state, item.equipment)) {
+    // finds go into the bag, staying grounded when it's full. When the player
+    // has turned auto-equip off (a setting), even a genuine upgrade banks to
+    // the bag instead — the card still flags it so they can equip it by hand.
+    if (isAutoEquipEnabled() && isBetterEquipment(state, item.equipment)) {
       const slot = item.equipment.slot;
       const previous =
         slot === "weapon" ? player.equipment.weapon : player.equipment[slot];

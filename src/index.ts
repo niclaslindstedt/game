@@ -89,6 +89,8 @@ export {
   syncInventoryCapacity,
   gearScore,
   isBetterEquipment,
+  setAutoEquipEnabled,
+  isAutoEquipEnabled,
   isPassiveItem,
   isScrappableLoot,
   isArmorBroken,

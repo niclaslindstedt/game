@@ -131,7 +131,8 @@ and something enormous haunts the old flag.
   than what you wear equips it instantly**; the rest lands in the **BAG** —
   open it with the **hero avatar** in the top-left vitals panel (or press I)
   for a Diablo-style inventory: drag items onto their slot or tap to
-  quick-equip.
+  quick-equip. Prefer to curate your own loadout? Turn auto-equip off under
+  SETTINGS → CONTROLS and every find banks to the bag instead.
 - Dropped weapons **wear out** as they fire: when one breaks it is trashed
   and the best weapon left in your bag takes its place (your own sidearm
   never breaks). **Repair kits** restore the equipped weapon's edge,
