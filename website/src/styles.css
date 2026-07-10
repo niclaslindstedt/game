@@ -4281,7 +4281,10 @@ body {
   align-items: center;
   gap: 0.5rem;
   width: min(94vw, 52rem);
-  margin: auto;
+  /* Fill the overlay so the list/detail sections can carry fixed heights and
+     BACK can be pinned to the bottom (see .arsenal-close). */
+  height: 100%;
+  margin: 0 auto;
 }
 
 .arsenal-body {
@@ -4289,6 +4292,9 @@ body {
   gap: 0.9rem;
   width: 100%;
   min-height: 0;
+  /* The two sections carry their own fixed heights — don't let the body grow
+     to fill the panel (that free space belongs below, pushing BACK down). */
+  flex: 0 0 auto;
 }
 
 .arsenal-list {
@@ -4297,7 +4303,9 @@ body {
   gap: 0.15rem;
   flex: 1 1 55%;
   min-width: 0;
-  max-height: 60vh;
+  /* Fixed height, not max-height: the list keeps one size so the layout never
+     reflows as the selection moves. */
+  height: 58vh;
   overflow-y: auto;
   overscroll-behavior: contain;
   scrollbar-width: thin;
@@ -4343,7 +4351,12 @@ body {
 .arsenal-detail {
   flex: 1 1 45%;
   min-width: 0;
-  align-self: flex-start;
+  /* Fixed height so the card never resizes as you switch items; a card taller
+     than the box scrolls inside it rather than growing the layout. */
+  height: 58vh;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  scrollbar-width: thin;
   display: flex;
   flex-direction: column;
   align-items: flex-start;
@@ -4373,17 +4386,32 @@ body {
 }
 
 .arsenal-close {
-  margin-top: 0.2rem;
+  /* Pin BACK to the bottom of the panel: the body's leftover space collects
+     above it, giving the list/detail sections all the room and dropping the
+     button clear of them. */
+  margin-top: auto;
+  margin-bottom: 0.2rem;
 }
 
-/* Portrait / narrow: stack the detail card under the list instead of beside. */
+/* Portrait / narrow: stack the detail card under the list instead of beside,
+   both at a fixed height so neither section reflows as the selection moves. */
 @media (max-aspect-ratio: 4/3) {
   .arsenal-body {
     flex-direction: column;
   }
 
+  /* Column layout: the flex basis now drives height, so pin it back to auto and
+     let the explicit height govern (otherwise the list grows to fill). */
   .arsenal-list {
-    max-height: 36vh;
+    flex: 0 0 auto;
+    height: 38vh;
+  }
+
+  .arsenal-detail {
+    flex: 0 0 auto;
+    height: 38vh;
+    /* Full width under the list, rather than hugging its content bottom-left. */
+    align-self: stretch;
   }
 }
 
