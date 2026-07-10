@@ -1229,8 +1229,13 @@ export function GameScreen({
             });
             // The kill's XP reward flows up off the corpse as blue combat text
             // (WoW's floating "+N"), starting above the damage number and
-            // climbing higher/longer so the two don't overlap.
-            if (event.type === "enemyKilled" && event.xp > 0) {
+            // climbing higher/longer so the two don't overlap. The DISPLAY
+            // preference `xpFloat` can silence these popups.
+            if (
+              event.type === "enemyKilled" &&
+              event.xp > 0 &&
+              getSettings().xpFloat === "on"
+            ) {
               // Trail the popup half a second behind the kill's damage number so
               // the two read in sequence — the hit lands, then the XP flows up.
               const xpDelayMs = 500;
