@@ -393,7 +393,9 @@ if (worldPlacements.length) {
   console.log(
     `\nWorld-drop uniques (level-locked; minion ${(wr.minion * 100).toFixed(3)}% / ` +
       `elite ${(wr.elite * 100).toFixed(1)}% / boss ${(wr.boss * 100).toFixed(0)}% per kill, ` +
-      `gate lvl ${WORLD_DROP.minPlayerLevel}):\n`,
+      `gate lvl ${Object.entries(WORLD_DROP.minPlayerLevel)
+        .map(([d, l]) => `${d} ${l}`)
+        .join(" / ")}):\n`,
   );
   const levels = [...new Set(worldPlacements.map((p) => p.level))];
   const wcell = (level, diff) =>

@@ -210,7 +210,10 @@ export const THE_RIFT: LevelDef = {
     // history, so it coughs up two relics from Earth's past — EXCALIBUR (the
     // once-and-future blade) and THE TRINITY SHARD (trinitite glass). Farmed on
     // boss runs of the Rift.
-    worldUniques: { easy: ["excalibur", "the_trinity_shard"] },
+    worldUniques: {
+      easy: ["excalibur", "the_trinity_shard"],
+      medium: ["wishbane", "gorgonscale", "mjolnir"],
+    },
     // The VOID WAND arrives early at a kill discovered in play — the level's
     // signature caster, same cadence as Mars's katana.
     earlyDrops: [{ atKills: [35, 90], weapon: "void_wand" }],

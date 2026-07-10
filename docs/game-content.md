@@ -180,14 +180,26 @@ enemy on the relic's home level can drop it, but at odds set purely by the
 enemy's **role**: a trash minion is a 0.015% long shot, an elite ~2%, the boss
 a fat 10% single kill — so across a whole ~1,200-mob floor the chance amasses to
 roughly 30%, yet one fast **boss run** is by far the best drops-per-minute. The
-table stays shut until the hero passes `WORLD_DROP.minPlayerLevel` (level 20,
-above where a first EASY campaign pass ends ~17, see `leveling-curve.mjs
---by-level`), so the relics can only be farmed by RETURNING for boss runs once
-EASY is beaten. The first batch is the EASY rung, one relic themed to each level
+table stays shut until the hero passes `WORLD_DROP.minPlayerLevel[difficulty]` —
+a PER-RUNG gate sized a few levels above where a first pass of that difficulty
+ends (easy 20, medium 34, hard 46, nightmare 56, jesus 60; see `leveling-curve.mjs
+--by-level`), so a rung's relics can only be farmed by RETURNING for boss runs
+once that difficulty is beaten. The first batch is the EASY rung, one relic themed to each level
 — **THE FIRST DRAFT** (SpaceZ HQ, the prototype-GROK neural crown), **THE PALE
 COVENANT** (the Moon, the last moonwalker's sealed plate), **DUSTBORN** (Mars,
 storm-runner boots) — plus two on the Rift, which, being a tear in history,
 coughs up **EXCALIBUR** and **THE TRINITY SHARD** (trinitite glass).
+
+The MEDIUM rung adds a mid-campaign batch, a notch stronger: **DEADSPRINT**
+(SpaceZ HQ, up-or-out glass-cannon leggings), **MARECREST** (the Moon, the
+vigil-helm that outlasted the silence), **REDWIND** (Mars, the frontier raygun
+that drinks the red storm) — and three more from the Rift's deeper haul:
+**WISHBANE** (a cursed-wish charm), **GORGONSCALE** (Athena's gorgon-faced
+aegis), and the game's first **LEGENDARY**, **MJÖLNIR** — the thunder-hammer of a
+dead god, minted one rarity rung above every unique (`UniqueDef.tier:
+"legendary"`: the orange card and densest pickup blaze), unbreakable and
+keepsake-worthy like any unique but with a scaling strength keeper that grows
+into best-in-slot.
 
 Alongside the weapon, the hero wears **four ARMOR slots — head, chest,
 legs, feet — plus a charm and a bag** (seven equip slots). Every armor

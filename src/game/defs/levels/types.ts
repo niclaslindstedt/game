@@ -289,7 +289,8 @@ export type LevelDef = {
      * keyed by difficulty rung: the named relics that ANY enemy on this level
      * can drop on that rung, at role-scaled odds (config WORLD_DROP). This is
      * how a Moon-themed relic drops only on the Moon — and only once the hero
-     * out-levels a first campaign pass (`WORLD_DROP.minPlayerLevel`), so the
+     * out-levels a first campaign pass (`WORLD_DROP.minPlayerLevel[difficulty]`,
+     * a per-rung gate), so the
      * relics are farmed by returning for boss runs. Distinct from the boss-only
      * `EnemyDef.uniquesByDifficulty` tables. Rolled in `maybeDropWorldUnique`.
      */

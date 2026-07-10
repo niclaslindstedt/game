@@ -277,7 +277,7 @@ export const MARS: LevelDef = {
     abilityPool: ["fire_orbs", "storm_cell", "stasis_field", "item_magnet"],
     // Level-locked world drop (see config WORLD_DROP): DUSTBORN, the light boots
     // that outrun the dust storms — farmed on boss runs of Mars.
-    worldUniques: { easy: ["dustborn"] },
+    worldUniques: { easy: ["dustborn"], medium: ["redwind"] },
     // The CYBER KATANA arrives early at a kill discovered in play — the
     // run's signature blade, same cadence as the moon's blade.
     earlyDrops: [{ atKills: [40, 100], weapon: "cyber_katana" }],
