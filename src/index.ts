@@ -183,6 +183,7 @@ export {
 // derived bonuses the app can read to break "base + chosen" apart, and the
 // power curve the horde's hp scaling mirrors.
 export {
+  arrowXpShareAt,
   autoGainAt,
   autoPowerScale,
   baseStatBonus,

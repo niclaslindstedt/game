@@ -37,7 +37,6 @@ import {
   HELD_ITEMS,
   JUMP,
   LAST_STAND,
-  LEVELING,
   LOOT,
   MEDKIT,
   PLAYER,
@@ -85,6 +84,7 @@ import {
   wearWornArmor,
   wouldUpgradeSlot,
 } from "./items.ts";
+import { arrowXpShareAt } from "./leveling.ts";
 import { grantXp, hitEnemy, unspawnedMinions } from "./loot.ts";
 import { revealAround } from "./map.ts";
 import { repelFromMerchant, stepMerchant } from "./merchant.ts";
@@ -1358,7 +1358,10 @@ function stepItems(state: GameState): void {
     }
 
     // The golden arrow: a share of the current level's XP bar. It scales
-    // with the threshold, so arrows keep paying toward level-ups all run.
+    // with the threshold so arrows keep triggering dings all run, but the
+    // share TAPERS with level (arrowXpShareAt) — a full quarter-level early,
+    // a thin sliver near the cap — so arrows carry the onboarding and then
+    // recede, leaving the long climb to the kill grind.
     if (item.kind === "xp") {
       state.stats.itemsCollected++;
       state.events.push({
@@ -1368,7 +1371,7 @@ function stepItems(state: GameState): void {
       });
       grantXp(
         state,
-        Math.max(1, Math.round(player.xpToNext * LEVELING.arrowXpShare)),
+        Math.max(1, Math.round(player.xpToNext * arrowXpShareAt(player.level))),
       );
       return false;
     }
