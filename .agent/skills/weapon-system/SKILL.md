@@ -1,6 +1,6 @@
 ---
 name: weapon-system
-description: "Use when adding, rebalancing, or reworking weapons and loot — base weapons, level requirements, tiers/affixes, drop rules, weapon sprites and projectile behaviors. Walks the def-first workflow and the two verification loops: the stat sanity checker and the weapon sheet, then tests and playtest."
+description: "Use when adding, rebalancing, or reworking weapons and loot — base weapons, level requirements, tiers/affixes, drop rules, named UNIQUE items (weapons, armor, charms, bags), weapon sprites and projectile behaviors. Walks the def-first workflow and the verification loops: the damage-budget calculator, the stat sanity checker, the weapon sheet, and the unique authoring checker, then tests and playtest."
 ---
 
 # The Weapon System
@@ -21,7 +21,9 @@ projectile sprite — no engine edits unless you're adding a new BEHAVIOR.
 | Loot config: tier gates (`tierUnlockMlvl`), base tier chances, ilvl deficit weights, drop shares | `src/game/config.ts` (`LOOT`) |
 | Chain/cooldown/damage globals | `src/game/config.ts` (`WEAPON`) |
 | Which bases drop on a level (thematic pools) | `src/game/defs/levels/<level>.ts` `loot.weaponPool` |
-| Elite/boss drops: signatures (`items`), per-tier pledges (`tierDrops`), `levelBonus` | `src/game/defs/enemies/<roster>.ts` |
+| Elite/boss drops: signatures (`items`), per-tier pledges (`tierDrops`), boss UNIQUE tables (`uniquesByDifficulty`), `levelBonus` | `src/game/defs/enemies/<roster>.ts` |
+| Named UNIQUE defs (fixed bonuses on a real base) | `src/game/defs/uniques.ts` |
+| Unique mint + drop roll: `mintUnique`, `maybeDropBossUnique`, `UNIQUE` config | `src/game/items.ts`, `src/game/loot.ts`, `src/game/config.ts` |
 | The roll pipeline (tier → ilvl → affixes), equip gates | `src/game/items.ts` (`rollEquipment`, `meetsLevelReq`) |
 | Kill → drop funnel (pity rule, tierDrops payout) | `src/game/loot.ts` |
 | Monster level stamping | `src/game/create.ts` (`spawnEnemy`), `src/game/menace.ts` (`mobLevelFor`, re-stamp in `maybePowerScale`) |
@@ -124,6 +126,99 @@ one, and scripted `earlyDrops` pin `quality: "normal"`.
 5. **Feel**: the `playtest` skill. Numbers that pass the checker can still
    feel limp — cadence, projectile speed, and screen effects are judged in
    the running game.
+
+## Unique items (named drops)
+
+UNIQUES are the top of the loot ladder above rolled rares: hand-authored named
+drops (`src/game/defs/uniques.ts`) with a FIXED bonus block on a REAL catalog
+base — no rolled affixes. Each drop still rolls a small ±band on the base
+damage/armor (`UNIQUE.baseRollBand`, ±10%) so copies differ and a better roll
+is worth chasing; the bonuses stay identical. They mint via `mintUnique`
+(`items.ts`), unbreakable like any unique/legendary.
+
+**The catalog shape (this game).** 35 uniques as a slot Latin square: five
+bosses × five difficulties, each difficulty the home of one full
+weapon+armor set (a weapon + head/chest/legs/feet, one per boss), plus a BAG
+from MUSKRAT and a CHARM from GROK on each rung. Which boss drops which at
+which rung is wired on the enemy def (`EnemyDef.uniquesByDifficulty`), gated
+to the rung — an easy unique only drops on easy. Each is rolled at
+`UNIQUE.dropChance × mlvl/ilvl` (capped) on the kill (`maybeDropBossUnique` in
+`loot.ts`): ~5% at the item's home difficulty, never guaranteed.
+
+**The design rules** (all enforced by `scripts/unique-check.mjs`):
+
+- **Fixed bonuses only, no affixes.** Author `bonuses: Affix[]` directly — flat
+  `stat`/`crit`/`maxHp`/`armor`/`damagePct`, plus at most ONE scaling bonus
+  (`statPct`/`maxHpPct`) per item and each ≤ 3% (the "keeper" that grows with
+  the hero). A downside (a small negative) buys extra upside — situational
+  glass-cannon pieces are good.
+- **The base is a REAL catalog id — including generated grade variants.** A
+  unique's `base` must resolve in the runtime `WEAPON_DEFS`/`GEAR_DEFS`. That
+  record includes the EXCEPTIONAL/ELITE variants `grades.ts` generates at load
+  (`spatha`, `microlattice_plate`, `fluted_greaves`, …) — they are NOT in the
+  gear/equipment source files, so **a source grep will tell you a real base
+  doesn't exist.** Always resolve against the runtime record, i.e. run the
+  checker's `--bases`, never `grep`.
+- **`ilvl` scales power and drop odds, not the equip gate.** Equip level is the
+  base item's `levelReq` (like any tier), so a unique wears well below its ilvl.
+  Pick a base whose `levelReq ≈ ilvl − 20` (`EQUIP_GAP`): that one rule sets
+  both the equip gate AND the armor/dps, because a higher-req base is a higher
+  grade. Too weak a base (far below target) equips absurdly early and
+  under-armors the ilvl.
+- **Armor climbs with ilvl within a slot.** Uniques don't grow armor with ilvl
+  (only the ±band), so a higher-ilvl piece MUST sit on a higher-armor base or
+  it's strictly worse than a lower one. The checker holds this per gear slot.
+  (Weapon power is class-dependent — an AoE weapon deals less per hit BY DESIGN
+  — so weapons get an eyeball ladder, not a hard check; sanity them against the
+  damage-budget model.)
+- **Trinkets gate at 1.** Charm and bag bases top out at req ~20 and carry no
+  armor, so charms/bags legitimately equip low — exempt from the equip-gap rule.
+  A bag unique overrides its base capacity with `UniqueDef.bagSlots`.
+
+**The authoring loop** — `node scripts/unique-check.mjs`:
+
+1. Draft the def (name, base, slot, ilvl, bonuses, lore). For the base, run
+   `node scripts/unique-check.mjs --bases <slot>` to see every REAL base in the
+   slot with its req + armor/dps, and pick one at `req ≈ ilvl − 20`.
+2. `node scripts/unique-check.mjs --suggest [slot]` does that pick for every
+   unique at once — the repeatable re-base pass. It prints the current base, an
+   `⚠ under-grade` flag when a base is too weak for its ilvl, and the top
+   candidates at the target req. Pick the on-theme one among them (weapon
+   fantasy often beats a rung of req). The knobs (`EQUIP_GAP`, `GAP_SLACK`, the
+   seed-base exclusions) are named constants at the top of the script.
+3. Wire the drop: add the id to the boss's `uniquesByDifficulty[rung]`.
+4. `node scripts/unique-check.mjs [--strict]` — the full report: the boss drop
+   grid, base integrity + slot agreement, bonus discipline (≤1 scaling ≤3%),
+   the equip-gap rule, per-slot armor monotonicity, and Latin-square coverage
+   (every unique placed once, each rung a full set). ERRORS fail; `--strict`
+   fails on WARNs too.
+5. Tests: `tests/content/uniques_test.ts` (registry integrity, `mintUnique`,
+   the boss drop tables) — and `npx vitest run`, since the drop-table suite
+   asserts every shipped unique is placed exactly once.
+
+**Lore/story note.** Unique `lore` is cosmetic item flavor (like weapon
+flavor), NOT manuscript content — the manuscript transcribes spoken/found
+story, not item cards, so a unique doesn't touch `docs/manuscript.md`. New
+uniques ARE game content, so update `docs/game-content.md`.
+
+## Lessons learned (2026-07 uniques)
+
+- **Generated grade variants are real bases but invisible to grep.** The single
+  worst unique-authoring bug: naming a base, greping the gear/equipment source,
+  not finding it, and "fixing" a non-problem — because `grades.ts` mints the
+  Exceptional/Elite variants at load, not in source. Validate bases through the
+  checker (runtime `GEAR_DEFS`/`WEAPON_DEFS`), never a source grep.
+- **`req ≈ ilvl − 20` is the whole base-selection math.** It sets the equip gate
+  and the armor/dps in one move (higher req = higher grade). `--suggest` makes
+  it a repeatable pass; re-run it whenever the ilvl of a unique changes or new
+  bases land, and re-pick the flagged (`⚠ under-grade`) items.
+- **Armor is fixed by the base for uniques** (no ilvl growth — that was a
+  deliberate design call so rares eventually overtake), so within a slot the
+  base armor must climb with ilvl. The checker's per-slot monotonicity catch is
+  what keeps a nightmare piece from being weaker than an easy one.
+- **Weapon power is class-dependent** — don't chase a strictly-climbing weapon
+  DPS ladder across uniques; an AoE flamethrower reads "weaker" than a maul on
+  raw numbers but is on-budget. Theme wins ties; sanity against weapon-budget.
 
 ## Lessons learned (2026-07 Diablo rework)
 
@@ -232,6 +327,8 @@ one, and scripted `earlyDrops` pin `quality: "normal"`.
 - [ ] `node scripts/weapon-budget.mjs --strict` clean — every weapon on its
       damage budget (or the drift is a deliberate, commented exception).
 - [ ] `node scripts/weapon-stats.mjs` clean (or the warnings are deliberate).
+- [ ] `node scripts/unique-check.mjs` clean, if you touched uniques (base
+      integrity, equip-gap, armor monotonicity, Latin-square coverage).
 - [ ] `node website/scripts/weapon-sheet.mjs` and LOOK at the sheet.
 - [ ] `make assets` committed together with the sprite-data change
       (atlas.png + atlas.json are the build inputs).
@@ -248,5 +345,8 @@ one, and scripted `earlyDrops` pin `quality: "normal"`.
 
 When a weapon-system change teaches something new (a tuning heuristic, a
 failure mode, a new behavior pattern), bake it into "Lessons learned" above
-— and extend `scripts/weapon-stats.mjs` when the lesson is checkable, so the
-next run catches it mechanically instead of by eye.
+— and extend the checker when the lesson is checkable, so the next run catches
+it mechanically instead of by eye: `scripts/weapon-stats.mjs` for weapon/loot
+rules, `scripts/unique-check.mjs` for unique authoring (its tuning knobs —
+`EQUIP_GAP`, `GAP_SLACK`, seed-base exclusions — are named constants at the
+top; adjust them there, not inline).

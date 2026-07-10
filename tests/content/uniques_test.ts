@@ -81,7 +81,7 @@ describe("mintUnique", () => {
       { ...state, rng: () => 0 } as typeof state,
       "truthseeker",
     );
-    const base = gearDef("aegis_exoplate").armor ?? 0;
+    const base = gearDef("microlattice_plate").armor ?? 0;
     // A ±10% band around the base value — a better-rolled copy is worth chasing.
     expect(hi.armor as number).toBeGreaterThan(lo.armor as number);
     expect(hi.armor as number).toBeCloseTo(base * 1.1, 0);
@@ -90,8 +90,8 @@ describe("mintUnique", () => {
 
   it("equips at the BASE item's level, well below its (higher) ilvl", () => {
     const state = startGame();
-    const item = mintUnique(state, "walled_garden"); // ilvl 67, base plate_greaves
-    const baseReq = equipmentLevelReq("plate_greaves");
+    const item = mintUnique(state, "walled_garden"); // ilvl 67, base fluted_greaves
+    const baseReq = equipmentLevelReq("fluted_greaves");
     // The ilvl scales power, not the requirement — wearable far below it.
     expect(baseReq).toBeLessThan(uniqueDef("walled_garden").ilvl);
     state.player.level = baseReq;

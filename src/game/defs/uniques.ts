@@ -106,7 +106,7 @@ const MUSKRAT_UNIQUES: UniqueDef[] = [
   {
     id: "gnawed_sabatons",
     name: "GNAWED SABATONS",
-    base: "sabatons",
+    base: "gothic_sabatons",
     slot: "feet",
     ilvl: 60,
     bonuses: [
@@ -214,7 +214,7 @@ const ARMSTRONG_UNIQUES: UniqueDef[] = [
   {
     id: "marewalkers",
     name: "MAREWALKERS",
-    base: "mag_boots",
+    base: "crater_boots",
     slot: "feet",
     ilvl: 50,
     bonuses: [
@@ -227,7 +227,7 @@ const ARMSTRONG_UNIQUES: UniqueDef[] = [
   {
     id: "the_fallen_standard",
     name: "THE FALLEN STANDARD",
-    base: "executioners_axe",
+    base: "spatha",
     slot: "weapon",
     ilvl: 62,
     bonuses: [
@@ -256,7 +256,7 @@ const ELON_MARS_UNIQUES: UniqueDef[] = [
   {
     id: "lawless_stride",
     name: "LAWLESS STRIDE",
-    base: "cargo_pants",
+    base: "carbon_leggings",
     slot: "legs",
     ilvl: 28,
     bonuses: [
@@ -281,7 +281,7 @@ const ELON_MARS_UNIQUES: UniqueDef[] = [
   {
     id: "wrathflame",
     name: "WRATHFLAME",
-    base: "not_a_flamethrower",
+    base: "atomic_raygun",
     slot: "weapon",
     ilvl: 53,
     bonuses: [
@@ -293,7 +293,7 @@ const ELON_MARS_UNIQUES: UniqueDef[] = [
   {
     id: "the_signal_crown",
     name: "THE SIGNAL CROWN",
-    base: "great_helm",
+    base: "crusaders_helm",
     slot: "head",
     ilvl: 64,
     bonuses: [
@@ -360,7 +360,7 @@ const ELON_RIFT_UNIQUES: UniqueDef[] = [
   {
     id: "aegis_of_exile",
     name: "AEGIS OF EXILE",
-    base: "dragonscale_cloak",
+    base: "linked_mail",
     slot: "chest",
     ilvl: 67,
     bonuses: [
@@ -415,7 +415,7 @@ const GROK_UNIQUES: UniqueDef[] = [
   {
     id: "truthseeker",
     name: "TRUTHSEEKER",
-    base: "aegis_exoplate",
+    base: "microlattice_plate",
     slot: "chest",
     ilvl: 56,
     bonuses: [
@@ -428,7 +428,7 @@ const GROK_UNIQUES: UniqueDef[] = [
   {
     id: "walled_garden",
     name: "GREAVES OF THE WALLED GARDEN",
-    base: "plate_greaves",
+    base: "fluted_greaves",
     slot: "legs",
     ilvl: 67,
     bonuses: [
