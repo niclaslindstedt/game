@@ -2014,8 +2014,10 @@ body {
   z-index: 1;
 }
 
-/* The level-select list can outgrow a landscape phone (20+ levels); cap its
-   height and scroll, keeping the title and headings fixed above it. */
+/* A long level ladder (20+ levels) can outgrow a short viewport; when it does,
+   TitleScreen adds `.scrollable` to cap the height and scroll, keeping the
+   title and headings fixed above it. Short lists that fit stay uncapped so no
+   needless scrollbar appears. */
 .title-menu.scrollable {
   max-height: min(52vh, 20rem);
   overflow-y: auto;
