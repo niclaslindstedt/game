@@ -94,6 +94,19 @@ export function autoPowerScale(level: number): number {
 }
 
 /**
+ * The share of the CURRENT level bar a golden arrow grants at `level`: the
+ * base share (`LEVELING.arrowXpShare`) decayed harmonically by
+ * `LEVELING.arrowXpShareTaper`, so arrows pay a full quarter-level early and a
+ * thin sliver near the cap. The single source of truth for the arrow payout,
+ * read by the pickup handler (step.ts) and the leveling-curve calculator
+ * (scripts/leveling-curve.mjs) alike, so the model and the game never drift.
+ */
+export function arrowXpShareAt(level: number): number {
+  const l = Math.max(1, level);
+  return LEVELING.arrowXpShare / (1 + LEVELING.arrowXpShareTaper * (l - 1));
+}
+
+/**
  * The XP needed to cross OUT of `level` (from L to L+1) — the single source of
  * truth for the level curve, walked by `grantXp` (loot.ts), the initial bar
  * (create.ts), and the arrival derivation (arrival.ts).

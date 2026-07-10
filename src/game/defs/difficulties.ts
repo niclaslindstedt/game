@@ -150,6 +150,14 @@ export type DifficultyDef = {
    */
   powerupDropMult: number;
   /**
+   * Multiplies the golden-XP-arrow slice of the drop ladder (LOOT.arrowShare) —
+   * free levels thin out up the rungs, so the harder fights lean on the kill
+   * grind instead of arrow rain. Whatever this trims off the slice simply
+   * doesn't drop (arrows are the ladder's tail, not the leftover). JESUS sets
+   * it to 0: no arrows at all, the climb is earned kill by kill.
+   */
+  arrowDropMult: number;
+  /**
    * MERCY DROPS (see the `MERCY` config for the ramp shapes) — the per-rung
    * STRENGTH of the easy/medium rope: how hard a packed field, a bleeding
    * hero, or a near-broken weapon bends the drops in the player's favor. The
@@ -241,6 +249,9 @@ export const DIFFICULTY_DEFS: Record<Difficulty, DifficultyDef> = {
     medkitDropMult: 1.05,
     armorDropMult: 1.05,
     powerupDropMult: 1.05,
+    // The gentlest rung keeps the full arrow rain — the onboarding wants the
+    // quick dings.
+    arrowDropMult: 1,
     // The most forgiving rung: a full screen tops out at a 5%-per-kill bomb,
     // a dying hero triples his medkit odds and coin-flips gear into armor, and
     // a near-broken weapon draws repairs three times as hard.
@@ -279,6 +290,9 @@ export const DIFFICULTY_DEFS: Record<Difficulty, DifficultyDef> = {
     medkitDropMult: 1,
     armorDropMult: 1,
     powerupDropMult: 1,
+    // The 1.0 baseline: the arrow slice fills the rest of the ladder exactly
+    // as the old implicit remainder did.
+    arrowDropMult: 1,
     // The fight as intended, with a lighter touch than easy: a packed field
     // caps at 3% bomb, and the low-health/low-durability boosts are dialed
     // back so the rope is thinner.
@@ -317,6 +331,8 @@ export const DIFFICULTY_DEFS: Record<Difficulty, DifficultyDef> = {
     medkitDropMult: 0.95,
     armorDropMult: 0.95,
     powerupDropMult: 0.95,
+    // Arrows start thinning: fewer free levels, more of the climb earned.
+    arrowDropMult: 0.7,
     // No mercy from hard up: no crowd bomb, no low-health or low-durability
     // help. The struggle is the point.
     mercy: {
@@ -354,6 +370,8 @@ export const DIFFICULTY_DEFS: Record<Difficulty, DifficultyDef> = {
     medkitDropMult: 0.9,
     armorDropMult: 0.9,
     powerupDropMult: 0.9,
+    // Arrows are scarce up here — the horde is the only real XP source.
+    arrowDropMult: 0.4,
     mercy: {
       crowdBombChanceMax: 0,
       medkitBonus: 0,
@@ -391,6 +409,8 @@ export const DIFFICULTY_DEFS: Record<Difficulty, DifficultyDef> = {
     medkitDropMult: 0.77,
     armorDropMult: 0.77,
     powerupDropMult: 0.77,
+    // No arrows at all on JESUS: every level is earned kill by kill.
+    arrowDropMult: 0,
     mercy: {
       crowdBombChanceMax: 0,
       medkitBonus: 0,

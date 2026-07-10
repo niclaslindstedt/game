@@ -545,6 +545,7 @@ export const FIX_DIFFICULTIES: Record<string, DifficultyDef> = {
     medkitDropMult: 1.05,
     armorDropMult: 1.05,
     powerupDropMult: 1.05,
+    arrowDropMult: 1,
     mercy: {
       crowdBombChanceMax: 0.05,
       medkitBonus: 2,
@@ -579,6 +580,7 @@ export const FIX_DIFFICULTIES: Record<string, DifficultyDef> = {
     medkitDropMult: 1,
     armorDropMult: 1,
     powerupDropMult: 1,
+    arrowDropMult: 1,
     mercy: {
       crowdBombChanceMax: 0.03,
       medkitBonus: 1.3,
@@ -613,6 +615,7 @@ export const FIX_DIFFICULTIES: Record<string, DifficultyDef> = {
     medkitDropMult: 0.95,
     armorDropMult: 0.95,
     powerupDropMult: 0.95,
+    arrowDropMult: 0.7,
     mercy: {
       crowdBombChanceMax: 0,
       medkitBonus: 0,
@@ -647,6 +650,7 @@ export const FIX_DIFFICULTIES: Record<string, DifficultyDef> = {
     medkitDropMult: 0.9,
     armorDropMult: 0.9,
     powerupDropMult: 0.9,
+    arrowDropMult: 0.4,
     mercy: {
       crowdBombChanceMax: 0,
       medkitBonus: 0,
@@ -681,6 +685,7 @@ export const FIX_DIFFICULTIES: Record<string, DifficultyDef> = {
     medkitDropMult: 0.77,
     armorDropMult: 0.77,
     powerupDropMult: 0.77,
+    arrowDropMult: 0,
     mercy: {
       crowdBombChanceMax: 0,
       medkitBonus: 0,

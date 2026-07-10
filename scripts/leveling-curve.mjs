@@ -12,6 +12,14 @@
 //
 // which is INVARIANT to the auto-stat flag and the hero's damage (autoPowerScale
 // cancels top and bottom) — only the difficulty's mob-level offset moves it.
+//
+// GOLDEN XP ARROWS are folded in on top: they drop from the ordinary loot rain
+// (`LOOT.dropChance × LOOT.arrowShare × the difficulty's arrowDropMult`) and
+// each grants `arrowXpShareAt(L)` of the current level bar — a second, parallel
+// XP faucet the raw kill-XP count above ignores. The `w/arrows` column folds it
+// in, so the two columns bracket the real pace: arrows shave the most off early
+// (big share, cheap levels) and thin out up the rungs (zero on JESUS).
+//
 // From a kill rate (kills/hour × hours/day) the model reads out LEVELS PER DAY
 // at each level and the cumulative kills/days to a target level, so you can aim
 // the taper (fast early → slow near the cap).
@@ -19,6 +27,7 @@
 //   node scripts/leveling-curve.mjs                 # medium, 1500 kills/hr, 1 h/day
 //   node scripts/leveling-curve.mjs --difficulty easy --kills-per-hour 3000
 //   node scripts/leveling-curve.mjs --hours-per-day 2 --to 99
+//   node scripts/leveling-curve.mjs --luck 20       # more LUCK → more arrows
 //
 // The kill rate is an ASSUMPTION — measure the real one with the `playtest`
 // skill (kills ÷ timeMs from a bot run) and pass it here.
@@ -29,10 +38,14 @@ import { fileURLToPath } from "node:url";
 const here = path.dirname(fileURLToPath(import.meta.url));
 const root = path.join(here, "..");
 
-const { LEVELING } = await import(path.join(root, "src/game/config.ts"));
-const { xpToLevelUp } = await import(path.join(root, "src/game/leveling.ts"));
+const { LEVELING, LOOT, STATS } = await import(
+  path.join(root, "src/game/config.ts")
+);
+const { xpToLevelUp, arrowXpShareAt } = await import(
+  path.join(root, "src/game/leveling.ts")
+);
 const { mobHpScaleFor } = await import(path.join(root, "src/game/menace.ts"));
-const { DIFFICULTY_ORDER, meetsMinDifficulty } = await import(
+const { DIFFICULTY_ORDER, meetsMinDifficulty, difficultyDef } = await import(
   path.join(root, "src/game/defs/difficulties.ts")
 );
 const { LEVELS, LEVEL_ORDER } = await import(
@@ -50,8 +63,22 @@ const opt = (name, fallback) => {
 const difficulty = opt("difficulty", "medium");
 const killsPerHour = Number(opt("kills-per-hour", "1500"));
 const hoursPerDay = Number(opt("hours-per-day", "1"));
+const luck = Number(opt("luck", "0"));
 const target = Math.min(LEVELING.maxLevel, Number(opt("to", "99")));
 const killsPerDay = killsPerHour * hoursPerDay;
+
+// The per-kill chance that a kill drops a golden XP arrow at `diff`: the drop
+// gate (base + the rung's bonus + LUCK) times the arrow slice of the ladder
+// (thinned by `arrowDropMult`, zero on JESUS). The nuke slice is skimmed first,
+// hence the `(1 - nukeShare)`; the tiny per-level unique slice is ignored.
+const arrowDropProb = (diff) => {
+  const d = difficultyDef(diff);
+  const dropChance = Math.min(
+    1,
+    LOOT.dropChance + d.dropChanceBonus + luck * STATS.dropChancePerLuck,
+  );
+  return dropChance * (1 - LOOT.nukeShare) * LOOT.arrowShare * d.arrowDropMult;
+};
 // `--campaign` models a full story playthrough instead of the per-level table:
 // clearing every level at every difficulty in order, to check where the
 // campaign leaves the hero (design target: ~level 60, leaving the rest as the
@@ -88,6 +115,20 @@ if (campaign) {
     }
     return t;
   };
+  // The head-count of the same roster — how many kills the clear yields, so the
+  // arrow drops (a per-kill roll) can be estimated on top of the kill XP.
+  const rosterCount = (def, diff) => {
+    let n = 0;
+    for (const s of def.spawns ?? []) {
+      if (!meetsMinDifficulty(diff, s.minDifficulty)) continue;
+      n += "count" in s ? s.count : 1;
+    }
+    for (const e of def.waves?.budget ?? []) {
+      if (!meetsMinDifficulty(diff, e.minDifficulty)) continue;
+      n += e.count;
+    }
+    return n;
+  };
   let level = 1;
   let xp = 0;
   const advance = () => {
@@ -101,8 +142,17 @@ if (campaign) {
   );
   for (const diff of DIFFICULTY_ORDER) {
     for (const id of LEVEL_ORDER) {
-      xp +=
+      const kills = rosterCount(LEVELS[id], diff) * clearShare;
+      const killXp =
         rosterXp(LEVELS[id], diff) * clearShare * mobHpScaleFor(level, diff);
+      // Arrow XP for the clear: each of `kills` mobs has `arrowDropProb` to
+      // drop an arrow worth `arrowXpShareAt(level)` of the current bar. The
+      // level is taken at the clear's START (an approximation — it climbs as
+      // the clear plays out), good enough for the "where does the campaign
+      // land" check.
+      const arrowXp =
+        kills * arrowDropProb(diff) * arrowXpShareAt(level) * xpToLevelUp(level);
+      xp += killXp + arrowXp;
       advance();
     }
     console.log(`  ${diff.padEnd(10)} -> lvl ${level}`);
@@ -120,6 +170,17 @@ if (campaign) {
 const killsPerLevel = (L) =>
   xpToLevelUp(L) / (LEVELING.refMobHp * mobHpScaleFor(L, difficulty));
 
+// The same count with golden arrows folded in. Over the `k0` kills a level
+// takes on kill XP alone, arrows drip an extra `k0 × pArrow × arrowXpShareAt(L)`
+// levels' worth of XP, so the kills actually needed fall to
+// `k0 / (1 + k0 × pArrow × arrowShareAt(L))`. On JESUS pArrow is 0 and the two
+// columns coincide.
+const pArrow = arrowDropProb(difficulty);
+const killsPerLevelWithArrows = (L) => {
+  const k0 = killsPerLevel(L);
+  return k0 / (1 + k0 * pArrow * arrowXpShareAt(L));
+};
+
 const rows = [
   1, 2, 3, 4, 5, 6, 8, 10, 15, 20, 25, 30, 40, 50, 60, 70, 80, 90, 99,
 ].filter((L) => L <= target);
@@ -128,26 +189,34 @@ console.log(
   `\nLeveling curve — difficulty=${difficulty}, ${killsPerHour} kills/hr × ${hoursPerDay} h/day = ${killsPerDay} kills/day`,
 );
 console.log(
-  `knobs: base=${LEVELING.killsPerLevelBase} growth=${LEVELING.killsPerLevelGrowth} refMobHp=${LEVELING.refMobHp} ramp=${LEVELING.earlyRampStart}→1 over ${LEVELING.earlyRampLevels} · cap=${LEVELING.maxLevel}\n`,
+  `knobs: base=${LEVELING.killsPerLevelBase} growth=${LEVELING.killsPerLevelGrowth} refMobHp=${LEVELING.refMobHp} ramp=${LEVELING.earlyRampStart}→1 over ${LEVELING.earlyRampLevels} · cap=${LEVELING.maxLevel}`,
 );
 console.log(
-  "   L     xpToNext   kills/lvl   levels/day   cum.kills   cum.days",
+  `arrows: share@L1=${LEVELING.arrowXpShare} taper=${LEVELING.arrowXpShareTaper} · slice=${LOOT.arrowShare}×${difficultyDef(difficulty).arrowDropMult} · luck=${luck} → ~${pArrow.toFixed(3)} arrows/kill\n`,
+);
+console.log(
+  "   L     xpToNext   kills/lvl   w/arrows   levels/day   cum.kills   cum.days",
 );
 
+// Cumulative and levels/day ride the WITH-ARROWS count — the realistic pace;
+// the raw `kills/lvl` column stays beside it as the kill-XP-only baseline.
 let cumKills = 0;
 let cumDays = 0;
 let firstDing = 0;
 for (let L = 1; L < target; L++) {
   const kpl = killsPerLevel(L);
-  cumKills += kpl;
-  cumDays += kpl / killsPerDay;
-  if (L === 1) firstDing = kpl;
+  const kplA = killsPerLevelWithArrows(L);
+  cumKills += kplA;
+  cumDays += kplA / killsPerDay;
+  if (L === 1) firstDing = kplA;
   if (rows.includes(L)) {
-    const lpd = killsPerDay / kpl;
+    const lpd = killsPerDay / kplA;
     console.log(
       `${String(L).padStart(4)}  ${String(xpToLevelUp(L)).padStart(11)}  ${kpl
         .toFixed(0)
-        .padStart(9)}  ${lpd.toFixed(1).padStart(10)}  ${Math.round(cumKills)
+        .padStart(9)}  ${kplA.toFixed(0).padStart(8)}  ${lpd
+        .toFixed(1)
+        .padStart(10)}  ${Math.round(cumKills)
         .toLocaleString()
         .padStart(10)}  ${cumDays.toFixed(1).padStart(8)}`,
     );
@@ -160,6 +229,7 @@ console.log(
 );
 console.log(
   "note: kills/lvl uses refMobHp as the reference mob; the opening waves are\n" +
-    "weaker (worth less XP), so the very first ding takes more kills in play —\n" +
-    "confirm it with a bot run (see the playtest skill).\n",
+    "weaker (worth less XP), so the very first ding takes more kills in play.\n" +
+    "`w/arrows` folds in the golden-arrow drip at an ASSUMED drop rate — confirm\n" +
+    "the real pace with a bot run (see the playtest skill).\n",
 );

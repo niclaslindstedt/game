@@ -491,6 +491,11 @@ function dropMinionLoot(
   // few percent per rung (the equipment/repair slices stay as authored).
   const abilityShare =
     abilities.length > 0 ? LOOT.abilityShare * diff.powerupDropMult : 0;
+  // The golden-arrow slice, thinned by the rung (zero on JESUS). Unlike the
+  // slices above it this is the ladder's TAIL, not the leftover: whatever the
+  // difficulty trims off it just doesn't drop, so free levels grow scarcer up
+  // the rungs instead of the arrow rain quietly refilling the remainder.
+  const arrowShare = LOOT.arrowShare * diff.arrowDropMult;
   // MERCY DROPS (gentle rungs only — the bonuses are zero from hard up): as the
   // hero's health drains, medkits and plated armor rain harder; as his weapon
   // nears breaking, repair kits do. Each boost scales the slice by
@@ -521,6 +526,9 @@ function dropMinionLoot(
     diff.uniqueDropChance > 0 &&
     state.rng() < diff.uniqueDropChance;
   const roll = state.rng();
+  // Whatever falls past the ladder's tail (the arrow slice a hard rung trims
+  // away) yields nothing — so guard the drop event on an item actually landing.
+  const itemsBefore = state.items.length;
   if (nuked) {
     state.items.push({
       id: state.nextId++,
@@ -573,12 +581,24 @@ function dropMinionLoot(
     // hero (it stays grounded until he's run himself winded), but the winded
     // one is far likelier to find one through the stamina-empty mercy roll above.
     state.items.push({ id: state.nextId++, kind: "drink", pos });
-  } else {
-    // The remainder are golden XP arrows — the field still rains pickups, but
-    // they buy levels (points to spend on a build) rather than free healing.
+  } else if (
+    roll <
+    LOOT.equipmentShare +
+      abilityShare +
+      medkitShare +
+      repairShare +
+      LOOT.drinkShare +
+      arrowShare
+  ) {
+    // Golden XP arrows — the field's steady drip of levels (points to spend on
+    // a build) rather than free healing. The slice shrinks up the rungs, so on
+    // the hard difficulties this branch is reached less often and, on JESUS
+    // (arrowShare 0), never — the tail below it drops nothing at all.
     state.items.push({ id: state.nextId++, kind: "xp", pos });
   }
-  state.events.push({ type: "itemDropped", pos });
+  if (state.items.length > itemsBefore) {
+    state.events.push({ type: "itemDropped", pos });
+  }
 }
 
 /** Bosses and elites always pay out: their def pins the drops, scattered

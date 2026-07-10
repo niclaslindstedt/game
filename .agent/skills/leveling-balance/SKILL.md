@@ -34,6 +34,16 @@ difficulty's `mobLevelOffset` nudges it. That is the whole point: you tune
 *kills per level*, and the XP number takes care of itself no matter how the
 horde scales.
 
+**Golden XP arrows are a SECOND faucet.** They drop from the loot rain
+(`LOOT.dropChance × LOOT.arrowShare × the difficulty's `arrowDropMult`) and each
+grants `arrowXpShareAt(L)` of the current bar — XP the kill-count model above
+ignores. They meaningfully accelerate leveling (up to ~40% faster mid-game on
+the gentle rungs), taper with level (`arrowXpShareTaper`), and thin out up the
+difficulty ladder (zero on JESUS). The calculator folds them in — its `w/arrows`
+column is the realistic pace beside the kill-XP-only `kills/lvl` — so treat
+`arrowXpShare`, `arrowXpShareTaper`, `LOOT.arrowShare`, and per-difficulty
+`arrowDropMult` as pacing levers too, not just feel.
+
 ## The knobs (`LEVELING` in `src/game/config.ts`)
 
 | Knob | Does |
@@ -45,8 +55,10 @@ horde scales.
 | `maxLevel` | The Diablo-style cap (99). At the cap XP stops banking levels (bar pins full) — the endgame becomes the gear hunt. Enforced in `grantXp` (loot.ts). |
 | `xpPerHp` | XP per point of a mob's max hp. The units the whole model rides on; rarely touched. |
 
-`statPointsPerLevel`, `arrowXpShare`, `dingCelebrationMs`, `autoGainsPerLevel`
-are ding *rewards/feel*, not pacing — leave them unless that's the change.
+`statPointsPerLevel`, `dingCelebrationMs`, `autoGainsPerLevel` are ding
+*rewards/feel*, not pacing — leave them unless that's the change. `arrowXpShare`
+/ `arrowXpShareTaper` (and `LOOT.arrowShare` / per-difficulty `arrowDropMult`)
+DO move pacing — the golden-arrow faucet above — and the calculator models them.
 
 **Don't fight the auto-stat/mob balance.** `autoGainsPerLevel` (leveling.ts)
 and `MENACE.mobHpPerLevel` are wired so free growth cancels against the horde
@@ -63,12 +75,18 @@ scaling, to move pacing.
    ```sh
    node scripts/leveling-curve.mjs --difficulty medium --kills-per-hour 2000
    node scripts/leveling-curve.mjs --difficulty easy --to 20   # early game
+   node scripts/leveling-curve.mjs --luck 20                   # more arrows
    node scripts/leveling-curve.mjs --campaign                  # full playthrough
    ```
-   The default table reads the live `LEVELING`/`MENACE` config and prints, per
-   level: `xpToNext`, `kills/lvl`, `levels/day`, and cumulative kills/days to
-   the cap. `--campaign` instead simulates clearing every level at every
-   difficulty in order and reports the level after each rung — the check for the
+   The default table reads the live `LEVELING`/`MENACE`/`LOOT` config and prints,
+   per level: `xpToNext`, `kills/lvl` (kill XP only), `w/arrows` (the same with
+   the golden-arrow faucet folded in), `levels/day`, and cumulative kills/days to
+   the cap. `levels/day` and the cumulative columns ride the `w/arrows` count —
+   the realistic pace — while `kills/lvl` stays as the kill-XP-only baseline; the
+   gap between them IS the arrows' contribution (`--luck N` grows it, JESUS
+   collapses it to zero). `--campaign` instead simulates clearing every level at
+   every difficulty in order (arrows included) and reports the level after each
+   rung — the check for the
    **"all difficulties → ~level 60"** target (`--clear-share` overrides the
    assumed roster fraction killed per clear, default 0.5). `killsPerLevelBase`
    is the height knob that moves that number; `killsPerLevelGrowth` the taper.

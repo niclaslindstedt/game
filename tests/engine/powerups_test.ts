@@ -7,8 +7,8 @@ import { describe, expect, it } from "vitest";
 
 import {
   abilityDef,
+  arrowXpShareAt,
   grantAbility,
-  LEVELING,
   levelStatGains,
   magnetRadius,
   step,
@@ -40,28 +40,30 @@ describe("xp arrows", () => {
     clearStage(state);
     state.items = [dropArrow(state, 1)];
     step(state, idle, DT);
+    // A fresh hero is level 1, where the share is the full base (no taper yet).
     expect(state.player.xp).toBe(
-      Math.round(state.player.xpToNext * LEVELING.arrowXpShare),
+      Math.round(state.player.xpToNext * arrowXpShareAt(state.player.level)),
     );
     expect(state.events).toContainEqual(
       expect.objectContaining({ type: "itemCollected", kind: "xp" }),
     );
 
-    // At a later level the same arrow is worth more raw XP — it tracks the
-    // threshold instead of fading into noise.
+    // At a later level the same-sized bar pays LESS of a level: the share
+    // tapers with level (arrowXpShareAt), so arrows recede as the run goes on.
     const later = startGame();
     clearStage(later);
     later.player.level = 8;
     later.player.xpToNext = 4000;
     later.items = [dropArrow(later, 1)];
     step(later, idle, DT);
-    expect(later.player.xp).toBe(Math.round(4000 * LEVELING.arrowXpShare));
+    expect(later.player.xp).toBe(Math.round(4000 * arrowXpShareAt(8)));
+    expect(arrowXpShareAt(8)).toBeLessThan(arrowXpShareAt(1));
   });
 
   it("enough arrows level the player up and open the chooser", () => {
     const state = startGame();
     clearStage(state);
-    const needed = Math.ceil(1 / LEVELING.arrowXpShare);
+    const needed = Math.ceil(1 / arrowXpShareAt(state.player.level));
     state.items = Array.from({ length: needed }, (_, i) =>
       dropArrow(state, i + 1),
     );

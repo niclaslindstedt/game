@@ -7,6 +7,7 @@ import { describe, expect, it } from "vitest";
 
 import {
   allocateStat,
+  arrowXpShareAt,
   autoGainAt,
   autoPowerScale,
   baseStatBonus,
@@ -139,6 +140,24 @@ describe("xp", () => {
     expect(state.phase).toBe("levelup"); // one point still pending
     allocateStat(state, "dexterity");
     expect(state.phase).toBe("playing");
+  });
+});
+
+describe("golden-arrow XP share tapers with level", () => {
+  it("pays the full base share at level 1 and decays harmonically after", () => {
+    // Level 1 is the base share, untapered.
+    expect(arrowXpShareAt(1)).toBeCloseTo(LEVELING.arrowXpShare);
+    // The harmonic law: share / (1 + taper × (L−1)).
+    expect(arrowXpShareAt(11)).toBeCloseTo(
+      LEVELING.arrowXpShare / (1 + LEVELING.arrowXpShareTaper * 10),
+    );
+    // Monotonically down: every level pays a thinner slice of its own bar…
+    expect(arrowXpShareAt(20)).toBeLessThan(arrowXpShareAt(5));
+    expect(arrowXpShareAt(99)).toBeLessThan(arrowXpShareAt(20));
+    // …but never negative or zero — an arrow always pays something.
+    expect(arrowXpShareAt(99)).toBeGreaterThan(0);
+    // A level floor: absurd inputs clamp to the level-1 share, never blow up.
+    expect(arrowXpShareAt(0)).toBeCloseTo(LEVELING.arrowXpShare);
   });
 });
 
