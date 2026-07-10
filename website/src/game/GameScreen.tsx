@@ -771,6 +771,10 @@ export function GameScreen({
     };
 
     const onKeyDown = (event: KeyboardEvent) => {
+      // The level-up chooser owns the keyboard while it's up: LevelUpOverlay
+      // runs its own listener (arrows/WASD move the cursor, Enter/Space spend a
+      // point). Ceding here keeps those keys from steering or queuing a jump.
+      if (state.phase === "levelup") return;
       // Track held movement keys + the run modifier every keydown (repeats
       // included — Set.add is idempotent) so the sim loop reads live state.
       if (event.code in MOVE_KEYS) {

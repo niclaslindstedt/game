@@ -3195,6 +3195,13 @@ body {
   box-shadow: 0 0 0 #b8961e;
 }
 
+/* The keyboard/hover cursor's highlight — the app's teal selection ring, reads
+   clearly against the gold buttons. */
+.stat-button.selected {
+  outline: 3px solid #7ef0c8;
+  outline-offset: 2px;
+}
+
 /* Landscape (the mobile-first reference is a 844×390 phone): six stacked
    stat buttons cannot fit 390px — fold them into a 3×2 grid and tighten
    the box so the whole chooser stays on screen without scrolling. */
