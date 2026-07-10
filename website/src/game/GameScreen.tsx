@@ -981,6 +981,19 @@ export function GameScreen({
           playUiSound(synth, "back");
         }
         bumpUi();
+      } else if (
+        (event.key === "y" || event.key === "Y") &&
+        state.phase === "playing"
+      ) {
+        // Y opens the achievements shelf (WoW's binding), freezing the run
+        // underneath like the HUD star; the shelf's own keys (Y/ESC) close
+        // it — the guard above cedes the keyboard while it's up.
+        setWeaponMenuOpen(false);
+        pauseGame(state);
+        pauseMusic();
+        setAchievementsOpen(true);
+        playUiSound(synth, "confirm");
+        bumpUi();
       } else if (event.key === "Escape" && state.phase === "shop") {
         closeShop(state);
         playUiSound(synth, "back");

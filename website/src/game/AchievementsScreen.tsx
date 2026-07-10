@@ -95,7 +95,13 @@ export function AchievementsScreen({
         playUiSound(synth, "move");
         const delta = event.key === "ArrowDown" ? 1 : -1;
         setCursor((c) => (c + delta + badges.length) % badges.length);
-      } else if (event.key === "Escape") {
+      } else if (
+        event.key === "Escape" ||
+        event.key === "y" ||
+        event.key === "Y"
+      ) {
+        // ESC backs out; Y toggles the shelf shut (the WoW binding that
+        // opened it mid-run).
         event.preventDefault();
         playUiSound(synth, "back");
         onClose();
