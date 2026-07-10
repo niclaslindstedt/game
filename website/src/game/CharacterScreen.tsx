@@ -12,7 +12,12 @@ import { DIFFICULTY_ORDER, difficultyDef } from "@game/core";
 
 import { PixelText } from "@ui/lib/PixelText.tsx";
 
-import { spriteDataUrl, loadGameAssets, type GameAssets } from "./assets.ts";
+import {
+  spriteCursor,
+  spriteDataUrl,
+  loadGameAssets,
+  type GameAssets,
+} from "./assets.ts";
 import { synth } from "./audio.ts";
 import {
   createCharacter,
@@ -90,11 +95,20 @@ export function CharacterScreen({
   if (!assets) return <div className="game-loading">Loading…</div>;
   const font = assets.font;
   const cursorSprite = spriteDataUrl(assets.sprites, "wisp_0") ?? "";
+  // The menu's mouse pointer: a 16-bit Mickey glove, hotspot on the fingertip.
+  // Fed to the whole screen through the --menu-cursor CSS var (see styles.css).
+  // Must go through spriteCursor so the value carries a hotspot and fallback
+  // keyword — a bare url() is an invalid CSS cursor and gets dropped.
+  const menuCursor = spriteCursor(assets.sprites, "glove", {
+    hotX: 3.5,
+    hotY: 0.5,
+    fallback: "default",
+  });
 
   return (
     <div
       className="title-screen character-screen"
-      style={{ "--menu-cursor": `url(${cursorSprite})` } as CSSProperties}
+      style={{ "--menu-cursor": menuCursor } as CSSProperties}
     >
       <div className="title-stars" aria-hidden="true" />
 
