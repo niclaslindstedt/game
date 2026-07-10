@@ -84,17 +84,23 @@ export function IntroOverlay({
           <PixelText font={font} text="ME" scale={2} color="#7ef0c8" />
         </div>
         <div className="dialogue-body">
-          {page.map((row, i) => (
-            // Reserve each row's full height (PixelText is fixed-height even
-            // when empty) so the box never reflows as the crawl fills it in.
-            <PixelText
-              key={i}
-              font={font}
-              text={rows[i] ?? ""}
-              scale={2}
-              maxWidth={INTRO_TEXT_REM}
-            />
-          ))}
+          {/* Stack the lines in a flex column: a bare PixelText <canvas> is
+              inline and taller than the default line-height, so laying the rows
+              out on shared line-boxes prints them on top of each other (the same
+              overlap `.dialogue-lines` fixes for the in-world box). */}
+          <div className="dialogue-lines">
+            {page.map((row, i) => (
+              // Reserve each row's full height (PixelText is fixed-height even
+              // when empty) so the box never reflows as the crawl fills it in.
+              <PixelText
+                key={i}
+                font={font}
+                text={rows[i] ?? ""}
+                scale={2}
+                maxWidth={INTRO_TEXT_REM}
+              />
+            ))}
+          </div>
         </div>
       </div>
       <button
