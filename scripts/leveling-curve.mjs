@@ -32,8 +32,14 @@ const root = path.join(here, "..");
 const { LEVELING } = await import(path.join(root, "src/game/config.ts"));
 const { xpToLevelUp } = await import(path.join(root, "src/game/leveling.ts"));
 const { mobHpScaleFor } = await import(path.join(root, "src/game/menace.ts"));
-const { DIFFICULTY_ORDER } = await import(
+const { DIFFICULTY_ORDER, meetsMinDifficulty } = await import(
   path.join(root, "src/game/defs/difficulties.ts")
+);
+const { LEVELS, LEVEL_ORDER } = await import(
+  path.join(root, "src/game/defs/levels/index.ts")
+);
+const { enemyDef } = await import(
+  path.join(root, "src/game/defs/enemies/index.ts")
 );
 
 const args = process.argv.slice(2);
@@ -46,12 +52,65 @@ const killsPerHour = Number(opt("kills-per-hour", "1500"));
 const hoursPerDay = Number(opt("hours-per-day", "1"));
 const target = Math.min(LEVELING.maxLevel, Number(opt("to", "99")));
 const killsPerDay = killsPerHour * hoursPerDay;
+// `--campaign` models a full story playthrough instead of the per-level table:
+// clearing every level at every difficulty in order, to check where the
+// campaign leaves the hero (design target: ~level 60, leaving the rest as the
+// grind-to-cap endgame). `--clear-share` overrides the assumed fraction of a
+// level's roster actually killed per clear (default: the engine's ARRIVAL one).
+const campaign = args.includes("--campaign");
+const clearShare = Number(opt("clear-share", "0.5"));
 
 if (!DIFFICULTY_ORDER.includes(difficulty)) {
   console.error(
     `unknown difficulty "${difficulty}" (expected: ${DIFFICULTY_ORDER.join(", ")})`,
   );
   process.exit(1);
+}
+
+if (campaign) {
+  // The XP a full clear of a level's roster pays (mirrors arrival.ts rosterXp):
+  // every placed spawn + wave-budget mob at its catalog hp, difficulty-gated
+  // lines the run never fielded left out. The actual XP is that × how tough the
+  // horde is at the hero's CURRENT level (mobHpScaleFor) × the clear share.
+  const mobXp = (id) => {
+    const e = enemyDef(id);
+    return e.xp ?? Math.round(e.hp * LEVELING.xpPerHp);
+  };
+  const rosterXp = (def, diff) => {
+    let t = 0;
+    for (const s of def.spawns ?? []) {
+      if (!meetsMinDifficulty(diff, s.minDifficulty)) continue;
+      t += mobXp(s.enemy) * ("count" in s ? s.count : 1);
+    }
+    for (const e of def.waves?.budget ?? []) {
+      if (!meetsMinDifficulty(diff, e.minDifficulty)) continue;
+      t += mobXp(e.enemy) * e.count;
+    }
+    return t;
+  };
+  let level = 1;
+  let xp = 0;
+  const advance = () => {
+    while (level < LEVELING.maxLevel && xp >= xpToLevelUp(level)) {
+      xp -= xpToLevelUp(level);
+      level++;
+    }
+  };
+  console.log(
+    `\nCampaign playthrough — clearShare=${clearShare} · base=${LEVELING.killsPerLevelBase} growth=${LEVELING.killsPerLevelGrowth} cap=${LEVELING.maxLevel}\n`,
+  );
+  for (const diff of DIFFICULTY_ORDER) {
+    for (const id of LEVEL_ORDER) {
+      xp +=
+        rosterXp(LEVELS[id], diff) * clearShare * mobHpScaleFor(level, diff);
+      advance();
+    }
+    console.log(`  ${diff.padEnd(10)} -> lvl ${level}`);
+  }
+  console.log(
+    `\nafter all difficulties: lvl ${level}  (then ${LEVELING.maxLevel - level} levels of grind to the cap)\n`,
+  );
+  process.exit(0);
 }
 
 // Kills to clear level L at this difficulty, from the real curve. xpToLevelUp

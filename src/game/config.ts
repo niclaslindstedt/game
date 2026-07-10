@@ -196,7 +196,7 @@ export const LEVELING = {
    * The count rises with level on a gentle geometric, so leveling tapers from
    * ~10–20/day early to ~2/day near the cap.
    */
-  killsPerLevelBase: 140,
+  killsPerLevelBase: 108,
   killsPerLevelGrowth: 1.02,
   /**
    * Onboarding ramp: the opening levels cost only a FRACTION of their curve

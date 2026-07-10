@@ -63,10 +63,16 @@ scaling, to move pacing.
    ```sh
    node scripts/leveling-curve.mjs --difficulty medium --kills-per-hour 2000
    node scripts/leveling-curve.mjs --difficulty easy --to 20   # early game
+   node scripts/leveling-curve.mjs --campaign                  # full playthrough
    ```
-   It reads the live `LEVELING`/`MENACE` config and prints, per level:
-   `xpToNext`, `kills/lvl`, `levels/day`, and cumulative kills/days to the cap.
-   Adjust the knobs and re-run until the table matches the target.
+   The default table reads the live `LEVELING`/`MENACE` config and prints, per
+   level: `xpToNext`, `kills/lvl`, `levels/day`, and cumulative kills/days to
+   the cap. `--campaign` instead simulates clearing every level at every
+   difficulty in order and reports the level after each rung — the check for the
+   **"all difficulties → ~level 60"** target (`--clear-share` overrides the
+   assumed roster fraction killed per clear, default 0.5). `killsPerLevelBase`
+   is the height knob that moves that number; `killsPerLevelGrowth` the taper.
+   Adjust and re-run until both the table and the campaign land where you want.
 3. **Measure the real kill rate** — the calculator's kills/hour is an
    ASSUMPTION. Get the real number from a bot run (see the `playtest` skill):
    ```sh
@@ -94,9 +100,12 @@ scaling, to move pacing.
 - **Gear stays relevant** — the pain that motivated the slow curve was
   out-leveling loot in a day. Early levels should NOT blow past whole gear tiers
   in minutes; the taper is what keeps a find useful.
-- **A real climb to the cap** — reaching 99 is a weeks-of-play grind
-  (difficulty replay + boss runs), not a day. The calculator's "to L99" total is
-  the sanity check.
+- **Campaign lands ~level 60** — playing through all five difficulties'
+  campaigns should leave the hero around level 60 (`--campaign`), so the
+  remaining ~39 levels to the cap are the grind endgame (difficulty replay +
+  boss runs), not the story.
+- **A real climb to the cap** — reaching 99 is a weeks-of-play grind, not a day.
+  The calculator's "to L99" total is the sanity check.
 
 ## Gotchas
 
