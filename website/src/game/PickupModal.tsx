@@ -25,10 +25,21 @@ import type { Quality, Tier } from "@game/core";
 import { PixelText } from "@ui/lib/PixelText.tsx";
 import type { PixelFont } from "@ui/lib/pixel-font.ts";
 
-/** How long a pickup card stays on screen before it clears, in ms. Must match
- * the `.pickup-card` animation duration in styles.css. Longer than a glance so
- * a tap-to-equip find has time to be acted on. */
+/** Base display time for a lone pickup card (nothing queued behind it), in ms.
+ * The `.pickup-card` animation reads it via the `--pickup-ttl` custom property
+ * (styles.css), so the CSS default must match this. Longer than a glance so a
+ * tap-to-equip find has time to be acted on. */
 export const PICKUP_CARD_TTL_MS = 5200;
+
+/** Display time for an ORDINARY card while a backlog waits behind it — halved,
+ * so a burst of loot drains fast enough for the player to see every find
+ * instead of the newest flash-replacing the rest. */
+export const PICKUP_CARD_TTL_QUEUED_MS = Math.round(PICKUP_CARD_TTL_MS * 0.5);
+
+/** Display time for a BETTER find — one at or above the worn piece for its slot
+ * (an upgrade, or auto-equipped). Held longer than the base, even mid-flood, so
+ * a genuine gear jump gets a proper look and a chance to be tapped-to-equip. */
+export const PICKUP_CARD_TTL_UPGRADE_MS = Math.round(PICKUP_CARD_TTL_MS * 1.25);
 
 /**
  * Wrap width for the pickup name, in rem. Kept deliberately narrow so a long,
@@ -120,6 +131,13 @@ export type PickupCard = {
   upgrade: boolean;
   /** The piece is already worn (auto-equipped on pickup) — badge EQUIPPED. */
   equipped: boolean;
+  /**
+   * How long this card dwells on screen before it clears, in ms — set by the
+   * queue when the card is dequeued (halved under a backlog, lengthened for a
+   * better find). Fed to the CSS animation via the `--pickup-ttl` custom
+   * property so the pop/hold/fade retimes to match.
+   */
+  ttlMs: number;
   /**
    * Equip this bagged find. Present only when the piece is in the bag and the
    * hero can wear it right now; absent for already-worn or under-leveled finds.
@@ -268,7 +286,10 @@ export function PickupModal({
   const className = `pickup-card pickup-card--finish-${finish}${
     clickable ? " pickup-card--clickable" : ""
   }${card.upgrade || card.equipped ? " pickup-card--upgrade" : ""}`;
-  const style = { "--rarity": card.color } as CSSProperties;
+  const style = {
+    "--rarity": card.color,
+    "--pickup-ttl": `${card.ttlMs}ms`,
+  } as CSSProperties;
   // Always a <button>, inert (disabled) when there's nothing to equip. Keeping
   // the element type stable means tapping to equip updates the card in place
   // rather than remounting it and replaying the whole pop + reveal.
