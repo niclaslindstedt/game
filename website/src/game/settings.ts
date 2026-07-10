@@ -66,9 +66,9 @@ export type AutoLevelStats = "on" | "off";
  * HUD avatar and inventory portrait stay dressed regardless. */
 export type CharacterGear = "on" | "off";
 
-/** XP POPUPS: a display preference (SETTINGS → DISPLAY) for the blue "+N XP"
+/** XP ON KILL: a display preference (SETTINGS → DISPLAY) for the blue "+N XP"
  * combat text that floats off a corpse on each kill (emitted in GameScreen).
- * `on` (the default) keeps them; `off` silences them for a cleaner field. */
+ * `on` (the default) keeps it; `off` silences it for a cleaner field. */
 export type XpFloat = "on" | "off";
 
 export type GameSettings = {

@@ -16,7 +16,7 @@ own namespace, and a sequel changes it there once:
 | Controls → Powerups (side)   | lower left / lower right                                    | lower left                                                                           |
 | Music volume                 | 0–100% in quarter steps                                     | 80%                                                                                  |
 | Sound FX volume              | 0–100% in quarter steps                                     | 100%                                                                                 |
-| Display → XP popups          | on / off                                                    | on (floating "+N XP" text on kills)                                                  |
+| Display → XP on kill         | on / off                                                    | on (floating "+N XP" text on kills)                                                  |
 | Hardcore                     | on / off                                                    | off (softcore: death loses nothing)                                                  |
 | Developer → Debug mode       | on / off                                                    | off (inert flag; the row itself is hidden until unlocked)                            |
 | Developer → Auto level stats | on / off                                                    | off (opt-in free per-level base-stat growth; the row is hidden until unlocked)       |

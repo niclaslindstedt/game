@@ -635,12 +635,12 @@ export function TitleScreen({
       const s = getSettings();
       return [
         {
-          label: s.xpFloat === "on" ? "XP POPUPS: ON" : "XP POPUPS: OFF",
+          label: s.xpFloat === "on" ? "XP ON KILL: ON" : "XP ON KILL: OFF",
           aria: "display-xp-float",
           blurb:
             s.xpFloat === "on"
-              ? "KILLS FLOAT A BLUE +N XP OFF THE CORPSE"
-              : "NO FLOATING XP TEXT ON KILLS",
+              ? "A BLUE +N XP FLOATS OFF EACH KILL"
+              : "NO XP TEXT ON KILLS",
           action: () => {
             playUiSound(synth, "confirm");
             updateSettings({ xpFloat: s.xpFloat === "on" ? "off" : "on" });
