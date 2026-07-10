@@ -3087,6 +3087,15 @@ body {
   gap: 0.35rem;
 }
 
+/* The stat's current value and the "+N" base-gain tag sit on one line, the
+   green bonus trailing the dark label. */
+.stat-button-value {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: 0.4rem;
+}
+
 .stat-button:active {
   box-shadow: 0 0 0 #b8961e;
 }
