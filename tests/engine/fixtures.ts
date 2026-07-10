@@ -166,6 +166,29 @@ export const FIX_ENEMIES: Record<string, EnemyDef> = {
       tierBonus: 0.2,
     },
   },
+  // A TWO-WAY speaker (mirrors the shipped elites/bosses): its arrival scene
+  // interleaves a `{ hero: [...] }` reply page — the hero talking back — with
+  // its own pages (see EnemyDef DialoguePage).
+  test_talker: {
+    id: "test_talker",
+    name: "TEST TALKER",
+    role: "elite",
+    sprite: "test_talker",
+    gore: "ecto",
+    phasing: true,
+    hp: 150,
+    speed: 24,
+    radius: 11,
+    contactDamage: 18,
+    critChance: 0.12,
+    contactCooldownMs: 800,
+    dialogue: [
+      ["TEST TALKER LINE ONE."],
+      { hero: ["TEST HERO REPLY."] },
+      ["TEST TALKER LINE TWO."],
+    ],
+    ai: { aggroRadius: 260, rushSpeed: 90 },
+  },
   // A dialogue-only APPARITION (mirrors the rift's historic residents): an
   // elite-role speaker nothing can hit — it rushes in, delivers its scene,
   // then walks off and dissolves (config APPARITION.lingerMs).

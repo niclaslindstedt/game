@@ -65,7 +65,13 @@ describe("dialogue sweep", () => {
       pages.push({ who: `intro:${def.id}`, page: [...page] });
   }
   for (const def of Object.values(ENEMY_DEFS)) {
-    for (const page of def.dialogue ?? []) pages.push({ who: def.name, page });
+    for (const page of def.dialogue ?? []) {
+      // A `{ hero: ... }` page is the hero's reply — same crawl, his lines.
+      pages.push({
+        who: def.name,
+        page: Array.isArray(page) ? page : page.hero,
+      });
+    }
     if (def.lastWords) pages.push({ who: def.name, page: def.lastWords });
   }
   for (const def of Object.values(STORY_ITEM_DEFS)) {

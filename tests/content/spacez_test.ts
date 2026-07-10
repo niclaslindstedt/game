@@ -249,11 +249,18 @@ describe("THE ARCHITECT and the PASSAGE CHIP", () => {
   });
 
   it("hits the meeting's beats: the plea, the obsolescence, the threat", () => {
-    const script = enemyDef("architect").dialogue!.flat().join(" ");
+    const script = enemyDef("architect")
+      .dialogue!.flatMap((p) => (Array.isArray(p) ? p : p.hero))
+      .join(" ");
     expect(script).toContain("QUIT");
     expect(script).toContain("SUPERINTELLIGENCE");
     expect(script).toContain("OBSOLETE");
     expect(script).toContain("NOW YOU WILL DIE");
+    // The plea is now the HERO's own page — a two-way scene, not a lecture.
+    const heroSide = enemyDef("architect")
+      .dialogue!.flatMap((p) => (Array.isArray(p) ? [] : p.hero))
+      .join(" ");
+    expect(heroSide).toContain("QUIT");
   });
 
   it("drops the chip he operated into himself", () => {

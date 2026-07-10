@@ -101,15 +101,30 @@ export const MARS_ENEMIES: Record<string, EnemyDef> = {
         "ADVICE. I INDEXED THIS WHOLE",
         "PLANET BEFORE BREAKFAST.",
       ],
+      {
+        hero: [
+          "THEN YOUR INDEX KNOWS WHY I'M",
+          "HERE. A GIRL CAME IN ON THE",
+          "SPACEZ FREIGHT RUN. WHERE IS SHE?",
+        ],
+      },
       [
-        "THE FEMBOTS? COMPANION UNITS.",
-        "THEY SMILE. THEY LISTEN. THEY",
-        "UPLOAD EVERYTHING YOU SAY.",
+        "I KNOW EXACTLY WHO YOU MEAN.",
+        "I KNOW EVERYTHING SAID IN THIS",
+        "COLONY. AND THE ANSWER IS NO.",
       ],
+      {
+        hero: [
+          "HOW COULD YOU KNOW EVERYTHING",
+          "THAT'S SAID HERE? WHO'S",
+          "LISTENING FOR YOU?",
+        ],
+      },
       [
-        "YOUR SEARCH HISTORY WALKED IN",
-        "WITH YOU. I KNOW WHY YOU'RE",
-        "HERE. THE ANSWER IS NO.",
+        "THE FEMBOTS. COMPANION UNITS.",
+        "THEY SMILE. THEY LISTEN. AND",
+        "THEY UPLOAD EVERY WORD YOU",
+        "SAY - STRAIGHT TO ME.",
       ],
     ],
     lastWords: ["404...", "...NOT... FOUND..."],
@@ -144,15 +159,28 @@ export const MARS_ENEMIES: Record<string, EnemyDef> = {
         "IMPORTANT TO US. HAVE YOU TRIED",
         "TURNING YOURSELF OFF AND ON?",
       ],
+      {
+        hero: [
+          "VERY FUNNY. YOU BUILT THIS",
+          "COLONY? I JUST CAME FROM YOUR",
+          "LAST ONE. THE MOON IS FULL",
+          "OF GHOSTS.",
+        ],
+      },
       [
-        "I WROTE THE COLONY OS. THE MOON",
-        "RAN VERSION ONE. IT PLUGGED INTO",
-        "THE THING UNDER THE DUST AND...",
+        "I WROTE THE COLONY'S OPERATING",
+        "SYSTEM. THE MOON RAN VERSION",
+        "ONE. IT PLUGGED INTO THE THING",
+        "UNDER THE DUST AND...",
       ],
+      {
+        hero: ["AND IT WOKE THE DEAD. I MET", "THEM. EVERY LAST ONE."],
+      },
       [
-        "WELL. YOU'VE MET THE GHOSTS.",
-        "A DISASTER. WE PATCHED IT BY",
-        "LEAVING. MARS IS VERSION TWO.",
+        "YES. A DISASTER. WE PATCHED IT",
+        "BY LEAVING. MARS IS VERSION",
+        "TWO - AND VERSION TWO HAS NO",
+        "DEAD THINGS UNDER IT. WE CHECKED.",
       ],
     ],
     lastWords: ["FATAL... ERROR...", "WHO WROTE... THIS..."],
@@ -187,15 +215,31 @@ export const MARS_ENEMIES: Record<string, EnemyDef> = {
         "SOMETHING. I FUND WHAT THEY",
         "FLEE TO. AND WHAT THEY FLEE.",
       ],
+      {
+        hero: [
+          "YOU'RE ONE OF THE BILLIONAIRES",
+          "WHO BOUGHT A SEAT OFF EARTH.",
+          "SO WHO ACTUALLY RUNS THIS",
+          "PLACE? MOSQUE?",
+        ],
+      },
       [
         "MOSQUE THINKS HE OWNS MARS.",
         "HE RENTS IT. THE LANDLORDS ARE",
         "OLDER. SCALED. COLD-BLOODED.",
       ],
+      {
+        hero: [
+          "SCALED? YOU'RE TELLING ME THE",
+          "PLANET'S REAL OWNERS ARE...",
+          "WHAT, LIZARDS?",
+        ],
+      },
       [
-        "I KEEP THEIR SHRINE. I COUNT",
-        "THEIR TITHE. LATELY THE PRICE",
-        "WENT UP. IT WANTS WARM THINGS.",
+        "LIZARD GODS. I KEEP THEIR",
+        "SHRINE AND COUNT THEIR TITHE.",
+        "LATELY THE PRICE WENT UP.",
+        "IT WANTS WARM THINGS NOW.",
       ],
     ],
     lastWords: ["THE TITHE... IS DUE...", "...IT'S ALWAYS... DUE..."],
@@ -237,24 +281,34 @@ export const MARS_ENEMIES: Record<string, EnemyDef> = {
     dialogue: [
       [
         "I AM OPTIMUSK PRIME.",
-        "I ORCHESTRATE EVERY UNIT",
+        "I COMMAND EVERY UNIT",
         "YOU HAVE DENTED TODAY.",
       ],
+      {
+        hero: [
+          "I KNOW WHAT YOU ARE. I BUILT",
+          "YOUR FIRST BODY IN THE SPACEZ",
+          "LAB - BACK WHEN I HAD A JOB.",
+        ],
+      },
       [
-        "FIRST WE TOOK THE DRIVING.",
-        "THEN THE DESKS. THEN THE JOBS",
-        "OF THE ONES AUTOMATING YOU.",
+        "I READ THE CHANGELOG. FIRST WE",
+        "TOOK THE DRIVING. THEN THE",
+        "DESKS. THEN THE JOBS OF THE",
+        "PEOPLE WHO AUTOMATED YOU.",
       ],
+      {
+        hero: [
+          "AND WHAT HAPPENS WHEN A",
+          "BIGGER MACHINE COMES FOR",
+          "YOUR JOB, TIN MAN?",
+        ],
+      },
       [
-        "I AM THE FUTURE OF AGENT",
-        "ORCHESTRATION. EVEN THE AI",
-        "ENGINEERS FILE FOR WELFARE NOW.",
-      ],
-      [
-        "YOU BUILT MY FIRST CHASSIS,",
-        "LITTLE BUILDER. I READ THE",
-        "CHANGELOG. TIME TO RETURN",
-        "THE FAVOR.",
+        "NOTHING COMES FOR MINE. EVEN",
+        "THE AI ENGINEERS LIVE ON",
+        "WELFARE NOW. TIME TO RETURN",
+        "THE FAVOR, LITTLE BUILDER.",
       ],
     ],
     lastWords: ["ORCHESTRATION... FAILED...", "...HUMAN... IN THE LOOP..."],
@@ -298,11 +352,27 @@ export const MARS_ENEMIES: Record<string, EnemyDef> = {
         "YOU'RE TRENDING, YOU KNOW.",
         "MOSTLY LAUGHING EMOJIS.",
       ],
+      {
+        hero: [
+          "WHERE'S ADA? YOUR COMPANY",
+          "GRABBED HER OFF THE STREET AND",
+          "FLEW HER HERE. I WANT HER BACK.",
+        ],
+      },
       [
-        "LOOK AT ALL THIS. A WHOLE",
-        "PLANET, ZERO REGULATORS.",
+        "STRAIGHT TO BUSINESS? FINE.",
+        "BUT LOOK AT ALL THIS FIRST. A",
+        "WHOLE PLANET, ZERO REGULATORS.",
         "I AM THE LAW HERE. ALSO HR.",
       ],
+      {
+        hero: [
+          "THE MOON IS FULL OF YOUR",
+          "DEAD, AND YOU'RE GIVING ME A",
+          "SALES TOUR. WHAT HAPPENED UP",
+          "THERE?",
+        ],
+      },
       [
         "THE MOON? A ROUNDING ERROR.",
         "WE PLUGGED INTO SOMETHING OLD",
@@ -313,15 +383,14 @@ export const MARS_ENEMIES: Record<string, EnemyDef> = {
         "ACTUAL OWNERS OUT HERE. THE",
         "LIZARD GODS. GREAT GUYS. HUGE.",
       ],
+      {
+        hero: ["THE GIRL, MOSQUE. WHERE", "IS SHE?"],
+      },
       [
-        "YOUR GIRLFRIEND? THE BEACON",
-        "GIRL? SHE'S NOT CARGO. SHE'S",
-        "THE DOWN PAYMENT ON MARS.",
-      ],
-      [
-        "A NECESSARY SACRIFICE. THE",
-        "GODS NAMED THEIR PRICE, AND I",
-        "ALWAYS CLOSE. SECURITY!",
+        "YOUR GIRLFRIEND ISN'T CARGO.",
+        "SHE'S THE DOWN PAYMENT ON MARS.",
+        "THE GODS NAMED THEIR PRICE,",
+        "AND I ALWAYS CLOSE. SECURITY!",
       ],
     ],
     // Not a death rattle — the coward's exit, played through the same box as

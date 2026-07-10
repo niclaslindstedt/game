@@ -271,6 +271,7 @@ export {
 export {
   ENEMY_DEFS,
   enemyDef,
+  type DialoguePage,
   type EnemyDef,
   type EnemyRole,
 } from "./game/defs/enemies/index.ts";
