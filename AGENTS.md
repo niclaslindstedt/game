@@ -134,8 +134,11 @@ long-press on the title moon (`MOON_HOLD_MS` in
 The detonation does nothing else — the player then opens SETTINGS on their own,
 where a **DEVELOPER** row now appears (it stays available across launches once
 unlocked). That screen offers **SELECT LEVEL** (the warp picker: jump into any
-mission, skipping the intro), a **DEBUG MODE** toggle (`debug: "on" | "off"`,
-also persisted), and two feature flags. DEBUG MODE is currently an inert flag —
+mission, skipping the intro), **VIEW ARSENAL** (`ArsenalScreen.tsx` — a
+scrollable gallery of every unique/legendary item, ordered by ilvl, each minted
+via `mintUnique` and drawn through the shared `ItemCard.tsx` icon + card the
+inventory tooltip reuses so the two never drift), a **DEBUG MODE** toggle
+(`debug: "on" | "off"`, also persisted), and two feature flags. DEBUG MODE is currently an inert flag —
 a hook reserved for future developer diagnostics — so wire real behavior to
 `getSettings().debug` when adding it, and keep it distinct from the `?debug` URL
 param (which drives console verbosity and `window.__game`, see

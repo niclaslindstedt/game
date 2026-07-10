@@ -27,8 +27,11 @@ screen's moon Easter egg is found — a long-press on the title moon detonates i
 and latches `developerUnlocked` (persisted, so the row then survives launches).
 The player opens SETTINGS themselves to find it; the detonation does nothing
 else. The developer screen offers **SELECT LEVEL** (the warp picker — jump into
-any mission regardless of unlock state, skipping the intro), a **DEBUG MODE**
-toggle, and two feature flags. DEBUG MODE is a persisted flag with no wired-up
+any mission regardless of unlock state, skipping the intro), **VIEW ARSENAL** (a
+browsable gallery of every hand-authored unique/legendary item, ordered by item
+level and drawn with the same icon + item card the in-game inventory uses —
+steer the scrollable list with the pointer or the arrow keys, ESC backs out), a
+**DEBUG MODE** toggle, and two feature flags. DEBUG MODE is a persisted flag with no wired-up
 behavior yet, distinct from the `?debug` URL parameter below. Both feature
 flags are **opt-in (off by default)**. **AUTO LEVEL STATS** turns the automatic
 per-level base-stat growth on or off — on also brings the horde's compensating

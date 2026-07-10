@@ -27,6 +27,7 @@ import { PixelText } from "@ui/lib/PixelText.tsx";
 
 import { IDENTITY } from "../identity.ts";
 
+import { ArsenalScreen } from "./ArsenalScreen.tsx";
 import { HELP_LINES } from "./copy.ts";
 
 import { topScores, type ScoreMetric, type ScoreRow } from "./highscores.ts";
@@ -61,6 +62,7 @@ type MenuScreen =
   | "controls"
   | "display"
   | "developer"
+  | "arsenal"
   | "help";
 
 const pct = (v: number) => `${Math.round(v * 100)}%`;
@@ -516,6 +518,16 @@ export function TitleScreen({
           },
         },
         {
+          label: "VIEW ARSENAL",
+          aria: "developer-arsenal",
+          blurb: "EVERY UNIQUE & LEGENDARY ITEM, BY ITEM LEVEL",
+          action: () => {
+            playUiSound(synth, "confirm");
+            setScreen("arsenal");
+            setCursor(0);
+          },
+        },
+        {
           label: s.debug === "on" ? "DEBUG MODE: ON" : "DEBUG MODE: OFF",
           aria: "developer-debug",
           blurb: "DEVELOPER DIAGNOSTICS (NOT WIRED UP YET)",
@@ -732,6 +744,9 @@ export function TitleScreen({
   // axes (see above) instead of a cursor.
   useEffect(() => {
     const onKeyDown = (event: KeyboardEvent) => {
+      // The arsenal viewer runs its own list navigation (see ArsenalScreen);
+      // stay out of its way so the arrows don't also drive the hidden menu.
+      if (screen === "arsenal") return;
       if (screen === "scores") {
         // While a detail card is open the whole board's navigation collapses to
         // "close it" — any steer/confirm/back key returns to the ranked list.
@@ -1265,7 +1280,7 @@ export function TitleScreen({
         </>
       )}
 
-      {screen !== "scores" && (
+      {screen !== "scores" && screen !== "arsenal" && (
         <nav
           className={`title-menu${screen === "levels" ? " scrollable" : ""}`}
           aria-label="main menu"
@@ -1334,6 +1349,20 @@ export function TitleScreen({
             );
           })}
         </nav>
+      )}
+
+      {/* The developer ARSENAL viewer: a full-screen overlay over the menu,
+          mounted only while browsing (it owns its own keyboard navigation). */}
+      {screen === "arsenal" && (
+        <ArsenalScreen
+          font={font}
+          sprites={assets.sprites}
+          onClose={() => {
+            setScreen("developer");
+            // Land back on VIEW ARSENAL — the second developer row.
+            setCursor(1);
+          }}
+        />
       )}
 
       <footer className="title-footer">
