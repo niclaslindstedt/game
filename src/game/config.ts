@@ -825,7 +825,10 @@ export const LOOT = {
    * (see `rollTier`). Global — the campaign's progression now lives in the
    * mlvl gates above, not in per-level tables. LUCK, the difficulty's
    * `tierChanceBonus`, menace evolution, and per-enemy bonuses all add to
-   * each. Unique/legendary sit at 0 until their one-of-a-kind defs ship.
+   * each. Unique/legendary stay at 0 BY DESIGN: those tiers are hand-authored
+   * named items (defs/uniques.ts) with their own drop channels — boss tables
+   * (`uniquesByDifficulty`) and level world drops (`worldUniques`) — and must
+   * never come out of the random affix roll as nameless pieces.
    */
   tierChances: { magic: 0.2, rare: 0.06, unique: 0, legendary: 0 },
   /**

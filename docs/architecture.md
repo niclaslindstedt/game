@@ -147,8 +147,7 @@ run against synthetic fixtures with no shipped content (see
   `MENACE.mobHpPerLevel`), the drop economy (medkit/armor/powerup
   multipliers down, drop-chance/tier bonuses up — and since a rung's
   `mobLevelOffset` raises MONSTER level, the hard rungs also reach every
-  tier's unlock gate earlier; `uniqueDropChance` draws from a level's
-  `loot.uniquePool` once unique items exist), the stamina burn, dodge/miss accuracy multipliers, and the
+  tier's unlock gate earlier), the stamina burn, dodge/miss accuracy multipliers, and the
   menace meter's trigger/decay/effect. MEDIUM is the exact 1.0 baseline.
 - **`src/game/abilities.ts`** — ability activation (`grantAbility`, which
   links the running copy to the dock slot it was spent from), freeing a slot

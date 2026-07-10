@@ -138,9 +138,10 @@ sequel truncates this file to a stub and rebuilds it as its own systems land.
   weapon) are separate defs resolved once by `cutsceneVariant(id,
   difficulty)` — `<id>_<difficulty>` when registered, the base otherwise —
   so the state carries a plain resolved id and renderers stay untouched.
-  Plumbing knobs guard their rng draws (`uniqueDropChance` draws nothing on
-  an empty `loot.uniquePool`), so a future feature costs no determinism
-  churn today. App-side meta-progression (LEVEL TOKENS: clear a level, spend
+  Conditional drop rolls guard their rng draws (`maybeDropWorldUnique`
+  returns before touching `state.rng` when a level ships no table or the
+  player is under the gate), so a rarely-taken path costs no determinism
+  churn on the common one. App-side meta-progression (LEVEL TOKENS: clear a level, spend
   the token to unlock it on a higher rung) lives entirely in the website's
   progress store — the engine never learns tokens exist.
 - **Engine tests run on synthetic fixtures (2026-07):** `tests/engine/`

@@ -278,13 +278,6 @@ export type LevelDef = {
     /** ABILITY_DEFS ids this level's drops draw from. */
     abilityPool: string[];
     /**
-     * One-of-a-kind equipment ids only the harder difficulties can rain: a
-     * minion's equipment drop is drawn from here with the difficulty's
-     * `uniqueDropChance` (see dropMinionLoot). Omitted/empty = the slice is a
-     * no-op — plumbing that waits until this game ships unique items.
-     */
-    uniquePool?: string[];
-    /**
      * LEVEL-LOCKED world-drop uniques (see `defs/uniques.ts` WORLD_UNIQUES),
      * keyed by difficulty rung: the named relics that ANY enemy on this level
      * can drop on that rung, at role-scaled odds (config WORLD_DROP). This is

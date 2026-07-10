@@ -4,9 +4,9 @@
 // (stat head-start, the weapon off the wall), how the horde compares to him
 // (count and RELATIVE LEVEL), how generous the floor is (medkits, armor,
 // powerups), how fast he tires (stamina), how touchy the rampage meter is —
-// and it pays the harder rungs back in richer loot (higher tiers, and the
-// unique slice once unique items exist). MEDIUM is the 1.0 baseline the
-// levels are tuned at; every other entry scales from it.
+// and it pays the harder rungs back in richer loot (higher tiers, deeper
+// item levels). MEDIUM is the 1.0 baseline the levels are tuned at; every
+// other entry scales from it.
 
 import type { Difficulty, StatName, Tier } from "../types.ts";
 
@@ -166,21 +166,14 @@ export type DifficultyDef = {
    */
   mercy: MercyTuning;
   /**
-   * Chance that a minion's equipment drop is drawn from the level's
-   * `loot.uniquePool` instead of the regular pools — the harder rungs' shot
-   * at one-of-a-kind gear. PLUMBING for now: no level ships a unique pool
-   * yet, and an empty pool makes this a clean no-op (no roll is even drawn),
-   * so the knob costs nothing until unique items exist.
-   */
-  uniqueDropChance: number;
-  /**
    * Added per tier to the global base chances (config LOOT.tierChances) —
-   * the reward side of the ladder: richer blues/yellows per rung, and (once
-   * unique/legendary items ship) the harder rungs' better odds at them. The
+   * the reward side of the ladder: richer blues/yellows per rung. The
    * monster-level gates (LOOT.tierUnlockMlvl) still hold: no bonus makes a
    * tier drop off a mob whose level hasn't unlocked it — but since mobs run
    * at `player level + mobLevelOffset`, the harder rungs also reach every
-   * gate earlier in the campaign.
+   * gate earlier in the campaign. Unique/legendary are hand-authored drops
+   * with their own channels (boss tables, world drops) — a bonus here can't
+   * make them roll (their base chance is 0; see LOOT.tierChances).
    */
   tierChanceBonus: Partial<Record<Tier, number>>;
   /**
@@ -262,7 +255,6 @@ export const DIFFICULTY_DEFS: Record<Difficulty, DifficultyDef> = {
       repairBonus: 2,
       staminaDrinkChanceMax: 0.15,
     },
-    uniqueDropChance: 0,
     lootIlvlBonus: 0,
     tierChanceBonus: {},
     staminaDrainMult: 0.95,
@@ -303,7 +295,6 @@ export const DIFFICULTY_DEFS: Record<Difficulty, DifficultyDef> = {
       repairBonus: 1.3,
       staminaDrinkChanceMax: 0.1,
     },
-    uniqueDropChance: 0,
     lootIlvlBonus: 0,
     tierChanceBonus: {},
     staminaDrainMult: 1,
@@ -342,7 +333,6 @@ export const DIFFICULTY_DEFS: Record<Difficulty, DifficultyDef> = {
       repairBonus: 0,
       staminaDrinkChanceMax: 0,
     },
-    uniqueDropChance: 0.01,
     lootIlvlBonus: 1,
     tierChanceBonus: { magic: 0.08, rare: 0.05 },
     staminaDrainMult: 1.05,
@@ -379,7 +369,6 @@ export const DIFFICULTY_DEFS: Record<Difficulty, DifficultyDef> = {
       repairBonus: 0,
       staminaDrinkChanceMax: 0,
     },
-    uniqueDropChance: 0.02,
     lootIlvlBonus: 2,
     tierChanceBonus: { magic: 0.14, rare: 0.08 },
     staminaDrainMult: 1.1,
@@ -418,7 +407,6 @@ export const DIFFICULTY_DEFS: Record<Difficulty, DifficultyDef> = {
       repairBonus: 0,
       staminaDrinkChanceMax: 0,
     },
-    uniqueDropChance: 0.04,
     lootIlvlBonus: 4,
     tierChanceBonus: { magic: 0.2, rare: 0.12 },
     // No extra burn past nightmare — JESUS is kited or not survived at all.

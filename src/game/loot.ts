@@ -527,16 +527,6 @@ function dropMinionLoot(
   const repairShare = LOOT.repairShare * (1 + repairBoost);
   // The rare slice first, so tuning the ladder below never dilutes it.
   const nuked = !forced && state.rng() < LOOT.nukeShare;
-  // The unique slice: the harder rungs' shot at one-of-a-kind gear, drawn
-  // from the level's `uniquePool`. No level ships one yet, so the guard makes
-  // this a clean no-op (not even a roll is drawn) until unique items exist.
-  const uniques = levelDef(state.level.id).loot.uniquePool ?? [];
-  const unique =
-    !nuked &&
-    !forced &&
-    uniques.length > 0 &&
-    diff.uniqueDropChance > 0 &&
-    state.rng() < diff.uniqueDropChance;
   const roll = state.rng();
   // Whatever falls past the ladder's tail (the arrow slice a hard rung trims
   // away) yields nothing — so guard the drop event on an item actually landing.
@@ -547,17 +537,6 @@ function dropMinionLoot(
       kind: "ability",
       pos,
       defId: "screen_nuke",
-    });
-  } else if (unique) {
-    state.items.push({
-      id: state.nextId++,
-      kind: "equipment",
-      pos,
-      equipment: rollEquipment(state, {
-        defId: uniques[Math.floor(state.rng() * uniques.length)] as string,
-        tierBonus,
-        mlvl,
-      }),
     });
   } else if (forced || roll < LOOT.equipmentShare) {
     state.minionEquipmentDrops++;
