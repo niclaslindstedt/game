@@ -63,7 +63,14 @@ describe("xp arrows", () => {
   it("enough arrows level the player up and open the chooser", () => {
     const state = startGame();
     clearStage(state);
-    const needed = Math.ceil(1 / arrowXpShareAt(state.player.level));
+    // How many arrows actually cross the L1 bar — derived from the rounded
+    // per-arrow grant, not `1 / share`, so it stays honest when the curve
+    // (xpToLevelUp) or the share changes and rounding leaves a sliver.
+    const perArrow = Math.max(
+      1,
+      Math.round(state.player.xpToNext * arrowXpShareAt(state.player.level)),
+    );
+    const needed = Math.ceil(state.player.xpToNext / perArrow);
     state.items = Array.from({ length: needed }, (_, i) =>
       dropArrow(state, i + 1),
     );
