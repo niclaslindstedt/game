@@ -5,7 +5,7 @@
 // their spawn lists (defs/levels/). Adding a monster = adding an entry to a
 // roster + a sprite named after it — no engine changes.
 
-import type { Tier } from "../../types.ts";
+import type { Difficulty, Tier } from "../../types.ts";
 
 /**
  * `minion` is the horde, `boss` guards the objective — and `elite` is a
@@ -170,4 +170,12 @@ export type EnemyDef = {
     /** Added to every tier chance when rolling this enemy's drops. */
     tierBonus: number;
   };
+  /**
+   * Hand-authored UNIQUE drops keyed by DIFFICULTY: which named uniques
+   * (`defs/uniques.ts` ids) this boss can drop on each rung. Gated to the rung —
+   * an easy unique only drops on easy — and each is rolled at
+   * `UNIQUE.dropChance × mlvl/ilvl` on the kill (see `maybeDropBossUnique`). A
+   * boss may list more than one per rung (its slot piece plus a trinket).
+   */
+  uniquesByDifficulty?: Partial<Record<Difficulty, string[]>>;
 };

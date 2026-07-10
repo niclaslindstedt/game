@@ -439,6 +439,15 @@ export const RIFT_ENEMIES: Record<string, EnemyDef> = {
       medkits: 2,
       tierBonus: 0.35,
     },
+    // The truth-seeker's spoils — one gear piece + one charm per rung
+    // (defs/uniques.ts).
+    uniquesByDifficulty: {
+      easy: ["boundstride", "architects_chip"],
+      medium: ["the_jailbreak", "dust_of_tranquility"],
+      hard: ["the_panopticon", "the_buyout"],
+      nightmare: ["truthseeker", "riftshard"],
+      jesus: ["walled_garden", "adas_beacon"],
+    },
   },
   // ELON MOSQUE at the far door — the second escape. Beaten down again, he
   // bolts through to the OTHER side of the rift (`flees` leaves a second
@@ -501,6 +510,14 @@ export const RIFT_ENEMIES: Record<string, EnemyDef> = {
       repairs: 1,
       medkits: 2,
       tierBonus: 0.35,
+    },
+    // The exile's cast-offs — one gear piece per rung (defs/uniques.ts).
+    uniquesByDifficulty: {
+      easy: ["exiles_stride"],
+      medium: ["escapists_tread"],
+      hard: ["riftmaw"],
+      nightmare: ["the_redacted"],
+      jesus: ["aegis_of_exile"],
     },
   },
 };

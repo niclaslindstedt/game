@@ -427,5 +427,13 @@ export const SPACEZ_ENEMIES: Record<string, EnemyDef> = {
       medkits: 2,
       tierBonus: 0.3,
     },
+    // One gear piece + one bag per rung — the vermin king's hoard (defs/uniques.ts).
+    uniquesByDifficulty: {
+      easy: ["muskrats_tooth", "the_hoard"],
+      medium: ["whiskerweave_hood", "regolith_rucksack"],
+      hard: ["vermin_pelt", "foremans_duffel"],
+      nightmare: ["burrow_greaves", "voidcache"],
+      jesus: ["gnawed_sabatons", "adas_satchel"],
+    },
   },
 };
