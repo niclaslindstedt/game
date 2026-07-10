@@ -214,22 +214,31 @@ table stays shut until the hero passes `WORLD_DROP.minPlayerLevel[difficulty]` �
 a PER-RUNG gate sized a few levels above where a first pass of that difficulty
 ends (easy 20, medium 34, hard 46, nightmare 56, jesus 60; see `leveling-curve.mjs
 --by-level`), so a rung's relics can only be farmed by RETURNING for boss runs
-once that difficulty is beaten. The first batch is the EASY rung, one relic themed to each level
+once that difficulty is beaten. The first batch is the EASY rung, relics themed to their levels
 — **THE FIRST DRAFT** (SpaceZ HQ, the prototype-GROK neural crown), **THE PALE
-COVENANT** (the Moon, the last moonwalker's sealed plate), **DUSTBORN** (Mars,
-storm-runner boots) — plus two on the Rift, which, being a tear in history,
-coughs up **EXCALIBUR** and **THE TRINITY SHARD** (trinitite glass).
+COVENANT** (the Moon, the last moonwalker's sealed plate), **DEADSTAR** (the
+Moon, the pulsar-rod heart of a star that died screaming), **DUSTBORN** (Mars,
+storm-runner boots), **PALE RIDER** (Eastworld, the pale horseman's revolver on
+the park's own PRAIRIE IRON) — plus two on the Rift, which, being a tear in
+history, coughs up **EXCALIBUR** and **THE TRINITY SHARD** (trinitite glass).
 
 The MEDIUM rung adds a mid-campaign batch, a notch stronger: **DEADSPRINT**
 (SpaceZ HQ, up-or-out glass-cannon leggings), **MARECREST** (the Moon, the
 vigil-helm that outlasted the silence), **REDWIND** (Mars, the frontier raygun
-that drinks the red storm) — and three more from the Rift's deeper haul:
+that drinks the red storm), Eastworld's two melee relics — **HERDBREAKER** (the
+cattle bench's master brand) and **THE LAST ROUNDUP** (the wrangler's monowire
+lariat, thrown wide) — and three more from the Rift's deeper haul:
 **WISHBANE** (a cursed-wish charm), **GORGONSCALE** (Athena's gorgon-faced
 aegis), and the game's first **LEGENDARY**, **MJÖLNIR** — the thunder-hammer of a
 dead god, minted one rarity rung above every unique (`UniqueDef.tier:
 "legendary"`: the orange card and densest pickup blaze), unbreakable and
 keepsake-worthy like any unique but with a scaling strength keeper that grows
 into best-in-slot.
+
+Between the boss sets and the world relics, EASY and MEDIUM each now cover
+every **build**: easy fields melee (MUSKRAT'S TOOTH, EXCALIBUR), ranged (PALE
+RIDER), and magic (DEADSTAR); medium fields magic (THE JAILBREAK), ranged
+(REDWIND), and three melee choices (HERDBREAKER, THE LAST ROUNDUP, MJÖLNIR).
 
 Alongside the weapon, the hero wears **four ARMOR slots — head, chest,
 legs, feet — plus a charm and a bag** (seven equip slots). Every armor

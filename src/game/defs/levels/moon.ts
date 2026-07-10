@@ -227,9 +227,13 @@ export const MOON: LevelDef = {
       "bag",
     ],
     abilityPool: ["fire_orbs", "storm_cell", "stasis_field", "item_magnet"],
-    // Level-locked world drop (see config WORLD_DROP): THE PALE COVENANT, the
-    // last moonwalker's vacuum-sealed plate, farmed on boss runs of the Moon.
-    worldUniques: { easy: ["the_pale_covenant"], medium: ["marecrest"] },
+    // Level-locked world drops (see config WORLD_DROP): THE PALE COVENANT, the
+    // last moonwalker's vacuum-sealed plate, and DEADSTAR, the pulsar-rod
+    // relic that gives the easy rung its magic build — farmed on Moon boss runs.
+    worldUniques: {
+      easy: ["the_pale_covenant", "deadstar"],
+      medium: ["marecrest"],
+    },
     // MOON'S BLADE arrives early — at a kill rolled in the first hundred,
     // discovered in play — so the run's signature weapon shapes the run
     // instead of capping it.
