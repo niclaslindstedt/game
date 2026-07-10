@@ -320,5 +320,13 @@ export const MOON_ENEMIES: Record<string, EnemyDef> = {
       medkits: 2,
       tierBonus: 0.35,
     },
+    // The dead sentinel's watch — one gear piece per rung (defs/uniques.ts).
+    uniquesByDifficulty: {
+      easy: ["the_long_vigil"],
+      medium: ["palegrave"],
+      hard: ["sentinels_greaves"],
+      nightmare: ["marewalkers"],
+      jesus: ["the_fallen_standard"],
+    },
   },
 };

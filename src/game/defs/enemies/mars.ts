@@ -340,5 +340,13 @@ export const MARS_ENEMIES: Record<string, EnemyDef> = {
       medkits: 2,
       tierBonus: 0.35,
     },
+    // The mogul's gilded loot — one gear piece per rung (defs/uniques.ts).
+    uniquesByDifficulty: {
+      easy: ["gilded_carapace"],
+      medium: ["lawless_stride"],
+      hard: ["ovation_striders"],
+      nightmare: ["wrathflame"],
+      jesus: ["the_signal_crown"],
+    },
   },
 };

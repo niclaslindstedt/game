@@ -14,16 +14,19 @@ import {
   MENACE,
   MERCY,
   STATS,
+  UNIQUE,
 } from "./config.ts";
 import { difficultyDef, scaledMobCount } from "./defs/difficulties.ts";
 import { enemyDef, type EnemyDef } from "./defs/enemies/index.ts";
 import { levelDef } from "./defs/levels/index.ts";
+import { uniqueDef } from "./defs/uniques.ts";
 import {
   dropChance,
   enemyDodgeChance,
   lowDurabilityDesperation,
   lowHealthDesperation,
   mercyRescueWaiting,
+  mintUnique,
   playerCritChance,
   playerMissChance,
   recomputeMaxHp,
@@ -331,6 +334,10 @@ export function killEnemy(
     dropMinionLoot(state, def, enemy.pos, enemy.evo ?? 0, enemy.mlvl);
   }
 
+  // Boss unique drops: the difficulty's authored uniques for this boss, each
+  // rolled by how close the boss's mlvl runs to its ilvl (see the function).
+  maybeDropBossUnique(state, def, enemy);
+
   if (def.role === "boss") {
     state.events.push({ type: "bossDefeated", pos: { ...enemy.pos } });
   }
@@ -579,6 +586,48 @@ function dropMinionLoot(
     state.items.push({ id: state.nextId++, kind: "xp", pos });
   }
   state.events.push({ type: "itemDropped", pos });
+}
+
+/**
+ * A boss's hand-authored UNIQUE drops for the current difficulty
+ * (`EnemyDef.uniquesByDifficulty`, gated to the rung). Each listed unique rolls
+ * independently at `UNIQUE.dropChance × mlvl/ilvl` (capped) — ~5% at the item's
+ * home difficulty, a touch more off a deeper boss — and, on a hit, mints and
+ * scatters onto the ground like any drop. NOT guaranteed: boss runs are the
+ * endgame.
+ */
+function maybeDropBossUnique(
+  state: GameState,
+  def: EnemyDef,
+  enemy: Enemy,
+): void {
+  const ids = def.uniquesByDifficulty?.[state.difficulty];
+  if (!ids) return;
+  for (const id of ids) {
+    const ilvl = Math.max(1, uniqueDef(id).ilvl);
+    const chance = Math.min(
+      UNIQUE.dropChanceCap,
+      UNIQUE.dropChance * (enemy.mlvl / ilvl),
+    );
+    if (state.rng() >= chance) continue;
+    state.items.push({
+      id: state.nextId++,
+      kind: "equipment",
+      pos: {
+        x: clamp(
+          enemy.pos.x + (state.rng() - 0.5) * 90,
+          16,
+          state.level.width - 16,
+        ),
+        y: clamp(
+          enemy.pos.y + (state.rng() - 0.5) * 90,
+          16,
+          state.level.height - 16,
+        ),
+      },
+      equipment: mintUnique(state, id),
+    });
+  }
 }
 
 /** Bosses and elites always pay out: their def pins the drops, scattered

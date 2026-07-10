@@ -276,6 +276,15 @@ export const LEVELING = {
 export const UNIQUE = {
   /** Half-width of the base-stat roll: a ±10% band around the base value. */
   baseRollBand: 0.1,
+  /**
+   * Boss unique drop chance, scaled by how close the boss's monster level is to
+   * the item's ilvl: `dropChance × mlvl/ilvl`, capped at `dropChanceCap`. At the
+   * item's home difficulty (mlvl ≈ ilvl) this lands at ~`dropChance`; a deeper
+   * (over-ilvl) boss pays a little more, up to the cap. NOT guaranteed — boss
+   * runs are the endgame.
+   */
+  dropChance: 0.05,
+  dropChanceCap: 0.1,
 } as const;
 
 /**

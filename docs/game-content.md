@@ -155,6 +155,25 @@ Craftsmanship and magic are exclusive, the D2 rule — a magic-or-better
 find is always normal make, as are charms and bags; scripted story drops
 (a level's `earlyDrops`) are pinned normal so the opening plays as tuned.
 
+Above the rolled tiers sit the **named UNIQUES** (`src/game/defs/uniques.ts`):
+hand-authored drops with a FIXED bonus block on a chosen base — no rolled
+affixes, only a small ±10% band on the base damage/armor
+(`UNIQUE.baseRollBand`) so two copies differ and a better roll is worth
+chasing. Each is tied to a boss and a difficulty rung
+(`EnemyDef.uniquesByDifficulty`) and gated to it — an easy unique only drops
+on easy — at `UNIQUE.dropChance × mlvl/ilvl` (≈5% at its home rung, capped),
+so boss runs are the endgame and nothing is guaranteed. The 35 span the five
+bosses × five difficulties as a slot Latin square: every rung is the home of
+one full weapon-and-armor set (a weapon plus a head/chest/legs/feet piece,
+one per boss), and MUSKRAT also drops that rung's roomier **bag** while GROK
+OMEGA drops its **charm** — seven uniques per difficulty. Their ilvl scales
+power and drop odds, not the equip requirement (that stays the base item's
+`levelReq`, like any tier), so a unique is wearable well below its ilvl — the
+D2 "found it early, grow into it" feel. A few carry ONE small scaling stat
+(`statPct`/`maxHpPct`, ≤3% of the hero's own value) so they keep pace as the
+hero levels; the rest are best-in-slot for ~10 levels before a rolled rare
+overtakes them.
+
 Alongside the weapon, the hero wears **four ARMOR slots — head, chest,
 legs, feet — plus a charm and a bag** (seven equip slots). Every armor
 piece carries flat **armor points** that sum into a physical damage

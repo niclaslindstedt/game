@@ -486,6 +486,11 @@ export function mintUnique(state: GameState, uniqueId: string): Equipment {
     // fixed bonuses, not in ilvl-scaled base stats (uniques don't grow with
     // ilvl the way rolled pieces do). Normal make, so no quality multiplier.
     if (gear.armor !== undefined) item.armor = Math.round(gear.armor * roll);
+    // A bag unique overrides its base's capacity — the extra room is the point.
+    // Stamped onto the frozen def, which `equippedBagSlots` reads first.
+    if (u.bagSlots !== undefined && item.def) {
+      (item.def as { bagSlots?: number }).bagSlots = u.bagSlots;
+    }
   }
   return item;
 }
@@ -1272,11 +1277,13 @@ export function gearScore(gear: Equipment): number {
   const def = gearDef(gear.defId);
   // A bag's worth is the room it buys — score its cells so auto-equip fills an
   // empty bag slot and a roomier bag supplants a smaller one (each cell ≈ 10).
+  const bagSlots =
+    gear.def && "bagSlots" in gear.def ? gear.def.bagSlots : def.bagSlots;
   let score =
     (def.bonuses.maxHp ?? 0) +
     (def.bonuses.critChance ?? 0) * 300 +
     (gear.armor ?? def.armor ?? 0) * 2 +
-    (def.bagSlots ?? 0) * 10;
+    (bagSlots ?? 0) * 10;
   for (const affix of gear.affixes) {
     if (affix.kind === "maxHp") score += affix.value;
     else if (affix.kind === "crit") score += affix.value * 300;
@@ -1387,7 +1394,14 @@ export function wouldUpgradeSlot(
 export function equippedBagSlots(state: GameState): number {
   const bag = state.player.equipment.bag;
   if (!bag || isWeaponDef(bag.defId)) return 0;
-  return gearDef(bag.defId).bagSlots ?? 0;
+  // Prefer the FROZEN def so a unique bag's overridden capacity (mintUnique)
+  // stands; fall back to the live catalog for rolled/legacy bags.
+  const frozen = bag.def;
+  const slots =
+    frozen && "bagSlots" in frozen
+      ? frozen.bagSlots
+      : gearDef(bag.defId).bagSlots;
+  return slots ?? 0;
 }
 
 /**

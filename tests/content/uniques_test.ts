@@ -4,7 +4,9 @@
 // Exercised through the SHIPPED uniques (GROK OMEGA's five) and real bases.
 
 import {
+  DIFFICULTY_ORDER,
   effectiveStat,
+  ENEMY_DEFS,
   equipmentLevelReq,
   gearDef,
   isWeaponDef,
@@ -79,7 +81,7 @@ describe("mintUnique", () => {
       { ...state, rng: () => 0 } as typeof state,
       "truthseeker",
     );
-    const base = gearDef("microlattice_plate").armor ?? 0;
+    const base = gearDef("aegis_exoplate").armor ?? 0;
     // A ±10% band around the base value — a better-rolled copy is worth chasing.
     expect(hi.armor as number).toBeGreaterThan(lo.armor as number);
     expect(hi.armor as number).toBeCloseTo(base * 1.1, 0);
@@ -88,8 +90,8 @@ describe("mintUnique", () => {
 
   it("equips at the BASE item's level, well below its (higher) ilvl", () => {
     const state = startGame();
-    const item = mintUnique(state, "walled_garden"); // ilvl 67, base actuator_greaves
-    const baseReq = equipmentLevelReq("actuator_greaves");
+    const item = mintUnique(state, "walled_garden"); // ilvl 67, base plate_greaves
+    const baseReq = equipmentLevelReq("plate_greaves");
     // The ilvl scales power, not the requirement — wearable far below it.
     expect(baseReq).toBeLessThan(uniqueDef("walled_garden").ilvl);
     state.player.level = baseReq;
@@ -109,5 +111,38 @@ describe("mintUnique", () => {
     expect(effectiveStat(state, "intelligence")).toBe(
       Math.round(before * 1.03),
     );
+  });
+});
+
+describe("boss unique drop tables", () => {
+  // Every shipped unique is placed on exactly one boss/rung, and every id a
+  // boss lists resolves — no dangling references either way.
+  const wiring = Object.values(ENEMY_DEFS)
+    .filter((def) => def.uniquesByDifficulty)
+    .flatMap((def) =>
+      Object.entries(def.uniquesByDifficulty ?? {}).flatMap(([diff, ids]) =>
+        (ids ?? []).map((id) => ({ boss: def.id, diff, id })),
+      ),
+    );
+
+  it("references only real uniques, on real difficulty rungs", () => {
+    for (const { diff, id } of wiring) {
+      expect(DIFFICULTY_ORDER).toContain(diff);
+      expect(() => uniqueDef(id)).not.toThrow();
+    }
+  });
+
+  it("places every shipped unique exactly once across the five bosses", () => {
+    const placed = wiring.map((w) => w.id).sort();
+    expect(placed).toEqual([...UNIQUE_IDS].sort());
+    // No id is wired to two bosses/rungs.
+    expect(new Set(placed).size).toBe(placed.length);
+  });
+
+  it("gives each rung a full boss set — 7 uniques per difficulty", () => {
+    // 5 boss weapon/armor pieces + 1 MUSKRAT bag + 1 GROK charm = 7.
+    const perRung: Record<string, number> = {};
+    for (const { diff } of wiring) perRung[diff] = (perRung[diff] ?? 0) + 1;
+    for (const diff of DIFFICULTY_ORDER) expect(perRung[diff]).toBe(7);
   });
 });
