@@ -126,25 +126,32 @@ export type PickupCard = {
   onEquip?: () => void;
 };
 
-/** A handful of sparkle motes for magic+ reveals — fixed offsets so the burst
- * reads the same every time (no per-render randomness that could jitter). */
-const SPARKS = [
-  { x: 8, y: 18, d: 0 },
-  { x: 88, y: 12, d: 90 },
-  { x: 22, y: 84, d: 160 },
-  { x: 72, y: 82, d: 60 },
-  { x: 50, y: 6, d: 120 },
-  { x: 96, y: 54, d: 200 },
+/**
+ * Sparkles that SURROUND a rare+ find and drift upward like embers — fixed
+ * offsets (no per-render randomness that could jitter), placed around the
+ * frame (some just outside it, some below) and never across the face. `x`/`y`
+ * are percentages of the sparkle layer (which overhangs the card), `d` the
+ * loop delay so the twinkle staggers.
+ */
+const SPARKLES = [
+  { x: -3, y: 82, d: 0 },
+  { x: 103, y: 74, d: 300 },
+  { x: 6, y: 98, d: 600 },
+  { x: 94, y: 100, d: 150 },
+  { x: -5, y: 46, d: 900 },
+  { x: 105, y: 52, d: 450 },
+  { x: 40, y: 104, d: 760 },
+  { x: 66, y: 106, d: 1050 },
 ] as const;
 
-/** A second, denser mote burst layered in only for the legendary explosion. */
-const LEGENDARY_SPARKS = [
-  { x: 2, y: 50, d: 40 },
-  { x: 100, y: 34, d: 130 },
-  { x: 40, y: 96, d: 220 },
-  { x: 62, y: 2, d: 70 },
-  { x: 14, y: 4, d: 180 },
-  { x: 86, y: 92, d: 20 },
+/** A denser second ring layered in only for the legendary reveal. */
+const LEGENDARY_SPARKLES = [
+  { x: 14, y: 108, d: 200 },
+  { x: 88, y: 110, d: 520 },
+  { x: -6, y: 66, d: 340 },
+  { x: 106, y: 90, d: 880 },
+  { x: 30, y: 112, d: 1180 },
+  { x: 54, y: 100, d: 60 },
 ] as const;
 
 /** Flame tongues along the base for the top tiers (unique/legendary). */
@@ -154,9 +161,11 @@ const LEGENDARY_FLAMES = [8, 20, 32, 44, 56, 68, 80, 92] as const;
 
 function RarityReveal({ tier }: { tier: Tier }) {
   const rank = TIER_RANK[tier];
-  if (rank === 0) return null;
+  // Magic reads purely from its finish (the blue frame + border glare); the
+  // extra flourishes start at rare so the ladder stays subtle below it.
+  if (rank < TIER_RANK.rare) return null;
   const legendary = tier === "legendary";
-  const motes = legendary ? [...SPARKS, ...LEGENDARY_SPARKS] : SPARKS;
+  const sparkles = legendary ? [...SPARKLES, ...LEGENDARY_SPARKLES] : SPARKLES;
   const flames = legendary ? LEGENDARY_FLAMES : FLAMES;
   return (
     <span
@@ -165,24 +174,26 @@ function RarityReveal({ tier }: { tier: Tier }) {
       }`}
       aria-hidden="true"
     >
-      {/* Legendary breaks out of the card in a shockwave blast — every lever
-          to 11 — while lesser tiers just bloom. */}
+      {/* The reserved glow lives here: only a legendary blooms and blasts,
+          every lever to 11. Lesser tiers just twinkle. */}
       {legendary && <span className="pickup-card-blast" />}
-      <span className="pickup-card-flash" />
-      {rank >= TIER_RANK.rare && <span className="pickup-card-rays" />}
-      {motes.map((s, i) => (
-        <span
-          key={i}
-          className="pickup-card-spark-mote"
-          style={
-            {
-              left: `${s.x}%`,
-              top: `${s.y}%`,
-              "--mote-delay": `${s.d}ms`,
-            } as CSSProperties
-          }
-        />
-      ))}
+      {legendary && <span className="pickup-card-flash" />}
+      {legendary && <span className="pickup-card-rays" />}
+      <span className="pickup-card-sparkles">
+        {sparkles.map((s, i) => (
+          <span
+            key={i}
+            className="pickup-card-sparkle"
+            style={
+              {
+                left: `${s.x}%`,
+                top: `${s.y}%`,
+                "--spark-delay": `${s.d}ms`,
+              } as CSSProperties
+            }
+          />
+        ))}
+      </span>
       {rank >= TIER_RANK.unique && (
         <span className="pickup-card-flames">
           {flames.map((x, i) => (
@@ -279,7 +290,7 @@ export function PickupModal({
         <PixelText
           font={font}
           text={card.name}
-          scale={2}
+          scale={1}
           color={card.color}
           maxWidth={PICKUP_NAME_REM}
         />
