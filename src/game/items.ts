@@ -336,6 +336,14 @@ export function rollEquipment(
     const minReq = Math.min(...fullPool.map((id) => equipmentLevelReq(id)));
     pool = fullPool.filter((id) => equipmentLevelReq(id) === minReq);
   }
+  // The BASE-LEVEL FLOOR (config `LOOT.dropLevelWindow`): retire bases far under
+  // the mob so a high kill drops a high-tier base, not a weak one with affixes.
+  // Only applied when the band has entries — otherwise the whole eligible pool
+  // stands (early game, or a pool whose bases all sit below the window).
+  const floored = pool.filter(
+    (id) => equipmentLevelReq(id) >= mlvl - LOOT.dropLevelWindow,
+  );
+  if (floored.length > 0) pool = floored;
   let defId = opts.defId ?? (pool[Math.floor(rng() * pool.length)] as string);
   // Harder difficulties find fewer ARMOR pieces: when a random gear pick
   // lands on armor, the difficulty's `armorDropMult` is its chance to stand —
