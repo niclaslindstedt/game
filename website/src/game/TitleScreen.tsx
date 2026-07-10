@@ -5,14 +5,16 @@
 // arrays); the wisp sprite plays the part of Doom's skull cursor.
 
 import {
+  lazy,
+  Suspense,
+  type AnimationEvent as ReactAnimationEvent,
+  type CSSProperties,
+  type PointerEvent as ReactPointerEvent,
   useCallback,
   useEffect,
   useMemo,
   useRef,
   useState,
-  type AnimationEvent as ReactAnimationEvent,
-  type CSSProperties,
-  type PointerEvent as ReactPointerEvent,
 } from "react";
 
 import {
@@ -57,8 +59,15 @@ import {
 } from "./characters.ts";
 import { getSettings, updateSettings } from "./settings.ts";
 import { playUiSound } from "./sfx/index.ts";
-import { AchievementsScreen } from "./AchievementsScreen.tsx";
 import { startTitleSky } from "./titleSky.ts";
+
+// Lazy for the SEO critical-path budget: the browser is a menu destination,
+// not startup code (see the GameScreen twin of this note).
+const AchievementsScreen = lazy(() =>
+  import("./AchievementsScreen.tsx").then((m) => ({
+    default: m.AchievementsScreen,
+  })),
+);
 
 type MenuScreen =
   | "main"
@@ -1535,15 +1544,17 @@ export function TitleScreen({
           mounted only while browsing (it owns its own keyboard navigation).
           Opening it acknowledges any unseen badges. */}
       {screen === "achievements" && (
-        <AchievementsScreen
-          font={font}
-          sprites={assets.sprites}
-          onClose={() => {
-            setScreen("main");
-            // Land back on the ACHIEVEMENTS row.
-            setCursor(onResume ? 4 : 3);
-          }}
-        />
+        <Suspense fallback={null}>
+          <AchievementsScreen
+            font={font}
+            sprites={assets.sprites}
+            onClose={() => {
+              setScreen("main");
+              // Land back on the ACHIEVEMENTS row.
+              setCursor(onResume ? 4 : 3);
+            }}
+          />
+        </Suspense>
       )}
 
       {/* The developer ARSENAL viewer: a full-screen overlay over the menu,

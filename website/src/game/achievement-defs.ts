@@ -26,13 +26,18 @@ import {
 
 import type { AchievementTier } from "@niclaslindstedt/oss-framework/achievements";
 
-import { maxLevelRuns, type LifetimeTotals } from "./achievement-totals.ts";
+import {
+  EQUIP_SLOTS,
+  maxLevelRuns,
+  type LifetimeTotals,
+} from "./achievement-totals.ts";
 
 /** Browser sections, in display order. */
 export const ACHIEVEMENT_CATEGORIES = [
   "story",
   "combat",
   "loot",
+  "gear",
   "arsenal",
   "party",
   "hero",
@@ -44,6 +49,7 @@ export const CATEGORY_LABELS: Record<AchievementCategory, string> = {
   story: "STORY",
   combat: "COMBAT",
   loot: "LOOT",
+  gear: "WARDROBE",
   arsenal: "ARSENAL",
   party: "PARTY",
   hero: "HERO",
@@ -181,6 +187,66 @@ const RARE_LADDER: [string, string, number, AchievementTier][] = [
   ["rare_100", "RARITY EXPERT", 100, "expert"],
   ["rare_250", "GOLD STANDARD", 250, "expert"],
 ];
+
+// Damage feats, grounded in the live balance model (see the weapon-system
+// skill's calculators): with the looted-weapon damper at 0.5 and STR/INT
+// worth 20%/12% per point, an early crit lands ~20-50, a mid-game crit
+// ~250, a strong endgame crit ~1,500-2,000, and a god-roll (top base, fat
+// damagePct affix, PERFECT make, top-of-band crit) peaks ~5-6K on one
+// target. One STRIKE's total (a nuke billing each victim's remaining hp,
+// an INT-cleave sweep, a pierce volley) starts ~150 on an early screen
+// wipe and reaches 25-50K nuking a dense endgame horde.
+const SINGLE_HIT_LADDER: [string, string, number, AchievementTier][] = [
+  ["single_50", "HEAVY HITTER", 50, "beginner"],
+  ["single_250", "HAYMAKER", 250, "intermediate"],
+  ["single_1000", "EXECUTIONER", 1_000, "pro"],
+  ["single_5000", "GODHAND", 5_000, "expert"],
+];
+
+// Lifetime damage: the same kill model integrated over the whole climb —
+// ~25K kills at a journey-average ~225 scaled hp each puts the road to 99
+// at roughly 5-7M damage dealt, so 10M is the "finished the climb and kept
+// swinging" rung and 50M the long post-cap farm.
+const TOTAL_DAMAGE_LADDER: [string, string, number, AchievementTier][] = [
+  ["damage_10k", "PAIN DEALER", 10_000, "beginner"],
+  ["damage_100k", "HURT LOCKER", 100_000, "intermediate"],
+  ["damage_1m", "FORCE OF NATURE", 1_000_000, "pro"],
+  ["damage_10m", "NATURAL DISASTER", 10_000_000, "expert"],
+  ["damage_50m", "PLANET CRACKER", 50_000_000, "expert"],
+];
+
+const BURST_LADDER: [string, string, number, AchievementTier][] = [
+  ["burst_100", "BLAST RADIUS", 100, "beginner"],
+  ["burst_1000", "CROWD CONTROL", 1_000, "intermediate"],
+  ["burst_5000", "SHOCK AND AWE", 5_000, "pro"],
+  ["burst_25000", "CATACLYSM", 25_000, "expert"],
+];
+
+/** The first-equip badge per slot: name, condition copy, and icon. */
+const SLOT_BADGES: Record<
+  (typeof EQUIP_SLOTS)[number],
+  { name: string; desc: string; icon: string }
+> = {
+  weapon: {
+    name: "ARMED AND DANGEROUS",
+    desc: "EQUIP A LOOTED WEAPON",
+    icon: "icon_machete",
+  },
+  head: { name: "HARD HEADED", desc: "EQUIP A HELMET", icon: "icon_hard_hat" },
+  chest: {
+    name: "SUIT UP",
+    desc: "EQUIP A CHEST PIECE",
+    icon: "icon_kevlar_vest",
+  },
+  legs: { name: "LEG DAY", desc: "EQUIP LEG ARMOR", icon: "icon_jeans" },
+  feet: {
+    name: "BEST FOOT FORWARD",
+    desc: "EQUIP FOOTWEAR",
+    icon: "icon_leather_boots",
+  },
+  charm: { name: "CHARMED", desc: "EQUIP A CHARM", icon: "icon_charm" },
+  bag: { name: "PACK MULE", desc: "EQUIP A BAG", icon: "icon_bag" },
+};
 
 const UNIQUE_LADDER: [string, string, number, AchievementTier][] = [
   ["uniques_1", "ONE OF A KIND", 1, "beginner"],
@@ -372,6 +438,42 @@ export const ACHIEVEMENTS: AchievementDef[] = [
     tier: "pro",
     done: (t) => t.speedClears >= 1,
   },
+  ...SINGLE_HIT_LADDER.map(([id, name, goal, tier]) =>
+    counter({
+      id,
+      category: "combat",
+      name,
+      desc: `HIT ONE ENEMY FOR ${goal.toLocaleString("en-US")} DAMAGE`,
+      icon: "bolt",
+      tier,
+      goal,
+      read: (t) => t.maxSingleHit,
+    }),
+  ),
+  ...TOTAL_DAMAGE_LADDER.map(([id, name, goal, tier]) =>
+    counter({
+      id,
+      category: "combat",
+      name,
+      desc: `DEAL ${goal.toLocaleString("en-US")} TOTAL DAMAGE`,
+      icon: "icon_swords",
+      tier,
+      goal,
+      read: (t) => t.totalDamage,
+    }),
+  ),
+  ...BURST_LADDER.map(([id, name, goal, tier]) =>
+    counter({
+      id,
+      category: "combat",
+      name,
+      desc: `DEAL ${goal.toLocaleString("en-US")} DAMAGE IN ONE STRIKE`,
+      icon: "fireball",
+      tier,
+      goal,
+      read: (t) => t.maxBurstDamage,
+    }),
+  ),
 
   // ---- LOOT: rarity ladders and the collection meta.
   ...MAGIC_LADDER.map(([id, name, goal, tier]) =>
@@ -429,6 +531,54 @@ export const ACHIEVEMENTS: AchievementDef[] = [
     goal: UNIQUE_IDS.length,
     read: (t) => t.uniquesFound.length,
   }),
+
+  // ---- WARDROBE: dressing the hero, slot by slot, then head to toe.
+  ...EQUIP_SLOTS.map((slot) => ({
+    id: `equip_${slot}`,
+    category: "gear" as const,
+    name: SLOT_BADGES[slot].name,
+    desc: SLOT_BADGES[slot].desc,
+    icon: SLOT_BADGES[slot].icon,
+    tier: "beginner" as AchievementTier,
+    done: (t: LifetimeTotals) => t.slotsWorn.includes(slot),
+  })),
+  counter({
+    id: "outfit_full",
+    category: "gear",
+    name: "FULL KIT",
+    desc: "FILL EVERY EQUIPMENT SLOT AT ONCE",
+    icon: "icon_suit",
+    tier: "intermediate",
+    goal: EQUIP_SLOTS.length,
+    read: (t) => (t.outfitRank >= 0 ? EQUIP_SLOTS.length : t.slotsWorn.length),
+  }),
+  {
+    id: "outfit_magic",
+    category: "gear",
+    name: "DRESSED TO KILL",
+    desc: "WEAR A FULL OUTFIT, ALL MAGIC OR BETTER",
+    icon: "icon_chainmail",
+    tier: "pro",
+    done: (t) => t.outfitRank >= 1,
+  },
+  {
+    id: "outfit_rare",
+    category: "gear",
+    name: "HIGH FASHION",
+    desc: "WEAR A FULL OUTFIT, ALL RARE OR BETTER",
+    icon: "icon_cuirass",
+    tier: "expert",
+    done: (t) => t.outfitRank >= 2,
+  },
+  {
+    id: "outfit_unique",
+    category: "gear",
+    name: "MYTHIC WARDROBE",
+    desc: "WEAR A FULL OUTFIT, ALL UNIQUE OR LEGENDARY",
+    icon: "icon_dragonscale_cloak",
+    tier: "expert",
+    done: (t) => t.outfitRank >= 3,
+  },
 
   // ---- ARSENAL: one trophy per hand-authored unique.
   ...uniqueBadges(),

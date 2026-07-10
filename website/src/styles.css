@@ -4500,11 +4500,12 @@ body {
    wait), and the BROWSER (AchievementsScreen — the arsenal viewer's layout
    with per-row progress and locked dimming). */
 
-/* The unlock banner: top-center, under the XP strip, clear of the pickup
-   card (bottom) and the hero (center). Never eats pointer events. */
+/* The unlock banner: bottom-center, tucked under the pickup card's zone and
+   clear of the corner feed, the powerup dock, and the top HUD — the badge
+   celebrates from the screen's quiet edge. Never eats pointer events. */
 .achievement-toast {
   position: absolute;
-  top: 2.6rem;
+  bottom: max(0.6rem, env(safe-area-inset-bottom));
   left: 50%;
   z-index: 30;
   display: flex;
@@ -4526,14 +4527,15 @@ body {
   will-change: transform, opacity;
 }
 
-/* Drop in, settle, hold, drift out — sized to ACHIEVEMENT_TOAST_TTL_MS. */
+/* Rise in from the bottom edge, settle, hold, sink out — sized to
+   ACHIEVEMENT_TOAST_TTL_MS. */
 @keyframes achievement-toast {
   0% {
-    transform: translate(-50%, -140%) scale(0.9);
+    transform: translate(-50%, 140%) scale(0.9);
     opacity: 0;
   }
   7% {
-    transform: translate(-50%, 6%) scale(1.04);
+    transform: translate(-50%, -6%) scale(1.04);
     opacity: 1;
   }
   12% {
@@ -4544,7 +4546,7 @@ body {
     opacity: 1;
   }
   100% {
-    transform: translate(-50%, -40%) scale(0.96);
+    transform: translate(-50%, 40%) scale(0.96);
     opacity: 0;
   }
 }

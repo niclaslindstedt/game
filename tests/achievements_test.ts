@@ -26,7 +26,9 @@ import {
 import {
   applyEventsToTotals,
   applyRunStart,
+  applyWornEquipment,
   emptyTotals,
+  EQUIP_SLOTS,
   maxLevelRuns,
   SPEED_CLEAR_MS,
 } from "../website/src/game/achievement-totals.ts";
@@ -35,6 +37,7 @@ import {
   getAchievements,
   recordAchievementEvents,
   recordRunStarted,
+  recordWornEquipment,
   resetAchievementsForTest,
   unseenAchievements,
 } from "../website/src/game/achievements.ts";
@@ -180,6 +183,90 @@ describe("lifetime totals reducer", () => {
     expect(totals.maxMenace).toBe(4);
   });
 
+  it("tracks the hardest single hit and the biggest one-strike burst", () => {
+    const totals = emptyTotals();
+    // One tick: a 40-damage hit plus a 60-damage kill = a 100 burst.
+    applyEventsToTotals(
+      totals,
+      [
+        {
+          type: "enemyHit",
+          pos: { x: 0, y: 0 },
+          crit: false,
+          damage: 40,
+          defId: "retired_mob_from_v1",
+        },
+        { ...kill("retired_mob_from_v1"), damage: 60 } as GameEvent,
+      ],
+      CTX,
+    );
+    expect(totals.maxSingleHit).toBe(60);
+    expect(totals.maxBurstDamage).toBe(100);
+    expect(totals.totalDamage).toBe(100);
+    // A later, smaller tick moves neither record — but still adds up.
+    applyEventsToTotals(
+      totals,
+      [
+        {
+          type: "enemyHit",
+          pos: { x: 0, y: 0 },
+          crit: false,
+          damage: 50,
+          defId: "retired_mob_from_v1",
+        },
+      ],
+      CTX,
+    );
+    expect(totals.maxSingleHit).toBe(60);
+    expect(totals.maxBurstDamage).toBe(100);
+    expect(totals.totalDamage).toBe(150);
+  });
+
+  it("books worn slots, skipping the built-in sidearm, and ranks outfits", () => {
+    const totals = emptyTotals();
+    // The spawn loadout — the sidearm (or a wall weapon) plus the issued
+    // clothes — books nothing: first-equip feats are for looted pieces.
+    expect(
+      applyWornEquipment(totals, [
+        { slot: "weapon", tier: "regular", defId: "blaster" },
+        { slot: "chest", tier: "regular", defId: "t_shirt" },
+        { slot: "legs", tier: "regular", defId: "jeans" },
+        { slot: "feet", tier: "regular", defId: "leather_boots" },
+      ]),
+    ).toBe(false);
+    expect(
+      applyWornEquipment(totals, [
+        { slot: "weapon", tier: "regular", defId: "hairy_potters_wand" },
+      ]),
+    ).toBe(false);
+    expect(totals.slotsWorn).toEqual([]);
+    // A looted weapon and a helmet book their slots.
+    applyWornEquipment(totals, [
+      { slot: "weapon", tier: "regular", defId: "box_cutter" },
+      { slot: "head", tier: "magic", defId: "hard_hat" },
+    ]);
+    expect([...totals.slotsWorn].sort()).toEqual(["head", "weapon"]);
+    expect(totals.outfitRank).toBe(-1); // not a full outfit yet
+    // Every slot filled at once: the outfit ranks by its WORST piece.
+    const fullOutfit = EQUIP_SLOTS.map((slot) => ({
+      slot,
+      tier: slot === "charm" ? "magic" : "rare",
+      defId: "x",
+    }));
+    applyWornEquipment(totals, fullOutfit);
+    expect(totals.outfitRank).toBe(1); // the magic charm holds it at 1
+    // Upgrading the charm to unique lifts the rank to the rare pieces.
+    applyWornEquipment(
+      totals,
+      EQUIP_SLOTS.map((slot) => ({
+        slot,
+        tier: slot === "charm" ? "unique" : "rare",
+        defId: "x",
+      })),
+    );
+    expect(totals.outfitRank).toBe(2);
+  });
+
   it("counts runs per level for the farming badges", () => {
     const totals = emptyTotals();
     applyRunStart(totals, "a");
@@ -221,6 +308,29 @@ describe("unlock store", () => {
     for (let i = 0; i < 10; i++) fresh = recordRunStarted(LEVEL_ORDER[0]!);
     expect(fresh).toContain("runs_10");
     expect(fresh).toContain("farm_10");
+  });
+
+  it("unlocks wardrobe badges through the worn-equipment hook", () => {
+    const worn = [
+      { slot: "weapon", tier: "regular", defId: "box_cutter" },
+      { slot: "head", tier: "regular", defId: "hard_hat" },
+    ];
+    const fresh = recordWornEquipment(worn);
+    expect(fresh).toContain("equip_weapon");
+    expect(fresh).toContain("equip_head");
+    // The same outfit again is a quiet no-op (the signature guard).
+    expect(recordWornEquipment(worn)).toEqual([]);
+    // A full unique outfit sweeps the whole outfit ladder.
+    const mythic = EQUIP_SLOTS.map((slot) => ({
+      slot,
+      tier: "unique",
+      defId: "x",
+    }));
+    const outfit = recordWornEquipment(mythic);
+    expect(outfit).toContain("outfit_full");
+    expect(outfit).toContain("outfit_magic");
+    expect(outfit).toContain("outfit_rare");
+    expect(outfit).toContain("outfit_unique");
   });
 
   it("unlocks a unique's own badge alongside the count ladder", () => {
@@ -265,6 +375,9 @@ describe("achievement catalog", () => {
     totals.kills = 1_000_000;
     totals.heroLevel = 99;
     totals.totalRuns = 10_000;
+    totals.totalDamage = 10 ** 9;
+    totals.maxSingleHit = 10 ** 6;
+    totals.maxBurstDamage = 10 ** 6;
     for (const def of ACHIEVEMENTS) {
       const p = def.progress?.(totals);
       if (!p) continue;

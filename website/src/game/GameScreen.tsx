@@ -12,6 +12,8 @@
 // at the menu; one run = one `runId` (retry bumps it).
 
 import {
+  lazy,
+  Suspense,
   useEffect,
   useRef,
   useState,
@@ -98,15 +100,25 @@ import { ACHIEVEMENTS_BY_ID } from "./achievement-defs.ts";
 import {
   recordAchievementEvents,
   recordRunStarted,
+  recordWornEquipment,
   unseenAchievements,
 } from "./achievements.ts";
-import { AchievementsScreen } from "./AchievementsScreen.tsx";
 import {
   AchievementToast,
   ACHIEVEMENT_TOAST_TTL_MS,
   type AchievementToastData,
 } from "./AchievementToast.tsx";
 import { synth } from "./audio.ts";
+
+// The achievements browser rides a lazy chunk: it's reached through a
+// deliberate tap (the HUD star / Y), never on the run's critical path, and
+// the SEO budget (check-seo.mjs) counts only entry-preloaded JS. The PWA
+// precaches every chunk, so it opens offline all the same.
+const AchievementsScreen = lazy(() =>
+  import("./AchievementsScreen.tsx").then((m) => ({
+    default: m.AchievementsScreen,
+  })),
+);
 import { cloneGameState } from "./checkpoint.ts";
 import { playEventHaptics, playTypewriterHaptic } from "./haptics.ts";
 import { ChoiceOverlay } from "./ChoiceOverlay.tsx";
@@ -980,6 +992,19 @@ export function GameScreen({
           playUiSound(synth, "back");
         }
         bumpUi();
+      } else if (
+        (event.key === "y" || event.key === "Y") &&
+        state.phase === "playing"
+      ) {
+        // Y opens the achievements shelf (WoW's binding), freezing the run
+        // underneath like the HUD star; the shelf's own keys (Y/ESC) close
+        // it — the guard above cedes the keyboard while it's up.
+        setWeaponMenuOpen(false);
+        pauseGame(state);
+        pauseMusic();
+        setAchievementsOpen(true);
+        playUiSound(synth, "confirm");
+        bumpUi();
       } else if (event.key === "Escape" && state.phase === "shop") {
         closeShop(state);
         playUiSound(synth, "back");
@@ -1276,6 +1301,34 @@ export function GameScreen({
             stats: state.stats,
           }),
         );
+        // …and the hero's outfit for the wardrobe feats. Reported every
+        // frame; the store no-ops until the worn set actually changes, and
+        // equips made while a panel freezes the sim are still caught here
+        // (the loop keeps running under paused phases).
+        {
+          const eq = state.player.equipment;
+          const worn = [
+            {
+              slot: "weapon",
+              tier: eq.weapon.tier,
+              defId: eq.weapon.defId,
+            },
+          ];
+          for (const slot of [
+            "head",
+            "chest",
+            "legs",
+            "feet",
+            "charm",
+            "bag",
+          ] as const) {
+            const piece = eq[slot];
+            if (piece) {
+              worn.push({ slot, tier: piece.tier, defId: piece.defId });
+            }
+          }
+          celebrateAchievements(recordWornEquipment(worn));
+        }
 
         for (const event of state.events) {
           if (event.type === "lightning") {
@@ -2609,19 +2662,21 @@ export function GameScreen({
           (the HUD star put it there). Closing resumes play and dims the star
           — opening the shelf acknowledged the unseen queue. */}
       {state && achievementsOpen && (
-        <AchievementsScreen
-          font={font}
-          sprites={assets.sprites}
-          onClose={() => {
-            setAchievementsOpen(false);
-            setUnseenBadges(unseenAchievements().length);
-            if (state.phase === "paused") {
-              resumeGame(state);
-              resumeMusic();
-            }
-            bumpUi();
-          }}
-        />
+        <Suspense fallback={null}>
+          <AchievementsScreen
+            font={font}
+            sprites={assets.sprites}
+            onClose={() => {
+              setAchievementsOpen(false);
+              setUnseenBadges(unseenAchievements().length);
+              if (state.phase === "paused") {
+                resumeGame(state);
+                resumeMusic();
+              }
+              bumpUi();
+            }}
+          />
+        </Suspense>
       )}
 
       {/* The achievement unlock banner — any phase: a badge earned on the
