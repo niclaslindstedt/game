@@ -183,6 +183,7 @@ export {
   autoPowerScale,
   baseStatBonus,
   levelStatGains,
+  setAutoStatGainsEnabled,
 } from "./game/leveling.ts";
 
 // Time-limited abilities: activation and the helpers the renderer shares.

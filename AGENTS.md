@@ -134,11 +134,29 @@ long-press on the title moon (`MOON_HOLD_MS` in
 The detonation does nothing else — the player then opens SETTINGS on their own,
 where a **DEVELOPER** row now appears (it stays available across launches once
 unlocked). That screen offers **SELECT LEVEL** (the warp picker: jump into any
-mission, skipping the intro) and a **DEBUG MODE** toggle (`debug: "on" | "off"`,
-also persisted). DEBUG MODE is currently an inert flag — a hook reserved for
-future developer diagnostics — so wire real behavior to `getSettings().debug`
-when adding it, and keep it distinct from the `?debug` URL param (which drives
-console verbosity and `window.__game`, see `docs/configuration.md`).
+mission, skipping the intro), a **DEBUG MODE** toggle (`debug: "on" | "off"`,
+also persisted), and two feature flags. DEBUG MODE is currently an inert flag —
+a hook reserved for future developer diagnostics — so wire real behavior to
+`getSettings().debug` when adding it, and keep it distinct from the `?debug` URL
+param (which drives console verbosity and `window.__game`, see
+`docs/configuration.md`).
+
+The two feature flags gate recently-added systems so they can be toggled at
+runtime:
+
+- **AUTO LEVEL STATS** (`autoLevelStats: "on" | "off"`) gates the automatic
+  per-level base-stat growth (`src/game/leveling.ts`). The app applies it to
+  the engine via `setAutoStatGainsEnabled` from `settings.ts` (mirroring how
+  audio/haptics are applied). Off makes `autoGainAt` return 0, which cascades
+  through `baseStatBonus`, `levelStatGains`, and `autoPowerScale` — so the
+  hero's free gains AND the horde's compensating hp scale (menace.ts) switch
+  off together and the balance stays whole. It gates simulation, so it needs an
+  engine-side setter; a website-only flag would leave the engine unaware.
+- **CHARACTER GEAR** (`characterGear: "on" | "off"`) gates drawing the worn
+  armor + held weapon on the field hero sprite. It is a pure render concern:
+  `render.ts` reads the flag and passes `{ gear }` to `playerDollLayers`
+  (`paper-doll.ts`), which drops to the bare body when off. The HUD avatar and
+  inventory portrait always pass gear on, so only the field character changes.
 
 ## Reuse through oss-framework
 

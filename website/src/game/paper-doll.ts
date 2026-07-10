@@ -64,14 +64,21 @@ const LEFT_POINTING_ICONS = new Set([
  * The dressed player as an ordered sprite stack for one pose: body, worn
  * armor overlays, then the held weapon. Layers are atlas names — a missing
  * sprite (unknown def, stale save) degrades to "not drawn" downstream.
+ *
+ * `opts.gear` (default true) drives the developer CHARACTER GEAR flag: pass
+ * `false` to strip the worn-armor overlays and held weapon down to the bare
+ * body, as the hero looked before the paper-doll landed. The field renderer
+ * honors the flag; the DOM avatars keep their gear on.
  */
 export function playerDollLayers(
   state: GameState,
   frame: DollFrame,
+  opts: { gear?: boolean } = {},
 ): DollLayer[] {
   const layers: DollLayer[] = [
     { sprite: `${playerAppearance(state)}_${frame}`, dx: 0, dy: 0 },
   ];
+  if (opts.gear === false) return layers;
   const equipment = state.player.equipment;
   for (const slot of WORN_ORDER) {
     const piece = equipment[slot];

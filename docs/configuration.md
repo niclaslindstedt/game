@@ -8,25 +8,32 @@ persisted on-device in `localStorage` under `<storagePrefix>:settings`
 field of the identity config (`game.config.json`) — this game ships it as its
 own namespace, and a sequel changes it there once:
 
-| Setting                    | Values                                                      | Default                                                     |
-| -------------------------- | ----------------------------------------------------------- | ----------------------------------------------------------- |
-| Controls → Mouse           | follow cursor / hold to steer                               | follow cursor on fine pointers, hold on touch-first devices |
-| Controls → Keys            | WASD move / mouse only                                      | WASD move on fine pointers, off on touch-first devices      |
-| Controls → Powerups (use)  | use on pickup / use manually (tap a slot, click, E, or 1-3) | manual everywhere                                           |
-| Controls → Powerups (side) | lower left / lower right                                    | lower left                                                  |
-| Music volume               | 0–100% in quarter steps                                     | 80%                                                         |
-| Sound FX volume            | 0–100% in quarter steps                                     | 100%                                                        |
-| Hardcore                   | on / off                                                    | off (softcore: death loses nothing)                         |
-| Developer → Debug mode     | on / off                                                    | off (inert flag; the row itself is hidden until unlocked)   |
+| Setting                      | Values                                                      | Default                                                                      |
+| ---------------------------- | ----------------------------------------------------------- | ---------------------------------------------------------------------------- |
+| Controls → Mouse             | follow cursor / hold to steer                               | follow cursor on fine pointers, hold on touch-first devices                  |
+| Controls → Keys              | WASD move / mouse only                                      | WASD move on fine pointers, off on touch-first devices                       |
+| Controls → Powerups (use)    | use on pickup / use manually (tap a slot, click, E, or 1-3) | manual everywhere                                                            |
+| Controls → Powerups (side)   | lower left / lower right                                    | lower left                                                                   |
+| Music volume                 | 0–100% in quarter steps                                     | 80%                                                                          |
+| Sound FX volume              | 0–100% in quarter steps                                     | 100%                                                                         |
+| Hardcore                     | on / off                                                    | off (softcore: death loses nothing)                                          |
+| Developer → Debug mode       | on / off                                                    | off (inert flag; the row itself is hidden until unlocked)                    |
+| Developer → Auto level stats | on / off                                                    | on (free per-level base-stat growth; the row is hidden until unlocked)       |
+| Developer → Character gear   | on / off                                                    | on (worn armor + weapon on the field hero; the row is hidden until unlocked) |
 
 A hidden **DEVELOPER** row unlocks at the bottom of SETTINGS after the title
 screen's moon Easter egg is found — a long-press on the title moon detonates it
 and latches `developerUnlocked` (persisted, so the row then survives launches).
 The player opens SETTINGS themselves to find it; the detonation does nothing
 else. The developer screen offers **SELECT LEVEL** (the warp picker — jump into
-any mission regardless of unlock state, skipping the intro) and a **DEBUG MODE**
-toggle. DEBUG MODE is a persisted flag with no wired-up behavior yet, distinct
-from the `?debug` URL parameter below.
+any mission regardless of unlock state, skipping the intro), a **DEBUG MODE**
+toggle, and two feature flags. DEBUG MODE is a persisted flag with no wired-up
+behavior yet, distinct from the `?debug` URL parameter below. **AUTO LEVEL
+STATS** turns the automatic per-level base-stat growth on or off — off also
+drops the horde's compensating hp scaling in lockstep (both derive from the
+same rule), so only chosen points and gear push the hero ahead of the curve.
+**CHARACTER GEAR** shows or hides the worn armor and held weapon on the field
+hero sprite; the HUD avatar and inventory portrait stay dressed either way.
 
 Desktop keyboard controls (when **Keys** is set to WASD): WASD or the arrow
 keys run, **Shift** walks, **Space** jumps, **1/2/3** fire the powerup dock

@@ -5,6 +5,8 @@
 // hold-to-steer with instant item use, mouse players get cursor steering
 // with click-to-use.
 
+import { setAutoStatGainsEnabled } from "@game/core";
+
 import { storageKey } from "../identity.ts";
 
 import { setAudioVolumes } from "./audio.ts";
@@ -48,6 +50,22 @@ export type Hardcore = "on" | "off";
  * hidden DEVELOPER menu (see `developerUnlocked`). */
 export type DebugMode = "on" | "off";
 
+/** AUTO LEVEL STATS: a developer feature flag for the automatic per-level
+ * base-stat growth (the WoW-style gains a ding hands the hero on its own,
+ * underneath the chosen point — see the engine's leveling.ts). `on` (default)
+ * is the shipped behavior; `off` strips both the free gains AND the horde's
+ * compensating hp scaling in lockstep (they derive from the same rule), so
+ * only chosen points and gear move the hero ahead of the curve. Applied to the
+ * engine via `setAutoStatGainsEnabled`. */
+export type AutoLevelStats = "on" | "off";
+
+/** CHARACTER GEAR: a developer feature flag for drawing the worn armor and
+ * held weapon on the hero SPRITE in the field (the paper-doll — see
+ * paper-doll.ts / render.ts). `on` (default) dresses the character; `off`
+ * renders the bare body as before the paper-doll landed. The HUD avatar and
+ * inventory portrait stay dressed regardless. */
+export type CharacterGear = "on" | "off";
+
 export type GameSettings = {
   steering: SteeringMode;
   itemUse: ItemUseMode;
@@ -64,6 +82,10 @@ export type GameSettings = {
   developerUnlocked: boolean;
   /** Developer DEBUG toggle — persisted but inert for now (see DebugMode). */
   debug: DebugMode;
+  /** Developer flag: automatic per-level base-stat growth (see AutoLevelStats). */
+  autoLevelStats: AutoLevelStats;
+  /** Developer flag: worn armor + weapon on the field hero (see CharacterGear). */
+  characterGear: CharacterGear;
 };
 
 const STORAGE_KEY = storageKey("settings");
@@ -93,6 +115,9 @@ function defaults(): GameSettings {
     // The developer menu stays hidden until the moon Easter egg is found.
     developerUnlocked: false,
     debug: "off",
+    // Developer feature flags default to the shipped behavior (both on).
+    autoLevelStats: "on",
+    characterGear: "on",
   };
 }
 
@@ -145,6 +170,14 @@ function load(): GameSettings {
         stored.debug === "on" || stored.debug === "off"
           ? stored.debug
           : base.debug,
+      autoLevelStats:
+        stored.autoLevelStats === "on" || stored.autoLevelStats === "off"
+          ? stored.autoLevelStats
+          : base.autoLevelStats,
+      characterGear:
+        stored.characterGear === "on" || stored.characterGear === "off"
+          ? stored.characterGear
+          : base.characterGear,
     };
   } catch {
     return base; // private mode / corrupt JSON — play with defaults
@@ -154,6 +187,7 @@ function load(): GameSettings {
 const settings: GameSettings = load();
 setAudioVolumes({ music: settings.musicVolume, sfx: settings.sfxVolume });
 setHapticsEnabled(settings.vibration === "on");
+setAutoStatGainsEnabled(settings.autoLevelStats === "on");
 
 /** The live settings singleton — cheap to read every simulation tick. */
 export function getSettings(): GameSettings {
@@ -167,6 +201,7 @@ export function updateSettings(patch: Partial<GameSettings>): GameSettings {
   settings.sfxVolume = clamp01(settings.sfxVolume);
   setAudioVolumes({ music: settings.musicVolume, sfx: settings.sfxVolume });
   setHapticsEnabled(settings.vibration === "on");
+  setAutoStatGainsEnabled(settings.autoLevelStats === "on");
   try {
     window.localStorage.setItem(STORAGE_KEY, JSON.stringify(settings));
   } catch {
