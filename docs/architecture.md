@@ -376,8 +376,11 @@ pixelated`; enemies swap to generated wounded sprite variants as hp falls
   (persistent named **characters** — the Diablo-style save model: each hero
   owns one evolving build carried into every difficulty, plus per-difficulty
   clear/beaten bookmarks that unlock the ladder in order and open a
-  difficulty's free level-select once beaten; HARDCORE is per-character
-  permadeath, chosen at creation in `CharacterScreen.tsx`), `highscores.ts`
+  difficulty's free level-select once beaten; a SOFTCORE death banks the run's
+  build so the hero keeps the levels, stats and items earned it and just
+  restarts the level, while HARDCORE is per-character permadeath — a death
+  retires the hero for good, chosen at creation in `CharacterScreen.tsx`),
+  `highscores.ts`
   (per-difficulty banked runs — survival
   time, kills, player level reached, and a full end-of-run session snapshot —
   feeding the end-of-run best time and the menu's browsable HIGH SCORES board,

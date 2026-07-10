@@ -27,11 +27,22 @@ import { UpdateModal } from "./game/UpdateModal.tsx";
 // owns the PWA update lifecycle so a new deploy can never silently reload
 // mid-run.
 export function App() {
-  // The active hero. null = on the character roster (pick or create one). Every
-  // run and the title screen's difficulty ladder belong to this character.
+  // The active hero, or null when none is chosen yet. The app opens on the
+  // title menu either way; the difficulty ladder and every run belong to this
+  // character once one is picked.
   const [character, setCharacter] = useState<Character | null>(() =>
     getActiveCharacter(),
   );
+
+  // Whether the character roster is open on top of the title, and why: "play"
+  // means PLAY sent us here to pick a hero and should drop into the difficulty
+  // ladder once one is chosen; "manage" means CHARACTERS (or a fallen hero) and
+  // returns to the title. null = the title menu itself is showing.
+  const [picking, setPicking] = useState<null | "play" | "manage">(null);
+  // Set when a hero is picked via PLAY, so the title mounts straight on the
+  // difficulty ladder instead of the main menu. Reset on every other route back
+  // to the title so a later visit opens on the menu.
+  const [startOnDifficulty, setStartOnDifficulty] = useState(false);
 
   // The pending run: the difficulty and starting level chosen on the menu.
   // null = still on the menu (or roster).
@@ -142,20 +153,23 @@ export function App() {
           setRun(null);
         }}
         // Ended for good (victory/defeat splash MENU): abandon the run and go
-        // back to the roster, refreshing the hero (a hardcore death has
-        // retired them; a victory has advanced them).
+        // back to the menu, refreshing the hero (a hardcore death has retired
+        // them; a softcore death banked the run; a victory advanced them).
         onQuit={() => {
           setParked(null);
           clearSavedRun();
           setRun(null);
-          // Re-read the hero: a victory advanced them, a hardcore death retired
-          // them. A fallen (or missing) hero can't play on — clear the active
-          // selection so the roster shows their fate; a living hero stays on the
-          // menu for another run.
+          // Re-read the hero: a victory advanced them, a softcore death kept
+          // their run, a hardcore death retired them. A fallen (or missing)
+          // hero can't play on — clear the active selection and drop onto the
+          // roster so the player sees their fate and picks another; a living
+          // hero stays on the title menu for another run.
           const refreshed = getActiveCharacter();
           if (!refreshed || refreshed.dead) {
             setActiveCharacterId(null);
             setCharacter(null);
+            setStartOnDifficulty(false);
+            setPicking("manage");
           } else {
             setCharacter(refreshed);
           }
@@ -164,15 +178,23 @@ export function App() {
     );
   }
 
-  // No hero selected: the roster (pick, create, or retire). Creating or picking
-  // a living hero makes them active and opens the title screen for them.
-  if (!character) {
+  // The character roster, opened on top of the title (PLAY with no hero, or
+  // CHARACTERS). Picking or creating a living hero makes them active; when PLAY
+  // sent us here ("play") the title then mounts straight on the difficulty
+  // ladder, otherwise it returns to the main menu. BACK returns to the title.
+  if (picking) {
     return (
       <>
         <CharacterScreen
           onPlay={(picked) => {
             setActiveCharacterId(picked.id);
             setCharacter(picked);
+            setStartOnDifficulty(picking === "play");
+            setPicking(null);
+          }}
+          onBack={() => {
+            setStartOnDifficulty(false);
+            setPicking(null);
           }}
         />
         <UpdateModal
@@ -193,21 +215,35 @@ export function App() {
           // Starting fresh abandons whatever was parked (in memory and storage).
           setParked(null);
           clearSavedRun();
+          // Consume the "open on the ladder" intent so returning to the title
+          // after this run lands on the main menu, not back on the ladder.
+          setStartOnDifficulty(false);
           setRun({
             difficulty,
             levelId,
             skipIntro: opts?.skipIntro,
           });
         }}
-        onBack={() => {
-          // Switch heroes: back to the roster. The parked run stays put — it's
-          // this hero's, offered again as CONTINUE if they're re-selected.
-          setCharacter(null);
+        onManageCharacters={() => {
+          // Open the roster to switch heroes / create one. The parked run stays
+          // put — it's this hero's, offered again as CONTINUE if re-selected.
+          setStartOnDifficulty(false);
+          setPicking("manage");
         }}
+        onNeedCharacter={() => {
+          // PLAY with no active hero: pick or create one, then drop into the
+          // difficulty ladder for them.
+          setStartOnDifficulty(false);
+          setPicking("play");
+        }}
+        startOnDifficulty={startOnDifficulty}
         onResume={
-          // CONTINUE is the active hero's alone: only offer it when the parked
-          // run belongs to them and they still live.
-          parked && parked.characterId === character.id && !character.dead
+          // CONTINUE is the active hero's alone: only offer it when a hero is
+          // active, the parked run belongs to them, and they still live.
+          parked &&
+          character &&
+          parked.characterId === character.id &&
+          !character.dead
             ? () => {
                 setRun({
                   difficulty: parked.difficulty,

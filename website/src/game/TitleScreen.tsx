@@ -135,16 +135,28 @@ function unlockAudio() {
   playTitleMusic();
 }
 
+/** The furthest difficulty rung this hero has unlocked — where the ladder
+ * opens (a fresh hero lands on EASY, the only one open). */
+function furthestUnlockedDifficulty(character: Character): number {
+  return DIFFICULTY_ORDER.reduce(
+    (best, id, i) => (isDifficultyUnlocked(character, id) ? i : best),
+    0,
+  );
+}
+
 export function TitleScreen({
   character,
   onStart,
   onResume,
-  onBack,
+  onManageCharacters,
+  onNeedCharacter,
+  startOnDifficulty = false,
 }: {
-  /** The active hero. The difficulty ladder and level picker read their
-   * unlock/clear state from this character's progress, and the run starts from
-   * their build. */
-  character: Character;
+  /** The active hero, or null when none is selected yet (the menu still opens
+   * on the title; PLAY then routes through character select). The difficulty
+   * ladder and level picker read their unlock/clear state from this character's
+   * progress, and the run starts from their build. */
+  character: Character | null;
   onStart: (
     difficulty: Difficulty,
     levelId: string,
@@ -154,13 +166,25 @@ export function TitleScreen({
    * menu from the pause screen). When set, the menu offers CONTINUE, which
    * drops straight back into the frozen run. */
   onResume?: () => void;
-  /** Return to the character roster (switch heroes / create a new one). */
-  onBack: () => void;
+  /** Open the character roster to switch heroes / create a new one (CHARACTERS,
+   * and the target when PLAY needs a hero but one is already active). */
+  onManageCharacters: () => void;
+  /** PLAY was chosen with no active hero: open the roster to pick or create one
+   * first, then drop into the difficulty ladder for it. */
+  onNeedCharacter: () => void;
+  /** Mount straight on the difficulty ladder (set when returning from the
+   * roster via PLAY) instead of the main menu. */
+  startOnDifficulty?: boolean;
 }) {
   const [assets, setAssets] = useState<GameAssets | null>(null);
-  const [screen, setScreen] = useState<MenuScreen>("main");
-  // Cursor position per screen; the difficulty list opens on MEDIUM.
-  const [cursor, setCursor] = useState(0);
+  const [screen, setScreen] = useState<MenuScreen>(
+    startOnDifficulty && character ? "difficulty" : "main",
+  );
+  // Cursor position per screen; the difficulty ladder opens on the hero's
+  // furthest-unlocked rung (see furthestUnlockedDifficulty).
+  const [cursor, setCursor] = useState(() =>
+    startOnDifficulty && character ? furthestUnlockedDifficulty(character) : 0,
+  );
   // The difficulty picked on the ladder — the level-select screen that
   // follows reads it to decide which levels are unlocked (progress is per
   // difficulty), and it carries into the run.
@@ -270,14 +294,15 @@ export function TitleScreen({
           aria: "new-game",
           action: () => {
             playUiSound(synth, "confirm");
+            // No hero yet: pick or create one first — the roster drops back
+            // into the difficulty ladder once a hero is chosen.
+            if (!character) {
+              onNeedCharacter();
+              return;
+            }
             setScreen("difficulty");
-            // Open on the hardest rung this hero has unlocked (a fresh hero
-            // lands on EASY — the only one open).
-            const furthest = DIFFICULTY_ORDER.reduce(
-              (best, id, i) => (isDifficultyUnlocked(character, id) ? i : best),
-              0,
-            );
-            setCursor(furthest);
+            // Open on the hardest rung this hero has unlocked.
+            setCursor(furthestUnlockedDifficulty(character));
           },
         },
         {
@@ -285,7 +310,7 @@ export function TitleScreen({
           aria: "characters",
           action: () => {
             playUiSound(synth, "back");
-            onBack();
+            onManageCharacters();
           },
         },
         {
@@ -317,7 +342,7 @@ export function TitleScreen({
         },
       ];
     }
-    if (screen === "difficulty") {
+    if (screen === "difficulty" && character) {
       return [
         ...DIFFICULTY_ORDER.map((id) => {
           const def = difficultyDef(id);
@@ -366,7 +391,7 @@ export function TitleScreen({
         backTo("main", onResume ? 1 : 0),
       ];
     }
-    if (screen === "levels") {
+    if (screen === "levels" && character) {
       // Warp mode (opened from the developer menu's SELECT LEVEL) ignores the
       // unlock gate: every level is reachable so you can try any of them, and
       // picking one drops straight into play with no intro. Backing out returns
@@ -653,7 +678,8 @@ export function TitleScreen({
     character,
     onStart,
     onResume,
-    onBack,
+    onManageCharacters,
+    onNeedCharacter,
     settingsTick,
     difficulty,
     warp,

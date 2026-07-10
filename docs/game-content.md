@@ -183,13 +183,15 @@ stat sheet tucked behind the portrait (hover or tap it) so the bag grid
 owns the screen.
 
 What the campaign _does_ persist is the **character** and its **completion**,
-on-device (`website/src/game/characters.ts`). The app opens on the hero roster
-(pick, create, or retire — see [configuration.md](configuration.md)); the
-chosen hero's build carries into everything, and their progress is tracked per
-difficulty. Clearing a level records it, and the victory splash offers **NEXT
-LEVEL** (advancing along `LEVEL_ORDER`, carrying the difficulty). A hero is
-walked through the story in order — choosing a difficulty (PLAY → difficulty)
-drops them straight into the next unbeaten level, no picker. Only once the whole
+on-device (`website/src/game/characters.ts`). The app opens on the title menu;
+**PLAY** opens the hero roster (pick, create, or retire — see
+[configuration.md](configuration.md)) when no hero is active, then drops into
+the difficulty ladder for the chosen one. The chosen hero's build carries into
+everything, and their progress is tracked per difficulty. Clearing a level
+records it, and the victory splash offers **NEXT LEVEL** (advancing along
+`LEVEL_ORDER`, carrying the difficulty). A hero is walked through the story in
+order — choosing a difficulty (PLAY → difficulty) drops them straight into the
+next unbeaten level, no picker. Only once the whole
 campaign is beaten at a difficulty does that difficulty's **level-select** screen
 open, as a free replay picker (the grind-for-gear endgame). The difficulty
 ladder itself unlocks in order per character: a rung opens once the one before
@@ -202,8 +204,12 @@ the runs four ways (survival time, kills-per-minute, mobs killed, level reached)
 and opens any banked run into a detail card of the whole session.
 
 **HARDCORE**, chosen when the character is created, makes death permanent: a
-hardcore hero that dies is retired for good (kept in the roster as fallen). A
-softcore death costs nothing — the build is only ever banked on victory. The
+hardcore hero that dies is retired for good (kept in the roster as fallen) and
+the death splash offers only **MENU**. A softcore death costs no progress — the
+run's build is banked on death just as on victory, so the hero keeps the levels,
+stats and items earned it and the splash offers **RETRY** (restart the level
+from that kept build) or **MENU**; only the level-clear bookmarks wait for an
+actual victory. The
 level cap is **99** (`LEVELING.maxLevel`): at the cap XP stops banking levels
 and the endgame becomes the hunt for cap-level gear.
 

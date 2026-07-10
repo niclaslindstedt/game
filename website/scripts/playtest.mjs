@@ -61,17 +61,19 @@ page.on("pageerror", (e) => console.error("PAGE ERROR:", e.message));
 // `?bot=` hands the run to the engine autopilot: it dismisses the intro,
 // steers, jumps, and spends level-ups on its own.
 await page.goto(`${url}/?debug&bot=${strategy}`);
-// The app opens on the CHARACTER roster. A fresh browser has no heroes, so the
-// create form is shown: name one and CREATE it (softcore by default) to reach
-// the title menu.
-await page.getByRole("textbox", { name: "character-name" }).waitFor();
-await page.getByRole("textbox", { name: "character-name" }).fill("BOT");
-await page.getByRole("button", { name: "character-create" }).click();
-// The Doom-style menu: PLAY, the chosen difficulty rung, then the level.
-// Wait for the menu (asset load) before shooting the splash.
+// The app opens on the Doom-style title menu. Wait for it (asset load) before
+// shooting the splash, then PLAY. With no active hero yet, PLAY opens the
+// character roster.
 await page.getByRole("button", { name: "new-game" }).waitFor();
 await page.screenshot({ path: `${shotDir}/title.png` });
 await page.getByRole("button", { name: "new-game" }).click();
+// A fresh browser has no heroes, so the create form is shown: name one and
+// CREATE it (softcore by default) to drop straight into the difficulty ladder.
+await page.getByRole("textbox", { name: "character-name" }).waitFor();
+await page.getByRole("textbox", { name: "character-name" }).fill("BOT");
+await page.getByRole("button", { name: "character-create" }).click();
+// The chosen difficulty rung, then the level.
+await page.getByRole("button", { name: `difficulty-${difficulty}` }).waitFor();
 await page.screenshot({ path: `${shotDir}/difficulty.png` });
 await page.getByRole("button", { name: `difficulty-${difficulty}` }).click();
 // An unbeaten difficulty walks straight into the campaign (no mission list) —

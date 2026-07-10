@@ -1,9 +1,10 @@
 // SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
-// The CHARACTER roster + creation screen — the entry point the app opens on.
-// A player picks a living hero to play on, creates a new one (naming it and
-// choosing HARDCORE here, where the choice belongs), or retires the fallen.
-// Selecting or creating a hero hands it up via `onPlay`; the title screen's
-// difficulty ladder follows for that character.
+// The CHARACTER roster + creation screen — reached from the title menu by PLAY
+// (with no active hero) or CHARACTERS. A player picks a living hero to play on,
+// creates a new one (naming it and choosing HARDCORE here, where the choice
+// belongs), retires the fallen, or backs out (`onBack`) to the title. Selecting
+// or creating a hero hands it up via `onPlay`; when PLAY sent them here the
+// title's difficulty ladder follows for that character.
 
 import { useCallback, useEffect, useState, type CSSProperties } from "react";
 
@@ -42,10 +43,13 @@ function summarize(character: Character): string {
 
 export function CharacterScreen({
   onPlay,
+  onBack,
 }: {
   /** A living hero was selected or freshly created — play on with them (the
    * app makes them active and opens the difficulty ladder). */
   onPlay: (character: Character) => void;
+  /** Leave the roster without picking anyone — back to the title menu. */
+  onBack: () => void;
 }) {
   const [assets, setAssets] = useState<GameAssets | null>(null);
   const [roster, setRoster] = useState<Character[]>(() => loadCharacters());
@@ -146,7 +150,7 @@ export function CharacterScreen({
                   text={
                     hardcore
                       ? "ONE LIFE - DEATH RETIRES THIS HERO FOREVER"
-                      : "SOFTCORE - DEATH COSTS NOTHING"
+                      : "SOFTCORE - DEATH KEEPS YOUR PROGRESS"
                   }
                   scale={2}
                   color="#9aa3ad"
@@ -164,26 +168,26 @@ export function CharacterScreen({
             >
               <PixelText font={font} text="CREATE" scale={3} color="#7ef0c8" />
             </button>
-            {roster.length > 0 && (
-              <button
-                type="button"
-                className="menu-item character-cancel"
-                aria-label="character-cancel"
-                onClick={() => {
-                  playUiSound(synth, "back");
+            <button
+              type="button"
+              className="menu-item character-cancel"
+              aria-label="character-cancel"
+              onClick={() => {
+                playUiSound(synth, "back");
+                // With heroes to fall back on, CANCEL returns to the roster;
+                // with none (the create form opened straight up) it backs all
+                // the way out to the title menu.
+                if (roster.length > 0) {
                   setCreating(false);
                   setName("");
                   setHardcore(false);
-                }}
-              >
-                <PixelText
-                  font={font}
-                  text="CANCEL"
-                  scale={3}
-                  color="#9aa3ad"
-                />
-              </button>
-            )}
+                } else {
+                  onBack();
+                }
+              }}
+            >
+              <PixelText font={font} text="CANCEL" scale={3} color="#9aa3ad" />
+            </button>
           </div>
         </div>
       ) : (
@@ -273,6 +277,21 @@ export function CharacterScreen({
                 scale={3}
                 color="#7ef0c8"
               />
+            </span>
+          </button>
+
+          <button
+            type="button"
+            className="menu-item character-back"
+            aria-label="character-back"
+            onPointerEnter={() => setHover(-2)}
+            onClick={() => {
+              playUiSound(synth, "back");
+              onBack();
+            }}
+          >
+            <span className="menu-item-text">
+              <PixelText font={font} text="BACK" scale={3} color="#9aa3ad" />
             </span>
           </button>
         </nav>
