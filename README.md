@@ -219,15 +219,16 @@ make build         # typecheck everything and produce website/dist
 
 The game has no user-facing configuration yet. Build-time knobs:
 
-| Variable                   | Effect                                                                                                                                          |
-| -------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------- |
-| `GITHUB_PAT`               | Auth for GitHub Packages installs (`.npmrc`)                                                                                                    |
-| `VITE_BASE`                | Deploy-slot base path (`/`, `/preview/`, `/branch/`); defaults to `/` for local builds                                                          |
-| `?debug` URL param         | Turns on debug-level console output (`src/output.ts`) and exposes the live game state as `window.__game` for inspection and automated playtests |
-| `?level=<id>` URL param    | Starts runs on a specific catalog level (`spacez_hq`, `moon`, `mars`, `the_rift`) instead of the story default                                  |
-| `?seed=<n>` URL param      | Pins the run's layout seed so retries reproduce the same level layout                                                                           |
-| `?cutscene=<id>` URL param | Opens the cutscene workbench: loops one scene from the catalog for authoring iteration (see `docs/configuration.md`)                            |
-| Hidden DEVELOPER menu      | Long-press the title moon to unlock a DEVELOPER row in SETTINGS: level select (warp) and a (currently inert) debug-mode toggle                  |
+| Variable                     | Effect                                                                                                                                                  |
+| ---------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `GITHUB_PAT`                 | Auth for GitHub Packages installs (`.npmrc`)                                                                                                            |
+| `VITE_BASE`                  | Deploy-slot base path (`/`, `/preview/`, `/branch/`); defaults to `/` for local builds                                                                  |
+| `VITE_CHARACTER_SIGNING_KEY` | HMAC key that signs exported character archives so hand-edited saves fail to re-import; falls back to a committed default (see `docs/configuration.md`) |
+| `?debug` URL param           | Turns on debug-level console output (`src/output.ts`) and exposes the live game state as `window.__game` for inspection and automated playtests         |
+| `?level=<id>` URL param      | Starts runs on a specific catalog level (`spacez_hq`, `moon`, `mars`, `the_rift`) instead of the story default                                          |
+| `?seed=<n>` URL param        | Pins the run's layout seed so retries reproduce the same level layout                                                                                   |
+| `?cutscene=<id>` URL param   | Opens the cutscene workbench: loops one scene from the catalog for authoring iteration (see `docs/configuration.md`)                                    |
+| Hidden DEVELOPER menu        | Long-press the title moon to unlock a DEVELOPER row in SETTINGS: level select (warp) and a (currently inert) debug-mode toggle                          |
 
 ## Examples
 

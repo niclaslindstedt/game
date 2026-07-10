@@ -241,6 +241,65 @@ export function createCharacter(name: string, hardcore: boolean): Character {
   return character;
 }
 
+// ---- Import / export (see character-transfer.ts) -----------------------------
+
+/** Serialize a character to canonical JSON — the `character.json` an export
+ * signs and ships (see character-transfer.ts). */
+export function serializeCharacter(character: Character): string {
+  return JSON.stringify(character);
+}
+
+/**
+ * Validate a parsed value as a Character, or throw. Every field is defended
+ * (a hand-authored file can carry anything) and the loadout is adopted through
+ * `migrateLoadout` so a build from an older catalog can't crash the apply. The
+ * id is preserved when present but is not trusted for uniqueness — the roster
+ * add (`importCharacter`) mints a fresh one.
+ */
+export function normalizeCharacter(data: unknown): Character {
+  if (!data || typeof data !== "object") {
+    throw new Error("not a character");
+  }
+  const c = data as Partial<Character>;
+  if (typeof c.name !== "string") {
+    throw new Error("character is missing a name");
+  }
+  const strings = (v: unknown): string[] =>
+    Array.isArray(v) ? v.filter((x): x is string => typeof x === "string") : [];
+  let loadout: Loadout | null;
+  try {
+    loadout = c.loadout ? migrateLoadout(c.loadout) : null;
+  } catch {
+    // A malformed build is dropped rather than crashing the import — the hero
+    // still comes across with its progress bookmarks intact.
+    loadout = null;
+  }
+  return {
+    id: typeof c.id === "string" ? c.id : newId(),
+    name: c.name.trim() || "HERO",
+    hardcore: c.hardcore === true,
+    createdAt: typeof c.createdAt === "number" ? c.createdAt : Date.now(),
+    dead: c.dead === true,
+    loadout,
+    clears: strings(c.clears),
+    beaten: strings(c.beaten) as Difficulty[],
+    storySeen: strings(c.storySeen),
+  };
+}
+
+/**
+ * Add an imported character to the roster under a FRESH id, so importing a hero
+ * onto a device that still has the original makes a copy rather than clobbering
+ * it. Returns the stored character.
+ */
+export function importCharacter(data: unknown): Character {
+  const character: Character = { ...normalizeCharacter(data), id: newId() };
+  const roster = loadCharacters();
+  roster.push(character);
+  saveCharacters(roster);
+  return character;
+}
+
 /** Delete a character from the roster (roster screen). Clears the active
  * selection if it was the one removed. */
 export function deleteCharacter(id: string): void {

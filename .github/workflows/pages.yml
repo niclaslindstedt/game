@@ -62,6 +62,12 @@ env:
   BRANCH_DEPLOY_REF: branch-deploy
   # GitHub Packages auth for @niclaslindstedt/oss-framework (see .npmrc).
   GITHUB_PAT: ${{ secrets.GITHUB_PAT || github.token }}
+  # Signs exported character archives so a hand-edited save fails to re-import
+  # (see website/src/game/character-transfer.ts). Optional — an empty secret
+  # falls back to the committed default key baked into the bundle. Set the
+  # `CHARACTER_SIGNING_KEY` repo secret to rotate it. Inherited by every build
+  # step (preview / root / branch) since Vite only reads VITE_-prefixed vars.
+  VITE_CHARACTER_SIGNING_KEY: ${{ secrets.CHARACTER_SIGNING_KEY }}
 
 jobs:
   build:
