@@ -31,12 +31,14 @@ import type { PixelFont } from "@ui/lib/pixel-font.ts";
 export const PICKUP_CARD_TTL_MS = 5200;
 
 /**
- * Wrap width for the pickup name, in rem: the `.pickup-card` caps at 22rem,
- * less the icon, gap, and padding — so a long, affix-built weapon name wraps
- * within the card instead of stretching it off both edges of the screen. Keep
- * in step with `.pickup-card` in styles.css.
+ * Wrap width for the pickup name, in rem. Kept deliberately narrow so a long,
+ * multi-word name (VICIOUS SECURITY BATON, an affix-built weapon) breaks onto
+ * two or three lines and the card grows TALLER instead of stretching wide — at
+ * the 2× name scale one rem here spans two glyph-pixels, so ~9rem is roughly a
+ * dozen characters before a wrap. `.pickup-card`'s max-width caps just above
+ * this (name + icon + gap + padding); keep the two in step in styles.css.
  */
-const PICKUP_NAME_REM = 17;
+const PICKUP_NAME_REM = 9;
 
 /** Rarity ladder rank — drives how much reveal spectacle a tier earns. */
 const TIER_RANK: Record<Tier, number> = {
