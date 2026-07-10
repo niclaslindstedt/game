@@ -70,7 +70,7 @@ const killsPerDay = killsPerHour * hoursPerDay;
 // The per-kill chance that a kill drops a golden XP arrow at `diff`: the drop
 // gate (base + the rung's bonus + LUCK) times the arrow slice of the ladder
 // (thinned by `arrowDropMult`, zero on JESUS). The nuke slice is skimmed first,
-// hence the `(1 - nukeShare)`; the tiny per-level unique slice is ignored.
+// hence the `(1 - nukeShare)`.
 const arrowDropProb = (diff) => {
   const d = difficultyDef(diff);
   const dropChance = Math.min(

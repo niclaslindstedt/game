@@ -2,7 +2,7 @@
 // The difficulty ladder: a rung turns a whole rack of knobs at once — the
 // hero's opening kit (starting weapon + stat head-start), the horde's count
 // and RELATIVE level, the drop economy (medkits/armor/powerups thin out, the
-// tier and unique slices sweeten), the stamina burn, and how touchy the
+// tier chances sweeten), the stamina burn, and how touchy the
 // rampage meter is. MEDIUM is the exact 1.0 baseline the levels are tuned at.
 
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
@@ -69,7 +69,6 @@ describe("difficulty catalog", () => {
     expect(medium.armorDropMult).toBe(1);
     expect(medium.powerupDropMult).toBe(1);
     expect(medium.arrowDropMult).toBe(1);
-    expect(medium.uniqueDropChance).toBe(0);
     expect(medium.staminaDrainMult).toBe(1);
     expect(medium.menaceDecayMult).toBe(1);
     expect(medium.menaceEffectMult).toBe(1);
@@ -115,9 +114,6 @@ describe("difficulty catalog", () => {
       expect(next.playerMissMult).toBeGreaterThan(prev.playerMissMult);
       expect(next.enemyDodgeMult).toBeGreaterThan(prev.enemyDodgeMult);
       expect(next.dropChanceBonus).toBeGreaterThanOrEqual(prev.dropChanceBonus);
-      expect(next.uniqueDropChance).toBeGreaterThanOrEqual(
-        prev.uniqueDropChance,
-      );
       expect(next.tierChanceBonus.magic ?? 0).toBeGreaterThanOrEqual(
         prev.tierChanceBonus.magic ?? 0,
       );
@@ -373,7 +369,7 @@ describe("stamina burn (staminaDrainMult)", () => {
   });
 });
 
-describe("the drop economy (medkit/powerup mults, the unique slice)", () => {
+describe("the drop economy (medkit/powerup mults)", () => {
   // Feed the engine a scripted rng: the listed values are consumed in order,
   // then the fallback keeps everything else (crits, scatter) out of the way.
   const scriptRng = (state: GameState, values: number[], fallback = 0.99) => {
@@ -433,35 +429,15 @@ describe("the drop economy (medkit/powerup mults, the unique slice)", () => {
     expect(jesus.some((i) => i.kind === "medkit")).toBe(false);
     expect(jesus.some((i) => i.kind === "repair")).toBe(true);
   });
-
-  it("keeps the unique slice a strict no-op while no uniquePool exists", () => {
-    // JESUS has a live uniqueDropChance but the level ships no pool: the
-    // same scripted rolls must land the same drops as a zero-chance rung —
-    // not even a roll is drawn for the empty slice.
-    const rolls = [0.9, 0.9, 0.9, 0.0, 0.9, 0.2];
-    const medium = killForLoot("medium", rolls);
-    const jesus = killForLoot("jesus", rolls);
-    expect(medium.map((i) => i.kind)).toEqual(jesus.map((i) => i.kind));
-  });
 });
 
-describe("unique drops and the hp floor (custom catalog)", () => {
-  // A rung with a guaranteed unique slice and one with a bottomless level
-  // deficit, plus a level that actually ships a unique pool — the plumbing
-  // the shipped content doesn't exercise yet. Registered in beforeAll so the
+describe("the mob hp floor (custom catalog)", () => {
+  // A rung with a bottomless level deficit — registered in beforeAll so the
   // swap only covers this block; afterAll reinstalls the stock fixtures.
   beforeAll(() =>
     registerDefs({
       difficulties: {
         ...FIX_DIFFICULTIES,
-        test_unique: {
-          ...(FIX_DIFFICULTIES.jesus as NonNullable<
-            (typeof FIX_DIFFICULTIES)["jesus"]
-          >),
-          id: "test_unique",
-          index: 6,
-          uniqueDropChance: 1,
-        },
         test_paper: {
           ...(FIX_DIFFICULTIES.easy as NonNullable<
             (typeof FIX_DIFFICULTIES)["easy"]
@@ -471,62 +447,13 @@ describe("unique drops and the hp floor (custom catalog)", () => {
           mobLevelOffset: -30,
         },
       },
-      levels: {
-        test_level: FIX_LEVEL,
-        test_unique_level: {
-          ...FIX_LEVEL,
-          id: "test_unique_level",
-          loot: { ...FIX_LEVEL.loot, uniquePool: ["test_hammer"] },
-        },
-      },
+      levels: { test_level: FIX_LEVEL },
     }),
   );
   afterAll(() => installFixtures(true));
 
   it("floors the hp scale so a deep level deficit can't zero a mob out", () => {
     expect(mobHpScaleFor(1, "test_paper")).toBe(MENACE.mobHpScaleFloor);
-  });
-
-  it("draws a unique from the level's pool at the difficulty's chance", () => {
-    const state = createGame(SEED, "test_unique_level", "test_unique");
-    dismissIntro(state);
-    clearStage(state);
-    state.waveSpawned = state.waveSpawned.map(() => 1e9);
-    for (let i = 0; i < 4; i++) {
-      state.enemies.push({
-        id: 9100 + i,
-        defId: "test_minion",
-        pos: { x: 40, y: 40 + i * 30 },
-        home: { x: 40, y: 40 + i * 30 },
-        hp: 45,
-        maxHp: 45,
-        mlvl: 99,
-        speed: 0,
-        contactCooldownMs: 0,
-      });
-    }
-    state.enemies.push({
-      id: 9000,
-      defId: "test_minion",
-      pos: { x: state.player.pos.x + 20, y: state.player.pos.y },
-      home: { x: state.player.pos.x + 20, y: state.player.pos.y },
-      hp: 1,
-      maxHp: 45,
-      mlvl: 99,
-      speed: 0,
-      contactCooldownMs: 0,
-    });
-    state.player.weaponCooldownMs = 0;
-    // rolls: miss no, dodge no, crit no, drop gate pass, nuke no, unique
-    // gate pass (chance 1), pool pick 0 → test_hammer.
-    const rolls = [0.9, 0.9, 0.9, 0.0, 0.9, 0.0, 0.0];
-    let i = 0;
-    state.rng = () => (i < rolls.length ? (rolls[i++] as number) : 0.99);
-    step(state, idle, DT);
-    const dropped = state.items.find((item) => item.kind === "equipment");
-    expect(dropped?.kind === "equipment" && dropped.equipment.defId).toBe(
-      "test_hammer",
-    );
   });
 });
 
