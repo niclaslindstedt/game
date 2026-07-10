@@ -37,6 +37,7 @@ import {
   totalArmor,
   unequipToInventory,
   weaponDamage,
+  wouldUpgradeSlot,
   type EquipSlot,
   type Equipment,
   type GameState,
@@ -667,6 +668,13 @@ export function InventoryPanel({
                 key={index}
                 className={`inv-cell${
                   item && isArmorBroken(item) ? " broken" : ""
+                }${
+                  // A find that beats what's worn in its slot glows to pull the
+                  // eye — the cue that replaces auto-equip now that finds bank
+                  // to the bag. A broken piece never glows (it wears nothing).
+                  item && !isArmorBroken(item) && wouldUpgradeSlot(state, item)
+                    ? " upgrade"
+                    : ""
                 }`}
                 data-drop={`inv:${index}`}
                 style={

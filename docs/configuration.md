@@ -8,19 +8,19 @@ persisted on-device in `localStorage` under `<storagePrefix>:settings`
 field of the identity config (`game.config.json`) — this game ships it as its
 own namespace, and a sequel changes it there once:
 
-| Setting                      | Values                                                      | Default                                                                              |
-| ---------------------------- | ----------------------------------------------------------- | ------------------------------------------------------------------------------------ |
-| Controls → Mouse             | follow cursor / hold to steer                               | follow cursor on fine pointers, hold on touch-first devices                          |
-| Controls → Keys              | WASD move / mouse only                                      | WASD move on fine pointers, off on touch-first devices                               |
-| Controls → Powerups (use)    | use on pickup / use manually (tap a slot, click, E, or 1-3) | manual everywhere                                                                    |
-| Controls → Gear (auto-equip) | equip on pickup / keep in bag                               | equip on pickup (a stronger find is worn on the spot; off banks it to the bag)       |
-| Controls → Powerups (side)   | lower left / lower right                                    | lower left                                                                           |
-| Music volume                 | 0–100% in quarter steps                                     | 80%                                                                                  |
-| Sound FX volume              | 0–100% in quarter steps                                     | 100%                                                                                 |
-| Display → XP on kill         | on / off                                                    | on (floating "+N XP" text on kills)                                                  |
-| Developer → Debug mode       | on / off                                                    | off (inert flag; the row itself is hidden until unlocked)                            |
-| Developer → Auto level stats | on / off                                                    | off (opt-in free per-level base-stat growth; the row is hidden until unlocked)       |
-| Developer → Character gear   | on / off                                                    | off (opt-in worn armor + weapon on the field hero; the row is hidden until unlocked) |
+| Setting                      | Values                                                      | Default                                                                                                       |
+| ---------------------------- | ----------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------- |
+| Controls → Mouse             | follow cursor / hold to steer                               | follow cursor on fine pointers, hold on touch-first devices                                                   |
+| Controls → Keys              | WASD move / mouse only                                      | WASD move on fine pointers, off on touch-first devices                                                        |
+| Controls → Powerups (use)    | use on pickup / use manually (tap a slot, click, E, or 1-3) | manual everywhere                                                                                             |
+| Controls → Gear (auto-equip) | equip on pickup / keep in bag                               | keep in bag (finds bank to the bag and glow when they beat what's worn; on wears a stronger find on the spot) |
+| Controls → Powerups (side)   | lower left / lower right                                    | lower left                                                                                                    |
+| Music volume                 | 0–100% in quarter steps                                     | 80%                                                                                                           |
+| Sound FX volume              | 0–100% in quarter steps                                     | 100%                                                                                                          |
+| Display → XP on kill         | on / off                                                    | on (floating "+N XP" text on kills)                                                                           |
+| Developer → Debug mode       | on / off                                                    | off (inert flag; the row itself is hidden until unlocked)                                                     |
+| Developer → Auto level stats | on / off                                                    | off (opt-in free per-level base-stat growth; the row is hidden until unlocked)                                |
+| Developer → Character gear   | on / off                                                    | off (opt-in worn armor + weapon on the field hero; the row is hidden until unlocked)                          |
 
 A hidden **DEVELOPER** row unlocks at the bottom of SETTINGS after the title
 screen's moon Easter egg is found — a long-press on the title moon detonates it

@@ -106,9 +106,11 @@ function defaults(): GameSettings {
   return {
     steering: touchFirst ? "hold" : "hover",
     itemUse: "manual",
-    // Auto-equip on out of the box — a stronger find is worn the moment it's
-    // grabbed; a player who prefers to curate their loadout turns it off.
-    autoEquip: "on",
+    // Auto-equip off out of the box — finds bank to the bag so the player
+    // curates their own loadout; the inventory glows the pieces that beat
+    // what's worn to draw the eye. A player who wants finds worn the moment
+    // they're grabbed turns it on.
+    autoEquip: "off",
     powerupSide: "left",
     // Fine-pointer devices get WASD out of the box; touch has no keyboard,
     // so it defaults off and the on-screen dpad stays in charge.

@@ -3722,6 +3722,34 @@ body {
   filter: grayscale(1) brightness(0.55);
 }
 
+/* An UPGRADE: a bag find that out-scores whatever is worn in its slot. With
+   auto-equip off by default, this pulsing gold glow is what tells the player
+   "wear me" — it draws the eye to the piece worth equipping. The tier border
+   still shows through; the glow rides on top via box-shadow + a warm border so
+   it reads at a glance without hiding the rarity colour. */
+.inv-cell.upgrade {
+  border-color: #ffd24a;
+  animation: inv-upgrade-glow 1.3s ease-in-out infinite;
+}
+
+@keyframes inv-upgrade-glow {
+  0%,
+  100% {
+    box-shadow: 0 0 3px 0 rgba(255, 210, 74, 0.55);
+  }
+  50% {
+    box-shadow: 0 0 8px 2px rgba(255, 210, 74, 0.9);
+  }
+}
+
+/* Respect a reduced-motion preference: keep the gold cue, drop the pulse. */
+@media (prefers-reduced-motion: reduce) {
+  .inv-cell.upgrade {
+    animation: none;
+    box-shadow: 0 0 6px 1px rgba(255, 210, 74, 0.7);
+  }
+}
+
 /* The HUD purse: the coin icon sized to the stat-row text. */
 .hud-coin-row {
   gap: 0.3rem;
