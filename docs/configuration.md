@@ -13,6 +13,7 @@ own namespace, and a sequel changes it there once:
 | Controls → Mouse             | follow cursor / hold to steer                               | follow cursor on fine pointers, hold on touch-first devices                          |
 | Controls → Keys              | WASD move / mouse only                                      | WASD move on fine pointers, off on touch-first devices                               |
 | Controls → Powerups (use)    | use on pickup / use manually (tap a slot, click, E, or 1-3) | manual everywhere                                                                    |
+| Controls → Gear (auto-equip) | equip on pickup / keep in bag                               | equip on pickup (a stronger find is worn on the spot; off banks it to the bag)       |
 | Controls → Powerups (side)   | lower left / lower right                                    | lower left                                                                           |
 | Music volume                 | 0–100% in quarter steps                                     | 80%                                                                                  |
 | Sound FX volume              | 0–100% in quarter steps                                     | 100%                                                                                 |

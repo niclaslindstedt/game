@@ -617,6 +617,24 @@ export function TitleScreen({
         },
         {
           label:
+            s.autoEquip === "on"
+              ? "GEAR: EQUIP ON PICKUP"
+              : "GEAR: KEEP IN BAG",
+          aria: "controls-auto-equip",
+          blurb:
+            s.autoEquip === "on"
+              ? "STRONGER FINDS ARE WORN THE MOMENT YOU GRAB THEM"
+              : "FINDS GO TO THE BAG - EQUIP THEM YOURSELF",
+          action: () => {
+            playUiSound(synth, "confirm");
+            updateSettings({
+              autoEquip: s.autoEquip === "on" ? "off" : "on",
+            });
+            setSettingsTick((t) => t + 1);
+          },
+        },
+        {
+          label:
             s.powerupSide === "right"
               ? "POWERUPS: LOWER RIGHT"
               : "POWERUPS: LOWER LEFT",

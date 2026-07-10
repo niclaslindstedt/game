@@ -1326,6 +1326,31 @@ export function meetsLevelReq(state: GameState, equipment: Equipment): boolean {
   return state.player.level >= equipmentLevelReq(equipment.defId);
 }
 
+// Player setting (website settings `autoEquip`, applied via the
+// `setAutoEquipEnabled` setter): whether a picked-up piece that out-scores the
+// worn one is EQUIPPED ON THE SPOT (on) or banked to the bag for the player to
+// equip by hand (off). It gates the pickup path in step.ts only — the manual
+// AUTO-EQUIP sweep (autoEquipBest), the on-break weapon swap (a broken weapon
+// still needs a replacement), and the pure ranking predicates below are all
+// unaffected, so a player who turns auto-equip off keeps every manual escape
+// hatch. The engine default is on (the standalone/test baseline when no app
+// configures it); the shipped app applies the persisted choice on load. Tests
+// that toggle it must restore it.
+let autoEquipOnPickup = true;
+
+/** Toggle whether picked-up upgrades are worn on the spot (a player setting).
+ * Off banks them to the bag instead; the manual AUTO-EQUIP button and the
+ * on-break weapon swap still work. */
+export function setAutoEquipEnabled(enabled: boolean): void {
+  autoEquipOnPickup = enabled;
+}
+
+/** Whether the on-pickup auto-equip is active (see `setAutoEquipEnabled`). The
+ * pickup path in step.ts reads this to decide equip-on-spot vs bag-it. */
+export function isAutoEquipEnabled(): boolean {
+  return autoEquipOnPickup;
+}
+
 /** Is `candidate` strictly better than the piece occupying its slot? */
 export function isBetterEquipment(
   state: GameState,
