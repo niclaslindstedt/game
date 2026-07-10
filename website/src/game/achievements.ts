@@ -26,9 +26,11 @@ import { ACHIEVEMENTS } from "./achievement-defs.ts";
 import {
   applyEventsToTotals,
   applyRunStart,
+  applyWornEquipment,
   emptyTotals,
   type LifetimeTotals,
   type RunContext,
+  type WornPiece,
 } from "./achievement-totals.ts";
 
 /** The persisted blob: the framework ledger plus our counter totals. */
@@ -127,6 +129,23 @@ export function recordRunStarted(levelId: string): string[] {
   return fresh;
 }
 
+// The last-seen worn-gear signature: GameScreen reports the hero's outfit
+// every frame, so a cheap string compare keeps quiet frames free.
+let lastWornSig = "";
+
+/** Book the hero's currently-worn gear (the wardrobe feats) and return any
+ * unlocks it tipped over. Cheap to call per frame — it no-ops until the
+ * outfit actually changes. */
+export function recordWornEquipment(worn: readonly WornPiece[]): string[] {
+  const sig = worn.map((p) => `${p.slot}:${p.tier}:${p.defId}`).join("|");
+  if (sig === lastWornSig) return [];
+  lastWornSig = sig;
+  if (!applyWornEquipment(save.totals, worn)) return [];
+  const fresh = unlockSatisfied();
+  persist();
+  return fresh;
+}
+
 /** The player has seen their new badges (opened the browser) — dim the star. */
 export function acknowledgeAchievements(): void {
   if (save.unseen.length === 0) return;
@@ -137,6 +156,7 @@ export function acknowledgeAchievements(): void {
 /** Test hook: reset the module ledger (and storage) to a blank slate. */
 export function resetAchievementsForTest(): void {
   save = emptySave();
+  lastWornSig = "";
   try {
     window.localStorage.removeItem(STORAGE_KEY);
   } catch {

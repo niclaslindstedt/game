@@ -434,13 +434,18 @@ it is built with a companion at his side in mind.
 ## Achievements
 
 The game keeps an account-wide trophy shelf (`website/src/game/achievement-defs.ts`
-— app data, not engine): ~100 badges across seven shelves. **STORY** (clear
+— app data, not engine): ~130 badges across eight shelves. **STORY** (clear
 each mission, beat the campaign on each of the five difficulties, collect
 lore, meet the merchant), **COMBAT** (kill ladders for mobs / elites /
 bosses, plus feats — watch a boss flee, set off a nuke, reach full RAMPAGE,
-die once, clear a mission untouched or in under five minutes), **LOOT**
+die once, clear a mission untouched or in under five minutes, and damage
+ladders for the hardest single hit and the biggest one-strike burst — a
+nuke's screen wipe, an AoE sweep, a pierce volley — with rungs sized to the
+real damage model, **LOOT**
 (counted ladders for magic / rare / unique finds — 10, 25, 50, 100-style
-rungs — plus the first legendary and finding every unique), **ARSENAL** (one
+rungs — plus the first legendary and finding every unique), **WARDROBE**
+(first equip per gear slot, every slot filled at once, and full outfits of
+all-magic, all-rare, and all-unique quality), **ARSENAL** (one
 badge per hand-authored unique, icon and name straight from its def),
 **PARTY** (each spared legend and the full four), **HERO** (level 10 → 99),
 and **MASTERY** (total runs and farming one mission).

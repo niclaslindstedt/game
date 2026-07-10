@@ -98,6 +98,7 @@ import { ACHIEVEMENTS_BY_ID } from "./achievement-defs.ts";
 import {
   recordAchievementEvents,
   recordRunStarted,
+  recordWornEquipment,
   unseenAchievements,
 } from "./achievements.ts";
 import { AchievementsScreen } from "./AchievementsScreen.tsx";
@@ -1276,6 +1277,34 @@ export function GameScreen({
             stats: state.stats,
           }),
         );
+        // …and the hero's outfit for the wardrobe feats. Reported every
+        // frame; the store no-ops until the worn set actually changes, and
+        // equips made while a panel freezes the sim are still caught here
+        // (the loop keeps running under paused phases).
+        {
+          const eq = state.player.equipment;
+          const worn = [
+            {
+              slot: "weapon",
+              tier: eq.weapon.tier,
+              defId: eq.weapon.defId,
+            },
+          ];
+          for (const slot of [
+            "head",
+            "chest",
+            "legs",
+            "feet",
+            "charm",
+            "bag",
+          ] as const) {
+            const piece = eq[slot];
+            if (piece) {
+              worn.push({ slot, tier: piece.tier, defId: piece.defId });
+            }
+          }
+          celebrateAchievements(recordWornEquipment(worn));
+        }
 
         for (const event of state.events) {
           if (event.type === "lightning") {

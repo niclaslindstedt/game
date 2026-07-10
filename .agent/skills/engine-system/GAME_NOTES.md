@@ -289,4 +289,11 @@ sequel truncates this file to a stub and rebuilds it as its own systems land.
   a setState UPDATER must stay pure — advancing the toast queue inside
   `setAchievementToast((cur) => cur ?? queue.shift() ?? null)` double-shifts
   under StrictMode's double-invoke and eats the toast; shift queues in
-  effects (keyed by a bumped tick), never in updaters.
+  effects (keyed by a bumped tick), never in updaters. Second ingestion
+  channel (2026-07, wardrobe feats): state that changes WITHOUT an event
+  (worn gear — manual equips emit nothing) is snapshot-reported from the sim
+  loop every frame to a store hook (`recordWornEquipment`) that keeps a
+  cheap signature and no-ops on quiet frames; damage feats fold per-tick
+  event sums (one tick = one STRIKE) into max counters, with rungs grounded
+  in the balance calculators (leveling-curve.mjs, the weapon damage model)
+  rather than invented round numbers.

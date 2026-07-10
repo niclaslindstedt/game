@@ -1,7 +1,8 @@
 // SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
-// The achievement unlock TOAST: a gold-framed banner that drops in under the
-// XP strip when a badge is earned — the star, "ACHIEVEMENT UNLOCKED", and the
-// badge's name — with a sheen sweep and gold sparkles riding the frame. Sized
+// The achievement unlock TOAST: a gold-framed banner that rises from the
+// bottom edge when a badge is earned — the star, "ACHIEVEMENT UNLOCKED", and
+// the badge's name — with a sheen sweep and gold sparkles riding the frame.
+// Anchored bottom-center, under the pickup card's zone and clear of the HUD. Sized
 // a deliberate notch below the level-up burn and the unique pickup card: a
 // badge is a great moment, not the run's biggest one. One toast at a time;
 // GameScreen queues batched unlocks and keys the mount by `id` so each badge

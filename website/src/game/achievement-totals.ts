@@ -11,6 +11,7 @@
 // already consumes each `step()` plus the run-start hook GameScreen calls.
 
 import {
+  DIFFICULTY_DEFS,
   enemyDef,
   LEVEL_ORDER,
   type GameEvent,
@@ -65,6 +66,20 @@ export type LifetimeTotals = {
   untouchableClears: number;
   /** Victories faster than SPEED_CLEAR_MS. */
   speedClears: number;
+  /** DISTINCT equipment slots ever filled (the built-in sidearm doesn't
+   * count as arming the weapon slot — see `applyWornEquipment`). */
+  slotsWorn: string[];
+  /** The best FULL OUTFIT ever worn: with every slot filled at once, the
+   * lowest tier among the pieces, ranked regular 0 → magic 1 → rare 2 →
+   * unique/legendary 3. -1 = never had every slot filled. */
+  outfitRank: number;
+  /** Lifetime damage dealt to the horde (every hit's roll, summed). */
+  totalDamage: number;
+  /** The hardest single blow ever landed on ONE target (one hit event). */
+  maxSingleHit: number;
+  /** The biggest damage dealt in one strike — a single tick's summed hits,
+   * so a nuke, an AoE sweep, or a pierce volley counts as one blow. */
+  maxBurstDamage: number;
 };
 
 export function emptyTotals(): LifetimeTotals {
@@ -92,8 +107,50 @@ export function emptyTotals(): LifetimeTotals {
     deaths: 0,
     untouchableClears: 0,
     speedClears: 0,
+    slotsWorn: [],
+    outfitRank: -1,
+    totalDamage: 0,
+    maxSingleHit: 0,
+    maxBurstDamage: 0,
   };
 }
+
+/** Every wearable slot, the full-outfit roster (`EquipSlot` order). */
+export const EQUIP_SLOTS = [
+  "weapon",
+  "head",
+  "chest",
+  "legs",
+  "feet",
+  "charm",
+  "bag",
+] as const;
+
+/** Outfit rank of a tier — unique and legendary share the top rung. */
+const TIER_RANK: Record<string, number> = {
+  regular: 0,
+  magic: 1,
+  rare: 2,
+  unique: 3,
+  legendary: 3,
+};
+
+/** One currently-worn piece, as GameScreen summarizes the hero each tick. */
+export type WornPiece = { slot: string; tier: string; defId: string };
+
+/** Gear the hero is ISSUED rather than loots: the built-in sidearm, every
+ * difficulty's wall weapon (the prelude's starting piece), and the clothes
+ * on his back (`DifficultyDef.startingGear` — t-shirt, jeans, boots).
+ * Spawning dressed must not book first-equip feats — those are for the
+ * first pieces the player actually picked up and wore. (A looted copy of
+ * an issued base also skips; any other piece in the slot still books.) */
+const ISSUED_GEAR = new Set([
+  "blaster",
+  ...Object.values(DIFFICULTY_DEFS).flatMap((d) => [
+    d.startingWeapon,
+    ...(d.startingGear ?? []),
+  ]),
+]);
 
 /** The run context a batch of events is booked against: which mission on
  * which difficulty, and the run's live stats (read at victory for the
@@ -131,13 +188,32 @@ export function applyEventsToTotals(
   ctx: RunContext,
 ): boolean {
   let changed = false;
+  // One tick's summed damage output = one STRIKE for the burst feats: a
+  // nuke's screen wipe, an AoE sweep, or a pierce volley all land their hits
+  // in the same tick. (Companion hits ride along — events carry no shooter
+  // attribution — but the party fights at a heavy damper, so the hero's own
+  // blows dominate any record.)
+  let tickDamage = 0;
   for (const event of events) {
     switch (event.type) {
+      case "enemyHit":
+        totals.totalDamage += event.damage;
+        tickDamage += event.damage;
+        if (event.damage > totals.maxSingleHit) {
+          totals.maxSingleHit = event.damage;
+        }
+        changed = true;
+        break;
       case "enemyKilled": {
         totals.kills++;
         const role = roleOf(event.defId);
         if (role === "elite") totals.eliteKills++;
         if (role === "boss") totals.bossKills++;
+        totals.totalDamage += event.damage;
+        tickDamage += event.damage;
+        if (event.damage > totals.maxSingleHit) {
+          totals.maxSingleHit = event.damage;
+        }
         changed = true;
         break;
       }
@@ -202,6 +278,37 @@ export function applyEventsToTotals(
         break;
       default:
         break;
+    }
+  }
+  if (tickDamage > totals.maxBurstDamage) {
+    totals.maxBurstDamage = tickDamage;
+    changed = true;
+  }
+  return changed;
+}
+
+/**
+ * Book the hero's currently-worn gear, IN PLACE: which slots have ever been
+ * filled (the built-in sidearm doesn't count as arming the weapon slot — the
+ * hero spawns with it), and, when EVERY slot is filled at once, the outfit's
+ * rank (the lowest tier worn — a full set of rares ranks 2). Returns true
+ * when something new was booked. Fed by GameScreen once per change (it keeps
+ * a cheap signature of the worn set, so this never runs on a quiet frame).
+ */
+export function applyWornEquipment(
+  totals: LifetimeTotals,
+  worn: readonly WornPiece[],
+): boolean {
+  let changed = false;
+  for (const piece of worn) {
+    if (ISSUED_GEAR.has(piece.defId)) continue;
+    changed = addDistinct(totals.slotsWorn, piece.slot) || changed;
+  }
+  if (worn.length === EQUIP_SLOTS.length) {
+    const rank = Math.min(...worn.map((p) => TIER_RANK[p.tier] ?? 0));
+    if (rank > totals.outfitRank) {
+      totals.outfitRank = rank;
+      changed = true;
     }
   }
   return changed;
