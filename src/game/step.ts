@@ -1279,14 +1279,26 @@ function moveEnemy(state: GameState, enemy: Enemy, dt: number): void {
     return;
   }
 
-  // The scripted vanguard (openingStrike): it sprints ahead of the slow rank
-  // to reach the still-holstered hero, then STOPS the instant it's next to him
-  // — its harmless swing is what draws the blade (story.ts). Parking at contact
-  // instead of charging on means it can't clip through the hero and shove him
-  // around while it waits to strike. Once the blade is out (`!disarmed`) it
-  // drops the sprint and falls through to the normal minion chase at its plain
-  // `speed`, a lab scientist the armed hero cuts down.
+  // The scripted vanguard (openingStrike): it HOLDS at its post until the
+  // opening survey beat has played, then breaks from the pack and sprints the
+  // still-holstered hero down, STOPPING the instant it's next to him — its
+  // harmless swing is what draws the blade (story.ts). Holding until the beat
+  // means the scene always reads in order: the "look at this place" monologue
+  // first, THEN the lone scientist rushing in and striking — never a rusher
+  // that beats the hero's first read to him and sits glued while the gate is
+  // shut. Parking at contact (instead of charging on) means it can't clip
+  // through the hero and shove him around while it waits to strike. Once the
+  // blade is out (`!disarmed`) it drops the sprint and falls through to the
+  // normal minion chase at its plain `speed`, a lab scientist the armed hero
+  // cuts down.
   if (enemy.vanguard && player.disarmed) {
+    const opening = levelDef(state.level.id).openingStrike;
+    // Hold at the post while the strike's ordering gate is still shut — the
+    // rush waits on the hero's opening read, so he isn't rushed before he has
+    // even looked around.
+    if (opening?.after && !state.thoughtsSeen.includes(opening.after)) {
+      return;
+    }
     const rushSpeed =
       (def.ai.rushSpeed ?? def.speed) * stasisFactorAt(player, enemy.pos);
     const gap = distance(enemy.pos, player.pos) - (def.radius + PLAYER.radius);

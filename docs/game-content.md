@@ -264,12 +264,16 @@ The roster is split one file per level/biome under `src/game/defs/enemies/`
   which draws whatever he took off the wall ("good thing I came armed") and
   turns combat on. The rusher outruns the hero (`ai.rushSpeed` > `PLAYER.speed`),
   so a fleeing hero still gets run down rather than kiting the opening beat into
-  a stall. Two
-  sight-pinned inner monologues also fire here (`firstSightThoughts` — on view,
-  before any blow): the first intern the hero SEES plays his arrival read on a
-  building fully staffed at midnight, and the first OPTIMUSK he SEES plays the
-  personal one — he helped build the first unit before the AI redrew the line
-  and it took everyone's jobs, his included.
+  a stall. The beat is **ordered**: the vanguard HOLDS at its post (it doesn't
+  even break from the pack — `moveEnemy`) until the hero's arrival read has
+  played, so the scene always runs monologue-first, then the lone scientist
+  rushing in and striking. Two sight-pinned inner monologues also fire here
+  (`firstSightThoughts` — on view, before any blow): the first intern the hero
+  SEES plays that arrival read on a building fully staffed at midnight, pinned
+  to a **wide, drop-in `radius`** so it lands the instant the packed opening
+  ring is on screen (and gates the vanguard's rush via `openingStrike.after`);
+  the first OPTIMUSK he SEES plays the personal one — he helped build the first
+  unit before the AI redrew the line and it took everyone's jobs, his included.
 - **Level 2** ships wisp → moon ghost → wraith and the OPTIMUSK robots SpaceZ
   shipped up to garrison the moon (the same heavy from level 1, now laced
   through the haunting) — four ghost elites (MISSION SPECIALIST, THE

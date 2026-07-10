@@ -300,26 +300,35 @@ export const SPACEZ_HQ: LevelDef = {
   // The first staffer he SEES stops him cold: the whole building is manned
   // at midnight. Pinned to sighting an intern because the opening ring is
   // packed with them — it fires the moment one is on screen, before a single
-  // blow lands. An arrival beat, not a kill beat. Deeper in, the first
-  // OPTIMUSK he sees is personal: he helped build the first one, and the
-  // line took everyone's jobs — his included.
+  // blow lands. An arrival beat, not a kill beat. `radius` is WIDE (a full
+  // view, well past the packed opening ring at ~150 px out) so it fires on the
+  // drop-in tick rather than waiting for an intern to crawl to the tight 96 px
+  // default — that wait let the scripted vanguard reach the hero and sit glued
+  // before his opening read ever played (see `openingStrike`, which holds the
+  // rush until this beat lands). Deeper in, the first OPTIMUSK he sees is
+  // personal: he helped build the first one, and the line took everyone's jobs
+  // — his included.
   firstSightThoughts: [
-    { enemy: "intern", thought: "spacez_staff" },
+    { enemy: "intern", thought: "spacez_staff", radius: 200 },
     { enemy: "optimusk", thought: "spacez_optimusk" },
   ],
   // The sword is holstered at the drop: the hero walks in like it's still his
-  // old job, not a fight. A lone VANGUARD scientist sprints out ahead of the
-  // slow rank and bears down on him — and reaching him is what draws the weapon.
-  // The soft hit fires `spacez_armed` ("good thing I came armed") and turns the
-  // auto-attack on. `radius` is a CONTACT gap (center-to-center): the vanguard's
-  // radius (8) + the hero's (10) put it at ~18px when it parks right up against
-  // him, so 22 fires the beat the instant it touches — the swing lands with the
-  // scientist on top of the hero, not half a screen away. It can afford to be a
-  // touch and not a distant proximity read because the rusher outruns the hero
-  // (rushSpeed 72 > PLAYER.speed 56), so kiting it can't stall the beat. Gated
-  // `after` the "look at this place" sighting so the two beats always read in
-  // order. Placed a short sprint ahead in the open lobby so it reaches him fast
-  // and in clear view.
+  // old job, not a fight. The `after` gate holds the whole beat until the "look
+  // at this place" sighting has played — and that hold now governs the
+  // vanguard's MOVEMENT too (step.ts `moveEnemy`): it waits at its post through
+  // the opening read, THEN breaks from the slow rank and sprints him down. So
+  // the scene always reads in order — monologue first, then the lone scientist
+  // rushing in — instead of a rusher that reaches the hero before he has looked
+  // around and sits glued while the gate is shut. Reaching him is what draws
+  // the weapon: the soft hit fires `spacez_armed` ("good thing I came armed")
+  // and turns the auto-attack on. `radius` is a CONTACT gap (center-to-center):
+  // the vanguard's radius (8) + the hero's (10) put it at ~18px when it parks
+  // right up against him, so 22 fires the beat the instant it touches — the
+  // swing lands with the scientist on top of the hero, not half a screen away.
+  // It can afford to be a touch and not a distant proximity read because the
+  // rusher outruns the hero (rushSpeed 72 > PLAYER.speed 56), so kiting it can't
+  // stall the beat. Placed a short sprint ahead in the open lobby so it reaches
+  // him fast and in clear view once it does break loose.
   openingStrike: {
     enemy: "vanguard_scientist",
     at: { x: 400, y: 620 },

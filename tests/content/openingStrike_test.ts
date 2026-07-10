@@ -80,24 +80,42 @@ describe("SpaceZ HQ opening strike", () => {
     expect(def.contactDamage).toBe(0);
   });
 
-  it("stops next to the disarmed hero instead of clipping into him", () => {
+  it("holds at its post until the sighting beat plays, then breaks loose to reach him", () => {
     const state = disarmedHQ();
-    const v = isolateVanguard(state);
-    const def = enemyDef(v.defId);
-    // Sighting gate held shut (no interns to fire spacez_staff), so the strike
-    // never lands — this isolates the pure approach: the vanguard must park at
-    // contact rather than shove through the hero and glue to his center.
-    v.pos = { x: state.player.pos.x + 120, y: state.player.pos.y };
+    // Strip to the vanguard AND the parked boss — keeping the boss means the
+    // killBoss objective never clears, so a long idle hold doesn't tip the run
+    // into `victory` and freeze the sim out from under the assertion.
+    stopWaves(state);
+    const v = vanguard(state);
+    state.enemies = state.enemies.filter(
+      (e) => e.vanguard || enemyDef(e.defId).role === "boss",
+    );
+    const startX = state.player.pos.x + 120;
+    v.pos = { x: startX, y: state.player.pos.y };
+    // Sighting gate held shut (no interns to fire spacez_staff): the vanguard
+    // waits at its post through the hero's opening read rather than rushing him
+    // before he has even looked around. It must NOT have closed the gap — the
+    // "look at this place" monologue is meant to land first.
     for (let i = 0; i < 400; i++) step(state, idle, DT);
     expect(state.player.disarmed).toBe(true); // gate held, still holstered
+    expect(v.pos.x).toBeCloseTo(startX, 5); // never left its post
+    // The moment the beat plays, it breaks from the pack, sprints the hero
+    // down, and its swing draws the blade — the rush follows the read.
+    state.thoughtsSeen.push("spacez_staff");
+    for (let i = 0; i < 400 && state.player.disarmed; i++)
+      step(state, idle, DT);
+    expect(state.player.disarmed).toBe(false);
+    expect(state.dialogue?.source).toEqual({
+      kind: "playerThought",
+      defId: "spacez_armed",
+    });
+    // The blade came out with the scientist on top of him, not half a screen
+    // away — a contact-range strike, never the old distant standoff.
     const dist = Math.hypot(
       v.pos.x - state.player.pos.x,
       v.pos.y - state.player.pos.y,
     );
-    // Parked right up against the hero — up to the two collision radii apart,
-    // never overlapping his center.
-    expect(dist).toBeGreaterThan(def.radius);
-    expect(dist).toBeLessThanOrEqual(def.radius + PLAYER.radius + 2);
+    expect(dist).toBeLessThan(30);
   });
 
   it("drops the sprint to normal mob speed once the blade is drawn", () => {
@@ -216,6 +234,44 @@ describe("SpaceZ HQ opening strike", () => {
     expect(state.player.hp).toBe(hp);
     expect(state.player.disarmed).toBe(true);
     expect(state.dialogue).toBeNull();
+  });
+
+  it("plays the sighting read before the vanguard reaches him, on the real crowd", () => {
+    // The full level (packed opening ring + the placed vanguard), an idle hero.
+    const state = disarmedHQ();
+    // The drop-in survey beat fires promptly — the crowd already fills the view,
+    // so it must not wait for an intern to crawl to the tight default radius.
+    let sawStaff = false;
+    let vgapAtStaff = Infinity;
+    for (let i = 0; i < 400 && !sawStaff; i++) {
+      step(state, idle, DT);
+      if (state.dialogue?.source.kind === "playerThought") {
+        const src = state.dialogue.source as { defId: string };
+        if (src.defId === "spacez_staff") {
+          sawStaff = true;
+          const v = vanguard(state);
+          vgapAtStaff = Math.hypot(
+            v.pos.x - state.player.pos.x,
+            v.pos.y - state.player.pos.y,
+          );
+        }
+      }
+    }
+    expect(sawStaff).toBe(true);
+    expect(state.player.disarmed).toBe(true); // still holstered at this point
+    // The vanguard has NOT reached him yet — the read lands first, and the
+    // scientist is still out in the lobby (its 180 px start), not glued on.
+    expect(vgapAtStaff).toBeGreaterThan(100);
+    // Tap the read closed; now the vanguard breaks loose, closes, and its
+    // strike arms the hero and opens the "good thing I came armed" beat.
+    tapThrough(state);
+    for (let i = 0; i < 600 && state.player.disarmed; i++)
+      step(state, idle, DT);
+    expect(state.player.disarmed).toBe(false);
+    expect(state.dialogue?.source).toEqual({
+      kind: "playerThought",
+      defId: "spacez_armed",
+    });
   });
 
   it("resumes normal combat once armed", () => {
