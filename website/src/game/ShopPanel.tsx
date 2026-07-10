@@ -63,6 +63,91 @@ function CoinPrice({
   );
 }
 
+/**
+ * The big BUY/SELL action's face: the verb, the coin, and the amount — so a
+ * deal reads "SELL 🪙 12" rather than spelling out a bare "+12" the player has
+ * to know means coins.
+ */
+function DealLabel({
+  font,
+  sprites,
+  verb,
+  amount,
+}: {
+  font: PixelFont;
+  sprites: Sprites;
+  verb: string;
+  amount: number;
+}) {
+  const coin = spriteDataUrl(sprites, "icon_coin");
+  return (
+    <span className="shop-deal-label">
+      <PixelText font={font} text={verb} scale={2} color="#0b0d10" />
+      {coin && <img src={coin} alt="" className="pixel-img shop-deal-coin" />}
+      <PixelText
+        font={font}
+        text={formatCompact(amount)}
+        scale={2}
+        color="#0b0d10"
+      />
+    </span>
+  );
+}
+
+/**
+ * A one-tap bulk-sell tool in the bag header: a coin glyph (one for JUNK, a
+ * stack of three for ALL), the label, and — when there's anything to sell —
+ * the coins it would fetch. Disabled (and total hidden) when nothing qualifies
+ * so it can never fire on an empty bag.
+ */
+function BulkSellButton({
+  font,
+  sprites,
+  coinIcon,
+  label,
+  ariaLabel,
+  total,
+  count,
+  onSell,
+}: {
+  font: PixelFont;
+  sprites: Sprites;
+  coinIcon: string;
+  label: string;
+  ariaLabel: string;
+  total: number;
+  count: number;
+  onSell: () => void;
+}) {
+  const enabled = count > 0;
+  const coin = spriteDataUrl(sprites, coinIcon);
+  return (
+    <button
+      type="button"
+      className="pixel-button secondary shop-bulk-btn"
+      aria-label={ariaLabel}
+      disabled={!enabled}
+      onClick={enabled ? onSell : undefined}
+    >
+      {coin && <img src={coin} alt="" className="pixel-img shop-bulk-coin" />}
+      <PixelText
+        font={font}
+        text={label}
+        scale={1}
+        color={enabled ? "#e6e8eb" : "#5a6470"}
+      />
+      {enabled && (
+        <PixelText
+          font={font}
+          text={formatCompact(total)}
+          scale={1}
+          color="#ffd75e"
+        />
+      )}
+    </button>
+  );
+}
+
 export function ShopPanel({
   state,
   font,
@@ -109,6 +194,14 @@ export function ShopPanel({
         e.item !== null && isScrappableLoot(state, e.item),
     );
   const junkTotal = junk.reduce((sum, e) => sum + sellValue(e.item), 0);
+
+  // SELL ALL: the whole bag across the counter in one gesture — every loose
+  // piece, keepers included (the equipped loadout is untouched). The count
+  // gates the button; the total is what the purse gains.
+  const bag = player.inventory
+    .map((item, index) => ({ item, index }))
+    .filter((e): e is { item: Equipment; index: number } => e.item !== null);
+  const bagTotal = bag.reduce((sum, e) => sum + sellValue(e.item), 0);
 
   const doSell = (index: number) => {
     if (sellItem(state, index) !== null) {
@@ -204,30 +297,40 @@ export function ShopPanel({
         <div className="shop-section">
           <div className="inv-bag-header">
             <PixelText font={font} text="YOUR BAG" scale={1} color="#9aa3ad" />
-            <button
-              type="button"
-              className="pixel-button secondary inv-scrap-btn"
-              aria-label="sell-junk"
-              disabled={junk.length === 0}
-              onClick={() => {
-                if (junk.length === 0) return;
-                for (const { index } of junk) sellItem(state, index);
-                playUiSound(synth, "confirm");
-                setSelected(null);
-                onChange();
-              }}
-            >
-              <PixelText
+            <div className="shop-bag-actions">
+              {/* SELL JUNK: only the outgrown pieces, one coin. */}
+              <BulkSellButton
                 font={font}
-                text={
-                  junk.length > 0
-                    ? `SELL JUNK +${formatCompact(junkTotal)}`
-                    : "SELL JUNK"
-                }
-                scale={1}
-                color={junk.length > 0 ? "#e6e8eb" : "#5a6470"}
+                sprites={sprites}
+                coinIcon="icon_coin"
+                label="SELL JUNK"
+                ariaLabel="sell-junk"
+                total={junkTotal}
+                count={junk.length}
+                onSell={() => {
+                  for (const { index } of junk) sellItem(state, index);
+                  playUiSound(synth, "confirm");
+                  setSelected(null);
+                  onChange();
+                }}
               />
-            </button>
+              {/* SELL ALL: the whole bag, a stack of three coins. */}
+              <BulkSellButton
+                font={font}
+                sprites={sprites}
+                coinIcon="icon_coins"
+                label="SELL ALL"
+                ariaLabel="sell-all"
+                total={bagTotal}
+                count={bag.length}
+                onSell={() => {
+                  for (const { index } of bag) sellItem(state, index);
+                  playUiSound(synth, "confirm");
+                  setSelected(null);
+                  onChange();
+                }}
+              />
+            </div>
           </div>
           <div className="inv-grid shop-bag-grid">
             {player.inventory.map((item, index) => (
@@ -299,11 +402,11 @@ export function ShopPanel({
                 disabled={!canBuyStock(state, selectedStock)}
                 onClick={() => doBuy(selectedStock)}
               >
-                <PixelText
+                <DealLabel
                   font={font}
-                  text={`BUY ${formatCompact(selectedStock.price)}`}
-                  scale={2}
-                  color="#0b0d10"
+                  sprites={sprites}
+                  verb="BUY"
+                  amount={selectedStock.price}
                 />
               </button>
             </>
@@ -325,11 +428,11 @@ export function ShopPanel({
                   selected?.kind === "bag" && doSell(selected.index)
                 }
               >
-                <PixelText
+                <DealLabel
                   font={font}
-                  text={`SELL +${formatCompact(sellValue(selectedBag))}`}
-                  scale={2}
-                  color="#0b0d10"
+                  sprites={sprites}
+                  verb="SELL"
+                  amount={sellValue(selectedBag)}
                 />
               </button>
             </>

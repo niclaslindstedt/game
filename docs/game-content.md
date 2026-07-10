@@ -256,8 +256,9 @@ double, PRECIOUS ones (gold, gems, the genuinely magical) fetch four times
 rolled with a magic-skewed tier bonus, Diablo 2 gamble style, priced at ten
 times their own sell value — a purchase costs roughly what selling a handful
 of magic finds brings in. The shop's SELL JUNK button clears every outgrown
-piece (the inventory's scrap rule) in one tap. Coins ride the loadout
-between levels like everything else the hero carries.
+piece (the inventory's scrap rule) in one tap; SELL ALL empties the whole bag
+across the counter, keepers included (the worn loadout is untouched). Coins
+ride the loadout between levels like everything else the hero carries.
 
 ## Enemy roster (`src/game/defs/enemies/`)
 
