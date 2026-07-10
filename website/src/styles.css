@@ -1982,6 +1982,10 @@ body {
   margin-top: 0.5rem;
 }
 
+.character-back {
+  justify-content: center;
+}
+
 .title-help {
   display: flex;
   flex-direction: column;

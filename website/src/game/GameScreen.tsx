@@ -123,6 +123,7 @@ import {
   type PickupCard,
 } from "./PickupModal.tsx";
 import {
+  bankLoadout,
   nextLevelId,
   recordDeath,
   recordVictory,
@@ -1423,11 +1424,22 @@ export function GameScreen({
               extractLoadout(state),
             );
           }
-          // Hardcore death is permadeath: the hero is retired for good. A
-          // softcore death loses nothing — the build was only ever banked on
-          // victory, so the run simply isn't saved.
+          // Death splits on the hero's mode. Hardcore is permadeath: retire the
+          // hero for good. Softcore costs no progress: bank the run's build so
+          // the level, stats and items earned this run are kept, and drop the
+          // retry checkpoint (which froze the entry build at combat-start) so
+          // RETRY rebuilds the level from this just-banked build — replaying
+          // from the lower entry build would regress the hero on the next clear.
           if (event.type === "defeat") {
-            characterRef.current = recordDeath(characterRef.current);
+            if (characterRef.current.hardcore) {
+              characterRef.current = recordDeath(characterRef.current);
+            } else {
+              characterRef.current = bankLoadout(
+                characterRef.current,
+                extractLoadout(state),
+              );
+              checkpointRef.current = null;
+            }
           }
         }
         if (effects.length > 0) {
@@ -2403,6 +2415,21 @@ export function GameScreen({
               color="#ffd75e"
             />
           )}
+          {/* A death parts the two modes: hardcore is retired for good, while a
+              softcore hero keeps everything earned this run and only has to
+              restart the level (or leave). */}
+          {hud.phase === "defeat" && (
+            <PixelText
+              font={font}
+              text={
+                character.hardcore
+                  ? "HARDCORE · HERO RETIRED"
+                  : "SOFTCORE · PROGRESS KEPT"
+              }
+              scale={2}
+              color={character.hardcore ? "#ff6d6d" : "#7ef0c8"}
+            />
+          )}
           <div className="splash-stats">
             <PixelText
               font={font}
@@ -2470,21 +2497,26 @@ export function GameScreen({
                   </button>
                 );
               })()}
-            <button
-              type="button"
-              className={`pixel-button${hud.phase === "victory" ? " secondary" : ""}`}
-              onClick={() => {
-                setHud(null);
-                setRunId((id) => id + 1);
-              }}
-            >
-              <PixelText
-                font={font}
-                text="RETRY"
-                scale={3}
-                color={hud.phase === "victory" ? undefined : "#0b0d10"}
-              />
-            </button>
+            {/* RETRY restarts the level. Offered after every victory, and after
+                a SOFTCORE death (the kept build rebuilds the run) — but never
+                for a hardcore hero, who is retired and can only exit to MENU. */}
+            {(hud.phase === "victory" || !character.hardcore) && (
+              <button
+                type="button"
+                className={`pixel-button${hud.phase === "victory" ? " secondary" : ""}`}
+                onClick={() => {
+                  setHud(null);
+                  setRunId((id) => id + 1);
+                }}
+              >
+                <PixelText
+                  font={font}
+                  text="RETRY"
+                  scale={3}
+                  color={hud.phase === "victory" ? undefined : "#0b0d10"}
+                />
+              </button>
+            )}
             <button
               type="button"
               className="pixel-button secondary"

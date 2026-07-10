@@ -18,8 +18,10 @@
 //
 // HARDCORE is chosen at creation and is per-character: a hardcore hero that
 // dies is retired for good (`dead`), kept in the roster's fallen list but never
-// played again. Softcore death costs nothing — the build is only ever written
-// on victory, so a failed run simply isn't banked.
+// played again. Softcore death costs no progress — the run's build is banked on
+// death (see `bankLoadout`) exactly as it is on victory, so the levels, stats
+// and items earned this run are kept; only the level clear/beaten bookmarks
+// wait for an actual victory.
 //
 // Persisted to localStorage (same best-effort policy as settings.ts): the
 // roster under one key, the active-character id under another.
@@ -341,12 +343,25 @@ export function recordVictory(
 /**
  * The hardcore reckoning: on DEATH, a hardcore hero is retired for good
  * (`dead`), so the roster keeps them as fallen but they can never be played
- * again. Softcore death is a no-op — the build was only ever written on
- * victory, so nothing is lost and the hero plays on.
+ * again. Softcore never dies here — a softcore death banks the run's build via
+ * `bankLoadout` instead, so the hero keeps everything and plays on.
  */
 export function recordDeath(character: Character): Character {
   if (!character.hardcore) return character;
   const updated: Character = { ...character, dead: true };
+  persist(updated);
+  return updated;
+}
+
+/**
+ * Bank the run's end-of-run build onto a SOFTCORE hero after a death, so the
+ * levels, stats and items earned this run are kept — softcore death costs no
+ * progress. Unlike `recordVictory` it records no clear and marks no difficulty
+ * beaten (the level was NOT cleared); only the persistent loadout advances.
+ * Persists and returns the updated character.
+ */
+export function bankLoadout(character: Character, loadout: Loadout): Character {
+  const updated: Character = { ...character, loadout };
   persist(updated);
   return updated;
 }

@@ -50,9 +50,11 @@ skips the whole scene.
 Progress belongs to **characters** — named, persistent heroes
 (`website/src/game/characters.ts`), stored under `<storagePrefix>:characters`
 with the active one at `<storagePrefix>:active-character`. The app opens on the
-roster: pick a hero, create one (naming it and choosing **HARDCORE** at
-creation — the choice belongs to the character, not a global setting), or retire
-the fallen. A character owns ONE evolving build (the engine `Loadout` — level,
+title menu; **PLAY** opens the roster when no hero is active: pick a hero, create
+one (naming it and choosing **HARDCORE** at creation — the choice belongs to the
+character, not a global setting), or retire the fallen, then drop into the
+difficulty ladder for the chosen hero. A character owns ONE evolving build (the
+engine `Loadout` — level,
 stats, gear, inventory, coins, abilities, companions) that carries whole into
 every difficulty and level, so higher difficulties are met with the gear earned
 on the lower ones. It also remembers which difficulties it has BEATEN and which
@@ -61,9 +63,11 @@ difficulty ladder unlocks in order (a rung opens once the one before it is
 beaten; locked rungs show greyed out), and a difficulty runs as a linear
 campaign until it is beaten, after which its level picker opens for free replays
 (the grind-for-gear endgame). **HARDCORE is permadeath**: a hardcore hero that
-dies is retired for good (kept in the roster as fallen, never played again). A
-softcore death costs nothing — the build is only ever banked on victory, so a
-failed run simply isn't saved. Every
+dies is retired for good (kept in the roster as fallen, never played again), and
+its death splash offers only MENU. A softcore death costs no progress — the
+run's build is banked on death just as on victory, so the hero keeps the levels,
+stats and items earned it and can RETRY the level (from that kept build) or exit
+to MENU; only the level-clear bookmarks wait for an actual victory. Every
 finished run is banked per difficulty under `<storagePrefix>:highscores` with
 its survival time, kills, player level reached, and a full end-of-run session
 snapshot (`website/src/game/highscores.ts`); the end-of-run screen shows that
