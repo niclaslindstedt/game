@@ -546,16 +546,19 @@ const WORLD_UNIQUES: UniqueDef[] = [
     ],
     lore: "SEALED AGAINST A SILENCE THAT EATS EVERYTHING IT TOUCHES.",
   },
-  // MARS — light boots that outrun the dust storms that bury everything.
+  // MARS — light runner's shoes that outrun the dust storms that bury everything
+  // (on `sneakers`, not the seed leather boots, so they carry a hair more sole and
+  // read as fast footwear, not army surplus).
   {
     id: "dustborn",
     name: "DUSTBORN",
-    base: "leather_boots",
+    base: "sneakers",
     slot: "feet",
-    ilvl: 8,
+    ilvl: 12,
     bonuses: [
-      { kind: "stat", stat: "speed", value: 4 },
-      { kind: "stat", stat: "dexterity", value: 3 },
+      { kind: "stat", stat: "speed", value: 5 },
+      { kind: "stat", stat: "dexterity", value: 4 },
+      { kind: "stat", stat: "stamina", value: 2 },
     ],
     lore: "BORN OF THE WIND THAT BURIES EVERYTHING THAT STOPS MOVING.",
   },
