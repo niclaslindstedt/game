@@ -466,30 +466,54 @@ export function TitleScreen({
       ];
     }
     if (screen === "difficulty" && character) {
+      // Warp mode (opened from the developer menu's SELECT LEVEL) ignores the
+      // unlock ladder: every difficulty is selectable so you can warp into any
+      // mission at any difficulty. Picking one hands off to the level picker
+      // (still in warp mode); backing out returns to the developer menu.
+      const warpBack: MenuEntry = {
+        label: "BACK",
+        aria: "menu-back",
+        action: () => {
+          playUiSound(synth, "back");
+          setWarp(false);
+          setScreen("developer");
+          setCursor(0);
+        },
+      };
       return [
         ...DIFFICULTY_ORDER.map((id) => {
           const def = difficultyDef(id);
           // The ladder unlocks in order per character: a rung opens once the
           // one before it is beaten (easy is always open). Locked rungs show
-          // greyed out.
-          const unlocked = isDifficultyUnlocked(character, id);
+          // greyed out. Warp mode opens every rung.
+          const unlocked = warp || isDifficultyUnlocked(character, id);
           const beaten = isDifficultyBeaten(character, id);
           return {
             label: def.name,
             aria: `difficulty-${id}`,
             color: unlocked ? def.color : "#5a6068",
             locked: !unlocked,
-            blurb: !unlocked
-              ? "LOCKED - BEAT THE PREVIOUS DIFFICULTY"
-              : beaten
-                ? "CLEARED - CHOOSE ANY MISSION"
-                : def.tagline,
+            blurb: warp
+              ? "WARP - PICK A MISSION"
+              : !unlocked
+                ? "LOCKED - BEAT THE PREVIOUS DIFFICULTY"
+                : beaten
+                  ? "CLEARED - CHOOSE ANY MISSION"
+                  : def.tagline,
             action: () => {
               if (!unlocked) {
                 playUiSound(synth, "back");
                 return;
               }
               setDifficulty(id);
+              // Warp: pick the difficulty, then hand off to the level picker
+              // (still in warp mode) — never auto-start the campaign.
+              if (warp) {
+                playUiSound(synth, "confirm");
+                setScreen("levels");
+                setCursor(0);
+                return;
+              }
               // Until this difficulty is beaten the level picker stays locked:
               // the hero is walked straight through the campaign from the next
               // unbeaten level. Once beaten, the picker opens for free replays.
@@ -511,22 +535,21 @@ export function TitleScreen({
           };
         }),
         // Re-home on NEW GAME — one lower when CONTINUE tops the menu.
-        backTo("main", onResume ? 1 : 0),
+        warp ? warpBack : backTo("main", onResume ? 1 : 0),
       ];
     }
     if (screen === "levels" && character) {
       // Warp mode (opened from the developer menu's SELECT LEVEL) ignores the
       // unlock gate: every level is reachable so you can try any of them, and
       // picking one drops straight into play with no intro. Backing out returns
-      // to the developer menu it was launched from.
+      // to the warp difficulty picker it was launched from (still in warp mode).
       const warpBack: MenuEntry = {
         label: "BACK",
         aria: "menu-back",
         action: () => {
           playUiSound(synth, "back");
-          setWarp(false);
-          setScreen("developer");
-          setCursor(0);
+          setScreen("difficulty");
+          setCursor(DIFFICULTY_ORDER.indexOf(difficulty));
         },
       };
       return [
@@ -636,11 +659,11 @@ export function TitleScreen({
         {
           label: "SELECT LEVEL",
           aria: "developer-select-level",
-          blurb: "WARP TO ANY MISSION - SKIPS THE INTRO",
+          blurb: "WARP TO ANY DIFFICULTY & MISSION - SKIPS THE INTRO",
           action: () => {
             playUiSound(synth, "confirm");
             setWarp(true);
-            setScreen("levels");
+            setScreen("difficulty");
             setCursor(0);
           },
         },
@@ -978,17 +1001,18 @@ export function TitleScreen({
       } else if (event.key === "Escape" && screen !== "main") {
         unlockAudio();
         playUiSound(synth, "back");
-        // The warp picker isn't reached through the difficulty ladder, so its
-        // back-out returns to the developer menu it was opened from and leaves
-        // warp mode.
-        if (screen === "levels" && warp) setWarp(false);
+        // The warp picker walks developer → difficulty → levels; Escape backs
+        // out one rung at a time, leaving warp mode only once it returns to the
+        // developer menu (from the warp difficulty picker).
+        if (screen === "difficulty" && warp) setWarp(false);
         const back: Record<string, MenuScreen> = {
           controls: "settings",
           display: "settings",
           sound: "settings",
           data: "settings",
           developer: "settings",
-          levels: warp ? "developer" : "difficulty",
+          difficulty: warp ? "developer" : "main",
+          levels: "difficulty",
         };
         setScreen(back[screen] ?? "main");
         setCursor(0);
@@ -1204,9 +1228,9 @@ export function TitleScreen({
       {screen === "difficulty" && (
         <PixelText
           font={font}
-          text="CHOOSE YOUR NIGHTMARE"
+          text={warp ? "WARP TO ANY DIFFICULTY" : "CHOOSE YOUR NIGHTMARE"}
           scale={2}
-          color="#d9a0f0"
+          color={warp ? "#7ef0c8" : "#d9a0f0"}
         />
       )}
       {screen === "levels" && (

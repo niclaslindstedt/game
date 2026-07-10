@@ -26,8 +26,9 @@ A hidden **DEVELOPER** row unlocks at the bottom of SETTINGS after the title
 screen's moon Easter egg is found — a long-press on the title moon detonates it
 and latches `developerUnlocked` (persisted, so the row then survives launches).
 The player opens SETTINGS themselves to find it; the detonation does nothing
-else. The developer screen offers **SELECT LEVEL** (the warp picker — jump into
-any mission regardless of unlock state, skipping the intro), **VIEW ARSENAL** (a
+else. The developer screen offers **SELECT LEVEL** (the warp picker — pick any
+difficulty and mission regardless of unlock state, skipping the intro), **VIEW
+ARSENAL** (a
 browsable gallery of every hand-authored unique/legendary item, ordered by item
 level and drawn with the same icon + item card the in-game inventory uses —
 steer the scrollable list with the pointer or the arrow keys, ESC backs out), a

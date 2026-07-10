@@ -133,8 +133,9 @@ long-press on the title moon (`MOON_HOLD_MS` in
 `developerUnlocked` in the persisted settings (`website/src/game/settings.ts`).
 The detonation does nothing else — the player then opens SETTINGS on their own,
 where a **DEVELOPER** row now appears (it stays available across launches once
-unlocked). That screen offers **SELECT LEVEL** (the warp picker: jump into any
-mission, skipping the intro), **VIEW ARSENAL** (`ArsenalScreen.tsx` — a
+unlocked). That screen offers **SELECT LEVEL** (the warp picker: pick any
+difficulty and mission regardless of unlock state, skipping the intro), **VIEW
+ARSENAL** (`ArsenalScreen.tsx` — a
 scrollable gallery of every unique/legendary item, ordered by ilvl, each minted
 via `mintUnique` and drawn through the shared `ItemCard.tsx` icon + card the
 inventory tooltip reuses so the two never drift), a **DEBUG MODE** toggle
