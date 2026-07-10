@@ -658,8 +658,9 @@ function maybeDropBossUnique(
  * lists relics for this difficulty rolls each one, at a chance set purely by the
  * enemy's ROLE (config WORLD_DROP) — a trash minion is a lottery ticket, the
  * boss a fat single kill, so boss runs are the efficient farm. Gated shut until
- * the hero passes `WORLD_DROP.minPlayerLevel` (above where a first campaign pass
- * ends), so the relics can only be farmed by RETURNING once the rung is beaten.
+ * the hero passes `WORLD_DROP.minPlayerLevel[difficulty]` (above where a first
+ * pass of THIS rung ends), so the relics can only be farmed by RETURNING once the
+ * rung is beaten.
  * The gate is checked BEFORE any rng draw, so levels without a table — every
  * synthetic test fixture, and every under-level run — consume no rng and leave
  * the seeded drop stream untouched. */
@@ -670,7 +671,10 @@ function maybeDropWorldUnique(
 ): void {
   const ids = levelDef(state.level.id).loot.worldUniques?.[state.difficulty];
   if (!ids || ids.length === 0) return;
-  if (state.player.level < WORLD_DROP.minPlayerLevel) return;
+  // Per-rung gate; a rung with no gate entry fails closed (drops nothing), all
+  // BEFORE any rng draw so the seeded stream is untouched on ungated runs.
+  const gate = WORLD_DROP.minPlayerLevel[state.difficulty];
+  if (gate === undefined || state.player.level < gate) return;
   const chance = WORLD_DROP.chanceByRole[def.role];
   for (const id of ids) {
     if (state.rng() >= chance) continue;

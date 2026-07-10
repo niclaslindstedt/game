@@ -24,7 +24,7 @@
 
 import { gearDef, isWeaponDef } from "./equipment.ts";
 
-import type { Affix, EquipSlot } from "../types.ts";
+import type { Affix, EquipSlot, Tier } from "../types.ts";
 
 /** A hand-authored unique: a fixed bonus block on a base type. */
 export type UniqueDef = {
@@ -36,6 +36,13 @@ export type UniqueDef = {
   base: string;
   /** The slot it occupies (must match the base). */
   slot: EquipSlot;
+  /** The rarity tier this mints at — the rarest hand-authored finds are
+   * `"legendary"` (one rung above the default `"unique"`): orange card, the
+   * densest pickup blaze, and the same unbreakable/keepsake treatment. Omit for
+   * an ordinary unique. Purely a display/rarity stamp — power still obeys the
+   * same ilvl budget and armor rules as any unique (the checkers are
+   * tier-agnostic). */
+  tier?: Extract<Tier, "unique" | "legendary">;
   /** The static item level — scales the unique's POWER/feel, not its equip
    * requirement (which is the base item's `levelReq`, like any tier), so a
    * unique is often wearable well below its ilvl. */
@@ -511,11 +518,13 @@ const GROK_UNIQUES: UniqueDef[] = [
 // wired to one boss on `EnemyDef.uniquesByDifficulty`), these are wired on the
 // LEVEL (`LevelDef.loot.worldUniques`) and rain from the WHOLE roster of their
 // home level at role-scaled odds (config WORLD_DROP), but only once the hero
-// out-levels a first campaign pass — so they're farmed by returning for boss
-// runs. This first batch is the EASY rung: one relic themed to each level, plus
-// a second for the Rift (which, being a tear in reality, coughs up anything in
-// Earth's history). Kept easy-tier in power on purpose — the chase is the
-// collection and the fantasy, not raw stats.
+// out-levels a first campaign pass of THAT rung — so they're farmed by returning
+// for boss runs (the gate is per-difficulty, `WORLD_DROP.minPlayerLevel`). Two
+// rungs so far: the EASY batch (one relic per level, plus a second for the Rift,
+// kept easy-tier in power — the chase is the collection, not raw stats), and the
+// MEDIUM batch a notch stronger, capped by the game's first LEGENDARY (MJÖLNIR).
+// Both lean on the Rift, which, being a tear in reality, coughs up anything in
+// Earth's history.
 const WORLD_UNIQUES: UniqueDef[] = [
   // SPACEZ HQ — ZAI's corporate HQ, where the CORE first drafted GROK.
   {
@@ -588,6 +597,98 @@ const WORLD_UNIQUES: UniqueDef[] = [
       { kind: "maxHp", value: -20 },
     ],
     lore: "GREEN GLASS, BORN THE INSTANT THE SKY FIRST BURNED.",
+  },
+
+  // MEDIUM RUNG — the second batch of world relics, a notch above the easy set
+  // in power (mid-campaign ilvls, still farmed by returning for boss runs once
+  // MEDIUM is beaten). One relic themed to each level, plus the Rift's extra
+  // haul from Earth's history — and, hanging in the tear, the first LEGENDARY.
+  // SPACEZ HQ — ZAI's up-or-out ladder: fast, exposed, no safety net.
+  {
+    id: "deadsprint",
+    name: "DEADSPRINT",
+    base: "chausses",
+    slot: "legs",
+    ilvl: 27,
+    bonuses: [
+      { kind: "stat", stat: "speed", value: 7 },
+      { kind: "stat", stat: "dexterity", value: 5 },
+      { kind: "maxHp", value: -20 },
+    ],
+    lore: "THE FASTER YOU RUN, THE LESS OF YOU ARRIVES.",
+  },
+  // THE MOON — ARMSTRONG's vigil: the helm that outlasted the silence.
+  {
+    id: "marecrest",
+    name: "MARECREST",
+    base: "great_helm",
+    slot: "head",
+    ilvl: 34,
+    bonuses: [
+      { kind: "stat", stat: "stamina", value: 6 },
+      { kind: "maxHp", value: 50 },
+      { kind: "stat", stat: "intelligence", value: 4 },
+    ],
+    lore: "CROWNED FOR A SEA WITH NO WATER. NOTHING HAS STIRRED IT IN AN AGE.",
+  },
+  // MARS — the dust-storm frontier gun that shrugs off the grit.
+  {
+    id: "redwind",
+    name: "REDWIND",
+    base: "atomic_raygun",
+    slot: "weapon",
+    ilvl: 46,
+    bonuses: [
+      { kind: "damagePct", value: 0.25 },
+      { kind: "stat", stat: "dexterity", value: 6 },
+      { kind: "stat", stat: "speed", value: 3 },
+    ],
+    lore: "IT DRINKS THE RED STORM AND SPITS IT BACK, HOTTER.",
+  },
+  // THE RIFT — a cursed wish out of a folk tale: power at a price.
+  {
+    id: "wishbane",
+    name: "WISHBANE",
+    base: "grimoire",
+    slot: "charm",
+    ilvl: 19,
+    bonuses: [
+      { kind: "damagePct", value: 0.2 },
+      { kind: "crit", value: 0.06 },
+      { kind: "maxHp", value: -25 },
+    ],
+    lore: "IT GRANTS EXACTLY WHAT YOU ASK. NEVER WHAT YOU WANTED.",
+  },
+  // THE RIFT — Athena's aegis, gorgon-faced, dragged whole through the tear.
+  {
+    id: "gorgonscale",
+    name: "GORGONSCALE",
+    base: "dragonscale_cloak",
+    slot: "chest",
+    ilvl: 33,
+    bonuses: [
+      { kind: "armor", value: 45 },
+      { kind: "stat", stat: "stamina", value: 6 },
+      { kind: "maxHp", value: 40 },
+    ],
+    lore: "IT TURNED ARMIES TO STONE. IT WILL SETTLE FOR STOPPING A BLOW.",
+  },
+  // THE RIFT — the first LEGENDARY: the thunder-hammer of a dead god, fallen
+  // out of a colder, older sky than this one.
+  {
+    id: "mjolnir",
+    name: "MJÖLNIR",
+    base: "seismic_hammer",
+    slot: "weapon",
+    tier: "legendary",
+    ilvl: 68,
+    keeper: true,
+    bonuses: [
+      { kind: "damagePct", value: 0.3 },
+      { kind: "statPct", stat: "strength", value: 0.03 },
+      { kind: "crit", value: 0.08 },
+    ],
+    lore: "ONLY THE WORTHY LIFT IT. OUT HERE, WORTHY MEANS STILL BREATHING.",
   },
 ];
 

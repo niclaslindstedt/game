@@ -5,6 +5,8 @@
 // defs/equipment.ts. Units: world pixels (one sprite pixel = one world unit
 // at scale 1), milliseconds, hit points.
 
+import type { Difficulty } from "./types.ts";
+
 export const PLAYER = {
   /** Base max hp before equipment bonuses (no stat feeds hp — STAMINA now
    * drives the sprint pool instead; see STAMINA / computeMaxStamina). */
@@ -313,10 +315,12 @@ export const UNIQUE = {
  * boss drops), these rain from the whole roster, but at RANK-scaled odds so a
  * boss run is by far the efficient farm: a trash minion is a lottery ticket, an
  * elite ten times likelier, the boss forty. `minPlayerLevel` gates the whole
- * table shut until the hero out-levels a first campaign pass — on EASY the
- * campaign lands at ~level 17 (see `leveling-curve.mjs --by-level`), so the gate
- * sits above that: the relics can only be farmed by RETURNING for boss runs once
- * the difficulty is beaten. Rolled per unique, per kill, on `maybeDropWorldUnique`.
+ * table shut until the hero out-levels a first campaign pass — PER RUNG, since a
+ * later rung's relics sit behind a later, higher first-pass level. The campaign
+ * is continuous (see `leveling-curve.mjs --by-level`): EASY ends ~17, MEDIUM ~32,
+ * HARD ~44, NIGHTMARE ~54, JESUS ~60, so each gate sits a few levels above its
+ * rung's end — the relics can only be farmed by RETURNING for boss runs once the
+ * difficulty is beaten. Rolled per unique, per kill, on `maybeDropWorldUnique`.
  */
 export const WORLD_DROP = {
   /**
@@ -332,9 +336,18 @@ export const WORLD_DROP = {
     elite: 0.02, //     2%     — ~130× a minion
     boss: 0.1, //       10%    — ~670× a minion; the fast run you repeat
   },
-  /** No world unique drops until the hero reaches this level (past a first
-   * easy campaign pass, which ends ~17) — so boss runs are the only source. */
-  minPlayerLevel: 20,
+  /** No world unique drops until the hero reaches this level ON THAT RUNG —
+   * sized a few levels above where a first campaign pass of the difficulty ends
+   * (easy ~17, medium ~32, hard ~44, nightmare ~54, jesus ~60), so boss runs on
+   * a beaten rung are the only source. Hard and up are plumbing until relics ship
+   * for those rungs. */
+  minPlayerLevel: {
+    easy: 20,
+    medium: 34,
+    hard: 46,
+    nightmare: 56,
+    jesus: 60,
+  } as Record<Difficulty, number>,
 } as const;
 
 /**

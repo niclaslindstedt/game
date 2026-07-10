@@ -39,6 +39,10 @@ export const GLYPHS = {
   X: ["#.#", "#.#", ".#.", "#.#", "#.#"],
   Y: ["#.#", "#.#", ".#.", ".#.", ".#."],
   Z: ["###", "..#", ".#.", "#..", "###"],
+  // Ö — umlaut on the top row, a four-row O beneath, baseline-aligned like the
+  // rest of the caps (there's no headroom for dots ABOVE a full-height O in a
+  // 5px cell, so the O is squared to four rows). Used by MJÖLNIR.
+  Ö: ["#.#", "###", "#.#", "#.#", "###"],
   0: ["###", "#.#", "#.#", "#.#", "###"],
   1: [".#.", "##.", ".#.", ".#.", "###"],
   2: ["###", "..#", "###", "#..", "###"],

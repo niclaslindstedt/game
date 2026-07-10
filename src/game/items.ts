@@ -471,7 +471,7 @@ export function mintUnique(state: GameState, uniqueId: string): Equipment {
     id: state.nextId++,
     defId: u.base,
     slot: u.slot,
-    tier: "unique",
+    tier: u.tier ?? "unique",
     ilvl: u.ilvl,
     affixes: u.bonuses.map((bonus) => ({ ...bonus })),
     name: u.name,
