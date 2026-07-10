@@ -152,12 +152,18 @@ function companionBadges(): AchievementDef[] {
   }));
 }
 
+// Sized against the leveling model (scripts/leveling-curve.mjs): the climb
+// to the level-99 cap runs ~25K kills, so the ladder keeps paying through
+// the whole journey and two rungs beyond it for the post-cap farmers.
 const KILL_LADDER: [string, string, number, AchievementTier][] = [
   ["kills_1", "FIRST BLOOD", 1, "beginner"],
   ["kills_100", "BODY COUNT", 100, "beginner"],
   ["kills_1000", "EXTERMINATOR", 1_000, "intermediate"],
   ["kills_5000", "ONE-PERSON ARMY", 5_000, "pro"],
   ["kills_10000", "APEX PREDATOR", 10_000, "expert"],
+  ["kills_25000", "WALKING APOCALYPSE", 25_000, "expert"],
+  ["kills_50000", "EXTINCTION EVENT", 50_000, "expert"],
+  ["kills_100000", "DEATH INCARNATE", 100_000, "expert"],
 ];
 
 const MAGIC_LADDER: [string, string, number, AchievementTier][] = [
@@ -165,6 +171,7 @@ const MAGIC_LADDER: [string, string, number, AchievementTier][] = [
   ["magic_25", "BLUE BLOOD", 25, "beginner"],
   ["magic_50", "ENCHANTED", 50, "intermediate"],
   ["magic_100", "MAGIC KINGDOM", 100, "pro"],
+  ["magic_250", "DEEP BLUE", 250, "expert"],
 ];
 
 const RARE_LADDER: [string, string, number, AchievementTier][] = [
@@ -172,6 +179,7 @@ const RARE_LADDER: [string, string, number, AchievementTier][] = [
   ["rare_25", "RARE BREED", 25, "intermediate"],
   ["rare_50", "RARE FORM", 50, "pro"],
   ["rare_100", "RARITY EXPERT", 100, "expert"],
+  ["rare_250", "GOLD STANDARD", 250, "expert"],
 ];
 
 const UNIQUE_LADDER: [string, string, number, AchievementTier][] = [
@@ -179,6 +187,7 @@ const UNIQUE_LADDER: [string, string, number, AchievementTier][] = [
   ["uniques_5", "COLLECTOR", 5, "intermediate"],
   ["uniques_10", "CURATOR", 10, "pro"],
   ["uniques_25", "MUSEUM GRADE", 25, "expert"],
+  ["uniques_50", "LIVING MUSEUM", 50, "expert"],
 ];
 
 /** The full catalog, browser order: fixed entries + generated groups. */
@@ -260,6 +269,16 @@ export const ACHIEVEMENTS: AchievementDef[] = [
     read: (t) => t.eliteKills,
   }),
   counter({
+    id: "elites_500",
+    category: "combat",
+    name: "LEGEND ERASER",
+    desc: "KILL 500 ELITE MOBS",
+    icon: "map_elite",
+    tier: "expert",
+    goal: 500,
+    read: (t) => t.eliteKills,
+  }),
+  counter({
     id: "bosses_1",
     category: "combat",
     name: "GIANT KILLER",
@@ -287,6 +306,16 @@ export const ACHIEVEMENTS: AchievementDef[] = [
     icon: "icon_crown",
     tier: "expert",
     goal: 50,
+    read: (t) => t.bossKills,
+  }),
+  counter({
+    id: "bosses_250",
+    category: "combat",
+    name: "REGICIDE ROUTINE",
+    desc: "DEFEAT 250 BOSSES",
+    icon: "icon_crown",
+    tier: "expert",
+    goal: 250,
     read: (t) => t.bossKills,
   }),
   {
