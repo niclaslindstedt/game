@@ -3815,23 +3815,53 @@ body {
   padding: 3px;
 }
 
-/* The deal bar: selection name + the one big BUY/SELL action. */
+/* The deal bar: the selection's full stat card on the left, the one BUY/SELL
+   action on the right. The card can run tall, so the button pins to the top
+   rather than floating to the middle of a long list. */
 .shop-detail {
   display: flex;
   flex-direction: row;
-  align-items: center;
+  align-items: flex-start;
   justify-content: space-between;
   flex-wrap: wrap;
-  gap: 0.5rem;
+  gap: 0.6rem;
   min-height: 2.6rem;
-  padding: 0.45rem 0.6rem;
+  padding: 0.55rem 0.7rem;
   background: rgba(6, 8, 12, 0.6);
   border: 2px solid #232b35;
   border-radius: 3px;
 }
 
+/* The card side: the item's icon beside its stat lines (same reading as the
+   inventory tooltip). Grows to take the bar's width; the deal button holds its
+   own size on the right. */
+.shop-detail-info {
+  display: flex;
+  flex-direction: row;
+  align-items: flex-start;
+  gap: 0.6rem;
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+.shop-detail-icon {
+  width: 3.2rem;
+  height: 3.2rem;
+  aspect-ratio: auto;
+  flex: 0 0 auto;
+  cursor: default;
+}
+
+.shop-detail-card {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  min-width: 0;
+}
+
+/* No longer spelling "SELL", so it can sit a touch tighter to its coins. */
 .shop-deal-btn {
-  padding: 0.45rem 0.9rem;
+  padding: 0.4rem 0.7rem;
   flex: 0 0 auto;
 }
 

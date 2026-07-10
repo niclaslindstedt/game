@@ -15,8 +15,6 @@ import {
   buyStock,
   canBuyStock,
   equipmentIcon,
-  equipmentLevelReq,
-  equipmentName,
   isScrappableLoot,
   merchantName,
   sellItem,
@@ -32,8 +30,13 @@ import type { PixelFont } from "@ui/lib/pixel-font.ts";
 
 import { spriteDataUrl, type Sprites } from "./assets.ts";
 import { synth } from "./audio.ts";
+import { ItemCardBody, ItemIcon } from "./ItemCard.tsx";
 import { playUiSound } from "./sfx/index.ts";
 import { TIER_COLORS } from "./tiers.ts";
+
+/** Wrap the detail card's name/stat lines to the same rem cap the inventory
+ * tooltip and arsenal viewer use, so the three read identically. */
+const SHOP_DETAIL_REM = 14.3;
 
 /** What the player has tapped: a stall entry to buy, or a bag cell to sell. */
 type Selection = { kind: "stock"; id: number } | { kind: "bag"; index: number };
@@ -64,9 +67,10 @@ function CoinPrice({
 }
 
 /**
- * The big BUY/SELL action's face: the verb, the coin, and the amount — so a
- * deal reads "SELL 🪙 12" rather than spelling out a bare "+12" the player has
- * to know means coins.
+ * The BUY/SELL action's face: the coin and the amount, with an optional verb
+ * ahead of it. BUY spells the verb out ("BUY 🪙 12"); SELL leaves it off — the
+ * button lives beside the item's own stats, so the coins-out reads as a sale
+ * without the word.
  */
 function DealLabel({
   font,
@@ -76,13 +80,13 @@ function DealLabel({
 }: {
   font: PixelFont;
   sprites: Sprites;
-  verb: string;
+  verb?: string;
   amount: number;
 }) {
   const coin = spriteDataUrl(sprites, "icon_coin");
   return (
     <span className="shop-deal-label">
-      <PixelText font={font} text={verb} scale={2} color="#0b0d10" />
+      {verb && <PixelText font={font} text={verb} scale={2} color="#0b0d10" />}
       {coin && <img src={coin} alt="" className="pixel-img shop-deal-coin" />}
       <PixelText
         font={font}
@@ -173,17 +177,21 @@ export function ShopPanel({
         : equipmentIcon(entry.equipment.defId),
     );
 
-  const stockName = (entry: MerchantStock) =>
-    entry.kind === "ability"
-      ? abilityDef(entry.defId).name
-      : equipmentName(entry.equipment);
-
   const selectedStock =
     selected?.kind === "stock"
       ? merchant.stock.find((s) => s.id === selected.id)
       : undefined;
   const selectedBag =
     selected?.kind === "bag" ? player.inventory[selected.index] : undefined;
+
+  // The stat card compares the selection against what the hero already wears in
+  // that slot (the same green/red deltas the inventory shows) — so a purchase
+  // reads as an upgrade and a sale shows what's being let go. Never compare a
+  // piece to itself.
+  const compareFor = (item: Equipment): Equipment | null => {
+    const worn = player.equipment[item.slot];
+    return worn && worn.id !== item.id ? worn : null;
+  };
 
   // The one-tap cleanup: every outgrown piece (the inventory SCRAP rule)
   // sold across the counter in a single gesture, for its full valuation.
@@ -370,31 +378,62 @@ export function ShopPanel({
           </div>
         </div>
 
-        {/* The detail bar: what's selected, its facts, and the deal. */}
+        {/* The detail bar: the selection's full stat card on the left — the
+            same icon + lines the inventory shows, so you weigh a trade on the
+            item's real facts — and the one BUY/SELL action on the right. */}
         <div className="shop-detail">
           {selectedStock && (
             <>
-              <PixelText
-                font={font}
-                text={stockName(selectedStock)}
-                scale={1}
-                color={
-                  selectedStock.kind === "weapon"
-                    ? TIER_COLORS[selectedStock.equipment.tier]
-                    : "#7ecbff"
-                }
-                maxWidth={14}
-              />
-              {selectedStock.kind === "weapon" &&
-                equipmentLevelReq(selectedStock.equipment.defId) >
-                  player.level && (
-                  <PixelText
-                    font={font}
-                    text={`REQUIRES LEVEL ${equipmentLevelReq(selectedStock.equipment.defId)}`}
-                    scale={1}
-                    color="#e06a6a"
-                  />
+              <div className="shop-detail-info">
+                {selectedStock.kind === "weapon" ? (
+                  <>
+                    <span
+                      className="inv-cell shop-detail-icon"
+                      style={{
+                        borderColor: TIER_COLORS[selectedStock.equipment.tier],
+                      }}
+                    >
+                      <ItemIcon
+                        sprites={sprites}
+                        item={selectedStock.equipment}
+                      />
+                    </span>
+                    <div className="shop-detail-card">
+                      <ItemCardBody
+                        font={font}
+                        state={state}
+                        item={selectedStock.equipment}
+                        compareTo={compareFor(selectedStock.equipment)}
+                        maxWidth={SHOP_DETAIL_REM}
+                      />
+                    </div>
+                  </>
+                ) : (
+                  <>
+                    <span className="inv-cell shop-detail-icon">
+                      {(() => {
+                        const icon = stockIcon(selectedStock);
+                        return icon ? (
+                          <img
+                            src={icon}
+                            alt=""
+                            className="pixel-img inv-item-icon"
+                          />
+                        ) : null;
+                      })()}
+                    </span>
+                    <div className="shop-detail-card">
+                      <PixelText
+                        font={font}
+                        text={abilityDef(selectedStock.defId).name}
+                        scale={2}
+                        color="#7ecbff"
+                        maxWidth={SHOP_DETAIL_REM}
+                      />
+                    </div>
+                  </>
                 )}
+              </div>
               <button
                 type="button"
                 className="pixel-button shop-deal-btn"
@@ -413,13 +452,23 @@ export function ShopPanel({
           )}
           {selectedBag && (
             <>
-              <PixelText
-                font={font}
-                text={equipmentName(selectedBag)}
-                scale={1}
-                color={TIER_COLORS[selectedBag.tier]}
-                maxWidth={14}
-              />
+              <div className="shop-detail-info">
+                <span
+                  className="inv-cell shop-detail-icon"
+                  style={{ borderColor: TIER_COLORS[selectedBag.tier] }}
+                >
+                  <ItemIcon sprites={sprites} item={selectedBag} />
+                </span>
+                <div className="shop-detail-card">
+                  <ItemCardBody
+                    font={font}
+                    state={state}
+                    item={selectedBag}
+                    compareTo={compareFor(selectedBag)}
+                    maxWidth={SHOP_DETAIL_REM}
+                  />
+                </div>
+              </div>
               <button
                 type="button"
                 className="pixel-button shop-deal-btn"
@@ -431,7 +480,6 @@ export function ShopPanel({
                 <DealLabel
                   font={font}
                   sprites={sprites}
-                  verb="SELL"
                   amount={sellValue(selectedBag)}
                 />
               </button>
