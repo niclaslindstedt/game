@@ -2944,43 +2944,43 @@ export function GameScreen({
             <PixelText
               font={font}
               text={`TIME ${formatTime(hud.stats.timeMs)}`}
-              scale={3}
+              scale={2}
             />
             <PixelText
               font={font}
               text={`BEST (${difficultyDef(difficulty).name}) ${formatTime(bestTime(difficulty))}`}
-              scale={3}
+              scale={2}
               color="#9aa3ad"
             />
             <PixelText
               font={font}
               text={`LEVEL REACHED ${hud.level}`}
-              scale={3}
+              scale={2}
             />
             <PixelText
               font={font}
               text={`${state?.level.foes ?? "FOES"} ${hud.stats.kills}/${hud.stats.totalEnemies}`}
-              scale={3}
+              scale={2}
             />
             <PixelText
               font={font}
               text={`XP ${formatCompact(hud.stats.xpGained)}`}
-              scale={3}
+              scale={2}
             />
             <PixelText
               font={font}
               text={`DAMAGE DEALT ${formatCompact(hud.stats.damageDealt)}`}
-              scale={3}
+              scale={2}
             />
             <PixelText
               font={font}
               text={`DAMAGE TAKEN ${formatCompact(hud.stats.damageTaken)}`}
-              scale={3}
+              scale={2}
             />
             <PixelText
               font={font}
               text={`ITEMS ${hud.stats.itemsCollected}`}
-              scale={3}
+              scale={2}
             />
           </div>
           <div className="splash-buttons">
