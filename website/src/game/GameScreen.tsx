@@ -1620,6 +1620,30 @@ export function GameScreen({
               );
             }
           }
+          // A golden XP arrow flows its award up off the hero's head as blue
+          // "+N XP" combat text — the same popup a slain foe drips, so the
+          // ground's steady XP drip reads in the body too. Honors the same
+          // `xpFloat` DISPLAY preference that silences kill-XP popups.
+          if (
+            event.type === "itemCollected" &&
+            event.kind === "xp" &&
+            event.xp != null &&
+            event.xp > 0 &&
+            getSettings().xpFloat === "on"
+          ) {
+            effects.push({
+              kind: "text",
+              pos: {
+                x: state.player.pos.x,
+                y: state.player.pos.y - PLAYER.radius - 12,
+              },
+              untilMs: state.stats.timeMs + 1100,
+              durationMs: 1100,
+              text: `+${formatCompact(event.xp)} XP`,
+              color: "#6cc4ff",
+              rise: 30,
+            });
+          }
           if (event.type === "storyItemCollected") {
             pushPickup(storyItemDef(event.defId).name, "#ffd75e");
           }

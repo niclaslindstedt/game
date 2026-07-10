@@ -1366,15 +1366,19 @@ function stepItems(state: GameState): void {
     // recede, leaving the long climb to the kill grind.
     if (item.kind === "xp") {
       state.stats.itemsCollected++;
+      // Resolve the award once so the same figure both banks XP and floats up
+      // off the hero's head as blue "+N XP" combat text.
+      const xpGain = Math.max(
+        1,
+        Math.round(player.xpToNext * arrowXpShareAt(player.level)),
+      );
       state.events.push({
         type: "itemCollected",
         kind: "xp",
         name: "GOLDEN ARROW",
+        xp: xpGain,
       });
-      grantXp(
-        state,
-        Math.max(1, Math.round(player.xpToNext * arrowXpShareAt(player.level))),
-      );
+      grantXp(state, xpGain);
       return false;
     }
 
