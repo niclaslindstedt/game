@@ -441,7 +441,7 @@ export function InventoryPanel({
                 />
               )}
             </button>
-            <PixelText font={font} text="STATS" scale={1} color="#7a828b" />
+            <PixelText font={font} text="STATS" scale={2} color="#7a828b" />
             {statsOpen && (
               <div className="char-stats-popover pixel-panel">
                 <div className="char-sheet">
@@ -554,7 +554,7 @@ export function InventoryPanel({
           </div>
 
           <div className="equip-area">
-            <PixelText font={font} text="EQUIPPED" scale={1} color="#9aa3ad" />
+            <PixelText font={font} text="EQUIPPED" scale={2} color="#9aa3ad" />
             <div className="equip-slots">
               {SLOTS.map(({ slot, label }) => {
                 const item =
@@ -719,7 +719,7 @@ export function InventoryPanel({
           aria-label="close-inventory"
           onClick={onClose}
         >
-          <PixelText font={font} text="CLOSE" scale={1} color="#0b0d10" />
+          <PixelText font={font} text="CLOSE" scale={2} color="#0b0d10" />
         </button>
       </div>
 

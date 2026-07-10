@@ -1294,24 +1294,59 @@ body {
   }
 }
 
-/* End-of-run splash: stats + retry. */
+/* End-of-run splash: stats + retry. Scrolls as a last resort — a defeat with
+   NEW RECORD and the softcore/hardcore tag runs taller than a landscape phone,
+   and the headline/buttons used to clip off both edges. The flex spacers
+   (::before/::after) center the column while it fits and top-align the scroll
+   when it doesn't. */
 .game-splash {
   position: absolute;
   inset: 0;
   display: flex;
   flex-direction: column;
   align-items: center;
-  justify-content: center;
-  gap: 2rem;
-  background: rgba(11, 13, 16, 0.82);
+  gap: clamp(0.8rem, 2.5vh, 2rem);
+  padding: 1rem;
+  box-sizing: border-box;
+  /* Darker than the old wash: the moon floor is bright, and the stats have to
+     read over whatever frame the run froze on. */
+  background: rgba(6, 8, 12, 0.88);
   text-align: center;
+  overflow-y: auto;
 }
 
+.game-splash::before,
+.game-splash::after {
+  content: "";
+  flex: 1 1 0;
+}
+
+.game-splash > * {
+  flex-shrink: 0;
+}
+
+/* The run's numbers in their own window — the FF6 skin grounds them instead
+   of floating bare rows over the frozen field. */
 .splash-stats {
-  display: flex;
-  flex-direction: column;
-  align-items: flex-start;
-  gap: 0.75rem;
+  display: grid;
+  grid-template-columns: 1fr;
+  justify-items: start;
+  gap: 0.55rem 1.75rem;
+  padding: 0.9rem 1.3rem;
+  background: var(--panel-fill);
+  border: 2px solid var(--panel-rail);
+  border-top-color: var(--panel-rail-top);
+  border-bottom-color: var(--panel-rail-bottom);
+  border-radius: var(--panel-radius);
+  box-shadow: var(--panel-shadow);
+}
+
+/* Landscape phones are short: fold the eight stat rows into two columns so
+   the whole splash fits without scrolling. */
+@media (min-aspect-ratio: 4/3) {
+  .splash-stats {
+    grid-template-columns: repeat(2, auto);
+  }
 }
 
 .splash-buttons {
@@ -1382,11 +1417,37 @@ body {
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: clamp(0.75rem, 3.5vh, 2rem);
   overflow: hidden;
   background: radial-gradient(ellipse at 50% 130%, #172030 0%, #0b0d10 65%);
   user-select: none;
   -webkit-user-select: none;
+}
+
+/* The menu column (logo, heading, rows) rides in its own scroll box so a tall
+   sub-screen (SETTINGS with DEVELOPER, CONTROLS, HOW TO PLAY) scrolls instead
+   of clipping the logo off the top and mashing the heading into the tagline —
+   flex used to shrink the children into each other on short landscape phones.
+   The starfield backdrop stays put on the screen behind it. */
+.title-content {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: clamp(0.75rem, 3.5vh, 2rem);
+  width: 100%;
+  max-height: 100%;
+  box-sizing: border-box;
+  padding: 0.75rem 0;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  scrollbar-width: thin;
+}
+
+/* Never let flex compress a row into its neighbours — overflow scrolls. */
+.title-content > * {
+  flex-shrink: 0;
+  max-width: 100%;
 }
 
 /* A tiled pixel starfield, layered from three drifting gradient sheets. */
@@ -2113,9 +2174,15 @@ body {
   z-index: 1;
   width: min(90vw, 28rem);
   padding: 1.25rem 1.5rem;
-  background: rgba(16, 21, 28, 0.92);
-  border: 3px solid #1d2530;
-  box-shadow: 0 6px 0 rgba(0, 0, 0, 0.4);
+  box-sizing: border-box;
+  /* FF6 window skin — the birth certificate deserves the same dressing as
+     every other modal. */
+  background: var(--panel-fill);
+  border: 2px solid var(--panel-rail);
+  border-top-color: var(--panel-rail-top);
+  border-bottom-color: var(--panel-rail-bottom);
+  border-radius: var(--panel-radius);
+  box-shadow: var(--panel-shadow);
 }
 
 .character-field {
@@ -2173,10 +2240,14 @@ body {
   gap: 0.35rem;
   max-width: min(90vw, 40rem);
   padding: 1rem 1.5rem;
-  background: rgba(16, 21, 28, 0.92);
-  border: 3px solid #1d2530;
-  box-shadow: 0 6px 0 rgba(0, 0, 0, 0.4);
   z-index: 1;
+  /* FF6 window skin (see --panel-* tokens), like every other reading pane. */
+  background: var(--panel-fill);
+  border: 2px solid var(--panel-rail);
+  border-top-color: var(--panel-rail-top);
+  border-bottom-color: var(--panel-rail-bottom);
+  border-radius: var(--panel-radius);
+  box-shadow: var(--panel-shadow);
 }
 
 /* ---- High-score board ---------------------------------------------------- */
@@ -2358,9 +2429,14 @@ body {
   justify-content: center;
   max-width: min(94vw, 42rem);
   padding: 1rem 1.25rem;
-  background: #10151c;
-  border: 3px solid #1d2530;
-  box-shadow: 0 8px 0 rgba(0, 0, 0, 0.4);
+  /* FF6 window skin — the prompt predates the shared panel dressing and wore
+     a flat slab; now it matches every other modal. */
+  background: var(--panel-fill);
+  border: 2px solid var(--panel-rail);
+  border-top-color: var(--panel-rail-top);
+  border-bottom-color: var(--panel-rail-bottom);
+  border-radius: var(--panel-radius);
+  box-shadow: var(--panel-shadow);
   animation: update-modal-in 0.24s steps(4) both;
 }
 
@@ -3425,6 +3501,15 @@ body {
     width: 1.6rem;
     height: 1.6rem;
   }
+
+  /* The (i) breakdown runs far taller than a short landscape screen as one
+     column; fold it into two so most of it is readable without scrolling. */
+  .stat-info {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 0.6rem 1.5rem;
+    max-width: none;
+  }
 }
 
 /* ---- LEVEL TOKEN respec (Diablo-style attribute screen) --------------------
@@ -3921,6 +4006,21 @@ body {
   }
 }
 
+/* The empty deal bar: park the "tap an item" hint in the middle of the box
+   rather than a whisper in its top corner. */
+.shop-detail-empty {
+  flex: 1 1 auto;
+  align-self: stretch;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* Outrank the blanket `.inventory-panel canvas` flex-start parking. */
+.shop-detail .shop-detail-empty canvas {
+  align-self: center;
+}
+
 /* The deal button's face: verb, coin, amount on one baseline. */
 .shop-deal-label {
   display: inline-flex;
@@ -4313,6 +4413,15 @@ body {
      BACK can be pinned to the bottom (see .arsenal-close). */
   height: 100%;
   margin: 0 auto;
+  box-sizing: border-box;
+  padding: 0.9rem 1rem 1rem;
+  /* FF6 window skin, matching the achievements shelf. */
+  background: var(--panel-fill);
+  border: 2px solid var(--panel-rail);
+  border-top-color: var(--panel-rail-top);
+  border-bottom-color: var(--panel-rail-bottom);
+  border-radius: var(--panel-radius);
+  box-shadow: var(--panel-shadow);
 }
 
 .arsenal-body {
@@ -4810,6 +4919,16 @@ body {
   gap: 0.5rem;
   width: min(94vw, 46rem);
   margin: auto;
+  box-sizing: border-box;
+  padding: 0.9rem 1rem 1rem;
+  /* FF6 window skin: the badge shelf is a window like every other browser,
+     not bare rows floating over the dimmed screen. */
+  background: var(--panel-fill);
+  border: 2px solid var(--panel-rail);
+  border-top-color: var(--panel-rail-top);
+  border-bottom-color: var(--panel-rail-bottom);
+  border-radius: var(--panel-radius);
+  box-shadow: var(--panel-shadow);
 }
 
 .achievements-list {

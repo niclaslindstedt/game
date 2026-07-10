@@ -248,7 +248,7 @@ export function ShopPanel({
         {/* The stall: his goods, priced. Sold-out weapons stay visible but
             dark — the run remembers what it passed up. */}
         <div className="shop-section">
-          <PixelText font={font} text="FOR SALE" scale={1} color="#9aa3ad" />
+          <PixelText font={font} text="FOR SALE" scale={2} color="#9aa3ad" />
           <div className="shop-stall">
             {merchant.stock.map((entry) => {
               const icon = stockIcon(entry);
@@ -304,7 +304,7 @@ export function ShopPanel({
         {/* The hero's bag: tap a piece to see what he pays for it. */}
         <div className="shop-section">
           <div className="inv-bag-header">
-            <PixelText font={font} text="YOUR BAG" scale={1} color="#9aa3ad" />
+            <PixelText font={font} text="YOUR BAG" scale={2} color="#9aa3ad" />
             <div className="shop-bag-actions">
               {/* SELL JUNK: only the outgrown pieces, one coin. */}
               <BulkSellButton
@@ -486,12 +486,14 @@ export function ShopPanel({
             </>
           )}
           {!selectedStock && !selectedBag && (
-            <PixelText
-              font={font}
-              text="TAP AN ITEM TO TRADE"
-              scale={1}
-              color="#5a6470"
-            />
+            <div className="shop-detail-empty">
+              <PixelText
+                font={font}
+                text="TAP AN ITEM TO TRADE"
+                scale={2}
+                color="#5a6470"
+              />
+            </div>
           )}
         </div>
 
@@ -501,7 +503,7 @@ export function ShopPanel({
           aria-label="close-shop"
           onClick={onClose}
         >
-          <PixelText font={font} text="CLOSE" scale={1} />
+          <PixelText font={font} text="CLOSE" scale={2} />
         </button>
       </div>
     </div>

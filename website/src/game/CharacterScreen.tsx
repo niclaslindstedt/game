@@ -112,204 +112,220 @@ export function CharacterScreen({
     >
       <div className="title-stars" aria-hidden="true" />
 
-      <header className="character-heading">
-        <PixelText
-          font={font}
-          text={creating ? "NEW HERO" : "SELECT HERO"}
-          scale={3}
-          color="#ffd75e"
-        />
-      </header>
+      <div className="title-content">
+        <header className="character-heading">
+          <PixelText
+            font={font}
+            text={creating ? "NEW HERO" : "SELECT HERO"}
+            scale={3}
+            color="#ffd75e"
+          />
+        </header>
 
-      {creating ? (
-        <div className="character-form" aria-label="create character">
-          <label className="character-field">
-            <PixelText font={font} text="NAME" scale={2} color="#9aa3ad" />
-            <input
-              className="character-name-input"
-              aria-label="character-name"
-              value={name}
-              maxLength={MAX_NAME}
-              autoFocus
-              spellCheck={false}
-              onChange={(e) =>
-                setName(e.target.value.toUpperCase().slice(0, MAX_NAME))
-              }
-              onKeyDown={(e) => {
-                if (e.key === "Enter" && name.trim()) create();
-              }}
-              placeholder="HERO"
-            />
-          </label>
-
-          <button
-            type="button"
-            className={`menu-item character-toggle${hardcore ? " on" : ""}`}
-            aria-label="character-hardcore"
-            onClick={() => {
-              playUiSound(synth, "confirm");
-              setHardcore((h) => !h);
-            }}
-          >
-            <span className="menu-item-text">
-              <PixelText
-                font={font}
-                text={hardcore ? "HARDCORE: ON" : "HARDCORE: OFF"}
-                scale={3}
-                color={hardcore ? "#ff6d6d" : "#9aa3ad"}
+        {creating ? (
+          <div className="character-form" aria-label="create character">
+            <label className="character-field">
+              <PixelText font={font} text="NAME" scale={2} color="#9aa3ad" />
+              <input
+                className="character-name-input"
+                aria-label="character-name"
+                value={name}
+                maxLength={MAX_NAME}
+                autoFocus
+                spellCheck={false}
+                onChange={(e) =>
+                  setName(e.target.value.toUpperCase().slice(0, MAX_NAME))
+                }
+                onKeyDown={(e) => {
+                  if (e.key === "Enter" && name.trim()) create();
+                }}
+                placeholder="HERO"
               />
-              <span className="menu-item-blurb">
+            </label>
+
+            <button
+              type="button"
+              className={`menu-item character-toggle${hardcore ? " on" : ""}`}
+              aria-label="character-hardcore"
+              onClick={() => {
+                playUiSound(synth, "confirm");
+                setHardcore((h) => !h);
+              }}
+            >
+              <span className="menu-item-text">
                 <PixelText
                   font={font}
-                  text={
-                    hardcore
-                      ? "ONE LIFE - DEATH RETIRES THIS HERO FOREVER"
-                      : "SOFTCORE - DEATH KEEPS YOUR PROGRESS"
+                  text={hardcore ? "HARDCORE: ON" : "HARDCORE: OFF"}
+                  scale={3}
+                  color={hardcore ? "#ff6d6d" : "#9aa3ad"}
+                />
+                <span className="menu-item-blurb">
+                  <PixelText
+                    font={font}
+                    text={
+                      hardcore
+                        ? "ONE LIFE - DEATH RETIRES THIS HERO FOREVER"
+                        : "SOFTCORE - DEATH KEEPS YOUR PROGRESS"
+                    }
+                    scale={2}
+                    color="#9aa3ad"
+                  />
+                </span>
+              </span>
+            </button>
+
+            <div className="character-actions">
+              <button
+                type="button"
+                className="pixel-button character-confirm"
+                aria-label="character-create"
+                onClick={create}
+              >
+                <PixelText
+                  font={font}
+                  text="CREATE"
+                  scale={3}
+                  color="#0b0d10"
+                />
+              </button>
+              <button
+                type="button"
+                className="pixel-button secondary character-cancel"
+                aria-label="character-cancel"
+                onClick={() => {
+                  playUiSound(synth, "back");
+                  // With heroes to fall back on, CANCEL returns to the roster;
+                  // with none (the create form opened straight up) it backs all
+                  // the way out to the title menu.
+                  if (roster.length > 0) {
+                    setCreating(false);
+                    setName("");
+                    setHardcore(false);
+                  } else {
+                    onBack();
                   }
-                  scale={2}
+                }}
+              >
+                <PixelText
+                  font={font}
+                  text="CANCEL"
+                  scale={3}
                   color="#9aa3ad"
                 />
-              </span>
-            </span>
-          </button>
-
-          <div className="character-actions">
-            <button
-              type="button"
-              className="menu-item character-confirm"
-              aria-label="character-create"
-              onClick={create}
-            >
-              <PixelText font={font} text="CREATE" scale={3} color="#7ef0c8" />
-            </button>
-            <button
-              type="button"
-              className="menu-item character-cancel"
-              aria-label="character-cancel"
-              onClick={() => {
-                playUiSound(synth, "back");
-                // With heroes to fall back on, CANCEL returns to the roster;
-                // with none (the create form opened straight up) it backs all
-                // the way out to the title menu.
-                if (roster.length > 0) {
-                  setCreating(false);
-                  setName("");
-                  setHardcore(false);
-                } else {
-                  onBack();
-                }
-              }}
-            >
-              <PixelText font={font} text="CANCEL" scale={3} color="#9aa3ad" />
-            </button>
+              </button>
+            </div>
           </div>
-        </div>
-      ) : (
-        <nav className="title-menu scrollable" aria-label="character roster">
-          {roster.map((character, i) => {
-            const selected = i === hover;
-            const fallen = character.dead;
-            const color = fallen ? "#5a6068" : selected ? "#ffd75e" : "#9aa3ad";
-            return (
-              <div key={character.id} className="character-row">
-                <button
-                  type="button"
-                  className={`menu-item${selected ? " selected" : ""}${
-                    fallen ? " locked" : ""
-                  }`}
-                  aria-label={`character-${character.id}`}
-                  onPointerEnter={() => {
-                    if (i !== hover) {
-                      playUiSound(synth, "move");
-                      setHover(i);
-                    }
-                  }}
-                  onClick={() => {
-                    if (fallen) {
-                      playUiSound(synth, "back");
-                      return;
-                    }
-                    playUiSound(synth, "start");
-                    onPlay(character);
-                  }}
-                >
-                  <img
-                    src={cursorSprite}
-                    alt=""
-                    className="menu-cursor"
-                    style={{ visibility: selected ? "visible" : "hidden" }}
-                  />
-                  <span className="menu-item-text">
-                    <PixelText
-                      font={font}
-                      text={character.name}
-                      scale={3}
-                      color={color}
+        ) : (
+          <nav className="title-menu scrollable" aria-label="character roster">
+            {roster.map((character, i) => {
+              const selected = i === hover;
+              const fallen = character.dead;
+              const color = fallen
+                ? "#5a6068"
+                : selected
+                  ? "#ffd75e"
+                  : "#9aa3ad";
+              return (
+                <div key={character.id} className="character-row">
+                  <button
+                    type="button"
+                    className={`menu-item${selected ? " selected" : ""}${
+                      fallen ? " locked" : ""
+                    }`}
+                    aria-label={`character-${character.id}`}
+                    onPointerEnter={() => {
+                      if (i !== hover) {
+                        playUiSound(synth, "move");
+                        setHover(i);
+                      }
+                    }}
+                    onClick={() => {
+                      if (fallen) {
+                        playUiSound(synth, "back");
+                        return;
+                      }
+                      playUiSound(synth, "start");
+                      onPlay(character);
+                    }}
+                  >
+                    <img
+                      src={cursorSprite}
+                      alt=""
+                      className="menu-cursor"
+                      style={{ visibility: selected ? "visible" : "hidden" }}
                     />
-                    <span
-                      className="menu-item-blurb"
-                      style={{ visibility: "visible" }}
-                    >
+                    <span className="menu-item-text">
                       <PixelText
                         font={font}
-                        text={summarize(character)}
-                        scale={2}
-                        color={fallen ? "#5a6068" : "#9aa3ad"}
+                        text={character.name}
+                        scale={3}
+                        color={color}
                       />
+                      <span
+                        className="menu-item-blurb"
+                        style={{ visibility: "visible" }}
+                      >
+                        <PixelText
+                          font={font}
+                          text={summarize(character)}
+                          scale={2}
+                          color={fallen ? "#5a6068" : "#9aa3ad"}
+                        />
+                      </span>
                     </span>
-                  </span>
-                </button>
-                <button
-                  type="button"
-                  className="character-delete"
-                  aria-label={`delete-${character.id}`}
-                  title="DELETE"
-                  onClick={() => remove(character.id)}
-                >
-                  <PixelText font={font} text="X" scale={2} color="#ff6d6d" />
-                </button>
-              </div>
-            );
-          })}
+                  </button>
+                  <button
+                    type="button"
+                    className="character-delete"
+                    aria-label={`delete-${character.id}`}
+                    title="DELETE"
+                    onClick={() => remove(character.id)}
+                  >
+                    <PixelText font={font} text="X" scale={2} color="#ff6d6d" />
+                  </button>
+                </div>
+              );
+            })}
 
-          <button
-            type="button"
-            className="menu-item character-new"
-            aria-label="character-new"
-            onPointerEnter={() => setHover(-1)}
-            onClick={() => {
-              playUiSound(synth, "confirm");
-              setCreating(true);
-              setName("");
-              setHardcore(false);
-            }}
-          >
-            <span className="menu-item-text">
-              <PixelText
-                font={font}
-                text="+ NEW CHARACTER"
-                scale={3}
-                color="#7ef0c8"
-              />
-            </span>
-          </button>
+            <button
+              type="button"
+              className="menu-item character-new"
+              aria-label="character-new"
+              onPointerEnter={() => setHover(-1)}
+              onClick={() => {
+                playUiSound(synth, "confirm");
+                setCreating(true);
+                setName("");
+                setHardcore(false);
+              }}
+            >
+              <span className="menu-item-text">
+                <PixelText
+                  font={font}
+                  text="+ NEW CHARACTER"
+                  scale={3}
+                  color="#7ef0c8"
+                />
+              </span>
+            </button>
 
-          <button
-            type="button"
-            className="menu-item character-back"
-            aria-label="character-back"
-            onPointerEnter={() => setHover(-2)}
-            onClick={() => {
-              playUiSound(synth, "back");
-              onBack();
-            }}
-          >
-            <span className="menu-item-text">
-              <PixelText font={font} text="BACK" scale={3} color="#9aa3ad" />
-            </span>
-          </button>
-        </nav>
-      )}
+            <button
+              type="button"
+              className="menu-item character-back"
+              aria-label="character-back"
+              onPointerEnter={() => setHover(-2)}
+              onClick={() => {
+                playUiSound(synth, "back");
+                onBack();
+              }}
+            >
+              <span className="menu-item-text">
+                <PixelText font={font} text="BACK" scale={3} color="#9aa3ad" />
+              </span>
+            </button>
+          </nav>
+        )}
+      </div>
     </div>
   );
 }

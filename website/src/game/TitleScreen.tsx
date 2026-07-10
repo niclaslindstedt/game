@@ -253,6 +253,10 @@ export function TitleScreen({
   // so every level is reachable regardless of progress and picking one skips
   // the intro.
   const [warp, setWarp] = useState(false);
+  // The scrollable menu column: each screen change starts reading from the
+  // top (the selected row's scrollIntoView would otherwise land a tall screen
+  // — HOW TO PLAY — scrolled to its BACK row, hiding the content).
+  const contentRef = useRef<HTMLDivElement | null>(null);
   // The moon is mid-charge (held but not yet at MOON_HOLD_MS) — drives the
   // "charging up" glow so the long-press has visible feedback.
   const [moonCharging, setMoonCharging] = useState(false);
@@ -291,6 +295,10 @@ export function TitleScreen({
     };
   }, []);
   const logoScale = compact ? 7 : wide ? 10 : 6;
+
+  useEffect(() => {
+    contentRef.current?.scrollTo(0, 0);
+  }, [screen]);
   // A long blurb (the developer flags carry sentence-length ones) would stretch
   // the centered menu wider than a portrait phone, shoving every label to the
   // left and the selection cursor off the screen edge. On narrow screens cap
@@ -1133,6 +1141,13 @@ export function TitleScreen({
   });
   const scoreRows = topScores(scoreDifficulty, scoreMetric);
   const scoreDef = difficultyDef(scoreDifficulty);
+  // The full-screen browsers (achievements, arsenal) own the whole display:
+  // don't paint the logo/menu underneath — it bled through their backdrop.
+  const browserOpen = screen === "achievements" || screen === "arsenal";
+  // Sub-screens drop the tagline and shrink the logo: the heading + rows get
+  // the room, and a tall menu no longer collides with the branding.
+  const onMain = screen === "main";
+  const headerScale = onMain ? logoScale : compact ? 4 : 6;
   // When a row with a banked session is opened, this holds it (with `detail`
   // narrowed non-null) so the board swaps its list for the full-session card.
   const openScore =
@@ -1210,172 +1225,304 @@ export function TitleScreen({
       <div ref={sunRef} className="title-sun" aria-hidden="true" />
       <div ref={glareRef} className="title-sun-glare" aria-hidden="true" />
 
-      <header className="title-logo">
-        <h1 className="visually-hidden">{IDENTITY.title}</h1>
-        <PixelText
-          font={font}
-          text={IDENTITY.title.toUpperCase()}
-          scale={logoScale}
-          color="#7ef0c8"
-        />
-        <PixelText
-          font={font}
-          text={IDENTITY.tagline.toUpperCase()}
-          scale={2}
-          color="#9aa3ad"
-        />
-      </header>
-
-      {screen === "difficulty" && (
-        <PixelText
-          font={font}
-          text={warp ? "WARP TO ANY DIFFICULTY" : "CHOOSE YOUR NIGHTMARE"}
-          scale={2}
-          color={warp ? "#7ef0c8" : "#d9a0f0"}
-        />
-      )}
-      {screen === "levels" && (
-        <PixelText
-          font={font}
-          text={warp ? "WARP TO ANY MISSION" : "CHOOSE YOUR MISSION"}
-          scale={2}
-          color={warp ? "#7ef0c8" : "#d9a0f0"}
-        />
-      )}
-      {screen === "settings" && (
-        <PixelText font={font} text="SETTINGS" scale={2} color="#d9a0f0" />
-      )}
-
-      {screen === "controls" && (
-        <PixelText
-          font={font}
-          text="SETTINGS - CONTROLS"
-          scale={2}
-          color="#d9a0f0"
-        />
-      )}
-      {screen === "display" && (
-        <PixelText
-          font={font}
-          text="SETTINGS - DISPLAY"
-          scale={2}
-          color="#d9a0f0"
-        />
-      )}
-      {screen === "sound" && (
-        <PixelText
-          font={font}
-          text="SETTINGS - SOUND"
-          scale={2}
-          color="#d9a0f0"
-        />
-      )}
-      {screen === "data" && (
-        <PixelText
-          font={font}
-          text="SETTINGS - DATA"
-          scale={2}
-          color="#d9a0f0"
-        />
-      )}
-      {screen === "developer" && (
-        <PixelText font={font} text="DEVELOPER" scale={2} color="#7ef0c8" />
-      )}
-
-      {screen === "help" && (
-        <div className="title-help">
-          {HELP_LINES.map((line, i) =>
-            line === "" ? (
-              <div key={i} className="intro-gap" />
-            ) : (
-              <PixelText key={i} font={font} text={line} scale={2} />
-            ),
-          )}
-        </div>
-      )}
-
-      {screen === "scores" && (
-        <>
-          <PixelText font={font} text="HIGH SCORES" scale={2} color="#d9a0f0" />
-          <div
-            className="score-board"
-            onPointerDown={onScorePointerDown}
-            onPointerUp={onScorePointerUp}
-          >
-            <button
-              type="button"
-              className="score-axis score-bob"
-              aria-label="score-difficulty"
-              onClick={() => stepScoreDifficulty(1)}
-            >
+      {!browserOpen && (
+        <div className="title-content" ref={contentRef}>
+          <header className="title-logo">
+            <h1 className="visually-hidden">{IDENTITY.title}</h1>
+            <PixelText
+              font={font}
+              text={IDENTITY.title.toUpperCase()}
+              scale={headerScale}
+              color="#7ef0c8"
+            />
+            {onMain && (
               <PixelText
                 font={font}
-                text={scoreDef.name}
-                scale={3}
-                color={scoreDef.color}
+                text={IDENTITY.tagline.toUpperCase()}
+                scale={2}
+                color="#9aa3ad"
               />
-            </button>
+            )}
+          </header>
 
-            {openScore ? (
-              (() => {
-                const { detail } = openScore;
-                const { name: levelName, foes } = scoreLevelInfo(
-                  detail.levelId,
-                );
-                const cleared = detail.outcome === "victory";
-                const kpm =
-                  detail.stats.timeMs > 0
-                    ? detail.stats.kills / (detail.stats.timeMs / 60_000)
-                    : 0;
-                // Every field of the run, headline numbers and all: a big kill
-                // count reads very differently beside the shots and damage it
-                // cost to earn.
-                const lines: [string, string][] = [
-                  ["TIME", formatTime(detail.stats.timeMs)],
-                  [foes, `${detail.stats.kills}/${detail.stats.totalEnemies}`],
-                  ["KILLS / MIN", formatKpm(kpm)],
-                  ["LEVEL REACHED", String(detail.level)],
-                  ["XP GAINED", formatCompact(detail.stats.xpGained)],
-                  ["SHOTS FIRED", formatCompact(detail.stats.shotsFired)],
-                  ["DAMAGE DEALT", formatCompact(detail.stats.damageDealt)],
-                  ["DAMAGE TAKEN", formatCompact(detail.stats.damageTaken)],
-                  ["ITEMS", String(detail.stats.itemsCollected)],
-                ];
-                return (
-                  <div className="score-detail">
-                    <PixelText
-                      font={font}
-                      text={cleared ? "LEVEL CLEAR!" : "YOU DIED"}
-                      scale={3}
-                      color={cleared ? "#7ef0c8" : "#d83a3a"}
-                    />
-                    <PixelText font={font} text={levelName} scale={2} />
-                    <PixelText
-                      font={font}
-                      text={formatScoreDate(detail.at)}
-                      scale={1}
-                      color="#7a8088"
-                    />
-                    <div className="score-detail-stats">
-                      {lines.map(([label, value]) => (
-                        <div className="score-detail-row" key={label}>
+          {screen === "difficulty" && (
+            <PixelText
+              font={font}
+              text={warp ? "WARP TO ANY DIFFICULTY" : "CHOOSE YOUR NIGHTMARE"}
+              scale={2}
+              color={warp ? "#7ef0c8" : "#d9a0f0"}
+            />
+          )}
+          {screen === "levels" && (
+            <PixelText
+              font={font}
+              text={warp ? "WARP TO ANY MISSION" : "CHOOSE YOUR MISSION"}
+              scale={2}
+              color={warp ? "#7ef0c8" : "#d9a0f0"}
+            />
+          )}
+          {screen === "settings" && (
+            <PixelText font={font} text="SETTINGS" scale={2} color="#d9a0f0" />
+          )}
+
+          {screen === "controls" && (
+            <PixelText
+              font={font}
+              text="SETTINGS - CONTROLS"
+              scale={2}
+              color="#d9a0f0"
+            />
+          )}
+          {screen === "display" && (
+            <PixelText
+              font={font}
+              text="SETTINGS - DISPLAY"
+              scale={2}
+              color="#d9a0f0"
+            />
+          )}
+          {screen === "sound" && (
+            <PixelText
+              font={font}
+              text="SETTINGS - SOUND"
+              scale={2}
+              color="#d9a0f0"
+            />
+          )}
+          {screen === "data" && (
+            <PixelText
+              font={font}
+              text="SETTINGS - DATA"
+              scale={2}
+              color="#d9a0f0"
+            />
+          )}
+          {screen === "developer" && (
+            <PixelText font={font} text="DEVELOPER" scale={2} color="#7ef0c8" />
+          )}
+
+          {screen === "help" && (
+            <div className="title-help">
+              {HELP_LINES.map((line, i) =>
+                line === "" ? (
+                  <div key={i} className="intro-gap" />
+                ) : (
+                  <PixelText key={i} font={font} text={line} scale={2} />
+                ),
+              )}
+            </div>
+          )}
+
+          {screen === "scores" && (
+            <>
+              <PixelText
+                font={font}
+                text="HIGH SCORES"
+                scale={2}
+                color="#d9a0f0"
+              />
+              <div
+                className="score-board"
+                onPointerDown={onScorePointerDown}
+                onPointerUp={onScorePointerUp}
+              >
+                <button
+                  type="button"
+                  className="score-axis score-bob"
+                  aria-label="score-difficulty"
+                  onClick={() => stepScoreDifficulty(1)}
+                >
+                  <PixelText
+                    font={font}
+                    text={scoreDef.name}
+                    scale={3}
+                    color={scoreDef.color}
+                  />
+                </button>
+
+                {openScore ? (
+                  (() => {
+                    const { detail } = openScore;
+                    const { name: levelName, foes } = scoreLevelInfo(
+                      detail.levelId,
+                    );
+                    const cleared = detail.outcome === "victory";
+                    const kpm =
+                      detail.stats.timeMs > 0
+                        ? detail.stats.kills / (detail.stats.timeMs / 60_000)
+                        : 0;
+                    // Every field of the run, headline numbers and all: a big kill
+                    // count reads very differently beside the shots and damage it
+                    // cost to earn.
+                    const lines: [string, string][] = [
+                      ["TIME", formatTime(detail.stats.timeMs)],
+                      [
+                        foes,
+                        `${detail.stats.kills}/${detail.stats.totalEnemies}`,
+                      ],
+                      ["KILLS / MIN", formatKpm(kpm)],
+                      ["LEVEL REACHED", String(detail.level)],
+                      ["XP GAINED", formatCompact(detail.stats.xpGained)],
+                      ["SHOTS FIRED", formatCompact(detail.stats.shotsFired)],
+                      ["DAMAGE DEALT", formatCompact(detail.stats.damageDealt)],
+                      ["DAMAGE TAKEN", formatCompact(detail.stats.damageTaken)],
+                      ["ITEMS", String(detail.stats.itemsCollected)],
+                    ];
+                    return (
+                      <div className="score-detail">
+                        <PixelText
+                          font={font}
+                          text={cleared ? "LEVEL CLEAR!" : "YOU DIED"}
+                          scale={3}
+                          color={cleared ? "#7ef0c8" : "#d83a3a"}
+                        />
+                        <PixelText font={font} text={levelName} scale={2} />
+                        <PixelText
+                          font={font}
+                          text={formatScoreDate(detail.at)}
+                          scale={1}
+                          color="#7a8088"
+                        />
+                        <div className="score-detail-stats">
+                          {lines.map(([label, value]) => (
+                            <div className="score-detail-row" key={label}>
+                              <PixelText
+                                font={font}
+                                text={label}
+                                scale={1}
+                                color="#9aa3ad"
+                              />
+                              <PixelText font={font} text={value} scale={2} />
+                            </div>
+                          ))}
+                        </div>
+                        <button
+                          type="button"
+                          className="score-back"
+                          aria-label="score-back"
+                          onClick={() => {
+                            playUiSound(synth, "back");
+                            setScoreDetail(null);
+                          }}
+                        >
                           <PixelText
                             font={font}
-                            text={label}
-                            scale={1}
-                            color="#9aa3ad"
+                            text="BACK"
+                            scale={3}
+                            color="#ffd75e"
                           />
-                          <PixelText font={font} text={value} scale={2} />
-                        </div>
-                      ))}
+                        </button>
+                      </div>
+                    );
+                  })()
+                ) : (
+                  <>
+                    <button
+                      type="button"
+                      className="score-metric score-bob score-bob-delay"
+                      aria-label="score-metric"
+                      onClick={() => stepScoreMetric(1)}
+                    >
+                      <PixelText
+                        font={font}
+                        text={
+                          SCORE_METRICS.find((m) => m.id === scoreMetric)
+                            ?.label ?? ""
+                        }
+                        scale={2}
+                        color="#7ef0c8"
+                      />
+                    </button>
+
+                    <div className="score-list">
+                      {scoreRows.length === 0 ? (
+                        <PixelText
+                          font={font}
+                          text="NO RUNS YET"
+                          scale={2}
+                          color="#5a6068"
+                        />
+                      ) : (
+                        scoreRows.map((row, i) => {
+                          const medal =
+                            ["#ffd75e", "#c8cdd4", "#cd7f4b"][i] ?? "#7ef0c8";
+                          // Each ranking leads with its own metric; the smaller
+                          // secondary line keeps survival time in view (or KPM,
+                          // when time itself is the headline).
+                          const metricValue = (m: ScoreMetric): string => {
+                            switch (m) {
+                              case "time":
+                                return formatTime(row.timeMs);
+                              case "kpm":
+                                return `${formatKpm(row.kpm)} KPM`;
+                              case "kills":
+                                return `${row.kills} KILLS`;
+                              case "level":
+                                return `LV ${row.level}`;
+                            }
+                          };
+                          const primary = metricValue(scoreMetric);
+                          const secondary =
+                            scoreMetric === "time"
+                              ? metricValue("kpm")
+                              : metricValue("time");
+                          // A row opens into its full session only when one was
+                          // banked; legacy time-only runs stay inert (no arrow).
+                          const openable = Boolean(row.detail);
+                          return (
+                            <button
+                              type="button"
+                              className="score-row"
+                              key={i}
+                              disabled={!openable}
+                              aria-label={`score-row-${i + 1}`}
+                              onClick={() => {
+                                if (!openable) return;
+                                playUiSound(synth, "move");
+                                setScoreDetail(row);
+                              }}
+                            >
+                              <PixelText
+                                font={font}
+                                text={`${i + 1}.`}
+                                scale={3}
+                                color={medal}
+                              />
+                              <PixelText font={font} text={primary} scale={3} />
+                              <PixelText
+                                font={font}
+                                text={secondary}
+                                scale={1}
+                                color="#9aa3ad"
+                              />
+                              {openable && (
+                                <PixelText
+                                  font={font}
+                                  text=">"
+                                  scale={2}
+                                  color="#5a6068"
+                                />
+                              )}
+                            </button>
+                          );
+                        })
+                      )}
                     </div>
+
+                    <PixelText
+                      font={font}
+                      text="SWIPE OR ARROWS TO SWITCH"
+                      scale={2}
+                      color="#7a8088"
+                    />
                     <button
                       type="button"
                       className="score-back"
                       aria-label="score-back"
                       onClick={() => {
                         playUiSound(synth, "back");
-                        setScoreDetail(null);
+                        setScreen("main");
+                        setCursor(onResume ? 2 : 1);
                       }}
                     >
                       <PixelText
@@ -1385,219 +1532,105 @@ export function TitleScreen({
                         color="#ffd75e"
                       />
                     </button>
-                  </div>
-                );
-              })()
-            ) : (
-              <>
-                <button
-                  type="button"
-                  className="score-metric score-bob score-bob-delay"
-                  aria-label="score-metric"
-                  onClick={() => stepScoreMetric(1)}
-                >
-                  <PixelText
-                    font={font}
-                    text={
-                      SCORE_METRICS.find((m) => m.id === scoreMetric)?.label ??
-                      ""
-                    }
-                    scale={2}
-                    color="#7ef0c8"
-                  />
-                </button>
+                  </>
+                )}
+              </div>
+            </>
+          )}
 
-                <div className="score-list">
-                  {scoreRows.length === 0 ? (
-                    <PixelText
-                      font={font}
-                      text="NO RUNS YET"
-                      scale={2}
-                      color="#5a6068"
+          {/* browserOpen (arsenal/achievements) never reaches here — the whole
+              content column is skipped while a full-screen browser is up. */}
+          {screen !== "scores" && (
+            <nav
+              className={`title-menu${screen === "levels" ? " scrollable" : ""}`}
+              aria-label="main menu"
+            >
+              {entries.map((entry, i) => {
+                const selected = i === cursor;
+                const baseColor = entry.color ?? "#ffd75e";
+                const color = selected
+                  ? baseColor
+                  : entry.locked
+                    ? "#5a6068"
+                    : "#9aa3ad";
+                return (
+                  <button
+                    key={entry.aria}
+                    type="button"
+                    // Keep the highlighted row in view as the level list scrolls.
+                    ref={
+                      selected
+                        ? (el) => el?.scrollIntoView({ block: "nearest" })
+                        : undefined
+                    }
+                    className={`menu-item${selected ? " selected" : ""}${entry.locked ? " locked" : ""}`}
+                    aria-label={entry.aria}
+                    onPointerEnter={() => {
+                      if (i !== cursor) {
+                        playUiSound(synth, "move");
+                        setCursor(i);
+                      }
+                    }}
+                    onClick={entry.action}
+                  >
+                    <img
+                      src={cursorSprite}
+                      alt=""
+                      className="menu-cursor"
+                      style={{ visibility: selected ? "visible" : "hidden" }}
                     />
-                  ) : (
-                    scoreRows.map((row, i) => {
-                      const medal =
-                        ["#ffd75e", "#c8cdd4", "#cd7f4b"][i] ?? "#7ef0c8";
-                      // Each ranking leads with its own metric; the smaller
-                      // secondary line keeps survival time in view (or KPM,
-                      // when time itself is the headline).
-                      const metricValue = (m: ScoreMetric): string => {
-                        switch (m) {
-                          case "time":
-                            return formatTime(row.timeMs);
-                          case "kpm":
-                            return `${formatKpm(row.kpm)} KPM`;
-                          case "kills":
-                            return `${row.kills} KILLS`;
-                          case "level":
-                            return `LV ${row.level}`;
-                        }
-                      };
-                      const primary = metricValue(scoreMetric);
-                      const secondary =
-                        scoreMetric === "time"
-                          ? metricValue("kpm")
-                          : metricValue("time");
-                      // A row opens into its full session only when one was
-                      // banked; legacy time-only runs stay inert (no arrow).
-                      const openable = Boolean(row.detail);
-                      return (
-                        <button
-                          type="button"
-                          className="score-row"
-                          key={i}
-                          disabled={!openable}
-                          aria-label={`score-row-${i + 1}`}
-                          onClick={() => {
-                            if (!openable) return;
-                            playUiSound(synth, "move");
-                            setScoreDetail(row);
+                    <span className="menu-item-text">
+                      <PixelText
+                        font={font}
+                        text={entry.label}
+                        scale={3}
+                        color={color}
+                      />
+                      {entry.blurb && (
+                        // Always occupy the blurb's row so selecting an item never
+                        // changes its height. The menu is vertically centered, so a
+                        // grow-on-hover row would shift every label (including the
+                        // hovered one) — the flicker. Hidden when unselected keeps
+                        // the space reserved without showing the text.
+                        <span
+                          className="menu-item-blurb"
+                          style={{
+                            visibility: selected ? "visible" : "hidden",
                           }}
                         >
                           <PixelText
                             font={font}
-                            text={`${i + 1}.`}
-                            scale={3}
-                            color={medal}
-                          />
-                          <PixelText font={font} text={primary} scale={3} />
-                          <PixelText
-                            font={font}
-                            text={secondary}
-                            scale={1}
+                            text={entry.blurb}
+                            scale={2}
                             color="#9aa3ad"
+                            maxWidth={blurbMaxWidth}
                           />
-                          {openable && (
-                            <PixelText
-                              font={font}
-                              text=">"
-                              scale={2}
-                              color="#5a6068"
-                            />
-                          )}
-                        </button>
-                      );
-                    })
-                  )}
-                </div>
-
-                <PixelText
-                  font={font}
-                  text="SWIPE OR ARROWS TO SWITCH"
-                  scale={2}
-                  color="#7a8088"
-                />
-                <button
-                  type="button"
-                  className="score-back"
-                  aria-label="score-back"
-                  onClick={() => {
-                    playUiSound(synth, "back");
-                    setScreen("main");
-                    setCursor(onResume ? 2 : 1);
-                  }}
-                >
-                  <PixelText
-                    font={font}
-                    text="BACK"
-                    scale={3}
-                    color="#ffd75e"
-                  />
-                </button>
-              </>
-            )}
-          </div>
-        </>
-      )}
-
-      {screen !== "scores" && screen !== "arsenal" && (
-        <nav
-          className={`title-menu${screen === "levels" ? " scrollable" : ""}`}
-          aria-label="main menu"
-        >
-          {entries.map((entry, i) => {
-            const selected = i === cursor;
-            const baseColor = entry.color ?? "#ffd75e";
-            const color = selected
-              ? baseColor
-              : entry.locked
-                ? "#5a6068"
-                : "#9aa3ad";
-            return (
-              <button
-                key={entry.aria}
-                type="button"
-                // Keep the highlighted row in view as the level list scrolls.
-                ref={
-                  selected
-                    ? (el) => el?.scrollIntoView({ block: "nearest" })
-                    : undefined
-                }
-                className={`menu-item${selected ? " selected" : ""}${entry.locked ? " locked" : ""}`}
-                aria-label={entry.aria}
-                onPointerEnter={() => {
-                  if (i !== cursor) {
-                    playUiSound(synth, "move");
-                    setCursor(i);
-                  }
-                }}
-                onClick={entry.action}
-              >
-                <img
-                  src={cursorSprite}
-                  alt=""
-                  className="menu-cursor"
-                  style={{ visibility: selected ? "visible" : "hidden" }}
-                />
-                <span className="menu-item-text">
-                  <PixelText
-                    font={font}
-                    text={entry.label}
-                    scale={3}
-                    color={color}
-                  />
-                  {entry.blurb && (
-                    // Always occupy the blurb's row so selecting an item never
-                    // changes its height. The menu is vertically centered, so a
-                    // grow-on-hover row would shift every label (including the
-                    // hovered one) — the flicker. Hidden when unselected keeps
-                    // the space reserved without showing the text.
-                    <span
-                      className="menu-item-blurb"
-                      style={{ visibility: selected ? "visible" : "hidden" }}
-                    >
-                      <PixelText
-                        font={font}
-                        text={entry.blurb}
-                        scale={2}
-                        color="#9aa3ad"
-                        maxWidth={blurbMaxWidth}
-                      />
+                        </span>
+                      )}
                     </span>
-                  )}
-                </span>
-              </button>
-            );
-          })}
-        </nav>
-      )}
+                  </button>
+                );
+              })}
+            </nav>
+          )}
 
-      {/* The import/export result line, under the SETTINGS - DATA menu. */}
-      {screen === "data" && transferNotice && (
-        <p
-          className={`title-notice ${transferNotice.tone}`}
-          role="status"
-          aria-live="polite"
-        >
-          <PixelText
-            font={font}
-            text={transferNotice.text}
-            scale={2}
-            color={transferNotice.tone === "error" ? "#ff6d6d" : "#7ef0c8"}
-            maxWidth={24}
-          />
-        </p>
+          {/* The import/export result line, under the SETTINGS - DATA menu. */}
+          {screen === "data" && transferNotice && (
+            <p
+              className={`title-notice ${transferNotice.tone}`}
+              role="status"
+              aria-live="polite"
+            >
+              <PixelText
+                font={font}
+                text={transferNotice.text}
+                scale={2}
+                color={transferNotice.tone === "error" ? "#ff6d6d" : "#7ef0c8"}
+                maxWidth={24}
+              />
+            </p>
+          )}
+        </div>
       )}
 
       {/* The ACHIEVEMENTS browser: a full-screen overlay over the menu,
@@ -1631,14 +1664,16 @@ export function TitleScreen({
         />
       )}
 
-      <footer className="title-footer">
-        <PixelText
-          font={font}
-          text={`v${__APP_VERSION__} · ${__BUILD_COMMIT__}`}
-          scale={1}
-          color="#7a8088"
-        />
-      </footer>
+      {!browserOpen && (
+        <footer className="title-footer">
+          <PixelText
+            font={font}
+            text={`v${__APP_VERSION__} · ${__BUILD_COMMIT__}`}
+            scale={1}
+            color="#7a8088"
+          />
+        </footer>
+      )}
     </div>
   );
 }
