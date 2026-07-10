@@ -45,6 +45,13 @@ export type UniqueDef = {
   /** BAG uniques only: the extra inventory cells this bag grants, overriding
    * the base bag's capacity (applied in `mintUnique`). */
   bagSlots?: number;
+  /** Authoring metadata (the engine ignores it): mark an INTENTIONAL over-budget
+   * keeper — a scaling `statPct`/`maxHpPct` piece that's deliberately weak at its
+   * early equip level but compounds into best-in-slot as the hero grows. It
+   * suppresses `scripts/weapon-ilvl.mjs`'s over-budget warning, which otherwise
+   * flags "power too high for the equip gate". Only set this when the deviation
+   * is a deliberate keeper design, not an accident. */
+  keeper?: boolean;
   /** One-line flavor for the item card. */
   lore: string;
 };
@@ -57,7 +64,8 @@ const MUSKRAT_UNIQUES: UniqueDef[] = [
     name: "MUSKRAT'S TOOTH",
     base: "combat_knife",
     slot: "weapon",
-    ilvl: 8,
+    ilvl: 36,
+    keeper: true,
     bonuses: [
       { kind: "crit", value: 0.1 },
       { kind: "statPct", stat: "dexterity", value: 0.03 },
@@ -70,7 +78,7 @@ const MUSKRAT_UNIQUES: UniqueDef[] = [
     name: "WHISKERWEAVE HOOD",
     base: "targeting_monocle",
     slot: "head",
-    ilvl: 22,
+    ilvl: 23,
     bonuses: [
       { kind: "stat", stat: "luck", value: 6 },
       { kind: "stat", stat: "speed", value: 3 },
@@ -83,7 +91,7 @@ const MUSKRAT_UNIQUES: UniqueDef[] = [
     name: "VERMIN PELT",
     base: "nanoweave_plate",
     slot: "chest",
-    ilvl: 36,
+    ilvl: 26,
     bonuses: [
       { kind: "maxHp", value: 70 },
       { kind: "stat", stat: "stamina", value: 6 },
@@ -96,7 +104,7 @@ const MUSKRAT_UNIQUES: UniqueDef[] = [
     name: "BURROW GREAVES",
     base: "chausses",
     slot: "legs",
-    ilvl: 48,
+    ilvl: 29,
     bonuses: [
       { kind: "stat", stat: "speed", value: 7 },
       { kind: "stat", stat: "dexterity", value: 6 },
@@ -108,7 +116,7 @@ const MUSKRAT_UNIQUES: UniqueDef[] = [
     name: "GNAWED SABATONS",
     base: "gothic_sabatons",
     slot: "feet",
-    ilvl: 60,
+    ilvl: 64,
     bonuses: [
       { kind: "stat", stat: "speed", value: 6 },
       { kind: "stat", stat: "luck", value: 8 },
@@ -121,7 +129,7 @@ const MUSKRAT_UNIQUES: UniqueDef[] = [
     name: "THE HOARD",
     base: "bag",
     slot: "bag",
-    ilvl: 8,
+    ilvl: 17,
     bagSlots: 6,
     bonuses: [{ kind: "stat", stat: "luck", value: 4 }],
     lore: "EVERY SCRAP IT EVER STOLE, AND IT STOLE EVERYTHING.",
@@ -131,7 +139,7 @@ const MUSKRAT_UNIQUES: UniqueDef[] = [
     name: "REGOLITH RUCKSACK",
     base: "bag",
     slot: "bag",
-    ilvl: 22,
+    ilvl: 24,
     bagSlots: 8,
     bonuses: [{ kind: "stat", stat: "stamina", value: 5 }],
     lore: "PACKED FOR A LONG WALK ACROSS SOMEWHERE THAT WANTS YOU DEAD.",
@@ -141,7 +149,7 @@ const MUSKRAT_UNIQUES: UniqueDef[] = [
     name: "FOREMAN'S DUFFEL",
     base: "bag",
     slot: "bag",
-    ilvl: 36,
+    ilvl: 31,
     bagSlots: 10,
     bonuses: [{ kind: "stat", stat: "strength", value: 6 }],
     lore: "A WHOLE BENCH ON A STRAP. HE NEVER CLOCKED OUT EITHER.",
@@ -151,7 +159,7 @@ const MUSKRAT_UNIQUES: UniqueDef[] = [
     name: "VOIDCACHE",
     base: "bag",
     slot: "bag",
-    ilvl: 48,
+    ilvl: 38,
     bagSlots: 12,
     bonuses: [{ kind: "stat", stat: "intelligence", value: 7 }],
     lore: "IT HOLDS MORE THAN IT SHOULD. DON'T LOOK TOO LONG INSIDE.",
@@ -161,7 +169,7 @@ const MUSKRAT_UNIQUES: UniqueDef[] = [
     name: "ADA'S SATCHEL",
     base: "bag",
     slot: "bag",
-    ilvl: 60,
+    ilvl: 53,
     bagSlots: 14,
     bonuses: [
       { kind: "maxHpPct", value: 0.03 },
@@ -178,7 +186,7 @@ const ARMSTRONG_UNIQUES: UniqueDef[] = [
     name: "THE LONG VIGIL",
     base: "apollo_visor",
     slot: "head",
-    ilvl: 11,
+    ilvl: 13,
     bonuses: [
       { kind: "stat", stat: "intelligence", value: 4 },
       { kind: "maxHp", value: 30 },
@@ -190,7 +198,7 @@ const ARMSTRONG_UNIQUES: UniqueDef[] = [
     name: "PALEGRAVE",
     base: "micrometeoroid_vest",
     slot: "chest",
-    ilvl: 25,
+    ilvl: 20,
     bonuses: [
       { kind: "stat", stat: "dexterity", value: 5 },
       { kind: "armor", value: 30 },
@@ -203,7 +211,8 @@ const ARMSTRONG_UNIQUES: UniqueDef[] = [
     name: "SENTINEL'S GREAVES",
     base: "servo_greaves",
     slot: "legs",
-    ilvl: 38,
+    ilvl: 53,
+    keeper: true,
     bonuses: [
       { kind: "statPct", stat: "speed", value: 0.03 },
       { kind: "stat", stat: "stamina", value: 6 },
@@ -216,7 +225,7 @@ const ARMSTRONG_UNIQUES: UniqueDef[] = [
     name: "MAREWALKERS",
     base: "crater_boots",
     slot: "feet",
-    ilvl: 50,
+    ilvl: 44,
     bonuses: [
       { kind: "armor", value: 35 },
       { kind: "maxHp", value: 65 },
@@ -229,7 +238,7 @@ const ARMSTRONG_UNIQUES: UniqueDef[] = [
     name: "THE FALLEN STANDARD",
     base: "spatha",
     slot: "weapon",
-    ilvl: 62,
+    ilvl: 79,
     bonuses: [
       { kind: "damagePct", value: 0.25 },
       { kind: "statPct", stat: "strength", value: 0.03 },
@@ -246,7 +255,7 @@ const ELON_MARS_UNIQUES: UniqueDef[] = [
     name: "GILDED CARAPACE",
     base: "flight_jacket",
     slot: "chest",
-    ilvl: 14,
+    ilvl: 12,
     bonuses: [
       { kind: "armor", value: 22 },
       { kind: "stat", stat: "luck", value: 5 },
@@ -258,7 +267,7 @@ const ELON_MARS_UNIQUES: UniqueDef[] = [
     name: "LAWLESS STRIDE",
     base: "carbon_leggings",
     slot: "legs",
-    ilvl: 28,
+    ilvl: 16,
     bonuses: [
       { kind: "stat", stat: "speed", value: 6 },
       { kind: "damagePct", value: 0.2 },
@@ -271,7 +280,7 @@ const ELON_MARS_UNIQUES: UniqueDef[] = [
     name: "OVATION STRIDERS",
     base: "legionary_sandals",
     slot: "feet",
-    ilvl: 41,
+    ilvl: 29,
     bonuses: [
       { kind: "stat", stat: "speed", value: 6 },
       { kind: "stat", stat: "luck", value: 8 },
@@ -283,7 +292,7 @@ const ELON_MARS_UNIQUES: UniqueDef[] = [
     name: "WRATHFLAME",
     base: "atomic_raygun",
     slot: "weapon",
-    ilvl: 53,
+    ilvl: 46,
     bonuses: [
       { kind: "damagePct", value: 0.35 },
       { kind: "stat", stat: "strength", value: 8 },
@@ -295,7 +304,7 @@ const ELON_MARS_UNIQUES: UniqueDef[] = [
     name: "THE SIGNAL CROWN",
     base: "crusaders_helm",
     slot: "head",
-    ilvl: 64,
+    ilvl: 81,
     bonuses: [
       { kind: "statPct", stat: "intelligence", value: 0.03 },
       { kind: "stat", stat: "luck", value: 8 },
@@ -312,7 +321,7 @@ const ELON_RIFT_UNIQUES: UniqueDef[] = [
     name: "EXILE'S STRIDE",
     base: "padded_work_pants",
     slot: "legs",
-    ilvl: 18,
+    ilvl: 10,
     bonuses: [
       { kind: "stat", stat: "speed", value: 7 },
       { kind: "maxHp", value: -20 },
@@ -324,7 +333,7 @@ const ELON_RIFT_UNIQUES: UniqueDef[] = [
     name: "ESCAPIST'S TREAD",
     base: "gecko_soles",
     slot: "feet",
-    ilvl: 32,
+    ilvl: 25,
     bonuses: [
       { kind: "stat", stat: "speed", value: 5 },
       { kind: "stat", stat: "luck", value: 6 },
@@ -337,7 +346,7 @@ const ELON_RIFT_UNIQUES: UniqueDef[] = [
     name: "RIFTMAW",
     base: "graviton_maw",
     slot: "weapon",
-    ilvl: 45,
+    ilvl: 27,
     bonuses: [
       { kind: "stat", stat: "intelligence", value: 8 },
       { kind: "damagePct", value: 0.2 },
@@ -349,7 +358,7 @@ const ELON_RIFT_UNIQUES: UniqueDef[] = [
     name: "THE REDACTED",
     base: "great_helm",
     slot: "head",
-    ilvl: 56,
+    ilvl: 33,
     bonuses: [
       { kind: "armor", value: 50 },
       { kind: "maxHp", value: 70 },
@@ -362,7 +371,7 @@ const ELON_RIFT_UNIQUES: UniqueDef[] = [
     name: "AEGIS OF EXILE",
     base: "linked_mail",
     slot: "chest",
-    ilvl: 67,
+    ilvl: 83,
     bonuses: [
       { kind: "statPct", stat: "stamina", value: 0.03 },
       { kind: "armor", value: 45 },
@@ -380,7 +389,7 @@ const GROK_UNIQUES: UniqueDef[] = [
     name: "BOUNDSTRIDE",
     base: "sneakers",
     slot: "feet",
-    ilvl: 18,
+    ilvl: 6,
     bonuses: [
       { kind: "stat", stat: "speed", value: 3 },
       { kind: "stat", stat: "dexterity", value: 2 },
@@ -392,7 +401,7 @@ const GROK_UNIQUES: UniqueDef[] = [
     name: "THE JAILBREAK",
     base: "prompt_injector",
     slot: "weapon",
-    ilvl: 32,
+    ilvl: 24,
     bonuses: [
       { kind: "stat", stat: "intelligence", value: 8 },
       { kind: "damagePct", value: 0.2 },
@@ -405,7 +414,8 @@ const GROK_UNIQUES: UniqueDef[] = [
     name: "THE PANOPTICON",
     base: "neural_visor",
     slot: "head",
-    ilvl: 45,
+    ilvl: 48,
+    keeper: true,
     bonuses: [
       { kind: "statPct", stat: "intelligence", value: 0.03 },
       { kind: "stat", stat: "luck", value: 6 },
@@ -417,7 +427,7 @@ const GROK_UNIQUES: UniqueDef[] = [
     name: "TRUTHSEEKER",
     base: "microlattice_plate",
     slot: "chest",
-    ilvl: 56,
+    ilvl: 72,
     bonuses: [
       { kind: "statPct", stat: "intelligence", value: 0.03 },
       { kind: "crit", value: 0.08 },
@@ -430,7 +440,7 @@ const GROK_UNIQUES: UniqueDef[] = [
     name: "GREAVES OF THE WALLED GARDEN",
     base: "fluted_greaves",
     slot: "legs",
-    ilvl: 67,
+    ilvl: 69,
     bonuses: [
       { kind: "maxHpPct", value: 0.03 },
       { kind: "armor", value: 60 },
@@ -443,7 +453,7 @@ const GROK_UNIQUES: UniqueDef[] = [
     name: "ARCHITECT'S CHIP",
     base: "passage_chip",
     slot: "charm",
-    ilvl: 18,
+    ilvl: 6,
     bonuses: [{ kind: "stat", stat: "intelligence", value: 5 }],
     lore: "HE OPERATED IT INTO HIMSELF. IT STILL REMEMBERS HOW TO BUILD MINDS.",
   },
@@ -452,7 +462,7 @@ const GROK_UNIQUES: UniqueDef[] = [
     name: "DUST OF TRANQUILITY",
     base: "moon_charm",
     slot: "charm",
-    ilvl: 32,
+    ilvl: 9,
     bonuses: [
       { kind: "stat", stat: "stamina", value: 5 },
       { kind: "maxHp", value: 40 },
@@ -464,7 +474,7 @@ const GROK_UNIQUES: UniqueDef[] = [
     name: "THE BUYOUT",
     base: "golden_parachute",
     slot: "charm",
-    ilvl: 45,
+    ilvl: 14,
     bonuses: [
       { kind: "stat", stat: "luck", value: 10 },
       { kind: "stat", stat: "speed", value: 3 },
@@ -476,7 +486,7 @@ const GROK_UNIQUES: UniqueDef[] = [
     name: "RIFTSHARD",
     base: "stardust_charm",
     slot: "charm",
-    ilvl: 56,
+    ilvl: 11,
     bonuses: [
       { kind: "stat", stat: "intelligence", value: 8 },
       { kind: "crit", value: 0.06 },
@@ -488,7 +498,7 @@ const GROK_UNIQUES: UniqueDef[] = [
     name: "ADA'S BEACON",
     base: "red_dust_charm",
     slot: "charm",
-    ilvl: 67,
+    ilvl: 37,
     bonuses: [
       { kind: "statPct", stat: "luck", value: 0.03 },
       { kind: "stat", stat: "intelligence", value: 6 },
@@ -513,7 +523,8 @@ const WORLD_UNIQUES: UniqueDef[] = [
     name: "THE FIRST DRAFT",
     base: "mission_cap",
     slot: "head",
-    ilvl: 9,
+    ilvl: 41,
+    keeper: true,
     bonuses: [
       { kind: "stat", stat: "intelligence", value: 5 },
       { kind: "armor", value: 12 },
@@ -527,7 +538,7 @@ const WORLD_UNIQUES: UniqueDef[] = [
     name: "THE PALE COVENANT",
     base: "kevlar_vest",
     slot: "chest",
-    ilvl: 11,
+    ilvl: 18,
     bonuses: [
       { kind: "stat", stat: "stamina", value: 4 },
       { kind: "maxHp", value: 25 },
@@ -535,16 +546,19 @@ const WORLD_UNIQUES: UniqueDef[] = [
     ],
     lore: "SEALED AGAINST A SILENCE THAT EATS EVERYTHING IT TOUCHES.",
   },
-  // MARS — light boots that outrun the dust storms that bury everything.
+  // MARS — light runner's shoes that outrun the dust storms that bury everything
+  // (on `sneakers`, not the seed leather boots, so they carry a hair more sole and
+  // read as fast footwear, not army surplus).
   {
     id: "dustborn",
     name: "DUSTBORN",
-    base: "leather_boots",
+    base: "sneakers",
     slot: "feet",
-    ilvl: 10,
+    ilvl: 12,
     bonuses: [
-      { kind: "stat", stat: "speed", value: 4 },
-      { kind: "stat", stat: "dexterity", value: 3 },
+      { kind: "stat", stat: "speed", value: 5 },
+      { kind: "stat", stat: "dexterity", value: 4 },
+      { kind: "stat", stat: "stamina", value: 2 },
     ],
     lore: "BORN OF THE WIND THAT BURIES EVERYTHING THAT STOPS MOVING.",
   },
@@ -554,7 +568,7 @@ const WORLD_UNIQUES: UniqueDef[] = [
     name: "EXCALIBUR",
     base: "medieval_sword",
     slot: "weapon",
-    ilvl: 14,
+    ilvl: 1,
     bonuses: [
       { kind: "damagePct", value: 0.12 },
       { kind: "crit", value: 0.05 },
@@ -568,7 +582,7 @@ const WORLD_UNIQUES: UniqueDef[] = [
     name: "THE TRINITY SHARD",
     base: "crystal_orb",
     slot: "charm",
-    ilvl: 18,
+    ilvl: 15,
     bonuses: [
       { kind: "damagePct", value: 0.15 },
       { kind: "maxHp", value: -20 },

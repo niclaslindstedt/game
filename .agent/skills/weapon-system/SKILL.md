@@ -1,6 +1,6 @@
 ---
 name: weapon-system
-description: "Use when adding, rebalancing, or reworking weapons and loot — base weapons, level requirements, tiers/affixes, drop rules, named UNIQUE items (weapons, armor, charms, bags), weapon sprites and projectile behaviors. Walks the def-first workflow and the verification loops: the damage-budget calculator, the stat sanity checker, the weapon sheet, and the unique authoring checker, then tests and playtest."
+description: "Use when adding, rebalancing, or reworking weapons and loot — base weapons, level requirements, tiers/affixes, drop rules, named UNIQUE items (weapons, armor, charms, bags), weapon sprites and projectile behaviors. Walks the def-first workflow and the verification loops: the damage-budget calculator, the stat sanity checker, the weapon sheet, the unique ilvl calculator, and the unique authoring checker, then tests and playtest."
 ---
 
 # The Weapon System
@@ -23,6 +23,7 @@ projectile sprite — no engine edits unless you're adding a new BEHAVIOR.
 | Which bases drop on a level (thematic pools) | `src/game/defs/levels/<level>.ts` `loot.weaponPool` |
 | Elite/boss drops: signatures (`items`), per-tier pledges (`tierDrops`), boss UNIQUE tables (`uniquesByDifficulty`), `levelBonus` | `src/game/defs/enemies/<roster>.ts` |
 | Named UNIQUE defs (fixed bonuses on a real base) | `src/game/defs/uniques.ts` (`WORLD_UNIQUES` group = level-locked ones) |
+| The ilvl MODEL (what a unique's `ilvl` means; over/under-power check) | `scripts/weapon-ilvl.mjs` — `unique-check.mjs` imports it; conversion table derived from live combat constants |
 | Unique mint + drop roll: `mintUnique`, `maybeDropBossUnique`, `UNIQUE` config | `src/game/items.ts`, `src/game/loot.ts`, `src/game/config.ts` |
 | World-drop uniques: level wiring, role-scaled roll, gate | `LevelDef.loot.worldUniques`, `maybeDropWorldUnique` (loot.ts), `WORLD_DROP` config; size the gate with `scripts/leveling-curve.mjs --by-level` |
 | The roll pipeline (tier → ilvl → affixes), equip gates | `src/game/items.ts` (`rollEquipment`, `meetsLevelReq`) |
@@ -162,10 +163,22 @@ to the rung — an easy unique only drops on easy. Each is rolled at
   checker's `--bases`, never `grep`.
 - **`ilvl` scales power and drop odds, not the equip gate.** Equip level is the
   base item's `levelReq` (like any tier), so a unique wears well below its ilvl.
-  Pick a base whose `levelReq ≈ ilvl − 20` (`EQUIP_GAP`): that one rule sets
-  both the equip gate AND the armor/dps, because a higher-req base is a higher
-  grade. Too weak a base (far below target) equips absurdly early and
-  under-armors the ilvl.
+  `ilvl` is NOT a free-hand number — it has a DEFINITION (`scripts/weapon-ilvl.mjs`):
+  `ilvl = base.levelReq + bonusBudget`, where each fixed bonus is converted to
+  "ilvl points" by a table DERIVED FROM THE LIVE COMBAT CONSTANTS (a STR point's
+  damage, the crit/stamina/armor scaling), so 1 stat = 1 ilvl and a change to the
+  combat math re-prices every unique. Run `node scripts/weapon-ilvl.mjs --suggest`
+  to get the canonical ilvl to author, and `--check` to catch a piece that became
+  over- or under-powered. Because a higher-req base is a higher grade (more
+  armor/dps), pick one whose `levelReq ≈ ilvl − 20` (`EQUIP_GAP`) so it wears ~20
+  levels below its power; too weak a base equips absurdly early and under-armors.
+- **The bonus budget is capped, and the cap grows with the base's `levelReq`.** A
+  low-req unique must keep a SMALL budget (`ilvl − levelReq`) — it can't smuggle
+  late-game power in behind an early equip gate — while a high-req end-game piece
+  may deviate a lot. `weapon-ilvl.mjs --check` flags the over-budget ones; the
+  usual fix is to move a scaling `statPct`/`maxHpPct` keeper (30 ilvl at +3%) off a
+  low base onto a higher-grade one, trim it, or buy it back with a downside.
+  Trinkets (charm/bag) gate at req ~1 by design and are exempt from the cap.
 - **Armor climbs with ilvl within a slot.** Uniques don't grow armor with ilvl
   (only the ±band), so a higher-ilvl piece MUST sit on a higher-armor base or
   it's strictly worse than a lower one. The checker holds this per gear slot.
@@ -178,9 +191,12 @@ to the rung — an easy unique only drops on easy. Each is rolled at
 
 **The authoring loop** — `node scripts/unique-check.mjs`:
 
-1. Draft the def (name, base, slot, ilvl, bonuses, lore). For the base, run
-   `node scripts/unique-check.mjs --bases <slot>` to see every REAL base in the
-   slot with its req + armor/dps, and pick one at `req ≈ ilvl − 20`.
+1. Draft the def (name, base, slot, bonuses, lore) — but DON'T free-hand `ilvl`.
+   For the base, run `node scripts/unique-check.mjs --bases <slot>` to see every
+   REAL base in the slot with its req + armor/dps, and pick one at `req ≈ ilvl − 20`.
+   Then `node scripts/weapon-ilvl.mjs --suggest` computes the canonical `ilvl`
+   from your base + bonuses (`ilvl = levelReq + bonusBudget`) — author THAT number,
+   and if `--check` flags it over-budget, rebalance the bonuses/base first.
 2. `node scripts/unique-check.mjs --suggest [slot]` does that pick for every
    unique at once — the repeatable re-base pass. It prints the current base, an
    `⚠ under-grade` flag when a base is too weak for its ilvl, and the top
@@ -401,8 +417,11 @@ in `loot.ts`, called from `killEnemy` right after the boss roll.
 - [ ] `node scripts/weapon-budget.mjs --strict` clean — every weapon on its
       damage budget (or the drift is a deliberate, commented exception).
 - [ ] `node scripts/weapon-stats.mjs` clean (or the warnings are deliberate).
+- [ ] `node scripts/weapon-ilvl.mjs --check` clean, if you touched uniques or the
+      combat/item constants (every unique's `ilvl` == computed, none over-budget).
 - [ ] `node scripts/unique-check.mjs` clean, if you touched uniques (base
-      integrity, equip-gap, armor monotonicity, Latin-square coverage).
+      integrity, ilvl drift + over-budget via weapon-ilvl.mjs, armor monotonicity,
+      Latin-square coverage).
 - [ ] `node website/scripts/weapon-sheet.mjs` and LOOK at the sheet.
 - [ ] `make assets` committed together with the sprite-data change
       (atlas.png + atlas.json are the build inputs).

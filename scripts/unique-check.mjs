@@ -54,6 +54,11 @@ const { DIFFICULTY_ORDER } = await import(
   path.join(root, "src/game/defs/difficulties.ts")
 );
 const { UNIQUE } = await import(path.join(root, "src/game/config.ts"));
+// The ilvl model is OWNED by weapon-ilvl.mjs (ilvl = levelReq + bonusBudget, each
+// bonus priced off the LIVE combat constants). We reference it here rather than
+// re-deriving ilvl, so the two scripts can never disagree on what a unique's ilvl
+// is or whether it's over-powered for its equip gate.
+const { ilvlOf } = await import(path.join(root, "scripts/weapon-ilvl.mjs"));
 
 const argv = process.argv.slice(2);
 const strict = argv.includes("--strict");
@@ -246,20 +251,21 @@ for (const id of UNIQUE_IDS) {
   for (const s of scaling)
     if (s.value > 0.03) err(`${id}: scaling bonus ${s.value} > 0.03 cap.`);
 
-  const req = levelReqOf(base);
-  if (req > u.ilvl)
+  // ilvl integrity + power budget — DELEGATED to the shared model in
+  // weapon-ilvl.mjs (the source of truth for what ilvl means). It prices every
+  // bonus off the LIVE combat constants, so this one call catches both a unique
+  // whose authored ilvl drifted from its computed value AND one whose bonus
+  // budget is over-powered for the equip gate its base sets. The equip-gap
+  // heuristic this replaced (req ≈ ilvl − 20) is now the base picker's job only.
+  const m = ilvlOf(u);
+  if (m.drift !== 0)
     warn(
-      `${id}: equip level ${req} is ABOVE its ilvl ${u.ilvl} — uniques should wear below ilvl.`,
+      `${id}: authored ilvl ${u.ilvl} ≠ computed ${m.computed} — re-author it (weapon-ilvl.mjs --suggest).`,
     );
-  // The design rule: a unique equips ~EQUIP_GAP levels below its ilvl (the level
-  // its base would gate at if you stripped the bonuses). A base more than
-  // GAP_SLACK below that target equips absurdly early AND under-armors the ilvl.
-  // Trinkets are exempt (charm/bag bases top out at req ~20). `--suggest` fixes.
-  const target = u.ilvl - EQUIP_GAP;
-  if (!GAP_EXEMPT.has(u.slot) && target >= 1 && req < target - GAP_SLACK)
+  if (m.overBudget)
     warn(
-      `${id}: base "${base}" gates at ${req} but ilvl ${u.ilvl} wants ~${target} ` +
-        `(re-base: --suggest ${u.slot}).`,
+      `${id}: bonus budget ${m.budget.toFixed(1)} > cap ${m.cap.toFixed(1)} for req ${m.req} ` +
+        `— over-powered for its equip gate (weapon-ilvl.mjs --check).`,
     );
 }
 
@@ -269,9 +275,13 @@ const bySlot = {};
 for (const id of UNIQUE_IDS) (bySlot[UNIQUE_DEFS[id].slot] ??= []).push(id);
 for (const slot of ["head", "chest", "legs", "feet"]) {
   const rows = (bySlot[slot] ?? [])
+    // Keepers are exempt: their computed ilvl is inflated by a SCALING stat, not
+    // armor, so a keeper legitimately carries less armor than a lower-ilvl piece
+    // (comparing them on armor is meaningless — that's the point of a keeper).
+    .filter((id) => !UNIQUE_DEFS[id].keeper)
     .map((id) => ({
       id,
-      ilvl: UNIQUE_DEFS[id].ilvl,
+      ilvl: ilvlOf(UNIQUE_DEFS[id]).computed, // the derived ilvl, not the authored one
       armor: armorOf(UNIQUE_DEFS[id].base),
     }))
     .sort((a, b) => a.ilvl - b.ilvl);

@@ -154,3 +154,23 @@ describe("boss unique drop tables", () => {
     for (const diff of DIFFICULTY_ORDER) expect(perRung[diff]).toBe(7);
   });
 });
+
+// The ilvl model (scripts/weapon-ilvl.mjs) is the single source of truth for what
+// a unique's `ilvl` means — ilvl = base.levelReq + bonusBudget, priced off the
+// live combat constants. These guards keep every shipped ilvl honest going
+// forward: authored == computed, and no non-keeper deviates over its budget cap.
+describe("unique ilvl model (weapon-ilvl.mjs)", () => {
+  it("every unique's authored ilvl equals its computed ilvl", async () => {
+    const { computeAll } = await import("../../scripts/weapon-ilvl.mjs");
+    for (const r of computeAll())
+      expect(`${r.id}=${r.authored}`).toBe(`${r.id}=${r.computed}`);
+  });
+
+  it("no non-keeper unique exceeds its power-budget cap", async () => {
+    const { computeAll } = await import("../../scripts/weapon-ilvl.mjs");
+    // Over-budget keepers are opt-in via `UniqueDef.keeper` (a scaling stat that
+    // grows into best-in-slot); everything else must fit under the cap.
+    const over = computeAll().filter((r) => r.overBudget);
+    expect(over.map((r) => r.id)).toEqual([]);
+  });
+});
