@@ -57,6 +57,7 @@ import {
 } from "./characters.ts";
 import { getSettings, updateSettings } from "./settings.ts";
 import { playUiSound } from "./sfx/index.ts";
+import { AchievementsScreen } from "./AchievementsScreen.tsx";
 import { startTitleSky } from "./titleSky.ts";
 
 type MenuScreen =
@@ -69,6 +70,7 @@ type MenuScreen =
   | "display"
   | "developer"
   | "arsenal"
+  | "achievements"
   | "help";
 
 const pct = (v: number) => `${Math.round(v * 100)}%`;
@@ -419,6 +421,14 @@ export function TitleScreen({
           },
         },
         {
+          label: "ACHIEVEMENTS",
+          aria: "achievements",
+          action: () => {
+            playUiSound(synth, "confirm");
+            setScreen("achievements");
+          },
+        },
+        {
           label: "SETTINGS",
           aria: "settings",
           action: () => {
@@ -614,7 +624,7 @@ export function TitleScreen({
               },
             ]
           : []),
-        backTo("main", onResume ? 2 : 1),
+        backTo("main", onResume ? 5 : 4),
       ];
     }
     if (screen === "developer") {
@@ -861,9 +871,10 @@ export function TitleScreen({
   // axes (see above) instead of a cursor.
   useEffect(() => {
     const onKeyDown = (event: KeyboardEvent) => {
-      // The arsenal viewer runs its own list navigation (see ArsenalScreen);
-      // stay out of its way so the arrows don't also drive the hidden menu.
-      if (screen === "arsenal") return;
+      // The arsenal viewer and the achievements browser run their own list
+      // navigation; stay out of their way so the arrows don't also drive the
+      // hidden menu underneath.
+      if (screen === "arsenal" || screen === "achievements") return;
       if (screen === "scores") {
         // While a detail card is open the whole board's navigation collapses to
         // "close it" — any steer/confirm/back key returns to the ranked list.
@@ -1489,6 +1500,21 @@ export function TitleScreen({
             maxWidth={24}
           />
         </p>
+      )}
+
+      {/* The ACHIEVEMENTS browser: a full-screen overlay over the menu,
+          mounted only while browsing (it owns its own keyboard navigation).
+          Opening it acknowledges any unseen badges. */}
+      {screen === "achievements" && (
+        <AchievementsScreen
+          font={font}
+          sprites={assets.sprites}
+          onClose={() => {
+            setScreen("main");
+            // Land back on the ACHIEVEMENTS row.
+            setCursor(onResume ? 4 : 3);
+          }}
+        />
       )}
 
       {/* The developer ARSENAL viewer: a full-screen overlay over the menu,

@@ -257,3 +257,36 @@ sequel truncates this file to a stub and rebuilds it as its own systems land.
   `autoPowerScale` multiplied into `mobHpScaleFor`/`enemyPowerScale` —
   keyed to the PLAYER's level so difficulty offsets stay linear. Suite:
   `tests/engine/leveling_test.ts` ("the ding" describe block).
+- **Achievements (2026-07, account-wide badges):** cross-run meta-progression
+  stays app-side (the tokens/hardcore precedent): the whole system lives in
+  `website/src/game/achievement-totals.ts` (pure lifetime counters + the
+  event reducer), `achievement-defs.ts` (the badge catalog), and
+  `achievements.ts` (the persisted store on the oss-framework ledger —
+  `applyUnlocks`/`clearUnseen` from
+  `@niclaslindstedt/oss-framework/achievements`). The engine's ONLY change
+  was identity plumbing: `Equipment.uniqueId` stamped by `mintUnique` and
+  carried on `itemCollected`, so the app books WHICH unique dropped by id,
+  never by display name. GameScreen feeds the store right after
+  `playEventSounds` (per-tick events) plus a `recordRunStarted` hook in the
+  run-mount effect (`!resumed` only — a menu resume is the same run).
+  **The catalog derives its per-content badge groups from the live
+  registries** — one badge per level (`LEVEL_ORDER`), per difficulty
+  (`DIFFICULTY_ORDER`), per unique (`UNIQUE_IDS`, icon =
+  `equipmentIcon(base)`), per companion (`COMPANION_DEFS`) — so **new
+  content of those kinds gets its badge automatically; nothing to add**.
+  What DOES need a manual touch: a brand-new tracked METRIC means a new
+  `LifetimeTotals` counter + a reducer case in `applyEventsToTotals` (old
+  saves merge field-wise, so a new counter starts at 0), and a new
+  one-off FEAT means a fixed entry in `achievement-defs.ts` (never rename a
+  shipped id — unlocks key on it). A new celebration-worthy `GameEvent`
+  kind should get a reducer case in the same change. The in-run browser
+  freezes the sim via the engine's ordinary `paused` phase under an
+  app-side `achievementsOpen` flag (PauseOverlay gated off while it's up;
+  the global key handler yields, mirroring the `levelup` cede). Suite:
+  `tests/achievements_test.ts` — it resolves enemy ids BY ROLE from the live
+  catalog and asserts every badge icon exists in the shipped atlas, so a
+  content rewrite or an icon typo fails loudly. React gotcha (StrictMode):
+  a setState UPDATER must stay pure — advancing the toast queue inside
+  `setAchievementToast((cur) => cur ?? queue.shift() ?? null)` double-shifts
+  under StrictMode's double-invoke and eats the toast; shift queues in
+  effects (keyed by a bumped tick), never in updaters.

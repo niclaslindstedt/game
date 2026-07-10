@@ -1464,6 +1464,7 @@ function stepItems(state: GameState): void {
         name: equipmentName(item.equipment),
         defId: item.equipment.defId,
         itemId: item.equipment.id,
+        uniqueId: item.equipment.uniqueId,
         // Worn on the spot — the auto-equip path only ever fires on a genuine
         // upgrade, so the card badges it EQUIPPED, not tap-to-equip.
         equipped: true,
@@ -1499,6 +1500,7 @@ function stepItems(state: GameState): void {
       name: equipmentName(item.equipment),
       defId: item.equipment.defId,
       itemId: item.equipment.id,
+      uniqueId: item.equipment.uniqueId,
       equipped: false,
       upgrade: bagUpgrade,
     });
