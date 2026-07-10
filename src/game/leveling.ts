@@ -12,13 +12,35 @@ import type { StatName } from "./types.ts";
 const AUTO_GAINS: Partial<Record<StatName, number>> =
   LEVELING.autoGainsPerLevel;
 
+// Developer feature flag (website settings `autoLevelStats`, applied via the
+// `setAutoStatGainsEnabled` setter): whether the automatic per-level base-stat
+// growth is active. Flipping it off makes `autoGainAt` return 0, which
+// CASCADES through every derivation in this module — `baseStatBonus`,
+// `levelStatGains`, and `autoPowerScale` all fall to their neutral values — so
+// the hero stops banking free stats AND the horde's compensating hp scale
+// (menace.ts folds `autoPowerScale` into `mobHpScaleFor`/`enemyPowerScale`)
+// drops in lockstep, keeping the balance consistent. Defaults on (shipped
+// behavior); tests toggle it and must restore it.
+let autoStatGainsEnabled = true;
+
+/**
+ * Toggle the automatic per-level base-stat growth (a developer flag). Off
+ * strips both the hero's free gains and the mob hp scaling that compensates
+ * them (they derive from the same `autoGainAt`), so the balance stays whole.
+ */
+export function setAutoStatGainsEnabled(enabled: boolean): void {
+  autoStatGainsEnabled = enabled;
+}
+
 /**
  * The automatic points of `stat` that crossing INTO `level` grants:
  * `round(rate × level)`, so each ding pays a little more than the last —
  * the gain scales with the level, like the level-up itself should feel.
- * Zero for stats the config leaves off the auto-growth list.
+ * Zero for stats the config leaves off the auto-growth list, and zero for
+ * every stat while the auto-growth flag is off (see `setAutoStatGainsEnabled`).
  */
 export function autoGainAt(level: number, stat: StatName): number {
+  if (!autoStatGainsEnabled) return 0;
   const rate = AUTO_GAINS[stat] ?? 0;
   return rate > 0 ? Math.round(rate * level) : 0;
 }

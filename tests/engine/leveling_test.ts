@@ -26,6 +26,7 @@ import {
   PLAYER,
   playerCritChance,
   playerDodgeChance,
+  setAutoStatGainsEnabled,
   STAMINA,
   STATS,
   step,
@@ -186,6 +187,31 @@ describe("the ding: automatic base gains and the celebration window", () => {
       1 + 11 * MENACE.mobHpPerLevel,
       10,
     );
+  });
+
+  it("the developer flag switches the free growth AND its mob compensation off together", () => {
+    try {
+      setAutoStatGainsEnabled(false);
+      // No stat grows on its own, at any level…
+      expect(autoGainAt(12, "stamina")).toBe(0);
+      expect(baseStatBonus(20, "strength")).toBe(0);
+      // …the ding readout is empty…
+      expect(levelStatGains(5)).toEqual([]);
+      // …the hero's effective stat is just his chosen points…
+      const state = killGhostWorth(LEVELING.baseXpToLevel); // ding to level 2
+      expect(effectiveStat(state, "stamina")).toBe(state.player.stats.stamina);
+      // …and the horde's hp scale drops the compensating curve in lockstep, so
+      // the ladder is the bare linear ramp (autoPowerScale collapses to 1).
+      expect(autoPowerScale(12)).toBe(1);
+      expect(mobHpScaleFor(12, "nightmare")).toBeCloseTo(
+        1 + 11 * MENACE.mobHpPerLevel,
+        10,
+      );
+    } finally {
+      setAutoStatGainsEnabled(true);
+    }
+    // Restored: the growth is back for the rest of the suite.
+    expect(autoGainAt(12, "stamina")).toBeGreaterThan(0);
   });
 
   it("xp gained during the celebration window never yanks the chooser open early", () => {

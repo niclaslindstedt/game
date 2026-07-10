@@ -499,6 +499,36 @@ export function TitleScreen({
             setSettingsTick((t) => t + 1);
           },
         },
+        {
+          label:
+            s.autoLevelStats === "on"
+              ? "AUTO LEVEL STATS: ON"
+              : "AUTO LEVEL STATS: OFF",
+          aria: "developer-auto-level-stats",
+          blurb: "FREE BASE STAT GROWTH EACH LEVEL (MOBS SCALE TO MATCH)",
+          action: () => {
+            playUiSound(synth, "confirm");
+            updateSettings({
+              autoLevelStats: s.autoLevelStats === "on" ? "off" : "on",
+            });
+            setSettingsTick((t) => t + 1);
+          },
+        },
+        {
+          label:
+            s.characterGear === "on"
+              ? "CHARACTER GEAR: ON"
+              : "CHARACTER GEAR: OFF",
+          aria: "developer-character-gear",
+          blurb: "SHOW WORN ARMOR AND WEAPON ON THE HERO SPRITE",
+          action: () => {
+            playUiSound(synth, "confirm");
+            updateSettings({
+              characterGear: s.characterGear === "on" ? "off" : "on",
+            });
+            setSettingsTick((t) => t + 1);
+          },
+        },
         // Land back on the DEVELOPER row in SETTINGS — it sits just above BACK,
         // after CONTROLS / MUSIC / SOUND FX / HARDCORE.
         backTo("settings", 4),

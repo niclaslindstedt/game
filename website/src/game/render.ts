@@ -27,6 +27,7 @@ import { formatCompact } from "@ui/lib/format-number.ts";
 
 import { spriteByName, type GameAssets, type Sprites } from "./assets.ts";
 import { playerDollLayers } from "./paper-doll.ts";
+import { getSettings } from "./settings.ts";
 import { TIER_COLORS } from "./tiers.ts";
 
 /**
@@ -1170,14 +1171,18 @@ function drawPlayer(
   const airborne = player.z > 0;
   // The paper-doll owns the costume: body sprite (from `playerAppearance`),
   // worn-armor overlays, and the held weapon, as one ordered layer stack
-  // shared with the DOM avatars (paper-doll.ts).
+  // shared with the DOM avatars (paper-doll.ts). The developer CHARACTER GEAR
+  // flag can strip the field hero back to the bare body (the HUD avatar keeps
+  // its gear).
   const { sprites } = assets;
   const frame = airborne
     ? "jump"
     : player.moving && Math.floor(timeMs / 160) % 2 === 1
       ? "1"
       : "0";
-  const layers = playerDollLayers(state, frame);
+  const layers = playerDollLayers(state, frame, {
+    gear: getSettings().characterGear === "on",
+  });
   // In the rift the ground isn't there — bob the grounded hero so he reads as
   // floating. The jump height (`player.z`) already lifts him in the air, so the
   // hover only applies while grounded to avoid fighting the arc.
