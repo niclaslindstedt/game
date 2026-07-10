@@ -174,6 +174,21 @@ D2 "found it early, grow into it" feel. A few carry ONE small scaling stat
 hero levels; the rest are best-in-slot for ~10 levels before a rolled rare
 overtakes them.
 
+A second breed of unique — **level-locked WORLD DROPS** — hangs on the LEVEL
+rather than a boss (`LevelDef.loot.worldUniques`, config `WORLD_DROP`). Any
+enemy on the relic's home level can drop it, but at odds set purely by the
+enemy's **role**: a trash minion is a 0.015% long shot, an elite ~2%, the boss
+a fat 10% single kill — so across a whole ~1,200-mob floor the chance amasses to
+roughly 30%, yet one fast **boss run** is by far the best drops-per-minute. The
+table stays shut until the hero passes `WORLD_DROP.minPlayerLevel` (level 20,
+above where a first EASY campaign pass ends ~17, see `leveling-curve.mjs
+--by-level`), so the relics can only be farmed by RETURNING for boss runs once
+EASY is beaten. The first batch is the EASY rung, one relic themed to each level
+— **THE FIRST DRAFT** (SpaceZ HQ, the prototype-GROK neural crown), **THE PALE
+COVENANT** (the Moon, the last moonwalker's sealed plate), **DUSTBORN** (Mars,
+storm-runner boots) — plus two on the Rift, which, being a tear in history,
+coughs up **EXCALIBUR** and **THE TRINITY SHARD** (trinitite glass).
+
 Alongside the weapon, the hero wears **four ARMOR slots — head, chest,
 legs, feet — plus a charm and a bag** (seven equip slots). Every armor
 piece carries flat **armor points** that sum into a physical damage

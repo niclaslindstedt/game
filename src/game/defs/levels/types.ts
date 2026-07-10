@@ -285,6 +285,16 @@ export type LevelDef = {
      */
     uniquePool?: string[];
     /**
+     * LEVEL-LOCKED world-drop uniques (see `defs/uniques.ts` WORLD_UNIQUES),
+     * keyed by difficulty rung: the named relics that ANY enemy on this level
+     * can drop on that rung, at role-scaled odds (config WORLD_DROP). This is
+     * how a Moon-themed relic drops only on the Moon — and only once the hero
+     * out-levels a first campaign pass (`WORLD_DROP.minPlayerLevel`), so the
+     * relics are farmed by returning for boss runs. Distinct from the boss-only
+     * `EnemyDef.uniquesByDifficulty` tables. Rolled in `maybeDropWorldUnique`.
+     */
+    worldUniques?: Partial<Record<Difficulty, string[]>>;
+    /**
      * Trophy weapon def dropped by the last regular monster standing —
      * clearing every mob on the level always earns it.
      */

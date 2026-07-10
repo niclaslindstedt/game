@@ -353,6 +353,7 @@ export {
   STATS,
   WEAPON,
   WELLS,
+  WORLD_DROP,
   WOUNDS,
 } from "./game/config.ts";
 

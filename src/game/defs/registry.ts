@@ -15,6 +15,7 @@ import { setEnemyDefs, type EnemyDef } from "./enemies/index.ts";
 import { setEquipmentDefs, type GearDef, type WeaponDef } from "./equipment.ts";
 import { setLevelDefs, type LevelDef } from "./levels/index.ts";
 import { setStoryItemDefs, type StoryItemDef } from "./story.ts";
+import { setUniqueDefs, type UniqueDef } from "./uniques.ts";
 import type { CutsceneDef } from "@game/lib/cutscene.ts";
 
 /** A partial set of catalog overrides; omitted catalogs keep their current
@@ -29,6 +30,7 @@ export type DefOverrides = {
   difficulties?: Record<string, DifficultyDef>;
   storyItems?: Record<string, StoryItemDef>;
   cutscenes?: Record<string, CutsceneDef>;
+  uniques?: Record<string, UniqueDef>;
 };
 
 /**
@@ -47,4 +49,5 @@ export function registerDefs(defs: DefOverrides): void {
   if (defs.difficulties) setDifficultyDefs(defs.difficulties);
   if (defs.storyItems) setStoryItemDefs(defs.storyItems);
   if (defs.cutscenes) setCutsceneDefs(defs.cutscenes);
+  if (defs.uniques) setUniqueDefs(defs.uniques);
 }

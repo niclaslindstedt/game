@@ -10,6 +10,7 @@ import {
   equipmentLevelReq,
   gearDef,
   isWeaponDef,
+  LEVELS,
   meetsLevelReq,
   mintUnique,
   UNIQUE_IDS,
@@ -125,17 +126,24 @@ describe("boss unique drop tables", () => {
       ),
     );
 
+  // World-drop uniques are wired on the LEVEL (`loot.worldUniques`), not a boss.
+  const worldWiring = Object.values(LEVELS).flatMap((def) =>
+    Object.entries(def.loot.worldUniques ?? {}).flatMap(([diff, ids]) =>
+      (ids ?? []).map((id) => ({ level: def.id, diff, id })),
+    ),
+  );
+
   it("references only real uniques, on real difficulty rungs", () => {
-    for (const { diff, id } of wiring) {
+    for (const { diff, id } of [...wiring, ...worldWiring]) {
       expect(DIFFICULTY_ORDER).toContain(diff);
       expect(() => uniqueDef(id)).not.toThrow();
     }
   });
 
-  it("places every shipped unique exactly once across the five bosses", () => {
-    const placed = wiring.map((w) => w.id).sort();
+  it("places every shipped unique exactly once (boss table or level world drop)", () => {
+    const placed = [...wiring, ...worldWiring].map((w) => w.id).sort();
     expect(placed).toEqual([...UNIQUE_IDS].sort());
-    // No id is wired to two bosses/rungs.
+    // No id has two homes.
     expect(new Set(placed).size).toBe(placed.length);
   });
 

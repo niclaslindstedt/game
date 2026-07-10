@@ -206,6 +206,11 @@ export const THE_RIFT: LevelDef = {
       "bag",
     ],
     abilityPool: ["fire_orbs", "storm_cell", "stasis_field", "item_magnet"],
+    // Level-locked world drops (see config WORLD_DROP): the Rift is a tear in
+    // history, so it coughs up two relics from Earth's past — EXCALIBUR (the
+    // once-and-future blade) and THE TRINITY SHARD (trinitite glass). Farmed on
+    // boss runs of the Rift.
+    worldUniques: { easy: ["excalibur", "the_trinity_shard"] },
     // The VOID WAND arrives early at a kill discovered in play — the level's
     // signature caster, same cadence as Mars's katana.
     earlyDrops: [{ atKills: [35, 90], weapon: "void_wand" }],
