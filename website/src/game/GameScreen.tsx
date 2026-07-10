@@ -77,6 +77,7 @@ import {
   type GamePhase,
   type GameState,
   type GameStats,
+  type Quality,
   type Tier,
 } from "@game/core";
 
@@ -615,12 +616,13 @@ export function GameScreen({
     const showPickupCard = (opts: {
       name: string;
       tier: Tier;
+      quality?: Quality;
       defId?: string;
       itemId?: number;
       equipped: boolean;
       upgrade: boolean;
     }) => {
-      const { name, tier, defId, itemId, equipped, upgrade } = opts;
+      const { name, tier, quality, defId, itemId, equipped, upgrade } = opts;
       const icon = defId
         ? spriteDataUrl(assets.sprites, equipmentIcon(defId))
         : undefined;
@@ -664,6 +666,7 @@ export function GameScreen({
         name,
         color,
         tier,
+        quality,
         upgrade,
         equipped,
         onEquip,
@@ -1404,6 +1407,7 @@ export function GameScreen({
               showPickupCard({
                 name: event.name,
                 tier: event.tier ?? "regular",
+                quality: event.quality,
                 defId: event.defId,
                 itemId: event.itemId,
                 equipped: event.equipped === true,

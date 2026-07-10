@@ -773,6 +773,13 @@ export type GameEvent =
       type: "itemCollected";
       kind: Item["kind"];
       tier?: Tier;
+      /**
+       * The piece's MAKE quality (equipment pickups only, regular tier). The
+       * pickup card reads it as the second visual axis: a broken/crude find
+       * stays dull, while superior/perfect make earns the glow and shine a
+       * magic-or-better tier would. Absent for loose pickups and normal make.
+       */
+      quality?: Quality;
       /** Human-readable label for the "picked up X" pickup feed. */
       name?: string;
       /**

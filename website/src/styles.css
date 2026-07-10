@@ -725,8 +725,10 @@ body {
   background: rgba(11, 13, 16, 0.72);
   border: 2px solid var(--rarity, #e6e8eb);
   border-radius: 6px;
+  /* Only a faint rarity edge behind the card — the frame + its border glare
+     carry rarity now; the real glow is reserved for a legendary. */
   box-shadow:
-    0 0 0.5rem color-mix(in srgb, var(--rarity, #fff) 55%, transparent),
+    0 0 0.25rem color-mix(in srgb, var(--rarity, #fff) 28%, transparent),
     0 0.2rem 0.5rem rgba(11, 13, 16, 0.55);
   text-shadow: 0 2px 0 rgba(11, 13, 16, 0.6);
   pointer-events: none;
@@ -761,6 +763,100 @@ body {
   animation:
     pickup-card 5200ms ease-out forwards,
     pickup-card-upgrade 900ms ease-in-out 3;
+}
+
+/* ---- Finish: folds a find's rarity TIER and its MAKE quality into one look
+   (see `finishFor` in PickupModal.tsx). The signal is the FRAME — its color
+   and a travelling border glare — not a glow behind the card; only a legendary
+   lights up the space around it. Low finishes strip the frame back to dull or
+   cracked. Ladder, low → high: broken → crude → plain → glow → radiant →
+   shine → legendary (`plain` is the baseline .pickup-card, unstyled here). */
+
+/* Broken make: a cracked, joyless find — a dashed, desaturated frame, no
+   border glare or sheen (both stripped below). */
+.pickup-card--finish-broken {
+  border-style: dashed;
+  border-color: color-mix(in srgb, var(--rarity, #e6e8eb) 40%, #6b7078);
+  box-shadow: 0 0.2rem 0.5rem rgba(11, 13, 16, 0.55);
+  filter: saturate(0.5) brightness(0.92);
+}
+/* Crude make: intact but plain — a dulled frame, no glare or sheen. */
+.pickup-card--finish-crude {
+  border-color: color-mix(in srgb, var(--rarity, #e6e8eb) 62%, #6b7078);
+  filter: saturate(0.8);
+}
+/* Both low finishes read boring: no border glare, no sheen. */
+.pickup-card--finish-broken .pickup-card-spark,
+.pickup-card--finish-broken .pickup-card-sheen,
+.pickup-card--finish-crude .pickup-card-spark,
+.pickup-card--finish-crude .pickup-card-sheen {
+  display: none;
+}
+
+/* The escalating BORDER GLARE: the travelling glint on the frame gets brighter
+   with the finish (broken/crude hid it; plain uses the base spark as-is). */
+.pickup-card--finish-glow .pickup-card-spark {
+  filter: brightness(1.2);
+}
+.pickup-card--finish-radiant .pickup-card-spark {
+  filter: brightness(1.4);
+}
+.pickup-card--finish-shine .pickup-card-spark {
+  filter: brightness(1.6) saturate(1.15);
+}
+.pickup-card--finish-legendary .pickup-card-spark {
+  filter: brightness(1.9) saturate(1.2);
+}
+
+/* A quietly brighter frame edge climbs the ladder alongside the glare. */
+.pickup-card--finish-glow,
+.pickup-card--finish-radiant {
+  border-color: color-mix(in srgb, var(--rarity, #fff) 92%, #fff);
+}
+.pickup-card--finish-shine {
+  border-color: color-mix(in srgb, var(--rarity, #fff) 82%, #fff);
+}
+
+/* Shine catches the light a touch harder: a slightly brighter sheen sweep. */
+.pickup-card--finish-shine .pickup-card-sheen::before,
+.pickup-card--finish-legendary .pickup-card-sheen::before {
+  background: linear-gradient(
+    100deg,
+    transparent,
+    rgba(255, 255, 255, 0.7),
+    transparent
+  );
+}
+
+/* Legendary is the ONLY finish that lights up the space behind the card — a
+   white-hot frame over a gently pulsing halo (the reserved glow). */
+.pickup-card--finish-legendary {
+  border-color: color-mix(in srgb, var(--rarity, #ffa726) 80%, #fff);
+  box-shadow:
+    0 0 1.3rem color-mix(in srgb, var(--rarity, #ffa726) 78%, transparent),
+    0 0 0.55rem color-mix(in srgb, var(--rarity, #ffa726) 68%, transparent),
+    0 0.2rem 0.5rem rgba(11, 13, 16, 0.55);
+}
+.pickup-card--finish-legendary::after {
+  content: "";
+  position: absolute;
+  inset: -3px;
+  z-index: -3;
+  border-radius: inherit;
+  pointer-events: none;
+  box-shadow: 0 0 1.5rem
+    color-mix(in srgb, var(--rarity, #ffa726) 82%, transparent);
+  animation: pickup-glow-pulse 1200ms ease-in-out infinite;
+}
+
+@keyframes pickup-glow-pulse {
+  0%,
+  100% {
+    opacity: 0.5;
+  }
+  50% {
+    opacity: 1;
+  }
 }
 
 .pickup-card-icon {
@@ -849,13 +945,28 @@ body {
     linear-gradient(#000 0 0) content-box,
     linear-gradient(#000 0 0);
   mask-composite: exclude;
-  animation: pickup-card-spark 1200ms linear infinite;
+  /* The glare is a REVEAL, not a permanent effect: one bright lap of the frame,
+     then it fades out (~1s total) so the item name stays readable for the rest
+     of the card's life. */
+  animation:
+    pickup-card-spark 900ms linear,
+    pickup-card-glare-out 1150ms ease-out forwards;
   pointer-events: none;
 }
 
 @keyframes pickup-card-spark {
   to {
     --pickup-spin: 360deg;
+  }
+}
+
+@keyframes pickup-card-glare-out {
+  0%,
+  68% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0;
   }
 }
 
@@ -1003,32 +1114,43 @@ body {
   }
 }
 
-/* Sparkle motes (magic+): little glints that shoot outward from the frame. */
-.pickup-card-spark-mote {
+/* Sparkles (rare+): little glints that SURROUND the card and drift upward like
+   embers. The layer overhangs the frame so the motes sit around it (some just
+   outside, some below) — never across the face — and each loops on a stagger so
+   the find keeps twinkling gently. */
+.pickup-card-sparkles {
   position: absolute;
-  width: 0.32rem;
-  height: 0.32rem;
-  margin: -0.16rem;
+  inset: -0.5rem;
+  pointer-events: none;
+}
+.pickup-card-sparkle {
+  position: absolute;
+  width: 0.24rem;
+  height: 0.24rem;
+  margin: -0.12rem;
   border-radius: 50%;
   background: #fff;
-  box-shadow: 0 0 0.35rem 0.08rem
+  box-shadow: 0 0 0.3rem 0.05rem
     color-mix(in srgb, var(--rarity, #fff) 85%, #fff);
   opacity: 0;
-  animation: pickup-mote 820ms ease-out var(--mote-delay, 0ms) forwards;
+  animation: pickup-sparkle 1900ms ease-out var(--spark-delay, 0ms) infinite;
 }
 
-@keyframes pickup-mote {
+@keyframes pickup-sparkle {
   0% {
     opacity: 0;
-    transform: scale(0.2);
+    transform: translateY(0.3rem) scale(0.3);
   }
-  30% {
+  25% {
     opacity: 1;
-    transform: scale(1.3);
+    transform: translateY(-0.2rem) scale(1);
+  }
+  70% {
+    opacity: 0.7;
   }
   100% {
     opacity: 0;
-    transform: scale(0.4) translateY(-0.5rem);
+    transform: translateY(-1.4rem) scale(0.4);
   }
 }
 
@@ -1041,20 +1163,20 @@ body {
 }
 .pickup-card-flame {
   position: absolute;
-  bottom: -0.35rem;
-  width: 0.5rem;
-  height: 1.1rem;
-  margin-left: -0.25rem;
+  bottom: -0.25rem;
+  width: 0.4rem;
+  height: 0.8rem;
+  margin-left: -0.2rem;
   border-radius: 45% 45% 50% 50% / 65% 65% 40% 40%;
   background: linear-gradient(
     to top,
     color-mix(in srgb, var(--rarity, #ffa726) 70%, #ff5b1e),
     #ffcf47 55%,
-    rgba(255, 255, 255, 0.9)
+    rgba(255, 255, 255, 0.85)
   );
   filter: blur(0.4px);
   transform-origin: bottom center;
-  opacity: 0.9;
+  opacity: 0.72;
   mix-blend-mode: screen;
   animation: pickup-flame 480ms ease-in-out var(--flame-delay, 0ms) infinite
     alternate;
@@ -1069,6 +1191,44 @@ body {
     transform: scaleY(1.15) scaleX(0.85) translateY(-0.15rem);
     opacity: 1;
   }
+}
+
+/* Legendary explosion: a shockwave ring that blasts outward past the card
+   edges, over a bigger, brighter central bloom — the top-tier reveal. */
+.pickup-card-blast {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: 60%;
+  aspect-ratio: 1;
+  transform: translate(-50%, -50%) scale(0.15);
+  border-radius: 50%;
+  border: 0.22rem solid color-mix(in srgb, var(--rarity, #ffa726) 85%, #fff);
+  box-shadow:
+    0 0 1.2rem color-mix(in srgb, var(--rarity, #ffa726) 80%, transparent),
+    inset 0 0 0.8rem color-mix(in srgb, var(--rarity, #ffa726) 70%, transparent);
+  opacity: 0;
+  animation: pickup-blast 760ms ease-out forwards;
+}
+
+@keyframes pickup-blast {
+  0% {
+    opacity: 0;
+    transform: translate(-50%, -50%) scale(0.15);
+  }
+  15% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0;
+    transform: translate(-50%, -50%) scale(3.4);
+    border-width: 0;
+  }
+}
+
+/* The legendary bloom blows out bigger than the tier flash. */
+.pickup-card-reveal--legendary .pickup-card-flash {
+  width: 180%;
 }
 
 @media (prefers-reduced-motion: reduce) {
@@ -1093,12 +1253,12 @@ body {
   }
   .pickup-card-sheen::before,
   .pickup-card-rays,
-  .pickup-card-spark-mote,
+  .pickup-card-sparkle,
   .pickup-card-tag--upgrade,
   .pickup-card-tag--hint {
     animation: none;
   }
-  .pickup-card-spark-mote,
+  .pickup-card-sparkle,
   .pickup-card-rays {
     opacity: 0;
   }
@@ -1118,6 +1278,15 @@ body {
   .pickup-card-flame {
     animation: none;
     opacity: 0.7;
+  }
+  /* The legendary halo pulse settles to a still glow; its shockwave is dropped. */
+  .pickup-card--finish-legendary::after {
+    animation: none;
+    opacity: 0.7;
+  }
+  .pickup-card-blast {
+    animation: none;
+    opacity: 0;
   }
 }
 
