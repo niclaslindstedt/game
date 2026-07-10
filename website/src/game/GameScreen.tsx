@@ -1621,9 +1621,11 @@ export function GameScreen({
             }
           }
           // A golden XP arrow flows its award up off the hero's head as blue
-          // "+N XP" combat text — the same popup a slain foe drips, so the
-          // ground's steady XP drip reads in the body too. Honors the same
-          // `xpFloat` DISPLAY preference that silences kill-XP popups.
+          // "+N XP" combat text — the same popup a slain foe drips, but at
+          // double size and with a crit-style jolt first: an arrow is a whole
+          // slice of the level bar, basically a crit's worth of XP, so it
+          // shakes in place before it floats. Honors the same `xpFloat` DISPLAY
+          // preference that silences kill-XP popups.
           if (
             event.type === "itemCollected" &&
             event.kind === "xp" &&
@@ -1642,6 +1644,8 @@ export function GameScreen({
               text: `+${formatCompact(event.xp)} XP`,
               color: "#6cc4ff",
               rise: 30,
+              scale: 2,
+              shake: true,
             });
           }
           if (event.type === "storyItemCollected") {

@@ -785,6 +785,14 @@ export type Effect = {
   /** Text float: how far the word climbs over its life, in world px
    * (default 16). XP popups rise further so they read as "flowing up". */
   rise?: number;
+  /** Text float: glyph scale (default 1). A golden-arrow XP popup doubles it
+   * so the found level reads as bigger than a per-kill drip. */
+  scale?: number;
+  /** Text float: crit-style jolt. The word shakes left–right–center in place
+   * for a couple of opening beats, THEN lifts off — an arrow's XP is basically
+   * a crit's worth of levels, so it hits like one before it floats. Plain
+   * floats (DODGE/MISS) leave this off and rise from the first frame. */
+  shake?: boolean;
   /** Damage number: the hit's rounded damage. */
   value?: number;
   /** Damage number: crits jolt left-right-center, grow, and glow gold. */
@@ -925,17 +933,34 @@ export function drawEffects(
       // damage number but spelled out.
       const duration = effect.durationMs ?? 650;
       const t = 1 - (effect.untilMs - timeMs) / duration; // 0 → 1
-      const rise = Math.round((effect.rise ?? 16) * t);
+      const scale = effect.scale ?? 1;
+      const elapsedMs = t * duration;
+      // A crit-style float shakes in place for the opening beats (a
+      // left–right–center jolt, wider for bigger text) and holds down there,
+      // THEN lifts off and rises over the remainder. Plain floats skip the
+      // shake and rise from the first frame.
+      const shakeMs = 140;
+      const jolt = !effect.shake
+        ? 0
+        : elapsedMs < 55
+          ? -Math.round(scale)
+          : elapsedMs < 110
+            ? Math.round(scale)
+            : 0;
+      const riseT = effect.shake
+        ? Math.max(0, (elapsedMs - shakeMs) / (duration - shakeMs))
+        : t;
+      const rise = Math.round((effect.rise ?? 16) * riseT);
       const text = effect.text ?? "";
-      const width = font.measure(text);
-      const tx = x - Math.round(width / 2);
-      const ty = groundY - rise - font.height;
+      const width = font.measure(text) * scale;
+      const tx = x - Math.round(width / 2) + jolt;
+      const ty = groundY - rise - font.height * scale;
       ctx.globalAlpha = t > 0.6 ? 1 - (t - 0.6) / 0.4 : 1;
       // A hard 1px drop-shadow first so the word keeps contrast on both the
       // bright floor and the dark sky — the colored glyphs ride on top.
-      font.draw(ctx, text, tx + 1, ty + 1, { scale: 1, color: "#0b0d10" });
+      font.draw(ctx, text, tx + 1, ty + 1, { scale, color: "#0b0d10" });
       font.draw(ctx, text, tx, ty, {
-        scale: 1,
+        scale,
         color: effect.color ?? "#7ecbff",
       });
       ctx.globalAlpha = 1;
