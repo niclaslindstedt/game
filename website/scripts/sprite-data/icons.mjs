@@ -344,6 +344,23 @@ const SPRITES = {
     "...OOOOOO...",
     "............",
   ],
+  // A little STACK of three coins: the shop's "sell everything" mark, three
+  // gold discs overlapping (two behind, one in front) — the same gold ramp as
+  // the single coin, no mint-hole at this size.
+  icon_coins: [
+    ".OOOO..OOOO.",
+    "OyyooOOyyooO",
+    "OyoooOOyoooO",
+    "OoooqOOoooqO",
+    "OooqqOOooqqO",
+    ".OO.OOOO.OO.",
+    "...OyyooO...",
+    "...OyoooO...",
+    "...OoooqO...",
+    "...OooqqO...",
+    "....OOOO....",
+    "............",
+  ],
   // The starter BAG: a leather satchel — a top carry handle over a rounded
   // body, a brass clasp down the middle, right and bottom edges shaded.
   icon_bag: [
