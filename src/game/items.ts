@@ -1846,6 +1846,25 @@ export function skipCutscene(state: GameState): void {
   state.phase = "title";
 }
 
+/**
+ * Replay shortcut: bail the whole opening at once — the prelude cutscene AND
+ * the hero's intro monologue — and drop straight into play with his weapon
+ * drawn. The app calls this when the player has already witnessed this level's
+ * opening on this difficulty (see the per-character story ledger in
+ * characters.ts): a die-and-retry loop shouldn't sit through the cutscene, the
+ * briefing, or the scripted "draw your weapon" strike every single time.
+ * Arming here is what lets a level that opens holstered (SpaceZ HQ's
+ * `openingStrike`) skip that beat cleanly — its thought is marked seen, so
+ * `stepOpeningStrike` never fires to arm him, and he would stand defenceless
+ * otherwise. A harmless no-op on a run already in play (a resumed or
+ * checkpointed state).
+ */
+export function skipStoryOpening(state: GameState): void {
+  if (state.phase === "cutscene") skipCutscene(state);
+  dismissIntro(state);
+  state.player.disarmed = false;
+}
+
 /** Pause into the bag. Only possible mid-run. */
 export function openInventory(state: GameState): void {
   if (state.phase === "playing") state.phase = "inventory";

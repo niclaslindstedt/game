@@ -209,9 +209,22 @@ the death splash offers only **MENU**. A softcore death costs no progress — th
 run's build is banked on death just as on victory, so the hero keeps the levels,
 stats and items earned it and the splash offers **RETRY** (restart the level
 from that kept build) or **MENU**; only the level-clear bookmarks wait for an
-actual victory. The
+actual victory. The banked build drops the run's **powerups**, though — the
+dock's pocketed powerups do not survive a death, so a RETRY starts the level
+with an empty dock rather than a hoarded stack. The
 level cap is **99** (`LEVELING.maxLevel`): at the cap XP stops banking levels
 and the endgame becomes the hunt for cap-level gear.
+
+Because we die and replay a lot, a level's **story is shown only once per
+difficulty**. The first time a character reaches combat on a level (on a given
+difficulty), its opening — the prelude cutscene and the hero's intro monologue —
+and every pinned inner monologue read that run (the SpaceZ scientist, the Mars
+rover, and the rest) are banked onto the character; every later replay on that
+difficulty skips the opening and pre-marks those thoughts as seen, dropping the
+hero straight into the fight (`skipStoryOpening`/`markThoughtsSeen`, driven by
+the per-character `storySeen` ledger in `website/src/game/characters.ts`). A
+monologue not yet reached still plays its one time, and a fresh character — or a
+harder rung of the ladder — sees the whole story again.
 
 Difficulty-exclusive content lives with the level that uses it: a `spawns` or
 `waves.budget` line can carry an optional `minDifficulty`, and it only appears

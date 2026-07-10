@@ -164,6 +164,23 @@ export function startPlayerThought(state: GameState, thoughtId: string): void {
 }
 
 /**
+ * Pre-seed the seen-thought ledger so a replay skips inner monologues the
+ * player has already read. The app persists a run's accumulated `thoughtsSeen`
+ * per difficulty (see the app's story ledger in characters.ts) and feeds the
+ * ids back in here when it rebuilds a level, so a pinned kill/sight/strike/
+ * asteroid beat that already played never fires again. Ids not yet read are
+ * left out, so a monologue the player has not reached still gets its one turn.
+ */
+export function markThoughtsSeen(
+  state: GameState,
+  ids: readonly string[],
+): void {
+  for (const id of ids) {
+    if (!state.thoughtsSeen.includes(id)) state.thoughtsSeen.push(id);
+  }
+}
+
+/**
  * The kill-path hook for a level's `firstKillThoughts`: the first time the
  * hero downs `enemyId` on this level, fire its inner monologue exactly once
  * (tracked in `state.thoughtsSeen`). Called from loot.ts after the kill is
