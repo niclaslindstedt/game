@@ -111,9 +111,11 @@ describe("first-kill thoughts", () => {
   it("opens the hero's read on the night shift when the first HQ INTERN comes into view", () => {
     const state = startGame(undefined, "spacez_hq");
     clearStage(state);
-    // A live intern parked beyond the sight radius: no reaction yet.
+    // A live intern parked beyond the (wide, drop-in) sight radius: no reaction
+    // yet. The beat uses a full-view radius so it fires the instant the packed
+    // opening ring is on screen, so "beyond" here is well past that.
     const staffer = makeEnemy(
-      { pos: { x: state.player.pos.x + 200, y: state.player.pos.y } },
+      { pos: { x: state.player.pos.x + 280, y: state.player.pos.y } },
       "intern",
     );
     state.enemies.push(staffer);

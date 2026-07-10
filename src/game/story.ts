@@ -186,9 +186,12 @@ export function maybeFirstKillThought(
 
 /**
  * The per-tick hook for a level's `firstSightThoughts`: the first time a
- * pinned mob comes within DIALOGUE.sightRadius of the hero, fire its inner
- * monologue exactly once (tracked in `state.thoughtsSeen`, same ledger as
- * the kill-pinned beats). Called from step() after the enemies have moved,
+ * pinned mob comes within the trigger's `radius` (falling back to
+ * DIALOGUE.sightRadius) of the hero, fire its inner monologue exactly once
+ * (tracked in `state.thoughtsSeen`, same ledger as the kill-pinned beats). A
+ * drop-in survey beat widens that radius so it fires the instant the crowd is
+ * on screen, before a faster scripted rusher can beat it to the punch. Called
+ * from step() after the enemies have moved,
  * so the sighting is judged on this tick's positions; if another scene is
  * already on stage, the sighting simply retries on a later playing tick.
  * A trigger gated by `after` holds the same way until its prerequisite
@@ -202,10 +205,11 @@ export function stepSightThoughts(
   for (const trigger of triggers) {
     if (state.thoughtsSeen.includes(trigger.thought)) continue;
     if (trigger.after && !state.thoughtsSeen.includes(trigger.after)) continue;
+    const radius = trigger.radius ?? DIALOGUE.sightRadius;
     const seen = state.enemies.some(
       (e) =>
         e.defId === trigger.enemy &&
-        distance(e.pos, state.player.pos) <= DIALOGUE.sightRadius,
+        distance(e.pos, state.player.pos) <= radius,
     );
     if (!seen) continue;
     state.thoughtsSeen.push(trigger.thought);

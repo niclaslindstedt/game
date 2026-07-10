@@ -319,6 +319,16 @@ export type ThoughtTrigger = {
    * beyond sight range.
    */
   after?: string;
+  /**
+   * `firstSightThoughts` only: how close (world px) the pinned mob must get
+   * before the sighting fires. Omitted falls back to `DIALOGUE.sightRadius`
+   * (the conservative phone-half-view read). A drop-in "look at this place"
+   * beat wants a WIDER radius so it fires the instant the crowd is on screen —
+   * the horde already fills the view, so waiting for one to crawl to 96 px
+   * lets a faster scripted rusher win the race and land its strike first.
+   * Ignored by `firstKillThoughts`.
+   */
+  radius?: number;
 };
 
 /**
