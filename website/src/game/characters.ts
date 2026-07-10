@@ -63,6 +63,18 @@ export type Character = {
   /** Difficulties whose whole campaign is beaten — unlocks the level picker
    * there AND the next rung of the ladder. */
   beaten: Difficulty[];
+  /**
+   * Story beats already witnessed, so a replay drops straight into the action
+   * instead of replaying them (we die and retry a lot — no need to sit through
+   * the same text twice). Two kinds of marker, per difficulty so a fresh rung
+   * still tells the story once:
+   *   - `${difficulty}:${levelId}` — the level's OPENING (prelude cutscene +
+   *     intro monologue) has played on this difficulty.
+   *   - `${difficulty}#${thoughtId}` — a pinned inner monologue (the
+   *     kill/sight/strike/asteroid thoughts) has played on this difficulty.
+   * Thought ids are globally unique, so the difficulty alone keys them.
+   */
+  storySeen: string[];
 };
 
 const ROSTER_KEY = storageKey("characters");
@@ -70,6 +82,13 @@ const ACTIVE_KEY = storageKey("active-character");
 
 const clearKey = (levelId: string, difficulty: Difficulty): string =>
   `${difficulty}:${levelId}`;
+
+// The two `storySeen` marker shapes (see the field's docs): an OPENING is
+// pinned to a level, a THOUGHT to a difficulty alone (ids are globally unique).
+const openingKey = (levelId: string, difficulty: Difficulty): string =>
+  `${difficulty}:${levelId}`;
+const thoughtSeenKey = (thoughtId: string, difficulty: Difficulty): string =>
+  `${difficulty}#${thoughtId}`;
 
 /** A fresh unique id — `crypto.randomUUID` where present, else a timestamped
  * random fallback (older webviews). */
@@ -156,6 +175,7 @@ export function loadCharacters(): Character[] {
       dead: c.dead ?? false,
       clears: Array.isArray(c.clears) ? c.clears : [],
       beaten: Array.isArray(c.beaten) ? c.beaten : [],
+      storySeen: Array.isArray(c.storySeen) ? c.storySeen : [],
       loadout: c.loadout ? migrateLoadout(c.loadout) : null,
     }));
   } catch {
@@ -212,6 +232,7 @@ export function createCharacter(name: string, hardcore: boolean): Character {
     loadout: null,
     clears: [],
     beaten: [],
+    storySeen: [],
   };
   const roster = loadCharacters();
   roster.push(character);
@@ -245,6 +266,57 @@ export function hasClearedLevel(
   difficulty: Difficulty,
 ): boolean {
   return character.clears.includes(clearKey(levelId, difficulty));
+}
+
+/**
+ * Has this character already witnessed `levelId`'s opening (prelude cutscene +
+ * intro monologue) on `difficulty`? True means a replay should skip straight
+ * into play (see `skipStoryOpening`).
+ */
+export function hasSeenOpening(
+  character: Character,
+  levelId: string,
+  difficulty: Difficulty,
+): boolean {
+  return character.storySeen.includes(openingKey(levelId, difficulty));
+}
+
+/**
+ * The pinned inner-monologue (thought) ids this character has already read on
+ * `difficulty`. Fed back into the engine on a rebuild (`markThoughtsSeen`) so
+ * a replay skips every beat it has already shown while a not-yet-reached one
+ * still plays its one time.
+ */
+export function seenThoughts(
+  character: Character,
+  difficulty: Difficulty,
+): string[] {
+  const prefix = `${difficulty}#`;
+  return character.storySeen
+    .filter((key) => key.startsWith(prefix))
+    .map((key) => key.slice(prefix.length));
+}
+
+/**
+ * Record that this character has now witnessed `levelId`'s opening and read
+ * `thoughts` (the run's accumulated `state.thoughtsSeen`) on `difficulty`, so
+ * future replays on this difficulty skip them. Idempotent — a no-op returns the
+ * same character untouched; otherwise it persists and returns the update.
+ */
+export function markStorySeen(
+  character: Character,
+  levelId: string,
+  difficulty: Difficulty,
+  thoughts: readonly string[],
+): Character {
+  const seen = new Set(character.storySeen);
+  const before = seen.size;
+  seen.add(openingKey(levelId, difficulty));
+  for (const thought of thoughts) seen.add(thoughtSeenKey(thought, difficulty));
+  if (seen.size === before) return character; // nothing new witnessed
+  const updated: Character = { ...character, storySeen: [...seen] };
+  persist(updated);
+  return updated;
 }
 
 /** Has this character beaten the whole campaign at `difficulty`? */

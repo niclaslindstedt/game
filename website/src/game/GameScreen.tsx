@@ -47,6 +47,7 @@ import {
   isWeaponDef,
   LEVELS,
   levelDef,
+  markThoughtsSeen,
   MENACE,
   MERCHANT,
   menaceStage,
@@ -62,6 +63,7 @@ import {
   resumeGame,
   skipCutscene,
   skipIntro,
+  skipStoryOpening,
   STAMINA,
   step,
   storyItemDef,
@@ -124,9 +126,12 @@ import {
 } from "./PickupModal.tsx";
 import {
   bankLoadout,
+  hasSeenOpening,
+  markStorySeen,
   nextLevelId,
   recordDeath,
   recordVictory,
+  seenThoughts,
   type Character,
 } from "./characters.ts";
 import { bestTime, recordRun } from "./highscores.ts";
@@ -565,9 +570,19 @@ export function GameScreen({
     // checkpoint that already froze it): capture the combat-start checkpoint
     // once this mount, superseding any stale one from an earlier level.
     const captureCheckpoint = !resumed && !checkpoint;
-    // The prelude always plays — every run opens on its cutscene (the player
-    // can dismiss it with the SKIP button or Esc). It is never auto-skipped on
-    // replay.
+    // The per-character story ledger (characters.ts): has this hero already
+    // watched this level's opening — and which inner monologues has he read —
+    // on this difficulty? We die and replay a lot, so a witnessed opening is
+    // skipped and already-read thoughts are pre-marked as seen. Seed the seen
+    // thoughts into every rebuild (a fresh createGame OR a cloned checkpoint,
+    // so a post-victory RETRY doesn't replay a late kill/sight beat either);
+    // the opening itself is skipped below, once, for a fresh createGame.
+    const openingSeen = hasSeenOpening(
+      characterRef.current,
+      runLevelId,
+      difficulty,
+    );
+    markThoughtsSeen(state, seenThoughts(characterRef.current, difficulty));
     setState(state);
     setNewRecord(false);
     debug(`run ${runId} started (seed ${seed}, ${difficulty})`);
@@ -706,6 +721,13 @@ export function GameScreen({
       // the same shortcut the keyboard and headless bot use, done up front.
       if (state.phase === "cutscene") skipCutscene(state);
       beginRun();
+    } else if (openingSeen) {
+      // Already watched this level's opening on this difficulty (a die-and-retry
+      // loop): skip the prelude, the intro monologue and the scripted opening
+      // strike, arming the hero, and roll the level theme straight away — the
+      // level music beginRun would start, minus the story it would sit through.
+      skipStoryOpening(state);
+      playLevelMusic(levelDef(state.level.id).music);
     }
 
     // Backing store in world units; CSS upscales by the view scale
@@ -1134,6 +1156,17 @@ export function GameScreen({
             levelId: runLevelId,
             state: cloneGameState(state),
           };
+          // Combat has begun, so the opening (cutscene + intro, and the strike
+          // that armed him) has been witnessed — bank it on the character now,
+          // together with the inner monologues read so far, so it stays skipped
+          // even if the player quits before the run resolves. Late in-play
+          // thoughts are added again at run's end below.
+          characterRef.current = markStorySeen(
+            characterRef.current,
+            runLevelId,
+            difficulty,
+            state.thoughtsSeen,
+          );
         }
         playEventSounds(synth, state.events);
         playEventHaptics(state.events);
@@ -1440,12 +1473,28 @@ export function GameScreen({
             if (characterRef.current.hardcore) {
               characterRef.current = recordDeath(characterRef.current);
             } else {
-              characterRef.current = bankLoadout(
-                characterRef.current,
-                extractLoadout(state),
-              );
+              // Powerups do NOT survive death: the banked build keeps the level,
+              // stats, gear, bag and coins earned this run, but the dock's
+              // pocketed powerups are spent — a RETRY rebuilds the level from
+              // this build and starts it with an empty dock, so a hoarded stack
+              // can't be replayed through the same fight over and over.
+              const banked = extractLoadout(state);
+              banked.heldAbilities = [];
+              characterRef.current = bankLoadout(characterRef.current, banked);
               checkpointRef.current = null;
             }
+          }
+          // Run over either way: bank the opening and every inner monologue read
+          // this run onto the character, so the next replay on this difficulty
+          // skips them. This catches the late kill/sight beats that only fire
+          // deep into a run (the combat-start mark above bags the opening ones).
+          if (event.type === "victory" || event.type === "defeat") {
+            characterRef.current = markStorySeen(
+              characterRef.current,
+              state.level.id,
+              difficulty,
+              state.thoughtsSeen,
+            );
           }
         }
         if (effects.length > 0) {

@@ -64,6 +64,7 @@ export {
   skipIntro,
   dismissIntro,
   skipCutscene,
+  skipStoryOpening,
   tapCutscene,
   ARMOR_SLOTS,
   armorReduction,
@@ -203,6 +204,7 @@ export {
   advanceDialogue,
   collectStoryItem,
   dialogueContent,
+  markThoughtsSeen,
 } from "./game/story.ts";
 
 // Cutscenes: the generic player (@game/lib) plus the scene catalog. The app

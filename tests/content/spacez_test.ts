@@ -13,14 +13,18 @@ import {
   isWeaponDef,
   LEVEL_ORDER,
   LEVELS,
+  markThoughtsSeen,
   OBSTACLES,
   PLAYER,
+  skipStoryOpening,
+  step,
   STORY_ITEM_DEFS,
   weaponDef,
   type LevelDef,
 } from "@game/core";
 import {
   clearStage,
+  DT,
   idle,
   makeEnemy,
   run,
@@ -185,6 +189,34 @@ describe("SPACEZ HQ level def", () => {
     // Six full sim runs of statistics: give the sampling headroom over the
     // 5 s default — CI runners cross it while the assertion itself is sound.
   }, 20_000);
+
+  it("replays drop straight into an armed fight (skipStoryOpening)", () => {
+    // A die-and-retry loop shouldn't sit through the prelude, the briefing, or
+    // the scripted opening strike every time — one call bails the lot and arms
+    // the holstered hero (who would otherwise wait on the strike that never
+    // comes, since its thought is marked seen).
+    const state = createGame(SEED, "spacez_hq");
+    expect(state.phase).toBe("cutscene");
+    expect(state.player.disarmed).toBe(true);
+    skipStoryOpening(state);
+    expect(state.phase).toBe("playing");
+    expect(state.cutscene).toBeNull();
+    expect(state.player.disarmed).toBe(false);
+  });
+
+  it("silences an already-read inner monologue on replay (markThoughtsSeen)", () => {
+    // The packed opening ring would fire the SCIENTIST/staff sighting beat the
+    // instant an intern is on screen; pre-marking it seen keeps a replay quiet.
+    const seen = createGame(SEED, "spacez_hq");
+    skipStoryOpening(seen);
+    markThoughtsSeen(seen, ["spacez_staff", "spacez_armed", "spacez_optimusk"]);
+    let opened = false;
+    for (let i = 0; i < 400 && !opened; i++) {
+      step(seen, idle, DT);
+      if (seen.dialogue?.source.kind === "playerThought") opened = true;
+    }
+    expect(opened).toBe(false);
+  });
 
   it("spawns the player clear of every wall", () => {
     const state = startGame(SEED, "spacez_hq");
