@@ -27,6 +27,9 @@ export const AFFIX_COLORS: Record<Affix["kind"], string> = {
   maxHp: "#5fd97a",
   armor: "#9ab3c9",
   stat: "#4da6ff",
+  // Scaling bonuses (uniques) share their flat cousin's hue.
+  statPct: "#4da6ff",
+  maxHpPct: "#5fd97a",
 };
 
 /**

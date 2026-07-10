@@ -124,6 +124,10 @@ function affixLine(affix: Affix): string {
       return `+${affix.value} ARMOR`;
     case "stat":
       return `+${affix.value} ${STAT_LABELS[affix.stat]}`;
+    case "statPct":
+      return `+${Math.round(affix.value * 100)}% ${STAT_LABELS[affix.stat]}`;
+    case "maxHpPct":
+      return `+${Math.round(affix.value * 100)}% MAX HP`;
   }
 }
 

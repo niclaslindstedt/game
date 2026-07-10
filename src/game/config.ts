@@ -699,7 +699,7 @@ export const LOOT = {
    * the difficulty's `mobLevelOffset`, so harder rungs reach each tier
    * earlier in the story.)
    */
-  tierUnlockMlvl: { magic: 5, rare: 10, unique: 15, legendary: 25 },
+  tierUnlockMlvl: { magic: 5, rare: 10, unique: 15, legendary: 40 },
   /**
    * Base chance per tier that an equipment drop rolls it, checked best-first
    * (see `rollTier`). Global — the campaign's progression now lives in the
