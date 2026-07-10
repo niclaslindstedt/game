@@ -77,6 +77,7 @@ type MenuScreen =
   | "settings"
   | "controls"
   | "display"
+  | "sound"
   | "data"
   | "developer"
   | "arsenal"
@@ -289,6 +290,12 @@ export function TitleScreen({
     };
   }, []);
   const logoScale = compact ? 7 : wide ? 10 : 6;
+  // A long blurb (the developer flags carry sentence-length ones) would stretch
+  // the centered menu wider than a portrait phone, shoving every label to the
+  // left and the selection cursor off the screen edge. On narrow screens cap
+  // the wrap width so a long blurb folds to a second line instead; landscape /
+  // desktop (wide) keep the roomy single-line look.
+  const blurbMaxWidth = wide ? undefined : 20;
 
   useEffect(() => {
     let alive = true;
@@ -578,23 +585,16 @@ export function TitleScreen({
             setCursor(0);
           },
         },
+        // Music and sound-fx volume live together in their own SOUND submenu,
+        // keeping the SETTINGS list short.
         {
-          label: `MUSIC ${pct(s.musicVolume)}`,
-          aria: "settings-music-volume",
-          blurb: "THE THEME FOLLOWS ALONG",
+          label: "SOUND",
+          aria: "settings-sound",
+          blurb: "MUSIC AND SOUND FX VOLUME",
           action: () => {
-            updateSettings({ musicVolume: cycleVolume(s.musicVolume) });
-            setSettingsTick((t) => t + 1);
-          },
-        },
-        {
-          label: `SOUND FX ${pct(s.sfxVolume)}`,
-          aria: "settings-sfx-volume",
-          blurb: "BLASTERS, GHOSTS, PICKUPS",
-          action: () => {
-            updateSettings({ sfxVolume: cycleVolume(s.sfxVolume) });
-            setSettingsTick((t) => t + 1);
-            playUiSound(synth, "confirm"); // audition the new level
+            playUiSound(synth, "confirm");
+            setScreen("sound");
+            setCursor(0);
           },
         },
         // Character transfer lives in its own DATA submenu (EXPORT / IMPORT),
@@ -695,9 +695,8 @@ export function TitleScreen({
           },
         },
         // Land back on the DEVELOPER row in SETTINGS. It sits just above BACK,
-        // after CONTROLS / DISPLAY / MUSIC / SOUND FX / DATA — a fixed index now
-        // that the character transfer rows live in their own DATA submenu.
-        backTo("settings", 5),
+        // after CONTROLS / DISPLAY / SOUND / DATA.
+        backTo("settings", 4),
       ];
     }
     if (screen === "data") {
@@ -722,8 +721,34 @@ export function TitleScreen({
           action: pickImport,
         },
         // Land back on the DATA row in SETTINGS (after CONTROLS / DISPLAY /
-        // MUSIC / SOUND FX).
-        backTo("settings", 4),
+        // SOUND).
+        backTo("settings", 3),
+      ];
+    }
+    if (screen === "sound") {
+      const s = getSettings();
+      return [
+        {
+          label: `MUSIC ${pct(s.musicVolume)}`,
+          aria: "sound-music-volume",
+          blurb: "THE THEME FOLLOWS ALONG",
+          action: () => {
+            updateSettings({ musicVolume: cycleVolume(s.musicVolume) });
+            setSettingsTick((t) => t + 1);
+          },
+        },
+        {
+          label: `SOUND FX ${pct(s.sfxVolume)}`,
+          aria: "sound-sfx-volume",
+          blurb: "BLASTERS, GHOSTS, PICKUPS",
+          action: () => {
+            updateSettings({ sfxVolume: cycleVolume(s.sfxVolume) });
+            setSettingsTick((t) => t + 1);
+            playUiSound(synth, "confirm"); // audition the new level
+          },
+        },
+        // Land back on the SOUND row in SETTINGS (after CONTROLS / DISPLAY).
+        backTo("settings", 2),
       ];
     }
     if (screen === "controls") {
@@ -960,6 +985,7 @@ export function TitleScreen({
         const back: Record<string, MenuScreen> = {
           controls: "settings",
           display: "settings",
+          sound: "settings",
           data: "settings",
           developer: "settings",
           levels: warp ? "developer" : "difficulty",
@@ -1207,6 +1233,14 @@ export function TitleScreen({
         <PixelText
           font={font}
           text="SETTINGS - DISPLAY"
+          scale={2}
+          color="#d9a0f0"
+        />
+      )}
+      {screen === "sound" && (
+        <PixelText
+          font={font}
+          text="SETTINGS - SOUND"
           scale={2}
           color="#d9a0f0"
         />
@@ -1513,6 +1547,7 @@ export function TitleScreen({
                         text={entry.blurb}
                         scale={2}
                         color="#9aa3ad"
+                        maxWidth={blurbMaxWidth}
                       />
                     </span>
                   )}
