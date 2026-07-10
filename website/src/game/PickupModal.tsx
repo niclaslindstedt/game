@@ -20,7 +20,7 @@
 
 import type { CSSProperties } from "react";
 
-import type { Tier } from "@game/core";
+import type { Quality, Tier } from "@game/core";
 
 import { PixelText } from "@ui/lib/PixelText.tsx";
 import type { PixelFont } from "@ui/lib/pixel-font.ts";
@@ -47,6 +47,50 @@ const TIER_RANK: Record<Tier, number> = {
   legendary: 4,
 };
 
+/**
+ * The card's persistent FINISH — the frame/glow treatment that plays for the
+ * card's whole life (as opposed to the one-shot `RarityReveal` flourish). It
+ * folds the two axes into one visual ladder: a magic-or-better TIER always
+ * earns at least a glow, and within the plain regular tier the MAKE quality
+ * takes over — a broken find looks dull and cracked, a superior one glows, a
+ * perfect one shines. Its numeric intensity climbs monotonically so the CSS
+ * can lean on the ordering.
+ *
+ *   broken → crude → plain → glow → radiant → shine → legendary
+ *
+ * (superior make reads like a magic tier; perfect make like a unique.)
+ */
+export type Finish =
+  "broken" | "crude" | "plain" | "glow" | "radiant" | "shine" | "legendary";
+
+/** Fold (tier, make quality) into the single finish ladder above. */
+export function finishFor(tier: Tier, quality: Quality | undefined): Finish {
+  switch (tier) {
+    case "legendary":
+      return "legendary";
+    case "unique":
+      return "shine";
+    case "rare":
+      return "radiant";
+    case "magic":
+      return "glow";
+    default:
+      // Plain regular tier: the piece's craftsmanship carries the whole look.
+      switch (quality ?? "normal") {
+        case "broken":
+          return "broken";
+        case "crude":
+          return "crude";
+        case "superior":
+          return "glow";
+        case "perfect":
+          return "shine";
+        default:
+          return "plain";
+      }
+  }
+}
+
 /** Green worn by the UPGRADE / EQUIPPED status tags (matches AFFIX vitality). */
 const UPGRADE_COLOR = "#5fd97a";
 /** Neutral off-white for the tap-to-equip affordance. */
@@ -63,6 +107,13 @@ export type PickupCard = {
   color: string;
   /** Rarity tier — selects which reveal spectacle plays. */
   tier: Tier;
+  /**
+   * The piece's MAKE quality (plain regular-tier finds only). The second
+   * visual axis: within the regular tier it decides whether the card looks
+   * dull (broken/crude), normal, glowing (superior) or shining (perfect).
+   * Undefined (loose or normal make) reads as normal.
+   */
+  quality?: Quality;
   /** Wearing this piece would improve its slot — badge it as an upgrade. */
   upgrade: boolean;
   /** The piece is already worn (auto-equipped on pickup) — badge EQUIPPED. */
@@ -86,17 +137,40 @@ const SPARKS = [
   { x: 96, y: 54, d: 200 },
 ] as const;
 
+/** A second, denser mote burst layered in only for the legendary explosion. */
+const LEGENDARY_SPARKS = [
+  { x: 2, y: 50, d: 40 },
+  { x: 100, y: 34, d: 130 },
+  { x: 40, y: 96, d: 220 },
+  { x: 62, y: 2, d: 70 },
+  { x: 14, y: 4, d: 180 },
+  { x: 86, y: 92, d: 20 },
+] as const;
+
 /** Flame tongues along the base for the top tiers (unique/legendary). */
 const FLAMES = [20, 38, 50, 62, 80] as const;
+/** The legendary blaze packs the base edge to edge. */
+const LEGENDARY_FLAMES = [8, 20, 32, 44, 56, 68, 80, 92] as const;
 
 function RarityReveal({ tier }: { tier: Tier }) {
   const rank = TIER_RANK[tier];
   if (rank === 0) return null;
+  const legendary = tier === "legendary";
+  const motes = legendary ? [...SPARKS, ...LEGENDARY_SPARKS] : SPARKS;
+  const flames = legendary ? LEGENDARY_FLAMES : FLAMES;
   return (
-    <span className="pickup-card-reveal" aria-hidden="true">
+    <span
+      className={`pickup-card-reveal${
+        legendary ? " pickup-card-reveal--legendary" : ""
+      }`}
+      aria-hidden="true"
+    >
+      {/* Legendary breaks out of the card in a shockwave blast — every lever
+          to 11 — while lesser tiers just bloom. */}
+      {legendary && <span className="pickup-card-blast" />}
       <span className="pickup-card-flash" />
       {rank >= TIER_RANK.rare && <span className="pickup-card-rays" />}
-      {SPARKS.map((s, i) => (
+      {motes.map((s, i) => (
         <span
           key={i}
           className="pickup-card-spark-mote"
@@ -111,7 +185,7 @@ function RarityReveal({ tier }: { tier: Tier }) {
       ))}
       {rank >= TIER_RANK.unique && (
         <span className="pickup-card-flames">
-          {FLAMES.map((x, i) => (
+          {flames.map((x, i) => (
             <span
               key={i}
               className="pickup-card-flame"
@@ -177,9 +251,10 @@ export function PickupModal({
   card: PickupCard;
 }) {
   const clickable = card.onEquip != null;
-  const className = `pickup-card${clickable ? " pickup-card--clickable" : ""}${
-    card.upgrade || card.equipped ? " pickup-card--upgrade" : ""
-  }`;
+  const finish = finishFor(card.tier, card.quality);
+  const className = `pickup-card pickup-card--finish-${finish}${
+    clickable ? " pickup-card--clickable" : ""
+  }${card.upgrade || card.equipped ? " pickup-card--upgrade" : ""}`;
   const style = { "--rarity": card.color } as CSSProperties;
   // Always a <button>, inert (disabled) when there's nothing to equip. Keeping
   // the element type stable means tapping to equip updates the card in place

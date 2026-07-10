@@ -763,6 +763,116 @@ body {
     pickup-card-upgrade 900ms ease-in-out 3;
 }
 
+/* ---- Finish: the persistent frame/glow ladder that folds a find's rarity
+   TIER and its MAKE quality into one look (see `finishFor` in
+   PickupModal.tsx). The two low finishes strip the card back for a dull or
+   cracked look; the high finishes pile on glow, culminating in a white-hot
+   legendary. The ladder, low to high: broken → crude → plain → glow → radiant
+   → shine → legendary (`plain` is the baseline .pickup-card, unstyled here). */
+
+/* Broken make: a cracked, joyless find — a dashed, desaturated frame with no
+   glow, and no traveling spark or sheen (stripped below). */
+.pickup-card--finish-broken {
+  border-style: dashed;
+  border-color: color-mix(in srgb, var(--rarity, #e6e8eb) 40%, #6b7078);
+  box-shadow: 0 0.2rem 0.5rem rgba(11, 13, 16, 0.55);
+  filter: saturate(0.5) brightness(0.92);
+}
+/* Crude make: intact but plain — a dulled solid frame and the faintest glow. */
+.pickup-card--finish-crude {
+  border-color: color-mix(in srgb, var(--rarity, #e6e8eb) 62%, #6b7078);
+  box-shadow:
+    0 0 0.3rem color-mix(in srgb, var(--rarity, #e6e8eb) 30%, transparent),
+    0 0.2rem 0.5rem rgba(11, 13, 16, 0.55);
+  filter: saturate(0.8);
+}
+/* Both low finishes drop the "new and shiny" spark + sheen so they read boring. */
+.pickup-card--finish-broken .pickup-card-spark,
+.pickup-card--finish-broken .pickup-card-sheen,
+.pickup-card--finish-crude .pickup-card-spark,
+.pickup-card--finish-crude .pickup-card-sheen {
+  display: none;
+}
+
+/* Glow (superior make / magic tier): a brighter, wider rarity halo. */
+.pickup-card--finish-glow {
+  box-shadow:
+    0 0 0.85rem color-mix(in srgb, var(--rarity, #fff) 70%, transparent),
+    0 0 0.35rem color-mix(in srgb, var(--rarity, #fff) 60%, transparent),
+    0 0.2rem 0.5rem rgba(11, 13, 16, 0.55);
+}
+/* Radiant (rare tier): a stronger halo that also breathes (the ::after pulse). */
+.pickup-card--finish-radiant {
+  box-shadow:
+    0 0 1.15rem color-mix(in srgb, var(--rarity, #fff) 80%, transparent),
+    0 0 0.45rem color-mix(in srgb, var(--rarity, #fff) 70%, transparent),
+    0 0.2rem 0.5rem rgba(11, 13, 16, 0.55);
+}
+/* Shine (perfect make / unique tier): a heavy halo, a brightened frame, and a
+   faster brushed sheen (below) — the "really shines" look. */
+.pickup-card--finish-shine {
+  border-color: color-mix(in srgb, var(--rarity, #fff) 88%, #fff);
+  box-shadow:
+    0 0 1.4rem color-mix(in srgb, var(--rarity, #fff) 85%, transparent),
+    0 0 0.6rem color-mix(in srgb, var(--rarity, #fff) 75%, transparent),
+    0 0.2rem 0.5rem rgba(11, 13, 16, 0.55);
+}
+/* Legendary tier: every lever to 11 — a white-hot frame and the widest, fastest
+   pulsing halo, beneath the explosion reveal. */
+.pickup-card--finish-legendary {
+  border-color: color-mix(in srgb, var(--rarity, #ffa726) 80%, #fff);
+  box-shadow:
+    0 0 1.8rem color-mix(in srgb, var(--rarity, #ffa726) 90%, transparent),
+    0 0 0.8rem color-mix(in srgb, var(--rarity, #ffa726) 80%, transparent),
+    0 0.2rem 0.5rem rgba(11, 13, 16, 0.55);
+}
+
+/* The breathing outer aura for the top three finishes — a pulsing halo on a
+   pseudo-element so it runs independently of the card's own pop animation. */
+.pickup-card--finish-radiant::after,
+.pickup-card--finish-shine::after,
+.pickup-card--finish-legendary::after {
+  content: "";
+  position: absolute;
+  inset: -3px;
+  z-index: -3;
+  border-radius: inherit;
+  pointer-events: none;
+  box-shadow: 0 0 1.1rem
+    color-mix(in srgb, var(--rarity, #fff) 75%, transparent);
+  animation: pickup-glow-pulse 1500ms ease-in-out infinite;
+}
+.pickup-card--finish-shine::after {
+  box-shadow: 0 0 1.4rem
+    color-mix(in srgb, var(--rarity, #fff) 82%, transparent);
+}
+.pickup-card--finish-legendary::after {
+  box-shadow: 0 0 1.9rem
+    color-mix(in srgb, var(--rarity, #ffa726) 90%, transparent);
+  animation-duration: 900ms;
+}
+/* Shine + legendary catch the light harder: a faster, brighter sheen sweep. */
+.pickup-card--finish-shine .pickup-card-sheen::before,
+.pickup-card--finish-legendary .pickup-card-sheen::before {
+  animation-duration: 1500ms;
+  background: linear-gradient(
+    100deg,
+    transparent,
+    rgba(255, 255, 255, 0.82),
+    transparent
+  );
+}
+
+@keyframes pickup-glow-pulse {
+  0%,
+  100% {
+    opacity: 0.45;
+  }
+  50% {
+    opacity: 1;
+  }
+}
+
 .pickup-card-icon {
   width: 1.75rem;
   height: 1.75rem;
@@ -1071,6 +1181,44 @@ body {
   }
 }
 
+/* Legendary explosion: a shockwave ring that blasts outward past the card
+   edges, over a bigger, brighter central bloom — the top-tier reveal. */
+.pickup-card-blast {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: 60%;
+  aspect-ratio: 1;
+  transform: translate(-50%, -50%) scale(0.15);
+  border-radius: 50%;
+  border: 0.22rem solid color-mix(in srgb, var(--rarity, #ffa726) 85%, #fff);
+  box-shadow:
+    0 0 1.2rem color-mix(in srgb, var(--rarity, #ffa726) 80%, transparent),
+    inset 0 0 0.8rem color-mix(in srgb, var(--rarity, #ffa726) 70%, transparent);
+  opacity: 0;
+  animation: pickup-blast 760ms ease-out forwards;
+}
+
+@keyframes pickup-blast {
+  0% {
+    opacity: 0;
+    transform: translate(-50%, -50%) scale(0.15);
+  }
+  15% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0;
+    transform: translate(-50%, -50%) scale(3.4);
+    border-width: 0;
+  }
+}
+
+/* The legendary bloom blows out bigger than the tier flash. */
+.pickup-card-reveal--legendary .pickup-card-flash {
+  width: 180%;
+}
+
 @media (prefers-reduced-motion: reduce) {
   .pickup-card,
   .pickup-card--upgrade {
@@ -1118,6 +1266,17 @@ body {
   .pickup-card-flame {
     animation: none;
     opacity: 0.7;
+  }
+  /* The finish aura pulse and legendary shockwave settle to a still glow. */
+  .pickup-card--finish-radiant::after,
+  .pickup-card--finish-shine::after,
+  .pickup-card--finish-legendary::after {
+    animation: none;
+    opacity: 0.7;
+  }
+  .pickup-card-blast {
+    animation: none;
+    opacity: 0;
   }
 }
 
