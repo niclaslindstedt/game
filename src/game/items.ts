@@ -568,12 +568,18 @@ export function isPassiveItem(defId: string): boolean {
 export function effectiveStat(state: GameState, stat: StatName): number {
   let value =
     state.player.stats[stat] + baseStatBonus(state.player.level, stat);
+  // Scaling `statPct` bonuses (uniques) multiply the whole total, so they grow
+  // with the hero — a +3% STRENGTH is worth more the stronger you are.
+  let pct = 0;
   for (const piece of activePieces(state)) {
     for (const affix of piece.affixes) {
       if (affix.kind === "stat" && affix.stat === stat) value += affix.value;
+      else if (affix.kind === "statPct" && affix.stat === stat)
+        pct += affix.value;
     }
   }
-  return value + passiveStatBonus(state, stat);
+  value += passiveStatBonus(state, stat);
+  return Math.round(value * (1 + pct));
 }
 
 /** Max hp from the base pool + the STAMINA stat + gear bonuses and affixes.
@@ -581,15 +587,18 @@ export function effectiveStat(state: GameState, stat: StatName): number {
  * health bar — a hardy sprinter is a sturdier hero. */
 export function computeMaxHp(state: GameState): number {
   let max = PLAYER.maxHp + effectiveStat(state, "stamina") * STAMINA.hpPerPoint;
+  let pct = 0;
   for (const piece of activePieces(state)) {
     if (!isWeaponDef(piece.defId)) {
       max += gearDef(piece.defId).bonuses.maxHp ?? 0;
     }
     for (const affix of piece.affixes) {
       if (affix.kind === "maxHp") max += affix.value;
+      // Scaling `maxHpPct` (uniques) grows with the hero's whole health pool.
+      else if (affix.kind === "maxHpPct") pct += affix.value;
     }
   }
-  return max;
+  return Math.round(max * (1 + pct));
 }
 
 /**
@@ -1207,6 +1216,10 @@ export function gearScore(gear: Equipment): number {
     else if (affix.kind === "crit") score += affix.value * 300;
     else if (affix.kind === "stat") score += affix.value * 15;
     else if (affix.kind === "armor") score += affix.value * 2;
+    // Scaling bonuses are a fraction of a big number — worth a lot on a grown
+    // hero, so weight them well above the raw fraction.
+    else if (affix.kind === "statPct") score += affix.value * 600;
+    else if (affix.kind === "maxHpPct") score += affix.value * 400;
     else score += affix.value * 100;
   }
   return score;

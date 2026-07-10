@@ -1151,6 +1151,12 @@ export function affixNaming(affix: Affix): {
       return { prefix: affix.value < 20 ? "STUDDED" : "PLATED" };
     case "stat":
       return { suffix: STAT_SUFFIX[affix.stat] };
+    // Scaling kinds only ride hand-named UNIQUES, never rolled magic names, so
+    // these are here for exhaustiveness — a magic item never composes from them.
+    case "statPct":
+      return { suffix: STAT_SUFFIX[affix.stat] };
+    case "maxHpPct":
+      return { prefix: "REINFORCED" };
   }
 }
 

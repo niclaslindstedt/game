@@ -92,13 +92,23 @@ export type EquipSlot = "weapon" | ArmorSlot | "charm" | "bag";
  */
 export type Quality = "broken" | "crude" | "normal" | "superior" | "perfect";
 
-/** One rolled bonus on a magic+ item. Higher tiers roll more of them. */
+/**
+ * One bonus on an item. Magic+ items ROLL these (higher tiers roll more);
+ * hand-authored UNIQUES carry a fixed set instead of rolling. Most are FLAT
+ * (a fixed `+N`), so they fall behind as the hero grows; the `*Pct` kinds
+ * SCALE with the character (a % of the hero's own stat / max hp), so a unique
+ * carrying one stays relevant far longer — the "keeper" bonus. Uniques use at
+ * most one scaling bonus each, kept small (≤3%).
+ */
 export type Affix =
   | { kind: "damagePct"; value: number }
   | { kind: "maxHp"; value: number }
   | { kind: "crit"; value: number }
   | { kind: "armor"; value: number }
-  | { kind: "stat"; value: number; stat: StatName };
+  | { kind: "stat"; value: number; stat: StatName }
+  // Scaling bonuses (uniques): a fraction of the hero's OWN value.
+  | { kind: "statPct"; value: number; stat: StatName }
+  | { kind: "maxHpPct"; value: number };
 
 /** A droppable, equippable item instance (medkits are consumables, not this). */
 export type Equipment = {
