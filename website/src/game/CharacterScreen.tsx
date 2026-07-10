@@ -6,14 +6,7 @@
 // or creating a hero hands it up via `onPlay`; when PLAY sent them here the
 // title's difficulty ladder follows for that character.
 
-import {
-  useCallback,
-  useEffect,
-  useRef,
-  useState,
-  type ChangeEvent,
-  type CSSProperties,
-} from "react";
+import { useCallback, useEffect, useState, type CSSProperties } from "react";
 
 import { DIFFICULTY_ORDER, difficultyDef } from "@game/core";
 
@@ -22,13 +15,8 @@ import { PixelText } from "@ui/lib/PixelText.tsx";
 import { spriteDataUrl, loadGameAssets, type GameAssets } from "./assets.ts";
 import { synth } from "./audio.ts";
 import {
-  exportCharacterToFile,
-  importCharacterFromFile,
-} from "./character-transfer.ts";
-import {
   createCharacter,
   deleteCharacter,
-  importCharacter,
   loadCharacters,
   type Character,
 } from "./characters.ts";
@@ -71,13 +59,6 @@ export function CharacterScreen({
   const [hardcore, setHardcore] = useState(false);
   // Which row the cursor rides (hover/focus), for the pointer glow.
   const [hover, setHover] = useState(0);
-  // A transient line under the roster reporting the last import/export result.
-  const [notice, setNotice] = useState<{
-    tone: "info" | "error";
-    text: string;
-  } | null>(null);
-  // The hidden picker the IMPORT button clicks — importing opens a file dialog.
-  const fileInput = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     let live = true;
@@ -102,44 +83,6 @@ export function CharacterScreen({
       playUiSound(synth, "back");
       deleteCharacter(id);
       refresh();
-    },
-    [refresh],
-  );
-
-  const exportOne = useCallback(async (character: Character) => {
-    playUiSound(synth, "confirm");
-    try {
-      await exportCharacterToFile(character);
-      setNotice({ tone: "info", text: `EXPORTED ${character.name}` });
-    } catch {
-      setNotice({ tone: "error", text: "EXPORT FAILED" });
-    }
-  }, []);
-
-  const pickImport = useCallback(() => {
-    playUiSound(synth, "confirm");
-    fileInput.current?.click();
-  }, []);
-
-  const onFilePicked = useCallback(
-    async (e: ChangeEvent<HTMLInputElement>) => {
-      const file = e.target.files?.[0];
-      // Clear the value so re-picking the same file fires `change` again.
-      e.target.value = "";
-      if (!file) return;
-      try {
-        const imported = await importCharacterFromFile(file);
-        const stored = importCharacter(imported);
-        refresh();
-        playUiSound(synth, "start");
-        setNotice({ tone: "info", text: `IMPORTED ${stored.name}` });
-      } catch (err) {
-        playUiSound(synth, "back");
-        setNotice({
-          tone: "error",
-          text: err instanceof Error ? err.message : "IMPORT FAILED",
-        });
-      }
     },
     [refresh],
   );
@@ -304,15 +247,6 @@ export function CharacterScreen({
                 </button>
                 <button
                   type="button"
-                  className="character-export"
-                  aria-label={`export-${character.id}`}
-                  title="EXPORT"
-                  onClick={() => void exportOne(character)}
-                >
-                  <span aria-hidden="true">↓</span>
-                </button>
-                <button
-                  type="button"
                   className="character-delete"
                   aria-label={`delete-${character.id}`}
                   title="DELETE"
@@ -345,57 +279,6 @@ export function CharacterScreen({
               />
             </span>
           </button>
-
-          <button
-            type="button"
-            className="menu-item character-import"
-            aria-label="character-import"
-            onPointerEnter={() => setHover(-3)}
-            onClick={pickImport}
-          >
-            <span className="menu-item-text">
-              <PixelText
-                font={font}
-                text="IMPORT CHARACTER"
-                scale={3}
-                color="#9aa3ad"
-              />
-              <span className="menu-item-blurb">
-                <PixelText
-                  font={font}
-                  text="LOAD A HERO EXPORTED FROM ANOTHER DEVICE"
-                  scale={2}
-                  color="#9aa3ad"
-                />
-              </span>
-            </span>
-          </button>
-
-          {notice ? (
-            <p
-              className={`character-notice ${notice.tone}`}
-              role="status"
-              aria-live="polite"
-            >
-              <PixelText
-                font={font}
-                text={notice.text}
-                scale={2}
-                color={notice.tone === "error" ? "#ff6d6d" : "#7ef0c8"}
-                maxWidth={22}
-              />
-            </p>
-          ) : null}
-
-          <input
-            ref={fileInput}
-            type="file"
-            accept=".zip,application/zip"
-            className="character-file-input"
-            aria-hidden="true"
-            tabIndex={-1}
-            onChange={(e) => void onFilePicked(e)}
-          />
 
           <button
             type="button"

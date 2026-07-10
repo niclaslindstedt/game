@@ -42,8 +42,13 @@ import { synth } from "./audio.ts";
 import { haptics } from "./haptics.ts";
 import { playTitleMusic } from "./music/index.ts";
 import {
+  exportCharacterToFile,
+  importCharacterFromFile,
+} from "./character-transfer.ts";
+import {
   firstUnclearedLevel,
   hasClearedLevel,
+  importCharacter,
   isDifficultyBeaten,
   isDifficultyUnlocked,
   isLevelUnlocked,
@@ -264,6 +269,56 @@ export function TitleScreen({
   // Settings live in a plain singleton; mirror a tick so labels re-render.
   const [settingsTick, setSettingsTick] = useState(0);
 
+  // Character transfer (SETTINGS → EXPORT / IMPORT CHARACTER): the last result,
+  // shown as a line under the menu.
+  const [transferNotice, setTransferNotice] = useState<{
+    tone: "info" | "error";
+    text: string;
+  } | null>(null);
+
+  // Export the ACTIVE hero (the roster's per-character export moved here, so it
+  // is the one currently selected). A no-op with no active character — the row
+  // isn't offered then.
+  const exportActive = useCallback(async () => {
+    if (!character) return;
+    playUiSound(synth, "confirm");
+    try {
+      await exportCharacterToFile(character);
+      setTransferNotice({ tone: "info", text: `EXPORTED ${character.name}` });
+    } catch {
+      setTransferNotice({ tone: "error", text: "EXPORT FAILED" });
+    }
+  }, [character]);
+
+  const runImport = useCallback(async (file: File) => {
+    try {
+      const imported = await importCharacterFromFile(file);
+      const stored = importCharacter(imported);
+      playUiSound(synth, "start");
+      setTransferNotice({ tone: "info", text: `IMPORTED ${stored.name}` });
+    } catch (err) {
+      playUiSound(synth, "back");
+      setTransferNotice({
+        tone: "error",
+        text: err instanceof Error ? err.message : "IMPORT FAILED",
+      });
+    }
+  }, []);
+
+  // Open the OS file picker. A transient input avoids a render-time ref (and
+  // the click is a genuine user gesture, so the dialog opens).
+  const pickImport = useCallback(() => {
+    playUiSound(synth, "confirm");
+    const input = document.createElement("input");
+    input.type = "file";
+    input.accept = ".zip,application/zip";
+    input.addEventListener("change", () => {
+      const file = input.files?.[0];
+      if (file) void runImport(file);
+    });
+    input.click();
+  }, [runImport]);
+
   const entries: MenuEntry[] = useMemo(() => {
     const backTo = (target: MenuScreen, at = 0): MenuEntry => ({
       label: "BACK",
@@ -483,6 +538,26 @@ export function TitleScreen({
             playUiSound(synth, "confirm"); // audition the new level
           },
         },
+        // Character transfer: EXPORT the active hero as a signed zip (offered
+        // only when one is active), IMPORT any exported hero back via a file
+        // picker. Moved here from the roster so it lives with the rest of the
+        // device-level configuration.
+        ...(character
+          ? [
+              {
+                label: "EXPORT CHARACTER",
+                aria: "settings-export-character",
+                blurb: `SAVE ${character.name} TO A FILE`,
+                action: () => void exportActive(),
+              },
+            ]
+          : []),
+        {
+          label: "IMPORT CHARACTER",
+          aria: "settings-import-character",
+          blurb: "LOAD A HERO EXPORTED FROM ANOTHER DEVICE",
+          action: pickImport,
+        },
         // The DEVELOPER row is hidden until the title moon's secret long-press
         // unlocks it (see startMoonHold); once found it stays put across
         // launches (persisted via `developerUnlocked`).
@@ -567,9 +642,10 @@ export function TitleScreen({
             setSettingsTick((t) => t + 1);
           },
         },
-        // Land back on the DEVELOPER row in SETTINGS — it sits just above BACK,
-        // after CONTROLS / DISPLAY / MUSIC / SOUND FX.
-        backTo("settings", 4),
+        // Land back on the DEVELOPER row in SETTINGS. It sits just above BACK,
+        // after CONTROLS / DISPLAY / MUSIC / SOUND FX and the IMPORT/EXPORT
+        // rows — EXPORT only shows with an active hero, so the index shifts.
+        backTo("settings", character ? 6 : 5),
       ];
     }
     if (screen === "controls") {
@@ -713,6 +789,8 @@ export function TitleScreen({
     settingsTick,
     difficulty,
     warp,
+    exportActive,
+    pickImport,
   ]);
 
   // The HIGH SCORES board is steered on two axes rather than a cursor list:
@@ -1031,6 +1109,7 @@ export function TitleScreen({
       {screen === "settings" && (
         <PixelText font={font} text="SETTINGS" scale={2} color="#d9a0f0" />
       )}
+
       {screen === "controls" && (
         <PixelText
           font={font}
@@ -1349,6 +1428,23 @@ export function TitleScreen({
             );
           })}
         </nav>
+      )}
+
+      {/* The import/export result line, under the SETTINGS menu. */}
+      {screen === "settings" && transferNotice && (
+        <p
+          className={`title-notice ${transferNotice.tone}`}
+          role="status"
+          aria-live="polite"
+        >
+          <PixelText
+            font={font}
+            text={transferNotice.text}
+            scale={2}
+            color={transferNotice.tone === "error" ? "#ff6d6d" : "#7ef0c8"}
+            maxWidth={24}
+          />
+        </p>
       )}
 
       {/* The developer ARSENAL viewer: a full-screen overlay over the menu,
