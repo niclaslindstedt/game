@@ -86,16 +86,26 @@ an incompatible older build is discarded rather than resumed. Clearing site
 data resets all of it; the `?cutscene=<id>` workbench replays any scene
 regardless, and `?level=<id>` reaches any level regardless of unlock state.
 
+The roster (**PLAY** with no active hero, or **CHARACTERS**) can carry a hero
+between devices: each row's **EXPORT** button downloads that character as a
+small signed `.zip` (a `character.json` save plus a `manifest.json`), and the
+**IMPORT CHARACTER** button opens a file picker to load one back as a fresh
+copy (`website/src/game/character-transfer.ts`). The archive is signed with an
+HMAC-SHA256 key (`VITE_CHARACTER_SIGNING_KEY`, below), so a hand-edited save
+fails to re-import — an anti-cheat speed bump, not a wall, since the key ships
+in the bundle.
+
 Everything else configurable concerns the build and the development
 environment.
 
 ## Environment variables
 
-| Variable     | Read by                                        | Effect                                                                                                                                                                                                                                                  |
-| ------------ | ---------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `GITHUB_PAT` | `.npmrc` (every npm command), all CI workflows | Auth token for GitHub Packages — required to install `@niclaslindstedt/oss-framework`. Needs the `read:packages` scope. CI prefers the `GITHUB_PAT` secret and falls back to the workflow token.                                                        |
-| `VITE_BASE`  | `website/vite.config.ts`                       | The deploy-slot base path: `/` (production), `/preview/` (staging), `/branch/` (branch slot). Defaults to `/` for local dev and the CI quality gates. Drives asset URLs, the service-worker scope, the per-slot robots meta, and the precache cache id. |
-| `GITHUB_SHA` | `website/vite.config.ts`                       | Stamps the build label shown in the update toast and title screen; falls back to `git rev-parse` / a timestamp locally.                                                                                                                                 |
+| Variable                     | Read by                                        | Effect                                                                                                                                                                                                                                                                                                                                                                 |
+| ---------------------------- | ---------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `GITHUB_PAT`                 | `.npmrc` (every npm command), all CI workflows | Auth token for GitHub Packages — required to install `@niclaslindstedt/oss-framework`. Needs the `read:packages` scope. CI prefers the `GITHUB_PAT` secret and falls back to the workflow token.                                                                                                                                                                       |
+| `VITE_BASE`                  | `website/vite.config.ts`                       | The deploy-slot base path: `/` (production), `/preview/` (staging), `/branch/` (branch slot). Defaults to `/` for local dev and the CI quality gates. Drives asset URLs, the service-worker scope, the per-slot robots meta, and the precache cache id.                                                                                                                |
+| `GITHUB_SHA`                 | `website/vite.config.ts`                       | Stamps the build label shown in the update toast and title screen; falls back to `git rev-parse` / a timestamp locally.                                                                                                                                                                                                                                                |
+| `VITE_CHARACTER_SIGNING_KEY` | `website/src/game/character-transfer.ts`       | HMAC-SHA256 key that signs exported character archives so a hand-edited save fails to re-import (an anti-cheat speed bump, not a wall — the key ships in the bundle). Optional: `.github/workflows/pages.yml` maps the `CHARACTER_SIGNING_KEY` deploy secret onto it; an empty/unset secret falls back to the committed default key. Set the secret to rotate the key. |
 
 ## URL parameters
 

@@ -2095,6 +2095,50 @@ body {
   background: rgba(60, 26, 32, 0.8);
 }
 
+/* The per-row EXPORT affordance — mirrors the delete square in teal. The
+   down-arrow glyph the pixel font lacks is drawn in the UI font instead. */
+.character-export {
+  appearance: none;
+  border: 2px solid #24463c;
+  background: rgba(18, 34, 29, 0.6);
+  padding: 0.2rem 0.55rem;
+  cursor: pointer;
+  color: #7ef0c8;
+  font-family: ui-monospace, "Courier New", monospace;
+  font-size: 1.1rem;
+  font-weight: 700;
+  line-height: 1;
+  flex: 0 0 auto;
+}
+
+.character-export:hover {
+  border-color: #7ef0c8;
+  background: rgba(26, 52, 44, 0.8);
+}
+
+.character-import {
+  justify-content: center;
+}
+
+/* The picker the IMPORT button clicks — kept in the DOM (offscreen) so a click
+   can open it, but never shown. */
+.character-file-input {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  border: 0;
+}
+
+/* The transient import/export result line. */
+.character-notice {
+  margin: 0.25rem 0 0;
+  text-align: center;
+}
+
 /* The create form: a name field, the hardcore toggle, and the actions. */
 .character-form {
   display: flex;
