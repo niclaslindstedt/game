@@ -6,7 +6,7 @@
 // Kept in its own module (config + types only) so both items.ts (effective
 // stats) and menace.ts (mob hp keeping pace) can read it without a cycle.
 
-import { LEVELING, STATS } from "./config.ts";
+import { LEVELING, MENACE, STATS } from "./config.ts";
 import type { StatName } from "./types.ts";
 
 const AUTO_GAINS: Partial<Record<StatName, number>> =
@@ -91,4 +91,42 @@ export function autoPowerScale(level: number): number {
       baseStatBonus(level, "strength") * STATS.damageBonusPerPoint.strength) *
     (1 + baseStatBonus(level, "dexterity") * STATS.attackSpeedPerStat)
   );
+}
+
+/**
+ * The XP needed to cross OUT of `level` (from L to L+1) — the single source of
+ * truth for the level curve, walked by `grantXp` (loot.ts), the initial bar
+ * (create.ts), and the arrival derivation (arrival.ts).
+ *
+ * The curve is authored in KILLS, not raw XP: each level costs
+ * `killsPerLevel(L)` of a reference mob's worth of XP, where that mob's
+ * toughness mirrors `mobHpScaleFor` at the neutral offset — the flat per-level
+ * hp ramp (`MENACE.mobHpPerLevel`) times the automatic-stat damage curve
+ * (`autoPowerScale`). Kill XP is hp-proportional, so the `autoPowerScale`
+ * factor here CANCELS against the same factor in the mobs the hero is killing:
+ * the number of kills a level takes is invariant to the auto-stat dev flag and
+ * to how hard the hero hits, and rises only on the gentle geometric
+ * `killsPerLevelGrowth`. That is what makes leveling taper predictably —
+ * ~10–20 levels/day early, easing to ~2/day near the cap — instead of the old
+ * pure-exponential bar that raced early then walled.
+ */
+export function xpToLevelUp(level: number): number {
+  const l = Math.max(1, level);
+  // Onboarding ramp: the opening levels cost a fraction of the curve so the
+  // first ding is quick, easing to full by `earlyRampLevels`.
+  const ramp = Math.min(
+    1,
+    LEVELING.earlyRampStart +
+      ((1 - LEVELING.earlyRampStart) * (l - 1)) / LEVELING.earlyRampLevels,
+  );
+  const kills =
+    LEVELING.killsPerLevelBase *
+    Math.pow(LEVELING.killsPerLevelGrowth, l - 1) *
+    ramp;
+  const referenceMobXp =
+    LEVELING.refMobHp *
+    (1 + (l - 1) * MENACE.mobHpPerLevel) *
+    autoPowerScale(l) *
+    LEVELING.xpPerHp;
+  return Math.round(kills * referenceMobXp);
 }

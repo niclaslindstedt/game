@@ -24,6 +24,7 @@ import {
   recomputeMaxHp,
   recomputeMaxStamina,
 } from "./items.ts";
+import { xpToLevelUp } from "./leveling.ts";
 import type {
   Difficulty,
   Equipment,
@@ -34,9 +35,7 @@ import type {
 
 /** XP required to leave `level` (the same curve grantXp walks). */
 function xpToNextAt(level: number): number {
-  return Math.round(
-    LEVELING.baseXpToLevel * Math.pow(LEVELING.xpGrowth, level - 1),
-  );
+  return xpToLevelUp(level);
 }
 
 /** A deep copy of an equipment piece (or null), safe to carry across runs. */
@@ -278,7 +277,7 @@ export function deriveArrivalLoadout(
   );
   let level = 1;
   let points = 0;
-  while (xp >= xpToNextAt(level)) {
+  while (xp >= xpToNextAt(level) && level < LEVELING.maxLevel) {
     xp -= xpToNextAt(level);
     level++;
     points += LEVELING.statPointsPerLevel;

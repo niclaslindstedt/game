@@ -36,7 +36,10 @@ const opt = (name, fallback) => {
 const url = opt("url", "http://localhost:5199");
 const strategy = opt("strategy", "survivor");
 const timeoutMs = Number(opt("timeout", "120")) * 1000;
-const difficulty = opt("difficulty", "medium");
+// A fresh character (the harness always starts one) has only EASY unlocked —
+// the ladder unlocks in order. Testing a harder rung needs a character that has
+// already beaten the ones below it.
+const difficulty = opt("difficulty", "easy");
 // Which level to start on; the first level is always unlocked, so the bot
 // can reach any level regardless of saved progress via the level-select menu.
 const level = opt("level", "spacez_hq");
@@ -58,7 +61,13 @@ page.on("pageerror", (e) => console.error("PAGE ERROR:", e.message));
 // `?bot=` hands the run to the engine autopilot: it dismisses the intro,
 // steers, jumps, and spends level-ups on its own.
 await page.goto(`${url}/?debug&bot=${strategy}`);
-// The Doom-style menu: NEW GAME, the chosen difficulty rung, then the level.
+// The app opens on the CHARACTER roster. A fresh browser has no heroes, so the
+// create form is shown: name one and CREATE it (softcore by default) to reach
+// the title menu.
+await page.getByRole("textbox", { name: "character-name" }).waitFor();
+await page.getByRole("textbox", { name: "character-name" }).fill("BOT");
+await page.getByRole("button", { name: "character-create" }).click();
+// The Doom-style menu: PLAY, the chosen difficulty rung, then the level.
 // Wait for the menu (asset load) before shooting the splash.
 await page.getByRole("button", { name: "new-game" }).waitFor();
 await page.screenshot({ path: `${shotDir}/title.png` });
@@ -66,9 +75,8 @@ await page.getByRole("button", { name: "new-game" }).click();
 await page.screenshot({ path: `${shotDir}/difficulty.png` });
 await page.getByRole("button", { name: `difficulty-${difficulty}` }).click();
 // An unbeaten difficulty walks straight into the campaign (no mission list) —
-// the list only opens once the rung is cleared or a level token is spendable.
-// Click the level when the list shows; otherwise trust the walk-in (fresh
-// storage always lands on the first uncleared level).
+// the picker only opens once the rung is beaten. Click the level when the list
+// shows; otherwise trust the walk-in (a fresh hero lands on the first level).
 try {
   await page
     .getByRole("button", { name: `level-${level}` })

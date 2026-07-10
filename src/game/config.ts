@@ -178,9 +178,44 @@ export const ENEMY_AI = {
 export const LEVELING = {
   /** Default XP granted per point of a killed monster's max hp. */
   xpPerHp: 1,
-  /** XP needed to go from level 1 to 2; each next level costs ×growth. */
-  baseXpToLevel: 100,
-  xpGrowth: 1.65,
+  /**
+   * The hard level cap — a Diablo-style ceiling. Once a hero hits it, XP stops
+   * banking levels (the bar pins full) and the endgame becomes the hunt for
+   * cap-level gear rather than the next ding. Enforced in `grantXp` (loot.ts).
+   */
+  maxLevel: 99,
+  /**
+   * The level curve is authored in KILLS PER LEVEL, not raw XP, so pacing is
+   * legible and stays put no matter how the horde's hp scales. `xpToLevelUp`
+   * (leveling.ts) sets each level's cost to `killsPerLevel(L) × a reference
+   * mob's XP at L`, where the reference mob's toughness mirrors `mobHpScaleFor`
+   * (the flat per-level ramp × the auto-stat damage curve). Because the SAME
+   * `autoPowerScale` sits in both the cost and the mobs' hp, it cancels: the
+   * kills a level takes are invariant to the auto-stat dev flag and to how much
+   * the hero's damage grows — only the difficulty's mob-level offset nudges it.
+   * The count rises with level on a gentle geometric, so leveling tapers from
+   * ~10–20/day early to ~2/day near the cap.
+   */
+  killsPerLevelBase: 140,
+  killsPerLevelGrowth: 1.02,
+  /**
+   * Onboarding ramp: the opening levels cost only a FRACTION of their curve
+   * value so the first ding lands in a handful of kills — the level-up, the
+   * stat chooser, the golden burn all get shown off in the first minute — and
+   * the cost eases up to full by `earlyRampLevels`. `earlyRampStart` is level
+   * 1's fraction (≈a tenth, so ~a dozen kills to level 2); it lerps linearly to
+   * 1.0 across the ramp, after which the normal slow curve takes over. This
+   * only touches the first few levels — the long-game taper is unchanged.
+   */
+  earlyRampLevels: 6,
+  earlyRampStart: 0.025,
+  /**
+   * The hp of a "typical" rank-and-file minion — the anchor the kills-per-level
+   * accounting is stated against, so `killsPerLevelBase` reads as real kills
+   * when the hero fights level-appropriate mobs. Keep it near the common wave
+   * minions' catalog hp.
+   */
+  refMobHp: 45,
   statPointsPerLevel: 1,
   /**
    * XP granted by a golden arrow pickup, as a fraction of the CURRENT

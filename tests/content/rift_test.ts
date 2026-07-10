@@ -176,8 +176,10 @@ describe("THE RIFT level def", () => {
   it("derives a seasoned dev-jump loadout: Mars kit, level from the campaign", () => {
     const loadout = deriveArrivalLoadout("the_rift", "medium");
     expect(loadout).not.toBeNull();
-    // Three cleared levels behind him.
-    expect(loadout!.level).toBeGreaterThan(7);
+    // Three cleared levels behind him — seasoned past the opener. The slower
+    // kills-per-level curve yields a lower campaign level than the old
+    // exponential did, so this is a floor, not the old exact figure.
+    expect(loadout!.level).toBeGreaterThan(4);
     // Carrying Mars's signature kit.
     expect(loadout!.equipment.weapon.defId).toBe("cyber_katana");
     // Mars's best wardrobe rides along.

@@ -42,14 +42,12 @@ import { haptics } from "./haptics.ts";
 import { playTitleMusic } from "./music/index.ts";
 import {
   firstUnclearedLevel,
-  hasBeatenDifficulty,
-  hasCompletedLevel,
-  hasSpendableTokens,
-  hasTokenFor,
+  hasClearedLevel,
+  isDifficultyBeaten,
+  isDifficultyUnlocked,
   isLevelUnlocked,
-  spendTokenFor,
-  tokenSourceFor,
-} from "./progress.ts";
+  type Character,
+} from "./characters.ts";
 import { getSettings, updateSettings } from "./settings.ts";
 import { playUiSound } from "./sfx/index.ts";
 import { startTitleSky } from "./titleSky.ts";
@@ -138,18 +136,26 @@ function unlockAudio() {
 }
 
 export function TitleScreen({
+  character,
   onStart,
   onResume,
+  onBack,
 }: {
+  /** The active hero. The difficulty ladder and level picker read their
+   * unlock/clear state from this character's progress, and the run starts from
+   * their build. */
+  character: Character;
   onStart: (
     difficulty: Difficulty,
     levelId: string,
-    opts?: { skipIntro?: boolean; respec?: boolean },
+    opts?: { skipIntro?: boolean },
   ) => void;
   /** Present only while a run sits parked in memory (the player exited to the
    * menu from the pause screen). When set, the menu offers CONTINUE, which
    * drops straight back into the frozen run. */
   onResume?: () => void;
+  /** Return to the character roster (switch heroes / create a new one). */
+  onBack: () => void;
 }) {
   const [assets, setAssets] = useState<GameAssets | null>(null);
   const [screen, setScreen] = useState<MenuScreen>("main");
@@ -260,12 +266,26 @@ export function TitleScreen({
             ]
           : []),
         {
-          label: "NEW GAME",
+          label: "PLAY",
           aria: "new-game",
           action: () => {
             playUiSound(synth, "confirm");
             setScreen("difficulty");
-            setCursor(DIFFICULTY_ORDER.indexOf("medium"));
+            // Open on the hardest rung this hero has unlocked (a fresh hero
+            // lands on EASY — the only one open).
+            const furthest = DIFFICULTY_ORDER.reduce(
+              (best, id, i) => (isDifficultyUnlocked(character, id) ? i : best),
+              0,
+            );
+            setCursor(furthest);
+          },
+        },
+        {
+          label: "CHARACTERS",
+          aria: "characters",
+          action: () => {
+            playUiSound(synth, "back");
+            onBack();
           },
         },
         {
@@ -301,36 +321,41 @@ export function TitleScreen({
       return [
         ...DIFFICULTY_ORDER.map((id) => {
           const def = difficultyDef(id);
-          const beaten = hasBeatenDifficulty(id);
-          // A lower rung's clears mint LEVEL TOKENS; when one is spendable
-          // here, this rung opens its mission list even before it's beaten so
-          // the token can be cashed in (see progress.ts).
-          const tokensReady = !beaten && hasSpendableTokens(id);
+          // The ladder unlocks in order per character: a rung opens once the
+          // one before it is beaten (easy is always open). Locked rungs show
+          // greyed out.
+          const unlocked = isDifficultyUnlocked(character, id);
+          const beaten = isDifficultyBeaten(character, id);
           return {
             label: def.name,
             aria: `difficulty-${id}`,
-            color: def.color,
-            blurb: beaten
-              ? "CLEARED - CHOOSE ANY MISSION"
-              : tokensReady
-                ? "LEVEL TOKEN READY - PICK YOUR MISSION"
+            color: unlocked ? def.color : "#5a6068",
+            locked: !unlocked,
+            blurb: !unlocked
+              ? "LOCKED - BEAT THE PREVIOUS DIFFICULTY"
+              : beaten
+                ? "CLEARED - CHOOSE ANY MISSION"
                 : def.tagline,
             action: () => {
+              if (!unlocked) {
+                playUiSound(synth, "back");
+                return;
+              }
               setDifficulty(id);
-              // The level select stays locked until the whole story is
-              // cleared at this difficulty — first-timers are walked straight
-              // through the campaign, dropped into the next unbeaten level —
-              // unless a level token is waiting to be spent here.
-              if (!beaten && !tokensReady) {
+              // Until this difficulty is beaten the level picker stays locked:
+              // the hero is walked straight through the campaign from the next
+              // unbeaten level. Once beaten, the picker opens for free replays.
+              if (!beaten) {
                 playUiSound(synth, "start");
-                onStart(id, firstUnclearedLevel(id));
+                onStart(id, firstUnclearedLevel(character, id));
                 return;
               }
               playUiSound(synth, "confirm");
               setScreen("levels");
               // Open on the furthest level still reachable at this difficulty.
               const furthest = LEVEL_ORDER.reduce(
-                (best, levelId, i) => (isLevelUnlocked(levelId, id) ? i : best),
+                (best, levelId, i) =>
+                  isLevelUnlocked(character, levelId, id) ? i : best,
                 0,
               );
               setCursor(furthest);
@@ -359,44 +384,22 @@ export function TitleScreen({
       return [
         ...LEVEL_ORDER.map((id, i) => {
           const def = levelDef(id);
-          const unlocked = warp || isLevelUnlocked(id, difficulty);
-          const cleared = hasCompletedLevel(id, difficulty);
-          // A locked mission a LEVEL TOKEN can open: earned by clearing this
-          // level on a lower rung, spent (once) to start it here — the jump
-          // into the harder rung's richer loot (see progress.ts).
-          const tokenable = !warp && !unlocked && hasTokenFor(id, difficulty);
-          const tokenSource = tokenable ? tokenSourceFor(id, difficulty) : null;
+          const unlocked = warp || isLevelUnlocked(character, id, difficulty);
+          const cleared = hasClearedLevel(character, id, difficulty);
           const blurb = warp
             ? "WARP - DROPS STRAIGHT IN"
-            : tokenable
-              ? `SPEND THE ${
-                  tokenSource ? difficultyDef(tokenSource).name : ""
-                } LEVEL TOKEN`
-              : !unlocked
-                ? "LOCKED - CLEAR THE PREVIOUS LEVEL"
-                : cleared
-                  ? "CLEARED - REPLAY"
-                  : "NEW";
+            : !unlocked
+              ? "LOCKED - CLEAR THE PREVIOUS LEVEL"
+              : cleared
+                ? "CLEARED - REPLAY"
+                : "NEW";
           return {
             label: `${i + 1}. ${def.name}`,
             aria: `level-${id}`,
-            color: unlocked ? "#7ef0c8" : tokenable ? "#ffd75e" : "#5a6068",
-            locked: !unlocked && !tokenable,
+            color: unlocked ? "#7ef0c8" : "#5a6068",
+            locked: !unlocked,
             blurb,
             action: () => {
-              if (tokenable) {
-                // Cash the token in: consumed for good, the unlock persists.
-                if (!spendTokenFor(id, difficulty)) {
-                  playUiSound(synth, "back");
-                  return;
-                }
-                playUiSound(synth, "start");
-                // The token jump carries the earning rung's build into a
-                // tougher one — hand the player a full respec on arrival so the
-                // build can be re-tuned for the harder fight (see progress.ts).
-                onStart(difficulty, id, { respec: true });
-                return;
-              }
               if (!unlocked) {
                 playUiSound(synth, "back");
                 return;
@@ -451,19 +454,6 @@ export function TitleScreen({
             updateSettings({ sfxVolume: cycleVolume(s.sfxVolume) });
             setSettingsTick((t) => t + 1);
             playUiSound(synth, "confirm"); // audition the new level
-          },
-        },
-        {
-          label: s.hardcore === "on" ? "HARDCORE: ON" : "HARDCORE: OFF",
-          aria: "settings-hardcore",
-          blurb:
-            s.hardcore === "on"
-              ? "DEATH BURNS UNIQUE FINDS, TOKENS AND UNLOCKS"
-              : "DEATH LOSES NOTHING - BEATEN FINDS ARE FOREVER",
-          action: () => {
-            playUiSound(synth, "confirm");
-            updateSettings({ hardcore: s.hardcore === "on" ? "off" : "on" });
-            setSettingsTick((t) => t + 1);
           },
         },
         // The DEVELOPER row is hidden until the title moon's secret long-press
@@ -541,8 +531,8 @@ export function TitleScreen({
           },
         },
         // Land back on the DEVELOPER row in SETTINGS — it sits just above BACK,
-        // after CONTROLS / DISPLAY / MUSIC / SOUND FX / HARDCORE.
-        backTo("settings", 5),
+        // after CONTROLS / DISPLAY / MUSIC / SOUND FX.
+        backTo("settings", 4),
       ];
     }
     if (screen === "controls") {
@@ -658,7 +648,16 @@ export function TitleScreen({
     // can't see that dependency through getSettings(), so it wrongly flags the
     // tick as unnecessary — keep it and silence the false positive.
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [screen, onStart, onResume, settingsTick, difficulty, warp]);
+  }, [
+    screen,
+    character,
+    onStart,
+    onResume,
+    onBack,
+    settingsTick,
+    difficulty,
+    warp,
+  ]);
 
   // The HIGH SCORES board is steered on two axes rather than a cursor list:
   // left/right walks the difficulty ladder, up/down flips the ranking. Both

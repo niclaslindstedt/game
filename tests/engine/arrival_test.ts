@@ -17,6 +17,7 @@ import {
   LEVELING,
   PLAYER,
   totalArmor,
+  xpToLevelUp,
   type Loadout,
 } from "@game/core";
 // Importing the helper installs the fixture catalogs as a side effect.
@@ -141,16 +142,14 @@ describe("loadout carry-over", () => {
     // Walk the same curve the derivation walks, from the known roster total.
     let xp = Math.round(FIX_LEVEL_XP * ARRIVAL.clearShare);
     let level = 1;
-    let xpToNext: number = LEVELING.baseXpToLevel;
-    while (xp >= xpToNext) {
+    let xpToNext: number = xpToLevelUp(level);
+    while (xp >= xpToNext && level < LEVELING.maxLevel) {
       xp -= xpToNext;
       level++;
-      xpToNext = Math.round(
-        LEVELING.baseXpToLevel * Math.pow(LEVELING.xpGrowth, level - 1),
-      );
+      xpToNext = xpToLevelUp(level);
     }
     expect(loadout!.level).toBe(level);
-    expect(loadout!.level).toBeGreaterThan(5); // sanity: genuinely seasoned
+    expect(loadout!.level).toBeGreaterThan(1); // sanity: cleared, not a rookie
     expect(loadout!.xp).toBe(xp);
     // Every banked point spent, round-robin flat: no stat more than one ahead.
     const values = Object.values(loadout!.stats);

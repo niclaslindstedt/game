@@ -10,14 +10,7 @@ import { createCutscene } from "@game/lib/cutscene.ts";
 import { createRng, randomRange, type Rng } from "@game/lib/rng.ts";
 import { distance, vec, type Vec2 } from "@game/lib/vec.ts";
 import { applyLoadout } from "./arrival.ts";
-import {
-  ENEMY_AI,
-  LEVELING,
-  LOOT,
-  OBSTACLES,
-  PLAYER,
-  STAMINA,
-} from "./config.ts";
+import { ENEMY_AI, LOOT, OBSTACLES, PLAYER, STAMINA } from "./config.ts";
 import { cutsceneDef, cutsceneVariant } from "./defs/cutscenes.ts";
 import {
   difficultyDef,
@@ -34,6 +27,7 @@ import {
   rollEquipment,
   syncInventoryCapacity,
 } from "./items.ts";
+import { xpToLevelUp } from "./leveling.ts";
 import { createExplored, revealAround } from "./map.ts";
 import { createMerchant } from "./merchant.ts";
 import { evolutionHpMult, mobHpScaleFor, mobLevelFor } from "./menace.ts";
@@ -251,7 +245,7 @@ export function createGame(
       hurtFlashMs: 0,
       level: 1,
       xp: 0,
-      xpToNext: LEVELING.baseXpToLevel,
+      xpToNext: xpToLevelUp(1),
       pendingStatPoints: 0,
       // The purse opens empty — coins come from selling loot to the merchant
       // (a carried loadout restores its banked purse below).

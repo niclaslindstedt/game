@@ -25,10 +25,14 @@ const KEY = storageKey("current-run");
 // v2: companions/choice/companionFocus joined the state (a v1 run would thaw
 // without the party fields and crash the companion pass).
 // v3: levelUpFxMs (the ding-celebration countdown) joined the state.
-const SAVE_VERSION = 3;
+// v4: characterId joined the park — a parked run belongs to the character that
+// was playing it, so CONTINUE only offers to resume the ACTIVE character's run.
+const SAVE_VERSION = 4;
 
 /** A run parked between sessions: enough to drop the player straight back in. */
 export type ParkedRun = {
+  /** The character whose run this is — CONTINUE is theirs alone. */
+  characterId: string;
   difficulty: Difficulty;
   levelId: string;
   state: GameState;
@@ -36,6 +40,7 @@ export type ParkedRun = {
 
 type Serialized = {
   v: number;
+  characterId: string;
   difficulty: Difficulty;
   levelId: string;
   // The rng closures can't be serialized; each stream's position is snapshotted
@@ -54,6 +59,7 @@ export function saveRun(run: ParkedRun): void {
     const { rng, fxRng, ...rest } = run.state;
     const payload: Serialized = {
       v: SAVE_VERSION,
+      characterId: run.characterId,
       difficulty: run.difficulty,
       levelId: run.levelId,
       rngState: rngState(rng),
@@ -176,6 +182,7 @@ export function loadSavedRun(): ParkedRun | null {
     // so a catalog edge that landed while the run was parked can't reach it.
     adoptRunEquipment(state);
     return {
+      characterId: payload.characterId,
       difficulty: payload.difficulty,
       levelId: payload.levelId,
       state,

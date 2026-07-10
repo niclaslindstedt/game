@@ -36,6 +36,7 @@ import {
   weaponDef,
   weaponDamage,
   weaponDamageFor,
+  xpToLevelUp,
   type Equipment,
 } from "@game/core";
 import {
@@ -68,6 +69,20 @@ function killGhostWorth(maxHp: number) {
   return state;
 }
 
+/**
+ * Ding a fresh hero to level 2 by banking exactly the level-1 threshold. The
+ * curve now costs thousands of XP per level (kills-per-level accounting), far
+ * more than one blaster-killed ghost pays, so the level-up mechanics are
+ * exercised through `grantXp` directly — the same path `killEnemy` routes a
+ * kill's XP through.
+ */
+function dingToLevel2() {
+  const state = startGame();
+  clearStage(state);
+  grantXp(state, xpToLevelUp(1));
+  return state;
+}
+
 describe("xp", () => {
   it("is proportional to the killed monster's max hp", () => {
     const small = killGhostWorth(20);
@@ -79,7 +94,7 @@ describe("xp", () => {
   });
 
   it("levels up at the threshold, celebrates, then pauses on a stat point", () => {
-    const state = killGhostWorth(LEVELING.baseXpToLevel);
+    const state = dingToLevel2();
     expect(state.player.level).toBe(2);
     expect(state.player.pendingStatPoints).toBe(1);
     // The ding does NOT pause the run on the spot: the celebration window
@@ -92,9 +107,8 @@ describe("xp", () => {
       gains: levelStatGains(2),
     });
     // The next level costs more.
-    expect(state.player.xpToNext).toBe(
-      Math.round(LEVELING.baseXpToLevel * LEVELING.xpGrowth),
-    );
+    expect(state.player.xpToNext).toBe(xpToLevelUp(2));
+    expect(xpToLevelUp(2)).toBeGreaterThan(xpToLevelUp(1));
 
     // The chooser opens only once the celebration has burned down.
     runUntilChooser(state);
@@ -113,9 +127,10 @@ describe("xp", () => {
   });
 
   it("banks multiple points when one kill crosses several thresholds", () => {
-    const toLevel2 = LEVELING.baseXpToLevel;
-    const toLevel3 = Math.round(LEVELING.baseXpToLevel * LEVELING.xpGrowth);
-    const state = killGhostWorth(toLevel2 + toLevel3 + 10); // 10 into level 3
+    const state = startGame();
+    clearStage(state);
+    // 10 XP into level 3: one grant crossing both thresholds at once.
+    grantXp(state, xpToLevelUp(1) + xpToLevelUp(2) + 10);
     expect(state.player.level).toBe(3);
     expect(state.player.pendingStatPoints).toBe(2);
     runUntilChooser(state); // burn the celebration down
@@ -146,7 +161,7 @@ describe("the ding: automatic base gains and the celebration window", () => {
   });
 
   it("auto gains raise effective stats and the pools without touching chosen points", () => {
-    const state = killGhostWorth(LEVELING.baseXpToLevel); // ding to level 2
+    const state = dingToLevel2(); // ding to level 2
     // The chosen-points record is untouched — the growth is derived…
     expect(state.player.stats.stamina).toBe(0);
     // …but the effective stat carries it.
@@ -162,7 +177,7 @@ describe("the ding: automatic base gains and the celebration window", () => {
   });
 
   it("a respec refunds only the CHOSEN points — never the automatic growth", () => {
-    const state = killGhostWorth(LEVELING.baseXpToLevel); // 1 pending point
+    const state = dingToLevel2(); // 1 pending point
     runUntilChooser(state);
     allocateStat(state, "luck");
     beginRespec(state);
@@ -198,7 +213,7 @@ describe("the ding: automatic base gains and the celebration window", () => {
       // …the ding readout is empty…
       expect(levelStatGains(5)).toEqual([]);
       // …the hero's effective stat is just his chosen points…
-      const state = killGhostWorth(LEVELING.baseXpToLevel); // ding to level 2
+      const state = dingToLevel2(); // ding to level 2
       expect(effectiveStat(state, "stamina")).toBe(state.player.stats.stamina);
       // …and the horde's hp scale drops the compensating curve in lockstep, so
       // the ladder is the bare linear ramp (autoPowerScale collapses to 1).
@@ -215,7 +230,7 @@ describe("the ding: automatic base gains and the celebration window", () => {
   });
 
   it("xp gained during the celebration window never yanks the chooser open early", () => {
-    const state = killGhostWorth(LEVELING.baseXpToLevel); // window armed
+    const state = dingToLevel2(); // window armed
     expect(state.phase).toBe("playing");
     // More xp lands mid-celebration (below the next threshold): still playing.
     grantXp(state, 1);

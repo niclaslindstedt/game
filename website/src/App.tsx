@@ -6,6 +6,12 @@ import { CUTSCENE_DEFS, type Difficulty, type GameState } from "@game/core";
 import { usePwaUpdate } from "@niclaslindstedt/oss-framework/pwa";
 
 import { cacheIdForBase } from "./app/pwa.ts";
+import { CharacterScreen } from "./game/CharacterScreen.tsx";
+import {
+  getActiveCharacter,
+  setActiveCharacterId,
+  type Character,
+} from "./game/characters.ts";
 import { CutscenePreview } from "./game/CutscenePreview.tsx";
 import { GameScreen } from "./game/GameScreen.tsx";
 import {
@@ -21,17 +27,20 @@ import { UpdateModal } from "./game/UpdateModal.tsx";
 // owns the PWA update lifecycle so a new deploy can never silently reload
 // mid-run.
 export function App() {
+  // The active hero. null = on the character roster (pick or create one). Every
+  // run and the title screen's difficulty ladder belong to this character.
+  const [character, setCharacter] = useState<Character | null>(() =>
+    getActiveCharacter(),
+  );
+
   // The pending run: the difficulty and starting level chosen on the menu.
-  // null = still on the menu.
+  // null = still on the menu (or roster).
   const [run, setRun] = useState<{
     difficulty: Difficulty;
     levelId: string;
     // Warp-in from the title moon's long-press: skip the prelude and intro
     // monologue and drop straight into the level.
     skipIntro?: boolean;
-    // Cashed a LEVEL TOKEN: open the from-scratch stat respec once the intro
-    // clears (see GameScreen / engine `beginRespec`).
-    respec?: boolean;
     // Resuming a run parked in memory: GameScreen adopts this live engine
     // state instead of starting a fresh one (see `parked` below).
     resume?: GameState;
@@ -101,13 +110,16 @@ export function App() {
     return <CutscenePreview id={sceneId} />;
   }
 
-  if (run) {
+  // A run is playing: hand it to the active hero. (`character` is always set
+  // when `run` is — a run can only be started from the title screen, which
+  // needs a character.)
+  if (run && character) {
     return (
       <GameScreen
+        character={character}
         difficulty={run.difficulty}
         levelId={run.levelId}
         skipIntro={run.skipIntro}
-        respec={run.respec}
         resume={run.resume}
         // Exited to the menu from the pause screen: keep the frozen run in
         // memory (still paused) so CONTINUE can resume it, and drop to the
@@ -115,6 +127,7 @@ export function App() {
         // level id (which may have advanced past where the run began).
         onExitToMenu={(state) => {
           const nextParked: ParkedRun = {
+            characterId: character.id,
             difficulty: run.difficulty,
             levelId: state.level.id,
             state,
@@ -123,23 +136,59 @@ export function App() {
           // Persist it too, so an app update (which reloads and wipes memory)
           // leaves CONTINUE intact instead of dropping the run on the floor.
           saveRun(nextParked);
+          // Re-read the hero: the run may have banked a victory (new level,
+          // beaten difficulty) onto them since the menu was last shown.
+          setCharacter(getActiveCharacter());
           setRun(null);
         }}
-        // Ended for good (victory/defeat splash MENU): abandon the run. Any
-        // parked run is already gone (parking nulls `run`), but clear both the
-        // memory and the stored copy to be safe.
+        // Ended for good (victory/defeat splash MENU): abandon the run and go
+        // back to the roster, refreshing the hero (a hardcore death has
+        // retired them; a victory has advanced them).
         onQuit={() => {
           setParked(null);
           clearSavedRun();
           setRun(null);
+          // Re-read the hero: a victory advanced them, a hardcore death retired
+          // them. A fallen (or missing) hero can't play on — clear the active
+          // selection so the roster shows their fate; a living hero stays on the
+          // menu for another run.
+          const refreshed = getActiveCharacter();
+          if (!refreshed || refreshed.dead) {
+            setActiveCharacterId(null);
+            setCharacter(null);
+          } else {
+            setCharacter(refreshed);
+          }
         }}
       />
+    );
+  }
+
+  // No hero selected: the roster (pick, create, or retire). Creating or picking
+  // a living hero makes them active and opens the title screen for them.
+  if (!character) {
+    return (
+      <>
+        <CharacterScreen
+          onPlay={(picked) => {
+            setActiveCharacterId(picked.id);
+            setCharacter(picked);
+          }}
+        />
+        <UpdateModal
+          needRefresh={pwa.needRefresh}
+          incomingVersion={pwa.incomingVersion}
+          onReload={() => pwa.reload()}
+          onDismiss={() => pwa.dismiss()}
+        />
+      </>
     );
   }
 
   return (
     <>
       <TitleScreen
+        character={character}
         onStart={(difficulty, levelId, opts) => {
           // Starting fresh abandons whatever was parked (in memory and storage).
           setParked(null);
@@ -148,11 +197,17 @@ export function App() {
             difficulty,
             levelId,
             skipIntro: opts?.skipIntro,
-            respec: opts?.respec,
           });
         }}
+        onBack={() => {
+          // Switch heroes: back to the roster. The parked run stays put — it's
+          // this hero's, offered again as CONTINUE if they're re-selected.
+          setCharacter(null);
+        }}
         onResume={
-          parked
+          // CONTINUE is the active hero's alone: only offer it when the parked
+          // run belongs to them and they still live.
+          parked && parked.characterId === character.id && !character.dead
             ? () => {
                 setRun({
                   difficulty: parked.difficulty,
