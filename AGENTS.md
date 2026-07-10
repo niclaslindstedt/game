@@ -142,7 +142,8 @@ param (which drives console verbosity and `window.__game`, see
 `docs/configuration.md`).
 
 The two feature flags gate recently-added systems so they can be toggled at
-runtime:
+runtime. Both are **opt-in — off by default** (the app applies the off state on
+load); a developer turns them on from the DEVELOPER menu:
 
 - **AUTO LEVEL STATS** (`autoLevelStats: "on" | "off"`) gates the automatic
   per-level base-stat growth (`src/game/leveling.ts`). The app applies it to

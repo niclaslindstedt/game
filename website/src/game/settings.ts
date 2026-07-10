@@ -52,19 +52,24 @@ export type DebugMode = "on" | "off";
 
 /** AUTO LEVEL STATS: a developer feature flag for the automatic per-level
  * base-stat growth (the WoW-style gains a ding hands the hero on its own,
- * underneath the chosen point — see the engine's leveling.ts). `on` (default)
- * is the shipped behavior; `off` strips both the free gains AND the horde's
- * compensating hp scaling in lockstep (they derive from the same rule), so
- * only chosen points and gear move the hero ahead of the curve. Applied to the
- * engine via `setAutoStatGainsEnabled`. */
+ * underneath the chosen point — see the engine's leveling.ts). Opt-in: `off`
+ * (the default) means a ding grants only the chosen point; `on` restores the
+ * free gains AND the horde's compensating hp scaling in lockstep (they derive
+ * from the same rule), so the two switch together and the balance stays whole.
+ * Applied to the engine via `setAutoStatGainsEnabled`. */
 export type AutoLevelStats = "on" | "off";
 
 /** CHARACTER GEAR: a developer feature flag for drawing the worn armor and
  * held weapon on the hero SPRITE in the field (the paper-doll — see
- * paper-doll.ts / render.ts). `on` (default) dresses the character; `off`
- * renders the bare body as before the paper-doll landed. The HUD avatar and
- * inventory portrait stay dressed regardless. */
+ * paper-doll.ts / render.ts). Opt-in: `off` (the default) renders the bare
+ * body as before the paper-doll landed; `on` dresses the field character. The
+ * HUD avatar and inventory portrait stay dressed regardless. */
 export type CharacterGear = "on" | "off";
+
+/** XP POPUPS: a display preference (SETTINGS → DISPLAY) for the blue "+N XP"
+ * combat text that floats off a corpse on each kill (emitted in GameScreen).
+ * `on` (the default) keeps them; `off` silences them for a cleaner field. */
+export type XpFloat = "on" | "off";
 
 export type GameSettings = {
   steering: SteeringMode;
@@ -86,6 +91,8 @@ export type GameSettings = {
   autoLevelStats: AutoLevelStats;
   /** Developer flag: worn armor + weapon on the field hero (see CharacterGear). */
   characterGear: CharacterGear;
+  /** Display preference: floating "+N XP" popups on kills (see XpFloat). */
+  xpFloat: XpFloat;
 };
 
 const STORAGE_KEY = storageKey("settings");
@@ -115,9 +122,12 @@ function defaults(): GameSettings {
     // The developer menu stays hidden until the moon Easter egg is found.
     developerUnlocked: false,
     debug: "off",
-    // Developer feature flags default to the shipped behavior (both on).
-    autoLevelStats: "on",
-    characterGear: "on",
+    // Developer feature flags are opt-in — both default off, so auto stat
+    // growth and the field hero's worn gear stay dark until a dev enables them.
+    autoLevelStats: "off",
+    characterGear: "off",
+    // Display preferences default to the shipped presentation.
+    xpFloat: "on",
   };
 }
 
@@ -178,6 +188,10 @@ function load(): GameSettings {
         stored.characterGear === "on" || stored.characterGear === "off"
           ? stored.characterGear
           : base.characterGear,
+      xpFloat:
+        stored.xpFloat === "on" || stored.xpFloat === "off"
+          ? stored.xpFloat
+          : base.xpFloat,
     };
   } catch {
     return base; // private mode / corrupt JSON — play with defaults

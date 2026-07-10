@@ -19,8 +19,10 @@ const AUTO_GAINS: Partial<Record<StatName, number>> =
 // `levelStatGains`, and `autoPowerScale` all fall to their neutral values — so
 // the hero stops banking free stats AND the horde's compensating hp scale
 // (menace.ts folds `autoPowerScale` into `mobHpScaleFor`/`enemyPowerScale`)
-// drops in lockstep, keeping the balance consistent. Defaults on (shipped
-// behavior); tests toggle it and must restore it.
+// drops in lockstep, keeping the balance consistent. The engine default is on
+// (the standalone/test baseline when no app configures it); the shipped app
+// makes the flag opt-in and applies `setAutoStatGainsEnabled(false)` on load
+// unless the developer turns it on. Tests toggle it and must restore it.
 let autoStatGainsEnabled = true;
 
 /**
