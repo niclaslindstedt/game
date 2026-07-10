@@ -157,11 +157,13 @@ load); a developer turns them on from the DEVELOPER menu:
   hero's free gains AND the horde's compensating hp scale (menace.ts) switch
   off together and the balance stays whole. It gates simulation, so it needs an
   engine-side setter; a website-only flag would leave the engine unaware.
-- **CHARACTER GEAR** (`characterGear: "on" | "off"`) gates drawing the worn
-  armor + held weapon on the field hero sprite. It is a pure render concern:
-  `render.ts` reads the flag and passes `{ gear }` to `playerDollLayers`
-  (`paper-doll.ts`), which drops to the bare body when off. The HUD avatar and
-  inventory portrait always pass gear on, so only the field character changes.
+- **CHARACTER WEAPON** (`characterWeapon: "on" | "off"`) gates drawing the
+  held weapon on the field hero sprite. The worn armor always draws — only the
+  weapon is gated, since posing/swinging it convincingly is the hard part. It
+  is a pure render concern: `render.ts` reads the flag and passes `{ weapon }`
+  to `playerDollLayers` (`paper-doll.ts`), which drops the held weapon (but
+  keeps the armor) when off. The HUD avatar and inventory portrait always pass
+  the weapon on, so only the field character changes.
 
 ## Reuse through oss-framework
 

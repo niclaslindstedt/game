@@ -705,15 +705,15 @@ export function TitleScreen({
         },
         {
           label:
-            s.characterGear === "on"
-              ? "CHARACTER GEAR: ON"
-              : "CHARACTER GEAR: OFF",
-          aria: "developer-character-gear",
-          blurb: "SHOW WORN ARMOR AND WEAPON ON THE HERO SPRITE",
+            s.characterWeapon === "on"
+              ? "CHARACTER WEAPON: ON"
+              : "CHARACTER WEAPON: OFF",
+          aria: "developer-character-weapon",
+          blurb: "SHOW THE HELD WEAPON ON THE HERO SPRITE",
           action: () => {
             playUiSound(synth, "confirm");
             updateSettings({
-              characterGear: s.characterGear === "on" ? "off" : "on",
+              characterWeapon: s.characterWeapon === "on" ? "off" : "on",
             });
             setSettingsTick((t) => t + 1);
           },

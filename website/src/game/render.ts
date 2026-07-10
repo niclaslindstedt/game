@@ -1230,9 +1230,9 @@ function drawPlayer(
   const airborne = player.z > 0;
   // The paper-doll owns the costume: body sprite (from `playerAppearance`),
   // worn-armor overlays, and the held weapon, as one ordered layer stack
-  // shared with the DOM avatars (paper-doll.ts). The developer CHARACTER GEAR
-  // flag can strip the field hero back to the bare body (the HUD avatar keeps
-  // its gear).
+  // shared with the DOM avatars (paper-doll.ts). The armor always draws; the
+  // developer CHARACTER WEAPON flag can strip the field hero's held weapon
+  // (the HUD avatar keeps its weapon).
   const { sprites } = assets;
   const frame = airborne
     ? "jump"
@@ -1240,7 +1240,7 @@ function drawPlayer(
       ? "1"
       : "0";
   const layers = playerDollLayers(state, frame, {
-    gear: getSettings().characterGear === "on",
+    weapon: getSettings().characterWeapon === "on",
   });
   // In the rift the ground isn't there — bob the grounded hero so he reads as
   // floating. The jump height (`player.z`) already lifts him in the air, so the
