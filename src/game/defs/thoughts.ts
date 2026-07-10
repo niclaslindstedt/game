@@ -222,6 +222,47 @@ export const THOUGHT_DEFS: Record<string, ThoughtDef> = {
       ],
     ],
   },
+  // Sighting the first COWBOT in Eastworld: the drop-in arrival read — the
+  // rift's far side is a wild-west theme park, and the town is a machine
+  // pretending it's 1880. Wide radius so it lands as the town comes on
+  // screen. Portrait is "hero" — the park is habitable, the EVA suit is
+  // stowed (the level runs `heroSuited: false`).
+  eastworld_arrival: {
+    id: "eastworld_arrival",
+    speaker: "ME",
+    portrait: "hero",
+    pages: [
+      [
+        "A COWBOY JUST TIPPED ITS",
+        "HAT AT ME. SERVOS IN THE",
+        "WRIST. TICKING IN THE JAW.",
+      ],
+      [
+        "THIS WHOLE TOWN IS A",
+        "MACHINE PRETENDING IT'S",
+        "1880. AND ADA'S BEACON IS",
+        "POINTING RIGHT DOWN MAIN",
+        "STREET.",
+      ],
+    ],
+  },
+  // Downing the first COWBOT: they're ZAI hosts — the same brain that took
+  // his job back home, wearing spurs. The two-part beat orders itself with
+  // `after` (see the town, then down a host).
+  eastworld_hosts: {
+    id: "eastworld_hosts",
+    speaker: "ME",
+    portrait: "hero",
+    pages: [
+      ["IT DIED APOLOGIZING. 'YOUR", "EXPERIENCE MATTERS TO US.'"],
+      [
+        "ZAI HOSTS. THE SAME BRAIN",
+        "THAT WALKED MY JOB OUT THE",
+        "DOOR, WEARING SPURS. GOOD.",
+        "NO GUILT, THEN.",
+      ],
+    ],
+  },
 };
 
 // Active registry the accessor reads (defaults to the shipped catalog).

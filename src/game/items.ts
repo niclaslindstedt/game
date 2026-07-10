@@ -248,9 +248,9 @@ function rollTier(state: GameState, mlvl: number, tierBonus: number): Tier {
   const luckBonus =
     effectiveStat(state, "luck") * STATS.tierChancePerLuck + tierBonus;
   const magicFind = 1 + magicFindBonus(state);
-  // TIER_ROLL_ORDER never contains "regular" (the fall-through), so the
-  // rolled-tier config maps index safely.
-  for (const tier of TIER_ROLL_ORDER as Exclude<Tier, "regular">[]) {
+  // TIER_ROLL_ORDER never contains "regular" (the fall-through) or "trash"
+  // (scripted mints only), so the rolled-tier config maps index safely.
+  for (const tier of TIER_ROLL_ORDER) {
     if (mlvl < LOOT.tierUnlockMlvl[tier]) continue;
     const base = LOOT.tierChances[tier] + (difficultyChances[tier] ?? 0);
     if (base <= 0) continue;
@@ -1928,6 +1928,27 @@ export function dismissIntro(state: GameState): void {
       state.phase = "playing";
     }
   }
+}
+
+/**
+ * The player's tap through a level's post-victory EPILOGUE (`LevelDef.outro`
+ * — the intro's black-screen mirror, entered when the victory countdown runs
+ * out): turn the page. Past the last page the story is told — on to the
+ * victory splash.
+ */
+export function advanceOutro(state: GameState): void {
+  if (state.phase !== "outro") return;
+  const pages = levelDef(state.level.id).outro ?? [];
+  state.outroPage++;
+  if (state.outroPage >= pages.length) {
+    state.outroPage = pages.length;
+    state.phase = "victory";
+  }
+}
+
+/** The outro's SKIP button: cut the epilogue short, straight to the splash. */
+export function skipOutro(state: GameState): void {
+  if (state.phase === "outro") state.phase = "victory";
 }
 
 /**

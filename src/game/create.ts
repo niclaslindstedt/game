@@ -189,6 +189,8 @@ export function createGame(
       ? createCutscene(cutsceneDef(cutsceneVariant(def.prelude, difficulty)))
       : null,
     introPage: 0,
+    outroPage: 0,
+    quakeMs: 0,
     difficulty,
     menace: 0,
     combatDps: 0,

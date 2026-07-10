@@ -27,6 +27,7 @@ import {
   type GearDef,
   type LevelDef,
   type StoryItemDef,
+  type UniqueDef,
   type WeaponDef,
 } from "@game/core";
 
@@ -211,6 +212,68 @@ export const FIX_ENEMIES: Record<string, EnemyDef> = {
       tierBonus: 0,
     },
   },
+};
+
+// A SHOOTER elite (mirrors the Eastworld GROK controllers): fires hostile
+// projectiles at the player and hides behind obstacles between shots. No
+// dialogue, so it never rushes — the ranged suite gets the pure behavior.
+FIX_ENEMIES.test_gunner = {
+  id: "test_gunner",
+  name: "TEST GUNNER",
+  role: "elite",
+  sprite: "test_gunner",
+  hp: 150,
+  speed: 30,
+  radius: 10,
+  contactDamage: 15,
+  critChance: 0.1,
+  contactCooldownMs: 700,
+  ai: { aggroRadius: 400, rushSpeed: 90 },
+  ranged: {
+    damage: 20,
+    cooldownMs: 1500,
+    range: 220,
+    projectile: { speed: 200, radius: 4, lifetimeMs: 2000, sprite: "bolt" },
+    takesCover: true,
+  },
+};
+
+// A GUARDED boss (mirrors THE ZAI SUPERCORE): it cannot be hurt while its
+// named guardian lives (`shieldedBy`), and it shoots — a stationary turret.
+FIX_ENEMIES.test_shielded_boss = {
+  id: "test_shielded_boss",
+  name: "TEST SHIELDED BOSS",
+  role: "boss",
+  sprite: "test_shielded_boss",
+  hp: 500,
+  speed: 0,
+  radius: 20,
+  contactDamage: 30,
+  critChance: 0.1,
+  contactCooldownMs: 900,
+  shieldedBy: ["test_guard"],
+  ai: { aggroRadius: 300, leashRadius: 460 },
+  ranged: {
+    damage: 25,
+    cooldownMs: 2000,
+    range: 260,
+    projectile: { speed: 150, radius: 5, lifetimeMs: 2500, sprite: "bolt" },
+  },
+};
+
+// The guardian whose life holds the boss's shield up.
+FIX_ENEMIES.test_guard = {
+  id: "test_guard",
+  name: "TEST GUARD",
+  role: "minion",
+  sprite: "test_guard",
+  hp: 60,
+  speed: 20,
+  radius: 9,
+  contactDamage: 12,
+  critChance: 0.1,
+  contactCooldownMs: 700,
+  ai: { aggroRadius: 950 },
 };
 
 // A SPAREABLE unique (mirrors the rift's historic residents): beaten to 0 hp
@@ -922,6 +985,50 @@ export const FIX_APPARITION_LEVEL: LevelDef = hazardLevel(
   },
 );
 
+// A level with an OUTRO epilogue (mirrors Eastworld): killing the boss arms
+// the victory quake, and the countdown ends in the `outro` phase instead of
+// the splash. Bare arena so the kill is surgical.
+export const FIX_OUTRO_LEVEL: LevelDef = hazardLevel("test_outro_level", {
+  outro: [["TEST OUTRO PAGE ONE."], ["TEST OUTRO PAGE TWO."]],
+});
+
+// A shooter arena: a gunner elite and a shielded, shooting boss with its
+// guard — the ranged/cover/shield suites' stage. No waves, no obstacles
+// (suites that need cover push a rock in by hand).
+export const FIX_RANGED_LEVEL: LevelDef = hazardLevel("test_ranged_level", {
+  spawns: [
+    { enemy: "test_gunner", at: { x: 1200, y: 800 } },
+    { enemy: "test_shielded_boss", at: { x: 2130, y: 260 } },
+  ],
+});
+
+// A fixture UNIQUE for the merchant-stall rules (mirrors the Eastworld
+// PUTAIN stall): a plain charm relic the stall may roll into stock.
+export const FIX_UNIQUES: Record<string, UniqueDef> = {
+  test_relic: {
+    id: "test_relic",
+    name: "TEST RELIC",
+    base: "test_charm",
+    slot: "charm",
+    ilvl: 1,
+    bonuses: [],
+    lore: "A TEST RELIC.",
+  },
+};
+
+// A merchant level whose stall lists the fixture relic (rolled at the
+// standing unique odds when the stall stocks — see rollStock). No greeting,
+// so discovery leaves the run playing and the shop opens without a scene.
+export const FIX_STALL_LEVEL: LevelDef = {
+  ...FIX_MERCHANT_LEVEL,
+  id: "test_stall_level",
+  merchant: {
+    sprite: "merchant_test",
+    name: "TEST STALL MERCHANT",
+    stockUniques: ["test_relic"],
+  },
+};
+
 // A prelude scene for the cutscene-in-a-run tests: a timed beat, then a text
 // beat the sim parks on, an actor that exits (and never returns), and a
 // closing caption.
@@ -981,7 +1088,11 @@ export function installFixtures(force = false): void {
       test_well_level: FIX_WELL_LEVEL,
       test_asteroid_level: FIX_ASTEROID_LEVEL,
       test_apparition_level: FIX_APPARITION_LEVEL,
+      test_outro_level: FIX_OUTRO_LEVEL,
+      test_ranged_level: FIX_RANGED_LEVEL,
+      test_stall_level: FIX_STALL_LEVEL,
     },
+    uniques: FIX_UNIQUES,
     enemies: FIX_ENEMIES,
     companions: FIX_COMPANIONS,
     weapons: FIX_WEAPONS,

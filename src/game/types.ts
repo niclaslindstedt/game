@@ -21,7 +21,9 @@ import type { Vec2 } from "@game/lib/vec.ts";
  * the fog-of-war level map, `dialogue` holds the world while a character (or
  * a found story item) speaks, `choice` holds it while a beaten spareable
  * unique awaits the SPARE-or-KILL verdict, `companion` pauses into a
- * companion's equip screen; the simulation only advances while `playing`.
+ * companion's equip screen, `outro` shows a level's post-victory epilogue
+ * pages (the intro's black-screen mirror, before the victory splash); the
+ * simulation only advances while `playing`.
  */
 export type GamePhase =
   | "cutscene"
@@ -37,6 +39,7 @@ export type GamePhase =
   | "dialogue"
   | "choice"
   | "companion"
+  | "outro"
   | "victory"
   | "defeat";
 
@@ -64,17 +67,19 @@ export type WeaponClass = "melee" | "ranged" | "magic";
 export type ArmorSlot = "head" | "chest" | "legs" | "feet";
 
 /**
- * Item quality, lowest to highest: white regular, blue magic, yellow rare,
- * gold unique, orange legendary (the colors are the app's, see tiers.ts) —
- * the Diablo ladder. Every tier exists engine-wide, but a tier only drops
- * off a monster whose LEVEL has reached its unlock (config
+ * Item quality, lowest to highest: grey trash, white regular, blue magic,
+ * yellow rare, gold unique, orange legendary (the colors are the app's, see
+ * tiers.ts) — the Diablo ladder. Every tier exists engine-wide, but a tier
+ * only drops off a monster whose LEVEL has reached its unlock (config
  * `LOOT.tierUnlockMlvl`): magic from monster level 5, rare from 10, unique
  * from 15, legendary from 25 — so rares are the reward of the deeper levels
- * and harder difficulties, never the level-1 rank and file. Unique and
- * legendary are plumbing for now: no base rolls them until their one-of-a-kind
- * defs ship.
+ * and harder difficulties, never the level-1 rank and file. TRASH sits BELOW
+ * regular and never rolls: it exists only for scripted joke drops (zero-damage,
+ * zero-stat garbage a story kill pays out on purpose — see EnemyDef.loot) and
+ * sells for next to nothing.
  */
-export type Tier = "regular" | "magic" | "rare" | "unique" | "legendary";
+export type Tier =
+  "trash" | "regular" | "magic" | "rare" | "unique" | "legendary";
 
 export type EquipSlot = "weapon" | ArmorSlot | "charm" | "bag";
 
@@ -420,6 +425,14 @@ export type Enemy = {
    * board with an `apparitionVanished` event. Absent on everything else.
    */
   vanishMs?: number;
+  /**
+   * A SHOOTER's reload clock (enemies with `EnemyDef.ranged`): ms until it
+   * may fire again. Counts down every tick; firing resets it to the def's
+   * `ranged.cooldownMs`. The cover AI also reads it — a freshly-fired
+   * shooter scrambles behind a rock and only peeks back out as the clock
+   * runs down (see moveRangedEnemy in ranged.ts). Absent on melee mobs.
+   */
+  rangedCooldownMs?: number;
 };
 
 /**
@@ -500,6 +513,20 @@ export type Projectile = {
    * have no DEXTERITY to earn it back with). Absent on the hero's shots.
    */
   companionId?: number;
+  /**
+   * A HOSTILE shot — fired by an enemy (`EnemyDef.ranged`) at the PLAYER.
+   * It never touches the horde: `stepProjectiles` moves it, walls eat it,
+   * and it resolves against the hero alone (armor applies; a jump sails
+   * over it like it clears enemy contact). Absent on the hero's and the
+   * companions' shots.
+   */
+  hostile?: boolean;
+  /**
+   * A hostile shot's firing MONSTER LEVEL — the attacker level the hero's
+   * armor reduction is judged against (see `armorReduction`), stamped from
+   * the shooter's `mlvl` when it fires. Absent on friendly shots.
+   */
+  sourceMlvl?: number;
   /** The firing weapon's crit-damage multiplier (see `weaponCritMult`) —
    * carried so the hit resolves with the cadence-weighted crit. Absent =
    * the global `STATS.critMultiplier`. */
@@ -788,6 +815,18 @@ export type GameEvent =
   /** An enemy sidestepped the player's weapon blow (see `enemyDodgeChance`).
    * `pos` is the foe — the app floats a "DODGE" tag off it. */
   | { type: "enemyDodge"; pos: Vec2; defId: string }
+  /**
+   * A blow bounced off a SHIELDED unique (`EnemyDef.shieldedBy` — it cannot
+   * be hurt while its named guardians live). `pos` is the foe — the app
+   * floats a "SHIELDED" tag so the immunity reads as a rule, not a bug.
+   */
+  | { type: "enemyShielded"; pos: Vec2; defId: string }
+  /**
+   * An enemy fired a projectile at the player (`EnemyDef.ranged`). `pos` is
+   * the shooter's muzzle, `dir` the unit aim — the app draws the flash and
+   * pips the hostile shot sound.
+   */
+  | { type: "enemyShot"; pos: Vec2; dir: Vec2; defId: string }
   /** The player's weapon blow whiffed of its own accord (see
    * `playerMissChance`). `pos` is the foe — the app floats a "MISS" tag. */
   | { type: "enemyMiss"; pos: Vec2; defId: string }
@@ -1067,6 +1106,22 @@ export type GameState = {
    * past the last page drops into the `title` card; unused in other phases.
    */
   introPage: number;
+  /**
+   * Which page of the level's post-victory EPILOGUE is on screen while
+   * `phase === "outro"` (`LevelDef.outro` — the intro's black-screen mirror,
+   * entered when the victory countdown runs out on a level that ships one).
+   * Turning past the last page lands on the `victory` splash. 0 and unused
+   * on levels without an outro.
+   */
+  outroPage: number;
+  /**
+   * Ms of VICTORY QUAKE left: on a level with an `outro`, clearing the
+   * objective arms this alongside the victory countdown (the world shakes
+   * itself apart while the hero grabs the last loot). Purely presentational —
+   * the renderer jitters the camera off it; ticks down only while `playing`,
+   * like the countdown it mirrors. 0 everywhere else.
+   */
+  quakeMs: number;
   /**
    * A LEVEL TOKEN respec is owed at this run's start: the hero jumped a rung
    * on a spent token, so before play begins the whole banked build is refunded

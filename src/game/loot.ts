@@ -158,6 +158,21 @@ export function hitEnemy(
   // choice overlay is about to ask about.
   if (state.choice !== null && state.choice.enemyId === enemy.id) return;
 
+  // A GUARDED unique (`EnemyDef.shieldedBy`) cannot be hurt while any of its
+  // named guardians still stands — every blow bounces with a "SHIELDED" cue
+  // so the immunity reads as a rule. Kill the controllers, then the boss.
+  if (
+    def.shieldedBy &&
+    def.shieldedBy.some((id) => state.enemies.some((e) => e.defId === id))
+  ) {
+    state.events.push({
+      type: "enemyShielded",
+      pos: { ...enemy.pos },
+      defId: enemy.defId,
+    });
+    return;
+  }
+
   // An elite or boss meets the player's power the instant the fight opens —
   // scale its hp before this blow lands so it can never be one-shot out of a
   // set piece by a leveled hero. Idempotent (latched by `powerScaled`).
@@ -698,6 +713,12 @@ function dropGuaranteedLoot(
       pos: scatter(),
       defId,
     });
+  }
+  // GUARANTEED named uniques (`loot.uniqueItems` — UNIQUE_DEFS ids): story
+  // payouts a kill always drops, minted like any unique find. Distinct from
+  // `uniquesByDifficulty`, which is the chance-rolled endgame table.
+  for (const id of loot.uniqueItems ?? []) {
+    pushUniqueDrop(state, id, at);
   }
   // The per-tier chance payouts, and they may exceed 100%: each whole 1.0 is
   // a guaranteed drop of that tier, the remainder a chance of one more — a

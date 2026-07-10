@@ -128,6 +128,7 @@ export const EQUIP_SLOTS = [
 
 /** Outfit rank of a tier — unique and legendary share the top rung. */
 const TIER_RANK: Record<string, number> = {
+  trash: 0,
   regular: 0,
   magic: 1,
   rare: 2,

@@ -182,6 +182,44 @@ const SPRITES = {
     "..OOOO....OOOO..",
     "................",
   ],
+  // THE BARKEEP — the Eastworld costume: bowler hat, white shirt, apron, a
+  // rag over the arm. Same body plan and foot anchor as every other look.
+  merchant_eastworld_0: [
+    "................",
+    ".....OOOOO......",
+    "....OkkkkkO.....",
+    "...OkkkkkkkO....",
+    "...OppppppO.....",
+    "...OppOpOppO....",
+    "....OppppppO....",
+    "...OOWWWWWWOO...",
+    "..OWWWWWWWWWWO..",
+    "..OWWaaaaaaWWO..",
+    "..OaWaaaaaaWaO..",
+    "...OaaaaaaaaO...",
+    "...OkkO..OkkO...",
+    "...OEEO..OEEO...",
+    "...OOOO..OOOO...",
+    "................",
+  ],
+  merchant_eastworld_1: [
+    "................",
+    ".....OOOOO......",
+    "....OkkkkkO.....",
+    "...OkkkkkkkO....",
+    "...OppppppO.....",
+    "...OppOpOppO....",
+    "....OppppppO....",
+    "...OOWWWWWWOO...",
+    "..OWWWWWWWWWWO..",
+    "..OWWaaaaaaWWO..",
+    "..OaWaaaaaaWaO..",
+    "...OaaaaaaaaO...",
+    "..OkkO....OkkO..",
+    "..OEEO....OEEO..",
+    "..OOOO....OOOO..",
+    "................",
+  ],
 };
 
 export default {
@@ -202,6 +240,10 @@ export default {
     },
     merchant_mars_walk: {
       frames: ["merchant_mars_0", "merchant_mars_1"],
+      delayMs: 200,
+    },
+    merchant_eastworld_walk: {
+      frames: ["merchant_eastworld_0", "merchant_eastworld_1"],
       delayMs: 200,
     },
   },

@@ -702,6 +702,139 @@ export const GEAR_DEFS: Record<string, GearDef> = {
     bonuses: { critChance: 0.05 },
     icon: "icon_enchanted_ring",
   },
+  // ---- EASTWORLD (level 5) armor: the park wardrobe department's hybrid
+  // frontier kit — cowboy silhouettes over ZAI-printed shells, same fabricators
+  // as the weapon pool. Requirements ride the normal band's top rungs (18–23).
+  servo_stetson: {
+    id: "servo_stetson",
+    name: "SERVO STETSON",
+    slot: "head",
+    levelReq: 18,
+    // A ten-gallon hat with a one-gallon gyro: it tips itself at danger.
+    bonuses: {},
+    armor: 32,
+    durability: 130,
+    icon: "icon_stetson",
+    worn: "cap",
+  },
+  mirrorshade_visor: {
+    id: "mirrorshade_visor",
+    material: "metal",
+    name: "MIRRORSHADE VISOR",
+    slot: "head",
+    levelReq: 22,
+    // The gunslinger hosts' eye-band: it shows the crowd only themselves.
+    bonuses: {},
+    armor: 40,
+    durability: 140,
+    icon: "icon_mirrorshade",
+    worn: "visor",
+  },
+  exo_duster: {
+    id: "exo_duster",
+    name: "EXO-DUSTER",
+    slot: "chest",
+    levelReq: 20,
+    // A trail duster over a printed exoframe — flaps in the wind, stops a slug.
+    bonuses: {},
+    armor: 44,
+    durability: 140,
+    icon: "icon_duster",
+  },
+  tin_star_cuirass: {
+    id: "tin_star_cuirass",
+    material: "metal",
+    name: "TIN STAR CUIRASS",
+    slot: "chest",
+    levelReq: 23,
+    // The sheriff hosts' chest plate, star included. The star is the armor.
+    bonuses: {},
+    armor: 48,
+    durability: 150,
+    icon: "icon_tin_star",
+  },
+  rattlesnake_chaps: {
+    id: "rattlesnake_chaps",
+    name: "RATTLESNAKE CHAPS",
+    slot: "legs",
+    levelReq: 19,
+    // Cut from the park's own robot rattlers. They still rattle. Ignore it.
+    bonuses: {},
+    armor: 30,
+    durability: 130,
+    icon: "icon_chaps",
+  },
+  spur_jet_boots: {
+    id: "spur_jet_boots",
+    material: "metal",
+    name: "SPUR-JET BOOTS",
+    slot: "feet",
+    levelReq: 21,
+    // Riding boots with micro-thrusters in the spurs. The rowels are turbines.
+    bonuses: {},
+    armor: 31,
+    durability: 140,
+    icon: "icon_spur_boots",
+  },
+  sheriffs_badge: {
+    id: "sheriffs_badge",
+    material: "metal",
+    name: "SHERIFF'S BADGE",
+    slot: "charm",
+    levelReq: 18,
+    // Authority is mostly posture. The badge handles the posture.
+    bonuses: { critChance: 0.03 },
+    icon: "icon_sheriff_badge",
+  },
+  // ---- Eastworld signatures — elite drops, never pooled.
+  seagulls_ponytail: {
+    id: "seagulls_ponytail",
+    name: "SEAGULL'S PONYTAIL",
+    slot: "charm",
+    // Cut clean off mid-lecture. It remembers seven kinds of ju-jutsu,
+    // three of which exist.
+    bonuses: { maxHp: 30 },
+    icon: "icon_ponytail",
+  },
+  bottomless_carafe: {
+    id: "bottomless_carafe",
+    material: "precious",
+    name: "BOTTOMLESS CARAFE",
+    slot: "charm",
+    // DEPARDIEU's carafe: it refills itself, and so, somehow, do you.
+    bonuses: { maxHp: 40 },
+    icon: "icon_carafe",
+  },
+  // ---- PUTAIN's brand watches: pure VALUABLES. Zero base bonuses — their
+  // job is the merchant's scales (precious ×4, dropped at unique tier by the
+  // man himself), the coin that buys his own estate back off the stall.
+  kolex_daytonne: {
+    id: "kolex_daytonne",
+    material: "precious",
+    name: "KOLEX DAYTONNE",
+    slot: "charm",
+    // Waterproof to forty metres of denial.
+    bonuses: {},
+    icon: "icon_watch_gold",
+  },
+  putek_philippe: {
+    id: "putek_philippe",
+    material: "precious",
+    name: "PUTEK PHILIPPE",
+    slot: "charm",
+    // You never actually own one. It was seized from the previous owner.
+    bonuses: {},
+    icon: "icon_watch_silver",
+  },
+  vacheron_kremlinton: {
+    id: "vacheron_kremlinton",
+    material: "precious",
+    name: "VACHERON KREMLINTON",
+    slot: "charm",
+    // Keeps two times: yours, and the one the state prefers.
+    bonuses: {},
+    icon: "icon_watch_rose",
+  },
 };
 
 // The generated EXCEPTIONAL/ELITE versions of every pool armor piece — same

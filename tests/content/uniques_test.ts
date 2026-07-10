@@ -133,6 +133,13 @@ describe("boss unique drop tables", () => {
     ),
   );
 
+  // Merchant-stall uniques are SOLD by a level's trader instead of dropping
+  // (`LevelDef.merchant.stockUniques` — Eastworld's PUTAIN estate): the third
+  // home kind, no difficulty rung (the stall stocks on every rung).
+  const stallWiring = Object.values(LEVELS).flatMap((def) =>
+    (def.merchant?.stockUniques ?? []).map((id) => ({ level: def.id, id })),
+  );
+
   it("references only real uniques, on real difficulty rungs", () => {
     for (const { diff, id } of [...wiring, ...worldWiring]) {
       expect(DIFFICULTY_ORDER).toContain(diff);
@@ -140,11 +147,18 @@ describe("boss unique drop tables", () => {
     }
   });
 
-  it("places every shipped unique exactly once (boss table or level world drop)", () => {
-    const placed = [...wiring, ...worldWiring].map((w) => w.id).sort();
+  it("places every shipped unique exactly once (boss table, world drop, or stall)", () => {
+    const placed = [...wiring, ...worldWiring, ...stallWiring]
+      .map((w) => w.id)
+      .sort();
     expect(placed).toEqual([...UNIQUE_IDS].sort());
     // No id has two homes.
     expect(new Set(placed).size).toBe(placed.length);
+
+    // Stall stock resolves against real uniques too.
+    for (const { id } of stallWiring) {
+      expect(() => uniqueDef(id)).not.toThrow();
+    }
   });
 
   it("gives each rung a full boss set — 7 uniques per difficulty", () => {

@@ -27,7 +27,9 @@ const KEY = storageKey("current-run");
 // v3: levelUpFxMs (the ding-celebration countdown) joined the state.
 // v4: characterId joined the park — a parked run belongs to the character that
 // was playing it, so CONTINUE only offers to resume the ACTIVE character's run.
-const SAVE_VERSION = 4;
+// v5: outroPage + quakeMs (the post-victory epilogue and its quake) joined the
+// state, plus the `outro` GamePhase.
+const SAVE_VERSION = 5;
 
 /** A run parked between sessions: enough to drop the player straight back in. */
 export type ParkedRun = {

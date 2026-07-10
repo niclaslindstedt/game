@@ -347,6 +347,62 @@ export const STORY_ITEM_DEFS: Record<string, StoryItemDef> = {
       ],
     ],
   },
+  // ---- Eastworld ------------------------------------------------------------
+  park_brochure: {
+    id: "park_brochure",
+    name: "EASTWORLD BROCHURE",
+    icon: "icon_brochure",
+    lore: [
+      [
+        "'EASTWORLD! THE WEST, BUT",
+        "EAST. BUILT BY V. PUTAIN &",
+        "S. SEAGULL. INTELLIGENCE",
+        "PROVIDED BY ZAI.'",
+      ],
+      [
+        "THE MASCOT IS A BEAR IN A",
+        "COWBOY HAT. THE FINE PRINT",
+        "WAIVES YOUR ORGANS.",
+      ],
+    ],
+  },
+  keycard_eastworld: {
+    id: "keycard_eastworld",
+    name: "ALL-ACCESS PASS",
+    icon: "icon_pass",
+    unlocks: "control",
+    lore: [
+      [
+        "SEAGULL'S ALL-ACCESS PASS.",
+        "LAMINATED. AUTOGRAPHED BY",
+        "HIMSELF, TO HIMSELF.",
+      ],
+      [
+        "IT OPENS THE CONTROL",
+        "CENTER. ADA'S BEACON POINTS",
+        "STRAIGHT THROUGH THAT DOOR.",
+      ],
+    ],
+  },
+  annexation_map: {
+    id: "annexation_map",
+    name: "THE ANNEXATION MAP",
+    icon: "icon_annex_map",
+    lore: [
+      [
+        "A MAP OF EASTWORLD, RELABELED",
+        "IN PEN: EVERY BUILDING RENAMED",
+        "AFTER A CITY HE COULDN'T TAKE",
+        "OUT THERE.",
+      ],
+      [
+        "IN HERE THE FLAGS NEVER ARGUE",
+        "BACK. THAT'S ALL THIS PLACE",
+        "EVER WAS - A SANDBOX FOR A",
+        "MAN WHO LOST.",
+      ],
+    ],
+  },
 };
 
 // Active registry the accessor reads (defaults to the shipped catalog;

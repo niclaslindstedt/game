@@ -44,6 +44,7 @@ const LEVEL_MLVL_BANDS = {
   moon: [4, 14],
   mars: [9, 20],
   the_rift: [13, 28],
+  eastworld: [16, 34],
 };
 
 const atlas = JSON.parse(

@@ -81,6 +81,42 @@ export type EnemyDef = {
    */
   flees?: { landmark: string };
   /**
+   * A RANGED attacker: instead of only biting on contact, this enemy fires a
+   * hostile projectile at the player whenever its reload has run down, the
+   * player is within `range`, and it has line of sight. The shot rides the
+   * ordinary projectile pass flagged `hostile` (walls eat it, a jump clears
+   * it, armor turns its share — see stepProjectiles / ranged.ts). With
+   * `takesCover` the shooter also plays hide-and-peek: after firing it
+   * scrambles to put the nearest solid obstacle between itself and the
+   * player, and only steps back out as the reload runs down (config
+   * ENEMY_RANGED). Contact damage still applies if the player closes in.
+   */
+  ranged?: {
+    /** Damage one shot deals before the hero's armor turns its share. */
+    damage: number;
+    /** Ms between shots (the reload the cover dance is timed against). */
+    cooldownMs: number;
+    /** Max firing distance (world px); also the range it tries to hold. */
+    range: number;
+    projectile: {
+      speed: number;
+      radius: number;
+      lifetimeMs: number;
+      /** Sprite the renderer draws for the shot. */
+      sprite: string;
+    };
+    /** Hide behind obstacles between shots (see moveRangedEnemy). */
+    takesCover?: boolean;
+  };
+  /**
+   * A GUARDED unique: while ANY enemy with one of these def ids is still on
+   * the board, this one cannot be hurt — every blow bounces off with an
+   * `enemyShielded` event (the app floats "SHIELDED"). How a set-piece boss
+   * is wired to its controllers: kill the named guardians first, then the
+   * shield falls. Contact damage and its own attacks work throughout.
+   */
+  shieldedBy?: string[];
+  /**
    * A SPAREABLE unique: beaten to 0 hp it kneels instead of dying, and the
    * run pauses into the `choice` phase for the SPARE-or-KILL verdict
    * (`resolveChoice` in companions.ts). Spared, it joins the party as the
@@ -149,6 +185,13 @@ export type EnemyDef = {
     items?: (string | { defId: string; tier?: Tier })[];
     /** Story items always dropped (STORY_ITEM_DEFS ids — keys, dossiers). */
     storyItems?: string[];
+    /**
+     * Named UNIQUES always dropped (`defs/uniques.ts` ids), minted via
+     * `mintUnique` — the scripted story payouts (a fallen oligarch's brand
+     * watches). Distinct from `uniquesByDifficulty`, the chance-rolled
+     * per-rung endgame table.
+     */
+    uniqueItems?: string[];
     /**
      * Per-tier drop CHANCES for this mob's kill, and they may exceed 1: each
      * whole 1.0 is a guaranteed drop of that tier and the remainder is the

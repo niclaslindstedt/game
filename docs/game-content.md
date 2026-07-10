@@ -80,6 +80,23 @@ names its in-run music with an optional `music` id (a key into the app's
   nothing. The far door — a second rift at the east end — is where the
   tribute went and where MOSQUE flees again. Music: `rift_drift` ("RIFT
   DRIFT", a weightless lydian float).
+- **Level 5 — EASTWORLD** (`levels/eastworld.ts`). The rift's far side: a
+  knockoff wild-west theme park built in Russia by VLADIMIR PUTAIN and STEVEN
+  SEAGULL, run on robotics and intelligence licensed from ZAI — the reality
+  PUTAIN retreated into to escape the one where he loses. `eastworld` biome
+  (sun-baked hardpan + dry-scrub patches; the control-center compound swaps
+  to ZAI deck plating via a tile zone), ~700 px/s² gravity. The town is the
+  level's signature: **building-sized `house` obstacles** (the game's largest
+  footprints — 3×2 up to 5×3 cells at 16 px/cell) plus two `storefront` wall
+  rows squeeze main street into tight corridors, so escaping the horde is
+  genuinely hard. A fenced CONTROL CENTER compound walls off the east end
+  behind a locked door (`control`) that SEAGULL's ALL-ACCESS PASS opens;
+  inside, a hand-placed rock garden gives the GROK controllers their cover.
+  Beating the boss arms the **victory quake** (the whole park shakes through
+  the loot-grab window) and plays the campaign's **outro epilogue**
+  (`LevelDef.outro` — the intro's black-screen mirror) before the victory
+  splash. Music: `red_dust` (the galloping desert-western drive, at home at
+  last).
 
 ### Campaign progression & what carries across levels
 
@@ -114,10 +131,21 @@ EMITTER, PUMP SHOTGUN), the moon yields the 70s hardware the space race
 ferried up (LUNAR WRENCH, SERVICE REVOLVER, GEOLOGY HAMMER, SURPLUS
 CARBINE, RETRO RAYGUN, PULSAR ROD), Mars prints AI-forged weapons (SMART
 PISTOL with homing darts, PLASMA BLADE, piercing RAILGUN, chain-lightning
-ARC PROJECTOR, GRAVITON MAW, GRAVITY MAUL), and the rift rains history and
+ARC PROJECTOR, GRAVITON MAW, GRAVITY MAUL), the rift rains history and
 fantasy (GLADIUS, LONGBOW, BLUNDERBUSS, EXECUTIONER'S AXE, SORCERER'S
 STAFF, EMBER WAND — plus the rift-only fantasy gear: LUCKY CLOVER, CRYSTAL
-ORB, GRIMOIRE, ENCHANTED RING, DRAGONSCALE CLOAK). A base only drops from
+ORB, GRIMOIRE, ENCHANTED RING, DRAGONSCALE CLOAK), and Eastworld's control
+center fabricates hybrid frontier arms at the normal band's top rungs
+(MONO-WIRE LARIAT, PLASMA PEACEMAKER, PLASMA BRANDING IRON, MAGLEV
+REPEATER, SNAKE-OIL SPRAYER, HIGH NOON — with the PRAIRIE IRON revolver as
+the scheduled early drop, and a cowboy wardrobe from the SERVO STETSON to
+the SPUR-JET BOOTS).
+
+Below regular sits the **TRASH tier** — the joke class: weapons with ZERO
+damage and no stats (grey card, worth pocket lint at the counter). It never
+rolls; it exists only for scripted story drops — ELON MOSQUE's final estate
+on Eastworld is its debut (SOGGY CARDBOARD SWORD, NOT-A-FLAMETHROWER
+(EMPTY), CYBERVAN WIPER BLADE). A base only drops from
 monsters whose LEVEL has reached its requirement, tiers unlock by monster
 level (config `LOOT.tierUnlockMlvl`), and every drop carries an item level
 near its killer's (plus the difficulty's `lootIlvlBonus` on the harder
@@ -281,10 +309,10 @@ from that rung of the ladder up (see `meetsMinDifficulty`).
 Every level has a **WANDERING MERCHANT** (`src/game/merchant.ts`, config
 `MERCHANT`/`ECONOMY`) — the same impossible trader in a different costume per
 venue (`LevelDef.merchant`): the vending-machine man at SpaceZ HQ, the '76
-salvage-run trader on the moon, the colony commissary keeper on Mars, and the
+salvage-run trader on the moon, the colony commissary keeper on Mars, the
 hooded trader between universes in the rift, where he admits every market he
-ever ran fell through eventually (his lines are in
-[`manuscript.md`](./manuscript.md)). The horde ignores him and his ward keeps
+ever ran fell through eventually, and the BARKEEP of Eastworld's saloon (his
+lines are in [`manuscript.md`](./manuscript.md)). The horde ignores him and his ward keeps
 mobs two body-widths off his stall. He roams the level until the hero first
 walks up to him: the **meeting** roots him to the spot for the rest of the
 run, pins him on the level map (a gold MERCHANT coin marker), plays his greeting,
@@ -301,7 +329,14 @@ double, PRECIOUS ones (gold, gems, the genuinely magical) fetch four times
 (restocked, priced off the hero's level) and a couple of one-off **weapons**
 rolled with a magic-skewed tier bonus, Diablo 2 gamble style, priced at ten
 times their own sell value — a purchase costs roughly what selling a handful
-of magic finds brings in. The shop's SELL JUNK button clears every outgrown
+of magic finds brings in. A level may also list **stall UNIQUES**
+(`LevelDef.merchant.stockUniques`): named uniques the trader fences, each
+ROLLED into stock at the standing boss-unique odds when the stall stocks —
+the same rarity as a boss's unique drop, landing on the counter instead of a
+corpse. Eastworld's barkeep carries the PUTAIN estate this way (PUTAIN'S
+TRACKSUIT, THE KREMLIN USHANKA, HONORARY BLACK BELT), and PUTAIN's own
+brand-watch valuables — precious, statless, minted at unique tier — are the
+intended purse. The shop's SELL JUNK button clears every outgrown
 piece (the inventory's scrap rule) in one tap; SELL ALL empties the whole bag
 across the counter, keepers included (the worn loadout is untouched). Coins
 ride the loadout between levels like everything else the hero carries.
@@ -392,6 +427,28 @@ The roster is split one file per level/biome under `src/game/defs/enemies/`
   until the next level — dropping the GOLDEN PARACHUTE. The objective needs
   BOTH bosses off the board. First-sight/kill thoughts fire for the voidling
   (the walking-on-nothing arrival read) and the graviton.
+- **Level 5** ships the park's HOSTS — COWBOT (fodder greeters) → SALOON
+  BRAWLER → TIN OUTLAW (the quick-draw high-crit line) → LONGHORN (the
+  robotic-steer heavy with a sweetened `dropProfile`) — and the celebrity
+  staff as elites: **STEVEN SEAGULL** (slow as advertised, `dodgeChance`
+  0.3 of pure ju-jutsu; drops his PONYTAIL and the compound's ALL-ACCESS
+  PASS), **VLADIMIR PUTAIN** (the owner; drops three unique-tier brand
+  watches — pure precious valuables — and THE ANNEXATION MAP, and dies
+  facing the war he retreated from), and **GERALD DEPARDIEU** (the biggest,
+  slowest elite in the game — radius 16, speed 6, cannot dodge — who tries
+  to act his way out of the fight; drops the BOTTOMLESS CARAFE). **ELON
+  MOSQUE finally DIES here** (`elon_mosque_eastworld`, role boss, no
+  `flees`) — wimping, and dropping nothing but the TRASH tier's debut. The
+  finale is **THE ZAI SUPERCORE** — the level-1 CORE several promotions
+  later, a stationary 48×48 mainframe with a ranged attack — **shielded by
+  the three GROK controllers** (`EnemyDef.shieldedBy`): ALPHA, BETA and
+  GAMMA are boss-role SHOOTERS (`EnemyDef.ranged`) that genuinely play the
+  map — they hold their distance, fire, and hide behind the compound's
+  rocks while they reload (`takesCover`) — and all three must fall before
+  the SUPERCORE can be hurt (blows bounce with a "SHIELDED" cue until
+  then). The `killBoss` objective needs all five bosses off the board.
+  First-sight/kill thoughts fire for the cowbot (the arrival read, then the
+  ZAI-hosts read).
 
 Every unique mob (elite/boss) carries `dialogue` played on arrival and
 `lastWords` played as it dies; minions are the nameless horde streamed in by

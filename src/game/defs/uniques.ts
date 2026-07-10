@@ -692,6 +692,51 @@ const WORLD_UNIQUES: UniqueDef[] = [
   },
 ];
 
+// EASTWORLD MERCHANT STALL — the third unique home: not dropped at all, but
+// SOLD. THE BARKEEP fences the park owner's estate (`LevelDef.merchant
+// .stockUniques` on Eastworld), priced at the standing vendor markup — the
+// intended purse is PUTAIN's own brand watches, sold back across the same
+// counter. Scripted stock, minted by `mintUnique` like any unique.
+const MERCHANT_STALL_UNIQUES: UniqueDef[] = [
+  {
+    id: "putains_tracksuit",
+    name: "PUTAIN'S TRACKSUIT",
+    base: "tin_star_cuirass",
+    slot: "chest",
+    ilvl: 32,
+    bonuses: [
+      { kind: "stat", stat: "speed", value: 5 },
+      { kind: "stat", stat: "stamina", value: 4 },
+    ],
+    lore: "STRIPES DOWN THE ARMS. AUTHORITY DOWN THE SPINE. RUNS FROM NOTHING, OFFICIALLY.",
+  },
+  {
+    id: "the_kremlin_ushanka",
+    name: "THE KREMLIN USHANKA",
+    base: "mirrorshade_visor",
+    slot: "head",
+    ilvl: 34,
+    bonuses: [
+      { kind: "stat", stat: "intelligence", value: 5 },
+      { kind: "stat", stat: "luck", value: 4 },
+      { kind: "maxHp", value: 40 },
+    ],
+    lore: "WARM EARS, COLD DECISIONS. THE FUR REMEMBERS EVERY WINTER IT OUTLASTED.",
+  },
+  {
+    id: "honorary_black_belt",
+    name: "HONORARY BLACK BELT",
+    base: "sheriffs_badge",
+    slot: "charm",
+    ilvl: 23,
+    bonuses: [
+      { kind: "stat", stat: "dexterity", value: 4 },
+      { kind: "crit", value: 0.04 },
+    ],
+    lore: "AWARDED, NEVER EARNED. THE BELT DOES NOT KNOW THAT. NEITHER DO YOUR OPPONENTS.",
+  },
+];
+
 /** The shipped unique catalog, merged by id (throws on a clash / bad base). */
 export const UNIQUE_DEFS: Record<string, UniqueDef> = mergeUniques([
   ...MUSKRAT_UNIQUES,
@@ -700,6 +745,7 @@ export const UNIQUE_DEFS: Record<string, UniqueDef> = mergeUniques([
   ...ELON_RIFT_UNIQUES,
   ...GROK_UNIQUES,
   ...WORLD_UNIQUES,
+  ...MERCHANT_STALL_UNIQUES,
 ]);
 
 function mergeUniques(defs: UniqueDef[]): Record<string, UniqueDef> {
