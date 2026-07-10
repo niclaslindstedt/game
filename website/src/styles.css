@@ -736,7 +736,9 @@ body {
   pointer-events: none;
   overflow: visible;
   isolation: isolate;
-  animation: pickup-card 5200ms ease-out forwards;
+  /* Dwell time is per-card (the pickup queue shortens ordinary finds under a
+     backlog and lengthens better ones); it rides in on `--pickup-ttl`. */
+  animation: pickup-card var(--pickup-ttl, 5200ms) ease-out forwards;
   will-change: transform, opacity;
 }
 
@@ -763,7 +765,7 @@ body {
    glance, layered over the rarity glow. */
 .pickup-card--upgrade {
   animation:
-    pickup-card 5200ms ease-out forwards,
+    pickup-card var(--pickup-ttl, 5200ms) ease-out forwards,
     pickup-card-upgrade 900ms ease-in-out 3;
 }
 
@@ -1236,7 +1238,7 @@ body {
 @media (prefers-reduced-motion: reduce) {
   .pickup-card,
   .pickup-card--upgrade {
-    animation: pickup-card-fade 5200ms linear forwards;
+    animation: pickup-card-fade var(--pickup-ttl, 5200ms) linear forwards;
     transform: translateX(-50%);
   }
   @keyframes pickup-card-fade {

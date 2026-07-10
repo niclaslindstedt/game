@@ -148,6 +148,8 @@ import {
 import {
   PickupModal,
   PICKUP_CARD_TTL_MS,
+  PICKUP_CARD_TTL_QUEUED_MS,
+  PICKUP_CARD_TTL_UPGRADE_MS,
   type PickupCard,
 } from "./PickupModal.tsx";
 import {
@@ -252,6 +254,11 @@ const DPAD_RING_PX = 36;
 // At most this many pickup lines show at once; older ones drop off the top so
 // a loot flood never buries the screen.
 const PICKUP_MAX = 6;
+// How many bag-gear pickup cards may WAIT in the queue behind the one on
+// screen. Past this a loot flood would take too long to drain, so the oldest
+// ordinary (non-upgrade) card is dropped to make room — better finds are never
+// skipped, only ordinary overflow is.
+const PICKUP_CARD_QUEUE_MAX = 8;
 // How far a powerup must be dragged off its dock slot's center before the
 // gesture counts as a drag-to-discard rather than a tap that spends it (CSS px).
 const DOCK_DRAG_THRESHOLD_PX = 16;
@@ -703,12 +710,46 @@ export function GameScreen({
       pickupTimers.add(timer);
     };
 
-    // The framed pickup card for bag gear: the newest find pops in and replaces
-    // whatever is showing (its id keys the mount, restarting the pop + spark),
-    // then clears itself after PICKUP_CARD_TTL_MS.
+    // The framed pickup card for bag gear: finds are ENQUEUED and shown one at
+    // a time, so a burst of loot doesn't flash-replace itself before the player
+    // can read (or tap-to-equip) each piece — each card gets its own turn on
+    // screen, which is the "delay" between pickups. A card's dwell shortens
+    // while a backlog waits behind it (so the queue drains fast) but a BETTER
+    // find — an upgrade over / at-or-above the worn piece for its slot — always
+    // lingers longer, so a real gear jump gets a proper look. The queue is
+    // capped (PICKUP_CARD_QUEUE_MAX); on overflow the oldest ordinary card is
+    // dropped first, so better finds are never skipped.
     setPickupCard(null);
     let pickupCardTimer: ReturnType<typeof setTimeout> | undefined;
     let pickupCardSeq = 0;
+    const cardQueue: PickupCard[] = [];
+    let cardShowing = false;
+
+    // Pull the next queued card onto the screen, sizing its dwell to the state
+    // at show time: a better find lingers, an ordinary one is halved while a
+    // backlog still waits behind it, and otherwise runs the full base time.
+    // When the queue empties the stage goes idle.
+    const pumpPickupCards = () => {
+      const next = cardQueue.shift();
+      if (!next) {
+        cardShowing = false;
+        return;
+      }
+      cardShowing = true;
+      const better = next.upgrade || next.equipped;
+      const ttlMs = better
+        ? PICKUP_CARD_TTL_UPGRADE_MS
+        : cardQueue.length > 0
+          ? PICKUP_CARD_TTL_QUEUED_MS
+          : PICKUP_CARD_TTL_MS;
+      setPickupCard({ ...next, ttlMs });
+      if (pickupCardTimer) clearTimeout(pickupCardTimer);
+      pickupCardTimer = setTimeout(() => {
+        setPickupCard(null);
+        pumpPickupCards();
+      }, ttlMs);
+    };
+
     const showPickupCard = (opts: {
       name: string;
       tier: Tier;
@@ -756,7 +797,8 @@ export function GameScreen({
             }
           }
         : undefined;
-      setPickupCard({
+      // Dwell is decided at show time (pumpPickupCards); enqueue with the base.
+      cardQueue.push({
         id,
         icon,
         name,
@@ -766,12 +808,16 @@ export function GameScreen({
         upgrade,
         equipped,
         onEquip,
+        ttlMs: PICKUP_CARD_TTL_MS,
       });
-      if (pickupCardTimer) clearTimeout(pickupCardTimer);
-      pickupCardTimer = setTimeout(
-        () => setPickupCard(null),
-        PICKUP_CARD_TTL_MS,
-      );
+      // Keep the backlog bounded: drop the oldest ORDINARY card first so a flood
+      // of trash can't stall an upgrade's turn; fall back to the oldest of all
+      // if every waiting card is a keeper.
+      if (cardQueue.length > PICKUP_CARD_QUEUE_MAX) {
+        const drop = cardQueue.findIndex((c) => !(c.upgrade || c.equipped));
+        cardQueue.splice(drop >= 0 ? drop : 0, 1);
+      }
+      if (!cardShowing) pumpPickupCards();
     };
 
     // The run's music: the level theme rolls once the intro is dismissed and
