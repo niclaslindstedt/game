@@ -287,14 +287,16 @@ const MIN_WALK_THROTTLE = 0.35;
 const CURSOR_FULL_SPEED_PX = 90;
 
 // Merged pack-kill XP floats. When one attack drops this many foes at once and
-// their bodies touch, their XP drips fuse into a single oversized "+N XP" pop
-// that jolts like a crit — one big satisfying number instead of a smear of
-// overlapping drips. The pack size sets the glyph scale: count/10 (20 mobs →
-// 2×, 30 → 3×), floored so even a small merge reads as bigger and capped so a
-// monster pull can't swallow the screen. `SLACK` lets near-touching bodies
-// still count as one knot.
+// their bodies sit in one knot, their XP drips fuse into a single oversized
+// "+N XP" pop that jolts like a crit — one big satisfying number instead of a
+// smear of overlapping drips. The pack size sets the glyph scale: count/10 (20
+// mobs → 2×, 30 → 3×), floored so even a small merge reads as bigger and capped
+// so a monster pull can't swallow the screen. `SLACK` is generous — mobs a
+// body-width apart still count as one knot, so a wide blast over a loosely
+// packed horde (bodies rarely literally overlapping) still merges instead of
+// dripping a dozen separate numbers.
 const XP_MERGE_MIN_KILLS = 3;
-const XP_MERGE_SLACK_PX = 4;
+const XP_MERGE_SLACK_PX = 16;
 const XP_MERGE_MIN_SCALE = 1.4;
 const XP_MERGE_MAX_SCALE = 4;
 
