@@ -272,7 +272,9 @@ if (isMain) {
   }
   console.log(
     `\n${UNIQUE_IDS.length} uniques · ${over.length} over-budget · ${drifted.length} drifted from computed ilvl.` +
-      (check ? "" : "  (run --check for the deviation report; --suggest for canonical ilvls)"),
+      (check
+        ? ""
+        : "  (run --check for the deviation report; --suggest for canonical ilvls)"),
   );
   if (check && !over.length && (!strict || !drifted.length))
     console.log("All ilvl checks pass. ✓");
