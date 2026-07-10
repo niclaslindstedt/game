@@ -68,6 +68,7 @@ type MenuScreen =
   | "settings"
   | "controls"
   | "display"
+  | "data"
   | "developer"
   | "arsenal"
   | "achievements"
@@ -310,8 +311,8 @@ export function TitleScreen({
   // Settings live in a plain singleton; mirror a tick so labels re-render.
   const [settingsTick, setSettingsTick] = useState(0);
 
-  // Character transfer (SETTINGS → EXPORT / IMPORT CHARACTER): the last result,
-  // shown as a line under the menu.
+  // Character transfer (SETTINGS → DATA → EXPORT / IMPORT CHARACTER): the last
+  // result, shown as a line under the menu.
   const [transferNotice, setTransferNotice] = useState<{
     tone: "info" | "error";
     text: string;
@@ -587,25 +588,18 @@ export function TitleScreen({
             playUiSound(synth, "confirm"); // audition the new level
           },
         },
-        // Character transfer: EXPORT the active hero as a signed zip (offered
-        // only when one is active), IMPORT any exported hero back via a file
-        // picker. Moved here from the roster so it lives with the rest of the
+        // Character transfer lives in its own DATA submenu (EXPORT / IMPORT),
+        // keeping the SETTINGS list short. It sits with the rest of the
         // device-level configuration.
-        ...(character
-          ? [
-              {
-                label: "EXPORT CHARACTER",
-                aria: "settings-export-character",
-                blurb: `SAVE ${character.name} TO A FILE`,
-                action: () => void exportActive(),
-              },
-            ]
-          : []),
         {
-          label: "IMPORT CHARACTER",
-          aria: "settings-import-character",
-          blurb: "LOAD A HERO EXPORTED FROM ANOTHER DEVICE",
-          action: pickImport,
+          label: "DATA",
+          aria: "settings-data",
+          blurb: "EXPORT AND IMPORT CHARACTERS",
+          action: () => {
+            playUiSound(synth, "confirm");
+            setScreen("data");
+            setCursor(0);
+          },
         },
         // The DEVELOPER row is hidden until the title moon's secret long-press
         // unlocks it (see startMoonHold); once found it stays put across
@@ -692,9 +686,35 @@ export function TitleScreen({
           },
         },
         // Land back on the DEVELOPER row in SETTINGS. It sits just above BACK,
-        // after CONTROLS / DISPLAY / MUSIC / SOUND FX and the IMPORT/EXPORT
-        // rows — EXPORT only shows with an active hero, so the index shifts.
-        backTo("settings", character ? 6 : 5),
+        // after CONTROLS / DISPLAY / MUSIC / SOUND FX / DATA — a fixed index now
+        // that the character transfer rows live in their own DATA submenu.
+        backTo("settings", 5),
+      ];
+    }
+    if (screen === "data") {
+      // Character transfer: EXPORT the active hero as a signed zip (offered
+      // only when one is active), IMPORT any exported hero back via a file
+      // picker.
+      return [
+        ...(character
+          ? [
+              {
+                label: "EXPORT CHARACTER",
+                aria: "data-export-character",
+                blurb: `SAVE ${character.name} TO A FILE`,
+                action: () => void exportActive(),
+              },
+            ]
+          : []),
+        {
+          label: "IMPORT CHARACTER",
+          aria: "data-import-character",
+          blurb: "LOAD A HERO EXPORTED FROM ANOTHER DEVICE",
+          action: pickImport,
+        },
+        // Land back on the DATA row in SETTINGS (after CONTROLS / DISPLAY /
+        // MUSIC / SOUND FX).
+        backTo("settings", 4),
       ];
     }
     if (screen === "controls") {
@@ -931,6 +951,7 @@ export function TitleScreen({
         const back: Record<string, MenuScreen> = {
           controls: "settings",
           display: "settings",
+          data: "settings",
           developer: "settings",
           levels: warp ? "developer" : "difficulty",
         };
@@ -1177,6 +1198,14 @@ export function TitleScreen({
         <PixelText
           font={font}
           text="SETTINGS - DISPLAY"
+          scale={2}
+          color="#d9a0f0"
+        />
+      )}
+      {screen === "data" && (
+        <PixelText
+          font={font}
+          text="SETTINGS - DATA"
           scale={2}
           color="#d9a0f0"
         />
@@ -1485,8 +1514,8 @@ export function TitleScreen({
         </nav>
       )}
 
-      {/* The import/export result line, under the SETTINGS menu. */}
-      {screen === "settings" && transferNotice && (
+      {/* The import/export result line, under the SETTINGS - DATA menu. */}
+      {screen === "data" && transferNotice && (
         <p
           className={`title-notice ${transferNotice.tone}`}
           role="status"
