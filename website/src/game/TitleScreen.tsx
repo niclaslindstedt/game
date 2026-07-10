@@ -145,10 +145,11 @@ const MOON_BOOM_MS_REDUCED = 200;
 const ASTEROID_BASE_SECONDS = [21, 17, 27];
 
 /** Speed spread for a fly-by, relative to the base cadence: from a lazy drift
- * (0.5×) up to a quick streak (4×). Each crossing rolls a fresh multiplier so
- * no two feel alike and the belt reads as natural rather than a metronome. */
+ * (0.5×) up to a gentle streak (1.5×). Each crossing rolls a fresh multiplier
+ * so no two feel alike and the belt reads as natural rather than a metronome.
+ * Kept modest so even the quickest asteroid stays easy to follow by eye. */
 const ASTEROID_MIN_SPEED = 0.5;
-const ASTEROID_MAX_SPEED = 4;
+const ASTEROID_MAX_SPEED = 1.5;
 
 /** A random `animation-duration` for one asteroid's next crossing. Faster
  * speed ⇒ shorter cycle. `Math.random` is fine here — this is cosmetic, not
