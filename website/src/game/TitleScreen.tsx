@@ -61,6 +61,7 @@ type MenuScreen =
   | "scores"
   | "settings"
   | "controls"
+  | "display"
   | "developer"
   | "help";
 
@@ -424,6 +425,16 @@ export function TitleScreen({
           },
         },
         {
+          label: "DISPLAY",
+          aria: "settings-display",
+          blurb: "ON-SCREEN POPUPS AND EFFECTS",
+          action: () => {
+            playUiSound(synth, "confirm");
+            setScreen("display");
+            setCursor(0);
+          },
+        },
+        {
           label: `MUSIC ${pct(s.musicVolume)}`,
           aria: "settings-music-volume",
           blurb: "THE THEME FOLLOWS ALONG",
@@ -530,8 +541,8 @@ export function TitleScreen({
           },
         },
         // Land back on the DEVELOPER row in SETTINGS — it sits just above BACK,
-        // after CONTROLS / MUSIC / SOUND FX / HARDCORE.
-        backTo("settings", 4),
+        // after CONTROLS / DISPLAY / MUSIC / SOUND FX / HARDCORE.
+        backTo("settings", 5),
       ];
     }
     if (screen === "controls") {
@@ -618,6 +629,26 @@ export function TitleScreen({
           },
         },
         backTo("settings", 0),
+      ];
+    }
+    if (screen === "display") {
+      const s = getSettings();
+      return [
+        {
+          label: s.xpFloat === "on" ? "XP POPUPS: ON" : "XP POPUPS: OFF",
+          aria: "display-xp-float",
+          blurb:
+            s.xpFloat === "on"
+              ? "KILLS FLOAT A BLUE +N XP OFF THE CORPSE"
+              : "NO FLOATING XP TEXT ON KILLS",
+          action: () => {
+            playUiSound(synth, "confirm");
+            updateSettings({ xpFloat: s.xpFloat === "on" ? "off" : "on" });
+            setSettingsTick((t) => t + 1);
+          },
+        },
+        // Land back on the DISPLAY row in SETTINGS (index 1, after CONTROLS).
+        backTo("settings", 1),
       ];
     }
     return [backTo("main", onResume ? 3 : 2)];
@@ -713,6 +744,7 @@ export function TitleScreen({
         if (screen === "levels" && warp) setWarp(false);
         const back: Record<string, MenuScreen> = {
           controls: "settings",
+          display: "settings",
           developer: "settings",
           levels: warp ? "developer" : "difficulty",
         };
@@ -945,6 +977,14 @@ export function TitleScreen({
         <PixelText
           font={font}
           text="SETTINGS - CONTROLS"
+          scale={2}
+          color="#d9a0f0"
+        />
+      )}
+      {screen === "display" && (
+        <PixelText
+          font={font}
+          text="SETTINGS - DISPLAY"
           scale={2}
           color="#d9a0f0"
         />
