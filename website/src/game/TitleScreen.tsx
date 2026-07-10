@@ -10,6 +10,7 @@ import {
   useMemo,
   useRef,
   useState,
+  type AnimationEvent as ReactAnimationEvent,
   type CSSProperties,
   type PointerEvent as ReactPointerEvent,
 } from "react";
@@ -124,6 +125,28 @@ const MOON_HOLD_MS = 7000;
 const MOON_BOOM_MS = 900;
 const MOON_BOOM_MS_REDUCED = 200;
 
+/** Base cycle length of each backdrop asteroid's drift keyframe (seconds),
+ * matching the `.title-asteroid-N` animations in styles.css. The visible
+ * crossing is a fixed slice of this cycle, so a shorter cycle reads as a
+ * faster fly-by. */
+const ASTEROID_BASE_SECONDS = [21, 17, 27];
+
+/** Speed spread for a fly-by, relative to the base cadence: from a lazy drift
+ * (0.5×) up to a quick streak (4×). Each crossing rolls a fresh multiplier so
+ * no two feel alike and the belt reads as natural rather than a metronome. */
+const ASTEROID_MIN_SPEED = 0.5;
+const ASTEROID_MAX_SPEED = 4;
+
+/** A random `animation-duration` for one asteroid's next crossing. Faster
+ * speed ⇒ shorter cycle. `Math.random` is fine here — this is cosmetic, not
+ * gameplay RNG. */
+function randomAsteroidDuration(baseSeconds: number): string {
+  const speed =
+    ASTEROID_MIN_SPEED +
+    Math.random() * (ASTEROID_MAX_SPEED - ASTEROID_MIN_SPEED);
+  return `${(baseSeconds / speed).toFixed(2)}s`;
+}
+
 type MenuEntry = {
   label: string;
   aria: string;
@@ -191,6 +214,22 @@ export function TitleScreen({
   // furthest-unlocked rung (see furthestUnlockedDifficulty).
   const [cursor, setCursor] = useState(() =>
     startOnDifficulty && character ? furthestUnlockedDifficulty(character) : 0,
+  );
+  // Each backdrop asteroid gets its own random speed for its first fly-by, and
+  // rerolls a fresh one at every iteration boundary (rerollAsteroid), so the
+  // belt never falls into a fixed rhythm. Computed once per mount.
+  const asteroidDurations = useMemo(
+    () => ASTEROID_BASE_SECONDS.map(randomAsteroidDuration),
+    [],
+  );
+  const rerollAsteroid = useCallback(
+    (e: ReactAnimationEvent<HTMLSpanElement>, baseSeconds: number) => {
+      // Fires while the asteroid is parked off-screen, so swapping the
+      // duration never shows as a mid-flight jump.
+      e.currentTarget.style.animationDuration =
+        randomAsteroidDuration(baseSeconds);
+    },
+    [],
   );
   // The difficulty picked on the ladder — the level-select screen that
   // follows reads it to decide which levels are unlocked (progress is per
@@ -1019,9 +1058,14 @@ export function TitleScreen({
       {/* Asteroids drift across the backdrop now and then, so the menu feels
           alive rather than a static painting. */}
       <div className="title-asteroids" aria-hidden="true">
-        <span className="title-asteroid title-asteroid-1" />
-        <span className="title-asteroid title-asteroid-2" />
-        <span className="title-asteroid title-asteroid-3" />
+        {ASTEROID_BASE_SECONDS.map((baseSeconds, i) => (
+          <span
+            key={i}
+            className={`title-asteroid title-asteroid-${i + 1}`}
+            style={{ animationDuration: asteroidDurations[i] }}
+            onAnimationIteration={(e) => rerollAsteroid(e, baseSeconds)}
+          />
+        ))}
       </div>
       {/* A handful of stars twinkle on their own long cycles, out of sync, so
           the sky flickers with life rather than sitting as a flat backdrop. */}
