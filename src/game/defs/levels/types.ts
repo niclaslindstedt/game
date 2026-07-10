@@ -86,6 +86,15 @@ export type LevelDef = {
    * name and drops into the run.
    */
   intro: readonly (readonly string[])[];
+  /**
+   * The level's post-victory EPILOGUE — the intro's mirror: black-screen
+   * pages shown when the victory countdown runs out, before the splash.
+   * Same shape as `intro`. A level that ships one also gets the VICTORY
+   * QUAKE: the world shakes through the whole loot-grab window (see
+   * `GameState.quakeMs`) — the going-out-with-a-bang beat. Omitted = the
+   * splash comes up directly, as on every earlier level.
+   */
+  outro?: readonly (readonly string[])[];
   width: number;
   height: number;
   /** Downward acceleration in world px/s². Lower floats jumps higher. */
@@ -103,8 +112,9 @@ export type LevelDef = {
   /**
    * Whether the hero already wears the EVA suit when the level opens. The
    * story starts him in plain clothes at SpaceZ HQ (`false`) — he only
-   * becomes the astronaut once he loots the space suit — and every later
-   * level picks up mid-mission with the suit on. Omitted = suited.
+   * becomes the astronaut once he loots the space suit — the space levels
+   * pick up mid-mission with the suit on, and a habitable venue (Eastworld's
+   * theme park) stows it again. Omitted = suited.
    */
   heroSuited?: boolean;
   /** What the HUD calls this level's hostiles ("GHOSTS", "STAFF"). */
@@ -251,6 +261,16 @@ export type LevelDef = {
     name?: string;
     /** Pages of the meeting scene (same shape as an elite's `dialogue`). */
     greeting?: string[][];
+    /**
+     * Named UNIQUES (`defs/uniques.ts` ids) this level's stall MAY carry on
+     * top of the rolled weapons. Each is ROLLED at stall-stocking time at
+     * the standing boss-unique odds (`UNIQUE.dropChance × mlvl/ilvl`, the
+     * hero's level as the mlvl) — the same rarity as a boss's unique drop,
+     * landing on the counter instead of a corpse, priced at sell value ×
+     * the vendor markup. How a trader ends up fencing a dead oligarch's
+     * wardrobe, and why the oligarch's own valuables are the intended purse.
+     */
+    stockUniques?: string[];
   };
   /**
    * A scripted opening beat that draws the hero's weapon. When present, the

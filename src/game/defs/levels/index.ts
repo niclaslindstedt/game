@@ -7,6 +7,7 @@
 
 import type { LevelDef } from "./types.ts";
 
+import { EASTWORLD } from "./eastworld.ts";
 import { MARS } from "./mars.ts";
 import { MOON } from "./moon.ts";
 import { THE_RIFT } from "./rift.ts";
@@ -19,7 +20,7 @@ export type { LevelDef, SpawnSpec, WaveBudget, WaveSpec } from "./types.ts";
  * `index.ts` keeps the order and the merged map in one place so the app,
  * the campaign progression, and the tests all read the same source.
  */
-const ORDERED: LevelDef[] = [SPACEZ_HQ, MOON, MARS, THE_RIFT];
+const ORDERED: LevelDef[] = [SPACEZ_HQ, MOON, MARS, THE_RIFT, EASTWORLD];
 
 /** Merge the ordered defs into one registry, failing loudly on a duplicate
  * id so a clash surfaces at module load, not as a silently shadowed level. */

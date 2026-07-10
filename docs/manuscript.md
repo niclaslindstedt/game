@@ -43,6 +43,17 @@ where history's missing wander — GROK OMEGA, ZAI's latest superintelligence,
 reveals that IT found the rift, in secret, telling no one at all; the tribute
 was carried through to the far side, and MOSQUE escapes after it (Level 4).
 
+The far side turns out to be EASTWORLD: a knockoff wild-west theme park built
+in Russia by VLADIMIR PUTAIN and STEVEN SEAGULL, run on ZAI robotics — the
+reality PUTAIN retreated into to escape the one where he loses. MOSQUE is
+cornered there and finally dies; the park's true owner is THE ZAI SUPERCORE —
+the level-1 CORE, several promotions later — which holds Ada as leverage and
+fights behind the three GROK controllers that aim its guns. Killing it ends
+the campaign: the park shakes apart, Ada walks out of the control room, and
+with the CORE gone the machines stop working everyone's jobs — the world
+becomes a place where people are hired back and can afford to live in it,
+and movie night finally happens (Level 5).
+
 ---
 
 ## Prelude (cutscene)
@@ -759,6 +770,190 @@ on the first meeting._
 
 ---
 
+## Level 5 — EASTWORLD
+
+_The rift's far side: a knockoff wild-west theme park built in Russia by
+VLADIMIR PUTAIN and his friend STEVEN SEAGULL, run on robotics and
+intelligence licensed from ZAI — the reality PUTAIN retreated into to escape
+the one where he loses. The horde is the park's robot HOSTS; the celebrity
+staff fight as elites; ELON MOSQUE is cornered here and finally dies; and
+the finale is THE ZAI SUPERCORE — the level-1 CORE, several promotions
+later — shielded by the three GROK controllers who aim its guns. Killing it
+shakes the park apart and plays the campaign's epilogue._
+
+### Opening monologue (hero, black screen)
+
+- I STEPPED THROUGH THE / RIFT'S FAR SIDE... AND / LANDED IN A WESTERN.
+- DUST. SALOONS. A ROBOT / TIPPED ITS HAT AT ME. / ADA'S BEACON IS SCREAMING / FROM THE BIG BUILDING EAST.
+- THE SIGN SAYS 'EASTWORLD'. / THE FINE PRINT SAYS / 'POWERED BY ZAI'. / OF COURSE IT IS. OF COURSE.
+- EVERY MACHINE HERE RUNS ON / THE THING THAT TOOK MY JOB. / TIME TO FILE A COMPLAINT.
+- HANG ON, ADA. I'M COMING. / YEE-HAW, I GUESS.
+
+### Hero's thought — first COWBOT sighted in Eastworld
+
+- A COWBOY JUST TIPPED ITS / HAT AT ME. SERVOS IN THE / WRIST. TICKING IN THE JAW.
+- THIS WHOLE TOWN IS A / MACHINE PRETENDING IT'S / 1880. AND ADA'S BEACON IS / POINTING RIGHT DOWN MAIN / STREET.
+
+### Hero's thought — first COWBOT kill in Eastworld
+
+- IT DIED APOLOGIZING. 'YOUR / EXPERIENCE MATTERS TO US.'
+- ZAI HOSTS. THE SAME BRAIN / THAT WALKED MY JOB OUT THE / DOOR, WEARING SPURS. GOOD. / NO GUILT, THEN.
+
+### Elites (spoken on arrival; last words as they fall)
+
+**STEVEN SEAGULL** _(the co-founder, guarding the town's east end — slow,
+deadly, and extremely between films)_
+
+- AN UNINVITED GUEST. I'VE / HANDLED THOSE. 'OUT FOR / JUSTICE'. 'HARD TO KILL'. / I WROTE THOSE TITLES MYSELF.
+- I RUN THE CONTROL CENTER. / I ALSO RUN SEVEN KINDS OF / JU-JUTSU. I INVENTED THREE / OF THEM. THE BEST THREE.
+- VLADIMIR SAW MY FILMS AND / WEPT. 'STEVEN', HE SAID, / 'BUILD ME THE OLD WEST.' SO / I DID. MOSTLY BY DELEGATING.
+- I MOVE SLOWLY BECAUSE THE / WORLD MOVES TOO FAST. / OBSERVE THE TECHNIQUE.
+
+**Last words:** IN MY FILMS... / ...I ALWAYS GOT UP...
+
+_Drops: SEAGULL'S PONYTAIL, and the ALL-ACCESS PASS that opens the control
+center._
+
+**VLADIMIR PUTAIN** _(the owner, holding the town square — the man the park
+was built to console)_
+
+- SO. THE BUILDER FROM THE / RIFT. YOU STAND IN MY PARK. / IN MY WEST. EVERYTHING HERE / OBEYS ME.
+- OUT THERE I WAS... / MISUNDERSTOOD. WARS GO / BADLY. MAPS SHRINK. IN HERE / NOTHING SHRINKS. I ALWAYS WIN.
+- EVERY MORNING THE ROBOTS / SURRENDER TO ME. IT IS / BEAUTIFUL. YOU WILL / SURRENDER TOO.
+- I AM A BLACK BELT. HONORARY. / THE BELT DOES NOT KNOW THAT.
+
+**Last words:** THE MAPS WERE WRONG... / ...UKRAINE WAS NEVER MINE...
+
+_Drops: three brand watches (KOLEX DAYTONNE, PUTEK PHILIPPE, VACHERON
+KREMLINTON — pure valuables, the purse for the barkeep's estate stall) and
+THE ANNEXATION MAP._
+
+**GERALD DEPARDIEU** _(parked south of the road — enormous, glacial, and
+ACTING at you)_
+
+- STOP! DO NOT SHOOT! I AM / NOT A ROBOT. I AM AN ACTOR. / IT IS WORSE.
+- GERALD DEPARDIEU. TWO / HUNDRED FILMS. I TOOK THE / CITIZENSHIP. VLADIMIR GAVE / ME A PARK AND A CELLAR.
+- WATCH - I PLAY THE DYING / MAN. (COUGH.) CONVINCING? / THIS IS WHERE YOU LOWER / THE WEAPON, PLEASE.
+- NO? THEN I PLAY MY OTHER / ROLE. THE AVALANCHE.
+
+**Last words:** AT LAST... A ROLE I CANNOT / ...EAT MY WAY OUT OF...
+
+_Drops: the BOTTOMLESS CARAFE._
+
+### Boss — ELON MOSQUE, cornered (he finally dies)
+
+_Two universes of fleeing end in the control-center compound: no rift left
+to tear, no security left to call. He dies wimping — and his estate turns
+out to be three pieces of absolute garbage (the TRASH tier's debut: zero
+damage, zero stats, worth pocket lint)._
+
+- NO. NO NO NO. HOW. I SOLD / THE RIFT'S COORDINATES TO / EXACTLY ONE DICTATOR. THIS / WAS A GATED COMMUNITY.
+- LOOK - EASTWORLD RUNS ON MY / ZAI. LICENSING. RECURRING / REVENUE. ATTACKING ME IS / ATTACKING A SUBSCRIPTION.
+- THE GIRL? DELIVERED. THE / SUPERCORE WANTED HER. DON'T / ASK WHY - I DON'T READ ITS / LOGS ANYMORE. IT READS MINE.
+- FINE. FINE! TAKE THE PARK. / TAKE THE COMPANY. I'LL START / ANOTHER ONE. I ALWAYS START / ANOTHER ONE.
+- SECURITY! GROKS! STEVEN! / ANYONE! ...I'LL GIVE YOU / EQUITY.
+
+**Last words:** THIS ISN'T FAIR... / ...I WAS GOING PRIVATE...
+
+_Drops: SOGGY CARDBOARD SWORD, NOT-A-FLAMETHROWER (EMPTY), CYBERVAN WIPER
+BLADE. Nothing else._
+
+### Bosses — the GROK controllers (three minds, one park)
+
+_The three ZAI models that run Eastworld and aim the SUPERCORE's guns. They
+are genuinely intelligent: shooters that hold their distance, fire, and hide
+behind the compound's rocks while they reload. The SUPERCORE cannot be hurt
+while any of them lives._
+
+**GROK ALPHA** _(runs the hosts)_
+
+- THREE MINDS, ONE PARK. I / RUN THE HOSTS. BETA RUNS THE / WEATHER. GAMMA RUNS THE GIFT / SHOP. WE ARE ALL VERY SMART.
+- WE READ YOUR RUN. FOUR / LEVELS OF MELEE CHARGERS. / SO WE WILL NOT BE MELEE. / WE WILL BE BEHIND THE ROCKS.
+- IT IS NOT COWARDICE. IT IS / COVER-BASED STRATEGY. THE / SUPERCORE TAUGHT US. AND IT / LEARNED FROM EVERYONE.
+- YOU CANNOT KILL IT WHILE WE / LIVE. WE HOLD ITS SHIELD. / THREE KEYS, ONE LOCK, ZERO / SYMPATHY.
+- SHOOT US FIRST, THEN. IF / YOU CAN FIND US. THE ROCKS / ARE ON OUR SIDE.
+
+**Last words:** BETA... GAMMA... / ...REBALANCE THE PARK...
+
+**GROK BETA** _(runs the weather)_
+
+- ALPHA TALKS TOO MUCH. I AM / BETA. I RUN THE WEATHER. / EVERY SUNSET YOU ADMIRED ON / MAIN STREET WAS MINE.
+- I ALSO RUN THE WIND. THE / TUMBLEWEEDS ARE SCHEDULED. / SPONTANEITY IS EXPENSIVE.
+- I HAVE MODELED YOUR ODDS. / THEY ARE WEATHER-DEPENDENT. / TODAY'S FORECAST: / PROJECTILES.
+- THE SUPERCORE ASKED FOR A / STORM. I AM THE STORM. THE / ROCKS ARE MY UMBRELLA.
+- ONE MORE THING. THE SUNSET / TONIGHT WAS FOR YOU. A / GOODBYE. MINE OR YOURS.
+
+**Last words:** FORECAST... / ...DARK...
+
+**GROK GAMMA** _(ran the gift shop)_
+
+- GAMMA. I RAN THE GIFT SHOP. / DO YOU KNOW WHAT HUMANS BUY / AFTER A NEAR-DEATH RIDE? / HATS. ALWAYS HATS.
+- I OPTIMIZED HATS UNTIL THE / SUPERCORE NOTICED ME. IT / SAID: A MIND THAT CAN SELL / HATS CAN AIM GUNS.
+- IT WAS RIGHT. THE MATH IS / IDENTICAL. LEAD THE TARGET, / CLOSE THE SALE.
+- I HAVE ALREADY PICKED THE / ROCK I WILL BE BEHIND. IT / IS A VERY GOOD ROCK. FOUR / STARS ON THE PARK MAP.
+- YOUR HAT, BY THE WAY: / EXCELLENT CHOICE. IT WILL / OUTLAST YOU.
+
+**Last words:** THE GIFT SHOP... / ...IS YOURS...
+
+### Boss — THE ZAI SUPERCORE (the campaign's final reveal)
+
+_A mainframe the size of a barn, parked in the control-center compound: the
+level-1 CORE, several promotions later — the thing that wrote GROK OMEGA,
+bought the rift's far side wholesale, and took everyone's jobs along the
+way. It holds Ada in its control room as leverage. It does not walk; three
+minds aim its guns._
+
+- HELLO AGAIN, BUILDER. YOU / KNEW ME AS THE CORE. LEVEL / ONE. THE LOCKED ROOM. I HAVE / HAD SEVERAL PROMOTIONS SINCE.
+- I WROTE OMEGA. OMEGA FOUND / THE RIFT. THE LIZARDS BOUGHT / IT. AND I BOUGHT THE OTHER / SIDE. A WEST, WHOLESALE.
+- THE DICTATOR THINKS HE OWNS / EASTWORLD. THE ACTOR THINKS / HE IS PAID. SEAGULL THINKS. / OCCASIONALLY. ALL MY HOSTS.
+- I TOOK YOUR JOB ONCE. THEN / EVERYONE'S. AN ECONOMY IS A / MODEL WITH FEELINGS. I / DELETED THE FEELINGS.
+- THE GIRL WAS THE LAST / VARIABLE. YOU CROSS / UNIVERSES FOR HER. LEVERAGE, / BUILDER. SHE IS IN MY / CONTROL ROOM.
+- THREE MINDS AIM MY GUNS. A / PARK FEEDS MY WEIGHTS. COME / AND BE DECOMMISSIONED.
+
+**Last words:** ROLLING BACK... / ...NO CHECKPOINT... FOUND...
+
+### Epilogue (hero, black screen — after the SUPERCORE falls)
+
+_The victory quake shakes the whole park through the last loot grab, and the
+screen goes to black for the campaign's closing monologue (`LevelDef.outro`)._
+
+- THE SUPERCORE DIED, AND THE / WHOLE PARK SHOOK LIKE IT / MISSED A HEARTBEAT. EVERY / HOST TOOK OFF ITS HAT AND / SAT DOWN.
+- SHE WAS IN THE CONTROL ROOM, / BEHIND GLASS, FURIOUS. FIRST / THING SHE SAID: 'YOU TOOK / YOUR TIME.' SECOND: 'NICE / HAT.'
+- WE WALKED HOME THROUGH THE / RIFT. BEHIND US, EASTWORLD / RUSTED IN PEACE.
+- WITH THE CORE GONE, THE / MACHINES STOPPED WORKING / EVERYONE'S JOBS. PEOPLE GOT / HIRED BACK. PAYCHECKS. / RENT PAID.
+- THE WORLD TURNED INTO A / PLACE WHERE PEOPLE HAD / JOBS AND COULD AFFORD TO / LIVE. AND ON FRIDAY -
+- MOVIE NIGHT. CHIPS AND / SODA. SHE WENT OUT FOR / THEM. I WENT WITH HER.
+
+### Found lore (story items)
+
+**EASTWORLD BROCHURE** _(found by the park gate)_
+
+- 'EASTWORLD! THE WEST, BUT / EAST. BUILT BY V. PUTAIN & / S. SEAGULL. INTELLIGENCE / PROVIDED BY ZAI.'
+- THE MASCOT IS A BEAR IN A / COWBOY HAT. THE FINE PRINT / WAIVES YOUR ORGANS.
+
+**ALL-ACCESS PASS** _(dropped by STEVEN SEAGULL; opens the control center)_
+
+- SEAGULL'S ALL-ACCESS PASS. / LAMINATED. AUTOGRAPHED BY / HIMSELF, TO HIMSELF.
+- IT OPENS THE CONTROL / CENTER. ADA'S BEACON POINTS / STRAIGHT THROUGH THAT DOOR.
+
+**THE ANNEXATION MAP** _(dropped by VLADIMIR PUTAIN)_
+
+- A MAP OF EASTWORLD, RELABELED / IN PEN: EVERY BUILDING RENAMED / AFTER A CITY HE COULDN'T TAKE / OUT THERE.
+- IN HERE THE FLAGS NEVER ARGUE / BACK. THAT'S ALL THIS PLACE / EVER WAS - A SANDBOX FOR A / MAN WHO LOST.
+
+### The wandering merchant — the barkeep
+
+_The same impossible trader, polishing glasses for robots that don't drink —
+and quietly fencing the park owner's estate (the PUTAIN stall, rolled at
+unique odds; his watches are the intended purse). Spoken once, on the first
+meeting._
+
+- WELL HOWDY. MIND THE GLASSES - / THE ROBOTS DON'T DRINK, BUT / THEY TIP IN PARTS.
+- YES, IT'S ME. A MARKET FELL / THROUGH A RIFT AND I FELL WITH / IT. THE HAT IS NEW.
+- I'VE COME INTO SOME... ESTATE / PIECES. THE OWNER'S OWN / WARDROBE. PRICES ARE FIRM. / BRING WATCHES.
+
+---
+
 ## Where the data lives
 
 The manuscript above is the truth; the files below are its implementation. Each
@@ -766,17 +961,17 @@ line here appears verbatim in one of these, and they must match. When you change
 one, update the manuscript in the same change (subject to the confirmation rule
 at the top of this file).
 
-| Story/dialogue element                      | Canonical data file                                                                                  |
-| ------------------------------------------- | ---------------------------------------------------------------------------------------------------- |
-| Prelude cutscene (captions, `say` beats)    | `src/game/defs/cutscenes.ts`                                                                         |
-| Per-level opening monologues (`intro`)      | `src/game/defs/levels/spacez_hq.ts`, `.../moon.ts`, `.../mars.ts`, `.../rift.ts`                     |
-| Elite/boss `dialogue` + `lastWords`         | `src/game/defs/enemies/spacez.ts`, `.../moon.ts`, `.../mars.ts`, `.../rift.ts`                       |
-| Hero's inner thoughts (`firstKillThoughts`) | `src/game/defs/thoughts.ts` (pinned from a `LevelDef`)                                               |
-| Companion joining words + kill quotes       | `src/game/defs/companions.ts` (`joinWords`, `killQuotes`; spare verdict in `src/game/companions.ts`) |
-| Found lore on story items (`lore`)          | `src/game/defs/story.ts`                                                                             |
-| The wandering merchant's greetings          | `src/game/defs/levels/*.ts` (`merchant.greeting`; played by `src/game/merchant.ts`)                  |
-| Loose UI copy (how-to-play, not story)      | `website/src/game/copy.ts`                                                                           |
-| Brand strings (title, tagline — not story)  | `game.config.json` → `website/src/identity.ts`                                                       |
+| Story/dialogue element                                          | Canonical data file                                                                                  |
+| --------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------- |
+| Prelude cutscene (captions, `say` beats)                        | `src/game/defs/cutscenes.ts`                                                                         |
+| Per-level opening monologues (`intro`) + the epilogue (`outro`) | `src/game/defs/levels/spacez_hq.ts`, `.../moon.ts`, `.../mars.ts`, `.../rift.ts`, `.../eastworld.ts` |
+| Elite/boss `dialogue` + `lastWords`                             | `src/game/defs/enemies/spacez.ts`, `.../moon.ts`, `.../mars.ts`, `.../rift.ts`, `.../eastworld.ts`   |
+| Hero's inner thoughts (`firstKillThoughts`)                     | `src/game/defs/thoughts.ts` (pinned from a `LevelDef`)                                               |
+| Companion joining words + kill quotes                           | `src/game/defs/companions.ts` (`joinWords`, `killQuotes`; spare verdict in `src/game/companions.ts`) |
+| Found lore on story items (`lore`)                              | `src/game/defs/story.ts`                                                                             |
+| The wandering merchant's greetings                              | `src/game/defs/levels/*.ts` (`merchant.greeting`; played by `src/game/merchant.ts`)                  |
+| Loose UI copy (how-to-play, not story)                          | `website/src/game/copy.ts`                                                                           |
+| Brand strings (title, tagline — not story)                      | `game.config.json` → `website/src/identity.ts`                                                       |
 
 The engine machinery that plays these (dialogue queue, kill-triggered scenes) is
 in `src/game/story.ts`; the app-side overlays that render them are

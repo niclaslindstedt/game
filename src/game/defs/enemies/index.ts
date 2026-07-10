@@ -8,6 +8,7 @@
 
 import type { EnemyDef } from "./types.ts";
 
+import { EASTWORLD_ENEMIES } from "./eastworld.ts";
 import { MARS_ENEMIES } from "./mars.ts";
 import { MOON_ENEMIES } from "./moon.ts";
 import { RIFT_ENEMIES } from "./rift.ts";
@@ -41,6 +42,7 @@ export const ENEMY_DEFS: Record<string, EnemyDef> = mergeRosters([
   MOON_ENEMIES,
   MARS_ENEMIES,
   RIFT_ENEMIES,
+  EASTWORLD_ENEMIES,
 ]);
 
 // Active registry the accessor reads (defaults to the shipped catalog;

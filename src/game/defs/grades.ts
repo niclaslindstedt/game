@@ -191,6 +191,31 @@ const WEAPON_GRADE_NAMES: Record<string, GradeNames> = {
     exceptional: { id: "inferno_wand", name: "INFERNO WAND" },
     elite: { id: "solar_wand", name: "SOLAR WAND" },
   },
+  // EASTWORLD
+  mono_wire_lariat: {
+    exceptional: { id: "razor_lariat", name: "RAZOR LARIAT" },
+    elite: { id: "singularity_lasso", name: "SINGULARITY LASSO" },
+  },
+  plasma_peacemaker: {
+    exceptional: { id: "ion_peacemaker", name: "ION PEACEMAKER" },
+    elite: { id: "nova_peacemaker", name: "NOVA PEACEMAKER" },
+  },
+  branding_iron: {
+    exceptional: { id: "fusion_brand", name: "FUSION BRAND" },
+    elite: { id: "starfall_brand", name: "STARFALL BRAND" },
+  },
+  maglev_repeater: {
+    exceptional: { id: "coilgun_repeater", name: "COILGUN REPEATER" },
+    elite: { id: "railstorm_repeater", name: "RAILSTORM REPEATER" },
+  },
+  snake_oil_sprayer: {
+    exceptional: { id: "viper_oil_sprayer", name: "VIPER-OIL SPRAYER" },
+    elite: { id: "basilisk_sprayer", name: "BASILISK SPRAYER" },
+  },
+  high_noon: {
+    exceptional: { id: "solar_noon", name: "SOLAR NOON" },
+    elite: { id: "midnight_sun", name: "MIDNIGHT SUN" },
+  },
 };
 
 const GEAR_GRADE_NAMES: Record<string, GradeNames> = {
@@ -357,6 +382,31 @@ const GEAR_GRADE_NAMES: Record<string, GradeNames> = {
   sabatons: {
     exceptional: { id: "gothic_sabatons", name: "GOTHIC SABATONS" },
     elite: { id: "myrmidon_sabatons", name: "MYRMIDON SABATONS" },
+  },
+  // EASTWORLD
+  servo_stetson: {
+    exceptional: { id: "marshals_stetson", name: "MARSHAL'S STETSON" },
+    elite: { id: "high_nooner", name: "HIGH NOONER" },
+  },
+  mirrorshade_visor: {
+    exceptional: { id: "duelists_visor", name: "DUELIST'S VISOR" },
+    elite: { id: "deadeye_visor", name: "DEADEYE VISOR" },
+  },
+  exo_duster: {
+    exceptional: { id: "outriders_duster", name: "OUTRIDER'S DUSTER" },
+    elite: { id: "stormwall_duster", name: "STORMWALL DUSTER" },
+  },
+  tin_star_cuirass: {
+    exceptional: { id: "silver_star_cuirass", name: "SILVER STAR CUIRASS" },
+    elite: { id: "gold_star_cuirass", name: "GOLD STAR CUIRASS" },
+  },
+  rattlesnake_chaps: {
+    exceptional: { id: "diamondback_chaps", name: "DIAMONDBACK CHAPS" },
+    elite: { id: "basilisk_chaps", name: "BASILISK CHAPS" },
+  },
+  spur_jet_boots: {
+    exceptional: { id: "thruster_spurs", name: "THRUSTER SPURS" },
+    elite: { id: "afterburner_spurs", name: "AFTERBURNER SPURS" },
   },
 };
 

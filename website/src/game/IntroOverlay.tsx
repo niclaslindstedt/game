@@ -38,6 +38,7 @@ export function IntroOverlay({
   onSkip,
   onBlip,
   revealRef,
+  variant = "intro",
 }: {
   state: GameState;
   assets: GameAssets;
@@ -50,9 +51,18 @@ export function IntroOverlay({
   onBlip?: () => void;
   /** Mirror of the live reveal state for the out-of-overlay advance handler. */
   revealRef?: MutableRefObject<IntroReveal>;
+  /**
+   * Which black-screen monologue this overlay plays: the level's opening
+   * `intro` (default) or its post-victory `outro` epilogue — same hero, same
+   * box, same typewriter; only the page source (and the phase mutators the
+   * caller wires) differ.
+   */
+  variant?: "intro" | "outro";
 }) {
-  const pages = levelDef(state.level.id).intro;
-  const page = pages[state.introPage] ?? EMPTY_PAGE;
+  const def = levelDef(state.level.id);
+  const pages = variant === "outro" ? (def.outro ?? []) : def.intro;
+  const pageIndex = variant === "outro" ? state.outroPage : state.introPage;
+  const page = pages[pageIndex] ?? EMPTY_PAGE;
 
   // Blip on every other printed character — a dense-enough "typing" chatter
   // without a machine-gun at the per-character crawl rate.

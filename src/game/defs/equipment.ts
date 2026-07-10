@@ -25,6 +25,9 @@ import type { Affix, Quality, StatName, Tier, WeaponClass } from "../types.ts";
  * one-of-a-kind defs don't ship yet.
  */
 export const TIERS: Record<Tier, { prefix: string; affixCount: number }> = {
+  // TRASH never rolls (see TIER_ROLL_ORDER) — only scripted joke drops mint
+  // it. No prefix: the defs' own names already read as garbage.
+  trash: { prefix: "", affixCount: 0 },
   regular: { prefix: "", affixCount: 0 },
   magic: { prefix: "MAGIC ", affixCount: 1 },
   rare: { prefix: "RARE ", affixCount: 2 },
@@ -32,8 +35,14 @@ export const TIERS: Record<Tier, { prefix: string; affixCount: number }> = {
   legendary: { prefix: "LEGENDARY ", affixCount: 4 },
 };
 
-/** Roll order: try the best tier first, fall through to regular. */
-export const TIER_ROLL_ORDER: Tier[] = ["legendary", "unique", "rare", "magic"];
+/** Roll order: try the best tier first, fall through to regular. TRASH is
+ * deliberately absent — it never rolls, only scripted drops mint it. */
+export const TIER_ROLL_ORDER: Exclude<Tier, "regular" | "trash">[] = [
+  "legendary",
+  "unique",
+  "rare",
+  "magic",
+];
 
 // ---- Make quality ------------------------------------------------------------
 
@@ -724,6 +733,185 @@ export const WEAPON_DEFS: Record<string, WeaponDef> = {
     durability: 220,
     projectile: { speed: 360, radius: 4, lifetimeMs: 1000, sprite: "spark" },
     icon: "icon_void_wand",
+  },
+  // ---- EASTWORLD (level 5) base pool: the control center's hybrid arsenal —
+  // frontier silhouettes printed on ZAI fabricators, dropped by the park's
+  // hosts. The pool takes the normal band's top rungs (18 → 23, the ceiling
+  // grades unfold from); the hero arrives here around the high teens.
+  //
+  // A monomolecular lasso off the host-wrangling bench: the widest rope in
+  // the west, cracking a whole circle of the crowd at once.
+  mono_wire_lariat: {
+    id: "mono_wire_lariat",
+    material: "metal",
+    name: "MONO-WIRE LARIAT",
+    class: "melee",
+    levelReq: 18,
+    damage: 15,
+    cooldownMs: 650,
+    range: 46,
+    // A cracked lasso sweeps wide — a genuine cone AoE, the level's crowd tool.
+    sweepDeg: 130,
+    durability: 200,
+    icon: "icon_lariat",
+  },
+  // The park's signature sidearm: a six-shooter with a plasma cylinder.
+  // Honest cadence, honest damage — the peacekeeper of the main street.
+  plasma_peacemaker: {
+    id: "plasma_peacemaker",
+    material: "metal",
+    name: "PLASMA PEACEMAKER",
+    class: "ranged",
+    levelReq: 19,
+    damage: 45,
+    cooldownMs: 460,
+    range: 250,
+    durability: 200,
+    projectile: {
+      speed: 440,
+      radius: 3,
+      lifetimeMs: 800,
+      sprite: "plasma_slug",
+    },
+    icon: "icon_peacemaker",
+  },
+  // The cattle bench's plasma brand: one slow, searing thrust that ends the
+  // argument — the knuckles archetype grown up.
+  branding_iron: {
+    id: "branding_iron",
+    material: "metal",
+    name: "PLASMA BRANDING IRON",
+    class: "melee",
+    levelReq: 20,
+    damage: 90,
+    cooldownMs: 950,
+    range: 40,
+    // A thrust, not a sweep — one target takes the whole brand.
+    sweepDeg: 55,
+    durability: 180,
+    icon: "icon_branding_iron",
+  },
+  // A lever rifle on a maglev rail: the slug threads the line, punching
+  // through the front bodies into the ones behind.
+  maglev_repeater: {
+    id: "maglev_repeater",
+    material: "metal",
+    name: "MAGLEV REPEATER",
+    class: "ranged",
+    levelReq: 21,
+    damage: 24,
+    cooldownMs: 700,
+    range: 320,
+    durability: 190,
+    projectile: {
+      speed: 520,
+      radius: 3,
+      lifetimeMs: 900,
+      sprite: "rail_slug",
+      pierce: 2,
+    },
+    icon: "icon_repeater",
+  },
+  // The medicine wagon's pride: a fan of corrosive vials, three per squeeze.
+  // Cures nothing, dissolves most things.
+  snake_oil_sprayer: {
+    id: "snake_oil_sprayer",
+    name: "SNAKE-OIL SPRAYER",
+    class: "magic",
+    levelReq: 22,
+    damage: 19,
+    // Patent medicine: the batch varies. A lot.
+    damageVariance: 0.35,
+    cooldownMs: 520,
+    range: 220,
+    durability: 190,
+    projectile: {
+      speed: 300,
+      radius: 4,
+      lifetimeMs: 900,
+      sprite: "oil_vial",
+      count: 3,
+      spreadDeg: 26,
+    },
+    icon: "icon_snake_oil",
+  },
+  // The control center's sun-gun: a captured noon, released one blinding
+  // bolt at a time. The base ladder's slow magic capstone.
+  high_noon: {
+    id: "high_noon",
+    material: "precious",
+    name: "HIGH NOON",
+    class: "magic",
+    levelReq: 23,
+    damage: 94,
+    // A calibrated star: near-metronomic output.
+    damageVariance: 0.1,
+    cooldownMs: 900,
+    range: 340,
+    durability: 200,
+    projectile: { speed: 480, radius: 5, lifetimeMs: 1100, sprite: "sun_bolt" },
+    icon: "icon_high_noon",
+  },
+  // Eastworld's scheduled early revolver (earlyDrops) — a special, not a
+  // base: the first host down surrenders its stage prop, live rounds and all.
+  prairie_iron: {
+    id: "prairie_iron",
+    material: "metal",
+    name: "PRAIRIE IRON",
+    class: "ranged",
+    levelReq: 17,
+    damage: 52,
+    cooldownMs: 500,
+    range: 240,
+    durability: 210,
+    projectile: {
+      speed: 420,
+      radius: 3,
+      lifetimeMs: 800,
+      sprite: "plasma_slug",
+    },
+    icon: "icon_prairie_iron",
+  },
+  // ---- TRASH — the joke class (tier "trash", see Tier). ELON MOSQUE's final
+  // estate: weapons with ZERO damage and no stats, minted only by his scripted
+  // Eastworld drop, worth pocket lint at the counter. Never pooled, never
+  // rolled, exempt from the damage budget (they deliberately owe nothing).
+  soggy_cardboard_sword: {
+    id: "soggy_cardboard_sword",
+    name: "SOGGY CARDBOARD SWORD",
+    class: "melee",
+    levelReq: 1,
+    damage: 0,
+    cooldownMs: 800,
+    range: 30,
+    sweepDeg: 90,
+    durability: 10,
+    icon: "icon_cardboard_sword",
+  },
+  busted_flamethrower: {
+    id: "busted_flamethrower",
+    name: "NOT-A-FLAMETHROWER (EMPTY)",
+    class: "melee",
+    levelReq: 1,
+    damage: 0,
+    cooldownMs: 900,
+    range: 28,
+    sweepDeg: 60,
+    durability: 10,
+    icon: "icon_busted_flamethrower",
+  },
+  cybervan_wiper: {
+    id: "cybervan_wiper",
+    material: "metal",
+    name: "CYBERVAN WIPER BLADE",
+    class: "melee",
+    levelReq: 1,
+    damage: 0,
+    cooldownMs: 700,
+    range: 34,
+    sweepDeg: 70,
+    durability: 10,
+    icon: "icon_cybervan_wiper",
   },
   // Specials — never in a level's random base pool; they arrive via
   // guaranteed drops (a boss's `loot.items`, a level's `allClearWeapon`,

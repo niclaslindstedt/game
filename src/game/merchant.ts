@@ -15,10 +15,16 @@ import {
   type Rng,
 } from "@game/lib/rng.ts";
 import { clamp, distance, moveToward, type Vec2 } from "@game/lib/vec.ts";
-import { ECONOMY, HELD_ITEMS, MERCHANT } from "./config.ts";
+import { ECONOMY, HELD_ITEMS, MERCHANT, UNIQUE } from "./config.ts";
 import { gearDef, isWeaponDef, weaponDef } from "./defs/equipment.ts";
 import { levelDef } from "./defs/levels/index.ts";
-import { addToInventory, qualityMult, rollEquipment } from "./items.ts";
+import { uniqueDef } from "./defs/uniques.ts";
+import {
+  addToInventory,
+  mintUnique,
+  qualityMult,
+  rollEquipment,
+} from "./items.ts";
 import { addMapMarker } from "./map.ts";
 import { lineOfSight, resolveObstacles } from "./obstacles.ts";
 import type { Equipment, GameState, Merchant } from "./types.ts";
@@ -222,6 +228,29 @@ function rollStock(state: GameState, merchant: Merchant): Merchant["stock"] {
         // Stocked against the hero himself — his level is the stall's mlvl.
         mlvl: state.player.level,
       });
+      stock.push({
+        id: state.nextId++,
+        kind: "weapon",
+        equipment,
+        price: sellValue(equipment) * ECONOMY.weaponBuyMarkup,
+        sold: false,
+      });
+    }
+    // Stall UNIQUES (`merchant.stockUniques`): the level's persona fences
+    // named uniques, each ROLLED at the standing boss-unique odds
+    // (`UNIQUE.dropChance × mlvl/ilvl`, capped — the hero's level standing
+    // in for the killer's, exactly like the stall's weapon rolls). Same
+    // rarity as any unique, different venue: it appears on the counter
+    // instead of a corpse, and costs coins instead of a kill — the loop a
+    // fallen oligarch's expensive-but-useless valuables exist to fund.
+    for (const id of level.merchant?.stockUniques ?? []) {
+      const ilvl = Math.max(1, uniqueDef(id).ilvl);
+      const chance = Math.min(
+        UNIQUE.dropChanceCap,
+        UNIQUE.dropChance * (state.player.level / ilvl),
+      );
+      if (state.rng() >= chance) continue;
+      const equipment = mintUnique(state, id);
       stock.push({
         id: state.nextId++,
         kind: "weapon",

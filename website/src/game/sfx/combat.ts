@@ -140,6 +140,40 @@ export function playCombatSound(synth: Synth, event: GameEvent): boolean {
       });
       return true;
 
+    case "enemyShot":
+      // A hostile pew: lower and meaner than the hero's own shot, so return
+      // fire reads as a threat arriving, not the player's output.
+      synth.tone({
+        type: "square",
+        from: 520,
+        to: 160,
+        durationMs: 70,
+        volume: 0.03,
+      });
+      synth.noise({
+        durationMs: 35,
+        volume: 0.02,
+        filter: { type: "highpass", frequency: 1800 },
+      });
+      return true;
+
+    case "enemyShielded":
+      // The blow bouncing off the shield: a hard metallic tink with no give —
+      // clearly a wall, not a wound.
+      synth.tone({
+        type: "triangle",
+        from: 1900,
+        to: 1500,
+        durationMs: 70,
+        volume: 0.04,
+      });
+      synth.noise({
+        durationMs: 30,
+        volume: 0.02,
+        filter: { type: "bandpass", frequency: 3200, q: 2 },
+      });
+      return true;
+
     case "enemyDodge":
     case "enemyMiss":
       // A blow that hit only air: a short dry whiff, no impact body. Quieter

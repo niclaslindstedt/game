@@ -807,9 +807,10 @@ export const LOOT = {
    * campaign start paying blues/yellows/golds": magic from mlvl 5, rare from
    * 10, unique from 15, legendary from 40. (Monster level = player level +
    * the difficulty's `mobLevelOffset`, so harder rungs reach each tier
-   * earlier in the story.)
+   * earlier in the story.) TRASH is gated at 1 — it never rolls anyway (only
+   * scripted drops mint it), the entry just keeps the tier table total.
    */
-  tierUnlockMlvl: { magic: 5, rare: 10, unique: 15, legendary: 40 },
+  tierUnlockMlvl: { trash: 1, magic: 5, rare: 10, unique: 15, legendary: 40 },
   /**
    * BASE-LEVEL drop floor: a base whose `levelReq` is more than this many
    * levels under the killer's monster level is retired from the drop pool, so a
@@ -1095,6 +1096,36 @@ export const ASTEROIDS = {
 } as const;
 
 /**
+ * Ranged enemies (`EnemyDef.ranged`) — shooters that fire hostile projectiles
+ * at the player and, with `takesCover`, play hide-and-peek behind the level's
+ * solid obstacles between shots (the per-enemy numbers — damage, cooldown,
+ * range, projectile — live on the def; this is the shared choreography).
+ * Units: world px, ms, fractions.
+ */
+export const ENEMY_RANGED = {
+  /**
+   * The share of its firing range a shooter tries to hold from the player:
+   * closer than this it backs away (a gunslinger keeps its distance), further
+   * it advances until the player is in range and sight.
+   */
+  holdRangeFraction: 0.7,
+  /**
+   * With this much (or less) of the reload left, a covering shooter steps
+   * back out of hiding to line up the next shot — the "peek" of the
+   * hide-and-peek dance. Longer = more brazen, shorter = more cowardly.
+   */
+  peekWindowMs: 700,
+  /**
+   * How far around itself a covering shooter looks for a solid (non-jumpable)
+   * obstacle to hide behind. Nothing in reach = it just backs off to its hold
+   * range instead.
+   */
+  coverSearchRadius: 260,
+  /** Gap kept between the shooter's edge and its cover rock's edge. */
+  coverGap: 4,
+} as const;
+
+/**
  * Apparitions — dialogue-only figures (EnemyDef.apparition). One seeks the
  * player out for its scene like any elite speaker, but nothing in the world
  * touches it (weapons, abilities, hazards) and its own touch is cold air.
@@ -1221,14 +1252,19 @@ export const ECONOMY = {
   itemBase: 2,
   /** Coins of worth per point of the item's level (ilvl). */
   itemPerIlvl: 1,
-  /** The tier ladder in coin terms — each rung an order of magnitude. */
+  /** The tier ladder in coin terms — each rung an order of magnitude. TRASH
+   * sits below 1: joke drops melt down for pocket lint, whatever their ilvl. */
   tierValueMult: {
+    trash: 0.1,
     regular: 1,
     magic: 10,
     rare: 100,
     unique: 1_000,
     legendary: 10_000,
-  } as Record<"regular" | "magic" | "rare" | "unique" | "legendary", number>,
+  } as Record<
+    "trash" | "regular" | "magic" | "rare" | "unique" | "legendary",
+    number
+  >,
   /** Metal items melt down: worth double (see EquipmentDef.material). */
   metalMult: 2,
   /** Precious items (gold, gems, true magic) fetch four times. */

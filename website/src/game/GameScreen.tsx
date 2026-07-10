@@ -25,6 +25,8 @@ import {
   abilityDef,
   advanceDialogue,
   advanceIntro,
+  advanceOutro,
+  skipOutro,
   allocateStat,
   confirmRespec,
   BOT_STRATEGIES,
@@ -964,6 +966,7 @@ export function GameScreen({
       const inScene =
         state.phase === "cutscene" ||
         state.phase === "intro" ||
+        state.phase === "outro" ||
         state.phase === "title" ||
         state.phase === "dialogue";
       if (advanceKey && inScene) {
@@ -982,6 +985,16 @@ export function GameScreen({
             introRevealRef.current.skip();
           } else {
             advanceIntro(state);
+            playUiSound(synth, "move");
+          }
+          bumpUi();
+        } else if (state.phase === "outro") {
+          // The epilogue turns like the intro (the overlay shares the reveal
+          // ref — only one of the two is ever mounted at a time).
+          if (!introRevealRef.current.done) {
+            introRevealRef.current.skip();
+          } else {
+            advanceOutro(state);
             playUiSound(synth, "move");
           }
           bumpUi();
@@ -1006,6 +1019,10 @@ export function GameScreen({
         playUiSound(synth, "back");
       } else if (event.key === "Escape" && state.phase === "intro") {
         skipIntro(state);
+        playUiSound(synth, "back");
+        bumpUi();
+      } else if (event.key === "Escape" && state.phase === "outro") {
+        skipOutro(state);
         playUiSound(synth, "back");
         bumpUi();
       } else if (event.key === "e" || event.key === "E") {
@@ -1156,6 +1173,7 @@ export function GameScreen({
           if (state.phase === "paused") resumeGame(state);
           if (state.phase === "cutscene") skipCutscene(state);
           if (state.phase === "intro") skipIntro(state);
+          if (state.phase === "outro") skipOutro(state);
           if (state.phase === "title") beginRun();
           if (state.phase === "dialogue") {
             advanceDialogue(state);
@@ -1523,6 +1541,30 @@ export function GameScreen({
               color: event.type === "enemyDodge" ? "#cfd6df" : "#9aa3ad",
             });
           }
+          // A blow bounced off a guarded unique: float "SHIELDED" so the
+          // immunity reads as a rule (kill the controllers first), not a bug.
+          if (event.type === "enemyShielded") {
+            const def = enemyDef(event.defId);
+            effects.push({
+              kind: "text",
+              pos: { x: event.pos.x, y: event.pos.y - def.radius - 2 },
+              untilMs: state.stats.timeMs + 650,
+              durationMs: 650,
+              text: "SHIELDED",
+              color: "#8fd7ff",
+            });
+          }
+          // An enemy's shot flashes at its muzzle like the hero's own.
+          if (event.type === "enemyShot") {
+            effects.push({
+              kind: "muzzle",
+              pos: { x: event.pos.x, y: event.pos.y },
+              angle: Math.atan2(event.dir.y, event.dir.x),
+              weaponClass: "ranged",
+              untilMs: state.stats.timeMs + 110,
+              durationMs: 110,
+            });
+          }
           // A companion's kill-quote banter: hovering text over the killer,
           // gold and longer-lived than a combat tag — a one-liner, not a
           // dialogue scene, so the run never pauses for it.
@@ -1736,7 +1778,12 @@ export function GameScreen({
         }
       },
       render(timeMs) {
-        const camera = computeCamera(state, canvas.width, canvas.height);
+        const camera = computeCamera(
+          state,
+          canvas.width,
+          canvas.height,
+          timeMs,
+        );
         drawFrame(ctx, state, assets, camera, timeMs);
         drawEffects(ctx, effects, camera, state.stats.timeMs, assets);
 
@@ -2579,6 +2626,30 @@ export function GameScreen({
           }}
           onSkip={() => {
             skipIntro(state);
+            playUiSound(synth, "back");
+            bumpUi();
+          }}
+        />
+      )}
+
+      {state && hud?.phase === "outro" && (
+        <IntroOverlay
+          variant="outro"
+          state={state}
+          assets={assets}
+          font={font}
+          revealRef={introRevealRef}
+          onBlip={() => {
+            playUiSound(synth, "blip");
+            playTypewriterHaptic();
+          }}
+          onAdvance={() => {
+            advanceOutro(state);
+            playUiSound(synth, "move");
+            bumpUi();
+          }}
+          onSkip={() => {
+            skipOutro(state);
             playUiSound(synth, "back");
             bumpUi();
           }}

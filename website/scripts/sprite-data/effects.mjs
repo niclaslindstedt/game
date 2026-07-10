@@ -43,6 +43,9 @@ const PALETTE = {
   // (same values as the icons family's storm chars — chars are per-family).
   e: [90, 180, 255],
   s: [214, 240, 255],
+  // The ZAI glow (same value as the rift/eastworld families' Q): the
+  // controllers' and the SUPERCORE's hostile shots.
+  Q: [96, 240, 208],
 };
 
 const SPRITES = {
@@ -276,6 +279,73 @@ const SPRITES = {
     "......OWWO......",
     "......OWWO......",
     "......OOOO......",
+  ],
+  // ---- Eastworld shots ---------------------------------------------------------
+  // The PLASMA PEACEMAKER / PRAIRIE IRON slug: a hot blue-white round.
+  plasma_slug: [
+    "........",
+    "........",
+    "..OOO...",
+    ".OessO..",
+    ".OseeO..",
+    "..OOO...",
+    "........",
+    "........",
+  ],
+  // The MAGLEV REPEATER's rail sliver: a silver needle in flight.
+  rail_slug: [
+    "........",
+    "........",
+    ".OOOOOO.",
+    "OWaaaaAO",
+    ".OOOOOO.",
+    "........",
+    "........",
+    "........",
+  ],
+  // The SNAKE-OIL SPRAYER's vial: a lobbed dose of patent medicine.
+  oil_vial: [
+    "........",
+    "...OO...",
+    "..OWWO..",
+    ".OGllGO.",
+    ".OGGGGO.",
+    ".OgGGgO.",
+    "..OOOO..",
+    "........",
+  ],
+  // HIGH NOON's bolt: a captured sun, released.
+  sun_bolt: [
+    "........",
+    "...OO...",
+    "..OYYO..",
+    ".OYyyYO.",
+    ".OYyyYO.",
+    "..OYYO..",
+    "...OO...",
+    "........",
+  ],
+  // The GROK controllers' shot: a ZAI-cyan dart.
+  zai_bolt: [
+    "........",
+    "...O....",
+    "..OQO...",
+    ".OQsQO..",
+    "..OQO...",
+    "...O....",
+    "........",
+    "........",
+  ],
+  // THE SUPERCORE's shot: a fat, slow ZAI orb — dodge it or jump it.
+  zai_orb: [
+    "..OOO...",
+    ".OQQQO..",
+    "OQQsQQO.",
+    "OQsssQO.",
+    "OQQsQQO.",
+    ".OQQQO..",
+    "..OOO...",
+    "........",
   ],
   // The menu pointer: a puffy Mickey-Mouse white glove pointing up, three back
   // seams on the mitt, a rolled cuff. Hotspot is the fingertip (top).

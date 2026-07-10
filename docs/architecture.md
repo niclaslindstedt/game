@@ -73,7 +73,15 @@ run against synthetic fixtures with no shipped content (see
   dialogue box (an `enemyDeath` scene) as it falls, so a story death lands
   harder than a nameless minion's. A unique may instead be `spareable`: at
   0 hp it kneels for the SPARE-or-KILL verdict, and spared it joins the
-  party as the named companion (see `companions.ts` below). This game's
+  party as the named companion (see `companions.ts` below). A mob may be a
+  SHOOTER (`EnemyDef.ranged`): it fires hostile projectiles at the player
+  (they ride the ordinary projectile pass flagged `hostile` — walls eat
+  them, a jump clears them, armor turns its share; movement/firing in
+  `src/game/ranged.ts`), and with `takesCover` it hides behind the level's
+  solid obstacles between shots. A unique may be GUARDED
+  (`EnemyDef.shieldedBy`): it cannot be hurt while any enemy with a listed
+  def id lives — blows bounce with an `enemyShielded` event — so a set-piece
+  boss is wired to its controllers. This game's
   actual roster (and the story it tells) is in
   [`game-content.md`](./game-content.md).
 - **`src/game/defs/companions.ts`** — the companion catalog: who a spared
@@ -97,15 +105,22 @@ run against synthetic fixtures with no shipped content (see
   the prelude _and_ the hero's level-intro monologue that follows — landing
   on the level-name `title` card just before the drop. The opening flow is
   `cutscene` (if any) → `intro` (the hero's monologue) → `title` (the level
-  name alone on black) → `playing`.
+  name alone on black) → `playing`. The intro has a closing mirror: a level
+  may ship `outro` pages (`LevelDef.outro`) — clearing its objective arms a
+  VICTORY QUAKE (`GameState.quakeMs`, a render-side camera shake) through
+  the loot-grab countdown, and the countdown then lands in the `outro`
+  phase (the same black-screen paged monologue, turned by
+  `advanceOutro`/`skipOutro`) before the `victory` splash.
 - **`src/game/defs/equipment.ts`** — weapons (melee/ranged/magic classes,
   each with a Diablo-style `levelReq` that gates both the drop — no monster
   below it drops the base — and the hero's own hands, plus a durability
   budget: dropped weapons wear out per attack and break, though the starting
   sidearm and every unique/legendary find are minted unbreakable; ranged
   bases can fire pellet volleys, pierce, home, or chain), gear, the
-  five-tier quality ladder (regular/magic/rare/unique/legendary — each tier
-  unlocks at a MONSTER LEVEL, config `LOOT.tierUnlockMlvl`), and the affix
+  quality ladder (trash/regular/magic/rare/unique/legendary — each tier
+  unlocks at a MONSTER LEVEL, config `LOOT.tierUnlockMlvl`; TRASH sits below
+  regular, never rolls, and exists only for scripted zero-stat joke drops
+  minted by a boss's forced-tier `loot.items`), and the affix
   pools magic+ items roll, whose magnitudes scale with the drop's ITEM LEVEL
   (the killer's monster level minus a small weighted deficit; magic+ names
   are composed Diablo-style from those affixes). Two more axes complete the
@@ -277,7 +292,10 @@ run against synthetic fixtures with no shipped content (see
   the step) roots him for good, pins the map (`merchant` marker), rolls his
   stall against the hero's level, emits `merchantDiscovered`, and plays the
   level's greeting scene (`LevelDef.merchant` — sprite, name, and pages;
-  the words live in `docs/manuscript.md`). His ward (`repelFromMerchant`,
+  the words live in `docs/manuscript.md`). A level may also list stall
+  UNIQUES (`merchant.stockUniques`): named uniques the stall MAY carry,
+  each rolled at the standing boss-unique odds when it stocks — the same
+  rarity as a unique drop, sold across the counter instead. His ward (`repelFromMerchant`,
   called from the enemy pass) keeps the horde `MERCHANT.repelRadius` off
   the stall — bosses and apparitions excepted. `openShop`/`closeShop`
   toggle the `shop` pause phase (proximity-gated); `sellItem`/`buyStock`

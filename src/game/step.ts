@@ -103,6 +103,11 @@ import {
   tickMenace,
 } from "./menace.ts";
 import {
+  moveRangedEnemy,
+  resolveHostileHit,
+  stepRangedAttacks,
+} from "./ranged.ts";
+import {
   collectStoryItem,
   startEnemyDialogue,
   stepDoors,
@@ -159,6 +164,11 @@ export function step(state: GameState, input: GameInput, dtMs: number): void {
       state.bagFullHintCooldownMs - dtMs,
     );
   }
+  // The victory quake burns down alongside the countdown that armed it (the
+  // renderer jitters the camera off this — see GameState.quakeMs).
+  if (state.quakeMs > 0) {
+    state.quakeMs = Math.max(0, state.quakeMs - dtMs);
+  }
 
   // Snapshot cumulative output so the menace tick can read this step's damage
   // and kills as rates (see tickMenace) — the meter heats from what the player
@@ -178,6 +188,9 @@ export function step(state: GameState, input: GameInput, dtMs: number): void {
   stepAbilities(state, dt, dtMs);
   stepProjectiles(state, dt, dtMs);
   stepEnemies(state, dt, dtMs);
+  // Shooters pull their triggers on the tick's final positions — after the
+  // horde has moved, so the aim is judged on what the player actually sees.
+  stepRangedAttacks(state, dtMs);
   // The party acts on the tick's final enemy positions: regroup, fight,
   // soak contact blows, stand back up (see companions.ts).
   stepCompanions(state, dt, dtMs);
@@ -213,13 +226,26 @@ export function step(state: GameState, input: GameInput, dtMs: number): void {
   // the loot.
   if (state.victoryCountdownMs === null && objectiveCleared(state)) {
     state.victoryCountdownMs = RUN.victoryDelayMs;
+    // A level with an epilogue goes out with a bang: the world quakes
+    // through the whole loot-grab window, and the black-screen outro takes
+    // the stage when the countdown runs out.
+    if ((levelDef(state.level.id).outro?.length ?? 0) > 0) {
+      state.quakeMs = RUN.victoryDelayMs;
+    }
   }
   if (state.victoryCountdownMs !== null) {
     state.victoryCountdownMs -= dtMs;
     if (state.victoryCountdownMs <= 0) {
       state.victoryCountdownMs = 0;
-      state.phase = "victory";
+      // The quake ends with the countdown — the black-screen outro (and the
+      // splash behind it) sit on steady ground.
+      state.quakeMs = 0;
       state.events.push({ type: "victory" });
+      // A level that ships an outro reads its epilogue before the splash:
+      // the `outro` phase mirrors the intro's black-screen pages
+      // (advanceOutro turns them; past the last page comes `victory`).
+      const outro = levelDef(state.level.id).outro;
+      state.phase = outro && outro.length > 0 ? "outro" : "victory";
     }
   }
 }
@@ -939,6 +965,13 @@ function stepProjectiles(state: GameState, dt: number, dtMs: number): void {
       continue;
     }
 
+    // A HOSTILE shot (an enemy's — see EnemyDef.ranged) never touches the
+    // horde: it resolves against the player alone and is spent on contact.
+    if (projectile.hostile) {
+      if (!resolveHostileHit(state, projectile)) survivors.push(projectile);
+      continue;
+    }
+
     const hit = hitGridFind(
       projectile.pos,
       projectile.radius,
@@ -1240,6 +1273,16 @@ function moveEnemy(state: GameState, enemy: Enemy, dt: number): void {
     // The stare-down is the fight starting: match the player's power now, so
     // the boss is worthy whether the player opens with a shot or a charge.
     if (awake) maybePowerScale(state, enemy);
+    // A SHOOTER boss (the zAI controllers) fights at range once woken: hold
+    // distance, peek for the shot, hide behind the rocks between shots. Its
+    // cover dance replaces the leash — cover-seeking keeps it near its post.
+    // An unplayed speaker still closes in first (the stare-down needs the
+    // speak radius), exactly like an elite's rush.
+    const speechPending = !enemy.spoke && (def.dialogue?.length ?? 0) > 0;
+    if (awake && def.ranged && !speechPending) {
+      moveRangedEnemy(state, enemy, speed, dt);
+      return;
+    }
     const leashed =
       def.ai.leashRadius !== undefined &&
       distance(enemy.pos, enemy.home) > def.ai.leashRadius;
@@ -1272,6 +1315,13 @@ function moveEnemy(state: GameState, enemy: Enemy, dt: number): void {
     // so the scene starts seconds after the ambush springs. Once it has
     // spoken (or never had lines) it settles into its fighting speed.
     const rushing = !enemy.spoke && (def.dialogue?.length ?? 0) > 0;
+    // A SHOOTER that has said its piece fights at range instead of charging:
+    // hold distance, peek for the shot, and (takesCover) hide behind the
+    // rocks between shots — see moveRangedEnemy in ranged.ts.
+    if (!rushing && def.ranged) {
+      moveRangedEnemy(state, enemy, speed, dt);
+      return;
+    }
     const rushSpeed =
       (def.ai.rushSpeed ?? def.speed) * stasisFactorAt(player, enemy.pos);
     enemy.pos = moveToward(

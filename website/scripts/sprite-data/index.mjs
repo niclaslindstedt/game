@@ -19,6 +19,7 @@ import { buildPalette } from "../asset-tools/palette.mjs";
 import { wornFrames, wornRamp } from "../asset-tools/worn.mjs";
 import { CORE_PALETTE } from "./core.mjs";
 import earth from "./earth.mjs";
+import eastworld from "./eastworld.mjs";
 import effects from "./effects.mjs";
 import hero from "./hero.mjs";
 import icons from "./icons.mjs";
@@ -43,6 +44,7 @@ export const FAMILIES = [
   spacez,
   mars,
   rift,
+  eastworld,
 ].map((family) => ({
   ...family,
   // Throws on a char defined both locally and in the core — a family may

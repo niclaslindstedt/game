@@ -24,7 +24,13 @@ export { step } from "./game/step.ts";
 
 // MERCY DROP queries — exposed so the app can surface "the swarm is about to
 // cough up a bomb" / "a drink is coming" and tests can assert the ramps.
-export { crowdBombChance, grantXp, staminaDrinkChance } from "./game/loot.ts";
+export {
+  crowdBombChance,
+  grantXp,
+  hitEnemy,
+  killEnemy,
+  staminaDrinkChance,
+} from "./game/loot.ts";
 export { mercyRescueWaiting, type MercyRescue } from "./game/items.ts";
 
 // Loadout carry-over between levels: snapshot a finished run's progress,
@@ -64,6 +70,8 @@ export {
   advanceIntro,
   skipIntro,
   dismissIntro,
+  advanceOutro,
+  skipOutro,
   skipCutscene,
   skipStoryOpening,
   tapCutscene,

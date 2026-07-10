@@ -333,13 +333,27 @@ for (const def of Object.values(LEVELS)) {
   }
 }
 
+// Merchant-stall placements: uniques a level's trader SELLS instead of any
+// mob dropping them (`LevelDef.merchant.stockUniques` — Eastworld's PUTAIN
+// estate). The third home kind; still exactly one home per unique.
+const stallPlacements = [];
+for (const def of Object.values(LEVELS)) {
+  for (const id of def.merchant?.stockUniques ?? []) {
+    if (!(id in UNIQUE_DEFS))
+      err(`level "${def.id}" stall: wires unknown unique "${id}".`);
+    stallPlacements.push({ level: def.id, id, slot: UNIQUE_DEFS[id]?.slot });
+  }
+}
+
 const placedCount = {};
-for (const p of [...placements, ...worldPlacements])
+for (const p of [...placements, ...worldPlacements, ...stallPlacements])
   placedCount[p.id] = (placedCount[p.id] ?? 0) + 1;
 for (const id of UNIQUE_IDS) {
   const n = placedCount[id] ?? 0;
   if (n === 0)
-    err(`${id}: shipped but wired to no boss or level — it can never drop.`);
+    err(
+      `${id}: shipped but wired to no boss, level, or stall — it can never drop.`,
+    );
   else if (n > 1)
     err(`${id}: wired to ${n} homes — a unique drops from exactly one.`);
 }

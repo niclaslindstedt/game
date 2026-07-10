@@ -257,6 +257,50 @@ sequel truncates this file to a stub and rebuilds it as its own systems land.
   `autoPowerScale` multiplied into `mobHpScaleFor`/`enemyPowerScale` —
   keyed to the PLAYER's level so difficulty offsets stay linear. Suite:
   `tests/engine/leveling_test.ts` ("the ding" describe block).
+- **Ranged enemies & guarded bosses (2026-07, Eastworld):** enemy shooters are
+  data — `EnemyDef.ranged` (damage/cooldown/range/projectile, optional
+  `takesCover`) with the behavior in a cohesive `src/game/ranged.ts`
+  (movement handed off from `moveEnemy`, a `stepRangedAttacks` firing pass
+  after `stepEnemies`, and `resolveHostileHit` for the player collision).
+  Hostile shots ride the EXISTING `state.projectiles` flagged
+  `Projectile.hostile` (+ `sourceMlvl` for the armor curve) — no new state
+  array, no save-version churn from the projectiles themselves — and branch
+  in `stepProjectiles` before the enemy hit-grid: walls eat them, a jump
+  clears them (`JUMP.dodgeHeight`), the hero may DODGE, armor turns its
+  share and wears. Cover is a two-mood dance (config `ENEMY_RANGED`): shot
+  ready → close/hold/sidestep for LOS; reloading (`takesCover`) → run to the
+  far side of the nearest solid obstacle. A GUARDED unique is
+  `EnemyDef.shieldedBy: string[]` — a guard in `hitEnemy` bounces every blow
+  (`enemyShielded` event, the app floats "SHIELDED") while any listed defId
+  is alive; wire a set-piece boss to its controllers by making the
+  controllers role `boss` so the `killBoss` objective needs them all (the
+  3-5-elites-per-level content rule counts only `elite`). Fixtures:
+  `test_gunner`/`test_shielded_boss`/`test_guard`; suite:
+  `tests/engine/ranged_test.ts`.
+- **Outro epilogue + victory quake (2026-07, Eastworld):** a level's closing
+  story is the intro's mirror — `LevelDef.outro` pages, a `outro` GamePhase
+  entered when the victory countdown expires (the `victory` EVENT still
+  fires at expiry so the app's end-of-run hooks run once), turned by
+  `advanceOutro`/`skipOutro` and landing on `victory`. The quake is
+  `GameState.quakeMs`, armed with the countdown on outro levels and burned
+  down in step(); the RENDERER shakes the camera off it (`computeCamera`
+  takes a render clock; the simulate pass's view rect stays steady). App
+  reuses `IntroOverlay` with a `variant: "outro"` prop; new phase + fields =
+  website `SAVE_VERSION` bump. Suite: `tests/engine/outro_test.ts`.
+- **TRASH tier + scripted estates (2026-07, Eastworld):** a tier BELOW
+  regular ("trash") that never rolls — `TIER_ROLL_ORDER` omits it, only a
+  boss's forced-tier `loot.items` mints it — with 0 affixes and a 0.1
+  coin multiplier (`ECONOMY.tierValueMult`). Adding a Tier value is a
+  sweep of every `Record<Tier, …>`: engine `TIERS`, `tierUnlockMlvl`,
+  `tierValueMult`, app `TIER_COLORS`/`TIER_RANK` maps. `loot.uniqueItems`
+  is the guaranteed-named-unique sibling (PUTAIN's watches pattern uses
+  plain gear defs at forced `tier: "unique"` instead — zero-bonus precious
+  valuables whose worth is the merchant's scales). Stall uniques are
+  `LevelDef.merchant.stockUniques`, rolled in `rollStock` at the
+  boss-unique odds on the merchant's own rng; `scripts/unique-check.mjs`
+  and `tests/content/uniques_test.ts` count the stall as the third
+  placement home. Suites: `tests/engine/trash_tier_test.ts`,
+  `tests/engine/stall_uniques_test.ts`.
 - **Achievements (2026-07, account-wide badges):** cross-run meta-progression
   stays app-side (the tokens/hardcore precedent): the whole system lives in
   `website/src/game/achievement-totals.ts` (pure lifetime counters + the

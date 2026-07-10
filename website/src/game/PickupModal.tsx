@@ -53,6 +53,7 @@ const PICKUP_NAME_REM = 9;
 
 /** Rarity ladder rank — drives how much reveal spectacle a tier earns. */
 const TIER_RANK: Record<Tier, number> = {
+  trash: 0,
   regular: 0,
   magic: 1,
   rare: 2,

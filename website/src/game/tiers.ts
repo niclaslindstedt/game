@@ -7,6 +7,8 @@
 import type { Affix, Tier, WeaponClass } from "@game/core";
 
 export const TIER_COLORS: Record<Tier, string> = {
+  // Below regular: the joke tier. Grey-brown, the color of wet cardboard.
+  trash: "#8a8073",
   regular: "#e6e8eb",
   magic: "#4da6ff",
   rare: "#ffe14d",

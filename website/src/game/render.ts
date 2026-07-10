@@ -73,21 +73,45 @@ const RIFT_HOVER_PERIOD_MS = 2400;
 
 export type Camera = { x: number; y: number };
 
+/**
+ * The VICTORY QUAKE: while `state.quakeMs` burns (a level with an outro,
+ * objective just cleared), the camera jitters a couple of world px on a fast
+ * multi-frequency wobble — the whole world shaking itself apart under the
+ * hero's feet. Amplitude in world units (doubled on screen by VIEW_SCALE);
+ * driven by render time so it never touches the simulation.
+ */
+const QUAKE_AMPLITUDE = 2.5;
+
 /** Top-left of the view rect: player-centered, clamped to the level. */
 export function computeCamera(
   state: GameState,
   viewWidth: number,
   viewHeight: number,
+  timeMs = 0,
 ): Camera {
   const clampAxis = (center: number, view: number, level: number) => {
     // A view larger than the level parks the level centered inside it.
     if (view >= level) return Math.round((level - view) / 2);
     return Math.round(Math.min(Math.max(center - view / 2, 0), level - view));
   };
-  return {
+  const camera = {
     x: clampAxis(state.player.pos.x, viewWidth, state.level.width),
     y: clampAxis(state.player.pos.y, viewHeight, state.level.height),
   };
+  // Only the drawing pass passes a clock — the simulate pass's view rect
+  // (enemy targeting) stays rock steady through the quake.
+  if (state.quakeMs > 0 && timeMs > 0) {
+    // Two incommensurate sine pairs read as a rumble, not a metronome.
+    camera.x += Math.round(
+      Math.sin(timeMs / 23) * QUAKE_AMPLITUDE +
+        Math.sin(timeMs / 61) * QUAKE_AMPLITUDE * 0.6,
+    );
+    camera.y += Math.round(
+      Math.cos(timeMs / 31) * QUAKE_AMPLITUDE +
+        Math.cos(timeMs / 47) * QUAKE_AMPLITUDE * 0.6,
+    );
+  }
+  return camera;
 }
 
 /** Cheap deterministic per-tile hash for ground variety. */
