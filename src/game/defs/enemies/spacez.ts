@@ -106,7 +106,11 @@ export const SPACEZ_ENEMIES: Record<string, EnemyDef> = {
     contactDamage: 0,
     critChance: 0,
     contactCooldownMs: 700,
-    ai: { aggroRadius: 1200, rushSpeed: 50 },
+    // Sprints in FASTER than the hero walks (PLAYER.speed) so the opening beat
+    // fires on an actual touch, not a distant proximity read — a fleeing hero
+    // still gets run down and the "took a swing at me" line lands with the
+    // scientist right on top of him. Folds back to the plain `speed` once armed.
+    ai: { aggroRadius: 1200, rushSpeed: 72 },
   },
   // OPTIMUSK — the humanoid robots SpaceZ swapped in for the night shift it no
   // longer trusts. Not a story unique (no dialogue, no keycard) — just a

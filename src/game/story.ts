@@ -217,10 +217,12 @@ export function stepSightThoughts(
 /**
  * The per-tick hook for a level's `openingStrike`: the hero starts disarmed,
  * and the pinned vanguard closing to within `openingStrike.radius` (falling
- * back to `DIALOGUE.strikeRadius`) draws his weapon. A PROXIMITY trigger, not a
- * contact one — so a hero who runs circles around the rusher can't stall the
- * opening beat forever (the old contact rule let a kited vanguard never land
- * its swing, leaving the level un-armed). Called from step() after the enemies
+ * back to `DIALOGUE.strikeRadius`) draws his weapon. Levels tune that radius to
+ * a CONTACT gap — the vanguard reaches the hero and swings when it's on top of
+ * him, not half a screen away (see spacez_hq). That works because the rusher
+ * outruns the hero (its `rushSpeed` sits above PLAYER.speed), so a fleeing hero
+ * still gets run down rather than kiting the beat into a permanent stall.
+ * Called from step() after the enemies
  * have moved, so the sighting is judged on this tick's positions. This arms the
  * hero, fires the pinned thought once (tracked in `thoughtsSeen`), and flashes
  * the soft hit. Held until the `after` gate's thought has played — so the "look

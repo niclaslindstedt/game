@@ -309,19 +309,23 @@ export const SPACEZ_HQ: LevelDef = {
   ],
   // The sword is holstered at the drop: the hero walks in like it's still his
   // old job, not a fight. A lone VANGUARD scientist sprints out ahead of the
-  // slow rank and bears down on him — and closing to within `radius` is what
-  // draws the weapon. The soft hit fires `spacez_armed` ("good thing I came
-  // armed") and turns the auto-attack on. A PROXIMITY trigger (not a contact
-  // one) so a hero circling the rusher can't stall the opening forever. Gated
+  // slow rank and bears down on him — and reaching him is what draws the weapon.
+  // The soft hit fires `spacez_armed` ("good thing I came armed") and turns the
+  // auto-attack on. `radius` is a CONTACT gap (center-to-center): the vanguard's
+  // radius (8) + the hero's (10) put it at ~18px when it parks right up against
+  // him, so 22 fires the beat the instant it touches — the swing lands with the
+  // scientist on top of the hero, not half a screen away. It can afford to be a
+  // touch and not a distant proximity read because the rusher outruns the hero
+  // (rushSpeed 72 > PLAYER.speed 56), so kiting it can't stall the beat. Gated
   // `after` the "look at this place" sighting so the two beats always read in
   // order. Placed a short sprint ahead in the open lobby so it reaches him fast
-  // and in clear view; `radius` is the px gap that fires it (tune it here).
+  // and in clear view.
   openingStrike: {
     enemy: "vanguard_scientist",
     at: { x: 400, y: 620 },
     thought: "spacez_armed",
     after: "spacez_staff",
-    radius: 96,
+    radius: 22,
   },
   loot: {
     // The base ladder's first five: earthly weapons an American space company

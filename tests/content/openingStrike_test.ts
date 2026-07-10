@@ -1,11 +1,13 @@
 // SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
 // The scripted opening strike at SpaceZ HQ (LevelDef.openingStrike): the hero
 // walks in with his sword holstered, and a lone VANGUARD scientist sprints out
-// ahead of the pack to land a harmless first swing — THAT is what draws the
-// blade, fires the "good thing I brought the sword" beat (spacez_armed), and
-// turns the auto-attack on. Verifies the disarmed state, the ordering gate
-// (the sighting read lands first), the no-HP-cost strike, and that a
-// non-vanguard touch stays harmless until the beat lands.
+// ahead of the pack to reach him and land a harmless first swing — THAT is what
+// draws the blade, fires the "good thing I brought the sword" beat
+// (spacez_armed), and turns the auto-attack on. Verifies the disarmed state,
+// the ordering gate (the sighting read lands first), the CONTACT trigger (the
+// swing lands when the rusher is on top of him, not half a screen away), the
+// no-HP-cost strike, and that a non-vanguard touch stays harmless until the
+// beat lands.
 
 import { describe, expect, it } from "vitest";
 
@@ -72,6 +74,9 @@ describe("SpaceZ HQ opening strike", () => {
     // (so it folds back in once the blade is drawn, not a permanent glue).
     expect(def.ai.rushSpeed).toBeGreaterThan(enemyDef("intern").speed);
     expect(def.speed).toBeLessThanOrEqual(enemyDef("scientist").speed);
+    // …and crucially it outruns the HERO, so the contact-triggered beat can't
+    // be kited into a stall: a fleeing hero still gets run down.
+    expect(def.ai.rushSpeed).toBeGreaterThan(PLAYER.speed);
     expect(def.contactDamage).toBe(0);
   });
 
@@ -145,29 +150,42 @@ describe("SpaceZ HQ opening strike", () => {
     expect(state.thoughtsSeen).toContain("spacez_armed");
   });
 
-  it("draws the blade on proximity — no contact needed", () => {
+  it("holds the blade until the vanguard reaches him, then draws it on contact", () => {
     const state = disarmedHQ();
     const v = isolateVanguard(state);
     state.thoughtsSeen.push("spacez_staff"); // gate open
-    // A clear gap away — nowhere near touching (two radii), but inside the
-    // strike radius. The old contact rule would have left him holstered here;
-    // proximity draws the blade.
+    // A clear gap away — sprinting in, but nowhere near touching. A single
+    // tick's rush can't close it, so the blade stays holstered: the beat waits
+    // for the scientist to actually arrive, not a distant proximity read.
     v.pos = { x: state.player.pos.x + 80, y: state.player.pos.y };
     step(state, idle, DT);
+    expect(state.player.disarmed).toBe(true);
+    expect(state.dialogue).toBeNull();
+    // Let it sprint the rest of the way in. It parks right up against the hero
+    // and THAT touch draws the blade and fires the beat.
+    for (let i = 0; i < 200 && state.player.disarmed; i++)
+      step(state, idle, DT);
     expect(state.player.disarmed).toBe(false);
     expect(state.dialogue?.source).toEqual({
       kind: "playerThought",
       defId: "spacez_armed",
     });
+    // The swing landed with the scientist on top of him — a contact gap, never
+    // the old ~96 px half-a-screen standoff.
+    const dist = Math.hypot(
+      v.pos.x - state.player.pos.x,
+      v.pos.y - state.player.pos.y,
+    );
+    expect(dist).toBeLessThan(30);
   });
 
-  it("stays holstered while the vanguard is beyond the strike radius", () => {
+  it("stays holstered while the vanguard has yet to reach him", () => {
     const state = disarmedHQ();
     const v = isolateVanguard(state);
     state.thoughtsSeen.push("spacez_staff"); // gate open
-    // Far outside the strike radius (96 px): a single tick's rush can't close
-    // the ~300 px gap, so the blade stays holstered — the beat waits on
-    // distance, not on time or contact.
+    // Way off across the lobby: a single tick's rush can't close the ~300 px
+    // gap, so the blade stays holstered — the beat waits on the rusher arriving,
+    // not on time.
     v.pos = { x: state.player.pos.x + 400, y: state.player.pos.y };
     step(state, idle, DT);
     expect(state.player.disarmed).toBe(true);

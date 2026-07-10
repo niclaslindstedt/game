@@ -810,11 +810,12 @@ export const DIALOGUE = {
   sightRadius: 96,
   /**
    * A level's `openingStrike` arms the hero once its scripted vanguard closes
-   * to within this distance of the player (world px) — a proximity trigger, not
-   * a contact one, so kiting the rusher around can't stall the opening beat
-   * forever. Same phone-half-view rationale as `speakRadius`: the vanguard is
-   * on screen and bearing down when the blade comes out. A level may override
-   * it per-strike via `OpeningStrike.radius`.
+   * to within this distance of the player (world px). This generic fallback is
+   * the phone-half-view (as `speakRadius`); a level should override it per-strike
+   * via `OpeningStrike.radius` down to a CONTACT gap so the swing lands when the
+   * rusher is actually on top of the hero — see spacez_hq, which does exactly
+   * that. A contact trigger only avoids a kiting stall when the vanguard's
+   * `rushSpeed` outruns PLAYER.speed, so pair the two.
    */
   strikeRadius: 96,
 } as const;
