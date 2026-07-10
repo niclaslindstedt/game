@@ -7,7 +7,12 @@
 
 import { useState } from "react";
 
-import { allocateStat, effectiveStat, type GameState } from "@game/core";
+import {
+  allocateStat,
+  autoGainAt,
+  effectiveStat,
+  type GameState,
+} from "@game/core";
 
 import { PixelText } from "@ui/lib/PixelText.tsx";
 import type { PixelFont } from "@ui/lib/pixel-font.ts";
@@ -82,34 +87,50 @@ export function LevelUpOverlay({
           </div>
         ) : (
           <div className="stat-buttons">
-            {CHOICES.map(({ stat, label, blurb, icon }) => (
-              <button
-                key={stat}
-                type="button"
-                className="pixel-button stat-button"
-                aria-label={`stat-${stat}`}
-                onClick={() => {
-                  allocateStat(state, stat);
-                  onChange();
-                }}
-              >
-                <StatGlyph sprites={sprites} icon={icon} />
-                <span className="stat-button-text">
-                  <PixelText
-                    font={font}
-                    text={`${label} ${effectiveStat(state, stat)}`}
-                    scale={2}
-                    color="#0b0d10"
-                  />
-                  <PixelText
-                    font={font}
-                    text={blurb}
-                    scale={2}
-                    color="#3a4048"
-                  />
-                </span>
-              </button>
-            ))}
+            {CHOICES.map(({ stat, label, blurb, icon }) => {
+              // The free base growth this ding already handed the stat (see
+              // leveling.ts); surfaced as a gold "+N" so the chooser shows the
+              // automatic gains alongside the point the player is spending.
+              const gain = autoGainAt(state.player.level, stat);
+              return (
+                <button
+                  key={stat}
+                  type="button"
+                  className="pixel-button stat-button"
+                  aria-label={`stat-${stat}`}
+                  onClick={() => {
+                    allocateStat(state, stat);
+                    onChange();
+                  }}
+                >
+                  <StatGlyph sprites={sprites} icon={icon} />
+                  <span className="stat-button-text">
+                    <span className="stat-button-value">
+                      <PixelText
+                        font={font}
+                        text={`${label} ${effectiveStat(state, stat)}`}
+                        scale={2}
+                        color="#0b0d10"
+                      />
+                      {gain > 0 ? (
+                        <PixelText
+                          font={font}
+                          text={`+${gain}`}
+                          scale={2}
+                          color="#1a7f3d"
+                        />
+                      ) : null}
+                    </span>
+                    <PixelText
+                      font={font}
+                      text={blurb}
+                      scale={2}
+                      color="#3a4048"
+                    />
+                  </span>
+                </button>
+              );
+            })}
           </div>
         )}
       </div>
