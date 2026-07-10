@@ -3095,6 +3095,22 @@ body {
   overflow: hidden;
 }
 
+/* The arrival-scene bag access (GameScreen): while an elite/boss speaks the
+   HUD proper is hidden, but the hero's avatar button re-parks here, top-left
+   over the overlay's tap-to-advance backdrop, so the player can open the
+   inventory and equip a fitting weapon before the fight. Same top/left
+   padding as .game-hud, so the button sits exactly where the player knows it
+   from play; the wrapper stays tap-transparent (.inventory-avatar re-enables
+   its own pointer events). */
+.dialogue-hud {
+  position: absolute;
+  top: 0;
+  left: 0;
+  padding: max(0.5rem, env(safe-area-inset-top)) 0 0
+    max(0.6rem, env(safe-area-inset-left));
+  pointer-events: none;
+}
+
 .dialogue-box {
   position: absolute;
   left: 50%;

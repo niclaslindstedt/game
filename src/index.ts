@@ -58,6 +58,7 @@ export {
   DAMAGE_STAT,
   SPEED_STAT,
   CRIT_STAT,
+  canOpenInventory,
   closeInventory,
   addToInventory,
   advanceIntro,
