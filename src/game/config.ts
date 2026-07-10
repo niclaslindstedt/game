@@ -212,8 +212,15 @@ export const LEVELING = {
    * the hero's damage grows — only the difficulty's mob-level offset nudges it.
    * The count rises with level on a gentle geometric, so leveling tapers from
    * ~10–20/day early to ~2/day near the cap.
+   *
+   * The base is tuned WITH the golden-arrow faucet counted (arrows are a second
+   * XP source on top of kills — see LEVELING.arrowXpShare and the calculator's
+   * `w/arrows` column): a full campaign across all five difficulties lands the
+   * hero at ~level 60 (`node scripts/leveling-curve.mjs --campaign`), leaving
+   * the rest as the grind-to-cap endgame. Don't drop it back toward the
+   * kill-only figure without re-checking that campaign target.
    */
-  killsPerLevelBase: 108,
+  killsPerLevelBase: 150,
   killsPerLevelGrowth: 1.02,
   /**
    * Onboarding ramp: the opening levels cost only a FRACTION of their curve
