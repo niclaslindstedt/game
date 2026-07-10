@@ -212,7 +212,7 @@ a fat 10% single kill — so across a whole ~1,200-mob floor the chance amasses 
 roughly 30%, yet one fast **boss run** is by far the best drops-per-minute. The
 table stays shut until the hero passes `WORLD_DROP.minPlayerLevel[difficulty]` —
 a PER-RUNG gate sized a few levels above where a first pass of that difficulty
-ends (easy 20, medium 34, hard 46, nightmare 56, jesus 60; see `leveling-curve.mjs
+ends (easy 22, medium 36, hard 48, nightmare 57, jesus 60; see `leveling-curve.mjs
 --by-level`), so a rung's relics can only be farmed by RETURNING for boss runs
 once that difficulty is beaten. The first batch is the EASY rung, one relic themed to each level
 — **THE FIRST DRAFT** (SpaceZ HQ, the prototype-GROK neural crown), **THE PALE

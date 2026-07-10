@@ -219,10 +219,12 @@ export const LEVELING = {
    * XP source on top of kills — see LEVELING.arrowXpShare and the calculator's
    * `w/arrows` column): a full campaign across all five difficulties lands the
    * hero at ~level 60 (`node scripts/leveling-curve.mjs --campaign`), leaving
-   * the rest as the grind-to-cap endgame. Don't drop it back toward the
-   * kill-only figure without re-checking that campaign target.
+   * the rest as the grind-to-cap endgame. The base absorbs the roster whenever
+   * the campaign grows — Eastworld's arrival re-raised it from 150 so the five
+   * rungs still end at 60 instead of overshooting toward 72. Don't drop it back
+   * toward the kill-only figure without re-checking that campaign target.
    */
-  killsPerLevelBase: 150,
+  killsPerLevelBase: 260,
   killsPerLevelGrowth: 1.02,
   /**
    * Onboarding ramp: the opening levels cost only a FRACTION of their curve
@@ -317,8 +319,8 @@ export const UNIQUE = {
  * elite ten times likelier, the boss forty. `minPlayerLevel` gates the whole
  * table shut until the hero out-levels a first campaign pass — PER RUNG, since a
  * later rung's relics sit behind a later, higher first-pass level. The campaign
- * is continuous (see `leveling-curve.mjs --by-level`): EASY ends ~17, MEDIUM ~32,
- * HARD ~44, NIGHTMARE ~54, JESUS ~60, so each gate sits a few levels above its
+ * is continuous (see `leveling-curve.mjs --by-level`): EASY ends ~19, MEDIUM ~34,
+ * HARD ~46, NIGHTMARE ~55, JESUS ~60, so each gate sits a few levels above its
  * rung's end — the relics can only be farmed by RETURNING for boss runs once the
  * difficulty is beaten. Rolled per unique, per kill, on `maybeDropWorldUnique`.
  */
@@ -338,14 +340,15 @@ export const WORLD_DROP = {
   },
   /** No world unique drops until the hero reaches this level ON THAT RUNG —
    * sized a few levels above where a first campaign pass of the difficulty ends
-   * (easy ~17, medium ~32, hard ~44, nightmare ~54, jesus ~60), so boss runs on
-   * a beaten rung are the only source. Hard and up are plumbing until relics ship
-   * for those rungs. */
+   * (easy ~19, medium ~34, hard ~46, nightmare ~55, jesus ~60), so boss runs on
+   * a beaten rung are the only source (JESUS's gate sits AT the campaign's end
+   * — level 60 — so the last rung's farm opens the moment the story is done).
+   * Hard and up are plumbing until relics ship for those rungs. */
   minPlayerLevel: {
-    easy: 20,
-    medium: 34,
-    hard: 46,
-    nightmare: 56,
+    easy: 22,
+    medium: 36,
+    hard: 48,
+    nightmare: 57,
     jesus: 60,
   } as Record<Difficulty, number>,
 } as const;
