@@ -28,6 +28,7 @@ import {
   BOT_STRATEGIES,
   botAct,
   botAllocate,
+  canOpenInventory,
   closeCompanionPanel,
   closeInventory,
   closeMap,
@@ -866,7 +867,9 @@ export function GameScreen({
       } else if (event.key === "e" || event.key === "E") {
         useItemQueuedRef.current = true;
       } else if (event.key === "i" || event.key === "I") {
-        if (state.phase === "playing") {
+        // Opens mid-run AND during an elite/boss arrival scene (the engine
+        // gate) — the stare-down is when a fitting weapon gets equipped.
+        if (canOpenInventory(state)) {
           openInventory(state);
           playUiSound(synth, "confirm");
         } else if (state.phase === "inventory") {
@@ -1743,6 +1746,48 @@ export function GameScreen({
     setDockDrag(null);
   };
 
+  // The hero-avatar inventory button — the dressed paper-doll portrait with
+  // the free-bag-cells badge. Shared between the playing HUD's status unit
+  // and the arrival-scene corner: an elite/boss stare-down hides the HUD
+  // proper but still offers the bag (see canOpenInventory), so the player
+  // can size up the speaker and equip a fitting weapon before the fight.
+  const heroAvatar = hud && (
+    <button
+      type="button"
+      className={`inventory-avatar${hud.bagFullHint ? " bag-full" : ""}`}
+      aria-label="open-inventory"
+      onClick={() => {
+        if (state) {
+          setWeaponMenuOpen(false);
+          openInventory(state);
+          playUiSound(synth, "confirm");
+          bumpUi();
+        }
+      }}
+    >
+      {(() => {
+        // The dressed paper-doll (worn armor + held weapon), so
+        // the portrait always matches the character on the field.
+        const src = state
+          ? dollDataUrl(assets.sprites, playerDollLayers(state, "0"))
+          : spriteDataUrl(assets.sprites, `${hud.appearance}_0`);
+        return src ? (
+          <img src={src} alt="" className="pixel-img avatar-img" />
+        ) : null;
+      })()}
+      {/* Empty bag slots, always shown — dark on the white badge,
+          flipping red the moment the bag is full (0). */}
+      <span className="avatar-badge">
+        <PixelText
+          font={font}
+          text={String(hud.bagFree)}
+          scale={1}
+          color={hud.bagFree === 0 ? "#d83a3a" : "#0b0d10"}
+        />
+      </span>
+    </button>
+  );
+
   return (
     <div className="game-screen">
       <canvas ref={canvasRef} className="game-canvas" />
@@ -1782,43 +1827,7 @@ export function GameScreen({
                 party's portraits railed underneath (tap one to equip it). */}
             <div className="hud-left">
               <div className="hud-status">
-                <button
-                  type="button"
-                  className={`inventory-avatar${hud.bagFullHint ? " bag-full" : ""}`}
-                  aria-label="open-inventory"
-                  onClick={() => {
-                    if (state) {
-                      setWeaponMenuOpen(false);
-                      openInventory(state);
-                      playUiSound(synth, "confirm");
-                      bumpUi();
-                    }
-                  }}
-                >
-                  {(() => {
-                    // The dressed paper-doll (worn armor + held weapon), so
-                    // the portrait always matches the character on the field.
-                    const src = state
-                      ? dollDataUrl(
-                          assets.sprites,
-                          playerDollLayers(state, "0"),
-                        )
-                      : spriteDataUrl(assets.sprites, `${hud.appearance}_0`);
-                    return src ? (
-                      <img src={src} alt="" className="pixel-img avatar-img" />
-                    ) : null;
-                  })()}
-                  {/* Empty bag slots, always shown — dark on the white badge,
-                    flipping red the moment the bag is full (0). */}
-                  <span className="avatar-badge">
-                    <PixelText
-                      font={font}
-                      text={String(hud.bagFree)}
-                      scale={1}
-                      color={hud.bagFree === 0 ? "#d83a3a" : "#0b0d10"}
-                    />
-                  </span>
-                </button>
+                {heroAvatar}
                 <div className="hud-vitals">
                   <div className="hud-stat-row">
                     <PixelText
@@ -2355,6 +2364,16 @@ export function GameScreen({
             bumpUi();
           }}
         />
+      )}
+
+      {/* An elite/boss ARRIVAL scene offers the bag: the hero's avatar
+          re-parks top-left OVER the overlay's tap-to-advance backdrop
+          (rendered after it, so its taps never turn the page), letting the
+          player open the inventory and equip a fitting weapon before the
+          fight. Other scenes (last words, thoughts, lore) stay read-only —
+          the engine's canOpenInventory draws that line. */}
+      {state && hud?.phase === "dialogue" && canOpenInventory(state) && (
+        <div className="dialogue-hud">{heroAvatar}</div>
       )}
 
       {state && hud?.phase === "choice" && (

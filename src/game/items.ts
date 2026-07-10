@@ -1974,14 +1974,35 @@ export function skipStoryOpening(state: GameState): void {
   state.player.disarmed = false;
 }
 
-/** Pause into the bag. Only possible mid-run. */
-export function openInventory(state: GameState): void {
-  if (state.phase === "playing") state.phase = "inventory";
+/**
+ * Can the bag open right now? Mid-run always — and during an elite/boss
+ * ARRIVAL scene (a `dialogue` with an `enemy` source): the stare-down is
+ * exactly when the player wants to size up the speaker and equip a fitting
+ * weapon, so the scene lends the bag the stage and takes it back on close.
+ * Every other scene (last words, inner thoughts, lore, greetings, joins)
+ * stays read-only.
+ */
+export function canOpenInventory(state: GameState): boolean {
+  return (
+    state.phase === "playing" ||
+    (state.phase === "dialogue" && state.dialogue?.source.kind === "enemy")
+  );
 }
 
-/** Close the bag and resume (pending level-ups take priority). */
+/** Pause into the bag — mid-run, or from an elite/boss arrival scene. */
+export function openInventory(state: GameState): void {
+  if (canOpenInventory(state)) state.phase = "inventory";
+}
+
+/** Close the bag and resume: the arrival scene it interrupted takes the
+ * stage back if one is still up, else play (pending level-ups take
+ * priority — a scene's own pending level-up lands when IT ends). */
 export function closeInventory(state: GameState): void {
   if (state.phase !== "inventory") return;
+  if (state.dialogue !== null) {
+    state.phase = "dialogue";
+    return;
+  }
   state.phase = state.player.pendingStatPoints > 0 ? "levelup" : "playing";
 }
 

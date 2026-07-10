@@ -233,7 +233,12 @@ run against synthetic fixtures with no shipped content (see
   `advanceDialogue` as the player's tap, `dialogueContent` for the
   renderer), story-item collection, and `stepDoors` (a carried key
   removes its door's obstacle chain). Dialogue freezes the run in the
-  `dialogue` phase exactly like the level-up chooser.
+  `dialogue` phase exactly like the level-up chooser. An elite/boss
+  ARRIVAL scene additionally lends the stage to the bag
+  (`canOpenInventory` in items.ts): `openInventory` works mid-scene so
+  the player can equip a fitting weapon for the fight, and
+  `closeInventory` hands the stage back to the speaker on the same page;
+  every other scene (last words, thoughts, lore) stays read-only.
 - **`src/game/companions.ts`** — the COMPANION system and the SPARE-or-KILL
   verdict (config `COMPANIONS`): a spareable unique (`EnemyDef.spareable`)
   beaten to 0 hp kneels and pauses the run in the `choice` phase (the
