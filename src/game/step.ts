@@ -517,10 +517,12 @@ function stepUseItem(state: GameState, input: GameInput): void {
 }
 
 /**
- * The screen-nuke pickup: every non-boss monster within the radius, and not
- * behind a rock, dies on the spot. A tall obstacle stops the blast the same
- * way it stops a shot — a mob sheltered behind the stone rides it out. Kills
- * flow through hitEnemy, so XP, loot rolls, the pity rule, and the all-clear
+ * The screen-nuke pickup: every horde minion within the radius, and not
+ * behind a rock, dies on the spot. Elites and bosses shrug it off — the
+ * set-piece fights are meant to be fought, not skipped, so the blast only
+ * clears the rank and file. A tall obstacle stops the blast the same way it
+ * stops a shot — a mob sheltered behind the stone rides it out. Kills flow
+ * through hitEnemy, so XP, loot rolls, the pity rule, and the all-clear
  * trophy all behave exactly as if the player had done it the hard way.
  */
 function detonateNuke(state: GameState, radius: number): void {
@@ -529,7 +531,7 @@ function detonateNuke(state: GameState, radius: number): void {
   const caught = state.enemies.filter((enemy) => {
     const def = enemyDef(enemy.defId);
     return (
-      def.role !== "boss" &&
+      def.role === "minion" &&
       !def.apparition &&
       distanceSq(enemy.pos, state.player.pos) <= radiusSq &&
       lineOfSight(state, state.player.pos, enemy.pos)

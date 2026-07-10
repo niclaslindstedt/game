@@ -126,15 +126,21 @@ describe("the screen nuke", () => {
       id: 9002,
       pos: { x: state.player.pos.x + radius + 60, y: state.player.pos.y },
     });
-    // Park the boss inside the blast to prove his immunity.
+    // Park a boss and an elite inside the blast to prove their immunity — the
+    // set-piece fights still have to be fought, nuke or not.
     boss.pos = { x: state.player.pos.x + 80, y: state.player.pos.y };
     boss.home = { ...boss.pos };
-    state.enemies.push(near, far);
+    const elite = makeEnemy(
+      { id: 9003, pos: { x: state.player.pos.x + 90, y: state.player.pos.y } },
+      "test_elite",
+    );
+    state.enemies.push(near, far, elite);
 
     const xpBefore = state.stats.xpGained;
     step(state, useItem, DT);
     expect(state.player.heldAbilities).toHaveLength(0);
     expect(state.enemies).toContain(boss); // bosses shrug it off
+    expect(state.enemies).toContain(elite); // so do elites
     expect(state.enemies).toContain(far); // out of the blast
     expect(state.enemies).not.toContain(near);
     expect(state.events).toContainEqual(
