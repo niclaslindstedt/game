@@ -96,6 +96,17 @@ export function playAchievementHaptic(): void {
   haptics.vibrate(ACHIEVEMENT_PATTERN);
 }
 
+// A firm double tap when gear snaps into a slot — two pulses that mirror the
+// equip sound's twin sword-clang, so committing a piece is felt as a solid
+// "clunk-clunk" under the thumb. A noop when haptics are off/unsupported.
+const EQUIP_PATTERN: HapticPattern = [18, 30, 24];
+
+/** Buzz a successful equip/unequip — paired with the "equip" sword-clash SFX
+ * so slotting a piece lands on the thumb as well as the ear. */
+export function playEquipHaptic(): void {
+  haptics.vibrate(EQUIP_PATTERN);
+}
+
 // A faint tick under each typewriter letter — the shortest pulse a motor can
 // register, so the dialogue crawl reads as a light chatter under the thumb
 // rather than one long buzz. Fired on the same cadence as the print blip.
