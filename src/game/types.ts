@@ -836,6 +836,12 @@ export type GameEvent =
        * "UPGRADE" marker.
        */
       upgrade?: boolean;
+      /**
+       * XP this pickup awarded (golden XP arrows only) — the app floats it as
+       * rising blue combat text above the hero's head, mirroring the "+N XP"
+       * that flows off a slain foe. Absent for pickups that grant no XP.
+       */
+      xp?: number;
     }
   | { type: "itemDropped"; pos: Vec2 }
   /**
