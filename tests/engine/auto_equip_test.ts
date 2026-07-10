@@ -179,6 +179,36 @@ describe("autoEquipBest", () => {
     expect(state.player.equipment.weapon.defId).toBe("test_wand");
   });
 
+  it("keeps a reliable single-target weapon over a same-budget spread gun", () => {
+    // Regression: a 4-pellet scattergun's per-hit damage is a quarter of a
+    // single-target's (budget ÷ 4, by design), so its per-target DPS reads far
+    // lower — horrible against one tough foe — while its budget-authored
+    // EFFECTIVE DPS merely ties the revolver's. The old scoring credited all
+    // four pellets in full, so auto-equip swapped the revolver away for it. It
+    // must now stay put: a spread gun that only ties on paper is not an upgrade.
+    const state = startGame();
+    state.player.equipment.weapon = weapon("test_revolver");
+    const scatter = weapon("test_scattergun");
+    stock(state, [scatter]);
+
+    expect(autoEquipBest(state)).toBe(0);
+    expect(state.player.equipment.weapon.defId).toBe("test_revolver");
+    expect(bagIds(state)).toEqual([scatter.id]);
+  });
+
+  it("still equips a spread gun that genuinely out-budgets the held weapon", () => {
+    // The discount is a tie-breaker toward reliability, not a ban on AoE: a
+    // spread gun whose budget clears the weak sidearm even after the pellet
+    // discount still wins its slot, so real ranged AoE upgrades are not lost.
+    const state = startGame();
+    state.player.equipment.weapon = weapon("blaster"); // damage 8 — feeble
+    const scatter = weapon("test_scattergun");
+    stock(state, [scatter]);
+
+    expect(autoEquipBest(state)).toBe(1);
+    expect(state.player.equipment.weapon.defId).toBe("test_scattergun");
+  });
+
   it("autoEquipUpgradeCount matches the sweep it predicts", () => {
     const state = startGame();
     state.player.equipment.weapon = weapon("crude_sword");

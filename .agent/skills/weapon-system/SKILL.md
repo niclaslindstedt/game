@@ -106,7 +106,10 @@ one, and scripted `earlyDrops` pin `quality: "normal"`.
    calibrated on them). `weaponScore` (auto-equip) and the item card's
    extra lines (PELLETS / PIERCES / CHAINS, CRIT DAMAGE — melee cleave is
    INTELLIGENCE's, not a per-weapon count, so it carries no line) speak the
-   same model — keep all three in agreement.
+   same model — keep all three in agreement, with ONE deliberate exception:
+   `weaponScore` credits a ranged spread's targets at
+   `1 + (assumed − 1) × WEAPON.aoeRealization`, not in full (§ below). The
+   budget scripts and item card still use the raw `weaponAssumedTargets`.
 3. **Sprites** (the `pixel-assets` skill has the full loop): icon in
    `icons.mjs`, projectile in `effects.mjs`, `make assets`, then LOOK at
    `website/assets-preview/<name>@8x.png` — and at the arsenal in one
@@ -161,6 +164,17 @@ one, and scripted `earlyDrops` pin `quality: "normal"`.
   AoE weapon; the score folds in assumed targets and the crit lift now. Any
   future model change lands in `weaponScore`, `weaponDps`, and the budget
   scripts together.
+- **…but ranged AoE is credited at what it REALIZES, not its ceiling.**
+  `weaponAssumedTargets` is a balance-AUTHORING assumption (budget ÷ 4 for a
+  4-pellet gun); crediting it in full to `weaponScore` let a spread weapon with
+  a quarter of a single-target's per-hit damage displace it on a paper tie,
+  which feels awful against any lone tough foe. So `weaponScore` credits a
+  ranged spread's extra targets at a fraction — `1 + (assumed − 1) ×
+  WEAPON.aoeRealization` — beyond its first, guaranteed hit. Melee sweeps stay
+  reliable (credited at `maxMeleeTargets`, what INT can cleave); only
+  conditional ranged multipliers (pellets/pierce/chain) take the discount. This
+  is a RANKING tuning only — the budget scripts, item card, and
+  `weaponAssumedTargets` are untouched.
 - **Wood-dark pixels vanish**: the core `k` wood char is near-outline dark;
   weapon hafts/stocks read better in the warm `B` brown. Verify every icon
   at @8x — first drafts of "obvious" silhouettes (rayguns, revolvers) read

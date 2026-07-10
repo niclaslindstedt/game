@@ -73,6 +73,23 @@ export const WEAPON = {
   aoeFullFromDeg: 300,
   assumedTargets: { cone: 4, full: 5 },
   /**
+   * AUTO-EQUIP AoE realization: how much of a RANGED multi-projectile weapon's
+   * assumed target count (pellets, pierce, chain — see `weaponAssumedTargets`)
+   * the auto-equip ranking (`weaponScore`) credits beyond its first, guaranteed
+   * hit. Unlike a melee sweep — which reliably strikes everything in its arc in
+   * the close press of the horde, and is credited at the count INTELLIGENCE can
+   * realize (`maxMeleeTargets`) — a ranged spread is CONDITIONAL: a shotgun's
+   * pellets fan across their arc and, in the sparse field that is the common
+   * case, overlap on one foe instead of splitting cleanly across four. So its
+   * budget-authored 4× is potential, not a promise. `weaponScore` credits
+   * `1 + (assumed - 1) * aoeRealization`, so a spread weapon must genuinely
+   * out-budget the held one to displace it rather than sidegrade in on a paper
+   * tie that its per-target damage — far lower by design — can't cash against a
+   * single tough target. Tunes RANKING only; the budget-authoring assumption
+   * (`weaponAssumedTargets`, used by the balance scripts) is untouched.
+   */
+  aoeRealization: 0.5,
+  /**
    * Global damage scale on every weapon's catalog `damage` — the single lever
    * for "how hard does any weapon hit", the damage counterpart to
    * `baseCooldownMult`. Applied in `weaponDamageFor` (the one source of truth
