@@ -151,7 +151,10 @@ if (campaign) {
       // the clear plays out), good enough for the "where does the campaign
       // land" check.
       const arrowXp =
-        kills * arrowDropProb(diff) * arrowXpShareAt(level) * xpToLevelUp(level);
+        kills *
+        arrowDropProb(diff) *
+        arrowXpShareAt(level) *
+        xpToLevelUp(level);
       xp += killXp + arrowXp;
       advance();
     }
