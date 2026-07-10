@@ -709,9 +709,11 @@ body {
   display: flex;
   align-items: center;
   gap: 0.5rem;
-  /* Cap the width so a long, affix-built name wraps (PixelText maxWidth) rather
-     than stretching the centered card off both screen edges. */
-  max-width: min(22rem, 92vw);
+  /* Cap the width just above the wrapped name column (PICKUP_NAME_REM in
+     PickupModal.tsx, at 2× scale, plus the icon, gap and padding). A long name
+     wraps to more lines and the card grows TALLER rather than stretching wide
+     off both screen edges. */
+  max-width: min(14rem, 92vw);
   box-sizing: border-box;
   padding: 0.35rem 0.6rem;
   /* Button reset (the card is always a <button>, inert when nothing to equip):
