@@ -10,7 +10,8 @@
 // 16×16 hero body plan, so every layer draws at the body's own origin. The
 // held weapon is the def's inventory icon anchored at the hero's hand — the
 // icons are drawn as diagonal "held" items (grip lower-left), which is
-// exactly the pose a sidearm-scale sprite needs.
+// exactly the pose a sidearm-scale sprite needs. The armor always draws; only
+// the held weapon is gated (the developer CHARACTER WEAPON flag).
 
 import {
   type ArmorSlot,
@@ -65,20 +66,21 @@ const LEFT_POINTING_ICONS = new Set([
  * armor overlays, then the held weapon. Layers are atlas names — a missing
  * sprite (unknown def, stale save) degrades to "not drawn" downstream.
  *
- * `opts.gear` (default true) drives the developer CHARACTER GEAR flag: pass
- * `false` to strip the worn-armor overlays and held weapon down to the bare
- * body, as the hero looked before the paper-doll landed. The field renderer
- * honors the flag; the DOM avatars keep their gear on.
+ * The worn armor always draws — it sits flat on the body and reads correctly
+ * in every pose. `opts.weapon` (default true) drives the developer CHARACTER
+ * WEAPON flag: pass `false` to drop only the held weapon, leaving the hero in
+ * his armor but empty-handed. The held weapon is the hard part to get right
+ * (posing/swinging it convincingly), so only it is gated. The field renderer
+ * honors the flag; the DOM avatars keep the weapon on.
  */
 export function playerDollLayers(
   state: GameState,
   frame: DollFrame,
-  opts: { gear?: boolean } = {},
+  opts: { weapon?: boolean } = {},
 ): DollLayer[] {
   const layers: DollLayer[] = [
     { sprite: `${playerAppearance(state)}_${frame}`, dx: 0, dy: 0 },
   ];
-  if (opts.gear === false) return layers;
   const equipment = state.player.equipment;
   for (const slot of WORN_ORDER) {
     const piece = equipment[slot];
@@ -94,6 +96,7 @@ export function playerDollLayers(
         : "";
     layers.push({ sprite: `worn_${base}${suffix}`, dx: 0, dy: 0 });
   }
+  if (opts.weapon === false) return layers;
   const icon = weaponDef(equipment.weapon.defId).icon;
   layers.push({
     sprite: icon,

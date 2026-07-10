@@ -56,12 +56,13 @@ export type DebugMode = "on" | "off";
  * Applied to the engine via `setAutoStatGainsEnabled`. */
 export type AutoLevelStats = "on" | "off";
 
-/** CHARACTER GEAR: a developer feature flag for drawing the worn armor and
- * held weapon on the hero SPRITE in the field (the paper-doll — see
- * paper-doll.ts / render.ts). Opt-in: `off` (the default) renders the bare
- * body as before the paper-doll landed; `on` dresses the field character. The
- * HUD avatar and inventory portrait stay dressed regardless. */
-export type CharacterGear = "on" | "off";
+/** CHARACTER WEAPON: a developer feature flag for drawing the held weapon on
+ * the hero SPRITE in the field (the paper-doll — see paper-doll.ts /
+ * render.ts). The worn armor always draws; only the held weapon is gated,
+ * since posing/swinging it convincingly is the hard part. Opt-in: `off` (the
+ * default) leaves the field hero empty-handed but still armored; `on` arms
+ * him. The HUD avatar and inventory portrait stay armed regardless. */
+export type CharacterWeapon = "on" | "off";
 
 /** XP ON KILL: a display preference (SETTINGS → DISPLAY) for the blue "+N XP"
  * combat text that floats off a corpse on each kill (emitted in GameScreen).
@@ -87,8 +88,8 @@ export type GameSettings = {
   debug: DebugMode;
   /** Developer flag: automatic per-level base-stat growth (see AutoLevelStats). */
   autoLevelStats: AutoLevelStats;
-  /** Developer flag: worn armor + weapon on the field hero (see CharacterGear). */
-  characterGear: CharacterGear;
+  /** Developer flag: held weapon on the field hero (see CharacterWeapon). */
+  characterWeapon: CharacterWeapon;
   /** Display preference: floating "+N XP" popups on kills (see XpFloat). */
   xpFloat: XpFloat;
 };
@@ -124,9 +125,9 @@ function defaults(): GameSettings {
     developerUnlocked: false,
     debug: "off",
     // Developer feature flags are opt-in — both default off, so auto stat
-    // growth and the field hero's worn gear stay dark until a dev enables them.
+    // growth and the field hero's held weapon stay dark until a dev enables them.
     autoLevelStats: "off",
-    characterGear: "off",
+    characterWeapon: "off",
     // Display preferences default to the shipped presentation.
     xpFloat: "on",
   };
@@ -185,10 +186,10 @@ function load(): GameSettings {
         stored.autoLevelStats === "on" || stored.autoLevelStats === "off"
           ? stored.autoLevelStats
           : base.autoLevelStats,
-      characterGear:
-        stored.characterGear === "on" || stored.characterGear === "off"
-          ? stored.characterGear
-          : base.characterGear,
+      characterWeapon:
+        stored.characterWeapon === "on" || stored.characterWeapon === "off"
+          ? stored.characterWeapon
+          : base.characterWeapon,
       xpFloat:
         stored.xpFloat === "on" || stored.xpFloat === "off"
           ? stored.xpFloat

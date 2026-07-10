@@ -36,9 +36,9 @@ behavior yet, distinct from the `?debug` URL parameter below. Both feature
 flags are **opt-in (off by default)**. **AUTO LEVEL STATS** turns the automatic
 per-level base-stat growth on or off — on also brings the horde's compensating
 hp scaling in lockstep (both derive from the same rule), and off leaves only
-chosen points and gear to push the hero ahead of the curve. **CHARACTER GEAR**
-shows or hides the worn armor and held weapon on the field hero sprite; the HUD
-avatar and inventory portrait stay dressed either way.
+chosen points and gear to push the hero ahead of the curve. **CHARACTER WEAPON**
+shows or hides the held weapon on the field hero sprite (the worn armor always
+shows); the HUD avatar and inventory portrait stay armed either way.
 
 Desktop keyboard controls (when **Keys** is set to WASD): WASD or the arrow
 keys run, **Shift** walks, **Space** jumps, **1/2/3** fire the powerup dock
