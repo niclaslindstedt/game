@@ -138,6 +138,16 @@ damage/armor (`UNIQUE.baseRollBand`, ±10%) so copies differ and a better roll
 is worth chasing; the bonuses stay identical. They mint via `mintUnique`
 (`items.ts`), unbreakable like any unique/legendary.
 
+**Achievements ride the catalog for free.** Every unique automatically gets
+its own badge in the achievements browser — the app's catalog
+(`website/src/game/achievement-defs.ts`) derives one entry per `UNIQUE_IDS`
+id (name from the def, icon via `equipmentIcon(base)`), and the loot-count
+plus "find every unique" goals track the same registry. Nothing to add when
+authoring a unique — but `tests/achievements_test.ts` asserts the badge icon
+resolves in the shipped atlas, so a base whose icon sprite is missing fails
+there too. Never RENAME a shipped unique id: the achievement ledger (and
+player unlocks) key on it.
+
 **The catalog shape (this game).** 35 uniques as a slot Latin square: five
 bosses × five difficulties, each difficulty the home of one full
 weapon+armor set (a weapon + head/chest/legs/feet, one per boss), plus a BAG

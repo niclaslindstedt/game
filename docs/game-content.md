@@ -431,6 +431,29 @@ as likely (kill him instead and the clover is a one-off drop). The party
 made in the rift walks through the far door with the hero — the level beyond
 it is built with a companion at his side in mind.
 
+## Achievements
+
+The game keeps an account-wide trophy shelf (`website/src/game/achievement-defs.ts`
+— app data, not engine): ~100 badges across seven shelves. **STORY** (clear
+each mission, beat the campaign on each of the five difficulties, collect
+lore, meet the merchant), **COMBAT** (kill ladders for mobs / elites /
+bosses, plus feats — watch a boss flee, set off a nuke, reach full RAMPAGE,
+die once, clear a mission untouched or in under five minutes), **LOOT**
+(counted ladders for magic / rare / unique finds — 10, 25, 50, 100-style
+rungs — plus the first legendary and finding every unique), **ARSENAL** (one
+badge per hand-authored unique, icon and name straight from its def),
+**PARTY** (each spared legend and the full four), **HERO** (level 10 → 99),
+and **MASTERY** (total runs and farming one mission).
+
+Badges are earned on any hero — the ledger and lifetime counters persist
+per install, across characters. A fresh unlock drops a gold banner with its
+own chime (a deliberate notch below the level-up ding), and a pulsing gold
+star appears under the HUD's MAP button until the shelf is opened; the
+browser (title menu → ACHIEVEMENTS, or the star mid-run) shows every badge
+with live progress toward the counted ones. The per-content badge groups
+derive from the live registries, so new levels, difficulties, uniques, and
+companions mint their badges automatically.
+
 ## Story items & costume
 
 Plot pieces (`src/game/defs/story.ts`) — keycards that open the locked doors,

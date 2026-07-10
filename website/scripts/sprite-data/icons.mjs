@@ -939,6 +939,101 @@ const SPRITES = {
     "............",
     "............",
   ],
+  // The ACHIEVEMENT star: a gold four-point shine (map_elite's cut in visor
+  // gold) with a white-hot core — the HUD badge button and the unlock toast.
+  icon_star: [
+    "............",
+    ".....OO.....",
+    "....OYYO....",
+    "...OYYyyO...",
+    "...OYyyyO...",
+    "OYYyyWWyyyqO",
+    "OyyyyWWyyqqO",
+    "...OyyyqO...",
+    "...OyyqqO...",
+    "....OyqO....",
+    ".....OO.....",
+    "............",
+  ],
+  // ---- Achievement badge icons (12x12) ---------------------------------------
+  // Drawn for the achievements browser and unlock toast; gold ramp from the
+  // core (visor gold y/Y, lander-gold shadow q) so the shelf reads as one set.
+  // The TROPHY cup: rim, handles, stem, flared foot — the difficulty ladder.
+  icon_trophy: [
+    "............",
+    ".OOOOOOOOOO.",
+    ".OYYYYyyyyO.",
+    "OOYYYYyyyyOO",
+    "OyOYYYyyyOyO",
+    "OyOYYyyyyOyO",
+    ".OOYyyyyOO..",
+    "...OyyyyO...",
+    "....OyyO....",
+    "....OyqO....",
+    "..OOyyyyOO..",
+    "..OOOOOOOO..",
+  ],
+  // The SKULL: bone white, dark sockets, toothy jaw — the kill ladders.
+  icon_skull: [
+    "............",
+    "...OOOOOO...",
+    "..OWWWWWWO..",
+    ".OWWWWWWWWO.",
+    ".OWWWWWWWWO.",
+    ".OWOOWWOOWO.",
+    ".OWOOWWOOWO.",
+    "..OWWOOWWO..",
+    "..OWWWWWWO..",
+    "..OWOWOWO...",
+    "...OOOOO....",
+    "............",
+  ],
+  // The CROWN: three points over a jeweled band — boss trophies. One solid
+  // gold silhouette (interior seams at this size swallow the metal).
+  icon_crown: [
+    "............",
+    "............",
+    "............",
+    "..OO.OO.OO..",
+    ".OYYOYYOYYO.",
+    ".OYYYYYYYYO.",
+    ".OYyyyyyyyO.",
+    ".OyWWyyyyqO.",
+    ".OOOOOOOOOO.",
+    "............",
+    "............",
+    "............",
+  ],
+  // The MEDAL: flag-blue ribbon over a gold disc — the hero's level climb.
+  icon_medal: [
+    "............",
+    "..OOO..OOO..",
+    "..OjjO.OjjO.",
+    "...OjjOjjO..",
+    "....OjjjO...",
+    "...OyYYyO...",
+    "..OyYYYyyO..",
+    "..OyYWWYyO..",
+    "..OyYYyyqO..",
+    "...OyyyqO...",
+    "....OOO.....",
+    "............",
+  ],
+  // The STOPWATCH: steel case, white face, dark hands — the speed clear.
+  icon_stopwatch: [
+    "............",
+    ".....OO.....",
+    "....OvvO....",
+    "...OOOOOO...",
+    "..OWWWWWWO..",
+    ".OWWWOWWWWO.",
+    ".OWWWOOWWWO.",
+    ".OWWWWWWWWO.",
+    "..OWWWWWWO..",
+    "...OOOOOO...",
+    "............",
+    "............",
+  ],
   // ---- Elite signature weapon icons (12x12) ----------------------------------
   // The NIGHT MANAGER's back-nine special.
   icon_putter: [

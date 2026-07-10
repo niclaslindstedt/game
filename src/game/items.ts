@@ -475,6 +475,9 @@ export function mintUnique(state: GameState, uniqueId: string): Equipment {
     ilvl: u.ilvl,
     affixes: u.bonuses.map((bonus) => ({ ...bonus })),
     name: u.name,
+    // The catalog id behind the display name — the stable identity anything
+    // booking "which unique is this" keys on (see Equipment.uniqueId).
+    uniqueId: u.id,
     // The roll rides the instance for weapons (read in `weaponDamageFor`);
     // for armor it is baked straight into the stamped `armor` below.
     baseRoll: weapon ? roll : undefined,

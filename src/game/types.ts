@@ -166,6 +166,14 @@ export type Equipment = {
    */
   baseRoll?: number;
   /**
+   * A hand-authored UNIQUE's catalog id (key into UNIQUE_DEFS), stamped by
+   * `mintUnique` — the stable identity behind the display `name`, so anything
+   * that books WHICH unique this is (the app's achievement ledger, a future
+   * stash dedup) keys on an id like every other def reference. Absent on
+   * rolled items and on unique instances minted before this field shipped.
+   */
+  uniqueId?: string;
+  /**
    * A FROZEN copy of the item's catalog def, captured the instant it was
    * minted (see `rollEquipment`). This is what makes a kept item version-proof:
    * an item a test player carries keeps the stats it dropped with even after we
@@ -808,6 +816,12 @@ export type GameEvent =
        * card, robust to the bag being rearranged while the card is up.
        */
       itemId?: number;
+      /**
+       * A hand-authored UNIQUE's catalog id (see `Equipment.uniqueId`) — lets
+       * the app book WHICH unique was found (the achievement ledger) without
+       * matching on the display name. Absent on rolled items.
+       */
+      uniqueId?: string;
       /**
        * True when the piece was good enough to be worn on the spot (the
        * auto-equip path). The pickup card reads it to badge the find

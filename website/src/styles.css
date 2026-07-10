@@ -4492,3 +4492,283 @@ body {
 .title-screen * {
   cursor: inherit;
 }
+
+/* ---- Achievements ----------------------------------------------------------
+   Three surfaces: the unlock TOAST (a gold banner under the XP strip — a
+   deliberate notch below the level-up burn and the unique pickup card), the
+   HUD STAR button (below the MAP button, shown only while unseen badges
+   wait), and the BROWSER (AchievementsScreen — the arsenal viewer's layout
+   with per-row progress and locked dimming). */
+
+/* The unlock banner: top-center, under the XP strip, clear of the pickup
+   card (bottom) and the hero (center). Never eats pointer events. */
+.achievement-toast {
+  position: absolute;
+  top: 2.6rem;
+  left: 50%;
+  z-index: 30;
+  display: flex;
+  align-items: center;
+  gap: 0.55rem;
+  max-width: min(16rem, 92vw);
+  box-sizing: border-box;
+  padding: 0.4rem 0.7rem;
+  background: rgba(11, 13, 16, 0.78);
+  border: 2px solid #ffd75e;
+  border-radius: 6px;
+  box-shadow:
+    0 0 0.35rem rgba(255, 215, 94, 0.35),
+    0 0.2rem 0.5rem rgba(11, 13, 16, 0.55);
+  pointer-events: none;
+  overflow: visible;
+  isolation: isolate;
+  animation: achievement-toast 4000ms ease-out forwards;
+  will-change: transform, opacity;
+}
+
+/* Drop in, settle, hold, drift out — sized to ACHIEVEMENT_TOAST_TTL_MS. */
+@keyframes achievement-toast {
+  0% {
+    transform: translate(-50%, -140%) scale(0.9);
+    opacity: 0;
+  }
+  7% {
+    transform: translate(-50%, 6%) scale(1.04);
+    opacity: 1;
+  }
+  12% {
+    transform: translate(-50%, 0) scale(1);
+  }
+  88% {
+    transform: translate(-50%, 0) scale(1);
+    opacity: 1;
+  }
+  100% {
+    transform: translate(-50%, -40%) scale(0.96);
+    opacity: 0;
+  }
+}
+
+.achievement-toast-icon {
+  width: 1.9rem;
+  height: 1.9rem;
+  image-rendering: pixelated;
+}
+
+.achievement-toast-body {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 0.22rem;
+}
+
+/* A sheen sweeping the banner face once as it lands (the pickup card's
+   trick, scoped local so the two never couple). */
+.achievement-toast-sheen {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  border-radius: 4px;
+  pointer-events: none;
+}
+.achievement-toast-sheen::before {
+  content: "";
+  position: absolute;
+  top: -30%;
+  bottom: -30%;
+  width: 34%;
+  left: -40%;
+  background: linear-gradient(
+    105deg,
+    transparent,
+    rgba(255, 240, 190, 0.28),
+    transparent
+  );
+  animation: achievement-toast-sheen 1400ms ease-out 180ms 1 both;
+}
+@keyframes achievement-toast-sheen {
+  from {
+    transform: translateX(0);
+  }
+  to {
+    transform: translateX(480%);
+  }
+}
+
+/* Gold flecks twinkling around the frame (fixed offsets from the component,
+   staggered per-fleck via --spark-delay). */
+.achievement-toast-sparkles {
+  position: absolute;
+  inset: -0.4rem;
+  pointer-events: none;
+}
+.achievement-toast-sparkle {
+  position: absolute;
+  width: 4px;
+  height: 4px;
+  background: #ffe9a8;
+  box-shadow: 0 0 6px 1px rgba(255, 215, 94, 0.8);
+  transform: rotate(45deg) scale(0);
+  animation: achievement-toast-sparkle 1300ms ease-in-out
+    var(--spark-delay, 0ms) infinite;
+}
+@keyframes achievement-toast-sparkle {
+  0%,
+  100% {
+    transform: rotate(45deg) scale(0);
+    opacity: 0;
+  }
+  40% {
+    transform: rotate(45deg) scale(1);
+    opacity: 1;
+  }
+  70% {
+    transform: rotate(45deg) scale(0.4);
+    opacity: 0.6;
+  }
+}
+
+/* The HUD STAR: tucked under the MAP button in the clock stack (same frame
+   family), present ONLY while unseen badges wait — a gold pulse invites the
+   tap without nagging. */
+.hud-achievements-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.2rem 0.6rem;
+  background: rgba(11, 13, 16, 0.55);
+  border: 2px solid #ffd75e;
+  border-radius: 6px;
+  font: inherit;
+  color: inherit;
+  appearance: none;
+  -webkit-tap-highlight-color: transparent;
+  pointer-events: auto;
+  cursor: pointer;
+  animation: hud-achievements-pulse 1600ms ease-in-out infinite;
+}
+.hud-achievements-btn:active {
+  transform: translateY(1px);
+}
+.hud-achievements-icon {
+  width: 1.5rem;
+  height: 1.5rem;
+}
+@keyframes hud-achievements-pulse {
+  0%,
+  100% {
+    box-shadow: 0 0 0.15rem rgba(255, 215, 94, 0.35);
+  }
+  50% {
+    box-shadow: 0 0 0.55rem rgba(255, 215, 94, 0.75);
+  }
+}
+
+/* The BROWSER: the arsenal viewer's overlay/panel/list layout, with category
+   headers, a progress readout per counter badge, and locked rows dimmed. */
+.achievements-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 70;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(8, 10, 14, 0.94);
+  padding: 1rem;
+  overflow-y: auto;
+}
+
+.achievements-panel {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.5rem;
+  width: min(94vw, 46rem);
+  margin: auto;
+}
+
+.achievements-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+  width: 100%;
+  max-height: 62vh;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  scrollbar-width: thin;
+  padding-right: 0.3rem;
+}
+
+.achievements-header {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  padding: 0.5rem 0.4rem 0.15rem;
+}
+
+.achievement-row {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  padding: 0.25rem 0.4rem;
+  border-radius: 4px;
+  text-align: left;
+}
+
+.achievement-row.selected {
+  background: rgba(255, 255, 255, 0.08);
+}
+
+/* The badge icon in a bordered cell (the inventory frame, achievement gold
+   when earned; slate and dimmed while locked). */
+.achievement-cell {
+  flex: 0 0 auto;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 2rem;
+  height: 2rem;
+  box-sizing: border-box;
+  background: rgba(255, 255, 255, 0.04);
+  border: 2px solid #3a4150;
+  border-radius: 4px;
+}
+.achievement-row.unlocked .achievement-cell {
+  border-color: #ffd75e;
+  box-shadow: 0 0 0.3rem rgba(255, 215, 94, 0.3);
+}
+.achievement-cell .pixel-img {
+  width: 1.5rem;
+  height: 1.5rem;
+}
+.achievement-row.locked .achievement-cell .pixel-img {
+  filter: grayscale(1) brightness(0.55);
+}
+
+.achievement-row-text {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 0.2rem;
+  min-width: 0;
+}
+
+/* Progress meter under a counter badge's condition: a thin gold fill. */
+.achievement-progress {
+  width: 7rem;
+  height: 0.35rem;
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 2px;
+  overflow: hidden;
+}
+.achievement-progress-fill {
+  height: 100%;
+  background: #ffd75e;
+}
+.achievement-row.locked .achievement-progress-fill {
+  background: #8a7742;
+}
+
+.achievements-close {
+  margin-top: 0.2rem;
+}

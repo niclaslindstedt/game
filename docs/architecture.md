@@ -390,6 +390,14 @@ pixelated`; enemies swap to generated wounded sprite variants as hp falls
   time, kills, player level reached, and a full end-of-run session snapshot —
   feeding the end-of-run best time and the menu's browsable HIGH SCORES board,
   ranked four ways, with its per-run detail card),
+  `achievement-totals.ts` / `achievement-defs.ts` / `achievements.ts`
+  (account-wide **achievements**: pure lifetime counters fed by the engine's
+  per-tick events, the badge catalog — its per-level / per-difficulty /
+  per-unique / per-companion groups derived from the live content
+  registries — and the persisted unlock store built on the oss-framework
+  achievements ledger; `AchievementsScreen.tsx` is the browsable shelf
+  reached from the title menu and the in-run HUD star that appears while
+  new badges wait, and `AchievementToast.tsx` the gold unlock banner),
   `assets.ts` (loads the generated sprite atlas — one PNG + JSON source
   rects sliced into per-sprite bitmaps in a single decode — plus the pixel
   font), and `assets/` (the generated atlas + font atlas — never

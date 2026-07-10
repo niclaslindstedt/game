@@ -64,6 +64,13 @@ Delete or empty each of these — they are 100% this-game data:
       `tests/engine/fixtures.ts` only if the new game changes engine
       *mechanics* (new archetypes), not for new content. Lib tests at the
       `tests/` root (`chiptune`, `synth`, …) are untouched.
+- [ ] **`website/src/game/achievement-defs.ts`** — the achievement catalog.
+      The generated groups (one badge per level, difficulty, unique,
+      companion) rebuild themselves from the new registries automatically;
+      the FIXED entries (kill/loot ladders, feats, their names and flavor)
+      are this game's copy — rewrite them for the sequel. The tracking
+      machinery (`achievement-totals.ts`, `achievements.ts`) is machinery;
+      keep it.
 - [ ] **`docs/game-content.md`** — this game's story/level/roster
       walkthrough; replace it wholesale. Trim the flavored README sections
       (premise, how-to-play story beats) to the new game.

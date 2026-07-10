@@ -94,6 +94,18 @@ import {
   spriteDataUrl,
   type GameAssets,
 } from "./assets.ts";
+import { ACHIEVEMENTS_BY_ID } from "./achievement-defs.ts";
+import {
+  recordAchievementEvents,
+  recordRunStarted,
+  unseenAchievements,
+} from "./achievements.ts";
+import { AchievementsScreen } from "./AchievementsScreen.tsx";
+import {
+  AchievementToast,
+  ACHIEVEMENT_TOAST_TTL_MS,
+  type AchievementToastData,
+} from "./AchievementToast.tsx";
 import { synth } from "./audio.ts";
 import { cloneGameState } from "./checkpoint.ts";
 import { playEventHaptics, playTypewriterHaptic } from "./haptics.ts";
@@ -148,6 +160,7 @@ import {
 } from "./render.ts";
 import { getSettings } from "./settings.ts";
 import { playEventSounds, playUiSound } from "./sfx/index.ts";
+import { playAchievementJingle } from "./sfx/jingles.ts";
 import { TIER_COLORS, WEAPON_CLASS_COLORS } from "./tiers.ts";
 
 type Hud = {
@@ -505,6 +518,71 @@ export function GameScreen({
     weaponMenuOpenRef.current = weaponMenuOpen;
   }, [weaponMenuOpen]);
 
+  // Achievement unlocks: batched unlocks queue and toast ONE at a time (each
+  // replays the banner + chime), `unseenBadges` lights the HUD star, and
+  // `achievementsOpen` is the in-run browser (an app-side overlay over the
+  // engine's `paused` phase — the sim freezes under it like the pause screen).
+  const achievementQueueRef = useRef<AchievementToastData[]>([]);
+  const achievementToastSeqRef = useRef(0);
+  const [achievementToast, setAchievementToast] =
+    useState<AchievementToastData | null>(null);
+  const [unseenBadges, setUnseenBadges] = useState(
+    () => unseenAchievements().length,
+  );
+  const [achievementsOpen, setAchievementsOpen] = useState(false);
+  // Ref mirror so the (closure-captured) key handler reads the live value:
+  // while the browser is up it owns the keyboard (its own ESC closes it), so
+  // the run's pause toggle must not double-handle the same keypress.
+  const achievementsOpenRef = useRef(false);
+  useEffect(() => {
+    achievementsOpenRef.current = achievementsOpen;
+  }, [achievementsOpen]);
+
+  // Bumped whenever badges join the queue, waking the stage effect below.
+  // The queue lives in a ref and is only ever shifted inside effects — state
+  // updaters must stay pure (StrictMode double-invokes them), which is why
+  // the stage never advances the queue from inside setAchievementToast.
+  const [achievementTick, setAchievementTick] = useState(0);
+
+  // The toast stage, two halves: a showing toast chimes once and clears
+  // itself after its TTL; an idle stage pulls the next queued badge.
+  useEffect(() => {
+    if (!achievementToast) return;
+    playAchievementJingle(synth);
+    const timer = setTimeout(
+      () => setAchievementToast(null),
+      ACHIEVEMENT_TOAST_TTL_MS,
+    );
+    return () => clearTimeout(timer);
+  }, [achievementToast]);
+  useEffect(() => {
+    if (achievementToast) return;
+    const next = achievementQueueRef.current.shift();
+    if (next) setAchievementToast(next);
+  }, [achievementToast, achievementTick]);
+
+  // Queue freshly-unlocked badges for the toast stage and light the star.
+  // Called from the sim loop (event ingestion) and the run-start hook. Only
+  // refs and setters are touched (the toast resolves its own icon sprite),
+  // so the run effect can call it without listing it as a dependency —
+  // the same footing as `bumpUi`.
+  const celebrateAchievements = (ids: string[]) => {
+    if (ids.length === 0) return;
+    const queued = achievementQueueRef.current;
+    for (const id of ids) {
+      const def = ACHIEVEMENTS_BY_ID.get(id);
+      if (!def) continue;
+      queued.push({
+        id: ++achievementToastSeqRef.current,
+        name: def.name,
+        icon: def.icon,
+      });
+    }
+    setUnseenBadges(unseenAchievements().length);
+    // Wake the stage (the idle-stage effect pulls the queue).
+    setAchievementTick((t) => t + 1);
+  };
+
   useEffect(() => {
     let alive = true;
     void loadGameAssets().then((loaded) => {
@@ -588,6 +666,11 @@ export function GameScreen({
     setState(state);
     setNewRecord(false);
     debug(`run ${runId} started (seed ${seed}, ${difficulty})`);
+
+    // Book the run on the achievement ledger — fresh starts and RETRYs both
+    // count as "running the level"; a run resumed from the menu is the same
+    // run continuing, so it doesn't. Run-count badges can unlock right here.
+    if (!resumed) celebrateAchievements(recordRunStarted(runLevelId));
 
     // The lower-right pickup feed: a fresh run starts with an empty log, and
     // each line schedules its own expiry so rows fade independently (WoW's
@@ -801,6 +884,9 @@ export function GameScreen({
       // runs its own listener (arrows/WASD move the cursor, Enter/Space spend a
       // point). Ceding here keeps those keys from steering or queuing a jump.
       if (state.phase === "levelup") return;
+      // Same for the achievements browser: it closes itself on ESC (resuming
+      // the run), so the pause toggle below must not double-handle that press.
+      if (achievementsOpenRef.current) return;
       // Track held movement keys + the run modifier every keydown (repeats
       // included — Set.add is idempotent) so the sim loop reads live state.
       if (event.code in MOVE_KEYS) {
@@ -1180,6 +1266,16 @@ export function GameScreen({
         }
         playEventSounds(synth, state.events);
         playEventHaptics(state.events);
+        // Book the tick's events on the achievement ledger (kills, loot,
+        // clears, …) and celebrate whatever unlocked — the toast + chime,
+        // sized a notch below the ding and the unique card.
+        celebrateAchievements(
+          recordAchievementEvents(state.events, {
+            levelId: state.level.id,
+            difficulty,
+            stats: state.stats,
+          }),
+        );
 
         for (const event of state.events) {
           if (event.type === "lightning") {
@@ -2143,6 +2239,34 @@ export function GameScreen({
                   className="pixel-img hud-map-icon"
                 />
               </button>
+
+              {/* The ACHIEVEMENTS star — appears under the MAP button only
+                while new badges wait, pulsing gold. Tapping it freezes the
+                run (the pause phase, like the bag) under the browser, which
+                acknowledges the queue and dims the star. */}
+              {unseenBadges > 0 && (
+                <button
+                  type="button"
+                  className="hud-achievements-btn"
+                  aria-label="open-achievements"
+                  onClick={() => {
+                    if (state?.phase === "playing") {
+                      setWeaponMenuOpen(false);
+                      pauseGame(state);
+                      pauseMusic();
+                      setAchievementsOpen(true);
+                      playUiSound(synth, "confirm");
+                      bumpUi();
+                    }
+                  }}
+                >
+                  <img
+                    src={spriteDataUrl(assets.sprites, "icon_star") ?? ""}
+                    alt=""
+                    className="pixel-img hud-achievements-icon"
+                  />
+                </button>
+              )}
             </div>
           </div>
         </div>
@@ -2466,7 +2590,7 @@ export function GameScreen({
         />
       )}
 
-      {state && hud?.phase === "paused" && (
+      {state && hud?.phase === "paused" && !achievementsOpen && (
         <PauseOverlay
           font={font}
           onResume={() => {
@@ -2478,6 +2602,36 @@ export function GameScreen({
           // Leave to the menu but keep the frozen run in memory — CONTINUE
           // resumes it. The state is already in the `paused` phase here.
           onExit={() => onExitToMenu(state)}
+        />
+      )}
+
+      {/* The achievements browser, over the run frozen in the `paused` phase
+          (the HUD star put it there). Closing resumes play and dims the star
+          — opening the shelf acknowledged the unseen queue. */}
+      {state && achievementsOpen && (
+        <AchievementsScreen
+          font={font}
+          sprites={assets.sprites}
+          onClose={() => {
+            setAchievementsOpen(false);
+            setUnseenBadges(unseenAchievements().length);
+            if (state.phase === "paused") {
+              resumeGame(state);
+              resumeMusic();
+            }
+            bumpUi();
+          }}
+        />
+      )}
+
+      {/* The achievement unlock banner — any phase: a badge earned on the
+          winning blow still gets its moment over the victory splash. */}
+      {achievementToast && (
+        <AchievementToast
+          key={achievementToast.id}
+          font={font}
+          sprites={assets.sprites}
+          toast={achievementToast}
         />
       )}
 

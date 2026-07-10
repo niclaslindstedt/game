@@ -8,6 +8,53 @@ import type { GameEvent } from "@game/core";
 
 import type { Synth } from "@ui/lib/synth.ts";
 
+/**
+ * The ACHIEVEMENT chime: a badge landing on the shelf. App-triggered (the
+ * unlock ledger lives app-side, so there is no engine event to key on), and
+ * deliberately a notch below the level-up DING — a quick major arpeggio with
+ * glass octaves and one high sparkle, no root swell, no landing chord, so a
+ * badge feels great without outshining a ding or a unique find.
+ */
+export function playAchievementJingle(synth: Synth): void {
+  // The rise: G-C-E skyward, glass octave riding each step.
+  [784, 1047, 1319].forEach((freq, i) => {
+    synth.tone({
+      type: "triangle",
+      from: freq,
+      durationMs: 120,
+      volume: 0.05,
+      delayMs: i * 70,
+      echo: 0.3,
+    });
+    synth.tone({
+      type: "sine",
+      from: freq * 2,
+      durationMs: 100,
+      volume: 0.018,
+      delayMs: i * 70,
+      echo: 0.35,
+    });
+  });
+  // A thin shimmer under the rise — air, not a note.
+  synth.noise({
+    durationMs: 260,
+    volume: 0.01,
+    delayMs: 40,
+    filter: { type: "highpass", frequency: 6800 },
+    echo: 0.35,
+  });
+  // One last sparkle drifting off in the echo.
+  synth.tone({
+    type: "sine",
+    from: 2093,
+    to: 2637,
+    durationMs: 220,
+    volume: 0.014,
+    delayMs: 260,
+    echo: 0.5,
+  });
+}
+
 /** Play the jingle for a milestone event; false when it isn't one. */
 export function playJingle(synth: Synth, event: GameEvent): boolean {
   switch (event.type) {
