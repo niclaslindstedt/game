@@ -17,7 +17,6 @@ own namespace, and a sequel changes it there once:
 | Music volume                 | 0–100% in quarter steps                                     | 80%                                                                                  |
 | Sound FX volume              | 0–100% in quarter steps                                     | 100%                                                                                 |
 | Display → XP on kill         | on / off                                                    | on (floating "+N XP" text on kills)                                                  |
-| Hardcore                     | on / off                                                    | off (softcore: death loses nothing)                                                  |
 | Developer → Debug mode       | on / off                                                    | off (inert flag; the row itself is hidden until unlocked)                            |
 | Developer → Auto level stats | on / off                                                    | off (opt-in free per-level base-stat growth; the row is hidden until unlocked)       |
 | Developer → Character gear   | on / off                                                    | off (opt-in worn armor + weapon on the field hero; the row is hidden until unlocked) |
@@ -48,20 +47,23 @@ During a cutscene, intro, or dialogue, **Space** or **Enter** turns the page
 (the first press finishes the letter crawl, the next advances) and **Escape**
 skips the whole scene.
 
-Story progress is persisted the same way (`website/src/game/progress.ts`):
-cleared levels are recorded under `<storagePrefix>:completed-levels` (keyed
-per difficulty). Until the whole campaign is cleared at a difficulty, choosing
-that difficulty drops you straight into the next unbeaten level (the story
-runs in order); clearing the last level opens the menu's level-select screen
-as a replay picker and lights up NEXT LEVEL on the victory splash. Clearing a
-level also mints a one-shot LEVEL TOKEN (`<storagePrefix>:level-tokens`) that
-can be spent to unlock the same level at a higher difficulty ahead of the
-campaign there (`<storagePrefix>:token-unlocks`); the unlock persists, the
-token doesn't. Unique/legendary items carried through a difficulty's final
-victory join the forever-stash (`<storagePrefix>:keepsakes`) and are poured
-back into every later run's bag. With **Hardcore** on, DYING burns that
-stash, strips banked loadouts of their unique/legendary pieces, and revokes
-the level tokens and their unlocks — softcore death loses nothing. Every
+Progress belongs to **characters** — named, persistent heroes
+(`website/src/game/characters.ts`), stored under `<storagePrefix>:characters`
+with the active one at `<storagePrefix>:active-character`. The app opens on the
+roster: pick a hero, create one (naming it and choosing **HARDCORE** at
+creation — the choice belongs to the character, not a global setting), or retire
+the fallen. A character owns ONE evolving build (the engine `Loadout` — level,
+stats, gear, inventory, coins, abilities, companions) that carries whole into
+every difficulty and level, so higher difficulties are met with the gear earned
+on the lower ones. It also remembers which difficulties it has BEATEN and which
+levels it has CLEARED — pure progress bookmarks that gate two things: the
+difficulty ladder unlocks in order (a rung opens once the one before it is
+beaten; locked rungs show greyed out), and a difficulty runs as a linear
+campaign until it is beaten, after which its level picker opens for free replays
+(the grind-for-gear endgame). **HARDCORE is permadeath**: a hardcore hero that
+dies is retired for good (kept in the roster as fallen, never played again). A
+softcore death costs nothing — the build is only ever banked on victory, so a
+failed run simply isn't saved. Every
 finished run is banked per difficulty under `<storagePrefix>:highscores` with
 its survival time, kills, player level reached, and a full end-of-run session
 snapshot (`website/src/game/highscores.ts`); the end-of-run screen shows that

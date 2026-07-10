@@ -12,6 +12,7 @@ import {
   ENEMY_DEFS,
   enemyDef,
   step,
+  xpToLevelUp,
   type GameEvent,
   type GameState,
 } from "@game/core";
@@ -93,10 +94,17 @@ describe("last words on death", () => {
     const state = startGame();
     clearStage(state);
     state.rng = () => 0.99; // land the killing blow deterministically
-    // A fat XP payout: the killing blow both banks a level-up AND opens the
-    // death scene — the scene wins the phase, the level-up waits its turn.
+    // A fat XP payout — over a full level's worth — so the killing blow both
+    // banks a level-up AND opens the death scene: the scene wins the phase, the
+    // level-up waits its turn. Sized off the live curve so it stays a ding
+    // through any pacing retune.
     const elite = makeEnemy(
-      { pos: { ...state.player.pos }, hp: 1, maxHp: 4000, speed: 0 },
+      {
+        pos: { ...state.player.pos },
+        hp: 1,
+        maxHp: xpToLevelUp(1) + 500,
+        speed: 0,
+      },
       "cartographer",
     );
     state.enemies.push(elite);

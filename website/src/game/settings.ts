@@ -33,17 +33,6 @@ export type KeyboardMove = "on" | "off";
  * on iOS — no Vibration API — it is a noop regardless (see haptics.ts). */
 export type Vibration = "on" | "off";
 
-/**
- * HARDCORE mode: `on` means DEATH costs you your hoard — the keepsake stash
- * burns, every banked loadout loses its unique/legendary pieces, and the
- * LEVEL TOKENS (unspent ones and the respec unlocks bought with them) are
- * revoked, so the ladder is climbed again from the rungs still cleared (see
- * progress.ts `noteHardcoreDeath`). `off` (the default) is softcore: death
- * loses nothing — tokens stick, and unique/legendary finds carried through a
- * beaten difficulty are yours forever.
- */
-export type Hardcore = "on" | "off";
-
 /** DEBUG mode: a developer-only toggle. `on` is reserved for future
  * developer diagnostics (a live-state overlay, extra logging); today it is a
  * plain persisted flag that does nothing on its own yet. Reached through the
@@ -77,7 +66,6 @@ export type GameSettings = {
   powerupSide: PowerupSide;
   keyboardMove: KeyboardMove;
   vibration: Vibration;
-  hardcore: Hardcore;
   /** 0–1 master volumes, applied via audio.ts. */
   musicVolume: number;
   sfxVolume: number;
@@ -115,8 +103,6 @@ function defaults(): GameSettings {
     // Vibration is a touch-device affordance — on out of the box where a
     // motor exists, and inert on iOS and pointer devices anyway.
     vibration: "on",
-    // The keeper's game by default: hardcore is the opt-in.
-    hardcore: "off",
     musicVolume: 0.8,
     sfxVolume: 1,
     // The developer menu stays hidden until the moon Easter egg is found.
@@ -160,10 +146,6 @@ function load(): GameSettings {
         stored.vibration === "on" || stored.vibration === "off"
           ? stored.vibration
           : base.vibration,
-      hardcore:
-        stored.hardcore === "on" || stored.hardcore === "off"
-          ? stored.hardcore
-          : base.hardcore,
       musicVolume:
         typeof stored.musicVolume === "number"
           ? clamp01(stored.musicVolume)

@@ -31,7 +31,7 @@ import {
   rollEquipment,
   syncInventoryCapacity,
 } from "./items.ts";
-import { levelStatGains } from "./leveling.ts";
+import { levelStatGains, xpToLevelUp } from "./leveling.ts";
 import { addMapMarker } from "./map.ts";
 import { bankOverkill, maybePowerScale, mobLevelTierBonus } from "./menace.ts";
 import { maybeFirstKillThought, startDeathWords } from "./story.ts";
@@ -680,12 +680,17 @@ export function grantXp(state: GameState, amount: number): void {
   state.stats.xpGained += amount;
   let leveled = false;
   while (player.xp >= player.xpToNext) {
+    // The Diablo-style cap: at max level XP stops banking levels. Pin the bar
+    // full and keep the overflow out, so the hero fights on for cap-level gear
+    // (the endgame) instead of a ding that will never come.
+    if (player.level >= LEVELING.maxLevel) {
+      player.xp = player.xpToNext;
+      break;
+    }
     player.xp -= player.xpToNext;
     player.level++;
     leveled = true;
-    player.xpToNext = Math.round(
-      LEVELING.baseXpToLevel * Math.pow(LEVELING.xpGrowth, player.level - 1),
-    );
+    player.xpToNext = xpToLevelUp(player.level);
     player.pendingStatPoints += LEVELING.statPointsPerLevel;
     // The automatic base gains land with the level itself (they derive from
     // `player.level` — see leveling.ts), so re-derive everything they feed:

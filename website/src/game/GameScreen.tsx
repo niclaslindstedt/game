@@ -122,16 +122,13 @@ import {
   PICKUP_CARD_TTL_MS,
   type PickupCard,
 } from "./PickupModal.tsx";
-import { bestTime, recordRun } from "./highscores.ts";
 import {
-  bankKeepsakesOnVictory,
-  markLevelCompleted,
   nextLevelId,
-  noteHardcoreDeath,
-  restoreKeepsakes,
-  saveLoadout,
-  startingLoadout,
-} from "./progress.ts";
+  recordDeath,
+  recordVictory,
+  type Character,
+} from "./characters.ts";
+import { bestTime, recordRun } from "./highscores.ts";
 import {
   computeCamera,
   drawEffects,
@@ -378,14 +375,17 @@ function KillCounter({
 }
 
 export function GameScreen({
+  character,
   difficulty,
   levelId: initialLevelId,
   onQuit,
   onExitToMenu,
   skipIntro: skipOpening = false,
-  respec = false,
   resume,
 }: {
+  /** The hero playing this run — the run starts from their persistent build,
+   * and every victory (and, in hardcore, death) is banked onto them. */
+  character: Character;
   difficulty: Difficulty;
   levelId: string;
   /** Abandon the run for good (the end-of-run splash's MENU button). */
@@ -396,10 +396,6 @@ export function GameScreen({
   /** Warp-in (the title moon's long-press): drop straight into play, skipping
    * the prelude cutscene and the hero's level-intro monologue. */
   skipIntro?: boolean;
-  /** Cashed a LEVEL TOKEN: refund the carried build into a from-scratch stat
-   * respec once the intro clears (see the engine's `beginRespec`). Only the
-   * token-jumped level itself respecs — advancing to the NEXT LEVEL does not. */
-  respec?: boolean;
   /** Resuming a run parked in memory: adopt this frozen (paused) engine state
    * as-is instead of starting fresh. Consumed once — a later RETRY / NEXT
    * LEVEL in this same mount recreates the game normally. */
@@ -410,6 +406,11 @@ export function GameScreen({
   // (a fresh createGame) — each run is standalone, carrying only the chosen
   // difficulty across, per docs/game-content.md.
   const [levelId, setLevelId] = useState(initialLevelId);
+  // The live character, kept in a ref so it survives re-renders and, crucially,
+  // so a second victory in the SAME mount (clear a level → NEXT LEVEL → clear
+  // again) starts from the loadout the FIRST victory just banked. `recordVictory`
+  // returns the updated character; we stash it back here.
+  const characterRef = useRef<Character>(character);
   // The parked engine state to adopt on this mount (a run resumed from the
   // menu), consumed the first time the run effect fires so a later RETRY /
   // NEXT LEVEL recreates the game from scratch instead of re-adopting it.
@@ -545,9 +546,10 @@ export function GameScreen({
       !resumed && checkpointRef.current?.levelId === runLevelId
         ? checkpointRef.current.state
         : null;
-    // The carry-over: the loadout banked when the previous level was cleared
-    // (or a derived stand-in for dev jumps with nothing banked). The hero
-    // arrives with the level, stats and items he finished the last level with.
+    // The carry-over: the character's persistent build. The hero arrives with
+    // the exact level, stats and items they carry right now — into any level,
+    // any difficulty. A brand-new hero (no banked build yet) starts from the
+    // authored fresh start (level 1, the difficulty's wall weapon).
     const state =
       resumed ??
       (checkpoint
@@ -556,22 +558,12 @@ export function GameScreen({
             seed,
             runLevelId,
             difficulty,
-            startingLoadout(runLevelId, difficulty) ?? undefined,
-            // The token respec is owed only on the jumped-into level; once the
-            // run advances along the campaign (a fresh levelId) it no longer
-            // applies.
-            respec && levelId === initialLevelId,
+            characterRef.current.loadout ?? undefined,
           ));
     // A run started from scratch (not resumed from the menu, not adopted from a
     // checkpoint that already froze it): capture the combat-start checkpoint
     // once this mount, superseding any stale one from an earlier level.
     const captureCheckpoint = !resumed && !checkpoint;
-    // The forever-hoard follows the hero into every FRESH run: any stashed
-    // unique/legendary he isn't already carrying lands in the bag. (In
-    // hardcore the stash exists too — right up until a death burns it.) A
-    // resumed or checkpoint-adopted run already carries whatever its own
-    // creation restored.
-    if (captureCheckpoint) restoreKeepsakes(state);
     // The prelude always plays — every run opens on its cutscene (the player
     // can dismiss it with the SKIP button or Esc). It is never auto-skipped on
     // replay.
@@ -1419,16 +1411,23 @@ export function GameScreen({
           // the difficulty's LAST level also banks any unique/legendary
           // finds into the forever-stash.
           if (event.type === "victory") {
-            markLevelCompleted(state.level.id, difficulty);
-            const loadout = extractLoadout(state);
-            saveLoadout(state.level.id, difficulty, loadout);
-            bankKeepsakesOnVictory(state.level.id, loadout);
+            // Bank the win onto the character: their build becomes the
+            // end-of-level snapshot, the clear is recorded, and clearing the
+            // difficulty's LAST level marks it beaten (opening its level picker
+            // and the next rung of the ladder). The updated character feeds the
+            // next level's carry-over.
+            characterRef.current = recordVictory(
+              characterRef.current,
+              state.level.id,
+              difficulty,
+              extractLoadout(state),
+            );
           }
-          // A hardcore death takes the hoard and the shortcuts with it —
-          // keepsakes, banked unique/legendary pieces, tokens and their
-          // unlocks all burn (a softcore death loses nothing).
+          // Hardcore death is permadeath: the hero is retired for good. A
+          // softcore death loses nothing — the build was only ever banked on
+          // victory, so the run simply isn't saved.
           if (event.type === "defeat") {
-            noteHardcoreDeath();
+            characterRef.current = recordDeath(characterRef.current);
           }
         }
         if (effects.length > 0) {
@@ -1582,7 +1581,7 @@ export function GameScreen({
       pickupTimers.forEach(clearTimeout);
       if (pickupCardTimer) clearTimeout(pickupCardTimer);
     };
-  }, [assets, runId, difficulty, levelId, initialLevelId, respec, skipOpening]);
+  }, [assets, runId, difficulty, levelId, initialLevelId, skipOpening]);
 
   if (!assets) {
     return <div className="game-loading">Loading…</div>;

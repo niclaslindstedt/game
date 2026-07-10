@@ -285,7 +285,7 @@ run against synthetic fixtures with no shipped content (see
   (`autoEquipBest` — wear the best wearable piece in every slot at once,
   weapons by the build-aware `weaponScore`; `scrapInferiorLoot` — cull every
   outgrown find), `allocateStat` (plus the
-  LEVEL TOKEN respec trio `beginRespec` / `deallocateStat` / `confirmRespec`),
+  respec trio `beginRespec` / `deallocateStat` / `confirmRespec`),
   the derived
   stats (max hp — now STAMINA-scaled, class-aware crit chance
   `playerCritChance` — DEX for physical, INT for magic, LUCK marginal — the
@@ -350,7 +350,7 @@ deploy-shaped:
   `?cutscene=<id>` workbench that loops one scene outside any run),
   `LevelUpOverlay.tsx` (the stat chooser shown while the engine pauses in
   `levelup`; folds into a 3×2 grid on landscape phones),
-  `RespecOverlay.tsx` (the LEVEL TOKEN respec — a Diablo-style attribute
+  `RespecOverlay.tsx` (the respec — a Diablo-style attribute
   screen shown in the `respec` phase, with a −/+ stepper per stat and a
   CONFIRM gate; shares the stat catalog with the level-up chooser via
   `statChoices.tsx`),
@@ -372,11 +372,13 @@ pixelated`; enemies swap to generated wounded sprite variants as hp falls
   player and a `LEVEL_TRACKS` registry, so a level's `music` id selects its
   theme and `playLevelMusic(trackId)` switches cleanly between levels),
   `audio.ts` (one shared synth split into SFX/music volume views),
-  `settings.ts` (persisted control-scheme + volume settings), `progress.ts`
-  (persisted per-difficulty level completion that drives the campaign: it
-  walks a first-timer through the story in order and only unlocks the
-  level-select picker once the campaign is cleared, and lights up the victory
-  splash's NEXT LEVEL), `highscores.ts` (per-difficulty banked runs — survival
+  `settings.ts` (persisted control-scheme + volume settings), `characters.ts`
+  (persistent named **characters** — the Diablo-style save model: each hero
+  owns one evolving build carried into every difficulty, plus per-difficulty
+  clear/beaten bookmarks that unlock the ladder in order and open a
+  difficulty's free level-select once beaten; HARDCORE is per-character
+  permadeath, chosen at creation in `CharacterScreen.tsx`), `highscores.ts`
+  (per-difficulty banked runs — survival
   time, kills, player level reached, and a full end-of-run session snapshot —
   feeding the end-of-run best time and the menu's browsable HIGH SCORES board,
   ranked four ways, with its per-run detail card),

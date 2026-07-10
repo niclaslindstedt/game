@@ -1891,6 +1891,97 @@ body {
   gap: 0.3rem;
 }
 
+/* ---- Character roster + creation (CharacterScreen) ---- */
+
+.character-heading {
+  z-index: 1;
+}
+
+/* The roster reuses .title-menu / .menu-item; each row pairs the play button
+   with a small delete on the right. */
+.character-row {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.character-row .menu-item {
+  flex: 1;
+}
+
+.character-delete {
+  appearance: none;
+  border: 2px solid #3a2530;
+  background: rgba(40, 20, 26, 0.6);
+  padding: 0.2rem 0.5rem;
+  cursor: pointer;
+  line-height: 0;
+  flex: 0 0 auto;
+}
+
+.character-delete:hover {
+  border-color: #ff6d6d;
+  background: rgba(60, 26, 32, 0.8);
+}
+
+/* The create form: a name field, the hardcore toggle, and the actions. */
+.character-form {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 0.9rem;
+  z-index: 1;
+  width: min(90vw, 28rem);
+  padding: 1.25rem 1.5rem;
+  background: rgba(16, 21, 28, 0.92);
+  border: 3px solid #1d2530;
+  box-shadow: 0 6px 0 rgba(0, 0, 0, 0.4);
+}
+
+.character-field {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+}
+
+.character-name-input {
+  appearance: none;
+  background: #0b0d10;
+  border: 3px solid #2a3442;
+  color: #ffd75e;
+  font-family: ui-monospace, "Courier New", monospace;
+  font-size: 1.5rem;
+  font-weight: 700;
+  letter-spacing: 0.25em;
+  text-transform: uppercase;
+  padding: 0.5rem 0.75rem;
+  outline: none;
+}
+
+.character-name-input:focus {
+  border-color: #7ef0c8;
+}
+
+.character-toggle {
+  border: 3px solid #2a3442;
+  justify-content: flex-start;
+}
+
+.character-toggle.on {
+  border-color: #ff6d6d;
+}
+
+.character-actions {
+  display: flex;
+  gap: 0.75rem;
+  justify-content: center;
+}
+
+.character-new {
+  justify-content: center;
+  margin-top: 0.5rem;
+}
+
 .title-help {
   display: flex;
   flex-direction: column;

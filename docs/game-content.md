@@ -90,8 +90,8 @@ run's first job is to scavenge a replacement — and any looted weapon
 auto-supplants the wall piece). The gentler rungs also bank a few
 pre-allocated stat points (`DifficultyDef.startingStats`). Clearing a level banks a
 **loadout snapshot** — his level, stats, worn equipment, bag, and pocketed
-powerups (`extractLoadout`, persisted per difficulty by
-`website/src/game/progress.ts`) — and starting the next level hands it back
+powerups (`extractLoadout`, banked onto the playing **character** by
+`website/src/game/characters.ts`) — and starting the next level hands it back
 to `createGame(seed, levelId, difficulty, loadout)`, which dresses the run
 in it (`applyLoadout` in `src/game/arrival.ts`): ids re-minted, bag re-sized
 to the carried STRENGTH, and the hero arriving rested (full health/stamina,
@@ -182,42 +182,30 @@ roomier bags arrive later as their own defs. The character modal keeps the
 stat sheet tucked behind the portrait (hover or tap it) so the bag grid
 owns the screen.
 
-What the campaign _does_ persist is **completion**, on-device and per
-difficulty (`website/src/game/progress.ts`): clearing a level records it, and
-the victory splash offers **NEXT LEVEL** (advancing along `LEVEL_ORDER`
-carrying the difficulty). A first-timer is walked through the story in order —
-choosing a difficulty (NEW GAME → difficulty) drops them straight into the
-next unbeaten level, no picker. Only once the whole campaign is cleared at a
-difficulty does the title menu's **level-select** screen open, as a replay
-picker. The `?level=` dev override bypasses the gate entirely. Every finished
-run is banked per difficulty (`website/src/game/highscores.ts`) with its
-survival time, kills, player level reached, and a full end-of-run session
-snapshot; the end-of-run screen shows that difficulty's best survival time, and
-the menu's **HIGH SCORES** board ranks the runs four ways (survival time,
-kills-per-minute, mobs killed, level reached) and opens any banked run into a
-detail card of the whole session.
+What the campaign _does_ persist is the **character** and its **completion**,
+on-device (`website/src/game/characters.ts`). The app opens on the hero roster
+(pick, create, or retire — see [configuration.md](configuration.md)); the
+chosen hero's build carries into everything, and their progress is tracked per
+difficulty. Clearing a level records it, and the victory splash offers **NEXT
+LEVEL** (advancing along `LEVEL_ORDER`, carrying the difficulty). A hero is
+walked through the story in order — choosing a difficulty (PLAY → difficulty)
+drops them straight into the next unbeaten level, no picker. Only once the whole
+campaign is beaten at a difficulty does that difficulty's **level-select** screen
+open, as a free replay picker (the grind-for-gear endgame). The difficulty
+ladder itself unlocks in order per character: a rung opens once the one before
+it is beaten, and locked rungs show greyed out. The `?level=` dev override
+bypasses the gates entirely. Every finished run is banked per difficulty
+(`website/src/game/highscores.ts`) with its survival time, kills, player level
+reached, and a full end-of-run session snapshot; the end-of-run screen shows
+that difficulty's best survival time, and the menu's **HIGH SCORES** board ranks
+the runs four ways (survival time, kills-per-minute, mobs killed, level reached)
+and opens any banked run into a detail card of the whole session.
 
-Clearing a level also mints a **LEVEL TOKEN** for it at that difficulty
-(`website/src/game/progress.ts`). A token is spent — once, it can't be used
-again — to unlock the **same level at a higher difficulty** ahead of the
-campaign there: the fast lane into the harder rungs' richer loot (their
-tier/unique bonuses), while playing the difficulties in order remains the
-full-reward path. The title menu surfaces it: a rung with a spendable token
-opens its mission list ("LEVEL TOKEN READY"), and the locked mission shows
-"SPEND THE <RUNG> LEVEL TOKEN" in gold. A token jump carries the hero's
-loadout from the highest lower rung that banked one (mobs scale relative to
-his level either way, via the difficulty's `mobLevelOffset`), and the unlock
-persists — dying doesn't revoke it; a spent token is re-minted only by
-re-clearing the level.
-
-Because the jump drops the carried build into a tougher rung, spending a
-token also hands the hero a **respec**: once the intro clears, the whole
-banked build is refunded into a single pool and the run freezes on a
-Diablo-style attribute screen (the `respec` phase, engine `beginRespec` →
-`RespecOverlay`) where every point is re-placed from scratch — points move
-both ways (`allocateStat` / `deallocateStat`) until CONFIRM commits the build
-(`confirmRespec`). Only the token-jumped level respecs; advancing to the next
-level does not.
+**HARDCORE**, chosen when the character is created, makes death permanent: a
+hardcore hero that dies is retired for good (kept in the roster as fallen). A
+softcore death costs nothing — the build is only ever banked on victory. The
+level cap is **99** (`LEVELING.maxLevel`): at the cap XP stops banking levels
+and the endgame becomes the hunt for cap-level gear.
 
 Difficulty-exclusive content lives with the level that uses it: a `spawns` or
 `waves.budget` line can carry an optional `minDifficulty`, and it only appears
