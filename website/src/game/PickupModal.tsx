@@ -221,7 +221,7 @@ function StatusTag({ card, font }: { card: PickupCard; font: PixelFont }) {
         <PixelText
           font={font}
           text="EQUIPPED"
-          scale={1}
+          scale={2}
           color={UPGRADE_COLOR}
         />
       </div>
@@ -233,7 +233,7 @@ function StatusTag({ card, font }: { card: PickupCard; font: PixelFont }) {
         <PixelText
           font={font}
           text="▲ UPGRADE"
-          scale={1}
+          scale={2}
           color={UPGRADE_COLOR}
         />
       </div>
@@ -245,7 +245,7 @@ function StatusTag({ card, font }: { card: PickupCard; font: PixelFont }) {
         <PixelText
           font={font}
           text="TAP TO EQUIP"
-          scale={1}
+          scale={2}
           color={HINT_COLOR}
         />
       </div>
@@ -290,7 +290,7 @@ export function PickupModal({
         <PixelText
           font={font}
           text={card.name}
-          scale={1}
+          scale={2}
           color={card.color}
           maxWidth={PICKUP_NAME_REM}
         />
