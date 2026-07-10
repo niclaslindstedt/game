@@ -30,7 +30,6 @@ import { PixelText } from "@ui/lib/PixelText.tsx";
 
 import { IDENTITY } from "../identity.ts";
 
-import { ArsenalScreen } from "./ArsenalScreen.tsx";
 import { HELP_LINES } from "./copy.ts";
 
 import { topScores, type ScoreMetric, type ScoreRow } from "./highscores.ts";
@@ -61,12 +60,17 @@ import { getSettings, updateSettings } from "./settings.ts";
 import { playUiSound } from "./sfx/index.ts";
 import { startTitleSky } from "./titleSky.ts";
 
-// Lazy for the SEO critical-path budget: the browser is a menu destination,
-// not startup code (see the GameScreen twin of this note).
+// Lazy for the SEO critical-path budget: these are menu destinations, not
+// startup code (the achievements browser has a GameScreen twin of this
+// note; the arsenal is a developer-menu viewer) — both ride lazy chunks the
+// entry budget ignores and the PWA still precaches.
 const AchievementsScreen = lazy(() =>
   import("./AchievementsScreen.tsx").then((m) => ({
     default: m.AchievementsScreen,
   })),
+);
+const ArsenalScreen = lazy(() =>
+  import("./ArsenalScreen.tsx").then((m) => ({ default: m.ArsenalScreen })),
 );
 
 type MenuScreen =
@@ -1560,15 +1564,17 @@ export function TitleScreen({
       {/* The developer ARSENAL viewer: a full-screen overlay over the menu,
           mounted only while browsing (it owns its own keyboard navigation). */}
       {screen === "arsenal" && (
-        <ArsenalScreen
-          font={font}
-          sprites={assets.sprites}
-          onClose={() => {
-            setScreen("developer");
-            // Land back on VIEW ARSENAL — the second developer row.
-            setCursor(1);
-          }}
-        />
+        <Suspense fallback={null}>
+          <ArsenalScreen
+            font={font}
+            sprites={assets.sprites}
+            onClose={() => {
+              setScreen("developer");
+              // Land back on VIEW ARSENAL — the second developer row.
+              setCursor(1);
+            }}
+          />
+        </Suspense>
       )}
 
       <footer className="title-footer">
