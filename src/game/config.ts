@@ -307,6 +307,37 @@ export const UNIQUE = {
 } as const;
 
 /**
+ * WORLD-DROP uniques — level-locked named drops that any enemy on their home
+ * level can drop (see `defs/uniques.ts` WORLD_UNIQUES, wired per level in
+ * `LevelDef.loot.worldUniques`). Unlike boss uniques (which only a specific
+ * boss drops), these rain from the whole roster, but at RANK-scaled odds so a
+ * boss run is by far the efficient farm: a trash minion is a lottery ticket, an
+ * elite ten times likelier, the boss forty. `minPlayerLevel` gates the whole
+ * table shut until the hero out-levels a first campaign pass — on EASY the
+ * campaign lands at ~level 17 (see `leveling-curve.mjs --by-level`), so the gate
+ * sits above that: the relics can only be farmed by RETURNING for boss runs once
+ * the difficulty is beaten. Rolled per unique, per kill, on `maybeDropWorldUnique`.
+ */
+export const WORLD_DROP = {
+  /**
+   * Per-unique drop chance by the falling enemy's ROLE. Calibrated to the level
+   * head-count: a full EASY level fields ~1200 minions, a handful of elites, and
+   * its boss(es), so a WHOLE-level clear amasses to ≈ 30% per relic —
+   * `1 − (1−minion)^1200·(1−elite)^5·(1−boss) ≈ 0.30`. The boss is weighted
+   * MAGNITUDES over trash (a 10% single kill vs 0.015%) so a boss run — one fast
+   * kill for a fat slice — is the efficient farm, not grinding the whole floor.
+   */
+  chanceByRole: {
+    minion: 0.00015, // 0.015% — 1200 of them sum to the bulk of the 30%
+    elite: 0.02, //     2%     — ~130× a minion
+    boss: 0.1, //       10%    — ~670× a minion; the fast run you repeat
+  },
+  /** No world unique drops until the hero reaches this level (past a first
+   * easy campaign pass, which ends ~17) — so boss runs are the only source. */
+  minPlayerLevel: 20,
+} as const;
+
+/**
  * The DERIVED arrival loadout (`deriveArrivalLoadout` in arrival.ts): the
  * realistic stand-in used when a mid-campaign level starts with nothing
  * banked — dev `?level=` jumps, playtest bots, wiped storage. In the real

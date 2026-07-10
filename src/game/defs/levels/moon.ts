@@ -218,6 +218,9 @@ export const MOON: LevelDef = {
       "bag",
     ],
     abilityPool: ["fire_orbs", "storm_cell", "stasis_field", "item_magnet"],
+    // Level-locked world drop (see config WORLD_DROP): THE PALE COVENANT, the
+    // last moonwalker's vacuum-sealed plate, farmed on boss runs of the Moon.
+    worldUniques: { easy: ["the_pale_covenant"] },
     // MOON'S BLADE arrives early — at a kill rolled in the first hundred,
     // discovered in play — so the run's signature weapon shapes the run
     // instead of capping it.

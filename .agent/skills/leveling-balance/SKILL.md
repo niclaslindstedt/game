@@ -77,6 +77,7 @@ scaling, to move pacing.
    node scripts/leveling-curve.mjs --difficulty easy --to 20   # early game
    node scripts/leveling-curve.mjs --luck 20                   # more arrows
    node scripts/leveling-curve.mjs --campaign                  # full playthrough
+   node scripts/leveling-curve.mjs --by-level                  # per (diff × level)
    ```
    The default table reads the live `LEVELING`/`MENACE`/`LOOT` config and prints,
    per level: `xpToNext`, `kills/lvl` (kill XP only), `w/arrows` (the same with
@@ -86,7 +87,9 @@ scaling, to move pacing.
    gap between them IS the arrows' contribution (`--luck N` grows it, JESUS
    collapses it to zero). `--campaign` instead simulates clearing every level at
    every difficulty in order (arrows included) and reports the level after each
-   rung — the check for the
+   rung; `--by-level` prints the same run but with the hero's level at the START
+   of every (difficulty × level) clear — the view for sizing a level-locked gate
+   (e.g. a world-drop `minPlayerLevel`) above where a level is first reached — the check for the
    **"all difficulties → ~level 60"** target (`--clear-share` overrides the
    assumed roster fraction killed per clear, default 0.5). `killsPerLevelBase`
    is the height knob that moves that number; `killsPerLevelGrowth` the taper.

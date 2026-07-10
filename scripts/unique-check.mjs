@@ -46,6 +46,10 @@ const { UNIQUE_DEFS, UNIQUE_IDS } = await import(
 const { ENEMY_DEFS } = await import(
   path.join(root, "src/game/defs/enemies/index.ts")
 );
+const { LEVELS } = await import(
+  path.join(root, "src/game/defs/levels/index.ts")
+);
+const { WORLD_DROP } = await import(path.join(root, "src/game/config.ts"));
 const { DIFFICULTY_ORDER } = await import(
   path.join(root, "src/game/defs/difficulties.ts")
 );
@@ -296,13 +300,38 @@ for (const def of Object.values(ENEMY_DEFS)) {
     }
   }
 }
+// World-drop placements: uniques wired on a LEVEL (`loot.worldUniques`) instead
+// of a boss. A relic lives in exactly ONE home — either a boss table OR a level
+// world table, never both — so both universes count toward "placed once".
+const worldPlacements = [];
+for (const def of Object.values(LEVELS)) {
+  const table = def.loot.worldUniques;
+  if (!table) continue;
+  for (const [diff, ids] of Object.entries(table)) {
+    if (!DIFFICULTY_ORDER.includes(diff))
+      err(`level "${def.id}": "${diff}" is not a real difficulty rung.`);
+    for (const id of ids ?? []) {
+      if (!(id in UNIQUE_DEFS))
+        err(`level "${def.id}" [${diff}]: wires unknown world unique "${id}".`);
+      worldPlacements.push({
+        level: def.id,
+        diff,
+        id,
+        slot: UNIQUE_DEFS[id]?.slot,
+      });
+    }
+  }
+}
+
 const placedCount = {};
-for (const p of placements) placedCount[p.id] = (placedCount[p.id] ?? 0) + 1;
+for (const p of [...placements, ...worldPlacements])
+  placedCount[p.id] = (placedCount[p.id] ?? 0) + 1;
 for (const id of UNIQUE_IDS) {
   const n = placedCount[id] ?? 0;
-  if (n === 0) err(`${id}: shipped but wired to no boss — it can never drop.`);
+  if (n === 0)
+    err(`${id}: shipped but wired to no boss or level — it can never drop.`);
   else if (n > 1)
-    err(`${id}: wired to ${n} boss/rung slots — a unique has one home.`);
+    err(`${id}: wired to ${n} homes — a unique drops from exactly one.`);
 }
 
 // Latin square: each difficulty column must be a permutation of the 5 set slots.
@@ -347,6 +376,37 @@ for (const boss of bosses)
       ].join(""),
   );
 
+// World-drop grid: level × difficulty, the level-locked relics any enemy on the
+// level can drop (config WORLD_DROP), farmed by returning for boss runs.
+if (worldPlacements.length) {
+  const wr = WORLD_DROP.chanceByRole;
+  console.log(
+    `\nWorld-drop uniques (level-locked; minion ${(wr.minion * 100).toFixed(3)}% / ` +
+      `elite ${(wr.elite * 100).toFixed(1)}% / boss ${(wr.boss * 100).toFixed(0)}% per kill, ` +
+      `gate lvl ${WORLD_DROP.minPlayerLevel}):\n`,
+  );
+  const levels = [...new Set(worldPlacements.map((p) => p.level))];
+  const wcell = (level, diff) =>
+    worldPlacements
+      .filter((p) => p.level === level && p.diff === diff)
+      .map((p) => p.id)
+      .join(", ") || "—";
+  console.log(
+    "  " +
+      ["level".padEnd(14), ...DIFFICULTY_ORDER.map((d) => d.padEnd(20))].join(
+        "",
+      ),
+  );
+  for (const level of levels)
+    console.log(
+      "  " +
+        [
+          level.padEnd(14),
+          ...DIFFICULTY_ORDER.map((d) => wcell(level, d).padEnd(20)),
+        ].join(""),
+    );
+}
+
 // Weapon ladder — informational (weapon power is class-dependent; eyeball it
 // against the weapon-budget model rather than assume raw DPS must climb).
 const weaponRows = (bySlot.weapon ?? [])
@@ -364,8 +424,9 @@ if (weaponRows.length) {
 }
 
 console.log(
-  `\n${UNIQUE_IDS.length} uniques · ${placements.length} placements · ` +
-    `home-rung drop ≈ ${(UNIQUE.dropChance * 100).toFixed(0)}% (cap ${(UNIQUE.dropChanceCap * 100).toFixed(0)}%).\n`,
+  `\n${UNIQUE_IDS.length} uniques · ${placements.length} boss + ` +
+    `${worldPlacements.length} world placements · ` +
+    `boss home-rung drop ≈ ${(UNIQUE.dropChance * 100).toFixed(0)}% (cap ${(UNIQUE.dropChanceCap * 100).toFixed(0)}%).\n`,
 );
 
 if (errors.length) {

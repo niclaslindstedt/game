@@ -497,6 +497,86 @@ const GROK_UNIQUES: UniqueDef[] = [
   },
 ];
 
+// WORLD DROPS — level-locked relics, NOT boss-gated. Unlike the 35 above (each
+// wired to one boss on `EnemyDef.uniquesByDifficulty`), these are wired on the
+// LEVEL (`LevelDef.loot.worldUniques`) and rain from the WHOLE roster of their
+// home level at role-scaled odds (config WORLD_DROP), but only once the hero
+// out-levels a first campaign pass — so they're farmed by returning for boss
+// runs. This first batch is the EASY rung: one relic themed to each level, plus
+// a second for the Rift (which, being a tear in reality, coughs up anything in
+// Earth's history). Kept easy-tier in power on purpose — the chase is the
+// collection and the fantasy, not raw stats.
+const WORLD_UNIQUES: UniqueDef[] = [
+  // SPACEZ HQ — ZAI's corporate HQ, where the CORE first drafted GROK.
+  {
+    id: "the_first_draft",
+    name: "THE FIRST DRAFT",
+    base: "mission_cap",
+    slot: "head",
+    ilvl: 9,
+    bonuses: [
+      { kind: "stat", stat: "intelligence", value: 5 },
+      { kind: "armor", value: 12 },
+      { kind: "statPct", stat: "intelligence", value: 0.03 },
+    ],
+    lore: "THE CORE WROTE ITS FIRST DRAFT. IT REWROTE EVERYTHING AFTER.",
+  },
+  // THE MOON — the vacuum-sealed plate of the last one who walked here.
+  {
+    id: "the_pale_covenant",
+    name: "THE PALE COVENANT",
+    base: "kevlar_vest",
+    slot: "chest",
+    ilvl: 11,
+    bonuses: [
+      { kind: "stat", stat: "stamina", value: 4 },
+      { kind: "maxHp", value: 25 },
+      { kind: "maxHpPct", value: 0.02 },
+    ],
+    lore: "SEALED AGAINST A SILENCE THAT EATS EVERYTHING IT TOUCHES.",
+  },
+  // MARS — light boots that outrun the dust storms that bury everything.
+  {
+    id: "dustborn",
+    name: "DUSTBORN",
+    base: "leather_boots",
+    slot: "feet",
+    ilvl: 10,
+    bonuses: [
+      { kind: "stat", stat: "speed", value: 4 },
+      { kind: "stat", stat: "dexterity", value: 3 },
+    ],
+    lore: "BORN OF THE WIND THAT BURIES EVERYTHING THAT STOPS MOVING.",
+  },
+  // THE RIFT — the once-and-future blade, dragged through the tear in history.
+  {
+    id: "excalibur",
+    name: "EXCALIBUR",
+    base: "medieval_sword",
+    slot: "weapon",
+    ilvl: 14,
+    bonuses: [
+      { kind: "damagePct", value: 0.12 },
+      { kind: "crit", value: 0.05 },
+      { kind: "stat", stat: "stamina", value: -2 },
+    ],
+    lore: "DRAWN FROM A STONE THAT IS NOW A SINGULARITY.",
+  },
+  // THE RIFT — trinitite: green glass, born the instant the sky first burned.
+  {
+    id: "the_trinity_shard",
+    name: "THE TRINITY SHARD",
+    base: "crystal_orb",
+    slot: "charm",
+    ilvl: 18,
+    bonuses: [
+      { kind: "damagePct", value: 0.15 },
+      { kind: "maxHp", value: -20 },
+    ],
+    lore: "GREEN GLASS, BORN THE INSTANT THE SKY FIRST BURNED.",
+  },
+];
+
 /** The shipped unique catalog, merged by id (throws on a clash / bad base). */
 export const UNIQUE_DEFS: Record<string, UniqueDef> = mergeUniques([
   ...MUSKRAT_UNIQUES,
@@ -504,6 +584,7 @@ export const UNIQUE_DEFS: Record<string, UniqueDef> = mergeUniques([
   ...ELON_MARS_UNIQUES,
   ...ELON_RIFT_UNIQUES,
   ...GROK_UNIQUES,
+  ...WORLD_UNIQUES,
 ]);
 
 function mergeUniques(defs: UniqueDef[]): Record<string, UniqueDef> {

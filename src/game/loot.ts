@@ -15,6 +15,7 @@ import {
   MERCY,
   STATS,
   UNIQUE,
+  WORLD_DROP,
 } from "./config.ts";
 import { difficultyDef, scaledMobCount } from "./defs/difficulties.ts";
 import { enemyDef, type EnemyDef } from "./defs/enemies/index.ts";
@@ -338,6 +339,10 @@ export function killEnemy(
   // rolled by how close the boss's mlvl runs to its ilvl (see the function).
   maybeDropBossUnique(state, def, enemy);
 
+  // Level-locked world drops: this level's relics, rolled at role-scaled odds
+  // on EVERY kill once the hero out-levels a first campaign pass (see function).
+  maybeDropWorldUnique(state, def, enemy);
+
   if (def.role === "boss") {
     state.events.push({ type: "bossDefeated", pos: { ...enemy.pos } });
   }
@@ -616,6 +621,21 @@ function dropMinionLoot(
  * scatters onto the ground like any drop. NOT guaranteed: boss runs are the
  * endgame.
  */
+/** Scatter one minted unique near `at` — the shared tail of every unique drop
+ * (boss and world). Consumes exactly two rng draws (x, y scatter) plus whatever
+ * `mintUnique` rolls, in that order — keep it stable so seeded drops don't drift. */
+function pushUniqueDrop(state: GameState, id: string, at: Vec2): void {
+  state.items.push({
+    id: state.nextId++,
+    kind: "equipment",
+    pos: {
+      x: clamp(at.x + (state.rng() - 0.5) * 90, 16, state.level.width - 16),
+      y: clamp(at.y + (state.rng() - 0.5) * 90, 16, state.level.height - 16),
+    },
+    equipment: mintUnique(state, id),
+  });
+}
+
 function maybeDropBossUnique(
   state: GameState,
   def: EnemyDef,
@@ -630,23 +650,31 @@ function maybeDropBossUnique(
       UNIQUE.dropChance * (enemy.mlvl / ilvl),
     );
     if (state.rng() >= chance) continue;
-    state.items.push({
-      id: state.nextId++,
-      kind: "equipment",
-      pos: {
-        x: clamp(
-          enemy.pos.x + (state.rng() - 0.5) * 90,
-          16,
-          state.level.width - 16,
-        ),
-        y: clamp(
-          enemy.pos.y + (state.rng() - 0.5) * 90,
-          16,
-          state.level.height - 16,
-        ),
-      },
-      equipment: mintUnique(state, id),
-    });
+    pushUniqueDrop(state, id, enemy.pos);
+  }
+}
+
+/** Level-locked world drops: any enemy on a level whose `loot.worldUniques`
+ * lists relics for this difficulty rolls each one, at a chance set purely by the
+ * enemy's ROLE (config WORLD_DROP) — a trash minion is a lottery ticket, the
+ * boss a fat single kill, so boss runs are the efficient farm. Gated shut until
+ * the hero passes `WORLD_DROP.minPlayerLevel` (above where a first campaign pass
+ * ends), so the relics can only be farmed by RETURNING once the rung is beaten.
+ * The gate is checked BEFORE any rng draw, so levels without a table — every
+ * synthetic test fixture, and every under-level run — consume no rng and leave
+ * the seeded drop stream untouched. */
+function maybeDropWorldUnique(
+  state: GameState,
+  def: EnemyDef,
+  enemy: Enemy,
+): void {
+  const ids = levelDef(state.level.id).loot.worldUniques?.[state.difficulty];
+  if (!ids || ids.length === 0) return;
+  if (state.player.level < WORLD_DROP.minPlayerLevel) return;
+  const chance = WORLD_DROP.chanceByRole[def.role];
+  for (const id of ids) {
+    if (state.rng() >= chance) continue;
+    pushUniqueDrop(state, id, enemy.pos);
   }
 }
 

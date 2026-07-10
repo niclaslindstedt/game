@@ -22,8 +22,9 @@ projectile sprite — no engine edits unless you're adding a new BEHAVIOR.
 | Chain/cooldown/damage globals | `src/game/config.ts` (`WEAPON`) |
 | Which bases drop on a level (thematic pools) | `src/game/defs/levels/<level>.ts` `loot.weaponPool` |
 | Elite/boss drops: signatures (`items`), per-tier pledges (`tierDrops`), boss UNIQUE tables (`uniquesByDifficulty`), `levelBonus` | `src/game/defs/enemies/<roster>.ts` |
-| Named UNIQUE defs (fixed bonuses on a real base) | `src/game/defs/uniques.ts` |
+| Named UNIQUE defs (fixed bonuses on a real base) | `src/game/defs/uniques.ts` (`WORLD_UNIQUES` group = level-locked ones) |
 | Unique mint + drop roll: `mintUnique`, `maybeDropBossUnique`, `UNIQUE` config | `src/game/items.ts`, `src/game/loot.ts`, `src/game/config.ts` |
+| World-drop uniques: level wiring, role-scaled roll, gate | `LevelDef.loot.worldUniques`, `maybeDropWorldUnique` (loot.ts), `WORLD_DROP` config; size the gate with `scripts/leveling-curve.mjs --by-level` |
 | The roll pipeline (tier → ilvl → affixes), equip gates | `src/game/items.ts` (`rollEquipment`, `meetsLevelReq`) |
 | Kill → drop funnel (pity rule, tierDrops payout) | `src/game/loot.ts` |
 | Monster level stamping | `src/game/create.ts` (`spawnEnemy`), `src/game/menace.ts` (`mobLevelFor`, re-stamp in `maybePowerScale`) |
@@ -200,6 +201,79 @@ to the rung — an easy unique only drops on easy. Each is rolled at
 flavor), NOT manuscript content — the manuscript transcribes spoken/found
 story, not item cards, so a unique doesn't touch `docs/manuscript.md`. New
 uniques ARE game content, so update `docs/game-content.md`.
+
+## World-drop uniques (level-locked)
+
+A SECOND kind of unique home: instead of one boss (`EnemyDef.uniquesByDifficulty`),
+a relic hangs on a LEVEL (`LevelDef.loot.worldUniques`, keyed by difficulty) and
+any enemy on that level can drop it, at a chance set purely by the enemy's ROLE
+(config `WORLD_DROP.chanceByRole` — `minion`/`elite`/`boss`). This is the
+"drops out in the world, but boss runs are the efficient farm" loot. Same def
+shape (`WORLD_UNIQUES` group in `uniques.ts`), same `mintUnique` / ±band / equip
+rules — only the wiring and the roll differ. The roll is `maybeDropWorldUnique`
+in `loot.ts`, called from `killEnemy` right after the boss roll.
+
+**The two knobs that make it work:**
+
+- **Role chances, calibrated to head-count.** A drop rolls PER unique PER kill,
+  so a full clear's odds are `1 − ∏(1−chance)^count` over the roster. An EASY
+  floor fields **~1200 minions**, ~5 elites, 1–2 bosses (get the real numbers
+  from the roster, or `leveling-curve.mjs --campaign`), so a minion chance that
+  "feels tiny" (0.2%) actually compounds to ~90% a clear. Solve BACKWARD from
+  the target: for a whole-clear ≈ 30% with the boss weighted magnitudes over
+  trash, `minion 0.015% / elite 2% / boss 10%` lands it — and the 10% boss kill
+  makes a fast boss run the best drops-per-minute. Always sanity-check the
+  aggregate against the actual per-level counts, not intuition.
+- **The level gate (`minPlayerLevel`) decides WHEN.** Set it above the level the
+  hero reaches on a first pass so the relic can only be farmed by RETURNING for
+  boss runs after the difficulty is beaten. Size it with the new
+  `leveling-curve.mjs --by-level` — it prints the hero's level at the START of
+  every (difficulty × level) clear. EASY ends ~17, so gate 20 forces a return.
+  The gate is checked in `maybeDropWorldUnique` BEFORE any rng draw, so levels
+  without a table (every synthetic fixture, every under-level run) consume no
+  rng and the seeded drop stream never shifts — that's why the whole change
+  landed with zero seeded-test churn.
+
+**Authoring loop (extends the boss loop):**
+
+1. Draft the def in the `WORLD_UNIQUES` group; pick bases the same way
+   (`--suggest`, `req ≈ ilvl − 20`, armor monotonicity — the checker holds all
+   of it across BOTH unique kinds). Trinkets/charms still exempt from the equip
+   gap; a charm base whose req exceeds the ilvl warns ("wears above ilvl") — bump
+   the ilvl (a world charm's ilvl only scales a cosmetic ±band, since world odds
+   are flat role rates, not ilvl-scaled like boss uniques).
+2. Wire it on the LEVEL: `loot.worldUniques: { <rung>: ["id", …] }`.
+3. `node scripts/unique-check.mjs` — the coverage check now spans boss ∪ world
+   placements ("placed exactly once, one home each"), and prints a **World-drop
+   grid** (level × difficulty) with the live role chances + gate. The Latin
+   square stays boss-only.
+4. Tests: `tests/engine/world_drops_test.ts` asserts the role scaling and the
+   gate on SYNTHETIC fixtures — `registerDefs` now takes a `uniques` override,
+   so an engine test can register a fixture unique + a fixture level's
+   `worldUniques` without any shipped id. `tests/content/uniques_test.ts`
+   coverage counts both homes. Run `npx vitest run` (the drop-table suite
+   asserts every shipped unique has exactly one home).
+
+## Lessons learned (2026-07 world drops)
+
+- **Compounding over head-count is the whole calibration.** A per-kill chance
+  that reads "rare" is enormous across 1000+ mobs. Always solve the aggregate
+  `1 − ∏(1−p)^count` to the target (~30% a clear), and weight the boss orders of
+  magnitude over minions so boss runs — not floor-grinding — are the efficient
+  farm. `leveling-curve.mjs --campaign`/`--by-level` gives the counts and the
+  per-level hero level to size both the rates and the `minPlayerLevel` gate.
+- **Gate BEFORE the rng draw.** `maybeDropWorldUnique` returns on "no table for
+  this level/rung" and "under the gate" before touching `state.rng`, so the vast
+  majority of kills (fixtures, under-level runs) draw nothing and every seeded
+  loot/content test is untouched. A per-kill roll that drew unconditionally would
+  shift every seeded test after the first kill — the classic rng-stream trap.
+- **`registerDefs` grew a `uniques` slot** so world-drop rules test on synthetic
+  fixtures (the engine-test rule: no shipped ids). Mirror this for any future
+  system that mints uniques in the engine.
+- **World-charm ilvl is nearly cosmetic.** World odds are flat role rates (not
+  `× mlvl/ilvl` like boss uniques) and charms carry no base armor/dps, so a world
+  charm's ilvl only moves the ±band. Bump it freely to clear the "wears above
+  ilvl" warn without worrying about power.
 
 ## Lessons learned (2026-07 uniques)
 

@@ -367,6 +367,9 @@ export const SPACEZ_HQ: LevelDef = {
       "bag",
     ],
     abilityPool: ["storm_cell", "stasis_field", "item_magnet"],
+    // Level-locked world drop (see config WORLD_DROP): THE FIRST DRAFT, the
+    // prototype-GROK neural crown, farmable only by returning for boss runs.
+    worldUniques: { easy: ["the_first_draft"] },
     allClearWeapon: "golden_stapler",
     // The opening loot loop, on a schedule the rain can't promise: the
     // SECURITY BATON drops on the second kill — a real weapon in hand before

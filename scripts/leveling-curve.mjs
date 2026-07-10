@@ -85,6 +85,12 @@ const arrowDropProb = (diff) => {
 // grind-to-cap endgame). `--clear-share` overrides the assumed fraction of a
 // level's roster actually killed per clear (default: the engine's ARRIVAL one).
 const campaign = args.includes("--campaign");
+// `--by-level` is `--campaign` with the intermediate detail: the hero's level
+// at the START of every (difficulty × level) clear, so you can see exactly what
+// level a given level is reached at on a first pass. This is the view that sizes
+// a LEVEL-LOCKED world-drop gate — set the gate above the level a level is first
+// cleared at and the drop can only be farmed on a RETURN (boss-run) pass.
+const byLevel = args.includes("--by-level");
 const clearShare = Number(opt("clear-share", "0.5"));
 
 if (!DIFFICULTY_ORDER.includes(difficulty)) {
@@ -94,7 +100,7 @@ if (!DIFFICULTY_ORDER.includes(difficulty)) {
   process.exit(1);
 }
 
-if (campaign) {
+if (campaign || byLevel) {
   // The XP a full clear of a level's roster pays (mirrors arrival.ts rosterXp):
   // every placed spawn + wave-budget mob at its catalog hp, difficulty-gated
   // lines the run never fielded left out. The actual XP is that × how tough the
@@ -140,8 +146,19 @@ if (campaign) {
   console.log(
     `\nCampaign playthrough — clearShare=${clearShare} · base=${LEVELING.killsPerLevelBase} growth=${LEVELING.killsPerLevelGrowth} cap=${LEVELING.maxLevel}\n`,
   );
+  if (byLevel) {
+    // Column header: one column per level, in story order.
+    console.log(
+      "  " +
+        "diff".padEnd(11) +
+        LEVEL_ORDER.map((id) => id.padEnd(12)).join("") +
+        "-> end",
+    );
+  }
   for (const diff of DIFFICULTY_ORDER) {
+    const starts = [];
     for (const id of LEVEL_ORDER) {
+      starts.push(level); // the hero's level as this level's clear BEGINS
       const kills = rosterCount(LEVELS[id], diff) * clearShare;
       const killXp =
         rosterXp(LEVELS[id], diff) * clearShare * mobHpScaleFor(level, diff);
@@ -158,7 +175,16 @@ if (campaign) {
       xp += killXp + arrowXp;
       advance();
     }
-    console.log(`  ${diff.padEnd(10)} -> lvl ${level}`);
+    if (byLevel) {
+      console.log(
+        "  " +
+          diff.padEnd(11) +
+          starts.map((l) => `lvl ${l}`.padEnd(12)).join("") +
+          `-> ${level}`,
+      );
+    } else {
+      console.log(`  ${diff.padEnd(10)} -> lvl ${level}`);
+    }
   }
   console.log(
     `\nafter all difficulties: lvl ${level}  (then ${LEVELING.maxLevel - level} levels of grind to the cap)\n`,
