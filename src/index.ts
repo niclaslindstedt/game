@@ -114,6 +114,7 @@ export {
   restoreStamina,
   totalArmor,
   rollEquipment,
+  mintUnique,
   unequipToInventory,
   weaponCooldownFor,
   weaponDamage,
@@ -280,6 +281,13 @@ export {
   type GearDef,
   type WeaponDef,
 } from "./game/defs/equipment.ts";
+export {
+  UNIQUE_DEFS,
+  UNIQUE_IDS,
+  uniqueDef,
+  setUniqueDefs,
+  type UniqueDef,
+} from "./game/defs/uniques.ts";
 export {
   gradeLevelReq,
   gradeVariantIds,

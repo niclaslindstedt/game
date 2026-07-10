@@ -22,6 +22,7 @@ import {
   QUALITY,
   STAMINA,
   STATS,
+  UNIQUE,
   WEAPON,
 } from "./config.ts";
 import { companionDef } from "./defs/companions.ts";
@@ -50,6 +51,7 @@ import { gradeVariantIds } from "./defs/grades.ts";
 import { difficultyDef } from "./defs/difficulties.ts";
 import { levelDef } from "./defs/levels/index.ts";
 import { storyItemDef } from "./defs/story.ts";
+import { uniqueDef } from "./defs/uniques.ts";
 import { baseStatBonus } from "./leveling.ts";
 import { currentMobLevel } from "./menace.ts";
 import type {
@@ -115,6 +117,8 @@ export const CRIT_STAT: Record<WeaponClass, StatName> = {
  * affixes on epic/legendary pieces still list their bonuses in full below it).
  */
 export function equipmentName(equipment: Equipment): string {
+  // A hand-authored unique carries its own fixed name — no base/affix compose.
+  if (equipment.name) return equipment.name;
   const base = equipmentBaseName(equipment.defId);
   let prefix = "";
   let suffix = "";
@@ -437,6 +441,45 @@ export function rollEquipment(
     }
   }
   return rolled;
+}
+
+/**
+ * Mint a hand-authored UNIQUE (`defs/uniques.ts`) as a live item instance: its
+ * base type, static ilvl, fixed name and bonuses, plus a per-drop ±band roll on
+ * the base damage (weapons) / armor (config `UNIQUE.baseRollBand`) so two copies
+ * differ — the fixed bonuses stay identical, so a better-rolled copy is worth
+ * chasing. Minted unbreakable (no durability), like every unique/legendary find,
+ * so it also keeps its FULL catalog damage (the looted-weapon damper is skipped,
+ * as for the sidearm). The frozen `def` snapshot version-proofs it, exactly like
+ * a rolled drop.
+ */
+export function mintUnique(state: GameState, uniqueId: string): Equipment {
+  const u = uniqueDef(uniqueId);
+  const weapon = isWeaponDef(u.base);
+  const baseDef = weapon ? weaponDef(u.base) : gearDef(u.base);
+  // ±band around the base value; the fixed bonuses are untouched.
+  const roll = 1 + (state.rng() * 2 - 1) * UNIQUE.baseRollBand;
+  const item: Equipment = {
+    id: state.nextId++,
+    defId: u.base,
+    slot: u.slot,
+    tier: "unique",
+    ilvl: u.ilvl,
+    affixes: u.bonuses.map((bonus) => ({ ...bonus })),
+    name: u.name,
+    // The roll rides the instance for weapons (read in `weaponDamageFor`);
+    // for armor it is baked straight into the stamped `armor` below.
+    baseRoll: weapon ? roll : undefined,
+    def: structuredClone(baseDef),
+  };
+  if (!weapon) {
+    const gear = gearDef(u.base);
+    // A unique's armor is its base value rolled ±band — its POWER lives in the
+    // fixed bonuses, not in ilvl-scaled base stats (uniques don't grow with
+    // ilvl the way rolled pieces do). Normal make, so no quality multiplier.
+    if (gear.armor !== undefined) item.armor = Math.round(gear.armor * roll);
+  }
+  return item;
 }
 
 /**
@@ -1017,7 +1060,14 @@ export function weaponDamageFor(state: GameState, weapon: Equipment): number {
   // a PERFECT one over its catalog weight (config QUALITY.mults). Routed
   // here — the one source of stat-scaled damage — so combat, auto-equip
   // scoring, and every DPS readout agree on what craftsmanship is worth.
-  return def.damage * multiplier * lootMult * qualityMult(weapon);
+  // A UNIQUE weapon's per-drop ±band on the base damage (see `Equipment.baseRoll`).
+  return (
+    def.damage *
+    multiplier *
+    lootMult *
+    qualityMult(weapon) *
+    (weapon.baseRoll ?? 1)
+  );
 }
 
 /**
@@ -1240,10 +1290,14 @@ export function baseDefId(piece: Equipment): string {
 }
 
 /**
- * Can the hero WEAR this piece yet? The Diablo level gate: an item whose
- * base `levelReq` outruns the player's level is a find to bank, not a weapon
- * to swing — auto-equip skips it, the bag refuses to equip it, and the UI
- * paints the requirement red until the hero grows into it.
+ * Can the hero WEAR this piece yet? The Diablo level gate keys on the BASE
+ * item's `levelReq` for EVERY tier — strip an item's rolled/authored bonuses
+ * and what's left is the base, so a magic, rare, unique, or legendary piece
+ * equips at the same level a plain one on that base would. A unique's high
+ * ilvl scales its power, not its requirement, so it is often wearable many
+ * levels before its ilvl — a find to grab early. Auto-equip skips a piece the
+ * hero can't wear, the bag refuses to equip it, and the UI paints the
+ * requirement red until the hero grows into it.
  */
 export function meetsLevelReq(state: GameState, equipment: Equipment): boolean {
   return state.player.level >= equipmentLevelReq(equipment.defId);
