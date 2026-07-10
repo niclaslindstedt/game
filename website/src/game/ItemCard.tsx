@@ -342,6 +342,8 @@ export function ItemIcon({
  * floats this next to a cell; the arsenal viewer lays it out in a detail pane.
  * `compareTo` (a piece worn in the same slot) drives the green/red deltas; pass
  * null for a standalone read. `maxWidth` wraps long names/lines to a rem cap.
+ * `lineScale` sizes the stat/affix lines (the hover tooltip pumps it up so the
+ * numbers read at arm's length; the arsenal viewer keeps the default 1).
  */
 export function ItemCardBody({
   font,
@@ -349,12 +351,14 @@ export function ItemCardBody({
   item,
   compareTo,
   maxWidth,
+  lineScale = 1,
 }: {
   font: PixelFont;
   state: GameState;
   item: Equipment;
   compareTo: Equipment | null;
   maxWidth?: number;
+  lineScale?: number;
 }) {
   return (
     <>
@@ -371,14 +375,14 @@ export function ItemCardBody({
             <PixelText
               font={font}
               text={line.text}
-              scale={1}
+              scale={lineScale}
               color={line.color}
               maxWidth={maxWidth}
             />
             <PixelText
               font={font}
               text={`(${line.delta.text})`}
-              scale={1}
+              scale={lineScale}
               color={line.delta.color}
             />
           </div>
@@ -387,7 +391,7 @@ export function ItemCardBody({
             key={line.text}
             font={font}
             text={line.text}
-            scale={1}
+            scale={lineScale}
             color={line.color}
             maxWidth={maxWidth}
           />
@@ -398,7 +402,7 @@ export function ItemCardBody({
           key={i}
           font={font}
           text={affixLine(affix)}
-          scale={1}
+          scale={lineScale}
           color={AFFIX_COLORS[affix.kind]}
           maxWidth={maxWidth}
         />

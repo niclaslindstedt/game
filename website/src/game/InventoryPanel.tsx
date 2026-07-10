@@ -206,6 +206,7 @@ function ItemTooltip({
         item={item}
         compareTo={compareTo}
         maxWidth={TOOLTIP_TEXT_REM}
+        lineScale={2}
       />
     </div>,
     document.body,
