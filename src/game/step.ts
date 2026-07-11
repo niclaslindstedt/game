@@ -23,6 +23,7 @@ import {
   type Vec2,
 } from "@game/lib/vec.ts";
 import {
+  canBankAbility,
   grantAbility,
   isSlotActive,
   magnetRadius,
@@ -34,7 +35,6 @@ import {
   AIM,
   APPARITION,
   ENEMY_AI,
-  HELD_ITEMS,
   JUMP,
   LAST_STAND,
   LOOT,
@@ -549,7 +549,9 @@ function stepUseItem(state: GameState, input: GameInput): void {
  * clears the rank and file. A tall obstacle stops the blast the same way it
  * stops a shot — a mob sheltered behind the stone rides it out. Kills flow
  * through hitEnemy, so XP, loot rolls, the pity rule, and the all-clear
- * trophy all behave exactly as if the player had done it the hard way.
+ * trophy all behave exactly as if the player had done it the hard way —
+ * except the screen-nuke slices themselves (`noNukeDrop`): a bomb's kills
+ * never chain into another bomb.
  */
 function detonateNuke(state: GameState, radius: number): void {
   state.events.push({ type: "nuke", pos: { ...state.player.pos } });
@@ -564,7 +566,7 @@ function detonateNuke(state: GameState, radius: number): void {
     );
   });
   for (const enemy of caught) {
-    hitEnemy(state, enemy, enemy.hp);
+    hitEnemy(state, enemy, enemy.hp, undefined, { noNukeDrop: true });
   }
 }
 
@@ -1470,9 +1472,10 @@ function stepItems(state: GameState): void {
     }
 
     // Ability pickups are banked for the `useItem` input (never the bag);
-    // at the carry cap they stay on the ground like an overflowing drop.
+    // at the carry cap — or a second `uniqueHeld` power like the NUKE while
+    // one is already docked — they stay on the ground like an overflowing drop.
     if (item.kind === "ability") {
-      if (state.player.heldAbilities.length >= HELD_ITEMS.cap) return true;
+      if (!canBankAbility(state, item.defId)) return true;
       state.player.heldAbilities.push(item.defId);
       state.stats.itemsCollected++;
       state.events.push({

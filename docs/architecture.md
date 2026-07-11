@@ -137,12 +137,17 @@ run against synthetic fixtures with no shipped content (see
   powers (orbiting fire orbs, storm strikes, stasis slow fields, the item
   magnet whose pull radius grows with INTELLIGENCE) plus the instant
   screen nuke (wipes every horde minion on screen — elites and bosses are
-  immune — its drop rate kept rare by `LOOT.nukeShare`); levels choose which
+  immune — its drop rate kept rare by `LOOT.nukeShare`, and its own kills
+  never chain: a nuke blast's loot rolls skip both screen-nuke slices, so a
+  bomb can't pay out another bomb); levels choose which
   can drop via their
   `loot.abilityPool`. Pickups are banked into `player.heldAbilities` (up
   to `HELD_ITEMS.cap`) and spent with the `useItem` input, or dragged out
   of their dock slot to be discarded (`discardHeldAbility`) when the bank
-  is full of powers you don't want. A spent power does not vacate its slot:
+  is full of powers you don't want. A `uniqueHeld` power (the nuke) docks
+  at most once — a second pickup stays on the ground and the merchant
+  refuses the sale (`canBankAbility`, the one gate every route into the
+  dock shares). A spent power does not vacate its slot:
   it keeps counting down in place (`ActiveAbility.slot` links a running copy
   to its dock slot), and only when it lapses does the slot free and the rest
   shift down (`removeHeldSlot`) — so the dock stays full while a power runs
@@ -167,8 +172,10 @@ run against synthetic fixtures with no shipped content (see
 - **`src/game/abilities.ts`** — ability activation (`grantAbility`, which
   links the running copy to the dock slot it was spent from), freeing a slot
   when a power lapses or is discarded (`removeHeldSlot`, `discardHeldAbility`),
-  and the helpers the renderer shares (`orbPositions`, `stasisFactorAt`); the
-  per-tick behavior runs inside `step.ts` so all damage flows through one path.
+  the dock's one admission gate (`canBankAbility` — room under the cap, and a
+  `uniqueHeld` power at most once), and the helpers the renderer shares
+  (`orbPositions`, `stasisFactorAt`); the per-tick behavior runs inside
+  `step.ts` so all damage flows through one path.
 - **`src/game/types.ts`** — state shapes plus the `GameEvent` union: events
   are the only channel from simulation to presentation (sound, flashes);
   the engine never knows a renderer or speaker exists.

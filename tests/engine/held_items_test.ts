@@ -170,6 +170,43 @@ describe("held ability items", () => {
   });
 });
 
+describe("uniqueHeld powers (one bomb in the dock at a time)", () => {
+  it("refuses a second nuke pickup while one is docked, without blocking others", () => {
+    const state = startGame();
+    clearStage(state);
+    state.items = [
+      abilityAt(state, 500, "test_nuke"),
+      abilityAt(state, 501, "test_nuke"),
+      abilityAt(state, 502, "test_orbit"),
+    ];
+    step(state, idle, DT);
+
+    // The first nuke banks; the double stays grounded (like an over-cap
+    // pickup) while the orbit behind it banks past it into the open slot.
+    expect(state.player.heldAbilities).toEqual(["test_nuke", "test_orbit"]);
+    expect(state.items.map((i) => i.id)).toEqual([501]);
+    expect(state.stats.itemsCollected).toBe(2);
+  });
+
+  it("banks the waiting double once the docked nuke is spent", () => {
+    const state = startGame();
+    clearStage(state);
+    state.items = [
+      abilityAt(state, 500, "test_nuke"),
+      abilityAt(state, 501, "test_nuke"),
+    ];
+    step(state, idle, DT); // one banks, the double waits on the ground
+
+    // Spending the nuke vacates its slot at once (it is instant), so the
+    // grounded double is free to bank — the rule is one AT A TIME, not one
+    // per run.
+    step(state, useItem, DT);
+    step(state, idle, DT);
+    expect(state.player.heldAbilities).toEqual(["test_nuke"]);
+    expect(state.items).toHaveLength(0);
+  });
+});
+
 describe("discarding banked abilities", () => {
   it("drops a specific slot and shifts the rest down, without granting it", () => {
     const state = startGame();

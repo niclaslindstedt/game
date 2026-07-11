@@ -590,6 +590,7 @@ export const FIX_ABILITIES: Record<string, AbilityDef> = {
     name: "SCREEN NUKE",
     kind: "nuke",
     durationMs: 0,
+    uniqueHeld: true,
     icon: "icon_nuke",
     nuke: { radius: 240 },
   },
@@ -632,6 +633,7 @@ export const FIX_ABILITIES: Record<string, AbilityDef> = {
     name: "TEST NUKE",
     kind: "nuke",
     durationMs: 0,
+    uniqueHeld: true, // mirrors the shipped nuke: one bomb docked at a time
     icon: "icon_nuke",
     nuke: { radius: 240 },
   },

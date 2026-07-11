@@ -289,6 +289,32 @@ describe("the shop", () => {
     expect(buyStock(state, entry.id)).toBe(false); // dock full
   });
 
+  it("won't sell a uniqueHeld powerup while one is already docked", () => {
+    const state = startGame();
+    meet(state);
+    state.player.pos = { ...state.merchant.pos };
+    openShop(state);
+    // A hand-stocked bomb on the stall (no level pools a nuke, so the entry
+    // is planted): the first sale docks it, the second is refused while it
+    // sits there — same gate as the ground pickup (canBankAbility).
+    state.merchant.stock.push({
+      id: 990,
+      kind: "ability",
+      defId: "test_nuke",
+      price: 5,
+    });
+    const entry = state.merchant.stock.find((s) => s.id === 990)!;
+    state.player.coins = 100;
+    expect(canBuyStock(state, entry)).toBe(true);
+    expect(buyStock(state, 990)).toBe(true);
+    expect(canBuyStock(state, entry)).toBe(false);
+    expect(buyStock(state, 990)).toBe(false); // refused, coins untouched
+    expect(state.player.coins).toBe(95);
+    expect(
+      state.player.heldAbilities.filter((d) => d === "test_nuke"),
+    ).toHaveLength(1);
+  });
+
   it("a stall weapon is a one-off that lands in the bag", () => {
     const state = startGame();
     meet(state);

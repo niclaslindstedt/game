@@ -23,6 +23,14 @@ export type AbilityDef = {
    * kept banked rather than wasted (the MAGNET, whose pull can't stack).
    */
   stackable?: boolean;
+  /**
+   * Whether the powerup dock holds at most ONE of this pickup at a time. When
+   * true, a second pickup is refused while one is already banked — it stays on
+   * the ground (like an over-cap pickup) and the merchant won't sell one
+   * either (see `canBankAbility`). The NUKE: a pocket full of screen-wipes
+   * trivializes every swarm, so one is the limit.
+   */
+  uniqueHeld?: boolean;
   /** Ground-item icon sprite. */
   icon: string;
   /** `orbit`: projectiles circling the player, mangling what they touch. */
@@ -113,6 +121,7 @@ export const ABILITY_DEFS: Record<string, AbilityDef> = {
     name: "NUKE",
     kind: "nuke",
     durationMs: 0, // instant — never becomes an ActiveAbility
+    uniqueHeld: true, // one bomb in the dock at a time
     icon: "icon_nuke",
     // Radius comfortably covers the phone-landscape view (half-diagonal
     // ≈ 232 world px, see AGENTS.md) from a player at its center.

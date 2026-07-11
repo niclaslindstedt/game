@@ -13,6 +13,7 @@
 
 import { companionMaxHp } from "./companions.ts";
 import { ARRIVAL, HELD_ITEMS, LEVELING } from "./config.ts";
+import { abilityDef } from "./defs/abilities.ts";
 import { companionDef, isCompanionDef } from "./defs/companions.ts";
 import { difficultyDef, meetsMinDifficulty } from "./defs/difficulties.ts";
 import { enemyDef } from "./defs/enemies/index.ts";
@@ -125,7 +126,11 @@ export function applyLoadout(state: GameState, loadout: Loadout): void {
   player.inventory = new Array<Equipment | null>(inventoryCapacity(state))
     .fill(null)
     .map((_, i) => stillWearable(mint(loadout.inventory[i] ?? null)));
-  player.heldAbilities = loadout.heldAbilities.slice(0, HELD_ITEMS.cap);
+  // A `uniqueHeld` power (the NUKE) docks at most once — loadouts banked
+  // before the rule existed may carry doubles, so the extras stay behind.
+  player.heldAbilities = loadout.heldAbilities
+    .filter((id, i, all) => !abilityDef(id).uniqueHeld || all.indexOf(id) === i)
+    .slice(0, HELD_ITEMS.cap);
   // The purse rides along; loadouts banked before the economy existed carry
   // no coins field and load as an empty purse.
   player.coins = Math.max(0, loadout.coins ?? 0);
