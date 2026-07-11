@@ -48,16 +48,21 @@ export function RespecOverlay({
         className="levelup-box respec-box"
         onPointerDown={(e) => e.stopPropagation()}
       >
+        <button
+          type="button"
+          className={`info-button${showInfo ? " active" : ""}`}
+          aria-label="toggle-stat-info"
+          onClick={() => setShowInfo((v) => !v)}
+        >
+          {/* A dotted lowercase "i" — the pixel font is uppercase-only, so its
+              "i" renders as a dotless capital I; draw the glyph from blocks. */}
+          <span className="info-glyph" aria-hidden="true">
+            <span className="info-glyph-dot" />
+            <span className="info-glyph-stem" />
+          </span>
+        </button>
         <div className="levelup-header">
           <PixelText font={font} text="RESPEC" scale={5} color="#ffd75e" />
-          <button
-            type="button"
-            className={`info-button${showInfo ? " active" : ""}`}
-            aria-label="toggle-stat-info"
-            onClick={() => setShowInfo((v) => !v)}
-          >
-            <PixelText font={font} text="i" scale={2} color="#0b0d10" />
-          </button>
         </div>
         <PixelText
           font={font}
