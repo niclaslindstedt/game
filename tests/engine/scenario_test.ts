@@ -12,6 +12,7 @@ import {
   createGame,
   HELD_ITEMS,
   isExplored,
+  MERCHANT,
   weaponDef,
   xpToLevelUp,
   type GameState,
@@ -169,6 +170,19 @@ describe("scenario / placement", () => {
     expect(state.player.pos.x).toBeGreaterThan(0);
     expect(state.player.pos.y).toBeLessThan(state.level.height);
   });
+
+  it("places the hero beside the merchant, outside his discovery radius", () => {
+    const state = startGame();
+    applyScenario(state, { place: "merchant" });
+    const away = dist(state.player.pos, state.merchant.pos);
+    expect(away).toBeGreaterThan(MERCHANT.discoverRadius);
+    expect(away).toBeLessThanOrEqual(MERCHANT.discoverRadius + 12);
+    // Horizontally beside the stall — a vertical stand-off this size would
+    // sit just outside the phone frame's ~97 world units of half-height.
+    expect(state.player.pos.y).toBeCloseTo(state.merchant.pos.y, 5);
+    expect(state.merchant.discovered).toBe(false);
+    expect(isExplored(state, state.player.pos)).toBe(true);
+  });
 });
 
 describe("scenario / the field", () => {
@@ -228,6 +242,22 @@ describe("scenario / the field", () => {
     expect(state.enemies.length).toBe(before);
   });
 
+  it("spawns already wounded at the staged hp fraction", () => {
+    const state = startGame();
+    applyScenario(state, {
+      clearEnemies: true,
+      spawns: [
+        { enemy: "test_brute", at: { x: 500, y: 500 }, hpFrac: 0.4 },
+        { enemy: "test_fodder", at: { x: 520, y: 500 }, hpFrac: 0 },
+      ],
+    });
+    const brute = state.enemies.find((e) => e.defId === "test_brute");
+    expect(brute!.hp).toBe(Math.round(brute!.maxHp * 0.4));
+    // A staged wound never kills: 0 clamps to 1 hp, not a corpse.
+    const fodder = state.enemies.find((e) => e.defId === "test_fodder");
+    expect(fodder!.hp).toBe(1);
+  });
+
   it("is deterministic: same seed + same spec, same ring", () => {
     const build = () => {
       const state = startGame(123);
@@ -240,5 +270,116 @@ describe("scenario / the field", () => {
       );
     };
     expect(build()).toEqual(build());
+  });
+});
+
+describe("scenario / freeze", () => {
+  it("poses the field: nobody moves, nobody strikes", () => {
+    const state = startGame();
+    applyScenario(state, {
+      clearEnemies: true,
+      stopWaves: true,
+      freeze: true,
+      disarmed: true,
+      spawns: [
+        { enemy: "test_fodder", count: 5, minDistance: 25, maxDistance: 60 },
+      ],
+    });
+    const posed = state.enemies.map((e) => `${e.pos.x},${e.pos.y}`);
+    const hp = state.player.hp;
+    run(state, idle, Math.ceil(3000 / DT));
+    expect(state.enemies.map((e) => `${e.pos.x},${e.pos.y}`)).toEqual(posed);
+    expect(state.player.hp).toBe(hp);
+  });
+
+  it("roots the merchant mid-pose", () => {
+    const state = startGame();
+    applyScenario(state, { place: "merchant", freeze: true });
+    const parked = { ...state.merchant.pos };
+    run(state, idle, Math.ceil(3000 / DT));
+    expect(state.merchant.pos).toEqual(parked);
+    expect(state.merchant.discovered).toBe(false);
+  });
+
+  it("thaws a frozen run with freeze false", () => {
+    const state = startGame();
+    applyScenario(state, {
+      clearEnemies: true,
+      stopWaves: true,
+      freeze: true,
+      spawns: [
+        { enemy: "test_fodder", count: 3, minDistance: 60, maxDistance: 90 },
+      ],
+    });
+    const posed = state.enemies.map((e) => `${e.pos.x},${e.pos.y}`);
+    applyScenario(state, { freeze: false });
+    run(state, idle, Math.ceil(1000 / DT));
+    expect(state.enemies.map((e) => `${e.pos.x},${e.pos.y}`)).not.toEqual(
+      posed,
+    );
+  });
+});
+
+describe("scenario / drops", () => {
+  it("lays loose pickups in a ring beyond scoop reach", () => {
+    const state = startGame();
+    const before = state.items.length;
+    applyScenario(state, { drops: [{ item: "medkit", count: 3 }] });
+    const added = state.items.slice(before);
+    expect(added.length).toBe(3);
+    for (const item of added) {
+      expect(item.kind).toBe("medkit");
+      expect(dist(item.pos, state.player.pos)).toBeGreaterThanOrEqual(30);
+    }
+  });
+
+  it("drops at an exact spot with `at`", () => {
+    const state = startGame();
+    const before = state.items.length;
+    applyScenario(state, { drops: [{ item: "xp", at: { x: 400, y: 400 } }] });
+    const added = state.items.slice(before);
+    expect(added.length).toBe(1);
+    expect(added[0]?.pos).toEqual({ x: 400, y: 400 });
+  });
+
+  it("mints equipment at the asked tier, quality pinned to normal", () => {
+    const state = startGame();
+    const before = state.items.length;
+    applyScenario(state, { drops: [{ item: "test_hammer", tier: "rare" }] });
+    const added = state.items.slice(before);
+    expect(added.length).toBe(1);
+    const item = added[0];
+    if (item?.kind !== "equipment") throw new Error("expected equipment");
+    expect(item.equipment.defId).toBe("test_hammer");
+    expect(item.equipment.tier).toBe("rare");
+    expect(item.equipment.quality).toBe("normal");
+  });
+
+  it("mints a named unique from its UNIQUE_DEFS id", () => {
+    const state = startGame();
+    const before = state.items.length;
+    applyScenario(state, { drops: [{ item: "test_relic" }] });
+    const added = state.items.slice(before);
+    const item = added[0];
+    if (item?.kind !== "equipment") throw new Error("expected equipment");
+    expect(item.equipment.defId).toBe("test_charm");
+    expect(item.equipment.tier).toBe("unique");
+  });
+
+  it("wraps ability and story defs into their pickup kinds", () => {
+    const state = startGame();
+    const before = state.items.length;
+    applyScenario(state, {
+      drops: [{ item: "test_orbit" }, { item: "test_key" }],
+    });
+    const added = state.items.slice(before);
+    expect(added.map((i) => i.kind)).toEqual(["ability", "story"]);
+  });
+
+  it("an unknown item id skips the drop line without throwing", () => {
+    const state = startGame();
+    const before = state.items.length;
+    applyScenario(state, { drops: [{ item: "no_such_item", count: 3 }] });
+    expect(state.items.length).toBe(before);
   });
 });

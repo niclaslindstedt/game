@@ -1,6 +1,6 @@
 ---
 name: test-scenario
-description: "Use when a bug repro, an fps probe, or a visual judgement needs the game in an EXACT situation — the hero at the boss with 2 hp and no weapon, 60 mobs in a ring, a specific build. Covers the ScenarioSpec (`?scenario=` / applyScenario), the FPS meter, and the recipes for staging with the playtest bot."
+description: "Use when a bug repro, an fps probe, or a visual judgement needs the game in an EXACT situation — the hero at the boss with 2 hp and no weapon, 60 mobs in a ring, a redrawn sprite posed frozen over its own level ground, a specific build. Covers the ScenarioSpec (`?scenario=` / applyScenario), freeze-posing for art screenshots, the FPS meter, and the recipes for staging with the playtest bot."
 ---
 
 # Test Scenarios
@@ -15,7 +15,10 @@ build, gear, and the field's exact population. Use it whenever you are:
 - **probing performance** — spawn the worst-case horde and read the FPS
   meter;
 - **eyeballing a context** ("how does the new boss sprite read next to the
-  hero?", "is the HUD legible over 60 mobs?") — stage it, screenshot it.
+  hero?", "is the HUD legible over 60 mobs?") — stage it, screenshot it;
+- **judging art in the world** (the art-improvement skill's in-game check) —
+  pose a redrawn mob, gear piece, or ground pickup over its real level
+  ground, `freeze` the field so nothing charges the camera, screenshot it.
 
 ## The spec
 
@@ -23,7 +26,7 @@ Every field optional — describe only what differs from a normal run.
 
 | Field | Effect |
 | --- | --- |
-| `place` | `"boss"` (a stand-off from the level's boss, facing it) or `{x, y}`. Map revealed around the landing spot |
+| `place` | `"boss"` (a stand-off from the level's boss, facing it), `"merchant"` (a step outside the trader's discovery radius, facing the stall — one step closer triggers the meeting), or `{x, y}`. Map revealed around the landing spot |
 | `hp`, `stamina` | Vitals, clamped to `[1, maxHp]` / `[0, maxStamina]`, applied AFTER gear/stats resolve so "2 hp" sticks |
 | `level`, `stats`, `coins` | Player level (xp curve re-derived), ABSOLUTE stat allocations, purse |
 | `weapon` | A `WEAPON_DEFS` id minted plain — or `null` for the unbreakable fallback sidearm (the game's "no weapon") |
@@ -32,7 +35,9 @@ Every field optional — describe only what differs from a normal run.
 | `abilities` | Powerups banked into the dock, capped at its size |
 | `clearEnemies` | Empty the field — bosses are KEPT (deleting the objective would clear the level on the spot) |
 | `stopWaves` | Exhaust the wave budget so the horde spawner stays silent — the field holds exactly what you placed |
-| `spawns` | Rings of extra mobs: `{enemy, count, minDistance, maxDistance, at?, mlvl?, hpMult?}` — around the player (post-`place`), at least `minDistance` out (default 60 world units, ~1.5 body lengths past melee reach) |
+| `spawns` | Rings of extra mobs: `{enemy, count, minDistance, maxDistance, at?, mlvl?, hpMult?, hpFrac?}` — around the player (post-`place`), at least `minDistance` out (default 60 world units, ~1.5 body lengths past melee reach). `hpFrac` spawns them pre-wounded (fraction of maxHp, never below 1 hp) so battle-damage sprite stages pose without a fight: ≤0.5 hurt, ≤0.25 wrecked (elites/bosses), ≤0.1 a boss's dying last stand (config `WOUNDS`/`LAST_STAND`) |
+| `drops` | Ground items laid around the hero (post-`place`): `{item, count?, tier?, at?, minDistance?, maxDistance?}` — `item` is a loose pickup kind (`medkit`/`xp`/`repair`/`drink`), an equipment def id (minted at `tier`, default regular), a `UNIQUE_DEFS` id (the named piece), an `ABILITY_DEFS` id, or a `STORY_ITEM_DEFS` id. Default ring starts 30 units out — beyond scoop reach |
+| `freeze` | POSE the world: enemies neither move, strike, nor fire; the merchant stops wandering (and can't be discovered mid-pose); companions hold position. The hero stays fully playable — pair with `disarmed` so the auto-attack doesn't cut down the exhibits. `window.__scenario({freeze: false})` thaws a live run |
 | `skipOpening` | Default `true`: prelude + intro + opening strike skipped, straight into `playing` |
 
 Distances are **world units** (the phone viewport is ≈422×195 world units).
@@ -77,6 +82,21 @@ node website/scripts/playtest.mjs --strategy idle --seed 42 --level moon \
 # A specific build at a specific spot (visual check of gear on the hero).
 node website/scripts/playtest.mjs --strategy idle \
   --scenario '{"place":{"x":1200,"y":800},"level":12,"stats":{"strength":6},"gear":{"chest":"kevlar_vest"}}'
+
+# ART POSE (see the art-improvement skill): a redrawn mob frozen next to the
+# hero over its own level ground — fresh, hurt (hpFrac 0.4), and wrecked
+# (hpFrac 0.2) copies side by side, nothing moves, nothing fights.
+node website/scripts/playtest.mjs --strategy idle --seed 42 --level moon \
+  --scenario '{"clearEnemies":true,"stopWaves":true,"freeze":true,"disarmed":true,"spawns":[{"enemy":"wraith","at":{"x":560,"y":400}},{"enemy":"wraith","at":{"x":600,"y":400},"hpFrac":0.4},{"enemy":"wraith","at":{"x":640,"y":400},"hpFrac":0.2}],"place":{"x":600,"y":440}}'
+
+# ITEM ART on the ground: redrawn icons posed in the drop rain — a tiered
+# weapon, a named unique, and the loose pickups, scattered beyond scoop reach.
+node website/scripts/playtest.mjs --strategy idle --seed 42 \
+  --scenario '{"clearEnemies":true,"stopWaves":true,"freeze":true,"disarmed":true,"drops":[{"item":"kevlar_vest","tier":"rare"},{"item":"medkit"},{"item":"xp"},{"item":"drink"}]}'
+
+# The MERCHANT posed at a stand-off (his stall art over this level's ground).
+node website/scripts/playtest.mjs --strategy idle --seed 42 --level mars \
+  --scenario '{"place":"merchant","freeze":true,"clearEnemies":true,"stopWaves":true}'
 ```
 
 Shipped def ids live in `src/game/defs/` (enemies, equipment, abilities);
@@ -86,6 +106,10 @@ engine tests use the fixture ids (`test_minion`, `test_vest`, …) instead.
 
 - **Stage, don't play.** If a repro script starts with "walk to the boss",
   replace the walk with `place`.
+- **Pose, don't dodge.** An art screenshot wants a still life:
+  `clearEnemies` + `stopWaves` + `freeze` + `disarmed` gives a field where
+  the exhibits stand exactly where placed and nobody swings at anyone. `at`
+  lines several copies up in a row; `hpFrac` shows the wound stages.
 - **Silence what you're not testing.** `clearEnemies` + `stopWaves` gives a
   field that holds exactly what the spec placed — fps numbers and repro
   steps stop drifting with the wave ramp.

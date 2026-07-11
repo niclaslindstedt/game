@@ -192,6 +192,7 @@ export function createGame(
     introPage: 0,
     outroPage: 0,
     quakeMs: 0,
+    freeze: false,
     difficulty,
     menace: 0,
     combatDps: 0,

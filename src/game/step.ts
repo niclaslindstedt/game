@@ -182,19 +182,25 @@ export function step(state: GameState, input: GameInput, dtMs: number): void {
   revealAround(state, state.player.pos);
   // The wandering merchant strolls (and may be MET) on this tick's player
   // position — right after the hero moves, so the meeting judges what the
-  // player actually sees.
-  stepMerchant(state, dt, dtMs);
+  // player actually sees. A scenario FREEZE (state.freeze — the developer
+  // pose switch) holds the world's actors entirely: the merchant stops
+  // wandering (and can't be discovered mid-pose), the horde neither moves,
+  // strikes, nor fires — while the hero stays fully playable.
+  if (!state.freeze) stepMerchant(state, dt, dtMs);
   stepUseItem(state, input);
   stepWeapon(state, input, dtMs);
   stepAbilities(state, dt, dtMs);
   stepProjectiles(state, dt, dtMs);
-  stepEnemies(state, dt, dtMs);
-  // Shooters pull their triggers on the tick's final positions — after the
-  // horde has moved, so the aim is judged on what the player actually sees.
-  stepRangedAttacks(state, dtMs);
+  if (!state.freeze) {
+    stepEnemies(state, dt, dtMs);
+    // Shooters pull their triggers on the tick's final positions — after the
+    // horde has moved, so the aim is judged on what the player actually sees.
+    stepRangedAttacks(state, dtMs);
+  }
   // The party acts on the tick's final enemy positions: regroup, fight,
-  // soak contact blows, stand back up (see companions.ts).
-  stepCompanions(state, dt, dtMs);
+  // soak contact blows, stand back up (see companions.ts). A freeze poses
+  // the party with the rest of the world's actors.
+  if (!state.freeze) stepCompanions(state, dt, dtMs);
   // Environmental hazards act on this tick's positions, after everyone has
   // moved: the wells drag (and devour), the asteroids fly (and strike).
   stepWells(state, dt, dtMs);

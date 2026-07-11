@@ -1,22 +1,33 @@
 // SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
 // Test-scenario support: mutate a freshly created run into an exact
 // situation — the hero at the boss with 2 hp and no weapon, sixty mobs in a
-// ring around him, the wave spawner silenced — so bugs and performance
-// problems can be reproduced on demand instead of played into. This is a
+// ring around him, the wave spawner silenced, a redrawn sprite posed frozen
+// over its own level ground — so bugs, performance problems, and art
+// judgements can be staged on demand instead of played into. This is a
 // developer tool, not a gameplay system: the app feeds it from the
 // `?scenario=` URL param (see docs/configuration.md and the `test-scenario`
 // skill), tests call `applyScenario` directly after `createGame`.
 
 import { clamp, distance, vec, type Vec2 } from "@game/lib/vec.ts";
-import { HELD_ITEMS } from "./config.ts";
+import { HELD_ITEMS, MEDKIT, MERCHANT } from "./config.ts";
+import { abilityDef } from "./defs/abilities.ts";
 import { enemyDef } from "./defs/enemies/index.ts";
-import { gearDef, isWeaponDef, weaponDef } from "./defs/equipment.ts";
+import {
+  gearDef,
+  isGearDef,
+  isWeaponDef,
+  weaponDef,
+} from "./defs/equipment.ts";
 import { levelDef } from "./defs/levels/index.ts";
 import { scaledMobCount } from "./defs/difficulties.ts";
+import { storyItemDef } from "./defs/story.ts";
+import { uniqueDef } from "./defs/uniques.ts";
 import { spawnEnemy } from "./create.ts";
 import {
+  mintUnique,
   recomputeMaxHp,
   recomputeMaxStamina,
+  rollEquipment,
   skipStoryOpening,
   syncInventoryCapacity,
 } from "./items.ts";
@@ -25,7 +36,7 @@ import { revealAround } from "./map.ts";
 import { currentMobLevel, mobLevelScale } from "./menace.ts";
 import { insideObstacle } from "./obstacles.ts";
 import { warn } from "../output.ts";
-import type { Equipment, GameState, StatName } from "./types.ts";
+import type { Equipment, GameState, Item, StatName, Tier } from "./types.ts";
 
 /** One ring of extra monsters dropped around a center point. */
 export type ScenarioSpawn = {
@@ -48,6 +59,41 @@ export type ScenarioSpawn = {
   mlvl?: number;
   /** Extra hp multiplier on top of the difficulty's live scale. Default 1. */
   hpMult?: number;
+  /**
+   * Spawn already WOUNDED: current hp as a fraction of max, clamped to
+   * (0, 1]. The renderer swaps wound sprites off this same fraction (config
+   * WOUNDS: ≤0.5 hurt, ≤0.25 wrecked for elites/bosses, ≤0.1 a boss's dying
+   * last stand), so a staged `hpFrac` shows a battle-damage stage in-game
+   * without landing a single hit. Default 1 — spawned fresh.
+   */
+  hpFrac?: number;
+};
+
+/**
+ * One line of GROUND ITEMS laid out around the hero — pickups posed in the
+ * world exactly like `spawns` poses monsters. The art loop's tool for judging
+ * item/pickup sprites over real level ground (see the art-improvement skill).
+ */
+export type ScenarioDrop = {
+  /**
+   * What lies on the ground: a loose pickup kind (`medkit` / `xp` / `repair`
+   * / `drink`), an equipment def id (WEAPON_DEFS/GEAR_DEFS — minted at
+   * `tier`), a UNIQUE_DEFS id (minted as that named piece), an ABILITY_DEFS
+   * id, or a STORY_ITEM_DEFS id. An unknown id warns and skips the line.
+   */
+  item: string;
+  /** How many copies. Default 1. */
+  count?: number;
+  /** Equipment ids only: the minted tier (drop-beam color, affix count).
+   * Default `regular`. */
+  tier?: Tier;
+  /** Exact spot instead of the ring — every copy lands here. */
+  at?: Vec2;
+  /** Ring inner radius around the player (world units). Default 30 — beyond
+   * pickup reach, so the hero doesn't scoop the exhibit. */
+  minDistance?: number;
+  /** Ring outer radius. Default `minDistance + 90` (inside one screen). */
+  maxDistance?: number;
 };
 
 /**
@@ -64,10 +110,20 @@ export type ScenarioSpec = {
   skipOpening?: boolean;
   /**
    * Teleport the hero: `"boss"` places him a stand-off away from the level's
-   * boss (facing it), a `{x, y}` lands him exactly there. The map is
-   * revealed around the landing spot.
+   * boss (facing it), `"merchant"` a step outside the merchant's discovery
+   * radius (facing the stall — one step closer triggers the meeting), and a
+   * `{x, y}` lands him exactly there. The map is revealed around the landing
+   * spot.
    */
-  place?: "boss" | Vec2;
+  place?: "boss" | "merchant" | Vec2;
+  /**
+   * POSE the world for a screenshot: enemies neither move, strike, nor fire;
+   * the merchant stops wandering (and can't be discovered mid-pose);
+   * companions hold position. The hero stays fully playable — pair with
+   * `disarmed` so the auto-attack doesn't cut down the exhibits. Applied to
+   * `state.freeze`; `window.__scenario({freeze: false})` thaws a live run.
+   */
+  freeze?: boolean;
   /** Hit points, clamped to [1, maxHp] after gear/stats resolve. */
   hp?: number;
   /** Sprint pool, clamped to [0, maxStamina]. */
@@ -109,10 +165,16 @@ export type ScenarioSpec = {
   stopWaves?: boolean;
   /** Extra monsters, spawned after `clearEnemies`/`stopWaves` resolve. */
   spawns?: ScenarioSpawn[];
+  /** Ground items laid out around the hero (after `place` resolves), for
+   * judging pickup/item art in the world. */
+  drops?: ScenarioDrop[];
 };
 
 /** How far from the boss `place: "boss"` sets the hero down. */
 const BOSS_STANDOFF = 90;
+/** How far past the merchant's discovery radius `place: "merchant"` stays —
+ * he fills the frame but the meeting scene doesn't fire on its own. */
+const MERCHANT_STANDOFF_SLACK = 10;
 /** Ring sampling attempts per spawned monster before placement is forced. */
 const SPAWN_ATTEMPTS = 24;
 
@@ -126,6 +188,7 @@ export function applyScenario(state: GameState, spec: ScenarioSpec): void {
   const player = state.player;
 
   if (spec.skipOpening !== false) skipStoryOpening(state);
+  if (spec.freeze !== undefined) state.freeze = spec.freeze;
 
   if (spec.level !== undefined) {
     player.level = Math.max(1, Math.floor(spec.level));
@@ -201,6 +264,7 @@ export function applyScenario(state: GameState, spec: ScenarioSpec): void {
   }
 
   for (const spawn of spec.spawns ?? []) spawnRing(state, spawn);
+  for (const drop of spec.drops ?? []) dropRing(state, drop);
 }
 
 /** Mint a plain weapon at catalog durability (the fallback sidearm is
@@ -254,8 +318,12 @@ function mintGear(
   return piece;
 }
 
-/** Teleport the hero to the spec's spot (or a stand-off from the boss). */
-function placePlayer(state: GameState, place: "boss" | Vec2): void {
+/** Teleport the hero to the spec's spot (or a stand-off from the boss or
+ * the merchant's stall). */
+function placePlayer(
+  state: GameState,
+  place: "boss" | "merchant" | Vec2,
+): void {
   const player = state.player;
   let target: Vec2;
   if (place === "boss") {
@@ -278,6 +346,18 @@ function placePlayer(state: GameState, place: "boss" | Vec2): void {
     target = vec(boss.pos.x + dir.x * reach, boss.pos.y + dir.y * reach);
     player.facing = vec(-dir.x, -dir.y);
     player.faceLeft = dir.x > 0;
+  } else if (place === "merchant") {
+    // A step OUTSIDE the discovery radius: the trader fills the frame but
+    // his meeting scene waits for the player (or a nudge) to trigger it.
+    // Horizontally beside the stall, not on the approach line — the phone
+    // frame shows ~97 world units above/below the hero, so a vertical
+    // stand-off this size would park the merchant just off-screen.
+    const merchant = state.merchant.pos;
+    const reach = MERCHANT.discoverRadius + MERCHANT_STANDOFF_SLACK;
+    const side = player.pos.x >= merchant.x ? 1 : -1;
+    target = vec(merchant.x + side * reach, merchant.y);
+    player.facing = vec(-side, 0);
+    player.faceLeft = side > 0;
   } else {
     target = vec(place.x, place.y);
   }
@@ -309,20 +389,96 @@ function spawnRing(state: GameState, spawn: ScenarioSpawn): void {
       spawn.at !== undefined
         ? vec(spawn.at.x, spawn.at.y)
         : samplePosition(state, center, min, max, def.radius);
-    state.enemies.push(
-      spawnEnemy(
-        spawn.enemy,
-        pos,
-        state.rng,
-        state.nextId++,
-        hpMult,
-        0,
-        1,
-        mlvl,
-      ),
+    const mob = spawnEnemy(
+      spawn.enemy,
+      pos,
+      state.rng,
+      state.nextId++,
+      hpMult,
+      0,
+      1,
+      mlvl,
     );
+    // Staged battle damage: land on the wound fraction directly (never
+    // below 1 hp — a scenario poses wounded mobs, it doesn't kill them).
+    if (spawn.hpFrac !== undefined) {
+      mob.hp = clamp(Math.round(mob.maxHp * spawn.hpFrac), 1, mob.maxHp);
+    }
+    state.enemies.push(mob);
   }
   state.stats.totalEnemies += count;
+}
+
+/** Lay one drop line's ground items into their ring (or onto their spot). */
+function dropRing(state: GameState, drop: ScenarioDrop): void {
+  const count = Math.max(1, Math.floor(drop.count ?? 1));
+  const min = Math.max(0, drop.minDistance ?? 30);
+  const max = Math.max(min, drop.maxDistance ?? min + 90);
+  const center = state.player.pos;
+  for (let i = 0; i < count; i++) {
+    const pos =
+      drop.at !== undefined
+        ? vec(drop.at.x, drop.at.y)
+        : samplePosition(state, center, min, max, MEDKIT.radius);
+    const item = mintDrop(state, drop, pos);
+    if (!item) return; // unknown id — warned once, the whole line skipped
+    state.items.push(item);
+  }
+}
+
+/** True when `lookup` recognizes the id (the def accessors throw loudly). */
+function knownDef(lookup: (id: string) => unknown, id: string): boolean {
+  try {
+    lookup(id);
+    return true;
+  } catch {
+    return false;
+  }
+}
+
+/**
+ * Mint one ground item off a drop line: loose pickup kinds pass through;
+ * equipment ids mint at the line's tier (make quality pinned to normal so a
+ * staged sprite is the catalog sprite); unique ids mint the named piece;
+ * ability/story ids wrap their def. Unknown ids warn and mint nothing.
+ */
+function mintDrop(
+  state: GameState,
+  drop: ScenarioDrop,
+  pos: Vec2,
+): Item | null {
+  const id = drop.item;
+  if (id === "medkit" || id === "xp" || id === "repair" || id === "drink") {
+    return { id: state.nextId++, kind: id, pos };
+  }
+  if (isWeaponDef(id) || isGearDef(id)) {
+    return {
+      id: state.nextId++,
+      kind: "equipment",
+      pos,
+      equipment: rollEquipment(state, {
+        defId: id,
+        tier: drop.tier ?? "regular",
+        quality: "normal",
+      }),
+    };
+  }
+  if (knownDef(uniqueDef, id)) {
+    return {
+      id: state.nextId++,
+      kind: "equipment",
+      pos,
+      equipment: mintUnique(state, id),
+    };
+  }
+  if (knownDef(abilityDef, id)) {
+    return { id: state.nextId++, kind: "ability", pos, defId: id };
+  }
+  if (knownDef(storyItemDef, id)) {
+    return { id: state.nextId++, kind: "story", pos, defId: id };
+  }
+  warn(`scenario: unknown drop item '${id}' — drop skipped`);
+  return null;
 }
 
 /**
