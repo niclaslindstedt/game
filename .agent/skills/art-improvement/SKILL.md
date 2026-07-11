@@ -44,9 +44,12 @@ numbers".
 | `concepts <module.mjs>`     | Render a concept scratch module (current sprite first, then each concept, numbered)                        |
 | `before-after <name...>`    | The final review sheet: numbered BEFORE\|AFTER pairs from the snapshots vs the current grids               |
 | `names <regex>`             | Grep atlas sprite names when unsure what a thing is called                                                 |
+| `palette <family\|sprite>`  | List the char → color map a redraw draws with (`*` = family-local) — run before sketching a concept module |
 
 Flags: `--out <png>`, `--scale <n>`, `--cols <n>`, `--chunk <n>`. Names
-accept the base (`wraith`) or an exact key (`wraith_0`).
+accept the base (`wraith`) or an exact key (`wraith_0`). The survey/shortlist
+sheets render small by default — pass `--scale 12` (or higher) when judging
+internal anatomy, not just silhouette.
 
 ## Phase 1 — Survey: build the long list
 
@@ -198,7 +201,55 @@ For each candidate, in the numbered order:
 
 ## Skill self-improvement
 
-When a funnel round or the user's vote reveals a defect class this skill's
-rubric missed (or a helper-command gap that forced manual work), add it to
-the rubric or extend `art-audit.mjs` in the same PR, so the next pass
-catches it in Phase 1.
+**Every pass leaves this skill sharper than it found it.** When something in
+the funnel makes you stumble — a defect class the rubric missed, a step whose
+instructions were wrong or ambiguous, a thing you had to do by hand that a
+command could have done, a fact you wish you'd known in Phase 1 — fix the
+cause *here*, in the same PR as the art, before you finish:
+
+- **Missed a defect class?** Add it to the worst-art rubric (Phase 1).
+- **Did something manual a command could do?** Extend `art-audit.mjs` (a new
+  subcommand, or a new field in an existing legend) and add it to the helper
+  table. Keep the script's usage text, header comment, and that table in sync.
+- **A step read wrong, ambiguous, or incomplete?** Rewrite it in place.
+- **Learned a gotcha that would have saved time up front?** Add one concrete
+  bullet to the **Lessons learned** log below, so the next session reads it in
+  Phase 1 and skips the stumble.
+
+Keep the log tight — when a lesson becomes obsolete (a manual step turns into
+a command, an instruction gets fixed), prune or rewrite the bullet rather than
+letting it rot.
+
+### Lessons learned
+
+A running log of gotchas from past passes. Add to it; don't let it rot.
+
+- **Resolve a loose target name first.** Users name a biome or level loosely
+  ("do spacez", "improve the moon"). `art-audit.mjs levels` prints every level
+  id *and* its biome — map the request to a concrete `<id>` before surveying
+  (e.g. "spacez" → `spacez_hq`, biome `spacez`).
+- **A single level can BE the whole 30-sprite long list.** Some levels have
+  ~30 total sprites, so the survey sheet already *is* the "worst 30" and the
+  30 → 20 → 10 funnel collapses. When the genuinely weak count is under 10, do
+  NOT pad the finalists to hit 10 — the "don't flatten hierarchy" craft note
+  applies. Name the real worst (often 5–7) and leave sprites that already read
+  well alone.
+- **Read the enemy/level defs before judging — hierarchy hides in the numbers.**
+  The survey legend carries `(role, Nhp)` so scale/hierarchy lies show on the
+  sheet itself: the classic offender is a tanky mob ("hits like a wrecking
+  ball", high hp) drawn *smaller and quieter* than a squishy minion, which the
+  eye alone misses. The defs also give speed, `gore`, and dialogue — the raw
+  material for the Phase 4 brief.
+- **The merchant is in scope for a level pass.** It lives in `merchant.mjs`,
+  not the biome family module, but has per-biome variants (`merchant_vendor`,
+  `merchant_moon`, …). The survey pulls the right one via `def.merchant.sprite`;
+  editing it only affects that biome.
+- **Wounds are auto-generated — draw the base to survive them.** `variants
+  <name>` shows the `_hurt`/`_wrecked`/`_dying` stages; the generator paints
+  them from the base per the enemy's `gore` field (staff bleed red `r/i`,
+  machines throw gold sparks `y/Y`, the haunting smears cyan). Never hand-draw
+  a wound stage — confirm the *base* silhouette still reads once the overlay
+  lands, and animated mobs need BOTH frames (`_0` and `_1`) redrawn to match.
+- **`palette <family|sprite>` before you sketch.** It prints the exact char →
+  color map a redraw draws with (core + family-local), so you don't hand-read
+  `core.mjs` and the family file to find which letter is "steel" or "cyan".
