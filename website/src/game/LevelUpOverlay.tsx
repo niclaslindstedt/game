@@ -12,12 +12,7 @@
 
 import { useEffect, useState } from "react";
 
-import {
-  allocateStat,
-  autoGainAt,
-  effectiveStat,
-  type GameState,
-} from "@game/core";
+import { allocateStat, type GameState } from "@game/core";
 
 import { PixelText } from "@ui/lib/PixelText.tsx";
 import type { PixelFont } from "@ui/lib/pixel-font.ts";
@@ -151,10 +146,11 @@ export function LevelUpOverlay({
         ) : (
           <div className="stat-buttons">
             {CHOICES.map(({ stat, label, blurb, icon }, i) => {
-              // The free base growth this ding already handed the stat (see
-              // leveling.ts); surfaced as a gold "+N" so the chooser shows the
-              // automatic gains alongside the point the player is spending.
-              const gain = autoGainAt(state.player.level, stat);
+              // Only the points the PLAYER has spent on this stat (see
+              // `spentStats`) — the head-start, automatic per-level growth, and
+              // gear bonuses folded into the effective stat are deliberately
+              // left off so the chooser shows the player's own picks alone.
+              const spent = state.player.spentStats[stat];
               return (
                 <button
                   key={stat}
@@ -181,18 +177,10 @@ export function LevelUpOverlay({
                     <span className="stat-button-value">
                       <PixelText
                         font={font}
-                        text={`${label} ${effectiveStat(state, stat)}`}
+                        text={`${label} ${spent}`}
                         scale={2}
                         color="#0b0d10"
                       />
-                      {gain > 0 ? (
-                        <PixelText
-                          font={font}
-                          text={`+${gain}`}
-                          scale={2}
-                          color="#1a7f3d"
-                        />
-                      ) : null}
                     </span>
                     <PixelText
                       font={font}

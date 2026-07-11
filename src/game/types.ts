@@ -274,6 +274,18 @@ export type Player = {
    */
   coins: number;
   stats: Record<StatName, number>;
+  /**
+   * The stat points the PLAYER personally spent on the level-up/respec
+   * chooser — a display-only tally the two overlays show so the chooser
+   * reflects only the player's own picks. Distinct from `stats`, which also
+   * carries the difficulty head-start (create.ts) and, through
+   * `effectiveStat`, folds in the automatic per-level growth and gear; none
+   * of those are "spent" by the player. Incremented by `allocateStat`,
+   * decremented by `deallocateStat`, zeroed by `beginRespec` (a respec
+   * re-places the whole refunded pool from scratch). Carried between levels
+   * via the loadout.
+   */
+  spentStats: Record<StatName, number>;
   equipment: {
     /** Never empty — the character always fights with something. */
     weapon: Equipment;
@@ -1094,6 +1106,12 @@ export type Loadout = {
   /** Progress into the current level (clamped below its threshold on apply). */
   xp: number;
   stats: Record<StatName, number>;
+  /**
+   * The player's own spent stat points (see `Player.spentStats`). Optional so
+   * loadouts banked before this shipped load without it — `applyLoadout` then
+   * falls back to `stats`.
+   */
+  spentStats?: Record<StatName, number>;
   equipment: {
     weapon: Equipment;
     head: Equipment | null;
