@@ -285,7 +285,12 @@ run against synthetic fixtures with no shipped content (see
   non-decaying toughness floor at spawn (`mobLevelScale`, folded into
   `spawnEnemy`'s hp mult) and richer drops (`mobLevelTierBonus`, added to
   the loot tier roll), so a levelled hero keeps meeting a proportionally
-  sturdier, better-paying horde. The kill side pays by the same honesty:
+  sturdier, better-paying horde. The LOOT gates deliberately key to the
+  CHARACTER level alone (the monster level `currentMobLevel` stamps, which
+  decides base `levelReq`, tier unlocks, and the dropped item's own
+  level): the gear and damage reads buy toughness and xp, never better
+  drops, so one hot find can't roll itself an even better successor and
+  leapfrog the difficulty ladder. The kill side pays by the same honesty:
   `overkillEfficiency` scales a kill's xp AND its drop roll by
   `maxHp / damage` once the blow exceeds the full bar (2× the bar → half,
   3× → a third), so farming mobs far beneath you is deliberately

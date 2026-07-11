@@ -203,6 +203,7 @@ export {
   menaceStage,
   menaceWarmup,
   mobHpScaleFor,
+  mobLevelScale,
   overkillEfficiency,
 } from "./game/menace.ts";
 

@@ -169,16 +169,19 @@ export function heroDamageLevel(state: GameState): number {
 }
 
 /**
- * The hero's POWER LEVEL — what the horde actually keys its level to: the
- * character level, the gear level, or the damage level, whichever is
- * HIGHEST. In ordinary play gear trails the mobs it drops from and damage
- * sits inside its grace band, so this is simply the character level and
- * nothing changes; but a hero decked out ABOVE his level (a twink, a lucky
- * unique streak, a dev warp with endgame gear) — or one swinging a weapon
- * whose calculated damage is absurd for its ilvl (`heroDamageLevel`) —
- * meets a horde levelled to what he actually wields: tougher mobs that pay
- * more xp and gate higher loot, instead of a one-shot crowd his character
- * sheet says is fair.
+ * The hero's POWER LEVEL — what the horde's TOUGHNESS (minion hp via
+ * `mobLevelScale`, the elite/boss power-match via `enemyPowerScale`) keys
+ * to: the character level, the gear level, or the damage level, whichever
+ * is HIGHEST. In ordinary play gear trails the mobs it drops from and
+ * damage sits inside its grace band, so this is simply the character level
+ * and nothing changes; but a hero decked out ABOVE his level (a twink, a
+ * lucky unique streak, a dev warp with endgame gear) — or one swinging a
+ * weapon whose calculated damage is absurd for its ilvl
+ * (`heroDamageLevel`) — meets a horde toughened to what he actually
+ * wields: harder fights that pay more xp (kill xp is hp-proportional),
+ * instead of a one-shot crowd his character sheet says is fair. TOUGHNESS
+ * only: the loot-facing monster level (`currentMobLevel`) keys to the
+ * CHARACTER level alone, so neither gear nor damage ever sweetens drops.
  */
 export function heroPowerLevel(state: GameState): number {
   return Math.max(
@@ -224,13 +227,15 @@ export function mobLevelFor(playerLevel: number, difficulty: string): number {
 }
 
 /** `mobLevelFor` off the live state: the monster level a mob spawned right
- * now would carry (before its def's `levelBonus`). Keyed to the hero's POWER
- * level — the character level, the total-gear ilvl average, or the equipped
- * weapon's damage read as a level, whichever is highest — so the horde (and
- * the loot gates it opens) tracks what the hero actually swings, not just
- * his character sheet. */
+ * now would carry (before its def's `levelBonus`). Keyed to the CHARACTER
+ * level alone — deliberately not the gear or damage reads — so the loot
+ * gates the mlvl opens (base `levelReq`, tier unlocks, the dropped item's
+ * own level) track only earned progression: a hot weapon or a twink rack
+ * buys harder fights and more xp (`heroPowerLevel`), never a better
+ * successor — no good-find→better-finds elevator past the difficulty
+ * ladder. */
 export function currentMobLevel(state: GameState): number {
-  return mobLevelFor(heroPowerLevel(state), state.difficulty);
+  return mobLevelFor(state.player.level, state.difficulty);
 }
 
 /**
