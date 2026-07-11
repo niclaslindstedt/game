@@ -146,20 +146,21 @@ constants by design; tuning happens by editing that file and playtesting
 [`src/game/defs/difficulties.ts`](../src/game/defs/difficulties.ts) —
 MEDIUM is the exact 1.0 baseline the levels are tuned at.
 
-**Mercy drops** ease the gentle rungs without making them un-losable: on EASY
-and MEDIUM a packed screen (20+ mobs) starts dropping screen-nuke bombs, low
+**Mercy drops** ease the fight without making it un-losable: a packed screen
+(20+ mobs) starts dropping screen-nuke bombs, low
 health or worn-down gear makes medkits, armor pieces, and repair kits rain
 harder, and a hero stranded with a bone-dry sprint pool (stamina at exactly 0,
 not merely low) is thrown ENERGY DRINKS — a per-kill chance that ramps with the
-time spent winded up to 15% on EASY / 10% on MEDIUM (the drink resets stamina to
-full on touch). Each signal keeps at most ONE rope on the ground: while the
+time spent winded up to 15% on EASY, tapering down the ladder to zero on
+JESUS (the drink resets stamina to full on touch). Each signal keeps at most ONE rope on the ground: while the
 rescue it answers with (a medkit, repair kit, drink, screen-nuke, or armor
 piece) already lies un-collected within `MERCY.rescueRadius` of the hero, that
 signal holds fire — picking it up (or leaving it behind out of view) re-arms
 the rope. The ramp _shapes_ (where each signal starts and maxes) are the
 `MERCY` block in `config.ts`; each rung's _strength_ is its `mercy` object in
-`difficulties.ts` (`MercyTuning`), zeroed on HARD and up so death stays on the
-table there. Every mercy rope makes a dramatic entrance: rather than blinking
+`difficulties.ts` (`MercyTuning`), tapering geometrically down the ladder
+(~×0.4 per rung: EASY full, MEDIUM lighter, HARD a whisper, NIGHTMARE a
+ghost, JESUS absolute zero — death is always on the table up there). Every mercy rope makes a dramatic entrance: rather than blinking
 onto the ground, a guardian ANGEL flies it in from above, cradles it, and
 releases it over the spot the mob died — the whole descent inside
 `MERCY.angelDeliverMs` (under two seconds), during which the gift is airborne

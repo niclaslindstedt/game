@@ -135,9 +135,13 @@ run against synthetic fixtures with no shipped content (see
   unlocks at a MONSTER LEVEL, config `LOOT.tierUnlockMlvl`; TRASH sits below
   regular, never rolls, and exists only for scripted zero-stat joke drops
   minted by a boss's forced-tier `loot.items`), and the affix
-  pools magic+ items roll, whose magnitudes scale with the drop's ITEM LEVEL
-  (the killer's monster level minus a small weighted deficit; magic+ names
-  are composed Diablo-style from those affixes). Two more axes complete the
+  pools magic+ items roll: magnitudes come from ilvl-gated BRACKETS
+  (PoE-style generations unlocking at ilvl 1/10/22/36/52, the top one held
+  near 60% of the stat soft cap), keyed to the drop's ITEM LEVEL — the
+  killer's monster level minus a small weighted deficit; magic+ names are
+  composed Diablo-style from those affixes. A rolled instance also grows its
+  BASE with depth: armor by `ARMOR.armorPerIlvl` and weapon damage by
+  `WEAPON.damagePerIlvl` per item level above the base's requirement. Two more axes complete the
   tables: **base grades** (`defs/grades.ts` — every pool base ships
   generated EXCEPTIONAL and ELITE versions, same look, new names, level
   requirements remapped up to 100, damage/armor re-derived on the balance
