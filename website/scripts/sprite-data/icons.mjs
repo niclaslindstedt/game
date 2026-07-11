@@ -612,19 +612,18 @@ const SPRITES = {
     ".....OO.....",
     "............",
   ],
-  // MARS: the SMART PISTOL — a sleek white-ceramic sidearm, no trigger, one cyan
-  // sensor eye tracking down the barrel.
+  // MARS: the SMART PISTOL — white ceramic, no trigger, one cyan eye.
   icon_smart_pistol: [
     "............",
     "............",
-    "..OOOOOOOOO.",
-    "..OsWWWWeew.",
-    "..OOOOOOOOO.",
-    "..OwO.......",
-    "..OwO.......",
-    "..OWw.......",
-    "..OwO.......",
-    "..OOO.......",
+    "..OOOOOOO...",
+    "..OWWeWWwO..",
+    "..OOOWWwO...",
+    "....OWwO....",
+    "....OWwO....",
+    "....OwwO....",
+    ".....OO.....",
+    "............",
     "............",
     "............",
   ],
