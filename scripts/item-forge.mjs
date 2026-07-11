@@ -147,7 +147,8 @@ if (mode === "weapon") {
 
   // THE BUDGET LINE — damage is an OUTPUT. This is the whole point.
   const special = flag("special");
-  const budget = (BASE + PER_LEVEL * (req - 1)) * (special ? SPECIAL_PREMIUM : 1);
+  const budget =
+    (BASE + PER_LEVEL * (req - 1)) * (special ? SPECIAL_PREMIUM : 1);
   const targets = weaponAssumedTargets(candidate);
   const lift = 1 + REF_CRIT * (weaponCritMult(candidate) - 1);
   const damage = Math.max(
@@ -166,9 +167,7 @@ if (mode === "weapon") {
     .map((d) => d.durability)
     .sort((a, b) => a - b);
   const durability =
-    neighbors.length > 0
-      ? neighbors[Math.floor(neighbors.length / 2)]
-      : 150;
+    neighbors.length > 0 ? neighbors[Math.floor(neighbors.length / 2)] : 150;
 
   const lines = [
     `  ${id}: {`,
@@ -198,15 +197,21 @@ if (mode === "weapon") {
   }
   lines.push("  },");
 
-  console.log("\n── Forged weapon def (paste into src/game/defs/equipment.ts):\n");
+  console.log(
+    "\n── Forged weapon def (paste into src/game/defs/equipment.ts):\n",
+  );
   console.log(lines.join("\n"));
   console.log(`
 ── Wiring checklist:
   1. Add "${id}" to a level's loot.weaponPool (cumulative pools: later maps
      inherit it automatically) — its grade variants unfold on their own.
   2. Name its EXCEPTIONAL/ELITE variants in src/game/defs/grades.ts.
-  3. Icon (12×12) in website/scripts/sprite-data/icons.mjs${candidate.projectile ? ` and the
-     projectile sprite (8×8) in effects.mjs` : ""}; then \`make assets\` and LOOK.
+  3. Icon (12×12) in website/scripts/sprite-data/icons.mjs${
+    candidate.projectile
+      ? ` and the
+     projectile sprite (8×8) in effects.mjs`
+      : ""
+  }; then \`make assets\` and LOOK.
   4. node scripts/item-forge.mjs check   # the full battery must stay green.`);
   process.exit(0);
 }

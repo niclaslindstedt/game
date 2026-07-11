@@ -521,7 +521,12 @@ export const SPACEZ_ENEMIES: Record<string, EnemyDef> = {
       {
         belowHpFrac: 0.5,
         mechanics: {
-          charge: { windupMs: 600, speedMult: 3.8, range: 170, cooldownMs: 5000 },
+          charge: {
+            windupMs: 600,
+            speedMult: 3.8,
+            range: 170,
+            cooldownMs: 5000,
+          },
           summon: { defId: "guard", count: 3, cooldownMs: 12000, maxAlive: 6 },
         },
       },

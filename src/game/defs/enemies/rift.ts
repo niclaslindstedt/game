@@ -518,8 +518,18 @@ export const RIFT_ENEMIES: Record<string, EnemyDef> = {
       {
         belowHpFrac: 0.5,
         mechanics: {
-          charge: { windupMs: 600, speedMult: 3.8, range: 180, cooldownMs: 5000 },
-          slam: { windupMs: 800, radius: 75, damageFrac: 1.2, cooldownMs: 7000 },
+          charge: {
+            windupMs: 600,
+            speedMult: 3.8,
+            range: 180,
+            cooldownMs: 5000,
+          },
+          slam: {
+            windupMs: 800,
+            radius: 75,
+            damageFrac: 1.2,
+            cooldownMs: 7000,
+          },
         },
       },
     ],
@@ -621,7 +631,12 @@ export const RIFT_ENEMIES: Record<string, EnemyDef> = {
       {
         belowHpFrac: 0.35,
         mechanics: {
-          summon: { defId: "voidling", count: 4, cooldownMs: 10000, maxAlive: 8 },
+          summon: {
+            defId: "voidling",
+            count: 4,
+            cooldownMs: 10000,
+            maxAlive: 8,
+          },
           enrage: { belowHpFrac: 0.35, speedMult: 1.35, damageMult: 1.25 },
         },
       },

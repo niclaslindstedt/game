@@ -825,7 +825,12 @@ export const EASTWORLD_ENEMIES: Record<string, EnemyDef> = {
       {
         belowHpFrac: 0.5,
         mechanics: {
-          summon: { defId: "tin_outlaw", count: 4, cooldownMs: 8000, maxAlive: 8 },
+          summon: {
+            defId: "tin_outlaw",
+            count: 4,
+            cooldownMs: 8000,
+            maxAlive: 8,
+          },
         },
       },
     ],

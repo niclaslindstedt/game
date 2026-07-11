@@ -80,8 +80,7 @@ describe("medkit tiers", () => {
     const state = startGame();
     // Fixture medium offset −2: mlvl = level − 2. Reach the top tier's band.
     const top = MEDKIT.tiers.length - 1;
-    state.player.level =
-      (MEDKIT.tiers[top] as { minMlvl: number }).minMlvl + 4;
+    state.player.level = (MEDKIT.tiers[top] as { minMlvl: number }).minMlvl + 4;
     const seen = new Set<number>();
     for (let i = 0; i < 200; i++) seen.add(rollMedkitTier(state));
     expect(seen.has(top)).toBe(true); // the deep kit drops

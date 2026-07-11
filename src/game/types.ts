@@ -574,40 +574,41 @@ export type Projectile = {
   z: number;
 };
 
-export type Item = (
+export type Item =
   /** `tier` indexes config MEDKIT.tiers (the D2-style kit sizes) — absent
    * on items minted before tiers shipped, read as the lightest kit. */
-  | { id: number; kind: "medkit"; pos: Vec2; tier?: number }
-  /** The golden level-up arrow: grants a share of the XP to the next level. */
-  | { id: number; kind: "xp"; pos: Vec2 }
-  /** A repair kit: restores the equipped weapon's durability to full. */
-  | { id: number; kind: "repair"; pos: Vec2 }
-  /** An energy drink: resets the sprint pool to full on touch. Like the repair
-   * kit it stays grounded when there is nothing to top up (stamina already
-   * full), so it is never wasted on a rested hero. */
-  | { id: number; kind: "drink"; pos: Vec2 }
-  | { id: number; kind: "equipment"; pos: Vec2; equipment: Equipment }
-  /** A time-limited power pickup; `defId` keys into ABILITY_DEFS. */
-  | { id: number; kind: "ability"; pos: Vec2; defId: string }
-  /**
-   * A plot piece — a keycard, a dossier, the anti-grav unit. `defId` keys
-   * into STORY_ITEM_DEFS; picking one up banks it in `state.storyItems`
-   * (never the bag) and plays its lore as a dialogue.
-   */
-  | { id: number; kind: "story"; pos: Vec2; defId: string }
-) & {
-  /**
-   * A MERCY DROP still being flown in by its ANGEL. When set (and > 0) the
-   * rescue is airborne — cradled by the guardian as it descends to `pos` (the
-   * spot the mob died) — and NOT yet collectable; the magnet ignores it and
-   * `stepItems` counts it down (see `MERCY.angelDeliverMs`). At 0 the gift has
-   * landed and the item behaves like any other. Absent on every ordinary drop,
-   * so a plain drop is `deliverMs === undefined` and grounded from birth. The
-   * renderer draws the descending angel + falling pickup off this timer
-   * (`render.ts`); the engine only gates the pickup and never mentions angels.
-   */
-  deliverMs?: number;
-};
+  (
+    | { id: number; kind: "medkit"; pos: Vec2; tier?: number }
+    /** The golden level-up arrow: grants a share of the XP to the next level. */
+    | { id: number; kind: "xp"; pos: Vec2 }
+    /** A repair kit: restores the equipped weapon's durability to full. */
+    | { id: number; kind: "repair"; pos: Vec2 }
+    /** An energy drink: resets the sprint pool to full on touch. Like the repair
+     * kit it stays grounded when there is nothing to top up (stamina already
+     * full), so it is never wasted on a rested hero. */
+    | { id: number; kind: "drink"; pos: Vec2 }
+    | { id: number; kind: "equipment"; pos: Vec2; equipment: Equipment }
+    /** A time-limited power pickup; `defId` keys into ABILITY_DEFS. */
+    | { id: number; kind: "ability"; pos: Vec2; defId: string }
+    /**
+     * A plot piece — a keycard, a dossier, the anti-grav unit. `defId` keys
+     * into STORY_ITEM_DEFS; picking one up banks it in `state.storyItems`
+     * (never the bag) and plays its lore as a dialogue.
+     */
+    | { id: number; kind: "story"; pos: Vec2; defId: string }
+  ) & {
+    /**
+     * A MERCY DROP still being flown in by its ANGEL. When set (and > 0) the
+     * rescue is airborne — cradled by the guardian as it descends to `pos` (the
+     * spot the mob died) — and NOT yet collectable; the magnet ignores it and
+     * `stepItems` counts it down (see `MERCY.angelDeliverMs`). At 0 the gift has
+     * landed and the item behaves like any other. Absent on every ordinary drop,
+     * so a plain drop is `deliverMs === undefined` and grounded from birth. The
+     * renderer draws the descending angel + falling pickup off this timer
+     * (`render.ts`); the engine only gates the pickup and never mentions angels.
+     */
+    deliverMs?: number;
+  };
 
 /** A decorative feature scattered at level creation — rendered, no collision. */
 export type Decor = {

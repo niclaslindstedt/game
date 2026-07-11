@@ -414,7 +414,12 @@ export const MARS_ENEMIES: Record<string, EnemyDef> = {
       {
         belowHpFrac: 0.35,
         mechanics: {
-          summon: { defId: "servo_bot", count: 4, cooldownMs: 10000, maxAlive: 8 },
+          summon: {
+            defId: "servo_bot",
+            count: 4,
+            cooldownMs: 10000,
+            maxAlive: 8,
+          },
           enrage: { belowHpFrac: 0.35, speedMult: 1.35, damageMult: 1.25 },
         },
       },

@@ -128,10 +128,7 @@ export function abilityPowerScale(state: GameState): number {
  * by INTELLIGENCE (`ABILITY.stasisRadiusPerInt`), mirroring the magnet. The
  * slow factor itself never scales — a stronger slow would trivialize kiting.
  */
-export function stasisRadius(
-  state: GameState,
-  def: AbilityDef,
-): number {
+export function stasisRadius(state: GameState, def: AbilityDef): number {
   if (!def.stasis) return 0;
   return (
     def.stasis.radius +

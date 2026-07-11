@@ -227,9 +227,9 @@ describe("enrage", () => {
     rager.hp = 90; // under 0.5 × 200
     step(state, idle, DT);
     expect(rager.mech?.enraged).toBe(true);
-    expect(
-      state.events.filter((e) => e.type === "enemyEnraged").length,
-    ).toBe(1);
+    expect(state.events.filter((e) => e.type === "enemyEnraged").length).toBe(
+      1,
+    );
     const beforeRage = rager.pos.x;
     step(state, idle, DT);
     const ragingStep = beforeRage - rager.pos.x;
@@ -311,9 +311,10 @@ describe("difficulty-gated smarts", () => {
   });
 
   it("shooters lead a running hero from the hard rung only", () => {
-    function firstShotDir(
-      difficulty: "medium" | "hard",
-    ): { x: number; y: number } {
+    function firstShotDir(difficulty: "medium" | "hard"): {
+      x: number;
+      y: number;
+    } {
       const state = startAt(difficulty);
       // A shooter due east, the hero running due north (positive vel.y).
       const pos = { x: state.player.pos.x + 150, y: state.player.pos.y };

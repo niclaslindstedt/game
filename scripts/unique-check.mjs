@@ -359,8 +359,7 @@ const primaryCount = {};
 for (const p of [...placements, ...stallPlacements])
   primaryCount[p.id] = (primaryCount[p.id] ?? 0) + 1;
 const worldCount = {};
-for (const p of worldPlacements)
-  worldCount[p.id] = (worldCount[p.id] ?? 0) + 1;
+for (const p of worldPlacements) worldCount[p.id] = (worldCount[p.id] ?? 0) + 1;
 for (const id of UNIQUE_IDS) {
   const primary = primaryCount[id] ?? 0;
   const world = worldCount[id] ?? 0;

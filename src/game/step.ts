@@ -1589,8 +1589,7 @@ function flankTarget(state: GameState, enemy: Enemy): Vec2 {
   // contact), and alternate sides by id parity so the pack splits pincer-like.
   const ease = Math.min(1, dist / 360);
   const side = enemy.id % 2 === 0 ? 1 : -1;
-  const angle =
-    ((ENEMY_AI.flankAngleDeg * Math.PI) / 180) * ease * side;
+  const angle = ((ENEMY_AI.flankAngleDeg * Math.PI) / 180) * ease * side;
   // Rotate the player-to-enemy bearing and aim at the point the same
   // distance out along it — walking that ray closes distance while drifting
   // around the flank.

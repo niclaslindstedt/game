@@ -392,7 +392,12 @@ export const MOON_ENEMIES: Record<string, EnemyDef> = {
       {
         belowHpFrac: 0.4,
         mechanics: {
-          slam: { windupMs: 700, radius: 80, damageFrac: 1.3, cooldownMs: 6000 },
+          slam: {
+            windupMs: 700,
+            radius: 80,
+            damageFrac: 1.3,
+            cooldownMs: 6000,
+          },
           enrage: { belowHpFrac: 0.4, speedMult: 1.4, damageMult: 1.25 },
         },
       },
