@@ -1,21 +1,30 @@
 // SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
 // The menace system: the escalation meter that answers an overpowered player.
-// Overkilling and fast kills bank menace; idling bleeds it off. The stage it
-// reads lures a denser horde, evolves freshly-spawned minions (more hp → more
-// xp → better loot), and — with the player's own level — scales elites and
-// bosses when they engage. Runs on the synthetic engine fixtures.
+// Overkilling and fast kills bank menace; idling bleeds it off — but never
+// below the permanent floor the evolution RATCHET earns by one-shotting the
+// current crop. The (uncapped) stage lures a denser horde, evolves
+// freshly-spawned minions (more hp → more xp, worse loot), and — with the
+// hero's power level — scales elites and bosses when they engage. Runs on
+// the synthetic engine fixtures.
 
 import { describe, expect, it } from "vitest";
 
 import {
   createGame,
+  currentMobLevel,
   dismissIntro,
   enemyDef,
   enemyPowerScale,
+  heroGearLevel,
+  heroPowerLevel,
+  hitEnemy,
   MENACE,
+  menaceFloorStage,
   menaceStage,
   menaceWarmup,
   mobHpScaleFor,
+  resetBalanceTuning,
+  setBalanceTuning,
   skipCutscene,
   step,
 } from "@game/core";
@@ -55,7 +64,7 @@ function bareStage(state: GameState): void {
 }
 
 describe("menace — the meter", () => {
-  it("buckets menace into evolution stages, capped at maxStage", () => {
+  it("buckets menace into evolution stages, with NO upper roof", () => {
     const state = startGame();
     state.menace = 0;
     expect(menaceStage(state)).toBe(0);
@@ -63,8 +72,10 @@ describe("menace — the meter", () => {
     expect(menaceStage(state)).toBe(0);
     state.menace = MENACE.perStage;
     expect(menaceStage(state)).toBe(1);
-    state.menace = MENACE.max * 10; // way over the cap
-    expect(menaceStage(state)).toBe(MENACE.maxStage);
+    // The old ten-stage cap is gone: the horde keeps evolving as long as the
+    // player's output keeps proving it too easy.
+    state.menace = MENACE.perStage * 25;
+    expect(menaceStage(state)).toBe(25);
   });
 
   it("an overpowered kill jolts the meter and lures the horde in", () => {
@@ -183,15 +194,19 @@ describe("menace — the meter", () => {
 });
 
 describe("menace — difficulty and warmup gate the heat", () => {
-  /** Menace banked by one identical overkill kill on the given difficulty. */
+  /** Menace banked by one identical overkill kill on the given difficulty.
+   * The fodder's bar is sized so the overkill stays well under the ratchet
+   * threshold (`MENACE.ratchetHealthbars`) — this suite compares the METER
+   * jolt the rungs' menace knobs produce; the difficulty-blind ratchet has
+   * its own suite below. */
   function joltOn(difficulty: string, level: number): number {
     const state = startOn(difficulty);
     bareStage(state);
     state.player.level = level;
-    equip(state, "test_hammer"); // 34 dmg vs a 10-hp fodder → fixed overkill
+    equip(state, "test_hammer"); // ~34+ dmg vs a 30-hp fodder → mild overkill
     const { x, y } = state.player.pos;
     state.enemies.push(
-      makeEnemy({ pos: { x: x + 20, y }, hp: 10, maxHp: 10 }, "test_fodder"),
+      makeEnemy({ pos: { x: x + 20, y }, hp: 30, maxHp: 30 }, "test_fodder"),
     );
     // Pin the rng high so the blow neither misses, is dodged, nor crits (and
     // no drop rolls) — the jolt is then the pure overkill formula, and the
@@ -292,6 +307,44 @@ describe("menace — evolution of the horde", () => {
     }
   });
 
+  it("evolved (malice) mobs find worse gear — the tier roll pays the penalty", () => {
+    // Kill 120 mobs at saturated drop odds, once un-evolved and once at a
+    // deep evolution stage, off the same seed: the per-stage tier PENALTY
+    // (MENACE.tierPenaltyPerStage) drives the evolved crop's magic odds to
+    // zero — a rampage is a leveling faucet, not a loot farm.
+    const magicOrBetter = (evo: number): number => {
+      setBalanceTuning({ dropRate: 20 });
+      const state = startGame(); // same seed both arms — comparable streams
+      stopWaves(state);
+      state.items = [];
+      for (let i = 0; i < 120; i++) {
+        const enemy = makeEnemy(
+          {
+            id: state.nextId++,
+            pos: { x: state.player.pos.x + 60, y: state.player.pos.y },
+            hp: 45,
+            maxHp: 45,
+          },
+          "test_minion",
+        );
+        if (evo > 0) enemy.evo = evo;
+        state.enemies.push(enemy);
+        hitEnemy(state, enemy, 45, undefined, { rollAccuracy: false });
+      }
+      resetBalanceTuning();
+      return state.items.filter(
+        (i) =>
+          i.kind === "equipment" &&
+          i.equipment.tier !== "regular" &&
+          i.equipment.tier !== "trash",
+      ).length;
+    };
+    const plain = magicOrBetter(0);
+    const evolved = magicOrBetter(10);
+    expect(plain).toBeGreaterThan(0); // the ordinary rain pays magic finds
+    expect(evolved).toBe(0); // ten stages of penalty shut the tier roll
+  });
+
   it("high menace lures a denser crowd than a calm field", () => {
     // Sustained rampage vs. calm: re-pin menace each tick so the stage holds.
     const minionsAfter = (keepMenace: number) => {
@@ -303,7 +356,164 @@ describe("menace — evolution of the horde", () => {
       return state.enemies.filter((e) => enemyDef(e.defId).role === "minion")
         .length;
     };
-    expect(minionsAfter(MENACE.max)).toBeGreaterThan(minionsAfter(0));
+    expect(minionsAfter(MENACE.perStage * 10)).toBeGreaterThan(minionsAfter(0));
+  });
+});
+
+describe("menace — the evolution ratchet (no breaks)", () => {
+  /** A clean, warmed-up stage with the rng pinned high (no crits, no drops)
+   * so each hand-dealt blow banks exactly its own overkill. */
+  function warmedStage(difficulty = "medium"): GameState {
+    const state = startOn(difficulty);
+    bareStage(state);
+    state.player.level = 8; // fully past the warmup damping
+    state.rng = () => 0.99;
+    return state;
+  }
+
+  /** One-shot a staged 10-hp mob of evolution stage `evo` with a 40-damage
+   * blow — 3 healthbars of overkill banked toward the ratchet per kill. */
+  function oneShot(state: GameState, evo: number): void {
+    const { x, y } = state.player.pos;
+    const enemy = makeEnemy(
+      { id: state.nextId++, pos: { x: x + 30, y }, hp: 10, maxHp: 10 },
+      "test_fodder",
+    );
+    if (evo > 0) enemy.evo = evo;
+    state.enemies.push(enemy);
+    hitEnemy(state, enemy, 40);
+  }
+
+  it("one-shotting the current crop lifts the permanent floor, stage by stage", () => {
+    const state = warmedStage();
+    expect(state.menaceFloor).toBe(0);
+    // 3 healthbars of overkill per kill: two kills cross ratchetHealthbars (6)
+    // and the floor locks in stage 1 — the next crop spawns evolved.
+    oneShot(state, 0);
+    expect(menaceFloorStage(state)).toBe(0);
+    oneShot(state, 0);
+    expect(menaceFloorStage(state)).toBe(1);
+    expect(state.menace).toBeGreaterThanOrEqual(state.menaceFloor);
+    // Stage-1 mobs getting one-shot just as fast force stage 2 — and so on,
+    // with NO roof. (The between-stages breather is skipped by hand here;
+    // its pacing has its own test below.)
+    state.evoRatchetMs = 0;
+    oneShot(state, 1);
+    oneShot(state, 1);
+    expect(menaceFloorStage(state)).toBe(2);
+  });
+
+  it("stale un-evolved leftovers prove nothing once the floor has risen", () => {
+    const state = warmedStage();
+    state.menaceFloor = MENACE.perStage; // stage-1 floor already earned
+    state.menace = state.menaceFloor;
+    // Massacring old evo-0 stragglers banks no proof toward stage 2.
+    for (let i = 0; i < 6; i++) oneShot(state, 0);
+    expect(menaceFloorStage(state)).toBe(1);
+    // The same blows against the CURRENT crop do.
+    oneShot(state, 1);
+    oneShot(state, 1);
+    expect(menaceFloorStage(state)).toBe(2);
+  });
+
+  it("clean kills of the crop RELIEVE the proof — a mixed horde holds the floor", () => {
+    const state = warmedStage();
+    // One overkill banks 3 healthbars of proof…
+    oneShot(state, 0);
+    expect(state.evoProof).toBeCloseTo(3);
+    // …and three honest kills (a finisher within the bar — no overkill)
+    // refund it back to zero: trash one-shots alone can't evolve a horde
+    // whose heavies still take real fights.
+    const { x, y } = state.player.pos;
+    for (let i = 0; i < 3; i++) {
+      const heavy = makeEnemy(
+        { id: state.nextId++, pos: { x: x + 30, y }, hp: 40, maxHp: 400 },
+        "test_fodder",
+      );
+      state.enemies.push(heavy);
+      hitEnemy(state, heavy, 100); // kills from 40, far under the 400 bar
+    }
+    expect(state.evoProof).toBe(0);
+    expect(menaceFloorStage(state)).toBe(0);
+  });
+
+  it("climbs at most one stage per cooldown — one evolve per malice round", () => {
+    const state = warmedStage();
+    oneShot(state, 0);
+    oneShot(state, 0); // stage 1 locks in and arms the breather
+    expect(menaceFloorStage(state)).toBe(1);
+    expect(state.evoRatchetMs).toBe(MENACE.ratchetCooldownMs);
+    // A massacre burst against the fresh crop banks proof, but the breather
+    // holds the next stage — and the bank caps at 2× the threshold, so the
+    // burst defers at most ONE stage past its own moment.
+    for (let i = 0; i < 10; i++) oneShot(state, 1);
+    expect(menaceFloorStage(state)).toBe(1);
+    expect(state.evoProof).toBe(MENACE.ratchetHealthbars * 2);
+    // Once the breather has burned down (playing ticks), the banked proof
+    // spends the next stage on the very next overkill.
+    run(state, idle, Math.ceil(MENACE.ratchetCooldownMs / DT) + 2);
+    oneShot(state, 1);
+    expect(menaceFloorStage(state)).toBe(2);
+  });
+
+  it("idling never cools the meter below the earned floor", () => {
+    const state = warmedStage();
+    state.menaceFloor = MENACE.perStage * 2;
+    state.menace = MENACE.perStage * 3; // some transient heat on top
+    run(state, idle, 300); // ~5s of standing still
+    expect(state.menace).toBe(state.menaceFloor); // heat bled, floor held
+    expect(menaceStage(state)).toBe(2);
+  });
+
+  it("ratchets even on EASY — the difficulty sizes the step, not whether it happens", () => {
+    // EASY's menaceMult (0.05) makes the METER nearly inert, but the ratchet
+    // is deliberately difficulty-blind: mobs getting one-shot instantly must
+    // evolve the horde on every rung.
+    const state = warmedStage("easy");
+    oneShot(state, 0);
+    oneShot(state, 0);
+    expect(menaceFloorStage(state)).toBe(1);
+  });
+
+  it("the early-game warmup damps the ratchet for a fresh hero", () => {
+    const state = warmedStage();
+    state.player.level = 1; // warmupFloor (0.12) damps the proof
+    oneShot(state, 0);
+    oneShot(state, 0);
+    expect(menaceFloorStage(state)).toBe(0);
+  });
+});
+
+describe("hero power level — gear drives the horde", () => {
+  it("averages the total equipped ilvl over the whole rack", () => {
+    const state = startGame();
+    // The fresh rack (wall weapon + street clothes, all ilvl 1-ish) reads
+    // well under the character level, so a fresh hero's power IS his level.
+    expect(heroGearLevel(state)).toBeLessThan(1);
+    expect(heroPowerLevel(state)).toBe(state.player.level);
+    // Deck the hero out: a 70-ilvl weapon alone averages 10 over 7 slots.
+    state.player.equipment.weapon.ilvl = 70;
+    expect(heroGearLevel(state)).toBe(10);
+    expect(heroPowerLevel(state)).toBe(10);
+  });
+
+  it("a decked-out hero meets a horde levelled to his gear, not his sheet", () => {
+    const state = startGame(); // medium: mobLevelOffset −2
+    const before = currentMobLevel(state);
+    expect(before).toBe(1); // level-1 hero, floor at 1
+    state.player.equipment.weapon.ilvl = 70; // power level 10
+    expect(currentMobLevel(state)).toBe(8); // 10 − 2
+    // The set pieces power-match the same gear-driven level.
+    expect(enemyPowerScale(state)).toBeGreaterThan(1);
+  });
+
+  it("ordinary play is untouched — gear trailing the level changes nothing", () => {
+    const state = startGame();
+    state.player.level = 10;
+    // Mid-campaign gear sits a few levels under the mobs it dropped from.
+    state.player.equipment.weapon.ilvl = 8;
+    expect(heroPowerLevel(state)).toBe(10);
+    expect(currentMobLevel(state)).toBe(8); // 10 − 2, exactly as before
   });
 });
 

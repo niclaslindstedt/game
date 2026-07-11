@@ -3,25 +3,25 @@
 // CAMPAIGN SIMULATOR CLI (see the `simulate-run` skill): runs the REAL engine
 // headlessly — createGame, step, the autopilot, auto-equip, loadout carry —
 // through levels and whole campaigns (easy → JESUS across every map) and
-// prints extensive balance reporting: hero level/hp/dps progression, per-mob
-// hp / monster level / contact damage / kill counts, every drop, the weapons
-// the auto-equip stepped through, deaths, and the XP the per-map caps
-// withheld. The engine side is src/sim/simulate.ts; this front-end parses
-// flags and renders tables.
+// prints extensive balance reporting: hero level/hp/dps progression, damage
+// per hit dealt and taken, per-mob hp / monster level / contact damage /
+// blows-to-kill / kill counts, every drop, the weapons the auto-equip
+// stepped through, deaths, and the XP the per-map caps withheld. The engine
+// side is src/sim/simulate.ts; this front-end parses flags and renders
+// tables.
 //
 //   node scripts/simulate-run.mjs                            # full campaign, easy → JESUS
 //   node scripts/simulate-run.mjs --difficulty easy          # one rung
 //   node scripts/simulate-run.mjs --difficulty easy --level spacez_hq
 //   node scripts/simulate-run.mjs --rerun 3                  # replay each map ×3 (XP-cap probe)
 //   node scripts/simulate-run.mjs --strategy kite --seed 42
-//   node scripts/simulate-run.mjs --max-minutes 10 --no-revive
 //   node scripts/simulate-run.mjs --full                     # per-run mob/drop detail
 //   node scripts/simulate-run.mjs --json report.json         # machine-readable dump
 //
-// By default the hero REVIVES on death (deaths are counted; the run marches
-// on) so pacing and loot measurements aren't capped by the autopilot's
-// survival skill — pass --no-revive for the honest lethality read (deaths
-// end attempts; a level fails after --attempts tries).
+// This is a CALIBRATION tool: the hero cannot die. A defeat revives the hero
+// at the spawn with everything kept, books the death as a pressure gauge,
+// and the measurement marches on — so pacing, loot, and damage-exchange
+// reads are never capped by the autopilot's survival skill.
 
 import { writeFileSync } from "node:fs";
 import { register } from "node:module";
@@ -57,7 +57,7 @@ if (flag("help")) {
   console.log(
     "usage: node scripts/simulate-run.mjs [--difficulty all|easy[,medium,…]] " +
       "[--level all|spacez_hq[,…]] [--rerun N] [--seed N] [--strategy survivor|rush|kite|boss] " +
-      "[--max-minutes N] [--attempts N] [--no-revive] [--fresh] [--full] [--json out.json]",
+      "[--max-minutes N] [--fresh] [--full] [--json out.json]",
   );
   process.exit(0);
 }
@@ -73,8 +73,6 @@ const levels = levelsOnce.flatMap((id) => Array(rerun).fill(id));
 const seed = Number(opt("seed", "1"));
 const strategy = opt("strategy", "survivor");
 const maxMinutes = Number(opt("max-minutes", "15"));
-const maxAttempts = Number(opt("attempts", "3"));
-const revive = !flag("no-revive");
 const carryLoadout = !flag("fresh");
 const full = flag("full");
 const jsonPath = opt("json");
@@ -85,7 +83,7 @@ const startedAt = Date.now();
 console.log(
   `Simulating ${difficulties.length} difficulty(ies) × ${levels.length} level run(s)` +
     ` — strategy=${strategy} seed=${seed} maxMinutes=${maxMinutes}` +
-    ` revive=${revive} carry=${carryLoadout}${rerun > 1 ? ` rerun=${rerun}` : ""}`,
+    ` carry=${carryLoadout}${rerun > 1 ? ` rerun=${rerun}` : ""}`,
 );
 
 const report = simulateCampaign({
@@ -94,8 +92,6 @@ const report = simulateCampaign({
   seed,
   strategy,
   maxMinutes,
-  maxAttempts,
-  revive,
   carryLoadout,
 });
 
@@ -117,7 +113,9 @@ const header =
   pad("kills", 7) +
   pad("k/min", 7) +
   pad("dpsOut", 8) +
+  pad("hitOut", 8) +
   pad("dmgIn", 8) +
+  pad("hitIn", 7) +
   pad("cap", 5) +
   pad("xpLost", 9) +
   "  weapon";
@@ -133,7 +131,9 @@ for (const run of report.runs) {
       pad(run.combat.kills, 7) +
       pad(run.combat.killsPerMinute, 7) +
       pad(run.combat.dpsOut, 8) +
+      pad(run.combat.damagePerHit, 8) +
       pad(run.combat.damageTaken, 8) +
+      pad(run.combat.damagePerHitTaken, 7) +
       pad(run.xpCap.cap, 5) +
       pad(run.xpCap.forfeited, 9) +
       `  ${run.hero.weapon.name} (${run.hero.weapon.tier}, ${run.hero.weapon.dps} dps)`,
@@ -164,7 +164,10 @@ if (full) {
     );
     console.log(
       `combat: ${run.combat.kills}/${run.combat.totalEnemies} kills · ` +
-        `${run.combat.dpsOut} dps out · ${run.combat.damageTaken} damage taken · ` +
+        `${run.combat.dpsOut} dps out · ${run.combat.hitsLanded} hits landed ` +
+        `(${run.combat.damagePerHit}/hit, ${pct(run.combat.critRate)} crit) · ` +
+        `${run.combat.damageTaken} damage taken over ${run.combat.hitsTaken} hits ` +
+        `(${run.combat.damagePerHitTaken}/hit before armor) · ` +
         `${run.combat.shotsFired} shots · xp ${h.xpGained}` +
         (run.xpCap.forfeited > 0
           ? ` (+${run.xpCap.forfeited} withheld by the map cap ${run.xpCap.cap}` +
@@ -194,6 +197,8 @@ if (full) {
         pad("avgHp", 8) +
         pad("mlvl", 6) +
         pad("hit", 6) +
+        pad("heroHit", 9) +
+        pad("toKill", 7) +
         pad("xpPaid", 9),
     );
     for (const mob of run.mobs) {
@@ -206,6 +211,8 @@ if (full) {
           pad(mob.avgMaxHp, 8) +
           pad(mob.avgMlvl, 6) +
           pad(mob.contactDamage, 6) +
+          pad(mob.avgHitFromHero, 9) +
+          pad(mob.hitsToKill, 7) +
           pad(mob.xpPaid, 9),
       );
     }

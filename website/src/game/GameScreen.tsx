@@ -54,7 +54,6 @@ import {
   LEVELS,
   levelDef,
   markThoughtsSeen,
-  MENACE,
   MERCHANT,
   menaceStage,
   openCompanionPanel,
@@ -199,7 +198,7 @@ type Hud = {
   xp: number;
   xpToNext: number;
   enemiesLeft: number;
-  /** Current menace/rampage stage (0…MENACE.maxStage) driving the gauge. */
+  /** Current menace/rampage stage (uncapped) driving the gauge. */
   menaceStage: number;
   /** Free (empty) bag cells — shown on the avatar badge, red at 0. */
   bagFree: number;
@@ -368,9 +367,14 @@ function formatTime(ms: number): string {
   return `${minutes}:${String(seconds).padStart(2, "0")}`;
 }
 
-/** The rampage gauge heats from amber to red as the menace stage climbs
- * (0…MENACE.maxStage = 10) — the top stages glow a hotter red so the deadly
- * end of the meter reads at a glance. */
+/** Pips on the rampage gauge. The menace stage itself is UNCAPPED (the
+ * evolution ratchet climbs as long as the player out-hits the horde); the
+ * gauge fills its ten pips and then counts the deeper stages numerically. */
+const RAMPAGE_PIPS = 10;
+
+/** The rampage gauge heats from amber to red as the menace stage climbs —
+ * the top stages glow a hotter red so the deadly end of the meter reads at
+ * a glance. */
 function rampageColor(stage: number): string {
   if (stage >= 8) return "#ff3020";
   if (stage >= 5) return "#ff5030";
@@ -2529,12 +2533,16 @@ export function GameScreen({
                   <div className="hud-rampage" aria-hidden>
                     <PixelText
                       font={font}
-                      text="RAMPAGE"
+                      text={
+                        hud.menaceStage > RAMPAGE_PIPS
+                          ? `RAMPAGE ${hud.menaceStage}`
+                          : "RAMPAGE"
+                      }
                       scale={2}
                       color={rampageColor(hud.menaceStage)}
                     />
                     <div className="hud-rampage-pips">
-                      {Array.from({ length: MENACE.maxStage }, (_, i) => (
+                      {Array.from({ length: RAMPAGE_PIPS }, (_, i) => (
                         <span
                           key={i}
                           className="hud-rampage-pip"

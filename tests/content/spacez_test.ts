@@ -7,6 +7,7 @@ import { describe, expect, it } from "vitest";
 
 import {
   abilityDef,
+  allocateStat,
   createGame,
   enemyDef,
   gearDef,
@@ -28,7 +29,6 @@ import {
   DT,
   idle,
   makeEnemy,
-  run,
   SEED,
   startGame,
   equipBlaster,
@@ -169,14 +169,25 @@ describe("SPACEZ HQ level def", () => {
                 x: state.player.pos.x + 80,
                 y: state.player.pos.y + (i - N / 2) * 2,
               },
+              // Wounded down to 1 hp under a tall max bar: the bolt finishes
+              // each in one hit (fast) without ever exceeding its FULL health,
+              // so the OVERKILL TOLL never discounts the drop rate the
+              // profiles are being compared on.
               hp: 1,
-              maxHp: 1,
+              maxHp: 100,
             },
             defId,
           ),
         );
       }
-      run(state, idle, 40_000, (s) => s.enemies.length === 1);
+      // The tall bars pay real xp now — auto-spend each ding's point so the
+      // stat chooser never freezes the massacre being measured.
+      for (let i = 0; i < 40_000 && state.enemies.length > 1; i++) {
+        step(state, idle, DT);
+        while (state.player.pendingStatPoints > 0) {
+          allocateStat(state, "stamina");
+        }
+      }
       return state.items.length;
     };
 

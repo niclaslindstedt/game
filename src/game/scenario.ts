@@ -260,6 +260,10 @@ export function applyScenario(state: GameState, spec: ScenarioSpec): void {
         state.waveSpawned[i] = total;
       });
       state.moveSpawnCredit = 0;
+      // A staged field stays staged: park the trickle cooldown effectively
+      // forever so the post-budget straggler stream (stepSpawner) can't wander
+      // into an fps probe or a posed screenshot. Finite so it serializes.
+      state.trickleMs = Number.MAX_SAFE_INTEGER;
     }
   }
 
