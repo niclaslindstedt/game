@@ -136,6 +136,27 @@ For each candidate, in the numbered order:
    bulk, read), not one drawing five times. Follow the pixel-assets rules:
    silhouette first, family palette ramps, 2–5 colors plus outline,
    top-left light, correct size class for its role.
+
+   **Compute grids in JS for anything prop-heavy or multi-frame** (a mob
+   holding a tool, a machine with panels, both walk frames) — hand-aligning
+   fixed-width ASCII is where off-by-one errors creep in. The concept module
+   runs as real JavaScript, so sketch with helpers and export the joined
+   rows; `concepts` validates every grid's width, so a mistake fails loudly
+   instead of rendering skewed:
+
+   ```js
+   const W = 16;
+   const blank = () => Array.from({ length: 16 }, () => Array(W).fill("."));
+   const from = (rows) => rows.map((r) => r.split("")); // start from a base grid
+   const put = (g, r, c, ch) => { if (g[r] && c >= 0 && c < W) g[r][c] = ch; };
+   const hline = (g, r, c0, c1, ch) => { for (let c=c0;c<=c1;c++) put(g,r,c,ch); };
+   const box = (g, r0,r1,c0,c1, fill, out="O") => {           // outlined rect
+     for (let r=r0;r<=r1;r++) for (let c=c0;c<=c1;c++)
+       put(g,r,c, (r===r0||r===r1||c===c0||c===c1) ? out : fill);
+   };
+   const done = (g) => g.map((row) => row.join(""));
+   // build a base once, stamp each concept's props onto a clone, export done()
+   ```
 3. **Render and pick**: `concepts <module>` → Read the sheet (the current
    sprite renders first for comparison) → judge each concept against the
    brief and the rubric → pick the strongest **one**.
@@ -145,7 +166,12 @@ For each candidate, in the numbered order:
 5. **Install the winner** in its family module under
    `website/scripts/sprite-data/` (both walk frames for animated sprites
    — redraw `_1` to match, don't leave a mismatched old frame; new chars
-   go in the FAMILY palette; check `wounds` overrides still apply).
+   go in the FAMILY palette; check `wounds` overrides still apply). For a
+   computed grid (above), generate BOTH frames from the one base — the `_1`
+   frame is usually just the leg stride shifted — and preview them together
+   in one last concept sheet to check the walk cycle reads before you paste.
+   Then print the joined rows (a tiny `console.log` builder) and paste them
+   in; nothing hand-retypes the winning grid.
 6. **Verify**: `make assets` (heed every warning), then Read the family
    sheet and the `@8x` preview per the pixel-assets checklist, and
    `variants <name>` to confirm frames, wounds, and overlays still read.
@@ -267,3 +293,15 @@ A running log of gotchas from past passes. Add to it; don't let it rot.
   fix is often a bigger/smaller grid, not more internal detail. Update the
   sprite-data comment when you change a size, and remember both `_0`/`_1`
   frames must share the new dimensions.
+- **Compute grids in JS, don't hand-type ASCII, once a sprite has props or two
+  frames.** Every prop-heavy redraw this pass (janitor's mop + bucket, the
+  desk, the vending machine, the hazmat rig) was faster and error-free built
+  with `put`/`box`/`hline` helpers over a base grid (see Phase 4) than typed by
+  hand — hand-aligning a mop handle or a keyboard into a fixed-width row is
+  where off-by-one bugs live. Build both walk frames from the one base and
+  print the joined rows to paste in; never retype the winning grid.
+- **Static sheets show the stride, not the motion.** `variants`/`concepts`
+  prove `_0`/`_1` both read and that wounds survive, but the actual walk
+  cadence and in-motion silhouette only show in the running game — for an
+  animated redesign you're unsure about, close the loop with the `playtest`
+  skill rather than trusting the still frames.
