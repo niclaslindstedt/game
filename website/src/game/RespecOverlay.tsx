@@ -10,12 +10,7 @@
 
 import { useState } from "react";
 
-import {
-  allocateStat,
-  deallocateStat,
-  effectiveStat,
-  type GameState,
-} from "@game/core";
+import { allocateStat, deallocateStat, type GameState } from "@game/core";
 
 import { PixelText } from "@ui/lib/PixelText.tsx";
 import type { PixelFont } from "@ui/lib/pixel-font.ts";
@@ -102,7 +97,10 @@ export function RespecOverlay({
         ) : (
           <div className="respec-rows">
             {CHOICES.map(({ stat, label, blurb, icon }) => {
-              const value = effectiveStat(state, stat);
+              // Only the points re-placed during this respec (see
+              // `spentStats`) — `beginRespec` zeroes the tally, so it grows
+              // from zero as the player rebuilds, matching the level-up chooser.
+              const value = state.player.spentStats[stat];
               const canAdd = points > 0;
               const canRemove = state.player.stats[stat] > 0;
               return (

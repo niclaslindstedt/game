@@ -1888,6 +1888,9 @@ export function allocateStat(state: GameState, stat: StatName): boolean {
   const player = state.player;
   if (player.pendingStatPoints <= 0) return false;
   player.stats[stat]++;
+  // Tally the player's own pick so the chooser can show it apart from the
+  // head-start/auto-growth/gear baked into the effective stat.
+  player.spentStats[stat]++;
   player.pendingStatPoints--;
   recomputeMaxHp(state);
   recomputeMaxStamina(state);
@@ -1920,6 +1923,10 @@ export function beginRespec(state: GameState): void {
   for (const stat of STAT_NAMES) {
     pool += player.stats[stat];
     player.stats[stat] = 0;
+    // The whole refunded pool (head-start included) is re-placed from
+    // scratch, so the player's spent tally restarts at zero and grows back as
+    // they re-allocate — the chooser tracks this respec's own picks.
+    player.spentStats[stat] = 0;
   }
   player.pendingStatPoints = pool;
   recomputeMaxHp(state);
@@ -1943,6 +1950,7 @@ export function deallocateStat(state: GameState, stat: StatName): boolean {
   const player = state.player;
   if (player.stats[stat] <= 0) return false;
   player.stats[stat]--;
+  player.spentStats[stat] = Math.max(0, player.spentStats[stat] - 1);
   player.pendingStatPoints++;
   recomputeMaxHp(state);
   recomputeMaxStamina(state);
