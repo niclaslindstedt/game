@@ -182,9 +182,13 @@ export function step(state: GameState, input: GameInput, dtMs: number): void {
 
   // Snapshot cumulative output so the menace tick can read this step's damage
   // and kills as rates (see tickMenace) — the meter heats from what the player
-  // is actually putting out, not from any single blow.
+  // is actually putting out, not from any single blow. The powerup-exempt
+  // counters are snapshotted alongside so bomb/ability output is subtracted
+  // out: a screen-nuke or damage powerup never escalates the horde.
   const damageBefore = state.stats.damageDealt;
   const killsBefore = state.stats.kills;
+  const exemptDamageBefore = state.menaceExemptDamage;
+  const exemptKillsBefore = state.menaceExemptKills;
 
   stepPlayer(state, input, dt, dtMs);
   // Walking lifts the fog of war around wherever the hero now stands.
@@ -224,8 +228,12 @@ export function step(state: GameState, input: GameInput, dtMs: number): void {
   tickMenace(
     state,
     dtMs,
-    state.stats.damageDealt - damageBefore,
-    state.stats.kills - killsBefore,
+    state.stats.damageDealt -
+      damageBefore -
+      (state.menaceExemptDamage - exemptDamageBefore),
+    state.stats.kills -
+      killsBefore -
+      (state.menaceExemptKills - exemptKillsBefore),
   );
   stepSpawner(state, dtMs);
   stepItems(state, dtMs);
@@ -728,7 +736,10 @@ function detonateNuke(state: GameState, radius: number): void {
     );
   });
   for (const enemy of caught) {
-    hitEnemy(state, enemy, enemy.hp, undefined, { noNukeDrop: true });
+    hitEnemy(state, enemy, enemy.hp, undefined, {
+      noNukeDrop: true,
+      noMenace: true,
+    });
   }
 }
 
@@ -1004,7 +1015,10 @@ function stepAbilities(state: GameState, dt: number, dtMs: number): void {
           }
           if (!victim) continue;
           // Conjured abilities crit off INTELLIGENCE, like the magic they are.
-          hitEnemy(state, victim, def.orbit.damage * power, "magic");
+          // A powerup's kills stay out of the menace meter (`noMenace`).
+          hitEnemy(state, victim, def.orbit.damage * power, "magic", {
+            noMenace: true,
+          });
           struck = true;
         }
         if (struck) ability.cooldownMs = def.orbit.hitCooldownMs;
@@ -1016,7 +1030,9 @@ function stepAbilities(state: GameState, dt: number, dtMs: number): void {
       if (victim) {
         ability.cooldownMs = def.storm.intervalMs;
         state.events.push({ type: "lightning", pos: { ...victim.pos } });
-        hitEnemy(state, victim, def.storm.damage * power, "magic");
+        hitEnemy(state, victim, def.storm.damage * power, "magic", {
+          noMenace: true,
+        });
       }
     }
 

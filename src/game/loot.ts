@@ -237,6 +237,13 @@ export function hitEnemy(
      * bombs, so the loot roll skips both screen-nuke slices (the crowd-bomb
      * mercy drop and the rare `LOOT.nukeShare` slice). */
     noNukeDrop?: boolean;
+    /** The blow comes from a POWERUP — the screen-nuke bomb, the fire orbs, or
+     * the storm cell — not the hero's own weapon. Its damage and kill are still
+     * booked into the run stats, but kept OUT of the menace meter: the exempt
+     * counters below catch the damage, and `killEnemy` skips the overkill jolt
+     * and evolution ratchet. A bomb clearing the screen must not escalate the
+     * horde the player didn't out-fight by hand. */
+    noMenace?: boolean;
   },
 ): void {
   const def = enemyDef(enemy.defId);
@@ -303,6 +310,9 @@ export function hitEnemy(
   );
   enemy.hp -= damage;
   state.stats.damageDealt += damage;
+  // Powerup damage is booked for the run stats but held back from the menace
+  // meter — step() subtracts this slice from what tickMenace reads.
+  if (opts?.noMenace) state.menaceExemptDamage += damage;
 
   if (enemy.hp > 0) {
     // A critical hit flashes the victim (renderer blink; visual only).
@@ -393,6 +403,7 @@ export function hitEnemy(
 
   killEnemy(state, enemy, damage, crit, crit ? opts?.damageRoll : undefined, {
     noNukeDrop: opts?.noNukeDrop,
+    noMenace: opts?.noMenace,
   });
 }
 
@@ -405,7 +416,9 @@ export function hitEnemy(
  * blow's damage-variance roll (only meaningful on a crit) — it rides out on
  * the `enemyKilled` event so the app can size the popup. `opts.noNukeDrop`
  * marks a screen-nuke kill, whose loot roll never pays out another nuke
- * (see `hitEnemy`).
+ * (see `hitEnemy`). `opts.noMenace` marks a powerup kill (nuke/orbs/storm):
+ * it books the kill for the run but skips the overkill jolt/ratchet and is
+ * netted out of the menace kill-rate heat (see `hitEnemy`).
  */
 export function killEnemy(
   state: GameState,
@@ -413,13 +426,16 @@ export function killEnemy(
   damage: number,
   crit: boolean,
   critPower?: number,
-  opts?: { noNukeDrop?: boolean },
+  opts?: { noNukeDrop?: boolean; noMenace?: boolean },
 ): void {
   const def = enemyDef(enemy.defId);
   const index = state.enemies.indexOf(enemy);
   if (index >= 0) state.enemies.splice(index, 1);
 
   state.stats.kills++;
+  // A powerup kill (nuke/orbs/storm) counts for the run but not for the menace
+  // kill-rate heat — step() nets it out of what tickMenace reads.
+  if (opts?.noMenace) state.menaceExemptKills++;
   // The kill's XP reward, resolved once so the same figure both credits the
   // hero (grantXp below) and rides the event out to the app, which floats it
   // off the corpse as rising blue combat text (WoW's "+42" xp popup). The
@@ -453,8 +469,10 @@ export function killEnemy(
   // one that could have dropped it several times over is. The victim's own
   // evolution stage rides along to feed the RATCHET: one-shotting the current
   // crop is what forces the next stage. The meter also heats continuously from
-  // the player's rolling output (see tickMenace).
-  bankOverkill(state, damage, enemy.maxHp, enemy.evo ?? 0);
+  // the player's rolling output (see tickMenace). A POWERUP kill is exempt: a
+  // bomb or ability wiping the screen must not jolt, lure, or ratchet — the
+  // escalation answers the hero's OWN power, not a consumable.
+  if (!opts?.noMenace) bankOverkill(state, damage, enemy.maxHp, enemy.evo ?? 0);
 
   grantXp(state, xpGain);
 

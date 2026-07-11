@@ -277,7 +277,13 @@ run against synthetic fixtures with no shipped content (see
   tier roll via `tierPenaltyPerStage`, so a rampage levels rather than
   farms), and — with the hero's power — power-matches elites/bosses when
   they engage (`enemyPowerScale`/`maybePowerScale`, called from both
-  `step.ts` wake and `loot.ts` first-hit). Separately from that
+  `step.ts` wake and `loot.ts` first-hit). POWERUP output — the screen-nuke
+  bomb, fire orbs, and storm cell — is exempt from all of this: `hitEnemy`'s
+  `noMenace` flag books its damage/kills into `state.menaceExemptDamage` /
+  `menaceExemptKills` (so `step.ts` nets them out of the rolling DPS/kill-rate
+  `tickMenace` reads) and makes `killEnemy` skip `bankOverkill` entirely, so a
+  consumable clearing the screen never jolts, lures, or ratchets — menace
+  answers only the hero's own weapon. Separately from that
   moment-to-moment heat, the hero's POWER LEVEL (`heroPowerLevel`: the
   character level, the gear rack's averaged total ilvl (`heroGearLevel`),
   or the equipped weapon's calculated output mapped onto the mob-hp curve
