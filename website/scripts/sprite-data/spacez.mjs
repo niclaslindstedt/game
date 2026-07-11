@@ -888,25 +888,28 @@ const SPRITES = {
     "........................",
     "........................",
   ],
-  // THE ARCHITECT - the hero's old bench partner, half-converted: a steel
-  // skullcap implant over a still-human face, cyan optic eyes and a matching
-  // chest core (c/x) echoing the OPTIMUSK machines he worships, the rest a dark
-  // tech tunic (steel v/V). Same 24px elite footprint and stride as the staff.
+  // THE ARCHITECT - the hero's old bench partner, half-converted. The cyborg
+  // cues are dialled up to read at gameplay scale: a riveted steel skullcap
+  // implant (O rivets, V metal highlights) over a still-human face, bright
+  // glowing cyan OPTIC EYES (x), and a bold glowing chest REACTOR (c ring
+  // around an x core) echoing the OPTIMUSK machines he worships, with cyan
+  // seams (c) marking the dark tech tunic apart from the night shift's plain
+  // suits. Same 24px elite footprint and stride as the staff.
   architect_0: [
     "........................",
     ".........OOOOOO.........",
-    ".......OOvvvvvvOO.......",
-    ".......OvVvvvvVvO.......",
-    ".......OvppppppcO.......",
-    ".......OpcppppcpO.......",
+    ".......OOOvvvvOOO.......",
+    ".......OVVvvvvVVO.......",
+    ".......OvppcpcpcO.......",
+    ".......OpxxppxxpO.......",
     ".......OppppppppO.......",
     "........OppppppO........",
-    "......OvvvWWWWvvvO......",
+    "......OvcvWWWWvcvO......",
     ".....OvvvvWccWvvvvO.....",
-    "....OvvvvvWccWvvvvvO....",
-    "....OvvvvvWxxWvvvvvO....",
-    "....OvpOvvWWWWvvOpvO....",
-    ".....OvvvvvvvvvvvvO.....",
+    "....OvvvvvcxxcvvvvvO....",
+    "....OvvvvvcxxcvvvvvO....",
+    "....OvpOvvWccWvvOpvO....",
+    ".....OvvcvvvvvvcvvO.....",
     ".....OvvvvvvvvvvvvO.....",
     "......OvvvvOOvvvvO......",
     "......ObbbO..ObbbO......",
@@ -921,18 +924,18 @@ const SPRITES = {
   architect_1: [
     "........................",
     ".........OOOOOO.........",
-    ".......OOvvvvvvOO.......",
-    ".......OvVvvvvVvO.......",
-    ".......OvppppppcO.......",
-    ".......OpcppppcpO.......",
+    ".......OOOvvvvOOO.......",
+    ".......OVVvvvvVVO.......",
+    ".......OvppcpcpcO.......",
+    ".......OpxxppxxpO.......",
     ".......OppppppppO.......",
     "........OppppppO........",
-    "......OvvvWWWWvvvO......",
+    "......OvcvWWWWvcvO......",
     ".....OvvvvWccWvvvvO.....",
-    "....OvvvvvWccWvvvvvO....",
-    "....OvvvvvWxxWvvvvvO....",
-    "....OvpOvvWWWWvvOpvO....",
-    ".....OvvvvvvvvvvvvO.....",
+    "....OvvvvvcxxcvvvvvO....",
+    "....OvvvvvcxxcvvvvvO....",
+    "....OvpOvvWccWvvOpvO....",
+    ".....OvvcvvvvvvcvvO.....",
     ".....OvvvvvvvvvvvvO.....",
     "......OvvvvOOvvvvO......",
     ".....ObbbO....ObbbO.....",
