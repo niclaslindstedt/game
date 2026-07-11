@@ -211,6 +211,15 @@ export const MOON: LevelDef = {
       "surplus_carbine",
       "retro_raygun",
       "pulsar_rod",
+      // …plus every earlier stage's arsenal (the bunker idiom): later maps
+      // keep dropping earlier bases, so every revisit rung finds live bases
+      // in its drop window and the grade ladder unfolds without holes.
+      "box_cutter",
+      "security_baton",
+      "nine_mm",
+      "prototype_laser",
+      "microwave_emitter",
+      "pump_shotgun",
     ],
     // The 70s kit lockers: mission cotton to the gold Apollo visor,
     // introduced at levelReqs 5 → 9 alongside the weapons.
@@ -225,6 +234,20 @@ export const MOON: LevelDef = {
       "moon_boots",
       "moon_charm",
       "bag",
+      // …plus every earlier stage's arsenal (the bunker idiom): later maps
+      // keep dropping earlier bases, so every revisit rung finds live bases
+      // in its drop window and the grade ladder unfolds without holes.
+      "baseball_cap",
+      "hard_hat",
+      "welding_mask",
+      "riot_helmet",
+      "lab_coat",
+      "coveralls",
+      "kevlar_vest",
+      "cargo_pants",
+      "padded_work_pants",
+      "sneakers",
+      "steel_toe_boots",
     ],
     abilityPool: ["fire_orbs", "storm_cell", "stasis_field", "item_magnet"],
     // Level-locked world drops (see config WORLD_DROP): THE PALE COVENANT, the

@@ -266,6 +266,21 @@ export const MARS: LevelDef = {
       "arc_projector",
       "graviton_maw",
       "gravity_maul",
+      // …plus every earlier stage's arsenal (the bunker idiom): later maps
+      // keep dropping earlier bases, so every revisit rung finds live bases
+      // in its drop window and the grade ladder unfolds without holes.
+      "box_cutter",
+      "security_baton",
+      "nine_mm",
+      "prototype_laser",
+      "microwave_emitter",
+      "pump_shotgun",
+      "lunar_wrench",
+      "service_revolver",
+      "geology_hammer",
+      "surplus_carbine",
+      "retro_raygun",
+      "pulsar_rod",
     ],
     // The colony printer's wardrobe: monocle to exoplate, introduced at
     // levelReqs 10 → 15 alongside the weapons.
@@ -282,6 +297,28 @@ export const MARS: LevelDef = {
       "mag_boots",
       "red_dust_charm",
       "bag",
+      // …plus every earlier stage's arsenal (the bunker idiom): later maps
+      // keep dropping earlier bases, so every revisit rung finds live bases
+      // in its drop window and the grade ladder unfolds without holes.
+      "baseball_cap",
+      "hard_hat",
+      "welding_mask",
+      "riot_helmet",
+      "lab_coat",
+      "coveralls",
+      "kevlar_vest",
+      "cargo_pants",
+      "padded_work_pants",
+      "sneakers",
+      "steel_toe_boots",
+      "mission_cap",
+      "apollo_visor",
+      "flight_jacket",
+      "micrometeoroid_vest",
+      "thermal_leggings",
+      "pressure_trousers",
+      "lunar_overshoes",
+      "moon_boots",
     ],
     abilityPool: ["fire_orbs", "storm_cell", "stasis_field", "item_magnet"],
     // Level-locked world drop (see config WORLD_DROP): DUSTBORN, the light boots

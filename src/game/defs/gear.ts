@@ -156,7 +156,7 @@ export const GEAR_DEFS: Record<string, GearDef> = {
     id: "hard_hat",
     name: "HARD HAT",
     slot: "head",
-    levelReq: 2,
+    levelReq: 1,
     // Shipping-floor issue, box-cutter country.
     bonuses: {},
     armor: 5,
@@ -202,7 +202,7 @@ export const GEAR_DEFS: Record<string, GearDef> = {
     id: "coveralls",
     name: "COVERALLS",
     slot: "chest",
-    levelReq: 2,
+    levelReq: 1,
     // Maintenance issue, one size fits most.
     bonuses: {},
     armor: 8,
@@ -224,7 +224,7 @@ export const GEAR_DEFS: Record<string, GearDef> = {
     id: "cargo_pants",
     name: "CARGO PANTS",
     slot: "legs",
-    levelReq: 2,
+    levelReq: 1,
     bonuses: {},
     armor: 6,
     durability: 70,

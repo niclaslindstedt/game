@@ -232,7 +232,7 @@ const ARMSTRONG_UNIQUES: UniqueDef[] = [
     name: "MAREWALKERS",
     base: "crater_boots",
     slot: "feet",
-    ilvl: 44,
+    ilvl: 43,
     bonuses: [
       { kind: "armor", value: 35 },
       { kind: "maxHp", value: 65 },
@@ -299,7 +299,7 @@ const ELON_MARS_UNIQUES: UniqueDef[] = [
     name: "WRATHFLAME",
     base: "atomic_raygun",
     slot: "weapon",
-    ilvl: 46,
+    ilvl: 45,
     bonuses: [
       { kind: "damagePct", value: 0.35 },
       { kind: "stat", stat: "strength", value: 8 },
@@ -434,7 +434,7 @@ const GROK_UNIQUES: UniqueDef[] = [
     name: "TRUTHSEEKER",
     base: "microlattice_plate",
     slot: "chest",
-    ilvl: 62,
+    ilvl: 61,
     bonuses: [
       { kind: "statPct", stat: "intelligence", value: 0.02 },
       { kind: "crit", value: 0.08 },
@@ -637,7 +637,7 @@ const WORLD_UNIQUES: UniqueDef[] = [
     name: "REDWIND",
     base: "atomic_raygun",
     slot: "weapon",
-    ilvl: 46,
+    ilvl: 45,
     bonuses: [
       { kind: "damagePct", value: 0.25 },
       { kind: "stat", stat: "dexterity", value: 6 },
@@ -742,7 +742,7 @@ const WORLD_UNIQUES: UniqueDef[] = [
     base: "seismic_hammer",
     slot: "weapon",
     tier: "legendary",
-    ilvl: 58,
+    ilvl: 57,
     keeper: true,
     bonuses: [
       { kind: "damagePct", value: 0.3 },

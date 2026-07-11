@@ -278,7 +278,9 @@ export const DIFFICULTY_DEFS: Record<Difficulty, DifficultyDef> = {
     menaceMult: 0.7,
     menaceDecayMult: 1,
     menaceEffectMult: 1,
-    dropChanceBonus: 0,
+    // Every step up the ladder pays in drop VOLUME too (easy 0 → jesus 0.1);
+    // medium's small step is what makes the first climb feel it.
+    dropChanceBonus: 0.01,
     medkitDropMult: 1,
     armorDropMult: 1,
     powerupDropMult: 1,
