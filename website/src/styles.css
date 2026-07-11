@@ -4385,6 +4385,21 @@ body {
   align-self: flex-start;
 }
 
+/* The card's name row when it carries the item's icon (the EQUIPPED card,
+   which may float over the very slot icon it describes — the icon inside the
+   card keeps the piece identifiable). */
+.tooltip-name-row {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+}
+
+.tooltip-name-row .inv-item-icon {
+  flex: 0 0 auto;
+  width: 1.4rem;
+  height: 1.4rem;
+}
+
 /* A tooltip stat line paired with its comparison delta ("(+3)") versus the
    equipped piece, the two pixel-text canvases kept on one baseline. */
 .tooltip-row {
