@@ -464,3 +464,91 @@ describe("one rope at a time (a waiting rescue holds its signal's fire)", () => 
     expect(rollEquipment(state).defId).toBe("test_charm");
   });
 });
+
+// A mercy drop makes a dramatic entrance: rather than blinking onto the ground,
+// a guardian ANGEL flies it in from above, cradles it, and releases it over the
+// spot the mob died — the whole descent under two seconds (MERCY.angelDeliverMs).
+// The engine models only the airborne window: the pickup carries a `deliverMs`
+// countdown, is uncollectable (and magnet-proof) until it lands, and cues a
+// one-shot `mercyDrop` event the app plays the chime off. The renderer owns the
+// angel itself. These suites lock the timer and the pickup gate.
+describe("the mercy angel's delivery window", () => {
+  it("stays under two seconds — a lifeline never dawdles", () => {
+    expect(MERCY.angelDeliverMs).toBeGreaterThan(0);
+    expect(MERCY.angelDeliverMs).toBeLessThanOrEqual(2000);
+  });
+
+  it("marks a bailout drop airborne and cues the swoop on its birth frame", () => {
+    // The stranded-drink bailout (see the energy-drink suite) is an unambiguous
+    // mercy path: the kill that throws the drink flags it for the angel.
+    const state = startOn("medium");
+    clearStage(state);
+    state.waveSpawned = state.waveSpawned.map(() => 1e9);
+    state.items = [];
+    const p = state.player.pos;
+    for (let i = 0; i < 4; i++) {
+      state.enemies.push(
+        makeEnemy({ id: 9100 + i, pos: { x: p.x + 5000, y: p.y + i * 30 } }),
+      );
+    }
+    state.enemies.push(
+      makeEnemy({ id: 9000, pos: { x: p.x + 20, y: p.y }, hp: 1, maxHp: 45 }),
+    );
+    state.player.stamina = 0;
+    state.staminaEmptyMs = MERCY.staminaEmptyDrinkRampMs;
+    state.player.weaponCooldownMs = 0;
+    scriptRng(state, [0.9, 0.9, 0.9, 0.0]); // miss, dodge, crit no; drink YES
+    step(state, steerTo(p.x + 20, p.y), DT);
+
+    // deliverMs is stamped on the kill and then ticked once by this same step's
+    // stepItems, so it sits just under the full window — but unmistakably airborne.
+    const drink = state.items.find((i) => i.kind === "drink");
+    expect(drink?.deliverMs).toBeGreaterThan(0);
+    expect(drink?.deliverMs).toBeLessThanOrEqual(MERCY.angelDeliverMs);
+    expect(drink?.deliverMs).toBeGreaterThan(MERCY.angelDeliverMs - 100);
+    // The one-shot cue fired this very step, alongside the drop event.
+    expect(state.events.some((e) => e.type === "mercyDrop")).toBe(true);
+  });
+
+  it("can't be grabbed mid-air, then lands and is collected within the window", () => {
+    const state = startOn("medium");
+    clearStage(state);
+    state.player.maxHp = 100;
+    state.player.hp = 1;
+    const gift: Item = {
+      id: state.nextId++,
+      kind: "medkit",
+      pos: { ...state.player.pos }, // hero standing right on the landing spot
+      deliverMs: MERCY.angelDeliverMs,
+    };
+    state.items = [gift];
+
+    // One step: still airborne — the gift hangs in the angel's hands, unhealed.
+    step(state, idle, DT);
+    expect(state.items).toHaveLength(1);
+    expect(state.player.hp).toBe(1);
+
+    // Run the clock through the delivery window: it lands and is grabbed.
+    let ms = DT;
+    while (ms < MERCY.angelDeliverMs + DT) {
+      step(state, idle, DT);
+      ms += DT;
+    }
+    expect(state.items).toHaveLength(0);
+    expect(state.player.hp).toBeGreaterThan(1);
+  });
+
+  it("leaves ordinary drops grounded from birth (no angel, grabbed at once)", () => {
+    const state = startOn("medium");
+    clearStage(state);
+    state.player.maxHp = 100;
+    state.player.hp = 1;
+    // A plain medkit with no deliverMs is on the ground under the hero.
+    state.items = [
+      { id: state.nextId++, kind: "medkit", pos: { ...state.player.pos } },
+    ];
+    step(state, idle, DT);
+    expect(state.items).toHaveLength(0); // collected immediately
+    expect(state.player.hp).toBeGreaterThan(1);
+  });
+});

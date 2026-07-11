@@ -141,6 +141,32 @@ export function playPickupSound(synth: Synth, event: GameEvent): boolean {
       }
       return true;
 
+    case "mercyDrop": {
+      // The guardian's arrival: a soft, consonant halo of sound — a rising
+      // major arpeggio of sine bells (C6–E6–G6–C7) under a shimmering high
+      // sine, all wet with echo. Gentle (a rescue, not a fanfare) and pitched
+      // above the drop's own tick so the two layer rather than clash.
+      [1047, 1319, 1568, 2093].forEach((freq, i) =>
+        synth.tone({
+          type: "sine",
+          from: freq,
+          durationMs: 260,
+          volume: 0.032,
+          delayMs: i * 90,
+          echo: 0.4,
+        }),
+      );
+      synth.tone({
+        type: "sine",
+        from: 3136,
+        durationMs: 220,
+        volume: 0.014,
+        delayMs: 360,
+        echo: 0.5,
+      });
+      return true;
+    }
+
     case "itemDropped":
       // Loot hitting the regolith: a tick and a puff of dust.
       synth.tone({ type: "square", from: 440, durationMs: 45, volume: 0.028 });

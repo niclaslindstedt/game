@@ -159,7 +159,11 @@ signal holds fire — picking it up (or leaving it behind out of view) re-arms
 the rope. The ramp _shapes_ (where each signal starts and maxes) are the
 `MERCY` block in `config.ts`; each rung's _strength_ is its `mercy` object in
 `difficulties.ts` (`MercyTuning`), zeroed on HARD and up so death stays on the
-table there.
+table there. Every mercy rope makes a dramatic entrance: rather than blinking
+onto the ground, a guardian ANGEL flies it in from above, cradles it, and
+releases it over the spot the mob died — the whole descent inside
+`MERCY.angelDeliverMs` (under two seconds), during which the gift is airborne
+and can't be grabbed (the magnet leaves it alone too).
 
 ## Repository pins
 
