@@ -65,6 +65,21 @@ internal anatomy, not just silhouette.
 4. Collect the **worst 30** by severity. Tie-break toward sprites the
    player sees most (common minions, the level-1 catalog, ground tiles
    beat one-off decor).
+5. **Cut recently-redrawn art — never re-improve fresh work.** Before the
+   list is locked, check what was touched in the last few passes:
+   `git log -n 30 --oneline -- website/scripts/sprite-data/<family>.mjs`
+   (levels) or `.../icons.mjs` (items), and `git blame -- <file>` on a
+   candidate's grid lines when unsure. A sprite whose grid was rewritten in a
+   recent art pass is **not weak art — it's fresh art**, and its sprite-data
+   comment usually says so out loud (an elaborate, just-finished rationale like
+   _"drawn bulkier on an 18px canvas so it looms over the 16px staff"_ or
+   _"drawn on a bigger 20×20 canvas… reads as a heavy machine, not an
+   appliance"_ is a redesign someone shipped, not a placeholder). Drop every
+   such sprite from the long list and leave it alone. Redoing art this skill —
+   or a teammate — just improved is churn, not improvement: it burns the pass,
+   re-litigates settled pixels, and reliably loses the before/after vote. When
+   in doubt, treat "was this touched recently?" as a hard gate, not a
+   tie-break.
 
 ### The worst-art rubric
 
@@ -257,6 +272,16 @@ letting it rot.
 
 A running log of gotchas from past passes. Add to it; don't let it rot.
 
+- **Don't re-redraw recently-updated art (Phase 1, step 5).** A sprite can read
+  a little awkward and still be freshly, deliberately made. Two tells flag
+  recent work: its git history (`git log`/`git blame` on the family
+  sprite-data module) and its own sprite-data comment — an elaborate,
+  just-finished rationale ("drawn on a 20×20 canvas so it looms over the crowd",
+  "drawn bulkier… so it looms over the 16px staff") is a shipped redesign, not a
+  placeholder. Check recency BEFORE locking the long list and cut those
+  candidates; a redraw of fresh art is churn, and the vote will reject it. (A
+  spacez pass learned this the hard way — redrew OPTIMUSK and HAZMAT, both
+  recently reworked, and both were voted out.)
 - **Resolve a loose target name first.** Users name a biome or level loosely
   ("do spacez", "improve the moon"). `art-audit.mjs levels` prints every level
   id *and* its biome — map the request to a concrete `<id>` before surveying
