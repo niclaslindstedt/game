@@ -376,7 +376,16 @@ A running log of gotchas from past passes. Add to it; don't let it rot.
   row to land on — legs that stride between frames are *not* candidates (only
   pixels body-colored in BOTH frames count), so a fixed coat hem / boot band in
   the lower third is what the scuff needs; (3) avoid isolated 1px limbs — a
-  cluster that anchors on a stub can't grow, so connect arms to the torso.
-  Iterate fast with a throwaway probe that calls `woundedFrames(name, [f0,f1],
-  style, ["hurt"])` + `woundVisibility(f0, hurt0, SPRITE_PALETTES[name+"_0"])` —
-  pass the REAL minion stage `["hurt"]` (not the boss set) or it lies.
+  cluster that anchors on a stub can't grow, so connect arms to the torso. When
+  color/scuff can't move enough pixels it is a *count* problem, not a color one:
+  give the base a contiguous multi-row body block (a 3-row deck beats a wide
+  2-row one — clusters grow 2D, not just along a line). Iterate fast with a
+  throwaway probe that calls `woundedFrames(name, [f0,f1], style, ["hurt"])` +
+  `woundVisibility(f0, hurt0, SPRITE_PALETTES[name+"_0"])` — pass the REAL minion
+  stage `["hurt"]` (not the boss set) or it lies.
+- **`concepts`/`variants`/`sheet` render a sprite over its HOME family's ground
+  tile, not the level you're auditing.** A shared mob (e.g. `optimusk` lives in
+  the spacez family) renders over grey deck even while you audit Mars — a white
+  robot on grey deck looks washed-out and headless, tricking you into flagging
+  it. Judge a shared sprite over the LEVEL sheet (`level <id>`, which uses that
+  level's ground) before condemning it; over red regolith it may read fine.
