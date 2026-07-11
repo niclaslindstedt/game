@@ -1882,6 +1882,27 @@ export function GameScreen({
               checkpointRef.current = null;
             }
           }
+          // Stepping into a travel gate (the cow-level door the SEVERED HAND
+          // tears open): bank the hero's build and the thoughts read this
+          // run, then swap the mount to the destination level. The next run
+          // dresses the hero in the banked build, so the crossing carries
+          // everything he's holding — the run he leaves behind simply ends.
+          if (event.type === "gateEntered") {
+            characterRef.current = bankLoadout(
+              characterRef.current,
+              extractLoadout(state),
+            );
+            characterRef.current = markStorySeen(
+              characterRef.current,
+              state.level.id,
+              difficulty,
+              state.thoughtsSeen,
+            );
+            checkpointRef.current = null;
+            stopMusic();
+            setHud(null);
+            setLevelId(event.to);
+          }
           // Run over either way: bank the opening and every inner monologue read
           // this run onto the character, so the next replay on this difficulty
           // skips them. This catches the late kill/sight beats that only fire
@@ -3060,7 +3081,11 @@ export function GameScreen({
             {hud.phase === "victory" &&
               state &&
               (() => {
-                const next = nextLevelId(state.level.id);
+                // A level with a return door (`exitTo` — the bunker's way
+                // back to the rift) offers the crossing instead of the
+                // campaign's NEXT LEVEL; a level with neither shows nothing.
+                const exitTo = levelDef(state.level.id).exitTo ?? null;
+                const next = exitTo ?? nextLevelId(state.level.id);
                 if (!next) return null;
                 return (
                   <button
@@ -3073,7 +3098,11 @@ export function GameScreen({
                   >
                     <PixelText
                       font={font}
-                      text="NEXT LEVEL"
+                      text={
+                        exitTo
+                          ? `BACK TO ${levelDef(exitTo).name}`
+                          : "NEXT LEVEL"
+                      }
                       scale={3}
                       color="#0b0d10"
                     />

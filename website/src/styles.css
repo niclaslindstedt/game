@@ -4470,6 +4470,15 @@ canvas.tier-legendary {
   align-self: flex-start;
 }
 
+/* The USE row a usable trinket grows (a travel-gate key on its home level):
+   the tooltip itself ignores the pointer, so the button opts back in. */
+.item-tooltip .tooltip-use {
+  pointer-events: auto;
+  margin-top: 0.3rem;
+  padding: 0.3rem 0;
+  width: 100%;
+}
+
 /* The card's name row when it carries the item's icon (the EQUIPPED card,
    which may float over the very slot icon it describes — the icon inside the
    card keeps the piece identifiable). */

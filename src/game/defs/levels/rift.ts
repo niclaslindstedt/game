@@ -86,6 +86,17 @@ export const THE_RIFT: LevelDef = {
     { kind: "far_door", sprite: "rift", pos: { x: 2900, y: 800 } },
   ],
   objective: { type: "killBoss" },
+  // The cow level's door: latent until THE SEVERED HAND (RASPUTIN's junk-
+  // looking drop) is USED here — then a blast door tears open beside the
+  // hero and steps through to THE BUNKER. Nothing in the game explains this.
+  gates: [
+    {
+      id: "bunker_gate",
+      to: "the_bunker",
+      opensWith: "severed_hand",
+      sprite: "bunker_gate",
+    },
+  ],
   // Black holes strewn along the road: each drags the grounded, devours
   // minions, and hoards dragged loot on its rim. Jump them or skirt them.
   wells: [

@@ -265,7 +265,12 @@ export const RIFT_ENEMIES: Record<string, EnemyDef> = {
     spareable: { companion: "grigori_rasputin" },
     ai: { aggroRadius: 250, rushSpeed: 110 },
     loot: {
-      items: ["rasputin_beard"],
+      // The doorman's OTHER key: a cold biometric palm, forced to the base
+      // tier so it reads as junk. USED while standing in the rift it tears
+      // open the bunker gate (the level's `gates` entry) — the cow-level
+      // ritual, never explained anywhere. Kill-only: sparing him keeps his
+      // gear on him, so the door costs the unkillable man his life.
+      items: ["rasputin_beard", { defId: "severed_hand", tier: "regular" }],
       tierDrops: { magic: 1, rare: 0.5 },
       weapons: 0,
       gear: 1,

@@ -1195,6 +1195,24 @@ export const DOORS = {
 } as const;
 
 /**
+ * Travel gates (LevelDef.gates) — doorways to ANOTHER LEVEL, unlocked by a
+ * story item (`requires`) the way keycards open doors. The engine only books
+ * the crossing (`gateEntered`); the app owns the actual travel, carrying the
+ * hero's build into a run of the destination level.
+ */
+export const GATES = {
+  /** Stepping this close to an OPEN gate crosses it (world px). */
+  enterRadius: 22,
+  /** Default `reachExit` objective radius: standing this close to the exit
+   * ends the level (world px) — deliberate contact, not a walk-by graze. */
+  exitRadius: 30,
+  /** How far ahead of the hero a used key tears its gate open (world px) —
+   * past `enterRadius`, so crossing is a deliberate step, never a same-tick
+   * surprise. */
+  summonDistance: 48,
+} as const;
+
+/**
  * Gravity wells — black holes placed by a level (LevelDef.wells). Each well
  * drags whatever crosses its pull radius toward the core: the grounded
  * player (a jump sails clean over the pull, same rule as enemy contact),

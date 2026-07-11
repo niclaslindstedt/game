@@ -228,7 +228,7 @@ The game has no user-facing configuration yet. Build-time knobs:
 | `VITE_BASE`                  | Deploy-slot base path (`/`, `/preview/`, `/branch/`); defaults to `/` for local builds                                                                                       |
 | `VITE_CHARACTER_SIGNING_KEY` | HMAC key that signs exported character archives so hand-edited saves fail to re-import; falls back to a committed default (see `docs/configuration.md`)                      |
 | `?debug` URL param           | Turns on debug-level console output (`src/output.ts`), exposes the live game state as `window.__game` for inspection and automated playtests, and shows the in-run FPS meter |
-| `?level=<id>` URL param      | Starts runs on a specific catalog level (`spacez_hq`, `moon`, `mars`, `the_rift`) instead of the story default                                                               |
+| `?level=<id>` URL param      | Starts runs on a specific catalog level (`spacez_hq`, `moon`, `mars`, `the_rift`, `eastworld`, secret `the_bunker`) instead of the story default                             |
 | `?seed=<n>` URL param        | Pins the run's layout seed so retries reproduce the same level layout                                                                                                        |
 | `?scenario=<json>` URL param | Stages a fresh run into an exact test situation — hero position, vitals, gear, spawned mobs (see `docs/configuration.md`)                                                    |
 | `?cutscene=<id>` URL param   | Opens the cutscene workbench: loops one scene from the catalog for authoring iteration (see `docs/configuration.md`)                                                         |

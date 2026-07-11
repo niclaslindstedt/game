@@ -78,15 +78,18 @@ export function createGame(
   let nextId = 1;
 
   // The difficulty axis: bands are fractions of the distance from the player
-  // spawn to the objective (the boss's post), so "further out = harder"
-  // scales with the level's actual geometry.
+  // spawn to the objective (the boss's post — or the exit door on a bossless
+  // `reachExit` level), so "further out = harder" scales with the level's
+  // actual geometry.
   const bossSpawn = def.spawns.find(
     (s) => "at" in s && enemyDef(s.enemy).role === "boss",
   );
   const bandReach =
     bossSpawn && "at" in bossSpawn
       ? distance(playerSpawn, bossSpawn.at)
-      : Math.hypot(def.width, def.height);
+      : def.objective.type === "reachExit"
+        ? distance(playerSpawn, def.objective.at)
+        : Math.hypot(def.width, def.height);
 
   // Obstacles go down first so monsters (and their walk-in spawns) never
   // start wedged inside one. Deliberate walls and locked doors land before
@@ -225,6 +228,8 @@ export function createGame(
     storyItems: [],
     thoughtsSeen: [],
     doors,
+    // Travel gates stay latent until their key trinket is USED (spendGateKey).
+    gates: [],
     // The wandering merchant: placed (and forever rolled) on his own seeded
     // stream, so the run's rng sequence is exactly what it was without him.
     merchant: createMerchant(seed, def, playerSpawn, blocked),

@@ -15,6 +15,7 @@ import {
   gearDef,
   isWeaponDef,
   LEVELS,
+  SECRET_LEVEL_ORDER,
   step,
   STORY_ITEM_DEFS,
   storyItemDef,
@@ -345,10 +346,13 @@ describe("locked doors", () => {
 describe("catalog integrity", () => {
   const elites = Object.values(ENEMY_DEFS).filter((d) => d.role === "elite");
 
-  it("fields 3-5 speaking, loot-bearing elites per level", () => {
+  it("fields 3-5 speaking, loot-bearing elites per campaign level", () => {
+    const secret = new Set(SECRET_LEVEL_ORDER);
     for (const level of Object.values(LEVELS)) {
-      // Apparitions are dialogue-only figures, not the loot-bearing story
-      // fights this rule counts — they have their own rule below.
+      // Secret venues (the bunker) field their own roster shape — they get
+      // their own rule below. Apparitions are dialogue-only figures, not the
+      // loot-bearing story fights this rule counts — same.
+      if (secret.has(level.id)) continue;
       const placed = level.spawns
         .filter((s) => "at" in s)
         .map((s) => enemyDef(s.enemy))
@@ -361,6 +365,35 @@ describe("catalog integrity", () => {
         expect(def.ai.rushSpeed ?? 0).toBeGreaterThan(def.speed);
       }
     }
+  });
+
+  it("fields six far-tougher speaking residents in the bunker", () => {
+    const bunker = LEVELS.the_bunker!;
+    const placed = bunker.spawns
+      .filter((s) => "at" in s)
+      .map((s) => enemyDef(s.enemy))
+      .filter((d) => d.role === "elite" && !d.apparition);
+    expect(placed.length).toBe(6);
+    // The toughest campaign elite tops out around 950 hp — every resident
+    // is a class above it (the farm level's fights ARE the price), speaks,
+    // pays generous tier drops, and rushes into view like any story elite.
+    for (const def of placed) {
+      expect(def.hp, def.id).toBeGreaterThanOrEqual(1600);
+      expect(def.levelBonus ?? 0, def.id).toBeGreaterThanOrEqual(6);
+      expect(def.dialogue?.length ?? 0, def.id).toBeGreaterThan(0);
+      expect(def.lastWords?.length ?? 0, def.id).toBeGreaterThan(0);
+      expect(
+        Object.keys(def.loot?.tierDrops ?? {}).length,
+        def.id,
+      ).toBeGreaterThan(0);
+      expect(def.ai.rushSpeed ?? 0, def.id).toBeGreaterThan(def.speed);
+    }
+    // Every resident is ringed by his personal detail: at least three
+    // bodyguards placed within reach of his post.
+    const guards = bunker.spawns.filter(
+      (s) => "at" in s && enemyDef(s.enemy).id.startsWith("guard_"),
+    );
+    expect(guards.length).toBe(18);
   });
 
   it("keeps every apparition a pure dialogue figure", () => {

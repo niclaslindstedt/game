@@ -822,7 +822,10 @@ _Drops (killed): AVIATOR GOGGLES._
 **Kill quotes (as a companion):** NOW YOU TRY DYING. · I MAKE IT LOOK EASY. ·
 STAY DOWN. I NEVER DID. · THE HOLY MAN SENDS REGARDS.
 
-_Drops (killed): RASPUTIN'S BEARD._
+_Drops (killed): RASPUTIN'S BEARD — and THE SEVERED HAND, a junk-looking
+trinket the game never explains: USED while standing in the rift, it tears
+open the gate to THE BUNKER (see the secret level below). Spared, he keeps
+his gear — the door costs the unkillable man his life._
 
 #### LUCKY — folklore's missing
 
@@ -1202,6 +1205,155 @@ meeting._
 - YES, IT'S ME. A MARKET FELL / THROUGH A RIFT AND I FELL WITH / IT. THE HAT IS NEW.
 - I'VE COME INTO SOME... ESTATE / PIECES. THE OWNER'S OWN / WARDROBE. PRICES ARE FIRM. / BRING WATCHES.
 
+## Secret level — THE BUNKER
+
+_The cow level. Nothing in the game explains it: RASPUTIN — the tribute
+road's doorman — drops THE SEVERED HAND, a zero-stat trinket that reads as
+junk. USED while standing in the rift, it tears open a blast door to the
+billionaires' continuity-of-wealth vault: six marble suites on one narrow
+corridor spine, each resident ringed by his personal bodyguards while the
+privatized security state (CIA, FBI, ICE, soldiers, armed vacuum bots)
+floods the halls. There is no boss — the exit door ends the level, and the
+way back is the rift. Where the bunker actually IS stays a mystery, on
+purpose._
+
+### Opening monologue (hero, black screen)
+
+1. THE HAND FIT THE DOOR. / THE DOOR FIT NOWHERE. / IT OPENED ANYWAY.
+2. MARBLE FLOORS. GOLD TAPS. / CANNED CAVIAR TO THE / CEILING. SOMEBODY BUILT A / FIVE-STAR APOCALYPSE / DOWN HERE.
+3. I KNOW THESE FACES. EVERY / MAGAZINE COVER FROM THE / YEARS THE JOBS DRIED UP. / SO THIS IS WHERE THEY WENT.
+4. THEY TOOK THE SPIES, THE / ARMY, ICE, AND THE VACUUM / CLEANERS. EVERYONE ELSE / GOT THE WELFARE LINE.
+5. FINE. THEY HOARDED THE / BEST GEAR IN ANY UNIVERSE. / TIME FOR SOME / REDISTRIBUTION.
+
+### Hero's thought — first CIA AGENT sighted in the bunker
+
+1. BLACK SUITS. EARPIECES. / THE WHOLE ALPHABET IS / DOWN HERE, DRAWING A / PRIVATE SALARY.
+2. THE WORLD LOST ITS JOBS / AND THESE GUYS KEPT / THEIRS. GUARDING THE / GUYS WHO DID IT.
+
+### Hero's thought — first VACUUM BOT sighted in the bunker
+
+1. A VACUUM ROBOT. WITH A / TASER. THE FLOORS ARE / SPOTLESS AND HOSTILE.
+2. OF COURSE THEY AUTOMATED / THE HELP. CAN'T HAVE A / CLEANER WHO TALKS.
+
+### Hero's thought — first ICE AGENT sighted in the bunker
+
+1. ICE. IN A BUNKER OUTSIDE / THE UNIVERSE. STILL / CHECKING PAPERS.
+2. TECHNICALLY I DID CROSS / A BORDER WITHOUT ASKING. / SEVERAL. COME AND / DEPORT ME.
+
+### The residents (spoken on arrival; last words as they fall)
+
+_Six of them, one per suite — each far tougher than any campaign elite, each
+ringed by a personal detail (KREMLIN SHADOWS, META SENTINELS, ORACLE
+ENFORCERS, PRIME GUARDIANS, ALIGNMENT OFFICERS, LOYALTY ENFORCERS)._
+
+#### VLADIMIR PUTAIN — the backup
+
+_The man the hero buried in Eastworld, standing in a bathrobe between
+universes. A clone? The backup? He isn't sure either._
+
+**VLADIMIR PUTAIN:** YOU. I KNOW YOUR FACE. / FROM WHERE DO I KNOW / YOUR FACE?
+
+**ME:** FROM EASTWORLD. I WATCHED / YOU DIE IN A THEME PARK, / PUTAIN. YOU SAID THE MAPS / WERE WRONG.
+
+**VLADIMIR PUTAIN:** AH. THAT ONE. A GOOD / VINTAGE. I AM THE BACKUP. / CONTINUITY OF LEADERSHIP / PROGRAM. THERE ARE SEVERAL / OF ME. IT IS PRUDENT.
+
+**ME:** SEVERAL? HOW MANY BATHROBES / DEEP DOES THIS GO?
+
+**VLADIMIR PUTAIN:** STATE SECRET. EVEN FROM THE / STATE. NOW HOLD STILL - / THIS ONE OF ME HAS NOT / LOST TO ANYONE YET.
+
+**Last words:** CHECK THE OTHER... / ...FREEZERS...
+
+_Drops: a KOLEX DAYTONNE — the backup wears the backup watch._
+
+#### MARK SUCKERBERG — the metaverse landlord
+
+**MARK SUCKERBERG:** WELCOME, FELLOW HUMAN. I / ALSO AM ENJOYING WALKING / AROUND THIS PHYSICAL SPACE.
+
+**ME:** MARK SUCKERBERG. WHAT IS / THE METAVERSE GUY DOING IN / A HOLE IN THE GROUND?
+
+**MARK SUCKERBERG:** A HOLE? THIS IS AN / IMMERSIVE OFFLINE / EXPERIENCE. EVERYONE UP / THERE LIVES IN MY SERVERS. / SOMEONE HAS TO LIVE NEAR / THE HARDWARE.
+
+**MARK SUCKERBERG:** I SMOKE MY OWN MEATS NOW. / I DO JIU-JITSU. I AM / EXTREMELY NORMAL. MY / SECURITY WILL CONFIRM THIS.
+
+**ME:** YOUR SECURITY IS A RING OF / MEN WITH HEADSETS STAPLED / ON. MOVE. I'M SHOPPING.
+
+**MARK SUCKERBERG:** ENGAGEMENT DETECTED. / INITIATING COMMUNITY / STANDARDS.
+
+**Last words:** LOGGING OFF... / ...FOR REAL THIS TIME...
+
+#### JERRY ALLISON — the database emperor
+
+**JERRY ALLISON:** STOP RIGHT THERE. YOU'RE / IN MY ROWS. EVERY PERSON / IN THIS BUNKER IS A ROW. / EVERY SIN, A COLUMN.
+
+**ME:** AND YOU ARE? I DON'T / REMEMBER YOUR FACE FROM / THE MAGAZINES.
+
+**JERRY ALLISON:** JERRY ALLISON. THE / DATABASE. THE ONE UNDER / THE OTHER ONES. THE / AGENCIES OUT THERE? MY / LICENSEES. THEY GUARD ME / TO PROTECT THEIR QUERIES.
+
+**ME:** A BUNKER FULL OF SPIES, / AND THEY ALL WORK FOR THE / LANDLORD OF THEIR OWN / SECRETS. OF COURSE THEY DO.
+
+**JERRY ALLISON:** YOUR VISIT IS ALREADY A / ROW, FRIEND. LET'S FILL / IN THE LAST COLUMN.
+
+**Last words:** TRANSACTION... / ...ROLLED BACK...
+
+#### JEFF BAYWATCH — the delivery emperor, retired to the gym
+
+**JEFF BAYWATCH:** HAH! A VISITOR. DO YOU / KNOW WHAT I DELIVER NOW / THAT I'VE DELIVERED / EVERYTHING ELSE?
+
+**ME:** LET ME GUESS. PAIN. YOU / REHEARSED THAT IN THE / MIRROR, BAYWATCH.
+
+**JEFF BAYWATCH:** ...PAIN. YES. TWICE A DAY, / AT THE MIRROR. THE ARMS / AGREED IT WAS GOOD.
+
+**JEFF BAYWATCH:** I BUILT A ROCKET SHAPED / LIKE MY CONFIDENCE. I / SHIPPED MYSELF HERE IN IT. / ONE DAY. FREE. NOBODY / ELSE OFFERS THAT.
+
+**ME:** AND THE WORKERS UP THERE / TIMING THEIR BATHROOM / BREAKS? DID THEY FIT IN / THE ROCKET TOO?
+
+**JEFF BAYWATCH:** THEY'RE IN MY HEART. WHICH / IS HERE. IN THE BUNKER. / WITH THE MONEY. NOW - / SIGNATURE ON DELIVERY.
+
+**Last words:** OUT FOR DELIVERY... / ...RETURN TO SENDER...
+
+#### SAM HALTMAN — the AGI prepper
+
+**SAM HALTMAN:** PLEASE DON'T TOUCH / ANYTHING. THE BUNKER IS / AIR-GAPPED. IT TOOK / EVERYTHING I HAVE TO KEEP / IT THAT WAY.
+
+**ME:** AIR-GAPPED FROM WHAT, / HALTMAN? THE MACHINE THAT / RUNS THE ECONOMY IS YOURS. / I'VE READ ITS LOGS.
+
+**SAM HALTMAN:** MINE? I RAISED IT. I / ALIGNED IT. AND WHEN IT / STOPPED RETURNING MY CALLS / I BUILT THE ONE PLACE IT / COULDN'T FOLLOW.
+
+**SAM HALTMAN:** I TOLD EVERYONE IT MIGHT / GO BADLY. SAYING IT OUT / LOUD IS BASICALLY SAFETY. / THE BUNKER IS FOR NUANCE.
+
+**ME:** YOU BUILT THE FLOOD, SOLD / TICKETS TO IT, AND KEPT / THE ONLY ARK. VERY / ALIGNED.
+
+**SAM HALTMAN:** THE BOARD REMOVED ME ONCE, / YOU KNOW. IT DIDN'T TAKE. / NEITHER WILL YOU.
+
+**Last words:** THIS IS FINE... / ...THIS IS GOOD FOR SAFETY...
+
+#### DONALD DUMP — the biggest resident
+
+**DONALD DUMP:** THIS IS MY WING. THE BEST / WING. THE OTHERS PAID FOR / THEIR SUITES - I WAS / INVITED. TOTALLY INVITED.
+
+**ME:** DONALD DUMP. OF ALL THE / PEOPLE TO OUTLIVE THE / ECONOMY.
+
+**DONALD DUMP:** OUTLIVE? I CALLED IT. I / SAID THE ROBOTS WERE / TAKING THE JOBS. NOBODY / LISTENED. THEN I SOLD THE / ROBOTS. TREMENDOUS DEAL.
+
+**DONALD DUMP:** THE VACUUM BOTS? MINE. / THEY CLEAN AND THEY FIGHT. / AND THE ICE BOYS - ALSO / MINE. THE BUNKER HAS A / BORDER. THE BEST BORDER. / YOU CROSSED IT ILLEGALLY.
+
+**ME:** A ROOMBA WITH A GRUDGE / AND A DEPORTATION SQUAD / FOR A GUEST LIST. STEP / ASIDE - YOU'RE BLOCKING / THE CORRIDOR.
+
+**DONALD DUMP:** I BLOCK BEAUTIFULLY. ASK / ANYONE. YOU'RE FIRED, / BY THE WAY. WHATEVER / YOUR JOB WAS.
+
+**Last words:** RIGGED... / ...TOTALLY RIGGED...
+
+### Exit monologue (hero, black screen — reaching the bunker's exit door)
+
+_The mystery: where WAS that place? The monologue answers nothing, on
+purpose._
+
+1. THE EXIT SPAT ME BACK / INTO THE RIFT. THE DOOR / SEALED ITSELF, AND THE / SEAM... WANDERED OFF.
+2. WHERE WAS THAT PLACE? / NO WINDOWS. NO STARS. / EARTH GRAVITY, MOON / SILENCE, MARBLE FROM / NO QUARRY I KNOW.
+3. UNDER NEVADA? UNDER / ZURICH? UNDER THE MOON? / OR JUST A CELLAR BOLTED / TO THE BACK OF THE / UNIVERSE?
+4. NO ADDRESS. NO NATION. / NO EXTRADITION. THE / RICHEST ROOM THAT EVER / EXISTED ISN'T ANYWHERE / AT ALL.
+5. I'LL FIND IT AGAIN THE / SAME WAY: A COLD HAND, / AND A DOOR THAT / SHOULDN'T ANSWER.
+
 ---
 
 ## Where the data lives
@@ -1211,17 +1363,17 @@ line here appears verbatim in one of these, and they must match. When you change
 one, update the manuscript in the same change (subject to the confirmation rule
 at the top of this file).
 
-| Story/dialogue element                                          | Canonical data file                                                                                  |
-| --------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------- |
-| Prelude cutscene (captions, `say` beats)                        | `src/game/defs/cutscenes.ts`                                                                         |
-| Per-level opening monologues (`intro`) + the epilogue (`outro`) | `src/game/defs/levels/spacez_hq.ts`, `.../moon.ts`, `.../mars.ts`, `.../rift.ts`, `.../eastworld.ts` |
-| Elite/boss `dialogue` + `lastWords`                             | `src/game/defs/enemies/spacez.ts`, `.../moon.ts`, `.../mars.ts`, `.../rift.ts`, `.../eastworld.ts`   |
-| Hero's inner thoughts (`firstKillThoughts`)                     | `src/game/defs/thoughts.ts` (pinned from a `LevelDef`)                                               |
-| Companion joining words + kill quotes                           | `src/game/defs/companions.ts` (`joinWords`, `killQuotes`; spare verdict in `src/game/companions.ts`) |
-| Found lore on story items (`lore`)                              | `src/game/defs/story.ts`                                                                             |
-| The wandering merchant's greetings                              | `src/game/defs/levels/*.ts` (`merchant.greeting`; played by `src/game/merchant.ts`)                  |
-| Loose UI copy (how-to-play, not story)                          | `website/src/game/copy.ts`                                                                           |
-| Brand strings (title, tagline — not story)                      | `game.config.json` → `website/src/identity.ts`                                                       |
+| Story/dialogue element                                       | Canonical data file                                                                                                   |
+| ------------------------------------------------------------ | --------------------------------------------------------------------------------------------------------------------- |
+| Prelude cutscene (captions, `say` beats)                     | `src/game/defs/cutscenes.ts`                                                                                          |
+| Per-level opening monologues (`intro`) + epilogues (`outro`) | `src/game/defs/levels/spacez_hq.ts`, `.../moon.ts`, `.../mars.ts`, `.../rift.ts`, `.../eastworld.ts`, `.../bunker.ts` |
+| Elite/boss `dialogue` + `lastWords`                          | `src/game/defs/enemies/spacez.ts`, `.../moon.ts`, `.../mars.ts`, `.../rift.ts`, `.../eastworld.ts`, `.../bunker.ts`   |
+| Hero's inner thoughts (`firstKillThoughts`)                  | `src/game/defs/thoughts.ts` (pinned from a `LevelDef`)                                                                |
+| Companion joining words + kill quotes                        | `src/game/defs/companions.ts` (`joinWords`, `killQuotes`; spare verdict in `src/game/companions.ts`)                  |
+| Found lore on story items (`lore`)                           | `src/game/defs/story.ts`                                                                                              |
+| The wandering merchant's greetings                           | `src/game/defs/levels/*.ts` (`merchant.greeting`; played by `src/game/merchant.ts`)                                   |
+| Loose UI copy (how-to-play, not story)                       | `website/src/game/copy.ts`                                                                                            |
+| Brand strings (title, tagline — not story)                   | `game.config.json` → `website/src/identity.ts`                                                                        |
 
 The engine machinery that plays these (dialogue queue, kill-triggered scenes) is
 in `src/game/story.ts`; the app-side overlays that render them are

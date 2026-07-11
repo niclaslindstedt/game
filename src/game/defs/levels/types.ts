@@ -138,9 +138,39 @@ export type LevelDef = {
   }[];
   /**
    * What ends the level. `killBoss` also anchors the difficulty axis: bands
-   * scale from the player spawn toward the boss.
+   * scale from the player spawn toward the boss. `reachExit` is the bossless
+   * form (farm levels): standing within `radius` (default GATES.exitRadius)
+   * of `at` clears the objective — the exit door anchors the axis instead.
    */
-  objective: { type: "killBoss" } | { type: "clearAll" };
+  objective:
+    | { type: "killBoss" }
+    | { type: "clearAll" }
+    | { type: "reachExit"; at: Vec2; radius?: number };
+  /**
+   * Latent travel gates: doorways to ANOTHER LEVEL that do not exist on the
+   * board until the player USES the matching bag trinket (`opensWith`, a
+   * GEAR_DEFS id) while standing on this level — the Diablo cow-level ritual.
+   * Using the key consumes it, tears the gate open beside the hero
+   * (`spendGateKey` in items.ts), and stepping into it books a `gateEntered`
+   * event; the APP owns the actual travel, carrying the hero's build into a
+   * run of `to`. Deliberately undocumented in-game: the key item's USE
+   * affordance is the only clue.
+   */
+  gates?: {
+    id: string;
+    /** Destination level id. */
+    to: string;
+    /** GEAR_DEFS id of the trinket that, used on this level, opens it. */
+    opensWith: string;
+    /** Sprite the renderer draws once open; defaults to `id`. */
+    sprite?: string;
+  }[];
+  /**
+   * Where the exit of a `reachExit` level leads: the victory splash swaps
+   * NEXT LEVEL for a "BACK TO <name>" button that starts a run of this level.
+   * The farm-loop return door; omitted = the campaign's NEXT LEVEL rules.
+   */
+  exitTo?: string;
   /** Monsters placed at level creation — the "few on screen" at the start. */
   spawns: SpawnSpec[];
   /** The horde: thousands more streamed in around the player over time. */
@@ -308,6 +338,12 @@ export type LevelDef = {
      * `EnemyDef.uniquesByDifficulty` tables. Rolled in `maybeDropWorldUnique`.
      */
     worldUniques?: Partial<Record<Difficulty, string[]>>;
+    /**
+     * Multiplier on every world-unique roll chance on this level (default 1).
+     * The farm-level knob: a dedicated grind venue pays a bit better per kill
+     * than the relics' home levels (read in `maybeDropWorldUnique`).
+     */
+    worldDropMult?: number;
     /**
      * The player level a normal single run of this level at each difficulty
      * leaves the hero at — the point past which GOLDEN ARROWS stop paying a

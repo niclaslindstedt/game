@@ -814,6 +814,21 @@ export const GEAR_DEFS: Record<string, GearDef> = {
     bonuses: { maxHp: 35 },
     icon: "icon_dead_switch",
   },
+  // ---- THE SEVERED HAND: the cow-level key. A biometric palm off some
+  // bunker resident's arm, carried by RASPUTIN — the tribute road's doorman
+  // holds more than one door's key. Zero bonuses, base value, no fanfare:
+  // it looks like the worst charm in the game, and the only clue it isn't
+  // is the USE row its card grows while the hero stands in the rift
+  // (`LevelDef.gates` on the_rift / `spendGateKey`). Deliberately undocumented.
+  severed_hand: {
+    id: "severed_hand",
+    name: "SEVERED HAND",
+    slot: "charm",
+    // Cold. Manicured. Won't open a conversation, but somewhere a door
+    // still answers to it.
+    bonuses: {},
+    icon: "icon_severed_hand",
+  },
   // ---- PUTAIN's brand watches: pure VALUABLES. Zero base bonuses — their
   // job is the merchant's scales (precious ×4, dropped at unique tier by the
   // man himself), the coin that buys his own estate back off the stall.

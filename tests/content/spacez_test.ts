@@ -14,6 +14,7 @@ import {
   isWeaponDef,
   LEVEL_ORDER,
   LEVELS,
+  SECRET_LEVEL_ORDER,
   markThoughtsSeen,
   OBSTACLES,
   PLAYER,
@@ -307,8 +308,14 @@ describe("level catalog integrity", () => {
   const levels = Object.values(LEVELS) as LevelDef[];
 
   it("gives every level a unique story index and an intro", () => {
-    const indices = levels.map((l) => l.index);
-    expect(new Set(indices).size).toBe(levels.length);
+    // Campaign indices are unique; a SECRET venue (the bunker) SHARES a
+    // campaign index on purpose so the per-map XP-cap axis never shifts.
+    const secret = new Set(SECRET_LEVEL_ORDER);
+    const campaign = levels.filter((l) => !secret.has(l.id));
+    expect(new Set(campaign.map((l) => l.index)).size).toBe(campaign.length);
+    for (const l of levels.filter((l) => secret.has(l.id))) {
+      expect(campaign.map((c) => c.index)).toContain(l.index);
+    }
     for (const level of levels) expect(level.intro.length).toBeGreaterThan(0);
   });
 

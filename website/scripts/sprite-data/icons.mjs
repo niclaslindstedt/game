@@ -2402,6 +2402,22 @@ const SPRITES = {
     "............",
     "............",
   ],
+  // THE SEVERED HAND: the cow-level key — a cold, manicured biometric palm,
+  // fingers up, a clean red cut at the wrist. Reads as junk on purpose.
+  icon_severed_hand: [
+    "............",
+    "..O.O.O.....",
+    ".OpOpOpO.O..",
+    ".OpppppOpO..",
+    ".OppppppppO.",
+    "..OppppppO..",
+    "..OppppppO..",
+    "...OppppO...",
+    "...OrrrrO...",
+    "....OiiO....",
+    "............",
+    "............",
+  ],
   // PUTAIN's brand watches: gold base, silver and rose-gold recolors below.
   icon_watch_gold: [
     "............",
