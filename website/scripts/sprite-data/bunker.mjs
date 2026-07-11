@@ -565,9 +565,9 @@ const SPRITES = {
     "........................",
     "........................",
   ],
-  // JERRY ALLISON — the database emperor: silver crop and beard, black tee
+  // LARRY ALLISON — the database emperor: silver crop and beard, black tee
   // under a charcoal blazer, slacks sharp enough to audit.
-  jerry_allison_0: [
+  larry_allison_0: [
     "........................",
     "........................",
     "........................",
@@ -593,7 +593,7 @@ const SPRITES = {
     "........OOOO.OOOO.......",
     "........................",
   ],
-  jerry_allison_1: [
+  larry_allison_1: [
     "........................",
     "........................",
     "........................",

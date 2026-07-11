@@ -257,12 +257,12 @@ export const BUNKER_ENEMIES: Record<string, EnemyDef> = {
       tierBonus: 0.4,
     },
   },
-  jerry_allison: {
-    id: "jerry_allison",
-    name: "JERRY ALLISON",
+  larry_allison: {
+    id: "larry_allison",
+    name: "LARRY ALLISON",
     role: "elite",
     levelBonus: 6,
-    sprite: "jerry_allison",
+    sprite: "larry_allison",
     // The database emperor: he owns the ledger every agency in this bunker
     // reports to. Fights like an audit — from range, behind the furniture.
     hp: 1800,
@@ -287,7 +287,7 @@ export const BUNKER_ENEMIES: Record<string, EnemyDef> = {
         ],
       },
       [
-        "JERRY ALLISON. THE",
+        "LARRY ALLISON. THE",
         "DATABASE. THE ONE UNDER",
         "THE OTHER ONES. THE",
         "AGENCIES OUT THERE? MY",
