@@ -66,6 +66,15 @@ phone, not like a desktop — and remember media queries see the *physical*
 CSS viewport (1180×820), so width/height-gated rules written for phones
 silently miss the iPad even when its effective space matches a phone's.
 
+The settings step walks the whole SETTINGS tree — CONTROLS, DISPLAY, SOUND,
+DATA, and the developer surfaces (the DEVELOPER page itself, its BALANCE
+multiplier subpage, the arsenal browser, and the warp picker's difficulty +
+level lists). The BALANCE page is the tallest menu in the game (12 rows), so
+it is the first place a menu-height regression shows: check the
+measure-then-cap scroll treatment it shares with the level ladder
+(`tallMenu`/`.title-menu.scrollable` in `TitleScreen.tsx`) still engages at
+the short viewports.
+
 Steps are tolerant: a surface that can't be reached logs `FAILED <step>` and
 the sweep continues. Two captures are content-coupled and may need flags or a
 one-off tweak: the SPARE/KILL choice needs a spareable elite def id
@@ -144,7 +153,7 @@ plain mutations because rendering reads state every frame:
 | Dialogue | `g.dialogue = { source: { kind: "merchant", levelId: g.level.id }, page: 0 }; g.phase = "dialogue"` (a real def on every level, so the portrait resolves) |
 | Choice + companion | Push a synthetic 0-hp enemy with a spareable `defId` onto `g.enemies`, set `g.choice`, `g.phase = "choice"`, then click SPARE — the join dialogue and companion panel follow for free |
 | Victory / defeat | `g.phase = "victory"` / `g.player.hp = 0` |
-| Developer menu / warp / arsenal | Pre-seed `localStorage` `<storagePrefix>:settings` with `{"developerUnlocked": true}` before load |
+| Developer menu / warp / arsenal / balance | Pre-seed `localStorage` `<storagePrefix>:settings` with `{"developerUnlocked": true}` before load |
 
 Keep the harness in sync: a new overlay, a renamed aria-label, or a new
 `GamePhase` gets a step (or a fixed selector) in `ui-shots.mjs` in the same
