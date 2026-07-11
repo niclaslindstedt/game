@@ -201,6 +201,16 @@ export {
   xpToLevelUp,
 } from "./game/leveling.ts";
 
+// Developer balance tuning: the runtime multipliers the hidden DEVELOPER →
+// BALANCE menu applies over the shipped config (see tuning.ts).
+export {
+  BALANCE_TUNING_DEFAULTS,
+  getBalanceTuning,
+  resetBalanceTuning,
+  setBalanceTuning,
+} from "./game/tuning.ts";
+export type { BalanceTuning } from "./game/tuning.ts";
+
 // Time-limited abilities: activation and the helpers the renderer shares.
 export {
   canBankAbility,

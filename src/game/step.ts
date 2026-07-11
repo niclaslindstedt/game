@@ -115,6 +115,7 @@ import {
   stepSightThoughts,
   wantsDialogue,
 } from "./story.ts";
+import { BALANCE } from "./tuning.ts";
 import type {
   Enemy,
   Equipment,
@@ -283,7 +284,10 @@ function stepSpawner(state: GameState): void {
   // actually crowd the field instead of queueing behind medium's cap. Menace
   // stacks on top — a rampaging player lures a denser, bigger crowd (lureMult
   // ≥ 1), so the floor and cap both swell with the escalation.
-  const aliveMult = difficultyDef(state.difficulty).aliveMult * lureMult(state);
+  const aliveMult =
+    difficultyDef(state.difficulty).aliveMult *
+    lureMult(state) *
+    BALANCE.hordeSize;
   const maxAlive = Math.round(waves.maxAlive * aliveMult);
   const minAlive = Math.round(waves.minAlive * aliveMult);
 
@@ -1176,7 +1180,8 @@ function stepEnemies(state: GameState, dt: number, dtMs: number): void {
         def.contactDamage *
           (enemy.contactMult ?? 1) *
           (crit ? STATS.critMultiplier : 1) *
-          (lastStand ? LAST_STAND.damageMultiplier : 1),
+          (lastStand ? LAST_STAND.damageMultiplier : 1) *
+          BALANCE.mobDamage,
       );
       // Worn armor turns its share of the physical blow — the D2 curve
       // against THIS attacker's level (see armorReduction) — and the hit

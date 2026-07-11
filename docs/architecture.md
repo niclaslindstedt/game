@@ -238,6 +238,14 @@ run against synthetic fixtures with no shipped content (see
   the minion floor and the elite/boss power-match multiply by
   `autoPowerScale` (leveling.ts) — the free per-level stat gains cancel out
   against the crowd, so only chosen points, gear, and skill pull ahead.
+- **`src/game/tuning.ts`** — runtime BALANCE TUNING: ~10 developer
+  multipliers over the shipped config (XP gain, hero/mob damage, mob hp,
+  horde size, drop rate, gear share/quality, unique drops, menace gain),
+  each applied at the one read site that owns its rule so the knob moves
+  every surface of the rule together. Neutral (all 1) by default and
+  clamped on the way in (`setBalanceTuning`); the app persists the values
+  with the settings and applies them on load, and the hidden DEVELOPER →
+  BALANCE menu cycles them at runtime.
 - **`src/game/hazards.ts`** — environmental hazards, both pure level data:
   **gravity wells** (`LevelDef.wells`, config `WELLS`) drag the grounded
   player/enemies/items toward their core — minions are devoured there

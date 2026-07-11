@@ -138,12 +138,26 @@ difficulty and mission regardless of unlock state, skipping the intro), **VIEW
 ARSENAL** (`ArsenalScreen.tsx` — a
 scrollable gallery of every unique/legendary item, ordered by ilvl, each minted
 via `mintUnique` and drawn through the shared `ItemCard.tsx` icon + card the
-inventory tooltip reuses so the two never drift), a **DEBUG MODE** toggle
+inventory tooltip reuses so the two never drift), a **BALANCE** subpage (see
+below), a **DEBUG MODE** toggle
 (`debug: "on" | "off"`, also persisted), and two feature flags. DEBUG MODE is currently an inert flag —
 a hook reserved for future developer diagnostics — so wire real behavior to
 `getSettings().debug` when adding it, and keep it distinct from the `?debug` URL
 param (which drives console verbosity and `window.__game`, see
 `docs/configuration.md`).
+
+The **BALANCE** subpage holds ~10 runtime balance multipliers (leveling pace,
+mob strength, loot percentages, …) so the game's balance can be probed without
+editing `src/game/config.ts` and rebuilding. The engine side is
+`src/game/tuning.ts` (`setBalanceTuning`, neutral 1 defaults, values clamped);
+each knob is applied at the ONE read site that owns its rule (`grantXp`,
+`weaponDamageFor`, `spawnEnemy`, the drop ladder, `rollTier`,
+`menaceSensitivity`, …), so it moves every surface of that rule together. The
+UI catalog (labels, blurbs, the preset 25%–400% step cycle) lives in
+`website/src/game/balanceKnobs.ts`; the values persist in the settings
+(`balance` in `settings.ts`, applied on load like the other engine flags) and a
+RESET ALL row restores the shipped tuning. Keep the page around ten knobs — one
+lever per system, not a config editor.
 
 The two feature flags gate recently-added systems so they can be toggled at
 runtime. Both are **opt-in — off by default** (the app applies the off state on

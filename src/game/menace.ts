@@ -19,6 +19,7 @@ import { MENACE } from "./config.ts";
 import { difficultyDef } from "./defs/difficulties.ts";
 import { enemyDef } from "./defs/enemies/index.ts";
 import { autoPowerScale } from "./leveling.ts";
+import { BALANCE } from "./tuning.ts";
 import type { Enemy, GameState } from "./types.ts";
 
 /** The current evolution stage: menace bucketed into [0, MENACE.maxStage]. */
@@ -51,7 +52,13 @@ export function menaceWarmup(state: GameState): number {
  * progression rather than raw output alone.
  */
 export function menaceSensitivity(state: GameState): number {
-  return difficultyDef(state.difficulty).menaceMult * menaceWarmup(state);
+  // The developer menace knob scales all gain (never the decay), so at 0.05
+  // the meter effectively never heats and at 4 a rampage snowballs fast.
+  return (
+    difficultyDef(state.difficulty).menaceMult *
+    menaceWarmup(state) *
+    BALANCE.menaceGain
+  );
 }
 
 /** The hp multiplier a minion spawned at evolution `stage` carries.

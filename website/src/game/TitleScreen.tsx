@@ -19,6 +19,7 @@ import {
 } from "react";
 
 import {
+  BALANCE_TUNING_DEFAULTS,
   DIFFICULTY_ORDER,
   difficultyDef,
   LEVEL_ORDER,
@@ -32,6 +33,11 @@ import { PixelText } from "@ui/lib/PixelText.tsx";
 import { IDENTITY } from "../identity.ts";
 
 import { ArsenalScreen } from "./ArsenalScreen.tsx";
+import {
+  BALANCE_KNOBS,
+  formatBalanceMult,
+  nextBalanceStep,
+} from "./balanceKnobs.ts";
 import { HELP_LINES } from "./copy.ts";
 
 import { topScores, type ScoreMetric, type ScoreRow } from "./highscores.ts";
@@ -82,6 +88,7 @@ type MenuScreen =
   | "sound"
   | "data"
   | "developer"
+  | "balance"
   | "arsenal"
   | "achievements"
   | "help";
@@ -352,6 +359,10 @@ export function TitleScreen({
   const screenRef = useRef<HTMLDivElement>(null);
   const menuRef = useRef<HTMLElement>(null);
   const [levelsOverflow, setLevelsOverflow] = useState(false);
+  // The screens whose row lists can genuinely outgrow a short viewport — the
+  // level ladder and the developer BALANCE knobs — share the measure-then-cap
+  // treatment (see the levelsOverflow effect below).
+  const tallMenu = screen === "levels" || screen === "balance";
   useEffect(() => {
     const moon = moonRef.current;
     const sun = sunRef.current;
@@ -714,6 +725,16 @@ export function TitleScreen({
           },
         },
         {
+          label: "BALANCE",
+          aria: "developer-balance",
+          blurb: "TUNE XP, MOB STRENGTH AND LOOT MULTIPLIERS",
+          action: () => {
+            playUiSound(synth, "confirm");
+            setScreen("balance");
+            setCursor(0);
+          },
+        },
+        {
           label: s.debug === "on" ? "DEBUG MODE: ON" : "DEBUG MODE: OFF",
           aria: "developer-debug",
           blurb: "DEVELOPER DIAGNOSTICS (NOT WIRED UP YET)",
@@ -756,6 +777,42 @@ export function TitleScreen({
         // Land back on the DEVELOPER row in SETTINGS. It sits just above BACK,
         // after CONTROLS / DISPLAY / SOUND / DATA.
         backTo("settings", 4),
+      ];
+    }
+    if (screen === "balance") {
+      // The BALANCE subpage: one row per runtime multiplier (see
+      // balanceKnobs.ts). A click cycles the knob through the preset steps —
+      // the volume rows' idiom — and the engine applies it via settings.ts.
+      const s = getSettings();
+      return [
+        ...BALANCE_KNOBS.map(({ key, label, blurb }) => ({
+          label: `${label} ${formatBalanceMult(s.balance[key])}`,
+          aria: `balance-${key}`,
+          blurb,
+          action: () => {
+            playUiSound(synth, "confirm");
+            updateSettings({
+              balance: {
+                ...s.balance,
+                [key]: nextBalanceStep(s.balance[key]),
+              },
+            });
+            setSettingsTick((t) => t + 1);
+          },
+        })),
+        {
+          label: "RESET ALL",
+          aria: "balance-reset",
+          blurb: "EVERY KNOB BACK TO 100% - THE SHIPPED TUNING",
+          action: () => {
+            playUiSound(synth, "back");
+            updateSettings({ balance: { ...BALANCE_TUNING_DEFAULTS } });
+            setSettingsTick((t) => t + 1);
+          },
+        },
+        // Land back on the BALANCE row in DEVELOPER (after SELECT LEVEL and
+        // VIEW ARSENAL).
+        backTo("developer", 2),
       ];
     }
     if (screen === "data") {
@@ -1047,6 +1104,7 @@ export function TitleScreen({
           sound: "settings",
           data: "settings",
           developer: "settings",
+          balance: "developer",
           difficulty: warp ? "developer" : "main",
           levels: "difficulty",
         };
@@ -1161,7 +1219,7 @@ export function TitleScreen({
   // cap is applied. Off the levels screen it stays false.
   useLayoutEffect(() => {
     const measure = () => {
-      if (screen !== "levels") {
+      if (!tallMenu) {
         setLevelsOverflow(false);
         return;
       }
@@ -1197,7 +1255,7 @@ export function TitleScreen({
       cancelAnimationFrame(raf);
       window.removeEventListener("resize", measure);
     };
-  }, [screen, entries]);
+  }, [tallMenu, entries]);
 
   if (!assets) {
     return <div className="game-loading">Loading…</div>;
@@ -1372,6 +1430,14 @@ export function TitleScreen({
           )}
           {screen === "developer" && (
             <PixelText font={font} text="DEVELOPER" scale={2} color="#7ef0c8" />
+          )}
+          {screen === "balance" && (
+            <PixelText
+              font={font}
+              text="DEVELOPER - BALANCE"
+              scale={2}
+              color="#7ef0c8"
+            />
           )}
 
           {screen === "help" && (
@@ -1616,7 +1682,7 @@ export function TitleScreen({
           {screen !== "scores" && (
             <nav
               ref={menuRef}
-              className={`title-menu${screen === "levels" && levelsOverflow ? " scrollable" : ""}`}
+              className={`title-menu${tallMenu && levelsOverflow ? " scrollable" : ""}`}
               aria-label="main menu"
             >
               {entries.map((entry, i) => {

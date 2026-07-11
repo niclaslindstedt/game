@@ -175,6 +175,9 @@ for (const vp of VIEWPORTS) {
     await page.keyboard.press("Escape");
     await click("settings-developer");
     await shot("developer");
+    await click("developer-balance");
+    await shot("developer-balance");
+    await page.keyboard.press("Escape");
     await click("developer-arsenal");
     await page.locator(".arsenal-panel").waitFor();
     await shot("arsenal");

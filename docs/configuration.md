@@ -21,6 +21,7 @@ own namespace, and a sequel changes it there once:
 | Developer → Debug mode       | on / off                                                    | off (inert flag; the row itself is hidden until unlocked)                                                     |
 | Developer → Auto level stats | on / off                                                    | off (opt-in free per-level base-stat growth; the row is hidden until unlocked)                                |
 | Developer → Character gear   | on / off                                                    | off (opt-in worn armor + weapon on the field hero; the row is hidden until unlocked)                          |
+| Developer → Balance          | ten multipliers, 25%–400% in preset steps                   | 100% each (the shipped tuning; a RESET ALL row restores it)                                                   |
 
 A hidden **DEVELOPER** row unlocks at the bottom of SETTINGS after the title
 screen's moon Easter egg is found — a long-press on the title moon detonates it
@@ -40,6 +41,16 @@ hp scaling in lockstep (both derive from the same rule), and off leaves only
 chosen points and gear to push the hero ahead of the curve. **CHARACTER WEAPON**
 shows or hides the held weapon on the field hero sprite (the worn armor always
 shows); the HUD avatar and inventory portrait stay armed either way.
+
+The developer screen also holds a **BALANCE** subpage: ten runtime multipliers
+over the engine's shipped tuning (`src/game/tuning.ts`, applied via
+`setBalanceTuning`) for probing the game's balance without rebuilding — XP
+GAIN (leveling pace), HERO DAMAGE, MOB HP, MOB DAMAGE, HORDE SIZE (the wave
+spawner's floor and cap), DROP RATE, GEAR SHARE (the equipment slice of the
+drop ladder), GEAR QUALITY (magic/rare tier odds), UNIQUE DROPS, and MENACE
+GAIN. Each row cycles through preset steps (25% → 400%); values persist with
+the settings, and a **RESET ALL** row restores the shipped 100% across the
+board.
 
 Desktop keyboard controls (when **Keys** is set to WASD): WASD or the arrow
 keys run, **Shift** walks, **Space** jumps, **1/2/3** fire the powerup dock

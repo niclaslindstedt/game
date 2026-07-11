@@ -12,6 +12,7 @@ import { ENEMY_RANGED, JUMP, PLAYER } from "./config.ts";
 import { enemyDef } from "./defs/enemies/index.ts";
 import { armorReduction, playerDodgeChance, wearWornArmor } from "./items.ts";
 import { lineOfSight } from "./obstacles.ts";
+import { BALANCE } from "./tuning.ts";
 import type { Enemy, GameState, Projectile } from "./types.ts";
 
 /**
@@ -183,7 +184,9 @@ export function resolveHostileHit(
     state.events.push({ type: "playerDodge", pos: { ...player.pos } });
     return true;
   }
-  const damage = projectile.damage;
+  // Same developer mob-damage knob the contact path applies (step.ts), so
+  // hostile shots and blows scale as one.
+  const damage = Math.round(projectile.damage * BALANCE.mobDamage);
   const hpDamage = Math.max(
     0,
     Math.round(
