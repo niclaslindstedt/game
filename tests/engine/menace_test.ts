@@ -15,7 +15,9 @@ import {
   currentMobLevel,
   dismissIntro,
   enemyDef,
+  enemyPowerLevelTerm,
   enemyPowerScale,
+  mobContactScaleFor,
   heroDamageLevel,
   heroGearLevel,
   heroPowerLevel,
@@ -652,17 +654,21 @@ describe("menace — elites and bosses match the player", () => {
     const boss = findBoss(state);
     const base = boss.maxHp;
     state.player.level = 10; // a leveled hero
-    const scale = enemyPowerScale(state); // 1 + 9 * bossLevelWeight
+    const scale = enemyPowerScale(state); // (1 + 9·bossLevelWeight) × autoPowerScale
     expect(scale).toBeGreaterThan(1);
+    // Contact rides only the LEVEL term (never autoPowerScale — nothing in
+    // the hero's survivability grows with the auto-stat curve) times the
+    // horde's gentle per-level damage ramp.
+    const levelTerm = enemyPowerLevelTerm(state);
     state.player.pos = { x: boss.pos.x + 40, y: boss.pos.y };
 
     step(state, idle, DT);
 
     expect(boss.powerScaled).toBe(true);
     expect(boss.maxHp).toBe(Math.round(base * scale));
-    // Contact damage scales too, but softened by bossContactShare.
     expect(boss.contactMult).toBeCloseTo(
-      1 + (scale - 1) * MENACE.bossContactShare,
+      mobContactScaleFor(boss.mlvl) *
+        (1 + (levelTerm - 1) * MENACE.bossContactShare),
     );
   });
 

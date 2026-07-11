@@ -30,7 +30,12 @@ import {
 import { xpToLevelUp } from "./leveling.ts";
 import { createExplored, revealAround } from "./map.ts";
 import { createMerchant } from "./merchant.ts";
-import { evolutionHpMult, mobHpScaleFor, mobLevelFor } from "./menace.ts";
+import {
+  evolutionHpMult,
+  mobContactScaleFor,
+  mobHpScaleFor,
+  mobLevelFor,
+} from "./menace.ts";
 import { BALANCE } from "./tuning.ts";
 import { boundingRadius, rockHalf } from "./obstacles.ts";
 import type {
@@ -471,6 +476,12 @@ export function spawnEnemy(
     speed: def.speed * (1 + jitter),
     contactCooldownMs: 0,
   };
+  // The horde's gentle per-level DAMAGE ramp (MENACE.mobDamagePerLevel),
+  // stamped at spawn like the hp scale: late-campaign trash threatens
+  // instead of tickling. Elites/bosses overwrite it when their fight
+  // engages (maybePowerScale folds it in with the power-match share).
+  const contactScale = mobContactScaleFor(enemy.mlvl);
+  if (contactScale !== 1) enemy.contactMult = contactScale;
   if (evolved > 0) enemy.evo = evolved;
   return enemy;
 }

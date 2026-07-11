@@ -617,7 +617,7 @@ export const MENACE = {
    * thin out as the horde evolves, so a rampage is a decent way of leveling
    * and a poor way of farming loot. Chances floor at 0 in `rollTier`.
    */
-  tierPenaltyPerStage: 0.04,
+  tierPenaltyPerStage: 0.03,
   /**
    * The wave spawner's live floor AND cap grow by this fraction per stage —
    * a rampage pulls a denser, bigger crowd onto the screen.
@@ -672,6 +672,18 @@ export const MENACE = {
    * 1) weakens the horde without turning it into paper.
    */
   mobHpScaleFloor: 0.5,
+  /**
+   * The horde's per-level CONTACT-DAMAGE ramp (+3% per monster level over 1,
+   * linear — see `mobContactScaleFor`, stamped at spawn): the damage sibling
+   * of `mobHpPerLevel`, kept GENTLE and never multiplied by `autoPowerScale`.
+   * The asymmetry is deliberate: hp rides the auto-stat curve because it
+   * cancels against the hero's compounding DPS, but his SURVIVABILITY (max
+   * hp from STAMINA, armor) grows roughly linearly — so mob damage tracks
+   * that instead. Without this ramp a level-60 minion's catalog blow was a
+   * tickle against a campaign health bar; with the old auto-scaled boss
+   * contact, a set piece was a one-shot. Both read from here now.
+   */
+  mobDamagePerLevel: 0.03,
   /**
    * Better gear as the hero levels: added to a minion's drop tier roll per
    * player level above 1 (+0.4% each), so a higher-level hero's kills yield

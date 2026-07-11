@@ -193,8 +193,10 @@ export {
 // The menace meter: the escalation the app reads to draw the rampage gauge
 // and mark evolved mobs (the mechanics live in step()/loot()).
 export {
+  enemyPowerLevelTerm,
   enemyPowerScale,
   currentMobLevel,
+  mobContactScaleFor,
   heroDamageLevel,
   heroGearLevel,
   heroPowerLevel,
