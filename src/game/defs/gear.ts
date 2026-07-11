@@ -805,6 +805,15 @@ export const GEAR_DEFS: Record<string, GearDef> = {
     bonuses: { maxHp: 40 },
     icon: "icon_carafe",
   },
+  snows_dead_mans_switch: {
+    id: "snows_dead_mans_switch",
+    name: "DEAD MAN'S SWITCH",
+    slot: "charm",
+    // SNOW's insurance policy: if his heart stops, everything publishes.
+    // Worn, it gives yours a very good reason to keep going.
+    bonuses: { maxHp: 35 },
+    icon: "icon_dead_switch",
+  },
   // ---- PUTAIN's brand watches: pure VALUABLES. Zero base bonuses — their
   // job is the merchant's scales (precious ×4, dropped at unique tier by the
   // man himself), the coin that buys his own estate back off the stall.

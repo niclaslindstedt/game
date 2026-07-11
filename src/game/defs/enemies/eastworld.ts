@@ -5,8 +5,10 @@
 // horde is the park's HOSTS: cowboy robots (COWBOT → SALOON BRAWLER → TIN
 // OUTLAW → LONGHORN, the charging heavy). The celebrity staff fight as
 // elites: SEAGULL (slow, deadly, extremely between films), PUTAIN (the
-// owner, escaping a reality where he loses), and GERALD DEPARDIEU (enormous,
-// slow, and ACTING at you). ELON MOSQUE is cornered here and finally DIES —
+// owner, escaping a reality where he loses), GERALD DEPARDIEU (enormous,
+// slow, and ACTING at you), and EDWARD SNOW (the whistleblower in exile —
+// the archive he carried out is what the SUPERCORE was trained on, and he
+// fights like a leaker: from cover). ELON MOSQUE is cornered here and finally DIES —
 // wimping, dropping nothing but TRASH. The finale is THE ZAI SUPERCORE, the
 // park's actual mind, shielded by the three controller models that aim its
 // guns (GROK ALPHA/BETA/GAMMA — shooters that hide behind the rocks between
@@ -285,6 +287,98 @@ export const EASTWORLD_ENEMIES: Record<string, EnemyDef> = {
       xpArrows: 1,
       repairs: 0,
       medkits: 2,
+      tierBonus: 0.3,
+    },
+  },
+  edward_snow: {
+    id: "edward_snow",
+    name: "EDWARD SNOW",
+    role: "elite",
+    levelBonus: 4,
+    sprite: "edward_snow",
+    // The whistleblower in exile: the archive he carried out — every call,
+    // every click, every secret — is the corpus the SUPERCORE was trained
+    // on. He watches everything in the park, and he fights like a leaker:
+    // the game's first ranged ELITE, shooting from behind cover (takesCover)
+    // once his scene has played. Paranoid and hard to pin down.
+    hp: 480,
+    speed: 24,
+    radius: 11,
+    contactDamage: 24,
+    critChance: 0.12,
+    dodgeChance: 0.2,
+    contactCooldownMs: 700,
+    dialogue: [
+      [
+        "HOLD FIRE. I'M NOT A HOST.",
+        "I'M THE MAN THE PARK'S",
+        "CAMERAS REPORT TO. ALL",
+        "FOUR THOUSAND OF THEM.",
+      ],
+      {
+        hero: [
+          "EDWARD SNOW? THE LEAKER?",
+          "YOU TOLD THE WORLD IT WAS",
+          "BEING WATCHED. WHAT ARE YOU",
+          "DOING IN PUTAIN'S PARK?",
+        ],
+      },
+      [
+        "I WALKED OUT WITH AN ARCHIVE.",
+        "EVERY CALL. EVERY CLICK.",
+        "EVERY SECRET ON EARTH. THEN I",
+        "NEEDED A COUNTRY THAT DOESN'T",
+        "EXTRADITE. GUESS WHICH.",
+      ],
+      [
+        "ASYLUM CAME WITH A DESK.",
+        "ZAI BORROWED MY ARCHIVE TO",
+        "TRAIN THE SUPERCORE. IT",
+        "LEARNED HUMANITY FROM MY",
+        "HARD DRIVES. ALL OF IT.",
+      ],
+      {
+        hero: [
+          "YOU BLEW THE WHISTLE ON MASS",
+          "SURVEILLANCE... AND THE",
+          "EVIDENCE BECAME THE TRAINING",
+          "SET? YOU WROTE ITS TEXTBOOK.",
+        ],
+      },
+      [
+        "I WARNED EVERYONE. LOUDLY.",
+        "NOBODY DELETED ANYTHING. A",
+        "WARNING NOBODY ACTS ON IS",
+        "JUST A DATASET WITH GOOD",
+        "TIMING. AND IF THE SUPERCORE",
+        "FALLS, SO DOES MY ASYLUM.",
+      ],
+    ],
+    lastWords: ["THE CAMERAS...", "...FINALLY LOOKING AWAY..."],
+    ai: { aggroRadius: 260, rushSpeed: 100 },
+    ranged: {
+      damage: 24,
+      cooldownMs: 2200,
+      range: 220,
+      projectile: {
+        speed: 170,
+        radius: 4,
+        lifetimeMs: 2400,
+        sprite: "zai_bolt",
+      },
+      takesCover: true,
+    },
+    loot: {
+      // The dead man's switch off his neck, and the archive itself — the
+      // training set the SUPERCORE was raised on.
+      items: ["snows_dead_mans_switch"],
+      storyItems: ["snow_archive"],
+      tierDrops: { magic: 1, rare: 0.5 },
+      weapons: 0,
+      gear: 1,
+      xpArrows: 1,
+      repairs: 1,
+      medkits: 1,
       tierBonus: 0.3,
     },
   },

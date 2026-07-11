@@ -2305,6 +2305,38 @@ const SPRITES = {
     "............",
     "............",
   ],
+  // THE SNOW ARCHIVE: a hard drive in a faraday sleeve — the training set
+  // the SUPERCORE was raised on. Label up top, activity light still blinking.
+  icon_snow_archive: [
+    "............",
+    "..OOOOOOOO..",
+    ".ONNNNNNNNO.",
+    ".ONWWWWwNNO.",
+    ".ONWwwwwNNO.",
+    ".ONNNNNNNNO.",
+    ".ONeeeeeeNO.",
+    ".ONNNNNNNNO.",
+    ".ONNONNONNO.",
+    "..OOOOOOOO..",
+    "............",
+    "............",
+  ],
+  // SNOW's DEAD MAN'S SWITCH: a key fob with a red publish button and one
+  // blue heartbeat LED. If it stops checking in, everything goes out.
+  icon_dead_switch: [
+    "............",
+    ".....OO.....",
+    "....OOOO....",
+    ".....OO.....",
+    "...OOOOOO...",
+    "..ONNNNNNO..",
+    "..ONrrrNNO..",
+    "..ONrrrNNO..",
+    "..ONNNNNNO..",
+    "..ONeeNNNO..",
+    "..OOOOOOOO..",
+    "............",
+  ],
   // THE ANNEXATION MAP: every building renamed after a city he couldn't take.
   icon_annex_map: [
     "............",

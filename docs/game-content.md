@@ -445,9 +445,14 @@ The roster is split one file per level/biome under `src/game/defs/enemies/`
   0.3 of pure ju-jutsu; drops his PONYTAIL and the compound's ALL-ACCESS
   PASS), **VLADIMIR PUTAIN** (the owner; drops three unique-tier brand
   watches — pure precious valuables — and THE ANNEXATION MAP, and dies
-  facing the war he retreated from), and **GERALD DEPARDIEU** (the biggest,
+  facing the war he retreated from), **GERALD DEPARDIEU** (the biggest,
   slowest elite in the game — radius 16, speed 6, cannot dodge — who tries
-  to act his way out of the fight; drops the BOTTOMLESS CARAFE). **ELON
+  to act his way out of the fight; drops the BOTTOMLESS CARAFE), and
+  **EDWARD SNOW** (the whistleblower in exile, posted under the water
+  tower: the archive he leaked is the corpus the SUPERCORE was trained on.
+  The game's first ranged ELITE — after his scene he fights like the GROKs,
+  shooting from cover (`takesCover`); drops the DEAD MAN'S SWITCH charm and
+  THE SNOW ARCHIVE story item). **ELON
   MOSQUE finally DIES here** (`elon_mosque_eastworld`, role boss, no
   `flees`) — wimping, and dropping nothing but the TRASH tier's debut. The
   finale is **THE ZAI SUPERCORE** — the level-1 CORE several promotions

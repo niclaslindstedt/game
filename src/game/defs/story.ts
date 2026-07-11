@@ -384,6 +384,25 @@ export const STORY_ITEM_DEFS: Record<string, StoryItemDef> = {
       ],
     ],
   },
+  snow_archive: {
+    id: "snow_archive",
+    name: "THE SNOW ARCHIVE",
+    icon: "icon_snow_archive",
+    lore: [
+      [
+        "A HARD DRIVE IN A FARADAY",
+        "SLEEVE. MARKER ON THE SIDE:",
+        "'TRAINING SET V1.",
+        "DO NOT LEAK. AGAIN.'",
+      ],
+      [
+        "EVERY SECRET HUMANITY EVER",
+        "TYPED - THE CORPUS THE",
+        "SUPERCORE WAS RAISED ON.",
+        "IT LEARNED US FROM THIS.",
+      ],
+    ],
+  },
   annexation_map: {
     id: "annexation_map",
     name: "THE ANNEXATION MAP",
