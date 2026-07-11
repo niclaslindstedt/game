@@ -984,21 +984,20 @@ const SPRITES = {
     "............",
     "............",
   ],
-  // RASPUTIN'S BEARD — a gaunt mystic's face: sunken brows and eyes over a
-  // long, pointed beard. It survived everything, and now it stares back.
+  // RASPUTIN'S BEARD — the beard. It survived everything.
   icon_beard: [
-    "...OOOOO....",
-    "..OpppppO...",
-    "..OkOpOkO...",
-    "..OpOpOpO...",
-    ".OkkppppkO..",
-    ".OkkkkkkkO..",
-    ".OSkkkkkEO..",
-    ".OkkkkkkkEO.",
+    "............",
+    "...OO..OO...",
+    "..OkkOOkkO..",
+    "..OkkkkkkO..",
+    "..OkkkkkkO..",
     "..OkkkkkkO..",
     "...OkkkkO...",
-    "...OkkkO....",
-    "....OkO.....",
+    "...OkkkkO...",
+    "....OkkO....",
+    "....OkkO....",
+    ".....OO.....",
+    "............",
   ],
   // GOLDEN PARACHUTE — deploys automatically upon career failure.
   icon_parachute: [
