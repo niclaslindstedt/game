@@ -624,41 +624,44 @@ const SPRITES = {
     "....OO....OO....",
     "................",
   ],
-  // TIN OUTLAW — the quick-draw bandit: lean chassis, dark duster, bandana.
+  // TIN OUTLAW — the quick-draw bandit: a LEAN robot gunslinger under a
+  // wide-brim hat and a blue bandana MASK, a dark duster with a buckled
+  // gunbelt, and a steel six-shooter leveled at the hip. Leaner than the
+  // brawler. _1 splays the legs and re-levels the gun a pixel (recoil).
   tin_outlaw_0: [
-    "................",
-    "....ONNNNNO.....",
-    "...ONNNNNNNO....",
-    "....OvvvvvO.....",
-    "....OvKvKvO.....",
-    "....ONNNNNO.....",
-    "....ONNNNNO.....",
-    "...ODDDDDDDO....",
-    "..ODODDDDDODO...",
-    "..ODODvDvDODO...",
-    "..ODODDDDDODO...",
-    "...OODDDDDOO....",
-    "....ODDODDO.....",
-    "....ObbObbO.....",
-    "....ONNONNO.....",
+    "......OOOO......",
+    "......OOOO......",
+    "...DDDDDDDDDD...",
+    "...EEEOOOOEEE...",
+    "......KvvK......",
+    "......CCCC......",
+    "....OOOOOOOO....",
+    "...NONNDDNNO....",
+    "...NONNDDNNON...",
+    "...NOEEoEEEODAVA",
+    "...NONNDDNNO.D..",
+    "...NODDDDDDO....",
+    "....OOOOOOOO....",
+    ".....OO..OO.....",
+    ".....OO..OO.....",
     "................",
   ],
   tin_outlaw_1: [
-    "................",
-    "....ONNNNNO.....",
-    "...ONNNNNNNO....",
-    "....OvvvvvO.....",
-    "....OvKvKvO.....",
-    "....ONNNNNO.....",
-    "....ONNNNNO.....",
-    "...ODDDDDDDO....",
-    "..ODODDDDDODO...",
-    "..ODODvDvDODO...",
-    "..ODODDDDDODO...",
-    "...OODDDDDOO....",
-    "...ODDO.ODDO....",
-    "..ObbO...ObbO...",
-    "..ONNO...ONNO...",
+    "......OOOO......",
+    "......OOOO......",
+    "...DDDDDDDDDD...",
+    "...EEEOOOOEEE...",
+    "......KvvK......",
+    "......CCCC......",
+    "....OOOOOOOO....",
+    "...NONNDDNNON...",
+    "...NONNDDNNODAVA",
+    "...NOEEoEEEO.D..",
+    "...NONNDDNNO....",
+    "...NODDDDDDO....",
+    "....OOOOOOOO....",
+    "....OO....OO....",
+    "....OO....OO....",
     "................",
   ],
   // LONGHORN — the robotic steer HEAVY (290hp, "size of a stagecoach"): drawn
@@ -1131,10 +1134,13 @@ export default {
       delayMs: 420,
     },
   },
-  // Wound overrides: the steel COWBOT swallows the default splat — hot spark
-  // gold reads on its grey body (the lint's own suggestion).
+  // Wound overrides: the dark steel hosts swallow the default splat — hot
+  // spark gold reads on their grey/black bodies (the lint's own suggestion).
   wounds: {
     cowbot: { splat: "y", core: "Y" },
+    // The outlaw's lean, dark duster offers little stable body for splats, so
+    // add an amber scuff on the lower body to carry the wound read.
+    tin_outlaw: { splat: "y", core: "Y", scuff: "H" },
   },
   // The desert floor and its scatter read as terrain, not subjects.
   contrastExempt: [
