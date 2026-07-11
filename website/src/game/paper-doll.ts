@@ -32,6 +32,9 @@ export type DollLayer = {
   dy: number;
   /** Mirror this layer in place (icons drawn pointing left). */
   flip?: boolean;
+  /** The held weapon layer — the field renderer pivots this one about the
+   * grip to swing it on attack (developer WEAPON SWING flag). */
+  weapon?: boolean;
 };
 
 /** The pose being drawn: the two stride frames or the airborne tuck. */
@@ -46,6 +49,11 @@ const WORN_ORDER: ArmorSlot[] = ["legs", "feet", "chest", "head"];
 // shoulder. Tuned on the paper-doll preview sheet — change with eyes on it.
 const HELD_DX = 9;
 const HELD_DY = 2;
+
+// The grip point within the doll (the hero's leading hand), where the held
+// weapon's 12×12 icon is gripped lower-left. The field renderer pivots the
+// weapon about this point to swing it (WEAPON SWING). Doll-local coords.
+export const WEAPON_GRIP = { x: HELD_DX + 2, y: HELD_DY + 10 };
 
 // Icons drawn pointing LEFT (the pistol family and its kin) — mirrored so
 // the business end leads in the facing direction like every other icon.
@@ -103,6 +111,7 @@ export function playerDollLayers(
     dx: HELD_DX,
     dy: HELD_DY,
     flip: LEFT_POINTING_ICONS.has(icon),
+    weapon: true,
   });
   return layers;
 }

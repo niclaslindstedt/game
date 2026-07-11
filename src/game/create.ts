@@ -276,6 +276,17 @@ export function createGame(
         speed: 0,
         luck: 0,
       },
+      // Only the points the player spends on the chooser (see `spentStats`).
+      // The difficulty head-start folded into `stats` below is deliberately
+      // NOT counted here — it isn't the player's own pick.
+      spentStats: {
+        stamina: 0,
+        strength: 0,
+        dexterity: 0,
+        intelligence: 0,
+        speed: 0,
+        luck: 0,
+      },
       equipment: {
         // The starting weapon: whatever the DIFFICULTY hangs on the hero's
         // wall (an heirloom wand down the ladder, a bare stick at the top) —

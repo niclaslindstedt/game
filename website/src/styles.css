@@ -3026,6 +3026,14 @@ body {
   flex-direction: column;
   align-items: center;
   gap: 1.25rem;
+  /* Anchor the absolutely-positioned (i) toggle to the box's own top-right
+     corner. */
+  position: relative;
+  /* On a narrow portrait phone the box otherwise hugs its single stat-button
+     column (~14rem), too tight for the full-size LEVEL UP! title to clear the
+     corner (i) — floor the width (capped at the viewport) so the centered
+     title keeps its scale and still misses the button. */
+  min-width: min(20rem, 94vw);
   /* Never wider than the viewport on a vertical phone — the info breakdown
      wraps inside this, so the box must stay on screen. */
   max-width: min(42rem, 94vw);
@@ -3383,16 +3391,31 @@ body {
   pointer-events: auto;
 }
 
-/* The LEVEL UP! title with the (i) info toggle riding its right edge. */
+/* The LEVEL UP! title stacked over the level the hero just reached, centered.
+   The (i) toggle no longer rides the title — it's pinned to the box corner
+   (see .info-button) so it never reads as part of the level line. */
 .levelup-header {
   display: flex;
+  flex-direction: column;
   align-items: center;
-  justify-content: center;
-  gap: 0.75rem;
+  gap: 0.4rem;
 }
 
+/* Center the stacked title lines. The extra `.levelup-box` class outranks the
+   later `.game-overlay canvas` rule, which would otherwise left-pin them
+   (align-self: flex-start) now that the header is a column — leaving the
+   shorter LEVEL line ragged under the title. */
+.levelup-box .levelup-header canvas {
+  align-self: center;
+}
+
+/* Pinned to the top-right corner of the level-up / respec box, clear of the
+   centered title so it reads as a help affordance, not a value. */
 .info-button {
   appearance: none;
+  position: absolute;
+  top: 0.75rem;
+  right: 0.75rem;
   width: 1.9rem;
   height: 1.9rem;
   display: grid;
@@ -3411,6 +3434,30 @@ body {
 .info-button.active {
   transform: translateY(2px);
   box-shadow: 0 1px 0 rgba(0, 0, 0, 0.4);
+}
+
+/* The (i) glyph, drawn from pixel blocks (dot over stem) because the pixel
+   font is uppercase-only and would render "i" as a dotless capital I. Sized in
+   rem so it scales with the UI at the 2× breakpoint like the rest of the DOM. */
+.info-glyph {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.16rem;
+}
+
+.info-glyph-dot,
+.info-glyph-stem {
+  width: 0.26rem;
+  background: #0b0d10;
+}
+
+.info-glyph-dot {
+  height: 0.26rem;
+}
+
+.info-glyph-stem {
+  height: 0.6rem;
 }
 
 /* The (i) panel: one row per stat with its full effect breakdown. */
@@ -3918,6 +3965,10 @@ canvas.tier-legendary {
   width: 100%;
   align-items: center;
   gap: 0.5rem;
+  /* Nudge the foot down so the ILVL row sits centered between the last stat
+     line and the card's bottom padding (~0.6rem) rather than riding high with
+     only the 0.35rem inter-line gap above it. */
+  margin-top: 0.2rem;
 }
 
 .card-foot-right {
@@ -4484,14 +4535,18 @@ canvas.tier-legendary {
    card keeps the piece identifiable). */
 .tooltip-name-row {
   display: flex;
+  /* One text row tall, so a single-line name reads level with the icon; when
+     the name wraps to two lines, center keeps the icon on the row's midline. */
   align-items: center;
   gap: 0.4rem;
 }
 
 .tooltip-name-row .inv-item-icon {
   flex: 0 0 auto;
-  width: 1.4rem;
-  height: 1.4rem;
+  /* Match one row of the scale-2 name (font height 5px × 2 = 10px = 0.625rem)
+     so icon and title line up top-and-bottom. */
+  width: 0.625rem;
+  height: 0.625rem;
 }
 
 /* A tooltip stat line paired with its comparison delta ("(+3)") versus the

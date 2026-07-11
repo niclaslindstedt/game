@@ -10,12 +10,7 @@
 
 import { useState } from "react";
 
-import {
-  allocateStat,
-  deallocateStat,
-  effectiveStat,
-  type GameState,
-} from "@game/core";
+import { allocateStat, deallocateStat, type GameState } from "@game/core";
 
 import { PixelText } from "@ui/lib/PixelText.tsx";
 import type { PixelFont } from "@ui/lib/pixel-font.ts";
@@ -48,16 +43,21 @@ export function RespecOverlay({
         className="levelup-box respec-box"
         onPointerDown={(e) => e.stopPropagation()}
       >
+        <button
+          type="button"
+          className={`info-button${showInfo ? " active" : ""}`}
+          aria-label="toggle-stat-info"
+          onClick={() => setShowInfo((v) => !v)}
+        >
+          {/* A dotted lowercase "i" — the pixel font is uppercase-only, so its
+              "i" renders as a dotless capital I; draw the glyph from blocks. */}
+          <span className="info-glyph" aria-hidden="true">
+            <span className="info-glyph-dot" />
+            <span className="info-glyph-stem" />
+          </span>
+        </button>
         <div className="levelup-header">
           <PixelText font={font} text="RESPEC" scale={5} color="#ffd75e" />
-          <button
-            type="button"
-            className={`info-button${showInfo ? " active" : ""}`}
-            aria-label="toggle-stat-info"
-            onClick={() => setShowInfo((v) => !v)}
-          >
-            <PixelText font={font} text="i" scale={2} color="#0b0d10" />
-          </button>
         </div>
         <PixelText
           font={font}
@@ -97,7 +97,10 @@ export function RespecOverlay({
         ) : (
           <div className="respec-rows">
             {CHOICES.map(({ stat, label, blurb, icon }) => {
-              const value = effectiveStat(state, stat);
+              // Only the points re-placed during this respec (see
+              // `spentStats`) — `beginRespec` zeroes the tally, so it grows
+              // from zero as the player rebuilds, matching the level-up chooser.
+              const value = state.player.spentStats[stat];
               const canAdd = points > 0;
               const canRemove = state.player.stats[stat] > 0;
               return (

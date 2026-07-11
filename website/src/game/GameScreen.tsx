@@ -181,6 +181,7 @@ import {
   viewScaleFor,
   uiScaleFor,
   type Effect,
+  type PlayerAction,
 } from "./render.ts";
 import { getSettings } from "./settings.ts";
 import { playEventSounds, playUiSound } from "./sfx/index.ts";
@@ -304,6 +305,17 @@ const XP_MERGE_SLACK_PX = 16;
 const XP_MERGE_MIN_SCALE = 1.4;
 const XP_MERGE_MAX_SCALE = 4;
 
+// A `swing`/`shot` event is the hero's (not a companion's) when it was thrown
+// from his own position — both fire in the same step, so the hero hasn't moved
+// off the spot the event recorded. A generous world-px slop absorbs any drift.
+const HERO_ATTACK_SLOP_PX = 12;
+function isHeroAttack(
+  pos: { x: number; y: number },
+  player: { x: number; y: number },
+): boolean {
+  return Math.hypot(pos.x - player.x, pos.y - player.y) <= HERO_ATTACK_SLOP_PX;
+}
+
 /** Map a dpad thumb distance (CSS px) to a walk throttle in [MIN_WALK, 1]. */
 function dpadThrottle(len: number): number {
   const span = DPAD_RING_PX - DPAD_DEADZONE_PX;
@@ -343,9 +355,11 @@ const MOVE_KEYS: Record<string, { x: number; y: number }> = {
 // it. A bare 0.6 tipped over the 0.5 threshold and drained like a run.
 const KEYBOARD_WALK_THROTTLE = STAMINA.runThreshold;
 
-/** Other carried weapons, strongest first — the switch targets shared by the
- * Q weapon menu and the 1-4 hotkeys. Damage is stat-scaled (weaponDamageFor)
- * so the ordering matches the number each slot shows and follows the build. */
+/** Other carried weapons, best first — the switch targets shared by the Q
+ * weapon menu and the 1-4 hotkeys. Ordered by ilvl (highest first) so "1"
+ * grabs the top-item-level weapon; ties break on stat-scaled damage
+ * (weaponDamageFor) so equal-ilvl slots fall in dps order and follow the
+ * build. */
 function weaponAlternatives(
   state: GameState,
 ): { item: Equipment; index: number; dmg: number }[] {
@@ -357,7 +371,7 @@ function weaponAlternatives(
       index: e.index,
       dmg: Math.round(weaponDamageFor(state, e.item as Equipment)),
     }))
-    .sort((a, b) => b.dmg - a.dmg);
+    .sort((a, b) => b.item.ilvl - a.item.ilvl || b.dmg - a.dmg);
 }
 
 function formatTime(ms: number): string {
@@ -1221,6 +1235,11 @@ export function GameScreen({
     let fpsNextFlushMs = 0;
     // Transient visuals driven by engine events (lightning strikes).
     let effects: Effect[] = [];
+    // The hero's most recent attack, so the field renderer can swing the held
+    // weapon in step with its slash/muzzle effect (developer WEAPON SWING).
+    // Only the hero's own blows are captured — companions swing from their own
+    // spots (matched by proximity to the hero below).
+    let heroAction: PlayerAction | undefined;
     // Run-clock ms through which the "bags are full" nudge stays lit — set when
     // a `pickupBlocked` event fires, drives the inventory button's pulse.
     let bagFullHintUntilMs = 0;
@@ -1539,6 +1558,17 @@ export function GameScreen({
               untilMs: state.stats.timeMs + 200,
               durationMs: 200,
             });
+            // Swing the hero's own blade to match — companions swing from
+            // their own spots, so only a blow thrown from the hero's position
+            // arms the animation.
+            if (isHeroAttack(event.pos, state.player.pos)) {
+              heroAction = {
+                kind: "swing",
+                weaponClass: "melee",
+                startMs: state.stats.timeMs,
+                durationMs: 220,
+              };
+            }
           }
           // A shot flashes at the muzzle — a hot burst for guns, a cool cast
           // bloom for wands — oriented along the aim.
@@ -1553,6 +1583,16 @@ export function GameScreen({
               untilMs: state.stats.timeMs + 110,
               durationMs: 110,
             });
+            // Kick/cast the hero's own weapon to match the muzzle flash — a gun
+            // recoils, a wand thrusts — but not a companion's shot.
+            if (isHeroAttack(event.pos, state.player.pos)) {
+              heroAction = {
+                kind: "shot",
+                weaponClass: event.weaponClass,
+                startMs: state.stats.timeMs,
+                durationMs: event.weaponClass === "magic" ? 220 : 150,
+              };
+            }
           }
           // Every landed hit sprays the victim's gore (ghosts: ectoplasm)
           // and pops a static damage number on the head — crits are bigger,
@@ -1927,7 +1967,7 @@ export function GameScreen({
           canvas.height,
           timeMs,
         );
-        drawFrame(ctx, state, assets, camera, timeMs);
+        drawFrame(ctx, state, assets, camera, timeMs, heroAction);
         drawEffects(ctx, effects, camera, state.stats.timeMs, assets);
 
         // The FPS readout: smooth the frame delta (EMA) and write the number

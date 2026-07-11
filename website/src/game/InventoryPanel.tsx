@@ -316,7 +316,7 @@ function ItemTooltip({
           maxWidth={TOOLTIP_TEXT_REM}
           lineScale={2}
           subtitle={isWorn ? "EQUIPPED" : undefined}
-          icon={isWorn ? <ItemIcon sprites={sprites} item={item} /> : undefined}
+          icon={<ItemIcon sprites={sprites} item={item} />}
         />
         {onUse && (
           <button

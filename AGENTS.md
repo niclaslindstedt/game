@@ -140,7 +140,7 @@ scrollable gallery of every unique/legendary item, ordered by ilvl, each minted
 via `mintUnique` and drawn through the shared `ItemCard.tsx` icon + card the
 inventory tooltip reuses so the two never drift), a **BALANCE** subpage (see
 below), a **DEBUG MODE** toggle
-(`debug: "on" | "off"`, also persisted), and two feature flags. DEBUG MODE
+(`debug: "on" | "off"`, also persisted), and three feature flags. DEBUG MODE
 shows the in-run FPS meter (`GameScreen.tsx` `showFps`, written to the DOM by
 the render loop — the first probe for performance regressions) and is the hook
 further developer diagnostics wire to via `getSettings().debug`. Keep it
@@ -161,8 +161,8 @@ UI catalog (labels, blurbs, the preset 25%–400% step cycle) lives in
 RESET ALL row restores the shipped tuning. Keep the page around ten knobs — one
 lever per system, not a config editor.
 
-The two feature flags gate recently-added systems so they can be toggled at
-runtime. Both are **opt-in — off by default** (the app applies the off state on
+The feature flags gate recently-added systems so they can be toggled at
+runtime. All are **opt-in — off by default** (the app applies the off state on
 load); a developer turns them on from the DEVELOPER menu:
 
 - **AUTO LEVEL STATS** (`autoLevelStats: "on" | "off"`) gates the automatic
@@ -180,6 +180,16 @@ load); a developer turns them on from the DEVELOPER menu:
   to `playerDollLayers` (`paper-doll.ts`), which drops the held weapon (but
   keeps the armor) when off. The HUD avatar and inventory portrait always pass
   the weapon on, so only the field character changes.
+- **WEAPON SWING** (`weaponSwing: "on" | "off"`) is experimental: it animates
+  the field hero's held weapon on each attack — a blade winds back and whips
+  through its slash arc, a gun recoils with the muzzle rising, a wand thrusts
+  up on the cast — pivoting the weapon layer about the grip in step with the
+  swing/muzzle effect so it reads as the weapon actually being used. Like
+  CHARACTER WEAPON it is a pure render concern: GameScreen captures the hero's
+  own `swing`/`shot` events into a `PlayerAction` (matched to his position so a
+  companion's blow is ignored), `render.ts` `drawPlayer` reads the flag and
+  poses the weapon layer via `weaponPose`. It only bites when CHARACTER WEAPON
+  is on too — there is no held weapon to swing otherwise.
 
 ## Reuse through oss-framework
 

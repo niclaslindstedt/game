@@ -24,12 +24,13 @@ import {
   WOUNDS,
   type GameState,
   type TileSpec,
+  type WeaponClass,
 } from "@game/core";
 
 import { formatCompact } from "@ui/lib/format-number.ts";
 
 import { spriteByName, type GameAssets, type Sprites } from "./assets.ts";
-import { playerDollLayers } from "./paper-doll.ts";
+import { playerDollLayers, WEAPON_GRIP } from "./paper-doll.ts";
 import { getSettings } from "./settings.ts";
 import { TIER_COLORS } from "./tiers.ts";
 
@@ -390,6 +391,7 @@ export function drawFrame(
   assets: GameAssets,
   camera: Camera,
   timeMs: number,
+  playerAction?: PlayerAction,
 ): void {
   const { sprites } = assets;
   ensureCaches(sprites);
@@ -720,7 +722,7 @@ export function drawFrame(
   // sprite, the rising embers float over it, so the light reads as engulfing
   // the character rather than a decal pasted on top.
   drawLevelUpBurn(ctx, state, camera, timeMs, "under");
-  drawPlayer(ctx, state, assets, camera, timeMs);
+  drawPlayer(ctx, state, assets, camera, timeMs, playerAction);
   drawLevelUpBurn(ctx, state, camera, timeMs, "over");
 
   // Asteroids fly over everything on the ground plane — they're rocks in
@@ -1372,12 +1374,78 @@ function drawLevelUpBurn(
   ctx.globalAlpha = 1;
 }
 
+/**
+ * The hero's in-flight attack, handed to `drawPlayer` so the held weapon
+ * animates in step with the swing/muzzle effect it accompanies (the developer
+ * WEAPON SWING flag). `startMs`/`durationMs` are on the simulation clock
+ * (`state.stats.timeMs`) — the same clock `drawEffects` runs on — so the weapon
+ * and its slash cone stay locked together. GameScreen captures it from the
+ * hero's own `swing`/`shot` events.
+ */
+export type PlayerAction = {
+  kind: "swing" | "shot";
+  weaponClass: WeaponClass;
+  startMs: number;
+  durationMs: number;
+};
+
+/** A held-weapon animation pose: a rotation about the grip (WEAPON_GRIP) plus a
+ * small translation, in doll-local coords (mirrored with the doll for facing).
+ * Positive `rot` swings the blade/barrel down and forward in the facing dir. */
+type WeaponPose = { rot: number; offX: number; offY: number };
+
+const REST_POSE: WeaponPose = { rot: 0, offX: 0, offY: 0 };
+
+/**
+ * The held weapon's pose for the active attack at `nowMs`. Each weapon class
+ * gets its own motion, shaped to start AND end at rest so it folds cleanly back
+ * to the static pose when the animation lapses (no snap): a blade winds back and
+ * whips through its slash arc, a gun recoils with the muzzle rising, a wand
+ * thrusts up on the cast. Returns `REST_POSE` when no attack is live.
+ */
+function weaponPose(
+  action: PlayerAction | undefined,
+  nowMs: number,
+): WeaponPose {
+  if (!action) return REST_POSE;
+  const t = (nowMs - action.startMs) / action.durationMs;
+  if (t < 0 || t > 1) return REST_POSE;
+  if (action.weaponClass === "melee") {
+    // windup (cock back) → strike (whip forward, ease-out) → recover
+    // (smoothstep back to rest). Big sweep so the slash reads at a glance.
+    const WINDUP = 0.55; // rad the blade cocks back
+    const STRIKE = 1.35; // rad it whips forward through the slash
+    let rot: number;
+    if (t < 0.18) {
+      rot = -WINDUP * (t / 0.18);
+    } else if (t < 0.5) {
+      const p = (t - 0.18) / 0.32;
+      rot = -WINDUP + (STRIKE + WINDUP) * (1 - (1 - p) * (1 - p));
+    } else {
+      const p = (t - 0.5) / 0.5;
+      rot = STRIKE * (1 - p * p * (3 - 2 * p));
+    }
+    return { rot, offX: 0, offY: 0 };
+  }
+  if (action.weaponClass === "ranged") {
+    // A quick recoil impulse: kick back toward the shoulder, muzzle rising,
+    // then settle forward. Triangle peaking early so the punch is felt.
+    const kick = t < 0.2 ? t / 0.2 : 1 - (t - 0.2) / 0.8;
+    return { rot: -0.4 * kick, offX: -3 * kick, offY: -1 * kick };
+  }
+  // Magic: a smooth bloom (sin) that thrusts the wand up and forward on the
+  // cast and eases it back — the staff "presents" the spell.
+  const bloom = Math.sin(Math.PI * t);
+  return { rot: 0.35 * bloom, offX: bloom, offY: -3 * bloom };
+}
+
 function drawPlayer(
   ctx: CanvasRenderingContext2D,
   state: GameState,
   assets: GameAssets,
   camera: Camera,
   timeMs: number,
+  action: PlayerAction | undefined,
 ): void {
   const player = state.player;
   const airborne = player.z > 0;
@@ -1423,6 +1491,15 @@ function drawPlayer(
   // overlays, held weapon — draws inside one flipped transform and the
   // outfit stays glued to the body. A layer's own `flip` mirrors the sprite
   // in place (left-pointing weapon icons) on top of whichever facing holds.
+  // The held weapon swings on attack when the developer WEAPON SWING flag is
+  // on (a pure render concern, like CHARACTER WEAPON): the weapon layer pivots
+  // about the grip in step with the swing/muzzle effect. The pose folds to rest
+  // between blows, and there is no weapon layer at all when CHARACTER WEAPON is
+  // off, so the flag only bites when both are on.
+  const pose =
+    getSettings().weaponSwing === "on"
+      ? weaponPose(action, state.stats.timeMs)
+      : REST_POSE;
   ctx.save();
   if (player.faceLeft) {
     ctx.translate(x + TILE, y);
@@ -1433,6 +1510,16 @@ function drawPlayer(
   for (const layer of layers) {
     const image = spriteByName(sprites, layer.sprite);
     if (!image) continue; // unknown def or stale save: skip, never crash
+    const swung =
+      layer.weapon && (pose.rot !== 0 || pose.offX !== 0 || pose.offY !== 0);
+    if (swung) {
+      // Pivot the weapon about the grip (translate to grip, rotate, translate
+      // back), on top of whatever facing transform already holds.
+      ctx.save();
+      ctx.translate(WEAPON_GRIP.x + pose.offX, WEAPON_GRIP.y + pose.offY);
+      ctx.rotate(pose.rot);
+      ctx.translate(-WEAPON_GRIP.x, -WEAPON_GRIP.y);
+    }
     if (layer.flip) {
       ctx.save();
       ctx.translate(layer.dx + image.width, layer.dy);
@@ -1442,6 +1529,7 @@ function drawPlayer(
     } else {
       ctx.drawImage(image, layer.dx, layer.dy);
     }
+    if (swung) ctx.restore();
   }
   ctx.restore();
 }

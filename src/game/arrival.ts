@@ -56,6 +56,7 @@ export function extractLoadout(state: GameState): Loadout {
     level: player.level,
     xp: player.xp,
     stats: { ...player.stats },
+    spentStats: { ...player.spentStats },
     equipment: {
       weapon: copyPiece(player.equipment.weapon) as Equipment,
       head: copyPiece(player.equipment.head),
@@ -94,6 +95,10 @@ export function applyLoadout(state: GameState, loadout: Loadout): void {
   player.xpToNext = xpToNextAt(player.level);
   player.xp = Math.max(0, Math.min(loadout.xp, player.xpToNext - 1));
   player.stats = { ...loadout.stats };
+  // The player's own spent tally rides along; a pre-`spentStats` loadout falls
+  // back to the carried stats (best-effort — the chooser then shows the whole
+  // carried build rather than crashing on a missing field).
+  player.spentStats = { ...(loadout.spentStats ?? loadout.stats) };
   player.pendingStatPoints = 0;
 
   // Re-mint every carried piece with THIS run's ids so nothing collides
@@ -319,6 +324,9 @@ export function deriveArrivalLoadout(
     level,
     xp,
     stats,
+    // A dev/stand-in arrival auto-spends its whole banked pool, so every
+    // derived point counts as the hero's own pick on the chooser.
+    spentStats: { ...stats },
     equipment: {
       weapon: regularPiece(weaponId, "weapon", weaponDef(weaponId).durability),
       head: armorPiece("head"),

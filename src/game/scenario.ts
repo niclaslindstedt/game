@@ -197,7 +197,10 @@ export function applyScenario(state: GameState, spec: ScenarioSpec): void {
   }
   if (spec.stats) {
     for (const [stat, points] of Object.entries(spec.stats)) {
-      player.stats[stat as StatName] = Math.max(0, points ?? 0);
+      const value = Math.max(0, points ?? 0);
+      player.stats[stat as StatName] = value;
+      // A forced build reads as the hero's own picks on the chooser.
+      player.spentStats[stat as StatName] = value;
     }
   }
 
