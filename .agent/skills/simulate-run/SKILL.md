@@ -1,6 +1,6 @@
 ---
 name: simulate-run
-description: "Use to measure the game's ACTUAL balance by running the real engine headlessly — whole levels or whole campaigns (easy → JESUS across every map), with the autopilot playing, auto-equip equipping, and loadouts carried between clears. Reports hero level/hp/dps progression, per-mob hp/level/contact damage, every drop, weapon swaps, deaths, and the XP the per-map caps withheld. The closing measurement loop of every balance change."
+description: "Use to measure the game's ACTUAL balance by running the real engine headlessly — whole levels or whole campaigns (easy → JESUS across every map), with the autopilot playing, auto-equip equipping, and loadouts carried between clears. The hero is immortal (a calibration instrument — deaths are booked, never run-ending). Reports hero level/hp/dps progression, damage per hit dealt and taken, per-mob hp/level/contact damage/blows-to-kill, every drop, weapon swaps, deaths, and the XP the per-map caps withheld. The closing measurement loop of every balance change."
 ---
 
 # Simulate Run
@@ -18,6 +18,8 @@ playtest, and to answer the questions the analytic calculators can't:
   per-map caps (`XP_CAP`, see leveling.ts `xpLevelCap`) withhold on reruns?
 - How hard does each mob actually hit, at what hp and monster level, and how
   many of them does a run field?
+- How hard does the hero's blow actually land — per hit, per mob type, and
+  how many blows does one kill take?
 - What does a full campaign (easy → JESUS, every level, loadout carried)
   leave the hero with?
 
@@ -38,42 +40,50 @@ node scripts/simulate-run.mjs --difficulty easy          # one rung
 node scripts/simulate-run.mjs --difficulty easy --level spacez_hq --full
 node scripts/simulate-run.mjs --rerun 3                  # replay each map ×3 — the XP-cap/farm probe
 node scripts/simulate-run.mjs --seed 42 --strategy kite  # different seed/autopilot
-node scripts/simulate-run.mjs --no-revive --attempts 3   # honest lethality read
 node scripts/simulate-run.mjs --json report.json         # machine-readable dump
 ```
 
 ## Reading the report
 
 The summary table prints one row per run: hero level `start→end`, deaths,
-kills, kills/min, realized DPS out, damage taken, the map's XP cap, the XP
-that cap withheld (`xpLost`), and the weapon walked out with. `--full` adds,
-per run: the hero block (stats, armor reduction, coins), the weapon timeline
-(every auto-equip swap with before/after DPS), the mob table (spawned/killed,
-average hp and monster level, catalog contact damage, XP paid), the drop
-ledger (ground vs collected, equipment by tier, named finds), and per-minute
-hero snapshots (hp, dps, armor, menace stage).
+kills, kills/min, realized DPS out, average damage per landed blow
+(`hitOut`), damage taken and its per-blow average before armor (`hitIn`),
+the map's XP cap, the XP that cap withheld (`xpLost`), and the weapon walked
+out with. `--full` adds, per run: the hero block (stats, armor reduction,
+coins), the combat line (hits landed, damage per hit, crit rate, hits
+taken), the weapon timeline (every auto-equip swap with before/after DPS),
+the mob table (spawned/killed, average hp and monster level, catalog contact
+damage, the hero's average blow against that mob type and its blows-to-kill,
+XP paid), the drop ledger (ground vs collected, equipment by tier, named
+finds), and per-minute hero snapshots (hp, dps, armor, menace stage).
 
 Balance signals to look for:
 
-- **Snapshots' dps vs the mobs' avgHp** — blows-to-kill. If it collapses
-  toward 1 the hero is one-shotting the horde (the overpowered drift the
-  diminishing-returns curve exists to stop); if it balloons, the rung walls.
+- **The mob table's `toKill` (avgHp / the hero's average blow)** — the
+  direct blows-to-kill read. If it collapses toward 1 the hero is
+  one-shotting the horde (the overpowered drift the diminishing-returns
+  curve exists to stop); if it balloons, the rung walls.
+- **`hitOut` vs `hitIn`** — the damage exchange rate: how hard one hero blow
+  lands against how hard one mob blow arrives (before armor; the hero block
+  prints the armor reduction to apply).
 - **`xpLost` on FIRST visits** should be near zero — the caps are sized to
   bite reruns, not the story. Big first-visit forfeits mean `XP_CAP` bands
   sit too low for that rung.
 - **Weapon timeline density** — a healthy run steps through a few genuine
   upgrades; constant churn means drops out-pace their worth, a silent
   timeline means the pools are starved.
-- **Deaths (revive mode)** are a pressure gauge, not a lethality verdict —
-  the autopilot plays far below a human. Compare rungs against each other,
-  not against zero.
+- **Deaths** are a pressure gauge, not a lethality verdict — the autopilot
+  plays far below a human. Compare rungs against each other, not against
+  zero.
 
 ## Caveats — what a bot run does and doesn't measure
 
-- **Revive mode is the default** (`--no-revive` to disable): deaths respawn
-  the hero at the level spawn, counted, run continuing — so pacing and loot
-  measurements aren't capped by the autopilot's survival skill. Use
-  `--no-revive` when the question IS survival.
+- **The hero is immortal — it's a calibration instrument**: a death respawns
+  the hero at the level spawn (counted in `deaths`, run continuing), so
+  pacing, loot, and damage-exchange measurements are never capped by the
+  autopilot's survival skill. A run only ends in `victory` or `timeout`;
+  the sim never answers "does the hero survive?" — only "how hard is the
+  pressure?" (the deaths count).
 - **Runs are chaotic**: one different roll early cascades into a different
   run. For a tuning decision, compare A/B across several `--seed`s, not one.
 - **The stall-breaker** teleports a geometry-wedged bot toward the fight
