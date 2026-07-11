@@ -673,6 +673,67 @@ const WORLD_UNIQUES: UniqueDef[] = [
     ],
     lore: "IT TURNED ARMIES TO STONE. IT WILL SETTLE FOR STOPPING A BLOW.",
   },
+  // THE MOON — the collapsed heart of a dead pulsar, still keeping its
+  // impossible beat: the EASY rung's magic build finally gets its relic.
+  {
+    id: "deadstar",
+    name: "DEADSTAR",
+    base: "pulsar_rod",
+    slot: "weapon",
+    ilvl: 20,
+    bonuses: [
+      { kind: "stat", stat: "intelligence", value: 6 },
+      { kind: "damagePct", value: 0.15 },
+      { kind: "crit", value: 0.04 },
+    ],
+    lore: "THE HEART OF A STAR THAT DIED SCREAMING. IT STILL KEEPS TIME.",
+  },
+  // EASTWORLD — the pale horseman's sidearm, holstered on the park's own
+  // stage-prop revolver: the EASY rung's ranged build relic.
+  {
+    id: "pale_rider",
+    name: "PALE RIDER",
+    base: "prairie_iron",
+    slot: "weapon",
+    ilvl: 25,
+    bonuses: [
+      { kind: "crit", value: 0.08 },
+      { kind: "stat", stat: "dexterity", value: 5 },
+      { kind: "damagePct", value: 0.12 },
+    ],
+    lore: "I LOOKED, AND BEHELD A PALE HORSE. HELL FOLLOWED AT A CANTER.",
+  },
+  // EASTWORLD (MEDIUM) — the cattle bench's master brand: one searing thrust
+  // that ends the argument. A melee choice that isn't a once-a-campaign
+  // legendary.
+  {
+    id: "herdbreaker",
+    name: "HERDBREAKER",
+    base: "branding_iron",
+    slot: "weapon",
+    ilvl: 28,
+    bonuses: [
+      { kind: "damagePct", value: 0.3 },
+      { kind: "stat", stat: "strength", value: 8 },
+      { kind: "maxHp", value: -25 },
+    ],
+    lore: "IT BRANDED A THOUSAND HEAD. NONE OF THEM WERE CATTLE.",
+  },
+  // EASTWORLD (MEDIUM) — the wrangler's monowire noose, thrown wide: the
+  // crowd-sweep melee choice, and INT makes the loop bigger.
+  {
+    id: "the_last_roundup",
+    name: "THE LAST ROUNDUP",
+    base: "mono_wire_lariat",
+    slot: "weapon",
+    ilvl: 29,
+    bonuses: [
+      { kind: "stat", stat: "intelligence", value: 6 },
+      { kind: "stat", stat: "dexterity", value: 4 },
+      { kind: "damagePct", value: 0.15 },
+    ],
+    lore: "ONE THROW TOOK THE WHOLE HERD. THE HERD DID NOT GET UP.",
+  },
   // THE RIFT — the first LEGENDARY: the thunder-hammer of a dead god, fallen
   // out of a colder, older sky than this one.
   {

@@ -424,5 +424,12 @@ export const EASTWORLD: LevelDef = {
     // The PRAIRIE IRON arrives early at a kill discovered in play — the
     // level's signature revolver, same cadence as the rift's void wand.
     earlyDrops: [{ atKills: [30, 80], weapon: "prairie_iron" }],
+    // The park's relics: PALE RIDER (the easy rung's ranged build) rides the
+    // signature revolver; the medium rung fields BOTH melee choices — the
+    // brand and the lariat — so the build isn't hostage to one legendary.
+    worldUniques: {
+      easy: ["pale_rider"],
+      medium: ["herdbreaker", "the_last_roundup"],
+    },
   },
 };
