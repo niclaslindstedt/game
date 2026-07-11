@@ -19,6 +19,18 @@ export const PLAYER = {
   speed: 56,
   /** Collision radius. */
   radius: 10,
+  /**
+   * Contact-damage reach as a fraction of the touching distance (the sum of
+   * the attacker's and the hero's collision radii). At 1 a blow lands the
+   * instant the two bodies' circles graze; below 1 the enemy must press
+   * genuinely INTO the hero — the circles have to overlap — before it bites.
+   * Kept a touch under 1 so a sidestep at the last moment is a clean escape
+   * rather than a graze that still connects; the same tightened reach governs
+   * where an elite/boss rush settles (see step.ts) so the closer they must get
+   * to hurt is exactly how close they close. Collision, obstacle, projectile,
+   * and pickup radii are untouched — this shrinks only the damage hitbox.
+   */
+  contactReachMult: 0.85,
   /** Steering closer than this to the pointer target stops jitter. */
   arriveRadius: 4,
   /**

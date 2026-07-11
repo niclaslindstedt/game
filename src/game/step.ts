@@ -1329,8 +1329,10 @@ function stepEnemies(state: GameState, dt: number, dtMs: number): void {
     if (def.apparition) continue;
 
     // Monsters drift along the ground — a player at the top of a moon jump
-    // sails clean over their grasp.
-    const touchReach = def.radius + PLAYER.radius;
+    // sails clean over their grasp. The reach is pulled in a little under the
+    // bodies' touching distance (contactReachMult), so a foe must press into
+    // the hero to bite — a last-instant sidestep is a clean escape, not a graze.
+    const touchReach = (def.radius + PLAYER.radius) * PLAYER.contactReachMult;
     const touching =
       player.z <= JUMP.dodgeHeight &&
       distanceSq(enemy.pos, player.pos) <= touchReach * touchReach;
@@ -1551,7 +1553,11 @@ function moveEnemy(state: GameState, enemy: Enemy, dt: number): void {
     }
     const rushSpeed =
       (def.ai.rushSpeed ?? def.speed) * stasisFactorAt(state, enemy.pos);
-    const gap = distance(enemy.pos, player.pos) - (def.radius + PLAYER.radius);
+    // Close to the same tightened contact distance the damage test uses, so a
+    // rusher settles exactly where it can actually bite (not a hair short of it).
+    const gap =
+      distance(enemy.pos, player.pos) -
+      (def.radius + PLAYER.radius) * PLAYER.contactReachMult;
     if (gap > 0) {
       enemy.pos = moveToward(
         enemy.pos,
