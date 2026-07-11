@@ -17,6 +17,7 @@ import {
   UNIQUE,
   WORLD_DROP,
 } from "./config.ts";
+import { abilityDef } from "./defs/abilities.ts";
 import { difficultyDef, scaledMobCount } from "./defs/difficulties.ts";
 import { enemyDef, type EnemyDef } from "./defs/enemies/index.ts";
 import { levelDef } from "./defs/levels/index.ts";
@@ -72,6 +73,50 @@ function onScreenMinions(state: GameState): number {
   return count;
 }
 
+/** True while a NUKE (any ability of `nuke` kind) sits in the powerup dock. */
+function holdsNuke(state: GameState): boolean {
+  return state.player.heldAbilities.some(
+    (id) => abilityDef(id).kind === "nuke",
+  );
+}
+
+/**
+ * The ONE NUKE rule: whether a fresh screen-nuke may drop right now. A bomb is
+ * barred while the hero already holds one in the powerup dock, and while an
+ * un-collected bomb still lies ON screen (the `MERCY.rescueRadius` proxy, via
+ * `mercyRescueWaiting`). A bomb that has drifted OFF screen does NOT bar the
+ * drop: the mint sweeps it away and lets the fresh one fall (see
+ * `dropScreenNuke`). Both loot paths — the crowd-bomb mercy roll and the rare
+ * `LOOT.nukeShare` slice — gate on this, so at most one bomb is ever in play.
+ */
+export function canDropNuke(state: GameState): boolean {
+  if (holdsNuke(state)) return false;
+  return !mercyRescueWaiting(state, "bomb");
+}
+
+/**
+ * Mint a fresh screen-nuke at `at`. First sweeps away any NUKE that has drifted
+ * OFF screen — an un-collected bomb the hero walked away from — so the field
+ * never carries two. The drop is gated by `canDropNuke`, which already bars a
+ * fresh bomb while one waits ON screen or sits in the dock, so anything cleared
+ * here is stale.
+ */
+function dropScreenNuke(state: GameState, at: Vec2): void {
+  for (let i = state.items.length - 1; i >= 0; i--) {
+    const item = state.items[i];
+    if (item && item.kind === "ability" && item.defId === "screen_nuke") {
+      state.items.splice(i, 1);
+    }
+  }
+  state.items.push({
+    id: state.nextId++,
+    kind: "ability",
+    pos: { ...at },
+    defId: "screen_nuke",
+  });
+  state.events.push({ type: "itemDropped", pos: { ...at } });
+}
+
 /**
  * The per-kill chance a PACKED FIELD coughs up a screen-nuke — the
  * bomb-in-a-swarm bailout (a MERCY DROP). Zero until the on-screen crowd
@@ -83,9 +128,9 @@ function onScreenMinions(state: GameState): number {
 export function crowdBombChance(state: GameState): number {
   const max = difficultyDef(state.difficulty).mercy.crowdBombChanceMax;
   if (max <= 0) return 0;
-  // One rope at a time: while an un-collected screen-nuke already waits in
-  // view, the packed field holds fire (see mercyRescueWaiting).
-  if (mercyRescueWaiting(state, "bomb")) return 0;
+  // The ONE NUKE rule: a bomb already in the dock, or an un-collected one still
+  // waiting ON screen, holds the packed field's fire (see canDropNuke).
+  if (!canDropNuke(state)) return 0;
   const { crowdBombThreshold: lo, crowdBombFull: hi } = MERCY;
   if (hi <= lo) return 0;
   const crowd = onScreenMinions(state);
@@ -472,13 +517,7 @@ function dropMinionLoot(
   // is even drawn on a normal kill (the RNG stream is untouched).
   const bombChance = noNukeDrop ? 0 : crowdBombChance(state);
   if (bombChance > 0 && state.rng() < bombChance) {
-    state.items.push({
-      id: state.nextId++,
-      kind: "ability",
-      pos: { ...at },
-      defId: "screen_nuke",
-    });
-    state.events.push({ type: "itemDropped", pos: { ...at } });
+    dropScreenNuke(state, at);
     return;
   }
 
@@ -566,21 +605,25 @@ function dropMinionLoot(
     : lowDurabilityDesperation(state) * diff.mercy.repairBonus;
   const repairShare = LOOT.repairShare * (1 + repairBoost);
   // The rare slice first, so tuning the ladder below never dilutes it. A
-  // nuke's own kills skip it (short-circuited before the draw): the blast
-  // that cleared the field can't hand back the bomb that caused it.
-  const nuked = !forced && !noNukeDrop && state.rng() < LOOT.nukeShare;
+  // nuke's own kills skip it (`noNukeDrop`, short-circuited before the draw):
+  // the blast that cleared the field can't hand back the bomb that caused it.
+  // The ONE NUKE rule gates it too (`canDropNuke`): no second bomb rolls while
+  // one already waits on screen or sits in the dock.
+  const nuked =
+    !forced &&
+    !noNukeDrop &&
+    canDropNuke(state) &&
+    state.rng() < LOOT.nukeShare;
   const roll = state.rng();
+  if (nuked) {
+    // Sweeps away any stale off-screen bomb before minting the fresh one.
+    dropScreenNuke(state, pos);
+    return;
+  }
   // Whatever falls past the ladder's tail (the arrow slice a hard rung trims
   // away) yields nothing — so guard the drop event on an item actually landing.
   const itemsBefore = state.items.length;
-  if (nuked) {
-    state.items.push({
-      id: state.nextId++,
-      kind: "ability",
-      pos,
-      defId: "screen_nuke",
-    });
-  } else if (forced || roll < equipmentShare) {
+  if (forced || roll < equipmentShare) {
     state.minionEquipmentDrops++;
     state.items.push({
       id: state.nextId++,
