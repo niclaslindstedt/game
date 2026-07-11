@@ -66,6 +66,6 @@ Extend this table every time you find a new source file that feeds the docs.
 
 ## Skill self-improvement
 
-1. **Grow the mapping table** with any new source → doc relationship you discovered.
-2. **Record recurring patterns** you had to invent.
+1. **Grow the mapping table** with any new source → doc relationship you discovered (operating data — edit it in place).
+2. **Record recurring patterns** you had to invent as lesson fragments under `.lessons/` (see [`../LESSONS.md`](../LESSONS.md); read back with `node scripts/skill-lessons.mjs update-docs`) — fragments never conflict across parallel sessions.
 3. **Commit the skill edit** alongside the docs change so the knowledge compounds.

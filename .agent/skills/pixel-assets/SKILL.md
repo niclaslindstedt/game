@@ -193,5 +193,10 @@ actually looked at**:
 ## Skill self-improvement
 
 When you discover a new failure mode (muddy contrast, off-pivot frames, a
-seam pattern), add it to the quality checklist above so the next run catches
-it in step 4 instead of in playtesting.
+seam pattern), record it as a lesson fragment under `.lessons/` (see
+[`../LESSONS.md`](../LESSONS.md)) — never by appending to this file, which
+conflicts across parallel sessions. Read past ones with
+`node scripts/skill-lessons.mjs pixel-assets` before drawing. During a
+consolidation pass, promote recurring failure modes into the quality
+checklist above so the next run catches them in step 4 instead of in
+playtesting.

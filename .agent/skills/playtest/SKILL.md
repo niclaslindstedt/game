@@ -80,4 +80,8 @@ AI-controlled second player).
 ## Skill self-improvement
 
 When a tuning session settles on a new feel-rule of thumb ("contact damage
-above X makes rush unwinnable"), add it to the evaluation list above.
+above X makes rush unwinnable"), record it as a lesson fragment under
+`.lessons/` (see [`../LESSONS.md`](../LESSONS.md)) — never by appending to
+this file, which conflicts across parallel sessions. Read past ones with
+`node scripts/skill-lessons.mjs playtest` before evaluating. During a
+consolidation pass, promote settled rules into the evaluation list above.

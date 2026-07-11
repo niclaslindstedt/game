@@ -58,6 +58,6 @@ The `website/` directory contains the marketing site for `game`. Per §11.2 of `
 
 ## Skill self-improvement
 
-1. **Expand the mapping table** if a new source file started feeding the website.
-2. **Record extraction quirks** (e.g. "anchor X is parsed from heading Y").
+1. **Expand the mapping table** if a new source file started feeding the website (operating data — edit it in place).
+2. **Record extraction quirks** (e.g. "anchor X is parsed from heading Y") as lesson fragments under `.lessons/` (see [`../LESSONS.md`](../LESSONS.md); read back with `node scripts/skill-lessons.mjs update-website`) — fragments never conflict across parallel sessions.
 3. **Commit the skill edit** alongside the website update.

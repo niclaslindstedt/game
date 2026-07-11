@@ -68,13 +68,16 @@ what makes every game rule unit-testable in plain Node.
 
 When a new system forces a pattern not covered here (status effects, timed
 spawners, projectile-vs-projectile collision…), record where it landed and
-why, so the next system follows suit.
-
+why as a lesson fragment under `.lessons/` (see
+[`../LESSONS.md`](../LESSONS.md)) — never by appending to this file, which
+conflicts across parallel sessions. Read past ones with
+`node scripts/skill-lessons.mjs engine-system` before starting. During a
+consolidation pass, promote the proven lessons:
 
 - **Workflow patterns** (a new kind of system, a new invariant, a testing
-  technique) belong here in `SKILL.md`, phrased generically so any game
+  technique) into this `SKILL.md`, phrased generically so any game
   benefits.
 - **Game-specific pattern instances** (which catalog a system landed in, the
-  tunings that worked, references to this game's levels/enemies) go in
+  tunings that worked, references to this game's levels/enemies) into
   [`GAME_NOTES.md`](./GAME_NOTES.md) next to this file. A sequel resets that
   file, not this one.

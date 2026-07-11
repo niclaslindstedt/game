@@ -56,6 +56,11 @@ internal anatomy, not just silhouette.
 
 ## Phase 1 — Survey: build the long list
 
+Before anything else, read the lessons from past passes — `node
+scripts/skill-lessons.mjs art-improvement` — so known stumbles (fresh-art
+churn, the wound-visibility lint, sheet blind spots) are avoided up front.
+They live as fragments in [`.lessons/`](./.lessons/) next to this file.
+
 1. Run `make assets` first so grids, atlas, and warnings are current; note
    any contrast/orphan warnings — they are pre-scored offenders.
 2. `levels` mode: for each id from `art-audit.mjs levels`, generate
@@ -294,100 +299,19 @@ cause *here*, in the same PR as the art, before you finish:
   subcommand, or a new field in an existing legend) and add it to the helper
   table. Keep the script's usage text, header comment, and that table in sync.
 - **A step read wrong, ambiguous, or incomplete?** Rewrite it in place.
-- **Learned a gotcha that would have saved time up front?** Add one concrete
-  bullet to the **Lessons learned** log below, so the next session reads it in
-  Phase 1 and skips the stumble.
+- **Learned a gotcha that would have saved time up front?** Record it as a
+  lesson fragment — `.lessons/$(date +%s)-short-slug.md` with `title:`/`date:`
+  front matter and the lesson in the body (format in
+  [`../LESSONS.md`](../LESSONS.md)) — so the next session reads it at the top
+  of Phase 1 and skips the stumble. Never append lessons to this file:
+  parallel passes editing one SKILL.md is what causes merge conflicts; one
+  fragment per lesson never collides.
 
-Keep the log tight — when a lesson becomes obsolete (a manual step turns into
-a command, an instruction gets fixed), prune or rewrite the bullet rather than
-letting it rot.
+Keep the log tight — when `node scripts/skill-lessons.mjs art-improvement`
+nudges (more than 15 fragments), or a lesson has gone obsolete (a manual step turned
+into a command, an instruction got fixed), run the consolidation pass from
+`../LESSONS.md` as its own commit: merge near-duplicate fragments, delete the
+stale ones, and promote the load-bearing ones into the rubric, the steps, or
+`art-audit.mjs` above. Consolidation is the only time lesson content moves
+into this file.
 
-### Lessons learned
-
-A running log of gotchas from past passes. Add to it; don't let it rot.
-
-- **Don't re-redraw recently-updated art (Phase 1, step 5).** A sprite can read
-  a little awkward and still be freshly, deliberately made. Two tells flag
-  recent work: its git history (`git log`/`git blame` on the family
-  sprite-data module) and its own sprite-data comment — an elaborate,
-  just-finished rationale ("drawn on a 20×20 canvas so it looms over the crowd",
-  "drawn bulkier… so it looms over the 16px staff") is a shipped redesign, not a
-  placeholder. Check recency BEFORE locking the long list and cut those
-  candidates; a redraw of fresh art is churn, and the vote will reject it. (A
-  spacez pass learned this the hard way — redrew OPTIMUSK and HAZMAT, both
-  recently reworked, and both were voted out.)
-- **Resolve a loose target name first.** Users name a biome or level loosely
-  ("do spacez", "improve the moon"). `art-audit.mjs levels` prints every level
-  id *and* its biome — map the request to a concrete `<id>` before surveying
-  (e.g. "spacez" → `spacez_hq`, biome `spacez`).
-- **A single level can BE the whole 30-sprite long list.** Some levels have
-  ~30 total sprites, so the survey sheet already *is* the "worst 30" and the
-  30 → 20 → 10 funnel collapses. When the genuinely weak count is under 10, do
-  NOT pad the finalists to hit 10 — the "don't flatten hierarchy" craft note
-  applies. Name the real worst (often 5–7) and leave sprites that already read
-  well alone.
-- **Read the enemy/level defs before judging — hierarchy hides in the numbers.**
-  The survey legend carries `(role, Nhp)` so scale/hierarchy lies show on the
-  sheet itself: the classic offender is a tanky mob ("hits like a wrecking
-  ball", high hp) drawn *smaller and quieter* than a squishy minion, which the
-  eye alone misses. The defs also give speed, `gore`, and dialogue — the raw
-  material for the Phase 4 brief.
-- **The merchant is in scope for a level pass.** It lives in `merchant.mjs`,
-  not the biome family module, but has per-biome variants (`merchant_vendor`,
-  `merchant_moon`, …). The survey pulls the right one via `def.merchant.sprite`;
-  editing it only affects that biome.
-- **Wounds are auto-generated — draw the base to survive them.** `variants
-  <name>` shows the `_hurt`/`_wrecked`/`_dying` stages; the generator paints
-  them from the base per the enemy's `gore` field (staff bleed red `r/i`,
-  machines throw gold sparks `y/Y`, the haunting smears cyan). Never hand-draw
-  a wound stage — confirm the *base* silhouette still reads once the overlay
-  lands, and animated mobs need BOTH frames (`_0` and `_1`) redrawn to match.
-- **`palette <family|sprite>` before you sketch.** It prints the exact char →
-  color map a redraw draws with (core + family-local), so you don't hand-read
-  `core.mjs` and the family file to find which letter is "steel" or "cyan".
-- **A redraw can change the canvas size, not just the pixels.** Mobs are NOT
-  locked to one size — `render.ts` draws each at its native grid dimensions,
-  the atlas packs whatever you give it, and `woundedFrames`/the audit sheets
-  follow. When a mob's problem is "reads too small/big for its threat", the
-  fix is often a bigger/smaller grid, not more internal detail. Update the
-  sprite-data comment when you change a size, and remember both `_0`/`_1`
-  frames must share the new dimensions.
-- **Compute grids in JS, don't hand-type ASCII, once a sprite has props or two
-  frames.** Every prop-heavy redraw this pass (janitor's mop + bucket, the
-  desk, the vending machine, the hazmat rig) was faster and error-free built
-  with `put`/`box`/`hline` helpers over a base grid (see Phase 4) than typed by
-  hand — hand-aligning a mop handle or a keyboard into a fixed-width row is
-  where off-by-one bugs live. Build both walk frames from the one base and
-  print the joined rows to paste in; never retype the winning grid.
-- **Static sheets show the stride, not the motion — and lie about context.**
-  `variants`/`concepts` prove `_0`/`_1` both read and that wounds survive,
-  but ground separation, hierarchy next to the hero, and the walk cadence
-  only show in the running game. The scenario pose check (Phase 4 step 7)
-  is the cheap way to close that loop for anything stageable — a frozen
-  screenshot for the read, an unfrozen run for the motion; don't trust the
-  still frames alone, and don't hand-play the game to reach the sprite
-  either.
-- **A leaner/darker minion redraw can trip the 6px wound-visibility lint —
-  budget for it.** `make assets` warns `hurt overlay visibly changes only N px`
-  when the auto-generated wound doesn't move enough pixels. Minions get only
-  the `hurt` stage (2 tiny clusters), and the RNG (seeded by the sprite name)
-  anchors them at fixed spots, so a compact, dark, or sparse silhouette can
-  land under 6 visible px. Fixes, in order: (1) a family `wounds` override with
-  a splat that contrasts the body (`{splat:"y",core:"Y"}` gold for steel/dark
-  hosts); (2) add a `scuff` (`{...,scuff:"H"}`) AND give it a STABLE lower-body
-  row to land on — legs that stride between frames are *not* candidates (only
-  pixels body-colored in BOTH frames count), so a fixed coat hem / boot band in
-  the lower third is what the scuff needs; (3) avoid isolated 1px limbs — a
-  cluster that anchors on a stub can't grow, so connect arms to the torso. When
-  color/scuff can't move enough pixels it is a *count* problem, not a color one:
-  give the base a contiguous multi-row body block (a 3-row deck beats a wide
-  2-row one — clusters grow 2D, not just along a line). Iterate fast with a
-  throwaway probe that calls `woundedFrames(name, [f0,f1], style, ["hurt"])` +
-  `woundVisibility(f0, hurt0, SPRITE_PALETTES[name+"_0"])` — pass the REAL minion
-  stage `["hurt"]` (not the boss set) or it lies.
-- **`concepts`/`variants`/`sheet` render a sprite over its HOME family's ground
-  tile, not the level you're auditing.** A shared mob (e.g. `optimusk` lives in
-  the spacez family) renders over grey deck even while you audit Mars — a white
-  robot on grey deck looks washed-out and headless, tricking you into flagging
-  it. Judge a shared sprite over the LEVEL sheet (`level <id>`, which uses that
-  level's ground) before condemning it; over red regolith it may read fine.

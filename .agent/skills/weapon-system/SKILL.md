@@ -11,6 +11,14 @@ skill is the map of that system and the workflow for changing it safely.
 Everything is data-first: a new weapon is a def + an icon + (for ranged) a
 projectile sprite — no engine edits unless you're adding a new BEHAVIOR.
 
+**Before starting, read the lessons from past passes** — they live as
+fragments in [`.lessons/`](./.lessons/) next to this file (format in
+[`../LESSONS.md`](../LESSONS.md)):
+
+```sh
+node scripts/skill-lessons.mjs weapon-system
+```
+
 ## Where everything lives
 
 | Piece | File |
@@ -280,148 +288,6 @@ in `loot.ts`, called from `killEnemy` right after the boss roll.
    coverage counts both homes. Run `npx vitest run` (the drop-table suite
    asserts every shipped unique has exactly one home).
 
-## Lessons learned (2026-07 world drops)
-
-- **Compounding over head-count is the whole calibration.** A per-kill chance
-  that reads "rare" is enormous across 1000+ mobs. Always solve the aggregate
-  `1 − ∏(1−p)^count` to the target (~30% a clear), and weight the boss orders of
-  magnitude over minions so boss runs — not floor-grinding — are the efficient
-  farm. `leveling-curve.mjs --campaign`/`--by-level` gives the counts and the
-  per-level hero level to size both the rates and the `minPlayerLevel` gate.
-- **Gate BEFORE the rng draw.** `maybeDropWorldUnique` returns on "no table for
-  this level/rung" and "under the gate" before touching `state.rng`, so the vast
-  majority of kills (fixtures, under-level runs) draw nothing and every seeded
-  loot/content test is untouched. A per-kill roll that drew unconditionally would
-  shift every seeded test after the first kill — the classic rng-stream trap.
-- **`registerDefs` grew a `uniques` slot** so world-drop rules test on synthetic
-  fixtures (the engine-test rule: no shipped ids). Mirror this for any future
-  system that mints uniques in the engine.
-- **World-charm ilvl is nearly cosmetic.** World odds are flat role rates (not
-  `× mlvl/ilvl` like boss uniques) and charms carry no base armor/dps, so a world
-  charm's ilvl only moves the ±band. Bump it freely to clear the "wears above
-  ilvl" warn without worrying about power.
-
-## Lessons learned (2026-07 uniques)
-
-- **Generated grade variants are real bases but invisible to grep.** The single
-  worst unique-authoring bug: naming a base, greping the gear/equipment source,
-  not finding it, and "fixing" a non-problem — because `grades.ts` mints the
-  Exceptional/Elite variants at load, not in source. Validate bases through the
-  checker (runtime `GEAR_DEFS`/`WEAPON_DEFS`), never a source grep.
-- **`req ≈ ilvl − 20` is the whole base-selection math.** It sets the equip gate
-  and the armor/dps in one move (higher req = higher grade). `--suggest` makes
-  it a repeatable pass; re-run it whenever the ilvl of a unique changes or new
-  bases land, and re-pick the flagged (`⚠ under-grade`) items.
-- **Armor is fixed by the base for uniques** (no ilvl growth — that was a
-  deliberate design call so rares eventually overtake), so within a slot the
-  base armor must climb with ilvl. The checker's per-slot monotonicity catch is
-  what keeps a nightmare piece from being weaker than an easy one.
-- **Weapon power is class-dependent** — don't chase a strictly-climbing weapon
-  DPS ladder across uniques; an AoE flamethrower reads "weaker" than a maul on
-  raw numbers but is on-budget. Theme wins ties; sanity against weapon-budget.
-
-## Lessons learned (2026-07 Diablo rework)
-
-- **Starting weapons are lore, not economy.** The difficulty's wall weapons
-  (wand/sword/knife/knuckles/stick) and the elite/boss signatures stay OUT
-  of the base pools; they're the seed stock for the unique tier. The
-  `blaster` is the engine's unbreakable fallback sidearm — never delete it,
-  never pool it.
-- **Scripted early drops constrain `levelReq`.** Anything in a level's
-  `earlyDrops` (or dropped by kill ~2) must be equippable when it arrives:
-  HQ's `security_baton` drops at kill 2, so its req is 1 even though it's
-  the pool's second-best melee. Check every guaranteed drop against the
-  hero's level at that story moment.
-- **Deleting a weapon id is a repo-wide grep**, not a def deletion: level
-  pools, `placedItems`, `earlyDrops`, enemy `loot.items`, content tests,
-  icons (a swapPalette variant may still need the const), and BANKED
-  LOADOUTS in players' localStorage — `migrateLoadout` in
-  `website/src/game/progress.ts` must map retired ids/tiers or old saves
-  crash `createGame`.
-- **rng-stream discipline**: any change to how many rng draws a drop
-  consumes shifts every seeded content test after the first kill. Tests
-  that park a dying mob ON the player die to contact-damage streaks when
-  the stream shifts — stage kills at arm's length (`equipBlaster` + mob at
-  +80px) so the scenario doesn't hinge on miss/dodge luck.
-- **Tier-gate defaults in tests**: `tests/engine/helpers.ts` `makeEnemy`
-  defaults `mlvl: 99` (past every gate) so loot-shape suites keep their
-  pre-gate behavior; gate suites set `mlvl` explicitly. Elite/boss mlvl is
-  re-stamped on engage (`maybePowerScale`) — set `powerScaled: true` when a
-  test needs a hand-staged mlvl to survive the first hit.
-- **Multi-pellet volleys carry damage PER PELLET** — compare volleys at
-  ~60% pellet connect rate (what weapon-stats.mjs does), and remember the
-  `shot` event fires once per pull (SFX) while `shotsFired` counts pulls.
-- **AoE trades single-target DPS** by design — the budget model makes the
-  trade exact (per-target damage = budget ÷ assumed targets), and the
-  effective ladder is what must climb with levelReq, never the raw one.
-- **Auto-equip must speak the balance model.** When per-target damage was
-  budget-normalized, raw dps ranking (`weaponScore`) started shunning every
-  AoE weapon; the score folds in assumed targets and the crit lift now. Any
-  future model change lands in `weaponScore`, `weaponDps`, and the budget
-  scripts together.
-- **…but ranged AoE is credited at what it REALIZES, not its ceiling.**
-  `weaponAssumedTargets` is a balance-AUTHORING assumption (budget ÷ 4 for a
-  4-pellet gun); crediting it in full to `weaponScore` let a spread weapon with
-  a quarter of a single-target's per-hit damage displace it on a paper tie,
-  which feels awful against any lone tough foe. So `weaponScore` credits a
-  ranged spread's extra targets at a fraction — `1 + (assumed − 1) ×
-  WEAPON.aoeRealization` — beyond its first, guaranteed hit. Melee sweeps stay
-  reliable (credited at `maxMeleeTargets`, what INT can cleave); only
-  conditional ranged multipliers (pellets/pierce/chain) take the discount. This
-  is a RANKING tuning only — the budget scripts, item card, and
-  `weaponAssumedTargets` are untouched.
-- **Wood-dark pixels vanish**: the core `k` wood char is near-outline dark;
-  weapon hafts/stocks read better in the warm `B` brown. Verify every icon
-  at @8x — first drafts of "obvious" silhouettes (rayguns, revolvers) read
-  as crosses and blobs; two or three iterations is normal.
-
-## Lessons learned (2026-07 quality + grade ladders)
-
-- **Generated variants must be classified through `gradeBase`.** Both
-  scripts (`weapon-budget.mjs` special-vs-pooled, `weapon-stats.mjs` class
-  ladder) and the weapon sheet group by pool membership — a variant rides
-  its base's (`pooled.has(def.gradeBase ?? def.id)`), or every generated
-  def reads as a "special" and fails the ×1.15 premium budget.
-- **Derive variant damage from the budget FORMULA, not by scaling the
-  base's damage.** Ratio-scaling carries the base's within-tolerance drift
-  into the variant, and rounding can push it over the band (riot_baton did).
-  Computing `budget(newReq) × cd/1000 ÷ targets ÷ critLift` directly puts
-  every variant dead-center by construction.
-- **Any new per-drop rng draw shifts every seeded content test** — the
-  quality roll surfaced a latent fixture gap: the loot rain hardcodes the
-  `screen_nuke` id (LOOT.nukeShare), so the fixture catalog must register a
-  `screen_nuke` ability (like the shared `blaster`) or a long headless run
-  crashes when the slice finally hits.
-- **Durability "max" is an instance question now.** Anything comparing or
-  refilling against `def.durability` (repair kits, mercy desperation, UI
-  bars) must go through `equipmentMaxDurability` or a CRUDE piece repairs
-  past what it minted with.
-
-## Lessons learned (2026-07 damage ranges + magic parity)
-
-- **`def.damage` is the MEAN of a range, not a fixed hit.** Every blow rolls
-  inside a band (`WEAPON.damageVariance` default, per-def `damageVariance`
-  override) around the average. Keep authoring `damage` as the average —
-  the budget model, DPS readouts, auto-equip, and grade generation all
-  reason about expected output, so the spread rides on top and none of them
-  change. `weaponDamageFor` stays the deterministic average (UI/scoring);
-  `rollWeaponDamage` is the combat-time roll; `weaponDamageRange` is the
-  item-card min–max. Melee rolls once per swing, projectiles once PER PELLET.
-- **Per-hit variance draws off `state.fxRng`, a SECOND stream — never
-  `state.rng`.** This is the trick that let the whole change land with zero
-  seeded-loot-test churn: the loot/crit stream sequence is untouched, so
-  drop determinism holds. `fxRng` is seeded off the same seed (repro-safe)
-  and IS persisted (saved-run snapshots `fxRngState` too, so resume is
-  lossless — the persistence test enforces exact-sequence resume). Any
-  future combat-flavor randomness (screen shake, spark counts) belongs on
-  `fxRng`, not `rng`.
-- **A pool is `2 melee / 2 ranged / 2 magic` now.** Magic shipped
-  half-served (one base per level → 12 rungs vs 24). Bringing a class to
-  parity is: add one base per level pool at a stepped `levelReq`, grade
-  names in `grades.ts`, wire the pool array, `make assets`, LOOK. The grade
-  bands ([25,52] exceptional, [55,100] elite) unfold the rest — check the
-  `weapon-stats.mjs` per-class ladder afterwards (it must never step down).
-
 ## After you're done — the checklist
 
 - [ ] `node scripts/weapon-budget.mjs --strict` clean — every weapon on its
@@ -447,9 +313,20 @@ in `loot.ts`, called from `killEnemy` right after the boss roll.
 ## Skill self-improvement
 
 When a weapon-system change teaches something new (a tuning heuristic, a
-failure mode, a new behavior pattern), bake it into "Lessons learned" above
-— and extend the checker when the lesson is checkable, so the next run catches
-it mechanically instead of by eye: `scripts/weapon-stats.mjs` for weapon/loot
+failure mode, a new behavior pattern), record it as a NEW lesson fragment —
+`.lessons/$(date +%s)-short-slug.md` with `title:`/`date:` front matter and
+the lesson in the body (format and lifecycle in
+[`../LESSONS.md`](../LESSONS.md)). Never append lessons to this file:
+parallel sessions editing one SKILL.md is what causes merge conflicts; one
+fragment per lesson never collides.
+
+Extend the checker when the lesson is checkable, so the next run catches it
+mechanically instead of by eye: `scripts/weapon-stats.mjs` for weapon/loot
 rules, `scripts/unique-check.mjs` for unique authoring (its tuning knobs —
 `EQUIP_GAP`, `GAP_SLACK`, seed-base exclusions — are named constants at the
 top; adjust them there, not inline).
+
+When `skill-lessons.mjs` nudges (more than 15 fragments), run the consolidation pass
+from `../LESSONS.md` as its own commit: merge near-duplicate fragments,
+delete stale ones, and promote the load-bearing ones into the sections above
+— consolidation is the only time lesson content moves into this file.

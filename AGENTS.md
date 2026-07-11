@@ -359,3 +359,17 @@ Per §21 of `OSS_SPEC.md`, this repo ships agent skills for keeping drift-prone 
 | `commit`         | To commit, push, and open/update a PR with a conventional-commit title.                                                           |
 
 Each skill has a `SKILL.md` (the playbook) and a `.last-updated` file (the baseline commit hash). Run a skill by loading its `SKILL.md` and following the discovery process and update checklist. The skill rewrites `.last-updated` at the end of a successful run, and improves itself in place when it discovers new mapping entries. The `maintenance` skill owns a **Registry** table listing every `update-*` skill — add a row whenever you create a new sync skill.
+
+## Skill lessons — fragments, not SKILL.md edits
+
+When a session learns a gotcha or heuristic while running any skill, it
+records it under `.agent/skills/<skill>/.lessons/<unix-timestamp>-<slug>.md`
+— one file per lesson, YAML front matter with `title`/`date`, the lesson in
+the body; the full convention is
+[`.agent/skills/LESSONS.md`](.agent/skills/LESSONS.md). Read a skill's
+lessons back with `node scripts/skill-lessons.mjs <skill>` before starting
+that kind of work. Never append lessons to a `SKILL.md`: parallel sessions
+editing one file cause merge conflicts, while fragments never collide. A
+periodic consolidation pass (its own commit) merges near-duplicate lessons,
+deletes stale ones, and promotes the load-bearing ones into the skill's main
+instruction — that is the only time lesson content moves into `SKILL.md`.

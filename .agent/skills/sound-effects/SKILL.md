@@ -107,30 +107,20 @@ run start and every canvas pointerdown — keep that invariant if you touch
 ## Skill self-improvement
 
 Record parameter recipes that worked ("UI confirm = square 660+990 stepped
-60 ms apart, detune 5, echo 0.15") so the palette of proven sounds grows
-over time.
+60 ms apart, detune 5, echo 0.15") as lesson fragments —
+`.lessons/$(date +%s)-short-slug.md` with `title:`/`date:` front matter
+(format in [`../LESSONS.md`](../LESSONS.md)) — so the palette of proven
+sounds grows over time without parallel sessions conflicting on this file.
+Read the palette back before designing a sound:
 
-- **16-bit palette rule (2026-07):** the palette opened up from the old
-  NES three-waves rule — sines are the gloss/bell layer, saws carry
-  danger and weight (playerHurt, kills, boss), squares stay the action
-  core, triangle stays the warm reward/bass voice. What keeps it "chip"
-  is short envelopes and quantized pitches, not banning waveforms.
-- **Echo bus (2026-07):** one shared feedback delay (0.22 s, feedback
-  0.32, lowpass 2600) in `synth.ts`; `echo:` on any tone/noise is a send
-  level into it. It is the single biggest "sounds 16-bit now" knob —
-  and the easiest to overdose: keep combat SFX ≤0.3.
-- **Master limiter + per-step dedupe (2026-07):** every voice and the echo
-  bus sum into one `DynamicsCompressor` limiter (threshold −12 dB, knee 6,
-  ratio 20, attack 2 ms, release 180 ms) in `synth.ts` before the
-  destination — single sounds (peaks ≤ 0.12 ≈ −18 dBFS) pass untouched,
-  overlapping stacks stop hard-clipping. And `playEventSounds` plays
-  identical sounds once per step (keyed on type/weaponClass/crit/kind/tier):
-  N same-frame kills are sample-aligned copies of one waveform, i.e. one
-  sound at N× amplitude, never "N kills".
-- **Drum kit recipes (2026-07):** kick = triangle A2, `slide 0.25`,
-  gate 1; snare = noise, highpass 1400, vol ~0.038; hat = noise,
-  highpass 6500, gate 0.3, vol ~0.011, panned slightly. A 2-bar kick
-  pattern + backbeat snare + eighth hats carries a whole action track.
+```sh
+node scripts/skill-lessons.mjs sound-effects
+```
+
 - **Arrangement shapes** — this game's proven title/level track structures
   live in [`GAME_NOTES.md`](./GAME_NOTES.md); record new score-specific
-  arrangements there, and keep reusable synth/mixing recipes here.
+  arrangements there, and keep reusable synth/mixing recipes in `.lessons/`.
+
+When the printer nudges (more than 15 fragments), run the consolidation pass from
+`../LESSONS.md`: merge near-duplicate recipes, delete stale ones, and
+promote what every session relies on into the sound vocabulary above.
