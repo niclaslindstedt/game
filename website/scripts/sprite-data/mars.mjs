@@ -33,42 +33,44 @@ const PALETTE = {
 
 const SPRITES = {
   // ---- The colony's machines (16×16 minions) --------------------------------
-  // SCOUT ROVER — a camera on six wheels, the dust's fodder rank. Frames
-  // alternate the wheel base like a stride.
+  // SCOUT ROVER — the dust's fodder rank: a camera on wheels, fresh paint on a
+  // worn chassis. A boxy camera head with a cyan lens rides a short mast over a
+  // steel deck on three round wheels. Frames spin the wheel spokes and blink
+  // the status lamp — a cheap thing that evaporates on contact.
   scout_rover_0: [
     "................",
-    ".....OOO........",
-    "....OxccO.......",
-    ".....OOO........",
-    "......OvO.......",
-    "....OOOvOOOO....",
-    "...OvooooooVO...",
-    "..OvvoqoqoqvvO..",
-    "..OvvvvvvvvvvO..",
-    "..OObOObbOObOO..",
-    "..ObbO.ObbO.ObO.",
-    "...OO...OO...O..",
-    "................",
-    "................",
-    "................",
+    ".....OOOOOo.....",
+    ".....ObcxbO.....",
+    ".....OVxcVO.....",
+    ".....OOOOOO.....",
+    "........b.......",
+    "........b.......",
+    ".OOOoOOOOOOHOOO.",
+    ".OVVVVVVVVVVVVO.",
+    ".OvvvvvvvvvvvvO.",
+    ".OvvvvvvvvvvvvO.",
+    ".OOOOOOOOOOOOOO.",
+    "..OaO.OaO..OaO..",
+    "..OVO.OVO..OVO..",
+    "..OOO.OOO..OOO..",
     "................",
   ],
   scout_rover_1: [
     "................",
-    ".....OOO........",
-    "....OxccO.......",
-    ".....OOO........",
-    "......OvO.......",
-    "....OOOvOOOO....",
-    "...OvooooooVO...",
-    "..OvvqoqoqovvO..",
-    "..OvvvvvvvvvvO..",
-    "..OObbOObOObbO..",
-    "..OObbO.ObbOOO..",
-    "....OO...OO.....",
-    "................",
-    "................",
-    "................",
+    ".....OOOOOH.....",
+    ".....ObcxbO.....",
+    ".....OVxcVO.....",
+    ".....OOOOOO.....",
+    "........b.......",
+    "........b.......",
+    ".OOOHOOOOOOoOOO.",
+    ".OVVVVVVVVVVVVO.",
+    ".OvvvvvvvvvvvvO.",
+    ".OvvvvvvvvvvvvO.",
+    ".OOOOOOOOOOOOOO.",
+    "..OaO.OaO..OaO..",
+    "..OVO.OVO..OVO..",
+    "..OOO.OOO..OOO..",
     "................",
   ],
   // MINING ROVER — the outdoor heavy: a tracked drill rig that looms over the
@@ -850,6 +852,9 @@ export default {
    */
   wounds: {
     fembot: { splat: "v", core: "b" },
+    // Bright gold spark + dark-gold core so the electrical hit reads across the
+    // little scout's steel deck (its default core matched the body too closely).
+    scout_rover: { splat: "y", core: "H" },
     // Gold sparks vanish on the gold hazard cab — torn pale plating reads.
     mining_rover: { splat: "x", core: "b" },
     peter_seal: { splat: "r", core: "r" },
