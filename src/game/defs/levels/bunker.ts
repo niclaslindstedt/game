@@ -148,7 +148,7 @@ export const THE_BUNKER: LevelDef = {
     { enemy: "guard_alignment", at: { x: 2510, y: 390 } },
     { enemy: "guard_alignment", at: { x: 2645, y: 345 } },
     { enemy: "guard_alignment", at: { x: 2610, y: 475 } },
-    { enemy: "jerry_allison", at: { x: 770, y: 1300 } },
+    { enemy: "larry_allison", at: { x: 770, y: 1300 } },
     { enemy: "guard_oracle", at: { x: 700, y: 1290 } },
     { enemy: "guard_oracle", at: { x: 835, y: 1245 } },
     { enemy: "guard_oracle", at: { x: 800, y: 1375 } },

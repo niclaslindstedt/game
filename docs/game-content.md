@@ -111,7 +111,7 @@ names its in-run music with an optional `music` id (a key into the app's
   narrow corridor spine (`bunker` biome — polished concrete with brass-inlay
   medallions and burgundy carpet runs; ~800 px/s² gravity). Each suite holds
   a **resident** — VLADIMIR PUTAIN (a clone? the backup), MARK SUCKERBERG,
-  JERRY ALLISON, JEFF BAYWATCH, SAM HALTMAN, DONALD DUMP — every one far
+  LARRY ALLISON, JEFF BAYWATCH, SAM HALTMAN, DONALD DUMP — every one far
   tougher than any campaign elite and ringed by his **personal bodyguards**
   (one drawing, six liveries, a size up from the crew), while the privatized
   security state (CIA and FBI agents, ICE's border detail, soldiers that
@@ -501,7 +501,7 @@ The roster is split one file per level/biome under `src/game/defs/enemies/`
   in the campaign (1600–2600 hp, `levelBonus` 6): VLADIMIR PUTAIN — the
   backup ("CHECK THE OTHER FREEZERS"; drops another KOLEX DAYTONNE),
   MARK SUCKERBERG (fast, `dodgeChance` 0.3 of rehearsed humanity),
-  JERRY ALLISON and SAM HALTMAN (ranged, `takesCover` — the audit and the
+  LARRY ALLISON and SAM HALTMAN (ranged, `takesCover` — the audit and the
   aligned bolt), JEFF BAYWATCH (the fastest, hardest-hitting rusher), and
   DONALD DUMP (radius 15, speed 10, the hardest single touch in the game,
   never dodges). No boss — the exit door ends it. Sight thoughts fire for
