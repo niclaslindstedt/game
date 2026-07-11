@@ -180,11 +180,13 @@ export const ENEMY_AI = {
   separation: 16,
   /**
    * Fraction of the separation distance mobs may overlap (0 = shoulder to
-   * shoulder, 0.2 = bodies squeeze 20% into each other). Looser packing
-   * lets a kited horde bunch into one clump the player can finish off
-   * together — the single knob to turn if packs feel too loose or too tight.
+   * shoulder, 0.5 = bodies squeeze halfway into each other). Loose packing is
+   * a deliberate design choice: a kited horde bunches into one tight clump the
+   * player can lure together and finish off with a high-INT AoE weapon —
+   * overlapping bodies are the whole point, not a defect. The single knob to
+   * turn if packs feel too loose or too tight.
    */
-  overlapFraction: 0.2,
+  overlapFraction: 0.5,
   /**
    * A minion counts toward the wave floor (waves.minAlive) only within this
    * distance of the player — parked spawns on the far side of the map must
