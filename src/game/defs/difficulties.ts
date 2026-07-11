@@ -11,16 +11,18 @@
 import type { Difficulty, StatName, Tier } from "../types.ts";
 
 /**
- * A rung's MERCY strengths — how forcefully the easy/medium rope pulls (the
- * ramp SHAPES that turn each signal into a 0→1 desperation live in the `MERCY`
- * config). Every field is zero on hard and up, so no mercy reaches them.
+ * A rung's MERCY strengths — how forcefully the rope pulls (the ramp SHAPES
+ * that turn each signal into a 0→1 desperation live in the `MERCY` config).
+ * The strengths TAPER geometrically down the ladder (~×0.4 per rung off
+ * medium): easy is a firm hand, medium a light one, hard a whisper,
+ * nightmare a ghost — and JESUS is absolute zero, the no-net terminus.
  */
 export type MercyTuning = {
   /**
    * The most a PACKED FIELD adds to each kill's chance of dropping a
    * screen-nuke — the bomb-in-a-swarm bailout. Ramps in from zero once the
    * on-screen crowd passes `MERCY.crowdBombThreshold`, reaching this cap at
-   * `MERCY.crowdBombFull`. Easy tops out at 5%, medium 3%, the rest 0.
+   * `MERCY.crowdBombFull`. Easy tops out at 5%, tapering to 0 on JESUS.
    */
   crowdBombChanceMax: number;
   /**
@@ -47,7 +49,7 @@ export type MercyTuning = {
    * The per-kill chance a stranded hero is thrown an ENERGY DRINK once his
    * sprint pool is BONE-DRY (exactly empty, not merely low). Zero the instant
    * stamina hits empty, ramping to this cap over `MERCY.staminaEmptyDrinkRampMs`
-   * — 15% on easy, 10% on medium, zero from hard up (a winded hero on the hard
+   * — 15% on easy tapering to nothing by JESUS (a winded hero on the top
    * rungs recovers by backing off, not by looting his way out).
    */
   staminaDrinkChanceMax: number;
@@ -329,14 +331,15 @@ export const DIFFICULTY_DEFS: Record<Difficulty, DifficultyDef> = {
     powerupDropMult: 0.95,
     // Arrows start thinning: fewer free levels, more of the climb earned.
     arrowDropMult: 0.7,
-    // No mercy from hard up: no crowd bomb, no low-health or low-durability
-    // help. The struggle is the point.
+    // The mercy taper (~x0.4 per rung off medium): hard keeps a WHISPER of
+    // the rope — a rare bomb in a drowning swarm, a thin low-health boost —
+    // so the cliff out of medium is a step, not a wall.
     mercy: {
-      crowdBombChanceMax: 0,
-      medkitBonus: 0,
-      armorBonus: 0,
-      repairBonus: 0,
-      staminaDrinkChanceMax: 0,
+      crowdBombChanceMax: 0.012,
+      medkitBonus: 0.5,
+      armorBonus: 0.13,
+      repairBonus: 0.5,
+      staminaDrinkChanceMax: 0.04,
     },
     lootIlvlBonus: 2,
     tierChanceBonus: { magic: 0.09, rare: 0.05 },
@@ -367,12 +370,13 @@ export const DIFFICULTY_DEFS: Record<Difficulty, DifficultyDef> = {
     powerupDropMult: 0.9,
     // Arrows are scarce up here — the horde is the only real XP source.
     arrowDropMult: 0.4,
+    // A ghost of mercy (the taper's last audible step before JESUS's zero).
     mercy: {
-      crowdBombChanceMax: 0,
-      medkitBonus: 0,
-      armorBonus: 0,
-      repairBonus: 0,
-      staminaDrinkChanceMax: 0,
+      crowdBombChanceMax: 0.005,
+      medkitBonus: 0.2,
+      armorBonus: 0.05,
+      repairBonus: 0.2,
+      staminaDrinkChanceMax: 0.015,
     },
     lootIlvlBonus: 3,
     tierChanceBonus: { magic: 0.15, rare: 0.09 },
@@ -405,6 +409,7 @@ export const DIFFICULTY_DEFS: Record<Difficulty, DifficultyDef> = {
     powerupDropMult: 0.77,
     // No arrows at all on JESUS: every level is earned kill by kill.
     arrowDropMult: 0,
+    // JESUS is the taper's terminus: absolute zero, no net, by design.
     mercy: {
       crowdBombChanceMax: 0,
       medkitBonus: 0,

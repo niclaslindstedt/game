@@ -1103,17 +1103,19 @@ export const QUALITY = {
 } as const;
 
 /**
- * MERCY DROPS — the gentle rungs (easy/medium) throw a drowning player a rope,
- * and the fight eases without ever becoming un-losable. Four independent
- * signals feed it: a PACKED FIELD (crowd of on-screen mobs), LOW HEALTH, a
- * near-BROKEN WEAPON, and an EMPTY SPRINT POOL (stamina bone-dry). The first
- * three turn into a 0→1 "desperation" as they worsen — zero at their `*Start`
- * mark, one at their `*Full` mark, linear between (see `desperationRamp`); the
- * stamina rope instead ramps over TIME the pool sits empty (see
- * `staminaDrinkChance`). This namespace owns the RAMP SHAPES (where help begins
- * and maxes); each rung owns its STRENGTH via `DifficultyDef.mercy`
- * (`MercyTuning`), and hard-and-up zero every strength so none of this reaches
- * them. Tune the two together: shape here, per-rung force on the ladder.
+ * MERCY DROPS — the game throws a drowning player a rope, harder the gentler
+ * the rung, and the fight eases without ever becoming un-losable. Four
+ * independent signals feed it: a PACKED FIELD (crowd of on-screen mobs), LOW
+ * HEALTH, a near-BROKEN WEAPON, and an EMPTY SPRINT POOL (stamina bone-dry).
+ * The first three turn into a 0→1 "desperation" as they worsen — zero at
+ * their `*Start` mark, one at their `*Full` mark, linear between (see
+ * `desperationRamp`); the stamina rope instead ramps over TIME the pool sits
+ * empty (see `staminaDrinkChance`). This namespace owns the RAMP SHAPES
+ * (where help begins and maxes); each rung owns its STRENGTH via
+ * `DifficultyDef.mercy` (`MercyTuning`), TAPERING geometrically down the
+ * ladder (~×0.4 per rung: easy → medium → a whisper on hard → a ghost on
+ * nightmare → absolute zero on JESUS). Tune the two together: shape here,
+ * per-rung force on the ladder.
  */
 export const MERCY = {
   /** On-screen minions before a packed field starts coughing up screen-nukes,
@@ -1404,9 +1406,18 @@ export const APPARITION = {
   lingerMs: 2600,
 } as const;
 
-/** The medkit consumable: picked up on touch, never enters the inventory. */
+/**
+ * The medkit consumable: picked up on touch, never enters the inventory.
+ * The heal is `max(healBase, healFrac × maxHp)` — a flat floor for the
+ * opening (30 on the authored 100-hp start, a hair under the old 35), then
+ * a FRACTION of the grown health bar, so a late-campaign medkit is still a
+ * fifth of a STAMINA build's bar instead of a decayed rounding error. The
+ * fraction keeps healing's PRESSURE constant across the campaign; scarcity
+ * (the drop share and the per-rung medkitDropMult) stays the balance lever.
+ */
 export const MEDKIT = {
-  heal: 35,
+  healBase: 30,
+  healFrac: 0.2,
   radius: 8,
 } as const;
 

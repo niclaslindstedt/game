@@ -1616,7 +1616,13 @@ function stepItems(state: GameState, dtMs: number): void {
     if (!overlapping) return true;
 
     if (item.kind === "medkit") {
-      player.hp = Math.min(player.maxHp, player.hp + MEDKIT.heal);
+      // A fraction of the GROWN bar with a flat floor (config MEDKIT), so
+      // healing keeps its meaning against a campaign health pool.
+      const heal = Math.max(
+        MEDKIT.healBase,
+        Math.round(MEDKIT.healFrac * player.maxHp),
+      );
+      player.hp = Math.min(player.maxHp, player.hp + heal);
       state.stats.itemsCollected++;
       state.events.push({
         type: "itemCollected",
