@@ -58,6 +58,10 @@ export const STAT_LABELS: Record<StatName, string> = {
 export const DELTA_UP = "#5fd97a";
 export const DELTA_DOWN = "#e06a6a";
 
+/** A stat line's VALUE reads in light grey so the white TITLE (DPS, DAMAGE,
+ * SPEED, …) leads the eye; the number is the detail, not the headline. */
+export const VALUE_COLOR = "#9aa3ad";
+
 export function affixLine(affix: Affix): string {
   switch (affix.kind) {
     case "damagePct":
@@ -90,12 +94,16 @@ export function hitRate(state: GameState): number {
   );
 }
 
-/** A stat line in the item card: text with an optional accent color (the
- * default white reads as a plain fact; a color flags a class or a bonus), plus
- * an optional green/red `(+3)` delta comparing this stat to the equipped
- * piece — only set on the lines that differ from what's worn. */
+/** A stat line in the item card. A plain fact splits into a white `label`
+ * (DPS, DAMAGE, …) and a light-grey `value` (the number). Lines that carry
+ * meaning in their color instead — an affix, the REQUIRES-LEVEL freshness
+ * gauge, a low-durability warning — set a whole-line `color` and skip the
+ * split, so the accent reads across the row. `delta` is the optional green/red
+ * `(+3)` comparison to the equipped piece, only on lines that differ. */
 export type CardLine = {
   text: string;
+  label?: string;
+  value?: string;
   color?: string;
   delta?: { text: string; color: string } | null;
 };
@@ -174,7 +182,8 @@ export function itemLines(
     const dps = Math.round(weaponDps(state, item));
     lines.push({
       text: `DPS ${formatCompact(dps)}`,
-      color: "#7ef0c8",
+      label: "DPS",
+      value: formatCompact(dps),
       delta: eq ? compareChip(dps - Math.round(weaponDps(state, eq))) : null,
     });
     // Show the damage this weapon would deal in the player's hands as the RANGE
@@ -184,11 +193,14 @@ export function itemLines(
     const effective = Math.round(weaponDamageFor(state, item));
     const { min, max } = weaponDamageRange(state, item);
     const bonus = effective - def.damage;
+    const dmgValue =
+      bonus > 0
+        ? `${formatCompact(min)}-${formatCompact(max)} (+${formatCompact(bonus)})`
+        : `${formatCompact(min)}-${formatCompact(max)}`;
     lines.push({
-      text:
-        bonus > 0
-          ? `DAMAGE ${formatCompact(min)}-${formatCompact(max)} (+${formatCompact(bonus)})`
-          : `DAMAGE ${formatCompact(min)}-${formatCompact(max)}`,
+      text: `DAMAGE ${dmgValue}`,
+      label: "DAMAGE",
+      value: dmgValue,
       delta: eq
         ? compareChip(effective - Math.round(weaponDamageFor(state, eq)))
         : null,
@@ -199,11 +211,14 @@ export function itemLines(
     // show the base-relative time shaved off as a "-X" hint.
     const secs = weaponCooldownFor(state, item) / 1000;
     const saved = def.cooldownMs / 1000 - secs;
+    const spdValue =
+      saved > 0.005
+        ? `${secs.toFixed(2)} (-${saved.toFixed(2)})`
+        : `${secs.toFixed(2)}`;
     lines.push({
-      text:
-        saved > 0.005
-          ? `SPEED ${secs.toFixed(2)} (-${saved.toFixed(2)})`
-          : `SPEED ${secs.toFixed(2)}`,
+      text: `SPEED ${spdValue}`,
+      label: "SPEED",
+      value: spdValue,
       // Shorter cadence is faster, so a smaller number is the upgrade.
       delta: eq
         ? compareChip(secs - weaponCooldownFor(state, eq) / 1000, {
@@ -215,11 +230,12 @@ export function itemLines(
     // Reach the same way: INTELLIGENCE lengthens every weapon's range.
     const effRange = Math.round(weaponRangeFor(state, item));
     const rangeBonus = effRange - def.range;
+    const rangeValue =
+      rangeBonus > 0 ? `${effRange} (+${rangeBonus})` : `${effRange}`;
     lines.push({
-      text:
-        rangeBonus > 0
-          ? `RANGE ${effRange} (+${rangeBonus})`
-          : `RANGE ${effRange}`,
+      text: `RANGE ${rangeValue}`,
+      label: "RANGE",
+      value: rangeValue,
       delta: eq
         ? compareChip(effRange - Math.round(weaponRangeFor(state, eq)))
         : null,
@@ -246,7 +262,8 @@ export function itemLines(
     if (critMult !== STATS.critMultiplier) {
       lines.push({
         text: `CRIT DAMAGE X${critMult.toFixed(1)}`,
-        color: AFFIX_COLORS.crit,
+        label: "CRIT DAMAGE",
+        value: `X${critMult.toFixed(1)}`,
         delta: eq
           ? compareChip(critMult - weaponCritMult(weaponDef(eq.defId)), {
               digits: 1,
@@ -260,7 +277,10 @@ export function itemLines(
         ? { text: "UNBREAKABLE" }
         : {
             text: `DURABILITY ${item.durability}/${maxDur}`,
-            // A near-broken weapon warns in red.
+            label: "DURABILITY",
+            value: `${item.durability}/${maxDur}`,
+            // A near-broken weapon warns in red across the whole row (the
+            // whole-line color suppresses the label/value split).
             color: item.durability <= maxDur * 0.25 ? "#e06a6a" : undefined,
           },
     );
@@ -311,6 +331,8 @@ export function itemLines(
           ? { text: "BROKEN - REPAIR TO RESTORE", color: "#e06a6a" }
           : {
               text: `DURABILITY ${item.durability}/${maxDur}`,
+              label: "DURABILITY",
+              value: `${item.durability}/${maxDur}`,
               color: item.durability <= maxDur * 0.25 ? "#e06a6a" : undefined,
             },
       );
@@ -349,10 +371,11 @@ export function ItemIcon({
  * null for a standalone read. `maxWidth` wraps long names/lines to a rem cap.
  * `lineScale` sizes the stat/affix lines (the hover tooltip pumps it up so the
  * numbers read at arm's length; the arsenal viewer keeps the default 1).
- * `subtitle` prints a small grey kicker above the name ("EQUIPPED") and `icon`
- * seats the item's pixel icon beside the name — the worn piece's comparison
- * card uses both, so it stays identifiable even when the card floats over the
- * equip slot whose icon it describes.
+ * `subtitle` prints a small grey kicker above the name ("EQUIPPED"; only the
+ * worn piece carries it) and `icon` seats the item's pixel icon beside the
+ * name — every inventory card shows it (sized to one row of the name, so the
+ * two align), which keeps the piece identifiable even when the card floats
+ * over the equip slot whose icon it describes.
  */
 export function ItemCardBody({
   font,
@@ -397,7 +420,7 @@ export function ItemCardBody({
       scale={2}
       color={TIER_COLORS[item.tier]}
       className={tierGlowClass(item.tier).trim() || undefined}
-      maxWidth={icon && maxWidth ? maxWidth - 2 : maxWidth}
+      maxWidth={icon && maxWidth ? maxWidth - 1 : maxWidth}
     />
   );
   return (
@@ -413,24 +436,50 @@ export function ItemCardBody({
       ) : (
         name
       )}
-      {itemLines(state, item, compareTo).map((line) =>
-        line.delta ? (
-          <div key={line.text} className="tooltip-row">
-            <PixelText
-              font={font}
-              text={line.text}
-              scale={lineScale}
-              color={line.color}
-              maxWidth={maxWidth}
-            />
-            <PixelText
-              font={font}
-              text={`(${line.delta.text})`}
-              scale={lineScale}
-              color={line.delta.color}
-            />
-          </div>
-        ) : (
+      {itemLines(state, item, compareTo).map((line) => {
+        // A plain stat splits into a white TITLE + light-grey VALUE; a line
+        // that carries meaning in its color (affix, freshness, low-durability
+        // warning) stays a single tinted string. Either way a delta chip, when
+        // present, trails on the same row.
+        const split = line.label !== undefined && !line.color;
+        if (split || line.delta) {
+          return (
+            <div key={line.text} className="tooltip-row">
+              {split ? (
+                <>
+                  <PixelText
+                    font={font}
+                    text={line.label ?? ""}
+                    scale={lineScale}
+                  />
+                  <PixelText
+                    font={font}
+                    text={line.value ?? ""}
+                    scale={lineScale}
+                    color={VALUE_COLOR}
+                  />
+                </>
+              ) : (
+                <PixelText
+                  font={font}
+                  text={line.text}
+                  scale={lineScale}
+                  color={line.color}
+                  maxWidth={maxWidth}
+                />
+              )}
+              {line.delta && (
+                <PixelText
+                  font={font}
+                  text={`(${line.delta.text})`}
+                  scale={lineScale}
+                  color={line.delta.color}
+                />
+              )}
+            </div>
+          );
+        }
+        return (
           <PixelText
             key={line.text}
             font={font}
@@ -439,8 +488,8 @@ export function ItemCardBody({
             color={line.color}
             maxWidth={maxWidth}
           />
-        ),
-      )}
+        );
+      })}
       {item.affixes.map((affix, i) => (
         <PixelText
           key={i}

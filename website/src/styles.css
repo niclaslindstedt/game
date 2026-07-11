@@ -3918,6 +3918,10 @@ canvas.tier-legendary {
   width: 100%;
   align-items: center;
   gap: 0.5rem;
+  /* Nudge the foot down so the ILVL row sits centered between the last stat
+     line and the card's bottom padding (~0.6rem) rather than riding high with
+     only the 0.35rem inter-line gap above it. */
+  margin-top: 0.2rem;
 }
 
 .card-foot-right {
@@ -4484,14 +4488,18 @@ canvas.tier-legendary {
    card keeps the piece identifiable). */
 .tooltip-name-row {
   display: flex;
+  /* One text row tall, so a single-line name reads level with the icon; when
+     the name wraps to two lines, center keeps the icon on the row's midline. */
   align-items: center;
   gap: 0.4rem;
 }
 
 .tooltip-name-row .inv-item-icon {
   flex: 0 0 auto;
-  width: 1.4rem;
-  height: 1.4rem;
+  /* Match one row of the scale-2 name (font height 5px × 2 = 10px = 0.625rem)
+     so icon and title line up top-and-bottom. */
+  width: 0.625rem;
+  height: 0.625rem;
 }
 
 /* A tooltip stat line paired with its comparison delta ("(+3)") versus the
