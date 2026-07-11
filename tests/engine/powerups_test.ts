@@ -7,6 +7,7 @@ import { describe, expect, it } from "vitest";
 
 import {
   abilityDef,
+  arrowColdXp,
   arrowXpShareAt,
   createGame,
   dismissIntro,
@@ -61,6 +62,36 @@ describe("xp arrows", () => {
     step(later, idle, DT);
     expect(later.player.xp).toBe(Math.round(4000 * arrowXpShareAt(8)));
     expect(arrowXpShareAt(8)).toBeLessThan(arrowXpShareAt(1));
+  });
+
+  it("go COLD once the hero passes the map/difficulty cap", () => {
+    // `test_level` caps EASY golden arrows at level 3: a catch-up faucet that
+    // pays the level-bar share while the hero is under-levelled, then drops to
+    // a flat few mob kills (`arrowColdXp`) once he has out-grown the content.
+    const share = (): GameState => {
+      const s = createGame(SEED, "test_level", "easy");
+      dismissIntro(s);
+      clearStage(s);
+      s.player.xpToNext = 4000;
+      s.player.xp = 0;
+      return s;
+    };
+
+    // Below the cap (L2): the usual tapered share of the current bar.
+    const under = share();
+    under.player.level = 2;
+    under.items = [dropArrow(under, 1)];
+    step(under, idle, DT);
+    expect(under.player.xp).toBe(Math.round(4000 * arrowXpShareAt(2)));
+
+    // At the cap (L3) it goes cold: a flat `arrowColdXp`, far under the share
+    // it would have paid — grinding old content can't arrow-boost the hero on.
+    const capped = share();
+    capped.player.level = 3;
+    capped.items = [dropArrow(capped, 1)];
+    step(capped, idle, DT);
+    expect(capped.player.xp).toBe(arrowColdXp(3));
+    expect(capped.player.xp).toBeLessThan(Math.round(4000 * arrowXpShareAt(3)));
   });
 
   it("enough arrows level the player up and open the chooser", () => {

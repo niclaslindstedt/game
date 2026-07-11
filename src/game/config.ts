@@ -264,6 +264,17 @@ export const LEVELING = {
    */
   arrowXpShareTaper: 0.1,
   /**
+   * The COLD arrow payout, in reference-mob kills. A golden arrow is a
+   * CATCH-UP faucet: while the hero is still under the level a normal run of
+   * the current map/difficulty leaves him at (`LevelDef.loot.arrowCapByDifficulty`),
+   * it pays the share-of-bar above; ONCE HE HITS THAT CAP the arrow goes cold
+   * and pays a flat `arrowColdMobXpMult × referenceMobXp(level)` instead —
+   * ~5 mob kills' worth, a rounding error against a whole level, so grinding
+   * old content can't arrow-boost the hero past where that content belongs.
+   * Levels with no cap entry (test fixtures, un-tuned maps) never go cold.
+   */
+  arrowColdMobXpMult: 5,
+  /**
    * Ms the level-up celebration plays before the stat chooser interrupts:
    * the ding's golden burn wreathes the hero, the fanfare rings, the gains
    * tick into the feed — and only then does the modal open. The reward
@@ -789,13 +800,14 @@ export const LOOT = {
   /**
    * …the share that is a GOLDEN XP ARROW (grants a share of the level bar —
    * see LEVELING.arrowXpShare). Unlike the medkit/repair/drink slices, this
-   * is the tail of the ladder rather than the leftover: whatever a difficulty's
-   * `arrowDropMult` trims off it simply doesn't drop, so arrows thin out up the
-   * rungs and vanish entirely on JESUS (mult 0). At MEDIUM (mult 1) it fills
-   * the rest of the ladder exactly as the old implicit remainder did. Kept high
-   * because arrows are the field's steady drip of levels, not a rare prize.
+   * is the tail of the ladder rather than the leftover: whatever this slice
+   * (thinned further by a difficulty's `arrowDropMult`) leaves unfilled simply
+   * doesn't drop, so arrows are a rare prize rather than the ladder's filler.
+   * At MEDIUM (mult 1) this lands ~one arrow per 50 kills
+   * (`LOOT.dropChance × arrowShare`); harder rungs thin it toward zero and JESUS
+   * (mult 0) drops none at all. A found level, not a steady drip.
    */
-  arrowShare: 0.47,
+  arrowShare: 0.225,
   /**
    * Clearing every regular monster on a level is guaranteed to have dropped
    * at least this much equipment (a pity roll forces the tail end; boss

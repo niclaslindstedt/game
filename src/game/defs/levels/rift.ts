@@ -215,6 +215,15 @@ export const THE_RIFT: LevelDef = {
       easy: ["excalibur", "the_trinity_shard"],
       medium: ["wishbane", "gorgonscale", "mjolnir"],
     },
+    // Level a normal run reaches per rung (`leveling-curve.mjs --by-level`) —
+    // past it golden arrows go cold so a Rift replay can't over-level.
+    arrowCapByDifficulty: {
+      easy: 13,
+      medium: 25,
+      hard: 36,
+      nightmare: 45,
+      jesus: 51,
+    },
     // The VOID WAND arrives early at a kill discovered in play — the level's
     // signature caster, same cadence as Mars's katana.
     earlyDrops: [{ atKills: [35, 90], weapon: "void_wand" }],

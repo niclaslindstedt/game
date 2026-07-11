@@ -201,11 +201,13 @@ export {
 // derived bonuses the app can read to break "base + chosen" apart, and the
 // power curve the horde's hp scaling mirrors.
 export {
+  arrowColdXp,
   arrowXpShareAt,
   autoGainAt,
   autoPowerScale,
   baseStatBonus,
   levelStatGains,
+  referenceMobXp,
   setAutoStatGainsEnabled,
   xpToLevelUp,
 } from "./game/leveling.ts";

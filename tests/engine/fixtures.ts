@@ -911,6 +911,10 @@ export const FIX_LEVEL: LevelDef = {
     weaponPool: ["blaster", "test_pistol", "test_wand", "test_wrench"],
     gearPool: ["test_vest", "test_charm"],
     abilityPool: ["test_orbit", "test_storm", "test_stasis", "test_magnet"],
+    // A low EASY cap so the golden-arrow COLD rule is exercisable on a
+    // fixture; the default-difficulty (MEDIUM) suites leave it unset so their
+    // arrows stay hot at every level they test.
+    arrowCapByDifficulty: { easy: 3 },
     earlyDrops: [
       { atKills: 2, weapon: "test_hammer" },
       { atKills: 5, ability: "test_storm" },

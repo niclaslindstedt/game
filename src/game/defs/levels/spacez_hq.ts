@@ -375,6 +375,16 @@ export const SPACEZ_HQ: LevelDef = {
     // Level-locked world drop (see config WORLD_DROP): THE FIRST DRAFT, the
     // prototype-GROK neural crown, farmable only by returning for boss runs.
     worldUniques: { easy: ["the_first_draft"], medium: ["deadsprint"] },
+    // The level a normal run of the campaign's OPENING map leaves the hero at
+    // per rung (from `leveling-curve.mjs --by-level`) — past it golden arrows
+    // go cold, so a replay of the tutorial floor can't over-level him.
+    arrowCapByDifficulty: {
+      easy: 4,
+      medium: 18,
+      hard: 30,
+      nightmare: 40,
+      jesus: 48,
+    },
     allClearWeapon: "golden_stapler",
     // The opening loot loop, on a schedule the rain can't promise: the
     // SECURITY BATON drops on the second kill — a real weapon in hand before
