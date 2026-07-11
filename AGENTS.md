@@ -140,10 +140,12 @@ scrollable gallery of every unique/legendary item, ordered by ilvl, each minted
 via `mintUnique` and drawn through the shared `ItemCard.tsx` icon + card the
 inventory tooltip reuses so the two never drift), a **BALANCE** subpage (see
 below), a **DEBUG MODE** toggle
-(`debug: "on" | "off"`, also persisted), and two feature flags. DEBUG MODE is currently an inert flag —
-a hook reserved for future developer diagnostics — so wire real behavior to
-`getSettings().debug` when adding it, and keep it distinct from the `?debug` URL
-param (which drives console verbosity and `window.__game`, see
+(`debug: "on" | "off"`, also persisted), and two feature flags. DEBUG MODE
+shows the in-run FPS meter (`GameScreen.tsx` `showFps`, written to the DOM by
+the render loop — the first probe for performance regressions) and is the hook
+further developer diagnostics wire to via `getSettings().debug`. Keep it
+distinct from the `?debug` URL param (console verbosity, `window.__game` /
+`window.__scenario`, and the same FPS meter forced on — see
 `docs/configuration.md`).
 
 The **BALANCE** subpage holds ~10 runtime balance multipliers (leveling pace,
@@ -334,6 +336,7 @@ relevant `SKILL.md` before starting that kind of work:
 | `sound-effects`    | Adding or tuning synthesized WebAudio SFX — the sound vocabulary, mixing rules, and audition loop.                                                                                                                                                                                                                                            |
 | `playtest`         | Verifying changes in the running game and tuning game feel with the autoplay bot (`website/scripts/playtest.mjs`).                                                                                                                                                                                                                            |
 | `debug-game`       | Investigating gameplay/render/input/audio bugs — deterministic seed repros, `?debug` + `window.__game`, failing-test-first fixes.                                                                                                                                                                                                             |
+| `test-scenario`    | Staging an exact in-game situation to reproduce a bug, probe fps, or eyeball a context — the `?scenario=` URL param / `applyScenario` spec (place the hero at the boss, set hp/gear, clear the field, spawn mob rings) plus the FPS meter (DEBUG MODE or `?debug`).                                                                           |
 | `ui-review`        | A fit-and-finish pass over the game's UI (screens, modals, popups, toasts) — the screenshot-audit loop: capture every surface at the three reference viewports (`website/scripts/ui-shots.mjs`), judge against the quality bar, unify off-skin surfaces, fix clipping/overflow, verify with re-captures.                                      |
 
 ## Maintenance skills

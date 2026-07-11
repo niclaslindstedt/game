@@ -179,6 +179,25 @@ body {
   color: #7a8088;
 }
 
+/* The FPS meter (DEBUG MODE / ?debug, see GameScreen `showFps`): a quiet
+   bottom-center readout the render loop writes into directly. Framed like
+   the HUD units so it reads as family, small enough to never crowd play. */
+.game-fps {
+  position: absolute;
+  bottom: max(0.4rem, env(safe-area-inset-bottom));
+  left: 50%;
+  transform: translateX(-50%);
+  padding: 0.2rem 0.4rem;
+  background: rgba(11, 13, 16, 0.55);
+  border: 2px solid #1a1c2c;
+  border-radius: 6px;
+  color: #7ef0c8;
+  font-size: 0.6rem;
+  line-height: 1;
+  letter-spacing: 0.08em;
+  pointer-events: none;
+}
+
 /* HUD overlay: pinned to the top, ignores the pointer so it never blocks
    steering (the few interactive children opt back in). A full-width XP strip
    caps the screen; a three-column status row sits just beneath it. */
