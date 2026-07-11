@@ -575,7 +575,9 @@ export type Projectile = {
 };
 
 export type Item = (
-  | { id: number; kind: "medkit"; pos: Vec2 }
+  /** `tier` indexes config MEDKIT.tiers (the D2-style kit sizes) — absent
+   * on items minted before tiers shipped, read as the lightest kit. */
+  | { id: number; kind: "medkit"; pos: Vec2; tier?: number }
   /** The golden level-up arrow: grants a share of the XP to the next level. */
   | { id: number; kind: "xp"; pos: Vec2 }
   /** A repair kit: restores the equipped weapon's durability to full. */

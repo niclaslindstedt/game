@@ -309,7 +309,18 @@ export const LEVELING = {
    * minions' catalog hp.
    */
   refMobHp: 45,
+  /**
+   * Trainable stat points a ding grants — the BASE, plus one bonus point
+   * per full `statPointsBonusEvery` levels reached (see `statPointsAt` in
+   * leveling.ts): 1/ding through the opening, 2 from level 10, 5 at 40,
+   * 10 at 99. Later dings pay MORE points on purpose: past the soft cap
+   * (STATS.statSoftCap) each raw point realizes less, so the growing grant
+   * keeps the chooser exciting deep into the campaign without undoing the
+   * flattening — gear still carries the endgame, the ding just keeps its
+   * dignity.
+   */
   statPointsPerLevel: 1,
+  statPointsBonusEvery: 10,
   /**
    * XP granted by a golden arrow pickup, as a fraction of the CURRENT
    * xpToNext AT LEVEL 1 — a share of a level, not a flat sum, so an arrow
@@ -1408,16 +1419,23 @@ export const APPARITION = {
 
 /**
  * The medkit consumable: picked up on touch, never enters the inventory.
- * The heal is `max(healBase, healFrac × maxHp)` — a flat floor for the
- * opening (30 on the authored 100-hp start, a hair under the old 35), then
- * a FRACTION of the grown health bar, so a late-campaign medkit is still a
- * fifth of a STAMINA build's bar instead of a decayed rounding error. The
- * fraction keeps healing's PRESSURE constant across the campaign; scarcity
- * (the drop share and the per-rung medkitDropMult) stays the balance lever.
+ * D2-style TIERS — each is a STATIC heal, and deeper content drops bigger
+ * kits: the drop rolls the deepest tier the killer's monster level has
+ * unlocked most of the time and the one under it sometimes (3:1, the affix
+ * bracket idiom — see `rollMedkitTier` in loot.ts). Static numbers keep a
+ * heal legible (a kit is worth what it says, like a D2 potion); the tier
+ * ladder is what keeps healing meaningful against a campaign health bar
+ * (~a fifth to a quarter of the era's typical max hp). All tiers share one
+ * sprite for now; scarcity (the drop share and the per-rung medkitDropMult)
+ * stays the balance lever.
  */
 export const MEDKIT = {
-  healBase: 30,
-  healFrac: 0.2,
+  tiers: [
+    { name: "LIGHT MEDKIT", heal: 25, minMlvl: 1 },
+    { name: "MEDKIT", heal: 60, minMlvl: 12 },
+    { name: "LARGE MEDKIT", heal: 120, minMlvl: 30 },
+    { name: "SUPERIOR MEDKIT", heal: 200, minMlvl: 46 },
+  ],
   radius: 8,
 } as const;
 
@@ -1429,6 +1447,24 @@ export const MEDKIT = {
 export const HELD_ITEMS = {
   /** How many ability pickups the player can carry; extras stay grounded. */
   cap: 3,
+} as const;
+
+/**
+ * ABILITY POWER SCALING (see `abilityPowerScale` in abilities.ts). The
+ * catalog numbers in defs/abilities.ts are authored AT LEVEL 1; without
+ * scaling they decayed into noise against a horde whose healthbars grow by
+ * `MENACE.mobHpPerLevel × autoPowerScale` every level. The scale is exactly
+ * that minion-bar formula — so a FIRE ORB keeps meaning "the same fraction
+ * of a level-appropriate healthbar" all campaign — times an INTELLIGENCE
+ * term: conjured powers are magic, and INT is what deepens them.
+ */
+export const ABILITY = {
+  /** Extra ability damage per point of effective INTELLIGENCE (+5% each). */
+  intDamagePerPoint: 0.05,
+  /** Extra STASIS FIELD radius per point of effective INT (world px) —
+   * mirrors the magnet's `radiusPerInt`; the slow factor itself never
+   * scales (a stronger slow would trivialize kiting). */
+  stasisRadiusPerInt: 1.5,
 } as const;
 
 /**

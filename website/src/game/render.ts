@@ -9,6 +9,7 @@
 import {
   abilityDef,
   activeMechanics,
+  stasisRadius,
   APPARITION,
   COMPANIONS,
   companionDef,
@@ -884,14 +885,15 @@ function drawAbilities(
     const def = abilityDef(ability.defId);
 
     if (def.stasis) {
-      // A faint pulsing ring marks the field's slowing reach.
+      // A faint pulsing ring marks the field's slowing reach (INT widens it —
+      // stasisRadius, the same read the engine slows by).
       const pulse = 0.18 + 0.08 * Math.sin(timeMs / 220);
       ctx.strokeStyle = `rgba(140, 205, 215, ${pulse})`;
       ctx.beginPath();
       ctx.arc(
         Math.round(player.pos.x - camera.x),
         Math.round(player.pos.y - camera.y),
-        def.stasis.radius,
+        stasisRadius(state, def),
         0,
         Math.PI * 2,
       );

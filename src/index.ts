@@ -230,6 +230,7 @@ export {
   levelStatGains,
   referenceMobXp,
   setAutoStatGainsEnabled,
+  statPointsAt,
   xpCapMultiplier,
   xpLevelCap,
   xpToLevelUp,
@@ -247,12 +248,14 @@ export type { BalanceTuning } from "./game/tuning.ts";
 
 // Time-limited abilities: activation and the helpers the renderer shares.
 export {
+  abilityPowerScale,
   canBankAbility,
   discardHeldAbility,
   grantAbility,
   magnetRadius,
   orbPositions,
   stasisFactorAt,
+  stasisRadius,
 } from "./game/abilities.ts";
 
 // In-world dialogue (elite ambushes, boss confrontations, story-item lore):
@@ -382,6 +385,7 @@ export { registerDefs, type DefOverrides } from "./game/defs/registry.ts";
 export {
   ACCURACY,
   AIM,
+  ABILITY,
   APPARITION,
   ARMOR,
   ARRIVAL,

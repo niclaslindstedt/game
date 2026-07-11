@@ -5,9 +5,10 @@
 // so all combat flows through one hitEnemy path.
 
 import { distance, type Vec2 } from "@game/lib/vec.ts";
-import { HELD_ITEMS } from "./config.ts";
+import { ABILITY, HELD_ITEMS, MENACE } from "./config.ts";
 import { abilityDef, type AbilityDef } from "./defs/abilities.ts";
 import { effectiveStat } from "./items.ts";
+import { autoPowerScale } from "./leveling.ts";
 import type { ActiveAbility, GameState, Player } from "./types.ts";
 
 /**
@@ -99,6 +100,45 @@ export function discardHeldAbility(
   return removeHeldSlot(state, index);
 }
 
+/**
+ * The damage multiplier every conjured ability blow carries (config
+ * `ABILITY`): the catalog numbers are authored at level 1, and this scale is
+ * EXACTLY the minion healthbar's growth — `(1 + (L−1)·mobHpPerLevel) ×
+ * autoPowerScale(L)`, the same formula `mobHpScaleFor` bakes into every
+ * spawn at the neutral offset — times an INTELLIGENCE deepening. So a
+ * FIRE ORB that clipped a third of a level-1 bar still clips a third of a
+ * level-50 bar, INT makes it bite deeper, and the difficulty offset is the
+ * only thing that moves the fraction. Scale = 1 at level 1 and zero INT:
+ * the authored numbers ARE the opening experience. Applied at the two
+ * `hitEnemy` sites in stepAbilities (orbit ticks, storm bolts); the NUKE
+ * (binary minion wipe) and the MAGNET (no damage) have nothing to scale.
+ * (`LEVELING.maxLevel` never matters here — mob bars use the same L.)
+ */
+export function abilityPowerScale(state: GameState): number {
+  const level = Math.max(1, state.player.level);
+  return (
+    (1 + (level - 1) * MENACE.mobHpPerLevel) *
+    autoPowerScale(level) *
+    (1 + effectiveStat(state, "intelligence") * ABILITY.intDamagePerPoint)
+  );
+}
+
+/**
+ * A stasis field's effective radius for this player: the def's base widened
+ * by INTELLIGENCE (`ABILITY.stasisRadiusPerInt`), mirroring the magnet. The
+ * slow factor itself never scales — a stronger slow would trivialize kiting.
+ */
+export function stasisRadius(
+  state: GameState,
+  def: AbilityDef,
+): number {
+  if (!def.stasis) return 0;
+  return (
+    def.stasis.radius +
+    effectiveStat(state, "intelligence") * ABILITY.stasisRadiusPerInt
+  );
+}
+
 /** World positions of an orbit ability's orbs, spread evenly on the ring. */
 export function orbPositions(player: Player, ability: ActiveAbility): Vec2[] {
   const orbit = abilityDef(ability.defId).orbit;
@@ -129,15 +169,18 @@ export function magnetRadius(state: GameState, def: AbilityDef): number {
 
 /**
  * The combined slow multiplier stasis fields apply to a monster at `pos`
- * (1 = unaffected). Fields don't stack below the strongest one.
+ * (1 = unaffected). Fields don't stack below the strongest one. The reach
+ * is the INT-widened `stasisRadius`, so a scholarly build casts a broader
+ * field; the slow itself stays the authored factor.
  */
-export function stasisFactorAt(player: Player, pos: Vec2): number {
+export function stasisFactorAt(state: GameState, pos: Vec2): number {
+  const player = state.player;
   let factor = 1;
   for (const ability of player.abilities) {
-    const stasis = abilityDef(ability.defId).stasis;
-    if (!stasis) continue;
-    if (distance(player.pos, pos) <= stasis.radius) {
-      factor = Math.min(factor, stasis.slowFactor);
+    const def = abilityDef(ability.defId);
+    if (!def.stasis) continue;
+    if (distance(player.pos, pos) <= stasisRadius(state, def)) {
+      factor = Math.min(factor, def.stasis.slowFactor);
     }
   }
   return factor;

@@ -25,6 +25,7 @@ import {
 import {
   canBankAbility,
   grantAbility,
+  abilityPowerScale,
   isSlotActive,
   magnetRadius,
   orbPositions,
@@ -976,6 +977,11 @@ function stepAbilities(state: GameState, dt: number, dtMs: number): void {
   const player = state.player;
   if (player.abilities.length === 0) return;
 
+  // The conjured powers' damage scale (level ramp × INT — abilityPowerScale):
+  // catalog numbers are level-1 values; this keeps a powerup meaning the same
+  // fraction of a level-appropriate healthbar all campaign.
+  const power = abilityPowerScale(state);
+
   for (const ability of player.abilities) {
     ability.remainingMs -= dtMs;
     ability.cooldownMs = Math.max(0, ability.cooldownMs - dtMs);
@@ -998,7 +1004,7 @@ function stepAbilities(state: GameState, dt: number, dtMs: number): void {
           }
           if (!victim) continue;
           // Conjured abilities crit off INTELLIGENCE, like the magic they are.
-          hitEnemy(state, victim, def.orbit.damage, "magic");
+          hitEnemy(state, victim, def.orbit.damage * power, "magic");
           struck = true;
         }
         if (struck) ability.cooldownMs = def.orbit.hitCooldownMs;
@@ -1010,7 +1016,7 @@ function stepAbilities(state: GameState, dt: number, dtMs: number): void {
       if (victim) {
         ability.cooldownMs = def.storm.intervalMs;
         state.events.push({ type: "lightning", pos: { ...victim.pos } });
-        hitEnemy(state, victim, def.storm.damage, "magic");
+        hitEnemy(state, victim, def.storm.damage * power, "magic");
       }
     }
 
@@ -1435,7 +1441,7 @@ function moveEnemy(state: GameState, enemy: Enemy, dt: number): void {
   // Stasis fields slow whatever crawls inside them — bosses included. An
   // enraged set piece runs hot (mechSpeedMult).
   const speed =
-    enemy.speed * stasisFactorAt(player, enemy.pos) * mechSpeedMult(enemy, def);
+    enemy.speed * stasisFactorAt(state, enemy.pos) * mechSpeedMult(enemy, def);
   const senses = () =>
     def.phasing === true || lineOfSight(state, enemy.pos, player.pos);
 
@@ -1498,7 +1504,7 @@ function moveEnemy(state: GameState, enemy: Enemy, dt: number): void {
       return;
     }
     const rushSpeed =
-      (def.ai.rushSpeed ?? def.speed) * stasisFactorAt(player, enemy.pos);
+      (def.ai.rushSpeed ?? def.speed) * stasisFactorAt(state, enemy.pos);
     enemy.pos = moveToward(
       enemy.pos,
       player.pos,
@@ -1528,7 +1534,7 @@ function moveEnemy(state: GameState, enemy: Enemy, dt: number): void {
       return;
     }
     const rushSpeed =
-      (def.ai.rushSpeed ?? def.speed) * stasisFactorAt(player, enemy.pos);
+      (def.ai.rushSpeed ?? def.speed) * stasisFactorAt(state, enemy.pos);
     const gap = distance(enemy.pos, player.pos) - (def.radius + PLAYER.radius);
     if (gap > 0) {
       enemy.pos = moveToward(
@@ -1616,18 +1622,18 @@ function stepItems(state: GameState, dtMs: number): void {
     if (!overlapping) return true;
 
     if (item.kind === "medkit") {
-      // A fraction of the GROWN bar with a flat floor (config MEDKIT), so
-      // healing keeps its meaning against a campaign health pool.
-      const heal = Math.max(
-        MEDKIT.healBase,
-        Math.round(MEDKIT.healFrac * player.maxHp),
-      );
-      player.hp = Math.min(player.maxHp, player.hp + heal);
+      // D2-style tiered kits: a STATIC heal per tier (config MEDKIT.tiers),
+      // bigger kits dropping off deeper content. Untiered items (minted
+      // before tiers shipped) read as the lightest kit.
+      const tier =
+        MEDKIT.tiers[Math.min(item.tier ?? 0, MEDKIT.tiers.length - 1)] ??
+        MEDKIT.tiers[0];
+      player.hp = Math.min(player.maxHp, player.hp + tier.heal);
       state.stats.itemsCollected++;
       state.events.push({
         type: "itemCollected",
         kind: "medkit",
-        name: "MEDKIT",
+        name: tier.name,
       });
       return false;
     }
