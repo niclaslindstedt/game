@@ -547,41 +547,44 @@ const SPRITES = {
     "................................................",
   ],
   // ---- The horde (16×16 minions, two walk frames each) ------------------------
-  // COWBOT — the greeter host: steel body, leather hat, red bandana.
+  // COWBOT — the greeter host and the level's most-seen fodder: a little
+  // LIGHT-STEEL robot cowboy, a clear wide-brim hat with a gold band and a
+  // red neck kerchief carry the read, red "grudge" optics tie it to the
+  // menacing hosts. Kept small and light so it stays the fodder. _1 strides.
   cowbot_0: [
-    "................",
-    "....ODDDDDO.....",
-    "..ODDDDDDDDDO...",
-    "...OvvvvvvvO....",
-    "...OvKvvvKvO....",
-    "...OvvvvvvvO....",
-    "...OrrrrrrrO....",
-    "..OvvvvvvvvvO...",
-    ".OvOvvvvvvvOvO..",
-    ".OvOvvbvbvvOvO..",
-    ".OvOvvvvvvvOvO..",
-    "..OOvbbbbbvOO...",
-    "....ObbObbO.....",
-    "....ObbObbO.....",
-    "....ONNONNO.....",
+    "......EOOE......",
+    "......HHHH......",
+    "...DDDDDDDDDD...",
+    "...EEEEEEEEEE...",
+    "......OOOO......",
+    "......RvvR......",
+    "......OOOO......",
+    ".....rrrrrr.....",
+    "......rRRr......",
+    "....vOOOOOOv....",
+    "....vOVVVVOv....",
+    "....AOvAAvOA....",
+    ".....OOOOOO.....",
+    ".....OO..OO.....",
+    ".....OO..OO.....",
     "................",
   ],
   cowbot_1: [
-    "................",
-    "....ODDDDDO.....",
-    "..ODDDDDDDDDO...",
-    "...OvvvvvvvO....",
-    "...OvKvvvKvO....",
-    "...OvvvvvvvO....",
-    "...OrrrrrrrO....",
-    "..OvvvvvvvvvO...",
-    ".OvOvvvvvvvOvO..",
-    ".OvOvvbvbvvOvO..",
-    ".OvOvvvvvvvOvO..",
-    "..OOvbbbbbvOO...",
-    "...ObbO.ObbO....",
-    "..ObbO...ObbO...",
-    "..ONNO...ONNO...",
+    "......EOOE......",
+    "......HHHH......",
+    "...DDDDDDDDDD...",
+    "...EEEEEEEEEE...",
+    "......OOOO......",
+    "......RvvR......",
+    "......OOOO......",
+    ".....rrrrrr.....",
+    "......rRRr......",
+    "....vOOOOOOv....",
+    "....vOVVVVOv....",
+    "....AOvAAvOA....",
+    ".....OOOOOO.....",
+    "....OO....OO....",
+    "....OO....OO....",
     "................",
   ],
   // SALOON BRAWLER — the bar-fight host: a burly steel robot in a torn red
@@ -1137,9 +1140,9 @@ export default {
   // Wound overrides: the dark steel hosts swallow the default splat — hot
   // spark gold reads on their grey/black bodies (the lint's own suggestion).
   wounds: {
-    cowbot: { splat: "y", core: "Y" },
-    // The outlaw's lean, dark duster offers little stable body for splats, so
-    // add an amber scuff on the lower body to carry the wound read.
+    // The compact steel hosts offer little stable body for the minion's lone
+    // hurt splats, so an amber scuff on the lower body carries the wound read.
+    cowbot: { splat: "y", core: "Y", scuff: "H" },
     tin_outlaw: { splat: "y", core: "Y", scuff: "H" },
   },
   // The desert floor and its scatter read as terrain, not subjects.
