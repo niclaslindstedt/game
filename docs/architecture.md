@@ -357,6 +357,13 @@ run against synthetic fixtures with no shipped content (see
   `kite`, `boss`, `survivor`) that turn the live state into ordinary
   `GameInput`, so a bot can sit anywhere a player does — headless tests,
   the app's `?bot=` autoplay mode, and later an AI-driven second player.
+- **`src/game/scenario.ts`** — test scenarios: `applyScenario(state, spec)`
+  mutates a fresh run into an exact declared situation (hero position and
+  vitals, build, gear, cleared field, silenced waves, spawned mob rings) for
+  bug repros, performance probes, and visual checks. Fed by the app's
+  `?scenario=` URL param and the engine test suites — a developer tool, not
+  a gameplay system (see the `test-scenario` skill and
+  `docs/configuration.md`).
 - **`src/lib/`** — generic, game-agnostic helpers (`vec.ts`, `rng.ts`,
   `cutscene.ts` — the deterministic beat-machine cutscene player),
   imported via the `@game/lib/*` alias and earmarked for extraction into

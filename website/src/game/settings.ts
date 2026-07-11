@@ -47,10 +47,11 @@ export type KeyboardMove = "on" | "off";
  * on iOS — no Vibration API — it is a noop regardless (see haptics.ts). */
 export type Vibration = "on" | "off";
 
-/** DEBUG mode: a developer-only toggle. `on` is reserved for future
- * developer diagnostics (a live-state overlay, extra logging); today it is a
- * plain persisted flag that does nothing on its own yet. Reached through the
- * hidden DEVELOPER menu (see `developerUnlocked`). */
+/** DEBUG mode: a developer-only toggle. `on` shows the in-run FPS meter
+ * (GameScreen `showFps` — the same readout `?debug` forces on) and is the
+ * hook future developer diagnostics wire to (a live-state overlay, extra
+ * logging). Reached through the hidden DEVELOPER menu (see
+ * `developerUnlocked`). */
 export type DebugMode = "on" | "off";
 
 /** AUTO LEVEL STATS: a developer feature flag for the automatic per-level
@@ -90,7 +91,7 @@ export type GameSettings = {
    * detonates it (see TitleScreen `startMoonHold`); this latches that unlock so
    * the menu stays available across launches once discovered. */
   developerUnlocked: boolean;
-  /** Developer DEBUG toggle — persisted but inert for now (see DebugMode). */
+  /** Developer DEBUG toggle — shows the in-run FPS meter (see DebugMode). */
   debug: DebugMode;
   /** Developer flag: automatic per-level base-stat growth (see AutoLevelStats). */
   autoLevelStats: AutoLevelStats;

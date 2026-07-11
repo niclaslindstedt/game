@@ -14,7 +14,13 @@
 //   node scripts/playtest.mjs [--url http://localhost:5199] \
 //     [--strategy idle|rush|kite|boss|survivor] [--timeout 120] \
 //     [--difficulty easy|medium|hard|nightmare|jesus] \
-//     [--level spacez_hq|moon]
+//     [--level spacez_hq|moon] [--seed 42] \
+//     [--scenario '{"place":"boss","hp":2}']
+//
+// `--scenario` forwards a ScenarioSpec (JSON) into the app's `?scenario=`
+// param, staging the run into an exact situation before the bot takes over
+// (see the test-scenario skill); `--seed` pins the layout so the staged
+// situation reproduces exactly.
 //
 // Playwright is intentionally NOT a dependency of this repo; install it
 // ephemerally when playtesting: `npm install --no-save playwright`.
@@ -43,6 +49,10 @@ const difficulty = opt("difficulty", "easy");
 // Which level to start on; the first level is always unlocked, so the bot
 // can reach any level regardless of saved progress via the level-select menu.
 const level = opt("level", "spacez_hq");
+// A test scenario (JSON ScenarioSpec) and a pinned layout seed, forwarded to
+// the app as `?scenario=` / `?seed=` (see docs/configuration.md).
+const scenario = opt("scenario", "");
+const seed = opt("seed", "");
 
 const shotDir = fileURLToPath(
   new URL("../assets-preview/playtest", import.meta.url),
@@ -59,8 +69,13 @@ const page = await browser.newPage({ viewport: { width: 844, height: 390 } });
 page.on("pageerror", (e) => console.error("PAGE ERROR:", e.message));
 
 // `?bot=` hands the run to the engine autopilot: it dismisses the intro,
-// steers, jumps, and spends level-ups on its own.
-await page.goto(`${url}/?debug&bot=${strategy}`);
+// steers, jumps, and spends level-ups on its own. The params survive the
+// menu clicks below (no navigation happens), so the scenario and seed apply
+// the moment the run is created.
+const extras =
+  (scenario ? `&scenario=${encodeURIComponent(scenario)}` : "") +
+  (seed ? `&seed=${seed}` : "");
+await page.goto(`${url}/?debug&bot=${strategy}${extras}`);
 // The app opens on the Doom-style title menu. Wait for it (asset load) before
 // shooting the splash, then PLAY. With no active hero yet, PLAY opens the
 // character roster.

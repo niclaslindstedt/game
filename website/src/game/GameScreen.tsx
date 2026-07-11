@@ -26,6 +26,7 @@ import {
   advanceDialogue,
   advanceIntro,
   advanceOutro,
+  applyScenario,
   skipOutro,
   allocateStat,
   confirmRespec,
@@ -73,6 +74,7 @@ import {
   step,
   storyItemDef,
   tapCutscene,
+  warn,
   weaponDamageFor,
   weaponDef,
   type BotStrategy,
@@ -84,6 +86,7 @@ import {
   type GameState,
   type GameStats,
   type Quality,
+  type ScenarioSpec,
   type Tier,
 } from "@game/core";
 
@@ -555,6 +558,17 @@ export function GameScreen({
   const [pickupCard, setPickupCard] = useState<PickupCard | null>(null);
   // Whether the in-HUD weapon switcher (tap the weapon slot / Q) is expanded.
   const [weaponMenuOpen, setWeaponMenuOpen] = useState(false);
+  // The HUD FPS readout — the DEVELOPER menu's DEBUG MODE flag (or ?debug)
+  // turns it on, read once per mount so flipping the setting applies to the
+  // next run. The value itself is written straight to the DOM by the render
+  // loop (see fpsRef) — a React state ticking every frame would defeat the
+  // point of measuring.
+  const [showFps] = useState(
+    () =>
+      getSettings().debug === "on" ||
+      new URLSearchParams(window.location.search).has("debug"),
+  );
+  const fpsRef = useRef<HTMLDivElement | null>(null);
   useEffect(() => {
     weaponMenuOpenRef.current = weaponMenuOpen;
   }, [weaponMenuOpen]);
@@ -705,6 +719,21 @@ export function GameScreen({
       difficulty,
     );
     markThoughtsSeen(state, seenThoughts(characterRef.current, difficulty));
+    // `?scenario=<json>` (dev/test): mutate the fresh run into an exact
+    // situation — position, hp, gear, spawns (see docs/configuration.md and
+    // the test-scenario skill). Resumed/checkpointed runs already lived past
+    // their opening, so the spec only applies to a run built from scratch.
+    let scenarioApplied = false;
+    const scenarioParam = params.get("scenario");
+    if (scenarioParam && !resumed && !checkpoint) {
+      try {
+        applyScenario(state, JSON.parse(scenarioParam) as ScenarioSpec);
+        scenarioApplied = true;
+        debug(`scenario applied: ${scenarioParam}`);
+      } catch {
+        warn(`?scenario= is not valid JSON — ignored: ${scenarioParam}`);
+      }
+    }
     setState(state);
     setNewRecord(false);
     debug(`run ${runId} started (seed ${seed}, ${difficulty})`);
@@ -851,9 +880,15 @@ export function GameScreen({
     };
 
     // In debug mode (?debug) the live state is reachable from the console /
-    // automated playtests. See the debug-game skill.
+    // automated playtests, and `__scenario(spec)` re-shapes the live run from
+    // DevTools. See the debug-game and test-scenario skills.
     if (params.has("debug")) {
-      (window as { __game?: GameState }).__game = state;
+      const dev = window as {
+        __game?: GameState;
+        __scenario?: (spec: ScenarioSpec) => void;
+      };
+      dev.__game = state;
+      dev.__scenario = (spec) => applyScenario(state, spec);
     }
 
     // Autoplay (?bot=<strategy>): the engine bot steers instead of the
@@ -881,6 +916,10 @@ export function GameScreen({
       // Straight back into the fight: the checkpoint is already in the
       // `playing` phase, past the prelude and intro, so just roll the level
       // theme — no cutscene, no monologue, no scripted strike to sit through.
+      playLevelMusic(levelDef(state.level.id).music);
+    } else if (scenarioApplied && state.phase === "playing") {
+      // A scenario that skipped the opening starts mid-run by construction:
+      // roll the level theme, nothing left to dismiss.
       playLevelMusic(levelDef(state.level.id).music);
     } else if (skipOpening) {
       // Warp-in from the title moon's long-press: bail the whole opening and
@@ -1171,6 +1210,11 @@ export function GameScreen({
       useItem: false,
     };
     let lastHud = "";
+    // FPS meter (DEBUG MODE / ?debug): an EMA over the real rAF deltas,
+    // flushed to its DOM node a few times a second by the render loop.
+    let fpsLastMs: number | undefined;
+    let fpsAvgMs = 0;
+    let fpsNextFlushMs = 0;
     // Transient visuals driven by engine events (lightning strikes).
     let effects: Effect[] = [];
     // Run-clock ms through which the "bags are full" nudge stays lit — set when
@@ -1861,6 +1905,23 @@ export function GameScreen({
         drawFrame(ctx, state, assets, camera, timeMs);
         drawEffects(ctx, effects, camera, state.stats.timeMs, assets);
 
+        // The FPS readout: smooth the frame delta (EMA) and write the number
+        // straight to the DOM every quarter second — no React re-render, so
+        // the meter itself costs nothing worth measuring.
+        const fpsNode = fpsRef.current;
+        if (fpsNode) {
+          if (fpsLastMs !== undefined) {
+            const frameMs = timeMs - fpsLastMs;
+            fpsAvgMs =
+              fpsAvgMs === 0 ? frameMs : fpsAvgMs * 0.9 + frameMs * 0.1;
+            if (timeMs >= fpsNextFlushMs && fpsAvgMs > 0) {
+              fpsNextFlushMs = timeMs + 250;
+              fpsNode.textContent = `${Math.round(1000 / fpsAvgMs)} FPS`;
+            }
+          }
+          fpsLastMs = timeMs;
+        }
+
         // The virtual dpad hint: anchored where the touch landed, arrows
         // brighten toward the drag direction, the nub trails the finger.
         if (dpad) {
@@ -2145,6 +2206,10 @@ export function GameScreen({
         <span className="dpad-arrow dpad-right" />
         <span className="dpad-nub" />
       </div>
+
+      {/* The FPS meter (DEBUG MODE / ?debug): a tiny bottom-center readout
+          the render loop writes into directly — see fpsRef. */}
+      {showFps && <div ref={fpsRef} className="game-fps" aria-hidden="true" />}
 
       {hud && hud.phase === "playing" && (
         <div className="game-hud">

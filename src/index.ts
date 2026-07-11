@@ -42,6 +42,15 @@ export {
   extractLoadout,
 } from "./game/arrival.ts";
 
+// Test scenarios: mutate a fresh run into an exact situation (hero at the
+// boss, 2 hp, no weapon, a ring of 60 mobs…) for bug repros and performance
+// probes. Fed by the `?scenario=` URL param and the test-scenario skill.
+export {
+  applyScenario,
+  type ScenarioSpawn,
+  type ScenarioSpec,
+} from "./game/scenario.ts";
+
 // The autopilot: bot strategies producing player input (tests, ?bot=, and
 // the future AI second player).
 export {

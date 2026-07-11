@@ -737,7 +737,7 @@ export function TitleScreen({
         {
           label: s.debug === "on" ? "DEBUG MODE: ON" : "DEBUG MODE: OFF",
           aria: "developer-debug",
-          blurb: "DEVELOPER DIAGNOSTICS (NOT WIRED UP YET)",
+          blurb: "SHOW THE FPS METER DURING RUNS",
           action: () => {
             playUiSound(synth, "confirm");
             updateSettings({ debug: s.debug === "on" ? "off" : "on" });
