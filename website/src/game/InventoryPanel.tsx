@@ -61,7 +61,7 @@ import {
 } from "./ItemCard.tsx";
 import { dollDataUrl, playerDollLayers } from "./paper-doll.ts";
 import { playUiSound } from "./sfx/index.ts";
-import { TIER_COLORS } from "./tiers.ts";
+import { TIER_COLORS, tierGlowClass } from "./tiers.ts";
 
 type DragSource =
   { type: "inv"; index: number } | { type: "slot"; slot: EquipSlot };
@@ -197,7 +197,7 @@ function ItemTooltip({
   return createPortal(
     <div
       ref={ref}
-      className="item-tooltip"
+      className={`item-tooltip${tierGlowClass(item.tier)}`}
       style={{
         left: pos?.left ?? anchor.right + 10,
         top: pos?.top ?? anchor.top,
@@ -572,7 +572,9 @@ export function InventoryPanel({
                     <div
                       className={`inv-cell equip-cell${
                         drag && drag.item.slot === slot ? " drop-ok" : ""
-                      }${item && isArmorBroken(item) ? " broken" : ""}`}
+                      }${item && isArmorBroken(item) ? " broken" : ""}${
+                        item ? tierGlowClass(item.tier) : ""
+                      }`}
                       data-drop={`slot:${slot}`}
                       style={
                         item
@@ -689,7 +691,7 @@ export function InventoryPanel({
                   item && !isArmorBroken(item) && wouldUpgradeSlot(state, item)
                     ? " upgrade"
                     : ""
-                }`}
+                }${item ? tierGlowClass(item.tier) : ""}`}
                 data-drop={`inv:${index}`}
                 style={
                   item ? { borderColor: TIER_COLORS[item.tier] } : undefined

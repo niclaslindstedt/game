@@ -36,7 +36,13 @@ import { PixelText } from "@ui/lib/PixelText.tsx";
 import type { PixelFont } from "@ui/lib/pixel-font.ts";
 
 import { spriteDataUrl, type Sprites } from "./assets.ts";
-import { AFFIX_COLORS, TIER_COLORS, WEAPON_CLASS_COLORS } from "./tiers.ts";
+import {
+  AFFIX_COLORS,
+  TIER_COLORS,
+  TIER_LABELS,
+  tierGlowClass,
+  WEAPON_CLASS_COLORS,
+} from "./tiers.ts";
 
 /** The item card's headline per gear slot (weapons headline their class). */
 const SLOT_HEADLINES: Record<Exclude<Equipment["slot"], "weapon">, string> = {
@@ -360,13 +366,17 @@ export function ItemCardBody({
   maxWidth?: number;
   lineScale?: number;
 }) {
+  const tierLabel = TIER_LABELS[item.tier];
   return (
     <>
+      {/* Unique/legendary names carry a soft glow (tierGlowClass) on top of
+          the tier color — gold alone sits too close to rare yellow. */}
       <PixelText
         font={font}
         text={equipmentName(item)}
         scale={2}
         color={TIER_COLORS[item.tier]}
+        className={tierGlowClass(item.tier).trim() || undefined}
         maxWidth={maxWidth}
       />
       {itemLines(state, item, compareTo).map((line) =>
@@ -407,6 +417,18 @@ export function ItemCardBody({
           maxWidth={maxWidth}
         />
       ))}
+      {/* The quality tier, spelled out at the card's foot in the tier color —
+          the explicit answer to "is this rare or unique?" that the name color
+          alone can't give. Plain finds carry no label (see TIER_LABELS). */}
+      {tierLabel && (
+        <PixelText
+          font={font}
+          text={tierLabel}
+          scale={lineScale}
+          color={TIER_COLORS[item.tier]}
+          className={tierGlowClass(item.tier).trim() || undefined}
+        />
+      )}
     </>
   );
 }

@@ -24,7 +24,7 @@ import { synth } from "./audio.ts";
 import { ItemCardBody, ItemIcon } from "./ItemCard.tsx";
 import { playUiSound } from "./sfx/index.ts";
 import { type Sprites } from "./assets.ts";
-import { TIER_COLORS } from "./tiers.ts";
+import { TIER_COLORS, tierGlowClass } from "./tiers.ts";
 
 /** Wrap width (rem) for the detail card's text — mirrors the inventory
  * tooltip's cap so a long unique name folds instead of spilling. */
@@ -122,7 +122,7 @@ export function ArsenalScreen({
                   onClick={() => setCursor(i)}
                 >
                   <span
-                    className="inv-cell arsenal-cell"
+                    className={`inv-cell arsenal-cell${tierGlowClass(item.tier)}`}
                     style={{ borderColor: color }}
                   >
                     <ItemIcon sprites={sprites} item={item} />
@@ -148,10 +148,14 @@ export function ArsenalScreen({
 
           {selected && (
             <div
-              className="arsenal-detail"
+              className={`arsenal-detail${tierGlowClass(selected.tier)}`}
               style={{ borderColor: TIER_COLORS[selected.tier] }}
             >
-              <span className="inv-cell arsenal-detail-icon">
+              <span
+                className={`inv-cell arsenal-detail-icon${tierGlowClass(
+                  selected.tier,
+                )}`}
+              >
                 <ItemIcon sprites={sprites} item={selected} />
               </span>
               <div className="arsenal-detail-card">
