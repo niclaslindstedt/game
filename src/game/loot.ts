@@ -123,6 +123,19 @@ function dropScreenNuke(state: GameState, at: Vec2): void {
 }
 
 /**
+ * Fly the freshest drop in on an ANGEL: mark it airborne (uncollectable, and
+ * magnet-proof) for `MERCY.angelDeliverMs` so the guardian can swoop it down to
+ * `at` before releasing it, and emit the one-shot `mercyDrop` cue the app plays
+ * the chime off. The engine names no angel — it just sets the timer the renderer
+ * dramatizes (see `stepItems`, `render.ts`). No-op if nothing was just pushed.
+ */
+function flyInByAngel(state: GameState, at: Vec2): void {
+  const item = state.items[state.items.length - 1];
+  if (item) item.deliverMs = MERCY.angelDeliverMs;
+  state.events.push({ type: "mercyDrop", pos: { ...at } });
+}
+
+/**
  * The per-kill chance a PACKED FIELD coughs up a screen-nuke — the
  * bomb-in-a-swarm bailout (a MERCY DROP). Zero until the on-screen crowd
  * passes `MERCY.crowdBombThreshold`, then ramps linearly to the difficulty's
@@ -523,6 +536,7 @@ function dropMinionLoot(
   const bombChance = noNukeDrop ? 0 : crowdBombChance(state);
   if (bombChance > 0 && state.rng() < bombChance) {
     dropScreenNuke(state, at);
+    flyInByAngel(state, at);
     return;
   }
 
@@ -536,6 +550,7 @@ function dropMinionLoot(
   if (drinkChance > 0 && state.rng() < drinkChance) {
     state.items.push({ id: state.nextId++, kind: "drink", pos: { ...at } });
     state.events.push({ type: "itemDropped", pos: { ...at } });
+    flyInByAngel(state, at);
     return;
   }
 
@@ -645,8 +660,14 @@ function dropMinionLoot(
     });
   } else if (roll < equipmentShare + abilityShare + medkitShare) {
     state.items.push({ id: state.nextId++, kind: "medkit", pos });
+    // A medkit that fell because low health WIDENED its slice is a mercy rope,
+    // not the ordinary rain — fly it in on the angel (a healthy hero's boost is
+    // zero, so his medkits land the mundane way).
+    if (medkitBoost > 0) flyInByAngel(state, pos);
   } else if (roll < equipmentShare + abilityShare + medkitShare + repairShare) {
     state.items.push({ id: state.nextId++, kind: "repair", pos });
+    // Likewise a repair kit widened in by a near-broken weapon (see repairBoost).
+    if (repairBoost > 0) flyInByAngel(state, pos);
   } else if (
     roll <
     equipmentShare + abilityShare + medkitShare + repairShare + LOOT.drinkShare

@@ -538,7 +538,7 @@ export type Projectile = {
   z: number;
 };
 
-export type Item =
+export type Item = (
   | { id: number; kind: "medkit"; pos: Vec2 }
   /** The golden level-up arrow: grants a share of the XP to the next level. */
   | { id: number; kind: "xp"; pos: Vec2 }
@@ -556,7 +556,20 @@ export type Item =
    * into STORY_ITEM_DEFS; picking one up banks it in `state.storyItems`
    * (never the bag) and plays its lore as a dialogue.
    */
-  | { id: number; kind: "story"; pos: Vec2; defId: string };
+  | { id: number; kind: "story"; pos: Vec2; defId: string }
+) & {
+  /**
+   * A MERCY DROP still being flown in by its ANGEL. When set (and > 0) the
+   * rescue is airborne — cradled by the guardian as it descends to `pos` (the
+   * spot the mob died) — and NOT yet collectable; the magnet ignores it and
+   * `stepItems` counts it down (see `MERCY.angelDeliverMs`). At 0 the gift has
+   * landed and the item behaves like any other. Absent on every ordinary drop,
+   * so a plain drop is `deliverMs === undefined` and grounded from birth. The
+   * renderer draws the descending angel + falling pickup off this timer
+   * (`render.ts`); the engine only gates the pickup and never mentions angels.
+   */
+  deliverMs?: number;
+};
 
 /** A decorative feature scattered at level creation — rendered, no collision. */
 export type Decor = {
@@ -883,6 +896,14 @@ export type GameEvent =
       xp?: number;
     }
   | { type: "itemDropped"; pos: Vec2 }
+  /**
+   * A MERCY DROP was rolled and is being flown in by its ANGEL (the item's
+   * `deliverMs` is now ticking). `pos` is where the guardian will release it —
+   * the spot the mob died. Fires once, the instant the rescue is minted, so the
+   * app can answer with the angel's chime and swoop; the `itemDropped` cue still
+   * fires alongside it for the drop itself.
+   */
+  | { type: "mercyDrop"; pos: Vec2 }
   /**
    * The player walked over loot he couldn't carry — the bag is full, so the
    * piece stays on the ground. `pos` is the hero (the app floats a "bags full"

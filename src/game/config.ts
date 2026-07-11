@@ -1004,6 +1004,19 @@ export const MERCY = {
    * again.
    */
   rescueRadius: 340,
+  /**
+   * THE ANGEL — how a mercy drop makes its entrance. Rather than blinking onto
+   * the ground, a rescue rolled by a mercy path (the crowd-bomb and empty-sprint
+   * bailouts, and the desperation-boosted medkit/repair) is flown down by a
+   * guardian angel that swoops in from above, cradles the gift, and releases it
+   * over the spot the mob died. `angelDeliverMs` is the WHOLE performance —
+   * descent, release, and the short fall to the ground — kept under two seconds
+   * so a drowning player's lifeline never dawdles. The pickup is uncollectable
+   * (and magnet-proof) for exactly this long, then lands and behaves like any
+   * drop. Only the renderer knows it is an "angel"; the engine just marks the
+   * item's `deliverMs` and counts it down (see `stepItems`, `dropMinionLoot`).
+   */
+  angelDeliverMs: 1400,
 } as const;
 
 /**

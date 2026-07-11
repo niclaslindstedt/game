@@ -219,7 +219,7 @@ export function step(state: GameState, input: GameInput, dtMs: number): void {
     state.stats.kills - killsBefore,
   );
   stepSpawner(state);
-  stepItems(state);
+  stepItems(state, dtMs);
   stepDoors(state);
 
   if (state.player.hp <= 0) {
@@ -870,6 +870,9 @@ function stepAbilities(state: GameState, dt: number, dtMs: number): void {
       const reachSq = reach * reach;
       const pull = def.magnet.pullSpeed * dt;
       for (const item of state.items) {
+        // A drop still being flown in by its angel is airborne — the magnet
+        // can't reel a gift out of the guardian's hands (see stepItems).
+        if (item.deliverMs !== undefined && item.deliverMs > 0) continue;
         if (distanceSq(item.pos, player.pos) > reachSq) continue;
         item.pos = moveToward(item.pos, player.pos, pull);
       }
@@ -1400,7 +1403,7 @@ function moveEnemy(state: GameState, enemy: Enemy, dt: number): void {
   }
 }
 
-function stepItems(state: GameState): void {
+function stepItems(state: GameState, dtMs: number): void {
   const player = state.player;
   // Pieces displaced by an auto-equip with a full bag fall back to the
   // ground — collected here so the filter pass isn't mutated mid-flight.
@@ -1408,6 +1411,14 @@ function stepItems(state: GameState): void {
   const pickupReach = MEDKIT.radius + PLAYER.radius;
   const pickupReachSq = pickupReach * pickupReach;
   state.items = state.items.filter((item) => {
+    // A mercy drop still riding its angel down is airborne: count off the
+    // delivery, and until it lands it can't be picked up (the magnet leaves it
+    // alone too — see stepAbilities). The renderer draws the descent off the
+    // same timer; here it only gates the grab.
+    if (item.deliverMs !== undefined && item.deliverMs > 0) {
+      item.deliverMs = Math.max(0, item.deliverMs - dtMs);
+      return true;
+    }
     const overlapping = distanceSq(item.pos, player.pos) <= pickupReachSq;
     if (!overlapping) return true;
 
