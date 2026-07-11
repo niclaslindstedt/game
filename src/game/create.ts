@@ -31,6 +31,7 @@ import { xpToLevelUp } from "./leveling.ts";
 import { createExplored, revealAround } from "./map.ts";
 import { createMerchant } from "./merchant.ts";
 import { evolutionHpMult, mobHpScaleFor, mobLevelFor } from "./menace.ts";
+import { BALANCE } from "./tuning.ts";
 import { boundingRadius, rockHalf } from "./obstacles.ts";
 import type {
   Decor,
@@ -429,9 +430,15 @@ export function spawnEnemy(
       ? 0
       : randomRange(rng, -ENEMY_AI.speedJitter, ENEMY_AI.speedJitter);
   const evolved = def.role === "minion" ? Math.max(0, evo) : 0;
+  // The developer mob-hp knob multiplies in here — the one chokepoint every
+  // spawn path funnels through — so placed mobs, waves, and rushers all
+  // toughen together (and pay proportionally more XP, since kill XP is
+  // hp-proportional).
   const hp = Math.max(
     1,
-    Math.round(def.hp * hpMult * evolutionHpMult(evolved, evoEffect)),
+    Math.round(
+      def.hp * hpMult * evolutionHpMult(evolved, evoEffect) * BALANCE.mobHp,
+    ),
   );
   const enemy: Enemy = {
     id,

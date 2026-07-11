@@ -5,7 +5,13 @@
 // hold-to-steer with instant item use, mouse players get cursor steering
 // with click-to-use.
 
-import { setAutoEquipEnabled, setAutoStatGainsEnabled } from "@game/core";
+import {
+  BALANCE_TUNING_DEFAULTS,
+  setAutoEquipEnabled,
+  setAutoStatGainsEnabled,
+  setBalanceTuning,
+  type BalanceTuning,
+} from "@game/core";
 
 import { storageKey } from "../identity.ts";
 
@@ -92,6 +98,10 @@ export type GameSettings = {
   characterWeapon: CharacterWeapon;
   /** Display preference: floating "+N XP" popups on kills (see XpFloat). */
   xpFloat: XpFloat;
+  /** Developer BALANCE multipliers (DEVELOPER → BALANCE): runtime tuning over
+   * the engine's shipped config — XP pace, mob strength, loot percentages…
+   * All 1 (neutral) by default; applied via `setBalanceTuning`. */
+  balance: BalanceTuning;
 };
 
 const STORAGE_KEY = storageKey("settings");
@@ -130,7 +140,23 @@ function defaults(): GameSettings {
     characterWeapon: "off",
     // Display preferences default to the shipped presentation.
     xpFloat: "on",
+    // Balance multipliers start neutral — the shipped tuning.
+    balance: { ...BALANCE_TUNING_DEFAULTS },
   };
+}
+
+/** Sanitize a stored balance object: every knob falls back to neutral unless
+ * it is a finite positive number (the engine clamps the range further). */
+function loadBalance(stored: unknown): BalanceTuning {
+  const balance = { ...BALANCE_TUNING_DEFAULTS };
+  if (typeof stored !== "object" || stored === null) return balance;
+  for (const key of Object.keys(balance) as (keyof BalanceTuning)[]) {
+    const value = (stored as Record<string, unknown>)[key];
+    if (typeof value === "number" && Number.isFinite(value) && value > 0) {
+      balance[key] = value;
+    }
+  }
+  return balance;
 }
 
 const clamp01 = (v: number) => Math.min(1, Math.max(0, v));
@@ -194,6 +220,7 @@ function load(): GameSettings {
         stored.xpFloat === "on" || stored.xpFloat === "off"
           ? stored.xpFloat
           : base.xpFloat,
+      balance: loadBalance(stored.balance),
     };
   } catch {
     return base; // private mode / corrupt JSON — play with defaults
@@ -205,6 +232,7 @@ setAudioVolumes({ music: settings.musicVolume, sfx: settings.sfxVolume });
 setHapticsEnabled(settings.vibration === "on");
 setAutoStatGainsEnabled(settings.autoLevelStats === "on");
 setAutoEquipEnabled(settings.autoEquip === "on");
+setBalanceTuning(settings.balance);
 
 /** The live settings singleton — cheap to read every simulation tick. */
 export function getSettings(): GameSettings {
@@ -220,6 +248,7 @@ export function updateSettings(patch: Partial<GameSettings>): GameSettings {
   setHapticsEnabled(settings.vibration === "on");
   setAutoStatGainsEnabled(settings.autoLevelStats === "on");
   setAutoEquipEnabled(settings.autoEquip === "on");
+  setBalanceTuning(settings.balance);
   try {
     window.localStorage.setItem(STORAGE_KEY, JSON.stringify(settings));
   } catch {

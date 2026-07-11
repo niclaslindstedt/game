@@ -54,6 +54,7 @@ import { storyItemDef } from "./defs/story.ts";
 import { uniqueDef } from "./defs/uniques.ts";
 import { baseStatBonus } from "./leveling.ts";
 import { currentMobLevel } from "./menace.ts";
+import { BALANCE } from "./tuning.ts";
 import type {
   Affix,
   ArmorSlot,
@@ -254,7 +255,10 @@ function rollTier(state: GameState, mlvl: number, tierBonus: number): Tier {
     if (mlvl < LOOT.tierUnlockMlvl[tier]) continue;
     const base = LOOT.tierChances[tier] + (difficultyChances[tier] ?? 0);
     if (base <= 0) continue;
-    if (state.rng() < (base + luckBonus) * magicFind) return tier;
+    // The developer gear-quality knob scales the whole tier roll, stacking
+    // multiplicatively with magic find like one more MF source.
+    if (state.rng() < (base + luckBonus) * magicFind * BALANCE.gearQuality)
+      return tier;
   }
   return "regular";
 }
@@ -931,10 +935,13 @@ export function enemyCritChance(state: GameState, base: number): number {
 
 /** Chance a regular monster drops loot, after LUCK and difficulty. */
 export function dropChance(state: GameState): number {
+  // The developer drop-rate knob scales the whole per-kill chance — base,
+  // difficulty bonus, and LUCK alike — so the rain thickens uniformly.
   return (
-    LOOT.dropChance +
-    difficultyDef(state.difficulty).dropChanceBonus +
-    effectiveStat(state, "luck") * STATS.dropChancePerLuck
+    (LOOT.dropChance +
+      difficultyDef(state.difficulty).dropChanceBonus +
+      effectiveStat(state, "luck") * STATS.dropChancePerLuck) *
+    BALANCE.dropRate
   );
 }
 
@@ -1077,12 +1084,16 @@ export function weaponDamageFor(state: GameState, weapon: Equipment): number {
   // here — the one source of stat-scaled damage — so combat, auto-equip
   // scoring, and every DPS readout agree on what craftsmanship is worth.
   // A UNIQUE weapon's per-drop ±band on the base damage (see `Equipment.baseRoll`).
+  // The developer damage knob scales the final figure, so combat, auto-equip
+  // scoring, and every DPS readout move together (rankings are unchanged —
+  // it's one factor on all of them).
   return (
     def.damage *
     multiplier *
     lootMult *
     qualityMult(weapon) *
-    (weapon.baseRoll ?? 1)
+    (weapon.baseRoll ?? 1) *
+    BALANCE.playerDamage
   );
 }
 

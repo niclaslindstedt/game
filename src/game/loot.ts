@@ -39,6 +39,7 @@ import { levelStatGains, xpToLevelUp } from "./leveling.ts";
 import { addMapMarker } from "./map.ts";
 import { bankOverkill, maybePowerScale, mobLevelTierBonus } from "./menace.ts";
 import { maybeFirstKillThought, startDeathWords } from "./story.ts";
+import { BALANCE } from "./tuning.ts";
 import type { Enemy, GameState, Tier, WeaponClass } from "./types.ts";
 
 /** Monsters still owed by the wave budget but not yet streamed in. Each line
@@ -534,6 +535,10 @@ function dropMinionLoot(
   const pos = { ...at };
   const diff = difficultyDef(state.difficulty);
   const abilities = levelDef(state.level.id).loot.abilityPool;
+  // The developer knob widens (or thins) the equipment slice in place — the
+  // ladder below is cumulative, so the lesser slices shift up and the arrow
+  // tail absorbs the difference, exactly as authored-share tuning would.
+  const equipmentShare = LOOT.equipmentShare * BALANCE.equipmentShare;
   // The difficulty leans on the drop ladder: medkits and powerups thin out a
   // few percent per rung (the equipment/repair slices stay as authored).
   const abilityShare =
@@ -575,7 +580,7 @@ function dropMinionLoot(
       pos,
       defId: "screen_nuke",
     });
-  } else if (forced || roll < LOOT.equipmentShare) {
+  } else if (forced || roll < equipmentShare) {
     state.minionEquipmentDrops++;
     state.items.push({
       id: state.nextId++,
@@ -583,27 +588,20 @@ function dropMinionLoot(
       pos,
       equipment: rollEquipment(state, { tierBonus, mlvl }),
     });
-  } else if (roll < LOOT.equipmentShare + abilityShare) {
+  } else if (roll < equipmentShare + abilityShare) {
     state.items.push({
       id: state.nextId++,
       kind: "ability",
       pos,
       defId: abilities[Math.floor(state.rng() * abilities.length)] as string,
     });
-  } else if (roll < LOOT.equipmentShare + abilityShare + medkitShare) {
+  } else if (roll < equipmentShare + abilityShare + medkitShare) {
     state.items.push({ id: state.nextId++, kind: "medkit", pos });
-  } else if (
-    roll <
-    LOOT.equipmentShare + abilityShare + medkitShare + repairShare
-  ) {
+  } else if (roll < equipmentShare + abilityShare + medkitShare + repairShare) {
     state.items.push({ id: state.nextId++, kind: "repair", pos });
   } else if (
     roll <
-    LOOT.equipmentShare +
-      abilityShare +
-      medkitShare +
-      repairShare +
-      LOOT.drinkShare
+    equipmentShare + abilityShare + medkitShare + repairShare + LOOT.drinkShare
   ) {
     // A plain energy drink in the ordinary rain — worth nothing to a rested
     // hero (it stays grounded until he's run himself winded), but the winded
@@ -611,7 +609,7 @@ function dropMinionLoot(
     state.items.push({ id: state.nextId++, kind: "drink", pos });
   } else if (
     roll <
-    LOOT.equipmentShare +
+    equipmentShare +
       abilityShare +
       medkitShare +
       repairShare +
@@ -661,10 +659,11 @@ function maybeDropBossUnique(
   if (!ids) return;
   for (const id of ids) {
     const ilvl = Math.max(1, uniqueDef(id).ilvl);
-    const chance = Math.min(
-      UNIQUE.dropChanceCap,
-      UNIQUE.dropChance * (enemy.mlvl / ilvl),
-    );
+    // The developer knob scales the capped chance (it may push past the cap —
+    // that's the point of a farm-rate probe); the rng test tolerates > 1.
+    const chance =
+      Math.min(UNIQUE.dropChanceCap, UNIQUE.dropChance * (enemy.mlvl / ilvl)) *
+      BALANCE.uniqueDrops;
     if (state.rng() >= chance) continue;
     pushUniqueDrop(state, id, enemy.pos);
   }
@@ -691,7 +690,7 @@ function maybeDropWorldUnique(
   // BEFORE any rng draw so the seeded stream is untouched on ungated runs.
   const gate = WORLD_DROP.minPlayerLevel[state.difficulty];
   if (gate === undefined || state.player.level < gate) return;
-  const chance = WORLD_DROP.chanceByRole[def.role];
+  const chance = WORLD_DROP.chanceByRole[def.role] * BALANCE.uniqueDrops;
   for (const id of ids) {
     if (state.rng() >= chance) continue;
     pushUniqueDrop(state, id, enemy.pos);
@@ -798,6 +797,10 @@ function dropGuaranteedLoot(
  * only pauses the run once `levelUpFxMs` has burned down (see step()).
  */
 export function grantXp(state: GameState, amount: number): void {
+  // The developer XP knob scales every grant at the door — kills, golden
+  // arrows, and scripted awards alike — so it purely paces leveling without
+  // touching the curve (`xpToLevelUp`) the costs are stated in.
+  amount = Math.round(amount * BALANCE.xpGain);
   const player = state.player;
   player.xp += amount;
   state.stats.xpGained += amount;
