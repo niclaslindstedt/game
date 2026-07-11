@@ -29,13 +29,17 @@ const spawnedSoFar = (state: GameState) =>
  * Step with idle input, auto-spending level-ups so time keeps flowing,
  * holding the player airborne so the horde can never end the run early,
  * and keeping the weapon quiet so no kills muddy the spawn counts (the
- * near-floor would refill every death, hiding the windowed ramp).
+ * near-floor would refill every death, hiding the windowed ramp). The camp
+ * clock is reset every step — a genuinely parked player would STARVE the
+ * spawner (config CAMPING; see camping_test.ts), and these suites measure
+ * the ramp a player on the move experiences.
  */
 function stepThrough(state: GameState, steps: number): void {
   for (let i = 0; i < steps; i++) {
     state.player.z = 100;
     state.player.vz = 0;
     state.player.weaponCooldownMs = 1_000_000;
+    state.campMs = 0;
     step(state, idle, DT);
     while (state.player.pendingStatPoints > 0) allocateStat(state, "stamina");
   }

@@ -136,15 +136,19 @@ describe("dropRate", () => {
 
 describe("equipmentShare", () => {
   // Ten minion kills with the drop chance saturated (dropRate 20 pushes it
-  // past 1, so every kill drops something).
+  // past 1, so every kill drops something). Each mob is finished from half
+  // its (inflated) bar with a blow well under its max hp, so the OVERKILL
+  // TOLL (`overkillEfficiency`) never discounts the roll being measured.
   function killTen(state: GameState): void {
     for (let i = 0; i < 10; i++) {
       const enemy = makeEnemy({
         id: 9000 + i,
         pos: { x: state.player.pos.x + 60, y: state.player.pos.y },
+        hp: 45,
+        maxHp: 200,
       });
       state.enemies.push(enemy);
-      hitEnemy(state, enemy, 1_000_000, undefined, { rollAccuracy: false });
+      hitEnemy(state, enemy, 45, undefined, { rollAccuracy: false });
     }
   }
 

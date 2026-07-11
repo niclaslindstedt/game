@@ -195,6 +195,9 @@ export function createGame(
     freeze: false,
     difficulty,
     menace: 0,
+    menaceFloor: 0,
+    evoProof: 0,
+    evoRatchetMs: 0,
     combatDps: 0,
     combatKillRate: 0,
     level: {
@@ -314,6 +317,11 @@ export function createGame(
     minionEquipmentDrops: 0,
     waveSpawned: (def.waves?.budget ?? []).map(() => 0),
     moveSpawnCredit: 0,
+    // The camp clock opens anchored on the spawn — standing at the lander
+    // farming the opening waves is exactly the camping the starvation answers.
+    campAnchor: { ...playerSpawn },
+    campMs: 0,
+    trickleMs: 0,
     // Resolve the scripted opening drops: a rolled [min, max] threshold picks
     // a concrete kill discovered in play; a fixed number stands as authored.
     earlyDropKills: (def.loot.earlyDrops ?? []).map((d) =>

@@ -190,7 +190,14 @@ run against synthetic fixtures with no shipped content (see
   projectiles → enemies (aggro/guard/elite AI, dialogue triggers, contact
   damage, obstacle push-out) → hazards (gravity wells, asteroids) → menace
   decay → wave spawner → item pickups →
-  locked doors → objective → win/lose. A boss at or below `LAST_STAND.hpFraction`
+  locked doors → objective → win/lose. The wave spawner also enforces
+  CAMPING PRESSURE (config `CAMPING`): a player who holds the same ground
+  past a grace period stops being fed — the live floor and the timed budget
+  stream fade out (deferred, not canceled) and a slow beckoning trickle
+  walks in from the objective's direction instead, luring him onward; and
+  once a killBoss level's wave budget is spent, a thin endless straggler
+  stream keeps arriving from that same bearing so the walk to the boss
+  never crosses a dead-empty map (clearAll levels stay finite). A boss at or below `LAST_STAND.hpFraction`
   multiplies its contact damage — the one-last-stand spike the renderer
   telegraphs with a flickering dying sprite. The character fights autonomously (and only
   targets monsters inside the visible view the app passes in
@@ -234,23 +241,40 @@ run against synthetic fixtures with no shipped content (see
 - **`src/game/menace.ts`** — the escalation system: the player's rolling
   DPS/kill-rate (`tickMenace`) plus relative-overkill jolts on a killing
   blow (`bankOverkill`) bank `state.menace`, which idle time bleeds off (a
-  fixed decay, also in `tickMenace`, run from `step.ts`). All gain is scaled
-  by `menaceSensitivity` — the difficulty's `menaceMult` times an early-game
-  `menaceWarmup` — so a rampage takes a genuinely overpowered build, is
-  practically impossible in the opening levels, and gets touchier the harder
-  the difficulty. Its `menaceStage` lures a denser
-  horde (`lureMult`, read by the wave spawner), evolves freshly-spawned
-  minions (`evolutionHpMult`, stamped in `create.ts`'s `spawnEnemy`), and
-  — with the player's level — power-matches elites/bosses when they engage
-  (`enemyPowerScale`/`maybePowerScale`, called from both `step.ts` wake and
-  `loot.ts` first-hit). Separately from that moment-to-moment heat, the
-  player's LEVEL alone gives every minion a non-decaying toughness floor at
-  spawn (`mobLevelScale`, folded into `spawnEnemy`'s hp mult) and richer
-  drops (`mobLevelTierBonus`, added to the loot tier roll), so a levelled
-  hero keeps meeting a proportionally sturdier, better-paying horde. Both
-  the minion floor and the elite/boss power-match multiply by
-  `autoPowerScale` (leveling.ts) — the free per-level stat gains cancel out
-  against the crowd, so only chosen points, gear, and skill pull ahead.
+  fixed decay, also in `tickMenace`, run from `step.ts`) — but never below
+  the permanent floor of the EVOLUTION RATCHET: overkills on mobs of the
+  current evolution stage bank proof (`state.evoProof`; the crop's clean
+  kills refund it), and enough proof lifts `state.menaceFloor` a full
+  stage, at most one per `ratchetCooldownMs` — so a horde whose current
+  crop keeps getting one-shot evolves stage by stage, with NO upper cap,
+  until the player's blows stop dropping mobs outright. The transient
+  gain is scaled by `menaceSensitivity` — the difficulty's `menaceMult`
+  times an early-game `menaceWarmup` — but the ratchet is deliberately
+  difficulty-blind (warmup-damped only): every rung keeps evolving; the
+  difficulty sizes each step (`menaceEffectMult`), not whether it happens.
+  The (uncapped) `menaceStage` lures a denser horde (`lureMult`, read by
+  the wave spawner, its crowd growth alone capped at `lureStageCap`),
+  evolves freshly-spawned minions (`evolutionHpMult`, stamped in
+  `create.ts`'s `spawnEnemy` — more hp, hence more xp, but a WORSE loot
+  tier roll via `tierPenaltyPerStage`, so a rampage levels rather than
+  farms), and — with the hero's power — power-matches elites/bosses when
+  they engage (`enemyPowerScale`/`maybePowerScale`, called from both
+  `step.ts` wake and `loot.ts` first-hit). Separately from that
+  moment-to-moment heat, the hero's POWER LEVEL (`heroPowerLevel`: the
+  character level or the gear rack's averaged total ilvl
+  (`heroGearLevel`), whichever is higher — so a decked-out hero meets a
+  horde levelled to what he actually swings) gives every minion a
+  non-decaying toughness floor at spawn (`mobLevelScale`, folded into
+  `spawnEnemy`'s hp mult) and richer drops (`mobLevelTierBonus`, added to
+  the loot tier roll), so a levelled hero keeps meeting a proportionally
+  sturdier, better-paying horde. The kill side pays by the same honesty:
+  `overkillEfficiency` scales a kill's xp AND its drop roll by
+  `maxHp / damage` once the blow exceeds the full bar (2× the bar → half,
+  3× → a third), so farming mobs far beneath you is deliberately
+  unrewarding. Both the minion floor and the elite/boss power-match
+  multiply by `autoPowerScale` (leveling.ts) — the free per-level stat
+  gains cancel out against the crowd, so only chosen points, gear, and
+  skill pull ahead.
 - **`src/game/tuning.ts`** — runtime BALANCE TUNING: ~10 developer
   multipliers over the shipped config (XP gain, hero/mob damage, mob hp,
   horde size, drop rate, gear share/quality, unique drops, menace gain),

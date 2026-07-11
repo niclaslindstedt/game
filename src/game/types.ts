@@ -1166,10 +1166,31 @@ export type GameState = {
   /**
    * The escalation meter (see config MENACE). Heated by the player's rolling
    * combat output (`combatDps` / `combatKillRate`) and jolted by overpowered
-   * kills; idling bleeds it off. Read as a stage that lures, evolves, and
-   * scales the horde. Starts at 0.
+   * kills; idling bleeds it off — but never below `menaceFloor`. Read as an
+   * uncapped stage that lures, evolves, and scales the horde. Starts at 0.
    */
   menace: number;
+  /**
+   * The PERMANENT menace floor the evolution ratchet has earned (see
+   * `bankOverkill`): raised a full stage each time the current stage's mobs
+   * keep getting one-shot, never lowered — the horde that evolved because it
+   * was too easy stays evolved for the rest of the run. Starts at 0.
+   */
+  menaceFloor: number;
+  /**
+   * Healthbars of overkill banked toward the NEXT ratchet stage (only blows
+   * against mobs of the current evolution crop count; the crop's CLEAN kills
+   * refund it — see `MENACE.ratchetReliefPerKill`). Capped at twice the
+   * threshold; spends `MENACE.ratchetHealthbars` each time the floor rises.
+   * Starts at 0.
+   */
+  evoProof: number;
+  /**
+   * Ms until the ratchet may lift the floor another stage (the "one evolve
+   * per malice round" pacing, `MENACE.ratchetCooldownMs`). Counts down each
+   * playing tick. Starts at 0.
+   */
+  evoRatchetMs: number;
   /**
    * Rolling estimate of the player's damage-per-second, an EMA smoothed over
    * MENACE.rateWindowSec and updated each step from that step's damage. The
@@ -1276,6 +1297,25 @@ export type GameState = {
    * (waves.moveSpawnEvery px each).
    */
   moveSpawnCredit: number;
+  /**
+   * Where the player last SETTLED (config CAMPING): re-anchored to his
+   * position whenever he strays past `CAMPING.campRadius` of it. While he
+   * stays inside the radius, `campMs` counts up.
+   */
+  campAnchor: Vec2;
+  /**
+   * Ms the player has camped inside `campRadius` of `campAnchor`. Past
+   * `CAMPING.graceMs` the spawner starves the camper — the live floor and the
+   * timed budget stream fade out over `CAMPING.fadeMs` — and the beckoning
+   * trickle from the objective direction takes over. Reset by moving on.
+   */
+  campMs: number;
+  /**
+   * Cooldown (ms, counts down) between trickle arrivals — shared by the
+   * camped-player BEACON spawns and the post-budget STRAGGLER stream, both of
+   * which walk in slowly from the objective direction (see stepSpawner).
+   */
+  trickleMs: number;
   /**
    * Resolved kill thresholds for the level's `loot.earlyDrops` schedule,
    * parallel to it: a rolled `[min, max]` entry gets a concrete count here at

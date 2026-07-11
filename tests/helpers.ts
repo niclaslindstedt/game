@@ -83,6 +83,11 @@ export function stopWaves(state: GameState): void {
   waves.budget.forEach((entry, i) => {
     state.waveSpawned[i] = entry.count;
   });
+  // A spent budget on a killBoss level starts the endless STRAGGLER trickle
+  // (see stepSpawner) — park its cooldown effectively forever so a surgically
+  // staged field stays exactly as the test arranged it. Suites probing the
+  // trickle itself reset `trickleMs` to 0 explicitly.
+  state.trickleMs = Number.MAX_SAFE_INTEGER;
 }
 
 /**

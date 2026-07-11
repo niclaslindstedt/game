@@ -29,7 +29,9 @@ const KEY = storageKey("current-run");
 // was playing it, so CONTINUE only offers to resume the ACTIVE character's run.
 // v5: outroPage + quakeMs (the post-victory epilogue and its quake) joined the
 // state, plus the `outro` GamePhase.
-const SAVE_VERSION = 5;
+// v6: menaceFloor/evoProof (the evolution ratchet) and campAnchor/campMs/
+// trickleMs (the camping-starvation spawner) joined the state.
+const SAVE_VERSION = 6;
 
 /** A run parked between sessions: enough to drop the player straight back in. */
 export type ParkedRun = {
