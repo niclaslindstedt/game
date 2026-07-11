@@ -12,6 +12,7 @@ export default [
       "website/node_modules/**",
       "website/dist/**",
       "website/src/generated/**",
+      "website/src/game/assets/**",
       "coverage/**",
     ],
   },

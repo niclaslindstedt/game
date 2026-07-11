@@ -11,9 +11,12 @@
   ],
   "scripts": {
     "build": "npm run typecheck && npm run build --workspace website",
+    "pretest": "npm run assets",
     "test": "vitest run",
+    "pretest:watch": "npm run assets",
     "test:watch": "vitest",
     "typecheck": "tsc --noEmit && npm run typecheck --workspace website",
+    "prelint": "npm run assets",
     "lint": "eslint . && npm run typecheck",
     "fmt": "prettier --write .",
     "fmt:check": "prettier --check .",

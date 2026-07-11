@@ -483,9 +483,11 @@ pixelated`; enemies swap to generated wounded sprite variants as hp falls
   `generate-assets.mjs`** — the pixel-asset pipeline (`make assets`):
   sprites are character grids organized in per-family modules, each with a
   local palette scope merged with a shared core (`sprite-data/core.mjs`),
-  rendered at build time into one committed sprite atlas (PNG + JSON
-  source rects) plus gitignored previews (per-family contact sheets, film
-  strips, palette sheet, font specimen). Wound styles derive from the
+  rendered into one sprite atlas (PNG + JSON source rects) plus previews
+  (per-family contact sheets, film strips, palette sheet, font specimen).
+  The atlas and previews are both gitignored and regenerated on every build
+  (`npm run assets` runs ahead of `vite`/`tsc`/`vitest`), so the pixel grids
+  are the only committed source of truth (§11.2). Wound styles derive from the
   enemy catalog's `gore` field and role; contrast lints flag sprites that
   dissolve into their family's ground and wound overlays that don't read.
   See the `pixel-assets` skill.
@@ -595,10 +597,11 @@ in [`game-content.md`](./game-content.md) so a sequel replaces it wholesale.
   screen flashes, and future particles hang off the same channel without
   the engine growing presentation hooks.
 - **Generated assets over binaries** — sprites, tiles, and the UI font
-  ship as two committed atlases (sprite atlas + font atlas), but their
-  sources of truth are reviewable text (pixel grids, palette ramps, glyph
-  definitions) rendered by `make assets`. Art is diffable and
-  agent-editable like any other code.
+  render into two atlases (sprite atlas + font atlas) that are gitignored
+  and rebuilt on every build, never committed; their sources of truth are
+  reviewable text (pixel grids, palette ramps, glyph definitions) rendered
+  by `make assets`. Art is diffable and agent-editable like any other code,
+  and the binary atlas never shows up in a diff or merge conflict.
 - **Synthesized audio over audio files** — every sound is a handful of
   WebAudio oscillator/noise parameters in `website/src/game/sfx/`, and
   the background music is tracker-style score data (one file per track

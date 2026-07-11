@@ -182,11 +182,13 @@ actually looked at**:
   ghost-tier overrides wound in `c`/`C`/`U`/`N` (see the `wounds` maps in
   the family modules).
 - Tiles must tile: check the sheet's tiled-ground strip for visible seams.
-- After changing any grid, regenerate and commit `atlas.png` + `atlas.json`
-  together with the `sprite-data/` change — CI has no image toolchain
-  guarantee, so the committed atlas is the build input and the grids are
-  its reviewable source. The pack is deterministic: the atlas only diffs
-  when a grid does.
+- After changing any grid, run `make assets` and eyeball the render, but
+  commit only the `sprite-data/` change: the atlas (`atlas.png` +
+  `atlas.json`, font atlas) under `website/src/game/assets/` is gitignored
+  and rebuilt on every build (`npm run assets` runs ahead of `vite`, `tsc`,
+  and `vitest`), so the grids are the sole committed source of truth and the
+  binary atlas never enters a diff or merge conflict. The pack is
+  deterministic: regenerating from the same grids yields the same atlas.
 
 ## Skill self-improvement
 

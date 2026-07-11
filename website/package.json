@@ -6,13 +6,13 @@
   "type": "module",
   "scripts": {
     "extract": "node scripts/extract-source-data.mjs",
-    "dev": "npm run extract && vite",
-    "build": "npm run extract && vite build && node scripts/generate-seo.mjs",
+    "dev": "npm run assets && npm run extract && vite",
+    "build": "npm run assets && npm run extract && vite build && node scripts/generate-seo.mjs",
     "check:seo": "node scripts/check-seo.mjs",
     "icons": "pwa-assets-generator && node scripts/generate-og.mjs",
     "assets": "node scripts/generate-assets.mjs",
     "preview": "vite preview",
-    "typecheck": "tsc --noEmit -p tsconfig.json"
+    "typecheck": "npm run assets && tsc --noEmit -p tsconfig.json"
   },
   "dependencies": {
     "@niclaslindstedt/oss-framework": "^2.3.0",
