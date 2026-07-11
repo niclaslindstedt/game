@@ -319,6 +319,7 @@ relevant `SKILL.md` before starting that kind of work:
 | `sound-effects`    | Adding or tuning synthesized WebAudio SFX — the sound vocabulary, mixing rules, and audition loop.                                                                                                                                                                                                                                            |
 | `playtest`         | Verifying changes in the running game and tuning game feel with the autoplay bot (`website/scripts/playtest.mjs`).                                                                                                                                                                                                                            |
 | `debug-game`       | Investigating gameplay/render/input/audio bugs — deterministic seed repros, `?debug` + `window.__game`, failing-test-first fixes.                                                                                                                                                                                                             |
+| `ui-review`        | A fit-and-finish pass over the game's UI (screens, modals, popups, toasts) — the screenshot-audit loop: capture every surface at the three reference viewports (`website/scripts/ui-shots.mjs`), judge against the quality bar, unify off-skin surfaces, fix clipping/overflow, verify with re-captures.                                      |
 
 ## Maintenance skills
 
