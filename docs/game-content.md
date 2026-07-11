@@ -99,6 +99,30 @@ names its in-run music with an optional `music` id (a key into the app's
   (`LevelDef.outro` — the intro's black-screen mirror) before the victory
   splash. Music: `red_dust` (the galloping desert-western drive, at home at
   last).
+- **Secret level — THE BUNKER** (`levels/bunker.ts`). The cow level. Not part
+  of the campaign (`SECRET_LEVEL_ORDER`, outside `LEVEL_ORDER` — no unlock
+  chain, no NEXT LEVEL slot, no mission-select row): the only way in is a
+  ritual the game never explains. RASPUTIN in the rift drops **THE SEVERED
+  HAND** — a zero-stat trinket that reads as junk — and USING it while
+  standing in the rift (a `USE` row on its item card, or a desktop
+  right-click; `LevelDef.gates` + `spendGateKey`) tears open a blast door
+  beside the hero. Stepping in carries the whole build into the bunker: the
+  billionaires' continuity-of-wealth vault, six marble suites strung on one
+  narrow corridor spine (`bunker` biome — polished concrete with brass-inlay
+  medallions and burgundy carpet runs; ~800 px/s² gravity). Each suite holds
+  a **resident** — VLADIMIR PUTAIN (a clone? the backup), MARK SUCKERBERG,
+  JERRY ALLISON, JEFF BAYWATCH, SAM HALTMAN, DONALD DUMP — every one far
+  tougher than any campaign elite and ringed by his **personal bodyguards**
+  (one drawing, six liveries, a size up from the crew), while the privatized
+  security state (CIA and FBI agents, ICE's border detail, soldiers that
+  shoot from cover, armed VACUUM BOTS) floods the halls harder and denser
+  than Eastworld. There is **no boss**: the exit blast door is the objective
+  (`reachExit`), reaching it plays the where-was-this-place mystery outro,
+  and the splash offers **BACK TO THE RIFT** (`exitTo`). The reward is the
+  loot: the level's `worldUniques` table re-lists **every** campaign relic at
+  sweetened odds (`worldDropMult` 1.5) — the one venue that can pay out
+  anything, still behind the per-rung `WORLD_DROP.minPlayerLevel` gates.
+  Farming it again costs another hand. Music: `hq_lockdown`.
 
 ### Campaign progression & what carries across levels
 
@@ -465,6 +489,24 @@ The roster is split one file per level/biome under `src/game/defs/enemies/`
   then). The `killBoss` objective needs all five bosses off the board.
   First-sight/kill thoughts fire for the cowbot (the arrival read, then the
   ZAI-hosts read).
+- **THE BUNKER** (secret) ships the privatized security state — CIA AGENT
+  (suit fodder) → VACUUM BOT (fast, cheap, sparks; armed housekeeping) →
+  ICE AGENT (the grabby border detail) → FBI AGENT (quick, `dodgeChance`
+  0.1) → SOLDIER (the horde's rank-and-file SHOOTER: rifles from range,
+  reloads behind the furniture) — plus six per-resident **bodyguard**
+  liveries (KREMLIN SHADOW, META SENTINEL, ORACLE ENFORCER, PRIME GUARDIAN,
+  ALIGNMENT OFFICER, LOYALTY ENFORCER: one 20 px body, six accent swaps,
+  380 hp with a leash that keeps each detail on post and a sweetened
+  `dropProfile`). The six **residents** are elites a class above anything
+  in the campaign (1600–2600 hp, `levelBonus` 6): VLADIMIR PUTAIN — the
+  backup ("CHECK THE OTHER FREEZERS"; drops another KOLEX DAYTONNE),
+  MARK SUCKERBERG (fast, `dodgeChance` 0.3 of rehearsed humanity),
+  JERRY ALLISON and SAM HALTMAN (ranged, `takesCover` — the audit and the
+  aligned bolt), JEFF BAYWATCH (the fastest, hardest-hitting rusher), and
+  DONALD DUMP (radius 15, speed 10, the hardest single touch in the game,
+  never dodges). No boss — the exit door ends it. Sight thoughts fire for
+  the cia agent (arrival), the vacuum bot, and the ice agent (the hero
+  really is the illegal immigrant here).
 
 Every unique mob (elite/boss) carries `dialogue` played on arrival and
 `lastWords` played as it dies; minions are the nameless horde streamed in by

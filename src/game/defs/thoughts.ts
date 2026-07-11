@@ -263,6 +263,64 @@ export const THOUGHT_DEFS: Record<string, ThoughtDef> = {
       ],
     ],
   },
+  // Sighting the first CIA AGENT in THE BUNKER: the arrival read — the
+  // security state didn't collapse with the economy, it just changed
+  // employers and postcodes. Wide drop-in radius, like the other surveys.
+  bunker_arrival: {
+    id: "bunker_arrival",
+    speaker: "ME",
+    portrait: "hero",
+    pages: [
+      [
+        "BLACK SUITS. EARPIECES.",
+        "THE WHOLE ALPHABET IS",
+        "DOWN HERE, DRAWING A",
+        "PRIVATE SALARY.",
+      ],
+      [
+        "THE WORLD LOST ITS JOBS",
+        "AND THESE GUYS KEPT",
+        "THEIRS. GUARDING THE",
+        "GUYS WHO DID IT.",
+      ],
+    ],
+  },
+  // Sighting the first VACUUM BOT, once the arrival read has landed: the
+  // housekeeping gag — even the cleaning staff got automated, and armed.
+  bunker_vacuum: {
+    id: "bunker_vacuum",
+    speaker: "ME",
+    portrait: "hero",
+    pages: [
+      [
+        "A VACUUM ROBOT. WITH A",
+        "TASER. THE FLOORS ARE",
+        "SPOTLESS AND HOSTILE.",
+      ],
+      [
+        "OF COURSE THEY AUTOMATED",
+        "THE HELP. CAN'T HAVE A",
+        "CLEANER WHO TALKS.",
+      ],
+    ],
+  },
+  // Sighting the first ICE AGENT in THE BUNKER, once the arrival read has
+  // landed: the place has no address, but it has a border patrol — and for
+  // once, the hero really is the illegal immigrant.
+  bunker_ice: {
+    id: "bunker_ice",
+    speaker: "ME",
+    portrait: "hero",
+    pages: [
+      ["ICE. IN A BUNKER OUTSIDE", "THE UNIVERSE. STILL", "CHECKING PAPERS."],
+      [
+        "TECHNICALLY I DID CROSS",
+        "A BORDER WITHOUT ASKING.",
+        "SEVERAL. COME AND",
+        "DEPORT ME.",
+      ],
+    ],
+  },
 };
 
 // Active registry the accessor reads (defaults to the shipped catalog).

@@ -753,13 +753,19 @@ function maybeDropWorldUnique(
   def: EnemyDef,
   enemy: Enemy,
 ): void {
-  const ids = levelDef(state.level.id).loot.worldUniques?.[state.difficulty];
+  const loot = levelDef(state.level.id).loot;
+  const ids = loot.worldUniques?.[state.difficulty];
   if (!ids || ids.length === 0) return;
   // Per-rung gate; a rung with no gate entry fails closed (drops nothing), all
   // BEFORE any rng draw so the seeded stream is untouched on ungated runs.
   const gate = WORLD_DROP.minPlayerLevel[state.difficulty];
   if (gate === undefined || state.player.level < gate) return;
-  const chance = WORLD_DROP.chanceByRole[def.role] * BALANCE.uniqueDrops;
+  // `worldDropMult` is the farm-level sweetener: a dedicated grind venue
+  // pays a bit better per kill than the relics' home levels (default 1).
+  const chance =
+    WORLD_DROP.chanceByRole[def.role] *
+    BALANCE.uniqueDrops *
+    (loot.worldDropMult ?? 1);
   for (const id of ids) {
     if (state.rng() >= chance) continue;
     pushUniqueDrop(state, id, enemy.pos);

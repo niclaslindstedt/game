@@ -7,7 +7,7 @@
 // the app outside `step()` exactly like the inventory mutators.
 
 import { distance, type Vec2 } from "@game/lib/vec.ts";
-import { DIALOGUE, DOORS } from "./config.ts";
+import { DIALOGUE, DOORS, GATES } from "./config.ts";
 import { companionDef } from "./defs/companions.ts";
 import { enemyDef } from "./defs/enemies/index.ts";
 import type { DialoguePage } from "./defs/enemies/types.ts";
@@ -339,6 +339,26 @@ function holdsKeyFor(state: GameState, doorId: string): boolean {
   return state.storyItems.some(
     (defId) => storyItemDef(defId).unlocks === doorId,
   );
+}
+
+/**
+ * Travel gates: stepping into one the player tore open (`spendGateKey` in
+ * items.ts) books the crossing — a one-shot `gateEntered` event the app
+ * answers by carrying the build into a run of the destination level. The
+ * engine itself never travels; a latched gate the app ignores (tests,
+ * headless sims) is simply a doorway nobody followed through.
+ */
+export function stepGates(state: GameState): void {
+  for (const gate of state.gates) {
+    if (gate.entered) continue;
+    if (distance(state.player.pos, gate.pos) > GATES.enterRadius) continue;
+    gate.entered = true;
+    state.events.push({
+      type: "gateEntered",
+      pos: { ...gate.pos },
+      to: gate.to,
+    });
+  }
 }
 
 /**

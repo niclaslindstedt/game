@@ -35,6 +35,7 @@ import {
   AIM,
   APPARITION,
   ENEMY_AI,
+  GATES,
   JUMP,
   LAST_STAND,
   LOOT,
@@ -111,6 +112,7 @@ import {
   collectStoryItem,
   startEnemyDialogue,
   stepDoors,
+  stepGates,
   stepOpeningStrike,
   stepSightThoughts,
   wantsDialogue,
@@ -221,6 +223,7 @@ export function step(state: GameState, input: GameInput, dtMs: number): void {
   stepSpawner(state);
   stepItems(state, dtMs);
   stepDoors(state);
+  stepGates(state);
 
   if (state.player.hp <= 0) {
     state.player.hp = 0;
@@ -260,6 +263,14 @@ export function step(state: GameState, input: GameInput, dtMs: number): void {
 /** Has the level's objective been met? */
 function objectiveCleared(state: GameState): boolean {
   const objective = levelDef(state.level.id).objective;
+  if (objective.type === "reachExit") {
+    // The bossless form: standing at the exit door ends the level. Deliberate
+    // contact — the radius is a doorstep, not a drive-by.
+    return (
+      distance(state.player.pos, objective.at) <=
+      (objective.radius ?? GATES.exitRadius)
+    );
+  }
   if (objective.type === "clearAll") {
     // Apparitions never count as foes — an unvisited (hence unvanished)
     // dialogue figure must not hold a cleared field hostage.

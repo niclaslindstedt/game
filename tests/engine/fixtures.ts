@@ -558,6 +558,16 @@ export const FIX_GEAR: Record<string, GearDef> = {
     passive: { intelligence: 1 },
     icon: "icon_charm",
   },
+  // A travel-gate KEY (mirrors the shipped severed hand): a zero-stat charm
+  // whose only worth is the gate it tears open when USED on its home level
+  // (see FIX_GATE_LEVEL / spendGateKey). The scrap sweep must spare it.
+  test_gate_key: {
+    id: "test_gate_key",
+    name: "TEST GATE KEY",
+    slot: "charm",
+    bonuses: {},
+    icon: "icon_charm",
+  },
   // A worn BAG (mirrors the shipped `bag`): +2 carry cells while equipped in
   // the bag slot, so the engine's bag-capacity rule has a content-agnostic
   // piece to exercise.
@@ -1074,6 +1084,30 @@ export const FIX_STALL_LEVEL: LevelDef = {
   },
 };
 
+// A level with a LATENT travel gate (mirrors the rift's bunker door): using
+// `test_gate_key` here tears the gate open beside the hero; stepping into it
+// books a one-shot `gateEntered` the app answers with the actual travel.
+export const FIX_GATE_LEVEL: LevelDef = hazardLevel("test_gate_level", {
+  gates: [
+    { id: "test_gate", to: "test_exit_level", opensWith: "test_gate_key" },
+  ],
+});
+
+// A BOSSLESS farm level (mirrors the bunker): the objective is REACHING the
+// exit door, the outro is its closing monologue, and `exitTo` names the
+// return leg the victory splash offers. No boss anywhere on the roster.
+export const FIX_EXIT_LEVEL: LevelDef = (() => {
+  const level = hazardLevel("test_exit_level", {
+    objective: { type: "reachExit", at: { x: 2130, y: 260 } },
+    outro: [["TEST EXIT OUTRO."]],
+    exitTo: "test_gate_level",
+    spawns: [{ enemy: "test_minion", count: 2, band: [0.4, 0.8] }],
+    loot: { ...FIX_LEVEL.loot, worldDropMult: 2 },
+  });
+  delete level.loot.earlyDrops;
+  return level;
+})();
+
 // A prelude scene for the cutscene-in-a-run tests: a timed beat, then a text
 // beat the sim parks on, an actor that exits (and never returns), and a
 // closing caption.
@@ -1136,6 +1170,8 @@ export function installFixtures(force = false): void {
       test_outro_level: FIX_OUTRO_LEVEL,
       test_ranged_level: FIX_RANGED_LEVEL,
       test_stall_level: FIX_STALL_LEVEL,
+      test_gate_level: FIX_GATE_LEVEL,
+      test_exit_level: FIX_EXIT_LEVEL,
     },
     uniques: FIX_UNIQUES,
     enemies: FIX_ENEMIES,

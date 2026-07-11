@@ -11,6 +11,7 @@ import {
   gearDef,
   isWeaponDef,
   LEVELS,
+  SECRET_LEVEL_ORDER,
   meetsLevelReq,
   mintUnique,
   UNIQUE_IDS,
@@ -127,12 +128,18 @@ describe("boss unique drop tables", () => {
       ),
     );
 
-  // World-drop uniques are wired on the LEVEL (`loot.worldUniques`), not a boss.
-  const worldWiring = Object.values(LEVELS).flatMap((def) =>
-    Object.entries(def.loot.worldUniques ?? {}).flatMap(([diff, ids]) =>
-      (ids ?? []).map((id) => ({ level: def.id, diff, id })),
-    ),
-  );
+  // World-drop uniques are wired on the LEVEL (`loot.worldUniques`), not a
+  // boss. Secret venues are excluded from the exactly-once accounting: the
+  // bunker's cow-level table deliberately RE-LISTS every campaign relic (its
+  // own rule below), so each relic's HOME stays its campaign level.
+  const secret = new Set(SECRET_LEVEL_ORDER);
+  const worldWiring = Object.values(LEVELS)
+    .filter((def) => !secret.has(def.id))
+    .flatMap((def) =>
+      Object.entries(def.loot.worldUniques ?? {}).flatMap(([diff, ids]) =>
+        (ids ?? []).map((id) => ({ level: def.id, diff, id })),
+      ),
+    );
 
   // Merchant-stall uniques are SOLD by a level's trader instead of dropping
   // (`LevelDef.merchant.stockUniques` — Eastworld's PUTAIN estate): the third
@@ -159,6 +166,23 @@ describe("boss unique drop tables", () => {
     // Stall stock resolves against real uniques too.
     for (const { id } of stallWiring) {
       expect(() => uniqueDef(id)).not.toThrow();
+    }
+  });
+
+  it("the bunker re-lists only campaign world drops, per matching rung", () => {
+    // The cow level's table is a UNION of the campaign's relic lists at
+    // sweetened odds — never a first home. Every id it lists must be wired
+    // on some campaign level, on the SAME difficulty rung.
+    const bunker = LEVELS.the_bunker!;
+    expect(bunker.loot.worldDropMult ?? 1).toBeGreaterThan(1);
+    for (const [diff, ids] of Object.entries(bunker.loot.worldUniques ?? {})) {
+      expect(ids?.length ?? 0).toBeGreaterThan(0);
+      for (const id of ids ?? []) {
+        expect(
+          worldWiring.some((w) => w.id === id && w.diff === diff),
+          `${id} (${diff})`,
+        ).toBe(true);
+      }
     }
   });
 

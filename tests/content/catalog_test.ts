@@ -16,12 +16,19 @@ import {
   isWeaponDef,
   LEVEL_ORDER,
   LEVELS,
+  SECRET_LEVEL_ORDER,
   storyItemDef,
   weaponDef,
   type LevelDef,
 } from "@game/core";
 
-const levels: LevelDef[] = LEVEL_ORDER.map((id) => LEVELS[id]!);
+// The whole shipped catalog: the campaign in story order plus the secret
+// venues (gate-only levels outside LEVEL_ORDER — the bunker). Cross-reference
+// integrity holds for every level; the ORDER assertions below only bind the
+// campaign.
+const levels: LevelDef[] = [...LEVEL_ORDER, ...SECRET_LEVEL_ORDER].map(
+  (id) => LEVELS[id]!,
+);
 
 /** Resolve an equipment id whether it is a weapon or a piece of gear. */
 function resolveEquipment(id: string): void {
@@ -30,11 +37,19 @@ function resolveEquipment(id: string): void {
 }
 
 describe("campaign catalog integrity", () => {
-  it("LEVEL_ORDER lists every level exactly once, in ascending story index", () => {
-    expect([...LEVEL_ORDER].sort()).toEqual(Object.keys(LEVELS).sort());
-    const indices = levels.map((l) => l.index);
-    expect(indices).toEqual([...indices].sort((a, b) => a - b));
-    expect(new Set(indices).size).toBe(indices.length);
+  it("LEVEL_ORDER + SECRET_LEVEL_ORDER list every level exactly once, campaign in ascending story index", () => {
+    expect([...LEVEL_ORDER, ...SECRET_LEVEL_ORDER].sort()).toEqual(
+      Object.keys(LEVELS).sort(),
+    );
+    // The campaign's own indices stay unique and ascending; a secret venue
+    // instead SHARES a campaign index on purpose, so levelPosition's
+    // interpolation axis (per-map XP caps) never shifts under shipped maps.
+    const campaign = LEVEL_ORDER.map((id) => LEVELS[id]!.index);
+    expect(campaign).toEqual([...campaign].sort((a, b) => a - b));
+    expect(new Set(campaign).size).toBe(campaign.length);
+    for (const id of SECRET_LEVEL_ORDER) {
+      expect(campaign).toContain(LEVELS[id]!.index);
+    }
   });
 
   for (const level of levels) {

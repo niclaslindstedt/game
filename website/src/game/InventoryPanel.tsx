@@ -26,6 +26,8 @@ import {
   discardFromInventory,
   effectiveStat,
   equipFromInventory,
+  gateKeyTarget,
+  spendGateKey,
   isArmorBroken,
   isScrappableLoot,
   scrapInferiorLoot,
@@ -176,12 +178,19 @@ function ItemTooltip({
   state,
   item,
   anchor,
+  onUse,
 }: {
   font: PixelFont;
   sprites: Sprites;
   state: GameState;
   item: Equipment;
   anchor: DOMRect;
+  /**
+   * Present only on a usable trinket in a place it works (a travel-gate key
+   * on its home level — see gateKeyTarget): renders a USE row on the card.
+   * The touch path to using it; desktop can also right-click the bag cell.
+   */
+  onUse?: () => void;
 }) {
   const mainRef = useRef<HTMLDivElement>(null);
   const wornRef = useRef<HTMLDivElement>(null);
@@ -309,6 +318,18 @@ function ItemTooltip({
           subtitle={isWorn ? "EQUIPPED" : undefined}
           icon={isWorn ? <ItemIcon sprites={sprites} item={item} /> : undefined}
         />
+        {onUse && (
+          <button
+            type="button"
+            className="pixel-button tooltip-use"
+            // Swallow the press so the overlay's tap-to-dismiss and the drag
+            // machinery never see it — this click is the whole gesture.
+            onPointerDown={(e) => e.stopPropagation()}
+            onClick={onUse}
+          >
+            <PixelText font={font} text="USE" scale={2} color="#0b0d10" />
+          </button>
+        )}
       </div>
       {compareTo && (
         <div
@@ -463,6 +484,19 @@ export function InventoryPanel({
   // Raise (or update) the item tooltip, anchored to the cell under the pointer.
   const inspectItem = (item: Equipment) => (e: ReactPointerEvent) =>
     setInspect({ item, anchor: e.currentTarget.getBoundingClientRect() });
+
+  // USE a usable trinket (a travel-gate key on its home level): consume it,
+  // tear the gate open, and close the panel so the player sees it happen.
+  // Reached from the tooltip's USE row (touch) or a right-click on the bag
+  // cell (desktop) — the quiet, cow-level-ritual gesture.
+  const activateKeyItem = (item: Equipment) => {
+    const index = state.player.inventory.findIndex((i) => i?.id === item.id);
+    if (index < 0 || !spendGateKey(state, index)) return;
+    playUiSound(synth, "confirm");
+    setInspect(null);
+    onChange();
+    onClose();
+  };
 
   const startDrag =
     (item: Equipment, from: DragSource) => (e: ReactPointerEvent) => {
@@ -826,6 +860,16 @@ export function InventoryPanel({
                     setInspect(null);
                   }
                 }}
+                // Desktop's quiet ritual: right-clicking a usable trinket
+                // (a travel-gate key on its home level) uses it in place.
+                onContextMenu={
+                  item && gateKeyTarget(state, item)
+                    ? (e) => {
+                        e.preventDefault();
+                        activateKeyItem(item);
+                      }
+                    : undefined
+                }
               >
                 {item &&
                   !(drag?.from.type === "inv" && drag.from.index === index) && (
@@ -872,6 +916,11 @@ export function InventoryPanel({
           state={state}
           item={inspect.item}
           anchor={inspect.anchor}
+          onUse={
+            gateKeyTarget(state, inspect.item)
+              ? () => activateKeyItem(inspect.item)
+              : undefined
+          }
         />
       )}
 

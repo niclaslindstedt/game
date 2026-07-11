@@ -38,7 +38,12 @@ run against synthetic fixtures with no shipped content (see
 - **`src/game/defs/levels/`** — the level registry: one `LevelDef` per file
   (`spacez_hq.ts`, `moon.ts`, …) merged and ordered by `levels/index.ts`
   (which owns `LEVELS`, `LEVEL_ORDER`, `levelDef`; the split keeps each
-  level's ~250 lines under the source-size cap as the campaign grows). A
+  level's ~250 lines under the source-size cap as the campaign grows).
+  SECRET venues (`SECRET_LEVEL_ORDER` — the bunker) register in `LEVELS`
+  but sit OUTSIDE `LEVEL_ORDER`: no unlock chain, no NEXT LEVEL slot, no
+  per-level badge — only a travel gate (or a dev warp) reaches them, and
+  each shares a campaign story `index` so `levelPosition`'s interpolation
+  axis never shifts. A
   level carries geometry, per-level gravity (low gravity makes jumps soar),
   biome (a `tiles` sprite spec the renderer paints from), an optional `music`
   track id (a key into the app's `LEVEL_TRACKS` registry — the engine stays
@@ -48,7 +53,8 @@ run against synthetic fixtures with no shipped content (see
   an optional prelude cutscene id, landmark props, banded enemy spawns (each
   spawn/wave line may carry an optional `minDifficulty` so difficulty-gated
   content lives with the level that uses it), the
-  objective (`killBoss` / `clearAll`), solid obstacles (tall pieces block
+  objective (`killBoss` / `clearAll` / `reachExit` — the bossless form:
+  standing at the exit door's `at` ends the level), solid obstacles (tall pieces block
   everyone — including sight, shots and a nuke's blast; low/jumpable ones like
   craters can be cleared by the player but never by monsters; a `rockSizes`
   spec scatters rectangular rock footprints that collide as a box, not a
@@ -56,9 +62,17 @@ run against synthetic fixtures with no shipped content (see
   at creation — door gaps between segments carve rooms),
   locked `doors` (chains of `door_locked` obstacles tracked in
   `state.doors`, opened by carrying the matching story-item key up to
-  them), hand-`placedItems` (locked-room loot, plot pieces on pedestals),
+  them), latent travel `gates` (doorways to ANOTHER level: USING the
+  matching bag trinket — `spendGateKey`, surfaced as the item card's USE
+  row / a desktop right-click — tears the gate open beside the hero, and
+  stepping in books a one-shot `gateEntered` event the app answers by
+  carrying the banked build into a run of the destination; `exitTo` names
+  the return leg the victory splash offers),
+  hand-`placedItems` (locked-room loot, plot pieces on pedestals),
   decor, and the loot table (the level's thematic base pools — tier
-  availability is the global monster-level gate, not per-level data).
+  availability is the global monster-level gate, not per-level data; a
+  `worldUniques` table may carry a `worldDropMult` sweetener on a farm
+  venue).
 - **`src/game/defs/enemies/`** — the monster catalog, split one file per
   roster (`spacez.ts`, `moon.ts`, …) merged into `ENEMY_DEFS` by
   `enemies/index.ts` (which throws on a duplicate id): stats, AI radii,

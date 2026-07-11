@@ -10,11 +10,12 @@
 import { advanceCutsceneBeat, finishCutscene } from "@game/lib/cutscene.ts";
 import type { Rng } from "@game/lib/rng.ts";
 import { randomRange } from "@game/lib/rng.ts";
-import { distance } from "@game/lib/vec.ts";
+import { clamp, distance } from "@game/lib/vec.ts";
 import {
   ACCURACY,
   ARMOR,
   DODGE,
+  GATES,
   LOOT,
   MELEE,
   MERCY,
@@ -49,7 +50,7 @@ import {
 } from "./defs/equipment.ts";
 import { gradeVariantIds } from "./defs/grades.ts";
 import { difficultyDef } from "./defs/difficulties.ts";
-import { levelDef } from "./defs/levels/index.ts";
+import { gateKeyIds, levelDef } from "./defs/levels/index.ts";
 import { storyItemDef } from "./defs/story.ts";
 import { uniqueDef } from "./defs/uniques.ts";
 import { baseStatBonus, diminishStat } from "./leveling.ts";
@@ -1552,6 +1553,56 @@ export function addToInventory(state: GameState, item: Equipment): boolean {
 }
 
 /**
+ * The travel gate this bag piece would tear open HERE — the USE-affordance
+ * probe the inventory card asks per item. Non-null only when the running
+ * level ships a latent gate (`LevelDef.gates`) whose `opensWith` names this
+ * piece's def and that gate isn't already standing. Everywhere else the
+ * piece is inert — which is the whole cow-level joke.
+ */
+export function gateKeyTarget(
+  state: GameState,
+  item: Equipment,
+): { id: string; to: string } | null {
+  const gate = (levelDef(state.level.id).gates ?? []).find(
+    (g) => g.opensWith === item.defId,
+  );
+  if (!gate || state.gates.some((g) => g.id === gate.id)) return null;
+  return { id: gate.id, to: gate.to };
+}
+
+/**
+ * USE a gate-key trinket from bag cell `index` (the cow-level ritual):
+ * consumes the piece and tears its gate open a step ahead of the hero — a
+ * GateState for the crossing logic, a landmark so the renderer draws it with
+ * zero edits, and a `gateOpened` event for the app's rupture cue. Returns
+ * false (and consumes nothing) when the cell holds no key for this level or
+ * the gate already stands.
+ */
+export function spendGateKey(state: GameState, index: number): boolean {
+  const item = state.player.inventory[index] ?? null;
+  if (!item) return false;
+  const gate = gateKeyTarget(state, item);
+  if (!gate) return false;
+  const def = levelDef(state.level.id);
+  const gateDef = (def.gates ?? []).find((g) => g.id === gate.id);
+  if (!gateDef) return false;
+  state.player.inventory[index] = null;
+  const pos = {
+    x: clamp(state.player.pos.x + GATES.summonDistance, 24, def.width - 24),
+    y: clamp(state.player.pos.y, 24, def.height - 24),
+  };
+  state.gates.push({ id: gate.id, to: gate.to, pos, entered: false });
+  state.landmarks.push({
+    kind: gateDef.id,
+    sprite: gateDef.sprite ?? gateDef.id,
+    anchor: "base",
+    pos: { ...pos },
+  });
+  state.events.push({ type: "gateOpened", pos: { ...pos }, to: gate.to });
+  return true;
+}
+
+/**
  * Permanently destroy the item in bag cell `index` — the "drag it out and
  * drop it on the ground" gesture. Returns the discarded item (so the UI can
  * announce what was trashed), or null on an empty cell. There is no undo and
@@ -1594,12 +1645,15 @@ export function discardEquipped(
 /**
  * A "special" bag piece the bulk-scrap sweep always spares, whatever the raw
  * numbers say: a passive trinket (it pays its bonus just by riding in the bag,
- * so a plain stat comparison misses its worth) or a top-tier find (unique or
+ * so a plain stat comparison misses its worth), a top-tier find (unique or
  * legendary — the rarest drops, kept as trophies and for their fat affix
- * rolls). Everything else is ordinary loot the sweep may cull.
+ * rolls), or a travel-gate key (a zero-stat trinket whose worth is the door
+ * it opens — see LevelDef.gates). Everything else is ordinary loot the sweep
+ * may cull.
  */
 export function isSpecialItem(item: Equipment): boolean {
   if (item.tier === "unique" || item.tier === "legendary") return true;
+  if (gateKeyIds().includes(item.defId)) return true;
   if (isWeaponDef(item.defId)) return false;
   const def = gearDef(item.defId);
   return def.passive !== undefined;

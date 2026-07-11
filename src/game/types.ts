@@ -661,6 +661,24 @@ export type DoorState = {
 };
 
 /**
+ * An OPEN travel gate — a doorway to another level, torn open by using its
+ * key trinket (`spendGateKey`; the latent defs live on `LevelDef.gates`).
+ * Purely logical: the visual is a landmark pushed alongside it, so the
+ * renderer never learns gates exist. Stepping within GATES.enterRadius books
+ * a one-shot `gateEntered` event; the app owns the actual travel.
+ */
+export type GateState = {
+  /** The LevelDef gate id this came from. */
+  id: string;
+  /** Destination level id. */
+  to: string;
+  /** Where it stands (proximity checks, event anchor). */
+  pos: Vec2;
+  /** Latched once the crossing is booked, so it fires exactly once. */
+  entered: boolean;
+};
+
+/**
  * The running conversation while `phase === "dialogue"`: an elite or boss
  * delivering its scene, a unique mob gasping its last words as it dies, or a
  * picked-up story item revealing its lore. The pages live on the def
@@ -967,6 +985,18 @@ export type GameEvent =
   /** A locked door recognized its key and slid open. */
   | { type: "doorOpened"; pos: Vec2 }
   /**
+   * A travel gate tore open at `pos` (its key trinket was USED — see
+   * `spendGateKey`). The app plays the rupture; the gate now stands on the
+   * board waiting to be stepped into.
+   */
+  | { type: "gateOpened"; pos: Vec2; to: string }
+  /**
+   * The hero stepped into an open travel gate. The engine only books the
+   * crossing (once per gate) — the APP owns the travel: bank the build,
+   * start a run of level `to` carrying it.
+   */
+  | { type: "gateEntered"; pos: Vec2; to: string }
+  /**
    * The hero met the wandering merchant for the first time: he stops
    * wandering, pins the level map, and his stall is now open at `pos`. The
    * app toasts the meeting and can chime a till.
@@ -1207,6 +1237,11 @@ export type GameState = {
   thoughtsSeen: string[];
   /** Locked doors built from the level def, open or not. */
   doors: DoorState[];
+  /**
+   * Travel gates torn open this run (`spendGateKey`) — empty until a key
+   * trinket is used; the level def's `gates` entries stay latent until then.
+   */
+  gates: GateState[];
   /** The level's wandering merchant (see merchant.ts). */
   merchant: Merchant;
   /**

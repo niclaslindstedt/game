@@ -23,6 +23,7 @@ import {
   DIFFICULTY_ORDER,
   difficultyDef,
   LEVEL_ORDER,
+  SECRET_LEVEL_ORDER,
   levelDef,
   type Difficulty,
 } from "@game/core";
@@ -627,6 +628,21 @@ export function TitleScreen({
             },
           };
         }),
+        // The secret venues (the bunker): reachable in play only through
+        // their travel gates, so the campaign picker never lists them — the
+        // dev warp does, as extra unnumbered rows.
+        ...(warp
+          ? SECRET_LEVEL_ORDER.map((id) => ({
+              label: `?. ${levelDef(id).name}`,
+              aria: `level-${id}`,
+              color: "#c9a2ff",
+              blurb: "SECRET - WARP DROPS STRAIGHT IN",
+              action: () => {
+                playUiSound(synth, "start");
+                onStart(difficulty, id, { skipIntro: true });
+              },
+            }))
+          : []),
         warp
           ? warpBack
           : backTo("difficulty", DIFFICULTY_ORDER.indexOf(difficulty)),
