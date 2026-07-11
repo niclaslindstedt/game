@@ -1351,6 +1351,11 @@ body {
 
 .splash-buttons {
   display: flex;
+  /* Wrap as a last resort: a 2×-scaled tablet portrait (iPad mini, 768px
+     physical = 384 effective) is narrower than the phone the row was tuned
+     on, and three victory buttons would otherwise run off both edges. */
+  flex-wrap: wrap;
+  justify-content: center;
   gap: 1rem;
 }
 

@@ -58,6 +58,7 @@ import {
   isLevelUnlocked,
   type Character,
 } from "./characters.ts";
+import { uiScaleFor } from "./render.ts";
 import { getSettings, updateSettings } from "./settings.ts";
 import { playUiSound } from "./sfx/index.ts";
 import { startTitleSky } from "./titleSky.ts";
@@ -273,33 +274,49 @@ export function TitleScreen({
   // for the ranked list. Only rows banked with a detail snapshot can open.
   const [scoreDetail, setScoreDetail] = useState<ScoreRow | null>(null);
   // Landscape phones are short and portrait ones narrow: pick a logo scale
-  // that keeps the title logo plus the menu inside both.
-  const [compact, setCompact] = useState(
-    () => window.matchMedia("(max-height: 480px)").matches,
-  );
-  const [wide, setWide] = useState(
-    () => window.matchMedia("(min-width: 760px)").matches,
-  );
+  // that keeps the title logo plus the menu inside both. `wide` gates the
+  // big desktop logo (scale 10, ~510 CSS px), so it must track the 2×
+  // root-font regime (UI_SCALE_BREAKPOINT_PX): past that breakpoint the logo
+  // renders at ~1020 *physical* px, so the width gate doubles too. A plain
+  // (min-width: 760px) media query counted an iPad portrait (820×1180) as
+  // wide and clipped the title off both screen edges.
+  const isCompact = () => window.innerHeight <= 480;
+  const isWide = () => {
+    const { innerWidth: w, innerHeight: h } = window;
+    return w >= (uiScaleFor(w, h) === 2 ? 1080 : 760);
+  };
+  const [compact, setCompact] = useState(isCompact);
+  const [wide, setWide] = useState(isWide);
 
   useEffect(() => {
-    const short = window.matchMedia("(max-height: 480px)");
-    const broad = window.matchMedia("(min-width: 760px)");
-    const onChange = () => {
-      setCompact(short.matches);
-      setWide(broad.matches);
+    const onResize = () => {
+      setCompact(isCompact());
+      setWide(isWide());
     };
-    short.addEventListener("change", onChange);
-    broad.addEventListener("change", onChange);
+    window.addEventListener("resize", onResize);
     return () => {
-      short.removeEventListener("change", onChange);
-      broad.removeEventListener("change", onChange);
+      window.removeEventListener("resize", onResize);
     };
   }, []);
   const logoScale = compact ? 7 : wide ? 10 : 6;
 
+  // The row the selection cursor is on, so cursor moves can keep it in view.
+  const selectedRowRef = useRef<HTMLButtonElement | null>(null);
+  const prevScreenRef = useRef(screen);
   useEffect(() => {
-    contentRef.current?.scrollTo(0, 0);
-  }, [screen]);
+    if (prevScreenRef.current !== screen) {
+      // Fresh screen: start reading from the top. Scrolling the selected row
+      // into view here instead used to land a taller-than-viewport screen
+      // (HOW TO PLAY on a small phone or a 2×-scaled tablet) scrolled to its
+      // BACK row, clipping the header and the content's first lines.
+      prevScreenRef.current = screen;
+      contentRef.current?.scrollTo(0, 0);
+    } else {
+      // In-screen cursor move: keep the highlighted row visible as a long
+      // list (levels, settings) scrolls under keyboard navigation.
+      selectedRowRef.current?.scrollIntoView({ block: "nearest" });
+    }
+  }, [screen, cursor]);
   // A long blurb (the developer flags carry sentence-length ones) would stretch
   // the centered menu wider than a portrait phone, shoving every label to the
   // left and the selection cursor off the screen edge. On narrow screens cap
@@ -1614,10 +1631,15 @@ export function TitleScreen({
                   <button
                     key={entry.aria}
                     type="button"
-                    // Keep the highlighted row in view as the level list scrolls.
+                    // Tracked so cursor moves scroll the row into view — the
+                    // scrolling itself lives in an effect keyed on the cursor,
+                    // NOT here: a mount-time scrollIntoView fights the
+                    // scroll-to-top on screen entry (see contentRef).
                     ref={
                       selected
-                        ? (el) => el?.scrollIntoView({ block: "nearest" })
+                        ? (el) => {
+                            selectedRowRef.current = el;
+                          }
                         : undefined
                     }
                     className={`menu-item${selected ? " selected" : ""}${entry.locked ? " locked" : ""}`}
