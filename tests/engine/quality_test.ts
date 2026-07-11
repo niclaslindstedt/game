@@ -110,7 +110,10 @@ describe("the quality roll", () => {
 
 describe("what quality is worth", () => {
   function pipeAt(state: ReturnType<typeof startGame>, quality: Quality) {
-    return rollEquipment(state, { defId: "test_pipe", quality, mlvl: 10 });
+    // mlvl 1 pins every roll's ilvl at 1, so the ITEM-LEVEL damage term
+    // (WEAPON.damagePerIlvl) is identical across instances and the test
+    // isolates what QUALITY alone is worth.
+    return rollEquipment(state, { defId: "test_pipe", quality, mlvl: 1 });
   }
 
   it("scales a weapon's damage through the one damage source", () => {

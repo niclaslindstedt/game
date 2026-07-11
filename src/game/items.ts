@@ -45,6 +45,7 @@ import {
   weaponCritMult,
   weaponDamageVariance,
   weaponDef,
+  type AffixBracket,
   type AffixDef,
   equipmentBaseName,
 } from "./defs/equipment.ts";
@@ -196,14 +197,21 @@ function pickWeighted<T extends { weight: number }>(rng: Rng, pool: T[]): T {
 }
 
 /**
- * Roll one affix: its magnitude is `ilvl × randomRange(perIlvl)` — the
- * Diablo rule that a deeper drop rolls bigger. Stat and hp affixes round to
- * whole points and never fall below 1, so even an ilvl-1 magic find pays
- * something.
+ * Roll one affix from its ilvl-gated BRACKET ladder (see `AffixBracket` in
+ * defs/equipment.ts): the roll usually lands in the highest generation the
+ * item level has unlocked and sometimes one below it (3:1), so a deeper drop
+ * rolls bigger — but inside authored bands, never the old unbounded
+ * `ilvl × perIlvl` line. Stat and hp affixes round to whole points and never
+ * fall below 1, so even an ilvl-1 magic find pays something.
  */
 function rollAffix(rng: Rng, def: AffixDef, ilvl: number): Affix {
-  const [min, max] = def.perIlvl;
-  const value = ilvl * randomRange(rng, min, max);
+  const unlocked = def.brackets.filter((b) => b.minIlvl <= Math.max(1, ilvl));
+  // The first bracket unlocks at 1, so `unlocked` is never empty; the top
+  // generation rolls three times as often as the one under it.
+  const top = unlocked[unlocked.length - 1] as AffixBracket;
+  const under = unlocked[unlocked.length - 2];
+  const bracket = under && rng() < 0.25 ? under : top;
+  const value = randomRange(rng, bracket.min, bracket.max);
   switch (def.kind) {
     case "damagePct":
       return { kind: "damagePct", value };
@@ -1086,6 +1094,15 @@ export function weaponDamageFor(state: GameState, weapon: Equipment): number {
   for (const affix of weapon.affixes) {
     if (affix.kind === "damagePct") multiplier += affix.value;
   }
+  // ITEM LEVEL grows the base blow — the weapon half of the armor rule
+  // (ARMOR.armorPerIlvl): a base's catalog damage is its value AT ITS OWN
+  // levelReq, and a deeper find of the same base swings harder by
+  // `damagePerIlvl` per item level above it. Zero at the base's own levelReq,
+  // so catalog defs (and the damage-budget model they're authored on) are
+  // untouched — only the rolled instance grows. This is what makes a deep
+  // drop of an old favorite a real find instead of a stat-stick.
+  const ilvlMult =
+    1 + WEAPON.damagePerIlvl * Math.max(0, weapon.ilvl - def.levelReq);
   // The global damage lever cuts every LOOTED weapon, so a scavenged weapon is
   // a measured edge, not a free power spike that lets a basic loadout melt the
   // horde. The built-in sidearm — minted unbreakable (no durability), the
@@ -1103,6 +1120,7 @@ export function weaponDamageFor(state: GameState, weapon: Equipment): number {
   return (
     def.damage *
     multiplier *
+    ilvlMult *
     lootMult *
     qualityMult(weapon) *
     (weapon.baseRoll ?? 1) *

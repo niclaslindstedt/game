@@ -241,12 +241,19 @@ export function currentMobLevel(state: GameState): number {
 /**
  * The tier bonus a minion's drop rolls from the player's LEVEL — better gear to
  * match the tougher horde `mobLevelScale` produces (`tierBonusPerLevel` per
- * level above 1). Read in `dropMinionLoot` alongside the mob's own
- * `dropProfile` bonus and the menace evolution stage's `tierPenaltyPerStage`
- * (which pulls the other way on evolved mobs).
+ * level above 1, CAPPED at `tierBonusLevelCap`). Read in `dropMinionLoot`
+ * alongside the mob's own `dropProfile` bonus and the menace evolution stage's
+ * `tierPenaltyPerStage` (which pulls the other way on evolved mobs). The cap is
+ * what keeps the tier ladder discriminating all campaign: uncapped, the level
+ * term alone eventually dwarfed every base chance and made every late drop
+ * roll rare — tier progression belongs to the difficulty ladder
+ * (`tierChanceBonus`), not the level counter.
  */
 export function mobLevelTierBonus(state: GameState): number {
-  return Math.max(0, state.player.level - 1) * MENACE.tierBonusPerLevel;
+  return Math.min(
+    MENACE.tierBonusLevelCap,
+    Math.max(0, state.player.level - 1) * MENACE.tierBonusPerLevel,
+  );
 }
 
 /**
@@ -378,8 +385,20 @@ export function tickMenace(
   state.combatKillRate += (kills / dt - state.combatKillRate) * alpha;
 
   const before = menaceStage(state);
+  // The DPS channel is measured in REFERENCE HEALTHBARS per second, not raw
+  // points: absolute damage inflates ~30× over a campaign (autoPowerScale
+  // sits inside every number), so a raw-dps term that was fair at level 1
+  // saturated the meter for ordinary level-30 play. Dividing by the era's
+  // reference bar — the same one the spawner scales mob hp by — makes the
+  // channel stationary: "how many level-appropriate healthbars per second"
+  // is the same question at level 1 and level 60. The overkill and
+  // kill-rate channels were relative already.
+  const bar =
+    LEVELING.refMobHp *
+    (1 + (Math.max(1, state.player.level) - 1) * MENACE.mobHpPerLevel) *
+    autoPowerScale(state.player.level);
   const gain =
-    (state.combatDps * MENACE.perDps +
+    ((state.combatDps / Math.max(1, bar)) * MENACE.perBarDps +
       state.combatKillRate * MENACE.perKillRate) *
     menaceSensitivity(state);
   // The cooler is per-difficulty: EASY bleeds a hot streak off fast, the
@@ -404,12 +423,37 @@ export function enemyPowerScale(state: GameState): number {
   // Like the rank and file (`mobLevelScale`), the set pieces also ride the
   // automatic stat-gain damage curve, so a boss met at level 12 doesn't melt
   // under growth the player never chose.
+  return enemyPowerLevelTerm(state) * autoPowerScale(state.player.level);
+}
+
+/**
+ * The LEVEL half of `enemyPowerScale`, WITHOUT the auto-stat damage curve:
+ * `1 + (power − 1)·bossLevelWeight + stage·bossMenaceWeight`. This is the
+ * factor the CONTACT side may ride — `autoPowerScale` compensates the hero's
+ * DAMAGE growth (it belongs on hp, where it cancels against his blows), but
+ * nothing in the hero's SURVIVABILITY grows with it, so folding it into
+ * contact damage turned deep-campaign set pieces into one-shot machines
+ * (a level-22 hero was eating blows scaled ×20+ past the catalog).
+ */
+export function enemyPowerLevelTerm(state: GameState): number {
   return (
-    (1 +
-      Math.max(0, heroPowerLevel(state) - 1) * MENACE.bossLevelWeight +
-      menaceStage(state) * MENACE.bossMenaceWeight) *
-    autoPowerScale(state.player.level)
+    1 +
+    Math.max(0, heroPowerLevel(state) - 1) * MENACE.bossLevelWeight +
+    menaceStage(state) * MENACE.bossMenaceWeight
   );
+}
+
+/**
+ * The contact-damage multiplier a mob of `mlvl` carries from the horde's
+ * level ramp alone (`MENACE.mobDamagePerLevel`): the DAMAGE sibling of
+ * `mobHpScaleFor`, but linear and gentle — it tracks the hero's own EHP
+ * growth (max hp from STAMINA + armor), which is roughly linear, where his
+ * DPS growth is multiplicative. Stamped at spawn for every mob (create.ts),
+ * so the late campaign's rank and file threaten instead of tickling; the
+ * hero's growing armor and health bar are what keep it fair.
+ */
+export function mobContactScaleFor(mlvl: number): number {
+  return 1 + Math.max(0, mlvl - 1) * MENACE.mobDamagePerLevel;
 }
 
 /**
@@ -417,8 +461,10 @@ export function enemyPowerScale(state: GameState): number {
  * called from both sides of the fight (the player's first blow in hitEnemy,
  * and the mob waking in moveEnemy), so whichever lands first applies it.
  * Idempotent: `powerScaled` latches it to exactly once. Hp scales in full
- * (preserving the current hp fraction); contact damage scales by a softened
- * share so a tanky boss threatens without one-shotting.
+ * (preserving the current hp fraction); contact damage scales by the horde's
+ * gentle per-level damage ramp times a softened share of the LEVEL term only
+ * (never `autoPowerScale` — see `enemyPowerLevelTerm`), so a tanky boss
+ * threatens without one-shotting.
  */
 export function maybePowerScale(state: GameState, enemy: Enemy): void {
   if (enemy.powerScaled) return;
@@ -430,8 +476,11 @@ export function maybePowerScale(state: GameState, enemy: Enemy): void {
   // not of the level it was placed at. Its `levelBonus` keeps it a few levels
   // above the rank and file, so the set pieces reach the tier gates first.
   enemy.mlvl = Math.max(1, currentMobLevel(state) + (def.levelBonus ?? 0));
+  const levelTerm = enemyPowerLevelTerm(state);
+  enemy.contactMult =
+    mobContactScaleFor(enemy.mlvl) *
+    (1 + (levelTerm - 1) * MENACE.bossContactShare);
   const scale = enemyPowerScale(state);
-  enemy.contactMult = 1 + (scale - 1) * MENACE.bossContactShare;
   if (scale <= 1) return;
   const frac = enemy.maxHp > 0 ? enemy.hp / enemy.maxHp : 1;
   enemy.maxHp = Math.round(enemy.maxHp * scale);

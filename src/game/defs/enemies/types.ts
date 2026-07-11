@@ -23,6 +23,82 @@ export type EnemyRole = "minion" | "elite" | "boss";
  */
 export type DialoguePage = string[] | { hero: string[] };
 
+/**
+ * The set-piece MECHANICS an elite or boss may carry (see src/game/mechanics.ts
+ * — minions never run these). Each is opt-in data; the point of every one is
+ * READABLE danger: the dangerous moves are telegraphed (`enemyTelegraph`
+ * events + the windup freeze) so the player earns the dodge, instead of the
+ * fight just being a bigger health bar.
+ */
+export type EnemyMechanics = {
+  /**
+   * TELEGRAPHED CHARGE: off cooldown, with the player in `range` and in
+   * sight, the mob roots for `windupMs` (aiming — the bearing LOCKS at the
+   * start of the windup, so a sidestep beats it), then dashes along the
+   * locked bearing at `speed × speedMult`, its contact blows carrying
+   * `damageMult` while the dash lasts. The dash runs `range × 1.3` of
+   * ground, then the mob resumes its normal hunt.
+   */
+  charge?: {
+    windupMs: number;
+    speedMult: number;
+    range: number;
+    cooldownMs: number;
+    /** Contact-damage multiplier while dashing (default 1.5). */
+    damageMult?: number;
+  };
+  /**
+   * TELEGRAPHED SLAM: off cooldown, with the player inside `radius`, the mob
+   * roots for `windupMs`, then smashes the ground: every grounded player
+   * inside `radius` takes `contactDamage × damageFrac` (armor applies; a
+   * jump — z above JUMP.dodgeHeight — sails clean over it, same rule as
+   * contact).
+   */
+  slam?: {
+    windupMs: number;
+    radius: number;
+    damageFrac: number;
+    cooldownMs: number;
+  };
+  /**
+   * ENRAGE: at or below `belowHpFrac` of max hp the mob fights like a
+   * cornered animal for the rest of the fight — speed and contact damage
+   * multiply, and the `enemyEnraged` event lets the app sell the turn.
+   * The elite-grade generalization of the boss LAST_STAND (which stays the
+   * every-boss default on top).
+   */
+  enrage?: {
+    belowHpFrac: number;
+    speedMult: number;
+    damageMult: number;
+  };
+  /**
+   * SUMMON ADDS: off cooldown (and awake), the mob calls `count` minions of
+   * `defId` out of the ground around it — spawned OUTSIDE the wave budget,
+   * capped at `maxAlive` of its own summons alive at once so the arena never
+   * floods. Summons are ordinary minions in every other way (xp, loot, the
+   * works).
+   */
+  summon?: {
+    defId: string;
+    count: number;
+    cooldownMs: number;
+    maxAlive: number;
+  };
+};
+
+/**
+ * One hp-breakpoint PHASE of a boss fight: at or below `belowHpFrac` the
+ * boss's active mechanics become this set (REPLACING the def's base
+ * `mechanics` — composition over machinery: a phase is just a different
+ * selection of the four mechanics above). Author phases in DESCENDING
+ * `belowHpFrac` order; the deepest crossed entry is the active one.
+ */
+export type EnemyPhase = {
+  belowHpFrac: number;
+  mechanics: EnemyMechanics;
+};
+
 export type EnemyDef = {
   id: string;
   /** Display name (HUD, boss bar). */
@@ -169,6 +245,18 @@ export type EnemyDef = {
      */
     rushSpeed?: number;
   };
+  /**
+   * Set-piece mechanics (elites/bosses only — see `EnemyMechanics`): the
+   * telegraphed moves and turns that make a named fight categorically harder
+   * than a fat minion, instead of just statier.
+   */
+  mechanics?: EnemyMechanics;
+  /**
+   * Boss PHASES: hp-breakpoint switches of the active mechanic set (see
+   * `EnemyPhase`). While the deepest crossed phase is active its `mechanics`
+   * replace the def's base ones. Descending `belowHpFrac` order.
+   */
+  phases?: EnemyPhase[];
   /**
    * A tougher regular monster's richer drop profile. Minions with no `loot`
    * roll the level's loot table (see loot.ts `dropMinionLoot`); this sweetens

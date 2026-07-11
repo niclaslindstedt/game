@@ -263,6 +263,10 @@ export const RIFT_ENEMIES: Record<string, EnemyDef> = {
     lastWords: ["HA! AT LAST...", "...SOMEONE WHO COMMITS..."],
     // Beaten, he kneels: SPARE the unkillable and he simply switches sides.
     spareable: { companion: "grigori_rasputin" },
+    // The man who would not die: below half he simply refuses harder.
+    mechanics: {
+      enrage: { belowHpFrac: 0.5, speedMult: 1.35, damageMult: 1.3 },
+    },
     ai: { aggroRadius: 250, rushSpeed: 110 },
     loot: {
       // The doorman's OTHER key: a cold biometric palm, forced to the base
@@ -505,6 +509,30 @@ export const RIFT_ENEMIES: Record<string, EnemyDef> = {
       ],
     ],
     lastWords: ["RATE... LIMITED...", "...CONTEXT WINDOW... CLOSED..."],
+    // The omega pounce: a telegraphed charge; at half power the rift
+    // rings with ground-tearing slams between the lunges.
+    mechanics: {
+      charge: { windupMs: 650, speedMult: 3.6, range: 180, cooldownMs: 5500 },
+    },
+    phases: [
+      {
+        belowHpFrac: 0.5,
+        mechanics: {
+          charge: {
+            windupMs: 600,
+            speedMult: 3.8,
+            range: 180,
+            cooldownMs: 5000,
+          },
+          slam: {
+            windupMs: 800,
+            radius: 75,
+            damageFrac: 1.2,
+            cooldownMs: 7000,
+          },
+        },
+      },
+    ],
     ai: { aggroRadius: 280, leashRadius: 460 },
     loot: {
       // Its sidearm: a cannon that fires very small, very rude black holes.
@@ -594,6 +622,25 @@ export const RIFT_ENEMIES: Record<string, EnemyDef> = {
     // The coward's second exit, gasped as he scrambles through the far door.
     lastWords: ["INVESTOR CALL! OTHER SIDE!", "DON'T FOLLOW ME - LEGALLY!"],
     flees: { landmark: "rift" },
+    // Cornered between universes: the voidlings answer his call, and past
+    // a third he flails into overdrive.
+    mechanics: {
+      summon: { defId: "voidling", count: 3, cooldownMs: 12000, maxAlive: 6 },
+    },
+    phases: [
+      {
+        belowHpFrac: 0.35,
+        mechanics: {
+          summon: {
+            defId: "voidling",
+            count: 4,
+            cooldownMs: 10000,
+            maxAlive: 8,
+          },
+          enrage: { belowHpFrac: 0.35, speedMult: 1.35, damageMult: 1.25 },
+        },
+      },
+    ],
     ai: { aggroRadius: 280, leashRadius: 460 },
     loot: {
       // He cuts the cord and floats away on it: the GOLDEN PARACHUTE.

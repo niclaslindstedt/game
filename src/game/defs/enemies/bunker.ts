@@ -181,6 +181,10 @@ export const BUNKER_ENEMIES: Record<string, EnemyDef> = {
       ],
     ],
     lastWords: ["CHECK THE OTHER...", "...FREEZERS..."],
+    // The clone keeps the judo: a telegraphed lunge-charge.
+    mechanics: {
+      charge: { windupMs: 650, speedMult: 3.6, range: 170, cooldownMs: 5500 },
+    },
     ai: { aggroRadius: 280, rushSpeed: 110 },
     loot: {
       // The backup wears the backup watch — same estate, fresh wrist.
@@ -246,6 +250,10 @@ export const BUNKER_ENEMIES: Record<string, EnemyDef> = {
       ["ENGAGEMENT DETECTED.", "INITIATING COMMUNITY", "STANDARDS."],
     ],
     lastWords: ["LOGGING OFF...", "...FOR REAL THIS TIME..."],
+    // He doesn't fight users, he SCALES: vacuum bots deploy mid-fight.
+    mechanics: {
+      summon: { defId: "vacuum_bot", count: 3, cooldownMs: 10000, maxAlive: 6 },
+    },
     ai: { aggroRadius: 280, rushSpeed: 120 },
     loot: {
       tierDrops: { rare: 1, magic: 1.5 },
@@ -389,6 +397,10 @@ export const BUNKER_ENEMIES: Record<string, EnemyDef> = {
       ],
     ],
     lastWords: ["OUT FOR DELIVERY...", "...RETURN TO SENDER..."],
+    // Below half the delivery guarantee kicks in: everything, faster.
+    mechanics: {
+      enrage: { belowHpFrac: 0.5, speedMult: 1.4, damageMult: 1.25 },
+    },
     ai: { aggroRadius: 280, rushSpeed: 130 },
     loot: {
       tierDrops: { rare: 1, magic: 1.5 },
@@ -540,6 +552,10 @@ export const BUNKER_ENEMIES: Record<string, EnemyDef> = {
       ],
     ],
     lastWords: ["RIGGED...", "...TOTALLY RIGGED..."],
+    // The huge, beautiful slam — many people say it's the best slam.
+    mechanics: {
+      slam: { windupMs: 1000, radius: 85, damageFrac: 1.3, cooldownMs: 9000 },
+    },
     ai: { aggroRadius: 260, rushSpeed: 60 },
     loot: {
       tierDrops: { rare: 1.5, magic: 1 },

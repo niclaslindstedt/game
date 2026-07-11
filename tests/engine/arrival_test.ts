@@ -16,6 +16,7 @@ import {
   HELD_ITEMS,
   LEVELING,
   PLAYER,
+  statPointsAt,
   totalArmor,
   xpToLevelUp,
   type Loadout,
@@ -163,10 +164,12 @@ describe("loadout carry-over", () => {
     expect(loadout!.level).toBeGreaterThan(1); // sanity: cleared, not a rookie
     expect(loadout!.xp).toBe(xp);
     // Every banked point spent, round-robin flat: no stat more than one ahead.
+    // Each ding's grant follows the growing schedule (statPointsAt), exactly
+    // as real level-ups would have paid.
+    let banked = 0;
+    for (let l = 2; l <= level; l++) banked += statPointsAt(l);
     const values = Object.values(loadout!.stats);
-    expect(values.reduce((a, b) => a + b, 0)).toBe(
-      (level - 1) * LEVELING.statPointsPerLevel,
-    );
+    expect(values.reduce((a, b) => a + b, 0)).toBe(banked);
     expect(Math.max(...values) - Math.min(...values)).toBeLessThanOrEqual(1);
     // The previous level's kit: its scripted early-drop weapon, issue gear,
     // and a couple of its powerups.

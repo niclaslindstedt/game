@@ -195,6 +195,27 @@ export const THE_RIFT: LevelDef = {
       "executioners_axe",
       "sorcerers_staff",
       "ember_wand",
+      // …plus every earlier stage's arsenal (the bunker idiom): later maps
+      // keep dropping earlier bases, so every revisit rung finds live bases
+      // in its drop window and the grade ladder unfolds without holes.
+      "box_cutter",
+      "security_baton",
+      "nine_mm",
+      "prototype_laser",
+      "microwave_emitter",
+      "pump_shotgun",
+      "lunar_wrench",
+      "service_revolver",
+      "geology_hammer",
+      "surplus_carbine",
+      "retro_raygun",
+      "pulsar_rod",
+      "smart_pistol",
+      "plasma_blade",
+      "railgun",
+      "arc_projector",
+      "graviton_maw",
+      "gravity_maul",
     ],
     // History's armory, leaning medieval — legion sandals to the great
     // helm (levelReqs 15 → 22) — plus the fantasy charms only the rift rains.
@@ -216,6 +237,38 @@ export const THE_RIFT: LevelDef = {
       "grimoire",
       "enchanted_ring",
       "bag",
+      // …plus every earlier stage's arsenal (the bunker idiom): later maps
+      // keep dropping earlier bases, so every revisit rung finds live bases
+      // in its drop window and the grade ladder unfolds without holes.
+      "baseball_cap",
+      "hard_hat",
+      "welding_mask",
+      "riot_helmet",
+      "lab_coat",
+      "coveralls",
+      "kevlar_vest",
+      "cargo_pants",
+      "padded_work_pants",
+      "sneakers",
+      "steel_toe_boots",
+      "mission_cap",
+      "apollo_visor",
+      "flight_jacket",
+      "micrometeoroid_vest",
+      "thermal_leggings",
+      "pressure_trousers",
+      "lunar_overshoes",
+      "moon_boots",
+      "targeting_monocle",
+      "neural_visor",
+      "printed_helm",
+      "polymer_shell",
+      "nanoweave_plate",
+      "aegis_exoplate",
+      "carbon_leggings",
+      "servo_greaves",
+      "gecko_soles",
+      "mag_boots",
     ],
     abilityPool: ["fire_orbs", "storm_cell", "stasis_field", "item_magnet"],
     // Level-locked world drops (see config WORLD_DROP): the Rift is a tear in
@@ -229,11 +282,11 @@ export const THE_RIFT: LevelDef = {
     // Level a normal run reaches per rung (`leveling-curve.mjs --by-level`) —
     // past it golden arrows go cold so a Rift replay can't over-level.
     arrowCapByDifficulty: {
-      easy: 13,
-      medium: 25,
-      hard: 36,
-      nightmare: 45,
-      jesus: 51,
+      easy: 15,
+      medium: 29,
+      hard: 40,
+      nightmare: 50,
+      jesus: 58,
     },
     // The VOID WAND arrives early at a kill discovered in play — the level's
     // signature caster, same cadence as Mars's katana.

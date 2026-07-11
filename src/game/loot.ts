@@ -11,6 +11,7 @@ import {
   ENEMY_AI,
   LEVELING,
   LOOT,
+  MEDKIT,
   MENACE,
   MERCY,
   STATS,
@@ -38,6 +39,7 @@ import {
 } from "./items.ts";
 import {
   levelStatGains,
+  statPointsAt,
   xpCapMultiplier,
   xpLevelCap,
   xpToLevelUp,
@@ -45,6 +47,7 @@ import {
 import { addMapMarker } from "./map.ts";
 import {
   bankOverkill,
+  currentMobLevel,
   maybePowerScale,
   mobLevelTierBonus,
   overkillEfficiency,
@@ -141,12 +144,29 @@ function flyInByAngel(state: GameState, at: Vec2): void {
 }
 
 /**
+ * Which MEDKIT tier this kill pays (an index into `MEDKIT.tiers`): the
+ * deepest tier the current monster level has unlocked most of the time, the
+ * one under it sometimes (3:1 — the affix-bracket idiom), so a deep campaign
+ * drops SUPERIOR kits with the odd plain one mixed in and the opening only
+ * ever finds LIGHT kits. D2's potion rule: bigger areas, bigger potions.
+ */
+export function rollMedkitTier(state: GameState): number {
+  const mlvl = currentMobLevel(state);
+  let top = 0;
+  for (let i = 0; i < MEDKIT.tiers.length; i++) {
+    if ((MEDKIT.tiers[i] as { minMlvl: number }).minMlvl <= mlvl) top = i;
+  }
+  if (top === 0) return 0;
+  return state.rng() < 0.25 ? top - 1 : top;
+}
+
+/**
  * The per-kill chance a PACKED FIELD coughs up a screen-nuke — the
  * bomb-in-a-swarm bailout (a MERCY DROP). Zero until the on-screen crowd
  * passes `MERCY.crowdBombThreshold`, then ramps linearly to the difficulty's
- * `mercy.crowdBombChanceMax` at `MERCY.crowdBombFull`. Easy tops out at 5%,
- * medium 3%; hard and up cap it at zero, so this never fires there. Tune the
- * ramp shape in the `MERCY` config and the per-rung strength on the ladder.
+ * `mercy.crowdBombChanceMax` at `MERCY.crowdBombFull`. The cap TAPERS down
+ * the ladder (easy 5% … nightmare 0.5%, zero on JESUS). Tune the ramp shape
+ * in the `MERCY` config and the per-rung strength on the ladder.
  */
 export function crowdBombChance(state: GameState): number {
   const max = difficultyDef(state.difficulty).mercy.crowdBombChanceMax;
@@ -166,8 +186,8 @@ export function crowdBombChance(state: GameState): number {
  * empty-sprint bailout (a MERCY DROP). Zero unless the pool is BONE-DRY (exactly
  * empty, "not close to 0"), then ramps with TIME spent stranded: from zero the
  * instant stamina hits empty up to the difficulty's `mercy.staminaDrinkChanceMax`
- * at `MERCY.staminaEmptyDrinkRampMs`. Easy tops out at 15%, medium 10%; hard and
- * up cap it at zero, so this never fires there. The ramp resets the moment any
+ * at `MERCY.staminaEmptyDrinkRampMs`. The cap tapers down the ladder (easy
+ * 15% … zero on JESUS). The ramp resets the moment any
  * stamina returns (see `GameState.staminaEmptyMs`), so a hero who catches his
  * breath drops straight back to the baseline drink rain.
  */
@@ -695,7 +715,12 @@ function dropMinionLoot(
       defId: abilities[Math.floor(state.rng() * abilities.length)] as string,
     });
   } else if (roll < equipmentShare + abilityShare + medkitShare) {
-    state.items.push({ id: state.nextId++, kind: "medkit", pos });
+    state.items.push({
+      id: state.nextId++,
+      kind: "medkit",
+      pos,
+      tier: rollMedkitTier(state),
+    });
     // A medkit that fell because low health WIDENED its slice is a mercy rope,
     // not the ordinary rain — fly it in on the angel (a healthy hero's boost is
     // zero, so his medkits land the mundane way).
@@ -897,7 +922,12 @@ function dropGuaranteedLoot(
     state.items.push({ id: state.nextId++, kind: "repair", pos: scatter() });
   }
   for (let i = 0; i < loot.medkits; i++) {
-    state.items.push({ id: state.nextId++, kind: "medkit", pos: scatter() });
+    state.items.push({
+      id: state.nextId++,
+      kind: "medkit",
+      pos: scatter(),
+      tier: rollMedkitTier(state),
+    });
   }
   state.events.push({ type: "itemDropped", pos: { ...at } });
 }
@@ -939,7 +969,7 @@ export function grantXp(state: GameState, amount: number): void {
     player.level++;
     leveled = true;
     player.xpToNext = xpToLevelUp(player.level);
-    player.pendingStatPoints += LEVELING.statPointsPerLevel;
+    player.pendingStatPoints += statPointsAt(player.level);
     // The automatic base gains land with the level itself (they derive from
     // `player.level` — see leveling.ts), so re-derive everything they feed:
     // the hp/stamina pools (STAMINA) and the carry bag (STRENGTH).

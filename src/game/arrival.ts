@@ -25,7 +25,7 @@ import {
   recomputeMaxHp,
   recomputeMaxStamina,
 } from "./items.ts";
-import { xpToLevelUp } from "./leveling.ts";
+import { statPointsAt, xpToLevelUp } from "./leveling.ts";
 import type {
   Difficulty,
   Equipment,
@@ -290,7 +290,7 @@ export function deriveArrivalLoadout(
   while (xp >= xpToNextAt(level) && level < LEVELING.maxLevel) {
     xp -= xpToNextAt(level);
     level++;
-    points += LEVELING.statPointsPerLevel;
+    points += statPointsAt(level);
   }
 
   // Spend the banked points the way a steady hand would: round-robin, so

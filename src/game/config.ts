@@ -115,6 +115,20 @@ export const WEAPON = {
    * flavor stream (not the loot stream), so it never perturbs drop rolls.
    */
   damageVariance: 0.2,
+  /**
+   * ITEM-LEVEL damage growth — the weapon half of `ARMOR.armorPerIlvl`: a
+   * rolled weapon's damage grows by this fraction per item level ABOVE its
+   * base's `levelReq` (a base's catalog damage is its value at its own req).
+   * Zero at the req itself, so the catalog and the damage-budget model
+   * (`scripts/weapon-budget.mjs`) are untouched; only deep finds grow. Kept
+   * at a third of armor's rate — damage compounds with stats, crit, and
+   * cadence where armor only sums, so a gentler slope keeps a +20-ilvl find
+   * a real edge (~+40%) rather than a doubling. Applied in `weaponDamageFor`
+   * (the one source of stat-scaled damage), so combat, auto-equip scoring,
+   * the item card, and `heroDamageLevel`'s power read all move together —
+   * the menace system automatically prices a hot deep find into the horde.
+   */
+  damagePerIlvl: 0.02,
 } as const;
 
 /**
@@ -193,6 +207,17 @@ export const ENEMY_AI = {
    * not satisfy "there's a pack on screen".
    */
   nearRadius: 340,
+  /**
+   * SMARTER MOBS up the ladder — FLANKING: from this difficulty INDEX
+   * (hard = 3) a chasing minion steers toward a point rotated off the direct
+   * player bearing, each mob to its own deterministic side, so the pack
+   * ENVELOPS instead of forming a straight-line conga the hero mows down a
+   * rank at a time. The rotation eases out as the mob closes (it converges
+   * on the player for the bite) — see `flankTarget` in step.ts.
+   */
+  flankFromIndex: 3,
+  /** The flank rotation at full distance (degrees off the direct bearing). */
+  flankAngleDeg: 35,
 } as const;
 
 /**
@@ -258,13 +283,15 @@ export const LEVELING = {
    * The base is tuned WITH the golden-arrow faucet counted (arrows are a second
    * XP source on top of kills — see LEVELING.arrowXpShare and the calculator's
    * `w/arrows` column): a full campaign across all five difficulties lands the
-   * hero at ~level 60 (`node scripts/leveling-curve.mjs --campaign`), leaving
-   * the rest as the grind-to-cap endgame. The base absorbs the roster whenever
-   * the campaign grows — Eastworld's arrival re-raised it from 150 so the five
-   * rungs still end at 60 instead of overshooting toward 72. Don't drop it back
-   * toward the kill-only figure without re-checking that campaign target.
+   * hero at level 60 (`node scripts/leveling-curve.mjs --campaign`), leaving
+   * the rest as the grind-to-cap endgame. The per-rung ends the whole gate
+   * family is sized against are easy 19 / medium 32 / hard 43 / nightmare 53 /
+   * jesus 60 (`--by-level` prints the per-map landings — XP_CAP bands, the
+   * WORLD_DROP gates, and every level's arrowCapByDifficulty are all read off
+   * that table). Whenever this base or the roster moves, re-run both views and
+   * re-read the gates; don't tune the base by feel.
    */
-  killsPerLevelBase: 260,
+  killsPerLevelBase: 180,
   killsPerLevelGrowth: 1.02,
   /**
    * Onboarding ramp: the opening levels cost only a FRACTION of their curve
@@ -284,7 +311,18 @@ export const LEVELING = {
    * minions' catalog hp.
    */
   refMobHp: 45,
+  /**
+   * Trainable stat points a ding grants — the BASE, plus one bonus point
+   * per full `statPointsBonusEvery` levels reached (see `statPointsAt` in
+   * leveling.ts): 1/ding through the opening, 2 from level 10, 5 at 40,
+   * 10 at 99. Later dings pay MORE points on purpose: past the soft cap
+   * (STATS.statSoftCap) each raw point realizes less, so the growing grant
+   * keeps the chooser exciting deep into the campaign without undoing the
+   * flattening — gear still carries the endgame, the ding just keeps its
+   * dignity.
+   */
   statPointsPerLevel: 1,
+  statPointsBonusEvery: 10,
   /**
    * XP granted by a golden arrow pickup, as a fraction of the CURRENT
    * xpToNext AT LEVEL 1 — a share of a level, not a flat sum, so an arrow
@@ -349,10 +387,10 @@ export const LEVELING = {
  * past the cap — the Diablo rule that outleveling a zone retires its XP, not
  * its drops. Each rung lists the cap on its FIRST and LAST story level;
  * intermediate maps interpolate linearly. Sized a few levels above where a
- * first campaign pass naturally lands (easy ends ~19, medium ~34, hard ~46,
- * nightmare ~55, jesus ~60 — see the leveling-balance skill), so the story
- * never starves; only the rerun grind hits the wall. JESUS's last map runs to
- * the global `LEVELING.maxLevel` — the endgame grind lives there.
+ * first campaign pass naturally lands (easy ends 19, medium 32, hard 43,
+ * nightmare 53, jesus 60 — read off `leveling-curve.mjs --by-level`), so the
+ * story never starves; only the rerun grind hits the wall. JESUS's last map
+ * runs to the global `LEVELING.maxLevel` — the endgame grind lives there.
  */
 export const XP_CAP = {
   capByDifficulty: {
@@ -409,8 +447,8 @@ export const UNIQUE = {
  * elite ten times likelier, the boss forty. `minPlayerLevel` gates the whole
  * table shut until the hero out-levels a first campaign pass — PER RUNG, since a
  * later rung's relics sit behind a later, higher first-pass level. The campaign
- * is continuous (see `leveling-curve.mjs --by-level`): EASY ends ~19, MEDIUM ~34,
- * HARD ~46, NIGHTMARE ~55, JESUS ~60, so each gate sits a few levels above its
+ * is continuous (see `leveling-curve.mjs --by-level`): EASY ends 19, MEDIUM 32,
+ * HARD 43, NIGHTMARE 53, JESUS 60, so each gate sits a few levels above its
  * rung's end — the relics can only be farmed by RETURNING for boss runs once the
  * difficulty is beaten. Rolled per unique, per kill, on `maybeDropWorldUnique`.
  */
@@ -430,14 +468,14 @@ export const WORLD_DROP = {
   },
   /** No world unique drops until the hero reaches this level ON THAT RUNG —
    * sized a few levels above where a first campaign pass of the difficulty ends
-   * (easy ~19, medium ~34, hard ~46, nightmare ~55, jesus ~60), so boss runs on
+   * (easy 19, medium 32, hard 43, nightmare 53, jesus 60), so boss runs on
    * a beaten rung are the only source (JESUS's gate sits AT the campaign's end
    * — level 60 — so the last rung's farm opens the moment the story is done).
    * Hard and up are plumbing until relics ship for those rungs. */
   minPlayerLevel: {
     easy: 22,
     medium: 36,
-    hard: 48,
+    hard: 46,
     nightmare: 57,
     jesus: 60,
   } as Record<Difficulty, number>,
@@ -492,17 +530,19 @@ export const ARRIVAL = {
  */
 export const MENACE = {
   /**
-   * Menace banked per second per point of the player's rolling DPS: sustained
-   * damage output is the meter's main fuel, so a hard-hitting build heats it
-   * faster than a plinking one — the meter tracks how overpowered you are, not
-   * how you happened to land the last blow. Scaled by `menaceSensitivity`
-   * (difficulty × early-game warmup) before it lands. Kept deliberately low:
-   * raw DPS climbs for every build as the run goes on, so leaning on it would
-   * heat the meter for fair late-game play too. The meter leans instead on
-   * relative OVERKILL and kill RATE, which single out a genuinely lopsided
-   * build; DPS is only a gentle supporting term.
+   * Menace banked per second per REFERENCE HEALTHBAR PER SECOND of rolling
+   * output: sustained damage is the meter's supporting fuel, but it is
+   * measured RELATIVE to the era — the rolling DPS divided by the level's
+   * reference minion bar (`refMobHp` on the `mobHpPerLevel` ramp ×
+   * `autoPowerScale`, the same bar the spawner scales hp by) — so "mowing
+   * two healthbars a second" heats the meter the same at level 1 and level
+   * 60. (A raw-dps term was non-stationary: absolute numbers inflate ~30×
+   * over a campaign, and fair mid-game play saturated the meter.) Scaled by
+   * `menaceSensitivity` before it lands; 3.2 ≈ the old 0.07/raw-point term
+   * at the level-1 bar, so the opening behaves exactly as before. The meter
+   * still leans on relative OVERKILL and kill RATE as its main signals.
    */
-  perDps: 0.07,
+  perBarDps: 3.2,
   /**
    * Menace banked per second per kill/second of the player's rolling kill rate:
    * a fast clear heats the meter on top of raw damage, so mowing a crowd down
@@ -592,7 +632,7 @@ export const MENACE = {
    * thin out as the horde evolves, so a rampage is a decent way of leveling
    * and a poor way of farming loot. Chances floor at 0 in `rollTier`.
    */
-  tierPenaltyPerStage: 0.04,
+  tierPenaltyPerStage: 0.03,
   /**
    * The wave spawner's live floor AND cap grow by this fraction per stage —
    * a rampage pulls a denser, bigger crowd onto the screen.
@@ -617,7 +657,10 @@ export const MENACE = {
    * plus the current menace heat — locked in once so a level-20 hero meets a
    * boss worthy of them instead of one-shotting the set piece.
    */
-  bossLevelWeight: 0.12,
+  // Trimmed from 0.12 when the set-piece MECHANICS shipped (mechanics.ts):
+  // a boss now gets harder via telegraphed moves, enrage turns, and phases —
+  // the hp-sponge share of its difficulty gives that much back.
+  bossLevelWeight: 0.1,
   bossMenaceWeight: 0.1,
   /** Share of the hp power-scale that also applies to contact damage (so a
    * scaled boss hits harder, but not as steeply as its health grows). */
@@ -645,13 +688,33 @@ export const MENACE = {
    */
   mobHpScaleFloor: 0.5,
   /**
+   * The horde's per-level CONTACT-DAMAGE ramp (+3% per monster level over 1,
+   * linear — see `mobContactScaleFor`, stamped at spawn): the damage sibling
+   * of `mobHpPerLevel`, kept GENTLE and never multiplied by `autoPowerScale`.
+   * The asymmetry is deliberate: hp rides the auto-stat curve because it
+   * cancels against the hero's compounding DPS, but his SURVIVABILITY (max
+   * hp from STAMINA, armor) grows roughly linearly — so mob damage tracks
+   * that instead. Without this ramp a level-60 minion's catalog blow was a
+   * tickle against a campaign health bar; with the old auto-scaled boss
+   * contact, a set piece was a one-shot. Both read from here now.
+   */
+  mobDamagePerLevel: 0.03,
+  /**
    * Better gear as the hero levels: added to a minion's drop tier roll per
-   * player level above 1 (+1.5% each), so a higher-level hero's kills yield
+   * player level above 1 (+0.4% each), so a higher-level hero's kills yield
    * richer loot to match the tougher mobs they came off — the drop-quality
    * companion to `mobHpPerLevel` (the menace `tierPenaltyPerStage` pulls the
-   * other way on evolved mobs).
+   * other way on evolved mobs). Kept SMALL and capped (`tierBonusLevelCap`):
+   * at the old 1.5% the level term alone hit +0.59 by level 40 — past the
+   * magic AND rare base chances combined, so every mid-game drop rolled at
+   * least rare and the tier ladder stopped discriminating. Tier quality is
+   * the DIFFICULTY ladder's reward (`tierChanceBonus`); the level term only
+   * seasons it.
    */
-  tierBonusPerLevel: 0.015,
+  tierBonusPerLevel: 0.004,
+  /** Ceiling on the level term above (+15% at level ~38 and beyond), so the
+   * deep endgame still rolls mostly regular/magic and a rare stays an event. */
+  tierBonusLevelCap: 0.15,
   /**
    * The DAMAGE→LEVEL mapping's normalization (see `heroDamageLevel` in
    * menace.ts): the equipped weapon's sustained single-target output
@@ -1046,22 +1109,28 @@ export const QUALITY = {
   weightsLow: { broken: 20, crude: 25, normal: 52, superior: 3, perfect: 0 },
   /** …and off a monster at/above `highMlvl`; lerped linearly between. */
   weightsHigh: { broken: 0, crude: 6, normal: 54, superior: 28, perfect: 12 },
-  /** The monster level at which the odds reach `weightsHigh`. */
-  highMlvl: 100,
+  /** The monster level at which the odds reach `weightsHigh`. Set to the
+   * level a full campaign actually ends at (~60, see LEVELING) so the lerp
+   * spans the real game: superior and perfect work is genuinely common on
+   * the last rungs instead of parked behind a monster level that never
+   * spawns. */
+  highMlvl: 60,
 } as const;
 
 /**
- * MERCY DROPS — the gentle rungs (easy/medium) throw a drowning player a rope,
- * and the fight eases without ever becoming un-losable. Four independent
- * signals feed it: a PACKED FIELD (crowd of on-screen mobs), LOW HEALTH, a
- * near-BROKEN WEAPON, and an EMPTY SPRINT POOL (stamina bone-dry). The first
- * three turn into a 0→1 "desperation" as they worsen — zero at their `*Start`
- * mark, one at their `*Full` mark, linear between (see `desperationRamp`); the
- * stamina rope instead ramps over TIME the pool sits empty (see
- * `staminaDrinkChance`). This namespace owns the RAMP SHAPES (where help begins
- * and maxes); each rung owns its STRENGTH via `DifficultyDef.mercy`
- * (`MercyTuning`), and hard-and-up zero every strength so none of this reaches
- * them. Tune the two together: shape here, per-rung force on the ladder.
+ * MERCY DROPS — the game throws a drowning player a rope, harder the gentler
+ * the rung, and the fight eases without ever becoming un-losable. Four
+ * independent signals feed it: a PACKED FIELD (crowd of on-screen mobs), LOW
+ * HEALTH, a near-BROKEN WEAPON, and an EMPTY SPRINT POOL (stamina bone-dry).
+ * The first three turn into a 0→1 "desperation" as they worsen — zero at
+ * their `*Start` mark, one at their `*Full` mark, linear between (see
+ * `desperationRamp`); the stamina rope instead ramps over TIME the pool sits
+ * empty (see `staminaDrinkChance`). This namespace owns the RAMP SHAPES
+ * (where help begins and maxes); each rung owns its STRENGTH via
+ * `DifficultyDef.mercy` (`MercyTuning`), TAPERING geometrically down the
+ * ladder (~×0.4 per rung: easy → medium → a whisper on hard → a ghost on
+ * nightmare → absolute zero on JESUS). Tune the two together: shape here,
+ * per-rung force on the ladder.
  */
 export const MERCY = {
   /** On-screen minions before a packed field starts coughing up screen-nukes,
@@ -1325,6 +1394,17 @@ export const ENEMY_RANGED = {
   coverSearchRadius: 260,
   /** Gap kept between the shooter's edge and its cover rock's edge. */
   coverGap: 4,
+  /**
+   * SMARTER MOBS up the ladder — TARGET LEADING: from `leadFromIndex`
+   * (hard = 3) shooters aim ahead of a RUNNING hero by `leadFactor` of the
+   * full firing solution (`player.vel × time-of-flight`), and from
+   * `leadFullFromIndex` (nightmare = 4) by the whole thing — a standing hero
+   * is aimed at dead-on either way. Below the gate shots fly at where the
+   * hero WAS: the strafe-to-dodge freebie the gentle rungs keep.
+   */
+  leadFromIndex: 3,
+  leadFullFromIndex: 4,
+  leadFactor: 0.5,
 } as const;
 
 /**
@@ -1341,9 +1421,25 @@ export const APPARITION = {
   lingerMs: 2600,
 } as const;
 
-/** The medkit consumable: picked up on touch, never enters the inventory. */
+/**
+ * The medkit consumable: picked up on touch, never enters the inventory.
+ * D2-style TIERS — each is a STATIC heal, and deeper content drops bigger
+ * kits: the drop rolls the deepest tier the killer's monster level has
+ * unlocked most of the time and the one under it sometimes (3:1, the affix
+ * bracket idiom — see `rollMedkitTier` in loot.ts). Static numbers keep a
+ * heal legible (a kit is worth what it says, like a D2 potion); the tier
+ * ladder is what keeps healing meaningful against a campaign health bar
+ * (~a fifth to a quarter of the era's typical max hp). All tiers share one
+ * sprite for now; scarcity (the drop share and the per-rung medkitDropMult)
+ * stays the balance lever.
+ */
 export const MEDKIT = {
-  heal: 35,
+  tiers: [
+    { name: "LIGHT MEDKIT", heal: 25, minMlvl: 1 },
+    { name: "MEDKIT", heal: 60, minMlvl: 12 },
+    { name: "LARGE MEDKIT", heal: 120, minMlvl: 30 },
+    { name: "SUPERIOR MEDKIT", heal: 200, minMlvl: 46 },
+  ],
   radius: 8,
 } as const;
 
@@ -1355,6 +1451,24 @@ export const MEDKIT = {
 export const HELD_ITEMS = {
   /** How many ability pickups the player can carry; extras stay grounded. */
   cap: 3,
+} as const;
+
+/**
+ * ABILITY POWER SCALING (see `abilityPowerScale` in abilities.ts). The
+ * catalog numbers in defs/abilities.ts are authored AT LEVEL 1; without
+ * scaling they decayed into noise against a horde whose healthbars grow by
+ * `MENACE.mobHpPerLevel × autoPowerScale` every level. The scale is exactly
+ * that minion-bar formula — so a FIRE ORB keeps meaning "the same fraction
+ * of a level-appropriate healthbar" all campaign — times an INTELLIGENCE
+ * term: conjured powers are magic, and INT is what deepens them.
+ */
+export const ABILITY = {
+  /** Extra ability damage per point of effective INTELLIGENCE (+5% each). */
+  intDamagePerPoint: 0.05,
+  /** Extra STASIS FIELD radius per point of effective INT (world px) —
+   * mirrors the magnet's `radiusPerInt`; the slow factor itself never
+   * scales (a stronger slow would trivialize kiting). */
+  stasisRadiusPerInt: 1.5,
 } as const;
 
 /**

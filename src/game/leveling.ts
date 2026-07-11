@@ -119,6 +119,21 @@ export function autoPowerScale(level: number): number {
 }
 
 /**
+ * Trainable stat points crossing INTO `level` grants: the flat base plus one
+ * bonus point per full `statPointsBonusEvery` levels — 1 through the opening,
+ * 2 from level 10, 5 at 40, 10 at 99. The single source of truth for the
+ * ding's chooser budget, read by `grantXp` (loot.ts) and the arrival
+ * derivation (arrival.ts) so a derived build banks exactly what real dings
+ * would have paid.
+ */
+export function statPointsAt(level: number): number {
+  return (
+    LEVELING.statPointsPerLevel +
+    Math.floor(Math.max(0, level) / LEVELING.statPointsBonusEvery)
+  );
+}
+
+/**
  * The share of the CURRENT level bar a golden arrow grants at `level`: the
  * base share (`LEVELING.arrowXpShare`) decayed harmonically by
  * `LEVELING.arrowXpShareTaper`, so arrows pay a full quarter-level early and a

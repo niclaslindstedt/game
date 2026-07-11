@@ -9,6 +9,7 @@
 
 import { direction, distance, moveToward, type Vec2 } from "@game/lib/vec.ts";
 import { ENEMY_RANGED, JUMP, PLAYER } from "./config.ts";
+import { difficultyDef } from "./defs/difficulties.ts";
 import { enemyDef } from "./defs/enemies/index.ts";
 import { armorReduction, playerDodgeChance, wearWornArmor } from "./items.ts";
 import { lineOfSight } from "./obstacles.ts";
@@ -135,7 +136,23 @@ export function stepRangedAttacks(state: GameState, dtMs: number): void {
     if (dist > ranged.range) continue;
     if (!lineOfSight(state, enemy.pos, player.pos)) continue;
     enemy.rangedCooldownMs = ranged.cooldownMs;
-    const dir = direction(enemy.pos, player.pos);
+    // TARGET LEADING (the hard rungs' smarter shooters): aim ahead of a
+    // running hero by the shot's time-of-flight — half the firing solution
+    // from hard, the full one from nightmare (config ENEMY_RANGED.lead*). A
+    // standing hero's vel is zero, so he is aimed at dead-on on every rung.
+    const index = difficultyDef(state.difficulty).index;
+    const lead =
+      index >= ENEMY_RANGED.leadFullFromIndex
+        ? 1
+        : index >= ENEMY_RANGED.leadFromIndex
+          ? ENEMY_RANGED.leadFactor
+          : 0;
+    const flight = dist / ranged.projectile.speed;
+    const aim = {
+      x: player.pos.x + player.vel.x * flight * lead,
+      y: player.pos.y + player.vel.y * flight * lead,
+    };
+    const dir = direction(enemy.pos, aim);
     const spec = ranged.projectile;
     const shot: Projectile = {
       id: state.nextId++,

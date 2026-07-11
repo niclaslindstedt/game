@@ -231,6 +231,13 @@ export type Player = {
   /** Unit vector of the last movement direction; drives sprite facing. */
   facing: Vec2;
   /**
+   * Realized velocity this tick (world px/s; zero while standing). Distinct
+   * from `facing`, which persists while idle — this is what the smarter
+   * shooters LEAD with on the hard rungs (see stepRangedAttacks), so a
+   * standing hero is aimed at dead-on and a running one ahead of his path.
+   */
+  vel: Vec2;
+  /**
    * Which way the sprite mirrors. Updated with hysteresis (see
    * PLAYER.faceFlipMinX) so near-vertical movement doesn't flicker the flip.
    */
@@ -445,6 +452,35 @@ export type Enemy = {
    * runs down (see moveRangedEnemy in ranged.ts). Absent on melee mobs.
    */
   rangedCooldownMs?: number;
+  /**
+   * Set-piece MECHANICS bookkeeping (elites/bosses with `EnemyDef.mechanics`
+   * or `phases` — see src/game/mechanics.ts; absent on everything else).
+   * The renderer reads `telegraph` to sell the windup (the freeze + flash)
+   * and `dashMs` for the charge streak; everything else is clocks.
+   */
+  mech?: EnemyMech;
+};
+
+/** Runtime state of one enemy's set-piece mechanics (see `Enemy.mech`). */
+export type EnemyMech = {
+  /** The windup in progress: which move, ms left, and the LOCKED bearing
+   * (charge only). While set the mob is rooted — the readable tell. */
+  telegraph?: { kind: "charge" | "slam"; remainingMs: number; dir?: Vec2 };
+  /** Ms of dash left, and the locked unit bearing it rides. */
+  dashMs?: number;
+  dashDir?: Vec2;
+  /** Contact-damage multiplier while `dashMs` runs (the charge's impact). */
+  dashDamageMult?: number;
+  /** Cooldown clocks (ms) per mechanic. */
+  chargeCooldownMs?: number;
+  slamCooldownMs?: number;
+  summonCooldownMs?: number;
+  /** Latched true when the enrage threshold is crossed (fires the event and
+   * the multipliers once — an enrage never calms back down). */
+  enraged?: boolean;
+  /** Live ids of this mob's summoned adds (pruned as they die), holding the
+   * summon's `maxAlive` cap. */
+  summons?: number[];
 };
 
 /**
@@ -550,38 +586,41 @@ export type Projectile = {
   z: number;
 };
 
-export type Item = (
-  | { id: number; kind: "medkit"; pos: Vec2 }
-  /** The golden level-up arrow: grants a share of the XP to the next level. */
-  | { id: number; kind: "xp"; pos: Vec2 }
-  /** A repair kit: restores the equipped weapon's durability to full. */
-  | { id: number; kind: "repair"; pos: Vec2 }
-  /** An energy drink: resets the sprint pool to full on touch. Like the repair
-   * kit it stays grounded when there is nothing to top up (stamina already
-   * full), so it is never wasted on a rested hero. */
-  | { id: number; kind: "drink"; pos: Vec2 }
-  | { id: number; kind: "equipment"; pos: Vec2; equipment: Equipment }
-  /** A time-limited power pickup; `defId` keys into ABILITY_DEFS. */
-  | { id: number; kind: "ability"; pos: Vec2; defId: string }
-  /**
-   * A plot piece — a keycard, a dossier, the anti-grav unit. `defId` keys
-   * into STORY_ITEM_DEFS; picking one up banks it in `state.storyItems`
-   * (never the bag) and plays its lore as a dialogue.
-   */
-  | { id: number; kind: "story"; pos: Vec2; defId: string }
-) & {
-  /**
-   * A MERCY DROP still being flown in by its ANGEL. When set (and > 0) the
-   * rescue is airborne — cradled by the guardian as it descends to `pos` (the
-   * spot the mob died) — and NOT yet collectable; the magnet ignores it and
-   * `stepItems` counts it down (see `MERCY.angelDeliverMs`). At 0 the gift has
-   * landed and the item behaves like any other. Absent on every ordinary drop,
-   * so a plain drop is `deliverMs === undefined` and grounded from birth. The
-   * renderer draws the descending angel + falling pickup off this timer
-   * (`render.ts`); the engine only gates the pickup and never mentions angels.
-   */
-  deliverMs?: number;
-};
+export type Item =
+  /** `tier` indexes config MEDKIT.tiers (the D2-style kit sizes) — absent
+   * on items minted before tiers shipped, read as the lightest kit. */
+  (
+    | { id: number; kind: "medkit"; pos: Vec2; tier?: number }
+    /** The golden level-up arrow: grants a share of the XP to the next level. */
+    | { id: number; kind: "xp"; pos: Vec2 }
+    /** A repair kit: restores the equipped weapon's durability to full. */
+    | { id: number; kind: "repair"; pos: Vec2 }
+    /** An energy drink: resets the sprint pool to full on touch. Like the repair
+     * kit it stays grounded when there is nothing to top up (stamina already
+     * full), so it is never wasted on a rested hero. */
+    | { id: number; kind: "drink"; pos: Vec2 }
+    | { id: number; kind: "equipment"; pos: Vec2; equipment: Equipment }
+    /** A time-limited power pickup; `defId` keys into ABILITY_DEFS. */
+    | { id: number; kind: "ability"; pos: Vec2; defId: string }
+    /**
+     * A plot piece — a keycard, a dossier, the anti-grav unit. `defId` keys
+     * into STORY_ITEM_DEFS; picking one up banks it in `state.storyItems`
+     * (never the bag) and plays its lore as a dialogue.
+     */
+    | { id: number; kind: "story"; pos: Vec2; defId: string }
+  ) & {
+    /**
+     * A MERCY DROP still being flown in by its ANGEL. When set (and > 0) the
+     * rescue is airborne — cradled by the guardian as it descends to `pos` (the
+     * spot the mob died) — and NOT yet collectable; the magnet ignores it and
+     * `stepItems` counts it down (see `MERCY.angelDeliverMs`). At 0 the gift has
+     * landed and the item behaves like any other. Absent on every ordinary drop,
+     * so a plain drop is `deliverMs === undefined` and grounded from birth. The
+     * renderer draws the descending angel + falling pickup off this timer
+     * (`render.ts`); the engine only gates the pickup and never mentions angels.
+     */
+    deliverMs?: number;
+  };
 
 /** A decorative feature scattered at level creation — rendered, no collision. */
 export type Decor = {
@@ -873,6 +912,27 @@ export type GameEvent =
   /** The player's weapon blow whiffed of its own accord (see
    * `playerMissChance`). `pos` is the foe — the app floats a "MISS" tag. */
   | { type: "enemyMiss"; pos: Vec2; defId: string }
+  /**
+   * A set-piece mob began a telegraphed move (mechanics.ts): it stands
+   * rooted for `ms` before the move lands — the app sells the windup (flash,
+   * sound) so the dodge is earnable. `dir` is the charge's locked bearing.
+   */
+  | {
+      type: "enemyTelegraph";
+      kind: "charge" | "slam";
+      pos: Vec2;
+      defId: string;
+      ms: number;
+      dir?: Vec2;
+    }
+  /** A telegraphed slam landed: the shockwave around `pos` (radius for the
+   * app's ring/shake; the damage was resolved engine-side). */
+  | { type: "enemySlam"; pos: Vec2; radius: number; defId: string }
+  /** An elite/boss crossed its enrage threshold — speed and damage are up
+   * for the rest of the fight (the app tints it and stings the turn). */
+  | { type: "enemyEnraged"; pos: Vec2; defId: string }
+  /** A summoner called adds out of the ground around it. */
+  | { type: "enemySummoned"; pos: Vec2; defId: string; count: number }
   | {
       type: "itemCollected";
       kind: Item["kind"];

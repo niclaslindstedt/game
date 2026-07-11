@@ -66,7 +66,9 @@ export function equipBlaster(state: GameState): GameState {
     defId: "blaster",
     slot: "weapon",
     tier: "regular",
-    ilvl: 5,
+    // Pinned at the def's levelReq (1) so the ITEM-LEVEL damage term
+    // (WEAPON.damagePerIlvl) stays 1 and suites measure catalog damage.
+    ilvl: 1,
     affixes: [],
   };
   state.player.weaponCooldownMs = 0;

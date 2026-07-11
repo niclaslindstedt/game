@@ -382,6 +382,17 @@ The roster is split one file per level/biome under `src/game/defs/enemies/`
 (`spacez.ts`, `moon.ts`, …), merged into `ENEMY_DEFS` by `enemies/index.ts`
 (which throws on a duplicate id).
 
+Named elites and bosses fight with **set-piece mechanics**
+(`EnemyDef.mechanics`/`phases`, stepped by `src/game/mechanics.ts`):
+telegraphed shoulder-charges and ground slams (the windup roots the mob and
+the app strobes the tell — sidestep the charge, jump the slam), enrage turns
+below an hp threshold, summoned reinforcements, and boss PHASES that swap the
+active moves at hp breakpoints (MUSKRAT calls security at half health,
+ARMSTRONG's moon-quake fury, the MOSQUE bosses ship reinforcements off the
+line, GROK OMEGA pounces, THE ZAI SUPERCORE doubles production once its
+shield falls). From HARD up the rank and file get smarter too: minions flank
+instead of forming a single-file conga, and shooters lead a running target.
+
 - **Level 1** ships the SpaceZ night shift (intern → lab scientist →
   propulsion engineer → security guard → hazmat tech) reinforced by OPTIMUSK
   units — humanoid robots that are not story uniques but hit far harder and

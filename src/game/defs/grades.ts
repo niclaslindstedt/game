@@ -35,9 +35,18 @@ type GradeNames = { exceptional: GradeName; elite: GradeName };
  * across the mid-game and its elites across the run to level 100.
  */
 const SOURCE_REQ_MAX = 23;
+// Exceptional picks up exactly where the normal band ends (…23 → 24…52); the
+// elite band deliberately OVERLAPS it (43…100, the D2 shape: elite work
+// starts dropping in late NIGHTMARE, not only at the endgame). The overlap is
+// what keeps every map's drop window alive on its high-rung revisits: a map
+// whose normal sources sit low (spacez, reqs 1–8) maps its exceptionals onto
+// 24–33 only, and without the overlap nothing could carry reqs 34–52 there —
+// a dry rung entry at nightmare. With elite from 43, every cumulative pool
+// (see the level defs' "…plus every earlier stage's arsenal") covers the
+// ladder 24→100 without holes.
 const GRADE_REQ_BANDS: Record<Grade, { from: number; to: number }> = {
-  exceptional: { from: 25, to: 52 },
-  elite: { from: 55, to: 100 },
+  exceptional: { from: 24, to: 52 },
+  elite: { from: 43, to: 100 },
 };
 
 /** A variant's level requirement: the base's, remapped onto the grade band. */

@@ -8,6 +8,8 @@
 
 import {
   abilityDef,
+  activeMechanics,
+  stasisRadius,
   APPARITION,
   COMPANIONS,
   companionDef,
@@ -636,6 +638,54 @@ export function drawFrame(
       ctx.fill();
       ctx.globalAlpha = 1;
     }
+    // A TELEGRAPHED move winding up (mechanics.ts): the mob is rooted, so
+    // the tell must carry — a fast white/red strobe ring plus, for a slam,
+    // the danger circle the shockwave will fill; for a charge, the locked
+    // bearing drawn as a lunge line. Read the dodge, earn the dodge.
+    const telegraph = enemy.mech?.telegraph;
+    if (telegraph) {
+      const cx = Math.round(enemy.pos.x - camera.x);
+      const cy = Math.round(enemy.pos.y - camera.y) + bob;
+      const strobe = Math.floor(timeMs / 90) % 2 === 0;
+      ctx.strokeStyle = strobe ? "#ffffff" : "#ff4030";
+      ctx.globalAlpha = 0.8;
+      ctx.lineWidth = 1;
+      if (telegraph.kind === "slam") {
+        const slam = activeMechanics(enemy, def)?.slam;
+        if (slam) {
+          ctx.beginPath();
+          ctx.arc(cx, cy, slam.radius, 0, Math.PI * 2);
+          ctx.stroke();
+        }
+      } else if (telegraph.dir) {
+        const charge = activeMechanics(enemy, def)?.charge;
+        const reach = (charge?.range ?? 120) * 1.3;
+        ctx.beginPath();
+        ctx.moveTo(cx, cy);
+        ctx.lineTo(
+          Math.round(cx + telegraph.dir.x * reach),
+          Math.round(cy + telegraph.dir.y * reach),
+        );
+        ctx.stroke();
+      }
+      ctx.beginPath();
+      ctx.arc(cx, cy, def.radius + 4, 0, Math.PI * 2);
+      ctx.stroke();
+      ctx.globalAlpha = 1;
+    }
+    // An ENRAGED set piece burns: a steady red aura under the sprite, the
+    // standing tell that its speed and blows are up for good.
+    if (enemy.mech?.enraged) {
+      const cx = Math.round(enemy.pos.x - camera.x);
+      const cy = Math.round(enemy.pos.y - camera.y) + bob;
+      const pulse = 0.5 + 0.5 * Math.sin(timeMs / 120 + enemy.id);
+      ctx.globalAlpha = 0.18 + 0.1 * pulse;
+      ctx.fillStyle = "#ff3020";
+      ctx.beginPath();
+      ctx.arc(cx, cy, def.radius + 5, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.globalAlpha = 1;
+    }
     // A critical hit blinks the victim — skip alternating 60ms windows.
     const critBlink =
       (enemy.critFlashMs ?? 0) > 0 && Math.floor(timeMs / 60) % 2 === 0;
@@ -837,14 +887,15 @@ function drawAbilities(
     const def = abilityDef(ability.defId);
 
     if (def.stasis) {
-      // A faint pulsing ring marks the field's slowing reach.
+      // A faint pulsing ring marks the field's slowing reach (INT widens it —
+      // stasisRadius, the same read the engine slows by).
       const pulse = 0.18 + 0.08 * Math.sin(timeMs / 220);
       ctx.strokeStyle = `rgba(140, 205, 215, ${pulse})`;
       ctx.beginPath();
       ctx.arc(
         Math.round(player.pos.x - camera.x),
         Math.round(player.pos.y - camera.y),
-        def.stasis.radius,
+        stasisRadius(state, def),
         0,
         Math.PI * 2,
       );

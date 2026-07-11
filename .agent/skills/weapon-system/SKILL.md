@@ -23,7 +23,8 @@ node scripts/skill-lessons.mjs weapon-system
 
 | Piece | File |
 | --- | --- |
-| Weapon/gear defs, tier ladder, affix pools, naming | `src/game/defs/equipment.ts` |
+| **THE ITEM FORGE — the one door new items come through** | `scripts/item-forge.mjs` (see below) |
+| Weapon/gear defs, tier ladder, affix BRACKETS, naming | `src/game/defs/equipment.ts` |
 | Base GRADES (Normal → Exceptional → Elite): per-base names + generated variant defs | `src/game/defs/grades.ts` |
 | MAKE QUALITY (broken → perfect): multipliers + mlvl-sliding roll odds | `src/game/config.ts` (`QUALITY`); the roll in `items.ts` (`rollQuality`) |
 | Loot config: tier gates (`tierUnlockMlvl`), base tier chances, ilvl deficit weights, drop shares | `src/game/config.ts` (`LOOT`) |
@@ -44,13 +45,82 @@ node scripts/skill-lessons.mjs weapon-system
 | Keepsakes / hardcore rules (app-side permanence) | `website/src/game/progress.ts`, `settings.ts` |
 | Engine rule tests | `tests/engine/loot_diablo_test.ts`, `tests/engine/projectile_behavior_test.ts` |
 
+## THE ITEM FORGE — never freehand item numbers
+
+`scripts/item-forge.mjs` is the one door a new weapon or gear base comes
+through. Give it the item's SHAPE and it computes the numbers the balance
+model owes that shape — damage/armor are OUTPUTS of the forge, never inputs
+you invent:
+
+```sh
+node scripts/item-forge.mjs weapon --id volt_pike --class melee \
+  --req 18 --cooldown 700 --range 56 --sweep 30            # → def on the budget line
+node scripts/item-forge.mjs weapon --id storm_carbine --class ranged \
+  --req 24 --cooldown 950 --range 240 \
+  --projectile speed=420,radius=3,lifetime=900 --count 3 --spread 24
+node scripts/item-forge.mjs gear --id crystal_greaves --slot legs --req 30
+node scripts/item-forge.mjs check    # the FULL checker battery, one command
+```
+
+It prints a ready-to-paste def (damage on the budget line, armor on the
+slot's catalog curve, durability from the class's neighbors) plus the wiring
+checklist. `check` runs `weapon-budget --strict`, `weapon-stats --coverage
+--strict`, `weapon-ilvl --check`, and `unique-check` in one shot and fails on
+any drift — run it before every item PR. If a hand-edited number drifts off
+the model, the battery is what catches it; keep the forge's `BASE/PER_LEVEL/
+SPECIAL_PREMIUM/REF_CRIT` knobs in lockstep with `weapon-budget.mjs`.
+
+## The power model — what an instance's numbers mean
+
+An item's power is a single predictable function of **(base, ilvl, tier,
+quality)** — keep every rule below in mind when touching any of them:
+
+- **The base** carries damage/armor authored AT ITS OWN `levelReq`, on the
+  damage-budget line (`40 + 4·(levelReq−1)` eff dps) / the slot's armor curve.
+- **ilvl grows the instance**: armor by `ARMOR.armorPerIlvl` (6%/ilvl over
+  the req) and weapon damage by `WEAPON.damagePerIlvl` (2%/ilvl over the
+  req — a third of armor's rate, since damage compounds with stats/crit
+  where armor only sums). Both are zero at the base's own req, so catalog
+  defs and the budget model never move — only deep finds grow, and
+  `heroDamageLevel` prices a hot find into the horde automatically.
+- **Affixes roll in ilvl-gated BRACKETS** (`AFFIX_POOLS[..].brackets` in
+  equipment.ts, PoE-style generations at minIlvl 1/10/22/36/52 — deliberately
+  the rung-end mlvls, so each difficulty unlocks the next generation). The
+  roll takes the highest unlocked bracket 3:1 over the one under it. The
+  CEILING RULE: the top stat bracket stays ≈ 60% of `STATS.statSoftCap`, so
+  no single affix outweighs a build's chosen points — `weapon-stats.mjs`
+  enforces ladder sanity (ascending minIlvls from 1, ascending bands, the
+  stat ceiling). TIER sets affix COUNT only (magic 1 / rare 2 / unique 3 /
+  legendary 4), never size: a low rare is wide-but-shallow, a deep magic
+  narrow-but-deep.
+- **Make QUALITY** (broken→perfect ×0.7–1.3) lerps its odds to
+  `QUALITY.highMlvl` = **60** — the level a campaign actually ends at —
+  so superior/perfect work genuinely drops on the last rungs.
+- **Grade bands overlap on purpose**: exceptional `[24, 52]`, elite
+  `[43, 100]` (grades.ts). Elite work starts dropping in NIGHTMARE (the D2
+  shape) — the overlap is what keeps a low-req map's drop window alive on
+  its high-rung revisits. Don't "fix" it back to contiguous.
+- **Pools are CUMULATIVE**: each map's `weaponPool`/`gearPool` also carries
+  every earlier stage's arsenal (the bunker idiom), so every (map × rung)
+  visit keeps live bases in its drop window. The audit is
+  `node scripts/weapon-stats.mjs --coverage` — targets ≥4 weapons / ≥3 gear
+  in-window everywhere (hard floor 3/2 warns); its `CAMPAIGN_LANDINGS` table
+  and `LEVEL_MLVL_BANDS` are re-read from `leveling-curve.mjs --by-level`
+  whenever the XP curve moves.
+- **Tier odds belong to the DIFFICULTY ladder**, strictly increasing
+  (`tierChanceBonus` easy {} → jesus {m .22, r .14}; `lootIlvlBonus`
+  0/1/2/3/5); the per-level term is small and capped
+  (`MENACE.tierBonusPerLevel` 0.4%/level, cap +15%) so the tier roll keeps
+  discriminating all campaign. Don't let any bonus stack push the effective
+  magic chance near 1.
+
 ## The system in one paragraph
 
 Every enemy carries a **monster level** (`mlvl` = player level + the
 difficulty's `mobLevelOffset` + the def's `levelBonus`; elites/bosses
 re-stamp when their fight engages). A drop rolls its **tier** best-first,
 each tier gated by `LOOT.tierUnlockMlvl` (magic 5 / rare 10 / unique 15 /
-legendary 25) and rolled at `LOOT.tierChances` + difficulty bonus + luck +
+legendary 40) and rolled at `LOOT.tierChances` + difficulty bonus + luck +
 per-kill bonuses. It then rolls its **item level** = mlvl − a weighted
 deficit (`ilvlDeltaWeights`, −3 likeliest; rare+ uses the tight
 `ilvlDeltaWeightsRare` 0–1 band), picks a **base** from the level's pool
@@ -82,12 +152,15 @@ one, and scripted `earlyDrops` pin `quality: "normal"`.
 
 ## Adding or changing a weapon
 
-1. **Def first** (`equipment.ts`): id, name, class, `levelReq`, damage,
-   cooldown, range, durability, melee cone (`sweepDeg` — the SHAPE; how many
-   it hits is INT's business, see maxMeleeTargets) or
-   `projectile` (sprite + optional `count`/`spreadDeg`/`pierce`/`homing`/
-   `chain`). Add to the right level's `weaponPool` (bases) or to an enemy's
-   `loot.items` / a level's `earlyDrops`/`allClearWeapon` (specials).
+1. **FORGE the def** (`node scripts/item-forge.mjs weapon …` — see the
+   forge section above): pick the SHAPE (id, class, `levelReq`, cooldown,
+   range, melee cone `sweepDeg` or `projectile` with optional
+   `count`/`spreadDeg`/`pierce`/`homing`/`chain`) and paste the forged def
+   into `equipment.ts` — the damage is the budget line's answer, not yours.
+   Add to the right level's `weaponPool` (bases — remember pools are
+   cumulative, later maps inherit it) or to an enemy's `loot.items` / a
+   level's `earlyDrops`/`allClearWeapon` (specials, forged with
+   `--special`).
 2. **Check the numbers — the damage-budget model.** Every weapon owes an
    EFFECTIVE DPS set by its levelReq (`scripts/weapon-budget.mjs`, knobs at
    the top: BASE 40 at req 1, +4/level, specials ×1.15):
@@ -278,7 +351,9 @@ in `loot.ts`, called from `killEnemy` right after the boss roll.
    are flat role rates, not ilvl-scaled like boss uniques).
 2. Wire it on the LEVEL: `loot.worldUniques: { <rung>: ["id", …] }`.
 3. `node scripts/unique-check.mjs` — the coverage check now spans boss ∪ world
-   placements ("placed exactly once, one home each"), and prints a **World-drop
+   placements ("one primary home each" — a WORLD unique may additionally be
+   re-listed by FARM-VENUE levels' world tables, the bunker rule; boss/stall
+   homes never repeat), and prints a **World-drop
    grid** (level × difficulty) with the live role chances + gate. The Latin
    square stays boss-only.
 4. Tests: `tests/engine/world_drops_test.ts` asserts the role scaling and the
@@ -290,9 +365,12 @@ in `loot.ts`, called from `killEnemy` right after the boss roll.
 
 ## After you're done — the checklist
 
+- [ ] `node scripts/item-forge.mjs check` clean — the whole battery below in
+      one command; the individual runs only matter when digging into a fail.
 - [ ] `node scripts/weapon-budget.mjs --strict` clean — every weapon on its
       damage budget (or the drift is a deliberate, commented exception).
-- [ ] `node scripts/weapon-stats.mjs` clean (or the warnings are deliberate).
+- [ ] `node scripts/weapon-stats.mjs --coverage` clean (or the warnings are
+      deliberate) — including the drop-window coverage table.
 - [ ] `node scripts/weapon-ilvl.mjs --check` clean, if you touched uniques or the
       combat/item constants (every unique's `ilvl` == computed, none over-budget).
 - [ ] `node scripts/unique-check.mjs` clean, if you touched uniques (base

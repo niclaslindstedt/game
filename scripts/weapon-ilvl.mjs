@@ -10,8 +10,9 @@
 // hand-authored number that scales the item's POWER/feel and its drop odds
 // (`UNIQUE.dropChance × mlvl/ilvl`) — NOT its equip gate (that's the base's
 // `levelReq`). Authored by hand, those ilvls drift. This script gives ilvl a
-// DEFINITION, mirroring how ROLLED affixes scale (`AFFIX_POOLS.perIlvl` in
-// equipment.ts — a rolled affix's magnitude is `ilvl × perIlvl`):
+// DEFINITION, priced in STAT POINTS (rolled affixes scale by ilvl-gated
+// BRACKETS — `AFFIX_POOLS[..].brackets` in equipment.ts — but the unique
+// budget keeps the simple 1-stat-=-1-ilvl anchor below):
 //
 //     ilvl = base.levelReq + bonusBudget
 //     bonusBudget = Σ  value(bonus) / PER_ILVL[bonus.kind]     (signed)

@@ -193,8 +193,10 @@ export {
 // The menace meter: the escalation the app reads to draw the rampage gauge
 // and mark evolved mobs (the mechanics live in step()/loot()).
 export {
+  enemyPowerLevelTerm,
   enemyPowerScale,
   currentMobLevel,
+  mobContactScaleFor,
   heroDamageLevel,
   heroGearLevel,
   heroPowerLevel,
@@ -206,6 +208,11 @@ export {
   mobLevelScale,
   overkillEfficiency,
 } from "./game/menace.ts";
+
+// Set-piece mechanics (telegraphed charge/slam, enrage, summons, phases):
+// the app reads the active set to draw windup tells and danger circles.
+export { activeMechanics } from "./game/mechanics.ts";
+export type { EnemyMechanics, EnemyPhase } from "./game/defs/enemies/types.ts";
 
 // Automatic per-level base-attribute growth (the WoW-style ding gains): the
 // derived bonuses the app can read to break "base + chosen" apart, and the
@@ -220,6 +227,7 @@ export {
   levelStatGains,
   referenceMobXp,
   setAutoStatGainsEnabled,
+  statPointsAt,
   xpCapMultiplier,
   xpLevelCap,
   xpToLevelUp,
@@ -237,12 +245,14 @@ export type { BalanceTuning } from "./game/tuning.ts";
 
 // Time-limited abilities: activation and the helpers the renderer shares.
 export {
+  abilityPowerScale,
   canBankAbility,
   discardHeldAbility,
   grantAbility,
   magnetRadius,
   orbPositions,
   stasisFactorAt,
+  stasisRadius,
 } from "./game/abilities.ts";
 
 // In-world dialogue (elite ambushes, boss confrontations, story-item lore):
@@ -329,6 +339,7 @@ export {
   TIERS,
   WEAPON_DEFS,
   weaponDef,
+  type AffixBracket,
   type AffixDef,
   type GearDef,
   type WeaponDef,
@@ -371,6 +382,7 @@ export { registerDefs, type DefOverrides } from "./game/defs/registry.ts";
 export {
   ACCURACY,
   AIM,
+  ABILITY,
   APPARITION,
   ARMOR,
   ARRIVAL,

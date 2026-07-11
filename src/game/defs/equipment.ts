@@ -1237,29 +1237,92 @@ export { GEAR_DEFS, type GearDef };
 
 // ---- Affixes ------------------------------------------------------------------
 
+/**
+ * One rung of an affix's roll ladder: at/above `minIlvl` the affix may roll a
+ * flat value in [min, max]. PoE-style affix TIERS, replacing the old linear
+ * `ilvl × perIlvl` rule: magnitude now comes in authored GENERATIONS that
+ * unlock as items drop deeper, so a deep find rolls bigger — but never
+ * unboundedly bigger. The generations are the balance wall the old linear
+ * rule lacked: an endgame stat affix tops out around 60% of the hero's own
+ * soft cap (STATS.statSoftCap) instead of sailing past a whole build's
+ * chosen points.
+ */
+export type AffixBracket = {
+  /** The item level this generation unlocks at. */
+  minIlvl: number;
+  /** The roll band inside the generation (flat, not per-ilvl). */
+  min: number;
+  max: number;
+};
+
 export type AffixDef = {
   kind: "damagePct" | "maxHp" | "crit" | "stat" | "armor";
   /**
-   * Roll size PER ITEM LEVEL: the affix's value is
-   * `ilvl × randomRange(min, max)` (stat/maxHp rounded, floored at 1 point).
-   * Tying magnitude to ilvl is the Diablo rule "deeper drops roll bigger":
-   * a stat affix at [1, 1] pays exactly +1 point per item level, so an
-   * ilvl-12 magic find carries +12 in one stat — and a rare, rolling TWO
-   * affixes, pays out twice the points at the same ilvl (unique three,
-   * legendary four).
+   * The affix's roll generations, ascending by `minIlvl` (the first entry
+   * unlocks at 1 so every affix always has a band). `rollAffix` rolls in the
+   * HIGHEST unlocked bracket most of the time and one below it sometimes
+   * (weighted 3:1), so a deep drop usually pays deep-generation values with
+   * a taste of the previous one — a rare still varies, a bracket is not a
+   * fixed price.
    */
-  perIlvl: [number, number];
+  brackets: AffixBracket[];
   /** Relative weight within the pool. */
   weight: number;
+};
+
+/**
+ * The bracket ladders, shared by both pools so a kind means the same thing
+ * on a weapon and a worn piece. `minIlvl`s (1/10/22/36/52) deliberately
+ * track where the difficulty rungs end (see LEVELING's per-rung landings):
+ * each rung of the campaign unlocks the next affix generation, and the
+ * harder difficulties' `lootIlvlBonus` reaches a generation a few levels
+ * early — climbing the ladder is visible in the loot's very numbers.
+ */
+const BRACKETS: Record<AffixDef["kind"], AffixBracket[]> = {
+  stat: [
+    { minIlvl: 1, min: 1, max: 3 },
+    { minIlvl: 10, min: 4, max: 7 },
+    { minIlvl: 22, min: 8, max: 12 },
+    { minIlvl: 36, min: 13, max: 18 },
+    // Top generation ≈ 60% of STATS.statSoftCap: the ceiling rule that keeps
+    // one affix from out-muscling a whole build's chosen points.
+    { minIlvl: 52, min: 19, max: 25 },
+  ],
+  damagePct: [
+    { minIlvl: 1, min: 0.05, max: 0.1 },
+    { minIlvl: 10, min: 0.11, max: 0.18 },
+    { minIlvl: 22, min: 0.19, max: 0.28 },
+    { minIlvl: 36, min: 0.29, max: 0.4 },
+    { minIlvl: 52, min: 0.41, max: 0.55 },
+  ],
+  crit: [
+    { minIlvl: 1, min: 0.02, max: 0.03 },
+    { minIlvl: 10, min: 0.03, max: 0.05 },
+    { minIlvl: 22, min: 0.05, max: 0.07 },
+    { minIlvl: 36, min: 0.07, max: 0.09 },
+    { minIlvl: 52, min: 0.09, max: 0.12 },
+  ],
+  maxHp: [
+    { minIlvl: 1, min: 5, max: 12 },
+    { minIlvl: 10, min: 13, max: 25 },
+    { minIlvl: 22, min: 26, max: 45 },
+    { minIlvl: 36, min: 46, max: 70 },
+    { minIlvl: 52, min: 71, max: 100 },
+  ],
+  armor: [
+    { minIlvl: 1, min: 4, max: 8 },
+    { minIlvl: 10, min: 9, max: 16 },
+    { minIlvl: 22, min: 17, max: 28 },
+    { minIlvl: 36, min: 29, max: 44 },
+    { minIlvl: 52, min: 45, max: 65 },
+  ],
 };
 
 /** What magic+ items can roll, per slot family. */
 export const AFFIX_POOLS: Record<"weapon" | "gear", AffixDef[]> = {
   weapon: [
-    // +2.4–3.6% damage per ilvl: an ilvl-10 roll is the old mid-band (~30%),
-    // and the band keeps growing where the flat roll used to plateau.
-    { kind: "damagePct", perIlvl: [0.024, 0.036], weight: 7 },
-    { kind: "crit", perIlvl: [0.004, 0.006], weight: 3 },
+    { kind: "damagePct", brackets: BRACKETS.damagePct, weight: 7 },
+    { kind: "crit", brackets: BRACKETS.crit, weight: 3 },
     // A weapon can also carry stat points (STRENGTH, DEXTERITY, …) or a little
     // life, so a multi-affix rare/unique/legendary weapon reads like a Diablo
     // yellow — "CRUEL PIPE OF THE FOX" — not just raw damage (the engine folds
@@ -1267,18 +1330,16 @@ export const AFFIX_POOLS: Record<"weapon" | "gear", AffixDef[]> = {
     // other worn piece). Weighted below the offensive rolls so damage stays a
     // weapon's headline, and four kinds let a legendary weapon fill all four
     // affix slots.
-    { kind: "stat", perIlvl: [1, 1], weight: 2 },
-    { kind: "maxHp", perIlvl: [1.6, 2.6], weight: 2 },
+    { kind: "stat", brackets: BRACKETS.stat, weight: 2 },
+    { kind: "maxHp", brackets: BRACKETS.maxHp, weight: 2 },
   ],
   gear: [
-    { kind: "maxHp", perIlvl: [2, 3.4], weight: 4 },
-    { kind: "crit", perIlvl: [0.004, 0.006], weight: 3 },
-    { kind: "stat", perIlvl: [1, 1], weight: 3 },
-    // +0.8–1.4 armor per ilvl: an ilvl-10 roll adds 8–14 armor — the scale
-    // of a mid-band base piece, so a MAGIC find can genuinely out-armor a
-    // plain one a slot up. Rolls on any gear (a +armor charm is a fine
-    // Diablo tradition), stacking into the same worn total.
-    { kind: "armor", perIlvl: [0.8, 1.4], weight: 3 },
+    { kind: "maxHp", brackets: BRACKETS.maxHp, weight: 4 },
+    { kind: "crit", brackets: BRACKETS.crit, weight: 3 },
+    { kind: "stat", brackets: BRACKETS.stat, weight: 3 },
+    // Armor rolls on any gear (a +armor charm is a fine Diablo tradition),
+    // stacking into the same worn total.
+    { kind: "armor", brackets: BRACKETS.armor, weight: 3 },
   ],
 };
 
