@@ -105,6 +105,19 @@ describe("the celebrity staff", () => {
     expect(def.dodgeChance).toBe(0);
     expect(def.hp).toBeGreaterThan(enemyDef("vladimir_putain").hp);
   });
+
+  it("EDWARD SNOW is the game's first ranged elite and drops the archive", () => {
+    const def = enemyDef("edward_snow");
+    expect(def.role).toBe("elite");
+    // The leaker fights from cover, like the GROKs his archive trained.
+    expect(def.ranged?.takesCover).toBe(true);
+    expect(def.dialogue?.length ?? 0).toBeGreaterThan(0);
+    expect(def.lastWords?.length ?? 0).toBeGreaterThan(0);
+    // The plot payload: the SUPERCORE's training set, plus his insurance.
+    expect(def.loot?.storyItems).toContain("snow_archive");
+    expect(def.loot?.items).toContain("snows_dead_mans_switch");
+    expect(STORY_ITEM_DEFS.snow_archive).toBeDefined();
+  });
 });
 
 describe("ELON MOSQUE's last stand — the TRASH estate", () => {

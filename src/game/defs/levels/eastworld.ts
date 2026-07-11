@@ -5,7 +5,9 @@
 // escape the one where he loses. A tight frontier town (large house
 // obstacles + storefront wall rows squeeze the streets, so escaping the
 // horde is hard), and a fenced CONTROL CENTER compound at the east end
-// behind SEAGULL's keycard. ELON MOSQUE is cornered inside and finally
+// behind SEAGULL's keycard. EDWARD SNOW — the whistleblower whose leaked
+// archive trained the SUPERCORE — watches the town from the water tower.
+// ELON MOSQUE is cornered inside and finally
 // DIES (trash loot and all); the finale is THE ZAI SUPERCORE, shielded by
 // the three GROK controllers who shoot from behind the compound's rocks.
 // Killing it quakes the whole park and plays the campaign's EPILOGUE (the
@@ -166,10 +168,13 @@ export const EASTWORLD: LevelDef = {
     { enemy: "elon_mosque_eastworld", at: { x: 2620, y: 900 } },
     // The celebrity staff, pinned along the road in walking order: the
     // co-founder guards the town's east end (and the compound keycard),
-    // the owner holds the square, the actor is parked south of the road.
+    // the owner holds the square, the actor is parked south of the road —
+    // and the whistleblower watches it all from under the water tower,
+    // the best sightline in town.
     { enemy: "steven_seagull", at: { x: 2340, y: 780 } },
     { enemy: "vladimir_putain", at: { x: 1700, y: 760 } },
     { enemy: "gerald_depardieu", at: { x: 1380, y: 1180 } },
+    { enemy: "edward_snow", at: { x: 1560, y: 480 } },
   ],
   // The park pours for ~6 minutes, a notch over the rift — this is level 5.
   waves: {

@@ -5,7 +5,8 @@
 // streets — the largest obstacles in the game, built programmatically from a
 // facade recipe), storefront wall rows, the control-center compound fence,
 // robot cowboys (COWBOT, SALOON BRAWLER, TIN OUTLAW, LONGHORN), the
-// celebrity staff (STEVEN SEAGULL, VLADIMIR PUTAIN, GERALD DEPARDIEU), the
+// celebrity staff (STEVEN SEAGULL, VLADIMIR PUTAIN, GERALD DEPARDIEU,
+// EDWARD SNOW), the
 // three GROK controllers (one drawing, three accent palettes) and THE ZAI
 // SUPERCORE — a mainframe the size of a barn. One string per pixel row, one
 // character per pixel; `.` is transparent and every other char must exist in
@@ -840,6 +841,62 @@ const SPRITES = {
     "....ODDDO..ODDDO........",
     "....OKKKO..OKKKO........",
     "....OOOOO..OOOOO........",
+  ],
+  // EDWARD SNOW — the whistleblower in exile: pale, slight, rectangular
+  // glasses, dark hair, a grey jacket over a dark shirt — and the laptop
+  // that never leaves his side, its screen edge glowing ZAI cyan (the
+  // archive is always plugged in somewhere).
+  edward_snow_0: [
+    "........................",
+    "..........OOOO..........",
+    ".........OkkkkO.........",
+    "........OkkkkkkO........",
+    "........OppppppO........",
+    "........OVVppVVO........",
+    "........OppppppO........",
+    ".........OppppO.........",
+    ".........OvvvvO.........",
+    ".......OvvvNNvvvO.......",
+    "......OvvvvNNvvvvO......",
+    "......OvvvvNNvvvvO......",
+    "......OvpOvNNvOpvO......",
+    "......OvpOvNNvOpvOOOO...",
+    "......OvpOvvvvOpvOQVO...",
+    "......OppOvvvvOppOQVO...",
+    ".......OOvvvvvvOO.OOO...",
+    "........OvvvvvvO........",
+    "........ONNOONNO........",
+    "........ONNO.ONNO.......",
+    "........ONNO.ONNO.......",
+    "........OKKO.OKKO.......",
+    "........OOOO.OOOO.......",
+    "........................",
+  ],
+  edward_snow_1: [
+    "........................",
+    "..........OOOO..........",
+    ".........OkkkkO.........",
+    "........OkkkkkkO........",
+    "........OppppppO........",
+    "........OVVppVVO........",
+    "........OppppppO........",
+    ".........OppppO.........",
+    ".........OvvvvO.........",
+    ".......OvvvNNvvvO.......",
+    "......OvvvvNNvvvvO......",
+    "......OvvvvNNvvvvO......",
+    "......OvpOvNNvOpvO......",
+    "......OvpOvNNvOpvOOOO...",
+    "......OvpOvvvvOpvOQVO...",
+    "......OppOvvvvOppOQVO...",
+    ".......OOvvvvvvOO.OOO...",
+    "........OvvvvvvO........",
+    ".......ONNO.ONNO........",
+    "......ONNO...ONNO.......",
+    "......ONNO...ONNO.......",
+    "......OKKO...OKKO.......",
+    "......OOOO...OOOO.......",
+    "........................",
   ],
   // GROK ALPHA — a ZAI controller on a mobile chassis: monolith head, one
   // bright eye, spindle legs. BETA and GAMMA are palette swaps (below).
