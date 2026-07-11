@@ -1,6 +1,6 @@
 ---
 name: ui-review
-description: "Use for a fit-and-finish pass over the game's UI — screens, modals, popups, toasts. Drives the screenshot-audit loop: capture every surface at the three reference viewports, evaluate against the quality bar, unify anything that drifted off the shared window skin, fix what clips or overflows, and verify with re-captures."
+description: "Use for a fit-and-finish pass over the game's UI — screens, modals, popups, toasts. Drives the screenshot-audit loop: capture every surface at the nine reference viewports (phones down to the SE floor, iPads and iPad mini in both orientations, desktop), evaluate against the quality bar, unify anything that drifted off the shared window skin, fix what clips or overflows, and verify with re-captures."
 ---
 
 # UI Review — audit and consolidate every screen
@@ -17,7 +17,7 @@ pixels.
 
 | Piece | Role |
 | --- | --- |
-| `website/scripts/ui-shots.mjs` | The capture harness: screenshots EVERY screen/modal/popup/toast at all three viewports into `website/assets-preview/ui-review/<viewport>/` (gitignored) |
+| `website/scripts/ui-shots.mjs` | The capture harness: screenshots EVERY screen/modal/popup/toast at all nine viewports into `website/assets-preview/ui-review/<viewport>/` (gitignored) |
 | `?debug` + `window.__game` | Forces the rare in-game phases (levelup, respec, shop, dialogue, choice, victory, defeat) without waiting for organic triggers |
 | `?bot=kite` | Plays for real so the organic surfaces (pickup cards, feed, achievement toasts, a loot-filled bag) exist to capture |
 | `?cutscene=<id>` | Deterministic cutscene capture via the standalone workbench |
@@ -28,19 +28,43 @@ pixels.
 ```sh
 npm install --no-save playwright          # once per session — not a repo dep
 cd website && npx vite --port 5199 &      # dev server
-node website/scripts/ui-shots.mjs         # all three viewports (~10 min)
-node website/scripts/ui-shots.mjs --only land   # just the reference viewport
+node website/scripts/ui-shots.mjs         # all nine viewports (~25 min)
+node website/scripts/ui-shots.mjs --only land             # just the reference
+node website/scripts/ui-shots.mjs --only padl,padp,minil,minip  # tablets
 ```
 
-The three viewports and what each is for:
+The nine viewports and what each is for:
 
 - **`land` 844×390** — the mobile-first reference (AGENTS.md). Every
   fits/reads judgement is made here FIRST; a surface that fails here is
   broken, full stop.
 - **`port` 390×844** — vertical phone: narrow columns, stacked layouts, the
   bottom-edge docks.
-- **`desk` 1440×900** — the 2× root-font breakpoint: confirms the rem-scaled
-  UI grows in lockstep and nothing depends on physical pixels.
+- **`sel` 667×375 / `sep` 375×667** — the small-phone floor (iPhone SE
+  class): the tightest 1× layouts. Anything tuned to *exactly* fit the
+  844×390 reference (wide folds, three-button rows, long labels) runs out
+  of room here first.
+- **`padl` 1180×820** — iPad landscape. Past the 2× UI-scale breakpoint
+  (`UI_SCALE_BREAKPOINT_PX`), so its *effective* layout space is 590×410 —
+  **narrower than the landscape phone**. Anything that fits 844×390 only
+  because of horizontal room breaks here first.
+- **`padp` 820×1180** — iPad portrait. Also 2×-scaled: effective 410×590,
+  **much shorter than the portrait phone** — tall single-column stacks that
+  fit an 844px-tall phone must scroll or fold here, never clip.
+- **`minil` 1133×744 / `minip` 744×1133** — iPad mini, both orientations.
+  The harshest 2× cases: effective 566×372 landscape and 372×566 portrait —
+  *smaller than every phone layout in both axes*. If a surface survives the
+  mini, it survives every tablet.
+- **`desk` 1440×900** — the 2× root-font breakpoint at desktop size:
+  confirms the rem-scaled UI grows in lockstep and nothing depends on
+  physical pixels.
+
+The tablet viewports are the harsh cases of the 2× regime: they pass the
+`≥700px on both axes` gate like a desktop, but after doubling they have
+*less* effective room than the phone baseline. Judge them like a cramped
+phone, not like a desktop — and remember media queries see the *physical*
+CSS viewport (1180×820), so width/height-gated rules written for phones
+silently miss the iPad even when its effective space matches a phone's.
 
 Steps are tolerant: a surface that can't be reached logs `FAILED <step>` and
 the sweep continues. Two captures are content-coupled and may need flags or a

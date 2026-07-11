@@ -11,7 +11,8 @@
 //   npm install --no-save playwright   # once per session (not a repo dep)
 //   cd website && npx vite --port 5199 &
 //   node website/scripts/ui-shots.mjs [--url http://localhost:5199] \
-//     [--only land|port|desk] [--spareable nikola_tesla]
+//     [--only land|port|sel|sep|padl|padp|minil|minip|desk[,...]] \
+//     [--spareable nikola_tesla]
 //
 // Every step is tolerant: a surface that can't be reached logs FAILED and
 // the sweep continues, so one flaky capture never costs the whole pass.
@@ -47,12 +48,24 @@ const config = JSON.parse(
 const SETTINGS_KEY = `${config.storagePrefix}:settings`;
 
 // Mobile-first: the landscape phone is the reference viewport (AGENTS.md);
-// portrait and desktop are the two other layouts every surface must survive.
+// the others are the layouts every surface must also survive. The `se` pair
+// is the small-phone floor (iPhone SE class) — the tightest 1× layouts. The
+// iPad/iPad-mini viewports sit past the 2× UI-scale breakpoint
+// (UI_SCALE_BREAKPOINT_PX) but are smaller than a desktop, so after doubling
+// their *effective* space is tighter than the phone reference — the exact
+// regime where big-tablet scaling bugs live; the mini (effective 566×372) is
+// the harshest case of all.
 const VIEWPORTS = [
   { name: "land", width: 844, height: 390 },
   { name: "port", width: 390, height: 844 },
+  { name: "sel", width: 667, height: 375 },
+  { name: "sep", width: 375, height: 667 },
+  { name: "padl", width: 1180, height: 820 },
+  { name: "padp", width: 820, height: 1180 },
+  { name: "minil", width: 1133, height: 744 },
+  { name: "minip", width: 744, height: 1133 },
   { name: "desk", width: 1440, height: 900 },
-].filter((v) => !only || v.name === only);
+].filter((v) => !only || only.split(",").includes(v.name));
 
 const OUT = fileURLToPath(
   new URL("../assets-preview/ui-review", import.meta.url),
@@ -439,6 +452,25 @@ for (const vp of VIEWPORTS) {
     await bot.waitForFunction(() => window.__game !== undefined, null, {
       timeout: 60000,
     });
+    // Click through whatever opening scene is up (prelude cutscene, intro
+    // monologue, level title card): a retried character usually skips them,
+    // but when one does appear nothing else advances it and the whole bot
+    // step starves waiting for `playing`.
+    const settle = async () => {
+      for (let i = 0; i < 40; i++) {
+        const p = await bot.evaluate(() => window.__game?.phase);
+        if (p === "playing") return;
+        if (p === "cutscene" || p === "intro" || p === "outro") {
+          await bot.keyboard.press("Escape");
+        } else if (p === "paused") {
+          await bot.keyboard.press("p");
+        } else {
+          await bot.mouse.click(vp.width / 2, vp.height / 2);
+        }
+        await bot.waitForTimeout(400);
+      }
+    };
+    await settle();
     await bot.waitForFunction(() => window.__game?.phase === "playing", null, {
       timeout: 30000,
     });
@@ -481,6 +513,9 @@ for (const vp of VIEWPORTS) {
     await bot.waitForTimeout(300);
     await bshot("weapon-switcher");
     await bot.keyboard.press("Escape");
+    // If the switcher click missed, that Escape paused the run instead —
+    // settle back to `playing` so the inventory key below actually lands.
+    await settle();
     await bot.keyboard.press("i");
     await bot.waitForFunction(() => window.__game?.phase === "inventory");
     await bot.waitForTimeout(400);
