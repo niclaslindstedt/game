@@ -8,6 +8,8 @@ import { describe, expect, it } from "vitest";
 import {
   abilityDef,
   arrowXpShareAt,
+  createGame,
+  dismissIntro,
   grantAbility,
   levelStatGains,
   magnetRadius,
@@ -20,6 +22,7 @@ import {
   idle,
   makeEnemy,
   runUntilChooser,
+  SEED,
   startGame,
 } from "./helpers.ts";
 
@@ -177,6 +180,89 @@ describe("the screen nuke", () => {
     step(state, useItem, DT);
     expect(state.enemies).toContain(sheltered); // the rock ate the blast
     expect(state.enemies).not.toContain(exposed); // no cover, no mercy
+  });
+});
+
+describe("a bomb's kills never drop another bomb", () => {
+  // EASY is the rung with the highest crowd-bomb mercy cap, so it is where a
+  // nuke blast would most readily chain into another bomb without the rule.
+  const startOnEasy = (): GameState => {
+    const state = createGame(SEED, "test_level", "easy");
+    dismissIntro(state);
+    return state;
+  };
+
+  // A scripted rng: the listed values are consumed in order, then the
+  // fallback keeps every later roll (crits, scatter, tier) out of the way.
+  const scriptRng = (state: GameState, values: number[], fallback = 0.99) => {
+    let i = 0;
+    state.rng = () => (i < values.length ? (values[i++] as number) : fallback);
+  };
+
+  // Bank a nuke and park one victim just off the player, with a clear floor
+  // so the blast's line of sight can't be blocked by seeded level obstacles.
+  const armNuke = (state: GameState): void => {
+    clearStage(state);
+    state.obstacles = [];
+    state.player.heldAbilities = ["test_nuke"];
+    state.enemies.push(
+      makeEnemy({
+        id: 9000,
+        pos: { x: state.player.pos.x + 50, y: state.player.pos.y },
+      }),
+    );
+  };
+
+  const droppedBomb = (state: GameState): boolean =>
+    state.items.some(
+      (i) =>
+        i.kind === "ability" &&
+        (i.defId === "screen_nuke" || i.defId === "test_nuke"),
+    );
+
+  it("skips the crowd-bomb mercy roll on a nuke kill", () => {
+    const state = startOnEasy();
+    armNuke(state);
+    // A packed field just OUTSIDE the blast radius but inside the on-screen
+    // one (ENEMY_AI.nearRadius): the crowd survives the nuke, so the victim's
+    // drop roll happens with the crowd-bomb chance fully ramped — exactly
+    // where a bomb would pay out another bomb without the rule.
+    const p = state.player.pos;
+    for (let i = 0; i < 40; i++) {
+      state.enemies.push(
+        makeEnemy({
+          id: 10_000 + i,
+          pos: { x: p.x + 300, y: p.y - 120 + i * 6 },
+        }),
+      );
+    }
+    // rolls: [crit no, 0.0] — without the rule the 0.0 would be the crowd-bomb
+    // roll (well under easy's ramped 4% chance) and a bomb would fall; with it
+    // the mercy slice never draws and the 0.0 lands on the ordinary drop gate.
+    scriptRng(state, [0.9, 0.0]);
+    step(state, useItem, DT);
+    expect(state.enemies.find((e) => e.id === 9000)).toBeUndefined();
+    expect(droppedBomb(state)).toBe(false);
+  });
+
+  it("skips the rare nuke slice on a nuke kill (the rain still pays out)", () => {
+    const state = startOnEasy();
+    armNuke(state);
+    // Four far minions keep the equipment pity rule quiet (owed <= remaining).
+    const p = state.player.pos;
+    for (let i = 0; i < 4; i++) {
+      state.enemies.push(
+        makeEnemy({ id: 9100 + i, pos: { x: p.x + 5000, y: p.y + i * 30 } }),
+      );
+    }
+    // rolls: [crit no, drop gate 0.0, 0.0] — without the rule the trailing 0.0
+    // would be the LOOT.nukeShare draw (a bomb); with it the slice never draws
+    // and the 0.0 lands on the ladder as a plain equipment drop instead.
+    scriptRng(state, [0.9, 0.0, 0.0]);
+    step(state, useItem, DT);
+    expect(state.enemies.find((e) => e.id === 9000)).toBeUndefined();
+    expect(droppedBomb(state)).toBe(false);
+    expect(state.items.some((i) => i.kind === "equipment")).toBe(true);
   });
 });
 

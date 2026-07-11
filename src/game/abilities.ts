@@ -5,6 +5,7 @@
 // so all combat flows through one hitEnemy path.
 
 import { distance, type Vec2 } from "@game/lib/vec.ts";
+import { HELD_ITEMS } from "./config.ts";
 import { abilityDef, type AbilityDef } from "./defs/abilities.ts";
 import { effectiveStat } from "./items.ts";
 import type { ActiveAbility, GameState, Player } from "./types.ts";
@@ -42,6 +43,20 @@ export function grantAbility(
   });
   state.events.push({ type: "abilityStarted", defId });
   return true;
+}
+
+/**
+ * Whether a pickup of `defId` can bank into the powerup dock right now: there
+ * must be room under the carry cap, and a `uniqueHeld` power (the NUKE) is
+ * refused while a copy is already docked. The one gate every route into the
+ * dock shares — the ground pickup pass (step.ts) and the merchant stall
+ * (buyStock/canBuyStock) — so all of them refuse for the same reasons and a
+ * refused pickup stays where it was instead of being consumed.
+ */
+export function canBankAbility(state: GameState, defId: string): boolean {
+  const held = state.player.heldAbilities;
+  if (held.length >= HELD_ITEMS.cap) return false;
+  return !(abilityDef(defId).uniqueHeld && held.includes(defId));
 }
 
 /**

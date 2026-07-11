@@ -119,6 +119,17 @@ describe("loadout carry-over", () => {
     expect(totalArmor(state)).toBeGreaterThan(0);
   });
 
+  it("drops a legacy loadout's double bomb (uniqueHeld docks once)", () => {
+    // Loadouts banked before the one-bomb rule could pocket two nukes; on
+    // arrival only the first docks, and the powers around it close ranks.
+    const loadout = {
+      ...sampleLoadout(),
+      heldAbilities: ["test_nuke", "test_nuke", "test_storm"],
+    };
+    const state = createGame(SEED, "test_level_2", "medium", loadout);
+    expect(state.player.heldAbilities).toEqual(["test_nuke", "test_storm"]);
+  });
+
   it("round-trips: extractLoadout of one run seeds the next", () => {
     const first = createGame(SEED, "test_level", "medium", sampleLoadout());
     first.player.xp = 12; // some progress made during the run

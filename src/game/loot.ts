@@ -144,6 +144,10 @@ export function hitEnemy(
      * app can size a crit's popup by how strong it was. Omitted by sources with
      * no variance (abilities). */
     damageRoll?: number;
+    /** The blow is a screen-nuke blast: a bomb's kills never chain into more
+     * bombs, so the loot roll skips both screen-nuke slices (the crowd-bomb
+     * mercy drop and the rare `LOOT.nukeShare` slice). */
+    noNukeDrop?: boolean;
   },
 ): void {
   const def = enemyDef(enemy.defId);
@@ -287,7 +291,9 @@ export function hitEnemy(
     return;
   }
 
-  killEnemy(state, enemy, damage, crit, crit ? opts?.damageRoll : undefined);
+  killEnemy(state, enemy, damage, crit, crit ? opts?.damageRoll : undefined, {
+    noNukeDrop: opts?.noNukeDrop,
+  });
 }
 
 /**
@@ -297,7 +303,9 @@ export function hitEnemy(
  * withheld killing blow through the exact same rails. Splicing is idempotent
  * — an enemy already off the board isn't removed twice. `critPower` is the
  * blow's damage-variance roll (only meaningful on a crit) — it rides out on
- * the `enemyKilled` event so the app can size the popup.
+ * the `enemyKilled` event so the app can size the popup. `opts.noNukeDrop`
+ * marks a screen-nuke kill, whose loot roll never pays out another nuke
+ * (see `hitEnemy`).
  */
 export function killEnemy(
   state: GameState,
@@ -305,6 +313,7 @@ export function killEnemy(
   damage: number,
   crit: boolean,
   critPower?: number,
+  opts?: { noNukeDrop?: boolean },
 ): void {
   const def = enemyDef(enemy.defId);
   const index = state.enemies.indexOf(enemy);
@@ -347,7 +356,14 @@ export function killEnemy(
   if (def.loot) {
     dropGuaranteedLoot(state, def, enemy.pos, enemy.mlvl);
   } else {
-    dropMinionLoot(state, def, enemy.pos, enemy.evo ?? 0, enemy.mlvl);
+    dropMinionLoot(
+      state,
+      def,
+      enemy.pos,
+      enemy.evo ?? 0,
+      enemy.mlvl,
+      opts?.noNukeDrop ?? false,
+    );
   }
 
   // Boss unique drops: the difficulty's authored uniques for this boss, each
@@ -435,6 +451,9 @@ function dropEarlyDrops(state: GameState, at: Vec2): void {
  * better tier when it does, so a rampaging player who toughens the horde is
  * paid back in gear. A tougher mob's `dropProfile` sweetens the same two
  * knobs by a fixed amount, so a heavy hitter is worth the effort of dropping.
+ * `noNukeDrop` marks a kill dealt by a screen-nuke blast: bombs never pay out
+ * more bombs, so both screen-nuke slices sit out (skipped before their rng
+ * draw, like a zero chance) and the rest of the rain rolls as usual.
  */
 function dropMinionLoot(
   state: GameState,
@@ -442,6 +461,7 @@ function dropMinionLoot(
   at: Vec2,
   evo = 0,
   mlvl = 1,
+  noNukeDrop = false,
 ): void {
   // The crowd-pressure bailout: on the gentle rungs a packed field has a
   // rising chance, per kill, to drop a screen-nuke — the way out of a swarm.
@@ -449,7 +469,7 @@ function dropMinionLoot(
   // and it stands in for this kill's drop (a bomb instead of the usual rain).
   // `crowdBombChance` is zero unless the field is genuinely packed, so no roll
   // is even drawn on a normal kill (the RNG stream is untouched).
-  const bombChance = crowdBombChance(state);
+  const bombChance = noNukeDrop ? 0 : crowdBombChance(state);
   if (bombChance > 0 && state.rng() < bombChance) {
     state.items.push({
       id: state.nextId++,
@@ -540,8 +560,10 @@ function dropMinionLoot(
     ? 0
     : lowDurabilityDesperation(state) * diff.mercy.repairBonus;
   const repairShare = LOOT.repairShare * (1 + repairBoost);
-  // The rare slice first, so tuning the ladder below never dilutes it.
-  const nuked = !forced && state.rng() < LOOT.nukeShare;
+  // The rare slice first, so tuning the ladder below never dilutes it. A
+  // nuke's own kills skip it (short-circuited before the draw): the blast
+  // that cleared the field can't hand back the bomb that caused it.
+  const nuked = !forced && !noNukeDrop && state.rng() < LOOT.nukeShare;
   const roll = state.rng();
   // Whatever falls past the ladder's tail (the arrow slice a hard rung trims
   // away) yields nothing — so guard the drop event on an item actually landing.

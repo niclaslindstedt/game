@@ -15,7 +15,8 @@ import {
   type Rng,
 } from "@game/lib/rng.ts";
 import { clamp, distance, moveToward, type Vec2 } from "@game/lib/vec.ts";
-import { ECONOMY, HELD_ITEMS, MERCHANT, UNIQUE } from "./config.ts";
+import { canBankAbility } from "./abilities.ts";
+import { ECONOMY, MERCHANT, UNIQUE } from "./config.ts";
 import { gearDef, isWeaponDef, weaponDef } from "./defs/equipment.ts";
 import { levelDef } from "./defs/levels/index.ts";
 import { uniqueDef } from "./defs/uniques.ts";
@@ -363,10 +364,11 @@ export function sellItem(state: GameState, index: number): number | null {
 
 /**
  * Buy the stall entry with `stockId`. A POWERUP goes straight to the
- * powerup dock (refused at the carry cap) and restocks — the entry stays; a
- * WEAPON lands in the bag (refused when full) and is a one-off — the entry
- * latches `sold`. Coins are only spent on success. False = the purchase was
- * refused (missing entry, sold out, too poor, or no room to carry it).
+ * powerup dock (refused at the carry cap, or when a `uniqueHeld` power like
+ * the NUKE is already docked — see `canBankAbility`) and restocks — the entry
+ * stays; a WEAPON lands in the bag (refused when full) and is a one-off — the
+ * entry latches `sold`. Coins are only spent on success. False = the purchase
+ * was refused (missing entry, sold out, too poor, or no room to carry it).
  */
 export function buyStock(state: GameState, stockId: number): boolean {
   if (state.phase !== "shop") return false;
@@ -374,7 +376,7 @@ export function buyStock(state: GameState, stockId: number): boolean {
   if (!entry) return false;
   if (state.player.coins < entry.price) return false;
   if (entry.kind === "ability") {
-    if (state.player.heldAbilities.length >= HELD_ITEMS.cap) return false;
+    if (!canBankAbility(state, entry.defId)) return false;
     state.player.heldAbilities.push(entry.defId);
   } else {
     if (entry.sold) return false;
@@ -397,5 +399,5 @@ export function canBuyStock(
   if (entry.kind === "weapon") {
     return !entry.sold && state.player.inventory.includes(null);
   }
-  return state.player.heldAbilities.length < HELD_ITEMS.cap;
+  return canBankAbility(state, entry.defId);
 }

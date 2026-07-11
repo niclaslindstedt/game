@@ -203,6 +203,7 @@ export {
 
 // Time-limited abilities: activation and the helpers the renderer shares.
 export {
+  canBankAbility,
   discardHeldAbility,
   grantAbility,
   magnetRadius,
