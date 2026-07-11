@@ -3,9 +3,15 @@
 // REAL engine — createGame, step, the autopilot bot, auto-equip, loadout
 // carry-over — through whole levels and whole campaigns (easy → JESUS across
 // every level) at full speed, no renderer, and reports what actually
-// happened: how hard the hero hit, how hard each mob hit back, mob hp and
-// levels, every drop, XP earned and XP forfeited to the per-map caps, the
-// weapons the auto-equip stepped through, and periodic hero snapshots.
+// happened: how hard the hero hit (per blow, overall and per mob type), how
+// hard each mob hit back, mob hp and levels, every drop, XP earned and XP
+// forfeited to the per-map caps, the weapons the auto-equip stepped through,
+// and periodic hero snapshots.
+//
+// The simulated hero is IMMORTAL: this is a calibration instrument, so a
+// death never ends a run — the hero stands back up at the spawn with full
+// bars, the death is booked as a pressure gauge, and the measurement marches
+// on. Lethality is a number the report carries, never a run-ender.
 //
 // This is the balance team's wind tunnel. Nothing here is a model or an
 // approximation of the rules — it IS the rules, run fast. The leveling-curve
@@ -70,20 +76,8 @@ export type SimulateLevelOptions = {
   maxMinutes?: number;
   /** Fixed step size in ms (16 ≈ the app's frame cadence). */
   dtMs?: number;
-  /** Retries after a death before the level is reported failed. */
-  maxAttempts?: number;
   /** Interval between hero snapshots, in simulated ms. */
   snapshotEveryMs?: number;
-  /**
-   * Respawn on death instead of ending the attempt: the hero stands back up
-   * at the level spawn, full health, keeping every level and item — the
-   * death is COUNTED and the run marches on. This separates the balance
-   * questions (how fast does the hero level, what does the rain equip, how
-   * hard do mobs hit) from the autopilot's survival skill, which is well
-   * below a human's. Off = defeat ends the attempt (the honest difficulty
-   * read).
-   */
-  revive?: boolean;
   /**
    * Stall-breaker (default on): the autopilot has no pathfinding, so it can
    * wedge against a wall en route to the boss. When neither a kill nor a
@@ -104,12 +98,9 @@ export type SimulateCampaignOptions = {
   strategy?: BotStrategy;
   maxMinutes?: number;
   dtMs?: number;
-  maxAttempts?: number;
   snapshotEveryMs?: number;
   /** Carry the hero across rungs (the real campaign) — default true. */
   carryLoadout?: boolean;
-  /** Respawn-and-continue on death (see SimulateLevelOptions.revive). */
-  revive?: boolean;
 };
 
 // ---- Report shapes ---------------------------------------------------------------
@@ -150,6 +141,12 @@ export type MobReport = {
   avgMlvl: number;
   /** Catalog contact damage — how hard one hit lands before armor/dodge. */
   contactDamage: number;
+  /** Player blows this mob type absorbed (hits + killing blows). */
+  hitsFromHero: number;
+  /** Average damage ONE player blow dealt this mob type — the calibration read. */
+  avgHitFromHero: number;
+  /** Blows-to-kill: avgMaxHp / avgHitFromHero (0 when never hit). */
+  hitsToKill: number;
   /** Total XP its deaths paid (pre-cap figures, as the kill events book). */
   xpPaid: number;
 };
@@ -160,11 +157,10 @@ export type LevelReport = {
   difficulty: Difficulty;
   seed: number;
   strategy: BotStrategy;
-  outcome: "victory" | "defeat" | "timeout";
-  /** Attempts played (1 = first try). Deaths = attempts − (victory ? 1 : 0). */
-  attempts: number;
+  outcome: "victory" | "timeout";
+  /** Times the hero WOULD have died — booked, revived at spawn, marched on. */
   deaths: number;
-  /** Simulated play time of the FINAL attempt, ms. */
+  /** Simulated play time of the run, ms. */
   timeMs: number;
   hero: {
     levelStart: number;
@@ -183,6 +179,16 @@ export type LevelReport = {
     damageDealt: number;
     damageTaken: number;
     shotsFired: number;
+    /** Player blows that landed on combatants (hits + killing blows). */
+    hitsLanded: number;
+    /** Average damage ONE landed player blow dealt — the calibration read. */
+    damagePerHit: number;
+    /** Fraction of landed player blows that crit, in [0, 1]. */
+    critRate: number;
+    /** Enemy blows that landed on the hero (post-dodge). */
+    hitsTaken: number;
+    /** Average damage ONE enemy blow carried, before armor reduction. */
+    damagePerHitTaken: number;
     /** Damage dealt per simulated second — the run's realized DPS. */
     dpsOut: number;
     /** Kills per simulated minute — feeds the leveling calculator. */
@@ -226,7 +232,7 @@ export type CampaignReport = {
   finalWeapon: string;
   totalDeaths: number;
   totalKills: number;
-  /** Total simulated play time across every attempt's final run, ms. */
+  /** Total simulated play time across every run, ms. */
   totalTimeMs: number;
 };
 
@@ -237,6 +243,8 @@ type MobAccumulator = {
   killed: number;
   hpSum: number;
   mlvlSum: number;
+  hitsFromHero: number;
+  damageFromHero: number;
   xpPaid: number;
 };
 
@@ -253,8 +261,8 @@ const NUDGE_DISTANCE = 60;
 /**
  * Play ONE level headlessly with the autopilot at the controls and report
  * everything that happened. Deterministic per options (the bot draws nothing
- * from the RNG). Deaths retry with a fresh seed up to `maxAttempts`, walking
- * in with the same loadout each time — exactly like a player re-entering.
+ * from the RNG). The hero cannot die: a defeat revives at the spawn (booked
+ * in `deaths`) and the run continues to victory or timeout.
  */
 export function simulateLevel(options: SimulateLevelOptions): LevelReport {
   return runLevel(options).report;
@@ -277,44 +285,25 @@ export function runLevel(options: SimulateLevelOptions): {
     strategy = "survivor",
     maxMinutes = 15,
     dtMs = 16,
-    maxAttempts = 3,
     snapshotEveryMs = 60_000,
-    revive = false,
     unstick = true,
   } = options;
 
-  let attempt = 0;
-  let outcome: { report: LevelReport; state: GameState } | null = null;
-  // With revive on, one attempt runs to victory or timeout — deaths respawn
-  // in place, so retry attempts would only measure the same thing again.
-  const attemptCap = revive ? 1 : maxAttempts;
-  while (attempt < attemptCap) {
-    attempt++;
-    // Distinct seed per attempt, deterministic across re-runs.
-    const attemptSeed = (seed + (attempt - 1) * 7919) >>> 0;
-    outcome = playAttempt({
-      levelId,
-      difficulty,
-      seed: attemptSeed,
-      loadout,
-      strategy,
-      maxMinutes,
-      dtMs,
-      snapshotEveryMs,
-      revive,
-      unstick,
-    });
-    outcome.report.attempts = attempt;
-    outcome.report.deaths +=
-      attempt - 1 + (outcome.report.outcome === "defeat" ? 1 : 0);
-    if (outcome.report.outcome !== "defeat") break;
-  }
-  // maxAttempts ≥ 1, so at least one attempt always ran.
-  const final = outcome as { report: LevelReport; state: GameState };
-  return { report: final.report, loadout: extractLoadout(final.state) };
+  const { report, state } = playRun({
+    levelId,
+    difficulty,
+    seed,
+    loadout,
+    strategy,
+    maxMinutes,
+    dtMs,
+    snapshotEveryMs,
+    unstick,
+  });
+  return { report, loadout: extractLoadout(state) };
 }
 
-function playAttempt(args: {
+function playRun(args: {
   levelId: string;
   difficulty: Difficulty;
   seed: number;
@@ -323,7 +312,6 @@ function playAttempt(args: {
   maxMinutes: number;
   dtMs: number;
   snapshotEveryMs: number;
-  revive: boolean;
   unstick: boolean;
 }): { report: LevelReport; state: GameState } {
   const state = createGame(
@@ -351,6 +339,10 @@ function playAttempt(args: {
   let forfeited = 0;
   let reachedAtMs: number | null = null;
   let reviveDeaths = 0;
+  let hitsLanded = 0;
+  let critsLanded = 0;
+  let damagePerHitSum = 0;
+  let hitsTaken = 0;
   let unstuckNudges = 0;
   let lastProgressMs = 0;
   let lastKills = 0;
@@ -368,6 +360,8 @@ function playAttempt(args: {
         killed: 0,
         hpSum: 0,
         mlvlSum: 0,
+        hitsFromHero: 0,
+        damageFromHero: 0,
         xpPaid: 0,
       };
       acc.spawned++;
@@ -441,19 +435,16 @@ function playAttempt(args: {
         outcome = "victory";
         break simulation;
       case "defeat":
-        if (args.revive) {
-          // Stand back up at the spawn, full bars, everything kept — the
-          // death is booked and the pacing measurement marches on.
-          reviveDeaths++;
-          state.player.hp = state.player.maxHp;
-          state.player.stamina = state.player.maxStamina;
-          state.player.pos = { ...state.playerSpawn };
-          state.phase = "playing";
-          guardPhase(++phaseAdvances);
-          continue;
-        }
-        outcome = "defeat";
-        break simulation;
+        // The calibration hero never stays down: stand back up at the
+        // spawn, full bars, everything kept — the death is booked as a
+        // pressure gauge and the measurement marches on.
+        reviveDeaths++;
+        state.player.hp = state.player.maxHp;
+        state.player.stamina = state.player.maxStamina;
+        state.player.pos = { ...state.playerSpawn };
+        state.phase = "playing";
+        guardPhase(++phaseAdvances);
+        continue;
       default:
         break;
     }
@@ -461,18 +452,41 @@ function playAttempt(args: {
     const beforeXpGained = state.stats.xpGained;
     step(state, botAct(bot, state), args.dtMs);
     phaseAdvances = 0;
+    // Register same-step spawns BEFORE reading the events, so a mob hit the
+    // tick it appeared still attributes its blows to the right accumulator.
+    trackSpawns();
 
     // ---- Per-step bookkeeping off the event stream --------------------------------
     for (const event of state.events) {
       switch (event.type) {
+        case "enemyHit": {
+          const acc = mobs.get(event.defId);
+          if (acc) {
+            acc.hitsFromHero++;
+            acc.damageFromHero += event.damage;
+            hitsLanded++;
+            damagePerHitSum += event.damage;
+            if (event.crit) critsLanded++;
+          }
+          break;
+        }
         case "enemyKilled": {
           const acc = mobs.get(event.defId);
           if (acc) {
             acc.killed++;
             acc.xpPaid += event.xp;
+            // The killing blow is a landed hit too.
+            acc.hitsFromHero++;
+            acc.damageFromHero += event.damage;
+            hitsLanded++;
+            damagePerHitSum += event.damage;
+            if (event.crit) critsLanded++;
           }
           break;
         }
+        case "playerHurt":
+          hitsTaken++;
+          break;
         case "itemCollected": {
           const kind = event.tier ? `equipment` : event.kind;
           collectedByKind[kind] = (collectedByKind[kind] ?? 0) + 1;
@@ -516,8 +530,6 @@ function playAttempt(args: {
     if (reachedAtMs === null && state.player.level >= cap) {
       reachedAtMs = state.stats.timeMs;
     }
-
-    trackSpawns();
 
     // Auto-equip swaps: the weapon in hand changed without the bot asking.
     const weapon = state.player.equipment.weapon;
@@ -600,7 +612,6 @@ function playAttempt(args: {
     seed: args.seed,
     strategy: args.strategy,
     outcome,
-    attempts: 1,
     deaths: reviveDeaths,
     timeMs: state.stats.timeMs,
     hero: {
@@ -624,6 +635,13 @@ function playAttempt(args: {
       damageDealt: Math.round(state.stats.damageDealt),
       damageTaken: Math.round(state.stats.damageTaken),
       shotsFired: state.stats.shotsFired,
+      hitsLanded,
+      damagePerHit: hitsLanded ? round1(damagePerHitSum / hitsLanded) : 0,
+      critRate: hitsLanded ? round3(critsLanded / hitsLanded) : 0,
+      hitsTaken,
+      damagePerHitTaken: hitsTaken
+        ? round1(state.stats.damageTaken / hitsTaken)
+        : 0,
       dpsOut: round1(state.stats.damageDealt / timeSec),
       killsPerMinute: round1(state.stats.kills / (timeSec / 60)),
       unstuckNudges,
@@ -641,15 +659,22 @@ function playAttempt(args: {
     mobs: [...mobs.entries()]
       .map(([defId, acc]) => {
         const d = enemyDef(defId);
+        const avgMaxHp = acc.spawned ? acc.hpSum / acc.spawned : 0;
+        const avgHit = acc.hitsFromHero
+          ? acc.damageFromHero / acc.hitsFromHero
+          : 0;
         return {
           defId,
           name: d.name,
           role: d.role,
           spawned: acc.spawned,
           killed: acc.killed,
-          avgMaxHp: acc.spawned ? round1(acc.hpSum / acc.spawned) : 0,
+          avgMaxHp: round1(avgMaxHp),
           avgMlvl: acc.spawned ? round1(acc.mlvlSum / acc.spawned) : 0,
           contactDamage: d.contactDamage,
+          hitsFromHero: acc.hitsFromHero,
+          avgHitFromHero: round1(avgHit),
+          hitsToKill: avgHit > 0 ? round1(avgMaxHp / avgHit) : 0,
           xpPaid: acc.xpPaid,
         };
       })
@@ -665,9 +690,9 @@ function playAttempt(args: {
  * Sweep the whole ladder — every requested difficulty in order, every story
  * level within it — carrying the hero's loadout from clear to clear exactly
  * as the app does (`extractLoadout` on victory). A level that never falls
- * (defeats exhausted, or timeout) is reported as it ended and the campaign
- * marches on with the progress that attempt actually banked, so one wall
- * doesn't hide the rest of the ladder from the report.
+ * (timeout) is reported as it ended and the campaign marches on with the
+ * progress that run actually banked, so one wall doesn't hide the rest of
+ * the ladder from the report.
  */
 export function simulateCampaign(
   options: SimulateCampaignOptions = {},
@@ -679,10 +704,8 @@ export function simulateCampaign(
     strategy = "survivor",
     maxMinutes = 15,
     dtMs = 16,
-    maxAttempts = 3,
     snapshotEveryMs = 60_000,
     carryLoadout = true,
-    revive = false,
   } = options;
 
   const runs: LevelReport[] = [];
@@ -698,16 +721,14 @@ export function simulateCampaign(
         strategy,
         maxMinutes,
         dtMs,
-        maxAttempts,
         snapshotEveryMs,
-        revive,
       });
       runs.push(report);
       runIndex++;
-      // The hero marches on with whatever the final attempt banked — the
-      // app's extractLoadout-on-victory, and on a wall (defeats exhausted,
-      // timeout) the progress that attempt still earned, so one stuck level
-      // doesn't hide the rest of the ladder from the report.
+      // The hero marches on with whatever the run banked — the app's
+      // extractLoadout-on-victory, and on a wall (timeout) the progress the
+      // run still earned, so one stuck level doesn't hide the rest of the
+      // ladder from the report.
       if (carryLoadout) loadout = banked;
     }
   }

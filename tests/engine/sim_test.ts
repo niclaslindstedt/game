@@ -17,22 +17,38 @@ describe("simulateLevel", () => {
       difficulty: "medium",
       seed: 42,
       maxMinutes: 2,
-      revive: true,
     });
     // The bot genuinely played: time passed, blows landed, mobs fell.
     expect(report.timeMs).toBeGreaterThan(0);
     expect(report.combat.kills).toBeGreaterThan(0);
     expect(report.combat.damageDealt).toBeGreaterThan(0);
-    expect(["victory", "defeat", "timeout"]).toContain(report.outcome);
+    // The calibration hero cannot die — defeat is not an outcome.
+    expect(["victory", "timeout"]).toContain(report.outcome);
     // The report's bookkeeping holds together.
     expect(report.levelId).toBe("test_level");
     expect(report.hero.levelEnd).toBeGreaterThanOrEqual(report.hero.levelStart);
     expect(report.snapshots.length).toBeGreaterThanOrEqual(2); // start + end
     const killedTotal = report.mobs.reduce((sum, m) => sum + m.killed, 0);
     expect(killedTotal).toBe(report.combat.kills);
+    // The per-hit calibration reads: blows landed, average blow size, and
+    // per-mob attribution all hold together.
+    expect(report.combat.hitsLanded).toBeGreaterThanOrEqual(
+      report.combat.kills,
+    );
+    expect(report.combat.damagePerHit).toBeGreaterThan(0);
     for (const mob of report.mobs) {
       expect(mob.killed).toBeLessThanOrEqual(mob.spawned);
       expect(mob.avgMaxHp).toBeGreaterThan(0);
+      expect(mob.hitsFromHero).toBeGreaterThanOrEqual(mob.killed);
+      if (mob.hitsFromHero > 0) {
+        expect(mob.avgHitFromHero).toBeGreaterThan(0);
+        expect(mob.hitsToKill).toBeGreaterThan(0);
+      }
+    }
+    const mobHits = report.mobs.reduce((sum, m) => sum + m.hitsFromHero, 0);
+    expect(mobHits).toBe(report.combat.hitsLanded);
+    if (report.combat.hitsTaken > 0) {
+      expect(report.combat.damagePerHitTaken).toBeGreaterThanOrEqual(0);
     }
     // The per-map cap rode along (fixtures run the shipped medium band).
     expect(report.xpCap.cap).toBeGreaterThan(0);
@@ -45,7 +61,6 @@ describe("simulateLevel", () => {
         difficulty: "medium",
         seed: 7,
         maxMinutes: 1,
-        revive: true,
       });
     expect(JSON.stringify(run())).toBe(JSON.stringify(run()));
   });
@@ -58,7 +73,6 @@ describe("simulateCampaign", () => {
       levels: ["test_level", "test_level_2"],
       seed: 11,
       maxMinutes: 2,
-      revive: true,
     });
     expect(report.runs.length).toBe(2);
     const [first, second] = report.runs;
