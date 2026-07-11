@@ -231,6 +231,13 @@ export type Player = {
   /** Unit vector of the last movement direction; drives sprite facing. */
   facing: Vec2;
   /**
+   * Realized velocity this tick (world px/s; zero while standing). Distinct
+   * from `facing`, which persists while idle — this is what the smarter
+   * shooters LEAD with on the hard rungs (see stepRangedAttacks), so a
+   * standing hero is aimed at dead-on and a running one ahead of his path.
+   */
+  vel: Vec2;
+  /**
    * Which way the sprite mirrors. Updated with hysteresis (see
    * PLAYER.faceFlipMinX) so near-vertical movement doesn't flicker the flip.
    */
@@ -433,6 +440,35 @@ export type Enemy = {
    * runs down (see moveRangedEnemy in ranged.ts). Absent on melee mobs.
    */
   rangedCooldownMs?: number;
+  /**
+   * Set-piece MECHANICS bookkeeping (elites/bosses with `EnemyDef.mechanics`
+   * or `phases` — see src/game/mechanics.ts; absent on everything else).
+   * The renderer reads `telegraph` to sell the windup (the freeze + flash)
+   * and `dashMs` for the charge streak; everything else is clocks.
+   */
+  mech?: EnemyMech;
+};
+
+/** Runtime state of one enemy's set-piece mechanics (see `Enemy.mech`). */
+export type EnemyMech = {
+  /** The windup in progress: which move, ms left, and the LOCKED bearing
+   * (charge only). While set the mob is rooted — the readable tell. */
+  telegraph?: { kind: "charge" | "slam"; remainingMs: number; dir?: Vec2 };
+  /** Ms of dash left, and the locked unit bearing it rides. */
+  dashMs?: number;
+  dashDir?: Vec2;
+  /** Contact-damage multiplier while `dashMs` runs (the charge's impact). */
+  dashDamageMult?: number;
+  /** Cooldown clocks (ms) per mechanic. */
+  chargeCooldownMs?: number;
+  slamCooldownMs?: number;
+  summonCooldownMs?: number;
+  /** Latched true when the enrage threshold is crossed (fires the event and
+   * the multipliers once — an enrage never calms back down). */
+  enraged?: boolean;
+  /** Live ids of this mob's summoned adds (pruned as they die), holding the
+   * summon's `maxAlive` cap. */
+  summons?: number[];
 };
 
 /**
@@ -861,6 +897,27 @@ export type GameEvent =
   /** The player's weapon blow whiffed of its own accord (see
    * `playerMissChance`). `pos` is the foe — the app floats a "MISS" tag. */
   | { type: "enemyMiss"; pos: Vec2; defId: string }
+  /**
+   * A set-piece mob began a telegraphed move (mechanics.ts): it stands
+   * rooted for `ms` before the move lands — the app sells the windup (flash,
+   * sound) so the dodge is earnable. `dir` is the charge's locked bearing.
+   */
+  | {
+      type: "enemyTelegraph";
+      kind: "charge" | "slam";
+      pos: Vec2;
+      defId: string;
+      ms: number;
+      dir?: Vec2;
+    }
+  /** A telegraphed slam landed: the shockwave around `pos` (radius for the
+   * app's ring/shake; the damage was resolved engine-side). */
+  | { type: "enemySlam"; pos: Vec2; radius: number; defId: string }
+  /** An elite/boss crossed its enrage threshold — speed and damage are up
+   * for the rest of the fight (the app tints it and stings the turn). */
+  | { type: "enemyEnraged"; pos: Vec2; defId: string }
+  /** A summoner called adds out of the ground around it. */
+  | { type: "enemySummoned"; pos: Vec2; defId: string; count: number }
   | {
       type: "itemCollected";
       kind: Item["kind"];

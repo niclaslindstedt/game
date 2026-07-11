@@ -109,6 +109,10 @@ export const MOON_ENEMIES: Record<string, EnemyDef> = {
       ],
     ],
     lastWords: ["ONE SMALL... STEP...", "ONTO A... GRAVE... HHK"],
+    // A ghost with unfinished business: below a third it burns hot.
+    mechanics: {
+      enrage: { belowHpFrac: 0.35, speedMult: 1.4, damageMult: 1.3 },
+    },
     ai: { aggroRadius: 250, rushSpeed: 115 },
     loot: {
       items: ["flare_gun"],
@@ -165,6 +169,10 @@ export const MOON_ENEMIES: Record<string, EnemyDef> = {
       ],
     ],
     lastWords: ["THE CLAIM'S... URGH...", "...YOURS NOW, KID..."],
+    // The claim-jumper's pickaxe rush: a telegraphed charge.
+    mechanics: {
+      charge: { windupMs: 700, speedMult: 3.5, range: 160, cooldownMs: 6500 },
+    },
     ai: { aggroRadius: 250, rushSpeed: 120 },
     loot: {
       items: ["core_drill"],
@@ -375,6 +383,20 @@ export const MOON_ENEMIES: Record<string, EnemyDef> = {
       ],
     ],
     lastWords: ["THE WATCH... HHH...", "IT'S... YOURS... NOW..."],
+    // One small stomp: a telegraphed moon-quake slam; on his last quarter
+    // the giant leaps into a fury and the slams come faster.
+    mechanics: {
+      slam: { windupMs: 900, radius: 75, damageFrac: 1.2, cooldownMs: 8000 },
+    },
+    phases: [
+      {
+        belowHpFrac: 0.4,
+        mechanics: {
+          slam: { windupMs: 700, radius: 80, damageFrac: 1.3, cooldownMs: 6000 },
+          enrage: { belowHpFrac: 0.4, speedMult: 1.4, damageMult: 1.25 },
+        },
+      },
+    ],
     ai: { aggroRadius: 280, leashRadius: 460 },
     // The machete rode up in his survival kit — Apollo crews really packed
     // one for jungle splashdowns. Fifty years on, it's for the aliens.

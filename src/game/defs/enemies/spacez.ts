@@ -243,6 +243,10 @@ export const SPACEZ_ENEMIES: Record<string, EnemyDef> = {
       ],
     ],
     lastWords: ["UGH... PAD 2...", "SHE'S ON... PAD... 2..."],
+    // The chief's takedown: a telegraphed shoulder-charge down the corridor.
+    mechanics: {
+      charge: { windupMs: 700, speedMult: 3.5, range: 180, cooldownMs: 6000 },
+    },
     ai: { aggroRadius: 240, rushSpeed: 130 },
     loot: {
       // The Chief guards the way off-planet — and surrenders the EVA suit
@@ -363,6 +367,10 @@ export const SPACEZ_ENEMIES: Record<string, EnemyDef> = {
       ],
     ],
     lastWords: ["AND I JUST... URGH...", "...DID THIS FLOOR..."],
+    // The mop comes DOWN: a telegraphed ground slam — jump it or eat it.
+    mechanics: {
+      slam: { windupMs: 900, radius: 70, damageFrac: 1.2, cooldownMs: 8000 },
+    },
     ai: { aggroRadius: 240, rushSpeed: 110 },
     loot: {
       items: ["wet_floor_sign"],
@@ -504,6 +512,20 @@ export const SPACEZ_ENEMIES: Record<string, EnemyDef> = {
       ],
     ],
     lastWords: ["SQUEAK...? NO...", "SQUEEEAK... AFTER ALL..."],
+    // The rat lunges: a telegraphed scurry-charge; cornered (half hp) he
+    // starts squealing for SECURITY between lunges.
+    mechanics: {
+      charge: { windupMs: 700, speedMult: 3.5, range: 170, cooldownMs: 6000 },
+    },
+    phases: [
+      {
+        belowHpFrac: 0.5,
+        mechanics: {
+          charge: { windupMs: 600, speedMult: 3.8, range: 170, cooldownMs: 5000 },
+          summon: { defId: "guard", count: 3, cooldownMs: 12000, maxAlive: 6 },
+        },
+      },
+    ],
     ai: { aggroRadius: 260, leashRadius: 440 },
     // He nests under the prototype rocket, digesting the one part the
     // hero's ship can't fly without. The plasma cutter was the

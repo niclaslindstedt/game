@@ -207,6 +207,14 @@ export {
   overkillEfficiency,
 } from "./game/menace.ts";
 
+// Set-piece mechanics (telegraphed charge/slam, enrage, summons, phases):
+// the app reads the active set to draw windup tells and danger circles.
+export { activeMechanics } from "./game/mechanics.ts";
+export type {
+  EnemyMechanics,
+  EnemyPhase,
+} from "./game/defs/enemies/types.ts";
+
 // Automatic per-level base-attribute growth (the WoW-style ding gains): the
 // derived bonuses the app can read to break "base + chosen" apart, and the
 // power curve the horde's hp scaling mirrors.

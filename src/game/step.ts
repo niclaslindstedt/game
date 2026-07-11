@@ -89,6 +89,11 @@ import {
 import { arrowColdXp, arrowXpShareAt } from "./leveling.ts";
 import { grantXp, hitEnemy, unspawnedMinions } from "./loot.ts";
 import { revealAround } from "./map.ts";
+import {
+  mechDamageMult,
+  mechSpeedMult,
+  stepEnemyMechanics,
+} from "./mechanics.ts";
 import { repelFromMerchant, stepMerchant } from "./merchant.ts";
 import {
   blockedByObstacle,
@@ -567,6 +572,10 @@ function stepPlayer(
   const throttle = clamp(input.throttle ?? 1, 0, 1);
   // An empty stamina pool caps the top speed to a winded jog until it recovers.
   const staminaFactor = player.stamina > 0 ? 1 : STAMINA.emptySpeedFactor;
+  // Standing still until proven moving — the realized velocity the smart
+  // shooters lead with (stepRangedAttacks) must read zero for a parked hero.
+  player.vel.x = 0;
+  player.vel.y = 0;
 
   if (
     input.steering &&
@@ -578,6 +587,10 @@ function stepPlayer(
       input.target,
       playerSpeed(state) * throttle * staminaFactor * dt,
     );
+    if (dt > 0) {
+      player.vel.x = (next.x - before.x) / dt;
+      player.vel.y = (next.y - before.y) / dt;
+    }
     player.facing = direction(before, input.target);
     // The sprite flip only follows decisively horizontal movement —
     // near-vertical steering would otherwise mirror-flicker every step.
@@ -1323,9 +1336,12 @@ function stepEnemies(state: GameState, dt: number, dtMs: number): void {
         def.role === "boss" && enemy.hp <= enemy.maxHp * LAST_STAND.hpFraction;
       // A power-matched elite/boss hits harder too (contactMult, softened —
       // set once when it engaged; 1 for un-scaled mobs and every minion).
+      // Its set-piece mechanics stack on top: the charge's impact while
+      // dashing, the enrage's fury once turned (mechDamageMult).
       const damage = Math.round(
         def.contactDamage *
           (enemy.contactMult ?? 1) *
+          mechDamageMult(enemy, def) *
           (crit ? STATS.critMultiplier : 1) *
           (lastStand ? LAST_STAND.damageMultiplier : 1) *
           BALANCE.mobDamage,
@@ -1413,8 +1429,13 @@ function separateEnemies(state: GameState): void {
 function moveEnemy(state: GameState, enemy: Enemy, dt: number): void {
   const player = state.player;
   const def = enemyDef(enemy.defId);
-  // Stasis fields slow whatever crawls inside them — bosses included.
-  const speed = enemy.speed * stasisFactorAt(player, enemy.pos);
+  // Set-piece mechanics first (mechanics.ts): a mob rooted in a telegraph
+  // windup or riding a charge dash is owned by the mechanic this tick.
+  if (stepEnemyMechanics(state, enemy, dt, dt * 1000)) return;
+  // Stasis fields slow whatever crawls inside them — bosses included. An
+  // enraged set piece runs hot (mechSpeedMult).
+  const speed =
+    enemy.speed * stasisFactorAt(player, enemy.pos) * mechSpeedMult(enemy, def);
   const senses = () =>
     def.phasing === true || lineOfSight(state, enemy.pos, player.pos);
 
@@ -1531,7 +1552,7 @@ function moveEnemy(state: GameState, enemy: Enemy, dt: number): void {
   }
 
   if (inRange && enemy.awake) {
-    enemy.pos = moveToward(enemy.pos, player.pos, speed * dt);
+    enemy.pos = moveToward(enemy.pos, flankTarget(state, enemy), speed * dt);
   } else if (distanceSq(enemy.pos, enemy.home) > 16) {
     enemy.pos = moveToward(
       enemy.pos,
@@ -1539,6 +1560,40 @@ function moveEnemy(state: GameState, enemy: Enemy, dt: number): void {
       speed * (def.ai.returnSpeedFactor ?? 0.5) * dt,
     );
   }
+}
+
+/**
+ * Where a chasing minion actually steers: the player, or — from
+ * `ENEMY_AI.flankFromIndex` up the difficulty ladder — a point rotated off
+ * the direct bearing by up to `flankAngleDeg`, each mob to its own
+ * deterministic side (its id's parity), the angle easing out as it closes so
+ * the pack fans into an envelope at range and still converges for the bite.
+ * The gentle rungs keep the honest straight-line conga.
+ */
+function flankTarget(state: GameState, enemy: Enemy): Vec2 {
+  const player = state.player;
+  if (difficultyDef(state.difficulty).index < ENEMY_AI.flankFromIndex) {
+    return player.pos;
+  }
+  const dx = enemy.pos.x - player.pos.x;
+  const dy = enemy.pos.y - player.pos.y;
+  const dist = Math.sqrt(dx * dx + dy * dy);
+  if (dist < 24) return player.pos; // at the bite — go straight in
+  // Ease the rotation off as the mob closes (full at ~3 screens, none at
+  // contact), and alternate sides by id parity so the pack splits pincer-like.
+  const ease = Math.min(1, dist / 360);
+  const side = enemy.id % 2 === 0 ? 1 : -1;
+  const angle =
+    ((ENEMY_AI.flankAngleDeg * Math.PI) / 180) * ease * side;
+  // Rotate the player-to-enemy bearing and aim at the point the same
+  // distance out along it — walking that ray closes distance while drifting
+  // around the flank.
+  const cos = Math.cos(angle);
+  const sin = Math.sin(angle);
+  return {
+    x: player.pos.x + (dx * cos - dy * sin) * 0.5,
+    y: player.pos.y + (dx * sin + dy * cos) * 0.5,
+  };
 }
 
 function stepItems(state: GameState, dtMs: number): void {

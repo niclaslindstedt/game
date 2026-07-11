@@ -139,6 +139,10 @@ export const EASTWORLD_ENEMIES: Record<string, EnemyDef> = {
       ],
     ],
     lastWords: ["IN MY FILMS...", "...I ALWAYS GOT UP..."],
+    // Below half the aikido comes out — such fury, much wrist.
+    mechanics: {
+      enrage: { belowHpFrac: 0.4, speedMult: 1.5, damageMult: 1.3 },
+    },
     ai: { aggroRadius: 260, rushSpeed: 70 },
     loot: {
       // The ponytail, and the pass that opens his control center.
@@ -207,6 +211,10 @@ export const EASTWORLD_ENEMIES: Record<string, EnemyDef> = {
     ],
     // The one honest sentence he ever managed, and it took dying.
     lastWords: ["THE MAPS WERE WRONG...", "...UKRAINE WAS NEVER MINE..."],
+    // The judo lunge: a telegraphed bare-chested charge.
+    mechanics: {
+      charge: { windupMs: 700, speedMult: 3.5, range: 170, cooldownMs: 6000 },
+    },
     ai: { aggroRadius: 260, rushSpeed: 110 },
     loot: {
       // The estate: three brand watches — pure valuables, minted at unique
@@ -278,6 +286,11 @@ export const EASTWORLD_ENEMIES: Record<string, EnemyDef> = {
       ["NO? THEN I PLAY MY OTHER", "ROLE. THE AVALANCHE."],
     ],
     lastWords: ["AT LAST... A ROLE I CANNOT", "...EAT MY WAY OUT OF..."],
+    // The mountain falls on you: a telegraphed belly-flop slam — slow,
+    // huge, and absolutely worth jumping.
+    mechanics: {
+      slam: { windupMs: 1000, radius: 80, damageFrac: 1.3, cooldownMs: 9000 },
+    },
     ai: { aggroRadius: 240, rushSpeed: 60 },
     loot: {
       items: ["bottomless_carafe"],
@@ -449,6 +462,11 @@ export const EASTWORLD_ENEMIES: Record<string, EnemyDef> = {
     ],
     // Wimping to the end.
     lastWords: ["THIS ISN'T FAIR...", "...I WAS GOING PRIVATE..."],
+    // Nothing left but the tantrum: below a quarter the wimp fights like
+    // a cornered animal at last.
+    mechanics: {
+      enrage: { belowHpFrac: 0.25, speedMult: 1.4, damageMult: 1.35 },
+    },
     ai: { aggroRadius: 280, leashRadius: 460 },
     loot: {
       // The estate of the century: three TRASH weapons — zero damage, zero
@@ -798,6 +816,19 @@ export const EASTWORLD_ENEMIES: Record<string, EnemyDef> = {
       ],
     ],
     lastWords: ["ROLLING BACK...", "...NO CHECKPOINT... FOUND..."],
+    // The core doesn't move — it MANUFACTURES: tin outlaws roll off its
+    // line, and once the shield falls (half hp) the line runs double.
+    mechanics: {
+      summon: { defId: "tin_outlaw", count: 3, cooldownMs: 11000, maxAlive: 6 },
+    },
+    phases: [
+      {
+        belowHpFrac: 0.5,
+        mechanics: {
+          summon: { defId: "tin_outlaw", count: 4, cooldownMs: 8000, maxAlive: 8 },
+        },
+      },
+    ],
     ai: { aggroRadius: 320, leashRadius: 460 },
     ranged: {
       damage: 30,

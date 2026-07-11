@@ -3,7 +3,7 @@
 // threshold a boss's contact hits multiply — the "one last stand" spike the
 // renderer telegraphs with the dying sprite and its flicker.
 
-import { enemyDef, LAST_STAND, step } from "@game/core";
+import { activeMechanics, enemyDef, LAST_STAND, step } from "@game/core";
 import type { GameState } from "@game/core";
 import { describe, expect, it } from "vitest";
 
@@ -43,9 +43,14 @@ describe("boss last stand", () => {
     boss.hp = boss.maxHp * LAST_STAND.hpFraction;
     const hpBefore = state.player.hp;
     step(state, idle, DT);
+    // ARMSTRONG's dying-phase ENRAGE (defs mechanics) stacks with the global
+    // last stand — at a tenth hp his phase's fury multiplier is active too.
+    const enrage = activeMechanics(boss, enemyDef(boss.defId))?.enrage;
     expect(hpBefore - state.player.hp).toBe(
       Math.round(
-        enemyDef(boss.defId).contactDamage * LAST_STAND.damageMultiplier,
+        enemyDef(boss.defId).contactDamage *
+          LAST_STAND.damageMultiplier *
+          (enrage?.damageMult ?? 1),
       ),
     );
   });

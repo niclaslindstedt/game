@@ -184,6 +184,10 @@ export const MARS_ENEMIES: Record<string, EnemyDef> = {
       ],
     ],
     lastWords: ["FATAL... ERROR...", "WHO WROTE... THIS..."],
+    // The compiler crashes DOWN: a telegraphed slam of blue-screen force.
+    mechanics: {
+      slam: { windupMs: 900, radius: 70, damageFrac: 1.2, cooldownMs: 8000 },
+    },
     ai: { aggroRadius: 250, rushSpeed: 110 },
     loot: {
       items: ["blue_screen"],
@@ -312,6 +316,10 @@ export const MARS_ENEMIES: Record<string, EnemyDef> = {
       ],
     ],
     lastWords: ["ORCHESTRATION... FAILED...", "...HUMAN... IN THE LOOP..."],
+    // The prime directive: a telegraphed full-torque charge.
+    mechanics: {
+      charge: { windupMs: 650, speedMult: 3.6, range: 180, cooldownMs: 6000 },
+    },
     ai: { aggroRadius: 250, rushSpeed: 105 },
     loot: {
       // Its sidearm and the paperwork: the colony's auto-generated org
@@ -397,6 +405,20 @@ export const MARS_ENEMIES: Record<string, EnemyDef> = {
     // he scrambles into the rift he tears open behind himself.
     lastWords: ["OKAY! OKAY! NOT THE FACE!", "BOARD MEETING. OTHER UNIVERSE."],
     flees: { landmark: "rift" },
+    // The factory boss: he doesn't fight fair, he SHIPS — servo bots roll
+    // off the line mid-fight, and past a third he panics into overdrive.
+    mechanics: {
+      summon: { defId: "servo_bot", count: 3, cooldownMs: 12000, maxAlive: 6 },
+    },
+    phases: [
+      {
+        belowHpFrac: 0.35,
+        mechanics: {
+          summon: { defId: "servo_bot", count: 4, cooldownMs: 10000, maxAlive: 8 },
+          enrage: { belowHpFrac: 0.35, speedMult: 1.35, damageMult: 1.25 },
+        },
+      },
+    ],
     ai: { aggroRadius: 280, leashRadius: 460 },
     // He drops the NOT-A-FLAMETHROWER as he bolts — of course he brought it.
     loot: {

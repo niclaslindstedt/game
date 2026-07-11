@@ -205,6 +205,17 @@ export const ENEMY_AI = {
    * not satisfy "there's a pack on screen".
    */
   nearRadius: 340,
+  /**
+   * SMARTER MOBS up the ladder — FLANKING: from this difficulty INDEX
+   * (hard = 3) a chasing minion steers toward a point rotated off the direct
+   * player bearing, each mob to its own deterministic side, so the pack
+   * ENVELOPS instead of forming a straight-line conga the hero mows down a
+   * rank at a time. The rotation eases out as the mob closes (it converges
+   * on the player for the bite) — see `flankTarget` in step.ts.
+   */
+  flankFromIndex: 3,
+  /** The flank rotation at full distance (degrees off the direct bearing). */
+  flankAngleDeg: 35,
 } as const;
 
 /**
@@ -631,7 +642,10 @@ export const MENACE = {
    * plus the current menace heat — locked in once so a level-20 hero meets a
    * boss worthy of them instead of one-shotting the set piece.
    */
-  bossLevelWeight: 0.12,
+  // Trimmed from 0.12 when the set-piece MECHANICS shipped (mechanics.ts):
+  // a boss now gets harder via telegraphed moves, enrage turns, and phases —
+  // the hp-sponge share of its difficulty gives that much back.
+  bossLevelWeight: 0.1,
   bossMenaceWeight: 0.1,
   /** Share of the hp power-scale that also applies to contact damage (so a
    * scaled boss hits harder, but not as steeply as its health grows). */
@@ -1351,6 +1365,17 @@ export const ENEMY_RANGED = {
   coverSearchRadius: 260,
   /** Gap kept between the shooter's edge and its cover rock's edge. */
   coverGap: 4,
+  /**
+   * SMARTER MOBS up the ladder — TARGET LEADING: from `leadFromIndex`
+   * (hard = 3) shooters aim ahead of a RUNNING hero by `leadFactor` of the
+   * full firing solution (`player.vel × time-of-flight`), and from
+   * `leadFullFromIndex` (nightmare = 4) by the whole thing — a standing hero
+   * is aimed at dead-on either way. Below the gate shots fly at where the
+   * hero WAS: the strafe-to-dodge freebie the gentle rungs keep.
+   */
+  leadFromIndex: 3,
+  leadFullFromIndex: 4,
+  leadFactor: 0.5,
 } as const;
 
 /**

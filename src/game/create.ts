@@ -245,6 +245,7 @@ export function createGame(
       stamina: STAMINA.base,
       maxStamina: STAMINA.base,
       facing: vec(1, 0),
+      vel: vec(0, 0),
       faceLeft: false,
       abilities: [],
       heldAbilities: [],
