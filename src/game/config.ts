@@ -115,6 +115,20 @@ export const WEAPON = {
    * flavor stream (not the loot stream), so it never perturbs drop rolls.
    */
   damageVariance: 0.2,
+  /**
+   * ITEM-LEVEL damage growth — the weapon half of `ARMOR.armorPerIlvl`: a
+   * rolled weapon's damage grows by this fraction per item level ABOVE its
+   * base's `levelReq` (a base's catalog damage is its value at its own req).
+   * Zero at the req itself, so the catalog and the damage-budget model
+   * (`scripts/weapon-budget.mjs`) are untouched; only deep finds grow. Kept
+   * at a third of armor's rate — damage compounds with stats, crit, and
+   * cadence where armor only sums, so a gentler slope keeps a +20-ilvl find
+   * a real edge (~+40%) rather than a doubling. Applied in `weaponDamageFor`
+   * (the one source of stat-scaled damage), so combat, auto-equip scoring,
+   * the item card, and `heroDamageLevel`'s power read all move together —
+   * the menace system automatically prices a hot deep find into the horde.
+   */
+  damagePerIlvl: 0.02,
 } as const;
 
 /**
@@ -646,12 +660,20 @@ export const MENACE = {
   mobHpScaleFloor: 0.5,
   /**
    * Better gear as the hero levels: added to a minion's drop tier roll per
-   * player level above 1 (+1.5% each), so a higher-level hero's kills yield
+   * player level above 1 (+0.4% each), so a higher-level hero's kills yield
    * richer loot to match the tougher mobs they came off — the drop-quality
    * companion to `mobHpPerLevel` (the menace `tierPenaltyPerStage` pulls the
-   * other way on evolved mobs).
+   * other way on evolved mobs). Kept SMALL and capped (`tierBonusLevelCap`):
+   * at the old 1.5% the level term alone hit +0.59 by level 40 — past the
+   * magic AND rare base chances combined, so every mid-game drop rolled at
+   * least rare and the tier ladder stopped discriminating. Tier quality is
+   * the DIFFICULTY ladder's reward (`tierChanceBonus`); the level term only
+   * seasons it.
    */
-  tierBonusPerLevel: 0.015,
+  tierBonusPerLevel: 0.004,
+  /** Ceiling on the level term above (+15% at level ~38 and beyond), so the
+   * deep endgame still rolls mostly regular/magic and a rare stays an event. */
+  tierBonusLevelCap: 0.15,
   /**
    * The DAMAGE→LEVEL mapping's normalization (see `heroDamageLevel` in
    * menace.ts): the equipped weapon's sustained single-target output
@@ -1046,8 +1068,12 @@ export const QUALITY = {
   weightsLow: { broken: 20, crude: 25, normal: 52, superior: 3, perfect: 0 },
   /** …and off a monster at/above `highMlvl`; lerped linearly between. */
   weightsHigh: { broken: 0, crude: 6, normal: 54, superior: 28, perfect: 12 },
-  /** The monster level at which the odds reach `weightsHigh`. */
-  highMlvl: 100,
+  /** The monster level at which the odds reach `weightsHigh`. Set to the
+   * level a full campaign actually ends at (~60, see LEVELING) so the lerp
+   * spans the real game: superior and perfect work is genuinely common on
+   * the last rungs instead of parked behind a monster level that never
+   * spawns. */
+  highMlvl: 60,
 } as const;
 
 /**

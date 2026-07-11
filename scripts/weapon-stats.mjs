@@ -23,15 +23,20 @@ import { fileURLToPath } from "node:url";
 const here = path.dirname(fileURLToPath(import.meta.url));
 const root = path.join(here, "..");
 
-const { WEAPON_DEFS, GEAR_DEFS, weaponAssumedTargets, weaponCritMult } =
-  await import(path.join(root, "src/game/defs/equipment.ts"));
+const {
+  WEAPON_DEFS,
+  GEAR_DEFS,
+  AFFIX_POOLS,
+  weaponAssumedTargets,
+  weaponCritMult,
+} = await import(path.join(root, "src/game/defs/equipment.ts"));
 const { LEVELS, LEVEL_ORDER } = await import(
   path.join(root, "src/game/defs/levels/index.ts")
 );
 const { ENEMY_DEFS } = await import(
   path.join(root, "src/game/defs/enemies/index.ts")
 );
-const { LOOT } = await import(path.join(root, "src/game/config.ts"));
+const { LOOT, STATS } = await import(path.join(root, "src/game/config.ts"));
 
 /**
  * The monster-level band each level is expected to span (player level + the
@@ -195,6 +200,51 @@ for (const def of Object.values(ENEMY_DEFS)) {
     warn(
       `LOOT.tierUnlockMlvl is not ascending (magic ${magic} < rare ${rare} < unique ${unique} < legendary ${legendary})`,
     );
+  }
+}
+
+// ---- Affix bracket sanity ------------------------------------------------------
+// The ilvl-gated affix generations (AFFIX_POOLS[..].brackets) must form a
+// clean ladder: ascending minIlvl starting at 1 (so every ilvl has a band),
+// bands themselves ascending (a deeper generation never rolls smaller), and
+// the top STAT generation held to ~60% of the hero's own stat soft cap so no
+// single affix outweighs a whole build's chosen points.
+
+{
+  const seen = new Set();
+  for (const [family, pool] of Object.entries(AFFIX_POOLS)) {
+    for (const affix of pool) {
+      const key = `${affix.kind}`;
+      const label = `${family}.${affix.kind}`;
+      let prev = null;
+      if (affix.brackets[0]?.minIlvl !== 1) {
+        warn(`${label}: first bracket must unlock at ilvl 1`);
+      }
+      for (const bracket of affix.brackets) {
+        if (bracket.min > bracket.max) {
+          warn(`${label}: bracket at ilvl ${bracket.minIlvl} has min > max`);
+        }
+        if (prev) {
+          if (bracket.minIlvl <= prev.minIlvl) {
+            warn(`${label}: bracket minIlvls not ascending`);
+          }
+          if (bracket.min < prev.min || bracket.max < prev.max) {
+            warn(`${label}: bracket bands not ascending with depth`);
+          }
+        }
+        prev = bracket;
+      }
+      if (affix.kind === "stat" && !seen.has(key)) {
+        const top = affix.brackets[affix.brackets.length - 1];
+        const ceiling = STATS.statSoftCap * 0.65;
+        if (top.max > ceiling) {
+          warn(
+            `${label}: top stat bracket ${top.max} exceeds ~60% of statSoftCap (${STATS.statSoftCap})`,
+          );
+        }
+      }
+      seen.add(key);
+    }
   }
 }
 

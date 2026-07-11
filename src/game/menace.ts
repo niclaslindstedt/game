@@ -241,12 +241,19 @@ export function currentMobLevel(state: GameState): number {
 /**
  * The tier bonus a minion's drop rolls from the player's LEVEL — better gear to
  * match the tougher horde `mobLevelScale` produces (`tierBonusPerLevel` per
- * level above 1). Read in `dropMinionLoot` alongside the mob's own
- * `dropProfile` bonus and the menace evolution stage's `tierPenaltyPerStage`
- * (which pulls the other way on evolved mobs).
+ * level above 1, CAPPED at `tierBonusLevelCap`). Read in `dropMinionLoot`
+ * alongside the mob's own `dropProfile` bonus and the menace evolution stage's
+ * `tierPenaltyPerStage` (which pulls the other way on evolved mobs). The cap is
+ * what keeps the tier ladder discriminating all campaign: uncapped, the level
+ * term alone eventually dwarfed every base chance and made every late drop
+ * roll rare — tier progression belongs to the difficulty ladder
+ * (`tierChanceBonus`), not the level counter.
  */
 export function mobLevelTierBonus(state: GameState): number {
-  return Math.max(0, state.player.level - 1) * MENACE.tierBonusPerLevel;
+  return Math.min(
+    MENACE.tierBonusLevelCap,
+    Math.max(0, state.player.level - 1) * MENACE.tierBonusPerLevel,
+  );
 }
 
 /**

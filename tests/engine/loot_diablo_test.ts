@@ -157,27 +157,55 @@ describe("item level", () => {
   });
 });
 
-describe("ilvl-scaled affixes", () => {
-  it("pays +1 stat point per item level, and scales damage% with depth", () => {
+describe("ilvl-gated affix brackets", () => {
+  it("rolls inside the unlocked generation (top or one under, never lower)", () => {
     const state = startGame();
     let statSeen = 0;
     let damageSeen = 0;
     for (let i = 0; i < 300; i++) {
+      // mlvl 30 → ilvl 27–30: the ilvl-22 generation is the top unlocked
+      // (stat 8–12, damagePct 0.19–0.28); the roll may also pay the ilvl-10
+      // generation under it (stat 4–7, damagePct 0.11–0.18) — never the
+      // ilvl-36 one above, and never the ilvl-1 floor two rungs down.
       const piece = rollEquipment(state, { mlvl: 30, tier: "magic" });
       for (const affix of piece.affixes) {
         if (affix.kind === "stat") {
           statSeen++;
-          expect(affix.value).toBe(piece.ilvl); // perIlvl [1, 1] exactly
+          expect(affix.value).toBeGreaterThanOrEqual(4);
+          expect(affix.value).toBeLessThanOrEqual(12);
         }
         if (affix.kind === "damagePct") {
           damageSeen++;
-          expect(affix.value).toBeGreaterThanOrEqual(piece.ilvl * 0.024);
-          expect(affix.value).toBeLessThanOrEqual(piece.ilvl * 0.036);
+          expect(affix.value).toBeGreaterThanOrEqual(0.11);
+          expect(affix.value).toBeLessThanOrEqual(0.28);
         }
       }
     }
     expect(statSeen).toBeGreaterThan(0);
     expect(damageSeen).toBeGreaterThan(0);
+  });
+
+  it("deep drops unlock the top generation, shallow ones stay small", () => {
+    const state = startGame();
+    for (let i = 0; i < 200; i++) {
+      // ilvl 1 items only know the first generation.
+      const shallow = rollEquipment(state, { mlvl: 1, tier: "magic" });
+      for (const affix of shallow.affixes) {
+        if (affix.kind === "stat") expect(affix.value).toBeLessThanOrEqual(3);
+        if (affix.kind === "maxHp") expect(affix.value).toBeLessThanOrEqual(12);
+      }
+    }
+    // A deep rare (mlvl 60 → ilvl 59–60) reaches the ilvl-52 generation.
+    let sawTopStat = false;
+    for (let i = 0; i < 400 && !sawTopStat; i++) {
+      const deep = rollEquipment(state, { mlvl: 60, tier: "rare" });
+      for (const affix of deep.affixes) {
+        if (affix.kind === "stat" && affix.value >= 19) sawTopStat = true;
+        // The ceiling rule: no stat affix ever exceeds the top band (25).
+        if (affix.kind === "stat") expect(affix.value).toBeLessThanOrEqual(25);
+      }
+    }
+    expect(sawTopStat).toBe(true);
   });
 });
 

@@ -329,6 +329,7 @@ export {
   TIERS,
   WEAPON_DEFS,
   weaponDef,
+  type AffixBracket,
   type AffixDef,
   type GearDef,
   type WeaponDef,

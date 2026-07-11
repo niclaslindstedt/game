@@ -306,7 +306,9 @@ describe("stats", () => {
       defId: "test_wand",
       slot: "weapon",
       tier: "regular",
-      ilvl: 5,
+      // At the def's levelReq the ITEM-LEVEL damage term is 1, so this test
+      // isolates the class-stat scaling it is about.
+      ilvl: 1,
       affixes: [],
       durability: wandDef.durability,
     };
