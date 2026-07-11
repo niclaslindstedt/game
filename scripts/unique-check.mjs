@@ -350,17 +350,32 @@ for (const def of Object.values(LEVELS)) {
   }
 }
 
-const placedCount = {};
-for (const p of [...placements, ...worldPlacements, ...stallPlacements])
-  placedCount[p.id] = (placedCount[p.id] ?? 0) + 1;
+// Every unique has exactly ONE primary home (a boss table, its world-drop
+// level, or a merchant stall). A WORLD unique may ALSO be re-listed by other
+// levels as extra WORLD homes — the FARM-VENUE rule: the bunker deliberately
+// re-lists earlier relics at sweetened odds so it reads as the endgame farm
+// (see its worldUniques comment). Boss and stall homes never repeat.
+const primaryCount = {};
+for (const p of [...placements, ...stallPlacements])
+  primaryCount[p.id] = (primaryCount[p.id] ?? 0) + 1;
+const worldCount = {};
+for (const p of worldPlacements)
+  worldCount[p.id] = (worldCount[p.id] ?? 0) + 1;
 for (const id of UNIQUE_IDS) {
-  const n = placedCount[id] ?? 0;
-  if (n === 0)
+  const primary = primaryCount[id] ?? 0;
+  const world = worldCount[id] ?? 0;
+  if (primary + world === 0)
     err(
       `${id}: shipped but wired to no boss, level, or stall — it can never drop.`,
     );
-  else if (n > 1)
-    err(`${id}: wired to ${n} homes — a unique drops from exactly one.`);
+  else if (primary > 1)
+    err(
+      `${id}: wired to ${primary} boss/stall homes — those never repeat (farm venues are world tables only).`,
+    );
+  else if (primary === 1 && world > 0)
+    err(
+      `${id}: wired to a boss/stall home AND ${world} world table(s) — pick one kind.`,
+    );
 }
 
 // Latin square: each difficulty column must be a permutation of the 5 set slots.
