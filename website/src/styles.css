@@ -3861,6 +3861,69 @@ body {
   }
 }
 
+/* UNIQUE / LEGENDARY finds shine (tierGlowClass in tiers.ts hangs these
+   classes on grid cells, the raised item tooltip, the arsenal detail pane,
+   and the card's name canvas). Each tier class sets its halo color as bare
+   RGB components; the shared rules below turn it into a steady cell glow, a
+   tooltip ring, and a name drop-shadow — the treatment that separates a
+   hand-authored gold/orange drop from a rare's plain yellow border. */
+.tier-unique {
+  --tier-glow: 214, 176, 98;
+}
+
+.tier-legendary {
+  --tier-glow: 255, 167, 38;
+}
+
+.inv-cell.tier-unique,
+.inv-cell.tier-legendary {
+  background: radial-gradient(
+    circle,
+    rgba(var(--tier-glow), 0.3),
+    rgba(6, 8, 12, 0.6) 72%
+  );
+  box-shadow:
+    0 0 7px 1px rgba(var(--tier-glow), 0.6),
+    inset 0 0 5px rgba(var(--tier-glow), 0.4);
+}
+
+.item-tooltip.tier-unique,
+.item-tooltip.tier-legendary,
+.arsenal-detail.tier-unique,
+.arsenal-detail.tier-legendary {
+  box-shadow:
+    inset 0 0 0 1px var(--panel-groove),
+    0 6px 18px rgba(0, 0, 0, 0.65),
+    0 0 14px 2px rgba(var(--tier-glow), 0.45);
+}
+
+canvas.tier-unique,
+canvas.tier-legendary {
+  filter: drop-shadow(0 0 0.2rem rgba(var(--tier-glow), 0.8));
+}
+
+/* The item card's weapon-class glyph (sword/reticle/spark at 1× = 12 CSS px):
+   sits left of the tier-colored name inside the shared .tooltip-name-row,
+   replacing the old "MELEE WEAPON" line. */
+.card-class-glyph {
+  flex: 0 0 auto;
+  width: 0.75rem;
+  height: 0.75rem;
+}
+
+/* The card's foot: the tier callout on the left, the item level tucked into
+   the lower right — margin-left pushes it there even with no tier label. */
+.card-foot {
+  display: flex;
+  width: 100%;
+  align-items: baseline;
+  gap: 0.5rem;
+}
+
+.card-foot .card-ilvl {
+  margin-left: auto;
+}
+
 /* The HUD purse: the coin icon sized to the stat-row text. */
 .hud-coin-row {
   gap: 0.3rem;

@@ -38,7 +38,12 @@ import { PixelText } from "@ui/lib/PixelText.tsx";
 import type { PixelFont } from "@ui/lib/pixel-font.ts";
 
 import { spriteDataUrl, type Sprites } from "./assets.ts";
-import { AFFIX_COLORS, TIER_COLORS, WEAPON_CLASS_COLORS } from "./tiers.ts";
+import {
+  AFFIX_COLORS,
+  TIER_COLORS,
+  TIER_LABELS,
+  tierGlowClass,
+} from "./tiers.ts";
 
 /** The item card's headline per gear slot (weapons headline their class). */
 const SLOT_HEADLINES: Record<Exclude<Equipment["slot"], "weapon">, string> = {
@@ -132,38 +137,46 @@ function compareChip(
  * slot, each comparable stat carries a green/red `(+N)` delta versus what's
  * worn, so a bag find reads as an upgrade or a downgrade at a glance.
  */
+/**
+ * The REQUIRES LEVEL line doubles as a freshness gauge — how current the
+ * piece is against the hero's own level: red = above the hero (the engine
+ * refuses to equip it, see meetsLevelReq), yellow = current (within 2
+ * levels), green = recent (3–7 below), grey = outgrown.
+ */
+function levelReqColor(playerLevel: number, req: number): string {
+  const behind = playerLevel - req;
+  if (behind < 0) return "#e06a6a";
+  if (behind <= 2) return "#ffe14d";
+  if (behind <= 7) return "#5fd97a";
+  return "#9aa3ad";
+}
+
 export function itemLines(
   state: GameState,
   item: Equipment,
   equipped: Equipment | null,
 ): CardLine[] {
   const lines: CardLine[] = [];
-  // The Diablo birth certificate: the item's own LEVEL (which sized its
-  // affixes) and the base's requirement — red while the hero hasn't grown
-  // into it (the engine refuses to equip it until then, see meetsLevelReq).
-  const meta: CardLine[] = [
-    { text: `ITEM LEVEL ${item.ilvl}`, color: "#9aa3ad" },
-  ];
+  // The base's requirement, freshness-colored (the item's own LEVEL sits at
+  // the card's foot, drawn by ItemCardBody). Weapons lead with it; gear
+  // slides it in under the slot headline.
   const req = equipmentLevelReq(item.defId);
-  if (req > 1) {
-    meta.push({
-      text: `REQUIRES LEVEL ${req}`,
-      color: state.player.level < req ? "#e06a6a" : "#9aa3ad",
-    });
-  }
+  const reqLine: CardLine | null =
+    req > 1
+      ? {
+          text: `REQUIRES LEVEL ${req}`,
+          color: levelReqColor(state.player.level, req),
+        }
+      : null;
   if (isWeaponDef(item.defId)) {
     const def = weaponDef(item.defId);
     // Compare against the equipped weapon (only when inspecting a different
     // one) — the deltas below read this game's stats in the SAME hands, so a
     // bag find's numbers stack fairly against what's currently held.
     const eq = equipped && isWeaponDef(equipped.defId) ? equipped : null;
-    // The weapon's class, tinted by class (magic=purple, melee=gold,
-    // ranged=orange) so it reads as "what kind of weapon" — never confused
-    // with the blue MAGIC quality tier the name color carries.
-    lines.push({
-      text: `${def.class.toUpperCase()} WEAPON`,
-      color: WEAPON_CLASS_COLORS[def.class].border,
-    });
+    // The weapon's CLASS is the glyph beside the name (ItemCardBody), not a
+    // line — the card saves the row.
+    if (reqLine) lines.push(reqLine);
     // Lead with DPS — the one figure that folds damage, attack speed, and crit
     // into "how hard this hits over time", so a slow heavy weapon and a quick
     // light one compare at a glance. Tinted the same accent as the character
@@ -190,9 +203,8 @@ export function itemLines(
         ? compareChip(effective - Math.round(weaponDamageFor(state, eq)))
         : null,
     });
-    // Attack speed as plain seconds between attacks (lower is faster). The
-    // unit is spelled " SEC" — never a bare trailing "S", which the pixel font
-    // renders close enough to a "5" to read as part of the number. The speed
+    // Attack speed as plain seconds between attacks (lower is faster), the
+    // unit left off — the two decimals already read as a time. The speed
     // stat (DEX for melee & ranged, INT for magic) quickens the cadence, so
     // show the base-relative time shaved off as a "-X" hint.
     const secs = weaponCooldownFor(state, item) / 1000;
@@ -200,8 +212,8 @@ export function itemLines(
     lines.push({
       text:
         saved > 0.005
-          ? `SPEED ${secs.toFixed(2)} SEC (-${saved.toFixed(2)})`
-          : `SPEED ${secs.toFixed(2)} SEC`,
+          ? `SPEED ${secs.toFixed(2)} (-${saved.toFixed(2)})`
+          : `SPEED ${secs.toFixed(2)}`,
       // Shorter cadence is faster, so a smaller number is the upgrade.
       delta: eq
         ? compareChip(secs - weaponCooldownFor(state, eq) / 1000, {
@@ -268,6 +280,7 @@ export function itemLines(
     const eqGear =
       equipped && !isWeaponDef(equipped.defId) ? gearDef(equipped.defId) : null;
     lines.push({ text: SLOT_HEADLINES[def.slot] });
+    if (reqLine) lines.push(reqLine);
     // An armor piece leads with its rolled armor points (the ilvl-grown
     // stamp), compared against what the same slot wears now.
     if (def.armor !== undefined) {
@@ -312,8 +325,6 @@ export function itemLines(
       );
     }
   }
-  // The class/slot headline stays first; the level lines slide in under it.
-  lines.splice(1, 0, ...meta);
   return lines;
 }
 
@@ -339,8 +350,9 @@ export function ItemIcon({
 }
 
 /**
- * The card's CONTENT: the tier-colored name, the stat/affix lines, and the
- * rolled affixes — everything but the box it sits in. The inventory tooltip
+ * The card's CONTENT: the weapon-class glyph + tier-colored name, the
+ * stat/affix lines, the rolled affixes, and the foot row (tier callout +
+ * item level) — everything but the box it sits in. The inventory tooltip
  * floats this next to a cell; the arsenal viewer lays it out in a detail pane.
  * `compareTo` (a piece worn in the same slot) drives the green/red deltas; pass
  * null for a standalone read. `maxWidth` wraps long names/lines to a rem cap.
@@ -353,6 +365,7 @@ export function ItemIcon({
  */
 export function ItemCardBody({
   font,
+  sprites,
   state,
   item,
   compareTo,
@@ -362,6 +375,7 @@ export function ItemCardBody({
   icon,
 }: {
   font: PixelFont;
+  sprites: Sprites;
   state: GameState;
   item: Equipment;
   compareTo: Equipment | null;
@@ -370,14 +384,36 @@ export function ItemCardBody({
   subtitle?: string;
   icon?: ReactNode;
 }) {
+  const tierLabel = TIER_LABELS[item.tier];
+  // The weapon's class as a glyph left of the name (sword/reticle/spark, in
+  // the class color) — the "MELEE WEAPON" line it replaces saved a row.
+  const weaponClass = isWeaponDef(item.defId)
+    ? weaponDef(item.defId).class
+    : null;
+  const glyph = weaponClass
+    ? spriteDataUrl(sprites, `icon_class_${weaponClass}`)
+    : null;
+  // Unique/legendary names carry a soft glow (tierGlowClass) on top of the
+  // tier color — gold alone sits too close to rare yellow. The icon and the
+  // class glyph eat into the wrap width, so long names still stay inside.
   const name = (
     <PixelText
       font={font}
       text={equipmentName(item)}
       scale={2}
       color={TIER_COLORS[item.tier]}
-      // The icon eats into the wrap width, so long names still stay inside.
-      maxWidth={icon && maxWidth ? maxWidth - 2 : maxWidth}
+      className={tierGlowClass(item.tier).trim() || undefined}
+      maxWidth={
+        maxWidth ? maxWidth - (icon ? 2 : 0) - (glyph ? 1 : 0) : maxWidth
+      }
+    />
+  );
+  const glyphImg = glyph && (
+    <img
+      src={glyph}
+      alt={`${weaponClass} weapon`}
+      className="pixel-img card-class-glyph"
+      draggable={false}
     />
   );
   return (
@@ -385,9 +421,10 @@ export function ItemCardBody({
       {subtitle && (
         <PixelText font={font} text={subtitle} scale={1} color="#9aa3ad" />
       )}
-      {icon ? (
+      {icon || glyphImg ? (
         <div className="tooltip-name-row">
           {icon}
+          {glyphImg}
           {name}
         </div>
       ) : (
@@ -431,6 +468,27 @@ export function ItemCardBody({
           maxWidth={maxWidth}
         />
       ))}
+      {/* The card's foot: the quality tier spelled out in the tier color —
+          the explicit answer to "is this rare or unique?" that the name color
+          alone can't give (plain finds carry no label, see TIER_LABELS) — and
+          the item's own LEVEL (which sized its bonuses) tucked lower-right. */}
+      <div className="card-foot">
+        {tierLabel && (
+          <PixelText
+            font={font}
+            text={tierLabel}
+            scale={lineScale}
+            color={TIER_COLORS[item.tier]}
+            className={tierGlowClass(item.tier).trim() || undefined}
+          />
+        )}
+        <PixelText
+          font={font}
+          text={`ILVL ${item.ilvl}`}
+          scale={lineScale}
+          className="card-ilvl"
+        />
+      </div>
     </>
   );
 }

@@ -156,9 +156,59 @@ const PALETTE = {
   // Aged parchment for the HUD's treasure map: sun-bleached tan + shadow.
   t: [222, 192, 138],
   D: [178, 142, 92],
+  // Item-card weapon-class glyphs, tinted to WEAPON_CLASS_COLORS (the app's
+  // tiers.ts) so the glyph reads as the class line it replaces.
+  K: [232, 185, 62], // melee gold
+  Q: [224, 96, 58], // ranged ember
+  X: [180, 93, 240], // magic violet
 };
 
 const SPRITES = {
+  // The item card's weapon-class glyphs (ItemCard.tsx), sitting left of the
+  // item name at 1× (12 CSS px) — bold single-subject silhouettes, no fine
+  // detail: a sword for melee, a crosshair for ranged, a spark for magic.
+  icon_class_melee: [
+    ".....OO.....",
+    "....OKKO....",
+    "....OKKO....",
+    "....OKKO....",
+    "....OKKO....",
+    "....OKKO....",
+    "..OOOKKOOO..",
+    "..OKKKKKKO..",
+    "..OOOKKOOO..",
+    "....OKKO....",
+    "....OOOO....",
+    "............",
+  ],
+  icon_class_ranged: [
+    ".....QQ.....",
+    ".....QQ.....",
+    "...QQQQQQ...",
+    "..Q......Q..",
+    "..Q..QQ..Q..",
+    "QQQ.QQQQ.QQQ",
+    "QQQ.QQQQ.QQQ",
+    "..Q..QQ..Q..",
+    "..Q......Q..",
+    "...QQQQQQ...",
+    ".....QQ.....",
+    ".....QQ.....",
+  ],
+  icon_class_magic: [
+    "............",
+    ".....XX..XX.",
+    "....XXXX.XX.",
+    "...XXXXXX...",
+    ".XXXXWWXXXX.",
+    ".XXXXWWXXXX.",
+    "...XXXXXX...",
+    "....XXXX....",
+    ".....XX.....",
+    "............",
+    "............",
+    "............",
+  ],
   // ARMSTRONG's Apollo survival-kit machete: broad steel blade, wood grip.
   icon_machete: [
     "............",

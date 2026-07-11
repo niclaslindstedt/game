@@ -61,7 +61,7 @@ import {
 } from "./ItemCard.tsx";
 import { dollDataUrl, playerDollLayers } from "./paper-doll.ts";
 import { playUiSound } from "./sfx/index.ts";
-import { TIER_COLORS } from "./tiers.ts";
+import { TIER_COLORS, tierGlowClass } from "./tiers.ts";
 
 type DragSource =
   { type: "inv"; index: number } | { type: "slot"; slot: EquipSlot };
@@ -172,14 +172,14 @@ const clampNum = (v: number, lo: number, hi: number) =>
  */
 function ItemTooltip({
   font,
-  state,
   sprites,
+  state,
   item,
   anchor,
 }: {
   font: PixelFont;
-  state: GameState;
   sprites: Sprites;
+  state: GameState;
   item: Equipment;
   anchor: DOMRect;
 }) {
@@ -290,7 +290,7 @@ function ItemTooltip({
     <>
       <div
         ref={mainRef}
-        className="item-tooltip"
+        className={`item-tooltip${tierGlowClass(item.tier)}`}
         style={{
           left: pos?.main.left ?? anchor.right + 10,
           top: pos?.main.top ?? anchor.top,
@@ -300,6 +300,7 @@ function ItemTooltip({
       >
         <ItemCardBody
           font={font}
+          sprites={sprites}
           state={state}
           item={item}
           compareTo={compareTo}
@@ -312,7 +313,7 @@ function ItemTooltip({
       {compareTo && (
         <div
           ref={wornRef}
-          className="item-tooltip"
+          className={`item-tooltip${tierGlowClass(compareTo.tier)}`}
           style={{
             left: pos?.worn?.left ?? 0,
             top: pos?.worn?.top ?? 0,
@@ -322,6 +323,7 @@ function ItemTooltip({
         >
           <ItemCardBody
             font={font}
+            sprites={sprites}
             state={state}
             item={compareTo}
             compareTo={null}
@@ -691,7 +693,9 @@ export function InventoryPanel({
                     <div
                       className={`inv-cell equip-cell${
                         drag && drag.item.slot === slot ? " drop-ok" : ""
-                      }${item && isArmorBroken(item) ? " broken" : ""}`}
+                      }${item && isArmorBroken(item) ? " broken" : ""}${
+                        item ? tierGlowClass(item.tier) : ""
+                      }`}
                       data-drop={`slot:${slot}`}
                       style={
                         item
@@ -808,7 +812,7 @@ export function InventoryPanel({
                   item && !isArmorBroken(item) && wouldUpgradeSlot(state, item)
                     ? " upgrade"
                     : ""
-                }`}
+                }${item ? tierGlowClass(item.tier) : ""}`}
                 data-drop={`inv:${index}`}
                 style={
                   item ? { borderColor: TIER_COLORS[item.tier] } : undefined
@@ -864,8 +868,8 @@ export function InventoryPanel({
       {inspect && !(drag && drag.moved) && (
         <ItemTooltip
           font={font}
-          state={state}
           sprites={sprites}
+          state={state}
           item={inspect.item}
           anchor={inspect.anchor}
         />

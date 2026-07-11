@@ -32,7 +32,7 @@ import { spriteDataUrl, type Sprites } from "./assets.ts";
 import { synth } from "./audio.ts";
 import { ItemCardBody, ItemIcon } from "./ItemCard.tsx";
 import { playUiSound } from "./sfx/index.ts";
-import { TIER_COLORS } from "./tiers.ts";
+import { TIER_COLORS, tierGlowClass } from "./tiers.ts";
 
 /** Wrap the detail card's name/stat lines to the same rem cap the inventory
  * tooltip and arsenal viewer use, so the three read identically. */
@@ -271,7 +271,14 @@ export function ShopPanel({
                   disabled={soldOut}
                   onClick={() => setSelected({ kind: "stock", id: entry.id })}
                 >
-                  <span className="inv-cell" style={{ borderColor: tint }}>
+                  <span
+                    className={`inv-cell${
+                      entry.kind === "weapon"
+                        ? tierGlowClass(entry.equipment.tier)
+                        : ""
+                    }`}
+                    style={{ borderColor: tint }}
+                  >
                     {icon && (
                       <img
                         src={icon}
@@ -349,7 +356,7 @@ export function ShopPanel({
                   selected?.kind === "bag" && selected.index === index
                     ? " selected"
                     : ""
-                }`}
+                }${item ? tierGlowClass(item.tier) : ""}`}
                 aria-label={`bag-${index}`}
                 style={
                   item ? { borderColor: TIER_COLORS[item.tier] } : undefined
@@ -388,7 +395,9 @@ export function ShopPanel({
                 {selectedStock.kind === "weapon" ? (
                   <>
                     <span
-                      className="inv-cell shop-detail-icon"
+                      className={`inv-cell shop-detail-icon${tierGlowClass(
+                        selectedStock.equipment.tier,
+                      )}`}
                       style={{
                         borderColor: TIER_COLORS[selectedStock.equipment.tier],
                       }}
@@ -401,6 +410,7 @@ export function ShopPanel({
                     <div className="shop-detail-card">
                       <ItemCardBody
                         font={font}
+                        sprites={sprites}
                         state={state}
                         item={selectedStock.equipment}
                         compareTo={compareFor(selectedStock.equipment)}
@@ -454,7 +464,9 @@ export function ShopPanel({
             <>
               <div className="shop-detail-info">
                 <span
-                  className="inv-cell shop-detail-icon"
+                  className={`inv-cell shop-detail-icon${tierGlowClass(
+                    selectedBag.tier,
+                  )}`}
                   style={{ borderColor: TIER_COLORS[selectedBag.tier] }}
                 >
                   <ItemIcon sprites={sprites} item={selectedBag} />
@@ -462,6 +474,7 @@ export function ShopPanel({
                 <div className="shop-detail-card">
                   <ItemCardBody
                     font={font}
+                    sprites={sprites}
                     state={state}
                     item={selectedBag}
                     compareTo={compareFor(selectedBag)}

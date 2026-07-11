@@ -31,7 +31,7 @@ import type { PixelFont } from "@ui/lib/pixel-font.ts";
 import { spriteDataUrl, type Sprites } from "./assets.ts";
 import { synth } from "./audio.ts";
 import { playUiSound } from "./sfx/index.ts";
-import { TIER_COLORS } from "./tiers.ts";
+import { TIER_COLORS, tierGlowClass } from "./tiers.ts";
 
 const SLOT_LABELS: Record<CompanionSlot, string> = {
   weapon: "WEAPON",
@@ -133,7 +133,9 @@ export function CompanionPanel({
               <button
                 key={slot}
                 type="button"
-                className="inv-cell equip-cell companion-cell"
+                className={`inv-cell equip-cell companion-cell${
+                  item ? tierGlowClass(item.tier) : ""
+                }`}
                 aria-label={`companion-slot-${slot}`}
                 style={{ borderColor: border }}
                 onClick={() => {
@@ -182,7 +184,9 @@ export function CompanionPanel({
               <button
                 key={index}
                 type="button"
-                className={`inv-cell companion-bag-cell${usable ? " usable" : ""}`}
+                className={`inv-cell companion-bag-cell${usable ? " usable" : ""}${
+                  item ? tierGlowClass(item.tier) : ""
+                }`}
                 aria-label={`companion-bag-${index}`}
                 style={
                   item && fitsCompanion(item)
