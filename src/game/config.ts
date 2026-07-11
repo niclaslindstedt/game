@@ -650,6 +650,23 @@ export const MENACE = {
    * other way on evolved mobs).
    */
   tierBonusPerLevel: 0.015,
+  /**
+   * The DAMAGE→LEVEL mapping's normalization (see `heroDamageLevel` in
+   * menace.ts): the equipped weapon's sustained single-target output
+   * (`weaponDps` — per-hit damage with `damagePct` affixes, the stat-scaled
+   * cadence, and the average crit lift) reads as the power level whose
+   * TYPICAL minion (`LEVELING.refMobHp` on the same `mobHpPerLevel` ramp
+   * the spawner scales hp by) it would fell in this many SECONDS. DPS, not
+   * the raw blow, so a slow crusher and a quick blade with the same true
+   * output read the same (one-shot excess is the overkill/ratchet system's
+   * job). Fair play fells the reference minion in ~4–5 s on the wall
+   * starter and ~2–3 s well-geared, so 1.5 grants a comfortable GRACE: gear
+   * merely good for its level still reads UNDER the character level (the
+   * max() in `heroPowerLevel` ignores it) and a strong find keeps feeling
+   * good; genuinely absurd output levels the horde until its health answers
+   * the damage instead of letting a lopsided drop melt the campaign.
+   */
+  damageLevelKillSec: 1.5,
 } as const;
 
 /**

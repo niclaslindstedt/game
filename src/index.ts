@@ -193,6 +193,7 @@ export {
 export {
   enemyPowerScale,
   currentMobLevel,
+  heroDamageLevel,
   heroGearLevel,
   heroPowerLevel,
   menaceFloorStage,
