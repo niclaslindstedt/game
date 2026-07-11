@@ -45,16 +45,6 @@ import {
   tierGlowClass,
 } from "./tiers.ts";
 
-/** The item card's headline per gear slot (weapons headline their class). */
-const SLOT_HEADLINES: Record<Exclude<Equipment["slot"], "weapon">, string> = {
-  head: "HEAD ARMOR",
-  chest: "CHEST ARMOR",
-  legs: "LEG ARMOR",
-  feet: "FOOT ARMOR",
-  charm: "CHARM",
-  bag: "BAG",
-};
-
 export const STAT_LABELS: Record<StatName, string> = {
   stamina: "STAMINA",
   strength: "STRENGTH",
@@ -279,7 +269,8 @@ export function itemLines(
     // Compare against the gear worn in the same slot.
     const eqGear =
       equipped && !isWeaponDef(equipped.defId) ? gearDef(equipped.defId) : null;
-    lines.push({ text: SLOT_HEADLINES[def.slot] });
+    // The slot itself is the glyph beside the name (ItemCardBody), like a
+    // weapon's class — no headline row.
     if (reqLine) lines.push(reqLine);
     // An armor piece leads with its rolled armor points (the ilvl-grown
     // stamp), compared against what the same slot wears now.
@@ -385,17 +376,20 @@ export function ItemCardBody({
   icon?: ReactNode;
 }) {
   const tierLabel = TIER_LABELS[item.tier];
-  // The weapon's class as a glyph left of the name (sword/reticle/spark, in
-  // the class color) — the "MELEE WEAPON" line it replaces saved a row.
+  // What this thing IS, as a glyph in the card's lower-right corner beside
+  // the item level: a weapon's class (sword/reticle/spark, class-colored) or
+  // a gear piece's slot (helmet/vest/pants/boot/clover/satchel) — the
+  // "MELEE WEAPON" / "HEAD ARMOR" headline it replaces saved a card row.
   const weaponClass = isWeaponDef(item.defId)
     ? weaponDef(item.defId).class
     : null;
-  const glyph = weaponClass
-    ? spriteDataUrl(sprites, `icon_class_${weaponClass}`)
-    : null;
+  const glyph = spriteDataUrl(
+    sprites,
+    weaponClass ? `icon_class_${weaponClass}` : `icon_slot_${item.slot}`,
+  );
   // Unique/legendary names carry a soft glow (tierGlowClass) on top of the
-  // tier color — gold alone sits too close to rare yellow. The icon and the
-  // class glyph eat into the wrap width, so long names still stay inside.
+  // tier color — gold alone sits too close to rare yellow. The icon eats
+  // into the wrap width, so long names still stay inside.
   const name = (
     <PixelText
       font={font}
@@ -403,17 +397,7 @@ export function ItemCardBody({
       scale={2}
       color={TIER_COLORS[item.tier]}
       className={tierGlowClass(item.tier).trim() || undefined}
-      maxWidth={
-        maxWidth ? maxWidth - (icon ? 2 : 0) - (glyph ? 1 : 0) : maxWidth
-      }
-    />
-  );
-  const glyphImg = glyph && (
-    <img
-      src={glyph}
-      alt={`${weaponClass} weapon`}
-      className="pixel-img card-class-glyph"
-      draggable={false}
+      maxWidth={icon && maxWidth ? maxWidth - 2 : maxWidth}
     />
   );
   return (
@@ -421,10 +405,9 @@ export function ItemCardBody({
       {subtitle && (
         <PixelText font={font} text={subtitle} scale={1} color="#9aa3ad" />
       )}
-      {icon || glyphImg ? (
+      {icon ? (
         <div className="tooltip-name-row">
           {icon}
-          {glyphImg}
           {name}
         </div>
       ) : (
@@ -468,10 +451,11 @@ export function ItemCardBody({
           maxWidth={maxWidth}
         />
       ))}
-      {/* The card's foot: the quality tier spelled out in the tier color —
-          the explicit answer to "is this rare or unique?" that the name color
-          alone can't give (plain finds carry no label, see TIER_LABELS) — and
-          the item's own LEVEL (which sized its bonuses) tucked lower-right. */}
+      {/* The card's foot: the quality tier spelled out in the tier color on
+          the left — the explicit answer to "is this rare or unique?" that
+          the name color alone can't give (plain finds carry no label, see
+          TIER_LABELS) — and, tucked lower-right, the item's own LEVEL
+          (which sized its bonuses) with the class/slot glyph beside it. */}
       <div className="card-foot">
         {tierLabel && (
           <PixelText
@@ -482,12 +466,17 @@ export function ItemCardBody({
             className={tierGlowClass(item.tier).trim() || undefined}
           />
         )}
-        <PixelText
-          font={font}
-          text={`ILVL ${item.ilvl}`}
-          scale={lineScale}
-          className="card-ilvl"
-        />
+        <div className="card-foot-right">
+          <PixelText font={font} text={`ILVL ${item.ilvl}`} scale={lineScale} />
+          {glyph && (
+            <img
+              src={glyph}
+              alt={weaponClass ? `${weaponClass} weapon` : item.slot}
+              className="pixel-img card-class-glyph"
+              draggable={false}
+            />
+          )}
+        </div>
       </div>
     </>
   );
