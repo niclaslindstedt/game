@@ -72,6 +72,7 @@ Extend this table every time you discover a new drift path.
 
 After a run, edit this file in place:
 
-1. **Grow the mapping table** with any new source → prompt path you discovered.
+1. **Grow the mapping table** with any new source → prompt path you discovered (operating data — edit it in place).
 2. **Record drift signals** — if a prompt went stale through a path not captured above, add the path.
-3. **Commit the skill edit** together with the prompt edits so the knowledge compounds.
+3. **Record recurring patterns** as lesson fragments under `.lessons/` (see [`../LESSONS.md`](../LESSONS.md); read back with `node scripts/skill-lessons.mjs update-prompts`) — fragments never conflict across parallel sessions.
+4. **Commit the skill edit** together with the prompt edits so the knowledge compounds.

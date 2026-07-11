@@ -163,6 +163,10 @@ sweep will ever look at.
 ## Skill self-improvement
 
 When a sweep settles a new quality rule ("essential text ≥ scale 2",
-"legendary glow is reserved"), add it to **The quality bar** above. When a
-new surface or trigger lands, add the row to the forcing table and the step
-to the harness.
+"legendary glow is reserved"), record it as a lesson fragment under
+`.lessons/` (see [`../LESSONS.md`](../LESSONS.md)) — never by appending to
+this file, which conflicts across parallel sessions. Read past ones with
+`node scripts/skill-lessons.mjs ui-review` before sweeping, and promote
+settled rules into **The quality bar** above during a consolidation pass.
+When a new surface or trigger lands, add the row to the forcing table and
+the step to the harness (that's operating data — edit it in place).

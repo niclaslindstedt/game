@@ -52,5 +52,9 @@ route over clicking around in a browser.
 
 ## Skill self-improvement
 
-Add each diagnosed root-cause *class* (not the one-off) to the
-classification table so triage gets faster.
+Record each diagnosed root-cause *class* (not the one-off) as a lesson
+fragment under `.lessons/` (see [`../LESSONS.md`](../LESSONS.md)) — never by
+appending to this file, which conflicts across parallel sessions. Read past
+ones with `node scripts/skill-lessons.mjs debug-game` before triaging.
+During a consolidation pass, promote recurring classes into the
+classification table above so triage gets faster.

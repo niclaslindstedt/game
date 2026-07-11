@@ -192,6 +192,6 @@ After a run, extend this file:
 
 1. **Grow the mapping table** whenever a new §X.Y section starts producing violations that the table does not yet cover.
 2. **Extend the step-2 shell checks** whenever a new mandate lands upstream — the checks must stay a faithful, binary-free mirror of the spec's structural rules.
-3. **Record fix recipes** (exact commands or edit patterns) for violations that required more than a one-line change.
+3. **Record fix recipes** (exact commands or edit patterns) as lesson fragments under `.lessons/` for violations that required more than a one-line change (see [`../LESSONS.md`](../LESSONS.md); read them back with `node scripts/skill-lessons.mjs sync-oss-spec`) — fragments never conflict across parallel sessions the way edits to this file do.
 4. **Flag recurring drift** — if the same violation keeps coming back, either a CI check or a different skill's mapping table is missing a row. Fix the upstream cause, not just the symptom.
-5. **Commit the skill edit** alongside the repo fixes so the knowledge compounds.
+5. **Commit the skill edit** alongside the repo fixes so the knowledge compounds. The mapping table and shell checks are operating data — grow them in place; everything narrative goes to `.lessons/`.

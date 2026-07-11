@@ -70,6 +70,6 @@ Extend this table every time you find a new source-of-truth file that feeds the 
 
 After a run, improve this file in place:
 
-1. **Grow the mapping table** with any new source → README relationship you discovered.
-2. **Record patterns** for recurring edits.
+1. **Grow the mapping table** with any new source → README relationship you discovered (operating data — edit it in place).
+2. **Record patterns** for recurring edits as lesson fragments under `.lessons/` (see [`../LESSONS.md`](../LESSONS.md); read back with `node scripts/skill-lessons.mjs update-readme`) — fragments never conflict across parallel sessions.
 3. **Commit the skill edit** together with the README edit so the knowledge compounds.

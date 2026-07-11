@@ -124,4 +124,8 @@ engine tests use the fixture ids (`test_minion`, `test_vest`, …) instead.
 
 When a staging need doesn't fit the spec (a new field, a new default), grow
 `src/game/scenario.ts` + its test, then document the field in the spec table
-above and in `docs/configuration.md`. Add recurring stagings as recipes.
+above and in `docs/configuration.md` (that's operating data — edit it in
+place). Record recurring stagings and staging gotchas as lesson fragments
+under `.lessons/` (see [`../LESSONS.md`](../LESSONS.md)); read past ones
+with `node scripts/skill-lessons.mjs test-scenario`, and promote the proven
+ones into the recipes above during a consolidation pass.
