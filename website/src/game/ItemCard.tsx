@@ -6,6 +6,8 @@
 // `ItemIcon` + `ItemCardBody`, so a change to how a stat is worded or colored
 // lands everywhere at once and the surfaces never drift.
 
+import type { ReactNode } from "react";
+
 import {
   ACCURACY,
   armorValueOf,
@@ -344,6 +346,10 @@ export function ItemIcon({
  * null for a standalone read. `maxWidth` wraps long names/lines to a rem cap.
  * `lineScale` sizes the stat/affix lines (the hover tooltip pumps it up so the
  * numbers read at arm's length; the arsenal viewer keeps the default 1).
+ * `subtitle` prints a small grey kicker above the name ("EQUIPPED") and `icon`
+ * seats the item's pixel icon beside the name — the worn piece's comparison
+ * card uses both, so it stays identifiable even when the card floats over the
+ * equip slot whose icon it describes.
  */
 export function ItemCardBody({
   font,
@@ -352,6 +358,8 @@ export function ItemCardBody({
   compareTo,
   maxWidth,
   lineScale = 1,
+  subtitle,
+  icon,
 }: {
   font: PixelFont;
   state: GameState;
@@ -359,16 +367,32 @@ export function ItemCardBody({
   compareTo: Equipment | null;
   maxWidth?: number;
   lineScale?: number;
+  subtitle?: string;
+  icon?: ReactNode;
 }) {
+  const name = (
+    <PixelText
+      font={font}
+      text={equipmentName(item)}
+      scale={2}
+      color={TIER_COLORS[item.tier]}
+      // The icon eats into the wrap width, so long names still stay inside.
+      maxWidth={icon && maxWidth ? maxWidth - 2 : maxWidth}
+    />
+  );
   return (
     <>
-      <PixelText
-        font={font}
-        text={equipmentName(item)}
-        scale={2}
-        color={TIER_COLORS[item.tier]}
-        maxWidth={maxWidth}
-      />
+      {subtitle && (
+        <PixelText font={font} text={subtitle} scale={1} color="#9aa3ad" />
+      )}
+      {icon ? (
+        <div className="tooltip-name-row">
+          {icon}
+          {name}
+        </div>
+      ) : (
+        name
+      )}
       {itemLines(state, item, compareTo).map((line) =>
         line.delta ? (
           <div key={line.text} className="tooltip-row">
