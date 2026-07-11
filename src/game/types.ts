@@ -1312,6 +1312,23 @@ export type GameState = {
    * of raw damage output. Starts at 0.
    */
   combatKillRate: number;
+  /**
+   * Cumulative damage dealt by powerups — the screen-nuke bomb and the damage
+   * abilities (fire orbs, storm cell). Booked alongside `stats.damageDealt` but
+   * kept out of the menace meter: `step` subtracts this step's slice from the
+   * damage `tickMenace` reads, so a bomb or powerup clearing the screen never
+   * heats the escalation the player didn't earn with their own weapon. Starts
+   * at 0.
+   */
+  menaceExemptDamage: number;
+  /**
+   * Cumulative kills scored by powerups — the same nuke/orbs/storm sources as
+   * `menaceExemptDamage`. Booked alongside `stats.kills` but subtracted from the
+   * kills `tickMenace` reads, so powerup kills never feed the menace kill-rate
+   * heat (and they skip the overkill jolt and evolution ratchet entirely —
+   * see `killEnemy`). Starts at 0.
+   */
+  menaceExemptKills: number;
   /** Where the run begins; also the origin difficulty scales out from. */
   playerSpawn: Vec2;
   /** Story props to draw (the lander, the boss's flag, …). */

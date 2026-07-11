@@ -208,6 +208,8 @@ export function createGame(
     evoRatchetMs: 0,
     combatDps: 0,
     combatKillRate: 0,
+    menaceExemptDamage: 0,
+    menaceExemptKills: 0,
     level: {
       id: def.id,
       index: def.index,

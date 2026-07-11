@@ -35,7 +35,7 @@ import {
   step,
   weaponDps,
 } from "@game/core";
-import type { Equipment, GameState } from "@game/core";
+import type { Equipment, GameInput, GameState } from "@game/core";
 
 import { DT, idle, makeEnemy, run, startGame, stopWaves } from "./helpers.ts";
 
@@ -625,6 +625,119 @@ describe("hero power level — calculated damage drives the horde", () => {
     expect(heroDamageLevel(state)).toBeGreaterThan(fair);
     state.player.equipment.weapon.affixes.pop();
     expect(heroDamageLevel(state)).toBeCloseTo(fair, 6);
+  });
+});
+
+describe("menace — powerups don't trigger it", () => {
+  const useItem: GameInput = { ...idle, useItem: true };
+
+  /** A warmed-up, bare stage with the hero's own weapon silenced, so the only
+   * combat output is whatever powerup the test fires. */
+  function powerupStage(): GameState {
+    const state = startGame();
+    bareStage(state);
+    state.player.level = 8; // past the warmup, so a real kill WOULD escalate
+    state.player.weaponCooldownMs = 1_000_000; // the hero swings nothing himself
+    return state;
+  }
+
+  /** Drop `count` overkillable fodder in blast range of the hero. */
+  function seedFodder(state: GameState, count: number): void {
+    const { x, y } = state.player.pos;
+    for (let i = 0; i < count; i++) {
+      state.enemies.push(
+        makeEnemy(
+          { pos: { x: x + 16 + i * 6, y }, hp: 10, maxHp: 10 },
+          "test_fodder",
+        ),
+      );
+    }
+  }
+
+  it("a screen-nuke bomb clears the pack without heating the meter", () => {
+    const state = powerupStage();
+    seedFodder(state, 6);
+    state.player.heldAbilities = ["test_nuke"];
+    const creditBefore = state.moveSpawnCredit;
+
+    step(state, useItem, DT);
+
+    // The bomb did its job — six fodder dead, the field cleared.
+    expect(state.stats.kills).toBe(6);
+    expect(
+      state.enemies.filter((e) => enemyDef(e.defId).role === "minion"),
+    ).toHaveLength(0);
+    // …yet nothing on the menace side moved: no meter, no rolling fuel, no
+    // dinner-bell lure, no permanent-floor ratchet.
+    expect(state.menace).toBe(0);
+    expect(state.combatDps).toBe(0);
+    expect(state.combatKillRate).toBe(0);
+    expect(state.moveSpawnCredit).toBe(creditBefore);
+    expect(state.menaceFloor).toBe(0);
+    expect(state.evoProof).toBe(0);
+  });
+
+  it("even a CRITTING bomb — real overkill — banks no jolt or ratchet", () => {
+    const state = powerupStage();
+    state.rng = () => 0; // force the crit so each blast overkills its target
+    seedFodder(state, 4);
+    state.player.heldAbilities = ["test_nuke"];
+    const creditBefore = state.moveSpawnCredit;
+
+    step(state, useItem, DT);
+
+    expect(state.stats.kills).toBe(4);
+    // The overkill spike that a WEAPON crit would have jolted/lured/ratcheted
+    // with is inert here — a bomb's overkill is not the hero's own power.
+    expect(state.menace).toBe(0);
+    expect(state.moveSpawnCredit).toBe(creditBefore);
+    expect(state.menaceFloor).toBe(0);
+    expect(state.evoProof).toBe(0);
+  });
+
+  it("damage powerups (storm) deal damage without feeding the meter", () => {
+    const state = powerupStage();
+    state.player.heldAbilities = ["test_storm"];
+    step(state, useItem, DT); // start the storm running
+    state.enemies.push(
+      makeEnemy(
+        {
+          pos: { x: state.player.pos.x + 40, y: state.player.pos.y },
+          hp: 1_000_000,
+          maxHp: 1_000_000,
+        },
+        "test_minion",
+      ),
+    );
+    const dealtBefore = state.stats.damageDealt;
+
+    run(state, idle, 120); // a couple of seconds of strikes
+
+    // The storm connected — the run stats book its damage…
+    expect(state.stats.damageDealt).toBeGreaterThan(dealtBefore);
+    // …but that output never entered the menace fuel, so the meter stays cold.
+    expect(state.combatDps).toBe(0);
+    expect(state.menace).toBe(0);
+  });
+
+  it("the hero's OWN weapon still escalates — the exemption is powerup-only", () => {
+    // Same overkillable fodder, but felled by the hero's weapon rather than a
+    // bomb: the meter and the lure both react, proving nothing global changed.
+    const state = startGame();
+    bareStage(state);
+    state.player.level = 8;
+    equip(state, "test_hammer"); // ~34 dmg vs a 10-hp bar → real overkill
+    const { x, y } = state.player.pos;
+    state.enemies.push(
+      makeEnemy({ pos: { x: x + 20, y }, hp: 10, maxHp: 10 }, "test_fodder"),
+    );
+    const creditBefore = state.moveSpawnCredit;
+
+    step(state, idle, DT);
+
+    expect(state.stats.kills).toBe(1);
+    expect(state.menace).toBeGreaterThan(0);
+    expect(state.moveSpawnCredit).toBeGreaterThan(creditBefore);
   });
 });
 
