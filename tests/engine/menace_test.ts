@@ -26,6 +26,7 @@ import {
   menaceStage,
   menaceWarmup,
   mobHpScaleFor,
+  mobLevelScale,
   resetBalanceTuning,
   setBalanceTuning,
   skipCutscene,
@@ -501,14 +502,17 @@ describe("hero power level — gear drives the horde", () => {
     expect(heroPowerLevel(state)).toBe(10);
   });
 
-  it("a decked-out hero meets a horde levelled to his gear, not his sheet", () => {
+  it("a decked-out hero meets a horde TOUGHENED to his gear, not his sheet", () => {
     const state = startGame(); // medium: mobLevelOffset −2
-    const before = currentMobLevel(state);
-    expect(before).toBe(1); // level-1 hero, floor at 1
+    const mlvlBefore = currentMobLevel(state);
+    const hpScaleBefore = mobLevelScale(state);
+    expect(mlvlBefore).toBe(1); // level-1 hero, floor at 1
     state.player.equipment.weapon.ilvl = 70; // power level 10
-    expect(currentMobLevel(state)).toBe(8); // 10 − 2
-    // The set pieces power-match the same gear-driven level.
+    // Gear buys harder fights — minion hp and the set-piece power-match —
+    // but the loot-facing monster level stays on the character sheet.
+    expect(mobLevelScale(state)).toBeGreaterThan(hpScaleBefore);
     expect(enemyPowerScale(state)).toBeGreaterThan(1);
+    expect(currentMobLevel(state)).toBe(mlvlBefore);
   });
 
   it("ordinary play is untouched — gear trailing the level changes nothing", () => {
@@ -547,9 +551,10 @@ describe("hero power level — calculated damage drives the horde", () => {
     expect(heroPowerLevel(state)).toBe(state.player.level);
   });
 
-  it("an absurd damage roll levels the horde to what the hero swings", () => {
+  it("an absurd damage roll toughens the horde to what the hero swings", () => {
     const state = startGame();
-    const before = currentMobLevel(state);
+    const hpScaleBefore = mobLevelScale(state);
+    const bossScaleBefore = enemyPowerScale(state);
     // A +900% damage affix — the kind of roll ilvl never priced in. The
     // weapon's ilvl stays put, so the GEAR level alone would miss it.
     state.player.equipment.weapon.affixes.push({
@@ -560,10 +565,33 @@ describe("hero power level — calculated damage drives the horde", () => {
     const damageLevel = heroDamageLevel(state);
     expect(damageLevel).toBeGreaterThan(state.player.level);
     expect(heroPowerLevel(state)).toBe(damageLevel);
-    // The horde — and the loot gates its mlvl opens — follows the damage.
-    expect(currentMobLevel(state)).toBeGreaterThan(before);
-    // The set pieces power-match the same damage-driven level.
-    expect(enemyPowerScale(state)).toBeGreaterThan(1);
+    // The horde's TOUGHNESS follows the damage: minion hp and the set-piece
+    // power-match both rise.
+    expect(mobLevelScale(state)).toBeGreaterThan(hpScaleBefore);
+    expect(enemyPowerScale(state)).toBeGreaterThan(bossScaleBefore);
+  });
+
+  it("neither damage nor gear opens loot gates — no good-find→better-finds loop", () => {
+    const state = startGame();
+    const mlvlBefore = currentMobLevel(state);
+    // An absurd damage roll: toughness answers (heroPowerLevel), but the
+    // monster level — and the levelReq/tier/item-level gates hanging off
+    // it — is exactly what the CHARACTER level says: harder fights and
+    // more xp, never a better successor.
+    state.player.equipment.weapon.affixes.push({
+      kind: "damagePct",
+      value: 9,
+    });
+    expect(heroPowerLevel(state)).toBeGreaterThan(state.player.level);
+    expect(currentMobLevel(state)).toBe(mlvlBefore);
+    // A twink rack: same rule — gear toughens the horde, not the drops.
+    state.player.equipment.weapon.affixes.pop();
+    state.player.equipment.weapon.ilvl = 70; // gear level 10 across 7 slots
+    expect(heroPowerLevel(state)).toBe(10);
+    expect(currentMobLevel(state)).toBe(mlvlBefore);
+    // Only the character level moves the loot gates.
+    state.player.level = 10;
+    expect(currentMobLevel(state)).toBeGreaterThan(mlvlBefore);
   });
 
   it("mob health answers the damage: the leveled bar meets the output", () => {
