@@ -1004,19 +1004,20 @@ const SPRITES = {
   // The CEO's desk ornament: the old stapler drawing survives only as the
   // trophy's gold re-skin.
   icon_golden_stapler: swapPalette(STAPLER_ICON, { r: "y", a: "o", A: "q" }),
-  // The guard's baton: dark shaft, wooden grip.
+  // The guard's telescoping baton: a bright steel shaft with a hard glinting
+  // tip, dropping into a black knurled grip.
   icon_baton: [
     "............",
-    ".........OO.",
-    "........ObO.",
-    ".......ObO..",
-    "......ObO...",
-    ".....ObO....",
-    "....ObO.....",
-    "...OkO......",
-    "..OkO.......",
-    "..OO........",
-    "............",
+    "..........O.",
+    ".........sO.",
+    "........OT..",
+    ".......OT...",
+    "......OT....",
+    "..OOOOT.....",
+    "..OfbO......",
+    "..ObfO......",
+    "..OfbO......",
+    "..OOOO......",
     "............",
   ],
   // Cleanroom tooling rated for rocket hulls — MUSKRAT's toothpick.
