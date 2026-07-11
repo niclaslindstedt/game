@@ -56,20 +56,17 @@ const TASER_ICON = [
   "............",
 ];
 
-// The lab-bench laser emitter: a grey breech with a red charge LED, a sheened
-// barrel dropping to a muzzle head. `b` is the energy body — the OVERCLOCKED
-// LASER recolors it b->y so the whole barrel runs gold.
 const LASER_ICON = [
   "............",
-  ".OOOO.......",
-  ".OrrO.......",
-  ".OfAOO......",
-  ".OOOOsO.....",
-  ".....ObO....",
-  "......ObO...",
-  ".......OOO..",
-  "........bbO.",
-  "........OsO.",
+  ".rr.........",
+  ".rr.........",
+  "....OO......",
+  "...ObbO.....",
+  "....ObbO....",
+  ".....ObbO...",
+  "......ObbO..",
+  ".......ObO..",
+  "........O...",
   "............",
   "............",
 ];
