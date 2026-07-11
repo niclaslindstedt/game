@@ -36,7 +36,12 @@ import {
   rollEquipment,
   syncInventoryCapacity,
 } from "./items.ts";
-import { levelStatGains, xpToLevelUp } from "./leveling.ts";
+import {
+  levelStatGains,
+  xpCapMultiplier,
+  xpLevelCap,
+  xpToLevelUp,
+} from "./leveling.ts";
 import { addMapMarker } from "./map.ts";
 import { bankOverkill, maybePowerScale, mobLevelTierBonus } from "./menace.ts";
 import { maybeFirstKillThought, startDeathWords } from "./story.ts";
@@ -844,6 +849,17 @@ export function grantXp(state: GameState, amount: number): void {
   // arrows, and scripted awards alike — so it purely paces leveling without
   // touching the curve (`xpToLevelUp`) the costs are stated in.
   amount = Math.round(amount * BALANCE.xpGain);
+  // The PER-MAP CAP (config XP_CAP): every grant on this map diminishes as
+  // the hero closes on the (level × difficulty) ceiling and zeroes at it, so
+  // re-running an outgrown map farms loot, never levels. Applied at the same
+  // one door as the dev knob — kills, arrows, and scripted awards all obey.
+  amount = Math.round(
+    amount *
+      xpCapMultiplier(
+        state.player.level,
+        xpLevelCap(state.level.id, state.difficulty),
+      ),
+  );
   const player = state.player;
   player.xp += amount;
   state.stats.xpGained += amount;

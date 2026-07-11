@@ -33,12 +33,12 @@ describe("unique registry", () => {
       expect(def.slot === "weapon").toBe(isWeapon);
       // The base resolves (throws otherwise).
       expect(isWeapon ? weaponDef(def.base) : gearDef(def.base)).toBeTruthy();
-      // At most one scaling bonus, and small.
+      // At most one scaling bonus, and small — within the engine mint clamp.
       const scaling = def.bonuses.filter(
         (b) => b.kind === "statPct" || b.kind === "maxHpPct",
       );
       expect(scaling.length).toBeLessThanOrEqual(1);
-      for (const s of scaling) expect(s.value).toBeLessThanOrEqual(0.03);
+      for (const s of scaling) expect(s.value).toBeLessThanOrEqual(0.02);
     }
   });
 });
@@ -103,14 +103,15 @@ describe("mintUnique", () => {
     const state = startGame();
     state.player.stats.intelligence = 20;
     const before = effectiveStat(state, "intelligence");
-    // THE PANOPTICON carries +3% INTELLIGENCE (a scaling bonus).
+    // THE PANOPTICON carries +2% INTELLIGENCE (a scaling bonus, at the
+    // UNIQUE.scalingPctCap ceiling).
     const panopticon: Equipment = mintUnique(
       { ...state, rng: () => 0.5 } as typeof state,
       "the_panopticon",
     );
     state.player.equipment.head = panopticon;
     expect(effectiveStat(state, "intelligence")).toBe(
-      Math.round(before * 1.03),
+      Math.round(before * 1.02),
     );
   });
 });

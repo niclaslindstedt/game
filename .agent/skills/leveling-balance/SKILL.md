@@ -77,7 +77,23 @@ DO move pacing — the golden-arrow faucet above — and the calculator models t
 and `MENACE.mobHpPerLevel` are wired so free growth cancels against the horde
 (`tests/engine/leveling_test.ts` asserts it). The kills-per-level model already
 rides that cancellation — so tune the `LEVELING` pacing knobs, not the mob
-scaling, to move pacing.
+scaling, to move pacing. Both sides of the cancellation run through the
+**diminishing-returns curve** (`diminishStat` in leveling.ts, knobs
+`STATS.statSoftCap`/`statTaper`): effective stats are linear to the soft cap
+and flatten past it, and `autoPowerScale` applies the same curve to the
+auto-only sums — so the cancellation holds, while chosen points and gear
+stats (which stack deeper into the flat tail) realize a little less each
+level. That is deliberate: leveling alone slowly loses ground to the horde,
+and gear carries the endgame.
+
+**Per-map XP caps.** Every (level × difficulty) pair has a hero-level ceiling
+(config `XP_CAP`, `xpLevelCap`/`xpCapMultiplier` in leveling.ts, applied in
+`grantXp`): XP halves per level across the last `fadeLevels` under the cap
+and stops AT it, so re-running an outgrown map farms loot, never levels. The
+bands are sized a few levels above where a first campaign pass naturally ends
+per rung (`--by-level` below is the check) — when retuning the curve, re-size
+the bands too, and verify with the simulator that first visits forfeit ~no XP
+(`xpLost` in the `simulate-run` summary).
 
 ## Workflow
 
@@ -108,7 +124,15 @@ scaling, to move pacing.
    is the height knob that moves that number; `killsPerLevelGrowth` the taper.
    Adjust and re-run until both the table and the campaign land where you want.
 3. **Measure the real kill rate** — the calculator's kills/hour is an
-   ASSUMPTION. Get the real number from a bot run (see the `playtest` skill):
+   ASSUMPTION. Get the real number headlessly from the campaign simulator
+   (see the `simulate-run` skill — the summary table's `k/min` column ×60 is
+   kills/hour, and its per-rung hero `start→end` levels ARE the campaign
+   progression the calculator only predicts):
+   ```sh
+   node scripts/simulate-run.mjs --difficulty easy --level spacez_hq --full
+   node scripts/simulate-run.mjs               # the full campaign, easy → JESUS
+   ```
+   or from a browser bot run (see the `playtest` skill):
    ```sh
    cd website && npx vite --port 5199 &
    node website/scripts/playtest.mjs --strategy survivor --difficulty easy

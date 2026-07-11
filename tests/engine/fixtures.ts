@@ -1043,6 +1043,22 @@ export const FIX_UNIQUES: Record<string, UniqueDef> = {
     bonuses: [],
     lore: "A TEST RELIC.",
   },
+  // A deliberately OVER-AUTHORED relic: scaling percentages far past the
+  // engine ceiling (UNIQUE.scalingPctCap) beside an exempt damagePct — the
+  // mint-clamp suite verifies statPct/maxHpPct clamp and damagePct doesn't.
+  test_greedy_relic: {
+    id: "test_greedy_relic",
+    name: "TEST GREEDY RELIC",
+    base: "test_charm",
+    slot: "charm",
+    ilvl: 1,
+    bonuses: [
+      { kind: "statPct", stat: "strength", value: 0.5 },
+      { kind: "maxHpPct", value: 0.4 },
+      { kind: "damagePct", value: 0.3 },
+    ],
+    lore: "IT PROMISES TOO MUCH.",
+  },
 };
 
 // A merchant level whose stall lists the fixture relic (rolled at the

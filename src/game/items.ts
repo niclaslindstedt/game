@@ -52,7 +52,7 @@ import { difficultyDef } from "./defs/difficulties.ts";
 import { levelDef } from "./defs/levels/index.ts";
 import { storyItemDef } from "./defs/story.ts";
 import { uniqueDef } from "./defs/uniques.ts";
-import { baseStatBonus } from "./leveling.ts";
+import { baseStatBonus, diminishStat } from "./leveling.ts";
 import { currentMobLevel } from "./menace.ts";
 import { BALANCE } from "./tuning.ts";
 import type {
@@ -469,7 +469,11 @@ export function mintUnique(state: GameState, uniqueId: string): Equipment {
   const u = uniqueDef(uniqueId);
   const weapon = isWeaponDef(u.base);
   const baseDef = weapon ? weaponDef(u.base) : gearDef(u.base);
-  // ±band around the base value; the fixed bonuses are untouched.
+  // ±band around the base value; the fixed bonuses are untouched — except
+  // that SCALING percentages (`statPct`/`maxHpPct`) clamp to the engine's
+  // hard ceiling (UNIQUE.scalingPctCap): they multiply the hero's own grown
+  // total, so no catalog entry may pay more than the cap, whatever it says.
+  // `damagePct` (a weapon's flat +X% damage) and armor are exempt by design.
   const roll = 1 + (state.rng() * 2 - 1) * UNIQUE.baseRollBand;
   const item: Equipment = {
     id: state.nextId++,
@@ -477,7 +481,11 @@ export function mintUnique(state: GameState, uniqueId: string): Equipment {
     slot: u.slot,
     tier: u.tier ?? "unique",
     ilvl: u.ilvl,
-    affixes: u.bonuses.map((bonus) => ({ ...bonus })),
+    affixes: u.bonuses.map((bonus) =>
+      bonus.kind === "statPct" || bonus.kind === "maxHpPct"
+        ? { ...bonus, value: Math.min(bonus.value, UNIQUE.scalingPctCap) }
+        : { ...bonus },
+    ),
     name: u.name,
     // The catalog id behind the display name — the stable identity anything
     // booking "which unique is this" keys on (see Equipment.uniqueId).
@@ -626,13 +634,17 @@ export function isPassiveItem(defId: string): boolean {
  * Stat points from level-ups — the AUTOMATIC base growth leveling itself
  * grants (`baseStatBonus`, WoW-style) plus the points the player chose —
  * any equipped `+N <stat>` affixes, and the flat bonus of every passive
- * trinket carried (bag or worn).
+ * trinket carried (bag or worn). The flat total then runs through the
+ * DIMINISHING-RETURNS curve (`diminishStat`): linear to the soft cap,
+ * flattening past it, so a grown hero's stat pile saturates instead of
+ * compounding forever (the horde's compensation rides the same curve — see
+ * `autoPowerScale`).
  */
 export function effectiveStat(state: GameState, stat: StatName): number {
   let value =
     state.player.stats[stat] + baseStatBonus(state.player.level, stat);
   // Scaling `statPct` bonuses (uniques) multiply the whole total, so they grow
-  // with the hero — a +3% STRENGTH is worth more the stronger you are.
+  // with the hero — a +2% STRENGTH is worth more the stronger you are.
   let pct = 0;
   for (const piece of activePieces(state)) {
     for (const affix of piece.affixes) {
@@ -642,7 +654,7 @@ export function effectiveStat(state: GameState, stat: StatName): number {
     }
   }
   value += passiveStatBonus(state, stat);
-  return Math.round(value * (1 + pct));
+  return Math.round(diminishStat(value) * (1 + pct));
 }
 
 /** Max hp from the base pool + the STAMINA stat + gear bonuses and affixes.

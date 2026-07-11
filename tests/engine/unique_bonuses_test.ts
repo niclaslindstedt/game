@@ -4,7 +4,13 @@
 // value, so they grow as the hero does — the "keeper" bonus. Verified through
 // the same effective-stat / max-hp path all combat reads.
 
-import { computeMaxHp, effectiveStat, type Equipment } from "@game/core";
+import {
+  computeMaxHp,
+  effectiveStat,
+  mintUnique,
+  UNIQUE,
+  type Equipment,
+} from "@game/core";
 import { describe, expect, it } from "vitest";
 
 import { startGame } from "./helpers.ts";
@@ -79,5 +85,18 @@ describe("scaling unique bonuses", () => {
     };
     // +10% yields a bigger absolute gain on a stronger hero.
     expect(grew(100)).toBeGreaterThan(grew(10));
+  });
+
+  it("mintUnique clamps scaling percentages to the engine ceiling", () => {
+    // The fixture relic is authored far past the cap: statPct 0.5,
+    // maxHpPct 0.4, damagePct 0.3. Whatever the catalog says, no minted
+    // piece pays more than UNIQUE.scalingPctCap on a SCALING bonus —
+    // damagePct (a weapon's flat +X% damage) is exempt by design.
+    const state = startGame();
+    const relic = mintUnique(state, "test_greedy_relic");
+    const byKind = Object.fromEntries(relic.affixes.map((a) => [a.kind, a]));
+    expect(byKind.statPct?.value).toBe(UNIQUE.scalingPctCap);
+    expect(byKind.maxHpPct?.value).toBe(UNIQUE.scalingPctCap);
+    expect(byKind.damagePct?.value).toBe(0.3);
   });
 });

@@ -3,11 +3,13 @@
 // underneath the chosen stat points (config LEVELING.autoGainsPerLevel).
 // Everything here is DERIVED from `player.level` — nothing is ever written
 // into `player.stats`, so a respec refunds only the points the player chose.
-// Kept in its own module (config + types only) so both items.ts (effective
-// stats) and menace.ts (mob hp keeping pace) can read it without a cycle.
+// Kept in its own module (config, types, and the pure-data level catalog
+// only) so both items.ts (effective stats) and menace.ts (mob hp keeping
+// pace) can read it without a cycle.
 
-import { LEVELING, MENACE, STATS } from "./config.ts";
-import type { StatName } from "./types.ts";
+import { LEVELING, MENACE, STATS, XP_CAP } from "./config.ts";
+import { levelPosition } from "./defs/levels/index.ts";
+import type { Difficulty, StatName } from "./types.ts";
 
 const AUTO_GAINS: Partial<Record<StatName, number>> =
   LEVELING.autoGainsPerLevel;
@@ -76,20 +78,43 @@ export function levelStatGains(
 }
 
 /**
+ * DIMINISHING RETURNS on stat points — the single curve every effective-stat
+ * read runs through (`effectiveStat` in items.ts) and `autoPowerScale`
+ * mirrors. Linear up to `STATS.statSoftCap`; past it each further raw point
+ * pays less (`softCap + over/(1 + statTaper·over)`), saturating toward
+ * `softCap + 1/statTaper`. Early builds are untouched; the late-game stat
+ * pile flattens, so the horde's flat per-level hp ramp gradually outpaces the
+ * hero and gear — not free stats — has to carry the endgame.
+ */
+export function diminishStat(points: number): number {
+  if (points <= STATS.statSoftCap) return points;
+  const over = points - STATS.statSoftCap;
+  return STATS.statSoftCap + over / (1 + STATS.statTaper * over);
+}
+
+/**
  * The damage-output multiplier the AUTOMATIC gains alone hand a hero of
  * `level`: the STR damage curve times the DEX cadence curve, exactly as
- * `weaponDamage`/`weaponCooldownFor` would apply those points. The horde's
- * hp scaling multiplies by this same number (`mobHpScaleFor`,
+ * `weaponDamage`/`weaponCooldownFor` would apply those points — including
+ * the diminishing-returns curve (`diminishStat`) those reads run through, so
+ * the horde's compensation never overshoots what the hero actually realizes.
+ * The horde's hp scaling multiplies by this same number (`mobHpScaleFor`,
  * `enemyPowerScale` in menace.ts), so the free growth cancels out against
  * the crowd and only CHOSEN points, gear, and skill move the player ahead
  * of the curve — the ding feels mighty without turning the campaign into
- * one-hit kills.
+ * one-hit kills. And because chosen points and gear stats stack ON TOP of
+ * the auto gains — deeper into the flat tail of the diminishing curve — each
+ * new level realizes a little LESS of that edge than the last: leveling
+ * alone slowly loses ground to the horde's ramp, by design.
  */
 export function autoPowerScale(level: number): number {
   return (
     (1 +
-      baseStatBonus(level, "strength") * STATS.damageBonusPerPoint.strength) *
-    (1 + baseStatBonus(level, "dexterity") * STATS.attackSpeedPerStat)
+      diminishStat(baseStatBonus(level, "strength")) *
+        STATS.damageBonusPerPoint.strength) *
+    (1 +
+      diminishStat(baseStatBonus(level, "dexterity")) *
+        STATS.attackSpeedPerStat)
   );
 }
 
@@ -171,4 +196,36 @@ export function xpToLevelUp(level: number): number {
     Math.pow(LEVELING.killsPerLevelGrowth, l - 1) *
     ramp;
   return Math.round(kills * referenceMobXp(l));
+}
+
+/**
+ * The hero-level CEILING this (level × difficulty) pair can pay XP toward —
+ * the per-map cap (config `XP_CAP`): the rung's `first`…`last` band
+ * interpolated across the story order, so each map on a difficulty tops out
+ * a little higher than the one before it. Re-running an outgrown map still
+ * rains loot; it just stops paying levels (see `xpCapMultiplier`, applied in
+ * `grantXp`). A difficulty outside the shipped ladder (fixture rungs) is
+ * uncapped — the global `LEVELING.maxLevel` still holds in `grantXp`.
+ */
+export function xpLevelCap(levelId: string, difficulty: Difficulty): number {
+  const band = XP_CAP.capByDifficulty[difficulty];
+  if (!band) return LEVELING.maxLevel;
+  const { position, total } = levelPosition(levelId);
+  const t = total > 1 ? position / (total - 1) : 0;
+  return Math.min(
+    LEVELING.maxLevel,
+    Math.round(band.first + (band.last - band.first) * t),
+  );
+}
+
+/**
+ * How much of an XP grant a hero of `level` still collects against a map's
+ * `cap` (see `xpLevelCap`): full value up to `cap − XP_CAP.fadeLevels`, then
+ * HALVED per level (the diminishing-returns taper into the wall), and zero
+ * at/past the cap — the map has nothing more to teach, only to drop.
+ */
+export function xpCapMultiplier(level: number, cap: number): number {
+  if (level >= cap) return 0;
+  const over = level - (cap - XP_CAP.fadeLevels);
+  return over <= 0 ? 1 : Math.pow(0.5, over);
 }

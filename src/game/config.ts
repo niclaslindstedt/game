@@ -302,6 +302,35 @@ export const LEVELING = {
 } as const;
 
 /**
+ * PER-MAP XP CAPS — every (level × difficulty) pair has a hero-level ceiling
+ * (see `xpLevelCap` in leveling.ts): XP earned on that map diminishes as the
+ * hero closes on the cap (halving per level across the last `fadeLevels`) and
+ * stops entirely AT it, so re-running an easy map farms LOOT, never levels
+ * past the cap — the Diablo rule that outleveling a zone retires its XP, not
+ * its drops. Each rung lists the cap on its FIRST and LAST story level;
+ * intermediate maps interpolate linearly. Sized a few levels above where a
+ * first campaign pass naturally lands (easy ends ~19, medium ~34, hard ~46,
+ * nightmare ~55, jesus ~60 — see the leveling-balance skill), so the story
+ * never starves; only the rerun grind hits the wall. JESUS's last map runs to
+ * the global `LEVELING.maxLevel` — the endgame grind lives there.
+ */
+export const XP_CAP = {
+  capByDifficulty: {
+    easy: { first: 10, last: 22 },
+    medium: { first: 26, last: 36 },
+    hard: { first: 40, last: 48 },
+    nightmare: { first: 50, last: 57 },
+    jesus: { first: 62, last: 99 },
+  } as Record<Difficulty, { first: number; last: number }>,
+  /**
+   * XP starts diminishing this many levels UNDER the cap: the grant is halved
+   * for each level past `cap − fadeLevels`, reaching zero at the cap itself —
+   * a taper into the wall, not a cliff.
+   */
+  fadeLevels: 3,
+} as const;
+
+/**
  * UNIQUE items — hand-authored named drops (see `defs/uniques.ts`). Their
  * bonuses are fixed, but each drop rolls a small ±band on the BASE damage
  * (weapons) / armor so two copies differ and a better-rolled one is worth
@@ -310,6 +339,16 @@ export const LEVELING = {
 export const UNIQUE = {
   /** Half-width of the base-stat roll: a ±10% band around the base value. */
   baseRollBand: 0.1,
+  /**
+   * Hard ceiling on any SCALING percentage bonus (`statPct` / `maxHpPct`) an
+   * item can carry — clamped at mint (`mintUnique`), whatever the catalog
+   * says. Scaling bonuses multiply the hero's own grown total, so even small
+   * percentages compound into the strongest affixes in the game; 2% is the
+   * most any one piece may pay. Deliberately EXCLUDES `damagePct` (a weapon's
+   * flat +X% damage) and armor — those scale a single surface and stay
+   * catalog-authored.
+   */
+  scalingPctCap: 0.02,
   /**
    * Boss unique drop chance, scaled by how close the boss's monster level is to
    * the item's ilvl: `dropChance × mlvl/ilvl`, capped at `dropChanceCap`. At the
@@ -549,6 +588,23 @@ export const MENACE = {
  * items.ts (`DAMAGE_STAT`, `SPEED_STAT`, `CRIT_STAT`).
  */
 export const STATS = {
+  /**
+   * DIMINISHING RETURNS on every stat (see `diminishStat` in leveling.ts):
+   * effective stat points are linear up to `statSoftCap`, then each further
+   * raw point pays less — `softCap + over/(1 + statTaper·over)` — saturating
+   * toward `statSoftCap + 1/statTaper` (≈90 at the shipped tuning). Applied
+   * at the ONE derivation site every stat read routes through
+   * (`effectiveStat`), and mirrored in `autoPowerScale` so the horde's
+   * compensating hp scale rides the SAME curve. The point: weapons and armor
+   * scale with item level all campaign, so unbounded stat inflation on top
+   * turned the mid-game hero into a god — past the soft cap, stat growth
+   * (auto gains, chosen points, gear affixes) flattens while the horde's flat
+   * per-level ramp (`MENACE.mobHpPerLevel`) keeps climbing, so every new
+   * level nudges the fight HARDER, not easier, and gear — not the ding —
+   * carries the endgame.
+   */
+  statSoftCap: 40,
+  statTaper: 0.02,
   /** Move-speed multiplier added per SPEED point (+8% each). */
   speedPerPoint: 0.08,
   /**

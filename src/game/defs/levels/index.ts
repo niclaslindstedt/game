@@ -57,6 +57,23 @@ export function levelDef(levelId: string): LevelDef {
 }
 
 /**
+ * Where `levelId` sits in the ACTIVE story order: its 0-based position among
+ * the distinct story indexes, and how many there are — the interpolation axis
+ * per-map rules (the XP caps in leveling.ts) scale along. Variants sharing an
+ * index (fixture catalogs do this) count once, like `deriveArrivalLoadout`.
+ */
+export function levelPosition(levelId: string): {
+  position: number;
+  total: number;
+} {
+  const target = levelDef(levelId);
+  const indexes = [
+    ...new Set(Object.values(activeLevels).map((def) => def.index)),
+  ].sort((a, b) => a - b);
+  return { position: indexes.indexOf(target.index), total: indexes.length };
+}
+
+/**
  * Every active level with a LOWER story index than `levelId`, ascending —
  * the campaign the hero has already cleared by the time this level opens.
  * Reads the active registry, so tests that install fixture catalogs get
