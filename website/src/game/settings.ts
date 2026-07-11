@@ -71,6 +71,15 @@ export type AutoLevelStats = "on" | "off";
  * him. The HUD avatar and inventory portrait stay armed regardless. */
 export type CharacterWeapon = "on" | "off";
 
+/** WEAPON SWING: an experimental developer feature flag that animates the
+ * field hero's held weapon on each attack — a blade whips through its slash
+ * arc, a gun recoils, a wand thrusts on the cast — timed to the swing/muzzle
+ * effect so it reads as the weapon actually being used (see render.ts
+ * `drawPlayer`). A pure render concern, like CHARACTER WEAPON, and it only
+ * shows when that flag is on too (there is no held weapon to swing otherwise).
+ * Opt-in: `off` (the default) leaves the weapon posed statically. */
+export type WeaponSwing = "on" | "off";
+
 /** XP ON KILL: a display preference (SETTINGS → DISPLAY) for the blue "+N XP"
  * combat text that floats off a corpse on each kill (emitted in GameScreen).
  * `on` (the default) keeps it; `off` silences it for a cleaner field. */
@@ -97,6 +106,8 @@ export type GameSettings = {
   autoLevelStats: AutoLevelStats;
   /** Developer flag: held weapon on the field hero (see CharacterWeapon). */
   characterWeapon: CharacterWeapon;
+  /** Developer flag: animate the held weapon on attack (see WeaponSwing). */
+  weaponSwing: WeaponSwing;
   /** Display preference: floating "+N XP" popups on kills (see XpFloat). */
   xpFloat: XpFloat;
   /** Developer BALANCE multipliers (DEVELOPER → BALANCE): runtime tuning over
@@ -135,10 +146,12 @@ function defaults(): GameSettings {
     // The developer menu stays hidden until the moon Easter egg is found.
     developerUnlocked: false,
     debug: "off",
-    // Developer feature flags are opt-in — both default off, so auto stat
-    // growth and the field hero's held weapon stay dark until a dev enables them.
+    // Developer feature flags are opt-in — all default off, so auto stat
+    // growth, the field hero's held weapon, and its swing animation stay dark
+    // until a dev enables them.
     autoLevelStats: "off",
     characterWeapon: "off",
+    weaponSwing: "off",
     // Display preferences default to the shipped presentation.
     xpFloat: "on",
     // Balance multipliers start neutral — the shipped tuning.
@@ -217,6 +230,10 @@ function load(): GameSettings {
         stored.characterWeapon === "on" || stored.characterWeapon === "off"
           ? stored.characterWeapon
           : base.characterWeapon,
+      weaponSwing:
+        stored.weaponSwing === "on" || stored.weaponSwing === "off"
+          ? stored.weaponSwing
+          : base.weaponSwing,
       xpFloat:
         stored.xpFloat === "on" || stored.xpFloat === "off"
           ? stored.xpFloat

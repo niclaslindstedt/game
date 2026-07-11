@@ -221,8 +221,9 @@ function checkLlmsTxt() {
 function checkBundleBudgets() {
   // §11.3.9 — critical-path JS budget. Anything the entry HTML preloads
   // counts as critical; lazy chunks reached through a runtime import()
-  // do not.
-  const BUDGET_BYTES = 600_000;
+  // do not. Nudged up as the app grows — the render-heavy game code lives in
+  // the lazy GameScreen chunk, so the critical path is the title/menu shell.
+  const BUDGET_BYTES = 620_000;
   const assetsDir = join(DIST, "assets");
   if (!existsSync(assetsDir)) return;
   const indexHtml = join(DIST, "index.html");

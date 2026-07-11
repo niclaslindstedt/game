@@ -790,6 +790,20 @@ export function TitleScreen({
             setSettingsTick((t) => t + 1);
           },
         },
+        {
+          label:
+            s.weaponSwing === "on" ? "WEAPON SWING: ON" : "WEAPON SWING: OFF",
+          aria: "developer-weapon-swing",
+          blurb:
+            "ANIMATE THE HELD WEAPON ON EACH ATTACK (NEEDS CHARACTER WEAPON)",
+          action: () => {
+            playUiSound(synth, "confirm");
+            updateSettings({
+              weaponSwing: s.weaponSwing === "on" ? "off" : "on",
+            });
+            setSettingsTick((t) => t + 1);
+          },
+        },
         // Land back on the DEVELOPER row in SETTINGS. It sits just above BACK,
         // after CONTROLS / DISPLAY / SOUND / DATA.
         backTo("settings", 4),
