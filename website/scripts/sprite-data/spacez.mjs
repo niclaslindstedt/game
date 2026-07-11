@@ -350,24 +350,28 @@ const SPRITES = {
     "sttttttttttttttt",
   ],
   // ---- SpaceZ HQ obstacles --------------------------------------------------
-  // One wall block: chained every 16 px by the engine's wall segments, the
-  // shared edge outline reads as steel paneling.
+  // One wall block: chained every 16 px by the engine's wall segments. A
+  // recessed steel lab panel — a light top/left bevel (V) and a dark
+  // bottom/right bevel (b) around a mid-steel field (v), with four flush corner
+  // bolts (f). The O border keeps chained blocks reading as a clean panel grid;
+  // the bevel gives each panel depth without the noise that would tire the eye
+  // down a long corridor. Quiet by hierarchy — solid, not loud.
   wall: [
     "OOOOOOOOOOOOOOOO",
-    "OVVVVVVVVVVVVVVO",
-    "OVvvvvvvvvvvvvVO",
-    "OvvvvvvvvvvvvvvO",
-    "OvvvvvvvvvvvvvvO",
-    "OvbvvvvvvvvvvbvO",
-    "OvvvvvvvvvvvvvvO",
-    "OvvvvvvvvvvvvvvO",
-    "OvvvvvvvvvvvvvvO",
-    "OvvvvvvvvvvvvvvO",
-    "OvbvvvvvvvvvvbvO",
-    "OvvvvvvvvvvvvvvO",
-    "OvvvvvvvvvvvvvvO",
-    "ObbbbbbbbbbbbbbO",
-    "ObbbbbbbbbbbbbbO",
+    "OVVVVVVVVVVVVVvO",
+    "OVvvvvvvvvvvvvbO",
+    "OVvfvvvvvvvvfvbO",
+    "OVvvvvvvvvvvvvbO",
+    "OVvvvvvvvvvvvvbO",
+    "OVvvvvvvvvvvvvbO",
+    "OVvvvvvvvvvvvvbO",
+    "OVvvvvvvvvvvvvbO",
+    "OVvvvvvvvvvvvvbO",
+    "OVvvvvvvvvvvvvbO",
+    "OVvvvvvvvvvvvvbO",
+    "OVvfvvvvvvvvfvbO",
+    "OVvvvvvvvvvvvvbO",
+    "OvbbbbbbbbbbbbbO",
     "OOOOOOOOOOOOOOOO",
   ],
   // A server rack, blinkenlights and all. Blocks outright.
@@ -967,24 +971,27 @@ const SPRITES = {
     "........................",
   ],
   // ---- Locked door (16x16, chained like wall blocks) -------------------------
-  // Steel slab with a keypad and a red "locked" lamp - visibly not a wall,
-  // visibly not open.
+  // A sealed steel blast door — two leaves meeting at a center seam (b|V) with
+  // a bold red MAGLOCK (dark housing O, red bars r, bright bar R) straddling the
+  // seam. Same steel family as the wall so it belongs on the corridor, but the
+  // split and the red lock read it plainly as a door, plainly shut. Corner
+  // bolts (f) echo the wall panel.
   door_locked: [
     "OOOOOOOOOOOOOOOO",
-    "OVVVVVVVVVVVVVVO",
-    "OvvvvvvvvvvvvvvO",
-    "OvvbbbbbbbbbbvvO",
-    "OvbvvvvvvvvvvbvO",
-    "OvbvvvvrrvvvvbvO",
-    "OvbvvvvvvvvvvbvO",
-    "OvbvvvyyvvvvvbvO",
-    "OvbvvvyYvvvvvbvO",
-    "OvbvvvvvvvvvvbvO",
-    "OvbvvvvvvvvvvbvO",
-    "OvvbbbbbbbbbbvvO",
-    "OvvvvvvvvvvvvvvO",
-    "ObbbbbbbbbbbbbbO",
-    "ObbbbbbbbbbbbbbO",
+    "OVVVVVVbVVVVVVVO",
+    "OVvvvvvbVvvvvvbO",
+    "OVvfvvvbVvvvfvbO",
+    "OVvvvvvbVvvvvvbO",
+    "OVvvvvvbVvvvvvbO",
+    "OVvvvOOOOOOvvvbO",
+    "OVvvvOrrrrOvvvbO",
+    "OVvvvORRRROvvvbO",
+    "OVvvvOrrrrOvvvbO",
+    "OVvvvOOOOOOvvvbO",
+    "OVvvvvvbVvvvvvbO",
+    "OVvfvvvbVvvvfvbO",
+    "OVvvvvvbVvvvvvbO",
+    "ObbbbbbbVbbbbbbO",
     "OOOOOOOOOOOOOOOO",
   ],
 };

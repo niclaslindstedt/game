@@ -1123,6 +1123,15 @@ export type GameState = {
    */
   quakeMs: number;
   /**
+   * Developer POSE switch (set by a scenario's `freeze` — see scenario.ts):
+   * while true the world's actors hold still — enemies neither move, strike,
+   * nor fire, and the merchant stops wandering (so a pose can't be broken by
+   * his discovery scene). The hero still moves, jumps, and fights freely.
+   * Purely a staging tool for screenshots and visual judgement; nothing in
+   * gameplay ever sets it.
+   */
+  freeze: boolean;
+  /**
    * A LEVEL TOKEN respec is owed at this run's start: the hero jumped a rung
    * on a spent token, so before play begins the whole banked build is refunded
    * into a pool for a from-scratch reallocation (a Diablo-style respec). Set at
