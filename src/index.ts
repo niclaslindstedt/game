@@ -193,10 +193,14 @@ export {
 export {
   enemyPowerScale,
   currentMobLevel,
+  heroGearLevel,
+  heroPowerLevel,
+  menaceFloorStage,
   menaceSensitivity,
   menaceStage,
   menaceWarmup,
   mobHpScaleFor,
+  overkillEfficiency,
 } from "./game/menace.ts";
 
 // Automatic per-level base-attribute growth (the WoW-style ding gains): the
@@ -366,6 +370,7 @@ export {
   ARMOR,
   ARRIVAL,
   ASTEROIDS,
+  CAMPING,
   COMPANIONS,
   DIALOGUE,
   DODGE,

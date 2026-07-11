@@ -193,6 +193,44 @@ export const ENEMY_AI = {
   nearRadius: 340,
 } as const;
 
+/**
+ * CAMPING PRESSURE — the anti-farm rules layered over the wave spawner (see
+ * stepSpawner). A player who parks in one spot stops being fed: after a grace
+ * period the horde loses interest — the live floor AND the timed budget stream
+ * fade out, the field drains, and the only arrivals left are a slow BECKONING
+ * trickle walking in from the direction of the objective (the living boss, or
+ * the nearest remaining elite), luring the player onward. Moving again resets
+ * the camp clock and the flood resumes — the deferred budget was never
+ * canceled, only held. And once a killBoss level's wave budget is fully spent,
+ * a thin endless STRAGGLER stream keeps arriving from that same objective
+ * direction, so the map never goes dead-empty on the walk to the boss
+ * (clearAll levels stay finite — they must be clearable). Units: world px, ms.
+ */
+export const CAMPING = {
+  /** The player counts as camped while staying within this radius of where he
+   * last settled; stepping outside it re-anchors and resets the clock. Sized
+   * to most of a phone screen: kiting a wave around one arena is normal
+   * fighting, not camping — only genuinely holding the same ground counts. */
+  campRadius: 160,
+  /** Camping is free for this long — the fight comes to him as usual. A
+   * generous grace: a pitched minute-long battle on one screen is the game
+   * working, and the starvation must never bite it. */
+  graceMs: 45_000,
+  /** …then the floor and the budget stream fade to nothing over this window. */
+  fadeMs: 15_000,
+  /** While starved, one beckoning mob arrives this often (from the objective
+   * direction, drawn from the normal wave budget). */
+  beaconEveryMs: 2_800,
+  /** Half-angle (deg) of the arrival cone around the objective bearing — the
+   * trickle reads as a stream from ONE direction, not a ring. */
+  directionSpreadDeg: 60,
+  /** Cadence of the endless post-budget straggler stream (killBoss levels). */
+  stragglerEveryMs: 4_000,
+  /** Stragglers only arrive while fewer minions than this are near the player
+   * — a thin stream that keeps the walk alive, never a second flood. */
+  stragglerMinAlive: 8,
+} as const;
+
 /** XP and level-ups. Each level-up grants stat points to spend. */
 export const LEVELING = {
   /** Default XP granted per point of a killed monster's max hp. */
@@ -439,12 +477,16 @@ export const ARRIVAL = {
  * engine keeps a rolling estimate of the damage-per-second and kills-per-second
  * the player is putting out right now (`state.combatDps` / `state.combatKillRate`,
  * smoothed over `rateWindowSec`); the harder and faster you clear, the faster
- * the meter heats. Standing idle — no damage, no kills — cools it. Menace is
- * read as a stage (0…maxStage) that does three things: it LURES more of the
- * horde toward the player, it EVOLVES freshly-spawned minions (more hp → more
- * xp → better loot), and — folded in with the player's own level — it scales
- * elites and bosses when they engage, so the epic fights keep pace with the
- * player's power instead of melting. Units: raw menace points, world px, hp.
+ * the meter heats. Standing idle — no damage, no kills — cools it, but never
+ * below the PERMANENT floor the evolution ratchet has earned (see
+ * `ratchetHealthbars`): a horde that evolved because it was getting one-shot
+ * stays evolved — no breaks. Menace is read as an UNCAPPED stage that does
+ * three things: it LURES more of the horde toward the player (the crowd
+ * growth alone caps at `lureStageCap`), it EVOLVES freshly-spawned minions
+ * (more hp → more xp, but WORSE loot — a leveling faucet, not a loot one),
+ * and — folded in with the player's own power — it scales elites and bosses
+ * when they engage, so the epic fights keep pace with the player's power
+ * instead of melting. Units: raw menace points, world px, hp.
  */
 export const MENACE = {
   /**
@@ -499,32 +541,67 @@ export const MENACE = {
    */
   warmupLevels: 5,
   warmupFloor: 0.12,
-  /** Menace is capped here (also caps the derived stage at maxStage). */
-  max: 120,
   /** Raw menace per evolution stage: stage = floor(menace / perStage). */
   perStage: 12,
   /**
-   * Hard cap on the evolution stage (perStage × maxStage should equal max).
-   * Ten stages of headroom: the first few are the familiar rampage, but a
-   * player who keeps pushing their output climbs into stages the old five-step
-   * meter never reached — where the lured, evolved horde stacks into a wall.
+   * THE EVOLUTION RATCHET — the "no breaks" rule. Overkill on mobs of the
+   * CURRENT evolution stage is proof the horde still lags the player; once
+   * this many HEALTHBARS of it are banked (`state.evoProof`, damped by the
+   * early-game warmup only — every difficulty ratchets when genuinely
+   * one-shot), the PERMANENT menace floor (`state.menaceFloor`) rises one
+   * stage and the proof resets. The meter never decays below the floor, so a
+   * horde that evolved to stage N because stage N−1 was getting one-shot
+   * stays at N — it keeps evolving, stage by stage, until the player's blows
+   * stop dropping mobs outright. There is NO upper stage cap: the roof is
+   * wherever the player's power stops; the difficulty sets the SIZE of each
+   * step (`menaceEffectMult` scales `hpPerStage`), not whether it happens.
    */
-  maxStage: 10,
+  ratchetHealthbars: 6,
+  /**
+   * The ratchet's RELIEF: a clean kill of the current crop — one that did
+   * NOT overkill (several blows, or a finisher within the bar) — refunds
+   * this many healthbars of banked proof (floored at 0). This is what makes
+   * the floor an EQUILIBRIUM instead of a runaway: a mixed horde's trash is
+   * always one-shot by a healthy build, but as long as its heavies take
+   * honest fights, their clean kills cancel the trash overkills and the
+   * floor holds. Only when one-shots dominate the WHOLE kill mix — the
+   * genuinely overpowered build — does proof outrun relief and the horde
+   * evolve another stage.
+   */
+  ratchetReliefPerKill: 1,
+  /**
+   * Minimum ms between ratchet stages — the "one evolve per malice round"
+   * pacing. However hard a massacre burst banks proof, the permanent floor
+   * climbs at most one stage per cooldown, so one early bomb can't wall the
+   * run in a single breath. Banked proof is also capped at 2× the threshold,
+   * so a burst carries at most one deferred stage past its own moment.
+   */
+  ratchetCooldownMs: 10_000,
   /**
    * Extra minion hp per evolution stage (+35% each), stamped when the mob
    * spawns. Kill XP is hp-proportional, so an evolved mob is worth more xp
-   * automatically; its drops are sweetened separately below.
+   * automatically — evolution is a LEVELING faucet; its drops actually get
+   * WORSE per stage (see tierPenaltyPerStage below).
    */
   hpPerStage: 0.35,
-  /** Added to an evolved minion's base drop chance per stage. */
-  dropBonusPerStage: 0.04,
-  /** Added to an evolved minion's drop tier roll per stage (better gear). */
-  tierBonusPerStage: 0.06,
+  /**
+   * Subtracted from an evolved minion's drop TIER roll per stage: malice
+   * mobs pay more xp (hp-proportional) but find WORSE gear — magic/rare odds
+   * thin out as the horde evolves, so a rampage is a decent way of leveling
+   * and a poor way of farming loot. Chances floor at 0 in `rollTier`.
+   */
+  tierPenaltyPerStage: 0.04,
   /**
    * The wave spawner's live floor AND cap grow by this fraction per stage —
    * a rampage pulls a denser, bigger crowd onto the screen.
    */
   lurePerStage: 0.25,
+  /**
+   * The lure stops growing past this stage — evolution has no roof, but the
+   * CROWD does: past here the horde answers with tougher mobs, not more of
+   * them, so a deep rampage can't spawn the framerate to death.
+   */
+  lureStageCap: 8,
   /**
    * Overkill also drags the horde over RIGHT NOW: each point of overkill banks
    * this much of the spawner's move-credit (the same channel walking uses),
@@ -569,7 +646,8 @@ export const MENACE = {
    * Better gear as the hero levels: added to a minion's drop tier roll per
    * player level above 1 (+1.5% each), so a higher-level hero's kills yield
    * richer loot to match the tougher mobs they came off — the drop-quality
-   * companion to `mobHpPerLevel`, stacking with the menace `tierBonusPerStage`.
+   * companion to `mobHpPerLevel` (the menace `tierPenaltyPerStage` pulls the
+   * other way on evolved mobs).
    */
   tierBonusPerLevel: 0.015,
 } as const;

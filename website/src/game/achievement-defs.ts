@@ -19,7 +19,6 @@ import {
   equipmentIcon,
   LEVEL_ORDER,
   levelDef,
-  MENACE,
   UNIQUE_IDS,
   uniqueDef,
 } from "@game/core";
@@ -406,10 +405,12 @@ export const ACHIEVEMENTS: AchievementDef[] = [
     id: "menace_max",
     category: "combat",
     name: "PUBLIC ENEMY NO. 1",
-    desc: "REACH FULL RAMPAGE",
+    desc: "REACH RAMPAGE STAGE 10",
     icon: "icon_storm",
     tier: "pro",
-    done: (t) => t.maxMenace >= MENACE.maxStage,
+    // The evolution ratchet uncapped the stage — 10 (the old full gauge) stays
+    // the badge's bar, now a fixed rung on an endless ladder.
+    done: (t) => t.maxMenace >= 10,
   },
   {
     id: "death_1",

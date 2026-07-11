@@ -2,16 +2,22 @@
 // The menace system: the escalation meter that answers an overpowered player.
 // The meter heats from the player's ACTUAL combat output — rolling
 // damage-per-second and kill rate (tickMenace) — with an extra jolt from
-// OVERKILL on a killing blow (bankOverkill); idling bleeds it back off. Menace
-// is read as an integer "stage" (0…10) that drives three responses (all tuned
-// in config MENACE):
-//   1. LURE — the wave spawner keeps a denser, bigger crowd on the player,
-//      and every overkill drags nearby mobs in through the walk-credit channel.
+// OVERKILL on a killing blow (bankOverkill); idling bleeds it back off, but
+// never below the PERMANENT floor the evolution RATCHET has earned: mobs of
+// the current stage getting one-shot lifts the floor a stage, without a roof,
+// so an overpowered player faces a horde that keeps evolving — no breaks.
+// Menace is read as an integer "stage" (uncapped) that drives three responses
+// (all tuned in config MENACE):
+//   1. LURE — the wave spawner keeps a denser, bigger crowd on the player
+//      (crowd growth alone caps at lureStageCap), and every overkill drags
+//      nearby mobs in through the walk-credit channel.
 //   2. EVOLVE — minions spawned while menace is high carry extra hp (baked in
-//      at spawn), so they take more killing, pay more xp (xp is hp-proportional),
-//      and drop better loot.
-//   3. POWER-MATCH — elites and bosses, folded together with the player's own
-//      level, scale their hp and contact damage when they first engage, so the
+//      at spawn), so they take more killing and pay more xp (xp is
+//      hp-proportional) — but their drops roll WORSE tiers, so a rampage is a
+//      leveling faucet, not a loot farm.
+//   3. POWER-MATCH — elites and bosses, folded together with the hero's own
+//      POWER level (character level or total-gear ilvl, whichever is higher),
+//      scale their hp and contact damage when they first engage, so the
 //      set-piece fights keep pace instead of melting.
 // Kept out of step.ts/loot.ts so both stay lean and this rule reads in one place.
 
@@ -22,9 +28,17 @@ import { autoPowerScale } from "./leveling.ts";
 import { BALANCE } from "./tuning.ts";
 import type { Enemy, GameState } from "./types.ts";
 
-/** The current evolution stage: menace bucketed into [0, MENACE.maxStage]. */
+/** The current evolution stage: menace bucketed by `perStage`, UNCAPPED —
+ * evolution has no roof; the horde keeps toughening as long as the player's
+ * output keeps proving it too easy (see the ratchet in `bankOverkill`). */
 export function menaceStage(state: GameState): number {
-  return Math.min(MENACE.maxStage, Math.floor(state.menace / MENACE.perStage));
+  return Math.floor(state.menace / MENACE.perStage);
+}
+
+/** The permanent floor's stage: the evolution level the ratchet has locked
+ * in — the meter never decays below it (see `tickMenace`). */
+export function menaceFloorStage(state: GameState): number {
+  return Math.floor(state.menaceFloor / MENACE.perStage);
 }
 
 /**
@@ -95,15 +109,61 @@ export function mobHpScaleFor(playerLevel: number, difficulty: string): number {
   );
 }
 
+/** The number of gear slots the hero's GEAR LEVEL averages over — every slot
+ * counts, worn or empty, so a bare slot reads as ilvl 0. */
+const GEAR_SLOT_COUNT = 7;
+
+/**
+ * The hero's GEAR LEVEL: the total item level across every equipment slot
+ * (weapon, the four armor slots, charm, bag — empty slots count 0), averaged
+ * over the full rack. This is what the hero's power ACTUALLY runs on once the
+ * campaign is underway — a decked-out twink hits far above his character
+ * level, a naked max-level hero far below it.
+ */
+export function heroGearLevel(state: GameState): number {
+  const eq = state.player.equipment;
+  const total =
+    eq.weapon.ilvl +
+    (eq.head?.ilvl ?? 0) +
+    (eq.chest?.ilvl ?? 0) +
+    (eq.legs?.ilvl ?? 0) +
+    (eq.feet?.ilvl ?? 0) +
+    (eq.charm?.ilvl ?? 0) +
+    (eq.bag?.ilvl ?? 0);
+  return total / GEAR_SLOT_COUNT;
+}
+
+/**
+ * The hero's POWER LEVEL — what the horde actually keys its level to: the
+ * character level or the gear level, whichever is HIGHER. In ordinary play
+ * gear trails the mobs it drops from, so this is simply the character level
+ * and nothing changes; but a hero decked out ABOVE his level (a twink, a
+ * lucky unique streak, a dev warp with endgame gear) meets a horde levelled
+ * to the gear — tougher mobs that pay more xp and gate higher loot — instead
+ * of one-shotting a crowd his character sheet says is fair.
+ */
+export function heroPowerLevel(state: GameState): number {
+  return Math.max(state.player.level, heroGearLevel(state));
+}
+
 /**
  * The live-state view of `mobHpScaleFor`: the toughness the whole horde —
- * rank-and-file minions included — locks in from the player's CURRENT level
- * and the run's difficulty. Stamped at spawn (see spawnEnemy); the menace
- * EVOLUTION stage (`evolutionHpMult`) is the moment-to-moment overkill half,
- * and the two multiply together.
+ * rank-and-file minions included — locks in from the hero's POWER level
+ * (character level or gear level, whichever is higher) and the run's
+ * difficulty. Stamped at spawn (see spawnEnemy); the menace EVOLUTION stage
+ * (`evolutionHpMult`) is the moment-to-moment overkill half, and the two
+ * multiply together. The auto-stat compensation (`autoPowerScale`) stays
+ * keyed to the CHARACTER level — it cancels the free stat gains, which gear
+ * has nothing to do with.
  */
 export function mobLevelScale(state: GameState): number {
-  return mobHpScaleFor(state.player.level, state.difficulty);
+  const mobLevel =
+    heroPowerLevel(state) + difficultyDef(state.difficulty).mobLevelOffset;
+  return Math.max(
+    MENACE.mobHpScaleFloor,
+    (1 + (mobLevel - 1) * MENACE.mobHpPerLevel) *
+      autoPowerScale(state.player.level),
+  );
 }
 
 /**
@@ -115,20 +175,27 @@ export function mobLevelScale(state: GameState): number {
  * A def's own `levelBonus` (elites/bosses run hot) is added by the caller.
  */
 export function mobLevelFor(playerLevel: number, difficulty: string): number {
-  return Math.max(1, playerLevel + difficultyDef(difficulty).mobLevelOffset);
+  return Math.max(
+    1,
+    Math.round(playerLevel + difficultyDef(difficulty).mobLevelOffset),
+  );
 }
 
 /** `mobLevelFor` off the live state: the monster level a mob spawned right
- * now would carry (before its def's `levelBonus`). */
+ * now would carry (before its def's `levelBonus`). Keyed to the hero's POWER
+ * level — the character level or the total-gear ilvl average, whichever is
+ * higher — so the horde (and the loot gates it opens) tracks what the hero
+ * actually swings, not just his character sheet. */
 export function currentMobLevel(state: GameState): number {
-  return mobLevelFor(state.player.level, state.difficulty);
+  return mobLevelFor(heroPowerLevel(state), state.difficulty);
 }
 
 /**
  * The tier bonus a minion's drop rolls from the player's LEVEL — better gear to
  * match the tougher horde `mobLevelScale` produces (`tierBonusPerLevel` per
- * level above 1). Stacks with the menace evolution stage's `tierBonusPerStage`
- * and the mob's own `dropProfile`, read in `dropMinionLoot`.
+ * level above 1). Read in `dropMinionLoot` alongside the mob's own
+ * `dropProfile` bonus and the menace evolution stage's `tierPenaltyPerStage`
+ * (which pulls the other way on evolved mobs).
  */
 export function mobLevelTierBonus(state: GameState): number {
   return Math.max(0, state.player.level - 1) * MENACE.tierBonusPerLevel;
@@ -140,12 +207,27 @@ export function mobLevelTierBonus(state: GameState): number {
  * The difficulty's `menaceEffectMult` scales how hard the pull lands.
  */
 export function lureMult(state: GameState): number {
+  // Evolution has no stage roof, but the CROWD does (lureStageCap): a deep
+  // rampage answers with tougher mobs, not with an unbounded spawn count.
   return (
     1 +
-    menaceStage(state) *
+    Math.min(menaceStage(state), MENACE.lureStageCap) *
       MENACE.lurePerStage *
       difficultyDef(state.difficulty).menaceEffectMult
   );
+}
+
+/**
+ * The efficiency of a killing blow, judged by OVERKILL: a hit exactly the
+ * mob's full health (or less) is worth full value; one at 2× its health pays
+ * HALF, 3× a THIRD — `maxHp / damage`, hyperbolic in between. Applied to the
+ * kill's XP and to the minion drop-chance roll (loot.ts), so farming mobs a
+ * build one-shots several times over is deliberately unrewarding — the answer
+ * to "too easy" is to move up, not to keep mowing.
+ */
+export function overkillEfficiency(damage: number, maxHp: number): number {
+  if (maxHp <= 0 || damage <= maxHp) return 1;
+  return maxHp / damage;
 }
 
 /**
@@ -160,23 +242,61 @@ export function lureMult(state: GameState): number {
  * level-appropriate kill barely moves it while one-shotting a mob for several
  * times its health — being wildly stronger than the horde — escalates on the
  * spot, a spike on top of the rolling DPS/kill-rate heat in `tickMenace`. Emits
- * `menaceRose` if the jolt tips into a new stage. Called from hitEnemy on every
- * kill with the (crit-adjusted) killing-blow damage and the victim's max hp.
+ * `menaceRose` if the jolt tips into a new stage. Called from the kill funnel
+ * on every kill with the (crit-adjusted) killing-blow damage, the victim's max
+ * hp, and the victim's own evolution stage (which feeds the RATCHET below).
  */
 export function bankOverkill(
   state: GameState,
   damage: number,
   maxHp: number,
+  evo = 0,
 ): void {
   const spike = Math.max(0, damage - maxHp);
   state.moveSpawnCredit += spike * MENACE.lureCreditPerOverkill;
-  if (spike <= 0 || maxHp <= 0) return;
+  if (maxHp <= 0) return;
+  // THE RATCHET (the "no breaks" rule): overkill on a mob of the CURRENT
+  // evolution crop (`evo` at or above the permanent floor's stage — a stale
+  // un-evolved leftover proves nothing) banks PROOF, damped by the early-game
+  // warmup only, so every difficulty ratchets when its mobs are genuinely
+  // getting one-shot. A CLEAN kill of the same crop — several blows, or a
+  // finisher within the bar — refunds proof instead (the RELIEF), so the
+  // floor is an equilibrium: a mixed horde's trash is always one-shot, but as
+  // long as its heavies take honest fights the floor holds, and only a build
+  // whose one-shots dominate the whole kill mix keeps climbing.
+  const currentCrop = evo >= menaceFloorStage(state);
+  if (spike <= 0) {
+    if (currentCrop) {
+      state.evoProof = Math.max(
+        0,
+        state.evoProof - MENACE.ratchetReliefPerKill,
+      );
+    }
+    return;
+  }
   const healths = spike / maxHp;
   const before = menaceStage(state);
-  state.menace = Math.min(
-    MENACE.max,
-    state.menace + healths * MENACE.perOverkill * menaceSensitivity(state),
-  );
+  state.menace += healths * MENACE.perOverkill * menaceSensitivity(state);
+  if (currentCrop) {
+    // Proof is capped at two thresholds (a burst defers at most ONE extra
+    // stage) and spends at most one stage per cooldown — the "one evolve per
+    // malice round" pacing — so a single massacre can't wall the run in one
+    // breath. Enough sustained proof lifts the permanent floor a full stage:
+    // stage-1 mobs one-shot instantly mean stage 2 spawns next round, and so
+    // on without a roof — the meter never decays below the floor (see
+    // tickMenace), and the difficulty tunes each step's SIZE
+    // (menaceEffectMult), never whether the horde keeps evolving.
+    state.evoProof = Math.min(
+      state.evoProof + healths * menaceWarmup(state),
+      MENACE.ratchetHealthbars * 2,
+    );
+    if (state.evoProof >= MENACE.ratchetHealthbars && state.evoRatchetMs <= 0) {
+      state.evoProof -= MENACE.ratchetHealthbars;
+      state.menaceFloor += MENACE.perStage;
+      state.evoRatchetMs = MENACE.ratchetCooldownMs;
+      state.menace = Math.max(state.menace, state.menaceFloor);
+    }
+  }
   const after = menaceStage(state);
   if (after > before) state.events.push({ type: "menaceRose", stage: after });
 }
@@ -199,6 +319,9 @@ export function tickMenace(
   const dt = dtMs / 1000;
   if (dt <= 0) return;
 
+  // The ratchet's between-stages breather burns down here (see bankOverkill).
+  state.evoRatchetMs = Math.max(0, state.evoRatchetMs - dtMs);
+
   // Fold this step's output into the rolling estimates. alpha is the fraction
   // of the window one step covers, so the EMA tracks roughly the last
   // `rateWindowSec` of fighting and a lone burst can't spike it.
@@ -212,27 +335,30 @@ export function tickMenace(
       state.combatKillRate * MENACE.perKillRate) *
     menaceSensitivity(state);
   // The cooler is per-difficulty: EASY bleeds a hot streak off fast, the
-  // hardest rungs let a rampage linger (menaceDecayMult below 1).
+  // hardest rungs let a rampage linger (menaceDecayMult below 1). It only
+  // ever cools down to the PERMANENT floor the evolution ratchet has earned
+  // (bankOverkill) — evolution takes no breaks; the momentary heat does.
   const decay =
     MENACE.decayPerSec * difficultyDef(state.difficulty).menaceDecayMult;
   const next = state.menace + (gain - decay) * dt;
-  state.menace = Math.max(0, Math.min(MENACE.max, next));
+  state.menace = Math.max(state.menaceFloor, next);
   const after = menaceStage(state);
   if (after > before) state.events.push({ type: "menaceRose", stage: after });
 }
 
 /**
  * The scale an elite or boss locks in the moment it engages, so the fight
- * matches the player's power: a non-decaying floor from the player's LEVEL
- * plus the current menace heat. Always ≥ 1.
+ * matches the player's power: a non-decaying floor from the hero's POWER
+ * level (character level or gear level, whichever is higher — see
+ * `heroPowerLevel`) plus the current menace heat. Always ≥ 1.
  */
 export function enemyPowerScale(state: GameState): number {
-  // Like the rank and file (`mobHpScaleFor`), the set pieces also ride the
+  // Like the rank and file (`mobLevelScale`), the set pieces also ride the
   // automatic stat-gain damage curve, so a boss met at level 12 doesn't melt
   // under growth the player never chose.
   return (
     (1 +
-      Math.max(0, state.player.level - 1) * MENACE.bossLevelWeight +
+      Math.max(0, heroPowerLevel(state) - 1) * MENACE.bossLevelWeight +
       menaceStage(state) * MENACE.bossMenaceWeight) *
     autoPowerScale(state.player.level)
   );

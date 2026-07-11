@@ -1106,6 +1106,15 @@ export const FIX_PRELUDE_LEVEL: LevelDef = {
   prelude: "test_prelude",
 };
 
+// The reference level under a CLEAR-ALL objective (for the spawner's
+// straggler rule: the endless post-budget trickle must stay OFF here, or the
+// level could never be cleared).
+export const FIX_CLEARALL_LEVEL: LevelDef = {
+  ...FIX_LEVEL,
+  id: "test_clearall_level",
+  objective: { type: "clearAll" },
+};
+
 // A per-difficulty VARIANT of the prelude (`<id>_<difficulty>`), as the
 // shipped game uses to hang the run's actual starting weapon on the wall:
 // starting `test_prelude_level` on JESUS must resolve to this scene
@@ -1129,6 +1138,7 @@ export function installFixtures(force = false): void {
       test_level_2: FIX_LEVEL_2,
       test_merchant_level: FIX_MERCHANT_LEVEL,
       test_prelude_level: FIX_PRELUDE_LEVEL,
+      test_clearall_level: FIX_CLEARALL_LEVEL,
       test_gated_level: FIX_GATED_LEVEL,
       test_well_level: FIX_WELL_LEVEL,
       test_asteroid_level: FIX_ASTEROID_LEVEL,

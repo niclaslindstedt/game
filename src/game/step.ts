@@ -34,6 +34,7 @@ import {
 import {
   AIM,
   APPARITION,
+  CAMPING,
   ENEMY_AI,
   JUMP,
   LAST_STAND,
@@ -218,7 +219,7 @@ export function step(state: GameState, input: GameInput, dtMs: number): void {
     state.stats.damageDealt - damageBefore,
     state.stats.kills - killsBefore,
   );
-  stepSpawner(state);
+  stepSpawner(state, dtMs);
   stepItems(state, dtMs);
   stepDoors(state);
 
@@ -272,19 +273,45 @@ function objectiveCleared(state: GameState): boolean {
 }
 
 /**
- * The horde spawner, three pressures stacked. (1) Each wave-budget line
- * streams its count in over its time window, eased quadratically, so the
- * ramp ends in an overwhelming flood. (2) Walking the level spends
- * moveSpawnCredit — every `moveSpawnEvery` px stirs one extra monster
- * awake. (3) A live floor (`minAlive`) pulls spawns forward whenever the
- * field goes quiet, so there is always a pack on screen. All three draw
- * from the same finite budget; spawns land in a ring just outside the
- * player's view and give chase at once; the live cap defers (never
- * cancels) what the field can't hold.
+ * The horde spawner, three pressures stacked plus two anti-camp flows.
+ * (1) Each wave-budget line streams its count in over its time window,
+ * eased quadratically, so the ramp ends in an overwhelming flood.
+ * (2) Walking the level spends moveSpawnCredit — every `moveSpawnEvery` px
+ * stirs one extra monster awake. (3) A live floor (`minAlive`) pulls spawns
+ * forward whenever the field goes quiet, so there is always a pack on
+ * screen. All three draw from the same finite budget; spawns land in a ring
+ * just outside the player's view and give chase at once; the live cap
+ * defers (never cancels) what the field can't hold.
+ *
+ * CAMPING starves the first and third pressures (config CAMPING): a player
+ * who parks in one spot stops being fed after a grace period — the floor
+ * fades out and the timed stream holds — and the only arrivals left are a
+ * slow BECKONING trickle walking in from the objective's direction, luring
+ * him onward. Moving re-anchors the camp clock and the held flood resumes.
+ * And once a killBoss level's budget is fully spent, a thin endless
+ * STRAGGLER stream keeps arriving from that same direction, so the walk to
+ * the boss never crosses a dead-empty map.
  */
-function stepSpawner(state: GameState): void {
+function stepSpawner(state: GameState, dtMs: number): void {
   const waves = levelDef(state.level.id).waves;
   if (!waves) return;
+
+  // The camp clock: staying inside campRadius of where the player last
+  // settled counts up; stepping out re-anchors and resets. Starvation eases
+  // 0→1 across the fade window once the grace runs out.
+  if (distance(state.player.pos, state.campAnchor) > CAMPING.campRadius) {
+    state.campAnchor = { ...state.player.pos };
+    state.campMs = 0;
+  } else {
+    state.campMs += dtMs;
+  }
+  const starvation = clamp(
+    (state.campMs - CAMPING.graceMs) / CAMPING.fadeMs,
+    0,
+    1,
+  );
+  state.trickleMs = Math.max(0, state.trickleMs - dtMs);
+
   // Difficulty scales the horde: every budget line grows by the mob
   // multiplier, and the live cap/floor stretch so the bigger budget can
   // actually crowd the field instead of queueing behind medium's cap. Menace
@@ -295,7 +322,9 @@ function stepSpawner(state: GameState): void {
     lureMult(state) *
     BALANCE.hordeSize;
   const maxAlive = Math.round(waves.maxAlive * aliveMult);
-  const minAlive = Math.round(waves.minAlive * aliveMult);
+  // The floor starves as the player camps: a parked hero watches his
+  // surroundings drain instead of farming an endless refill.
+  const minAlive = Math.round(waves.minAlive * aliveMult * (1 - starvation));
 
   let alive = 0;
   let near = 0; // minions close enough to count as "on the player's screen"
@@ -306,25 +335,30 @@ function stepSpawner(state: GameState): void {
     if (distanceSq(enemy.pos, state.player.pos) <= nearRadiusSq) near++;
   }
 
+  // A fully-starved camper also pauses the timed stream — the horde loses
+  // interest in a parked target. The window math is monotone, so nothing is
+  // canceled: the held backlog floods back in the moment he moves on.
   const t = state.stats.timeMs;
-  outer: for (let i = 0; i < waves.budget.length; i++) {
-    const entry = waves.budget[i] as (typeof waves.budget)[number];
-    // A budget line below its difficulty gate never streams in.
-    if (!meetsMinDifficulty(state.difficulty, entry.minDifficulty)) continue;
-    const count = scaledMobCount(entry.count, state.difficulty);
-    const spawned = state.waveSpawned[i] ?? 0;
-    if (spawned >= count) continue;
+  if (starvation < 1) {
+    outer: for (let i = 0; i < waves.budget.length; i++) {
+      const entry = waves.budget[i] as (typeof waves.budget)[number];
+      // A budget line below its difficulty gate never streams in.
+      if (!meetsMinDifficulty(state.difficulty, entry.minDifficulty)) continue;
+      const count = scaledMobCount(entry.count, state.difficulty);
+      const spawned = state.waveSpawned[i] ?? 0;
+      if (spawned >= count) continue;
 
-    const start = entry.window[0] * waves.rampDurationMs;
-    const end = entry.window[1] * waves.rampDurationMs;
-    const progress = clamp((t - start) / Math.max(1, end - start), 0, 1);
-    const eased = progress * progress;
-    let due = Math.floor(count * eased) - spawned;
+      const start = entry.window[0] * waves.rampDurationMs;
+      const end = entry.window[1] * waves.rampDurationMs;
+      const progress = clamp((t - start) / Math.max(1, end - start), 0, 1);
+      const eased = progress * progress;
+      let due = Math.floor(count * eased) - spawned;
 
-    while (due-- > 0 && alive < maxAlive) {
-      if (!spawnWaveEnemy(state, entry.enemy)) break outer;
-      state.waveSpawned[i] = (state.waveSpawned[i] ?? 0) + 1;
-      alive++;
+      while (due-- > 0 && alive < maxAlive) {
+        if (!spawnWaveEnemy(state, entry.enemy)) break outer;
+        state.waveSpawned[i] = (state.waveSpawned[i] ?? 0) + 1;
+        alive++;
+      }
     }
   }
 
@@ -347,19 +381,77 @@ function stepSpawner(state: GameState): void {
     near++;
     alive++;
   }
+
+  // The trickle flows: a starved camper is BECKONED — one budget mob at a
+  // time walks in from the objective's direction — and a spent budget on a
+  // killBoss level leaves an endless thin STRAGGLER stream from the same
+  // bearing, so the field is never dead. Both hold once the objective clears.
+  if (
+    state.victoryCountdownMs === null &&
+    state.trickleMs <= 0 &&
+    alive < maxAlive
+  ) {
+    const budgetLeft = unspawnedMinions(state) > 0;
+    if (starvation > 0 && budgetLeft) {
+      if (spawnFromBudget(state, waves, spawnGoal(state))) {
+        state.trickleMs = CAMPING.beaconEveryMs;
+      }
+    } else if (
+      !budgetLeft &&
+      levelDef(state.level.id).objective.type === "killBoss" &&
+      near < CAMPING.stragglerMinAlive
+    ) {
+      if (spawnStraggler(state, waves, spawnGoal(state))) {
+        state.trickleMs = CAMPING.stragglerEveryMs;
+      }
+    }
+  }
 }
 
-/** Pull one monster forward from the earliest unfinished budget line. */
+/**
+ * Where the player SHOULD be going — the bearing the beckoning trickle and
+ * the straggler stream arrive from: the nearest living boss, else the nearest
+ * living elite (the remaining set pieces ARE the level's to-do list). Null
+ * when neither stands; the trickle then falls back to the plain ring.
+ */
+function spawnGoal(state: GameState): Vec2 | null {
+  let boss: Vec2 | null = null;
+  let elite: Vec2 | null = null;
+  let bossDistSq = Infinity;
+  let eliteDistSq = Infinity;
+  for (const enemy of state.enemies) {
+    const def = enemyDef(enemy.defId);
+    if (def.apparition) continue;
+    if (def.role === "boss") {
+      const d = distanceSq(enemy.pos, state.player.pos);
+      if (d < bossDistSq) {
+        bossDistSq = d;
+        boss = enemy.pos;
+      }
+    } else if (def.role === "elite") {
+      const d = distanceSq(enemy.pos, state.player.pos);
+      if (d < eliteDistSq) {
+        eliteDistSq = d;
+        elite = enemy.pos;
+      }
+    }
+  }
+  return boss ?? elite;
+}
+
+/** Pull one monster forward from the earliest unfinished budget line.
+ * `toward` biases the spawn ring toward that bearing (see spawnWaveEnemy). */
 function spawnFromBudget(
   state: GameState,
   waves: NonNullable<ReturnType<typeof levelDef>["waves"]>,
+  toward: Vec2 | null = null,
 ): boolean {
   for (let i = 0; i < waves.budget.length; i++) {
     const entry = waves.budget[i] as (typeof waves.budget)[number];
     if (!meetsMinDifficulty(state.difficulty, entry.minDifficulty)) continue;
     const spawned = state.waveSpawned[i] ?? 0;
     if (spawned >= scaledMobCount(entry.count, state.difficulty)) continue;
-    if (!spawnWaveEnemy(state, entry.enemy)) return false;
+    if (!spawnWaveEnemy(state, entry.enemy, toward)) return false;
     state.waveSpawned[i] = spawned + 1;
     return true;
   }
@@ -367,14 +459,49 @@ function spawnFromBudget(
 }
 
 /**
+ * Mint one EXTRA monster beyond the wave budget — the endless straggler
+ * stream that keeps a killBoss level's field alive once the budget is spent.
+ * Draws a kind from the difficulty-eligible budget lines so the stragglers
+ * look like the level's own horde; never books against `waveSpawned`.
+ */
+function spawnStraggler(
+  state: GameState,
+  waves: NonNullable<ReturnType<typeof levelDef>["waves"]>,
+  toward: Vec2 | null,
+): boolean {
+  const pool = waves.budget.filter((entry) =>
+    meetsMinDifficulty(state.difficulty, entry.minDifficulty),
+  );
+  if (pool.length === 0) return false;
+  const entry = pool[
+    Math.floor(state.rng() * pool.length)
+  ] as (typeof pool)[number];
+  return spawnWaveEnemy(state, entry.enemy, toward);
+}
+
+/**
  * Drop one wave monster into the spawn ring around the player. Near a wall
  * the clamped ring can collapse onto the player — rejection-sample a few
  * angles and defer the spawn (false) rather than place an unfair one.
+ * `toward` narrows the ring to a cone around that bearing (the beckoning
+ * trickle arrives from where the player should be going); the last attempts
+ * fall back to the full ring so a goal against a wall can't wedge the spawn.
  */
-function spawnWaveEnemy(state: GameState, defId: string): boolean {
+function spawnWaveEnemy(
+  state: GameState,
+  defId: string,
+  toward: Vec2 | null = null,
+): boolean {
   const def = enemyDef(defId);
   for (let attempts = 0; attempts < 8; attempts++) {
-    const angle = state.rng() * Math.PI * 2;
+    const angle =
+      toward && attempts < 5
+        ? Math.atan2(
+            toward.y - state.player.pos.y,
+            toward.x - state.player.pos.x,
+          ) +
+          (state.rng() * 2 - 1) * ((CAMPING.directionSpreadDeg * Math.PI) / 180)
+        : state.rng() * Math.PI * 2;
     const ring =
       ENEMY_AI.minSpawnDistance + state.rng() * ENEMY_AI.spawnRingWidth;
     const pos = {

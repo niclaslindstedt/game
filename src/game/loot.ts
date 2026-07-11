@@ -43,7 +43,12 @@ import {
   xpToLevelUp,
 } from "./leveling.ts";
 import { addMapMarker } from "./map.ts";
-import { bankOverkill, maybePowerScale, mobLevelTierBonus } from "./menace.ts";
+import {
+  bankOverkill,
+  maybePowerScale,
+  mobLevelTierBonus,
+  overkillEfficiency,
+} from "./menace.ts";
 import { maybeFirstKillThought, startDeathWords } from "./story.ts";
 import { BALANCE } from "./tuning.ts";
 import type { Enemy, GameState, Tier, WeaponClass } from "./types.ts";
@@ -349,7 +354,18 @@ export function hitEnemy(
       enemy.pos,
       enemy.defId,
     );
-    grantXp(state, def.xp ?? Math.round(enemy.maxHp * LEVELING.xpPerHp));
+    // The overkill toll applies to a routed foe like any kill: a blow far
+    // beyond its full health collects only its share of the xp.
+    grantXp(
+      state,
+      Math.max(
+        1,
+        Math.round(
+          (def.xp ?? enemy.maxHp * LEVELING.xpPerHp) *
+            overkillEfficiency(damage, enemy.maxHp),
+        ),
+      ),
+    );
     if (def.loot) dropGuaranteedLoot(state, def, enemy.pos, enemy.mlvl);
     startDeathWords(state, enemy.defId);
     return;
@@ -386,8 +402,16 @@ export function killEnemy(
   state.stats.kills++;
   // The kill's XP reward, resolved once so the same figure both credits the
   // hero (grantXp below) and rides the event out to the app, which floats it
-  // off the corpse as rising blue combat text (WoW's "+42" xp popup).
-  const xpGain = def.xp ?? Math.round(enemy.maxHp * LEVELING.xpPerHp);
+  // off the corpse as rising blue combat text (WoW's "+42" xp popup). The
+  // OVERKILL TOLL scales it down first: a killing blow at 2× the mob's full
+  // health pays half, at 3× a third (`overkillEfficiency`) — one-shotting a
+  // horde far beneath you levels slowly, by design. The same efficiency cuts
+  // the drop roll below, so trivial farming pays out neither xp nor loot.
+  const efficiency = overkillEfficiency(damage, enemy.maxHp);
+  const xpGain = Math.max(
+    1,
+    Math.round((def.xp ?? enemy.maxHp * LEVELING.xpPerHp) * efficiency),
+  );
   state.events.push({
     type: "enemyKilled",
     pos: { ...enemy.pos },
@@ -406,9 +430,11 @@ export function killEnemy(
   // An overpowered kill's answer: the OVERKILL — this blow's damage beyond the
   // mob's FULL health (damage − maxHp) — jolts the menace meter and lures the
   // nearby horde in. A blow that only finished a wounded mob isn't overkill;
-  // one that could have dropped it several times over is. The meter also heats
-  // continuously from the player's rolling output (see tickMenace).
-  bankOverkill(state, damage, enemy.maxHp);
+  // one that could have dropped it several times over is. The victim's own
+  // evolution stage rides along to feed the RATCHET: one-shotting the current
+  // crop is what forces the next stage. The meter also heats continuously from
+  // the player's rolling output (see tickMenace).
+  bankOverkill(state, damage, enemy.maxHp, enemy.evo ?? 0);
 
   grantXp(state, xpGain);
 
@@ -427,6 +453,7 @@ export function killEnemy(
       enemy.evo ?? 0,
       enemy.mlvl,
       opts?.noNukeDrop ?? false,
+      efficiency,
     );
   }
 
@@ -511,13 +538,15 @@ function dropEarlyDrops(state: GameState, at: Vec2): void {
  * split what falls between equipment, ability pickups, weapon upgrades, and
  * medkits — and a pity rule forces equipment whenever the monsters left
  * alive couldn't otherwise cover the level's guaranteed minimum. `evo` is the
- * mob's menace evolution stage: an evolved kill drops more often and rolls a
- * better tier when it does, so a rampaging player who toughens the horde is
- * paid back in gear. A tougher mob's `dropProfile` sweetens the same two
- * knobs by a fixed amount, so a heavy hitter is worth the effort of dropping.
+ * mob's menace evolution stage: an evolved (malice) kill pays MORE xp (its
+ * extra hp) but rolls a WORSE tier when it drops — a rampage is a leveling
+ * faucet, not a loot farm. A tougher mob's `dropProfile` sweetens its rolls
+ * by a fixed amount, so a heavy hitter is worth the effort of dropping.
  * `noNukeDrop` marks a kill dealt by a screen-nuke blast: bombs never pay out
  * more bombs, so both screen-nuke slices sit out (skipped before their rng
  * draw, like a zero chance) and the rest of the rain rolls as usual.
+ * `efficiency` is the killing blow's overkill toll (`overkillEfficiency`):
+ * it scales the whole drop chance, so one-shot farming starves the rain too.
  */
 function dropMinionLoot(
   state: GameState,
@@ -526,6 +555,7 @@ function dropMinionLoot(
   evo = 0,
   mlvl = 1,
   noNukeDrop = false,
+  efficiency = 1,
 ): void {
   // The crowd-pressure bailout: on the gentle rungs a packed field has a
   // rising chance, per kill, to drop a screen-nuke — the way out of a swarm.
@@ -578,18 +608,24 @@ function dropMinionLoot(
   const owed = LOOT.minEquipmentPerLevel - state.minionEquipmentDrops;
   const forced = owed > remaining;
 
-  // An evolved mob is likelier to drop, and its equipment rolls a richer tier;
-  // a tougher mob's own drop profile stacks the same bonuses on top. The
-  // player's LEVEL sweetens the tier too, so a higher-level hero's kills yield
-  // richer gear to match the sturdier horde they came off (see mobLevelScale).
-  const evoDropBonus = Math.max(0, evo) * MENACE.dropBonusPerStage;
-  const evoTierBonus = Math.max(0, evo) * MENACE.tierBonusPerStage;
-  const profileDropBonus = def.dropProfile?.dropBonus ?? 0;
-  const profileTierBonus = def.dropProfile?.tierBonus ?? 0;
-  const dropBonus = evoDropBonus + profileDropBonus;
-  const tierBonus = evoTierBonus + profileTierBonus + mobLevelTierBonus(state);
+  // An evolved (malice) mob finds WORSE gear: each evolution stage SUBTRACTS
+  // from its drop's tier roll, so the magic/rare odds thin out as the horde
+  // toughens — its reward is the extra xp its extra hp pays, not loot. A
+  // tougher mob's own drop profile still sweetens its rolls, and the player's
+  // LEVEL keeps sweetening the tier (see mobLevelScale), so ordinary kills
+  // stay rewarding; only the rampage-evolved crop pays out lean.
+  const evoTierPenalty = Math.max(0, evo) * MENACE.tierPenaltyPerStage;
+  const dropBonus = def.dropProfile?.dropBonus ?? 0;
+  const tierBonus =
+    (def.dropProfile?.tierBonus ?? 0) +
+    mobLevelTierBonus(state) -
+    evoTierPenalty;
 
-  if (!forced && state.rng() >= dropChance(state) + dropBonus) return;
+  // The overkill toll: the whole per-kill drop chance scales by the killing
+  // blow's efficiency, so a mob one-shot for triple its health surrenders a
+  // third of its usual odds — the loot mirror of the xp rule in killEnemy.
+  if (!forced && state.rng() >= (dropChance(state) + dropBonus) * efficiency)
+    return;
 
   const pos = { ...at };
   const diff = difficultyDef(state.difficulty);
