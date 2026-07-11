@@ -275,9 +275,13 @@ run against synthetic fixtures with no shipped content (see
   they engage (`enemyPowerScale`/`maybePowerScale`, called from both
   `step.ts` wake and `loot.ts` first-hit). Separately from that
   moment-to-moment heat, the hero's POWER LEVEL (`heroPowerLevel`: the
-  character level or the gear rack's averaged total ilvl
-  (`heroGearLevel`), whichever is higher — so a decked-out hero meets a
-  horde levelled to what he actually swings) gives every minion a
+  character level, the gear rack's averaged total ilvl (`heroGearLevel`),
+  or the equipped weapon's calculated output mapped onto the mob-hp curve
+  (`heroDamageLevel` — the level whose typical minion the weapon's
+  sustained DPS would fell in `damageLevelKillSec` seconds, so an absurd
+  `damage`/`damagePct` roll ilvl never priced in still reads as the power
+  it actually swings), whichever is highest — so a decked-out hero meets a
+  horde levelled to what he actually wields) gives every minion a
   non-decaying toughness floor at spawn (`mobLevelScale`, folded into
   `spawnEnemy`'s hp mult) and richer drops (`mobLevelTierBonus`, added to
   the loot tier roll), so a levelled hero keeps meeting a proportionally

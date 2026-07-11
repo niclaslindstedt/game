@@ -16,14 +16,19 @@
 //      hp-proportional) — but their drops roll WORSE tiers, so a rampage is a
 //      leveling faucet, not a loot farm.
 //   3. POWER-MATCH — elites and bosses, folded together with the hero's own
-//      POWER level (character level or total-gear ilvl, whichever is higher),
+//      POWER level (character level, total-gear ilvl, or the equipped
+//      weapon's calculated damage mapped to a level — whichever is highest),
 //      scale their hp and contact damage when they first engage, so the
 //      set-piece fights keep pace instead of melting.
 // Kept out of step.ts/loot.ts so both stay lean and this rule reads in one place.
 
-import { MENACE } from "./config.ts";
+import { LEVELING, MENACE } from "./config.ts";
 import { difficultyDef } from "./defs/difficulties.ts";
 import { enemyDef } from "./defs/enemies/index.ts";
+// items.ts also imports from this module (currentMobLevel) — a runtime-only
+// cycle: both sides only reference the other inside function bodies, never
+// during module evaluation, so ESM resolves it safely.
+import { weaponDps } from "./items.ts";
 import { autoPowerScale } from "./leveling.ts";
 import { BALANCE } from "./tuning.ts";
 import type { Enemy, GameState } from "./types.ts";
@@ -134,23 +139,60 @@ export function heroGearLevel(state: GameState): number {
 }
 
 /**
+ * The hero's DAMAGE LEVEL: the equipped weapon's real calculated output —
+ * `weaponDps`: per-hit damage (governing stat, `damagePct` affixes, make
+ * quality, the unique base roll), the stat-scaled cadence, and the average
+ * crit lift — mapped onto the horde's own hp curve. The output reads as the
+ * power level whose TYPICAL minion (`LEVELING.refMobHp` on the
+ * `mobHpPerLevel` ramp, times the same `autoPowerScale` the spawner bakes
+ * into mob hp) it would fell in `damageLevelKillSec` seconds — i.e. the
+ * level whose spawned health this damage is fair against. Ilvl is a
+ * promise; this is the delivery: an absurd `damage`/`damagePct` roll that
+ * ilvl never priced in still reads as the deep-campaign power it actually
+ * swings. Sustained DPS rather than the raw blow, so a slow crusher isn't
+ * over-read for the same true output (one-shot excess is `bankOverkill`'s
+ * job). Fair-for-level output maps well BELOW the character level (the knob
+ * carries the grace — see config), so ordinary play never hears from this;
+ * it can go below 1 for a bare fist — `heroPowerLevel`'s max() floors it at
+ * the character level anyway.
+ */
+export function heroDamageLevel(state: GameState): number {
+  const dps = weaponDps(state, state.player.equipment.weapon);
+  // One typical healthbar at ramp 1: what the reference minion carries at
+  // this hero's autoPowerScale (the free-stat growth cancels out — it sits
+  // in the hero's output AND in every spawned bar).
+  const bar = LEVELING.refMobHp * autoPowerScale(state.player.level);
+  if (bar <= 0) return 1;
+  return (
+    1 + ((dps * MENACE.damageLevelKillSec) / bar - 1) / MENACE.mobHpPerLevel
+  );
+}
+
+/**
  * The hero's POWER LEVEL — what the horde actually keys its level to: the
- * character level or the gear level, whichever is HIGHER. In ordinary play
- * gear trails the mobs it drops from, so this is simply the character level
- * and nothing changes; but a hero decked out ABOVE his level (a twink, a
- * lucky unique streak, a dev warp with endgame gear) meets a horde levelled
- * to the gear — tougher mobs that pay more xp and gate higher loot — instead
- * of one-shotting a crowd his character sheet says is fair.
+ * character level, the gear level, or the damage level, whichever is
+ * HIGHEST. In ordinary play gear trails the mobs it drops from and damage
+ * sits inside its grace band, so this is simply the character level and
+ * nothing changes; but a hero decked out ABOVE his level (a twink, a lucky
+ * unique streak, a dev warp with endgame gear) — or one swinging a weapon
+ * whose calculated damage is absurd for its ilvl (`heroDamageLevel`) —
+ * meets a horde levelled to what he actually wields: tougher mobs that pay
+ * more xp and gate higher loot, instead of a one-shot crowd his character
+ * sheet says is fair.
  */
 export function heroPowerLevel(state: GameState): number {
-  return Math.max(state.player.level, heroGearLevel(state));
+  return Math.max(
+    state.player.level,
+    heroGearLevel(state),
+    heroDamageLevel(state),
+  );
 }
 
 /**
  * The live-state view of `mobHpScaleFor`: the toughness the whole horde —
  * rank-and-file minions included — locks in from the hero's POWER level
- * (character level or gear level, whichever is higher) and the run's
- * difficulty. Stamped at spawn (see spawnEnemy); the menace EVOLUTION stage
+ * (character level, gear level, or damage level, whichever is highest) and
+ * the run's difficulty. Stamped at spawn (see spawnEnemy); the menace EVOLUTION stage
  * (`evolutionHpMult`) is the moment-to-moment overkill half, and the two
  * multiply together. The auto-stat compensation (`autoPowerScale`) stays
  * keyed to the CHARACTER level — it cancels the free stat gains, which gear
@@ -183,9 +225,10 @@ export function mobLevelFor(playerLevel: number, difficulty: string): number {
 
 /** `mobLevelFor` off the live state: the monster level a mob spawned right
  * now would carry (before its def's `levelBonus`). Keyed to the hero's POWER
- * level — the character level or the total-gear ilvl average, whichever is
- * higher — so the horde (and the loot gates it opens) tracks what the hero
- * actually swings, not just his character sheet. */
+ * level — the character level, the total-gear ilvl average, or the equipped
+ * weapon's damage read as a level, whichever is highest — so the horde (and
+ * the loot gates it opens) tracks what the hero actually swings, not just
+ * his character sheet. */
 export function currentMobLevel(state: GameState): number {
   return mobLevelFor(heroPowerLevel(state), state.difficulty);
 }
@@ -349,8 +392,8 @@ export function tickMenace(
 /**
  * The scale an elite or boss locks in the moment it engages, so the fight
  * matches the player's power: a non-decaying floor from the hero's POWER
- * level (character level or gear level, whichever is higher — see
- * `heroPowerLevel`) plus the current menace heat. Always ≥ 1.
+ * level (character level, gear level, or damage level, whichever is highest
+ * — see `heroPowerLevel`) plus the current menace heat. Always ≥ 1.
  */
 export function enemyPowerScale(state: GameState): number {
   // Like the rank and file (`mobLevelScale`), the set pieces also ride the
