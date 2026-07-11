@@ -400,20 +400,23 @@ const SPRITES = {
     "................",
     "................",
   ],
-  // An office desk, monitor still on. Low — hop it.
+  // An office desk, monitor still on: a glowing screen (x/c with a W glint) on
+  // a stand, a keyboard, and a coffee mug someone left on the night shift, over
+  // a desktop (T/s) with a drawer pedestal (v/b, seam + V handles) and a leg.
+  // Low — hop it.
   desk: [
-    "......OOOO..........",
-    "......OxxO..........",
-    "......ObbO..........",
+    "....OOOOOOO.........",
+    "....OWxxxxO.........",
+    "....OcccccO.........",
+    "....OOOOOOO.......o.",
+    ".......b...OvVvVvVW.",
     ".OOOOOOOOOOOOOOOOOO.",
     ".OTTTTTTTTTTTTTTTTO.",
-    ".OttttttttttttttttO.",
     ".OssssssssssssssssO.",
-    ".ObbO..........ObbO.",
-    ".ObbO..........ObbO.",
-    ".OOOO..........OOOO.",
-    "....................",
-    "....................",
+    "..OOOVOOO......OOO..",
+    "..ObbbbbO......ObO..",
+    "..OvvVvvO......ObO..",
+    "..OOOOOOO......OOO..",
   ],
   // A shipping crate of rocket parts. Low — hop it.
   crate: [
