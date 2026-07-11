@@ -19,6 +19,7 @@
 //   node website/scripts/art-audit.mjs concepts /path/to/concepts.mjs
 //   node website/scripts/art-audit.mjs before-after wraith optimusk
 //   node website/scripts/art-audit.mjs names "^icon_"
+//   node website/scripts/art-audit.mjs palette spacez
 //
 // Flags: --out <png>  --scale <n>  --cols <n>  --chunk <n>
 
@@ -250,7 +251,10 @@ function levelEntries(def) {
   ]) {
     const enemy = ENEMY_DEFS[spec.enemy];
     if (!enemy) continue;
-    add(enemy.sprite, `${enemy.name} (${enemy.role})`);
+    // hp rides in the legend so scale/hierarchy lies (a tanky mob drawn
+    // smaller than a squishy one) are visible on the survey sheet itself,
+    // not only after hand-reading the enemy defs.
+    add(enemy.sprite, `${enemy.name} (${enemy.role}, ${enemy.hp}hp)`);
   }
   add(def.merchant?.sprite ?? "merchant", "the merchant");
 
@@ -329,6 +333,7 @@ const USAGE = `usage:
   art-audit.mjs concepts <module.mjs>       render a concept scratch module
   art-audit.mjs before-after <name...>      before/after sheet from snapshots
   art-audit.mjs names <regex>               grep atlas sprite names
+  art-audit.mjs palette [family|sprite]     list a family's char -> color map
 flags: --out <png>  --scale <n>  --cols <n>  --chunk <n>`;
 
 const argv = process.argv.slice(2);
@@ -466,6 +471,38 @@ switch (cmd) {
     const re = new RegExp(args[0] ?? ".");
     for (const name of Object.keys(SPRITES).sort()) {
       if (re.test(name)) console.log(name);
+    }
+    break;
+  }
+
+  case "palette": {
+    // The char -> color map a redraw draws with, so Phase 4 sketches don't
+    // require hand-reading core.mjs + the family module. Accepts a family
+    // name (`spacez`) or any sprite in it (`optimusk`); "*" marks a
+    // family-local char, the rest come from the shared core.
+    const arg = args[0];
+    const names = FAMILIES.map((f) => f.name).join(", ");
+    if (!arg) {
+      console.log(`families: ${names}`);
+      console.log("usage: art-audit.mjs palette <family|sprite>");
+      break;
+    }
+    let family = FAMILIES.find((f) => f.name === arg);
+    if (!family) {
+      const key = resolveSprite(arg);
+      if (key) family = FAMILIES.find((f) => f.name === SPRITE_FAMILY[key]);
+    }
+    if (!family) {
+      console.error(`unknown family/sprite "${arg}" — families: ${names}`);
+      process.exit(1);
+    }
+    const local = new Set(Object.keys(family.localPalette ?? {}));
+    console.log(`palette "${family.name}"  (* = family-local, else core):`);
+    for (const [char, color] of Object.entries(family.palette).sort(
+      ([a], [b]) => a.localeCompare(b),
+    )) {
+      const mark = local.has(char) ? "*" : " ";
+      console.log(`  ${mark} ${char}  [${color.join(", ")}]`);
     }
     break;
   }

@@ -7,10 +7,14 @@ import { describe, expect, it } from "vitest";
 
 import {
   abilityDef,
+  arrowColdXp,
   arrowXpShareAt,
+  canDropNuke,
   createGame,
+  crowdBombChance,
   dismissIntro,
   grantAbility,
+  killEnemy,
   levelStatGains,
   magnetRadius,
   step,
@@ -61,6 +65,36 @@ describe("xp arrows", () => {
     step(later, idle, DT);
     expect(later.player.xp).toBe(Math.round(4000 * arrowXpShareAt(8)));
     expect(arrowXpShareAt(8)).toBeLessThan(arrowXpShareAt(1));
+  });
+
+  it("go COLD once the hero passes the map/difficulty cap", () => {
+    // `test_level` caps EASY golden arrows at level 3: a catch-up faucet that
+    // pays the level-bar share while the hero is under-levelled, then drops to
+    // a flat few mob kills (`arrowColdXp`) once he has out-grown the content.
+    const share = (): GameState => {
+      const s = createGame(SEED, "test_level", "easy");
+      dismissIntro(s);
+      clearStage(s);
+      s.player.xpToNext = 4000;
+      s.player.xp = 0;
+      return s;
+    };
+
+    // Below the cap (L2): the usual tapered share of the current bar.
+    const under = share();
+    under.player.level = 2;
+    under.items = [dropArrow(under, 1)];
+    step(under, idle, DT);
+    expect(under.player.xp).toBe(Math.round(4000 * arrowXpShareAt(2)));
+
+    // At the cap (L3) it goes cold: a flat `arrowColdXp`, far under the share
+    // it would have paid — grinding old content can't arrow-boost the hero on.
+    const capped = share();
+    capped.player.level = 3;
+    capped.items = [dropArrow(capped, 1)];
+    step(capped, idle, DT);
+    expect(capped.player.xp).toBe(arrowColdXp(3));
+    expect(capped.player.xp).toBeLessThan(Math.round(4000 * arrowXpShareAt(3)));
   });
 
   it("enough arrows level the player up and open the chooser", () => {
@@ -263,6 +297,84 @@ describe("a bomb's kills never drop another bomb", () => {
     expect(state.enemies.find((e) => e.id === 9000)).toBeUndefined();
     expect(droppedBomb(state)).toBe(false);
     expect(state.items.some((i) => i.kind === "equipment")).toBe(true);
+  });
+});
+
+describe("the ONE NUKE rule — only one bomb in play at a time", () => {
+  const startOnEasy = (): GameState => {
+    const state = createGame(SEED, "test_level", "easy");
+    dismissIntro(state);
+    clearStage(state);
+    state.obstacles = [];
+    return state;
+  };
+
+  const groundNuke = (state: GameState, offset: number): Item => ({
+    id: 1,
+    kind: "ability",
+    pos: { x: state.player.pos.x + offset, y: state.player.pos.y },
+    defId: "screen_nuke",
+  });
+
+  // A packed field, all within the "on screen" radius, so the crowd-bomb ramp
+  // is fully lit — exactly where a second bomb would fall without the rule.
+  const packField = (state: GameState, n: number): void => {
+    const p = state.player.pos;
+    for (let i = 0; i < n; i++) {
+      state.enemies.push(
+        makeEnemy({
+          id: 10_000 + i,
+          pos: { x: p.x + 20, y: p.y - 60 + i * 3 },
+        }),
+      );
+    }
+  };
+
+  it("bars a drop while a NUKE sits in the powerup dock", () => {
+    const state = startOnEasy();
+    state.player.heldAbilities = ["test_nuke"];
+    packField(state, 45); // would be the full 5% crowd-bomb cap…
+    expect(canDropNuke(state)).toBe(false);
+    // …but the packed field holds its fire while a bomb is already docked.
+    expect(crowdBombChance(state)).toBe(0);
+  });
+
+  it("bars a drop while an un-collected bomb waits ON screen", () => {
+    const state = startOnEasy();
+    state.items = [groundNuke(state, 50)]; // within the rescueRadius proxy
+    packField(state, 45);
+    expect(canDropNuke(state)).toBe(false);
+    expect(crowdBombChance(state)).toBe(0);
+  });
+
+  it("allows a drop when the only bomb has drifted OFF screen", () => {
+    const state = startOnEasy();
+    state.items = [groundNuke(state, 5000)]; // well past the rescueRadius
+    packField(state, 45);
+    expect(canDropNuke(state)).toBe(true);
+    expect(crowdBombChance(state)).toBeCloseTo(0.05, 5);
+  });
+
+  it("sweeps the stale off-screen bomb when a fresh one drops", () => {
+    const state = startOnEasy();
+    // One bomb already parked far off screen (the hero walked away from it).
+    state.items = [groundNuke(state, 5000)];
+    packField(state, 45);
+    // The victim stands right on the hero, so the fresh bomb lands ON screen.
+    const victim = makeEnemy({ id: 9000, pos: { ...state.player.pos } });
+    state.enemies.push(victim);
+    // The very first roll is the crowd-bomb draw (0.0 < easy's ramped cap).
+    let i = 0;
+    state.rng = () => (i++ === 0 ? 0.0 : 0.99);
+    killEnemy(state, victim, 10, false);
+    const bombs = state.items.filter(
+      (it) => it.kind === "ability" && it.defId === "screen_nuke",
+    );
+    // The stale off-screen bomb is gone; only the fresh on-screen one remains.
+    expect(bombs).toHaveLength(1);
+    expect(bombs[0]!.pos.x).toBeCloseTo(state.player.pos.x, 5);
+    // With a bomb now waiting on screen, no further bomb may drop.
+    expect(canDropNuke(state)).toBe(false);
   });
 });
 

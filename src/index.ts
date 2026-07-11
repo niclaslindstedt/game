@@ -25,6 +25,7 @@ export { step } from "./game/step.ts";
 // MERCY DROP queries — exposed so the app can surface "the swarm is about to
 // cough up a bomb" / "a drink is coming" and tests can assert the ramps.
 export {
+  canDropNuke,
   crowdBombChance,
   grantXp,
   hitEnemy,
@@ -201,11 +202,13 @@ export {
 // derived bonuses the app can read to break "base + chosen" apart, and the
 // power curve the horde's hp scaling mirrors.
 export {
+  arrowColdXp,
   arrowXpShareAt,
   autoGainAt,
   autoPowerScale,
   baseStatBonus,
   levelStatGains,
+  referenceMobXp,
   setAutoStatGainsEnabled,
   xpToLevelUp,
 } from "./game/leveling.ts";

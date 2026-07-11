@@ -436,5 +436,15 @@ export const EASTWORLD: LevelDef = {
       easy: ["pale_rider"],
       medium: ["herdbreaker", "the_last_roundup"],
     },
+    // Level a normal run reaches per rung (`leveling-curve.mjs --by-level`) —
+    // the campaign's FINAL map, so these are each difficulty's end level; past
+    // it golden arrows go cold so a replay can't over-level.
+    arrowCapByDifficulty: {
+      easy: 16,
+      medium: 28,
+      hard: 38,
+      nightmare: 47,
+      jesus: 53,
+    },
   },
 };

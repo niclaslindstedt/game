@@ -3902,15 +3902,9 @@ canvas.tier-legendary {
   filter: drop-shadow(0 0 0.2rem rgba(var(--tier-glow), 0.8));
 }
 
-/* The item card's name row: the weapon-class glyph (sword/reticle/spark at
-   1× = 12 CSS px) sits left of the tier-colored name, replacing the old
-   "MELEE WEAPON" line. Top-aligned so a wrapped name hangs below the glyph. */
-.card-name-row {
-  display: flex;
-  align-items: flex-start;
-  gap: 0.25rem;
-}
-
+/* The item card's weapon-class glyph (sword/reticle/spark at 1× = 12 CSS px):
+   sits left of the tier-colored name inside the shared .tooltip-name-row,
+   replacing the old "MELEE WEAPON" line. */
 .card-class-glyph {
   flex: 0 0 auto;
   width: 0.75rem;
@@ -4471,6 +4465,21 @@ canvas.tier-legendary {
 .item-tooltip canvas {
   flex: 0 0 auto;
   align-self: flex-start;
+}
+
+/* The card's name row when it carries the item's icon (the EQUIPPED card,
+   which may float over the very slot icon it describes — the icon inside the
+   card keeps the piece identifiable). */
+.tooltip-name-row {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+}
+
+.tooltip-name-row .inv-item-icon {
+  flex: 0 0 auto;
+  width: 1.4rem;
+  height: 1.4rem;
 }
 
 /* A tooltip stat line paired with its comparison delta ("(+3)") versus the

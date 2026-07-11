@@ -34,15 +34,28 @@ difficulty's `mobLevelOffset` nudges it. That is the whole point: you tune
 *kills per level*, and the XP number takes care of itself no matter how the
 horde scales.
 
-**Golden XP arrows are a SECOND faucet.** They drop from the loot rain
-(`LOOT.dropChance × LOOT.arrowShare × the difficulty's `arrowDropMult`) and each
-grants `arrowXpShareAt(L)` of the current bar — XP the kill-count model above
-ignores. They meaningfully accelerate leveling (up to ~40% faster mid-game on
-the gentle rungs), taper with level (`arrowXpShareTaper`), and thin out up the
-difficulty ladder (zero on JESUS). The calculator folds them in — its `w/arrows`
-column is the realistic pace beside the kill-XP-only `kills/lvl` — so treat
-`arrowXpShare`, `arrowXpShareTaper`, `LOOT.arrowShare`, and per-difficulty
-`arrowDropMult` as pacing levers too, not just feel.
+**Golden XP arrows are a SECOND faucet — a CATCH-UP one.** They drop from the
+loot rain (`LOOT.dropChance × LOOT.arrowShare × the difficulty's `arrowDropMult`,
+tuned to ~one per 50 kills at medium) and, while the hero is UNDER-levelled for
+the current content, each grants `arrowXpShareAt(L)` of the current bar — XP the
+kill-count model above ignores. They meaningfully accelerate an under-levelled
+hero (up to ~40% faster mid-game on the gentle rungs), taper with level
+(`arrowXpShareTaper`), and thin out up the difficulty ladder (zero on JESUS).
+
+They **go COLD past a cap.** Each `LevelDef.loot.arrowCapByDifficulty` names the
+level a normal single run of that map/difficulty leaves the hero at (read from
+`--by-level`); once `player.level` reaches it, arrows stop paying a share of the
+bar and pay a flat `LEVELING.arrowColdMobXpMult × referenceMobXp(L)` (≈5 mob
+kills, a rounding error against a level) via `arrowColdXp`. So arrows speed a
+hero up to where the content belongs and no further — grinding old maps can't
+over-level him. The calculator folds both regimes in: its `w/arrows` column and
+the `--campaign`/`--by-level` model apply the cold branch when the modelled
+level is at/above a map's cap (visible with high `--luck` or on replay). Treat
+`arrowXpShare`, `arrowXpShareTaper`, `LOOT.arrowShare`, `arrowColdMobXpMult`, the
+per-map `arrowCapByDifficulty`, and per-difficulty `arrowDropMult` as pacing
+levers, not just feel — and when the curve moves, re-read the caps off
+`--by-level` and update the level defs so the cold cliff still lands where a run
+actually ends.
 
 ## The knobs (`LEVELING` in `src/game/config.ts`)
 

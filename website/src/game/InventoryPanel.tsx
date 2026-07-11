@@ -150,14 +150,25 @@ function StatLine({
  */
 const TOOLTIP_TEXT_REM = 14.3;
 
+const clampNum = (v: number, lo: number, hi: number) =>
+  Math.max(lo, Math.min(v, hi));
+
 /**
  * WoW-style item tooltip: name (in tier color) plus the stat/affix lines,
  * floated next to the item that raised it. Portaled to <body> and positioned
- * in viewport coordinates from the anchoring cell's rect, flipping to the
- * other side / clamping to the viewport so it never spills off-screen. Hidden
- * on the first paint until it has measured itself, to avoid a positioned
- * flash. The card CONTENT (name, stat lines, affixes) renders through the
- * shared `ItemCardBody`, so the tooltip and the arsenal viewer never drift.
+ * in viewport coordinates from the anchoring cell's rect. The card NEVER
+ * covers the cell that raised it — the icon must stay visible so the second
+ * touch tap that commits the equip lands on something the player can see —
+ * so it sits to the right, flips left, and on narrow screens drops below or
+ * above the cell instead of clamping over it.
+ *
+ * Inspecting a bag piece whose slot already wears something ALSO raises the
+ * worn piece's card, anchored over its own equip slot (covering THAT icon is
+ * fine — the card repeats the icon in its header) and dodging the main card;
+ * it carries an EQUIPPED kicker so the two cards can't be confused. Hidden on
+ * the first paint until measured, to avoid a positioned flash. The card
+ * CONTENT (name, stat lines, affixes) renders through the shared
+ * `ItemCardBody`, so the tooltip and the arsenal viewer never drift.
  */
 function ItemTooltip({
   font,
@@ -172,51 +183,158 @@ function ItemTooltip({
   item: Equipment;
   anchor: DOMRect;
 }) {
-  const ref = useRef<HTMLDivElement>(null);
-  const [pos, setPos] = useState<{ left: number; top: number } | null>(null);
-  // The piece worn in this item's slot, for the per-stat comparison — unless
-  // we're inspecting that very piece (an item never compares to itself).
+  const mainRef = useRef<HTMLDivElement>(null);
+  const wornRef = useRef<HTMLDivElement>(null);
+  const [pos, setPos] = useState<{
+    main: { left: number; top: number };
+    worn: { left: number; top: number } | null;
+  } | null>(null);
+  // The piece worn in this item's slot, for the side-by-side comparison —
+  // unless we're inspecting that very piece (an item never compares to
+  // itself; its own card says EQUIPPED instead).
   const equipped = state.player.equipment[item.slot];
-  const compareTo = equipped && equipped.id !== item.id ? equipped : null;
+  const isWorn = equipped?.id === item.id;
+  const compareTo = equipped && !isWorn ? equipped : null;
 
   useLayoutEffect(() => {
-    const el = ref.current;
+    const el = mainRef.current;
     if (!el) return;
     const gap = 10;
     const margin = 6;
+    const vw = window.innerWidth;
+    const vh = window.innerHeight;
     const w = el.offsetWidth;
     const h = el.offsetHeight;
-    // Prefer the right of the item; flip left if it would overflow.
-    let left = anchor.right + gap;
-    if (left + w > window.innerWidth - margin) left = anchor.left - gap - w;
-    left = Math.max(margin, Math.min(left, window.innerWidth - margin - w));
-    // Align the top with the item, clamped into the viewport.
-    let top = anchor.top;
-    top = Math.max(margin, Math.min(top, window.innerHeight - margin - h));
-    setPos({ left, top });
-  }, [anchor, item]);
+    // Beside the cell — right, else left — never over it.
+    let left: number;
+    let top: number;
+    if (anchor.right + gap + w <= vw - margin) {
+      left = anchor.right + gap;
+      top = clampNum(anchor.top, margin, vh - margin - h);
+    } else if (anchor.left - gap - w >= margin) {
+      left = anchor.left - gap - w;
+      top = clampNum(anchor.top, margin, vh - margin - h);
+    } else {
+      // No side room (narrow portrait): below the cell, else above.
+      left = clampNum(anchor.left, margin, vw - margin - w);
+      top =
+        anchor.bottom + gap + h <= vh - margin
+          ? anchor.bottom + gap
+          : Math.max(margin, anchor.top - gap - h);
+    }
+    const main = { left, top };
+
+    // The worn piece's card: over its own equip slot when that doesn't
+    // collide with the main card, else hugging the main card's free side.
+    // No collision-free spot (tiny viewports) hides it — the main card's
+    // (+N) deltas still carry the comparison.
+    let worn: { left: number; top: number } | null = null;
+    const wornEl = wornRef.current;
+    if (wornEl) {
+      const slotRect = document
+        .querySelector(`[data-drop="slot:${item.slot}"]`)
+        ?.getBoundingClientRect();
+      const w2 = wornEl.offsetWidth;
+      const h2 = wornEl.offsetHeight;
+      // Colliding with the main card is a bad spot; so is covering the
+      // inspected cell — the worn card obeys the same "the icon that raised
+      // the tooltip stays visible" rule as the main card.
+      const collides = (p: { left: number; top: number }) =>
+        (p.left < main.left + w &&
+          p.left + w2 > main.left &&
+          p.top < main.top + h &&
+          p.top + h2 > main.top) ||
+        (p.left < anchor.right &&
+          p.left + w2 > anchor.left &&
+          p.top < anchor.bottom &&
+          p.top + h2 > anchor.top);
+      const candidates: { left: number; top: number }[] = [];
+      if (slotRect) {
+        candidates.push({
+          left: clampNum(slotRect.left, margin, vw - margin - w2),
+          top: clampNum(slotRect.top, margin, vh - margin - h2),
+        });
+      }
+      candidates.push(
+        {
+          left: main.left - gap - w2,
+          top: clampNum(main.top, margin, vh - margin - h2),
+        },
+        {
+          left: main.left + w + gap,
+          top: clampNum(main.top, margin, vh - margin - h2),
+        },
+        {
+          left: clampNum(main.left, margin, vw - margin - w2),
+          top: main.top - gap - h2,
+        },
+        {
+          left: clampNum(main.left, margin, vw - margin - w2),
+          top: main.top + h + gap,
+        },
+      );
+      worn =
+        candidates.find(
+          (p) =>
+            p.left >= margin &&
+            p.left + w2 <= vw - margin &&
+            p.top >= margin &&
+            p.top + h2 <= vh - margin &&
+            !collides(p),
+        ) ?? null;
+    }
+    setPos({ main, worn });
+  }, [anchor, item, compareTo]);
 
   return createPortal(
-    <div
-      ref={ref}
-      className={`item-tooltip${tierGlowClass(item.tier)}`}
-      style={{
-        left: pos?.left ?? anchor.right + 10,
-        top: pos?.top ?? anchor.top,
-        borderColor: TIER_COLORS[item.tier],
-        visibility: pos ? "visible" : "hidden",
-      }}
-    >
-      <ItemCardBody
-        font={font}
-        sprites={sprites}
-        state={state}
-        item={item}
-        compareTo={compareTo}
-        maxWidth={TOOLTIP_TEXT_REM}
-        lineScale={2}
-      />
-    </div>,
+    <>
+      <div
+        ref={mainRef}
+        className={`item-tooltip${tierGlowClass(item.tier)}`}
+        style={{
+          left: pos?.main.left ?? anchor.right + 10,
+          top: pos?.main.top ?? anchor.top,
+          borderColor: TIER_COLORS[item.tier],
+          visibility: pos ? "visible" : "hidden",
+        }}
+      >
+        <ItemCardBody
+          font={font}
+          sprites={sprites}
+          state={state}
+          item={item}
+          compareTo={compareTo}
+          maxWidth={TOOLTIP_TEXT_REM}
+          lineScale={2}
+          subtitle={isWorn ? "EQUIPPED" : undefined}
+          icon={isWorn ? <ItemIcon sprites={sprites} item={item} /> : undefined}
+        />
+      </div>
+      {compareTo && (
+        <div
+          ref={wornRef}
+          className={`item-tooltip${tierGlowClass(compareTo.tier)}`}
+          style={{
+            left: pos?.worn?.left ?? 0,
+            top: pos?.worn?.top ?? 0,
+            borderColor: TIER_COLORS[compareTo.tier],
+            visibility: pos?.worn ? "visible" : "hidden",
+          }}
+        >
+          <ItemCardBody
+            font={font}
+            sprites={sprites}
+            state={state}
+            item={compareTo}
+            compareTo={null}
+            maxWidth={TOOLTIP_TEXT_REM}
+            lineScale={2}
+            subtitle="EQUIPPED"
+            icon={<ItemIcon sprites={sprites} item={compareTo} />}
+          />
+        </div>
+      )}
+    </>,
     document.body,
   );
 }

@@ -6,6 +6,8 @@
 // `ItemIcon` + `ItemCardBody`, so a change to how a stat is worded or colored
 // lands everywhere at once and the surfaces never drift.
 
+import type { ReactNode } from "react";
+
 import {
   ACCURACY,
   armorValueOf,
@@ -356,6 +358,10 @@ export function ItemIcon({
  * null for a standalone read. `maxWidth` wraps long names/lines to a rem cap.
  * `lineScale` sizes the stat/affix lines (the hover tooltip pumps it up so the
  * numbers read at arm's length; the arsenal viewer keeps the default 1).
+ * `subtitle` prints a small grey kicker above the name ("EQUIPPED") and `icon`
+ * seats the item's pixel icon beside the name — the worn piece's comparison
+ * card uses both, so it stays identifiable even when the card floats over the
+ * equip slot whose icon it describes.
  */
 export function ItemCardBody({
   font,
@@ -365,6 +371,8 @@ export function ItemCardBody({
   compareTo,
   maxWidth,
   lineScale = 1,
+  subtitle,
+  icon,
 }: {
   font: PixelFont;
   sprites: Sprites;
@@ -373,6 +381,8 @@ export function ItemCardBody({
   compareTo: Equipment | null;
   maxWidth?: number;
   lineScale?: number;
+  subtitle?: string;
+  icon?: ReactNode;
 }) {
   const tierLabel = TIER_LABELS[item.tier];
   // The weapon's class as a glyph left of the name (sword/reticle/spark, in
@@ -383,28 +393,43 @@ export function ItemCardBody({
   const glyph = weaponClass
     ? spriteDataUrl(sprites, `icon_class_${weaponClass}`)
     : null;
+  // Unique/legendary names carry a soft glow (tierGlowClass) on top of the
+  // tier color — gold alone sits too close to rare yellow. The icon and the
+  // class glyph eat into the wrap width, so long names still stay inside.
+  const name = (
+    <PixelText
+      font={font}
+      text={equipmentName(item)}
+      scale={2}
+      color={TIER_COLORS[item.tier]}
+      className={tierGlowClass(item.tier).trim() || undefined}
+      maxWidth={
+        maxWidth ? maxWidth - (icon ? 2 : 0) - (glyph ? 1 : 0) : maxWidth
+      }
+    />
+  );
+  const glyphImg = glyph && (
+    <img
+      src={glyph}
+      alt={`${weaponClass} weapon`}
+      className="pixel-img card-class-glyph"
+      draggable={false}
+    />
+  );
   return (
     <>
-      {/* Unique/legendary names carry a soft glow (tierGlowClass) on top of
-          the tier color — gold alone sits too close to rare yellow. */}
-      <div className="card-name-row">
-        {glyph && (
-          <img
-            src={glyph}
-            alt={`${weaponClass} weapon`}
-            className="pixel-img card-class-glyph"
-            draggable={false}
-          />
-        )}
-        <PixelText
-          font={font}
-          text={equipmentName(item)}
-          scale={2}
-          color={TIER_COLORS[item.tier]}
-          className={tierGlowClass(item.tier).trim() || undefined}
-          maxWidth={maxWidth && glyph ? maxWidth - 1 : maxWidth}
-        />
-      </div>
+      {subtitle && (
+        <PixelText font={font} text={subtitle} scale={1} color="#9aa3ad" />
+      )}
+      {icon || glyphImg ? (
+        <div className="tooltip-name-row">
+          {icon}
+          {glyphImg}
+          {name}
+        </div>
+      ) : (
+        name
+      )}
       {itemLines(state, item, compareTo).map((line) =>
         line.delta ? (
           <div key={line.text} className="tooltip-row">
