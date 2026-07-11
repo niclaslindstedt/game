@@ -1,6 +1,6 @@
 ---
 name: art-improvement
-description: "Use when hunting down and replacing the WORST art in the game. Drives the audit funnel: numbered contact sheets per level (or of the item catalog), shortlist the worst 30 → 20 → 10, study the finalists with their variants, sketch 5 manuscript-grounded concepts per candidate, refine the pick with 2 more, install the winners, then present a numbered before/after sheet the user votes on — the PR ships only the liked candidates."
+description: "Use when hunting down and replacing the WORST art in the game. Drives the audit funnel: numbered contact sheets per level (or of the item catalog), shortlist the worst 30 → 20 → 10, study the finalists with their variants, sketch 5 manuscript-grounded concepts per candidate, refine the pick with 2 more, install the winners and pose each stageable one in the running game via a frozen test scenario, then present a numbered before/after sheet the user votes on — the PR ships only the liked candidates."
 ---
 
 # Improving the Game's Worst Art
@@ -11,7 +11,10 @@ at every step, and gated by the user's vote before anything ships. This
 skill layers a *selection and approval workflow* on top of the
 [`pixel-assets`](../pixel-assets/SKILL.md) skill; load that one too — its
 palette rules, iteration cycle, and quality checklist govern every redraw
-here.
+here. Also load [`test-scenario`](../test-scenario/SKILL.md): stageable
+winners get an **in-game pose check** (Phase 4 step 7) — the scenario
+engine freezes the redraw in the running game, over its real ground, at
+the phone viewport, before it is committed.
 
 **Two modes — run exactly one per pass:**
 
@@ -172,10 +175,39 @@ For each candidate, in the numbered order:
    in one last concept sheet to check the walk cycle reads before you paste.
    Then print the joined rows (a tiny `console.log` builder) and paste them
    in; nothing hand-retypes the winning grid.
-6. **Verify**: `make assets` (heed every warning), then Read the family
-   sheet and the `@8x` preview per the pixel-assets checklist, and
-   `variants <name>` to confirm frames, wounds, and overlays still read.
-7. **Commit this candidate alone** — grid change + regenerated
+6. **Verify on the sheets**: `make assets` (heed every warning), then Read
+   the family sheet and the `@8x` preview per the pixel-assets checklist,
+   and `variants <name>` to confirm frames, wounds, and overlays still read.
+7. **Verify in the game — when the asset is stageable.** Audit sheets
+   render sprites at rest on a swatch; the game renders them in a lit,
+   moving, cluttered scene at the phone viewport. If the candidate has a
+   row in the staging table below, pose it with the scenario engine (see
+   the test-scenario skill) and Read the screenshot before committing:
+
+   ```sh
+   node website/scripts/playtest.mjs --strategy idle --seed 42 --level <id> \
+     --scenario '<spec from the table>' --timeout 10
+   ```
+
+   Every pose spec starts from the same still-life base —
+   `{"clearEnemies":true,"stopWaves":true,"freeze":true,"disarmed":true}`
+   (nothing moves, nothing fights, the exhibit stands where placed) — plus:
+
+   | Candidate               | Add to the spec                                                                                                                                                  |
+   | ----------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+   | Enemy (minion/elite)    | `"spawns":[{"enemy":"<id>","at":{...}},{"enemy":"<id>","at":{...},"hpFrac":0.4},{"enemy":"<id>","at":{...},"hpFrac":0.2}]` — fresh, hurt, and wrecked in one row |
+   | Boss                    | `"place":"boss"` — the level's own boss survives `clearEnemies`, so the base still-life stages it as-is; pose its wound stages with extra `spawns` copies at `hpFrac` 0.4 / 0.2 / 0.05                                              |
+   | The merchant            | `"place":"merchant"` — posed a step outside his discovery radius, stall art over this biome's ground                                                            |
+   | Weapon/gear on the hero | `"weapon":"<id>"` / `"gear":{"<slot>":"<id>"}` — the paper doll wears it on the field (field weapon needs the CHARACTER WEAPON dev flag on)                     |
+   | Item/pickup icon        | `"drops":[{"item":"<id>","tier":"rare"}, …]` — the icon in the real drop rain; loose kinds, equipment ids, `UNIQUE_DEFS` ids, abilities, story items all work    |
+   | Tile / decor / obstacle / landmark | **Not stageable** — placed at level creation. Judge on the level sheet, then wander the level with the playtest bot (`--strategy survivor`) and screenshot |
+
+   Judge the shot with the same rubric: silhouette at 1x, separation from
+   the real ground, hierarchy against the hero standing next to it. A
+   redraw that passed the sheets but melts into the running game goes back
+   to step 4, not into a commit. For an animated redesign, follow with a
+   short *unfrozen* run (drop `freeze`) to see the walk cycle in motion.
+8. **Commit this candidate alone** — grid change + regenerated
    `atlas.png`/`atlas.json` together, conventional message, e.g.
    `feat(assets): redraw wraith with a torn-shroud silhouette`. One commit
    per candidate is what makes Phase 6's per-candidate revert trivial.
@@ -300,8 +332,11 @@ A running log of gotchas from past passes. Add to it; don't let it rot.
   hand — hand-aligning a mop handle or a keyboard into a fixed-width row is
   where off-by-one bugs live. Build both walk frames from the one base and
   print the joined rows to paste in; never retype the winning grid.
-- **Static sheets show the stride, not the motion.** `variants`/`concepts`
-  prove `_0`/`_1` both read and that wounds survive, but the actual walk
-  cadence and in-motion silhouette only show in the running game — for an
-  animated redesign you're unsure about, close the loop with the `playtest`
-  skill rather than trusting the still frames.
+- **Static sheets show the stride, not the motion — and lie about context.**
+  `variants`/`concepts` prove `_0`/`_1` both read and that wounds survive,
+  but ground separation, hierarchy next to the hero, and the walk cadence
+  only show in the running game. The scenario pose check (Phase 4 step 7)
+  is the cheap way to close that loop for anything stageable — a frozen
+  screenshot for the read, an unfrozen run for the motion; don't trust the
+  still frames alone, and don't hand-play the game to reach the sprite
+  either.

@@ -48,6 +48,7 @@ export {
 // probes. Fed by the `?scenario=` URL param and the test-scenario skill.
 export {
   applyScenario,
+  type ScenarioDrop,
   type ScenarioSpawn,
   type ScenarioSpec,
 } from "./game/scenario.ts";
