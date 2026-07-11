@@ -32,8 +32,13 @@
 // The kill rate is an ASSUMPTION — measure the real one with the `playtest`
 // skill (kills ÷ timeMs from a bot run) and pass it here.
 
+import { register } from "node:module";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
+
+// The engine uses the @game/lib alias at runtime (menace.ts → items.ts →
+// @game/lib) — map it before the first engine import, like simulate-run.mjs.
+register("./game-alias-loader.mjs", import.meta.url);
 
 const here = path.dirname(fileURLToPath(import.meta.url));
 const root = path.join(here, "..");

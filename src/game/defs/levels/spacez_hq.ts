@@ -379,11 +379,11 @@ export const SPACEZ_HQ: LevelDef = {
     // per rung (from `leveling-curve.mjs --by-level`) — past it golden arrows
     // go cold, so a replay of the tutorial floor can't over-level him.
     arrowCapByDifficulty: {
-      easy: 4,
-      medium: 18,
-      hard: 30,
-      nightmare: 40,
-      jesus: 48,
+      easy: 5,
+      medium: 21,
+      hard: 34,
+      nightmare: 45,
+      jesus: 54,
     },
     allClearWeapon: "golden_stapler",
     // The opening loot loop, on a schedule the rain can't promise: the

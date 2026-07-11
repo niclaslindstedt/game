@@ -440,11 +440,11 @@ export const EASTWORLD: LevelDef = {
     // the campaign's FINAL map, so these are each difficulty's end level; past
     // it golden arrows go cold so a replay can't over-level.
     arrowCapByDifficulty: {
-      easy: 16,
-      medium: 28,
-      hard: 38,
-      nightmare: 47,
-      jesus: 53,
+      easy: 19,
+      medium: 32,
+      hard: 43,
+      nightmare: 53,
+      jesus: 60,
     },
   },
 };

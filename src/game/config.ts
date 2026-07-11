@@ -256,13 +256,15 @@ export const LEVELING = {
    * The base is tuned WITH the golden-arrow faucet counted (arrows are a second
    * XP source on top of kills — see LEVELING.arrowXpShare and the calculator's
    * `w/arrows` column): a full campaign across all five difficulties lands the
-   * hero at ~level 60 (`node scripts/leveling-curve.mjs --campaign`), leaving
-   * the rest as the grind-to-cap endgame. The base absorbs the roster whenever
-   * the campaign grows — Eastworld's arrival re-raised it from 150 so the five
-   * rungs still end at 60 instead of overshooting toward 72. Don't drop it back
-   * toward the kill-only figure without re-checking that campaign target.
+   * hero at level 60 (`node scripts/leveling-curve.mjs --campaign`), leaving
+   * the rest as the grind-to-cap endgame. The per-rung ends the whole gate
+   * family is sized against are easy 19 / medium 32 / hard 43 / nightmare 53 /
+   * jesus 60 (`--by-level` prints the per-map landings — XP_CAP bands, the
+   * WORLD_DROP gates, and every level's arrowCapByDifficulty are all read off
+   * that table). Whenever this base or the roster moves, re-run both views and
+   * re-read the gates; don't tune the base by feel.
    */
-  killsPerLevelBase: 260,
+  killsPerLevelBase: 180,
   killsPerLevelGrowth: 1.02,
   /**
    * Onboarding ramp: the opening levels cost only a FRACTION of their curve
@@ -347,10 +349,10 @@ export const LEVELING = {
  * past the cap — the Diablo rule that outleveling a zone retires its XP, not
  * its drops. Each rung lists the cap on its FIRST and LAST story level;
  * intermediate maps interpolate linearly. Sized a few levels above where a
- * first campaign pass naturally lands (easy ends ~19, medium ~34, hard ~46,
- * nightmare ~55, jesus ~60 — see the leveling-balance skill), so the story
- * never starves; only the rerun grind hits the wall. JESUS's last map runs to
- * the global `LEVELING.maxLevel` — the endgame grind lives there.
+ * first campaign pass naturally lands (easy ends 19, medium 32, hard 43,
+ * nightmare 53, jesus 60 — read off `leveling-curve.mjs --by-level`), so the
+ * story never starves; only the rerun grind hits the wall. JESUS's last map
+ * runs to the global `LEVELING.maxLevel` — the endgame grind lives there.
  */
 export const XP_CAP = {
   capByDifficulty: {
@@ -407,8 +409,8 @@ export const UNIQUE = {
  * elite ten times likelier, the boss forty. `minPlayerLevel` gates the whole
  * table shut until the hero out-levels a first campaign pass — PER RUNG, since a
  * later rung's relics sit behind a later, higher first-pass level. The campaign
- * is continuous (see `leveling-curve.mjs --by-level`): EASY ends ~19, MEDIUM ~34,
- * HARD ~46, NIGHTMARE ~55, JESUS ~60, so each gate sits a few levels above its
+ * is continuous (see `leveling-curve.mjs --by-level`): EASY ends 19, MEDIUM 32,
+ * HARD 43, NIGHTMARE 53, JESUS 60, so each gate sits a few levels above its
  * rung's end — the relics can only be farmed by RETURNING for boss runs once the
  * difficulty is beaten. Rolled per unique, per kill, on `maybeDropWorldUnique`.
  */
@@ -428,14 +430,14 @@ export const WORLD_DROP = {
   },
   /** No world unique drops until the hero reaches this level ON THAT RUNG —
    * sized a few levels above where a first campaign pass of the difficulty ends
-   * (easy ~19, medium ~34, hard ~46, nightmare ~55, jesus ~60), so boss runs on
+   * (easy 19, medium 32, hard 43, nightmare 53, jesus 60), so boss runs on
    * a beaten rung are the only source (JESUS's gate sits AT the campaign's end
    * — level 60 — so the last rung's farm opens the moment the story is done).
    * Hard and up are plumbing until relics ship for those rungs. */
   minPlayerLevel: {
     easy: 22,
     medium: 36,
-    hard: 48,
+    hard: 46,
     nightmare: 57,
     jesus: 60,
   } as Record<Difficulty, number>,
