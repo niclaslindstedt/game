@@ -41,17 +41,20 @@ const JEANS_ICON = [
   "............",
 ];
 
+// A stun-gun: an emitter body + grip with two prongs and a zigzag arc leaping
+// the gap. `h`/`H` is the body — the RIOT TASER recolors it h->J, H->j to blue,
+// while the grey prongs and bright arc stay put.
 const TASER_ICON = [
   "............",
-  "...aa..aa...",
-  "...Oa..aO...",
-  "..OOOOOOO...",
-  "..OhhhhhO...",
-  "..OhHhhhO...",
-  "..OhhhhhO...",
-  "...OhhhO....",
-  "...OhhhO....",
-  "...OOOOO....",
+  "............",
+  ".OOOOOO.....",
+  ".OHhhhOaOs..",
+  ".OhhhhO.ees.",
+  ".OhhhHOaOs..",
+  ".OOOOOO.....",
+  ".OHO........",
+  ".OHO........",
+  ".OOO........",
   "............",
   "............",
 ];
