@@ -161,11 +161,13 @@ const TOOLTIP_TEXT_REM = 14.3;
  */
 function ItemTooltip({
   font,
+  sprites,
   state,
   item,
   anchor,
 }: {
   font: PixelFont;
+  sprites: Sprites;
   state: GameState;
   item: Equipment;
   anchor: DOMRect;
@@ -207,6 +209,7 @@ function ItemTooltip({
     >
       <ItemCardBody
         font={font}
+        sprites={sprites}
         state={state}
         item={item}
         compareTo={compareTo}
@@ -747,6 +750,7 @@ export function InventoryPanel({
       {inspect && !(drag && drag.moved) && (
         <ItemTooltip
           font={font}
+          sprites={sprites}
           state={state}
           item={inspect.item}
           anchor={inspect.anchor}

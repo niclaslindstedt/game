@@ -410,6 +410,7 @@ export function ShopPanel({
                     <div className="shop-detail-card">
                       <ItemCardBody
                         font={font}
+                        sprites={sprites}
                         state={state}
                         item={selectedStock.equipment}
                         compareTo={compareFor(selectedStock.equipment)}
@@ -473,6 +474,7 @@ export function ShopPanel({
                 <div className="shop-detail-card">
                   <ItemCardBody
                     font={font}
+                    sprites={sprites}
                     state={state}
                     item={selectedBag}
                     compareTo={compareFor(selectedBag)}

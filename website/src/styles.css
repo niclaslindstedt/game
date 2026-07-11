@@ -3902,6 +3902,34 @@ canvas.tier-legendary {
   filter: drop-shadow(0 0 0.2rem rgba(var(--tier-glow), 0.8));
 }
 
+/* The item card's name row: the weapon-class glyph (sword/reticle/spark at
+   1× = 12 CSS px) sits left of the tier-colored name, replacing the old
+   "MELEE WEAPON" line. Top-aligned so a wrapped name hangs below the glyph. */
+.card-name-row {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.25rem;
+}
+
+.card-class-glyph {
+  flex: 0 0 auto;
+  width: 0.75rem;
+  height: 0.75rem;
+}
+
+/* The card's foot: the tier callout on the left, the item level tucked into
+   the lower right — margin-left pushes it there even with no tier label. */
+.card-foot {
+  display: flex;
+  width: 100%;
+  align-items: baseline;
+  gap: 0.5rem;
+}
+
+.card-foot .card-ilvl {
+  margin-left: auto;
+}
+
 /* The HUD purse: the coin icon sized to the stat-row text. */
 .hud-coin-row {
   gap: 0.3rem;

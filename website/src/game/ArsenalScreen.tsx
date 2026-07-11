@@ -161,6 +161,7 @@ export function ArsenalScreen({
               <div className="arsenal-detail-card">
                 <ItemCardBody
                   font={font}
+                  sprites={sprites}
                   state={state}
                   item={selected}
                   compareTo={null}
