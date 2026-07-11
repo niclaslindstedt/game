@@ -103,7 +103,7 @@ export type Quality = "broken" | "crude" | "normal" | "superior" | "perfect";
  * (a fixed `+N`), so they fall behind as the hero grows; the `*Pct` kinds
  * SCALE with the character (a % of the hero's own stat / max hp), so a unique
  * carrying one stays relevant far longer — the "keeper" bonus. Uniques use at
- * most one scaling bonus each, kept small (≤3%).
+ * most one scaling bonus each, kept small (≤2% — clamped at mint, UNIQUE.scalingPctCap).
  */
 export type Affix =
   | { kind: "damagePct"; value: number }

@@ -217,7 +217,15 @@ run against synthetic fixtures with no shipped content (see
   (`baseStatBonus`, folded into `effectiveStat`) — never written into
   `player.stats`, so a respec refunds only chosen points — and
   `autoPowerScale` expresses the damage curve those free gains produce so
-  the horde's scaling can cancel it out.
+  the horde's scaling can cancel it out. Two balance guards live here too:
+  `diminishStat` (config `STATS.statSoftCap`/`statTaper`) is the
+  diminishing-returns curve every effective-stat read and `autoPowerScale`
+  run through — linear to the soft cap, saturating past it, so late-game
+  stat piles flatten and gear carries the endgame — and
+  `xpLevelCap`/`xpCapMultiplier` (config `XP_CAP`) are the per-map XP caps:
+  every (level × difficulty) pair has a hero-level ceiling XP tapers into
+  and stops at (applied in `grantXp`), so re-running an outgrown map farms
+  loot, never levels.
 - **`src/game/menace.ts`** — the escalation system: the player's rolling
   DPS/kill-rate (`tickMenace`) plus relative-overkill jolts on a killing
   blow (`bankOverkill`) bank `state.menace`, which idle time bleeds off (a
@@ -361,6 +369,16 @@ run against synthetic fixtures with no shipped content (see
   `cutscene.ts` — the deterministic beat-machine cutscene player),
   imported via the `@game/lib/*` alias and earmarked for extraction into
   oss-framework once mature (extraction is then a prefix swap).
+- **`src/sim/simulate.ts`** — the headless campaign simulator (see the
+  `simulate-run` skill): `simulateLevel`/`simulateCampaign` drive the real
+  engine — createGame, step, the autopilot, auto-equip, loadout carry —
+  through whole levels and whole campaigns at full speed and return typed
+  balance reports (hero/mob hp and damage, drops, weapon swaps, deaths, XP
+  withheld by the per-map caps). Deliberately NOT exported from
+  `src/index.ts` — the CLI (`scripts/simulate-run.mjs`, via
+  `scripts/game-alias-loader.mjs` for the `@game/lib` alias) and the tests
+  import it directly, so the public engine API stays what the renderer
+  needs.
 - **`src/index.ts`** — the public surface the app imports via `@game/core`.
 
 `src/output.ts` remains the central output module (OSS_SPEC §19.4) through

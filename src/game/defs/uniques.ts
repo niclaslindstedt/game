@@ -9,7 +9,7 @@
 // Bonus classes:
 //   - FLAT (`stat`/`crit`/`maxHp`/`armor`/`damagePct`): best in slot for ~10
 //     levels, then a rolled rare overtakes them.
-//   - SCALING (`statPct`/`maxHpPct`, at most ONE per item, ≤3%): a fraction of
+//   - SCALING (`statPct`/`maxHpPct`, at most ONE per item, ≤2%): a fraction of
 //     the hero's own value that grows with them — the "keeper" pieces.
 // Authoring budget: a DOWNSIDE (a small negative) buys extra/bigger upside, so
 // the situational pieces (glass-cannon legs, all-brain helms) hit harder for
@@ -71,11 +71,11 @@ const MUSKRAT_UNIQUES: UniqueDef[] = [
     name: "MUSKRAT'S TOOTH",
     base: "combat_knife",
     slot: "weapon",
-    ilvl: 36,
+    ilvl: 26,
     keeper: true,
     bonuses: [
       { kind: "crit", value: 0.1 },
-      { kind: "statPct", stat: "dexterity", value: 0.03 },
+      { kind: "statPct", stat: "dexterity", value: 0.02 },
       { kind: "stat", stat: "speed", value: 2 },
     ],
     lore: "THE INCISOR THAT GNAWED THROUGH THE VAULT, STILL WARM FROM THE CORE.",
@@ -176,10 +176,10 @@ const MUSKRAT_UNIQUES: UniqueDef[] = [
     name: "ADA'S SATCHEL",
     base: "bag",
     slot: "bag",
-    ilvl: 53,
+    ilvl: 49,
     bagSlots: 14,
     bonuses: [
-      { kind: "maxHpPct", value: 0.03 },
+      { kind: "maxHpPct", value: 0.02 },
       { kind: "stat", stat: "speed", value: 4 },
     ],
     lore: "YOU SEWED THE BEACON INTO A BAG LIKE THIS. IT SMELLS LIKE MOVIE NIGHT.",
@@ -218,10 +218,10 @@ const ARMSTRONG_UNIQUES: UniqueDef[] = [
     name: "SENTINEL'S GREAVES",
     base: "servo_greaves",
     slot: "legs",
-    ilvl: 53,
+    ilvl: 43,
     keeper: true,
     bonuses: [
-      { kind: "statPct", stat: "speed", value: 0.03 },
+      { kind: "statPct", stat: "speed", value: 0.02 },
       { kind: "stat", stat: "stamina", value: 6 },
       { kind: "maxHp", value: 55 },
     ],
@@ -245,10 +245,10 @@ const ARMSTRONG_UNIQUES: UniqueDef[] = [
     name: "THE FALLEN STANDARD",
     base: "spatha",
     slot: "weapon",
-    ilvl: 79,
+    ilvl: 69,
     bonuses: [
       { kind: "damagePct", value: 0.25 },
-      { kind: "statPct", stat: "strength", value: 0.03 },
+      { kind: "statPct", stat: "strength", value: 0.02 },
       { kind: "maxHp", value: 80 },
     ],
     lore: "HE PLANTED IT AND STOOD WATCH BENEATH IT. TAKE IT UP.",
@@ -311,9 +311,9 @@ const ELON_MARS_UNIQUES: UniqueDef[] = [
     name: "THE SIGNAL CROWN",
     base: "crusaders_helm",
     slot: "head",
-    ilvl: 81,
+    ilvl: 71,
     bonuses: [
-      { kind: "statPct", stat: "intelligence", value: 0.03 },
+      { kind: "statPct", stat: "intelligence", value: 0.02 },
       { kind: "stat", stat: "luck", value: 8 },
       { kind: "maxHp", value: -40 },
     ],
@@ -378,9 +378,9 @@ const ELON_RIFT_UNIQUES: UniqueDef[] = [
     name: "AEGIS OF EXILE",
     base: "linked_mail",
     slot: "chest",
-    ilvl: 83,
+    ilvl: 73,
     bonuses: [
-      { kind: "statPct", stat: "stamina", value: 0.03 },
+      { kind: "statPct", stat: "stamina", value: 0.02 },
       { kind: "armor", value: 45 },
       { kind: "stat", stat: "speed", value: 4 },
     ],
@@ -421,10 +421,10 @@ const GROK_UNIQUES: UniqueDef[] = [
     name: "THE PANOPTICON",
     base: "neural_visor",
     slot: "head",
-    ilvl: 48,
+    ilvl: 38,
     keeper: true,
     bonuses: [
-      { kind: "statPct", stat: "intelligence", value: 0.03 },
+      { kind: "statPct", stat: "intelligence", value: 0.02 },
       { kind: "stat", stat: "luck", value: 6 },
     ],
     lore: "IT HOLDS THE WHOLE BATTLEFIELD AT ONCE. BRIEFLY.",
@@ -434,9 +434,9 @@ const GROK_UNIQUES: UniqueDef[] = [
     name: "TRUTHSEEKER",
     base: "microlattice_plate",
     slot: "chest",
-    ilvl: 72,
+    ilvl: 62,
     bonuses: [
-      { kind: "statPct", stat: "intelligence", value: 0.03 },
+      { kind: "statPct", stat: "intelligence", value: 0.02 },
       { kind: "crit", value: 0.08 },
       { kind: "damagePct", value: 0.15 },
     ],
@@ -447,9 +447,9 @@ const GROK_UNIQUES: UniqueDef[] = [
     name: "GREAVES OF THE WALLED GARDEN",
     base: "fluted_greaves",
     slot: "legs",
-    ilvl: 69,
+    ilvl: 65,
     bonuses: [
-      { kind: "maxHpPct", value: 0.03 },
+      { kind: "maxHpPct", value: 0.02 },
       { kind: "armor", value: 60 },
       { kind: "stat", stat: "stamina", value: 8 },
     ],
@@ -505,9 +505,9 @@ const GROK_UNIQUES: UniqueDef[] = [
     name: "ADA'S BEACON",
     base: "red_dust_charm",
     slot: "charm",
-    ilvl: 37,
+    ilvl: 27,
     bonuses: [
-      { kind: "statPct", stat: "luck", value: 0.03 },
+      { kind: "statPct", stat: "luck", value: 0.02 },
       { kind: "stat", stat: "intelligence", value: 6 },
     ],
     lore: "THE TRACKING BEACON FROM HER JACKET. IT STILL POINTS HOME.",
@@ -532,12 +532,12 @@ const WORLD_UNIQUES: UniqueDef[] = [
     name: "THE FIRST DRAFT",
     base: "mission_cap",
     slot: "head",
-    ilvl: 41,
+    ilvl: 31,
     keeper: true,
     bonuses: [
       { kind: "stat", stat: "intelligence", value: 5 },
       { kind: "armor", value: 12 },
-      { kind: "statPct", stat: "intelligence", value: 0.03 },
+      { kind: "statPct", stat: "intelligence", value: 0.02 },
     ],
     lore: "THE CORE WROTE ITS FIRST DRAFT. IT REWROTE EVERYTHING AFTER.",
   },
@@ -742,11 +742,11 @@ const WORLD_UNIQUES: UniqueDef[] = [
     base: "seismic_hammer",
     slot: "weapon",
     tier: "legendary",
-    ilvl: 68,
+    ilvl: 58,
     keeper: true,
     bonuses: [
       { kind: "damagePct", value: 0.3 },
-      { kind: "statPct", stat: "strength", value: 0.03 },
+      { kind: "statPct", stat: "strength", value: 0.02 },
       { kind: "crit", value: 0.08 },
     ],
     lore: "ONLY THE WORTHY LIFT IT. OUT HERE, WORTHY MEANS STILL BREATHING.",

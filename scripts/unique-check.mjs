@@ -13,7 +13,8 @@
 // Checks (ERROR = broken, WARN = smell):
 //   - every `base` resolves in the runtime weapon/gear catalog; slot agrees with
 //     the base (weapon uniques on weapon bases, gear uniques in the base's slot);
-//   - at most ONE scaling bonus (statPct/maxHpPct) per item, and each ≤ 3%;
+//   - at most ONE scaling bonus (statPct/maxHpPct) per item, and each within the
+//     engine mint clamp (config UNIQUE.scalingPctCap);
 //   - the equip level (the base's `levelReq`) sits ~EQUIP_GAP below the ilvl —
 //     never above, and not so far below the base under-armors the ilvl;
 //   - within a GEAR slot, base armor climbs with ilvl, so a higher-ilvl unique
@@ -249,7 +250,11 @@ for (const id of UNIQUE_IDS) {
       `${id}: ${scaling.length} scaling bonuses — at most ONE statPct/maxHpPct per unique.`,
     );
   for (const s of scaling)
-    if (s.value > 0.03) err(`${id}: scaling bonus ${s.value} > 0.03 cap.`);
+    if (s.value > UNIQUE.scalingPctCap) {
+      err(
+        `${id}: scaling bonus ${s.value} > ${UNIQUE.scalingPctCap} cap (UNIQUE.scalingPctCap).`,
+      );
+    }
 
   // ilvl integrity + power budget — DELEGATED to the shared model in
   // weapon-ilvl.mjs (the source of truth for what ilvl means). It prices every

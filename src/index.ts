@@ -196,8 +196,11 @@ export {
   autoGainAt,
   autoPowerScale,
   baseStatBonus,
+  diminishStat,
   levelStatGains,
   setAutoStatGainsEnabled,
+  xpCapMultiplier,
+  xpLevelCap,
   xpToLevelUp,
 } from "./game/leveling.ts";
 
@@ -273,6 +276,7 @@ export {
   LEVEL_ORDER,
   LEVELS,
   levelDef,
+  levelPosition,
   levelsBefore,
   type LevelDef,
   type SpawnSpec,
@@ -372,10 +376,12 @@ export {
   RUN,
   STAMINA,
   STATS,
+  UNIQUE,
   WEAPON,
   WELLS,
   WORLD_DROP,
   WOUNDS,
+  XP_CAP,
 } from "./game/config.ts";
 
 export type {
