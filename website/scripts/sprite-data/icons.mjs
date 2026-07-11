@@ -2368,20 +2368,21 @@ const SPRITES = {
     "............",
     "............",
   ],
-  // SEAGULL'S PONYTAIL: it remembers seven kinds of ju-jutsu.
+  // SEAGULL'S PONYTAIL: slicked crown, gold tie, a sheened tail that flicks at
+  // the tip. It remembers seven kinds of ju-jutsu.
   icon_ponytail: [
-    "............",
-    "....OOO.....",
-    "...OkkkO....",
-    "...OkkkO....",
-    "....OkkO....",
-    "....OkkO....",
-    "...OkkO.....",
-    "...OkkO.....",
-    "....OkkO....",
-    "....OkkO....",
-    ".....OO.....",
-    "............",
+    "..OOOO......",
+    ".OkkkkO.....",
+    ".OkffkkO....",
+    ".OkkkkkO....",
+    "..OoooO.....",
+    "..OkfkO.....",
+    "...OkfkO....",
+    "...OkkfO....",
+    "....OkkkO...",
+    "....OkkkO...",
+    ".....OkkO...",
+    "....OkO.....",
   ],
   // The BOTTOMLESS CARAFE: it refills itself, and so do you.
   icon_carafe: [
