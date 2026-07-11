@@ -343,9 +343,11 @@ const MOVE_KEYS: Record<string, { x: number; y: number }> = {
 // it. A bare 0.6 tipped over the 0.5 threshold and drained like a run.
 const KEYBOARD_WALK_THROTTLE = STAMINA.runThreshold;
 
-/** Other carried weapons, strongest first — the switch targets shared by the
- * Q weapon menu and the 1-4 hotkeys. Damage is stat-scaled (weaponDamageFor)
- * so the ordering matches the number each slot shows and follows the build. */
+/** Other carried weapons, best first — the switch targets shared by the Q
+ * weapon menu and the 1-4 hotkeys. Ordered by ilvl (highest first) so "1"
+ * grabs the top-item-level weapon; ties break on stat-scaled damage
+ * (weaponDamageFor) so equal-ilvl slots fall in dps order and follow the
+ * build. */
 function weaponAlternatives(
   state: GameState,
 ): { item: Equipment; index: number; dmg: number }[] {
@@ -357,7 +359,7 @@ function weaponAlternatives(
       index: e.index,
       dmg: Math.round(weaponDamageFor(state, e.item as Equipment)),
     }))
-    .sort((a, b) => b.dmg - a.dmg);
+    .sort((a, b) => b.item.ilvl - a.item.ilvl || b.dmg - a.dmg);
 }
 
 function formatTime(ms: number): string {
