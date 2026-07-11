@@ -185,7 +185,14 @@ For each candidate, in the numbered order:
 - **Hierarchy is game design, not decoration.** Threat level must sort
   visually: bosses heaviest, elites louder than minions, pickups inviting,
   decor quiet. An audit that fixes ten sprites but flattens hierarchy has
-  made the game worse.
+  made the game worse. **Size is the bluntest hierarchy lever** — the
+  renderer draws every mob at its own grid size (nothing clamps a minion to
+  16²), so a tanky mob can simply live on a bigger canvas (20², 22²) to loom
+  over the crowd. Reach for a bigger grid before you fight to cram menace
+  into 16²; the atlas, wound generator, and audit sheets all handle mixed
+  sizes already (elites are 24², bosses 48²). Keep `radius` (the hitbox) a
+  deliberate, separate decision — a bigger look doesn't have to change
+  collision or balance.
 - **Contrast is safety-critical.** The player dodges what they can see;
   a mob that melts into the regolith is a difficulty bug wearing an art
   bug's clothes. Judge every field sprite over its own level ground —
@@ -253,3 +260,10 @@ A running log of gotchas from past passes. Add to it; don't let it rot.
 - **`palette <family|sprite>` before you sketch.** It prints the exact char →
   color map a redraw draws with (core + family-local), so you don't hand-read
   `core.mjs` and the family file to find which letter is "steel" or "cyan".
+- **A redraw can change the canvas size, not just the pixels.** Mobs are NOT
+  locked to one size — `render.ts` draws each at its native grid dimensions,
+  the atlas packs whatever you give it, and `woundedFrames`/the audit sheets
+  follow. When a mob's problem is "reads too small/big for its threat", the
+  fix is often a bigger/smaller grid, not more internal detail. Update the
+  sprite-data comment when you change a size, and remember both `_0`/`_1`
+  frames must share the new dimensions.
