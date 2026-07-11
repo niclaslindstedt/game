@@ -97,13 +97,47 @@ export function autoPowerScale(level: number): number {
  * The share of the CURRENT level bar a golden arrow grants at `level`: the
  * base share (`LEVELING.arrowXpShare`) decayed harmonically by
  * `LEVELING.arrowXpShareTaper`, so arrows pay a full quarter-level early and a
- * thin sliver near the cap. The single source of truth for the arrow payout,
- * read by the pickup handler (step.ts) and the leveling-curve calculator
- * (scripts/leveling-curve.mjs) alike, so the model and the game never drift.
+ * thin sliver near the cap. The single source of truth for the arrow payout
+ * WHILE HOT, read by the pickup handler (step.ts) and the leveling-curve
+ * calculator (scripts/leveling-curve.mjs) alike, so the model and the game
+ * never drift.
  */
 export function arrowXpShareAt(level: number): number {
   const l = Math.max(1, level);
   return LEVELING.arrowXpShare / (1 + LEVELING.arrowXpShareTaper * (l - 1));
+}
+
+/**
+ * A reference minion's worth of XP at `level`: the flat per-level hp ramp
+ * (`MENACE.mobHpPerLevel`) over `LEVELING.refMobHp`, carried by the same
+ * `autoPowerScale` the horde scales by, priced at `LEVELING.xpPerHp`. This is
+ * the "typical mob" unit the KILLS-per-level curve is authored against (see
+ * `xpToLevelUp`), reused as the COLD arrow's payout unit so "5 mob kills"
+ * means the same thing to the game and the calculator.
+ */
+export function referenceMobXp(level: number): number {
+  const l = Math.max(1, level);
+  return (
+    LEVELING.refMobHp *
+    (1 + (l - 1) * MENACE.mobHpPerLevel) *
+    autoPowerScale(l) *
+    LEVELING.xpPerHp
+  );
+}
+
+/**
+ * The COLD golden-arrow payout at `level`: a flat `arrowColdMobXpMult` mob
+ * kills' worth of XP (see `referenceMobXp`). Handed out instead of the
+ * share-of-bar once the hero passes the current map/difficulty's
+ * `arrowCapByDifficulty` — a catch-up faucet that runs dry once the content
+ * has given all the levels it is meant to. Read by the pickup handler and the
+ * calculator alike.
+ */
+export function arrowColdXp(level: number): number {
+  return Math.max(
+    1,
+    Math.round(LEVELING.arrowColdMobXpMult * referenceMobXp(level)),
+  );
 }
 
 /**
@@ -136,10 +170,5 @@ export function xpToLevelUp(level: number): number {
     LEVELING.killsPerLevelBase *
     Math.pow(LEVELING.killsPerLevelGrowth, l - 1) *
     ramp;
-  const referenceMobXp =
-    LEVELING.refMobHp *
-    (1 + (l - 1) * MENACE.mobHpPerLevel) *
-    autoPowerScale(l) *
-    LEVELING.xpPerHp;
-  return Math.round(kills * referenceMobXp);
+  return Math.round(kills * referenceMobXp(l));
 }

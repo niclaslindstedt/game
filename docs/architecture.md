@@ -204,9 +204,11 @@ run against synthetic fixtures with no shipped content (see
   base-attribute gains (see `leveling.ts` below), and celebrate first: the
   ding arms `state.levelUpFxMs` (config `LEVELING.dingCelebrationMs`) — the
   app draws the golden burn off it — and the `levelup` stat-chooser phase
-  only opens once the window has burned down. Golden XP arrows
-  grant a fixed share of the current threshold. Picked-up equipment that
-  beats what is worn is equipped on the spot.
+  only opens once the window has burned down. Golden XP arrows are a catch-up
+  faucet: a share of the current threshold while the hero is under the map and
+  difficulty's `loot.arrowCapByDifficulty` level, a flat few mob kills
+  (`LEVELING.arrowColdMobXpMult`, via `arrowColdXp`) once he passes it. Picked-up
+  equipment that beats what is worn is equipped on the spot.
 - **`src/game/loot.ts`** — kill resolution: `hitEnemy` applies player
   damage (crit rolls flash the victim), pays out XP, and rolls drops —
   the level's loot table for minions (with the pity rule and the

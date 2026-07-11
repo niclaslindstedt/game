@@ -41,7 +41,7 @@ const root = path.join(here, "..");
 const { LEVELING, LOOT, STATS } = await import(
   path.join(root, "src/game/config.ts")
 );
-const { xpToLevelUp, arrowXpShareAt } = await import(
+const { xpToLevelUp, arrowXpShareAt, arrowColdXp } = await import(
   path.join(root, "src/game/leveling.ts")
 );
 const { mobHpScaleFor } = await import(path.join(root, "src/game/menace.ts"));
@@ -163,15 +163,19 @@ if (campaign || byLevel) {
       const killXp =
         rosterXp(LEVELS[id], diff) * clearShare * mobHpScaleFor(level, diff);
       // Arrow XP for the clear: each of `kills` mobs has `arrowDropProb` to
-      // drop an arrow worth `arrowXpShareAt(level)` of the current bar. The
+      // drop an arrow. While the hero is UNDER this map/difficulty's arrow cap
+      // it pays `arrowXpShareAt(level)` of the current bar; once he is AT/ABOVE
+      // the cap the arrow goes COLD (`arrowColdXp`, a flat few mob kills). The
       // level is taken at the clear's START (an approximation — it climbs as
-      // the clear plays out), good enough for the "where does the campaign
-      // land" check.
-      const arrowXp =
-        kills *
-        arrowDropProb(diff) *
-        arrowXpShareAt(level) *
-        xpToLevelUp(level);
+      // the clear plays out), so on a clean first pass START < cap = END and
+      // arrows read hot; only an over-levelled start (high --luck, a replay)
+      // trips the cold branch — which is exactly the anti-over-level behaviour.
+      const cap = LEVELS[id].loot.arrowCapByDifficulty?.[diff];
+      const arrowPerDrop =
+        cap !== undefined && level >= cap
+          ? arrowColdXp(level)
+          : arrowXpShareAt(level) * xpToLevelUp(level);
+      const arrowXp = kills * arrowDropProb(diff) * arrowPerDrop;
       xp += killXp + arrowXp;
       advance();
     }
@@ -203,7 +207,10 @@ const killsPerLevel = (L) =>
 // takes on kill XP alone, arrows drip an extra `k0 × pArrow × arrowXpShareAt(L)`
 // levels' worth of XP, so the kills actually needed fall to
 // `k0 / (1 + k0 × pArrow × arrowShareAt(L))`. On JESUS pArrow is 0 and the two
-// columns coincide.
+// columns coincide. Arrows read HOT here: this table models a hero levelling
+// THROUGH on-content, always under the arrow cap (see `arrowCapByDifficulty`);
+// the cold-once-capped branch only bites on REPLAY, which the `--campaign`
+// model handles per (map, difficulty).
 const pArrow = arrowDropProb(difficulty);
 const killsPerLevelWithArrows = (L) => {
   const k0 = killsPerLevel(L);

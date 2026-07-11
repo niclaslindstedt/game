@@ -309,6 +309,19 @@ export type LevelDef = {
      */
     worldUniques?: Partial<Record<Difficulty, string[]>>;
     /**
+     * The player level a normal single run of this level at each difficulty
+     * leaves the hero at — the point past which GOLDEN ARROWS stop paying a
+     * share of the level bar and go COLD (a flat few mob kills, see
+     * `LEVELING.arrowColdMobXpMult` / `arrowColdXp`). Arrows are thus a
+     * CATCH-UP faucet: they speed a hero who is UNDER-levelled for the content
+     * up to where it belongs, then run dry, so replaying old maps can't
+     * arrow-boost him past their tier. Derived from the campaign model
+     * (`scripts/leveling-curve.mjs --by-level`, the level each map/difficulty
+     * clear reaches); a rung with no entry never caps (arrows stay hot). Read
+     * in the `xp` pickup handler (step.ts) and modelled by the calculator.
+     */
+    arrowCapByDifficulty?: Partial<Record<Difficulty, number>>;
+    /**
      * Trophy weapon def dropped by the last regular monster standing —
      * clearing every mob on the level always earns it.
      */

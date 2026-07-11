@@ -118,8 +118,11 @@ and something enormous haunts the old flag.
   base fire rate is deliberately slow, so a build is what wins the cadence
   back, and a new **(i)** button on the level-up screen spells out exactly
   what each stat does. Golden
-  **XP arrows** drop from the horde and are always worth a fixed share of
-  your next level.
+  **XP arrows** are a rare catch-up drop (about one every fifty kills): they
+  pay a share of your next level while you're under-levelled for the map, then
+  go **cold** — a handful of kills' worth — once you've reached the level a
+  normal run of that map and difficulty leaves you at, so grinding old ground
+  can't push you past it.
 - The horde drops **loot**, Diablo-style — medkits, gear, repair kits, energy
   drinks, XP arrows, and **base weapons themed to each level** (a box cutter or the
   armory's pump shotgun on earth, 70s hardware on the moon, AI-forged

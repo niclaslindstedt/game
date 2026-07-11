@@ -84,7 +84,7 @@ import {
   wearWornArmor,
   wouldUpgradeSlot,
 } from "./items.ts";
-import { arrowXpShareAt } from "./leveling.ts";
+import { arrowColdXp, arrowXpShareAt } from "./leveling.ts";
 import { grantXp, hitEnemy, unspawnedMinions } from "./loot.ts";
 import { revealAround } from "./map.ts";
 import { repelFromMerchant, stepMerchant } from "./merchant.ts";
@@ -1416,19 +1416,28 @@ function stepItems(state: GameState): void {
       return false;
     }
 
-    // The golden arrow: a share of the current level's XP bar. It scales
-    // with the threshold so arrows keep triggering dings all run, but the
-    // share TAPERS with level (arrowXpShareAt) — a full quarter-level early,
-    // a thin sliver near the cap — so arrows carry the onboarding and then
-    // recede, leaving the long climb to the kill grind.
+    // The golden arrow: a CATCH-UP faucet. While the hero is still under the
+    // level a normal run of this map/difficulty leaves him at, it pays a share
+    // of the current level's XP bar — tapering with level (arrowXpShareAt), a
+    // full quarter-level early down to a sliver — so arrows carry the
+    // onboarding and speed an under-levelled hero up to where the content
+    // belongs. ONCE he hits that cap the arrow goes COLD (arrowColdXp: a flat
+    // few mob kills), so replaying old maps can't arrow-boost him past their
+    // tier. A rung with no cap entry never goes cold.
     if (item.kind === "xp") {
       state.stats.itemsCollected++;
+      const cap = levelDef(state.level.id).loot.arrowCapByDifficulty?.[
+        state.difficulty
+      ];
       // Resolve the award once so the same figure both banks XP and floats up
       // off the hero's head as blue "+N XP" combat text.
-      const xpGain = Math.max(
-        1,
-        Math.round(player.xpToNext * arrowXpShareAt(player.level)),
-      );
+      const xpGain =
+        cap !== undefined && player.level >= cap
+          ? arrowColdXp(player.level)
+          : Math.max(
+              1,
+              Math.round(player.xpToNext * arrowXpShareAt(player.level)),
+            );
       state.events.push({
         type: "itemCollected",
         kind: "xp",
