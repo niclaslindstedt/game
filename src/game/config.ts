@@ -528,17 +528,19 @@ export const ARRIVAL = {
  */
 export const MENACE = {
   /**
-   * Menace banked per second per point of the player's rolling DPS: sustained
-   * damage output is the meter's main fuel, so a hard-hitting build heats it
-   * faster than a plinking one — the meter tracks how overpowered you are, not
-   * how you happened to land the last blow. Scaled by `menaceSensitivity`
-   * (difficulty × early-game warmup) before it lands. Kept deliberately low:
-   * raw DPS climbs for every build as the run goes on, so leaning on it would
-   * heat the meter for fair late-game play too. The meter leans instead on
-   * relative OVERKILL and kill RATE, which single out a genuinely lopsided
-   * build; DPS is only a gentle supporting term.
+   * Menace banked per second per REFERENCE HEALTHBAR PER SECOND of rolling
+   * output: sustained damage is the meter's supporting fuel, but it is
+   * measured RELATIVE to the era — the rolling DPS divided by the level's
+   * reference minion bar (`refMobHp` on the `mobHpPerLevel` ramp ×
+   * `autoPowerScale`, the same bar the spawner scales hp by) — so "mowing
+   * two healthbars a second" heats the meter the same at level 1 and level
+   * 60. (A raw-dps term was non-stationary: absolute numbers inflate ~30×
+   * over a campaign, and fair mid-game play saturated the meter.) Scaled by
+   * `menaceSensitivity` before it lands; 3.2 ≈ the old 0.07/raw-point term
+   * at the level-1 bar, so the opening behaves exactly as before. The meter
+   * still leans on relative OVERKILL and kill RATE as its main signals.
    */
-  perDps: 0.07,
+  perBarDps: 3.2,
   /**
    * Menace banked per second per kill/second of the player's rolling kill rate:
    * a fast clear heats the meter on top of raw damage, so mowing a crowd down

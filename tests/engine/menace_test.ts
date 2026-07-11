@@ -165,7 +165,7 @@ describe("menace — the meter", () => {
     // The rolling DPS/kill-rate driver: grind a tanky mob (no killing blow, so
     // no overkill spike) and the meter still climbs purely from output. Run it
     // on a sensitive difficulty with a warmed-up hero, since the DPS channel is
-    // deliberately a gentle supporting term (see MENACE.perDps).
+    // deliberately a gentle supporting term (see MENACE.perBarDps).
     const state = startOn("jesus");
     bareStage(state);
     state.player.level = 8;

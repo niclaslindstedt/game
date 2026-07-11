@@ -385,8 +385,20 @@ export function tickMenace(
   state.combatKillRate += (kills / dt - state.combatKillRate) * alpha;
 
   const before = menaceStage(state);
+  // The DPS channel is measured in REFERENCE HEALTHBARS per second, not raw
+  // points: absolute damage inflates ~30× over a campaign (autoPowerScale
+  // sits inside every number), so a raw-dps term that was fair at level 1
+  // saturated the meter for ordinary level-30 play. Dividing by the era's
+  // reference bar — the same one the spawner scales mob hp by — makes the
+  // channel stationary: "how many level-appropriate healthbars per second"
+  // is the same question at level 1 and level 60. The overkill and
+  // kill-rate channels were relative already.
+  const bar =
+    LEVELING.refMobHp *
+    (1 + (Math.max(1, state.player.level) - 1) * MENACE.mobHpPerLevel) *
+    autoPowerScale(state.player.level);
   const gain =
-    (state.combatDps * MENACE.perDps +
+    ((state.combatDps / Math.max(1, bar)) * MENACE.perBarDps +
       state.combatKillRate * MENACE.perKillRate) *
     menaceSensitivity(state);
   // The cooler is per-difficulty: EASY bleeds a hot streak off fast, the
