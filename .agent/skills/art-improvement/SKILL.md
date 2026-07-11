@@ -222,8 +222,9 @@ For each candidate, in the numbered order:
    redraw that passed the sheets but melts into the running game goes back
    to step 4, not into a commit. For an animated redesign, follow with a
    short *unfrozen* run (drop `freeze`) to see the walk cycle in motion.
-8. **Commit this candidate alone** — grid change + regenerated
-   `atlas.png`/`atlas.json` together, conventional message, e.g.
+8. **Commit this candidate alone** — just the sprite-data grid change
+   (the atlas is gitignored and rebuilt on every build, so there is nothing
+   binary to commit alongside it), conventional message, e.g.
    `feat(assets): redraw wraith with a torn-shroud silhouette`. One commit
    per candidate is what makes Phase 6's per-candidate revert trivial.
 
@@ -240,8 +241,9 @@ For each candidate, in the numbered order:
 ## Phase 6 — Ship what the user liked
 
 1. `git revert` the commits of every candidate the user did NOT pick
-   (this is why each got its own commit), then `make assets` and commit
-   the regenerated atlas if the reverts left it stale.
+   (this is why each got its own commit). The atlas is gitignored and
+   rebuilt on every build, so there is no regenerated binary to re-commit
+   after the reverts.
 2. `make test && make lint && make fmt-check` — `tests/content/` sprite
    suites and the wound lint must pass.
 3. Push and open ONE PR (see the `commit` skill) titled for the pass,

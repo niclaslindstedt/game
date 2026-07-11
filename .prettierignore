@@ -5,6 +5,7 @@ LICENSE
 package-lock.json
 website/dist/
 website/src/generated/
+website/src/game/assets/
 site/
 node_modules/
 
