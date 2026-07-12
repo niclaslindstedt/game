@@ -266,10 +266,10 @@ describe("mercy drops through a real kill (medium)", () => {
   });
 
   it("rains medkits harder as the hero nears death", () => {
-    // roll 0.45 sits past the base medkit window but inside the low-health one
-    // (medium's 1.3× bonus at full desperation widens it). rolls: [miss, dodge,
-    // crit, drop-gate pass, nuke no, ladder].
-    const ladder = [0.9, 0.9, 0.9, 0.0, 0.9, 0.45];
+    // roll 0.6 sits past the base medkit window (a repair at full health) but
+    // inside the low-health one (medium's 1.3× bonus at full desperation widens
+    // it). rolls: [miss, dodge, crit, drop-gate pass, nuke no, ladder].
+    const ladder = [0.9, 0.9, 0.9, 0.0, 0.9, 0.6];
     const hurt = killForItems(ladder, { hp: 1 });
     expect(hurt.some((i) => i.kind === "medkit")).toBe(true);
     // At full health the same roll falls through to a repair, not a medkit.
@@ -278,10 +278,10 @@ describe("mercy drops through a real kill (medium)", () => {
   });
 
   it("drops repair kits harder as the weapon nears breaking", () => {
-    // roll 0.55 sits past the base repair window but inside the low-durability
-    // one (1.3× at full desperation). Health is full, so only the repair slice
-    // is widened here.
-    const ladder = [0.9, 0.9, 0.9, 0.0, 0.9, 0.55];
+    // roll 0.7 sits past the base repair window (an arrow at full durability)
+    // but inside the low-durability one (1.3× at full desperation). Health is
+    // full, so only the repair slice is widened here.
+    const ladder = [0.9, 0.9, 0.9, 0.0, 0.9, 0.7];
     const worn = killForItems(ladder, { durability: 1 });
     expect(worn.some((i) => i.kind === "repair")).toBe(true);
     const fresh = killForItems(ladder, { durability: 120 });
@@ -430,10 +430,10 @@ describe("one rope at a time (a waiting rescue holds its signal's fire)", () => 
   });
 
   it("stops widening the medkit slice while a medkit waits in view", () => {
-    // The same ladder that rains a medkit at hp 1 (roll 0.45 inside the
+    // The same ladder that rains a medkit at hp 1 (roll 0.6 inside the
     // widened slice) — with one already on the ground, the boost holds fire
     // and the roll falls through, so the waiting medkit stays the only one.
-    const ladder = [0.9, 0.9, 0.9, 0.0, 0.9, 0.45];
+    const ladder = [0.9, 0.9, 0.9, 0.0, 0.9, 0.6];
     const items = killForItems(ladder, {
       hp: 1,
       arrange: (state) => groundItem(state, { kind: "medkit" }, -100),
@@ -442,7 +442,7 @@ describe("one rope at a time (a waiting rescue holds its signal's fire)", () => 
   });
 
   it("stops widening the repair slice while a repair kit waits in view", () => {
-    const ladder = [0.9, 0.9, 0.9, 0.0, 0.9, 0.55];
+    const ladder = [0.9, 0.9, 0.9, 0.0, 0.9, 0.7];
     const items = killForItems(ladder, {
       durability: 1,
       arrange: (state) => groundItem(state, { kind: "repair" }, -100),

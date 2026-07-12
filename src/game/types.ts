@@ -441,6 +441,10 @@ export type Companion = {
   moving: boolean;
   /** Remaining ms until its weapon may strike again. */
   weaponCooldownMs: number;
+  /** Combat-heat timer (ms): set to `COMPANIONS.regenCalmMs` whenever the
+   * companion has a live target or takes a hit, counting down otherwise. Out-of-
+   * combat regen (see stepCompanion) kicks in only once it reaches 0. */
+  combatMs?: number;
   /** Ms left kneeling; undefined while up and fighting. See COMPANIONS. */
   downedMs?: number;
   /** Ms until this companion may float another kill quote. */

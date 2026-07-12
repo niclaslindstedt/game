@@ -1322,6 +1322,11 @@ export function GameScreen({
           input.throttle = 1;
           input.jump = decided.jump;
           input.useItem = decided.useItem ?? false;
+          // The bot spends stacked consumables on its own read of the state
+          // (botAct: medkit under half hp, drink when winded) — wire them
+          // through so autoplay actually heals instead of hoarding kits.
+          input.useMedkit = decided.useMedkit ?? false;
+          input.useStaminaPotion = decided.useStaminaPotion ?? false;
           input.useItemIndex = undefined;
           input.aim = undefined;
         } else {
