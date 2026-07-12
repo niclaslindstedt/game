@@ -17,7 +17,7 @@
 // `companionId` for kill-quote attribution in step.ts).
 
 import { clamp, direction, distance, distanceSq } from "@game/lib/vec.ts";
-import { ARMOR, COMPANIONS, LEVELING, MELEE, WEAPON } from "./config.ts";
+import { ARMOR, COMPANIONS, MELEE, WEAPON } from "./config.ts";
 import { companionDef, type CompanionDef } from "./defs/companions.ts";
 import { enemyDef } from "./defs/enemies/index.ts";
 import { weaponDef } from "./defs/equipment.ts";
@@ -27,7 +27,7 @@ import {
   playerSpeed,
   qualityMult,
 } from "./items.ts";
-import { grantXp, hitEnemy, killEnemy } from "./loot.ts";
+import { enemyKillXp, grantXp, hitEnemy, killEnemy } from "./loot.ts";
 import { addMapMarker } from "./map.ts";
 import { startJoinWords } from "./story.ts";
 import { lineOfSight, resolveObstacles } from "./obstacles.ts";
@@ -201,7 +201,7 @@ export function resolveChoice(state: GameState, spare: boolean): boolean {
   if (def.spareable) {
     recruitCompanion(state, def.spareable.companion, enemy.pos);
   }
-  grantXp(state, def.xp ?? Math.round(enemy.maxHp * LEVELING.xpPerHp));
+  grantXp(state, Math.round(enemyKillXp(state, def, enemy)));
   // The joining scene — the thanks, the life owed — takes the stage last,
   // so a level-up earned by the fight waits its turn behind it, the same
   // ordering a death gasp gets.

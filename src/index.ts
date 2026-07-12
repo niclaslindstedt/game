@@ -27,6 +27,7 @@ export { step } from "./game/step.ts";
 export {
   canDropNuke,
   crowdBombChance,
+  enemyKillXp,
   grantXp,
   hitEnemy,
   killEnemy,

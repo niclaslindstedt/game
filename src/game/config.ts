@@ -275,6 +275,26 @@ export const LEVELING = {
   /** Default XP granted per point of a killed monster's max hp. */
   xpPerHp: 1,
   /**
+   * Elite and boss kills pay XP as a SHARE OF THE HERO'S CURRENT LEVEL BAR —
+   * a flat fraction of `xpToLevelUp(player.level)` — rather than the
+   * hp-proportional rule the rank and file ride (`xpPerHp`). A set-piece kill
+   * is meant to visibly LURCH the bar (the "boss = a real chunk of a level"
+   * reward), and only a bar-share does that CONSISTENTLY across every map and
+   * difficulty: a flat number tuned for the first easy encounter would collapse
+   * to a rounding error by the time the same elite is re-fought fifty levels
+   * later, and an hp-proportional reward swings wildly between a squishy moon
+   * elite and a bunker bullet-sponge. Reading the live level instead makes the
+   * lurch the same 12%/20% wherever and whenever the elite/boss dies — and
+   * because it flows through `grantXp`, the per-map XP cap still fades it to
+   * nothing on an outgrown replay, so boss farming never over-levels the hero.
+   * A def may override its own share with `EnemyDef.xpBarShare` (the shielded
+   * grok trio each pay less, being a three-part guardian gauntlet). Elites aim
+   * at the 10–15% "noticeable move" band; bosses deliberately reach past it as
+   * the campaign's climactic kills.
+   */
+  eliteXpBarShare: 0.12,
+  bossXpBarShare: 0.2,
+  /**
    * The hard level cap — a Diablo-style ceiling. Once a hero hits it, XP stops
    * banking levels (the bar pins full) and the endgame becomes the hunt for
    * cap-level gear rather than the next ding. Enforced in `grantXp` (loot.ts).

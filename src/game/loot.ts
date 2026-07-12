@@ -391,7 +391,7 @@ export function hitEnemy(
       Math.max(
         1,
         Math.round(
-          (def.xp ?? enemy.maxHp * LEVELING.xpPerHp) *
+          enemyKillXp(state, def, enemy) *
             overkillEfficiency(damage, enemy.maxHp),
         ),
       ),
@@ -405,6 +405,34 @@ export function hitEnemy(
     noNukeDrop: opts?.noNukeDrop,
     noMenace: opts?.noMenace,
   });
+}
+
+/**
+ * The base XP a kill of `enemy` pays, BEFORE the overkill toll — the single
+ * place the two reward rules live, so every death path (a normal kill, a
+ * routed boss, a companion's finishing blow) reads the same figure. ELITES and
+ * BOSSES pay a SHARE OF THE HERO'S CURRENT LEVEL BAR
+ * (`xpToLevelUp(player.level)` × the def's `xpBarShare` or the role default
+ * LEVELING.eliteXpBarShare / bossXpBarShare), so a set-piece kill lurches the
+ * bar the same noticeable amount on every map and difficulty; the rank and
+ * file pay the hp-proportional `xpPerHp × max hp`. A def's flat `xp` override,
+ * when set, wins outright.
+ */
+export function enemyKillXp(
+  state: GameState,
+  def: EnemyDef,
+  enemy: Enemy,
+): number {
+  if (def.xp != null) return def.xp;
+  if (def.role !== "minion") {
+    const share =
+      def.xpBarShare ??
+      (def.role === "boss"
+        ? LEVELING.bossXpBarShare
+        : LEVELING.eliteXpBarShare);
+    return share * xpToLevelUp(state.player.level);
+  }
+  return enemy.maxHp * LEVELING.xpPerHp;
 }
 
 /**
@@ -446,7 +474,7 @@ export function killEnemy(
   const efficiency = overkillEfficiency(damage, enemy.maxHp);
   const xpGain = Math.max(
     1,
-    Math.round((def.xp ?? enemy.maxHp * LEVELING.xpPerHp) * efficiency),
+    Math.round(enemyKillXp(state, def, enemy) * efficiency),
   );
   state.events.push({
     type: "enemyKilled",
