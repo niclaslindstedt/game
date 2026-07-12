@@ -92,6 +92,14 @@ export type GameSettings = {
   autoEquip: AutoEquip;
   powerupSide: PowerupSide;
   keyboardMove: KeyboardMove;
+  /**
+   * Desktop keys that spend from the consumable dock (`KeyboardEvent.key`,
+   * lowercased): `keyMedkit` heals with the best medkit held, `keyStamina`
+   * drinks a stamina potion. Default Z / X; rebindable in SETTINGS → CONTROLS.
+   * Touch devices use the on-screen slots and ignore these.
+   */
+  keyMedkit: string;
+  keyStamina: string;
   vibration: Vibration;
   /** 0–1 master volumes, applied via audio.ts. */
   musicVolume: number;
@@ -138,6 +146,10 @@ function defaults(): GameSettings {
     // Fine-pointer devices get WASD out of the box; touch has no keyboard,
     // so it defaults off and the on-screen dpad stays in charge.
     keyboardMove: touchFirst ? "off" : "on",
+    // The consumable-dock keys default to the reachable Z / X near the WASD
+    // hand; rebindable in CONTROLS.
+    keyMedkit: "z",
+    keyStamina: "x",
     // Vibration is a touch-device affordance — on out of the box where a
     // motor exists, and inert on iOS and pointer devices anyway.
     vibration: "on",
@@ -176,6 +188,14 @@ function loadBalance(stored: unknown): BalanceTuning {
 
 const clamp01 = (v: number) => Math.min(1, Math.max(0, v));
 
+/** A stored consumable-dock bind falls back to its default unless it's a
+ * single printable character (a `KeyboardEvent.key` like "z"), lowercased. */
+export function sanitizeBindKey(stored: unknown, fallback: string): string {
+  return typeof stored === "string" && stored.length === 1
+    ? stored.toLowerCase()
+    : fallback;
+}
+
 function load(): GameSettings {
   const base = defaults();
   try {
@@ -203,6 +223,8 @@ function load(): GameSettings {
         stored.keyboardMove === "on" || stored.keyboardMove === "off"
           ? stored.keyboardMove
           : base.keyboardMove,
+      keyMedkit: sanitizeBindKey(stored.keyMedkit, base.keyMedkit),
+      keyStamina: sanitizeBindKey(stored.keyStamina, base.keyStamina),
       vibration:
         stored.vibration === "on" || stored.vibration === "off"
           ? stored.vibration

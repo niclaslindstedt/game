@@ -9,7 +9,7 @@
 // skill), tests call `applyScenario` directly after `createGame`.
 
 import { clamp, distance, vec, type Vec2 } from "@game/lib/vec.ts";
-import { HELD_ITEMS, MEDKIT, MERCHANT } from "./config.ts";
+import { CONSUMABLES, HELD_ITEMS, MEDKIT, MERCHANT } from "./config.ts";
 import { abilityDef } from "./defs/abilities.ts";
 import { enemyDef } from "./defs/enemies/index.ts";
 import {
@@ -154,6 +154,12 @@ export type ScenarioSpec = {
   /** Powerups banked into the dock (ABILITY_DEFS ids, oldest first, capped
    * at the dock size). */
   abilities?: string[];
+  /** Stacked medkits per quality (index → count, clamped to the stack cap) —
+   * stages the consumable dock's medkit slot for a screenshot. */
+  medkits?: number[];
+  /** Stacked stamina potions (clamped to the stack cap) — stages the dock's
+   * stamina slot. */
+  staminaPotions?: number;
   /**
    * Remove the spawned population before the scenario's own spawns land.
    * Bosses are kept — deleting the objective would end the level on the
@@ -242,6 +248,20 @@ export function applyScenario(state: GameState, spec: ScenarioSpec): void {
 
   if (spec.abilities) {
     player.heldAbilities = spec.abilities.slice(0, HELD_ITEMS.cap);
+  }
+  if (spec.medkits) {
+    player.medkits = new Array<number>(MEDKIT.tiers.length)
+      .fill(0)
+      .map((_, i) =>
+        clamp(Math.round(spec.medkits?.[i] ?? 0), 0, CONSUMABLES.stackCap),
+      );
+  }
+  if (spec.staminaPotions !== undefined) {
+    player.staminaPotions = clamp(
+      Math.round(spec.staminaPotions),
+      0,
+      CONSUMABLES.stackCap,
+    );
   }
 
   if (spec.place !== undefined) placePlayer(state, spec.place);

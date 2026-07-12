@@ -30,6 +30,7 @@ import {
 import { formatCompact } from "@ui/lib/format-number.ts";
 
 import { spriteByName, type GameAssets, type Sprites } from "./assets.ts";
+import { medkitIconFor } from "./consumables.ts";
 import { playerDollLayers, WEAPON_GRIP } from "./paper-doll.ts";
 import { getSettings } from "./settings.ts";
 import { TIER_COLORS } from "./tiers.ts";
@@ -510,7 +511,8 @@ export function drawFrame(
     if (!inView(item.pos.x, item.pos.y, 16)) continue;
     const sprite =
       item.kind === "medkit"
-        ? sprites.medkit
+        ? (spriteByName(sprites, medkitIconFor(item.tier ?? 0)) ??
+          sprites.medkit)
         : item.kind === "xp"
           ? sprites.upgrade
           : item.kind === "repair"

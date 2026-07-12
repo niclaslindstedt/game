@@ -72,30 +72,24 @@ export function playPickupSound(synth: Synth, event: GameEvent): boolean {
           volume: 0.05,
           delayMs: 140,
         });
-      } else if (event.kind === "drink") {
-        // The energy drink: a fizzy hiss cracking open, then a quick two-note
-        // lift as the legs come back under the hero.
+      } else if (event.kind === "drink" || event.kind === "medkit") {
+        // Medkits and stamina potions now STASH into the consumable dock rather
+        // than firing on contact — so the pickup is a soft "tuck it into the
+        // pouch" click (a low cloth rustle + a quiet blip), leaving the
+        // satisfying heal/fizz chime for the moment it's actually spent (see the
+        // medkitUsed / staminaPotionUsed cases). The drink stows a touch lower
+        // than the kit so the two read apart.
         synth.noise({
-          durationMs: 90,
+          durationMs: 45,
+          volume: 0.02,
+          filter: { type: "lowpass", frequency: 1400 },
+        });
+        synth.tone({
+          type: "triangle",
+          from: event.kind === "drink" ? 466 : 587,
+          durationMs: 70,
           volume: 0.03,
-          filter: { type: "highpass", frequency: 3200 },
-        });
-        synth.tone({
-          type: "square",
-          from: 588,
-          to: 784,
-          durationMs: 120,
-          volume: 0.045,
-          delayMs: 60,
-          detuneCents: 6,
-        });
-        synth.tone({
-          type: "sine",
-          from: 1568,
-          durationMs: 120,
-          volume: 0.025,
-          delayMs: 150,
-          echo: 0.25,
+          delayMs: 30,
         });
       } else if (event.kind === "ability") {
         // A power surging on: a wide rising sweep into a hanging shimmer.
@@ -116,30 +110,74 @@ export function playPickupSound(synth: Synth, event: GameEvent): boolean {
           delayMs: 160,
           echo: 0.4,
         });
-      } else {
-        // The medkit: a warm two-note mend with a soft octave glow.
-        synth.tone({
-          type: "triangle",
-          from: 523,
-          durationMs: 90,
-          volume: 0.055,
-        });
-        synth.tone({
-          type: "triangle",
-          from: 784,
-          durationMs: 130,
-          volume: 0.055,
-          delayMs: 90,
-        });
+      }
+      return true;
+
+    case "medkitUsed": {
+      // Spending a kit: the warm two-note mend (a major fifth up) with a soft
+      // octave glow — the satisfying "patched up" chime. A bigger kit
+      // (`tier` ≥ LARGE) rings a brighter bell on top so the grade is audible.
+      synth.tone({
+        type: "triangle",
+        from: 523,
+        durationMs: 90,
+        volume: 0.055,
+      });
+      synth.tone({
+        type: "triangle",
+        from: 784,
+        durationMs: 150,
+        volume: 0.055,
+        delayMs: 90,
+      });
+      synth.tone({
+        type: "sine",
+        from: 1568,
+        durationMs: 150,
+        volume: 0.03,
+        delayMs: 90,
+        echo: 0.25,
+      });
+      if (event.tier >= 2) {
         synth.tone({
           type: "sine",
-          from: 1568,
-          durationMs: 120,
-          volume: 0.02,
-          delayMs: 90,
+          from: 2093,
+          durationMs: 200,
+          volume: 0.022,
+          delayMs: 180,
+          echo: 0.4,
         });
       }
       return true;
+    }
+
+    case "staminaPotionUsed": {
+      // Draining a stamina potion: a fizzy hiss cracking open, then a quick
+      // two-note lift as the legs come back under the hero.
+      synth.noise({
+        durationMs: 90,
+        volume: 0.03,
+        filter: { type: "highpass", frequency: 3200 },
+      });
+      synth.tone({
+        type: "square",
+        from: 588,
+        to: 784,
+        durationMs: 120,
+        volume: 0.045,
+        delayMs: 60,
+        detuneCents: 6,
+      });
+      synth.tone({
+        type: "sine",
+        from: 1568,
+        durationMs: 120,
+        volume: 0.025,
+        delayMs: 150,
+        echo: 0.25,
+      });
+      return true;
+    }
 
     case "mercyDrop": {
       // The guardian's arrival: a soft, consonant halo of sound — a rising

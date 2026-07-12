@@ -344,7 +344,7 @@ describe("the energy drink drop and pickup", () => {
     expect(state.items.some((i) => i.kind === "drink")).toBe(true);
   });
 
-  it("resets the sprint pool to full on touch and is consumed", () => {
+  it("banks a drink into the consumable dock, then refills on use", () => {
     const state = startOn("easy");
     clearStage(state);
     state.waveSpawned = state.waveSpawned.map(() => 1e9);
@@ -353,16 +353,22 @@ describe("the energy drink drop and pickup", () => {
     ];
     state.player.stamina = 0;
     step(state, idle, DT);
-    expect(state.player.stamina).toBe(state.player.maxStamina);
+    // Stashed, not drunk: the pool isn't slammed to full on contact.
+    expect(state.player.stamina).toBeLessThan(state.player.maxStamina);
+    expect(state.player.staminaPotions).toBe(1);
     expect(state.items.some((i) => i.kind === "drink")).toBe(false);
     expect(
       state.events.some(
         (e) => e.type === "itemCollected" && e.kind === "drink",
       ),
     ).toBe(true);
+    // Spending it on the input edge fills the sprint pool.
+    step(state, { ...idle, useStaminaPotion: true }, DT);
+    expect(state.player.stamina).toBe(state.player.maxStamina);
+    expect(state.player.staminaPotions).toBe(0);
   });
 
-  it("stays on the ground for a rested hero (nothing to top up)", () => {
+  it("banks a drink even for a rested hero (it's a carried reserve now)", () => {
     const state = startOn("easy");
     clearStage(state);
     state.waveSpawned = state.waveSpawned.map(() => 1e9);
@@ -371,7 +377,8 @@ describe("the energy drink drop and pickup", () => {
       { id: state.nextId++, kind: "drink", pos: { ...state.player.pos } },
     ];
     step(state, idle, DT);
-    expect(state.items.some((i) => i.kind === "drink")).toBe(true);
+    expect(state.items.some((i) => i.kind === "drink")).toBe(false);
+    expect(state.player.staminaPotions).toBe(1);
   });
 });
 
@@ -523,19 +530,19 @@ describe("the mercy angel's delivery window", () => {
     };
     state.items = [gift];
 
-    // One step: still airborne — the gift hangs in the angel's hands, unhealed.
+    // One step: still airborne — the gift hangs in the angel's hands, ungrabbed.
     step(state, idle, DT);
     expect(state.items).toHaveLength(1);
-    expect(state.player.hp).toBe(1);
+    expect(state.player.medkits.reduce((a, b) => a + b, 0)).toBe(0);
 
-    // Run the clock through the delivery window: it lands and is grabbed.
+    // Run the clock through the delivery window: it lands and is banked.
     let ms = DT;
     while (ms < MERCY.angelDeliverMs + DT) {
       step(state, idle, DT);
       ms += DT;
     }
     expect(state.items).toHaveLength(0);
-    expect(state.player.hp).toBeGreaterThan(1);
+    expect(state.player.medkits.reduce((a, b) => a + b, 0)).toBe(1);
   });
 
   it("leaves ordinary drops grounded from birth (no angel, grabbed at once)", () => {
@@ -549,6 +556,6 @@ describe("the mercy angel's delivery window", () => {
     ];
     step(state, idle, DT);
     expect(state.items).toHaveLength(0); // collected immediately
-    expect(state.player.hp).toBeGreaterThan(1);
+    expect(state.player.medkits.reduce((a, b) => a + b, 0)).toBe(1);
   });
 });

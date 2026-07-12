@@ -10,7 +10,14 @@ import { createCutscene } from "@game/lib/cutscene.ts";
 import { createRng, randomRange, type Rng } from "@game/lib/rng.ts";
 import { distance, vec, type Vec2 } from "@game/lib/vec.ts";
 import { applyLoadout } from "./arrival.ts";
-import { ENEMY_AI, LOOT, OBSTACLES, PLAYER, STAMINA } from "./config.ts";
+import {
+  ENEMY_AI,
+  LOOT,
+  MEDKIT,
+  OBSTACLES,
+  PLAYER,
+  STAMINA,
+} from "./config.ts";
 import { cutsceneDef, cutsceneVariant } from "./defs/cutscenes.ts";
 import {
   difficultyDef,
@@ -261,6 +268,9 @@ export function createGame(
       faceLeft: false,
       abilities: [],
       heldAbilities: [],
+      // One empty medkit stack per quality; stamina potions share one stack.
+      medkits: new Array<number>(MEDKIT.tiers.length).fill(0),
+      staminaPotions: 0,
       moving: false,
       weaponCooldownMs: 0,
       // Levels with a scripted opening strike (SpaceZ HQ) start the hero with

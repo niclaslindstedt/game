@@ -29,6 +29,7 @@ import {
   applyScenario,
   skipOutro,
   allocateStat,
+  bestMedkitTier,
   confirmRespec,
   BOT_STRATEGIES,
   botAct,
@@ -115,6 +116,12 @@ import {
   type AchievementToastData,
 } from "./AchievementToast.tsx";
 import { synth } from "./audio.ts";
+import {
+  medkitColorFor,
+  medkitIconFor,
+  STAMINA_POTION_COLOR,
+  STAMINA_POTION_ICON,
+} from "./consumables.ts";
 
 // The achievements browser rides a lazy chunk: it's reached through a
 // deliberate tap (the HUD star / Y), never on the run's critical path, and
@@ -216,6 +223,13 @@ type Hud = {
    * render loop (keyed on the slot), not through here.
    */
   activeSlots: number[];
+  /** The best-quality medkit the hero holds (MEDKIT tier index), or -1 when
+   * none — the consumable dock's medkit slot shows this grade + its count. */
+  medkitTier: number;
+  /** How many medkits of `medkitTier` are stacked (0 when none held). */
+  medkitCount: number;
+  /** Stacked stamina potions held — the consumable dock's stamina slot count. */
+  staminaPotions: number;
   /** Equipped weapon def id — drives the always-on weapon widget. */
   weaponDefId: string;
   /** Equipped weapon's durability 0..1, or null for the unbreakable sidearm. */
@@ -515,6 +529,10 @@ export function GameScreen({
   const powerupDockRef = useRef<HTMLDivElement>(null);
   const jumpQueuedRef = useRef(false);
   const useItemQueuedRef = useRef(false);
+  // The consumable dock: a medkit / stamina-potion use queued this frame (a
+  // slot tap or its bindable key), spent on the next sim tick.
+  const useMedkitQueuedRef = useRef(false);
+  const useStaminaQueuedRef = useRef(false);
   // Where the last tap/click landed (CSS px on the canvas): the sim loop
   // checks it against the discovered merchant — a tap on him at the counter
   // opens the shop instead of jumping.
@@ -1195,6 +1213,17 @@ export function GameScreen({
           useItemQueuedRef.current = true;
           useItemIndexRef.current = n;
         }
+      } else if (state.phase === "playing" && !weaponMenuOpenRef.current) {
+        // The bindable consumable keys (default Z heal, X stamina) spend from
+        // the consumable dock. The engine no-ops when nothing is held or there
+        // is nothing to top up, so an idle press is free.
+        const s = getSettings();
+        const pressed = event.key.toLowerCase();
+        if (pressed === s.keyMedkit) {
+          useMedkitQueuedRef.current = true;
+        } else if (pressed === s.keyStamina) {
+          useStaminaQueuedRef.current = true;
+        }
       }
     };
     const onKeyUp = (event: KeyboardEvent) => {
@@ -1387,6 +1416,13 @@ export function GameScreen({
           input.useItemIndex = useItemIndexRef.current ?? undefined;
           useItemQueuedRef.current = false;
           useItemIndexRef.current = null;
+          // Stacked consumables: a queued medkit / stamina-potion use fires
+          // this tick (the engine no-ops when there's nothing to spend or top
+          // up, so a stray edge is harmless).
+          input.useMedkit = useMedkitQueuedRef.current;
+          input.useStaminaPotion = useStaminaQueuedRef.current;
+          useMedkitQueuedRef.current = false;
+          useStaminaQueuedRef.current = false;
         }
         // A tap that lands on the DISCOVERED merchant (and the hero close
         // enough to trade — openShop checks the counter distance) opens the
@@ -2058,6 +2094,13 @@ export function GameScreen({
           .filter((s) => s !== undefined)
           .sort((a, b) => a - b)
           .join(",");
+        // The consumable dock: the best-quality medkit held (and its stack
+        // depth) plus the stamina-potion count. Both feed the change-key so the
+        // two slots re-render as kits are grabbed and spent.
+        const medkitTier = bestMedkitTier(state);
+        const medkitCount =
+          medkitTier >= 0 ? (state.player.medkits[medkitTier] ?? 0) : 0;
+        const staminaPotions = state.player.staminaPotions;
         const weapon = state.player.equipment.weapon;
         const weaponWear =
           weapon.durability === undefined
@@ -2082,7 +2125,7 @@ export function GameScreen({
         // The prelude scene's id is part of the key: a chained prelude swaps
         // `state.cutscene` for the next scene with nothing else changing, and
         // the overlay only receives the fresh scene if this re-renders.
-        const key = `${state.phase}/${state.cutscene?.defId ?? ""}/${state.player.hp}/${Math.ceil(state.player.stamina)}/${state.player.xp}/${state.player.level}/${state.player.pendingStatPoints}/${state.enemies.length}/${bagCount}/${bagFree}/${bagFullHint ? 1 : 0}/${held}/${active}/${weapon.defId}/${weaponWear?.toFixed(2) ?? ""}/${state.player.coins}/${appearance}/${outfit}/${stage}/${party}/${state.stats.kills}/${Math.floor(state.stats.timeMs / 1000)}`;
+        const key = `${state.phase}/${state.cutscene?.defId ?? ""}/${state.player.hp}/${Math.ceil(state.player.stamina)}/${state.player.xp}/${state.player.level}/${state.player.pendingStatPoints}/${state.enemies.length}/${bagCount}/${bagFree}/${bagFullHint ? 1 : 0}/${held}/${active}/${medkitTier}:${medkitCount}/${staminaPotions}/${weapon.defId}/${weaponWear?.toFixed(2) ?? ""}/${state.player.coins}/${appearance}/${outfit}/${stage}/${party}/${state.stats.kills}/${Math.floor(state.stats.timeMs / 1000)}`;
         if (key !== lastHud) {
           lastHud = key;
           setHud({
@@ -2102,6 +2145,9 @@ export function GameScreen({
             activeSlots: state.player.abilities
               .map((a) => a.slot)
               .filter((s): s is number => s !== undefined),
+            medkitTier,
+            medkitCount,
+            staminaPotions,
             weaponDefId: weapon.defId,
             weaponWear,
             coins: state.player.coins,
@@ -2678,6 +2724,117 @@ export function GameScreen({
               </div>
             </div>
           </div>
+        </div>
+      )}
+
+      {/* The consumable dock: two slots the same width as the powerup slots,
+          sitting just ABOVE them in the same corner. The medkit slot shows the
+          best quality the hero holds (quality-tinted ring + count); the stamina
+          slot shows the potion count. Tapping a slot (or its bindable key, Z /
+          X on desktop) spends one — the engine no-ops at a full bar so a mistap
+          never wastes a kit. The tap area runs well past the slot art (a padded
+          hit region) so the small icons are still easy to hit on a phone. */}
+      {hud?.phase === "playing" && (
+        <div className={`consumable-dock dock-${powerupSide}`}>
+          <button
+            type="button"
+            className={`consumable-slot${hud.medkitCount > 0 ? " filled" : ""}`}
+            style={
+              hud.medkitCount > 0
+                ? ({
+                    "--slot-accent": medkitColorFor(hud.medkitTier),
+                  } as CSSProperties)
+                : undefined
+            }
+            aria-label={
+              hud.medkitCount > 0 ? "use-medkit" : "medkit-slot-empty"
+            }
+            disabled={hud.medkitCount === 0}
+            onPointerDown={() => {
+              useMedkitQueuedRef.current = true;
+            }}
+          >
+            {hud.medkitCount > 0 && (
+              <img
+                src={
+                  spriteDataUrl(
+                    assets.sprites,
+                    medkitIconFor(hud.medkitTier),
+                  ) ?? ""
+                }
+                alt=""
+                className="pixel-img consumable-icon"
+              />
+            )}
+            {hud.medkitCount > 0 && (
+              <span className="consumable-count">
+                <PixelText
+                  font={font}
+                  text={String(hud.medkitCount)}
+                  scale={2}
+                  color="#f4f4f4"
+                />
+              </span>
+            )}
+            {keyHints && (
+              <span className="slot-key consumable-key">
+                <PixelText
+                  font={font}
+                  text={getSettings().keyMedkit.toUpperCase()}
+                  scale={1}
+                  color="#0b0d10"
+                />
+              </span>
+            )}
+          </button>
+          <button
+            type="button"
+            className={`consumable-slot${
+              hud.staminaPotions > 0 ? " filled" : ""
+            }`}
+            style={
+              hud.staminaPotions > 0
+                ? ({ "--slot-accent": STAMINA_POTION_COLOR } as CSSProperties)
+                : undefined
+            }
+            aria-label={
+              hud.staminaPotions > 0
+                ? "use-stamina-potion"
+                : "stamina-slot-empty"
+            }
+            disabled={hud.staminaPotions === 0}
+            onPointerDown={() => {
+              useStaminaQueuedRef.current = true;
+            }}
+          >
+            {hud.staminaPotions > 0 && (
+              <img
+                src={spriteDataUrl(assets.sprites, STAMINA_POTION_ICON) ?? ""}
+                alt=""
+                className="pixel-img consumable-icon"
+              />
+            )}
+            {hud.staminaPotions > 0 && (
+              <span className="consumable-count">
+                <PixelText
+                  font={font}
+                  text={String(hud.staminaPotions)}
+                  scale={2}
+                  color="#f4f4f4"
+                />
+              </span>
+            )}
+            {keyHints && (
+              <span className="slot-key consumable-key">
+                <PixelText
+                  font={font}
+                  text={getSettings().keyStamina.toUpperCase()}
+                  scale={1}
+                  color="#0b0d10"
+                />
+              </span>
+            )}
+          </button>
         </div>
       )}
 

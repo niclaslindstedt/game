@@ -148,7 +148,28 @@ const SPRITES = {
     "...OO...",
     "........",
   ],
-  // The medkit consumable.
+  // The medkit consumables — one per quality tier (config MEDKIT.tiers, spent
+  // best-first from the consumable dock). All share the white case + red cross
+  // so they read as MEDKITS at a glance; the case trim ramps by tier the way
+  // loot rarity does — steel for the LIGHT kit, plain for the MEDKIT, flag-blue
+  // banding for the LARGE, a full gold frame for the SUPERIOR — so the HUD slot
+  // shows which grade the hero is holding.
+  medkit_light: [
+    "............",
+    ".OOOOOOOOOO.",
+    ".ObbbbbbbbO.",
+    ".OWWWrrWWWO.",
+    ".OWWWrrWWWO.",
+    ".OWrrrrrrWO.",
+    ".OWrrrrrrWO.",
+    ".OWWWrrWWWO.",
+    ".OWWWrrWWWO.",
+    ".ObbbbbbbbO.",
+    ".OOOOOOOOOO.",
+    "............",
+  ],
+  // Index 1 keeps the bare name `medkit` so it stays the renderer's fallback
+  // sprite for any untiered kit (see render.ts).
   medkit: [
     "............",
     ".OOOOOOOOOO.",
@@ -160,6 +181,34 @@ const SPRITES = {
     ".OWWWrrWWWO.",
     ".OWWWrrWWWO.",
     ".OwwwwwwwwO.",
+    ".OOOOOOOOOO.",
+    "............",
+  ],
+  medkit_large: [
+    "............",
+    ".OOOOOOOOOO.",
+    ".OjjjjjjjjO.",
+    ".OWWWrrWWWO.",
+    ".OWWWrrWWWO.",
+    ".OWrrrrrrWO.",
+    ".OWrrrrrrWO.",
+    ".OWWWrrWWWO.",
+    ".OWWWrrWWWO.",
+    ".OjjjjjjjjO.",
+    ".OOOOOOOOOO.",
+    "............",
+  ],
+  medkit_superior: [
+    "............",
+    ".OOOOOOOOOO.",
+    ".OooooooooO.",
+    ".OoWWrrWWoO.",
+    ".OoWWrrWWoO.",
+    ".OorrrrrroO.",
+    ".OorrrrrroO.",
+    ".OoWWrrWWoO.",
+    ".OoWWrrWWoO.",
+    ".OooooooooO.",
     ".OOOOOOOOOO.",
     "............",
   ],

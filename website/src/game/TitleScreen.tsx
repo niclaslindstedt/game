@@ -293,6 +293,11 @@ export function TitleScreen({
   // The board row currently opened into its full-session detail card, or null
   // for the ranked list. Only rows banked with a detail snapshot can open.
   const [scoreDetail, setScoreDetail] = useState<ScoreRow | null>(null);
+  // Which consumable-dock key is mid-rebind (CONTROLS): the next key pressed is
+  // captured as the new bind. Null when not listening.
+  const [captureBind, setCaptureBind] = useState<"medkit" | "stamina" | null>(
+    null,
+  );
   // Landscape phones are short and portrait ones narrow: pick a logo scale
   // that keeps the title logo plus the menu inside both. `wide` gates the
   // big desktop logo (scale 10, ~510 CSS px), so it must track the 2×
@@ -1002,6 +1007,32 @@ export function TitleScreen({
           },
         },
         {
+          label:
+            captureBind === "medkit"
+              ? "HEAL KEY: PRESS A KEY..."
+              : `HEAL KEY: ${s.keyMedkit.toUpperCase()}`,
+          aria: "controls-key-medkit",
+          blurb: "DESKTOP KEY THAT USES A MEDKIT FROM THE DOCK",
+          action: () => {
+            playUiSound(synth, "confirm");
+            setCaptureBind("medkit");
+            setSettingsTick((t) => t + 1);
+          },
+        },
+        {
+          label:
+            captureBind === "stamina"
+              ? "STAMINA KEY: PRESS A KEY..."
+              : `STAMINA KEY: ${s.keyStamina.toUpperCase()}`,
+          aria: "controls-key-stamina",
+          blurb: "DESKTOP KEY THAT DRINKS A STAMINA POTION FROM THE DOCK",
+          action: () => {
+            playUiSound(synth, "confirm");
+            setCaptureBind("stamina");
+            setSettingsTick((t) => t + 1);
+          },
+        },
+        {
           label: s.vibration === "on" ? "VIBRATION: ON" : "VIBRATION: OFF",
           aria: "controls-vibration",
           blurb: "BUZZ ON KILLS & DIALOGUE - BIGGER MOBS HIT HARDER (NO IOS)",
@@ -1052,6 +1083,7 @@ export function TitleScreen({
     onManageCharacters,
     onNeedCharacter,
     settingsTick,
+    captureBind,
     difficulty,
     warp,
     exportActive,
@@ -1087,6 +1119,25 @@ export function TitleScreen({
   // axes (see above) instead of a cursor.
   useEffect(() => {
     const onKeyDown = (event: KeyboardEvent) => {
+      // A consumable-dock key rebind is listening: the next key IS the new
+      // bind. Escape cancels; any single printable key (lowercased) is taken,
+      // so it can't collide with the arrow/Enter menu keys below.
+      if (captureBind) {
+        event.preventDefault();
+        if (event.key !== "Escape" && event.key.length === 1) {
+          updateSettings(
+            captureBind === "medkit"
+              ? { keyMedkit: event.key.toLowerCase() }
+              : { keyStamina: event.key.toLowerCase() },
+          );
+          playUiSound(synth, "confirm");
+        } else {
+          playUiSound(synth, "back");
+        }
+        setCaptureBind(null);
+        setSettingsTick((t) => t + 1);
+        return;
+      }
       // The arsenal viewer and the achievements browser run their own list
       // navigation; stay out of their way so the arrows don't also drive the
       // hidden menu underneath.
@@ -1176,6 +1227,7 @@ export function TitleScreen({
     cursor,
     screen,
     scoreDetail,
+    captureBind,
     stepScoreDifficulty,
     stepScoreMetric,
     warp,
