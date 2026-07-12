@@ -1219,7 +1219,7 @@ export function GameScreen({
           useItemIndexRef.current = n;
         }
       } else if (state.phase === "playing" && !weaponMenuOpenRef.current) {
-        // The bindable consumable keys (default Z heal, X stamina) spend from
+        // The bindable consumable keys (default C heal, X stamina) spend from
         // the consumable dock. The engine no-ops when nothing is held or there
         // is nothing to top up, so an idle press is free.
         const s = getSettings();
@@ -2756,7 +2756,7 @@ export function GameScreen({
       {/* The consumable dock: two slots the same width as the powerup slots,
           sitting just ABOVE them in the same corner. The medkit slot shows the
           best quality the hero holds (quality-tinted ring + count); the stamina
-          slot shows the potion count. Tapping a slot (or its bindable key, Z /
+          slot shows the potion count. Tapping a slot (or its bindable key, C /
           X on desktop) spends one — the engine no-ops at a full bar so a mistap
           never wastes a kit. The tap area runs well past the slot art (a padded
           hit region) so the small icons are still easy to hit on a phone. */}

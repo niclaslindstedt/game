@@ -15,7 +15,7 @@ own namespace, and a sequel changes it there once:
 | Controls → Powerups (use)    | use on pickup / use manually (tap a slot, click, E, or 1-3) | manual everywhere                                                                                                     |
 | Controls → Gear (auto-equip) | equip on pickup / keep in bag                               | keep in bag (finds bank to the bag and glow when they beat what's worn; on wears a stronger find on the spot)         |
 | Controls → Powerups (side)   | lower left / lower right                                    | lower left                                                                                                            |
-| Controls → Heal key          | desktop key that uses a medkit from the consumable dock     | `Z`                                                                                                                   |
+| Controls → Heal key          | desktop key that uses a medkit from the consumable dock     | `C`                                                                                                                   |
 | Controls → Stamina key       | desktop key that drinks a stamina potion from the dock      | `X`                                                                                                                   |
 | Music volume                 | 0–100% drag slider                                          | 80%                                                                                                                   |
 | Sound FX volume              | 0–100% drag slider                                          | 100%                                                                                                                  |
@@ -67,7 +67,7 @@ shipped 1× across the board.
 Desktop keyboard controls (when **Keys** is set to WASD): WASD or the arrow
 keys run, **Shift** walks, **Space** jumps, **1/2/3** fire the powerup dock
 slots, **Q** opens the weapon switcher (then **1-4** equip a weapon), **E**
-spends the oldest powerup, **Z** uses a medkit and **X** drinks a stamina
+spends the oldest powerup, **C** uses a medkit and **X** drinks a stamina
 potion from the consumable dock (both rebindable in **Controls → Heal key /
 Stamina key**), **I** toggles the bag, and **P** or **Escape**
 pauses the run (and its music). On touch, tapping the on-screen clock / foe
@@ -166,7 +166,7 @@ time spent winded up to 15% on EASY, tapering down the ladder to zero on
 JESUS. Medkits and stamina potions no longer fire on contact: touching one
 banks it into the **consumable dock** (a medkit slot and a stamina slot above
 the powerups), stacked 5 deep — medkits per quality — and the hero spends them
-on his own call (tap the slot, or **Z** / **X** on desktop), medkits
+on his own call (tap the slot, or **C** / **X** on desktop), medkits
 biggest-heal-first, never wasting one at a full bar. Each signal keeps at most ONE rope on the ground: while the
 rescue it answers with (a medkit, repair kit, drink, screen-nuke, or armor
 piece) already lies un-collected within `MERCY.rescueRadius` of the hero, that

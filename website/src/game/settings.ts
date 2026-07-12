@@ -101,7 +101,7 @@ export type GameSettings = {
   /**
    * Desktop keys that spend from the consumable dock (`KeyboardEvent.key`,
    * lowercased): `keyMedkit` heals with the best medkit held, `keyStamina`
-   * drinks a stamina potion. Default Z / X; rebindable in SETTINGS → CONTROLS.
+   * drinks a stamina potion. Default C / X; rebindable in SETTINGS → CONTROLS.
    * Touch devices use the on-screen slots and ignore these.
    */
   keyMedkit: string;
@@ -154,9 +154,9 @@ function defaults(): GameSettings {
     // Fine-pointer devices get WASD out of the box; touch has no keyboard,
     // so it defaults off and the on-screen dpad stays in charge.
     keyboardMove: touchFirst ? "off" : "on",
-    // The consumable-dock keys default to the reachable Z / X near the WASD
+    // The consumable-dock keys default to the reachable C / X near the WASD
     // hand; rebindable in CONTROLS.
-    keyMedkit: "z",
+    keyMedkit: "c",
     keyStamina: "x",
     // Vibration is a touch-device affordance — on out of the box where a
     // motor exists, and inert on iOS and pointer devices anyway.
