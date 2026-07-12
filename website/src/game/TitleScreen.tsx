@@ -34,10 +34,13 @@ import { PixelText } from "@ui/lib/PixelText.tsx";
 import { IDENTITY } from "../identity.ts";
 
 import { ArsenalScreen } from "./ArsenalScreen.tsx";
+import { BalanceSlider } from "./BalanceSlider.tsx";
 import {
   BALANCE_KNOBS,
+  balanceFromSlider,
+  balanceToSlider,
   formatBalanceMult,
-  nextBalanceStep,
+  nudgeBalance,
 } from "./balanceKnobs.ts";
 import { HELP_LINES } from "./copy.ts";
 
@@ -180,6 +183,15 @@ type MenuEntry = {
    * lands on it, but choosing it just buzzes instead of starting. */
   locked?: boolean;
   action: () => void;
+  /** A DEVELOPER → BALANCE row: renders a drag slider after the label and
+   * takes ArrowLeft/ArrowRight (see onKeyDown) instead of a confirm cycle.
+   * `pos` is the 0..1 track position; `set` commits a dragged/tapped position;
+   * `nudge` steps one keyboard tick in a direction (±1). */
+  slider?: {
+    pos: number;
+    set: (pos: number) => void;
+    nudge: (dir: number) => void;
+  };
 };
 
 // Audio needs a user gesture; the first interaction with the menu doubles
@@ -811,29 +823,33 @@ export function TitleScreen({
     }
     if (screen === "balance") {
       // The BALANCE subpage: one row per runtime multiplier (see
-      // balanceKnobs.ts). A click cycles the knob through the preset steps —
-      // the volume rows' idiom — and the engine applies it via settings.ts.
+      // balanceKnobs.ts). Each row is an exponential slider — drag it, tap the
+      // track, or steer it with ArrowLeft/ArrowRight — spanning 0× (system off)
+      // to 100× the shipped tuning, where 1× is baseline. The engine applies
+      // the value via settings.ts.
       const s = getSettings();
+      const setKnob = (key: keyof typeof s.balance, value: number) => {
+        updateSettings({ balance: { ...getSettings().balance, [key]: value } });
+        setSettingsTick((t) => t + 1);
+      };
       return [
         ...BALANCE_KNOBS.map(({ key, label, blurb }) => ({
           label: `${label} ${formatBalanceMult(s.balance[key])}`,
           aria: `balance-${key}`,
           blurb,
-          action: () => {
-            playUiSound(synth, "confirm");
-            updateSettings({
-              balance: {
-                ...s.balance,
-                [key]: nextBalanceStep(s.balance[key]),
-              },
-            });
-            setSettingsTick((t) => t + 1);
+          // The row itself does nothing on confirm; the slider owns the value.
+          action: () => {},
+          slider: {
+            pos: balanceToSlider(s.balance[key]),
+            set: (pos: number) => setKnob(key, balanceFromSlider(pos)),
+            nudge: (dir: number) =>
+              setKnob(key, nudgeBalance(getSettings().balance[key], dir)),
           },
         })),
         {
           label: "RESET ALL",
           aria: "balance-reset",
-          blurb: "EVERY KNOB BACK TO 100% - THE SHIPPED TUNING",
+          blurb: "EVERY KNOB BACK TO 1× - THE SHIPPED TUNING",
           action: () => {
             playUiSound(synth, "back");
             updateSettings({ balance: { ...BALANCE_TUNING_DEFAULTS } });
@@ -1111,7 +1127,18 @@ export function TitleScreen({
         }
         return;
       }
-      if (event.key === "ArrowDown" || event.key === "ArrowUp") {
+      const sliderRow = entries[cursor]?.slider;
+      if (
+        sliderRow &&
+        (event.key === "ArrowLeft" || event.key === "ArrowRight")
+      ) {
+        // On a BALANCE row the horizontal arrows steer its slider instead of
+        // idling — up/down still walk the row list as everywhere else.
+        event.preventDefault();
+        unlockAudio();
+        playUiSound(synth, "move");
+        sliderRow.nudge(event.key === "ArrowRight" ? 1 : -1);
+      } else if (event.key === "ArrowDown" || event.key === "ArrowUp") {
         event.preventDefault();
         unlockAudio();
         playUiSound(synth, "move");
@@ -1761,6 +1788,12 @@ export function TitleScreen({
                         scale={3}
                         color={color}
                       />
+                      {entry.slider && (
+                        <BalanceSlider
+                          pos={entry.slider.pos}
+                          onChange={entry.slider.set}
+                        />
+                      )}
                       {entry.blurb && (
                         // Always occupy the blurb's row so selecting an item never
                         // changes its height. The menu is vertically centered, so a

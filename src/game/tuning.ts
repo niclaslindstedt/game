@@ -50,11 +50,13 @@ export const BALANCE_TUNING_DEFAULTS: BalanceTuning = {
   menaceGain: 1,
 };
 
-/** Guard rails on any applied value — wide enough for every probe a developer
- * would run (a quarter to a few times the shipped tuning), tight enough that a
- * corrupt persisted value can't zero a system out or overflow it. */
-const TUNING_MIN = 0.05;
-const TUNING_MAX = 20;
+/** Guard rails on any applied value — the developer BALANCE sliders span a
+ * system fully off (0×) to a hundred times the shipped tuning, and the clamp
+ * matches so a corrupt persisted value still can't overflow the simulation.
+ * Every read site multiplies by its knob and floors the result where a zero
+ * would be nonsensical (e.g. mob hp is `Math.max(1, …)`), so 0 is safe. */
+const TUNING_MIN = 0;
+const TUNING_MAX = 100;
 
 // The live values, read by the rule owners each roll/tick. Exported read-only
 // so the hot paths pay a property read, not a getter call — mutate ONLY
@@ -65,7 +67,7 @@ export const BALANCE: Readonly<BalanceTuning> = tuning;
 /**
  * Apply developer balance multipliers (partial — omitted knobs keep their
  * current value). Non-finite values are ignored and the rest clamped to
- * [0.05, 20], so a corrupt store can never wedge the simulation. Takes effect
+ * [0, 100], so a corrupt store can never wedge the simulation. Takes effect
  * on the NEXT roll/spawn/tick — nothing already in flight is restated.
  */
 export function setBalanceTuning(patch: Partial<BalanceTuning>): void {

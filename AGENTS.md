@@ -151,15 +151,20 @@ distinct from the `?debug` URL param (console verbosity, `window.__game` /
 The **BALANCE** subpage holds ~10 runtime balance multipliers (leveling pace,
 mob strength, loot percentages, …) so the game's balance can be probed without
 editing `src/game/config.ts` and rebuilding. The engine side is
-`src/game/tuning.ts` (`setBalanceTuning`, neutral 1 defaults, values clamped);
-each knob is applied at the ONE read site that owns its rule (`grantXp`,
-`weaponDamageFor`, `spawnEnemy`, the drop ladder, `rollTier`,
-`menaceSensitivity`, …), so it moves every surface of that rule together. The
-UI catalog (labels, blurbs, the preset 25%–400% step cycle) lives in
-`website/src/game/balanceKnobs.ts`; the values persist in the settings
-(`balance` in `settings.ts`, applied on load like the other engine flags) and a
-RESET ALL row restores the shipped tuning. Keep the page around ten knobs — one
-lever per system, not a config editor.
+`src/game/tuning.ts` (`setBalanceTuning`, neutral 1 defaults, values clamped to
+`[0, 100]`); each knob is applied at the ONE read site that owns its rule
+(`grantXp`, `weaponDamageFor`, `spawnEnemy`, the drop ladder, `rollTier`,
+`menaceSensitivity`, …), so it moves every surface of that rule together. Each
+row is a **slider** (drag, tap the track, or steer with ←/→) spanning **0×
+(system off) to 100×** the shipped tuning, where **1× is baseline** — never a
+percentage. The track is exponential: its four quarters cover 0→1, 1→2, 2→10,
+10→100, so the useful low end gets most of the travel. The mapping
+(`sliderToBalance`/`balanceToSlider`), the snap grid, the `×` readout, and the
+knob catalog (labels, blurbs) live in `website/src/game/balanceKnobs.ts`; the
+drag track is `website/src/game/BalanceSlider.tsx`. The values persist in the
+settings (`balance` in `settings.ts`, applied on load like the other engine
+flags) and a RESET ALL row restores the shipped 1× tuning. Keep the page around
+ten knobs — one lever per system, not a config editor.
 
 The feature flags gate recently-added systems so they can be toggled at
 runtime. All are **opt-in — off by default** (the app applies the off state on
@@ -332,6 +337,16 @@ render them are `website/src/game/DialogueOverlay.tsx` and `CutsceneOverlay.tsx`
   ahead of `vite`, `tsc`, and `vitest`, so the pixel grids are the sole
   committed source of truth. Never commit `website/src/game/assets/` — the
   binary atlas is a build output, not a reviewable artifact.
+- The **pixel font glyph set** is hand-defined in
+  `website/scripts/asset-tools/font.mjs` (the `GLYPHS` map — `#` lit, `.`
+  transparent, 3×5 variable-width cells); `make assets` packs it into the font
+  atlas + metrics that `PixelText`/`pixel-font.ts` render at runtime. Lookups
+  uppercase the character, so anything `PixelText` draws must have a glyph key
+  there or it falls back to `?`. **Before rendering a new character** (a symbol
+  like `×`, an accented letter, punctuation), add its glyph to `GLYPHS` (and to
+  the specimen line in `generate-assets.mjs`) and rerun `make assets` — don't
+  work around a missing glyph with a substitute. Verify the new glyph in the
+  running UI, not just the specimen preview.
 
 ## Game development skills
 
