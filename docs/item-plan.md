@@ -225,8 +225,8 @@ armor/trinket anchors, all with spells/procs:
 - **WINDGRAVE** (feet — winged speed)
 - **EMBERHEART** (charm — the burning heart, `orbit`)
 
-- [ ] 16 unique defs + 6 legendary defs, world-drop wiring on the jesus column
-- [ ] Checker battery + tests + docs + changelog
+- [x] 16 unique defs + 6 legendary defs, world-drop wiring on the jesus column
+- [x] Checker battery + tests + docs + changelog
 
 ## Phase 5 — JESUS 99+ legendaries (~24, the power ladder)
 

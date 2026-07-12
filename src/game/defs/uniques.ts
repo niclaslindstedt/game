@@ -1031,6 +1031,337 @@ const WORLD_UNIQUES: UniqueDef[] = [
     ],
     lore: "THE CROWN OF A STAR THAT REFUSED TO DIE. IT BURNS FOR ITS BEARER NOW.",
   },
+
+  // JESUS RUNG (pre-99) — the fifth batch of world relics (docs/item-plan.md,
+  // phase 4): the THIRD set per spec for the rung where the horde runs two
+  // levels above the hero and mercy is absolute zero. Eight weapons, seven
+  // armor pieces, a charm — and the rung's six pre-99 LEGENDARIES, every one
+  // carrying a forever power. Gate: minion lottery at lvl 60; the 99+ roster
+  // (phase 5) sits above these on higher-req bases. Ilvls ~67–96.
+  // THE MOON — the hammer that made the craters' little brothers.
+  {
+    id: "worldsplitter",
+    name: "WORLDSPLITTER",
+    base: "meteor_hammer",
+    slot: "weapon",
+    ilvl: 75,
+    bonuses: [
+      { kind: "damagePct", value: 0.3 },
+      { kind: "stat", stat: "strength", value: 10 },
+      { kind: "maxHp", value: 40 },
+    ],
+    lore: "THE CRATERS HAVE OLDER SIBLINGS. THIS MADE THEM.",
+  },
+  // THE MOON — greaves stridden out of a titan's cast-off frame.
+  {
+    id: "titanstride",
+    name: "TITANSTRIDE",
+    base: "exo_greaves",
+    slot: "legs",
+    ilvl: 88,
+    bonuses: [
+      { kind: "stat", stat: "strength", value: 8 },
+      { kind: "stat", stat: "stamina", value: 6 },
+    ],
+    lore: "LEGS FROM A FRAME THAT CARRIED MOUNTAINS. THEY HAVE NOT NOTICED YOU YET.",
+  },
+  // THE MOON — mail that has not stirred in an age, and will not start now.
+  {
+    id: "the_immovable",
+    name: "THE IMMOVABLE",
+    base: "double_mail_chausses",
+    slot: "legs",
+    ilvl: 94,
+    bonuses: [
+      { kind: "stat", stat: "stamina", value: 8 },
+      { kind: "maxHp", value: 60 },
+      { kind: "armor", value: 50 },
+      { kind: "stat", stat: "speed", value: -3 },
+    ],
+    lore: "IT HAS NEVER TAKEN A STEP BACK. IT RARELY TAKES ONE FORWARD.",
+  },
+  // THE MOON — boots that hold their ground where ground barely holds.
+  {
+    id: "earthfast",
+    name: "EARTHFAST",
+    base: "grav_anchor_boots",
+    slot: "feet",
+    ilvl: 90,
+    bonuses: [
+      { kind: "stat", stat: "stamina", value: 7 },
+      { kind: "stat", stat: "strength", value: 5 },
+      { kind: "armor", value: 25 },
+    ],
+    lore: "WHEREVER THEY STAND IS, FOR THE MOMENT, EARTH.",
+  },
+  // MARS — the driver that throws hills. Ammunition is a formality.
+  {
+    id: "meteorfall",
+    name: "METEORFALL",
+    base: "mass_driver",
+    slot: "weapon",
+    ilvl: 86,
+    bonuses: [
+      { kind: "damagePct", value: 0.3 },
+      { kind: "stat", stat: "dexterity", value: 8 },
+      { kind: "maxHp", value: 40 },
+    ],
+    lore: "IT DOES NOT FIRE ROUNDS. IT SCHEDULES IMPACTS.",
+  },
+  // MARS — the sun's own spear, thrown over a desert with no shade.
+  {
+    id: "sunspear",
+    name: "SUNSPEAR",
+    base: "cosmic_raygun",
+    slot: "weapon",
+    ilvl: 78,
+    bonuses: [
+      { kind: "stat", stat: "intelligence", value: 9 },
+      { kind: "damagePct", value: 0.2 },
+      { kind: "crit", value: 0.06 },
+    ],
+    lore: "NOON, SHARPENED TO A POINT.",
+  },
+  // MARS — the helm of whatever the terraformers dug too deep to name.
+  {
+    id: "crown_of_ruin",
+    name: "CROWN OF RUIN",
+    base: "monocoque_helm",
+    slot: "head",
+    ilvl: 91,
+    bonuses: [
+      { kind: "stat", stat: "strength", value: 8 },
+      { kind: "maxHp", value: 60 },
+      { kind: "armor", value: 40 },
+    ],
+    lore: "WHOEVER WORE IT LAST RULED SOMETHING. NOTHING OF IT REMAINS TO RULE.",
+  },
+  // MARS — the wanderer's star, sewn into a ring that always points on.
+  {
+    id: "the_pilgrim_star",
+    name: "THE PILGRIM STAR",
+    base: "enchanted_ring",
+    slot: "charm",
+    ilvl: 40,
+    bonuses: [
+      { kind: "stat", stat: "luck", value: 10 },
+      { kind: "stat", stat: "intelligence", value: 8 },
+      { kind: "crit", value: 0.06 },
+    ],
+    lore: "IT POINTS NOWHERE YOU KNOW. IT HAS NEVER ONCE POINTED WRONG.",
+  },
+  // THE RIFT — the claymore quenched in the dark between universes.
+  {
+    id: "nightfall",
+    name: "NIGHTFALL",
+    base: "plasma_claymore",
+    slot: "weapon",
+    ilvl: 84,
+    bonuses: [
+      { kind: "damagePct", value: 0.3 },
+      { kind: "crit", value: 0.08 },
+      { kind: "stat", stat: "strength", value: 8 },
+    ],
+    lore: "QUENCHED IN THE DARK BETWEEN UNIVERSES. IT NEVER QUITE CAME BACK OUT.",
+  },
+  // THE RIFT — the whole storm, projected through one aperture.
+  {
+    id: "maelstrom",
+    name: "MAELSTROM",
+    base: "tempest_projector",
+    slot: "weapon",
+    ilvl: 90,
+    bonuses: [
+      { kind: "stat", stat: "intelligence", value: 10 },
+      { kind: "damagePct", value: 0.2 },
+      { kind: "crit", value: 0.06 },
+    ],
+    lore: "THE WHOLE STORM, THROUGH ONE NARROW DOOR.",
+  },
+  // THE RIFT — plate hammered on the anvil where stars are struck.
+  {
+    id: "starforge_plate",
+    name: "STARFORGE PLATE",
+    base: "femtoweave_plate",
+    slot: "chest",
+    ilvl: 87,
+    bonuses: [
+      { kind: "stat", stat: "stamina", value: 8 },
+      { kind: "maxHp", value: 60 },
+      { kind: "armor", value: 50 },
+    ],
+    lore: "HAMMERED WHERE STARS ARE STRUCK. IT STILL HOLDS THE HEAT.",
+  },
+  // SPACEZ HQ — the rod that binds light itself to the wielder's will.
+  {
+    id: "lightbinder",
+    name: "LIGHTBINDER",
+    base: "quasar_rod",
+    slot: "weapon",
+    ilvl: 83,
+    bonuses: [
+      { kind: "stat", stat: "intelligence", value: 10 },
+      { kind: "damagePct", value: 0.25 },
+    ],
+    lore: "LIGHT OBEYS IT. LIGHT DID NOT GET A CHOICE.",
+  },
+  // SPACEZ HQ — the visor that reads the field by starlight alone.
+  {
+    id: "starsight",
+    name: "STARSIGHT",
+    base: "orion_visor",
+    slot: "head",
+    ilvl: 70,
+    bonuses: [
+      { kind: "stat", stat: "intelligence", value: 7 },
+      { kind: "stat", stat: "luck", value: 4 },
+    ],
+    lore: "IT SEES BY LIGHT THAT LEFT ITS STAR BEFORE ANYTHING HERE HAD EYES.",
+  },
+  // SPACEZ HQ — the plate every blow has already been tried against.
+  {
+    id: "the_anvil",
+    name: "THE ANVIL",
+    base: "debris_shield_vest",
+    slot: "chest",
+    ilvl: 77,
+    bonuses: [
+      { kind: "stat", stat: "strength", value: 8 },
+      { kind: "maxHp", value: 70 },
+      { kind: "armor", value: 45 },
+      { kind: "stat", stat: "speed", value: -2 },
+    ],
+    lore: "EVERYTHING BREAKS ON IT. THAT IS WHAT IT IS FOR.",
+  },
+  // EASTWORLD — the revolver that ends the argument, correctly.
+  {
+    id: "the_verdict",
+    name: "THE VERDICT",
+    base: "ranger_revolver",
+    slot: "weapon",
+    ilvl: 67,
+    bonuses: [
+      { kind: "crit", value: 0.1 },
+      { kind: "stat", stat: "dexterity", value: 8 },
+      { kind: "damagePct", value: 0.15 },
+    ],
+    lore: "IT HEARS BOTH SIDES. THEN IT RULES.",
+  },
+  // EASTWORLD — the rifle zeroed on the line where the world ends.
+  {
+    id: "horizons_end",
+    name: "HORIZON'S END",
+    base: "marksman_rifle",
+    slot: "weapon",
+    ilvl: 77,
+    bonuses: [
+      { kind: "crit", value: 0.1 },
+      { kind: "stat", stat: "dexterity", value: 9 },
+      { kind: "damagePct", value: 0.2 },
+    ],
+    lore: "NOTHING ON THIS SIDE OF THE HORIZON IS OUT OF ITS REACH.",
+  },
+
+  // THE JESUS PRE-99 LEGENDARIES — six, one anchor per spec plus three
+  // armor/trinket pieces, every one carrying a forever power. The 99+ roster
+  // (phase 5) climbs from here on the rarity power law.
+  // EASTWORLD — the regicide blade: it has unmade kings, and it answers
+  // every landed blow with a burst of ruin.
+  {
+    id: "kingsbane",
+    name: "KINGSBANE",
+    base: "falcata",
+    slot: "weapon",
+    tier: "legendary",
+    ilvl: 94,
+    bonuses: [
+      { kind: "sureStrike" },
+      { kind: "proc", trigger: "hit", spell: "nova", chance: 0.2, rank: 2 },
+      { kind: "damagePct", value: 0.35 },
+      { kind: "crit", value: 0.1 },
+    ],
+    lore: "CROWNS DO NOT STOP IT. CROWNS NEVER HAVE.",
+  },
+  // EASTWORLD — the pistol that speaks once per life, softly.
+  {
+    id: "the_long_silence",
+    name: "THE LONG SILENCE",
+    base: "oracle_pistol",
+    slot: "weapon",
+    tier: "legendary",
+    ilvl: 88,
+    bonuses: [
+      { kind: "proc", trigger: "kill", spell: "nova", chance: 0.25, rank: 2 },
+      { kind: "crit", value: 0.12 },
+      { kind: "stat", stat: "dexterity", value: 10 },
+      { kind: "damagePct", value: 0.3 },
+    ],
+    lore: "AFTER IT SPEAKS, NOTHING ELSE DOES.",
+  },
+  // THE RIFT — the lance of falling starlight: every kill comes down as a
+  // burst of sky.
+  {
+    id: "starfall",
+    name: "STARFALL",
+    base: "maser_lance",
+    slot: "weapon",
+    tier: "legendary",
+    ilvl: 90,
+    bonuses: [
+      { kind: "proc", trigger: "kill", spell: "nova", chance: 0.3, rank: 3 },
+      { kind: "statPct", stat: "intelligence", value: 0.02 },
+      { kind: "damagePct", value: 0.2 },
+    ],
+    lore: "EVERY FALLEN FOE PULLS A PIECE OF THE SKY DOWN WITH IT.",
+  },
+  // THE MOON — the ward of the great stillness: the sea of tranquility,
+  // worn as a shell that slows the world around its bearer.
+  {
+    id: "the_stillward",
+    name: "THE STILLWARD",
+    base: "graphene_shell",
+    slot: "chest",
+    tier: "legendary",
+    ilvl: 94,
+    keeper: true,
+    bonuses: [
+      { kind: "spell", spell: "stasis", rank: 2 },
+      { kind: "maxHpPct", value: 0.02 },
+      { kind: "stat", stat: "stamina", value: 8 },
+    ],
+    lore: "THE GREAT STILLNESS, CUT TO FIT. THE WORLD SLOWS TO MATCH IT.",
+  },
+  // EASTWORLD — the spurs of the rider the wind could not keep up with.
+  {
+    id: "windgrave",
+    name: "WINDGRAVE",
+    base: "thruster_spurs",
+    slot: "feet",
+    tier: "legendary",
+    ilvl: 83,
+    bonuses: [
+      { kind: "statPct", stat: "speed", value: 0.02 },
+      { kind: "stat", stat: "speed", value: 8 },
+      { kind: "stat", stat: "dexterity", value: 6 },
+    ],
+    lore: "THE WIND CHASED THE RIDER. HERE IS WHERE THE WIND GAVE UP.",
+  },
+  // THE RIFT — the burning heart: a core of forever fire that rings any
+  // bearer, whatever they fight with.
+  {
+    id: "emberheart",
+    name: "EMBERHEART",
+    base: "crystal_orb",
+    slot: "charm",
+    tier: "legendary",
+    ilvl: 53,
+    bonuses: [
+      { kind: "spell", spell: "orbit", rank: 2 },
+      { kind: "statPct", stat: "intelligence", value: 0.02 },
+      { kind: "crit", value: 0.05 },
+    ],
+    lore: "A HEART THAT NEVER COOLED. IT BEATS IN FIRE, FOR WHOEVER CARRIES IT.",
+  },
 ];
 
 // EASTWORLD MERCHANT STALL — the third unique home: not dropped at all, but

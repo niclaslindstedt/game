@@ -283,6 +283,17 @@ export const THE_RIFT: LevelDef = {
       // LEGENDARIES: THE RECKONING (the cursed blade that answers every blow
       // taken with lightning) and SUNWREATH (the dead star's burning crown).
       nightmare: ["gravemaker", "the_reckoning", "sunwreath"],
+      // The JESUS rung's rift haul — the void-quenched claymore, the storm
+      // door, star-struck plate, and two LEGENDARIES: STARFALL (kills pull
+      // the sky down) and EMBERHEART (the burning heart, forever fire for
+      // any build).
+      jesus: [
+        "nightfall",
+        "maelstrom",
+        "starforge_plate",
+        "starfall",
+        "emberheart",
+      ],
     },
     // Level a normal run reaches per rung (`leveling-curve.mjs --by-level`) —
     // past it golden arrows go cold so a Rift replay can't over-level.
