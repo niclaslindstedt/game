@@ -176,6 +176,30 @@ export const THE_BUNKER: LevelDef = {
     { enemy: "guard_loyalty", at: { x: 2645, y: 1245 } },
     { enemy: "guard_loyalty", at: { x: 2610, y: 1375 } },
   ],
+  // Checkpoints strung down the central corridor to the exit, dormant until
+  // the hero reaches each one, then the detail closes in: suits and a vacuum
+  // unit first, the border/windbreaker mix mid-hall, a rifle squad guarding
+  // the door. The run to daylight is fought station by station.
+  packs: [
+    {
+      at: { x: 1150, y: 850 },
+      members: [
+        { enemy: "cia_agent", count: 5 },
+        { enemy: "vacuum_bot", count: 2 },
+      ],
+    },
+    {
+      at: { x: 2050, y: 850 },
+      members: [
+        { enemy: "ice_agent", count: 3 },
+        { enemy: "fbi_agent", count: 3 },
+      ],
+    },
+    {
+      at: { x: 2850, y: 850 },
+      members: [{ enemy: "soldier", count: 4 }],
+    },
+  ],
   // The grind is harder than the campaign's: the vault pours longer and
   // denser than Eastworld — the price of the loot table.
   waves: {

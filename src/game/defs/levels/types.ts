@@ -52,6 +52,47 @@ export type WaveBudget = {
   minDifficulty?: Difficulty;
 };
 
+/**
+ * One member line of a PLACED PACK: a monster kind and how many of it the
+ * pack contains. A plain number is a BASE count auto-scaled per difficulty by
+ * the rung's `mobCountMult`, like the wave budget — the simple default. A
+ * per-difficulty record instead hand-authors each rung VERBATIM for exact
+ * control (a rung it omits falls back to the nearest DEFINED rung — see
+ * `resolvePackCount` — so `{ easy: 2, hard: 5 }` gives medium 2 and JESUS 5,
+ * and a single-entry record is a flat count everywhere).
+ */
+export type PackMember = {
+  /** Key into ENEMY_DEFS. */
+  enemy: string;
+  /** How many, per difficulty (see the type doc). */
+  count: number | Partial<Record<Difficulty, number>>;
+};
+
+/**
+ * A PLACED PACK — a fixed cluster of monsters pinned to a spot on the map
+ * that stays DORMANT until the player walks near it (config PACKS /
+ * stepPacks). Closing to `triggerRadius` of `at` wakes the pack: its members
+ * spawn scattered within `spawnRadius` of the anchor and give chase at once,
+ * and killing every one of them CLEARS that patch of ground. Packs are the
+ * level-design lever that rewards MOVEMENT — a map built from packs is cleared
+ * by walking it, encounter by encounter, instead of farmed from a standstill
+ * like the survivors-style wave horde. They compose with `waves` (ambient
+ * pressure) and `spawns` (the opening few); a level can use any mix.
+ */
+export type PackSpec = {
+  /** Where the pack sleeps on the map (world px) — the anchor it spawns
+   * around and the point the player must approach to wake it. */
+  at: Vec2;
+  /** The pack's monsters — one line per kind, counts per difficulty. */
+  members: PackMember[];
+  /** Proximity (world px) that wakes the pack; defaults to
+   * `PACKS.triggerRadius`. */
+  triggerRadius?: number;
+  /** Radius (world px) the members scatter within when woken; defaults to
+   * `PACKS.spawnRadius`. */
+  spawnRadius?: number;
+};
+
 /** The continuous spawner that turns a level into a survivors-style horde. */
 export type WaveSpec = {
   /** Time to full pressure; every window is a fraction of this. */
@@ -189,6 +230,15 @@ export type LevelDef = {
   };
   /** The horde: thousands more streamed in around the player over time. */
   waves?: WaveSpec;
+  /**
+   * PLACED PACKS: fixed clusters of monsters pinned around the map that sleep
+   * until the player nears them, then boil up and give chase (see `PackSpec`
+   * and stepPacks). The level-design tool for maps cleared by MOVING through
+   * them rather than farmed from a standstill. On a `clearAll` level every
+   * pack must be cleared to win (dormant members count as unspawned foes);
+   * on a `killBoss` level they are optional pressure along the way.
+   */
+  packs?: PackSpec[];
   /**
    * Solid features scattered at level creation. Nothing moves through one;
    * `jumpable` ones can be hopped over — monsters never jump, so low rocks

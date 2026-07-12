@@ -1917,6 +1917,11 @@ export function GameScreen({
           if (event.type === "merchantDiscovered") {
             pushPickup("MERCHANT DISCOVERED", "#ffd75e");
           }
+          // A placed pack wiped out: toast the patch of ground as cleared —
+          // the movement reward. The ambush and clear chimes ride the sfx bus.
+          if (event.type === "packCleared") {
+            pushPickup("AREA CLEARED", "#7cff9b");
+          }
           // The run is over: silence the loop so the jingle stands alone, and
           // bank the run as this difficulty's high score — the survival time
           // and kills rank it, and the full session snapshot rides along so the

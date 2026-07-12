@@ -141,6 +141,26 @@ export const THE_RIFT: LevelDef = {
     // reward. Spare him for the magic-find aura, or kill him for the clover.
     { enemy: "lucky", at: { x: 1150, y: 1280 } },
   ],
+  // Knots of the void condensing along the road, still until the hero drifts
+  // near, then unfolding onto him: voidlings up front, jellies mid-rift, the
+  // unravelers and a graviton bending the deep stretch before the boss.
+  packs: [
+    { at: { x: 800, y: 760 }, members: [{ enemy: "voidling", count: 6 }] },
+    {
+      at: { x: 1400, y: 980 },
+      members: [
+        { enemy: "voidling", count: 4 },
+        { enemy: "star_jelly", count: 2 },
+      ],
+    },
+    {
+      at: { x: 2050, y: 660 },
+      members: [
+        { enemy: "unraveler", count: 3 },
+        { enemy: "graviton", count: 2 },
+      ],
+    },
+  ],
   // The rift pours for ~5.7 minutes, a touch over Mars — this is level 4.
   waves: {
     rampDurationMs: 340_000,

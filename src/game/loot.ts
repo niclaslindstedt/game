@@ -66,7 +66,11 @@ import type {
 
 /** Monsters still owed by the wave budget but not yet streamed in. Each line
  * clamps at zero so an over-counted line (tests exhaust budgets by maxing
- * `waveSpawned`) can never drag the total negative and trip the pity rule. */
+ * `waveSpawned`) can never drag the total negative and trip the pity rule.
+ * Deliberately does NOT count DORMANT PACK members — the loot pity's
+ * "remaining" reads this as monsters about to be killed here and now, and a
+ * far-off cluster the hero may never reach must not suppress the pity drops.
+ * A `clearAll` level gates on packs separately (see `packsCleared`). */
 export function unspawnedMinions(state: GameState): number {
   const waves = levelDef(state.level.id).waves;
   if (!waves) return 0;
@@ -80,6 +84,14 @@ export function unspawnedMinions(state: GameState): number {
       ),
     0,
   );
+}
+
+/** Every placed pack wiped out (or the level has none) — the `clearAll`
+ * objective's pack gate. A dormant or still-fighting pack keeps the level
+ * open, so the map can't be won until each cluster has been reached and
+ * cleared. */
+export function packsCleared(state: GameState): boolean {
+  return state.packs.every((pack) => pack.status === "cleared");
 }
 
 /** Minions close enough to crowd the screen — the same `ENEMY_AI.nearRadius`

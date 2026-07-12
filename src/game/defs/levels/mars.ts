@@ -115,6 +115,26 @@ export const MARS: LevelDef = {
     { enemy: "peter_seal", at: { x: 2340, y: 1240 } },
     { enemy: "elon_mosque", at: { x: 2620, y: 700 } },
   ],
+  // Work-crews scattered across the dust and the dome floor, dormant until the
+  // hero closes on them: scout rovers out on the regolith, the metal staff
+  // holding the corridors inside — the colony is swept chamber by chamber.
+  packs: [
+    { at: { x: 900, y: 650 }, members: [{ enemy: "scout_rover", count: 6 }] },
+    {
+      at: { x: 1450, y: 950 },
+      members: [
+        { enemy: "scout_rover", count: 4 },
+        { enemy: "mining_rover", count: 2 },
+      ],
+    },
+    {
+      at: { x: 2050, y: 560 },
+      members: [
+        { enemy: "servo_bot", count: 4 },
+        { enemy: "fembot", count: 3 },
+      ],
+    },
+  ],
   // The colony wakes up over ~5.5 minutes: rovers first, then the base
   // empties its staff onto the floor, fembots and heavies riding the back
   // half. A touch over the moon's totals — this is level 3.

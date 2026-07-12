@@ -66,6 +66,14 @@ describe("campaign catalog integrity", () => {
         }
       });
 
+      it("resolves every placed-pack monster in ENEMY_DEFS", () => {
+        for (const pack of level.packs ?? []) {
+          for (const member of pack.members) {
+            expect(() => enemyDef(member.enemy)).not.toThrow();
+          }
+        }
+      });
+
       it("resolves every loot-pool id (weapons, gear, abilities)", () => {
         for (const id of level.loot.weaponPool) {
           expect(() => weaponDef(id)).not.toThrow();

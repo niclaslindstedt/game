@@ -52,7 +52,11 @@ run against synthetic fixtures with no shipped content (see
   card drops the run in),
   an optional prelude cutscene id, landmark props, banded enemy spawns (each
   spawn/wave line may carry an optional `minDifficulty` so difficulty-gated
-  content lives with the level that uses it), the
+  content lives with the level that uses it), placed `packs` (fixed monster
+  clusters pinned around the map that sleep until the hero nears them, then
+  boil up and give chase — cleared by wiping them out, the movement-driven
+  counter to the wave horde; on a `clearAll` level every pack must be reached
+  and cleared to win), the
   objective (`killBoss` / `clearAll` / `reachExit` — the bossless form:
   standing at the exit door's `at` ends the level), solid obstacles (tall pieces block
   everyone — including sight, shots and a nuke's blast; low/jumpable ones like
@@ -241,7 +245,8 @@ run against synthetic fixtures with no shipped content (see
   weapon auto-attack (wearing the weapon's durability) → abilities →
   projectiles → enemies (aggro/guard/elite AI, dialogue triggers, contact
   damage, obstacle push-out) → hazards (gravity wells, asteroids) → menace
-  decay → wave spawner → item pickups →
+  decay → placed packs (waking clusters the hero nears) → wave spawner →
+  item pickups →
   locked doors → objective → win/lose. The wave spawner also enforces
   CAMPING PRESSURE (config `CAMPING`): a player who holds the same ground
   past a grace period stops being fed — the live floor and the timed budget

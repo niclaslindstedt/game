@@ -1198,6 +1198,36 @@ export const FIX_CLEARALL_LEVEL: LevelDef = {
   objective: { type: "clearAll" },
 };
 
+// A level built from PLACED PACKS (`LevelDef.packs`) instead of the wave
+// horde: two dormant clusters at known spots, NO ambient waves, and NO placed
+// spawns, under a `clearAll` objective — so the pack wake/clear rules and the
+// clearAll gating (dormant members count as unspawned foes) can be driven in
+// isolation. The near pack (scalar count, auto-scaled) wakes with a short
+// walk; the far pack (a per-difficulty record + a scalar line, a tighter
+// trigger) stays asleep until the player crosses the map.
+export const FIX_PACK_LEVEL: LevelDef = {
+  ...FIX_LEVEL,
+  id: "test_pack_level",
+  objective: { type: "clearAll" },
+  spawns: [],
+  waves: undefined,
+  packs: [
+    {
+      at: { x: 700, y: 1320 },
+      members: [{ enemy: "test_fodder", count: 3 }],
+    },
+    {
+      at: { x: 2000, y: 300 },
+      triggerRadius: 200,
+      spawnRadius: 80,
+      members: [
+        { enemy: "test_minion", count: { easy: 1, hard: 4 } },
+        { enemy: "test_brute", count: 2 },
+      ],
+    },
+  ],
+};
+
 // A per-difficulty VARIANT of the prelude (`<id>_<difficulty>`), as the
 // shipped game uses to hang the run's actual starting weapon on the wall:
 // starting `test_prelude_level` on JESUS must resolve to this scene
@@ -1242,6 +1272,7 @@ export function installFixtures(force = false): void {
       test_prelude_level: FIX_PRELUDE_LEVEL,
       test_chain_level: FIX_CHAIN_LEVEL,
       test_clearall_level: FIX_CLEARALL_LEVEL,
+      test_pack_level: FIX_PACK_LEVEL,
       test_gated_level: FIX_GATED_LEVEL,
       test_well_level: FIX_WELL_LEVEL,
       test_asteroid_level: FIX_ASTEROID_LEVEL,
