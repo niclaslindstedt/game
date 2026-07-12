@@ -170,12 +170,16 @@ ten knobs — one lever per system, not a config editor.
 `website/src/lib/`, imported via `@ui/lib/*` for eventual extraction to
 oss-framework): `PixelSlider.tsx` — the 0..1 drag track used by every slidable
 row (the BALANCE knobs and the SOUND music/SFX volumes) — and
-`PixelToggle.tsx` — an iOS-style pixel ON/OFF switch (dark→green, a knob that
-snaps left/right) used by every row that reads as a straight on/off (DEBUG
+`PixelToggle.tsx` — a pixel ON/OFF switch drawn as the slider frozen at its two
+ends (same amber track + blocky knob; off is empty/knob-left, on is
+filled/knob-right) used by every row that reads as a straight on/off (DEBUG
 MODE, AUTO LEVEL STATS, CHARACTER WEAPON, WEAPON SWING, VIBRATION, XP ON KILL).
-Both are presentational; `TitleScreen.tsx` owns the menu wiring via a
-`MenuEntry`'s `slider`/`toggle` field, and the arrow keys steer the focused
-row's control (←/→). Two-mode rows that are NOT on/off (MOUSE follow/hold,
+The switch is **right-aligned** to a shared edge down the right of the menu
+(the label/blurb column stretches to the block width — see
+`.title-menu .menu-item-text`). Both are presentational; `TitleScreen.tsx` owns
+the menu wiring via a `MenuEntry`'s `slider`/`toggle` field, and the arrow keys
+steer the focused row's control (←/→). Two-mode rows that are NOT on/off (MOUSE
+follow/hold,
 POWERUPS on-pickup/manual, GEAR equip/bag, POWERUPS left/right corner) stay
 label-cycling buttons — a switch implies enabled/disabled, which those don't.
 
