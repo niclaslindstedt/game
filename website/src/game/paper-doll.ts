@@ -16,6 +16,7 @@
 import {
   type ArmorSlot,
   type GameState,
+  type Loadout,
   gearDef,
   playerAppearance,
   weaponDef,
@@ -113,6 +114,44 @@ export function playerDollLayers(
     flip: LEFT_POINTING_ICONS.has(icon),
     weapon: true,
   });
+  return layers;
+}
+
+/**
+ * The dressed hero built straight from a stored build (a roster `Loadout`),
+ * rather than a live `GameState` — the save-slot portraits on the LOAD GAME
+ * screen, where there is no running game to read. It dresses the hero in the
+ * gear the build carries (worn armor + held weapon) over the suited body, so a
+ * slot shows the character as they'll drop into the next mission. A brand-new
+ * hero (`null` loadout, no gear yet) shows the bare suited body.
+ *
+ * Unlike `playerDollLayers` the appearance can't be resolved from story/level
+ * state here, so it defaults to the suited "player" look the HUD/inventory
+ * portraits wear — the recognizable hero avatar.
+ */
+export function loadoutDollLayers(loadout: Loadout | null): DollLayer[] {
+  const layers: DollLayer[] = [{ sprite: "player_0", dx: 0, dy: 0 }];
+  const equipment = loadout?.equipment;
+  if (!equipment) return layers;
+  for (const slot of WORN_ORDER) {
+    const piece = equipment[slot];
+    if (!piece) continue;
+    const def = gearDef(piece.defId);
+    const base = def.gradeBase ?? def.id;
+    const suffix = slot === "legs" || slot === "feet" ? "_0" : "";
+    layers.push({ sprite: `worn_${base}${suffix}`, dx: 0, dy: 0 });
+  }
+  const weapon = equipment.weapon;
+  if (weapon) {
+    const icon = weaponDef(weapon.defId).icon;
+    layers.push({
+      sprite: icon,
+      dx: HELD_DX,
+      dy: HELD_DY,
+      flip: LEFT_POINTING_ICONS.has(icon),
+      weapon: true,
+    });
+  }
   return layers;
 }
 

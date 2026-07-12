@@ -1443,6 +1443,10 @@ body {
   image-rendering: pixelated;
 }
 
+.pixel-button:hover {
+  filter: brightness(1.1);
+}
+
 .pixel-button:active {
   transform: translateY(4px);
   box-shadow: 0 0 0 #3aa285;
@@ -2353,37 +2357,239 @@ body {
   }
 }
 
-/* ---- Character roster + creation (CharacterScreen) ---- */
+/* ---- Character roster (LoadGame) + creation (NewGame) ---- */
 
 .character-heading {
   z-index: 1;
 }
 
-/* The roster reuses .title-menu / .menu-item; each row pairs the play button
-   with a small delete on the right. */
-.character-row {
+/* The LOAD GAME roster: a column of framed save slots, each a hero card with
+   a portrait, name, standing and progress pips. */
+.hero-slots {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 0.55rem;
+  z-index: 1;
+  width: min(92vw, 34rem);
+}
+
+/* A tall roster (many heroes) can outgrow a short viewport: cap and scroll,
+   keeping the heading fixed above. Short rosters stay uncapped. */
+.hero-slots.scrollable {
+  max-height: min(62vh, 26rem);
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  scrollbar-width: thin;
+  /* Room for the scrollbar so a capped list doesn't clip the slot frames. */
+  padding-right: 0.35rem;
+}
+
+/* One save slot: the shared window skin, a hero card + a delete tab. */
+.hero-slot {
+  display: flex;
+  align-items: stretch;
+  gap: 0;
+  background: var(--panel-fill);
+  border: 2px solid var(--panel-rail);
+  border-top-color: var(--panel-rail-top);
+  border-bottom-color: var(--panel-rail-bottom);
+  border-radius: var(--panel-radius);
+  box-shadow: var(--panel-shadow);
+  overflow: hidden;
+  transition:
+    border-color 0.08s steps(2),
+    filter 0.08s steps(2);
+}
+
+/* Hover/keyboard focus lands here: an amber rail lights the whole slot. */
+.hero-slot.selected {
+  border-color: #ffd75e;
+  border-top-color: #ffe58a;
+  border-bottom-color: #b98f24;
+}
+
+/* A hardcore hero who fell: dimmed and tinted red, still shown as a headstone
+   in the roster but unplayable (its click just buzzes). */
+.hero-slot.fallen {
+  filter: grayscale(0.4) brightness(0.72);
+  border-color: #4a2f34;
+}
+
+.hero-slot-main {
+  appearance: none;
+  border: 0;
+  background: none;
+  flex: 1;
+  min-width: 0;
   display: flex;
   align-items: center;
+  gap: 0.85rem;
+  padding: 0.55rem 0.7rem;
+  cursor: pointer;
+  font: inherit;
+  text-align: left;
+}
+
+.hero-slot.fallen .hero-slot-main {
+  cursor: not-allowed;
+}
+
+/* The portrait plate: the dressed hero doll on a sunken screen, like a
+   character-sheet mugshot. */
+.hero-slot-portrait {
+  flex: 0 0 auto;
+  width: 3.2rem;
+  height: 3.2rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.2rem;
+  box-sizing: border-box;
+  background: radial-gradient(circle at 50% 38%, #1b2430 0%, #0a0d13 100%);
+  border: 2px solid #2a3340;
+  border-radius: 5px;
+  box-shadow: inset 0 0 0 1px rgba(0, 0, 0, 0.6);
+}
+
+.hero-slot-portrait img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  /* The doll canvas is wider than tall (weapon overhang); nudge it to sit
+     centered and grounded in the plate. */
+  transform: translateY(6%);
+}
+
+.hero-slot-info {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+}
+
+.hero-slot-name {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
   gap: 0.5rem;
 }
 
-.character-row .menu-item {
-  flex: 1;
+/* The HARDCORE / FALLEN pill next to the name. */
+.hero-slot-badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.1rem 0.35rem;
+  border: 1px solid #6d3236;
+  border-radius: 3px;
+  background: rgba(60, 26, 32, 0.55);
+  line-height: 0;
 }
 
-.character-delete {
-  appearance: none;
-  border: 2px solid #3a2530;
-  background: rgba(40, 20, 26, 0.6);
-  padding: 0.2rem 0.5rem;
-  cursor: pointer;
+.hero-slot-badge.fallen {
+  border-color: #8a4a4a;
+  background: rgba(70, 34, 34, 0.6);
+}
+
+.hero-slot-meta {
+  display: flex;
+  align-items: center;
+  gap: 0.45rem;
   line-height: 0;
+}
+
+/* The dot separating LVL from the standing line. */
+.hero-slot-dot {
+  width: 0.28rem;
+  height: 0.28rem;
+  border-radius: 50%;
+  background: #4a515c;
   flex: 0 0 auto;
 }
 
-.character-delete:hover {
-  border-color: #ff6d6d;
-  background: rgba(60, 26, 32, 0.8);
+/* Progress pips: one per difficulty, lit in that rung's colour once beaten. */
+.hero-slot-pips {
+  display: flex;
+  align-items: center;
+  gap: 0.3rem;
+  margin-top: 0.05rem;
+}
+
+.hero-slot-pip {
+  width: 0.55rem;
+  height: 0.55rem;
+  border: 1px solid #3a424e;
+  background: #12161d;
+  box-shadow: inset 0 0 0 1px rgba(0, 0, 0, 0.5);
+}
+
+.hero-slot-pip.won {
+  background: var(--pip, #ffd75e);
+  border-color: var(--pip, #ffd75e);
+  box-shadow: 0 0 5px -1px var(--pip, #ffd75e);
+}
+
+/* The delete tab down the slot's right edge. */
+.hero-slot-delete {
+  appearance: none;
+  flex: 0 0 auto;
+  border: 0;
+  border-left: 2px solid rgba(0, 0, 0, 0.45);
+  background: rgba(40, 20, 26, 0.4);
+  padding: 0 0.7rem;
+  cursor: pointer;
+  line-height: 0;
+  transition:
+    background-color 0.08s steps(2),
+    box-shadow 0.08s steps(2);
+}
+
+.hero-slot-delete:hover {
+  background: rgba(90, 30, 38, 0.85);
+  box-shadow: inset 0 0 0 9999px rgba(255, 109, 109, 0.12);
+}
+
+/* The "add a hero" slot: a dashed, empty frame that reads as an open save
+   slot, and the plain BACK row under the list. */
+.hero-slot-new {
+  appearance: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.7rem;
+  background: rgba(126, 240, 200, 0.04);
+  border: 2px dashed #2f6a58;
+  border-radius: var(--panel-radius);
+  cursor: pointer;
+  font: inherit;
+  transition:
+    border-color 0.08s steps(2),
+    background-color 0.08s steps(2);
+}
+
+.hero-slot-new:hover {
+  border-color: #7ef0c8;
+  background: rgba(126, 240, 200, 0.1);
+}
+
+.hero-slot-back {
+  appearance: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.45rem;
+  margin-top: 0.15rem;
+  background: none;
+  border: 0;
+  cursor: pointer;
+  font: inherit;
+  opacity: 0.85;
+  transition: opacity 0.08s steps(2);
+}
+
+.hero-slot-back:hover {
+  opacity: 1;
 }
 
 /* The create form: a name field, the hardcore toggle, and the actions. */
@@ -2412,45 +2618,135 @@ body {
   gap: 0.4rem;
 }
 
-.character-name-input {
-  appearance: none;
+/* The name field, drawn in the pixel font (PixelNameInput): a framed screen
+   with the value as PixelText and a real, transparent <input> on top owning
+   focus, the caret, IME and the mobile keyboard. */
+.pixel-input {
+  position: relative;
+  display: flex;
+  align-items: center;
+  min-height: 2.6rem;
+  padding: 0.4rem 0.7rem;
+  box-sizing: border-box;
   background: #0b0d10;
   border: 3px solid #2a3442;
-  color: #ffd75e;
-  font-family: ui-monospace, "Courier New", monospace;
-  font-size: 1.5rem;
-  font-weight: 700;
-  letter-spacing: 0.25em;
-  text-transform: uppercase;
-  padding: 0.5rem 0.75rem;
-  outline: none;
+  box-shadow: inset 0 2px 6px rgba(0, 0, 0, 0.6);
+  cursor: text;
+  overflow: hidden;
 }
 
-.character-name-input:focus {
+.pixel-input.focused {
   border-color: #7ef0c8;
+}
+
+/* The visible glyphs (pixel font) + the blinking caret; the real input above
+   drives everything, so this layer never takes the pointer. */
+.pixel-input-display {
+  display: flex;
+  align-items: center;
+  gap: 0.15rem;
+  pointer-events: none;
+}
+
+/* A blocky retro caret that blinks at the end of the typed name. */
+.pixel-caret {
+  width: 0.55rem;
+  height: 1.2rem;
+  background: #7ef0c8;
+  animation: pixel-caret-blink 1s steps(1) infinite;
+}
+
+@keyframes pixel-caret-blink {
+  0%,
+  50% {
+    opacity: 1;
+  }
+  50.01%,
+  100% {
+    opacity: 0;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .pixel-caret {
+    animation: none;
+  }
+}
+
+/* The real textbox: full-bleed over the display, its own text and caret
+   invisible (the display draws them), but still focusable and typeable. */
+.pixel-input-field {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  appearance: none;
+  background: none;
+  border: 0;
+  outline: none;
+  padding: 0.4rem 0.7rem;
+  box-sizing: border-box;
+  color: transparent;
+  caret-color: transparent;
+  font-family: ui-monospace, monospace;
+  font-size: 1.3rem;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+}
+
+.pixel-input-field::selection {
+  background: transparent;
 }
 
 .character-toggle {
   border: 3px solid #2a3442;
+  border-radius: 5px;
   justify-content: flex-start;
+  transition:
+    border-color 0.08s steps(2),
+    background-color 0.08s steps(2);
+}
+
+/* The hardcore box is clickable — light it on hover so that reads. */
+.character-toggle:hover {
+  border-color: #7ef0c8;
+  background: rgba(126, 240, 200, 0.06);
 }
 
 .character-toggle.on {
   border-color: #ff6d6d;
 }
 
+.character-toggle.on:hover {
+  border-color: #ff9d9d;
+  background: rgba(255, 109, 109, 0.08);
+}
+
+/* The label + ON/OFF state chip on the hardcore row. */
+.character-toggle-head {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+}
+
+.character-toggle-state {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.12rem 0.4rem;
+  border: 1px solid #3a424e;
+  border-radius: 3px;
+  background: rgba(20, 24, 30, 0.6);
+  line-height: 0;
+}
+
+.character-toggle-state.on {
+  border-color: #6d3236;
+  background: rgba(60, 26, 32, 0.55);
+}
+
 .character-actions {
   display: flex;
   gap: 0.75rem;
-  justify-content: center;
-}
-
-.character-new {
-  justify-content: center;
-  margin-top: 0.5rem;
-}
-
-.character-back {
   justify-content: center;
 }
 
