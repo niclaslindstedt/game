@@ -231,7 +231,15 @@ export function createChiptunePlayer(synth: Synth): ChiptunePlayer {
   const tick = () => {
     if (!flat) return;
     const now = synth.now();
-    if (now === null) return; // still locked — try again next tick
+    if (now === null) {
+      // The context fell out of "running" — a browser/OS suspend (audio-device
+      // change, tab throttle) or an iOS interruption. Nudge it back here every
+      // tick rather than waiting on a user gesture or a browser event that may
+      // never fire, so the music self-heals instead of staying silent. resume
+      // is async, so we still bail and pick up on a later tick once it lands.
+      synth.resume();
+      return;
+    }
     if (nextStepTime === 0 || nextStepTime < now - 0.5) {
       nextStepTime = now + 0.05; // (re)anchor after unlock or a long stall
     }

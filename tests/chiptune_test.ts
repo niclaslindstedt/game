@@ -27,13 +27,18 @@ function makeFakeSynth(): {
   tones: ToneOptions[];
   noises: NoiseOptions[];
   clock: { t: number | null };
+  resumes: { count: number };
 } {
   const tones: ToneOptions[] = [];
   const noises: NoiseOptions[] = [];
   const clock: { t: number | null } = { t: 0 };
+  const resumes = { count: 0 };
   return {
     synth: {
       unlock() {},
+      resume() {
+        resumes.count++;
+      },
       now: () => clock.t,
       tone: (o) => tones.push(o),
       noise: (o) => noises.push(o),
@@ -41,6 +46,7 @@ function makeFakeSynth(): {
     tones,
     noises,
     clock,
+    resumes,
   };
 }
 
@@ -264,6 +270,33 @@ describe("sequencer", () => {
     clock.t = 1; // unlocked now
     vi.advanceTimersByTime(200);
     expect(tones.length).toBeGreaterThan(0);
+    player.stop();
+  });
+
+  it("nudges the context to resume while it is suspended mid-song", () => {
+    const { synth, tones, clock, resumes } = makeFakeSynth();
+    const player = createChiptunePlayer(synth);
+    player.play(track(["A4", ".", ".", "."]));
+
+    // Roll a little so it is genuinely playing, then the context drops out of
+    // "running" (a browser/OS suspend) so now() reads null.
+    for (let t = 0; t < 0.5; t += 0.08) {
+      clock.t = t;
+      vi.advanceTimersByTime(100);
+    }
+    const booked = tones.length;
+    clock.t = null; // suspended — nothing schedules
+
+    // Every locked tick nudges resume() so the audio self-heals instead of
+    // waiting on a user gesture that may never come.
+    vi.advanceTimersByTime(300);
+    expect(tones.length).toBe(booked); // still silent while suspended
+    expect(resumes.count).toBeGreaterThan(0);
+
+    // Once the context comes back the scheduler picks the song up again.
+    clock.t = 1;
+    vi.advanceTimersByTime(200);
+    expect(tones.length).toBeGreaterThan(booked);
     player.stop();
   });
 });

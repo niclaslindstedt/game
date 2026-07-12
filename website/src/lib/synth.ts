@@ -72,6 +72,12 @@ export type NoiseOptions = {
 export type Synth = {
   /** Create/resume the AudioContext. Call from a user gesture handler. */
   unlock: () => void;
+  /** Resume an already-created context that fell out of "running" (a
+   * browser/OS suspend or an iOS interruption). Unlike `unlock` it never
+   * creates a context, so it is safe to call from a timer or a browser event
+   * outside a user gesture — a no-op while still locked. Lets the music
+   * scheduler self-heal instead of waiting on the next gesture. */
+  resume: () => void;
   tone: (options: ToneOptions) => void;
   noise: (options: NoiseOptions) => void;
   /** The AudioContext clock in seconds, or null while locked/unavailable.
@@ -105,7 +111,7 @@ export function createSynth(): Synth {
 
   // iOS puts the context into a non-standard "interrupted" state on app
   // switch / lock; treat anything that isn't running or closed as resumable.
-  const resume = (c: AudioContext): void => {
+  const resumeCtx = (c: AudioContext): void => {
     if (c.state !== "running" && c.state !== "closed") {
       c.resume().catch(() => {});
     }
@@ -119,13 +125,13 @@ export function createSynth(): Synth {
       // iOS PWA: returning from another app leaves the context interrupted
       // and no user gesture is guaranteed — resume on foreground transitions.
       const onVisible = (): void => {
-        if (document.visibilityState === "visible") resume(c);
+        if (document.visibilityState === "visible") resumeCtx(c);
       };
       document.addEventListener("visibilitychange", onVisible);
       window.addEventListener("pageshow", onVisible);
       window.addEventListener("focus", onVisible);
       c.addEventListener("statechange", () => {
-        if (document.visibilityState === "visible") resume(c);
+        if (document.visibilityState === "visible") resumeCtx(c);
       });
     }
     return ctx;
@@ -209,7 +215,15 @@ export function createSynth(): Synth {
   return {
     unlock() {
       const c = ensure();
-      if (c) resume(c);
+      if (c) resumeCtx(c);
+    },
+
+    resume() {
+      // Only nudge a context that already exists — never create one here, so
+      // this stays safe to call from a timer/event outside a user gesture
+      // (creating a context off-gesture leaves it unresumable on iOS; see
+      // now()).
+      if (ctx) resumeCtx(ctx);
     },
 
     now() {
@@ -237,7 +251,11 @@ export function createSynth(): Synth {
       filter,
     }) {
       const c = ensure();
-      if (!c || c.state !== "running") return;
+      if (!c) return;
+      if (c.state !== "running") {
+        resumeCtx(c); // nudge a suspended/interrupted context back; this one
+        return; //       sound is dropped, but audio recovers for the next.
+      }
       const t0 = at ?? c.currentTime + delayMs / 1000;
       const t1 = t0 + durationMs / 1000;
 
@@ -299,7 +317,11 @@ export function createSynth(): Synth {
       echo = 0,
     }) {
       const c = ensure();
-      if (!c || c.state !== "running") return;
+      if (!c) return;
+      if (c.state !== "running") {
+        resumeCtx(c); // nudge a suspended/interrupted context back; this one
+        return; //       sound is dropped, but audio recovers for the next.
+      }
       const t0 = at ?? c.currentTime + delayMs / 1000;
       const length = Math.max(
         1,
