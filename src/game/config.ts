@@ -283,6 +283,32 @@ export const CAMPING = {
   stragglerMinAlive: 8,
 } as const;
 
+/**
+ * PLACED PACKS — the level-design counter to the survivors-style horde (see
+ * stepPacks). A pack is a fixed cluster of monsters pinned to a spot on the
+ * map that sleeps until the player walks near it: closing to `triggerRadius`
+ * of the anchor spawns the pack's members in a ring around it and they give
+ * chase at once; killing every member CLEARS that patch of ground. Where the
+ * wave spawner funnels the whole level to a camper standing still, packs
+ * reward MOVEMENT — the map is cleared by walking it, one encounter at a
+ * time. Distances are world px. Per-pack overrides live on the LevelDef.
+ */
+export const PACKS = {
+  /** How close (world px) the player must get to a pack's anchor before it
+   * wakes. Sized to about a phone screen-width ahead so the cluster boils up
+   * as the player advances into it, not while it is still off-screen. A pack
+   * may override this with its own `triggerRadius`. */
+  triggerRadius: 260,
+  /** Members spawn scattered within this radius of the pack anchor — a tight
+   * knot the player meets as one group, not a thin ring around himself. A
+   * pack may override with its own `spawnRadius`. */
+  spawnRadius: 120,
+  /** Rejection-sampling attempts per member to find a spawn spot inside the
+   * scatter radius that clears obstacles and the map edge before giving up
+   * and placing it on the anchor. */
+  placeAttempts: 12,
+} as const;
+
 /** XP and level-ups. Each level-up grants stat points to spend. */
 export const LEVELING = {
   /** Default XP granted per point of a killed monster's max hp. */

@@ -14,7 +14,14 @@ import { MOON } from "./moon.ts";
 import { THE_RIFT } from "./rift.ts";
 import { SPACEZ_HQ } from "./spacez_hq.ts";
 
-export type { LevelDef, SpawnSpec, WaveBudget, WaveSpec } from "./types.ts";
+export type {
+  LevelDef,
+  PackMember,
+  PackSpec,
+  SpawnSpec,
+  WaveBudget,
+  WaveSpec,
+} from "./types.ts";
 
 /**
  * The levels in story order. Adding a level = a new file + one entry here;

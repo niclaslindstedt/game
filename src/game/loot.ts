@@ -64,12 +64,19 @@ import type {
   WeaponClass,
 } from "./types.ts";
 
-/** Monsters still owed by the wave budget but not yet streamed in. Each line
- * clamps at zero so an over-counted line (tests exhaust budgets by maxing
- * `waveSpawned`) can never drag the total negative and trip the pity rule. */
+/** Monsters still owed by the wave budget but not yet streamed in, plus the
+ * members of any DORMANT placed pack the player hasn't reached yet. Each wave
+ * line clamps at zero so an over-counted line (tests exhaust budgets by maxing
+ * `waveSpawned`) can never drag the total negative and trip the pity rule. The
+ * dormant-pack term is what makes a `clearAll` level wait until every pack has
+ * been walked up to and wiped, not just the ambient horde drained. */
 export function unspawnedMinions(state: GameState): number {
+  const dormantPackMembers = state.packs.reduce(
+    (sum, pack) => sum + (pack.status === "dormant" ? pack.total : 0),
+    0,
+  );
   const waves = levelDef(state.level.id).waves;
-  if (!waves) return 0;
+  if (!waves) return dormantPackMembers;
   return waves.budget.reduce(
     (sum, entry, i) =>
       sum +
@@ -78,7 +85,7 @@ export function unspawnedMinions(state: GameState): number {
         scaledMobCount(entry.count, state.difficulty) -
           (state.waveSpawned[i] ?? 0),
       ),
-    0,
+    dormantPackMembers,
   );
 }
 

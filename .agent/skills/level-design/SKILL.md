@@ -49,8 +49,15 @@ groups:
    `{enemy, count, band: [lo, hi]}` along spawn→objective, or pinned
    `{enemy, at}`; `minDifficulty` gates entries), `waves`
    (`rampDurationMs`, `maxAlive`, `minAlive`, `moveSpawnEvery`, `budget`
-   windows), `objective` (`killBoss` | `clearAll` | `reachExit`),
-   `openingStrike` (the scripted "draw your weapon" beat).
+   windows), `packs` (fixed clusters pinned at `{at}` that SLEEP until the
+   hero nears them then boil up and give chase — `{at, members:[{enemy,
+   count}], triggerRadius?, spawnRadius?}`; a member `count` is a base
+   auto-scaled per difficulty, or a `{easy, hard, …}` record for exact per-rung
+   control; the movement-driven counter to the wave horde — build a map to be
+   CLEARED BY MOVING through its packs rather than farmed from a standstill,
+   and on a `clearAll` level every pack must be reached and wiped to win),
+   `objective` (`killBoss` | `clearAll` | `reachExit`), `openingStrike` (the
+   scripted "draw your weapon" beat).
 4. **Story beats**: `intro` (the hero's opening monologue), optional
    `outro`/`prelude`, `firstKillThoughts`/`firstSightThoughts` pinned to
    `THOUGHT_DEFS` entries, the per-level `merchant` persona, `placedItems`

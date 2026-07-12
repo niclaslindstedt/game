@@ -464,6 +464,42 @@ export function scaledMobCount(count: number, difficulty: Difficulty): number {
 }
 
 /**
+ * Resolve a PLACED PACK member's count for a difficulty (see `PackMember`).
+ * A plain number is a BASE count auto-scaled by the difficulty's
+ * `mobCountMult`, exactly like the wave budget (`scaledMobCount`) — the
+ * ergonomic default, so a pack grows with the rung without hand-authoring
+ * every one. A per-difficulty record instead hand-authors each rung VERBATIM
+ * (no auto-scale) for exact control; a rung the record omits falls back to
+ * the nearest DEFINED rung (preferring one below, else the closest above), so
+ * a sparse `{ easy: 2, hard: 5 }` still yields a count on every difficulty and
+ * a single-entry record is a flat count everywhere.
+ */
+export function resolvePackCount(
+  count: number | Partial<Record<Difficulty, number>>,
+  difficulty: Difficulty,
+): number {
+  if (typeof count === "number") return scaledMobCount(count, difficulty);
+  const exact = count[difficulty];
+  if (exact !== undefined) return Math.max(0, Math.round(exact));
+  const here = difficultyDef(difficulty).index;
+  let best: number | undefined;
+  let bestDist = Infinity;
+  for (const rung of DIFFICULTY_ORDER) {
+    const value = count[rung];
+    if (value === undefined) continue;
+    const idx = difficultyDef(rung).index;
+    // Prefer the nearest rung; on a tie prefer the LOWER one (a +0.5 nudge to
+    // the above-distance breaks ties toward "no harder than authored").
+    const dist = Math.abs(idx - here) + (idx > here ? 0.5 : 0);
+    if (dist < bestDist) {
+      bestDist = dist;
+      best = value;
+    }
+  }
+  return best === undefined ? 0 : Math.max(0, Math.round(best));
+}
+
+/**
  * Does `current` sit at or above `min` on the ladder? The ordering is a def's
  * `index`, so this is how difficulty-gated content (a level's
  * `minDifficulty` spawn/wave lines) decides whether to appear: a line tagged

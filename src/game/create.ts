@@ -15,6 +15,7 @@ import {
   LOOT,
   MEDKIT,
   OBSTACLES,
+  PACKS,
   PLAYER,
   RARE_MOBS,
   STAMINA,
@@ -23,6 +24,7 @@ import { cutsceneDef, cutsceneVariant } from "./defs/cutscenes.ts";
 import {
   difficultyDef,
   meetsMinDifficulty,
+  resolvePackCount,
   scaledMobCount,
 } from "./defs/difficulties.ts";
 import { enemyDef } from "./defs/enemies/index.ts";
@@ -56,6 +58,7 @@ import type {
   Item,
   Loadout,
   Obstacle,
+  PackState,
   StatName,
 } from "./types.ts";
 
@@ -223,6 +226,27 @@ export function createGame(
     0,
   );
 
+  // Placed packs sleep until the player nears them (stepPacks), but their
+  // members are part of the level's population from the start — resolve each
+  // pack's count for this difficulty now so the HUD total counts the whole
+  // level and a `clearAll` objective waits for every pack to be woken and
+  // wiped (see `unspawnedMinions`).
+  const packs: PackState[] = (def.packs ?? []).map((pack) => {
+    const total = pack.members.reduce(
+      (sum, member) => sum + resolvePackCount(member.count, difficulty),
+      0,
+    );
+    return {
+      at: { ...pack.at },
+      triggerRadius: pack.triggerRadius ?? PACKS.triggerRadius,
+      spawnRadius: pack.spawnRadius ?? PACKS.spawnRadius,
+      status: "dormant",
+      total,
+      memberIds: [],
+    };
+  });
+  const packTotal = packs.reduce((sum, pack) => sum + pack.total, 0);
+
   // The prelude may be a single scene or a chain (the launch, then the
   // flight); each scene resolves its per-difficulty variant when one is
   // registered (`<id>_<difficulty>`), so the weapon on the living-room wall
@@ -387,6 +411,7 @@ export function createGame(
     levelUpFxMs: 0,
     minionEquipmentDrops: 0,
     waveSpawned: (def.waves?.budget ?? []).map(() => 0),
+    packs,
     moveSpawnCredit: 0,
     // The camp clock opens anchored on the spawn — standing at the lander
     // farming the opening waves is exactly the camping the starvation answers.
@@ -404,7 +429,7 @@ export function createGame(
     earlyDropCursor: 0,
     stats: {
       kills: 0,
-      totalEnemies: foeCount + waveTotal,
+      totalEnemies: foeCount + waveTotal + packTotal,
       shotsFired: 0,
       damageDealt: 0,
       damageTaken: 0,

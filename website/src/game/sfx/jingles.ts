@@ -289,6 +289,59 @@ export function playJingle(synth: Synth, event: GameEvent): boolean {
       });
       return true;
 
+    case "packAwoken":
+      // The ambush sting: a pack boils up out of the ground. A short, low
+      // menace growl — a saw dropping under a detuned square stab, dusted with
+      // a gritty noise burst — threatening, but a notch under a boss arrival.
+      synth.tone({
+        type: "sawtooth",
+        from: 196,
+        to: 110,
+        durationMs: 260,
+        volume: 0.05,
+        detuneCents: 12,
+        echo: 0.2,
+      });
+      synth.tone({
+        type: "square",
+        from: 147,
+        durationMs: 180,
+        volume: 0.035,
+        delayMs: 40,
+        detuneCents: 9,
+      });
+      synth.noise({
+        durationMs: 160,
+        volume: 0.045,
+        filter: { type: "highpass", frequency: 1800 },
+        echo: 0.2,
+      });
+      return true;
+
+    case "packCleared":
+      // The all-clear: this patch of ground is yours. A bright, brief rising
+      // two-note affirmation with a glass octave — satisfying without
+      // reaching for the boss-kill or level-clear fanfare.
+      [659, 988].forEach((freq, i) => {
+        synth.tone({
+          type: "triangle",
+          from: freq,
+          durationMs: 150,
+          volume: 0.045,
+          delayMs: i * 90,
+          echo: 0.3,
+        });
+        synth.tone({
+          type: "sine",
+          from: freq * 2,
+          durationMs: 130,
+          volume: 0.016,
+          delayMs: i * 90,
+          echo: 0.35,
+        });
+      });
+      return true;
+
     default:
       return false;
   }

@@ -34,7 +34,10 @@ const KEY = storageKey("current-run");
 // v7: gates (travel gates torn open by a used key — the bunker door) joined
 // the state; an older snapshot would thaw without the field and crash
 // stepGates.
-const SAVE_VERSION = 7;
+// v8: packs (placed clusters that sleep until the player nears them) joined
+// the state; an older snapshot would thaw without the field and crash
+// stepPacks.
+const SAVE_VERSION = 8;
 
 /** A run parked between sessions: enough to drop the player straight back in. */
 export type ParkedRun = {

@@ -1231,6 +1231,18 @@ export type GameEvent =
    * the run never pauses for it.
    */
   | { type: "companionQuote"; defId: string; text: string; pos: Vec2 }
+  /**
+   * A PLACED PACK woke: the player closed to its trigger radius and its
+   * members boiled up around `at` and gave chase (see stepPacks). `count` is
+   * how many spawned — the app can sting the ambush and shake the turn.
+   */
+  | { type: "packAwoken"; pos: Vec2; count: number }
+  /**
+   * A placed pack was wiped out — that patch of ground is CLEARED (stepPacks).
+   * `pos` is the pack anchor and `remaining` how many packs still stand on
+   * the level; the app floats an "AREA CLEARED" cue and chimes it.
+   */
+  | { type: "packCleared"; pos: Vec2; remaining: number }
   | { type: "victory" }
   | { type: "defeat" };
 
@@ -1364,6 +1376,32 @@ export type LevelInfo = {
   tiles: TileSpec;
   /** What the HUD calls this level's hostiles. */
   foes: string;
+};
+
+/**
+ * Runtime state for one PLACED PACK (see `PackSpec` / stepPacks), built at
+ * level creation from `LevelDef.packs` in order. A pack sleeps (`dormant`)
+ * until the player closes to its trigger radius, at which point its members
+ * spawn around the anchor and it goes `active`; once every spawned member is
+ * dead it is `cleared`. Serialized with the run, so a resumed game remembers
+ * which patches of ground are already emptied.
+ */
+export type PackState = {
+  /** Where the pack sits on the map — the anchor its members spawn around. */
+  at: Vec2;
+  /** How close (world px) the player must get to wake it. */
+  triggerRadius: number;
+  /** Radius (world px) members scatter within when the pack wakes. */
+  spawnRadius: number;
+  /** Life cycle: asleep, spawned-and-fighting, or wiped out. */
+  status: "dormant" | "active" | "cleared";
+  /** How many members will spawn when this pack wakes (resolved for the run's
+   * difficulty at creation) — folded into the HUD foe total up front, and the
+   * count still OWED while the pack is dormant (see `unspawnedMinions`). */
+  total: number;
+  /** `Enemy.id`s of the members spawned when the pack woke — the pack clears
+   * when none of them are alive anymore. Empty until it wakes. */
+  memberIds: number[];
 };
 
 export type GameState = {
@@ -1579,6 +1617,13 @@ export type GameState = {
    * exhausted; empty when the level has no waves.
    */
   waveSpawned: number[];
+  /**
+   * PLACED PACKS for this run, parallel to `LevelDef.packs` (see `PackState`
+   * / stepPacks): fixed clusters that sleep until the player nears them, then
+   * boil up and are cleared by wiping them out. Empty when the level has no
+   * packs.
+   */
+  packs: PackState[];
   /**
    * World px the player has walked that the spawner hasn't converted into
    * monsters yet — moving through the level stirs more of the horde awake
