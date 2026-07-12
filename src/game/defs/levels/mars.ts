@@ -327,6 +327,9 @@ export const MARS: LevelDef = {
       // COLOSSUS PLATE — terraformer plating (the hard rung's melee-lean
       // chest: a wall that trades a step of speed).
       hard: ["colossus_plate"],
+      // PYRELIGHT (the forge-heart wand) and IRONROOT GREAVES (the planted
+      // stance) — the nightmare rung's Mars relics.
+      nightmare: ["pyrelight", "ironroot_greaves"],
     },
     // Level a normal run reaches per rung (`leveling-curve.mjs --by-level`) —
     // past it golden arrows go cold so a Mars replay can't over-level.

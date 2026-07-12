@@ -311,12 +311,29 @@ obeys **stats determine rarity**: drop weight falls off as a power law of
 the item's priced bonus budget, so the mightiest legendaries are
 astronomically rarer than the modest ones.
 
-Between the boss sets and the world relics, EASY, MEDIUM, and HARD each now
-cover every **build**: easy fields melee (MUSKRAT'S TOOTH, EXCALIBUR), ranged
-(PALE RIDER), and magic (DEADSTAR); medium fields magic (THE JAILBREAK),
-ranged (REDWIND), and three melee choices (HERDBREAKER, THE LAST ROUNDUP,
-MJÖLNIR); hard fields melee (OATHBRAND), ranged (LONGWATCH, THE INEVITABLE),
-and magic (RIFTMAW from its boss set).
+The NIGHTMARE rung's batch (phase 3) doubles the coverage — a SECOND set per
+spec for the climb where the horde matches the hero level for level:
+**HORDEBANE** (Eastworld, the axe made for too many) and **GRAVEMAKER** (the
+Rift, the burying maul) for melee, **DRAGON'S BREATH** (Eastworld, the park's
+monster-of-legend scattergun) for ranged, **PYRELIGHT** (Mars, the
+forge-heart wand) and **STORMLASH** (SpaceZ HQ, the lab-broken storm) for
+magic, plus four spec-leaning armor relics — **OMENSIGHT** (head),
+**FALCONMAIL** (chest), **IRONROOT GREAVES** (legs), **VEILWALKERS** (feet).
+Its three LEGENDARIES, one per spec, all carry forever powers: **THE
+RECKONING** (the Rift — the cursed blade: never whiffs, answers every blow
+taken with lightning — the game's first when-struck proc — and takes its
+price in blood), **SKYBREAKER** (Eastworld — on-hit lightning revolver), and
+**SUNWREATH** (the Rift — the dead star's crown, ringing its bearer in
+permanent circling flame).
+
+Between the boss sets and the world relics, EASY, MEDIUM, HARD, and
+NIGHTMARE each now cover every **build**: easy fields melee (MUSKRAT'S
+TOOTH, EXCALIBUR), ranged (PALE RIDER), and magic (DEADSTAR); medium fields
+magic (THE JAILBREAK), ranged (REDWIND), and three melee choices
+(HERDBREAKER, THE LAST ROUNDUP, MJÖLNIR); hard fields melee (OATHBRAND),
+ranged (LONGWATCH, THE INEVITABLE), and magic (RIFTMAW from its boss set);
+nightmare fields two-plus of each (see above, plus WRATHFLAME from its boss
+set).
 
 Alongside the weapon, the hero wears **four ARMOR slots — head, chest,
 legs, feet — plus a charm and a bag** (seven equip slots). Every armor

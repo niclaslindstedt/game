@@ -510,6 +510,10 @@ export const EASTWORLD: LevelDef = {
       // OATHBRAND — the last honest lawman's monomolecular blade (the hard
       // rung's melee anchor).
       hard: ["oathbrand"],
+      // HORDEBANE (the axe made for too many), DRAGON'S BREATH (the park's
+      // monster-of-legend scattergun), and SKYBREAKER — the nightmare rung's
+      // ranged LEGENDARY, tearing the sky with every landed round.
+      nightmare: ["hordebane", "dragons_breath", "skybreaker"],
     },
     // Level a normal run reaches per rung (`leveling-curve.mjs --by-level`) —
     // the campaign's FINAL map, so these are each difficulty's end level; past

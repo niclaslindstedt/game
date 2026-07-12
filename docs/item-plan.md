@@ -201,16 +201,17 @@ Second set per spec (ilvls ~55–70, gate 57). Weapons: +2 melee, +1 ranged,
 +2 magic; armor: +4 spec-leaning pieces (one per slot). Legendaries (one per
 spec, each carrying a granted spell or proc):
 
-- **THE RECKONING** — melee. The cursed blade: huge damage + crit, a real
-  downside (hp). It always cuts — `sureStrike`.
+- **THE RECKONING** — melee. The cursed blade: huge damage, a real downside
+  (hp), `sureStrike`, and the first WHEN-STRUCK proc — every blow taken is
+  answered in lightning.
 - **SKYBREAKER** — ranged. The storm answers every shot: on-hit bolt proc +
   DEX.
 - **SUNWREATH** — magic. The burning crown of a dead star: grants `orbit`
   (circling fire) + INT keeper — the first forever-spell showcase.
 
-- [ ] 9 unique defs + 3 legendary defs, world-drop wiring on the nightmare column
-- [ ] Checker battery + tests + docs + changelog
-- [ ] Playtest SUNWREATH orbit uptime/feel
+- [x] 9 unique defs + 3 legendary defs, world-drop wiring on the nightmare column
+- [x] Checker battery + tests + docs + changelog
+- [x] Playtest SUNWREATH orbit uptime/feel (headless probe: equips, orbit rank 2 live and sweeping, bot 97 kills)
 
 ## Phase 4 — JESUS pre-99 batch (16 uniques + 6 legendaries)
 

@@ -257,6 +257,9 @@ export const MOON: LevelDef = {
       // HUNTSMAN'S COWL — the moon-huntress's visor (the hard rung's
       // ranged-lean head piece).
       hard: ["huntsmans_cowl"],
+      // OMENSIGHT (the vigil's foresight) and VEILWALKERS (night-quiet
+      // boots) — the nightmare rung's Moon relics.
+      nightmare: ["omensight", "veilwalkers"],
     },
     // Level a normal run reaches per rung (`leveling-curve.mjs --by-level`) —
     // past it golden arrows go cold so a Moon replay can't over-level.
