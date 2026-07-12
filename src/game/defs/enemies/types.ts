@@ -212,9 +212,20 @@ export type EnemyDef = {
   spareable?: { companion: string };
   /**
    * XP granted on kill. Omitted = proportional to max hp
-   * (LEVELING.xpPerHp) — the standing rule; set only to override it.
+   * (LEVELING.xpPerHp) for minions, or a share of the hero's current level
+   * bar for elites/bosses (LEVELING.eliteXpBarShare / bossXpBarShare) — the
+   * standing rules. Set only to override with a FLAT XP figure.
    */
   xp?: number;
+  /**
+   * Elite/boss only: this kill's XP as a fraction of the hero's current level
+   * bar (`xpToLevelUp(player.level)`), overriding the role default
+   * (LEVELING.eliteXpBarShare / bossXpBarShare). Set below the default for a
+   * set piece that shouldn't pay a full share — e.g. one head of a multi-part
+   * guardian gauntlet, where the whole fight's shares are meant to sum to a
+   * sane reward. Ignored when `xp` (a flat override) is set, and on minions.
+   */
+  xpBarShare?: number;
   /**
    * The scene played the first time this enemy closes to
    * DIALOGUE.speakRadius of the player (elites and bosses). One entry per

@@ -497,6 +497,10 @@ export const EASTWORLD_ENEMIES: Record<string, EnemyDef> = {
     role: "boss",
     levelBonus: 4,
     sprite: "grok_alpha",
+    // One head of a three-part guardian gauntlet, then the SUPERCORE — so each
+    // grok pays under a full boss share; the whole finale still lurches the bar
+    // hard without a single fight banking most of a level.
+    xpBarShare: 0.1,
     gore: "sparks",
     hp: 380,
     speed: 34,
@@ -581,6 +585,8 @@ export const EASTWORLD_ENEMIES: Record<string, EnemyDef> = {
     role: "boss",
     levelBonus: 4,
     sprite: "grok_beta",
+    // One head of the guardian gauntlet — a reduced share (see grok_alpha).
+    xpBarShare: 0.1,
     gore: "sparks",
     hp: 380,
     speed: 34,
@@ -663,6 +669,8 @@ export const EASTWORLD_ENEMIES: Record<string, EnemyDef> = {
     role: "boss",
     levelBonus: 4,
     sprite: "grok_gamma",
+    // One head of the guardian gauntlet — a reduced share (see grok_alpha).
+    xpBarShare: 0.1,
     gore: "sparks",
     hp: 380,
     speed: 34,
