@@ -14,6 +14,7 @@ import {
   MEDKIT,
   MENACE,
   MERCY,
+  RARE_MOBS,
   STATS,
   UNIQUE,
   WORLD_DROP,
@@ -682,18 +683,39 @@ function dropMinionLoot(
   // stay rewarding; only the rampage-evolved crop pays out lean.
   const evoTierPenalty = Math.max(0, evo) * MENACE.tierPenaltyPerStage;
   const dropBonus = def.dropProfile?.dropBonus ?? 0;
+  // A RARE/UNIQUE mob's tier (config RARE_MOBS): its kill sweetens every
+  // payout's tier roll, and — below — multiplies the drop chance itself into
+  // MULTIPLE payouts, so the special find erupts in loot.
+  const rarity = def.rarity ? RARE_MOBS.tuning[def.rarity] : undefined;
   const tierBonus =
     (def.dropProfile?.tierBonus ?? 0) +
+    (rarity?.tierBonus ?? 0) +
     mobLevelTierBonus(state) -
     evoTierPenalty;
 
   // The overkill toll: the whole per-kill drop chance scales by the killing
   // blow's efficiency, so a mob one-shot for triple its health surrenders a
   // third of its usual odds — the loot mirror of the xp rule in killEnemy.
-  if (!forced && state.rng() >= (dropChance(state) + dropBonus) * efficiency)
+  // A rare/unique mob multiplies the same chance by its `dropMult` (20×/100×
+  // the rank and file) and pays it out in WHOLE payouts, tierDrops-style:
+  // each full 1.0 of the product is a guaranteed run of the drop ladder and
+  // the remainder the chance of one more, capped so LUCK stacking can't
+  // carpet the field. The rng draw order for an ordinary mob is unchanged.
+  const baseChance = (dropChance(state) + dropBonus) * efficiency;
+  let payouts = 1;
+  if (rarity) {
+    const total = Math.min(
+      baseChance * rarity.dropMult,
+      RARE_MOBS.maxDropRolls,
+    );
+    payouts = Math.floor(total);
+    if (state.rng() < total - payouts) payouts++;
+    if (forced) payouts = Math.max(1, payouts);
+    if (payouts === 0) return;
+  } else if (!forced && state.rng() >= baseChance) {
     return;
+  }
 
-  const pos = { ...at };
   const diff = difficultyDef(state.difficulty);
   const abilities = levelDef(state.level.id).loot.abilityPool;
   // The developer knob widens (or thins) the equipment slice in place — the
@@ -726,80 +748,109 @@ function dropMinionLoot(
     ? 0
     : lowDurabilityDesperation(state) * diff.mercy.repairBonus;
   const repairShare = LOOT.repairShare * (1 + repairBoost);
-  // The rare slice first, so tuning the ladder below never dilutes it. A
-  // nuke's own kills skip it (`noNukeDrop`, short-circuited before the draw):
-  // the blast that cleared the field can't hand back the bomb that caused it.
-  // The ONE NUKE rule gates it too (`canDropNuke`): no second bomb rolls while
-  // one already waits on screen or sits in the dock.
-  const nuked =
-    !forced &&
-    !noNukeDrop &&
-    canDropNuke(state) &&
-    state.rng() < LOOT.nukeShare;
-  const roll = state.rng();
-  if (nuked) {
-    // Sweeps away any stale off-screen bomb before minting the fresh one.
-    dropScreenNuke(state, pos);
-    return;
-  }
-  // Whatever falls past the ladder's tail (the arrow slice a hard rung trims
-  // away) yields nothing — so guard the drop event on an item actually landing.
-  const itemsBefore = state.items.length;
-  if (forced || roll < equipmentShare) {
-    state.minionEquipmentDrops++;
-    state.items.push({
-      id: state.nextId++,
-      kind: "equipment",
-      pos,
-      equipment: rollEquipment(state, { tierBonus, mlvl }),
-    });
-  } else if (roll < equipmentShare + abilityShare) {
-    state.items.push({
-      id: state.nextId++,
-      kind: "ability",
-      pos,
-      defId: abilities[Math.floor(state.rng() * abilities.length)] as string,
-    });
-  } else if (roll < equipmentShare + abilityShare + medkitShare) {
-    state.items.push({
-      id: state.nextId++,
-      kind: "medkit",
-      pos,
-      tier: rollMedkitTier(state),
-    });
-    // A medkit that fell because low health WIDENED its slice is a mercy rope,
-    // not the ordinary rain — fly it in on the angel (a healthy hero's boost is
-    // zero, so his medkits land the mundane way).
-    if (medkitBoost > 0) flyInByAngel(state, pos);
-  } else if (roll < equipmentShare + abilityShare + medkitShare + repairShare) {
-    state.items.push({ id: state.nextId++, kind: "repair", pos });
-    // Likewise a repair kit widened in by a near-broken weapon (see repairBoost).
-    if (repairBoost > 0) flyInByAngel(state, pos);
-  } else if (
-    roll <
-    equipmentShare + abilityShare + medkitShare + repairShare + LOOT.drinkShare
-  ) {
-    // A plain energy drink in the ordinary rain — worth nothing to a rested
-    // hero (it stays grounded until he's run himself winded), but the winded
-    // one is far likelier to find one through the stamina-empty mercy roll above.
-    state.items.push({ id: state.nextId++, kind: "drink", pos });
-  } else if (
-    roll <
-    equipmentShare +
-      abilityShare +
-      medkitShare +
-      repairShare +
-      LOOT.drinkShare +
-      arrowShare
-  ) {
-    // Golden XP arrows — the field's steady drip of levels (points to spend on
-    // a build) rather than free healing. The slice shrinks up the rungs, so on
-    // the hard difficulties this branch is reached less often and, on JESUS
-    // (arrowShare 0), never — the tail below it drops nothing at all.
-    state.items.push({ id: state.nextId++, kind: "xp", pos });
-  }
-  if (state.items.length > itemsBefore) {
-    state.events.push({ type: "itemDropped", pos });
+  // Each payout runs the ladder once. An ordinary mob pays exactly one (the
+  // pre-restructure body verbatim); a rare/unique mob's burst loops, each
+  // payout scattered around the corpse so the pile reads as separate finds.
+  for (let payout = 0; payout < payouts; payout++) {
+    const pos =
+      payouts > 1
+        ? {
+            x: clamp(
+              at.x + (state.rng() - 0.5) * 60,
+              16,
+              state.level.width - 16,
+            ),
+            y: clamp(
+              at.y + (state.rng() - 0.5) * 60,
+              16,
+              state.level.height - 16,
+            ),
+          }
+        : { ...at };
+    // The pity rule only claims the FIRST payout of a burst.
+    const forcedNow = forced && payout === 0;
+    // The rare slice first, so tuning the ladder below never dilutes it. A
+    // nuke's own kills skip it (`noNukeDrop`, short-circuited before the draw):
+    // the blast that cleared the field can't hand back the bomb that caused it.
+    // The ONE NUKE rule gates it too (`canDropNuke`): no second bomb rolls while
+    // one already waits on screen or sits in the dock.
+    const nuked =
+      !forcedNow &&
+      !noNukeDrop &&
+      canDropNuke(state) &&
+      state.rng() < LOOT.nukeShare;
+    const roll = state.rng();
+    if (nuked) {
+      // Sweeps away any stale off-screen bomb before minting the fresh one.
+      dropScreenNuke(state, pos);
+      continue;
+    }
+    // Whatever falls past the ladder's tail (the arrow slice a hard rung trims
+    // away) yields nothing — so guard the drop event on an item actually landing.
+    const itemsBefore = state.items.length;
+    if (forcedNow || roll < equipmentShare) {
+      state.minionEquipmentDrops++;
+      state.items.push({
+        id: state.nextId++,
+        kind: "equipment",
+        pos,
+        equipment: rollEquipment(state, { tierBonus, mlvl }),
+      });
+    } else if (roll < equipmentShare + abilityShare) {
+      state.items.push({
+        id: state.nextId++,
+        kind: "ability",
+        pos,
+        defId: abilities[Math.floor(state.rng() * abilities.length)] as string,
+      });
+    } else if (roll < equipmentShare + abilityShare + medkitShare) {
+      state.items.push({
+        id: state.nextId++,
+        kind: "medkit",
+        pos,
+        tier: rollMedkitTier(state),
+      });
+      // A medkit that fell because low health WIDENED its slice is a mercy rope,
+      // not the ordinary rain — fly it in on the angel (a healthy hero's boost is
+      // zero, so his medkits land the mundane way).
+      if (medkitBoost > 0) flyInByAngel(state, pos);
+    } else if (
+      roll <
+      equipmentShare + abilityShare + medkitShare + repairShare
+    ) {
+      state.items.push({ id: state.nextId++, kind: "repair", pos });
+      // Likewise a repair kit widened in by a near-broken weapon (see repairBoost).
+      if (repairBoost > 0) flyInByAngel(state, pos);
+    } else if (
+      roll <
+      equipmentShare +
+        abilityShare +
+        medkitShare +
+        repairShare +
+        LOOT.drinkShare
+    ) {
+      // A plain energy drink in the ordinary rain — worth nothing to a rested
+      // hero (it stays grounded until he's run himself winded), but the winded
+      // one is far likelier to find one through the stamina-empty mercy roll above.
+      state.items.push({ id: state.nextId++, kind: "drink", pos });
+    } else if (
+      roll <
+      equipmentShare +
+        abilityShare +
+        medkitShare +
+        repairShare +
+        LOOT.drinkShare +
+        arrowShare
+    ) {
+      // Golden XP arrows — the field's steady drip of levels (points to spend on
+      // a build) rather than free healing. The slice shrinks up the rungs, so on
+      // the hard difficulties this branch is reached less often and, on JESUS
+      // (arrowShare 0), never — the tail below it drops nothing at all.
+      state.items.push({ id: state.nextId++, kind: "xp", pos });
+    }
+    if (state.items.length > itemsBefore) {
+      state.events.push({ type: "itemDropped", pos });
+    }
   }
 }
 

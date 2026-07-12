@@ -22,6 +22,14 @@ const PALETTE = {
   N: BOSS.dark,
   d: MOON.dark,
   e: MOON_PIT,
+  // The MOURNER's pale-gold grief tier — the wisp's translucency in mourning
+  // gilt (rare-mob recolor chars).
+  t: [235, 215, 160, 185],
+  s: [190, 165, 110, 185],
+  // The LOST COSMONAUT's rose-tinged suit — the ghost's sheet flushed with
+  // the color the record never printed.
+  z: [232, 172, 162, 230],
+  Z: [172, 110, 104, 230],
 };
 
 const SPRITES = {
@@ -805,6 +813,30 @@ const SPRITES = {
   ],
 };
 
+// ---- RARE & UNIQUE mobs (palette variants — the Diablo recolor idiom) ------
+// The special haunting wears the tiers' own body plans in colors the graves
+// never issue, so a find reads at a glance (the engine adds the aura + name).
+for (const frame of [0, 1]) {
+  // MOONSTRUCK MOURNER — the wisp in pale mourning gilt.
+  SPRITES[`moonstruck_mourner_${frame}`] = swapPalette(
+    SPRITES[`wisp_${frame}`],
+    { u: "t", U: "s" },
+  );
+  // LOST COSMONAUT — the sheet ghost flushed rose, a white glint where the
+  // helmet caught the last of somebody's sun.
+  SPRITES[`lost_cosmonaut_${frame}`] = swapPalette(SPRITES[`ghost_${frame}`], {
+    c: "z",
+    C: "Z",
+    x: "W",
+  });
+  // THE THIRTEENTH MAN — the wraith's shroud trimmed in visor gold, eyes
+  // burning pale gold instead of red.
+  SPRITES[`the_thirteenth_man_${frame}`] = swapPalette(
+    SPRITES[`wraith_${frame}`],
+    { L: "y", R: "Y" },
+  );
+}
+
 export default {
   name: "moon",
   /** Ground tile behind this family's contact sheet. */
@@ -815,6 +847,18 @@ export default {
     wisp_float: { frames: ["wisp_0", "wisp_1"], delayMs: 340 },
     ghost_float: { frames: ["ghost_0", "ghost_1"], delayMs: 300 },
     wraith_float: { frames: ["wraith_0", "wraith_1"], delayMs: 240 },
+    moonstruck_mourner_float: {
+      frames: ["moonstruck_mourner_0", "moonstruck_mourner_1"],
+      delayMs: 360,
+    },
+    lost_cosmonaut_float: {
+      frames: ["lost_cosmonaut_0", "lost_cosmonaut_1"],
+      delayMs: 300,
+    },
+    the_thirteenth_man_float: {
+      frames: ["the_thirteenth_man_0", "the_thirteenth_man_1"],
+      delayMs: 240,
+    },
     armstrong_loom: { frames: ["armstrong_0", "armstrong_1"], delayMs: 420 },
     apollo_ghost_float: {
       frames: ["apollo_ghost_0", "apollo_ghost_1"],

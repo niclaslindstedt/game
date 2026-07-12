@@ -328,6 +328,7 @@ export {
   type DialoguePage,
   type EnemyDef,
   type EnemyRole,
+  type MobRarity,
 } from "./game/defs/enemies/index.ts";
 export {
   AFFIX_POOLS,
@@ -417,6 +418,7 @@ export {
   PLAYER,
   PROJECTILE,
   QUALITY,
+  RARE_MOBS,
   RUN,
   STAMINA,
   STATS,

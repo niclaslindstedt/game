@@ -424,6 +424,22 @@ line, GROK OMEGA pounces, THE ZAI SUPERCORE doubles production once its
 shield falls). From HARD up the rank and file get smarter too: minions flank
 instead of forming a single-file conga, and shooters lead a running target.
 
+Every level also laces in **rare and unique special mobs** (Diablo-style;
+`EnemyDef.rarity` + `LevelDef.rareSpawns`, tuned in `config.RARE_MOBS`). A
+**rare** is a generically-named oddity (WANDERING TOURIST, LOST COSMONAUT,
+STRAY COMET…) that turns up on most runs — solo or a small pack — and a
+**unique** is a named one-off (EMPLOYEE OF THE MONTH, THE THIRTEENTH MAN,
+THE ONE-ARMED BANDIT…) that only appears about one run in five, always
+alone. Both are minion-role defs authored at ordinary numbers; the engine
+applies the whole tier at spawn — a rare is **5× tougher / 1.5× contact
+damage / 20× drop rate**, a unique **10× / 2× / 100×** — and both run a few
+monster levels hot (reaching the loot-tier gates early) and power-match the
+hero when the fight opens, so a special find deep in a run is a real fight
+with a loot burst, not a placed-at-level-1 speed bump. They carry no
+dialogue: the recolored sprite (a per-biome palette variant of a base mob),
+a pulsing rarity aura (cool blue for rares, radiant gold for uniques), an
+over-head health bar, and the loot are the whole encounter.
+
 - **Level 1** ships the SpaceZ night shift (intern → lab scientist →
   propulsion engineer → security guard → hazmat tech) reinforced by OPTIMUSK
   units — humanoid robots that are not story uniques but hit far harder and

@@ -814,6 +814,33 @@ const SPRITES = {
   ],
 };
 
+// ---- RARE & UNIQUE mobs (palette variants — the Diablo recolor idiom) ------
+// The special machines wear the colony's own body plans in finishes the
+// printers never issue, so a find reads at a glance (the engine adds the
+// aura + name).
+for (const frame of [0, 1]) {
+  // MISPRINTED FEMBOT — the companion line in glitch green: gown misprinted
+  // grass-green, hair fused to bare steel, the pink trim corrupted dark.
+  SPRITES[`misprinted_fembot_${frame}`] = swapPalette(
+    SPRITES[`fembot_${frame}`],
+    { W: "G", Z: "l", Q: "g", y: "v", Y: "V" },
+  );
+  // DERELICT ROVER — the scout rusted to the axles, camera eye burnt to a
+  // dead red, hazard stripe faded into the pit-dark.
+  SPRITES[`derelict_rover_${frame}`] = swapPalette(
+    SPRITES[`scout_rover_${frame}`],
+    { v: "B", V: "S", b: "E", c: "R", x: "r", a: "E", H: "d" },
+  );
+  // UNIT ZERO — the servo chassis in original antique brass, running its
+  // first firmware behind pale-gold eyes.
+  SPRITES[`unit_zero_${frame}`] = swapPalette(SPRITES[`servo_bot_${frame}`], {
+    F: "o",
+    v: "q",
+    c: "y",
+    x: "Y",
+  });
+}
+
 export default {
   name: "mars",
   /** Ground tile behind this family's contact sheet. */
@@ -831,6 +858,15 @@ export default {
     },
     servo_bot_walk: { frames: ["servo_bot_0", "servo_bot_1"], delayMs: 300 },
     fembot_walk: { frames: ["fembot_0", "fembot_1"], delayMs: 260 },
+    misprinted_fembot_walk: {
+      frames: ["misprinted_fembot_0", "misprinted_fembot_1"],
+      delayMs: 260,
+    },
+    derelict_rover_roll: {
+      frames: ["derelict_rover_0", "derelict_rover_1"],
+      delayMs: 300,
+    },
+    unit_zero_walk: { frames: ["unit_zero_0", "unit_zero_1"], delayMs: 320 },
     larry_webpage_walk: {
       frames: ["larry_webpage_0", "larry_webpage_1"],
       delayMs: 280,
@@ -861,6 +897,12 @@ export default {
    */
   wounds: {
     fembot: { splat: "v", core: "b" },
+    // The misprint wounds like its sister: torn deck-gray plating on the
+    // green gown (gold sparks sink into the glitch print).
+    misprinted_fembot: { splat: "v", core: "b" },
+    // Gold sparks vanish on UNIT ZERO's antique brass — pale torn plating
+    // reads instead (the mining rover's rule).
+    unit_zero: { splat: "x", core: "b" },
     // Bright gold spark + dark-gold core so the electrical hit reads across the
     // little scout's steel deck (its default core matched the body too closely).
     scout_rover: { splat: "y", core: "H" },

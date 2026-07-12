@@ -9,6 +9,7 @@
 // every other char must exist in CORE_PALETTE (sprite-data/core.mjs) or
 // this family's local palette.
 
+import { swapPalette } from "../asset-tools/palette.mjs";
 import { GHOST } from "./core.mjs";
 
 /** Chars only this family draws with — merged with the core at build time. */
@@ -1056,6 +1057,30 @@ const SPRITES = {
   ],
 };
 
+// ---- RARE & UNIQUE mobs (palette variants — the Diablo recolor idiom) ------
+// The special fauna wears the void's own body plans in colors the rift never
+// spawns, so a find reads at a glance (the engine adds the aura + name).
+for (const frame of [0, 1]) {
+  // STRAY COMET — a voidling inverted into pale ice, sparkles burnt white.
+  SPRITES[`stray_comet_${frame}`] = swapPalette(SPRITES[`voidling_${frame}`], {
+    K: "c",
+    x: "W",
+    c: "W",
+  });
+  // COLLAPSED STAR — a star jelly fallen all the way in: violet flesh around
+  // an absolute-black heart, glinting glitch magenta.
+  SPRITES[`collapsed_star_${frame}`] = swapPalette(
+    SPRITES[`star_jelly_${frame}`],
+    { c: "P", n: "K", W: "L", x: "L", Q: "X" },
+  );
+  // THE LAST PHOTON — a scrap of pure light where a voidling would be dark,
+  // sparkling visor-gold.
+  SPRITES[`the_last_photon_${frame}`] = swapPalette(
+    SPRITES[`voidling_${frame}`],
+    { K: "W", x: "y", c: "y" },
+  );
+}
+
 export default {
   name: "rift",
   /** Ground tile behind this family's contact sheet. */
@@ -1067,6 +1092,18 @@ export default {
     star_jelly_drift: {
       frames: ["star_jelly_0", "star_jelly_1"],
       delayMs: 360,
+    },
+    stray_comet_squish: {
+      frames: ["stray_comet_0", "stray_comet_1"],
+      delayMs: 280,
+    },
+    collapsed_star_drift: {
+      frames: ["collapsed_star_0", "collapsed_star_1"],
+      delayMs: 400,
+    },
+    the_last_photon_squish: {
+      frames: ["the_last_photon_0", "the_last_photon_1"],
+      delayMs: 180,
     },
     unraveler_glitch: { frames: ["unraveler_0", "unraveler_1"], delayMs: 200 },
     graviton_orbit: { frames: ["graviton_0", "graviton_1"], delayMs: 260 },
@@ -1082,6 +1119,13 @@ export default {
    */
   wounds: {
     star_jelly: { splat: "P", core: "M" },
+    // The comet and the photon are ecto-pale like the jelly — cyan splats
+    // vanish, so they bruise in slime purple too.
+    stray_comet: { splat: "P", core: "M" },
+    the_last_photon: { splat: "P", core: "M" },
+    // The collapsed star is itself violet-black — it cracks in the glitch
+    // magenta the graviton uses.
+    collapsed_star: { splat: "X", core: "Q" },
     // The graviton is a gold ring around a black heart — spark-gold wounds
     // vanish on it, so it cracks in glitch magenta instead.
     graviton: { splat: "X", core: "P" },
