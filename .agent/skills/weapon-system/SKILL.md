@@ -24,7 +24,8 @@ node scripts/skill-lessons.mjs weapon-system
 | Piece | File |
 | --- | --- |
 | **THE ITEM FORGE — the one door new items come through** | `scripts/item-forge.mjs` (see below) |
-| Weapon/gear defs, tier ladder, affix BRACKETS, naming | `src/game/defs/equipment.ts` |
+| Weapon defs, tier ladder, affix BRACKETS, naming | `src/game/defs/equipment.ts` (re-exports the gear record) |
+| Gear (armor/charm/bag) base defs | `src/game/defs/gear.ts` |
 | Base GRADES (Normal → Exceptional → Elite): per-base names + generated variant defs | `src/game/defs/grades.ts` |
 | MAKE QUALITY (broken → perfect): multipliers + mlvl-sliding roll odds | `src/game/config.ts` (`QUALITY`); the roll in `items.ts` (`rollQuality`) |
 | Loot config: tier gates (`tierUnlockMlvl`), base tier chances, ilvl deficit weights, drop shares | `src/game/config.ts` (`LOOT`) |

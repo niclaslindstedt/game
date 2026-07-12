@@ -22,7 +22,7 @@ diffable, reviewable, and editable by agents.
 | `website/scripts/sprite-data/index.mjs` | Merges the families, resolves each sprite's core+local palette, derives battle-damage variants from the enemy catalog |
 | `website/scripts/generate-assets.mjs` | The pipeline: grids + font → `website/src/game/assets/` (`atlas.png` + `atlas.json`, font atlas + metrics) + previews + contrast lint |
 | `website/scripts/asset-tools/` | The utility pool the pipeline composes (see below) |
-| `website/src/game/assets/` | Generated, checked in, loaded by `assets.ts` — **never edit by hand** |
+| `website/src/game/assets/` | Generated, **gitignored** — rebuilt on every build (`npm run assets` runs ahead of `vite`/`tsc`/`vitest`), loaded by `assets.ts`; **never edit by hand, never commit** |
 | `website/assets-preview/` | Generated previews for evaluation — gitignored |
 
 ## Palette scoping
@@ -75,9 +75,10 @@ Rules of the pool:
   and derives the stages from the `role` (minions `hurt`, elites +
   `wrecked`, bosses + `dying` — thresholds in the engine's
   `config.WOUNDS`/`LAST_STAND`) and the style from the `gore` field
-  (`blood` → red splats with dried cores and grime, `ecto` → pale cyan).
+  (`blood` → red splats with dried cores and grime, `ecto` → pale cyan,
+  `sparks` → hot gold with a white-hot core, for machines).
   A NEW ENEMY therefore needs NO wound registry entry — just its enemy def
-  and base frames, then `make assets`; `tests/wounds_test.ts` fails until
+  and base frames, then `make assets`; `tests/content/wounds_test.ts` fails until
   the frames land in the atlas. Only a mob whose body colors swallow the
   default (dark-on-dark never reads) adds an override to its family
   module's `wounds` map (splat/core/scuff chars). Retuning a base sprite
@@ -176,11 +177,11 @@ actually looked at**:
 - Enemy damage stages are named `<sprite>_<stage>_<frame>` (`hurt` /
   `wrecked` / `dying`); the renderer falls back to the base frame when a
   variant is missing, so a typo degrades silently — that's what
-  `tests/wounds_test.ts` is for.
+  `tests/content/wounds_test.ts` is for.
 - Gore/wound chars: `r` blood, `i` dried blood (dark core), `E` grime (all
-  in the core palette — the wound generator paints them on any mob);
-  ghost-tier overrides wound in `c`/`C`/`U`/`N` (see the `wounds` maps in
-  the family modules).
+  in the core palette — the wound generator paints them on any mob); `ecto`
+  wounds in `c`/`C`, `sparks` in `y`/`Y`; per-sprite overrides live in the
+  `wounds` maps in the family modules.
 - Tiles must tile: check the sheet's tiled-ground strip for visible seams.
 - After changing any grid, run `make assets` and eyeball the render, but
   commit only the `sprite-data/` change: the atlas (`atlas.png` +

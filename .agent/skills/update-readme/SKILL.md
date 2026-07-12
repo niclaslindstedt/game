@@ -41,11 +41,13 @@ description: "Use when README.md may be stale. Discovers commits since the last 
 
 | Changed files / scope | README section(s) to update |
 |---|---|
-| Public API surface | **Usage** / **Quick start** |
-| CLI flags or subcommands | **Usage** table |
-| Default configuration | **Quick start** |
-| Installation instructions / package name | **Install** |
-| New supported platform or language | **Supported platforms** list |
+| Engine public API (`src/index.ts`) | **Usage** |
+| Make targets / npm scripts (`Makefile`, `package.json` scripts) | **Usage** (and `CONTRIBUTING.md`, `AGENTS.md` per the CLAUDE.md sync table) |
+| Deploy slots / pages workflow (`.github/workflows/pages.yml`, `website/pwa-plugin.ts` `DEPLOY_SLOTS`) | **Play** table (the `/`, `/preview/`, `/branch/` links) |
+| Config knobs: env vars, URL params | **Configuration** |
+| Game identity (title, tagline, domain — `game.config.json`) | Title, description, links — but never re-hardcode a brand string that `game.config.json` owns |
+| Game premise / how-to-play content | The flavored intro sections |
+| Installation / dev setup (`.npmrc`, `GITHUB_PAT`) | **Install** / dev setup |
 | License change | **License** section, badges |
 
 Extend this table every time you find a new source-of-truth file that feeds the README.

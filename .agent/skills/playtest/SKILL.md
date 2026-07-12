@@ -13,7 +13,7 @@ change ends with a playtest before it ships.
 
 | Piece | Role |
 | --- | --- |
-| `src/game/bot.ts` | The engine autopilot: strategies that turn `GameState` into `GameInput`. One source of truth — headless tests (`tests/bot_test.ts`) and the browser harness both drive THIS code |
+| `src/game/bot.ts` | The engine autopilot: strategies that turn `GameState` into `GameInput`. One source of truth — headless tests (`tests/engine/bot_test.ts`) and the browser harness both drive THIS code |
 | `?bot=<strategy>` URL param | Hands the run to the autopilot in the real app (`GameScreen.tsx`): it dismisses the intro, steers, jumps, and spends level-ups itself |
 | `website/scripts/playtest.mjs` | Thin Playwright launcher/observer: opens `?debug&bot=<strategy>`, screenshots, prints outcome + stats JSON |
 | `?debug` URL param | Exposes the live `GameState` as `window.__game` (set in `GameScreen.tsx`) — the harness's (and your) window into the simulation |
@@ -37,6 +37,11 @@ Strategies:
   DANGEROUS; if rushing wins comfortably, the game got too easy.
 - `idle` — no input after start: pure survival clock; sanity-checks enemy
   pressure and that the game doesn't win/lose itself.
+- `boss` — beelines for the boss (or his landmark) and holds at the equipped
+  weapon's range: the boss-fight probe, and the fastest route to a clear.
+- `survivor` — plays the whole level like a survivors run: farms the horde,
+  detours for pickups, pushes for the boss once leveled. The default probe
+  for "wander the level and see everything" checks (art passes, tiles).
 
 The bot prints stats JSON (`outcome`, `hp`, `kills`, `timeMs`, damage in
 and out). **Look at the screenshots with the Read tool** (`title.png`,
@@ -70,7 +75,7 @@ well?), run headed: `make website-dev` and play in the browser.
 New systems usually need a new probe: add a strategy to the ENGINE bot
 (`src/game/bot.ts` — a new `BotStrategy` name plus a case in `botAct`),
 never to the Playwright script. That one strategy is then instantly
-available to headless engine tests (see `tests/bot_test.ts`'s `drive`
+available to headless engine tests (see `tests/engine/bot_test.ts`'s `drive`
 helper), to `?bot=` in the real app, and to this harness. Keep strategies
 tiny and PURE — a steering decision per tick from the state, no state
 mutation, no `state.rng` draws (determinism is the point). The `Bot`

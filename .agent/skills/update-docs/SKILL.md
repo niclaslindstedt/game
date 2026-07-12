@@ -39,10 +39,14 @@ The `docs/` directory contains conceptual documentation for game. Unlike the REA
 
 | Changed files / scope | Doc(s) to update |
 |---|---|
-| Public API surface | `docs/getting-started.md`, architecture-level docs |
-| Configuration keys / env vars | `docs/configuration.md` |
-| Error messages and exit codes | `docs/troubleshooting.md` |
-| Deployment / install mechanics | `docs/getting-started.md` |
+| Engine public API (`src/index.ts`) | `docs/architecture.md`, `README.md` Usage |
+| Config knobs: env vars, URL params (`?debug`, `?seed`, `?scenario`, `?bot`, …), dev-menu flags | `docs/configuration.md` |
+| Game content: levels, enemies, story items, uniques (`src/game/defs/**`) | `docs/game-content.md` (this game's walkthrough) |
+| Story or dialogue text — any spoken line, caption, lore page | `docs/manuscript.md` — **only with user confirmation** (see CLAUDE.md "Story & dialogue"; never silently rewrite it) |
+| Deploy slots / pages workflow (`.github/workflows/pages.yml`, `website/pwa-plugin.ts`) | `docs/architecture.md` |
+| PWA surface (manifest, icons, service worker) | `docs/architecture.md` |
+| Error messages and troubleshooting-relevant behavior | `docs/troubleshooting.md` |
+| Install / first-run mechanics (Makefile, `.npmrc`, `GITHUB_PAT`) | `docs/getting-started.md` |
 
 Extend this table every time you find a new source file that feeds the docs.
 
