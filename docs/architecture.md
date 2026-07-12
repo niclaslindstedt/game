@@ -204,6 +204,21 @@ run against synthetic fixtures with no shipped content (see
   `uniqueHeld` power at most once), and the helpers the renderer shares
   (`orbPositions`, `stasisFactorAt`); the per-tick behavior runs inside
   `step.ts` so all damage flows through one path.
+- **`src/game/spells.ts`** — the GRANTED forever powers items carry (the
+  `spell`/`proc`/`sureStrike` affix kinds, config `SPELL`): deriving the
+  worn loadout's granted spells (`syncItemSpells`, ranks from multiple
+  sources adding), the live rank+INT-scaled numbers (`orbitSpellParams`,
+  `stormSpellParams`, `stasisSpellParams`, INT shortening intervals via
+  `spellIntervalScale`), proc lookups (`equippedProcs`), and the renderer's
+  orb positions (`itemSpellOrbPositions`). Stepping lives in `step.ts`
+  (`stepItemSpells`/`stepProcs` — procs queue on the hero's own weapon
+  blows in `hitEnemy` and resolve after the attack pass).
+- **`src/game/item-budget.ts`** — the bonus-budget pricing model (what a
+  unique's fixed bonuses are WORTH in ilvl points, derived from the live
+  combat constants). One source of truth: `scripts/weapon-ilvl.mjs` imports
+  it for authoring checks, and `pickUniqueForDrop` reads it at runtime to
+  derive a legendary's drop weight from its power ("stats determine
+  rarity", `UNIQUE.rarityBudgetRef`).
 - **`src/game/types.ts`** — state shapes plus the `GameEvent` union: events
   are the only channel from simulation to presentation (sound, flashes);
   the engine never knows a renderer or speaker exists.

@@ -321,7 +321,13 @@ export const MARS: LevelDef = {
     abilityPool: ["fire_orbs", "storm_cell", "stasis_field", "item_magnet"],
     // Level-locked world drop (see config WORLD_DROP): DUSTBORN, the light boots
     // that outrun the dust storms — farmed on boss runs of Mars.
-    worldUniques: { easy: ["dustborn"], medium: ["redwind"] },
+    worldUniques: {
+      easy: ["dustborn"],
+      medium: ["redwind"],
+      // COLOSSUS PLATE — terraformer plating (the hard rung's melee-lean
+      // chest: a wall that trades a step of speed).
+      hard: ["colossus_plate"],
+    },
     // Level a normal run reaches per rung (`leveling-curve.mjs --by-level`) —
     // past it golden arrows go cold so a Mars replay can't over-level.
     arrowCapByDifficulty: {

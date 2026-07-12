@@ -465,6 +465,13 @@ export const THE_BUNKER: LevelDef = {
         "herdbreaker",
         "the_last_roundup",
       ],
+      hard: [
+        "longwatch",
+        "huntsmans_cowl",
+        "colossus_plate",
+        "oathbrand",
+        "the_inevitable",
+      ],
     },
     // "A bit higher" world-drop odds than the relics' home levels — the
     // farm-venue sweetener, applied per roll in maybeDropWorldUnique.

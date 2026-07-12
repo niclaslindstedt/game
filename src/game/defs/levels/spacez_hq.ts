@@ -374,7 +374,13 @@ export const SPACEZ_HQ: LevelDef = {
     abilityPool: ["storm_cell", "stasis_field", "item_magnet"],
     // Level-locked world drop (see config WORLD_DROP): THE FIRST DRAFT, the
     // prototype-GROK neural crown, farmable only by returning for boss runs.
-    worldUniques: { easy: ["the_first_draft"], medium: ["deadsprint"] },
+    worldUniques: {
+      easy: ["the_first_draft"],
+      medium: ["deadsprint"],
+      // LONGWATCH — the perimeter marksman's rifle (the hard rung's ranged
+      // build), farmed on HQ boss runs.
+      hard: ["longwatch"],
+    },
     // The level a normal run of the campaign's OPENING map leaves the hero at
     // per rung (from `leveling-curve.mjs --by-level`) — past it golden arrows
     // go cold, so a replay of the tutorial floor can't over-level him.

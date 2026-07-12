@@ -88,10 +88,11 @@ step/render machinery (`abilities.ts` orbit/storm/stasis):
 - A new `SPELL` config namespace defines each spell's base numbers per rank
   (orb count/damage/radius, bolt interval/damage/range, slow field
   radius/factor). Ranks are small integers (1–5); rank sets the magnitude.
-- **INTELLIGENCE improves them**: two `STATS` knobs — spell damage % per
-  effective INT point, and interval reduction % per point (floored) — so INT
-  is the spell stat for every spec, matching melee cleave already being
-  INT's.
+- **INTELLIGENCE improves them**: damage deepens via the standing
+  `abilityPowerScale` (level ramp × `ABILITY.intDamagePerPoint`), and the
+  new `SPELL.intervalPerInt` knob shortens tick/strike intervals per
+  effective INT point (floored at `SPELL.intervalFloor`) — so INT is the
+  spell stat for every spec, matching melee cleave already being INT's.
 - Engine: a derived "item spells" pass in the step pipeline (worn equipment →
   active granted spells; no duration, active while worn). Multiple sources
   stack like stackable abilities.
@@ -151,19 +152,19 @@ model.
 
 ### Phase 1 checklist
 
-- [ ] `Affix` union: `spell`, `proc`, `sureStrike` (types.ts)
-- [ ] `SPELL` config namespace + `STATS` INT-scaling knobs (config.ts)
-- [ ] Granted-spell derivation + stepping (item spells beside abilities)
-- [ ] `nova` burst effect (engine + render, existing sprites)
-- [ ] Proc triggers on hit/kill in the combat path
-- [ ] `sureStrike` in `playerMissChance`
-- [ ] `UniqueDef.scaling` + scaling mint in `mintUnique`
-- [ ] Budget-derived legendary rarity in `pickUniqueForDrop`
-- [ ] Item card / tooltip / arsenal lines for the new affix kinds
-- [ ] `weapon-ilvl.mjs` pricing for the new kinds
-- [ ] `unique-check.mjs` rules (proc discipline, scaling/rarity report)
-- [ ] Engine tests for all of the above (fixtures, no shipped ids)
-- [ ] Docs sync + changelog fragment
+- [x] `Affix` union: `spell`, `proc`, `sureStrike` (types.ts)
+- [x] `SPELL` config namespace + INT interval-scaling knobs (config.ts)
+- [x] Granted-spell derivation + stepping (item spells beside abilities)
+- [x] `nova` burst effect (engine + render, existing sprites)
+- [x] Proc triggers on hit/kill in the combat path
+- [x] `sureStrike` in `playerMissChance`
+- [x] `UniqueDef.scaling` + scaling mint in `mintUnique`
+- [x] Budget-derived legendary rarity in `pickUniqueForDrop`
+- [x] Item card / tooltip / arsenal lines for the new affix kinds
+- [x] `weapon-ilvl.mjs` pricing for the new kinds
+- [x] `unique-check.mjs` rules (proc discipline, scaling/rarity report)
+- [x] Engine tests for all of the above (fixtures, no shipped ids)
+- [x] Docs sync + changelog fragment
 
 ## Phase 2 — HARD batch (4 uniques + 1 legendary)
 
@@ -182,13 +183,13 @@ drop during the campaign). Bases picked at implementation time via
 
 ### Phase 2 checklist
 
-- [ ] 4 unique defs + 1 legendary def (`uniques.ts`, world-drop group)
-- [ ] Wire `loot.worldUniques.hard` across the rung's levels + bunker relist
-- [ ] `weapon-ilvl.mjs --suggest` ilvls; `unique-check.mjs` clean
-- [ ] `item-forge.mjs check` battery clean
-- [ ] Content tests pass (placement coverage suites)
-- [ ] `docs/game-content.md` update + changelog fragment
-- [ ] Playtest: THE INEVITABLE proc feel at the phone viewport
+- [x] 4 unique defs + 1 legendary def (`uniques.ts`, world-drop group)
+- [x] Wire `loot.worldUniques.hard` across the rung's levels + bunker relist
+- [x] `weapon-ilvl.mjs --suggest` ilvls; `unique-check.mjs` clean
+- [x] `item-forge.mjs check` battery clean
+- [x] Content tests pass (placement coverage suites)
+- [x] `docs/game-content.md` update + changelog fragment
+- [x] Playtest: THE INEVITABLE proc feel at the phone viewport (headless probe: equips, 11 bolt procs/60s, 0 whiffs, bot 18→115 kills)
 
 ## Phase 3 — NIGHTMARE batch (9 uniques + 3 legendaries)
 

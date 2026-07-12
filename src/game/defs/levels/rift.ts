@@ -276,6 +276,9 @@ export const THE_RIFT: LevelDef = {
     worldUniques: {
       easy: ["excalibur", "the_trinity_shard"],
       medium: ["wishbane", "gorgonscale", "mjolnir"],
+      // THE INEVITABLE — the hard rung's LEGENDARY: the pistol that has
+      // never missed, hung in the tear like everything else fate mislaid.
+      hard: ["the_inevitable"],
     },
     // Level a normal run reaches per rung (`leveling-curve.mjs --by-level`) —
     // past it golden arrows go cold so a Rift replay can't over-level.

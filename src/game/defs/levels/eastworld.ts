@@ -507,6 +507,9 @@ export const EASTWORLD: LevelDef = {
     worldUniques: {
       easy: ["pale_rider"],
       medium: ["herdbreaker", "the_last_roundup"],
+      // OATHBRAND — the last honest lawman's monomolecular blade (the hard
+      // rung's melee anchor).
+      hard: ["oathbrand"],
     },
     // Level a normal run reaches per rung (`leveling-curve.mjs --by-level`) —
     // the campaign's FINAL map, so these are each difficulty's end level; past
