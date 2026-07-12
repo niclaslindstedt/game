@@ -258,11 +258,11 @@ for (const id of UNIQUE_IDS) {
       );
     }
 
-  // The FOREVER powers are legendary territory: a proc or sure strike on a
-  // plain unique dilutes the tier's identity (WARN — a deliberate exception
-  // stays possible).
+  // The FOREVER powers are legendary/artifact territory: a proc or sure strike
+  // on a plain unique dilutes the tier's identity (WARN — a deliberate
+  // exception stays possible).
   const tier = u.tier ?? "unique";
-  if (tier !== "legendary") {
+  if (tier !== "legendary" && tier !== "artifact") {
     for (const b of u.bonuses) {
       if (b.kind === "proc" || b.kind === "sureStrike")
         warn(
