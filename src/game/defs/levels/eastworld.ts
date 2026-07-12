@@ -186,6 +186,27 @@ export const EASTWORLD: LevelDef = {
     { enemy: "gerald_depardieu", at: { x: 1380, y: 1180 } },
     { enemy: "edward_snow", at: { x: 1560, y: 480 } },
   ],
+  // Host-gangs holding their marks down main street, frozen in tableau until
+  // the hero walks into range, then they draw on him: greeters near the gate,
+  // brawlers by the saloon, the tin outlaws and a longhorn covering the
+  // approach to the compound.
+  packs: [
+    { at: { x: 900, y: 700 }, members: [{ enemy: "cowbot", count: 6 }] },
+    {
+      at: { x: 1500, y: 1060 },
+      members: [
+        { enemy: "cowbot", count: 3 },
+        { enemy: "saloon_brawler", count: 3 },
+      ],
+    },
+    {
+      at: { x: 2150, y: 650 },
+      members: [
+        { enemy: "tin_outlaw", count: 3 },
+        { enemy: "longhorn", count: 2 },
+      ],
+    },
+  ],
   // The park pours for ~6 minutes, a notch over the rift — this is level 5.
   waves: {
     rampDurationMs: 360_000,

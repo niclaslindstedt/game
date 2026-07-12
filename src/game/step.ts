@@ -109,6 +109,7 @@ import { arrowColdXp, arrowXpShareAt } from "./leveling.ts";
 import {
   grantXp,
   hitEnemy,
+  packsCleared,
   queueStruckProcs,
   unspawnedMinions,
 } from "./loot.ts";
@@ -326,10 +327,13 @@ function objectiveCleared(state: GameState): boolean {
   }
   if (objective.type === "clearAll") {
     // Apparitions never count as foes — an unvisited (hence unvanished)
-    // dialogue figure must not hold a cleared field hostage.
+    // dialogue figure must not hold a cleared field hostage. Every placed
+    // pack must also be reached and wiped: a dormant cluster is unspawned
+    // foes the player still owes.
     return (
       !state.enemies.some((e) => !enemyDef(e.defId).apparition) &&
-      unspawnedMinions(state) === 0
+      unspawnedMinions(state) === 0 &&
+      packsCleared(state)
     );
   }
   return !state.enemies.some((e) => enemyDef(e.defId).role === "boss");
@@ -627,7 +631,10 @@ function stepPacks(state: GameState): void {
   for (let i = 0; i < packs.length; i++) {
     const pack = packs[i] as PackState;
     if (pack.status === "dormant") {
-      if (canWake && distance(state.player.pos, pack.at) <= pack.triggerRadius) {
+      if (
+        canWake &&
+        distance(state.player.pos, pack.at) <= pack.triggerRadius
+      ) {
         wakePack(state, pack, specs[i] as PackSpec);
       }
     } else if (pack.status === "active") {

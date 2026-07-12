@@ -124,6 +124,25 @@ export const SPACEZ_HQ: LevelDef = {
     { enemy: "janitor", at: { x: 900, y: 1000 } },
     { enemy: "muskrat", at: { x: 1730, y: 620 } },
   ],
+  // Two knots of night-shift staff holding rooms off the main route — quiet
+  // until the hero steps in, then they're on him. A gentle first taste of the
+  // pack (this being level one), placed past the opening arming beat.
+  packs: [
+    {
+      at: { x: 1000, y: 900 },
+      members: [
+        { enemy: "intern", count: 5 },
+        { enemy: "scientist", count: 3 },
+      ],
+    },
+    {
+      at: { x: 1420, y: 430 },
+      members: [
+        { enemy: "engineer", count: 3 },
+        { enemy: "guard", count: 2 },
+      ],
+    },
+  ],
   // The night shift floods in over ~4.5 minutes — a slightly gentler total
   // than the moon's haunting, this being the first level.
   waves: {

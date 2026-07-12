@@ -90,6 +90,27 @@ export const MOON: LevelDef = {
     { enemy: "cartographer", at: { x: 1880, y: 520 } },
     { enemy: "armstrong", at: { x: 2130, y: 260 } },
   ],
+  // Grave-clusters along the walk to the flag: patches of regolith that stay
+  // still until the hero wanders into them, then rise as one and give chase.
+  // The moonscape is cleared by CROSSING it, grave by grave — not farmed from
+  // the lander.
+  packs: [
+    { at: { x: 900, y: 1080 }, members: [{ enemy: "wisp", count: 6 }] },
+    {
+      at: { x: 1350, y: 760 },
+      members: [
+        { enemy: "ghost", count: 5 },
+        { enemy: "wisp", count: 3 },
+      ],
+    },
+    {
+      at: { x: 1780, y: 460 },
+      members: [
+        { enemy: "wraith", count: 3 },
+        { enemy: "ghost", count: 4 },
+      ],
+    },
+  ],
   // The haunting proper: over five minutes the moon empties its graves.
   // The floor keeps a dozen ghosts on screen from the first breath; walking
   // the moonscape stirs extras out of the regolith every 48 px.
