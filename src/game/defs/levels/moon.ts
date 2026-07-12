@@ -285,11 +285,12 @@ export const MOON: LevelDef = {
     // last moonwalker's vacuum-sealed plate, and DEADSTAR, the pulsar-rod
     // relic that gives the easy rung its magic build — farmed on Moon boss runs.
     worldUniques: {
-      easy: ["the_pale_covenant", "deadstar"],
-      medium: ["marecrest"],
-      // HUNTSMAN'S COWL — the moon-huntress's visor (the hard rung's
-      // ranged-lean head piece).
-      hard: ["huntsmans_cowl"],
+      // Bottom tier shares one merged relic batch across the three parallel
+      // starting lanes (the former easy/medium/hard drops, incl. HUNTSMAN'S
+      // COWL, the moon-huntress's visor); odds self-select as the hero levels.
+      easy: ["the_pale_covenant", "deadstar", "marecrest", "huntsmans_cowl"],
+      medium: ["the_pale_covenant", "deadstar", "marecrest", "huntsmans_cowl"],
+      hard: ["the_pale_covenant", "deadstar", "marecrest", "huntsmans_cowl"],
       // OMENSIGHT (the vigil's foresight) and VEILWALKERS (night-quiet
       // boots) — the nightmare rung's Moon relics.
       nightmare: ["omensight", "veilwalkers"],
@@ -301,11 +302,11 @@ export const MOON: LevelDef = {
     // Level a normal run reaches per rung (`leveling-curve.mjs --by-level`) —
     // past it golden arrows go cold so a Moon replay can't over-level.
     arrowCapByDifficulty: {
-      easy: 8,
-      medium: 23,
-      hard: 36,
-      nightmare: 46,
-      jesus: 55,
+      easy: 13,
+      medium: 13,
+      hard: 13,
+      nightmare: 38,
+      jesus: 53,
     },
     // MOON'S BLADE arrives early — at a kill rolled in the first hundred,
     // discovered in play — so the run's signature weapon shapes the run

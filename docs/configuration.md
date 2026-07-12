@@ -89,8 +89,9 @@ stats, gear, inventory, coins, abilities, companions) that carries whole into
 every difficulty and level, so higher difficulties are met with the gear earned
 on the lower ones. It also remembers which difficulties it has BEATEN and which
 levels it has CLEARED — pure progress bookmarks that gate two things: the
-difficulty ladder unlocks in order (a rung opens once the one before it is
-beaten; locked rungs show greyed out), and a difficulty runs as a linear
+difficulty ladder (the three parallel starting lanes — easy/medium/hard — are
+all open from the start; NIGHTMARE unlocks once any one is beaten, JESUS once
+NIGHTMARE is; locked rungs show greyed out), and a difficulty runs as a linear
 campaign until it is beaten, after which its level picker opens for free replays
 (the grind-for-gear endgame). **HARDCORE is permadeath**: a hardcore hero that
 dies is retired for good (kept in the roster as fallen, never played again), and

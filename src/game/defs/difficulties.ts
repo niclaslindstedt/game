@@ -428,7 +428,8 @@ export const DIFFICULTY_DEFS: Record<Difficulty, DifficultyDef> = {
   },
 };
 
-/** Menu order of the difficulties, gentlest first. */
+/** Menu order of the difficulties, gentlest first. Also orders the mob-level
+ * offsets and the select-screen rows; the UNLOCK graph below is separate. */
 export const DIFFICULTY_ORDER: Difficulty[] = [
   "easy",
   "medium",
@@ -436,6 +437,31 @@ export const DIFFICULTY_ORDER: Difficulty[] = [
   "nightmare",
   "jesus",
 ];
+
+/**
+ * The three PARALLEL starting lanes. All are open from the first launch — a
+ * player picks one as their entry point. They run the same missions over the
+ * same hero-level band (and share one XP-cap band, see `XP_CAP`); the only
+ * difference is how much help each gives (easy the most, hard the least).
+ * Beating ANY one of them opens the gated tier (nightmare).
+ */
+export const STARTING_DIFFICULTIES: Difficulty[] = ["easy", "medium", "hard"];
+
+/**
+ * Unlock graph for the difficulty ladder: a rung opens once ANY difficulty in
+ * its prerequisite list is beaten. The three starting lanes have no prereqs
+ * (always open); NIGHTMARE opens on any starting lane beaten; JESUS opens on
+ * NIGHTMARE beaten. This replaces the old strict five-rung chain (each rung
+ * needing the one before it). Consumed by the app's progression gate
+ * (`isDifficultyUnlocked` in website `characters.ts`).
+ */
+export const DIFFICULTY_UNLOCK_PREREQS: Record<Difficulty, Difficulty[]> = {
+  easy: [],
+  medium: [],
+  hard: [],
+  nightmare: [...STARTING_DIFFICULTIES],
+  jesus: ["nightmare"],
+};
 
 // Active registry the accessor reads (defaults to the shipped ladder;
 // tests swap in fixtures via `registerDefs`). See src/index.ts.

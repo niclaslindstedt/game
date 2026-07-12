@@ -10,8 +10,10 @@
 // A character also remembers which difficulties it has BEATEN and which levels
 // it has CLEARED — pure progress bookmarks that never touch the build. They
 // gate two things:
-//   1. the difficulty ladder — a difficulty is playable once the one before it
-//      on `DIFFICULTY_ORDER` is beaten (easy is always open);
+//   1. the difficulty ladder — the three parallel starting lanes
+//      (easy/medium/hard) are always open; a gated rung unlocks once any of its
+//      prerequisites is beaten (NIGHTMARE on any starting lane, JESUS on
+//      NIGHTMARE — see `DIFFICULTY_UNLOCK_PREREQS`);
 //   2. the level picker — a difficulty runs as a linear campaign until it is
 //      beaten, after which any of its levels can be replayed freely (the
 //      grind-for-gear endgame).
@@ -28,7 +30,7 @@
 
 import {
   adoptEquipment,
-  DIFFICULTY_ORDER,
+  DIFFICULTY_UNLOCK_PREREQS,
   equipmentLevelReq,
   LEVEL_ORDER,
   type Difficulty,
@@ -402,18 +404,20 @@ export function isDifficultyBeaten(
 }
 
 /**
- * Is `difficulty` playable by this character? The first rung (easy) is always
- * open; every harder rung unlocks once the rung before it on `DIFFICULTY_ORDER`
- * is beaten. Locked rungs are shown greyed out on the select screen.
+ * Is `difficulty` playable by this character? Reads the unlock graph
+ * (`DIFFICULTY_UNLOCK_PREREQS`): the three parallel starting lanes
+ * (easy/medium/hard) have no prerequisites and are always open; a gated rung
+ * unlocks once ANY difficulty in its prerequisite list is beaten — NIGHTMARE on
+ * any starting lane beaten, JESUS on NIGHTMARE beaten. Locked rungs are shown
+ * greyed out on the select screen.
  */
 export function isDifficultyUnlocked(
   character: Character,
   difficulty: Difficulty,
 ): boolean {
-  const index = DIFFICULTY_ORDER.indexOf(difficulty);
-  if (index <= 0) return true;
-  const previous = DIFFICULTY_ORDER[index - 1] as Difficulty;
-  return isDifficultyBeaten(character, previous);
+  const prereqs = DIFFICULTY_UNLOCK_PREREQS[difficulty] ?? [];
+  if (prereqs.length === 0) return true;
+  return prereqs.some((d) => isDifficultyBeaten(character, d));
 }
 
 /**

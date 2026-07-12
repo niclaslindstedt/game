@@ -62,7 +62,7 @@ actually ends.
 | Knob | Does |
 | --- | --- |
 | `killsPerLevelBase` | Kills a mid level costs (the curve's height). Bigger = slower everywhere. |
-| `killsPerLevelGrowth` | Per-level rise (the taper). `1.02` ≈ ×7 over 99 levels → ~10–20/day early easing to ~2/day at cap. Bigger = steeper taper. |
+| `killsPerLevelGrowth` | Per-level rise (the taper). Ships at `1.035` (≈×29 over 99 levels): a STEEP taper on purpose — cheap low levels make the accessible bottom tier level fast, expensive high levels let the jesus pass land at ~60 on the curve alone (no cap wall) and keep the 60→99 endgame a real grind. Bigger = steeper. |
 | `refMobHp` | The "typical minion hp" anchor kills-per-level is stated against. Keep near the common wave minions' catalog hp. Scales the whole curve's height with `killsPerLevelBase`. |
 | `earlyRampStart` / `earlyRampLevels` | Onboarding ramp: level 1 costs this FRACTION of its curve value, lerping to full by `earlyRampLevels`. Makes the first ding land in a handful of kills to show off the level-up. |
 | `maxLevel` | The Diablo-style cap (99). At the cap XP stops banking levels (bar pins full) — the endgame becomes the gear hunt. Enforced in `grantXp` (loot.ts). |
@@ -90,10 +90,14 @@ and gear carries the endgame.
 (config `XP_CAP`, `xpLevelCap`/`xpCapMultiplier` in leveling.ts, applied in
 `grantXp`): XP halves per level across the last `fadeLevels` under the cap
 and stops AT it, so re-running an outgrown map farms loot, never levels. The
-bands are sized a few levels above where a first campaign pass naturally ends
-per rung (`--by-level` below is the check) — when retuning the curve, re-size
-the bands too, and verify with the simulator that first visits forfeit ~no XP
-(`xpLost` in the `simulate-run` summary).
+bands are sized a few levels above where a first pass naturally ends per stage
+(`--by-level` below is the check) — when retuning the curve, re-size the bands
+too, and verify with the simulator that first visits forfeit ~no XP (`xpLost` in
+the `simulate-run` summary). **The three bottom lanes (easy/medium/hard) are
+parallel entry points over the same level band, so they SHARE one cap band** —
+the difference between them is help, not pace. That shared cap also BOUNDS the
+completionist who replays all three bottom lanes to roughly the same level
+entering nightmare as someone who played just one (`--full` shows it).
 
 ## Workflow
 
@@ -105,8 +109,10 @@ the bands too, and verify with the simulator that first visits forfeit ~no XP
    node scripts/leveling-curve.mjs --difficulty medium --kills-per-hour 2000
    node scripts/leveling-curve.mjs --difficulty easy --to 20   # early game
    node scripts/leveling-curve.mjs --luck 20                   # more arrows
-   node scripts/leveling-curve.mjs --campaign                  # full playthrough
-   node scripts/leveling-curve.mjs --by-level                  # per (diff × level)
+   node scripts/leveling-curve.mjs --campaign                  # critical path
+   node scripts/leveling-curve.mjs --by-level                  # per (stage × level)
+   node scripts/leveling-curve.mjs --by-level --start hard     # a different lane
+   node scripts/leveling-curve.mjs --by-level --full           # completionist
    ```
    The default table reads the live `LEVELING`/`MENACE`/`LOOT` config and prints,
    per level: `xpToNext`, `kills/lvl` (kill XP only), `w/arrows` (the same with
@@ -114,15 +120,20 @@ the bands too, and verify with the simulator that first visits forfeit ~no XP
    the cap. `levels/day` and the cumulative columns ride the `w/arrows` count —
    the realistic pace — while `kills/lvl` stays as the kill-XP-only baseline; the
    gap between them IS the arrows' contribution (`--luck N` grows it, JESUS
-   collapses it to zero). `--campaign` instead simulates clearing every level at
-   every difficulty in order (arrows included) and reports the level after each
-   rung; `--by-level` prints the same run but with the hero's level at the START
-   of every (difficulty × level) clear — the view for sizing a level-locked gate
-   (e.g. a world-drop `minPlayerLevel`) above where a level is first reached — the check for the
-   **"all difficulties → ~level 60"** target (`--clear-share` overrides the
-   assumed roster fraction killed per clear, default 0.5). `killsPerLevelBase`
+   collapses it to zero). `--campaign` instead simulates clearing every level along
+   the CRITICAL PATH (arrows included, and the per-map XP caps applied) and
+   reports the level after each stage; `--by-level` prints the same run but with
+   the hero's level at the START of every (stage × level) clear — the view for
+   sizing a level-locked gate (e.g. a world-drop `minPlayerLevel`) above where a
+   level is first reached. The critical path is the SHORTEST route under the
+   parallel-lane ladder: **one bottom lane → nightmare → jesus** (three
+   playthroughs, not five); `--start <easy|medium|hard>` picks the bottom lane
+   (default medium — the three share caps so they land within a level of each
+   other), and `--full` walks all five rungs for the completionist. This is the
+   check for the **critical path → ~level 60** target (`--clear-share` overrides
+   the assumed roster fraction killed per clear, default 0.5). `killsPerLevelBase`
    is the height knob that moves that number; `killsPerLevelGrowth` the taper.
-   Adjust and re-run until both the table and the campaign land where you want.
+   Adjust and re-run until the table and every `--start` lane land where you want.
 3. **Measure the real kill rate** — the calculator's kills/hour is an
    ASSUMPTION. Get the real number headlessly from the campaign simulator
    (see the `simulate-run` skill — the summary table's `k/min` column ×60 is
@@ -158,10 +169,13 @@ the bands too, and verify with the simulator that first visits forfeit ~no XP
 - **Gear stays relevant** — the pain that motivated the slow curve was
   out-leveling loot in a day. Early levels should NOT blow past whole gear tiers
   in minutes; the taper is what keeps a find useful.
-- **Campaign lands ~level 60** — playing through all five difficulties'
-  campaigns should leave the hero around level 60 (`--campaign`), so the
-  remaining ~39 levels to the cap are the grind endgame (difficulty replay +
-  boss runs), not the story.
+- **Critical path lands ~level 60** — the 3-stage climb (one bottom lane →
+  nightmare → jesus) should leave the hero around level 60 (`--campaign`), so the
+  remaining ~39 levels to the cap are the grind endgame (bottom-lane / difficulty
+  replay + boss runs), not the story. Check every bottom lane (`--start easy`,
+  `--start hard`) lands within a level of medium's, and that `--full` (all three
+  bottom lanes) doesn't over-level past it — the shared cap band is what holds
+  both true.
 - **A real climb to the cap** — reaching 99 is a weeks-of-play grind, not a day.
   The calculator's "to L99" total is the sanity check.
 

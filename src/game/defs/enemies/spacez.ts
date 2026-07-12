@@ -9,6 +9,21 @@
 
 import type { EnemyDef } from "./types.ts";
 
+// MUSKRAT's BOTTOM-TIER pool: the former easy/medium/hard drops merged. The
+// three starting lanes (easy/medium/hard) are parallel entry points over the
+// same level band, so they share one pool — whichever lane you play can drop
+// any of them. The per-drop `mlvl / ilvl` scaling (see `maybeDropBossUnique`)
+// self-selects: the low-ilvl pieces drop as you first reach him, the higher-ilvl
+// ones as you out-level the run or return. nightmare/jesus keep their own tier.
+const MUSKRAT_EARLY = [
+  "muskrats_tooth",
+  "the_hoard",
+  "whiskerweave_hood",
+  "regolith_rucksack",
+  "vermin_pelt",
+  "foremans_duffel",
+];
+
 export const SPACEZ_ENEMIES: Record<string, EnemyDef> = {
   // Staff speeds sit far below the player's walk — same rule as the moon:
   // the crowd is a tide to route around, not a footrace. Guards are the
@@ -600,11 +615,12 @@ export const SPACEZ_ENEMIES: Record<string, EnemyDef> = {
       medkits: 2,
       tierBonus: 0.3,
     },
-    // One gear piece + one bag per rung — the vermin king's hoard (defs/uniques.ts).
+    // Bottom tier shares one merged pool (MUSKRAT_EARLY); nightmare/jesus keep
+    // their own gear piece + bag — the vermin king's hoard (defs/uniques.ts).
     uniquesByDifficulty: {
-      easy: ["muskrats_tooth", "the_hoard"],
-      medium: ["whiskerweave_hood", "regolith_rucksack"],
-      hard: ["vermin_pelt", "foremans_duffel"],
+      easy: MUSKRAT_EARLY,
+      medium: MUSKRAT_EARLY,
+      hard: MUSKRAT_EARLY,
       nightmare: ["burrow_greaves", "voidcache"],
       jesus: ["gnawed_sabatons", "adas_satchel"],
     },

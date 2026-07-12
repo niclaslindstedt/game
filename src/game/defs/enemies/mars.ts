@@ -11,6 +11,15 @@
 
 import type { EnemyDef } from "./types.ts";
 
+// ELON MOSQUE's (Mars) BOTTOM-TIER pool: the former easy/medium/hard drops
+// merged (the three parallel starting lanes share one pool; `mlvl / ilvl`
+// self-selects level-appropriate pieces). nightmare/jesus keep their own.
+const ELON_MARS_EARLY = [
+  "gilded_carapace",
+  "lawless_stride",
+  "ovation_striders",
+];
+
 export const MARS_ENEMIES: Record<string, EnemyDef> = {
   // Minion speeds sit below the player's walk, same standing rule as every
   // level: the colony's machines are a tide to route around, not a footrace.
@@ -494,9 +503,9 @@ export const MARS_ENEMIES: Record<string, EnemyDef> = {
     },
     // The mogul's gilded loot — one gear piece per rung (defs/uniques.ts).
     uniquesByDifficulty: {
-      easy: ["gilded_carapace"],
-      medium: ["lawless_stride"],
-      hard: ["ovation_striders"],
+      easy: ELON_MARS_EARLY,
+      medium: ELON_MARS_EARLY,
+      hard: ELON_MARS_EARLY,
       nightmare: ["wrathflame"],
       jesus: ["the_signal_crown"],
     },

@@ -7,6 +7,11 @@
 
 import type { EnemyDef } from "./types.ts";
 
+// ARMSTRONG's BOTTOM-TIER pool: the former easy/medium/hard drops merged (the
+// three parallel starting lanes share one pool; the `mlvl / ilvl` drop scaling
+// self-selects level-appropriate pieces). nightmare/jesus keep their own.
+const ARMSTRONG_EARLY = ["the_long_vigil", "palegrave", "sentinels_greaves"];
+
 export const MOON_ENEMIES: Record<string, EnemyDef> = {
   // Minion speeds sit far below the player's walk: the horde is a slow,
   // inevitable tide the player reads and routes around, not a footrace.
@@ -476,9 +481,9 @@ export const MOON_ENEMIES: Record<string, EnemyDef> = {
     },
     // The dead sentinel's watch — one gear piece per rung (defs/uniques.ts).
     uniquesByDifficulty: {
-      easy: ["the_long_vigil"],
-      medium: ["palegrave"],
-      hard: ["sentinels_greaves"],
+      easy: ARMSTRONG_EARLY,
+      medium: ARMSTRONG_EARLY,
+      hard: ARMSTRONG_EARLY,
       nightmare: ["marewalkers"],
       jesus: ["the_fallen_standard"],
     },

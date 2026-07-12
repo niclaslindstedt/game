@@ -23,6 +23,15 @@ import {
 function killAt(state: GameState, atKills: number): void {
   equipBlaster(state); // finish the stray minion from range
   state.items = [];
+  // Isolate the early-drop cadence (kill-count driven) from the leveling curve:
+  // freeze XP so an opening ding can't flip the phase to "levelup" mid-helper
+  // and stall the stray-minion kill this relies on. The fast opening curve dings
+  // within a handful of kills, which is exactly this window.
+  state.phase = "playing";
+  state.player.pendingStatPoints = 0;
+  state.levelUpFxMs = 0;
+  state.player.xp = 0;
+  state.player.xpToNext = Number.MAX_SAFE_INTEGER;
   state.stats.kills = atKills - 1;
   state.enemies.push(
     makeEnemy({ pos: { x: state.player.pos.x + 60, y: state.player.pos.y } }),

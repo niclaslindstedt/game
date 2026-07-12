@@ -46,9 +46,13 @@ const root = path.join(here, "..");
 const { LEVELING, LOOT, STATS } = await import(
   path.join(root, "src/game/config.ts")
 );
-const { xpToLevelUp, arrowXpShareAt, arrowColdXp } = await import(
-  path.join(root, "src/game/leveling.ts")
-);
+const {
+  xpToLevelUp,
+  arrowXpShareAt,
+  arrowColdXp,
+  xpLevelCap,
+  xpCapMultiplier,
+} = await import(path.join(root, "src/game/leveling.ts"));
 const { mobHpScaleFor } = await import(path.join(root, "src/game/menace.ts"));
 const { DIFFICULTY_ORDER, meetsMinDifficulty, difficultyDef } = await import(
   path.join(root, "src/game/defs/difficulties.ts")
@@ -85,10 +89,23 @@ const arrowDropProb = (diff) => {
   return dropChance * (1 - LOOT.nukeShare) * LOOT.arrowShare * d.arrowDropMult;
 };
 // `--campaign` models a full story playthrough instead of the per-level table:
-// clearing every level at every difficulty in order, to check where the
+// clearing every level along the CRITICAL PATH in order, to check where the
 // campaign leaves the hero (design target: ~level 60, leaving the rest as the
 // grind-to-cap endgame). `--clear-share` overrides the assumed fraction of a
 // level's roster actually killed per clear (default: the engine's ARRIVAL one).
+//
+// The critical path is the SHORTEST route to the cap under the parallel-lane
+// ladder: one bottom lane (the three — easy/medium/hard — share XP caps and only
+// differ in how much help they give, so `medium` is representative) → nightmare
+// → jesus. Reaching the cap costs THREE playthroughs, not five. `--full` walks
+// all five rungs in DIFFICULTY_ORDER instead (the completionist who replays
+// every bottom lane), for comparison.
+// `--start <easy|medium|hard>` picks which bottom lane the critical path runs
+// through (default medium). The three share XP caps but differ in mob count,
+// level offset, and hp, so it's worth checking each lands the tier consistently.
+const startLane = opt("start", "medium");
+const CRITICAL_PATH = [startLane, "nightmare", "jesus"];
+const PLAYTHROUGH = args.includes("--full") ? DIFFICULTY_ORDER : CRITICAL_PATH;
 const campaign = args.includes("--campaign");
 // `--by-level` is `--campaign` with the intermediate detail: the hero's level
 // at the START of every (difficulty × level) clear, so you can see exactly what
@@ -160,7 +177,7 @@ if (campaign || byLevel) {
         "-> end",
     );
   }
-  for (const diff of DIFFICULTY_ORDER) {
+  for (const diff of PLAYTHROUGH) {
     const starts = [];
     for (const id of LEVEL_ORDER) {
       starts.push(level); // the hero's level as this level's clear BEGINS
@@ -181,7 +198,12 @@ if (campaign || byLevel) {
           ? arrowColdXp(level)
           : arrowXpShareAt(level) * xpToLevelUp(level);
       const arrowXp = kills * arrowDropProb(diff) * arrowPerDrop;
-      xp += killXp + arrowXp;
+      // Apply the per-map XP cap the same way grantXp does: the map pays full XP
+      // until the hero nears its cap, then the grant fades (halving per level
+      // over fadeLevels) to zero AT the cap. Approximated at the clear's START
+      // level — good enough to see where each stage's cap halts the climb.
+      const capMult = xpCapMultiplier(level, xpLevelCap(id, diff));
+      xp += (killXp + arrowXp) * capMult;
       advance();
     }
     if (byLevel) {
@@ -196,7 +218,7 @@ if (campaign || byLevel) {
     }
   }
   console.log(
-    `\nafter all difficulties: lvl ${level}  (then ${LEVELING.maxLevel - level} levels of grind to the cap)\n`,
+    `\nafter the ${PLAYTHROUGH.join(" → ")} path: lvl ${level}  (then ${LEVELING.maxLevel - level} levels of grind to the cap)\n`,
   );
   process.exit(0);
 }

@@ -353,17 +353,24 @@ export const LEVELING = {
    *
    * The base is tuned WITH the golden-arrow faucet counted (arrows are a second
    * XP source on top of kills — see LEVELING.arrowXpShare and the calculator's
-   * `w/arrows` column): a full campaign across all five difficulties lands the
-   * hero at level 60 (`node scripts/leveling-curve.mjs --campaign`), leaving
-   * the rest as the grind-to-cap endgame. The per-rung ends the whole gate
-   * family is sized against are easy 19 / medium 32 / hard 43 / nightmare 53 /
-   * jesus 60 (`--by-level` prints the per-map landings — XP_CAP bands, the
-   * WORLD_DROP gates, and every level's arrowCapByDifficulty are all read off
-   * that table). Whenever this base or the roster moves, re-run both views and
-   * re-read the gates; don't tune the base by feel.
+   * `w/arrows` column): the CRITICAL PATH — one bottom lane (easy/medium/hard,
+   * the three are parallel entry points that share XP caps) → nightmare → jesus,
+   * three playthroughs, not five — lands the hero at level 60
+   * (`node scripts/leveling-curve.mjs --campaign`), leaving the rest as the
+   * grind-to-cap endgame. The bottom lane leaves the hero ~29, nightmare ~49,
+   * jesus 60; per-map first-pass landings are easy/medium/hard reached at
+   * ~1/7/12/17/23, nightmare ~29/33/37/41/44, jesus ~49/51/52/55/57
+   * (`--by-level` prints them — XP_CAP bands, the WORLD_DROP gates, and every
+   * level's arrowCapByDifficulty are all read off that table; `--start <lane>`
+   * checks each bottom lane, `--full` the completionist who replays all three).
+   * The growth is steeper than a flat curve on purpose: cheap low levels make
+   * the accessible bottom tier level FAST, while expensive high levels let the
+   * jesus pass land at 60 without the cap having to wall it, preserving the
+   * jesus last-map endgame grind to the cap. Whenever this base/growth or the
+   * roster moves, re-run both views and re-read the gates; don't tune by feel.
    */
-  killsPerLevelBase: 180,
-  killsPerLevelGrowth: 1.02,
+  killsPerLevelBase: 60,
+  killsPerLevelGrowth: 1.035,
   /**
    * Onboarding ramp: the opening levels cost only a FRACTION of their curve
    * value so the first ding lands in a handful of kills — the level-up, the
@@ -458,18 +465,22 @@ export const LEVELING = {
  * past the cap — the Diablo rule that outleveling a zone retires its XP, not
  * its drops. Each rung lists the cap on its FIRST and LAST story level;
  * intermediate maps interpolate linearly. Sized a few levels above where a
- * first campaign pass naturally lands (easy ends 19, medium 32, hard 43,
- * nightmare 53, jesus 60 — read off `leveling-curve.mjs --by-level`), so the
- * story never starves; only the rerun grind hits the wall. JESUS's last map
- * runs to the global `LEVELING.maxLevel` — the endgame grind lives there.
+ * first pass naturally lands (bottom lane ends ~29, nightmare ~49, jesus 60 —
+ * read off `leveling-curve.mjs --by-level`), so the story never starves; only
+ * the rerun grind hits the wall. The three bottom lanes (easy/medium/hard) are
+ * PARALLEL entry points over the same level band, so they SHARE one cap band —
+ * the difference between them is help, not pace; the shared cap also bounds the
+ * completionist who replays all three (`--full`) to the same ~34 entering
+ * nightmare. JESUS's last map runs to the global `LEVELING.maxLevel` — the
+ * endgame grind lives there.
  */
 export const XP_CAP = {
   capByDifficulty: {
-    easy: { first: 10, last: 22 },
-    medium: { first: 26, last: 36 },
-    hard: { first: 40, last: 48 },
-    nightmare: { first: 50, last: 57 },
-    jesus: { first: 62, last: 99 },
+    easy: { first: 12, last: 33 },
+    medium: { first: 12, last: 33 },
+    hard: { first: 12, last: 33 },
+    nightmare: { first: 35, last: 52 },
+    jesus: { first: 52, last: 99 },
   } as Record<Difficulty, { first: number; last: number }>,
   /**
    * XP starts diminishing this many levels UNDER the cap: the grant is halved
@@ -572,14 +583,15 @@ export const WORLD_DROP = {
   },
   /** The MINION-only return-farm gate: trash relics stay shut until the hero
    * reaches this level ON THAT RUNG — sized a few levels above where a first
-   * campaign pass of the difficulty ends (easy 19, medium 32, hard 43,
-   * nightmare 53, jesus 60). ELITES and BOSSES ignore this gate (they drop
-   * during the campaign); it holds back only the minion lottery. */
+   * pass of the difficulty ends (bottom lane ~29, nightmare ~49, jesus 60). The
+   * three bottom lanes are parallel entry points over the same level band, so
+   * they share one gate. ELITES and BOSSES ignore this gate (they drop during
+   * the campaign); it holds back only the minion lottery. */
   minPlayerLevel: {
-    easy: 22,
-    medium: 36,
-    hard: 46,
-    nightmare: 57,
+    easy: 30,
+    medium: 30,
+    hard: 30,
+    nightmare: 50,
     jesus: 60,
   } as Record<Difficulty, number>,
 } as const;

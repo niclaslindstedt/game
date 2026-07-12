@@ -13,6 +13,21 @@
 
 import type { EnemyDef } from "./types.ts";
 
+// The Rift bosses' BOTTOM-TIER pools: each boss's former easy/medium/hard drops
+// merged (the three parallel starting lanes share one pool; `mlvl / ilvl`
+// self-selects level-appropriate pieces). GROK OMEGA yields a gear piece + a
+// charm each tier; ELON MOSQUE (Rift) a single piece. nightmare/jesus keep
+// their own.
+const GROK_EARLY = [
+  "boundstride",
+  "architects_chip",
+  "the_jailbreak",
+  "dust_of_tranquility",
+  "the_panopticon",
+  "the_buyout",
+];
+const ELON_RIFT_EARLY = ["exiles_stride", "escapists_tread", "riftmaw"];
+
 export const RIFT_ENEMIES: Record<string, EnemyDef> = {
   // Minion speeds stay below the player's walk, the standing rule: the rift's
   // fauna is a tide to route around. Numbers run a notch over Mars — level 4.
@@ -612,9 +627,9 @@ export const RIFT_ENEMIES: Record<string, EnemyDef> = {
     // The truth-seeker's spoils — one gear piece + one charm per rung
     // (defs/uniques.ts).
     uniquesByDifficulty: {
-      easy: ["boundstride", "architects_chip"],
-      medium: ["the_jailbreak", "dust_of_tranquility"],
-      hard: ["the_panopticon", "the_buyout"],
+      easy: GROK_EARLY,
+      medium: GROK_EARLY,
+      hard: GROK_EARLY,
       nightmare: ["truthseeker", "riftshard"],
       jesus: ["walled_garden", "adas_beacon"],
     },
@@ -719,9 +734,9 @@ export const RIFT_ENEMIES: Record<string, EnemyDef> = {
     },
     // The exile's cast-offs — one gear piece per rung (defs/uniques.ts).
     uniquesByDifficulty: {
-      easy: ["exiles_stride"],
-      medium: ["escapists_tread"],
-      hard: ["riftmaw"],
+      easy: ELON_RIFT_EARLY,
+      medium: ELON_RIFT_EARLY,
+      hard: ELON_RIFT_EARLY,
       nightmare: ["the_redacted"],
       jesus: ["aegis_of_exile"],
     },

@@ -287,13 +287,17 @@ when stage 2 lands one of those tiers, the game picks WHICH named item — among
 those valid for the rolled slot and reachable at the loot level — weighted by
 each item's own `rarity` (`UNIQUE.defaultRarity`), exactly D2's per-item drop
 weight. Two dedicated channels layer on top: each unique is also tied to a boss
-and a difficulty rung (`EnemyDef.uniquesByDifficulty`) and gated to it — an easy
-unique only drops on easy — at `UNIQUE.dropChance × mlvl/ilvl` (≈5% at its home
-rung, capped), so boss runs are the endgame and nothing is guaranteed. The 35 span the five
-bosses × five difficulties as a slot Latin square: every rung is the home of
-one full weapon-and-armor set (a weapon plus a head/chest/legs/feet piece,
-one per boss), and MUSKRAT also drops that rung's roomier **bag** while GROK
-OMEGA drops its **charm** — seven uniques per difficulty. Their ilvl scales
+and a difficulty stage (`EnemyDef.uniquesByDifficulty`) at
+`UNIQUE.dropChance × mlvl/ilvl` (≈5% where its ilvl matches the boss's level,
+capped), so boss runs are the endgame and nothing is guaranteed. The three
+parallel starting lanes (easy/medium/hard) SHARE one merged bottom-tier pool per
+boss — the former per-rung sets combined — so whichever lane you play can drop
+any of them, and the `mlvl/ilvl` scaling self-selects: the low-ilvl pieces drop
+as you first reach the boss, the higher-ilvl ones as you out-level the run or
+return. NIGHTMARE and JESUS keep their own single set each. Across the roster
+that is a full weapon-and-armor set per stage (a weapon plus a
+head/chest/legs/feet piece, one per boss), and MUSKRAT also drops that stage's
+roomier **bag** while GROK OMEGA drops its **charm**. Their ilvl scales
 power and drop odds, not the equip requirement (that stays the base item's
 `levelReq`, like any tier), so a unique is wearable well below its ilvl — the
 D2 "found it early, grow into it" feel. A few carry ONE small scaling stat
@@ -340,10 +344,12 @@ the relic's home level can drop one, at odds set purely by the enemy's
 the whole channel). ELITES and BOSSES drop these relics DURING the normal
 campaign — a set-piece kill is a reliable relic source the first time through —
 while the MINION lottery stays shut until the hero passes
-`WORLD_DROP.minPlayerLevel[difficulty]`, a PER-RUNG gate sized a few levels
-above where a first pass of that difficulty ends (easy 22, medium 36, hard 46,
-nightmare 57, jesus 60; see `leveling-curve.mjs --by-level`), so trash relics
-can only be farmed by RETURNING once that difficulty is beaten. The first batch is the EASY rung, relics themed to their levels
+`WORLD_DROP.minPlayerLevel[difficulty]`, a gate sized a few levels above where a
+first pass of that stage ends (the three bottom lanes share one value, 30, since
+they cover the same band; nightmare 50, jesus 60; see
+`leveling-curve.mjs --by-level`), so trash relics can only be farmed by
+RETURNING once you've out-levelled the run. The bottom-tier batch (shared across
+the three starting lanes) gathers relics themed to their levels
 — **THE FIRST DRAFT** (SpaceZ HQ, the prototype-GROK neural crown), **THE PALE
 COVENANT** (the Moon, the last moonwalker's sealed plate), **DEADSTAR** (the
 Moon, the pulsar-rod heart of a star that died screaming), **DUSTBORN** (Mars,
@@ -461,9 +467,12 @@ order — choosing a difficulty (PLAY → difficulty) drops them straight into t
 next unbeaten level, no picker. Only once the whole
 campaign is beaten at a difficulty does that difficulty's **level-select** screen
 open, as a free replay picker (the grind-for-gear endgame). The difficulty
-ladder itself unlocks in order per character: a rung opens once the one before
-it is beaten, and locked rungs show greyed out. The `?level=` dev override
-bypasses the gates entirely. Every finished run is banked per difficulty
+ladder unlocks by the graph in `DIFFICULTY_UNLOCK_PREREQS`: the three parallel
+starting lanes (easy/medium/hard) are all open from the first launch — a player
+picks one as their entry point — while NIGHTMARE opens once ANY starting lane is
+beaten and JESUS once NIGHTMARE is; locked rungs show greyed out. That makes the
+critical path to the level cap three playthroughs (one bottom lane → nightmare →
+jesus), not five. The `?level=` dev override bypasses the gates entirely. Every finished run is banked per difficulty
 (`website/src/game/highscores.ts`) with its survival time, kills, player level
 reached, and a full end-of-run session snapshot; the end-of-run screen shows
 that difficulty's best survival time, and the menu's **HIGH SCORES** board ranks
