@@ -548,7 +548,12 @@ export const EASTWORLD: LevelDef = {
       // The JESUS rung's park haul — the ruling revolver, the horizon rifle,
       // and three LEGENDARIES: KINGSBANE (never misses, bursts on hit), THE
       // LONG SILENCE (kills detonate), WINDGRAVE (the wind's own spurs).
-      jesus: ["the_verdict", "horizons_end"],
+      jesus: [
+        "the_verdict",
+        "horizons_end",
+        "the_last_ante",
+        "the_kings_ransom",
+      ],
     },
     // Level a normal run reaches per rung (`leveling-curve.mjs --by-level`) —
     // the campaign's FINAL map, so these are each difficulty's end level; past

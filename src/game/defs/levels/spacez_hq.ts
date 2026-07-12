@@ -413,7 +413,13 @@ export const SPACEZ_HQ: LevelDef = {
       // composite) — the nightmare rung's HQ relics.
       nightmare: ["stormlash", "falconmail"],
       // LIGHTBINDER, STARSIGHT, THE ANVIL — the JESUS rung's lab relics.
-      jesus: ["lightbinder", "starsight", "the_anvil"],
+      jesus: [
+        "lightbinder",
+        "starsight",
+        "the_anvil",
+        "the_last_word",
+        "the_severance",
+      ],
     },
     // The level a normal run of the campaign's OPENING map leaves the hero at
     // per rung (from `leveling-curve.mjs --by-level`) — past it golden arrows

@@ -835,4 +835,210 @@ export const WORLD_UNIQUES: UniqueDef[] = [
     ],
     lore: "A HEART THAT NEVER COOLED. IT BEATS IN FIRE, FOR WHOEVER CARRIES IT.",
   },
+
+  // ── THE 60→99 ENDGAME UNIQUES ────────────────────────────────────────────
+  // Twelve relics that fill the ilvl 80–99 chase window between the campaign's
+  // last uniques and the level-99 ARTIFACT roster — weighted to the slots the
+  // endgame left empty (charm & bag had NO drop above ilvl 53/49; head/legs/
+  // feet were thin). Wired onto the JESUS rungs so they farm in the Rift → the
+  // Bunker loop. ilvls are the computed values (weapon-ilvl.mjs); trinkets gate
+  // low by design (charms carry one scaling keeper + flat; bags run a big flat
+  // block off the req-1 base), landing a notch under the artifact trinkets.
+
+  // EASTWORLD — the bet the frontier's house could never cover.
+  {
+    id: "the_last_ante",
+    name: "THE LAST ANTE",
+    base: "crystal_orb",
+    slot: "charm",
+    ilvl: 86,
+    keeper: true,
+    bonuses: [
+      { kind: "statPct", stat: "luck", value: 0.02 },
+      { kind: "stat", stat: "luck", value: 18 },
+      { kind: "maxHp", value: 120 },
+      { kind: "crit", value: 0.06 },
+      { kind: "stat", stat: "stamina", value: 12 },
+      { kind: "stat", stat: "intelligence", value: 10 },
+    ],
+    lore: "EVERYTHING ON ONE CARD. THE HOUSE COULD NOT COVER THE CALL.",
+  },
+  // THE RIFT — the one place in all the noise that will not move.
+  {
+    id: "the_still_point",
+    name: "THE STILL POINT",
+    base: "grimoire",
+    slot: "charm",
+    ilvl: 91,
+    keeper: true,
+    bonuses: [
+      { kind: "statPct", stat: "intelligence", value: 0.02 },
+      { kind: "stat", stat: "intelligence", value: 20 },
+      { kind: "maxHp", value: 140 },
+      { kind: "crit", value: 0.06 },
+      { kind: "stat", stat: "stamina", value: 14 },
+      { kind: "stat", stat: "luck", value: 8 },
+    ],
+    lore: "EVERYTHING IN HERE DRIFTS. HOLD THIS, AND YOU DO NOT.",
+  },
+  // MARS — the red hour the terraformers dug down into and woke.
+  {
+    id: "the_ember_hour",
+    name: "THE EMBER HOUR",
+    base: "enchanted_ring",
+    slot: "charm",
+    ilvl: 96,
+    keeper: true,
+    bonuses: [
+      { kind: "statPct", stat: "strength", value: 0.02 },
+      { kind: "stat", stat: "strength", value: 20 },
+      { kind: "maxHp", value: 160 },
+      { kind: "crit", value: 0.06 },
+      { kind: "stat", stat: "stamina", value: 16 },
+      { kind: "stat", stat: "dexterity", value: 8 },
+    ],
+    lore: "THE HOUR THE RED WORLD BURNS HOTTEST. IT NEVER QUITE ENDS.",
+  },
+  // THE RIFT — the star that hangs fixed while every other falls.
+  {
+    id: "the_fixed_star",
+    name: "THE FIXED STAR",
+    base: "enchanted_ring",
+    slot: "charm",
+    ilvl: 99,
+    keeper: true,
+    bonuses: [
+      { kind: "statPct", stat: "luck", value: 0.02 },
+      { kind: "stat", stat: "luck", value: 26 },
+      { kind: "maxHp", value: 200 },
+      { kind: "crit", value: 0.08 },
+      { kind: "stat", stat: "intelligence", value: 18 },
+    ],
+    lore: "NIGHTFALL DROPS. STARFALL DROPS. THIS ONE NEVER HAS.",
+  },
+  // SPACEZ HQ — everything the machine ever owed you, collected at last.
+  {
+    id: "the_severance",
+    name: "THE SEVERANCE",
+    base: "bag",
+    slot: "bag",
+    ilvl: 95,
+    bagSlots: 4,
+    bonuses: [
+      { kind: "stat", stat: "luck", value: 16 },
+      { kind: "stat", stat: "stamina", value: 18 },
+      { kind: "maxHp", value: 210 },
+      { kind: "stat", stat: "intelligence", value: 14 },
+      { kind: "stat", stat: "strength", value: 14 },
+      { kind: "stat", stat: "dexterity", value: 12 },
+    ],
+    lore: "EVERYTHING THEY OWED THE ONES THEY LAID OFF. PAID OUT AT LAST.",
+  },
+  // MARS — the strike the whole dust bowl was dug looking for.
+  {
+    id: "the_motherlode",
+    name: "THE MOTHERLODE",
+    base: "bag",
+    slot: "bag",
+    ilvl: 79,
+    bagSlots: 5,
+    bonuses: [
+      { kind: "stat", stat: "strength", value: 16 },
+      { kind: "stat", stat: "stamina", value: 16 },
+      { kind: "maxHp", value: 170 },
+      { kind: "stat", stat: "luck", value: 14 },
+      { kind: "stat", stat: "dexterity", value: 12 },
+    ],
+    lore: "EVERY PROSPECTOR ON MARS DIED LOOKING FOR IT. YOU TRIPPED OVER IT.",
+  },
+  // EASTWORLD — enough to buy back a throne, with room to spare.
+  {
+    id: "the_kings_ransom",
+    name: "THE KING'S RANSOM",
+    base: "bag",
+    slot: "bag",
+    ilvl: 93,
+    bagSlots: 5,
+    bonuses: [
+      { kind: "stat", stat: "luck", value: 18 },
+      { kind: "stat", stat: "stamina", value: 16 },
+      { kind: "maxHp", value: 200 },
+      { kind: "stat", stat: "strength", value: 14 },
+      { kind: "stat", stat: "dexterity", value: 12 },
+      { kind: "stat", stat: "intelligence", value: 10 },
+    ],
+    lore: "ENOUGH TO BUY BACK A CROWN. THE CROWN WAS NEVER WORTH IT.",
+  },
+  // SPACEZ HQ — the CORE's final ruling, worn where thoughts are read.
+  {
+    id: "the_last_word",
+    name: "THE LAST WORD",
+    base: "cortex_visor",
+    slot: "head",
+    ilvl: 87,
+    bonuses: [
+      { kind: "stat", stat: "dexterity", value: 8 },
+      { kind: "maxHp", value: 60 },
+      { kind: "armor", value: 30 },
+      { kind: "crit", value: 0.04 },
+    ],
+    lore: "IT HAS ALREADY DECIDED WHAT YOU WERE GOING TO SAY.",
+  },
+  // MARS — the line the legion held, that nothing has yet crossed.
+  {
+    id: "the_bulwark",
+    name: "THE BULWARK",
+    base: "praetorian_cuirass",
+    slot: "chest",
+    ilvl: 92,
+    bonuses: [
+      { kind: "stat", stat: "strength", value: 8 },
+      { kind: "maxHp", value: 70 },
+      { kind: "armor", value: 45 },
+      { kind: "stat", stat: "speed", value: -2 },
+    ],
+    lore: "THE LINE HAS NOT BROKEN. IT HAS NOT EVEN BENT.",
+  },
+  // THE MOON — plate poured from the crust of a world that already died.
+  {
+    id: "the_worldshell",
+    name: "THE WORLDSHELL",
+    base: "paladin_exoplate",
+    slot: "chest",
+    ilvl: 94,
+    bonuses: [
+      { kind: "stat", stat: "stamina", value: 8 },
+      { kind: "maxHp", value: 70 },
+      { kind: "armor", value: 45 },
+    ],
+    lore: "A DEAD WORLD'S CRUST, CUT TO FIT A LIVING BACK.",
+  },
+  // THE MOON — greaves that outwalked the war they were forged for.
+  {
+    id: "the_long_march",
+    name: "THE LONG MARCH",
+    base: "exo_greaves",
+    slot: "legs",
+    ilvl: 89,
+    bonuses: [
+      { kind: "stat", stat: "stamina", value: 8 },
+      { kind: "stat", stat: "strength", value: 6 },
+      { kind: "armor", value: 20 },
+    ],
+    lore: "THEY HAVE WALKED FARTHER THAN THE WAR THAT MADE THEM.",
+  },
+  // THE RIFT — boots that land where no foot has ever fallen.
+  {
+    id: "the_far_shore",
+    name: "THE FAR SHORE",
+    base: "gilded_caligae",
+    slot: "feet",
+    ilvl: 88,
+    bonuses: [
+      { kind: "stat", stat: "dexterity", value: 6 },
+      { kind: "stat", stat: "stamina", value: 3 },
+      { kind: "armor", value: 8 },
+    ],
+    lore: "EVERY STEP LANDS SOMEWHERE THAT HAS NEVER HELD A FOOT.",
+  },
 ];

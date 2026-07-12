@@ -317,7 +317,14 @@ export const THE_RIFT: LevelDef = {
       // door, star-struck plate, and two LEGENDARIES: STARFALL (kills pull
       // the sky down) and EMBERHEART (the burning heart, forever fire for
       // any build).
-      jesus: ["nightfall", "maelstrom", "starforge_plate"],
+      jesus: [
+        "nightfall",
+        "maelstrom",
+        "starforge_plate",
+        "the_still_point",
+        "the_fixed_star",
+        "the_far_shore",
+      ],
     },
     // Level a normal run reaches per rung (`leveling-curve.mjs --by-level`) —
     // past it golden arrows go cold so a Rift replay can't over-level.
