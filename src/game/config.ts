@@ -104,6 +104,20 @@ export const WEAPON = {
    */
   aoeRealization: 0.5,
   /**
+   * The MELEE sibling of `aoeRealization` — the target count a cone / full
+   * sweep is credited in the auto-equip ranking (`weaponScore`), damped BELOW
+   * the budget-authoring `assumedTargets` (cone 4 / full 5). A sweep does
+   * reliably strike its arc in the close press, but crediting the full budget
+   * assumption let a light cone cleaver (per-hit damage a quarter of a
+   * single-target's, by design) out-rank a heavier weapon it loses to against
+   * anything but a packed line — so a low-damage baton would auto-equip over a
+   * genuinely stronger single-target starter on a paper tie. The ranking now
+   * credits these damped counts instead, still capped by the INT cleave
+   * (`maxMeleeTargets`). Tunes RANKING only; the budget assumption
+   * (`weaponAssumedTargets`, used by the balance scripts) is untouched.
+   */
+  meleeAoeRealized: { cone: 2.5, full: 3.5 },
+  /**
    * Global damage scale on every weapon's catalog `damage` — the single lever
    * for "how hard does any weapon hit", the damage counterpart to
    * `baseCooldownMult`. Applied in `weaponDamageFor` (the one source of truth

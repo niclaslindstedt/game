@@ -48,6 +48,7 @@ import {
   weaponCritMult,
   weaponDamageVariance,
   weaponDef,
+  weaponMeleeRealizedTargets,
   type AffixBracket,
   type AffixDef,
   equipmentBaseName,
@@ -1488,10 +1489,13 @@ export function weaponScore(state: GameState, weapon: Equipment): number {
   // ceiling — otherwise a spread weapon whose per-target damage is a quarter of
   // a single-target's (budget ÷ 4, by design) reads as an even trade and
   // auto-equip swaps away a reliable weapon for one that's horrible against any
-  // lone tough foe. Two kinds of AoE, realized differently:
+  // lone tough foe. Two kinds of AoE, both realized BELOW the budget count:
   //   • Melee: a sweep reliably strikes everything in its arc in the close
-  //     press of the horde, so it counts at the number INTELLIGENCE can cleave
-  //     (maxMeleeTargets) — a cone budgeted at 4 is worth 2 in untrained hands.
+  //     press of the horde, but crediting the full budget assumption (cone 4,
+  //     full 5) let a light cone cleaver out-rank a heavier single-target
+  //     weapon it loses to against a lone foe — so it counts at the damped
+  //     `WEAPON.meleeAoeRealized` (cone 2.5, full 3.5), still capped by the
+  //     number INTELLIGENCE can cleave (maxMeleeTargets).
   //   • Ranged: pellets/pierce/chain are CONDITIONAL — a shotgun's spread fans
   //     wide and, in the common sparse field, overlaps on one foe rather than
   //     splitting across four. Credit only a fraction of that potential beyond
@@ -1500,7 +1504,7 @@ export function weaponScore(state: GameState, weapon: Equipment): number {
   const assumed = weaponAssumedTargets(def);
   const targets = def.projectile
     ? 1 + (assumed - 1) * WEAPON.aoeRealization
-    : Math.min(assumed, maxMeleeTargets(state));
+    : Math.min(weaponMeleeRealizedTargets(def), maxMeleeTargets(state));
   return (
     ((weaponDamageFor(state, weapon) * 1000) /
       weaponCooldownFor(state, weapon)) *
