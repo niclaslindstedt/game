@@ -127,7 +127,7 @@ and something enormous haunts the old flag.
   one banks it into the **consumable dock** — a medkit slot and a stamina slot
   just above the powerups — stacked **five deep** (medkits stack per quality,
   from LIGHT up to SUPERIOR, and the slot shows the best grade you hold). **Tap
-  a slot** (or on desktop press **Z** to heal, **X** to drink — both
+  a slot** (or on desktop press **C** to heal, **X** to drink — both
   rebindable) to spend one when you need it; a medkit always uses your biggest
   heal first and neither is wasted at a full bar.
 - The horde drops **loot**, Diablo-style — medkits, gear, repair kits, stamina
