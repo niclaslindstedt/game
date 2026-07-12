@@ -47,7 +47,26 @@ git status && git diff --staged && git diff
 
 Understand what changed so you can write an accurate commit message and PR title.
 
-## Step 4: Stage & Commit
+## Step 4: Changelog Fragment
+
+**The changelog and version bump come from `.changes/unreleased/` fragments, not from commit messages or PR titles.** CI's `changeset` job fails any PR that changes something user-visible without one (files under `tests/`, `docs/`, `scripts/`, `.github/`, etc. are skip-listed; the `no-changelog` label opts a pure refactor/CI/docs PR out).
+
+If the branch changes user-visible behavior and no fragment exists yet, add one:
+
+```sh
+cat > .changes/unreleased/$(date +%s)-short-slug.md <<'EOF'
+---
+type: Added         # Added | Changed | Fixed | Removed | Security | Deprecated
+title: Short title  # optional — bolded at the head of the changelog bullet
+---
+
+One-sentence user-facing summary.
+EOF
+```
+
+At release time the fragments drive the semver bump: `breaking: true` → major; Added/Changed/Removed/Deprecated → minor; Fixed/Security → patch. Preview with `make bump`.
+
+## Step 5: Stage & Commit
 
 Stage relevant files (prefer specific paths over `git add -A` to avoid accidentally including secrets or build artifacts):
 
@@ -61,18 +80,7 @@ Write a conventional commit message:
 type(scope): summary in imperative mood
 ```
 
-**Changelog-eligible types** (pick the right one — it determines what appears in the changelog):
-
-| Type | Changelog section | Version bump |
-|------|-------------------|--------------|
-| `feat` | Added | minor |
-| `fix` | Fixed | patch |
-| `perf` | Performance | patch |
-| `docs` | Documentation | none |
-| `test` | Tests | none |
-| `refactor`, `chore`, `ci`, `build`, `style` | *(not included)* | none |
-
-For breaking changes use `feat!:` or `fix!:`, or add a `BREAKING CHANGE:` footer → triggers a major version bump.
+Common types: `feat`, `fix`, `perf`, `docs`, `test`, `refactor`, `chore`, `ci`, `build`, `style`. For breaking changes use `feat!:` or `fix!:`, or add a `BREAKING CHANGE:` footer (and set `breaking: true` in the changelog fragment).
 
 Scopes are lowercase, comma-separated if multiple: `feat(api,auth): ...`
 
@@ -80,13 +88,17 @@ Scopes are lowercase, comma-separated if multiple: `feat(api,auth): ...`
 git commit -m "type(scope): summary"
 ```
 
-## Step 5: Push
+## Step 6: Push
 
 ```sh
 git push -u origin HEAD
 ```
 
-## Step 6: Create or Update the PR
+## Step 7: Create or Update the PR
+
+> In remote/managed sessions the `gh` CLI may be unavailable — use the GitHub
+> MCP tools (`create_pull_request`, `update_pull_request`, `list_pull_requests`)
+> with the same titles and bodies instead.
 
 **Check if a PR already exists for this branch:**
 
@@ -96,7 +108,9 @@ gh pr view --json number,title,url 2>/dev/null
 
 ### If no PR exists — create one:
 
-The PR title **must** follow conventional commit format — it becomes the squashed commit message on `main` and is what drives the changelog. Match it to the overall intent of the branch, not just the latest commit.
+The PR title **must** follow conventional commit format — PRs are squash-merged, so it becomes the single commit on `main`. Match it to the overall intent of the branch, not just the latest commit.
+
+The body follows the repo's PR template (`.github/PULL_REQUEST_TEMPLATE.md`): **Summary**, **Linked issue**, **Test plan**, **Checklist**.
 
 ```sh
 gh pr create \
@@ -104,55 +118,35 @@ gh pr create \
   --body "$(cat <<'EOF'
 ## Summary
 
-<brief description of the changes and motivation>
+<1–3 sentences: why is this change being made?>
+
+## Linked issue
+
+<Closes #123, or "—">
 
 ## Test plan
 
-- [ ] `make build` passes
-- [ ] `make test` passes
-- [ ] `make lint` has zero warnings
-- [ ] `make fmt-check` applied
+- [ ] `make build && make test && make lint && make fmt-check` pass
+- [ ] <change-specific verification: playtest / sheet / screenshot as applicable>
 
 ## Checklist
 
-- [ ] Tests added/updated
-- [ ] Documentation updated (if user-facing behavior changed)
-- [ ] Commit messages follow conventional commit style
+- [ ] PR title follows Conventional Commits
+- [ ] Tests added or updated
+- [ ] Docs updated (`docs/`, README as applicable)
+- [ ] Changelog fragment added under `.changes/unreleased/` (or `no-changelog` label justified)
 EOF
 )"
 ```
 
 ### If a PR already exists — update it:
 
-Re-evaluate the PR title and description to reflect the **combined** scope of all commits on the branch, then update:
-
-```sh
-gh pr edit \
-  --title "type(scope): updated summary" \
-  --body "$(cat <<'EOF'
-## Summary
-
-<updated description covering all changes>
-
-## Test plan
-
-- [ ] `make build` passes
-- [ ] `make test` passes
-- [ ] `make lint` has zero warnings
-- [ ] `make fmt-check` applied
-
-## Checklist
-
-- [ ] Tests added/updated
-- [ ] Documentation updated (if user-facing behavior changed)
-- [ ] Commit messages follow conventional commit style
-EOF
-)"
-```
+Re-evaluate the PR title and description to reflect the **combined** scope of all commits on the branch, then `gh pr edit --title ... --body ...` with the same template.
 
 ## Key Reminders
 
-- **PR title = squashed commit on main = changelog entry.** Choose the type and summary carefully.
-- The individual commits within the branch don't appear in the changelog — only the PR title does.
+- **PR title = squashed commit on main.** Choose the type and summary carefully; individual branch commits disappear at merge.
+- **The changelog rides `.changes/unreleased/` fragments** — not the PR title. No user-visible change ships without one (Step 4).
 - If the branch touches multiple scopes, use comma-separated scopes: `feat(api,auth): ...`
 - Never skip hooks (`--no-verify`) — fix the underlying issue instead.
+- Per CLAUDE.md: once the PR is open, write out its URL and a short summary, then stop — don't subscribe to PR activity, poll CI, or schedule check-ins.

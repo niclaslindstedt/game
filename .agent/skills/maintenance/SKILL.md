@@ -25,11 +25,12 @@ The registry is the single source of truth for which sync skills exist in this r
 | `update-docs`     | `docs/*.md` vs. source of truth                                                                             | §11.1                     | 2 |
 | `update-readme`   | `README.md` vs. current public surface                                                                      | §3                        | 3 |
 | `update-prompts`  | `prompts/**` vs. code and embedded sources                                                                  | §13.5                     | 4 |
+| `update-website`  | Source-derived content under `website/` (SEO surfaces, extracted metadata) vs. README/docs/config           | §11.2                     | 5 — last: it reads files the docs/readme skills may rewrite |
 
 Run order matters:
 
 - `sync-oss-spec` runs **first** so every downstream skill sees the current spec — it may overwrite the local `OSS_SPEC.md` with the upstream copy, which downstream skills then read.
-- The per-artifact skills (`update-docs`, `update-readme`, `update-prompts`, and any `update-website` / `update-manpages` / other skills this project adds) run afterwards in dependency order: a skill that reads files another skill rewrites must run *after* that other skill.
+- The per-artifact skills (`update-docs`, `update-readme`, `update-prompts`, `update-website`, and any other `update-*` skill this project adds) run afterwards in dependency order: a skill that reads files another skill rewrites must run *after* that other skill — `update-website` runs last because the website extracts content from README/docs.
 
 ## Discovery process
 

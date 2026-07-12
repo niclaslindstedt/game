@@ -115,10 +115,15 @@ fi
        | head -1 | grep -q . || echo "MISSING: central output module (§19.4)"
    fi
 
-   # §20.2 — every tests/*.<ext> stem must end with _test(s) or Test(s)
+   # §20.2 — every test file's stem must end with _test(s) or Test(s).
+   # Shared non-test helper modules (tests/helpers.ts, tests/engine/fixtures.ts
+   # — documented in AGENTS.md "Test conventions") are imports, not test files,
+   # and are exempt. Nested suite dirs (tests/engine/, tests/content/) are
+   # covered too.
    if [ -d tests ]; then
-     find tests -maxdepth 1 -type f \
+     find tests -type f -name '*.ts' \
        | grep -vE '(_test(s)?|Test(s)?)\.[^/]+$' \
+       | grep -vE '/(helpers|fixtures)\.[^/]+$' \
        | sed 's/^/BAD-TEST-NAME: /'
    fi
 

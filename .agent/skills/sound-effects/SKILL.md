@@ -20,7 +20,7 @@ unmistakably chip.
 | `website/src/lib/synth.ts` | The instrument: `tone()` (oscillator + glide + attack/decay + detune pair + vibrato + filter + pan + echo send) and `noise()` (fading white noise + filter + pan + echo). One shared SNES-style echo bus per context. Generic — extraction candidate. |
 | `website/src/lib/chiptune.ts` | The music sequencer: a track = named **instruments** (patches) + named **patterns** (voice → note tokens) + an **order** arrangement list, scheduled lookahead-style on the synth. Generic — extraction candidate. |
 | `website/src/game/sfx/` | The sound design, organized by domain: `ui.ts` (menus), `combat.ts`, `world.ts` (movement/doors/dialogue), `pickups.ts`, `jingles.ts`, dispatched from `index.ts`. This is where SFX work happens. |
-| `website/src/game/music/` | The soundtrack: one score file per track (`title.ts`, `level.ts`) holding **all** of that track's instruments and notes; `index.ts` owns the single player and the play/stop API. |
+| `website/src/game/music/` | The soundtrack: one score file per track (`title.ts`, `level.ts`, and per-level themes like `mars.ts`/`rift.ts`/`spacez.ts`) holding **all** of that track's instruments and notes; `index.ts` owns the single player, the play/stop API, and the `LEVEL_TRACKS` map a `LevelDef.music` id keys into. |
 
 The engine emits `GameEvent`s from `step()`; `playEventSounds` translates
 them. A new sound therefore starts as an engine event (see the

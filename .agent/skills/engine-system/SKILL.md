@@ -15,16 +15,16 @@ what makes every game rule unit-testable in plain Node.
 | Piece | File |
 | --- | --- |
 | GLOBAL tuning (player, XP curve, stat effects, loot rules) | `src/game/config.ts` — cross-level knobs only |
-| A new level (geometry, gravity, intro, spawns, objective, loot table) | `src/game/defs/levels.ts` — one `LevelDef` entry |
-| A new monster (stats, AI radii, role, guaranteed drops) | `src/game/defs/enemies.ts` — one `EnemyDef` entry + sprites named after it |
-| A new weapon/gear piece or affix | `src/game/defs/equipment.ts` — catalog entry; add its id to level loot pools |
+| A new level (geometry, gravity, intro, spawns, objective, loot table) | `src/game/defs/levels/<id>.ts` — one `LevelDef` module, registered in `levels/index.ts` (see the `level-design` skill) |
+| A new monster (stats, AI radii, role, guaranteed drops) | `src/game/defs/enemies/<roster>.ts` — one `EnemyDef` entry + sprites named after it (see the `enemy-design` skill) |
+| A new weapon/gear piece or affix | `src/game/defs/equipment.ts` (weapons, tiers, affixes) / `src/game/defs/gear.ts` (armor bases) — forge it via the `weapon-system` skill; add its id to level loot pools |
 | State shapes & events | `src/game/types.ts` (entities reference defs by id — keep it that way) |
 | Level/entity setup | `src/game/create.ts` (seeded RNG only — no `Math.random`, determinism is what makes bugs reproducible) |
 | Player-driven mutations (equip, stat allocation, phase toggles) | `src/game/items.ts` — safe to call from UI outside `step()` |
 | Per-tick behavior | `src/game/step.ts` — one `stepX()` function per system, called in a fixed order documented at the top |
 | Generic helpers (any game could use) | `src/lib/` — earmarked for oss-framework extraction |
 | Public surface | `src/index.ts` — export new types/constants the app needs |
-| Tests | `tests/<system>_test.ts` (Vitest, `_test` suffix mandatory) |
+| Tests | `tests/engine/<system>_test.ts` (Vitest, `_test` suffix mandatory) — engine rules run on the synthetic fixtures (`tests/engine/fixtures.ts` via `registerDefs`), never on shipped content ids; content suites live in `tests/content/` |
 | Drawing | `website/src/game/render.ts` (+ new sprites via the `pixel-assets` skill) |
 | Sound | `website/src/game/sfx/` (+ the `sound-effects` skill) |
 | HUD/overlay | `website/src/game/GameScreen.tsx` |
@@ -42,10 +42,12 @@ what makes every game rule unit-testable in plain Node.
    it into the documented order inside `step()`. Mutate state in place;
    respect `phase !== "playing"` freezing. Keep per-tick allocation near
    zero (this runs 60×/s).
-4. **Test headlessly** in `tests/`: build a state with `createGame(SEED)`,
-   surgically arrange entities, run fixed `step(state, input, 16)` loops,
-   assert on state + events. Every rule you claim ("cooldown blocks the
-   second hit") gets an assertion. `npx vitest run tests/<file>` to iterate.
+4. **Test headlessly** in `tests/engine/`: build a state with
+   `createGame(SEED)` (fixtures installed via `registerDefs` — see
+   `tests/engine/fixtures.ts`), surgically arrange entities, run fixed
+   `step(state, input, 16)` loops, assert on state + events. Every rule you
+   claim ("cooldown blocks the second hit") gets an assertion.
+   `npx vitest run tests/engine/<file>` to iterate.
 5. **Export** what the app needs from `src/index.ts`.
 6. **Present.** Sprites via the `pixel-assets` skill; draw order and
    animation in `render.ts`; event → sound mapping via the `sound-effects`

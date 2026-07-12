@@ -40,24 +40,27 @@ should hardcode the old name.
 
 Delete or empty each of these — they are 100% this-game data:
 
-- [ ] **`src/game/defs/*`** — the content catalogs: `levels.ts`,
-      `enemies.ts`, `equipment.ts`, `abilities.ts`, `difficulties.ts`,
-      `story.ts`, `cutscenes.ts`. Keep the **types and accessors**
-      (`LevelDef`, `levelDef`, `TileSpec`, `EnemyRole`, …); replace the
-      **entries**. The engine references content only by id, so it compiles
-      against an empty-but-typed catalog.
+- [ ] **`src/game/defs/*`** — the content catalogs: the `levels/` and
+      `enemies/` directories (one module per level / roster), `equipment.ts`,
+      `gear.ts`, `grades.ts`, `uniques.ts`, `abilities.ts`, `companions.ts`,
+      `difficulties.ts`, `story.ts`, `cutscenes.ts`, `thoughts.ts`. Keep the
+      **types and accessors** (`levels/types.ts`, `enemies/types.ts`, the
+      `index.ts` registries, `registry.ts`; `LevelDef`, `levelDef`,
+      `TileSpec`, `EnemyRole`, …); replace the **entries**. The engine
+      references content only by id, so it compiles against an
+      empty-but-typed catalog.
 - [ ] **`website/scripts/sprite-data/*`** — the sprite families. Keep
       `core.mjs` conventions and `index.mjs` wiring; replace the family
       modules. Then `make assets`.
-- [ ] **`website/src/game/music/{title,level}.ts`** — the scores. Rewrite
-      with the `sound-effects` skill.
+- [ ] **`website/src/game/music/*.ts`** (every score file — `title.ts`,
+      `level.ts`, and the per-level tracks; keep `index.ts`, the player) —
+      rewrite with the `sound-effects` skill.
 - [ ] **`website/src/game/copy.ts`** — the loose UI copy (how-to-play lines,
       the level-entry button label).
 - [ ] **`tests/content/`** — this game's story/level/boss/atlas suites
-      (`spacez_test.ts`, `story_test.ts`, `last_words_test.ts`,
-      `last_stand_test.ts`, `spacesuit_test.ts`, `aggro_test.ts`,
-      `items_test.ts`, `wounds_test.ts`). Delete the directory and rewrite
-      suites for the new content. The **engine** suites in `tests/engine/`
+      (one per level plus `story_test.ts`, `last_words_test.ts`,
+      `wounds_test.ts`, `uniques_test.ts`, …). Delete the directory and
+      rewrite suites for the new content. The **engine** suites in `tests/engine/`
       are content-agnostic — they run on the synthetic fixtures in
       `tests/engine/fixtures.ts` (installed via `registerDefs`), so `make
       test` stays green with the content catalogs empty. Adjust
@@ -85,10 +88,11 @@ Delete or empty each of these — they are 100% this-game data:
 
 Author the new game on the untouched engine, one catalog at a time:
 
-- [ ] Levels, enemies, equipment, abilities, difficulties, cutscenes, story
-      → the **`engine-system`** skill (config → types → step → events →
-      tests → presentation). New _content_ is data; new _mechanics_ touch
-      the closed unions — see **Architecture › Extension points**
+- [ ] Levels → the **`level-design`** skill; enemies → the
+      **`enemy-design`** skill; equipment/loot → the **`weapon-system`**
+      skill; new _mechanics_ (closed unions, step pipeline) → the
+      **`engine-system`** skill (config → types → step → events → tests →
+      presentation) — see **Architecture › Extension points**
       (`docs/architecture.md`).
 - [ ] Sprites/tiles/font → the **`pixel-assets`** skill.
 - [ ] SFX and music → the **`sound-effects`** skill.

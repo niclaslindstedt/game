@@ -33,7 +33,9 @@ route over clicking around in a browser.
    - audio bug → events right (log `state.events`), sound wrong
      (`sfx/`/`synth.ts`; remember audio needs a user gesture to unlock)
 2. **Engine bugs: write the failing test BEFORE the fix.** Arrange the
-   exact scenario in `tests/`, step until the bad state appears, assert
+   exact scenario in `tests/engine/` (synthetic fixtures via `registerDefs`;
+   `applyScenario` stages complex situations — see the `test-scenario`
+   skill), step until the bad state appears, assert
    the correct behavior, watch it fail, then fix `src/game/*`. The test
    stays forever; the bug can't return silently. Add diagnostic
    `debug(...)` calls to the engine (never `console.*` — lint forbids it)
@@ -44,7 +46,7 @@ route over clicking around in a browser.
    `website/assets-preview/`) to separate "asset is wrong" from "renderer
    draws it wrong".
 4. **Heisenbugs / timing:** the loop caps frame deltas at 100 ms
-   (`lib/game-loop.ts`) — tab-background fast-forwarding is already
+   (`website/src/lib/game-loop.ts`) — tab-background fast-forwarding is already
    handled. For dt-sensitivity, run the same scenario at dt=16 and dt=33
    in a test and compare.
 5. Keep the repro test in `tests/` named after the behavior (not
