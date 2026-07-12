@@ -472,6 +472,20 @@ export const THE_BUNKER: LevelDef = {
         "oathbrand",
         "the_inevitable",
       ],
+      nightmare: [
+        "stormlash",
+        "falconmail",
+        "omensight",
+        "veilwalkers",
+        "pyrelight",
+        "ironroot_greaves",
+        "gravemaker",
+        "hordebane",
+        "dragons_breath",
+        "the_reckoning",
+        "skybreaker",
+        "sunwreath",
+      ],
     },
     // "A bit higher" world-drop odds than the relics' home levels — the
     // farm-venue sweetener, applied per roll in maybeDropWorldUnique.

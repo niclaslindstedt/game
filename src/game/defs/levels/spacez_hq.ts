@@ -380,6 +380,9 @@ export const SPACEZ_HQ: LevelDef = {
       // LONGWATCH — the perimeter marksman's rifle (the hard rung's ranged
       // build), farmed on HQ boss runs.
       hard: ["longwatch"],
+      // STORMLASH (the lab-broken storm) and FALCONMAIL (flight-weight
+      // composite) — the nightmare rung's HQ relics.
+      nightmare: ["stormlash", "falconmail"],
     },
     // The level a normal run of the campaign's OPENING map leaves the hero at
     // per rung (from `leveling-curve.mjs --by-level`) — past it golden arrows

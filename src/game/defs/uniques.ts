@@ -848,6 +848,189 @@ const WORLD_UNIQUES: UniqueDef[] = [
     ],
     lore: "EVERY SHOT IT EVER FIRED IS STILL ON ITS WAY TO SOMETHING.",
   },
+
+  // NIGHTMARE RUNG — the fourth batch of world relics (docs/item-plan.md,
+  // phase 3): the SECOND set per spec for the climb where the horde matches
+  // the hero level for level. Five weapons (two melee, one ranged, two
+  // magic — WRATHFLAME's boss set already fields a ranged one), four
+  // spec-leaning armor pieces, and the rung's three LEGENDARIES — one per
+  // spec, each carrying a forever power. Gate: minion lottery at lvl 57.
+  // SPACEZ HQ — the storm, broken to harness in a ZAI lab.
+  {
+    id: "stormlash",
+    name: "STORMLASH",
+    base: "storm_projector",
+    slot: "weapon",
+    ilvl: 53,
+    bonuses: [
+      { kind: "stat", stat: "intelligence", value: 7 },
+      { kind: "crit", value: 0.06 },
+      { kind: "stat", stat: "speed", value: 3 },
+    ],
+    lore: "THE STORM, BROKEN TO HARNESS. IT STILL PULLS.",
+  },
+  // SPACEZ HQ — flight-weight composite cut for the dive.
+  {
+    id: "falconmail",
+    name: "FALCONMAIL",
+    base: "composite_vest",
+    slot: "chest",
+    ilvl: 60,
+    bonuses: [
+      { kind: "stat", stat: "dexterity", value: 6 },
+      { kind: "stat", stat: "speed", value: 3 },
+    ],
+    lore: "CUT FOR THE DIVE. WHAT IT GIVES UP IN WEIGHT IT TAKES BACK IN SPEED.",
+  },
+  // THE MOON — the vigil's inheritance: sight that arrives before the blow.
+  {
+    id: "omensight",
+    name: "OMENSIGHT",
+    base: "synaptic_visor",
+    slot: "head",
+    ilvl: 50,
+    bonuses: [
+      { kind: "stat", stat: "intelligence", value: 7 },
+      { kind: "stat", stat: "luck", value: 5 },
+    ],
+    lore: "IT SHOWS WHAT COMES NEXT. IT DOES NOT SHOW HOW TO STOP IT.",
+  },
+  // THE MOON — boots that cross the floor the way night does.
+  {
+    id: "veilwalkers",
+    name: "VEILWALKERS",
+    base: "flux_boots",
+    slot: "feet",
+    ilvl: 55,
+    bonuses: [
+      { kind: "stat", stat: "speed", value: 5 },
+      { kind: "stat", stat: "dexterity", value: 5 },
+      { kind: "stat", stat: "intelligence", value: 4 },
+    ],
+    lore: "THEY CROSS THE FLOOR THE WAY NIGHT CROSSES IT. NOTHING HEARS.",
+  },
+  // MARS — a wand still warm from the forge-heart of the red desert.
+  {
+    id: "pyrelight",
+    name: "PYRELIGHT",
+    base: "inferno_wand",
+    slot: "weapon",
+    ilvl: 59,
+    bonuses: [
+      { kind: "stat", stat: "intelligence", value: 8 },
+      { kind: "damagePct", value: 0.2 },
+      { kind: "crit", value: 0.05 },
+    ],
+    lore: "LIT ONCE AND NEVER SINCE PUT OUT. IT REMEMBERS BEING A STAR.",
+  },
+  // MARS — greaves planted like the terraformers that would not move.
+  {
+    id: "ironroot_greaves",
+    name: "IRONROOT GREAVES",
+    base: "riveted_chausses",
+    slot: "legs",
+    ilvl: 55,
+    bonuses: [
+      { kind: "stat", stat: "strength", value: 7 },
+      { kind: "stat", stat: "stamina", value: 5 },
+    ],
+    lore: "STAND WHERE THEY ARE PLANTED AND NOTHING MOVES YOU. NOTHING HAS.",
+  },
+  // THE RIFT — the maul that buries what it fells.
+  {
+    id: "gravemaker",
+    name: "GRAVEMAKER",
+    base: "neutron_maul",
+    slot: "weapon",
+    ilvl: 57,
+    bonuses: [
+      { kind: "damagePct", value: 0.3 },
+      { kind: "stat", stat: "strength", value: 10 },
+      { kind: "maxHp", value: 40 },
+    ],
+    lore: "WHAT IT FELLS STAYS FELLED. THE GROUND REMEMBERS EVERY BLOW.",
+  },
+  // EASTWORLD — the axe made for too many.
+  {
+    id: "hordebane",
+    name: "HORDEBANE",
+    base: "berserker_axe",
+    slot: "weapon",
+    ilvl: 60,
+    bonuses: [
+      { kind: "damagePct", value: 0.25 },
+      { kind: "stat", stat: "strength", value: 8 },
+      { kind: "crit", value: 0.06 },
+    ],
+    lore: "IT WAS MADE FOR TOO MANY. THERE HAVE NEVER BEEN TOO MANY.",
+  },
+  // EASTWORLD — a mouthful of fire off the park's monster-of-legend rack.
+  {
+    id: "dragons_breath",
+    name: "DRAGON'S BREATH",
+    base: "dragon_blunderbuss",
+    slot: "weapon",
+    ilvl: 60,
+    bonuses: [
+      { kind: "damagePct", value: 0.25 },
+      { kind: "stat", stat: "dexterity", value: 8 },
+      { kind: "stat", stat: "stamina", value: 4 },
+    ],
+    lore: "A MOUTHFUL OF FIRE FROM SOMETHING THAT NEVER EXISTED. THE BURNS EXIST.",
+  },
+  // THE RIFT — the nightmare rung's melee LEGENDARY: the cursed blade that
+  // collects. It never whiffs, it answers every blow taken with lightning
+  // (the game's first WHEN-STRUCK proc), and it takes its price in blood.
+  {
+    id: "the_reckoning",
+    name: "THE RECKONING",
+    base: "fusion_brand",
+    slot: "weapon",
+    tier: "legendary",
+    ilvl: 77,
+    bonuses: [
+      { kind: "sureStrike" },
+      { kind: "proc", trigger: "struck", spell: "bolt", chance: 0.25, rank: 2 },
+      { kind: "statPct", stat: "strength", value: 0.02 },
+      { kind: "damagePct", value: 0.35 },
+      { kind: "maxHp", value: -60 },
+    ],
+    lore: "EVERY DEBT COMES DUE. THIS IS HOW.",
+  },
+  // EASTWORLD — the nightmare rung's ranged LEGENDARY: the revolver that
+  // tears the sky open with every landed round.
+  {
+    id: "skybreaker",
+    name: "SKYBREAKER",
+    base: "ion_peacemaker",
+    slot: "weapon",
+    tier: "legendary",
+    ilvl: 76,
+    bonuses: [
+      { kind: "proc", trigger: "hit", spell: "bolt", chance: 0.25, rank: 2 },
+      { kind: "statPct", stat: "dexterity", value: 0.02 },
+      { kind: "crit", value: 0.08 },
+      { kind: "damagePct", value: 0.15 },
+    ],
+    lore: "EVERY SHOT TEARS THE SKY, AND THE SKY ANSWERS.",
+  },
+  // THE RIFT — the nightmare rung's magic LEGENDARY: the burning crown of a
+  // star that refused to die, ringing its bearer in forever fire (the first
+  // granted-orbit showcase).
+  {
+    id: "sunwreath",
+    name: "SUNWREATH",
+    base: "magnetar_rod",
+    slot: "weapon",
+    tier: "legendary",
+    ilvl: 75,
+    bonuses: [
+      { kind: "spell", spell: "orbit", rank: 2 },
+      { kind: "statPct", stat: "intelligence", value: 0.02 },
+      { kind: "damagePct", value: 0.15 },
+    ],
+    lore: "THE CROWN OF A STAR THAT REFUSED TO DIE. IT BURNS FOR ITS BEARER NOW.",
+  },
 ];
 
 // EASTWORLD MERCHANT STALL — the third unique home: not dropped at all, but
