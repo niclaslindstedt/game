@@ -2619,6 +2619,28 @@ body {
   border-bottom-color: var(--panel-rail-bottom);
   border-radius: var(--panel-radius);
   box-shadow: var(--panel-shadow);
+  /* Slide up into place on open, with a touch of overshoot so it settles like
+     a real modal rather than snapping in. */
+  animation: modal-slide-in 0.32s cubic-bezier(0.16, 0.9, 0.3, 1.08) both;
+}
+
+/* The modal rises from just below its resting spot and fades in. */
+@keyframes modal-slide-in {
+  from {
+    opacity: 0;
+    transform: translateY(2.5rem);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Motion off: appear in place with no travel. */
+@media (prefers-reduced-motion: reduce) {
+  .character-form {
+    animation: none;
+  }
 }
 
 .character-field {

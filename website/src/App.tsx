@@ -53,6 +53,11 @@ export function App() {
   // rather than the hero list (PLAY → LOAD GAME). An empty roster shows the
   // form regardless — there is nothing to load.
   const [pickCreating, setPickCreating] = useState(false);
+  // Whether the create form was reached FROM the roster (its "+ NEW CHARACTER"
+  // slot) rather than straight from the title (PLAY → NEW GAME). It decides
+  // where CANCEL goes back to: the roster if that is where it came from, else
+  // the title menu.
+  const [createFromRoster, setCreateFromRoster] = useState(false);
   // Set when a hero is picked via PLAY, so the title mounts straight on the
   // difficulty ladder instead of the main menu. Reset on every other route back
   // to the title so a later visit opens on the menu.
@@ -222,16 +227,19 @@ export function App() {
               commitPlay(createCharacter(name, hardcore))
             }
             onCancel={() => {
-              // With heroes to fall back on, CANCEL returns to the roster; with
-              // none (the form opened straight up) it backs out to the title.
-              if (loadCharacters().length > 0) setPickCreating(false);
+              // Back to wherever the form was opened from: the roster if the
+              // player came from its "+ NEW CHARACTER" slot, else the title.
+              if (createFromRoster) setPickCreating(false);
               else leave();
             }}
           />
         ) : (
           <LoadGame
             onPlay={commitPlay}
-            onNew={() => setPickCreating(true)}
+            onNew={() => {
+              setCreateFromRoster(true);
+              setPickCreating(true);
+            }}
             onBack={leave}
           />
         )}
@@ -263,17 +271,21 @@ export function App() {
           });
         }}
         onNewGame={() => {
-          // PLAY → NEW GAME: open the roster on the create form, then drop into
-          // the difficulty ladder for the freshly-minted hero.
+          // PLAY → NEW GAME: open straight on the create form, then drop into
+          // the difficulty ladder for the freshly-minted hero. CANCEL here
+          // returns to the title (not the roster) — the form came from PLAY.
           setStartOnDifficulty(false);
+          setCreateFromRoster(false);
           setPickCreating(true);
           setPicking("play");
         }}
         onLoadGame={() => {
           // PLAY → LOAD GAME: open the roster to pick (or retire) a saved hero,
           // then drop into the difficulty ladder for the chosen one. An empty
-          // roster has nothing to load, so it opens straight on the create form.
+          // roster has nothing to load, so it opens straight on the create form
+          // (whose CANCEL then backs out to the title).
           setStartOnDifficulty(false);
+          setCreateFromRoster(false);
           setPickCreating(loadCharacters().length === 0);
           setPicking("play");
         }}
