@@ -34,8 +34,10 @@ import { useScrollFade } from "@ui/lib/scroll-fade.ts";
 
 import { IDENTITY } from "../identity.ts";
 
+import { PixelSlider } from "@ui/lib/PixelSlider.tsx";
+import { PixelToggle } from "@ui/lib/PixelToggle.tsx";
+
 import { ArsenalScreen } from "./ArsenalScreen.tsx";
-import { BalanceSlider } from "./BalanceSlider.tsx";
 import {
   BALANCE_KNOBS,
   balanceFromSlider,
@@ -70,7 +72,7 @@ import {
   type Character,
 } from "./characters.ts";
 import { uiScaleFor } from "./render.ts";
-import { getSettings, updateSettings } from "./settings.ts";
+import { getSettings, updateSettings, type GameSettings } from "./settings.ts";
 import { playUiSound } from "./sfx/index.ts";
 import { startTitleSky } from "./titleSky.ts";
 
@@ -99,8 +101,6 @@ type MenuScreen =
   | "help";
 
 const pct = (v: number) => `${Math.round(v * 100)}%`;
-/** 0 → 25 → 50 → 75 → 100 → 0, in quarter steps. */
-const cycleVolume = (v: number) => ((Math.round(v * 4) + 1) % 5) / 4;
 
 /** m:ss survival time (mirrors the HUD/splash formatter). */
 const formatTime = (ms: number): string => {
@@ -184,15 +184,19 @@ type MenuEntry = {
    * lands on it, but choosing it just buzzes instead of starting. */
   locked?: boolean;
   action: () => void;
-  /** A DEVELOPER → BALANCE row: renders a drag slider after the label and
-   * takes ArrowLeft/ArrowRight (see onKeyDown) instead of a confirm cycle.
-   * `pos` is the 0..1 track position; `set` commits a dragged/tapped position;
-   * `nudge` steps one keyboard tick in a direction (±1). */
+  /** A slider row (BALANCE knobs, SOUND volumes): renders a drag track after
+   * the label and takes ArrowLeft/ArrowRight (see onKeyDown) instead of a
+   * confirm cycle. `pos` is the 0..1 track position; `set` commits a
+   * dragged/tapped position; `nudge` steps one keyboard tick (±1). */
   slider?: {
     pos: number;
     set: (pos: number) => void;
     nudge: (dir: number) => void;
   };
+  /** An ON/OFF row: renders a pixel switch after the label; the arrows set it
+   * (→ on, ← off) and confirm/click flips it. `on` is the current state; `set`
+   * commits a new one. */
+  toggle?: { on: boolean; set: (on: boolean) => void };
 };
 
 // Audio needs a user gesture; the first interaction with the menu doubles
@@ -453,6 +457,67 @@ export function TitleScreen({
         setCursor(at);
       },
     });
+
+    // The boolean SETTINGS rows that read as a straight ON/OFF share one shape:
+    // a constant label plus a pixel switch (see MenuEntry.toggle). `audition`
+    // fires a confirming cue after the flip (e.g. a haptic buzz for VIBRATION).
+    type OnOffKey =
+      | "debug"
+      | "autoLevelStats"
+      | "characterWeapon"
+      | "weaponSwing"
+      | "vibration"
+      | "xpFloat";
+    const onOffRow = (
+      key: OnOffKey,
+      label: string,
+      aria: string,
+      blurb: string,
+      audition?: (on: boolean) => void,
+    ): MenuEntry => {
+      const on = getSettings()[key] === "on";
+      const set = (next: boolean) => {
+        playUiSound(synth, "confirm");
+        updateSettings({ [key]: next ? "on" : "off" } as Partial<GameSettings>);
+        audition?.(next);
+        setSettingsTick((t) => t + 1);
+      };
+      return {
+        label,
+        aria,
+        blurb,
+        toggle: { on, set },
+        action: () => set(!on),
+      };
+    };
+
+    // A 0–1 volume as a drag slider: the label carries the "%" readout, the
+    // arrows nudge in 5% steps, and updateSettings applies the level live.
+    const volumeRow = (
+      key: "musicVolume" | "sfxVolume",
+      label: string,
+      aria: string,
+      blurb: string,
+    ): MenuEntry => {
+      const vol = getSettings()[key];
+      const setVol = (v: number) => {
+        updateSettings({
+          [key]: Math.round(Math.min(1, Math.max(0, v)) * 100) / 100,
+        });
+        setSettingsTick((t) => t + 1);
+      };
+      return {
+        label: `${label} ${pct(vol)}`,
+        aria,
+        blurb,
+        action: () => {},
+        slider: {
+          pos: vol,
+          set: setVol,
+          nudge: (dir: number) => setVol(getSettings()[key] + dir * 0.05),
+        },
+      };
+    };
 
     if (screen === "main") {
       return [
@@ -735,7 +800,6 @@ export function TitleScreen({
       ];
     }
     if (screen === "developer") {
-      const s = getSettings();
       return [
         {
           label: "SELECT LEVEL",
@@ -768,60 +832,30 @@ export function TitleScreen({
             setCursor(0);
           },
         },
-        {
-          label: s.debug === "on" ? "DEBUG MODE: ON" : "DEBUG MODE: OFF",
-          aria: "developer-debug",
-          blurb: "SHOW THE FPS METER DURING RUNS",
-          action: () => {
-            playUiSound(synth, "confirm");
-            updateSettings({ debug: s.debug === "on" ? "off" : "on" });
-            setSettingsTick((t) => t + 1);
-          },
-        },
-        {
-          label:
-            s.autoLevelStats === "on"
-              ? "AUTO LEVEL STATS: ON"
-              : "AUTO LEVEL STATS: OFF",
-          aria: "developer-auto-level-stats",
-          blurb: "FREE BASE STAT GROWTH EACH LEVEL (MOBS SCALE TO MATCH)",
-          action: () => {
-            playUiSound(synth, "confirm");
-            updateSettings({
-              autoLevelStats: s.autoLevelStats === "on" ? "off" : "on",
-            });
-            setSettingsTick((t) => t + 1);
-          },
-        },
-        {
-          label:
-            s.characterWeapon === "on"
-              ? "CHARACTER WEAPON: ON"
-              : "CHARACTER WEAPON: OFF",
-          aria: "developer-character-weapon",
-          blurb: "SHOW THE HELD WEAPON ON THE HERO SPRITE",
-          action: () => {
-            playUiSound(synth, "confirm");
-            updateSettings({
-              characterWeapon: s.characterWeapon === "on" ? "off" : "on",
-            });
-            setSettingsTick((t) => t + 1);
-          },
-        },
-        {
-          label:
-            s.weaponSwing === "on" ? "WEAPON SWING: ON" : "WEAPON SWING: OFF",
-          aria: "developer-weapon-swing",
-          blurb:
-            "ANIMATE THE HELD WEAPON ON EACH ATTACK (NEEDS CHARACTER WEAPON)",
-          action: () => {
-            playUiSound(synth, "confirm");
-            updateSettings({
-              weaponSwing: s.weaponSwing === "on" ? "off" : "on",
-            });
-            setSettingsTick((t) => t + 1);
-          },
-        },
+        onOffRow(
+          "debug",
+          "DEBUG MODE",
+          "developer-debug",
+          "SHOW THE FPS METER DURING RUNS",
+        ),
+        onOffRow(
+          "autoLevelStats",
+          "AUTO LEVEL STATS",
+          "developer-auto-level-stats",
+          "FREE BASE STAT GROWTH EACH LEVEL (MOBS SCALE TO MATCH)",
+        ),
+        onOffRow(
+          "characterWeapon",
+          "CHARACTER WEAPON",
+          "developer-character-weapon",
+          "SHOW THE HELD WEAPON ON THE HERO SPRITE",
+        ),
+        onOffRow(
+          "weaponSwing",
+          "WEAPON SWING",
+          "developer-weapon-swing",
+          "ANIMATE THE HELD WEAPON ON EACH ATTACK (NEEDS CHARACTER WEAPON)",
+        ),
         // Land back on the DEVELOPER row in SETTINGS. It sits just above BACK,
         // after CONTROLS / DISPLAY / SOUND / DATA.
         backTo("settings", 4),
@@ -894,27 +928,22 @@ export function TitleScreen({
       ];
     }
     if (screen === "sound") {
-      const s = getSettings();
+      // Both volumes are drag sliders now (see volumeRow). The theme follows
+      // the music level live; the SFX level is auditioned by the "move" cue the
+      // arrows already play, and by every other sound the slider doesn't mute.
       return [
-        {
-          label: `MUSIC ${pct(s.musicVolume)}`,
-          aria: "sound-music-volume",
-          blurb: "THE THEME FOLLOWS ALONG",
-          action: () => {
-            updateSettings({ musicVolume: cycleVolume(s.musicVolume) });
-            setSettingsTick((t) => t + 1);
-          },
-        },
-        {
-          label: `SOUND FX ${pct(s.sfxVolume)}`,
-          aria: "sound-sfx-volume",
-          blurb: "BLASTERS, GHOSTS, PICKUPS",
-          action: () => {
-            updateSettings({ sfxVolume: cycleVolume(s.sfxVolume) });
-            setSettingsTick((t) => t + 1);
-            playUiSound(synth, "confirm"); // audition the new level
-          },
-        },
+        volumeRow(
+          "musicVolume",
+          "MUSIC",
+          "sound-music-volume",
+          "THE THEME FOLLOWS ALONG",
+        ),
+        volumeRow(
+          "sfxVolume",
+          "SOUND FX",
+          "sound-sfx-volume",
+          "BLASTERS, GHOSTS, PICKUPS",
+        ),
         // Land back on the SOUND row in SETTINGS (after CONTROLS / DISPLAY).
         backTo("settings", 2),
       ];
@@ -1033,38 +1062,25 @@ export function TitleScreen({
             setSettingsTick((t) => t + 1);
           },
         },
-        {
-          label: s.vibration === "on" ? "VIBRATION: ON" : "VIBRATION: OFF",
-          aria: "controls-vibration",
-          blurb: "BUZZ ON KILLS & DIALOGUE - BIGGER MOBS HIT HARDER (NO IOS)",
-          action: () => {
-            playUiSound(synth, "confirm");
-            const next = s.vibration === "on" ? "off" : "on";
-            updateSettings({ vibration: next });
-            // Audition the new state — a firm tap confirms it's live.
-            if (next === "on") haptics.vibrate(28);
-            setSettingsTick((t) => t + 1);
-          },
-        },
+        onOffRow(
+          "vibration",
+          "VIBRATION",
+          "controls-vibration",
+          "BUZZ ON KILLS & DIALOGUE - BIGGER MOBS HIT HARDER (NO IOS)",
+          // Audition the new state — a firm tap confirms it's live.
+          (on) => on && haptics.vibrate(28),
+        ),
         backTo("settings", 0),
       ];
     }
     if (screen === "display") {
-      const s = getSettings();
       return [
-        {
-          label: s.xpFloat === "on" ? "XP ON KILL: ON" : "XP ON KILL: OFF",
-          aria: "display-xp-float",
-          blurb:
-            s.xpFloat === "on"
-              ? "A BLUE +N XP FLOATS OFF EACH KILL"
-              : "NO XP TEXT ON KILLS",
-          action: () => {
-            playUiSound(synth, "confirm");
-            updateSettings({ xpFloat: s.xpFloat === "on" ? "off" : "on" });
-            setSettingsTick((t) => t + 1);
-          },
-        },
+        onOffRow(
+          "xpFloat",
+          "XP ON KILL",
+          "display-xp-float",
+          "FLOAT A BLUE +N XP OFF EACH KILL",
+        ),
         // Land back on the DISPLAY row in SETTINGS (index 1, after CONTROLS).
         backTo("settings", 1),
       ];
@@ -1179,17 +1195,22 @@ export function TitleScreen({
         }
         return;
       }
-      const sliderRow = entries[cursor]?.slider;
-      if (
-        sliderRow &&
-        (event.key === "ArrowLeft" || event.key === "ArrowRight")
-      ) {
-        // On a BALANCE row the horizontal arrows steer its slider instead of
-        // idling — up/down still walk the row list as everywhere else.
+      const row = entries[cursor];
+      const horizontal =
+        event.key === "ArrowLeft" || event.key === "ArrowRight";
+      if (row?.slider && horizontal) {
+        // On a slider row (BALANCE knobs, SOUND volumes) the horizontal arrows
+        // steer the track instead of idling — up/down still walk the row list.
         event.preventDefault();
         unlockAudio();
         playUiSound(synth, "move");
-        sliderRow.nudge(event.key === "ArrowRight" ? 1 : -1);
+        row.slider.nudge(event.key === "ArrowRight" ? 1 : -1);
+      } else if (row?.toggle && horizontal) {
+        // On an ON/OFF row the arrows set the switch directly (→ on, ← off);
+        // `set` plays its own confirm cue.
+        event.preventDefault();
+        unlockAudio();
+        row.toggle.set(event.key === "ArrowRight");
       } else if (event.key === "ArrowDown" || event.key === "ArrowUp") {
         event.preventDefault();
         unlockAudio();
@@ -1842,14 +1863,17 @@ export function TitleScreen({
                       style={{ visibility: selected ? "visible" : "hidden" }}
                     />
                     <span className="menu-item-text">
-                      <PixelText
-                        font={font}
-                        text={entry.label}
-                        scale={3}
-                        color={color}
-                      />
+                      <span className="menu-item-headline">
+                        <PixelText
+                          font={font}
+                          text={entry.label}
+                          scale={3}
+                          color={color}
+                        />
+                        {entry.toggle && <PixelToggle on={entry.toggle.on} />}
+                      </span>
                       {entry.slider && (
-                        <BalanceSlider
+                        <PixelSlider
                           pos={entry.slider.pos}
                           onChange={entry.slider.set}
                         />
