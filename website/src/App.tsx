@@ -6,12 +6,15 @@ import { CUTSCENE_DEFS, type Difficulty, type GameState } from "@game/core";
 import { usePwaUpdate } from "@niclaslindstedt/oss-framework/pwa";
 
 import { cacheIdForBase } from "./app/pwa.ts";
-import { CharacterScreen } from "./game/CharacterScreen.tsx";
 import {
+  createCharacter,
   getActiveCharacter,
+  loadCharacters,
   setActiveCharacterId,
   type Character,
 } from "./game/characters.ts";
+import { LoadGame } from "./game/LoadGame.tsx";
+import { NewGame } from "./game/NewGame.tsx";
 import { CutscenePreview } from "./game/CutscenePreview.tsx";
 import {
   clearSavedRun,
@@ -181,6 +184,7 @@ export function App() {
               setActiveCharacterId(null);
               setCharacter(null);
               setStartOnDifficulty(false);
+              setPickCreating(false);
               setPicking("manage");
             } else {
               setCharacter(refreshed);
@@ -196,23 +200,41 @@ export function App() {
   // sent us here ("play") the title then mounts straight on the difficulty
   // ladder, otherwise it returns to the main menu. BACK returns to the title.
   if (picking) {
+    // Selecting or minting a living hero makes them active; when PLAY sent us
+    // here the title then mounts straight on the difficulty ladder.
+    const commitPlay = (picked: Character) => {
+      setActiveCharacterId(picked.id);
+      setCharacter(picked);
+      setStartOnDifficulty(picking === "play");
+      setPicking(null);
+      setPickCreating(false);
+    };
+    const leave = () => {
+      setStartOnDifficulty(false);
+      setPicking(null);
+      setPickCreating(false);
+    };
     return (
       <>
-        <CharacterScreen
-          startCreating={pickCreating}
-          onPlay={(picked) => {
-            setActiveCharacterId(picked.id);
-            setCharacter(picked);
-            setStartOnDifficulty(picking === "play");
-            setPicking(null);
-            setPickCreating(false);
-          }}
-          onBack={() => {
-            setStartOnDifficulty(false);
-            setPicking(null);
-            setPickCreating(false);
-          }}
-        />
+        {pickCreating ? (
+          <NewGame
+            onCreate={(name, hardcore) =>
+              commitPlay(createCharacter(name, hardcore))
+            }
+            onCancel={() => {
+              // With heroes to fall back on, CANCEL returns to the roster; with
+              // none (the form opened straight up) it backs out to the title.
+              if (loadCharacters().length > 0) setPickCreating(false);
+              else leave();
+            }}
+          />
+        ) : (
+          <LoadGame
+            onPlay={commitPlay}
+            onNew={() => setPickCreating(true)}
+            onBack={leave}
+          />
+        )}
         <UpdateModal
           needRefresh={pwa.needRefresh}
           incomingVersion={pwa.incomingVersion}
@@ -249,9 +271,10 @@ export function App() {
         }}
         onLoadGame={() => {
           // PLAY → LOAD GAME: open the roster to pick (or retire) a saved hero,
-          // then drop into the difficulty ladder for the chosen one.
+          // then drop into the difficulty ladder for the chosen one. An empty
+          // roster has nothing to load, so it opens straight on the create form.
           setStartOnDifficulty(false);
-          setPickCreating(false);
+          setPickCreating(loadCharacters().length === 0);
           setPicking("play");
         }}
         startOnDifficulty={startOnDifficulty}

@@ -92,14 +92,29 @@ export function spriteCursor(
 }
 
 let loaded: Promise<GameAssets> | null = null;
+let loadedValue: GameAssets | null = null;
 
 export function loadGameAssets(): Promise<GameAssets> {
   // Memoized: the title screen and the game screen share one decode pass.
   loaded ??= loadImages({ atlas: atlasUrl, font: fontUrl }).then(
-    async (images) => ({
-      sprites: await sliceAtlas(images.atlas, atlasRects),
-      font: createPixelFont(images.font, fontMeta),
-    }),
+    async (images) => {
+      const assets: GameAssets = {
+        sprites: await sliceAtlas(images.atlas, atlasRects),
+        font: createPixelFont(images.font, fontMeta),
+      };
+      loadedValue = assets;
+      return assets;
+    },
   );
   return loaded;
+}
+
+/**
+ * The already-decoded assets if `loadGameAssets` has resolved, else null. Lets
+ * a screen mount without a "Loading…" flash once the shared decode pass is done
+ * (the title screen triggers it) — the sibling menu screens (NEW GAME / LOAD
+ * GAME) seed their state from this and skip the loading placeholder.
+ */
+export function peekGameAssets(): GameAssets | null {
+  return loadedValue;
 }
