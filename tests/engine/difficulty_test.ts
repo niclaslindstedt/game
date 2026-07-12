@@ -220,26 +220,25 @@ describe("difficulty scaling in a run", () => {
     );
   });
 
-  it("unlocks unique and legendary tiers the base chances never roll", () => {
-    const mediumTiers = new Set<Tier>();
-    const jesusTiers = new Set<Tier>();
+  it("pays the top tiers far more often on harder rungs (tierChanceBonus)", () => {
     const medium = startOn("medium");
     const jesus = startOn("jesus");
-    // Past every monster-level gate (LOOT.tierUnlockMlvl), so the roll is
-    // purely about the chances — the gates have their own suite.
-    medium.player.level = 40;
-    jesus.player.level = 40;
-    for (let i = 0; i < 600; i++) {
-      mediumTiers.add(rollEquipment(medium).tier);
-      jesusTiers.add(rollEquipment(jesus).tier);
+    // Past every loot-level gate on BOTH rungs (the offset-strip means the
+    // hero's level, not the mob's, opens the gates), so the roll is purely
+    // about the chances — the gates have their own suite.
+    medium.player.level = 50;
+    jesus.player.level = 50;
+    const isTop = (t: Tier): boolean => t === "unique" || t === "legendary";
+    let mediumTop = 0;
+    let jesusTop = 0;
+    for (let i = 0; i < 800; i++) {
+      if (isTop(rollEquipment(medium).tier)) mediumTop++;
+      if (isTop(rollEquipment(jesus).tier)) jesusTop++;
     }
-    // MEDIUM carries no tier bonus, so the top tiers stay at their zero
-    // base chance…
-    expect(mediumTiers.has("unique")).toBe(false);
-    expect(mediumTiers.has("legendary")).toBe(false);
-    // …but JESUS CHRIST! pays for its horde in uniques and legendaries.
-    expect(jesusTiers.has("unique")).toBe(true);
-    expect(jesusTiers.has("legendary")).toBe(true);
+    // Base chances put a trickle of uniques/legendaries on every rung now (the
+    // D2 reversal), but JESUS CHRIST! pays for its horde in far more of them.
+    expect(jesusTop).toBeGreaterThan(0);
+    expect(jesusTop).toBeGreaterThan(mediumTop);
   });
 
   it("stays deterministic per (seed, difficulty)", () => {

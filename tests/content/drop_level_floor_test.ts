@@ -17,7 +17,14 @@ describe("base-level drop floor", () => {
     // Every weapon drawn at this depth sits at/above the floor — no weak
     // low-tier bases off a deep monster.
     for (let i = 0; i < 80; i++) {
-      const item = rollEquipment(state, { slot: "weapon", mlvl });
+      // Force regular so the sample measures the base-POOL floor, not a folded
+      // unique's own (possibly low-req) base. The offset-strip lifts the loot
+      // level above `mlvl`, so the real floor is at least `mlvl − window`.
+      const item = rollEquipment(state, {
+        slot: "weapon",
+        mlvl,
+        tier: "regular",
+      });
       expect(equipmentLevelReq(item.defId)).toBeGreaterThanOrEqual(floor);
     }
   });

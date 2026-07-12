@@ -289,13 +289,14 @@ describe("companions in the field", () => {
   it("magic find widens the tier roll: the same draw pays magic, not plain", () => {
     const state = startGame();
     clearStage(state);
-    // 0.25 sits between the base magic chance (0.2) and the aura-widened
-    // one (0.2 × 1.5 = 0.3): plain without LUCKY's kin, magic with it.
-    state.rng = () => 0.25;
-    const before = rollEquipment(state, { defId: "test_wrench", mlvl: 99 });
+    // At the magic gate (loot level 5, mlvl 3 on medium) only magic can roll.
+    // 0.20 sits between the base magic chance (0.16) and the Magic-Find-widened
+    // one (0.16 × 1.5 = 0.24): plain without LUCKY's kin, magic with it.
+    state.rng = () => 0.2;
+    const before = rollEquipment(state, { defId: "test_wrench", mlvl: 3 });
     expect(before.tier).toBe("regular");
     recruitCompanion(state, "test_companion", { x: 30, y: 30 });
-    const after = rollEquipment(state, { defId: "test_wrench", mlvl: 99 });
+    const after = rollEquipment(state, { defId: "test_wrench", mlvl: 3 });
     expect(after.tier).toBe("magic");
   });
 });

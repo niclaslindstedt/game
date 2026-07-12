@@ -8,6 +8,7 @@
 import { describe, expect, it } from "vitest";
 
 import {
+  difficultyDef,
   equipFromInventory,
   isBetterEquipment,
   LOOT,
@@ -15,7 +16,7 @@ import {
   registerDefs,
   rollEquipment,
 } from "@game/core";
-import type { Equipment, GameState, Tier } from "@game/core";
+import type { Difficulty, Equipment, GameState, Tier } from "@game/core";
 // Engine-internal kill funnel — not public API, but the one door every drop
 // walks through, so the tierDrops rules are asserted right at it.
 import { hitEnemy } from "../../src/game/loot.ts";
@@ -43,6 +44,30 @@ const RELIC = {
   range: 44,
   durability: 200,
   icon: "icon_medieval_sword",
+};
+
+// Fixture UNIQUES on the relic base (req 10) so the D2 rarity FOLD has eligible
+// named items to mint when a weapon drop rolls unique/legendary. Registering
+// them REPLACES the active unique catalog (setUniqueDefs), so the fold sees
+// only these — no shipped ids leak into the gate assertions.
+const UNIQ_WPN = {
+  id: "test_uniq_wpn",
+  name: "TEST UNIQUE BLADE",
+  base: "test_relic",
+  slot: "weapon" as const,
+  ilvl: 12,
+  bonuses: [{ kind: "stat" as const, stat: "strength" as const, value: 3 }],
+  lore: "A TEST UNIQUE FOLDED FROM THE RARITY ROLL.",
+};
+const LEG_WPN = {
+  id: "test_leg_wpn",
+  name: "TEST LEGENDARY BLADE",
+  base: "test_relic",
+  slot: "weapon" as const,
+  tier: "legendary" as const,
+  ilvl: 42,
+  bonuses: [{ kind: "stat" as const, stat: "strength" as const, value: 5 }],
+  lore: "A TEST LEGENDARY FOLDED FROM THE RARITY ROLL.",
 };
 
 /** Re-register the fixture catalogs with the relic added and `test_level`'s
@@ -73,23 +98,41 @@ function installLootFixtures(): void {
     abilities: FIX_ABILITIES,
     difficulties: FIX_DIFFICULTIES,
     storyItems: FIX_STORY_ITEMS,
+    uniques: { test_uniq_wpn: UNIQ_WPN, test_leg_wpn: LEG_WPN },
   });
+}
+
+// rollEquipment strips the difficulty's `mobLevelOffset` from every LOOT gate
+// (the offset-strip: easy drops richer relative to its mobs). So a kill's LOOT
+// level is `mlvl − offset`; to target a loot level directly, back out the
+// offset. startGame runs on MEDIUM (offset −2) unless a test overrides it.
+function mobForLoot(state: GameState, lootLevel: number): number {
+  return lootLevel + difficultyDef(state.difficulty).mobLevelOffset;
 }
 
 installLootFixtures();
 
-/** Roll `n` pieces at a fixed monster level and collect their tiers. */
-function tiersAt(state: GameState, mlvl: number, n = 120): Set<Tier> {
+/** Roll `n` WEAPON pieces whose LOOT level is `lootLevel` and collect their
+ * tiers. Weapon slot so a unique/legendary roll folds one of the fixture
+ * weapon uniques (see UNIQ_WPN/LEG_WPN) rather than falling back to a rare. */
+function weaponTiersAtLoot(
+  state: GameState,
+  lootLevel: number,
+  n = 200,
+): Set<Tier> {
   const tiers = new Set<Tier>();
-  for (let i = 0; i < n; i++) tiers.add(rollEquipment(state, { mlvl }).tier);
+  const mlvl = mobForLoot(state, lootLevel);
+  for (let i = 0; i < n; i++) {
+    tiers.add(rollEquipment(state, { slot: "weapon", mlvl }).tier);
+  }
   return tiers;
 }
 
-describe("tier gates by monster level", () => {
+describe("tier gates by loot level", () => {
   it("drops only regular below the magic gate, whatever the luck", () => {
     const state = startGame();
-    state.player.stats.luck = 100; // saturates every unlocked tier's chance
-    expect(tiersAt(state, LOOT.tierUnlockMlvl.magic - 1)).toEqual(
+    state.player.stats.luck = 100; // heavy Magic Find, still gated out
+    expect(weaponTiersAtLoot(state, LOOT.tierUnlockMlvl.magic - 1)).toEqual(
       new Set(["regular"]),
     );
   });
@@ -97,62 +140,77 @@ describe("tier gates by monster level", () => {
   it("opens magic at its gate and rare at its own, in order", () => {
     const state = startGame();
     state.player.stats.luck = 100;
-    const atMagic = tiersAt(state, LOOT.tierUnlockMlvl.magic);
+    const atMagic = weaponTiersAtLoot(state, LOOT.tierUnlockMlvl.magic);
     expect(atMagic.has("magic")).toBe(true);
     expect(atMagic.has("rare")).toBe(false);
-    const atRare = tiersAt(state, LOOT.tierUnlockMlvl.rare);
+    const atRare = weaponTiersAtLoot(state, LOOT.tierUnlockMlvl.rare);
     expect(atRare.has("rare")).toBe(true);
     expect(atRare.has("unique")).toBe(false);
   });
 
-  it("holds unique/legendary behind their gates even where the difficulty pays them", () => {
+  it("holds unique/legendary behind their gates, then folds a named item", () => {
     // The fixture JESUS rung carries unique+legendary tier bonuses, so the
-    // CHANCE is live — only the monster-level gate stands in the way.
+    // rarity roll is live — only the loot-level gate stands in the way, and a
+    // roll that lands the tier folds one of the fixture weapon uniques.
     const state = startGame(42, "test_level");
-    state.difficulty = "jesus";
+    state.difficulty = "jesus" as Difficulty;
     state.player.stats.luck = 100;
-    const below = tiersAt(state, LOOT.tierUnlockMlvl.unique - 1);
+    const below = weaponTiersAtLoot(state, LOOT.tierUnlockMlvl.unique - 1);
     expect(below.has("unique")).toBe(false);
-    const at = tiersAt(state, LOOT.tierUnlockMlvl.unique);
+    const at = weaponTiersAtLoot(state, LOOT.tierUnlockMlvl.unique);
     expect(at.has("unique")).toBe(true);
     expect(at.has("legendary")).toBe(false);
-    expect(tiersAt(state, LOOT.tierUnlockMlvl.legendary).has("legendary")).toBe(
-      true,
-    );
+    expect(
+      weaponTiersAtLoot(state, LOOT.tierUnlockMlvl.legendary).has("legendary"),
+    ).toBe(true);
   });
 });
 
 describe("item level", () => {
-  it("lands 0–3 below the killer, weighted toward the bottom", () => {
+  it("lands 0–3 below the loot level, weighted toward the bottom", () => {
     const state = startGame();
+    // A kill at monster level 20 gates loot at 22 on medium (offset −2).
+    const lootLevel = 22;
     const counts = new Map<number, number>();
     for (let i = 0; i < 400; i++) {
-      const ilvl = rollEquipment(state, { mlvl: 20 }).ilvl;
+      // Force regular so the sample measures the ilvl DEFICIT band, not a
+      // folded unique's static ilvl (rare+ also uses the tighter band).
+      const ilvl = rollEquipment(state, {
+        mlvl: mobForLoot(state, lootLevel),
+        tier: "regular",
+      }).ilvl;
       counts.set(ilvl, (counts.get(ilvl) ?? 0) + 1);
     }
     const band = LOOT.ilvlDeltaWeights.length; // deltas 0..band-1
     for (const ilvl of counts.keys()) {
-      expect(ilvl).toBeGreaterThanOrEqual(20 - (band - 1));
-      expect(ilvl).toBeLessThanOrEqual(20);
+      expect(ilvl).toBeGreaterThanOrEqual(lootLevel - (band - 1));
+      expect(ilvl).toBeLessThanOrEqual(lootLevel);
     }
     // −3 is authored 4× likelier than −0; 400 samples put the expected split
     // near 160 vs 40 — a strict greater-than can't realistically flake.
-    expect(counts.get(17) ?? 0).toBeGreaterThan(counts.get(20) ?? 0);
+    expect(counts.get(lootLevel - 3) ?? 0).toBeGreaterThan(
+      counts.get(lootLevel) ?? 0,
+    );
   });
 
   it("floors at 1 on the shallowest kills", () => {
     const state = startGame();
+    // A kill shallower than the offset floors the loot level (and ilvl) at 1.
     for (let i = 0; i < 50; i++) {
-      expect(rollEquipment(state, { mlvl: 1 }).ilvl).toBe(1);
+      expect(rollEquipment(state, { mlvl: mobForLoot(state, 1) }).ilvl).toBe(1);
     }
   });
 
-  it("keeps rare finds within a level of the killer", () => {
+  it("keeps rare finds within a level of the loot level", () => {
     const state = startGame();
+    const lootLevel = 22;
     for (let i = 0; i < 100; i++) {
-      const ilvl = rollEquipment(state, { mlvl: 20, tier: "rare" }).ilvl;
-      expect(ilvl).toBeGreaterThanOrEqual(19);
-      expect(ilvl).toBeLessThanOrEqual(20);
+      const ilvl = rollEquipment(state, {
+        mlvl: mobForLoot(state, lootLevel),
+        tier: "rare",
+      }).ilvl;
+      expect(ilvl).toBeGreaterThanOrEqual(lootLevel - 1);
+      expect(ilvl).toBeLessThanOrEqual(lootLevel);
     }
   });
 });
@@ -210,18 +268,23 @@ describe("ilvl-gated affix brackets", () => {
 });
 
 describe("level requirements", () => {
-  it("keeps a base out of the pool until the killer's level reaches it", () => {
+  it("keeps a base out of the pool until the loot level reaches it", () => {
     const state = startGame();
     for (let i = 0; i < 60; i++) {
       const piece = rollEquipment(state, {
         slot: "weapon",
-        mlvl: RELIC.levelReq - 1,
+        mlvl: mobForLoot(state, RELIC.levelReq - 1),
       });
       expect(piece.defId).not.toBe("test_relic");
     }
     const deep = new Set<string>();
     for (let i = 0; i < 60; i++) {
-      deep.add(rollEquipment(state, { slot: "weapon", mlvl: 10 }).defId);
+      deep.add(
+        rollEquipment(state, {
+          slot: "weapon",
+          mlvl: mobForLoot(state, RELIC.levelReq),
+        }).defId,
+      );
     }
     expect(deep.has("test_relic")).toBe(true);
   });
@@ -342,9 +405,13 @@ describe("elite/boss tierDrops", () => {
     expect(counts.rare ?? 0).toBeGreaterThanOrEqual(1);
   });
 
-  it("still honors the monster-level gates — a shallow boss pays nothing fancy", () => {
+  it("still honors the loot-level gates — a shallow boss pays nothing fancy", () => {
     const state = startGame();
-    killPledgedBoss(state, LOOT.tierUnlockMlvl.magic - 1, () => 0.01);
+    killPledgedBoss(
+      state,
+      mobForLoot(state, LOOT.tierUnlockMlvl.magic - 1),
+      () => 0.01,
+    );
     const counts = tierCounts(state);
     expect(counts.magic ?? 0).toBe(0);
     expect(counts.rare ?? 0).toBe(0);

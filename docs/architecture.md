@@ -186,9 +186,10 @@ run against synthetic fixtures with no shipped content (see
   the wave spawner's live cap, the horde's RELATIVE level (`mobLevelOffset`
   — every monster spawns at player level + offset, hp shifted per level by
   `MENACE.mobHpPerLevel`), the drop economy (medkit/armor/powerup
-  multipliers down, drop-chance/tier bonuses up — and since a rung's
-  `mobLevelOffset` raises MONSTER level, the hard rungs also reach every
-  tier's unlock gate earlier), the stamina burn, dodge/miss accuracy multipliers, and the
+  multipliers down, drop-chance/tier bonuses up — the harder rungs pay richer
+  loot through their explicit `tierChanceBonus`/`lootIlvlBonus`, since the loot
+  gates now key off the hero's earned LOOT level with the `mobLevelOffset`
+  stripped back out, not the raw monster level), the stamina burn, dodge/miss accuracy multipliers, and the
   menace meter's trigger/decay/effect. MEDIUM is the exact 1.0 baseline.
 - **`src/game/abilities.ts`** — ability activation (`grantAbility`, which
   links the running copy to the dock slot it was spent from), freeing a slot

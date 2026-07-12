@@ -31,6 +31,7 @@ import { cutsceneDef } from "./defs/cutscenes.ts";
 import {
   affixNaming,
   AFFIX_POOLS,
+  equipmentDropWeight,
   equipmentLevelReq,
   gearDef,
   isGearDef,
@@ -51,9 +52,10 @@ import {
 } from "./defs/equipment.ts";
 import { gradeVariantIds } from "./defs/grades.ts";
 import { difficultyDef } from "./defs/difficulties.ts";
+import type { EnemyRole } from "./defs/enemies/index.ts";
 import { gateKeyIds, levelDef } from "./defs/levels/index.ts";
 import { storyItemDef } from "./defs/story.ts";
-import { uniqueDef } from "./defs/uniques.ts";
+import { activeUniqueDefs, uniqueDef } from "./defs/uniques.ts";
 import { baseStatBonus, diminishStat } from "./leveling.ts";
 import { currentMobLevel } from "./menace.ts";
 import { BALANCE } from "./tuning.ts";
@@ -253,23 +255,109 @@ export function magicFindBonus(state: GameState): number {
  * per-enemy/menace bonus — the whole chance scaled by the party's MAGIC FIND
  * aura (see `magicFindBonus`).
  */
-function rollTier(state: GameState, mlvl: number, tierBonus: number): Tier {
+/**
+ * MAGIC FIND (D2's MF) — reuses LUCK and the companion `magicFind` aura rather
+ * than a dedicated stat: LUCK pays `STATS.tierChancePerLuck` per effective
+ * point, the aura adds its flat share. Fed through the per-tier SATURATION
+ * curve in `rollTier`, so the top tiers see diminishing returns as it stacks.
+ */
+export function magicFind(state: GameState): number {
+  return (
+    effectiveStat(state, "luck") * STATS.tierChancePerLuck +
+    magicFindBonus(state)
+  );
+}
+
+/**
+ * The MF multiplier on a tier's chance: MAGIC is LINEAR (uncapped in MF); rare
+ * and up SATURATE toward `LOOT.mfSaturation[tier]` via `1 + cap·mf/(cap+mf)`,
+ * so stacking LUCK/aura is strong early and gives diminishing returns on the
+ * best drops — the D2 rule that MF can't make legendaries common.
+ */
+function magicFindFactor(
+  tier: Exclude<Tier, "regular" | "trash">,
+  mf: number,
+): number {
+  if (mf <= 0) return 1;
+  const cap = (LOOT.mfSaturation as Partial<Record<Tier, number>>)[tier];
+  if (cap === undefined) return 1 + mf; // magic: linear
+  return 1 + (cap * mf) / (cap + mf); // rare/unique/legendary: saturating
+}
+
+/**
+ * STAGE 2 — the D2 RARITY ROLL. Best tier first, each gated by its
+ * `tierUnlockMlvl` (its qlvl). A tier's chance is `rarityBase` at the gate plus
+ * `raritySlope` per level of DEPTH over it (a higher-`lootLevel` kill rolls
+ * rarer tiers more often — D2's `ilvl−qlvl` term), plus the difficulty's
+ * `tierChanceBonus`, the per-kill `tierBonus`, and the elite/boss set-piece
+ * bonus on the rarest tiers — the whole thing scaled by MAGIC FIND (per-tier
+ * diminishing returns) and the developer gear-quality knob. Clamped so magic
+ * still leaves whites for the make-quality roll.
+ */
+function rollTier(
+  state: GameState,
+  lootLevel: number,
+  tierBonus: number,
+  role: EnemyRole = "minion",
+): Tier {
   const difficultyChances = difficultyDef(state.difficulty).tierChanceBonus;
-  const luckBonus =
-    effectiveStat(state, "luck") * STATS.tierChancePerLuck + tierBonus;
-  const magicFind = 1 + magicFindBonus(state);
+  const mf = magicFind(state);
+  // The EXPLICIT set-piece boost on unique/legendary for elite/boss kills.
+  const roleBonus: Partial<Record<Tier, number>> | undefined =
+    role === "boss"
+      ? LOOT.bossRarityBonus
+      : role === "elite"
+        ? LOOT.eliteRarityBonus
+        : undefined;
   // TIER_ROLL_ORDER never contains "regular" (the fall-through) or "trash"
-  // (scripted mints only), so the rolled-tier config maps index safely.
+  // (scripted mints only), so the rarity config maps index safely.
   for (const tier of TIER_ROLL_ORDER) {
-    if (mlvl < LOOT.tierUnlockMlvl[tier]) continue;
-    const base = LOOT.tierChances[tier] + (difficultyChances[tier] ?? 0);
+    const qlvl = LOOT.tierUnlockMlvl[tier];
+    if (lootLevel < qlvl) continue; // hard gate, unchanged
+    const base =
+      LOOT.rarityBase[tier] +
+      LOOT.raritySlope[tier] * (lootLevel - qlvl) +
+      (difficultyChances[tier] ?? 0) +
+      (roleBonus?.[tier] ?? 0) +
+      tierBonus;
     if (base <= 0) continue;
-    // The developer gear-quality knob scales the whole tier roll, stacking
-    // multiplicatively with magic find like one more MF source.
-    if (state.rng() < (base + luckBonus) * magicFind * BALANCE.gearQuality)
-      return tier;
+    const chance = Math.min(
+      LOOT.rarityChanceMax,
+      base * magicFindFactor(tier, mf) * BALANCE.gearQuality,
+    );
+    if (state.rng() < chance) return tier;
   }
   return "regular";
+}
+
+/**
+ * The D2 unique/set SELECTION step: once a rarity roll lands unique/legendary,
+ * choose WHICH named item — among those whose slot matches the dropped base and
+ * whose base is reachable (`levelReq ≤ lootLevel`) — weighted by each item's
+ * `rarity` (default `UNIQUE.defaultRarity`). Returns the id, or null when
+ * nothing is eligible (the caller downgrades to a rare so the drop is never
+ * dead). Reads the ACTIVE catalog, so a fixture-swapped test sees only its own.
+ */
+function pickUniqueForDrop(
+  state: GameState,
+  slot: EquipSlot,
+  tier: "unique" | "legendary",
+  lootLevel: number,
+): string | null {
+  const eligible = activeUniqueDefs()
+    .filter(
+      (u) =>
+        (u.tier ?? "unique") === tier &&
+        u.slot === slot &&
+        // Skip a unique whose base isn't in the ACTIVE catalog — a fixture
+        // swap can leave the shipped unique catalog pointing at bases that no
+        // longer resolve; `equipmentLevelReq` would throw on them.
+        (isWeaponDef(u.base) || isGearDef(u.base)) &&
+        equipmentLevelReq(u.base) <= lootLevel,
+    )
+    .map((u) => ({ id: u.id, weight: u.rarity ?? UNIQUE.defaultRarity }));
+  if (eligible.length === 0) return null;
+  return pickWeighted(state.rng, eligible).id;
 }
 
 /**
@@ -318,10 +406,31 @@ export function rollEquipment(
     quality?: Quality;
     /** The killer's monster level; omitted = the live horde level. */
     mlvl?: number;
+    /** The killer's ROLE — elites/bosses get the set-piece rarity bonus on
+     * unique/legendary (see `rollTier`) and are eligible to fold a named
+     * unique into the drop. Omitted = minion (no bonus). */
+    role?: EnemyRole;
   } = {},
 ): Equipment {
   const rng = state.rng;
   const mlvl = opts.mlvl ?? currentMobLevel(state);
+  // LOOT LEVEL — what the loot GATES key off: the eligible base pool
+  // (`levelReq`), the tier unlocks, the dropped item's own level, and the
+  // make-quality roll. It strips the difficulty's MOB-LEVEL OFFSET back out of
+  // the monster level, so the gates track the hero's EARNED level rather than
+  // how far a rung shoves its horde up or down. The upshot the design wants:
+  // EASY (offset -3) drops loot sized to the hero, so its finds run RICHER
+  // relative to its weakened mobs than a hard rung's do (whose tougher mobs no
+  // longer buy earlier tiers). Combat scaling (mob hp/xp) still rides the real
+  // mlvl; only these loot gates strip the offset. A def's own `levelBonus`
+  // (elites/bosses run hot) survives — only the per-difficulty offset is
+  // removed. The explicit per-rung rewards (`tierChanceBonus`, `lootIlvlBonus`)
+  // still pay the harder rungs more in ABSOLUTE terms; this removes only the
+  // implicit mlvl edge, not those.
+  const lootLevel = Math.max(
+    1,
+    mlvl - difficultyDef(state.difficulty).mobLevelOffset,
+  );
   const loot = levelDef(state.level.id).loot;
   const family = opts.defId
     ? isWeaponDef(opts.defId)
@@ -344,7 +453,7 @@ export function rollEquipment(
   // hasn't reached stays out of the draw. If the whole pool is still out of
   // reach (a fresh run on a late-game pool), the lowest-requirement bases
   // stand in so a drop is never a dead roll.
-  let pool = fullPool.filter((id) => equipmentLevelReq(id) <= mlvl);
+  let pool = fullPool.filter((id) => equipmentLevelReq(id) <= lootLevel);
   if (pool.length === 0 && fullPool.length > 0) {
     const minReq = Math.min(...fullPool.map((id) => equipmentLevelReq(id)));
     pool = fullPool.filter((id) => equipmentLevelReq(id) === minReq);
@@ -354,10 +463,21 @@ export function rollEquipment(
   // Only applied when the band has entries — otherwise the whole eligible pool
   // stands (early game, or a pool whose bases all sit below the window).
   const floored = pool.filter(
-    (id) => equipmentLevelReq(id) >= mlvl - LOOT.dropLevelWindow,
+    (id) => equipmentLevelReq(id) >= lootLevel - LOOT.dropLevelWindow,
   );
   if (floored.length > 0) pool = floored;
-  let defId = opts.defId ?? (pool[Math.floor(rng() * pool.length)] as string);
+  // STAGE 1 — the TREASURECLASS pick: weight the eligible pool by each base's
+  // `dropWeight` (D2's `Prob`) instead of a flat uniform draw. Default weights
+  // are all 1, so an un-authored pool behaves exactly like the old uniform
+  // pick; only a base that sets `dropWeight` shifts the odds. Consumes one rng
+  // draw either way. (Stage-1 NoDrop — whether anything drops at all — is the
+  // `LOOT.dropChance` gate upstream in `dropMinionLoot`.)
+  let defId =
+    opts.defId ??
+    pickWeighted(
+      rng,
+      pool.map((id) => ({ id, weight: equipmentDropWeight(id) })),
+    ).id;
   // Harder difficulties find fewer ARMOR pieces: when a random gear pick
   // lands on armor, the difficulty's `armorDropMult` is its chance to stand —
   // a failed roll re-picks among the pool's non-armor pieces (if any). Minted
@@ -394,8 +514,24 @@ export function rollEquipment(
   }
   const slot: EquipSlot = family === "weapon" ? "weapon" : gearDef(defId).slot;
 
-  const tier = opts.tier ?? rollTier(state, mlvl, opts.tierBonus ?? 0);
-  const ilvl = rollItemLevel(state, mlvl, tier);
+  let tier =
+    opts.tier ?? rollTier(state, lootLevel, opts.tierBonus ?? 0, opts.role);
+  // STAGE 3 — the D2 FOLD: a NATURALLY-rolled unique/legendary becomes a NAMED
+  // item, chosen among those eligible for this slot by its per-item `rarity`
+  // weight (`pickUniqueForDrop`). Only when the tier was ROLLED (not a
+  // scripted/forced tier) and no specific base was requested — scripted mints
+  // keep their exact shape. Falls back to a rolled RARE when nothing is
+  // eligible, so the drop is never dead.
+  if (
+    opts.tier === undefined &&
+    opts.defId === undefined &&
+    (tier === "unique" || tier === "legendary")
+  ) {
+    const namedId = pickUniqueForDrop(state, slot, tier, lootLevel);
+    if (namedId) return mintUnique(state, namedId);
+    tier = "rare";
+  }
+  const ilvl = rollItemLevel(state, lootLevel, tier);
   // The MAKE QUALITY roll: PLAIN (regular-tier) weapons and armor only —
   // the D2 rule that craftsmanship and magic are exclusive. A magic-or-
   // better find is already well made, so every tier above white mints at
@@ -406,7 +542,7 @@ export function rollEquipment(
   const gradeable = family === "weapon" || gearDef(defId).armor !== undefined;
   const quality: Quality =
     opts.quality ??
-    (gradeable && tier === "regular" ? rollQuality(rng, mlvl) : "normal");
+    (gradeable && tier === "regular" ? rollQuality(rng, lootLevel) : "normal");
   const qMult = QUALITY.mults[quality];
   const affixes: Affix[] = [];
   const available = [...AFFIX_POOLS[family]];

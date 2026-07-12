@@ -171,12 +171,30 @@ Below regular sits the **TRASH tier** — the joke class: weapons with ZERO
 damage and no stats (grey card, worth pocket lint at the counter). It never
 rolls; it exists only for scripted story drops — ELON MOSQUE's final estate
 on Eastworld is its debut (SOGGY CARDBOARD SWORD, NOT-A-FLAMETHROWER
-(EMPTY), CYBERVAN WIPER BLADE). A base only drops from
-monsters whose LEVEL has reached its requirement, tiers unlock by monster
-level (config `LOOT.tierUnlockMlvl`), and every drop carries an item level
-near its killer's (plus the difficulty's `lootIlvlBonus` on the harder
-rungs) that sizes its affixes — see the `weapon-system` skill for the full
-economy and its tuning tools.
+(EMPTY), CYBERVAN WIPER BLADE).
+
+The drop resolves in **two Diablo 2 stages**. **Stage 1 — the TreasureClass:**
+whether anything drops at all is the `LOOT.dropChance` gate (D2's NoDrop, ~91%
+inverted), and if it does, a base is picked from the level's eligible pool
+weighted by each base's `dropWeight` (default 1 — an even pool). **Stage 2 —
+the rarity roll** (`rollTier`): best tier first, each gated by
+`LOOT.tierUnlockMlvl`, its chance a base (`LOOT.rarityBase`) plus a slope per
+level of depth over the gate (`LOOT.raritySlope` — a deeper kill rolls rarer),
+then scaled by **Magic Find**. MF reuses LUCK and LUCKY's companion aura
+(no separate stat), linear on magic but **saturating** on rare/unique/legendary
+(`LOOT.mfSaturation`), the D2 rule that MF is strong early and can't make
+legendaries common. The difficulty's `tierChanceBonus`/`lootIlvlBonus` still
+pay the harder rungs richer, and elite/boss kills add a set-piece bonus on the
+top tiers (`LOOT.eliteRarityBonus`/`bossRarityBonus`).
+
+Crucially, the loot gates key off the hero's **loot level** — the monster level
+with the difficulty's `mobLevelOffset` stripped back out — not the raw mob
+level. So which bases, tiers, and item level a kill can pay track EARNED
+progression, and EASY (offset −3) drops loot sized to the hero rather than to
+its weakened horde, running richer relative to its mobs than a hard rung does.
+Every drop still carries an item level near that loot level (plus the harder
+rungs' `lootIlvlBonus`) that sizes its affixes — see the `weapon-system` skill
+for the full economy and its tuning tools.
 
 Every weapon deals its damage as a **range**, not a fixed number: each
 blow rolls inside a band around the catalog average (config
@@ -213,10 +231,14 @@ Above the rolled tiers sit the **named UNIQUES** (`src/game/defs/uniques.ts`):
 hand-authored drops with a FIXED bonus block on a chosen base — no rolled
 affixes, only a small ±10% band on the base damage/armor
 (`UNIQUE.baseRollBand`) so two copies differ and a better roll is worth
-chasing. Each is tied to a boss and a difficulty rung
-(`EnemyDef.uniquesByDifficulty`) and gated to it — an easy unique only drops
-on easy — at `UNIQUE.dropChance × mlvl/ilvl` (≈5% at its home rung, capped),
-so boss runs are the endgame and nothing is guaranteed. The 35 span the five
+chasing. In the D2 way, unique/legendary are **the top of the rarity roll**:
+when stage 2 lands one of those tiers, the game picks WHICH named item — among
+those valid for the rolled slot and reachable at the loot level — weighted by
+each item's own `rarity` (`UNIQUE.defaultRarity`), exactly D2's per-item drop
+weight. Two dedicated channels layer on top: each unique is also tied to a boss
+and a difficulty rung (`EnemyDef.uniquesByDifficulty`) and gated to it — an easy
+unique only drops on easy — at `UNIQUE.dropChance × mlvl/ilvl` (≈5% at its home
+rung, capped), so boss runs are the endgame and nothing is guaranteed. The 35 span the five
 bosses × five difficulties as a slot Latin square: every rung is the home of
 one full weapon-and-armor set (a weapon plus a head/chest/legs/feet piece,
 one per boss), and MUSKRAT also drops that rung's roomier **bag** while GROK
@@ -230,15 +252,16 @@ overtakes them.
 
 A second breed of unique — **level-locked WORLD DROPS** — hangs on the LEVEL
 rather than a boss (`LevelDef.loot.worldUniques`, config `WORLD_DROP`). Any
-enemy on the relic's home level can drop it, but at odds set purely by the
-enemy's **role**: a trash minion is a 0.015% long shot, an elite ~2%, the boss
-a fat 10% single kill — so across a whole ~1,200-mob floor the chance amasses to
-roughly 30%, yet one fast **boss run** is by far the best drops-per-minute. The
-table stays shut until the hero passes `WORLD_DROP.minPlayerLevel[difficulty]` —
-a PER-RUNG gate sized a few levels above where a first pass of that difficulty
-ends (easy 22, medium 36, hard 48, nightmare 57, jesus 60; see `leveling-curve.mjs
---by-level`), so a rung's relics can only be farmed by RETURNING for boss runs
-once that difficulty is beaten. The first batch is the EASY rung, relics themed to their levels
+enemy on the relic's home level can drop it, at odds set purely by the enemy's
+**role** as a MULTIPLE of the minion base (`WORLD_DROP` — one lever to retune
+the whole channel): a trash minion is a 0.015% long shot, an elite ×100 (1.5%),
+the boss ×200 (3%). ELITES and BOSSES drop these relics DURING the normal
+campaign — a set-piece kill is a reliable relic source the first time through —
+while the MINION lottery stays shut until the hero passes
+`WORLD_DROP.minPlayerLevel[difficulty]`, a PER-RUNG gate sized a few levels
+above where a first pass of that difficulty ends (easy 22, medium 36, hard 46,
+nightmare 57, jesus 60; see `leveling-curve.mjs --by-level`), so trash relics
+can only be farmed by RETURNING once that difficulty is beaten. The first batch is the EASY rung, relics themed to their levels
 — **THE FIRST DRAFT** (SpaceZ HQ, the prototype-GROK neural crown), **THE PALE
 COVENANT** (the Moon, the last moonwalker's sealed plate), **DEADSTAR** (the
 Moon, the pulsar-rod heart of a star that died screaming), **DUSTBORN** (Mars,
