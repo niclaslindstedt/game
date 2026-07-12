@@ -86,6 +86,13 @@ export const MARS: LevelDef = {
     { kind: "shrine", pos: { x: 2620, y: 1290 }, anchor: "base" },
   ],
   objective: { type: "killBoss" },
+  // The colony's RARE & UNIQUE encounters (config RARE_MOBS): a bad batch
+  // off the fembot line or the mission that "lost contact" on most runs,
+  // and — one run in five — UNIT ZERO, the first robot SpaceZ ever printed.
+  rareSpawns: {
+    rare: ["misprinted_fembot", "derelict_rover"],
+    unique: ["unit_zero"],
+  },
   spawns: [
     // The dust is worked by rovers long before anything notices the hero:
     // scouts thick around the landing site, drill rigs deeper in.

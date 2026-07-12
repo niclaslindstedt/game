@@ -124,6 +124,13 @@ export const THE_BUNKER: LevelDef = {
   objective: { type: "reachExit", at: { x: 3320, y: 850 } },
   // The farm loop's return leg: the victory splash offers BACK TO THE RIFT.
   exitTo: "the_rift",
+  // The bunker's RARE & UNIQUE encounters (config RARE_MOBS): a cell of
+  // double-payroll suits on most runs, and — one run in five — THE MOLE
+  // every agency downstairs is hunting.
+  rareSpawns: {
+    rare: ["moonlighting_agent"],
+    unique: ["the_mole"],
+  },
   spawns: [
     // The halls wake up shallow: suits thick around the entrance, housekeeping
     // everywhere, the border detail patrolling the middle, windbreakers

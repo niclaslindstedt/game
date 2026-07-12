@@ -15,7 +15,7 @@ import { MOON_ENEMIES } from "./moon.ts";
 import { RIFT_ENEMIES } from "./rift.ts";
 import { SPACEZ_ENEMIES } from "./spacez.ts";
 
-export type { DialoguePage, EnemyDef, EnemyRole } from "./types.ts";
+export type { DialoguePage, EnemyDef, EnemyRole, MobRarity } from "./types.ts";
 
 /** Merge the rosters into one registry, failing loudly on a duplicate id so a
  * clash surfaces at module load, not as a silently shadowed monster. */

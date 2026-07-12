@@ -82,6 +82,64 @@ export const RIFT_ENEMIES: Record<string, EnemyDef> = {
     ai: { aggroRadius: 1000 },
     dropProfile: { dropBonus: 0.4, tierBonus: 0.3 },
   },
+  // ---- RARE & UNIQUE mobs (config RARE_MOBS; placed via the level's
+  // `rareSpawns`). Authored at ordinary minion numbers — the engine applies
+  // the whole tier at spawn. No dialogue: special graphics and a loot burst.
+  //
+  // STRAY COMET — a loose flock of ice-blue voidlings on a decaying orbit,
+  // tails still streaming from somewhere they can't go back to.
+  stray_comet: {
+    id: "stray_comet",
+    name: "STRAY COMET",
+    role: "minion",
+    rarity: "rare",
+    pack: [2, 5],
+    sprite: "stray_comet",
+    gore: "ecto",
+    hp: 20,
+    speed: 22,
+    radius: 8,
+    contactDamage: 10,
+    critChance: 0.1,
+    contactCooldownMs: 700,
+    ai: { aggroRadius: 950 },
+  },
+  // COLLAPSED STAR — a star jelly that fell all the way in: violet-black,
+  // heavier than it looks, drifting alone with its own event horizon.
+  collapsed_star: {
+    id: "collapsed_star",
+    name: "COLLAPSED STAR",
+    role: "minion",
+    rarity: "rare",
+    sprite: "collapsed_star",
+    gore: "ecto",
+    phasing: true,
+    hp: 100,
+    speed: 12,
+    radius: 9,
+    contactDamage: 20,
+    critChance: 0.12,
+    contactCooldownMs: 700,
+    ai: { aggroRadius: 950 },
+  },
+  // THE LAST PHOTON — the final flash of a dead universe, white-hot and
+  // very fast. There is exactly one, by definition.
+  the_last_photon: {
+    id: "the_last_photon",
+    name: "THE LAST PHOTON",
+    role: "minion",
+    rarity: "unique",
+    sprite: "the_last_photon",
+    gore: "ecto",
+    phasing: true,
+    hp: 60,
+    speed: 30,
+    radius: 8,
+    contactDamage: 18,
+    critChance: 0.15,
+    contactCooldownMs: 700,
+    ai: { aggroRadius: 1050 },
+  },
   // ---- History's missing, pinned along the road to the far door so the
   // rift's story unspools in walking order: the physics (TESLA), Ada's trail
   // (EARHART), and the tribute road's ancient doorman (RASPUTIN).

@@ -1114,6 +1114,35 @@ SPRITES.eastrock_2x2 = swapPalette(moon.sprites.moonrock_2x2, {
   F: "u",
 });
 
+// ---- RARE & UNIQUE mobs (palette variants — the Diablo recolor idiom) ------
+// The special hosts wear the park's own body plans in liveries the workshop
+// never issued, so a find reads at a glance (the engine adds the aura + name).
+for (const frame of [0, 1]) {
+  // HAYWIRE GREETER — the welcome host with its livery scrambled: denim hat,
+  // amber bandana, glitch-cyan eyes.
+  SPRITES[`haywire_greeter_${frame}`] = swapPalette(
+    SPRITES[`cowbot_${frame}`],
+    {
+      D: "C",
+      E: "N",
+      r: "U",
+      R: "Q",
+    },
+  );
+  // COUNTERFEIT OUTLAW — the bandit line off a pirated mold: wine-red shell
+  // seams, olive rag for a scarf, a too-shiny gold buckle.
+  SPRITES[`counterfeit_outlaw_${frame}`] = swapPalette(
+    SPRITES[`tin_outlaw_${frame}`],
+    { N: "X", C: "e", o: "y" },
+  );
+  // THE ONE-ARMED BANDIT — the outlaw chassis gilded head to toe in other
+  // people's coin, cherry-red payline where the buckle was.
+  SPRITES[`one_armed_bandit_${frame}`] = swapPalette(
+    SPRITES[`tin_outlaw_${frame}`],
+    { N: "U", D: "B", E: "S", o: "r", C: "K" },
+  );
+}
+
 export default {
   name: "eastworld",
   /** Ground tile behind this family's contact sheet. */
@@ -1127,6 +1156,18 @@ export default {
       delayMs: 320,
     },
     tin_outlaw_walk: { frames: ["tin_outlaw_0", "tin_outlaw_1"], delayMs: 260 },
+    haywire_greeter_walk: {
+      frames: ["haywire_greeter_0", "haywire_greeter_1"],
+      delayMs: 300,
+    },
+    counterfeit_outlaw_walk: {
+      frames: ["counterfeit_outlaw_0", "counterfeit_outlaw_1"],
+      delayMs: 260,
+    },
+    one_armed_bandit_walk: {
+      frames: ["one_armed_bandit_0", "one_armed_bandit_1"],
+      delayMs: 300,
+    },
     longhorn_walk: { frames: ["longhorn_0", "longhorn_1"], delayMs: 340 },
     mosque_beach_walk: {
       frames: ["elon_mosque_beach_0", "elon_mosque_beach_1"],
@@ -1144,6 +1185,12 @@ export default {
     // hurt splats, so an amber scuff on the lower body carries the wound read.
     cowbot: { splat: "y", core: "Y", scuff: "H" },
     tin_outlaw: { splat: "y", core: "Y", scuff: "H" },
+    // The recolored specials keep their bases' rule…
+    haywire_greeter: { splat: "y", core: "Y", scuff: "H" },
+    counterfeit_outlaw: { splat: "y", core: "Y", scuff: "H" },
+    // …except the gilded bandit, whose gold body swallows gold sparks — it
+    // cracks in glitch cyan instead.
+    one_armed_bandit: { splat: "Q", core: "K", scuff: "N" },
   },
   // The desert floor and its scatter read as terrain, not subjects.
   contrastExempt: [

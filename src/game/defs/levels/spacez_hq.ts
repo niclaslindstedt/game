@@ -92,6 +92,13 @@ export const SPACEZ_HQ: LevelDef = {
     { kind: "rocket", pos: { x: 1830, y: 520 } },
   ],
   objective: { type: "killBoss" },
+  // The floor's RARE & UNIQUE encounters (config RARE_MOBS): a knot of lost
+  // tour guests or the temp nobody onboarded on most runs, and — one run in
+  // five — the EMPLOYEE OF THE MONTH defending the break room.
+  rareSpawns: {
+    rare: ["wandering_tourist", "night_shift_temp"],
+    unique: ["employee_of_the_month"],
+  },
   spawns: [
     // A dense front rank clustered right around the spawn — the night shift is
     // already on top of the hero when the lockdown drops, so standing still is

@@ -80,6 +80,44 @@ export const FIX_ENEMIES: Record<string, EnemyDef> = {
     contactCooldownMs: 700,
     ai: { aggroRadius: 1000 },
   },
+  // A RARE special mob (config RARE_MOBS): authored at `test_minion` numbers
+  // so the rarity multipliers are measurable against it; a pack mob.
+  test_rare: {
+    id: "test_rare",
+    name: "TEST RARE",
+    role: "minion",
+    rarity: "rare",
+    pack: [2, 4],
+    sprite: "test_rare",
+    gore: "ecto",
+    phasing: true,
+    hp: 45,
+    speed: 16,
+    radius: 9,
+    contactDamage: 12,
+    critChance: 0.1,
+    contactCooldownMs: 700,
+    ai: { aggroRadius: 950 },
+  },
+  // A UNIQUE special mob — `pack` deliberately set so the "uniques are always
+  // solo" rule is what the suite proves ignores it.
+  test_unique_mob: {
+    id: "test_unique_mob",
+    name: "TEST UNIQUE",
+    role: "minion",
+    rarity: "unique",
+    pack: [3, 5],
+    sprite: "test_unique_mob",
+    gore: "ecto",
+    phasing: true,
+    hp: 45,
+    speed: 16,
+    radius: 9,
+    contactDamage: 12,
+    critChance: 0.1,
+    contactCooldownMs: 700,
+    ai: { aggroRadius: 950 },
+  },
   // A NON-phasing minion for wall / line-of-sight tests (mirrors `guard`).
   test_stalker: {
     id: "test_stalker",
@@ -933,6 +971,17 @@ export const FIX_LEVEL: LevelDef = {
   },
 };
 
+// A level carrying RARE & UNIQUE encounter candidates (`rareSpawns`) for the
+// special-mob rules; everything else is the reference level.
+export const FIX_RARE_LEVEL: LevelDef = {
+  ...FIX_LEVEL,
+  id: "test_rare_level",
+  rareSpawns: {
+    rare: ["test_rare"],
+    unique: ["test_unique_mob"],
+  },
+};
+
 // A level whose wandering merchant has a full persona — look, name, and a
 // meeting scene — for the discovery-dialogue rules. (The reference FIX_LEVEL
 // keeps the default silent merchant so no other suite trips a greeting.)
@@ -1188,6 +1237,7 @@ export function installFixtures(force = false): void {
     levels: {
       test_level: FIX_LEVEL,
       test_level_2: FIX_LEVEL_2,
+      test_rare_level: FIX_RARE_LEVEL,
       test_merchant_level: FIX_MERCHANT_LEVEL,
       test_prelude_level: FIX_PRELUDE_LEVEL,
       test_chain_level: FIX_CHAIN_LEVEL,

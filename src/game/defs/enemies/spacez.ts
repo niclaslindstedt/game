@@ -136,6 +136,61 @@ export const SPACEZ_ENEMIES: Record<string, EnemyDef> = {
     // meaningfully richer tier when it lands.
     dropProfile: { dropBonus: 0.4, tierBonus: 0.3 },
   },
+  // ---- RARE & UNIQUE mobs (config RARE_MOBS; placed via the level's
+  // `rareSpawns`). Authored at ordinary minion numbers — the engine applies
+  // the whole tier (5×/10× toughness, 20×/100× drops) at spawn. No dialogue:
+  // the special graphics and the loot burst ARE the encounter.
+  //
+  // WANDERING TOURIST — somebody's uncle who wandered off the public tour
+  // hours ago and somehow missed the evacuation. Turns up as a small knot of
+  // lost visitors, cameras out.
+  wandering_tourist: {
+    id: "wandering_tourist",
+    name: "WANDERING TOURIST",
+    role: "minion",
+    rarity: "rare",
+    pack: [1, 3],
+    sprite: "wandering_tourist",
+    hp: 30,
+    speed: 16,
+    radius: 8,
+    contactDamage: 10,
+    critChance: 0.1,
+    contactCooldownMs: 700,
+    ai: { aggroRadius: 950 },
+  },
+  // NIGHT-SHIFT TEMP — the agency worker nobody onboarded, still clocking
+  // rounds through the apocalypse. Always alone. Always on time.
+  night_shift_temp: {
+    id: "night_shift_temp",
+    name: "NIGHT-SHIFT TEMP",
+    role: "minion",
+    rarity: "rare",
+    sprite: "night_shift_temp",
+    hp: 55,
+    speed: 18,
+    radius: 9,
+    contactDamage: 14,
+    critChance: 0.1,
+    contactCooldownMs: 700,
+    ai: { aggroRadius: 950 },
+  },
+  // EMPLOYEE OF THE MONTH — the plaque winner, badge polished to a shine,
+  // defending the break room like it's shareholder value. One per company.
+  employee_of_the_month: {
+    id: "employee_of_the_month",
+    name: "EMPLOYEE OF THE MONTH",
+    role: "minion",
+    rarity: "unique",
+    sprite: "employee_of_the_month",
+    hp: 80,
+    speed: 20,
+    radius: 9,
+    contactDamage: 18,
+    critChance: 0.12,
+    contactCooldownMs: 700,
+    ai: { aggroRadius: 1000 },
+  },
   // ---- SpaceZ HQ elites — the four staffers who know too much. Each is a
   // hand-placed unique (LevelDef pins them), rushes the player on approach,
   // says its piece, then fights like a mid-boss. Their drops carry the plot:

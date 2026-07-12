@@ -643,6 +643,30 @@ export function drawFrame(
       ctx.fill();
       ctx.globalAlpha = 1;
     }
+    // A RARE or UNIQUE mob (config RARE_MOBS) wears a steady jeweled aura —
+    // the Diablo special-monster glow: cool blue for a rare, radiant gold for
+    // a one-of-a-kind unique — so the special find reads at a glance over the
+    // recolored body, wherever it stands in the horde.
+    if (def.rarity) {
+      const cx = Math.round(enemy.pos.x - camera.x);
+      const cy = Math.round(enemy.pos.y - camera.y) + bob;
+      const unique = def.rarity === "unique";
+      const pulse = 0.5 + 0.5 * Math.sin(timeMs / 260 + enemy.id);
+      // Two nested rings — a soft body halo under a brighter rim — so the tell
+      // reads without washing out the sprite it wraps.
+      ctx.fillStyle = unique ? "#ffcf40" : "#5cc8ff";
+      ctx.globalAlpha = (unique ? 0.16 : 0.13) + 0.09 * pulse;
+      ctx.beginPath();
+      ctx.arc(cx, cy, def.radius + (unique ? 6 : 4), 0, Math.PI * 2);
+      ctx.fill();
+      ctx.globalAlpha = (unique ? 0.5 : 0.4) + 0.2 * pulse;
+      ctx.strokeStyle = unique ? "#ffe38a" : "#a6e0ff";
+      ctx.lineWidth = 1;
+      ctx.beginPath();
+      ctx.arc(cx, cy, def.radius + (unique ? 7 : 5), 0, Math.PI * 2);
+      ctx.stroke();
+      ctx.globalAlpha = 1;
+    }
     // A TELEGRAPHED move winding up (mechanics.ts): the mob is rooted, so
     // the tell must carry — a fast white/red strobe ring plus, for a slam,
     // the danger circle the shockwave will fill; for a charge, the locked
@@ -708,14 +732,22 @@ export function drawFrame(
     if (!critBlink) ctx.drawImage(sprite, x, y);
     ctx.globalAlpha = 1;
 
-    // Bosses and elites carry their health over their head once wounded.
-    if (def.role !== "minion" && enemy.hp < enemy.maxHp) {
+    // Bosses and elites carry their health over their head once wounded — and
+    // so do RARE/UNIQUE mobs, the special-monster tell that reads them as the
+    // mini-bosses they fight like, in their aura's color.
+    if ((def.role !== "minion" || def.rarity) && enemy.hp < enemy.maxHp) {
       const barWidth = def.role === "boss" ? 40 : 28;
       const bx = Math.round(enemy.pos.x - barWidth / 2 - camera.x);
       const by = y - 6;
       ctx.fillStyle = "#0b0d10";
       ctx.fillRect(bx - 1, by - 1, barWidth + 2, 5);
-      ctx.fillStyle = def.role === "boss" ? "#d83a3a" : "#d9a0f0";
+      ctx.fillStyle = def.rarity
+        ? def.rarity === "unique"
+          ? "#ffcf40"
+          : "#5cc8ff"
+        : def.role === "boss"
+          ? "#d83a3a"
+          : "#d9a0f0";
       ctx.fillRect(bx, by, Math.round((barWidth * enemy.hp) / enemy.maxHp), 3);
     }
   }

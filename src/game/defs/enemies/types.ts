@@ -16,6 +16,17 @@ import type { Difficulty, Tier } from "../../types.ts";
 export type EnemyRole = "minion" | "elite" | "boss";
 
 /**
+ * The Diablo-style SPECIAL-MONSTER tiers (see config RARE_MOBS). A `rare`
+ * mob is a generically-named oddity that turns up about once per map (solo
+ * or a small pack); a `unique` mob is a NAMED one-off that only exists on a
+ * fraction of runs and is always alone. Both are minion-role defs — no
+ * dialogue, no guaranteed `loot` — whose whole tier (hp, contact damage,
+ * monster-level head start, multiplied drop rolls) the engine applies at
+ * spawn, so the def is authored at ordinary minion numbers.
+ */
+export type MobRarity = "rare" | "unique";
+
+/**
  * One page of a unique's arrival scene. A plain `string[]` is the speaker's
  * own page (one string per line); `{ hero: [...] }` is the HERO talking back
  * mid-scene — the app swaps in his name and portrait for that page, so a
@@ -112,6 +123,20 @@ export type EnemyDef = {
    * defaults to "blood".
    */
   gore?: "blood" | "ecto" | "sparks";
+  /**
+   * A SPECIAL monster (see `MobRarity` / config RARE_MOBS): the engine
+   * multiplies the def's authored minion baseline up at spawn — hp, contact
+   * damage, monster level, and the kill's drop rolls — and the renderer
+   * marks it (aura, floating name). Minion-role only; levels place these via
+   * `LevelDef.rareSpawns`, never in ordinary spawn/wave lists.
+   */
+  rarity?: MobRarity;
+  /**
+   * Rare mobs only: the pack size range `[min, max]` (inclusive) rolled per
+   * encounter — "1-5 depending on solo or pack". Omitted = always solo.
+   * Ignored on `unique` mobs, which are one of a kind by definition.
+   */
+  pack?: [number, number];
   hp: number;
   /**
    * Levels ABOVE the horde's baseline this mob runs at: its monster level is

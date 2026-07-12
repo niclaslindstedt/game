@@ -152,6 +152,13 @@ export const EASTWORLD: LevelDef = {
     { kind: "control_center", pos: { x: 2950, y: 620 }, anchor: "base" },
   ],
   objective: { type: "killBoss" },
+  // The park's RARE & UNIQUE encounters (config RARE_MOBS): a haywire
+  // welcome committee or a bootleg outlaw print on most runs, and — one run
+  // in five — THE ONE-ARMED BANDIT, gilded in other people's coin.
+  rareSpawns: {
+    rare: ["haywire_greeter", "counterfeit_outlaw"],
+    unique: ["one_armed_bandit"],
+  },
   spawns: [
     // The park wakes up shallow: greeters thick around the gate, brawlers
     // and outlaws down main street, longhorns bending the back half.

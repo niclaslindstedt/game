@@ -22,7 +22,7 @@
 //      set-piece fights keep pace instead of melting.
 // Kept out of step.ts/loot.ts so both stay lean and this rule reads in one place.
 
-import { LEVELING, MENACE } from "./config.ts";
+import { LEVELING, MENACE, RARE_MOBS } from "./config.ts";
 import { difficultyDef } from "./defs/difficulties.ts";
 import { enemyDef } from "./defs/enemies/index.ts";
 // items.ts also imports from this module (currentMobLevel) — a runtime-only
@@ -469,16 +469,24 @@ export function mobContactScaleFor(mlvl: number): number {
 export function maybePowerScale(state: GameState, enemy: Enemy): void {
   if (enemy.powerScaled) return;
   const def = enemyDef(enemy.defId);
-  if (def.role === "minion") return;
+  // RARE/UNIQUE mobs (config RARE_MOBS) power-match like the set pieces do:
+  // they are placed at creation on the warm-up baseline, so without the
+  // re-stamp a special find met deep into a run would be a speed bump.
+  if (def.role === "minion" && !def.rarity) return;
+  const rarity = def.rarity ? RARE_MOBS.tuning[def.rarity] : undefined;
   enemy.powerScaled = true;
   // The fight opening is also when the mob's MONSTER LEVEL is settled: an
   // elite/boss met deep into a run drops loot worthy of the hero who beat it,
   // not of the level it was placed at. Its `levelBonus` keeps it a few levels
   // above the rank and file, so the set pieces reach the tier gates first.
-  enemy.mlvl = Math.max(1, currentMobLevel(state) + (def.levelBonus ?? 0));
+  enemy.mlvl = Math.max(
+    1,
+    currentMobLevel(state) + (def.levelBonus ?? 0) + (rarity?.levelBonus ?? 0),
+  );
   const levelTerm = enemyPowerLevelTerm(state);
   enemy.contactMult =
     mobContactScaleFor(enemy.mlvl) *
+    (rarity?.damageMult ?? 1) *
     (1 + (levelTerm - 1) * MENACE.bossContactShare);
   const scale = enemyPowerScale(state);
   if (scale <= 1) return;

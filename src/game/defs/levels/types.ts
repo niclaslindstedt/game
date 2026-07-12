@@ -175,6 +175,18 @@ export type LevelDef = {
   exitTo?: string;
   /** Monsters placed at level creation — the "few on screen" at the start. */
   spawns: SpawnSpec[];
+  /**
+   * The level's RARE & UNIQUE encounters (see config RARE_MOBS): candidate
+   * `EnemyDef.rarity` mob ids, rolled once per run at level creation. Each
+   * tier rolls independently — `rare` exists on most runs (one candidate
+   * picked, spawning its def's `pack` count at a banded spot), `unique` on
+   * about one run in five (always a single mob). Candidates must be
+   * minion-role defs carrying the matching `rarity`.
+   */
+  rareSpawns?: {
+    rare?: string[];
+    unique?: string[];
+  };
   /** The horde: thousands more streamed in around the player over time. */
   waves?: WaveSpec;
   /**
