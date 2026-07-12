@@ -50,7 +50,15 @@ describe("artifact roster", () => {
 
   it("covers every equipment slot", () => {
     const slots = new Set(artifacts.map((a) => a.slot));
-    for (const slot of ["weapon", "head", "chest", "legs", "feet", "charm", "bag"])
+    for (const slot of [
+      "weapon",
+      "head",
+      "chest",
+      "legs",
+      "feet",
+      "charm",
+      "bag",
+    ])
       expect(slots.has(slot as UniqueDef["slot"])).toBe(true);
   });
 
