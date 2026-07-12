@@ -708,15 +708,35 @@ export function drawFrame(
     if (!critBlink) ctx.drawImage(sprite, x, y);
     ctx.globalAlpha = 1;
 
-    // Bosses and elites carry their health over their head once wounded.
-    if (def.role !== "minion" && enemy.hp < enemy.maxHp) {
-      const barWidth = def.role === "boss" ? 40 : 28;
+    // Health over the head. Bosses and elites always carry a bar once wounded;
+    // regular minions get one only when the HEALTH BARS display setting is on —
+    // and just a few pixels wide, since they hold so little hp that a full-size
+    // bar would swamp the sprite.
+    const minionBar = def.role === "minion" && getSettings().healthBars === "on";
+    if ((def.role !== "minion" || minionBar) && enemy.hp < enemy.maxHp) {
+      const barWidth =
+        def.role === "boss"
+          ? 40
+          : def.role === "elite"
+            ? 28
+            : sprite.width;
+      const barHeight = def.role === "minion" ? 1 : 3;
       const bx = Math.round(enemy.pos.x - barWidth / 2 - camera.x);
-      const by = y - 6;
+      const by = y - (def.role === "minion" ? 3 : 6);
       ctx.fillStyle = "#0b0d10";
-      ctx.fillRect(bx - 1, by - 1, barWidth + 2, 5);
-      ctx.fillStyle = def.role === "boss" ? "#d83a3a" : "#d9a0f0";
-      ctx.fillRect(bx, by, Math.round((barWidth * enemy.hp) / enemy.maxHp), 3);
+      ctx.fillRect(bx - 1, by - 1, barWidth + 2, barHeight + 2);
+      ctx.fillStyle =
+        def.role === "boss"
+          ? "#d83a3a"
+          : def.role === "elite"
+            ? "#d9a0f0"
+            : "#e05050";
+      ctx.fillRect(
+        bx,
+        by,
+        Math.max(1, Math.round((barWidth * enemy.hp) / enemy.maxHp)),
+        barHeight,
+      );
     }
   }
 
