@@ -175,7 +175,7 @@ export const BUNKER_ENEMIES: Record<string, EnemyDef> = {
   // ---- The residents ----------------------------------------------------------
   // Each one a campaign elite scaled to farm-boss weight: the bunker has no
   // finale, so the six suites ARE the fights. Their world-drop odds ride the
-  // elite role (config WORLD_DROP × the level's worldDropMult).
+  // elite role (config WORLD_DROP × the level's namedDropMult).
   putain_clone: {
     id: "putain_clone",
     name: "VLADIMIR PUTAIN",

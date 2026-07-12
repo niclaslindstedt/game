@@ -384,8 +384,19 @@ for (const p of [...placements, ...stallPlacements])
 const worldCount = {};
 for (const p of worldPlacements) worldCount[p.id] = (worldCount[p.id] ?? 0) + 1;
 for (const id of UNIQUE_IDS) {
+  const tier = UNIQUE_DEFS[id].tier ?? "unique";
   const primary = primaryCount[id] ?? 0;
   const world = worldCount[id] ?? 0;
+  // LEGENDARY and ARTIFACT are GLOBAL drops (the rarity roll on any HARD+ mob,
+  // gated by base levelReq — see `rollTier`), so they have NO table home by
+  // design. They must NOT be wired to a boss/level/stall table.
+  if (tier === "legendary" || tier === "artifact") {
+    if (primary + world > 0)
+      err(
+        `${id}: ${tier} wired to a drop table — legendary/artifact drop GLOBALLY via the rarity roll, not from tables.`,
+      );
+    continue;
+  }
   if (primary + world === 0)
     err(
       `${id}: shipped but wired to no boss, level, or stall — it can never drop.`,
@@ -496,7 +507,8 @@ if (weaponRows.length) {
 // UNIQUE.rarityBudgetRef, see `pickUniqueForDrop`); this prints the resulting
 // odds so authoring power IS visibly authoring rarity.
 const legendaryRows = UNIQUE_IDS.filter(
-  (id) => UNIQUE_DEFS[id].tier === "legendary",
+  (id) =>
+    UNIQUE_DEFS[id].tier === "legendary" || UNIQUE_DEFS[id].tier === "artifact",
 ).map((id) => {
   const u = UNIQUE_DEFS[id];
   const budget = u.bonuses.reduce((s, b) => s + bonusIlvl(b), 0);

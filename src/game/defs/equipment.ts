@@ -33,11 +33,16 @@ export const TIERS: Record<Tier, { prefix: string; affixCount: number }> = {
   rare: { prefix: "RARE ", affixCount: 2 },
   unique: { prefix: "UNIQUE ", affixCount: 3 },
   legendary: { prefix: "LEGENDARY ", affixCount: 4 },
+  // ARTIFACT — the tier above legendary: the super-epic hand-authored chase
+  // (the level-99 endgame roster). Rarest of all (config `LOOT.rarityBase`),
+  // its own card color, unbreakable/keepsake like every named drop.
+  artifact: { prefix: "ARTIFACT ", affixCount: 5 },
 };
 
 /** Roll order: try the best tier first, fall through to regular. TRASH is
  * deliberately absent — it never rolls, only scripted drops mint it. */
 export const TIER_ROLL_ORDER: Exclude<Tier, "regular" | "trash">[] = [
+  "artifact",
   "legendary",
   "unique",
   "rare",

@@ -1151,7 +1151,7 @@ export const FIX_EXIT_LEVEL: LevelDef = (() => {
     outro: [["TEST EXIT OUTRO."]],
     exitTo: "test_gate_level",
     spawns: [{ enemy: "test_minion", count: 2, band: [0.4, 0.8] }],
-    loot: { ...FIX_LEVEL.loot, worldDropMult: 2 },
+    loot: { ...FIX_LEVEL.loot, namedDropMult: 2 },
   });
   delete level.loot.earlyDrops;
   return level;

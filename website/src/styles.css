@@ -4233,8 +4233,14 @@ body {
   --tier-glow: 255, 167, 38;
 }
 
+/* ARTIFACT — the tier above legendary: the hottest halo (searing red-white). */
+.tier-artifact {
+  --tier-glow: 255, 94, 108;
+}
+
 .inv-cell.tier-unique,
-.inv-cell.tier-legendary {
+.inv-cell.tier-legendary,
+.inv-cell.tier-artifact {
   background: radial-gradient(
     circle,
     rgba(var(--tier-glow), 0.3),
@@ -4247,8 +4253,10 @@ body {
 
 .item-tooltip.tier-unique,
 .item-tooltip.tier-legendary,
+.item-tooltip.tier-artifact,
 .arsenal-detail.tier-unique,
-.arsenal-detail.tier-legendary {
+.arsenal-detail.tier-legendary,
+.arsenal-detail.tier-artifact {
   box-shadow:
     inset 0 0 0 1px var(--panel-groove),
     0 6px 18px rgba(0, 0, 0, 0.65),
@@ -4256,7 +4264,8 @@ body {
 }
 
 canvas.tier-unique,
-canvas.tier-legendary {
+canvas.tier-legendary,
+canvas.tier-artifact {
   filter: drop-shadow(0 0 0.2rem rgba(var(--tier-glow), 0.8));
 }
 

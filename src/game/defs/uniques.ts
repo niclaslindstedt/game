@@ -36,13 +36,14 @@ export type UniqueDef = {
   base: string;
   /** The slot it occupies (must match the base). */
   slot: EquipSlot;
-  /** The rarity tier this mints at — the rarest hand-authored finds are
-   * `"legendary"` (one rung above the default `"unique"`): orange card, the
-   * densest pickup blaze, and the same unbreakable/keepsake treatment. Omit for
-   * an ordinary unique. Purely a display/rarity stamp — power still obeys the
-   * same ilvl budget and armor rules as any unique (the checkers are
-   * tier-agnostic). */
-  tier?: Extract<Tier, "unique" | "legendary">;
+  /** The rarity tier this mints at — the hand-authored chase climbs
+   * `"unique"` (default) → `"legendary"` → `"artifact"` (the super-epic
+   * level-99 endgame roster): each rung a rarer card color, a denser pickup
+   * blaze, and the same unbreakable/keepsake treatment. Omit for an ordinary
+   * unique. Legendary/artifact drop from HARD up via the global rarity roll,
+   * gated by the base's level requirement and spread by the power-law
+   * `uniqueDropWeight`; the checkers hold the same ilvl/armor rules for all. */
+  tier?: Extract<Tier, "unique" | "legendary" | "artifact">;
   /** The static item level — scales the unique's POWER/feel, not its equip
    * requirement (which is the base item's `levelReq`, like any tier), so a
    * unique is often wearable well below its ilvl. */

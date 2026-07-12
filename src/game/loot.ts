@@ -993,12 +993,13 @@ function maybeDropWorldUnique(
     const gate = WORLD_DROP.minPlayerLevel[state.difficulty];
     if (gate === undefined || state.player.level < gate) return;
   }
-  // `worldDropMult` is the farm-level sweetener: a dedicated grind venue
-  // pays a bit better per kill than the relics' home levels (default 1).
+  // `namedDropMult` is the farm-venue sweetener: a dedicated grind venue (the
+  // bunker) pays better per kill than the relics' home levels (default 1). It
+  // lifts the global legendary/artifact roll too (see `rollTier`).
   const chance =
     WORLD_DROP.chanceByRole[def.role] *
     BALANCE.uniqueDrops *
-    (loot.worldDropMult ?? 1);
+    (loot.namedDropMult ?? 1);
   for (const id of ids) {
     if (state.rng() >= chance) continue;
     pushUniqueDrop(state, id, enemy.pos);

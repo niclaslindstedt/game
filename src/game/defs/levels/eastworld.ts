@@ -520,17 +520,11 @@ export const EASTWORLD: LevelDef = {
       // HORDEBANE (the axe made for too many), DRAGON'S BREATH (the park's
       // monster-of-legend scattergun), and SKYBREAKER — the nightmare rung's
       // ranged LEGENDARY, tearing the sky with every landed round.
-      nightmare: ["hordebane", "dragons_breath", "skybreaker"],
+      nightmare: ["hordebane", "dragons_breath"],
       // The JESUS rung's park haul — the ruling revolver, the horizon rifle,
       // and three LEGENDARIES: KINGSBANE (never misses, bursts on hit), THE
       // LONG SILENCE (kills detonate), WINDGRAVE (the wind's own spurs).
-      jesus: [
-        "the_verdict",
-        "horizons_end",
-        "kingsbane",
-        "the_long_silence",
-        "windgrave",
-      ],
+      jesus: ["the_verdict", "horizons_end"],
     },
     // Level a normal run reaches per rung (`leveling-curve.mjs --by-level`) —
     // the campaign's FINAL map, so these are each difficulty's end level; past

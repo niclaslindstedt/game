@@ -522,6 +522,15 @@ export const ACHIEVEMENTS: AchievementDef[] = [
     tier: "expert",
     done: (t) => t.legendaryFound >= 1,
   },
+  {
+    id: "artifact_1",
+    category: "loot",
+    name: "RELIC OF THE OLD WORLD",
+    desc: "FIND AN ARTIFACT",
+    icon: "icon_crystal_orb",
+    tier: "expert",
+    done: (t) => t.artifactFound >= 1,
+  },
   counter({
     id: "uniques_all",
     category: "loot",

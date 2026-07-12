@@ -12,9 +12,11 @@ export const TIER_COLORS: Record<Tier, string> = {
   regular: "#e6e8eb",
   magic: "#4da6ff",
   rare: "#ffe14d",
-  // The Diablo palette: gold uniques, orange legendaries.
+  // The Diablo palette: gold uniques, orange legendaries — and, above them,
+  // the searing red-white of an ARTIFACT (the super-epic level-99 chase).
   unique: "#c7a25a",
   legendary: "#ffa726",
+  artifact: "#ff5e6c",
 };
 
 /**
@@ -29,6 +31,7 @@ export const TIER_LABELS: Partial<Record<Tier, string>> = {
   rare: "RARE ITEM",
   unique: "UNIQUE ITEM",
   legendary: "LEGENDARY ITEM",
+  artifact: "ARTIFACT",
 };
 
 /**
@@ -39,7 +42,9 @@ export const TIER_LABELS: Partial<Record<Tier, string>> = {
  * Returns "" for the rolled tiers, so callers can append unconditionally.
  */
 export function tierGlowClass(tier: Tier): string {
-  return tier === "unique" || tier === "legendary" ? ` tier-${tier}` : "";
+  return tier === "unique" || tier === "legendary" || tier === "artifact"
+    ? ` tier-${tier}`
+    : "";
 }
 
 /**

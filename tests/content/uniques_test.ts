@@ -155,13 +155,24 @@ describe("boss unique drop tables", () => {
     }
   });
 
-  it("places every shipped unique exactly once (boss table, world drop, or stall)", () => {
+  it("places every shipped UNIQUE exactly once (boss table, world drop, or stall)", () => {
+    // LEGENDARY and ARTIFACT tiers drop GLOBALLY via the rarity roll (gated by
+    // base levelReq, HARD+), so they have NO table home — the coverage
+    // accounting is for plain uniques only.
+    const tableTiers = (id: string) => {
+      const t = uniqueDef(id).tier ?? "unique";
+      return t !== "legendary" && t !== "artifact";
+    };
     const placed = [...wiring, ...worldWiring, ...stallWiring]
       .map((w) => w.id)
       .sort();
-    expect(placed).toEqual([...UNIQUE_IDS].sort());
+    expect(placed).toEqual([...UNIQUE_IDS].filter(tableTiers).sort());
     // No id has two homes.
     expect(new Set(placed).size).toBe(placed.length);
+    // Legendaries/artifacts are wired to NO table.
+    for (const id of UNIQUE_IDS.filter((i) => !tableTiers(i))) {
+      expect(placed).not.toContain(id);
+    }
 
     // Stall stock resolves against real uniques too.
     for (const { id } of stallWiring) {
@@ -174,7 +185,7 @@ describe("boss unique drop tables", () => {
     // sweetened odds — never a first home. Every id it lists must be wired
     // on some campaign level, on the SAME difficulty rung.
     const bunker = LEVELS.the_bunker!;
-    expect(bunker.loot.worldDropMult ?? 1).toBeGreaterThan(1);
+    expect(bunker.loot.namedDropMult ?? 1).toBeGreaterThan(1);
     for (const [diff, ids] of Object.entries(bunker.loot.worldUniques ?? {})) {
       expect(ids?.length ?? 0).toBeGreaterThan(0);
       for (const id of ids ?? []) {

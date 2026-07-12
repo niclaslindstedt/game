@@ -79,7 +79,7 @@ export type ArmorSlot = "head" | "chest" | "legs" | "feet";
  * sells for next to nothing.
  */
 export type Tier =
-  "trash" | "regular" | "magic" | "rare" | "unique" | "legendary";
+  "trash" | "regular" | "magic" | "rare" | "unique" | "legendary" | "artifact";
 
 export type EquipSlot = "weapon" | ArmorSlot | "charm" | "bag";
 

@@ -67,21 +67,32 @@ function killAndCheckRelic(
 
 describe("world drops — role-scaled, minion-gated", () => {
   it("drops from a boss when the roll clears the boss chance", () => {
-    // boss chance is 3%; a 2% roll clears it.
-    expect(WORLD_DROP.chanceByRole.boss).toBeGreaterThan(0.02);
-    expect(killAndCheckRelic("test_boss", 40, () => 0.02)).toBe(true);
+    // A roll just under the boss chance clears it (rate-relative so the
+    // assertion survives recalibration of WORLD_DROP).
+    expect(WORLD_DROP.chanceByRole.boss).toBeGreaterThan(
+      WORLD_DROP.chanceByRole.minion,
+    );
+    const underBoss = () => WORLD_DROP.chanceByRole.boss / 2;
+    expect(killAndCheckRelic("test_boss", 40, underBoss)).toBe(true);
   });
 
   it("does NOT drop from a minion on the same roll — trash is magnitudes rarer", () => {
-    // The same 2% roll that a boss pays out on fails a minion (0.015%), so the
-    // relic favors boss/elite runs by orders of magnitude.
-    expect(WORLD_DROP.chanceByRole.minion).toBeLessThan(0.02);
-    expect(killAndCheckRelic("test_minion", 40, () => 0.02)).toBe(false);
+    // The same roll that a boss pays out on fails a minion (magnitudes rarer),
+    // so the relic favors boss/elite runs by orders of magnitude.
+    const underBoss = WORLD_DROP.chanceByRole.boss / 2;
+    expect(WORLD_DROP.chanceByRole.minion).toBeLessThan(underBoss);
+    expect(killAndCheckRelic("test_minion", 40, () => underBoss)).toBe(false);
   });
 
   it("a minion CAN drop it on a hot enough roll (the wild lottery ticket)", () => {
     // Hero level 40 is above the medium gate, so the minion lottery is open.
-    expect(killAndCheckRelic("test_minion", 40, () => 0.00005)).toBe(true);
+    expect(
+      killAndCheckRelic(
+        "test_minion",
+        40,
+        () => WORLD_DROP.chanceByRole.minion / 2,
+      ),
+    ).toBe(true);
   });
 
   it("elites sit between: they pay out where a minion would not", () => {
@@ -97,24 +108,40 @@ describe("world drops — role-scaled, minion-gated", () => {
 
   it("minion lottery stays shut below the level gate", () => {
     expect(
-      killAndCheckRelic("test_minion", MEDIUM_GATE - 1, () => 0.00005),
+      killAndCheckRelic(
+        "test_minion",
+        MEDIUM_GATE - 1,
+        () => WORLD_DROP.chanceByRole.minion / 2,
+      ),
     ).toBe(false);
   });
 
   it("minion lottery opens exactly at the gate", () => {
-    expect(killAndCheckRelic("test_minion", MEDIUM_GATE, () => 0.00005)).toBe(
-      true,
-    );
+    expect(
+      killAndCheckRelic(
+        "test_minion",
+        MEDIUM_GATE,
+        () => WORLD_DROP.chanceByRole.minion / 2,
+      ),
+    ).toBe(true);
   });
 
   it("elites and bosses IGNORE the gate — relics drop during the campaign", () => {
     // Well below the minion gate, a set-piece kill still pays out.
-    expect(killAndCheckRelic("test_boss", MEDIUM_GATE - 1, () => 0.02)).toBe(
-      true,
-    );
-    expect(killAndCheckRelic("test_elite", MEDIUM_GATE - 1, () => 0.01)).toBe(
-      true,
-    );
+    expect(
+      killAndCheckRelic(
+        "test_boss",
+        MEDIUM_GATE - 1,
+        () => WORLD_DROP.chanceByRole.boss / 2,
+      ),
+    ).toBe(true);
+    expect(
+      killAndCheckRelic(
+        "test_elite",
+        MEDIUM_GATE - 1,
+        () => WORLD_DROP.chanceByRole.elite / 2,
+      ),
+    ).toBe(true);
   });
 
   it("a level with no world table never drops one, even for a high-level boss", () => {

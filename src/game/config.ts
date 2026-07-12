@@ -517,10 +517,16 @@ export const UNIQUE = {
  * rung's end — the relics can only be farmed by RETURNING for boss runs once the
  * difficulty is beaten. Rolled per unique, per kill, on `maybeDropWorldUnique`.
  */
-const WORLD_DROP_MINION_CHANCE = 0.00015;
+// Calibrated (with the folded rarity roll and the boss `uniquesByDifficulty`
+// tables) so a JESUS farm run drops ≈ ONE named unique — see
+// `scripts/drop-rate.mjs`. The relic-dense levels (the rift, and the bunker
+// that relists the whole catalog) run a little hotter by design; a typical
+// level lands near one. Trimmed from 0.00015: three unique channels stacked
+// to ~9 uniques a bunker run, far past "one per run".
+const WORLD_DROP_MINION_CHANCE = 0.00004;
 // The explicit set-piece boost, as MULTIPLES of the minion base — the one
 // place to retune "how much better a set piece is" (also live-scaled by the
-// runtime BALANCE › UNIQUE DROPS knob). Elite ×100 → 1.5%, boss ×200 → 3%.
+// runtime BALANCE › UNIQUE DROPS knob). Elite ×100 → 0.4%, boss ×200 → 0.8%.
 const WORLD_DROP_ELITE_MULT = 100;
 const WORLD_DROP_BOSS_MULT = 200;
 
@@ -1174,7 +1180,14 @@ export const LOOT = {
    * earlier in the story.) TRASH is gated at 1 — it never rolls anyway (only
    * scripted drops mint it), the entry just keeps the tier table total.
    */
-  tierUnlockMlvl: { trash: 1, magic: 5, rare: 10, unique: 15, legendary: 40 },
+  tierUnlockMlvl: {
+    trash: 1,
+    magic: 5,
+    rare: 10,
+    unique: 15,
+    legendary: 40,
+    artifact: 40,
+  },
   /**
    * BASE-LEVEL drop floor: a base whose `levelReq` is more than this many
    * levels under the killer's monster level is retired from the drop pool, so a
@@ -1185,6 +1198,19 @@ export const LOOT = {
    * flooring — the base scales with where you kill, the affixes with the ilvl.
    */
   dropLevelWindow: 15,
+  /**
+   * NAMED-ITEM drop floor (D2 area-level flooring for uniques/legendaries/
+   * artifacts): a named item whose `ilvl` is more than this many levels under
+   * the killer's LOOT LEVEL is retired from the `pickUniqueForDrop` pool, so a
+   * cap-level (99) farm stops coughing up the campaign's low-ilvl relics —
+   * "level-60 crap" — and pays out only near-level gear (~ilvl 85+ at level
+   * 99). This is how a named drop's item level DRAGS UP as the hero levels: the
+   * eligible band slides with `lootLevel`, so you always find gear around your
+   * own level, and the low-tier uniques recede as you outgrow them. Kept as a
+   * WINDOW so a band of ilvls stays live; if it would empty a slot's pool the
+   * roll simply downgrades to a rare (never a dead drop). The equip CEILING
+   * (base `levelReq ≤ lootLevel`) still holds on top. */
+  namedIlvlWindow: 15,
   /**
    * STAGE 2 — the D2 RARITY ROLL. Each tier's chance is Diablo 2's shape:
    * a BASE chance at the tier's own qlvl (the `tierUnlockMlvl` gate) plus a
@@ -1201,11 +1227,43 @@ export const LOOT = {
    * explicit set-piece boost. The curve is deliberately D2-steep: rarer high
    * tiers, MF carrying the difference.
    */
-  rarityBase: { magic: 0.16, rare: 0.045, unique: 0.01, legendary: 0.003 },
+  rarityBase: {
+    magic: 0.16,
+    rare: 0.045,
+    // UNIQUE is a named CHASE tier too (it also ignores the generic tier
+    // bonus — see `rollTier`), so its base+slope are its WHOLE odds. Cut from
+    // the old 0.01/0.0016 (which, once the mob-level sweetener stopped
+    // inflating it, still rained ~7 uniques a JESUS farm run) to land the
+    // aggregate near ONE named unique per farm run (scripts/drop-rate.mjs).
+    // Uniques drop on every difficulty (unlike legendary/artifact); the boss
+    // `uniquesByDifficulty` tables and level `worldUniques` relics remain the
+    // reliable set-collection farm on top of this.
+    unique: 0.0036,
+    // LEGENDARY and ARTIFACT are the CHASE tiers — the drop-the-hero-chases
+    // endgame. Unlike magic/rare/unique they IGNORE the generic per-kill tier
+    // bonus (mob-level sweetener, all-clear trophy, dropProfile — see
+    // `rollTier`) and drop only from HARD up, so these bases + slopes + the
+    // elite/boss set-piece bonus below are their WHOLE odds. Calibrated with
+    // `node scripts/drop-rate.mjs` so a JESUS rift/bunker farm run drops a
+    // legendary ≈ once per 10 runs and an artifact ≈ once per 100 (aggregate
+    // across the tier); the power-law `uniqueDropWeight` then spreads WHICH
+    // one — the commonest legendary lands many times before the rarest.
+    // Retune here, not by feel; re-run the probe after any change.
+    legendary: 0.0008,
+    artifact: 0.00008,
+  },
   /** How much each mlvl OVER a tier's qlvl gate adds to its base chance (the
    * D2 `(ilvl−qlvl)/divisor` term, as a positive slope). Higher tiers climb
-   * slower, so depth favors rares over legendaries. */
-  raritySlope: { magic: 0.008, rare: 0.005, unique: 0.0016, legendary: 0.0006 },
+   * slower, so depth favors rares over legendaries. The chase tiers
+   * (legendary/artifact) climb very slowly — the deep endgame reaches them,
+   * but they never become common. */
+  raritySlope: {
+    magic: 0.008,
+    rare: 0.005,
+    unique: 0.00003,
+    legendary: 0.00001,
+    artifact: 0.000001,
+  },
   /**
    * MAGIC FIND saturation ceiling per tier — the MOST that MF can multiply a
    * tier's rarity chance by, approached asymptotically (`1 + cap·mf/(cap+mf)`).
@@ -1213,12 +1271,13 @@ export const LOOT = {
    * LUCK/aura can't make legendaries common — D2's rule that MF is strong early
    * and gives diminishing returns on the best drops.
    */
-  mfSaturation: { rare: 1.2, unique: 0.7, legendary: 0.45 },
-  /** The EXPLICIT set-piece boost (kept alongside the folded rarity roll): an
-   * additive bonus to the unique/legendary rarity BASE when the killer is an
-   * elite or a boss, so set-piece kills stay a reliable relic source. */
-  eliteRarityBonus: { unique: 0.03, legendary: 0.008 },
-  bossRarityBonus: { unique: 0.09, legendary: 0.03 },
+  mfSaturation: { rare: 1.2, unique: 0.7, legendary: 0.45, artifact: 0.3 },
+  /** The EXPLICIT set-piece boost: an additive bonus to the named-tier rarity
+   * BASE when the killer is an elite or a boss, so RARE/UNIQUE/ELITE mobs and
+   * BOSSES are a far better legendary/artifact farm than trash — a boss run is
+   * the efficient chase, but it still takes a long grind. */
+  eliteRarityBonus: { unique: 0.015, legendary: 0.002, artifact: 0.0002 },
+  bossRarityBonus: { unique: 0.045, legendary: 0.0065, artifact: 0.00065 },
   /** Ceiling on any single tier's rolled chance — keeps deep-campaign magic
    * from reaching 100% so PLAIN whites (and their make-quality roll) still
    * drop. Applied after slope, difficulty, role, and Magic Find. */
@@ -1826,8 +1885,15 @@ export const ECONOMY = {
     rare: 100,
     unique: 1_000,
     legendary: 10_000,
+    artifact: 100_000,
   } as Record<
-    "trash" | "regular" | "magic" | "rare" | "unique" | "legendary",
+    | "trash"
+    | "regular"
+    | "magic"
+    | "rare"
+    | "unique"
+    | "legendary"
+    | "artifact",
     number
   >,
   /** Metal items melt down: worth double (see EquipmentDef.material). */

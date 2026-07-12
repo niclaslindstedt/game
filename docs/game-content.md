@@ -258,12 +258,43 @@ D2 "found it early, grow into it" feel. A few carry ONE small scaling stat
 hero levels; the rest are best-in-slot for ~10 levels before a rolled rare
 overtakes them.
 
-A second breed of unique — **level-locked WORLD DROPS** — hangs on the LEVEL
-rather than a boss (`LevelDef.loot.worldUniques`, config `WORLD_DROP`). Any
-enemy on the relic's home level can drop it, at odds set purely by the enemy's
+**The named-item chase (the endgame drop economy).** Uniques, legendaries,
+and the top tier — **ARTIFACTS** (super-epic, level-99 endgame pieces, a
+searing red card above legendary) — all fall from the global rarity roll, but
+tuned as a real chase rather than a rain (`rollTier`, calibrated with
+`scripts/drop-rate.mjs`):
+
+- **Named tiers ignore the generic tier sweeteners.** The mob-level bonus and
+  the all-clear trophy lift the ROLLED tiers (magic/rare) but never the
+  hand-authored ones — otherwise a cap-level farm buried the player in
+  uniques. A named tier's odds are its own base + slope + the elite/boss
+  set-piece bonus alone.
+- **Legendaries and artifacts drop from HARD up**, from ANY mob on ANY level
+  (not level-locked) — rare/elite mobs and bosses far likelier than trash, so
+  a boss-dense run is the efficient chase but still a long grind. Uniques drop
+  on every difficulty.
+- **The item level DRAGS UP with the hero** (`LOOT.namedIlvlWindow`, D2
+  area-level flooring): a named item whose ilvl is more than ~15 under the loot
+  level is retired, so a level-99 farm pays out only high-ilvl gear (~85+) and
+  the campaign's low-level relics recede as you outgrow them. The equip
+  requirement (base `levelReq ≤ loot level`) still holds on top, so a req-99
+  legendary drops from any mob AT level 99 but not before.
+- **Rates:** a rift → **bunker** farm run (the canonical endgame loop — the
+  bunker is only reachable through the rift) yields roughly **one unique and
+  one legendary per ten runs**; artifacts are rarer still (~1/100). The bunker
+  is the best farm at **2× the named-drop rate** (`LevelDef.loot.namedDropMult`),
+  its "drops everything" cow-level identity now expressed as the doubled global
+  roll rather than a relic table. Within a tier the power-law `uniqueDropWeight`
+  decides WHICH one — the strongest pieces are the rarest.
+
+A second breed of PLAIN unique — **level-locked WORLD DROPS** — hangs on the
+LEVEL rather than a boss (`LevelDef.loot.worldUniques`, config `WORLD_DROP`):
+the thematic relics tied to their home level (EXCALIBUR on the Rift, and the
+like). LEGENDARIES and ARTIFACTS are NOT among them — they drop globally via
+the rarity roll above — so these tables carry only plain uniques. Any enemy on
+the relic's home level can drop one, at odds set purely by the enemy's
 **role** as a MULTIPLE of the minion base (`WORLD_DROP` — one lever to retune
-the whole channel): a trash minion is a 0.015% long shot, an elite ×100 (1.5%),
-the boss ×200 (3%). ELITES and BOSSES drop these relics DURING the normal
+the whole channel). ELITES and BOSSES drop these relics DURING the normal
 campaign — a set-piece kill is a reliable relic source the first time through —
 while the MINION lottery stays shut until the hero passes
 `WORLD_DROP.minPlayerLevel[difficulty]`, a PER-RUNG gate sized a few levels
