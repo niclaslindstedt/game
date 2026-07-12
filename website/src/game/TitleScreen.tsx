@@ -30,6 +30,7 @@ import {
 
 import { formatCompact } from "@ui/lib/format-number.ts";
 import { PixelText } from "@ui/lib/PixelText.tsx";
+import { useScrollFade } from "@ui/lib/scroll-fade.ts";
 
 import { IDENTITY } from "../identity.ts";
 
@@ -1313,6 +1314,13 @@ export function TitleScreen({
       window.removeEventListener("resize", measure);
     };
   }, [tallMenu, entries]);
+
+  // Soften the scroll edges of both the menu column and — when a long ladder
+  // caps and scrolls on its own — the inner row list, so rows fade in/out of
+  // view instead of clipping in with a hard line. Re-measures on every screen
+  // swap and cursor move (a keyboard step scrolls the highlighted row).
+  useScrollFade(contentRef, [assets, screen, cursor, entries, levelsOverflow]);
+  useScrollFade(menuRef, [assets, screen, cursor, entries, levelsOverflow]);
 
   if (!assets) {
     return <div className="game-loading">Loading…</div>;

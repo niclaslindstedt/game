@@ -1517,6 +1517,33 @@ body {
   scrollbar-width: thin;
 }
 
+/* Soft scroll edges: fade rows out toward whichever edge has content hidden
+   past it, so they don't clip in with a hard line. The two 0..1 variables are
+   driven by scroll position (useScrollFade, @ui/lib/scroll-fade) — both sit at
+   0 at rest, so a screen that fits (or the topmost/bottommost row once you
+   reach it) shows no fade at all. Applied to every scroll box in the title
+   menu system. */
+.title-content,
+.title-menu.scrollable {
+  --fade-top: 0;
+  --fade-bottom: 0;
+  --fade-size: clamp(1.5rem, 5vh, 3rem);
+  -webkit-mask-image: linear-gradient(
+    to bottom,
+    rgba(0, 0, 0, 0) 0,
+    #000 calc(var(--fade-top) * var(--fade-size)),
+    #000 calc(100% - var(--fade-bottom) * var(--fade-size)),
+    rgba(0, 0, 0, 0) 100%
+  );
+  mask-image: linear-gradient(
+    to bottom,
+    rgba(0, 0, 0, 0) 0,
+    #000 calc(var(--fade-top) * var(--fade-size)),
+    #000 calc(100% - var(--fade-bottom) * var(--fade-size)),
+    rgba(0, 0, 0, 0) 100%
+  );
+}
+
 /* Never let flex compress a row into its neighbours — overflow scrolls. */
 .title-content > * {
   flex-shrink: 0;
