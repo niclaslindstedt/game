@@ -113,7 +113,80 @@ export type Affix =
   | { kind: "stat"; value: number; stat: StatName }
   // Scaling bonuses (uniques): a fraction of the hero's OWN value.
   | { kind: "statPct"; value: number; stat: StatName }
-  | { kind: "maxHpPct"; value: number };
+  | { kind: "maxHpPct"; value: number }
+  /**
+   * A GRANTED SPELL — a forever version of the conjured powers, active while
+   * the piece is worn (config `SPELL` sizes each rank; INTELLIGENCE deepens
+   * the damage and shortens the interval). Ranks from multiple worn pieces
+   * of the same spell ADD — two rank-1 orbit sources ring like one rank-2.
+   * Unique/legendary authoring territory (never in the rolled affix pools).
+   */
+  | { kind: "spell"; spell: SpellKind; rank: number }
+  /**
+   * A PROC — a magic effect fired by combat events: `trigger` "hit" rolls
+   * `chance` on every landed blow of the hero's own weapon, "kill" on every
+   * weapon kill, and "struck" on every enemy hit the HERO takes (the D2
+   * "% chance to cast when struck" — contact, mechanic blows, hostile
+   * shots; impartial hazards never trigger it). The effect (`bolt` strikes
+   * the victim/attacker, `nova` bursts around the trigger) is sized by
+   * `rank` like a granted spell and scaled by the same INT deepening.
+   * Proc blows never re-proc. Legendary authoring territory.
+   */
+  | {
+      kind: "proc";
+      trigger: ProcTrigger;
+      spell: ProcSpell;
+      chance: number;
+      rank: number;
+    }
+  /**
+   * SURE STRIKE — the hero's weapon never whiffs on its own: the innate miss
+   * chance reads zero while the piece is worn (`playerMissChance`; the foe's
+   * dodge is still its own move). Legendary authoring territory.
+   */
+  | { kind: "sureStrike" };
+
+/** The spells an item can GRANT permanently (see the `spell` affix): the
+ * forever twins of the orbit/storm/stasis powerups, stepped off worn gear. */
+export type SpellKind = "orbit" | "storm" | "stasis";
+
+/** What fires a `proc` affix: a landed weapon blow, a weapon kill, or an
+ * enemy blow landing ON the hero ("struck" — the D2 cast-when-struck). */
+export type ProcTrigger = "hit" | "kill" | "struck";
+
+/** The effects a `proc` affix can fire: a lightning bolt into the struck
+ * enemy, or a damage nova bursting around it. */
+export type ProcSpell = "bolt" | "nova";
+
+/**
+ * The live state of one GRANTED SPELL (a `spell` affix on worn equipment):
+ * re-derived from the loadout every tick (`syncItemSpells`), with `rank`
+ * the summed rank across every worn source. `angle`/`cooldownMs` are the
+ * same scratch fields an ActiveAbility keeps — the sweep angle for orbit,
+ * the ms until the next tick/strike for orbit/storm.
+ */
+export type ItemSpell = {
+  spell: SpellKind;
+  rank: number;
+  angle: number;
+  cooldownMs: number;
+};
+
+/**
+ * A PROC waiting to resolve (see the `proc` affix): queued by `hitEnemy`
+ * when a weapon blow lands/kills, and by the player-damage paths when an
+ * enemy blow lands on the hero ("struck"); drained by `stepProcs` after the
+ * combat passes so a nova's kills never mutate the enemy list mid-sweep.
+ * `enemyId` is the triggering victim/attacker (a bolt strikes it if it
+ * still stands) — absent when the attacker is unknown (a hostile shot),
+ * where a bolt falls on the nearest foe to `pos` instead.
+ */
+export type PendingProc = {
+  spell: ProcSpell;
+  rank: number;
+  pos: Vec2;
+  enemyId?: number;
+};
 
 /** A droppable, equippable item instance (medkits are consumables, not this). */
 export type Equipment = {
@@ -244,6 +317,13 @@ export type Player = {
   faceLeft: boolean;
   /** Time-limited powers currently running (spent ability pickups). */
   abilities: ActiveAbility[];
+  /**
+   * GRANTED SPELLS from worn equipment (`spell` affixes) — the forever
+   * powers, alive as long as the piece is worn. Re-derived from the loadout
+   * each tick (`syncItemSpells`), preserving each spell's sweep/cooldown
+   * scratch state across the sync.
+   */
+  itemSpells: ItemSpell[];
   /**
    * The powerup dock (ABILITY_DEFS ids, oldest first, HELD_ITEMS.cap deep). A
    * slot holds a pickup from the moment it is scooped: first as a banked power
@@ -1028,6 +1108,9 @@ export type GameEvent =
   | { type: "nuke"; pos: Vec2 }
   /** A storm ability bolt struck at `pos` (drives the flash + crack). */
   | { type: "lightning"; pos: Vec2 }
+  /** A NOVA proc burst around `pos` (see the `proc` affix): `radius` sizes
+   * the app's expanding ring; the damage was resolved engine-side. */
+  | { type: "nova"; pos: Vec2; radius: number }
   /**
    * A stacked medkit was spent from the consumable dock: `name` is the
    * quality's label (`MEDKIT.tiers[tier].name`) and `heal` the hp actually
@@ -1511,6 +1594,12 @@ export type GameState = {
   stats: GameStats;
   /** Events emitted by the most recent `step()`. */
   events: GameEvent[];
+  /**
+   * PROCS queued by this tick's weapon blows (`proc` affixes), drained by
+   * `stepProcs` after the attack pass — resolving them inline would splice
+   * the enemy list out from under the sweep that triggered them.
+   */
+  pendingProcs: PendingProc[];
   /** Monotonic id source for spawned entities. */
   nextId: number;
   /** Seeded stream for in-run rolls (crits, drops) — keeps runs replayable. */

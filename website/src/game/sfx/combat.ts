@@ -232,6 +232,25 @@ export function playCombatSound(synth: Synth, event: GameEvent): boolean {
       });
       return true;
 
+    case "nova":
+      // A NOVA proc: a short arcane whump — a low burst and a rising shimmer,
+      // deliberately smaller than the nuke (procs fire often).
+      synth.noise({
+        durationMs: 140,
+        volume: 0.045,
+        filter: { type: "lowpass", frequency: 1400 },
+        echo: 0.15,
+      });
+      synth.tone({
+        type: "triangle",
+        from: 320,
+        to: 900,
+        durationMs: 150,
+        volume: 0.03,
+        delayMs: 15,
+      });
+      return true;
+
     case "nuke":
       // The screen-clearer: sub detonation, long lowpass rumble, and a
       // falling scream, all sent to the echo so it hangs in the air.

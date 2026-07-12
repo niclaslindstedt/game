@@ -1419,6 +1419,12 @@ export function affixNaming(affix: Affix): {
       return { suffix: STAT_SUFFIX[affix.stat] };
     case "maxHpPct":
       return { prefix: "REINFORCED" };
+    // Granted spells, procs, and sure strike are unique/legendary authoring
+    // territory — they never roll onto magic items, so they lend no name.
+    case "spell":
+    case "proc":
+    case "sureStrike":
+      return {};
   }
 }
 

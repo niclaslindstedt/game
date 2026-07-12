@@ -761,6 +761,93 @@ const WORLD_UNIQUES: UniqueDef[] = [
     ],
     lore: "ONLY THE WORTHY LIFT IT. OUT HERE, WORTHY MEANS STILL BREATHING.",
   },
+
+  // HARD RUNG — the third batch of world relics (docs/item-plan.md, phase 2):
+  // per-spec coverage for the hard climb. The rung's boss set already fields
+  // a magic weapon (RIFTMAW) and a full armor loadout, so this batch adds the
+  // MELEE and RANGED weapons, one spec-leaning piece each, and the rung's
+  // one LEGENDARY. Farmed like every world relic: elites/bosses during the
+  // campaign, the minion lottery once the hero out-levels the rung (gate 46).
+  // SPACEZ HQ — the compound's marksman post: the rifle that watched the
+  // perimeter for fifty years and never once blinked.
+  {
+    id: "longwatch",
+    name: "LONGWATCH",
+    base: "scout_rifle",
+    slot: "weapon",
+    ilvl: 45,
+    bonuses: [
+      { kind: "crit", value: 0.08 },
+      { kind: "stat", stat: "dexterity", value: 8 },
+      { kind: "damagePct", value: 0.15 },
+    ],
+    lore: "THE WATCH ENDS WHEN THE MARK FALLS. THE WATCH HAS NOT ENDED.",
+  },
+  // THE MOON — the huntress the old world named this ground after; her visor
+  // still marks what cannot be outrun.
+  {
+    id: "huntsmans_cowl",
+    name: "HUNTSMAN'S COWL",
+    base: "artemis_visor",
+    slot: "head",
+    ilvl: 43,
+    bonuses: [
+      { kind: "stat", stat: "dexterity", value: 7 },
+      { kind: "crit", value: 0.05 },
+      { kind: "stat", stat: "speed", value: 3 },
+    ],
+    lore: "THE HUNTRESS OF THE OLD MOON WORE IT. NOTHING SHE MARKED OUTRAN THE NIGHT.",
+  },
+  // MARS — plating cut for the terraforming colossi that raised mountains;
+  // a wall of a chestpiece that trades a step of speed for it.
+  {
+    id: "colossus_plate",
+    name: "COLOSSUS PLATE",
+    base: "whipple_vest",
+    slot: "chest",
+    ilvl: 46,
+    bonuses: [
+      { kind: "stat", stat: "strength", value: 8 },
+      { kind: "maxHp", value: 60 },
+      { kind: "armor", value: 40 },
+      { kind: "stat", stat: "speed", value: -2 },
+    ],
+    lore: "CUT FOR THE MACHINES THAT RAISED MOUNTAINS. IT DOES NOT MOVE FOR LESS.",
+  },
+  // EASTWORLD — the last honest lawman's blade, sworn to the edge of a
+  // molecule: the hard rung's melee anchor.
+  {
+    id: "oathbrand",
+    name: "OATHBRAND",
+    base: "mono_cutter",
+    slot: "weapon",
+    ilvl: 54,
+    bonuses: [
+      { kind: "damagePct", value: 0.2 },
+      { kind: "stat", stat: "strength", value: 8 },
+      { kind: "crit", value: 0.06 },
+    ],
+    lore: "SWORN TO AN EDGE ONE MOLECULE WIDE. IT HAS NEVER BEEN FORSWORN.",
+  },
+  // THE RIFT — the hard rung's LEGENDARY: the pistol fate itself aims. It
+  // has never missed (sure strike), and the sky answers every landed shot
+  // (on-hit lightning) — the first legendary built on the forever powers.
+  {
+    id: "the_inevitable",
+    name: "THE INEVITABLE",
+    base: "genius_pistol",
+    slot: "weapon",
+    tier: "legendary",
+    ilvl: 66,
+    keeper: true,
+    bonuses: [
+      { kind: "sureStrike" },
+      { kind: "proc", trigger: "hit", spell: "bolt", chance: 0.2, rank: 2 },
+      { kind: "statPct", stat: "dexterity", value: 0.02 },
+      { kind: "crit", value: 0.05 },
+    ],
+    lore: "EVERY SHOT IT EVER FIRED IS STILL ON ITS WAY TO SOMETHING.",
+  },
 ];
 
 // EASTWORLD MERCHANT STALL — the third unique home: not dropped at all, but

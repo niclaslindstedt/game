@@ -1715,6 +1715,17 @@ export function GameScreen({
               durationMs: 450,
             });
           }
+          // A NOVA proc: the violet burst ring, sized to the engine's
+          // damage radius.
+          if (event.type === "nova") {
+            effects.push({
+              kind: "nova",
+              pos: event.pos,
+              untilMs: state.stats.timeMs + 320,
+              durationMs: 320,
+              radius: event.radius,
+            });
+          }
           // A sidestep: float a "DODGE" tag off the hero so the whiff reads.
           if (event.type === "playerDodge") {
             effects.push({

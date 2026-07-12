@@ -225,10 +225,12 @@ function checkBundleBudgets() {
   // the lazy GameScreen chunk, so the critical path is the title/menu shell
   // (raised 600k → 620k when the set-piece mechanics system and the affix
   // bracket tables joined the engine; 620k → 632k for the between-level
-  // travel-cutscene catalog. Splitting the engine off the title screen is
-  // overdue as the next raise's alternative — the catalogs all live in the
-  // eager engine chunk while only the menu shell needs to boot).
-  const BUDGET_BYTES = 632_000;
+  // travel-cutscene catalog; 632k → 640k for the granted forever-spell/proc
+  // system + the item-budget pricing model and the hard-rung unique batch.
+  // Splitting the engine off the title screen is overdue as the next raise's
+  // alternative — the catalogs all live in the eager engine chunk while only
+  // the menu shell needs to boot).
+  const BUDGET_BYTES = 640_000;
   const assetsDir = join(DIST, "assets");
   if (!existsSync(assetsDir)) return;
   const indexHtml = join(DIST, "index.html");

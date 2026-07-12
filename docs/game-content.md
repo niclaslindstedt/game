@@ -290,10 +290,33 @@ dead god, minted one rarity rung above every unique (`UniqueDef.tier:
 keepsake-worthy like any unique but with a scaling strength keeper that grows
 into best-in-slot.
 
-Between the boss sets and the world relics, EASY and MEDIUM each now cover
-every **build**: easy fields melee (MUSKRAT'S TOOTH, EXCALIBUR), ranged (PALE
-RIDER), and magic (DEADSTAR); medium fields magic (THE JAILBREAK), ranged
-(REDWIND), and three melee choices (HERDBREAKER, THE LAST ROUNDUP, MJÖLNIR).
+The HARD rung's batch (see `docs/item-plan.md`, phase 2) completes per-spec
+coverage for the hard climb — the rung's boss set already fields the magic
+RIFTMAW and a full armor loadout, so the relics add **OATHBRAND** (Eastworld,
+the last honest lawman's monomolecular blade — the melee anchor),
+**LONGWATCH** (SpaceZ HQ, the perimeter marksman's rifle), **HUNTSMAN'S
+COWL** (the Moon, the moon-huntress's visor: DEX/crit head), **COLOSSUS
+PLATE** (Mars, terraformer plating that trades a step of speed for a wall),
+and the rung's LEGENDARY, **THE INEVITABLE** (the Rift) — the pistol that has
+never missed, built on the new **forever powers**: it carries SURE STRIKE
+(the hero's innate whiff reads zero) and a 20% on-hit LIGHTNING proc. The
+forever powers are the `spell`/`proc`/`sureStrike` affix kinds (config
+`SPELL`): granted spells (circling flame, stormcall, stasis field) run
+permanently while the piece is worn, scale with their RANK, deepen with
+INTELLIGENCE, and fire faster as INT grows; procs fire on-hit/on-kill off the hero's own
+weapon blows AND when-struck off enemy blows landing on him (the D2
+cast-when-struck — bolt or nova). Legendaries may carry them for every spec
+— magic effects on all hits, whatever the build — and the legendary roster
+obeys **stats determine rarity**: drop weight falls off as a power law of
+the item's priced bonus budget, so the mightiest legendaries are
+astronomically rarer than the modest ones.
+
+Between the boss sets and the world relics, EASY, MEDIUM, and HARD each now
+cover every **build**: easy fields melee (MUSKRAT'S TOOTH, EXCALIBUR), ranged
+(PALE RIDER), and magic (DEADSTAR); medium fields magic (THE JAILBREAK),
+ranged (REDWIND), and three melee choices (HERDBREAKER, THE LAST ROUNDUP,
+MJÖLNIR); hard fields melee (OATHBRAND), ranged (LONGWATCH, THE INEVITABLE),
+and magic (RIFTMAW from its boss set).
 
 Alongside the weapon, the hero wears **four ARMOR slots — head, chest,
 legs, feet — plus a charm and a bag** (seven equip slots). Every armor

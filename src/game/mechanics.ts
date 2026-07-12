@@ -16,6 +16,7 @@ import { enemyDef } from "./defs/enemies/index.ts";
 import type { EnemyDef, EnemyMechanics } from "./defs/enemies/types.ts";
 import { difficultyDef } from "./defs/difficulties.ts";
 import { armorReduction, wearWornArmor } from "./items.ts";
+import { queueStruckProcs } from "./loot.ts";
 import { currentMobLevel, menaceStage, mobLevelScale } from "./menace.ts";
 import { lineOfSight } from "./obstacles.ts";
 import { BALANCE } from "./tuning.ts";
@@ -290,4 +291,6 @@ function resolveSlamHit(
   player.hurtFlashMs = 250;
   state.stats.damageTaken += damage;
   state.events.push({ type: "playerHurt", crit });
+  // The slam that lands may cast back — the D2 "when struck" procs.
+  queueStruckProcs(state, enemy);
 }

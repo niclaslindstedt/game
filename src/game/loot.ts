@@ -52,9 +52,16 @@ import {
   mobLevelTierBonus,
   overkillEfficiency,
 } from "./menace.ts";
+import { equippedProcs } from "./spells.ts";
 import { maybeFirstKillThought, startDeathWords } from "./story.ts";
 import { BALANCE } from "./tuning.ts";
-import type { Enemy, GameState, Tier, WeaponClass } from "./types.ts";
+import type {
+  Enemy,
+  GameState,
+  ProcTrigger,
+  Tier,
+  WeaponClass,
+} from "./types.ts";
 
 /** Monsters still owed by the wave budget but not yet streamed in. Each line
  * clamps at zero so an over-counted line (tests exhaust budgets by maxing
@@ -314,6 +321,16 @@ export function hitEnemy(
   // meter — step() subtracts this slice from what tickMenace reads.
   if (opts?.noMenace) state.menaceExemptDamage += damage;
 
+  // PROCS (the `proc` affix, legendary territory) ride the hero's OWN weapon
+  // blows: `rollAccuracy` is set by exactly those paths (melee sweep, his own
+  // projectiles) — never by companions or conjured powers — so it doubles as
+  // the proc gate, and a proc's own hits can never proc again. ON-HIT procs
+  // roll on every landed blow, killing ones included; ON-KILL procs roll
+  // where the kill actually books (below). Resolution is deferred to
+  // `stepProcs` (step.ts) so a nova never splices the enemy list under the
+  // sweep that triggered it.
+  if (opts?.rollAccuracy) queueWeaponProcs(state, enemy, "hit");
+
   if (enemy.hp > 0) {
     // A critical hit flashes the victim (renderer blink; visual only).
     if (crit) enemy.critFlashMs = 300;
@@ -384,6 +401,9 @@ export function hitEnemy(
       enemy.pos,
       enemy.defId,
     );
+    // A rout is a won fight: the hero's killing blow fires its ON-KILL procs
+    // like any kill.
+    if (opts?.rollAccuracy) queueWeaponProcs(state, enemy, "kill");
     // The overkill toll applies to a routed foe like any kill: a blow far
     // beyond its full health collects only its share of the xp.
     grantXp(
@@ -401,10 +421,60 @@ export function hitEnemy(
     return;
   }
 
+  // The blow kills: the hero's own weapon kills fire their ON-KILL procs
+  // (a spared kneel above is not a kill; a companion's blow never queues).
+  if (opts?.rollAccuracy) queueWeaponProcs(state, enemy, "kill");
+
   killEnemy(state, enemy, damage, crit, crit ? opts?.damageRoll : undefined, {
     noNukeDrop: opts?.noNukeDrop,
     noMenace: opts?.noMenace,
   });
+}
+
+/**
+ * Roll every equipped PROC that fires on `trigger` and queue the winners for
+ * `stepProcs` (step.ts) to resolve after the combat passes. The equipped-proc
+ * check comes BEFORE any rng draw, so a loadout without procs consumes no
+ * rng and the seeded drop/combat streams never shift.
+ */
+function queueWeaponProcs(
+  state: GameState,
+  enemy: Enemy,
+  trigger: ProcTrigger,
+): void {
+  const procs = equippedProcs(state, trigger);
+  for (const proc of procs) {
+    if (state.rng() >= proc.chance) continue;
+    state.pendingProcs.push({
+      spell: proc.spell,
+      rank: proc.rank,
+      pos: { ...enemy.pos },
+      enemyId: enemy.id,
+    });
+  }
+}
+
+/**
+ * The D2 "cast when struck": roll every equipped `trigger: "struck"` proc
+ * when an ENEMY blow actually lands on the hero (post-dodge — a sidestepped
+ * swing casts nothing) and queue the winners for `stepProcs`. Called from
+ * the enemy-sourced damage paths — contact (step.ts), mechanic blows
+ * (mechanics.ts), hostile shots (ranged.ts); impartial hazards never
+ * retaliate. A BOLT grounds in `attacker` (or the nearest foe when a shot's
+ * shooter is unknown); a NOVA bursts around the HERO. Same no-rng-without-
+ * procs guarantee as the weapon triggers.
+ */
+export function queueStruckProcs(state: GameState, attacker?: Enemy): void {
+  const procs = equippedProcs(state, "struck");
+  for (const proc of procs) {
+    if (state.rng() >= proc.chance) continue;
+    state.pendingProcs.push({
+      spell: proc.spell,
+      rank: proc.rank,
+      pos: { ...state.player.pos },
+      enemyId: attacker?.id,
+    });
+  }
 }
 
 /**

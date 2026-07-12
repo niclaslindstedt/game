@@ -62,6 +62,25 @@ export const DELTA_DOWN = "#e06a6a";
  * SPEED, …) leads the eye; the number is the detail, not the headline. */
 export const VALUE_COLOR = "#9aa3ad";
 
+/** How a granted forever spell reads on the card (see the `spell` affix). */
+const SPELL_LABELS: Record<string, string> = {
+  orbit: "CIRCLING FLAME",
+  storm: "STORMCALL",
+  stasis: "STASIS FIELD",
+};
+
+/** How a proc's effect reads on the card (see the `proc` affix). */
+const PROC_LABELS: Record<string, string> = {
+  bolt: "LIGHTNING",
+  nova: "NOVA",
+};
+
+/** Roman numeral for a spell/proc RANK — ranks are small by design. */
+function rankNumeral(rank: number): string {
+  const numerals = ["I", "II", "III", "IV", "V"];
+  return numerals[Math.min(rank, numerals.length) - 1] ?? `${rank}`;
+}
+
 export function affixLine(affix: Affix): string {
   switch (affix.kind) {
     case "damagePct":
@@ -78,6 +97,19 @@ export function affixLine(affix: Affix): string {
       return `+${Math.round(affix.value * 100)}% ${STAT_LABELS[affix.stat]}`;
     case "maxHpPct":
       return `+${Math.round(affix.value * 100)}% MAX HP`;
+    case "spell":
+      return `GRANTS ${SPELL_LABELS[affix.spell] ?? affix.spell.toUpperCase()} ${rankNumeral(affix.rank)}`;
+    case "proc": {
+      const trigger =
+        affix.trigger === "hit"
+          ? "ON HIT"
+          : affix.trigger === "kill"
+            ? "ON KILL"
+            : "WHEN STRUCK";
+      return `${Math.round(affix.chance * 100)}% ${PROC_LABELS[affix.spell] ?? affix.spell.toUpperCase()} ${rankNumeral(affix.rank)} ${trigger}`;
+    }
+    case "sureStrike":
+      return "NEVER MISSES";
   }
 }
 

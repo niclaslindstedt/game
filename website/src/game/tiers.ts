@@ -57,6 +57,11 @@ export const AFFIX_COLORS: Record<Affix["kind"], string> = {
   // Scaling bonuses (uniques) share their flat cousin's hue.
   statPct: "#4da6ff",
   maxHpPct: "#5fd97a",
+  // The forever powers (granted spells, procs, sure strike) read in one
+  // arcane violet — the "this piece DOES something" hue.
+  spell: "#b88ae8",
+  proc: "#b88ae8",
+  sureStrike: "#b88ae8",
 };
 
 /**

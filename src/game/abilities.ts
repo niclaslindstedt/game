@@ -9,6 +9,7 @@ import { ABILITY, HELD_ITEMS, MENACE } from "./config.ts";
 import { abilityDef, type AbilityDef } from "./defs/abilities.ts";
 import { effectiveStat } from "./items.ts";
 import { autoPowerScale } from "./leveling.ts";
+import { stasisSpellParams } from "./spells.ts";
 import type { ActiveAbility, GameState, Player } from "./types.ts";
 
 /**
@@ -178,6 +179,16 @@ export function stasisFactorAt(state: GameState, pos: Vec2): number {
     if (!def.stasis) continue;
     if (distance(player.pos, pos) <= stasisRadius(state, def)) {
       factor = Math.min(factor, def.stasis.slowFactor);
+    }
+  }
+  // A GRANTED stasis field (a `spell` affix on worn gear) slows exactly like
+  // the pickup's, just gentler and forever — same no-stack rule (the
+  // strongest field wins).
+  for (const spell of player.itemSpells) {
+    if (spell.spell !== "stasis") continue;
+    const params = stasisSpellParams(state, spell.rank);
+    if (distance(player.pos, pos) <= params.radius) {
+      factor = Math.min(factor, params.slowFactor);
     }
   }
   return factor;

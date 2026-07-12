@@ -45,10 +45,19 @@ import {
   PLAYER,
   PROJECTILE,
   RUN,
+  SPELL,
   STAMINA,
   STATS,
   WEAPON,
 } from "./config.ts";
+import {
+  boltProcDamage,
+  itemSpellOrbPositions,
+  novaProcParams,
+  orbitSpellParams,
+  stormSpellParams,
+  syncItemSpells,
+} from "./spells.ts";
 import { maybeCompanionQuote, stepCompanions } from "./companions.ts";
 import { stepAsteroids, stepWells } from "./hazards.ts";
 import { spawnEnemy } from "./create.ts";
@@ -92,7 +101,12 @@ import {
   wouldUpgradeSlot,
 } from "./items.ts";
 import { arrowColdXp, arrowXpShareAt } from "./leveling.ts";
-import { grantXp, hitEnemy, unspawnedMinions } from "./loot.ts";
+import {
+  grantXp,
+  hitEnemy,
+  queueStruckProcs,
+  unspawnedMinions,
+} from "./loot.ts";
 import { revealAround } from "./map.ts";
 import {
   mechDamageMult,
@@ -208,6 +222,9 @@ export function step(state: GameState, input: GameInput, dtMs: number): void {
   stepUseConsumables(state, input);
   stepWeapon(state, input, dtMs);
   stepAbilities(state, dt, dtMs);
+  // The forever spells worn gear grants (the `spell` affix) tick beside the
+  // timed powers — same rails, no expiry.
+  stepItemSpells(state, dt, dtMs);
   stepProjectiles(state, dt, dtMs);
   if (!state.freeze) {
     stepEnemies(state, dt, dtMs);
@@ -219,6 +236,12 @@ export function step(state: GameState, input: GameInput, dtMs: number): void {
   // soak contact blows, stand back up (see companions.ts). A freeze poses
   // the party with the rest of the world's actors.
   if (!state.freeze) stepCompanions(state, dt, dtMs);
+  // Procs queued by this tick's combat — the hero's weapon blows (melee
+  // sweep, his projectiles) AND the blows that landed ON him (contact,
+  // mechanic slams, hostile shots — the "when struck" trigger) — resolve
+  // HERE, after every pass that iterates the enemy list has finished: a
+  // nova's kills must never splice that list out from under a sweep.
+  stepProcs(state);
   // Environmental hazards act on this tick's positions, after everyone has
   // moved: the wells drag (and devour), the asteroids fly (and strike).
   stepWells(state, dt, dtMs);
@@ -1079,6 +1102,105 @@ function stepAbilities(state: GameState, dt: number, dtMs: number): void {
   }
 }
 
+/**
+ * Advance the GRANTED SPELLS worn gear carries (the `spell` affix — see
+ * spells.ts and config `SPELL`): the loadout is reconciled first, then the
+ * forever orbit sweeps and the forever storm strikes exactly like their
+ * pickup twins (stasis acts inside moveEnemy via `stasisFactorAt`). One
+ * deliberate difference from the pickups: NO `noMenace` — a granted spell is
+ * the hero's permanent build power, so its output heats the menace meter
+ * like any weapon blow, where a temporary powerup's is exempted.
+ */
+function stepItemSpells(state: GameState, dt: number, dtMs: number): void {
+  syncItemSpells(state);
+  const player = state.player;
+  if (player.itemSpells.length === 0) return;
+
+  const power = abilityPowerScale(state);
+
+  for (const spell of player.itemSpells) {
+    spell.cooldownMs = Math.max(0, spell.cooldownMs - dtMs);
+
+    if (spell.spell === "orbit") {
+      const params = orbitSpellParams(state, spell.rank);
+      spell.angle += params.angularSpeed * dt;
+      if (spell.cooldownMs <= 0) {
+        let struck = false;
+        for (const orb of itemSpellOrbPositions(state, player, spell)) {
+          let victim: Enemy | undefined;
+          for (const enemy of state.enemies) {
+            const enemyDefData = enemyDef(enemy.defId);
+            if (enemyDefData.apparition) continue;
+            const reach = enemyDefData.radius + params.orbRadius;
+            if (distanceSq(enemy.pos, orb) <= reach * reach) {
+              victim = enemy;
+              break;
+            }
+          }
+          if (!victim) continue;
+          hitEnemy(state, victim, params.damage * power, "magic");
+          struck = true;
+        }
+        if (struck) spell.cooldownMs = params.hitCooldownMs;
+      }
+    }
+
+    if (spell.spell === "storm" && spell.cooldownMs <= 0) {
+      const params = stormSpellParams(state, spell.rank);
+      const victim = nearestEnemy(state.enemies, player.pos, params.range);
+      if (victim) {
+        spell.cooldownMs = params.intervalMs;
+        state.events.push({ type: "lightning", pos: { ...victim.pos } });
+        hitEnemy(state, victim, params.damage * power, "magic");
+      }
+    }
+  }
+}
+
+/**
+ * Resolve the PROCS this tick's weapon blows queued (`proc` affixes — see
+ * `queueWeaponProcs` in loot.ts): a BOLT grounds in the triggering victim if
+ * it still stands (else the nearest foe to where it fell), a NOVA bursts
+ * around the trigger point and bills everything inside the ring. Drained
+ * AFTER the attack passes so the extra kills never mutate the enemy list
+ * under a sweep in progress — and since only `rollAccuracy` blows queue
+ * procs, a proc's own hits can never proc again.
+ */
+function stepProcs(state: GameState): void {
+  if (state.pendingProcs.length === 0) return;
+  const queue = state.pendingProcs;
+  state.pendingProcs = [];
+  const power = abilityPowerScale(state);
+
+  for (const proc of queue) {
+    if (proc.spell === "bolt") {
+      const target =
+        state.enemies.find((e) => e.id === proc.enemyId) ??
+        nearestEnemy(state.enemies, proc.pos, SPELL.bolt.range);
+      if (!target) continue;
+      state.events.push({ type: "lightning", pos: { ...target.pos } });
+      hitEnemy(state, target, boltProcDamage(proc.rank) * power, "magic");
+      continue;
+    }
+    // NOVA: snapshot the victims first — hitEnemy splices the slain.
+    const params = novaProcParams(proc.rank);
+    state.events.push({
+      type: "nova",
+      pos: { ...proc.pos },
+      radius: params.radius,
+    });
+    const reachSq = params.radius * params.radius;
+    const victims = state.enemies.filter(
+      (enemy) =>
+        !enemyDef(enemy.defId).apparition &&
+        distanceSq(enemy.pos, proc.pos) <= reachSq,
+    );
+    for (const victim of victims) {
+      hitEnemy(state, victim, params.damage * power, "magic");
+    }
+  }
+}
+
 // Spatial hash for the projectile↔enemy hit tests, rebuilt on each tick that
 // has projectiles in flight and shared by every projectile that tick. Without
 // it each projectile scans the whole horde (O(projectiles × enemies) with a
@@ -1398,6 +1520,8 @@ function stepEnemies(state: GameState, dt: number, dtMs: number): void {
       player.hurtFlashMs = 250;
       state.stats.damageTaken += damage;
       state.events.push({ type: "playerHurt", crit });
+      // The landed blow may cast back — the D2 "when struck" procs.
+      queueStruckProcs(state, enemy);
     }
   }
 }

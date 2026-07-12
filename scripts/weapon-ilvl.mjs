@@ -77,44 +77,19 @@ const { UNIQUE_DEFS, UNIQUE_IDS } = await import(
 );
 // The LIVE combat/item constants — the numbers combat itself reads. Pricing the
 // bonuses off these (not copies) is what makes this script warn on balance drift.
-const { STATS, STAMINA, ARMOR, PLAYER } = await import(
-  path.join(root, "src/game/config.ts")
+// THE PRICING MODEL lives in the ENGINE (src/game/item-budget.ts) — the same
+// table the runtime reads to derive a legendary's drop rarity from its power,
+// so authoring checks and live odds can never drift apart. This script only
+// adds the authoring-side layers (the deviation cap, bag-capacity pricing).
+const { PER_ILVL, bonusIlvlPoints } = await import(
+  path.join(root, "src/game/item-budget.ts")
 );
 
-// ---- Design knobs (NOT combat constants — the few genuine authoring choices) --
-// Flat maxHp/armor is worth this fraction of the HP a STAMINA point grants (a
-// stamina point also buys sprint pool + regen, so raw HP is worth less). Sets
-// how many flat HP = 1 ilvl: STAMINA.hpPerPoint / FLAT_HP_FRACTION (= 6/0.4 = 15).
-const FLAT_HP_FRACTION = 0.4;
-// ilvl per +1% of a SCALING bonus (statPct/maxHpPct). A fraction of the hero's
-// own stat that compounds forever, so it's a heavy premium with no combat-constant
-// analogue: 1% = SCALING_PREMIUM ilvl (maxHpPct additionally HP-discounted below).
-const SCALING_PREMIUM = 10;
 // A BAG's real power is capacity, not an affix: value each cell it grants ABOVE
 // the base bag at BAG_SLOT_ILVL (else every bag computes a near-zero budget).
 const BAG_SLOT_ILVL = 3;
-// The reference fight the armor curve is valued at (armor's worth is attacker-level
-// and HP-pool dependent, so a reference point is unavoidable). REF_HP is a mid-game
-// pool (base HP + a representative stamina stack), REF_LEVEL the attacker level.
-const REF_LEVEL = 25;
-const REF_HP = PLAYER.maxHp + 30 * STAMINA.hpPerPoint; // ≈ 280 mid-game
 
-// ---- The conversion table, DERIVED from the live constants -------------------
-// PER_ILVL[kind] = the bonus value that equals exactly ONE ilvl.
-const hpPerIlvl = STAMINA.hpPerPoint / FLAT_HP_FRACTION; // flat HP for 1 ilvl (=15)
-// Effective-HP a single armor point buys at the reference fight: from
-// EHP = HP·(1 + armor/K), d(EHP)/d(armor) = HP/K, K = kBase + kPerLevel·level.
-const armorHpPerPoint = REF_HP / (ARMOR.kBase + ARMOR.kPerLevel * REF_LEVEL);
-
-export const PER_ILVL = {
-  stat: 1, // anchor: +1 stat point = 1 ilvl
-  damagePct: STATS.damageBonusPerPoint.strength, // +damage per STR point (= 0.2)
-  crit: STATS.critChancePerStat, // +crit per crit-stat point (= 0.04)
-  maxHp: hpPerIlvl, // = STAMINA.hpPerPoint / FLAT_HP_FRACTION (= 15)
-  armor: hpPerIlvl / armorHpPerPoint, // flat-HP rate ÷ EHP-per-armor
-  statPct: 0.01 / SCALING_PREMIUM, // +1% scaling stat = SCALING_PREMIUM ilvl
-  maxHpPct: 0.01 / SCALING_PREMIUM / FLAT_HP_FRACTION, // scaling HP, HP-discounted
-};
+export { PER_ILVL };
 
 // The deviation cap: the most bonus budget (ilvl − levelReq) a unique may carry,
 // as a function of its base's levelReq — grows with levelReq. cap = DEV_FLOOR +
@@ -133,14 +108,9 @@ const baseBagSlots = GEAR_DEFS.bag?.bagSlots ?? 2;
 const levelReqOf = (base) =>
   (isWeaponDef(base) ? WEAPON_DEFS[base] : GEAR_DEFS[base])?.levelReq ?? 1;
 
-// One bonus → its ilvl worth (signed). Unknown kinds contribute 0 loudly.
+// One bonus → its ilvl worth (signed) — the engine's pricing, verbatim.
 export function bonusIlvl(b) {
-  const per = PER_ILVL[b.kind];
-  if (per == null) {
-    console.error(`  ! unknown bonus kind "${b.kind}" — priced at 0 ilvl`);
-    return 0;
-  }
-  return b.value / per;
+  return bonusIlvlPoints(b);
 }
 
 // The whole model for one unique: budget, computed ilvl, deviation vs authored.
@@ -152,9 +122,14 @@ export function ilvlOf(u) {
     budget += (u.bagSlots - baseBagSlots) * BAG_SLOT_ILVL;
   const computed = Math.round(req + budget);
   // Trinkets gate at req ~1 by design; a `keeper` is a hand-declared intentional
-  // over-cap piece (a scaling stat that grows into best-in-slot). Both are exempt
-  // from the over-budget flag, but stay visible (their ilvl is still computed).
-  const exempt = TRINKET_SLOTS.has(u.slot) || u.keeper === true;
+  // over-cap piece (a scaling stat that grows into best-in-slot); and a
+  // LEGENDARY pays for its power in RARITY, not in the equip-gate cap — the
+  // roster is deliberately authored across a vast power range and the drop
+  // weight falls off as a power law of the budget (UNIQUE.rarityBudgetExp,
+  // see pickUniqueForDrop). All exempt from the over-budget flag, but stay
+  // visible (their ilvl is still computed).
+  const exempt =
+    TRINKET_SLOTS.has(u.slot) || u.keeper === true || u.tier === "legendary";
   return {
     req,
     budget, // signed ilvl worth of the fixed bonuses (= computed − req)

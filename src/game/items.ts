@@ -58,7 +58,8 @@ import { difficultyDef } from "./defs/difficulties.ts";
 import type { EnemyRole } from "./defs/enemies/index.ts";
 import { gateKeyIds, levelDef } from "./defs/levels/index.ts";
 import { storyItemDef } from "./defs/story.ts";
-import { activeUniqueDefs, uniqueDef } from "./defs/uniques.ts";
+import { activeUniqueDefs, uniqueDef, type UniqueDef } from "./defs/uniques.ts";
+import { bonusBudget } from "./item-budget.ts";
 import { baseStatBonus, diminishStat } from "./leveling.ts";
 import { currentMobLevel } from "./menace.ts";
 import { advanceCutsceneChain } from "./story.ts";
@@ -359,9 +360,33 @@ function pickUniqueForDrop(
         (isWeaponDef(u.base) || isGearDef(u.base)) &&
         equipmentLevelReq(u.base) <= lootLevel,
     )
-    .map((u) => ({ id: u.id, weight: u.rarity ?? UNIQUE.defaultRarity }));
+    .map((u) => ({ id: u.id, weight: uniqueDropWeight(u, tier) }));
   if (eligible.length === 0) return null;
   return pickWeighted(state.rng, eligible).id;
+}
+
+/**
+ * A named item's selection weight once the rarity roll lands its tier+slot.
+ * UNIQUES keep the flat authored/default weight. LEGENDARIES obey "stats
+ * determine rarity" as a POWER LAW: past the reference budget the weight is
+ * scaled by `(rarityBudgetRef / bonusBudget)^rarityBudgetExp` (the budget is
+ * the priced ilvl worth of the fixed bonuses — see item-budget.ts). The
+ * roster is authored across a VAST power range, so this is what makes the
+ * god-rolls astronomically rare — twice the reference budget is ~16× rarer,
+ * five times ~600× — while a modest legendary drops at its authored weight.
+ * An explicit `rarity` still multiplies on top.
+ */
+export function uniqueDropWeight(
+  u: UniqueDef,
+  tier: "unique" | "legendary",
+): number {
+  const base = u.rarity ?? UNIQUE.defaultRarity;
+  if (tier !== "legendary") return base;
+  const budget = bonusBudget(u.bonuses);
+  if (budget <= UNIQUE.rarityBudgetRef) return base;
+  return (
+    base * Math.pow(UNIQUE.rarityBudgetRef / budget, UNIQUE.rarityBudgetExp)
+  );
 }
 
 /**
@@ -723,6 +748,18 @@ export function isArmorBroken(piece: Equipment): boolean {
  * a worn-out piece goes silent the moment it breaks. */
 function activePieces(state: GameState): Equipment[] {
   return equippedPieces(state).filter((piece) => !isArmorBroken(piece));
+}
+
+/**
+ * Every affix currently APPLYING from the worn loadout, flattened — the read
+ * the granted-spell/proc/sure-strike systems (spells.ts, `playerMissChance`)
+ * share, so a broken armor piece silences its forever spell exactly as it
+ * silences its stats.
+ */
+export function activeEquippedAffixes(state: GameState): Affix[] {
+  const affixes: Affix[] = [];
+  for (const piece of activePieces(state)) affixes.push(...piece.affixes);
+  return affixes;
 }
 
 /**
@@ -1102,6 +1139,12 @@ export function playerDodgeChance(state: GameState): number {
  * stat panel (as HIT rate) and rolled in `hitEnemy` for weapon attacks.
  */
 export function playerMissChance(state: GameState): number {
+  // SURE STRIKE (a legendary affix): the weapon simply never whiffs on its
+  // own — the innate miss reads zero, floor and difficulty notwithstanding.
+  // The foe's DODGE is still its own move (see `enemyDodgeChance`).
+  if (activeEquippedAffixes(state).some((a) => a.kind === "sureStrike")) {
+    return 0;
+  }
   return Math.max(
     ACCURACY.minMiss,
     (ACCURACY.baseMiss - effectiveStat(state, "dexterity") * ACCURACY.perDex) *
@@ -1562,7 +1605,13 @@ export function gearScore(gear: Equipment): number {
     // hero, so weight them well above the raw fraction.
     else if (affix.kind === "statPct") score += affix.value * 600;
     else if (affix.kind === "maxHpPct") score += affix.value * 400;
-    else score += affix.value * 100;
+    // A granted forever spell is worth several stat points a rank; a proc's
+    // worth scales with how often it actually fires. Sure strike reads as
+    // the few % damage the innate whiff was costing.
+    else if (affix.kind === "spell") score += affix.rank * 45;
+    else if (affix.kind === "proc") score += affix.chance * affix.rank * 250;
+    else if (affix.kind === "sureStrike") score += 40;
+    else if (affix.kind === "damagePct") score += affix.value * 100;
   }
   return score;
 }
