@@ -467,7 +467,8 @@ export function TitleScreen({
       | "characterWeapon"
       | "weaponSwing"
       | "vibration"
-      | "xpFloat";
+      | "xpFloat"
+      | "healthBars";
     const onOffRow = (
       key: OnOffKey,
       label: string,
@@ -1080,6 +1081,12 @@ export function TitleScreen({
           "XP ON KILL",
           "display-xp-float",
           "FLOAT A BLUE +N XP OFF EACH KILL",
+        ),
+        onOffRow(
+          "healthBars",
+          "HEALTH BARS",
+          "display-health-bars",
+          "SHOW A TINY HP BAR OVER EVERY WOUNDED MOB",
         ),
         // Land back on the DISPLAY row in SETTINGS (index 1, after CONTROLS).
         backTo("settings", 1),

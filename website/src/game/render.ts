@@ -187,6 +187,36 @@ type EnemyVariants = {
 };
 const enemySpriteCache = new Map<string, EnemyVariants>();
 
+/** The width, in world units, of a sprite's non-transparent pixels — the art's
+ * visible body, ignoring the transparent margin the fixed atlas cell pads it
+ * with. Used to size the minion health bar to the character rather than the
+ * cell. Measured once per bitmap (a getImageData scan) and cached. */
+const opaqueWidthCache = new Map<ImageBitmap, number>();
+function opaqueWidth(sprite: ImageBitmap): number {
+  const cached = opaqueWidthCache.get(sprite);
+  if (cached !== undefined) return cached;
+  const c = document.createElement("canvas");
+  c.width = sprite.width;
+  c.height = sprite.height;
+  const g = c.getContext("2d", { willReadFrequently: true });
+  if (!g) return sprite.width;
+  g.drawImage(sprite, 0, 0);
+  const { data } = g.getImageData(0, 0, sprite.width, sprite.height);
+  let min = sprite.width;
+  let max = -1;
+  for (let y = 0; y < sprite.height; y++) {
+    for (let x = 0; x < sprite.width; x++) {
+      if ((data[(y * sprite.width + x) * 4 + 3] ?? 0) > 0) {
+        if (x < min) min = x;
+        if (x > max) max = x;
+      }
+    }
+  }
+  const w = max >= min ? max - min + 1 : sprite.width;
+  opaqueWidthCache.set(sprite, w);
+  return w;
+}
+
 function ensureCaches(sprites: Sprites): void {
   if (cachesFor === sprites) return;
   cachesFor = sprites;
@@ -603,6 +633,17 @@ export function drawFrame(
     );
   }
 
+  // Health bars are collected here and drawn in a second pass below, so a mob
+  // drawn later in the loop never paints over an earlier mob's bar — every bar
+  // stays legible on top of the whole horde.
+  const healthBars: {
+    x: number;
+    y: number;
+    width: number;
+    height: number;
+    color: string;
+    hpFrac: number;
+  }[] = [];
   for (const enemy of state.enemies) {
     if (!inView(enemy.pos.x, enemy.pos.y, 48)) continue;
     const def = enemyDef(enemy.defId);
@@ -732,24 +773,54 @@ export function drawFrame(
     if (!critBlink) ctx.drawImage(sprite, x, y);
     ctx.globalAlpha = 1;
 
-    // Bosses and elites carry their health over their head once wounded — and
-    // so do RARE/UNIQUE mobs, the special-monster tell that reads them as the
-    // mini-bosses they fight like, in their aura's color.
-    if ((def.role !== "minion" || def.rarity) && enemy.hp < enemy.maxHp) {
-      const barWidth = def.role === "boss" ? 40 : 28;
-      const bx = Math.round(enemy.pos.x - barWidth / 2 - camera.x);
-      const by = y - 6;
-      ctx.fillStyle = "#0b0d10";
-      ctx.fillRect(bx - 1, by - 1, barWidth + 2, 5);
-      ctx.fillStyle = def.rarity
+    // Health over the head. Bosses and elites always carry a bar once wounded,
+    // and so do RARE/UNIQUE mobs — the special-monster tell that reads them as
+    // the mini-bosses they fight like, in their aura's color. A plain minion
+    // gets one only when the HEALTH BARS display setting is on, drawn thin and
+    // trimmed just inside its silhouette since it holds so little hp. All are
+    // collected here and drawn in the pass below, so a mob in front never
+    // paints over another's bar.
+    const plainMinion = def.role === "minion" && !def.rarity;
+    const showBar = !plainMinion || getSettings().healthBars === "on";
+    if (showBar && enemy.hp < enemy.maxHp) {
+      const width = plainMinion
+        ? // Trim the visible-body width by 2 so the bar sits inside the
+          // sprite's silhouette rather than reaching its edges.
+          Math.max(2, opaqueWidth(sprite) - 2)
+        : def.role === "boss"
+          ? 40
+          : 28;
+      const color = def.rarity
         ? def.rarity === "unique"
           ? "#ffcf40"
           : "#5cc8ff"
         : def.role === "boss"
           ? "#d83a3a"
-          : "#d9a0f0";
-      ctx.fillRect(bx, by, Math.round((barWidth * enemy.hp) / enemy.maxHp), 3);
+          : def.role === "elite"
+            ? "#d9a0f0"
+            : "#e05050";
+      healthBars.push({
+        x: enemy.pos.x - camera.x,
+        y: y - (plainMinion ? 3 : 6),
+        width,
+        height: plainMinion ? 1 : 3,
+        color,
+        hpFrac: enemy.hp / enemy.maxHp,
+      });
     }
+  }
+  // Second pass: paint every collected bar on top of the drawn horde.
+  for (const bar of healthBars) {
+    const bx = Math.round(bar.x - bar.width / 2);
+    ctx.fillStyle = "#0b0d10";
+    ctx.fillRect(bx - 1, bar.y - 1, bar.width + 2, bar.height + 2);
+    ctx.fillStyle = bar.color;
+    ctx.fillRect(
+      bx,
+      bar.y,
+      Math.max(1, Math.round(bar.width * bar.hpFrac)),
+      bar.height,
+    );
   }
 
   drawMerchant(ctx, state, assets, camera, timeMs);
