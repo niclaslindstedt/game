@@ -1844,6 +1844,21 @@ export function addToInventory(state: GameState, item: Equipment): boolean {
 }
 
 /**
+ * Would an equipment drop find a home the instant it reached the hero — worn
+ * on the spot as a genuine upgrade, or slotted into a free bag cell? A
+ * side-effect-free mirror of the equipment branch of `stepItems`' pickup, so
+ * the item magnet can leave gear it couldn't keep where it lies instead of
+ * dragging it uselessly to the hero's feet on a full bag.
+ */
+export function canCollectEquipment(
+  state: GameState,
+  item: Equipment,
+): boolean {
+  if (isAutoEquipEnabled() && isBetterEquipment(state, item)) return true;
+  return state.player.inventory.indexOf(null) !== -1;
+}
+
+/**
  * The travel gate this bag piece would tear open HERE — the USE-affordance
  * probe the inventory card asks per item. Non-null only when the running
  * level ships a latent gate (`LevelDef.gates`) whose `opensWith` names this

@@ -3,13 +3,33 @@
 // useItem input, orbiting fire orbs mangling the pack, storm strikes,
 // stasis slow, and expiry.
 
-import { describe, expect, it } from "vitest";
+import { afterEach, describe, expect, it } from "vitest";
 
-import { abilityDef, enemyDef, orbPositions, step } from "@game/core";
-import type { GameInput, GameState } from "@game/core";
+import {
+  abilityDef,
+  enemyDef,
+  orbPositions,
+  setAutoEquipEnabled,
+  step,
+  weaponDef,
+} from "@game/core";
+import type { Equipment, GameInput, GameState } from "@game/core";
 import { clearStage, DT, idle, makeEnemy, run, startGame } from "./helpers.ts";
 
 const useItem: GameInput = { ...idle, useItem: true };
+
+/** A minimal fixture weapon, filled to full durability. */
+function fixtureWeapon(id: number, defId: string): Equipment {
+  return {
+    id,
+    defId,
+    slot: "weapon",
+    tier: "regular",
+    ilvl: 5,
+    affixes: [],
+    durability: weaponDef(defId).durability,
+  };
+}
 
 /** A run with a clean stage and one ability picked up AND activated. */
 function pickUp(defId: string): GameState {
@@ -249,5 +269,48 @@ describe("stasis field", () => {
     expect(inMoved).toBeGreaterThan(0);
     expect(outMoved).toBeGreaterThan(0);
     expect(inMoved).toBeCloseTo(outMoved * stasis.slowFactor, 5);
+  });
+});
+
+describe("item magnet", () => {
+  // A running MAGNET field reels drops toward the hero — but only gear he can
+  // actually keep, so a full bag no longer piles uncollectable loot at his feet.
+  afterEach(() => setAutoEquipEnabled(true));
+
+  /** A running magnet with one equipment drop just inside the pull radius but
+   * clear of pickup reach, so a step can move it without collecting it. */
+  function withDrop(drop: Equipment): { state: GameState; startX: number } {
+    const state = pickUp("test_magnet");
+    const startX = state.player.pos.x + 40;
+    state.items = [
+      {
+        id: 700,
+        kind: "equipment",
+        pos: { x: startX, y: state.player.pos.y },
+        equipment: drop,
+      },
+    ];
+    return { state, startX };
+  }
+
+  it("reels in gear the hero can hold (a free bag cell)", () => {
+    const { state, startX } = withDrop(fixtureWeapon(60, "crude_sword"));
+    step(state, idle, DT);
+    const drop = state.items.find((i) => i.id === 700);
+    // Pulled toward the hero (or already collected on arrival) — never left put.
+    if (drop) expect(drop.pos.x).toBeLessThan(startX);
+  });
+
+  it("leaves gear it can't keep where it lies (full bag, not an upgrade)", () => {
+    setAutoEquipEnabled(false); // even an upgrade banks, so nothing auto-equips
+    const { state, startX } = withDrop(fixtureWeapon(60, "crude_sword"));
+    // Fill every bag cell so the drop has no home.
+    state.player.inventory = state.player.inventory.map((_, i) =>
+      fixtureWeapon(100 + i, "crude_sword"),
+    );
+    step(state, idle, DT);
+    const drop = state.items.find((i) => i.id === 700);
+    // Still grounded, and not budged an inch.
+    expect(drop?.pos.x).toBe(startX);
   });
 });

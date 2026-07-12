@@ -73,6 +73,7 @@ import { weaponCritMult, weaponDef } from "./defs/equipment.ts";
 import { levelDef } from "./defs/levels/index.ts";
 import {
   addToInventory,
+  canCollectEquipment,
   armorReduction,
   effectiveStat,
   enemyCritChance,
@@ -1085,6 +1086,14 @@ function stepAbilities(state: GameState, dt: number, dtMs: number): void {
         // A drop still being flown in by its angel is airborne — the magnet
         // can't reel a gift out of the guardian's hands (see stepItems).
         if (item.deliverMs !== undefined && item.deliverMs > 0) continue;
+        // Gear the hero can't keep — a find that neither auto-equips nor fits
+        // the bag — is left where it lies; reeling it in would only pile
+        // uncollectable loot at his feet (stepItems turns it away on arrival).
+        if (
+          item.kind === "equipment" &&
+          !canCollectEquipment(state, item.equipment)
+        )
+          continue;
         if (distanceSq(item.pos, player.pos) > reachSq) continue;
         item.pos = moveToward(item.pos, player.pos, pull);
       }
