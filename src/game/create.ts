@@ -408,6 +408,7 @@ export function createGame(
     },
     events: [],
     pendingProcs: [],
+    pendingCritBlobs: [],
     nextId,
     rng,
     fxRng,

@@ -288,16 +288,18 @@ export function itemLines(
     if (label) {
       lines.push({ text: label, color: "#7ecbff" });
     }
-    // The cadence-weighted crit when it differs from the global default —
-    // slow weapons crit like trucks.
-    const critMult = weaponCritMult(def);
+    // The stat-scaled crit weight when it differs from the flat physical ×2:
+    // a magic weapon's softer base grown by INTELLIGENCE, a melee weapon's ×2
+    // deepened by STRENGTH. Ranged sits exactly at the default, so it shows no
+    // line — the bow carries no crit-damage stat.
+    const critMult = weaponCritMult(state, item);
     if (critMult !== STATS.critMultiplier) {
       lines.push({
         text: `CRIT DAMAGE X${critMult.toFixed(1)}`,
         label: "CRIT DAMAGE",
         value: `X${critMult.toFixed(1)}`,
         delta: eq
-          ? compareChip(critMult - weaponCritMult(weaponDef(eq.defId)), {
+          ? compareChip(critMult - weaponCritMult(state, eq), {
               digits: 1,
             })
           : null,

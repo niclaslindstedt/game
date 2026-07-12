@@ -425,7 +425,11 @@ run against synthetic fixtures with no shipped content (see
   the derived
   stats (max hp — now STAMINA-scaled, class-aware crit chance
   `playerCritChance` — DEX for physical, INT for magic, LUCK marginal — the
-  `playerDodgeChance` sidestep, weapon damage (STR scales physical harder than
+  class-based crit DAMAGE `weaponCritMult` — a flat ×2 physical / ×1.5 magic
+  `baseCritMult` deepened by STR on melee and INT on magic (ranged stays flat),
+  with a magic single-target crit also bursting a small INT-scaled AoE blob
+  (`MAGIC_CRIT`, resolved in `stepMagicCritBlobs`) — the `playerDodgeChance`
+  sidestep, weapon damage (STR scales physical harder than
   INT scales magic), STR-taxed move speed, INT-scaled reach
   `weaponRangeFor`, swing/fire cadence `weaponCooldownFor` — the catalog
   cooldown slowed by the global `WEAPON.baseCooldownMult` and quickened by the

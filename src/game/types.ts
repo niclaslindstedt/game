@@ -188,6 +188,21 @@ export type PendingProc = {
   enemyId?: number;
 };
 
+/**
+ * A MAGIC CRIT BLOB waiting to burst (see config `MAGIC_CRIT`): queued by
+ * `hitEnemy` when the hero's own direct magic weapon crit lands, drained by
+ * `stepMagicCritBlobs` after the combat passes — like a proc, resolving it
+ * inline would splice the enemy list out from under the projectile loop that
+ * spawned it. `pos` is the struck foe (the blob's centre), `blowDamage` the
+ * PRE-crit damage of the blow, and `victimId` the foe that already took the
+ * crit — excluded from the splash so it is never billed twice.
+ */
+export type PendingCritBlob = {
+  pos: Vec2;
+  blowDamage: number;
+  victimId: number;
+};
+
 /** A droppable, equippable item instance (medkits are consumables, not this). */
 export type Equipment = {
   id: number;
@@ -1600,6 +1615,14 @@ export type GameState = {
    * the enemy list out from under the sweep that triggered them.
    */
   pendingProcs: PendingProc[];
+  /**
+   * MAGIC CRIT BLOBS queued by this tick's magic weapon crits (config
+   * `MAGIC_CRIT`), drained by `stepMagicCritBlobs` after the attack pass —
+   * same reason as `pendingProcs`: an inline burst would splice the enemy
+   * list out from under the loop that spawned it. Empty between ticks (filled
+   * and drained within one `step`), so it needs no save serialization.
+   */
+  pendingCritBlobs: PendingCritBlob[];
   /** Monotonic id source for spawned entities. */
   nextId: number;
   /** Seeded stream for in-run rolls (crits, drops) — keeps runs replayable. */

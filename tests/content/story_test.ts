@@ -21,7 +21,7 @@ import {
   storyItemDef,
   WEAPON_DEFS,
   weaponAssumedTargets,
-  weaponCritMult,
+  baseCritMult,
   weaponDef,
   type Enemy,
   type GameState,
@@ -452,7 +452,7 @@ describe("catalog integrity", () => {
     // The promise: elite weapons are good, boss drops stay at least as good.
     // Raw dps can't compare a cone cleaver to a single-target thrust, so the
     // comparison runs in the damage-budget model's EFFECTIVE dps (per-target
-    // dps × assumed targets × cadence-weighted crit lift at a reference 15%
+    // dps × assumed targets × class-based crit lift at a reference 15%
     // crit) — the same math the arsenal is priced in, where a special's
     // worth is its levelReq. Ties are fine (same-req specials share a
     // budget); a boss trophy must never be strictly weaker.
@@ -461,7 +461,7 @@ describe("catalog integrity", () => {
       return (
         ((def.damage * 1000) / def.cooldownMs) *
         weaponAssumedTargets(def) *
-        (1 + 0.15 * (weaponCritMult(def) - 1))
+        (1 + 0.15 * (baseCritMult(def) - 1))
       );
     };
     const bossTrophies: Record<string, string[]> = {

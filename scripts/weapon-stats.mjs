@@ -28,7 +28,7 @@ const {
   GEAR_DEFS,
   AFFIX_POOLS,
   weaponAssumedTargets,
-  weaponCritMult,
+  baseCritMult,
 } = await import(path.join(root, "src/game/defs/equipment.ts"));
 const { LEVELS, LEVEL_ORDER } = await import(
   path.join(root, "src/game/defs/levels/index.ts")
@@ -75,7 +75,7 @@ const REF_CRIT = 0.15;
 const effDps = (def) =>
   dps(def) *
   weaponAssumedTargets(def) *
-  (1 + REF_CRIT * (weaponCritMult(def) - 1));
+  (1 + REF_CRIT * (baseCritMult(def) - 1));
 const fmt = (n, w) => String(n).padStart(w);
 
 // ---- Per-level base pool tables -------------------------------------------

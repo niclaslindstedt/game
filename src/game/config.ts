@@ -60,18 +60,17 @@ export const WEAPON = {
   chainRange: 80,
   chainDamageFrac: 0.6,
   /**
-   * CRIT WEIGHT BY CADENCE: a weapon's crit-damage multiplier follows how it
-   * swings — a quick blade crits lighter, a slow heavy hitter crits like a
-   * truck (`weaponCritMult` in defs/equipment.ts derives it; a def may pin
-   * its own `critMult`). This is the crit half of the damage-budget model:
-   * effective DPS folds the lift in, so the slow archetypes pay for their
-   * spikes with per-hit budget rather than getting them for free.
+   * CRIT WEIGHT BY CLASS: a weapon's crit-damage multiplier is a flat base set
+   * by its class — physical (melee & ranged) crit for `STATS.critMultiplier`
+   * (×2), magic for the softer `STATS.magicCritMultiplier` (×1.5). Weapons
+   * carry NO per-weapon crit stat; the class base is the whole of it at zero
+   * stats. STRENGTH then deepens a MELEE crit and INTELLIGENCE a MAGIC one
+   * (`STATS.critDamagePerStr` / `critDamagePerInt`) — the crit half of the
+   * damage-budget model reads the class base (`baseCritMult`), so a magic
+   * weapon's softer base buys it more per-hit budget in exchange, and the
+   * stat scaling rides free on top as the build's own payoff. The magic
+   * single-target crit BLOB (`MAGIC_CRIT`) is INT's other crit reward.
    */
-  critMultByCadence: { fast: 1.6, medium: 2, slow: 2.5 },
-  /** Cadence classes: fast below this cooldown… */
-  critFastBelowMs: 450,
-  /** …slow at/above this one; medium in between. */
-  critSlowFromMs: 800,
   /**
    * The AoE side of the damage-budget model — BALANCING assumptions, not
    * gameplay caps (how many foes a swing ACTUALLY hits is INTELLIGENCE's
@@ -982,7 +981,64 @@ export const STATS = {
   dropChancePerLuck: 0.01,
   /** Extra chance per LUCK point that a drop upgrades its tier roll. */
   tierChancePerLuck: 0.04,
+  /**
+   * The PHYSICAL crit-damage multiplier — a melee or ranged crit deals this
+   * many times the blow (`baseCritMult`). Also the fallback multiplier for
+   * conjured blows that carry no weapon (nova, storm, bolt, the nuke).
+   */
   critMultiplier: 2,
+  /**
+   * The MAGIC crit-damage multiplier at zero INTELLIGENCE — deliberately
+   * softer than the physical ×2, because a magic weapon's lighter crit buys
+   * it more per-hit base damage in the budget model and INT then deepens the
+   * crit back up (`critDamagePerInt`) as the mage's own investment.
+   */
+  magicCritMultiplier: 1.5,
+  /**
+   * STRENGTH deepens a MELEE crit: each point adds this to the crit
+   * multiplier (a 50-STR bruiser crits for ×3 off the ×2 base). Ranged crits
+   * take the flat physical base — the bow is DEXTERITY's, and DEX already
+   * buys its crit CHANCE, accuracy, and cadence, so it earns no crit-damage
+   * slope on top.
+   */
+  critDamagePerStr: 0.02,
+  /**
+   * INTELLIGENCE deepens a MAGIC crit: each point adds this to the crit
+   * multiplier — steeper than STRENGTH's melee slope so a mage's crit climbs
+   * from the softer ×1.5 base up past a bruiser's, the payoff that makes a
+   * high-INT build's spells spike (alongside the crit BLOB below). This is
+   * the one place INT buys raw crit power rather than utility.
+   */
+  critDamagePerInt: 0.03,
+} as const;
+
+/**
+ * THE MAGIC CRIT BLOB — a magic weapon's single-target crit doesn't just hit
+ * harder, it BURSTS: the struck foe detonates a small arcane blob that splashes
+ * the nearest few others for a share of the blow. INTELLIGENCE grows both the
+ * blob's reach and how many it can catch, so horde-clearing magic is an INT
+ * investment the way the melee cleave is — but the base stays SMALL and firmly
+ * capped on purpose. Big screen-shaping AoE is the province of unique and
+ * legendary item powers (the granted spells and procs), not this baseline
+ * reward. Only the hero's OWN direct weapon crits blob (a chain leap, a proc,
+ * a companion's shot never does), and the blob's own splash can't blob again.
+ */
+export const MAGIC_CRIT = {
+  /** Blob radius (world px) at zero INTELLIGENCE. Kept well under the nova
+   * proc's 56 — a tight burst around the victim, not a screen-wipe. */
+  blobRadius: 18,
+  /** Extra radius per INT point, capped at `blobRadiusMax`. */
+  blobRadiusPerInt: 0.6,
+  blobRadiusMax: 34,
+  /** Foes the blob splashes BESIDES the crit victim, at zero INT / added per
+   * INT point (fractional — ~1 more per 16 INT), capped at `blobTargetsMax`.
+   * The cap is the wall that keeps this from ever clearing a horde. */
+  blobTargets: 1,
+  blobTargetsPerInt: 0.06,
+  blobTargetsMax: 4,
+  /** The blob's damage as a fraction of the pre-crit blow that spawned it —
+   * a splash, not a second full hit. */
+  blobDamageFrac: 0.45,
 } as const;
 
 /**
