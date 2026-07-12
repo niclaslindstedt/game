@@ -43,6 +43,38 @@ node scripts/simulate-run.mjs --seed 42 --strategy kite  # different seed/autopi
 node scripts/simulate-run.mjs --json report.json         # machine-readable dump
 ```
 
+### The analytic sibling — `progression-sim`
+
+When the question is progression rather than survival — how XP, loot, and the
+hero's stat block climb if the hero cleanly farms **every** mob a level can
+field (the horde, its elites, its rolled rare/unique visitors, its boss), rung
+by rung, up to level 99 — use the **analytic** simulator instead. It skips the
+autopilot and the geometry: it enumerates a level's guaranteed roster and runs
+the real kill funnel (`killEnemy` → `grantXp` with the per-map cap → the drop
+ladder) once per mob at overkill efficiency 1, auto-equipping upgrades and
+spending level-up points on a **configurable** stat distribution, snapshotting
+the full stat block every N kills (default 25).
+
+- **Engine module: `src/sim/analytic.ts`** — `simulateProgression(options)`,
+  deterministic, returns a typed `ProgressionReport` (per-pass `LevelResult`s +
+  a flat `Checkpoint` series). Not part of the public engine API.
+- **CLI: `scripts/progression-sim.mjs`** — prints a per-pass table (and every
+  checkpoint with `--full`), dumps JSON with `--json`, and writes a
+  self-contained HTML **progression graph** (level, hp, damage, crit, armor,
+  and attributes over the run, banded by difficulty — via
+  `scripts/progression-chart.mjs`).
+
+```sh
+node scripts/progression-sim.mjs                              # full game → L99, writes progression.html
+node scripts/progression-sim.mjs --difficulty easy --level spacez_hq --full
+node scripts/progression-sim.mjs --stats strength=3,stamina=1 # a STR-heavy build
+node scripts/progression-sim.mjs --json out.json --html out.html
+```
+
+Use the autopilot simulator (above) for "how hard is the pressure / does the
+drop rain keep DPS on the mob-hp curve"; use `progression-sim` for "where does
+the stat/XP/loot curve actually land, batch by batch, to the cap."
+
 ## Reading the report
 
 The summary table prints one row per run: hero level `start→end`, deaths,
