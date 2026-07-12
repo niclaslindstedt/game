@@ -21,8 +21,8 @@ Status legend: `[ ]` not started · `[x]` done.
 - **99+ legendaries scale up**: their minted power grows with the kill's
   monster level past their floor, and their **stats determine their rarity**
   (the stronger the item, the rarer the drop) — mechanically, not by vibes.
-- **Magic needs mechanics, not just numbers:** items can grant *forever
-  spells* — e.g. fireballs circling the hero, periodic bolts — firing at an
+- **Magic needs mechanics, not just numbers:** items can grant _forever
+  spells_ — e.g. fireballs circling the hero, periodic bolts — firing at an
   interval and improved by INTELLIGENCE. Legendaries may grant such effects
   to ALL specs (e.g. magic effects on hit).
 - **Tone:** timeless and epic. No jokes in unique/legendary names or lore.
@@ -54,11 +54,11 @@ Status legend: `[ ]` not started · `[x]` done.
 
 ## Target coverage matrix (weapons per rung, by spec)
 
-| Rung      | Melee | Ranged | Magic | New weapons | New armor | New legendaries |
-| --------- | ----- | ------ | ----- | ----------- | --------- | --------------- |
-| HARD      | 1     | 1      | 1 ✓   | +2          | +2        | +1              |
-| NIGHTMARE | 2     | 2 (1✓) | 2     | +5          | +4        | +3              |
-| JESUS     | 3 (1✓)| 3      | 3     | +8          | +8        | +6 pre-99, +24 at 99+ |
+| Rung      | Melee  | Ranged | Magic | New weapons | New armor | New legendaries       |
+| --------- | ------ | ------ | ----- | ----------- | --------- | --------------------- |
+| HARD      | 1      | 1      | 1 ✓   | +2          | +2        | +1                    |
+| NIGHTMARE | 2      | 2 (1✓) | 2     | +5          | +4        | +3                    |
+| JESUS     | 3 (1✓) | 3      | 3     | +8          | +8        | +6 pre-99, +24 at 99+ |
 
 ✓ = already shipped via the boss Latin square. Armor "options per slot" per
 rung: hard 1 (boss set) + 2 spec-leaning extras, nightmare 2, jesus 3.
@@ -127,7 +127,7 @@ model.
   config knob), on top of the usual ±band. Deeper kills mint bigger copies —
   the 99+ farming loop (menace-hot bosses at the cap mint the biggest).
 - **Stats determine rarity**: for legendaries, the selection weight in
-  `pickUniqueForDrop` is *derived from the item's bonus budget* (the
+  `pickUniqueForDrop` is _derived from the item's bonus budget_ (the
   weapon-ilvl pricing model), normalized so a reference-budget legendary
   keeps `UNIQUE.defaultRarity` and stronger ones scale down proportionally.
   Authored `rarity` remains as an override multiplier only.
@@ -168,13 +168,13 @@ drop during the campaign). Bases picked at implementation time via
 `unique-check.mjs --bases` / `--suggest` (req ≈ ilvl − 20); ilvls set by
 `weapon-ilvl.mjs --suggest`. Target ilvls ~40–55. Concepts:
 
-| Item | Slot | Spec | Identity |
-| ---- | ---- | ---- | -------- |
-| **OATHBRAND** | weapon (melee) | melee | STR keeper + damage — the sworn blade that completes the hard melee set |
-| **LONGWATCH** | weapon (ranged) | ranged | DEX + crit sniper — patience rewarded |
-| **COLOSSUS PLATE** | chest | melee | heavy armor + STR, small speed downside — the wall |
-| **HUNTSMAN'S COWL** | head | ranged | DEX + crit + speed — the stalker's profile |
-| **GUNGNIR** *(legendary)* | weapon (ranged) | all | the Allfather's cast spear: `sureStrike` (never misses) + on-hit `bolt` proc + DEX keeper. Out-ilvls MJÖLNIR. |
+| Item                      | Slot            | Spec   | Identity                                                                                                      |
+| ------------------------- | --------------- | ------ | ------------------------------------------------------------------------------------------------------------- |
+| **OATHBRAND**             | weapon (melee)  | melee  | STR keeper + damage — the sworn blade that completes the hard melee set                                       |
+| **LONGWATCH**             | weapon (ranged) | ranged | DEX + crit sniper — patience rewarded                                                                         |
+| **COLOSSUS PLATE**        | chest           | melee  | heavy armor + STR, small speed downside — the wall                                                            |
+| **HUNTSMAN'S COWL**       | head            | ranged | DEX + crit + speed — the stalker's profile                                                                    |
+| **GUNGNIR** _(legendary)_ | weapon (ranged) | all    | the Allfather's cast spear: `sureStrike` (never misses) + on-hit `bolt` proc + DEX keeper. Out-ilvls MJÖLNIR. |
 
 ### Phase 2 checklist
 
