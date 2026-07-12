@@ -74,9 +74,21 @@ Delete or empty each of these — they are 100% this-game data:
       are this game's copy — rewrite them for the sequel. The tracking
       machinery (`achievement-totals.ts`, `achievements.ts`) is machinery;
       keep it.
+- [ ] **`docs/manuscript.md`** — the story's single source of truth; 100%
+      this-game narrative. Replace it wholesale with the new game's
+      manuscript (its "Where the data lives" table stays as the template).
+      Writing it FIRST pays off: every intro, dialogue, lastWord, and lore
+      page you author in step 3 must transcribe from it.
 - [ ] **`docs/game-content.md`** — this game's story/level/roster
       walkthrough; replace it wholesale. Trim the flavored README sections
       (premise, how-to-play story beats) to the new game.
+- [ ] **Per-game data embedded in scripts** — the balance checkers carry
+      tables keyed by this game's level ids: `scripts/weapon-stats.mjs`
+      (`LEVEL_MLVL_BANDS`, `CAMPAIGN_LANDINGS` — re-derive from
+      `scripts/leveling-curve.mjs --by-level` once the new campaign
+      exists) and the default `--level` in `website/scripts/playtest.mjs`
+      / the examples in `scripts/simulate-run.mjs`. Grep the old level ids
+      across `scripts/` and `website/scripts/` when the new catalogs land.
 - [ ] **`.changes/unreleased/*`** and **`CHANGELOG.md`** — per-game history;
       clear them. Reset versions with `scripts/update-versions.sh` (never by
       hand) and start the new game's changelog fresh.
