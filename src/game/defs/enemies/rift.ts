@@ -332,7 +332,13 @@ export const RIFT_ENEMIES: Record<string, EnemyDef> = {
       // open the bunker gate (the level's `gates` entry) — the cow-level
       // ritual, never explained anywhere. Kill-only: sparing him keeps his
       // gear on him, so the door costs the unkillable man his life.
-      items: ["rasputin_beard", { defId: "severed_hand", tier: "regular" }],
+      // `requiresClear: "eastworld"` holds the drop until the campaign is
+      // beaten — on a first pass the hero reaches the Rift before Eastworld,
+      // so the bunker is strictly a post-campaign bonus (see docs/story.md).
+      items: [
+        "rasputin_beard",
+        { defId: "severed_hand", tier: "regular", requiresClear: "eastworld" },
+      ],
       tierDrops: { magic: 1, rare: 0.5 },
       weapons: 0,
       gear: 1,

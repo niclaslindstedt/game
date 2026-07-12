@@ -355,6 +355,9 @@ export const EASTWORLD: LevelDef = {
   placedItems: [
     // The park brochure by the gate — the arrival's paper trail.
     { kind: "story", defId: "park_brochure", pos: { x: 900, y: 840 } },
+    // ADA'S TRAIL (5/5): a host she jammed dead with its own hat, out on main
+    // street — sabotage from inside the control room (sets up "nice hat").
+    { kind: "story", defId: "ada_host", pos: { x: 1500, y: 760 } },
     { kind: "repair", pos: { x: 1620, y: 800 } },
     { kind: "medkit", pos: { x: 1180, y: 1050 } },
     // Compound supplies, for the fight the door was locked around.

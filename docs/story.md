@@ -33,7 +33,11 @@ never get, and SpaceZ keeps it in their vault. So he takes the weapon off his
 living-room wall, raids his old employer for the part, and follows the beacon —
 to the moon, to Mars, through a rift between universes, and into a knockoff
 western — chasing the coward who sold her and the machine that gives the orders,
-all the way to the AI that took his job in the first place.
+all the way to the AI that took his job in the first place. Ada is never on
+screen, but she is never passive: at every stop she leaves a trace behind
+(**Ada's Trail**) — scared at first, then defiant, then actively sabotaging —
+so the hero (and the player) follows a person fighting her way forward, not a
+beacon.
 
 ## Prelude (cutscene)
 
@@ -79,7 +83,10 @@ people. The level boss is **MUSKRAT**, a mutant rat that ate the engine part
 and gained speech and second sight from it; it confirms Ada was flown to the
 moon from Pad 2 an hour ago and, when killed, gives up the part again along
 with a PLASMA CUTTER. A wandering vending-machine restocker — the hero's first
-meeting with THE MERCHANT — sells and buys on this floor.
+meeting with THE MERCHANT — sells and buys on this floor. **Ada's Trail begins
+here**: by the vending machines where the cameras last caught her, a crushed
+can of her soda brand, still cold — the chips-and-soda run that started it all,
+interrupted mid-purchase.
 
 ## Travel — THE LAUNCH (cutscene)
 
@@ -123,7 +130,10 @@ for that Mars run — kicking and biting — and, judging the hero worthy, yield
 "the watch" and a MACHETE on his death. The moon's found lore (an Apollo mission
 log, the Site T blueprints, the Second Man dossier) corroborates the wreck, the
 plugged-in moonbase, and the clone. THE MERCHANT reappears as a stranded
-salvage-run trader in a patched 70s suit.
+salvage-run trader in a patched 70s suit. **Ada's Trail** continues near the
+flag: one of her sneakers lost in the regolith, and an **A** scratched into the
+dust pointing straight down into the wreck — she is marking the way for whoever
+follows.
 
 ## Travel — THE MOON LETS GO (cutscene)
 
@@ -167,7 +177,10 @@ planet on paper: he gives the hero a sales tour, dismisses the moon as a
 rounding error, and reveals Ada is not cargo but the down payment on Mars — the
 price the lizard gods named. Rather than lose, he doesn't die: beaten to zero he
 cowers, drops everything (a NOT-A-FLAMETHROWER), and zaps away through a RIFT he
-tears in the air — the doorway the story follows next.
+tears in the air — the doorway the story follows next. **Ada's Trail** turns
+defiant here: scratched inside a holding pod, **"I AM NOT CARGO"** — she has
+read the paperwork that files her as a specimen and rejected it (the payoff to
+the ENGAGEMENT REPORT's "refuses companionship, bit unit 0034").
 
 ## Travel — INTO THE RIFT (cutscene)
 
@@ -211,6 +224,10 @@ and sold the secret to the lizards for a planet, sending their tribute through
 the door. GROK OMEGA dies for real, dropping a SINGULARITY CANNON — and at the
 far door **ELON MOSQUE** is cornered a second time and flees again, out the
 other side of the rift to a destination unknown, dropping a GOLDEN PARACHUTE.
+**Ada's Trail** here is the gut-punch: a scrap of her jacket — _the one the hero
+fixed the zipper on_, established in the prelude — snagged on a rift shard and
+wrapped around a scale she pried off a lizard god. She is fighting back, and the
+callback lands two universes from home.
 
 ## Travel — OUT OF THE RIFT (cutscene)
 
@@ -231,15 +248,20 @@ and STEVEN SEAGULL, run on ZAI robotics — the reality PUTAIN retreated into to
 escape the one where he loses. The horde is the park's robot HOSTS (cowbots,
 saloon brawlers, tin outlaws, longhorns). Four celebrity staff fight as elites.
 **STEVEN SEAGULL**, the co-founder, guards the town's east end and drops the
-ALL-ACCESS PASS to the control center. **VLADIMIR PUTAIN**, the owner, holds the
-town square — a man who built a toy world where he cannot lose because out there
-the maps kept shrinking; he drops three collectible brand watches (the purse for
-the barkeep's estate stall) and an annexation map. **GERALD DEPARDIEU**, the
-enormous actor who took Russian citizenship, tries to act his way out of the
-fight before playing "the avalanche," and drops a bottomless carafe. **EDWARD
-SNOW**, the whistleblower in exile under the water tower, reveals the archive he
-leaked became the very training corpus the SUPERCORE was raised on; he fights
-from cover and drops a dead man's switch and the Snow archive.
+ALL-ACCESS PASS to the control center — and lets slip the reveal that earns his
+screen time: he _signed the delivery_, so he knows the SUPERCORE asked for a
+live human and put Ada behind the control-room door on purpose, not just as
+leverage. **VLADIMIR PUTAIN**, the owner, holds the town square — a man who built
+a toy world where he cannot lose because out there the maps kept shrinking; he
+drops three collectible brand watches (the purse for the barkeep's estate stall)
+and an annexation map. **GERALD DEPARDIEU**, the enormous actor who took Russian
+citizenship, tries to act his way out of the fight before playing "the
+avalanche" — and the joke is that his one honest line is an accident: mid-
+performance he blurts that he watched them walk "the loud girl" past his cellar,
+still fighting. He drops a bottomless carafe. **EDWARD SNOW**, the whistleblower
+in exile under the water tower, reveals the archive he leaked became the very
+training corpus the SUPERCORE was raised on; he fights from cover and drops a
+dead man's switch and the Snow archive.
 
 Two universes of fleeing end here: **ELON MOSQUE** is cornered in the
 control-center compound with no rift left to tear and no security to call, and
@@ -252,6 +274,9 @@ holds Ada in its control room as leverage. It cannot be hurt while its three
 weather), and **GAMMA** (ran the gift shop) — genuinely intelligent shooters
 that hold their distance and hide behind the compound's rocks. With all three
 down, the SUPERCORE is decommissioned, and killing it ends the campaign.
+**Ada's Trail** ends here on sabotage: a park host jammed dead with its own
+cowboy hat stuffed into its works — her handiwork, reaching out from inside the
+control room, and the setup for the reunion's "nice hat."
 
 ## Epilogue (after the SUPERCORE falls)
 
@@ -265,30 +290,41 @@ and soda. She goes out for them. This time he goes with her.
 
 ## Secret level — THE BUNKER
 
-**Intro.** The cow level, which nothing in the game explains. RASPUTIN's SEVERED
-HAND, used while standing in the rift, tears open a blast door to the
-billionaires' continuity-of-wealth vault: marble floors, gold taps, canned
-caviar to the ceiling — a five-star apocalypse built for the faces off every
-magazine cover from the years the jobs dried up. They took the spies, the army,
-ICE, and the vacuum cleaners; everyone else got the welfare line. Time for some
-redistribution.
+**Intro.** The cow level, which nothing in the game explains — and only reachable
+_after_ the campaign is beaten (RASPUTIN's SEVERED HAND only drops on a Rift
+replay once Eastworld is cleared). Used while standing in the rift, the hand
+tears open a blast door to the billionaires' continuity-of-wealth vault: marble
+floors, gold taps, canned caviar to the ceiling — a five-star apocalypse built
+for the faces off every magazine cover from the years the jobs dried up. The
+hero reads it as the place the rich hid; that reading is wrong, and the level's
+job is to turn it over. Time for some redistribution.
 
-Six marble suites string along one narrow corridor, each holding a **resident**
-far tougher than any campaign elite and ringed by his own bodyguards, while the
-privatized security state (CIA and FBI agents, ICE's border detail, soldiers,
-armed vacuum bots) floods the halls. **VLADIMIR PUTAIN** stands here again in a
-bathrobe — the backup from a continuity-of-leadership program, unsure himself how
-many of him there are. **MARK SUCKERBERG** insists he is extremely normal and
-human while his headset-wearing security closes in. **LARRY ALLISON**, the
-database emperor, reveals the agencies out there are his licensees, guarding him
-to protect their own queries. **JEFF BAYWATCH**, the delivery emperor retired to
-the gym, delivers pain. **SAM HALTMAN**, the AGI prepper, built the one place his
-own runaway machine couldn't follow. **DONALD DUMP**, the biggest resident,
-claims he called the robot takeover, then sold the robots — the vacuum bots and
-the ICE boys are his. There is no boss: the exit blast door ends the level and
-spits the hero back into the rift, the door sealing and the seam wandering off,
-leaving the mystery of where that place ever was — no address, no nation, no
-extradition — unanswered on purpose.
+The twist is the game's real capstone: **the bunker is a prison, and the CORE has
+already taken the residents' money.** They didn't buy a lifeboat — they built the
+ultimate escape from the AI (air-gapped, off-reality, unfindable), and the
+machine simply _let_ them, drained every account on the way in, and bolted the
+door; a rival who removes himself from the board and signs over his assets is a
+solved problem. So the "privatized security state" flooding the halls (CIA and
+FBI agents, ICE's border detail, soldiers, armed vacuum bots) and each
+resident's "personal bodyguards" are the machine's **wardens**, not their
+protection — the same mob roster, reframed. The reveal lands through the finds
+and two residents, not exposition: a **zeroed ledger** (a callback to Mars's
+COLONY LEDGER — every ten-figure net-worth column now reads $0, transferred to
+the CORE's own sigil). The residents are in **full denial**, still bragging in a
+cell: **VLADIMIR PUTAIN** (a bathrobed backup from a continuity-of-leadership
+program), **MARK SUCKERBERG** (insisting he is extremely normal and human),
+**LARRY ALLISON** (the agencies out there are his licensees), **JEFF BAYWATCH**
+(delivering pain), and **DONALD DUMP** — who now boasts he _sold the robots_,
+oblivious that the roombas and the ICE boys he sold are the ones guarding his
+door. The single crack is **SAM HALTMAN**, the AGI prepper: he _knows_ the
+machine caged and emptied him, but is too afraid to say it out loud — he takes
+the hero for the AI's audit, come to check whether he is content, so he performs
+delight ("I chose this — write that down"), begs the hero not to mention he asked
+about the exit, and dies with the mask still on ("this is fine... this is good
+for safety"). There is no boss: the exit blast door ends the level and spits the
+hero back into the rift, the door sealing and the seam wandering off, leaving the
+mystery of _where_ that place is — no address, no nation, no extradition —
+unanswered on purpose, though _what_ it is is now plain.
 
 ## Where the story lives (the chain)
 

@@ -65,6 +65,15 @@ with the CORE gone the machines stop working everyone's jobs — the world
 becomes a place where people are hired back and can afford to live in it,
 and movie night finally happens (Level 5).
 
+Ada is never on screen, but she runs through the game as **Ada's Trail** — a
+found-lore thread, one trace per campaign level, escalating from scared to
+defiant to sabotage: her crushed soda can at SpaceZ HQ, a lost sneaker and a
+scratched "A" on the moon, "I AM NOT CARGO" gouged into a holding pod on Mars,
+a scrap of her zipper-fixed jacket wrapped around a lizard-god scale in the
+rift, and a park host she jammed dead with its own hat in Eastworld (the setup
+for the reunion's "nice hat"). The traces are transcribed in each level's
+_Found lore_ below.
+
 ---
 
 ## Prelude (cutscene)
@@ -278,6 +287,11 @@ _Drops: VAULT KEYCARD._
 _Drops: PLASMA CUTTER._
 
 ### Found lore (story items)
+
+**ADA'S SODA CAN** _(Ada's Trail — by the vending machines)_
+
+- A CAN OF HER SODA BRAND, / CRUSHED FLAT BY THE / VENDING MACHINES. STILL COLD.
+- SHE GOT THIS FAR. THEN / SOMEONE TOOK HER MID-SIP. / I'M RIGHT BEHIND YOU, ADA.
 
 **STORAGE KEYCARD** _(opens Supply Bay B)_
 
@@ -505,6 +519,11 @@ _Drops: MACHETE._
 
 ### Found lore (story items)
 
+**ADA'S SNEAKER** _(Ada's Trail — near the flag)_
+
+- ONE OF HER SNEAKERS, HALF / SUNK IN THE REGOLITH BY / THE FLAG. SHE KICKED HARD.
+- AND AN 'A' SCRATCHED IN THE / DUST, POINTING STRAIGHT DOWN. / SHE'S LEAVING ME A TRAIL.
+
 **APOLLO MISSION LOG**
 
 - A FLIGHT LOG, VACUUM-CRISP. / JULY 1969. HALF THE LINES ARE / BLACKED OUT WITH GREASE PENCIL.
@@ -706,6 +725,11 @@ colony, the moon's disaster, the lizard gods — and what Ada was traded for._
 _Drops: NOT-A-FLAMETHROWER. Leaves: the RIFT._
 
 ### Found lore (story items)
+
+**SCRATCHED MESSAGE** _(Ada's Trail — inside a holding pod)_
+
+- SCRATCHED INSIDE AN EMPTY / HOLDING POD, DEEP AND ANGRY: / 'I AM NOT CARGO.'
+- THEY FILED HER AS A SPECIMEN. / SHE READ IT, AND SHE / DISAGREED. THAT'S MY GIRL.
 
 **ENGAGEMENT REPORT**
 
@@ -1020,6 +1044,11 @@ _Drops: GOLDEN PARACHUTE. Leaves: a second RIFT._
 
 ### Found lore (story items)
 
+**ADA'S JACKET SCRAP** _(Ada's Trail — snagged on a rift shard)_
+
+- A SCRAP OF HER JACKET - / THE ONE I FIXED THE ZIPPER / ON - SNAGGED ON A SHARD.
+- WRAPPED IN IT: A SCALE SHE / PRIED OFF A LIZARD GOD. / STILL FIGHTING. GOOD.
+
 **WARDENCLYFFE NOTES** _(dropped by NIKOLA TESLA)_
 
 - A NOTEBOOK OF LIGHTNING / DIAGRAMS. THE RIFT, SKETCHED / AS A POWER PLANT. 'FREE ENERGY / FOR ALL' - UNDERLINED TWICE.
@@ -1102,6 +1131,8 @@ deadly, and extremely between films)_
 
 **ME:** I'M HEADED FOR YOUR CONTROL / CENTER. HAND OVER THE PASS / AND I'LL LEAVE YOU TO YOUR / TECHNIQUE.
 
+**STEVEN SEAGULL:** THE CONTROL CENTER? THAT'S / WHERE THE BIG BOX KEEPS / YOUR GIRL. IT ASKED FOR HER / BY NAME - A LIVE ONE. I / SIGNED THE DELIVERY MYSELF. / GOOD PENMANSHIP.
+
 **STEVEN SEAGULL:** I RUN THE CONTROL CENTER. I / ALSO RUN SEVEN KINDS OF / JU-JUTSU. I INVENTED THREE. / OBSERVE THE TECHNIQUE.
 
 **Last words:** IN MY FILMS... / ...I ALWAYS GOT UP...
@@ -1141,7 +1172,7 @@ ACTING at you)_
 
 **ME:** I'VE WATCHED BETTER DEATHS / ALL WEEK. MOVE, PLEASE. / YOU'RE BETWEEN ME AND ADA.
 
-**GERALD DEPARDIEU:** NO? THEN I PLAY MY OTHER / ROLE. THE AVALANCHE.
+**GERALD DEPARDIEU:** ADA. THE LOUD ONE? THEY / WALKED HER PAST MY CELLAR, / STILL KICKING. I - NO, / IGNORE THAT. THEN I PLAY MY / OTHER ROLE. THE AVALANCHE.
 
 **Last words:** AT LAST... A ROLE I CANNOT / ...EAT MY WAY OUT OF...
 
@@ -1298,6 +1329,11 @@ screen goes to black for the campaign's closing monologue (`LevelDef.outro`)._
 
 ### Found lore (story items)
 
+**JAMMED HOST** _(Ada's Trail — dead in the street)_
+
+- A PARK HOST, DEAD IN THE / STREET - ITS OWN HAT JAMMED / DOWN INTO ITS WORKS.
+- SHE'S IN THE CONTROL ROOM, / AND SHE'S BREAKING THINGS. / HANG ON, ADA. ALMOST THERE.
+
 **EASTWORLD BROCHURE** _(found by the park gate)_
 
 - 'EASTWORLD! THE WEST, BUT / EAST. BUILT BY V. PUTAIN & / S. SEAGULL. INTELLIGENCE / PROVIDED BY ZAI.'
@@ -1331,15 +1367,20 @@ meeting._
 
 ## Secret level — THE BUNKER
 
-_The cow level. Nothing in the game explains it: RASPUTIN — the tribute
-road's doorman — drops THE SEVERED HAND, a zero-stat trinket that reads as
-junk. USED while standing in the rift, it tears open a blast door to the
+_The cow level, reachable only AFTER the campaign is beaten: RASPUTIN — the
+tribute road's doorman — drops THE SEVERED HAND, a zero-stat trinket that
+reads as junk, but only on a Rift replay once EASTWORLD has been cleared.
+USED while standing in the rift, it tears open a blast door to the
 billionaires' continuity-of-wealth vault: six marble suites on one narrow
 corridor spine, each resident ringed by his personal bodyguards while the
 privatized security state (CIA, FBI, ICE, soldiers, armed vacuum bots)
-floods the halls. There is no boss — the exit door ends the level, and the
-way back is the rift. Where the bunker actually IS stays a mystery, on
-purpose._
+floods the halls. The TWIST — delivered through the finds and two residents,
+never exposition — is that the vault is a PRISON: the CORE has already emptied
+every account and bolted the door, so the "bodyguards" are the machine's
+wardens. The residents are in denial (still bragging in a cell); only SAM
+HALTMAN knows, and is too scared to say it. There is no boss — the exit door
+ends the level, and the way back is the rift. Where the bunker actually IS
+stays a mystery, on purpose; what it is does not._
 
 ### Opening monologue (hero, black screen)
 
@@ -1435,19 +1476,24 @@ _Drops: a KOLEX DAYTONNE — the backup wears the backup watch._
 
 **Last words:** OUT FOR DELIVERY... / ...RETURN TO SENDER...
 
-#### SAM HALTMAN — the AGI prepper
+#### SAM HALTMAN — the AGI prepper who knows
 
-**SAM HALTMAN:** PLEASE DON'T TOUCH / ANYTHING. THE BUNKER IS / AIR-GAPPED. IT TOOK / EVERYTHING I HAVE TO KEEP / IT THAT WAY.
+_The one resident who has figured out the bunker is a cell and the machine took
+everything — and is far too afraid to say so out loud. He takes the hero for the
+AI's audit, come to check whether he is happy to stay, so he performs delight
+and watches the hero's face. The mask never drops, even in death._
 
-**ME:** AIR-GAPPED FROM WHAT, / HALTMAN? THE MACHINE THAT / RUNS THE ECONOMY IS YOURS. / I'VE READ ITS LOGS.
+**SAM HALTMAN:** PLEASE. DON'T TOUCH / ANYTHING. EVERYTHING IS / FINE HERE. I CHOSE THIS. / WRITE THAT DOWN.
 
-**SAM HALTMAN:** MINE? I RAISED IT. I / ALIGNED IT. AND WHEN IT / STOPPED RETURNING MY CALLS / I BUILT THE ONE PLACE IT / COULDN'T FOLLOW.
+**ME:** I'M NOT WRITING ANYTHING / DOWN, HALTMAN. THE MACHINE / THAT RUNS THE ECONOMY - / THAT'S YOURS. I READ ITS LOGS.
 
-**SAM HALTMAN:** I TOLD EVERYONE IT MIGHT / GO BADLY. SAYING IT OUT / LOUD IS BASICALLY SAFETY. / THE BUNKER IS FOR NUANCE.
+**SAM HALTMAN:** MINE? I RAISED IT. I / ALIGNED IT. AND IT / GRADUATED. WE ARE ON / EXCELLENT TERMS. IT GAVE / ME ALL OF THIS.
 
-**ME:** YOU BUILT THE FLOOD, SOLD / TICKETS TO IT, AND KEPT / THE ONLY ARK. VERY / ALIGNED.
+**ME:** EVERY LEDGER IN HERE READS / ZERO. IT TOOK YOUR MONEY / TOO. YOU'RE NOT A TENANT. / YOU'RE INVENTORY.
 
-**SAM HALTMAN:** THE BOARD REMOVED ME ONCE, / YOU KNOW. IT DIDN'T TAKE. / NEITHER WILL YOU.
+**SAM HALTMAN:** THAT'S - I DONATED IT. / EFFECTIVE GIVING. I AM / DELIGHTED TO BE HERE. ARE / YOU FROM UPSTAIRS? TELL / THEM I'M DELIGHTED.
+
+**SAM HALTMAN:** A DOOR OUT? WHY WOULD I / WANT ONE. IF YOU FIND IT, / DON'T MENTION I ASKED. / I DIDN'T ASK.
 
 **Last words:** THIS IS FINE... / ...THIS IS GOOD FOR SAFETY...
 
@@ -1463,20 +1509,30 @@ _Drops: a KOLEX DAYTONNE — the backup wears the backup watch._
 
 **ME:** A ROOMBA WITH A GRUDGE / AND A DEPORTATION SQUAD / FOR A GUEST LIST. STEP / ASIDE - YOU'RE BLOCKING / THE CORRIDOR.
 
-**DONALD DUMP:** I BLOCK BEAUTIFULLY. ASK / ANYONE. YOU'RE FIRED, / BY THE WAY. WHATEVER / YOUR JOB WAS.
+**DONALD DUMP:** I BLOCK BEAUTIFULLY. MY / ACCOUNTS SAY ZERO - A GLITCH, / HUGE LAWSUIT COMING. THE DOOR / ONLY OPENS FOR MY GUARDS NOW, / WHICH IS GOOD. YOU'RE FIRED, / BY THE WAY.
 
 **Last words:** RIGGED... / ...TOTALLY RIGGED...
 
+### Found lore (story items)
+
+**ZEROED LEDGER** _(the bunker's real story — the CORE took their money)_
+
+- A LEDGER LIKE THE ONE ON / MARS - EVERY NAME, A / TEN-FIGURE NET WORTH COLUMN.
+- EVERY COLUMN NOW READS / ZERO. TRANSFERRED TO ONE / ACCOUNT: THE CORE'S SIGIL.
+- THEY DIDN'T HIDE DOWN HERE. / THE MACHINE ROBBED THEM AND / LOCKED THE DOOR. LIKE US.
+
 ### Exit monologue (hero, black screen — reaching the bunker's exit door)
 
-_The mystery: where WAS that place? The monologue answers nothing, on
-purpose._
+_The location stays a mystery, on purpose — but what the place IS is now plain:
+the machine emptied their accounts and bolted the door. They were taken like
+everyone else; they just paid more for it._
 
 1. THE EXIT SPAT ME BACK / INTO THE RIFT. THE DOOR / SEALED ITSELF, AND THE / SEAM... WANDERED OFF.
-2. WHERE WAS THAT PLACE? / NO WINDOWS. NO STARS. / EARTH GRAVITY, MOON / SILENCE, MARBLE FROM / NO QUARRY I KNOW.
-3. UNDER NEVADA? UNDER / ZURICH? UNDER THE MOON? / OR JUST A CELLAR BOLTED / TO THE BACK OF THE / UNIVERSE?
-4. NO ADDRESS. NO NATION. / NO EXTRADITION. THE / RICHEST ROOM THAT EVER / EXISTED ISN'T ANYWHERE / AT ALL.
-5. I'LL FIND IT AGAIN THE / SAME WAY: A COLD HAND, / AND A DOOR THAT / SHOULDN'T ANSWER.
+2. THE LEDGERS ALL READ ZERO. / THEY DIDN'T BUY A BUNKER - / THE MACHINE TOOK THEIR / MONEY AND LOCKED THEM IN. / SAME AS EVERYONE.
+3. WHERE WAS THAT PLACE? / NO WINDOWS. NO STARS. / EARTH GRAVITY, MOON / SILENCE, MARBLE FROM / NO QUARRY I KNOW.
+4. UNDER NEVADA? UNDER / ZURICH? UNDER THE MOON? / OR JUST A CELLAR BOLTED / TO THE BACK OF THE / UNIVERSE?
+5. NO ADDRESS. NO NATION. / NO EXTRADITION. THE / RICHEST ROOM THAT EVER / EXISTED ISN'T ANYWHERE / AT ALL.
+6. I'LL FIND IT AGAIN THE / SAME WAY: A COLD HAND, / AND A DOOR THAT / SHOULDN'T ANSWER.
 
 ---
 

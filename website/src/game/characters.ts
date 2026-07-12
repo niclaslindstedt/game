@@ -328,6 +328,21 @@ export function hasClearedLevel(
 }
 
 /**
+ * The level ids this character has cleared on `difficulty`, fed to the engine
+ * (`createGame`'s `clearedLevels`) so campaign-gated drops know the run's
+ * progress — chiefly the bunker key, latent until "eastworld" is cleared.
+ */
+export function clearedLevelsFor(
+  character: Character,
+  difficulty: Difficulty,
+): string[] {
+  const prefix = `${difficulty}:`;
+  return character.clears
+    .filter((c) => c.startsWith(prefix))
+    .map((c) => c.slice(prefix.length));
+}
+
+/**
  * Has this character already witnessed `levelId`'s opening (prelude cutscene +
  * intro monologue) on `difficulty`? True means a replay should skip straight
  * into play (see `skipStoryOpening`).

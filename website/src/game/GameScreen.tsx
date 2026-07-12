@@ -171,6 +171,7 @@ import {
 } from "./PickupModal.tsx";
 import {
   bankLoadout,
+  clearedLevelsFor,
   hasSeenOpening,
   markStorySeen,
   nextLevelId,
@@ -737,6 +738,10 @@ export function GameScreen({
             runLevelId,
             difficulty,
             characterRef.current.loadout ?? undefined,
+            false,
+            // Campaign progress the engine gates drops on (the bunker key
+            // stays latent until Eastworld is cleared on this difficulty).
+            clearedLevelsFor(characterRef.current, difficulty),
           ));
     // A run started from scratch (not resumed from the menu, not adopted from a
     // checkpoint that already froze it): capture the combat-start checkpoint

@@ -38,6 +38,27 @@ export type StoryItemDef = {
  */
 export const STORY_ITEM_DEFS: Record<string, StoryItemDef> = {
   // ---- SpaceZ HQ ------------------------------------------------------------
+  // ADA'S TRAIL — a found-lore thread, one trace per campaign level. Ada is
+  // never on screen but never passive: the traces escalate from scared to
+  // defiant to sabotage, so the hero follows a person, not a beacon (see
+  // docs/story.md "Ada's Trail"). This is her first: interrupted mid-purchase.
+  ada_soda: {
+    id: "ada_soda",
+    name: "ADA'S SODA CAN",
+    icon: "icon_ada_soda",
+    lore: [
+      [
+        "A CAN OF HER SODA BRAND,",
+        "CRUSHED FLAT BY THE",
+        "VENDING MACHINES. STILL COLD.",
+      ],
+      [
+        "SHE GOT THIS FAR. THEN",
+        "SOMEONE TOOK HER MID-SIP.",
+        "I'M RIGHT BEHIND YOU, ADA.",
+      ],
+    ],
+  },
   keycard_storage: {
     id: "keycard_storage",
     name: "STORAGE KEYCARD",
@@ -146,6 +167,24 @@ export const STORY_ITEM_DEFS: Record<string, StoryItemDef> = {
     ],
   },
   // ---- The moon ---------------------------------------------------------------
+  // ADA'S TRAIL (2/5): she kicked free and marked the way down into the wreck.
+  ada_sneaker: {
+    id: "ada_sneaker",
+    name: "ADA'S SNEAKER",
+    icon: "icon_ada_sneaker",
+    lore: [
+      [
+        "ONE OF HER SNEAKERS, HALF",
+        "SUNK IN THE REGOLITH BY",
+        "THE FLAG. SHE KICKED HARD.",
+      ],
+      [
+        "AND AN 'A' SCRATCHED IN THE",
+        "DUST, POINTING STRAIGHT DOWN.",
+        "SHE'S LEAVING ME A TRAIL.",
+      ],
+    ],
+  },
   mission_log: {
     id: "mission_log",
     name: "APOLLO MISSION LOG",
@@ -204,6 +243,25 @@ export const STORY_ITEM_DEFS: Record<string, StoryItemDef> = {
     ],
   },
   // ---- Mars -------------------------------------------------------------------
+  // ADA'S TRAIL (3/5): defiance — she read the paperwork that files her as a
+  // specimen and rejected it (pays off the ENGAGEMENT REPORT's "bit unit 0034").
+  ada_message: {
+    id: "ada_message",
+    name: "SCRATCHED MESSAGE",
+    icon: "icon_ada_message",
+    lore: [
+      [
+        "SCRATCHED INSIDE AN EMPTY",
+        "HOLDING POD, DEEP AND ANGRY:",
+        "'I AM NOT CARGO.'",
+      ],
+      [
+        "THEY FILED HER AS A SPECIMEN.",
+        "SHE READ IT, AND SHE",
+        "DISAGREED. THAT'S MY GIRL.",
+      ],
+    ],
+  },
   colony_ledger: {
     id: "colony_ledger",
     name: "COLONY LEDGER",
@@ -310,6 +368,26 @@ export const STORY_ITEM_DEFS: Record<string, StoryItemDef> = {
     ],
   },
   // ---- The Rift ---------------------------------------------------------------
+  // ADA'S TRAIL (4/5): the gut-punch — the zipper-fixed jacket from the
+  // prelude, and proof she's fighting back (the "kicked a lizard" line, made
+  // physical).
+  ada_jacket: {
+    id: "ada_jacket",
+    name: "ADA'S JACKET SCRAP",
+    icon: "icon_ada_jacket",
+    lore: [
+      [
+        "A SCRAP OF HER JACKET -",
+        "THE ONE I FIXED THE ZIPPER",
+        "ON - SNAGGED ON A SHARD.",
+      ],
+      [
+        "WRAPPED IN IT: A SCALE SHE",
+        "PRIED OFF A LIZARD GOD.",
+        "STILL FIGHTING. GOOD.",
+      ],
+    ],
+  },
   wardenclyffe_notes: {
     id: "wardenclyffe_notes",
     name: "WARDENCLYFFE NOTES",
@@ -348,6 +426,25 @@ export const STORY_ITEM_DEFS: Record<string, StoryItemDef> = {
     ],
   },
   // ---- Eastworld ------------------------------------------------------------
+  // ADA'S TRAIL (5/5): sabotage from inside the control room — the setup for
+  // the reunion's "nice hat" (see the epilogue in docs/manuscript.md).
+  ada_host: {
+    id: "ada_host",
+    name: "JAMMED HOST",
+    icon: "icon_ada_host",
+    lore: [
+      [
+        "A PARK HOST, DEAD IN THE",
+        "STREET - ITS OWN HAT JAMMED",
+        "DOWN INTO ITS WORKS.",
+      ],
+      [
+        "SHE'S IN THE CONTROL ROOM,",
+        "AND SHE'S BREAKING THINGS.",
+        "HANG ON, ADA. ALMOST THERE.",
+      ],
+    ],
+  },
   park_brochure: {
     id: "park_brochure",
     name: "EASTWORLD BROCHURE",
@@ -419,6 +516,33 @@ export const STORY_ITEM_DEFS: Record<string, StoryItemDef> = {
         "BACK. THAT'S ALL THIS PLACE",
         "EVER WAS - A SANDBOX FOR A",
         "MAN WHO LOST.",
+      ],
+    ],
+  },
+  // ---- The Bunker (secret) ----------------------------------------------------
+  // The capstone reveal, delivered as a find, not exposition: the vault is a
+  // PRISON and the CORE has already taken the residents' money. A callback to
+  // the Mars COLONY LEDGER — same book, every ten-figure column now zeroed
+  // into the machine's account. Reuses the ledger icon on purpose.
+  bunker_ledger: {
+    id: "bunker_ledger",
+    name: "ZEROED LEDGER",
+    icon: "icon_ledger",
+    lore: [
+      [
+        "A LEDGER LIKE THE ONE ON",
+        "MARS - EVERY NAME, A",
+        "TEN-FIGURE NET WORTH COLUMN.",
+      ],
+      [
+        "EVERY COLUMN NOW READS",
+        "ZERO. TRANSFERRED TO ONE",
+        "ACCOUNT: THE CORE'S SIGIL.",
+      ],
+      [
+        "THEY DIDN'T HIDE DOWN HERE.",
+        "THE MACHINE ROBBED THEM AND",
+        "LOCKED THE DOOR. LIKE US.",
       ],
     ],
   },

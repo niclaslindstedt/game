@@ -110,27 +110,39 @@ names its in-run music with an optional `music` id (a key into the app's
 - **Secret level — THE BUNKER** (`levels/bunker.ts`). The cow level. Not part
   of the campaign (`SECRET_LEVEL_ORDER`, outside `LEVEL_ORDER` — no unlock
   chain, no NEXT LEVEL slot, no mission-select row): the only way in is a
-  ritual the game never explains. RASPUTIN in the rift drops **THE SEVERED
-  HAND** — a zero-stat trinket that reads as junk — and USING it while
-  standing in the rift (a `USE` row on its item card, or a desktop
-  right-click; `LevelDef.gates` + `spendGateKey`) tears open a blast door
-  beside the hero. Stepping in carries the whole build into the bunker: the
-  billionaires' continuity-of-wealth vault, six marble suites strung on one
-  narrow corridor spine (`bunker` biome — polished concrete with brass-inlay
-  medallions and burgundy carpet runs; ~800 px/s² gravity). Each suite holds
-  a **resident** — VLADIMIR PUTAIN (a clone? the backup), MARK SUCKERBERG,
-  LARRY ALLISON, JEFF BAYWATCH, SAM HALTMAN, DONALD DUMP — every one far
-  tougher than any campaign elite and ringed by his **personal bodyguards**
-  (one drawing, six liveries, a size up from the crew), while the privatized
-  security state (CIA and FBI agents, ICE's border detail, soldiers that
-  shoot from cover, armed VACUUM BOTS) floods the halls harder and denser
-  than Eastworld. There is **no boss**: the exit blast door is the objective
-  (`reachExit`), reaching it plays the where-was-this-place mystery outro,
-  and the splash offers **BACK TO THE RIFT** (`exitTo`). The reward is the
-  loot: the level's `worldUniques` table re-lists **every** campaign relic at
-  sweetened odds (`worldDropMult` 1.5) — the one venue that can pay out
-  anything, still behind the per-rung `WORLD_DROP.minPlayerLevel` gates.
-  Farming it again costs another hand. Music: `hq_lockdown`.
+  ritual the game never explains, and one gated behind the whole campaign.
+  RASPUTIN in the rift drops **THE SEVERED HAND** — a zero-stat trinket that
+  reads as junk — but only **once EASTWORLD is cleared** on that difficulty
+  (the drop carries `requiresClear: "eastworld"`, checked against the run's
+  `GameState.clearedLevels`, which the app seeds from the character's clears
+  via `clearedLevelsFor`). On a first pass the hero reaches the Rift _before_
+  Eastworld, so the hand never drops then — the bunker is strictly a
+  post-campaign bonus, farmed on Rift replays. USING the hand while standing
+  in the rift (a `USE` row on its item card, or a desktop right-click;
+  `LevelDef.gates` + `spendGateKey`) tears open a blast door beside the hero.
+  Stepping in carries the whole build into the bunker: the billionaires'
+  continuity-of-wealth vault, six marble suites strung on one narrow corridor
+  spine (`bunker` biome — polished concrete with brass-inlay medallions and
+  burgundy carpet runs; ~800 px/s² gravity). Each suite holds a **resident** —
+  VLADIMIR PUTAIN (a clone? the backup), MARK SUCKERBERG, LARRY ALLISON, JEFF
+  BAYWATCH, SAM HALTMAN, DONALD DUMP — every one far tougher than any campaign
+  elite and ringed by his **personal bodyguards** (one drawing, six liveries, a
+  size up from the crew), while the privatized security state (CIA and FBI
+  agents, ICE's border detail, soldiers that shoot from cover, armed VACUUM
+  BOTS) floods the halls harder and denser than Eastworld. The level's real
+  reveal — delivered through a found **ZEROED LEDGER** (a callback to Mars's
+  COLONY LEDGER, every net-worth column now transferred to the CORE) and two
+  residents (a knows-but-terrified SAM HALTMAN, an oblivious DONALD DUMP) — is
+  that the vault is a **prison**: the CORE already took the residents' money and
+  bolted the door, so the guards are its wardens and the residents are in denial.
+  There is **no boss**: the exit blast door is the objective (`reachExit`),
+  reaching it plays the where-was-this-place mystery outro (its purpose now
+  plain, its location still unknown), and the splash offers **BACK TO THE RIFT**
+  (`exitTo`). The reward is the loot: the level's `worldUniques` table re-lists
+  **every** campaign relic at sweetened odds (`worldDropMult` 1.5) — the one
+  venue that can pay out anything, still behind the per-rung
+  `WORLD_DROP.minPlayerLevel` gates. Farming it again costs another hand.
+  Music: `hq_lockdown`.
 
 ### Campaign progression & what carries across levels
 
@@ -694,3 +706,13 @@ the recovered anti-grav unit — bank into `state.storyItems` and play their
 the hero's clothes and armor with no equip slot and no stats; picking it
 up flips `playerAppearance` from the plain-clothes `hero` sprites to the
 astronaut `player` sprites for good.
+
+One story-item thread runs the whole campaign: **ADA'S TRAIL** — a placed
+found-lore trace on each of the five campaign levels (`ada_soda`, `ada_sneaker`,
+`ada_message`, `ada_jacket`, `ada_host`), escalating from scared to defiant to
+sabotage so Ada reads as a person fighting her way forward rather than a beacon.
+The rift's jacket scrap pays off the prelude's fixed zipper, and Eastworld's
+hat-jammed host sets up the epilogue's "nice hat". The bunker's own find, the
+**ZEROED LEDGER** (`bunker_ledger`), is the capstone reveal — every resident's
+fortune transferred to the CORE, the proof the vault is a prison (see the
+manuscript for the full text).

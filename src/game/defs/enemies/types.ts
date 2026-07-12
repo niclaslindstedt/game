@@ -315,8 +315,13 @@ export type EnemyDef = {
      * Specific equipment always dropped, on top of the counts. A bare id
      * rolls its tier like any drop; `{ defId, tier }` forces the tier for
      * story-guaranteed uniques (the epic space suit the level can't roll).
+     * `requiresClear` gates the drop on campaign progress: the entry only
+     * drops when the run's `clearedLevels` (seeded from the character's clears
+     * at this difficulty) contains that level id — how the bunker key
+     * (RASPUTIN's SEVERED HAND) stays latent until EASTWORLD is beaten, so the
+     * secret level is a post-campaign bonus, not a mid-run detour.
      */
-    items?: (string | { defId: string; tier?: Tier })[];
+    items?: (string | { defId: string; tier?: Tier; requiresClear?: string })[];
     /** Story items always dropped (STORY_ITEM_DEFS ids — keys, dossiers). */
     storyItems?: string[];
     /**

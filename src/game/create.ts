@@ -71,6 +71,11 @@ export function createGame(
   // A LEVEL TOKEN jump: refund the carried build into a respec pool once the
   // intro clears (see items.ts `beginRespec`). Off for every ordinary run.
   respec = false,
+  // Level ids the hero has already CLEARED on this difficulty (the app seeds
+  // this from the character's clears). Gates `requiresClear` guaranteed drops
+  // — chiefly the bunker key, latent until "eastworld" is beaten. Empty on a
+  // dev jump or a fresh hero.
+  clearedLevels: string[] = [],
 ): GameState {
   const def = levelDef(levelId);
   const diff = difficultyDef(difficulty);
@@ -268,6 +273,7 @@ export function createGame(
     companions: [],
     companionFocus: null,
     storyItems: [],
+    clearedLevels,
     thoughtsSeen: [],
     doors,
     // Travel gates stay latent until their key trinket is USED (spendGateKey).
