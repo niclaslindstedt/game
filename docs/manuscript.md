@@ -1,20 +1,26 @@
 # Manuscript — _Gone in Space_
 
-> **This file is the single source of truth for the game's story and dialogue.**
+> **This file is the source of truth for the game's script — every word.** It
+> is the middle tier of the story chain: [`story.md`](./story.md) (the gist —
+> the whole plot in prose) is extrapolated into this manuscript (every line,
+> verbatim), which is in turn extrapolated into the game (the data under
+> `src/game/defs/`). Changes flow **downward**: when `story.md` and this file
+> disagree, **`story.md` wins**; when this file and the shipped data (listed
+> under [Where the data lives](#where-the-data-lives)) disagree, **this
+> manuscript wins** and the data is brought back into line.
 >
 > Every spoken line, monologue, caption, and piece of found lore in the game is
-> transcribed here verbatim, in narrative order. When the shipped content (the
-> data files listed under [Where the data lives](#where-the-data-lives)) and
-> this manuscript disagree, **this manuscript wins** — the data is wrong and must
-> be brought back into line.
+> transcribed here verbatim, in narrative order.
 >
 > **Changing the story is a two-step commitment.** If a change to the game
 > conflicts with what is written here, the manuscript is updated **only after the
 > user confirms the manuscript change** (the user may also grant that
 > confirmation ahead of time, as part of the instruction that requests the
 > change). Never silently edit the story in code and leave this file stale, and
-> never rewrite this file without that confirmation. Keep the two in lockstep: a
-> PR that touches dialogue/story data updates this manuscript in the same change.
+> never rewrite this file without that confirmation. Use the `update-story`
+> skill (`.agent/skills/update-story/`) to make a story change at the top of the
+> chain and carry it down. Keep the tiers in lockstep: a PR that touches
+> dialogue/story data updates `story.md` and this manuscript in the same change.
 
 This document sits beside [`game-content.md`](./game-content.md) (the content
 walkthrough — systems, levels, roster) and captures only the _words_: the
