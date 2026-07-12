@@ -122,9 +122,14 @@ export function ilvlOf(u) {
     budget += (u.bagSlots - baseBagSlots) * BAG_SLOT_ILVL;
   const computed = Math.round(req + budget);
   // Trinkets gate at req ~1 by design; a `keeper` is a hand-declared intentional
-  // over-cap piece (a scaling stat that grows into best-in-slot). Both are exempt
-  // from the over-budget flag, but stay visible (their ilvl is still computed).
-  const exempt = TRINKET_SLOTS.has(u.slot) || u.keeper === true;
+  // over-cap piece (a scaling stat that grows into best-in-slot); and a
+  // LEGENDARY pays for its power in RARITY, not in the equip-gate cap — the
+  // roster is deliberately authored across a vast power range and the drop
+  // weight falls off as a power law of the budget (UNIQUE.rarityBudgetExp,
+  // see pickUniqueForDrop). All exempt from the over-budget flag, but stay
+  // visible (their ilvl is still computed).
+  const exempt =
+    TRINKET_SLOTS.has(u.slot) || u.keeper === true || u.tier === "legendary";
   return {
     req,
     budget, // signed ilvl worth of the fixed bonuses (= computed − req)

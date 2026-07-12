@@ -367,11 +367,13 @@ function pickUniqueForDrop(
 /**
  * A named item's selection weight once the rarity roll lands its tier+slot.
  * UNIQUES keep the flat authored/default weight. LEGENDARIES obey "stats
- * determine rarity": the weight is scaled by `rarityBudgetRef / bonusBudget`
- * (the priced ilvl worth of the fixed bonuses — see item-budget.ts), so a
- * reference-budget legendary keeps its authored weight and a stronger one is
- * mechanically, proportionally rarer. An explicit `rarity` still multiplies
- * on top, and the weight floors just above zero so no god-roll goes extinct.
+ * determine rarity" as a POWER LAW: past the reference budget the weight is
+ * scaled by `(rarityBudgetRef / bonusBudget)^rarityBudgetExp` (the budget is
+ * the priced ilvl worth of the fixed bonuses — see item-budget.ts). The
+ * roster is authored across a VAST power range, so this is what makes the
+ * god-rolls astronomically rare — twice the reference budget is ~16× rarer,
+ * five times ~600× — while a modest legendary drops at its authored weight.
+ * An explicit `rarity` still multiplies on top.
  */
 export function uniqueDropWeight(
   u: UniqueDef,
@@ -380,8 +382,10 @@ export function uniqueDropWeight(
   const base = u.rarity ?? UNIQUE.defaultRarity;
   if (tier !== "legendary") return base;
   const budget = bonusBudget(u.bonuses);
-  if (budget <= 0) return base;
-  return Math.max(1, base * Math.min(1, UNIQUE.rarityBudgetRef / budget));
+  if (budget <= UNIQUE.rarityBudgetRef) return base;
+  return (
+    base * Math.pow(UNIQUE.rarityBudgetRef / budget, UNIQUE.rarityBudgetExp)
+  );
 }
 
 /**
@@ -552,10 +556,7 @@ export function rollEquipment(
     (tier === "unique" || tier === "legendary")
   ) {
     const namedId = pickUniqueForDrop(state, slot, tier, lootLevel);
-    // The killer's true mlvl rides the mint so a `scaling` legendary grows
-    // off a deep kill (lootLevel — the offset-stripped GATE level — still
-    // governs eligibility above).
-    if (namedId) return mintUnique(state, namedId, { mlvl });
+    if (namedId) return mintUnique(state, namedId);
     tier = "rare";
   }
   const ilvl = rollItemLevel(state, lootLevel, tier);
@@ -637,28 +638,10 @@ export function rollEquipment(
  * as for the sidearm). The frozen `def` snapshot version-proofs it, exactly like
  * a rolled drop.
  */
-export function mintUnique(
-  state: GameState,
-  uniqueId: string,
-  opts?: {
-    /** The killer's MONSTER LEVEL — lets a `scaling` legendary (the 99+
-     * endgame roster) mint ABOVE its authored floor: the higher of the two
-     * becomes the stamped ilvl and every numeric bonus grows by
-     * `UNIQUE.scalingPerIlvl` per level over the floor. Omitted (scripted
-     * mints, the merchant, the arsenal gallery) = the authored floor. */
-    mlvl?: number;
-  },
-): Equipment {
+export function mintUnique(state: GameState, uniqueId: string): Equipment {
   const u = uniqueDef(uniqueId);
   const weapon = isWeaponDef(u.base);
   const baseDef = weapon ? weaponDef(u.base) : gearDef(u.base);
-  // The 99+ SCALING mint: a deeper kill stamps its own level and grows the
-  // numeric bonuses — the reason cap-level boss runs are the endgame farm.
-  const ilvl =
-    u.scaling && opts?.mlvl !== undefined
-      ? Math.max(u.ilvl, Math.round(opts.mlvl))
-      : u.ilvl;
-  const growth = 1 + UNIQUE.scalingPerIlvl * (ilvl - u.ilvl);
   // ±band around the base value; the fixed bonuses are untouched — except
   // that SCALING percentages (`statPct`/`maxHpPct`) clamp to the engine's
   // hard ceiling (UNIQUE.scalingPctCap): they multiply the hero's own grown
@@ -670,8 +653,12 @@ export function mintUnique(
     defId: u.base,
     slot: u.slot,
     tier: u.tier ?? "unique",
-    ilvl,
-    affixes: u.bonuses.map((bonus) => scaleBonus(bonus, growth)),
+    ilvl: u.ilvl,
+    affixes: u.bonuses.map((bonus) =>
+      bonus.kind === "statPct" || bonus.kind === "maxHpPct"
+        ? { ...bonus, value: Math.min(bonus.value, UNIQUE.scalingPctCap) }
+        : { ...bonus },
+    ),
     name: u.name,
     // The catalog id behind the display name — the stable identity anything
     // booking "which unique is this" keys on (see Equipment.uniqueId).
@@ -694,36 +681,6 @@ export function mintUnique(
     }
   }
   return item;
-}
-
-/**
- * One authored bonus through the SCALING-legendary growth (see `mintUnique`):
- * numeric values grow by the factor — integer kinds re-round, scaling
- * percentages still clamp to the engine ceiling AFTER growing — while
- * granted spells, procs, and sure strike keep their authored shape (their
- * output already rides `abilityPowerScale`, so growing the rank too would
- * double-dip). Growth 1 (every non-scaling mint) copies verbatim.
- */
-function scaleBonus(bonus: Affix, growth: number): Affix {
-  switch (bonus.kind) {
-    case "stat":
-    case "maxHp":
-    case "armor":
-      return { ...bonus, value: Math.round(bonus.value * growth) };
-    case "damagePct":
-    case "crit":
-      return { ...bonus, value: bonus.value * growth };
-    case "statPct":
-    case "maxHpPct":
-      return {
-        ...bonus,
-        value: Math.min(bonus.value * growth, UNIQUE.scalingPctCap),
-      };
-    case "spell":
-    case "proc":
-    case "sureStrike":
-      return { ...bonus };
-  }
 }
 
 /**

@@ -433,7 +433,7 @@ export function hitEnemy(
 
 /**
  * Roll every equipped PROC that fires on `trigger` and queue the winners for
- * `stepProcs` (step.ts) to resolve after the attack pass. The equipped-proc
+ * `stepProcs` (step.ts) to resolve after the combat passes. The equipped-proc
  * check comes BEFORE any rng draw, so a loadout without procs consumes no
  * rng and the seeded drop/combat streams never shift.
  */
@@ -450,6 +450,29 @@ function queueWeaponProcs(
       rank: proc.rank,
       pos: { ...enemy.pos },
       enemyId: enemy.id,
+    });
+  }
+}
+
+/**
+ * The D2 "cast when struck": roll every equipped `trigger: "struck"` proc
+ * when an ENEMY blow actually lands on the hero (post-dodge — a sidestepped
+ * swing casts nothing) and queue the winners for `stepProcs`. Called from
+ * the enemy-sourced damage paths — contact (step.ts), mechanic blows
+ * (mechanics.ts), hostile shots (ranged.ts); impartial hazards never
+ * retaliate. A BOLT grounds in `attacker` (or the nearest foe when a shot's
+ * shooter is unknown); a NOVA bursts around the HERO. Same no-rng-without-
+ * procs guarantee as the weapon triggers.
+ */
+export function queueStruckProcs(state: GameState, attacker?: Enemy): void {
+  const procs = equippedProcs(state, "struck");
+  for (const proc of procs) {
+    if (state.rng() >= proc.chance) continue;
+    state.pendingProcs.push({
+      spell: proc.spell,
+      rank: proc.rank,
+      pos: { ...state.player.pos },
+      enemyId: attacker?.id,
     });
   }
 }
@@ -861,12 +884,7 @@ function dropMinionLoot(
 /** Scatter one minted unique near `at` — the shared tail of every unique drop
  * (boss and world). Consumes exactly two rng draws (x, y scatter) plus whatever
  * `mintUnique` rolls, in that order — keep it stable so seeded drops don't drift. */
-function pushUniqueDrop(
-  state: GameState,
-  id: string,
-  at: Vec2,
-  mlvl?: number,
-): void {
+function pushUniqueDrop(state: GameState, id: string, at: Vec2): void {
   state.items.push({
     id: state.nextId++,
     kind: "equipment",
@@ -874,9 +892,7 @@ function pushUniqueDrop(
       x: clamp(at.x + (state.rng() - 0.5) * 90, 16, state.level.width - 16),
       y: clamp(at.y + (state.rng() - 0.5) * 90, 16, state.level.height - 16),
     },
-    // The killer's mlvl rides along so a `scaling` legendary (the 99+
-    // roster) can mint above its floor off a deep kill.
-    equipment: mintUnique(state, id, { mlvl }),
+    equipment: mintUnique(state, id),
   });
 }
 
@@ -895,7 +911,7 @@ function maybeDropBossUnique(
       Math.min(UNIQUE.dropChanceCap, UNIQUE.dropChance * (enemy.mlvl / ilvl)) *
       BALANCE.uniqueDrops;
     if (state.rng() >= chance) continue;
-    pushUniqueDrop(state, id, enemy.pos, enemy.mlvl);
+    pushUniqueDrop(state, id, enemy.pos);
   }
 }
 
@@ -934,7 +950,7 @@ function maybeDropWorldUnique(
     (loot.worldDropMult ?? 1);
   for (const id of ids) {
     if (state.rng() >= chance) continue;
-    pushUniqueDrop(state, id, enemy.pos, enemy.mlvl);
+    pushUniqueDrop(state, id, enemy.pos);
   }
 }
 

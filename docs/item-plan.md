@@ -18,9 +18,11 @@ Status legend: `[ ]` not started · `[x]` done.
 - **Legendaries:** surface slowly, and become the level-99 endgame farming
   goal. Counts: **1 on hard, 3 on nightmare, ~30 on JESUS** (6 obtainable
   pre-99, the rest gated to the 99+ grind).
-- **99+ legendaries scale up**: their minted power grows with the kill's
-  monster level past their floor, and their **stats determine their rarity**
-  (the stronger the item, the rarer the drop) — mechanically, not by vibes.
+- **Legendaries span a VAST power range, and stats determine rarity**: the
+  roster is authored from solid to god-tier, and an item's drop weight falls
+  off as a POWER LAW of its priced bonus budget — the 0.001%-grade finds are
+  exactly the incredibly powerful ones. Mechanical, not vibes. (Decided: NO
+  mint-time scaling — a legendary's power is authored, its odds derived.)
 - **Magic needs mechanics, not just numbers:** items can grant _forever
   spells_ — e.g. fireballs circling the hero, periodic bolts — firing at an
   interval and improved by INTELLIGENCE. Legendaries may grant such effects
@@ -49,12 +51,11 @@ Status legend: `[ ]` not started · `[x]` done.
   (`EnemyDef.uniquesByDifficulty`), world drops
   (`LevelDef.loot.worldUniques` + `WORLD_DROP` role odds), per-item `rarity`
   weights. The engine needs **no new drop channel** — only new bonus
-  mechanics and the 99+ scaling mint.
+  mechanics and the legendary rarity law.
 - Campaign landings (`leveling-curve.mjs --by-level`): hard ends ~43,
   nightmare ~53, jesus ~60; hard cap `LEVELING.maxLevel` = 99. JESUS mobs run
   at `player + 2`, elites/bosses higher still (`levelBonus`, menace re-stamp)
-  — so mlvl 99–110 exists to farm at the cap, which is what the 99+
-  legendaries key off.
+  — the endgame grind the 99+ legendaries' high-req bases gate behind.
 
 ## Target coverage matrix (weapons per rung, by spec)
 
@@ -103,13 +104,17 @@ step/render machinery (`abilities.ts` orbit/storm/stasis):
 ### 1b. Proc affixes — magic effects on hit/kill (legendary territory)
 
 ```ts
-| { kind: "proc"; trigger: "hit" | "kill"; spell: "bolt" | "nova"; chance: number; rank: number }
+| { kind: "proc"; trigger: "hit" | "kill" | "struck"; spell: "bolt" | "nova"; chance: number; rank: number }
 ```
 
 - `bolt` reuses the storm strike (single-target zap at the struck/killed
   enemy); `nova` is a small new AoE ring burst centred on the trigger point
   (damage-only, drawn with existing effect sprites).
-- `chance` is per qualifying event; INT scales damage the same way.
+- `chance` is per qualifying event; INT scales damage the same way. The
+  `struck` trigger is the D2 "% chance to cast when struck": it rolls when
+  an ENEMY blow lands on the hero (contact, mechanic slams, hostile shots —
+  never impartial hazards, never dodged blows); a bolt grounds in the
+  attacker, a nova bursts around the hero.
 - Reserved in practice for legendaries (the checker warns on procs on plain
   uniques), and it's how "magic effects for all classes" lands: a melee
   legendary that chains lightning on hit, a bow that novas on kill.
@@ -124,29 +129,28 @@ Zeroes the hero's innate miss chance while worn (`playerMissChance` reads
 it). One legendary-grade line, cheap to implement, priced into the ilvl
 model.
 
-### 1d. 99+ scaling legendaries
+### 1d. Stats determine rarity (the legendary power law)
 
-- `UniqueDef` gains `scaling?: true` (legendary-only): at mint, the item's
-  effective ilvl is `max(authored ilvl, kill mlvl)` and every numeric bonus
-  grows by a per-ilvl growth factor over the authored floor (new `UNIQUE`
-  config knob), on top of the usual ±band. Deeper kills mint bigger copies —
-  the 99+ farming loop (menace-hot bosses at the cap mint the biggest).
-- **Stats determine rarity**: for legendaries, the selection weight in
-  `pickUniqueForDrop` is _derived from the item's bonus budget_ (the
-  weapon-ilvl pricing model), normalized so a reference-budget legendary
-  keeps `UNIQUE.defaultRarity` and stronger ones scale down proportionally.
-  Authored `rarity` remains as an override multiplier only.
+- Legendaries are authored across a VAST power range and are EXEMPT from the
+  unique budget cap — power is paid for in ODDS, not the equip gate. The
+  selection weight in `pickUniqueForDrop` is _derived from the item's bonus
+  budget_ (the weapon-ilvl pricing model) as a power law:
+  `weight × (rarityBudgetRef / budget)^rarityBudgetExp` past the reference —
+  twice the reference budget is ~16× rarer, five times ~600× rarer, so the
+  god-rolls are astronomically rare by construction. Authored `rarity`
+  remains as an override multiplier only. No mint-time scaling: two copies
+  differ only by the standing ±band.
 
 ### 1e. Pricing, checkers, tests
 
 - `scripts/weapon-ilvl.mjs`: price `spell`, `proc`, `sureStrike` into ilvl
   points off the live SPELL/combat constants, so the budget rules keep
   binding.
-- `scripts/unique-check.mjs`: procs-on-legendaries-only warning, scaling
-  implies legendary, rarity-derivation report column.
+- `scripts/unique-check.mjs`: procs-on-legendaries-only warning, the
+  legendary rarity report (budget → weight, power-law).
 - Engine tests (synthetic fixtures, `tests/engine/`): granted-spell
-  stepping + INT scaling, proc triggers, scaling mint (ilvl growth + band),
-  derived rarity weighting.
+  stepping + INT scaling, proc triggers (hit/kill/struck), the rarity
+  power law.
 - Docs: `docs/configuration.md` (new knobs), `docs/architecture.md` if the
   public API surface moves.
 
@@ -158,11 +162,11 @@ model.
 - [x] `nova` burst effect (engine + render, existing sprites)
 - [x] Proc triggers on hit/kill in the combat path
 - [x] `sureStrike` in `playerMissChance`
-- [x] `UniqueDef.scaling` + scaling mint in `mintUnique`
-- [x] Budget-derived legendary rarity in `pickUniqueForDrop`
+- [x] Legendary power law: budget-derived drop weight, cap exemption
+- [x] When-struck proc trigger (D2 cast-when-struck) on the player-damage paths
 - [x] Item card / tooltip / arsenal lines for the new affix kinds
 - [x] `weapon-ilvl.mjs` pricing for the new kinds
-- [x] `unique-check.mjs` rules (proc discipline, scaling/rarity report)
+- [x] `unique-check.mjs` rules (proc discipline, legendary rarity report)
 - [x] Engine tests for all of the above (fixtures, no shipped ids)
 - [x] Docs sync + changelog fragment
 
@@ -223,12 +227,13 @@ armor/trinket anchors, all with spells/procs:
 - [ ] 16 unique defs + 6 legendary defs, world-drop wiring on the jesus column
 - [ ] Checker battery + tests + docs + changelog
 
-## Phase 5 — JESUS 99+ scaling legendaries (~24)
+## Phase 5 — JESUS 99+ legendaries (~24, the power ladder)
 
-The endgame farm: `scaling: true`, authored ilvl floors ≥ 99, minted off
-mlvl-99+ kills (cap-level JESUS play; menace-hot set pieces mint the
-biggest). High-req elite bases gate them out of earlier play naturally.
-Budget-derived rarity makes the god-rolls genuinely rare. Provisional
+The endgame farm: authored ilvls ≥ 99 on high-req elite bases (gated out of
+earlier play naturally), deliberately spread across a VAST power ladder —
+from strong keepers near the reference budget up to god-tier pieces at
+several times it, which the rarity power law makes hundreds of times rarer.
+Provisional
 roster (subject to a naming pass at implementation):
 
 - Weapons — melee: **DURENDAL**, **GRAM**, **MURAMASA** · ranged:
@@ -240,7 +245,7 @@ roster (subject to a naming pass at implementation):
 - Feet: **WINDRUNNERS**, **SLEIPNIR'S SHOES**, **VIDAR'S BOOT**
 - Charms: **DRAUPNIR**, **SAMPO** · Bag: **CORNUCOPIA**
 
-- [ ] ~24 scaling legendary defs (ilvl floors 99+, spec spread as above)
+- [ ] ~24 legendary defs (ilvls 99+, spec spread as above, budgets spanning the power ladder)
 - [ ] Rarity-derivation sanity pass (`unique-check.mjs` report)
 - [ ] Checker battery + tests + docs + changelog
 
@@ -248,6 +253,6 @@ roster (subject to a naming pass at implementation):
 
 - [ ] `simulate-run.mjs` full campaign: drop counts per rung within intent
       (legendaries rare pre-99; hard/nightmare/jesus sets attainable)
-- [ ] Cap-level JESUS farm simulation: 99+ legendary mint sizes + rates
+- [ ] Cap-level JESUS farm simulation: legendary drop rates across the power ladder
 - [ ] Arsenal screen eyeball (ordering, cards, spell lines)
 - [ ] Playtest pass at the phone viewport

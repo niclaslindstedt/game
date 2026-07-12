@@ -303,9 +303,13 @@ never missed, built on the new **forever powers**: it carries SURE STRIKE
 forever powers are the `spell`/`proc`/`sureStrike` affix kinds (config
 `SPELL`): granted spells (circling flame, stormcall, stasis field) run
 permanently while the piece is worn, scale with their RANK, deepen with
-INTELLIGENCE, and fire faster as INT grows; procs ride the hero's own weapon
-blows on-hit/on-kill (bolt or nova). Legendaries may carry them for every
-spec — magic effects on all hits, whatever the build.
+INTELLIGENCE, and fire faster as INT grows; procs fire on-hit/on-kill off the hero's own
+weapon blows AND when-struck off enemy blows landing on him (the D2
+cast-when-struck — bolt or nova). Legendaries may carry them for every spec
+— magic effects on all hits, whatever the build — and the legendary roster
+obeys **stats determine rarity**: drop weight falls off as a power law of
+the item's priced bonus budget, so the mightiest legendaries are
+astronomically rarer than the modest ones.
 
 Between the boss sets and the world relics, EASY, MEDIUM, and HARD each now
 cover every **build**: easy fields melee (MUSKRAT'S TOOTH, EXCALIBUR), ranged

@@ -1,27 +1,25 @@
 // SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
-// GRANTED SPELLS, PROCS, SURE STRIKE, and the 99+ SCALING MINT — the forever
-// powers items carry (the `spell`/`proc`/`sureStrike` affix kinds, config
-// SPELL) and the legendary endgame rules (UNIQUE.scalingPerIlvl /
-// rarityBudgetRef). Exercised on synthetic fixtures so the rules survive
-// content deletion.
+// GRANTED SPELLS, PROCS, and SURE STRIKE — the forever powers items carry
+// (the `spell`/`proc`/`sureStrike` affix kinds, config SPELL) — plus the
+// legendary rarity law (weight ∝ (rarityBudgetRef/budget)^rarityBudgetExp:
+// stats determine rarity). Exercised on synthetic fixtures so the rules
+// survive content deletion.
 
 import { describe, expect, it } from "vitest";
 
 import { SPELL, UNIQUE, playerMissChance, stasisFactorAt } from "@game/core";
 import type { Equipment, GameState } from "@game/core";
-import { registerDefs } from "@game/core";
 // Engine internals: the kill funnel (proc queueing), the granted-spell
 // derivation, and the mint/rarity rules under test.
-import { hitEnemy } from "../../src/game/loot.ts";
+import { hitEnemy, queueStruckProcs } from "../../src/game/loot.ts";
 import {
   spellIntervalScale,
   stormSpellParams,
   syncItemSpells,
 } from "../../src/game/spells.ts";
-import { mintUnique, uniqueDropWeight } from "../../src/game/items.ts";
+import { uniqueDropWeight } from "../../src/game/items.ts";
 import type { UniqueDef } from "../../src/game/defs/uniques.ts";
 
-import { FIX_UNIQUES } from "./fixtures.ts";
 import { idle, makeEnemy, run, startGame, stopWaves } from "./helpers.ts";
 
 // ---- Scaffolding ---------------------------------------------------------------
@@ -166,6 +164,39 @@ describe("procs (the `proc` affix)", () => {
     expect(state.pendingProcs).toHaveLength(0);
   });
 
+  it("a WHEN-STRUCK proc casts back when an enemy blow lands on the hero", () => {
+    const state = startGame();
+    wearCharm(state, [
+      { kind: "proc", trigger: "struck", spell: "bolt", chance: 1, rank: 1 },
+    ]);
+    const mob = stageMob(state, { x: 200, y: 0 });
+    // The engine-internal queue hook the contact/mechanic/hostile-shot paths
+    // call when a blow actually lands.
+    queueStruckProcs(state, mob);
+    expect(state.pendingProcs).toHaveLength(1);
+    const before = mob.hp;
+    run(state, idle, 1);
+    expect(mob.hp).toBe(before - SPELL.bolt.damage);
+    expect(state.events.some((e) => e.type === "lightning")).toBe(true);
+  });
+
+  it("a struck NOVA bursts around the HERO, and an unknown attacker still bolts the nearest foe", () => {
+    const state = startGame();
+    wearCharm(state, [
+      { kind: "proc", trigger: "struck", spell: "nova", chance: 1, rank: 1 },
+      { kind: "proc", trigger: "struck", spell: "bolt", chance: 1, rank: 1 },
+    ]);
+    // A foe hugging the hero: inside the player-centred nova ring, and the
+    // nearest candidate for the shooterless bolt.
+    const mob = stageMob(state, { x: SPELL.nova.radius - 10, y: 0 });
+    queueStruckProcs(state); // a hostile shot — no attacker tracked
+    expect(state.pendingProcs).toHaveLength(2);
+    const before = mob.hp;
+    run(state, idle, 1);
+    expect(mob.hp).toBe(before - SPELL.nova.damage - SPELL.bolt.damage);
+    expect(state.events.some((e) => e.type === "nova")).toBe(true);
+  });
+
   it("an on-kill NOVA bursts around the victim and bills the neighbors", () => {
     const state = startGame();
     wearCharm(state, [
@@ -207,68 +238,7 @@ describe("sure strike", () => {
   });
 });
 
-// ---- The 99+ scaling mint & budget-derived rarity ---------------------------------
-
-const SCALING_LEGEND: UniqueDef = {
-  id: "test_scaling_legend",
-  name: "TEST SCALING LEGEND",
-  base: "test_charm",
-  slot: "charm",
-  tier: "legendary",
-  scaling: true,
-  ilvl: 99,
-  bonuses: [
-    { kind: "stat", stat: "strength", value: 10 },
-    { kind: "crit", value: 0.1 },
-  ],
-  lore: "IT GROWS WITH THE KILL THAT YIELDS IT.",
-};
-
-function installScalingFixtures(): void {
-  registerDefs({
-    uniques: { ...FIX_UNIQUES, test_scaling_legend: SCALING_LEGEND },
-  });
-}
-
-describe("99+ scaling legendaries", () => {
-  it("a deeper kill stamps its mlvl and grows the numeric bonuses", () => {
-    installScalingFixtures();
-    const state = startGame();
-    const grown = mintUnique(state, "test_scaling_legend", { mlvl: 110 });
-    expect(grown.ilvl).toBe(110);
-    const growth = 1 + UNIQUE.scalingPerIlvl * (110 - 99);
-    expect(grown.affixes).toContainEqual({
-      kind: "stat",
-      stat: "strength",
-      value: Math.round(10 * growth),
-    });
-    const crit = grown.affixes.find((a) => a.kind === "crit");
-    expect(crit && "value" in crit ? crit.value : 0).toBeCloseTo(0.1 * growth);
-  });
-
-  it("mints at the authored floor off shallower kills and scripted mints", () => {
-    installScalingFixtures();
-    const state = startGame();
-    for (const minted of [
-      mintUnique(state, "test_scaling_legend", { mlvl: 60 }),
-      mintUnique(state, "test_scaling_legend"),
-    ]) {
-      expect(minted.ilvl).toBe(99);
-      expect(minted.affixes).toContainEqual({
-        kind: "stat",
-        stat: "strength",
-        value: 10,
-      });
-    }
-  });
-
-  it("a non-scaling unique ignores the kill's mlvl entirely", () => {
-    installScalingFixtures();
-    const state = startGame();
-    const relic = mintUnique(state, "test_greedy_relic", { mlvl: 110 });
-    expect(relic.ilvl).toBe(FIX_UNIQUES.test_greedy_relic?.ilvl);
-  });
-});
+// ---- Stats determine rarity --------------------------------------------------------
 
 describe("stats determine legendary rarity", () => {
   const legend = (budgetStat: number): UniqueDef => ({
@@ -282,16 +252,27 @@ describe("stats determine legendary rarity", () => {
     lore: "ITS POWER IS ITS ODDS.",
   });
 
-  it("a stronger bonus budget mechanically lowers the drop weight", () => {
+  it("a stronger bonus budget lowers the drop weight as a POWER LAW", () => {
     // At/below the reference budget the authored weight stands; past it the
-    // weight falls in proportion — twice the reference is half as common.
+    // weight collapses — twice the reference is 2^exp rarer, five times is
+    // hundreds of times rarer. Vast authored power ⇒ astronomically rare.
     const atRef = uniqueDropWeight(legend(UNIQUE.rarityBudgetRef), "legendary");
     const double = uniqueDropWeight(
       legend(UNIQUE.rarityBudgetRef * 2),
       "legendary",
     );
+    const god = uniqueDropWeight(
+      legend(UNIQUE.rarityBudgetRef * 5),
+      "legendary",
+    );
     expect(atRef).toBe(UNIQUE.defaultRarity);
-    expect(double).toBeCloseTo(UNIQUE.defaultRarity / 2);
+    expect(double).toBeCloseTo(
+      UNIQUE.defaultRarity / Math.pow(2, UNIQUE.rarityBudgetExp),
+    );
+    expect(god).toBeCloseTo(
+      UNIQUE.defaultRarity / Math.pow(5, UNIQUE.rarityBudgetExp),
+    );
+    expect(atRef / god).toBeGreaterThan(100);
   });
 
   it("plain uniques keep their flat authored weight regardless of budget", () => {

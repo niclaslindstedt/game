@@ -99,8 +99,15 @@ export function affixLine(affix: Affix): string {
       return `+${Math.round(affix.value * 100)}% MAX HP`;
     case "spell":
       return `GRANTS ${SPELL_LABELS[affix.spell] ?? affix.spell.toUpperCase()} ${rankNumeral(affix.rank)}`;
-    case "proc":
-      return `${Math.round(affix.chance * 100)}% ${PROC_LABELS[affix.spell] ?? affix.spell.toUpperCase()} ${rankNumeral(affix.rank)} ON ${affix.trigger === "hit" ? "HIT" : "KILL"}`;
+    case "proc": {
+      const trigger =
+        affix.trigger === "hit"
+          ? "ON HIT"
+          : affix.trigger === "kill"
+            ? "ON KILL"
+            : "WHEN STRUCK";
+      return `${Math.round(affix.chance * 100)}% ${PROC_LABELS[affix.spell] ?? affix.spell.toUpperCase()} ${rankNumeral(affix.rank)} ${trigger}`;
+    }
     case "sureStrike":
       return "NEVER MISSES";
   }

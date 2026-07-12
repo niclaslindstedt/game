@@ -260,8 +260,7 @@ for (const id of UNIQUE_IDS) {
 
   // The FOREVER powers are legendary territory: a proc or sure strike on a
   // plain unique dilutes the tier's identity (WARN — a deliberate exception
-  // stays possible); a `scaling` mint on anything but a legendary is a
-  // broken def (ERROR — the 99+ growth rule is the legendary endgame's).
+  // stays possible).
   const tier = u.tier ?? "unique";
   if (tier !== "legendary") {
     for (const b of u.bonuses) {
@@ -270,10 +269,6 @@ for (const id of UNIQUE_IDS) {
           `${id}: "${b.kind}" on a plain unique — procs/sure-strike are legendary territory.`,
         );
     }
-    if (u.scaling)
-      err(
-        `${id}: scaling:true on a ${tier} — the 99+ scaling mint is legendary-only.`,
-      );
   }
   for (const b of u.bonuses) {
     if (b.kind === "spell" && (b.rank < 1 || b.rank > 5))
@@ -506,20 +501,24 @@ const legendaryRows = UNIQUE_IDS.filter(
   const u = UNIQUE_DEFS[id];
   const budget = u.bonuses.reduce((s, b) => s + bonusIlvl(b), 0);
   const base = u.rarity ?? UNIQUE.defaultRarity;
+  // Mirror of the engine's uniqueDropWeight (items.ts): weights fall off as
+  // a power law of the budget, so authoring power IS authoring odds.
   const weight =
-    budget <= 0
+    budget <= UNIQUE.rarityBudgetRef
       ? base
-      : Math.max(1, base * Math.min(1, UNIQUE.rarityBudgetRef / budget));
+      : base *
+        Math.pow(UNIQUE.rarityBudgetRef / budget, UNIQUE.rarityBudgetExp);
   return { id, u, budget, weight };
 });
 if (legendaryRows.length) {
   console.log(
-    `\nLegendaries (stats determine rarity — weight = rarity × min(1, ${UNIQUE.rarityBudgetRef}/budget)):`,
+    `\nLegendaries (stats determine rarity — weight = rarity × (${UNIQUE.rarityBudgetRef}/budget)^${UNIQUE.rarityBudgetExp} past the reference):`,
   );
+  const commonest = Math.max(...legendaryRows.map((r) => r.weight));
   for (const r of legendaryRows.sort((a, b) => b.weight - a.weight))
     console.log(
       `  ${r.id.padEnd(20)} ${r.u.slot.padEnd(7)} budget ${r.budget.toFixed(1).padStart(6)}  ` +
-        `weight ${r.weight.toFixed(1).padStart(6)}${r.u.scaling ? "  ·99+ scaling" : ""}`,
+        `weight ${r.weight.toFixed(2).padStart(8)}  (${(commonest / r.weight).toFixed(0)}× rarer than the commonest)`,
     );
 }
 

@@ -101,7 +101,12 @@ import {
   wouldUpgradeSlot,
 } from "./items.ts";
 import { arrowColdXp, arrowXpShareAt } from "./leveling.ts";
-import { grantXp, hitEnemy, unspawnedMinions } from "./loot.ts";
+import {
+  grantXp,
+  hitEnemy,
+  queueStruckProcs,
+  unspawnedMinions,
+} from "./loot.ts";
 import { revealAround } from "./map.ts";
 import {
   mechDamageMult,
@@ -221,10 +226,6 @@ export function step(state: GameState, input: GameInput, dtMs: number): void {
   // timed powers — same rails, no expiry.
   stepItemSpells(state, dt, dtMs);
   stepProjectiles(state, dt, dtMs);
-  // Procs queued by this tick's weapon blows (melee sweep above, projectile
-  // hits just now) resolve HERE, after the attack passes have finished with
-  // the enemy list — a nova's kills must never splice it mid-sweep.
-  stepProcs(state);
   if (!state.freeze) {
     stepEnemies(state, dt, dtMs);
     // Shooters pull their triggers on the tick's final positions — after the
@@ -235,6 +236,12 @@ export function step(state: GameState, input: GameInput, dtMs: number): void {
   // soak contact blows, stand back up (see companions.ts). A freeze poses
   // the party with the rest of the world's actors.
   if (!state.freeze) stepCompanions(state, dt, dtMs);
+  // Procs queued by this tick's combat — the hero's weapon blows (melee
+  // sweep, his projectiles) AND the blows that landed ON him (contact,
+  // mechanic slams, hostile shots — the "when struck" trigger) — resolve
+  // HERE, after every pass that iterates the enemy list has finished: a
+  // nova's kills must never splice that list out from under a sweep.
+  stepProcs(state);
   // Environmental hazards act on this tick's positions, after everyone has
   // moved: the wells drag (and devour), the asteroids fly (and strike).
   stepWells(state, dt, dtMs);
@@ -1513,6 +1520,8 @@ function stepEnemies(state: GameState, dt: number, dtMs: number): void {
       player.hurtFlashMs = 250;
       state.stats.damageTaken += damage;
       state.events.push({ type: "playerHurt", crit });
+      // The landed blow may cast back — the D2 "when struck" procs.
+      queueStruckProcs(state, enemy);
     }
   }
 }

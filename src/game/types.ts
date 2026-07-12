@@ -123,10 +123,13 @@ export type Affix =
    */
   | { kind: "spell"; spell: SpellKind; rank: number }
   /**
-   * A PROC — a magic effect fired by the hero's own WEAPON blows: `trigger`
-   * "hit" rolls `chance` on every landed blow, "kill" on every weapon kill.
-   * The effect (`bolt` strikes the victim, `nova` bursts around it) is sized
-   * by `rank` like a granted spell and scaled by the same INT deepening.
+   * A PROC — a magic effect fired by combat events: `trigger` "hit" rolls
+   * `chance` on every landed blow of the hero's own weapon, "kill" on every
+   * weapon kill, and "struck" on every enemy hit the HERO takes (the D2
+   * "% chance to cast when struck" — contact, mechanic blows, hostile
+   * shots; impartial hazards never trigger it). The effect (`bolt` strikes
+   * the victim/attacker, `nova` bursts around the trigger) is sized by
+   * `rank` like a granted spell and scaled by the same INT deepening.
    * Proc blows never re-proc. Legendary authoring territory.
    */
   | {
@@ -147,8 +150,9 @@ export type Affix =
  * forever twins of the orbit/storm/stasis powerups, stepped off worn gear. */
 export type SpellKind = "orbit" | "storm" | "stasis";
 
-/** What fires a `proc` affix: a landed weapon blow, or a weapon kill. */
-export type ProcTrigger = "hit" | "kill";
+/** What fires a `proc` affix: a landed weapon blow, a weapon kill, or an
+ * enemy blow landing ON the hero ("struck" — the D2 cast-when-struck). */
+export type ProcTrigger = "hit" | "kill" | "struck";
 
 /** The effects a `proc` affix can fire: a lightning bolt into the struck
  * enemy, or a damage nova bursting around it. */
@@ -170,15 +174,18 @@ export type ItemSpell = {
 
 /**
  * A PROC waiting to resolve (see the `proc` affix): queued by `hitEnemy`
- * when a weapon blow lands/kills, drained by `stepProcs` AFTER the attack
- * pass so a nova's kills never mutate the enemy list mid-sweep. `enemyId`
- * is the triggering victim (a bolt strikes it if it still stands).
+ * when a weapon blow lands/kills, and by the player-damage paths when an
+ * enemy blow lands on the hero ("struck"); drained by `stepProcs` after the
+ * combat passes so a nova's kills never mutate the enemy list mid-sweep.
+ * `enemyId` is the triggering victim/attacker (a bolt strikes it if it
+ * still stands) — absent when the attacker is unknown (a hostile shot),
+ * where a bolt falls on the nearest foe to `pos` instead.
  */
 export type PendingProc = {
   spell: ProcSpell;
   rank: number;
   pos: Vec2;
-  enemyId: number;
+  enemyId?: number;
 };
 
 /** A droppable, equippable item instance (medkits are consumables, not this). */

@@ -45,18 +45,8 @@ export type UniqueDef = {
   tier?: Extract<Tier, "unique" | "legendary">;
   /** The static item level — scales the unique's POWER/feel, not its equip
    * requirement (which is the base item's `levelReq`, like any tier), so a
-   * unique is often wearable well below its ilvl. On a `scaling` legendary
-   * this is the FLOOR: a deeper kill stamps its own mlvl instead. */
+   * unique is often wearable well below its ilvl. */
   ilvl: number;
-  /**
-   * A SCALING legendary (the 99+ endgame roster): when the kill's monster
-   * level exceeds the authored `ilvl`, the mint stamps the HIGHER level and
-   * grows every numeric bonus by `UNIQUE.scalingPerIlvl` per level over the
-   * floor (see `mintUnique`) — cap-level JESUS set pieces, run hot by the
-   * menace meter, mint the biggest copies. Legendary-tier only (the checker
-   * enforces it); granted spells/procs keep their authored rank.
-   */
-  scaling?: boolean;
   /**
    * D2's per-item `rarity` weight — the RELATIVE odds this named item is the
    * one chosen once a rarity roll lands its tier for its slot (see

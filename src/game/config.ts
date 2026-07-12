@@ -474,23 +474,19 @@ export const UNIQUE = {
    * un-annotated; hand-weight individual chase items DOWN from here. */
   defaultRarity: 100,
   /**
-   * SCALING legendaries (`UniqueDef.scaling`, the 99+ endgame roster): when
-   * the kill's monster level exceeds the authored ilvl floor, the mint stamps
-   * the HIGHER ilvl and grows every numeric bonus by this fraction per level
-   * over the floor — a menace-hot cap-level boss mints a genuinely bigger
-   * copy, which is the 99+ farming loop. Granted spells/procs keep their
-   * authored rank (their damage already rides `abilityPowerScale`).
-   */
-  scalingPerIlvl: 0.03,
-  /**
    * STATS DETERMINE RARITY (legendaries only): the selection weight in
-   * `pickUniqueForDrop` is scaled by `rarityBudgetRef / bonusBudget` — a
-   * legendary whose priced bonus budget (see item-budget.ts) sits at this
-   * reference keeps its authored/default weight, and a stronger one is
-   * proportionally rarer. Mechanical, so authoring power IS authoring odds;
-   * an explicit `rarity` still multiplies on top.
+   * `pickUniqueForDrop` falls off as a POWER LAW of the item's priced bonus
+   * budget — `weight × (rarityBudgetRef / budget)^rarityBudgetExp` once the
+   * budget exceeds the reference. Legendaries are deliberately authored
+   * across a VAST power range (they're exempt from the unique budget cap —
+   * power is paid for in ODDS instead): a reference-budget legendary keeps
+   * its authored/default weight, twice the reference is 2^exp (16×) rarer,
+   * five times is ~600× rarer — the god-rolls are astronomically rare by
+   * construction. Mechanical, so authoring power IS authoring odds; an
+   * explicit `rarity` still multiplies on top.
    */
   rarityBudgetRef: 40,
+  rarityBudgetExp: 4,
 } as const;
 
 /**

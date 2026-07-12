@@ -212,13 +212,17 @@ run against synthetic fixtures with no shipped content (see
   `spellIntervalScale`), proc lookups (`equippedProcs`), and the renderer's
   orb positions (`itemSpellOrbPositions`). Stepping lives in `step.ts`
   (`stepItemSpells`/`stepProcs` — procs queue on the hero's own weapon
-  blows in `hitEnemy` and resolve after the attack pass).
+  blows in `hitEnemy` and on enemy blows landing ON him — the D2
+  "when struck" trigger, `queueStruckProcs` — and resolve after the
+  combat passes).
 - **`src/game/item-budget.ts`** — the bonus-budget pricing model (what a
   unique's fixed bonuses are WORTH in ilvl points, derived from the live
   combat constants). One source of truth: `scripts/weapon-ilvl.mjs` imports
   it for authoring checks, and `pickUniqueForDrop` reads it at runtime to
-  derive a legendary's drop weight from its power ("stats determine
-  rarity", `UNIQUE.rarityBudgetRef`).
+  derive a legendary's drop weight from its power as a POWER LAW ("stats
+  determine rarity", `UNIQUE.rarityBudgetRef`/`rarityBudgetExp`): the
+  roster spans a vast authored power range and the strongest are
+  astronomically rare.
 - **`src/game/types.ts`** — state shapes plus the `GameEvent` union: events
   are the only channel from simulation to presentation (sound, flashes);
   the engine never knows a renderer or speaker exists.

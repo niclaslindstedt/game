@@ -12,6 +12,7 @@ import { ENEMY_RANGED, JUMP, PLAYER } from "./config.ts";
 import { difficultyDef } from "./defs/difficulties.ts";
 import { enemyDef } from "./defs/enemies/index.ts";
 import { armorReduction, playerDodgeChance, wearWornArmor } from "./items.ts";
+import { queueStruckProcs } from "./loot.ts";
 import { lineOfSight } from "./obstacles.ts";
 import { BALANCE } from "./tuning.ts";
 import type { Enemy, GameState, Projectile } from "./types.ts";
@@ -215,5 +216,9 @@ export function resolveHostileHit(
   player.hurtFlashMs = 250;
   state.stats.damageTaken += damage;
   state.events.push({ type: "playerHurt", crit: false });
+  // The shot that lands may cast back (the D2 "when struck" procs). The
+  // shooter isn't tracked on the projectile, so a bolt grounds in the
+  // nearest foe to the hero instead.
+  queueStruckProcs(state);
   return true;
 }
