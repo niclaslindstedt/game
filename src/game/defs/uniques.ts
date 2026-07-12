@@ -47,6 +47,16 @@ export type UniqueDef = {
    * requirement (which is the base item's `levelReq`, like any tier), so a
    * unique is often wearable well below its ilvl. */
   ilvl: number;
+  /**
+   * D2's per-item `rarity` weight — the RELATIVE odds this named item is the
+   * one chosen once a rarity roll lands its tier for its slot (see
+   * `pickUniqueForDrop` in items.ts). Higher = commoner. Omitted defaults to
+   * `UNIQUE.defaultRarity`, so the whole catalog works un-annotated and the
+   * chase items can be hand-weighted DOWN later. This is the "every item has
+   * its own drop %" lever, folded into the rarity roll rather than a bolt-on
+   * channel.
+   */
+  rarity?: number;
   /** The fixed bonuses (authored, not rolled). At most one scaling `*Pct`. */
   bonuses: Affix[];
   /** BAG uniques only: the extra inventory cells this bag grants, overriding
@@ -856,3 +866,10 @@ export function uniqueDef(id: string): UniqueDef {
 
 /** Every shipped unique id — drop-table authoring + tests. */
 export const UNIQUE_IDS: string[] = Object.keys(UNIQUE_DEFS);
+
+/** The ACTIVE unique catalog as a list (honors `setUniqueDefs`, so tests that
+ * swap in a fixture catalog see only their own). Used by the rarity-roll fold
+ * (`pickUniqueForDrop`) to enumerate the named items eligible for a drop. */
+export function activeUniqueDefs(): UniqueDef[] {
+  return Object.values(activeUniques);
+}

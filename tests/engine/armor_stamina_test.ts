@@ -215,9 +215,19 @@ describe("armor", () => {
     // only difference left is the rung's flat ilvl bonus.
     medium.rng = () => 0.5;
     jesus.rng = () => 0.5;
-    const opts = { defId: "test_vest", tier: "regular", mlvl: 10 } as const;
-    const plain = rollEquipment(medium, opts);
-    const hard = rollEquipment(jesus, opts);
+    // The offset-strip keys loot off the LOOT level (mlvl − offset), so target
+    // the SAME loot level on both rungs — back out each difficulty's offset —
+    // leaving `lootIlvlBonus` as the only difference.
+    const lootLevel = 12;
+    const common = { defId: "test_vest", tier: "regular" } as const;
+    const plain = rollEquipment(medium, {
+      ...common,
+      mlvl: lootLevel + FIX_DIFFICULTIES.medium!.mobLevelOffset,
+    });
+    const hard = rollEquipment(jesus, {
+      ...common,
+      mlvl: lootLevel + FIX_DIFFICULTIES.jesus!.mobLevelOffset,
+    });
     expect(hard.ilvl - plain.ilvl).toBe(
       FIX_DIFFICULTIES.jesus!.lootIlvlBonus -
         FIX_DIFFICULTIES.medium!.lootIlvlBonus,

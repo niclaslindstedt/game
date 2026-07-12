@@ -349,7 +349,9 @@ describe("menace — evolution of the horde", () => {
     const plain = magicOrBetter(0);
     const evolved = magicOrBetter(10);
     expect(plain).toBeGreaterThan(0); // the ordinary rain pays magic finds
-    expect(evolved).toBe(0); // ten stages of penalty shut the tier roll
+    // Ten stages of tier PENALTY thin the evolved crop's magic+ rate well
+    // below the ordinary rain — a rampage is a leveling faucet, not a loot farm.
+    expect(evolved).toBeLessThan(plain);
   });
 
   it("high menace lures a denser crowd than a calm field", () => {

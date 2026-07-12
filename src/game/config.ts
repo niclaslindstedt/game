@@ -468,6 +468,11 @@ export const UNIQUE = {
    */
   dropChance: 0.05,
   dropChanceCap: 0.1,
+  /** Default per-item `rarity` weight for a unique that doesn't set its own —
+   * the relative odds it's the chosen named item once a rarity roll lands its
+   * tier + slot (see `pickUniqueForDrop`). A flat default so the catalog works
+   * un-annotated; hand-weight individual chase items DOWN from here. */
+  defaultRarity: 100,
 } as const;
 
 /**
@@ -484,26 +489,33 @@ export const UNIQUE = {
  * rung's end — the relics can only be farmed by RETURNING for boss runs once the
  * difficulty is beaten. Rolled per unique, per kill, on `maybeDropWorldUnique`.
  */
+const WORLD_DROP_MINION_CHANCE = 0.00015;
+// The explicit set-piece boost, as MULTIPLES of the minion base — the one
+// place to retune "how much better a set piece is" (also live-scaled by the
+// runtime BALANCE › UNIQUE DROPS knob). Elite ×100 → 1.5%, boss ×200 → 3%.
+const WORLD_DROP_ELITE_MULT = 100;
+const WORLD_DROP_BOSS_MULT = 200;
+
 export const WORLD_DROP = {
   /**
-   * Per-unique drop chance by the falling enemy's ROLE. Calibrated to the level
-   * head-count: a full EASY level fields ~1200 minions, a handful of elites, and
-   * its boss(es), so a WHOLE-level clear amasses to ≈ 30% per relic —
-   * `1 − (1−minion)^1200·(1−elite)^5·(1−boss) ≈ 0.30`. The boss is weighted
-   * MAGNITUDES over trash (a 10% single kill vs 0.015%) so a boss run — one fast
-   * kill for a fat slice — is the efficient farm, not grinding the whole floor.
+   * Per-unique drop chance by the falling enemy's ROLE — the level-locked relic
+   * channel, kept ALONGSIDE the folded rarity roll as the explicit set-piece
+   * boost. A MINION is a lottery ticket (0.015%, still gated to return-farming);
+   * ELITES and BOSSES are magnitudes better (×100 / ×200 the minion base) AND
+   * drop during the normal campaign (see the role gate in `maybeDropWorldUnique`),
+   * so a set-piece kill is a reliable relic source the first time through. Change
+   * the base or the two multipliers above to move the whole channel at once.
    */
   chanceByRole: {
-    minion: 0.00015, // 0.015% — 1200 of them sum to the bulk of the 30%
-    elite: 0.02, //     2%     — ~130× a minion
-    boss: 0.1, //       10%    — ~670× a minion; the fast run you repeat
+    minion: WORLD_DROP_MINION_CHANCE,
+    elite: WORLD_DROP_MINION_CHANCE * WORLD_DROP_ELITE_MULT, // 1.5%
+    boss: WORLD_DROP_MINION_CHANCE * WORLD_DROP_BOSS_MULT, //   3%
   },
-  /** No world unique drops until the hero reaches this level ON THAT RUNG —
-   * sized a few levels above where a first campaign pass of the difficulty ends
-   * (easy 19, medium 32, hard 43, nightmare 53, jesus 60), so boss runs on
-   * a beaten rung are the only source (JESUS's gate sits AT the campaign's end
-   * — level 60 — so the last rung's farm opens the moment the story is done).
-   * Hard and up are plumbing until relics ship for those rungs. */
+  /** The MINION-only return-farm gate: trash relics stay shut until the hero
+   * reaches this level ON THAT RUNG — sized a few levels above where a first
+   * campaign pass of the difficulty ends (easy 19, medium 32, hard 43,
+   * nightmare 53, jesus 60). ELITES and BOSSES ignore this gate (they drop
+   * during the campaign); it holds back only the minion lottery. */
   minPlayerLevel: {
     easy: 22,
     medium: 36,
@@ -1012,9 +1024,12 @@ export const MELEE = {
 /** Loot rules that hold on every level (pools and tier odds are per level). */
 export const LOOT = {
   /**
-   * Base chance a regular monster drops anything (LUCK adds to it). Tuned
-   * for horde scale: hundreds of kills per run, a drop every ~8 of them —
-   * the steady rain of upgrades is what keeps the player ahead of the ramp.
+   * STAGE 1 — the drop gate (D2's NoDrop, inverted): the base chance a regular
+   * monster drops ANYTHING at all (LUCK adds to it). `1 − dropChance ≈ 91%` is
+   * the NoDrop weight. THE one drop-rate lever — raise it for a richer rain,
+   * lower it for a leaner one; the runtime BALANCE › DROP RATE knob scales it
+   * live. Tuned for horde scale: hundreds of kills per run, a drop every ~11 of
+   * them, the steady rain of upgrades that keeps the player ahead of the ramp.
    */
   dropChance: 0.09,
   /**
@@ -1085,16 +1100,43 @@ export const LOOT = {
    */
   dropLevelWindow: 15,
   /**
-   * Base chance per tier that an equipment drop rolls it, checked best-first
-   * (see `rollTier`). Global — the campaign's progression now lives in the
-   * mlvl gates above, not in per-level tables. LUCK, the difficulty's
-   * `tierChanceBonus`, menace evolution, and per-enemy bonuses all add to
-   * each. Unique/legendary stay at 0 BY DESIGN: those tiers are hand-authored
-   * named items (defs/uniques.ts) with their own drop channels — boss tables
-   * (`uniquesByDifficulty`) and level world drops (`worldUniques`) — and must
-   * never come out of the random affix roll as nameless pieces.
+   * STAGE 2 — the D2 RARITY ROLL. Each tier's chance is Diablo 2's shape:
+   * a BASE chance at the tier's own qlvl (the `tierUnlockMlvl` gate) plus a
+   * SLOPE that sweetens it the deeper OVER that gate the drop rolls — a
+   * higher-level kill rolls rarer tiers more often (D2: `ilvl − qlvl` improves
+   * rarity). MAGIC FIND then scales it (see `mfSaturation`). The difficulty's
+   * `tierChanceBonus`, menace evolution, and per-enemy bonuses still add to the
+   * base. Checked best-first in `rollTier`.
+   *
+   * Unlike the old ladder, unique/legendary are NON-ZERO: named items now fall
+   * out of the rarity roll (the D2 way — `rollTier` lands the tier, then
+   * `pickUniqueForDrop` chooses WHICH named item by its per-item `rarity`
+   * weight). The separate boss/world channels still layer on top as the
+   * explicit set-piece boost. The curve is deliberately D2-steep: rarer high
+   * tiers, MF carrying the difference.
    */
-  tierChances: { magic: 0.2, rare: 0.06, unique: 0, legendary: 0 },
+  rarityBase: { magic: 0.16, rare: 0.045, unique: 0.01, legendary: 0.003 },
+  /** How much each mlvl OVER a tier's qlvl gate adds to its base chance (the
+   * D2 `(ilvl−qlvl)/divisor` term, as a positive slope). Higher tiers climb
+   * slower, so depth favors rares over legendaries. */
+  raritySlope: { magic: 0.008, rare: 0.005, unique: 0.0016, legendary: 0.0006 },
+  /**
+   * MAGIC FIND saturation ceiling per tier — the MOST that MF can multiply a
+   * tier's rarity chance by, approached asymptotically (`1 + cap·mf/(cap+mf)`).
+   * MAGIC is uncapped (linear in MF); the top tiers saturate LOWER, so stacking
+   * LUCK/aura can't make legendaries common — D2's rule that MF is strong early
+   * and gives diminishing returns on the best drops.
+   */
+  mfSaturation: { rare: 1.2, unique: 0.7, legendary: 0.45 },
+  /** The EXPLICIT set-piece boost (kept alongside the folded rarity roll): an
+   * additive bonus to the unique/legendary rarity BASE when the killer is an
+   * elite or a boss, so set-piece kills stay a reliable relic source. */
+  eliteRarityBonus: { unique: 0.03, legendary: 0.008 },
+  bossRarityBonus: { unique: 0.09, legendary: 0.03 },
+  /** Ceiling on any single tier's rolled chance — keeps deep-campaign magic
+   * from reaching 100% so PLAIN whites (and their make-quality roll) still
+   * drop. Applied after slope, difficulty, role, and Magic Find. */
+  rarityChanceMax: 0.85,
   /**
    * How far below the killer's monster level a dropped item's LEVEL lands:
    * index i is the relative weight of dropping exactly i levels short, so

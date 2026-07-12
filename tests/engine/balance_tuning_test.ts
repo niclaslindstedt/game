@@ -178,25 +178,29 @@ describe("equipmentShare", () => {
 });
 
 describe("gearQuality", () => {
-  it("scales the tier odds an equipment drop rolls", () => {
-    // 20× saturates the rare roll (0.06 × 20 > 1), so off a tier-open mob
-    // every mint lands rare or better.
+  it("scales the D2 rarity roll an equipment drop rolls", () => {
+    const N = 200;
+    // A big gear-quality multiplier lifts every tier's chance toward its cap,
+    // so off a deep (all-tiers-open) mob almost nothing lands white.
     setBalanceTuning({ gearQuality: 20 });
-    const state = startGame();
-    for (let i = 0; i < 20; i++) {
-      const item = rollEquipment(state, { mlvl: 99 });
-      expect(item.tier).not.toBe("regular");
-      expect(item.tier).not.toBe("magic");
-    }
+    const rich = startGame();
+    const richAboveWhite = Array.from(
+      { length: N },
+      () => rollEquipment(rich, { mlvl: 99 }).tier,
+    ).filter((tier) => tier !== "regular").length;
 
-    // Neutral odds off the same seed still pay out mostly regular finds.
+    // Neutral odds off the same seed keep the roll honest — whites still turn
+    // up (the rarity cap leaves room for the make-quality roll).
     resetBalanceTuning();
     const plain = startGame();
-    const regulars = Array.from(
-      { length: 20 },
+    const plainAboveWhite = Array.from(
+      { length: N },
       () => rollEquipment(plain, { mlvl: 99 }).tier,
-    ).filter((tier) => tier === "regular").length;
-    expect(regulars).toBeGreaterThan(0);
+    ).filter((tier) => tier !== "regular").length;
+
+    expect(richAboveWhite).toBeGreaterThan(plainAboveWhite);
+    expect(richAboveWhite).toBeGreaterThanOrEqual(N * 0.95);
+    expect(N - plainAboveWhite).toBeGreaterThan(0); // whites still drop
   });
 });
 

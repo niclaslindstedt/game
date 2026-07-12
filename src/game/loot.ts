@@ -863,10 +863,15 @@ function maybeDropWorldUnique(
   const loot = levelDef(state.level.id).loot;
   const ids = loot.worldUniques?.[state.difficulty];
   if (!ids || ids.length === 0) return;
-  // Per-rung gate; a rung with no gate entry fails closed (drops nothing), all
-  // BEFORE any rng draw so the seeded stream is untouched on ungated runs.
-  const gate = WORLD_DROP.minPlayerLevel[state.difficulty];
-  if (gate === undefined || state.player.level < gate) return;
+  // The return-farm gate holds back only MINIONS: their trash relics stay shut
+  // until the hero out-levels a first pass of the rung. ELITES and BOSSES drop
+  // relics DURING the normal campaign (the explicit set-piece boost). Checked
+  // BEFORE any rng draw, so a gated minion kill leaves the seeded stream
+  // untouched — as do levels without a table (fixtures) and under-level runs.
+  if (def.role === "minion") {
+    const gate = WORLD_DROP.minPlayerLevel[state.difficulty];
+    if (gate === undefined || state.player.level < gate) return;
+  }
   // `worldDropMult` is the farm-level sweetener: a dedicated grind venue
   // pays a bit better per kill than the relics' home levels (default 1).
   const chance =
@@ -929,11 +934,18 @@ function dropGuaranteedLoot(
   // a second, and half the time a rare on top. The monster-level gates still
   // hold, so the same def only pays a tier its mlvl has unlocked — which is
   // why elites/bosses carry a `levelBonus` (they reach the gates first).
+  // The tier gate keys off the offset-stripped LOOT LEVEL, like every other
+  // loot gate (the offset-strip: a difficulty's mobLevelOffset never decides
+  // which tier a kill may pay — the hero's earned level does).
+  const lootLevel = Math.max(
+    1,
+    mlvl - difficultyDef(state.difficulty).mobLevelOffset,
+  );
   for (const [tier, chance] of Object.entries(loot.tierDrops ?? {}) as [
     Exclude<Tier, "regular">,
     number,
   ][]) {
-    if (mlvl < LOOT.tierUnlockMlvl[tier]) continue;
+    if (lootLevel < LOOT.tierUnlockMlvl[tier]) continue;
     let count = Math.floor(chance);
     if (state.rng() < chance - count) count++;
     for (let i = 0; i < count; i++) {
@@ -958,6 +970,9 @@ function dropGuaranteedLoot(
         slot,
         tierBonus: loot.tierBonus,
         mlvl,
+        // Elites/bosses get the set-piece rarity bonus AND are eligible to
+        // fold a named unique into these random drops (see `rollTier`).
+        role: def.role,
       }),
     });
   }

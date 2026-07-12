@@ -111,6 +111,12 @@ export type WeaponDef = {
    */
   levelReq: number;
   /**
+   * TreasureClass drop weight (D2's `Prob`): the relative odds this base is the
+   * one picked from its level's eligible pool. Omitted = 1 (an even pool). Set
+   * below 1 to make a base a rarer find, above to make it common.
+   */
+  dropWeight?: number;
+  /**
    * Attacks before a dropped instance of this weapon breaks. The player's
    * own starting sidearm is minted without durability and never breaks.
    */
@@ -1515,6 +1521,19 @@ export function equipmentLevelReq(defId: string): number {
 /** The icon sprite of an equipment def. */
 export function equipmentIcon(defId: string): string {
   return isWeaponDef(defId) ? weaponDef(defId).icon : gearDef(defId).icon;
+}
+
+/**
+ * A base's TREASURECLASS drop weight (D2's `Prob`): the relative odds it is the
+ * one picked from a level's eligible pool once stage 1 decides SOMETHING drops
+ * (see the weighted pick in `rollEquipment`). Default 1 — an even pool, exactly
+ * the old uniform pick — so a base only becomes rarer/commoner where a def
+ * authors a `dropWeight`. The single accessor both families read through.
+ */
+export function equipmentDropWeight(defId: string): number {
+  return isWeaponDef(defId)
+    ? (weaponDef(defId).dropWeight ?? 1)
+    : (gearDef(defId).dropWeight ?? 1);
 }
 
 // ---- The damage-budget model (see the weapon-system skill) --------------------

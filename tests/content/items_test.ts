@@ -125,16 +125,23 @@ describe("boss loot", () => {
     }
   });
 
-  it("unique and legendary never drop even at max luck", () => {
-    // Their base chances sit at zero until their one-of-a-kind defs ship;
-    // only the harder difficulties' tierChanceBonus will open them.
+  it("unique and legendary now drop as NAMED items (the D2 fold)", () => {
+    // The D2 reversal: a rarity roll that lands unique/legendary folds a real
+    // NAMED item chosen by its per-item weight (never a nameless top-tier
+    // affix roll). Past every gate, with heavy Magic Find, the top tiers turn
+    // up — and each carries a unique's fixed name, not a rolled one.
     const state = startGame();
-    state.player.level = 30; // past every mlvl gate — chance is the only lock
+    state.player.level = 60; // past every mlvl gate — chance is the only lock
     state.player.stats.luck = 100;
-    for (let i = 0; i < 50; i++) {
+    let sawTop = false;
+    for (let i = 0; i < 600; i++) {
       const rolled = rollEquipment(state);
-      expect(["regular", "magic", "rare"]).toContain(rolled.tier);
+      if (rolled.tier === "unique" || rolled.tier === "legendary") {
+        sawTop = true;
+        expect(rolled.name).toBeTruthy(); // a named item, folded in
+      }
     }
+    expect(sawTop).toBe(true);
   });
 });
 

@@ -20,6 +20,12 @@ export type GearDef = {
    * hero below it. Omitted = 1 (no gate).
    */
   levelReq?: number;
+  /**
+   * TreasureClass drop weight (D2's `Prob`): the relative odds this base is the
+   * one picked from its level's eligible pool. Omitted = 1 (an even pool). Set
+   * below 1 to make a piece a rarer find, above to make it common.
+   */
+  dropWeight?: number;
   /** Flat bonuses baked into the item before tier affixes. */
   bonuses: { maxHp?: number; critChance?: number };
   /**

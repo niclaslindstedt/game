@@ -110,9 +110,11 @@ describe("the quality roll", () => {
 
 describe("what quality is worth", () => {
   function pipeAt(state: ReturnType<typeof startGame>, quality: Quality) {
-    // mlvl 1 pins every roll's ilvl at 1, so the ITEM-LEVEL damage term
-    // (WEAPON.damagePerIlvl) is identical across instances and the test
-    // isolates what QUALITY alone is worth.
+    // Pin the ilvl draw so every instance shares one item level — the
+    // ITEM-LEVEL damage term (WEAPON.damagePerIlvl) is then identical across
+    // instances and the test isolates what QUALITY alone is worth. (A pinned
+    // draw, not a low mlvl: the offset-strip lifts the loot level off `mlvl`.)
+    state.rng = () => 0.5;
     return rollEquipment(state, { defId: "test_pipe", quality, mlvl: 1 });
   }
 
@@ -140,9 +142,11 @@ describe("what quality is worth", () => {
     const normal = rollEquipment(state, { ...opts, quality: "normal" });
     const perfect = rollEquipment(state, { ...opts, quality: "perfect" });
     expect(normal.ilvl).toBe(perfect.ilvl);
-    expect(perfect.armor).toBe(
-      Math.round((normal.armor! / 1) * QUALITY.mults.perfect),
-    );
+    // Both share one ilvl, so perfect is normal scaled by the make mult —
+    // within a point of rounding (each stamps round(raw × mult) independently).
+    expect(
+      Math.abs(perfect.armor! - normal.armor! * QUALITY.mults.perfect),
+    ).toBeLessThanOrEqual(1);
   });
 
   it("sizes the wear budget, and repair kits refill to it — not past it", () => {
