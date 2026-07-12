@@ -13,13 +13,26 @@ import atlasRects from "./assets/atlas.json";
 import atlasUrl from "./assets/atlas.png";
 import fontMeta from "./assets/font.json";
 import fontUrl from "./assets/font.png";
+import relicMeta from "./assets/font-relic.json";
+import relicArtifactUrl from "./assets/font-relic-artifact.png";
+import relicLegendaryUrl from "./assets/font-relic-legendary.png";
+import relicUniqueUrl from "./assets/font-relic-unique.png";
 
 export type SpriteName = keyof typeof atlasRects;
 export type Sprites = Record<SpriteName, ImageBitmap>;
 
+/** The rarity tiers that carry a struck-gold RELIC name font on their card. */
+export type RelicTier = "unique" | "legendary" | "artifact";
+
 export type GameAssets = {
   sprites: Sprites;
   font: PixelFont;
+  /**
+   * The pre-colored golden display fonts for unique/legendary/artifact item
+   * NAMES — one per tier, escalating in metallic richness. Pre-shaded, so
+   * they ignore the `color` draw option (see createPixelFont `tinted: false`).
+   */
+  relicFonts: Record<RelicTier, PixelFont>;
 };
 
 /**
@@ -96,16 +109,31 @@ let loadedValue: GameAssets | null = null;
 
 export function loadGameAssets(): Promise<GameAssets> {
   // Memoized: the title screen and the game screen share one decode pass.
-  loaded ??= loadImages({ atlas: atlasUrl, font: fontUrl }).then(
-    async (images) => {
-      const assets: GameAssets = {
-        sprites: await sliceAtlas(images.atlas, atlasRects),
-        font: createPixelFont(images.font, fontMeta),
-      };
-      loadedValue = assets;
-      return assets;
-    },
-  );
+  loaded ??= loadImages({
+    atlas: atlasUrl,
+    font: fontUrl,
+    relicUnique: relicUniqueUrl,
+    relicLegendary: relicLegendaryUrl,
+    relicArtifact: relicArtifactUrl,
+  }).then(async (images) => {
+    const assets: GameAssets = {
+      sprites: await sliceAtlas(images.atlas, atlasRects),
+      font: createPixelFont(images.font, fontMeta),
+      relicFonts: {
+        unique: createPixelFont(images.relicUnique, relicMeta, {
+          tinted: false,
+        }),
+        legendary: createPixelFont(images.relicLegendary, relicMeta, {
+          tinted: false,
+        }),
+        artifact: createPixelFont(images.relicArtifact, relicMeta, {
+          tinted: false,
+        }),
+      },
+    };
+    loadedValue = assets;
+    return assets;
+  });
   return loaded;
 }
 

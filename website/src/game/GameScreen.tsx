@@ -2996,7 +2996,12 @@ export function GameScreen({
       {/* The framed pickup card for freshly bagged gear. Keyed by the card id
           so a new find remounts the box and restarts its pop + border spark. */}
       {hud?.phase === "playing" && pickupCard && (
-        <PickupModal key={pickupCard.id} font={font} card={pickupCard} />
+        <PickupModal
+          key={pickupCard.id}
+          font={font}
+          relicFonts={assets.relicFonts}
+          card={pickupCard}
+        />
       )}
 
       {state && state.cutscene && hud?.phase === "cutscene" && (
@@ -3163,6 +3168,7 @@ export function GameScreen({
         <InventoryPanel
           state={state}
           font={font}
+          relicFonts={assets.relicFonts}
           sprites={assets.sprites}
           onChange={bumpUi}
           onClose={() => {
@@ -3176,6 +3182,7 @@ export function GameScreen({
         <ShopPanel
           state={state}
           font={font}
+          relicFonts={assets.relicFonts}
           sprites={assets.sprites}
           onChange={bumpUi}
           onClose={() => {

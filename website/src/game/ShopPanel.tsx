@@ -28,7 +28,7 @@ import { formatCompact } from "@ui/lib/format-number.ts";
 import { PixelText } from "@ui/lib/PixelText.tsx";
 import type { PixelFont } from "@ui/lib/pixel-font.ts";
 
-import { spriteDataUrl, type Sprites } from "./assets.ts";
+import { spriteDataUrl, type RelicTier, type Sprites } from "./assets.ts";
 import { synth } from "./audio.ts";
 import { ItemCardBody, ItemIcon } from "./ItemCard.tsx";
 import { playUiSound } from "./sfx/index.ts";
@@ -155,12 +155,14 @@ function BulkSellButton({
 export function ShopPanel({
   state,
   font,
+  relicFonts,
   sprites,
   onChange,
   onClose,
 }: {
   state: GameState;
   font: PixelFont;
+  relicFonts: Record<RelicTier, PixelFont>;
   sprites: Sprites;
   onChange: () => void;
   onClose: () => void;
@@ -410,6 +412,7 @@ export function ShopPanel({
                     <div className="shop-detail-card">
                       <ItemCardBody
                         font={font}
+                        relicFonts={relicFonts}
                         sprites={sprites}
                         state={state}
                         item={selectedStock.equipment}
@@ -474,6 +477,7 @@ export function ShopPanel({
                 <div className="shop-detail-card">
                   <ItemCardBody
                     font={font}
+                    relicFonts={relicFonts}
                     sprites={sprites}
                     state={state}
                     item={selectedBag}
