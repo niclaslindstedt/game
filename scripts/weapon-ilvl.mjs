@@ -129,7 +129,10 @@ export function ilvlOf(u) {
   // see pickUniqueForDrop). All exempt from the over-budget flag, but stay
   // visible (their ilvl is still computed).
   const exempt =
-    TRINKET_SLOTS.has(u.slot) || u.keeper === true || u.tier === "legendary";
+    TRINKET_SLOTS.has(u.slot) ||
+    u.keeper === true ||
+    u.tier === "legendary" ||
+    u.tier === "artifact";
   return {
     req,
     budget, // signed ilvl worth of the fixed bonuses (= computed − req)

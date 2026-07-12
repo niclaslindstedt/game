@@ -282,25 +282,19 @@ export const THE_RIFT: LevelDef = {
     // boss runs of the Rift.
     worldUniques: {
       easy: ["excalibur", "the_trinity_shard"],
-      medium: ["wishbane", "gorgonscale", "mjolnir"],
+      medium: ["wishbane", "gorgonscale"],
       // THE INEVITABLE — the hard rung's LEGENDARY: the pistol that has
       // never missed, hung in the tear like everything else fate mislaid.
-      hard: ["the_inevitable"],
+      hard: [],
       // GRAVEMAKER (the burying maul) and the nightmare rung's other two
       // LEGENDARIES: THE RECKONING (the cursed blade that answers every blow
       // taken with lightning) and SUNWREATH (the dead star's burning crown).
-      nightmare: ["gravemaker", "the_reckoning", "sunwreath"],
+      nightmare: ["gravemaker"],
       // The JESUS rung's rift haul — the void-quenched claymore, the storm
       // door, star-struck plate, and two LEGENDARIES: STARFALL (kills pull
       // the sky down) and EMBERHEART (the burning heart, forever fire for
       // any build).
-      jesus: [
-        "nightfall",
-        "maelstrom",
-        "starforge_plate",
-        "starfall",
-        "emberheart",
-      ],
+      jesus: ["nightfall", "maelstrom", "starforge_plate"],
     },
     // Level a normal run reaches per rung (`leveling-curve.mjs --by-level`) —
     // past it golden arrows go cold so a Rift replay can't over-level.

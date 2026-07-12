@@ -54,7 +54,7 @@ import {
   equipmentBaseName,
 } from "./defs/equipment.ts";
 import { gradeVariantIds } from "./defs/grades.ts";
-import { difficultyDef } from "./defs/difficulties.ts";
+import { difficultyDef, meetsMinDifficulty } from "./defs/difficulties.ts";
 import type { EnemyRole } from "./defs/enemies/index.ts";
 import { gateKeyIds, levelDef } from "./defs/levels/index.ts";
 import { storyItemDef } from "./defs/story.ts";
@@ -307,24 +307,51 @@ function rollTier(
 ): Tier {
   const difficultyChances = difficultyDef(state.difficulty).tierChanceBonus;
   const mf = magicFind(state);
-  // The EXPLICIT set-piece boost on unique/legendary for elite/boss kills.
+  // The EXPLICIT set-piece boost on named tiers for elite/boss kills.
   const roleBonus: Partial<Record<Tier, number>> | undefined =
     role === "boss"
       ? LOOT.bossRarityBonus
       : role === "elite"
         ? LOOT.eliteRarityBonus
         : undefined;
+  // The NAMED tiers (unique/legendary/artifact) are the hand-authored CHASE —
+  // their odds are their own rarityBase + slope + the elite/boss set-piece
+  // bonus ALONE. The generic per-kill `tierBonus` (the mob-level sweetener,
+  // the all-clear trophy, a mob's dropProfile) lifts the ROLLED tiers
+  // (magic/rare) — but it must NOT rain named items (it once made a JESUS
+  // farm drop ~9 uniques and ~4 legendaries a run; see scripts/drop-rate.mjs).
+  // The item's own level requirement gates WHERE each drops (a req-99 artifact
+  // only off a level-99 mob = JESUS). LEGENDARY/ARTIFACT additionally drop
+  // from HARD up only — the top chase is a hard-earned reward.
+  const hardPlus = meetsMinDifficulty(state.difficulty, "hard");
+  // The ARTIFACT tier stays INERT while no artifact is authored — no phantom
+  // roll consumes rng, so seeded drop streams don't shift until the roster
+  // ships. (`pickUniqueForDrop` would downgrade an empty artifact roll to a
+  // rare anyway; this just skips the wasted draw.)
+  const hasArtifacts =
+    lootLevel >= LOOT.tierUnlockMlvl.artifact &&
+    activeUniqueDefs().some((u) => u.tier === "artifact");
+  // The FARM-VENUE sweetener (the bunker's 2×): a level that farms named items
+  // richer, applied to the CHASE tiers' chance here and to the world-drop
+  // channel in `maybeDropWorldUnique`, so both scale together.
+  const namedMult = levelDef(state.level.id).loot.namedDropMult ?? 1;
   // TIER_ROLL_ORDER never contains "regular" (the fall-through) or "trash"
   // (scripted mints only), so the rarity config maps index safely.
   for (const tier of TIER_ROLL_ORDER) {
     const qlvl = LOOT.tierUnlockMlvl[tier];
     if (lootLevel < qlvl) continue; // hard gate, unchanged
+    if (tier === "artifact" && !hasArtifacts) continue;
+    const named =
+      tier === "unique" || tier === "legendary" || tier === "artifact";
+    const topChase = tier === "legendary" || tier === "artifact";
+    if (topChase && !hardPlus) continue; // legendary/artifact: HARD and up
     const base =
-      LOOT.rarityBase[tier] +
-      LOOT.raritySlope[tier] * (lootLevel - qlvl) +
-      (difficultyChances[tier] ?? 0) +
-      (roleBonus?.[tier] ?? 0) +
-      tierBonus;
+      (LOOT.rarityBase[tier] +
+        LOOT.raritySlope[tier] * (lootLevel - qlvl) +
+        (difficultyChances[tier] ?? 0) +
+        (roleBonus?.[tier] ?? 0)) *
+        (named ? namedMult : 1) +
+      (named ? 0 : tierBonus);
     if (base <= 0) continue;
     const chance = Math.min(
       LOOT.rarityChanceMax,
@@ -346,14 +373,21 @@ function rollTier(
 function pickUniqueForDrop(
   state: GameState,
   slot: EquipSlot,
-  tier: "unique" | "legendary",
+  tier: "unique" | "legendary" | "artifact",
   lootLevel: number,
 ): string | null {
+  // The named-drop level FLOOR (D2 area-level flooring): as the hero levels,
+  // the eligible band slides up, so a cap-level farm stops dropping the
+  // campaign's low-ilvl relics ("level-60 crap" at level 99) and pays out
+  // only near-level gear. The equip CEILING (base levelReq ≤ lootLevel) still
+  // holds on top; a slot with nothing in the band downgrades to a rare.
+  const ilvlFloor = lootLevel - LOOT.namedIlvlWindow;
   const eligible = activeUniqueDefs()
     .filter(
       (u) =>
         (u.tier ?? "unique") === tier &&
         u.slot === slot &&
+        u.ilvl >= ilvlFloor &&
         // Skip a unique whose base isn't in the ACTIVE catalog — a fixture
         // swap can leave the shipped unique catalog pointing at bases that no
         // longer resolve; `equipmentLevelReq` would throw on them.
@@ -378,10 +412,12 @@ function pickUniqueForDrop(
  */
 export function uniqueDropWeight(
   u: UniqueDef,
-  tier: "unique" | "legendary",
+  tier: "unique" | "legendary" | "artifact",
 ): number {
   const base = u.rarity ?? UNIQUE.defaultRarity;
-  if (tier !== "legendary") return base;
+  // The power law spreads WITHIN a chase tier (legendary or artifact): the
+  // stronger the piece, the rarer. Plain uniques keep their flat weight.
+  if (tier !== "legendary" && tier !== "artifact") return base;
   const budget = bonusBudget(u.bonuses);
   if (budget <= UNIQUE.rarityBudgetRef) return base;
   return (
@@ -400,7 +436,10 @@ export function uniqueDropWeight(
  */
 function rollItemLevel(state: GameState, mlvl: number, tier: Tier): number {
   const weights: readonly number[] =
-    tier === "rare" || tier === "unique" || tier === "legendary"
+    tier === "rare" ||
+    tier === "unique" ||
+    tier === "legendary" ||
+    tier === "artifact"
       ? LOOT.ilvlDeltaWeightsRare
       : LOOT.ilvlDeltaWeights;
   const delta = pickWeighted(
@@ -554,7 +593,7 @@ export function rollEquipment(
   if (
     opts.tier === undefined &&
     opts.defId === undefined &&
-    (tier === "unique" || tier === "legendary")
+    (tier === "unique" || tier === "legendary" || tier === "artifact")
   ) {
     const namedId = pickUniqueForDrop(state, slot, tier, lootLevel);
     if (namedId) return mintUnique(state, namedId);
@@ -601,7 +640,12 @@ export function rollEquipment(
   // sooner). Unique and legendary finds are the exception: very well built,
   // they never break (no durability also exempts them from the looted-weapon
   // damage damper, the way the built-in sidearm is exempt).
-  if (family === "weapon" && tier !== "unique" && tier !== "legendary") {
+  if (
+    family === "weapon" &&
+    tier !== "unique" &&
+    tier !== "legendary" &&
+    tier !== "artifact"
+  ) {
     rolled.durability = Math.max(
       1,
       Math.round(weaponDef(defId).durability * qMult),
@@ -621,7 +665,12 @@ export function rollEquipment(
       );
       // Armor wears per hit taken and merely goes INACTIVE at zero (never
       // trashed); unique/legendary pieces mint unbreakable, like weapons.
-      if (tier !== "unique" && tier !== "legendary" && def.durability) {
+      if (
+        tier !== "unique" &&
+        tier !== "legendary" &&
+        tier !== "artifact" &&
+        def.durability
+      ) {
         rolled.durability = Math.max(1, Math.round(def.durability * qMult));
       }
     }

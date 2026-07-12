@@ -220,7 +220,7 @@ describe("difficulty scaling in a run", () => {
     );
   });
 
-  it("pays the top tiers far more often on harder rungs (tierChanceBonus)", () => {
+  it("pays magic/rare far more often on harder rungs (tierChanceBonus)", () => {
     const medium = startOn("medium");
     const jesus = startOn("jesus");
     // Past every loot-level gate on BOTH rungs (the offset-strip means the
@@ -228,15 +228,16 @@ describe("difficulty scaling in a run", () => {
     // about the chances — the gates have their own suite.
     medium.player.level = 50;
     jesus.player.level = 50;
-    const isTop = (t: Tier): boolean => t === "unique" || t === "legendary";
+    // The difficulty `tierChanceBonus` lifts the ROLLED tiers (magic/rare);
+    // the named CHASE tiers ignore it (they're their own economy — see
+    // `rollTier`), so this measures the rolled-tier reward.
+    const isRolled = (t: Tier): boolean => t === "magic" || t === "rare";
     let mediumTop = 0;
     let jesusTop = 0;
     for (let i = 0; i < 800; i++) {
-      if (isTop(rollEquipment(medium).tier)) mediumTop++;
-      if (isTop(rollEquipment(jesus).tier)) jesusTop++;
+      if (isRolled(rollEquipment(medium).tier)) mediumTop++;
+      if (isRolled(rollEquipment(jesus).tier)) jesusTop++;
     }
-    // Base chances put a trickle of uniques/legendaries on every rung now (the
-    // D2 reversal), but JESUS CHRIST! pays for its horde in far more of them.
     expect(jesusTop).toBeGreaterThan(0);
     expect(jesusTop).toBeGreaterThan(mediumTop);
   });

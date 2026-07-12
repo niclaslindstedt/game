@@ -353,11 +353,13 @@ export type LevelDef = {
      */
     worldUniques?: Partial<Record<Difficulty, string[]>>;
     /**
-     * Multiplier on every world-unique roll chance on this level (default 1).
-     * The farm-level knob: a dedicated grind venue pays a bit better per kill
-     * than the relics' home levels (read in `maybeDropWorldUnique`).
+     * The FARM-VENUE multiplier (default 1): this level drops HAND-AUTHORED
+     * NAMED items at N× the per-kill rate — BOTH the world-locked unique
+     * relics (`maybeDropWorldUnique`) AND the global legendary/artifact rarity
+     * roll (`rollTier`). The bunker (the cow level) sets 2×, so its long runs
+     * are the game's best named-item farm; ordinary levels leave it 1.
      */
-    worldDropMult?: number;
+    namedDropMult?: number;
     /**
      * The player level a normal single run of this level at each difficulty
      * leaves the hero at — the point past which GOLDEN ARROWS stop paying a

@@ -59,6 +59,7 @@ const TIER_RANK: Record<Tier, number> = {
   rare: 2,
   unique: 3,
   legendary: 4,
+  artifact: 5,
 };
 
 /**
@@ -80,6 +81,9 @@ export type Finish =
 /** Fold (tier, make quality) into the single finish ladder above. */
 export function finishFor(tier: Tier, quality: Quality | undefined): Finish {
   switch (tier) {
+    // An artifact reuses the legendary blaze — the tier's red name color and
+    // the densest reveal (see the blaze below) set it apart.
+    case "artifact":
     case "legendary":
       return "legendary";
     case "unique":
@@ -185,7 +189,9 @@ function RarityReveal({ tier }: { tier: Tier }) {
   // Magic reads purely from its finish (the blue frame + border glare); the
   // extra flourishes start at rare so the ladder stays subtle below it.
   if (rank < TIER_RANK.rare) return null;
-  const legendary = tier === "legendary";
+  // Legendary AND artifact get the full bloom-and-blast reveal (an artifact
+  // reuses the legendary flourish — its red card color sets it apart).
+  const legendary = tier === "legendary" || tier === "artifact";
   const sparkles = legendary ? [...SPARKLES, ...LEGENDARY_SPARKLES] : SPARKLES;
   const flames = legendary ? LEGENDARY_FLAMES : FLAMES;
   return (

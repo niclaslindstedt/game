@@ -36,6 +36,7 @@ export type LifetimeTotals = {
   rareFound: number;
   uniqueFound: number;
   legendaryFound: number;
+  artifactFound: number;
   /** DISTINCT hand-authored uniques found (UNIQUE_DEFS ids). */
   uniquesFound: string[];
   /** DISTINCT companions recruited (COMPANION_DEFS ids). */
@@ -92,6 +93,7 @@ export function emptyTotals(): LifetimeTotals {
     rareFound: 0,
     uniqueFound: 0,
     legendaryFound: 0,
+    artifactFound: 0,
     uniquesFound: [],
     companions: [],
     storyItems: [],
@@ -126,7 +128,7 @@ export const EQUIP_SLOTS = [
   "bag",
 ] as const;
 
-/** Outfit rank of a tier — unique and legendary share the top rung. */
+/** Outfit rank of a tier — unique, legendary, and artifact share the top rung. */
 const TIER_RANK: Record<string, number> = {
   trash: 0,
   regular: 0,
@@ -134,6 +136,7 @@ const TIER_RANK: Record<string, number> = {
   rare: 2,
   unique: 3,
   legendary: 3,
+  artifact: 3,
 };
 
 /** One currently-worn piece, as GameScreen summarizes the hero each tick. */
@@ -228,6 +231,7 @@ export function applyEventsToTotals(
         else if (event.tier === "rare") totals.rareFound++;
         else if (event.tier === "unique") totals.uniqueFound++;
         else if (event.tier === "legendary") totals.legendaryFound++;
+        else if (event.tier === "artifact") totals.artifactFound++;
         else break;
         if (event.uniqueId) addDistinct(totals.uniquesFound, event.uniqueId);
         changed = true;

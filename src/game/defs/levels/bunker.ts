@@ -448,79 +448,17 @@ export const THE_BUNKER: LevelDef = {
       "bag",
     ],
     abilityPool: ["fire_orbs", "storm_cell", "stasis_field", "item_magnet"],
-    // The cow-level table: the WHOLE game's world relics rain here — every
-    // level's list merged, at sweetened odds (worldDropMult) — so the vault
-    // is the one venue that can pay out anything. Still behind the standing
-    // per-rung player-level gates (config WORLD_DROP.minPlayerLevel).
-    worldUniques: {
-      easy: [
-        "the_first_draft",
-        "the_pale_covenant",
-        "deadstar",
-        "dustborn",
-        "excalibur",
-        "the_trinity_shard",
-        "pale_rider",
-      ],
-      medium: [
-        "deadsprint",
-        "marecrest",
-        "redwind",
-        "wishbane",
-        "gorgonscale",
-        "mjolnir",
-        "herdbreaker",
-        "the_last_roundup",
-      ],
-      hard: [
-        "longwatch",
-        "huntsmans_cowl",
-        "colossus_plate",
-        "oathbrand",
-        "the_inevitable",
-      ],
-      nightmare: [
-        "stormlash",
-        "falconmail",
-        "omensight",
-        "veilwalkers",
-        "pyrelight",
-        "ironroot_greaves",
-        "gravemaker",
-        "hordebane",
-        "dragons_breath",
-        "the_reckoning",
-        "skybreaker",
-        "sunwreath",
-      ],
-      jesus: [
-        "lightbinder",
-        "starsight",
-        "the_anvil",
-        "worldsplitter",
-        "titanstride",
-        "the_immovable",
-        "earthfast",
-        "the_stillward",
-        "meteorfall",
-        "sunspear",
-        "crown_of_ruin",
-        "the_pilgrim_star",
-        "the_verdict",
-        "horizons_end",
-        "kingsbane",
-        "the_long_silence",
-        "windgrave",
-        "nightfall",
-        "maelstrom",
-        "starforge_plate",
-        "starfall",
-        "emberheart",
-      ],
-    },
-    // "A bit higher" world-drop odds than the relics' home levels — the
-    // farm-venue sweetener, applied per roll in maybeDropWorldUnique.
-    worldDropMult: 1.5,
+    // No world-unique table: the cow level farms EVERYTHING through the 2×
+    // GLOBAL rarity roll (`namedDropMult` below → `rollTier`), so it needs no
+    // hand-listed relic table — every named item is already eligible from any
+    // mob here, twice as often. The old per-rung relist double-dipped with the
+    // global roll and buried the vault in uniques; the 2× roll IS the jackpot.
+    // The cow level is the best named-item farm: 2× the per-kill rate for the
+    // whole unique/legendary/artifact rarity roll (see `rollTier`). On top of
+    // the vault's long, dense runs, this makes it the endgame grind of choice.
+    // Only reachable AFTER the rift (the severed-hand ritual), so a rift → the
+    // bunker clear is the canonical farm run the drop rates are tuned against.
+    namedDropMult: 2,
     // Arrows go cold at the campaign's own end-levels (Eastworld's caps):
     // the vault farms LOOT, not levels — a grind here can't out-level the
     // campaign's pacing.

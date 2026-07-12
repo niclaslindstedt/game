@@ -228,13 +228,32 @@ armor/trinket anchors, all with spells/procs:
 - [x] 16 unique defs + 6 legendary defs, world-drop wiring on the jesus column
 - [x] Checker battery + tests + docs + changelog
 
-## Phase 5 — JESUS 99+ legendaries (~24, the power ladder)
+## Drop economy (done, out of phase order)
+
+The named-item chase was reworked as its own pass (see `docs/game-content.md`,
+"the named-item chase", and `scripts/drop-rate.mjs`): a new **ARTIFACT** tier
+above legendary; uniques/legendaries/artifacts drop through the global rarity
+roll (named tiers ignore the generic tier sweeteners); legendaries/artifacts
+are HARD+ and role-scaled; the item level DRAGS with the hero
+(`LOOT.namedIlvlWindow`) so a level-99 farm pays only ~ilvl-85+ gear; a
+rift → bunker run lands ≈ 1 unique + 1 legendary per 10 runs (bunker 2× via
+`namedDropMult`), artifacts ~1/100. The phase-5 roster below therefore mints
+at **artifact** tier (req/ilvl 99+), the level-99 endgame drop.
+
+- [x] ARTIFACT tier machinery (types, ladder, card color, achievement, checker)
+- [x] Global HARD+ role-scaled drops; legendaries removed from world tables
+- [x] Item-level floor (drops drag up with the hero); req-99 eligibility
+- [x] Rate calibration (rift+bunker ≈ 1 unique / 1 legendary per 10; bunker 2×)
+- [x] `scripts/drop-rate.mjs` Monte-Carlo harness; engine tests
+
+## Phase 5 — JESUS 99+ ARTIFACTS (~24, the power ladder)
 
 The endgame farm: authored ilvls ≥ 99 on high-req elite bases (gated out of
-earlier play naturally), deliberately spread across a VAST power ladder —
-from strong keepers near the reference budget up to god-tier pieces at
-several times it, which the rarity power law makes hundreds of times rarer.
-Provisional
+earlier play naturally — a req-99 artifact drops from any mob only once the
+hero is at the cap), minted at **artifact** tier and deliberately spread
+across a VAST power ladder — from strong keepers near the reference budget up
+to god-tier pieces at several times it, which the rarity power law makes
+hundreds of times rarer. Provisional
 roster (subject to a naming pass at implementation):
 
 - Weapons — melee: **DURENDAL**, **GRAM**, **MURAMASA** · ranged:
@@ -246,8 +265,9 @@ roster (subject to a naming pass at implementation):
 - Feet: **WINDRUNNERS**, **SLEIPNIR'S SHOES**, **VIDAR'S BOOT**
 - Charms: **DRAUPNIR**, **SAMPO** · Bag: **CORNUCOPIA**
 
-- [ ] ~24 legendary defs (ilvls 99+, spec spread as above, budgets spanning the power ladder)
+- [ ] ~24 artifact defs (ilvls 99+, spec spread as above, budgets spanning the power ladder)
 - [ ] Rarity-derivation sanity pass (`unique-check.mjs` report)
+- [ ] Rate check: artifact ≈ 1/100 per rift+bunker run (`scripts/drop-rate.mjs`)
 - [ ] Checker battery + tests + docs + changelog
 
 ## Phase 6 — balance verification
