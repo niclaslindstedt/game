@@ -2303,191 +2303,208 @@ export function GameScreen({
               <div className="hud-status">
                 {heroAvatar}
                 <div className="hud-vitals">
-                  <div className="hud-stat-row">
-                    <PixelText
-                      font={font}
-                      text="HP"
-                      scale={2}
-                      color="#9aa3ad"
-                    />
-                    <div className="hud-bar hp-bar">
-                      <div
-                        className="hud-bar-fill"
-                        style={{ width: `${(100 * hud.hp) / hud.maxHp}%` }}
-                      />
-                    </div>
-                    <span className="hud-stat-val">
-                      <PixelText font={font} text={String(hud.hp)} scale={2} />
-                    </span>
-                  </div>
-                  <div className="hud-stat-row">
-                    <PixelText
-                      font={font}
-                      text="ST"
-                      scale={2}
-                      color="#9aa3ad"
-                    />
-                    <div className="hud-bar hp-bar">
-                      <div
-                        className="hud-bar-fill stamina-fill"
-                        style={{
-                          width: `${(100 * hud.stamina) / hud.maxStamina}%`,
-                        }}
-                      />
-                    </div>
-                    <span className="hud-stat-val">
+                  {/* HP + stamina stay together; the weapon + durability and
+                      purse form a second group that reflows to the RIGHT of
+                      the vitals in landscape (stacks below in portrait). */}
+                  <div className="hud-vitals-group hud-vitals-primary">
+                    <div className="hud-stat-row">
                       <PixelText
                         font={font}
-                        text={String(Math.ceil(hud.stamina))}
+                        text="HP"
                         scale={2}
+                        color="#9aa3ad"
                       />
-                    </span>
+                      <div className="hud-bar hp-bar">
+                        <div
+                          className="hud-bar-fill"
+                          style={{ width: `${(100 * hud.hp) / hud.maxHp}%` }}
+                        />
+                      </div>
+                      <span className="hud-stat-val">
+                        <PixelText
+                          font={font}
+                          text={String(hud.hp)}
+                          scale={2}
+                        />
+                      </span>
+                    </div>
+                    <div className="hud-stat-row">
+                      <PixelText
+                        font={font}
+                        text="ST"
+                        scale={2}
+                        color="#9aa3ad"
+                      />
+                      <div className="hud-bar hp-bar">
+                        <div
+                          className="hud-bar-fill stamina-fill"
+                          style={{
+                            width: `${(100 * hud.stamina) / hud.maxStamina}%`,
+                          }}
+                        />
+                      </div>
+                      <span className="hud-stat-val">
+                        <PixelText
+                          font={font}
+                          text={String(Math.ceil(hud.stamina))}
+                          scale={2}
+                        />
+                      </span>
+                    </div>
                   </div>
-                  <div className="hud-stat-row hud-weapon-row">
-                    {(() => {
-                      if (!state) return null;
-                      const equipped = state.player.equipment.weapon;
-                      const equippedColor =
-                        WEAPON_CLASS_COLORS[weaponDef(equipped.defId).class];
-                      const icon = spriteDataUrl(
-                        assets.sprites,
-                        weaponDef(equipped.defId).icon,
-                      );
-                      // Other carried weapons, highest damage first — the switch
-                      // targets, shared with the Q menu / 1-4 hotkeys.
-                      const alternatives = weaponAlternatives(state);
-                      return (
-                        <div className="wpn-control">
-                          <button
-                            type="button"
-                            className="wpn-slot"
-                            aria-label="switch-weapon"
-                            style={{
-                              borderColor: equippedColor.border,
-                              background: equippedColor.bg,
-                            }}
-                            onClick={() => {
-                              setWeaponMenuOpen((open) => !open);
-                              playUiSound(synth, "confirm");
-                            }}
-                          >
-                            {icon ? (
-                              <img
-                                src={icon}
-                                alt=""
-                                className="pixel-img wpn-slot-img"
-                              />
-                            ) : null}
-                          </button>
-                          {weaponMenuOpen && (
-                            <div className="wpn-switcher">
-                              {alternatives.length === 0 ? (
-                                <PixelText
-                                  font={font}
-                                  text="NO OTHER WEAPONS"
-                                  scale={2}
-                                  color="#9aa3ad"
+                  <div className="hud-vitals-group hud-vitals-gear">
+                    <div className="hud-stat-row hud-weapon-row">
+                      {(() => {
+                        if (!state) return null;
+                        const equipped = state.player.equipment.weapon;
+                        const equippedColor =
+                          WEAPON_CLASS_COLORS[weaponDef(equipped.defId).class];
+                        const icon = spriteDataUrl(
+                          assets.sprites,
+                          weaponDef(equipped.defId).icon,
+                        );
+                        // Other carried weapons, highest damage first — the switch
+                        // targets, shared with the Q menu / 1-4 hotkeys.
+                        const alternatives = weaponAlternatives(state);
+                        return (
+                          <div className="wpn-control">
+                            <button
+                              type="button"
+                              className="wpn-slot"
+                              aria-label="switch-weapon"
+                              style={{
+                                borderColor: equippedColor.border,
+                                background: equippedColor.bg,
+                              }}
+                              onClick={() => {
+                                setWeaponMenuOpen((open) => !open);
+                                playUiSound(synth, "confirm");
+                              }}
+                            >
+                              {icon ? (
+                                <img
+                                  src={icon}
+                                  alt=""
+                                  className="pixel-img wpn-slot-img"
                                 />
-                              ) : (
-                                alternatives.map(
-                                  ({ item, index, dmg }, order) => {
-                                    const color =
-                                      WEAPON_CLASS_COLORS[
-                                        weaponDef(item.defId).class
-                                      ];
-                                    const wpnIcon = spriteDataUrl(
-                                      assets.sprites,
-                                      weaponDef(item.defId).icon,
-                                    );
-                                    return (
-                                      <button
-                                        key={item.id}
-                                        type="button"
-                                        className="wpn-slot wpn-switch-slot"
-                                        aria-label={`equip-${item.defId}`}
-                                        style={{
-                                          borderColor: color.border,
-                                          background: color.bg,
-                                        }}
-                                        onClick={() => {
-                                          if (
-                                            equipFromInventory(state, index)
-                                          ) {
-                                            playUiSound(synth, "equip");
-                                            setWeaponMenuOpen(false);
-                                            bumpUi();
-                                          }
-                                        }}
-                                      >
-                                        {wpnIcon ? (
-                                          <img
-                                            src={wpnIcon}
-                                            alt=""
-                                            className="pixel-img wpn-slot-img"
-                                          />
-                                        ) : null}
-                                        {keyHints && order < 4 && (
-                                          <span className="slot-key">
+                              ) : null}
+                            </button>
+                            {weaponMenuOpen && (
+                              <div className="wpn-switcher">
+                                {alternatives.length === 0 ? (
+                                  <PixelText
+                                    font={font}
+                                    text="NO OTHER WEAPONS"
+                                    scale={2}
+                                    color="#9aa3ad"
+                                  />
+                                ) : (
+                                  alternatives.map(
+                                    ({ item, index, dmg }, order) => {
+                                      const color =
+                                        WEAPON_CLASS_COLORS[
+                                          weaponDef(item.defId).class
+                                        ];
+                                      const wpnIcon = spriteDataUrl(
+                                        assets.sprites,
+                                        weaponDef(item.defId).icon,
+                                      );
+                                      return (
+                                        <button
+                                          key={item.id}
+                                          type="button"
+                                          className="wpn-slot wpn-switch-slot"
+                                          aria-label={`equip-${item.defId}`}
+                                          style={{
+                                            borderColor: color.border,
+                                            background: color.bg,
+                                          }}
+                                          onClick={() => {
+                                            if (
+                                              equipFromInventory(state, index)
+                                            ) {
+                                              playUiSound(synth, "equip");
+                                              setWeaponMenuOpen(false);
+                                              bumpUi();
+                                            }
+                                          }}
+                                        >
+                                          {wpnIcon ? (
+                                            <img
+                                              src={wpnIcon}
+                                              alt=""
+                                              className="pixel-img wpn-slot-img"
+                                            />
+                                          ) : null}
+                                          {keyHints && order < 4 && (
+                                            <span className="slot-key">
+                                              <PixelText
+                                                font={font}
+                                                text={String(order + 1)}
+                                                scale={1}
+                                                color="#0b0d10"
+                                              />
+                                            </span>
+                                          )}
+                                          <span className="wpn-switch-dmg">
                                             <PixelText
                                               font={font}
-                                              text={String(order + 1)}
+                                              text={formatCompact(dmg)}
                                               scale={1}
-                                              color="#0b0d10"
                                             />
                                           </span>
-                                        )}
-                                        <span className="wpn-switch-dmg">
-                                          <PixelText
-                                            font={font}
-                                            text={formatCompact(dmg)}
-                                            scale={1}
-                                          />
-                                        </span>
-                                      </button>
-                                    );
-                                  },
-                                )
-                              )}
-                            </div>
-                          )}
-                        </div>
-                      );
-                    })()}
-                    <div className="hud-bar wpn-bar">
-                      <div
-                        className="hud-bar-fill wpn-fill"
-                        style={
-                          hud.weaponWear === null
-                            ? { width: "100%", background: "#7ef0c8" }
-                            : {
-                                width: `${Math.max(4, Math.round(100 * hud.weaponWear))}%`,
-                                background:
-                                  hud.weaponWear < 0.25 ? "#d83a3a" : "#9aa3ad",
-                              }
-                        }
+                                        </button>
+                                      );
+                                    },
+                                  )
+                                )}
+                              </div>
+                            )}
+                          </div>
+                        );
+                      })()}
+                      <div className="hud-bar wpn-bar">
+                        <div
+                          className="hud-bar-fill wpn-fill"
+                          style={
+                            hud.weaponWear === null
+                              ? { width: "100%", background: "#7ef0c8" }
+                              : {
+                                  width: `${Math.max(4, Math.round(100 * hud.weaponWear))}%`,
+                                  background:
+                                    hud.weaponWear < 0.25
+                                      ? "#d83a3a"
+                                      : "#9aa3ad",
+                                }
+                          }
+                        />
+                      </div>
+                      <PixelText
+                        font={font}
+                        text={hud.weaponWear === null ? "∞" : ""}
+                        scale={2}
+                        color="#7ef0c8"
                       />
                     </div>
-                    <PixelText
-                      font={font}
-                      text={hud.weaponWear === null ? "∞" : ""}
-                      scale={2}
-                      color="#7ef0c8"
-                    />
-                  </div>
-                  {/* The purse: coins earned selling loot to the merchant. */}
-                  <div className="hud-stat-row hud-coin-row">
-                    {(() => {
-                      const coin = spriteDataUrl(assets.sprites, "icon_coin");
-                      return coin ? (
-                        <img src={coin} alt="" className="pixel-img hud-coin" />
-                      ) : null;
-                    })()}
-                    <PixelText
-                      font={font}
-                      text={formatCompact(hud.coins)}
-                      scale={2}
-                      color="#ffd75e"
-                    />
+                    {/* The purse: coins earned selling loot to the merchant. */}
+                    <div className="hud-stat-row hud-coin-row">
+                      {(() => {
+                        const coin = spriteDataUrl(assets.sprites, "icon_coin");
+                        return coin ? (
+                          <img
+                            src={coin}
+                            alt=""
+                            className="pixel-img hud-coin"
+                          />
+                        ) : null;
+                      })()}
+                      <PixelText
+                        font={font}
+                        text={formatCompact(hud.coins)}
+                        scale={2}
+                        color="#ffd75e"
+                      />
+                    </div>
                   </div>
                 </div>
               </div>
@@ -2599,56 +2616,63 @@ export function GameScreen({
                 )}
               </button>
 
-              {/* The MAP button — a treasure map that opens the fog-of-war
+              {/* MAP + ACHIEVEMENTS ride together in one aux group. In
+                landscape it reflows to the LEFT of the clock (tighter HUD);
+                in portrait it stacks under the clock as before. */}
+              <div className="hud-clock-aux">
+                {/* The MAP button — a treasure map that opens the fog-of-war
                 level map (M on desktop) and pauses the run under it, like
                 the bag. Stretched to the clock unit's width by the stack. */}
-              <button
-                type="button"
-                className="hud-map-btn"
-                aria-label="open-map"
-                onClick={() => {
-                  if (state?.phase === "playing") {
-                    setWeaponMenuOpen(false);
-                    openMap(state);
-                    playUiSound(synth, "confirm");
-                    bumpUi();
-                  }
-                }}
-              >
-                <img
-                  src={spriteDataUrl(assets.sprites, "icon_treasure_map") ?? ""}
-                  alt=""
-                  className="pixel-img hud-map-icon"
-                />
-              </button>
-
-              {/* The ACHIEVEMENTS star — appears under the MAP button only
-                while new badges wait, pulsing gold. Tapping it freezes the
-                run (the pause phase, like the bag) under the browser, which
-                acknowledges the queue and dims the star. */}
-              {unseenBadges > 0 && (
                 <button
                   type="button"
-                  className="hud-achievements-btn"
-                  aria-label="open-achievements"
+                  className="hud-map-btn"
+                  aria-label="open-map"
                   onClick={() => {
                     if (state?.phase === "playing") {
                       setWeaponMenuOpen(false);
-                      pauseGame(state);
-                      pauseMusic();
-                      setAchievementsOpen(true);
+                      openMap(state);
                       playUiSound(synth, "confirm");
                       bumpUi();
                     }
                   }}
                 >
                   <img
-                    src={spriteDataUrl(assets.sprites, "icon_star") ?? ""}
+                    src={
+                      spriteDataUrl(assets.sprites, "icon_treasure_map") ?? ""
+                    }
                     alt=""
-                    className="pixel-img hud-achievements-icon"
+                    className="pixel-img hud-map-icon"
                   />
                 </button>
-              )}
+
+                {/* The ACHIEVEMENTS star — appears under the MAP button only
+                while new badges wait, pulsing gold. Tapping it freezes the
+                run (the pause phase, like the bag) under the browser, which
+                acknowledges the queue and dims the star. */}
+                {unseenBadges > 0 && (
+                  <button
+                    type="button"
+                    className="hud-achievements-btn"
+                    aria-label="open-achievements"
+                    onClick={() => {
+                      if (state?.phase === "playing") {
+                        setWeaponMenuOpen(false);
+                        pauseGame(state);
+                        pauseMusic();
+                        setAchievementsOpen(true);
+                        playUiSound(synth, "confirm");
+                        bumpUi();
+                      }
+                    }}
+                  >
+                    <img
+                      src={spriteDataUrl(assets.sprites, "icon_star") ?? ""}
+                      alt=""
+                      className="pixel-img hud-achievements-icon"
+                    />
+                  </button>
+                )}
+              </div>
             </div>
           </div>
         </div>

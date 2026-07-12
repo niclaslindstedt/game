@@ -269,6 +269,16 @@ body {
   gap: 0.3rem;
 }
 
+/* HP/ST share the "primary" group; weapon + durability and the purse share the
+   "gear" group. Portrait keeps both groups stacked in one column, so the order
+   stays HP, ST, weapon, coin. Landscape turns .hud-vitals into a row and floats
+   the gear group to the RIGHT of the vitals (see the landscape block below). */
+.hud-vitals-group {
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+}
+
 .hud-stat-row {
   display: flex;
   align-items: center;
@@ -353,6 +363,45 @@ body {
 
 .hud-map-btn:active {
   transform: translateY(1px);
+}
+
+/* MAP + ACHIEVEMENTS ride in one aux group. Portrait: a column under the clock
+   (map above the star), stretched to the clock unit's width by the stack.
+   Landscape reflows it into a row LEFT of the clock (see the landscape block). */
+.hud-clock-aux {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 0.3rem;
+}
+
+/* Landscape (the reference grip): tighten the upper HUD. HP/stamina and the
+   weapon + durability + purse sit side by side instead of in one tall column,
+   and MAP + ACHIEVEMENTS move to the LEFT of the clock — so neither the left
+   status unit nor the right clock unit stacks as tall. Portrait keeps the
+   vertical stacks from the base rules above. */
+@media (min-aspect-ratio: 4/3) {
+  .hud-status {
+    padding: 0.2rem 0.4rem;
+    gap: 0.35rem;
+  }
+
+  .hud-vitals {
+    flex-direction: row;
+    align-items: flex-start;
+    gap: 0.6rem;
+  }
+
+  .hud-clock-stack {
+    flex-direction: row-reverse;
+    align-items: flex-start;
+    gap: 0.35rem;
+  }
+
+  .hud-clock-aux {
+    flex-direction: row;
+    align-items: flex-start;
+  }
 }
 
 /* The kill tally jolts on every frag (see KillCounter). The throw distance,
@@ -2601,13 +2650,15 @@ body {
 
 .powerup-slot {
   appearance: none;
-  width: 3.75rem;
-  height: 3.75rem;
+  /* ~1.5× the portrait slot (1.9rem): tighter than the old 3.75rem landscape
+     dock, but still larger than vertical mode given the extra screen estate. */
+  width: 2.85rem;
+  height: 2.85rem;
   display: grid;
   place-items: center;
   padding: 0;
   border: 2px dashed #39435a;
-  border-radius: 8px;
+  border-radius: 7px;
   background: rgba(20, 26, 34, 0.5);
   cursor: default;
   image-rendering: pixelated;
@@ -2633,8 +2684,8 @@ body {
 }
 
 .powerup-icon {
-  width: 2.5rem;
-  height: 2.5rem;
+  width: 1.95rem;
+  height: 1.95rem;
 }
 
 /* The banked powerup icon itself glows blue. */
@@ -2686,7 +2737,7 @@ body {
   right: 2px;
   bottom: 1px;
   padding: 0 2px;
-  font-size: 0.85rem;
+  font-size: 0.72rem;
   font-weight: 700;
   line-height: 1;
   color: #fff4d6;
