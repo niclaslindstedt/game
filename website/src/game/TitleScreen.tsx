@@ -71,6 +71,15 @@ import {
   isLevelUnlocked,
   type Character,
 } from "./characters.ts";
+import {
+  DEFAULT_KEYBINDINGS,
+  KEYBIND_ROWS,
+  bindingLabel,
+  mouseButtonCode,
+  wheelCode,
+  withBinding,
+  type BindableAction,
+} from "./keybindings.ts";
 import { uiScaleFor } from "./render.ts";
 import { getSettings, updateSettings, type GameSettings } from "./settings.ts";
 import { playUiSound } from "./sfx/index.ts";
@@ -92,6 +101,7 @@ type MenuScreen =
   | "scores"
   | "settings"
   | "controls"
+  | "keybindings"
   | "display"
   | "sound"
   | "data"
@@ -198,6 +208,10 @@ type MenuEntry = {
    * (→ on, ← off) and confirm/click flips it. `on` is the current state; `set`
    * commits a new one. */
   toggle?: { on: boolean; set: (on: boolean) => void };
+  /** A KEY BINDINGS row: renders the bound key's name right-aligned (Quake
+   * style — label left, key far right). `capturing` swaps it for a "PRESS A
+   * KEY" prompt while this row is listening for the next press. */
+  binding?: { code: string; capturing: boolean };
 };
 
 // Audio needs a user gesture; the first interaction with the menu doubles
@@ -299,11 +313,9 @@ export function TitleScreen({
   // The board row currently opened into its full-session detail card, or null
   // for the ranked list. Only rows banked with a detail snapshot can open.
   const [scoreDetail, setScoreDetail] = useState<ScoreRow | null>(null);
-  // Which consumable-dock key is mid-rebind (CONTROLS): the next key pressed is
-  // captured as the new bind. Null when not listening.
-  const [captureBind, setCaptureBind] = useState<"medkit" | "stamina" | null>(
-    null,
-  );
+  // Which action is mid-rebind (KEY BINDINGS): the next key/mouse press is
+  // captured as its new bind. Null when not listening.
+  const [captureBind, setCaptureBind] = useState<BindableAction | null>(null);
   // Landscape phones are short and portrait ones narrow: pick a logo scale
   // that keeps the title logo plus the menu inside both. `wide` gates the
   // big desktop logo (scale 10, ~510 CSS px), so it must track the 2×
@@ -993,7 +1005,7 @@ export function TitleScreen({
           aria: "controls-keyboard-move",
           blurb:
             s.keyboardMove === "on"
-              ? "WASD / ARROWS RUN - SHIFT WALKS - SPACE JUMPS"
+              ? "STEER WITH THE KEYBOARD - REBIND IN KEY BINDINGS"
               : "STEERING STAYS ON THE MOUSE",
           action: () => {
             playUiSound(synth, "confirm");
@@ -1055,29 +1067,13 @@ export function TitleScreen({
           },
         },
         {
-          label:
-            captureBind === "medkit"
-              ? "HEAL KEY: PRESS A KEY..."
-              : `HEAL KEY: ${s.keyMedkit.toUpperCase()}`,
-          aria: "controls-key-medkit",
-          blurb: "DESKTOP KEY THAT USES A MEDKIT FROM THE DOCK",
+          label: "KEY BINDINGS",
+          aria: "controls-keybindings",
+          blurb: "REBIND EVERY DESKTOP KEY - MOVEMENT, ACTIONS, THE DOCK",
           action: () => {
             playUiSound(synth, "confirm");
-            setCaptureBind("medkit");
-            setSettingsTick((t) => t + 1);
-          },
-        },
-        {
-          label:
-            captureBind === "stamina"
-              ? "STAMINA KEY: PRESS A KEY..."
-              : `STAMINA KEY: ${s.keyStamina.toUpperCase()}`,
-          aria: "controls-key-stamina",
-          blurb: "DESKTOP KEY THAT DRINKS A STAMINA POTION FROM THE DOCK",
-          action: () => {
-            playUiSound(synth, "confirm");
-            setCaptureBind("stamina");
-            setSettingsTick((t) => t + 1);
+            setScreen("keybindings");
+            setCursor(0);
           },
         },
         onOffRow(
@@ -1089,6 +1085,39 @@ export function TitleScreen({
           (on) => on && haptics.vibrate(28),
         ),
         backTo("settings", 0),
+      ];
+    }
+    if (screen === "keybindings") {
+      // Quake-style rebind list: one row per action, its label at the left and
+      // the bound key's name far right. Choosing a row arms capture — the next
+      // key or mouse button pressed becomes the bind (see the capture handler).
+      const binds = getSettings().keybindings;
+      return [
+        ...KEYBIND_ROWS.map(({ action, label, blurb }) => ({
+          label,
+          aria: `keybind-${action}`,
+          blurb,
+          binding: { code: binds[action], capturing: captureBind === action },
+          action: () => {
+            playUiSound(synth, "confirm");
+            setCaptureBind(action);
+            setSettingsTick((t) => t + 1);
+          },
+        })),
+        {
+          label: "RESET TO DEFAULTS",
+          aria: "keybind-reset",
+          blurb: "RESTORE THE SHIPPED WASD + ACTION KEY SCHEME",
+          action: () => {
+            playUiSound(synth, "confirm");
+            setCaptureBind(null);
+            updateSettings({ keybindings: { ...DEFAULT_KEYBINDINGS } });
+            setSettingsTick((t) => t + 1);
+          },
+        },
+        // Land back on the KEY BINDINGS row in CONTROLS (after the five scheme
+        // rows: MOUSE / KEYS / POWERUPS / GEAR / POWERUP SIDE).
+        backTo("controls", 5),
       ];
     }
     if (screen === "display") {
@@ -1160,17 +1189,20 @@ export function TitleScreen({
   // axes (see above) instead of a cursor.
   useEffect(() => {
     const onKeyDown = (event: KeyboardEvent) => {
-      // A consumable-dock key rebind is listening: the next key IS the new
-      // bind. Escape cancels; any single printable key (lowercased) is taken,
-      // so it can't collide with the arrow/Enter menu keys below.
+      // A KEY BINDINGS rebind is listening: the next key IS the new bind, stored
+      // by physical `code` so WASD stays WASD across layouts. Escape cancels
+      // (it's the reserved menu-back key, never bindable); anything else is
+      // taken and stolen off whatever action already held it (withBinding).
       if (captureBind) {
         event.preventDefault();
-        if (event.key !== "Escape" && event.key.length === 1) {
-          updateSettings(
-            captureBind === "medkit"
-              ? { keyMedkit: event.key.toLowerCase() }
-              : { keyStamina: event.key.toLowerCase() },
-          );
+        if (event.key !== "Escape") {
+          updateSettings({
+            keybindings: withBinding(
+              getSettings().keybindings,
+              captureBind,
+              event.code,
+            ),
+          });
           playUiSound(synth, "confirm");
         } else {
           playUiSound(synth, "back");
@@ -1255,6 +1287,7 @@ export function TitleScreen({
         const back: Record<string, MenuScreen> = {
           play: "main",
           controls: "settings",
+          keybindings: "controls",
           display: "settings",
           sound: "settings",
           data: "settings",
@@ -1280,6 +1313,41 @@ export function TitleScreen({
     warp,
     onResume,
   ]);
+
+  // While a KEY BINDINGS row is armed, a mouse button or wheel notch can be
+  // bound too. The LEFT button (0) is left alone — it's how the menu is
+  // clicked, and in-game it steers — so only the middle/right/side buttons and
+  // the wheel are captured here (the row's own click already armed capture, so
+  // its mouseup is spent before this listener mounts).
+  useEffect(() => {
+    if (!captureBind) return;
+    const commit = (code: string) => {
+      updateSettings({
+        keybindings: withBinding(getSettings().keybindings, captureBind, code),
+      });
+      playUiSound(synth, "confirm");
+      setCaptureBind(null);
+      setSettingsTick((t) => t + 1);
+    };
+    const onMouseDown = (event: MouseEvent) => {
+      if (event.button === 0) return; // left click drives the menu itself
+      event.preventDefault();
+      commit(mouseButtonCode(event.button));
+    };
+    const onWheel = (event: WheelEvent) => {
+      event.preventDefault();
+      commit(wheelCode(event.deltaY));
+    };
+    const onContextMenu = (event: MouseEvent) => event.preventDefault();
+    window.addEventListener("mousedown", onMouseDown);
+    window.addEventListener("wheel", onWheel, { passive: false });
+    window.addEventListener("contextmenu", onContextMenu);
+    return () => {
+      window.removeEventListener("mousedown", onMouseDown);
+      window.removeEventListener("wheel", onWheel);
+      window.removeEventListener("contextmenu", onContextMenu);
+    };
+  }, [captureBind]);
 
   // Touch: a swipe on the board picks its axis by the dominant direction —
   // horizontal walks the difficulty ladder, vertical flips the ranking.
@@ -1566,6 +1634,14 @@ export function TitleScreen({
             <PixelText
               font={font}
               text="SETTINGS - CONTROLS"
+              scale={2}
+              color="#d9a0f0"
+            />
+          )}
+          {screen === "keybindings" && (
+            <PixelText
+              font={font}
+              text="CONTROLS - KEY BINDINGS"
               scale={2}
               color="#d9a0f0"
             />
@@ -1899,6 +1975,26 @@ export function TitleScreen({
                           color={color}
                         />
                         {entry.toggle && <PixelToggle on={entry.toggle.on} />}
+                        {entry.binding && (
+                          <span className="menu-item-binding">
+                            <PixelText
+                              font={font}
+                              text={
+                                entry.binding.capturing
+                                  ? "PRESS A KEY"
+                                  : bindingLabel(entry.binding.code)
+                              }
+                              scale={3}
+                              color={
+                                entry.binding.capturing
+                                  ? "#7ef0c8"
+                                  : selected
+                                    ? "#ffd75e"
+                                    : "#9aa3ad"
+                              }
+                            />
+                          </span>
+                        )}
                       </span>
                       {entry.slider && (
                         <PixelSlider

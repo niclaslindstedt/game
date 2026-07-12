@@ -2259,6 +2259,15 @@ body {
   margin-left: auto;
 }
 
+/* The bound key on a KEY BINDINGS row: pushed to the row's right edge so the
+   keys line up in a Quake-style column down the right of the screen (label
+   left, key far right). */
+.menu-item-binding {
+  margin-left: auto;
+  padding-left: 1rem;
+  text-align: right;
+}
+
 /* Pixel drag track (PixelSlider): a draggable bar under a row label — the
    DEVELOPER → BALANCE knobs and the SOUND volume rows. Sharp-cornered to match
    the pixel HUD; the fill and knob use the menu's amber accent.

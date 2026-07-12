@@ -179,6 +179,14 @@ import {
   type Effect,
   type PlayerAction,
 } from "./render.ts";
+import {
+  actionForCode,
+  bindingLabel,
+  moveVectorForCode,
+  mouseButtonCode,
+  wheelCode,
+  type BindableAction,
+} from "./keybindings.ts";
 import { getSettings } from "./settings.ts";
 import { playEventSounds, playUiSound } from "./sfx/index.ts";
 import { playAchievementJingle } from "./sfx/jingles.ts";
@@ -336,22 +344,13 @@ function cursorThrottle(dist: number, fullSpeedPx: number): number {
   return Math.max(0, Math.min(1, dist / fullSpeedPx));
 }
 
-// Desktop WASD/arrow steering (settings.keyboardMove === "on"): each held key
-// contributes a cardinal direction; the vector sum is the heading, projected
+// Desktop steering (settings.keyboardMove === "on"): each held direction key
+// contributes a cardinal vector; the sum is the heading, projected
 // DPAD_STEER_DISTANCE ahead like the touch dpad. Movement is binary — run by
-// default, hold Shift to walk, stand still with no key down. Keyed by
-// `event.code` so it's layout-independent (AZERTY etc.).
-const MOVE_KEYS: Record<string, { x: number; y: number }> = {
-  KeyW: { x: 0, y: -1 },
-  ArrowUp: { x: 0, y: -1 },
-  KeyS: { x: 0, y: 1 },
-  ArrowDown: { x: 0, y: 1 },
-  KeyA: { x: -1, y: 0 },
-  ArrowLeft: { x: -1, y: 0 },
-  KeyD: { x: 1, y: 0 },
-  ArrowRight: { x: 1, y: 0 },
-};
-// The reduced pace while Shift is held; the default (no modifier) runs at full
+// default, hold WALK to walk, stand still with no key down. The keys are the
+// player's rebindable FORWARD/BACK/LEFT/RIGHT binds (keybindings.ts), read by
+// `event.code` so they stay layout-independent (AZERTY etc.).
+// The reduced pace while WALK is held; the default (no modifier) runs at full
 // speed. Pinned to the engine's run threshold so a Shift-walk stays a *walk*
 // for the stamina system: `running = throttle > STAMINA.runThreshold`, so a
 // throttle at (not above) the threshold recovers stamina instead of draining
@@ -526,8 +525,9 @@ export function GameScreen({
   // checks it against the discovered merchant — a tap on him at the counter
   // opens the shop instead of jumping.
   const shopTapRef = useRef<{ x: number; y: number } | null>(null);
-  // Desktop keyboard steering: which MOVE_KEYS are held right now, and whether
-  // the walk modifier (Shift) is down. Read every sim tick (see the loop).
+  // Desktop keyboard steering: which movement-bound key codes are held right
+  // now, and whether the walk modifier is down. Read every sim tick (the loop
+  // resolves each held code to a direction via the player's key bindings).
   const heldMoveKeysRef = useRef<Set<string>>(new Set());
   const walkingRef = useRef(false);
   // Mirror of `weaponMenuOpen` so the (closure-captured) key handler can read
@@ -1014,20 +1014,86 @@ export function GameScreen({
       bumpUi();
     };
 
+    // Perform a rebindable discrete action (fired from a bound key, mouse
+    // button, or wheel notch). Each case mirrors what its shipped key used to
+    // do, honoring the current phase so a bind only bites where it makes sense.
+    const runBinding = (action: BindableAction) => {
+      switch (action) {
+        case "jump":
+          // Space's old bare-press jump; queued for the sim loop.
+          if (state.phase === "playing") jumpQueuedRef.current = true;
+          return;
+        case "useAbility":
+          // Spend the oldest powerup — the engine no-ops off the field.
+          useItemQueuedRef.current = true;
+          return;
+        case "weaponMenu":
+          if (state.phase === "playing") {
+            setWeaponMenuOpen((open) => !open);
+            playUiSound(synth, "confirm");
+          }
+          return;
+        case "inventory":
+          // Opens mid-run AND during an elite/boss arrival scene (the engine
+          // gate) — the stare-down is when a fitting weapon gets equipped.
+          if (canOpenInventory(state)) {
+            openInventory(state);
+            playUiSound(synth, "confirm");
+          } else if (state.phase === "inventory") {
+            closeInventory(state);
+            playUiSound(synth, "back");
+          }
+          bumpUi();
+          return;
+        case "map":
+          // Toggles the fog-of-war level map (same freeze as the bag).
+          if (state.phase === "playing") {
+            openMap(state);
+            playUiSound(synth, "confirm");
+            bumpUi();
+          } else if (state.phase === "map") {
+            closeMap(state);
+            playUiSound(synth, "back");
+            bumpUi();
+          }
+          return;
+        case "pause":
+          if (state.phase === "playing") {
+            pause();
+            playUiSound(synth, "confirm");
+          } else if (state.phase === "paused") {
+            resume();
+            playUiSound(synth, "back");
+          }
+          return;
+        case "medkit":
+          // Spend from the consumable dock; the engine no-ops when nothing is
+          // held or there's nothing to top up, so an idle press is free.
+          if (state.phase === "playing" && !weaponMenuOpenRef.current)
+            useMedkitQueuedRef.current = true;
+          return;
+        case "stamina":
+          if (state.phase === "playing" && !weaponMenuOpenRef.current)
+            useStaminaQueuedRef.current = true;
+          return;
+      }
+    };
+
     const onKeyDown = (event: KeyboardEvent) => {
       // The level-up chooser owns the keyboard while it's up: LevelUpOverlay
       // runs its own listener (arrows/WASD move the cursor, Enter/Space spend a
       // point). Ceding here keeps those keys from steering or queuing a jump.
       if (state.phase === "levelup") return;
-      // Track held movement keys + the run modifier every keydown (repeats
+      const binds = getSettings().keybindings;
+      // Track held movement keys + the walk modifier every keydown (repeats
       // included — Set.add is idempotent) so the sim loop reads live state.
-      if (event.code in MOVE_KEYS) {
+      if (moveVectorForCode(event.code, binds)) {
         heldMoveKeysRef.current.add(event.code);
         if (getSettings().keyboardMove === "on" && state.phase === "playing") {
           event.preventDefault(); // arrow keys must not scroll the page
         }
       }
-      if (event.code === "ShiftLeft" || event.code === "ShiftRight") {
+      if (event.code === binds.walk) {
         walkingRef.current = true;
       }
       if (event.repeat) return;
@@ -1082,84 +1148,50 @@ export function GameScreen({
           }
           bumpUi();
         }
-      } else if (event.code === "Space") {
-        // No scene up: Space is the jump.
-        event.preventDefault();
-        jumpQueuedRef.current = true;
-      } else if (event.key === "Escape" && state.phase === "cutscene") {
-        skipCutscene(state);
-        playUiSound(synth, "back");
-      } else if (event.key === "Escape" && state.phase === "intro") {
-        skipIntro(state);
-        playUiSound(synth, "back");
-        bumpUi();
-      } else if (event.key === "Escape" && state.phase === "outro") {
-        skipOutro(state);
-        playUiSound(synth, "back");
-        bumpUi();
-      } else if (event.key === "e" || event.key === "E") {
-        useItemQueuedRef.current = true;
-      } else if (event.key === "i" || event.key === "I") {
-        // Opens mid-run AND during an elite/boss arrival scene (the engine
-        // gate) — the stare-down is when a fitting weapon gets equipped.
-        if (canOpenInventory(state)) {
-          openInventory(state);
-          playUiSound(synth, "confirm");
+      } else if (event.key === "Escape") {
+        // Escape is the fixed, non-rebindable escape hatch: it skips a running
+        // scene, closes an open overlay, and pauses/resumes the live run — the
+        // one control a rebind can never steal.
+        if (state.phase === "cutscene") {
+          skipCutscene(state);
+          playUiSound(synth, "back");
+        } else if (state.phase === "intro") {
+          skipIntro(state);
+          playUiSound(synth, "back");
+          bumpUi();
+        } else if (state.phase === "outro") {
+          skipOutro(state);
+          playUiSound(synth, "back");
+          bumpUi();
         } else if (state.phase === "inventory") {
           closeInventory(state);
           playUiSound(synth, "back");
-        }
-        bumpUi();
-      } else if (event.key === "Escape" && state.phase === "inventory") {
-        closeInventory(state);
-        playUiSound(synth, "back");
-        bumpUi();
-      } else if (
-        (event.key === "m" || event.key === "M") &&
-        (state.phase === "playing" || state.phase === "map")
-      ) {
-        // M toggles the fog-of-war level map (same freeze as the bag).
-        if (state.phase === "playing") {
-          openMap(state);
-          playUiSound(synth, "confirm");
-        } else {
+          bumpUi();
+        } else if (state.phase === "shop") {
+          closeShop(state);
+          playUiSound(synth, "back");
+          bumpUi();
+        } else if (state.phase === "map") {
           closeMap(state);
           playUiSound(synth, "back");
-        }
-        bumpUi();
-      } else if (event.key === "Escape" && state.phase === "shop") {
-        closeShop(state);
-        playUiSound(synth, "back");
-        bumpUi();
-      } else if (event.key === "Escape" && state.phase === "map") {
-        closeMap(state);
-        playUiSound(synth, "back");
-        bumpUi();
-      } else if (
-        (event.key === "p" || event.key === "P" || event.key === "Escape") &&
-        (state.phase === "playing" || state.phase === "paused")
-      ) {
-        // P or Escape toggles the pause screen (desktop). Music pauses with the
-        // sim. Escape does double duty — it skips the scenes above, and pauses
-        // once the run is live.
-        if (state.phase === "playing") {
+          bumpUi();
+        } else if (state.phase === "playing") {
           pause();
           playUiSound(synth, "confirm");
-        } else {
+        } else if (state.phase === "paused") {
           resume();
           playUiSound(synth, "back");
         }
-      } else if (
-        (event.key === "q" || event.key === "Q") &&
-        state.phase === "playing"
-      ) {
-        // Q brings up the weapon switcher (1-4 then pick from it).
-        setWeaponMenuOpen((open) => !open);
-        playUiSound(synth, "confirm");
+      } else if (actionForCode(event.code, binds)) {
+        // A rebindable action key fired (see keybindings.ts / runBinding).
+        event.preventDefault();
+        runBinding(actionForCode(event.code, binds) as BindableAction);
       } else if (state.phase === "playing" && /^[1-9]$/.test(event.key)) {
+        // The weapon-slot / powerup-dock number keys stay fixed (a contextual
+        // range, not a single bind): 1-4 equip a listed alternative while the
+        // weapon menu is up, otherwise 1/2/3 fire the matching powerup slot.
         const n = Number(event.key) - 1;
         if (weaponMenuOpenRef.current) {
-          // The weapon menu is up: 1-4 equip the listed alternatives.
           const alt = weaponAlternatives(state)[n];
           if (alt && equipFromInventory(state, alt.index)) {
             playUiSound(synth, "equip");
@@ -1171,28 +1203,51 @@ export function GameScreen({
           state.player.heldAbilities[n] &&
           !state.player.abilities.some((a) => a.slot === n)
         ) {
-          // Otherwise 1/2/3 fire the matching powerup dock slot — but a slot
-          // already counting down a running power isn't spendable.
+          // A slot already counting down a running power isn't spendable.
           useItemQueuedRef.current = true;
           useItemIndexRef.current = n;
-        }
-      } else if (state.phase === "playing" && !weaponMenuOpenRef.current) {
-        // The bindable consumable keys (default C heal, X stamina) spend from
-        // the consumable dock. The engine no-ops when nothing is held or there
-        // is nothing to top up, so an idle press is free.
-        const s = getSettings();
-        const pressed = event.key.toLowerCase();
-        if (pressed === s.keyMedkit) {
-          useMedkitQueuedRef.current = true;
-        } else if (pressed === s.keyStamina) {
-          useStaminaQueuedRef.current = true;
         }
       }
     };
     const onKeyUp = (event: KeyboardEvent) => {
-      if (event.code in MOVE_KEYS) heldMoveKeysRef.current.delete(event.code);
-      if (event.code === "ShiftLeft" || event.code === "ShiftRight") {
+      const binds = getSettings().keybindings;
+      if (moveVectorForCode(event.code, binds))
+        heldMoveKeysRef.current.delete(event.code);
+      if (event.code === binds.walk) {
         walkingRef.current = false;
+      }
+    };
+    // A mouse button / wheel notch can be bound to any discrete action too (see
+    // keybindings.ts). Both no-op unless the player bound a pointer control —
+    // the shipped scheme is all-keyboard, so there's no default pointer capture
+    // to fight the canvas steering.
+    const onMouseDown = (event: MouseEvent) => {
+      const action = actionForCode(
+        mouseButtonCode(event.button),
+        getSettings().keybindings,
+      );
+      if (action) {
+        event.preventDefault();
+        runBinding(action);
+      }
+    };
+    const onWheel = (event: WheelEvent) => {
+      const action = actionForCode(
+        wheelCode(event.deltaY),
+        getSettings().keybindings,
+      );
+      if (action) {
+        event.preventDefault();
+        runBinding(action);
+      }
+    };
+    // Suppress the browser context menu only when the right button is actually
+    // bound, so an unbound right-click still behaves normally.
+    const onContextMenu = (event: MouseEvent) => {
+      if (
+        actionForCode(mouseButtonCode(2), getSettings().keybindings) !== null
+      ) {
+        event.preventDefault();
       }
     };
     // Losing focus (alt-tab, switching tab/app) must not leave a key "stuck",
@@ -1210,6 +1265,10 @@ export function GameScreen({
     };
     window.addEventListener("keydown", onKeyDown);
     window.addEventListener("keyup", onKeyUp);
+    window.addEventListener("mousedown", onMouseDown);
+    // Non-passive so a bound wheel notch can preventDefault the page scroll.
+    window.addEventListener("wheel", onWheel, { passive: false });
+    window.addEventListener("contextmenu", onContextMenu);
     window.addEventListener("blur", onBlur);
     document.addEventListener("visibilitychange", onVisibility);
 
@@ -1334,8 +1393,9 @@ export function GameScreen({
             let dx = 0;
             let dy = 0;
             if (settings.keyboardMove === "on") {
+              const binds = settings.keybindings;
               for (const code of heldMoveKeysRef.current) {
-                const v = MOVE_KEYS[code];
+                const v = moveVectorForCode(code, binds);
                 if (v) {
                   dx += v.x;
                   dy += v.y;
@@ -2156,6 +2216,9 @@ export function GameScreen({
       observer.disconnect();
       window.removeEventListener("keydown", onKeyDown);
       window.removeEventListener("keyup", onKeyUp);
+      window.removeEventListener("mousedown", onMouseDown);
+      window.removeEventListener("wheel", onWheel);
+      window.removeEventListener("contextmenu", onContextMenu);
       window.removeEventListener("blur", onBlur);
       document.removeEventListener("visibilitychange", onVisibility);
       canvas.removeEventListener("pointerdown", unlock);
@@ -2736,7 +2799,7 @@ export function GameScreen({
               <span className="slot-key consumable-key">
                 <PixelText
                   font={font}
-                  text={getSettings().keyMedkit.toUpperCase()}
+                  text={bindingLabel(getSettings().keybindings.medkit)}
                   scale={1}
                   color="#0b0d10"
                 />
@@ -2784,7 +2847,7 @@ export function GameScreen({
               <span className="slot-key consumable-key">
                 <PixelText
                   font={font}
-                  text={getSettings().keyStamina.toUpperCase()}
+                  text={bindingLabel(getSettings().keybindings.stamina)}
                   scale={1}
                   color="#0b0d10"
                 />
