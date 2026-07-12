@@ -418,13 +418,12 @@ describe("the drop economy (medkit/powerup mults)", () => {
 
   it("shrinks the medkit slice on the harder rungs", () => {
     // rolls: [miss (no), dodge (no), crit (no), drop gate (pass), nuke (no),
-    // ladder]. 0.36 sits
-    // inside MEDIUM's medkit window but past JESUS's shrunken one (the
-    // powerup slice ahead of it shrinks too, which narrows the window from
-    // both sides).
-    const medium = killForLoot("medium", [0.9, 0.9, 0.9, 0.0, 0.9, 0.36]);
+    // ladder]. 0.5 sits inside MEDIUM's medkit window but past JESUS's shrunken
+    // one (the powerup slice ahead of it shrinks too, which narrows the window
+    // from both sides), so on JESUS it falls through to the repair slice.
+    const medium = killForLoot("medium", [0.9, 0.9, 0.9, 0.0, 0.9, 0.5]);
     expect(medium.some((i) => i.kind === "medkit")).toBe(true);
-    const jesus = killForLoot("jesus", [0.9, 0.9, 0.9, 0.0, 0.9, 0.36]);
+    const jesus = killForLoot("jesus", [0.9, 0.9, 0.9, 0.0, 0.9, 0.5]);
     expect(jesus.some((i) => i.kind === "medkit")).toBe(false);
     expect(jesus.some((i) => i.kind === "repair")).toBe(true);
   });

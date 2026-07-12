@@ -90,9 +90,9 @@ describe("medkit tiers", () => {
 
   it("tier heals ascend — a bigger kit is never a worse one", () => {
     for (let i = 1; i < MEDKIT.tiers.length; i++) {
-      const prev = MEDKIT.tiers[i - 1] as { heal: number; minMlvl: number };
-      const next = MEDKIT.tiers[i] as { heal: number; minMlvl: number };
-      expect(next.heal).toBeGreaterThan(prev.heal);
+      const prev = MEDKIT.tiers[i - 1] as { healPct: number; minMlvl: number };
+      const next = MEDKIT.tiers[i] as { healPct: number; minMlvl: number };
+      expect(next.healPct).toBeGreaterThan(prev.healPct);
       expect(next.minMlvl).toBeGreaterThan(prev.minMlvl);
     }
   });

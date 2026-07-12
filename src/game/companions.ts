@@ -268,6 +268,7 @@ function stepCompanion(
   companion.moving = false;
   companion.quoteCooldownMs = Math.max(0, companion.quoteCooldownMs - dtMs);
   companion.weaponCooldownMs = Math.max(0, companion.weaponCooldownMs - dtMs);
+  companion.combatMs = Math.max(0, (companion.combatMs ?? 0) - dtMs);
 
   // Downed: kneel out the count, then stand back up on your own.
   if (companion.downedMs !== undefined) {
@@ -314,6 +315,9 @@ function stepCompanion(
       Math.max(def.speed, playerSpeed(state) * 1.1) * dt,
     );
   } else if (target) {
+    // A foe in the hero's engage bubble means the party is fighting — hold
+    // off regen until the field is quiet again.
+    companion.combatMs = COMPANIONS.regenCalmMs;
     const gap = distance(companion.pos, target.pos);
     const hold = weapon.range * COMPANIONS.holdFraction;
     if (gap > hold) {
@@ -362,6 +366,9 @@ function stepCompanion(
     const reach = edef.radius + def.radius;
     if (distanceSq(enemy.pos, companion.pos) > reach * reach) continue;
     enemy.contactCooldownMs = edef.contactCooldownMs;
+    // A blow lands the party in the fight — reset the calm timer either way,
+    // even if armor turned it to nothing.
+    companion.combatMs = COMPANIONS.regenCalmMs;
     const raw = edef.contactDamage * (enemy.contactMult ?? 1);
     const hpDamage = Math.max(
       0,
@@ -378,6 +385,17 @@ function stepCompanion(
       });
       return;
     }
+  }
+
+  // Out of combat (no live target, no blow taken for `regenCalmMs`): knit the
+  // party back up at `regenPerSec` of the bar each second, so a hurt companion
+  // recovers between fights instead of limping the rest of the level. A downed
+  // one never reaches here — it returned at the top of the tick.
+  if (companion.combatMs === 0 && companion.hp < companion.maxHp) {
+    companion.hp = Math.min(
+      companion.maxHp,
+      companion.hp + companion.maxHp * COMPANIONS.regenPerSec * dt,
+    );
   }
 }
 

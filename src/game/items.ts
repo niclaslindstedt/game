@@ -1044,7 +1044,10 @@ export function consumeMedkit(state: GameState): boolean {
   if (tierIndex < 0) return false;
   const tier = MEDKIT.tiers[tierIndex] ?? MEDKIT.tiers[0];
   const before = player.hp;
-  player.hp = Math.min(player.maxHp, player.hp + tier.heal);
+  // Percentage-of-max heal (config MEDKIT.tiers) — floored at 1 so a kit is
+  // never a no-op, then capped at full below.
+  const heal = Math.max(1, Math.round(player.maxHp * tier.healPct));
+  player.hp = Math.min(player.maxHp, player.hp + heal);
   player.medkits[tierIndex] = (player.medkits[tierIndex] ?? 0) - 1;
   state.events.push({
     type: "medkitUsed",

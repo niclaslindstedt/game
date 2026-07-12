@@ -1129,13 +1129,14 @@ export const LOOT = {
    * powerup rain never buries the field — the dock only banks three). */
   abilityShare: 0.06,
   /**
-   * …the share that is a medkit (heals on touch). Kept deliberately scarce —
-   * a steady medkit rain let a basic loadout tank the horde indefinitely, so
-   * healing is now a lucky find, not a crutch. The rest of the ladder (below)
-   * is unchanged; only this slice was carved out of what used to be the
-   * medkit-heavy remainder.
+   * …the share that is a medkit (banked on touch, spent on the player's call).
+   * A generous slice: healing is meant to be a reliable resource the hero
+   * finds often and spends deliberately, not a lucky drop he hoards. Paired
+   * with the percentage-of-max heals (config MEDKIT), a found kit is always a
+   * real top-up. The per-rung `medkitDropMult` and low-health MERCY boost still
+   * thin or fatten this slice around the baseline.
    */
-  medkitShare: 0.07,
+  medkitShare: 0.22,
   /** …the share that is a weapon repair kit… */
   repairShare: 0.1,
   /**
@@ -1430,6 +1431,18 @@ export const COMPANIONS = {
   reviveMs: 12_000,
   /** Fraction of max hp a companion stands back up with. */
   reviveHpFraction: 0.5,
+  /**
+   * Out-of-combat healing: a companion that hasn't swung at a foe or taken a
+   * blow for `regenCalmMs` knits itself back up at `regenPerSec` of its max hp
+   * each second — the party mends between fights instead of bleeding down over
+   * a level with no way to recover short of a full down. Combat (a live target
+   * in the hero's engage bubble, or a contact hit) resets the calm timer; a
+   * downed companion recovers only via its kneel/revive, never this.
+   */
+  regenPerSec: 0.08,
+  /** Ms of quiet (no swing made, no hit taken) before out-of-combat regen
+   * begins — a companion mid-fight is not "out of combat". */
+  regenCalmMs: 3_000,
   /** Chance a companion's kill floats one of its def's `killQuotes`. */
   quoteChance: 0.35,
   /** Minimum ms between one companion's quotes — banter, not a ticker. */
@@ -1583,22 +1596,22 @@ export const APPARITION = {
 
 /**
  * The medkit consumable: picked up on touch, never enters the inventory.
- * D2-style TIERS — each is a STATIC heal, and deeper content drops bigger
- * kits: the drop rolls the deepest tier the killer's monster level has
- * unlocked most of the time and the one under it sometimes (3:1, the affix
- * bracket idiom — see `rollMedkitTier` in loot.ts). Static numbers keep a
- * heal legible (a kit is worth what it says, like a D2 potion); the tier
- * ladder is what keeps healing meaningful against a campaign health bar
- * (~a fifth to a quarter of the era's typical max hp). All tiers share one
- * sprite for now; scarcity (the drop share and the per-rung medkitDropMult)
- * stays the balance lever.
+ * D2-style TIERS — each heals a FRACTION OF THE HERO'S MAX HP, and deeper
+ * content drops bigger kits: the drop rolls the deepest tier the killer's
+ * monster level has unlocked most of the time and the one under it sometimes
+ * (3:1, the affix bracket idiom — see `rollMedkitTier` in loot.ts). Percentage
+ * heals stay meaningful against a campaign health bar at every level without a
+ * static number decaying into a scratch: even the LIGHT kit is a real top-up
+ * (30% of the bar), and a SUPERIOR is a full mend. All tiers share one sprite
+ * for now; the drop share and the per-rung medkitDropMult stay the balance
+ * lever on scarcity.
  */
 export const MEDKIT = {
   tiers: [
-    { name: "LIGHT MEDKIT", heal: 25, minMlvl: 1 },
-    { name: "MEDKIT", heal: 60, minMlvl: 12 },
-    { name: "LARGE MEDKIT", heal: 120, minMlvl: 30 },
-    { name: "SUPERIOR MEDKIT", heal: 200, minMlvl: 46 },
+    { name: "LIGHT MEDKIT", healPct: 0.3, minMlvl: 1 },
+    { name: "MEDKIT", healPct: 0.5, minMlvl: 12 },
+    { name: "LARGE MEDKIT", healPct: 0.75, minMlvl: 30 },
+    { name: "SUPERIOR MEDKIT", healPct: 1, minMlvl: 46 },
   ],
   radius: 8,
 } as const;

@@ -211,6 +211,44 @@ describe("companions in the field", () => {
     expect(gap).toBeLessThan(80);
   });
 
+  it("mends out of combat: a hurt companion regenerates when the field is quiet", () => {
+    const state = startGame();
+    const companion = withCompanion(state); // clearStage — nothing to fight
+    companion.hp = 1;
+    // Half a second of quiet: not yet full, so the gain is visibly gradual.
+    run(state, idle, Math.ceil(500 / DT));
+    const partway = companion.hp;
+    expect(partway).toBeGreaterThan(1);
+    expect(partway).toBeLessThan(companion.maxHp);
+    // Left alone long enough it tops all the way back up — and never past full.
+    // 8%/s from near-zero needs ~13s; 20s of ticks clears it with margin.
+    run(state, idle, Math.ceil(20_000 / DT));
+    expect(companion.hp).toBe(companion.maxHp);
+  });
+
+  it("holds regen while there is a foe in the hero's engage bubble", () => {
+    const state = startGame();
+    const companion = withCompanion(state);
+    companion.hp = 1;
+    companion.combatMs = 0; // pretend it had already calmed down
+    // A mob inside the hero's engage bubble but well clear of the companion
+    // (no contact this tick) is still combat: the party is fighting.
+    companion.pos = { x: state.player.pos.x - 100, y: state.player.pos.y };
+    state.enemies.push(
+      makeEnemy(
+        {
+          id: state.nextId++,
+          pos: { x: state.player.pos.x + 100, y: state.player.pos.y },
+        },
+        "test_minion",
+      ),
+    );
+    step(state, idle, DT);
+    // The heat timer re-armed off the live target, so regen never ticked.
+    expect(companion.combatMs).toBe(COMPANIONS.regenCalmMs);
+    expect(companion.hp).toBe(1);
+  });
+
   it("fights on its own: kills a nearby mob and may float its quote", () => {
     const state = startGame();
     const companion = withCompanion(state);
@@ -280,9 +318,12 @@ describe("companions in the field", () => {
     }
     expect(revived.some((e) => e.type === "companionRevived")).toBe(true);
     expect(companion.downedMs).toBeUndefined();
-    expect(companion.hp).toBe(
+    // Stands up at the revive fraction, then keeps knitting up out of combat —
+    // so at least the revive floor, never past full.
+    expect(companion.hp).toBeGreaterThanOrEqual(
       Math.round(companion.maxHp * COMPANIONS.reviveHpFraction),
     );
+    expect(companion.hp).toBeLessThanOrEqual(companion.maxHp);
     expect(magicFindBonus(state)).toBeCloseTo(0.5);
   });
 

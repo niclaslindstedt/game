@@ -83,13 +83,15 @@ describe("stacked medkits", () => {
     state.player.medkits[2] = 1; // LARGE (bigger heal)
     expect(bestMedkitTier(state)).toBe(2);
     const before = state.player.hp;
+    // Percentage-of-max heal: LARGE (tier 2) mends 75% of the 1000 hp bar.
+    const largeHeal = Math.round(state.player.maxHp * MEDKIT.tiers[2]!.healPct);
     expect(consumeMedkit(state)).toBe(true);
-    expect(state.player.hp).toBe(before + MEDKIT.tiers[2]!.heal);
+    expect(state.player.hp).toBe(before + largeHeal);
     // The LARGE stack drained; the LIGHT reserve is untouched.
     expect(state.player.medkits[2]).toBe(0);
     expect(state.player.medkits[0]).toBe(2);
     const used = state.events.find((e) => e.type === "medkitUsed");
-    expect(used).toMatchObject({ tier: 2, heal: MEDKIT.tiers[2]!.heal });
+    expect(used).toMatchObject({ tier: 2, heal: largeHeal });
   });
 
   it("is a no-op at full hp so a mistap never wastes a kit", () => {
@@ -111,8 +113,12 @@ describe("stacked medkits", () => {
     const state = startGame();
     state.player.hp = 10;
     state.player.medkits[0] = 1;
+    const lightHeal = Math.max(
+      1,
+      Math.round(state.player.maxHp * MEDKIT.tiers[0]!.healPct),
+    );
     step(state, { ...idle, useMedkit: true }, DT);
-    expect(state.player.hp).toBe(10 + MEDKIT.tiers[0]!.heal);
+    expect(state.player.hp).toBe(Math.min(state.player.maxHp, 10 + lightHeal));
     expect(state.player.medkits[0]).toBe(0);
   });
 });
