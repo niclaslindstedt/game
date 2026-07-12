@@ -49,17 +49,24 @@ function summarize(character: Character): string {
 export function CharacterScreen({
   onPlay,
   onBack,
+  startCreating = false,
 }: {
   /** A living hero was selected or freshly created — play on with them (the
    * app makes them active and opens the difficulty ladder). */
   onPlay: (character: Character) => void;
   /** Leave the roster without picking anyone — back to the title menu. */
   onBack: () => void;
+  /** Open straight on the create form (PLAY → NEW GAME) instead of the hero
+   * list. An empty roster forces the form regardless. */
+  startCreating?: boolean;
 }) {
   const [assets, setAssets] = useState<GameAssets | null>(null);
   const [roster, setRoster] = useState<Character[]>(() => loadCharacters());
-  // An empty roster opens straight into creation — there is nothing to pick.
-  const [creating, setCreating] = useState(() => roster.length === 0);
+  // NEW GAME opens straight on the create form; so does an empty roster (there
+  // is nothing to pick). LOAD GAME opens the hero list.
+  const [creating, setCreating] = useState(
+    () => startCreating || roster.length === 0,
+  );
   const [name, setName] = useState("");
   const [hardcore, setHardcore] = useState(false);
   // Which row the cursor rides (hover/focus), for the pointer glow.

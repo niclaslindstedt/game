@@ -86,6 +86,7 @@ const AchievementsScreen = lazy(() =>
 
 type MenuScreen =
   | "main"
+  | "play"
   | "difficulty"
   | "levels"
   | "scores"
@@ -219,8 +220,8 @@ export function TitleScreen({
   character,
   onStart,
   onResume,
-  onManageCharacters,
-  onNeedCharacter,
+  onNewGame,
+  onLoadGame,
   startOnDifficulty = false,
 }: {
   /** The active hero, or null when none is selected yet (the menu still opens
@@ -234,15 +235,15 @@ export function TitleScreen({
     opts?: { skipIntro?: boolean },
   ) => void;
   /** Present only while a run sits parked in memory (the player exited to the
-   * menu from the pause screen). When set, the menu offers CONTINUE, which
+   * menu from the pause screen). When set, the menu offers RESUME, which
    * drops straight back into the frozen run. */
   onResume?: () => void;
-  /** Open the character roster to switch heroes / create a new one (CHARACTERS,
-   * and the target when PLAY needs a hero but one is already active). */
-  onManageCharacters: () => void;
-  /** PLAY was chosen with no active hero: open the roster to pick or create one
-   * first, then drop into the difficulty ladder for it. */
-  onNeedCharacter: () => void;
+  /** PLAY → NEW GAME: open the roster straight on the create form to mint a
+   * fresh hero, then drop into the difficulty ladder for it. */
+  onNewGame: () => void;
+  /** PLAY → LOAD GAME: open the roster to pick (or remove) an existing hero,
+   * then drop into the difficulty ladder for the chosen one. */
+  onLoadGame: () => void;
   /** Mount straight on the difficulty ladder (set when returning from the
    * roster via PLAY) instead of the main menu. */
   startOnDifficulty?: boolean;
@@ -527,8 +528,8 @@ export function TitleScreen({
         ...(onResume
           ? [
               {
-                label: "CONTINUE",
-                aria: "continue",
+                label: "RESUME",
+                aria: "resume",
                 action: () => {
                   playUiSound(synth, "confirm");
                   onResume();
@@ -537,27 +538,15 @@ export function TitleScreen({
             ]
           : []),
         {
+          // PLAY is a menu now, not a launch: it opens the NEW GAME / LOAD GAME
+          // submenu (picking a hero was the old PLAY's job — the two paths make
+          // that choice explicit).
           label: "PLAY",
-          aria: "new-game",
+          aria: "play",
           action: () => {
             playUiSound(synth, "confirm");
-            // No hero yet: pick or create one first — the roster drops back
-            // into the difficulty ladder once a hero is chosen.
-            if (!character) {
-              onNeedCharacter();
-              return;
-            }
-            setScreen("difficulty");
-            // Open on the hardest rung this hero has unlocked.
-            setCursor(furthestUnlockedDifficulty(character));
-          },
-        },
-        {
-          label: "CHARACTERS",
-          aria: "characters",
-          action: () => {
-            playUiSound(synth, "back");
-            onManageCharacters();
+            setScreen("play");
+            setCursor(0);
           },
         },
         {
@@ -595,6 +584,34 @@ export function TitleScreen({
             setCursor(0);
           },
         },
+      ];
+    }
+    if (screen === "play") {
+      // The PLAY submenu: NEW GAME mints a fresh hero, LOAD GAME picks (or
+      // removes) an existing one. Both open the roster and drop into the
+      // difficulty ladder once a hero is chosen (see App's onNewGame/onLoadGame).
+      return [
+        {
+          label: "NEW GAME",
+          aria: "new-game",
+          blurb: "CREATE A NEW HERO",
+          action: () => {
+            playUiSound(synth, "confirm");
+            onNewGame();
+          },
+        },
+        {
+          label: "LOAD GAME",
+          aria: "load-game",
+          blurb: "PLAY ON WITH A SAVED HERO - OR RETIRE ONE",
+          action: () => {
+            playUiSound(synth, "confirm");
+            onLoadGame();
+          },
+        },
+        // Land back on the PLAY row in the main menu (one lower when RESUME
+        // tops the menu).
+        backTo("main", onResume ? 1 : 0),
       ];
     }
     if (screen === "difficulty" && character) {
@@ -797,7 +814,7 @@ export function TitleScreen({
               },
             ]
           : []),
-        backTo("main", onResume ? 5 : 4),
+        backTo("main", onResume ? 4 : 3),
       ];
     }
     if (screen === "developer") {
@@ -1092,7 +1109,7 @@ export function TitleScreen({
         backTo("settings", 1),
       ];
     }
-    return [backTo("main", onResume ? 3 : 2)];
+    return [backTo("main", onResume ? 5 : 4)];
     // `settingsTick` is an intentional invalidation key: the menu reads the
     // non-React settings store through getSettings(), so bumping the tick after
     // updateSettings is what rebuilds this list with the fresh values. eslint
@@ -1104,8 +1121,8 @@ export function TitleScreen({
     character,
     onStart,
     onResume,
-    onManageCharacters,
-    onNeedCharacter,
+    onNewGame,
+    onLoadGame,
     settingsTick,
     captureBind,
     difficulty,
@@ -1236,6 +1253,7 @@ export function TitleScreen({
         // developer menu (from the warp difficulty picker).
         if (screen === "difficulty" && warp) setWarp(false);
         const back: Record<string, MenuScreen> = {
+          play: "main",
           controls: "settings",
           display: "settings",
           sound: "settings",
@@ -1521,6 +1539,9 @@ export function TitleScreen({
             )}
           </header>
 
+          {screen === "play" && (
+            <PixelText font={font} text="PLAY" scale={2} color="#d9a0f0" />
+          )}
           {screen === "difficulty" && (
             <PixelText
               font={font}
@@ -1943,7 +1964,7 @@ export function TitleScreen({
             onClose={() => {
               setScreen("main");
               // Land back on the ACHIEVEMENTS row.
-              setCursor(onResume ? 4 : 3);
+              setCursor(onResume ? 3 : 2);
             }}
           />
         </Suspense>

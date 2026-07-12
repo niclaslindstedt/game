@@ -80,10 +80,11 @@ skips the whole scene.
 Progress belongs to **characters** — named, persistent heroes
 (`website/src/game/characters.ts`), stored under `<storagePrefix>:characters`
 with the active one at `<storagePrefix>:active-character`. The app opens on the
-title menu; **PLAY** opens the roster when no hero is active: pick a hero, create
-one (naming it and choosing **HARDCORE** at creation — the choice belongs to the
-character, not a global setting), or retire the fallen, then drop into the
-difficulty ladder for the chosen hero. A character owns ONE evolving build (the
+title menu; **PLAY** opens a submenu with **NEW GAME** and **LOAD GAME**. NEW
+GAME opens the roster straight on the create form (name the hero and choose
+**HARDCORE** at creation — the choice belongs to the character, not a global
+setting); LOAD GAME opens the hero list to pick a saved hero (or retire the
+fallen). Either way, choosing a hero drops into the difficulty ladder for it. A character owns ONE evolving build (the
 engine `Loadout` — level,
 stats, gear, inventory, coins, abilities, companions) that carries whole into
 every difficulty and level, so higher difficulties are met with the gear earned
@@ -107,7 +108,7 @@ opens any banked run into a full-session detail card. Cutscenes
 always play at the start of a run (dismiss with the top-right SKIP button).
 An in-progress run is parked to storage too: exiting to the menu from the
 pause screen freezes the whole run under `<storagePrefix>:current-run`
-(`website/src/game/saved-run.ts`), so the menu's **CONTINUE** button survives a
+(`website/src/game/saved-run.ts`), so the menu's **RESUME** button survives a
 page reload — the one an app update forces included — instead of vanishing with
 the wiped memory. The snapshot is dropped once the run is resumed, abandoned
 (victory/defeat MENU), or replaced by a fresh game, and a snapshot written by

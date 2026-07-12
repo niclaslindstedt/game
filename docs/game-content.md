@@ -752,10 +752,9 @@ and **MASTERY** (total runs and farming one mission).
 
 Badges are earned on any hero — the ledger and lifetime counters persist
 per install, across characters. A fresh unlock drops a gold banner with its
-own chime (a deliberate notch below the level-up ding), and a pulsing gold
-star appears under the HUD's MAP button until the shelf is opened; the
-browser (title menu → ACHIEVEMENTS, or the star mid-run) shows every badge
-with live progress toward the counted ones. The per-content badge groups
+own chime (a deliberate notch below the level-up ding) mid-run; the browser
+(title menu → ACHIEVEMENTS) shows every badge with live progress toward the
+counted ones. The per-content badge groups
 derive from the live registries, so new levels, difficulties, uniques, and
 companions mint their badges automatically.
 

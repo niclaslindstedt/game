@@ -5353,42 +5353,6 @@ canvas.tier-artifact {
   }
 }
 
-/* The HUD STAR: tucked under the MAP button in the clock stack (same frame
-   family), present ONLY while unseen badges wait — a gold pulse invites the
-   tap without nagging. */
-.hud-achievements-btn {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: 0.2rem 0.6rem;
-  background: rgba(11, 13, 16, 0.55);
-  border: 2px solid #ffd75e;
-  border-radius: 6px;
-  font: inherit;
-  color: inherit;
-  appearance: none;
-  -webkit-tap-highlight-color: transparent;
-  pointer-events: auto;
-  cursor: pointer;
-  animation: hud-achievements-pulse 1600ms ease-in-out infinite;
-}
-.hud-achievements-btn:active {
-  transform: translateY(1px);
-}
-.hud-achievements-icon {
-  width: 1.5rem;
-  height: 1.5rem;
-}
-@keyframes hud-achievements-pulse {
-  0%,
-  100% {
-    box-shadow: 0 0 0.15rem rgba(255, 215, 94, 0.35);
-  }
-  50% {
-    box-shadow: 0 0 0.55rem rgba(255, 215, 94, 0.75);
-  }
-}
-
 /* The BROWSER: the arsenal viewer's overlay/panel/list layout, with category
    headers, a progress readout per counter badge, and locked rows dimmed. */
 .achievements-overlay {
