@@ -227,7 +227,8 @@ describe("auto-equip on pickup", () => {
   it("equips a picked-up weapon that out-scores the held one", () => {
     const state = startGame(); // default medieval sword: melee, short cleave
     clearStage(state);
-    state.player.level = 8; // grown into the hammer's requirement
+    state.player.level = 8; // grown into the hammer's level requirement
+    state.player.stats.strength = 20; // …and its STRENGTH requirement
     const hammer: Equipment = {
       id: 61,
       defId: "geology_hammer", // 38 dmg — out-scores the sword's cleave
@@ -298,6 +299,7 @@ describe("auto-equip on pickup", () => {
     const state = startGame();
     clearStage(state);
     state.player.level = 8;
+    state.player.stats.strength = 20; // clear the hammer's STRENGTH requirement
     // Level 8 brings automatic STRENGTH gains that widen the bag — grow it
     // first, then fill EVERY slot so the bag is genuinely full.
     syncInventoryCapacity(state);

@@ -25,6 +25,7 @@ import {
   QUALITY,
   STAMINA,
   STATS,
+  STAT_REQ,
   UNIQUE,
   WEAPON,
 } from "./config.ts";
@@ -60,7 +61,11 @@ import { gateKeyIds, levelDef } from "./defs/levels/index.ts";
 import { storyItemDef } from "./defs/story.ts";
 import { activeUniqueDefs, uniqueDef, type UniqueDef } from "./defs/uniques.ts";
 import { bonusBudget } from "./item-budget.ts";
-import { baseStatBonus, diminishStat } from "./leveling.ts";
+import {
+  baseStatBonus,
+  chosenStatPointsThrough,
+  diminishStat,
+} from "./leveling.ts";
 import { currentMobLevel } from "./menace.ts";
 import { advanceCutsceneChain } from "./story.ts";
 import { BALANCE } from "./tuning.ts";
@@ -113,6 +118,21 @@ export const SPEED_STAT: Record<WeaponClass, StatName> = {
  */
 export const CRIT_STAT: Record<WeaponClass, StatName> = {
   melee: "dexterity",
+  ranged: "dexterity",
+  magic: "intelligence",
+};
+
+/**
+ * The attribute a weapon class REQUIRES to wield it — the Diablo stat gate that
+ * forces a build to pick a lane: STRENGTH hefts melee, DEXTERITY steadies
+ * ranged, INTELLIGENCE channels magic. Deliberately DISTINCT from `DAMAGE_STAT`
+ * (which scales ranged off STRENGTH): the requirement gives each class its own
+ * primary attribute so a hero cannot wield every class at once, while damage
+ * scaling stays its own concern. The size of the requirement is derived from
+ * the weapon's `levelReq` (see `statRequirement`), never authored per item.
+ */
+export const REQ_STAT: Record<WeaponClass, StatName> = {
+  melee: "strength",
   ranged: "dexterity",
   magic: "intelligence",
 };
@@ -876,6 +896,22 @@ export function isPassiveItem(defId: string): boolean {
  * `autoPowerScale`).
  */
 export function effectiveStat(state: GameState, stat: StatName): number {
+  const { value, pct } = statParts(state, stat);
+  return Math.round(diminishStat(value) * (1 + pct));
+}
+
+/**
+ * The two pieces every stat read is built from: the flat `value` (chosen +
+ * automatic points, `+N` affixes, passive-trinket bonuses) and the scaling
+ * `pct` (unique `statPct` bonuses). `effectiveStat` runs the flat total through
+ * the diminishing-returns curve then applies the percentage; `rawStat` skips
+ * the diminish to recover the honest points-invested figure. Shared so the two
+ * never drift.
+ */
+function statParts(
+  state: GameState,
+  stat: StatName,
+): { value: number; pct: number } {
   let value =
     state.player.stats[stat] + baseStatBonus(state.player.level, stat);
   // Scaling `statPct` bonuses (uniques) multiply the whole total, so they grow
@@ -889,7 +925,22 @@ export function effectiveStat(state: GameState, stat: StatName): number {
     }
   }
   value += passiveStatBonus(state, stat);
-  return Math.round(diminishStat(value) * (1 + pct));
+  return { value, pct };
+}
+
+/**
+ * A hero's attribute BEFORE diminishing returns — the honest count of points
+ * invested (chosen + automatic + affixes + trinkets), the measure equipment
+ * stat requirements gate against (`meetsStatReq`). Requirements must use this,
+ * not `effectiveStat`: the automatic per-level growth piles raw points far past
+ * the soft cap where `diminishStat` flattens them, so an endgame requirement
+ * expressed against the diminished value could exceed what any single stat can
+ * ever DISPLAY — while the raw total still rises point-for-point, keeping the
+ * "invest a fraction of your chosen points" contract exact at every level.
+ */
+export function rawStat(state: GameState, stat: StatName): number {
+  const { value, pct } = statParts(state, stat);
+  return value * (1 + pct);
 }
 
 /** Max hp from the base pool + the STAMINA stat + gear bonuses and affixes.
@@ -1719,6 +1770,63 @@ export function meetsLevelReq(state: GameState, equipment: Equipment): boolean {
   return state.player.level >= equipmentLevelReq(equipment.defId);
 }
 
+/**
+ * A weapon's ATTRIBUTE requirement — the Diablo stat gate that forces a build
+ * to pick a lane (STRENGTH for melee, DEXTERITY for ranged, INTELLIGENCE for
+ * magic; see `REQ_STAT`). Gear carries none, so this returns null for anything
+ * that is not a weapon.
+ *
+ * The amount is DERIVED, never authored per item, so the whole arsenal is
+ * calibrated by the single `STAT_REQ.investFraction` knob: it is a fraction of
+ * the trainable points a hero has banked by the weapon's `levelReq`
+ * (`chosenStatPointsThrough`) plus the AUTOMATIC growth that stat has accrued
+ * by then (`baseStatBonus`). Folding in the auto floor is what makes the gate
+ * track the AUTO LEVEL STATS dev flag: `baseStatBonus` is zero for every stat
+ * while the flag is off (and always zero for INTELLIGENCE, which has no auto
+ * growth), so the requirement drops by exactly the free points the hero no
+ * longer receives — leaving the CHOSEN investment it demands unchanged. That
+ * invariance is the point: toggling WoW-style auto-attributes never requires
+ * re-tuning a single weapon. A `levelReq`-1 starter derives to zero and is
+ * ungated.
+ */
+export function statRequirement(
+  defId: string,
+): { stat: StatName; amount: number } | null {
+  if (!isWeaponDef(defId)) return null;
+  const def = weaponDef(defId);
+  const stat = REQ_STAT[def.class];
+  const amount =
+    baseStatBonus(def.levelReq, stat) +
+    Math.round(STAT_REQ.investFraction * chosenStatPointsThrough(def.levelReq));
+  return amount > 0 ? { stat, amount } : null;
+}
+
+/**
+ * Does the hero meet a piece's ATTRIBUTE requirement? Gear and requirement-free
+ * weapons always pass; a weapon is gated on the hero's RAW (pre-diminish)
+ * class attribute (`rawStat`) so the gate measures points invested rather than
+ * their diminished combat value — see `rawStat` for why the diminished figure
+ * would break the gate at high levels. Worn `+stat` gear counts toward the
+ * requirement, so a "OF THE OX" find helps heft a heavier weapon.
+ */
+export function meetsStatReq(state: GameState, equipment: Equipment): boolean {
+  const req = statRequirement(equipment.defId);
+  if (!req) return true;
+  return rawStat(state, req.stat) >= req.amount;
+}
+
+/**
+ * Can the hero WEAR this piece right now — BOTH the level gate (`meetsLevelReq`)
+ * and the attribute gate (`meetsStatReq`)? The single predicate every equip
+ * decision routes through (auto-equip, the bag's manual equip, the on-break
+ * weapon swap), so a piece the hero is too weak OR too low-level to wield is
+ * banked, never worn. The drop side is unaffected — a base still drops on
+ * `levelReq` vs monster level; only the hero's hands are gated by attributes.
+ */
+export function canEquip(state: GameState, equipment: Equipment): boolean {
+  return meetsLevelReq(state, equipment) && meetsStatReq(state, equipment);
+}
+
 // Player setting (website settings `autoEquip`, applied via the
 // `setAutoEquipEnabled` setter): whether a picked-up piece that out-scores the
 // worn one is EQUIPPED ON THE SPOT (on) or banked to the bag for the player to
@@ -1749,8 +1857,9 @@ export function isBetterEquipment(
   state: GameState,
   candidate: Equipment,
 ): boolean {
-  // An under-leveled find is never worn, however strong — it banks instead.
-  if (!meetsLevelReq(state, candidate)) return false;
+  // An under-leveled OR under-statted find is never worn, however strong — it
+  // banks until the hero grows the level and the attribute to wield it.
+  if (!canEquip(state, candidate)) return false;
   if (candidate.slot === "weapon") {
     const current = state.player.equipment.weapon;
     // No starter special case anymore: weaponScore speaks the damage-budget
@@ -1791,7 +1900,7 @@ export function wouldUpgradeSlot(
   state: GameState,
   candidate: Equipment,
 ): boolean {
-  if (!meetsLevelReq(state, candidate)) return false;
+  if (!canEquip(state, candidate)) return false;
   if (candidate.slot === "weapon") {
     return (
       weaponScore(state, candidate) >
@@ -1858,8 +1967,9 @@ export function equipFromInventory(state: GameState, index: number): boolean {
   const player = state.player;
   const item = player.inventory[index];
   if (!item) return false;
-  // The level gate holds in the bag too: an under-leveled find stays banked.
-  if (!meetsLevelReq(state, item)) return false;
+  // The equip gates hold in the bag too: an under-leveled or under-statted
+  // find stays banked until the hero grows into it.
+  if (!canEquip(state, item)) return false;
   const slot = item.slot;
   const previous =
     slot === "weapon" ? player.equipment.weapon : player.equipment[slot];
@@ -2124,7 +2234,7 @@ function planAutoEquip(state: GameState): number[] {
     const item = inv[i];
     if (!item || item.slot !== "weapon") continue;
     if (item.durability !== undefined && item.durability <= 0) continue;
-    if (!meetsLevelReq(state, item)) continue;
+    if (!canEquip(state, item)) continue;
     const score = weaponScore(state, item);
     if (score > bestWeaponScore) {
       bestWeaponScore = score;
@@ -2142,7 +2252,7 @@ function planAutoEquip(state: GameState): number[] {
     for (let i = 0; i < inv.length; i++) {
       const item = inv[i];
       if (!item || item.slot !== slot) continue;
-      if (!meetsLevelReq(state, item)) continue;
+      if (!canEquip(state, item)) continue;
       // A passive trinket earns its bonus just by riding in the bag, so it is
       // never worn — the charm slot stays open for an active piece.
       if (isPassiveItem(item.defId)) continue;
@@ -2214,8 +2324,9 @@ export function wearEquippedWeapon(state: GameState): void {
       player.inventory[i] = null;
       continue;
     }
-    // A banked find the hero hasn't grown into can't be drawn yet.
-    if (!meetsLevelReq(state, item)) continue;
+    // A banked find the hero hasn't grown into — in level or attribute —
+    // can't be drawn yet.
+    if (!canEquip(state, item)) continue;
     const score = weaponScore(state, item);
     if (score > bestScore) {
       bestScore = score;

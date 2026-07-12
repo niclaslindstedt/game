@@ -134,6 +134,22 @@ export function statPointsAt(level: number): number {
 }
 
 /**
+ * The cumulative TRAINABLE stat points a hero of `level` has banked — every
+ * ding's `statPointsAt` from level 2 up, summed (the chosen-point mirror of
+ * `baseStatBonus`). Unlike the automatic gains this is invariant to the auto
+ * dev flag; it is the pool the player distributes by hand, and the anchor the
+ * weapon stat requirements are sized against (`statRequirement` in items.ts):
+ * a requirement asks for a fraction of what a hero could have chosen to invest
+ * by the time a weapon is wieldable. Levels stay small, so the loop is cheaper
+ * than keeping a stored counter honest across saves and respecs.
+ */
+export function chosenStatPointsThrough(level: number): number {
+  let total = 0;
+  for (let l = 2; l <= level; l++) total += statPointsAt(l);
+  return total;
+}
+
+/**
  * The share of the CURRENT level bar a golden arrow grants at `level`: the
  * base share (`LEVELING.arrowXpShare`) decayed harmonically by
  * `LEVELING.arrowXpShareTaper`, so arrows pay a full quarter-level early and a

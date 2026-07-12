@@ -327,8 +327,10 @@ describe("level requirements", () => {
     expect(equipFromInventory(state, 0)).toBe(false);
     expect(state.player.equipment.weapon.defId).not.toBe("test_relic");
 
-    // Grown into it: the same find equips.
+    // Grown into it: at the required level AND with the STRENGTH the melee
+    // relic demands, the same find equips.
     state.player.level = RELIC.levelReq;
+    state.player.stats.strength = 40;
     expect(meetsLevelReq(state, relic)).toBe(true);
     expect(equipFromInventory(state, 0)).toBe(true);
     expect(state.player.equipment.weapon.defId).toBe("test_relic");

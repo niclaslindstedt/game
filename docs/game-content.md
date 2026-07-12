@@ -216,6 +216,23 @@ Every drop still carries an item level near that loot level (plus the harder
 rungs' `lootIlvlBonus`) that sizes its affixes — see the `weapon-system` skill
 for the full economy and its tuning tools.
 
+**Wielding a weapon takes a body for it.** On top of the Diablo `levelReq`
+(the hero must reach the base's level to equip it), every weapon carries an
+**attribute requirement** that forces a build to pick a lane: melee wants
+**STRENGTH**, ranged **DEXTERITY**, magic **INTELLIGENCE**. A find the hero is
+too weak for banks until he grows the attribute, exactly as an under-level find
+waits for the level — auto-equip skips it, the tooltip paints the requirement
+red. The number is never authored per item: it is DERIVED from the weapon's
+`levelReq` as a fraction of the trainable points a hero has banked by then
+(config `STAT_REQ.investFraction`, ~40%) plus the automatic growth that
+attribute has accrued — so a bruiser must sink real points into STRENGTH to
+swing the era's heavy weapons, but still keeps the majority of his points for
+STAMINA and the rest. Because the automatic floor is folded in, the requirement
+rises and falls with the **AUTO LEVEL STATS** developer flag by exactly the
+free points it hands out: the CHOSEN investment a weapon demands is the same
+whether WoW-style auto-attributes are on or off, so the whole arsenal stays
+calibrated without re-tuning a single item when the flag is toggled.
+
 Every weapon deals its damage as a **range**, not a fixed number: each
 blow rolls inside a band around the catalog average (config
 `WEAPON.damageVariance`, ±20% by default; a def may widen its own with
