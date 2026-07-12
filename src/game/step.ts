@@ -116,6 +116,7 @@ import {
   stepRangedAttacks,
 } from "./ranged.ts";
 import {
+  advanceCutsceneChain,
   collectStoryItem,
   startEnemyDialogue,
   stepDoors,
@@ -139,15 +140,14 @@ import type {
 export function step(state: GameState, input: GameInput, dtMs: number): void {
   state.events = [];
 
-  // The prelude scene runs on the same clock as the sim (deterministic,
-  // headless-testable); the world stays frozen until it plays out.
+  // The prelude scenes run on the same clock as the sim (deterministic,
+  // headless-testable); the world stays frozen until the chain plays out.
   if (state.phase === "cutscene") {
     if (state.cutscene && !state.cutscene.done) {
       stepCutscene(state.cutscene, cutsceneDef(state.cutscene.defId), dtMs);
     }
     if (!state.cutscene || state.cutscene.done) {
-      state.cutscene = null;
-      state.phase = "intro";
+      advanceCutsceneChain(state);
     }
     return;
   }

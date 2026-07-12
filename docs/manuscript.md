@@ -321,17 +321,58 @@ is his floor. Spoken once, on the first meeting._
 
 ---
 
+## Travel — THE LAUNCH (cutscene)
+
+_Between SpaceZ HQ and the moon, part one of the moon level's prelude chain
+(`launch` in `defs/cutscenes.ts`). The garage at night: the stolen part is in,
+the ship he built over ten years of weekends stands on the lawn, and the hero
+leaves home the way Ada did — out the door, no plan to be long._
+
+> **CAPTION:** TEN YEARS OF WEEKENDS / IN THE GARAGE. SHE ONLY / EVER NEEDED ONE MORE PART.
+
+_(The hero crosses the lawn to the ship.)_
+
+**ME:** ENGINE. FUEL. DUCT TAPE. / AND THE PART THEY SAID / I COULDN'T HAVE.
+
+_(He boards. The engine lights and the hull rattles on the pad; the ship
+climbs, and the camera follows it up — house, lawn, and ground fall away
+until only stars remain.)_
+
+> **CAPTION:** FIRST FLIGHT. NO TEST RUNS. / ADA WOULD CALL IT ROMANTIC.
+
+_(Fade to black.)_
+
+## Travel — THE VOYAGE, LEG ONE (cutscene)
+
+_Between SpaceZ HQ and the moon, part two (`voyage_moon`). Deep space: Earth
+shrinking behind, the moon ahead, the hero alone in the hull he built — his
+speech anchors to the ship._
+
+> **CAPTION:** EARTH GOT SMALL FAST.
+
+**ME:** THE THING I BUILT IN MY / GARAGE IS IN SPACE. / DON'T THROW UP.
+
+**ME:** HER TRACKER PINGS FROM THE / MOON. SHE WENT OUT FOR / CHIPS AND SODA.
+
+> **CAPTION:** NOBODY GOES TO THE MOON / FOR CHIPS AND SODA.
+
+_(Fade to black.)_
+
+---
+
 ## Level 2 — THE MOON
 
 Ada's beacon dies near the old flag. Something up here isn't dead.
 
 ### Opening monologue (hero, black screen)
 
-1. I GOT THE PART BACK FROM THE / RAT. THE SHIP FLEW. AND NOW / I'M ON THE MOON.
-2. ADA'S TRACKER WENT QUIET / SOMEWHERE NEAR THE OLD APOLLO / FLAG. THAT'S WHERE I'M HEADED.
-3. AND SOMETHING IS MOVING OUT / THERE IN THE DUST. THIS PLACE / IS SUPPOSED TO BE EMPTY.
-4. I KNOW THIS LANDING SITE FROM / THE OLD MISSION CHARTS. EVERY / CRATER. THE FASTEST LINE RUNS / STRAIGHT TO THAT FLAG.
-5. KEEP MOVING. I'M COMING, ADA.
+_The launch and the flight now play as the prelude scenes above, so the
+monologue opens on arrival._
+
+1. ADA'S TRACKER WENT QUIET / SOMEWHERE NEAR THE OLD APOLLO / FLAG. THAT'S WHERE I'M HEADED.
+2. AND SOMETHING IS MOVING OUT / THERE IN THE DUST. THIS PLACE / IS SUPPOSED TO BE EMPTY.
+3. I KNOW THIS LANDING SITE FROM / THE OLD MISSION CHARTS. EVERY / CRATER. THE FASTEST LINE RUNS / STRAIGHT TO THAT FLAG.
+4. KEEP MOVING. I'M COMING, ADA.
 
 ### Hero's thought — first wisp sighted on the moon
 
@@ -486,6 +527,43 @@ his return ticket. Spoken once, on the first meeting._
 
 ---
 
+## Travel — THE MOON LETS GO (cutscene)
+
+_Between the moon and Mars, part one of the Mars level's prelude chain
+(`moon_depart`). The landing site after the fight: ARMSTRONG beaten and
+satisfied, the flag still standing, the hero suited and boarding._
+
+> **CAPTION:** THE GHOST KEPT HIS WORD.
+
+**ARMSTRONG:** TAKE THE OLD FREIGHT LINE, / EARTHLING. RED ALL THE WAY. / BRING HER HOME.
+
+**ARMSTRONG:** AND WHEN YOU SEE THE COMPANY / MEN... TELL THEM THE MOON / REMEMBERS.
+
+**ME:** REST EASY, SPACEMAN.
+
+_(The hero boards. The engine lights and the hull rattles; the ship climbs,
+and the camera follows it up — flag, regolith, and the watching ghost fall
+away until only Earth and the stars remain.)_
+
+> **CAPTION:** HE WATCHED ME OUT OF SIGHT. / FIFTY YEARS OF PRACTICE.
+
+_(Fade to black.)_
+
+## Travel — THE VOYAGE, LEG TWO (cutscene)
+
+_Between the moon and Mars, part two (`voyage_mars`). The moon falling
+behind, the red planet growing ahead._
+
+> **CAPTION:** TWO DAYS OUT. THE RADIO / PLAYS STATIC. I'M STARTING / TO LIKE IT.
+
+**ME:** ONE PING FROM THE RED / PLANET. FAINT. BUT THERE.
+
+**ME:** I PACKED CHIPS AND SODA / FOR THE RIDE HOME.
+
+_(Fade to black.)_
+
+---
+
 ## Level 3 — MARS
 
 The red freight run ends at a secret colony: rovers working the dust outside, a
@@ -495,11 +573,13 @@ lifeboat. ELON MOSQUE owns the planet — on paper.
 
 ### Opening monologue (hero, black screen)
 
-1. THE GHOST KEPT HIS WORD. / THE MOON LET ME GO.
-2. HE SAID THE MOON WAS SPACEZ'S / BIG MISTAKE - THAT THE COMPANY / PACKED EVERYTHING INTO CRATES / AND RAN. TO MARS.
-3. ADA'S TRACKER AGREES. ONE / PING, FROM THE RED PLANET. / FAINT, BUT THERE.
-4. I KNOW WHAT A SPACEZ COLONY / LOOKS LIKE - I REBUILT THEIR / LANDER ONCE. DOMES. ROBOTS. / SECRETS.
-5. SOMEBODY DOWN HERE TRADED MY / GIRL AWAY LIKE CARGO. / BAD TRADE. FOR THEM.
+_The send-off and the crossing now play as the prelude scenes above (the
+ghost's word and the tracker's ping moved there), so the monologue opens on
+what he knows._
+
+1. HE SAID THE MOON WAS SPACEZ'S / BIG MISTAKE - THAT THE COMPANY / PACKED EVERYTHING INTO CRATES / AND RAN. TO MARS.
+2. I KNOW WHAT A SPACEZ COLONY / LOOKS LIKE - I REBUILT THEIR / LANDER ONCE. DOMES. ROBOTS. / SECRETS.
+3. SOMEBODY DOWN HERE TRADED MY / GIRL AWAY LIKE CARGO. / BAD TRADE. FOR THEM.
 
 ### Hero's thought — first SCOUT ROVER kill on Mars
 
@@ -664,6 +744,24 @@ once, on the first meeting._
 
 ---
 
+## Travel — INTO THE RIFT (cutscene)
+
+_Between Mars and the rift (`rift_entry`, the rift level's prelude). The
+colony's east end after MOSQUE fled: the tear he left hanging in the air, the
+hero's ship staying behind in the dust._
+
+> **CAPTION:** HE TORE A HOLE IN THE / UNIVERSE RATHER THAN LOSE.
+
+_(The hero walks up to the tear.)_
+
+**ME:** NO CHARTS FOR WHAT'S IN / THERE. NO GROUND. NO AIR? / NO IDEA.
+
+**ME:** SHE WENT THROUGH. / SO I GO THROUGH.
+
+_(He steps in. Fade to black.)_
+
+---
+
 ## Level 4 — THE RIFT
 
 The hero follows MOSQUE through the tear: a hallucinatory space between
@@ -683,11 +781,13 @@ other side of the rift, destination unknown until later.
 
 ### Opening monologue (hero, black screen)
 
-1. HE TORE A HOLE IN THE / UNIVERSE TO DODGE A FIGHT. / SO I JUMPED IN AFTER HIM.
-2. THERE'S NO FLOOR IN HERE. / NO SKY. NO NORTH. MY BOOTS / GRIP SOMETHING ANYWAY.
-3. THE STONE TABLET ON MARS SAID / IT PLAIN: ADA IS THE TRIBUTE, / AND THE HANDOVER HAPPENS IN / HERE. SHE CAME THROUGH THIS PLACE.
-4. HER BEACON PINGS FROM / EVERYWHERE AT ONCE. EVEN THE / SIGNAL IS HALLUCINATING.
-5. FIND THE FAR SIDE. CATCH / THE COWARD. BRING HER HOME.
+_The jump itself now plays as the prelude scene above, so the monologue
+opens on the other side._
+
+1. THERE'S NO FLOOR IN HERE. / NO SKY. NO NORTH. MY BOOTS / GRIP SOMETHING ANYWAY.
+2. THE STONE TABLET ON MARS SAID / IT PLAIN: ADA IS THE TRIBUTE, / AND THE HANDOVER HAPPENS IN / HERE. SHE CAME THROUGH THIS PLACE.
+3. HER BEACON PINGS FROM / EVERYWHERE AT ONCE. EVEN THE / SIGNAL IS HALLUCINATING.
+4. FIND THE FAR SIDE. CATCH / THE COWARD. BRING HER HOME.
 
 ### Hero's thought — first VOIDLING sighted in the rift
 
@@ -933,6 +1033,24 @@ on the first meeting._
 - AH. YOU AGAIN. DON'T LOOK SO / SURPRISED - EVERY MARKET I EVER / RAN FELL THROUGH HERE, IN THE END.
 - THE VENDING MACHINES. THE MOON. / THE DOME. ALL ROADS LEAD HERE - / AND COIN SPENDS ON ALL OF THEM.
 - BRING ME RELICS, TRAVELER. / TAKE WHAT YOU NEED. / WE'RE BOTH FAR FROM HOME.
+
+---
+
+## Travel — OUT OF THE RIFT (cutscene)
+
+_Between the rift and Eastworld (`rift_exit`, the Eastworld level's prelude).
+The far door with daylight leaking through: the same wound in space as the way
+in, but warm inside._
+
+> **CAPTION:** THE FAR DOOR. THE COWARD'S / TRAIL GOES STRAIGHT THROUGH.
+
+_(The hero drifts up to the glowing door.)_
+
+**ME:** THERE'S DAYLIGHT ON THE / OTHER SIDE. AND... / IS THAT A SALOON?
+
+**ME:** WHEREVER YOU ARE, ADA - / I'M ONE DOOR AWAY.
+
+_(He steps through. Fade to black.)_
 
 ---
 
@@ -1365,7 +1483,7 @@ at the top of this file).
 
 | Story/dialogue element                                       | Canonical data file                                                                                                   |
 | ------------------------------------------------------------ | --------------------------------------------------------------------------------------------------------------------- |
-| Prelude cutscene (captions, `say` beats)                     | `src/game/defs/cutscenes.ts`                                                                                          |
+| Cutscenes — prelude + travel scenes (captions, `say` beats)  | `src/game/defs/cutscenes.ts`                                                                                          |
 | Per-level opening monologues (`intro`) + epilogues (`outro`) | `src/game/defs/levels/spacez_hq.ts`, `.../moon.ts`, `.../mars.ts`, `.../rift.ts`, `.../eastworld.ts`, `.../bunker.ts` |
 | Elite/boss `dialogue` + `lastWords`                          | `src/game/defs/enemies/spacez.ts`, `.../moon.ts`, `.../mars.ts`, `.../rift.ts`, `.../eastworld.ts`, `.../bunker.ts`   |
 | Hero's inner thoughts (`firstKillThoughts`)                  | `src/game/defs/thoughts.ts` (pinned from a `LevelDef`)                                                                |

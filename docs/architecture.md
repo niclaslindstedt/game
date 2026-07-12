@@ -111,15 +111,21 @@ run against synthetic fixtures with no shipped content (see
   the key for the matching level door.
 - **`src/game/defs/cutscenes.ts`** — the cutscene catalog: pure-data scenes
   (a stage of props, a cast, a beat timeline) played by the generic
-  `@game/lib/cutscene` state machine. A level references a scene via its
-  `prelude` field; the run then opens in the `cutscene` phase (the sim
-  frozen underneath), advanced by `step()` on the same clock. Motion beats
-  run on that clock; text beats crawl in letter by letter and hold until
+  `@game/lib/cutscene` state machine. A level references scenes via its
+  `prelude` field — one id, or a LIST chained back-to-back (the moon opens
+  on the garage launch, then the space transit); the run then opens in the
+  `cutscene` phase (the sim frozen underneath), advanced by `step()` on the
+  same clock. Motion beats run on that clock — walks, fades, camera `pan`s
+  (the launch's ascent: the world falls away under the climbing ship) and
+  actor `shake`s (the rattling rocket) — and a stage may carry a constant
+  `drift` that streams its props by per-prop `parallax` depth (the space
+  transits' star field) even while a held line idles the timeline. Text
+  beats crawl in letter by letter and hold until
   `tapCutscene` (JRPG-style), and `skipCutscene` bails the whole opening —
-  the prelude _and_ the hero's level-intro monologue that follows — landing
-  on the level-name `title` card just before the drop. The opening flow is
-  `cutscene` (if any) → `intro` (the hero's monologue) → `title` (the level
-  name alone on black) → `playing`. The intro has a closing mirror: a level
+  every queued scene _and_ the hero's level-intro monologue that follows —
+  landing on the level-name `title` card just before the drop. The opening
+  flow is `cutscene` (if any) → `intro` (the hero's monologue) → `title`
+  (the level name alone on black) → `playing`. The intro has a closing mirror: a level
   may ship `outro` pages (`LevelDef.outro`) — clearing its objective arms a
   VICTORY QUAKE (`GameState.quakeMs`, a render-side camera shake) through
   the loot-grab countdown, and the countdown then lands in the `outro`

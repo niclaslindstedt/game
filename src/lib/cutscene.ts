@@ -11,8 +11,21 @@
 
 import { distance, moveToward, type Vec2 } from "./vec.ts";
 
-/** A static prop on the stage (a couch, a door…). Purely visual. */
-export type CutsceneProp = { kind: string; pos: Vec2 };
+/**
+ * A static prop on the stage (a couch, a door…). Purely visual. Props ride
+ * the stage's camera shift (`CutsceneState.shift`, fed by `drift` and `pan`
+ * beats) scaled by their `parallax` depth — 1 (default) moves with the
+ * ground, 0 is pinned to the sky — and a `wrap` prop re-enters from the
+ * opposite edge instead of scrolling off (star fields under a long drift).
+ */
+export type CutsceneProp = {
+  kind: string;
+  pos: Vec2;
+  /** Camera-shift multiplier: 1 = foreground (default), 0 = infinitely far. */
+  parallax?: number;
+  /** Wrap around the stage horizontally instead of leaving it. */
+  wrap?: boolean;
+};
 
 /**
  * The flat-color palette a scene's backdrop paints with. Data, not code, so
@@ -36,6 +49,14 @@ export type CutsceneStage = {
   /** Backdrop colors the renderer paints; omitted = the renderer's default. */
   palette?: CutsceneBackdrop;
   props: CutsceneProp[];
+  /**
+   * Constant camera velocity in world px/s, accumulated into
+   * `CutsceneState.shift` for the whole scene — the space transits stream
+   * their star props past the ship with this (parallax makes the depths).
+   * Runs UNDER the beat timeline, so the world keeps moving through held
+   * dialogue. Omitted = a static camera.
+   */
+  drift?: Vec2;
 };
 
 export type CutsceneActorDef = {
@@ -78,7 +99,17 @@ export type CutsceneBeat =
   | { kind: "enter"; actor: string }
   | { kind: "exit"; actor: string }
   /** Fade the whole frame toward `to` (0 = clear, 1 = black) over `ms`. */
-  | { kind: "fade"; to: number; ms: number };
+  | { kind: "fade"; to: number; ms: number }
+  /**
+   * Glide the camera `by` world px over `ms` (adds to the running shift;
+   * props follow scaled by their parallax, actors stay screen-pinned). The
+   * launch's ascent: pan the world down and the pad falls away under the
+   * climbing ship.
+   */
+  | { kind: "pan"; by: Vec2; ms: number }
+  /** Set an actor's tremble amplitude in world px (0 stops it). Instant —
+   *  the rumble runs under later beats until switched off. */
+  | { kind: "shake"; actor: string; amp: number };
 
 export type CutsceneDef = {
   id: string;
@@ -96,6 +127,8 @@ export type CutsceneActor = {
   hidden: boolean;
   /** True while a `move` beat is walking this actor (drives walk frames). */
   moving: boolean;
+  /** Tremble amplitude in world px (a `shake` beat sets it; 0 = still). */
+  shake: number;
 };
 
 export type CutsceneState = {
@@ -106,10 +139,18 @@ export type CutsceneState = {
   beat: number;
   /** Elapsed ms inside the running beat. */
   beatMs: number;
+  /** Total ms the scene has played (drives the renderer's shake wobble). */
+  timeMs: number;
   /** Current darkness, 0 (clear) to 1 (black). */
   fade: number;
   /** Fade level when the running fade beat started (interpolation base). */
   fadeFrom: number;
+  /**
+   * The camera's accumulated shift in world px (stage `drift` + `pan`
+   * beats). The renderer offsets each prop by `shift × its parallax`;
+   * actors are screen-pinned and unaffected.
+   */
+  shift: Vec2;
   done: boolean;
 };
 
@@ -124,11 +165,14 @@ export function createCutscene(def: CutsceneDef): CutsceneState {
       faceLeft: a.faceLeft ?? false,
       hidden: a.hidden ?? false,
       moving: false,
+      shake: 0,
     })),
     beat: 0,
     beatMs: 0,
+    timeMs: 0,
     fade: 0,
     fadeFrom: 0,
+    shift: { x: 0, y: 0 },
     done: def.beats.length === 0,
   };
 }
@@ -160,9 +204,20 @@ function settleBeat(state: CutsceneState, beat: CutsceneBeat): void {
     case "exit":
       actor(state, beat.actor).hidden = true;
       break;
+    case "shake":
+      actor(state, beat.actor).shake = beat.amp;
+      break;
     case "fade":
       state.fade = beat.to;
       break;
+    case "pan": {
+      // The pan applies incrementally as it plays (so it composes with the
+      // stage drift); settling adds only whatever remains of `by`.
+      const played = Math.min(1, state.beatMs / Math.max(1, beat.ms));
+      state.shift.x += beat.by.x * (1 - played);
+      state.shift.y += beat.by.y * (1 - played);
+      break;
+    }
     default:
       break; // wait/caption/say leave no end state behind
   }
@@ -181,7 +236,8 @@ function beginBeat(state: CutsceneState, def: CutsceneDef): void {
     beat.kind === "pose" ||
     beat.kind === "face" ||
     beat.kind === "enter" ||
-    beat.kind === "exit"
+    beat.kind === "exit" ||
+    beat.kind === "shake"
   ) {
     settleBeat(state, beat);
     state.beat++;
@@ -201,6 +257,14 @@ export function stepCutscene(
     state.done = true;
     return;
   }
+  state.timeMs += dtMs;
+  // The stage drift runs UNDER the beat timeline — the parallax field keeps
+  // streaming while a held line idles the beats.
+  if (def.stage.drift) {
+    state.shift.x += (def.stage.drift.x * dtMs) / 1000;
+    state.shift.y += (def.stage.drift.y * dtMs) / 1000;
+  }
+  const beatWasMs = state.beatMs;
   state.beatMs += dtMs;
 
   switch (beat.kind) {
@@ -214,6 +278,17 @@ export function stepCutscene(
     case "fade": {
       const t = Math.min(1, state.beatMs / Math.max(1, beat.ms));
       state.fade = state.fadeFrom + (beat.to - state.fadeFrom) * t;
+      if (state.beatMs >= beat.ms) nextBeat(state, def, beat);
+      return;
+    }
+    case "pan": {
+      // Apply this step's slice of `by` (incremental, so the drift above
+      // stacks cleanly); the settle in nextBeat adds any remainder.
+      const ms = Math.max(1, beat.ms);
+      const was = Math.min(1, beatWasMs / ms);
+      const now = Math.min(1, state.beatMs / ms);
+      state.shift.x += beat.by.x * (now - was);
+      state.shift.y += beat.by.y * (now - was);
       if (state.beatMs >= beat.ms) nextBeat(state, def, beat);
       return;
     }

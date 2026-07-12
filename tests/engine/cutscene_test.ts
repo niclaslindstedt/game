@@ -146,6 +146,64 @@ describe("cutscene player", () => {
     expect(cs.fade).toBe(1);
   });
 
+  it("pans the camera shift over its duration and settles the remainder", () => {
+    const PAN: CutsceneDef = {
+      id: "test_pan",
+      stage: { width: 320, height: 180, backdrop: "test", props: [] },
+      actors: [],
+      beats: [
+        { kind: "pan", by: { x: 0, y: 100 }, ms: 1000 },
+        { kind: "caption", text: ["UP."] },
+      ],
+    };
+    const cs = createCutscene(PAN);
+    for (let t = 0; t < 500; t += DT) stepCutscene(cs, PAN, DT);
+    // ~halfway through the glide (32 fixed steps × 16ms = 512ms → 51.2).
+    expect(cs.shift.y).toBeCloseTo(51.2, 1);
+    // The player's tap cuts it short — the remainder applies instantly.
+    advanceCutsceneBeat(cs, PAN);
+    expect(cs.shift.y).toBeCloseTo(100, 5);
+    expect(currentLine(cs, PAN)?.text).toEqual(["UP."]);
+  });
+
+  it("accumulates the stage drift even while a text beat holds", () => {
+    const DRIFT: CutsceneDef = {
+      id: "test_drift",
+      stage: {
+        width: 320,
+        height: 180,
+        backdrop: "test",
+        props: [],
+        drift: { x: -10, y: 0 },
+      },
+      actors: [],
+      beats: [{ kind: "caption", text: ["HOLD."] }],
+    };
+    const cs = createCutscene(DRIFT);
+    for (let t = 0; t < 2000; t += DT) stepCutscene(cs, DRIFT, DT);
+    expect(cs.beat).toBe(0); // still parked on the caption…
+    expect(cs.shift.x).toBeCloseTo(-20, 0); // …while the field streams
+  });
+
+  it("shake beats set and clear an actor's tremble instantly", () => {
+    const SHAKE: CutsceneDef = {
+      id: "test_shake",
+      stage: { width: 320, height: 180, backdrop: "test", props: [] },
+      actors: [{ id: "a", sprite: "a_idle", at: { x: 10, y: 20 } }],
+      beats: [
+        { kind: "shake", actor: "a", amp: 2 },
+        { kind: "wait", ms: 100 },
+        { kind: "shake", actor: "a", amp: 0 },
+        { kind: "wait", ms: 100 },
+      ],
+    };
+    const cs = createCutscene(SHAKE);
+    stepCutscene(cs, SHAKE, DT); // instant shake collapsed into the wait
+    expect(cs.actors[0]!.shake).toBe(2);
+    for (let t = 0; t < 200; t += DT) stepCutscene(cs, SHAKE, DT);
+    expect(cs.actors[0]!.shake).toBe(0);
+  });
+
   it("is deterministic for a fixed dt sequence", () => {
     const a = createCutscene(SCENE);
     const b = createCutscene(SCENE);
@@ -217,6 +275,49 @@ describe("the prelude in a run", () => {
     expect(moon.phase).toBe("intro");
     skipCutscene(moon);
     expect(moon.phase).toBe("intro");
+  });
+
+  it("plays a chained prelude scene by scene into the intro", () => {
+    const state = createGame(SEED, "test_chain_level");
+    expect(state.phase).toBe("cutscene");
+    expect(state.cutscene?.defId).toBe("test_prelude");
+    expect(state.cutsceneQueue).toEqual(["test_prelude_2"]);
+    // Tap the first scene out: the chain rolls into the second scene, not
+    // the intro. (Instant beats collapse, so tap by scene identity, not by
+    // beat count.)
+    while (state.cutscene?.defId === "test_prelude") tapCutscene(state);
+    expect(state.phase).toBe("cutscene");
+    expect(state.cutscene?.defId).toBe("test_prelude_2");
+    expect(state.cutsceneQueue).toEqual([]);
+    // Cast reset for the fresh scene: its own actors at their own marks.
+    expect(state.cutscene?.actors.map((a) => a.id)).toEqual(["hero"]);
+    // Tap the second scene out: NOW the intro takes the stage.
+    while (state.cutscene?.defId === "test_prelude_2") tapCutscene(state);
+    expect(state.phase).toBe("intro");
+    expect(state.cutscene).toBeNull();
+  });
+
+  it("the sim clock stays frozen across the whole chain", () => {
+    const state = createGame(SEED, "test_chain_level");
+    const defs = [cutsceneDef("test_prelude"), cutsceneDef("test_prelude_2")];
+    for (let i = 0; i < 20_000 && state.phase === "cutscene"; i++) {
+      step(state, idle, DT);
+      const def = defs.find((d) => d.id === state.cutscene?.defId);
+      const beat = state.cutscene && def?.beats[state.cutscene.beat];
+      if (beat && (beat.kind === "caption" || beat.kind === "say")) {
+        tapCutscene(state);
+      }
+    }
+    expect(state.phase).toBe("intro");
+    expect(state.stats.timeMs).toBe(0);
+  });
+
+  it("skipCutscene drops the whole chain, queue included", () => {
+    const state = createGame(SEED, "test_chain_level");
+    skipCutscene(state);
+    expect(state.phase).toBe("title");
+    expect(state.cutscene).toBeNull();
+    expect(state.cutsceneQueue).toEqual([]);
   });
 
   it("Ada leaves and never comes back", () => {

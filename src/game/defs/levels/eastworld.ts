@@ -19,6 +19,9 @@ export const EASTWORLD: LevelDef = {
   id: "eastworld",
   index: 5,
   name: "EASTWORLD",
+  // The between-level scene: the rift's far door with Eastworld's daylight
+  // leaking through — the hero steps out of the void and into a western.
+  prelude: "rift_exit",
   // The galloping desert-western drive — written for red dust, at home on it.
   music: "red_dust",
   intro: [

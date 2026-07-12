@@ -8,13 +8,11 @@ export const MOON: LevelDef = {
   id: "moon",
   index: 2,
   name: "THE MOON",
+  // The between-level scenes: the garage liftoff, then the flight out —
+  // the launch the intro monologue used to narrate, now shown.
+  prelude: ["launch", "voyage_moon"],
   music: "regolith_ride",
   intro: [
-    [
-      "I GOT THE PART BACK FROM THE",
-      "RAT. THE SHIP FLEW. AND NOW",
-      "I'M ON THE MOON.",
-    ],
     [
       "ADA'S TRACKER WENT QUIET",
       "SOMEWHERE NEAR THE OLD APOLLO",

@@ -1159,6 +1159,24 @@ export const FIX_CUTSCENE_JESUS: CutsceneDef = {
   beats: [{ kind: "caption", text: ["JESUS VARIANT."] }],
 };
 
+// A short second scene for the chained-prelude tests (`LevelDef.prelude`
+// as a list): one caption, so tests can tell exactly when the chain rolled
+// from `test_prelude` into this one.
+export const FIX_CUTSCENE_2: CutsceneDef = {
+  id: "test_prelude_2",
+  stage: { width: 200, height: 120, backdrop: "test", props: [] },
+  actors: [{ id: "hero", name: "ME", sprite: "hero", at: { x: 60, y: 100 } }],
+  beats: [{ kind: "caption", text: ["SECOND SCENE."] }],
+};
+
+// A level whose prelude is a CHAIN of scenes played back-to-back — the
+// shipped game's launch-then-flight openings.
+export const FIX_CHAIN_LEVEL: LevelDef = {
+  ...FIX_LEVEL,
+  id: "test_chain_level",
+  prelude: ["test_prelude", "test_prelude_2"],
+};
+
 let installed = false;
 
 /** Register the synthetic fixtures as the engine's active catalogs. Idempotent
@@ -1172,6 +1190,7 @@ export function installFixtures(force = false): void {
       test_level_2: FIX_LEVEL_2,
       test_merchant_level: FIX_MERCHANT_LEVEL,
       test_prelude_level: FIX_PRELUDE_LEVEL,
+      test_chain_level: FIX_CHAIN_LEVEL,
       test_clearall_level: FIX_CLEARALL_LEVEL,
       test_gated_level: FIX_GATED_LEVEL,
       test_well_level: FIX_WELL_LEVEL,
@@ -1194,6 +1213,7 @@ export function installFixtures(force = false): void {
     cutscenes: {
       test_prelude: FIX_CUTSCENE,
       test_prelude_jesus: FIX_CUTSCENE_JESUS,
+      test_prelude_2: FIX_CUTSCENE_2,
     },
   });
   installed = true;

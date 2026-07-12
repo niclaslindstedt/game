@@ -30,6 +30,7 @@ import merchant from "./merchant.mjs";
 import moon from "./moon.mjs";
 import prelude from "./prelude.mjs";
 import rift from "./rift.mjs";
+import scenes from "./scenes.mjs";
 import spacez from "./spacez.mjs";
 
 /** Every sprite family, each with its core-merged palette attached. */
@@ -47,6 +48,7 @@ export const FAMILIES = [
   rift,
   eastworld,
   bunker,
+  scenes,
 ].map((family) => ({
   ...family,
   // Throws on a char defined both locally and in the core — a family may

@@ -59,27 +59,49 @@ function drawStage(
     floorY: backdrop?.floorY ?? Math.round(height * 0.65),
   };
 
+  // The camera shift (stage drift + pan beats) scrolls the backdrop and the
+  // props; actors are screen-pinned. The floor line rides it at full depth —
+  // a downward pan sends the ground falling out of frame (the launch's
+  // ascent), so the wall paints the whole frame first and the floor is laid
+  // over whatever part of it is still on screen.
+  const shift = cutscene.shift;
+  const floorY = Math.round(paint.floorY + shift.y);
+
   ctx.imageSmoothingEnabled = false;
   ctx.fillStyle = paint.wall;
-  ctx.fillRect(0, 0, width, paint.floorY);
-  ctx.fillStyle = paint.floor;
-  ctx.fillRect(0, paint.floorY, width, height - paint.floorY);
-  ctx.fillStyle = paint.trim;
-  ctx.fillRect(0, paint.floorY, width, 2);
-  // Faint floorboards give the room depth without a tile pass.
-  for (let y = paint.floorY + 14; y < height; y += 14) {
-    ctx.fillRect(0, y, width, 1);
+  ctx.fillRect(0, 0, width, height);
+  if (floorY < height) {
+    ctx.fillStyle = paint.floor;
+    ctx.fillRect(0, Math.max(0, floorY), width, height - Math.max(0, floorY));
+    ctx.fillStyle = paint.trim;
+    ctx.fillRect(0, floorY, width, 2);
+    // Faint floorboards give the room depth without a tile pass.
+    for (let y = floorY + 14; y < height; y += 14) {
+      if (y >= 0) ctx.fillRect(0, y, width, 1);
+    }
   }
 
   // Props and visible actors share one painter's queue, bottom-anchored at
   // their pos (pos.y = where they meet the floor), sorted back to front.
-  type Placed = { sprite: string; x: number; y: number; flip: boolean };
-  const queue: Placed[] = def.stage.props.map((prop) => ({
-    sprite: prop.kind,
-    x: prop.pos.x,
-    y: prop.pos.y,
-    flip: false,
-  }));
+  type Placed = {
+    sprite: string;
+    x: number;
+    y: number;
+    flip: boolean;
+    wrap: boolean;
+    jitter: number;
+  };
+  const queue: Placed[] = def.stage.props.map((prop) => {
+    const depth = prop.parallax ?? 1;
+    return {
+      sprite: prop.kind,
+      x: prop.pos.x + shift.x * depth,
+      y: prop.pos.y + shift.y * depth,
+      flip: false,
+      wrap: prop.wrap ?? false,
+      jitter: 0,
+    };
+  });
   for (const actor of cutscene.actors) {
     if (actor.hidden) continue;
     // Walking actors alternate `<sprite>_0/_1`; idle holds frame 0.
@@ -89,6 +111,8 @@ function drawStage(
       x: actor.pos.x,
       y: actor.pos.y,
       flip: actor.faceLeft,
+      wrap: false,
+      jitter: actor.shake,
     });
   }
   queue.sort((a, b) => a.y - b.y);
@@ -98,8 +122,24 @@ function drawStage(
       spriteByName(assets.sprites, item.sprite) ??
       spriteByName(assets.sprites, `${item.sprite}_0`);
     if (!sprite) continue;
-    const x = Math.round(item.x - sprite.width / 2);
-    const y = Math.round(item.y - sprite.height);
+    let cx = item.x;
+    if (item.wrap) {
+      // Wrapping props re-enter from the far edge under a long drift (the
+      // transit star fields) instead of scrolling away forever.
+      const span = width + sprite.width;
+      const centered = cx + sprite.width / 2;
+      cx = (((centered % span) + span) % span) - sprite.width / 2;
+    }
+    // A shaking actor trembles on the scene clock — deterministic, so the
+    // preview harness replays it identically.
+    const jx = item.jitter
+      ? Math.round(Math.sin(cutscene.timeMs / 30) * item.jitter)
+      : 0;
+    const jy = item.jitter
+      ? Math.round(Math.cos(cutscene.timeMs / 23) * item.jitter * 0.6)
+      : 0;
+    const x = Math.round(cx - sprite.width / 2) + jx;
+    const y = Math.round(item.y - sprite.height) + jy;
     if (item.flip) {
       ctx.save();
       ctx.translate(x + sprite.width, y);

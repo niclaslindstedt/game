@@ -58,6 +58,7 @@ import { storyItemDef } from "./defs/story.ts";
 import { activeUniqueDefs, uniqueDef } from "./defs/uniques.ts";
 import { baseStatBonus, diminishStat } from "./leveling.ts";
 import { currentMobLevel } from "./menace.ts";
+import { advanceCutsceneChain } from "./story.ts";
 import { BALANCE } from "./tuning.ts";
 import type {
   Affix,
@@ -2192,22 +2193,21 @@ export function skipOutro(state: GameState): void {
 
 /**
  * The player's tap during the prelude: cut the running beat short (snap a
- * walk to its mark, dismiss a line early). One tap, one beat.
+ * walk to its mark, dismiss a line early). One tap, one beat. Tapping the
+ * last beat rolls the chain forward — the next queued scene, or the intro.
  */
 export function tapCutscene(state: GameState): void {
   if (state.phase !== "cutscene" || !state.cutscene) return;
   advanceCutsceneBeat(state.cutscene, cutsceneDef(state.cutscene.defId));
-  if (state.cutscene.done) {
-    state.cutscene = null;
-    state.phase = "intro";
-  }
+  if (state.cutscene.done) advanceCutsceneChain(state);
 }
 
 /**
- * The prelude's SKIP button: end the opening scene outright. Skipping the
- * prelude also skips the hero's level-intro monologue that would follow —
- * one press bails the whole opening, landing on the level-name `title` card
- * just before the drop.
+ * The prelude's SKIP button: end the opening outright — the running scene
+ * AND every scene still queued behind it. Skipping the prelude also skips
+ * the hero's level-intro monologue that would follow — one press bails the
+ * whole opening, landing on the level-name `title` card just before the
+ * drop.
  */
 export function skipCutscene(state: GameState): void {
   if (state.phase !== "cutscene") return;
@@ -2215,6 +2215,7 @@ export function skipCutscene(state: GameState): void {
     finishCutscene(state.cutscene, cutsceneDef(state.cutscene.defId));
   }
   state.cutscene = null;
+  state.cutsceneQueue = [];
   state.phase = "title";
 }
 

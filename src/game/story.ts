@@ -6,9 +6,11 @@
 // `playing` — and `advanceDialogue` is the player's tap, safe to call from
 // the app outside `step()` exactly like the inventory mutators.
 
+import { createCutscene } from "@game/lib/cutscene.ts";
 import { distance, type Vec2 } from "@game/lib/vec.ts";
 import { DIALOGUE, DOORS, GATES } from "./config.ts";
 import { companionDef } from "./defs/companions.ts";
+import { cutsceneDef } from "./defs/cutscenes.ts";
 import { enemyDef } from "./defs/enemies/index.ts";
 import type { DialoguePage } from "./defs/enemies/types.ts";
 import { levelDef } from "./defs/levels/index.ts";
@@ -17,6 +19,24 @@ import { storyItemDef } from "./defs/story.ts";
 import { thoughtDef } from "./defs/thoughts.ts";
 import { addMapMarker } from "./map.ts";
 import type { DialogueState, Enemy, GameState } from "./types.ts";
+
+/**
+ * The played-out prelude scene ends: start the next scene in the chain
+ * (`LevelDef.prelude` as a list — the launch, then the flight), or hand the
+ * stage to the intro monologue once the queue is dry. The queue's ids are
+ * already variant-resolved (create.ts), so they look up directly. Both the
+ * step loop and the player's tap land here so the chain behaves the same
+ * whether a scene runs out or is clicked through.
+ */
+export function advanceCutsceneChain(state: GameState): void {
+  const next = state.cutsceneQueue.shift();
+  if (next) {
+    state.cutscene = createCutscene(cutsceneDef(next));
+  } else {
+    state.cutscene = null;
+    state.phase = "intro";
+  }
+}
 
 /** A single-speaker scene: every page belongs to the named speaker. */
 function soloPages(pages: string[][]): {

@@ -13,19 +13,17 @@ export const MARS: LevelDef = {
   id: "mars",
   index: 3,
   name: "MARS",
+  // The between-level scenes: ARMSTRONG's send-off at the landing site,
+  // then the flight — the ghost-kept-his-word and tracker-ping pages the
+  // intro used to narrate now play out on stage.
+  prelude: ["moon_depart", "voyage_mars"],
   music: "red_dust",
   intro: [
-    ["THE GHOST KEPT HIS WORD.", "THE MOON LET ME GO."],
     [
       "HE SAID THE MOON WAS SPACEZ'S",
       "BIG MISTAKE - THAT THE COMPANY",
       "PACKED EVERYTHING INTO CRATES",
       "AND RAN. TO MARS.",
-    ],
-    [
-      "ADA'S TRACKER AGREES. ONE",
-      "PING, FROM THE RED PLANET.",
-      "FAINT, BUT THERE.",
     ],
     [
       "I KNOW WHAT A SPACEZ COLONY",
