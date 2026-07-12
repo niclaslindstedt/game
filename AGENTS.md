@@ -161,10 +161,23 @@ percentage. The track is exponential: its four quarters cover 0→1, 1→2, 2→
 10→100, so the useful low end gets most of the travel. The mapping
 (`sliderToBalance`/`balanceToSlider`), the snap grid, the `×` readout, and the
 knob catalog (labels, blurbs) live in `website/src/game/balanceKnobs.ts`; the
-drag track is `website/src/game/BalanceSlider.tsx`. The values persist in the
+drag track is the shared `@ui/lib/PixelSlider.tsx`. The values persist in the
 settings (`balance` in `settings.ts`, applied on load like the other engine
 flags) and a RESET ALL row restores the shipped 1× tuning. Keep the page around
 ten knobs — one lever per system, not a config editor.
+
+**Settings controls share two reusable pixel widgets** (generic React/UI, in
+`website/src/lib/`, imported via `@ui/lib/*` for eventual extraction to
+oss-framework): `PixelSlider.tsx` — the 0..1 drag track used by every slidable
+row (the BALANCE knobs and the SOUND music/SFX volumes) — and
+`PixelToggle.tsx` — an iOS-style pixel ON/OFF switch (dark→green, a knob that
+snaps left/right) used by every row that reads as a straight on/off (DEBUG
+MODE, AUTO LEVEL STATS, CHARACTER WEAPON, WEAPON SWING, VIBRATION, XP ON KILL).
+Both are presentational; `TitleScreen.tsx` owns the menu wiring via a
+`MenuEntry`'s `slider`/`toggle` field, and the arrow keys steer the focused
+row's control (←/→). Two-mode rows that are NOT on/off (MOUSE follow/hold,
+POWERUPS on-pickup/manual, GEAR equip/bag, POWERUPS left/right corner) stay
+label-cycling buttons — a switch implies enabled/disabled, which those don't.
 
 The feature flags gate recently-added systems so they can be toggled at
 runtime. All are **opt-in — off by default** (the app applies the off state on

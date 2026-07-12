@@ -2234,15 +2234,25 @@ body {
   gap: 0.3rem;
 }
 
-/* DEVELOPER → BALANCE knob slider: a draggable track under the row label.
-   Sharp-cornered to match the pixel HUD; the fill and knob use the menu's
-   amber accent. `touch-action: none` so a horizontal drag steers the knob
-   instead of scrolling the (scrollable) balance list. */
-.balance-slider {
+/* A menu row whose label carries an inline control (the ON/OFF switch): keep
+   the label and switch on one baseline-centered line so the toggle reads like
+   an iOS row control. Rows without one hold a single child and look unchanged. */
+.menu-item-headline {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+}
+
+/* Pixel drag track (PixelSlider): a draggable bar under a row label — the
+   DEVELOPER → BALANCE knobs and the SOUND volume rows. Sharp-cornered to match
+   the pixel HUD; the fill and knob use the menu's amber accent.
+   `touch-action: none` so a horizontal drag steers the knob instead of
+   scrolling the list. */
+.pixel-slider {
   position: relative;
   /* Fill most of the row and grow with the viewport: the wide landscape and
      desktop layouts (where rem doubles past UI_SCALE_BREAKPOINT_PX) get a
-     proportionally longer track. Being the widest thing in a BALANCE row, the
+     proportionally longer track. Being the widest thing in the row, the
      slider sets the row width, so the centered menu keeps the track's right
      reach matched to its left inset. */
   width: min(26rem, 80vw);
@@ -2253,14 +2263,14 @@ body {
   touch-action: none;
 }
 
-.balance-slider-fill {
+.pixel-slider-fill {
   position: absolute;
   inset: 0 auto 0 0;
   background: #ffd75e;
   pointer-events: none;
 }
 
-.balance-slider-knob {
+.pixel-slider-knob {
   position: absolute;
   top: 50%;
   width: 0.55rem;
@@ -2269,6 +2279,56 @@ body {
   background: #fff3c4;
   border: 1px solid #7a5a12;
   pointer-events: none;
+}
+
+/* Pixel ON/OFF switch (PixelToggle): an iOS-style pill in the game's palette —
+   dark when off, green when on — with a chunky knob that snaps left/right in
+   stepped jumps (no smooth glide, to keep the pixel feel). Presentational; the
+   enclosing menu row flips it. */
+.pixel-toggle {
+  position: relative;
+  flex: none;
+  width: 2rem;
+  height: 1rem;
+  background: #2b2f36;
+  border: 1px solid #4a505a;
+  border-radius: 0.5rem;
+  transition:
+    background-color 0.12s steps(2),
+    border-color 0.12s steps(2);
+}
+
+.pixel-toggle[data-on="true"] {
+  background: #2f8f66;
+  border-color: #7ef0c8;
+}
+
+.pixel-toggle-knob {
+  position: absolute;
+  top: 50%;
+  left: 0.12rem;
+  width: 0.72rem;
+  height: 0.72rem;
+  transform: translateY(-50%);
+  background: #cfd6dd;
+  border-radius: 0.36rem;
+  transition:
+    left 0.12s steps(3),
+    background-color 0.12s steps(2);
+}
+
+.pixel-toggle[data-on="true"] .pixel-toggle-knob {
+  left: calc(100% - 0.72rem - 0.12rem);
+  background: #eafff6;
+}
+
+/* Motion off: the switch still moves (it must show state) but without the
+   stepped tween — snap instantly. */
+@media (prefers-reduced-motion: reduce) {
+  .pixel-toggle,
+  .pixel-toggle-knob {
+    transition: none;
+  }
 }
 
 /* ---- Character roster + creation (CharacterScreen) ---- */

@@ -1,9 +1,10 @@
 // SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
-// The drag track for one DEVELOPER → BALANCE knob: a filled bar with a knob
-// the developer drags (or taps) to set the multiplier. The 0..1 position it
-// reports is mapped to a multiplier by balanceKnobs.ts; this component owns
-// only the pointer geometry. Lives beside the menu button in TitleScreen so
-// the row's label/readout stays in the shared menu idiom.
+// A pixel-styled drag track: a filled bar with a knob the player drags or taps
+// to set a 0..1 position. Purely geometry — the caller maps the position to
+// whatever it means (a balance multiplier, a volume level, …) and renders the
+// value readout itself. Generic React/UI game code, so it lives in
+// website/src/lib/ (imported as @ui/lib/PixelSlider.tsx) for eventual
+// extraction into oss-framework.
 
 import {
   useCallback,
@@ -12,13 +13,13 @@ import {
 } from "react";
 
 type Props = {
-  /** Current slider position, 0 (fully left) … 1 (fully right). */
+  /** Current position, 0 (fully left) … 1 (fully right). */
   pos: number;
   /** New position from a drag or tap, already clamped to [0, 1]. */
   onChange: (pos: number) => void;
 };
 
-export function BalanceSlider({ pos, onChange }: Props) {
+export function PixelSlider({ pos, onChange }: Props) {
   const trackRef = useRef<HTMLDivElement>(null);
 
   const posFromEvent = useCallback((clientX: number): number => {
@@ -56,14 +57,14 @@ export function BalanceSlider({ pos, onChange }: Props) {
   return (
     <div
       ref={trackRef}
-      className="balance-slider"
+      className="pixel-slider"
       onPointerDown={onPointerDown}
       onPointerMove={onPointerMove}
       // Clicks on the track must not bubble to the menu button's confirm.
       onClick={(event) => event.stopPropagation()}
     >
-      <div className="balance-slider-fill" style={{ width: fill }} />
-      <div className="balance-slider-knob" style={{ left: fill }} />
+      <div className="pixel-slider-fill" style={{ width: fill }} />
+      <div className="pixel-slider-knob" style={{ left: fill }} />
     </div>
   );
 }
