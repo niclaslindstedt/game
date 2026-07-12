@@ -812,18 +812,50 @@ for (const [id, accent] of Object.entries(LIVERIES)) {
   }
 }
 
+// ---- RARE & UNIQUE mobs (palette variants — the Diablo recolor idiom) ------
+// The special suits wear the agencies' own body plans in cuts no payroll
+// issues twice, so a find reads at a glance (the engine adds the aura + name).
+for (const frame of [0, 1]) {
+  // MOONLIGHTING AGENT — the windbreaker rank in the OTHER agency's olive,
+  // brass where the yellow lettering was.
+  SPRITES[`moonlighting_agent_${frame}`] = swapPalette(
+    SPRITES[`fbi_agent_${frame}`],
+    { J: "e", y: "I" },
+  );
+  // THE MOLE — the border detail's cut in aged leather, a brass scanner
+  // band, suit-black shoes. Employed by everyone, dressed by no one.
+  SPRITES[`the_mole_${frame}`] = swapPalette(SPRITES[`ice_agent_${frame}`], {
+    K: "D",
+    Q: "I",
+    N: "K",
+  });
+}
+
 export default {
   name: "bunker",
   /** Ground tile behind this family's contact sheet. */
   ground: "bunker_0",
   palette: PALETTE,
   sprites: SPRITES,
+  /**
+   * Wound-style overrides — THE MOLE's aged-leather coat is itself
+   * blood-dark, so dried cores and grime vanish on it: cores punch through
+   * in suit black, the scuffs dust pale off the vault floor.
+   */
+  wounds: {
+    the_mole: { splat: "r", core: "K", scuff: "Z" },
+  },
   // The vault floor and carpet read as terrain, not subjects.
   contrastExempt: ["bunker_0", "bunker_1", "carpet_0", "carpet_1"],
   animations: {
     cia_agent_walk: { frames: ["cia_agent_0", "cia_agent_1"], delayMs: 320 },
     fbi_agent_walk: { frames: ["fbi_agent_0", "fbi_agent_1"], delayMs: 300 },
     ice_agent_walk: { frames: ["ice_agent_0", "ice_agent_1"], delayMs: 280 },
+    moonlighting_agent_walk: {
+      frames: ["moonlighting_agent_0", "moonlighting_agent_1"],
+      delayMs: 300,
+    },
+    the_mole_walk: { frames: ["the_mole_0", "the_mole_1"], delayMs: 280 },
     soldier_walk: { frames: ["soldier_0", "soldier_1"], delayMs: 320 },
     vacuum_bot_roll: { frames: ["vacuum_bot_0", "vacuum_bot_1"], delayMs: 240 },
     bodyguard_walk: { frames: ["bodyguard_0", "bodyguard_1"], delayMs: 340 },

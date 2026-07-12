@@ -79,6 +79,62 @@ export const MARS_ENEMIES: Record<string, EnemyDef> = {
     ai: { aggroRadius: 1000 },
     dropProfile: { dropBonus: 0.4, tierBonus: 0.3 },
   },
+  // ---- RARE & UNIQUE mobs (config RARE_MOBS; placed via the level's
+  // `rareSpawns`). Authored at ordinary minion numbers — the engine applies
+  // the whole tier at spawn. No dialogue: special graphics and a loot burst.
+  //
+  // MISPRINTED FEMBOT — a bad batch off the companion line, glitch-green and
+  // still smiling. Escaped the recycler as a small malfunctioning cohort.
+  misprinted_fembot: {
+    id: "misprinted_fembot",
+    name: "MISPRINTED FEMBOT",
+    role: "minion",
+    rarity: "rare",
+    pack: [2, 4],
+    sprite: "misprinted_fembot",
+    gore: "sparks",
+    hp: 60,
+    speed: 24,
+    radius: 8,
+    contactDamage: 15,
+    critChance: 0.18,
+    contactCooldownMs: 700,
+    ai: { aggroRadius: 1000 },
+  },
+  // DERELICT ROVER — the mission that "lost contact" in the 90s, rusted to
+  // the axles and still following its last order. Always alone.
+  derelict_rover: {
+    id: "derelict_rover",
+    name: "DERELICT ROVER",
+    role: "minion",
+    rarity: "rare",
+    sprite: "derelict_rover",
+    gore: "sparks",
+    hp: 90,
+    speed: 14,
+    radius: 9,
+    contactDamage: 18,
+    critChance: 0.12,
+    contactCooldownMs: 700,
+    ai: { aggroRadius: 950 },
+  },
+  // UNIT ZERO — the first robot SpaceZ ever printed, obsolete for decades
+  // and never decommissioned. Antique brass, original firmware, a grudge.
+  unit_zero: {
+    id: "unit_zero",
+    name: "UNIT ZERO",
+    role: "minion",
+    rarity: "unique",
+    sprite: "unit_zero",
+    gore: "sparks",
+    hp: 85,
+    speed: 18,
+    radius: 9,
+    contactDamage: 20,
+    critChance: 0.12,
+    contactCooldownMs: 700,
+    ai: { aggroRadius: 1000 },
+  },
   // ---- The Mars elites — three tech billionaires who bought their way off
   // Earth, pinned along the walk to MOSQUE so the colony's story unspools in
   // order: the fembot line and its harvest, the moon post-mortem, and the

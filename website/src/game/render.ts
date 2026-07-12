@@ -637,10 +637,11 @@ export function drawFrame(
   // drawn later in the loop never paints over an earlier mob's bar — every bar
   // stays legible on top of the whole horde.
   const healthBars: {
-    role: string;
     x: number;
     y: number;
     width: number;
+    height: number;
+    color: string;
     hpFrac: number;
   }[] = [];
   for (const enemy of state.enemies) {
@@ -681,6 +682,30 @@ export function drawFrame(
       ctx.beginPath();
       ctx.arc(cx, cy, def.radius + 3 + evo, 0, Math.PI * 2);
       ctx.fill();
+      ctx.globalAlpha = 1;
+    }
+    // A RARE or UNIQUE mob (config RARE_MOBS) wears a steady jeweled aura —
+    // the Diablo special-monster glow: cool blue for a rare, radiant gold for
+    // a one-of-a-kind unique — so the special find reads at a glance over the
+    // recolored body, wherever it stands in the horde.
+    if (def.rarity) {
+      const cx = Math.round(enemy.pos.x - camera.x);
+      const cy = Math.round(enemy.pos.y - camera.y) + bob;
+      const unique = def.rarity === "unique";
+      const pulse = 0.5 + 0.5 * Math.sin(timeMs / 260 + enemy.id);
+      // Two nested rings — a soft body halo under a brighter rim — so the tell
+      // reads without washing out the sprite it wraps.
+      ctx.fillStyle = unique ? "#ffcf40" : "#5cc8ff";
+      ctx.globalAlpha = (unique ? 0.16 : 0.13) + 0.09 * pulse;
+      ctx.beginPath();
+      ctx.arc(cx, cy, def.radius + (unique ? 6 : 4), 0, Math.PI * 2);
+      ctx.fill();
+      ctx.globalAlpha = (unique ? 0.5 : 0.4) + 0.2 * pulse;
+      ctx.strokeStyle = unique ? "#ffe38a" : "#a6e0ff";
+      ctx.lineWidth = 1;
+      ctx.beginPath();
+      ctx.arc(cx, cy, def.radius + (unique ? 7 : 5), 0, Math.PI * 2);
+      ctx.stroke();
       ctx.globalAlpha = 1;
     }
     // A TELEGRAPHED move winding up (mechanics.ts): the mob is rooted, so
@@ -748,46 +773,53 @@ export function drawFrame(
     if (!critBlink) ctx.drawImage(sprite, x, y);
     ctx.globalAlpha = 1;
 
-    // Health over the head. Bosses and elites always carry a bar once wounded;
-    // regular minions get one only when the HEALTH BARS display setting is on —
-    // and just a few pixels wide, since they hold so little hp that a full-size
-    // bar would swamp the sprite. Collected now, drawn in the pass below.
-    const minionBar = def.role === "minion" && getSettings().healthBars === "on";
-    if ((def.role !== "minion" || minionBar) && enemy.hp < enemy.maxHp) {
-      const width =
-        def.role === "boss"
+    // Health over the head. Bosses and elites always carry a bar once wounded,
+    // and so do RARE/UNIQUE mobs — the special-monster tell that reads them as
+    // the mini-bosses they fight like, in their aura's color. A plain minion
+    // gets one only when the HEALTH BARS display setting is on, drawn thin and
+    // trimmed just inside its silhouette since it holds so little hp. All are
+    // collected here and drawn in the pass below, so a mob in front never
+    // paints over another's bar.
+    const plainMinion = def.role === "minion" && !def.rarity;
+    const showBar = !plainMinion || getSettings().healthBars === "on";
+    if (showBar && enemy.hp < enemy.maxHp) {
+      const width = plainMinion
+        ? // Trim the visible-body width by 2 so the bar sits inside the
+          // sprite's silhouette rather than reaching its edges.
+          Math.max(2, opaqueWidth(sprite) - 2)
+        : def.role === "boss"
           ? 40
+          : 28;
+      const color = def.rarity
+        ? def.rarity === "unique"
+          ? "#ffcf40"
+          : "#5cc8ff"
+        : def.role === "boss"
+          ? "#d83a3a"
           : def.role === "elite"
-            ? 28
-            : // Trim the visible-body width by 2 so the bar sits inside the
-              // sprite's silhouette rather than reaching its edges.
-              Math.max(2, opaqueWidth(sprite) - 2);
+            ? "#d9a0f0"
+            : "#e05050";
       healthBars.push({
-        role: def.role,
         x: enemy.pos.x - camera.x,
-        y: y - (def.role === "minion" ? 3 : 6),
+        y: y - (plainMinion ? 3 : 6),
         width,
+        height: plainMinion ? 1 : 3,
+        color,
         hpFrac: enemy.hp / enemy.maxHp,
       });
     }
   }
   // Second pass: paint every collected bar on top of the drawn horde.
   for (const bar of healthBars) {
-    const barHeight = bar.role === "minion" ? 1 : 3;
     const bx = Math.round(bar.x - bar.width / 2);
     ctx.fillStyle = "#0b0d10";
-    ctx.fillRect(bx - 1, bar.y - 1, bar.width + 2, barHeight + 2);
-    ctx.fillStyle =
-      bar.role === "boss"
-        ? "#d83a3a"
-        : bar.role === "elite"
-          ? "#d9a0f0"
-          : "#e05050";
+    ctx.fillRect(bx - 1, bar.y - 1, bar.width + 2, bar.height + 2);
+    ctx.fillStyle = bar.color;
     ctx.fillRect(
       bx,
       bar.y,
       Math.max(1, Math.round(bar.width * bar.hpFrac)),
-      barHeight,
+      bar.height,
     );
   }
 

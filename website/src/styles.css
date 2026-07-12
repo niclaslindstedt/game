@@ -2234,13 +2234,29 @@ body {
   gap: 0.3rem;
 }
 
-/* A menu row whose label carries an inline control (the ON/OFF switch): keep
-   the label and switch on one baseline-centered line so the toggle reads like
-   an iOS row control. Rows without one hold a single child and look unchanged. */
+/* A menu row whose label carries an inline control (the ON/OFF switch): the
+   label stays left and the switch is pushed to the row's right edge (see the
+   `margin-left: auto` below), so the switches line up in a column down the
+   right of the screen. The headline stretches to the full row width to make
+   that right edge shared across rows (see `.title-menu .menu-item-text`). */
 .menu-item-headline {
   display: flex;
   align-items: center;
   gap: 0.6rem;
+  align-self: stretch;
+}
+
+/* Stretch the label/blurb column to the menu's (centered) block width so the
+   right-aligned switch on every ON/OFF row shares one right edge. Left-aligned
+   labels, blurbs, and sliders are unaffected — they just no longer shrink the
+   column to their own width. Scoped to the title menu so the character roster
+   rows keep their own layout. */
+.title-menu .menu-item-text {
+  flex: 1;
+}
+
+.menu-item-headline .pixel-toggle {
+  margin-left: auto;
 }
 
 /* Pixel drag track (PixelSlider): a draggable bar under a row label — the
@@ -2281,51 +2297,57 @@ body {
   pointer-events: none;
 }
 
-/* Pixel ON/OFF switch (PixelToggle): an iOS-style pill in the game's palette —
-   dark when off, green when on — with a chunky knob that snaps left/right in
-   stepped jumps (no smooth glide, to keep the pixel feel). Presentational; the
-   enclosing menu row flips it. */
+/* Pixel ON/OFF switch (PixelToggle): the PixelSlider frozen at its two ends —
+   the same sharp track, amber fill, and blocky knob. OFF is the slider empty
+   with the knob at the left; ON fills amber with the knob snapped to the
+   right. A short fixed track so it reads as a two-state switch, not a range. */
 .pixel-toggle {
   position: relative;
   flex: none;
-  width: 2rem;
-  height: 1rem;
+  width: 2.2rem;
+  height: 0.6rem;
   background: #2b2f36;
   border: 1px solid #4a505a;
-  border-radius: 0.5rem;
-  transition:
-    background-color 0.12s steps(2),
-    border-color 0.12s steps(2);
 }
 
-.pixel-toggle[data-on="true"] {
-  background: #2f8f66;
-  border-color: #7ef0c8;
+.pixel-toggle-fill {
+  position: absolute;
+  inset: 0 auto 0 0;
+  width: 0;
+  background: #ffd75e;
+  transition: width 0.1s steps(2);
+}
+
+.pixel-toggle[data-on="true"] .pixel-toggle-fill {
+  width: 100%;
 }
 
 .pixel-toggle-knob {
   position: absolute;
   top: 50%;
-  left: 0.12rem;
-  width: 0.72rem;
-  height: 0.72rem;
-  transform: translateY(-50%);
-  background: #cfd6dd;
-  border-radius: 0.36rem;
+  left: 0;
+  width: 1rem;
+  height: 1rem;
+  transform: translate(-50%, -50%);
+  /* Grey when off; the amber below lights it on. */
+  background: #9aa3ad;
+  border: 1px solid #5a6068;
   transition:
-    left 0.12s steps(3),
-    background-color 0.12s steps(2);
+    left 0.1s steps(2),
+    background-color 0.1s steps(2),
+    border-color 0.1s steps(2);
 }
 
 .pixel-toggle[data-on="true"] .pixel-toggle-knob {
-  left: calc(100% - 0.72rem - 0.12rem);
-  background: #eafff6;
+  left: 100%;
+  background: #fff3c4;
+  border-color: #7a5a12;
 }
 
-/* Motion off: the switch still moves (it must show state) but without the
-   stepped tween — snap instantly. */
+/* Motion off: the switch still snaps between states (it must show state) but
+   without the stepped tween. */
 @media (prefers-reduced-motion: reduce) {
-  .pixel-toggle,
+  .pixel-toggle-fill,
   .pixel-toggle-knob {
     transition: none;
   }

@@ -554,6 +554,64 @@ export const WORLD_DROP = {
 } as const;
 
 /**
+ * RARE & UNIQUE MOBS — Diablo-style special monsters laced into the levels
+ * (see `EnemyDef.rarity` and `LevelDef.rareSpawns`). A RARE mob is a
+ * generically-named oddity ("WANDERING TOURIST") that turns up about once per
+ * map, solo or as a small pack; a UNIQUE mob is a NAMED, one-of-a-kind figure
+ * that only appears on a fraction of runs and is always alone. Both are
+ * MINION-role defs authored at ordinary minion numbers — the engine applies
+ * the whole tier here at spawn (`spawnEnemy`), so every rare/unique rides the
+ * same multipliers: tougher (hp), meaner (contact damage), levels ahead of
+ * the horde for the loot gates (`levelBonus`), and far richer drop rolls
+ * (`dropMult` multiplies the per-kill drop chance, every whole 1.0 of the
+ * product a guaranteed payout — see `dropMinionLoot`). Like elites/bosses
+ * they power-match the hero when the fight opens (`maybePowerScale`), so a
+ * late-campaign rare is a real fight, not a placed-at-level-1 speed bump.
+ */
+export const RARE_MOBS = {
+  /** The per-tier multipliers over the def's authored minion baseline. */
+  tuning: {
+    rare: {
+      /** Hp multiplier — kill XP is hp-proportional, so the reward scales. */
+      hpMult: 5,
+      /** Contact-damage multiplier (folded into the mob's `contactMult`). */
+      damageMult: 1.5,
+      /** Multiplies the per-kill drop chance (~20× the rank and file). */
+      dropMult: 20,
+      /** Monster levels above the horde baseline (reaches tier gates early). */
+      levelBonus: 2,
+      /** Added to each equipment payout's tier roll. */
+      tierBonus: 0.1,
+    },
+    unique: {
+      hpMult: 10,
+      damageMult: 2,
+      dropMult: 100,
+      levelBonus: 4,
+      tierBonus: 0.2,
+    },
+  },
+  /**
+   * Chance the level's encounter of each tier exists at all, rolled once at
+   * level creation: a rare shows up on most runs ("maybe once per map"), a
+   * unique on about one run in five.
+   */
+  encounterChance: { rare: 0.8, unique: 0.2 },
+  /**
+   * Distance band the encounter is placed in, as fractions of the spawn→
+   * objective axis (same yardstick as `SpawnSpec.band`) — off the doorstep,
+   * but not camped on the boss.
+   */
+  band: [0.25, 0.9] as [number, number],
+  /** Pack members scatter this far (world px) around the encounter anchor. */
+  packScatter: 26,
+  /** Ceiling on one kill's drop payouts, however high the multiplied chance
+   * runs (LUCK and the dev drop-rate knob multiply in) — a loot burst, not a
+   * carpet. */
+  maxDropRolls: 8,
+} as const;
+
+/**
  * The DERIVED arrival loadout (`deriveArrivalLoadout` in arrival.ts): the
  * realistic stand-in used when a mid-campaign level starts with nothing
  * banked — dev `?level=` jumps, playtest bots, wiped storage. In the real

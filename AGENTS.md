@@ -170,12 +170,16 @@ ten knobs — one lever per system, not a config editor.
 `website/src/lib/`, imported via `@ui/lib/*` for eventual extraction to
 oss-framework): `PixelSlider.tsx` — the 0..1 drag track used by every slidable
 row (the BALANCE knobs and the SOUND music/SFX volumes) — and
-`PixelToggle.tsx` — an iOS-style pixel ON/OFF switch (dark→green, a knob that
-snaps left/right) used by every row that reads as a straight on/off (DEBUG
+`PixelToggle.tsx` — a pixel ON/OFF switch drawn as the slider frozen at its two
+ends (same amber track + blocky knob; off is empty/knob-left, on is
+filled/knob-right) used by every row that reads as a straight on/off (DEBUG
 MODE, AUTO LEVEL STATS, CHARACTER WEAPON, WEAPON SWING, VIBRATION, XP ON KILL).
-Both are presentational; `TitleScreen.tsx` owns the menu wiring via a
-`MenuEntry`'s `slider`/`toggle` field, and the arrow keys steer the focused
-row's control (←/→). Two-mode rows that are NOT on/off (MOUSE follow/hold,
+The switch is **right-aligned** to a shared edge down the right of the menu
+(the label/blurb column stretches to the block width — see
+`.title-menu .menu-item-text`). Both are presentational; `TitleScreen.tsx` owns
+the menu wiring via a `MenuEntry`'s `slider`/`toggle` field, and the arrow keys
+steer the focused row's control (←/→). Two-mode rows that are NOT on/off (MOUSE
+follow/hold,
 POWERUPS on-pickup/manual, GEAR equip/bag, POWERUPS left/right corner) stay
 label-cycling buttons — a switch implies enabled/disabled, which those don't.
 
@@ -269,29 +273,42 @@ from GitHub Packages. **Prefer the framework over hand-rolling**:
 
 ## Documentation sync points
 
-| When you change…                      | Update…                                                                                |
-| ------------------------------------- | -------------------------------------------------------------------------------------- |
-| game identity (title, domain, …)      | `game.config.json` only — the single source of truth; then `make icons` (OG art)       |
-| engine public API (`src/index.ts`)    | `docs/architecture.md`, `README.md` Usage                                              |
-| game content (levels, enemies, story) | `docs/game-content.md` (this game's walkthrough; a sequel replaces it wholesale)       |
-| story or dialogue text (any line)     | `docs/manuscript.md` — the story's source of truth (see **Story & dialogue** below)    |
-| Make targets / npm scripts            | `README.md` Usage, `CONTRIBUTING.md`, this file                                        |
-| deploy slots / pages workflow         | `docs/architecture.md`, `README.md` Play table, `website/pwa-plugin.ts` `DEPLOY_SLOTS` |
-| config knobs (env vars, URL params)   | `docs/configuration.md`, `README.md` Configuration                                     |
-| PWA surface (manifest, icons, SW)     | `docs/architecture.md`, regenerate icons via `make icons`                              |
-| version anywhere                      | never by hand — `scripts/update-versions.sh` owns it                                   |
+| When you change…                      | Update…                                                                                                    |
+| ------------------------------------- | ---------------------------------------------------------------------------------------------------------- |
+| game identity (title, domain, …)      | `game.config.json` only — the single source of truth; then `make icons` (OG art)                           |
+| engine public API (`src/index.ts`)    | `docs/architecture.md`, `README.md` Usage                                                                  |
+| game content (levels, enemies, story) | `docs/game-content.md` (this game's walkthrough; a sequel replaces it wholesale)                           |
+| a plot beat / the story as a whole    | `docs/story.md` (the gist — top of the chain), then push down (see **Story & dialogue** below)             |
+| story or dialogue text (any line)     | `docs/manuscript.md` — the verbatim script; `docs/story.md` sits above it (see **Story & dialogue** below) |
+| Make targets / npm scripts            | `README.md` Usage, `CONTRIBUTING.md`, this file                                                            |
+| deploy slots / pages workflow         | `docs/architecture.md`, `README.md` Play table, `website/pwa-plugin.ts` `DEPLOY_SLOTS`                     |
+| config knobs (env vars, URL params)   | `docs/configuration.md`, `README.md` Configuration                                                         |
+| PWA surface (manifest, icons, SW)     | `docs/architecture.md`, regenerate icons via `make icons`                                                  |
+| version anywhere                      | never by hand — `scripts/update-versions.sh` owns it                                                       |
 
 The website must be regenerated whenever source-derived content changes
 (§11.2): `website/scripts/extract-source-data.mjs` runs on every build and
 fails if `src/version.ts` and `package.json` disagree.
 
-## Story & dialogue — the manuscript is the source of truth
+## Story & dialogue — a three-tier chain, `story.md` on top
 
-[`docs/manuscript.md`](docs/manuscript.md) is the **single source of truth for
-the game's story and dialogue**. It transcribes every spoken line, monologue,
-caption, and piece of found lore verbatim, in narrative order. Treat it as
-canonical: when the shipped content and the manuscript disagree, the manuscript
-is right and the data must be corrected to match.
+The story lives in a three-tier chain, and changes flow **downward, never up**:
+
+1. [`docs/story.md`](docs/story.md) — **the gist**: the whole plot in prose, in
+   narrative order (one paragraph per intro & per cutscene, two per level, every
+   elite and boss named). This is the **ground truth**.
+2. [`docs/manuscript.md`](docs/manuscript.md) — **the script**: every spoken
+   line, monologue, caption, and piece of found lore, transcribed verbatim. An
+   extrapolated version of the gist.
+3. `src/game/defs/**` — **the game**: the roster, items, cutscenes, and thoughts
+   that play the script. An extrapolated version of the manuscript.
+
+When two tiers disagree, the **higher tier wins**: `story.md` beats the
+manuscript, the manuscript beats the data — correct the lower tier to match.
+Use the **`update-story` skill** (`.agent/skills/update-story/`) to make a story
+change at the top and carry it down the whole chain (the manuscript, then the
+enemy roster, the story items and uniques, the pinned thoughts, and the
+companions — a boss swap re-homes that boss's drops).
 
 **Changing the story is a two-step commitment:**
 
@@ -302,8 +319,8 @@ is right and the data must be corrected to match.
   manuscript edit); otherwise, ask before rewriting it.
 - Never silently edit story/dialogue in the data files and leave the manuscript
   stale, and never rewrite the manuscript without that confirmation. A PR that
-  touches any dialogue/story text updates `docs/manuscript.md` in the same
-  change so the two never drift.
+  touches any dialogue/story text updates `docs/story.md` and
+  `docs/manuscript.md` in the same change so the tiers never drift.
 
 **Where the actual story/dialogue data lives** (the manuscript's implementation
 — its own "Where the data lives" table is the authoritative map):

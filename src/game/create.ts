@@ -8,7 +8,7 @@
 
 import { createCutscene } from "@game/lib/cutscene.ts";
 import { createRng, randomRange, type Rng } from "@game/lib/rng.ts";
-import { distance, vec, type Vec2 } from "@game/lib/vec.ts";
+import { clamp, distance, vec, type Vec2 } from "@game/lib/vec.ts";
 import { applyLoadout } from "./arrival.ts";
 import {
   ENEMY_AI,
@@ -16,6 +16,7 @@ import {
   MEDKIT,
   OBSTACLES,
   PLAYER,
+  RARE_MOBS,
   STAMINA,
 } from "./config.ts";
 import { cutsceneDef, cutsceneVariant } from "./defs/cutscenes.ts";
@@ -86,6 +87,11 @@ export function createGame(
   // The flavor stream: seeded off the same seed (so a run replays identically)
   // but a separate sequence, so damage variance never disturbs the loot stream.
   const fxRng = createRng((seed ^ 0x9e3779b9) >>> 0);
+  // The rare/unique encounter stream (config RARE_MOBS): seeded off the same
+  // seed but its OWN sequence, exactly like the merchant — so laying special
+  // mobs into a level leaves its main rng (obstacles, spawns, decor, and every
+  // downstream combat/loot roll) byte-identical to what it was without them.
+  const rareRng = createRng((seed ^ 0x5f356495) >>> 0);
   const playerSpawn = vec(def.playerSpawn.x, def.playerSpawn.y);
   let nextId = 1;
 
@@ -178,6 +184,23 @@ export function createGame(
     rusher.vanguard = true;
     enemies.push(rusher);
   }
+
+  // The level's RARE & UNIQUE encounters (config RARE_MOBS): each tier rolled
+  // once per run — a rare on most runs, a named unique on a fraction of them.
+  // Rolled on the dedicated `rareRng` so a level with `rareSpawns` keeps its
+  // main rng sequence (and every downstream combat/loot roll) exactly as it
+  // was without them — the merchant's own-stream trick.
+  placeRareEncounters(
+    rareRng,
+    def,
+    playerSpawn,
+    bandReach,
+    blocked,
+    enemies,
+    () => nextId++,
+    mobHp,
+    mobLvl,
+  );
 
   const decor = scatterDecor(rng, def);
 
@@ -457,6 +480,86 @@ function placeItem(
   return { id, kind: placed.kind, pos };
 }
 
+/**
+ * Roll and place the level's RARE & UNIQUE encounters (see config RARE_MOBS
+ * and `LevelDef.rareSpawns`). Each tier rolls its existence once, picks one
+ * candidate, lands it at a banded spot along the spawn→objective axis (the
+ * `SpawnSpec.band` yardstick), and — for a rare pack mob — scatters the
+ * rolled pack count around that anchor so the encounter reads as one find.
+ */
+function placeRareEncounters(
+  rng: Rng,
+  def: LevelDef,
+  playerSpawn: Vec2,
+  bandReach: number,
+  blocked: (pos: Vec2, radius: number) => boolean,
+  enemies: Enemy[],
+  takeId: () => number,
+  mobHp: number,
+  mobLvl: number,
+): void {
+  for (const kind of ["rare", "unique"] as const) {
+    const candidates = def.rareSpawns?.[kind] ?? [];
+    if (candidates.length === 0) continue;
+    if (rng() >= RARE_MOBS.encounterChance[kind]) continue;
+    const pick = candidates[Math.floor(rng() * candidates.length)] as string;
+    const mob = enemyDef(pick);
+    const margin = mob.radius + 4;
+    const [bandMin, bandMax] = RARE_MOBS.band;
+    // Banded rejection sampling, same shape as the ordinary spawn bands; the
+    // fallback (a pathological seed exhausting its attempts) is mid-map.
+    let anchor = vec(def.width / 2, def.height / 2);
+    for (let attempts = 0; attempts < 40; attempts++) {
+      const pos = vec(
+        randomRange(rng, margin, def.width - margin),
+        randomRange(rng, margin, def.height - margin),
+      );
+      const fromSpawn = distance(pos, playerSpawn) / bandReach;
+      if (
+        fromSpawn >= bandMin &&
+        fromSpawn <= bandMax &&
+        distance(pos, playerSpawn) >= ENEMY_AI.minSpawnDistance &&
+        !blocked(pos, margin)
+      ) {
+        anchor = pos;
+        break;
+      }
+    }
+    const count =
+      kind === "rare" && mob.pack
+        ? Math.floor(randomRange(rng, mob.pack[0], mob.pack[1] + 1))
+        : 1;
+    for (let i = 0; i < count; i++) {
+      const pos =
+        i === 0
+          ? { ...anchor }
+          : vec(
+              clamp(
+                anchor.x +
+                  randomRange(
+                    rng,
+                    -RARE_MOBS.packScatter,
+                    RARE_MOBS.packScatter,
+                  ),
+                margin,
+                def.width - margin,
+              ),
+              clamp(
+                anchor.y +
+                  randomRange(
+                    rng,
+                    -RARE_MOBS.packScatter,
+                    RARE_MOBS.packScatter,
+                  ),
+                margin,
+                def.height - margin,
+              ),
+            );
+      enemies.push(spawnEnemy(pick, pos, rng, takeId(), mobHp, 0, 1, mobLvl));
+    }
+  }
+}
+
 /** Mint one enemy instance (also used by the wave spawner in step.ts).
  * `hpMult` is the horde's relative-level hp scale the caller resolved
  * (mobHpScaleFor / mobLevelScale) — kill XP scales with max hp, so tougher
@@ -482,6 +585,9 @@ export function spawnEnemy(
       ? 0
       : randomRange(rng, -ENEMY_AI.speedJitter, ENEMY_AI.speedJitter);
   const evolved = def.role === "minion" ? Math.max(0, evo) : 0;
+  // A RARE/UNIQUE mob's whole tier lands here (config RARE_MOBS): the def is
+  // authored at ordinary minion numbers and the multipliers make it special.
+  const rarity = def.rarity ? RARE_MOBS.tuning[def.rarity] : undefined;
   // The developer mob-hp knob multiplies in here — the one chokepoint every
   // spawn path funnels through — so placed mobs, waves, and rushers all
   // toughen together (and pay proportionally more XP, since kill XP is
@@ -489,7 +595,11 @@ export function spawnEnemy(
   const hp = Math.max(
     1,
     Math.round(
-      def.hp * hpMult * evolutionHpMult(evolved, evoEffect) * BALANCE.mobHp,
+      def.hp *
+        hpMult *
+        evolutionHpMult(evolved, evoEffect) *
+        BALANCE.mobHp *
+        (rarity?.hpMult ?? 1),
     ),
   );
   const enemy: Enemy = {
@@ -501,18 +611,21 @@ export function spawnEnemy(
     maxHp: hp,
     // The MONSTER LEVEL the loot system reads (base levelReq gates, tier
     // unlock gates, the dropped item's own level): the horde baseline the
-    // caller resolved (mobLevelFor) plus this def's own head start. Elites
-    // and bosses re-stamp it the moment their fight engages
-    // (maybePowerScale), so their drops match the hero who beat them.
-    mlvl: Math.max(1, mlvl + (def.levelBonus ?? 0)),
+    // caller resolved (mobLevelFor) plus this def's own head start (a
+    // rare/unique tier adds its own — the special finds reach the tier gates
+    // early, like elites do). Elites and bosses re-stamp it the moment their
+    // fight engages (maybePowerScale), so their drops match the hero who
+    // beat them — and rare/unique mobs re-stamp the same way.
+    mlvl: Math.max(1, mlvl + (def.levelBonus ?? 0) + (rarity?.levelBonus ?? 0)),
     speed: def.speed * (1 + jitter),
     contactCooldownMs: 0,
   };
   // The horde's gentle per-level DAMAGE ramp (MENACE.mobDamagePerLevel),
-  // stamped at spawn like the hp scale: late-campaign trash threatens
-  // instead of tickling. Elites/bosses overwrite it when their fight
-  // engages (maybePowerScale folds it in with the power-match share).
-  const contactScale = mobContactScaleFor(enemy.mlvl);
+  // stamped at spawn like the hp scale — times the rare/unique tier's meaner
+  // touch. Elites/bosses overwrite it when their fight engages
+  // (maybePowerScale folds it in with the power-match share).
+  const contactScale =
+    mobContactScaleFor(enemy.mlvl) * (rarity?.damageMult ?? 1);
   if (contactScale !== 1) enemy.contactMult = contactScale;
   if (evolved > 0) enemy.evo = evolved;
   return enemy;

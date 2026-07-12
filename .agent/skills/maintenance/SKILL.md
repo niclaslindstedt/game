@@ -22,14 +22,16 @@ The registry is the single source of truth for which sync skills exist in this r
 | Skill | Fixes | Spec sections | Run order |
 |---|---|---|---|
 | `sync-oss-spec`   | Repo contents vs. the latest `OSS_SPEC.md` fetched from GitHub (standalone — no external validator binary) | all structural §§ + §21.5 | 1 — run first so every downstream skill reads the freshest spec |
-| `update-docs`     | `docs/*.md` vs. source of truth                                                                             | §11.1                     | 2 |
-| `update-readme`   | `README.md` vs. current public surface                                                                      | §3                        | 3 |
-| `update-prompts`  | `prompts/**` vs. code and embedded sources                                                                  | §13.5                     | 4 |
-| `update-website`  | Source-derived content under `website/` (SEO surfaces, extracted metadata) vs. README/docs/config           | §11.2                     | 5 — last: it reads files the docs/readme skills may rewrite |
+| `update-story`    | Story tiers vs. each other: `docs/manuscript.md` and `src/game/defs/**` story data vs. `docs/story.md` (the gist, ground truth) | §11.1                     | 2 — reconcile the story chain before `update-docs` reads the manuscript |
+| `update-docs`     | `docs/*.md` vs. source of truth                                                                             | §11.1                     | 3 |
+| `update-readme`   | `README.md` vs. current public surface                                                                      | §3                        | 4 |
+| `update-prompts`  | `prompts/**` vs. code and embedded sources                                                                  | §13.5                     | 5 |
+| `update-website`  | Source-derived content under `website/` (SEO surfaces, extracted metadata) vs. README/docs/config           | §11.2                     | 6 — last: it reads files the docs/readme skills may rewrite |
 
 Run order matters:
 
 - `sync-oss-spec` runs **first** so every downstream skill sees the current spec — it may overwrite the local `OSS_SPEC.md` with the upstream copy, which downstream skills then read.
+- `update-story` runs **second**: it owns the story chain (`story.md` → `manuscript.md` → `defs/**`), and `update-docs` reads the manuscript, so the story tiers must agree before the docs skill runs. In a sweep it only reconciles LOWER tiers up to `story.md` — a story *change* needs the user's confirmation (see its `SKILL.md`), so if the sweep finds the data holds a beat the gist lacks, it surfaces that instead of promoting it silently.
 - The per-artifact skills (`update-docs`, `update-readme`, `update-prompts`, `update-website`, and any other `update-*` skill this project adds) run afterwards in dependency order: a skill that reads files another skill rewrites must run *after* that other skill — `update-website` runs last because the website extracts content from README/docs.
 
 ## Discovery process

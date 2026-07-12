@@ -127,6 +127,44 @@ export const BUNKER_ENEMIES: Record<string, EnemyDef> = {
     contactCooldownMs: 600,
     ai: { aggroRadius: 1050 },
   },
+  // ---- RARE & UNIQUE mobs (config RARE_MOBS; placed via the level's
+  // `rareSpawns`). Authored at ordinary minion numbers — the engine applies
+  // the whole tier at spawn. No dialogue: special graphics and a loot burst.
+  //
+  // MOONLIGHTING AGENT — a suit on two payrolls, patrolling the bunker on
+  // one and selling its floor plan on the other. Works in small cells.
+  moonlighting_agent: {
+    id: "moonlighting_agent",
+    name: "MOONLIGHTING AGENT",
+    role: "minion",
+    rarity: "rare",
+    pack: [1, 3],
+    sprite: "moonlighting_agent",
+    hp: 100,
+    speed: 25,
+    radius: 8,
+    contactDamage: 20,
+    critChance: 0.15,
+    dodgeChance: 0.1,
+    contactCooldownMs: 700,
+    ai: { aggroRadius: 1000 },
+  },
+  // THE MOLE — the leak every agency in the bunker is hunting, which is
+  // awkward, because it is also employed by all of them. One of a kind.
+  the_mole: {
+    id: "the_mole",
+    name: "THE MOLE",
+    role: "minion",
+    rarity: "unique",
+    sprite: "the_mole",
+    hp: 120,
+    speed: 27,
+    radius: 8,
+    contactDamage: 22,
+    critChance: 0.14,
+    contactCooldownMs: 650,
+    ai: { aggroRadius: 1050 },
+  },
   // ---- The personal details: one body, six liveries ---------------------------
   guard_kremlin: bodyguard("guard_kremlin", "KREMLIN SHADOW"),
   guard_meta: bodyguard("guard_meta", "META SENTINEL"),

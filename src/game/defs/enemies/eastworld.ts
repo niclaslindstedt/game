@@ -85,6 +85,63 @@ export const EASTWORLD_ENEMIES: Record<string, EnemyDef> = {
     ai: { aggroRadius: 1000 },
     dropProfile: { dropBonus: 0.4, tierBonus: 0.3 },
   },
+  // ---- RARE & UNIQUE mobs (config RARE_MOBS; placed via the level's
+  // `rareSpawns`). Authored at ordinary minion numbers — the engine applies
+  // the whole tier at spawn. No dialogue: special graphics and a loot burst.
+  //
+  // HAYWIRE GREETER — a knot of welcome-committee hosts whose hospitality
+  // loop wore through: still waving, still smiling, now swinging.
+  haywire_greeter: {
+    id: "haywire_greeter",
+    name: "HAYWIRE GREETER",
+    role: "minion",
+    rarity: "rare",
+    pack: [2, 4],
+    sprite: "haywire_greeter",
+    gore: "sparks",
+    hp: 40,
+    speed: 20,
+    radius: 8,
+    contactDamage: 12,
+    critChance: 0.1,
+    contactCooldownMs: 700,
+    ai: { aggroRadius: 950 },
+  },
+  // COUNTERFEIT OUTLAW — a bootleg print of the bandit line run off a
+  // pirated mold, seams showing, twice as mean about it. Always alone.
+  counterfeit_outlaw: {
+    id: "counterfeit_outlaw",
+    name: "COUNTERFEIT OUTLAW",
+    role: "minion",
+    rarity: "rare",
+    sprite: "counterfeit_outlaw",
+    gore: "sparks",
+    hp: 110,
+    speed: 26,
+    radius: 8,
+    contactDamage: 20,
+    critChance: 0.2,
+    dodgeChance: 0.15,
+    contactCooldownMs: 700,
+    ai: { aggroRadius: 1000 },
+  },
+  // THE ONE-ARMED BANDIT — the park's rigged slot machine on legs, gilded
+  // head to toe in other people's coin. The house always wins. Usually.
+  one_armed_bandit: {
+    id: "one_armed_bandit",
+    name: "THE ONE-ARMED BANDIT",
+    role: "minion",
+    rarity: "unique",
+    sprite: "one_armed_bandit",
+    gore: "sparks",
+    hp: 130,
+    speed: 18,
+    radius: 9,
+    contactDamage: 24,
+    critChance: 0.15,
+    contactCooldownMs: 700,
+    ai: { aggroRadius: 1000 },
+  },
   // ---- The celebrity staff, pinned along the road so the park's story
   // unspools in walking order: the co-founder on main street, the owner at
   // the square, the actor parked off the road like a landslide.

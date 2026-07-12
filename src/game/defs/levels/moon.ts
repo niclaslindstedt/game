@@ -66,6 +66,13 @@ export const MOON: LevelDef = {
     { kind: "flag", pos: { x: 2130, y: 260 }, anchor: "base" },
   ],
   objective: { type: "killBoss" },
+  // The dust's RARE & UNIQUE encounters (config RARE_MOBS): a mourning
+  // procession or the other side's lost cosmonaut on most runs, and — one
+  // run in five — THE THIRTEENTH MAN the record never counted.
+  rareSpawns: {
+    rare: ["moonstruck_mourner", "lost_cosmonaut"],
+    unique: ["the_thirteenth_man"],
+  },
   spawns: [
     { enemy: "wisp", count: 8, band: [0.05, 0.45] },
     { enemy: "ghost", count: 6, band: [0.4, 0.8] },

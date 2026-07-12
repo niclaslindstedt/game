@@ -58,6 +58,65 @@ export const MOON_ENEMIES: Record<string, EnemyDef> = {
     contactCooldownMs: 700,
     ai: { aggroRadius: 1000 },
   },
+  // ---- RARE & UNIQUE mobs (config RARE_MOBS; placed via the level's
+  // `rareSpawns`). Authored at ordinary minion numbers — the engine applies
+  // the whole tier at spawn. No dialogue: special graphics and a loot burst.
+  //
+  // MOONSTRUCK MOURNER — pale-gold wisps that drift the craters in a small
+  // funeral procession, grieving something under the dust.
+  moonstruck_mourner: {
+    id: "moonstruck_mourner",
+    name: "MOONSTRUCK MOURNER",
+    role: "minion",
+    rarity: "rare",
+    pack: [2, 4],
+    sprite: "moonstruck_mourner",
+    gore: "ecto",
+    phasing: true,
+    hp: 25,
+    speed: 15,
+    radius: 8,
+    contactDamage: 8,
+    critChance: 0.1,
+    contactCooldownMs: 700,
+    ai: { aggroRadius: 950 },
+  },
+  // LOST COSMONAUT — the other side's casualty nobody ever admitted to,
+  // still drifting the far side in a red-trimmed suit. Always alone.
+  lost_cosmonaut: {
+    id: "lost_cosmonaut",
+    name: "LOST COSMONAUT",
+    role: "minion",
+    rarity: "rare",
+    sprite: "lost_cosmonaut",
+    gore: "ecto",
+    phasing: true,
+    hp: 45,
+    speed: 18,
+    radius: 9,
+    contactDamage: 12,
+    critChance: 0.1,
+    contactCooldownMs: 700,
+    ai: { aggroRadius: 950 },
+  },
+  // THE THIRTEENTH MAN — twelve men walked on the moon, says the record.
+  // The record is wrong. A gold-visored hooded ghost, one per haunting.
+  the_thirteenth_man: {
+    id: "the_thirteenth_man",
+    name: "THE THIRTEENTH MAN",
+    role: "minion",
+    rarity: "unique",
+    sprite: "the_thirteenth_man",
+    gore: "ecto",
+    phasing: true,
+    hp: 90,
+    speed: 22,
+    radius: 9,
+    contactDamage: 20,
+    critChance: 0.12,
+    contactCooldownMs: 700,
+    ai: { aggroRadius: 1000 },
+  },
   // ---- The moon's elites — four ghosts with unfinished business, pinned
   // along the walk to the flag so the conspiracy unspools in order: the
   // grave under the dust, the corporate moonbase, the clone, and Ada's

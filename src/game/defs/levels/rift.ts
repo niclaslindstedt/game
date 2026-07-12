@@ -84,6 +84,13 @@ export const THE_RIFT: LevelDef = {
     { kind: "far_door", sprite: "rift", pos: { x: 2900, y: 800 } },
   ],
   objective: { type: "killBoss" },
+  // The void's RARE & UNIQUE encounters (config RARE_MOBS): a stray comet
+  // flock or a collapsed star on most runs, and — one run in five — THE
+  // LAST PHOTON, of which there is exactly one.
+  rareSpawns: {
+    rare: ["stray_comet", "collapsed_star"],
+    unique: ["the_last_photon"],
+  },
   // The cow level's door: latent until THE SEVERED HAND (RASPUTIN's junk-
   // looking drop) is USED here — then a blast door tears open beside the
   // hero and steps through to THE BUNKER. Nothing in the game explains this.

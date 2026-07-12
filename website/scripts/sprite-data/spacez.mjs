@@ -1013,6 +1013,31 @@ const SPRITES = {
   ],
 };
 
+// ---- RARE & UNIQUE mobs (palette variants — the Diablo recolor idiom) ------
+// The special monsters wear the staff's own body plans in colors the floor
+// never issues, so a find reads at a glance (the engine adds the aura + name).
+for (const frame of [0, 1]) {
+  // WANDERING TOURIST — a lost visitor off the public tour: gold sun hat,
+  // brown hair, loud green shirt with a purple flower lei, denim-blue shorts.
+  // (Lei kept off blood-red so the default blood wound reads on the shirt.)
+  SPRITES[`wandering_tourist_${frame}`] = swapPalette(
+    SPRITES[`scientist_${frame}`],
+    { a: "y", w: "B", W: "G", j: "P", r: "L", b: "j" },
+  );
+  // NIGHT-SHIFT TEMP — the engineer's body in the agency's kit: red hard
+  // hat, blue vest over the white shirt.
+  SPRITES[`night_shift_temp_${frame}`] = swapPalette(
+    SPRITES[`engineer_${frame}`],
+    { o: "r", Y: "w", y: "j" },
+  );
+  // EMPLOYEE OF THE MONTH — the guard's frame in a gold ceremonial blazer,
+  // white sash where the shirt was, the red badge polished to a shine.
+  SPRITES[`employee_of_the_month_${frame}`] = swapPalette(
+    SPRITES[`guard_${frame}`],
+    { J: "o", j: "W", y: "r" },
+  );
+}
+
 export default {
   name: "spacez",
   /** Ground tile behind this family's contact sheet. */
@@ -1024,6 +1049,18 @@ export default {
     scientist_walk: { frames: ["scientist_0", "scientist_1"], delayMs: 300 },
     engineer_walk: { frames: ["engineer_0", "engineer_1"], delayMs: 280 },
     guard_walk: { frames: ["guard_0", "guard_1"], delayMs: 220 },
+    wandering_tourist_walk: {
+      frames: ["wandering_tourist_0", "wandering_tourist_1"],
+      delayMs: 300,
+    },
+    night_shift_temp_walk: {
+      frames: ["night_shift_temp_0", "night_shift_temp_1"],
+      delayMs: 280,
+    },
+    employee_of_the_month_walk: {
+      frames: ["employee_of_the_month_0", "employee_of_the_month_1"],
+      delayMs: 240,
+    },
     hazmat_walk: { frames: ["hazmat_0", "hazmat_1"], delayMs: 380 },
     optimusk_walk: { frames: ["optimusk_0", "optimusk_1"], delayMs: 300 },
     muskrat_loom: { frames: ["muskrat_0", "muskrat_1"], delayMs: 400 },
@@ -1041,6 +1078,15 @@ export default {
     },
     janitor_walk: { frames: ["janitor_0", "janitor_1"], delayMs: 340 },
     architect_walk: { frames: ["architect_0", "architect_1"], delayMs: 300 },
+  },
+  /**
+   * Wound-style override — the TOURIST reuses the scientist body plan, so its
+   * blood wounds read the same; the outline-dark core sharpens them against
+   * the loud green shirt (the lone hurt splat sits borderline on this seed,
+   * but the rendered blood on the shirt reads clearly in-game).
+   */
+  wounds: {
+    wandering_tourist: { splat: "r", core: "O" },
   },
   /** Ground tiles and flat floor decor the contrast lint skips. */
   contrastExempt: ["lab_0", "lab_1", "vent_0", "vent_1", "cable", "stain"],
