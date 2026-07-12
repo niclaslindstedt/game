@@ -8,23 +8,22 @@ persisted on-device in `localStorage` under `<storagePrefix>:settings`
 field of the identity config (`game.config.json`) — this game ships it as its
 own namespace, and a sequel changes it there once:
 
-| Setting                      | Values                                                      | Default                                                                                                               |
-| ---------------------------- | ----------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------- |
-| Controls → Mouse             | follow cursor / hold to steer                               | follow cursor on fine pointers, hold on touch-first devices                                                           |
-| Controls → Keys              | WASD move / mouse only                                      | WASD move on fine pointers, off on touch-first devices                                                                |
-| Controls → Powerups (use)    | use on pickup / use manually (tap a slot, click, E, or 1-3) | manual everywhere                                                                                                     |
-| Controls → Gear (auto-equip) | equip on pickup / keep in bag                               | keep in bag (finds bank to the bag and glow when they beat what's worn; on wears a stronger find on the spot)         |
-| Controls → Powerups (side)   | lower left / lower right                                    | lower left                                                                                                            |
-| Controls → Heal key          | desktop key that uses a medkit from the consumable dock     | `C`                                                                                                                   |
-| Controls → Stamina key       | desktop key that drinks a stamina potion from the dock      | `X`                                                                                                                   |
-| Music volume                 | 0–100% drag slider                                          | 80%                                                                                                                   |
-| Sound FX volume              | 0–100% drag slider                                          | 100%                                                                                                                  |
-| Display → XP on kill         | on / off                                                    | on (floating "+N XP" text on kills)                                                                                   |
-| Developer → Debug mode       | on / off                                                    | off (shows the in-run FPS meter; row hidden until unlocked)                                                           |
-| Developer → Auto level stats | on / off                                                    | off (opt-in free per-level base-stat growth; the row is hidden until unlocked)                                        |
-| Developer → Character gear   | on / off                                                    | off (opt-in worn armor + weapon on the field hero; the row is hidden until unlocked)                                  |
-| Developer → Weapon swing     | on / off                                                    | off (experimental — animate the held weapon on each attack; needs Character weapon; the row is hidden until unlocked) |
-| Developer → Balance          | ten multiplier sliders, 0×–100× (exponential)               | 1× each (the shipped tuning; a RESET ALL row restores it)                                                             |
+| Setting                      | Values                                                       | Default                                                                                                               |
+| ---------------------------- | ------------------------------------------------------------ | --------------------------------------------------------------------------------------------------------------------- |
+| Controls → Mouse             | follow cursor / hold to steer                                | follow cursor on fine pointers, hold on touch-first devices                                                           |
+| Controls → Keys              | WASD move / mouse only                                       | WASD move on fine pointers, off on touch-first devices                                                                |
+| Controls → Powerups (use)    | use on pickup / use manually (tap a slot, click, E, or 1-3)  | manual everywhere                                                                                                     |
+| Controls → Gear (auto-equip) | equip on pickup / keep in bag                                | keep in bag (finds bank to the bag and glow when they beat what's worn; on wears a stronger find on the spot)         |
+| Controls → Powerups (side)   | lower left / lower right                                     | lower left                                                                                                            |
+| Controls → Key bindings      | rebind every desktop key/mouse control (Quake-style submenu) | shipped WASD scheme (Shift walk, Space jump, E/Q/I/M/P, C/X dock; RESET TO DEFAULTS restores it)                      |
+| Music volume                 | 0–100% drag slider                                           | 80%                                                                                                                   |
+| Sound FX volume              | 0–100% drag slider                                           | 100%                                                                                                                  |
+| Display → XP on kill         | on / off                                                     | on (floating "+N XP" text on kills)                                                                                   |
+| Developer → Debug mode       | on / off                                                     | off (shows the in-run FPS meter; row hidden until unlocked)                                                           |
+| Developer → Auto level stats | on / off                                                     | off (opt-in free per-level base-stat growth; the row is hidden until unlocked)                                        |
+| Developer → Character gear   | on / off                                                     | off (opt-in worn armor + weapon on the field hero; the row is hidden until unlocked)                                  |
+| Developer → Weapon swing     | on / off                                                     | off (experimental — animate the held weapon on each attack; needs Character weapon; the row is hidden until unlocked) |
+| Developer → Balance          | ten multiplier sliders, 0×–100× (exponential)                | 1× each (the shipped tuning; a RESET ALL row restores it)                                                             |
 
 A hidden **DEVELOPER** row unlocks at the bottom of SETTINGS after the title
 screen's moon Easter egg is found — a long-press on the title moon detonates it
@@ -64,18 +63,25 @@ cover 0→1, 1→2, 2→10, then 10→100, so the useful low end gets most of th
 travel. Values persist with the settings, and a **RESET ALL** row restores the
 shipped 1× across the board.
 
-Desktop keyboard controls (when **Keys** is set to WASD): WASD or the arrow
-keys run, **Shift** walks, **Space** jumps, **1/2/3** fire the powerup dock
-slots, **Q** opens the weapon switcher (then **1-4** equip a weapon), **E**
-spends the oldest powerup, **C** uses a medkit and **X** drinks a stamina
-potion from the consumable dock (both rebindable in **Controls → Heal key /
-Stamina key**), **I** toggles the bag, and **P** or **Escape**
-pauses the run (and its music). On touch, tapping the on-screen clock / foe
-counter in the HUD pauses too. The run also auto-pauses when the tab or app
-loses focus; clicking the screen or pressing **P**/**Escape** again resumes.
-During a cutscene, intro, or dialogue, **Space** or **Enter** turns the page
-(the first press finishes the letter crawl, the next advances) and **Escape**
-skips the whole scene.
+Desktop keyboard controls (when **Keys** is set to WASD): the shipped scheme is
+**WASD** steer, **Shift** walks, **Space** jumps, **Q** opens the weapon
+switcher (then **1-4** equip a weapon), **E** spends the oldest powerup, **C**
+uses a medkit and **X** drinks a stamina potion from the consumable dock, **I**
+toggles the bag, **M** the level map, and **P** pauses. **1/2/3** also fire the
+powerup dock slots (a fixed contextual range).
+Every one of those controls is **rebindable in Controls → Key Bindings** — a
+Quake-style list (action label left, bound key far right): choose a row, then
+press the keyboard key or mouse button to bind it (a rebind steals the key off
+whatever action held it; **Escape** cancels and is never bindable). Bindings are
+stored by physical key code, so WASD stays put under any keyboard layout, and
+persist with the settings; **Reset to Defaults** restores the shipped scheme.
+**Escape** pauses/resumes the run and closes overlays no matter what else is
+bound. On touch, tapping the on-screen clock / foe counter in the HUD pauses
+too. The run also auto-pauses when the tab or app loses focus; clicking the
+screen or pressing the pause key / **Escape** again resumes. During a cutscene,
+intro, or dialogue, **Space** or **Enter** turns the page (the first press
+finishes the letter crawl, the next advances) and **Escape** skips the whole
+scene.
 
 Progress belongs to **characters** — named, persistent heroes
 (`website/src/game/characters.ts`), stored under `<storagePrefix>:characters`

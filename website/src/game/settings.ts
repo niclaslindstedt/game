@@ -17,6 +17,12 @@ import { storageKey } from "../identity.ts";
 
 import { setAudioVolumes } from "./audio.ts";
 import { setHapticsEnabled } from "./haptics.ts";
+import {
+  DEFAULT_KEYBINDINGS,
+  codeForChar,
+  sanitizeBindings,
+  type KeyBindings,
+} from "./keybindings.ts";
 
 /** How the mouse steers: chase the cursor, or classic hold-to-steer.
  * (Touch always steers by holding — this only changes mouse behavior.) */
@@ -99,13 +105,12 @@ export type GameSettings = {
   powerupSide: PowerupSide;
   keyboardMove: KeyboardMove;
   /**
-   * Desktop keys that spend from the consumable dock (`KeyboardEvent.key`,
-   * lowercased): `keyMedkit` heals with the best medkit held, `keyStamina`
-   * drinks a stamina potion. Default C / X; rebindable in SETTINGS → CONTROLS.
-   * Touch devices use the on-screen slots and ignore these.
+   * The desktop control scheme — one physical binding code per action
+   * (steering, jump, powerup, bag, map, pause, the consumable dock, …).
+   * Rebindable in SETTINGS → CONTROLS → KEY BINDINGS (see keybindings.ts);
+   * touch devices use the on-screen controls and ignore these.
    */
-  keyMedkit: string;
-  keyStamina: string;
+  keybindings: KeyBindings;
   vibration: Vibration;
   /** 0–1 master volumes, applied via audio.ts. */
   musicVolume: number;
@@ -154,10 +159,9 @@ function defaults(): GameSettings {
     // Fine-pointer devices get WASD out of the box; touch has no keyboard,
     // so it defaults off and the on-screen dpad stays in charge.
     keyboardMove: touchFirst ? "off" : "on",
-    // The consumable-dock keys default to the reachable C / X near the WASD
-    // hand; rebindable in CONTROLS.
-    keyMedkit: "c",
-    keyStamina: "x",
+    // The shipped WASD + action-key scheme; rebindable in CONTROLS → KEY
+    // BINDINGS.
+    keybindings: { ...DEFAULT_KEYBINDINGS },
     // Vibration is a touch-device affordance — on out of the box where a
     // motor exists, and inert on iOS and pointer devices anyway.
     vibration: "on",
@@ -199,12 +203,22 @@ function loadBalance(stored: unknown): BalanceTuning {
 
 const clamp01 = (v: number) => Math.min(1, Math.max(0, v));
 
-/** A stored consumable-dock bind falls back to its default unless it's a
- * single printable character (a `KeyboardEvent.key` like "z"), lowercased. */
-export function sanitizeBindKey(stored: unknown, fallback: string): string {
-  return typeof stored === "string" && stored.length === 1
-    ? stored.toLowerCase()
-    : fallback;
+/** Load the control scheme, migrating a pre-KEY-BINDINGS save: those stored the
+ * consumable dock as single-char `keyMedkit`/`keyStamina` and had no
+ * `keybindings` block, so fold those two into the defaults as physical codes. */
+function loadKeybindings(
+  stored: Partial<GameSettings> & {
+    keyMedkit?: unknown;
+    keyStamina?: unknown;
+  },
+): KeyBindings {
+  if (stored.keybindings) return sanitizeBindings(stored.keybindings);
+  const binds = { ...DEFAULT_KEYBINDINGS };
+  const medkit = codeForChar(stored.keyMedkit);
+  const stamina = codeForChar(stored.keyStamina);
+  if (medkit) binds.medkit = medkit;
+  if (stamina) binds.stamina = stamina;
+  return binds;
 }
 
 function load(): GameSettings {
@@ -234,8 +248,7 @@ function load(): GameSettings {
         stored.keyboardMove === "on" || stored.keyboardMove === "off"
           ? stored.keyboardMove
           : base.keyboardMove,
-      keyMedkit: sanitizeBindKey(stored.keyMedkit, base.keyMedkit),
-      keyStamina: sanitizeBindKey(stored.keyStamina, base.keyStamina),
+      keybindings: loadKeybindings(stored),
       vibration:
         stored.vibration === "on" || stored.vibration === "off"
           ? stored.vibration
