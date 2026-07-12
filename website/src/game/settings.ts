@@ -86,9 +86,9 @@ export type WeaponSwing = "on" | "off";
 export type XpFloat = "on" | "off";
 
 /** HEALTH BARS: a display preference (SETTINGS → DISPLAY) for a small hp bar
- * drawn over every wounded mob's head (see render.ts). `off` (the default)
- * keeps the field clean — bosses and elites still show their bars once hurt as
- * always; `on` extends a tiny few-pixel bar to regular minions too. */
+ * drawn over every wounded mob's head (see render.ts). `on` (the default)
+ * shows a tiny few-pixel bar over regular minions too; `off` keeps the field
+ * clean — bosses and elites still show their bars once hurt either way. */
 export type HealthBars = "on" | "off";
 
 export type GameSettings = {
@@ -174,9 +174,9 @@ function defaults(): GameSettings {
     weaponSwing: "off",
     // Display preferences default to the shipped presentation.
     xpFloat: "on",
-    // Health bars over regular mobs are opt-in — bosses/elites always show
-    // theirs; minions stay bar-free until a player turns this on.
-    healthBars: "off",
+    // Health bars over regular mobs are on out of the box; a player who wants
+    // a cleaner field turns them off (bosses/elites always show theirs).
+    healthBars: "on",
     // Balance multipliers start neutral — the shipped tuning.
     balance: { ...BALANCE_TUNING_DEFAULTS },
   };
