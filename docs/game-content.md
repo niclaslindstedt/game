@@ -326,6 +326,19 @@ price in blood), **SKYBREAKER** (Eastworld — on-hit lightning revolver), and
 **SUNWREATH** (the Rift — the dead star's crown, ringing its bearer in
 permanent circling flame).
 
+The JESUS pre-99 batch (phase 4) fields the THIRD set per spec for the
+no-mercy rung (ilvls 67–96): **WORLDSPLITTER** and **NIGHTFALL** (melee),
+**THE VERDICT**, **HORIZON'S END**, and **METEORFALL** (ranged),
+**SUNSPEAR**, **LIGHTBINDER**, and **MAELSTROM** (magic), armor from
+**STARSIGHT** and **CROWN OF RUIN** (head) through **THE ANVIL** /
+**STARFORGE PLATE** (chest), **TITANSTRIDE** / **THE IMMOVABLE** (legs),
+**EARTHFAST** (feet), and **THE PILGRIM STAR** (charm). Its six pre-99
+LEGENDARIES all run on the forever powers: **KINGSBANE** (never misses,
+bursts on hit), **THE LONG SILENCE** (kills detonate), **STARFALL** (kills
+pull the sky down, rank-3 novas), **THE STILLWARD** (a legendary stasis
+shell — the great stillness worn), **WINDGRAVE** (the wind's own spurs),
+and **EMBERHEART** (a charm of forever circling fire, for any build).
+
 Between the boss sets and the world relics, EASY, MEDIUM, HARD, and
 NIGHTMARE each now cover every **build**: easy fields melee (MUSKRAT'S
 TOOTH, EXCALIBUR), ranged (PALE RIDER), and magic (DEADSTAR); medium fields

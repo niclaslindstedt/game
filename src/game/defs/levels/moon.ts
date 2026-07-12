@@ -260,6 +260,16 @@ export const MOON: LevelDef = {
       // OMENSIGHT (the vigil's foresight) and VEILWALKERS (night-quiet
       // boots) — the nightmare rung's Moon relics.
       nightmare: ["omensight", "veilwalkers"],
+      // The JESUS rung's Moon haul — crater-maker, titan legs, the anchored
+      // boots, and THE STILLWARD: the great stillness worn as a legendary
+      // stasis shell.
+      jesus: [
+        "worldsplitter",
+        "titanstride",
+        "the_immovable",
+        "earthfast",
+        "the_stillward",
+      ],
     },
     // Level a normal run reaches per rung (`leveling-curve.mjs --by-level`) —
     // past it golden arrows go cold so a Moon replay can't over-level.
