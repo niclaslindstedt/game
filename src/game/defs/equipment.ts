@@ -318,11 +318,18 @@ export const WEAPON_DEFS: Record<string, WeaponDef> = {
     name: "SECURITY BATON",
     class: "melee",
     levelReq: 1,
-    damage: 4,
+    // A cone-AoE base — light per blow, the arc catching several at once — but
+    // no longer the anomalously feeble dmg-4 it was: at 4 it hit softer than
+    // the JESUS stick and, as HQ's scripted second-kill drop, auto-equipped
+    // over EASY's ranged wand starter into a crippling downgrade. Bumped to a
+    // respectable opener; the cone budget (per-hit ÷4) over-prices its cleave,
+    // so this sits a touch above the cone-4 budget on purpose — capped just
+    // under the next melee rung (lunar_wrench) so leveling still pays — and the
+    // damped melee AoE ranking (WEAPON.meleeAoeRealized) makes it out-fight,
+    // not just out-paper, the weapon it replaces.
+    damage: 5,
     cooldownMs: 400,
     range: 42,
-    // A cone-AoE base: light per blow, but the arc catches four at once —
-    // the swing "achieves its damage" with a full cleave (budget model).
     sweepDeg: 100,
     durability: 220,
     icon: "icon_baton",
@@ -1591,5 +1598,24 @@ export function weaponAssumedTargets(def: WeaponDef): number {
   const arc = def.sweepDeg ?? MELEE.defaultSweepDeg;
   if (arc >= WEAPON.aoeFullFromDeg) return WEAPON.assumedTargets.full;
   if (arc >= WEAPON.aoeConeFromDeg) return WEAPON.assumedTargets.cone;
+  return 1;
+}
+
+/**
+ * How many targets a MELEE weapon's sweep is credited in the AUTO-EQUIP ranking
+ * (`weaponScore`) — the melee sibling of the ranged `WEAPON.aoeRealization`.
+ * Classified by arc exactly like `weaponAssumedTargets`, but returning the
+ * DAMPED `WEAPON.meleeAoeRealized` counts (cone 2.5 / full 3.5) rather than the
+ * budget-authoring assumption (cone 4 / full 5), so a light cone cleaver no
+ * longer out-ranks a heavier single-target weapon on a paper tie it loses to
+ * against a lone foe. Ranged weapons fall through to 1 here — the ranking
+ * damps their spread with `aoeRealization` instead (see `weaponScore`). Tunes
+ * RANKING only; the budget model (`weaponAssumedTargets`) is untouched.
+ */
+export function weaponMeleeRealizedTargets(def: WeaponDef): number {
+  if (def.projectile) return 1;
+  const arc = def.sweepDeg ?? MELEE.defaultSweepDeg;
+  if (arc >= WEAPON.aoeFullFromDeg) return WEAPON.meleeAoeRealized.full;
+  if (arc >= WEAPON.aoeConeFromDeg) return WEAPON.meleeAoeRealized.cone;
   return 1;
 }
