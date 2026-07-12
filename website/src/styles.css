@@ -2207,6 +2207,43 @@ body {
   gap: 0.3rem;
 }
 
+/* DEVELOPER → BALANCE knob slider: a draggable track under the row label.
+   Sharp-cornered to match the pixel HUD; the fill and knob use the menu's
+   amber accent. `touch-action: none` so a horizontal drag steers the knob
+   instead of scrolling the (scrollable) balance list. */
+.balance-slider {
+  position: relative;
+  /* Fill most of the row and grow with the viewport: the wide landscape and
+     desktop layouts (where rem doubles past UI_SCALE_BREAKPOINT_PX) get a
+     proportionally longer track. Being the widest thing in a BALANCE row, the
+     slider sets the row width, so the centered menu keeps the track's right
+     reach matched to its left inset. */
+  width: min(26rem, 80vw);
+  height: 0.6rem;
+  background: #2b2f36;
+  border: 1px solid #4a505a;
+  cursor: pointer;
+  touch-action: none;
+}
+
+.balance-slider-fill {
+  position: absolute;
+  inset: 0 auto 0 0;
+  background: #ffd75e;
+  pointer-events: none;
+}
+
+.balance-slider-knob {
+  position: absolute;
+  top: 50%;
+  width: 0.55rem;
+  height: 1.2rem;
+  transform: translate(-50%, -50%);
+  background: #fff3c4;
+  border: 1px solid #7a5a12;
+  pointer-events: none;
+}
+
 /* ---- Character roster + creation (CharacterScreen) ---- */
 
 .character-heading {

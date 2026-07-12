@@ -30,13 +30,18 @@ describe("balance tuning plumbing", () => {
   });
 
   it("clamps applied values and ignores garbage", () => {
-    setBalanceTuning({ xpGain: 1000, mobHp: 0, mobDamage: Number.NaN });
+    setBalanceTuning({ xpGain: 1000, mobHp: -5, mobDamage: Number.NaN });
     const tuning = getBalanceTuning();
-    expect(tuning.xpGain).toBe(20); // clamped to the ceiling
-    expect(tuning.mobHp).toBe(0.05); // clamped to the floor
+    expect(tuning.xpGain).toBe(100); // clamped to the ceiling (100×)
+    expect(tuning.mobHp).toBe(0); // clamped to the floor (system off)
     expect(tuning.mobDamage).toBe(1); // NaN never lands
     // A partial patch leaves the other knobs alone.
     expect(tuning.dropRate).toBe(1);
+  });
+
+  it("accepts a knob turned fully off", () => {
+    setBalanceTuning({ dropRate: 0 });
+    expect(getBalanceTuning().dropRate).toBe(0);
   });
 
   it("resets every knob to neutral", () => {

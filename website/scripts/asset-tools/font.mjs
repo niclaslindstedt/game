@@ -62,6 +62,10 @@ export const GLYPHS = {
   "?": ["###", "..#", ".##", "...", ".#."],
   "-": ["...", "...", "###", "...", "..."],
   "+": ["...", ".#.", "###", ".#.", "..."],
+  // Multiplication sign — a compact cross, vertically centered so it reads as
+  // an operator (e.g. the "2×" balance multipliers) distinct from the
+  // full-height letter X above.
+  "×": ["...", "#.#", ".#.", "#.#", "..."],
   "/": ["..#", "..#", ".#.", "#..", "#.."],
   "%": ["#.#", "..#", ".#.", "#..", "#.#"],
   "'": ["#", "#", ".", ".", "."],

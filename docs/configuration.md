@@ -22,7 +22,7 @@ own namespace, and a sequel changes it there once:
 | Developer → Auto level stats | on / off                                                    | off (opt-in free per-level base-stat growth; the row is hidden until unlocked)                                        |
 | Developer → Character gear   | on / off                                                    | off (opt-in worn armor + weapon on the field hero; the row is hidden until unlocked)                                  |
 | Developer → Weapon swing     | on / off                                                    | off (experimental — animate the held weapon on each attack; needs Character weapon; the row is hidden until unlocked) |
-| Developer → Balance          | ten multipliers, 25%–400% in preset steps                   | 100% each (the shipped tuning; a RESET ALL row restores it)                                                           |
+| Developer → Balance          | ten multiplier sliders, 0×–100× (exponential)               | 1× each (the shipped tuning; a RESET ALL row restores it)                                                             |
 
 A hidden **DEVELOPER** row unlocks at the bottom of SETTINGS after the title
 screen's moon Easter egg is found — a long-press on the title moon detonates it
@@ -55,9 +55,12 @@ over the engine's shipped tuning (`src/game/tuning.ts`, applied via
 GAIN (leveling pace), HERO DAMAGE, MOB HP, MOB DAMAGE, HORDE SIZE (the wave
 spawner's floor and cap), DROP RATE, GEAR SHARE (the equipment slice of the
 drop ladder), GEAR QUALITY (magic/rare tier odds), UNIQUE DROPS, and MENACE
-GAIN. Each row cycles through preset steps (25% → 400%); values persist with
-the settings, and a **RESET ALL** row restores the shipped 100% across the
-board.
+GAIN. Each row is a slider — drag it, tap the track, or steer it with the
+left/right arrow keys — spanning **0× (system off) to 100×** the shipped
+tuning, where **1× is baseline**. The track is exponential: its four quarters
+cover 0→1, 1→2, 2→10, then 10→100, so the useful low end gets most of the
+travel. Values persist with the settings, and a **RESET ALL** row restores the
+shipped 1× across the board.
 
 Desktop keyboard controls (when **Keys** is set to WASD): WASD or the arrow
 keys run, **Shift** walks, **Space** jumps, **1/2/3** fire the powerup dock

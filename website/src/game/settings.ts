@@ -160,13 +160,14 @@ function defaults(): GameSettings {
 }
 
 /** Sanitize a stored balance object: every knob falls back to neutral unless
- * it is a finite positive number (the engine clamps the range further). */
+ * it is a finite, non-negative number (0 is a valid "system off" slider
+ * setting; the engine clamps the upper range further). */
 function loadBalance(stored: unknown): BalanceTuning {
   const balance = { ...BALANCE_TUNING_DEFAULTS };
   if (typeof stored !== "object" || stored === null) return balance;
   for (const key of Object.keys(balance) as (keyof BalanceTuning)[]) {
     const value = (stored as Record<string, unknown>)[key];
-    if (typeof value === "number" && Number.isFinite(value) && value > 0) {
+    if (typeof value === "number" && Number.isFinite(value) && value >= 0) {
       balance[key] = value;
     }
   }
