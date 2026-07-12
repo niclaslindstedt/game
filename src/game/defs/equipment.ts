@@ -6,7 +6,7 @@
 // config LOOT.tierUnlockMlvl — so growing this file to hundreds of items
 // never touches the engine.
 
-import { MELEE, WEAPON } from "../config.ts";
+import { MELEE, STATS, WEAPON } from "../config.ts";
 import { GEAR_DEFS, type GearDef } from "./gear.ts";
 import { weaponGradeVariants, type Grade } from "./grades.ts";
 import type { Affix, Quality, StatName, Tier, WeaponClass } from "../types.ts";
@@ -126,12 +126,6 @@ export type WeaponDef = {
    * own starting sidearm is minted without durability and never breaks.
    */
   durability: number;
-  /**
-   * Crit-damage multiplier override. Omitted, the cadence rule applies
-   * (`weaponCritMult`): fast weapons crit light, slow ones crit heavy — set
-   * this only as a deliberate exception to that rule.
-   */
-  critMult?: number;
   /**
    * Set on a GENERATED base-grade variant (see defs/grades.ts): which rung
    * of the Normal → Exceptional → Elite ladder this def is. Absent on every
@@ -599,7 +593,7 @@ export const WEAPON_DEFS: Record<string, WeaponDef> = {
     name: "GRAVITON MAW",
     class: "magic",
     levelReq: 18,
-    damage: 72,
+    damage: 82,
     // Tidal forces are not a precise art — the well bites for whatever it grips.
     damageVariance: 0.35,
     cooldownMs: 820,
@@ -616,7 +610,7 @@ export const WEAPON_DEFS: Record<string, WeaponDef> = {
     name: "GRAVITY MAUL",
     class: "melee",
     levelReq: 16,
-    damage: 14,
+    damage: 15,
     // The shockwave lands as hard as the ground under it decides to buckle —
     // a heavy, wildly swingy slam.
     damageVariance: 0.4,
@@ -640,7 +634,7 @@ export const WEAPON_DEFS: Record<string, WeaponDef> = {
     name: "GLADIUS",
     class: "melee",
     levelReq: 15,
-    damage: 37,
+    damage: 35,
     cooldownMs: 420,
     range: 40,
     sweepDeg: 70,
@@ -861,7 +855,7 @@ export const WEAPON_DEFS: Record<string, WeaponDef> = {
     name: "HIGH NOON",
     class: "magic",
     levelReq: 23,
-    damage: 94,
+    damage: 107,
     // A calibrated star: near-metronomic output.
     damageVariance: 0.1,
     cooldownMs: 900,
@@ -973,7 +967,7 @@ export const WEAPON_DEFS: Record<string, WeaponDef> = {
     name: "MACHETE",
     class: "melee",
     levelReq: 7,
-    damage: 7,
+    damage: 6,
     cooldownMs: 380,
     range: 46,
     durability: 220,
@@ -1059,7 +1053,7 @@ export const WEAPON_DEFS: Record<string, WeaponDef> = {
     class: "melee",
     levelReq: 6,
     // The PROSPECTOR's tunneler — chews rock, chews ghosts.
-    damage: 21,
+    damage: 20,
     cooldownMs: 330,
     range: 42,
     sweepDeg: 50,
@@ -1086,7 +1080,7 @@ export const WEAPON_DEFS: Record<string, WeaponDef> = {
     class: "melee",
     levelReq: 8,
     // THE CARTOGRAPHER's stake hammer: heavy arcs, deep dents.
-    damage: 31,
+    damage: 28,
     cooldownMs: 450,
     range: 44,
     sweepDeg: 60,
@@ -1242,7 +1236,7 @@ Object.assign(
   WEAPON_DEFS,
   weaponGradeVariants(WEAPON_DEFS, {
     assumedTargets: (def) => weaponAssumedTargets(def),
-    critMult: (def) => weaponCritMult(def),
+    critMult: (def) => baseCritMult(def),
   }),
 );
 
@@ -1557,21 +1551,19 @@ export function equipmentDropWeight(defId: string): number {
 // ---- The damage-budget model (see the weapon-system skill) --------------------
 
 /**
- * A weapon's crit-damage multiplier: its own `critMult` override, else the
- * cadence rule (config `WEAPON.critMultByCadence`) — a quick blade crits
- * light (many rolls of the dice), a slow heavy hitter crits like a truck.
- * The one source every crit-damage surface reads: the blow itself
- * (hitEnemy via step.ts), the DPS readouts, and auto-equip scoring.
+ * A weapon's BASE crit-damage multiplier — the flat class rule, before any
+ * stat scaling: physical (melee & ranged) crit for `STATS.critMultiplier`
+ * (×2), magic for the softer `STATS.magicCritMultiplier` (×1.5). Weapons carry
+ * no per-weapon crit stat, so this is the whole of a weapon's crit weight at
+ * zero stats. The damage-budget model prices crit off THIS (stat-independent)
+ * figure — a magic weapon's lighter base buys it more per-hit budget; the live
+ * per-swing multiplier `weaponCritMult` (items.ts) adds STR/INT on top for
+ * combat, the DPS readouts, and auto-equip scoring.
  */
-export function weaponCritMult(def: WeaponDef): number {
-  if (def.critMult !== undefined) return def.critMult;
-  if (def.cooldownMs < WEAPON.critFastBelowMs) {
-    return WEAPON.critMultByCadence.fast;
-  }
-  if (def.cooldownMs >= WEAPON.critSlowFromMs) {
-    return WEAPON.critMultByCadence.slow;
-  }
-  return WEAPON.critMultByCadence.medium;
+export function baseCritMult(def: WeaponDef): number {
+  return def.class === "magic"
+    ? STATS.magicCritMultiplier
+    : STATS.critMultiplier;
 }
 
 /**

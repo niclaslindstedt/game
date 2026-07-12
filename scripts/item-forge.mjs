@@ -36,7 +36,7 @@ import { fileURLToPath } from "node:url";
 const here = path.dirname(fileURLToPath(import.meta.url));
 const root = path.join(here, "..");
 
-const { WEAPON_DEFS, GEAR_DEFS, weaponAssumedTargets, weaponCritMult } =
+const { WEAPON_DEFS, GEAR_DEFS, weaponAssumedTargets, baseCritMult } =
   await import(path.join(root, "src/game/defs/equipment.ts"));
 
 // ---- Budget knobs — MUST match scripts/weapon-budget.mjs -------------------
@@ -150,7 +150,7 @@ if (mode === "weapon") {
   const budget =
     (BASE + PER_LEVEL * (req - 1)) * (special ? SPECIAL_PREMIUM : 1);
   const targets = weaponAssumedTargets(candidate);
-  const lift = 1 + REF_CRIT * (weaponCritMult(candidate) - 1);
+  const lift = 1 + REF_CRIT * (baseCritMult(candidate) - 1);
   const damage = Math.max(
     1,
     Math.round((budget * (cooldownMs / 1000)) / targets / lift),

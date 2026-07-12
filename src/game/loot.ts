@@ -322,6 +322,21 @@ export function hitEnemy(
   // meter — step() subtracts this slice from what tickMenace reads.
   if (opts?.noMenace) state.menaceExemptDamage += damage;
 
+  // THE MAGIC CRIT BLOB (config `MAGIC_CRIT`): the hero's OWN direct magic
+  // weapon crit bursts a small arcane splash around the struck foe. Gated on
+  // `rollAccuracy` — the same flag that marks his own weapon blows (never a
+  // chain leap, a proc, a conjured power, or a companion's shot), so the
+  // blob's own splash (which omits it) can't blob again. Queued whether the
+  // victim lived or died; `stepMagicCritBlobs` sizes and resolves it after
+  // the attack pass so it never splices the enemy list mid-loop.
+  if (crit && weaponClass === "magic" && opts?.rollAccuracy) {
+    state.pendingCritBlobs.push({
+      pos: { ...enemy.pos },
+      blowDamage: baseDamage,
+      victimId: enemy.id,
+    });
+  }
+
   // PROCS (the `proc` affix, legendary territory) ride the hero's OWN weapon
   // blows: `rollAccuracy` is set by exactly those paths (melee sweep, his own
   // projectiles) — never by companions or conjured powers — so it doubles as

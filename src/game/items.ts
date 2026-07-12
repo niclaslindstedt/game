@@ -44,8 +44,8 @@ import {
   STAT_NAMES,
   TIER_ROLL_ORDER,
   TIERS,
+  baseCritMult,
   weaponAssumedTargets,
-  weaponCritMult,
   weaponDamageVariance,
   weaponDef,
   weaponMeleeRealizedTargets,
@@ -1140,6 +1140,27 @@ export function recomputeMaxStamina(state: GameState): void {
 }
 
 /**
+ * A weapon's LIVE crit-damage multiplier in this player's hands: the flat
+ * class base (`baseCritMult` — physical ×2, magic ×1.5) deepened by the build's
+ * stat. STRENGTH deepens a MELEE crit (`critDamagePerStr`), INTELLIGENCE a
+ * MAGIC one (`critDamagePerInt`); a ranged crit takes the flat physical base
+ * (DEX earns its crit CHANCE, not its weight). The one source every stat-scaled
+ * crit surface reads — the blow itself (via step.ts), the DPS readouts, and
+ * auto-equip scoring — so a stronger build deepens all three together. The
+ * budget model prices crit off the stat-independent `baseCritMult`, not this.
+ */
+export function weaponCritMult(state: GameState, weapon: Equipment): number {
+  const def = weaponDef(weapon.defId);
+  let mult = baseCritMult(def);
+  if (def.class === "melee") {
+    mult += effectiveStat(state, "strength") * STATS.critDamagePerStr;
+  } else if (def.class === "magic") {
+    mult += effectiveStat(state, "intelligence") * STATS.critDamagePerInt;
+  }
+  return mult;
+}
+
+/**
  * The player's crit chance for a swing of the given weapon class: the base
  * chance plus the class's CRIT stat (DEX for melee & ranged, INT for magic —
  * see `CRIT_STAT`), a MARGINAL LUCK nudge, and every gear/affix crit bonus.
@@ -1572,14 +1593,15 @@ export function maxMeleeTargets(state: GameState): number {
  * auto-equip ranks weapons by. Per-target DPS (stats folded in: STR/DEX/INT
  * raise their class's damage AND cadence) × the weapon's assumed target
  * count (the damage-budget model's AoE normalization — a cone cleaver's
- * light blows are worth their crowd) × the cadence-weighted crit lift. The
+ * light blows are worth their crowd) × the stat-scaled crit lift. The
  * same math the balance budget is authored in, so "better" here matches the
  * design's intent.
  */
 export function weaponScore(state: GameState, weapon: Equipment): number {
   const def = weaponDef(weapon.defId);
   const critLift =
-    1 + playerCritChance(state, def.class) * (weaponCritMult(def) - 1);
+    1 +
+    playerCritChance(state, def.class) * (weaponCritMult(state, weapon) - 1);
   // AoE is only worth what's realistically REALIZED, never its theoretical
   // ceiling — otherwise a spread weapon whose per-target damage is a quarter of
   // a single-target's (budget ÷ 4, by design) reads as an even trade and
@@ -1626,7 +1648,8 @@ export function weaponDps(state: GameState, weapon: Equipment): number {
   const perHit = weaponDamageFor(state, weapon);
   const attacksPerSec = 1000 / weaponCooldownFor(state, weapon);
   const critLift =
-    1 + playerCritChance(state, def.class) * (weaponCritMult(def) - 1);
+    1 +
+    playerCritChance(state, def.class) * (weaponCritMult(state, weapon) - 1);
   return perHit * attacksPerSec * critLift;
 }
 

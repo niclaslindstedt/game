@@ -9,9 +9,10 @@
 //   assumed targets: single = 1, cone AoE = 4, full AoE = 5 (melee reads its
 //     cleave cap; volleys their pellets, pierce its line, chain its leaps)
 //     — so 40 eff dps means 10 dps per target on a cone or 8 on a full circle
-//   crit lift = 1 + REF_CRIT × (critMult − 1), where critMult follows cadence
-//     (fast 1.6 / medium 2.0 / slow 2.5 — quick blades crit light, slow
-//     heavy hitters crit hard)
+//   crit lift = 1 + REF_CRIT × (baseCritMult − 1), where baseCritMult is the
+//     flat class base (physical ×2, magic ×1.5 — a magic weapon's softer crit
+//     buys it more per-hit budget; STR/INT deepen the live crit on top, priced
+//     off this stat-independent base)
 //   damage = budget(levelReq) × cooldown/1000 ÷ targets ÷ critLift
 //
 // Prints every weapon's current vs suggested damage and flags anything
@@ -26,7 +27,7 @@ import { fileURLToPath } from "node:url";
 const here = path.dirname(fileURLToPath(import.meta.url));
 const root = path.join(here, "..");
 
-const { WEAPON_DEFS, weaponAssumedTargets, weaponCritMult } = await import(
+const { WEAPON_DEFS, weaponAssumedTargets, baseCritMult } = await import(
   path.join(root, "src/game/defs/equipment.ts")
 );
 const { LEVELS, LEVEL_ORDER } = await import(
@@ -53,7 +54,7 @@ const TOLERANCE = 0.12;
 const budgetFor = (levelReq, special) =>
   (BASE + PER_LEVEL * (levelReq - 1)) * (special ? SPECIAL_PREMIUM : 1);
 
-const critLift = (def) => 1 + REF_CRIT * (weaponCritMult(def) - 1);
+const critLift = (def) => 1 + REF_CRIT * (baseCritMult(def) - 1);
 
 const suggestedDamage = (def, special) =>
   (budgetFor(def.levelReq, special) * (def.cooldownMs / 1000)) /
@@ -110,7 +111,7 @@ for (const def of defs) {
   const eff = effectiveDps(def);
   const inRange = def.damage >= lo && def.damage <= hi;
   console.log(
-    `  ${fmt(def.levelReq, 3)}  ${fmt(eff.toFixed(0), 7)}  ${fmt(budget.toFixed(0), 6)}  ${fmt(weaponAssumedTargets(def).toFixed(1), 7)}  ${fmt(weaponCritMult(def).toFixed(1), 4)}  ${fmt(def.damage, 3)}  ${fmt(Math.round(lo), 4)}-${String(Math.round(hi)).padEnd(4)}  ${inRange ? " " : "!"} ${def.id}${special ? " (special)" : ""}`,
+    `  ${fmt(def.levelReq, 3)}  ${fmt(eff.toFixed(0), 7)}  ${fmt(budget.toFixed(0), 6)}  ${fmt(weaponAssumedTargets(def).toFixed(1), 7)}  ${fmt(baseCritMult(def).toFixed(1), 4)}  ${fmt(def.damage, 3)}  ${fmt(Math.round(lo), 4)}-${String(Math.round(hi)).padEnd(4)}  ${inRange ? " " : "!"} ${def.id}${special ? " (special)" : ""}`,
   );
   if (!inRange) {
     warnings.push(

@@ -227,6 +227,20 @@ tight ±10%. The average is unchanged, so the whole damage-budget model is
 untouched; the spread is rolled off a separate `fxRng` flavor stream so it
 never perturbs loot rolls.
 
+A **critical hit** deals extra damage set by the weapon's CLASS, not a
+per-weapon stat: a physical crit (melee or ranged) hits for **×2** the blow,
+a magic crit for a softer **×1.5** — and the governing stat then deepens it.
+**STRENGTH** raises a MELEE crit's multiplier, **INTELLIGENCE** a MAGIC one
+(a ranged crit takes the flat ×2 — DEXTERITY already buys its crit chance and
+accuracy), so a bruiser's slams and a mage's spells both spike harder the more
+they invest. A magic weapon's softer base is deliberate: the damage-budget
+model prices its lighter crit into slightly more per-hit damage, and INT earns
+the crit weight back on top. The mage's other reward is the **crit blob**: a
+magic single-target crit bursts a small arcane splash around the struck foe,
+catching the nearest few others for a share of the blow — INTELLIGENCE grows
+its reach and target count, both firmly capped so it never clears a horde on
+its own (that is unique and legendary territory).
+
 Two more axes complete the item tables (`src/game/defs/grades.ts`, config
 `QUALITY`). **Base grades**: every pool weapon and armor piece exists in
 three versions, D2-style — the NORMAL base, an **EXCEPTIONAL** version

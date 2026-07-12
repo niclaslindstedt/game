@@ -41,6 +41,7 @@ import {
   JUMP,
   LAST_STAND,
   LOOT,
+  MAGIC_CRIT,
   MEDKIT,
   PLAYER,
   PROJECTILE,
@@ -69,7 +70,7 @@ import {
   scaledMobCount,
 } from "./defs/difficulties.ts";
 import { enemyDef } from "./defs/enemies/index.ts";
-import { weaponCritMult, weaponDef } from "./defs/equipment.ts";
+import { weaponDef } from "./defs/equipment.ts";
 import { levelDef } from "./defs/levels/index.ts";
 import {
   addToInventory,
@@ -94,6 +95,7 @@ import {
   repairWornArmor,
   syncInventoryCapacity,
   weaponCooldownFor,
+  weaponCritMult,
   weaponRangeFor,
   rollWeaponHit,
   weaponSweepHalfAngle,
@@ -243,6 +245,9 @@ export function step(state: GameState, input: GameInput, dtMs: number): void {
   // HERE, after every pass that iterates the enemy list has finished: a
   // nova's kills must never splice that list out from under a sweep.
   stepProcs(state);
+  // Magic crit BLOBS queued by this tick's magic crits burst here, on the same
+  // rails and for the same reason as procs — after every enemy-list pass.
+  stepMagicCritBlobs(state);
   // Environmental hazards act on this tick's positions, after everyone has
   // moved: the wells drag (and devour), the asteroids fly (and strike).
   stepWells(state, dt, dtMs);
@@ -842,7 +847,7 @@ function stepWeapon(state: GameState, input: GameInput, dtMs: number): void {
       equipped,
       maxMeleeTargets(state),
       weapon.class,
-      weaponCritMult(weapon),
+      weaponCritMult(state, equipped),
     );
     // Wear AFTER the strike so the blow lands with the weapon that swung.
     wearEquippedWeapon(state);
@@ -884,7 +889,7 @@ function stepWeapon(state: GameState, input: GameInput, dtMs: number): void {
     if (spec.pierce) projectile.pierceLeft = spec.pierce;
     if (spec.homing) projectile.homing = spec.homing;
     if (spec.chain) projectile.chain = spec.chain;
-    projectile.critMult = weaponCritMult(weapon);
+    projectile.critMult = weaponCritMult(state, equipped);
     state.projectiles.push(projectile);
   }
   state.stats.shotsFired++;
@@ -1206,6 +1211,53 @@ function stepProcs(state: GameState): void {
     );
     for (const victim of victims) {
       hitEnemy(state, victim, params.damage * power, "magic");
+    }
+  }
+}
+
+/**
+ * Burst the MAGIC CRIT BLOBS this tick's magic crits queued (config
+ * `MAGIC_CRIT`): each detonates a small arcane splash around the struck foe,
+ * billing the nearest few OTHERS (the crit victim already took the blow) for a
+ * fraction of it. INTELLIGENCE grows the reach and the target count, both
+ * firmly capped — the baseline reward stays small, and screen-shaping AoE is
+ * left to unique/legendary item powers. Drained after `stepProcs` so the extra
+ * kills never mutate the enemy list under a sweep; the splash hits omit
+ * `rollAccuracy`, so a blob never blobs or procs again. Reuses the violet
+ * `nova` burst for its visual — a local arcane shockwave.
+ */
+function stepMagicCritBlobs(state: GameState): void {
+  if (state.pendingCritBlobs.length === 0) return;
+  const queue = state.pendingCritBlobs;
+  state.pendingCritBlobs = [];
+  const int = effectiveStat(state, "intelligence");
+  const radius = Math.min(
+    MAGIC_CRIT.blobRadiusMax,
+    MAGIC_CRIT.blobRadius + int * MAGIC_CRIT.blobRadiusPerInt,
+  );
+  const maxTargets = Math.min(
+    MAGIC_CRIT.blobTargetsMax,
+    Math.floor(MAGIC_CRIT.blobTargets + int * MAGIC_CRIT.blobTargetsPerInt),
+  );
+  const reachSq = radius * radius;
+  for (const blob of queue) {
+    state.events.push({ type: "nova", pos: { ...blob.pos }, radius });
+    if (maxTargets <= 0) continue;
+    // The nearest OTHER foes to the burst — the crit victim already ate the
+    // blow, so it is excluded. Snapshot + sort so the cap is honest even as
+    // hitEnemy splices the slain.
+    const victims = state.enemies
+      .filter(
+        (enemy) =>
+          enemy.id !== blob.victimId &&
+          !enemyDef(enemy.defId).apparition &&
+          distanceSq(enemy.pos, blob.pos) <= reachSq,
+      )
+      .sort((a, b) => distanceSq(a.pos, blob.pos) - distanceSq(b.pos, blob.pos))
+      .slice(0, maxTargets);
+    const damage = blob.blowDamage * MAGIC_CRIT.blobDamageFrac;
+    for (const victim of victims) {
+      hitEnemy(state, victim, damage, "magic");
     }
   }
 }

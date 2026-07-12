@@ -177,10 +177,12 @@ one, and scripted `earlyDrops` pin `quality: "normal"`.
      its damage-weighted leaps. So 40 eff = 10 dps/target on a cone, 8 on
      a full circle: an AoE weapon is deliberately weaker per hit from the
      start and grows into its assumption as INT rises.
-   - **Crit lift** (`weaponCritMult`): cadence-weighted crit damage — fast
-     (<450ms) ×1.6, medium ×2.0, slow (≥800ms) ×2.5, priced at a reference
-     15% crit chance. Slow weapons crit like trucks and pay per-hit budget
-     for it; a def may pin `critMult` as a deliberate exception.
+   - **Crit lift** (`baseCritMult`): class-based crit damage — a flat ×2 for
+     physical (melee & ranged), ×1.5 for magic, priced at a reference 15% crit
+     chance. Weapons carry NO per-weapon crit stat; a magic weapon's softer
+     crit buys it more per-hit budget in exchange. STR (melee) and INT (magic)
+     deepen the LIVE crit on top (`weaponCritMult(state, weapon)` in items.ts),
+     but the budget prices off the stat-independent `baseCritMult`.
    - `damage = budget(levelReq) × cooldown/1000 ÷ targets ÷ critLift` —
      the budget script prints current vs suggested range (±12%) for every
      weapon and `--strict` fails on drift.
