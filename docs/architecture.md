@@ -159,7 +159,9 @@ run against synthetic fixtures with no shipped content (see
   magic-or-better finds, charms, and bags stay normal make).
 - **`src/game/defs/abilities.ts`** — the ability pickups: time-limited
   powers (orbiting fire orbs, storm strikes, stasis slow fields, the item
-  magnet whose pull radius grows with INTELLIGENCE) plus the instant
+  magnet whose pull radius grows with INTELLIGENCE — and which only reels in
+  gear the hero can actually keep, leaving loot a full bag has no room for
+  where it lies) plus the instant
   screen nuke (wipes every horde minion on screen — elites and bosses are
   immune — its drop rate kept rare by `LOOT.nukeShare`, and its own kills
   never chain: a nuke blast's loot rolls skip both screen-nuke slices, so a

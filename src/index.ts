@@ -79,6 +79,7 @@ export {
   canOpenInventory,
   closeInventory,
   addToInventory,
+  canCollectEquipment,
   advanceIntro,
   skipIntro,
   dismissIntro,
