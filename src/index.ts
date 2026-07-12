@@ -262,6 +262,21 @@ export {
   stasisRadius,
 } from "./game/abilities.ts";
 
+// Granted forever spells & procs (the `spell`/`proc`/`sureStrike` affixes):
+// the renderer draws the orbit ring and stasis field off the same params the
+// engine ticks with; the item card names ranks and procs off the config.
+export {
+  boltProcDamage,
+  equippedProcs,
+  grantedSpellRanks,
+  itemSpellOrbPositions,
+  novaProcParams,
+  orbitSpellParams,
+  spellIntervalScale,
+  stasisSpellParams,
+  stormSpellParams,
+} from "./game/spells.ts";
+
 // In-world dialogue (elite ambushes, boss confrontations, story-item lore):
 // `advanceDialogue` is the player's tap; `dialogueContent` is what the app
 // draws while `phase === "dialogue"`.
@@ -418,6 +433,7 @@ export {
   PROJECTILE,
   QUALITY,
   RUN,
+  SPELL,
   STAMINA,
   STATS,
   UNIQUE,
@@ -451,6 +467,7 @@ export type {
   GateState,
   GravityWell,
   Item,
+  ItemSpell,
   Landmark,
   LevelInfo,
   Loadout,
@@ -459,9 +476,13 @@ export type {
   Merchant,
   MerchantStock,
   Obstacle,
+  PendingProc,
   Player,
+  ProcSpell,
+  ProcTrigger,
   Projectile,
   Quality,
+  SpellKind,
   StatName,
   Tier,
   TileSpec,

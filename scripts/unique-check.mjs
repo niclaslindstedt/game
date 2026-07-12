@@ -59,7 +59,9 @@ const { UNIQUE } = await import(path.join(root, "src/game/config.ts"));
 // bonus priced off the LIVE combat constants). We reference it here rather than
 // re-deriving ilvl, so the two scripts can never disagree on what a unique's ilvl
 // is or whether it's over-powered for its equip gate.
-const { ilvlOf } = await import(path.join(root, "scripts/weapon-ilvl.mjs"));
+const { ilvlOf, bonusIlvl } = await import(
+  path.join(root, "scripts/weapon-ilvl.mjs")
+);
 
 const argv = process.argv.slice(2);
 const strict = argv.includes("--strict");
@@ -255,6 +257,32 @@ for (const id of UNIQUE_IDS) {
         `${id}: scaling bonus ${s.value} > ${UNIQUE.scalingPctCap} cap (UNIQUE.scalingPctCap).`,
       );
     }
+
+  // The FOREVER powers are legendary territory: a proc or sure strike on a
+  // plain unique dilutes the tier's identity (WARN — a deliberate exception
+  // stays possible); a `scaling` mint on anything but a legendary is a
+  // broken def (ERROR — the 99+ growth rule is the legendary endgame's).
+  const tier = u.tier ?? "unique";
+  if (tier !== "legendary") {
+    for (const b of u.bonuses) {
+      if (b.kind === "proc" || b.kind === "sureStrike")
+        warn(
+          `${id}: "${b.kind}" on a plain unique — procs/sure-strike are legendary territory.`,
+        );
+    }
+    if (u.scaling)
+      err(
+        `${id}: scaling:true on a ${tier} — the 99+ scaling mint is legendary-only.`,
+      );
+  }
+  for (const b of u.bonuses) {
+    if (b.kind === "spell" && (b.rank < 1 || b.rank > 5))
+      err(`${id}: spell rank ${b.rank} out of the authoring band [1, 5].`);
+    if (b.kind === "proc" && (b.chance <= 0 || b.chance > 0.5))
+      err(
+        `${id}: proc chance ${b.chance} out of the authoring band (0, 0.5] — a proc is a garnish, not the weapon.`,
+      );
+  }
 
   // ilvl integrity + power budget — DELEGATED to the shared model in
   // weapon-ilvl.mjs (the source of truth for what ilvl means). It prices every
@@ -465,6 +493,33 @@ if (weaponRows.length) {
     console.log(
       `  ilvl${String(r.ilvl).padStart(3)}  ${r.id.padEnd(20)} ${r.base.padEnd(20)} ` +
         `req${levelReqOf(r.base)} ${dpsOf(r.base)} dps`,
+    );
+}
+
+// Legendary rarity table — "stats determine rarity": the engine derives each
+// legendary's selection weight from its priced bonus budget (item-budget.ts ×
+// UNIQUE.rarityBudgetRef, see `pickUniqueForDrop`); this prints the resulting
+// odds so authoring power IS visibly authoring rarity.
+const legendaryRows = UNIQUE_IDS.filter(
+  (id) => UNIQUE_DEFS[id].tier === "legendary",
+).map((id) => {
+  const u = UNIQUE_DEFS[id];
+  const budget = u.bonuses.reduce((s, b) => s + bonusIlvl(b), 0);
+  const base = u.rarity ?? UNIQUE.defaultRarity;
+  const weight =
+    budget <= 0
+      ? base
+      : Math.max(1, base * Math.min(1, UNIQUE.rarityBudgetRef / budget));
+  return { id, u, budget, weight };
+});
+if (legendaryRows.length) {
+  console.log(
+    `\nLegendaries (stats determine rarity — weight = rarity × min(1, ${UNIQUE.rarityBudgetRef}/budget)):`,
+  );
+  for (const r of legendaryRows.sort((a, b) => b.weight - a.weight))
+    console.log(
+      `  ${r.id.padEnd(20)} ${r.u.slot.padEnd(7)} budget ${r.budget.toFixed(1).padStart(6)}  ` +
+        `weight ${r.weight.toFixed(1).padStart(6)}${r.u.scaling ? "  ·99+ scaling" : ""}`,
     );
 }
 

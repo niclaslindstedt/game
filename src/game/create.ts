@@ -267,6 +267,9 @@ export function createGame(
       vel: vec(0, 0),
       faceLeft: false,
       abilities: [],
+      // Granted forever spells re-derive from the worn loadout on the first
+      // tick (`syncItemSpells`) — nothing to seed here.
+      itemSpells: [],
       heldAbilities: [],
       // One empty medkit stack per quality; stamina potions share one stack.
       medkits: new Array<number>(MEDKIT.tiers.length).fill(0),
@@ -381,6 +384,7 @@ export function createGame(
       timeMs: 0,
     },
     events: [],
+    pendingProcs: [],
     nextId,
     rng,
     fxRng,

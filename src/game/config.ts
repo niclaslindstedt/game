@@ -473,6 +473,24 @@ export const UNIQUE = {
    * tier + slot (see `pickUniqueForDrop`). A flat default so the catalog works
    * un-annotated; hand-weight individual chase items DOWN from here. */
   defaultRarity: 100,
+  /**
+   * SCALING legendaries (`UniqueDef.scaling`, the 99+ endgame roster): when
+   * the kill's monster level exceeds the authored ilvl floor, the mint stamps
+   * the HIGHER ilvl and grows every numeric bonus by this fraction per level
+   * over the floor — a menace-hot cap-level boss mints a genuinely bigger
+   * copy, which is the 99+ farming loop. Granted spells/procs keep their
+   * authored rank (their damage already rides `abilityPowerScale`).
+   */
+  scalingPerIlvl: 0.03,
+  /**
+   * STATS DETERMINE RARITY (legendaries only): the selection weight in
+   * `pickUniqueForDrop` is scaled by `rarityBudgetRef / bonusBudget` — a
+   * legendary whose priced bonus budget (see item-budget.ts) sits at this
+   * reference keeps its authored/default weight, and a stronger one is
+   * proportionally rarer. Mechanical, so authoring power IS authoring odds;
+   * an explicit `rarity` still multiplies on top.
+   */
+  rarityBudgetRef: 40,
 } as const;
 
 /**
@@ -1557,6 +1575,81 @@ export const ABILITY = {
    * mirrors the magnet's `radiusPerInt`; the slow factor itself never
    * scales (a stronger slow would trivialize kiting). */
   stasisRadiusPerInt: 1.5,
+} as const;
+
+/**
+ * GRANTED SPELLS & PROCS — the forever powers items carry (the `spell` /
+ * `proc` affix kinds, unique/legendary authoring territory). Every damage
+ * number here is authored AT LEVEL 1 and rides the SAME `abilityPowerScale`
+ * the pickup powers do (level ramp × INT deepening), so a granted spell
+ * keeps meaning the same fraction of a level-appropriate healthbar all
+ * campaign. Each spell scales linearly with its RANK (worn sources of the
+ * same spell add their ranks), and INTELLIGENCE additionally SHORTENS the
+ * tick/strike intervals (`intervalPerInt`) — the "improvable by INT" half
+ * the timed pickups don't get. A granted spell is deliberately weaker than
+ * its pickup twin at rank 1: it never runs out.
+ */
+export const SPELL = {
+  /** Circling flame — the forever FIRE ORBS. Rank adds orbs and per-tick
+   * damage; the ring turns at the pickup's pace. */
+  orbit: {
+    /** Orbs on the ring at rank 1 / added per further rank. */
+    count: 1,
+    countPerRank: 1,
+    /** Damage per tick per orb at rank 1 / added per further rank. */
+    damage: 8,
+    damagePerRank: 3,
+    radius: 36,
+    angularSpeed: 2.8,
+    hitCooldownMs: 200,
+    orbRadius: 8,
+    sprite: "fireball",
+  },
+  /** The forever STORM CELL: a bolt into the nearest foe on an interval.
+   * Rank raises the damage and quickens the strikes. */
+  storm: {
+    intervalMs: 2400,
+    /** Each rank past 1 multiplies the interval by this (rank 3 ≈ ×0.72). */
+    intervalPerRankMult: 0.85,
+    damage: 18,
+    damagePerRank: 7,
+    range: 200,
+  },
+  /** The forever STASIS FIELD: foes inside crawl. Rank widens the field and
+   * deepens the slow (floored — kiting must stay a skill). INT still widens
+   * it further via `ABILITY.stasisRadiusPerInt`, like the pickup. */
+  stasis: {
+    radius: 46,
+    radiusPerRank: 16,
+    /** Enemy speed multiplier inside the field at rank 1 (higher = gentler
+     * than the pickup's 0.3 — this one never expires). */
+    slowFactor: 0.8,
+    slowFactorPerRank: -0.07,
+    slowFactorMin: 0.5,
+  },
+  /** The BOLT proc: lightning into the struck/killed enemy (or the nearest
+   * foe to the trigger, if it fell). Rank sizes the hit. */
+  bolt: {
+    damage: 26,
+    damagePerRank: 10,
+    /** How far from the trigger point a replacement victim may stand. */
+    range: 120,
+  },
+  /** The NOVA proc: a damage ring bursting around the trigger point. */
+  nova: {
+    radius: 56,
+    radiusPerRank: 8,
+    damage: 22,
+    damagePerRank: 8,
+  },
+  /**
+   * INT's interval lever on GRANTED spells: each point of effective
+   * INTELLIGENCE trims orbit tick cooldowns and storm intervals by this
+   * fraction, floored at `intervalFloor` of the authored value — a
+   * scholar's forever spells genuinely fire faster.
+   */
+  intervalPerInt: 0.006,
+  intervalFloor: 0.5,
 } as const;
 
 /**

@@ -26,6 +26,10 @@ Status legend: `[ ]` not started · `[x]` done.
   interval and improved by INTELLIGENCE. Legendaries may grant such effects
   to ALL specs (e.g. magic effects on hit).
 - **Tone:** timeless and epic. No jokes in unique/legendary names or lore.
+- **Naming (decided):** real mythological artifact names are RESERVED for the
+  99+ endgame roster (following MJÖLNIR — the Rift dredging up Earth's
+  history justifies them in-world). Every legendary below 99+ and all plain
+  uniques carry ORIGINAL epic names in the game's own voice.
 - **No new art.** Every item sits on an existing catalog base (grade variants
   included) and every granted spell reuses the shipped effect sprites
   (fireball, storm bolt, …).
@@ -168,13 +172,13 @@ drop during the campaign). Bases picked at implementation time via
 `unique-check.mjs --bases` / `--suggest` (req ≈ ilvl − 20); ilvls set by
 `weapon-ilvl.mjs --suggest`. Target ilvls ~40–55. Concepts:
 
-| Item                      | Slot            | Spec   | Identity                                                                                                      |
-| ------------------------- | --------------- | ------ | ------------------------------------------------------------------------------------------------------------- |
-| **OATHBRAND**             | weapon (melee)  | melee  | STR keeper + damage — the sworn blade that completes the hard melee set                                       |
-| **LONGWATCH**             | weapon (ranged) | ranged | DEX + crit sniper — patience rewarded                                                                         |
-| **COLOSSUS PLATE**        | chest           | melee  | heavy armor + STR, small speed downside — the wall                                                            |
-| **HUNTSMAN'S COWL**       | head            | ranged | DEX + crit + speed — the stalker's profile                                                                    |
-| **GUNGNIR** _(legendary)_ | weapon (ranged) | all    | the Allfather's cast spear: `sureStrike` (never misses) + on-hit `bolt` proc + DEX keeper. Out-ilvls MJÖLNIR. |
+| Item                             | Slot            | Spec   | Identity                                                                                                                            |
+| -------------------------------- | --------------- | ------ | ----------------------------------------------------------------------------------------------------------------------------------- |
+| **OATHBRAND**                    | weapon (melee)  | melee  | STR keeper + damage — the sworn blade that completes the hard melee set                                                             |
+| **LONGWATCH**                    | weapon (ranged) | ranged | DEX + crit sniper — patience rewarded                                                                                               |
+| **COLOSSUS PLATE**               | chest           | melee  | heavy armor + STR, small speed downside — the wall                                                                                  |
+| **HUNTSMAN'S COWL**              | head            | ranged | DEX + crit + speed — the stalker's profile                                                                                          |
+| **THE INEVITABLE** _(legendary)_ | weapon (ranged) | all    | the shot that has never landed anywhere but home: `sureStrike` (never misses) + on-hit `bolt` proc + DEX keeper. Out-ilvls MJÖLNIR. |
 
 ### Phase 2 checklist
 
@@ -184,7 +188,7 @@ drop during the campaign). Bases picked at implementation time via
 - [ ] `item-forge.mjs check` battery clean
 - [ ] Content tests pass (placement coverage suites)
 - [ ] `docs/game-content.md` update + changelog fragment
-- [ ] Playtest: GUNGNIR proc feel at the phone viewport
+- [ ] Playtest: THE INEVITABLE proc feel at the phone viewport
 
 ## Phase 3 — NIGHTMARE batch (9 uniques + 3 legendaries)
 
@@ -192,16 +196,16 @@ Second set per spec (ilvls ~55–70, gate 57). Weapons: +2 melee, +1 ranged,
 +2 magic; armor: +4 spec-leaning pieces (one per slot). Legendaries (one per
 spec, each carrying a granted spell or proc):
 
-- **TYRFING** — melee. The cursed blade: huge damage + crit, a real downside
-  (hp). It always cuts — `sureStrike`.
-- **ICHAIVAL** — ranged. Odin's bow: extra projectiles feel via on-hit bolt
-  proc + DEX.
-- **CADUCEUS** — magic. The herald's staff: grants `orbit` (circling fire) +
-  INT keeper — the first forever-spell showcase.
+- **THE RECKONING** — melee. The cursed blade: huge damage + crit, a real
+  downside (hp). It always cuts — `sureStrike`.
+- **SKYBREAKER** — ranged. The storm answers every shot: on-hit bolt proc +
+  DEX.
+- **SUNWREATH** — magic. The burning crown of a dead star: grants `orbit`
+  (circling fire) + INT keeper — the first forever-spell showcase.
 
 - [ ] 9 unique defs + 3 legendary defs, world-drop wiring on the nightmare column
 - [ ] Checker battery + tests + docs + changelog
-- [ ] Playtest CADUCEUS orbit uptime/feel
+- [ ] Playtest SUNWREATH orbit uptime/feel
 
 ## Phase 4 — JESUS pre-99 batch (16 uniques + 6 legendaries)
 
@@ -209,11 +213,11 @@ Third set per spec (ilvls ~70–95, gate 60). Weapons: +2 melee, +3 ranged,
 +3 magic; armor: +8 (two per slot). Legendaries — one per spec + three
 armor/trinket anchors, all with spells/procs:
 
-- **ZULFIQAR** (melee weapon) · **GÁE BOLG** (ranged weapon) · **VAJRA**
-  (magic weapon, on-kill nova)
-- **AEGIS** (chest — the unbreakable guard, `stasis` field)
-- **TALARIA** (feet — winged speed)
-- **BRÍSINGAMEN** (charm — the fire necklace, `orbit`)
+- **KINGSBANE** (melee weapon) · **THE LONG SILENCE** (ranged weapon) ·
+  **STARFALL** (magic weapon, on-kill nova)
+- **THE STILLWARD** (chest — the unbreakable guard, `stasis` field)
+- **WINDGRAVE** (feet — winged speed)
+- **EMBERHEART** (charm — the burning heart, `orbit`)
 
 - [ ] 16 unique defs + 6 legendary defs, world-drop wiring on the jesus column
 - [ ] Checker battery + tests + docs + changelog

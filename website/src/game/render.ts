@@ -15,11 +15,14 @@ import {
   companionDef,
   enemyDef,
   equipmentIcon,
+  itemSpellOrbPositions,
   LAST_STAND,
   LEVELING,
   magnetRadius,
   MERCY,
+  orbitSpellParams,
   orbPositions,
+  stasisSpellParams,
   storyItemDef,
   WOUNDS,
   type GameState,
@@ -932,6 +935,40 @@ function drawAbilities(
       ctx.stroke();
     }
   }
+
+  // GRANTED forever spells (the `spell` affix on worn gear) draw off the
+  // same engine params they tick with: the orbit ring's orbs, the stasis
+  // field's slow ring. Storm strikes ride the lightning effect like the
+  // pickup's. Same visuals as the pickups — the power reads identically,
+  // it just never expires.
+  for (const spell of player.itemSpells) {
+    if (spell.spell === "orbit") {
+      const params = orbitSpellParams(state, spell.rank);
+      const sprite =
+        spriteByName(assets.sprites, params.sprite) ?? assets.sprites.fireball;
+      for (const orb of itemSpellOrbPositions(state, player, spell)) {
+        ctx.drawImage(
+          sprite,
+          Math.round(orb.x - sprite.width / 2 - camera.x),
+          Math.round(orb.y - sprite.height / 2 - camera.y),
+        );
+      }
+    }
+    if (spell.spell === "stasis") {
+      const params = stasisSpellParams(state, spell.rank);
+      const pulse = 0.18 + 0.08 * Math.sin(timeMs / 220);
+      ctx.strokeStyle = `rgba(140, 205, 215, ${pulse})`;
+      ctx.beginPath();
+      ctx.arc(
+        Math.round(player.pos.x - camera.x),
+        Math.round(player.pos.y - camera.y),
+        params.radius,
+        0,
+        Math.PI * 2,
+      );
+      ctx.stroke();
+    }
+  }
 }
 
 /**
@@ -943,6 +980,7 @@ export type Effect = {
   kind:
     | "lightning"
     | "nuke"
+    | "nova"
     | "splash"
     | "damage"
     | "swing"
@@ -1260,6 +1298,26 @@ export function drawEffects(
       ctx.strokeStyle = `rgba(255, 215, 94, ${0.9 * (1 - t)})`;
       ctx.beginPath();
       ctx.arc(x, groundY, 12 + t * 240, 0, Math.PI * 2);
+      ctx.stroke();
+      continue;
+    }
+
+    if (effect.kind === "nova") {
+      // A NOVA proc: a violet ring bursting out to its damage radius — a
+      // local, arcane shockwave (no screen flash; procs fire often).
+      const duration = effect.durationMs ?? 320;
+      const t = 1 - (effect.untilMs - timeMs) / duration; // 0 → 1
+      const reach = (effect.radius ?? 56) * (0.25 + 0.75 * t);
+      const fade = 1 - t;
+      ctx.strokeStyle = `rgba(184, 138, 232, ${0.85 * fade})`;
+      ctx.lineWidth = 2;
+      ctx.beginPath();
+      ctx.arc(x, groundY, reach, 0, Math.PI * 2);
+      ctx.stroke();
+      ctx.lineWidth = 1;
+      ctx.strokeStyle = `rgba(230, 214, 255, ${0.5 * fade})`;
+      ctx.beginPath();
+      ctx.arc(x, groundY, reach * 0.7, 0, Math.PI * 2);
       ctx.stroke();
       continue;
     }

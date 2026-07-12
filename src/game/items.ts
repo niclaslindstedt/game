@@ -57,7 +57,8 @@ import { difficultyDef } from "./defs/difficulties.ts";
 import type { EnemyRole } from "./defs/enemies/index.ts";
 import { gateKeyIds, levelDef } from "./defs/levels/index.ts";
 import { storyItemDef } from "./defs/story.ts";
-import { activeUniqueDefs, uniqueDef } from "./defs/uniques.ts";
+import { activeUniqueDefs, uniqueDef, type UniqueDef } from "./defs/uniques.ts";
+import { bonusBudget } from "./item-budget.ts";
 import { baseStatBonus, diminishStat } from "./leveling.ts";
 import { currentMobLevel } from "./menace.ts";
 import { advanceCutsceneChain } from "./story.ts";
@@ -358,9 +359,29 @@ function pickUniqueForDrop(
         (isWeaponDef(u.base) || isGearDef(u.base)) &&
         equipmentLevelReq(u.base) <= lootLevel,
     )
-    .map((u) => ({ id: u.id, weight: u.rarity ?? UNIQUE.defaultRarity }));
+    .map((u) => ({ id: u.id, weight: uniqueDropWeight(u, tier) }));
   if (eligible.length === 0) return null;
   return pickWeighted(state.rng, eligible).id;
+}
+
+/**
+ * A named item's selection weight once the rarity roll lands its tier+slot.
+ * UNIQUES keep the flat authored/default weight. LEGENDARIES obey "stats
+ * determine rarity": the weight is scaled by `rarityBudgetRef / bonusBudget`
+ * (the priced ilvl worth of the fixed bonuses — see item-budget.ts), so a
+ * reference-budget legendary keeps its authored weight and a stronger one is
+ * mechanically, proportionally rarer. An explicit `rarity` still multiplies
+ * on top, and the weight floors just above zero so no god-roll goes extinct.
+ */
+export function uniqueDropWeight(
+  u: UniqueDef,
+  tier: "unique" | "legendary",
+): number {
+  const base = u.rarity ?? UNIQUE.defaultRarity;
+  if (tier !== "legendary") return base;
+  const budget = bonusBudget(u.bonuses);
+  if (budget <= 0) return base;
+  return Math.max(1, base * Math.min(1, UNIQUE.rarityBudgetRef / budget));
 }
 
 /**
@@ -531,7 +552,10 @@ export function rollEquipment(
     (tier === "unique" || tier === "legendary")
   ) {
     const namedId = pickUniqueForDrop(state, slot, tier, lootLevel);
-    if (namedId) return mintUnique(state, namedId);
+    // The killer's true mlvl rides the mint so a `scaling` legendary grows
+    // off a deep kill (lootLevel — the offset-stripped GATE level — still
+    // governs eligibility above).
+    if (namedId) return mintUnique(state, namedId, { mlvl });
     tier = "rare";
   }
   const ilvl = rollItemLevel(state, lootLevel, tier);
@@ -613,10 +637,28 @@ export function rollEquipment(
  * as for the sidearm). The frozen `def` snapshot version-proofs it, exactly like
  * a rolled drop.
  */
-export function mintUnique(state: GameState, uniqueId: string): Equipment {
+export function mintUnique(
+  state: GameState,
+  uniqueId: string,
+  opts?: {
+    /** The killer's MONSTER LEVEL — lets a `scaling` legendary (the 99+
+     * endgame roster) mint ABOVE its authored floor: the higher of the two
+     * becomes the stamped ilvl and every numeric bonus grows by
+     * `UNIQUE.scalingPerIlvl` per level over the floor. Omitted (scripted
+     * mints, the merchant, the arsenal gallery) = the authored floor. */
+    mlvl?: number;
+  },
+): Equipment {
   const u = uniqueDef(uniqueId);
   const weapon = isWeaponDef(u.base);
   const baseDef = weapon ? weaponDef(u.base) : gearDef(u.base);
+  // The 99+ SCALING mint: a deeper kill stamps its own level and grows the
+  // numeric bonuses — the reason cap-level boss runs are the endgame farm.
+  const ilvl =
+    u.scaling && opts?.mlvl !== undefined
+      ? Math.max(u.ilvl, Math.round(opts.mlvl))
+      : u.ilvl;
+  const growth = 1 + UNIQUE.scalingPerIlvl * (ilvl - u.ilvl);
   // ±band around the base value; the fixed bonuses are untouched — except
   // that SCALING percentages (`statPct`/`maxHpPct`) clamp to the engine's
   // hard ceiling (UNIQUE.scalingPctCap): they multiply the hero's own grown
@@ -628,12 +670,8 @@ export function mintUnique(state: GameState, uniqueId: string): Equipment {
     defId: u.base,
     slot: u.slot,
     tier: u.tier ?? "unique",
-    ilvl: u.ilvl,
-    affixes: u.bonuses.map((bonus) =>
-      bonus.kind === "statPct" || bonus.kind === "maxHpPct"
-        ? { ...bonus, value: Math.min(bonus.value, UNIQUE.scalingPctCap) }
-        : { ...bonus },
-    ),
+    ilvl,
+    affixes: u.bonuses.map((bonus) => scaleBonus(bonus, growth)),
     name: u.name,
     // The catalog id behind the display name — the stable identity anything
     // booking "which unique is this" keys on (see Equipment.uniqueId).
@@ -656,6 +694,36 @@ export function mintUnique(state: GameState, uniqueId: string): Equipment {
     }
   }
   return item;
+}
+
+/**
+ * One authored bonus through the SCALING-legendary growth (see `mintUnique`):
+ * numeric values grow by the factor — integer kinds re-round, scaling
+ * percentages still clamp to the engine ceiling AFTER growing — while
+ * granted spells, procs, and sure strike keep their authored shape (their
+ * output already rides `abilityPowerScale`, so growing the rank too would
+ * double-dip). Growth 1 (every non-scaling mint) copies verbatim.
+ */
+function scaleBonus(bonus: Affix, growth: number): Affix {
+  switch (bonus.kind) {
+    case "stat":
+    case "maxHp":
+    case "armor":
+      return { ...bonus, value: Math.round(bonus.value * growth) };
+    case "damagePct":
+    case "crit":
+      return { ...bonus, value: bonus.value * growth };
+    case "statPct":
+    case "maxHpPct":
+      return {
+        ...bonus,
+        value: Math.min(bonus.value * growth, UNIQUE.scalingPctCap),
+      };
+    case "spell":
+    case "proc":
+    case "sureStrike":
+      return { ...bonus };
+  }
 }
 
 /**
@@ -722,6 +790,18 @@ export function isArmorBroken(piece: Equipment): boolean {
  * a worn-out piece goes silent the moment it breaks. */
 function activePieces(state: GameState): Equipment[] {
   return equippedPieces(state).filter((piece) => !isArmorBroken(piece));
+}
+
+/**
+ * Every affix currently APPLYING from the worn loadout, flattened — the read
+ * the granted-spell/proc/sure-strike systems (spells.ts, `playerMissChance`)
+ * share, so a broken armor piece silences its forever spell exactly as it
+ * silences its stats.
+ */
+export function activeEquippedAffixes(state: GameState): Affix[] {
+  const affixes: Affix[] = [];
+  for (const piece of activePieces(state)) affixes.push(...piece.affixes);
+  return affixes;
 }
 
 /**
@@ -1101,6 +1181,12 @@ export function playerDodgeChance(state: GameState): number {
  * stat panel (as HIT rate) and rolled in `hitEnemy` for weapon attacks.
  */
 export function playerMissChance(state: GameState): number {
+  // SURE STRIKE (a legendary affix): the weapon simply never whiffs on its
+  // own — the innate miss reads zero, floor and difficulty notwithstanding.
+  // The foe's DODGE is still its own move (see `enemyDodgeChance`).
+  if (activeEquippedAffixes(state).some((a) => a.kind === "sureStrike")) {
+    return 0;
+  }
   return Math.max(
     ACCURACY.minMiss,
     (ACCURACY.baseMiss - effectiveStat(state, "dexterity") * ACCURACY.perDex) *
@@ -1558,7 +1644,13 @@ export function gearScore(gear: Equipment): number {
     // hero, so weight them well above the raw fraction.
     else if (affix.kind === "statPct") score += affix.value * 600;
     else if (affix.kind === "maxHpPct") score += affix.value * 400;
-    else score += affix.value * 100;
+    // A granted forever spell is worth several stat points a rank; a proc's
+    // worth scales with how often it actually fires. Sure strike reads as
+    // the few % damage the innate whiff was costing.
+    else if (affix.kind === "spell") score += affix.rank * 45;
+    else if (affix.kind === "proc") score += affix.chance * affix.rank * 250;
+    else if (affix.kind === "sureStrike") score += 40;
+    else if (affix.kind === "damagePct") score += affix.value * 100;
   }
   return score;
 }

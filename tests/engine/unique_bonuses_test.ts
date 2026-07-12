@@ -94,9 +94,12 @@ describe("scaling unique bonuses", () => {
     // damagePct (a weapon's flat +X% damage) is exempt by design.
     const state = startGame();
     const relic = mintUnique(state, "test_greedy_relic");
-    const byKind = Object.fromEntries(relic.affixes.map((a) => [a.kind, a]));
-    expect(byKind.statPct?.value).toBe(UNIQUE.scalingPctCap);
-    expect(byKind.maxHpPct?.value).toBe(UNIQUE.scalingPctCap);
-    expect(byKind.damagePct?.value).toBe(0.3);
+    const valueOf = (kind: string) => {
+      const affix = relic.affixes.find((a) => a.kind === kind);
+      return affix && "value" in affix ? affix.value : undefined;
+    };
+    expect(valueOf("statPct")).toBe(UNIQUE.scalingPctCap);
+    expect(valueOf("maxHpPct")).toBe(UNIQUE.scalingPctCap);
+    expect(valueOf("damagePct")).toBe(0.3);
   });
 });
