@@ -155,6 +155,9 @@ export const THE_RIFT: LevelDef = {
     ],
   },
   placedItems: [
+    // ADA'S TRAIL (4/5): a scrap of her zipper-fixed jacket (the prelude
+    // callback) snagged on a shard, wrapped around a lizard-god scale.
+    { kind: "story", defId: "ada_jacket", pos: { x: 1500, y: 500 } },
     // The burnt ZAI probe — the reveal's paper trail — parked inside a black
     // hole's pull, so the proof costs a dip toward the horizon. The wells
     // drag these onto their rims: loot ON the event horizon.

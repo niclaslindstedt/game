@@ -1482,6 +1482,14 @@ export type GameState = {
   /** Collected story items (STORY_ITEM_DEFS ids) — keys, dossiers, the lot. */
   storyItems: string[];
   /**
+   * Level ids the hero has already CLEARED on this run's difficulty (seeded by
+   * the app from the character's clears; empty on a dev jump or fresh hero).
+   * Read only by `requiresClear`-gated guaranteed drops — the bunker key
+   * (RASPUTIN's SEVERED HAND) stays latent until this contains "eastworld", so
+   * the secret level unlocks only after the campaign is beaten.
+   */
+  clearedLevels: string[];
+  /**
    * THOUGHT_DEFS ids the hero has already thought through — each first-kill
    * inner monologue plays exactly once per run.
    */

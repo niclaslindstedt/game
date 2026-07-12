@@ -281,6 +281,9 @@ export const SPACEZ_HQ: LevelDef = {
     },
   ],
   placedItems: [
+    // ADA'S TRAIL (1/5): her crushed soda can on the path in, by the vending
+    // machines where the cameras last caught her.
+    { kind: "story", defId: "ada_soda", pos: { x: 640, y: 640 } },
     // Supply bay B — the armory cage: the building's big gun and its kits.
     { kind: "equipment", defId: "pump_shotgun", pos: { x: 100, y: 80 } },
     { kind: "repair", pos: { x: 150, y: 60 } },

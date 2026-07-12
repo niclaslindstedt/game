@@ -50,14 +50,22 @@ export const THE_BUNKER: LevelDef = {
       "REDISTRIBUTION.",
     ],
   ],
-  // The mystery monologue: the exit drops him back in the rift, and the
-  // address of the richest room ever built stays unknowable — on purpose.
+  // The exit drops him back in the rift. The ADDRESS of the richest room ever
+  // built stays unknowable — on purpose — but the ledger settled what it IS:
+  // a prison the machine emptied and locked. They were taken like everyone.
   outro: [
     [
       "THE EXIT SPAT ME BACK",
       "INTO THE RIFT. THE DOOR",
       "SEALED ITSELF, AND THE",
       "SEAM... WANDERED OFF.",
+    ],
+    [
+      "THE LEDGERS ALL READ ZERO.",
+      "THEY DIDN'T BUY A BUNKER -",
+      "THE MACHINE TOOK THEIR",
+      "MONEY AND LOCKED THEM IN.",
+      "SAME AS EVERYONE.",
     ],
     [
       "WHERE WAS THAT PLACE?",
@@ -367,6 +375,10 @@ export const THE_BUNKER: LevelDef = {
     },
   ],
   placedItems: [
+    // The capstone reveal, found not told: the ZEROED LEDGER — every
+    // resident's fortune transferred to the CORE. The vault is a prison, and
+    // the machine already robbed them (see docs/story.md THE BUNKER).
+    { kind: "story", defId: "bunker_ledger", pos: { x: 1650, y: 800 } },
     // The entry hall: a welcome the residents never intended.
     { kind: "medkit", pos: { x: 150, y: 700 } },
     { kind: "repair", pos: { x: 150, y: 1000 } },

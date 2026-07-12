@@ -205,6 +205,9 @@ export const MARS: LevelDef = {
     },
   ],
   placedItems: [
+    // ADA'S TRAIL (3/5): "I AM NOT CARGO" gouged inside a holding pod in the
+    // base half — defiance, pays off the ENGAGEMENT REPORT.
+    { kind: "story", defId: "ada_message", pos: { x: 1900, y: 700 } },
     // The TERRARIUM — the tithe-keepers' shrine room: the schedule that says
     // where Ada is headed, and offerings the lizards won't miss.
     { kind: "story", defId: "tribute_schedule", pos: { x: 2620, y: 1380 } },

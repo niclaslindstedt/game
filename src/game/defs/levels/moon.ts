@@ -153,6 +153,11 @@ export const MOON: LevelDef = {
       jumpable: false,
     },
   ],
+  placedItems: [
+    // ADA'S TRAIL (2/5): her sneaker and the scratched 'A' by the flag, just
+    // short of ARMSTRONG — she marked the way down into the wreck.
+    { kind: "story", defId: "ada_sneaker", pos: { x: 2010, y: 360 } },
+  ],
   obstacles: [
     // MOONROCK — solid slabs of stone in 1×1, 1×2 and 2×2 footprints. They
     // wall off sight, shots, AND a nuke's blast: a living thing behind one is
