@@ -563,8 +563,9 @@ pixelated`; enemies swap to generated wounded sprite variants as hp falls
   per-unique / per-companion groups derived from the live content
   registries — and the persisted unlock store built on the oss-framework
   achievements ledger; `AchievementsScreen.tsx` is the browsable shelf
-  reached from the title menu and the in-run HUD star that appears while
-  new badges wait, and `AchievementToast.tsx` the gold unlock banner),
+  reached from the title menu's ACHIEVEMENTS screen, and
+  `AchievementToast.tsx` the gold unlock banner that still fires in-run as
+  badges are earned),
   `assets.ts` (loads the generated sprite atlas — one PNG + JSON source
   rects sliced into per-sprite bitmaps in a single decode — plus the pixel
   font), and `assets/` (the generated atlas + font atlas — never

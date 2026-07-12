@@ -41,10 +41,15 @@ export function App() {
   );
 
   // Whether the character roster is open on top of the title, and why: "play"
-  // means PLAY sent us here to pick a hero and should drop into the difficulty
-  // ladder once one is chosen; "manage" means CHARACTERS (or a fallen hero) and
-  // returns to the title. null = the title menu itself is showing.
+  // means PLAY → NEW GAME / LOAD GAME sent us here to pick or mint a hero and
+  // should drop into the difficulty ladder once one is chosen; "manage" means a
+  // fallen hero's death dropped us onto the roster and it returns to the title.
+  // null = the title menu itself is showing.
   const [picking, setPicking] = useState<null | "play" | "manage">(null);
+  // Whether the roster opens straight on the create form (PLAY → NEW GAME)
+  // rather than the hero list (PLAY → LOAD GAME). An empty roster shows the
+  // form regardless — there is nothing to load.
+  const [pickCreating, setPickCreating] = useState(false);
   // Set when a hero is picked via PLAY, so the title mounts straight on the
   // difficulty ladder instead of the main menu. Reset on every other route back
   // to the title so a later visit opens on the menu.
@@ -194,15 +199,18 @@ export function App() {
     return (
       <>
         <CharacterScreen
+          startCreating={pickCreating}
           onPlay={(picked) => {
             setActiveCharacterId(picked.id);
             setCharacter(picked);
             setStartOnDifficulty(picking === "play");
             setPicking(null);
+            setPickCreating(false);
           }}
           onBack={() => {
             setStartOnDifficulty(false);
             setPicking(null);
+            setPickCreating(false);
           }}
         />
         <UpdateModal
@@ -232,16 +240,18 @@ export function App() {
             skipIntro: opts?.skipIntro,
           });
         }}
-        onManageCharacters={() => {
-          // Open the roster to switch heroes / create one. The parked run stays
-          // put — it's this hero's, offered again as CONTINUE if re-selected.
+        onNewGame={() => {
+          // PLAY → NEW GAME: open the roster on the create form, then drop into
+          // the difficulty ladder for the freshly-minted hero.
           setStartOnDifficulty(false);
-          setPicking("manage");
+          setPickCreating(true);
+          setPicking("play");
         }}
-        onNeedCharacter={() => {
-          // PLAY with no active hero: pick or create one, then drop into the
-          // difficulty ladder for them.
+        onLoadGame={() => {
+          // PLAY → LOAD GAME: open the roster to pick (or retire) a saved hero,
+          // then drop into the difficulty ladder for the chosen one.
           setStartOnDifficulty(false);
+          setPickCreating(false);
           setPicking("play");
         }}
         startOnDifficulty={startOnDifficulty}

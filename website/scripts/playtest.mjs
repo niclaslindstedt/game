@@ -77,10 +77,10 @@ const extras =
   (seed ? `&seed=${seed}` : "");
 await page.goto(`${url}/?debug&bot=${strategy}${extras}`);
 // The app opens on the Doom-style title menu. Wait for it (asset load) before
-// shooting the splash, then PLAY. With no active hero yet, PLAY opens the
-// character roster.
-await page.getByRole("button", { name: "new-game" }).waitFor();
+// shooting the splash, then PLAY → NEW GAME opens the character create form.
+await page.getByRole("button", { name: "play", exact: true }).waitFor();
 await page.screenshot({ path: `${shotDir}/title.png` });
+await page.getByRole("button", { name: "play", exact: true }).click();
 await page.getByRole("button", { name: "new-game" }).click();
 // A fresh browser has no heroes, so the create form is shown: name one and
 // CREATE it (softcore by default) to drop straight into the difficulty ladder.

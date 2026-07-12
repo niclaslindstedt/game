@@ -145,7 +145,7 @@ for (const vp of VIEWPORTS) {
     viewport: { width: vp.width, height: vp.height },
   });
   await page.goto(url);
-  await page.getByRole("button", { name: "new-game" }).waitFor();
+  await page.getByRole("button", { name: "play", exact: true }).waitFor();
 
   for (const sample of SAMPLES) {
     await page.evaluate((p) => {

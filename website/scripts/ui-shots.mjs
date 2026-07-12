@@ -121,11 +121,12 @@ for (const vp of VIEWPORTS) {
 
   // ---- Title & menu surfaces ----
   await page.goto(`${url}/?debug`);
-  await page.getByRole("button", { name: "new-game" }).waitFor();
+  await page.getByRole("button", { name: "play", exact: true }).waitFor();
   await shot("title-main");
 
-  // PLAY with no hero -> character create form -> difficulty ladder.
+  // PLAY -> NEW GAME -> character create form -> difficulty ladder.
   await tryStep("character-create", async () => {
+    await page.getByRole("button", { name: "play", exact: true }).click();
     await click("new-game");
     await page.getByRole("textbox", { name: "character-name" }).waitFor();
     await page.getByRole("textbox", { name: "character-name" }).fill("ADA");
@@ -136,9 +137,11 @@ for (const vp of VIEWPORTS) {
     await page.keyboard.press("Escape");
   });
 
+  // PLAY -> LOAD GAME -> the hero roster (the just-created ADA is listed).
   await tryStep("character-roster", async () => {
-    await page.getByRole("button", { name: "characters" }).waitFor();
-    await click("characters");
+    await page.getByRole("button", { name: "play", exact: true }).waitFor();
+    await page.getByRole("button", { name: "play", exact: true }).click();
+    await click("load-game");
     await page.getByRole("button", { name: "character-new" }).waitFor();
     await shot("character-roster");
     await click("character-back");
@@ -260,8 +263,11 @@ for (const vp of VIEWPORTS) {
 
   await tryStep("game-boot", async () => {
     await game.goto(`${url}/?debug&seed=7`);
-    await game.getByRole("button", { name: "new-game" }).waitFor();
+    await game.getByRole("button", { name: "play", exact: true }).waitFor();
+    await game.getByRole("button", { name: "play", exact: true }).click();
     await game.getByRole("button", { name: "new-game" }).click();
+    await game.getByRole("textbox", { name: "character-name" }).fill("SEED7");
+    await game.getByRole("button", { name: "character-create" }).click();
     await game.getByRole("button", { name: "difficulty-easy" }).click();
     await game.waitForFunction(() => window.__game !== undefined, null, {
       timeout: 60000,
@@ -449,8 +455,11 @@ for (const vp of VIEWPORTS) {
   };
   await tryStep("bot-run", async () => {
     await bot.goto(`${url}/?debug&seed=11&bot=kite`);
-    await bot.getByRole("button", { name: "new-game" }).waitFor();
+    await bot.getByRole("button", { name: "play", exact: true }).waitFor();
+    await bot.getByRole("button", { name: "play", exact: true }).click();
     await bot.getByRole("button", { name: "new-game" }).click();
+    await bot.getByRole("textbox", { name: "character-name" }).fill("KITE");
+    await bot.getByRole("button", { name: "character-create" }).click();
     await bot.getByRole("button", { name: "difficulty-easy" }).click();
     await bot.waitForFunction(() => window.__game !== undefined, null, {
       timeout: 60000,
