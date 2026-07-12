@@ -19,6 +19,8 @@ import {
   gearDef,
   isWeaponDef,
   playerMissChance,
+  rawStat,
+  statRequirement,
   STATS,
   weaponCritMult,
   weaponCooldownFor,
@@ -207,6 +209,21 @@ export function itemLines(
     // The weapon's CLASS is the glyph beside the name (ItemCardBody), not a
     // line — the card saves the row.
     if (reqLine) lines.push(reqLine);
+    // The ATTRIBUTE gate right under the level gate: red until the hero's raw
+    // (pre-diminish) class attribute clears it, so a piece he is too weak to
+    // wield reads at a glance the same way an under-leveled one does. Derived
+    // from the weapon's class and levelReq (STR/DEX/INT — see statRequirement),
+    // it forces a build to pick a lane.
+    const statReq = statRequirement(item.defId);
+    if (statReq) {
+      lines.push({
+        text: `REQUIRES ${statReq.amount} ${statReq.stat.toUpperCase()}`,
+        color:
+          rawStat(state, statReq.stat) >= statReq.amount
+            ? "#5fd97a"
+            : "#e06a6a",
+      });
+    }
     // Lead with DPS — the one figure that folds damage, attack speed, and crit
     // into "how hard this hits over time", so a slow heavy weapon and a quick
     // light one compare at a glance. Tinted the same accent as the character

@@ -133,7 +133,13 @@ run against synthetic fixtures with no shipped content (see
   `advanceOutro`/`skipOutro`) before the `victory` splash.
 - **`src/game/defs/equipment.ts`** — weapons (melee/ranged/magic classes,
   each with a Diablo-style `levelReq` that gates both the drop — no monster
-  below it drops the base — and the hero's own hands, plus a durability
+  below it drops the base — and the hero's own hands, plus a Diablo ATTRIBUTE
+  gate that forces a build to pick a lane: melee needs STRENGTH, ranged
+  DEXTERITY, magic INTELLIGENCE (`REQ_STAT`), the amount DERIVED from `levelReq`
+  by `statRequirement` and checked by `meetsStatReq`/`canEquip` against the
+  hero's RAW attribute — never authored per item, and it scales with the AUTO
+  LEVEL STATS flag so the arsenal stays calibrated when auto-attributes toggle
+  (config `STAT_REQ`); plus a durability
   budget: dropped weapons wear out per attack and break, though the starting
   sidearm and every unique/legendary find are minted unbreakable; ranged
   bases can fire pellet volleys, pierce, home, or chain), gear, the
@@ -261,7 +267,9 @@ run against synthetic fixtures with no shipped content (see
   faucet: a share of the current threshold while the hero is under the map and
   difficulty's `loot.arrowCapByDifficulty` level, a flat few mob kills
   (`LEVELING.arrowColdMobXpMult`, via `arrowColdXp`) once he passes it. Picked-up
-  equipment that beats what is worn is equipped on the spot.
+  equipment that beats what is worn — and that the hero can actually WIELD, both
+  the level and the attribute gate (`canEquip`) — is equipped on the spot; a
+  find he is too low-level or too weak for banks until he grows into it.
 - **`src/game/loot.ts`** — kill resolution: `hitEnemy` applies player
   damage (crit rolls flash the victim), pays out XP, and rolls drops —
   the level's loot table for minions (with the pity rule and the

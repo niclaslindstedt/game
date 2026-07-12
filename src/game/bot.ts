@@ -13,8 +13,15 @@ import { clamp, distance } from "@game/lib/vec.ts";
 import type { Vec2 } from "@game/lib/vec.ts";
 import { enemyDef } from "./defs/enemies/index.ts";
 import { weaponDef } from "./defs/equipment.ts";
-import { bestMedkitTier } from "./items.ts";
-import type { Enemy, GameInput, GameState, Item, StatName } from "./types.ts";
+import { bestMedkitTier, DAMAGE_STAT, REQ_STAT } from "./items.ts";
+import type {
+  Enemy,
+  GameInput,
+  GameState,
+  Item,
+  StatName,
+  WeaponClass,
+} from "./types.ts";
 
 export type BotStrategy = "idle" | "rush" | "kite" | "boss" | "survivor";
 
@@ -102,13 +109,53 @@ export function botAct(bot: Bot, state: GameState): GameInput {
 const BOT_HEAL_HP_FRAC = 0.5;
 
 /**
- * The level-up build a bot spends its points on: alternate the starting
- * weapon's speed stat and STAMINA — horde play needs the faster attacks AND
- * the legs to keep kiting the pack. Called whenever `pendingStatPoints > 0`.
+ * The level-up build a bot spends its points on: a focused, WIELDABLE build
+ * that commits to ONE lane instead of chasing whatever weapon happens to be in
+ * hand. The lane is the class the hero has invested most in so far (ties and a
+ * fresh, un-invested hero fall back to the held weapon's class), so once a bot
+ * starts down a lane it deepens the same attribute rather than thrashing every
+ * time auto-equip swaps its weapon. Half the points go into that lane's
+ * REQUIRED attribute (`REQ_STAT`) so the bot keeps clearing the weapon stat
+ * gates as they grow — ~50% comfortably clears the ~40% the requirement asks
+ * for — the rest split between the lane's DAMAGE attribute (`DAMAGE_STAT`, so
+ * its hits keep pace) and STAMINA for the legs to keep kiting the pack. Called
+ * whenever `pendingStatPoints > 0`.
  */
 export function botAllocate(bot: Bot, state: GameState): StatName {
   void bot; // strategy-specific builds can key off this later
-  return state.player.level % 2 === 0 ? "dexterity" : "stamina";
+  const lane = botLane(state);
+  // A 4-beat cycle: two points into the lane's required attribute (the equip
+  // gate), one into its damage attribute, one into STAMINA.
+  switch (state.player.level % 4) {
+    case 0:
+    case 1:
+      return REQ_STAT[lane];
+    case 2:
+      return DAMAGE_STAT[lane];
+    default:
+      return "stamina";
+  }
+}
+
+/**
+ * The weapon class a bot has committed to — the one whose REQUIRED attribute it
+ * has already poured the most CHOSEN points into. A tie (including a brand-new
+ * hero with nothing invested) falls back to the class of the weapon currently
+ * in hand, so the very first allocations follow the difficulty's starter and
+ * every one after that reinforces the deepest lane.
+ */
+function botLane(state: GameState): WeaponClass {
+  const stats = state.player.stats;
+  const held = weaponDef(state.player.equipment.weapon.defId).class;
+  let lane = held;
+  let best = stats[REQ_STAT[held]];
+  for (const c of ["melee", "ranged", "magic"] as const) {
+    if (stats[REQ_STAT[c]] > best) {
+      best = stats[REQ_STAT[c]];
+      lane = c;
+    }
+  }
+  return lane;
 }
 
 // ---- Strategy bodies -------------------------------------------------------

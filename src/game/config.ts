@@ -1019,6 +1019,42 @@ export const STATS = {
 } as const;
 
 /**
+ * WEAPON STAT REQUIREMENTS — the Diablo attribute gate that forces a build to
+ * pick a lane. On top of a weapon's LEVEL requirement, each class demands a
+ * minimum in ITS attribute before the hero can wield it: melee wants STRENGTH,
+ * ranged wants DEXTERITY, magic wants INTELLIGENCE (see `REQ_STAT` in items.ts).
+ * The number is DERIVED from the weapon's `levelReq`, never authored per item,
+ * so the whole arsenal is calibrated by one knob and never needs re-tuning when
+ * a base's numbers move — see `statRequirement` / `meetsStatReq` in items.ts.
+ *
+ * The requirement is `autoFloor + round(investFraction × chosenPoints)`, where
+ * `chosenPoints` is the trainable points a hero has banked by that levelReq
+ * (`chosenStatPointsThrough`) and `autoFloor` is the automatic per-level growth
+ * that stat has accrued by then (`baseStatBonus`, zero for INTELLIGENCE and
+ * zero for EVERY stat while the AUTO LEVEL STATS dev flag is off). Adding the
+ * auto floor is what makes the gate track the "level auto stats" setting: with
+ * auto growth ON the hero is handed those points for free, so the requirement
+ * rises by exactly that much and the CHOSEN investment it truly demands —
+ * `investFraction` of the hero's trainable points — stays identical whether the
+ * flag is on or off. That invariance is the whole point: a developer can toggle
+ * WoW-style auto-attributes without recalibrating a single item.
+ */
+export const STAT_REQ = {
+  /**
+   * The share of a hero's TRAINABLE (chosen) stat points a focused build is
+   * assumed to commit to its class attribute — hence the chosen-point portion
+   * of every weapon's requirement. At the shipped 0.4 a melee hero must sink
+   * ~40% of their points into STRENGTH to swing the era's heavy weapons, which
+   * still leaves the majority for STAMINA (survival), the class's speed/crit
+   * stat, and the rest — a realistic focused build, not an all-in dump. Raise
+   * it to force a harder commitment, lower it to loosen the lanes. Requirements
+   * are checked against the hero's RAW (pre-diminish) attribute so the gate
+   * measures points invested, not their diminished combat value.
+   */
+  investFraction: 0.4,
+} as const;
+
+/**
  * THE MAGIC CRIT BLOB — a magic weapon's single-target crit doesn't just hit
  * harder, it BURSTS: the struck foe detonates a small arcane blob that splashes
  * the nearest few others for a share of the blow. INTELLIGENCE grows both the
