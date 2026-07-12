@@ -187,6 +187,36 @@ type EnemyVariants = {
 };
 const enemySpriteCache = new Map<string, EnemyVariants>();
 
+/** The width, in world units, of a sprite's non-transparent pixels — the art's
+ * visible body, ignoring the transparent margin the fixed atlas cell pads it
+ * with. Used to size the minion health bar to the character rather than the
+ * cell. Measured once per bitmap (a getImageData scan) and cached. */
+const opaqueWidthCache = new Map<ImageBitmap, number>();
+function opaqueWidth(sprite: ImageBitmap): number {
+  const cached = opaqueWidthCache.get(sprite);
+  if (cached !== undefined) return cached;
+  const c = document.createElement("canvas");
+  c.width = sprite.width;
+  c.height = sprite.height;
+  const g = c.getContext("2d", { willReadFrequently: true });
+  if (!g) return sprite.width;
+  g.drawImage(sprite, 0, 0);
+  const { data } = g.getImageData(0, 0, sprite.width, sprite.height);
+  let min = sprite.width;
+  let max = -1;
+  for (let y = 0; y < sprite.height; y++) {
+    for (let x = 0; x < sprite.width; x++) {
+      if ((data[(y * sprite.width + x) * 4 + 3] ?? 0) > 0) {
+        if (x < min) min = x;
+        if (x > max) max = x;
+      }
+    }
+  }
+  const w = max >= min ? max - min + 1 : sprite.width;
+  opaqueWidthCache.set(sprite, w);
+  return w;
+}
+
 function ensureCaches(sprites: Sprites): void {
   if (cachesFor === sprites) return;
   cachesFor = sprites;
@@ -719,7 +749,7 @@ export function drawFrame(
           ? 40
           : def.role === "elite"
             ? 28
-            : sprite.width;
+            : opaqueWidth(sprite);
       const barHeight = def.role === "minion" ? 1 : 3;
       const bx = Math.round(enemy.pos.x - barWidth / 2 - camera.x);
       const by = y - (def.role === "minion" ? 3 : 6);
