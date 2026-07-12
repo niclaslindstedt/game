@@ -2326,16 +2326,22 @@ body {
   position: absolute;
   top: 50%;
   left: 0;
-  width: 0.55rem;
-  height: 1.2rem;
+  width: 1rem;
+  height: 1rem;
   transform: translate(-50%, -50%);
-  background: #fff3c4;
-  border: 1px solid #7a5a12;
-  transition: left 0.1s steps(2);
+  /* Grey when off; the amber below lights it on. */
+  background: #9aa3ad;
+  border: 1px solid #5a6068;
+  transition:
+    left 0.1s steps(2),
+    background-color 0.1s steps(2),
+    border-color 0.1s steps(2);
 }
 
 .pixel-toggle[data-on="true"] .pixel-toggle-knob {
   left: 100%;
+  background: #fff3c4;
+  border-color: #7a5a12;
 }
 
 /* Motion off: the switch still snaps between states (it must show state) but
