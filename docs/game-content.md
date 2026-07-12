@@ -21,12 +21,20 @@ difficulty's call (`DifficultyDef.startingWeapon`, mirrored by a
 per-difficulty prelude variant so the wall always shows the run's actual
 starter): HAIRY POTTER'S WAND on EASY, the MEDIEVAL SWORD on MEDIUM, the
 COMBAT KNIFE on HARD, BRASS KNUCKLES on NIGHTMARE, and A STICK on JESUS
-CHRIST!. Each level then opens on the hero's
+CHRIST!. Every later level opens on a **travel cutscene** of its own
+(`LevelDef.prelude`, which accepts a single scene or a CHAIN played
+back-to-back): the moon on the garage `launch` then the `voyage_moon` transit
+(Earth shrinking behind the ship he built), Mars on ARMSTRONG's `moon_depart`
+send-off then `voyage_mars`, the rift on `rift_entry` (walking into the tear
+MOSQUE left on Mars), and Eastworld on `rift_exit` (the far door with the
+western's daylight leaking through). Each level then opens on the hero's
 `intro` monologue (a black-screen dialogue, one page at a time, the hero
 standing above the box) before the level-name card drops the run in, and its
 elites' `dialogue` carry the thread forward as two-way exchanges — a page is
 the speaker's own lines or a `{ hero: [...] }` reply the hero talks back with
-(`DialoguePage`). Skipping the prelude skips the monologue too.
+(`DialoguePage`). Skipping the prelude skips the whole chain and the
+monologue too. All spoken lines are transcribed in
+[`manuscript.md`](./manuscript.md) — the story's source of truth.
 
 ## Levels (`src/game/defs/levels/`)
 

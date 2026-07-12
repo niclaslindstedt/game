@@ -120,10 +120,12 @@ export type LevelDef = {
   /** What the HUD calls this level's hostiles ("GHOSTS", "STAFF"). */
   foes: string;
   /**
-   * Cutscene played before the intro text box (key into CUTSCENE_DEFS).
-   * Tap advances a beat; the SKIP button ends it — a rerun costs one tap.
+   * Cutscene(s) played before the intro text box (keys into CUTSCENE_DEFS).
+   * A list plays back-to-back — one stage per scene (the launch, then the
+   * flight), each behind its own fades. Tap advances a beat; the SKIP
+   * button ends the WHOLE chain — a rerun costs one tap.
    */
-  prelude?: string;
+  prelude?: string | readonly string[];
   playerSpawn: Vec2;
   /**
    * Story props the renderer draws (and decor keeps clear of). `sprite`

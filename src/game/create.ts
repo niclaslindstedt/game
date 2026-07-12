@@ -188,15 +188,20 @@ export function createGame(
     0,
   );
 
+  // The prelude may be a single scene or a chain (the launch, then the
+  // flight); each scene resolves its per-difficulty variant when one is
+  // registered (`<id>_<difficulty>`), so the weapon on the living-room wall
+  // is always the one this run actually starts with.
+  const preludes = (
+    typeof def.prelude === "string" ? [def.prelude] : (def.prelude ?? [])
+  ).map((id) => cutsceneVariant(id, difficulty));
+
   const state: GameState = {
-    phase: def.prelude ? "cutscene" : "intro",
+    phase: preludes.length > 0 ? "cutscene" : "intro",
     respecPending: respec,
-    // The prelude plays its per-difficulty variant when one is registered
-    // (`<id>_<difficulty>`), so the weapon on the living-room wall is always
-    // the one this run actually starts with.
-    cutscene: def.prelude
-      ? createCutscene(cutsceneDef(cutsceneVariant(def.prelude, difficulty)))
-      : null,
+    cutscene:
+      preludes.length > 0 ? createCutscene(cutsceneDef(preludes[0]!)) : null,
+    cutsceneQueue: preludes.slice(1),
     introPage: 0,
     outroPage: 0,
     quakeMs: 0,

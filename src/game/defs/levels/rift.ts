@@ -13,13 +13,11 @@ export const THE_RIFT: LevelDef = {
   id: "the_rift",
   index: 4,
   name: "THE RIFT",
+  // The between-level scene: walking into the tear MOSQUE left hanging on
+  // Mars — the jump the intro's first page used to narrate, now shown.
+  prelude: "rift_entry",
   music: "rift_drift",
   intro: [
-    [
-      "HE TORE A HOLE IN THE",
-      "UNIVERSE TO DODGE A FIGHT.",
-      "SO I JUMPED IN AFTER HIM.",
-    ],
     [
       "THERE'S NO FLOOR IN HERE.",
       "NO SKY. NO NORTH. MY BOOTS",

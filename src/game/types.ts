@@ -1230,6 +1230,12 @@ export type GameState = {
    */
   cutscene: CutsceneState | null;
   /**
+   * The prelude scenes still waiting behind the running one (`LevelDef.
+   * prelude` as a list — the launch, then the flight). When the current
+   * scene ends, the next id here starts; SKIP drops the whole queue.
+   */
+  cutsceneQueue: string[];
+  /**
    * Which page of the level's opening monologue is on screen while
    * `phase === "intro"` — the hero's black-screen briefing dialogue. Turning
    * past the last page drops into the `title` card; unused in other phases.
