@@ -14,9 +14,11 @@ import { clamp, distance } from "@game/lib/vec.ts";
 import {
   ACCURACY,
   ARMOR,
+  CONSUMABLES,
   DODGE,
   GATES,
   LOOT,
+  MEDKIT,
   MELEE,
   MERCY,
   PLAYER,
@@ -944,6 +946,87 @@ export function restoreStamina(state: GameState): boolean {
   const player = state.player;
   if (player.stamina >= player.maxStamina) return false;
   player.stamina = player.maxStamina;
+  return true;
+}
+
+/** Clamp a medkit item's `tier` field into a valid `MEDKIT.tiers` index —
+ * untiered kits (minted before tiers shipped) read as the lightest. */
+export function medkitTierIndex(tier: number | undefined): number {
+  return Math.max(0, Math.min(tier ?? 0, MEDKIT.tiers.length - 1));
+}
+
+/**
+ * Bank a medkit of the given tier into the consumable dock. Returns false —
+ * so the caller leaves it on the ground — when that quality's stack is
+ * already full (`CONSUMABLES.stackCap`). Medkits stack only within their own
+ * quality, so a full LIGHT stack never blocks banking a SUPERIOR kit.
+ */
+export function bankMedkit(
+  state: GameState,
+  tier: number | undefined,
+): boolean {
+  const index = medkitTierIndex(tier);
+  const medkits = state.player.medkits;
+  if ((medkits[index] ?? 0) >= CONSUMABLES.stackCap) return false;
+  medkits[index] = (medkits[index] ?? 0) + 1;
+  return true;
+}
+
+/**
+ * Bank a stamina potion into the consumable dock. False (leave it grounded)
+ * when the stack is already full.
+ */
+export function bankStaminaPotion(state: GameState): boolean {
+  if (state.player.staminaPotions >= CONSUMABLES.stackCap) return false;
+  state.player.staminaPotions += 1;
+  return true;
+}
+
+/** The highest medkit quality the player is holding (index into
+ * `MEDKIT.tiers`), or -1 when the medkit stacks are all empty. This is the
+ * kit `consumeMedkit` spends and the one the HUD's medkit slot shows. */
+export function bestMedkitTier(state: GameState): number {
+  const medkits = state.player.medkits;
+  for (let i = medkits.length - 1; i >= 0; i--) {
+    if ((medkits[i] ?? 0) > 0) return i;
+  }
+  return -1;
+}
+
+/**
+ * Spend one stacked medkit, biggest heal first, to top up the hero's hp.
+ * A no-op — returns false, nothing consumed — when no medkit is held or the
+ * hero is already at full hp (so a mistap never wastes a kit). Emits
+ * `medkitUsed` with the quality name and the hp actually restored.
+ */
+export function consumeMedkit(state: GameState): boolean {
+  const player = state.player;
+  if (player.hp >= player.maxHp) return false;
+  const tierIndex = bestMedkitTier(state);
+  if (tierIndex < 0) return false;
+  const tier = MEDKIT.tiers[tierIndex] ?? MEDKIT.tiers[0];
+  const before = player.hp;
+  player.hp = Math.min(player.maxHp, player.hp + tier.heal);
+  player.medkits[tierIndex] = (player.medkits[tierIndex] ?? 0) - 1;
+  state.events.push({
+    type: "medkitUsed",
+    tier: tierIndex,
+    name: tier.name,
+    heal: player.hp - before,
+  });
+  return true;
+}
+
+/**
+ * Spend one stacked stamina potion to refill the sprint pool. A no-op —
+ * returns false, nothing consumed — with none held or the pool already full
+ * (`restoreStamina`), so a mistap keeps the potion. Emits `staminaPotionUsed`.
+ */
+export function consumeStaminaPotion(state: GameState): boolean {
+  if (state.player.staminaPotions <= 0) return false;
+  if (!restoreStamina(state)) return false;
+  state.player.staminaPotions -= 1;
+  state.events.push({ type: "staminaPotionUsed" });
   return true;
 }
 

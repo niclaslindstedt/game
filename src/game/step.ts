@@ -67,17 +67,21 @@ import {
   armorReduction,
   effectiveStat,
   enemyCritChance,
+  bankMedkit,
+  bankStaminaPotion,
+  consumeMedkit,
+  consumeStaminaPotion,
   equipmentName,
   isAutoEquipEnabled,
   isBetterEquipment,
   maxMeleeTargets,
+  medkitTierIndex,
   playerDodgeChance,
   playerSpeed,
   recomputeMaxHp,
   recomputeMaxStamina,
   repairEquippedWeapon,
   repairWornArmor,
-  restoreStamina,
   syncInventoryCapacity,
   weaponCooldownFor,
   weaponRangeFor,
@@ -201,6 +205,7 @@ export function step(state: GameState, input: GameInput, dtMs: number): void {
   // strikes, nor fires — while the hero stays fully playable.
   if (!state.freeze) stepMerchant(state, dt, dtMs);
   stepUseItem(state, input);
+  stepUseConsumables(state, input);
   stepWeapon(state, input, dtMs);
   stepAbilities(state, dt, dtMs);
   stepProjectiles(state, dt, dtMs);
@@ -710,6 +715,17 @@ function stepUseItem(state: GameState, input: GameInput): void {
   // to `index`. A refused re-activation (a running non-stackable power) starts
   // nothing and leaves the slot as it was.
   grantAbility(state, defId, index);
+}
+
+/**
+ * Spend a stacked consumable on the player's input edge: `useMedkit` heals
+ * with the best-quality kit held, `useStaminaPotion` refills the sprint pool.
+ * Both are quiet no-ops when nothing is held or there is nothing to top up
+ * (see consumeMedkit / consumeStaminaPotion), so a mistap never wastes a kit.
+ */
+function stepUseConsumables(state: GameState, input: GameInput): void {
+  if (input.useMedkit) consumeMedkit(state);
+  if (input.useStaminaPotion) consumeStaminaPotion(state);
 }
 
 /**
@@ -1643,18 +1659,18 @@ function stepItems(state: GameState, dtMs: number): void {
     if (!overlapping) return true;
 
     if (item.kind === "medkit") {
-      // D2-style tiered kits: a STATIC heal per tier (config MEDKIT.tiers),
-      // bigger kits dropping off deeper content. Untiered items (minted
-      // before tiers shipped) read as the lightest kit.
-      const tier =
-        MEDKIT.tiers[Math.min(item.tier ?? 0, MEDKIT.tiers.length - 1)] ??
-        MEDKIT.tiers[0];
-      player.hp = Math.min(player.maxHp, player.hp + tier.heal);
+      // D2-style tiered kits stack into the consumable dock, one stack per
+      // quality (config MEDKIT.tiers); the hero spends them on his own call
+      // (consumeMedkit), best-quality first. A stack already at its cap turns
+      // the kit away — it stays on the ground. Untiered items (minted before
+      // tiers shipped) read as the lightest kit.
+      const tierIndex = medkitTierIndex(item.tier);
+      if (!bankMedkit(state, tierIndex)) return true;
       state.stats.itemsCollected++;
       state.events.push({
         type: "itemCollected",
         kind: "medkit",
-        name: tier.name,
+        name: (MEDKIT.tiers[tierIndex] ?? MEDKIT.tiers[0]).name,
       });
       return false;
     }
@@ -1707,16 +1723,16 @@ function stepItems(state: GameState, dtMs: number): void {
       return false;
     }
 
-    // Energy drinks reset the sprint pool to full; with nothing to top up (a
-    // rested hero) they stay on the ground, like a repair kit on a pristine
-    // weapon, so the drink waits for when the legs have actually gone.
+    // Energy drinks (stamina potions) stack into the consumable dock and are
+    // spent on the player's call (consumeStaminaPotion) to refill the sprint
+    // pool. A full stack turns the drink away — it stays on the ground.
     if (item.kind === "drink") {
-      if (!restoreStamina(state)) return true;
+      if (!bankStaminaPotion(state)) return true;
       state.stats.itemsCollected++;
       state.events.push({
         type: "itemCollected",
         kind: "drink",
-        name: "ENERGY DRINK",
+        name: "STAMINA POTION",
       });
       return false;
     }

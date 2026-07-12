@@ -123,8 +123,15 @@ and something enormous haunts the old flag.
   go **cold** — a handful of kills' worth — once you've reached the level a
   normal run of that map and difficulty leaves you at, so grinding old ground
   can't push you past it.
-- The horde drops **loot**, Diablo-style — medkits, gear, repair kits, energy
-  drinks, XP arrows, and **base weapons themed to each level** (a box cutter or the
+- **Medkits and stamina potions** are carried, not spent on contact: grabbing
+  one banks it into the **consumable dock** — a medkit slot and a stamina slot
+  just above the powerups — stacked **five deep** (medkits stack per quality,
+  from LIGHT up to SUPERIOR, and the slot shows the best grade you hold). **Tap
+  a slot** (or on desktop press **Z** to heal, **X** to drink — both
+  rebindable) to spend one when you need it; a medkit always uses your biggest
+  heal first and neither is wasted at a full bar.
+- The horde drops **loot**, Diablo-style — medkits, gear, repair kits, stamina
+  potions, XP arrows, and **base weapons themed to each level** (a box cutter or the
   armory's pump shotgun on earth, 70s hardware on the moon, AI-forged
   railguns and plasma blades on Mars, historic and fantasy arms in the
   rift). Each base has a **level requirement** — it neither drops from
@@ -139,7 +146,7 @@ and something enormous haunts the old flag.
 - Dropped weapons **wear out** as they fire: when one breaks it is trashed
   and the best weapon left in your bag takes its place (your own sidearm
   never breaks). **Repair kits** restore the equipped weapon's edge,
-  **energy drinks** reset your sprint pool to full, and
+  **stamina potions** refill your sprint pool from the consumable dock, and
   grabbing a **fresh copy of the weapon you already hold** swaps it in for
   the extra durability, banking the worn one as a spare.
 - **Unique mobs** wait at set spots on every level — larger, named

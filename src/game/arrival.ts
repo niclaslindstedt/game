@@ -12,7 +12,13 @@
 // saved state.
 
 import { companionMaxHp } from "./companions.ts";
-import { ARRIVAL, HELD_ITEMS, LEVELING } from "./config.ts";
+import {
+  ARRIVAL,
+  CONSUMABLES,
+  HELD_ITEMS,
+  LEVELING,
+  MEDKIT,
+} from "./config.ts";
 import { abilityDef } from "./defs/abilities.ts";
 import { companionDef, isCompanionDef } from "./defs/companions.ts";
 import { difficultyDef, meetsMinDifficulty } from "./defs/difficulties.ts";
@@ -68,6 +74,8 @@ export function extractLoadout(state: GameState): Loadout {
     },
     inventory: player.inventory.map(copyPiece),
     heldAbilities: [...player.heldAbilities],
+    medkits: [...player.medkits],
+    staminaPotions: player.staminaPotions,
     coins: player.coins,
     // The party rides along: each companion's def and worn kit. Health and
     // level re-derive on apply — companions arrive rested like the hero.
@@ -136,6 +144,18 @@ export function applyLoadout(state: GameState, loadout: Loadout): void {
   player.heldAbilities = loadout.heldAbilities
     .filter((id, i, all) => !abilityDef(id).uniqueHeld || all.indexOf(id) === i)
     .slice(0, HELD_ITEMS.cap);
+  // Stacked consumables ride along, re-fit to this build's tier count and
+  // clamped to the stack cap; loadouts banked before consumables stacked carry
+  // no field and load with empty stacks.
+  player.medkits = new Array<number>(MEDKIT.tiers.length)
+    .fill(0)
+    .map((_, i) =>
+      Math.max(0, Math.min(loadout.medkits?.[i] ?? 0, CONSUMABLES.stackCap)),
+    );
+  player.staminaPotions = Math.max(
+    0,
+    Math.min(loadout.staminaPotions ?? 0, CONSUMABLES.stackCap),
+  );
   // The purse rides along; loadouts banked before the economy existed carry
   // no coins field and load as an empty purse.
   player.coins = Math.max(0, loadout.coins ?? 0);

@@ -13,6 +13,7 @@ import { clamp, distance } from "@game/lib/vec.ts";
 import type { Vec2 } from "@game/lib/vec.ts";
 import { enemyDef } from "./defs/enemies/index.ts";
 import { weaponDef } from "./defs/equipment.ts";
+import { bestMedkitTier } from "./items.ts";
 import type { Enemy, GameInput, GameState, Item, StatName } from "./types.ts";
 
 export type BotStrategy = "idle" | "rush" | "kite" | "boss" | "survivor";
@@ -86,8 +87,19 @@ export function botAct(bot: Bot, state: GameState): GameInput {
     (a) => a.slot !== undefined,
   ).length;
   decided.useItem = state.player.heldAbilities.length > running;
+  // Stacked consumables: pop a medkit once the hero drops under half health
+  // (biggest-heal-first — consumeMedkit no-ops at full so a mistap is free),
+  // and a stamina potion the instant the sprint pool bottoms out. No tactical
+  // hoarding, matching how the bot pops powerups on sight.
+  const player = state.player;
+  decided.useMedkit =
+    player.hp < player.maxHp * BOT_HEAL_HP_FRAC && bestMedkitTier(state) >= 0;
+  decided.useStaminaPotion = player.stamina <= 0 && player.staminaPotions > 0;
   return decided;
 }
+
+/** Bots pop a medkit once health falls below this fraction of the bar. */
+const BOT_HEAL_HP_FRAC = 0.5;
 
 /**
  * The level-up build a bot spends its points on: alternate the starting

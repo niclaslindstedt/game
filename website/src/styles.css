@@ -2780,6 +2780,102 @@ body {
   opacity: 0.75;
 }
 
+/* The consumable dock: the medkit + stamina slots, sitting one row ABOVE the
+   powerup dock in the same corner (its bottom clears the powerup slots' height
+   plus their gap). Same slot width as the powerups so the two rows line up. */
+.consumable-dock {
+  position: absolute;
+  bottom: calc(max(0.75rem, env(safe-area-inset-bottom)) + 2.85rem + 0.6rem);
+  display: flex;
+  gap: 0.6rem;
+  pointer-events: none;
+}
+
+.consumable-dock.dock-left {
+  left: max(0.75rem, env(safe-area-inset-left));
+}
+
+.consumable-dock.dock-right {
+  right: max(0.75rem, env(safe-area-inset-right));
+}
+
+.consumable-slot {
+  position: relative;
+  appearance: none;
+  /* Same footprint as the landscape powerup slot so the two rows line up. */
+  width: 2.85rem;
+  height: 2.85rem;
+  display: grid;
+  place-items: center;
+  padding: 0;
+  border: 2px dashed #39435a;
+  border-radius: 7px;
+  background: rgba(20, 26, 34, 0.5);
+  cursor: default;
+  image-rendering: pixelated;
+}
+
+/* A filled consumable slot glows in its quality accent (`--slot-accent`: the
+   medkit grade's trim, or the drink's green) so the grade reads at a glance. */
+.consumable-slot.filled {
+  pointer-events: auto;
+  cursor: pointer;
+  border-style: solid;
+  border-color: var(--slot-accent, #6b7186);
+  background: rgba(20, 26, 34, 0.82);
+  box-shadow:
+    0 4px 0 rgba(0, 0, 0, 0.35),
+    0 0 10px color-mix(in srgb, var(--slot-accent, #6b7186) 70%, transparent);
+}
+
+.consumable-slot.filled:active {
+  transform: translateY(4px);
+  box-shadow: 0 0 8px
+    color-mix(in srgb, var(--slot-accent, #6b7186) 70%, transparent);
+}
+
+.consumable-icon {
+  width: 1.95rem;
+  height: 1.95rem;
+}
+
+/* The stack count, bottom-right, over a dark chip so it reads on any icon. */
+.consumable-count {
+  position: absolute;
+  right: 2px;
+  bottom: 1px;
+  display: grid;
+  place-items: center;
+  padding: 0 2px;
+  line-height: 0;
+  background: rgba(6, 8, 12, 0.72);
+  border-radius: 3px;
+  pointer-events: none;
+}
+
+/* Easy-tap padding: a transparent hit region that runs well past the slot art
+   so the small pickups (and the powerups) are forgiving to tap on a phone. The
+   extension is ASYMMETRIC — generous on the outward edges (where a thumb lands
+   short) but slim on the edge facing the neighbouring dock row, so a tap in the
+   gap between the consumable and powerup rows never fires the wrong action. The
+   side reach stays under the inter-slot gap for the same reason. The consumable
+   row reaches up (its outward edge); the powerup row reaches down toward the
+   screen edge. */
+.consumable-slot.filled::before,
+.powerup-slot.filled::before {
+  content: "";
+  position: absolute;
+  border-radius: 12px;
+}
+
+.consumable-slot.filled::before {
+  inset: -0.95rem -0.3rem -0.2rem -0.3rem;
+}
+
+.powerup-slot.filled::before {
+  inset: -0.2rem -0.3rem -0.95rem -0.3rem;
+}
+
 /* Portrait (phone held vertically): the reference is landscape, and a full-size
    row of dock slots eats too much of the short bottom edge. Halve the slots (and
    their icons) so a vertical grip keeps them tappable without dominating the
@@ -2806,6 +2902,24 @@ body {
 
   .powerup-discard-hint {
     bottom: calc(max(0.75rem, env(safe-area-inset-bottom)) + 2.4rem);
+  }
+
+  /* The consumable slots shrink in lockstep and re-perch above the halved
+     powerup row. */
+  .consumable-slot {
+    width: 1.9rem;
+    height: 1.9rem;
+    border-radius: 5px;
+  }
+
+  .consumable-icon {
+    width: 1.3rem;
+    height: 1.3rem;
+  }
+
+  .consumable-dock {
+    gap: 0.4rem;
+    bottom: calc(max(0.75rem, env(safe-area-inset-bottom)) + 1.9rem + 0.5rem);
   }
 }
 

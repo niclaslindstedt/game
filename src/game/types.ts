@@ -254,6 +254,21 @@ export type Player = {
    * re-spent nor banked over, so the dock stays full while a power runs.
    */
   heldAbilities: string[];
+  /**
+   * Stacked medkits, one count per MEDKIT tier (index i is the tally of
+   * `MEDKIT.tiers[i]` kits held), each capped at `CONSUMABLES.stackCap`.
+   * Medkits stack only within their own quality — a LIGHT MEDKIT never
+   * merges with a SUPERIOR one — so the array is a per-quality inventory the
+   * HUD's single medkit slot shows the best-quality entry of. Spent
+   * best-first by `consumeMedkit`; carried between levels via the loadout.
+   */
+  medkits: number[];
+  /**
+   * Stacked stamina potions (the energy-drink consumable), capped at
+   * `CONSUMABLES.stackCap`. Spent by `consumeStaminaPotion` to refill the
+   * sprint pool; carried between levels via the loadout.
+   */
+  staminaPotions: number;
   /** True while the player moved this step; drives the walk animation. */
   moving: boolean;
   /** Remaining ms until the weapon may fire again. */
@@ -1013,6 +1028,15 @@ export type GameEvent =
   | { type: "nuke"; pos: Vec2 }
   /** A storm ability bolt struck at `pos` (drives the flash + crack). */
   | { type: "lightning"; pos: Vec2 }
+  /**
+   * A stacked medkit was spent from the consumable dock: `name` is the
+   * quality's label (`MEDKIT.tiers[tier].name`) and `heal` the hp actually
+   * restored (clamped at max hp). Drives the heal chime and a "+N" float.
+   */
+  | { type: "medkitUsed"; tier: number; name: string; heal: number }
+  /** A stacked stamina potion was spent from the consumable dock — the sprint
+   * pool is now full. Drives the fizz-and-lift chime. */
+  | { type: "staminaPotionUsed" }
   /** An ability pickup kicked in (or refreshed its timer). */
   | { type: "abilityStarted"; defId: string }
   | { type: "abilityEnded"; defId: string }
@@ -1137,6 +1161,18 @@ export type GameInput = {
    */
   useItemIndex?: number;
   /**
+   * True on the step the player asked to spend a stacked medkit (the medkit
+   * consumable-dock slot / its key). Heals with the best quality held; a
+   * no-op with none held or at full hp (`consumeMedkit`).
+   */
+  useMedkit?: boolean;
+  /**
+   * True on the step the player asked to spend a stacked stamina potion (the
+   * stamina consumable-dock slot / its key). Refills the sprint pool; a no-op
+   * with none held or already rested (`consumeStaminaPotion`).
+   */
+  useStaminaPotion?: boolean;
+  /**
    * The world rect currently on screen (the camera view). When set, the
    * auto-weapon only targets monsters inside it — the character never
    * shoots at enemies the player cannot see yet. Absent (headless tests,
@@ -1184,6 +1220,12 @@ export type Loadout = {
   inventory: (Equipment | null)[];
   /** Banked ability pickups (ABILITY_DEFS ids). */
   heldAbilities: string[];
+  /** Stacked medkits per quality (see `Player.medkits`). Optional so loadouts
+   * banked before consumables stacked load with empty stacks. */
+  medkits?: number[];
+  /** Stacked stamina potions (see `Player.staminaPotions`). Optional for the
+   * same backward-compatibility reason. */
+  staminaPotions?: number;
   /** The purse — merchant coins ride along between levels. Optional so
    * loadouts banked before the economy shipped load as an empty purse. */
   coins?: number;

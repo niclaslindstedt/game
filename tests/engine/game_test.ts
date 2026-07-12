@@ -603,15 +603,23 @@ describe("enemy AI", () => {
 });
 
 describe("items", () => {
-  it("heals the player on medkit pickup, capped at max hp", () => {
+  it("banks a medkit into the consumable dock on pickup (heals on use)", () => {
     const state = startGame();
     clearStage(state);
     state.player.hp = state.player.maxHp - 10;
-    state.items = [{ id: 999, kind: "medkit", pos: { ...state.player.pos } }];
+    state.items = [
+      { id: 999, kind: "medkit", tier: 0, pos: { ...state.player.pos } },
+    ];
     step(state, idle, DT);
-    expect(state.player.hp).toBe(state.player.maxHp);
+    // Picked up but not spent: the hp is untouched, the kit is stacked.
+    expect(state.player.hp).toBe(state.player.maxHp - 10);
+    expect(state.player.medkits[0]).toBe(1);
     expect(state.items).toHaveLength(0);
     expect(state.stats.itemsCollected).toBe(1);
+    // Spending it on the input edge tops the hero up, capped at max hp.
+    step(state, { ...idle, useMedkit: true }, DT);
+    expect(state.player.hp).toBe(state.player.maxHp);
+    expect(state.player.medkits[0]).toBe(0);
   });
 });
 
