@@ -413,6 +413,27 @@ pull the sky down, rank-3 novas), **THE STILLWARD** (a legendary stasis
 shell — the great stillness worn), **WINDGRAVE** (the wind's own spurs),
 and **EMBERHEART** (a charm of forever circling fire, for any build).
 
+The **ARTIFACT** roster (phase 5) is the level-99 endgame farm: 24 named
+relics of legend the Rift dredges up whole (`src/game/defs/artifacts.ts`),
+minted at the searing-red `tier: "artifact"` and dropping only at the cap
+(each on a high-req elite base, so a req-99 relic can't fall until the hero
+can wear it). They span a VAST power ladder ON PURPOSE, and the ODDS follow
+the power — the strongest are exponentially rarer (`uniqueDropWeight`). At
+the common end: **GÁNDIVA** (Arjuna's inexhaustible bow), **GLEIPNIR
+CHAUSSES**, **GOLDEN FLEECE**, **SEIÐR STAFF**; a mid band of set-pieces —
+**GRAM** and **MURAMASA** (melee), **SHARANGA** (ranged), **THYRSUS** (a
+staff wreathed in circling fire), the **TARNHELM** / **HELM OF DARKNESS**
+helms, **JÖTUNN GREAVES**, **SLEIPNIR'S SHOES**; the rarer god-tier —
+**ÆGISHJÁLMR** and **BABR-E BAYAN** (both burst when struck), **VÍÐARR'S
+BOOT** and **ACHILLEAN PLATE** (when-struck lightning), the **MEGINGJÖRÐ**
+and **WINDRUNNERS** keepers, the **DRAUPNIR** / **SAMPO** fortune charms, and
+the **CORNUCOPIA** carryall (+6 cells); and, at the very apex, **FAIL-NOT**
+(Tristan's bow that never misses), then the two rarest things in the game —
+**RUYI JINGU** (a permanent storm + nova-on-hit staff) and **DURENDAL** (the
+holy sword that never dulls, never whiffs, and grows with the arm — ~170×
+rarer than the commonest artifact). Combined a rift → bunker run pays an
+artifact roughly once per hundred runs (`scripts/drop-rate.mjs`).
+
 Between the boss sets and the world relics, EASY, MEDIUM, HARD, and
 NIGHTMARE each now cover every **build**: easy fields melee (MUSKRAT'S
 TOOTH, EXCALIBUR), ranged (PALE RIDER), and magic (DEADSTAR); medium fields

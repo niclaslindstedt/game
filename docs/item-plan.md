@@ -265,10 +265,18 @@ roster (subject to a naming pass at implementation):
 - Feet: **WINDRUNNERS**, **SLEIPNIR'S SHOES**, **VIDAR'S BOOT**
 - Charms: **DRAUPNIR**, **SAMPO** · Bag: **CORNUCOPIA**
 
-- [ ] ~24 artifact defs (ilvls 99+, spec spread as above, budgets spanning the power ladder)
-- [ ] Rarity-derivation sanity pass (`unique-check.mjs` report)
-- [ ] Rate check: artifact ≈ 1/100 per rift+bunker run (`scripts/drop-rate.mjs`)
-- [ ] Checker battery + tests + docs + changelog
+- [x] 24 artifact defs (`src/game/defs/artifacts.ts`, ilvls 108–236, spec
+      spread as above, budgets 36→144 spanning the power ladder). Named for the
+      real mythological artifacts (the naming reservation), on high-req elite
+      bases. `world-uniques.ts` split out of `uniques.ts` to keep both under the
+      file-size cap.
+- [x] Rarity-derivation sanity pass (`unique-check.mjs` report): commonest at
+      the flat weight, DURENDAL ~170× rarer; `unique-check.mjs` proc/spell
+      discipline extended to the artifact tier
+- [x] Rate check: artifact ≈ 1/110 combined rift+bunker (`scripts/drop-rate.mjs`,
+      rift 1/143 + bunker 1/400); the power ladder holds — only common-band
+      artifacts land in a 2000-run sample, apex pieces astronomically rare
+- [x] Checker battery + tests (1396 green) + docs + changelog
 
 ## Phase 6 — balance verification
 
