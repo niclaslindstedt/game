@@ -213,6 +213,10 @@ type MenuEntry = {
    * style — label left, key far right). `capturing` swaps it for a "PRESS A
    * KEY" prompt while this row is listening for the next press. */
   binding?: { code: string; capturing: boolean };
+  /** A label-cycling settings row (MOUSE, KEYS, GEAR…): the current value,
+   * rendered right-aligned like a binding so the key sits at the left and the
+   * value lines up down the right edge (confirm/click still cycles it). */
+  value?: string;
 };
 
 // Audio needs a user gesture; the first interaction with the menu doubles
@@ -340,6 +344,14 @@ export function TitleScreen({
   };
   const [compact, setCompact] = useState(isCompact);
   const [wide, setWide] = useState(isWide);
+  // KEY BINDINGS only make sense where there's a physical keyboard to rebind,
+  // so the row is desktop-only: any device with a fine pointer (a mouse or
+  // trackpad, which travels with a keyboard) shows it; touch-only phones and
+  // tablets don't. A device characteristic, so it's read once at mount.
+  const hasFinePointer =
+    typeof window !== "undefined" &&
+    typeof window.matchMedia === "function" &&
+    window.matchMedia("(any-pointer: fine)").matches;
 
   useEffect(() => {
     const onResize = () => {
@@ -998,10 +1010,8 @@ export function TitleScreen({
       const s = getSettings();
       return [
         {
-          label:
-            s.steering === "hover"
-              ? "MOUSE: FOLLOW CURSOR"
-              : "MOUSE: HOLD TO STEER",
+          label: "MOUSE",
+          value: s.steering === "hover" ? "FOLLOW CURSOR" : "HOLD TO STEER",
           aria: "controls-steering",
           blurb:
             s.steering === "hover"
@@ -1016,8 +1026,8 @@ export function TitleScreen({
           },
         },
         {
-          label:
-            s.keyboardMove === "on" ? "KEYS: WASD MOVE" : "KEYS: MOUSE ONLY",
+          label: "KEYS",
+          value: s.keyboardMove === "on" ? "WASD MOVE" : "MOUSE ONLY",
           aria: "controls-keyboard-move",
           blurb:
             s.keyboardMove === "on"
@@ -1032,10 +1042,8 @@ export function TitleScreen({
           },
         },
         {
-          label:
-            s.itemUse === "auto"
-              ? "POWERUPS: USE ON PICKUP"
-              : "POWERUPS: USE MANUALLY",
+          label: "POWERUPS",
+          value: s.itemUse === "auto" ? "USE ON PICKUP" : "USE MANUALLY",
           aria: "controls-item-use",
           blurb:
             s.itemUse === "auto"
@@ -1050,10 +1058,8 @@ export function TitleScreen({
           },
         },
         {
-          label:
-            s.autoEquip === "on"
-              ? "GEAR: EQUIP ON PICKUP"
-              : "GEAR: KEEP IN BAG",
+          label: "GEAR",
+          value: s.autoEquip === "on" ? "EQUIP ON PICKUP" : "KEEP IN BAG",
           aria: "controls-auto-equip",
           blurb:
             s.autoEquip === "on"
@@ -1068,10 +1074,8 @@ export function TitleScreen({
           },
         },
         {
-          label:
-            s.powerupSide === "right"
-              ? "POWERUPS: LOWER RIGHT"
-              : "POWERUPS: LOWER LEFT",
+          label: "POWERUPS",
+          value: s.powerupSide === "right" ? "LOWER RIGHT" : "LOWER LEFT",
           aria: "controls-powerup-side",
           blurb: "WHICH CORNER THE BIG POWERUP SLOTS SIT IN",
           action: () => {
@@ -1082,16 +1086,22 @@ export function TitleScreen({
             setSettingsTick((t) => t + 1);
           },
         },
-        {
-          label: "KEY BINDINGS",
-          aria: "controls-keybindings",
-          blurb: "REBIND EVERY DESKTOP KEY - MOVEMENT, ACTIONS, THE DOCK",
-          action: () => {
-            playUiSound(synth, "confirm");
-            setScreen("keybindings");
-            setCursor(0);
-          },
-        },
+        // KEY BINDINGS is desktop-only — there's no keyboard to rebind on a
+        // touch phone, so the row is hidden there (see hasFinePointer).
+        ...(hasFinePointer
+          ? [
+              {
+                label: "KEY BINDINGS",
+                aria: "controls-keybindings",
+                blurb: "REBIND EVERY DESKTOP KEY - MOVEMENT, ACTIONS, THE DOCK",
+                action: () => {
+                  playUiSound(synth, "confirm");
+                  setScreen("keybindings");
+                  setCursor(0);
+                },
+              },
+            ]
+          : []),
         onOffRow(
           "vibration",
           "VIBRATION",
@@ -1172,6 +1182,7 @@ export function TitleScreen({
     captureBind,
     difficulty,
     warp,
+    hasFinePointer,
     exportActive,
     pickImport,
   ]);
@@ -1991,6 +2002,16 @@ export function TitleScreen({
                           color={color}
                         />
                         {entry.toggle && <PixelToggle on={entry.toggle.on} />}
+                        {entry.value && (
+                          <span className="menu-item-value">
+                            <PixelText
+                              font={font}
+                              text={entry.value}
+                              scale={3}
+                              color={selected ? baseColor : "#9aa3ad"}
+                            />
+                          </span>
+                        )}
                         {entry.binding && (
                           <span className="menu-item-binding">
                             <PixelText
@@ -2019,22 +2040,17 @@ export function TitleScreen({
                         />
                       )}
                       {entry.blurb && (
-                        // Always occupy the blurb's row so selecting an item never
-                        // changes its height. The menu is vertically centered, so a
-                        // grow-on-hover row would shift every label (including the
-                        // hovered one) — the flicker. Hidden when unselected keeps
-                        // the space reserved without showing the text.
-                        <span
-                          className="menu-item-blurb"
-                          style={{
-                            visibility: selected ? "visible" : "hidden",
-                          }}
-                        >
+                        // The help line shows on every row, always — a dim gray
+                        // so it reads as a subtitle under the label without
+                        // competing with it. The selected row's is a touch
+                        // brighter for focus. Since it's always present there's
+                        // no per-selection height change to guard against.
+                        <span className="menu-item-blurb">
                           <PixelText
                             font={font}
                             text={entry.blurb}
                             scale={2}
-                            color="#9aa3ad"
+                            color={selected ? "#9aa3ad" : "#6b7178"}
                             maxWidth={blurbMaxWidth}
                           />
                         </span>
