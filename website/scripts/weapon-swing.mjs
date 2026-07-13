@@ -37,9 +37,10 @@
 //   node scripts/weapon-swing.mjs shots                    # contact sheet of every ranged/magic muzzle
 //   node scripts/weapon-swing.mjs live muramasa            # slowed real attack: slash + gore
 //   node scripts/weapon-swing.mjs live pyrelight           # slowed cast + projectile trail
+//   node scripts/weapon-swing.mjs live nine_mm --behind    # target BEHIND: flash must stay at the barrel
 // Flags: --frames N (samples, default 9) --slow F (live speed, default 0.12)
 //   --scale N (nearest-neighbour upscale, default 2) --arc DEG (poses cone)
-//   --seed S --url U --out DIR
+//   --behind (live: dummy behind the hero) --seed S --url U --out DIR
 //
 // `window` below only appears inside page.evaluate callbacks, which run in the
 // browser page, not in Node.
@@ -71,6 +72,10 @@ const flag = (name, fallback) => {
 const url = flag("url", "http://localhost:5199");
 const frames = Math.max(2, Number(flag("frames", "9")));
 const slow = Math.max(0.01, Number(flag("slow", "0.12")));
+// `--behind` (live mode): stage the dummy BEHIND the hero (opposite his
+// right-facing) so a shot/swing fired backward can be checked — the muzzle flash
+// must still fire at the weapon tip, not off behind him.
+const behind = argv.includes("--behind");
 const scale = Math.max(1, Number(flag("scale", "2")));
 const seed = flag("seed", "7");
 const outDir = flag("out", path.join(here, "../assets-preview/swing"));
@@ -353,7 +358,7 @@ for (const id of weaponIds) {
     // the hero, the whole run slowed to `slow`× so the swing, its slash and its
     // themed gore burst spread across the sampled frames.
     await page.evaluate(
-      ({ weapon, range }) => {
+      ({ weapon, range, side }) => {
         const g = window.__game;
         window.__scenario({
           weapon,
@@ -363,13 +368,19 @@ for (const id of weaponIds) {
           spawns: [
             {
               enemy: "guard",
-              at: { x: g.player.pos.x + range, y: g.player.pos.y },
+              at: { x: g.player.pos.x + range * side, y: g.player.pos.y },
               hpMult: 50,
             },
           ],
         });
       },
-      { weapon: id, range: cls === "melee" ? Math.max(28, range - 6) : 60 },
+      {
+        weapon: id,
+        range: cls === "melee" ? Math.max(28, range - 6) : 60,
+        // Behind = the hero's off side (he faces right by default), so the shot
+        // fires backward past him.
+        side: behind ? -1 : 1,
+      },
     );
     await bolster();
     await page.evaluate((f) => window.__timeScale(f), slow);
@@ -391,7 +402,7 @@ for (const id of weaponIds) {
       });
     }
     await page.evaluate(() => window.__timeScale(1));
-    await writeStrip(`${id}-live`, shots);
+    await writeStrip(`${id}-live${behind ? "-behind" : ""}`, shots);
   }
 }
 

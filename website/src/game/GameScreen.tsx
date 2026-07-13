@@ -1731,6 +1731,9 @@ export function GameScreen({
                       event.weaponClass,
                     )
                   : undefined,
+              // Pin the hero's flash to the barrel's side (his facing) so a shot
+              // at a foe BEHIND him still flashes at the weapon, not off his back.
+              faceLeft: heroShot ? state.player.faceLeft : undefined,
             });
             // Kick/cast the hero's own weapon to match the muzzle flash — a gun
             // recoils, a wand thrusts — but not a companion's shot.

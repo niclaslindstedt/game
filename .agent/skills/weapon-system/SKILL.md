@@ -237,7 +237,13 @@ node scripts/weapon-swing.mjs uniques                    # contact sheet of ever
 node scripts/weapon-swing.mjs live muramasa              # a unique's slash + its themed gore
 node scripts/weapon-swing.mjs shots                      # contact sheet of every ranged/magic muzzle
 node scripts/weapon-swing.mjs live pyrelight             # a magic unique's cast bloom + projectile trail
+node scripts/weapon-swing.mjs live nine_mm --behind      # target BEHIND the hero — flash stays at the barrel
 ```
+
+The hero faces where he MOVES, not where he shoots, so `--behind` (live mode)
+stages the dummy behind him: his muzzle/cast flash must still fire at the weapon
+tip (the barrel's facing side), not off his back — the melee slash already rides
+the blade on the facing side.
 
 `poses` pins the held-weapon pose at sampled fractions of the swing (via the
 `?debug` `window.__swing` hook) for a clean read of the sprite through its arc;
