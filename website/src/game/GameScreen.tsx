@@ -46,7 +46,7 @@ import {
   enemyDef,
   equipFromInventory,
   equipmentIcon,
-  equipmentLevelReq,
+  itemLevelReq,
   extractLoadout,
   isWeaponDef,
   LEVELS,
@@ -838,12 +838,18 @@ export function GameScreen({
       // Tap-to-equip is offered only for a bagged find the hero can wear right
       // now — an auto-equipped upgrade is already worn, and an under-leveled
       // find would be refused. The item is located by its stable id so a bag
-      // rearranged while the card is up still equips the right piece.
+      // rearranged while the card is up still equips the right piece, and its
+      // requirement is read off the INSTANCE (`itemLevelReq`) so an artifact's
+      // cap gate matches the engine's refusal instead of its lower base req.
+      const bagged =
+        itemId != null
+          ? (state.player.inventory.find((it) => it?.id === itemId) ?? null)
+          : null;
       const canEquip =
         !equipped &&
-        itemId != null &&
         defId != null &&
-        state.player.level >= equipmentLevelReq(defId);
+        bagged != null &&
+        state.player.level >= itemLevelReq(bagged);
       const onEquip = canEquip
         ? () => {
             const index = state.player.inventory.findIndex(

@@ -15,7 +15,7 @@ import {
   companionWeaponDamage,
   equipCompanionFromInventory,
   equipmentIcon,
-  equipmentLevelReq,
+  itemLevelReq,
   equipmentName,
   meetsLevelReq,
   unequipCompanionToInventory,
@@ -210,7 +210,7 @@ export function CompanionPanel({
                   <span className="companion-bag-req">
                     <PixelText
                       font={font}
-                      text={`L${equipmentLevelReq(item.defId)}`}
+                      text={`L${itemLevelReq(item)}`}
                       scale={1}
                       color="#d83a3a"
                     />

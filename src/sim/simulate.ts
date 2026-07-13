@@ -35,7 +35,6 @@ import { resolveChoice } from "../game/companions.ts";
 import { createGame } from "../game/create.ts";
 import { DIFFICULTY_ORDER } from "../game/defs/difficulties.ts";
 import { enemyDef } from "../game/defs/enemies/index.ts";
-import { equipmentLevelReq } from "../game/defs/equipment.ts";
 import { LEVEL_ORDER, levelDef } from "../game/defs/levels/index.ts";
 import {
   advanceOutro,
@@ -45,6 +44,7 @@ import {
   dismissIntro,
   effectiveStat,
   equipmentName,
+  itemLevelReq,
   skipCutscene,
   totalArmor,
   weaponDps,
@@ -698,7 +698,7 @@ function playRun(args: {
               else if (delta >= APPROP_BAND) ilvlAbove++;
               else ilvlOn++;
               if (canEquip(state, piece)) equippableNow++;
-              if (state.player.level < equipmentLevelReq(piece.defId)) {
+              if (state.player.level < itemLevelReq(piece)) {
                 levelGated++;
               }
             }

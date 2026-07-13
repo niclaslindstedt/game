@@ -10,6 +10,8 @@ import {
   equipmentLevelReq,
   gearDef,
   isWeaponDef,
+  itemLevelReq,
+  LEVELING,
   LEVELS,
   SECRET_LEVEL_ORDER,
   STARTING_DIFFICULTIES,
@@ -100,6 +102,22 @@ describe("mintUnique", () => {
     expect(baseReq).toBeLessThan(uniqueDef("walled_garden").ilvl);
     state.player.level = baseReq;
     expect(meetsLevelReq(state, item)).toBe(true);
+  });
+
+  it("an ARTIFACT requires the level cap (min(maxLevel, ilvl)), not its base", () => {
+    const state = startGame();
+    // Every shipped artifact sits on a base whose own req is well below 99, but
+    // the endgame relic itself is worn only AT the cap — where it drops.
+    const artifact = mintUnique(state, "cornucopia"); // ilvl 103, base bag (req 1)
+    const cap = LEVELING.maxLevel;
+    expect(equipmentLevelReq("bag")).toBeLessThan(cap);
+    expect(itemLevelReq(artifact)).toBe(Math.min(cap, artifact.ilvl));
+    expect(itemLevelReq(artifact)).toBe(cap);
+    // One level short of the cap it cannot be worn; at the cap it can.
+    state.player.level = cap - 1;
+    expect(meetsLevelReq(state, artifact)).toBe(false);
+    state.player.level = cap;
+    expect(meetsLevelReq(state, artifact)).toBe(true);
   });
 
   it("a scaling unique bonus reaches the hero's effective stat once worn", () => {
