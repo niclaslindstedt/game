@@ -22,3 +22,12 @@ Also: `--balance key=×` applies the DEVELOPER→BALANCE knobs via
 `setBalanceTuning` and RESTORES the prior global tuning in a `finally` — tests
 that call `simulateLevel({ balance })` still want an `afterEach(resetBalanceTuning)`
 guard in case a future change throws before the restore.
+
+Loot-vs-level (`drops.equipment`, the LOOT VS LEVEL table, the `Loot fits
+level` verdict): the sim MEASURES fit, it does not FIX it — the levers are the
+level's `loot.weaponPool`, a base's `levelReq` (`equipment.ts`), the `LOOT`
+config, and boss drops, all owned by the `weapon-system`/`level-design` skills.
+The recipe in SKILL.md is the measure-here-fix-there loop. Watch the trash read
+on fast-leveling OPENING maps: the hero out-levels his early drops by the clear,
+so a short single-map run reads a high trash share by construction — judge
+`Δilvl` across the whole campaign, not off one map.

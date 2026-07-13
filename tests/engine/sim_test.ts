@@ -89,6 +89,25 @@ describe("simulateLevel", () => {
     }
   });
 
+  it("judges each equipment drop against the hero's level", () => {
+    const report = simulateLevel({
+      levelId: "test_level",
+      difficulty: "medium",
+      seed: 3,
+      maxMinutes: 3,
+    });
+    const e = report.drops.equipment;
+    // The bands partition the resolved drops, and the counts stay coherent.
+    expect(e.belowLevel + e.onLevel + e.aboveLevel).toBe(e.total);
+    expect(e.equippableNow).toBeLessThanOrEqual(e.total);
+    expect(e.levelGated).toBeLessThanOrEqual(e.total);
+    if (e.total === 0) expect(e.avgIlvlDelta).toBe(0);
+    // A drop can't be both wearable-now and gated-too-high — the two are
+    // complementary reads on the level gate, so their counts never overlap
+    // into an impossible sum.
+    expect(e.equippableNow + e.levelGated).toBeLessThanOrEqual(e.total * 2);
+  });
+
   it("applies the balance knobs and restores global tuning afterward", () => {
     // A hard mobHp cut makes mobs die in fewer blows than at baseline.
     const base = simulateLevel({

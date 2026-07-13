@@ -243,6 +243,51 @@ if (allBosses.length > 0) {
   }
 }
 
+// ---- Loot vs level — do the drops fit the hero's level? ------------------------
+
+const runsWithDrops = report.runs.filter(
+  (run) => run.drops.equipment.total > 0,
+);
+if (runsWithDrops.length > 0) {
+  console.log("");
+  console.log("LOOT VS LEVEL — do the equipment drops fit the hero's level?");
+  const lh =
+    padE("difficulty", 11) +
+    padE("level", 13) +
+    pad("hero", 8) +
+    pad("drops", 7) +
+    pad("wear", 6) +
+    pad("gated", 7) +
+    pad("trash", 7) +
+    pad("onLvl", 7) +
+    pad("above", 7) +
+    pad("Δilvl", 7);
+  console.log(lh);
+  console.log("-".repeat(lh.length));
+  for (const run of runsWithDrops) {
+    const e = run.drops.equipment;
+    const delta =
+      e.avgIlvlDelta > 0 ? `+${e.avgIlvlDelta}` : `${e.avgIlvlDelta}`;
+    console.log(
+      padE(run.difficulty, 11) +
+        padE(run.levelId, 13) +
+        pad(`${run.hero.levelStart}→${run.hero.levelEnd}`, 8) +
+        pad(e.total, 7) +
+        pad(e.equippableNow, 6) +
+        pad(e.levelGated, 7) +
+        pad(e.belowLevel, 7) +
+        pad(e.onLevel, 7) +
+        pad(e.aboveLevel, 7) +
+        pad(delta, 7),
+    );
+  }
+  console.log(
+    "  wear = equippable on the spot · gated = too high-level to wear · " +
+      "trash/above = ilvl >" +
+      "3 below/above hero · Δilvl = mean drop ilvl − hero level",
+  );
+}
+
 if (verdict) renderVerdict(report);
 if (comparePath) renderCompare(report, comparePath);
 
@@ -474,6 +519,80 @@ function renderVerdict(report) {
         .join("; ")}`,
     );
 
+  // 5. Loot fits level — the drop rain should mostly hand the hero gear he can
+  //    wear and that tracks his level, not aspirational pieces he's too low for
+  //    (gated) or trash beneath him (ilvl well under his level).
+  let dTotal = 0;
+  let dGated = 0;
+  let dTrash = 0;
+  let dDeltaSum = 0;
+  for (const run of report.runs) {
+    const e = run.drops.equipment;
+    dTotal += e.total;
+    dGated += e.levelGated;
+    dTrash += e.belowLevel;
+    dDeltaSum += e.avgIlvlDelta * e.total;
+  }
+  if (dTotal === 0)
+    add("WARN", "Loot fits level", "no equipment dropped to read");
+  else {
+    const gatedFrac = dGated / dTotal;
+    const trashFrac = dTrash / dTotal;
+    const worstFrac = Math.max(gatedFrac, trashFrac);
+    const detail =
+      `${round1(gatedFrac * 100)}% gated, ${round1(trashFrac * 100)}% trash, ` +
+      `mean Δilvl ${round1(dDeltaSum / dTotal)} (over ${dTotal} drops)`;
+    if (worstFrac > 0.4) add("FAIL", "Loot fits level", detail);
+    else if (worstFrac > 0.2) add("WARN", "Loot fits level", detail);
+    else add("PASS", "Loot fits level", detail);
+  }
+
+  // 6. DPS on curve — PER RUNG (a campaign mean hides the one rung where loot
+  //    fell off). Each run's mean minion blows-to-kill should stay in band.
+  const offCurve = [];
+  let rungsRead = 0;
+  for (const run of report.runs) {
+    const mk = run.mobs.filter(
+      (m) => m.role === "minion" && m.killed > 0 && m.hitsToKill > 0,
+    );
+    if (mk.length === 0) continue;
+    rungsRead++;
+    const mean = mk.reduce((a, m) => a + m.hitsToKill, 0) / mk.length;
+    if (mean < 2 || mean > 8) {
+      offCurve.push(`${run.difficulty}/${run.levelId} ${round1(mean)}`);
+    }
+  }
+  if (rungsRead === 0)
+    add("WARN", "DPS on curve", "no minion kills to read per rung");
+  else if (offCurve.length === 0)
+    add("PASS", "DPS on curve", `all ${rungsRead} rungs 2–8 blows/minion`);
+  else
+    add(
+      offCurve.length > rungsRead / 3 ? "FAIL" : "WARN",
+      "DPS on curve",
+      `${offCurve.length}/${rungsRead} rungs off (2–8): ${offCurve.slice(0, 4).join("; ")}`,
+    );
+
+  // 7. Dead pools — a run where the hero leveled up but NOTHING better dropped
+  //    (no auto-equip swap, no upgrade equipped): the map's loot pool is starved.
+  const dead = report.runs.filter(
+    (run) =>
+      run.hero.levelEnd - run.hero.levelStart >= 2 &&
+      run.weaponTimeline.length === 0 &&
+      run.drops.equipment.equippableNow === 0,
+  );
+  if (dead.length === 0)
+    add("PASS", "Loot pools", "every rung handed the hero a usable upgrade");
+  else
+    add(
+      "WARN",
+      "Loot pools",
+      `${dead.length} starved rung(s) — leveled but no wearable drop: ${dead
+        .slice(0, 3)
+        .map((r) => `${r.difficulty}/${r.levelId}`)
+        .join("; ")}`,
+    );
+
   console.log("");
   console.log(
     "VERDICT — target-band checks (generous bands; flags regressions)",
@@ -512,6 +631,24 @@ function renderCompare(report, baselinePath) {
   console.log(`  final level : ${d(base.finalLevel, report.finalLevel)}`);
   console.log(`  total kills : ${d(base.totalKills, report.totalKills)}`);
   console.log(`  total deaths: ${d(base.totalDeaths, report.totalDeaths)}`);
+
+  // Campaign loot-vs-level aggregate: total drops and the mean drop ilvl − hero
+  // level (the "do drops fit the leveling curve" headline), diffed as a delta.
+  const lootAgg = (rep) => {
+    let total = 0;
+    let deltaSum = 0;
+    for (const run of rep.runs ?? []) {
+      const e = run.drops?.equipment;
+      if (!e) continue;
+      total += e.total;
+      deltaSum += (e.avgIlvlDelta ?? 0) * e.total;
+    }
+    return { total, meanDelta: total ? round1(deltaSum / total) : 0 };
+  };
+  const baseLoot = lootAgg(base);
+  const curLoot = lootAgg(report);
+  console.log(`  equip drops : ${d(baseLoot.total, curLoot.total)}`);
+  console.log(`  mean Δilvl  : ${d(baseLoot.meanDelta, curLoot.meanDelta)}`);
 
   const baseBoss = new Map();
   for (const run of base.runs ?? []) {

@@ -1,6 +1,6 @@
 ---
 name: simulate-run
-description: "Use to measure the game's ACTUAL balance by running the real engine headlessly — whole levels or whole campaigns (easy → JESUS across every map), with the autopilot playing, auto-equip equipping, and loadouts carried between clears. The hero is immortal (a calibration instrument — deaths are booked, never run-ending). Reports hero level/hp/dps progression, damage per hit dealt and taken, per-mob hp/level/contact damage/blows-to-kill, every drop, weapon swaps, deaths, and the XP the per-map caps withheld. The closing measurement loop of every balance change."
+description: "Use to measure the game's ACTUAL balance by running the real engine headlessly — whole levels or whole campaigns (easy → JESUS across every map), with the autopilot playing, auto-equip equipping, and loadouts carried between clears. The hero is immortal (a calibration instrument — deaths are booked, never run-ending). Reports hero level/hp/dps progression, damage per hit dealt and taken, per-mob hp/level/contact damage/blows-to-kill, every drop, weapon swaps, deaths, and the XP the per-map caps withheld. Probe a candidate tuning live with --balance (the DEVELOPER→BALANCE knobs, no rebuild), read a one-screen --verdict (PASS/WARN/FAIL incl. loot-fits-level and DPS-on-curve), see where the hero meets each boss and what it drops, judge whether drops fit the leveling curve, and A/B two runs with --compare. The closing measurement loop of every balance change — including fixing loot so drops make sense for the level."
 ---
 
 # Simulate Run
@@ -118,15 +118,38 @@ not killed` — a wall (or the bot's pacing giving out). This is the read for
 pacing gates: if the hero meets a boss far under its intended level, the rung
 before it levels too slow (or the boss gate sits too high).
 
-**`--verdict`** distills the whole run to a handful of PASS/WARN/FAIL band
-checks — first-visit XP forfeit (should be ~0), minion blows-to-kill (target
-2–8; toward 1 = one-shotting, ballooning = wall), boss level vs intended (±2),
-and bosses engaged-but-not-felled — plus one overall line. It's the "does
-anything seem off?" answer without reading every table; the bands are generous
-by design (they flag gross regressions, not fine feel). **`--compare
-baseline.json`** diffs the current run against an earlier `--json` dump as
-deltas (k/min, final level, per-boss hero level and blows-to-kill) — the A/B
-view a knob change actually wants.
+**The LOOT VS LEVEL table** (always printed when equipment drops) answers "do
+the drops FIT the hero's level, or is the map raining gear he's too low to wear
+or trash beneath him?" — the read for *drops that make sense from a leveling
+perspective*. One row per run: pieces dropped, how many were **wear**able on
+the spot, how many were **gated** (too high a level requirement to wear yet),
+how many were **trash** (ilvl ≥3 under the hero) vs **onLvl** vs **above**, and
+**Δilvl** — the mean drop ilvl minus hero level (the headline: ~0 means the
+rain tracks the hero, strongly negative = trash, strongly positive = gated).
+Fast-leveling opening maps read a higher trash share naturally (the hero
+out-levels his early drops by the clear), so read Δilvl across the campaign, not
+off one short map.
+
+**`--verdict`** distills the whole run to PASS/WARN/FAIL band checks — plus one
+overall line. It's the "does anything seem off?" answer without reading every
+table; the bands are generous by design (they flag gross regressions, not fine
+feel):
+
+- **First-visit XP** forfeit (should be ~0 — caps bite reruns, not first passes)
+- **Blows-to-kill** — campaign-mean minion blows (target 2–8; toward 1 =
+  one-shotting, ballooning = wall)
+- **Boss level** vs the map's intended level (±2)
+- **Bosses felled** — engaged-but-not-felled bosses (walls)
+- **Loot fits level** — the share of drops that were gated or trash, and the
+  mean Δilvl (the loot-vs-leveling headline)
+- **DPS on curve** — blows-to-kill checked PER RUNG, not just on average, so the
+  one rung where loot fell off the curve isn't hidden by a healthy mean
+- **Loot pools** — rungs where the hero leveled up but nothing wearable dropped
+  (a starved `weaponPool`)
+
+**`--compare baseline.json`** diffs the current run against an earlier `--json`
+dump as deltas (k/min, final level, equip drops, mean Δilvl, per-boss hero level
+and blows-to-kill) — the A/B view a knob or loot-pool change actually wants.
 
 Balance signals to look for:
 
@@ -193,3 +216,49 @@ to run many candidates without touching config:
 6. Run `make test` (the sim has engine smoke tests in
    `tests/engine/sim_test.ts`) and finish with a real `playtest` for feel —
    the simulator measures numbers, never fun.
+
+## Recipe — make the drops make sense for the leveling curve
+
+The task "fix loot so drops fit where the hero is" is a MEASURE-here,
+FIX-elsewhere loop: this sim is the instrument, but the levers live in the
+weapon/level defs (the `weapon-system` and `level-design` skills own them).
+Drive it like this:
+
+1. **Read the current state.** Run a full campaign and look at the LOOT VS
+   LEVEL table and the `Loot fits level` / `DPS on curve` / `Loot pools`
+   verdict lines:
+   ```sh
+   node scripts/simulate-run.mjs --verdict --json loot-before.json
+   ```
+   Diagnose from the columns:
+   - **high `gated`** (drops the hero can't wear yet) → a base's `levelReq` is
+     ahead of when the map drops it, or the level's `loot.weaponPool` includes
+     bases that gate too high for that rung.
+   - **high `trash` / strongly negative `Δilvl`** → the map rains gear beneath
+     the hero: he's over-levelled for the content (a leveling-pace problem — see
+     the `leveling-balance` skill) or the pool's bases sit too low.
+   - **`Loot pools` starved rung** (leveled up, nothing wearable dropped) →
+     the level's `loot.weaponPool` has nothing at that ilvl band; widen it or
+     add a base that enters there.
+   - **`DPS on curve` off on one rung** → the auto-equipped hero's DPS drifted
+     off the mob-hp curve there; the pool isn't handing him an upgrade that
+     rung keeps pace with.
+2. **Fix the DEF, not the sim.** The sites (see the `weapon-system` skill's
+   "Where everything lives" table): a base's `levelReq` (`equipment.ts`), the
+   level's `loot.weaponPool` (`defs/levels/<level>.ts`), the `LOOT` tier/ilvl
+   gates (`config.ts`), and boss `tierDrops`/`uniquesByDifficulty`
+   (`defs/enemies/`). Use `item-forge.mjs` for any new item's numbers and
+   `drop-rate.mjs` for the rare/unique economy.
+3. **Re-measure and diff.** Re-run against the baseline and confirm the loot
+   columns moved the right way without breaking pace or the boss table:
+   ```sh
+   node scripts/simulate-run.mjs --verdict --compare loot-before.json
+   ```
+   Iterate 1→3 until `Loot fits level` and `DPS on curve` pass across the
+   campaign (not just one map — a fast opening map reads trashy in isolation).
+4. Finish with `make test` and a `playtest`.
+
+Global loot knobs (`--balance dropRate/gearQuality/equipmentShare/uniqueDrops`)
+tune the drop rain's overall VOLUME and QUALITY, not any single item's fit — use
+them to probe "is there roughly enough good loot?", then fix specific fit
+problems in the pools/`levelReq` above.

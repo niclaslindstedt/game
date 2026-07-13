@@ -35,11 +35,13 @@ import { resolveChoice } from "../game/companions.ts";
 import { createGame } from "../game/create.ts";
 import { DIFFICULTY_ORDER } from "../game/defs/difficulties.ts";
 import { enemyDef } from "../game/defs/enemies/index.ts";
+import { equipmentLevelReq } from "../game/defs/equipment.ts";
 import { LEVEL_ORDER, levelDef } from "../game/defs/levels/index.ts";
 import {
   advanceOutro,
   allocateStat,
   armorReduction,
+  canEquip,
   dismissIntro,
   effectiveStat,
   equipmentName,
@@ -59,6 +61,7 @@ import {
 } from "../game/tuning.ts";
 import type {
   Difficulty,
+  Equipment,
   GameState,
   Item,
   Loadout,
@@ -271,6 +274,31 @@ export type LevelReport = {
     autoEquipped: number;
     /** Named unique/legendary finds, in pickup order. */
     named: string[];
+    /**
+     * Per-drop level-appropriateness — do the equipment drops FIT the hero's
+     * level, or is the map raining gear he's too low to wear (gated) or trash
+     * beneath him? The read for "drops that make sense from a leveling
+     * perspective." Each figure is over the equipment pieces actually resolved
+     * at pickup.
+     */
+    equipment: {
+      /** Equipment pieces collected and resolved. */
+      total: number;
+      /** Wearable on the spot — both the level and attribute gates pass. */
+      equippableNow: number;
+      /** Dropped ABOVE the hero's level gate: banked, can't wear yet. */
+      levelGated: number;
+      /** ilvl bands vs the hero's level at pickup (`APPROP_BAND` slack). */
+      belowLevel: number;
+      onLevel: number;
+      aboveLevel: number;
+      /**
+       * Mean (drop ilvl − hero level). ~0 means the rain tracks the hero;
+       * strongly negative = trash beneath him; strongly positive = aspirational
+       * drops he can't use yet.
+       */
+      avgIlvlDelta: number;
+    };
   };
   weaponTimeline: WeaponSwap[];
   levelUps: { atMs: number; level: number }[];
@@ -316,6 +344,10 @@ type MobAccumulator = {
 
 /** Phase-advance guard: a wedged phase throws instead of spinning forever. */
 const MAX_PHASE_ADVANCES = 10_000;
+
+/** Slack (in levels) around the hero's level a drop's ilvl may sit and still
+ * count "on level" — outside it a drop reads as trash (below) or gated (above). */
+const APPROP_BAND = 3;
 
 /** No kill and no damage for this long (simulated ms) = wedged on geometry. */
 const STALL_TIMEOUT_MS = 15_000;
@@ -433,6 +465,34 @@ function playRun(args: {
   const levelUps: { atMs: number; level: number }[] = [];
   const snapshots: HeroSnapshot[] = [];
   let autoEquipped = 0;
+  // Loot-vs-level accumulators (see drops.equipment) — filled as pieces resolve.
+  let equipTotal = 0;
+  let equippableNow = 0;
+  let levelGated = 0;
+  let ilvlBelow = 0;
+  let ilvlOn = 0;
+  let ilvlAbove = 0;
+  let ilvlDeltaSum = 0;
+  // Find a just-collected piece by its stable id (worn slot or bag cell) so its
+  // ilvl / level requirement can be judged against the hero at pickup.
+  const findEquipment = (id: number): Equipment | null => {
+    const worn = state.player.equipment;
+    for (const piece of [
+      worn.weapon,
+      worn.head,
+      worn.chest,
+      worn.legs,
+      worn.feet,
+      worn.charm,
+      worn.bag,
+    ]) {
+      if (piece && piece.id === id) return piece;
+    }
+    for (const cell of state.player.inventory) {
+      if (cell && cell.id === id) return cell;
+    }
+    return null;
+  };
   let forfeited = 0;
   let reachedAtMs: number | null = null;
   let reviveDeaths = 0;
@@ -626,6 +686,22 @@ function playRun(args: {
             equipmentByTier[event.tier] =
               (equipmentByTier[event.tier] ?? 0) + 1;
             if (event.equipped) autoEquipped++;
+            // Judge the piece against the hero: is it wearable now, and does its
+            // ilvl track his level or fall outside the appropriateness band?
+            const piece =
+              event.itemId != null ? findEquipment(event.itemId) : null;
+            if (piece) {
+              equipTotal++;
+              const delta = piece.ilvl - state.player.level;
+              ilvlDeltaSum += delta;
+              if (delta <= -APPROP_BAND) ilvlBelow++;
+              else if (delta >= APPROP_BAND) ilvlAbove++;
+              else ilvlOn++;
+              if (canEquip(state, piece)) equippableNow++;
+              if (state.player.level < equipmentLevelReq(piece.defId)) {
+                levelGated++;
+              }
+            }
             if (
               (event.tier === "unique" || event.tier === "legendary") &&
               event.name
@@ -819,6 +895,15 @@ function playRun(args: {
       equipmentByTier,
       autoEquipped,
       named,
+      equipment: {
+        total: equipTotal,
+        equippableNow,
+        levelGated,
+        belowLevel: ilvlBelow,
+        onLevel: ilvlOn,
+        aboveLevel: ilvlAbove,
+        avgIlvlDelta: equipTotal ? round1(ilvlDeltaSum / equipTotal) : 0,
+      },
     },
     weaponTimeline,
     levelUps,
