@@ -419,6 +419,21 @@ pull the sky down, rank-3 novas), **THE STILLWARD** (a legendary stasis
 shell — the great stillness worn), **WINDGRAVE** (the wind's own spurs),
 and **EMBERHEART** (a charm of forever circling fire, for any build).
 
+A JESUS **endgame gap-fill** batch (twelve more world-drop uniques, ilvls
+79–99) widens the 60→99 chase where the roster ran thin — the slots the
+pre-99 sets barely touched. Charm and bag had **no** relic above ilvl 53/49
+before the artifacts; four charms now bridge that gap — **THE LAST ANTE**
+(Eastworld, the un-coverable bet), **THE STILL POINT** (the Rift, the one
+place that will not move), **THE EMBER HOUR** (Mars, the red world's hottest
+hour), and **THE FIXED STAR** (the Rift, the star that never falls), each a
+scaling keeper — and three bags carry the endgame's first unique carryalls:
+**THE SEVERANCE** (SpaceZ HQ), **THE MOTHERLODE** (Mars), and **THE KING'S
+RANSOM** (Eastworld). The thin armor slots gain **THE LAST WORD** (SpaceZ HQ,
+head), **THE BULWARK** (Mars) and **THE WORLDSHELL** (the Moon) for chest,
+**THE LONG MARCH** (the Moon, legs), and **THE FAR SHORE** (the Rift, feet).
+All hang on the JESUS rungs, so they farm in the same rift → bunker loop and
+sit a notch under the artifact relics above them.
+
 The **ARTIFACT** roster (phase 5) is the level-99 endgame farm: 24 named
 relics of legend the Rift dredges up whole (`src/game/defs/artifacts.ts`),
 minted at the searing-red `tier: "artifact"` and dropping only at the cap

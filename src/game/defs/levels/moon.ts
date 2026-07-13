@@ -297,7 +297,14 @@ export const MOON: LevelDef = {
       // The JESUS rung's Moon haul — crater-maker, titan legs, the anchored
       // boots, and THE STILLWARD: the great stillness worn as a legendary
       // stasis shell.
-      jesus: ["worldsplitter", "titanstride", "the_immovable", "earthfast"],
+      jesus: [
+        "worldsplitter",
+        "titanstride",
+        "the_immovable",
+        "earthfast",
+        "the_worldshell",
+        "the_long_march",
+      ],
     },
     // Level a normal run reaches per rung (`leveling-curve.mjs --by-level`) —
     // past it golden arrows go cold so a Moon replay can't over-level.

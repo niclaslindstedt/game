@@ -363,7 +363,15 @@ export const MARS: LevelDef = {
       nightmare: ["pyrelight", "ironroot_greaves"],
       // The JESUS rung's Mars haul — the hill-thrower, noon sharpened to a
       // point, the ruin crown, and the wanderer's ring.
-      jesus: ["meteorfall", "sunspear", "crown_of_ruin", "the_pilgrim_star"],
+      jesus: [
+        "meteorfall",
+        "sunspear",
+        "crown_of_ruin",
+        "the_pilgrim_star",
+        "the_bulwark",
+        "the_ember_hour",
+        "the_motherlode",
+      ],
     },
     // Level a normal run reaches per rung (`leveling-curve.mjs --by-level`) —
     // past it golden arrows go cold so a Mars replay can't over-level.
