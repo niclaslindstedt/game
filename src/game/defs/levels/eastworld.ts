@@ -536,11 +536,12 @@ export const EASTWORLD: LevelDef = {
     // signature revolver; the medium rung fields BOTH melee choices — the
     // brand and the lariat — so the build isn't hostage to one legendary.
     worldUniques: {
-      easy: ["pale_rider"],
-      medium: ["herdbreaker", "the_last_roundup"],
-      // OATHBRAND — the last honest lawman's monomolecular blade (the hard
-      // rung's melee anchor).
-      hard: ["oathbrand"],
+      // Bottom tier shares one merged relic batch across the three parallel
+      // starting lanes (the former easy/medium/hard drops, incl. OATHBRAND, the
+      // last honest lawman's blade); odds self-select as the hero levels.
+      easy: ["pale_rider", "herdbreaker", "the_last_roundup", "oathbrand"],
+      medium: ["pale_rider", "herdbreaker", "the_last_roundup", "oathbrand"],
+      hard: ["pale_rider", "herdbreaker", "the_last_roundup", "oathbrand"],
       // HORDEBANE (the axe made for too many), DRAGON'S BREATH (the park's
       // monster-of-legend scattergun), and SKYBREAKER — the nightmare rung's
       // ranged LEGENDARY, tearing the sky with every landed round.
@@ -554,10 +555,10 @@ export const EASTWORLD: LevelDef = {
     // the campaign's FINAL map, so these are each difficulty's end level; past
     // it golden arrows go cold so a replay can't over-level.
     arrowCapByDifficulty: {
-      easy: 19,
-      medium: 32,
-      hard: 43,
-      nightmare: 53,
+      easy: 30,
+      medium: 30,
+      hard: 30,
+      nightmare: 50,
       jesus: 60,
     },
   },

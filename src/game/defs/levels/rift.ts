@@ -304,11 +304,12 @@ export const THE_RIFT: LevelDef = {
     // once-and-future blade) and THE TRINITY SHARD (trinitite glass). Farmed on
     // boss runs of the Rift.
     worldUniques: {
-      easy: ["excalibur", "the_trinity_shard"],
-      medium: ["wishbane", "gorgonscale"],
-      // THE INEVITABLE — the hard rung's LEGENDARY: the pistol that has
-      // never missed, hung in the tear like everything else fate mislaid.
-      hard: [],
+      // Bottom tier shares one merged relic batch across the three parallel
+      // starting lanes (the former easy + medium drops; the old hard rung
+      // carried none here); odds self-select as the hero levels through.
+      easy: ["excalibur", "the_trinity_shard", "wishbane", "gorgonscale"],
+      medium: ["excalibur", "the_trinity_shard", "wishbane", "gorgonscale"],
+      hard: ["excalibur", "the_trinity_shard", "wishbane", "gorgonscale"],
       // GRAVEMAKER (the burying maul) and the nightmare rung's other two
       // LEGENDARIES: THE RECKONING (the cursed blade that answers every blow
       // taken with lightning) and SUNWREATH (the dead star's burning crown).
@@ -322,10 +323,10 @@ export const THE_RIFT: LevelDef = {
     // Level a normal run reaches per rung (`leveling-curve.mjs --by-level`) —
     // past it golden arrows go cold so a Rift replay can't over-level.
     arrowCapByDifficulty: {
-      easy: 15,
-      medium: 29,
-      hard: 40,
-      nightmare: 50,
+      easy: 24,
+      medium: 24,
+      hard: 24,
+      nightmare: 45,
       jesus: 58,
     },
     // The VOID WAND arrives early at a kill discovered in play — the level's

@@ -24,6 +24,7 @@ import {
   difficultyDef,
   LEVEL_ORDER,
   SECRET_LEVEL_ORDER,
+  STARTING_DIFFICULTIES,
   levelDef,
   type Difficulty,
 } from "@game/core";
@@ -221,13 +222,22 @@ function unlockAudio() {
   playTitleMusic();
 }
 
-/** The furthest difficulty rung this hero has unlocked — where the ladder
- * opens (a fresh hero lands on EASY, the only one open). */
+/** Where the difficulty ladder's cursor opens for this hero: on the furthest
+ * GATED rung they've unlocked (the progression frontier — nightmare, then
+ * jesus), or, before any is open, on MEDIUM — the middle of the three parallel
+ * starting lanes, a neutral default (the three are all open from the start, so
+ * "furthest unlocked" would otherwise land arbitrarily on hard). */
 function furthestUnlockedDifficulty(character: Character): number {
-  return DIFFICULTY_ORDER.reduce(
-    (best, id, i) => (isDifficultyUnlocked(character, id) ? i : best),
-    0,
-  );
+  for (let i = DIFFICULTY_ORDER.length - 1; i >= 0; i--) {
+    const id = DIFFICULTY_ORDER[i] as Difficulty;
+    if (
+      !STARTING_DIFFICULTIES.includes(id) &&
+      isDifficultyUnlocked(character, id)
+    ) {
+      return i;
+    }
+  }
+  return DIFFICULTY_ORDER.indexOf("medium");
 }
 
 export function TitleScreen({
@@ -644,11 +654,17 @@ export function TitleScreen({
       return [
         ...DIFFICULTY_ORDER.map((id) => {
           const def = difficultyDef(id);
-          // The ladder unlocks in order per character: a rung opens once the
-          // one before it is beaten (easy is always open). Locked rungs show
-          // greyed out. Warp mode opens every rung.
+          // The three starting lanes (easy/medium/hard) are parallel and always
+          // open — a player picks one. The gated rungs open on a prereq beaten:
+          // NIGHTMARE on any starting lane, JESUS on NIGHTMARE (see
+          // `DIFFICULTY_UNLOCK_PREREQS`). Locked rungs show greyed out. Warp mode
+          // opens every rung.
           const unlocked = warp || isDifficultyUnlocked(character, id);
           const beaten = isDifficultyBeaten(character, id);
+          const lockedBlurb =
+            id === "jesus"
+              ? "LOCKED - BEAT NIGHTMARE"
+              : "LOCKED - BEAT A STARTING DIFFICULTY";
           return {
             label: def.name,
             aria: `difficulty-${id}`,
@@ -657,7 +673,7 @@ export function TitleScreen({
             blurb: warp
               ? "WARP - PICK A MISSION"
               : !unlocked
-                ? "LOCKED - BEAT THE PREVIOUS DIFFICULTY"
+                ? lockedBlurb
                 : beaten
                   ? "CLEARED - CHOOSE ANY MISSION"
                   : def.tagline,

@@ -12,12 +12,14 @@ import {
   isWeaponDef,
   LEVELS,
   SECRET_LEVEL_ORDER,
+  STARTING_DIFFICULTIES,
   meetsLevelReq,
   mintUnique,
   UNIQUE_IDS,
   uniqueDef,
   weaponDamageFor,
   weaponDef,
+  type Difficulty,
   type Equipment,
 } from "@game/core";
 import { describe, expect, it } from "vitest";
@@ -163,11 +165,24 @@ describe("boss unique drop tables", () => {
       const t = uniqueDef(id).tier ?? "unique";
       return t !== "legendary" && t !== "artifact";
     };
-    const placed = [...wiring, ...worldWiring, ...stallWiring]
-      .map((w) => w.id)
-      .sort();
-    expect(placed).toEqual([...UNIQUE_IDS].filter(tableTiers).sort());
-    // No id has two homes.
+    // The three parallel starting lanes (easy/medium/hard) share ONE merged
+    // bottom-tier pool, so a bottom relic appears identically under all three
+    // rungs — that is one home mirrored across the lanes, not three homes.
+    // Collapse the lanes to a single "bottom" stage before the exactly-once
+    // accounting.
+    const stageOf = (diff: string) =>
+      STARTING_DIFFICULTIES.includes(diff as Difficulty) ? "bottom" : diff;
+    const homes = [
+      ...wiring.map((w) => `${w.id}@boss:${w.boss}:${stageOf(w.diff)}`),
+      ...worldWiring.map((w) => `${w.id}@world:${w.level}:${stageOf(w.diff)}`),
+      ...stallWiring.map((w) => `${w.id}@stall:${w.level}`),
+    ];
+    // Collapse the lane-mirrored duplicates, then recover the id of each home.
+    const placed = [...new Set(homes)].map((h) => h.split("@")[0]).sort();
+    expect([...new Set(placed)].sort()).toEqual(
+      [...UNIQUE_IDS].filter(tableTiers).sort(),
+    );
+    // No id has two DISTINCT homes (the lane mirroring already collapsed above).
     expect(new Set(placed).size).toBe(placed.length);
     // Legendaries/artifacts are wired to NO table.
     for (const id of UNIQUE_IDS.filter((i) => !tableTiers(i))) {
@@ -197,11 +212,19 @@ describe("boss unique drop tables", () => {
     }
   });
 
-  it("gives each rung a full boss set — 7 uniques per difficulty", () => {
-    // 5 boss weapon/armor pieces + 1 MUSKRAT bag + 1 GROK charm = 7.
-    const perRung: Record<string, number> = {};
-    for (const { diff } of wiring) perRung[diff] = (perRung[diff] ?? 0) + 1;
-    for (const diff of DIFFICULTY_ORDER) expect(perRung[diff]).toBe(7);
+  it("bottom lanes share one merged pool; each gated rung keeps a full 7-piece set", () => {
+    const perRung: Record<string, string[]> = {};
+    for (const { diff, id } of wiring) (perRung[diff] ??= []).push(id);
+    // The three parallel starting lanes list the SAME merged bottom-tier pool.
+    const easy = [...(perRung.easy ?? [])].sort();
+    expect([...(perRung.medium ?? [])].sort()).toEqual(easy);
+    expect([...(perRung.hard ?? [])].sort()).toEqual(easy);
+    // The merged pool is the three former rungs' boss sets combined: 3 × 7 = 21.
+    expect(easy.length).toBe(21);
+    // Each gated rung keeps a full boss set: 5 pieces + MUSKRAT bag + GROK
+    // charm = 7.
+    expect((perRung.nightmare ?? []).length).toBe(7);
+    expect((perRung.jesus ?? []).length).toBe(7);
   });
 });
 

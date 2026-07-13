@@ -404,11 +404,13 @@ export const SPACEZ_HQ: LevelDef = {
     // Level-locked world drop (see config WORLD_DROP): THE FIRST DRAFT, the
     // prototype-GROK neural crown, farmable only by returning for boss runs.
     worldUniques: {
-      easy: ["the_first_draft"],
-      medium: ["deadsprint"],
-      // LONGWATCH — the perimeter marksman's rifle (the hard rung's ranged
-      // build), farmed on HQ boss runs.
-      hard: ["longwatch"],
+      // Bottom tier shares one merged relic batch across the three parallel
+      // starting lanes (the former easy/medium/hard drops — THE FIRST DRAFT,
+      // DEADSPRINT, and LONGWATCH, the perimeter marksman's rifle); the
+      // role-scaled drop odds self-select as the hero levels through.
+      easy: ["the_first_draft", "deadsprint", "longwatch"],
+      medium: ["the_first_draft", "deadsprint", "longwatch"],
+      hard: ["the_first_draft", "deadsprint", "longwatch"],
       // STORMLASH (the lab-broken storm) and FALCONMAIL (flight-weight
       // composite) — the nightmare rung's HQ relics.
       nightmare: ["stormlash", "falconmail"],
@@ -419,11 +421,11 @@ export const SPACEZ_HQ: LevelDef = {
     // per rung (from `leveling-curve.mjs --by-level`) — past it golden arrows
     // go cold, so a replay of the tutorial floor can't over-level him.
     arrowCapByDifficulty: {
-      easy: 5,
-      medium: 21,
-      hard: 34,
-      nightmare: 45,
-      jesus: 54,
+      easy: 8,
+      medium: 8,
+      hard: 8,
+      nightmare: 34,
+      jesus: 52,
     },
     allClearWeapon: "golden_stapler",
     // The opening loot loop, on a schedule the rain can't promise: the

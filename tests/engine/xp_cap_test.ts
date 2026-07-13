@@ -29,11 +29,20 @@ describe("xpLevelCap — the per-map ceiling", () => {
     expect(xpLevelCap("test_level_2", "medium")).toBe(band.last);
   });
 
-  it("harder rungs cap higher on the same map", () => {
-    expect(xpLevelCap("test_level", "easy")).toBeLessThan(
+  it("the three bottom lanes share a cap; progression tiers cap higher", () => {
+    // easy/medium/hard are PARALLEL entry points over the same level band, so
+    // they share one cap band — the difference between them is help, not pace.
+    expect(xpLevelCap("test_level", "easy")).toBe(
       xpLevelCap("test_level", "medium"),
     );
-    expect(xpLevelCap("test_level", "medium")).toBeLessThan(
+    expect(xpLevelCap("test_level", "medium")).toBe(
+      xpLevelCap("test_level", "hard"),
+    );
+    // The gated tiers pick up above the bottom band.
+    expect(xpLevelCap("test_level", "hard")).toBeLessThan(
+      xpLevelCap("test_level", "nightmare"),
+    );
+    expect(xpLevelCap("test_level", "nightmare")).toBeLessThan(
       xpLevelCap("test_level", "jesus"),
     );
   });

@@ -328,9 +328,11 @@ export {
 export {
   DIFFICULTY_DEFS,
   DIFFICULTY_ORDER,
+  DIFFICULTY_UNLOCK_PREREQS,
   difficultyDef,
   meetsMinDifficulty,
   scaledMobCount,
+  STARTING_DIFFICULTIES,
   type DifficultyDef,
 } from "./game/defs/difficulties.ts";
 export {

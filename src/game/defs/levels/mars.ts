@@ -352,11 +352,12 @@ export const MARS: LevelDef = {
     // Level-locked world drop (see config WORLD_DROP): DUSTBORN, the light boots
     // that outrun the dust storms — farmed on boss runs of Mars.
     worldUniques: {
-      easy: ["dustborn"],
-      medium: ["redwind"],
-      // COLOSSUS PLATE — terraformer plating (the hard rung's melee-lean
-      // chest: a wall that trades a step of speed).
-      hard: ["colossus_plate"],
+      // Bottom tier shares one merged relic batch across the three parallel
+      // starting lanes (the former easy/medium/hard drops, incl. COLOSSUS
+      // PLATE, terraformer plating); odds self-select as the hero levels.
+      easy: ["dustborn", "redwind", "colossus_plate"],
+      medium: ["dustborn", "redwind", "colossus_plate"],
+      hard: ["dustborn", "redwind", "colossus_plate"],
       // PYRELIGHT (the forge-heart wand) and IRONROOT GREAVES (the planted
       // stance) — the nightmare rung's Mars relics.
       nightmare: ["pyrelight", "ironroot_greaves"],
@@ -367,11 +368,11 @@ export const MARS: LevelDef = {
     // Level a normal run reaches per rung (`leveling-curve.mjs --by-level`) —
     // past it golden arrows go cold so a Mars replay can't over-level.
     arrowCapByDifficulty: {
-      easy: 11,
-      medium: 26,
-      hard: 38,
-      nightmare: 48,
-      jesus: 57,
+      easy: 18,
+      medium: 18,
+      hard: 18,
+      nightmare: 42,
+      jesus: 56,
     },
     // The CYBER KATANA arrives early at a kill discovered in play — the
     // run's signature blade, same cadence as the moon's blade.
