@@ -232,6 +232,9 @@ node scripts/weapon-swing.mjs poses --class magic        # every magic weapon
 node scripts/weapon-swing.mjs poses calibration_probe    # the debug weapon: red tip/base markers
 node scripts/weapon-swing.mjs poses calibration_probe --arc 180  # the half-circle (max-INT) swing
 node scripts/weapon-swing.mjs live medieval_sword        # slowed real attack — pose + slash/muzzle effect
+node scripts/weapon-swing.mjs poses excalibur            # a UNIQUE's signature slash
+node scripts/weapon-swing.mjs uniques                    # contact sheet of every unique slash
+node scripts/weapon-swing.mjs live muramasa              # a unique's slash + its themed gore
 ```
 
 `poses` pins the held-weapon pose at sampled fractions of the swing (via the
@@ -251,6 +254,17 @@ that never drops — `equipment.ts` / `icons.mjs`) marks the blade TIP and BASE 
 hot red so you can read exactly where the blade lies and line the cone up to it.
 Tune `WEAPON_SHOULDER` (pivot, `paper-doll.ts`) and `BLADE_REST_ANGLE` /
 `weaponPose` (`render.ts`), then re-shoot until the blade tracks the cone.
+
+**Give a UNIQUE its own slash + gore** (`website/src/game/slash-fx.ts`). The
+signature is a render concern keyed off the weapon's `uniqueId` — the engine
+knows nothing of it. Add a `SLASH_STYLES` entry (or reuse an elemental kit —
+FIRE/HOLY/FROST/STORM/VOID/BLOOD/VENOM): a `core`/`edge`/`glow` color, an
+optional `particle` stream, `afterimages` for a heavier blade, and a `gore`
+burst thrown on the hero's hits. A named blade should FEEL more powerful than
+its base — a couple of flourishes is enough. Preview a single one with `poses
+<id>` / `live <id>` (the gore shows in `live`), and eyeball the whole roster
+side by side with `uniques`. Un-styled uniques fall back to the plain white
+slash, so the catalog grows one entry at a time.
 
 ## Unique items (named drops)
 
