@@ -205,8 +205,8 @@ function pushBoss(state: GameState, jumpTravel = false): GameInput {
  * priority order:
  *   1. Nothing near → scoop a nearby pickup, else push the objective.
  *   2. Bleeding or hemmed in (low HP, or a pack pressing close) → BREAK CONTACT:
- *      punch down the openest lane out of the crowd, hopping to dodge any blow
- *      already in range (airborne is untouchable).
+ *      punch down the openest lane out of the crowd while HOPPING the whole way,
+ *      so the untouchable airborne frames carry him clean over the bodies.
  *   3. Otherwise KITE: sit at the weapon's own reach from the nearest foe so
  *      the auto-weapon keeps firing while the hero backpedals — melee fights
  *      close, a ranged loadout holds far — and hop when a body crowds in.
@@ -227,11 +227,15 @@ function survive(state: GameState): GameInput {
     return pushBoss(state, true);
   }
 
+  const grounded = player.z === 0;
   const nearest = near[0]!; // threatsWithin returns nearest-first
   const nearestD = distance(player.pos, nearest.pos);
-  const dodge = nearestD < CONTACT_DODGE_RADIUS && player.z === 0;
 
-  // 2. Emergency: low on HP, or a tight pack around him → punch out the gap.
+  // 2. Emergency: low on HP, or a tight pack around him → punch out the gap,
+  //    HOPPING THE WHOLE WAY. Every airborne frame above JUMP.dodgeHeight is
+  //    untouchable, so continuous jumps carry the hero clean OVER the bodies
+  //    between him and open ground — the desperate escape a cornered player
+  //    spams. Re-jump the instant he lands (grounded), never waiting to be hit.
   const packed = near.filter(
     (e) => distance(e.pos, player.pos) < SURROUND_RADIUS,
   );
@@ -245,23 +249,22 @@ function survive(state: GameState): GameInput {
         item.kind === "medkit" &&
         distance(player.pos, item.pos) < ITEM_REACH
       ) {
-        return steer(state, item.pos, dodge);
+        return steer(state, item.pos, grounded);
       }
     }
-    return steer(state, bestEscapeTarget(state, near), dodge);
+    return steer(state, bestEscapeTarget(state, near), grounded);
   }
 
   // 3. Kite the nearest at the weapon's reach — close enough to keep firing,
   //    far enough to keep backpedaling. Bias the hold toward the boss when the
-  //    local field is thin so the hero still advances to clear the map.
+  //    local field is thin so the hero still advances to clear the map. Hop when
+  //    a body presses into range or the crowd thickens, to shed the blow.
   const range = weaponDef(player.equipment.weapon.defId).range;
   const anchor =
     packed.length <= 1 ? (bossPos(state) ?? nearest.pos) : nearest.pos;
-  return steer(
-    state,
-    holdOff(state, anchor, Math.max(48, range * 0.85)),
-    dodge,
-  );
+  const hop =
+    grounded && (nearestD < CONTACT_DODGE_RADIUS || packed.length >= 3);
+  return steer(state, holdOff(state, anchor, Math.max(48, range * 0.85)), hop);
 }
 
 /** Non-apparition enemies within `radius`, nearest first. */
