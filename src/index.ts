@@ -202,9 +202,13 @@ export {
   closeShop,
   merchantName,
   openShop,
+  repairGear,
   sellItem,
   sellValue,
 } from "./game/merchant.ts";
+// The whole-kit repair quote the shop's REPAIR button reads (the mutator is
+// `repairGear` above; this is its price, for the button label / disabled state).
+export { repairAllCost, repairCost } from "./game/items.ts";
 
 // The menace meter: the escalation the app reads to draw the rampage gauge
 // and mark evolved mobs (the mechanics live in step()/loot()).

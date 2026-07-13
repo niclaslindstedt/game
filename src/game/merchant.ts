@@ -24,6 +24,8 @@ import {
   addToInventory,
   mintUnique,
   qualityMult,
+  repairAll,
+  repairAllCost,
   rollEquipment,
 } from "./items.ts";
 import { addMapMarker } from "./map.ts";
@@ -47,27 +49,33 @@ export function createMerchant(
   },
   playerSpawn: Vec2,
   blocked: (pos: Vec2, radius: number) => boolean,
+  // Met here on a prior run (persisted per level+difficulty): stand him right
+  // by the door so a restart-after-death can walk straight to the counter and
+  // repair. `revealMerchant` (called once the run's state exists) then opens him
+  // for business. When false he spawns out in the level, met the usual way.
+  preDiscovered = false,
 ): Merchant {
   // A fixed XOR keeps his stream distinct from the run's (same seed).
   const rng: Rng = createRngFromState((seed ^ 0x5eed) >>> 0 || 1);
   const margin = MERCHANT.radius + 8;
-  let pos: Vec2 = {
-    x: level.width / 2,
-    y: level.height / 2,
-  };
-  for (let attempts = 0; attempts < 60; attempts++) {
-    const candidate = {
-      x: randomRange(rng, margin, level.width - margin),
-      y: randomRange(rng, margin, level.height - margin),
-    };
-    // Small levels may not have the full clearance to give — halve the
-    // demand every 20 failed attempts rather than parking him on the spawn.
-    const clearance =
-      MERCHANT.minSpawnDistance / (1 + Math.floor(attempts / 20));
-    if (distance(candidate, playerSpawn) < clearance) continue;
-    if (blocked(candidate, MERCHANT.radius)) continue;
-    pos = candidate;
-    break;
+  let pos: Vec2 = preDiscovered
+    ? nearSpawnSpot(playerSpawn, level, blocked)
+    : { x: level.width / 2, y: level.height / 2 };
+  if (!preDiscovered) {
+    for (let attempts = 0; attempts < 60; attempts++) {
+      const candidate = {
+        x: randomRange(rng, margin, level.width - margin),
+        y: randomRange(rng, margin, level.height - margin),
+      };
+      // Small levels may not have the full clearance to give — halve the
+      // demand every 20 failed attempts rather than parking him on the spawn.
+      const clearance =
+        MERCHANT.minSpawnDistance / (1 + Math.floor(attempts / 20));
+      if (distance(candidate, playerSpawn) < clearance) continue;
+      if (blocked(candidate, MERCHANT.radius)) continue;
+      pos = candidate;
+      break;
+    }
   }
   return {
     pos,
@@ -79,10 +87,42 @@ export function createMerchant(
     faceLeft: false,
     moving: false,
     discovered: false,
+    // A pre-placed trader owes a "welcome back" line (delivered on approach);
+    // one met live greets through the first-meeting scene, so he owes none.
+    greetedReturn: !preDiscovered,
     stock: [],
     // Parked as a plain number so the merchant serializes with the run.
     rngState: rngState(rng),
   };
+}
+
+/** A clear spot a short walk from the player spawn for a pre-placed merchant —
+ * near enough to reach at once, not on top of the hero. Rings out from the
+ * spawn, falling back to the spawn itself if terrain refuses every offset. */
+function nearSpawnSpot(
+  playerSpawn: Vec2,
+  level: { width: number; height: number },
+  blocked: (pos: Vec2, radius: number) => boolean,
+): Vec2 {
+  const margin = MERCHANT.radius + 8;
+  const reach = MERCHANT.tradeRadius + MERCHANT.radius + 12;
+  for (let i = 0; i < 12; i++) {
+    const angle = (i / 12) * Math.PI * 2;
+    const candidate = {
+      x: clamp(
+        playerSpawn.x + Math.cos(angle) * reach,
+        margin,
+        level.width - margin,
+      ),
+      y: clamp(
+        playerSpawn.y + Math.sin(angle) * reach,
+        margin,
+        level.height - margin,
+      ),
+    };
+    if (!blocked(candidate, MERCHANT.radius)) return candidate;
+  }
+  return { ...playerSpawn };
 }
 
 /**
@@ -107,7 +147,10 @@ function draw(merchant: Merchant): number {
 export function stepMerchant(state: GameState, dt: number, dtMs: number): void {
   const merchant = state.merchant;
   merchant.moving = false;
-  if (merchant.discovered) return;
+  if (merchant.discovered) {
+    maybeGreetReturn(state, merchant);
+    return;
+  }
 
   // The meeting: close enough to see each other, and nothing in the way.
   if (
@@ -115,6 +158,9 @@ export function stepMerchant(state: GameState, dt: number, dtMs: number): void {
     lineOfSight(state, state.player.pos, merchant.pos)
   ) {
     merchant.discovered = true;
+    // Met live — the first-meeting scene IS his greeting, so he owes no
+    // separate "welcome back" on this run.
+    merchant.greetedReturn = true;
     merchant.wanderTarget = null;
     merchant.faceLeft = state.player.pos.x < merchant.pos.x;
     merchant.stock = rollStock(state, merchant);
@@ -182,6 +228,72 @@ export function stepMerchant(state: GameState, dt: number, dtMs: number): void {
       MERCHANT.idleMs[0] +
       draw(merchant) * (MERCHANT.idleMs[1] - MERCHANT.idleMs[0]);
   }
+}
+
+/**
+ * Reveal the merchant WITHOUT the walk-up meeting — used at map start when the
+ * hero has already met him here (persisted per level+difficulty, fed in via
+ * `createGame`). Roots him and rolls his stall against the arriving hero, just
+ * like a live discovery, but plays NO scene: his "welcome back" line waits for
+ * the hero to come near (`maybeGreetReturn`), and `greetedReturn` stays false
+ * until then. Call once the run's state exists and the loadout is applied (so
+ * his stock is priced off the hero who actually arrived).
+ */
+export function revealMerchant(state: GameState): void {
+  const merchant = state.merchant;
+  if (merchant.discovered) return;
+  merchant.discovered = true;
+  merchant.greetedReturn = false;
+  merchant.wanderTarget = null;
+  merchant.stock = rollStock(state, merchant);
+  addMapMarker(state, "merchant", merchant.pos, "merchant");
+}
+
+/**
+ * Deliver the "welcome back" line the first time the hero comes near a merchant
+ * REVEALED at the door (met here before). Same proximity trigger as a live
+ * meeting, but it plays the per-level `returnGreeting` + the difficulty's
+ * send-off instead of the first-meeting scene, and only once the run is live.
+ */
+function maybeGreetReturn(state: GameState, merchant: Merchant): void {
+  if (merchant.greetedReturn || state.phase !== "playing") return;
+  if (distance(state.player.pos, merchant.pos) > MERCHANT.discoverRadius)
+    return;
+  if (!lineOfSight(state, state.player.pos, merchant.pos)) return;
+  merchant.greetedReturn = true;
+  merchant.faceLeft = state.player.pos.x < merchant.pos.x;
+  state.dialogue = {
+    source: {
+      kind: "merchant",
+      levelId: state.level.id,
+      returning: true,
+      difficulty: state.difficulty,
+    },
+    page: 0,
+  };
+  state.phase = "dialogue";
+  state.events.push({
+    type: "dialogueStarted",
+    speaker: merchantName(state.level.id),
+  });
+}
+
+/**
+ * Mend the hero's WHOLE kit for coins at the counter — the worn weapon and
+ * armor plus every breakable piece in the bag, each priced by `repairAllCost`
+ * (dearer for high required level, rarer tier, finer make). Only with the shop
+ * open; refused when nothing needs mending or the purse is short. Returns the
+ * coins paid, else null (so the app can ignore a dud tap).
+ */
+export function repairGear(state: GameState): number | null {
+  if (state.phase !== "shop") return null;
+  const cost = repairAllCost(state);
+  if (cost <= 0) return null; // nothing to mend
+  if (state.player.coins < cost) return null; // can't afford it
+  repairAll(state);
+  state.player.coins -= cost;
+  state.events.push({ type: "gearRepaired", paid: cost });
+  return cost;
 }
 
 /**

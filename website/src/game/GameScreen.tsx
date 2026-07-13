@@ -162,7 +162,9 @@ import {
   campaignTally,
   clearedLevelsFor,
   hasClearedLevel,
+  hasMetMerchant,
   hasSeenOpening,
+  markMerchantMet,
   markStorySeen,
   nextLevelId,
   recordDeath,
@@ -719,6 +721,9 @@ export function GameScreen({
             // Campaign progress the engine gates drops on (the bunker key
             // stays latent until Eastworld is cleared on this difficulty).
             clearedLevelsFor(characterRef.current, difficulty),
+            // Met the trader here before? He's set up at the door from the
+            // start, so a restart-after-death can walk over and repair.
+            hasMetMerchant(characterRef.current, runLevelId, difficulty),
           ));
     // A run started from scratch (not resumed from the menu, not adopted from a
     // checkpoint that already froze it): capture the combat-start checkpoint
@@ -1943,6 +1948,17 @@ export function GameScreen({
           // has one) takes the stage through the ordinary dialogue overlay.
           if (event.type === "merchantDiscovered") {
             pushPickup("MERCHANT DISCOVERED", "#ffd75e");
+            // Remember the meeting per map+difficulty so he's set up at the
+            // door on every later entry (repair-after-death within reach).
+            characterRef.current = markMerchantMet(
+              characterRef.current,
+              runLevelId,
+              difficulty,
+            );
+          }
+          // Paid the trader to mend the whole kit — toast the spend.
+          if (event.type === "gearRepaired") {
+            pushPickup(`REPAIRED - ${event.paid} COIN`, "#ffd75e");
           }
           // A placed pack wiped out: toast the patch of ground as cleared —
           // the movement reward. The ambush and clear chimes ride the sfx bus.

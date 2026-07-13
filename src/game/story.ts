@@ -11,6 +11,7 @@ import { distance, type Vec2 } from "@game/lib/vec.ts";
 import { DIALOGUE, DOORS, GATES } from "./config.ts";
 import { companionDef } from "./defs/companions.ts";
 import { cutsceneDef } from "./defs/cutscenes.ts";
+import { MERCHANT_RETURN_SENDOFF } from "./defs/difficulties.ts";
 import { enemyDef } from "./defs/enemies/index.ts";
 import type { DialoguePage } from "./defs/enemies/types.ts";
 import { levelDef } from "./defs/levels/index.ts";
@@ -109,10 +110,23 @@ export function dialogueContent(dialogue: DialogueState): {
   // persona — look, name, and his own story for setting up shop here.
   if (dialogue.source.kind === "merchant") {
     const def = levelDef(dialogue.source.levelId).merchant;
+    // A RETURN visit (met here before, set up at the door) plays the shorter
+    // "welcome back" — the per-level line plus the difficulty's send-off — in
+    // place of the first-meeting scene.
+    const pages =
+      dialogue.source.returning && dialogue.source.difficulty
+        ? [
+            [
+              ...(def?.returnGreeting ?? ["GOOD TO SEE YOU AGAIN."]),
+              MERCHANT_RETURN_SENDOFF[dialogue.source.difficulty] ??
+                "GOOD LUCK OUT THERE.",
+            ],
+          ]
+        : (def?.greeting ?? []);
     return {
       speaker: def?.name ?? "THE MERCHANT",
       portrait: def?.sprite ?? "merchant",
-      ...soloPages(def?.greeting ?? []),
+      ...soloPages(pages),
     };
   }
   const def = storyItemDef(dialogue.source.defId);

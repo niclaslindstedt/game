@@ -16,10 +16,14 @@ import {
   dialogueContent,
   dismissIntro,
   ECONOMY,
+  equipmentMaxDurability,
   extractLoadout,
   HELD_ITEMS,
   MERCHANT,
   openShop,
+  repairAllCost,
+  repairCost,
+  repairGear,
   sellItem,
   sellValue,
   skipCutscene,
@@ -349,5 +353,130 @@ describe("the purse", () => {
     const legacy = startGame(44);
     applyLoadout(legacy, loadout);
     expect(legacy.player.coins).toBe(0);
+  });
+});
+
+describe("repair", () => {
+  /** A breakable weapon instance worn down to almost nothing. */
+  const worn = (tier: Tier = "regular"): Equipment => ({
+    ...piece("test_pipe", tier, 5),
+    id: 7,
+    durability: 1,
+  });
+
+  it("costs nothing for a whole or unbreakable piece, more for rarer gear", () => {
+    const max = equipmentMaxDurability(worn());
+    expect(repairCost({ ...worn(), durability: max })).toBe(0); // already whole
+    expect(repairCost(piece("test_pipe", "regular", 5))).toBe(0); // unbreakable
+    // A worn piece costs coins — and a rarer one costs MORE to keep whole.
+    expect(repairCost(worn("regular"))).toBeGreaterThan(0);
+    expect(repairCost(worn("rare"))).toBeGreaterThan(
+      repairCost(worn("regular")),
+    );
+  });
+
+  it("mends the whole kit at the counter, charging the quote and chiming", () => {
+    const state = startGame();
+    meet(state);
+    state.player.pos = { ...state.merchant.pos };
+    state.player.inventory[0] = worn();
+    state.player.coins = 100_000;
+    openShop(state);
+    const quote = repairAllCost(state);
+    expect(quote).toBeGreaterThan(0);
+    const before = state.player.coins;
+    const paid = repairGear(state);
+    expect(paid).toBe(quote);
+    expect(state.player.coins).toBe(before - quote);
+    expect(state.player.inventory[0]?.durability).toBe(
+      equipmentMaxDurability(worn()),
+    );
+    expect(state.events).toContainEqual(
+      expect.objectContaining({ type: "gearRepaired", paid: quote }),
+    );
+    // Nothing left to mend — a second repair is a no-op.
+    expect(repairGear(state)).toBeNull();
+  });
+
+  it("refuses with the shop shut or the purse short — kit untouched", () => {
+    const state = startGame();
+    meet(state);
+    state.player.pos = { ...state.merchant.pos };
+    state.player.inventory[0] = worn();
+    // Shop shut.
+    expect(repairGear(state)).toBeNull();
+    // Open, but broke.
+    state.player.coins = 0;
+    openShop(state);
+    expect(repairAllCost(state)).toBeGreaterThan(0);
+    expect(repairGear(state)).toBeNull();
+    expect(state.player.inventory[0]?.durability).toBe(1); // untouched
+  });
+});
+
+describe("return visit — met here before", () => {
+  /** Build a run where the hero has ALREADY met this level's merchant. */
+  const revisit = (difficulty: "easy" | "jesus" = "easy"): GameState =>
+    createGame(
+      42,
+      "test_merchant_level",
+      difficulty,
+      undefined,
+      false,
+      [],
+      true,
+    );
+
+  it("sets the trader up at the door: revealed, stocked, ungreeted, near spawn", () => {
+    const state = revisit();
+    expect(state.merchant.discovered).toBe(true);
+    expect(state.merchant.stock.length).toBeGreaterThan(0);
+    expect(state.merchant.greetedReturn).toBe(false);
+    expect(state.mapMarkers).toContainEqual(
+      expect.objectContaining({ kind: "merchant" }),
+    );
+    // Reachable at once — not flung to the far minSpawnDistance.
+    expect(dist(state.merchant.pos, state.playerSpawn)).toBeLessThan(
+      MERCHANT.minSpawnDistance,
+    );
+  });
+
+  /** Dismiss any opening and walk the hero up to the revealed merchant. */
+  const walkUp = (state: GameState): void => {
+    skipCutscene(state);
+    dismissIntro(state);
+    clearStage(state);
+    state.obstacles = [];
+    state.player.pos = {
+      x: state.merchant.pos.x + MERCHANT.tradeRadius / 2,
+      y: state.merchant.pos.y,
+    };
+    run(state, idle, 1);
+  };
+
+  it("gives the welcome-back line on approach: warmth + difficulty send-off", () => {
+    const state = revisit("easy");
+    walkUp(state);
+    expect(state.phase).toBe("dialogue");
+    const content = dialogueContent(state.dialogue!);
+    // One page — the per-level welcome plus the difficulty's send-off line.
+    expect(content.pages).toHaveLength(1);
+    expect(content.pages[0]).toContain("TEST WELCOME BACK.");
+    expect(content.pages[0]).toHaveLength(2);
+    expect(state.merchant.greetedReturn).toBe(true);
+    // Delivered once — no second scene on the next approach.
+    advanceDialogue(state);
+    run(state, idle, 1);
+    expect(state.phase).not.toBe("dialogue");
+  });
+
+  it("varies the send-off by difficulty", () => {
+    const easy = revisit("easy");
+    walkUp(easy);
+    const jesus = revisit("jesus");
+    walkUp(jesus);
+    expect(dialogueContent(easy.dialogue!).pages[0]).not.toEqual(
+      dialogueContent(jesus.dialogue!).pages[0],
+    );
   });
 });

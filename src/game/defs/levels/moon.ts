@@ -58,6 +58,7 @@ export const MOON: LevelDef = {
         "SELL ME SCRAP. BUY WHAT WORKS.",
       ],
     ],
+    returnGreeting: ["STILL BREATHING, I SEE.", "GOOD - MY ONLY CUSTOMER."],
   },
   playerSpawn: { x: 340, y: 1320 },
   landmarks: [

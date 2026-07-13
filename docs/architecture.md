@@ -436,8 +436,17 @@ run against synthetic fixtures with no shipped content (see
   toggle the `shop` pause phase (proximity-gated); `sellItem`/`buyStock`
   are the UI's trade mutators, and `sellValue` is the one valuation every
   price tag reads — item level × tier orders of magnitude × material
-  (metal ×2, precious ×4, from the equipment defs). Coins live on the
-  player and ride the loadout between levels.
+  (metal ×2, precious ×4, from the equipment defs). `repairGear` mends the
+  whole kit (worn weapon + armor + every breakable bag piece, via
+  `repairAll`/`repairAllCost` in items.ts) for coins, priced up by each
+  piece's required level, rarity, and make (config `ECONOMY.repair`). Coins
+  live on the player and ride the loadout between levels. Once the hero has
+  MET a map's trader (persisted per level+difficulty in the character's
+  `merchantsMet`, fed back through `createGame`'s `merchantDiscovered`),
+  `revealMerchant` sets him up at the door from the first tick of every later
+  visit — so a death-and-restart reaches the counter to repair — and he gives
+  a per-level + per-difficulty "welcome back" line on approach
+  (`LevelDef.merchant.returnGreeting` + `MERCHANT_RETURN_SENDOFF`).
 - **`src/game/items.ts`** — equipment instances and the player-driven
   mutations the UI calls into: loot rolls, `equipFromInventory` /
   `unequipToInventory` / `moveInventoryItem`, the one-tap bag tools

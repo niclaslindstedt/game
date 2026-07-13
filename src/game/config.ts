@@ -2114,6 +2114,40 @@ export const ECONOMY = {
   /** A stall powerup's price: base + perLevel × the hero's level. */
   abilityBase: 40,
   abilityPerLevel: 12,
+  /**
+   * REPAIR pricing at the merchant (see items.ts `repairCost`): mending one
+   * worn piece to full costs `(base + perReqLevel × the piece's required level)
+   * × the rarity multiplier × its make quality × the fraction of durability
+   * missing`. So higher required level, rarer tier, and finer make all cost
+   * more to keep whole — but the rarity ladder here is GENTLE (single digits),
+   * NOT the sell-value ladder's orders of magnitude, so repairing rare gear
+   * stays affordable against the coins selling brings in.
+   */
+  repair: {
+    /** Coins to fully mend a worn-out REGULAR piece at required level 1. */
+    base: 3,
+    /** Extra coins per point of the piece's required level. */
+    perReqLevel: 2,
+    /** Rarity multiplier — dearer gear costs more to keep whole. */
+    tierMult: {
+      trash: 0.5,
+      regular: 1,
+      magic: 2,
+      rare: 4,
+      unique: 8,
+      legendary: 12,
+      artifact: 16,
+    } as Record<
+      | "trash"
+      | "regular"
+      | "magic"
+      | "rare"
+      | "unique"
+      | "legendary"
+      | "artifact",
+      number
+    >,
+  },
 } as const;
 
 /** The level map and its fog of war (see map.ts). */
