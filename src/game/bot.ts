@@ -51,6 +51,12 @@ const THREAT_RADIUS = 320;
 /** A foe this close is about to bite — hop to dodge its blow (airborne is
  * untouchable above JUMP.dodgeHeight, see step.ts). */
 const CONTACT_DODGE_RADIUS = 46;
+/** The standoff the survivor HOLDS from the nearest body — just beyond a foe's
+ * ~34px grasp. He hugs the pack's edge at this range (not fleeing to the far
+ * corner), so the auto-weapon keeps mowing the front line while he stays out of
+ * reach. A melee loadout can't reach this far, so it holds at its own range
+ * instead and leans on the jump-dodge. */
+const GRASP_STANDOFF = 72;
 /** Enemies within this ring count toward being SURROUNDED. */
 const SURROUND_RADIUS = 150;
 /** This many foes packed inside SURROUND_RADIUS = punch out through the gap. */
@@ -207,12 +213,14 @@ function pushBoss(state: GameState, jumpTravel = false): GameInput {
  *   2. Bleeding or hemmed in (low HP, or a pack pressing close) → BREAK CONTACT:
  *      punch down the openest lane out of the crowd while HOPPING the whole way,
  *      so the untouchable airborne frames carry him clean over the bodies.
- *   3. Otherwise KITE: sit at the weapon's own reach from the nearest foe so
- *      the auto-weapon keeps firing while the hero backpedals — melee fights
- *      close, a ranged loadout holds far — and hop when a body crowds in.
- * Advancing on the boss is folded into the kite: when the field near the hero is
- * thin he drifts toward the objective, so he clears without ever standing still
- * in the flood.
+ *   3. Otherwise HUG THE PACK'S EDGE: hold just outside the nearest body's grasp
+ *      so the auto-weapon mows the front line while he stays out of reach —
+ *      orbiting the edge, backing off exactly as the pack closes, NOT fleeing to
+ *      the far corner (a ranged loadout holds at the grasp standoff; a melee one
+ *      holds at its own range and leans on the hop).
+ * Advancing on the boss is folded into the edge-hug: when the field near the
+ * hero is thin he drifts toward the objective, so he clears without ever
+ * standing still in the flood.
  */
 function survive(state: GameState): GameInput {
   const player = state.player;
@@ -231,16 +239,20 @@ function survive(state: GameState): GameInput {
   const nearest = near[0]!; // threatsWithin returns nearest-first
   const nearestD = distance(player.pos, nearest.pos);
 
-  // 2. Emergency: low on HP, or a tight pack around him → punch out the gap,
-  //    HOPPING THE WHOLE WAY. Every airborne frame above JUMP.dodgeHeight is
-  //    untouchable, so continuous jumps carry the hero clean OVER the bodies
-  //    between him and open ground — the desperate escape a cornered player
-  //    spams. Re-jump the instant he lands (grounded), never waiting to be hit.
+  // 2. Emergency — only when there's no clean way to just back off: low on HP,
+  //    or ENCIRCLED (a tight pack AND the retreat lane behind him is blocked, so
+  //    edge-hugging can't open the gap). Then punch out, HOPPING THE WHOLE WAY:
+  //    every airborne frame above JUMP.dodgeHeight is untouchable, so continuous
+  //    jumps carry the hero clean OVER the bodies to open ground. A dense pack
+  //    on ONE side isn't an emergency — that's the edge he hugs (step 3).
   const packed = near.filter(
     (e) => distance(e.pos, player.pos) < SURROUND_RADIUS,
   );
   const lowHp = player.hp < player.maxHp * FLEE_HP_FRAC;
-  if (lowHp || packed.length >= SURROUND_COUNT) {
+  if (
+    lowHp ||
+    (packed.length >= SURROUND_COUNT && isEncircled(state, packed))
+  ) {
     // A medkit within reach is worth the detour when we're bleeding.
     if (lowHp) {
       const item = nearestItem(state);
@@ -255,16 +267,62 @@ function survive(state: GameState): GameInput {
     return steer(state, bestEscapeTarget(state, near), grounded);
   }
 
-  // 3. Kite the nearest at the weapon's reach — close enough to keep firing,
-  //    far enough to keep backpedaling. Bias the hold toward the boss when the
-  //    local field is thin so the hero still advances to clear the map. Hop when
-  //    a body presses into range or the crowd thickens, to shed the blow.
+  // 3. HUG THE PACK'S EDGE. Stay just outside the nearest body's grasp so the
+  //    auto-weapon mows the front line while the hero keeps out of reach —
+  //    orbiting the edge, backing off toward the OPEN side (away from the pack's
+  //    mass), not fleeing to the far corner. `away` points away from the local
+  //    pack, closeness-weighted so the nearest bodies set the bearing and a gap
+  //    in the ring pulls him toward it. Pressed (a foe inside the standoff) →
+  //    give ground hard; safe on the edge → drift out just enough to hold the
+  //    gap; field thin → close on the boss to finish the map. A melee loadout
+  //    can't reach the grasp standoff, so it holds at its own range and leans on
+  //    the hop; hop when a body presses in or the crowd thickens.
   const range = weaponDef(player.equipment.weapon.defId).range;
-  const anchor =
-    packed.length <= 1 ? (bossPos(state) ?? nearest.pos) : nearest.pos;
+  const standoff =
+    range >= GRASP_STANDOFF ? GRASP_STANDOFF : Math.max(40, range * 0.9);
+  const away = awayFromPack(state, near);
   const hop =
     grounded && (nearestD < CONTACT_DODGE_RADIUS || packed.length >= 3);
-  return steer(state, holdOff(state, anchor, Math.max(48, range * 0.85)), hop);
+  if (nearestD < standoff) {
+    // Pressed into grasp → give ground toward the open side, fast.
+    return steer(
+      state,
+      { x: player.pos.x + away.x * 150, y: player.pos.y + away.y * 150 },
+      hop,
+    );
+  }
+  if (packed.length <= 1) {
+    // Field near him is thin → close on the boss to actually clear the map.
+    return steer(
+      state,
+      holdOff(state, bossPos(state) ?? nearest.pos, standoff),
+      hop,
+    );
+  }
+  // Safe on the edge → drift out a touch to keep the gap open as the pack chases.
+  return steer(
+    state,
+    { x: player.pos.x + away.x * 40, y: player.pos.y + away.y * 40 },
+    hop,
+  );
+}
+
+/** A unit vector pointing away from the local pack, weighted so the NEAREST
+ * bodies dominate the bearing (and a gap in a ring pulls the hero toward it). */
+function awayFromPack(state: GameState, near: Enemy[]): Vec2 {
+  const pos = state.player.pos;
+  let ax = 0;
+  let ay = 0;
+  for (const e of near) {
+    const dx = pos.x - e.pos.x;
+    const dy = pos.y - e.pos.y;
+    const d = Math.hypot(dx, dy) || 1;
+    ax += dx / (d * d); // 1/d direction × 1/d weight = nearer foes weigh more
+    ay += dy / (d * d);
+  }
+  const m = Math.hypot(ax, ay);
+  if (m < 1e-6) return { x: 1, y: 0 }; // dead-symmetric ring → any way out
+  return { x: ax / m, y: ay / m };
 }
 
 /** Non-apparition enemies within `radius`, nearest first. */
@@ -284,6 +342,31 @@ function threatsWithin(state: GameState, radius: number): Enemy[] {
 /** The current boss's position, if one is on the field. */
 function bossPos(state: GameState): Vec2 | undefined {
   return state.enemies.find((e) => enemyDef(e.defId).role === "boss")?.pos;
+}
+
+/**
+ * True when simply backing off the pack won't open a gap — foes hem the hero in
+ * on the RETREAT side too (behind the direction away from the pack's centroid),
+ * so he must punch through rather than hug the edge. A dense pack on ONE side
+ * only is NOT encircled: he can just back off along the open lane.
+ */
+function isEncircled(state: GameState, packed: Enemy[]): boolean {
+  const pos = state.player.pos;
+  const cx = packed.reduce((s, e) => s + e.pos.x, 0) / packed.length;
+  const cy = packed.reduce((s, e) => s + e.pos.y, 0) / packed.length;
+  let rx = pos.x - cx;
+  let ry = pos.y - cy;
+  const rd = Math.hypot(rx, ry);
+  if (rd < 1) return true; // centroid on top of him → bodies all around
+  rx /= rd;
+  ry /= rd;
+  // A packed foe within ~60° of the retreat direction blocks the way out.
+  return packed.some((e) => {
+    const ex = e.pos.x - pos.x;
+    const ey = e.pos.y - pos.y;
+    const d = Math.hypot(ex, ey) || 1;
+    return (ex / d) * rx + (ey / d) * ry > 0.5;
+  });
 }
 
 /**
