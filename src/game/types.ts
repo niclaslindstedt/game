@@ -955,8 +955,19 @@ export type GameStats = {
   damageTaken: number;
   itemsCollected: number;
   xpGained: number;
-  /** Wall-clock ms of simulated play time. */
+  /** Wall-clock ms of simulated play time — ticks every frame, drives every
+   * timed sub-system (spawner, menace, effects). */
   timeMs: number;
+  /**
+   * The farm-proof survival clock: ms that only accrue while a fight is LIVE —
+   * at least one foe on the field, or within `RUN.combatGraceMs` of the last
+   * kill (see step.ts). A cleared field can't be loitered on for survival
+   * time, so this — not `timeMs` — is what the high-score board banks.
+   */
+  combatMs: number;
+  /** The highest menace (RAMPAGE) stage reached this run — the high-water
+   * escalation, banked to the score board (see menace.ts `menaceStage`). */
+  peakMenace: number;
 };
 
 /**
@@ -1595,6 +1606,14 @@ export type GameState = {
    * `staminaDrinkChance`).
    */
   staminaEmptyMs: number;
+  /**
+   * Ms left of the combat-clock grace window (the "combat is still live" tail).
+   * Refreshed to `RUN.combatGraceMs` on every kill and counted down each
+   * playing tick; while it — or a live foe — stands, `stats.combatMs` accrues.
+   * Starts at 0, so a run that opens on an empty field banks no survival time
+   * until the first foe appears.
+   */
+  combatGraceMs: number;
   /** Counts down once the objective clears; the level ends at 0. */
   victoryCountdownMs: number | null;
   /**

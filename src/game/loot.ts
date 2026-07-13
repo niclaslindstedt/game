@@ -15,6 +15,7 @@ import {
   MENACE,
   MERCY,
   RARE_MOBS,
+  RUN,
   STATS,
   UNIQUE,
   WORLD_DROP,
@@ -559,6 +560,10 @@ export function killEnemy(
   if (index >= 0) state.enemies.splice(index, 1);
 
   state.stats.kills++;
+  // Refresh the combat-clock tail: this kill proves a fight is live, so the
+  // farm-proof survival clock keeps ticking for RUN.combatGraceMs even if this
+  // was the last foe standing (see step.ts).
+  state.combatGraceMs = RUN.combatGraceMs;
   // A powerup kill (nuke/orbs/storm) counts for the run but not for the menace
   // kill-rate heat — step() nets it out of what tickMenace reads.
   if (opts?.noMenace) state.menaceExemptKills++;

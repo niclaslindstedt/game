@@ -1965,6 +1965,11 @@ export const RUN = {
   /** Grace period between clearing the objective and the victory splash —
    * time enough to scoop up what the boss dropped. */
   victoryDelayMs: 5000,
+  /** How long the farm-proof survival clock (`stats.combatMs`) keeps ticking
+   * after a kill once the field is otherwise clear — the "combat is still
+   * live" tail. A cleared field with no fresh kill inside this window stops
+   * the clock, so survival time can't be milked by loitering (see step.ts). */
+  combatGraceMs: 2000,
 } as const;
 
 /**

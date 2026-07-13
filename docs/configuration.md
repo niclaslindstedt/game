@@ -105,13 +105,19 @@ dies is retired for good (kept in the roster as fallen, never played again), and
 its death splash offers only MENU. A softcore death costs no progress — the
 run's build is banked on death just as on victory, so the hero keeps the levels,
 stats and items earned it and can RETRY the level (from that kept build) or exit
-to MENU; only the level-clear bookmarks wait for an actual victory. Every
-finished run is banked per difficulty under `<storagePrefix>:highscores` with
-its survival time, kills, player level reached, and a full end-of-run session
-snapshot (`website/src/game/highscores.ts`); the end-of-run screen shows that
-difficulty's best survival time, and the menu's HIGH SCORES board ranks the
-runs four ways (survival time, kills-per-minute, mobs killed, level reached) and
-opens any banked run into a full-session detail card. Cutscenes
+to MENU; only the level-clear bookmarks wait for an actual victory. High scores
+are a **hardcore-only, whole-campaign** affair: a hardcore hero's foes felled,
+survival time and highest menace stage are summed across every map of a
+difficulty's campaign and banked per difficulty under
+`<storagePrefix>:campaign-scores` (`website/src/game/highscores.ts`) when the
+campaign is beaten (**SURVIVED**) or the hero falls partway through it
+(**FELL**, its totals including the fatal run). Softcore heroes never score.
+Survival time is the **combat clock** (`stats.combatMs`), which only ticks while
+a fight is live — a foe on the field, or within a two-second tail of the last
+kill — so a cleared field can't be milked for time (the HUD run timer shows this
+clock, not the wall clock). The menu's HIGH SCORES board ranks the campaigns
+four ways (mobs killed, survival time, kills-per-minute, peak menace) and opens
+any campaign into a full breakdown. Cutscenes
 always play at the start of a run (dismiss with the top-right SKIP button).
 An in-progress run is parked to storage too: exiting to the menu from the
 pause screen freezes the whole run under `<storagePrefix>:current-run`

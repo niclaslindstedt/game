@@ -553,10 +553,11 @@ pixelated`; enemies swap to generated wounded sprite variants as hp falls
   restarts the level, while HARDCORE is per-character permadeath — a death
   retires the hero for good, chosen at creation in `CharacterScreen.tsx`),
   `highscores.ts`
-  (per-difficulty banked runs — survival
-  time, kills, player level reached, and a full end-of-run session snapshot —
-  feeding the end-of-run best time and the menu's browsable HIGH SCORES board,
-  ranked four ways, with its per-run detail card),
+  (hardcore-only, whole-campaign high scores — foes felled, combat-clock
+  survival time and peak menace summed per difficulty across a campaign's maps
+  and banked when it is beaten (SURVIVED) or the hero falls (FELL) — feeding the
+  menu's browsable HIGH SCORES board, ranked four ways, with a per-campaign
+  breakdown),
   `achievement-totals.ts` / `achievement-defs.ts` / `achievements.ts`
   (account-wide **achievements**: pure lifetime counters fed by the engine's
   per-tick events, the badge catalog — its per-level / per-difficulty /

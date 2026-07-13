@@ -1,180 +1,151 @@
 // SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
 // The on-device high-score book (same storage policy as settings.ts /
-// progress.ts). Each finished run banks its survival time, kill count, player
-// level reached, and a full end-of-run session snapshot per difficulty; the
-// menu's HIGH SCORES board ranks them four ways — longest survived, highest
-// kills-per-minute, most mobs killed, and highest level reached — lets a row be
-// opened to reveal that whole session, and the end-of-run splash still reads the
-// single best survival time for the difficulty just played.
+// progress.ts). High scores are a HARDCORE-only affair and span a whole
+// CAMPAIGN, not a single level: a hardcore hero's foes felled, combat-clock
+// survival time, and highest menace (RAMPAGE) stage are summed across every
+// map of a difficulty's campaign and banked as one entry when that campaign is
+// beaten (SURVIVED) or the hero falls partway through it (FELL). The menu's
+// HIGH SCORES board ranks those campaigns per difficulty four ways — most mobs
+// killed, longest survived, highest kills-per-minute, and highest menace
+// reached — and a row opens to reveal that campaign's full breakdown.
+//
+// Softcore heroes never score: death costs them nothing, so a survival-time or
+// kill leaderboard would be meaningless for them. The app only ever calls
+// `recordCampaign` for hardcore characters (see GameScreen).
 
-import { type Difficulty, type GameStats } from "@game/core";
+import { type Difficulty } from "@game/core";
 
 import { storageKey } from "../identity.ts";
 
-const STORAGE_KEY = storageKey("highscores");
+// A distinct key from the pre-campaign per-run book: that store held a wholly
+// different shape (per-run entries for every difficulty, softcore included), so
+// it is left behind rather than migrated — the two can't be reconciled.
+const STORAGE_KEY = storageKey("campaign-scores");
 
-/** How many runs to keep per difficulty, per ranking — enough to fill the
+/** How many campaigns to keep per difficulty, per ranking — enough to fill the
  * board without letting the store grow without bound. */
 const KEEP_PER_METRIC = 10;
 
+/** How a banked campaign ended. */
+export type CampaignOutcome = "survived" | "fell";
+
 /**
- * The full end-of-run session banked alongside a ranked run, so a board entry
- * can be opened to reveal the whole story — a big kill count is far less
- * impressive next to a huge shots-fired or damage-taken tally. Optional: the
- * bare-time legacy format and pre-feature entries predate it, so any consumer
- * must treat it as possibly absent.
+ * One banked hardcore campaign: the totals summed across the maps the hero
+ * cleared on one difficulty, plus how the campaign ended. A `survived` campaign
+ * beat the difficulty's last level; a `fell` one ended in a hardcore death
+ * partway through (its totals include the fatal, uncleared run).
  */
-export type ScoreDetail = {
-  /** The complete session stats snapshot at the moment the run ended. */
-  stats: GameStats;
-  /** Player level reached when the run ended. */
-  level: number;
-  /** Which level was played (id — resolve to a name via `levelDef`). */
-  levelId: string;
-  /** How the run ended. */
-  outcome: "victory" | "defeat";
-  /** Epoch ms when the run was banked (for the detail view's date line). */
+export type CampaignScore = {
+  /** The hero's name, for the board row. */
+  name: string;
+  /** Total foes felled across the campaign. */
+  kills: number;
+  /** Combat-clock survival time (ms) summed across the campaign. */
+  combatMs: number;
+  /** Highest menace (RAMPAGE) stage reached anywhere in the campaign. */
+  peakMenace: number;
+  /** Levels CLEARED in the campaign (the fatal run's level isn't counted). */
+  levels: number;
+  /** How the campaign ended. */
+  outcome: CampaignOutcome;
+  /** The level the hero fell on — present only for a `fell` campaign. */
+  levelId?: string;
+  /** Epoch ms when the campaign was banked (for the detail view's date line). */
   at: number;
 };
 
-/** One banked run: how long it lasted, how many foes it felled, the player
- * level it reached, and — for runs banked since the detail feature — the full
- * session behind those headline numbers. `level` is optional: runs banked
- * before it was ranked carry it only inside `detail` (or not at all). */
-export type ScoreEntry = {
-  timeMs: number;
-  kills: number;
-  level?: number;
-  detail?: ScoreDetail;
-};
+/** A board row: a campaign with its kills-per-minute precomputed. */
+export type CampaignRow = CampaignScore & { kpm: number };
 
-/** A board row: an entry with its kills-per-minute and resolved player level
- * precomputed (level falls back to the detail snapshot, then 0). */
-export type ScoreRow = ScoreEntry & { kpm: number; level: number };
+/** The four ways the board ranks campaigns. */
+export type ScoreMetric = "kills" | "time" | "kpm" | "menace";
 
-/** The four ways the board ranks runs. */
-export type ScoreMetric = "time" | "kpm" | "kills" | "level";
+/** Banked campaigns keyed by difficulty id; a missing key = no run yet. */
+type CampaignScores = Record<string, CampaignScore[]>;
 
-/** Banked runs keyed by difficulty id; a missing key = no run yet. */
-type HighScores = Record<string, ScoreEntry[]>;
-
-/** Kills per minute for a run — 0 for a zero-length run (avoids /0). */
-function killsPerMinute(entry: ScoreEntry): number {
-  if (entry.timeMs <= 0) return 0;
-  return entry.kills / (entry.timeMs / 60_000);
+/** Kills per minute for a campaign — 0 for a zero-length one (avoids /0). */
+function killsPerMinute(score: CampaignScore): number {
+  if (score.combatMs <= 0) return 0;
+  return score.kills / (score.combatMs / 60_000);
 }
 
-/** The player level a run reached: the top-level field when present, else the
- * detail snapshot's, else 0 (legacy/detail-less runs rank last on level). */
-function entryLevel(entry: ScoreEntry): number {
-  return entry.level ?? entry.detail?.level ?? 0;
-}
-
-/** Keep only the runs worth ranking: the top KEEP_PER_METRIC by each metric,
- * unioned — so a great sprint (high KPM) survives next to a long grind (high
- * time), a slaughter (most kills), or a deep dive (highest level) even though
- * none tops another's list. */
-function trim(list: ScoreEntry[]): ScoreEntry[] {
-  const byTime = [...list].sort((a, b) => b.timeMs - a.timeMs);
-  const byKpm = [...list].sort((a, b) => killsPerMinute(b) - killsPerMinute(a));
+/** Keep only the campaigns worth ranking: the top KEEP_PER_METRIC by each
+ * metric, unioned — so a slaughter (most kills), a long survival, a frantic
+ * sprint (high KPM), and a deep evolution (peak menace) each keep their best
+ * even though none tops another's list. */
+function trim(list: CampaignScore[]): CampaignScore[] {
   const byKills = [...list].sort((a, b) => b.kills - a.kills);
-  const byLevel = [...list].sort((a, b) => entryLevel(b) - entryLevel(a));
-  const kept = new Set<ScoreEntry>([
+  const byTime = [...list].sort((a, b) => b.combatMs - a.combatMs);
+  const byKpm = [...list].sort((a, b) => killsPerMinute(b) - killsPerMinute(a));
+  const byMenace = [...list].sort((a, b) => b.peakMenace - a.peakMenace);
+  const kept = new Set<CampaignScore>([
+    ...byKills.slice(0, KEEP_PER_METRIC),
     ...byTime.slice(0, KEEP_PER_METRIC),
     ...byKpm.slice(0, KEEP_PER_METRIC),
-    ...byKills.slice(0, KEEP_PER_METRIC),
-    ...byLevel.slice(0, KEEP_PER_METRIC),
+    ...byMenace.slice(0, KEEP_PER_METRIC),
   ]);
   return [...kept];
 }
 
-/** The numeric fields every `GameStats` snapshot must carry — a stored detail
- * that is missing or malforms any of them is dropped rather than trusted. */
-const STAT_KEYS: (keyof GameStats)[] = [
-  "kills",
-  "totalEnemies",
-  "shotsFired",
-  "damageDealt",
-  "damageTaken",
-  "itemsCollected",
-  "xpGained",
-  "timeMs",
-];
-
-function isStats(value: unknown): value is GameStats {
-  if (!value || typeof value !== "object") return false;
-  const stats = value as Record<string, unknown>;
-  return STAT_KEYS.every(
-    (key) => typeof stats[key] === "number" && Number.isFinite(stats[key]),
-  );
+/** A finite, non-negative number, or the fallback when absent/bad. */
+function cleanNum(value: unknown, fallback = 0): number {
+  return typeof value === "number" && Number.isFinite(value) && value >= 0
+    ? value
+    : fallback;
 }
 
-function isDetail(value: unknown): value is ScoreDetail {
+function isCampaignScore(value: unknown): value is CampaignScore {
   if (!value || typeof value !== "object") return false;
-  const { stats, level, levelId, outcome, at } = value as Record<
-    string,
-    unknown
-  >;
+  const { name, kills, combatMs, peakMenace, levels, outcome, at } =
+    value as Record<string, unknown>;
   return (
-    isStats(stats) &&
-    typeof level === "number" &&
-    Number.isFinite(level) &&
-    typeof levelId === "string" &&
-    (outcome === "victory" || outcome === "defeat") &&
+    typeof name === "string" &&
+    typeof kills === "number" &&
+    Number.isFinite(kills) &&
+    kills >= 0 &&
+    typeof combatMs === "number" &&
+    Number.isFinite(combatMs) &&
+    combatMs >= 0 &&
+    typeof peakMenace === "number" &&
+    Number.isFinite(peakMenace) &&
+    peakMenace >= 0 &&
+    typeof levels === "number" &&
+    Number.isFinite(levels) &&
+    levels >= 0 &&
+    (outcome === "survived" || outcome === "fell") &&
     typeof at === "number" &&
     Number.isFinite(at)
   );
 }
 
-/** A trusted, finite, non-negative player level, or undefined if absent/bad. */
-function cleanLevel(value: unknown): number | undefined {
-  return typeof value === "number" && Number.isFinite(value) && value >= 0
-    ? value
-    : undefined;
-}
-
-function isEntry(value: unknown): value is ScoreEntry {
-  if (!value || typeof value !== "object") return false;
-  const { timeMs, kills } = value as Record<string, unknown>;
-  return (
-    typeof timeMs === "number" &&
-    Number.isFinite(timeMs) &&
-    timeMs >= 0 &&
-    typeof kills === "number" &&
-    Number.isFinite(kills) &&
-    kills >= 0
-  );
-}
-
-/** Reduce an entry to just its trusted fields: the ranking numbers, the level
- * when it validates, plus the detail blob only when it fully validates (a
- * partial/corrupt detail is discarded, leaving the run itself intact). */
-function sanitize(entry: ScoreEntry): ScoreEntry {
-  const clean: ScoreEntry = { timeMs: entry.timeMs, kills: entry.kills };
-  const level = cleanLevel(entry.level);
-  if (level !== undefined) clean.level = level;
-  if (isDetail(entry.detail)) clean.detail = entry.detail;
+/** Reduce a banked campaign to just its trusted fields. */
+function sanitize(score: CampaignScore): CampaignScore {
+  const clean: CampaignScore = {
+    name: score.name,
+    kills: cleanNum(score.kills),
+    combatMs: cleanNum(score.combatMs),
+    peakMenace: cleanNum(score.peakMenace),
+    levels: cleanNum(score.levels),
+    outcome: score.outcome,
+    at: cleanNum(score.at),
+  };
+  if (typeof score.levelId === "string") clean.levelId = score.levelId;
   return clean;
 }
 
-function load(): HighScores {
+function load(): CampaignScores {
   try {
     const raw = window.localStorage.getItem(STORAGE_KEY);
     if (!raw) return {};
     const parsed: unknown = JSON.parse(raw);
     if (!parsed || typeof parsed !== "object") return {};
-    const out: HighScores = {};
+    const out: CampaignScores = {};
     for (const [id, value] of Object.entries(
       parsed as Record<string, unknown>,
     )) {
-      // Legacy format: a bare best-time number per difficulty. Preserve it as
-      // a single kill-less run so old records still show on the board.
-      if (typeof value === "number" && Number.isFinite(value) && value > 0) {
-        out[id] = [{ timeMs: value, kills: 0 }];
-      } else if (Array.isArray(value)) {
-        const entries = value.filter(isEntry).map(sanitize);
-        if (entries.length) out[id] = trim(entries);
-      }
+      if (!Array.isArray(value)) continue;
+      const entries = value.filter(isCampaignScore).map(sanitize);
+      if (entries.length) out[id] = trim(entries);
     }
     return out;
   } catch {
@@ -182,7 +153,7 @@ function load(): HighScores {
   }
 }
 
-const scores: HighScores = load();
+const scores: CampaignScores = load();
 
 function persist(): void {
   try {
@@ -192,60 +163,64 @@ function persist(): void {
   }
 }
 
-/** The best survival time (ms) recorded on this difficulty, or 0 if none. */
-export function bestTime(difficulty: Difficulty): number {
+/** The most foes felled in any banked campaign on this difficulty, or 0. */
+export function bestKills(difficulty: Difficulty): number {
   return (scores[difficulty] ?? []).reduce(
-    (best, entry) => Math.max(best, entry.timeMs),
+    (best, score) => Math.max(best, score.kills),
     0,
   );
 }
 
 /**
- * Bank a finished run. Returns true when it beats the previous best survival
- * time for that difficulty (a new record) — the end-of-run splash flags it.
+ * Bank a finished hardcore campaign. Returns true when its kill total beats the
+ * previous best for that difficulty (a new record) — the end-of-run splash
+ * flags it. A campaign with no cleared level and no kills is ignored.
  */
-export function recordRun(difficulty: Difficulty, run: ScoreEntry): boolean {
-  if (!Number.isFinite(run.timeMs) || run.timeMs <= 0) return false;
-  const kills = Number.isFinite(run.kills) ? Math.max(0, run.kills) : 0;
-  const record = run.timeMs > bestTime(difficulty);
-  const entry: ScoreEntry = { timeMs: run.timeMs, kills };
-  const level = cleanLevel(run.level);
-  if (level !== undefined) entry.level = level;
-  if (isDetail(run.detail)) entry.detail = run.detail;
+export function recordCampaign(
+  difficulty: Difficulty,
+  score: CampaignScore,
+): boolean {
+  const kills = cleanNum(score.kills);
+  const levels = cleanNum(score.levels);
+  if (kills <= 0 && levels <= 0) return false;
+  const record = kills > bestKills(difficulty);
   const list = scores[difficulty] ?? [];
-  scores[difficulty] = trim([...list, entry]);
+  scores[difficulty] = trim([...list, sanitize(score)]);
   persist();
   return record;
 }
 
 /** Order two rows for a ranking metric, best first. */
-function compareRows(metric: ScoreMetric, a: ScoreRow, b: ScoreRow): number {
+function compareRows(
+  metric: ScoreMetric,
+  a: CampaignRow,
+  b: CampaignRow,
+): number {
   switch (metric) {
-    case "time":
-      return b.timeMs - a.timeMs;
-    case "kpm":
-      return b.kpm - a.kpm;
     case "kills":
       return b.kills - a.kills;
-    case "level":
-      return b.level - a.level;
+    case "time":
+      return b.combatMs - a.combatMs;
+    case "kpm":
+      return b.kpm - a.kpm;
+    case "menace":
+      return b.peakMenace - a.peakMenace;
   }
 }
 
 /**
- * The board for a difficulty, ranked by `metric` (longest survival, highest
- * kills-per-minute, most mobs killed, or highest level reached), best first and
- * capped at `limit` rows.
+ * The board for a difficulty, ranked by `metric` (most mobs killed, longest
+ * survival, highest kills-per-minute, or highest menace reached), best first
+ * and capped at `limit` rows.
  */
-export function topScores(
+export function topCampaigns(
   difficulty: Difficulty,
   metric: ScoreMetric,
   limit = 5,
-): ScoreRow[] {
-  const rows: ScoreRow[] = (scores[difficulty] ?? []).map((entry) => ({
-    ...entry,
-    kpm: killsPerMinute(entry),
-    level: entryLevel(entry),
+): CampaignRow[] {
+  const rows: CampaignRow[] = (scores[difficulty] ?? []).map((score) => ({
+    ...score,
+    kpm: killsPerMinute(score),
   }));
   rows.sort((a, b) => compareRows(metric, a, b));
   return rows.slice(0, limit);
