@@ -2175,7 +2175,11 @@ body {
   display: flex;
   flex-direction: column;
   align-items: stretch;
-  gap: 0.15rem;
+  /* A bit of breathing room between rows now that every row carries its help
+     subtitle: the two-line rows need the gap so the subtitle of one doesn't
+     crowd the label of the next. The list scrolls when it outgrows the
+     viewport, so the extra height is free. */
+  gap: 0.45rem;
   z-index: 1;
 }
 
@@ -2267,6 +2271,15 @@ body {
    keys line up in a Quake-style column down the right of the screen (label
    left, key far right). */
 .menu-item-binding {
+  margin-left: auto;
+  padding-left: 1rem;
+  text-align: right;
+}
+
+/* The value on a label-cycling settings row (MOUSE / KEYS / GEAR…): same
+   right-edge treatment as the bound key — the setting name sits at the left,
+   its value lines up down the right of the screen. */
+.menu-item-value {
   margin-left: auto;
   padding-left: 1rem;
   text-align: right;
