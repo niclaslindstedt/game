@@ -5,8 +5,20 @@
 // (ArsenalScreen), and anything else that shows an item all render through
 // `ItemIcon` + `ItemCardBody`, so a change to how a stat is worded or colored
 // lands everywhere at once and the surfaces never drift.
+//
+// Two skinned presentations wrap that body, the way the achievements shelf
+// reuses `AchievementCardBody`: `ItemCard` — the bordered, tier-glowing box the
+// inventory floats as a tooltip and the arsenal docks beside its list — and
+// `ItemCardModal` — the same box centered as a pop-up over a backdrop (the
+// arsenal's narrow-phone tap-to-inspect), dismissed by the backdrop or ESC.
 
-import type { ReactNode } from "react";
+import {
+  useEffect,
+  type CSSProperties,
+  type MouseEventHandler,
+  type Ref,
+  type ReactNode,
+} from "react";
 
 import {
   ACCURACY,
@@ -40,12 +52,22 @@ import { PixelText } from "@ui/lib/PixelText.tsx";
 import type { PixelFont } from "@ui/lib/pixel-font.ts";
 
 import { spriteDataUrl, type RelicTier, type Sprites } from "./assets.ts";
+import { synth } from "./audio.ts";
+import { playUiSound } from "./sfx/index.ts";
 import {
   AFFIX_COLORS,
   TIER_COLORS,
   TIER_LABELS,
   tierGlowClass,
 } from "./tiers.ts";
+
+/**
+ * Wrap width (rem) for the card's stat lines and long affix-built names: the
+ * `.item-card` box caps at 16rem, less its ~0.7rem side padding and 2px
+ * borders — so the longest name folds onto extra lines instead of spilling off
+ * the edge. Keep in step with `.item-card` in styles.css.
+ */
+export const ITEM_CARD_TEXT_REM = 14.3;
 
 export const STAT_LABELS: Record<StatName, string> = {
   stamina: "STAMINA",
@@ -597,5 +619,128 @@ export function ItemCardBody({
         </div>
       </div>
     </>
+  );
+}
+
+/** The shared, layout-agnostic props for a skinned item card. */
+export type ItemCardProps = {
+  font: PixelFont;
+  relicFonts?: Record<RelicTier, PixelFont>;
+  sprites: Sprites;
+  state: GameState;
+  item: Equipment;
+  /** The piece worn in the same slot, for the green/red `(+N)` deltas; null (the
+   * default) for a standalone read, as the arsenal shows — no diff hints. */
+  compareTo?: Equipment | null;
+  /** Small grey kicker above the name (e.g. "EQUIPPED"). */
+  subtitle?: string;
+};
+
+/**
+ * The item's stat card in its bordered, tier-glowing box: the shared
+ * `ItemCardBody` (icon + name + stat/affix lines) framed by the `.item-card`
+ * skin, the rarity color set inline from the tier. The inventory floats this as
+ * a tooltip (`className="item-tooltip"` + positioning `style`) and the arsenal
+ * docks it beside its list — one card, so the two never drift. `children` seats
+ * an optional trailing control (the tooltip's USE button); `cardRef` exposes the
+ * box for measuring; `onClick` lets a wrapper (the modal) stop backdrop taps.
+ */
+export function ItemCard({
+  font,
+  relicFonts,
+  sprites,
+  state,
+  item,
+  compareTo = null,
+  subtitle,
+  className,
+  style,
+  cardRef,
+  children,
+  onClick,
+}: ItemCardProps & {
+  className?: string;
+  style?: CSSProperties;
+  cardRef?: Ref<HTMLDivElement>;
+  children?: ReactNode;
+  onClick?: MouseEventHandler<HTMLDivElement>;
+}) {
+  return (
+    <div
+      ref={cardRef}
+      className={`item-card${tierGlowClass(item.tier)}${
+        className ? ` ${className}` : ""
+      }`}
+      style={{ borderColor: TIER_COLORS[item.tier], ...style }}
+      onClick={onClick}
+    >
+      <ItemCardBody
+        font={font}
+        relicFonts={relicFonts}
+        sprites={sprites}
+        state={state}
+        item={item}
+        compareTo={compareTo}
+        maxWidth={ITEM_CARD_TEXT_REM}
+        lineScale={2}
+        subtitle={subtitle}
+        icon={<ItemIcon sprites={sprites} item={item} />}
+      />
+      {children}
+    </div>
+  );
+}
+
+/**
+ * The item card as a centered modal over a dimming backdrop — the arsenal's
+ * tap-to-inspect on narrow phones (the achievements shelf's pop-up shape). The
+ * backdrop tap or ESC dismisses it; the figure swallows its own clicks so a tap
+ * ON it doesn't fall through. ESC is caught in the capture phase so it closes
+ * the card before the shelf's own ESC handler underneath.
+ *
+ * The piece's own icon rides LARGE and un-dimmed ABOVE the card: the backdrop
+ * dims the shelf behind, but the item you tapped keeps its full-size art — a
+ * nod to the tiny icon the card carries in its name row.
+ */
+export function ItemCardModal({
+  onClose,
+  ...card
+}: ItemCardProps & { onClose: () => void }) {
+  useEffect(() => {
+    const onKeyDown = (event: KeyboardEvent) => {
+      if (event.key === "Escape") {
+        event.preventDefault();
+        event.stopPropagation();
+        playUiSound(synth, "back");
+        onClose();
+      }
+    };
+    window.addEventListener("keydown", onKeyDown, true);
+    return () => window.removeEventListener("keydown", onKeyDown, true);
+  }, [onClose]);
+
+  return (
+    <div
+      className="item-card-overlay"
+      onClick={() => {
+        playUiSound(synth, "back");
+        onClose();
+      }}
+    >
+      <div
+        className="item-card-figure"
+        onClick={(event) => event.stopPropagation()}
+      >
+        <span
+          className={`inv-cell item-card-figure-icon${tierGlowClass(
+            card.item.tier,
+          )}`}
+          style={{ borderColor: TIER_COLORS[card.item.tier] }}
+        >
+          <ItemIcon sprites={card.sprites} item={card.item} />
+        </span>
+        <ItemCard {...card} />
+      </div>
+    </div>
   );
 }
