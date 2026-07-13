@@ -105,6 +105,19 @@ export type SimulateLevelOptions = {
    * shipped 1× tuning.
    */
   balance?: Partial<BalanceTuning>;
+  /**
+   * REALISTIC PACING. Without it the immortal bot farms a map for the whole
+   * `maxMinutes`, over-levelling far past where a real player — who clears a map
+   * and moves on — would be, which poisons every level-relative read
+   * (loot-vs-level, boss-level, difficulty). When true, the run instead ENDS
+   * (outcome `"cleared"`) once the hero reaches the map's INTENDED EXIT LEVEL —
+   * `LevelDef.loot.arrowCapByDifficulty[difficulty]`, the level a normal single
+   * clear leaves him at, the same yardstick the boss-level read uses — so he
+   * carries a REPRESENTATIVE level into the next map. A map with no cap for this
+   * rung is unbounded (falls through to victory/timeout). Omit/false = the
+   * farm-to-the-cap read (endgame / L99 / artifact chase).
+   */
+  realisticPacing?: boolean;
 };
 
 export type SimulateCampaignOptions = {
@@ -122,6 +135,9 @@ export type SimulateCampaignOptions = {
   /** Runtime balance multipliers applied to every run (see
    * SimulateLevelOptions.balance) — the DEVELOPER → BALANCE knobs. */
   balance?: Partial<BalanceTuning>;
+  /** Realistic pacing: end each run at the map's intended exit level so the hero
+   * carries a representative level forward (see SimulateLevelOptions). */
+  realisticPacing?: boolean;
 };
 
 // ---- Report shapes ---------------------------------------------------------------
@@ -225,7 +241,7 @@ export type LevelReport = {
   difficulty: Difficulty;
   seed: number;
   strategy: BotStrategy;
-  outcome: "victory" | "timeout";
+  outcome: "victory" | "timeout" | "cleared";
   /** Times the hero WOULD have died — booked, revived at spawn, marched on. */
   deaths: number;
   /** Simulated play time of the run, ms. */
@@ -387,6 +403,7 @@ export function runLevel(options: SimulateLevelOptions): {
     snapshotEveryMs = 60_000,
     unstick = true,
     balance,
+    realisticPacing,
   } = options;
 
   // Apply the requested balance knobs for the duration of the run, then put the
@@ -405,6 +422,7 @@ export function runLevel(options: SimulateLevelOptions): {
       dtMs,
       snapshotEveryMs,
       unstick,
+      realisticPacing,
     });
     return { report, loadout: extractLoadout(state) };
   } finally {
@@ -422,6 +440,7 @@ function playRun(args: {
   dtMs: number;
   snapshotEveryMs: number;
   unstick: boolean;
+  realisticPacing?: boolean;
 }): { report: LevelReport; state: GameState } {
   const state = createGame(
     args.seed,
@@ -582,6 +601,16 @@ function playRun(args: {
   takeSnapshot();
   let nextSnapshotMs = args.snapshotEveryMs;
 
+  // Realistic-pacing target: the level a normal single clear leaves the hero at
+  // (`intendedHeroLevel` = the map's arrowCapByDifficulty, computed above). In
+  // realistic mode the run ends `"cleared"` the moment the hero reaches it, so
+  // he carries a real-player level forward instead of farming to the cap. A map
+  // with no cap for this rung stays unbounded.
+  const pacingLevel =
+    args.realisticPacing && intendedHeroLevel !== null
+      ? intendedHeroLevel
+      : Infinity;
+
   const maxTimeMs = args.maxMinutes * 60_000;
   let outcome: LevelReport["outcome"] = "timeout";
   let phaseAdvances = 0;
@@ -726,6 +755,15 @@ function playRun(args: {
         default:
           break;
       }
+    }
+
+    // Realistic pacing: reached the level a normal clear leaves us at — a real
+    // player moves on, so end the run here (the hero carries this level forward)
+    // instead of farming the rest to the cap.
+    if (state.player.level >= pacingLevel) {
+      outcome = "cleared";
+      takeSnapshot();
+      break simulation;
     }
 
     // XP the per-map cap withheld this step: what the pre-cap grants would
@@ -969,6 +1007,7 @@ export function simulateCampaign(
     snapshotEveryMs = 60_000,
     carryLoadout = true,
     balance,
+    realisticPacing,
   } = options;
 
   const runs: LevelReport[] = [];
@@ -986,6 +1025,7 @@ export function simulateCampaign(
         dtMs,
         snapshotEveryMs,
         balance,
+        realisticPacing,
       });
       runs.push(report);
       runIndex++;

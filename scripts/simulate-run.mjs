@@ -60,8 +60,12 @@ if (flag("help")) {
   console.log(
     "usage: node scripts/simulate-run.mjs [--difficulty all|easy[,medium,…]] " +
       "[--level all|spacez_hq[,…]] [--rerun N] [--seed N] [--strategy survivor|rush|kite|boss] " +
-      "[--max-minutes N] [--fresh] [--full] [--verdict] [--balance xpGain=0.8,mobHp=1.5] " +
-      "[--compare baseline.json] [--json out.json]\n\n" +
+      "[--max-minutes N] [--fresh] [--full] [--verdict] [--farm] " +
+      "[--balance xpGain=0.8,mobHp=1.5] [--compare baseline.json] [--json out.json]\n\n" +
+      "pacing (DEFAULT realistic): each run ends when the hero reaches the map's intended\n" +
+      "                 exit level (arrowCapByDifficulty), so he carries a real-player level\n" +
+      "                 forward. --farm turns that off and farms to the cap (the endgame /\n" +
+      "                 L99 / artifact-chase read; pair with a big --max-minutes / --rerun).\n\n" +
       `--balance knobs (same ten as the DEVELOPER → BALANCE page, 0..100, 1 = shipped):\n  ${Object.keys(
         BALANCE_TUNING_DEFAULTS,
       ).join(", ")}`,
@@ -115,6 +119,13 @@ const verdict = flag("verdict");
 const balance = parseBalance(opt("balance"));
 const comparePath = opt("compare");
 const jsonPath = opt("json");
+// PACING. The DEFAULT is realistic: each run ends the moment the hero reaches
+// the map's intended exit level (its arrowCapByDifficulty), so he moves on with
+// a real-player level and every level-relative read stays trustworthy. `--farm`
+// opts OUT — the bot farms to the cap for the whole run, the endgame read (farm
+// toward L99 / full artifact gear); pair it with a big `--max-minutes`/`--rerun`
+// to farm deeper.
+const realisticPacing = !flag("farm");
 
 // ---- Run ------------------------------------------------------------------------
 
@@ -127,7 +138,10 @@ const balanceLabel = balance
 console.log(
   `Simulating ${difficulties.length} difficulty(ies) × ${levels.length} level run(s)` +
     ` — strategy=${strategy} seed=${seed} maxMinutes=${maxMinutes}` +
-    ` carry=${carryLoadout}${rerun > 1 ? ` rerun=${rerun}` : ""} · balance: ${balanceLabel}`,
+    ` carry=${carryLoadout}${rerun > 1 ? ` rerun=${rerun}` : ""} · balance: ${balanceLabel}` +
+    (realisticPacing
+      ? " · pacing: clear to the map's level & move on (realistic)"
+      : " · pacing: FARM to the cap (endgame / L99 chase — over-levels on purpose)"),
 );
 
 const report = simulateCampaign({
@@ -138,6 +152,7 @@ const report = simulateCampaign({
   maxMinutes,
   carryLoadout,
   balance,
+  realisticPacing,
 });
 
 // ---- Render ----------------------------------------------------------------------
