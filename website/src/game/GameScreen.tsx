@@ -334,6 +334,45 @@ function isHeroAttack(
   return Math.hypot(pos.x - player.x, pos.y - player.y) <= HERO_ATTACK_SLOP_PX;
 }
 
+// OVERKILL LAUNCH — how a killing blow's overkill turns into a corpse throw.
+// The launch distance is measured in the mob's own HEALTHBARS of OVERKILL
+// (`(damage − maxHp) / maxHp`): a blow that only finished a wounded mob throws
+// nothing; one that could have killed it several times over sends it sailing.
+// A phone's world viewport is ~422×195 units, so `LAUNCH_MAX_PX` (past the
+// half-width) lets a hard enough overkill punt a body clear off the screen.
+const LAUNCH_PX_PER_HEALTH = 42;
+const LAUNCH_MAX_PX = 260;
+// Heavier bodies barely budge: overkill on an elite/boss is rare (their bars
+// are huge), and flinging a giant across the map would read as a bug, so their
+// launch is scaled right down — the feature is for the flying HORDE.
+const LAUNCH_MASS: Record<string, number> = { elite: 0.32, boss: 0.14 };
+
+/**
+ * Size an overkill corpse throw: the unit heading pointing AWAY from the hero
+ * and how far the body sails, from the killing blow's overkill. Returns null
+ * when the blow wasn't overkill enough to move the body.
+ */
+function corpseLaunch(
+  damage: number,
+  maxHp: number,
+  from: { x: number; y: number },
+  to: { x: number; y: number },
+  role: string,
+): { dx: number; dy: number; dist: number } | null {
+  const healths = Math.max(0, (damage - maxHp) / Math.max(1, maxHp));
+  const mass = LAUNCH_MASS[role] ?? 1;
+  const dist = Math.min(LAUNCH_MAX_PX, healths * LAUNCH_PX_PER_HEALTH) * mass;
+  if (dist <= 2) return null;
+  // Away from the hero — the corpse flies off in the direction it was struck.
+  // If the body sits right on top of him (no clear heading), throw it upward.
+  const vx = to.x - from.x;
+  const vy = to.y - from.y;
+  const len = Math.hypot(vx, vy);
+  const dx = len > 0.01 ? vx / len : 0;
+  const dy = len > 0.01 ? vy / len : -1;
+  return { dx, dy, dist };
+}
+
 /** Map a dpad thumb distance (CSS px) to a walk throttle in [MIN_WALK, 1]. */
 function dpadThrottle(len: number): number {
   const span = DPAD_RING_PX - DPAD_DEADZONE_PX;
@@ -1766,9 +1805,22 @@ export function GameScreen({
             // all fall the same way.
             if (event.type === "enemyKilled") {
               const epic = def.role !== "minion";
+              // An overpowered kill punts the body flying away from the hero —
+              // further the harder it was overkilled (a legendary one-shot
+              // clears the screen). render.ts animates the arc + tumble.
+              const launch =
+                corpseLaunch(
+                  event.damage,
+                  event.maxHp,
+                  state.player.pos,
+                  event.pos,
+                  def.role,
+                ) ?? undefined;
               // Epics linger the whole level; a day of run-clock outlives any
-              // level, and `persist` keeps them from blinking out.
-              const lifeMs = epic ? 86_400_000 : 2000;
+              // level, and `persist` keeps them from blinking out. A launched
+              // minion gets a longer send-off so it stays visible where it
+              // lands instead of blinking mid-flight.
+              const lifeMs = epic ? 86_400_000 : launch ? 3200 : 2000;
               effects.push({
                 kind: "corpse",
                 pos: { x: event.pos.x, y: event.pos.y },
@@ -1777,6 +1829,7 @@ export function GameScreen({
                 sprite: def.sprite,
                 angle: (Math.random() < 0.5 ? -1 : 1) * (Math.PI / 2),
                 persist: epic || undefined,
+                launch,
               });
             }
             const duration = event.crit ? 900 : 650;

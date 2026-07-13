@@ -38,6 +38,7 @@ const kill = (x: number): GameEvent => ({
   pos: { x, y: 0 },
   defId: "test_minion",
   damage: 10,
+  maxHp: 10,
   crit: false,
   xp: 5,
 });

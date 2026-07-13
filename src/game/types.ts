@@ -1025,6 +1025,11 @@ export type GameEvent =
       defId: string;
       /** The killing blow, so death also pops a damage number. */
       damage: number;
+      /** The victim's FULL health. The app sizes the death launch off the
+       * OVERKILL (`damage − maxHp`): an overpowered blow flings the corpse
+       * flying away from the hero, further the harder it was overkilled — a
+       * legendary one-shot punts a minion clear off the screen. */
+      maxHp: number;
       crit: boolean;
       /** See `enemyHit.critPower`. */
       critPower?: number;

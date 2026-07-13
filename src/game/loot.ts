@@ -588,6 +588,7 @@ export function killEnemy(
     pos: { ...enemy.pos },
     defId: enemy.defId,
     damage,
+    maxHp: enemy.maxHp,
     crit,
     critPower: crit ? critPower : undefined,
     xp: xpGain,

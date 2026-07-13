@@ -56,6 +56,29 @@ describe("overkillEfficiency — the curve", () => {
   });
 });
 
+describe("kill event — launch inputs", () => {
+  it("carries the victim's full bar so the app can size the death launch", () => {
+    const state = bareStage();
+    const { x, y } = state.player.pos;
+    const enemy = makeEnemy(
+      { id: state.nextId++, pos: { x: x + 30, y }, hp: 40, maxHp: 200 },
+      "test_minion",
+    );
+    state.enemies.push(enemy);
+    state.events = [];
+    // A blow far past the mob's whole bar: the overkill (damage − maxHp) is
+    // what the app measures the corpse throw off.
+    hitEnemy(state, enemy, 5_000);
+    const killed = state.events.find(
+      (e): e is Extract<GameEvent, { type: "enemyKilled" }> =>
+        e.type === "enemyKilled",
+    );
+    expect(killed).toBeDefined();
+    expect(killed!.maxHp).toBe(200);
+    expect(killed!.damage - killed!.maxHp).toBe(4_800); // the overkill
+  });
+});
+
 describe("overkill toll — xp", () => {
   it("a clean kill pays the mob's full hp-proportional xp", () => {
     const state = bareStage();
