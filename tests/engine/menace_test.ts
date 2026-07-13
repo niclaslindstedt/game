@@ -574,9 +574,16 @@ describe("hero power level — calculated damage drives the horde", () => {
     expect(heroGearLevel(state)).toBeLessThan(state.player.level);
     const damageLevel = heroDamageLevel(state);
     expect(damageLevel).toBeGreaterThan(state.player.level);
-    expect(heroPowerLevel(state)).toBe(damageLevel);
-    // The horde's TOUGHNESS follows the damage: minion hp and the set-piece
-    // power-match both rise.
+    // The horde tracks the damage only PARTIALLY — `MENACE.damageLevelTracking`
+    // (0.2) of its excess over the character level — so a strong weapon toughens
+    // the horde but the hero still pulls ahead (and can overkill → rampage).
+    const char = state.player.level;
+    expect(heroPowerLevel(state)).toBeCloseTo(
+      char + MENACE.damageLevelTracking * (damageLevel - char),
+    );
+    expect(heroPowerLevel(state)).toBeLessThan(damageLevel);
+    // The horde's TOUGHNESS still follows the damage (dampened): minion hp and
+    // the set-piece power-match both rise.
     expect(mobLevelScale(state)).toBeGreaterThan(hpScaleBefore);
     expect(enemyPowerScale(state)).toBeGreaterThan(bossScaleBefore);
   });

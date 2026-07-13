@@ -35,6 +35,11 @@ export type BalanceTuning = {
   uniqueDrops: number;
   /** Scales how fast the menace meter heats from the player's output. */
   menaceGain: number;
+  /** Scales how much of the hero's DAMAGE level the horde tracks (over the
+   * shipped `MENACE.damageLevelTracking`, 0.2): higher = mobs hp-match a strong
+   * weapon more (harder to overkill/rampage), 0 = the horde ignores dps
+   * entirely and keys toughness to character/gear level alone. */
+  mobDamageTracking: number;
 };
 
 export const BALANCE_TUNING_DEFAULTS: BalanceTuning = {
@@ -48,6 +53,7 @@ export const BALANCE_TUNING_DEFAULTS: BalanceTuning = {
   gearQuality: 1,
   uniqueDrops: 1,
   menaceGain: 1,
+  mobDamageTracking: 1,
 };
 
 /** Guard rails on any applied value — the developer BALANCE sliders span a
