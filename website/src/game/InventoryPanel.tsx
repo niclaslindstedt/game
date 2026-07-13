@@ -57,7 +57,7 @@ import {
   DELTA_DOWN,
   DELTA_UP,
   hitRate,
-  ItemCardBody,
+  ItemCard,
   ItemIcon,
   STAT_LABELS,
 } from "./ItemCard.tsx";
@@ -143,14 +143,6 @@ function StatLine({
     </div>
   );
 }
-
-/**
- * Wrap width for the tooltip's text, in rem: the `.item-tooltip` box caps at
- * 16rem, less its 0.7rem side padding and 2px borders — so the longest,
- * affix-built weapon name folds onto extra lines instead of spilling off the
- * card's edge. Keep in step with `.item-tooltip` in styles.css.
- */
-const TOOLTIP_TEXT_REM = 14.3;
 
 const clampNum = (v: number, lo: number, hi: number) =>
   Math.max(lo, Math.min(v, hi));
@@ -299,28 +291,22 @@ function ItemTooltip({
 
   return createPortal(
     <>
-      <div
-        ref={mainRef}
-        className={`item-tooltip${tierGlowClass(item.tier)}`}
+      <ItemCard
+        cardRef={mainRef}
+        className="item-tooltip"
         style={{
           left: pos?.main.left ?? anchor.right + 10,
           top: pos?.main.top ?? anchor.top,
-          borderColor: TIER_COLORS[item.tier],
           visibility: pos ? "visible" : "hidden",
         }}
+        font={font}
+        relicFonts={relicFonts}
+        sprites={sprites}
+        state={state}
+        item={item}
+        compareTo={compareTo}
+        subtitle={isWorn ? "EQUIPPED" : undefined}
       >
-        <ItemCardBody
-          font={font}
-          relicFonts={relicFonts}
-          sprites={sprites}
-          state={state}
-          item={item}
-          compareTo={compareTo}
-          maxWidth={TOOLTIP_TEXT_REM}
-          lineScale={2}
-          subtitle={isWorn ? "EQUIPPED" : undefined}
-          icon={<ItemIcon sprites={sprites} item={item} />}
-        />
         {onUse && (
           <button
             type="button"
@@ -333,31 +319,24 @@ function ItemTooltip({
             <PixelText font={font} text="USE" scale={2} color="#0b0d10" />
           </button>
         )}
-      </div>
+      </ItemCard>
       {compareTo && (
-        <div
-          ref={wornRef}
-          className={`item-tooltip${tierGlowClass(compareTo.tier)}`}
+        <ItemCard
+          cardRef={wornRef}
+          className="item-tooltip"
           style={{
             left: pos?.worn?.left ?? 0,
             top: pos?.worn?.top ?? 0,
-            borderColor: TIER_COLORS[compareTo.tier],
             visibility: pos?.worn ? "visible" : "hidden",
           }}
-        >
-          <ItemCardBody
-            font={font}
-            relicFonts={relicFonts}
-            sprites={sprites}
-            state={state}
-            item={compareTo}
-            compareTo={null}
-            maxWidth={TOOLTIP_TEXT_REM}
-            lineScale={2}
-            subtitle="EQUIPPED"
-            icon={<ItemIcon sprites={sprites} item={compareTo} />}
-          />
-        </div>
+          font={font}
+          relicFonts={relicFonts}
+          sprites={sprites}
+          state={state}
+          item={compareTo}
+          compareTo={null}
+          subtitle="EQUIPPED"
+        />
       )}
     </>,
     document.body,

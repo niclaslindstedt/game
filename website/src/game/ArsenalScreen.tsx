@@ -1,11 +1,15 @@
 // SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
 // The developer ARSENAL viewer: a browsable gallery of every hand-authored
 // UNIQUE / LEGENDARY item, ordered by item level. Each entry is MINTED as a
-// real live instance (`mintUnique`) and rendered through the very same
-// `ItemIcon` + `ItemCardBody` the in-game inventory tooltip uses — so the
-// arsenal shows each piece exactly as it reads in play and never drifts from
-// it. Reached from the hidden DEVELOPER menu (TitleScreen); a scrollable list
-// steered by pointer or the keyboard arrows, ESC backs out.
+// real live instance (`mintUnique`) and inspected through the very same
+// `ItemCard` the in-game inventory raises — so the arsenal shows each piece
+// exactly as it reads in play and never drifts from it (no arsenal-only card,
+// no diff hints). Reached from the hidden DEVELOPER menu (TitleScreen).
+//
+// Follows the achievements shelf's shape: a scrollable list steered by pointer
+// or the arrow keys. Wide viewports dock the card BESIDE the list, always
+// showing the selected row; narrow phones show ONLY the list and pop the card
+// up as a modal on tap. ESC backs out.
 
 import { useEffect, useMemo, useState } from "react";
 
@@ -19,16 +23,13 @@ import {
 
 import { PixelText } from "@ui/lib/PixelText.tsx";
 import type { PixelFont } from "@ui/lib/pixel-font.ts";
+import { useMediaQuery } from "@ui/lib/useMediaQuery.ts";
 
 import { synth } from "./audio.ts";
-import { ItemCardBody, ItemIcon } from "./ItemCard.tsx";
+import { ItemCard, ItemCardModal, ItemIcon } from "./ItemCard.tsx";
 import { playUiSound } from "./sfx/index.ts";
 import { type RelicTier, type Sprites } from "./assets.ts";
 import { TIER_COLORS, tierGlowClass } from "./tiers.ts";
-
-/** Wrap width (rem) for the detail card's text — mirrors the inventory
- * tooltip's cap so a long unique name folds instead of spilling. */
-const DETAIL_TEXT_REM = 14.3;
 
 /** Uppercase slot label for a list row's sub-line (WEAPON, HEAD, CHARM, …). */
 const SLOT_LABEL: Record<Equipment["slot"], string> = {
@@ -65,19 +66,34 @@ export function ArsenalScreen({
     return { state, items };
   }, []);
 
+  // Wide viewports dock the card beside the list, always showing the selected
+  // row; narrow phones drop the docked card and pop it up on tap instead.
+  const wide = useMediaQuery("(min-aspect-ratio: 4/3)");
+
   const [cursor, setCursor] = useState(0);
+  // Narrow-only: the item whose pop-up card is open (index into `items`), or
+  // null. On wide the side panel follows `cursor` and this stays null.
+  const [openItem, setOpenItem] = useState<number | null>(null);
   const selected = items[cursor] ?? null;
 
-  // Doom-menu keys: arrows walk the list, ESC backs out. Enter is a no-op —
-  // these are trophies to browse, not choices to confirm.
+  // Doom-menu keys: arrows walk the list, ESC backs out. Enter pops the card on
+  // narrow phones (where it isn't already docked beside the list).
   useEffect(() => {
     const onKeyDown = (event: KeyboardEvent) => {
+      // While a pop-up card is open it owns the keyboard (its own ESC closes
+      // it); the shelf's shortcuts stand down.
+      if (openItem !== null) return;
       if (event.key === "ArrowDown" || event.key === "ArrowUp") {
         event.preventDefault();
         if (items.length === 0) return;
         playUiSound(synth, "move");
         const delta = event.key === "ArrowDown" ? 1 : -1;
         setCursor((c) => (c + delta + items.length) % items.length);
+      } else if (event.key === "Enter" || event.key === " ") {
+        event.preventDefault();
+        if (items.length === 0 || wide) return;
+        playUiSound(synth, "confirm");
+        setOpenItem(cursor);
       } else if (event.key === "Escape") {
         event.preventDefault();
         playUiSound(synth, "back");
@@ -86,7 +102,7 @@ export function ArsenalScreen({
     };
     window.addEventListener("keydown", onKeyDown);
     return () => window.removeEventListener("keydown", onKeyDown);
-  }, [items.length, onClose]);
+  }, [items.length, cursor, openItem, wide, onClose]);
 
   return (
     <div className="arsenal-overlay">
@@ -115,13 +131,19 @@ export function ArsenalScreen({
                   }
                   className={`arsenal-row${selectedRow ? " selected" : ""}`}
                   aria-label={`arsenal-${item.defId}`}
-                  onPointerEnter={() => {
-                    if (i !== cursor) {
-                      playUiSound(synth, "move");
-                      setCursor(i);
-                    }
+                  // Only a MOUSE hover moves the cursor — a touch drag to scroll
+                  // must not light up every row the finger passes over.
+                  onPointerEnter={(event) => {
+                    if (event.pointerType === "mouse") setCursor(i);
                   }}
-                  onClick={() => setCursor(i)}
+                  // Tap/click selects the row; on narrow phones it also pops the
+                  // card open. A scroll-drag isn't a click, so this never fires
+                  // while flicking the list.
+                  onClick={() => {
+                    playUiSound(synth, "confirm");
+                    setCursor(i);
+                    if (!wide) setOpenItem(i);
+                  }}
                 >
                   <span
                     className={`inv-cell arsenal-cell${tierGlowClass(item.tier)}`}
@@ -148,29 +170,16 @@ export function ArsenalScreen({
             })}
           </nav>
 
-          {selected && (
-            <div
-              className={`arsenal-detail${tierGlowClass(selected.tier)}`}
-              style={{ borderColor: TIER_COLORS[selected.tier] }}
-            >
-              <span
-                className={`inv-cell arsenal-detail-icon${tierGlowClass(
-                  selected.tier,
-                )}`}
-              >
-                <ItemIcon sprites={sprites} item={selected} />
-              </span>
-              <div className="arsenal-detail-card">
-                <ItemCardBody
-                  font={font}
-                  relicFonts={relicFonts}
-                  sprites={sprites}
-                  state={state}
-                  item={selected}
-                  compareTo={null}
-                  maxWidth={DETAIL_TEXT_REM}
-                />
-              </div>
+          {wide && selected && (
+            <div className="arsenal-detail">
+              <ItemCard
+                font={font}
+                relicFonts={relicFonts}
+                sprites={sprites}
+                state={state}
+                item={selected}
+                compareTo={null}
+              />
             </div>
           )}
         </div>
@@ -187,6 +196,18 @@ export function ArsenalScreen({
           <PixelText font={font} text="BACK" scale={2} color="#0b0d10" />
         </button>
       </div>
+
+      {!wide && openItem !== null && items[openItem] && (
+        <ItemCardModal
+          font={font}
+          relicFonts={relicFonts}
+          sprites={sprites}
+          state={state}
+          item={items[openItem]}
+          compareTo={null}
+          onClose={() => setOpenItem(null)}
+        />
+      )}
     </div>
   );
 }

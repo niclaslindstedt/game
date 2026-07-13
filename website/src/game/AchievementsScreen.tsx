@@ -11,6 +11,7 @@ import { useEffect, useMemo, useState } from "react";
 
 import { PixelText } from "@ui/lib/PixelText.tsx";
 import type { PixelFont } from "@ui/lib/pixel-font.ts";
+import { useMediaQuery } from "@ui/lib/useMediaQuery.ts";
 
 import { TIER_POINTS } from "@niclaslindstedt/oss-framework/achievements";
 
@@ -87,7 +88,7 @@ export function AchievementsScreen({
   // Wide viewports (the arsenal's breakpoint) dock the detail card BESIDE the
   // list, always showing the selected badge; narrow phones pop it up as a modal
   // on tap instead. Tracked live so a rotate/resize re-homes the card.
-  const wide = useWideViewport();
+  const wide = useMediaQuery("(min-aspect-ratio: 4/3)");
 
   // The keyboard cursor walks BADGE rows (headers are skipped); a MOUSE hover
   // moves it too, like the arsenal list. Touch does NOT — a finger dragging to
@@ -295,29 +296,4 @@ export function AchievementsScreen({
       )}
     </div>
   );
-}
-
-/** True on wide viewports (the arsenal's `min-aspect-ratio: 4/3` breakpoint),
- * updating live as the device rotates or resizes. Drives whether the detail
- * card docks beside the list or pops up as a modal. */
-function useWideViewport(): boolean {
-  const query = "(min-aspect-ratio: 4/3)";
-  const [wide, setWide] = useState(
-    () =>
-      typeof window !== "undefined" &&
-      typeof window.matchMedia === "function" &&
-      window.matchMedia(query).matches,
-  );
-  useEffect(() => {
-    if (
-      typeof window === "undefined" ||
-      typeof window.matchMedia !== "function"
-    )
-      return;
-    const mql = window.matchMedia(query);
-    const onChange = () => setWide(mql.matches);
-    mql.addEventListener("change", onChange);
-    return () => mql.removeEventListener("change", onChange);
-  }, []);
-  return wide;
 }

@@ -4630,12 +4630,9 @@ body {
     inset 0 0 5px rgba(var(--tier-glow), 0.4);
 }
 
-.item-tooltip.tier-unique,
-.item-tooltip.tier-legendary,
-.item-tooltip.tier-artifact,
-.arsenal-detail.tier-unique,
-.arsenal-detail.tier-legendary,
-.arsenal-detail.tier-artifact {
+.item-card.tier-unique,
+.item-card.tier-legendary,
+.item-card.tier-artifact {
   box-shadow:
     inset 0 0 0 1px var(--panel-groove),
     0 6px 18px rgba(0, 0, 0, 0.65),
@@ -5191,22 +5188,19 @@ canvas.tier-artifact {
   gap: 0.35rem;
 }
 
-/* WoW-style item tooltip: a floating, near-opaque card with a rarity-colored
-   border (set inline from the item tier) that hovers next to the item it
-   describes. Portaled to <body> and positioned in viewport coords by
-   ItemTooltip, so it never clips against the panel's scroll box. Purely
-   informational — pointer-transparent so taps fall through to dismiss it. */
-.item-tooltip {
-  position: fixed;
-  z-index: 60;
+/* Shared item card skin: a near-opaque card with a rarity-colored border (set
+   inline from the item tier) framing the shared ItemCardBody. The inventory
+   floats it as a tooltip (.item-tooltip); the arsenal docks it beside its list
+   or pops it up as a modal (.item-card-overlay) — one skin, so the surfaces
+   never drift. Same gradient fill as the windows; the tier glow on a
+   unique/legendary/artifact rides in via .item-card.tier-* above. */
+.item-card {
   display: flex;
   flex-direction: column;
   gap: 0.35rem;
   max-width: 16rem;
   padding: 0.6rem 0.7rem;
   box-sizing: border-box;
-  pointer-events: none;
-  /* Same gradient fill as the windows; the tier-colored border is set inline. */
   background: var(--panel-fill);
   border: 2px solid #1d2530;
   border-radius: 6px;
@@ -5215,9 +5209,19 @@ canvas.tier-artifact {
     0 6px 18px rgba(0, 0, 0, 0.65);
 }
 
-.item-tooltip canvas {
+.item-card canvas {
   flex: 0 0 auto;
   align-self: flex-start;
+}
+
+/* WoW-style item tooltip: the card floated next to the item it describes,
+   portaled to <body> and positioned in viewport coords by ItemTooltip so it
+   never clips against the panel's scroll box. Purely informational —
+   pointer-transparent so taps fall through to dismiss it. */
+.item-tooltip {
+  position: fixed;
+  z-index: 60;
+  pointer-events: none;
 }
 
 /* The USE row a usable trinket grows (a travel-gate key on its home level):
@@ -5257,10 +5261,11 @@ canvas.tier-artifact {
 }
 
 /* ---- Developer ARSENAL viewer (ArsenalScreen) ------------------------------
-   A full-screen overlay over the title menu: a scrollable list of every
-   unique/legendary item beside a detail card. Both the row icons and the
-   detail card render through the same ItemIcon / ItemCardBody the inventory
-   tooltip uses, so the arsenal shows each piece exactly as it reads in play. */
+   A full-screen overlay over the title menu, mirroring the achievements shelf:
+   a scrollable list of every unique/legendary item. Wide viewports dock the
+   shared ItemCard beside the list; narrow phones show ONLY the list and pop the
+   card up as a modal on tap (.item-card-overlay). The docked/modal card IS the
+   in-game inventory card (ItemCard), so the arsenal never drifts from play. */
 .arsenal-overlay {
   position: fixed;
   inset: 0;
@@ -5279,10 +5284,7 @@ canvas.tier-artifact {
   align-items: center;
   gap: 0.5rem;
   width: min(94vw, 52rem);
-  /* Fill the overlay so the list/detail sections can carry fixed heights and
-     BACK can be pinned to the bottom (see .arsenal-close). */
-  height: 100%;
-  margin: 0 auto;
+  margin: auto;
   box-sizing: border-box;
   padding: 0.9rem 1rem 1rem;
   /* FF6 window skin, matching the achievements shelf. */
@@ -5294,14 +5296,14 @@ canvas.tier-artifact {
   box-shadow: var(--panel-shadow);
 }
 
+/* Wide viewports lay the list and the docked card side by side; narrow phones
+   drop the card (it pops up as a modal instead) and the list takes the whole
+   width — so a vertical phone shows only the list. */
 .arsenal-body {
   display: flex;
   gap: 0.9rem;
   width: 100%;
   min-height: 0;
-  /* The two sections carry their own fixed heights — don't let the body grow
-     to fill the panel (that free space belongs below, pushing BACK down). */
-  flex: 0 0 auto;
 }
 
 .arsenal-list {
@@ -5310,9 +5312,7 @@ canvas.tier-artifact {
   gap: 0.15rem;
   flex: 1 1 55%;
   min-width: 0;
-  /* Fixed height, not max-height: the list keeps one size so the layout never
-     reflows as the selection moves. */
-  height: 58vh;
+  max-height: 62vh;
   overflow-y: auto;
   overscroll-behavior: contain;
   scrollbar-width: thin;
@@ -5337,8 +5337,8 @@ canvas.tier-artifact {
   background: rgba(255, 255, 255, 0.08);
 }
 
-/* The list-row and detail icons reuse .inv-cell for the bordered, centered
-   frame, overriding its bag-cell sizing and grab cursor. */
+/* The list-row icon reuses .inv-cell for the bordered, centered frame,
+   overriding its bag-cell sizing and grab cursor. */
 .arsenal-cell {
   flex: 0 0 auto;
   width: 2rem;
@@ -5355,71 +5355,58 @@ canvas.tier-artifact {
   min-width: 0;
 }
 
+/* The docked card beside the list on wide viewports: a plain flex column that
+   centers the shared ItemCard (which carries its own tier border + glow),
+   scrolled inside its own height so switching rows never reflows the shelf. */
 .arsenal-detail {
   flex: 1 1 45%;
   min-width: 0;
-  /* Fixed height so the card never resizes as you switch items; a card taller
-     than the box scrolls inside it rather than growing the layout. */
-  height: 58vh;
+  max-height: 62vh;
   overflow-y: auto;
   overscroll-behavior: contain;
   scrollbar-width: thin;
   display: flex;
-  flex-direction: column;
+  justify-content: center;
   align-items: flex-start;
-  gap: 0.4rem;
-  padding: 0.7rem 0.8rem;
-  box-sizing: border-box;
-  background: var(--panel-fill);
-  border: 2px solid #1d2530;
-  border-radius: 6px;
-  box-shadow:
-    inset 0 0 0 1px var(--panel-groove),
-    0 6px 18px rgba(0, 0, 0, 0.65);
-}
-
-.arsenal-detail-icon {
-  width: 3.2rem;
-  height: 3.2rem;
-  aspect-ratio: auto;
-  cursor: default;
-}
-
-.arsenal-detail-card {
-  display: flex;
-  flex-direction: column;
-  gap: 0.35rem;
-  width: 100%;
 }
 
 .arsenal-close {
-  /* Pin BACK to the bottom of the panel: the body's leftover space collects
-     above it, giving the list/detail sections all the room and dropping the
-     button clear of them. */
-  margin-top: auto;
-  margin-bottom: 0.2rem;
+  margin-top: 0.2rem;
 }
 
-/* Portrait / narrow: stack the detail card under the list instead of beside,
-   both at a fixed height so neither section reflows as the selection moves. */
-@media (max-aspect-ratio: 4/3) {
-  .arsenal-body {
-    flex-direction: column;
-  }
+/* The item card as a centered modal over the arsenal on narrow phones: a tapped
+   row opens it, the backdrop or ESC dismisses it. The card inside is the shared
+   ItemCard (its own tier border), so it reads exactly as it does in play — the
+   same window skin as the achievements pop-up, centered over the dimmed shelf. */
+.item-card-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 80;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(8, 10, 14, 0.7);
+  padding: 1rem;
+  overflow-y: auto;
+}
 
-  /* Column layout: the flex basis now drives height, so pin it back to auto and
-     let the explicit height govern (otherwise the list grows to fill). */
-  .arsenal-list {
-    flex: 0 0 auto;
-    height: 38vh;
-  }
+/* The modal's figure: the item's own icon LARGE and un-dimmed ABOVE the card.
+   The backdrop dims the shelf behind, but this piece — the one you tapped —
+   keeps its full-size art (the card's in-name icon is tiny). */
+.item-card-figure {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.75rem;
+  margin: auto;
+}
 
-  .arsenal-detail {
-    flex: 0 0 auto;
-    height: 38vh;
-    /* Full width under the list, rather than hugging its content bottom-left. */
-    align-self: stretch;
-  }
+.item-card-figure-icon {
+  flex: 0 0 auto;
+  width: 4.5rem;
+  height: 4.5rem;
+  aspect-ratio: auto;
+  cursor: default;
 }
 
 /* Floats over the bag while a bag item is dragged clear of the panel, warning
