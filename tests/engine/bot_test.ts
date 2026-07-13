@@ -123,6 +123,29 @@ describe("bot strategies", () => {
     expect(dist(state.player.pos, boss.home)).toBeLessThan(before - 300);
   });
 
+  it("survivor punches out the gap when surrounded", () => {
+    const state = equipBlaster(startGame());
+    clearStage(state);
+    const c = { ...state.player.pos };
+    // Ring the hero with fast chasers, leaving a clear GAP on the +x side.
+    for (let deg = 0; deg < 360; deg += 30) {
+      if (deg < 45 || deg > 315) continue; // the open lane, to the right
+      const a = (deg * Math.PI) / 180;
+      state.enemies.push(
+        makeEnemy({
+          pos: { x: c.x + Math.cos(a) * 120, y: c.y + Math.sin(a) * 120 },
+          hp: 1_000_000,
+          maxHp: 1_000_000,
+          mlvl: 99,
+          speed: 30,
+        }),
+      );
+    }
+    drive(state, createBot("survivor"), 120);
+    // He fled toward the open side (+x), not into the wall of bodies.
+    expect(state.player.pos.x).toBeGreaterThan(c.x + 40);
+  });
+
   it("idle never steers", () => {
     const state = startGame();
     const input = botAct(createBot("idle"), state);
