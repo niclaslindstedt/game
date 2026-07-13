@@ -1171,11 +1171,12 @@ export function grantXp(state: GameState, amount: number): void {
   // arrows, and scripted awards alike — so it purely paces leveling without
   // touching the curve (`xpToLevelUp`) the costs are stated in.
   amount = Math.round(amount * BALANCE.xpGain);
-  // The PER-MAP CAP (config XP_CAP): every grant on this map diminishes as
-  // the hero closes on the (level × difficulty) ceiling and, past it, drops to
-  // the never-zero floor trickle, so re-running an outgrown map farms loot and
-  // only creeps XP. Applied at the same one door as the dev knob — kills,
-  // arrows, and scripted awards all obey.
+  // The PER-MAP SOFT CAP (config XP_CAP): every grant on this map diminishes as
+  // the hero closes on the (level × difficulty) cap and, a couple of levels
+  // past it, decays to the never-zero ~1/100 floor trickle, so re-running an
+  // outgrown map farms loot and only crawls XP — no hard wall, just a glacial
+  // pace. Applied at the same one door as the dev knob — kills, arrows, and
+  // scripted awards all obey.
   amount = Math.round(
     amount *
       xpCapMultiplier(

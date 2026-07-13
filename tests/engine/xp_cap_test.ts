@@ -1,10 +1,12 @@
 // SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
 // Per-map XP caps (config XP_CAP, `xpLevelCap`/`xpCapMultiplier` in
-// leveling.ts): every (level × difficulty) pair has a hero-level ceiling —
-// XP diminishes across the approach and, past the cap, drops to a never-zero
-// floor trickle, so re-running an outgrown map farms loot and only creeps XP.
-// The fixture catalog ships two story levels, so the rung's first/last band
-// lands whole on them.
+// leveling.ts): every (level × difficulty) pair has a SOFT hero-level cap — XP
+// diminishes across the approach, then keeps decaying (reverse-exponential)
+// past the cap down to a never-zero ~1/100 floor trickle it bottoms out at a
+// couple of levels over the cap, so a hero can crawl a little further on an
+// outgrown map but the pace goes glacial — no hard wall, only the global
+// maxLevel. The fixture catalog ships two story levels, so the rung's
+// first/last band lands whole on them.
 
 import {
   advanceDialogue,
@@ -70,24 +72,41 @@ describe("xpLevelCap — the per-map ceiling", () => {
   });
 });
 
-describe("xpCapMultiplier — the taper into the trickle", () => {
-  it("pays full XP until the fade band, halves per level, then holds at the floor", () => {
+describe("xpCapMultiplier — the reverse-exponential soft cap", () => {
+  it("pays full XP until the fade band, then decays each level toward the cap", () => {
     const cap = 20;
     const fadeFrom = cap - XP_CAP.fadeLevels;
     expect(xpCapMultiplier(1, cap)).toBe(1);
     expect(xpCapMultiplier(fadeFrom, cap)).toBe(1);
-    expect(xpCapMultiplier(fadeFrom + 1, cap)).toBeCloseTo(0.5);
-    expect(xpCapMultiplier(fadeFrom + 2, cap)).toBeCloseTo(0.25);
-    // At the cap the halving still pays 0.5^fadeLevels — diminished, not zero.
+    expect(xpCapMultiplier(fadeFrom + 1, cap)).toBeCloseTo(XP_CAP.softCapDecay);
+    expect(xpCapMultiplier(fadeFrom + 2, cap)).toBeCloseTo(
+      Math.pow(XP_CAP.softCapDecay, 2),
+    );
+    // At the cap the fade has reached softCapDecay^fadeLevels — diminished,
+    // not zero: the climb over the cap can still (slowly) happen.
     expect(xpCapMultiplier(cap, cap)).toBeCloseTo(
-      Math.pow(0.5, XP_CAP.fadeLevels),
+      Math.pow(XP_CAP.softCapDecay, XP_CAP.fadeLevels),
     );
   });
 
-  it("never zeroes — deep past the cap it bottoms out at the floor trickle", () => {
+  it("slows to the ~1/100 floor about two levels past the cap", () => {
     const cap = 20;
-    // Far past the cap the halving would underflow the floor, so the floor
-    // holds: the grind still creeps forward, it never slams shut.
+    // Each level over the cap banks a smaller fraction than the one below it —
+    // the grind gets slower and slower, never faster...
+    for (let l = cap - XP_CAP.fadeLevels; l < cap + 2; l++) {
+      expect(xpCapMultiplier(l + 1, cap)).toBeLessThanOrEqual(
+        xpCapMultiplier(l, cap),
+      );
+    }
+    // ...until a couple of levels past the cap it has reached the glacial floor.
+    expect(xpCapMultiplier(cap + 2, cap)).toBeLessThan(0.02);
+    expect(xpCapMultiplier(cap + 2, cap)).toBeGreaterThan(0);
+  });
+
+  it("never zeroes — deep past the cap it holds the floor trickle", () => {
+    const cap = 20;
+    // Far past the cap the decay would underflow the floor, so the floor holds:
+    // the grind still creeps forward at ~1/100, it never slams shut.
     expect(xpCapMultiplier(cap + 10, cap)).toBe(XP_CAP.floor);
     expect(xpCapMultiplier(cap + 50, cap)).toBe(XP_CAP.floor);
     expect(xpCapMultiplier(cap + 50, cap)).toBeGreaterThan(0);
@@ -116,6 +135,20 @@ describe("grantXp obeys the per-map cap", () => {
     grantXp(state, 100_000);
     expect(state.stats.xpGained).toBe(Math.round(100_000 * XP_CAP.floor));
     expect(state.stats.xpGained).toBeGreaterThan(0);
+  });
+
+  it("crawls but never walls — enough XP still eventually dings past the cap", () => {
+    const state = startGame();
+    clearStage(state);
+    const cap = xpLevelCap("test_level", "medium");
+    state.player.level = cap + 5; // well past the cap, on the floor trickle
+    state.player.xpToNext = xpToLevelUp(state.player.level);
+    // A firehose of XP: at the ~1/100 floor it lands slowly, but it DOES land —
+    // the hero still climbs, there is no hard stop short of the global max.
+    const before = state.player.level;
+    for (let i = 0; i < 200; i++) grantXp(state, 1_000_000);
+    expect(state.player.level).toBeGreaterThan(before);
+    expect(state.player.level).toBeLessThan(LEVELING.maxLevel);
   });
 
   it("a hero inside the fade band gains a diminished grant", () => {
