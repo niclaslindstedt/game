@@ -90,7 +90,11 @@ title menu; **PLAY** opens a submenu with **NEW GAME** and **LOAD GAME**. NEW
 GAME opens the roster straight on the create form (name the hero and choose
 **HARDCORE** at creation — the choice belongs to the character, not a global
 setting); LOAD GAME opens the hero list to pick a saved hero (or retire the
-fallen). Either way, choosing a hero drops into the difficulty ladder for it. A character owns ONE evolving build (the
+fallen). A freshly created hero, or one who has beaten their current difficulty,
+drops into the difficulty ladder to pick a lane or step up a rung; a hero
+mid-campaign skips the ladder and resumes at the **beginning of their current
+level** on the difficulty they are already on (no difficulty picker —
+`resumeTargetFor`). A character owns ONE evolving build (the
 engine `Loadout` — level,
 stats, gear, inventory, coins, abilities, companions) that carries whole into
 every difficulty and level, so higher difficulties are met with the gear earned

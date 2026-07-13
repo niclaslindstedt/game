@@ -50,8 +50,10 @@ export function LoadGame({
   onNew,
   onBack,
 }: {
-  /** A living hero was selected — play on with them (the app makes them active
-   * and opens the difficulty ladder). */
+  /** A living hero was selected — play on with them: the app makes them active
+   * and, when a campaign is under way, drops straight into the beginning of
+   * their current level; a hero with nothing in progress opens the difficulty
+   * ladder to pick a lane or step up a rung. */
   onPlay: (character: Character) => void;
   /** The player wants a fresh hero — route to the NEW GAME create form. */
   onNew: () => void;

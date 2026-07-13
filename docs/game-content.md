@@ -494,12 +494,18 @@ owns the screen.
 What the campaign _does_ persist is the **character** and its **completion**,
 on-device (`website/src/game/characters.ts`). The app opens on the title menu;
 **PLAY** opens the hero roster (pick, create, or retire — see
-[configuration.md](configuration.md)) when no hero is active, then drops into
-the difficulty ladder for the chosen one. The chosen hero's build carries into
+[configuration.md](configuration.md)) when no hero is active. Loading a hero
+mid-campaign (**LOAD GAME**) drops straight into the **beginning of their
+current level** at the difficulty they are already on — no difficulty picker;
+the hero is tied to a difficulty and a current level, so they simply resume
+there (`resumeTargetFor`). Only a hero with no campaign under way — a freshly
+minted one, or one who has beaten their current difficulty — opens the
+difficulty ladder, to pick a starting lane or step up a newly-unlocked rung. The
+chosen hero's build carries into
 everything, and their progress is tracked per difficulty. Clearing a level
 records it, and the victory splash offers **NEXT LEVEL** (advancing along
 `LEVEL_ORDER`, carrying the difficulty). A hero is walked through the story in
-order — choosing a difficulty (PLAY → difficulty) drops them straight into the
+order — resuming or choosing a difficulty drops them straight into the
 next unbeaten level, no picker. Only once the whole
 campaign is beaten at a difficulty does that difficulty's **level-select** screen
 open, as a free replay picker (the grind-for-gear endgame). The difficulty

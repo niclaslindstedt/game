@@ -30,6 +30,7 @@
 
 import {
   adoptEquipment,
+  DIFFICULTY_ORDER,
   DIFFICULTY_UNLOCK_PREREQS,
   equipmentLevelReq,
   LEVEL_ORDER,
@@ -452,6 +453,32 @@ export function firstUnclearedLevel(
     LEVEL_ORDER.find((id) => !hasClearedLevel(character, id, difficulty)) ??
     opener
   );
+}
+
+/**
+ * Where LOADING this hero drops in: the campaign still IN PROGRESS — the
+ * furthest (hardest) difficulty they have begun but not yet beaten — at the
+ * beginning of its first uncleared level. A loaded hero is already tied to a
+ * difficulty and a current level, so LOAD resumes there straight away with no
+ * difficulty picker.
+ *
+ * Null when no campaign is under way: a brand-new hero who has not started one,
+ * or a hero who has beaten every difficulty they have touched. The caller then
+ * opens the difficulty ladder instead — the one place a hero picks a starting
+ * lane or steps up to a newly-unlocked harder rung.
+ */
+export function resumeTargetFor(
+  character: Character,
+): { difficulty: Difficulty; levelId: string } | null {
+  // Walk from the hardest rung down so a hero partway up a higher difficulty
+  // resumes there rather than on an easier lane they also dipped into.
+  for (let i = DIFFICULTY_ORDER.length - 1; i >= 0; i--) {
+    const difficulty = DIFFICULTY_ORDER[i] as Difficulty;
+    if (isDifficultyBeaten(character, difficulty)) continue;
+    if (clearedLevelsFor(character, difficulty).length === 0) continue;
+    return { difficulty, levelId: firstUnclearedLevel(character, difficulty) };
+  }
+  return null;
 }
 
 /** The next level along `LEVEL_ORDER`, or null if this is the last (or an
