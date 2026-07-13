@@ -37,6 +37,9 @@ register("./game-alias-loader.mjs", import.meta.url);
 const { simulateCampaign } = await import(
   path.join(root, "src/sim/simulate.ts")
 );
+const { synthesizeArrival } = await import(
+  path.join(root, "src/sim/arrival.ts")
+);
 const { DIFFICULTY_ORDER } = await import(
   path.join(root, "src/game/defs/difficulties.ts")
 );
@@ -61,7 +64,13 @@ if (flag("help")) {
     "usage: node scripts/simulate-run.mjs [--difficulty all|easy[,medium,…]] " +
       "[--level all|spacez_hq[,…]] [--rerun N] [--seed N] [--strategy survivor|rush|kite|boss] " +
       "[--max-minutes N] [--fresh] [--full] [--verdict] [--farm] [--no-shop] " +
+      "[--start-level N] [--gear-tier regular|magic|rare|legendary] " +
       "[--balance xpGain=0.8,mobHp=1.5] [--compare baseline.json] [--json out.json]\n\n" +
+      "arrival (--start-level N): drop a REALISTIC leveled + geared hero into the first swept\n" +
+      "                 rung instead of a fresh level-1 rookie — the campaign's intended entry\n" +
+      "                 state, since the game scales to hero level. e.g. `--difficulty jesus\n" +
+      "                 --start-level 50` measures a nightmare-geared L50 hero on JESUS. Pair\n" +
+      "                 with --gear-tier (default rare) to set the rolled kit's tier.\n\n" +
       "shopping (DEFAULT on): a weapon-starved hero is walked to the merchant to sell →\n" +
       "                 repair → buy → equip, the way a real player recovers a broken weapon.\n" +
       "                 --no-shop turns it off (the bot-never-shops read) to A/B how much a\n" +
@@ -137,6 +146,25 @@ const realisticPacing = !flag("farm");
 // turns it off — the bot-never-shops read, to A/B how much a stall is the bot
 // vs real balance.
 const autoShop = !flag("no-shop");
+// ARRIVAL. --start-level N drops a REALISTIC leveled + geared hero into the
+// first swept rung instead of a fresh level-1 rookie — the campaign's intended
+// entry state (a hero who cleared the rungs below and carried his kit forward).
+// The whole game scales to hero level, so this is the ONLY way a top rung reads
+// as it's actually played: e.g. `--difficulty jesus --start-level 50` measures a
+// nightmare-geared L50 hero on JESUS, not a naked rookie. --gear-tier sets the
+// rolled kit's tier (default rare — a solid nightmare-cleared loadout).
+const startLevel = opt("start-level");
+const gearTier = opt("gear-tier", "rare");
+let startLoadout = null;
+if (startLevel !== undefined) {
+  startLoadout = synthesizeArrival({
+    difficulty: difficulties[0],
+    level: Number(startLevel),
+    seed,
+    weaponTier: gearTier,
+    gearTier,
+  });
+}
 
 // ---- Run ------------------------------------------------------------------------
 
@@ -155,7 +183,10 @@ console.log(
       : " · pacing: FARM to the cap (endgame / L99 chase — over-levels on purpose)") +
     (autoShop
       ? " · shopping: ON (merchant recovery)"
-      : " · shopping: OFF (--no-shop, bot never shops)"),
+      : " · shopping: OFF (--no-shop, bot never shops)") +
+    (startLoadout
+      ? ` · arrival: L${startLoadout.level} ${gearTier}-geared (${startLoadout.equipment.weapon.defId})`
+      : ""),
 );
 
 const report = simulateCampaign({
@@ -168,6 +199,7 @@ const report = simulateCampaign({
   balance,
   realisticPacing,
   autoShop,
+  startLoadout,
 });
 
 // ---- Render ----------------------------------------------------------------------
