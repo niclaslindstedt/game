@@ -52,9 +52,17 @@ const HELD_DX = 9;
 const HELD_DY = 2;
 
 // The grip point within the doll (the hero's leading hand), where the held
-// weapon's 12×12 icon is gripped lower-left. The field renderer pivots the
-// weapon about this point to swing it (WEAPON SWING). Doll-local coords.
+// weapon's 12×12 icon is gripped lower-left. Doll-local coords.
 export const WEAPON_GRIP = { x: HELD_DX + 2, y: HELD_DY + 10 };
+
+// The leading shoulder within the doll (top of the hero's forward arm, where
+// it meets the torso — see the body plan in scripts/sprite-data/hero.mjs: the
+// shoulder line sits around row 7–8, the arm reaching down-and-out to the grip
+// at row 12). The field renderer swings the held weapon about THIS point, not
+// the grip, so the whole implied arm sweeps as one — the weapon arcs on the
+// end of a stretched-out arm rather than just cocking at the wrist (WEAPON
+// SWING). Doll-local coords.
+export const WEAPON_SHOULDER = { x: 8, y: 7 };
 
 // Icons drawn pointing LEFT (the pistol family and its kin) — mirrored so
 // the business end leads in the facing direction like every other icon.

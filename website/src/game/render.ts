@@ -34,7 +34,7 @@ import { formatCompact } from "@ui/lib/format-number.ts";
 
 import { spriteByName, type GameAssets, type Sprites } from "./assets.ts";
 import { medkitIconFor } from "./consumables.ts";
-import { playerDollLayers, WEAPON_GRIP } from "./paper-doll.ts";
+import { playerDollLayers, WEAPON_SHOULDER } from "./paper-doll.ts";
 import { getSettings } from "./settings.ts";
 import { TIER_COLORS } from "./tiers.ts";
 
@@ -1552,9 +1552,12 @@ export type PlayerAction = {
   durationMs: number;
 };
 
-/** A held-weapon animation pose: a rotation about the grip (WEAPON_GRIP) plus a
- * small translation, in doll-local coords (mirrored with the doll for facing).
- * Positive `rot` swings the blade/barrel down and forward in the facing dir. */
+/** A held-weapon animation pose: a rotation about the shoulder (WEAPON_SHOULDER)
+ * plus a small translation, in doll-local coords (mirrored with the doll for
+ * facing). Pivoting at the shoulder rather than the grip sweeps the whole
+ * implied arm — the weapon rides the end of a stretched-out arm, not just a
+ * flick of the wrist. Positive `rot` swings the blade/barrel down and forward
+ * in the facing dir. */
 type WeaponPose = { rot: number; offX: number; offY: number };
 
 const REST_POSE: WeaponPose = { rot: 0, offX: 0, offY: 0 };
@@ -1676,12 +1679,17 @@ function drawPlayer(
     const swung =
       layer.weapon && (pose.rot !== 0 || pose.offX !== 0 || pose.offY !== 0);
     if (swung) {
-      // Pivot the weapon about the grip (translate to grip, rotate, translate
-      // back), on top of whatever facing transform already holds.
+      // Pivot the weapon about the SHOULDER (translate to it, rotate, translate
+      // back), on top of whatever facing transform already holds. Pivoting at
+      // the shoulder — not the grip — arcs the grip end too, so the weapon
+      // reads as riding a swinging arm rather than twisting in place.
       ctx.save();
-      ctx.translate(WEAPON_GRIP.x + pose.offX, WEAPON_GRIP.y + pose.offY);
+      ctx.translate(
+        WEAPON_SHOULDER.x + pose.offX,
+        WEAPON_SHOULDER.y + pose.offY,
+      );
       ctx.rotate(pose.rot);
-      ctx.translate(-WEAPON_GRIP.x, -WEAPON_GRIP.y);
+      ctx.translate(-WEAPON_SHOULDER.x, -WEAPON_SHOULDER.y);
     }
     if (layer.flip) {
       ctx.save();

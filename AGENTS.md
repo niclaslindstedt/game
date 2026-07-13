@@ -210,13 +210,18 @@ load); a developer turns them on from the DEVELOPER menu:
 - **WEAPON SWING** (`weaponSwing: "on" | "off"`) is experimental: it animates
   the field hero's held weapon on each attack — a blade winds back and whips
   through its slash arc, a gun recoils with the muzzle rising, a wand thrusts
-  up on the cast — pivoting the weapon layer about the grip in step with the
-  swing/muzzle effect so it reads as the weapon actually being used. Like
-  CHARACTER WEAPON it is a pure render concern: GameScreen captures the hero's
-  own `swing`/`shot` events into a `PlayerAction` (matched to his position so a
+  up on the cast — pivoting the weapon layer about the **shoulder**
+  (`paper-doll.ts` `WEAPON_SHOULDER`, not the grip) in step with the
+  swing/muzzle effect, so the whole implied arm sweeps and the weapon rides the
+  end of a stretched-out arm rather than twisting at the wrist. Like CHARACTER
+  WEAPON it is a pure render concern: GameScreen captures the hero's own
+  `swing`/`shot` events into a `PlayerAction` (matched to his position so a
   companion's blow is ignored), `render.ts` `drawPlayer` reads the flag and
   poses the weapon layer via `weaponPose`. It only bites when CHARACTER WEAPON
-  is on too — there is no held weapon to swing otherwise.
+  is on too — there is no held weapon to swing otherwise. Tune it with the
+  `weapon-swing` preview script (`website/scripts/weapon-swing.mjs`), which
+  screenshots the animation frame by frame via the `?debug` `window.__swing`
+  (pin the pose) and `window.__timeScale` (slow the run) hooks.
 
 ## Reuse through oss-framework
 
