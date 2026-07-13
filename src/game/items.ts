@@ -17,6 +17,7 @@ import {
   CONSUMABLES,
   DODGE,
   GATES,
+  LEVELING,
   LOOT,
   MEDKIT,
   MELEE,
@@ -345,6 +346,12 @@ function rollTier(
   // only off a level-99 mob = JESUS). LEGENDARY/ARTIFACT additionally drop
   // from HARD up only — the top chase is a hard-earned reward.
   const hardPlus = meetsMinDifficulty(state.difficulty, "hard");
+  // ARTIFACTS are the CAP chase: they drop ONLY once the hero has reached the
+  // level cap (`LEVELING.maxLevel`, 99 — reachable only on JESUS's endgame
+  // grind). Every shipped artifact requires level 99 to wear (`itemLevelReq`),
+  // so this pins the drop to exactly where it becomes wearable — no relic ever
+  // falls into a hand too low to use it. Gates the whole artifact tier below.
+  const atCap = state.player.level >= LEVELING.maxLevel;
   // The ARTIFACT tier stays INERT while no artifact is authored — no phantom
   // roll consumes rng, so seeded drop streams don't shift until the roster
   // ships. (`pickUniqueForDrop` would downgrade an empty artifact roll to a
@@ -361,7 +368,7 @@ function rollTier(
   for (const tier of TIER_ROLL_ORDER) {
     const qlvl = LOOT.tierUnlockMlvl[tier];
     if (lootLevel < qlvl) continue; // hard gate, unchanged
-    if (tier === "artifact" && !hasArtifacts) continue;
+    if (tier === "artifact" && (!hasArtifacts || !atCap)) continue;
     const named =
       tier === "unique" || tier === "legendary" || tier === "artifact";
     const topChase = tier === "legendary" || tier === "artifact";
@@ -1787,17 +1794,32 @@ export function baseDefId(piece: Equipment): string {
 }
 
 /**
- * Can the hero WEAR this piece yet? The Diablo level gate keys on the BASE
- * item's `levelReq` for EVERY tier — strip an item's rolled/authored bonuses
- * and what's left is the base, so a magic, rare, unique, or legendary piece
- * equips at the same level a plain one on that base would. A unique's high
- * ilvl scales its power, not its requirement, so it is often wearable many
- * levels before its ilvl — a find to grab early. Auto-equip skips a piece the
- * hero can't wear, the bag refuses to equip it, and the UI paints the
- * requirement red until the hero grows into it.
+ * The level a hero must reach to WEAR this instance. For EVERY tier up to
+ * legendary the Diablo level gate keys on the BASE item's `levelReq` — strip
+ * the rolled/authored bonuses and what's left is the base, so a magic, rare,
+ * unique, or legendary piece equips at the same level a plain one on that base
+ * would (its high ilvl scales its power, not its requirement — a find to grab
+ * early). ARTIFACTS are the exception: the endgame relics require `min(maxLevel,
+ * ilvl)` — level 99 for the whole shipped roster (every artifact ilvl ≥ 99) —
+ * so a cap-tier relic is worn only AT the cap, matching where it drops. The
+ * `min` guards against an ilvl above the level cap ever demanding an
+ * unreachable level.
+ */
+export function itemLevelReq(equipment: Equipment): number {
+  if (equipment.tier === "artifact") {
+    return Math.min(LEVELING.maxLevel, equipment.ilvl);
+  }
+  return equipmentLevelReq(equipment.defId);
+}
+
+/**
+ * Can the hero WEAR this piece yet? Gated on `itemLevelReq` — the base's
+ * `levelReq` for every tier up to legendary, and `min(maxLevel, ilvl)` for an
+ * artifact. Auto-equip skips a piece the hero can't wear, the bag refuses to
+ * equip it, and the UI paints the requirement red until the hero grows into it.
  */
 export function meetsLevelReq(state: GameState, equipment: Equipment): boolean {
-  return state.player.level >= equipmentLevelReq(equipment.defId);
+  return state.player.level >= itemLevelReq(equipment);
 }
 
 /**

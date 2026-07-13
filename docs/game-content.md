@@ -316,16 +316,22 @@ tuned as a real chase rather than a rain (`rollTier`, calibrated with
   hand-authored ones — otherwise a cap-level farm buried the player in
   uniques. A named tier's odds are its own base + slope + the elite/boss
   set-piece bonus alone.
-- **Legendaries and artifacts drop from HARD up**, from ANY mob on ANY level
-  (not level-locked) — rare/elite mobs and bosses far likelier than trash, so
-  a boss-dense run is the efficient chase but still a long grind. Uniques drop
-  on every difficulty.
+- **Legendaries drop from HARD up**, from ANY mob on ANY level (not
+  level-locked) — rare/elite mobs and bosses far likelier than trash, so a
+  boss-dense run is the efficient chase but still a long grind. Uniques drop on
+  every difficulty.
+- **Artifacts drop ONLY at the level cap.** The artifact tier is gated shut
+  until the hero reaches `LEVELING.maxLevel` (99, reachable only on JESUS's
+  endgame grind) — a hard rule on the tier itself, not a side effect of the
+  floor below. Every artifact's EQUIP requirement is `min(maxLevel, ilvl)` = 99
+  for the whole roster, so a relic is worn exactly where it drops, never in a
+  hand too low to use it.
 - **The item level DRAGS UP with the hero** (`LOOT.namedIlvlWindow`, D2
   area-level flooring): a named item whose ilvl is more than ~15 under the loot
   level is retired, so a level-99 farm pays out only high-ilvl gear (~85+) and
-  the campaign's low-level relics recede as you outgrow them. The equip
-  requirement (base `levelReq ≤ loot level`) still holds on top, so a req-99
-  legendary drops from any mob AT level 99 but not before.
+  the campaign's low-level relics recede as you outgrow them. For every tier up
+  to legendary the equip requirement is the base's `levelReq`, so a unique's
+  high ilvl scales its power, not its requirement — a find to grab early.
 - **Rates:** a rift → **bunker** farm run (the canonical endgame loop — the
   bunker is only reachable through the rift) yields roughly **one unique and
   one legendary per ten runs**; artifacts are rarer still (~1/100). The bunker
@@ -436,9 +442,10 @@ sit a notch under the artifact relics above them.
 
 The **ARTIFACT** roster (phase 5) is the level-99 endgame farm: 24 named
 relics of legend the Rift dredges up whole (`src/game/defs/artifacts.ts`),
-minted at the searing-red `tier: "artifact"` and dropping only at the cap
-(each on a high-req elite base, so a req-99 relic can't fall until the hero
-can wear it). They span a VAST power ladder ON PURPOSE, and the ODDS follow
+minted at the searing-red `tier: "artifact"` and dropping only at the level
+cap — the tier is gated shut until the hero reaches level 99, and every relic's
+equip requirement is `min(99, ilvl)` = 99, so a relic falls exactly where it
+can be worn. They span a VAST power ladder ON PURPOSE, and the ODDS follow
 the power — the strongest are exponentially rarer (`uniqueDropWeight`). At
 the common end: **GÁNDIVA** (Arjuna's inexhaustible bow), **GLEIPNIR
 CHAUSSES**, **GOLDEN FLEECE**, **SEIÐR STAFF**; a mid band of set-pieces —

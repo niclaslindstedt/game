@@ -25,11 +25,11 @@ import {
   armorValueOf,
   enemyDodgeChance,
   equipmentIcon,
-  equipmentLevelReq,
   equipmentMaxDurability,
   equipmentName,
   gearDef,
   isWeaponDef,
+  itemLevelReq,
   playerMissChance,
   rawStat,
   statRequirement,
@@ -211,10 +211,11 @@ export function itemLines(
   equipped: Equipment | null,
 ): CardLine[] {
   const lines: CardLine[] = [];
-  // The base's requirement, freshness-colored (the item's own LEVEL sits at
+  // The instance's requirement, freshness-colored (the item's own LEVEL sits at
   // the card's foot, drawn by ItemCardBody). Weapons lead with it; gear
-  // slides it in under the slot headline.
-  const req = equipmentLevelReq(item.defId);
+  // slides it in under the slot headline. Artifacts require min(cap, ilvl) —
+  // the base's `levelReq` for every other tier (see `itemLevelReq`).
+  const req = itemLevelReq(item);
   const reqLine: CardLine | null =
     req > 1
       ? {

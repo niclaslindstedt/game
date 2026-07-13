@@ -2194,6 +2194,18 @@ body {
   scrollbar-width: thin;
 }
 
+/* Vertical (portrait) devices have height to spare — a phone held upright is
+   far taller than the landscape reference, so the 20rem ceiling above stranded
+   a tall list (the DEVELOPER balance knobs, a long level ladder) in the middle
+   of the screen with a big dead band below it. Let the list reach further down
+   and claim that room. The landscape reference stays governed by the `52vh`
+   term above, so gameplay-orientation layouts are untouched. */
+@media (orientation: portrait) {
+  .title-menu.scrollable {
+    max-height: min(72vh, 40rem);
+  }
+}
+
 /* A locked level: dimmed and unselectable-looking (its click just buzzes). */
 .menu-item.locked {
   cursor: not-allowed;
@@ -2611,29 +2623,7 @@ body {
   box-shadow: inset 0 0 0 9999px rgba(255, 109, 109, 0.12);
 }
 
-/* The "add a hero" slot: a dashed, empty frame that reads as an open save
-   slot, and the plain BACK row under the list. */
-.hero-slot-new {
-  appearance: none;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: 0.7rem;
-  background: rgba(126, 240, 200, 0.04);
-  border: 2px dashed #2f6a58;
-  border-radius: var(--panel-radius);
-  cursor: pointer;
-  font: inherit;
-  transition:
-    border-color 0.08s steps(2),
-    background-color 0.08s steps(2);
-}
-
-.hero-slot-new:hover {
-  border-color: #7ef0c8;
-  background: rgba(126, 240, 200, 0.1);
-}
-
+/* The plain BACK row under the hero list. */
 .hero-slot-back {
   appearance: none;
   display: flex;

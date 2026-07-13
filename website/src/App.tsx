@@ -54,11 +54,6 @@ export function App() {
   // rather than the hero list (PLAY → LOAD GAME). An empty roster shows the
   // form regardless — there is nothing to load.
   const [pickCreating, setPickCreating] = useState(false);
-  // Whether the create form was reached FROM the roster (its "+ NEW CHARACTER"
-  // slot) rather than straight from the title (PLAY → NEW GAME). It decides
-  // where CANCEL goes back to: the roster if that is where it came from, else
-  // the title menu.
-  const [createFromRoster, setCreateFromRoster] = useState(false);
   // Set when a hero is picked via PLAY and has no campaign under way, so the
   // title mounts straight on the difficulty ladder instead of the main menu (a
   // hero mid-campaign resumes their run directly and never sets this). Reset on
@@ -247,22 +242,13 @@ export function App() {
             onCreate={(name, hardcore) =>
               commitPlay(createCharacter(name, hardcore))
             }
-            onCancel={() => {
-              // Back to wherever the form was opened from: the roster if the
-              // player came from its "+ NEW CHARACTER" slot, else the title.
-              if (createFromRoster) setPickCreating(false);
-              else leave();
-            }}
+            // The create form is only ever reached straight from the title
+            // (PLAY → NEW GAME) or when the roster is empty, so CANCEL always
+            // backs out to the title.
+            onCancel={leave}
           />
         ) : (
-          <LoadGame
-            onPlay={commitPlay}
-            onNew={() => {
-              setCreateFromRoster(true);
-              setPickCreating(true);
-            }}
-            onBack={leave}
-          />
+          <LoadGame onPlay={commitPlay} onBack={leave} />
         )}
         <UpdateModal
           needRefresh={pwa.needRefresh}
@@ -296,7 +282,6 @@ export function App() {
           // the difficulty ladder for the freshly-minted hero. CANCEL here
           // returns to the title (not the roster) — the form came from PLAY.
           setStartOnDifficulty(false);
-          setCreateFromRoster(false);
           setPickCreating(true);
           setPicking("play");
         }}
@@ -306,7 +291,6 @@ export function App() {
           // roster has nothing to load, so it opens straight on the create form
           // (whose CANCEL then backs out to the title).
           setStartOnDifficulty(false);
-          setCreateFromRoster(false);
           setPickCreating(loadCharacters().length === 0);
           setPicking("play");
         }}

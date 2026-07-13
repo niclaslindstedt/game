@@ -130,6 +130,7 @@ export {
   isArmorBroken,
   isSpecialItem,
   magicFindBonus,
+  itemLevelReq,
   medkitTierIndex,
   meetsLevelReq,
   scrapInferiorLoot,
