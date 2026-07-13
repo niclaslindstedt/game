@@ -859,7 +859,8 @@ function dropMinionLoot(
   const repairBoost = mercyRescueWaiting(state, "repair")
     ? 0
     : lowDurabilityDesperation(state) * diff.mercy.repairBonus;
-  const repairShare = LOOT.repairShare * (1 + repairBoost);
+  const repairShare =
+    LOOT.repairShare * BALANCE.repairDrops * (1 + repairBoost);
   // Each payout runs the ladder once. An ordinary mob pays exactly one (the
   // pre-restructure body verbatim); a rare/unique mob's burst loops, each
   // payout scattered around the corpse so the pile reads as separate finds.

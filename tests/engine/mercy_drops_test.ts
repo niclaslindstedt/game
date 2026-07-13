@@ -278,10 +278,10 @@ describe("mercy drops through a real kill (medium)", () => {
   });
 
   it("drops repair kits harder as the weapon nears breaking", () => {
-    // roll 0.7 sits past the base repair window (an arrow at full durability)
+    // roll 0.8 sits past the base repair window (an arrow at full durability)
     // but inside the low-durability one (1.3× at full desperation). Health is
     // full, so only the repair slice is widened here.
-    const ladder = [0.9, 0.9, 0.9, 0.0, 0.9, 0.7];
+    const ladder = [0.9, 0.9, 0.9, 0.0, 0.9, 0.8];
     const worn = killForItems(ladder, { durability: 1 });
     expect(worn.some((i) => i.kind === "repair")).toBe(true);
     const fresh = killForItems(ladder, { durability: 120 });
@@ -442,7 +442,7 @@ describe("one rope at a time (a waiting rescue holds its signal's fire)", () => 
   });
 
   it("stops widening the repair slice while a repair kit waits in view", () => {
-    const ladder = [0.9, 0.9, 0.9, 0.0, 0.9, 0.7];
+    const ladder = [0.9, 0.9, 0.9, 0.0, 0.9, 0.8];
     const items = killForItems(ladder, {
       durability: 1,
       arrange: (state) => groundItem(state, { kind: "repair" }, -100),

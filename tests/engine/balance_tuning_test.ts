@@ -185,6 +185,42 @@ describe("equipmentShare", () => {
   });
 });
 
+describe("repairDrops", () => {
+  // Same saturated-drop setup as equipmentShare: ten minions finished from
+  // half their inflated bar so no overkill toll discounts the roll.
+  function killTen(state: GameState): void {
+    for (let i = 0; i < 10; i++) {
+      const enemy = makeEnemy({
+        id: 9000 + i,
+        pos: { x: state.player.pos.x + 60, y: state.player.pos.y },
+        hp: 45,
+        maxHp: 200,
+      });
+      state.enemies.push(enemy);
+      hitEnemy(state, enemy, 45, undefined, { rollAccuracy: false });
+    }
+  }
+
+  it("widens the repair-kit slice of the drop ladder", () => {
+    // Knob off: the repair band collapses, so no kill drops a repair kit.
+    setBalanceTuning({ dropRate: 20, repairDrops: 0 });
+    const none = startGame();
+    clearStage(none);
+    killTen(none);
+    expect(none.items.filter((i) => i.kind === "repair").length).toBe(0);
+
+    // Cranked up: the repair band swallows the ladder below equipment, so the
+    // rain is thick with repair kits.
+    setBalanceTuning({ dropRate: 20, repairDrops: 20 });
+    const rich = startGame();
+    clearStage(rich);
+    killTen(rich);
+    expect(
+      rich.items.filter((i) => i.kind === "repair").length,
+    ).toBeGreaterThan(0);
+  });
+});
+
 describe("gearQuality", () => {
   it("scales the D2 rarity roll an equipment drop rolls", () => {
     const N = 200;
