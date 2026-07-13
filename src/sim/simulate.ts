@@ -401,6 +401,10 @@ const STALL_TIMEOUT_MS = 15_000;
 const STALL_MOVE_RADIUS = 48;
 /** How far one stall-breaker nudge drags the hero (world px). */
 const NUDGE_DISTANCE = 60;
+/** Minimum simulated ms between merchant recovery visits (autoShop) — so a hero
+ * who can't afford or can't wield an upgrade fights on instead of spinning at
+ * the counter every tick. */
+const SHOP_COOLDOWN_MS = 20_000;
 
 /**
  * Play ONE level headlessly with the autopilot at the controls and report
@@ -554,6 +558,7 @@ function playRun(args: {
   let hitsTaken = 0;
   let unstuckNudges = 0;
   let shopVisits = 0;
+  let lastShopMs = -Infinity;
   let lastProgressMs = 0;
   let lastKills = 0;
   let lastDamage = 0;
@@ -570,10 +575,13 @@ function playRun(args: {
   };
   // The recovery a player would run at the counter: bank the bag for coins,
   // buy the best weapon he can wield and afford, mend the kit, equip up. Only
-  // fires when actually at the stall (openShop is proximity-gated).
-  const recoverAtMerchant = (): void => {
+  // fires when actually at the stall (openShop is proximity-gated). Returns
+  // whether the shop actually opened — the caller cools down on a real visit so
+  // a hero who can't afford/wield an upgrade fights on instead of spinning at
+  // the counter (else a level-gated stall spams tens of thousands of visits).
+  const recoverAtMerchant = (): boolean => {
     autoEquipBest(state); // a decent bag weapon may end the starve for free
-    if (!weaponStarved() || !openShop(state)) return;
+    if (!weaponStarved() || !openShop(state)) return false;
     for (let i = 0; i < state.player.inventory.length; i++) {
       if (state.player.inventory[i]) sellItem(state, i);
     }
@@ -596,6 +604,7 @@ function playRun(args: {
     closeShop(state);
     autoEquipBest(state); // equip the purchase
     shopVisits++;
+    return true;
   };
 
   const trackSpawns = () => {
@@ -888,13 +897,22 @@ function playRun(args: {
     // high-difficulty stall reads as BALANCE rather than the bot never shopping.
     // The big hop trips the stall-breaker's movement gate below, so the two
     // never fight over where to drag him.
-    if (args.autoShop && state.phase === "playing" && weaponStarved()) {
-      recoverAtMerchant(); // buys/repairs when at the stall (proximity-gated)
-      if (weaponStarved()) {
-        // Still starved → not at the counter → drag him toward it (even before
-        // it's DISCOVERED: the bot never seeks the merchant, so a stranded hero
-        // would never find it; walking him over discovers it via stepMerchant,
-        // then next tick opens the shop). Stop ~40px short, inside the radius.
+    if (
+      args.autoShop &&
+      state.phase === "playing" &&
+      weaponStarved() &&
+      state.stats.timeMs - lastShopMs >= SHOP_COOLDOWN_MS
+    ) {
+      // At the counter, recoverAtMerchant opens the shop and re-arms; a real
+      // visit starts the cooldown so a hero who can't afford/wield an upgrade
+      // fights on with what he has instead of spamming the counter every tick.
+      if (recoverAtMerchant()) {
+        lastShopMs = state.stats.timeMs;
+      } else {
+        // Not at the counter yet → drag him toward it (even before it's
+        // DISCOVERED: the bot never seeks the merchant, so a stranded hero would
+        // never find it; walking him over discovers it via stepMerchant, then a
+        // later tick opens the shop). Stop ~40px short, inside the trade radius.
         const m = state.merchant.pos;
         const dx = m.x - state.player.pos.x;
         const dy = m.y - state.player.pos.y;
