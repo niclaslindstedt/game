@@ -166,22 +166,27 @@ settings (`balance` in `settings.ts`, applied on load like the other engine
 flags) and a RESET ALL row restores the shipped 1× tuning. Keep the page around
 ten knobs — one lever per system, not a config editor.
 
-**Settings controls share two reusable pixel widgets** (generic React/UI, in
+**Settings controls share three reusable pixel widgets** (generic React/UI, in
 `website/src/lib/`, imported via `@ui/lib/*` for eventual extraction to
 oss-framework): `PixelSlider.tsx` — the 0..1 drag track used by every slidable
-row (the BALANCE knobs and the SOUND music/SFX volumes) — and
-`PixelToggle.tsx` — a pixel ON/OFF switch drawn as the slider frozen at its two
-ends (same amber track + blocky knob; off is empty/knob-left, on is
-filled/knob-right) used by every row that reads as a straight on/off (DEBUG
-MODE, AUTO LEVEL STATS, CHARACTER WEAPON, WEAPON SWING, VIBRATION, XP ON KILL).
-The switch is **right-aligned** to a shared edge down the right of the menu
-(the label/blurb column stretches to the block width — see
-`.title-menu .menu-item-text`). Both are presentational; `TitleScreen.tsx` owns
-the menu wiring via a `MenuEntry`'s `slider`/`toggle` field, and the arrow keys
-steer the focused row's control (←/→). Two-mode rows that are NOT on/off (MOUSE
-follow/hold,
-POWERUPS on-pickup/manual, GEAR equip/bag, POWERUPS left/right corner) stay
-label-cycling buttons — a switch implies enabled/disabled, which those don't.
+row (the BALANCE knobs and the SOUND music/SFX volumes); `PixelToggle.tsx` — a
+pixel ON/OFF switch drawn as the slider frozen at its two ends (same amber track
+
+- blocky knob; off is empty/knob-left, on is filled/knob-right) used by every
+  row that reads as a straight on/off (DEBUG MODE, AUTO LEVEL STATS, CHARACTER
+  WEAPON, WEAPON SWING, VIBRATION, XP ON KILL); and `PixelCheckbox.tsx` — a pixel
+  tick-box (an empty grey square that fills with a smaller amber square when
+  checked) used by every **multi-select** row where one picks one of MANY rather
+  than flipping a setting (the EXPORT CHARACTER roster picker). The control is
+  **right-aligned** to a shared edge down the right of the menu (the label/blurb
+  column stretches to the block width — see `.title-menu .menu-item-text`). All
+  three are presentational; `TitleScreen.tsx` owns the menu wiring via a
+  `MenuEntry`'s `slider`/`toggle`/`check` field, and the arrow keys steer the
+  focused row's control (←/→). Pick the widget by meaning: a **switch** for a
+  straight on/off setting, a **tick-box** for a pick-one-of-many list. Two-mode
+  rows that are NOT on/off (MOUSE follow/hold, POWERUPS on-pickup/manual, GEAR
+  equip/bag, POWERUPS left/right corner) stay label-cycling buttons — a switch
+  implies enabled/disabled, which those don't.
 
 The feature flags gate recently-added systems so they can be toggled at
 runtime. All are **opt-in — off by default** (the app applies the off state on

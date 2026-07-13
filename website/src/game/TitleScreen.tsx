@@ -34,6 +34,7 @@ import { useScrollFade } from "@ui/lib/scroll-fade.ts";
 
 import { IDENTITY } from "../identity.ts";
 
+import { PixelCheckbox } from "@ui/lib/PixelCheckbox.tsx";
 import { PixelSlider } from "@ui/lib/PixelSlider.tsx";
 import { PixelToggle } from "@ui/lib/PixelToggle.tsx";
 
@@ -73,6 +74,7 @@ import {
   isDifficultyBeaten,
   isDifficultyUnlocked,
   isLevelUnlocked,
+  loadCharacters,
   type Character,
 } from "./characters.ts";
 import {
@@ -109,6 +111,7 @@ type MenuScreen =
   | "display"
   | "sound"
   | "data"
+  | "export"
   | "developer"
   | "balance"
   | "arsenal"
@@ -212,6 +215,12 @@ type MenuEntry = {
    * (→ on, ← off) and confirm/click flips it. `on` is the current state; `set`
    * commits a new one. */
   toggle?: { on: boolean; set: (on: boolean) => void };
+  /** A MULTI-SELECT row (the EXPORT CHARACTER picker): renders a pixel tick-box
+   * after the label; the arrows set it (→ checked, ← empty) and confirm/click
+   * toggles it. `checked` is the current state; `set` commits a new one. A
+   * tick-box (not a switch) because these rows pick one of many, not a
+   * setting's on/off. */
+  check?: { checked: boolean; set: (checked: boolean) => void };
   /** A KEY BINDINGS row: renders the bound key's name right-aligned (Quake
    * style — label left, key far right). `capturing` swaps it for a "PRESS A
    * KEY" prompt while this row is listening for the next press. */
@@ -444,19 +453,61 @@ export function TitleScreen({
     text: string;
   } | null>(null);
 
-  // Export the ACTIVE hero (the roster's per-character export moved here, so it
-  // is the one currently selected). A no-op with no active character — the row
-  // isn't offered then.
-  const exportActive = useCallback(async () => {
-    if (!character) return;
+  // The whole roster, loaded for the EXPORT CHARACTER picker (SETTINGS → DATA →
+  // EXPORT CHARACTER). Refreshed each time the screen opens (via exportTick) so
+  // a hero imported this session shows up. Independent of the ACTIVE character —
+  // the picker exports whichever heroes are ticked, not the current game.
+  const [exportTick, setExportTick] = useState(0);
+  // exportTick is the deliberate refresh trigger (a fresh roster snapshot each
+  // time the picker opens); eslint can't see the dependency through
+  // loadCharacters(), so it wrongly flags it — keep it and silence the warning.
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  const roster = useMemo(() => loadCharacters(), [exportTick]);
+  // The ids ticked in the EXPORT CHARACTER picker — one or many. A Set so
+  // toggling a row is O(1) and the export button reads its size.
+  const [exportPicks, setExportPicks] = useState<Set<string>>(() => new Set());
+  const toggleExportPick = useCallback((id: string, on: boolean) => {
     playUiSound(synth, "confirm");
-    try {
-      await exportCharacterToFile(character);
-      setTransferNotice({ tone: "info", text: `EXPORTED ${character.name}` });
-    } catch {
-      setTransferNotice({ tone: "error", text: "EXPORT FAILED" });
+    setExportPicks((prev) => {
+      const next = new Set(prev);
+      if (on) next.add(id);
+      else next.delete(id);
+      return next;
+    });
+  }, []);
+
+  // Export every ticked hero as its own signed zip. A no-op with nothing ticked
+  // (the row buzzes instead). Downloads run sequentially so the browser doesn't
+  // drop overlapping saves; a single failure is surfaced without hiding the
+  // ones that did land.
+  const exportPicked = useCallback(async () => {
+    const chosen = roster.filter((c) => exportPicks.has(c.id));
+    if (chosen.length === 0) {
+      playUiSound(synth, "back");
+      setTransferNotice({ tone: "error", text: "SELECT A HERO TO EXPORT" });
+      return;
     }
-  }, [character]);
+    playUiSound(synth, "confirm");
+    let failed = 0;
+    for (const hero of chosen) {
+      try {
+        await exportCharacterToFile(hero);
+      } catch {
+        failed += 1;
+      }
+    }
+    if (failed === 0) {
+      setTransferNotice({
+        tone: "info",
+        text:
+          chosen.length === 1
+            ? `EXPORTED ${chosen[0]!.name}`
+            : `EXPORTED ${chosen.length} HEROES`,
+      });
+    } else {
+      setTransferNotice({ tone: "error", text: `EXPORT FAILED (${failed})` });
+    }
+  }, [roster, exportPicks]);
 
   const runImport = useCallback(async (file: File) => {
     try {
@@ -966,20 +1017,23 @@ export function TitleScreen({
       ];
     }
     if (screen === "data") {
-      // Character transfer: EXPORT the active hero as a signed zip (offered
-      // only when one is active), IMPORT any exported hero back via a file
-      // picker.
+      // Character transfer: EXPORT opens a picker over the WHOLE roster (tick
+      // one or many, not just the current game); IMPORT loads any exported hero
+      // back via a file picker.
       return [
-        ...(character
-          ? [
-              {
-                label: "EXPORT CHARACTER",
-                aria: "data-export-character",
-                blurb: `SAVE ${character.name} TO A FILE`,
-                action: () => void exportActive(),
-              },
-            ]
-          : []),
+        {
+          label: "EXPORT CHARACTER",
+          aria: "data-export-character",
+          blurb: "SAVE ONE OR MORE HEROES TO FILES",
+          action: () => {
+            playUiSound(synth, "confirm");
+            setExportTick((t) => t + 1); // refresh the roster snapshot
+            setExportPicks(new Set());
+            setTransferNotice(null);
+            setScreen("export");
+            setCursor(0);
+          },
+        },
         {
           label: "IMPORT CHARACTER",
           aria: "data-import-character",
@@ -989,6 +1043,67 @@ export function TitleScreen({
         // Land back on the DATA row in SETTINGS (after CONTROLS / DISPLAY /
         // SOUND).
         backTo("settings", 3),
+      ];
+    }
+    if (screen === "export") {
+      // The EXPORT CHARACTER picker: a ticked list of the WHOLE roster (not the
+      // active hero), then one download per ticked hero. A fallen hardcore hero
+      // still exports — a backup is a backup.
+      if (roster.length === 0) {
+        return [
+          {
+            label: "NO HEROES YET",
+            aria: "export-empty",
+            blurb: "CREATE A HERO FROM PLAY - NEW GAME FIRST",
+            locked: true,
+            action: () => playUiSound(synth, "back"),
+          },
+          backTo("data", 0),
+        ];
+      }
+      const heroRows: MenuEntry[] = roster.map((hero) => {
+        const level = hero.loadout?.level ?? 1;
+        const on = exportPicks.has(hero.id);
+        const status = hero.dead
+          ? "FALLEN"
+          : hero.hardcore
+            ? "HARDCORE"
+            : "SOFTCORE";
+        return {
+          label: hero.name,
+          aria: `export-hero-${hero.id}`,
+          blurb: `LV ${level} - ${status}`,
+          check: {
+            checked: on,
+            set: (next: boolean) => toggleExportPick(hero.id, next),
+          },
+          action: () => toggleExportPick(hero.id, !on),
+        };
+      });
+      const count = roster.filter((c) => exportPicks.has(c.id)).length;
+      const canExport = count > 0;
+      return [
+        ...heroRows,
+        {
+          label: canExport ? `EXPORT (${count})` : "EXPORT",
+          aria: "export-confirm",
+          // Greyed and inert until at least one hero is ticked (mirrors a
+          // locked level row): choosing it just buzzes.
+          color: canExport ? "#7ef0c8" : "#5a6068",
+          locked: !canExport,
+          blurb: canExport
+            ? "DOWNLOAD THE TICKED HEROES AS SIGNED FILES"
+            : "TICK A HERO ABOVE TO EXPORT",
+          action: () => {
+            if (!canExport) {
+              playUiSound(synth, "back");
+              return;
+            }
+            void exportPicked();
+          },
+        },
+        // Land back on the EXPORT CHARACTER row in DATA (the first row).
+        backTo("data", 0),
       ];
     }
     if (screen === "sound") {
@@ -1189,7 +1304,10 @@ export function TitleScreen({
     difficulty,
     warp,
     hasFinePointer,
-    exportActive,
+    roster,
+    exportPicks,
+    toggleExportPick,
+    exportPicked,
     pickImport,
   ]);
 
@@ -1300,6 +1418,12 @@ export function TitleScreen({
         event.preventDefault();
         unlockAudio();
         row.toggle.set(event.key === "ArrowRight");
+      } else if (row?.check && horizontal) {
+        // On a multi-select row the arrows set the tick-box directly
+        // (→ checked, ← empty); `set` plays its own confirm cue.
+        event.preventDefault();
+        unlockAudio();
+        row.check.set(event.key === "ArrowRight");
       } else if (event.key === "ArrowDown" || event.key === "ArrowUp") {
         event.preventDefault();
         unlockAudio();
@@ -1324,6 +1448,7 @@ export function TitleScreen({
           display: "settings",
           sound: "settings",
           data: "settings",
+          export: "data",
           developer: "settings",
           balance: "developer",
           difficulty: warp ? "developer" : "main",
@@ -1699,6 +1824,14 @@ export function TitleScreen({
               color="#d9a0f0"
             />
           )}
+          {screen === "export" && (
+            <PixelText
+              font={font}
+              text="DATA - EXPORT CHARACTER"
+              scale={2}
+              color="#d9a0f0"
+            />
+          )}
           {screen === "developer" && (
             <PixelText font={font} text="DEVELOPER" scale={2} color="#7ef0c8" />
           )}
@@ -2004,6 +2137,9 @@ export function TitleScreen({
                             />
                           </span>
                         )}
+                        {entry.check && (
+                          <PixelCheckbox checked={entry.check.checked} />
+                        )}
                         {entry.binding && (
                           <span className="menu-item-binding">
                             <PixelText
@@ -2054,8 +2190,9 @@ export function TitleScreen({
             </nav>
           )}
 
-          {/* The import/export result line, under the SETTINGS - DATA menu. */}
-          {screen === "data" && transferNotice && (
+          {/* The import/export result line, under the SETTINGS - DATA menu and
+              the EXPORT CHARACTER picker. */}
+          {(screen === "data" || screen === "export") && transferNotice && (
             <p
               className={`title-notice ${transferNotice.tone}`}
               role="status"

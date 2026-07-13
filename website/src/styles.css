@@ -2379,6 +2379,45 @@ body {
   }
 }
 
+/* Pixel CHECKBOX (PixelCheckbox): a multi-select tick-box on the same sharp
+   pixel skin as the toggle — an empty grey square that fills with a smaller
+   amber square when checked. Used where a row picks one of MANY (the EXPORT
+   CHARACTER roster) rather than flipping a single setting on/off. */
+.menu-item-headline .pixel-checkbox {
+  margin-left: auto;
+}
+
+.pixel-checkbox {
+  position: relative;
+  flex: none;
+  width: 1rem;
+  height: 1rem;
+  background: #2b2f36;
+  border: 1px solid #5a6068;
+}
+
+.pixel-checkbox-mark {
+  position: absolute;
+  /* Inset so the grey frame stays visible around the amber tick — a filled
+     square INSIDE the box, not the whole box lighting up. */
+  inset: 0.2rem;
+  background: #ffd75e;
+  opacity: 0;
+  transition: opacity 0.1s steps(2);
+}
+
+.pixel-checkbox[data-checked="true"] .pixel-checkbox-mark {
+  opacity: 1;
+}
+
+/* Motion off: the tick still appears/disappears (it must show state) but
+   without the stepped fade. */
+@media (prefers-reduced-motion: reduce) {
+  .pixel-checkbox-mark {
+    transition: none;
+  }
+}
+
 /* ---- Character roster (LoadGame) + creation (NewGame) ---- */
 
 .character-heading {
