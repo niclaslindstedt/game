@@ -1,19 +1,20 @@
 #!/usr/bin/env node
 // SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
-// Screenshot-based correctness check for the main-menu sun/moon Easter egg
-// (see src/game/titleSky.ts). For a set of frozen progress values, in both
+// Screenshot-based correctness check for the main-menu solar-system Easter egg
+// (see src/game/titleSky.ts). For a set of frozen progress values (each pinning
+// the Moon to a different point on its orbit around the Earth), in both
 // landscape and portrait, it:
 //
-//   1. pins the effect to a fixed progress (window.__skyFreeze),
+//   1. pins the orbits to a fixed progress (window.__skyFreeze),
 //   2. reads the sun and moon centres back (window.__skyState),
 //   3. screenshots the moon element and measures the luminance-weighted
 //      centroid of its *lit* pixels in the browser (a canvas, no image deps),
 //   4. checks that the lit limb actually points at the sun — i.e. the angle
 //      between (litCentroid − moonCentre) and (sun − moonCentre) is small.
 //
-// This is the geometric law the effect must obey ("the moon is lit from the
-// sun's side") and it must hold in any orientation. Prints a table and exits
-// non-zero if any directional frame is off.
+// This is the geometric law the effect must obey ("a body is lit from the
+// sun's side") and it must hold at every orbital position and orientation.
+// Prints a table and exits non-zero if any directional frame is off.
 //
 // Usage (from website/, dev server on :5199, playwright installed --no-save):
 //   node scripts/verify-sky.mjs [--url http://localhost:5199] [--shots]
@@ -42,23 +43,23 @@ mkdirSync(shotDir, { recursive: true });
 // pixel noise, tight enough to catch a terminator pointing the wrong way.
 const MAX_ANGLE_ERR = 22;
 
-// Progress values worth asserting: phases where the moon is a clear
-// crescent/gibbous (a strong directional signal) with the sun at varied
-// azimuths — dusk on one side, dawn on the other, and daytime slivers. Very
-// near-full/near-new frames are skipped: the terminator signal there is
-// swamped by the moon-face texture, so direction can't be read from pixels.
+// Progress values worth asserting: each pins the Moon to a different spot on
+// its orbit around the Earth, so the sun sits at a varied azimuth relative to
+// the Moon. The disc is always half-lit, so every frame leaves a clear
+// terminator to read a direction from.
 const SAMPLES = [
-  { p: 0.1, note: "day: sun high, thin sun-lit rim" },
-  { p: 0.2, note: "day: sun setting side, thin rim" },
-  { p: 0.4, note: "dusk: sun just set (waxing crescent)" },
-  { p: 0.45, note: "early night, waxing gibbous" },
-  { p: 0.5, note: "night, fat waxing gibbous" },
-  { p: 0.85, note: "late night, waning gibbous" },
-  { p: 0.9, note: "pre-dawn, waning gibbous" },
-  { p: 0.94, note: "dawn: sun about to rise (waning crescent)" },
+  { p: 0.1, note: "moon leading the earth" },
+  { p: 0.2, note: "moon above the earth" },
+  { p: 0.4, note: "moon trailing, sun to the lower right" },
+  { p: 0.45, note: "moon trailing the earth" },
+  { p: 0.5, note: "moon below the earth" },
+  { p: 0.85, note: "moon leading, sun to the left" },
+  { p: 0.9, note: "moon above-left of the earth" },
+  { p: 0.94, note: "moon crossing toward the sun" },
 ];
 
-// Only assert direction where the lit fraction leaves a clear terminator.
+// Only assert direction where the lit fraction leaves a clear terminator (the
+// half-lit disc always does; the guard stays for robustness).
 const CLEAR_MIN = 0.12;
 const CLEAR_MAX = 0.88;
 

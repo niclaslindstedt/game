@@ -421,10 +421,13 @@ export function TitleScreen({
     };
   }, []);
 
-  // The backdrop's sun/moon Easter egg — a rAF loop that keeps the moon lit
-  // from the sun's real position. Starts once the menu (and its elements) has
-  // mounted after the assets load.
+  // The backdrop's solar-system Easter egg — a rAF loop that spins Earth and
+  // Mars around a static sun (and the Moon around Earth), each lit from the
+  // sun's real position. Starts once the menu (and its elements) has mounted
+  // after the assets load.
   const moonRef = useRef<HTMLDivElement>(null);
+  const earthRef = useRef<HTMLDivElement>(null);
+  const marsRef = useRef<HTMLDivElement>(null);
   const sunRef = useRef<HTMLDivElement>(null);
   const glareRef = useRef<HTMLDivElement>(null);
 
@@ -442,10 +445,12 @@ export function TitleScreen({
   const tallMenu = screen === "levels" || screen === "balance";
   useEffect(() => {
     const moon = moonRef.current;
+    const earth = earthRef.current;
+    const mars = marsRef.current;
     const sun = sunRef.current;
     const glare = glareRef.current;
-    if (!moon || !sun || !glare) return;
-    return startTitleSky({ moon, sun, glare });
+    if (!moon || !earth || !mars || !sun || !glare) return;
+    return startTitleSky({ moon, earth, mars, sun, glare });
   }, [assets]);
 
   // Settings live in a plain singleton; mirror a tick so labels re-render.
@@ -1740,12 +1745,26 @@ export function TitleScreen({
         <span className="title-twinkle title-twinkle-6" />
         <span className="title-twinkle title-twinkle-7" />
       </div>
+      {/* Earth and Mars, wheeling around the sun; the Moon (below) orbits Earth.
+          Positions and lighting are driven each frame by startTitleSky
+          (titleSky.ts) — the CSS only supplies each planet's surface. */}
+      <div
+        ref={earthRef}
+        className="title-planet title-earth"
+        aria-hidden="true"
+      />
+      <div
+        ref={marsRef}
+        className="title-planet title-mars"
+        aria-hidden="true"
+      />
       {/* Hidden developer gesture: hold the moon for MOON_HOLD_MS to reveal the
           DEVELOPER row in SETTINGS (see startMoonHold). aria-hidden stays — it
-          is a secret, pointer-only Easter egg, not an announced control. */}
+          is a secret, pointer-only Easter egg, not an announced control. The
+          moon rides its orbit around Earth (titleSky.ts) but stays the trigger. */}
       <div
         ref={moonRef}
-        className={`title-moon${moonCharging ? " charging" : ""}${
+        className={`title-planet title-moon${moonCharging ? " charging" : ""}${
           moonExploding ? " exploding" : ""
         }`}
         aria-hidden="true"
@@ -1773,9 +1792,8 @@ export function TitleScreen({
           ))}
         </div>
       )}
-      {/* Easter egg: a lone sun slowly arcs across the sky roughly every few
-          minutes. The moon is dark while it is up and swells to full once it
-          has set — always lit from the sun's true direction. Driven by
+      {/* Easter egg: a sun sits still in the upper sky while the planets above
+          wheel around it, each lit from the sun's true direction. Driven by
           startTitleSky (titleSky.ts); the CSS only supplies the static look. */}
       <div ref={sunRef} className="title-sun" aria-hidden="true" />
       <div ref={glareRef} className="title-sun-glare" aria-hidden="true" />
