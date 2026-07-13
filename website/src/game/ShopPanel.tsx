@@ -17,6 +17,8 @@ import {
   equipmentIcon,
   isScrappableLoot,
   merchantName,
+  repairAllCost,
+  repairGear,
   sellItem,
   sellValue,
   type Equipment,
@@ -152,6 +154,53 @@ function BulkSellButton({
   );
 }
 
+/** Mend the hero's whole kit for coins — a SPEND, so it shows the price (gold
+ * when affordable, red when the purse is short) and disables when nothing needs
+ * mending or the hero can't cover it. */
+function RepairButton({
+  font,
+  sprites,
+  cost,
+  coins,
+  onRepair,
+}: {
+  font: PixelFont;
+  sprites: Sprites;
+  cost: number;
+  coins: number;
+  onRepair: () => void;
+}) {
+  const needsRepair = cost > 0;
+  const affordable = coins >= cost;
+  const enabled = needsRepair && affordable;
+  const coin = spriteDataUrl(sprites, "icon_coin");
+  return (
+    <button
+      type="button"
+      className="pixel-button secondary shop-bulk-btn"
+      aria-label="repair-all"
+      disabled={!enabled}
+      onClick={enabled ? onRepair : undefined}
+    >
+      {coin && <img src={coin} alt="" className="pixel-img shop-bulk-coin" />}
+      <PixelText
+        font={font}
+        text="REPAIR"
+        scale={1}
+        color={enabled ? "#e6e8eb" : "#5a6470"}
+      />
+      {needsRepair && (
+        <PixelText
+          font={font}
+          text={formatCompact(cost)}
+          scale={1}
+          color={affordable ? "#ffd75e" : "#c65f5f"}
+        />
+      )}
+    </button>
+  );
+}
+
 export function ShopPanel({
   state,
   font,
@@ -212,6 +261,19 @@ export function ShopPanel({
     .map((item, index) => ({ item, index }))
     .filter((e): e is { item: Equipment; index: number } => e.item !== null);
   const bagTotal = bag.reduce((sum, e) => sum + sellValue(e.item), 0);
+
+  // REPAIR ALL: the coins to mend the worn weapon, worn armor, and every
+  // breakable bag piece back to full (0 when the whole kit is already whole).
+  const repairTotal = repairAllCost(state);
+
+  const doRepair = () => {
+    if (repairGear(state) !== null) {
+      playUiSound(synth, "confirm");
+      onChange();
+    } else {
+      playUiSound(synth, "back");
+    }
+  };
 
   const doSell = (index: number) => {
     if (sellItem(state, index) !== null) {
@@ -346,6 +408,14 @@ export function ShopPanel({
                   setSelected(null);
                   onChange();
                 }}
+              />
+              {/* REPAIR ALL: mend the whole kit for coins. */}
+              <RepairButton
+                font={font}
+                sprites={sprites}
+                cost={repairTotal}
+                coins={player.coins}
+                onRepair={doRepair}
               />
             </div>
           </div>

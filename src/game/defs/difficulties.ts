@@ -439,6 +439,22 @@ export const DIFFICULTY_ORDER: Difficulty[] = [
 ];
 
 /**
+ * The wandering merchant's SEND-OFF line, tuned to the difficulty — the second
+ * half of his "welcome back" when he's already set up here (see
+ * `revealMerchant` / `LevelDef.merchant.returnGreeting`). Paired with the
+ * per-level warmth line, so each (level × difficulty) return greeting reads a
+ * little different: an easy floor gets a light "you'll be fine," JESUS the
+ * no-net truth. Dialogue text — mirror any change into `docs/manuscript.md`.
+ */
+export const MERCHANT_RETURN_SENDOFF: Record<Difficulty, string> = {
+  easy: "STAY SHARP. YOU'LL DO FINE.",
+  medium: "IT BITES HARDER NOW. WATCH IT.",
+  hard: "IT'S UGLY OUT THERE. CAREFUL.",
+  nightmare: "NOTHING'S FAIR NOW. GO SLOW.",
+  jesus: "MOST DON'T COME BACK. LUCK.",
+};
+
+/**
  * The three PARALLEL starting lanes. All are open from the first launch — a
  * player picks one as their entry point. They run the same missions over the
  * same hero-level band (and share one XP-cap band, see `XP_CAP`); the only

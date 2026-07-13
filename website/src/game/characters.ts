@@ -63,6 +63,14 @@ export type Character = {
   /** Levels cleared, as `${difficulty}:${levelId}` — drives the linear
    * campaign before a difficulty is beaten. */
   clears: string[];
+  /**
+   * Maps where this hero has MET the wandering merchant, as
+   * `${difficulty}:${levelId}`. Once met, the trader is set up at the door on
+   * every later entry to that map/difficulty (fed to `createGame` as
+   * `merchantDiscovered`), so a death-and-restart can walk straight to the
+   * counter and repair. Recorded on the `merchantDiscovered` engine event.
+   */
+  merchantsMet: string[];
   /** Difficulties whose whole campaign is beaten — unlocks the level picker
    * there AND the next rung of the ladder. */
   beaten: Difficulty[];
@@ -198,6 +206,7 @@ export function loadCharacters(): Character[] {
       clears: Array.isArray(c.clears) ? c.clears : [],
       beaten: Array.isArray(c.beaten) ? c.beaten : [],
       storySeen: Array.isArray(c.storySeen) ? c.storySeen : [],
+      merchantsMet: Array.isArray(c.merchantsMet) ? c.merchantsMet : [],
       loadout: c.loadout ? migrateLoadout(c.loadout) : null,
     }));
   } catch {
@@ -255,6 +264,7 @@ export function createCharacter(name: string, hardcore: boolean): Character {
     clears: [],
     beaten: [],
     storySeen: [],
+    merchantsMet: [],
   };
   const roster = loadCharacters();
   roster.push(character);
@@ -306,6 +316,7 @@ export function normalizeCharacter(data: unknown): Character {
     clears: strings(c.clears),
     beaten: strings(c.beaten) as Difficulty[],
     storySeen: strings(c.storySeen),
+    merchantsMet: strings(c.merchantsMet),
   };
 }
 
@@ -411,6 +422,35 @@ export function markStorySeen(
   for (const thought of thoughts) seen.add(thoughtSeenKey(thought, difficulty));
   if (seen.size === before) return character; // nothing new witnessed
   const updated: Character = { ...character, storySeen: [...seen] };
+  persist(updated);
+  return updated;
+}
+
+/** Has this hero met the wandering merchant on `levelId` at `difficulty`? The
+ * app feeds the answer to `createGame` (`merchantDiscovered`) so the trader is
+ * set up at the door on re-entry. */
+export function hasMetMerchant(
+  character: Character,
+  levelId: string,
+  difficulty: Difficulty,
+): boolean {
+  return character.merchantsMet.includes(clearKey(levelId, difficulty));
+}
+
+/** Record that this hero has now MET the merchant on `levelId`/`difficulty`
+ * (called on the `merchantDiscovered` event). Idempotent — a no-op returns the
+ * character untouched; otherwise it persists and returns the update. */
+export function markMerchantMet(
+  character: Character,
+  levelId: string,
+  difficulty: Difficulty,
+): Character {
+  const key = clearKey(levelId, difficulty);
+  if (character.merchantsMet.includes(key)) return character;
+  const updated: Character = {
+    ...character,
+    merchantsMet: [...character.merchantsMet, key],
+  };
   persist(updated);
   return updated;
 }

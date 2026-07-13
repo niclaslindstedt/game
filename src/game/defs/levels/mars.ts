@@ -75,6 +75,7 @@ export const MARS: LevelDef = {
         "MACHINES DROP - BUY WHAT HELPS.",
       ],
     ],
+    returnGreeting: ["THE LIVE ONE RETURNS.", "SCALES ARE STILL HONEST."],
   },
   playerSpawn: { x: 300, y: 750 },
   landmarks: [

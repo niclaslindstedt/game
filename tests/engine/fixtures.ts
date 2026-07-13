@@ -992,6 +992,7 @@ export const FIX_MERCHANT_LEVEL: LevelDef = {
     sprite: "merchant_test",
     name: "TEST MERCHANT",
     greeting: [["TEST MERCHANT LINE ONE."], ["TEST MERCHANT LINE TWO."]],
+    returnGreeting: ["TEST WELCOME BACK."],
   },
 };
 

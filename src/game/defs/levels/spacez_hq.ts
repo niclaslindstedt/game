@@ -85,6 +85,7 @@ export const SPACEZ_HQ: LevelDef = {
         "AND SELL WHAT KEEPS YOU UPRIGHT.",
       ],
     ],
+    returnGreeting: ["BACK ALREADY, FRIEND?", "THE MACHINES MISSED YOU."],
   },
   playerSpawn: { x: 220, y: 620 },
   landmarks: [

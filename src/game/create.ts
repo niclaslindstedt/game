@@ -39,7 +39,7 @@ import {
 } from "./items.ts";
 import { xpToLevelUp } from "./leveling.ts";
 import { createExplored, revealAround } from "./map.ts";
-import { createMerchant } from "./merchant.ts";
+import { createMerchant, revealMerchant } from "./merchant.ts";
 import {
   evolutionHpMult,
   mobContactScaleFor,
@@ -79,6 +79,11 @@ export function createGame(
   // — chiefly the bunker key, latent until "eastworld" is beaten. Empty on a
   // dev jump or a fresh hero.
   clearedLevels: string[] = [],
+  // True when the hero has ALREADY met this level's merchant on this difficulty
+  // (the app seeds it from the character's `merchantsMet`). The trader is then
+  // set up at the door from the first tick — a death-and-restart can walk
+  // straight to the counter to repair — and greets the hero back on approach.
+  merchantDiscovered = false,
 ): GameState {
   const def = levelDef(levelId);
   const diff = difficultyDef(difficulty);
@@ -307,7 +312,13 @@ export function createGame(
     gates: [],
     // The wandering merchant: placed (and forever rolled) on his own seeded
     // stream, so the run's rng sequence is exactly what it was without him.
-    merchant: createMerchant(seed, def, playerSpawn, blocked),
+    merchant: createMerchant(
+      seed,
+      def,
+      playerSpawn,
+      blocked,
+      merchantDiscovered,
+    ),
     explored: createExplored(def),
     mapMarkers: [],
     player: {
@@ -492,6 +503,10 @@ export function createGame(
   // Dress the run in the carried-over progress, when there is any: level,
   // stats, equipment, bag, and powerups from the previous level's clear.
   if (loadout) applyLoadout(state, loadout);
+
+  // A merchant met here before is set up at the door from the outset — revealed
+  // now (after the loadout, so his stall prices off the arriving hero's level).
+  if (merchantDiscovered) revealMerchant(state);
 
   return state;
 }

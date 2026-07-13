@@ -356,6 +356,15 @@ export type LevelDef = {
     /** Pages of the meeting scene (same shape as an elite's `dialogue`). */
     greeting?: string[][];
     /**
+     * The "welcome back" line, spoken when the hero re-enters a map where he
+     * has ALREADY met this trader (persisted per level+difficulty — the
+     * merchant is set up at the door on the new run, see `revealMerchant`).
+     * Lines of ONE page, in the trader's voice; the difficulty's send-off
+     * (`MERCHANT_RETURN_SENDOFF`) is appended so each level+difficulty reads a
+     * touch different. Dialogue text — mirror into `docs/manuscript.md`.
+     */
+    returnGreeting?: string[];
+    /**
      * Named UNIQUES (`defs/uniques.ts` ids) this level's stall MAY carry on
      * top of the rolled weapons. Each is ROLLED at stall-stocking time at
      * the standing boss-unique odds (`UNIQUE.dropChance × mlvl/ilvl`, the

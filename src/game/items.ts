@@ -16,6 +16,7 @@ import {
   ARMOR,
   CONSUMABLES,
   DODGE,
+  ECONOMY,
   GATES,
   LEVELING,
   LOOT,
@@ -1090,6 +1091,77 @@ export function repairWornArmor(state: GameState): boolean {
   }
   // A revived piece's bonuses just came back online.
   if (revived) {
+    recomputeMaxHp(state);
+    recomputeMaxStamina(state);
+  }
+  return mended;
+}
+
+/**
+ * Coins to fully mend ONE instance right now (config `ECONOMY.repair`): 0 for
+ * the unbreakable sidearm, a durability-free charm/bag, or an already-full
+ * piece. Otherwise it scales with the fraction of durability MISSING and — the
+ * three levers the price is meant to reflect — the piece's REQUIRED LEVEL, its
+ * RARITY (tier), and its MAKE QUALITY: dearer, higher-end, finer gear costs
+ * more to keep whole.
+ */
+export function repairCost(piece: Equipment): number {
+  if (piece.durability === undefined) return 0; // unbreakable
+  const max = equipmentMaxDurability(piece);
+  if (max <= 0) return 0; // charms, bags — no durability
+  const missing = max - piece.durability;
+  if (missing <= 0) return 0; // already whole
+  const { base, perReqLevel, tierMult } = ECONOMY.repair;
+  const cost =
+    (base + perReqLevel * itemLevelReq(piece)) *
+    tierMult[piece.tier] *
+    qualityMult(piece) *
+    (missing / max);
+  return Math.max(1, Math.ceil(cost));
+}
+
+/**
+ * The total coins to mend the hero's WHOLE kit — the worn weapon and armor plus
+ * every breakable piece riding in the bag — each priced by `repairCost`. The
+ * quote the merchant's REPAIR action charges; 0 when nothing needs mending.
+ */
+export function repairAllCost(state: GameState): number {
+  const p = state.player;
+  let total = repairCost(p.equipment.weapon);
+  for (const slot of ARMOR_SLOTS) {
+    const piece = p.equipment[slot];
+    if (piece) total += repairCost(piece);
+  }
+  for (const cell of p.inventory) {
+    if (cell) total += repairCost(cell);
+  }
+  return total;
+}
+
+/**
+ * Mend every repairable piece — worn weapon, worn armor, and everything in the
+ * bag — back to full, reviving any broken worn armor. The COIN cost is charged
+ * by the caller (the merchant's `repairGear`); this is the pure restore, so a
+ * ground repair kit or a scripted mend can reuse it. Returns whether anything
+ * changed.
+ */
+export function repairAll(state: GameState): boolean {
+  const p = state.player;
+  let mended = false;
+  let wornArmorRevived = false;
+  const mend = (piece: Equipment | null, wornArmor: boolean): void => {
+    if (!piece || piece.durability === undefined) return;
+    const max = equipmentMaxDurability(piece);
+    if (max <= 0 || piece.durability >= max) return;
+    if (wornArmor && piece.durability === 0) wornArmorRevived = true;
+    piece.durability = max;
+    mended = true;
+  };
+  mend(p.equipment.weapon, false);
+  for (const slot of ARMOR_SLOTS) mend(p.equipment[slot], true);
+  for (const cell of p.inventory) mend(cell, false);
+  // A revived worn piece's bonuses just came back online.
+  if (wornArmorRevived) {
     recomputeMaxHp(state);
     recomputeMaxStamina(state);
   }

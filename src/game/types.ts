@@ -866,8 +866,16 @@ export type DialogueState = {
      * The wandering merchant's meeting scene — played once, the moment he is
      * first discovered. `levelId` keys the level whose `merchant` def carries
      * the greeting (each level's trader has his own story for being there).
+     * When `returning` is set (he was already met here on a prior run and is
+     * revealed at map start), his shorter "welcome back" line plays instead —
+     * the per-level `returnGreeting` paired with `difficulty`'s send-off.
      */
-    | { kind: "merchant"; levelId: string }
+    | {
+        kind: "merchant";
+        levelId: string;
+        returning?: boolean;
+        difficulty?: Difficulty;
+      }
     /**
      * A spared figure's joining scene — the thanks, the life owed, the
      * promise to follow — played the moment the SPARE verdict lands. `defId`
@@ -937,6 +945,14 @@ export type Merchant = {
   moving: boolean;
   /** Latched on the first encounter: rooted, mapped, shop open for business. */
   discovered: boolean;
+  /**
+   * True once his "welcome back" line has been delivered (or was never owed).
+   * A merchant MET live this run greets through the first-meeting scene and is
+   * marked true then; a merchant REVEALED at map start (met here on a prior
+   * run — see `revealMerchant`) starts false and gives his return greeting the
+   * first time the hero comes near.
+   */
+  greetedReturn: boolean;
   /** The stall (empty until discovered — stock is rolled at the meeting). */
   stock: MerchantStock[];
   /**
@@ -1211,6 +1227,9 @@ export type GameEvent =
    * app toasts the meeting and can chime a till.
    */
   | { type: "merchantDiscovered"; pos: Vec2 }
+  /** The hero paid the merchant to mend his whole kit — `paid` coins spent (the
+   * app chimes the till and can toast the repair). */
+  | { type: "gearRepaired"; paid: number }
   /**
    * A minion was dragged into a black hole's core and devoured — off the
    * board with no kill, no XP and no loot. `defId` names the meal; the app

@@ -72,6 +72,7 @@ export const THE_RIFT: LevelDef = {
         "WE'RE BOTH FAR FROM HOME.",
       ],
     ],
+    returnGreeting: ["YOU AGAIN. OF COURSE.", "ALL ROADS STILL LEAD HERE."],
   },
   playerSpawn: { x: 300, y: 800 },
   landmarks: [

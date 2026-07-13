@@ -133,6 +133,7 @@ export const EASTWORLD: LevelDef = {
         "BRING WATCHES.",
       ],
     ],
+    returnGreeting: ["WELL, LOOK WHO'S BACK.", "SAME STOOL, PARTNER?"],
     stockUniques: [
       "putains_tracksuit",
       "the_kremlin_ushanka",

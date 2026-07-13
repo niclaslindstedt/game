@@ -1560,6 +1560,33 @@ everyone else; they just paid more for it._
 
 ---
 
+### The wandering merchant — welcome back (return visits)
+
+_Spoken when the hero re-enters a map where he has ALREADY met the trader (the
+meeting is remembered per level and difficulty). He is set up at the door from
+the start — so a death-and-restart can walk straight over to sell and repair —
+and greets the hero back on approach, in place of the first-meeting scene. Each
+line is his per-level warmth followed by a difficulty-tuned send-off, so every
+level×difficulty reads a touch different._
+
+Per-level welcome (`merchant.returnGreeting`):
+
+- **SpaceZ HQ** (the vending-machine man): BACK ALREADY, FRIEND? / THE MACHINES MISSED YOU.
+- **The moon** (the salvage-run trader): STILL BREATHING, I SEE. / GOOD - MY ONLY CUSTOMER.
+- **Mars** (the commissary keeper): THE LIVE ONE RETURNS. / SCALES ARE STILL HONEST.
+- **The rift** (the trader between worlds): YOU AGAIN. OF COURSE. / ALL ROADS STILL LEAD HERE.
+- **Eastworld** (the barkeep): WELL, LOOK WHO'S BACK. / SAME STOOL, PARTNER?
+
+Difficulty send-off, appended to the line above (`MERCHANT_RETURN_SENDOFF`):
+
+- **EASY:** STAY SHARP. YOU'LL DO FINE.
+- **MEDIUM:** IT BITES HARDER NOW. WATCH IT.
+- **HARD:** IT'S UGLY OUT THERE. CAREFUL.
+- **NIGHTMARE:** NOTHING'S FAIR NOW. GO SLOW.
+- **JESUS:** MOST DON'T COME BACK. LUCK.
+
+---
+
 ## Where the data lives
 
 The manuscript above is the truth; the files below are its implementation. Each
@@ -1577,6 +1604,7 @@ at the top of this file).
 | Companion joining words + kill quotes                        | `src/game/defs/companions.ts` (`joinWords`, `killQuotes`; spare verdict in `src/game/companions.ts`)                  |
 | Found lore on story items (`lore`)                           | `src/game/defs/story.ts`                                                                                              |
 | The wandering merchant's greetings                           | `src/game/defs/levels/*.ts` (`merchant.greeting`; played by `src/game/merchant.ts`)                                   |
+| The merchant's "welcome back" (return visits)                | `src/game/defs/levels/*.ts` (`merchant.returnGreeting`) + `src/game/defs/difficulties.ts` (`MERCHANT_RETURN_SENDOFF`) |
 | Loose UI copy (how-to-play, not story)                       | `website/src/game/copy.ts`                                                                                            |
 | Brand strings (title, tagline — not story)                   | `game.config.json` → `website/src/identity.ts`                                                                        |
 
