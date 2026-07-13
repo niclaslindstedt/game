@@ -7,10 +7,11 @@
 // `onCancel` (to the roster if there are heroes to fall back on, else the
 // title).
 
-import { useEffect, useState, type CSSProperties } from "react";
+import { useEffect, useRef, useState, type CSSProperties } from "react";
 
 import { PixelText } from "@ui/lib/PixelText.tsx";
 import type { PixelFont } from "@ui/lib/pixel-font.ts";
+import { useVisualViewportBox } from "@ui/lib/visual-viewport.ts";
 
 import {
   spriteCursor,
@@ -88,6 +89,11 @@ export function NewGame({
   const [assets, setAssets] = useState<GameAssets | null>(peekGameAssets);
   const [name, setName] = useState("");
   const [hardcore, setHardcore] = useState(false);
+  // Pin the screen to the visual viewport so the form stays centred in the
+  // space above the on-screen keyboard (iOS keeps the layout viewport full-
+  // height when the keyboard opens, otherwise hiding the centred form).
+  const screenRef = useRef<HTMLDivElement>(null);
+  useVisualViewportBox(screenRef);
   // Track the viewport width so the HARDCORE blurb can be wrapped to the form's
   // width — the long "ONE LIFE…" line runs off a narrow phone otherwise.
   const [viewportWidth, setViewportWidth] = useState(() => window.innerWidth);
@@ -131,6 +137,7 @@ export function NewGame({
 
   return (
     <div
+      ref={screenRef}
       className="title-screen character-screen"
       style={{ "--menu-cursor": menuCursor } as CSSProperties}
     >
@@ -138,12 +145,12 @@ export function NewGame({
 
       <div className="title-content">
         <header className="character-heading">
-          <PixelText font={font} text="NEW HERO" scale={3} color="#ffd75e" />
+          <PixelText font={font} text="NEW GAME" scale={3} color="#ffd75e" />
         </header>
 
         <div className="character-form" aria-label="create character">
           <label className="character-field">
-            <PixelText font={font} text="NAME" scale={2} color="#9aa3ad" />
+            <PixelText font={font} text="HERO NAME" scale={2} color="#9aa3ad" />
             <PixelNameInput
               font={font}
               value={name}
