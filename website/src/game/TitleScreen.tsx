@@ -273,7 +273,8 @@ export function TitleScreen({
    * fresh hero, then drop into the difficulty ladder for it. */
   onNewGame: () => void;
   /** PLAY → LOAD GAME: open the roster to pick (or remove) an existing hero,
-   * then drop into the difficulty ladder for the chosen one. */
+   * then resume the chosen one at the beginning of its current level — or open
+   * the difficulty ladder if no campaign is under way. */
   onLoadGame: () => void;
   /** Mount straight on the difficulty ladder (set when returning from the
    * roster via PLAY) instead of the main menu. */
@@ -626,8 +627,9 @@ export function TitleScreen({
     }
     if (screen === "play") {
       // The PLAY submenu: NEW GAME mints a fresh hero, LOAD GAME picks (or
-      // removes) an existing one. Both open the roster and drop into the
-      // difficulty ladder once a hero is chosen (see App's onNewGame/onLoadGame).
+      // removes) an existing one. Both open the roster; once a hero is chosen a
+      // fresh one drops into the difficulty ladder while one mid-campaign
+      // resumes at the start of its current level (see App's onNewGame/onLoadGame).
       return [
         {
           label: "NEW GAME",

@@ -10,6 +10,7 @@ import {
   createCharacter,
   getActiveCharacter,
   loadCharacters,
+  resumeTargetFor,
   setActiveCharacterId,
   type Character,
 } from "./game/characters.ts";
@@ -45,9 +46,9 @@ export function App() {
 
   // Whether the character roster is open on top of the title, and why: "play"
   // means PLAY → NEW GAME / LOAD GAME sent us here to pick or mint a hero and
-  // should drop into the difficulty ladder once one is chosen; "manage" means a
-  // fallen hero's death dropped us onto the roster and it returns to the title.
-  // null = the title menu itself is showing.
+  // should resume its run (or open the difficulty ladder) once one is chosen;
+  // "manage" means a fallen hero's death dropped us onto the roster and it
+  // returns to the title. null = the title menu itself is showing.
   const [picking, setPicking] = useState<null | "play" | "manage">(null);
   // Whether the roster opens straight on the create form (PLAY → NEW GAME)
   // rather than the hero list (PLAY → LOAD GAME). An empty roster shows the
@@ -58,9 +59,10 @@ export function App() {
   // where CANCEL goes back to: the roster if that is where it came from, else
   // the title menu.
   const [createFromRoster, setCreateFromRoster] = useState(false);
-  // Set when a hero is picked via PLAY, so the title mounts straight on the
-  // difficulty ladder instead of the main menu. Reset on every other route back
-  // to the title so a later visit opens on the menu.
+  // Set when a hero is picked via PLAY and has no campaign under way, so the
+  // title mounts straight on the difficulty ladder instead of the main menu (a
+  // hero mid-campaign resumes their run directly and never sets this). Reset on
+  // every other route back to the title so a later visit opens on the menu.
   const [startOnDifficulty, setStartOnDifficulty] = useState(false);
 
   // The pending run: the difficulty and starting level chosen on the menu.
@@ -202,17 +204,36 @@ export function App() {
 
   // The character roster, opened on top of the title (PLAY with no hero, or
   // CHARACTERS). Picking or creating a living hero makes them active; when PLAY
-  // sent us here ("play") the title then mounts straight on the difficulty
-  // ladder, otherwise it returns to the main menu. BACK returns to the title.
+  // sent us here ("play") the hero either resumes their run or the title mounts
+  // on the difficulty ladder, otherwise it returns to the main menu. BACK
+  // returns to the title.
   if (picking) {
-    // Selecting or minting a living hero makes them active; when PLAY sent us
-    // here the title then mounts straight on the difficulty ladder.
     const commitPlay = (picked: Character) => {
       setActiveCharacterId(picked.id);
       setCharacter(picked);
-      setStartOnDifficulty(picking === "play");
       setPicking(null);
       setPickCreating(false);
+      if (picking !== "play") {
+        // Reached the roster to manage a fallen hero, not to play — back to the
+        // title menu, no ladder.
+        setStartOnDifficulty(false);
+        return;
+      }
+      // PLAY flow. A hero with a campaign already under way skips the difficulty
+      // ladder entirely: LOAD drops straight into the beginning of their current
+      // level at their current difficulty. A hero with nothing in progress — a
+      // freshly minted one, or one who has beaten their current difficulty —
+      // opens the ladder instead, to pick a starting lane or step up a rung.
+      const target = resumeTargetFor(picked);
+      if (target) {
+        // Starting a fresh run abandons whatever was parked (in memory + storage).
+        setParked(null);
+        clearSavedRun();
+        setStartOnDifficulty(false);
+        setRun({ difficulty: target.difficulty, levelId: target.levelId });
+        return;
+      }
+      setStartOnDifficulty(true);
     };
     const leave = () => {
       setStartOnDifficulty(false);
