@@ -1331,8 +1331,18 @@ export const LOOT = {
    * thin or fatten this slice around the baseline.
    */
   medkitShare: 0.22,
-  /** …the share that is a weapon repair kit… */
-  repairShare: 0.1,
+  /**
+   * …the share that is a weapon repair kit. A generous slice, like the medkit
+   * one: a worn weapon that snaps strands the hero on the sidearm (or sends him
+   * running to the merchant), so mending kits are meant to turn up often enough
+   * to keep a good weapon alive through a run. Uniform across rungs (no
+   * `repairDropMult`) — since medkits thin up the ladder but this doesn't, the
+   * repair rain actually stands out MORE on the hard rungs, exactly where a
+   * broken weapon hurts most. It sits below the drink/arrow bands on the drop
+   * ladder, so widening it just eats the "nothing drops" tail — every other
+   * resource's drop rate is untouched.
+   */
+  repairShare: 0.18,
   /**
    * …the share that is an ENERGY DRINK (resets the sprint pool on touch). Kept
    * lean — a drink is only worth anything to a winded hero, and the gentle
