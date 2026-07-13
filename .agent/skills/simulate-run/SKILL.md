@@ -35,16 +35,40 @@ playtest, and to answer the questions the analytic calculators can't:
   `--json`.
 
 ```sh
-node scripts/simulate-run.mjs                            # full campaign, easy → JESUS
-node scripts/simulate-run.mjs --difficulty easy          # one rung
+node scripts/simulate-run.mjs                            # full campaign, easy → JESUS (realistic pacing)
+node scripts/simulate-run.mjs --difficulty medium,nightmare,jesus  # the critical path (avoids outlevelled 0-kill runs)
 node scripts/simulate-run.mjs --difficulty easy --level spacez_hq --full
-node scripts/simulate-run.mjs --rerun 3                  # replay each map ×3 — the XP-cap/farm probe
+node scripts/simulate-run.mjs --farm --rerun 3           # ENDGAME: farm to the cap (L99 / artifact chase)
 node scripts/simulate-run.mjs --seed 42 --strategy kite  # different seed/autopilot
 node scripts/simulate-run.mjs --verdict                  # one-screen PASS/WARN/FAIL read
 node scripts/simulate-run.mjs --balance xpGain=0.8,mobHp=1.5 --verdict   # probe a candidate tuning
 node scripts/simulate-run.mjs --compare baseline.json    # A/B diff vs an earlier --json dump
 node scripts/simulate-run.mjs --json report.json         # machine-readable dump
 ```
+
+### Pacing — realistic by DEFAULT, farm with `--farm`
+
+The immortal bot, left alone, farms every map for the whole `--max-minutes` and
+over-levels wildly (L48 after just easy+medium, L99 by the hard tier) — which
+**poisons every level-relative read** (loot-vs-level, boss-level, difficulty):
+the hero is 20 levels above the content, so drops read as trash and bosses read
+as trivial, purely from the over-farm, not the balance. So the CLI **defaults to
+realistic pacing**: each run ENDS (`outcome: cleared`) the moment the hero
+reaches the map's intended exit level (its `arrowCapByDifficulty`, the same
+yardstick the boss-level read uses), and he carries a real-player level forward.
+This is what makes the audit trustworthy — **use it for any level-relative
+tuning**. Notes:
+
+- Give it a **generous `--max-minutes`** (12–15): with a tight budget the slow
+  survivor bot can time out UNDER a map's target, then over-shoot catching up on
+  the next — a generous budget lets every map actually reach its target.
+- Sweep the **critical path** (`--difficulty medium,nightmare,jesus`), not all
+  five rungs: the bottom three lanes share caps, so after one of them the hero
+  outlevels the other two and their runs clear at 0 kills (no data).
+- **`--farm`** turns pacing OFF — the old farm-to-the-cap behaviour, for the
+  ENDGAME read (how the L99 / full-artifact chase actually plays). Pair it with a
+  big `--max-minutes` / `--rerun`. The DPS/deaths reads under `--farm` are an
+  over-farmer's, not a real player's — don't tune level-relative rules off them.
 
 ### Probing balance WITHOUT editing config — the `--balance` knobs
 

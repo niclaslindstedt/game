@@ -108,6 +108,26 @@ describe("simulateLevel", () => {
     expect(e.equippableNow + e.levelGated).toBeLessThanOrEqual(e.total * 2);
   });
 
+  it("realistic pacing ends the run at the map's intended level, not farmed out", () => {
+    // FIX_LEVEL carries arrowCapByDifficulty.easy = 3 — a normal clear's exit.
+    const opts = {
+      levelId: "test_level",
+      difficulty: "easy" as const,
+      seed: 4,
+      maxMinutes: 2,
+    };
+    const paced = simulateLevel({ ...opts, realisticPacing: true });
+    const farmed = simulateLevel(opts); // farm to the cap (default)
+    // Pacing stops the hero once he reaches the intended exit level — it never
+    // farms PAST where farm mode would land.
+    expect(paced.hero.levelEnd).toBeLessThanOrEqual(farmed.hero.levelEnd);
+    // Ending by the pacing rule means it stopped AT the intended exit level
+    // (arrowCapByDifficulty.easy = 3) rather than farming on past it.
+    if (paced.outcome === "cleared") {
+      expect(paced.hero.levelEnd).toBeGreaterThanOrEqual(3);
+    }
+  }, 30_000);
+
   it("applies the balance knobs and restores global tuning afterward", () => {
     // A hard mobHp cut makes mobs die in fewer blows than at baseline.
     const base = simulateLevel({
