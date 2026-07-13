@@ -1,6 +1,6 @@
 ---
-type: Changed
-title: Orbiting title-screen planets
+type: Added
+title: ORBITAL MENU developer flag
 ---
 
-The main-menu sun now sits still while Earth and Mars wheel around it (and the Moon around Earth), each lit from the sun's real direction as it orbits.
+A new DEVELOPER feature flag (ORBITAL MENU) swaps the title backdrop's arcing sun for a static sun with Earth, Mars, and the Moon orbiting it, each lit from the sun's real direction; off by default, so the shipped menu is unchanged.

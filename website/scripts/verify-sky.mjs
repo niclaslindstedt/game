@@ -145,6 +145,19 @@ for (const vp of VIEWPORTS) {
   const page = await browser.newPage({
     viewport: { width: vp.width, height: vp.height },
   });
+  // The orbital look is a DEVELOPER feature flag (settings.ts `titleOrbits`),
+  // off by default. Seed it on before the app boots so this harness verifies the
+  // orbiting solar system, not the classic arcing-sun default.
+  await page.addInitScript(() => {
+    try {
+      window.localStorage.setItem(
+        "gone-in-space:settings",
+        JSON.stringify({ titleOrbits: "on" }),
+      );
+    } catch {
+      /* private mode — the flag stays off, nothing to verify */
+    }
+  });
   await page.goto(url);
   await page.getByRole("button", { name: "play", exact: true }).waitFor();
 

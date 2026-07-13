@@ -1680,12 +1680,12 @@ body {
   }
 }
 
-/* The planets wheeling around the sun (Earth, Mars, and the Moon that orbits
-   Earth). startTitleSky (titleSky.ts) places each by its centre (left/top, in
-   px) every frame and lights it: a shadow disc (::after) is pushed *away from
-   the sun* via --sky-sx/--sky-sy so the lit limb always faces the sun, plus a
-   box-shadow halo. The left/top defaults below give each a resting spot for
-   before the driver starts / under prefers-reduced-motion. */
+/* The title's celestial bodies (Moon always; Earth + Mars only with ORBITAL
+   MENU on). titleSky.ts lights each via a shadow disc (::after) pushed *away
+   from the sun* through --sky-sx/--sky-sy, so the lit limb always faces the sun,
+   plus a box-shadow halo. In orbit mode it also places Earth/Mars/Moon by their
+   centre (left/top, px) each frame; the left/top defaults below are their
+   resting spots before the driver starts / under prefers-reduced-motion. */
 .title-planet {
   position: absolute;
   border-radius: 50%;
@@ -1708,7 +1708,8 @@ body {
   will-change: transform;
 }
 
-/* Earth — the largest planet, blue oceans dabbed with green landmasses. */
+/* Earth — the largest planet, blue oceans dabbed with green landmasses.
+   Only rendered with ORBITAL MENU on. */
 .title-earth {
   left: 34%;
   top: 26%;
@@ -1723,7 +1724,8 @@ body {
   box-shadow: 0 0 26px rgba(120, 170, 235, 0.32);
 }
 
-/* Mars — the rusty wanderer on the wide outer orbit. */
+/* Mars — the rusty wanderer on the wide outer orbit. Only rendered with
+   ORBITAL MENU on. */
 .title-mars {
   left: 68%;
   top: 20%;
@@ -1737,13 +1739,14 @@ body {
   box-shadow: 0 0 18px rgba(235, 140, 90, 0.3);
 }
 
-/* The Moon — grey and cratered, orbiting Earth. Its default rest sits near
-   Earth's so the reduced-motion scene reads as a moon by its planet. */
+/* The Moon — grey and cratered. By default it hangs in the top-right corner
+   and the arcing sun lights it (startTitleArcSky); with ORBITAL MENU on it
+   shrinks and rides its orbit around Earth (see .orbits .title-moon). */
 .title-moon {
-  left: 46%;
-  top: 34%;
-  width: clamp(34px, 7vmin, 60px);
-  height: clamp(34px, 7vmin, 60px);
+  top: max(6%, env(safe-area-inset-top));
+  right: 7%;
+  width: clamp(64px, 14vmin, 130px);
+  height: clamp(64px, 14vmin, 130px);
   /* Interactive: a long hold on the moon opens the warp picker (TitleScreen).
      It stays a pointer-only secret; the cursor hints nothing on purpose. */
   pointer-events: auto;
@@ -1759,11 +1762,23 @@ body {
     radial-gradient(circle at 35% 35%, #f4f6f8, #c3c9d1 55%, #99a0aa);
   box-shadow: 0 0 24px rgba(230, 232, 235, 0.25);
   /* Snap back gently when a charge is released early (the .charging class is
-     dropped); the halo itself is driven inline by startTitleSky each frame, so
+     dropped); the halo itself is driven inline by the sky driver each frame, so
      the charge glow rides on filter/transform, which the driver never sets. */
   transition:
     filter 260ms ease-out,
     transform 260ms ease-out;
+}
+
+/* Orbit mode: the Moon shrinks and joins the planets. The driver drives its
+   left/top in px each frame; these defaults are its resting spot near Earth for
+   before the driver starts / under prefers-reduced-motion, and clearing `right`
+   keeps the JS-set `left` unambiguous. */
+.orbits .title-moon {
+  top: 34%;
+  right: auto;
+  left: 46%;
+  width: clamp(34px, 7vmin, 60px);
+  height: clamp(34px, 7vmin, 60px);
 }
 
 /* The moon "charging up" while it is held: over MOON_HOLD_MS it brightens and
@@ -1823,25 +1838,33 @@ body {
 }
 
 /* The blast layer — a sibling of the moon so it can spill past the moon's own
-   clipped disc. Anchored over the moon; its children fire from the centre. */
-/* The detonation is a zero-size anchor pinned to the moon's live centre
-   (--moon-cx/--moon-cy, written each frame by startTitleSky) so the blast rides
-   the moon around its orbit; its children radiate from that point. The fallback
-   matches the moon's reduced-motion resting spot. */
+   clipped disc. By default it sits over the corner moon; its children fire from
+   its centre. */
 .moon-boom {
   position: absolute;
-  left: var(--moon-cx, 46%);
-  top: var(--moon-cy, 34%);
-  width: 0;
-  height: 0;
+  top: max(6%, env(safe-area-inset-top));
+  right: 7%;
+  width: clamp(64px, 14vmin, 130px);
+  height: clamp(64px, 14vmin, 130px);
   pointer-events: none;
   z-index: 3;
 }
 
+/* Orbit mode: collapse the blast to a zero-size anchor pinned to the moon's live
+   centre (--moon-cx/--moon-cy, written each frame by startTitleSky) so it rides
+   the moon around its orbit. The fallback matches the moon's resting spot. */
+.orbits .moon-boom {
+  top: var(--moon-cy, 34%);
+  right: auto;
+  left: var(--moon-cx, 46%);
+  width: 0;
+  height: 0;
+}
+
 .moon-boom span {
   position: absolute;
-  left: 0;
-  top: 0;
+  left: 50%;
+  top: 50%;
   border-radius: 50%;
   transform: translate(-50%, -50%);
   will-change: transform, opacity;
