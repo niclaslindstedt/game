@@ -2194,6 +2194,18 @@ body {
   scrollbar-width: thin;
 }
 
+/* Vertical (portrait) devices have height to spare — a phone held upright is
+   far taller than the landscape reference, so the 20rem ceiling above stranded
+   a tall list (the DEVELOPER balance knobs, a long level ladder) in the middle
+   of the screen with a big dead band below it. Let the list reach further down
+   and claim that room. The landscape reference stays governed by the `52vh`
+   term above, so gameplay-orientation layouts are untouched. */
+@media (orientation: portrait) {
+  .title-menu.scrollable {
+    max-height: min(72vh, 40rem);
+  }
+}
+
 /* A locked level: dimmed and unselectable-looking (its click just buzzes). */
 .menu-item.locked {
   cursor: not-allowed;
