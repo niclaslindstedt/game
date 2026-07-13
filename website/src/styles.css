@@ -1680,20 +1680,73 @@ body {
   }
 }
 
-/* The moon the trail leads to, hanging in the corner. Its phase and halo are
-   driven each frame by startTitleSky (titleSky.ts): a shadow disc (::after) is
-   pushed *away from the sun* via --sky-sx/--sky-sy so the lit limb always faces
-   the sun, and the box-shadow halo brightens as the moon fills. The defaults
-   below (shadow slid fully off, cool halo) rest on a plain full moon before the
-   driver starts and under prefers-reduced-motion. */
-.title-moon {
+/* The title's celestial bodies (Moon always; Earth + Mars only with ORBITAL
+   MENU on). titleSky.ts lights each via a shadow disc (::after) pushed *away
+   from the sun* through --sky-sx/--sky-sy, so the lit limb always faces the sun,
+   plus a box-shadow halo. In orbit mode it also places Earth/Mars/Moon by their
+   centre (left/top, px) each frame; the left/top defaults below are their
+   resting spots before the driver starts / under prefers-reduced-motion. */
+.title-planet {
   position: absolute;
+  border-radius: 50%;
+  overflow: hidden;
+  will-change: left, top;
+}
+
+/* The terminator: a soft-edged shadow disc, clipped to the planet by the
+   parent's overflow. Slid off (by the JS-set offset) it uncovers the lit half
+   facing the sun. Slightly oversized (inset) so a half-offset reads as a clean
+   day/night split rather than a hard edge. */
+.title-planet::after {
+  content: "";
+  position: absolute;
+  inset: -3%;
+  border-radius: 50%;
+  background: radial-gradient(circle at 60% 42%, #0c1017 0 68%, #05070b 100%);
+  filter: blur(1.5px);
+  transform: translate(var(--sky-sx, -140%), var(--sky-sy, 0));
+  will-change: transform;
+}
+
+/* Earth — the largest planet, blue oceans dabbed with green landmasses.
+   Only rendered with ORBITAL MENU on. */
+.title-earth {
+  left: 34%;
+  top: 26%;
+  width: clamp(44px, 9.5vmin, 88px);
+  height: clamp(44px, 9.5vmin, 88px);
+  background:
+    radial-gradient(circle at 58% 32%, #4c8a52 0 9%, transparent 10%),
+    radial-gradient(circle at 42% 60%, #4c8a52 0 12%, transparent 13%),
+    radial-gradient(circle at 72% 66%, #4c8a52 0 7%, transparent 8%),
+    radial-gradient(circle at 30% 42%, #4c8a52 0 6%, transparent 7%),
+    radial-gradient(circle at 40% 34%, #6fb7e6, #2f6fb0 55%, #1c4a80);
+  box-shadow: 0 0 26px rgba(120, 170, 235, 0.32);
+}
+
+/* Mars — the rusty wanderer on the wide outer orbit. Only rendered with
+   ORBITAL MENU on. */
+.title-mars {
+  left: 68%;
+  top: 20%;
+  width: clamp(32px, 7vmin, 62px);
+  height: clamp(32px, 7vmin, 62px);
+  background:
+    radial-gradient(circle at 60% 30%, #9c3f24 0 8%, transparent 9%),
+    radial-gradient(circle at 38% 62%, #7c2f1c 0 11%, transparent 12%),
+    radial-gradient(circle at 68% 70%, #b5623a 0 6%, transparent 7%),
+    radial-gradient(circle at 42% 40%, #d9764a, #c05a30 55%, #9c4322);
+  box-shadow: 0 0 18px rgba(235, 140, 90, 0.3);
+}
+
+/* The Moon — grey and cratered. By default it hangs in the top-right corner
+   and the arcing sun lights it (startTitleArcSky); with ORBITAL MENU on it
+   shrinks and rides its orbit around Earth (see .orbits .title-moon). */
+.title-moon {
   top: max(6%, env(safe-area-inset-top));
   right: 7%;
   width: clamp(64px, 14vmin, 130px);
   height: clamp(64px, 14vmin, 130px);
-  border-radius: 50%;
-  overflow: hidden;
   /* Interactive: a long hold on the moon opens the warp picker (TitleScreen).
      It stays a pointer-only secret; the cursor hints nothing on purpose. */
   pointer-events: auto;
@@ -1709,11 +1762,23 @@ body {
     radial-gradient(circle at 35% 35%, #f4f6f8, #c3c9d1 55%, #99a0aa);
   box-shadow: 0 0 24px rgba(230, 232, 235, 0.25);
   /* Snap back gently when a charge is released early (the .charging class is
-     dropped); the halo itself is driven inline by startTitleSky each frame, so
+     dropped); the halo itself is driven inline by the sky driver each frame, so
      the charge glow rides on filter/transform, which the driver never sets. */
   transition:
     filter 260ms ease-out,
     transform 260ms ease-out;
+}
+
+/* Orbit mode: the Moon shrinks and joins the planets. The driver drives its
+   left/top in px each frame; these defaults are its resting spot near Earth for
+   before the driver starts / under prefers-reduced-motion, and clearing `right`
+   keeps the JS-set `left` unambiguous. */
+.orbits .title-moon {
+  top: 34%;
+  right: auto;
+  left: 46%;
+  width: clamp(34px, 7vmin, 60px);
+  height: clamp(34px, 7vmin, 60px);
 }
 
 /* The moon "charging up" while it is held: over MOON_HOLD_MS it brightens and
@@ -1773,7 +1838,8 @@ body {
 }
 
 /* The blast layer — a sibling of the moon so it can spill past the moon's own
-   clipped disc. Anchored over the moon; its children fire from the centre. */
+   clipped disc. By default it sits over the corner moon; its children fire from
+   its centre. */
 .moon-boom {
   position: absolute;
   top: max(6%, env(safe-area-inset-top));
@@ -1782,6 +1848,17 @@ body {
   height: clamp(64px, 14vmin, 130px);
   pointer-events: none;
   z-index: 3;
+}
+
+/* Orbit mode: collapse the blast to a zero-size anchor pinned to the moon's live
+   centre (--moon-cx/--moon-cy, written each frame by startTitleSky) so it rides
+   the moon around its orbit. The fallback matches the moon's resting spot. */
+.orbits .moon-boom {
+  top: var(--moon-cy, 34%);
+  right: auto;
+  left: var(--moon-cx, 46%);
+  width: 0;
+  height: 0;
 }
 
 .moon-boom span {
@@ -1940,22 +2017,8 @@ body {
   }
 }
 
-/* The terminator: a soft-edged shadow disc, clipped to the moon by the parent's
-   overflow. Centred it reads as a new moon; slid off (by the JS-set offset) it
-   uncovers a crescent facing the sun, up to a full moon. */
-.title-moon::after {
-  content: "";
-  position: absolute;
-  inset: -3%;
-  border-radius: 50%;
-  background: radial-gradient(circle at 60% 42%, #141a24 0 68%, #0a0e14 100%);
-  filter: blur(1.5px);
-  transform: translate(var(--sky-sx, -140%), var(--sky-sy, 0));
-  will-change: transform;
-}
-
-/* The Easter-egg sun. Position and opacity are set each frame by the driver as
-   it arcs across the sky; the styles here are just its look — a glowing core,
+/* The Easter-egg sun. Position and opacity are set each frame by the driver;
+   the styles here are just its look — a glowing core,
    rotating rays (::before), a lens streak (::after) and a bloom in the
    box-shadow. */
 .title-sun {
@@ -2038,15 +2101,15 @@ body {
   mix-blend-mode: screen;
 }
 
-/* Reduced motion: the driver never starts, so the defaults already rest on a
-   plain full moon; make doubly sure by hiding the sun and dropping the
-   shadow. */
+/* Reduced motion: the driver never starts, so the planets rest at their CSS
+   default spots as plain, fully-lit discs — hide the sun/glare and drop every
+   terminator shadow. */
 @media (prefers-reduced-motion: reduce) {
   .title-sun,
   .title-sun-glare {
     display: none;
   }
-  .title-moon::after {
+  .title-planet::after {
     display: none;
   }
 }

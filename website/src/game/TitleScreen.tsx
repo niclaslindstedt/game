@@ -94,7 +94,7 @@ import {
   type GameSettings,
 } from "./settings.ts";
 import { playUiSound } from "./sfx/index.ts";
-import { startTitleSky } from "./titleSky.ts";
+import { startTitleArcSky, startTitleSky } from "./titleSky.ts";
 
 // Lazy for the SEO critical-path budget: the browser is a menu destination,
 // not startup code (see the GameScreen twin of this note).
@@ -421,10 +421,13 @@ export function TitleScreen({
     };
   }, []);
 
-  // The backdrop's sun/moon Easter egg — a rAF loop that keeps the moon lit
-  // from the sun's real position. Starts once the menu (and its elements) has
-  // mounted after the assets load.
+  // The backdrop's solar-system Easter egg — a rAF loop that spins Earth and
+  // Mars around a static sun (and the Moon around Earth), each lit from the
+  // sun's real position. Starts once the menu (and its elements) has mounted
+  // after the assets load.
   const moonRef = useRef<HTMLDivElement>(null);
+  const earthRef = useRef<HTMLDivElement>(null);
+  const marsRef = useRef<HTMLDivElement>(null);
   const sunRef = useRef<HTMLDivElement>(null);
   const glareRef = useRef<HTMLDivElement>(null);
 
@@ -440,16 +443,26 @@ export function TitleScreen({
   // level ladder and the developer BALANCE knobs — share the measure-then-cap
   // treatment (see the levelsOverflow effect below).
   const tallMenu = screen === "levels" || screen === "balance";
+  // Settings live in a plain singleton; mirror a tick so labels re-render.
+  const [settingsTick, setSettingsTick] = useState(0);
+
+  // DEVELOPER "ORBITAL MENU" flag: swaps the classic arcing-sun backdrop for
+  // the orbiting solar system. Re-read each render (a toggle bumps settingsTick,
+  // which re-renders), so flipping it in the menu restarts the sky driver live.
+  const titleOrbits = getSettings().titleOrbits === "on";
   useEffect(() => {
     const moon = moonRef.current;
     const sun = sunRef.current;
     const glare = glareRef.current;
     if (!moon || !sun || !glare) return;
-    return startTitleSky({ moon, sun, glare });
-  }, [assets]);
-
-  // Settings live in a plain singleton; mirror a tick so labels re-render.
-  const [settingsTick, setSettingsTick] = useState(0);
+    if (titleOrbits) {
+      const earth = earthRef.current;
+      const mars = marsRef.current;
+      if (!earth || !mars) return;
+      return startTitleSky({ moon, earth, mars, sun, glare });
+    }
+    return startTitleArcSky({ moon, sun, glare });
+  }, [assets, titleOrbits]);
 
   // Character transfer (SETTINGS → DATA → EXPORT / IMPORT CHARACTER): the last
   // result, shown as a line under the menu.
@@ -562,6 +575,7 @@ export function TitleScreen({
       | "autoLevelStats"
       | "characterWeapon"
       | "weaponSwing"
+      | "titleOrbits"
       | "vibration"
       | "xpFloat"
       | "healthBars";
@@ -1010,6 +1024,12 @@ export function TitleScreen({
             },
           };
         })(),
+        onOffRow(
+          "titleOrbits",
+          "ORBITAL MENU",
+          "developer-title-orbits",
+          "SPIN EARTH, MARS AND THE MOON AROUND A STATIC SUN ON THE TITLE",
+        ),
         // Land back on the DEVELOPER row in SETTINGS. It sits just above BACK,
         // after CONTROLS / DISPLAY / SOUND / DATA.
         backTo("settings", 4),
@@ -1712,7 +1732,7 @@ export function TitleScreen({
   return (
     <div
       ref={screenRef}
-      className="title-screen"
+      className={`title-screen${titleOrbits ? " orbits" : ""}`}
       onPointerDown={unlockAudio}
       style={{ "--menu-cursor": menuCursor } as CSSProperties}
     >
@@ -1740,12 +1760,32 @@ export function TitleScreen({
         <span className="title-twinkle title-twinkle-6" />
         <span className="title-twinkle title-twinkle-7" />
       </div>
+      {/* Earth and Mars, wheeling around the sun (ORBITAL MENU on); the Moon
+          (below) orbits Earth. Positions and lighting are driven each frame by
+          startTitleSky (titleSky.ts) — the CSS only supplies each surface. With
+          the flag off they are not rendered and the moon hangs in its corner. */}
+      {titleOrbits && (
+        <>
+          <div
+            ref={earthRef}
+            className="title-planet title-earth"
+            aria-hidden="true"
+          />
+          <div
+            ref={marsRef}
+            className="title-planet title-mars"
+            aria-hidden="true"
+          />
+        </>
+      )}
       {/* Hidden developer gesture: hold the moon for MOON_HOLD_MS to reveal the
           DEVELOPER row in SETTINGS (see startMoonHold). aria-hidden stays — it
-          is a secret, pointer-only Easter egg, not an announced control. */}
+          is a secret, pointer-only Easter egg, not an announced control. The
+          moon hangs in its corner by default, or rides its orbit around Earth
+          when ORBITAL MENU is on (titleSky.ts) — either way it stays the trigger. */}
       <div
         ref={moonRef}
-        className={`title-moon${moonCharging ? " charging" : ""}${
+        className={`title-planet title-moon${moonCharging ? " charging" : ""}${
           moonExploding ? " exploding" : ""
         }`}
         aria-hidden="true"
@@ -1773,10 +1813,9 @@ export function TitleScreen({
           ))}
         </div>
       )}
-      {/* Easter egg: a lone sun slowly arcs across the sky roughly every few
-          minutes. The moon is dark while it is up and swells to full once it
-          has set — always lit from the sun's true direction. Driven by
-          startTitleSky (titleSky.ts); the CSS only supplies the static look. */}
+      {/* Easter egg sun: by default it slowly arcs across the sky (lighting the
+          corner moon); with ORBITAL MENU on it sits still while the planets
+          wheel around it. Driven by titleSky.ts; the CSS is just the look. */}
       <div ref={sunRef} className="title-sun" aria-hidden="true" />
       <div ref={glareRef} className="title-sun-glare" aria-hidden="true" />
 
