@@ -66,6 +66,11 @@ export const BALANCE_KNOBS: BalanceKnob[] = [
     blurb: "BOSS AND WORLD UNIQUE DROP CHANCES",
   },
   {
+    key: "repairDrops",
+    label: "REPAIR DROPS",
+    blurb: "SHARE OF DROPS THAT IS A WEAPON REPAIR KIT",
+  },
+  {
     key: "menaceGain",
     label: "MENACE GAIN",
     blurb: "HOW FAST THE RAMPAGE METER HEATS",

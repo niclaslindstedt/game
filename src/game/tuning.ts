@@ -29,6 +29,9 @@ export type BalanceTuning = {
   dropRate: number;
   /** Scales the share of drops that is equipment (eats the lesser slices). */
   equipmentShare: number;
+  /** Scales the share of drops that is a weapon repair kit — how much of the
+   * drop rain mends a worn weapon (eats the ladder's empty tail). */
+  repairDrops: number;
   /** Scales the tier odds (magic/rare) an equipment drop rolls. */
   gearQuality: number;
   /** Scales the unique drop chances — boss tables and world drops. */
@@ -50,6 +53,7 @@ export const BALANCE_TUNING_DEFAULTS: BalanceTuning = {
   hordeSize: 1,
   dropRate: 1,
   equipmentShare: 1,
+  repairDrops: 1,
   gearQuality: 1,
   uniqueDrops: 1,
   menaceGain: 1,
