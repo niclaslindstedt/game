@@ -70,20 +70,21 @@ tuning**. Notes:
   big `--max-minutes` / `--rerun`. The DPS/deaths reads under `--farm` are an
   over-farmer's, not a real player's — don't tune level-relative rules off them.
 
-### `--auto-shop` — the bot never shops; this lets it
+### Shopping — ON by default; `--no-shop` to turn it off
 
-The autopilot has no merchant behaviour, so a weapon that breaks with an empty
-bag strands the hero on the unbreakable sidearm (`blaster`) and, at high
-difficulty, into a DEATH SPIRAL (can't kill → can't level → can't drop a
-replacement) that the bot can't escape — which **overstates high-difficulty
-pressure**. `--auto-shop` gives the sim the recovery a player would run: when the
-hero is weapon-starved (on the sidearm, or a nearly-worn weapon) and a merchant
-has been met, it walks him to the counter and **sells the bag → repairs → buys
-the best weapon he can wield → equips it** (visits counted in
-`combat.shopVisits`). **A/B it** (run once with, once without, `--compare`) to
-tell a REAL high-difficulty stall — where even a bought weapon can't keep up —
-from an artifact of the bot simply never shopping. It's off by default so the
-two reads stay distinct.
+The autopilot has no merchant behaviour of its own, so a weapon that breaks with
+an empty bag would strand the hero on the unbreakable sidearm (`blaster`) and,
+at high difficulty, into a DEATH SPIRAL (can't kill → can't level → can't drop a
+replacement) — which **overstates high-difficulty pressure**. Since a real
+player shops, the sim does it too **by default**: when the hero is weapon-starved
+(on the sidearm, or a nearly-worn weapon), it walks him to the merchant and
+**sells the bag → repairs → buys the best weapon he can wield → equips it**
+(visits counted in `combat.shopVisits`). **`--no-shop`** turns it off — the
+bot-never-shops read. **A/B them** (default vs `--no-shop`, `--compare`) to tell a
+REAL high-difficulty stall — where even a bought weapon can't keep up — from an
+artifact of the bot not shopping (in the audit, `--no-shop` stranded the hero on
+the 46-dps sidearm through all of JESUS; with shopping he stayed armed with
+447→1662-dps weapons, so the "spiral" was mostly the missing shop behaviour).
 
 ### Probing balance WITHOUT editing config — the `--balance` knobs
 
