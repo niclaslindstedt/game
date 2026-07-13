@@ -681,6 +681,8 @@ export function TitleScreen({
       // removes) an existing one. Both open the roster; once a hero is chosen a
       // fresh one drops into the difficulty ladder while one mid-campaign
       // resumes at the start of its current level (see App's onNewGame/onLoadGame).
+      // LOAD GAME dims out when there is no saved hero to load.
+      const hasRoster = roster.length > 0;
       return [
         {
           label: "NEW GAME",
@@ -694,8 +696,18 @@ export function TitleScreen({
         {
           label: "LOAD GAME",
           aria: "load-game",
-          blurb: "PLAY ON WITH A SAVED HERO - OR RETIRE ONE",
+          // Greyed and inert with an empty roster — there is no saved hero to
+          // load, so mint one via NEW GAME first (mirrors a locked level row).
+          color: hasRoster ? undefined : "#5a6068",
+          locked: !hasRoster,
+          blurb: hasRoster
+            ? "PLAY ON WITH A SAVED HERO - OR RETIRE ONE"
+            : "NO SAVED HEROES YET - START A NEW GAME",
           action: () => {
+            if (!hasRoster) {
+              playUiSound(synth, "back");
+              return;
+            }
             playUiSound(synth, "confirm");
             onLoadGame();
           },

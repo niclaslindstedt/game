@@ -4,9 +4,9 @@
 // the player back to the roster). Each slot is a save card: a dressed-hero
 // portrait built from the stored build, the name, level, standing, a row of
 // difficulty-progress pips, and a HARDCORE / FALLEN badge, with a delete tab
-// down the right edge. Picking a living hero hands it up via `onPlay`; the
-// dashed "+ NEW CHARACTER" slot routes to NEW GAME (`onNew`); BACK returns to
-// the title (`onBack`).
+// down the right edge. Picking a living hero hands it up via `onPlay`; BACK
+// returns to the title (`onBack`). Minting a fresh hero lives on the title
+// menu's NEW GAME entry, not here.
 
 import { useCallback, useEffect, useState, type CSSProperties } from "react";
 
@@ -47,7 +47,6 @@ function standing(character: Character): string {
 
 export function LoadGame({
   onPlay,
-  onNew,
   onBack,
 }: {
   /** A living hero was selected — play on with them: the app makes them active
@@ -55,8 +54,6 @@ export function LoadGame({
    * their current level; a hero with nothing in progress opens the difficulty
    * ladder to pick a lane or step up a rung. */
   onPlay: (character: Character) => void;
-  /** The player wants a fresh hero — route to the NEW GAME create form. */
-  onNew: () => void;
   /** Leave the roster without picking anyone — back to the title menu. */
   onBack: () => void;
 }) {
@@ -221,24 +218,6 @@ export function LoadGame({
               </div>
             );
           })}
-
-          <button
-            type="button"
-            className="hero-slot-new"
-            aria-label="character-new"
-            onPointerEnter={() => setHover(-1)}
-            onClick={() => {
-              playUiSound(synth, "confirm");
-              onNew();
-            }}
-          >
-            <PixelText
-              font={font}
-              text="+ NEW CHARACTER"
-              scale={3}
-              color="#7ef0c8"
-            />
-          </button>
 
           <button
             type="button"

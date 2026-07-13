@@ -2623,29 +2623,7 @@ body {
   box-shadow: inset 0 0 0 9999px rgba(255, 109, 109, 0.12);
 }
 
-/* The "add a hero" slot: a dashed, empty frame that reads as an open save
-   slot, and the plain BACK row under the list. */
-.hero-slot-new {
-  appearance: none;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: 0.7rem;
-  background: rgba(126, 240, 200, 0.04);
-  border: 2px dashed #2f6a58;
-  border-radius: var(--panel-radius);
-  cursor: pointer;
-  font: inherit;
-  transition:
-    border-color 0.08s steps(2),
-    background-color 0.08s steps(2);
-}
-
-.hero-slot-new:hover {
-  border-color: #7ef0c8;
-  background: rgba(126, 240, 200, 0.1);
-}
-
+/* The plain BACK row under the hero list. */
 .hero-slot-back {
   appearance: none;
   display: flex;
