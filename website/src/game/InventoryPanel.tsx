@@ -50,7 +50,7 @@ import { formatCompact } from "@ui/lib/format-number.ts";
 import { PixelText } from "@ui/lib/PixelText.tsx";
 import type { PixelFont } from "@ui/lib/pixel-font.ts";
 
-import { spriteDataUrl, type Sprites } from "./assets.ts";
+import { spriteDataUrl, type RelicTier, type Sprites } from "./assets.ts";
 import { synth } from "./audio.ts";
 import { playEquipHaptic } from "./haptics.ts";
 import {
@@ -174,6 +174,7 @@ const clampNum = (v: number, lo: number, hi: number) =>
  */
 function ItemTooltip({
   font,
+  relicFonts,
   sprites,
   state,
   item,
@@ -181,6 +182,7 @@ function ItemTooltip({
   onUse,
 }: {
   font: PixelFont;
+  relicFonts: Record<RelicTier, PixelFont>;
   sprites: Sprites;
   state: GameState;
   item: Equipment;
@@ -309,6 +311,7 @@ function ItemTooltip({
       >
         <ItemCardBody
           font={font}
+          relicFonts={relicFonts}
           sprites={sprites}
           state={state}
           item={item}
@@ -344,6 +347,7 @@ function ItemTooltip({
         >
           <ItemCardBody
             font={font}
+            relicFonts={relicFonts}
             sprites={sprites}
             state={state}
             item={compareTo}
@@ -363,12 +367,14 @@ function ItemTooltip({
 export function InventoryPanel({
   state,
   font,
+  relicFonts,
   sprites,
   onChange,
   onClose,
 }: {
   state: GameState;
   font: PixelFont;
+  relicFonts: Record<RelicTier, PixelFont>;
   sprites: Sprites;
   onChange: () => void;
   onClose: () => void;
@@ -912,6 +918,7 @@ export function InventoryPanel({
       {inspect && !(drag && drag.moved) && (
         <ItemTooltip
           font={font}
+          relicFonts={relicFonts}
           sprites={sprites}
           state={state}
           item={inspect.item}

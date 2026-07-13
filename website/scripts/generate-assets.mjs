@@ -14,6 +14,11 @@ import { fileURLToPath } from "node:url";
 import { buildFilmStrip, writeAnimatedWebp } from "./asset-tools/animation.mjs";
 import { packAtlas } from "./asset-tools/atlas.mjs";
 import { buildFontAtlas, renderText } from "./asset-tools/font.mjs";
+import {
+  buildRelicFonts,
+  RELIC_TIERS,
+  renderRelicText,
+} from "./asset-tools/relic-font.mjs";
 import { gridStats, gridToSurface, validateGrid } from "./asset-tools/grid.mjs";
 import { groundContrast, woundVisibility } from "./asset-tools/lint.mjs";
 import { buildPalette } from "./asset-tools/palette.mjs";
@@ -147,6 +152,37 @@ specimenLines.forEach((line, i) => {
   blit(specimen, renderText(line, [244, 244, 244, 255]), 2, 2 + i * 8);
 });
 await writePng(upscale(specimen, 4), `${previewDir}/font-specimen.png`);
+
+// ---- Relic font: one shared metrics JSON + one pre-colored atlas per tier --
+// (unique/legendary/artifact item names). Both gitignored, rebuilt on build.
+
+const relic = buildRelicFonts();
+writeFileSync(
+  `${assetsDir}/font-relic.json`,
+  `${JSON.stringify(relic.meta, null, 2)}\n`,
+);
+for (const tier of RELIC_TIERS) {
+  await writePng(relic.atlases[tier], `${assetsDir}/font-relic-${tier}.png`);
+}
+
+// Specimen: the alphabet plus a real name of each tier, struck in that tier's
+// own metal, over the card's dark ground — the surface to judge the font on.
+const relicSpecimen = [
+  { text: "UNIQUE ABCDEFG MUSKRAT'S TOOTH", tier: "unique" },
+  { text: "LEGENDARY HIJKLMN DRAGON'S BREATH", tier: "legendary" },
+  { text: "ARTIFACT OPQRSTU WORLDSPLITTER", tier: "artifact" },
+  { text: "MJÖLNIR EXCALIBUR THE PANOPTICON", tier: "unique" },
+  { text: "MJÖLNIR EXCALIBUR THE PANOPTICON", tier: "legendary" },
+  { text: "MJÖLNIR EXCALIBUR THE PANOPTICON", tier: "artifact" },
+];
+const relicSheet = fill(
+  createSurface(230, relicSpecimen.length * 10 + 4, 4),
+  [18, 18, 22, 255],
+);
+relicSpecimen.forEach(({ text, tier }, i) => {
+  blit(relicSheet, renderRelicText(text, tier), 3, 3 + i * 10);
+});
+await writePng(upscale(relicSheet, 4), `${previewDir}/font-relic-specimen.png`);
 
 // ---- Palette sheet: every scope's chars as labeled swatches -----------------
 // One section per palette scope: the shared core first, then each family

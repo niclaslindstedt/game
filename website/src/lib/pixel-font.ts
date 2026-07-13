@@ -86,13 +86,37 @@ export function wrapLines(
   return lines;
 }
 
+export type CreatePixelFontOptions = {
+  /**
+   * When false, the atlas is already the finished color art (e.g. the
+   * pre-shaded golden RELIC font) and is blitted as-is — the `color` draw
+   * option is ignored, no source-in tint runs. Default true: a white atlas
+   * recolored per requested color, cached per color string.
+   */
+  tinted?: boolean;
+};
+
 export function createPixelFont(
   atlas: HTMLImageElement,
   meta: PixelFontMeta,
+  { tinted: isTinted = true }: CreatePixelFontOptions = {},
 ): PixelFont {
   const tinted = new Map<string, HTMLCanvasElement>();
+  // The untinted (pre-colored) atlas drawn once into a canvas, so the glyph
+  // blits below take a canvas source in both modes.
+  let plain: HTMLCanvasElement | null = null;
 
   const atlasFor = (color: string): HTMLCanvasElement => {
+    if (!isTinted) {
+      if (plain) return plain;
+      plain = document.createElement("canvas");
+      plain.width = atlas.width;
+      plain.height = atlas.height;
+      const ctx = plain.getContext("2d");
+      if (!ctx) throw new Error("2d context unavailable for the pixel font");
+      ctx.drawImage(atlas, 0, 0);
+      return plain;
+    }
     let canvas = tinted.get(color);
     if (canvas) return canvas;
     canvas = document.createElement("canvas");

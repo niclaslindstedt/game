@@ -39,7 +39,7 @@ import { formatCompact } from "@ui/lib/format-number.ts";
 import { PixelText } from "@ui/lib/PixelText.tsx";
 import type { PixelFont } from "@ui/lib/pixel-font.ts";
 
-import { spriteDataUrl, type Sprites } from "./assets.ts";
+import { spriteDataUrl, type RelicTier, type Sprites } from "./assets.ts";
 import {
   AFFIX_COLORS,
   TIER_COLORS,
@@ -430,6 +430,7 @@ export function ItemIcon({
  */
 export function ItemCardBody({
   font,
+  relicFonts,
   sprites,
   state,
   item,
@@ -440,6 +441,13 @@ export function ItemCardBody({
   icon,
 }: {
   font: PixelFont;
+  /**
+   * The pre-colored golden display fonts (assets.relicFonts). When present, a
+   * unique/legendary/artifact item's NAME is struck in its tier's own metal
+   * instead of the flat-tinted UI font. Omitted → every tier's name falls
+   * back to the UI font in its tier color (the pre-relic look).
+   */
+  relicFonts?: Record<RelicTier, PixelFont>;
   sprites: Sprites;
   state: GameState;
   item: Equipment;
@@ -461,15 +469,25 @@ export function ItemCardBody({
     sprites,
     weaponClass ? `icon_class_${weaponClass}` : `icon_slot_${item.slot}`,
   );
-  // Unique/legendary names carry a soft glow (tierGlowClass) on top of the
-  // tier color — gold alone sits too close to rare yellow. The icon eats
-  // into the wrap width, so long names still stay inside.
+  // A unique/legendary/artifact name is struck in its tier's own golden RELIC
+  // font (pre-colored, so no `color` — see assets.relicFonts), each rung
+  // richer than the last; every other tier stays the flat-tinted UI font in
+  // its tier color. Either way the name carries the tier glow (tierGlowClass)
+  // — gold alone sits too close to rare yellow. The icon eats into the wrap
+  // width, so long names still stay inside.
+  const relicFont =
+    relicFonts &&
+    (item.tier === "unique" ||
+      item.tier === "legendary" ||
+      item.tier === "artifact")
+      ? relicFonts[item.tier]
+      : null;
   const name = (
     <PixelText
-      font={font}
+      font={relicFont ?? font}
       text={equipmentName(item)}
       scale={2}
-      color={TIER_COLORS[item.tier]}
+      color={relicFont ? undefined : TIER_COLORS[item.tier]}
       className={tierGlowClass(item.tier).trim() || undefined}
       maxWidth={icon && maxWidth ? maxWidth - 1 : maxWidth}
     />

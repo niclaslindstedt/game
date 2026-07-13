@@ -25,6 +25,8 @@ import type { Quality, Tier } from "@game/core";
 import { PixelText } from "@ui/lib/PixelText.tsx";
 import type { PixelFont } from "@ui/lib/pixel-font.ts";
 
+import type { RelicTier } from "./assets.ts";
+
 /** Base display time for a lone pickup card (nothing queued behind it), in ms.
  * The `.pickup-card` animation reads it via the `--pickup-ttl` custom property
  * (styles.css), so the CSS default must match this. Longer than a glance so a
@@ -283,12 +285,23 @@ function StatusTag({ card, font }: { card: PickupCard; font: PixelFont }) {
 
 export function PickupModal({
   font,
+  relicFonts,
   card,
 }: {
   font: PixelFont;
+  relicFonts: Record<RelicTier, PixelFont>;
   card: PickupCard;
 }) {
   const clickable = card.onEquip != null;
+  // A unique/legendary/artifact drop announces its NAME in the tier's own
+  // struck-gold relic font (pre-colored, so no tint color); every other tier
+  // keeps the flat-tinted UI font in its rarity color.
+  const relicFont =
+    card.tier === "unique" ||
+    card.tier === "legendary" ||
+    card.tier === "artifact"
+      ? relicFonts[card.tier]
+      : null;
   const finish = finishFor(card.tier, card.quality);
   const className = `pickup-card pickup-card--finish-${finish}${
     clickable ? " pickup-card--clickable" : ""
@@ -318,10 +331,10 @@ export function PickupModal({
       )}
       <div className="pickup-card-body">
         <PixelText
-          font={font}
+          font={relicFont ?? font}
           text={card.name}
           scale={2}
-          color={card.color}
+          color={relicFont ? undefined : card.color}
           maxWidth={PICKUP_NAME_REM}
         />
         <StatusTag card={card} font={font} />

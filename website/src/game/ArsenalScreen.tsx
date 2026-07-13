@@ -23,7 +23,7 @@ import type { PixelFont } from "@ui/lib/pixel-font.ts";
 import { synth } from "./audio.ts";
 import { ItemCardBody, ItemIcon } from "./ItemCard.tsx";
 import { playUiSound } from "./sfx/index.ts";
-import { type Sprites } from "./assets.ts";
+import { type RelicTier, type Sprites } from "./assets.ts";
 import { TIER_COLORS, tierGlowClass } from "./tiers.ts";
 
 /** Wrap width (rem) for the detail card's text — mirrors the inventory
@@ -43,10 +43,12 @@ const SLOT_LABEL: Record<Equipment["slot"], string> = {
 
 export function ArsenalScreen({
   font,
+  relicFonts,
   sprites,
   onClose,
 }: {
   font: PixelFont;
+  relicFonts: Record<RelicTier, PixelFont>;
   sprites: Sprites;
   onClose: () => void;
 }) {
@@ -161,6 +163,7 @@ export function ArsenalScreen({
               <div className="arsenal-detail-card">
                 <ItemCardBody
                   font={font}
+                  relicFonts={relicFonts}
                   sprites={sprites}
                   state={state}
                   item={selected}

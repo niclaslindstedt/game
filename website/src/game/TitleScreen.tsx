@@ -2087,6 +2087,7 @@ export function TitleScreen({
       {screen === "arsenal" && (
         <ArsenalScreen
           font={font}
+          relicFonts={assets.relicFonts}
           sprites={assets.sprites}
           onClose={() => {
             setScreen("developer");
