@@ -88,6 +88,9 @@ export function NewGame({
   const [assets, setAssets] = useState<GameAssets | null>(peekGameAssets);
   const [name, setName] = useState("");
   const [hardcore, setHardcore] = useState(false);
+  // Track the viewport width so the HARDCORE blurb can be wrapped to the form's
+  // width — the long "ONE LIFE…" line runs off a narrow phone otherwise.
+  const [viewportWidth, setViewportWidth] = useState(() => window.innerWidth);
 
   useEffect(() => {
     if (assets) return;
@@ -100,8 +103,21 @@ export function NewGame({
     };
   }, [assets]);
 
+  useEffect(() => {
+    const onResize = () => setViewportWidth(window.innerWidth);
+    window.addEventListener("resize", onResize);
+    return () => window.removeEventListener("resize", onResize);
+  }, []);
+
   if (!assets) return <div className="game-loading">Loading…</div>;
   const font = assets.font;
+  // The blurb wrap budget in rem, tracking the form's rendered width (it is
+  // `min(90vw, 28rem)` minus the form + toggle padding). Clamped so it never
+  // collapses on a very narrow screen. Matches the maxWidth PixelText wraps to.
+  const blurbMaxWidth = Math.max(
+    10,
+    Math.min(28, (viewportWidth * 0.9) / 16) - 5,
+  );
   const menuCursor = spriteCursor(assets.sprites, "glove", {
     hotX: 3.5,
     hotY: 0.5,
@@ -174,6 +190,7 @@ export function NewGame({
                   }
                   scale={2}
                   color="#9aa3ad"
+                  maxWidth={blurbMaxWidth}
                 />
               </span>
             </span>
