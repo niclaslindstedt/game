@@ -41,15 +41,25 @@ import {
   advanceOutro,
   allocateStat,
   armorReduction,
+  autoEquipBest,
   canEquip,
   dismissIntro,
   effectiveStat,
+  equipmentMaxDurability,
   equipmentName,
   itemLevelReq,
   skipCutscene,
   totalArmor,
   weaponDps,
 } from "../game/items.ts";
+import {
+  buyStock,
+  canBuyStock,
+  closeShop,
+  openShop,
+  repairGear,
+  sellItem,
+} from "../game/merchant.ts";
 import { xpCapMultiplier, xpLevelCap } from "../game/leveling.ts";
 import { currentMobLevel, menaceStage } from "../game/menace.ts";
 import { advanceDialogue } from "../game/story.ts";
@@ -118,6 +128,19 @@ export type SimulateLevelOptions = {
    * farm-to-the-cap read (endgame / L99 / artifact chase).
    */
   realisticPacing?: boolean;
+  /**
+   * Use the MERCHANT the way a real player would. The bot itself never shops,
+   * so a weapon that breaks with an empty bag strands the hero on the
+   * unbreakable sidearm (`blaster`) — a death spiral the bot can't escape,
+   * which overstates high-difficulty pressure. With this on, whenever the hero
+   * is weapon-starved (on the sidearm, or his weapon is nearly worn out) and a
+   * merchant has been met, the sim walks him to the counter and runs the
+   * recovery a player would: sell the bag for coins, repair the kit, buy the
+   * best affordable weapon he can wield, and equip it. Lets a run measure
+   * whether a high-difficulty stall is real balance or just the bot not
+   * shopping. Counted in the report (`combat.shopVisits`).
+   */
+  autoShop?: boolean;
 };
 
 export type SimulateCampaignOptions = {
@@ -138,6 +161,9 @@ export type SimulateCampaignOptions = {
   /** Realistic pacing: end each run at the map's intended exit level so the hero
    * carries a representative level forward (see SimulateLevelOptions). */
   realisticPacing?: boolean;
+  /** Use the merchant to recover from a broken weapon (see
+   * SimulateLevelOptions.autoShop) — real-player behaviour the bot lacks. */
+  autoShop?: boolean;
 };
 
 // ---- Report shapes ---------------------------------------------------------------
@@ -279,6 +305,9 @@ export type LevelReport = {
     killsPerMinute: number;
     /** Stall-breaker teleports the runner had to apply (see `unstick`). */
     unstuckNudges: number;
+    /** Merchant recovery visits the sim made (see `autoShop`) — how often the
+     * hero had to run to the counter to re-arm after a weapon broke. */
+    shopVisits: number;
   };
   drops: {
     /** Items that appeared on the ground, by kind. */
@@ -404,6 +433,7 @@ export function runLevel(options: SimulateLevelOptions): {
     unstick = true,
     balance,
     realisticPacing,
+    autoShop,
   } = options;
 
   // Apply the requested balance knobs for the duration of the run, then put the
@@ -423,6 +453,7 @@ export function runLevel(options: SimulateLevelOptions): {
       snapshotEveryMs,
       unstick,
       realisticPacing,
+      autoShop,
     });
     return { report, loadout: extractLoadout(state) };
   } finally {
@@ -441,6 +472,7 @@ function playRun(args: {
   snapshotEveryMs: number;
   unstick: boolean;
   realisticPacing?: boolean;
+  autoShop?: boolean;
 }): { report: LevelReport; state: GameState } {
   const state = createGame(
     args.seed,
@@ -521,10 +553,50 @@ function playRun(args: {
   let damagePerHitSum = 0;
   let hitsTaken = 0;
   let unstuckNudges = 0;
+  let shopVisits = 0;
   let lastProgressMs = 0;
   let lastKills = 0;
   let lastDamage = 0;
   let progressPos = { x: state.player.pos.x, y: state.player.pos.y };
+
+  // The hero can't fight his way out with the unbreakable fallback sidearm, or
+  // with a weapon about to snap — the cue to run to the merchant (autoShop).
+  const weaponStarved = (): boolean => {
+    const w = state.player.equipment.weapon;
+    if (w.defId === "blaster") return true; // on the fallback sidearm
+    if (w.durability === undefined) return false; // a keeper unique/legendary
+    const max = equipmentMaxDurability(w);
+    return max > 0 && w.durability <= Math.max(1, Math.floor(max * 0.15));
+  };
+  // The recovery a player would run at the counter: bank the bag for coins,
+  // buy the best weapon he can wield and afford, mend the kit, equip up. Only
+  // fires when actually at the stall (openShop is proximity-gated).
+  const recoverAtMerchant = (): void => {
+    autoEquipBest(state); // a decent bag weapon may end the starve for free
+    if (!weaponStarved() || !openShop(state)) return;
+    for (let i = 0; i < state.player.inventory.length; i++) {
+      if (state.player.inventory[i]) sellItem(state, i);
+    }
+    const curDps = weaponDps(state, state.player.equipment.weapon);
+    let bestId = -1;
+    let bestDps = curDps;
+    for (const entry of state.merchant.stock) {
+      if (entry.kind !== "weapon" || entry.sold) continue;
+      if (!canBuyStock(state, entry) || !canEquip(state, entry.equipment)) {
+        continue;
+      }
+      const dps = weaponDps(state, entry.equipment);
+      if (dps > bestDps) {
+        bestId = entry.id;
+        bestDps = dps;
+      }
+    }
+    if (bestId >= 0) buyStock(state, bestId);
+    repairGear(state);
+    closeShop(state);
+    autoEquipBest(state); // equip the purchase
+    shopVisits++;
+  };
 
   const trackSpawns = () => {
     for (const enemy of state.enemies) {
@@ -810,6 +882,29 @@ function playRun(args: {
       nextSnapshotMs += args.snapshotEveryMs;
     }
 
+    // Merchant recovery (autoShop): a weapon that broke with an empty bag
+    // strands the hero on the sidearm — real-player play the bot lacks. Run him
+    // to the counter and re-arm (sell → buy → repair → equip), so a
+    // high-difficulty stall reads as BALANCE rather than the bot never shopping.
+    // The big hop trips the stall-breaker's movement gate below, so the two
+    // never fight over where to drag him.
+    if (args.autoShop && state.phase === "playing" && weaponStarved()) {
+      recoverAtMerchant(); // buys/repairs when at the stall (proximity-gated)
+      if (weaponStarved()) {
+        // Still starved → not at the counter → drag him toward it (even before
+        // it's DISCOVERED: the bot never seeks the merchant, so a stranded hero
+        // would never find it; walking him over discovers it via stepMerchant,
+        // then next tick opens the shop). Stop ~40px short, inside the radius.
+        const m = state.merchant.pos;
+        const dx = m.x - state.player.pos.x;
+        const dy = m.y - state.player.pos.y;
+        const d = Math.hypot(dx, dy) || 1;
+        const hop = Math.min(NUDGE_DISTANCE, Math.max(0, d - 40));
+        state.player.pos.x += (dx / d) * hop;
+        state.player.pos.y += (dy / d) * hop;
+      }
+    }
+
     // Stall-breaker: the pathless autopilot wedged against geometry — no
     // kill, no damage dealt AND barely any net movement for a stretch — so
     // drag the hero straight toward the nearest foe (or the objective's
@@ -935,6 +1030,7 @@ function playRun(args: {
       dpsOut: round1(state.stats.damageDealt / timeSec),
       killsPerMinute: round1(state.stats.kills / (timeSec / 60)),
       unstuckNudges,
+      shopVisits,
     },
     drops: {
       spawnedByKind,
@@ -1008,6 +1104,7 @@ export function simulateCampaign(
     carryLoadout = true,
     balance,
     realisticPacing,
+    autoShop,
   } = options;
 
   const runs: LevelReport[] = [];
@@ -1026,6 +1123,7 @@ export function simulateCampaign(
         snapshotEveryMs,
         balance,
         realisticPacing,
+        autoShop,
       });
       runs.push(report);
       runIndex++;

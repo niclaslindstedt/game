@@ -128,6 +128,20 @@ describe("simulateLevel", () => {
     }
   }, 30_000);
 
+  it("auto-shop runs cleanly and reports its merchant recoveries", () => {
+    const report = simulateLevel({
+      levelId: "test_merchant_level",
+      difficulty: "medium",
+      seed: 8,
+      maxMinutes: 2,
+      autoShop: true,
+    });
+    // The recovery counter is always present and sane (a healthy run may never
+    // need the merchant, so 0 is fine — it must never go negative or crash).
+    expect(report.combat.shopVisits).toBeGreaterThanOrEqual(0);
+    expect(report.combat.kills).toBeGreaterThan(0);
+  }, 30_000);
+
   it("applies the balance knobs and restores global tuning afterward", () => {
     // A hard mobHp cut makes mobs die in fewer blows than at baseline.
     const base = simulateLevel({
