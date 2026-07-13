@@ -403,6 +403,7 @@ export {
   type StoryItemDef,
 } from "./game/defs/story.ts";
 export {
+  CAP_THOUGHT_IDS,
   THOUGHT_DEFS,
   thoughtDef,
   type ThoughtDef,

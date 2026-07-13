@@ -199,6 +199,12 @@ export function step(state: GameState, input: GameInput, dtMs: number): void {
       state.bagFullHintCooldownMs - dtMs,
     );
   }
+  // Cool down the recurring "these enemies are pathetic" cap-farm mutter so it
+  // recurs every so often on an out-levelled map, not on every kill (see
+  // maybeCapThought).
+  if (state.capThoughtMs > 0) {
+    state.capThoughtMs = Math.max(0, state.capThoughtMs - dtMs);
+  }
   // The victory quake burns down alongside the countdown that armed it (the
   // renderer jitters the camera off this — see GameState.quakeMs).
   if (state.quakeMs > 0) {

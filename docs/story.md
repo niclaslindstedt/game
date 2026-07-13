@@ -37,7 +37,11 @@ all the way to the AI that took his job in the first place. Ada is never on
 screen, but she is never passive: at every stop she leaves a trace behind
 (**Ada's Trail**) — scared at first, then defiant, then actively sabotaging —
 so the hero (and the player) follows a person fighting her way forward, not a
-beacon.
+beacon. His own impatience is the counter-melody to that urgency: whenever he
+lingers on a place long enough to outgrow it — the enemies turned pathetic, the
+fights teaching him nothing — he catches himself grinding and mutters that he
+should stop wasting time and go find Ada. It is the game's one recurring inner
+line, played in several moods whenever he over-farms a map.
 
 ## Prelude (cutscene)
 

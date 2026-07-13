@@ -234,9 +234,10 @@ export function xpToLevelUp(level: number): number {
  * the per-map cap (config `XP_CAP`): the rung's `first`…`last` band
  * interpolated across the story order, so each map on a difficulty tops out
  * a little higher than the one before it. Re-running an outgrown map still
- * rains loot; it just stops paying levels (see `xpCapMultiplier`, applied in
- * `grantXp`). A difficulty outside the shipped ladder (fixture rungs) is
- * uncapped — the global `LEVELING.maxLevel` still holds in `grantXp`.
+ * rains loot; past the cap it only trickles XP (see `xpCapMultiplier`, applied
+ * in `grantXp`), never levels at pace. A difficulty outside the shipped ladder
+ * (fixture rungs) is uncapped — the global `LEVELING.maxLevel` still holds in
+ * `grantXp`.
  */
 export function xpLevelCap(levelId: string, difficulty: Difficulty): number {
   const band = XP_CAP.capByDifficulty[difficulty];
@@ -252,11 +253,14 @@ export function xpLevelCap(levelId: string, difficulty: Difficulty): number {
 /**
  * How much of an XP grant a hero of `level` still collects against a map's
  * `cap` (see `xpLevelCap`): full value up to `cap − XP_CAP.fadeLevels`, then
- * HALVED per level (the diminishing-returns taper into the wall), and zero
- * at/past the cap — the map has nothing more to teach, only to drop.
+ * HALVED per level (the diminishing-returns taper into the wall), bottoming out
+ * at the never-zero `XP_CAP.floor` TRICKLE once the halving would sink below it.
+ * An outgrown map keeps paying a sliver forever — the map has little left to
+ * teach, but "diminish, don't zero" means the grind still creeps rather than
+ * slamming shut.
  */
 export function xpCapMultiplier(level: number, cap: number): number {
-  if (level >= cap) return 0;
   const over = level - (cap - XP_CAP.fadeLevels);
-  return over <= 0 ? 1 : Math.pow(0.5, over);
+  if (over <= 0) return 1;
+  return Math.max(XP_CAP.floor, Math.pow(0.5, over));
 }

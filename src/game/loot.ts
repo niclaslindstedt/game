@@ -55,7 +55,11 @@ import {
   overkillEfficiency,
 } from "./menace.ts";
 import { equippedProcs } from "./spells.ts";
-import { maybeFirstKillThought, startDeathWords } from "./story.ts";
+import {
+  maybeCapThought,
+  maybeFirstKillThought,
+  startDeathWords,
+} from "./story.ts";
 import { BALANCE } from "./tuning.ts";
 import type {
   Enemy,
@@ -650,6 +654,11 @@ export function killEnemy(
     def.id,
     levelDef(state.level.id).firstKillThoughts,
   );
+  // The recurring cap-farm mutter: if the hero has out-levelled this map, every
+  // so often he grumbles that the fights are pathetic and he should hurry to
+  // find Ada. Repeats on a cooldown (see maybeCapThought); yields if the pinned
+  // beat above already put a scene up.
+  maybeCapThought(state);
 }
 
 /**
@@ -1163,9 +1172,10 @@ export function grantXp(state: GameState, amount: number): void {
   // touching the curve (`xpToLevelUp`) the costs are stated in.
   amount = Math.round(amount * BALANCE.xpGain);
   // The PER-MAP CAP (config XP_CAP): every grant on this map diminishes as
-  // the hero closes on the (level × difficulty) ceiling and zeroes at it, so
-  // re-running an outgrown map farms loot, never levels. Applied at the same
-  // one door as the dev knob — kills, arrows, and scripted awards all obey.
+  // the hero closes on the (level × difficulty) ceiling and, past it, drops to
+  // the never-zero floor trickle, so re-running an outgrown map farms loot and
+  // only creeps XP. Applied at the same one door as the dev knob — kills,
+  // arrows, and scripted awards all obey.
   amount = Math.round(
     amount *
       xpCapMultiplier(
