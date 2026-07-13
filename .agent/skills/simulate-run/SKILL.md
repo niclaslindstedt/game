@@ -40,8 +40,24 @@ node scripts/simulate-run.mjs --difficulty easy          # one rung
 node scripts/simulate-run.mjs --difficulty easy --level spacez_hq --full
 node scripts/simulate-run.mjs --rerun 3                  # replay each map ×3 — the XP-cap/farm probe
 node scripts/simulate-run.mjs --seed 42 --strategy kite  # different seed/autopilot
+node scripts/simulate-run.mjs --verdict                  # one-screen PASS/WARN/FAIL read
+node scripts/simulate-run.mjs --balance xpGain=0.8,mobHp=1.5 --verdict   # probe a candidate tuning
+node scripts/simulate-run.mjs --compare baseline.json    # A/B diff vs an earlier --json dump
 node scripts/simulate-run.mjs --json report.json         # machine-readable dump
 ```
+
+### Probing balance WITHOUT editing config — the `--balance` knobs
+
+`--balance` applies the SAME ten runtime multipliers the DEVELOPER → BALANCE
+subpage exposes (`BalanceTuning` in `src/game/tuning.ts`: `xpGain`,
+`playerDamage`, `mobHp`, `mobDamage`, `hordeSize`, `dropRate`,
+`equipmentShare`, `gearQuality`, `uniqueDrops`, `menaceGain`) — as `key=×`
+pairs, where `1` is the shipped tuning and `0` turns a system off. The sim
+calls `setBalanceTuning` for the run and restores the prior tuning after, so
+you can measure a candidate balance with **no rebuild and no config edit**:
+change a knob, re-run, read the verdict, repeat. When a value earns its keep,
+paste it into `src/game/config.ts` (the knob's real read site) and re-verify at
+`1×` — the `--balance` flag is the fast probe, the config is the commit.
 
 ### The analytic sibling — `progression-sim`
 
@@ -89,6 +105,29 @@ damage, the hero's average blow against that mob type and its blows-to-kill,
 XP paid), the drop ledger (ground vs collected, equipment by tier, named
 finds), and per-minute hero snapshots (hp, dps, armor, menace stage).
 
+**The BOSS ENCOUNTERS table** (always printed when the run meets one) answers
+"where, at what level, and with what, does the hero fight each elite/boss — and
+what does it drop?" One row per boss/elite met: the sim-minute and hero level
+the fight STARTED (engagement — the first blow traded, not the boss's spawn,
+since bosses are usually placed at map load), shown as `heroL/intended` against
+the map's `arrowCapByDifficulty` yardstick; the boss's own monster level, hp,
+and contact damage; blows-to-kill; the hero's hp% entering the fight; and the
+named unique/legendary it dropped (attributed by kill order). A boss the run
+never reached reads `not reached`; one engaged but not felled reads `ENGAGED,
+not killed` — a wall (or the bot's pacing giving out). This is the read for
+pacing gates: if the hero meets a boss far under its intended level, the rung
+before it levels too slow (or the boss gate sits too high).
+
+**`--verdict`** distills the whole run to a handful of PASS/WARN/FAIL band
+checks — first-visit XP forfeit (should be ~0), minion blows-to-kill (target
+2–8; toward 1 = one-shotting, ballooning = wall), boss level vs intended (±2),
+and bosses engaged-but-not-felled — plus one overall line. It's the "does
+anything seem off?" answer without reading every table; the bands are generous
+by design (they flag gross regressions, not fine feel). **`--compare
+baseline.json`** diffs the current run against an earlier `--json` dump as
+deltas (k/min, final level, per-boss hero level and blows-to-kill) — the A/B
+view a knob change actually wants.
+
 Balance signals to look for:
 
 - **The mob table's `toKill` (avgHp / the hero's average blow)** — the
@@ -126,16 +165,31 @@ Balance signals to look for:
   `scripts/game-alias-loader.mjs` — new scripts that import engine modules
   must `register()` it first (see simulate-run.mjs's header).
 
-## Workflow for a balance change
+## Iterating balance FAST — the knob loop
 
-1. **Baseline**: run the relevant slice (a rung, or the full campaign) at
-   2–3 seeds and keep the JSON dumps.
-2. Make the engine/config change.
-3. **Re-run the same slices/seeds** and diff the summaries: hero level per
-   rung, dps-vs-mob-hp, drops per tier, deaths.
-4. For leveling-pace changes, cross-check the analytic view
+The `--balance`/`--verdict`/`--compare` trio makes the inner loop tight enough
+to run many candidates without touching config:
+
+1. **Baseline**: `node scripts/simulate-run.mjs --json baseline.json` (a rung,
+   or the full campaign; keep the dump).
+2. **Probe a candidate** with the runtime knobs — no rebuild:
+   ```sh
+   node scripts/simulate-run.mjs --balance mobHp=1.3,xpGain=0.9 --verdict --compare baseline.json
+   ```
+   Read the VERDICT line and the COMPARE deltas: did the change move what you
+   intended (and nothing you didn't)?
+3. **Iterate** — adjust the `--balance` values and re-run against the same
+   baseline until the verdict and the boss table land where you want. Hold the
+   `--seed` fixed while dialing one knob; then confirm across 2–3 seeds (runs
+   are chaotic — one A/B seed isn't a decision).
+4. **Commit the winner to config.** The `--balance` knobs are a probe, not a
+   ship vehicle — settings-page tuning doesn't change the shipped game. Move
+   the earned value into `src/game/config.ts` at the knob's real read site (the
+   `tuning.ts` header names each site), then re-run at plain `1×` to confirm
+   the config change reproduces the probe.
+5. For leveling-pace changes, cross-check the analytic view
    (`scripts/leveling-curve.mjs`, see the `leveling-balance` skill) — the
    calculator predicts, the simulator confirms.
-5. Run `make test` (the sim has engine smoke tests in
+6. Run `make test` (the sim has engine smoke tests in
    `tests/engine/sim_test.ts`) and finish with a real `playtest` for feel —
    the simulator measures numbers, never fun.
