@@ -142,7 +142,7 @@ for (const vp of VIEWPORTS) {
     await page.getByRole("button", { name: "play", exact: true }).waitFor();
     await page.getByRole("button", { name: "play", exact: true }).click();
     await click("load-game");
-    await page.getByRole("button", { name: "character-new" }).waitFor();
+    await page.locator(".hero-slots").waitFor();
     await shot("character-roster");
     await click("character-back");
   });
