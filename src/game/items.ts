@@ -1707,7 +1707,7 @@ export function weaponCooldownFor(state: GameState, weapon: Equipment): number {
  * side of the aim that the sweep strikes. Wide for a slashing blade, narrow
  * for a thrusting spear (which leans on its long `range` instead).
  * INTELLIGENCE widens the cone (the weapon's AoE) proportionally, so shapes
- * are preserved and a very high-INT wide weapon saturates to a full circle.
+ * are preserved and a very high-INT wide weapon saturates at a HALF circle.
  * This is the single source of truth for the cone: the sweep's hit test and
  * the arc the app draws both route through it.
  */
@@ -1720,9 +1720,9 @@ export function weaponSweepHalfAngle(
   const base = (deg * Math.PI) / 360;
   const widened =
     base * (1 + effectiveStat(state, "intelligence") * STATS.aoePerInt);
-  // A half-angle of π already sweeps the full circle — clamp so extreme INT
-  // saturates instead of wrapping past 360°.
-  return Math.min(Math.PI, widened);
+  // Saturate at a HALF circle (STATS.aoeMaxHalfAngle = π/2): even extreme INT
+  // sweeps at most a 180° arc, never wraps toward a full 360° disc.
+  return Math.min(STATS.aoeMaxHalfAngle, widened);
 }
 
 /**

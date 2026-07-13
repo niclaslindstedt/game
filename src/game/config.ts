@@ -1006,12 +1006,22 @@ export const STATS = {
   rangePerInt: 0.03,
   /**
    * INTELLIGENCE also widens a melee weapon's AoE cone by this fraction of its
-   * base half-angle per point (+4% each): a sword's slash sweeps a broader arc
-   * and a spear's thrust a slightly wider lane. Scaling the angle keeps each
-   * weapon's shape (a narrow spear stays narrow); a very high-INT wide weapon
-   * saturates to a full circle. Melee-only — ranged/magic have no cone.
+   * base half-angle per point (+0.8% each): a sword's slash sweeps a broader
+   * arc and a spear's thrust a slightly wider lane. Scaling the angle keeps
+   * each weapon's shape (a narrow spear stays narrow). It grows GENTLY and
+   * saturates at a HALF circle (`aoeMaxHalfAngle`), not a full one — a wide
+   * cleaver reaches that half-circle cap only at deep-endgame INT (~100
+   * effective), while an ordinary AoE build sweeps roughly a third of the
+   * circle. Melee-only — ranged/magic have no cone.
    */
-  aoePerInt: 0.04,
+  aoePerInt: 0.008,
+  /**
+   * The hard ceiling on the INT-widened melee cone: a HALF circle (π/2
+   * half-angle → a 180° total sweep). Even extreme INT on the widest weapon
+   * saturates here rather than wrapping toward a full 360° disc, so a swing
+   * always leaves a back arc uncovered and positioning still matters.
+   */
+  aoeMaxHalfAngle: Math.PI / 2,
   /**
    * INTELLIGENCE also raises the CAP on how many monsters one melee swing can
    * hit (see MELEE.baseAoeTargets): each point adds one extra foe to the

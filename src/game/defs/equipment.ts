@@ -229,6 +229,25 @@ export const WEAPON_DEFS: Record<string, WeaponDef> = {
     durability: 130,
     icon: "icon_medieval_sword",
   },
+  // DEVELOPER calibration probe — a debug melee weapon that NEVER drops (no
+  // level loot pool references it) and carries no game meaning. Its icon marks
+  // the blade TIP and BASE in hot red so the weapon-swing preview
+  // (website/scripts/weapon-swing.mjs) can read exactly where the held weapon
+  // starts and ends and line the slash cone up to it. A wide reference cone so
+  // the swing/cone geometry is easy to eyeball.
+  calibration_probe: {
+    id: "calibration_probe",
+    material: "metal",
+    name: "CALIBRATION PROBE",
+    class: "melee",
+    levelReq: 1,
+    damage: 18,
+    cooldownMs: 720,
+    range: 40,
+    sweepDeg: 100,
+    durability: 130,
+    icon: "icon_calibration_probe",
+  },
   // HARD: quick and mean, but short and SHALLOW — light per-hit damage means
   // most mobs take several stabs, so despite the tempo it holds a crowd worse
   // than the sword (matching DPS, worse control), and its tighter arc and

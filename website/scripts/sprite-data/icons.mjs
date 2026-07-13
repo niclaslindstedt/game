@@ -377,6 +377,24 @@ const SPRITES = {
     "..OO........",
     "............",
   ],
+  // DEVELOPER calibration probe (never drops): a plain diagonal shaft with a
+  // hot-red marker at the TIP and another at the BASE/grip, so the
+  // weapon-swing preview can read exactly where the blade starts and ends and
+  // line the slash cone up to it. See website/scripts/weapon-swing.mjs.
+  icon_calibration_probe: [
+    "............",
+    ".......RR...",
+    "......RRO...",
+    ".....OVO....",
+    "....OVO.....",
+    "...OVO......",
+    "..OVO.......",
+    "..OVO.......",
+    ".RRO........",
+    ".RRO........",
+    "..O.........",
+    "............",
+  ],
   // NIGHTMARE's BRASS KNUCKLES: four finger slots in a gold duster, the palm
   // bar shaded below.
   icon_knuckles: [
