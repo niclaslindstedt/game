@@ -229,24 +229,31 @@ load); a developer turns them on from the DEVELOPER menu:
   flag and poses the weapon layer via `weaponPose`. It only bites when CHARACTER
   WEAPON is on too — there is no held weapon to swing otherwise.
 
-  **Signature effects (`slash-fx.ts`).** Each UNIQUE weapon gets its own slash
-  look and gore, keyed off the equipped weapon's `uniqueId` so a named blade
-  FEELS more powerful: Excalibur flares holy gold, Mjölnir spits sparks, Muramasa
-  bleeds. `SLASH_STYLES` (a website-side catalog — the engine knows nothing of
-  it; un-listed weapons fall to `DEFAULT_SLASH`, a plain white slash) gives a
-  `SlashStyle` (crescent core/edge/glow, themed `particle` stream, `afterimages`,
-  and a `gore` burst). `drawSlash` renders the styled crescent in `drawPlayer`;
-  the `gore` throws a `burst` effect (`drawBurst`) over the plain splash on the
-  hero's own melee blows (GameScreen's `heroGore`, matched to his swing this
-  tick). Add a signature by adding a `SLASH_STYLES` entry — a couple of reusable
-  elemental kits (FIRE/HOLY/FROST/STORM/VOID/BLOOD/VENOM) cover most weapons.
+  **Signature effects (`weapon-fx.ts`).** Each weapon CLASS has a plain base
+  look, and a UNIQUE gets its OWN — keyed off the equipped weapon's `uniqueId`
+  so a named weapon FEELS more powerful. **Melee** (`SLASH_STYLES` → `SlashStyle`
+  → `drawSlash`): a themed slash crescent (core/edge/glow, a `particle` stream,
+  `afterimages`) plus a `gore` `burst` (`drawBurst`) thrown over the plain splash
+  on the hero's own blows (GameScreen's `heroGore`) — Excalibur flares holy gold,
+  Mjölnir spits sparks, Muramasa bleeds. **Ranged/magic** (`SHOT_STYLES` →
+  `ShotStyle` → `drawMuzzle` + `drawProjectileTrail`): a themed muzzle flash / cast
+  bloom at the tip AND a glow trail riding the hero's round/bolt in flight
+  (`render.ts`, gated to the hero's own shots via the projectile's
+  `hostile`/`companionId`) — Pyrelight casts fire, Pale Rider fires a deathly
+  shot. It's all a website-side catalog (the engine knows nothing of it);
+  un-listed weapons keep the plain class look, so the catalog grows one entry at
+  a time. Reusable elemental kits (FIRE/HOLY/FROST/STORM/VOID/BLOOD/VENOM for
+  slashes; FLAME/HOLY/STORM/COSMIC/FROST/VENOM/DEATH/SOLAR/TECH for shots) cover
+  most weapons. The engine's shared `nova` crit-AoE is NOT themed (it carries no
+  weapon attribution).
 
   Tune and author all of it with the `weapon-swing` preview script
-  (`website/scripts/weapon-swing.mjs`): `poses <weapon>` pins the swing frame by
-  frame, `live <weapon>` slows a real attack to show the slash + gore together,
-  `uniques` renders a contact sheet of every unique's signature, and the debug
-  `calibration_probe` weapon (red tip/base markers) calibrates the blade
-  geometry. It drives the `?debug` `window.__swing` (pin the pose, optionally
+  (`website/scripts/weapon-swing.mjs`): `poses <weapon>` pins the swing/shot frame
+  by frame, `live <weapon>` slows a real attack to show the slash + gore or the
+  cast + projectile trail, `uniques` / `shots` render contact sheets of every
+  melee slash / ranged-magic muzzle, and the debug `calibration_probe` weapon
+  (red tip/base markers) calibrates the blade geometry. It drives the `?debug`
+  `window.__swing` (pin the pose/muzzle, optionally
   with a cone) and `window.__timeScale` (slow the run) hooks.
 
 ## Reuse through oss-framework

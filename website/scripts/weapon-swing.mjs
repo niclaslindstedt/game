@@ -24,16 +24,19 @@
 // ephemerally when previewing: `npm install --no-save playwright`.
 //
 // A weapon id is a base WEAPON_DEFS id OR a UNIQUE_DEFS weapon id — a unique
-// shows its signature slash + themed gore (slash-fx.ts).
+// shows its signature (slash + gore, or muzzle + projectile trail) from
+// weapon-fx.ts.
 //
 // Usage (from website/, dev server on :5199 with assets built):
 //   npm run assets && npx vite --port 5199 &
 //   node scripts/weapon-swing.mjs poses                    # one strip per class
-//   node scripts/weapon-swing.mjs poses medieval_sword excalibur
+//   node scripts/weapon-swing.mjs poses medieval_sword excalibur pyrelight
 //   node scripts/weapon-swing.mjs poses --class melee      # every melee weapon
 //   node scripts/weapon-swing.mjs poses excalibur --arc 180  # the half-circle swing
-//   node scripts/weapon-swing.mjs uniques                  # contact sheet of every unique slash
-//   node scripts/weapon-swing.mjs live muramasa            # slowed real attack + its gore
+//   node scripts/weapon-swing.mjs uniques                  # contact sheet of every melee slash
+//   node scripts/weapon-swing.mjs shots                    # contact sheet of every ranged/magic muzzle
+//   node scripts/weapon-swing.mjs live muramasa            # slowed real attack: slash + gore
+//   node scripts/weapon-swing.mjs live pyrelight           # slowed cast + projectile trail
 // Flags: --frames N (samples, default 9) --slow F (live speed, default 0.12)
 //   --scale N (nearest-neighbour upscale, default 2) --arc DEG (poses cone)
 //   --seed S --url U --out DIR
@@ -60,7 +63,7 @@ const { UNIQUE_DEFS } = await import(
 );
 
 const argv = process.argv.slice(2);
-const mode = ["live", "uniques"].includes(argv[0]) ? argv[0] : "poses";
+const mode = ["live", "uniques", "shots"].includes(argv[0]) ? argv[0] : "poses";
 const flag = (name, fallback) => {
   const i = argv.indexOf(`--${name}`);
   return i >= 0 ? argv[i + 1] : fallback;
@@ -103,12 +106,19 @@ const weaponMeta = (id) => {
   }
   return null;
 };
-const uniqueMeleeIds = Object.values(UNIQUE_DEFS)
-  .filter((u) => u.slot === "weapon" && WEAPON_DEFS[u.base]?.class === "melee")
-  .map((u) => u.id);
+const uniqueIdsOfClasses = (classes) =>
+  Object.values(UNIQUE_DEFS)
+    .filter(
+      (u) =>
+        u.slot === "weapon" && classes.includes(WEAPON_DEFS[u.base]?.class),
+    )
+    .map((u) => u.id);
+const uniqueMeleeIds = uniqueIdsOfClasses(["melee"]);
+const uniqueShotIds = uniqueIdsOfClasses(["ranged", "magic"]);
 
 // Which weapons to shoot: an explicit id list (base or unique), every weapon of
-// one --class, every unique melee (`uniques` mode), or one per class (default).
+// one --class, every melee unique (`uniques`), every ranged/magic unique
+// (`shots`), or one per class (default).
 const classFilter = flag("class", null);
 const explicit = argv
   .slice(1)
@@ -117,6 +127,7 @@ const DEFAULTS = ["medieval_sword", "nine_mm", "hairy_potters_wand"];
 let weaponIds;
 if (explicit.length) weaponIds = explicit;
 else if (mode === "uniques") weaponIds = uniqueMeleeIds;
+else if (mode === "shots") weaponIds = uniqueShotIds;
 else if (classFilter) {
   weaponIds = Object.values(WEAPON_DEFS)
     .filter((d) => d.class === classFilter)
@@ -260,9 +271,10 @@ async function writeGrid(name, shots) {
   );
 }
 
-// The peak of the strike — where a signature slash reads best for a still.
-const PEAK_T = 0.42;
-const sheet = []; // {buf,label} per unique, for the `uniques` contact sheet
+// Where each signature reads best for a still: mid-swing for a melee slash,
+// early for a muzzle/cast flash (it fades as the shot leaves).
+const peakFor = (cls) => (cls === "melee" ? 0.42 : 0.2);
+const sheet = []; // {buf,label} per weapon, for the `uniques`/`shots` sheet
 
 for (const id of weaponIds) {
   const meta = weaponMeta(id);
@@ -304,12 +316,12 @@ for (const id of weaponIds) {
       p.hurtFlashMs = 0;
     });
 
-  if (mode === "uniques") {
-    // One peak-strike still per unique, gathered into a labelled contact sheet.
+  if (mode === "uniques" || mode === "shots") {
+    // One peak still per weapon, gathered into a labelled contact sheet.
     await stagePinned(id);
     await bolster();
     await page.waitForTimeout(110);
-    await pinPose(PEAK_T);
+    await pinPose(peakFor(cls));
     await page.waitForTimeout(70);
     sheet.push({
       buf: await page.screenshot({ clip: CROP }),
@@ -383,6 +395,6 @@ for (const id of weaponIds) {
   }
 }
 
-if (mode === "uniques") await writeGrid("uniques", sheet);
+if (mode === "uniques" || mode === "shots") await writeGrid(mode, sheet);
 
 await browser.close();

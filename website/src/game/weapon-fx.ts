@@ -1,16 +1,20 @@
 // SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
-// Signature slash effects for the field hero's melee WEAPON SWING (developer
-// flag): the styled crescent that rides the blade (see render.ts `drawPlayer` /
-// `drawBladeSlash`) plus the themed gore burst a hit throws off. A UNIQUE weapon
-// gets its OWN look — Excalibur flares holy gold, Mjölnir spits sparks, Muramasa
-// bleeds — so a named blade FEELS more powerful than a plain one. Purely a
-// render concern (this game's presentation layer), keyed off the equipped
-// weapon's `uniqueId`; the engine knows nothing about it.
+// Signature WEAPON EFFECTS for the field hero's attacks (developer WEAPON SWING
+// flag) — the styled MELEE slash crescent that rides the blade (`drawSlash`, see
+// render.ts `drawPlayer`), the RANGED/MAGIC muzzle flash / cast bloom
+// (`drawMuzzle`), and the themed gore a melee hit throws (`drawBurst`). Each
+// weapon CLASS has a plain base look, and a UNIQUE gets its OWN — Excalibur
+// flares holy gold, Mjölnir spits sparks, Muramasa bleeds, Pyrelight casts fire,
+// Pale Rider fires a deathly shot — so a named weapon FEELS more powerful than a
+// plain one. Purely a render concern (this game's presentation layer), keyed off
+// the equipped weapon's `uniqueId`; the engine knows nothing about it.
 //
 // Authoring: add a style below and preview it with the weapon-swing script —
-//   node scripts/weapon-swing.mjs poses excalibur
-//   node scripts/weapon-swing.mjs uniques           # a contact sheet of them all
+//   node scripts/weapon-swing.mjs poses excalibur   # a melee unique's slash
+//   node scripts/weapon-swing.mjs uniques           # contact sheet of melee slashes
+//   node scripts/weapon-swing.mjs shots             # contact sheet of ranged/magic muzzles
 //   node scripts/weapon-swing.mjs live muramasa     # the slash + its gore
+//   node scripts/weapon-swing.mjs live pyrelight    # the cast bloom
 
 /** A speck thrown off the slash arc — each kind reads as an element. */
 export type ParticleKind =
@@ -350,6 +354,283 @@ export function drawBurst(
     const r = 1 + Math.round((1 - t) * 1.5);
     ctx.fillRect(Math.round(px - r / 2), Math.round(py - r / 2), r, r);
   }
+  ctx.restore();
+  ctx.globalAlpha = 1;
+}
+
+// ---- Ranged & magic: the shot signature ------------------------------------
+// A gun/wand can't slash, so its signature rides its SHOT instead: the flash at
+// the muzzle/wand-tip when it fires (drawMuzzle) and the glow trailing its round
+// or bolt in flight (drawProjectileTrail). Each weapon CLASS has a plain base
+// look; a UNIQUE overrides it with its element.
+
+/** A ranged/magic weapon's shot signature. */
+export type ShotStyle = {
+  /** Flash shape: a gun's `rays` starburst, a caster's `ring`, or a soft
+   * `bloom`. Defaults per class (ranged → rays, magic → bloom). */
+  shape?: "rays" | "ring" | "bloom";
+  /** Hot core of the muzzle/cast flash — and the round's glow in flight. */
+  core: string;
+  /** Rays / ring / trail color. */
+  spark: string;
+  /** Soft glow behind the flash and around the round in flight. */
+  glow?: string;
+  /** Motes puffed out of the muzzle. */
+  particle?: ParticleKind;
+  /** Flash + trail size multiplier (1 = the plain shot). */
+  weight?: number;
+};
+
+// The plain look each class fires with — a base weapon's (or an enemy's) shot,
+// matching the pre-signature look so only NAMED weapons change. A signature
+// unique gets the showier `bloom` (magic) via `shotStyleFor`.
+const RANGED_SHOT: ShotStyle = {
+  shape: "rays",
+  core: "#fff2c0",
+  spark: "#ffd36b",
+};
+const MAGIC_SHOT: ShotStyle = {
+  shape: "ring",
+  core: "#e6d6ff",
+  spark: "#c9a6ff",
+  glow: "#8a4fff",
+};
+
+// Reusable elemental shot kits — colors only, so the class default supplies the
+// shape (rays for a gun, bloom for a wand).
+const FLAME_SHOT: ShotStyle = {
+  core: "#ffe0a0",
+  spark: "#ff7a1e",
+  glow: "#ff4a1e",
+  particle: "ember",
+};
+const HOLY_SHOT: ShotStyle = {
+  core: "#fff6d6",
+  spark: "#ffe08a",
+  glow: "#ffd94a",
+  particle: "mote",
+};
+const VOID_SHOT: ShotStyle = {
+  core: "#e7d8ff",
+  spark: "#9a6bff",
+  glow: "#6a2ac0",
+  particle: "void",
+};
+const STORM_SHOT: ShotStyle = {
+  core: "#dfe8ff",
+  spark: "#8ab0ff",
+  glow: "#4a6aff",
+  particle: "spark",
+};
+const COSMIC_SHOT: ShotStyle = {
+  core: "#eaf1ff",
+  spark: "#9fd0ff",
+  glow: "#6a8aff",
+  particle: "mote",
+};
+const FROST_SHOT: ShotStyle = {
+  core: "#daf3ff",
+  spark: "#8ad8ff",
+  glow: "#3a8ad0",
+  particle: "frost",
+};
+const VENOM_SHOT: ShotStyle = {
+  core: "#dcffcf",
+  spark: "#7ad83a",
+  glow: "#3a8a1e",
+  particle: "spark",
+};
+const DEATH_SHOT: ShotStyle = {
+  core: "#f0f0f2",
+  spark: "#c0c4d0",
+  glow: "#7a8090",
+  particle: "void",
+};
+const SOLAR_SHOT: ShotStyle = {
+  core: "#fff0c0",
+  spark: "#ffcf3a",
+  glow: "#ff9a1e",
+  particle: "mote",
+  weight: 1.25,
+};
+const TECH_SHOT: ShotStyle = {
+  core: "#eaffff",
+  spark: "#7affea",
+  glow: "#2ad0c0",
+  particle: "spark",
+};
+
+// Signature shots, keyed by UNIQUE_DEFS id (ranged + magic). Un-listed weapons
+// fire the plain class look.
+export const SHOT_STYLES: Record<string, ShotStyle> = {
+  // Ranged
+  pale_rider: DEATH_SHOT,
+  redwind: { ...FLAME_SHOT, spark: "#ff5a3a", weight: 1.2 },
+  dragons_breath: { ...FLAME_SHOT, weight: 1.35 },
+  longwatch: FROST_SHOT,
+  meteorfall: { ...FLAME_SHOT, spark: "#ff8a3a", weight: 1.25 },
+  horizons_end: COSMIC_SHOT,
+  the_verdict: HOLY_SHOT,
+  skybreaker: { ...STORM_SHOT, weight: 1.2 },
+  the_inevitable: TECH_SHOT,
+  the_long_silence: VOID_SHOT,
+  fail_not: { ...HOLY_SHOT, weight: 1.2 },
+  sharanga: COSMIC_SHOT,
+  gandiva: SOLAR_SHOT,
+  // Magic
+  wrathflame: FLAME_SHOT,
+  riftmaw: { ...VOID_SHOT, weight: 1.25 },
+  the_jailbreak: {
+    core: "#d6ffea",
+    spark: "#3affaa",
+    glow: "#1e8a5a",
+    particle: "spark",
+  },
+  deadstar: COSMIC_SHOT,
+  lightbinder: { ...HOLY_SHOT, spark: "#ffffff", weight: 1.2 },
+  maelstrom: STORM_SHOT,
+  pyrelight: { ...FLAME_SHOT, weight: 1.2 },
+  sunspear: SOLAR_SHOT,
+  stormlash: STORM_SHOT,
+  starfall: { ...COSMIC_SHOT, glow: "#8a9aff" },
+  sunwreath: SOLAR_SHOT,
+  ruyi_jingu: {
+    core: "#fff0d0",
+    spark: "#ffcf6b",
+    glow: "#ffae33",
+    particle: "mote",
+  },
+  seidr_staff: FROST_SHOT,
+  thyrsus: VENOM_SHOT,
+};
+
+/** The shot signature for the equipped weapon, filled with the class default. A
+ * base weapon keeps the plain class look; a NAMED unique flares its element —
+ * and a magic unique swells into a `bloom` rather than the base ring. */
+export function shotStyleFor(
+  uniqueId: string | undefined,
+  cls: "ranged" | "magic",
+): ShotStyle {
+  const base = cls === "magic" ? MAGIC_SHOT : RANGED_SHOT;
+  const u = uniqueId ? SHOT_STYLES[uniqueId] : undefined;
+  if (!u) return base;
+  return { ...base, shape: cls === "magic" ? "bloom" : "rays", ...u };
+}
+
+/**
+ * The flash at the muzzle / wand tip when a weapon fires — a gun's ray-burst, a
+ * caster's ring or bloom, colored by the weapon's signature. `mx`/`my` is the
+ * flash centre (screen coords), `aim` the shot direction, `t` 0→1 over its life.
+ */
+export function drawMuzzle(
+  ctx: CanvasRenderingContext2D,
+  mx: number,
+  my: number,
+  aim: number,
+  t: number,
+  style: ShotStyle,
+): void {
+  const fade = 1 - t;
+  const w = style.weight ?? 1;
+  const shape = style.shape ?? "rays";
+  ctx.save();
+  if (style.glow) {
+    ctx.globalAlpha = 0.5 * fade;
+    ctx.fillStyle = style.glow;
+    ctx.beginPath();
+    ctx.arc(mx, my, (3 + t * 5) * w, 0, Math.PI * 2);
+    ctx.fill();
+  }
+  if (shape === "rays") {
+    ctx.globalAlpha = fade;
+    ctx.fillStyle = style.core;
+    ctx.beginPath();
+    ctx.arc(mx, my, (2 + fade * 2) * w, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.strokeStyle = style.spark;
+    ctx.lineWidth = 1;
+    for (const spread of [0, 0.5, -0.5]) {
+      const len = (4 + t * 5) * w;
+      ctx.beginPath();
+      ctx.moveTo(mx, my);
+      ctx.lineTo(
+        mx + Math.cos(aim + spread) * len,
+        my + Math.sin(aim + spread) * len,
+      );
+      ctx.stroke();
+    }
+  } else {
+    ctx.globalAlpha = 0.9 * fade;
+    ctx.strokeStyle = style.spark;
+    ctx.lineWidth = shape === "bloom" ? 2 : 1;
+    ctx.beginPath();
+    ctx.arc(mx, my, (2 + t * 8) * w, 0, Math.PI * 2);
+    ctx.stroke();
+    if (shape === "bloom") {
+      ctx.globalAlpha = 0.7 * fade;
+      ctx.fillStyle = style.core;
+      ctx.beginPath();
+      ctx.arc(mx, my, (2 + t * 3) * w, 0, Math.PI * 2);
+      ctx.fill();
+    } else {
+      ctx.globalAlpha = fade;
+      ctx.fillStyle = style.core;
+      ctx.fillRect(mx - 1, my - 1, 2, 2);
+    }
+  }
+  if (style.particle) {
+    const color = PARTICLE_COLOR[style.particle];
+    for (let i = 0; i < 4; i++) {
+      const h1 = hash(i + 1);
+      const h2 = hash(i + 9);
+      const a = aim + (h1 - 0.5) * 1.2;
+      const d = (2 + t * 8 * (0.5 + h2)) * w;
+      ctx.globalAlpha = fade * (0.6 + 0.4 * h2);
+      ctx.fillStyle = t < 0.3 ? "#ffffff" : color;
+      ctx.fillRect(
+        Math.round(mx + Math.cos(a) * d),
+        Math.round(my + Math.sin(a) * d),
+        1,
+        1,
+      );
+    }
+  }
+  ctx.restore();
+  ctx.globalAlpha = 1;
+}
+
+/**
+ * The glow trailing the hero's round / bolt in flight — a soft halo, a hot core,
+ * and a short fading tail behind it, in the weapon's signature colors. Drawn
+ * UNDER the projectile sprite (screen coords). `dir` is the unit travel vector.
+ */
+export function drawProjectileTrail(
+  ctx: CanvasRenderingContext2D,
+  px: number,
+  py: number,
+  dir: { x: number; y: number },
+  style: ShotStyle,
+): void {
+  const w = style.weight ?? 1;
+  ctx.save();
+  if (style.glow) {
+    ctx.globalAlpha = 0.32;
+    ctx.fillStyle = style.glow;
+    ctx.beginPath();
+    ctx.arc(px, py, 3.5 * w, 0, Math.PI * 2);
+    ctx.fill();
+  }
+  for (let i = 3; i >= 1; i--) {
+    ctx.globalAlpha = 0.36 * (1 - i / 4);
+    ctx.fillStyle = style.spark;
+    const d = i * 2.5 * w;
+    ctx.fillRect(Math.round(px - dir.x * d), Math.round(py - dir.y * d), 1, 1);
+  }
+  ctx.globalAlpha = 0.85;
+  ctx.fillStyle = style.core;
+  ctx.beginPath();
+  ctx.arc(px, py, 1.6 * w, 0, Math.PI * 2);
+  ctx.fill();
   ctx.restore();
   ctx.globalAlpha = 1;
 }

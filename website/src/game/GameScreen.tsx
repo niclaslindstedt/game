@@ -185,7 +185,7 @@ import {
   type Effect,
   type PlayerAction,
 } from "./render.ts";
-import { goreStyleFor } from "./slash-fx.ts";
+import { goreStyleFor, shotStyleFor } from "./weapon-fx.ts";
 import {
   actionForCode,
   bindingLabel,
@@ -1710,6 +1710,7 @@ export function GameScreen({
           // A shot flashes at the muzzle — a hot burst for guns, a cool cast
           // bloom for wands — oriented along the aim.
           if (event.type === "shot") {
+            const heroShot = isHeroAttack(event.pos, state.player.pos);
             effects.push({
               kind: "muzzle",
               // Lift to the hero's airborne height so the muzzle flash fires
@@ -1719,10 +1720,21 @@ export function GameScreen({
               weaponClass: event.weaponClass,
               untilMs: state.stats.timeMs + 110,
               durationMs: 110,
+              // The hero's own shot flashes his weapon's signature (WEAPON
+              // SWING flag); companion/enemy shots keep the plain class look.
+              fx:
+                heroShot &&
+                getSettings().weaponSwing === "on" &&
+                event.weaponClass !== "melee"
+                  ? shotStyleFor(
+                      state.player.equipment.weapon.uniqueId,
+                      event.weaponClass,
+                    )
+                  : undefined,
             });
             // Kick/cast the hero's own weapon to match the muzzle flash — a gun
             // recoils, a wand thrusts — but not a companion's shot.
-            if (isHeroAttack(event.pos, state.player.pos)) {
+            if (heroShot) {
               heroAction = {
                 kind: "shot",
                 weaponClass: event.weaponClass,
@@ -2227,6 +2239,23 @@ export function GameScreen({
               arc: debugPose.arc,
               untilMs: state.stats.timeMs + (1 - debugPose.t) * MELEE_SWING_MS,
               durationMs: MELEE_SWING_MS,
+            },
+          ];
+        } else if (debugPose && debugPose.kind === "shot") {
+          // Pin the muzzle / cast flash at the same fraction as the pose, so a
+          // ranged/magic weapon's shot signature can be sampled frame by frame.
+          const MUZZLE_MS = 110;
+          const wc = debugPose.weaponClass === "magic" ? "magic" : "ranged";
+          debugEffects = [
+            ...effects,
+            {
+              kind: "muzzle",
+              pos: { x: state.player.pos.x, y: state.player.pos.y },
+              angle: state.player.faceLeft ? Math.PI : 0,
+              weaponClass: debugPose.weaponClass,
+              fx: shotStyleFor(state.player.equipment.weapon.uniqueId, wc),
+              untilMs: state.stats.timeMs + (1 - debugPose.t) * MUZZLE_MS,
+              durationMs: MUZZLE_MS,
             },
           ];
         }
