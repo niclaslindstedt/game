@@ -25,6 +25,7 @@
 // stays what the renderer needs.
 
 import { extractLoadout } from "../game/arrival.ts";
+import { reviveHero } from "./arrival.ts";
 import {
   botAct,
   botAllocate,
@@ -164,6 +165,14 @@ export type SimulateCampaignOptions = {
   /** Use the merchant to recover from a broken weapon (see
    * SimulateLevelOptions.autoShop) — real-player behaviour the bot lacks. */
   autoShop?: boolean;
+  /**
+   * The hero walking into the FIRST run of the sweep — a carried-over loadout to
+   * start from instead of a fresh level-1 rookie. This is how a rung is measured
+   * as it's actually played: `synthesizeArrival` mints a leveled, geared hero
+   * (the campaign's intended entry state for the rung), and the sweep drops him
+   * straight in. With `carryLoadout` on he then carries forward run to run.
+   */
+  startLoadout?: Loadout | null;
 };
 
 // ---- Report shapes ---------------------------------------------------------------
@@ -735,14 +744,13 @@ function playRun(args: {
         outcome = "victory";
         break simulation;
       case "defeat":
-        // The calibration hero never stays down: stand back up at the
-        // spawn, full bars, everything kept — the death is booked as a
-        // pressure gauge and the measurement marches on.
+        // The calibration hero never stays down: stand back up, full bars,
+        // everything kept — the death is booked as a pressure gauge and the
+        // measurement marches on. He revives at the open point FURTHEST from
+        // the swarm (reviveHero), not on top of it, so a spawn-camp loop can't
+        // book hundreds of phantom deaths that read as lethality.
         reviveDeaths++;
-        state.player.hp = state.player.maxHp;
-        state.player.stamina = state.player.maxStamina;
-        state.player.pos = { ...state.playerSpawn };
-        state.phase = "playing";
+        reviveHero(state);
         guardPhase(++phaseAdvances);
         continue;
       default:
@@ -1123,10 +1131,11 @@ export function simulateCampaign(
     balance,
     realisticPacing,
     autoShop,
+    startLoadout = null,
   } = options;
 
   const runs: LevelReport[] = [];
-  let loadout: Loadout | null = null;
+  let loadout: Loadout | null = startLoadout;
   let runIndex = 0;
   for (const difficulty of difficulties) {
     for (const levelId of levels) {
