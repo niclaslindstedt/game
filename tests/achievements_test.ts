@@ -290,6 +290,15 @@ describe("unlock store", () => {
     expect(getAchievements().unlocked["kills_1"]).toBeDefined();
   });
 
+  it("stamps each freshly-earned badge with unlock context (meta)", () => {
+    recordAchievementEvents([kill(idByRole("minion"))], CTX);
+    // A meta entry is written for the badge (the browser reads it for the
+    // "earned by NAME" line). No active hero in the test env → character null.
+    const meta = getAchievements().meta["kills_1"];
+    expect(meta).toBeDefined();
+    expect(meta?.character).toBeNull();
+  });
+
   it("returns nothing on a tick with no counted events", () => {
     expect(recordAchievementEvents([{ type: "jump" }], CTX)).toEqual([]);
     expect(recordAchievementEvents([], CTX)).toEqual([]);
