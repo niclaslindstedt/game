@@ -48,6 +48,9 @@ const { STAT_NAMES } = await import(
 const { buildChartHtml } = await import(
   pathToFileURL(path.join(here, "progression-chart.mjs")).href
 );
+const { setAutoStatGainsEnabled } = await import(
+  pathToFileURL(path.join(root, "src/game/leveling.ts")).href
+);
 
 // ---- Flags ---------------------------------------------------------------------
 
@@ -63,7 +66,7 @@ if (flag("help")) {
     "usage: node scripts/progression-sim.mjs " +
       "[--difficulty all|easy[,medium,…]] [--level all|spacez_hq[,…]] " +
       "[--seed N] [--stats str=2,sta=1,dex=1] [--batch 25] " +
-      "[--target-level 99] [--fresh] [--no-rares] [--full] " +
+      "[--target-level 99] [--fresh] [--no-rares] [--auto] [--full] " +
       "[--json out.json] [--html out.html]",
   );
   process.exit(0);
@@ -80,6 +83,11 @@ const targetLevel = Number(opt("target-level", "99"));
 const carryLoadout = !flag("fresh");
 const includeRares = !flag("no-rares");
 const full = flag("full");
+// The AUTO-STAT experimental feature (off in the shipped app, and now off by
+// engine default). `--auto` turns it on so a run can be read in either regime —
+// it drives `autoPowerScale`, which the mob-hp ramp and `heroDamageLevel` bar
+// both ride, so toggling it is the cleanest way to see that mechanism's effect.
+setAutoStatGainsEnabled(flag("auto"));
 
 // --stats str=2,sta=1,dex=1 → { strength: 2, stamina: 1, dexterity: 1 }.
 // Names match a stat by 3-letter prefix (STR/STA disambiguate at 3 chars).
@@ -185,6 +193,45 @@ console.log(
     `${report.reachedTarget ? "reached" : "NOT reached"}), ` +
     `${((Date.now() - startedAt) / 1000).toFixed(1)}s wall.`,
 );
+
+// ---- Render — the MOB & MENACE read (the balance instrument) ---------------------
+// The horde the hero actually faces at each rung's end, the fight's shape
+// (blows-to-kill, seconds-to-kill, blows-survived), and the sustained RAMPAGE
+// (menace) stage the build settles at — the endgame's real score.
+console.log("");
+console.log(
+  "MOB & MENACE — the horde the hero faces, the fight's shape, and the RAMPAGE stage it sustains",
+);
+const mmHeader =
+  padE("difficulty", 10) +
+  padE("level", 12) +
+  pad("hero", 9) +
+  pad("gear/dmg", 10) +
+  pad("mobHp", 7) +
+  pad("mobDmg", 7) +
+  pad("blows", 6) +
+  pad("ttk(s)", 7) +
+  pad("survive", 8) +
+  pad("okill×", 7) +
+  pad("menace", 7);
+console.log(mmHeader);
+console.log("-".repeat(mmHeader.length + 2));
+for (const lr of report.levels) {
+  const end = lr.checkpoints[lr.checkpoints.length - 1];
+  console.log(
+    padE(lr.difficulty, 10) +
+      padE(lr.levelId, 12) +
+      pad(`${lr.heroLevelStart}→${lr.heroLevelEnd}`, 9) +
+      pad(`${end.gearLevel}/${end.damageLevel}`, 10) +
+      pad(end.mobHp, 7) +
+      pad(end.mobDamage, 7) +
+      pad(end.blowsToKill, 6) +
+      pad(end.ttkSec, 7) +
+      pad(end.hitsToDie, 8) +
+      pad(`${end.overkillRatio}×`, 7) +
+      pad(end.menaceStageEq, 7),
+  );
+}
 
 // ---- Render — every checkpoint (the 25-kill batches) with --full ----------------
 

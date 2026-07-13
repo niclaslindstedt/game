@@ -23,9 +23,11 @@
 // scripts and tests import this module directly.
 
 import { extractLoadout } from "../game/arrival.ts";
-import { LEVELING, RARE_MOBS } from "../game/config.ts";
+import { LEVELING, MENACE, RARE_MOBS } from "../game/config.ts";
 import { createGame, spawnEnemy } from "../game/create.ts";
+import { BALANCE } from "../game/tuning.ts";
 import {
+  difficultyDef,
   DIFFICULTY_ORDER,
   meetsMinDifficulty,
   resolvePackCount,
@@ -49,9 +51,12 @@ import {
   weaponDps,
 } from "../game/items.ts";
 import { killEnemy } from "../game/loot.ts";
-import { xpLevelCap } from "../game/leveling.ts";
+import { statCap, xpLevelCap } from "../game/leveling.ts";
 import {
   currentMobLevel,
+  heroDamageLevel,
+  heroGearLevel,
+  heroPowerLevel,
   maybePowerScale,
   menaceStage,
   mobLevelScale,
@@ -127,8 +132,39 @@ export type Checkpoint = {
   /** Crit-damage multiplier of the equipped weapon. */
   critMult: number;
   armor: number;
-  /** Physical damage reduction vs the current horde level, [0, 0.75]. */
+  /** Physical damage reduction vs the current horde level, [0, maxReduction]. */
   armorReduction: number;
+  // ---- The MOB side (the horde this hero faces) + the MENACE read. Populated
+  // from the last rank-and-file MINION the pass actually spawned, so the TTK
+  // and menace numbers are measured against a real bar, not a synthetic one. --
+  /** The horde's effective LEVEL and its three inputs (`heroPowerLevel` =
+   * max of character, gear, damage) — surfaced so an inflated mobHp can be
+   * traced to whichever read is driving it. */
+  powerLevel: number;
+  gearLevel: number;
+  damageLevel: number;
+  /** A rank-and-file minion's max hp at this hero's power (real spawn). */
+  mobHp: number;
+  /** That minion's contact damage per blow, pre-armor (real spawn). */
+  mobDamage: number;
+  /** Seconds for the hero's sustained DPS to fell one such minion. */
+  ttkSec: number;
+  /** Expected landed blows to fell it (mobHp / perHit, crit folded in). */
+  blowsToKill: number;
+  /** Blows the hero survives from that minion, after armor (maxHp ÷ the
+   * reduced incoming hit) — the incoming-damage half of the balance read. */
+  hitsToDie: number;
+  /** How many full minion healthbars one expected killing blow deletes
+   * (heroBlow ÷ mobHp) — the OVERKILL that fuels the menace ratchet. >1 means
+   * one-shots; the higher it climbs the faster the horde evolves. */
+  overkillRatio: number;
+  /** The sustained MENACE (RAMPAGE) stage this build settles at: the evolution
+   * stage whose toughened minion (`evolutionHpMult`) finally survives the
+   * hero's blow — `(overkillRatio − 1) / (hpPerStage × menaceEffectMult)`,
+   * floored at 0. The endgame's real score: better gear/spec → higher stage,
+   * uncapped. An ESTIMATE (steady-state, ignores warmup/relief), but monotone
+   * in build power, which is what a balance read needs. */
+  menaceStageEq: number;
   /** Effective value of every stat (base + auto-growth + gear, diminished). */
   stats: Record<StatName, number>;
   coins: number;
@@ -283,27 +319,45 @@ function allocatePoints(
   const active = STAT_NAMES.filter((s) => (weights[s] ?? 0) > 0);
   const lane = active.length > 0 ? active : (["stamina"] as StatName[]);
   while (state.player.pendingStatPoints > 0) {
-    let best: StatName = lane[0] ?? "stamina";
+    // Only stats below the level-scaled cap can still take a chosen point; once
+    // the lane is capped (a deep spec past ~L66), spill into any stat with room
+    // so the pool always drains — never spin on an un-placeable point.
+    const cap = statCap(state.player.level);
+    const laneRoom = lane.filter((s) => state.player.stats[s] < cap);
+    const pool =
+      laneRoom.length > 0
+        ? laneRoom
+        : STAT_NAMES.filter((s) => state.player.stats[s] < cap);
+    if (pool.length === 0) break; // every stat capped (unreachable in practice)
+    let best: StatName = pool[0] ?? "stamina";
     let bestScore = -Infinity;
-    for (const stat of lane) {
+    for (const stat of pool) {
       const score = (weights[stat] ?? 1) / (spent[stat] + 1);
       if (score > bestScore) {
         bestScore = score;
         best = stat;
       }
     }
-    allocateStat(state, best);
+    if (!allocateStat(state, best)) break;
     spent[best]++;
   }
 }
 
 // ---- The kill --------------------------------------------------------------------
 
+/** A rank-and-file minion's real toughness/touch at the hero's current power,
+ * for the mob-side balance read — the same numbers combat resolves against. */
+export type MobRef = { maxHp: number; contact: number; mlvl: number };
+
 /** Mint one real mob at the hero's current power (the same scaling every live
  * spawn path funnels through) and land a clean lethal blow — overkill
  * efficiency 1, so XP and loot pay their ceiling. Returns the equipment it
- * dropped (already collected off the ground). */
-function killOne(state: GameState, defId: string): Equipment[] {
+ * dropped (already collected off the ground) and the minted enemy (so the
+ * caller can read the real bar it faced). */
+function killOne(
+  state: GameState,
+  defId: string,
+): { dropped: Equipment[]; enemy: Enemy } {
   const enemy: Enemy = spawnEnemy(
     defId,
     { x: 0, y: 0 },
@@ -333,7 +387,19 @@ function killOne(state: GameState, defId: string): Equipment[] {
     if (item.kind === "equipment") dropped.push(item.equipment);
   }
   state.items = [];
-  return dropped;
+  return { dropped, enemy };
+}
+
+/** The contact damage a spawned minion actually lands (pre-armor): its def's
+ * base touch, the horde's per-level ramp already folded into `contactMult`,
+ * times the global mob-damage lever. Mirrors the `hitEnemy` contact path
+ * (step.ts), minus the moment-to-moment crit/last-stand/mechanic bumps. */
+function mobContactDamage(enemy: Enemy): number {
+  return (
+    enemyDef(enemy.defId).contactDamage *
+    (enemy.contactMult ?? 1) *
+    BALANCE.mobDamage
+  );
 }
 
 /** Equip every dropped piece that out-scores what's worn, through the real
@@ -383,11 +449,35 @@ function snapshot(
   killsInLevel: number,
   totalKills: number,
   batch: BatchAccumulator,
+  ref: MobRef | null,
 ): Checkpoint {
   const player = state.player;
   const weapon = player.equipment.weapon;
   const stats = {} as Record<StatName, number>;
   for (const stat of STAT_NAMES) stats[stat] = effectiveStat(state, stat);
+
+  // ---- The mob-side + menace read, measured against the last real minion bar.
+  const dps = weaponDps(state, weapon);
+  const perHit = weaponDamageFor(state, weapon);
+  // The expected KILLING BLOW: one landed hit, crit folded in as its average
+  // lift — what the menace ratchet weighs its overkill against.
+  const critLift =
+    1 +
+    playerCritChance(state, undefined) * (weaponCritMult(state, weapon) - 1);
+  const heroBlow = perHit * critLift;
+  const mobHp = ref?.maxHp ?? 0;
+  const mobDamage = ref?.contact ?? 0;
+  const reduction = ref ? armorReduction(state, ref.mlvl) : 0;
+  const incoming = Math.max(1, mobDamage * (1 - reduction));
+  const overkillRatio = mobHp > 0 ? heroBlow / mobHp : 0;
+  // Evolution hp is LINEAR in stage (evolutionHpMult), so the stage where a
+  // toughened minion finally survives the hero's blow solves in closed form.
+  const eff = difficultyDef(difficulty).menaceEffectMult;
+  const menaceStageEq =
+    overkillRatio > 1
+      ? (overkillRatio - 1) / (MENACE.hpPerStage * Math.max(1e-6, eff))
+      : 0;
+
   return {
     difficulty,
     levelId,
@@ -403,6 +493,16 @@ function snapshot(
     critMult: round2(weaponCritMult(state, weapon)),
     armor: totalArmor(state),
     armorReduction: round3(armorReduction(state, currentMobLevel(state))),
+    powerLevel: round1(heroPowerLevel(state)),
+    gearLevel: round1(heroGearLevel(state)),
+    damageLevel: round1(heroDamageLevel(state)),
+    mobHp: Math.round(mobHp),
+    mobDamage: round1(mobDamage),
+    ttkSec: dps > 0 ? round2(mobHp / dps) : 0,
+    blowsToKill: perHit > 0 ? round1(mobHp / perHit) : 0,
+    hitsToDie: round1(player.maxHp / incoming),
+    overkillRatio: round2(overkillRatio),
+    menaceStageEq: Math.round(menaceStageEq),
     stats,
     coins: player.coins,
     weapon: equipmentName(weapon),
@@ -442,6 +542,10 @@ function runLevelPass(
   let raresKilled = 0;
   let bossKilled = false;
   let totalKills = totalKillsBefore;
+  // The most recent rank-and-file minion's real bar — the mob-side/menace read
+  // measures against it. Rares/elites/bosses are set pieces, not the horde the
+  // TTK is framed around, so they don't overwrite it.
+  let ref: MobRef | null = null;
 
   const take = (killsInLevel: number) => {
     batch.xp = state.stats.xpGained - batchXpStart;
@@ -454,6 +558,7 @@ function runLevelPass(
         killsInLevel,
         totalKills,
         batch,
+        ref,
       ),
     );
     batch = freshBatch();
@@ -467,7 +572,15 @@ function runLevelPass(
     const entry = roster[i];
     if (!entry) continue;
     const def = enemyDef(entry.defId);
-    const dropped = killOne(state, entry.defId);
+    const { dropped, enemy } = killOne(state, entry.defId);
+    // Record the rank-and-file bar (not rares/elites/bosses) for the mob read.
+    if (entry.role === "minion" && !def.rarity) {
+      ref = {
+        maxHp: enemy.maxHp,
+        contact: mobContactDamage(enemy),
+        mlvl: enemy.mlvl,
+      };
+    }
     collectDrops(state, dropped);
     bankDrops(batch, dropped);
     for (const eq of dropped) {

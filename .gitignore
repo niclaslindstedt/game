@@ -39,3 +39,7 @@ site-*/
 
 # TypeScript
 *.tsbuildinfo
+
+# progression-sim default output (scripts/progression-sim.mjs)
+progression.html
+progression.json

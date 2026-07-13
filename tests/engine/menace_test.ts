@@ -210,7 +210,13 @@ describe("menace — difficulty and warmup gate the heat", () => {
     const state = startOn(difficulty);
     bareStage(state);
     state.player.level = level;
-    equip(state, "test_hammer"); // ~34+ dmg vs a 30-hp fodder → mild overkill
+    equip(state, "test_hammer");
+    // An OVERPOWERED build: enough STRENGTH that the hammer roughly triples its
+    // ~34 base (well under the ratchet's 6-healthbar threshold) so the overkill
+    // is unambiguous. Auto-stat growth is off by default now, so the hero can't
+    // lean on free per-level STR — spell it out, or even EASY's tiny jolt is
+    // eaten by the per-step menace decay.
+    state.player.stats.strength = 8;
     const { x, y } = state.player.pos;
     state.enemies.push(
       makeEnemy({ pos: { x: x + 20, y }, hp: 30, maxHp: 30 }, "test_fodder"),

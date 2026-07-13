@@ -393,11 +393,11 @@ export const LEVELING = {
    * Trainable stat points a ding grants — the BASE, plus one bonus point
    * per full `statPointsBonusEvery` levels reached (see `statPointsAt` in
    * leveling.ts): 1/ding through the opening, 2 from level 10, 5 at 40,
-   * 10 at 99. Later dings pay MORE points on purpose: past the soft cap
-   * (STATS.statSoftCap) each raw point realizes less, so the growing grant
-   * keeps the chooser exciting deep into the campaign without undoing the
-   * flattening — gear still carries the endgame, the ding just keeps its
-   * dignity.
+   * 10 at 99. Later dings pay MORE points on purpose: the level-scaled stat
+   * cap (`statCap` in leveling.ts) rises by exactly this grant each ding, so a
+   * hero who keeps their main stat maxed stays right at the linear ceiling —
+   * the growing grant is what keeps a full SPEC realizing its raw value deep
+   * into the campaign, all the way to the `STATS.statHardCap` (250) roof.
    */
   statPointsPerLevel: 1,
   statPointsBonusEvery: 10,
@@ -922,22 +922,23 @@ export const MENACE = {
  */
 export const STATS = {
   /**
-   * DIMINISHING RETURNS on every stat (see `diminishStat` in leveling.ts):
-   * effective stat points are linear up to `statSoftCap`, then each further
-   * raw point pays less — `softCap + over/(1 + statTaper·over)` — saturating
-   * toward `statSoftCap + 1/statTaper` (≈90 at the shipped tuning). Applied
-   * at the ONE derivation site every stat read routes through
-   * (`effectiveStat`), and mirrored in `autoPowerScale` so the horde's
-   * compensating hp scale rides the SAME curve. The point: weapons and armor
-   * scale with item level all campaign, so unbounded stat inflation on top
-   * turned the mid-game hero into a god — past the soft cap, stat growth
-   * (auto gains, chosen points, gear affixes) flattens while the horde's flat
-   * per-level ramp (`MENACE.mobHpPerLevel`) keeps climbing, so every new
-   * level nudges the fight HARDER, not easier, and gear — not the ding —
-   * carries the endgame.
+   * LEVEL-SCALED STAT CAP (see `statCap`/`diminishStat` in leveling.ts). Every
+   * effective-stat read runs through it. The ceiling for a stat is exactly what
+   * you'd reach by pouring ALL your chosen points into that one stat
+   * (`statCeilingBase + chosenStatPointsThrough(level)`), so a full SPEC realizes
+   * its raw value with no diminishing — one stat can truly dominate — and the
+   * ceiling RISES as you level, hard-capped at `statHardCap` (250, reached ~L66).
+   * CHOSEN points wall at the cap (the chooser blocks placing past it); GEAR (and
+   * the auto gains / head-start) push effective PAST the cap through a gentle
+   * diminishing tail (`over/(1 + statTaper·over)`), so an ilvl-200 artifact is
+   * felt hard and nothing is wasted, but items never get the undiminished linear
+   * value a spec'd stat does. `autoPowerScale` rides the same curve so the horde's
+   * hp compensation still cancels. The point: specs and endgame gear stay
+   * relevant to the cap instead of flattening at a fixed ~90.
    */
-  statSoftCap: 40,
-  statTaper: 0.02,
+  statHardCap: 250,
+  statCeilingBase: 10,
+  statTaper: 0.01,
   /** Move-speed multiplier added per SPEED point (+8% each). */
   speedPerPoint: 0.08,
   /**
@@ -1006,6 +1007,14 @@ export const STATS = {
   attackSpeedPerStat: 0.02,
   /** Player base crit chance before stats and equipment. */
   baseCritChance: 0.05,
+  /**
+   * Crit chance SATURATES toward this ceiling (`saturateToward` in items.ts) —
+   * it never reaches 100%. The linear crit budget (base + crit-stat + luck +
+   * affixes) reads ~as-is while small, then bends toward `critCap` so the last
+   * few percent cost a lot of stat: with the raised stat cap a DEX/INT spec
+   * would otherwise blow past 100% (it was un-clamped). Below 1.0 by design.
+   */
+  critCap: 0.8,
   /**
    * Crit chance gained per point of the weapon's CRIT stat — DEXTERITY for
    * melee & ranged, INTELLIGENCE for magic (see `CRIT_STAT`). This is the main
@@ -1175,7 +1184,12 @@ export const ACCURACY = {
 export const ARMOR = {
   kBase: 40,
   kPerLevel: 12,
-  maxReduction: 0.75,
+  // Damage reduction saturates through `armor/(armor+k)` toward this ceiling.
+  // Raised to 0.90 (from 0.75): the top band is deliberately expensive — `k`
+  // grows with the attacker's level, so reaching ~0.85–0.90 at the endgame
+  // takes a LOT of armor (deep artifact stacking), while 0.85→0.90 is a further
+  // 33% cut in damage taken. It never reaches 1.0.
+  maxReduction: 0.9,
   armorPerIlvl: 0.06,
 } as const;
 

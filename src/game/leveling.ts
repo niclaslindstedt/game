@@ -21,11 +21,12 @@ const AUTO_GAINS: Partial<Record<StatName, number>> =
 // `levelStatGains`, and `autoPowerScale` all fall to their neutral values — so
 // the hero stops banking free stats AND the horde's compensating hp scale
 // (menace.ts folds `autoPowerScale` into `mobHpScaleFor`/`enemyPowerScale`)
-// drops in lockstep, keeping the balance consistent. The engine default is on
-// (the standalone/test baseline when no app configures it); the shipped app
-// makes the flag opt-in and applies `setAutoStatGainsEnabled(false)` on load
-// unless the developer turns it on. Tests toggle it and must restore it.
-let autoStatGainsEnabled = true;
+// drops in lockstep, keeping the balance consistent. Auto-stat growth is an
+// EXPERIMENTAL, opt-in feature: the engine default is OFF, matching the shipped
+// app (which only flips it on when the developer enables `autoLevelStats`), so
+// the standalone/test/sim baseline calibrates against the same auto-OFF regime
+// the player actually runs. Tests toggle it and must restore it.
+let autoStatGainsEnabled = false;
 
 /**
  * Toggle the automatic per-level base-stat growth (a developer flag). Off
@@ -78,18 +79,35 @@ export function levelStatGains(
 }
 
 /**
- * DIMINISHING RETURNS on stat points — the single curve every effective-stat
- * read runs through (`effectiveStat` in items.ts) and `autoPowerScale`
- * mirrors. Linear up to `STATS.statSoftCap`; past it each further raw point
- * pays less (`softCap + over/(1 + statTaper·over)`), saturating toward
- * `softCap + 1/statTaper`. Early builds are untouched; the late-game stat
- * pile flattens, so the horde's flat per-level hp ramp gradually outpaces the
- * hero and gear — not free stats — has to carry the endgame.
+ * The per-stat effective CEILING at `level`: what a hero could reach by pouring
+ * every chosen point into one stat (`statCeilingBase + chosenStatPointsThrough`),
+ * rising with level and hard-capped at `STATS.statHardCap` (250). This is the
+ * level-scaled cap `diminishStat` bends the stat pile toward — chosen points get
+ * full linear value up to it, gear diminishes past it.
  */
-export function diminishStat(points: number): number {
-  if (points <= STATS.statSoftCap) return points;
-  const over = points - STATS.statSoftCap;
-  return STATS.statSoftCap + over / (1 + STATS.statTaper * over);
+export function statCap(level: number): number {
+  return Math.min(
+    STATS.statHardCap,
+    STATS.statCeilingBase + chosenStatPointsThrough(level),
+  );
+}
+
+/**
+ * DIMINISHING RETURNS on stat points — the single curve every effective-stat
+ * read runs through (`effectiveStat` in items.ts) and `autoPowerScale` mirrors.
+ * LINEAR up to the level-scaled `statCap(level)` — so a full spec realizes its
+ * raw value and one stat can dominate — then each raw point PAST the cap pays
+ * less (`cap + over/(1 + statTaper·over)`): that over-cap region is where GEAR
+ * (and the auto gains / head-start) lands, so an endgame loadout is felt but
+ * never gets the undiminished linear value chosen points do. The cap rises with
+ * level toward 250, so specs and gear stay relevant to the endgame instead of
+ * flattening at a fixed ceiling.
+ */
+export function diminishStat(points: number, level: number): number {
+  const cap = statCap(level);
+  if (points <= cap) return points;
+  const over = points - cap;
+  return cap + over / (1 + STATS.statTaper * over);
 }
 
 /**
@@ -110,10 +128,10 @@ export function diminishStat(points: number): number {
 export function autoPowerScale(level: number): number {
   return (
     (1 +
-      diminishStat(baseStatBonus(level, "strength")) *
+      diminishStat(baseStatBonus(level, "strength"), level) *
         STATS.damageBonusPerPoint.strength) *
     (1 +
-      diminishStat(baseStatBonus(level, "dexterity")) *
+      diminishStat(baseStatBonus(level, "dexterity"), level) *
         STATS.attackSpeedPerStat)
   );
 }

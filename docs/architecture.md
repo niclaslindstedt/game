@@ -289,10 +289,12 @@ run against synthetic fixtures with no shipped content (see
   `player.stats`, so a respec refunds only chosen points — and
   `autoPowerScale` expresses the damage curve those free gains produce so
   the horde's scaling can cancel it out. Two balance guards live here too:
-  `diminishStat` (config `STATS.statSoftCap`/`statTaper`) is the
-  diminishing-returns curve every effective-stat read and `autoPowerScale`
-  run through — linear to the soft cap, saturating past it, so late-game
-  stat piles flatten and gear carries the endgame — and
+  `diminishStat` (config `STATS.statHardCap`/`statCeilingBase`/`statTaper`,
+  via `statCap(level)`) is the LEVEL-SCALED cap curve every effective-stat
+  read and `autoPowerScale` run through — linear up to a ceiling that rises
+  with level (a full spec realizes its raw value, undiminished) and is
+  hard-capped at 250, with a diminishing tail past it so gear pushes further
+  but never for free — and
   `xpLevelCap`/`xpCapMultiplier` (config `XP_CAP`) are the per-map XP caps:
   every (level × difficulty) pair has a hero-level ceiling XP tapers into
   and stops at (applied in `grantXp`), so re-running an outgrown map farms

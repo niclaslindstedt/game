@@ -93,11 +93,14 @@ describe("boss loot", () => {
 
   it("high-luck drops roll up to RARE, with affixes and a decorated name", () => {
     // At player level 7 the boss's levelBonus lifts him to monster level 10 —
-    // the rare gate — and his tierBonus + max luck then clear the rare chance
-    // every time, so every TIER-ROLLED piece (the machete, the pinned gear)
-    // lands rare. His `tierDrops` pieces keep their forced tier — that's the
-    // point of the pledge — so the haul reads rare + guaranteed magic.
-    const state = startGame();
+    // the rare gate — and his tierBonus + high luck push the rare chance up
+    // against its ceiling (`LOOT.rarityChanceMax`, the D2 magic-find cap that
+    // keeps rare short of a certainty even at max MF). The machete is the one
+    // TIER-ROLLED piece; the `tierDrops` gear keeps its forced tier — so on a
+    // seed that clears the (capped) rare roll the haul reads rare + guaranteed
+    // magic. A fixed seed pins that clear, since the ceiling makes each rolled
+    // piece ~85%, not guaranteed.
+    const state = startGame(1);
     state.player.level = 7;
     state.player.stats.luck = 30;
     state.items = [];

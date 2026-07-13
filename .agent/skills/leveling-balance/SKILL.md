@@ -78,12 +78,15 @@ and `MENACE.mobHpPerLevel` are wired so free growth cancels against the horde
 (`tests/engine/leveling_test.ts` asserts it). The kills-per-level model already
 rides that cancellation — so tune the `LEVELING` pacing knobs, not the mob
 scaling, to move pacing. Both sides of the cancellation run through the
-**diminishing-returns curve** (`diminishStat` in leveling.ts, knobs
-`STATS.statSoftCap`/`statTaper`): effective stats are linear to the soft cap
-and flatten past it, and `autoPowerScale` applies the same curve to the
-auto-only sums — so the cancellation holds, while chosen points and gear
-stats (which stack deeper into the flat tail) realize a little less each
-level. That is deliberate: leveling alone slowly loses ground to the horde,
+**level-scaled stat cap** (`diminishStat`/`statCap` in leveling.ts, knobs
+`STATS.statHardCap`/`statCeilingBase`/`statTaper`): effective stats are linear
+up to a ceiling that RISES with level — the raw a full spec (all chosen points
+in one stat) would reach — hard-capped at 250, then a diminishing tail past it,
+and `autoPowerScale` applies the same curve to the auto-only sums — so the
+cancellation holds, while GEAR that pushes a stat past the cap realizes a
+little less each point (chosen placement hard-walls at the cap). That keeps a
+spec dominant into the endgame while gear still pays off: leveling alone slowly
+loses ground to the horde,
 and gear carries the endgame.
 
 **Per-map XP caps.** Every (level × difficulty) pair has a hero-level ceiling

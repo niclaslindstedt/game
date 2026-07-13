@@ -3,7 +3,7 @@
 // victim's max hp, each level banks a stat point, spending points changes
 // derived numbers (hp, damage, crits, drops) the way the design says.
 
-import { describe, expect, it } from "vitest";
+import { afterEach, beforeEach, describe, expect, it } from "vitest";
 
 import {
   allocateStat,
@@ -27,6 +27,7 @@ import {
   PLAYER,
   playerCritChance,
   playerDodgeChance,
+  saturateToward,
   setAutoStatGainsEnabled,
   STAMINA,
   STATS,
@@ -162,6 +163,11 @@ describe("golden-arrow XP share tapers with level", () => {
 });
 
 describe("the ding: automatic base gains and the celebration window", () => {
+  // Auto-stat growth is an experimental, opt-in feature (OFF by engine default);
+  // this block exercises it, so turn it on and restore the default after each.
+  beforeEach(() => setAutoStatGainsEnabled(true));
+  afterEach(() => setAutoStatGainsEnabled(false));
+
   it("each ding grants automatic base stats whose size scales with the level", () => {
     // The per-ding gain is the configured rate × the new level, rounded…
     expect(autoGainAt(2, "stamina")).toBe(
@@ -432,26 +438,31 @@ describe("stats", () => {
     expect(playerCritChance(state)).toBeCloseTo(STATS.baseCritChance);
 
     // DEX raises the melee/ranged crit; INT does NOT touch a physical swing.
+    // The raw stat sum bends toward `critCap` via `saturateToward`, so the
+    // expected value runs through the same saturation the getter applies.
     state.player.stats.dexterity = 4;
     state.player.stats.intelligence = 7;
+    const crit = (linear: number) => saturateToward(linear, STATS.critCap);
     expect(playerCritChance(state, "melee")).toBeCloseTo(
-      STATS.baseCritChance + 4 * STATS.critChancePerStat,
+      crit(STATS.baseCritChance + 4 * STATS.critChancePerStat),
     );
     expect(playerCritChance(state, "ranged")).toBeCloseTo(
-      STATS.baseCritChance + 4 * STATS.critChancePerStat,
+      crit(STATS.baseCritChance + 4 * STATS.critChancePerStat),
     );
     // A magic swing rides INT instead (DEX leaves it alone).
     expect(playerCritChance(state, "magic")).toBeCloseTo(
-      STATS.baseCritChance + 7 * STATS.critChancePerStat,
+      crit(STATS.baseCritChance + 7 * STATS.critChancePerStat),
     );
 
     // LUCK adds a MARGINAL crit on top of whichever stat governs — a quarter
     // of a primary point, so it never replaces the class stat.
     state.player.stats.luck = 3;
     expect(playerCritChance(state, "melee")).toBeCloseTo(
-      STATS.baseCritChance +
-        4 * STATS.critChancePerStat +
-        3 * STATS.critChancePerLuck,
+      crit(
+        STATS.baseCritChance +
+          4 * STATS.critChancePerStat +
+          3 * STATS.critChancePerLuck,
+      ),
     );
     expect(STATS.critChancePerLuck).toBeCloseTo(STATS.critChancePerStat / 4);
   });
@@ -494,15 +505,23 @@ describe("stats", () => {
     const state = startGame();
     expect(playerDodgeChance(state)).toBeCloseTo(DODGE.base);
     // DEX sharpens the sidestep; LUCK nudges it MARGINALLY (a quarter of DEX).
+    // The linear inputs bend toward `DODGE.max` via `saturateToward`, so the
+    // expected value runs through the same saturation the getter applies.
     state.player.stats.dexterity = 4;
     state.player.stats.luck = 6;
     expect(playerDodgeChance(state)).toBeCloseTo(
-      DODGE.base + 4 * DODGE.perDex + 6 * DODGE.perLuck,
+      saturateToward(
+        DODGE.base + 4 * DODGE.perDex + 6 * DODGE.perLuck,
+        DODGE.max,
+      ),
     );
     expect(DODGE.perLuck).toBeCloseTo(DODGE.perDex / 4);
-    // Capped so no build becomes untouchable.
+    // Saturates toward the cap so no build becomes untouchable: a huge DEX pile
+    // crawls right up to `DODGE.max` but never reaches (let alone exceeds) it.
     state.player.stats.dexterity = 1000;
-    expect(playerDodgeChance(state)).toBe(DODGE.max);
+    const maxed = playerDodgeChance(state);
+    expect(maxed).toBeLessThan(DODGE.max);
+    expect(maxed).toBeGreaterThan(DODGE.max * 0.9);
   });
 
   it("a high-dodge hero eventually sidesteps a blow entirely (no damage)", () => {
