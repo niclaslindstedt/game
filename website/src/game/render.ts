@@ -38,11 +38,15 @@ import { playerDollLayers, WEAPON_SHOULDER } from "./paper-doll.ts";
 import { getSettings } from "./settings.ts";
 import {
   drawBurst,
+  drawMuzzle,
+  drawProjectileTrail,
   drawSlash,
+  shotStyleFor,
   slashStyleFor,
   type GoreStyle,
+  type ShotStyle,
   type SlashGeom,
-} from "./slash-fx.ts";
+} from "./weapon-fx.ts";
 import { TIER_COLORS } from "./tiers.ts";
 
 /**
@@ -622,8 +626,27 @@ export function drawFrame(
     ctx.drawImage(sprite, x, y);
   }
 
+  const swingFx = getSettings().weaponSwing === "on";
   for (const projectile of state.projectiles) {
     if (!inView(projectile.pos.x, projectile.pos.y, 16)) continue;
+    const px = Math.round(projectile.pos.x - camera.x);
+    const py = Math.round(projectile.pos.y - camera.y - projectile.z);
+    // The hero's own round/bolt carries its weapon's signature glow trail —
+    // drawn UNDER the sprite. Only his shots (not hostile, not a companion's),
+    // and only under the developer WEAPON SWING flag. Uses the CURRENTLY held
+    // weapon's shot style (an in-flight round can't re-ask what fired it).
+    if (swingFx && !projectile.hostile && projectile.companionId == null) {
+      drawProjectileTrail(
+        ctx,
+        px,
+        py,
+        projectile.dir,
+        shotStyleFor(
+          state.player.equipment.weapon.uniqueId,
+          projectile.weaponClass === "magic" ? "magic" : "ranged",
+        ),
+      );
+    }
     // Each weapon names its own shot sprite (staple, zap, vial, ray…) — the
     // stapler throws staples, the taser arcs, the beaker sloshes. Fall back
     // to the class default if a name is ever unknown.
@@ -633,10 +656,8 @@ export function drawFrame(
     // Shots fired mid-jump draw at their height, sinking back in flight.
     ctx.drawImage(
       sprite,
-      Math.round(projectile.pos.x - sprite.width / 2 - camera.x),
-      Math.round(
-        projectile.pos.y - sprite.height / 2 - camera.y - projectile.z,
-      ),
+      Math.round(px - sprite.width / 2),
+      Math.round(py - sprite.height / 2),
     );
   }
 
@@ -1149,10 +1170,13 @@ export type Effect = {
   arc?: number;
   /** Muzzle: ranged fires a hot flash, magic a cool cast burst. */
   weaponClass?: "melee" | "ranged" | "magic";
-  /** Burst: the themed gore a signature melee blow throws (slash-fx.ts). */
+  /** Burst: the themed gore a signature melee blow throws (weapon-fx.ts). */
   gore?: GoreStyle;
   /** Burst: a per-hit seed so stacked bursts scatter differently. */
   seed?: number;
+  /** Muzzle: the firing weapon's shot signature (weapon-fx.ts). Absent = the
+   * plain class look. */
+  fx?: ShotStyle;
 };
 
 export function drawEffects(
@@ -1381,47 +1405,24 @@ export function drawEffects(
     }
 
     if (effect.kind === "muzzle") {
-      // A short flash at the weapon's muzzle, a few px ahead along the aim.
-      // Ranged fires a hot yellow starburst; magic blooms a cool arcane ring.
+      // A short flash at the muzzle / wand tip, a few px ahead along the aim,
+      // in the firing weapon's signature (weapon-fx.ts) — the hero's own shots
+      // carry their weapon's `fx`; companion/enemy shots fall to the plain
+      // class look. Ranged bursts rays, magic blooms a ring.
       const duration = effect.durationMs ?? 110;
       const t = 1 - (effect.untilMs - timeMs) / duration; // 0 → 1
       if (t < 0 || t > 1) continue;
       const aim = effect.angle ?? 0;
-      const fade = 1 - t;
       const mx = x + Math.round(Math.cos(aim) * 9);
       // Lift to the weapon's height (the hero holds it mid-body).
       const my = groundY + Math.round(Math.sin(aim) * 9) - 5;
-      ctx.save();
-      if (effect.weaponClass === "magic") {
-        ctx.globalAlpha = 0.9 * fade;
-        ctx.strokeStyle = "#c9a6ff";
-        ctx.lineWidth = 1;
-        ctx.beginPath();
-        ctx.arc(mx, my, 2 + t * 7, 0, Math.PI * 2);
-        ctx.stroke();
-        ctx.fillStyle = `rgba(230, 214, 255, ${0.9 * fade})`;
-        ctx.fillRect(mx - 1, my - 1, 2, 2);
-      } else {
-        ctx.globalAlpha = fade;
-        ctx.fillStyle = "#fff2c0";
-        ctx.beginPath();
-        ctx.arc(mx, my, 2 + fade * 2, 0, Math.PI * 2);
-        ctx.fill();
-        ctx.strokeStyle = "#ffd36b";
-        ctx.lineWidth = 1;
-        for (const spread of [0, 0.5, -0.5]) {
-          const len = 4 + t * 4;
-          ctx.beginPath();
-          ctx.moveTo(mx, my);
-          ctx.lineTo(
-            mx + Math.cos(aim + spread) * len,
-            my + Math.sin(aim + spread) * len,
-          );
-          ctx.stroke();
-        }
-      }
-      ctx.restore();
-      ctx.globalAlpha = 1;
+      const style =
+        effect.fx ??
+        shotStyleFor(
+          undefined,
+          effect.weaponClass === "magic" ? "magic" : "ranged",
+        );
+      drawMuzzle(ctx, mx, my, aim, t, style);
       continue;
     }
 
