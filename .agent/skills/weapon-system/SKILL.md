@@ -42,6 +42,7 @@ node scripts/skill-lessons.mjs weapon-system
 | Firing + projectile behaviors (spread/pierce/homing/chain) | `src/game/step.ts` (`stepWeapon`, `stepProjectiles`) |
 | Icons (12×12) | `website/scripts/sprite-data/icons.mjs` |
 | Projectile sprites (8×8) | `website/scripts/sprite-data/effects.mjs` |
+| Field-hero held weapon art + its swing/recoil/cast animation | `website/src/game/paper-doll.ts` (`WEAPON_SHOULDER` pivot), `render.ts` (`weaponPose`, `drawPlayer`); preview with `website/scripts/weapon-swing.mjs` |
 | Tier colors, item tooltip (ilvl, level req) | `website/src/game/tiers.ts`, `InventoryPanel.tsx` |
 | Keepsakes / hardcore rules (app-side permanence) | `website/src/game/progress.ts`, `settings.ts` |
 | Engine rule tests | `tests/engine/loot_diablo_test.ts`, `tests/engine/projectile_behavior_test.ts` |
@@ -214,6 +215,30 @@ one, and scripted `earlyDrops` pin `quality: "normal"`.
 5. **Feel**: the `playtest` skill. Numbers that pass the checker can still
    feel limp — cadence, projectile speed, and screen effects are judged in
    the running game.
+
+### Weapon art & swing animation — the swing preview
+
+When the work is the LOOK of a weapon — its held sprite on the field hero, or
+how it swings/recoils/casts (the WEAPON SWING animation, pivoted about the
+shoulder in `render.ts` `weaponPose`) and how its slash/muzzle EFFECT reads —
+drive `website/scripts/weapon-swing.mjs` instead of eyeballing the live game
+(the swing is over in ~200 ms). It stages the field hero holding a weapon and
+screenshots a numbered strip of the animation, frame by frame:
+
+```sh
+npm run assets && npx vite --port 5199 &        # from website/
+node scripts/weapon-swing.mjs poses medieval_sword   # POSE arc, pinned frame by frame (art)
+node scripts/weapon-swing.mjs poses --class magic    # every magic weapon
+node scripts/weapon-swing.mjs live medieval_sword    # slowed real attack — pose + slash/muzzle effect
+```
+
+`poses` pins the held-weapon pose at sampled fractions of the swing (via the
+`?debug` `window.__swing` hook) for a clean read of the sprite through its arc;
+`live` runs a real attack against a dummy with the whole run slowed (via
+`window.__timeScale`) so the pose and its effect are judged together. Strips
+land in `website/assets-preview/swing/` (gitignored). Tune `WEAPON_SHOULDER`
+(pivot, `paper-doll.ts`) and the per-class magnitudes in `weaponPose`, then
+re-shoot until the arc reads.
 
 ## Unique items (named drops)
 

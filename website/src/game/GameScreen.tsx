@@ -1305,9 +1305,42 @@ export function GameScreen({
     // Only the hero's own blows are captured — companions swing from their own
     // spots (matched by proximity to the hero below).
     let heroAction: PlayerAction | undefined;
+    // Weapon-swing tuning hook (?debug): `window.__swing({kind, weaponClass,
+    // t})` PINS the held weapon to a fixed fraction `t` (0..1) of its swing arc
+    // so a screenshot can sample the animation frame by frame; `null` clears it
+    // and hands the weapon back to the live attack. Paired with the
+    // `weapon-swing` dev script (website/scripts/weapon-swing.mjs), it is how
+    // the held-weapon pose is tuned when designing weapon art. See the
+    // `weapon-system` skill and docs/configuration.md.
+    let debugPose: {
+      kind: PlayerAction["kind"];
+      weaponClass: PlayerAction["weaponClass"];
+      t: number;
+    } | null = null;
+    if (params.has("debug")) {
+      (
+        window as unknown as { __swing?: (o: typeof debugPose) => void }
+      ).__swing = (o) => {
+        debugPose = o;
+      };
+    }
     // Run-clock ms through which the "bags are full" nudge stays lit — set when
     // a `pickupBlocked` event fires, drives the inventory button's pulse.
     let bagFullHintUntilMs = 0;
+    // Slow-motion tuning hook (?debug): `window.__timeScale(f)` scales the
+    // simulation clock — 0.1 runs the whole run (steering, swings, slash cones,
+    // muzzle flashes, mob motion) at a tenth speed so a fast animation can be
+    // eyeballed or screenshotted frame by frame, 1 restores real time. It slows
+    // the SIM, not the render, so it costs nothing and stays deterministic. The
+    // `weapon-swing` dev script drives it to sample weapon EFFECTS. See the
+    // `weapon-system` skill and docs/configuration.md.
+    let timeScale = 1;
+    if (params.has("debug")) {
+      (window as unknown as { __timeScale?: (f: number) => void }).__timeScale =
+        (f) => {
+          timeScale = Number.isFinite(f) && f > 0 ? f : 1;
+        };
+    }
 
     const stop = startGameLoop({
       simulate(dtMs) {
@@ -1490,7 +1523,9 @@ export function GameScreen({
             bumpUi();
           }
         }
-        step(state, input, dtMs);
+        // `timeScale` (?debug `window.__timeScale`) slows the whole run for
+        // animation tuning — a neutral 1 in normal play.
+        step(state, input, dtMs * timeScale);
         // The first instant the run is truly in the player's hands — armed and
         // playing, past the prelude, the intro monologue, and (on SpaceZ HQ)
         // the scripted opening strike that draws the blade. Snapshot it once so
@@ -2125,7 +2160,20 @@ export function GameScreen({
           canvas.height,
           timeMs,
         );
-        drawFrame(ctx, state, assets, camera, timeMs, heroAction);
+        // A pinned swing pose (?debug `window.__swing`) overrides the live
+        // action so a screenshot samples an exact fraction of the arc. Rebuilt
+        // each frame off the current clock so the fraction stays fixed. Neutral
+        // (undefined) in normal play — the live `heroAction` drives the swing.
+        const DEBUG_POSE_MS = 1000;
+        const action = debugPose
+          ? {
+              kind: debugPose.kind,
+              weaponClass: debugPose.weaponClass,
+              startMs: state.stats.timeMs - debugPose.t * DEBUG_POSE_MS,
+              durationMs: DEBUG_POSE_MS,
+            }
+          : heroAction;
+        drawFrame(ctx, state, assets, camera, timeMs, action);
         drawEffects(ctx, effects, camera, state.stats.timeMs, assets);
 
         // The FPS readout: smooth the frame delta (EMA) and write the number
