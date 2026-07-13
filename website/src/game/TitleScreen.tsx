@@ -34,6 +34,7 @@ import { useScrollFade } from "@ui/lib/scroll-fade.ts";
 
 import { IDENTITY } from "../identity.ts";
 
+import { PixelCheckbox } from "@ui/lib/PixelCheckbox.tsx";
 import { PixelSlider } from "@ui/lib/PixelSlider.tsx";
 import { PixelToggle } from "@ui/lib/PixelToggle.tsx";
 
@@ -214,6 +215,12 @@ type MenuEntry = {
    * (→ on, ← off) and confirm/click flips it. `on` is the current state; `set`
    * commits a new one. */
   toggle?: { on: boolean; set: (on: boolean) => void };
+  /** A MULTI-SELECT row (the EXPORT CHARACTER picker): renders a pixel tick-box
+   * after the label; the arrows set it (→ checked, ← empty) and confirm/click
+   * toggles it. `checked` is the current state; `set` commits a new one. A
+   * tick-box (not a switch) because these rows pick one of many, not a
+   * setting's on/off. */
+  check?: { checked: boolean; set: (checked: boolean) => void };
   /** A KEY BINDINGS row: renders the bound key's name right-aligned (Quake
    * style — label left, key far right). `capturing` swaps it for a "PRESS A
    * KEY" prompt while this row is listening for the next press. */
@@ -1063,26 +1070,35 @@ export function TitleScreen({
         return {
           label: hero.name,
           aria: `export-hero-${hero.id}`,
-          blurb: `LV ${level} - ${status} - TICK TO EXPORT`,
-          toggle: {
-            on,
+          blurb: `LV ${level} - ${status}`,
+          check: {
+            checked: on,
             set: (next: boolean) => toggleExportPick(hero.id, next),
           },
           action: () => toggleExportPick(hero.id, !on),
         };
       });
       const count = roster.filter((c) => exportPicks.has(c.id)).length;
+      const canExport = count > 0;
       return [
         ...heroRows,
         {
-          label: count > 0 ? `EXPORT (${count})` : "EXPORT",
+          label: canExport ? `EXPORT (${count})` : "EXPORT",
           aria: "export-confirm",
-          color: "#7ef0c8",
-          blurb:
-            count > 0
-              ? "DOWNLOAD THE TICKED HEROES AS SIGNED FILES"
-              : "TICK A HERO ABOVE FIRST",
-          action: () => void exportPicked(),
+          // Greyed and inert until at least one hero is ticked (mirrors a
+          // locked level row): choosing it just buzzes.
+          color: canExport ? "#7ef0c8" : "#5a6068",
+          locked: !canExport,
+          blurb: canExport
+            ? "DOWNLOAD THE TICKED HEROES AS SIGNED FILES"
+            : "TICK A HERO ABOVE TO EXPORT",
+          action: () => {
+            if (!canExport) {
+              playUiSound(synth, "back");
+              return;
+            }
+            void exportPicked();
+          },
         },
         // Land back on the EXPORT CHARACTER row in DATA (the first row).
         backTo("data", 0),
@@ -1400,6 +1416,12 @@ export function TitleScreen({
         event.preventDefault();
         unlockAudio();
         row.toggle.set(event.key === "ArrowRight");
+      } else if (row?.check && horizontal) {
+        // On a multi-select row the arrows set the tick-box directly
+        // (→ checked, ← empty); `set` plays its own confirm cue.
+        event.preventDefault();
+        unlockAudio();
+        row.check.set(event.key === "ArrowRight");
       } else if (event.key === "ArrowDown" || event.key === "ArrowUp") {
         event.preventDefault();
         unlockAudio();
@@ -2112,6 +2134,9 @@ export function TitleScreen({
                               color={selected ? baseColor : "#9aa3ad"}
                             />
                           </span>
+                        )}
+                        {entry.check && (
+                          <PixelCheckbox checked={entry.check.checked} />
                         )}
                         {entry.binding && (
                           <span className="menu-item-binding">
