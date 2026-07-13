@@ -2,9 +2,12 @@
 // ARTIFACTS — the level-99 endgame roster, the very top of the loot ladder
 // above legendary. These are the Rift dredging Earth's whole myth-history to
 // the surface: the named relics of legend, minted at the `"artifact"` tier
-// (red card, densest pickup blaze) and dropped ONLY at the cap — each sits on a
-// high-req elite base, so a req-99 artifact can't drop until the hero is high
-// enough to wear it, and the item-level FLOOR retires everything lighter at 99.
+// (red card, densest pickup blaze) and dropped ONLY at the level cap — the
+// artifact tier is gated shut until the hero reaches `LEVELING.maxLevel` (99,
+// reachable only on JESUS's endgame grind; see `rollTier`). Every artifact's
+// EQUIP requirement is `min(maxLevel, ilvl)` = 99 for the whole roster
+// (`itemLevelReq`), so a relic is worn exactly where it drops — never a
+// low-level hand. The item-level FLOOR still retires everything lighter at 99.
 //
 // They span a VAST power ladder ON PURPOSE, and the rarity is DERIVED from that
 // power: `uniqueDropWeight` scales an artifact's drop odds by

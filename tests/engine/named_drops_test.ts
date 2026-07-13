@@ -8,7 +8,7 @@
 
 import { describe, expect, it } from "vitest";
 
-import { LOOT, registerDefs } from "@game/core";
+import { LEVELING, LOOT, registerDefs } from "@game/core";
 import type { GameState, UniqueDef } from "@game/core";
 import { rollEquipment } from "../../src/game/items.ts";
 
@@ -127,5 +127,19 @@ describe("named-item drop gates", () => {
     art.player.level = 99;
     const { tiers } = rollMany(art, 120_000);
     expect(tiers.artifact ?? 0).toBeGreaterThan(0);
+  });
+
+  it("ARTIFACTS never drop below the level cap (even on JESUS)", () => {
+    // The cap chase: an artifact falls only once the hero has reached
+    // `LEVELING.maxLevel`. A deep JESUS hero who is not yet capped sees zero,
+    // however many kills — while legendaries still rain, proving the gate is
+    // artifact-specific, not a difficulty/loot-level accident.
+    installNamed();
+    const state = startGame(7, "test_level");
+    state.difficulty = "jesus";
+    state.player.level = LEVELING.maxLevel - 1;
+    const { tiers } = rollMany(state, 120_000);
+    expect(tiers.artifact ?? 0).toBe(0);
+    expect(tiers.legendary ?? 0).toBeGreaterThan(0);
   });
 });

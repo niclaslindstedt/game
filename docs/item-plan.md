@@ -248,9 +248,11 @@ at **artifact** tier (req/ilvl 99+), the level-99 endgame drop.
 
 ## Phase 5 — JESUS 99+ ARTIFACTS (~24, the power ladder)
 
-The endgame farm: authored ilvls ≥ 99 on high-req elite bases (gated out of
-earlier play naturally — a req-99 artifact drops from any mob only once the
-hero is at the cap), minted at **artifact** tier and deliberately spread
+The endgame farm: authored ilvls ≥ 99 on high-req elite bases. The artifact
+tier is gated shut until the hero reaches the level cap (`LEVELING.maxLevel`,
+99), and every artifact's equip requirement is `min(maxLevel, ilvl)` = 99, so a
+relic drops exactly where it can be worn. Minted at **artifact** tier and
+deliberately spread
 across a VAST power ladder — from strong keepers near the reference budget up
 to god-tier pieces at several times it, which the rarity power law makes
 hundreds of times rarer. Provisional
