@@ -9,8 +9,10 @@ import type { EnemyDef } from "./types.ts";
 
 // ARMSTRONG's BOTTOM-TIER pool: the former easy/medium/hard drops merged (the
 // three parallel starting lanes share one pool; the `mlvl / ilvl` drop scaling
-// self-selects level-appropriate pieces). nightmare/jesus keep their own.
-const ARMSTRONG_EARLY = ["the_long_vigil", "palegrave", "sentinels_greaves"];
+// self-selects level-appropriate pieces). SENTINEL'S GREAVES (ilvl 43) sits a
+// full tier above where you first reach ARMSTRONG, so it lives on the NIGHTMARE
+// rung where its ilvl matches. nightmare/jesus keep their own.
+const ARMSTRONG_EARLY = ["the_long_vigil", "palegrave"];
 
 export const MOON_ENEMIES: Record<string, EnemyDef> = {
   // Minion speeds sit far below the player's walk: the horde is a slow,
@@ -484,7 +486,7 @@ export const MOON_ENEMIES: Record<string, EnemyDef> = {
       easy: ARMSTRONG_EARLY,
       medium: ARMSTRONG_EARLY,
       hard: ARMSTRONG_EARLY,
-      nightmare: ["marewalkers"],
+      nightmare: ["marewalkers", "sentinels_greaves"],
       jesus: ["the_fallen_standard"],
     },
   },

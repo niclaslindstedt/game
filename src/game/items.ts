@@ -446,27 +446,41 @@ export function uniqueDropWeight(
 }
 
 /**
- * Roll a dropped item's own LEVEL off a level-`mlvl` killer: the mob's level
- * minus a small weighted deficit (config `LOOT.ilvlDeltaWeights` — full-level
- * drops are the rare end of the band). Rare-and-better finds use the tighter
- * `ilvlDeltaWeightsRare` band (0–1 below), so a yellow is generally a
- * high-level item. The difficulty's `lootIlvlBonus` is added on top — the
- * harder rungs' drops roll a few levels deep, sizing both their affixes and
- * an armor piece's rolled armor. Floored at 1.
+ * Roll a dropped item's own LEVEL off a level-`mlvl` killer. The D2 rarity
+ * ladder decides how it sits relative to the loot level: WHITE/regular items
+ * roll AT or a hair under (a weighted deficit, `LOOT.ilvlDeltaWeights`), while
+ * MAGIC and RARE roll a weighted margin ABOVE it (`ilvlMarginMagic` +0..2,
+ * `ilvlMarginRare` +3..5) — the rarer the find, the more its power punches over
+ * the mob that dropped it. The named tiers (unique/legendary/artifact) fold
+ * into a hand-authored item whose own ilvl overrides this roll, so their raw
+ * value is moot. The difficulty's `lootIlvlBonus` is added on top. Floored at 1.
  */
 function rollItemLevel(state: GameState, mlvl: number, tier: Tier): number {
+  const bonus = difficultyDef(state.difficulty).lootIlvlBonus;
+  const margin =
+    tier === "magic"
+      ? LOOT.ilvlMarginMagic
+      : tier === "rare"
+        ? LOOT.ilvlMarginRare
+        : null;
+  if (margin) {
+    const offset =
+      margin.base +
+      pickWeighted(
+        state.rng,
+        margin.weights.map((weight, i) => ({ weight, i })),
+      ).i;
+    return Math.max(1, mlvl + bonus + offset);
+  }
+  // regular/trash (and the moot named-tier raw roll): the small downward deficit.
   const weights: readonly number[] =
-    tier === "rare" ||
-    tier === "unique" ||
-    tier === "legendary" ||
-    tier === "artifact"
+    tier === "unique" || tier === "legendary" || tier === "artifact"
       ? LOOT.ilvlDeltaWeightsRare
       : LOOT.ilvlDeltaWeights;
   const delta = pickWeighted(
     state.rng,
     weights.map((weight, i) => ({ weight, delta: i })),
   ).delta;
-  const bonus = difficultyDef(state.difficulty).lootIlvlBonus;
   return Math.max(1, mlvl + bonus - delta);
 }
 

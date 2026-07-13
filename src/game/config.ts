@@ -1421,11 +1421,23 @@ export const LOOT = {
    */
   ilvlDeltaWeights: [1, 2, 3, 4],
   /**
-   * The same weights for RARE-and-better drops: the big finds roll only 0–1
-   * below the mob (equal odds), so a yellow is generally a high-level item,
-   * not a lucky low roll.
+   * The same weights for the named tiers' RAW roll (unique/legendary/artifact
+   * fold into a hand-authored item whose ilvl OVERRIDES this, so it is moot —
+   * kept only so the raw roll has a value): 0–1 below the mob, equal odds.
    */
   ilvlDeltaWeightsRare: [1, 1],
+  /**
+   * ROLLED-tier UPWARD ilvl margin over the loot level — the D2 rule that the
+   * rarer a find, the more its power punches above the mob that dropped it
+   * (magic a hair over, rare a clear step over, and the hand-authored
+   * unique/legendary/artifact tiers further still via their own ilvls). Index
+   * `i` weights an offset of `base + i`, low end likeliest, so the margin tilts
+   * toward its floor. MAGIC lands loot+0..2, RARE loot+3..5. (WHITE/regular
+   * items still roll AT or just under loot via `ilvlDeltaWeights`, so the ladder
+   * reads regular ≤ magic < rare < unique.)
+   */
+  ilvlMarginMagic: { base: 0, weights: [3, 2, 1] },
+  ilvlMarginRare: { base: 3, weights: [3, 2, 1] },
   /**
    * The carry bag's floor — its size at zero STRENGTH. STRENGTH grows it from
    * here (`STATS.bagSlotsPerStr`), so the opening bag is deliberately tight

@@ -255,6 +255,18 @@ to the rung — an easy unique only drops on easy. Each is rolled at
   gear/equipment source files, so **a source grep will tell you a real base
   doesn't exist.** Always resolve against the runtime record, i.e. run the
   checker's `--bases`, never `grep`.
+- **The rarity ILVL-MARGIN ladder — power sits ABOVE where a find drops.** D2's
+  rule: the rarer a find, the further its item level punches over the level it
+  drops at. Rolled MAGIC lands loot+0..2 and RARE loot+3..5 (engine
+  `rollItemLevel`, config `LOOT.ilvlMarginMagic`/`ilvlMarginRare`); the
+  hand-authored tiers pitch their static ilvl a tier over their DROP LEVEL —
+  UNIQUE ≈ +10, LEGENDARY ≈ +20, ARTIFACT ≈ +30 (up to ~+100 for the rarest,
+  where drop odds fall off `(rarityBudgetRef/budget)^rarityBudgetExp`). A boss/
+  world unique's "drop level" is the boss/level MONSTER LEVEL at its stage
+  (bottom-tier ≈ where you first reach it, ~6/12/19/25 across the campaign;
+  nightmare/jesus higher); a globally-rolled legendary/artifact anchors to its
+  base `levelReq`. So author a boss unique at `ilvl ≈ stage mlvl + 10`, keeping
+  `base.levelReq ≤` where it drops so it's wearable when found.
 - **`ilvl` scales power and drop odds, not the equip gate.** Equip level is the
   base item's `levelReq` (like any tier), so a unique wears well below its ilvl.
   `ilvl` is NOT a free-hand number — it has a DEFINITION (`scripts/weapon-ilvl.mjs`):
