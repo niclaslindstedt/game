@@ -1255,9 +1255,10 @@ export { GEAR_DEFS, type GearDef };
  * `ilvl × perIlvl` rule: magnitude now comes in authored GENERATIONS that
  * unlock as items drop deeper, so a deep find rolls bigger — but never
  * unboundedly bigger. The generations are the balance wall the old linear
- * rule lacked: an endgame stat affix tops out around 60% of the hero's own
- * soft cap (STATS.statSoftCap) instead of sailing past a whole build's
- * chosen points.
+ * rule lacked: an endgame stat affix stays a COMPLEMENT to a spec, topping
+ * out around a fifth of the hero's endgame stat cap (STATS.statHardCap, 250)
+ * instead of sailing past a whole build's chosen points — a full rack of
+ * affixes lifts a build, one roll never replaces the spec.
  */
 export type AffixBracket = {
   /** The item level this generation unlocks at. */
@@ -1284,11 +1285,14 @@ export type AffixDef = {
 
 /**
  * The bracket ladders, shared by both pools so a kind means the same thing
- * on a weapon and a worn piece. `minIlvl`s (1/10/22/36/52) deliberately
+ * on a weapon and a worn piece. `minIlvl`s (1/10/22/36/52/70/88) deliberately
  * track where the difficulty rungs end (see LEVELING's per-rung landings):
  * each rung of the campaign unlocks the next affix generation, and the
  * harder difficulties' `lootIlvlBonus` reaches a generation a few levels
- * early — climbing the ladder is visible in the loot's very numbers.
+ * early — climbing the ladder is visible in the loot's very numbers. The two
+ * top generations (70, 88) carry rolled gear through the ilvl 52–99 ENDGAME so
+ * a deep NIGHTMARE/JESUS drop keeps out-rolling a mid-campaign one — the "better
+ * gear pushes menace higher" loop stays alive past the old ilvl-52 flatline.
  */
 const BRACKETS: Record<AffixDef["kind"], AffixBracket[]> = {
   stat: [
@@ -1296,9 +1300,11 @@ const BRACKETS: Record<AffixDef["kind"], AffixBracket[]> = {
     { minIlvl: 10, min: 4, max: 7 },
     { minIlvl: 22, min: 8, max: 12 },
     { minIlvl: 36, min: 13, max: 18 },
-    // Top generation ≈ 60% of STATS.statSoftCap: the ceiling rule that keeps
-    // one affix from out-muscling a whole build's chosen points.
     { minIlvl: 52, min: 19, max: 25 },
+    { minIlvl: 70, min: 26, max: 34 },
+    // Top generation ≈ a fifth of STATS.statHardCap (250): the ceiling rule
+    // that keeps one affix a COMPLEMENT to a spec, never a replacement for it.
+    { minIlvl: 88, min: 35, max: 46 },
   ],
   damagePct: [
     { minIlvl: 1, min: 0.05, max: 0.1 },
@@ -1306,6 +1312,8 @@ const BRACKETS: Record<AffixDef["kind"], AffixBracket[]> = {
     { minIlvl: 22, min: 0.19, max: 0.28 },
     { minIlvl: 36, min: 0.29, max: 0.4 },
     { minIlvl: 52, min: 0.41, max: 0.55 },
+    { minIlvl: 70, min: 0.56, max: 0.75 },
+    { minIlvl: 88, min: 0.76, max: 1.0 },
   ],
   crit: [
     { minIlvl: 1, min: 0.02, max: 0.03 },
@@ -1313,6 +1321,11 @@ const BRACKETS: Record<AffixDef["kind"], AffixBracket[]> = {
     { minIlvl: 22, min: 0.05, max: 0.07 },
     { minIlvl: 36, min: 0.07, max: 0.09 },
     { minIlvl: 52, min: 0.09, max: 0.12 },
+    { minIlvl: 70, min: 0.12, max: 0.15 },
+    // Crit affixes feed the pre-saturation crit chance; `playerCritChance`
+    // bends the total toward STATS.critCap, so a stacked-crit endgame build
+    // still can't reach a degenerate 100%.
+    { minIlvl: 88, min: 0.15, max: 0.19 },
   ],
   maxHp: [
     { minIlvl: 1, min: 5, max: 12 },
@@ -1320,6 +1333,8 @@ const BRACKETS: Record<AffixDef["kind"], AffixBracket[]> = {
     { minIlvl: 22, min: 26, max: 45 },
     { minIlvl: 36, min: 46, max: 70 },
     { minIlvl: 52, min: 71, max: 100 },
+    { minIlvl: 70, min: 101, max: 140 },
+    { minIlvl: 88, min: 141, max: 190 },
   ],
   armor: [
     { minIlvl: 1, min: 4, max: 8 },
@@ -1327,6 +1342,8 @@ const BRACKETS: Record<AffixDef["kind"], AffixBracket[]> = {
     { minIlvl: 22, min: 17, max: 28 },
     { minIlvl: 36, min: 29, max: 44 },
     { minIlvl: 52, min: 45, max: 65 },
+    { minIlvl: 70, min: 66, max: 92 },
+    { minIlvl: 88, min: 93, max: 125 },
   ],
 };
 

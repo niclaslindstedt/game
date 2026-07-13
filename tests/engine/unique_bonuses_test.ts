@@ -37,6 +37,9 @@ describe("scaling unique bonuses", () => {
 
   it("statPct stacks additively with a flat +N stat on the same piece", () => {
     const state = startGame();
+    // A grown hero so the level-scaled stat cap clears these values — this
+    // asserts the statPct-plus-flat STACKING, not the diminishing tail.
+    state.player.level = 60;
     state.player.stats.strength = 20;
     state.player.equipment.charm = {
       id: 779,

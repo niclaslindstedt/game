@@ -35,6 +35,7 @@ import { resolveChoice } from "../game/companions.ts";
 import { createGame } from "../game/create.ts";
 import { DIFFICULTY_ORDER } from "../game/defs/difficulties.ts";
 import { enemyDef } from "../game/defs/enemies/index.ts";
+import { STAT_NAMES } from "../game/defs/equipment.ts";
 import { LEVEL_ORDER, levelDef } from "../game/defs/levels/index.ts";
 import {
   advanceOutro,
@@ -608,7 +609,11 @@ function playRun(args: {
         guardPhase(++phaseAdvances);
         continue;
       case "levelup": {
-        allocateStat(state, botAllocate(bot, state));
+        // If the bot's pick is at the level-scaled cap it won't take; dump the
+        // point into any stat that still has room so the ding always resolves.
+        if (!allocateStat(state, botAllocate(bot, state))) {
+          for (const s of STAT_NAMES) if (allocateStat(state, s)) break;
+        }
         guardPhase(++phaseAdvances);
         continue;
       }

@@ -251,10 +251,13 @@ for (const def of Object.values(ENEMY_DEFS)) {
       }
       if (affix.kind === "stat" && !seen.has(key)) {
         const top = affix.brackets[affix.brackets.length - 1];
-        const ceiling = STATS.statSoftCap * 0.65;
+        // Ceiling rule: the top stat generation stays a COMPLEMENT to a spec —
+        // roughly a fifth of the endgame stat cap (STATS.statHardCap, 250), so
+        // one affix never replaces a build's chosen points.
+        const ceiling = STATS.statHardCap * 0.22;
         if (top.max > ceiling) {
           warn(
-            `${label}: top stat bracket ${top.max} exceeds ~60% of statSoftCap (${STATS.statSoftCap})`,
+            `${label}: top stat bracket ${top.max} exceeds ~a fifth of statHardCap (${Math.round(ceiling)})`,
           );
         }
       }

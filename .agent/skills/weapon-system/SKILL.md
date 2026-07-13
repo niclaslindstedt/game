@@ -85,11 +85,13 @@ quality)** — keep every rule below in mind when touching any of them:
   defs and the budget model never move — only deep finds grow, and
   `heroDamageLevel` prices a hot find into the horde automatically.
 - **Affixes roll in ilvl-gated BRACKETS** (`AFFIX_POOLS[..].brackets` in
-  equipment.ts, PoE-style generations at minIlvl 1/10/22/36/52 — deliberately
-  the rung-end mlvls, so each difficulty unlocks the next generation). The
-  roll takes the highest unlocked bracket 3:1 over the one under it. The
-  CEILING RULE: the top stat bracket stays ≈ 60% of `STATS.statSoftCap`, so
-  no single affix outweighs a build's chosen points — `weapon-stats.mjs`
+  equipment.ts, PoE-style generations at minIlvl 1/10/22/36/52/70/88 —
+  deliberately the rung-end mlvls, so each difficulty unlocks the next
+  generation, and the top two carry rolled gear through the ilvl 52–99
+  endgame). The roll takes the highest unlocked bracket 3:1 over the one under
+  it. The CEILING RULE: the top stat bracket stays ≈ a fifth of
+  `STATS.statHardCap` (250), so no single affix outweighs a build's chosen
+  points — `weapon-stats.mjs`
   enforces ladder sanity (ascending minIlvls from 1, ascending bands, the
   stat ceiling). TIER sets affix COUNT only (magic 1 / rare 2 / unique 3 /
   legendary 4), never size: a low rare is wide-but-shallow, a deep magic

@@ -66,6 +66,7 @@ import {
   baseStatBonus,
   chosenStatPointsThrough,
   diminishStat,
+  statCap,
 } from "./leveling.ts";
 import { currentMobLevel } from "./menace.ts";
 import { advanceCutsceneChain } from "./story.ts";
@@ -918,7 +919,7 @@ export function isPassiveItem(defId: string): boolean {
  */
 export function effectiveStat(state: GameState, stat: StatName): number {
   const { value, pct } = statParts(state, stat);
-  return Math.round(diminishStat(value) * (1 + pct));
+  return Math.round(diminishStat(value, state.player.level) * (1 + pct));
 }
 
 /**
@@ -1239,6 +1240,17 @@ export function weaponCritMult(state: GameState, weapon: Equipment): number {
  * `weaponClass` defaults to the equipped weapon's class, so the HUD readout
  * reflects what's in hand; combat passes the class of the blow that landed.
  */
+/**
+ * Bend an additive probability/reduction budget toward a sub-1.0 ceiling:
+ * ~linear while small, asymptotic to `cap` (never reaching it), the top band
+ * expensive — `cap × (1 − e^(−x/cap))`. Bounds crit and dodge so the raised,
+ * level-scaled stat cap can't drive them to a degenerate 100%.
+ */
+export function saturateToward(x: number, cap: number): number {
+  if (x <= 0) return 0;
+  return cap * (1 - Math.exp(-x / cap));
+}
+
 export function playerCritChance(
   state: GameState,
   weaponClass: WeaponClass = weaponDef(state.player.equipment.weapon.defId)
@@ -1256,7 +1268,9 @@ export function playerCritChance(
       if (affix.kind === "crit") chance += affix.value;
     }
   }
-  return chance;
+  // Saturate toward the ceiling — high crit-stat/affix builds approach but never
+  // reach `critCap`, with the last points crawling (see `saturateToward`).
+  return saturateToward(chance, STATS.critCap);
 }
 
 /**
@@ -1267,13 +1281,15 @@ export function playerCritChance(
  * Rolled in the contact-damage path (step.ts) and surfaced on the stat panel.
  */
 export function playerDodgeChance(state: GameState): number {
-  return Math.min(
-    DODGE.max,
+  // Saturate toward `DODGE.max` (well below 1.0) rather than hard-clamp, so DEX
+  // past the old clamp point keeps buying a little dodge with a steep, expensive
+  // top — no build becomes untouchable even at the raised stat cap.
+  const linear =
     (DODGE.base +
       effectiveStat(state, "dexterity") * DODGE.perDex +
       effectiveStat(state, "luck") * DODGE.perLuck) *
-      difficultyDef(state.difficulty).playerDodgeMult,
-  );
+    difficultyDef(state.difficulty).playerDodgeMult;
+  return saturateToward(linear, DODGE.max);
 }
 
 /**
@@ -2415,6 +2431,11 @@ export function repairEquippedWeapon(state: GameState): boolean {
 export function allocateStat(state: GameState, stat: StatName): boolean {
   const player = state.player;
   if (player.pendingStatPoints <= 0) return false;
+  // The level-scaled cap: chosen points can't be placed past `statCap` (they'd
+  // realize nothing — that region is the diminished GEAR tail). Below ~L66 the
+  // cap sits above any achievable chosen pile, so this only bites at the 250
+  // hard ceiling; the UI greys a maxed stat.
+  if (player.stats[stat] >= statCap(player.level)) return false;
   player.stats[stat]++;
   // Tally the player's own pick so the chooser can show it apart from the
   // head-start/auto-growth/gear baked into the effective stat.
