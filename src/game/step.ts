@@ -1612,6 +1612,29 @@ function chainLightning(
 function stepEnemies(state: GameState, dt: number, dtMs: number): void {
   const player = state.player;
 
+  // On the gentle rungs the plain horde loses its legs the moment the player
+  // ENGAGES an elite or boss, so he can push through the swarm to the set piece
+  // instead of being dog-piled at it (mobPursuitNearElite). "Engaged" means the
+  // encounter has actually started — the set piece is awake (elites latch it),
+  // wounded, or the player has walked inside its aggro range — not merely that
+  // one sleeps somewhere on the map (which would slow the whole level and gut
+  // the "idle play loses" promise). Computed once per tick; apparitions are
+  // ghosts, not a fight, so they never count.
+  const setPieceEngaged =
+    (difficultyDef(state.difficulty).mobPursuitNearElite ?? 1) < 1 &&
+    state.enemies.some((e) => {
+      const d = enemyDef(e.defId);
+      if (d.apparition || (d.role !== "elite" && d.role !== "boss")) {
+        return false;
+      }
+      return (
+        e.awake === true ||
+        e.hp < e.maxHp ||
+        distance(player.pos, e.pos) < d.ai.aggroRadius ||
+        distance(player.pos, e.home) < d.ai.aggroRadius
+      );
+    });
+
   for (const enemy of state.enemies) {
     enemy.contactCooldownMs = Math.max(0, enemy.contactCooldownMs - dtMs);
     if (enemy.critFlashMs) {
@@ -1620,7 +1643,7 @@ function stepEnemies(state: GameState, dt: number, dtMs: number): void {
     if (enemy.vanishMs !== undefined) {
       enemy.vanishMs = Math.max(0, enemy.vanishMs - dtMs);
     }
-    moveEnemy(state, enemy, dt);
+    moveEnemy(state, enemy, dt, setPieceEngaged);
   }
 
   // Apparitions whose linger ran out dissolve off the board.
@@ -1792,7 +1815,12 @@ function separateEnemies(state: GameState): void {
  * close (or hurts them), then rush into view for their scene and hunt
  * forever after.
  */
-function moveEnemy(state: GameState, enemy: Enemy, dt: number): void {
+function moveEnemy(
+  state: GameState,
+  enemy: Enemy,
+  dt: number,
+  setPieceEngaged: boolean,
+): void {
   const player = state.player;
   const def = enemyDef(enemy.defId);
   // Set-piece mechanics first (mechanics.ts): a mob rooted in a telegraph
@@ -1922,7 +1950,16 @@ function moveEnemy(state: GameState, enemy: Enemy, dt: number): void {
   }
 
   if (inRange && enemy.awake) {
-    enemy.pos = moveToward(enemy.pos, flankTarget(state, enemy), speed * dt);
+    // Gentle-rung mercy: once the player has engaged an elite/boss the plain
+    // horde crawls (easy 10%, medium 50%) so he can break for the set piece.
+    const pursuit = setPieceEngaged
+      ? (difficultyDef(state.difficulty).mobPursuitNearElite ?? 1)
+      : 1;
+    enemy.pos = moveToward(
+      enemy.pos,
+      flankTarget(state, enemy),
+      speed * pursuit * dt,
+    );
   } else if (distanceSq(enemy.pos, enemy.home) > 16) {
     enemy.pos = moveToward(
       enemy.pos,

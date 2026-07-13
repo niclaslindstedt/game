@@ -207,8 +207,11 @@ run against synthetic fixtures with no shipped content (see
   multipliers down, drop-chance/tier bonuses up — the harder rungs pay richer
   loot through their explicit `tierChanceBonus`/`lootIlvlBonus`, since the loot
   gates now key off the hero's earned LOOT level with the `mobLevelOffset`
-  stripped back out, not the raw monster level), the stamina burn, dodge/miss accuracy multipliers, and the
-  menace meter's trigger/decay/effect. MEDIUM is the exact 1.0 baseline.
+  stripped back out, not the raw monster level), the stamina burn, dodge/miss accuracy multipliers, the
+  menace meter's trigger/decay/effect, and — on EASY/MEDIUM only — how far the
+  plain horde's chase speed drops once an elite or boss is ENGAGED
+  (`mobPursuitNearElite`, 10%/50%, so the player can break past the swarm and
+  run to the set piece). MEDIUM is the exact 1.0 baseline.
 - **`src/game/abilities.ts`** — ability activation (`grantAbility`, which
   links the running copy to the dock slot it was spent from), freeing a slot
   when a power lapses or is discarded (`removeHeldSlot`, `discardHeldAbility`),

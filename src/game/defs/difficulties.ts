@@ -106,6 +106,22 @@ export type DifficultyDef = {
    * `minAlive`) — harder difficulties keep a denser field on screen. */
   aliveMult: number;
   /**
+   * The fraction of its normal chase speed the plain horde keeps once the
+   * player has ENGAGED an elite or boss — a gentle-rung mercy that lets him
+   * push past the swarm and close on the set piece instead of being dog-piled
+   * at it. The minions don't stop hunting, they just crawl: EASY drops them to
+   * 10% (0.1), MEDIUM to half (0.5). The trigger is the encounter actually
+   * starting — the elite/boss is awake, wounded, or the player has stepped
+   * inside its aggro range — NOT that one merely sleeps somewhere on the map
+   * (which would slow the whole level and gut the "idle play loses" promise).
+   * Applies only to the ordinary minion chase (elites/bosses, scripted rushers
+   * and returning-home drifters keep their own pace), and lifts the instant no
+   * set piece is engaged. Omitted (undefined) means no slowdown — the horde
+   * chases at full speed regardless, as on the harder rungs where running to
+   * the boss is meant to cost you.
+   */
+  mobPursuitNearElite?: number;
+  /**
    * How sensitively the rampage (menace) meter answers this difficulty: a
    * master multiplier on all menace gain (rolling DPS/kill-rate heat AND
    * overkill jolts — see `menaceSensitivity` in menace.ts). EASY barely reacts
@@ -237,6 +253,9 @@ export const DIFFICULTY_DEFS: Record<Difficulty, DifficultyDef> = {
     mobCountMult: 0.9,
     mobLevelOffset: -3,
     aliveMult: 0.9,
+    // The gentlest rung all but parks the horde once a set piece is engaged:
+    // 10% speed, so the player can walk straight through it to the boss.
+    mobPursuitNearElite: 0.1,
     menaceMult: 0.05,
     menaceDecayMult: 1.5,
     menaceEffectMult: 0.5,
@@ -277,6 +296,9 @@ export const DIFFICULTY_DEFS: Record<Difficulty, DifficultyDef> = {
     mobCountMult: 1,
     mobLevelOffset: -2,
     aliveMult: 1,
+    // Halved pursuit once a set piece is engaged — enough to break for the
+    // boss, not enough to ignore the swarm entirely.
+    mobPursuitNearElite: 0.5,
     menaceMult: 0.7,
     menaceDecayMult: 1,
     menaceEffectMult: 1,
