@@ -1239,7 +1239,7 @@ export function drawEffects(
       // topples in place. GameScreen sized `dist` from the kill's overkill.
       const launch = effect.launch;
       const launched = launch != null && launch.dist > 2;
-      const flightMs = launched ? Math.min(780, 240 + launch.dist * 2.2) : 0;
+      const flightMs = launched ? Math.min(1000, 240 + launch.dist * 2.0) : 0;
       const flight = launched ? Math.min(1, age / flightMs) : 0;
       const flightEase = flight * (2 - flight); // ease-out into the landing
       const tx = launched

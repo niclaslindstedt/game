@@ -338,10 +338,12 @@ function isHeroAttack(
 // The launch distance is measured in the mob's own HEALTHBARS of OVERKILL
 // (`(damage − maxHp) / maxHp`): a blow that only finished a wounded mob throws
 // nothing; one that could have killed it several times over sends it sailing.
-// A phone's world viewport is ~422×195 units, so `LAUNCH_MAX_PX` (past the
-// half-width) lets a hard enough overkill punt a body clear off the screen.
-const LAUNCH_PX_PER_HEALTH = 42;
-const LAUNCH_MAX_PX = 260;
+// A phone's world viewport is ~422×195 units (half-width ~211), and the camera
+// chases the advancing hero — so the launch has to clear the half-width AND the
+// camera's drift for a body to actually reach the screen edge. `LAUNCH_MAX_PX`
+// overshoots both, so a hard overkill visibly rockets a minion off the rim.
+const LAUNCH_PX_PER_HEALTH = 80;
+const LAUNCH_MAX_PX = 380;
 // Heavier bodies barely budge: overkill on an elite/boss is rare (their bars
 // are huge), and flinging a giant across the map would read as a bug, so their
 // launch is scaled right down — the feature is for the flying HORDE.
@@ -361,7 +363,12 @@ function corpseLaunch(
 ): { dx: number; dy: number; dist: number } | null {
   const healths = Math.max(0, (damage - maxHp) / Math.max(1, maxHp));
   const mass = LAUNCH_MASS[role] ?? 1;
-  const dist = Math.min(LAUNCH_MAX_PX, healths * LAUNCH_PX_PER_HEALTH) * mass;
+  // The DEVELOPER → KNOCKBACK slider scales the whole throw live (1× shipped,
+  // 0× disables it, higher rockets bodies off the screen).
+  const dist =
+    Math.min(LAUNCH_MAX_PX, healths * LAUNCH_PX_PER_HEALTH) *
+    mass *
+    getSettings().knockback;
   if (dist <= 2) return null;
   // Away from the hero — the corpse flies off in the direction it was struck.
   // If the body sits right on top of him (no clear heading), throw it upward.

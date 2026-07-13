@@ -131,6 +131,12 @@ export type GameSettings = {
   xpFloat: XpFloat;
   /** Display preference: hp bars over regular mobs' heads (see HealthBars). */
   healthBars: HealthBars;
+  /** Developer slider: scales the OVERKILL corpse launch — how far an
+   * overpowered kill flings the mob flying (see GameScreen `corpseLaunch`).
+   * A multiplier in [0, KNOCKBACK_MAX]: 0 = bodies topple in place, 1 = the
+   * shipped feel, up to KNOCKBACK_MAX× for absurd off-screen flight. Read
+   * app-side only (a pure render effect), so it needs no engine setter. */
+  knockback: number;
   /** Developer BALANCE multipliers (DEVELOPER → BALANCE): runtime tuning over
    * the engine's shipped config — XP pace, mob strength, loot percentages…
    * All 1 (neutral) by default; applied via `setBalanceTuning`. */
@@ -181,6 +187,8 @@ function defaults(): GameSettings {
     // Health bars over regular mobs are on out of the box; a player who wants
     // a cleaner field turns them off (bosses/elites always show theirs).
     healthBars: "on",
+    // The overkill launch ships at 1× — a dev dials it up or down live.
+    knockback: 1,
     // Balance multipliers start neutral — the shipped tuning.
     balance: { ...BALANCE_TUNING_DEFAULTS },
   };
@@ -202,6 +210,13 @@ function loadBalance(stored: unknown): BalanceTuning {
 }
 
 const clamp01 = (v: number) => Math.min(1, Math.max(0, v));
+
+/** Upper bound of the DEVELOPER → KNOCKBACK slider — 1× is the shipped feel,
+ * so 3× is deep into off-the-screen territory. Shared by the slider row
+ * (position ↔ multiplier) and the stored-value clamp. */
+export const KNOCKBACK_MAX = 3;
+const clampKnockback = (v: number) =>
+  Math.round(Math.min(KNOCKBACK_MAX, Math.max(0, v)) * 20) / 20;
 
 /** Load the control scheme, migrating a pre-KEY-BINDINGS save: those stored the
  * consumable dock as single-char `keyMedkit`/`keyStamina` and had no
@@ -289,6 +304,11 @@ function load(): GameSettings {
         stored.healthBars === "on" || stored.healthBars === "off"
           ? stored.healthBars
           : base.healthBars,
+      knockback:
+        typeof stored.knockback === "number" &&
+        Number.isFinite(stored.knockback)
+          ? clampKnockback(stored.knockback)
+          : base.knockback,
       balance: loadBalance(stored.balance),
     };
   } catch {
@@ -313,6 +333,7 @@ export function updateSettings(patch: Partial<GameSettings>): GameSettings {
   Object.assign(settings, patch);
   settings.musicVolume = clamp01(settings.musicVolume);
   settings.sfxVolume = clamp01(settings.sfxVolume);
+  settings.knockback = clampKnockback(settings.knockback);
   setAudioVolumes({ music: settings.musicVolume, sfx: settings.sfxVolume });
   setHapticsEnabled(settings.vibration === "on");
   setAutoStatGainsEnabled(settings.autoLevelStats === "on");
