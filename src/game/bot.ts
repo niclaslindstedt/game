@@ -46,13 +46,32 @@ export function createBot(strategy: BotStrategy): Bot {
   return { strategy };
 }
 
-/** How far the survivor pushes for the boss instead of farming the horde. */
-const SURVIVOR_PUSH_LEVEL = 6;
-/** "Local pack" radius the survivor flees the centroid of. */
-const THREAT_RADIUS = 300;
-/** Pickups worth a detour, and the breathing room required to take one. */
+/** "Local pack" radius the survivor reasons about (threat, escape, powerups). */
+const THREAT_RADIUS = 320;
+/** A foe this close is about to bite — hop to dodge its blow (airborne is
+ * untouchable above JUMP.dodgeHeight, see step.ts). */
+const CONTACT_DODGE_RADIUS = 46;
+/** Enemies within this ring count toward being SURROUNDED. */
+const SURROUND_RADIUS = 150;
+/** This many foes packed inside SURROUND_RADIUS = punch out through the gap. */
+const SURROUND_COUNT = 5;
+/** Below this fraction of HP the survivor disengages — heal and break contact
+ * rather than trade into a horde that can burst him down. */
+const FLEE_HP_FRAC = 0.4;
+/** Bots pop a medkit once health falls below this fraction of the bar. */
+const HEAL_HP_FRAC = 0.55;
+/** Top up stamina when the pool dips below this AND a threat is near — a winded
+ * hero (empty pool) is capped to a jog and gets run down. */
+const STAMINA_TOPUP_FRAC = 0.3;
+/** Spend a powerup once this many foes are packed close — a nuke/stasis/storm
+ * all pay off most against a crowd, so time them for the crowd. */
+const POWERUP_PACK = 5;
+/** …or once abilities pile up this deep, so a hoard never goes to waste. */
+const POWERUP_HOARD = 2;
+/** How far the escape steer aims down the openest lane. */
+const ESCAPE_DISTANCE = 340;
+/** How near a pickup must be to be worth a detour. */
 const ITEM_REACH = 240;
-const ITEM_SAFETY = 60;
 
 const idleInput = (): GameInput => ({
   steering: false,
@@ -86,27 +105,30 @@ export function botAct(bot: Bot, state: GameState): GameInput {
         return idleInput();
     }
   })();
-  // Bots pop ability pickups the moment they carry one — no tactical
-  // hoarding, matching how these items auto-activated before banking. A slot
-  // still counting down a running power isn't spendable, so only a banked
-  // (not-yet-running) slot trips the input.
-  const running = state.player.abilities.filter(
-    (a) => a.slot !== undefined,
-  ).length;
-  decided.useItem = state.player.heldAbilities.length > running;
-  // Stacked consumables: pop a medkit once the hero drops under half health
-  // (biggest-heal-first — consumeMedkit no-ops at full so a mistap is free),
-  // and a stamina potion the instant the sprint pool bottoms out. No tactical
-  // hoarding, matching how the bot pops powerups on sight.
   const player = state.player;
+  // POWERUPS, timed for effect: spend when a crowd is packed close (a nuke,
+  // stasis, or storm all pay off most against many bodies), or once abilities
+  // pile up so a hoard never goes to waste. A slot still counting down a
+  // running power isn't spendable, so gate on the BANKED (not-yet-running) ones.
+  const running = player.abilities.filter((a) => a.slot !== undefined).length;
+  const banked = player.heldAbilities.length - running;
+  const packedClose = threatsWithin(state, SURROUND_RADIUS).length;
+  decided.useItem =
+    banked > 0 &&
+    (packedClose >= POWERUP_PACK ||
+      player.heldAbilities.length >= POWERUP_HOARD);
+  // Heal below the threshold (biggest-heal-first — consumeMedkit no-ops at full
+  // so a mistap is free). Refill stamina when the pool bottoms out, or dips low
+  // with a threat near — a winded hero is capped to a jog and gets run down.
   decided.useMedkit =
-    player.hp < player.maxHp * BOT_HEAL_HP_FRAC && bestMedkitTier(state) >= 0;
-  decided.useStaminaPotion = player.stamina <= 0 && player.staminaPotions > 0;
+    player.hp < player.maxHp * HEAL_HP_FRAC && bestMedkitTier(state) >= 0;
+  const threatNear = threatsWithin(state, THREAT_RADIUS).length > 0;
+  decided.useStaminaPotion =
+    player.staminaPotions > 0 &&
+    (player.stamina <= 0 ||
+      (threatNear && player.stamina < player.maxStamina * STAMINA_TOPUP_FRAC));
   return decided;
 }
-
-/** Bots pop a medkit once health falls below this fraction of the bar. */
-const BOT_HEAL_HP_FRAC = 0.5;
 
 /**
  * The level-up build a bot spends its points on: a focused, WIELDABLE build
@@ -179,35 +201,131 @@ function pushBoss(state: GameState, jumpTravel = false): GameInput {
 }
 
 /**
- * Competent horde play: scoop pickups when there is breathing room, flee
- * the local pack's centroid (not just one ghost — the ring spawner punishes
- * tunnel vision), and once levelled, push for the boss before the flood
- * peaks, hopping over the pack in transit (airborne = untouchable).
+ * Competent horde survival — the read the JESUS floors actually need. In
+ * priority order:
+ *   1. Nothing near → scoop a nearby pickup, else push the objective.
+ *   2. Bleeding or hemmed in (low HP, or a pack pressing close) → BREAK CONTACT:
+ *      punch down the openest lane out of the crowd, hopping to dodge any blow
+ *      already in range (airborne is untouchable).
+ *   3. Otherwise KITE: sit at the weapon's own reach from the nearest foe so
+ *      the auto-weapon keeps firing while the hero backpedals — melee fights
+ *      close, a ranged loadout holds far — and hop when a body crowds in.
+ * Advancing on the boss is folded into the kite: when the field near the hero is
+ * thin he drifts toward the objective, so he clears without ever standing still
+ * in the flood.
  */
 function survive(state: GameState): GameInput {
-  if (state.player.level >= SURVIVOR_PUSH_LEVEL) return pushBoss(state, true);
+  const player = state.player;
+  const near = threatsWithin(state, THREAT_RADIUS);
 
-  const enemy = nearestEnemy(state);
-  if (!enemy) return pushBoss(state, true);
-  const enemyDist = distance(state.player.pos, enemy.pos);
-  const item = nearestItem(state);
-  if (
-    item &&
-    distance(state.player.pos, item.pos) < ITEM_REACH &&
-    enemyDist > ITEM_SAFETY
-  ) {
-    return steer(state, item.pos);
+  // 1. Breathing room: grab a pickup within reach, else advance on the boss.
+  if (near.length === 0) {
+    const item = nearestItem(state);
+    if (item && distance(player.pos, item.pos) < ITEM_REACH) {
+      return steer(state, item.pos);
+    }
+    return pushBoss(state, true);
   }
 
-  const pack = state.enemies.filter(
-    (e) => distance(e.pos, state.player.pos) < THREAT_RADIUS,
+  const nearest = near[0]!; // threatsWithin returns nearest-first
+  const nearestD = distance(player.pos, nearest.pos);
+  const dodge = nearestD < CONTACT_DODGE_RADIUS && player.z === 0;
+
+  // 2. Emergency: low on HP, or a tight pack around him → punch out the gap.
+  const packed = near.filter(
+    (e) => distance(e.pos, player.pos) < SURROUND_RADIUS,
   );
-  if (pack.length === 0) return idleInput();
-  const centroid = {
-    x: pack.reduce((sum, e) => sum + e.pos.x, 0) / pack.length,
-    y: pack.reduce((sum, e) => sum + e.pos.y, 0) / pack.length,
-  };
-  return steer(state, holdOff(state, centroid, 200));
+  const lowHp = player.hp < player.maxHp * FLEE_HP_FRAC;
+  if (lowHp || packed.length >= SURROUND_COUNT) {
+    // A medkit within reach is worth the detour when we're bleeding.
+    if (lowHp) {
+      const item = nearestItem(state);
+      if (
+        item &&
+        item.kind === "medkit" &&
+        distance(player.pos, item.pos) < ITEM_REACH
+      ) {
+        return steer(state, item.pos, dodge);
+      }
+    }
+    return steer(state, bestEscapeTarget(state, near), dodge);
+  }
+
+  // 3. Kite the nearest at the weapon's reach — close enough to keep firing,
+  //    far enough to keep backpedaling. Bias the hold toward the boss when the
+  //    local field is thin so the hero still advances to clear the map.
+  const range = weaponDef(player.equipment.weapon.defId).range;
+  const anchor =
+    packed.length <= 1 ? (bossPos(state) ?? nearest.pos) : nearest.pos;
+  return steer(
+    state,
+    holdOff(state, anchor, Math.max(48, range * 0.85)),
+    dodge,
+  );
+}
+
+/** Non-apparition enemies within `radius`, nearest first. */
+function threatsWithin(state: GameState, radius: number): Enemy[] {
+  return state.enemies
+    .filter(
+      (e) =>
+        !enemyDef(e.defId).apparition &&
+        distance(e.pos, state.player.pos) < radius,
+    )
+    .sort(
+      (a, b) =>
+        distance(a.pos, state.player.pos) - distance(b.pos, state.player.pos),
+    );
+}
+
+/** The current boss's position, if one is on the field. */
+function bossPos(state: GameState): Vec2 | undefined {
+  return state.enemies.find((e) => enemyDef(e.defId).role === "boss")?.pos;
+}
+
+/**
+ * Trace the best path OUT of a pack: sample directions around the hero and pick
+ * the openest — the one with the least enemy pressure ahead and clear ground to
+ * run into. Closer and more head-on foes weigh heavier; a lane that runs into a
+ * wall or off the map is penalised, so the hero punches through the gap in the
+ * ring instead of backing himself into a corner. Deterministic (fixed sample).
+ */
+function bestEscapeTarget(state: GameState, near: Enemy[]): Vec2 {
+  const pos = state.player.pos;
+  const SAMPLES = 16;
+  let best = { x: pos.x, y: pos.y };
+  let bestScore = Infinity;
+  for (let i = 0; i < SAMPLES; i++) {
+    const angle = (i / SAMPLES) * Math.PI * 2;
+    const dir = { x: Math.cos(angle), y: Math.sin(angle) };
+    let score = 0;
+    for (const e of near) {
+      const ex = e.pos.x - pos.x;
+      const ey = e.pos.y - pos.y;
+      const d = Math.hypot(ex, ey) || 1;
+      // How much this foe blocks THIS lane: 1 dead ahead, 0 to the side/behind.
+      const ahead = (ex / d) * dir.x + (ey / d) * dir.y;
+      if (ahead <= 0) continue; // a foe behind us doesn't block the way ahead
+      score += (ahead * ahead * THREAT_RADIUS) / d; // nearer + more head-on = worse
+    }
+    // Penalise a lane that runs into the level edge — no room to flee there.
+    const tx = pos.x + dir.x * ESCAPE_DISTANCE;
+    const ty = pos.y + dir.y * ESCAPE_DISTANCE;
+    const margin = Math.min(
+      tx,
+      state.level.width - tx,
+      ty,
+      state.level.height - ty,
+    );
+    if (margin < 0)
+      score += 1000; // off the map
+    else if (margin < 80) score += (80 - margin) * 4; // hugging a wall
+    if (score < bestScore) {
+      bestScore = score;
+      best = { x: tx, y: ty };
+    }
+  }
+  return best;
 }
 
 // ---- Geometry helpers ------------------------------------------------------
