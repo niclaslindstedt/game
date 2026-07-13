@@ -482,19 +482,21 @@ function renderVerdict(report) {
 
   // 2. Blows-to-kill on the minion horde — collapses toward 1 = one-shotting
   //    (the drift the diminishing-returns curve exists to stop); balloons = wall.
-  const toKill = [];
+  //    KILL-WEIGHTED: a rare mega-hp mob the hero downs once must not outvote
+  //    the basic minion he kills hundreds of times — the mean tracks the horde
+  //    he ACTUALLY fights, not the worst outlier he happened to clip.
+  let tkSum = 0;
+  let tkKills = 0;
   for (const run of report.runs) {
     for (const mob of run.mobs) {
       if (mob.role === "minion" && mob.killed > 0 && mob.hitsToKill > 0) {
-        toKill.push(mob.hitsToKill);
+        tkSum += mob.hitsToKill * mob.killed;
+        tkKills += mob.killed;
       }
     }
   }
-  const meanToKill = toKill.length
-    ? toKill.reduce((a, b) => a + b, 0) / toKill.length
-    : 0;
-  if (toKill.length === 0)
-    add("WARN", "Blows-to-kill", "no minion kills to read");
+  const meanToKill = tkKills ? tkSum / tkKills : 0;
+  if (tkKills === 0) add("WARN", "Blows-to-kill", "no minion kills to read");
   else if (meanToKill < 1.5)
     add(
       "FAIL",
@@ -595,7 +597,9 @@ function renderVerdict(report) {
   }
 
   // 6. DPS on curve — PER RUNG (a campaign mean hides the one rung where loot
-  //    fell off). Each run's mean minion blows-to-kill should stay in band.
+  //    fell off). Each run's KILL-WEIGHTED mean minion blows-to-kill should stay
+  //    in band — weighted so a rare mega-hp mob doesn't wrongly flag a rung the
+  //    hero actually clears fine.
   const offCurve = [];
   let rungsRead = 0;
   for (const run of report.runs) {
@@ -604,7 +608,8 @@ function renderVerdict(report) {
     );
     if (mk.length === 0) continue;
     rungsRead++;
-    const mean = mk.reduce((a, m) => a + m.hitsToKill, 0) / mk.length;
+    const kills = mk.reduce((a, m) => a + m.killed, 0);
+    const mean = mk.reduce((a, m) => a + m.hitsToKill * m.killed, 0) / kills;
     if (mean < 2 || mean > 8) {
       offCurve.push(`${run.difficulty}/${run.levelId} ${round1(mean)}`);
     }
