@@ -300,6 +300,8 @@ export function createGame(
     storyItems: [],
     clearedLevels,
     thoughtsSeen: [],
+    capThoughtMs: 0,
+    capThoughtIdx: 0,
     doors,
     // Travel gates stay latent until their key trinket is USED (spendGateKey).
     gates: [],

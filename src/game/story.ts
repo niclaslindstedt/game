@@ -16,7 +16,8 @@ import type { DialoguePage } from "./defs/enemies/types.ts";
 import { levelDef } from "./defs/levels/index.ts";
 import type { ThoughtTrigger } from "./defs/levels/types.ts";
 import { storyItemDef } from "./defs/story.ts";
-import { thoughtDef } from "./defs/thoughts.ts";
+import { CAP_THOUGHT_IDS, thoughtDef } from "./defs/thoughts.ts";
+import { xpLevelCap } from "./leveling.ts";
 import { addMapMarker } from "./map.ts";
 import type { DialogueState, Enemy, GameState } from "./types.ts";
 
@@ -244,6 +245,31 @@ export function maybeFirstKillThought(
   if (trigger.after && !state.thoughtsSeen.includes(trigger.after)) return;
   state.thoughtsSeen.push(trigger.thought);
   startPlayerThought(state, trigger.thought);
+}
+
+/**
+ * The kill-path hook for the RECURRING cap-farm mutter: once the hero has
+ * out-levelled this map (his level has reached the map's `xpLevelCap`, so kills
+ * only trickle XP now — see `xpCapMultiplier`), every so often he catches
+ * himself grinding and thinks "these things are pathetic, go find Ada." Called
+ * from loot.ts after the kill is booked, right behind `maybeFirstKillThought`.
+ *
+ * Unlike the pinned beats this one REPLAYS: it is never written to
+ * `thoughtsSeen`, so instead it is throttled by `state.capThoughtMs`
+ * (DIALOGUE.capThoughtCooldownMs, ticked down in step()) and rotates through
+ * `CAP_THOUGHT_IDS` round-robin via `state.capThoughtIdx` so a long farm hears
+ * a different variation each time. A no-op while a scene is up, off cooldown,
+ * or below the cap — and it only advances the rotation / re-arms the cooldown
+ * when it actually fires, so a blocked turn simply retries on the next kill.
+ */
+export function maybeCapThought(state: GameState): void {
+  if (state.dialogue !== null || state.capThoughtMs > 0) return;
+  const cap = xpLevelCap(state.level.id, state.difficulty);
+  if (state.player.level < cap) return;
+  const id = CAP_THOUGHT_IDS[state.capThoughtIdx % CAP_THOUGHT_IDS.length]!;
+  state.capThoughtIdx++;
+  state.capThoughtMs = DIALOGUE.capThoughtCooldownMs;
+  startPlayerThought(state, id);
 }
 
 /**

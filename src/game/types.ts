@@ -1558,6 +1558,20 @@ export type GameState = {
    * inner monologue plays exactly once per run.
    */
   thoughtsSeen: string[];
+  /**
+   * Cooldown (ms, counts down each step) gating the RECURRING cap-farm mutter
+   * (`maybeCapThought`): the "these enemies are pathetic — go find Ada" thought
+   * that replays while the hero grinds an out-levelled map. 0 = ready to fire;
+   * a firing re-arms it to `DIALOGUE.capThoughtCooldownMs`. Kept off
+   * `thoughtsSeen` precisely because it must repeat.
+   */
+  capThoughtMs: number;
+  /**
+   * Round-robin cursor into `CAP_THOUGHT_IDS` — which cap-farm variation fires
+   * next. Bumped each time `maybeCapThought` speaks so a long farm cycles the
+   * moods instead of repeating one line.
+   */
+  capThoughtIdx: number;
   /** Locked doors built from the level def, open or not. */
   doors: DoorState[];
   /**

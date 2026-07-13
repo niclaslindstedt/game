@@ -76,6 +76,30 @@ _Found lore_ below.
 
 ---
 
+## Recurring lines (not pinned to a level)
+
+### Hero's thought — out-levelling a map (the cap-farm mutter)
+
+_Every map has an intended top level (its per-map XP cap). Once the hero has
+farmed a map past that ceiling — the kills now only trickle XP and the enemies
+have stopped being a threat — he catches himself grinding and remembers what he
+came for. This is the game's one **recurring** inner monologue: it is NOT
+one-shot like the pinned beats below, it replays on a cooldown for as long as he
+keeps farming a capped map, so it exists in several moods and the engine rotates
+through them. Every variation lands the same two beats — these fights give me
+nothing now / go find Ada. (`THOUGHT_DEFS` ids `cap_pathetic_1..5`; fired by
+`maybeCapThought`.)_
+
+1. THESE THINGS BARELY SLOW ME / DOWN ANYMORE. I'M NOT / LEARNING A THING OUT HERE. // QUIT FARMING SCRAP, BUILDER. / ADA'S STILL OUT THERE.
+2. PATHETIC. THEY LINE UP AND / FALL OVER. I COULD DO THIS / IN MY SLEEP. // EVERY MINUTE HERE IS A / MINUTE ADA DOESN'T HAVE. / MOVE.
+3. I'VE WRUNG THIS PLACE DRY. / NOTHING LEFT TO PROVE HERE. // STOP CIRCLING. THE ONLY / THING THAT MATTERS IS / FINDING HER. GO.
+4. WHEN DID THIS GET EASY? / THEY DON'T EVEN REGISTER. / JUST NOISE ON THE WAY. // ENOUGH WARMUP. ADA FIRST. / ALWAYS ADA.
+5. I'M SWATTING FLIES AND / CALLING IT PROGRESS. THIS / ISN'T GETTING ME CLOSER. // SHE NEEDS ME MOVING, NOT / GRINDING. FIND THE WAY OUT. / FIND ADA.
+
+_(Slashes separate lines within a page; `//` marks a page break.)_
+
+---
+
 ## Prelude (cutscene)
 
 _The night everything started. Movie night in the living room. The weapon
@@ -1549,6 +1573,7 @@ at the top of this file).
 | Per-level opening monologues (`intro`) + epilogues (`outro`) | `src/game/defs/levels/spacez_hq.ts`, `.../moon.ts`, `.../mars.ts`, `.../rift.ts`, `.../eastworld.ts`, `.../bunker.ts` |
 | Elite/boss `dialogue` + `lastWords`                          | `src/game/defs/enemies/spacez.ts`, `.../moon.ts`, `.../mars.ts`, `.../rift.ts`, `.../eastworld.ts`, `.../bunker.ts`   |
 | Hero's inner thoughts (`firstKillThoughts`)                  | `src/game/defs/thoughts.ts` (pinned from a `LevelDef`)                                                                |
+| Hero's recurring cap-farm mutter (`cap_pathetic_*`)          | `src/game/defs/thoughts.ts` (`CAP_THOUGHT_IDS`; replayed by `maybeCapThought` in `src/game/story.ts`)                 |
 | Companion joining words + kill quotes                        | `src/game/defs/companions.ts` (`joinWords`, `killQuotes`; spare verdict in `src/game/companions.ts`)                  |
 | Found lore on story items (`lore`)                           | `src/game/defs/story.ts`                                                                                              |
 | The wandering merchant's greetings                           | `src/game/defs/levels/*.ts` (`merchant.greeting`; played by `src/game/merchant.ts`)                                   |

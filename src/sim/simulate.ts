@@ -724,14 +724,18 @@ function playRun(args: {
     }
 
     // XP the per-map cap withheld this step: what the pre-cap grants would
-    // have paid minus what actually landed.
+    // have paid minus what actually landed. The multiplier now floors at
+    // `XP_CAP.floor` (never zero — the trickle past the cap), so a grant always
+    // lands and the ratio recovers the pre-cap total; the zero-mult branch is
+    // kept only as a guard for a hypothetical floor of 0.
     const capMult = xpCapMultiplier(state.player.level, cap);
     if (capMult < 1) {
       const landed = state.stats.xpGained - beforeXpGained;
       if (capMult > 0) {
         forfeited += Math.round(landed / capMult) - landed;
       } else {
-        // At the ceiling nothing lands — book the kills' worth directly.
+        // Only reachable if the floor is ever set to 0 — book the kills'
+        // worth directly since nothing lands to scale back up.
         for (const event of state.events) {
           if (event.type === "enemyKilled") {
             forfeited += Math.round(event.xp * BALANCE.xpGain);

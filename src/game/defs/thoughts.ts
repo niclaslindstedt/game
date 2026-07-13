@@ -321,7 +321,91 @@ export const THOUGHT_DEFS: Record<string, ThoughtDef> = {
       ],
     ],
   },
+  // The RECURRING cap-farm mutters (see `CAP_THOUGHT_IDS` and `maybeCapThought`
+  // in story.ts): once the hero has out-levelled a map — level ≥ its
+  // `xpLevelCap`, so the kills barely pay anymore — he catches himself grinding
+  // and remembers what he came for. Unlike every pinned beat above these are
+  // NOT one-shot: the engine rotates through them and replays them on a
+  // cooldown for as long as he keeps farming a capped map, so there are several
+  // so it never reads like a broken record. Every one lands the same two beats
+  // — these fights give me nothing now / go find Ada — in a different mood.
+  cap_pathetic_1: {
+    id: "cap_pathetic_1",
+    speaker: "ME",
+    portrait: "player",
+    pages: [
+      [
+        "THESE THINGS BARELY SLOW ME",
+        "DOWN ANYMORE. I'M NOT",
+        "LEARNING A THING OUT HERE.",
+      ],
+      ["QUIT FARMING SCRAP, BUILDER.", "ADA'S STILL OUT THERE."],
+    ],
+  },
+  cap_pathetic_2: {
+    id: "cap_pathetic_2",
+    speaker: "ME",
+    portrait: "player",
+    pages: [
+      [
+        "PATHETIC. THEY LINE UP AND",
+        "FALL OVER. I COULD DO THIS",
+        "IN MY SLEEP.",
+      ],
+      ["EVERY MINUTE HERE IS A", "MINUTE ADA DOESN'T HAVE.", "MOVE."],
+    ],
+  },
+  cap_pathetic_3: {
+    id: "cap_pathetic_3",
+    speaker: "ME",
+    portrait: "player",
+    pages: [
+      ["I'VE WRUNG THIS PLACE DRY.", "NOTHING LEFT TO PROVE HERE."],
+      ["STOP CIRCLING. THE ONLY", "THING THAT MATTERS IS", "FINDING HER. GO."],
+    ],
+  },
+  cap_pathetic_4: {
+    id: "cap_pathetic_4",
+    speaker: "ME",
+    portrait: "player",
+    pages: [
+      [
+        "WHEN DID THIS GET EASY?",
+        "THEY DON'T EVEN REGISTER.",
+        "JUST NOISE ON THE WAY.",
+      ],
+      ["ENOUGH WARMUP. ADA FIRST.", "ALWAYS ADA."],
+    ],
+  },
+  cap_pathetic_5: {
+    id: "cap_pathetic_5",
+    speaker: "ME",
+    portrait: "player",
+    pages: [
+      [
+        "I'M SWATTING FLIES AND",
+        "CALLING IT PROGRESS. THIS",
+        "ISN'T GETTING ME CLOSER.",
+      ],
+      ["SHE NEEDS ME MOVING, NOT", "GRINDING. FIND THE WAY OUT.", "FIND ADA."],
+    ],
+  },
 };
+
+/**
+ * The RECURRING cap-farm monologue ids, in rotation order (see
+ * `maybeCapThought` in story.ts). The engine cycles these — one per firing,
+ * round-robin — so a hero farming an out-levelled map hears a fresh variation
+ * each time rather than the same line on repeat. Extend the list to add moods;
+ * order is the rotation, nothing else keys off it.
+ */
+export const CAP_THOUGHT_IDS = [
+  "cap_pathetic_1",
+  "cap_pathetic_2",
+  "cap_pathetic_3",
+  "cap_pathetic_4",
+  "cap_pathetic_5",
+] as const;
 
 // Active registry the accessor reads (defaults to the shipped catalog).
 let activeThoughtDefs: Record<string, ThoughtDef> = THOUGHT_DEFS;

@@ -460,19 +460,21 @@ export const LEVELING = {
 /**
  * PER-MAP XP CAPS — every (level × difficulty) pair has a hero-level ceiling
  * (see `xpLevelCap` in leveling.ts): XP earned on that map diminishes as the
- * hero closes on the cap (halving per level across the last `fadeLevels`) and
- * stops entirely AT it, so re-running an easy map farms LOOT, never levels
- * past the cap — the Diablo rule that outleveling a zone retires its XP, not
- * its drops. Each rung lists the cap on its FIRST and LAST story level;
- * intermediate maps interpolate linearly. Sized a few levels above where a
- * first pass naturally lands (bottom lane ends ~29, nightmare ~49, jesus 60 —
- * read off `leveling-curve.mjs --by-level`), so the story never starves; only
- * the rerun grind hits the wall. The three bottom lanes (easy/medium/hard) are
- * PARALLEL entry points over the same level band, so they SHARE one cap band —
- * the difference between them is help, not pace; the shared cap also bounds the
- * completionist who replays all three (`--full`) to the same ~34 entering
- * nightmare. JESUS's last map runs to the global `LEVELING.maxLevel` — the
- * endgame grind lives there.
+ * hero closes on the cap (halving per level across the last `fadeLevels`) and,
+ * past it, drops to a permanent `floor` TRICKLE — never zero, so re-running an
+ * outgrown map still creeps the bar forward while it rains LOOT. This is the
+ * Diablo rule softened: outleveling a zone throttles its XP to a trickle rather
+ * than retiring it outright, so a determined grinder can still crawl toward the
+ * global `LEVELING.maxLevel` on an old map, just achingly slowly. Each rung
+ * lists the cap on its FIRST and LAST story level; intermediate maps interpolate
+ * linearly. Sized a few levels above where a first pass naturally lands (bottom
+ * lane ends ~29, nightmare ~49, jesus 60 — read off `leveling-curve.mjs
+ * --by-level`), so the story never starves; only the rerun grind hits the
+ * trickle. The three bottom lanes (easy/medium/hard) are PARALLEL entry points
+ * over the same level band, so they SHARE one cap band — the difference between
+ * them is help, not pace; the shared cap also bounds the completionist who
+ * replays all three (`--full`) to the same ~34 entering nightmare. JESUS's last
+ * map runs to the global `LEVELING.maxLevel` — the endgame grind lives there.
  */
 export const XP_CAP = {
   capByDifficulty: {
@@ -484,10 +486,19 @@ export const XP_CAP = {
   } as Record<Difficulty, { first: number; last: number }>,
   /**
    * XP starts diminishing this many levels UNDER the cap: the grant is halved
-   * for each level past `cap − fadeLevels`, reaching zero at the cap itself —
-   * a taper into the wall, not a cliff.
+   * for each level past `cap − fadeLevels`, tapering into the wall — not a
+   * cliff. At the cap the halving has reached `0.5^fadeLevels` and from there
+   * the `floor` takes over.
    */
   fadeLevels: 3,
+  /**
+   * The never-zero TRICKLE: once the halving taper would sink below this, the
+   * multiplier holds here instead, so an outgrown map keeps paying a sliver of
+   * XP forever (the "diminish, don't zero" rule) rather than slamming shut. At
+   * `0.5^fadeLevels = 0.125` the taper meets the cap, so this floor bites a
+   * level or two past it and thereafter every kill still banks ~this fraction.
+   */
+  floor: 0.05,
 } as const;
 
 /**
@@ -1589,6 +1600,16 @@ export const DIALOGUE = {
    * `rushSpeed` outruns PLAYER.speed, so pair the two.
    */
   strikeRadius: 96,
+  /**
+   * The cooldown (ms, counts down each step) between the hero's recurring
+   * "these enemies are getting pathetic — I should hurry and find Ada" thought
+   * (see `maybeCapThought` in story.ts). Unlike the pinned one-shot beats this
+   * one REPEATS: it fires whenever the hero is farming a map he has already
+   * capped (level ≥ the map's `xpLevelCap`), then holds for this long so the
+   * grind mutters it every so often rather than on every kill. Sized so a long
+   * cap-farm hears it tens of times across the campaign, never back-to-back.
+   */
+  capThoughtCooldownMs: 60_000,
 } as const;
 
 /**
