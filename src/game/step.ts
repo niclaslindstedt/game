@@ -273,6 +273,22 @@ export function step(state: GameState, input: GameInput, dtMs: number): void {
       killsBefore -
       (state.menaceExemptKills - exemptKillsBefore),
   );
+  // The farm-proof survival clock. The wall clock (stats.timeMs, ticked at the
+  // top) still runs every frame for the sub-systems; this one only advances
+  // while a fight is LIVE — a foe on the field, or within the post-kill grace
+  // tail (refreshed on every kill in killEnemy). A cleared field bleeds the
+  // tail down and then stops the clock, so survival time can't be milked by
+  // loitering. It is what the high-score board banks.
+  if (state.combatGraceMs > 0) {
+    state.combatGraceMs = Math.max(0, state.combatGraceMs - dtMs);
+  }
+  if (state.enemies.length > 0 || state.combatGraceMs > 0) {
+    state.stats.combatMs += dtMs;
+  }
+  // The run's high-water menace, banked for the score board (read after this
+  // tick's tickMenace has settled the meter).
+  const stage = menaceStage(state);
+  if (stage > state.stats.peakMenace) state.stats.peakMenace = stage;
   stepPacks(state);
   stepSpawner(state, dtMs);
   stepItems(state, dtMs);

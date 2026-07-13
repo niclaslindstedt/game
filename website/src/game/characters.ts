@@ -77,6 +77,25 @@ export type Character = {
    * Thought ids are globally unique, so the difficulty alone keys them.
    */
   storySeen: string[];
+  /**
+   * HARDCORE campaign tally, per difficulty: the running total of foes felled,
+   * combat-clock time survived, highest menace stage reached, and levels
+   * cleared across the maps beaten this campaign. Accrued on each FIRST clear
+   * while the difficulty is unbeaten, and banked to the high-score board (then
+   * reset) when the campaign is completed or the hardcore hero falls (see
+   * GameScreen). Softcore heroes never score, so this stays empty for them.
+   * Optional: a character created before the feature simply starts empty.
+   */
+  campaigns?: Partial<Record<Difficulty, CampaignTally>>;
+};
+
+/** A hardcore character's in-progress campaign totals on one difficulty — the
+ * sum of every map cleared so far, awaiting the campaign's end to be banked. */
+export type CampaignTally = {
+  kills: number;
+  combatMs: number;
+  peakMenace: number;
+  levels: number;
 };
 
 const ROSTER_KEY = storageKey("characters");
@@ -460,6 +479,64 @@ export function nextLevelId(levelId: string): string | null {
   const index = LEVEL_ORDER.indexOf(levelId);
   if (index < 0 || index + 1 >= LEVEL_ORDER.length) return null;
   return LEVEL_ORDER[index + 1] as string;
+}
+
+// ---- Hardcore campaign tally --------------------------------------------------
+
+/** The zero tally — a campaign not yet begun on a difficulty. */
+const EMPTY_TALLY: CampaignTally = {
+  kills: 0,
+  combatMs: 0,
+  peakMenace: 0,
+  levels: 0,
+};
+
+/** This character's running campaign totals on a difficulty (zeros if none). */
+export function campaignTally(
+  character: Character,
+  difficulty: Difficulty,
+): CampaignTally {
+  return character.campaigns?.[difficulty] ?? EMPTY_TALLY;
+}
+
+/**
+ * Fold one cleared level's run into the campaign tally for a difficulty: sum
+ * the foes felled and combat-clock time, keep the highest menace stage, and
+ * count the level. Persists and returns the updated character. (Callers gate
+ * this on hardcore + first-clear so a softcore hero or a replay never scores.)
+ */
+export function accrueCampaign(
+  character: Character,
+  difficulty: Difficulty,
+  run: { kills: number; combatMs: number; peakMenace: number },
+): Character {
+  const prev = campaignTally(character, difficulty);
+  const next: CampaignTally = {
+    kills: prev.kills + Math.max(0, run.kills),
+    combatMs: prev.combatMs + Math.max(0, run.combatMs),
+    peakMenace: Math.max(prev.peakMenace, Math.max(0, run.peakMenace)),
+    levels: prev.levels + 1,
+  };
+  const updated: Character = {
+    ...character,
+    campaigns: { ...character.campaigns, [difficulty]: next },
+  };
+  persist(updated);
+  return updated;
+}
+
+/** Clear a difficulty's campaign tally once it has been banked, so a later
+ * replay-through can't re-bank the same totals. Persists and returns it. */
+export function resetCampaign(
+  character: Character,
+  difficulty: Difficulty,
+): Character {
+  if (!character.campaigns?.[difficulty]) return character;
+  const campaigns = { ...character.campaigns };
+  delete campaigns[difficulty];
+  const updated: Character = { ...character, campaigns };
+  persist(updated);
+  return updated;
 }
 
 // ---- Progression mutations ----------------------------------------------------

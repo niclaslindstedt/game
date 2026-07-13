@@ -41,7 +41,6 @@ import {
   createBot,
   createGame,
   debug,
-  difficultyDef,
   discardHeldAbility,
   dismissIntro,
   enemyDef,
@@ -158,17 +157,21 @@ import {
   type PickupCard,
 } from "./PickupModal.tsx";
 import {
+  accrueCampaign,
   bankLoadout,
+  campaignTally,
   clearedLevelsFor,
+  hasClearedLevel,
   hasSeenOpening,
   markStorySeen,
   nextLevelId,
   recordDeath,
   recordVictory,
+  resetCampaign,
   seenThoughts,
   type Character,
 } from "./characters.ts";
-import { bestTime, recordRun } from "./highscores.ts";
+import { recordCampaign } from "./highscores.ts";
 import {
   computeCamera,
   drawEffects,
@@ -1940,27 +1943,10 @@ export function GameScreen({
           if (event.type === "packCleared") {
             pushPickup("AREA CLEARED", "#7cff9b");
           }
-          // The run is over: silence the loop so the jingle stands alone, and
-          // bank the run as this difficulty's high score — the survival time
-          // and kills rank it, and the full session snapshot rides along so the
-          // board can later reveal the whole story behind those two numbers.
+          // The run is over: silence the loop so the jingle stands alone. High
+          // scores are banked below — per CAMPAIGN, hardcore only (not per run).
           if (event.type === "victory" || event.type === "defeat") {
             stopMusic();
-            if (
-              recordRun(difficulty, {
-                timeMs: state.stats.timeMs,
-                kills: state.stats.kills,
-                level: state.player.level,
-                detail: {
-                  stats: { ...state.stats },
-                  level: state.player.level,
-                  levelId: state.level.id,
-                  outcome: event.type,
-                  at: Date.now(),
-                },
-              })
-            )
-              setNewRecord(true);
           }
           // Clearing a level records it (per difficulty) so the campaign
           // unlocks the next one and the menu marks this one replayable —
@@ -1969,26 +1955,96 @@ export function GameScreen({
           // the difficulty's LAST level also banks any unique/legendary
           // finds into the forever-stash.
           if (event.type === "victory") {
+            // Whether this clear ADDS to the hardcore campaign score: it must
+            // be the level's FIRST clear on a difficulty not yet beaten, so a
+            // replay through the free level picker can't inflate a total.
+            const before = characterRef.current;
+            const scores =
+              before.hardcore &&
+              !before.beaten.includes(difficulty) &&
+              !hasClearedLevel(before, state.level.id, difficulty);
             // Bank the win onto the character: their build becomes the
             // end-of-level snapshot, the clear is recorded, and clearing the
             // difficulty's LAST level marks it beaten (opening its level picker
             // and the next rung of the ladder). The updated character feeds the
             // next level's carry-over.
             characterRef.current = recordVictory(
-              characterRef.current,
+              before,
               state.level.id,
               difficulty,
               extractLoadout(state),
             );
+            if (scores) {
+              // Fold this map into the running campaign total.
+              characterRef.current = accrueCampaign(
+                characterRef.current,
+                difficulty,
+                {
+                  kills: state.stats.kills,
+                  combatMs: state.stats.combatMs,
+                  peakMenace: state.stats.peakMenace,
+                },
+              );
+              // Beating the LAST level completes the campaign (recordVictory
+              // just marked it beaten): bank the whole campaign total as a
+              // SURVIVED high score, flag a new record, and clear the tally so
+              // a replay can't re-bank it.
+              const completed =
+                !before.beaten.includes(difficulty) &&
+                characterRef.current.beaten.includes(difficulty);
+              if (completed) {
+                const tally = campaignTally(characterRef.current, difficulty);
+                if (
+                  recordCampaign(difficulty, {
+                    name: characterRef.current.name,
+                    kills: tally.kills,
+                    combatMs: tally.combatMs,
+                    peakMenace: tally.peakMenace,
+                    levels: tally.levels,
+                    outcome: "survived",
+                    at: Date.now(),
+                  })
+                )
+                  setNewRecord(true);
+                characterRef.current = resetCampaign(
+                  characterRef.current,
+                  difficulty,
+                );
+              }
+            }
           }
-          // Death splits on the hero's mode. Hardcore is permadeath: retire the
-          // hero for good. Softcore costs no progress: bank the run's build so
-          // the level, stats and items earned this run are kept, and drop the
-          // retry checkpoint (which froze the entry build at combat-start) so
-          // RETRY rebuilds the level from this just-banked build — replaying
-          // from the lower entry build would regress the hero on the next clear.
+          // Death splits on the hero's mode. Hardcore is permadeath: bank the
+          // campaign the hero fell in (its cleared maps PLUS this fatal,
+          // uncleared run) as a FELL high score, then retire them for good.
+          // Softcore costs no progress: bank the run's build so the level,
+          // stats and items earned this run are kept, and drop the retry
+          // checkpoint (which froze the entry build at combat-start) so RETRY
+          // rebuilds the level from this just-banked build — replaying from the
+          // lower entry build would regress the hero on the next clear.
           if (event.type === "defeat") {
             if (characterRef.current.hardcore) {
+              // Bank the campaign total reached — the cleared maps plus this
+              // fatal run — but only while the difficulty is unbeaten (a death
+              // on a replay of an already-conquered campaign scores nothing).
+              if (!characterRef.current.beaten.includes(difficulty)) {
+                const tally = campaignTally(characterRef.current, difficulty);
+                if (
+                  recordCampaign(difficulty, {
+                    name: characterRef.current.name,
+                    kills: tally.kills + state.stats.kills,
+                    combatMs: tally.combatMs + state.stats.combatMs,
+                    peakMenace: Math.max(
+                      tally.peakMenace,
+                      state.stats.peakMenace,
+                    ),
+                    levels: tally.levels,
+                    outcome: "fell",
+                    levelId: state.level.id,
+                    at: Date.now(),
+                  })
+                )
+                  setNewRecord(true);
+              }
               characterRef.current = recordDeath(characterRef.current);
             } else {
               // Powerups do NOT survive death: the banked build keeps the level,
@@ -2169,7 +2225,7 @@ export function GameScreen({
         // The prelude scene's id is part of the key: a chained prelude swaps
         // `state.cutscene` for the next scene with nothing else changing, and
         // the overlay only receives the fresh scene if this re-renders.
-        const key = `${state.phase}/${state.cutscene?.defId ?? ""}/${state.player.hp}/${Math.ceil(state.player.stamina)}/${state.player.xp}/${state.player.level}/${state.player.pendingStatPoints}/${state.enemies.length}/${bagCount}/${bagFree}/${bagFullHint ? 1 : 0}/${held}/${active}/${medkitTier}:${medkitCount}/${staminaPotions}/${weapon.defId}/${weaponWear?.toFixed(2) ?? ""}/${state.player.coins}/${appearance}/${outfit}/${stage}/${party}/${state.stats.kills}/${Math.floor(state.stats.timeMs / 1000)}`;
+        const key = `${state.phase}/${state.cutscene?.defId ?? ""}/${state.player.hp}/${Math.ceil(state.player.stamina)}/${state.player.xp}/${state.player.level}/${state.player.pendingStatPoints}/${state.enemies.length}/${bagCount}/${bagFree}/${bagFullHint ? 1 : 0}/${held}/${active}/${medkitTier}:${medkitCount}/${staminaPotions}/${weapon.defId}/${weaponWear?.toFixed(2) ?? ""}/${state.player.coins}/${appearance}/${outfit}/${stage}/${party}/${state.stats.kills}/${Math.floor(state.stats.combatMs / 1000)}`;
         if (key !== lastHud) {
           lastHud = key;
           setHud({
@@ -2671,7 +2727,7 @@ export function GameScreen({
               >
                 <PixelText
                   font={font}
-                  text={formatTime(hud.stats.timeMs)}
+                  text={formatTime(hud.stats.combatMs)}
                   scale={3}
                 />
                 <KillCounter
@@ -3266,12 +3322,12 @@ export function GameScreen({
           <div className="splash-stats">
             <PixelText
               font={font}
-              text={`TIME ${formatTime(hud.stats.timeMs)}`}
+              text={`TIME ${formatTime(hud.stats.combatMs)}`}
               scale={2}
             />
             <PixelText
               font={font}
-              text={`BEST (${difficultyDef(difficulty).name}) ${formatTime(bestTime(difficulty))}`}
+              text={`PEAK MENACE ${hud.stats.peakMenace}`}
               scale={2}
               color="#9aa3ad"
             />

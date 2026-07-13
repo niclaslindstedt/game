@@ -37,7 +37,10 @@ const KEY = storageKey("current-run");
 // v8: packs (placed clusters that sleep until the player nears them) joined
 // the state; an older snapshot would thaw without the field and crash
 // stepPacks.
-const SAVE_VERSION = 8;
+// v9: combatGraceMs (the farm-proof survival clock's grace tail) joined the
+// state, and stats grew combatMs/peakMenace; an older snapshot would resume
+// with those undefined and tick the clock to NaN.
+const SAVE_VERSION = 9;
 
 /** A run parked between sessions: enough to drop the player straight back in. */
 export type ParkedRun = {

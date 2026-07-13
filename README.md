@@ -23,7 +23,9 @@
 > fighting at your side, dressable from your bag (weapon, helmet, chest),
 > and walking with you into the next level; sparing LUCKY buys his +50%
 > magic-find aura. Each run's end screen shows a summary with a retry
-> button and your best survival time on that difficulty.
+> button; the menu's HIGH SCORES board ranks hardcore heroes by how their
+> whole campaign went — mobs killed, survival time and peak menace summed
+> across every map.
 
 ## Why?
 

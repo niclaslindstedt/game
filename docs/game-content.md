@@ -508,12 +508,17 @@ starting lanes (easy/medium/hard) are all open from the first launch — a playe
 picks one as their entry point — while NIGHTMARE opens once ANY starting lane is
 beaten and JESUS once NIGHTMARE is; locked rungs show greyed out. That makes the
 critical path to the level cap three playthroughs (one bottom lane → nightmare →
-jesus), not five. The `?level=` dev override bypasses the gates entirely. Every finished run is banked per difficulty
-(`website/src/game/highscores.ts`) with its survival time, kills, player level
-reached, and a full end-of-run session snapshot; the end-of-run screen shows
-that difficulty's best survival time, and the menu's **HIGH SCORES** board ranks
-the runs four ways (survival time, kills-per-minute, mobs killed, level reached)
-and opens any banked run into a detail card of the whole session.
+jesus), not five. The `?level=` dev override bypasses the gates entirely. High scores are
+**hardcore-only and span a whole campaign** (`website/src/game/highscores.ts`):
+a hardcore hero's foes felled, combat-clock survival time and highest menace
+stage are summed across every map of a difficulty's campaign and banked per
+difficulty when the campaign is beaten (**SURVIVED**) or the hero falls partway
+through it (**FELL**, its totals including the fatal run). Softcore heroes never
+score. The survival clock only ticks while a fight is live — a foe on the field,
+or within a two-second tail of the last kill — so a cleared field can't be
+milked for time. The menu's **HIGH SCORES** board ranks the campaigns four ways
+(mobs killed, survival time, kills-per-minute, peak menace) and opens any
+campaign into a full breakdown.
 
 **HARDCORE**, chosen when the character is created, makes death permanent: a
 hardcore hero that dies is retired for good (kept in the roster as fallen) and

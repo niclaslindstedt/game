@@ -59,6 +59,8 @@ function stats(overrides: Partial<GameStats> = {}): GameStats {
     itemsCollected: 0,
     xpGained: 0,
     timeMs: 0,
+    combatMs: 0,
+    peakMenace: 0,
     ...overrides,
   };
 }

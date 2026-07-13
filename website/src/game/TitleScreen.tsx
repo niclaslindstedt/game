@@ -29,7 +29,6 @@ import {
   type Difficulty,
 } from "@game/core";
 
-import { formatCompact } from "@ui/lib/format-number.ts";
 import { PixelText } from "@ui/lib/PixelText.tsx";
 import { useScrollFade } from "@ui/lib/scroll-fade.ts";
 
@@ -48,7 +47,11 @@ import {
 } from "./balanceKnobs.ts";
 import { HELP_LINES } from "./copy.ts";
 
-import { topScores, type ScoreMetric, type ScoreRow } from "./highscores.ts";
+import {
+  topCampaigns,
+  type CampaignRow,
+  type ScoreMetric,
+} from "./highscores.ts";
 
 import {
   loadGameAssets,
@@ -145,10 +148,10 @@ const scoreLevelInfo = (levelId: string): { name: string; foes: string } => {
 
 /** The high-score board's rankings, in swipe/arrow order. */
 const SCORE_METRICS: { id: ScoreMetric; label: string }[] = [
+  { id: "kills", label: "MOBS KILLED" },
   { id: "time", label: "SURVIVAL TIME" },
   { id: "kpm", label: "KILLS / MIN" },
-  { id: "kills", label: "MOBS KILLED" },
-  { id: "level", label: "LEVEL REACHED" },
+  { id: "menace", label: "PEAK MENACE" },
 ];
 
 /** A minimum travel (CSS px) before a pointer drag counts as a swipe. */
@@ -317,12 +320,13 @@ export function TitleScreen({
   // MOON_BOOM_MS).
   const [moonExploding, setMoonExploding] = useState(false);
   // The HIGH SCORES board's axes: left/right picks the difficulty column,
-  // up/down flips between the survival-time and kills-per-minute rankings.
+  // up/down flips between the four campaign rankings (kills, survival, KPM,
+  // menace). The board is hardcore-only and per campaign (see highscores.ts).
   const [scoreDifficulty, setScoreDifficulty] = useState<Difficulty>("medium");
-  const [scoreMetric, setScoreMetric] = useState<ScoreMetric>("time");
-  // The board row currently opened into its full-session detail card, or null
-  // for the ranked list. Only rows banked with a detail snapshot can open.
-  const [scoreDetail, setScoreDetail] = useState<ScoreRow | null>(null);
+  const [scoreMetric, setScoreMetric] = useState<ScoreMetric>("kills");
+  // The campaign row currently opened into its full breakdown card, or null for
+  // the ranked list.
+  const [scoreDetail, setScoreDetail] = useState<CampaignRow | null>(null);
   // Which action is mid-rebind (KEY BINDINGS): the next key/mouse press is
   // captured as its new bind. Null when not listening.
   const [captureBind, setCaptureBind] = useState<BindableAction | null>(null);
@@ -1516,7 +1520,7 @@ export function TitleScreen({
     hotY: 0.5,
     fallback: "default",
   });
-  const scoreRows = topScores(scoreDifficulty, scoreMetric);
+  const scoreRows = topCampaigns(scoreDifficulty, scoreMetric);
   const scoreDef = difficultyDef(scoreDifficulty);
   // The full-screen browsers (achievements, arsenal) own the whole display:
   // don't paint the logo/menu underneath — it bled through their backdrop.
@@ -1525,12 +1529,8 @@ export function TitleScreen({
   // the room, and a tall menu no longer collides with the branding.
   const onMain = screen === "main";
   const headerScale = onMain ? logoScale : compact ? 4 : 6;
-  // When a row with a banked session is opened, this holds it (with `detail`
-  // narrowed non-null) so the board swaps its list for the full-session card.
-  const openScore =
-    scoreDetail && scoreDetail.detail
-      ? { row: scoreDetail, detail: scoreDetail.detail }
-      : null;
+  // The campaign row opened into its full breakdown card, or null for the list.
+  const openScore = scoreDetail;
 
   return (
     <div
@@ -1718,6 +1718,12 @@ export function TitleScreen({
                 scale={2}
                 color="#d9a0f0"
               />
+              <PixelText
+                font={font}
+                text="HARDCORE CAMPAIGNS"
+                scale={1}
+                color="#ff6d6d"
+              />
               <div
                 className="score-board"
                 onPointerDown={onScorePointerDown}
@@ -1739,41 +1745,32 @@ export function TitleScreen({
 
                 {openScore ? (
                   (() => {
-                    const { detail } = openScore;
-                    const { name: levelName, foes } = scoreLevelInfo(
-                      detail.levelId,
+                    const detail = openScore;
+                    const survived = detail.outcome === "survived";
+                    const { name: levelName } = scoreLevelInfo(
+                      detail.levelId ?? "",
                     );
-                    const cleared = detail.outcome === "victory";
-                    const kpm =
-                      detail.stats.timeMs > 0
-                        ? detail.stats.kills / (detail.stats.timeMs / 60_000)
-                        : 0;
-                    // Every field of the run, headline numbers and all: a big kill
-                    // count reads very differently beside the shots and damage it
-                    // cost to earn.
+                    // The whole campaign at a glance: the four ranked numbers
+                    // plus how far the hero got before beating it or falling.
                     const lines: [string, string][] = [
-                      ["TIME", formatTime(detail.stats.timeMs)],
-                      [
-                        foes,
-                        `${detail.stats.kills}/${detail.stats.totalEnemies}`,
-                      ],
-                      ["KILLS / MIN", formatKpm(kpm)],
-                      ["LEVEL REACHED", String(detail.level)],
-                      ["XP GAINED", formatCompact(detail.stats.xpGained)],
-                      ["SHOTS FIRED", formatCompact(detail.stats.shotsFired)],
-                      ["DAMAGE DEALT", formatCompact(detail.stats.damageDealt)],
-                      ["DAMAGE TAKEN", formatCompact(detail.stats.damageTaken)],
-                      ["ITEMS", String(detail.stats.itemsCollected)],
+                      ["MOBS KILLED", String(detail.kills)],
+                      ["SURVIVAL TIME", formatTime(detail.combatMs)],
+                      ["KILLS / MIN", formatKpm(detail.kpm)],
+                      ["PEAK MENACE", `RAMPAGE ${detail.peakMenace}`],
+                      ["LEVELS CLEARED", String(detail.levels)],
                     ];
+                    if (!survived && detail.levelId) {
+                      lines.push(["FELL ON", levelName]);
+                    }
                     return (
                       <div className="score-detail">
                         <PixelText
                           font={font}
-                          text={cleared ? "LEVEL CLEAR!" : "YOU DIED"}
+                          text={survived ? "SURVIVED" : "FELL"}
                           scale={3}
-                          color={cleared ? "#7ef0c8" : "#d83a3a"}
+                          color={survived ? "#7ef0c8" : "#d83a3a"}
                         />
-                        <PixelText font={font} text={levelName} scale={2} />
+                        <PixelText font={font} text={detail.name} scale={2} />
                         <PixelText
                           font={font}
                           text={formatScoreDate(detail.at)}
@@ -1835,7 +1832,7 @@ export function TitleScreen({
                       {scoreRows.length === 0 ? (
                         <PixelText
                           font={font}
-                          text="NO RUNS YET"
+                          text="NO CAMPAIGNS YET"
                           scale={2}
                           color="#5a6068"
                         />
@@ -1844,37 +1841,32 @@ export function TitleScreen({
                           const medal =
                             ["#ffd75e", "#c8cdd4", "#cd7f4b"][i] ?? "#7ef0c8";
                           // Each ranking leads with its own metric; the smaller
-                          // secondary line keeps survival time in view (or KPM,
-                          // when time itself is the headline).
+                          // secondary line keeps the two headline numbers (kills
+                          // and survival) cross-visible.
                           const metricValue = (m: ScoreMetric): string => {
                             switch (m) {
-                              case "time":
-                                return formatTime(row.timeMs);
-                              case "kpm":
-                                return `${formatKpm(row.kpm)} KPM`;
                               case "kills":
                                 return `${row.kills} KILLS`;
-                              case "level":
-                                return `LV ${row.level}`;
+                              case "time":
+                                return formatTime(row.combatMs);
+                              case "kpm":
+                                return `${formatKpm(row.kpm)} KPM`;
+                              case "menace":
+                                return `RAMPAGE ${row.peakMenace}`;
                             }
                           };
                           const primary = metricValue(scoreMetric);
                           const secondary =
-                            scoreMetric === "time"
-                              ? metricValue("kpm")
-                              : metricValue("time");
-                          // A row opens into its full session only when one was
-                          // banked; legacy time-only runs stay inert (no arrow).
-                          const openable = Boolean(row.detail);
+                            scoreMetric === "kills"
+                              ? metricValue("time")
+                              : metricValue("kills");
                           return (
                             <button
                               type="button"
                               className="score-row"
                               key={i}
-                              disabled={!openable}
                               aria-label={`score-row-${i + 1}`}
                               onClick={() => {
-                                if (!openable) return;
                                 playUiSound(synth, "move");
                                 setScoreDetail(row);
                               }}
@@ -1892,14 +1884,12 @@ export function TitleScreen({
                                 scale={1}
                                 color="#9aa3ad"
                               />
-                              {openable && (
-                                <PixelText
-                                  font={font}
-                                  text=">"
-                                  scale={2}
-                                  color="#5a6068"
-                                />
-                              )}
+                              <PixelText
+                                font={font}
+                                text=">"
+                                scale={2}
+                                color="#5a6068"
+                              />
                             </button>
                           );
                         })
