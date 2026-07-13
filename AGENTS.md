@@ -240,7 +240,10 @@ load); a developer turns them on from the DEVELOPER menu:
   bloom at the tip AND a glow trail riding the hero's round/bolt in flight
   (`render.ts`, gated to the hero's own shots via the projectile's
   `hostile`/`companionId`) — Pyrelight casts fire, Pale Rider fires a deathly
-  shot. It's all a website-side catalog (the engine knows nothing of it);
+  shot. The hero faces where he MOVES, not where he shoots, so his flash pins to
+  the barrel's facing side (the muzzle effect's `faceLeft`) — a shot at a foe
+  behind him still fires at the weapon, not off his back. It's all a website-side
+  catalog (the engine knows nothing of it);
   un-listed weapons keep the plain class look, so the catalog grows one entry at
   a time. Reusable elemental kits (FIRE/HOLY/FROST/STORM/VOID/BLOOD/VENOM for
   slashes; FLAME/HOLY/STORM/COSMIC/FROST/VENOM/DEATH/SOLAR/TECH for shots) cover
