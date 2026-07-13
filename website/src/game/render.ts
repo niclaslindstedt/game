@@ -36,6 +36,13 @@ import { spriteByName, type GameAssets, type Sprites } from "./assets.ts";
 import { medkitIconFor } from "./consumables.ts";
 import { playerDollLayers, WEAPON_SHOULDER } from "./paper-doll.ts";
 import { getSettings } from "./settings.ts";
+import {
+  drawBurst,
+  drawSlash,
+  slashStyleFor,
+  type GoreStyle,
+  type SlashGeom,
+} from "./slash-fx.ts";
 import { TIER_COLORS } from "./tiers.ts";
 
 /**
@@ -1085,6 +1092,7 @@ export type Effect = {
     | "nuke"
     | "nova"
     | "splash"
+    | "burst"
     | "damage"
     | "swing"
     | "muzzle"
@@ -1141,6 +1149,10 @@ export type Effect = {
   arc?: number;
   /** Muzzle: ranged fires a hot flash, magic a cool cast burst. */
   weaponClass?: "melee" | "ranged" | "magic";
+  /** Burst: the themed gore a signature melee blow throws (slash-fx.ts). */
+  gore?: GoreStyle;
+  /** Burst: a per-hit seed so stacked bursts scatter differently. */
+  seed?: number;
 };
 
 export function drawEffects(
@@ -1174,6 +1186,19 @@ export function drawEffects(
           x - Math.round(sprite.width / 2),
           groundY - Math.round(sprite.height / 2),
         );
+      }
+      continue;
+    }
+
+    if (effect.kind === "burst") {
+      // The themed gore a signature melee blow throws — colored specks flung off
+      // the wound over the splash (slash-fx.ts). Lifted to the hit, not the feet.
+      if (effect.gore) {
+        const duration = effect.durationMs ?? 300;
+        const t = 1 - (effect.untilMs - timeMs) / duration; // 0 → 1
+        if (t >= 0 && t <= 1) {
+          drawBurst(ctx, x, groundY - 4, t, effect.gore, effect.seed ?? 0);
+        }
       }
       continue;
     }
@@ -1625,7 +1650,7 @@ const SLASH_REST_BASE = { x: 11, y: 10.5 };
 function meleeSlashArc(
   action: PlayerAction | undefined,
   nowMs: number,
-): { rotFrom: number; rotTo: number; alpha: number } | null {
+): SlashGeom | null {
   if (!action || action.weaponClass !== "melee") return null;
   const t = (nowMs - action.startMs) / action.durationMs;
   if (t < SWING_WINDUP_END || t > 1) return null; // dark until the strike
@@ -1637,61 +1662,14 @@ function meleeSlashArc(
   const rotFor = (a: number) => a - BLADE_REST_ANGLE;
   const presence = 1 - clamp01((t - SWING_STRIKE_END) / (1 - SWING_STRIKE_END));
   return {
+    pivot: WEAPON_SHOULDER,
+    tip: SLASH_REST_TIP,
+    base: SLASH_REST_BASE,
     rotFrom: rotFor(-half),
     rotTo: rotFor(-half + 2 * half * swept),
     alpha: presence,
+    phase: clamp01(t),
   };
-}
-
-/**
- * Fill the streak the blade has carved this swing — the ribbon between the tip's
- * arc (outer) and the near-hand point's arc (inner), both swept about
- * WEAPON_SHOULDER from `rotFrom` to `rotTo`. Drawn in doll-local coords inside
- * drawPlayer's facing transform, so it mirrors with the hero and sits ON the
- * held blade. A hot leading edge marks where the blade is right now.
- */
-function drawBladeSlash(
-  ctx: CanvasRenderingContext2D,
-  arc: { rotFrom: number; rotTo: number; alpha: number },
-): void {
-  const piv = WEAPON_SHOULDER;
-  const rotPt = (pt: { x: number; y: number }, rot: number) => {
-    const dx = pt.x - piv.x;
-    const dy = pt.y - piv.y;
-    const c = Math.cos(rot);
-    const s = Math.sin(rot);
-    return { x: piv.x + dx * c - dy * s, y: piv.y + dx * s + dy * c };
-  };
-  const N = 12;
-  const rotAt = (i: number) =>
-    arc.rotFrom + (arc.rotTo - arc.rotFrom) * (i / N);
-  ctx.save();
-  ctx.beginPath();
-  for (let i = 0; i <= N; i++) {
-    const q = rotPt(SLASH_REST_TIP, rotAt(i));
-    if (i === 0) ctx.moveTo(q.x, q.y);
-    else ctx.lineTo(q.x, q.y);
-  }
-  for (let i = N; i >= 0; i--) {
-    const q = rotPt(SLASH_REST_BASE, rotAt(i));
-    ctx.lineTo(q.x, q.y);
-  }
-  ctx.closePath();
-  ctx.globalAlpha = 0.8 * arc.alpha;
-  ctx.fillStyle = "#e6f1ff";
-  ctx.fill();
-  // The hot leading edge: the blade's current line, tip to hand.
-  const tipNow = rotPt(SLASH_REST_TIP, arc.rotTo);
-  const baseNow = rotPt(SLASH_REST_BASE, arc.rotTo);
-  ctx.globalAlpha = Math.min(1, arc.alpha + 0.05);
-  ctx.strokeStyle = "#ffffff";
-  ctx.lineWidth = 1.5;
-  ctx.beginPath();
-  ctx.moveTo(baseNow.x, baseNow.y);
-  ctx.lineTo(tipNow.x, tipNow.y);
-  ctx.stroke();
-  ctx.restore();
-  ctx.globalAlpha = 1;
 }
 
 /**
@@ -1847,10 +1825,14 @@ function drawPlayer(
     if (swung) ctx.restore();
   }
   // The slash streak rides the blade — drawn last so it sits ON the weapon, in
-  // the same doll-local/facing space, hugging the arc the blade just carved.
+  // the same doll-local/facing space, hugging the arc the blade just carved. Its
+  // look is the equipped weapon's signature (slash-fx.ts): a plain blade slashes
+  // white, a named unique flares its element.
   if (getSettings().weaponSwing === "on") {
     const slash = meleeSlashArc(action, state.stats.timeMs);
-    if (slash) drawBladeSlash(ctx, slash);
+    if (slash) {
+      drawSlash(ctx, slash, slashStyleFor(player.equipment.weapon.uniqueId));
+    }
   }
   ctx.restore();
 }

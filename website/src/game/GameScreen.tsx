@@ -185,6 +185,7 @@ import {
   type Effect,
   type PlayerAction,
 } from "./render.ts";
+import { goreStyleFor } from "./slash-fx.ts";
 import {
   actionForCode,
   bindingLabel,
@@ -1653,6 +1654,19 @@ export function GameScreen({
           }
         }
 
+        // A signature melee weapon throws THEMED gore on the hero's own blows —
+        // Muramasa sprays crimson, Excalibur golden light. Detect the hero's
+        // swing this tick (matched to his position, ignoring companions) and, if
+        // his weapon carries a gore signature, mark it so this tick's enemy hits
+        // spray it. Bundled with the experimental WEAPON SWING flag.
+        const heroGore =
+          getSettings().weaponSwing === "on" &&
+          state.events.some(
+            (e) => e.type === "swing" && isHeroAttack(e.pos, state.player.pos),
+          )
+            ? goreStyleFor(state.player.equipment.weapon.uniqueId)
+            : null;
+
         for (const event of state.events) {
           if (event.type === "lightning") {
             effects.push({
@@ -1732,6 +1746,18 @@ export function GameScreen({
               durationMs: 240,
               sprite: def.gore ?? "blood",
             });
+            // A signature weapon's themed gore, sprayed over the plain splash
+            // on the hero's own melee blows (see `heroGore` above).
+            if (heroGore) {
+              effects.push({
+                kind: "burst",
+                pos: { x: event.pos.x, y: event.pos.y },
+                untilMs: state.stats.timeMs + 320,
+                durationMs: 320,
+                gore: heroGore,
+                seed: Math.floor(Math.random() * 997),
+              });
+            }
             // A slain mob keels over where it fell — the engine removed the
             // live enemy this tick, so the corpse takes over its spot. Minions
             // are a 2s send-off (fall → lie → blink out); epic bodies (elites

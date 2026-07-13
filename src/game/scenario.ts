@@ -212,9 +212,18 @@ export function applyScenario(state: GameState, spec: ScenarioSpec): void {
 
   if (spec.weapon !== undefined) {
     // `null` = the unbreakable fallback sidearm — the same piece items.ts
-    // draws when a weapon shatters with an empty bag ("no weapon").
+    // draws when a weapon shatters with an empty bag ("no weapon"). A
+    // UNIQUE_DEFS id mints that named unique (its bonuses AND its signature
+    // look), so a scenario can stage a hero holding a specific unique.
     const defId = spec.weapon ?? "blaster";
-    if (spec.weapon !== null && !isWeaponDef(defId)) {
+    const asUnique =
+      spec.weapon !== null && knownDef(uniqueDef, defId)
+        ? uniqueDef(defId)
+        : null;
+    if (asUnique && asUnique.slot === "weapon") {
+      player.equipment.weapon = mintUnique(state, defId);
+      player.weaponCooldownMs = 0;
+    } else if (spec.weapon !== null && !isWeaponDef(defId)) {
       warn(`scenario: unknown weapon def '${defId}' — kept the held weapon`);
     } else {
       player.equipment.weapon = mintWeapon(state, defId, spec.weapon === null);
