@@ -23,6 +23,7 @@ import {
 import { storageKey } from "../identity.ts";
 
 import { ACHIEVEMENTS } from "./achievement-defs.ts";
+import { getActiveCharacter } from "./characters.ts";
 import {
   applyEventsToTotals,
   applyRunStart,
@@ -33,13 +34,23 @@ import {
   type WornPiece,
 } from "./achievement-totals.ts";
 
-/** The persisted blob: the framework ledger plus our counter totals. */
-export type AchievementsSave = UnlockLedger & { totals: LifetimeTotals };
+/** Per-badge context captured the moment it was earned — WHO was playing when
+ * the trophy dropped. The timestamp lives in the framework ledger
+ * (`unlocked[id]`); this is the game-specific companion to it. `character` is
+ * null for badges earned before this was tracked (or with no active hero). */
+export type AchievementUnlockMeta = { character: string | null };
+
+/** The persisted blob: the framework ledger, our counter totals, and the
+ * per-badge unlock context (`meta`, keyed by achievement id). */
+export type AchievementsSave = UnlockLedger & {
+  totals: LifetimeTotals;
+  meta: Record<string, AchievementUnlockMeta>;
+};
 
 const STORAGE_KEY = storageKey("achievements");
 
 function emptySave(): AchievementsSave {
-  return { unlocked: {}, unseen: [], totals: emptyTotals() };
+  return { unlocked: {}, unseen: [], totals: emptyTotals(), meta: {} };
 }
 
 function load(): AchievementsSave {
@@ -57,6 +68,10 @@ function load(): AchievementsSave {
       // Field-wise merge so a save from before a new counter shipped starts
       // that counter at zero instead of undefined.
       totals: { ...base.totals, ...(stored.totals ?? {}) },
+      meta:
+        stored.meta && typeof stored.meta === "object"
+          ? stored.meta
+          : base.meta,
     };
   } catch {
     return base; // private mode / corrupt JSON — track in memory only
@@ -101,6 +116,14 @@ function unlockSatisfied(): string[] {
   if (ids.length === 0) return [];
   const { next, fresh } = applyUnlocks(save, ids, Date.now());
   save = next;
+  // Stamp each freshly-earned badge with the hero who was playing, so the
+  // browser can later say "earned by NAME" alongside the unlock date.
+  if (fresh.length > 0) {
+    const character = getActiveCharacter()?.name ?? null;
+    const meta = { ...save.meta };
+    for (const id of fresh) meta[id] = { character };
+    save = { ...save, meta };
+  }
   return fresh;
 }
 
