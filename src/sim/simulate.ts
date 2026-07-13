@@ -888,16 +888,13 @@ function playRun(args: {
     // high-difficulty stall reads as BALANCE rather than the bot never shopping.
     // The big hop trips the stall-breaker's movement gate below, so the two
     // never fight over where to drag him.
-    if (
-      args.autoShop &&
-      state.phase === "playing" &&
-      state.merchant.discovered &&
-      weaponStarved()
-    ) {
+    if (args.autoShop && state.phase === "playing" && weaponStarved()) {
       recoverAtMerchant(); // buys/repairs when at the stall (proximity-gated)
       if (weaponStarved()) {
-        // Still starved → not at the counter → drag him toward it, stopping
-        // ~40px short (inside the trade radius) so next tick opens the shop.
+        // Still starved → not at the counter → drag him toward it (even before
+        // it's DISCOVERED: the bot never seeks the merchant, so a stranded hero
+        // would never find it; walking him over discovers it via stepMerchant,
+        // then next tick opens the shop). Stop ~40px short, inside the radius.
         const m = state.merchant.pos;
         const dx = m.x - state.player.pos.x;
         const dy = m.y - state.player.pos.y;
