@@ -142,7 +142,13 @@ entering nightmare as someone who played just one (`--full` shows it).
    ```sh
    node scripts/simulate-run.mjs --difficulty easy --level spacez_hq --full
    node scripts/simulate-run.mjs               # the full campaign, easy → JESUS
+   node scripts/simulate-run.mjs --verdict     # PASS/WARN/FAIL, incl. boss-level-vs-intended
    ```
+   To probe a pace change BEFORE editing `LEVELING`, the simulator's `--balance
+   xpGain=…` knob scales kill XP live (no rebuild) and `--verdict` flags the
+   first-visit-XP and boss-level bands (see the `simulate-run` skill's knob
+   loop). It's a fast directional probe — the shipped pace still lives in
+   `config.ts`, so commit the change there and re-verify at `1×`.
    or from a browser bot run (see the `playtest` skill):
    ```sh
    cd website && npx vite --port 5199 &

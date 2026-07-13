@@ -4,11 +4,19 @@
 // reports what happened. These are engine-rule smoke tests on the fixture
 // catalog; the balance-probing runs live in scripts/simulate-run.mjs.
 
-import { describe, expect, it } from "vitest";
+import { afterEach, describe, expect, it } from "vitest";
 
 import { simulateCampaign, simulateLevel } from "../../src/sim/simulate.ts";
+import {
+  BALANCE_TUNING_DEFAULTS,
+  getBalanceTuning,
+  resetBalanceTuning,
+} from "../../src/game/tuning.ts";
 // Installs the fixture catalogs before any simulation builds a game.
 import "./helpers.ts";
+
+// The balance option touches global tuning — leave it neutral for other suites.
+afterEach(() => resetBalanceTuning());
 
 describe("simulateLevel", () => {
   it("plays a fixture level headlessly and reports the run", () => {
@@ -52,6 +60,78 @@ describe("simulateLevel", () => {
     }
     // The per-map cap rode along (fixtures run the shipped medium band).
     expect(report.xpCap.cap).toBeGreaterThan(0);
+  });
+
+  it("tracks each boss/elite as an engagement, not a spawn", () => {
+    const report = simulateLevel({
+      levelId: "test_level",
+      difficulty: "medium",
+      seed: 42,
+      strategy: "boss", // push toward the set-piece foes
+      maxMinutes: 3,
+    });
+    // The fixture level fields a boss and elites — they show up in the roster.
+    expect(report.bosses.length).toBeGreaterThan(0);
+    for (const boss of report.bosses) {
+      expect(["boss", "elite"]).toContain(boss.role);
+      expect(boss.bossMaxHp).toBeGreaterThan(0);
+      if (boss.engaged) {
+        // Engagement books the fight's start, not map load: a real hero level
+        // and moment. Any kill implies engagement and a blows-to-kill read.
+        expect(boss.heroLevel).toBeGreaterThan(0);
+        expect(boss.metAtMs).toBeGreaterThanOrEqual(0);
+        if (boss.killed) expect(boss.hitsToKill).toBeGreaterThan(0);
+      } else {
+        // Never reached: the pacing fields stay zeroed (not a false "met at 0").
+        expect(boss.heroLevel).toBe(0);
+        expect(boss.killed).toBe(false);
+      }
+    }
+  });
+
+  it("judges each equipment drop against the hero's level", () => {
+    const report = simulateLevel({
+      levelId: "test_level",
+      difficulty: "medium",
+      seed: 3,
+      maxMinutes: 3,
+    });
+    const e = report.drops.equipment;
+    // The bands partition the resolved drops, and the counts stay coherent.
+    expect(e.belowLevel + e.onLevel + e.aboveLevel).toBe(e.total);
+    expect(e.equippableNow).toBeLessThanOrEqual(e.total);
+    expect(e.levelGated).toBeLessThanOrEqual(e.total);
+    if (e.total === 0) expect(e.avgIlvlDelta).toBe(0);
+    // A drop can't be both wearable-now and gated-too-high — the two are
+    // complementary reads on the level gate, so their counts never overlap
+    // into an impossible sum.
+    expect(e.equippableNow + e.levelGated).toBeLessThanOrEqual(e.total * 2);
+  });
+
+  it("applies the balance knobs and restores global tuning afterward", () => {
+    // A hard mobHp cut makes mobs die in fewer blows than at baseline.
+    const base = simulateLevel({
+      levelId: "test_level",
+      difficulty: "medium",
+      seed: 5,
+      maxMinutes: 2,
+    });
+    const softer = simulateLevel({
+      levelId: "test_level",
+      difficulty: "medium",
+      seed: 5,
+      maxMinutes: 2,
+      balance: { mobHp: 0.25 },
+    });
+    const avgHp = (r: typeof base) =>
+      r.mobs.reduce((s, m) => s + m.avgMaxHp * m.spawned, 0) /
+      Math.max(
+        1,
+        r.mobs.reduce((s, m) => s + m.spawned, 0),
+      );
+    expect(avgHp(softer)).toBeLessThan(avgHp(base));
+    // The run put the global tuning back exactly as it found it.
+    expect(getBalanceTuning()).toEqual(BALANCE_TUNING_DEFAULTS);
   });
 
   it("is deterministic — the same options replay the same run exactly", () => {

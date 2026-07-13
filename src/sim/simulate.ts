@@ -35,11 +35,13 @@ import { resolveChoice } from "../game/companions.ts";
 import { createGame } from "../game/create.ts";
 import { DIFFICULTY_ORDER } from "../game/defs/difficulties.ts";
 import { enemyDef } from "../game/defs/enemies/index.ts";
+import { equipmentLevelReq } from "../game/defs/equipment.ts";
 import { LEVEL_ORDER, levelDef } from "../game/defs/levels/index.ts";
 import {
   advanceOutro,
   allocateStat,
   armorReduction,
+  canEquip,
   dismissIntro,
   effectiveStat,
   equipmentName,
@@ -51,9 +53,15 @@ import { xpCapMultiplier, xpLevelCap } from "../game/leveling.ts";
 import { currentMobLevel, menaceStage } from "../game/menace.ts";
 import { advanceDialogue } from "../game/story.ts";
 import { step } from "../game/step.ts";
-import { BALANCE } from "../game/tuning.ts";
+import {
+  BALANCE,
+  type BalanceTuning,
+  getBalanceTuning,
+  setBalanceTuning,
+} from "../game/tuning.ts";
 import type {
   Difficulty,
+  Equipment,
   GameState,
   Item,
   Loadout,
@@ -87,6 +95,15 @@ export type SimulateLevelOptions = {
    * Nudges are counted in the report.
    */
   unstick?: boolean;
+  /**
+   * Runtime balance multipliers to apply for this run — the SAME ten knobs the
+   * DEVELOPER → BALANCE subpage exposes (`BalanceTuning`: xpGain, playerDamage,
+   * mobHp, …). Applied via `setBalanceTuning` before the game is built and
+   * restored to the prior tuning after, so a run can measure a candidate
+   * balance without editing config or touching global state. Omit for the
+   * shipped 1× tuning.
+   */
+  balance?: Partial<BalanceTuning>;
 };
 
 export type SimulateCampaignOptions = {
@@ -101,6 +118,9 @@ export type SimulateCampaignOptions = {
   snapshotEveryMs?: number;
   /** Carry the hero across rungs (the real campaign) — default true. */
   carryLoadout?: boolean;
+  /** Runtime balance multipliers applied to every run (see
+   * SimulateLevelOptions.balance) — the DEVELOPER → BALANCE knobs. */
+  balance?: Partial<BalanceTuning>;
 };
 
 // ---- Report shapes ---------------------------------------------------------------
@@ -149,6 +169,53 @@ export type MobReport = {
   hitsToKill: number;
   /** Total XP its deaths paid (pre-cap figures, as the kill events book). */
   xpPaid: number;
+};
+
+/**
+ * One elite/boss encounter, surfaced as a first-class event so the report
+ * answers "at what point, and at what level, does the hero meet each boss, and
+ * what does it drop?" — the campaign's pacing gates. Met = the boss/elite first
+ * appears on the field; killed/drop are filled when it falls.
+ */
+export type BossEncounter = {
+  defId: string;
+  name: string;
+  role: "boss" | "elite";
+  /**
+   * Whether the hero actually reached and traded blows with this boss. Elites
+   * and bosses are usually PLACED at map load, so their spawn tells us nothing
+   * about pacing — engagement (the first blow dealt or taken) is the moment the
+   * fight starts, and the level/time/gear below are read THEN. A boss that
+   * spawned but was never reached stays `engaged: false` with zeroed meet
+   * fields (a time-boxed run that never got there — not a balance fault).
+   */
+  engaged: boolean;
+  /** Simulated ms the fight started (first blow traded). 0 until engaged. */
+  metAtMs: number;
+  /** Hero level when the fight started. 0 until engaged. */
+  heroLevel: number;
+  /** Hero hp fraction in [0, 1] when the fight started. */
+  heroHpFrac: number;
+  /** Hero's equipped weapon name when the fight started. */
+  heroWeapon: string;
+  /** That weapon's expected DPS in the hero's hands then. */
+  heroDps: number;
+  /**
+   * The level a normal single run of this map/difficulty is meant to leave the
+   * hero at (the map's `loot.arrowCapByDifficulty`) — the yardstick for
+   * `heroLevel`. null when the map declares no cap for this rung.
+   */
+  intendedHeroLevel: number | null;
+  /** Boss monster level stamped at spawn. */
+  bossLevel: number;
+  bossMaxHp: number;
+  bossContactDamage: number;
+  /** Blows one clean kill takes at the hero's average blow (0 if never hit). */
+  hitsToKill: number;
+  killed: boolean;
+  killedAtMs: number | null;
+  /** Named unique/legendary dropped, attributed by kill order (null = none). */
+  drop: string | null;
 };
 
 export type LevelReport = {
@@ -207,11 +274,38 @@ export type LevelReport = {
     autoEquipped: number;
     /** Named unique/legendary finds, in pickup order. */
     named: string[];
+    /**
+     * Per-drop level-appropriateness — do the equipment drops FIT the hero's
+     * level, or is the map raining gear he's too low to wear (gated) or trash
+     * beneath him? The read for "drops that make sense from a leveling
+     * perspective." Each figure is over the equipment pieces actually resolved
+     * at pickup.
+     */
+    equipment: {
+      /** Equipment pieces collected and resolved. */
+      total: number;
+      /** Wearable on the spot — both the level and attribute gates pass. */
+      equippableNow: number;
+      /** Dropped ABOVE the hero's level gate: banked, can't wear yet. */
+      levelGated: number;
+      /** ilvl bands vs the hero's level at pickup (`APPROP_BAND` slack). */
+      belowLevel: number;
+      onLevel: number;
+      aboveLevel: number;
+      /**
+       * Mean (drop ilvl − hero level). ~0 means the rain tracks the hero;
+       * strongly negative = trash beneath him; strongly positive = aspirational
+       * drops he can't use yet.
+       */
+      avgIlvlDelta: number;
+    };
   };
   weaponTimeline: WeaponSwap[];
   levelUps: { atMs: number; level: number }[];
   snapshots: HeroSnapshot[];
   mobs: MobReport[];
+  /** Every elite/boss met this run, in the order they appeared. */
+  bosses: BossEncounter[];
   xpCap: {
     /** This (map × difficulty) pair's hero-level ceiling. */
     cap: number;
@@ -251,6 +345,10 @@ type MobAccumulator = {
 /** Phase-advance guard: a wedged phase throws instead of spinning forever. */
 const MAX_PHASE_ADVANCES = 10_000;
 
+/** Slack (in levels) around the hero's level a drop's ilvl may sit and still
+ * count "on level" — outside it a drop reads as trash (below) or gated (above). */
+const APPROP_BAND = 3;
+
 /** No kill and no damage for this long (simulated ms) = wedged on geometry. */
 const STALL_TIMEOUT_MS = 15_000;
 /** Net displacement over the stall window that still counts as "moving". */
@@ -287,20 +385,30 @@ export function runLevel(options: SimulateLevelOptions): {
     dtMs = 16,
     snapshotEveryMs = 60_000,
     unstick = true,
+    balance,
   } = options;
 
-  const { report, state } = playRun({
-    levelId,
-    difficulty,
-    seed,
-    loadout,
-    strategy,
-    maxMinutes,
-    dtMs,
-    snapshotEveryMs,
-    unstick,
-  });
-  return { report, loadout: extractLoadout(state) };
+  // Apply the requested balance knobs for the duration of the run, then put the
+  // global tuning back exactly as we found it — the sim measures a candidate
+  // tuning without leaking it into a later run or a test.
+  const priorBalance = getBalanceTuning();
+  if (balance) setBalanceTuning(balance);
+  try {
+    const { report, state } = playRun({
+      levelId,
+      difficulty,
+      seed,
+      loadout,
+      strategy,
+      maxMinutes,
+      dtMs,
+      snapshotEveryMs,
+      unstick,
+    });
+    return { report, loadout: extractLoadout(state) };
+  } finally {
+    if (balance) setBalanceTuning(priorBalance);
+  }
 }
 
 function playRun(args: {
@@ -332,10 +440,59 @@ function playRun(args: {
   const collectedByKind: Record<string, number> = {};
   const equipmentByTier: Partial<Record<Tier, number>> = {};
   const named: string[] = [];
+  // Named finds with their collection time — the channel that attributes a
+  // unique/legendary drop to the boss whose death (just before) minted it.
+  const namedCollected: { name: string; atMs: number }[] = [];
+  // One record per elite/boss def, minted the tick it first appears. `killedAtMs`
+  // and `drop` are filled in later; `intendedHeroLevel` is the map's yardstick.
+  const bosses = new Map<string, BossEncounter>();
+  const intendedHeroLevel =
+    def.loot?.arrowCapByDifficulty?.[args.difficulty] ?? null;
+  // The fight has started — book the hero's level/hp/gear the moment the first
+  // blow lands on this boss (idempotent: only the first call takes).
+  const engageBoss = (defId: string) => {
+    const boss = bosses.get(defId);
+    if (!boss || boss.engaged) return;
+    const weapon = state.player.equipment.weapon;
+    boss.engaged = true;
+    boss.metAtMs = state.stats.timeMs;
+    boss.heroLevel = state.player.level;
+    boss.heroHpFrac = round3(state.player.hp / state.player.maxHp);
+    boss.heroWeapon = equipmentName(weapon);
+    boss.heroDps = round1(weaponDps(state, weapon));
+  };
   const weaponTimeline: WeaponSwap[] = [];
   const levelUps: { atMs: number; level: number }[] = [];
   const snapshots: HeroSnapshot[] = [];
   let autoEquipped = 0;
+  // Loot-vs-level accumulators (see drops.equipment) — filled as pieces resolve.
+  let equipTotal = 0;
+  let equippableNow = 0;
+  let levelGated = 0;
+  let ilvlBelow = 0;
+  let ilvlOn = 0;
+  let ilvlAbove = 0;
+  let ilvlDeltaSum = 0;
+  // Find a just-collected piece by its stable id (worn slot or bag cell) so its
+  // ilvl / level requirement can be judged against the hero at pickup.
+  const findEquipment = (id: number): Equipment | null => {
+    const worn = state.player.equipment;
+    for (const piece of [
+      worn.weapon,
+      worn.head,
+      worn.chest,
+      worn.legs,
+      worn.feet,
+      worn.charm,
+      worn.bag,
+    ]) {
+      if (piece && piece.id === id) return piece;
+    }
+    for (const cell of state.player.inventory) {
+      if (cell && cell.id === id) return cell;
+    }
+    return null;
+  };
   let forfeited = 0;
   let reachedAtMs: number | null = null;
   let reviveDeaths = 0;
@@ -368,6 +525,34 @@ function playRun(args: {
       acc.hpSum += enemy.maxHp;
       acc.mlvlSum += enemy.mlvl;
       mobs.set(enemy.defId, acc);
+
+      // Register the boss's fixed stats at spawn (level, hp, contact damage);
+      // the pacing fields — hero level/time/gear — are filled in on ENGAGEMENT
+      // (see the event loop), since a placed boss's spawn is just map load.
+      if (
+        (d.role === "boss" || d.role === "elite") &&
+        !bosses.has(enemy.defId)
+      ) {
+        bosses.set(enemy.defId, {
+          defId: enemy.defId,
+          name: d.name,
+          role: d.role,
+          engaged: false,
+          metAtMs: 0,
+          heroLevel: 0,
+          heroHpFrac: 0,
+          heroWeapon: "",
+          heroDps: 0,
+          intendedHeroLevel,
+          bossLevel: enemy.mlvl,
+          bossMaxHp: enemy.maxHp,
+          bossContactDamage: d.contactDamage,
+          hitsToKill: 0,
+          killed: false,
+          killedAtMs: null,
+          drop: null,
+        });
+      }
     }
     for (const item of state.items) {
       if (seenItems.has(item.id)) continue;
@@ -468,6 +653,7 @@ function playRun(args: {
             damagePerHitSum += event.damage;
             if (event.crit) critsLanded++;
           }
+          engageBoss(event.defId);
           break;
         }
         case "enemyKilled": {
@@ -482,6 +668,12 @@ function playRun(args: {
             damagePerHitSum += event.damage;
             if (event.crit) critsLanded++;
           }
+          engageBoss(event.defId);
+          const boss = bosses.get(event.defId);
+          if (boss && boss.killedAtMs === null) {
+            boss.killed = true;
+            boss.killedAtMs = state.stats.timeMs;
+          }
           break;
         }
         case "playerHurt":
@@ -494,11 +686,31 @@ function playRun(args: {
             equipmentByTier[event.tier] =
               (equipmentByTier[event.tier] ?? 0) + 1;
             if (event.equipped) autoEquipped++;
+            // Judge the piece against the hero: is it wearable now, and does its
+            // ilvl track his level or fall outside the appropriateness band?
+            const piece =
+              event.itemId != null ? findEquipment(event.itemId) : null;
+            if (piece) {
+              equipTotal++;
+              const delta = piece.ilvl - state.player.level;
+              ilvlDeltaSum += delta;
+              if (delta <= -APPROP_BAND) ilvlBelow++;
+              else if (delta >= APPROP_BAND) ilvlAbove++;
+              else ilvlOn++;
+              if (canEquip(state, piece)) equippableNow++;
+              if (state.player.level < equipmentLevelReq(piece.defId)) {
+                levelGated++;
+              }
+            }
             if (
               (event.tier === "unique" || event.tier === "legendary") &&
               event.name
             ) {
               named.push(event.name);
+              namedCollected.push({
+                name: event.name,
+                atMs: state.stats.timeMs,
+              });
             }
           }
           break;
@@ -605,6 +817,37 @@ function playRun(args: {
     stats[stat] = effectiveStat(state, stat);
   }
 
+  // Finalize boss encounters: read blows-to-kill off the mob accumulator, then
+  // attribute each named find to the boss that died most recently before it was
+  // picked up (the loot ladder mints a boss's signature the tick it falls). One
+  // named item to one boss, in kill order — a heuristic, but a tight one.
+  const bossList = [...bosses.values()];
+  for (const boss of bossList) {
+    const acc = mobs.get(boss.defId);
+    if (acc && acc.hitsFromHero > 0) {
+      const avgHit = acc.damageFromHero / acc.hitsFromHero;
+      const avgHp = acc.spawned ? acc.hpSum / acc.spawned : 0;
+      boss.hitsToKill = avgHit > 0 ? round1(avgHp / avgHit) : 0;
+    }
+  }
+  const claimed = new Set<number>();
+  const killedBosses = bossList
+    .filter((b) => b.killedAtMs !== null)
+    .sort((a, b) => (a.killedAtMs ?? 0) - (b.killedAtMs ?? 0));
+  for (const boss of killedBosses) {
+    // The last named find picked up at/after this boss fell and not already
+    // claimed by an earlier-dying boss.
+    for (let i = 0; i < namedCollected.length; i++) {
+      const find = namedCollected[i];
+      if (claimed.has(i) || !find) continue;
+      if (find.atMs >= (boss.killedAtMs ?? 0)) {
+        boss.drop = find.name;
+        claimed.add(i);
+        break;
+      }
+    }
+  }
+
   const report: LevelReport = {
     levelId: args.levelId,
     levelName: def.name,
@@ -652,6 +895,15 @@ function playRun(args: {
       equipmentByTier,
       autoEquipped,
       named,
+      equipment: {
+        total: equipTotal,
+        equippableNow,
+        levelGated,
+        belowLevel: ilvlBelow,
+        onLevel: ilvlOn,
+        aboveLevel: ilvlAbove,
+        avgIlvlDelta: equipTotal ? round1(ilvlDeltaSum / equipTotal) : 0,
+      },
     },
     weaponTimeline,
     levelUps,
@@ -679,6 +931,7 @@ function playRun(args: {
         };
       })
       .sort((a, b) => b.spawned - a.spawned),
+    bosses: bossList.sort((a, b) => a.metAtMs - b.metAtMs),
     xpCap: { cap, reachedAtMs, forfeited },
   };
   return { report, state };
@@ -706,6 +959,7 @@ export function simulateCampaign(
     dtMs = 16,
     snapshotEveryMs = 60_000,
     carryLoadout = true,
+    balance,
   } = options;
 
   const runs: LevelReport[] = [];
@@ -722,6 +976,7 @@ export function simulateCampaign(
         maxMinutes,
         dtMs,
         snapshotEveryMs,
+        balance,
       });
       runs.push(report);
       runIndex++;
