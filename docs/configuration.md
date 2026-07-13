@@ -129,10 +129,11 @@ an incompatible older build is discarded rather than resumed. Clearing site
 data resets all of it; the `?cutscene=<id>` workbench replays any scene
 regardless, and `?level=<id>` reaches any level regardless of unlock state.
 
-A hero can be carried between devices from **SETTINGS**: **EXPORT CHARACTER**
-(shown when a hero is active) downloads the active character as a small signed
-`.zip` (a `character.json` save plus a `manifest.json`), and **IMPORT
-CHARACTER** opens a file picker to load one back into the roster as a fresh copy
+A hero can be carried between devices from **SETTINGS → DATA**: **EXPORT
+CHARACTER** opens a picker over the whole roster where you tick one or many
+heroes (not just the current game) and download each as a small signed `.zip`
+(a `character.json` save plus a `manifest.json`), and **IMPORT CHARACTER** opens
+a file picker to load one back into the roster as a fresh copy
 (`website/src/game/character-transfer.ts`). The archive is signed with an
 HMAC-SHA256 key (`VITE_CHARACTER_SIGNING_KEY`, below), so a hand-edited save
 fails to re-import — an anti-cheat speed bump, not a wall, since the key ships
