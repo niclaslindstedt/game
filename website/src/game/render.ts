@@ -1164,6 +1164,12 @@ export type Effect = {
    * ever a handful, so leaving them on the field reads as a battlefield of
    * fallen giants rather than clutter. */
   persist?: boolean;
+  /** Corpse: an OVERKILL launch — the body is knocked flying away from the
+   * hero. `dx`/`dy` is the unit heading (already pointing away from the
+   * player), `dist` how far it sails in world px. Bigger overkill = further,
+   * up to clear off the screen (a legendary one-shot). Sized in GameScreen
+   * from the kill's `damage − maxHp`; absent for a plain keel-over. */
+  launch?: { dx: number; dy: number; dist: number };
   /** Swing: the arc's reach in world px (the weapon's effective range). */
   radius?: number;
   /** Swing: the full cone angle in radians (wide blade vs narrow spear). */
@@ -1249,6 +1255,34 @@ export function drawEffects(
         Math.floor(timeMs / 90) % 2 === 0
       )
         continue;
+      // OVERKILL LAUNCH: an overpowered kill punts the body flying away from
+      // the hero (kung-fu style) — it sails along `launch`, arcs up off the
+      // ground, and tumbles end over end, decelerating into the spot it lands.
+      // The harder it was overkilled the further it sails, up to clear off the
+      // screen for a legendary one-shot. A plain kill has no launch and just
+      // topples in place. GameScreen sized `dist` from the kill's overkill.
+      const launch = effect.launch;
+      const launched = launch != null && launch.dist > 2;
+      const flightMs = launched ? Math.min(1000, 240 + launch.dist * 2.0) : 0;
+      const flight = launched ? Math.min(1, age / flightMs) : 0;
+      const flightEase = flight * (2 - flight); // ease-out into the landing
+      const tx = launched
+        ? Math.round(launch.dx * launch.dist * flightEase)
+        : 0;
+      const ty = launched
+        ? Math.round(launch.dy * launch.dist * flightEase)
+        : 0;
+      // Airborne arc: rise then fall over the flight, its height growing with
+      // how far the body is thrown.
+      const lift = launched
+        ? Math.round(Math.sin(flight * Math.PI) * launch.dist * 0.16)
+        : 0;
+      // Tumble whole spins (so it lands flat on its keel), forward along the
+      // throw, bleeding off as it decelerates.
+      const spins = launched ? Math.round(launch.dist / 64) : 0;
+      const tumble = launched
+        ? (Math.sign(launch.dx) || 1) * spins * Math.PI * 2 * flightEase
+        : 0;
       // Keel-over: rotate 0 → the rolled ±90° over the first 260ms (ease-out),
       // with a brief hop as it topples.
       const fall = Math.min(1, age / 260);
@@ -1260,8 +1294,8 @@ export function drawEffects(
       ctx.save();
       // Pivot about the sprite's feet (bottom-centre) so it falls flat with its
       // base planted, then draw the body rising from that pivot.
-      ctx.translate(x, groundY + Math.round(h / 2) - hop);
-      ctx.rotate(tip);
+      ctx.translate(x + tx, groundY + ty + Math.round(h / 2) - hop - lift);
+      ctx.rotate(tip + tumble);
       ctx.drawImage(sprite, -Math.round(w / 2), -h);
       ctx.restore();
       continue;

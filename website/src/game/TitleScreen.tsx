@@ -87,7 +87,12 @@ import {
   type BindableAction,
 } from "./keybindings.ts";
 import { uiScaleFor } from "./render.ts";
-import { getSettings, updateSettings, type GameSettings } from "./settings.ts";
+import {
+  getSettings,
+  KNOCKBACK_MAX,
+  updateSettings,
+  type GameSettings,
+} from "./settings.ts";
 import { playUiSound } from "./sfx/index.ts";
 import { startTitleSky } from "./titleSky.ts";
 
@@ -983,6 +988,28 @@ export function TitleScreen({
           "developer-weapon-swing",
           "ANIMATE THE HELD WEAPON ON EACH ATTACK (NEEDS CHARACTER WEAPON)",
         ),
+        // The overkill fling strength: a drag track from 0× (bodies drop where
+        // they stand) through 1× (shipped feel) up to KNOCKBACK_MAX× (mobs
+        // rocket clear off the screen). Read live by GameScreen's launch.
+        ((): MenuEntry => {
+          const kb = getSettings().knockback;
+          const setKb = (mult: number) => {
+            updateSettings({ knockback: mult });
+            setSettingsTick((t) => t + 1);
+          };
+          return {
+            label: `KNOCKBACK ${formatBalanceMult(kb)}`,
+            aria: "developer-knockback",
+            blurb: "HOW FAR AN OVERKILL FLINGS THE MOB FLYING",
+            action: () => {},
+            slider: {
+              pos: kb / KNOCKBACK_MAX,
+              set: (pos: number) => setKb(pos * KNOCKBACK_MAX),
+              nudge: (dir: number) =>
+                setKb(getSettings().knockback + dir * 0.1),
+            },
+          };
+        })(),
         // Land back on the DEVELOPER row in SETTINGS. It sits just above BACK,
         // after CONTROLS / DISPLAY / SOUND / DATA.
         backTo("settings", 4),

@@ -77,6 +77,7 @@ function kill(defId: string): GameEvent {
     pos: { x: 0, y: 0 },
     defId,
     damage: 1,
+    maxHp: 1,
     crit: false,
     xp: 1,
   };
