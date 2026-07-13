@@ -11,7 +11,10 @@ import {
   dropChance,
   getBalanceTuning,
   grantXp,
+  heroDamageLevel,
+  heroPowerLevel,
   hitEnemy,
+  MENACE,
   menaceSensitivity,
   resetBalanceTuning,
   rollEquipment,
@@ -216,5 +219,31 @@ describe("menaceGain", () => {
     expect(base).toBeGreaterThan(0);
     setBalanceTuning({ menaceGain: 3 });
     expect(menaceSensitivity(state)).toBeCloseTo(base * 3, 6);
+  });
+});
+
+describe("mobDamageTracking", () => {
+  it("scales how much the horde toughness chases the hero's weapon output", () => {
+    const state = startGame();
+    // An absurd damage roll so the damage level runs well above the character
+    // level — the term the knob dampens.
+    state.player.equipment.weapon.affixes.push({ kind: "damagePct", value: 9 });
+    const char = state.player.level;
+    const damageLevel = heroDamageLevel(state);
+    expect(damageLevel).toBeGreaterThan(char);
+
+    // Shipped (knob 1×): the horde tracks MENACE.damageLevelTracking of the
+    // damage-level excess over the character level.
+    const shipped = char + MENACE.damageLevelTracking * (damageLevel - char);
+    expect(heroPowerLevel(state)).toBeCloseTo(shipped);
+
+    // Knob 0: the horde ignores weapon output entirely — toughness keys to the
+    // character (or gear) level, so a big hitter can freely overkill/rampage.
+    setBalanceTuning({ mobDamageTracking: 0 });
+    expect(heroPowerLevel(state)).toBe(char);
+
+    // Cranked up: the horde chases the damage harder (toward a 1:1 match).
+    setBalanceTuning({ mobDamageTracking: 5 });
+    expect(heroPowerLevel(state)).toBeGreaterThan(shipped);
   });
 });

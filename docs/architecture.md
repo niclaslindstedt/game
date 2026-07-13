@@ -334,7 +334,13 @@ run against synthetic fixtures with no shipped content (see
   sustained DPS would fell in `damageLevelKillSec` seconds, so an absurd
   `damage`/`damagePct` roll ilvl never priced in still reads as the power
   it actually swings), whichever is highest — so a decked-out hero meets a
-  horde levelled to what he actually wields) gives every minion a
+  horde levelled to what he actually wields. The DAMAGE term is DAMPENED to
+  `MENACE.damageLevelTracking` (0.2, ×the `mobDamageTracking` balance knob)
+  of its excess over the character level: a full 1:1 hp match pinned
+  time-to-kill flat and stopped a strong build ever OVERKILLING, which
+  starved the menace/evolution ratchet — the endgame's real challenge — so
+  the horde now only lag-follows a fifth of the hero's dps and the ratchet
+  answers the runaway instead) gives every minion a
   non-decaying toughness floor at spawn (`mobLevelScale`, folded into
   `spawnEnemy`'s hp mult) and richer drops (`mobLevelTierBonus`, added to
   the loot tier roll), so a levelled hero keeps meeting a proportionally

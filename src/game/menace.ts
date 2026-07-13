@@ -182,13 +182,21 @@ export function heroDamageLevel(state: GameState): number {
  * instead of a one-shot crowd his character sheet says is fair. TOUGHNESS
  * only: the loot-facing monster level (`currentMobLevel`) keys to the
  * CHARACTER level alone, so neither gear nor damage ever sweetens drops.
+ *
+ * The DAMAGE term is DAMPENED: only `MENACE.damageLevelTracking` (0.2, ×the
+ * `mobDamageTracking` balance knob) of its excess over the character level
+ * toughens the horde. A full 1:1 match pinned time-to-kill flat and stopped a
+ * geared hero ever OVERKILLING — which starved the menace/evolution ratchet,
+ * the endgame's real challenge. Lag-following a fifth lets a strong build pull
+ * ahead of the base hp and start rampaging; the ratchet, not an hp match, then
+ * answers the runaway. GEAR level still tracks fully.
  */
 export function heroPowerLevel(state: GameState): number {
-  return Math.max(
-    state.player.level,
-    heroGearLevel(state),
-    heroDamageLevel(state),
-  );
+  const char = state.player.level;
+  const track = MENACE.damageLevelTracking * BALANCE.mobDamageTracking;
+  const dampedDamage =
+    char + Math.max(0, heroDamageLevel(state) - char) * track;
+  return Math.max(char, heroGearLevel(state), dampedDamage);
 }
 
 /**

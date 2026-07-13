@@ -916,6 +916,20 @@ export const MENACE = {
    * the damage instead of letting a lopsided drop melt the campaign.
    */
   damageLevelKillSec: 1.5,
+  /**
+   * How much of the hero's DAMAGE level (`heroDamageLevel`) the horde tracks —
+   * the fraction of its EXCESS over the character level that toughens mobs
+   * (`heroPowerLevel`). At 1.0 the horde matched the hero's weapon output 1:1,
+   * which pinned time-to-kill flat and left a geared hero unable to ever
+   * OVERKILL — starving the menace/evolution ratchet (the endgame's real
+   * challenge). At 0.2 mobs only lag-follow a fifth of that excess, so a strong
+   * build pulls ahead of the base hp and starts overkilling — and the menace
+   * ratchet (not a 1:1 hp match) is what answers the runaway build. GEAR level
+   * still tracks fully; this dampens only the dps-derived term. Tunable at
+   * runtime via the DEVELOPER → BALANCE `mobDamageTracking` knob (multiplier
+   * over this shipped 0.2).
+   */
+  damageLevelTracking: 0.2,
 } as const;
 
 /**
