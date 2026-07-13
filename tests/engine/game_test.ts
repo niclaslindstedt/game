@@ -513,17 +513,26 @@ describe("weapon reach, cadence, and AoE", () => {
   });
 
   it("INTELLIGENCE's wider AoE cone cleaves a foe off the flank", () => {
-    // A larger area catches more enemies: a foe at 90° off the aim sits
-    // outside the wrench's base 120° cone but inside an INT-widened one.
+    // A larger area catches more enemies: a foe 70° off the aim sits outside
+    // the wrench's base 120° cone (60° half-angle) but inside an INT-widened
+    // one. INT widens the cone GENTLY now, saturating at a half circle (90°
+    // half-angle), so it takes a heavy INT investment to reach out this far.
     const flankStruck = (intelligence: number) => {
       const state = startGame();
       equipWrench(state); // 120° cone (60° half-angle), reach 42
       state.player.stats.intelligence = intelligence;
       stopWaves(state);
       const { x, y } = state.player.pos;
-      // The nearer foe dead ahead fixes the aim along +x; the flank foe is a
-      // quarter-turn off it, well within reach.
-      const flank = makeEnemy({ pos: { x, y: y + 30 }, hp: 500, maxHp: 500 });
+      // The nearer foe dead ahead fixes the aim along +x; the flank foe is 70°
+      // off it (just past the base half-angle), well within reach.
+      const flank = makeEnemy({
+        pos: {
+          x: x + 30 * Math.cos((70 * Math.PI) / 180),
+          y: y + 30 * Math.sin((70 * Math.PI) / 180),
+        },
+        hp: 500,
+        maxHp: 500,
+      });
       state.enemies = [
         makeEnemy({ pos: { x: x + 20, y }, hp: 500, maxHp: 500 }),
         flank,
@@ -532,7 +541,7 @@ describe("weapon reach, cadence, and AoE", () => {
       return flank.hp < flank.maxHp;
     };
     expect(flankStruck(0)).toBe(false); // the base cone misses the flank
-    expect(flankStruck(20)).toBe(true); // the widened cone cleaves it
+    expect(flankStruck(60)).toBe(true); // a big INT cone cleaves it
   });
 });
 

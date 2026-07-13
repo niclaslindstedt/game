@@ -1300,47 +1300,55 @@ export function drawEffects(
     }
 
     if (effect.kind === "swing") {
-      // Draw the EXACT region the swing strikes: a filled sector centred on the
-      // player, out to the weapon's reach, spanning the weapon's full cone (see
-      // `meleeSweep`/`weaponSweepHalfAngle` — the engine ships `radius` = the
-      // true reach and `arc` = the full cone here, so the visual and the hit
-      // test share one geometry). A bright edge sweeps across that footprint so
-      // it still reads as a slash: a wide cone is a blade's arc, a narrow one a
-      // spear's thrust straight down the line.
-      const duration = effect.durationMs ?? 200;
-      const t = 1 - (effect.untilMs - timeMs) / duration; // 0 → 1
+      // The EXACT region the swing strikes — a sector centred on the player, out
+      // to the weapon's reach, spanning the weapon's full cone (`radius` = true
+      // reach, `arc` = the full cone; the visual and the hit test share one
+      // geometry) — but drawn as the blade CARVES it: the cone tracks the held
+      // weapon's swing on the shared timeline (`MELEE_SWING_MS`,
+      // SWING_WINDUP_END/STRIKE_END). It stays dark through the windup, then the
+      // bright edge wipes from one rim to the other across the STRIKE window,
+      // filling the arc behind it as the blade passes, and clears over the
+      // recover. Companion swings (no held-weapon sprite) read the same — an
+      // anticipated slash that sweeps and lands.
+      const duration = effect.durationMs ?? MELEE_SWING_MS;
+      const t = 1 - (effect.untilMs - timeMs) / duration; // 0 → 1 over the swing
       if (t < 0 || t > 1) continue;
+      // Strike progress (0→1) across the same window the blade whips through,
+      // eased to match `weaponPose`; nothing shows until the strike begins.
+      const p = clamp01(
+        (t - SWING_WINDUP_END) / (SWING_STRIKE_END - SWING_WINDUP_END),
+      );
+      if (p <= 0) continue;
+      const swept = 1 - (1 - p) * (1 - p); // ease-out, in step with the blade
+      // Presence fades the whole slash out over the recover so it clears as the
+      // blade folds home.
+      const presence =
+        1 - clamp01((t - SWING_STRIKE_END) / (1 - SWING_STRIKE_END));
       const aim = effect.angle ?? 0;
       const reach = Math.max(6, effect.radius ?? 40);
       // The true half-cone — no minimum, so a thrust draws exactly the thin
       // wedge it hits and a saturated (π) cone fills the whole disc.
       const half = Math.min(Math.PI, (effect.arc ?? 1.9) / 2);
       const start = aim - half;
-      const end = aim + half;
+      const lead = start + 2 * half * swept; // the blade's current edge
       ctx.save();
       ctx.translate(x, groundY);
-      // The footprint: the filled pie-slice the blow actually covers, faded so
-      // it flashes and clears as the swing lands.
-      ctx.globalAlpha = Math.max(0, 0.26 * (1 - t));
+      // Just a FAINT AoE footprint now — the ground the swing covers, so the hit
+      // area still reads. The bright slash itself is drawn ON the blade in
+      // drawPlayer (`drawBladeSlash`), riding the weapon rather than fanning out
+      // of the hero's feet; this is only the quiet floor tint behind it.
+      // Companion swings (no held-weapon sprite) still read off this footprint.
+      ctx.globalAlpha = Math.max(0, 0.13 * presence);
       ctx.fillStyle = "#9fc4ff";
       ctx.beginPath();
       ctx.moveTo(0, 0);
-      ctx.arc(0, 0, reach, start, end);
+      ctx.arc(0, 0, reach, start, lead);
       ctx.closePath();
       ctx.fill();
-      // A thin outline traces the wedge's radial edges and rim so its shape
-      // stays legible even at a glance.
-      ctx.globalAlpha = Math.max(0, 0.5 * (1 - t));
+      // A thin rim edge along the swept front so the footprint's shape reads.
+      ctx.globalAlpha = Math.max(0, 0.28 * presence);
       ctx.strokeStyle = "#c7ddff";
       ctx.lineWidth = 1;
-      ctx.stroke();
-      // Bright leading edge racing across the cone — the "slash" landing.
-      const lead = start + 2 * half * Math.min(1, t * 1.3);
-      ctx.globalAlpha = Math.max(0, 0.9 * (1 - t));
-      ctx.strokeStyle = "#f2f7ff";
-      ctx.lineWidth = 3;
-      ctx.beginPath();
-      ctx.arc(0, 0, reach, Math.max(start, lead - 0.4), lead);
       ctx.stroke();
       ctx.restore();
       ctx.globalAlpha = 1;
@@ -1550,6 +1558,11 @@ export type PlayerAction = {
   weaponClass: WeaponClass;
   startMs: number;
   durationMs: number;
+  /** Melee only: the weapon's full slash cone in radians (the swing event's
+   * `arc`). The blade's sweep scales to it, so a broad slasher whips through a
+   * wide arc and a narrow thrust barely rotates — the motion reads as THIS
+   * weapon. Undefined falls back to a wide slash. */
+  arc?: number;
 };
 
 /** A held-weapon animation pose: a rotation about the shoulder (WEAPON_SHOULDER)
@@ -1561,6 +1574,125 @@ export type PlayerAction = {
 type WeaponPose = { rot: number; offX: number; offY: number };
 
 const REST_POSE: WeaponPose = { rot: 0, offX: 0, offY: 0 };
+
+const clamp01 = (v: number) => Math.max(0, Math.min(1, v));
+
+// The melee swing timeline, in fractions of the swing, SHARED by the blade
+// sprite (`weaponPose`) and its slash cone (`drawEffects`) so the two are one
+// motion: the blade cocks back through the windup, whips through the arc across
+// the STRIKE window, then folds home over the recover. The cone stays dark
+// until the strike, then wipes across in lockstep with the blade and clears as
+// it recovers — the slash lands exactly as the blade passes through it.
+const SWING_WINDUP_END = 0.18; // blade fully cocked back; strike begins
+const SWING_STRIKE_END = 0.5; // blade through the arc; cone fully swept
+/** How long a melee swing's blade + cone animation runs (ms). GameScreen times
+ * the swing `PlayerAction` and its slash-cone effect to this one value so their
+ * `t` stays locked. */
+export const MELEE_SWING_MS = 220;
+
+// The cone the blade sweeps through when a swing carries no explicit `arc`
+// (full cone in rad) — a broad slash. Half of it is one edge to the aim.
+const DEFAULT_SWING_ARC = (100 * Math.PI) / 180;
+// The blade's rest ORIENTATION about the shoulder pivot (rad, screen y-down):
+// the held icon points up-and-forward, so its shaft sits at this angle when
+// idle. The swing rotates the blade so its shaft rides the cone's leading edge,
+// which is measured FROM this rest angle — calibrated on the CALIBRATION PROBE
+// (the debug weapon whose red tip/base markers show exactly where the blade
+// lies; see website/scripts/weapon-swing.mjs). Tune it there, eyes on the strip.
+const BLADE_REST_ANGLE = -(50 * Math.PI) / 180;
+// The half circle the cone (and so the blade sweep) saturates at — mirrors the
+// engine's `STATS.aoeMaxHalfAngle`, so a max-INT slash swings a full 180° arc.
+const MAX_SWING_HALF = Math.PI / 2;
+
+// The blade's tip and inner (near-hand) points in DOLL coords — the two ends of
+// the streak the slash ribbon fills as the blade sweeps. They ride the weapon's
+// own pivot (WEAPON_SHOULDER), so the slash is drawn IN the weapon's space and
+// lands exactly on the blade, not fanning out of the hero's centre. Measured on
+// the CALIBRATION PROBE (its red tip/base markers show precisely where the blade
+// lies); tune there with the weapon-swing preview.
+// The outer point flares a little PAST the blade tip along the blade's line so
+// the slash reads as a streak thrown off the edge, not just the sprite; the
+// inner point sits at the hand. Both still ride the weapon's pivot.
+const SLASH_REST_TIP = { x: 20, y: -1 };
+const SLASH_REST_BASE = { x: 11, y: 10.5 };
+
+/**
+ * The blade's swept streak for the active melee swing: the rotation range (about
+ * WEAPON_SHOULDER) from the strike's start to `nowMs`, plus a fade. Shares the
+ * swing timeline + cone with `weaponPose`, so the streak hugs the blade the
+ * whole way. Null outside a live melee strike.
+ */
+function meleeSlashArc(
+  action: PlayerAction | undefined,
+  nowMs: number,
+): { rotFrom: number; rotTo: number; alpha: number } | null {
+  if (!action || action.weaponClass !== "melee") return null;
+  const t = (nowMs - action.startMs) / action.durationMs;
+  if (t < SWING_WINDUP_END || t > 1) return null; // dark until the strike
+  const half = Math.min(MAX_SWING_HALF, (action.arc ?? DEFAULT_SWING_ARC) / 2);
+  const p = clamp01(
+    (t - SWING_WINDUP_END) / (SWING_STRIKE_END - SWING_WINDUP_END),
+  );
+  const swept = 1 - (1 - p) * (1 - p); // ease-out, in step with weaponPose
+  const rotFor = (a: number) => a - BLADE_REST_ANGLE;
+  const presence = 1 - clamp01((t - SWING_STRIKE_END) / (1 - SWING_STRIKE_END));
+  return {
+    rotFrom: rotFor(-half),
+    rotTo: rotFor(-half + 2 * half * swept),
+    alpha: presence,
+  };
+}
+
+/**
+ * Fill the streak the blade has carved this swing — the ribbon between the tip's
+ * arc (outer) and the near-hand point's arc (inner), both swept about
+ * WEAPON_SHOULDER from `rotFrom` to `rotTo`. Drawn in doll-local coords inside
+ * drawPlayer's facing transform, so it mirrors with the hero and sits ON the
+ * held blade. A hot leading edge marks where the blade is right now.
+ */
+function drawBladeSlash(
+  ctx: CanvasRenderingContext2D,
+  arc: { rotFrom: number; rotTo: number; alpha: number },
+): void {
+  const piv = WEAPON_SHOULDER;
+  const rotPt = (pt: { x: number; y: number }, rot: number) => {
+    const dx = pt.x - piv.x;
+    const dy = pt.y - piv.y;
+    const c = Math.cos(rot);
+    const s = Math.sin(rot);
+    return { x: piv.x + dx * c - dy * s, y: piv.y + dx * s + dy * c };
+  };
+  const N = 12;
+  const rotAt = (i: number) =>
+    arc.rotFrom + (arc.rotTo - arc.rotFrom) * (i / N);
+  ctx.save();
+  ctx.beginPath();
+  for (let i = 0; i <= N; i++) {
+    const q = rotPt(SLASH_REST_TIP, rotAt(i));
+    if (i === 0) ctx.moveTo(q.x, q.y);
+    else ctx.lineTo(q.x, q.y);
+  }
+  for (let i = N; i >= 0; i--) {
+    const q = rotPt(SLASH_REST_BASE, rotAt(i));
+    ctx.lineTo(q.x, q.y);
+  }
+  ctx.closePath();
+  ctx.globalAlpha = 0.8 * arc.alpha;
+  ctx.fillStyle = "#e6f1ff";
+  ctx.fill();
+  // The hot leading edge: the blade's current line, tip to hand.
+  const tipNow = rotPt(SLASH_REST_TIP, arc.rotTo);
+  const baseNow = rotPt(SLASH_REST_BASE, arc.rotTo);
+  ctx.globalAlpha = Math.min(1, arc.alpha + 0.05);
+  ctx.strokeStyle = "#ffffff";
+  ctx.lineWidth = 1.5;
+  ctx.beginPath();
+  ctx.moveTo(baseNow.x, baseNow.y);
+  ctx.lineTo(tipNow.x, tipNow.y);
+  ctx.stroke();
+  ctx.restore();
+  ctx.globalAlpha = 1;
+}
 
 /**
  * The held weapon's pose for the active attack at `nowMs`. Each weapon class
@@ -1577,19 +1709,31 @@ function weaponPose(
   const t = (nowMs - action.startMs) / action.durationMs;
   if (t < 0 || t > 1) return REST_POSE;
   if (action.weaponClass === "melee") {
-    // windup (cock back) → strike (whip forward, ease-out) → recover
-    // (smoothstep back to rest). Big sweep so the slash reads at a glance.
-    const WINDUP = 0.55; // rad the blade cocks back
-    const STRIKE = 1.35; // rad it whips forward through the slash
+    // The blade RIDES ITS CONE. The cone spans [aim − half, aim + half]; the
+    // blade cocks to the start (up) edge through the windup, then sweeps to the
+    // end (down) edge across the strike, then folds home — all measured from the
+    // blade's rest orientation, with the SAME edges and ease the drawn cone uses
+    // (drawEffects). So the blade's tip starts and ends exactly where the cone
+    // does, and a wider cone — a narrow thrust up to a max-INT half circle —
+    // swings the blade through a correspondingly wider arc. `action.arc` is the
+    // weapon's INT-widened cone; the shape reads as THIS weapon and THIS build.
+    const half = Math.min(
+      MAX_SWING_HALF,
+      (action.arc ?? DEFAULT_SWING_ARC) / 2,
+    );
+    // Blade shaft angle (aim-local) → rotation about the shoulder pivot.
+    const rotFor = (angle: number) => angle - BLADE_REST_ANGLE;
+    const rotStart = rotFor(-half); // cocked to the cone's start edge
     let rot: number;
-    if (t < 0.18) {
-      rot = -WINDUP * (t / 0.18);
-    } else if (t < 0.5) {
-      const p = (t - 0.18) / 0.32;
-      rot = -WINDUP + (STRIKE + WINDUP) * (1 - (1 - p) * (1 - p));
+    if (t < SWING_WINDUP_END) {
+      rot = rotStart * (t / SWING_WINDUP_END); // cock back to the start edge
+    } else if (t < SWING_STRIKE_END) {
+      const p = (t - SWING_WINDUP_END) / (SWING_STRIKE_END - SWING_WINDUP_END);
+      const swept = 1 - (1 - p) * (1 - p); // ease-out, in step with the cone
+      rot = rotFor(-half + 2 * half * swept); // ride the leading edge across
     } else {
-      const p = (t - 0.5) / 0.5;
-      rot = STRIKE * (1 - p * p * (3 - 2 * p));
+      const p = (t - SWING_STRIKE_END) / (1 - SWING_STRIKE_END);
+      rot = rotFor(half) * (1 - p * p * (3 - 2 * p)); // fold home from the end
     }
     return { rot, offX: 0, offY: 0 };
   }
@@ -1701,6 +1845,12 @@ function drawPlayer(
       ctx.drawImage(image, layer.dx, layer.dy);
     }
     if (swung) ctx.restore();
+  }
+  // The slash streak rides the blade — drawn last so it sits ON the weapon, in
+  // the same doll-local/facing space, hugging the arc the blade just carved.
+  if (getSettings().weaponSwing === "on") {
+    const slash = meleeSlashArc(action, state.stats.timeMs);
+    if (slash) drawBladeSlash(ctx, slash);
   }
   ctx.restore();
 }

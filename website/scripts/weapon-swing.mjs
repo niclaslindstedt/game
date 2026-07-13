@@ -62,6 +62,10 @@ const slow = Math.max(0.01, Number(flag("slow", "0.12")));
 const scale = Math.max(1, Number(flag("scale", "2")));
 const seed = flag("seed", "7");
 const outDir = flag("out", path.join(here, "../assets-preview/swing"));
+// Override the melee cone (poses mode): a total sweep in degrees. Demonstrates
+// how the blade widens to accompany an INT-boosted cone — pass 180 to see the
+// half-circle cap. Unset uses the weapon's own base cone.
+const arcDeg = flag("arc", null);
 
 // Which weapons to shoot: an explicit id list, every weapon of one --class, or
 // (default) one representative per class.
@@ -177,7 +181,12 @@ for (const id of weaponIds) {
 
   if (mode === "poses") {
     // Clean POSE arc: hero armed but holstered (no live swing to clutter the
-    // frame), empty frozen field. `__swing` pins each sampled fraction.
+    // frame), empty frozen field. `__swing` pins each sampled fraction. For a
+    // melee weapon, hand its cone + reach in so the slash AoE draws pinned at
+    // the same fraction — blade and cone as one motion.
+    const coneDeg = arcDeg != null ? Number(arcDeg) : (def.sweepDeg ?? 110);
+    const arc = cls === "melee" ? coneDeg * (Math.PI / 180) : null;
+    const range = def.range ?? 40;
     await page.evaluate((weapon) => {
       window.__scenario({
         weapon,
@@ -192,8 +201,14 @@ for (const id of weaponIds) {
     for (let i = 0; i < frames; i++) {
       const t = i / (frames - 1);
       await page.evaluate(
-        ({ kind, weaponClass, t }) => window.__swing({ kind, weaponClass, t }),
-        { kind, weaponClass: cls, t },
+        ({ kind, weaponClass, t, arc, range }) =>
+          window.__swing({
+            kind,
+            weaponClass,
+            t,
+            ...(arc != null ? { arc, range } : {}),
+          }),
+        { kind, weaponClass: cls, t, arc, range },
       );
       await page.waitForTimeout(70);
       shots.push({
@@ -230,6 +245,12 @@ for (const id of weaponIds) {
     await page.waitForTimeout(150);
     const shots = [];
     for (let i = 0; i < frames; i++) {
+      // Clear the post-hit blink each frame: the level's opening strike leaves
+      // the hero flashing, and at slow-mo that brief blink stretches over the
+      // whole capture, dropping him out of frames. Purely a preview concern.
+      await page.evaluate(() => {
+        window.__game.player.hurtFlashMs = 0;
+      });
       await page.waitForTimeout(80);
       shots.push({
         buf: await page.screenshot({ clip: CROP }),

@@ -178,6 +178,7 @@ import {
   computeCamera,
   drawEffects,
   drawFrame,
+  MELEE_SWING_MS,
   VIEW_SCALE,
   viewScaleFor,
   uiScaleFor,
@@ -1308,14 +1309,19 @@ export function GameScreen({
     // Weapon-swing tuning hook (?debug): `window.__swing({kind, weaponClass,
     // t})` PINS the held weapon to a fixed fraction `t` (0..1) of its swing arc
     // so a screenshot can sample the animation frame by frame; `null` clears it
-    // and hands the weapon back to the live attack. Paired with the
-    // `weapon-swing` dev script (website/scripts/weapon-swing.mjs), it is how
-    // the held-weapon pose is tuned when designing weapon art. See the
+    // and hands the weapon back to the live attack. For a melee swing, passing
+    // `arc` (the weapon's cone, rad) and `range` (its reach, world px) shapes
+    // the blade's sweep AND draws the matching slash cone pinned at the same
+    // fraction, so the strip shows the blade and its AoE as one motion. Paired
+    // with the `weapon-swing` dev script (website/scripts/weapon-swing.mjs), it
+    // is how the held-weapon pose is tuned when designing weapon art. See the
     // `weapon-system` skill and docs/configuration.md.
     let debugPose: {
       kind: PlayerAction["kind"];
       weaponClass: PlayerAction["weaponClass"];
       t: number;
+      arc?: number;
+      range?: number;
     } | null = null;
     if (params.has("debug")) {
       (
@@ -1668,18 +1674,22 @@ export function GameScreen({
               angle: Math.atan2(event.dir.y, event.dir.x),
               radius: event.range,
               arc: event.arc,
-              untilMs: state.stats.timeMs + 200,
-              durationMs: 200,
+              // The cone runs on the SAME clock as the held-weapon swing
+              // (MELEE_SWING_MS), so the slash tracks the blade frame for frame.
+              untilMs: state.stats.timeMs + MELEE_SWING_MS,
+              durationMs: MELEE_SWING_MS,
             });
             // Swing the hero's own blade to match — companions swing from
             // their own spots, so only a blow thrown from the hero's position
-            // arms the animation.
+            // arms the animation. Hand the weapon's cone (`event.arc`) to the
+            // pose so the blade's sweep matches this weapon's reach and arc.
             if (isHeroAttack(event.pos, state.player.pos)) {
               heroAction = {
                 kind: "swing",
                 weaponClass: "melee",
                 startMs: state.stats.timeMs,
-                durationMs: 220,
+                durationMs: MELEE_SWING_MS,
+                arc: event.arc,
               };
             }
           }
@@ -2171,10 +2181,30 @@ export function GameScreen({
               weaponClass: debugPose.weaponClass,
               startMs: state.stats.timeMs - debugPose.t * DEBUG_POSE_MS,
               durationMs: DEBUG_POSE_MS,
+              arc: debugPose.arc,
             }
           : heroAction;
         drawFrame(ctx, state, assets, camera, timeMs, action);
-        drawEffects(ctx, effects, camera, state.stats.timeMs, assets);
+        // A pinned melee swing (with `arc`/`range`) also draws its slash cone
+        // frozen at the SAME fraction, so the preview strip shows the blade and
+        // its AoE moving together. The untilMs is set so drawEffects resolves
+        // the cone's own `t` back to `debugPose.t`.
+        let debugEffects = effects;
+        if (debugPose && debugPose.kind === "swing" && debugPose.arc != null) {
+          debugEffects = [
+            ...effects,
+            {
+              kind: "swing",
+              pos: { x: state.player.pos.x, y: state.player.pos.y },
+              angle: state.player.faceLeft ? Math.PI : 0,
+              radius: debugPose.range ?? 40,
+              arc: debugPose.arc,
+              untilMs: state.stats.timeMs + (1 - debugPose.t) * MELEE_SWING_MS,
+              durationMs: MELEE_SWING_MS,
+            },
+          ];
+        }
+        drawEffects(ctx, debugEffects, camera, state.stats.timeMs, assets);
 
         // The FPS readout: smooth the frame delta (EMA) and write the number
         // straight to the DOM every quarter second — no React re-render, so

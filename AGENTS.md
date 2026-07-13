@@ -208,20 +208,30 @@ load); a developer turns them on from the DEVELOPER menu:
   keeps the armor) when off. The HUD avatar and inventory portrait always pass
   the weapon on, so only the field character changes.
 - **WEAPON SWING** (`weaponSwing: "on" | "off"`) is experimental: it animates
-  the field hero's held weapon on each attack — a blade winds back and whips
-  through its slash arc, a gun recoils with the muzzle rising, a wand thrusts
-  up on the cast — pivoting the weapon layer about the **shoulder**
-  (`paper-doll.ts` `WEAPON_SHOULDER`, not the grip) in step with the
-  swing/muzzle effect, so the whole implied arm sweeps and the weapon rides the
-  end of a stretched-out arm rather than twisting at the wrist. Like CHARACTER
-  WEAPON it is a pure render concern: GameScreen captures the hero's own
-  `swing`/`shot` events into a `PlayerAction` (matched to his position so a
-  companion's blow is ignored), `render.ts` `drawPlayer` reads the flag and
-  poses the weapon layer via `weaponPose`. It only bites when CHARACTER WEAPON
-  is on too — there is no held weapon to swing otherwise. Tune it with the
-  `weapon-swing` preview script (`website/scripts/weapon-swing.mjs`), which
-  screenshots the animation frame by frame via the `?debug` `window.__swing`
-  (pin the pose) and `window.__timeScale` (slow the run) hooks.
+  the field hero's held weapon on each attack — a blade whips through its slash
+  arc, a gun recoils with the muzzle rising, a wand thrusts up on the cast —
+  pivoting the weapon layer about the **shoulder** (`paper-doll.ts`
+  `WEAPON_SHOULDER`, not the grip) so the whole implied arm sweeps. For a melee
+  swing the blade sweeps through its **cone**: it cocks to the cone's start
+  edge, whips through the full cone to the end edge, and folds home
+  (`weaponPose`), and its **slash is drawn ON the blade** — `drawBladeSlash`
+  fills the exact arc the blade carves, anchored to the same `WEAPON_SHOULDER`
+  pivot in the doll's own space (via the blade's tip/base points
+  `SLASH_REST_TIP`/`SLASH_REST_BASE`), so the effect rides the weapon instead of
+  fanning out of the hero's centre. The generic ground `swing` cone
+  (`drawEffects`) drops to a faint AoE footprint behind it (still the read for
+  companion swings). The cone widens with INTELLIGENCE (`weaponSweepHalfAngle`,
+  capped at a half circle — `STATS.aoeMaxHalfAngle`), so a max-INT slash swings
+  a full 180° arc; the swing is handed the weapon's cone via `PlayerAction.arc`.
+  Like CHARACTER WEAPON it is a pure render concern: GameScreen captures the
+  hero's own `swing`/`shot` events into a `PlayerAction` (matched to his
+  position so a companion's blow is ignored), `render.ts` `drawPlayer` reads the
+  flag and poses the weapon layer via `weaponPose`. It only bites when CHARACTER
+  WEAPON is on too — there is no held weapon to swing otherwise. Tune it with the
+  `weapon-swing` preview script (`website/scripts/weapon-swing.mjs`) and the
+  debug `calibration_probe` weapon (red tip/base markers): it screenshots the
+  animation frame by frame via the `?debug` `window.__swing` (pin the pose,
+  optionally with a cone) and `window.__timeScale` (slow the run) hooks.
 
 ## Reuse through oss-framework
 

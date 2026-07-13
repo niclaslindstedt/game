@@ -227,18 +227,30 @@ screenshots a numbered strip of the animation, frame by frame:
 
 ```sh
 npm run assets && npx vite --port 5199 &        # from website/
-node scripts/weapon-swing.mjs poses medieval_sword   # POSE arc, pinned frame by frame (art)
-node scripts/weapon-swing.mjs poses --class magic    # every magic weapon
-node scripts/weapon-swing.mjs live medieval_sword    # slowed real attack — pose + slash/muzzle effect
+node scripts/weapon-swing.mjs poses medieval_sword       # POSE + cone, pinned frame by frame (art)
+node scripts/weapon-swing.mjs poses --class magic        # every magic weapon
+node scripts/weapon-swing.mjs poses calibration_probe    # the debug weapon: red tip/base markers
+node scripts/weapon-swing.mjs poses calibration_probe --arc 180  # the half-circle (max-INT) swing
+node scripts/weapon-swing.mjs live medieval_sword        # slowed real attack — pose + slash/muzzle effect
 ```
 
 `poses` pins the held-weapon pose at sampled fractions of the swing (via the
 `?debug` `window.__swing` hook) for a clean read of the sprite through its arc;
-`live` runs a real attack against a dummy with the whole run slowed (via
-`window.__timeScale`) so the pose and its effect are judged together. Strips
-land in `website/assets-preview/swing/` (gitignored). Tune `WEAPON_SHOULDER`
-(pivot, `paper-doll.ts`) and the per-class magnitudes in `weaponPose`, then
-re-shoot until the arc reads.
+for a melee weapon it also draws the **slash cone** pinned at the same fraction,
+so blade and AoE are seen as one motion. `live` runs a real attack against a
+dummy with the whole run slowed (via `window.__timeScale`) so the pose and its
+effect are judged together. Strips land in `website/assets-preview/swing/`
+(gitignored).
+
+The melee blade **rides its cone**: it sweeps from the cone's start edge to its
+end edge, so a wider cone swings the blade wider. The cone is INT-widened
+(`weaponSweepHalfAngle`, capped at a half circle — `STATS.aoeMaxHalfAngle`);
+`--arc <deg>` overrides the cone so you can see the swing at any width up to the
+`180` cap without a stat build. The `calibration_probe` weapon (a debug weapon
+that never drops — `equipment.ts` / `icons.mjs`) marks the blade TIP and BASE in
+hot red so you can read exactly where the blade lies and line the cone up to it.
+Tune `WEAPON_SHOULDER` (pivot, `paper-doll.ts`) and `BLADE_REST_ANGLE` /
+`weaponPose` (`render.ts`), then re-shoot until the blade tracks the cone.
 
 ## Unique items (named drops)
 
