@@ -212,18 +212,22 @@ describe("boss unique drop tables", () => {
     }
   });
 
-  it("bottom lanes share one merged pool; each gated rung keeps a full 7-piece set", () => {
+  it("bottom lanes share one merged pool; gated rungs keep their sets", () => {
     const perRung: Record<string, string[]> = {};
     for (const { diff, id } of wiring) (perRung[diff] ??= []).push(id);
     // The three parallel starting lanes list the SAME merged bottom-tier pool.
     const easy = [...(perRung.easy ?? [])].sort();
     expect([...(perRung.medium ?? [])].sort()).toEqual(easy);
     expect([...(perRung.hard ?? [])].sort()).toEqual(easy);
-    // The merged pool is the three former rungs' boss sets combined: 3 × 7 = 21.
-    expect(easy.length).toBe(21);
-    // Each gated rung keeps a full boss set: 5 pieces + MUSKRAT bag + GROK
-    // charm = 7.
-    expect((perRung.nightmare ?? []).length).toBe(7);
+    // The merged pool is the three former rungs' boss sets combined (3 × 7 = 21),
+    // less SENTINEL'S GREAVES, promoted to nightmare (its ilvl outgrew the
+    // bottom tier) → 20.
+    expect(easy.length).toBe(20);
+    // Every bottom-tier gear/weapon is pitched ~10 ilvl over where its boss now
+    // drops (the D2 unique margin), so it lands as a level-appropriate upgrade.
+    // ARMSTRONG's nightmare rung gains the promoted greaves (2); the rest keep 1
+    // boss piece (MUSKRAT/GROK also pay a bag/charm) — 8 nightmare, 7 jesus.
+    expect((perRung.nightmare ?? []).length).toBe(8);
     expect((perRung.jesus ?? []).length).toBe(7);
   });
 });

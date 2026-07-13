@@ -173,8 +173,8 @@ describe("item level", () => {
     const lootLevel = 22;
     const counts = new Map<number, number>();
     for (let i = 0; i < 400; i++) {
-      // Force regular so the sample measures the ilvl DEFICIT band, not a
-      // folded unique's static ilvl (rare+ also uses the tighter band).
+      // Force regular so the sample measures the ilvl DEFICIT band — magic/rare
+      // roll a margin ABOVE loot, and a folded named item has a static ilvl.
       const ilvl = rollEquipment(state, {
         mlvl: mobForLoot(state, lootLevel),
         tier: "regular",
@@ -201,16 +201,41 @@ describe("item level", () => {
     }
   });
 
-  it("keeps rare finds within a level of the loot level", () => {
+  it("rolls MAGIC finds a hair above the loot level (the D2 rarity margin)", () => {
     const state = startGame();
     const lootLevel = 22;
+    const bonus = difficultyDef(state.difficulty).lootIlvlBonus;
+    const { base, weights } = LOOT.ilvlMarginMagic;
+    const lo = lootLevel + bonus + base;
+    const hi = lootLevel + bonus + base + weights.length - 1;
+    for (let i = 0; i < 100; i++) {
+      const ilvl = rollEquipment(state, {
+        mlvl: mobForLoot(state, lootLevel),
+        tier: "magic",
+      }).ilvl;
+      expect(ilvl).toBeGreaterThanOrEqual(lo);
+      expect(ilvl).toBeLessThanOrEqual(hi);
+    }
+  });
+
+  it("rolls RARE finds a clear step above the loot level (above magic)", () => {
+    const state = startGame();
+    const lootLevel = 22;
+    const bonus = difficultyDef(state.difficulty).lootIlvlBonus;
+    const { base, weights } = LOOT.ilvlMarginRare;
+    const lo = lootLevel + bonus + base;
+    const hi = lootLevel + bonus + base + weights.length - 1;
+    // The rare floor sits above the magic ceiling — the ladder never crosses.
+    expect(base).toBeGreaterThan(
+      LOOT.ilvlMarginMagic.base + LOOT.ilvlMarginMagic.weights.length - 1,
+    );
     for (let i = 0; i < 100; i++) {
       const ilvl = rollEquipment(state, {
         mlvl: mobForLoot(state, lootLevel),
         tier: "rare",
       }).ilvl;
-      expect(ilvl).toBeGreaterThanOrEqual(lootLevel - 1);
-      expect(ilvl).toBeLessThanOrEqual(lootLevel);
+      expect(ilvl).toBeGreaterThanOrEqual(lo);
+      expect(ilvl).toBeLessThanOrEqual(hi);
     }
   });
 });
