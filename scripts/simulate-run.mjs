@@ -60,11 +60,12 @@ if (flag("help")) {
   console.log(
     "usage: node scripts/simulate-run.mjs [--difficulty all|easy[,medium,…]] " +
       "[--level all|spacez_hq[,…]] [--rerun N] [--seed N] [--strategy survivor|rush|kite|boss] " +
-      "[--max-minutes N] [--fresh] [--full] [--verdict] [--farm] [--auto-shop] " +
+      "[--max-minutes N] [--fresh] [--full] [--verdict] [--farm] [--no-shop] " +
       "[--balance xpGain=0.8,mobHp=1.5] [--compare baseline.json] [--json out.json]\n\n" +
-      "--auto-shop      let the hero use the merchant (sell → repair → buy → equip) when\n" +
-      "                 weapon-starved — A/B it to tell a real high-difficulty stall from\n" +
-      "                 the bot simply never shopping\n\n" +
+      "shopping (DEFAULT on): a weapon-starved hero is walked to the merchant to sell →\n" +
+      "                 repair → buy → equip, the way a real player recovers a broken weapon.\n" +
+      "                 --no-shop turns it off (the bot-never-shops read) to A/B how much a\n" +
+      "                 high-difficulty stall is the bot vs real balance.\n\n" +
       "pacing (DEFAULT realistic): each run ends when the hero reaches the map's intended\n" +
       "                 exit level (arrowCapByDifficulty), so he carries a real-player level\n" +
       "                 forward. --farm turns that off and farms to the cap (the endgame /\n" +
@@ -129,10 +130,13 @@ const jsonPath = opt("json");
 // toward L99 / full artifact gear); pair it with a big `--max-minutes`/`--rerun`
 // to farm deeper.
 const realisticPacing = !flag("farm");
-// --auto-shop: let the sim use the merchant (sell → repair → buy → equip) when
-// the hero is weapon-starved, so a high-difficulty stall reads as balance
-// rather than the bot never shopping. Off by default (A/B the death spiral).
-const autoShop = flag("auto-shop");
+// SHOPPING is ON by default, because a real player shops: when the hero is
+// weapon-starved (a broken weapon, empty bag → the sidearm), the sim runs him
+// to the merchant to sell → repair → buy → equip. Without it a stranded hero
+// death-spirals on the sidearm, overstating high-difficulty pressure. `--no-shop`
+// turns it off — the bot-never-shops read, to A/B how much a stall is the bot
+// vs real balance.
+const autoShop = !flag("no-shop");
 
 // ---- Run ------------------------------------------------------------------------
 
@@ -149,7 +153,9 @@ console.log(
     (realisticPacing
       ? " · pacing: clear to the map's level & move on (realistic)"
       : " · pacing: FARM to the cap (endgame / L99 chase — over-levels on purpose)") +
-    (autoShop ? " · auto-shop: ON (merchant recovery)" : ""),
+    (autoShop
+      ? " · shopping: ON (merchant recovery)"
+      : " · shopping: OFF (--no-shop, bot never shops)"),
 );
 
 const report = simulateCampaign({
