@@ -485,20 +485,29 @@ export const XP_CAP = {
     jesus: { first: 52, last: 99 },
   } as Record<Difficulty, { first: number; last: number }>,
   /**
-   * XP starts diminishing this many levels UNDER the cap: the grant is halved
-   * for each level past `cap − fadeLevels`, tapering into the wall — not a
-   * cliff. At the cap the halving has reached `0.5^fadeLevels` and from there
-   * the `floor` takes over.
+   * XP starts diminishing this many levels UNDER the (soft) cap: the grant is
+   * multiplied by `softCapDecay` for each level past `cap − fadeLevels`,
+   * tapering into the wall — not a cliff.
    */
   fadeLevels: 3,
   /**
-   * The never-zero TRICKLE: once the halving taper would sink below this, the
-   * multiplier holds here instead, so an outgrown map keeps paying a sliver of
-   * XP forever (the "diminish, don't zero" rule) rather than slamming shut. At
-   * `0.5^fadeLevels = 0.125` the taper meets the cap, so this floor bites a
-   * level or two past it and thereafter every kill still banks ~this fraction.
+   * The per-level XP decay through the soft cap: every level past
+   * `cap − fadeLevels` multiplies the grant by this (a reverse-exponential
+   * fade), so each level over the cap takes far more kills than the one before.
+   * Tuned so the fade reaches the `floor` (the ~1/100 trickle) about two levels
+   * PAST the cap — the point the climb slows to a pace nobody would sit
+   * through, the map's effective soft cap.
    */
-  floor: 0.05,
+  softCapDecay: 0.4,
+  /**
+   * The never-zero TRICKLE the fade bottoms out at: once `softCapDecay` would
+   * sink the multiplier below this, it holds here instead, so an outgrown map
+   * keeps paying a sliver of XP forever (the "diminish, don't zero" rule)
+   * rather than slamming shut — there is NO hard level wall on a map, only this
+   * glacial ~1/100 pace once the hero is a couple of levels past the cap. The
+   * global `LEVELING.maxLevel` is the only true ceiling.
+   */
+  floor: 0.01,
 } as const;
 
 /**

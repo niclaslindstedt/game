@@ -295,10 +295,13 @@ run against synthetic fixtures with no shipped content (see
   with level (a full spec realizes its raw value, undiminished) and is
   hard-capped at 250, with a diminishing tail past it so gear pushes further
   but never for free — and
-  `xpLevelCap`/`xpCapMultiplier` (config `XP_CAP`) are the per-map XP caps:
-  every (level × difficulty) pair has a hero-level ceiling XP tapers into
-  and stops at (applied in `grantXp`), so re-running an outgrown map farms
-  loot, never levels.
+  `xpLevelCap`/`xpCapMultiplier` (config `XP_CAP`) are the per-map SOFT XP
+  caps: every (level × difficulty) pair has a hero-level cap XP tapers into,
+  then keeps decaying reverse-exponentially (`softCapDecay`) past it —
+  bottoming out at a never-zero ~1/100 `floor` trickle about two levels over
+  the cap (applied in `grantXp`), so re-running an outgrown map farms loot and
+  only crawls XP at a glacial pace, with no hard wall short of the global
+  `maxLevel`.
 - **`src/game/menace.ts`** — the escalation system: the player's rolling
   DPS/kill-rate (`tickMenace`) plus relative-overkill jolts on a killing
   blow (`bankOverkill`) bank `state.menace`, which idle time bleeds off (a

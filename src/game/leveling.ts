@@ -269,16 +269,18 @@ export function xpLevelCap(levelId: string, difficulty: Difficulty): number {
 }
 
 /**
- * How much of an XP grant a hero of `level` still collects against a map's
+ * How much of an XP grant a hero of `level` still collects against a map's SOFT
  * `cap` (see `xpLevelCap`): full value up to `cap − XP_CAP.fadeLevels`, then
- * HALVED per level (the diminishing-returns taper into the wall), bottoming out
- * at the never-zero `XP_CAP.floor` TRICKLE once the halving would sink below it.
- * An outgrown map keeps paying a sliver forever — the map has little left to
- * teach, but "diminish, don't zero" means the grind still creeps rather than
- * slamming shut.
+ * decayed by `XP_CAP.softCapDecay` per level (a reverse-exponential taper — each
+ * level over the cap banks a fraction of what the last did), bottoming out at
+ * the never-zero `XP_CAP.floor` TRICKLE once the decay would sink below it. The
+ * cap is a slope, not a wall: it slows to a glacial ~1/100 pace about two
+ * levels past the cap and holds there — the grind still creeps forward forever,
+ * it never slams shut. So an outgrown map rains loot and only crawls XP; the
+ * global `LEVELING.maxLevel` is the only true level ceiling.
  */
 export function xpCapMultiplier(level: number, cap: number): number {
   const over = level - (cap - XP_CAP.fadeLevels);
   if (over <= 0) return 1;
-  return Math.max(XP_CAP.floor, Math.pow(0.5, over));
+  return Math.max(XP_CAP.floor, Math.pow(XP_CAP.softCapDecay, over));
 }
