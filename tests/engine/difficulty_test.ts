@@ -32,7 +32,7 @@ import {
 } from "@game/core";
 import type { Difficulty, GameState, Item, Tier } from "@game/core";
 import { FIX_DIFFICULTIES, FIX_LEVEL, installFixtures } from "./fixtures.ts";
-import { clearStage, DT, idle, SEED, steerTo } from "./helpers.ts";
+import { clearStage, DT, idle, makeEnemy, SEED, steerTo } from "./helpers.ts";
 
 const WAVES = levelDef("test_level").waves!;
 
@@ -508,6 +508,56 @@ describe("difficulty-gated content (minDifficulty)", () => {
     };
     expect(ramped("medium").waveSpawned[gatedIdx] ?? 0).toBe(0);
     expect(ramped("hard").waveSpawned[gatedIdx] ?? 0).toBeGreaterThan(0);
+  });
+});
+
+describe("horde pursuit near a set piece (mobPursuitNearElite)", () => {
+  // One awake, phasing minion (never nudged by walls/obstacles/separation) a
+  // short way from an idle hero. A single step's magnitude is exactly
+  // speed·pursuit·dt regardless of direction, so it reads the pursuit fraction
+  // straight off. `test_level` keeps a parked boss; wounding it is what marks
+  // the encounter as ENGAGED (the trigger is engagement, not mere presence).
+  const stepMag = (difficulty: Difficulty, engaged: boolean): number => {
+    const state = startOn(difficulty);
+    clearStage(state); // quiets the waves, keeps the parked (far, full-hp) boss
+    const boss = state.enemies.find((e) => isBoss(e.defId))!;
+    // Keep the boss far from the hero so proximity never trips the gate; only a
+    // wound (engaged) should. Full hp + far + asleep = a set piece merely
+    // present, which must NOT slow the horde.
+    boss.pos = { x: 2000, y: 200 };
+    boss.home = { x: 2000, y: 200 };
+    if (engaged) boss.hp = boss.maxHp - 1; // the fight has been joined
+    state.player.pos = { x: 600, y: 800 };
+    const minion = makeEnemy(
+      { pos: { x: 600, y: 700 }, speed: 100, awake: true },
+      "test_minion",
+    );
+    state.enemies.push(minion);
+    const before = { ...minion.pos };
+    step(state, idle, DT);
+    return Math.hypot(minion.pos.x - before.x, minion.pos.y - before.y);
+  };
+
+  it("crawls the horde by the rung's fraction once a set piece is engaged", () => {
+    const easy = stepMag("easy", true);
+    const medium = stepMag("medium", true);
+    const hard = stepMag("hard", true);
+    // EASY parks the swarm at a tenth speed, MEDIUM at half, HARD not at all.
+    expect(easy).toBeCloseTo(hard * 0.1, 6);
+    expect(medium).toBeCloseTo(hard * 0.5, 6);
+    expect(easy).toBeCloseTo(medium * (0.1 / 0.5), 6);
+    // The un-slowed reading is the full speed·dt step (100 × 0.016).
+    expect(hard).toBeCloseTo(100 * (DT / 1000), 6);
+  });
+
+  it("leaves the horde at full speed while the set piece merely sleeps", () => {
+    // A boss present but un-engaged (full hp, far off, asleep) must not slow the
+    // swarm — otherwise the whole level crawls and idle play stops losing.
+    const engagedStep = stepMag("easy", true);
+    const idleStep = stepMag("easy", false);
+    expect(idleStep).toBeGreaterThan(engagedStep * 5);
+    // Un-engaged EASY chases exactly as fast as un-slowed HARD.
+    expect(idleStep).toBeCloseTo(stepMag("hard", true), 6);
   });
 });
 

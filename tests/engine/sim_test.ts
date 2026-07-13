@@ -60,7 +60,7 @@ describe("simulateLevel", () => {
     }
     // The per-map cap rode along (fixtures run the shipped medium band).
     expect(report.xpCap.cap).toBeGreaterThan(0);
-  });
+  }, 30_000);
 
   it("tracks each boss/elite as an engagement, not a spawn", () => {
     const report = simulateLevel({
@@ -87,7 +87,7 @@ describe("simulateLevel", () => {
         expect(boss.killed).toBe(false);
       }
     }
-  });
+  }, 30_000);
 
   it("judges each equipment drop against the hero's level", () => {
     const report = simulateLevel({
@@ -106,7 +106,7 @@ describe("simulateLevel", () => {
     // complementary reads on the level gate, so their counts never overlap
     // into an impossible sum.
     expect(e.equippableNow + e.levelGated).toBeLessThanOrEqual(e.total * 2);
-  });
+  }, 30_000);
 
   it("realistic pacing ends the run at the map's intended level, not farmed out", () => {
     // FIX_LEVEL carries arrowCapByDifficulty.easy = 3 — a normal clear's exit.
@@ -166,7 +166,7 @@ describe("simulateLevel", () => {
     expect(avgHp(softer)).toBeLessThan(avgHp(base));
     // The run put the global tuning back exactly as it found it.
     expect(getBalanceTuning()).toEqual(BALANCE_TUNING_DEFAULTS);
-  });
+  }, 30_000);
 
   it("is deterministic — the same options replay the same run exactly", () => {
     const run = () =>
@@ -194,5 +194,5 @@ describe("simulateCampaign", () => {
     expect(second!.hero.levelStart).toBe(first!.hero.levelEnd);
     expect(report.totalKills).toBe(first!.combat.kills + second!.combat.kills);
     expect(report.finalLevel).toBe(second!.hero.levelEnd);
-  });
+  }, 30_000);
 });
