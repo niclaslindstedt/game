@@ -472,18 +472,26 @@ function renderVerdict(report) {
     add("WARN", "Blows-to-kill", `mean ${round1(meanToKill)} (target 2–8)`);
   else add("PASS", "Blows-to-kill", `mean ${round1(meanToKill)} blows/minion`);
 
-  // 3. Boss level vs the map's intended level — the pacing gate: is the hero
-  //    arriving at each boss roughly where the content expects him?
+  // 3. Boss level within the map's own level SPAN — the pacing gate. Elites and
+  //    bosses are fought THROUGHOUT a map, not at its end, so the hero's level
+  //    when he meets one should sit between where he ENTERED (levelStart) and
+  //    where a normal clear LEAVES him (intendedHeroLevel = the map's end cap),
+  //    with ±2 slack. Comparing against the end cap alone (as an earlier version
+  //    did) is biased negative — a mid-map elite met at the entry level is fine,
+  //    not under-levelled. Outside the span = genuinely off: well under entry =
+  //    under-geared for the map, well over the end cap = over-levelled.
   const bossOff = [];
   let bossesChecked = 0;
   for (const run of report.runs) {
     for (const b of run.bosses) {
       if (!b.engaged || b.intendedHeroLevel === null) continue;
       bossesChecked++;
-      const delta = b.heroLevel - b.intendedHeroLevel;
-      if (Math.abs(delta) > 2) {
+      const lo = run.hero.levelStart - 2;
+      const hi = b.intendedHeroLevel + 2;
+      if (b.heroLevel < lo || b.heroLevel > hi) {
+        const how = b.heroLevel < lo ? "under" : "over";
         bossOff.push(
-          `${run.difficulty}/${b.name} L${b.heroLevel}v${b.intendedHeroLevel} (${delta > 0 ? "+" : ""}${delta})`,
+          `${run.difficulty}/${b.name} L${b.heroLevel} ${how} span [${run.hero.levelStart}–${b.intendedHeroLevel}]`,
         );
       }
     }
@@ -495,12 +503,16 @@ function renderVerdict(report) {
       "no boss was engaged on a map with an intended level",
     );
   else if (bossOff.length === 0)
-    add("PASS", "Boss level", `all ${bossesChecked} within ±2 of intended`);
+    add(
+      "PASS",
+      "Boss level",
+      `all ${bossesChecked} within their map's level span`,
+    );
   else
     add(
       bossOff.length > bossesChecked / 2 ? "FAIL" : "WARN",
       "Boss level",
-      `${bossOff.length}/${bossesChecked} off by >2: ${bossOff.slice(0, 3).join("; ")}`,
+      `${bossOff.length}/${bossesChecked} outside span: ${bossOff.slice(0, 3).join("; ")}`,
     );
 
   // 4. Bosses walled — a boss the hero REACHED and traded blows with but never
