@@ -1,0 +1,63 @@
+# Manual native app builds via EAS. Deliberately dispatch-only (never on push)
+# so builds — which consume paid EAS build minutes and store credentials — only
+# run when a human asks. Requires an EXPO_TOKEN repo secret (an Expo access
+# token from https://expo.dev/settings/access-tokens); store submission also
+# needs the App Store Connect / Play credentials configured on the EAS project.
+name: App Build (EAS)
+
+on:
+  workflow_dispatch:
+    inputs:
+      platform:
+        description: Platform to build
+        type: choice
+        default: all
+        options: [all, ios, android]
+      profile:
+        description: EAS build profile (see app/eas.json)
+        type: choice
+        default: preview
+        options: [preview, production]
+      submit:
+        description: Submit the build to the store after it finishes
+        type: boolean
+        default: false
+
+concurrency:
+  group: app-build-${{ github.ref }}
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: app
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+          cache-dependency-path: app/package-lock.json
+
+      - name: Set up EAS
+        uses: expo/expo-github-action@v8
+        with:
+          eas-version: latest
+          token: ${{ secrets.EXPO_TOKEN }}
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: EAS build
+        run: |
+          eas build \
+            --non-interactive \
+            --profile "${{ inputs.profile }}" \
+            --platform "${{ inputs.platform }}" \
+            ${{ inputs.submit && '--auto-submit' || '' }}

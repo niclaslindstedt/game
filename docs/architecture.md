@@ -679,6 +679,32 @@ kept in the dedicated `src/lib/` and
 in later games once it has matured through playtesting — see `AGENTS.md` for
 the policy.
 
+### `app/` — the native shell (optional third layer)
+
+The App Store / Play Store build lives in `app/`, an
+[Expo](https://expo.dev)/React Native project that is **not** part of the npm
+workspace and manages its own dependencies. It is a thin wrapper: a full-screen
+[`react-native-webview`](https://github.com/react-native-webview/react-native-webview)
+pointed at the deployed site (`siteUrl` from `game.config.json`), so the app
+looks and plays exactly like the PWA. On top of the web game it adds the native
+seams a browser can't provide on iOS:
+
+- **Taptic haptics.** iOS WKWebView never exposes `navigator.vibrate`, so the
+  engine's web haptics driver (`website/src/lib/haptics.ts`) no-ops there. The
+  shell injects a `navigator.vibrate` polyfill (`app/src/injected.ts`) that the
+  existing driver detects by feature test; every buzz is forwarded to the
+  native side (`app/src/nativeHaptics.ts`) and replayed on the Taptic Engine via
+  `expo-haptics`. No engine or website code changes — this is exactly the
+  `setDriver`/feature-detection seam that `haptics.ts` was built for.
+- **An audio session** (`setAudioModeAsync`) so the game's WebAudio plays
+  through the iOS silent switch.
+
+`app/app.config.js` reads brand identity from `game.config.json` (never
+re-hardcoding it) and pins the EAS project id; `app/eas.json` holds the build
+profiles. Builds are **manual only** — locally via `eas build`, or the
+dispatch-only `.github/workflows/app-build.yml` — so paid EAS build minutes are
+never spent on a push. See `app/README.md` for the full build/distribute flow.
+
 ## Deployment topology
 
 GitHub Pages serves three deploy slots on one origin — the `siteUrl` in
