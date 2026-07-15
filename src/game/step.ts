@@ -808,24 +808,39 @@ function stepPlayer(
     player.moving = true;
   }
 
-  // Stamina: a decisive run spends it; a walk and standing both recover it,
-  // but a walk only half as fast (walkRegenFactor) since a stroll is a lesser
-  // breather than a full stop. The STAMINA stat deepens the reserve
-  // (computeMaxStamina) and, here, both slows the drain and quickens the regen.
+  // Stamina scales with PACE. Standing still (not moving) takes the full
+  // breather (rate = 1). A moving hero reads his analogue throttle onto the
+  // proportional curve: +walkRateFactor of the regen (a walk still catches a
+  // little breath) at walkThrottle, easing linearly down to runRateFactor of
+  // the drain (a flat sprint burns the whole base drain) at full throttle, and
+  // crossing zero just above the walk — so a precise sub-run push barely dips
+  // the pool. The STAMINA stat deepens the reserve (computeMaxStamina) and,
+  // here, both slows the drain and quickens the regen.
   const staminaStat = effectiveStat(state, "stamina");
-  const running = player.moving && throttle > STAMINA.runThreshold;
-  if (running) {
-    // Harder difficulties wind the hero a touch faster (staminaDrainMult).
+  let rate = 1;
+  if (player.moving) {
+    const t = clamp(
+      (throttle - STAMINA.walkThrottle) / (1 - STAMINA.walkThrottle),
+      0,
+      1,
+    );
+    rate =
+      STAMINA.walkRateFactor +
+      t * (STAMINA.runRateFactor - STAMINA.walkRateFactor);
+  }
+  if (rate < 0) {
+    // Draining — harder difficulties wind the hero a touch faster
+    // (staminaDrainMult); the STAMINA stat slows the burn.
     const drain =
-      (STAMINA.drainPerSec * difficultyDef(state.difficulty).staminaDrainMult) /
+      (-rate *
+        STAMINA.drainPerSec *
+        difficultyDef(state.difficulty).staminaDrainMult) /
       (1 + staminaStat * STAMINA.drainReductionPerPoint);
     player.stamina = Math.max(0, player.stamina - drain * dt);
   } else {
-    const walkFactor = player.moving ? STAMINA.walkRegenFactor : 1;
+    // Regaining — the STAMINA stat quickens it.
     const regen =
-      STAMINA.regenPerSec *
-      (1 + staminaStat * STAMINA.regenPerPoint) *
-      walkFactor;
+      rate * STAMINA.regenPerSec * (1 + staminaStat * STAMINA.regenPerPoint);
     player.stamina = Math.min(player.maxStamina, player.stamina + regen * dt);
   }
 

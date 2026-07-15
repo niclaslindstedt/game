@@ -428,11 +428,11 @@ function cursorThrottle(dist: number, fullSpeedPx: number): number {
 // player's rebindable FORWARD/BACK/LEFT/RIGHT binds (keybindings.ts), read by
 // `event.code` so they stay layout-independent (AZERTY etc.).
 // The reduced pace while WALK is held; the default (no modifier) runs at full
-// speed. Pinned to the engine's run threshold so a Shift-walk stays a *walk*
-// for the stamina system: `running = throttle > STAMINA.runThreshold`, so a
-// throttle at (not above) the threshold recovers stamina instead of draining
-// it. A bare 0.6 tipped over the 0.5 threshold and drained like a run.
-const KEYBOARD_WALK_THROTTLE = STAMINA.runThreshold;
+// speed. Pinned to the engine's walk anchor so a Shift-walk stays a *walk* for
+// the stamina system: the proportional curve REGAINS stamina at `walkThrottle`
+// (its +walkRateFactor low anchor), so a throttle at the walk recovers instead
+// of draining it. A bare 0.6 would sit above the walk and drain like a run.
+const KEYBOARD_WALK_THROTTLE = STAMINA.walkThrottle;
 
 /** Other carried weapons, best first — the switch targets shared by the Q
  * weapon menu and the 1-4 hotkeys. Ordered by ilvl (highest first) so "1"
