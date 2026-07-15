@@ -26,7 +26,7 @@ import {
   step,
   unequipCompanionToInventory,
 } from "@game/core";
-import type { Equipment, GameEvent, GameState } from "@game/core";
+import type { Equipment, GameEvent, GameInput, GameState } from "@game/core";
 import {
   clearStage,
   DT,
@@ -325,6 +325,100 @@ describe("companions in the field", () => {
     );
     expect(companion.hp).toBeLessThanOrEqual(companion.maxHp);
     expect(magicFindBonus(state)).toBeCloseTo(0.5);
+  });
+
+  // Staying WITH the hero comes before clearing the horde: while he ranges
+  // across the map the party keeps pace instead of planting to trade shots,
+  // and a companion outrun to the camera's edge latches into FOLLOW mode —
+  // dropping the fight to move with him until he stops.
+  describe("keeping up with a moving hero", () => {
+    /** The phone world viewport (~422×195) centred on `pos`. */
+    function viewAround(pos: { x: number; y: number }) {
+      return { x: pos.x - 211, y: pos.y - 97, width: 422, height: 195 };
+    }
+    /** Steer the hero hard to the right, with the camera riding along. */
+    function marchRight(state: GameState): GameInput {
+      return {
+        steering: true,
+        target: { x: state.player.pos.x + 600, y: state.player.pos.y },
+        jump: false,
+        view: viewAround(state.player.pos),
+      };
+    }
+
+    it("latches FOLLOW at the screen edge: drops the fight, moves with the hero", () => {
+      const state = startGame();
+      clearStage(state);
+      // A companion lagging at the camera's left edge...
+      const companion = recruitCompanion(state, "test_companion", {
+        x: state.player.pos.x - 195,
+        y: state.player.pos.y,
+      });
+      // ...sitting right on a mob it would otherwise fight.
+      state.enemies.push(
+        makeEnemy(
+          {
+            id: state.nextId++,
+            pos: { x: companion.pos.x - 8, y: companion.pos.y },
+            hp: 5,
+            maxHp: 5,
+          },
+          "test_minion",
+        ),
+      );
+      const minion = () => state.enemies.find((e) => e.defId === "test_minion");
+      const startX = companion.pos.x;
+      for (let i = 0; i < 30; i++) step(state, marchRight(state), DT);
+
+      // It committed to following rather than planting to trade blows: the
+      // latch is on, the mob it sat on is untouched, and it moved WITH the
+      // hero (rightward) instead of staying behind.
+      expect(companion.following).toBe(true);
+      expect(minion()).toBeDefined();
+      expect(companion.pos.x).toBeGreaterThan(startX);
+    });
+
+    it("releases the follow latch when the hero stops moving", () => {
+      const state = startGame();
+      clearStage(state);
+      const companion = recruitCompanion(state, "test_companion", {
+        x: state.player.pos.x - 195,
+        y: state.player.pos.y,
+      });
+      step(state, marchRight(state), DT);
+      expect(companion.following).toBe(true);
+      // Hero halts: the latch lifts and the party is free to fight again.
+      step(state, idle, DT);
+      expect(companion.following).toBe(false);
+    });
+
+    it("holds with the moving hero instead of peeling off after a mob", () => {
+      const state = startGame();
+      clearStage(state);
+      // A companion at its formation spot (not at the screen edge), keeping up.
+      const companion = recruitCompanion(state, "test_companion", {
+        x: state.player.pos.x - 34,
+        y: state.player.pos.y,
+      });
+      // A stationary mob to the LEFT — inside the hero's engage bubble, but
+      // out of wrench reach. Chasing it would drag the companion left.
+      const mob = makeEnemy(
+        {
+          id: state.nextId++,
+          pos: { x: state.player.pos.x - 120, y: state.player.pos.y },
+        },
+        "test_minion",
+      );
+      state.enemies.push(mob);
+      const gap = () =>
+        Math.hypot(companion.pos.x - mob.pos.x, companion.pos.y - mob.pos.y);
+      const before = gap();
+      // Hero marches RIGHT, away from the mob: a companion that chased would
+      // close on it; one keeping up with the hero opens the distance.
+      for (let i = 0; i < 20; i++) step(state, marchRight(state), DT);
+      expect(companion.following).toBeFalsy();
+      expect(gap()).toBeGreaterThan(before);
+    });
   });
 
   it("magic find widens the tier roll: the same draw pays magic, not plain", () => {

@@ -1802,6 +1802,16 @@ export const COMPANIONS = {
    * companion slips through the noise and rejoins the formation outright —
    * a party member, never an escort quest. */
   catchUpDistance: 420,
+  /**
+   * Screen-edge FOLLOW latch: while the hero is on the move, a companion that
+   * drifts within this many world px of the camera's edge (or past it) stops
+   * fighting and commits to moving WITH him — the party keeps up with a hero
+   * ranging across the map rather than planting to trade shots and sliding
+   * off the screen. The latch releases when the hero stops moving (see
+   * `stepCompanion`). Only applied when the app hands the engine a `view`
+   * (headless/bot runs, with no camera, keep the plain formation behaviour).
+   */
+  screenEdgeMargin: 32,
   /** A companion holds at this share of its weapon's range, like the bots. */
   holdFraction: 0.75,
   /** How many foes a companion's melee swing may cleave at once. */

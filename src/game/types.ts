@@ -493,6 +493,14 @@ export type Companion = {
   combatMs?: number;
   /** Ms left kneeling; undefined while up and fighting. See COMPANIONS. */
   downedMs?: number;
+  /**
+   * True while the companion is in screen-edge FOLLOW mode: the hero moved far
+   * enough that it drifted to the camera's edge, so it drops the fight and
+   * moves WITH him until he stops (config `COMPANIONS.screenEdgeMargin`, logic
+   * in `stepCompanion`). Absent/false when it is free to hold formation and
+   * engage the horde around the hero.
+   */
+  following?: boolean;
   /** Ms until this companion may float another kill quote. */
   quoteCooldownMs: number;
   equipment: {
