@@ -25,23 +25,19 @@ import { synth } from "./audio.ts";
 import {
   deleteCharacter,
   loadCharacters,
+  nextDifficultyFor,
   type Character,
 } from "./characters.ts";
 import { dollDataUrl, loadoutDollLayers } from "./paper-doll.ts";
 import { playUiSound } from "./sfx/index.ts";
 
-/** The count of difficulties this hero has beaten — the roster's progress
- * read. */
-function beatenCount(character: Character): number {
-  return DIFFICULTY_ORDER.filter((d) => character.beaten.includes(d)).length;
-}
-
 /** The character's standing, shown under the name on their save slot: where a
- * living hero is headed next on the ladder, or that a hardcore hero fell. */
+ * living hero is headed next on the ladder, or that a hardcore hero fell. The
+ * next rung follows the OR-gated unlock graph (`nextDifficultyFor`), so beating
+ * any starting lane points at NIGHTMARE and beating NIGHTMARE at JESUS. */
 function standing(character: Character): string {
   if (character.dead) return "FALLEN IN BATTLE";
-  const beaten = beatenCount(character);
-  const nextRung = DIFFICULTY_ORDER[beaten];
+  const nextRung = nextDifficultyFor(character);
   return nextRung ? `NEXT: ${difficultyDef(nextRung).name}` : "ALL CLEARED";
 }
 

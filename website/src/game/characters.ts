@@ -34,6 +34,7 @@ import {
   DIFFICULTY_UNLOCK_PREREQS,
   equipmentLevelReq,
   LEVEL_ORDER,
+  STARTING_DIFFICULTIES,
   type Difficulty,
   type Equipment,
   type Loadout,
@@ -478,6 +479,40 @@ export function isDifficultyUnlocked(
   const prereqs = DIFFICULTY_UNLOCK_PREREQS[difficulty] ?? [];
   if (prereqs.length === 0) return true;
   return prereqs.some((d) => isDifficultyBeaten(character, d));
+}
+
+/**
+ * The rung this hero should aim for next — the roster card's "NEXT: …"
+ * standing — following the OR-gated unlock graph, NOT a flat five-rung count.
+ * The starting lanes (easy/medium/hard) are PARALLEL entry points sharing one
+ * tier: beating ANY one clears that tier and opens NIGHTMARE, which in turn
+ * opens JESUS. So the target jumps tier-to-tier, not lane-to-lane — beating
+ * (say) HARD points at NIGHTMARE, never back down at the medium lane it skipped.
+ *
+ * Null once every reachable rung is beaten (the top of the ladder is cleared) —
+ * the caller reads that as "ALL CLEARED".
+ */
+export function nextDifficultyFor(character: Character): Difficulty | null {
+  // Hardest first: the first UNLOCKED-but-unbeaten GATED rung is the target
+  // (NIGHTMARE once a starting lane falls, JESUS once NIGHTMARE falls). Skips
+  // the parallel starting lanes — those are a single tier handled below.
+  for (let i = DIFFICULTY_ORDER.length - 1; i >= 0; i--) {
+    const d = DIFFICULTY_ORDER[i] as Difficulty;
+    if (STARTING_DIFFICULTIES.includes(d)) continue;
+    if (isDifficultyUnlocked(character, d) && !isDifficultyBeaten(character, d)) {
+      return d;
+    }
+  }
+  // No gated rung is an open target. If a starting lane has been beaten the
+  // whole gated chain above it must be cleared too — the ladder is done.
+  if (STARTING_DIFFICULTIES.some((d) => isDifficultyBeaten(character, d))) {
+    return null;
+  }
+  // Still on the starting tier: aim at the gentlest lane not yet beaten.
+  return (
+    STARTING_DIFFICULTIES.find((d) => !isDifficultyBeaten(character, d)) ??
+    (STARTING_DIFFICULTIES[0] as Difficulty)
+  );
 }
 
 /**
