@@ -267,9 +267,6 @@ const SPRITES = {
     "O.wwwwwwwwwwwOkkkkOwwww.O.wwONNNNNNNNNNNNOwww.O.",
     "O.wwwwwwwwwwwOkkkkOwwww.O.wwONNNNNNNNNNNNOwww.O.",
     "OOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOO.",
-    "................................................",
-    "................................................",
-    "................................................",
   ],
   // The far door with Eastworld on the other side: the Mars rift's exact
   // silhouette, its violet edge kept, its glow swapped from between-universe
