@@ -5555,6 +5555,10 @@ canvas.tier-artifact {
 
 .stat-button canvas,
 .pixel-button canvas,
+/* A shop price sets its number canvas beside the taller coin glyph; without
+   this the `.game-overlay canvas` rule above top-pins the number so it rides
+   high of the coin's centre (the stall prices and the purse). */
+.shop-price canvas,
 /* The round (i) toggle centers its glyph both ways; without this the
    `.game-overlay canvas` rule above pins the "i" to the top of the circle. */
 .info-button canvas {
