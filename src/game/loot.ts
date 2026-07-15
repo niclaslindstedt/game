@@ -262,12 +262,13 @@ export function hitEnemy(
      * bombs, so the loot roll skips both screen-nuke slices (the crowd-bomb
      * mercy drop and the rare `LOOT.nukeShare` slice). */
     noNukeDrop?: boolean;
-    /** The blow comes from a POWERUP — the screen-nuke bomb, the fire orbs, or
-     * the storm cell — not the hero's own weapon. Its damage and kill are still
-     * booked into the run stats, but kept OUT of the menace meter: the exempt
-     * counters below catch the damage, and `killEnemy` skips the overkill jolt
-     * and evolution ratchet. A bomb clearing the screen must not escalate the
-     * horde the player didn't out-fight by hand. */
+    /** The blow is not the hero's own weapon — a POWERUP (the screen-nuke bomb,
+     * the fire orbs, the storm cell) or a COMPANION's attack. Its damage and
+     * kill are still booked into the run stats, but kept OUT of the menace
+     * meter: the exempt counters below catch the damage, and `killEnemy` skips
+     * the overkill jolt and evolution ratchet. Menace answers an overpowered
+     * HERO — a bomb clearing the screen, or a party carrying the fight, is not
+     * the hero out-fighting the horde by hand and must not escalate it. */
     noMenace?: boolean;
   },
 ): void {

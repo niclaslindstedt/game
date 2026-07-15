@@ -213,10 +213,10 @@ export function step(state: GameState, input: GameInput, dtMs: number): void {
   }
 
   // Snapshot cumulative output so the menace tick can read this step's damage
-  // and kills as rates (see tickMenace) — the meter heats from what the player
-  // is actually putting out, not from any single blow. The powerup-exempt
-  // counters are snapshotted alongside so bomb/ability output is subtracted
-  // out: a screen-nuke or damage powerup never escalates the horde.
+  // and kills as rates (see tickMenace) — the meter heats from what the HERO is
+  // actually putting out, not from any single blow. The menace-exempt counters
+  // are snapshotted alongside so non-hero output is subtracted out: neither a
+  // screen-nuke/damage powerup nor a COMPANION's attacks escalate the horde.
   const damageBefore = state.stats.damageDealt;
   const killsBefore = state.stats.kills;
   const exemptDamageBefore = state.menaceExemptDamage;
@@ -1542,6 +1542,10 @@ function stepProjectiles(state: GameState, dt: number, dtMs: number): void {
       rollAccuracy: projectile.companionId === undefined,
       critMult: projectile.critMult,
       damageRoll: projectile.damageRoll,
+      // A companion's shot is booked for the run but kept OUT of the menace
+      // meter — menace answers an overpowered hero, not a helpful party (see
+      // `noMenace` in hitEnemy); the hero's own shots heat it as always.
+      noMenace: projectile.companionId !== undefined,
     });
     if (
       projectile.companionId !== undefined &&
@@ -1629,7 +1633,13 @@ function chainLightning(
       target,
       projectile.damage * WEAPON.chainDamageFrac,
       projectile.weaponClass,
-      { critMult: projectile.critMult, damageRoll: projectile.damageRoll },
+      {
+        critMult: projectile.critMult,
+        damageRoll: projectile.damageRoll,
+        // A chained leap inherits the source shot's menace attribution: a
+        // companion's chain never heats the meter (see the projectile hit).
+        noMenace: projectile.companionId !== undefined,
+      },
     );
   }
 }
