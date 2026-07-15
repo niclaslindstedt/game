@@ -50,8 +50,11 @@ function addPunchingBag(state: GameState): void {
 describe("weapon durability", () => {
   it("rolled weapon drops carry their def's durability", () => {
     const state = startGame();
-    // Pin the make quality: BROKEN/PERFECT scale the wear budget (the
-    // quality suite's beat) — this asserts the plain def carry-over.
+    // Pin the make quality to NORMAL and its base-value roll to the band
+    // midpoint (1×, via a 0.5 flavor draw): BROKEN/PERFECT — and where inside
+    // a band a copy lands — scale the wear budget (the quality suite's beat);
+    // this asserts the plain def carry-over at neutral make.
+    state.fxRng = () => 0.5;
     const rolled = rollEquipment(state, {
       defId: "test_pipe",
       quality: "normal",

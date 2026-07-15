@@ -229,6 +229,18 @@ export type Equipment = {
    */
   quality?: Quality;
   /**
+   * The specific base-value multiplier this instance ROLLED within its make
+   * quality's range (config `QUALITY.ranges`), frozen at mint — the D2 rule
+   * that two SUPERIOR copies of the same base can carry different damage/armor.
+   * The quality tier sets the range; this is where inside it the piece landed.
+   * `qualityMult` returns it whenever present, so damage, armor, durability,
+   * and merchant value all read the SAME rolled figure. Absent on charms/bags
+   * (no number to scale), magic-or-better finds (always flat normal make), and
+   * every instance minted before the range roll shipped — those fall back to
+   * the quality's midpoint (`QUALITY.mults`).
+   */
+  qualityRoll?: number;
+  /**
    * Wear left before this piece gives out (the def carries the maximum).
    * Weapons spend one point per attack and are TRASHED at zero; armor spends
    * one per hit taken and merely goes INACTIVE at zero — it stays worn,

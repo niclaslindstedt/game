@@ -175,9 +175,27 @@ export function qualityOf(equipment: Equipment): Quality {
 }
 
 /** The stat scale an instance's make quality applies to its base's numbers
- * (damage, armor, durability, merchant value) — config `QUALITY.mults`. */
+ * (damage, armor, durability, merchant value). Returns the specific value the
+ * piece ROLLED within its quality band (`Equipment.qualityRoll`, config
+ * `QUALITY.ranges`), stamped at mint and frozen for life — so two SUPERIOR
+ * copies of a base scale differently. Falls back to the band's MIDPOINT
+ * (`QUALITY.mults`) for charms/bags, magic+ finds, and legacy instances minted
+ * before the range roll shipped. */
 export function qualityMult(equipment: Equipment): number {
-  return QUALITY.mults[qualityOf(equipment)];
+  return equipment.qualityRoll ?? QUALITY.mults[qualityOf(equipment)];
+}
+
+/**
+ * Roll a specific base-value multiplier inside a make quality's band (config
+ * `QUALITY.ranges`) — the number stamped onto a fresh gradeable drop's
+ * `qualityRoll`. Uniform within the band, so a SUPERIOR piece lands anywhere
+ * from a hair over NORMAL to well above it. Drawn off the caller's rng; the
+ * mint pulls it from `fxRng` (the flavor stream) so the base-value spread never
+ * perturbs the seeded loot sequence, exactly like the per-hit damage variance.
+ */
+export function rollQualityMult(rng: Rng, quality: Quality): number {
+  const band = QUALITY.ranges[quality];
+  return randomRange(rng, band.min, band.max);
 }
 
 /**
@@ -654,7 +672,18 @@ export function rollEquipment(
   const quality: Quality =
     opts.quality ??
     (gradeable && tier === "regular" ? rollQuality(rng, lootLevel) : "normal");
-  const qMult = QUALITY.mults[quality];
+  // A gradeable piece that actually TOOK a make quality (a rolled white, or a
+  // scripted forced quality) rolls a specific base-value multiplier inside that
+  // quality's band — the D2 rule that two SUPERIOR copies swing differently.
+  // Drawn off `fxRng` so the base-value spread never perturbs the seeded loot
+  // sequence (like the per-hit variance). Magic+ finds, charms, and bags carry
+  // no roll and read the flat NORMAL midpoint (1×), exactly as before.
+  const graded =
+    gradeable && (tier === "regular" || opts.quality !== undefined);
+  const qualityRoll = graded
+    ? rollQualityMult(state.fxRng, quality)
+    : undefined;
+  const qMult = qualityRoll ?? 1;
   const affixes: Affix[] = [];
   const available = [...AFFIX_POOLS[family]];
   for (let i = 0; i < TIERS[tier].affixCount && available.length > 0; i++) {
@@ -670,6 +699,9 @@ export function rollEquipment(
     tier,
     ilvl,
     quality,
+    // The specific base-value multiplier this piece rolled within its quality
+    // band, frozen for life (undefined on flat-normal pieces — see above).
+    ...(qualityRoll !== undefined ? { qualityRoll } : {}),
     affixes,
     // Freeze the birth-version def onto the instance so a later catalog edit
     // (rebalance or deletion) can never reach back and change THIS item — the
@@ -1670,9 +1702,11 @@ export function weaponDamageFor(state: GameState, weapon: Equipment): number {
   // full catalog damage, so the opening fight stays exactly as tuned.
   const lootMult = weapon.durability === undefined ? 1 : WEAPON.damageMult;
   // The instance's MAKE QUALITY scales the blow: a BROKEN pipe swings soft,
-  // a PERFECT one over its catalog weight (config QUALITY.mults). Routed
-  // here — the one source of stat-scaled damage — so combat, auto-equip
-  // scoring, and every DPS readout agree on what craftsmanship is worth.
+  // a PERFECT one over its catalog weight — the specific figure this copy
+  // rolled within its quality band (`qualityMult` → `Equipment.qualityRoll`,
+  // config QUALITY.ranges). Routed here — the one source of stat-scaled damage
+  // — so combat, auto-equip scoring, and every DPS readout agree on what this
+  // exact piece's craftsmanship is worth.
   // A UNIQUE weapon's per-drop ±band on the base damage (see `Equipment.baseRoll`).
   // The developer damage knob scales the final figure, so combat, auto-equip
   // scoring, and every DPS readout move together (rankings are unchanged —
