@@ -1739,6 +1739,31 @@ body {
   box-shadow: 0 0 18px rgba(235, 140, 90, 0.3);
 }
 
+/* Mercury — a tiny scorched cinder on the innermost orbit. Only rendered with
+   ORBITAL MENU on; the driver sizes it each frame (this is its resting look). */
+.title-mercury {
+  left: 44%;
+  top: 30%;
+  width: clamp(12px, 2.6vmin, 22px);
+  height: clamp(12px, 2.6vmin, 22px);
+  background:
+    radial-gradient(circle at 60% 34%, #6b6157 0 14%, transparent 15%),
+    radial-gradient(circle at 38% 62%, #5a5148 0 12%, transparent 13%),
+    radial-gradient(circle at 44% 40%, #a89a88, #7c7062 58%, #574e44);
+  box-shadow: 0 0 8px rgba(200, 180, 150, 0.28);
+}
+
+/* Venus — small, veiled in featureless pale-gold cloud. Only rendered with
+   ORBITAL MENU on; the driver sizes it each frame. */
+.title-venus {
+  left: 40%;
+  top: 34%;
+  width: clamp(18px, 4vmin, 34px);
+  height: clamp(18px, 4vmin, 34px);
+  background: radial-gradient(circle at 40% 36%, #f4e4b4, #e0c078 55%, #b89048);
+  box-shadow: 0 0 12px rgba(235, 205, 150, 0.3);
+}
+
 /* The Moon — grey and cratered. By default it hangs in the top-right corner
    and the arcing sun lights it (startTitleArcSky); with ORBITAL MENU on it
    shrinks and rides its orbit around Earth (see .orbits .title-moon). */
@@ -1777,8 +1802,21 @@ body {
   top: 34%;
   right: auto;
   left: 46%;
-  width: clamp(34px, 7vmin, 60px);
-  height: clamp(34px, 7vmin, 60px);
+  width: clamp(16px, 3.4vmin, 30px);
+  height: clamp(16px, 3.4vmin, 30px);
+}
+
+/* Orbit mode stacking: the planets and sun straddle a small z-band the driver
+   sets inline (SUN_Z ± depth, so the far half of each orbit tucks behind the
+   sun); lift the menu, the warm glare wash and the moon blast above that band
+   so the UI stays readable and the detonation still spills over the sky. Scoped
+   to .orbits so the classic menu keeps its original flat stacking. */
+.orbits .title-content {
+  z-index: 15;
+}
+
+.orbits .title-sun-glare {
+  z-index: 12;
 }
 
 /* The moon "charging up" while it is held: over MOON_HOLD_MS it brightens and
@@ -1859,6 +1897,9 @@ body {
   left: var(--moon-cx, 46%);
   width: 0;
   height: 0;
+  /* Above the raised menu/glare (see .orbits .title-content) so the blast still
+     spills across the whole sky in orbit mode. */
+  z-index: 18;
 }
 
 .moon-boom span {

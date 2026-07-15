@@ -426,10 +426,16 @@ export function TitleScreen({
   // sun's real position. Starts once the menu (and its elements) has mounted
   // after the assets load.
   const moonRef = useRef<HTMLDivElement>(null);
+  const mercuryRef = useRef<HTMLDivElement>(null);
+  const venusRef = useRef<HTMLDivElement>(null);
   const earthRef = useRef<HTMLDivElement>(null);
   const marsRef = useRef<HTMLDivElement>(null);
   const sunRef = useRef<HTMLDivElement>(null);
   const glareRef = useRef<HTMLDivElement>(null);
+  // The backdrop asteroids, driven on a 3D fly-through in orbit mode (they keep
+  // their CSS drift with the flag off). Collected so startTitleSky can take them
+  // over.
+  const asteroidRefs = useRef<(HTMLSpanElement | null)[]>([]);
 
   // The level list only needs to scroll when it genuinely can't fit — a long
   // ladder (20+ levels) on a short viewport. With the handful of levels this
@@ -456,10 +462,24 @@ export function TitleScreen({
     const glare = glareRef.current;
     if (!moon || !sun || !glare) return;
     if (titleOrbits) {
+      const mercury = mercuryRef.current;
+      const venus = venusRef.current;
       const earth = earthRef.current;
       const mars = marsRef.current;
-      if (!earth || !mars) return;
-      return startTitleSky({ moon, earth, mars, sun, glare });
+      if (!mercury || !venus || !earth || !mars) return;
+      const asteroids = asteroidRefs.current.filter(
+        (a): a is HTMLSpanElement => !!a,
+      );
+      return startTitleSky({
+        moon,
+        mercury,
+        venus,
+        earth,
+        mars,
+        sun,
+        glare,
+        asteroids,
+      });
     }
     return startTitleArcSky({ moon, sun, glare });
   }, [assets, titleOrbits]);
@@ -1743,6 +1763,9 @@ export function TitleScreen({
         {ASTEROID_BASE_SECONDS.map((baseSeconds, i) => (
           <span
             key={i}
+            ref={(el) => {
+              asteroidRefs.current[i] = el;
+            }}
             className={`title-asteroid title-asteroid-${i + 1}`}
             style={{ animationDuration: asteroidDurations[i] }}
             onAnimationIteration={(e) => rerollAsteroid(e, baseSeconds)}
@@ -1766,6 +1789,16 @@ export function TitleScreen({
           the flag off they are not rendered and the moon hangs in its corner. */}
       {titleOrbits && (
         <>
+          <div
+            ref={mercuryRef}
+            className="title-planet title-mercury"
+            aria-hidden="true"
+          />
+          <div
+            ref={venusRef}
+            className="title-planet title-venus"
+            aria-hidden="true"
+          />
           <div
             ref={earthRef}
             className="title-planet title-earth"
