@@ -160,6 +160,9 @@ export type ScenarioSpec = {
   /** Stacked stamina potions (clamped to the stack cap) — stages the dock's
    * stamina slot. */
   staminaPotions?: number;
+  /** Stacked weapon repair kits (clamped to the stack cap) — stages the dock's
+   * repair slot. */
+  repairKits?: number;
   /**
    * Remove the spawned population before the scenario's own spawns land.
    * Bosses are kept — deleting the objective would end the level on the
@@ -268,6 +271,13 @@ export function applyScenario(state: GameState, spec: ScenarioSpec): void {
   if (spec.staminaPotions !== undefined) {
     player.staminaPotions = clamp(
       Math.round(spec.staminaPotions),
+      0,
+      CONSUMABLES.stackCap,
+    );
+  }
+  if (spec.repairKits !== undefined) {
+    player.repairKits = clamp(
+      Math.round(spec.repairKits),
       0,
       CONSUMABLES.stackCap,
     );

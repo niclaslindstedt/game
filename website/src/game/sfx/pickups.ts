@@ -53,24 +53,21 @@ export function playPickupSound(synth: Synth, event: GameEvent): boolean {
           echo: 0.3,
         });
       } else if (event.kind === "repair") {
-        // The toolbox: two ratchet clicks, then the mended edge rings.
+        // Repair kits now STASH into the consumable dock rather than firing on
+        // contact — so the pickup is a soft metallic "tuck the toolbox away"
+        // click, leaving the satisfying ratchet-and-ring mend chime for the
+        // moment it's actually spent (see the repairKitUsed case).
         synth.noise({
-          durationMs: 35,
-          volume: 0.05,
-          filter: { type: "bandpass", frequency: 2600, q: 1.2 },
-        });
-        synth.noise({
-          durationMs: 35,
-          volume: 0.05,
-          delayMs: 70,
-          filter: { type: "bandpass", frequency: 2600, q: 1.2 },
+          durationMs: 45,
+          volume: 0.02,
+          filter: { type: "bandpass", frequency: 2200, q: 1 },
         });
         synth.tone({
           type: "triangle",
-          from: 988,
-          durationMs: 140,
-          volume: 0.05,
-          delayMs: 140,
+          from: 660,
+          durationMs: 70,
+          volume: 0.03,
+          delayMs: 30,
         });
       } else if (event.kind === "drink" || event.kind === "medkit") {
         // Medkits and stamina potions now STASH into the consumable dock rather
@@ -175,6 +172,38 @@ export function playPickupSound(synth: Synth, event: GameEvent): boolean {
         volume: 0.025,
         delayMs: 150,
         echo: 0.25,
+      });
+      return true;
+    }
+
+    case "repairKitUsed": {
+      // Spending a repair kit: the toolbox at work — two ratchet clicks, then
+      // the mended edge rings bright (the chime that used to fire on pickup).
+      synth.noise({
+        durationMs: 35,
+        volume: 0.05,
+        filter: { type: "bandpass", frequency: 2600, q: 1.2 },
+      });
+      synth.noise({
+        durationMs: 35,
+        volume: 0.05,
+        delayMs: 70,
+        filter: { type: "bandpass", frequency: 2600, q: 1.2 },
+      });
+      synth.tone({
+        type: "triangle",
+        from: 988,
+        durationMs: 140,
+        volume: 0.05,
+        delayMs: 140,
+      });
+      synth.tone({
+        type: "sine",
+        from: 1976,
+        durationMs: 180,
+        volume: 0.025,
+        delayMs: 180,
+        echo: 0.3,
       });
       return true;
     }

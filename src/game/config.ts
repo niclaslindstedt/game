@@ -1906,13 +1906,13 @@ export const HELD_ITEMS = {
 } as const;
 
 /**
- * Stacked consumables (medkits, stamina potions): a touched kit banks into
- * the consumable dock rather than firing on contact, and the `useMedkit` /
- * `useStaminaPotion` inputs (a dock-slot tap or its key) spend one on the
- * player's call — so the hero carries a reserve and heals when it matters.
- * Medkits stack per quality (one `stackCap`-deep stack per MEDKIT tier);
- * stamina potions share one stack. A pickup that would overflow its stack
- * stays on the ground.
+ * Stacked consumables (medkits, stamina potions, weapon repair kits): a touched
+ * kit banks into the consumable dock rather than firing on contact, and the
+ * `useMedkit` / `useStaminaPotion` / `useRepairKit` inputs (a dock-slot tap or
+ * its key) spend one on the player's call — so the hero carries a reserve and
+ * heals/mends when it matters. Medkits stack per quality (one `stackCap`-deep
+ * stack per MEDKIT tier); stamina potions and repair kits each share one stack.
+ * A pickup that would overflow its stack stays on the ground.
  */
 export const CONSUMABLES = {
   /** How deep one stack goes; a full stack turns away further pickups. */

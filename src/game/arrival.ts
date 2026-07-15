@@ -76,6 +76,7 @@ export function extractLoadout(state: GameState): Loadout {
     heldAbilities: [...player.heldAbilities],
     medkits: [...player.medkits],
     staminaPotions: player.staminaPotions,
+    repairKits: player.repairKits,
     coins: player.coins,
     // The party rides along: each companion's def and worn kit. Health and
     // level re-derive on apply — companions arrive rested like the hero.
@@ -155,6 +156,10 @@ export function applyLoadout(state: GameState, loadout: Loadout): void {
   player.staminaPotions = Math.max(
     0,
     Math.min(loadout.staminaPotions ?? 0, CONSUMABLES.stackCap),
+  );
+  player.repairKits = Math.max(
+    0,
+    Math.min(loadout.repairKits ?? 0, CONSUMABLES.stackCap),
   );
   // The purse rides along; loadouts banked before the economy existed carry
   // no coins field and load as an empty purse.

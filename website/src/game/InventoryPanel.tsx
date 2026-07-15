@@ -29,6 +29,7 @@ import {
   gateKeyTarget,
   spendGateKey,
   isArmorBroken,
+  isWeaponBroken,
   isScrappableLoot,
   scrapInferiorLoot,
   moveInventoryItem,
@@ -823,12 +824,18 @@ export function InventoryPanel({
               <div
                 key={index}
                 className={`inv-cell${
-                  item && isArmorBroken(item) ? " broken" : ""
+                  item && (isArmorBroken(item) || isWeaponBroken(item))
+                    ? " broken"
+                    : ""
                 }${
                   // A find that beats what's worn in its slot glows to pull the
                   // eye — the cue that replaces auto-equip now that finds bank
-                  // to the bag. A broken piece never glows (it wears nothing).
-                  item && !isArmorBroken(item) && wouldUpgradeSlot(state, item)
+                  // to the bag. A broken piece never glows (a broken weapon
+                  // can't be wielded and broken armor wears nothing).
+                  item &&
+                  !isArmorBroken(item) &&
+                  !isWeaponBroken(item) &&
+                  wouldUpgradeSlot(state, item)
                     ? " upgrade"
                     : ""
                 }${item ? tierGlowClass(item.tier) : ""}`}

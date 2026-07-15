@@ -5,13 +5,14 @@
 import { describe, expect, it } from "vitest";
 
 import {
+  CONSUMABLES,
   gearDef,
   isBetterEquipment,
   rollEquipment,
   step,
   weaponDef,
 } from "@game/core";
-import type { Equipment, GameState } from "@game/core";
+import type { Equipment, GameInput, GameState } from "@game/core";
 import {
   clearStage,
   DT,
@@ -84,7 +85,7 @@ describe("weapon durability", () => {
     expect(state.player.equipment.weapon.durability).toBe(9);
   });
 
-  it("a broken weapon is trashed and the best bag weapon takes over", () => {
+  it("a broken weapon drops into the bag (not trashed) and the best bag weapon takes over", () => {
     const state = startGame();
     clearStage(state);
     addPunchingBag(state);
@@ -95,13 +96,29 @@ describe("weapon durability", () => {
       s.events.some((e) => e.type === "weaponBroke"),
     );
     expect(state.player.equipment.weapon.id).toBe(52);
-    // The wand is gone for good — not in hand, not in the bag.
-    expect(state.player.inventory.every((i) => i?.id !== 50)).toBe(true);
-    expect(state.player.inventory[1]).toBeNull();
+    // The wand is NOT destroyed: it rides in the bag at zero durability, a
+    // broken spare unequippable until repaired.
+    const brokenWand = state.player.inventory.find((i) => i?.id === 50);
+    expect(brokenWand?.durability).toBe(0);
     expect(state.player.inventory[0]?.id).toBe(51); // the pistol stays put
   });
 
-  it("with no weapon in the bag a fresh sidearm is drawn", () => {
+  it("prefers a good bag weapon over the starting sidearm on a break", () => {
+    const state = startGame();
+    clearStage(state);
+    addPunchingBag(state);
+    state.player.equipment.weapon = weapon(50, "test_wand", 1); // last swing
+    state.player.inventory[0] = weapon(52, "test_hammer"); // the only spare
+    run(state, idle, 400, (s) =>
+      s.events.some((e) => e.type === "weaponBroke"),
+    );
+    // The hammer is drawn, not a fresh blaster — a good weapon beats defaulting
+    // to the starter.
+    expect(state.player.equipment.weapon.id).toBe(52);
+    expect(state.player.equipment.weapon.defId).toBe("test_hammer");
+  });
+
+  it("with no wieldable weapon in the bag a fresh sidearm is drawn", () => {
     const state = startGame();
     clearStage(state);
     addPunchingBag(state);
@@ -111,6 +128,18 @@ describe("weapon durability", () => {
     );
     expect(state.player.equipment.weapon.defId).toBe("blaster");
     expect(state.player.equipment.weapon.durability).toBeUndefined();
+    // The broken wand still rides in the bag — never destroyed.
+    expect(state.player.inventory.find((i) => i?.id === 50)?.durability).toBe(
+      0,
+    );
+  });
+
+  it("a broken weapon in the bag cannot be equipped until repaired", () => {
+    const state = startGame();
+    clearStage(state);
+    const broken = weapon(50, "test_hammer", 0); // durability 0 = broken
+    state.player.inventory[0] = broken;
+    expect(isBetterEquipment(state, broken)).toBe(false);
   });
 });
 
@@ -187,28 +216,74 @@ describe("same-weapon pickups refresh durability", () => {
   });
 });
 
-describe("repair kits", () => {
-  it("restore the equipped weapon to full durability", () => {
+const useRepair: GameInput = { ...idle, useRepairKit: true };
+
+describe("repair kits — banking", () => {
+  it("stash into the dock on pickup (stacking) rather than firing on contact", () => {
     const state = startGame();
     clearStage(state);
-    state.player.equipment.weapon = weapon(50, "test_hammer", 3);
+    state.player.equipment.weapon = weapon(50, "test_hammer", 3); // battered
     state.items = [{ id: 1, kind: "repair", pos: { ...state.player.pos } }];
     step(state, idle, DT);
+    // Grabbed for later — the kit is off the ground and banked, but the
+    // battered weapon is NOT yet mended (it waits for the player's call).
     expect(state.items).toHaveLength(0);
-    expect(state.player.equipment.weapon.durability).toBe(
-      weaponDef("test_hammer").durability,
-    );
+    expect(state.player.repairKits).toBe(1);
+    expect(state.player.equipment.weapon.durability).toBe(3);
     expect(state.events).toContainEqual(
-      expect.objectContaining({
-        type: "itemCollected",
-        kind: "repair",
-      }),
+      expect.objectContaining({ type: "itemCollected", kind: "repair" }),
     );
   });
 
-  it("also mend worn armor, kit consumed even with no weapon to mend", () => {
-    const state = equipBlaster(startGame()); // unbreakable weapon: nothing to mend
+  it("bank even with a pristine kit (grabbed for later, like a medkit)", () => {
+    const state = startGame(); // unbreakable sidearm, nothing to mend right now
     clearStage(state);
+    state.items = [{ id: 1, kind: "repair", pos: { ...state.player.pos } }];
+    step(state, idle, DT);
+    expect(state.items).toHaveLength(0);
+    expect(state.player.repairKits).toBe(1);
+  });
+
+  it("stack up to the cap, then overflow stays on the ground", () => {
+    const state = startGame();
+    clearStage(state);
+    state.player.repairKits = CONSUMABLES.stackCap; // full
+    state.items = [{ id: 1, kind: "repair", pos: { ...state.player.pos } }];
+    step(state, idle, DT);
+    // No room: the kit stays grounded and the stack holds at the cap.
+    expect(state.items).toHaveLength(1);
+    expect(state.player.repairKits).toBe(CONSUMABLES.stackCap);
+  });
+});
+
+describe("repair kits — spending", () => {
+  it("mend the held weapon AND every weapon in the bag, not just the equipped one", () => {
+    const state = startGame();
+    clearStage(state);
+    state.player.repairKits = 1;
+    state.player.equipment.weapon = weapon(50, "test_hammer", 3); // battered
+    state.player.inventory[0] = weapon(51, "test_pistol", 2); // battered spare
+    state.player.inventory[1] = weapon(52, "test_wand", 0); // broken spare
+    step(state, useRepair, DT);
+    expect(state.player.repairKits).toBe(0);
+    // The held weapon is whole again…
+    expect(state.player.equipment.weapon.durability).toBe(
+      weaponDef("test_hammer").durability,
+    );
+    // …and so is every weapon riding in the bag (the broken wand woke up).
+    const pistol = state.player.inventory.find((i) => i?.id === 51);
+    const wand = state.player.inventory.find((i) => i?.id === 52);
+    expect(pistol?.durability).toBe(weaponDef("test_pistol").durability);
+    expect(wand?.durability).toBe(weaponDef("test_wand").durability);
+    expect(state.events).toContainEqual(
+      expect.objectContaining({ type: "repairKitUsed" }),
+    );
+  });
+
+  it("also mend worn armor", () => {
+    const state = equipBlaster(startGame());
+    clearStage(state);
+    state.player.repairKits = 1;
     state.player.equipment.chest = {
       id: 70,
       defId: "test_vest",
@@ -218,37 +293,55 @@ describe("repair kits", () => {
       affixes: [],
       durability: 10, // battered
     };
-    state.items = [{ id: 1, kind: "repair", pos: { ...state.player.pos } }];
-    step(state, idle, DT);
-    expect(state.items).toHaveLength(0);
+    step(state, useRepair, DT);
+    expect(state.player.repairKits).toBe(0);
     expect(state.player.equipment.chest.durability).toBe(
       gearDef("test_vest").durability,
     );
   });
 
-  it("stay on the ground when there is nothing to repair", () => {
-    const state = startGame(); // unbreakable sidearm in hand
+  it("no-op (kit kept) with none held or nothing to mend", () => {
+    const state = startGame(); // unbreakable sidearm, nothing to mend
     clearStage(state);
-    state.items = [{ id: 1, kind: "repair", pos: { ...state.player.pos } }];
-    step(state, idle, DT);
-    expect(state.items).toHaveLength(1);
+    // None held: nothing happens.
+    step(state, useRepair, DT);
+    expect(state.events.some((e) => e.type === "repairKitUsed")).toBe(false);
+    // One held but the whole kit is already whole: the kit is kept.
+    state.player.repairKits = 1;
+    step(state, useRepair, DT);
+    expect(state.player.repairKits).toBe(1);
+    expect(state.events.some((e) => e.type === "repairKitUsed")).toBe(false);
+  });
 
-    // A pristine breakable weapon needs no repair either.
-    state.player.equipment.weapon = weapon(50, "test_hammer");
-    step(state, idle, DT);
-    expect(state.items).toHaveLength(1);
-
-    // Nor does armor at full durability.
-    state.player.equipment.chest = {
-      id: 70,
-      defId: "test_vest",
-      slot: "chest",
-      tier: "regular",
-      ilvl: 5,
-      affixes: [],
-      durability: gearDef("test_vest").durability,
-    };
-    step(state, idle, DT);
-    expect(state.items).toHaveLength(1);
+  it("re-equip the weapons durability booted, earliest-shed reclaiming the hand", () => {
+    const state = startGame();
+    clearStage(state);
+    addPunchingBag(state);
+    // The hero mains the hammer (best), with a pistol as backup. When the
+    // hammer breaks the pistol takes over; when the pistol breaks too, only the
+    // starter sidearm remains.
+    state.player.equipment.weapon = weapon(50, "test_hammer", 1);
+    state.player.inventory[0] = weapon(51, "test_pistol", 1);
+    // First break: hammer → bag (shed #1), pistol drawn.
+    run(state, idle, 600, (s) => s.player.equipment.weapon.id === 51);
+    // Second break: pistol → bag (shed #2), sidearm drawn.
+    run(state, idle, 600, (s) => s.player.equipment.weapon.defId === "blaster");
+    expect(state.player.equipment.weapon.defId).toBe("blaster");
+    // Clear the field so the re-equipped weapon doesn't wear a point swinging
+    // in the same step — this beat is about which weapon returns, not combat.
+    state.enemies = [];
+    // Now repair: both weapons mend, and the EARLIEST-shed (the hammer, the
+    // hero's main) reclaims the hand; the pistol stays as a wieldable spare.
+    state.player.repairKits = 1;
+    step(state, useRepair, DT);
+    expect(state.player.equipment.weapon.id).toBe(50);
+    expect(state.player.equipment.weapon.durability).toBe(
+      weaponDef("test_hammer").durability,
+    );
+    const pistol = state.player.inventory.find((i) => i?.id === 51);
+    expect(pistol?.durability).toBe(weaponDef("test_pistol").durability);
+    // The shed markers are cleared once the kit is whole again.
+    expect(state.player.equipment.weapon.unequippedAt).toBeUndefined();
+    expect(pistol?.unequippedAt).toBeUndefined();
   });
 });

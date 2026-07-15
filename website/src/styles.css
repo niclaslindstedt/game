@@ -3358,9 +3358,10 @@ body {
   opacity: 0.75;
 }
 
-/* The consumable dock: the medkit + stamina slots, sitting one row ABOVE the
-   powerup dock in the same corner (its bottom clears the powerup slots' height
-   plus their gap). Same slot width as the powerups so the two rows line up. */
+/* The consumable dock: the medkit + stamina + repair slots, sitting one row
+   ABOVE the powerup dock in the same corner (its bottom clears the powerup
+   slots' height plus their gap). Same slot width as the powerups so the two
+   rows line up. */
 .consumable-dock {
   position: absolute;
   bottom: calc(max(0.75rem, env(safe-area-inset-bottom)) + 2.85rem + 0.6rem);
@@ -3394,7 +3395,8 @@ body {
 }
 
 /* A filled consumable slot glows in its quality accent (`--slot-accent`: the
-   medkit grade's trim, or the drink's green) so the grade reads at a glance. */
+   medkit grade's trim, the drink's green, or the repair kit's bronze) so the
+   grade reads at a glance. */
 .consumable-slot.filled {
   pointer-events: auto;
   cursor: pointer;

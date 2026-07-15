@@ -24,7 +24,8 @@ export type BindableAction =
   | "map"
   | "pause"
   | "medkit"
-  | "stamina";
+  | "stamina"
+  | "repair";
 
 /** The live control scheme: one physical binding code per action. An empty
  * string means the action is unbound (a rebind cleared it off a key that got
@@ -32,7 +33,7 @@ export type BindableAction =
 export type KeyBindings = Record<BindableAction, string>;
 
 /** The shipped scheme: WASD steering with the action keys the game grew up on
- * (E powerup, Q weapon menu, I bag, M map, Y achievements, P pause, C/X the
+ * (E powerup, Q weapon menu, I bag, M map, Y achievements, P pause, C/X/V the
  * consumable dock). Shift walks, Space jumps. Bound by `KeyboardEvent.code` so
  * the physical WASD cluster holds under any keyboard layout. */
 export const DEFAULT_KEYBINDINGS: KeyBindings = {
@@ -49,6 +50,7 @@ export const DEFAULT_KEYBINDINGS: KeyBindings = {
   pause: "KeyP",
   medkit: "KeyC",
   stamina: "KeyX",
+  repair: "KeyV",
 };
 
 /** The menu's row order (Quake-style: steering first, then the actions) with
@@ -87,6 +89,11 @@ export const KEYBIND_ROWS: {
     label: "USE STAMINA",
     blurb: "DRINK A STAMINA POTION FROM THE CONSUMABLE DOCK",
   },
+  {
+    action: "repair",
+    label: "USE REPAIR KIT",
+    blurb: "MEND EVERY WEAPON WITH A REPAIR KIT FROM THE DOCK",
+  },
 ];
 
 /** The steering directions, as unit vectors — the held keys whose sum is the
@@ -114,6 +121,7 @@ const DISCRETE_ACTIONS: BindableAction[] = [
   "pause",
   "medkit",
   "stamina",
+  "repair",
 ];
 
 /** The steering vector a held binding code contributes, or null if the code
