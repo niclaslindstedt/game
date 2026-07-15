@@ -435,6 +435,7 @@ export function createGame(
     wellTickMs: 0,
     bagFullHintCooldownMs: 0,
     staminaEmptyMs: 0,
+    staminaRegenLockMs: 0,
     victoryCountdownMs: null,
     bossCorpse: null,
     staying: false,

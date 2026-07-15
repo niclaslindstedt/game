@@ -1369,6 +1369,21 @@ export const STAMINA = {
   runRateFactor: -1,
   /** Top-speed multiplier once the pool is empty (a winded jog). */
   emptySpeedFactor: 0.5,
+  /**
+   * Stamina spent per jump takeoff, as a fraction of the MAX pool (so a
+   * deeper reserve buys proportionally more hops). Drained on the takeoff
+   * frame only; a jump that bottoms the pool out trips the same regen lockout
+   * a spent-out run does (see `emptyRegenLockMs`).
+   */
+  jumpCost: 0.1,
+  /**
+   * Ms of frozen regen after a RUN or a JUMP empties the pool. Bottoming out
+   * mid-sprint (or on a takeoff) locks regen for this long — the pool refills
+   * at nothing until it lapses — so the hero can't tap-run/tap-jump on fumes
+   * and must walk it off instead. Any run/jump that re-empties the pool
+   * re-arms the full window.
+   */
+  emptyRegenLockMs: 2000,
 } as const;
 
 /**

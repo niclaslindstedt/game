@@ -1724,6 +1724,15 @@ export type GameState = {
    */
   staminaEmptyMs: number;
   /**
+   * Ms left of the stamina regen LOCKOUT — the frozen-regen window a run or a
+   * jump trips when it empties the sprint pool (see `STAMINA.emptyRegenLockMs`).
+   * Counts down each step; while it stands the pool refills at nothing, so a
+   * hero who bottomed out mid-sprint (or on a takeoff) must walk it off and
+   * wait the beat out. Re-armed to the full window whenever a run/jump empties
+   * the pool again.
+   */
+  staminaRegenLockMs: number;
+  /**
    * Ms left of the combat-clock grace window (the "combat is still live" tail).
    * Refreshed to `RUN.combatGraceMs` on every kill and counted down each
    * playing tick; while it — or a live foe — stands, `stats.combatMs` accrues.
