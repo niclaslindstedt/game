@@ -175,7 +175,14 @@ run against synthetic fixtures with no shipped content (see
   screen nuke (wipes every horde minion on screen — elites and bosses are
   immune — its drop rate kept rare by `LOOT.nukeShare`, and its own kills
   never chain: a nuke blast's loot rolls skip both screen-nuke slices, so a
-  bomb can't pay out another bomb). The ONE NUKE rule (`canDropNuke`) gates
+  bomb can't pay out another bomb). As a panic button it also buys real
+  breathing room — the AFTERMATH (`NUKE.calmMs`, `detonateNuke` →
+  `stepSpawner`): after a blast the spawner holds every refill for a short
+  calm so the cleared screen stays clear long enough to break away instead of
+  the live floor instantly repopulating the ring, and the transient menace heat
+  is cooled to the earned permanent floor (the ratchet stands) with the banked
+  walk-credit lure dumped, so the horde that returns is no denser or more
+  evolved than the run's baseline. The ONE NUKE rule (`canDropNuke`) gates
   every nuke drop so at most one is ever in play: none drops while a nuke sits
   in the dock or an un-collected one still waits on screen, and a nuke that has
   drifted off screen is swept away when a fresh one drops. Levels choose which

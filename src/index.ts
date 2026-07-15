@@ -450,6 +450,7 @@ export {
   MENACE,
   MERCHANT,
   MERCY,
+  NUKE,
   OBSTACLES,
   PLAYER,
   PROJECTILE,

@@ -1707,6 +1707,15 @@ export type GameState = {
    */
   trickleMs: number;
   /**
+   * Ms of post-NUKE calm still to run (config `NUKE.calmMs`, counts down in
+   * stepSpawner). While positive the spawner holds every refill — the live
+   * floor, the walk-credit pull, the timed stream, the trickle — so the screen
+   * a screen-nuke just cleared actually STAYS clear long enough to break away,
+   * instead of the ring instantly repopulating at the screen edge. Set by
+   * `detonateNuke`; starts at 0.
+   */
+  nukeCalmMs: number;
+  /**
    * Resolved kill thresholds for the level's `loot.earlyDrops` schedule,
    * parallel to it: a rolled `[min, max]` entry gets a concrete count here at
    * creation, a fixed entry keeps its number. Empty when the level has no
