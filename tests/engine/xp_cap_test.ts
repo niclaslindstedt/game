@@ -15,6 +15,8 @@ import {
   grantXp,
   LEVELING,
   levelPosition,
+  MENACE,
+  menaceStage,
   step,
   XP_CAP,
   xpCapMultiplier,
@@ -233,6 +235,50 @@ describe("maybeCapThought — the recurring cap-farm mutter", () => {
     killOne(state);
     expect(state.dialogue).toBeNull();
     expect(state.phase).toBe("playing");
+  });
+
+  it("falls silent once menace evolves the horde past the ceiling", () => {
+    // The ceiling only bites on a rung whose menace can climb that high — the
+    // JESUS rung is uncapped, so stage >10 is reachable there.
+    const state = startGame();
+    state.difficulty = "jesus";
+    clearStage(state);
+    equipBlaster(state);
+    state.player.level = xpLevelCap("test_level", "jesus");
+    state.player.xpToNext = 1_000_000; // keep an incidental level-up out of the way
+    state.capThoughtMs = 0;
+    // Evolve the horde past the ceiling: at this menace stage the mobs carry
+    // stacked evolution hp and are demonstrably no longer pathetic. Pin the
+    // ratchet floor too so decay across the kill loop can't cool it back down.
+    state.menace =
+      (DIALOGUE.capThoughtMenaceStageCeiling + 1) * MENACE.perStage;
+    state.menaceFloor = state.menace;
+    expect(menaceStage(state)).toBeGreaterThan(
+      DIALOGUE.capThoughtMenaceStageCeiling,
+    );
+
+    killOne(state);
+    expect(state.dialogue).toBeNull();
+    expect(state.phase).toBe("playing");
+    // The skip must not re-arm the cooldown — the line resumes the moment the
+    // meter cools back down.
+    expect(state.capThoughtMs).toBe(0);
+  });
+
+  it("still mutters at or below the menace ceiling", () => {
+    const state = startGame();
+    clearStage(state);
+    equipBlaster(state);
+    state.player.level = xpLevelCap("test_level", "medium");
+    state.player.xpToNext = 1_000_000; // keep an incidental level-up out of the way
+    state.capThoughtMs = 0;
+    // Right at the ceiling the horde hasn't out-evolved the line yet.
+    state.menace = DIALOGUE.capThoughtMenaceStageCeiling * MENACE.perStage;
+    expect(menaceStage(state)).toBe(DIALOGUE.capThoughtMenaceStageCeiling);
+
+    killOne(state);
+    expect(state.phase).toBe("dialogue");
+    expect(state.dialogue?.source.kind).toBe("playerThought");
   });
 
   it("holds for the cooldown, then rotates to the next variation", () => {

@@ -1719,6 +1719,16 @@ export const DIALOGUE = {
    * cap-farm hears it tens of times across the campaign, never back-to-back.
    */
   capThoughtCooldownMs: 60_000,
+  /**
+   * The menace STAGE above which the "these enemies are pathetic" cap-farm
+   * mutter falls silent (see `maybeCapThought` in story.ts). Once the horde has
+   * evolved past this stage it is demonstrably NOT pathetic anymore — mobs
+   * carry stacked evolution hp and the set pieces power-match the hero — so the
+   * self-satisfied grind line would read as flatly wrong. The hero can still be
+   * over the map's `xpLevelCap` and hear it at or below this stage; it's the
+   * high-menace rampage where the horde has answered his power that mutes it.
+   */
+  capThoughtMenaceStageCeiling: 10,
 } as const;
 
 /**
