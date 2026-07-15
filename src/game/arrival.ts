@@ -11,7 +11,7 @@
 // level's signature kit. The derivation is deterministic data — no RNG, no
 // saved state.
 
-import { companionMaxHp } from "./companions.ts";
+import { companionMaxHp, companionXpToLevelUp } from "./companion-stats.ts";
 import {
   ARRIVAL,
   CONSUMABLES,
@@ -78,10 +78,13 @@ export function extractLoadout(state: GameState): Loadout {
     staminaPotions: player.staminaPotions,
     repairKits: player.repairKits,
     coins: player.coins,
-    // The party rides along: each companion's def and worn kit. Health and
-    // level re-derive on apply — companions arrive rested like the hero.
+    // The party rides along: each companion's def, its EARNED level and XP (so
+    // it keeps leveling across every level and difficulty), and its worn kit.
+    // Health re-derives on apply — companions arrive rested like the hero.
     companions: state.companions.map((companion) => ({
       defId: companion.defId,
+      level: companion.level,
+      xp: companion.xp,
       equipment: {
         weapon: copyPiece(companion.equipment.weapon) as Equipment,
         head: copyPiece(companion.equipment.head),
@@ -171,13 +174,17 @@ export function applyLoadout(state: GameState, loadout: Loadout): void {
   player.stamina = player.maxStamina;
 
   // The party walks in with him: each carried companion re-minted at the
-  // hero's side, rested (full hp at his level), wearing its carried kit. A
-  // since-deleted companion def is simply left behind, like legacy gear.
+  // hero's side, rested (full hp at its OWN earned level), wearing its carried
+  // kit. Its level and XP ride along so it keeps climbing across levels AND
+  // difficulties; a loadout banked before companion leveling carries no level
+  // (falls back to the hero's) and no XP (a fresh bar). A since-deleted
+  // companion def is simply left behind, like legacy gear.
   state.companions = [];
   for (const carried of loadout.companions ?? []) {
     if (!isCompanionDef(carried.defId)) continue;
     const def = companionDef(carried.defId);
-    const maxHp = companionMaxHp(def, player.level);
+    const level = Math.max(1, carried.level ?? player.level);
+    const maxHp = companionMaxHp(def, level);
     const index = state.companions.length;
     const weapon = mint(carried.equipment.weapon) ?? {
       id: state.nextId++,
@@ -196,7 +203,9 @@ export function applyLoadout(state: GameState, loadout: Loadout): void {
       },
       hp: maxHp,
       maxHp,
-      level: Math.max(1, player.level),
+      level,
+      xp: Math.max(0, carried.xp ?? 0),
+      xpToNext: companionXpToLevelUp(level),
       faceLeft: false,
       moving: false,
       weaponCooldownMs: 0,

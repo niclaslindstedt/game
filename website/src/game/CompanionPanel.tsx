@@ -12,6 +12,7 @@ import {
   COMPANION_SLOTS,
   companionById,
   companionDef,
+  companionPowerRank,
   companionWeaponDamage,
   equipCompanionFromInventory,
   equipmentIcon,
@@ -84,6 +85,12 @@ export function CompanionPanel({
   const def = companionDef(companion.defId);
   const portrait = spriteDataUrl(sprites, `${def.sprite}_0`);
   const downed = companion.downedMs !== undefined;
+  // The XP bar toward the next level, clamped for a clean fill.
+  const xpFrac =
+    companion.xpToNext > 0
+      ? Math.max(0, Math.min(1, companion.xp / companion.xpToNext))
+      : 0;
+  const powerRank = def.power ? companionPowerRank(def, companion.level) : 0;
 
   return (
     <div className="game-overlay companion-overlay">
@@ -97,6 +104,20 @@ export function CompanionPanel({
           </span>
           <div className="companion-title">
             <PixelText font={font} text={def.name} scale={3} color="#ffd75e" />
+            {/* Level + the XP bar toward the next one — a companion trains by
+                fighting and levels on its own (see companion-stats.ts). */}
+            <PixelText
+              font={font}
+              text={`LEVEL ${companion.level}`}
+              scale={2}
+              color="#7ef0c8"
+            />
+            <span className="companion-xp-bar" aria-label="companion-xp">
+              <span
+                className="companion-xp-fill"
+                style={{ width: `${Math.round(xpFrac * 100)}%` }}
+              />
+            </span>
             <PixelText
               font={font}
               text={
@@ -107,7 +128,18 @@ export function CompanionPanel({
               scale={2}
               color={downed ? "#d83a3a" : "#9aa3ad"}
             />
-            {def.aura?.magicFind ? (
+            {/* The signature POWER and its current rank — the trick that grows
+                as the companion levels (more pellets, chain arcs, a wider
+                nova, deeper luck). Falls back to the plain aura/nova/damage
+                line for a companion with no scaling power. */}
+            {def.power ? (
+              <PixelText
+                font={font}
+                text={`${def.power.name} - RANK ${powerRank}`}
+                scale={2}
+                color="#ffcf6b"
+              />
+            ) : def.aura?.magicFind ? (
               <PixelText
                 font={font}
                 text={`AURA: +${Math.round(def.aura.magicFind * 100)}% MAGIC FIND`}

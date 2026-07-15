@@ -5241,6 +5241,23 @@ canvas.tier-artifact {
   gap: 0.3rem;
 }
 
+/* The companion's XP bar toward its next level — a thin party-green fill on a
+   dark track, the same read as the hero's bar. */
+.companion-xp-bar {
+  width: 100%;
+  min-width: 8rem;
+  height: 0.5rem;
+  background: #0b0d10;
+  border: 1px solid #3a4048;
+  image-rendering: pixelated;
+}
+
+.companion-xp-fill {
+  display: block;
+  height: 100%;
+  background: #7ef0c8;
+}
+
 .companion-slots {
   display: flex;
   gap: 0.5rem;

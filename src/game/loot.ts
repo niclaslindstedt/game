@@ -6,8 +6,10 @@
 // lot. Extracted from step.ts so the simulation step stays readable.
 
 import { clamp, direction, distance, type Vec2 } from "@game/lib/vec.ts";
+import { companionMaxHp, companionXpToLevelUp } from "./companion-stats.ts";
 import {
   ACCURACY,
+  COMPANIONS,
   ENEMY_AI,
   KNOCKBACK,
   LEVELING,
@@ -22,6 +24,7 @@ import {
   WORLD_DROP,
 } from "./config.ts";
 import { abilityDef } from "./defs/abilities.ts";
+import { companionDef } from "./defs/companions.ts";
 import { difficultyDef, scaledMobCount } from "./defs/difficulties.ts";
 import { enemyDef, type EnemyDef } from "./defs/enemies/index.ts";
 import { levelDef } from "./defs/levels/index.ts";
@@ -307,6 +310,10 @@ export function hitEnemy(
      * HERO — a bomb clearing the screen, or a party carrying the fight, is not
      * the hero out-fighting the horde by hand and must not escalate it. */
     noMenace?: boolean;
+    /** The COMPANION (`Companion.id`) whose attack this is: a kill by this blow
+     * credits its XP to that companion so it earns its OWN levels
+     * (`creditCompanionKill`). Undefined for the hero and for powerups. */
+    companionId?: number;
   },
 ): void {
   const def = enemyDef(enemy.defId);
@@ -503,6 +510,7 @@ export function hitEnemy(
   killEnemy(state, enemy, damage, crit, crit ? opts?.damageRoll : undefined, {
     noNukeDrop: opts?.noNukeDrop,
     noMenace: opts?.noMenace,
+    companionId: opts?.companionId,
   });
 }
 
@@ -585,6 +593,51 @@ export function enemyKillXp(
 }
 
 /**
+ * Credit a COMPANION's finishing blow: the kill's base XP (`enemyKillXp` — the
+ * same figure the hero would earn, so an elite lurches the bar) banks toward
+ * the companion's OWN level, and each threshold crossed levels it up, re-scales
+ * its hp to the new level (topped to full, the ding's heal), and floats a
+ * `companionLeveledUp` cue. A downed companion earns nothing (it isn't the one
+ * fighting). Companion XP is NOT run through the per-map soft cap — the party
+ * levels forever, by design. No-op if the id isn't in the party (it left, or
+ * was a stale tag).
+ */
+function creditCompanionKill(
+  state: GameState,
+  companionId: number,
+  def: EnemyDef,
+  enemy: Enemy,
+): void {
+  const companion = state.companions.find((c) => c.id === companionId);
+  if (!companion || companion.downedMs !== undefined) return;
+  companion.xp += Math.max(1, Math.round(enemyKillXp(state, def, enemy)));
+  let leveled = false;
+  while (
+    companion.level < COMPANIONS.maxLevel &&
+    companion.xp >= companion.xpToNext
+  ) {
+    companion.xp -= companion.xpToNext;
+    companion.level++;
+    companion.xpToNext = companionXpToLevelUp(companion.level);
+    leveled = true;
+  }
+  if (leveled) {
+    companion.maxHp = companionMaxHp(
+      companionDef(companion.defId),
+      companion.level,
+    );
+    // A ding is the heal, exactly as the hero's is.
+    companion.hp = companion.maxHp;
+    state.events.push({
+      type: "companionLeveledUp",
+      defId: companion.defId,
+      level: companion.level,
+      pos: { ...companion.pos },
+    });
+  }
+}
+
+/**
  * Book one enemy's death: off the board, kill counted, XP paid, loot rolled,
  * last words played. The tail of `hitEnemy`'s 0-hp path, extracted so the
  * SPARE-or-KILL verdict (`resolveChoice` in companions.ts) can land the
@@ -603,11 +656,19 @@ export function killEnemy(
   damage: number,
   crit: boolean,
   critPower?: number,
-  opts?: { noNukeDrop?: boolean; noMenace?: boolean },
+  opts?: { noNukeDrop?: boolean; noMenace?: boolean; companionId?: number },
 ): void {
   const def = enemyDef(enemy.defId);
   const index = state.enemies.indexOf(enemy);
   if (index >= 0) state.enemies.splice(index, 1);
+
+  // A COMPANION's finishing blow earns IT the kill's XP (its own leveling —
+  // decoupled from the hero, and persisted across the whole save via the
+  // loadout). Done before the hero's own bookkeeping below; it never touches
+  // the hero's bar.
+  if (opts?.companionId !== undefined) {
+    creditCompanionKill(state, opts.companionId, def, enemy);
+  }
 
   state.stats.kills++;
   // Refresh the combat-clock tail: this kill proves a fight is live, so the

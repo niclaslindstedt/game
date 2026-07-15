@@ -2083,6 +2083,25 @@ export function GameScreen({
               color: event.type === "companionDowned" ? "#d83a3a" : "#7ef0c8",
             });
           }
+          // A companion earned a level from its own kills: float a "LVL n" tag
+          // off its head (green, the party colour) and toast the name — its
+          // signature power grows a rank at a time, so the level is worth
+          // noticing.
+          if (event.type === "companionLeveledUp") {
+            effects.push({
+              kind: "text",
+              pos: { x: event.pos.x, y: event.pos.y - 16 },
+              untilMs: state.stats.timeMs + 1200,
+              durationMs: 1200,
+              text: `LVL ${event.level}`,
+              color: "#7ef0c8",
+              rise: 22,
+            });
+            pushPickup(
+              `${companionDef(event.defId).name} → LVL ${event.level}`,
+              "#7ef0c8",
+            );
+          }
           // The bag is full and turned away a piece of loot: float a "BAG
           // FULL" thought over the hero's hair and light the inventory button's
           // pulse so the player knows to open it and make room.

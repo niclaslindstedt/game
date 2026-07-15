@@ -1600,6 +1600,8 @@ function stepProjectiles(state: GameState, dt: number, dtMs: number): void {
       // meter — menace answers an overpowered hero, not a helpful party (see
       // `noMenace` in hitEnemy); the hero's own shots heat it as always.
       noMenace: projectile.companionId !== undefined,
+      // Credit a companion's shot-kill toward its own leveling (loot.ts).
+      companionId: projectile.companionId,
     });
     if (
       projectile.companionId !== undefined &&
@@ -1691,8 +1693,10 @@ function chainLightning(
         critMult: projectile.critMult,
         damageRoll: projectile.damageRoll,
         // A chained leap inherits the source shot's menace attribution: a
-        // companion's chain never heats the meter (see the projectile hit).
+        // companion's chain never heats the meter (see the projectile hit) —
+        // and credits its kills to the same companion.
         noMenace: projectile.companionId !== undefined,
+        companionId: projectile.companionId,
       },
     );
   }

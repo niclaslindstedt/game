@@ -8,8 +8,14 @@
 // whatever is in their weapon slot (helmet and chest piece on top — never
 // legs or feet), radiate their def's aura (LUCKY's +50% magic find), float
 // their kill-quote banter, and go DOWN instead of dying — a beaten companion
-// kneels out of the fight and stands back up on its own. The party rides the
-// loadout between levels (see arrival.ts).
+// kneels out of the fight. It stands back up on its own ONCE THE FIELD IS
+// CLEAR (a foe beside it freezes the count, `COMPANIONS.downedCombatRadius`),
+// so one downed in a swarm stays down until the hero speaks to a merchant
+// (`reviveDownedCompanions`, wired from merchant.ts) — which works in hardcore
+// too. Companions also LEVEL UP on their own kills (their level/power math is
+// in companion-stats.ts; the kill is credited in loot.ts on the `companionId`
+// tag), and the party — level, XP, kit and all — rides the loadout between
+// levels AND difficulties (see arrival.ts), so a companion levels up forever.
 //
 // Staying WITH the hero comes before clearing the horde: while he moves, a
 // companion holds formation instead of peeling off after a mob (it still
@@ -23,6 +29,13 @@
 // `companionId` for kill-quote attribution in step.ts).
 
 import { clamp, direction, distance, distanceSq } from "@game/lib/vec.ts";
+import {
+  companionMaxHp,
+  companionNovaBonusDamage,
+  companionNovaRadius,
+  companionProjectileBonus,
+  companionXpToLevelUp,
+} from "./companion-stats.ts";
 import { ARMOR, COMPANIONS, MELEE, WEAPON } from "./config.ts";
 import { companionDef, type CompanionDef } from "./defs/companions.ts";
 import { enemyDef } from "./defs/enemies/index.ts";
@@ -57,17 +70,12 @@ export const COMPANION_SLOTS: readonly CompanionSlot[] = [
   "chest",
 ];
 
-/** A companion's max hp at the hero's `level` (they train together). */
-export function companionMaxHp(def: CompanionDef, level: number): number {
-  return Math.round(def.hp * (1 + COMPANIONS.hpPerLevel * (level - 1)));
-}
-
 /**
  * A companion's per-hit weapon damage: the weapon's catalog damage times its
  * `damagePct` affixes and make quality, held at the party damper
  * (`COMPANIONS.damageMult` — support, not a replacement hero) and grown with
- * the hero's level. Companions carry no stats of their own; the gear IS the
- * build.
+ * the companion's OWN level (`COMPANIONS.damagePerLevel`). Companions carry no
+ * stats of their own; the gear IS the build.
  */
 export function companionWeaponDamage(companion: Companion): number {
   const weapon = companion.equipment.weapon;
@@ -88,16 +96,19 @@ export function companionWeaponDamage(companion: Companion): number {
 
 /**
  * A companion's FROST NOVA damage per caught foe: its def's base pulse damage
- * grown with the hero's level exactly as its weapon is (`COMPANIONS.
- * damagePerLevel`) — the party trains together — but WITHOUT the weapon
- * damper: the nova is a signature power, not a spammed strike, so it lands at
- * full authored weight. 0 for a companion with no nova.
+ * grown with the companion's OWN level exactly as its weapon is (`COMPANIONS.
+ * damagePerLevel`) — but WITHOUT the weapon damper: the nova is a signature
+ * power, not a spammed strike, so it lands at full authored weight. A ranked
+ * power's flat `novaDamagePerRank` bite is added on top (`companion-stats.ts`).
+ * 0 for a companion with no nova.
  */
 export function companionNovaDamage(companion: Companion): number {
-  const nova = companionDef(companion.defId).nova;
-  if (!nova) return 0;
+  const def = companionDef(companion.defId);
+  if (!def.nova) return 0;
   const trained = 1 + COMPANIONS.damagePerLevel * (companion.level - 1);
-  return nova.damage * trained;
+  return (
+    def.nova.damage * trained + companionNovaBonusDamage(def, companion.level)
+  );
 }
 
 /** The ms between a companion's attacks — the catalog cadence at the global
@@ -158,6 +169,8 @@ export function recruitCompanion(
   pos: { x: number; y: number },
 ): Companion {
   const def = companionDef(defId);
+  // Recruited TRAINED to the hero — it joins as an equal, then earns its own
+  // levels from here (its XP bar starts fresh at that level).
   const level = Math.max(1, state.player.level);
   const maxHp = companionMaxHp(def, level);
   const companion: Companion = {
@@ -167,6 +180,8 @@ export function recruitCompanion(
     hp: maxHp,
     maxHp,
     level,
+    xp: 0,
+    xpToNext: companionXpToLevelUp(level),
     faceLeft: false,
     moving: false,
     weaponCooldownMs: 0,
@@ -320,9 +335,15 @@ function stepCompanion(
   companion.weaponCooldownMs = Math.max(0, companion.weaponCooldownMs - dtMs);
   companion.combatMs = Math.max(0, (companion.combatMs ?? 0) - dtMs);
 
-  // Downed: kneel out the count, then stand back up on your own.
+  // Downed: kneel out the count, then stand back up on your own — but the
+  // count only ticks while the field around IT is clear. Beaten down in the
+  // middle of a swarm, a companion STAYS down until the area empties or the
+  // hero speaks to a merchant (`reviveDownedCompanions`); a clean scrap still
+  // lets it pop back up on its own once the mob is dead.
   if (companion.downedMs !== undefined) {
-    companion.downedMs = Math.max(0, companion.downedMs - dtMs);
+    if (!foeNear(state, companion.pos, COMPANIONS.downedCombatRadius)) {
+      companion.downedMs = Math.max(0, companion.downedMs - dtMs);
+    }
     if (companion.downedMs > 0) return;
     delete companion.downedMs;
     companion.hp = Math.max(
@@ -334,15 +355,6 @@ function stepCompanion(
       defId: companion.defId,
       pos: { ...companion.pos },
     });
-  }
-
-  // The party trains with the hero: a level-up re-scales hp in place,
-  // keeping the wound fraction (a hurt companion stays hurt, just sturdier).
-  if (companion.level !== player.level) {
-    const fraction = companion.maxHp > 0 ? companion.hp / companion.maxHp : 1;
-    companion.level = Math.max(1, player.level);
-    companion.maxHp = companionMaxHp(def, companion.level);
-    companion.hp = Math.max(1, Math.round(companion.maxHp * fraction));
   }
 
   // Fallen far behind (a jump chase, a teleporting fight): slip through the
@@ -475,6 +487,20 @@ function stepCompanion(
   }
 }
 
+/** Is any live (non-apparition) foe within `radius` of `pos`? The
+ * downed-companion revive gate reads it around the fallen companion: a foe this
+ * close keeps it pinned down. */
+function foeNear(
+  state: GameState,
+  pos: { x: number; y: number },
+  radius: number,
+): boolean {
+  const rSq = radius * radius;
+  return state.enemies.some(
+    (e) => !enemyDef(e.defId).apparition && distanceSq(e.pos, pos) <= rSq,
+  );
+}
+
 /** The nearest fightable foe inside the hero's engagement bubble — the party
  * fights around him, it never runs off to clear the map. */
 function pickTarget(state: GameState): Enemy | undefined {
@@ -591,7 +617,8 @@ function companionAttack(
         // A companion's blow is booked for the run but kept OUT of the menace
         // meter: menace answers an overpowered HERO, and a party carrying the
         // fight is not the hero being too strong (see `noMenace` in hitEnemy).
-        { noMenace: true },
+        // `companionId` credits the kill's XP to this companion (loot.ts).
+        { noMenace: true, companionId: companion.id },
       );
     }
     if (state.stats.kills > killsBefore) {
@@ -601,7 +628,16 @@ function companionAttack(
   }
 
   const spec = weapon.projectile;
-  const pellets = Math.max(1, spec.count ?? 1);
+  // The companion's signature POWER augments the volley: extra pellets, extra
+  // chain arcs, extra pierce, each growing a rank at a time as it levels
+  // (`companion-stats.ts`) — a coil with no base chain still learns to arc.
+  const bonus = companionProjectileBonus(
+    companionDef(companion.defId),
+    companion.level,
+  );
+  const pellets = Math.max(1, (spec.count ?? 1) + bonus.pellets);
+  const pierce = (spec.pierce ?? 0) + bonus.pierce;
+  const chain = (spec.chain ?? 0) + bonus.chain;
   const spread = ((spec.spreadDeg ?? 0) * Math.PI) / 180;
   for (let i = 0; i < pellets; i++) {
     const offset = pellets > 1 ? (i / (pellets - 1) - 0.5) * spread : 0;
@@ -620,9 +656,9 @@ function companionAttack(
       companionId: companion.id,
       z: 0,
     };
-    if (spec.pierce) projectile.pierceLeft = spec.pierce;
+    if (pierce > 0) projectile.pierceLeft = pierce;
     if (spec.homing) projectile.homing = spec.homing;
-    if (spec.chain) projectile.chain = spec.chain;
+    if (chain > 0) projectile.chain = chain;
     state.projectiles.push(projectile);
   }
   state.events.push({
@@ -658,7 +694,9 @@ function companionNova(
   );
   if (companion.novaCooldownMs > 0) return;
 
-  const reachSq = nova.radius * nova.radius;
+  // The ring WIDENS as the companion ranks up (`power.novaRadiusPerRank`).
+  const radius = companionNovaRadius(def, companion.level);
+  const reachSq = radius * radius;
   // Snapshot the victims first — hitEnemy splices the slain from the list.
   const victims = state.enemies.filter((enemy) => {
     if (enemyDef(enemy.defId).apparition) return false;
@@ -675,14 +713,18 @@ function companionNova(
   state.events.push({
     type: "nova",
     pos: { ...companion.pos },
-    radius: nova.radius,
+    radius,
     frost: true,
   });
   const damage = companionNovaDamage(companion);
   for (const victim of victims) {
     victim.chillMs = nova.chillMs;
     victim.chillFactor = nova.chillFactor;
-    hitEnemy(state, victim, damage, "magic", { noMenace: true });
+    // Credit a nova kill to the companion too (loot.ts reads `companionId`).
+    hitEnemy(state, victim, damage, "magic", {
+      noMenace: true,
+      companionId: companion.id,
+    });
   }
 }
 
@@ -761,6 +803,39 @@ export function unequipCompanionToInventory(
   state.player.inventory[free] = item;
   companion.equipment[slot] = null;
   return true;
+}
+
+// ---- Merchant revival --------------------------------------------------------------
+
+/**
+ * Stand the whole party back up and mend it — the WANDERING MERCHANT's mercy,
+ * paid the moment the hero speaks to him (see `merchant.ts`). Every DOWNED
+ * companion returns to its feet at FULL health (a beaten one that stayed down
+ * through a long fight is brought back), and every hurt-but-standing companion
+ * is topped off too. Emits a `companionRevived` per companion stood up so the
+ * app can float the cue. Works no matter the mode — hardcore heroes get their
+ * party back from the counter exactly like softcore ones. Returns how many were
+ * revived/mended (0 if the party is already whole), so the app can stay quiet
+ * when nothing changed. Safe to call from the app outside `step()`.
+ */
+export function reviveDownedCompanions(state: GameState): number {
+  let touched = 0;
+  for (const companion of state.companions) {
+    const wasDown = companion.downedMs !== undefined;
+    const hurt = companion.hp < companion.maxHp;
+    if (!wasDown && !hurt) continue;
+    delete companion.downedMs;
+    companion.hp = companion.maxHp;
+    touched++;
+    if (wasDown) {
+      state.events.push({
+        type: "companionRevived",
+        defId: companion.defId,
+        pos: { ...companion.pos },
+      });
+    }
+  }
+  return touched;
 }
 
 // ---- Phase toggles (called by the app's UI) --------------------------------------

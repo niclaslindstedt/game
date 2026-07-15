@@ -40,7 +40,10 @@ const KEY = storageKey("current-run");
 // v9: combatGraceMs (the farm-proof survival clock's grace tail) joined the
 // state, and stats grew combatMs/peakMenace; an older snapshot would resume
 // with those undefined and tick the clock to NaN.
-const SAVE_VERSION = 9;
+// v10: companions grew their own level/XP (`xp`/`xpToNext` — decoupled from the
+// hero, see companion-stats.ts); a v9 companion would thaw without an XP bar and
+// never level, so its power scaling would be wrong.
+const SAVE_VERSION = 10;
 
 /** A run parked between sessions: enough to drop the player straight back in. */
 export type ParkedRun = {

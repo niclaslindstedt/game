@@ -182,13 +182,13 @@ export {
 } from "./game/items.ts";
 
 // Companions: the SPARE-or-KILL verdict, the recruited party's equip screen
-// mutators, and the derived numbers the UI reads (see companions.ts).
+// mutators, the merchant revival, and the derived numbers the UI reads (see
+// companions.ts).
 export {
   COMPANION_SLOTS,
   closeCompanionPanel,
   companionArmorReduction,
   companionById,
-  companionMaxHp,
   companionNovaDamage,
   companionWeaponCooldown,
   companionWeaponDamage,
@@ -196,8 +196,20 @@ export {
   openCompanionPanel,
   recruitCompanion,
   resolveChoice,
+  reviveDownedCompanions,
   unequipCompanionToInventory,
 } from "./game/companions.ts";
+
+// Companion stat / level / power math (pure, config-derived — the UI reads the
+// level curve and the power rank; see companion-stats.ts).
+export {
+  companionAuraMagicFind,
+  companionMaxHp,
+  companionNovaRadius,
+  companionPowerRank,
+  companionProjectileBonus,
+  companionXpToLevelUp,
+} from "./game/companion-stats.ts";
 
 // The level map: fog-of-war queries, the map pause phase, and the grid
 // helpers the map overlay draws from (`state.explored` + MAP.cellSize).
@@ -433,6 +445,7 @@ export {
   companionDef,
   isCompanionDef,
   type CompanionDef,
+  type CompanionPower,
 } from "./game/defs/companions.ts";
 export {
   STORY_ITEM_DEFS,
