@@ -146,6 +146,16 @@ export type DifficultyDef = {
    * into a shrug; the hard rungs turn it into a wall.
    */
   menaceEffectMult: number;
+  /**
+   * The highest evolution STAGE the rampage meter is allowed to reach on this
+   * rung — its PEAK. Both the live meter and the permanent ratchet floor are
+   * clamped here (see `menaceStageCap`/`menaceCeiling` in menace.ts), so a
+   * gentle rung tops out early no matter how thoroughly the horde is
+   * steamrolled: EASY peaks at 3, MEDIUM 5, HARD 10, NIGHTMARE 100. Left
+   * `undefined` on JESUS — that rung stays UNCAPPED, the horde evolving without
+   * a roof for as long as the player keeps proving it too easy.
+   */
+  menaceStageCap?: number;
   /** Added to the base minion drop chance (LOOT.dropChance). */
   dropChanceBonus: number;
   /**
@@ -259,6 +269,7 @@ export const DIFFICULTY_DEFS: Record<Difficulty, DifficultyDef> = {
     menaceMult: 0.05,
     menaceDecayMult: 1.5,
     menaceEffectMult: 0.5,
+    menaceStageCap: 3,
     dropChanceBonus: 0,
     medkitDropMult: 1.05,
     armorDropMult: 1.05,
@@ -302,6 +313,7 @@ export const DIFFICULTY_DEFS: Record<Difficulty, DifficultyDef> = {
     menaceMult: 0.7,
     menaceDecayMult: 1,
     menaceEffectMult: 1,
+    menaceStageCap: 5,
     // Every step up the ladder pays in drop VOLUME too (easy 0 → jesus 0.1);
     // medium's small step is what makes the first climb feel it.
     dropChanceBonus: 0.01,
@@ -347,6 +359,7 @@ export const DIFFICULTY_DEFS: Record<Difficulty, DifficultyDef> = {
     menaceMult: 1.5,
     menaceDecayMult: 0.85,
     menaceEffectMult: 1.15,
+    menaceStageCap: 10,
     dropChanceBonus: 0.03,
     medkitDropMult: 0.95,
     armorDropMult: 0.95,
@@ -386,6 +399,7 @@ export const DIFFICULTY_DEFS: Record<Difficulty, DifficultyDef> = {
     menaceMult: 3.5,
     menaceDecayMult: 0.7,
     menaceEffectMult: 1.3,
+    menaceStageCap: 100,
     dropChanceBonus: 0.06,
     medkitDropMult: 0.9,
     armorDropMult: 0.9,
@@ -424,6 +438,8 @@ export const DIFFICULTY_DEFS: Record<Difficulty, DifficultyDef> = {
     menaceMult: 6.0,
     menaceDecayMult: 0.5,
     menaceEffectMult: 1.5,
+    // No `menaceStageCap`: JESUS stays UNCAPPED — the horde evolves without a
+    // roof, matching the "abandon all hope" promise.
     dropChanceBonus: 0.1,
     // A step below nightmare, then the extra −10% squeeze: 0.855 × 0.9.
     medkitDropMult: 0.77,
