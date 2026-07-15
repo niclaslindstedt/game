@@ -9,6 +9,7 @@
 import { describe, expect, it } from "vitest";
 
 import {
+  createGame,
   deriveArrivalLoadout,
   dialogueContent,
   enemyDef,
@@ -19,6 +20,7 @@ import {
   THOUGHT_DEFS,
   type GameEvent,
   type GameState,
+  type Loadout,
 } from "@game/core";
 import {
   clearStage,
@@ -187,6 +189,41 @@ describe("THE RIFT level def", () => {
     // Mars's best wardrobe rides along.
     expect(loadout!.equipment.chest?.defId).toBe("aegis_exoplate");
     expect(loadout!.equipment.charm?.defId).toBe("red_dust_charm");
+  });
+
+  it("stops history's missing from re-spawning once they ride the party", () => {
+    // RASPUTIN and TESLA spared into the party on an earlier pass.
+    const base = deriveArrivalLoadout("the_rift", "medium")!;
+    const loadout: Loadout = {
+      ...base,
+      companions: [
+        { defId: "grigori_rasputin", equipment: base.equipment },
+        { defId: "nikola_tesla", equipment: base.equipment },
+      ],
+    };
+    const withParty = createGame(SEED, "the_rift", "medium", loadout);
+    // The two who joined the hero are absent from the enemy roster…
+    expect(withParty.enemies.some((e) => e.defId === "grigori_rasputin")).toBe(
+      false,
+    );
+    expect(withParty.enemies.some((e) => e.defId === "nikola_tesla")).toBe(
+      false,
+    );
+    // …and walk the rift at his side instead.
+    expect(withParty.companions.map((c) => c.defId).sort()).toEqual([
+      "grigori_rasputin",
+      "nikola_tesla",
+    ]);
+    // The ones he never spared still guard their corners.
+    expect(withParty.enemies.some((e) => e.defId === "amelia_earhart")).toBe(
+      true,
+    );
+    expect(withParty.enemies.some((e) => e.defId === "lucky")).toBe(true);
+
+    // With no party, the whole cast spawns as normal.
+    const solo = createGame(SEED, "the_rift", "medium");
+    expect(solo.enemies.some((e) => e.defId === "grigori_rasputin")).toBe(true);
+    expect(solo.enemies.some((e) => e.defId === "nikola_tesla")).toBe(true);
   });
 });
 

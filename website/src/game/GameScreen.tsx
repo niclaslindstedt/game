@@ -1964,8 +1964,8 @@ export function GameScreen({
               durationMs: 450,
             });
           }
-          // A NOVA proc: the violet burst ring, sized to the engine's
-          // damage radius.
+          // A NOVA burst: the expanding ring sized to the engine's damage
+          // radius — icy blue for a companion's FROST nova, violet otherwise.
           if (event.type === "nova") {
             effects.push({
               kind: "nova",
@@ -1973,6 +1973,7 @@ export function GameScreen({
               untilMs: state.stats.timeMs + 320,
               durationMs: 320,
               radius: event.radius,
+              frost: event.frost,
             });
           }
           // A sidestep: float a "DODGE" tag off the hero so the whiff reads.

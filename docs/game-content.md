@@ -804,10 +804,16 @@ the hero out-fighting the horde by hand.
 
 **LUCKY's aura** is the recruitment pitch: +50% MAGIC FIND for the whole
 party while he's on his feet — every loot-tier roll's chance is half again
-as likely (kill him instead and the clover is a one-off drop). The party
-**rides the loadout** between levels (`Loadout.companions`), so the choice
-made in the rift walks through the far door with the hero — the level beyond
-it is built with a companion at his side in mind.
+as likely (kill him instead and the clover is a one-off drop). **RASPUTIN's
+FROST NOVA** is his: the unkillable mystic pulses a chilling ring on a cadence
+(`CompanionDef.nova`) that damages every foe around him and **slows them to a
+crawl**, making a plain axeman the party's crowd-control anchor — kill him
+instead and the beard/severed-hand drops are yours. The party **rides the
+loadout** between levels (`Loadout.companions`), so the choice made in the
+rift walks through the far door with the hero — the level beyond it is built
+with a companion at his side in mind. A companion you spared no longer
+re-spawns as an enemy: on a rift replay its twin stays off the board while it
+walks at the hero's side, so you never re-fight your own ally.
 
 ## Achievements
 

@@ -105,9 +105,11 @@ run against synthetic fixtures with no shipped content (see
 - **`src/game/defs/companions.ts`** — the companion catalog: who a spared
   unique becomes. Each def carries the sprite family (the enemy twin's), a
   base hp that grows with the hero's level, a signature starting weapon, an
-  optional party-wide `aura` (LUCKY's +50% magic find), the `joinWords`
-  scene played the moment the SPARE verdict lands, and the `killQuotes`
-  banter floated over the companion when its blow downs a mob.
+  optional party-wide `aura` (LUCKY's +50% magic find), an optional signature
+  `nova` (RASPUTIN's FROST NOVA — a chilling pulse that damages and slows the
+  foes around him), the `joinWords` scene played the moment the SPARE verdict
+  lands, and the `killQuotes` banter floated over the companion when its blow
+  downs a mob.
 - **`src/game/defs/story.ts`** — the story-item catalog: plot pieces
   (keycards, dossiers, recovered hardware) dropped by elites or placed in
   locked rooms. Pickups bank into `state.storyItems` (never the bag) and
@@ -430,7 +432,12 @@ run against synthetic fixtures with no shipped content (see
   swings against helmet+chest armor, and beats companions DOWN — never
   dead — until they stand back up on their own. Companion auras
   (`CompanionDef.aura` — LUCKY's +50% magic find, read by items.ts
-  `magicFindBonus` inside every tier roll) go silent while downed. The UI's
+  `magicFindBonus` inside every tier roll) go silent while downed, and a
+  `CompanionDef.nova` (RASPUTIN's FROST NOVA — `companionNova`) pulses a
+  chilling ring on a cadence that damages and slows nearby foes (the frost
+  `chillMs`/`chillFactor` read live in `moveEnemy`). A spared companion's
+  enemy twin is also held off the board while it rides the party (create.ts),
+  so a replay never pits the hero against his own ally. The UI's
   mutators are `equipCompanionFromInventory` / `unequipCompanionToInventory`
   (weapon/helmet/chest only) and the `companion` pause-phase toggles
   `openCompanionPanel` / `closeCompanionPanel`; the party rides the loadout

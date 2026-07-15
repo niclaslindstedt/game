@@ -29,6 +29,27 @@ export type CompanionDef = {
    */
   aura?: { magicFind?: number };
   /**
+   * A FROST NOVA the companion pulses on a cadence while it has a foe in
+   * reach: a chilling shockwave that damages AND slows every enemy caught in
+   * the ring (see `companionNova`). Pulses only while up — silent while
+   * downed — and holds its charge until a foe is actually in the blast, so it
+   * never fires into empty space. A signature power that makes a plain melee
+   * companion a crowd-control anchor; absent on companions without one.
+   */
+  nova?: {
+    /** Ms between pulses once a foe is in reach. */
+    everyMs: number;
+    /** Blast radius (world px). */
+    radius: number;
+    /** Base damage a pulse deals each caught foe at hero level 1 — grown with
+     * the party like the companion's weapon (`companionNovaDamage`). */
+    damage: number;
+    /** Ms a caught enemy stays chilled (movement slowed). */
+    chillMs: number;
+    /** Movement multiplier while chilled (0..1 — 0.5 = half speed). */
+    chillFactor: number;
+  };
+  /**
    * The joining scene: what the spared figure says the moment the SPARE
    * verdict lands — a short thanks, a life owed, a promise to follow and
    * protect — played through the ordinary dialogue box (a `companionJoin`
@@ -105,7 +126,10 @@ export const COMPANION_DEFS: Record<string, CompanionDef> = {
     ],
   },
   // The unkillable mystic. Finds the whole business of dying hilarious,
-  // professionally speaking.
+  // professionally speaking. His long stint frozen between universes rubbed
+  // off: he pulses a FROST NOVA that grips the horde in the cold that could
+  // never keep HIM down — a chilling ring that slows and chips everything
+  // near him, turning a plain axeman into the party's crowd-control anchor.
   grigori_rasputin: {
     id: "grigori_rasputin",
     name: "GRIGORI RASPUTIN",
@@ -114,6 +138,13 @@ export const COMPANION_DEFS: Record<string, CompanionDef> = {
     speed: 48,
     radius: 12,
     weapon: "executioners_axe",
+    nova: {
+      everyMs: 2600,
+      radius: 96,
+      damage: 46,
+      chillMs: 1600,
+      chillFactor: 0.45,
+    },
     joinWords: [
       [
         "POISON. BULLETS. RIVERS.",

@@ -1686,6 +1686,11 @@ function stepEnemies(state: GameState, dt: number, dtMs: number): void {
     if (enemy.critFlashMs) {
       enemy.critFlashMs = Math.max(0, enemy.critFlashMs - dtMs);
     }
+    // The FROST CHILL a companion's nova stamped runs down here; its slow is
+    // read live in moveEnemy while it lasts (chillFactorFor).
+    if (enemy.chillMs) {
+      enemy.chillMs = Math.max(0, enemy.chillMs - dtMs);
+    }
     if (enemy.vanishMs !== undefined) {
       enemy.vanishMs = Math.max(0, enemy.vanishMs - dtMs);
     }
@@ -1861,6 +1866,13 @@ function separateEnemies(state: GameState): void {
  * close (or hurts them), then rush into view for their scene and hunt
  * forever after.
  */
+/** The frost-chill slow a companion's nova stamped on `enemy`: its
+ * `chillFactor` while `chillMs` runs, 1 otherwise. Multiplies onto the stasis
+ * factor at every move site, so a chilled mob inside a stasis field crawls. */
+function chillFactorFor(enemy: Enemy): number {
+  return (enemy.chillMs ?? 0) > 0 ? (enemy.chillFactor ?? 1) : 1;
+}
+
 function moveEnemy(
   state: GameState,
   enemy: Enemy,
@@ -1872,10 +1884,13 @@ function moveEnemy(
   // Set-piece mechanics first (mechanics.ts): a mob rooted in a telegraph
   // windup or riding a charge dash is owned by the mechanic this tick.
   if (stepEnemyMechanics(state, enemy, dt, dt * 1000)) return;
-  // Stasis fields slow whatever crawls inside them — bosses included. An
-  // enraged set piece runs hot (mechSpeedMult).
+  // Stasis fields (and a companion's frost chill) slow whatever crawls inside
+  // them — bosses included. An enraged set piece runs hot (mechSpeedMult).
   const speed =
-    enemy.speed * stasisFactorAt(state, enemy.pos) * mechSpeedMult(enemy, def);
+    enemy.speed *
+    stasisFactorAt(state, enemy.pos) *
+    chillFactorFor(enemy) *
+    mechSpeedMult(enemy, def);
   const senses = () =>
     def.phasing === true || lineOfSight(state, enemy.pos, player.pos);
 
@@ -1938,7 +1953,9 @@ function moveEnemy(
       return;
     }
     const rushSpeed =
-      (def.ai.rushSpeed ?? def.speed) * stasisFactorAt(state, enemy.pos);
+      (def.ai.rushSpeed ?? def.speed) *
+      stasisFactorAt(state, enemy.pos) *
+      chillFactorFor(enemy);
     enemy.pos = moveToward(
       enemy.pos,
       player.pos,
@@ -1968,7 +1985,9 @@ function moveEnemy(
       return;
     }
     const rushSpeed =
-      (def.ai.rushSpeed ?? def.speed) * stasisFactorAt(state, enemy.pos);
+      (def.ai.rushSpeed ?? def.speed) *
+      stasisFactorAt(state, enemy.pos) *
+      chillFactorFor(enemy);
     // Close to the same tightened contact distance the damage test uses, so a
     // rusher settles exactly where it can actually bite (not a hair short of it).
     const gap =
