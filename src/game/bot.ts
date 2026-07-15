@@ -61,7 +61,8 @@ const CONTACT_DODGE_RADIUS = 46;
  * ~34px grasp. He hugs the pack's edge at this range (not fleeing to the far
  * corner), so the auto-weapon keeps mowing the front line while he stays out of
  * reach. A melee loadout can't reach this far, so it holds at its own range
- * instead and leans on the jump-dodge. */
+ * instead and gives ground on foot (it can't swing mid-air, so it doesn't hop
+ * to dodge in the DPS phase — only to ESCAPE an encirclement). */
 const GRASP_STANDOFF = 72;
 /** Enemies within this ring count toward being SURROUNDED. */
 const SURROUND_RADIUS = 150;
@@ -303,14 +304,25 @@ function survive(state: GameState): GameInput {
   //    in the ring pulls him toward it. Pressed (a foe inside the standoff) →
   //    give ground hard; safe on the edge → drift out just enough to hold the
   //    gap; field thin → close on the boss to finish the map. A melee loadout
-  //    can't reach the grasp standoff, so it holds at its own range and leans on
-  //    the hop; hop when a body presses in or the crowd thickens.
-  const range = weaponDef(player.equipment.weapon.defId).range;
+  //    can't reach the grasp standoff, so it holds at its own range; a RANGED
+  //    hero hops the contact away (it fires from the air), but a melee hero
+  //    can't swing mid-air, so it gives ground on foot instead of hopping.
+  const weapon = weaponDef(player.equipment.weapon.defId);
+  const range = weapon.range;
   const standoff =
     range >= GRASP_STANDOFF ? GRASP_STANDOFF : Math.max(40, range * 0.9);
   const away = awayFromPack(state, near);
+  // A melee hero can't swing mid-air — the blade is stayed above
+  // JUMP.dodgeHeight (see stepWeapon) — so hopping to dodge contact in the
+  // DPS-hugging phase would only forfeit his swings; he gives ground on FOOT
+  // instead. Ranged/magic fire from the air, so they still hop the bite away.
+  // (The emergency ESCAPE hop in step 2 is invulnerable flight, not attacking,
+  // so it stands for either loadout.)
+  const canHopAndFight = weapon.projectile !== undefined;
   const hop =
-    grounded && (nearestD < CONTACT_DODGE_RADIUS || packed.length >= 3);
+    canHopAndFight &&
+    grounded &&
+    (nearestD < CONTACT_DODGE_RADIUS || packed.length >= 3);
   if (nearestD < standoff) {
     // Pressed into grasp → give ground toward the open side, fast.
     return steer(

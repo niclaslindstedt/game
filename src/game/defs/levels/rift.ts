@@ -103,7 +103,9 @@ export const THE_RIFT: LevelDef = {
     },
   ],
   // Black holes strewn along the road: each drags the grounded, devours
-  // minions, and hoards dragged loot on its rim. Jump them or skirt them.
+  // minions, and hoards dragged loot on its rim. Skirt them — a jump no
+  // longer clears the pull, it only lightens it (you still drift in and hop
+  // lower over the horizon), so the safe line is around, not over.
   wells: [
     { pos: { x: 700, y: 500 } },
     { pos: { x: 900, y: 1150 } },

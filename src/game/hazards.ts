@@ -60,8 +60,12 @@ function hurtPlayer(state: GameState, damage: number): void {
  * Advance the gravity wells: drag the grounded player (burning them in the
  * core, ticked at WELLS.tickMs), drag enemies (devouring minions that reach
  * the core), and drag loose items until they park on the rim. Apparitions
- * are immaterial and ignore the pull entirely; a jumping player sails over
- * it (the same z rule that clears enemy contact).
+ * are immaterial and ignore the pull entirely. A jump no longer sails clean
+ * over a hole: airborne the hero still DRIFTS toward the core (a fraction of
+ * the ground pull, `airPullFraction`) and the hole's gravity FIGHTS his hop
+ * (`jumpGravity` heaped on `vz`), so he jumps less high the nearer the
+ * horizon — but he is out of the core's reach, so the burn only bites the
+ * grounded.
  */
 export function stepWells(state: GameState, dt: number, dtMs: number): void {
   if (state.wells.length === 0) return;
@@ -70,9 +74,22 @@ export function stepWells(state: GameState, dt: number, dtMs: number): void {
   const airborne = player.z > JUMP.dodgeHeight;
 
   for (const well of state.wells) {
-    // The player: dragged while grounded, burned in the core.
-    if (!airborne) {
-      const d = distance(player.pos, well.pos);
+    const d = distance(player.pos, well.pos);
+    if (airborne) {
+      // Over the hole: still tugged toward the core (weaker than grounded)
+      // and the hole's gravity drags the jump back down early. No core burn —
+      // he floats above it.
+      if (d < well.pullRadius) {
+        const frac = 1 - d / well.pullRadius;
+        player.pos = moveToward(
+          player.pos,
+          well.pos,
+          pullAt(well, d) * WELLS.airPullFraction * dt,
+        );
+        player.vz -= WELLS.jumpGravity * frac * dt;
+      }
+    } else {
+      // The player: dragged while grounded, burned in the core.
       if (d < well.pullRadius) {
         player.pos = moveToward(player.pos, well.pos, pullAt(well, d) * dt);
         if (

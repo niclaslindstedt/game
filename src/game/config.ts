@@ -1865,14 +1865,16 @@ export const GATES = {
 /**
  * Gravity wells — black holes placed by a level (LevelDef.wells). Each well
  * drags whatever crosses its pull radius toward the core: the grounded
- * player (a jump sails clean over the pull, same rule as enemy contact),
- * enemies, and loose items — which pile up on the rim instead of being
- * destroyed, a dare to dash in. A MINION dragged into the core is devoured
- * outright: off the board with no kill, no XP and no loot — the hole pays
- * nobody. Elites and bosses are too massive to swallow (their set pieces
- * survive a bad camp spot) and apparitions too immaterial; both only suffer
- * the drag. A player in the core burns hp at `coreDps`, ticked every
- * `tickMs`. These are the per-well DEFAULTS — a level's well spec may
+ * player, enemies, and loose items — which pile up on the rim instead of
+ * being destroyed, a dare to dash in. A jump no longer sails clean over a
+ * hole: airborne the hero still drifts toward the core (`airPullFraction` of
+ * the ground pull) and the hole's gravity fights his hop (`jumpGravity`), so
+ * he can't hang over the horizon at full height. A MINION dragged into the
+ * core is devoured outright: off the board with no kill, no XP and no loot —
+ * the hole pays nobody. Elites and bosses are too massive to swallow (their
+ * set pieces survive a bad camp spot) and apparitions too immaterial; both
+ * only suffer the drag. A player in the core burns hp at `coreDps`, ticked
+ * every `tickMs`. These are the per-well DEFAULTS — a level's well spec may
  * override each number. Units: world px, world px/s, hp/s, ms.
  */
 export const WELLS = {
@@ -1887,6 +1889,19 @@ export const WELLS = {
    * fight — SPEED, the sprint, or a jump is what gets him clear.
    */
   pullSpeed: 96,
+  /**
+   * The share of the ground pull that still tugs the hero HORIZONTALLY while
+   * he is airborne over the well: a jump over a hole no longer sails clean —
+   * he drifts toward the core, weaker than on the ground but never nothing.
+   */
+  airPullFraction: 0.6,
+  /**
+   * Extra downward acceleration (px/s²) the hole heaps on the hero's jump
+   * while he is airborne inside the pull radius — peak at the core's edge,
+   * linear falloff to 0 at the reach (the same shape as the drag). The hole's
+   * gravity fights the hop, so he JUMPS LESS HIGH the nearer the horizon.
+   */
+  jumpGravity: 900,
   /** Hp per second burned while the player stands in the core. */
   coreDps: 40,
   /**

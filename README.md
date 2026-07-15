@@ -80,7 +80,11 @@ and something enormous haunts the old flag.
   the consumable dock) in the Quake-style **KEY BINDINGS** list there.
 - **Tap** (with the other hand while steering, or press Space) to **jump**
   — each level sets its own gravity: HQ hops clear a desk; moon gravity
-  sails you clean over a ghost's grasp.
+  sails you clean over a ghost's grasp. A jump is a pure dodge, though:
+  floating over the field you can't swing a melee weapon at the horde or
+  scoop loot off the ground until you land. And the RIFT's **black holes**
+  fight the hop — jump near one and you drift toward it and don't rise as
+  high.
 - **Feel the game** — on phones with a vibration motor, every takedown
   buzzes, and the bigger the mob the harder it hits (a minion flicks, a boss
   rumbles); dialogue is felt too, each letter of the crawl ticking under your
