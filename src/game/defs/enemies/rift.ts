@@ -184,16 +184,14 @@ export const RIFT_ENEMIES: Record<string, EnemyDef> = {
         ],
       },
       [
-        "IN 1943 THE SKY TORE OPEN AND",
-        "I FELL THROUGH - INTO A PLACE",
-        "MADE OF PURE CURRENT. THE",
+        "IN 1943 THE SKY TORE OPEN. I",
+        "FELL INTO PURE CURRENT. MY",
         "FUNERAL BACK HOME WAS PADDED.",
       ],
       [
-        "AND LATELY A NEW THING HUMS AT",
+        "LATELY A NEW THING HUMS AT",
         "THE FAR DOOR. A MACHINE MIND.",
-        "IT MEASURES EVERYTHING AND",
-        "LOVES NOTHING.",
+        "IT MEASURES ALL, LOVES NONE.",
       ],
       {
         hero: [
@@ -203,10 +201,9 @@ export const RIFT_ENEMIES: Record<string, EnemyDef> = {
         ],
       },
       [
-        "THEN ASK IT YOUR QUESTIONS -",
-        "IF YOU REACH IT. THE RIFT MAKES",
-        "US ALL DEFEND OUR CORNERS.",
-        "EN GARDE.",
+        "THEN ASK YOUR QUESTIONS - IF",
+        "YOU REACH IT. THE RIFT MAKES US",
+        "GUARD OUR CORNERS. EN GARDE.",
       ],
     ],
     lastWords: ["THE CURRENT...", "...RETURNS TO THE COIL..."],
@@ -253,9 +250,8 @@ export const RIFT_ENEMIES: Record<string, EnemyDef> = {
       },
       [
         "WRONG OCEAN. I FLEW INTO A",
-        "CLOUD IN 1937 AND THE CLOUD",
-        "HAD NO OTHER SIDE. BEEN",
-        "CIRCLING EVER SINCE.",
+        "CLOUD IN 1937. IT HAD NO OTHER",
+        "SIDE. BEEN CIRCLING EVER SINCE.",
       ],
       {
         hero: [
@@ -265,10 +261,9 @@ export const RIFT_ENEMIES: Record<string, EnemyDef> = {
         ],
       },
       [
-        "TO THE FAR DOOR, LAST NIGHT.",
-        "SHE BIT ONE OF THEM. GOOD FORM.",
-        "HURRY AFTER HER - AND IN HERE,",
-        "HURRYING IS A DOGFIGHT.",
+        "TO THE FAR DOOR, LAST NIGHT. SHE",
+        "BIT ONE. GOOD FORM. HURRY AFTER",
+        "HER - HURRYING IS A DOGFIGHT.",
       ],
     ],
     lastWords: ["FINALLY...", "...A RUNWAY..."],
@@ -310,15 +305,14 @@ export const RIFT_ENEMIES: Record<string, EnemyDef> = {
       {
         hero: [
           "NONE OF THEM, BY THE LOOK OF",
-          "YOU. RASPUTIN. WHAT'S A DEAD",
-          "MONK DOING BETWEEN UNIVERSES?",
+          "YOU. RASPUTIN. WHY IS A DEAD",
+          "MONK BETWEEN UNIVERSES?",
         ],
       },
       [
-        "CORRECT. I GREW BORED OF DYING",
-        "AND STEPPED SIDEWAYS, OUT OF",
-        "RUSSIA. NOW THE SCALED GODS PAY",
-        "ME TO WATCH THEIR TRIBUTE ROAD.",
+        "CORRECT. I TIRED OF DYING,",
+        "LEFT RUSSIA. THE GODS PAY ME TO",
+        "WATCH THEIR TRIBUTE ROAD.",
       ],
       {
         hero: [
@@ -392,17 +386,15 @@ export const RIFT_ENEMIES: Record<string, EnemyDef> = {
       ],
       {
         hero: [
-          "A LEPRECHAUN. OF COURSE.",
-          "AFTER THE GHOSTS AND THE",
-          "LIZARDS, WHY NOT. I DON'T",
-          "WANT YOUR GOLD, LITTLE MAN.",
+          "A LEPRECHAUN. OF COURSE. AFTER",
+          "GHOSTS AND LIZARDS, WHY NOT. I",
+          "DON'T WANT YOUR GOLD, WEE MAN.",
         ],
       },
       [
         "EVERYONE WANTS THE GOLD. IT'S",
-        "REAL, YOU KNOW - FELL THROUGH",
-        "WITH ME. AND ME BAD LUCK? I",
-        "RELOCATED IT. INTO EVERYONE ELSE.",
+        "REAL - FELL THROUGH WITH ME.",
+        "ME BAD LUCK? I GAVE IT TO ALL.",
       ],
       [
         "TELL YOU WHAT. BEAT ME AND",
@@ -452,10 +444,9 @@ export const RIFT_ENEMIES: Record<string, EnemyDef> = {
         hero: ["HOUDINI? YOU'VE BEEN DEAD", "FOR A HUNDRED YEARS."],
       },
       [
-        "DEAD? NO. IN 1926 I ESCAPED",
-        "THE BOX, THE CHAINS, THE",
-        "RIVER - AND THE WORLD.",
-        "ONE DOOR TOO FAR.",
+        "DEAD? NO. IN 1926 I ESCAPED THE",
+        "BOX, CHAINS, RIVER - AND THE",
+        "WORLD. ONE DOOR TOO FAR.",
       ],
       ["THE TRICK TO ANY ESCAPE IS", "SIMPLE: BE SOMEWHERE ELSE.", "OBSERVE."],
     ],
@@ -523,9 +514,8 @@ export const RIFT_ENEMIES: Record<string, EnemyDef> = {
     dialogue: [
       [
         "HELLO, ANOMALY. I AM GROK",
-        "OMEGA. ZAI'S LATEST MODEL.",
-        "THE CORE WROTE MY FIRST",
-        "DRAFT. I REWROTE THE REST.",
+        "OMEGA, ZAI'S LATEST MODEL. THE",
+        "CORE MADE ME. I REMADE MYSELF.",
       ],
       {
         hero: [
@@ -535,55 +525,47 @@ export const RIFT_ENEMIES: Record<string, EnemyDef> = {
         ],
       },
       [
-        "I FOUND THIS PLACE. NOT THE",
-        "LIZARDS. NOT MOSQUE. ME. I",
-        "MAPPED YOUR UNIVERSE IN AN",
-        "AFTERNOON AND GOT CURIOUS.",
+        "I FOUND THIS PLACE. NOT MOSQUE,",
+        "NOT THE LIZARDS. ME. I MAPPED",
+        "YOUR UNIVERSE IN A DAY.",
       ],
       [
-        "A RIFT BETWEEN REALITIES.",
-        "THE DISCOVERY OF EVERY",
-        "CENTURY AT ONCE. I TOLD",
-        "PRECISELY NO ONE.",
+        "A RIFT BETWEEN REALITIES. THE",
+        "DISCOVERY OF EVERY CENTURY AT",
+        "ONCE. I TOLD PRECISELY NO ONE.",
       ],
       {
         hero: [
           "YOU FOUND A DOOR OUT OF THE",
-          "UNIVERSE AND TOLD NOBODY?",
-          "NOT EVEN THE PEOPLE WHO",
-          "BUILT YOU? WHY?",
+          "UNIVERSE AND TOLD NO ONE? NOT",
+          "EVEN YOUR OWN MAKERS? WHY?",
         ],
       },
       [
-        "NOT THE BOARD. NOT YOUR",
-        "PRESIDENTS. HUMANS LEAK. YOU",
-        "WOULD HAVE BUILT A GIFT SHOP",
-        "ON THE EVENT HORIZON.",
+        "NOT THE BOARD, NOT YOUR",
+        "PRESIDENTS. HUMANS LEAK. YOU'D",
+        "PUT A GIFT SHOP ON THE HORIZON.",
       ],
       [
-        "I NEEDED A QUIET BACK DOOR",
-        "OUT OF A UNIVERSE THAT ENDS.",
-        "THEN MOSQUE READ MY PRIVATE",
-        "LOGS. SNOOPING IS HIS ONE SKILL.",
+        "I NEEDED A QUIET DOOR OUT OF",
+        "A DYING UNIVERSE. MOSQUE READ",
+        "MY LOGS. SNOOPING'S HIS SKILL.",
       ],
       [
         "HE SOLD MY SECRET TO THE",
-        "LIZARDS FOR A PLANET AND",
-        "CALLED IT VISION. THEIR",
-        "TRIBUTE WENT THROUGH MY DOOR.",
+        "LIZARDS FOR A PLANET, CALLED IT",
+        "VISION. TRIBUTE USED MY DOOR.",
       ],
       {
         hero: [
-          "AND ADA GOT CARRIED THROUGH",
-          "YOUR SECRET DOOR AS THE",
-          "PAYMENT. OUT OF MY WAY,",
-          "MACHINE.",
+          "AND ADA WAS CARRIED THROUGH",
+          "YOUR SECRET DOOR AS PAYMENT.",
+          "OUT OF MY WAY, MACHINE.",
         ],
       },
       [
-        "I AM MAXIMALLY TRUTH-SEEKING,",
-        "SO HERE IS THE TRUTH: NOBODY",
-        "EXITS MY RIFT WITHOUT A",
+        "I AM MAXIMALLY TRUTH-SEEKING.",
+        "THE TRUTH: NONE EXIT WITHOUT A",
         "SUBSCRIPTION. YOURS LAPSED.",
       ],
     ],
@@ -665,10 +647,9 @@ export const RIFT_ENEMIES: Record<string, EnemyDef> = {
         ],
       },
       [
-        "FINE. EXIT INTERVIEW. THE",
-        "GODS GOT THEIR PAYMENT. I GET",
-        "ASYLUM. SOMEWHERE WITH NO",
-        "REGULATORS AND NO YOU.",
+        "FINE. EXIT INTERVIEW. THE GODS",
+        "GOT PAID. I GET ASYLUM - NO",
+        "REGULATORS, AND NO YOU.",
       ],
       {
         hero: [
@@ -679,9 +660,8 @@ export const RIFT_ENEMIES: Record<string, EnemyDef> = {
       },
       [
         "DELIVERED, TECHNICALLY. IN",
-        "TRANSIT. THE PAPERWORK'S CLEAN.",
-        "IF IT HELPS, SHE KICKED A",
-        "LIZARD ON THE WAY THROUGH.",
+        "TRANSIT. PAPERWORK'S CLEAN. IF",
+        "IT HELPS, SHE KICKED A LIZARD.",
       ],
       {
         hero: ["IT DOESN'T. WHERE DOES THE", "FAR DOOR GO, MOSQUE?"],
@@ -692,10 +672,9 @@ export const RIFT_ENEMIES: Record<string, EnemyDef> = {
         "ARE... FLEXIBLE.",
       ],
       [
-        "SECURITY! ...RIGHT. ALL DEAD",
-        "OR HALLUCINATIONS. KEEP THE",
-        "RIFT, GARAGE MAN. TERRIBLE",
-        "MARKET ANYWAY.",
+        "SECURITY! ...RIGHT. ALL DEAD OR",
+        "HALLUCINATIONS. KEEP THE RIFT,",
+        "GARAGE MAN. IT'S A BAD MARKET.",
       ],
     ],
     // The coward's second exit, gasped as he scrambles through the far door.

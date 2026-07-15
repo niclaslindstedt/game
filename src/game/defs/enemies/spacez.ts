@@ -238,8 +238,8 @@ export const SPACEZ_ENEMIES: Record<string, EnemyDef> = {
       },
       [
         "IF THEY TOOK HER, SHE'S ON A",
-        "MIDNIGHT LAUNCH. NO MANIFESTS,",
-        "NO NAMES. THEY ALL GO TO THE MOON.",
+        "MIDNIGHT LAUNCH. NO MANIFEST,",
+        "NO NAMES. ALL GO TO THE MOON.",
       ],
       {
         hero: [
@@ -295,8 +295,8 @@ export const SPACEZ_ENEMIES: Record<string, EnemyDef> = {
       },
       [
         "CAMERAS CAUGHT HER AT THE",
-        "VENDING MACHINES. THEN THE",
-        "SUITS CAME AND PUT HER ON PAD 2.",
+        "VENDING MACHINES. THEN SUITS",
+        "CAME AND PUT HER ON PAD 2.",
       ],
       {
         hero: [
@@ -306,10 +306,9 @@ export const SPACEZ_ENEMIES: Record<string, EnemyDef> = {
         ],
       },
       [
-        "THE FLIGHT PAPERS DIDN'T CALL",
-        "HER A PASSENGER. THEY CALLED HER",
-        "A SPECIMEN. I WAS PAID TO",
-        "FORGET THAT. SO SHOULD YOU.",
+        "THE PAPERS CALLED HER NO",
+        "PASSENGER. A SPECIMEN. I WAS",
+        "PAID TO FORGET THAT. YOU TOO.",
       ],
     ],
     lastWords: ["UGH... PAD 2...", "SHE'S ON... PAD... 2..."],
@@ -349,8 +348,8 @@ export const SPACEZ_ENEMIES: Record<string, EnemyDef> = {
     dialogue: [
       [
         "FASCINATING. AN INTRUDER WITH",
-        "FUNCTIONING LEGS. DO YOU KNOW WHAT",
-        "WE KEEP IN THE CLEANROOM VAULT?",
+        "WORKING LEGS. KNOW WHAT WE",
+        "KEEP IN THE CLEANROOM VAULT?",
       ],
       {
         hero: [
@@ -360,10 +359,9 @@ export const SPACEZ_ENEMIES: Record<string, EnemyDef> = {
         ],
       },
       [
-        "BUILD IT? OH, NOBODY BUILT IT.",
-        "WE DUG IT OUT OF THE SEA OF",
-        "TRANQUILITY IN '69. IT'S NOT",
-        "FROM EARTH.",
+        "BUILD IT? NOBODY BUILT IT.",
+        "WE DUG IT FROM THE SEA OF",
+        "TRANQUILITY IN '69. NOT EARTH'S.",
       ],
       {
         hero: [
@@ -374,8 +372,8 @@ export const SPACEZ_ENEMIES: Record<string, EnemyDef> = {
       },
       [
         "WE SPENT FIFTY YEARS COPYING",
-        "A MACHINE THAT ISN'T EVEN",
-        "BROKEN. IT'S WAITING. TO GO HOME.",
+        "A MACHINE THAT ISN'T BROKEN.",
+        "IT'S WAITING. TO GO HOME.",
       ],
     ],
     lastWords: ["IT'S STILL... HHH...", "STILL... HUMMING..."],
@@ -407,21 +405,20 @@ export const SPACEZ_ENEMIES: Record<string, EnemyDef> = {
     dialogue: [
       [
         "MIND THE FLOOR. I JUST DID IT.",
-        "THIRTY YEARS I'VE MOPPED THIS LAB.",
+        "THIRTY YEARS MOPPING THIS LAB.",
         "YOU LEARN THINGS, MOPPING.",
       ],
       {
         hero: [
           "THEN YOU SEE EVERYTHING THAT",
           "GOES ON HERE. WHAT'S GOT THE",
-          "WHOLE BUILDING UP AT MIDNIGHT?",
+          "WHOLE PLACE UP AT MIDNIGHT?",
         ],
       },
       [
-        "SOMETHING ON THE MOON. LAST",
-        "TUESDAY A BADGE PINGED IN AT THE",
-        "GATE: N. ARMSTRONG. FUNNY THING.",
-        "MAN'S BEEN DEAD SINCE 2012.",
+        "SOMETHING UP ON THE MOON. ONE",
+        "BADGE PINGED: N. ARMSTRONG.",
+        "DEAD SINCE 2012. FUNNY THING.",
       ],
       {
         hero: [
@@ -431,9 +428,9 @@ export const SPACEZ_ENEMIES: Record<string, EnemyDef> = {
         ],
       },
       [
-        "OR WHOEVER CAME BACK FROM THAT",
+        "OR WHOEVER CAME BACK FROM THE",
         "MOON IN '69 WASN'T THE FELLA",
-        "THEY SENT UP. NOW DROP THE WEAPON.",
+        "THEY SENT UP. NOW DROP IT.",
       ],
     ],
     lastWords: ["AND I JUST... URGH...", "...DID THIS FLOOR..."],
@@ -482,31 +479,27 @@ export const SPACEZ_ENEMIES: Record<string, EnemyDef> = {
       ],
       {
         hero: [
-          "THEY THREW US BOTH OUT FOR AN",
-          "AI, AND YOU WENT BACK TO BUILD",
-          "THEM A BIGGER ONE? QUIT. COME",
-          "HOME. THIS COMPANY IS ROTTEN.",
+          "THEY DUMPED US BOTH FOR AN AI.",
+          "YOU BUILD THEM A BIGGER ONE?",
+          "QUIT. COME HOME. IT'S ROTTEN.",
         ],
       },
       [
         "QUIT? THIS 'ROTTEN COMPANY'",
         "GAVE ME PURPOSE. I AM BUILDING",
-        "A SUPERINTELLIGENCE. A MIND",
-        "BIGGER THAN ALL OF US.",
+        "A SUPERINTELLIGENCE.",
       ],
       {
         hero: [
-          "LOOK WHAT IT'S DONE TO YOU.",
-          "YOU CUT A MACHINE CHIP INTO",
-          "YOUR OWN HEAD. IS THAT STILL",
-          "EVEN YOU IN THERE?",
+          "LOOK WHAT IT'S DONE TO YOU. YOU",
+          "CUT A MACHINE CHIP INTO YOUR",
+          "HEAD. STILL YOU IN THERE?",
         ],
       },
       [
-        "I CUT THE CHIP IN MYSELF, AND I",
-        "WOULD DO IT AGAIN. FLESH IS A",
-        "ROUGH DRAFT. HUMANS ARE",
-        "OBSOLETE - YOU MOST OF ALL.",
+        "I CUT THE CHIP MYSELF. I'D DO IT",
+        "AGAIN. FLESH IS A ROUGH DRAFT.",
+        "HUMANS ARE OBSOLETE, YOU MOST.",
       ],
       ["NO MORE TALKING, OLD FRIEND.", "NOW YOU WILL DIE."],
     ],
@@ -545,18 +538,14 @@ export const SPACEZ_ENEMIES: Record<string, EnemyDef> = {
     // The boss scene: longer than the elites' — the level's whole thread
     // ties off here before the fight starts.
     dialogue: [
-      [
-        "SQUEAK.",
-        "...NO. NO MORE SQUEAKING.",
-        "THE THING I ATE FIXED MY TONGUE.",
-      ],
+      ["SQUEAK.", "...NO. NO MORE SQUEAKING.", "WHAT I ATE FIXED MY TONGUE."],
       {
         hero: ["A TALKING RAT. SURE. WHY NOT.", "WHAT EXACTLY DID YOU EAT?"],
       },
       [
         "THE ENGINE PART YOU CAME FOR.",
-        "THEY KEPT IT IN A CHEESE-COLORED",
-        "BOX. OF COURSE I ATE IT.",
+        "THEY KEPT IT IN A CHEESE BOX.",
+        "OF COURSE I ATE IT.",
       ],
       [
         "NOW IT HUMS IN MY BELLY AND I",
@@ -572,13 +561,13 @@ export const SPACEZ_ENEMIES: Record<string, EnemyDef> = {
       },
       [
         "THEY FLEW HER OUT AN HOUR AGO.",
-        "PAD 2. TO THE MOON. SHE ASKED FOR",
-        "CHIPS. NOBODY GAVE HER ANY.",
+        "PAD 2. TO THE MOON. SHE ASKED",
+        "FOR CHIPS. NOBODY GAVE HER ANY.",
       ],
       [
-        "YOU WANT THE PART, LITTLE",
-        "BUILDER? IT'S KEEPING MY DREAMS",
-        "SO WARM. COME TAKE IT OUT OF ME.",
+        "WANT THE PART, LITTLE BUILDER?",
+        "IT KEEPS MY DREAMS WARM. COME",
+        "TAKE IT OUT OF ME.",
       ],
     ],
     lastWords: ["SQUEAK...? NO...", "SQUEEEAK... AFTER ALL..."],
