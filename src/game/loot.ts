@@ -641,6 +641,10 @@ export function killEnemy(
 
   if (def.role === "boss") {
     state.events.push({ type: "bossDefeated", pos: { ...enemy.pos } });
+    // Remember where it fell: if the player chooses to STAY on the cleared
+    // field (the victory menu), this becomes the corpse they tap to re-open
+    // the menu and finally move on (see step.ts / render).
+    state.bossCorpse = { pos: { ...enemy.pos }, sprite: def.sprite };
   }
 
   // A unique mob's send-off: reuse the dialogue box to gasp its last words

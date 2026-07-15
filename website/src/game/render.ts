@@ -512,6 +512,41 @@ export function drawFrame(
     );
   }
 
+  // The fallen boss, left as a tap target once the player chooses STAY on a
+  // cleared field (see stayOnField). A pulsing amber ring marks it as the way
+  // out — tapping it re-opens the victory menu (GameScreen). Drawn under the
+  // moving actors so loot dropped over the corpse still reads on top.
+  if (state.staying && state.bossCorpse) {
+    const bc = state.bossCorpse;
+    if (inView(bc.pos.x, bc.pos.y, 48)) {
+      const cx = Math.round(bc.pos.x - camera.x);
+      const cy = Math.round(bc.pos.y - camera.y);
+      const pulse = 0.5 + 0.5 * Math.sin(timeMs / 340);
+      ctx.save();
+      ctx.globalAlpha = 0.3 + 0.4 * pulse;
+      ctx.strokeStyle = "#ffd75e";
+      ctx.lineWidth = 2;
+      ctx.beginPath();
+      ctx.ellipse(cx, cy, 13 + pulse * 3, 6.5 + pulse * 1.5, 0, 0, Math.PI * 2);
+      ctx.stroke();
+      ctx.restore();
+      const corpse = spriteByName(sprites, `${bc.sprite}_0`);
+      if (corpse) {
+        ctx.save();
+        ctx.globalAlpha = 0.85;
+        ctx.translate(cx, cy);
+        // Toppled onto its side: a 90° roll reads as fallen, not standing.
+        ctx.rotate(Math.PI / 2);
+        ctx.drawImage(
+          corpse,
+          -Math.round(corpse.width / 2),
+          -Math.round(corpse.height / 2),
+        );
+        ctx.restore();
+      }
+    }
+  }
+
   // Obstacles sit on the ground plane, under everything that moves. Each
   // carries its sprite name from the def.
   for (const obstacle of state.obstacles) {

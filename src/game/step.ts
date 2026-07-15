@@ -310,8 +310,14 @@ export function step(state: GameState, input: GameInput, dtMs: number): void {
   }
 
   // The level ends a beat after the objective clears, leaving time to grab
-  // the loot.
-  if (state.victoryCountdownMs === null && objectiveCleared(state)) {
+  // the loot. Once the player has chosen to STAY (the win already banked),
+  // the countdown never re-arms — the still-cleared objective must not yank
+  // the victory menu back up; the boss-corpse tap re-opens it instead.
+  if (
+    !state.staying &&
+    state.victoryCountdownMs === null &&
+    objectiveCleared(state)
+  ) {
     state.victoryCountdownMs = RUN.victoryDelayMs;
     // A level with an epilogue goes out with a bang: the world quakes
     // through the whole loot-grab window, and the black-screen outro takes

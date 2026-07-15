@@ -61,6 +61,8 @@ import {
   openShop,
   pauseGame,
   resolveChoice,
+  reopenVictoryChoice,
+  stayOnField,
   equipmentMaxDurability,
   PLAYER,
   playerAppearance,
@@ -1608,6 +1610,32 @@ export function GameScreen({
           ) {
             input.jump = false;
             input.useItem = false;
+            playUiSound(synth, "confirm");
+            bumpUi();
+          }
+        }
+        // A tap on the fallen boss while STAYing (see stayOnField) re-opens the
+        // victory menu — the player has declared they're done farming. Same
+        // screen→world hit-test as the merchant; the tap must not double as a
+        // jump. Reuses the tap captured above (nulled already), so a merchant
+        // tap and a corpse tap can't both fire off one press.
+        if (
+          shopTap &&
+          !bot &&
+          state.phase === "playing" &&
+          state.staying &&
+          state.bossCorpse
+        ) {
+          const wx = camera.x + shopTap.x * cssToWorld.x;
+          const wy = camera.y + shopTap.y * cssToWorld.y;
+          const c = state.bossCorpse.pos;
+          if (
+            Math.hypot(wx - c.x, wy - c.y) <= 22 &&
+            reopenVictoryChoice(state)
+          ) {
+            input.jump = false;
+            input.useItem = false;
+            stopMusic();
             playUiSound(synth, "confirm");
             bumpUi();
           }
@@ -3594,14 +3622,90 @@ export function GameScreen({
         />
       )}
 
-      {hud && (hud.phase === "victory" || hud.phase === "defeat") && (
+      {/* The victory menu: a bare three-way choice, nothing else. NEXT LEVEL
+          moves on, RESTART replays this level, and STAY drops the (already
+          banked) hero back onto the cleared field to farm loot and mop up —
+          tapping the boss corpse later re-opens this same menu. */}
+      {hud && hud.phase === "victory" && (
         <div className="game-splash">
           <PixelText
             font={font}
-            text={hud.phase === "victory" ? "LEVEL CLEAR!" : "YOU DIED"}
+            text="LEVEL CLEAR!"
             scale={6}
-            color={hud.phase === "victory" ? "#7ef0c8" : "#d83a3a"}
+            color="#7ef0c8"
           />
+          {newRecord && (
+            <PixelText
+              font={font}
+              text="NEW RECORD!"
+              scale={3}
+              color="#ffd75e"
+            />
+          )}
+          <div className="splash-buttons">
+            {state &&
+              (() => {
+                // A level with a return door (`exitTo` — the bunker's way
+                // back to the rift) offers the crossing instead of the
+                // campaign's NEXT LEVEL; a level with neither shows nothing.
+                const exitTo = levelDef(state.level.id).exitTo ?? null;
+                const next = exitTo ?? nextLevelId(state.level.id);
+                if (!next) return null;
+                return (
+                  <button
+                    type="button"
+                    className="pixel-button"
+                    onClick={() => {
+                      setHud(null);
+                      setLevelId(next);
+                    }}
+                  >
+                    <PixelText
+                      font={font}
+                      text={
+                        exitTo
+                          ? `BACK TO ${levelDef(exitTo).name}`
+                          : "NEXT LEVEL"
+                      }
+                      scale={3}
+                      color="#0b0d10"
+                    />
+                  </button>
+                );
+              })()}
+            <button
+              type="button"
+              className="pixel-button secondary"
+              onClick={() => {
+                setHud(null);
+                setRunId((id) => id + 1);
+              }}
+            >
+              <PixelText font={font} text="RESTART" scale={3} />
+            </button>
+            {/* STAY only makes sense with a boss corpse to walk back to; the
+                bossless hub (reachExit) skips it. */}
+            {state?.bossCorpse && (
+              <button
+                type="button"
+                className="pixel-button secondary"
+                onClick={() => {
+                  if (state && stayOnField(state)) {
+                    setHud(null);
+                    playLevelMusic(levelDef(state.level.id).music);
+                  }
+                }}
+              >
+                <PixelText font={font} text="STAY" scale={3} />
+              </button>
+            )}
+          </div>
+        </div>
+      )}
+
+      {hud && hud.phase === "defeat" && (
+        <div className="game-splash">
+          <PixelText font={font} text="YOU DIED" scale={6} color="#d83a3a" />
           {newRecord && (
             <PixelText
               font={font}
@@ -3613,18 +3717,16 @@ export function GameScreen({
           {/* A death parts the two modes: hardcore is retired for good, while a
               softcore hero keeps everything earned this run and only has to
               restart the level (or leave). */}
-          {hud.phase === "defeat" && (
-            <PixelText
-              font={font}
-              text={
-                character.hardcore
-                  ? "HARDCORE · HERO RETIRED"
-                  : "SOFTCORE · PROGRESS KEPT"
-              }
-              scale={2}
-              color={character.hardcore ? "#ff6d6d" : "#7ef0c8"}
-            />
-          )}
+          <PixelText
+            font={font}
+            text={
+              character.hardcore
+                ? "HARDCORE · HERO RETIRED"
+                : "SOFTCORE · PROGRESS KEPT"
+            }
+            scale={2}
+            color={character.hardcore ? "#ff6d6d" : "#7ef0c8"}
+          />
           <div className="splash-stats">
             <PixelText
               font={font}
@@ -3669,55 +3771,18 @@ export function GameScreen({
             />
           </div>
           <div className="splash-buttons">
-            {hud.phase === "victory" &&
-              state &&
-              (() => {
-                // A level with a return door (`exitTo` — the bunker's way
-                // back to the rift) offers the crossing instead of the
-                // campaign's NEXT LEVEL; a level with neither shows nothing.
-                const exitTo = levelDef(state.level.id).exitTo ?? null;
-                const next = exitTo ?? nextLevelId(state.level.id);
-                if (!next) return null;
-                return (
-                  <button
-                    type="button"
-                    className="pixel-button"
-                    onClick={() => {
-                      setHud(null);
-                      setLevelId(next);
-                    }}
-                  >
-                    <PixelText
-                      font={font}
-                      text={
-                        exitTo
-                          ? `BACK TO ${levelDef(exitTo).name}`
-                          : "NEXT LEVEL"
-                      }
-                      scale={3}
-                      color="#0b0d10"
-                    />
-                  </button>
-                );
-              })()}
-            {/* RETRY restarts the level. Offered after every victory, and after
-                a SOFTCORE death (the kept build rebuilds the run) — but never
-                for a hardcore hero, who is retired and can only exit to MENU. */}
-            {(hud.phase === "victory" || !character.hardcore) && (
+            {/* RETRY rebuilds the level from the kept softcore build; a hardcore
+                hero is retired and can only exit to MENU. */}
+            {!character.hardcore && (
               <button
                 type="button"
-                className={`pixel-button${hud.phase === "victory" ? " secondary" : ""}`}
+                className="pixel-button"
                 onClick={() => {
                   setHud(null);
                   setRunId((id) => id + 1);
                 }}
               >
-                <PixelText
-                  font={font}
-                  text="RETRY"
-                  scale={3}
-                  color={hud.phase === "victory" ? undefined : "#0b0d10"}
-                />
+                <PixelText font={font} text="RETRY" scale={3} color="#0b0d10" />
               </button>
             )}
             <button

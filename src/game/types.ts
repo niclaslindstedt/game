@@ -1688,6 +1688,23 @@ export type GameState = {
   /** Counts down once the objective clears; the level ends at 0. */
   victoryCountdownMs: number | null;
   /**
+   * Where the level's boss fell, left as a clickable corpse once the player
+   * chooses to STAY on a cleared field (see `staying`). The victory menu's
+   * STAY option drops the hero back into `playing`; this corpse is the marker
+   * they walk back to and tap to re-open the menu (and finally move on). Set
+   * when a boss dies (`killEnemy`), null on any level the hero never felled a
+   * boss on (the bossless hub) — which is exactly when STAY is not offered.
+   */
+  bossCorpse: { pos: Vec2; sprite: string } | null;
+  /**
+   * True once the player picks STAY from the victory menu: the win is already
+   * banked, but the hero lingers on the cleared field to farm loot and finish
+   * off stragglers. It suppresses the auto-victory countdown from re-arming
+   * (so a still-cleared objective doesn't yank the menu straight back up) and
+   * arms the `bossCorpse` tap that re-opens the menu when the player is ready.
+   */
+  staying: boolean;
+  /**
    * Ms left of the level-up celebration: set to `LEVELING.dingCelebrationMs`
    * when a level lands (grantXp), counted down each playing step, and the
    * `levelup` stat-chooser phase only opens when it reaches 0 — the golden
