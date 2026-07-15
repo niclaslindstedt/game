@@ -381,8 +381,36 @@ export const FIX_COMPANIONS: Record<string, CompanionDef> = {
     radius: 11,
     weapon: "test_wrench",
     aura: { magicFind: 0.5 },
+    // A luck-swelling power: the aura grows +0.25 every 2 levels (rank 0 at
+    // level 1 leaves the base 0.5 untouched, so aura-at-recruit tests hold).
+    power: {
+      name: "TEST LUCK",
+      blurb: "AURA SWELLS EACH RANK",
+      everyLevels: 2,
+      magicFindPerRank: 0.25,
+    },
     joinWords: [["TEST JOIN LINE."]],
     killQuotes: ["TEST QUOTE."],
+  },
+  // A ranged companion whose signature POWER grows its volley: +1 pellet and
+  // +1 chain arc every 2 levels, onto a plain single-shot pistol (so the test
+  // sees the power ADD both from nothing).
+  test_gunner: {
+    id: "test_gunner",
+    name: "TEST GUNNER",
+    sprite: "test_companion",
+    hp: 150,
+    speed: 52,
+    radius: 11,
+    weapon: "test_pistol",
+    power: {
+      name: "TEST VOLLEY",
+      blurb: "MORE PELLETS AND ARCS EACH RANK",
+      everyLevels: 2,
+      pelletsPerRank: 1,
+      chainPerRank: 1,
+    },
+    killQuotes: ["TEST GUNNER QUOTE."],
   },
   // A companion with a FROST NOVA — the pulse that damages AND chills the
   // horde around it (see `companionNova`). Numbers picked round for the suite.
@@ -400,6 +428,15 @@ export const FIX_COMPANIONS: Record<string, CompanionDef> = {
       damage: 30,
       chillMs: 1500,
       chillFactor: 0.5,
+    },
+    // A deepening-frost power: +10 radius, +8 bite every 3 levels (rank 0 at
+    // recruit level 1 leaves the base ring untouched, so the nova suite holds).
+    power: {
+      name: "TEST FROST GROWTH",
+      blurb: "WIDER, HARDER NOVA EACH RANK",
+      everyLevels: 3,
+      novaRadiusPerRank: 10,
+      novaDamagePerRank: 8,
     },
     killQuotes: ["TEST FROST QUOTE."],
   },

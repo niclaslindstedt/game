@@ -496,9 +496,11 @@ export const MERCHANT_RETURN_SENDOFF: Record<Difficulty, string> = {
 /**
  * The three PARALLEL starting lanes. All are open from the first launch — a
  * player picks one as their entry point. They run the same missions over the
- * same hero-level band (and share one XP-cap band, see `XP_CAP`); the only
- * difference is how much help each gives (easy the most, hard the least).
- * Beating ANY one of them opens the gated tier (nightmare).
+ * same hero-level band; the only difference is how much help each gives (easy
+ * the most, hard the least) and a touch of farm headroom — MEDIUM and HARD carry
+ * XP caps two levels over EASY's (see `XP_CAP`), so those lanes can grind a level
+ * or two before nightmare. Beating ANY one of them opens the gated tier
+ * (nightmare).
  */
 export const STARTING_DIFFICULTIES: Difficulty[] = ["easy", "medium", "hard"];
 

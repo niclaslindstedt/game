@@ -429,9 +429,9 @@ function cursorThrottle(dist: number, fullSpeedPx: number): number {
 // `event.code` so they stay layout-independent (AZERTY etc.).
 // The reduced pace while WALK is held; the default (no modifier) runs at full
 // speed. Pinned to the engine's walk anchor so a Shift-walk stays a *walk* for
-// the stamina system: the proportional curve REGAINS stamina at `walkThrottle`
-// (its +walkRateFactor low anchor), so a throttle at the walk recovers instead
-// of draining it. A bare 0.6 would sit above the walk and drain like a run.
+// the stamina system: moving always spends the pool in proportion to pace, so a
+// walk drains only `walkThrottle` of a full run's rate — a slower, cheaper pace
+// (the pool refills only while standing still). A bare 0.6 would spend more.
 const KEYBOARD_WALK_THROTTLE = STAMINA.walkThrottle;
 
 /** Other carried weapons, best first — the switch targets shared by the Q
@@ -2108,6 +2108,25 @@ export function GameScreen({
               text: event.type === "companionDowned" ? "DOWN!" : "BACK UP",
               color: event.type === "companionDowned" ? "#d83a3a" : "#7ef0c8",
             });
+          }
+          // A companion earned a level from its own kills: float a "LVL n" tag
+          // off its head (green, the party colour) and toast the name — its
+          // signature power grows a rank at a time, so the level is worth
+          // noticing.
+          if (event.type === "companionLeveledUp") {
+            effects.push({
+              kind: "text",
+              pos: { x: event.pos.x, y: event.pos.y - 16 },
+              untilMs: state.stats.timeMs + 1200,
+              durationMs: 1200,
+              text: `LVL ${event.level}`,
+              color: "#7ef0c8",
+              rise: 22,
+            });
+            pushPickup(
+              `${companionDef(event.defId).name} → LVL ${event.level}`,
+              "#7ef0c8",
+            );
           }
           // The bag is full and turned away a piece of loot: float a "BAG
           // FULL" thought over the hero's hair and light the inventory button's

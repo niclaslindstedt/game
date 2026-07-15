@@ -403,12 +403,13 @@ export const LEVELING = {
    * The base is tuned WITH the golden-arrow faucet counted (arrows are a second
    * XP source on top of kills — see LEVELING.arrowXpShare and the calculator's
    * `w/arrows` column): the CRITICAL PATH — one bottom lane (easy/medium/hard,
-   * the three are parallel entry points that share XP caps) → nightmare → jesus,
-   * three playthroughs, not five — lands the hero at level 60
+   * the three are parallel entry points over the same level band — easy's caps
+   * tuned tight, medium/hard's two levels over it) → nightmare → jesus,
+   * three playthroughs, not five — lands the hero at ~level 62
    * (`node scripts/leveling-curve.mjs --campaign`), leaving the rest as the
-   * grind-to-cap endgame. The bottom lane leaves the hero ~29, nightmare ~49,
-   * jesus 60; per-map first-pass landings are easy/medium/hard reached at
-   * ~1/7/12/17/23, nightmare ~29/33/37/41/44, jesus ~49/51/52/55/57
+   * grind-to-cap endgame. The bottom lane leaves the hero ~36, nightmare ~52,
+   * jesus 62; per-map first-pass landings are bottom-lane maps reached at
+   * ~1/9/16/23/29, nightmare ~36/39/42/45/48, jesus ~52/54/56/58/60
    * (`--by-level` prints them — XP_CAP bands, the WORLD_DROP gates, and every
    * level's arrowCapByDifficulty are all read off that table; `--start <lane>`
    * checks each bottom lane, `--full` the completionist who replays all three).
@@ -516,22 +517,28 @@ export const LEVELING = {
  * than retiring it outright, so a determined grinder can still crawl toward the
  * global `LEVELING.maxLevel` on an old map, just achingly slowly. Each rung
  * lists the cap on its FIRST and LAST story level; intermediate maps interpolate
- * linearly. Sized a few levels above where a first pass naturally lands (bottom
- * lane ends ~29, nightmare ~49, jesus 60 — read off `leveling-curve.mjs
- * --by-level`), so the story never starves; only the rerun grind hits the
- * trickle. The three bottom lanes (easy/medium/hard) are PARALLEL entry points
- * over the same level band, so they SHARE one cap band — the difference between
- * them is help, not pace; the shared cap also bounds the completionist who
- * replays all three (`--full`) to the same ~34 entering nightmare. JESUS's last
- * map runs to the global `LEVELING.maxLevel` — the endgame grind lives there.
+ * linearly. Every cap sits at least `fadeLevels` (3) ABOVE where a single first
+ * pass of that map naturally leaves the hero (the `--by-level` exit level — read
+ * off `leveling-curve.mjs --by-level`), so KILLING EVERYTHING ON A MAP ONCE never
+ * reaches — never even touches the fade under — that map's cap: the story never
+ * starves and a clean clear forfeits ~nothing. Only the RERUN grind, replaying an
+ * outgrown map, hits the trickle. The three bottom lanes (easy/medium/hard) run
+ * the same missions over the same hero-level band, but they NO LONGER share one
+ * cap band: EASY is tuned tight (caps a bare `fadeLevels` over each first-pass
+ * landing — enough to never clip a clear, no more), while MEDIUM and HARD sit two
+ * levels higher across the whole band, so those lanes leave a little FARM headroom
+ * to grind a level or two before moving on to nightmare. JESUS's last map runs to
+ * the global `LEVELING.maxLevel` — the endgame grind lives there.
  */
 export const XP_CAP = {
   capByDifficulty: {
-    easy: { first: 12, last: 33 },
-    medium: { first: 12, last: 33 },
-    hard: { first: 12, last: 33 },
-    nightmare: { first: 35, last: 52 },
-    jesus: { first: 52, last: 99 },
+    easy: { first: 12, last: 38 },
+    // MEDIUM/HARD sit two levels over EASY across the whole band — same missions,
+    // same first-pass landings, but a touch more room to farm before nightmare.
+    medium: { first: 14, last: 40 },
+    hard: { first: 14, last: 40 },
+    nightmare: { first: 42, last: 55 },
+    jesus: { first: 57, last: 99 },
   } as Record<Difficulty, { first: number; last: number }>,
   /**
    * XP starts diminishing this many levels UNDER the (soft) cap: the grant is
@@ -1323,17 +1330,17 @@ export const ARMOR = {
 } as const;
 
 /**
- * Stamina — the sprint pool. Movement spends or refills it in proportion to
- * PACE (the analogue movement throttle): a flat-out sprint burns the full
- * `drainPerSec`, a walk (`walkThrottle`) trickles a little back, and the rates
- * between ease linearly across the zero-crossing — so a precise touch/mouse
- * push that hovers just under a run barely dips the pool, while a bang against
- * the ring drains it outright. Standing still (not moving) always takes the
- * full breather. While any stamina is left the player runs at full speed; once
- * it hits zero the top speed is capped at `emptySpeedFactor` until it recovers.
- * The STAMINA stat deepens the pool AND — matching "drains slower, regains
- * faster" — cuts the drain rate and quickens the regen. Units: stamina points
- * (pool), points/second (rates).
+ * Stamina — the sprint pool. MOVING always SPENDS it, in proportion to PACE
+ * (the analogue movement throttle): a bare creep barely dips the pool, a
+ * flat-out sprint burns the full `drainPerSec`, and everything between eases
+ * linearly from the standstill up to the ring — so the drain tracks the stick
+ * from zero, and the moment you push off you are already spending, never
+ * refilling. The pool refills ONLY while standing still (not moving), and then
+ * takes the full breather. While any stamina is left the player runs at full
+ * speed; once it hits zero the top speed is capped at `emptySpeedFactor` until
+ * it recovers. The STAMINA stat deepens the pool AND — matching "drains
+ * slower, regains faster" — cuts the drain rate and quickens the regen. Units:
+ * stamina points (pool), points/second (rates).
  */
 export const STAMINA = {
   /** Pool at zero STAMINA stat. */
@@ -1357,23 +1364,19 @@ export const STAMINA = {
   /** Each STAMINA point multiplies the regen by `1 + points·this` (regains faster). */
   regenPerPoint: 0.12,
   /**
-   * Pace anchoring the WALK end of the proportional stamina curve: a moving
-   * hero at (or below) this throttle counts as walking and REGAINS stamina at
-   * `walkRateFactor` of `regenPerSec`. It's also the pace a held WALK /
-   * keyboard-walk steers at (see GameScreen `KEYBOARD_WALK_THROTTLE`).
+   * The reduced pace a held WALK / keyboard-walk steers at (see GameScreen
+   * `KEYBOARD_WALK_THROTTLE`). A walk still MOVES, so it still spends stamina —
+   * just a fraction of a full run's drain (this throttle × `runRateFactor`) —
+   * it is a slower, cheaper pace, not a free breather. Only standing still
+   * refills the pool.
    */
   walkThrottle: 0.5,
   /**
-   * Signed stamina rate factor at `walkThrottle`: a positive fraction of
-   * `regenPerSec` REGAINED, so a walk still catches a little breath (+10%).
-   */
-  walkRateFactor: 0.1,
-  /**
    * Signed stamina rate factor at full throttle: a negative fraction of
    * `drainPerSec` SPENT, so a flat-out sprint burns the whole base drain
-   * (−100%). The curve runs linearly from `walkRateFactor` at `walkThrottle` to
-   * this at throttle 1, crossing zero just above the walk — so an analogue push
-   * tires the hero in proportion to his pace.
+   * (−100%). While moving, the rate runs linearly from 0 at a standstill to
+   * this at throttle 1 (`rate = throttle × runRateFactor`), so an analogue push
+   * spends the pool strictly in proportion to its pace and never regains it.
    */
   runRateFactor: -1,
   /** Top-speed multiplier once the pool is empty (a winded jog). */
@@ -1933,12 +1936,41 @@ export const COMPANIONS = {
    * supports the hero instead of clearing the field for him.
    */
   damageMult: 0.5,
-  /** Companion damage grows with the hero's level (they train together). */
+  /** Companion damage grows with its OWN level (it trains by fighting — see
+   * `companion-stats.ts`), NOT the hero's. */
   damagePerLevel: 0.04,
-  /** Companion max hp grows with the hero's level, same rationale. */
+  /** Companion max hp grows with its OWN level, same rationale. */
   hpPerLevel: 0.1,
-  /** Ms a downed companion kneels before getting back up on its own. */
+  /**
+   * COMPANION LEVELING (see `companion-stats.ts`). A companion earns its OWN
+   * levels from its OWN kills, decoupled from the hero: it starts trained to
+   * the hero's level when recruited and climbs from there, forever (the level
+   * rides the loadout, so it persists across every level AND difficulty). The
+   * curve is authored in KILLS, like the hero's (`xpToLevelUp`): a level costs
+   * `levelKills` of a reference-mob's worth of XP, growing gently per level, so
+   * a companion levels a handful of times a map early and slows as it climbs.
+   * The kill reward is the same figure the hero earns (`enemyKillXp`), so an
+   * elite finish lurches a companion's bar the way it does the hero's.
+   */
+  levelKills: 14,
+  /** Geometric growth of the per-level kill cost (mirrors the hero's gentle
+   * `killsPerLevelGrowth`). */
+  levelKillsGrowth: 1.04,
+  /** A companion levels up to here and no further — set high enough to read as
+   * "indefinite" without risking an unbounded loop on a colossal XP grant. */
+  maxLevel: 999,
+  /** Ms a downed companion kneels before getting back up on its own — but only
+   * counted down while OUT of combat (see `downedCombatRadius`). */
   reviveMs: 12_000,
+  /**
+   * A downed companion's revive count only ticks while the field around IT is
+   * clear: a live foe within this many world px freezes the count, so a
+   * companion beaten down in the middle of a swarm STAYS down until the area
+   * clears — or the hero speaks to a merchant, who stands the whole party back
+   * up (`reviveDownedCompanions`). A companion downed in a quick scrap still
+   * pops back up on its own once the mob is dead.
+   */
+  downedCombatRadius: 140,
   /** Fraction of max hp a companion stands back up with. */
   reviveHpFraction: 0.5,
   /**
@@ -1986,22 +2018,24 @@ export const GATES = {
 /**
  * Gravity wells — black holes placed by a level (LevelDef.wells). Each well
  * drags whatever crosses its pull radius toward the core: the grounded
- * player, enemies, and loose items — which pile up on the rim instead of
- * being destroyed, a dare to dash in. A jump no longer sails clean over a
- * hole: airborne the hero still drifts toward the core (`airPullFraction` of
- * the ground pull) and the hole's gravity fights his hop (`jumpGravity`), so
- * he can't hang over the horizon at full height. A MINION dragged into the
- * core is devoured outright: off the board with no kill, no XP and no loot —
- * the hole pays nobody. Elites and bosses are too massive to swallow (their
- * set pieces survive a bad camp spot) and apparitions too immaterial; both
- * only suffer the drag. A player in the core burns hp at `coreDps`, ticked
- * every `tickMs`. These are the per-well DEFAULTS — a level's well spec may
- * override each number. Units: world px, world px/s, hp/s, ms.
+ * player and enemies (reach `pullRadius`), and loose loot from much farther
+ * out (reach `lootRadius`, about a phone screen away) — which piles up on the
+ * rim instead of being destroyed, a dare to dash in. A jump no longer sails
+ * clean over a hole: airborne the hero still drifts toward the core
+ * (`airPullFraction` of the ground pull) and the hole's gravity fights his
+ * hop (`jumpGravity`), so he can't hang over the horizon at full height. A
+ * MINION dragged into the core is devoured outright: off the board with no
+ * kill, no XP and no loot — the hole pays nobody. Elites and bosses are too
+ * massive to swallow (their set pieces survive a bad camp spot) and
+ * apparitions too immaterial; both only suffer the drag. A grounded player
+ * dragged all the way into the core is DEVOURED too — instant death, the
+ * price of a loot dash gone wrong. These are the per-well DEFAULTS — a level's
+ * well spec may override each number. Units: world px, world px/s.
  */
 export const WELLS = {
-  /** Reach of the pull. */
+  /** Reach of the pull on the player and enemies. */
   pullRadius: 130,
-  /** Inside this the hole devours minions and burns the player. */
+  /** Inside this the hole devours minions and the grounded player alike. */
   coreRadius: 16,
   /**
    * Peak pull at the core's edge (px/s), falling off linearly to 0 at
@@ -2010,6 +2044,15 @@ export const WELLS = {
    * fight — SPEED, the sprint, or a jump is what gets him clear.
    */
   pullSpeed: 96,
+  /**
+   * Reach of the pull on loose LOOT — about a phone screen away, so drops
+   * scattered around a hole slide toward it from well beyond the player's own
+   * pull. The tug eases in (`1 - d/lootRadius` SQUARED): a crawl at the far
+   * edge, quickening as it nears the core — slow from the edges, then faster.
+   */
+  lootRadius: 300,
+  /** Peak loot pull at the core (px/s), eased to ~0 at `lootRadius`. */
+  lootPullSpeed: 96,
   /**
    * The share of the ground pull that still tugs the hero HORIZONTALLY while
    * he is airborne over the well: a jump over a hole no longer sails clean —
@@ -2023,13 +2066,6 @@ export const WELLS = {
    * gravity fights the hop, so he JUMPS LESS HIGH the nearer the horizon.
    */
   jumpGravity: 900,
-  /** Hp per second burned while the player stands in the core. */
-  coreDps: 40,
-  /**
-   * Core damage lands in ticks of this cadence (one `playerHurt` per tick,
-   * not per frame, so the flash and sfx read as a burn, not a buzzer).
-   */
-  tickMs: 250,
   /**
    * Dragged items park this far from the center — just outside the core, so
    * the loot hoard on the event horizon is grabbable at a price.

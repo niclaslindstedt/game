@@ -120,7 +120,7 @@ import {
   damageCrate,
   nearestCrate,
 } from "./crates.ts";
-import { revealAround } from "./map.ts";
+import { revealAround, revealRect } from "./map.ts";
 import {
   mechDamageMult,
   mechSpeedMult,
@@ -229,8 +229,12 @@ export function step(state: GameState, input: GameInput, dtMs: number): void {
   const exemptKillsBefore = state.menaceExemptKills;
 
   stepPlayer(state, input, dt, dtMs);
-  // Walking lifts the fog of war around wherever the hero now stands.
-  revealAround(state, state.player.pos);
+  // Playing lifts the fog of war from everything on screen: the camera view
+  // (input.view) is the exact world rect the player can see, so the map
+  // remembers all of it, not just a circle around the hero. Headless callers
+  // with no camera (bots, tests) fall back to the reveal circle.
+  if (input.view) revealRect(state, input.view);
+  else revealAround(state, state.player.pos);
   // The wandering merchant strolls (and may be MET) on this tick's player
   // position — right after the hero moves, so the meeting judges what the
   // player actually sees. A scenario FREEZE (state.freeze — the developer
@@ -267,7 +271,7 @@ export function step(state: GameState, input: GameInput, dtMs: number): void {
   stepMagicCritBlobs(state);
   // Environmental hazards act on this tick's positions, after everyone has
   // moved: the wells drag (and devour), the asteroids fly (and strike).
-  stepWells(state, dt, dtMs);
+  stepWells(state, dt);
   stepAsteroids(state, dt, dtMs);
   // Sight-pinned inner monologues fire on this tick's positions — after the
   // horde has moved, so "the hero sees one" means it is actually on screen.
@@ -815,30 +819,23 @@ function stepPlayer(
     player.moving = true;
   }
 
-  // Stamina scales with PACE. Standing still (not moving) takes the full
-  // breather (rate = 1). A moving hero reads his analogue throttle onto the
-  // proportional curve: +walkRateFactor of the regen (a walk still catches a
-  // little breath) at walkThrottle, easing linearly down to runRateFactor of
-  // the drain (a flat sprint burns the whole base drain) at full throttle, and
-  // crossing zero just above the walk — so a precise sub-run push barely dips
-  // the pool. The STAMINA stat deepens the reserve (computeMaxStamina) and,
+  // Stamina scales with PACE, and MOVING only ever spends it. Standing still
+  // (not moving) takes the full breather (rate = 1, the sole way to refill). A
+  // moving hero reads his analogue throttle straight onto the drain: the rate
+  // runs linearly from 0 at a standstill down to runRateFactor (a flat sprint
+  // burns the whole base drain) at full throttle — so the drain tracks the
+  // stick from zero and the instant he pushes off he is spending, never
+  // regaining. The STAMINA stat deepens the reserve (computeMaxStamina) and,
   // here, both slows the drain and quickens the regen. A JUMP takeoff also
   // spends the pool (jumpCost), and any draining pace or jump that bottoms it
   // out freezes regen for a beat (emptyRegenLockMs) — so the hero can't
-  // tap-run/tap-jump on fumes and must walk it off and wait the beat out.
+  // tap-run/tap-jump on fumes and must stand it off and wait the beat out.
   const staminaStat = effectiveStat(state, "stamina");
   // A jump only fires from the ground; the takeoff physics below share this.
   const jumping = input.jump && player.z === 0;
   let rate = 1;
   if (player.moving) {
-    const t = clamp(
-      (throttle - STAMINA.walkThrottle) / (1 - STAMINA.walkThrottle),
-      0,
-      1,
-    );
-    rate =
-      STAMINA.walkRateFactor +
-      t * (STAMINA.runRateFactor - STAMINA.walkRateFactor);
+    rate = throttle * STAMINA.runRateFactor;
   }
   const draining = rate < 0;
   if (draining) {
@@ -863,8 +860,9 @@ function stepPlayer(
   if ((draining || jumping) && player.stamina <= 0) {
     state.staminaRegenLockMs = STAMINA.emptyRegenLockMs;
   }
-  // Recover only on a non-draining pace, when no jump fired this frame, and
-  // once the lockout has lapsed — the STAMINA stat quickens it.
+  // Recover only while standing still (moving keeps `rate` ≤ 0, so this only
+  // adds stamina at the full standstill rate of 1), when no jump fired this
+  // frame, and once the lockout has lapsed — the STAMINA stat quickens it.
   if (!draining && !jumping && state.staminaRegenLockMs <= 0) {
     const regen =
       rate * STAMINA.regenPerSec * (1 + staminaStat * STAMINA.regenPerPoint);
@@ -1631,6 +1629,8 @@ function stepProjectiles(state: GameState, dt: number, dtMs: number): void {
       // meter — menace answers an overpowered hero, not a helpful party (see
       // `noMenace` in hitEnemy); the hero's own shots heat it as always.
       noMenace: projectile.companionId !== undefined,
+      // Credit a companion's shot-kill toward its own leveling (loot.ts).
+      companionId: projectile.companionId,
     });
     if (
       projectile.companionId !== undefined &&
@@ -1722,8 +1722,10 @@ function chainLightning(
         critMult: projectile.critMult,
         damageRoll: projectile.damageRoll,
         // A chained leap inherits the source shot's menace attribution: a
-        // companion's chain never heats the meter (see the projectile hit).
+        // companion's chain never heats the meter (see the projectile hit) —
+        // and credits its kills to the same companion.
         noMenace: projectile.companionId !== undefined,
+        companionId: projectile.companionId,
       },
     );
   }

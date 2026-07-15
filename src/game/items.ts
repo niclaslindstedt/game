@@ -31,6 +31,7 @@ import {
   UNIQUE,
   WEAPON,
 } from "./config.ts";
+import { companionAuraMagicFind } from "./companion-stats.ts";
 import { companionDef } from "./defs/companions.ts";
 import { cutsceneDef } from "./defs/cutscenes.ts";
 import {
@@ -280,16 +281,21 @@ function rollAffix(rng: Rng, def: AffixDef, ilvl: number): Affix {
 }
 
 /**
- * The party's MAGIC FIND: the summed `aura.magicFind` of every companion on
- * its feet (a downed companion's aura is silent until it stands back up).
- * Multiplies every loot-tier roll's chance in `rollTier` — LUCKY's +50% aura
- * makes each magic/rare/unique gate half again as likely to open.
+ * The party's MAGIC FIND: the summed effective aura of every companion on its
+ * feet (a downed companion's aura is silent until it stands back up). A LUCKY
+ * companion's aura SWELLS as he ranks up (`companionAuraMagicFind` folds in
+ * `power.magicFindPerRank`). Multiplies every loot-tier roll's chance in
+ * `rollTier` — LUCKY's +50% base makes each magic/rare/unique gate half again
+ * as likely to open, and more once he's leveled.
  */
 export function magicFindBonus(state: GameState): number {
   let bonus = 0;
   for (const companion of state.companions) {
     if (companion.downedMs !== undefined) continue;
-    bonus += companionDef(companion.defId).aura?.magicFind ?? 0;
+    bonus += companionAuraMagicFind(
+      companionDef(companion.defId),
+      companion.level,
+    );
   }
   return bonus;
 }

@@ -343,8 +343,9 @@ export type Player = {
   hp: number;
   maxHp: number;
   /**
-   * Current stamina — the sprint pool. Running spends it, walking/idling
-   * refills it; an empty pool caps the top speed (see config `STAMINA`).
+   * Current stamina — the sprint pool. Any movement spends it (in proportion
+   * to pace); only standing still refills it. An empty pool caps the top speed
+   * (see config `STAMINA`).
    */
   stamina: number;
   /** Max stamina, from the base pool + STAMINA stat (see `computeMaxStamina`). */
@@ -487,11 +488,17 @@ export type Companion = {
   hp: number;
   maxHp: number;
   /**
-   * The hero's level this companion is currently scaled to — hp and damage
-   * grow with it (config `COMPANIONS.hpPerLevel` / `damagePerLevel`), and
-   * stepCompanions re-scales the moment the hero levels up.
+   * The companion's OWN level, earned by fighting (config
+   * `COMPANIONS.levelKills`) and decoupled from the hero: hp, damage, and its
+   * signature POWER all grow with it (`companion-stats.ts`). It starts trained
+   * to the hero's level on recruit and climbs from there forever — the level
+   * rides the loadout, so it persists across every level and difficulty.
    */
   level: number;
+  /** XP banked toward the next level, from this companion's OWN kills. */
+  xp: number;
+  /** XP needed to cross out of the current level (`companionXpToLevelUp`). */
+  xpToNext: number;
   /** Sprite mirror, following the walk direction like the player's. */
   faceLeft: boolean;
   /** True while it walked this step; drives the walk animation. */
@@ -672,14 +679,15 @@ export type EnemyMech = {
 export type GravityWell = {
   id: number;
   pos: Vec2;
-  /** Reach of the pull (world px). */
+  /** Reach of the pull on the player and enemies (world px). */
   pullRadius: number;
-  /** Inside this the hole devours minions and burns the player. */
+  /** Inside this the hole devours minions and the grounded player alike. */
   coreRadius: number;
   /** Peak pull at the core's edge (px/s), linear falloff to the reach. */
   pullSpeed: number;
-  /** Hp per second burned while the player stands in the core. */
-  coreDps: number;
+  /** Reach of the pull on loose loot (world px) — about a screen away, so
+   * drops slide in from well beyond the player's own pull. */
+  lootRadius: number;
 };
 
 /**
@@ -1339,6 +1347,12 @@ export type GameEvent =
    */
   | { type: "wellSwallowed"; pos: Vec2; defId: string }
   /**
+   * The grounded hero was dragged all the way into a black hole's core and
+   * devoured — instant death (the run drops to `defeat` this same tick).
+   * `pos` is the core he fell into; the app plays the swallow at the hole.
+   */
+  | { type: "wellDeath"; pos: Vec2 }
+  /**
    * An apparition finished its scene, walked off, and dissolved (see
    * `EnemyDef.apparition`). The app sparkles it out at `pos`.
    */
@@ -1357,6 +1371,12 @@ export type GameEvent =
   | { type: "companionDowned"; defId: string; pos: Vec2 }
   /** A downed companion got back up (at `COMPANIONS.reviveHpFraction`). */
   | { type: "companionRevived"; defId: string; pos: Vec2 }
+  /**
+   * A companion earned a level from its own kills (`companion-stats.ts`): the
+   * app floats a "LVL n" tag off its head and, on a power rank-up, cues the
+   * signature growing stronger. `level` is the new companion level.
+   */
+  | { type: "companionLeveledUp"; defId: string; level: number; pos: Vec2 }
   /**
    * A companion's kill earned one of its def's `killQuotes`: the app floats
    * `text` above the companion at `pos` — banter, not a dialogue scene, so
@@ -1486,13 +1506,19 @@ export type Loadout = {
    * loadouts banked before the economy shipped load as an empty purse. */
   coins?: number;
   /**
-   * The recruited party rides along between levels: each companion's def and
-   * worn equipment (they arrive rested — hp re-derives from the carried
-   * level on apply). Optional so loadouts banked before companions shipped
-   * load as an empty party.
+   * The recruited party rides along between levels AND difficulties: each
+   * companion's def, its earned LEVEL and XP (so a companion levels up forever
+   * across the whole save), and its worn equipment. They arrive rested — hp
+   * re-derives from the carried level on apply. Optional so loadouts banked
+   * before companions shipped load as an empty party; `level`/`xp` are optional
+   * so a loadout banked before companion leveling loads at the hero's level.
    */
   companions?: {
     defId: string;
+    /** The companion's earned level (defaults to the hero's on an old save). */
+    level?: number;
+    /** XP banked toward the next level (defaults to 0 on an old save). */
+    xp?: number;
     equipment: {
       weapon: Equipment;
       head: Equipment | null;
@@ -1748,9 +1774,10 @@ export type GameState = {
   merchant: Merchant;
   /**
    * The fog of war: one byte per `MAP.cellSize` grid cell, row-major
-   * (`mapCols(level)` cells per row), 1 once the hero has walked within
-   * `MAP.revealRadius` of the cell. Stamped by `revealAround` each step and
-   * once at creation around the spawn; never re-fogged. See map.ts.
+   * (`mapCols(level)` cells per row), 1 once the cell has been on screen.
+   * Stamped by `revealRect` each step from the camera view (so everything
+   * seen is remembered) and by `revealAround` once at creation around the
+   * spawn; never re-fogged. See map.ts.
    */
   explored: Uint8Array;
   /** Pins on the level map: story finds, rare loot, elite/boss victories. */
@@ -1768,8 +1795,6 @@ export type GameState = {
   asteroids: Asteroid[];
   /** Ms until the next asteroid spawns (levels with LevelDef.asteroids). */
   asteroidTimerMs: number;
-  /** Ms until the next gravity-well core-damage tick may land. */
-  wellTickMs: number;
   /**
    * Ms until another "bags are full" nudge may fire. Counts down each step;
    * a blocked pickup emits `pickupBlocked` only when this reaches 0, then

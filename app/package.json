@@ -1,0 +1,34 @@
+{
+  "name": "gone-in-space-app",
+  "version": "0.1.0",
+  "description": "Native (Expo/React Native) App Store wrapper around the Gone in Space PWA — adds Taptic haptics and an audio session on top of the deployed game.",
+  "main": "index.ts",
+  "private": true,
+  "scripts": {
+    "start": "expo start",
+    "android": "expo start --android",
+    "ios": "expo start --ios",
+    "web": "expo start --web",
+    "typecheck": "tsc --noEmit",
+    "doctor": "npx --yes expo-doctor",
+    "build:preview": "eas build --profile preview",
+    "build:production": "eas build --profile production --platform all",
+    "submit": "eas submit --profile production"
+  },
+  "dependencies": {
+    "expo": "~57.0.6",
+    "expo-asset": "~57.0.5",
+    "expo-audio": "~57.0.2",
+    "expo-constants": "~57.0.5",
+    "expo-haptics": "~57.0.1",
+    "expo-splash-screen": "~57.0.4",
+    "expo-status-bar": "~57.0.1",
+    "react": "19.2.3",
+    "react-native": "0.86.0",
+    "react-native-webview": "13.16.1"
+  },
+  "devDependencies": {
+    "@types/react": "~19.2.2",
+    "typescript": "~6.0.3"
+  }
+}

@@ -192,6 +192,13 @@ The game is a Progressive Web App: open the site in your browser and choose
 app launches fullscreen, works offline, and shows a small toast when a new
 build is ready — reload when it suits you; an update never interrupts a run.
 
+A native **App Store / Play Store** build also lives in [`app/`](app/) — an
+Expo/React Native shell that wraps the deployed PWA in a full-screen WebView, so
+it looks and plays exactly like the website while adding real device haptics
+(the Taptic Engine, which the browser can't drive on iOS) and audio that plays
+through the silent switch. Builds are manual to keep costs down; see
+[`app/README.md`](app/README.md).
+
 ## Prerequisites
 
 - **Node.js ≥ 24** (pinned in [`.nvmrc`](.nvmrc); `nvm use` picks it up).

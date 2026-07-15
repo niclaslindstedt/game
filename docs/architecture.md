@@ -106,12 +106,21 @@ run against synthetic fixtures with no shipped content (see
   [`game-content.md`](./game-content.md).
 - **`src/game/defs/companions.ts`** — the companion catalog: who a spared
   unique becomes. Each def carries the sprite family (the enemy twin's), a
-  base hp that grows with the hero's level, a signature starting weapon, an
-  optional party-wide `aura` (LUCKY's +50% magic find), an optional signature
-  `nova` (RASPUTIN's FROST NOVA — a chilling pulse that damages and slows the
-  foes around him), the `joinWords` scene played the moment the SPARE verdict
-  lands, and the `killQuotes` banter floated over the companion when its blow
-  downs a mob.
+  base hp that grows with the companion's OWN level, a signature starting
+  weapon, an optional party-wide `aura` (LUCKY's +50% magic find), an optional
+  signature `nova` (RASPUTIN's FROST NOVA — a chilling pulse that damages and
+  slows the foes around him), an optional signature `power` (how the companion
+  gets stronger as it levels — more shotgun pellets, chain-lightning arcs, a
+  wider nova, a swelling luck aura), the `joinWords` scene played the moment the
+  SPARE verdict lands, and the `killQuotes` banter floated over the companion
+  when its blow downs a mob.
+- **`src/game/companion-stats.ts`** — pure companion stat/level/power math
+  (config + def only, no engine state): the max-hp ramp, the level XP curve
+  (`companionXpToLevelUp`, authored in kills like the hero's), the power RANK a
+  level has reached, and the per-rank bonuses (extra pellets/chain/pierce, a
+  wider/harder nova, a bigger magic-find aura). Shared by the per-tick pass, the
+  kill rail that credits a companion's XP (`loot.ts`), the party's magic-find
+  aura (`items.ts`), and the loadout carry — none of which it imports back.
 - **`src/game/defs/story.ts`** — the story-item catalog: plot pieces
   (keycards, dossiers, recovered hardware) dropped by elites or placed in
   locked rooms. Pickups bank into `state.storyItems` (never the bag) and
@@ -387,12 +396,17 @@ run against synthetic fixtures with no shipped content (see
   BALANCE menu cycles them at runtime.
 - **`src/game/hazards.ts`** — environmental hazards, both pure level data:
   **gravity wells** (`LevelDef.wells`, config `WELLS`) drag the grounded
-  player/enemies/items toward their core — minions are devoured there
-  (`wellSwallowed`: no kill, no XP, no loot, so a hole can't be farmed),
-  the player burns on a damage tick, dragged items park on the rim, and a
-  jump no longer clears the pull — airborne the hero still drifts toward the
-  core and the hole's gravity fights his hop, so he jumps less high over the
-  horizon (`WELLS.airPullFraction`/`jumpGravity`) — and the **asteroid rain**
+  player/enemies toward their core — minions are devoured there
+  (`wellSwallowed`: no kill, no XP, no loot, so a hole can't be farmed), and
+  the grounded hero dragged into the core is devoured too (`wellDeath`:
+  instant death). Loose loot is pulled from a wider reach (`WELLS.lootRadius`,
+  about a screen away, eased so it crawls at the edge and quickens toward the
+  core) and parks on the rim — a hoard the player can dare the deadly core
+  for. A jump no longer clears the pull — airborne the hero still drifts
+  toward the core and the hole's gravity fights his hop, so he jumps less high
+  over the horizon (`WELLS.airPullFraction`/`jumpGravity`), though he floats
+  above the core. The level map pins every well (`map_well`) so its road's
+  hazards read at a glance — and the **asteroid rain**
   (`LevelDef.asteroids`, config `ASTEROIDS`): rocks spawned on a ring past
   the screen edge streak across the player (one strike per rock, jumpable,
   armor reduces) and shove minions aside unharmed. Related:
@@ -426,24 +440,35 @@ run against synthetic fixtures with no shipped content (see
   `stepCompanions` (right after the enemy pass) walks the party's formation,
   picks fights inside the hero's engagement bubble _when he holds still_,
   strikes/shoots on the weapon's cadence (shots ride the ordinary projectile
-  pass, tagged `companionId` for kill-quote attribution), soaks the horde's
-  contact swings against helmet+chest armor, and beats companions DOWN — never
-  dead — until they stand back up on their own. Staying with the hero comes
-  first: while he moves the party keeps formation rather than peeling off after
-  a mob, and a companion he outruns to the camera's edge (`input.view`,
-  `COMPANIONS.screenEdgeMargin`) latches into FOLLOW mode — dropping the fight
-  to move with him until he stops. Companion auras
+  pass, tagged `companionId` for kill-quote attribution and XP credit), soaks
+  the horde's contact swings against helmet+chest armor, and beats companions
+  DOWN — never dead — until they stand back up on their own. Staying with the
+  hero comes first: while he moves the party keeps formation rather than peeling
+  off after a mob, and a companion he outruns to the camera's edge
+  (`input.view`, `COMPANIONS.screenEdgeMargin`) latches into FOLLOW mode —
+  dropping the fight to move with him until he stops. Companion auras
   (`CompanionDef.aura` — LUCKY's +50% magic find, read by items.ts
   `magicFindBonus` inside every tier roll) go silent while downed, and a
   `CompanionDef.nova` (RASPUTIN's FROST NOVA — `companionNova`) pulses a
   chilling ring on a cadence that damages and slows nearby foes (the frost
-  `chillMs`/`chillFactor` read live in `moveEnemy`). A spared companion's
+  `chillMs`/`chillFactor` read live in `moveEnemy`).
+  **Companions LEVEL UP on their own** (`companion-stats.ts`): a companion earns
+  its OWN levels from its OWN kills (credited on the `companionId` tag in
+  `killEnemy`), decoupled from the hero, and its hp/damage and signature `power`
+  grow with that level — the level and XP ride the loadout, so the party levels
+  up forever across every level and difficulty. A companion beaten down in a
+  swarm STAYS down (`COMPANIONS.downedCombatRadius` freezes the revive count
+  while a foe is on it) until the field clears or the hero speaks to the
+  wandering merchant, who stands the whole party back up
+  (`reviveDownedCompanions`, called on merchant discovery / return greeting /
+  shop-open — so it works in hardcore too). A spared companion's
   enemy twin is also held off the board while it rides the party (create.ts),
   so a replay never pits the hero against his own ally. The UI's
   mutators are `equipCompanionFromInventory` / `unequipCompanionToInventory`
   (weapon/helmet/chest only) and the `companion` pause-phase toggles
   `openCompanionPanel` / `closeCompanionPanel`; the party rides the loadout
-  (`Loadout.companions`) between levels.
+  (`Loadout.companions`, with each companion's earned level and XP) between
+  levels.
 - **`src/game/map.ts`** — the level map and its fog of war: run-scoped
   exploration as a coarse byte grid on the state (`state.explored`, one cell
   per config `MAP.cellSize` world px), stamped around the hero every step
@@ -680,6 +705,32 @@ kept in the dedicated `src/lib/` and
 `website/src/lib/` areas so it can be extracted into the framework for reuse
 in later games once it has matured through playtesting — see `AGENTS.md` for
 the policy.
+
+### `app/` — the native shell (optional third layer)
+
+The App Store / Play Store build lives in `app/`, an
+[Expo](https://expo.dev)/React Native project that is **not** part of the npm
+workspace and manages its own dependencies. It is a thin wrapper: a full-screen
+[`react-native-webview`](https://github.com/react-native-webview/react-native-webview)
+pointed at the deployed site (`siteUrl` from `game.config.json`), so the app
+looks and plays exactly like the PWA. On top of the web game it adds the native
+seams a browser can't provide on iOS:
+
+- **Taptic haptics.** iOS WKWebView never exposes `navigator.vibrate`, so the
+  engine's web haptics driver (`website/src/lib/haptics.ts`) no-ops there. The
+  shell injects a `navigator.vibrate` polyfill (`app/src/injected.ts`) that the
+  existing driver detects by feature test; every buzz is forwarded to the
+  native side (`app/src/nativeHaptics.ts`) and replayed on the Taptic Engine via
+  `expo-haptics`. No engine or website code changes — this is exactly the
+  `setDriver`/feature-detection seam that `haptics.ts` was built for.
+- **An audio session** (`setAudioModeAsync`) so the game's WebAudio plays
+  through the iOS silent switch.
+
+`app/app.config.js` reads brand identity from `game.config.json` (never
+re-hardcoding it) and pins the EAS project id; `app/eas.json` holds the build
+profiles. Builds are **manual only** — locally via `eas build`, or the
+dispatch-only `.github/workflows/app-build.yml` — so paid EAS build minutes are
+never spent on a push. See `app/README.md` for the full build/distribute flow.
 
 ## Deployment topology
 

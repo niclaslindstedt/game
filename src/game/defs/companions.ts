@@ -6,6 +6,37 @@
 // id, exactly like the enemy and equipment catalogs: a new companion is a new
 // entry + the sprites its enemy twin already ships — no engine changes.
 
+/**
+ * A companion's SIGNATURE POWER and how it scales with level (see
+ * `companion-stats.ts`). The power gains one RANK every `everyLevels` levels;
+ * each rank adds the set effects on top of the base weapon / nova / aura, so a
+ * companion visibly turns into a specialist the longer it fights. A def sets
+ * only the fields that fit its kit — a shotgunner grows `pelletsPerRank`, a
+ * coil `chainPerRank`, a frost caster the `nova*PerRank` pair, a lucky charm
+ * `magicFindPerRank`. Fields left unset simply don't grow.
+ */
+export type CompanionPower = {
+  /** Short all-caps name shown in the companion panel (e.g. "CHAIN LIGHTNING"). */
+  name: string;
+  /** One-line description of what the power does / how it grows. */
+  blurb: string;
+  /** Levels between rank-ups: rank = floor((level - 1) / everyLevels). */
+  everyLevels: number;
+  /** Extra shotgun pellets added to the weapon's volley per rank. */
+  pelletsPerRank?: number;
+  /** Extra chain-lightning arcs added to the weapon's shots per rank (works
+   * even on a weapon with no base chain — it grants the arc outright). */
+  chainPerRank?: number;
+  /** Extra pierce added to the weapon's shots per rank. */
+  piercePerRank?: number;
+  /** World px added to the FROST NOVA's blast radius per rank. */
+  novaRadiusPerRank?: number;
+  /** Flat damage added to the FROST NOVA's per-foe bite per rank. */
+  novaDamagePerRank?: number;
+  /** Party MAGIC FIND aura added per rank (on top of `aura.magicFind`). */
+  magicFindPerRank?: number;
+};
+
 export type CompanionDef = {
   id: string;
   /** Display name (portraits, the equip screen, the join toast). */
@@ -50,6 +81,17 @@ export type CompanionDef = {
     chillFactor: number;
   };
   /**
+   * The companion's SIGNATURE POWER — how it gets stronger as it levels
+   * (`companion-stats.ts`). Every `everyLevels` levels the power gains a RANK,
+   * and each rank steps up whichever of the effects below the def sets: a
+   * shotgun adds pellets, a coil adds lightning arcs, a nova widens and bites
+   * harder, a lucky charm's aura grows. Absent on a companion whose only growth
+   * is the plain hp/damage ramp. Purely additive on top of the base weapon /
+   * nova / aura — a companion with no `power` still trains, it just never gains
+   * a new trick. Author blurbs read in the companion panel.
+   */
+  power?: CompanionPower;
+  /**
    * The joining scene: what the spared figure says the moment the SPARE
    * verdict lands — a short thanks, a life owed, a promise to follow and
    * protect — played through the ordinary dialogue box (a `companionJoin`
@@ -76,6 +118,14 @@ export const COMPANION_DEFS: Record<string, CompanionDef> = {
     speed: 52,
     radius: 12,
     weapon: "tesla_coil",
+    // The coil's wireless current learns to LEAP: every few levels his bolts
+    // arc to one more foe, so a leveled Tesla chains the whole pack.
+    power: {
+      name: "CHAIN LIGHTNING",
+      blurb: "HIS BOLTS ARC TO ANOTHER FOE EACH RANK",
+      everyLevels: 3,
+      chainPerRank: 1,
+    },
     joinWords: [
       [
         "YOU HELD THE CURRENT AND",
@@ -106,6 +156,14 @@ export const COMPANION_DEFS: Record<string, CompanionDef> = {
     speed: 58,
     radius: 12,
     weapon: "blunderbuss",
+    // She packs the muzzle fuller every few levels: more pellets down the
+    // barrel, a wider wall of shot with each rank.
+    power: {
+      name: "FULL BROADSIDE",
+      blurb: "HER BLUNDERBUSS GAINS A PELLET EACH RANK",
+      everyLevels: 3,
+      pelletsPerRank: 1,
+    },
     joinWords: [
       [
         "YOU HAD ME GROUNDED AND",
@@ -145,6 +203,15 @@ export const COMPANION_DEFS: Record<string, CompanionDef> = {
       chillMs: 1600,
       chillFactor: 0.45,
     },
+    // The cold that could never keep HIM down spreads further every few
+    // levels: a wider ring, a deeper bite.
+    power: {
+      name: "DEEPENING FROST",
+      blurb: "HIS FROST NOVA WIDENS AND BITES HARDER EACH RANK",
+      everyLevels: 3,
+      novaRadiusPerRank: 10,
+      novaDamagePerRank: 8,
+    },
     joinWords: [
       [
         "POISON. BULLETS. RIVERS.",
@@ -175,6 +242,14 @@ export const COMPANION_DEFS: Record<string, CompanionDef> = {
     radius: 9,
     weapon: "sorcerers_staff",
     aura: { magicFind: 0.5 },
+    // The luck runs deeper the longer he's around: his magic-find aura swells
+    // with every rank, so the party's finds keep getting shinier.
+    power: {
+      name: "RUNAWAY LUCK",
+      blurb: "HIS MAGIC-FIND AURA SWELLS EACH RANK",
+      everyLevels: 3,
+      magicFindPerRank: 0.15,
+    },
     joinWords: [
       [
         "YE BEAT ME FAIR AND LET ME",
