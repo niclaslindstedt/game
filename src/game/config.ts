@@ -1601,16 +1601,40 @@ export const LOOT = {
  * MAKE QUALITY — the craftsmanship axis every PLAIN (regular-tier) weapon
  * and armor drop rolls at mint (see `rollEquipment`): BROKEN and CRUDE work
  * below the authored numbers, NORMAL at them, SUPERIOR and PERFECT above.
- * `mults` scales the base's damage (weapons), armor points (armor),
- * durability, and merchant value; the roll's odds shift with the killer's
- * MONSTER LEVEL — `weightsLow` are the relative odds at mlvl 1, `weightsHigh`
- * at `highMlvl`, lerped linearly between, so the level-1 rank and file drop
- * mostly shabby make and the deep campaign pays out superior and perfect
- * work. Craftsmanship and magic are exclusive (the D2 rule): MAGIC-or-better
- * finds, charms, and bags never roll one — they are always normal make.
+ *
+ * Each quality is a RANGE, not a single number (D2's superior/low-quality
+ * rule): a drop rolls a specific base-value multiplier inside its quality's
+ * `ranges` band, stamped on the instance (`Equipment.qualityRoll`) and frozen
+ * for life. The bands OVERLAP between adjacent qualities and climb with the
+ * rank, so a good CRUDE can out-swing a poor NORMAL, yet a PERFECT always
+ * clears a NORMAL — and two SUPERIOR copies of a base carry different damage.
+ * `mults` is the MIDPOINT of each band: the representative value a legacy
+ * instance (minted before the range roll) or a 0.5 roll reads, so the bands
+ * are symmetric around it and the economy's centre of mass is unchanged.
+ *
+ * The roll's ODDS shift with the killer's MONSTER LEVEL — `weightsLow` are the
+ * relative odds at mlvl 1, `weightsHigh` at `highMlvl`, lerped linearly
+ * between, so the level-1 rank and file drop mostly shabby make and the deep
+ * campaign pays out superior and perfect work. Craftsmanship and magic are
+ * exclusive (the D2 rule): MAGIC-or-better finds, charms, and bags never roll
+ * one — they are always normal make and carry no range roll.
  */
 export const QUALITY = {
   mults: { broken: 0.7, crude: 0.85, normal: 1, superior: 1.15, perfect: 1.3 },
+  /**
+   * The roll band each make quality drops within — a specific multiplier is
+   * drawn uniformly inside it at mint (see `rollQualityMult`). Symmetric around
+   * `mults` (the midpoint) and OVERLAPPING between neighbours, so make quality
+   * reads as a soft, D2-style gradient rather than five fixed steps. Only
+   * adjacent bands overlap: a PERFECT never rolls under a NORMAL's ceiling.
+   */
+  ranges: {
+    broken: { min: 0.58, max: 0.82 },
+    crude: { min: 0.73, max: 0.97 },
+    normal: { min: 0.9, max: 1.1 },
+    superior: { min: 1.03, max: 1.27 },
+    perfect: { min: 1.16, max: 1.44 },
+  },
   /** Relative quality odds off a monster-level-1 kill… */
   weightsLow: { broken: 20, crude: 25, normal: 52, superior: 3, perfect: 0 },
   /** …and off a monster at/above `highMlvl`; lerped linearly between. */

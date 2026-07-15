@@ -154,6 +154,7 @@ export {
   qualityMult,
   qualityOf,
   rollQuality,
+  rollQualityMult,
   repairEquippedWeapon,
   repairWornArmor,
   restoreStamina,

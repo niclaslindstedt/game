@@ -13,6 +13,7 @@ import {
   qualityMult,
   qualityOf,
   QUALITY,
+  QUALITY_ORDER,
   repairEquippedWeapon,
   rollEquipment,
   rollQuality,
@@ -115,6 +116,10 @@ describe("what quality is worth", () => {
     // instances and the test isolates what QUALITY alone is worth. (A pinned
     // draw, not a low mlvl: the offset-strip lifts the loot level off `mlvl`.)
     state.rng = () => 0.5;
+    // Pin the flavor stream too: the make-quality range roll is drawn off it,
+    // and a 0.5 draw lands on each band's MIDPOINT — i.e. `QUALITY.mults` — so
+    // the test reads what a quality is worth on average, not a random copy.
+    state.fxRng = () => 0.5;
     return rollEquipment(state, { defId: "test_pipe", quality, mlvl: 1 });
   }
 
@@ -137,8 +142,10 @@ describe("what quality is worth", () => {
   it("scales an armor piece's rolled points, stamped at mint", () => {
     const state = startGame();
     const opts = { defId: "test_vest", tier: "regular", mlvl: 10 } as const;
-    // Pin the ilvl draw so the two instances differ only in make.
+    // Pin the ilvl draw so the two instances differ only in make, and the
+    // flavor stream so each quality rolls its band MIDPOINT (`QUALITY.mults`).
     state.rng = () => 0.5;
+    state.fxRng = () => 0.5;
     const normal = rollEquipment(state, { ...opts, quality: "normal" });
     const perfect = rollEquipment(state, { ...opts, quality: "perfect" });
     expect(normal.ilvl).toBe(perfect.ilvl);
@@ -158,8 +165,15 @@ describe("what quality is worth", () => {
     });
     const full = equipmentMaxDurability(crude);
     expect(crude.durability).toBe(full);
+    // A CRUDE roll (its qualityRoll < 1) always wears out sooner than a NORMAL
+    // piece of the same base — drop the rolled multiplier so the comparison is
+    // against the flat-normal midpoint, not the crude copy's own roll.
     expect(full).toBeLessThan(
-      equipmentMaxDurability({ ...crude, quality: "normal" }),
+      equipmentMaxDurability({
+        ...crude,
+        quality: "normal",
+        qualityRoll: undefined,
+      }),
     );
     // Wear it, mend it: the kit restores the CRUDE maximum, never the def's.
     state.player.equipment.weapon = crude;
@@ -175,6 +189,69 @@ describe("what quality is worth", () => {
     const normal = rollEquipment(state, { ...opts, quality: "normal" });
     const perfect = rollEquipment(state, { ...opts, quality: "perfect" });
     expect(sellValue(perfect)).toBeGreaterThan(sellValue(normal));
+  });
+
+  it("rolls a base-value multiplier inside the quality's band, stamped at mint", () => {
+    const state = startGame();
+    for (const quality of QUALITY_ORDER) {
+      if (quality === "normal") continue; // covered by the spread below
+      const band = QUALITY.ranges[quality];
+      for (let i = 0; i < 40; i++) {
+        const piece = rollEquipment(state, {
+          defId: "test_pipe",
+          quality,
+          mlvl: 10,
+        });
+        expect(piece.qualityRoll).toBeDefined();
+        expect(piece.qualityRoll!).toBeGreaterThanOrEqual(band.min);
+        expect(piece.qualityRoll!).toBeLessThanOrEqual(band.max);
+        expect(qualityMult(piece)).toBe(piece.qualityRoll);
+      }
+    }
+  });
+
+  it("gives two SUPERIOR copies of a base different damage", () => {
+    const state = startGame();
+    // Pin the loot stream so ilvl/quality are identical — only the flavor
+    // stream (the base-value roll) is left to vary between the two copies.
+    state.rng = () => 0.5;
+    const damages = new Set<number>();
+    for (let i = 0; i < 20; i++) {
+      const copy = rollEquipment(state, {
+        defId: "test_pipe",
+        quality: "superior",
+        mlvl: 10,
+      });
+      damages.add(Math.round(weaponDamageFor(state, copy) * 1000));
+    }
+    // The fixed loot stream would collapse to one number under the old flat
+    // multiplier; the make-quality range roll spreads it across many.
+    expect(damages.size).toBeGreaterThan(1);
+  });
+
+  it("keeps the bands overlapping and climbing (a good CRUDE can beat a poor NORMAL)", () => {
+    const { crude, normal, superior, perfect } = QUALITY.ranges;
+    // Ascending midpoints.
+    expect(QUALITY.mults.crude).toBeLessThan(QUALITY.mults.normal);
+    expect(QUALITY.mults.normal).toBeLessThan(QUALITY.mults.superior);
+    // Adjacent bands OVERLAP…
+    expect(crude.max).toBeGreaterThan(normal.min);
+    expect(normal.max).toBeGreaterThan(superior.min);
+    // …but a PERFECT never rolls under a NORMAL's ceiling (non-adjacent).
+    expect(perfect.min).toBeGreaterThan(normal.max);
+  });
+
+  it("magic-or-better finds carry no range roll — always flat normal make", () => {
+    const state = startGame();
+    for (let i = 0; i < 20; i++) {
+      const magic = rollEquipment(state, {
+        defId: "test_pipe",
+        tier: "magic",
+        mlvl: 40,
+      });
+      expect(magic.qualityRoll).toBeUndefined();
+      expect(qualityMult(magic)).toBe(1);
+    }
   });
 
   it("leads the item's display name (and normal stays silent)", () => {

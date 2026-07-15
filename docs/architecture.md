@@ -164,9 +164,13 @@ run against synthetic fixtures with no shipped content (see
   curves; `rollEquipment` folds them into each level's pool at roll time)
   and **make quality** (every PLAIN regular-tier weapon/armor drop rolls
   BROKEN → CRUDE → NORMAL → SUPERIOR → PERFECT per instance, odds sliding
-  with the killer's monster level, scaling its damage/armor/durability/value
-  — config `QUALITY`; craftsmanship and magic are exclusive D2-style, so
-  magic-or-better finds, charms, and bags stay normal make).
+  with the killer's monster level; each quality is a RANGE, so a drop then
+  rolls a specific base-value multiplier inside its band — the D2 rule that
+  two SUPERIOR copies swing differently — with the bands overlapping between
+  neighbours and climbing with the rank, scaling its damage/armor/durability/
+  value — config `QUALITY` (`ranges`, midpoint `mults`); craftsmanship and
+  magic are exclusive D2-style, so magic-or-better finds, charms, and bags
+  stay flat normal make with no range roll).
 - **`src/game/defs/abilities.ts`** — the ability pickups: time-limited
   powers (orbiting fire orbs, storm strikes, stasis slow fields, the item
   magnet whose pull radius grows with INTELLIGENCE — and which only reels in

@@ -270,13 +270,18 @@ roll time, so the drop economy keeps introducing new bases to level 100
 without the level defs naming them. **Make quality**: every PLAIN
 (regular-tier) weapon/armor drop also rolls the craftsmanship of the
 individual piece — BROKEN → CRUDE → NORMAL → SUPERIOR → PERFECT — which
-scales its damage/armor/durability and merchant value (config
-`QUALITY.mults`) and leads its name. The odds slide with the killer's
-monster level (`QUALITY.weightsLow/High`): the level-1 rank and file drop
-mostly shabby make, the deep campaign pays out superior and perfect work.
-Craftsmanship and magic are exclusive, the D2 rule — a magic-or-better
-find is always normal make, as are charms and bags; scripted story drops
-(a level's `earlyDrops`) are pinned normal so the opening plays as tuned.
+scales its damage/armor/durability and merchant value and leads its name.
+Each quality is a RANGE, not a fixed step (config `QUALITY.ranges`): the
+drop then rolls a specific base-value multiplier inside its band, so two
+SUPERIOR copies of a base carry different damage. The bands OVERLAP between
+neighbours and climb with the rank — a good CRUDE can out-swing a poor
+NORMAL, yet a PERFECT always clears a NORMAL. The quality odds slide with the
+killer's monster level (`QUALITY.weightsLow/High`): the level-1 rank and file
+drop mostly shabby make, the deep campaign pays out superior and perfect work.
+Craftsmanship and magic are exclusive, the D2 rule — a magic-or-better find is
+always flat normal make (no range roll), as are charms and bags; scripted
+story drops (a level's `earlyDrops`) are pinned normal so the opening plays as
+tuned.
 
 Above the rolled tiers sit the **named UNIQUES** (`src/game/defs/uniques.ts`):
 hand-authored drops with a FIXED bonus block on a chosen base — no rolled
