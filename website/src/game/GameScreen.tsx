@@ -1964,6 +1964,32 @@ export function GameScreen({
               durationMs: 450,
             });
           }
+          // A crate took a blow but held: a small splinter chip flies off it so
+          // the hit reads before the box gives way.
+          if (event.type === "crateHit") {
+            effects.push({
+              kind: "burst",
+              pos: { x: event.pos.x, y: event.pos.y },
+              untilMs: state.stats.timeMs + 220,
+              durationMs: 220,
+              // Wood splinters — a small tan chip spray, not blood.
+              gore: { color: "#caa24d", count: 6, spread: 9, particle: "mote" },
+              seed: Math.floor(Math.random() * 997),
+            });
+          }
+          // A crate smashed open: keel the box over and burst it into splinters
+          // (the crateBreak effect), leaving just the loot the engine spilled.
+          if (event.type === "crateBroken") {
+            effects.push({
+              kind: "crateBreak",
+              pos: { x: event.pos.x, y: event.pos.y },
+              untilMs: state.stats.timeMs + 700,
+              durationMs: 700,
+              sprite: event.sprite,
+              angle: (Math.random() < 0.5 ? -1 : 1) * (Math.PI / 2),
+              seed: Math.floor(Math.random() * 997),
+            });
+          }
           // A NOVA burst: the expanding ring sized to the engine's damage
           // radius — icy blue for a companion's FROST nova, violet otherwise.
           if (event.type === "nova") {

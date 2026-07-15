@@ -837,6 +837,17 @@ export type Obstacle = {
   half?: Vec2;
   /** True when a jumping player sails over it. */
   jumpable: boolean;
+  /**
+   * BREAKABLE (a crate — see crates.ts): the hero's weapon smashes it. When
+   * set, `hp`/`maxHp` are live and the obstacle drops loot and is removed from
+   * the field once `hp` reaches 0. Absent on ordinary solid features (rocks,
+   * walls, craters), which never take damage.
+   */
+  breakable?: boolean;
+  /** Current break hp (breakable obstacles only). */
+  hp?: number;
+  /** Full break hp (breakable obstacles only). */
+  maxHp?: number;
 };
 
 /** A fixed story prop (a lander, a flag, …) placed by the level def. */
@@ -1199,6 +1210,19 @@ export type GameEvent =
       xp?: number;
     }
   | { type: "itemDropped"; pos: Vec2 }
+  /**
+   * A breakable crate took a hero blow but survived (see crates.ts). `pos` is
+   * the crate — the app puffs a splinter chip and pips a wooden thunk so the
+   * hit reads before the box gives way.
+   */
+  | { type: "crateHit"; pos: Vec2 }
+  /**
+   * A crate was smashed open: off the field, its loot already spilled around
+   * `pos`. `sprite` is the crate's sprite name so the app can keel the box
+   * over (like a slain mob) and burst it into splinters before it blinks out,
+   * leaving just the loot.
+   */
+  | { type: "crateBroken"; pos: Vec2; sprite: string }
   /**
    * A MERCY DROP was rolled and is being flown in by its ANGEL (the item's
    * `deliverMs` is now ticking). `pos` is where the guardian will release it —

@@ -408,7 +408,7 @@ export const THE_BUNKER: LevelDef = {
     { kind: "server", count: 14, radius: 9, jumpable: false },
     { kind: "vending", count: 8, radius: 8, jumpable: false },
     { kind: "marble_column", count: 10, radius: 9, jumpable: false },
-    { kind: "crate", count: 16, radius: 7, jumpable: true },
+    { kind: "crate", count: 16, radius: 7, jumpable: true, breakable: true },
     { kind: "gold_pallet", count: 10, radius: 7, jumpable: true },
   ],
   decor: [

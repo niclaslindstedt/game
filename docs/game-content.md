@@ -45,7 +45,10 @@ names its in-run music with an optional `music` id (a key into the app's
 
 - **Level 1 — SPACEZ HQ** (`levels/spacez_hq.ts`). A cleanroom raid for the
   ship engine's one missing part. `spacez` biome (polished lab
-  tiles + floor vents), ~800 px/s² gravity (hoppable desks and crates), rooms
+  tiles + floor vents), ~800 px/s² gravity (hoppable desks, and CRATES the
+  hero's weapon smashes for guaranteed loot — mostly health/stamina, sometimes
+  gear, a unique likelier than a plain kill; the same breakable crates appear
+  on the bunker and Mars, see `crates.ts`), rooms
   carved by `walls` with door gaps and three locked `doors` (storage, vault,
   and the AI CORE — THE ARCHITECT's keycard opens the last). The hero opens in
   plain clothes (`heroSuited: false`) and recovers the EVA suit here. Music:

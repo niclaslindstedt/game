@@ -319,7 +319,7 @@ export const SPACEZ_HQ: LevelDef = {
     { kind: "server", count: 16, radius: 9, jumpable: false },
     { kind: "vending", count: 8, radius: 8, jumpable: false },
     { kind: "desk", count: 18, radius: 8, jumpable: true },
-    { kind: "crate", count: 22, radius: 7, jumpable: true },
+    { kind: "crate", count: 22, radius: 7, jumpable: true, breakable: true },
   ],
   decor: [
     { kind: "papers", count: 24 },

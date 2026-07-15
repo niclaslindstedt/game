@@ -266,8 +266,9 @@ export const MARS: LevelDef = {
       radius: 12,
       jumpable: true,
     },
-    // Supply crates: dropped everywhere the colony works, hoppable cover.
-    { kind: "crate", count: 16, radius: 7, jumpable: true },
+    // Supply crates: dropped everywhere the colony works, hoppable cover the
+    // hero can also smash for supplies.
+    { kind: "crate", count: 16, radius: 7, jumpable: true, breakable: true },
   ],
   decor: [
     { kind: "rocks", sprite: "red_rocks", count: 22 },

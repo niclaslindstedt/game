@@ -114,6 +114,12 @@ import {
   queueStruckProcs,
   unspawnedMinions,
 } from "./loot.ts";
+import {
+  cratesInCone,
+  crateHitByCircle,
+  damageCrate,
+  nearestCrate,
+} from "./crates.ts";
 import { revealAround } from "./map.ts";
 import {
   mechDamageMult,
@@ -1040,12 +1046,18 @@ function stepWeapon(state: GameState, input: GameInput, dtMs: number): void {
     (enemy) => lineOfSight(state, player.pos, enemy.pos),
     aim,
   );
-  if (!target) return;
+  // With no foe in reach, the auto-attack turns on the nearest breakable CRATE
+  // and smashes it open for loot. Enemies always win the pick above; a crate is
+  // only chased once none are targetable, so a lone crate in a cleared room
+  // still gets cracked while combat is never diverted onto a box.
+  const targetPos =
+    target?.pos ?? nearestCrate(state, player.pos, range, input.view)?.pos;
+  if (!targetPos) return;
 
   // The speed stat quickens the cadence: DEX (melee & ranged) and INT (magic)
   // each drop the effective cooldown as they rise.
   player.weaponCooldownMs = weaponCooldownFor(state, equipped);
-  const dir = direction(player.pos, target.pos);
+  const dir = direction(player.pos, targetPos);
   if (!weapon.projectile) {
     // A swing cleaves a cone: the nearest monster is the aim, and every other
     // monster within reach and inside the weapon's arc is struck in the same
@@ -1069,6 +1081,12 @@ function stepWeapon(state: GameState, input: GameInput, dtMs: number): void {
       weapon.class,
       weaponCritMult(state, equipped),
     );
+    // The same swing smashes any breakable crate inside its cone — free
+    // collateral in a fight, and the whole point of a swing aimed at a crate.
+    // Each box rolls its own weapon blow, exactly like a cleaved mob.
+    for (const crate of cratesInCone(state, player.pos, dir, range, half)) {
+      damageCrate(state, crate, rollWeaponHit(state, equipped).damage);
+    }
     // Wear AFTER the strike so the blow lands with the weapon that swung.
     wearEquippedWeapon(state);
     return;
@@ -1585,6 +1603,19 @@ function stepProjectiles(state: GameState, dt: number, dtMs: number): void {
       projectile.hitIds,
     );
     if (!hit) {
+      // No foe in the way: a hero shot that overlaps a breakable crate smashes
+      // it instead of sailing over (a crate is jumpable, so `blockedByObstacle`
+      // above lets the shot through to here). A piercing round bites the box and
+      // flies on; anything else is spent on it.
+      const crate = crateHitByCircle(state, projectile.pos, projectile.radius);
+      if (crate) {
+        damageCrate(state, crate, projectile.damage);
+        if (projectile.pierceLeft && projectile.pierceLeft > 0) {
+          projectile.pierceLeft--;
+          survivors.push(projectile);
+        }
+        continue;
+      }
       survivors.push(projectile);
       continue;
     }

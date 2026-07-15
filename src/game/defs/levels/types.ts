@@ -252,6 +252,14 @@ export type LevelDef = {
     radius: number;
     jumpable: boolean;
     /**
+     * BREAKABLE loot crates (see crates.ts): the hero's weapon smashes these
+     * for guaranteed loot. Marked ones are minted with break hp (scaled to the
+     * run's level, config `CRATES`) and drop on death; unmarked features never
+     * take damage. Pair with `jumpable: true` — a crate is hoppable cover you
+     * can also smash.
+     */
+    breakable?: boolean;
+    /**
      * Rectangular rocks: each placement rolls one footprint from this list,
      * sized `[wCells, hCells]` at `cell` world px per cell. The rock collides
      * as that box (blocking sight, shots and blasts) and is drawn with the
