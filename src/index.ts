@@ -141,6 +141,8 @@ export {
   openInventory,
   pauseGame,
   resumeGame,
+  stayOnField,
+  reopenVictoryChoice,
   playerAppearance,
   playerCritChance,
   playerDodgeChance,

@@ -510,8 +510,14 @@ minted one, or one who has beaten their current difficulty — opens the
 difficulty ladder, to pick a starting lane or step up a newly-unlocked rung. The
 chosen hero's build carries into
 everything, and their progress is tracked per difficulty. Clearing a level
-records it, and the victory splash offers **NEXT LEVEL** (advancing along
-`LEVEL_ORDER`, carrying the difficulty). A hero is walked through the story in
+records it (banked the instant the boss falls), and the bare **LEVEL CLEAR**
+menu offers three choices and nothing else: **NEXT LEVEL** (advancing along
+`LEVEL_ORDER`, carrying the difficulty), **RESTART** (replay this level), and
+**STAY**. STAY drops the already-banked hero back onto the cleared field to
+farm loot and finish off stragglers; the fallen boss is left as a corpse the
+player taps to bring the menu back when they are ready to move on. STAY is
+offered only where a boss was felled — the bossless hub level instead swaps
+NEXT LEVEL for the crossing back (**BACK TO …**). A hero is walked through the story in
 order — resuming or choosing a difficulty drops them straight into the
 next unbeaten level, no picker. Only once the whole
 campaign is beaten at a difficulty does that difficulty's **level-select** screen

@@ -2856,3 +2856,33 @@ export function pauseGame(state: GameState): void {
 export function resumeGame(state: GameState): void {
   if (state.phase === "paused") state.phase = "playing";
 }
+
+/**
+ * The victory menu's STAY choice: the level is already won and banked, but the
+ * hero lingers on the cleared field to farm loot and mop up stragglers. Drops
+ * back into `playing`, latches `staying` (which stops the auto-victory
+ * countdown from re-arming — see step.ts), and disarms the countdown. The
+ * boss's corpse (recorded on its death) is left as the tap target that
+ * re-opens the menu when the player is ready to move on. Only valid from the
+ * `victory` phase with a corpse to return to. Returns true if it took.
+ */
+export function stayOnField(state: GameState): boolean {
+  if (state.phase !== "victory" || !state.bossCorpse) return false;
+  state.staying = true;
+  state.victoryCountdownMs = null;
+  state.phase = "playing";
+  return true;
+}
+
+/**
+ * Re-open the victory menu after a STAY: the player has tapped the boss corpse
+ * to declare they are done farming. Only valid while `staying` on a cleared
+ * field. Returns true if it took.
+ */
+export function reopenVictoryChoice(state: GameState): boolean {
+  if (!state.staying || state.phase !== "playing" || !state.bossCorpse) {
+    return false;
+  }
+  state.phase = "victory";
+  return true;
+}
