@@ -538,11 +538,7 @@ export const SPACEZ_ENEMIES: Record<string, EnemyDef> = {
     // The boss scene: longer than the elites' — the level's whole thread
     // ties off here before the fight starts.
     dialogue: [
-      [
-        "SQUEAK.",
-        "...NO. NO MORE SQUEAKING.",
-        "WHAT I ATE FIXED MY TONGUE.",
-      ],
+      ["SQUEAK.", "...NO. NO MORE SQUEAKING.", "WHAT I ATE FIXED MY TONGUE."],
       {
         hero: ["A TALKING RAT. SURE. WHY NOT.", "WHAT EXACTLY DID YOU EAT?"],
       },
