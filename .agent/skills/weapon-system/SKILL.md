@@ -219,7 +219,7 @@ one, and scripted `earlyDrops` pin `quality: "normal"`.
 ### Weapon art & swing animation — the swing preview
 
 When the work is the LOOK of a weapon — its held sprite on the field hero, or
-how it swings/recoils/casts (the WEAPON SWING animation, pivoted about the
+how it swings/recoils/casts (the swing animation, pivoted about the
 shoulder in `render.ts` `weaponPose`) and how its slash/muzzle EFFECT reads —
 drive `website/scripts/weapon-swing.mjs` instead of eyeballing the live game
 (the swing is over in ~200 ms). It stages the field hero holding a weapon and

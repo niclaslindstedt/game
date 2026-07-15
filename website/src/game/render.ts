@@ -626,16 +626,15 @@ export function drawFrame(
     ctx.drawImage(sprite, x, y);
   }
 
-  const swingFx = getSettings().weaponSwing === "on";
   for (const projectile of state.projectiles) {
     if (!inView(projectile.pos.x, projectile.pos.y, 16)) continue;
     const px = Math.round(projectile.pos.x - camera.x);
     const py = Math.round(projectile.pos.y - camera.y - projectile.z);
     // The hero's own round/bolt carries its weapon's signature glow trail —
-    // drawn UNDER the sprite. Only his shots (not hostile, not a companion's),
-    // and only under the developer WEAPON SWING flag. Uses the CURRENTLY held
-    // weapon's shot style (an in-flight round can't re-ask what fired it).
-    if (swingFx && !projectile.hostile && projectile.companionId == null) {
+    // drawn UNDER the sprite. Only his shots (not hostile, not a companion's).
+    // Uses the CURRENTLY held weapon's shot style (an in-flight round can't
+    // re-ask what fired it).
+    if (!projectile.hostile && projectile.companionId == null) {
       drawProjectileTrail(
         ctx,
         px,
@@ -1624,8 +1623,8 @@ function drawLevelUpBurn(
 
 /**
  * The hero's in-flight attack, handed to `drawPlayer` so the held weapon
- * animates in step with the swing/muzzle effect it accompanies (the developer
- * WEAPON SWING flag). `startMs`/`durationMs` are on the simulation clock
+ * animates in step with the swing/muzzle effect it accompanies.
+ * `startMs`/`durationMs` are on the simulation clock
  * (`state.stats.timeMs`) — the same clock `drawEffects` runs on — so the weapon
  * and its slash cone stay locked together. GameScreen captures it from the
  * hero's own `swing`/`shot` events.
@@ -1791,18 +1790,14 @@ function drawPlayer(
   const airborne = player.z > 0;
   // The paper-doll owns the costume: body sprite (from `playerAppearance`),
   // worn-armor overlays, and the held weapon, as one ordered layer stack
-  // shared with the DOM avatars (paper-doll.ts). The armor always draws; the
-  // developer CHARACTER WEAPON flag can strip the field hero's held weapon
-  // (the HUD avatar keeps its weapon).
+  // shared with the DOM avatars (paper-doll.ts).
   const { sprites } = assets;
   const frame = airborne
     ? "jump"
     : player.moving && Math.floor(timeMs / 160) % 2 === 1
       ? "1"
       : "0";
-  const layers = playerDollLayers(state, frame, {
-    weapon: getSettings().characterWeapon === "on",
-  });
+  const layers = playerDollLayers(state, frame, { weapon: true });
   // In the rift the ground isn't there — bob the grounded hero so he reads as
   // floating. The jump height (`player.z`) already lifts him in the air, so the
   // hover only applies while grounded to avoid fighting the arc.
@@ -1831,15 +1826,10 @@ function drawPlayer(
   // overlays, held weapon — draws inside one flipped transform and the
   // outfit stays glued to the body. A layer's own `flip` mirrors the sprite
   // in place (left-pointing weapon icons) on top of whichever facing holds.
-  // The held weapon swings on attack when the developer WEAPON SWING flag is
-  // on (a pure render concern, like CHARACTER WEAPON): the weapon layer pivots
-  // about the grip in step with the swing/muzzle effect. The pose folds to rest
-  // between blows, and there is no weapon layer at all when CHARACTER WEAPON is
-  // off, so the flag only bites when both are on.
-  const pose =
-    getSettings().weaponSwing === "on"
-      ? weaponPose(action, state.stats.timeMs)
-      : REST_POSE;
+  // The held weapon swings on attack (a pure render concern): the weapon layer
+  // pivots about the shoulder in step with the swing/muzzle effect, folding to
+  // rest between blows.
+  const pose = weaponPose(action, state.stats.timeMs);
   ctx.save();
   if (player.faceLeft) {
     ctx.translate(x + TILE, y);
@@ -1880,11 +1870,9 @@ function drawPlayer(
   // the same doll-local/facing space, hugging the arc the blade just carved. Its
   // look is the equipped weapon's signature (slash-fx.ts): a plain blade slashes
   // white, a named unique flares its element.
-  if (getSettings().weaponSwing === "on") {
-    const slash = meleeSlashArc(action, state.stats.timeMs);
-    if (slash) {
-      drawSlash(ctx, slash, slashStyleFor(player.equipment.weapon.uniqueId));
-    }
+  const slash = meleeSlashArc(action, state.stats.timeMs);
+  if (slash) {
+    drawSlash(ctx, slash, slashStyleFor(player.equipment.weapon.uniqueId));
   }
   ctx.restore();
 }

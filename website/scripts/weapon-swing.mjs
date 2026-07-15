@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 // SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
 // Weapon-swing preview tool (see the `weapon-system` skill): stage the field
-// hero holding a weapon and screenshot its WEAPON SWING animation frame by
+// hero holding a weapon and screenshot its swing animation frame by
 // frame, so the held-weapon pose (weapon art) and its slash/muzzle effect
 // (weapon effects) can be tuned by eye instead of guessed. Output is one
 // numbered horizontal strip per weapon into website/assets-preview/swing/
@@ -17,8 +17,8 @@
 //   window.__timeScale(f)                    — slow the whole run to f× speed
 //       so the fast live swing AND its effect spread across many frames.
 //       Used by `live` mode (weapon effects).
-// Both hooks (and the CHARACTER WEAPON / WEAPON SWING flags this script forces
-// on via localStorage) are documented in docs/configuration.md.
+// Both hooks are documented in docs/configuration.md. The field hero always
+// shows and swings his held weapon now, so nothing needs forcing on.
 //
 // Playwright is intentionally NOT a dependency of this repo; install it
 // ephemerally when previewing: `npm install --no-save playwright`.
@@ -162,15 +162,8 @@ const browser = await chromium.launch({
 const page = await browser.newPage({ viewport: { width: 844, height: 390 } });
 page.on("pageerror", (e) => console.error("PAGE ERROR:", e.message));
 
-// Force the two field-hero flags on before the app reads its settings — the
-// held weapon (CHARACTER WEAPON) and its animation (WEAPON SWING) are both
-// developer-only and off by default.
-await page.addInitScript(() => {
-  window.localStorage.setItem(
-    "gone-in-space:settings",
-    JSON.stringify({ characterWeapon: "on", weaponSwing: "on" }),
-  );
-});
+// The field hero's held weapon and its swing animation are the shipped
+// default now, so nothing needs forcing on before the app reads its settings.
 
 await page.goto(`${url}/?debug&bot=idle&seed=${seed}`);
 await page.getByRole("button", { name: "play", exact: true }).waitFor();

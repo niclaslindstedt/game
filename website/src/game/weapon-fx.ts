@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
-// Signature WEAPON EFFECTS for the field hero's attacks (developer WEAPON SWING
-// flag) — the styled MELEE slash crescent that rides the blade (`drawSlash`, see
+// Signature WEAPON EFFECTS for the field hero's attacks — the styled MELEE
+// slash crescent that rides the blade (`drawSlash`, see
 // render.ts `drawPlayer`), the RANGED/MAGIC muzzle flash / cast bloom
 // (`drawMuzzle`), and the themed gore a melee hit throws (`drawBurst`). Each
 // weapon CLASS has a plain base look, and a UNIQUE gets its OWN — Excalibur

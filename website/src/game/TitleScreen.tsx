@@ -573,8 +573,6 @@ export function TitleScreen({
     type OnOffKey =
       | "debug"
       | "autoLevelStats"
-      | "characterWeapon"
-      | "weaponSwing"
       | "titleOrbits"
       | "vibration"
       | "xpFloat"
@@ -989,18 +987,6 @@ export function TitleScreen({
           "AUTO LEVEL STATS",
           "developer-auto-level-stats",
           "FREE BASE STAT GROWTH EACH LEVEL (MOBS SCALE TO MATCH)",
-        ),
-        onOffRow(
-          "characterWeapon",
-          "CHARACTER WEAPON",
-          "developer-character-weapon",
-          "SHOW THE HELD WEAPON ON THE HERO SPRITE",
-        ),
-        onOffRow(
-          "weaponSwing",
-          "WEAPON SWING",
-          "developer-weapon-swing",
-          "ANIMATE THE HELD WEAPON ON EACH ATTACK (NEEDS CHARACTER WEAPON)",
         ),
         // The overkill fling strength: a drag track from 0× (bodies drop where
         // they stand) through 1× (shipped feel) up to KNOCKBACK_MAX× (mobs
