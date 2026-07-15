@@ -1207,6 +1207,9 @@ export type Effect = {
   launch?: { dx: number; dy: number; dist: number; spins: number };
   /** Swing: the arc's reach in world px (the weapon's effective range). */
   radius?: number;
+  /** Nova: an icy-blue chilling burst (a companion's FROST NOVA) rather than
+   * the plain violet arcane ring. */
+  frost?: boolean;
   /** Swing: the full cone angle in radians (wide blade vs narrow spear). */
   arc?: number;
   /** Muzzle: ranged fires a hot flash, magic a cool cast burst. */
@@ -1525,19 +1528,23 @@ export function drawEffects(
     }
 
     if (effect.kind === "nova") {
-      // A NOVA proc: a violet ring bursting out to its damage radius — a
-      // local, arcane shockwave (no screen flash; procs fire often).
+      // A NOVA burst: a ring bursting out to its damage radius — a local
+      // shockwave (no screen flash; novas fire often). A FROST nova (a
+      // companion's chilling pulse) rings icy blue; the arcane proc/crit
+      // burst rings violet.
       const duration = effect.durationMs ?? 320;
       const t = 1 - (effect.untilMs - timeMs) / duration; // 0 → 1
       const reach = (effect.radius ?? 56) * (0.25 + 0.75 * t);
       const fade = 1 - t;
-      ctx.strokeStyle = `rgba(184, 138, 232, ${0.85 * fade})`;
+      const outer = effect.frost ? "120, 200, 245" : "184, 138, 232";
+      const inner = effect.frost ? "214, 240, 255" : "230, 214, 255";
+      ctx.strokeStyle = `rgba(${outer}, ${0.85 * fade})`;
       ctx.lineWidth = 2;
       ctx.beginPath();
       ctx.arc(x, groundY, reach, 0, Math.PI * 2);
       ctx.stroke();
       ctx.lineWidth = 1;
-      ctx.strokeStyle = `rgba(230, 214, 255, ${0.5 * fade})`;
+      ctx.strokeStyle = `rgba(${inner}, ${0.5 * fade})`;
       ctx.beginPath();
       ctx.arc(x, groundY, reach * 0.7, 0, Math.PI * 2);
       ctx.stroke();

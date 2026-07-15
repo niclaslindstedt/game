@@ -135,10 +135,28 @@ export function createGame(
   const blocked = (pos: Vec2, radius: number) =>
     obstacles.some((o) => distance(pos, o.pos) < o.radius + radius);
 
+  // A spareable unique the hero already SPARED walks the campaign at his side
+  // (carried in the loadout's party), so its ENEMY twin must not spawn to be
+  // fought again — you don't re-fight your own companion. It stays absent
+  // until that companion is gone from the party (a downed one still counts as
+  // present; a party that no longer carries it lets the twin return). The
+  // loadout hasn't been applied yet (`state.companions` is still empty here),
+  // so read the carried party directly.
+  const partyCompanions = new Set(
+    (loadout?.companions ?? []).map((c) => c.defId),
+  );
+  const alreadyRecruited = (enemyId: string): boolean => {
+    const companion = enemyDef(enemyId).spareable?.companion;
+    return companion !== undefined && partyCompanions.has(companion);
+  };
+
   const enemies: Enemy[] = [];
   for (const spawn of def.spawns) {
     // Difficulty-gated spawns sit out the rungs below their `minDifficulty`.
     if (!meetsMinDifficulty(difficulty, spawn.minDifficulty)) continue;
+    // A spared companion's enemy twin stays off the board while it is in the
+    // party (see `partyCompanions`).
+    if (alreadyRecruited(spawn.enemy)) continue;
     if ("at" in spawn) {
       enemies.push(
         spawnEnemy(

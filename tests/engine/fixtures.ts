@@ -384,6 +384,25 @@ export const FIX_COMPANIONS: Record<string, CompanionDef> = {
     joinWords: [["TEST JOIN LINE."]],
     killQuotes: ["TEST QUOTE."],
   },
+  // A companion with a FROST NOVA — the pulse that damages AND chills the
+  // horde around it (see `companionNova`). Numbers picked round for the suite.
+  test_frost: {
+    id: "test_frost",
+    name: "TEST FROST",
+    sprite: "test_frost",
+    hp: 150,
+    speed: 52,
+    radius: 11,
+    weapon: "test_wrench",
+    nova: {
+      everyMs: 2000,
+      radius: 60,
+      damage: 30,
+      chillMs: 1500,
+      chillFactor: 0.5,
+    },
+    killQuotes: ["TEST FROST QUOTE."],
+  },
 };
 
 export const FIX_WEAPONS: Record<string, WeaponDef> = {
@@ -1264,6 +1283,17 @@ export const FIX_CHAIN_LEVEL: LevelDef = {
   prelude: ["test_prelude", "test_prelude_2"],
 };
 
+// A level with a placed SPAREABLE unique — used to prove its enemy twin is
+// held off the board while its companion rides the party (create.ts).
+export const FIX_RECRUIT_LEVEL: LevelDef = {
+  ...FIX_LEVEL,
+  id: "test_recruit_level",
+  spawns: [
+    ...FIX_LEVEL.spawns,
+    { enemy: "test_spareable", at: { x: 600, y: 300 } },
+  ],
+};
+
 let installed = false;
 
 /** Register the synthetic fixtures as the engine's active catalogs. Idempotent
@@ -1290,6 +1320,7 @@ export function installFixtures(force = false): void {
       test_stall_level: FIX_STALL_LEVEL,
       test_gate_level: FIX_GATE_LEVEL,
       test_exit_level: FIX_EXIT_LEVEL,
+      test_recruit_level: FIX_RECRUIT_LEVEL,
     },
     uniques: FIX_UNIQUES,
     enemies: FIX_ENEMIES,

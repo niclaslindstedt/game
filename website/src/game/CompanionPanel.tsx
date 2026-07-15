@@ -114,6 +114,13 @@ export function CompanionPanel({
                 scale={2}
                 color="#7ef0c8"
               />
+            ) : def.nova ? (
+              <PixelText
+                font={font}
+                text="FROST NOVA - CHILLS THE HORDE"
+                scale={2}
+                color="#78c8f5"
+              />
             ) : (
               <PixelText
                 font={font}

@@ -503,6 +503,14 @@ export type Companion = {
   following?: boolean;
   /** Ms until this companion may float another kill quote. */
   quoteCooldownMs: number;
+  /**
+   * Ms until this companion's FROST NOVA may pulse again (companions with a
+   * `CompanionDef.nova` — see `companionNova`). Held at 0 while there is no
+   * foe in reach, so the ring goes off the instant one drifts into it, then
+   * counts down `nova.everyMs` between pulses. Undefined on companions with no
+   * nova.
+   */
+  novaCooldownMs?: number;
   equipment: {
     /** Never empty — a companion always fights with something. */
     weapon: Equipment;
@@ -585,6 +593,15 @@ export type Enemy = {
    */
   powerScaled?: boolean;
   contactMult?: number;
+  /**
+   * FROST CHILL bookkeeping (a companion's frost nova — see `companionNova`):
+   * `chillMs` counts down the slow's remaining life, and `chillFactor` is the
+   * movement multiplier (0..1) applied while it runs — `moveEnemy` folds it in
+   * alongside a stasis field, so a chilled mob crawls. Both absent once the
+   * chill lapses.
+   */
+  chillMs?: number;
+  chillFactor?: number;
   /**
    * The scripted opening striker (a level's `openingStrike`): a lone vanguard
    * that rushes ahead of the pack, and whose first contact — harmless — draws
@@ -1198,9 +1215,11 @@ export type GameEvent =
   | { type: "nuke"; pos: Vec2 }
   /** A storm ability bolt struck at `pos` (drives the flash + crack). */
   | { type: "lightning"; pos: Vec2 }
-  /** A NOVA proc burst around `pos` (see the `proc` affix): `radius` sizes
-   * the app's expanding ring; the damage was resolved engine-side. */
-  | { type: "nova"; pos: Vec2; radius: number }
+  /** A NOVA burst around `pos` (a `proc` affix, a magic-crit blob, or a
+   * companion's FROST NOVA): `radius` sizes the app's expanding ring; the
+   * damage was resolved engine-side. `frost` recolours the ring icy blue for
+   * the chilling companion pulse (the plain violet arcane burst otherwise). */
+  | { type: "nova"; pos: Vec2; radius: number; frost?: boolean }
   /**
    * A stacked medkit was spent from the consumable dock: `name` is the
    * quality's label (`MEDKIT.tiers[tier].name`) and `heal` the hp actually

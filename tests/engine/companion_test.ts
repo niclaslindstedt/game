@@ -490,6 +490,128 @@ describe("companion equipment", () => {
   });
 });
 
+describe("the frost nova", () => {
+  /** A run with the fixture FROST companion recruited beside the hero, the
+   * stage cleared, and the event log reset. */
+  function withFrost(state: GameState) {
+    clearStage(state);
+    const companion = recruitCompanion(state, "test_frost", {
+      x: state.player.pos.x + 60,
+      y: state.player.pos.y,
+    });
+    state.events = [];
+    return companion;
+  }
+
+  it("pulses on cadence: chills and damages every foe in the ring", () => {
+    const state = startGame();
+    const companion = withFrost(state);
+    // Two chunky foes inside the 60px ring, one well outside it.
+    const near = (id: number, dx: number, dy: number) => {
+      const enemy = makeEnemy(
+        {
+          id,
+          pos: { x: companion.pos.x + dx, y: companion.pos.y + dy },
+          hp: 400,
+          maxHp: 400,
+        },
+        "test_minion",
+      );
+      state.enemies.push(enemy);
+      return enemy;
+    };
+    const a = near(8001, 20, 0);
+    const b = near(8002, 0, 25);
+    const far = near(8003, 200, 0);
+
+    const events: GameEvent[] = [];
+    for (let i = 0; i < 3; i++) {
+      step(state, idle, DT);
+      events.push(...state.events);
+    }
+
+    // The ring burst — flagged frost so the app rings it icy blue.
+    const nova = events.find((e) => e.type === "nova");
+    expect(nova).toBeDefined();
+    expect(nova && nova.type === "nova" && nova.frost).toBe(true);
+    // Both foes in the ring were chilled AND took the pulse's bite.
+    expect(a.chillMs).toBeGreaterThan(0);
+    expect(b.chillMs).toBeGreaterThan(0);
+    expect(a.hp).toBeLessThan(400);
+    // The foe outside the ring was untouched by the pulse.
+    expect(far.chillMs).toBeUndefined();
+  });
+
+  it("holds its charge until a foe is in reach — never fires into empty space", () => {
+    const state = startGame();
+    withFrost(state); // clearStage leaves only the far-parked boss, out of reach
+    const events: GameEvent[] = [];
+    for (let i = 0; i < 10; i++) {
+      step(state, idle, DT);
+      events.push(...state.events);
+    }
+    expect(events.some((e) => e.type === "nova")).toBe(false);
+  });
+
+  it("chills the horde: a caught mob crawls at the frost factor", () => {
+    const state = startGame();
+    clearStage(state);
+    const px = state.player.pos.x;
+    const py = state.player.pos.y;
+    // Two identical minions charging the hero from the same range; one chilled.
+    const charger = (id: number, dy: number, chilled: boolean) => {
+      const enemy = makeEnemy(
+        {
+          id,
+          pos: { x: px - 300, y: py + dy },
+          speed: 120,
+          awake: true,
+          mlvl: 1,
+          ...(chilled ? { chillMs: 10_000, chillFactor: 0.5 } : {}),
+        },
+        "test_minion",
+      );
+      state.enemies.push(enemy);
+      return enemy;
+    };
+    const control = charger(8100, -30, false);
+    const chilled = charger(8101, 30, true);
+    const gap = (e: typeof control) => Math.hypot(e.pos.x - px, e.pos.y - py);
+    const control0 = gap(control);
+    const chilled0 = gap(chilled);
+
+    run(state, idle, 40);
+
+    const controlMoved = control0 - gap(control);
+    const chilledMoved = chilled0 - gap(chilled);
+    expect(controlMoved).toBeGreaterThan(0);
+    expect(chilledMoved).toBeGreaterThan(0);
+    // Half-speed chill: the chilled mob covers well under the control's ground.
+    expect(chilledMoved).toBeLessThan(controlMoved * 0.7);
+  });
+});
+
+describe("a spared companion's twin stays off the board", () => {
+  it("does not spawn while the companion rides the party", () => {
+    // With no party, the fixture spareable spawns into the level as normal.
+    const solo = createGame(SEED_NEXT, "test_recruit_level", "medium");
+    expect(solo.enemies.some((e) => e.defId === "test_spareable")).toBe(true);
+
+    // Spare it into the party, then carry that loadout back into the level.
+    const first = startGame();
+    clearStage(first);
+    recruitCompanion(first, "test_companion", { x: 30, y: 30 });
+    const loadout = extractLoadout(first);
+    const next = createGame(SEED_NEXT, "test_recruit_level", "medium", loadout);
+
+    // The companion walked in at the hero's side; its enemy twin did not spawn.
+    expect(next.companions.some((c) => c.defId === "test_companion")).toBe(
+      true,
+    );
+    expect(next.enemies.some((e) => e.defId === "test_spareable")).toBe(false);
+  });
+});
+
 describe("the party rides the loadout", () => {
   it("extract → apply carries the companion and its kit, rested", () => {
     const state = startGame();

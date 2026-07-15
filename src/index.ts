@@ -186,6 +186,7 @@ export {
   companionArmorReduction,
   companionById,
   companionMaxHp,
+  companionNovaDamage,
   companionWeaponCooldown,
   companionWeaponDamage,
   equipCompanionFromInventory,

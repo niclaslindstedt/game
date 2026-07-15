@@ -86,6 +86,20 @@ export function companionWeaponDamage(companion: Companion): number {
   );
 }
 
+/**
+ * A companion's FROST NOVA damage per caught foe: its def's base pulse damage
+ * grown with the hero's level exactly as its weapon is (`COMPANIONS.
+ * damagePerLevel`) — the party trains together — but WITHOUT the weapon
+ * damper: the nova is a signature power, not a spammed strike, so it lands at
+ * full authored weight. 0 for a companion with no nova.
+ */
+export function companionNovaDamage(companion: Companion): number {
+  const nova = companionDef(companion.defId).nova;
+  if (!nova) return 0;
+  const trained = 1 + COMPANIONS.damagePerLevel * (companion.level - 1);
+  return nova.damage * trained;
+}
+
 /** The ms between a companion's attacks — the catalog cadence at the global
  * baseline (companions have no speed stat to quicken it). */
 export function companionWeaponCooldown(companion: Companion): number {
@@ -412,6 +426,12 @@ function stepCompanion(
     state.level.height - def.radius,
   );
 
+  // The FROST NOVA pulse (a `CompanionDef.nova`): an on-cadence chilling ring
+  // resolved at the companion's settled position this tick. Independent of its
+  // melee — it fires whenever a foe is in the blast, holding its charge
+  // otherwise, so a nova companion crowd-controls even mid-regroup.
+  companionNova(state, companion, def, dtMs);
+
   // The horde swings at whoever it touches: a companion in the pack soaks
   // contact blows on the same cooldown the hero would have. Armor (helmet +
   // chest) turns its share; at 0 hp the companion goes DOWN, never dead.
@@ -611,6 +631,59 @@ function companionAttack(
     pos: { ...companion.pos },
     dir,
   });
+}
+
+/**
+ * Pulse a companion's FROST NOVA (a `CompanionDef.nova`), if it is due: a
+ * chilling ring bursting around the companion that damages and SLOWS every
+ * non-apparition foe inside `nova.radius`. The cooldown counts down every tick
+ * but the ring only fires — and only then re-arms the `everyMs` cadence —
+ * when a foe is actually in reach, so the charge waits at the ready instead of
+ * detonating into empty space. Each caught foe is chilled (`chillMs` /
+ * `chillFactor`, read by `moveEnemy`) and struck for `companionNovaDamage`,
+ * kept OUT of the menace meter like every companion blow. A downed companion
+ * never reaches here (it returned at the top of the tick).
+ */
+function companionNova(
+  state: GameState,
+  companion: Companion,
+  def: CompanionDef,
+  dtMs: number,
+): void {
+  const nova = def.nova;
+  if (!nova) return;
+  companion.novaCooldownMs = Math.max(
+    0,
+    (companion.novaCooldownMs ?? 0) - dtMs,
+  );
+  if (companion.novaCooldownMs > 0) return;
+
+  const reachSq = nova.radius * nova.radius;
+  // Snapshot the victims first — hitEnemy splices the slain from the list.
+  const victims = state.enemies.filter((enemy) => {
+    if (enemyDef(enemy.defId).apparition) return false;
+    // A kneeling spareable awaiting its verdict is out of the fight.
+    if (state.choice !== null && state.choice.enemyId === enemy.id)
+      return false;
+    return distanceSq(enemy.pos, companion.pos) <= reachSq;
+  });
+  if (victims.length === 0) return; // hold the charge until a foe is in reach
+
+  companion.novaCooldownMs = nova.everyMs;
+  // A pulse is combat: hold off out-of-combat regen the same as a swing does.
+  companion.combatMs = COMPANIONS.regenCalmMs;
+  state.events.push({
+    type: "nova",
+    pos: { ...companion.pos },
+    radius: nova.radius,
+    frost: true,
+  });
+  const damage = companionNovaDamage(companion);
+  for (const victim of victims) {
+    victim.chillMs = nova.chillMs;
+    victim.chillFactor = nova.chillFactor;
+    hitEnemy(state, victim, damage, "magic", { noMenace: true });
+  }
 }
 
 /** Push overlapping companions apart so the formation never stacks. The
