@@ -198,7 +198,7 @@ const LAUNCH: CutsceneDef = {
       { kind: "stars_b", pos: { x: 168, y: 44 }, parallax: 0.15 },
       { kind: "stars_a", pos: { x: 82, y: 46 }, parallax: 0.15 },
       // Home, garage door up — the ship rolled out onto the back lawn.
-      { kind: "garage_house", pos: { x: 46, y: 88 } },
+      { kind: "garage_house", pos: { x: 46, y: 98 } },
     ],
   },
   actors: [
