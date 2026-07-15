@@ -303,6 +303,7 @@ export {
   collectStoryItem,
   dialogueContent,
   markThoughtsSeen,
+  muteDialogue,
 } from "./game/story.ts";
 
 // Cutscenes: the generic player (@game/lib) plus the scene catalog. The app

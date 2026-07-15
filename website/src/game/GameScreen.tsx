@@ -53,6 +53,7 @@ import {
   LEVELS,
   levelDef,
   markThoughtsSeen,
+  muteDialogue,
   MERCHANT,
   menaceStage,
   openCompanionPanel,
@@ -3461,6 +3462,11 @@ export function GameScreen({
           onAdvance={() => {
             advanceDialogue(state);
             playUiSound(synth, "move");
+            bumpUi();
+          }}
+          onMute={() => {
+            muteDialogue(state);
+            playUiSound(synth, "back");
             bumpUi();
           }}
         />

@@ -299,6 +299,7 @@ export function createGame(
       pos: { ...l.pos },
     })),
     dialogue: null,
+    dialogueMuted: false,
     choice: null,
     companions: [],
     companionFocus: null,

@@ -392,7 +392,9 @@ run against synthetic fixtures with no shipped content (see
   speak like any elite, then walk off and dissolve (`apparitionVanished`).
 - **`src/game/story.ts`** — the story systems: dialogue lifecycle
   (`wantsDialogue`/`startEnemyDialogue` inside the step,
-  `advanceDialogue` as the player's tap, `dialogueContent` for the
+  `advanceDialogue` as the player's tap, `muteDialogue` for the overlay's
+  MUTE button — it latches `dialogueMuted`, silencing every in-world scene
+  for the rest of the level (a fresh level un-mutes), `dialogueContent` for the
   renderer — its `heroPages` flags mark the pages the HERO speaks in a
   two-way arrival scene, authored as `{ hero: [...] }` entries in
   `EnemyDef.dialogue`), story-item collection, and `stepDoors` (a carried key
