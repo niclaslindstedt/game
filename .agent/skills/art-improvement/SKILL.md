@@ -41,6 +41,7 @@ numbers".
 | `levels`                    | List level ids to iterate                                                                                  |
 | `level <id>`                | Survey: one numbered sheet of ALL main art in that level, over that level's own ground tile                |
 | `items`                     | Survey: numbered sheet(s) of the whole item catalog (paginated `_pN` past 64 entries)                      |
+| `equipped [name...]`        | Survey/funnel: weapons & gear drawn ON the hero — whole catalog (no args) or a named shortlist (icons or def ids) |
 | `sheet <name...>`           | Funnel rounds: a numbered sheet of exactly the named sprites (30 → 20 → 10)                                |
 | `variants <name...>`        | Finalist study: each name expanded to all frames, wound stages, rock footprints, worn overlays             |
 | `snapshot <name...>`        | Preserve the CURRENT renders as "before" PNGs — run BEFORE touching any grid                               |
@@ -65,8 +66,11 @@ They live as fragments in [`.lessons/`](./.lessons/) next to this file.
    any contrast/orphan warnings — they are pre-scored offenders.
 2. `levels` mode: for each id from `art-audit.mjs levels`, generate
    `level <id>` and **Read every sheet**. `items` mode: generate `items`
-   and Read every page. (The hero appears on every level sheet — judge
-   him once.)
+   and Read every page, **then generate `equipped` and Read it** — the same
+   weapons and gear drawn on the hero (held/worn), since a weapon or armor
+   icon that reads fine as a loose square can sit wrong once equipped (bad
+   grip angle, wrong scale on the body, colors clashing with the suit).
+   (The hero appears on every level sheet — judge him once.)
 3. Judge each numbered cell against the **worst-art rubric** below. Keep a
    running table — `sprite name | where seen | defects | severity 1–5` —
    in sprite names, never bare numbers (numbers restart per sheet/page).
@@ -109,6 +113,10 @@ not from memory:
   say it is (a "prospector" with no mining kit).
 - **Placeholder energy** — flat rectangles, single-color shapes, obvious
   first drafts.
+- **Equipped misfit** _(weapons/gear only — judge on the `equipped` sheet)_ —
+  reads fine as a loose inventory square but wrong ON the hero: the grip sits
+  off the hand or the blade/barrel points the wrong way, it's mis-scaled
+  against the 16px body, or its colors clash with the suit.
 
 ## Phase 2 — Funnel: 30 → 20 → 10
 
@@ -119,6 +127,11 @@ not from memory:
 3. Write the final list of 10 with a one-line defect statement each —
    these become the redesign briefs. Number them 1–10 now; this order is
    used for everything that follows, including the final vote.
+
+Whenever a shortlist round holds weapons or armor (`items` mode), pair the
+`sheet` with `equipped <the same names>` and Read both — a weapon/gear
+candidate is judged BOTH as its inventory square and on the hero, since the
+equipped look is what the player mostly sees.
 
 ## Phase 3 — Study the finalists, then snapshot
 
@@ -198,6 +211,10 @@ For each candidate, in the numbered order:
 6. **Verify on the sheets**: `make assets` (heed every warning), then Read
    the family sheet and the `@8x` preview per the pixel-assets checklist,
    and `variants <name>` to confirm frames, wounds, and overlays still read.
+   For a redrawn weapon or armor icon, also `equipped <name>` and confirm
+   the new icon still reads held/worn on the hero (the `worn_<id>` overlay
+   regenerates from the icon on `make assets`, so a re-themed icon re-themes
+   the equipped look automatically — check it landed).
 7. **Verify in the game — when the asset is stageable.** Audit sheets
    render sprites at rest on a swatch; the game renders them in a lit,
    moving, cluttered scene at the phone viewport. If the candidate has a
