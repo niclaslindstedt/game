@@ -5699,6 +5699,16 @@ canvas.tier-artifact {
   animation: achievement-toast 4000ms ease-out forwards;
   will-change: transform, opacity;
 }
+/* The banner sits over the very zone a thumb anchors the virtual dpad in
+   (bottom-centre) and must NEVER swallow that touch — the dpad has priority
+   there; the toast is celebration, not a control. The root above is already
+   inert, but pointer-events only *inherits* to descendants: on iOS a
+   composited replaced-element child (the icon <img>, the PixelText <canvas>)
+   gets its own hit-test layer and can still eat the tap. Pin every descendant
+   inert too so the steering touch always falls through to the game canvas. */
+.achievement-toast * {
+  pointer-events: none;
+}
 
 /* Rise in from the bottom edge, settle, hold, sink out — sized to
    ACHIEVEMENT_TOAST_TTL_MS. */
