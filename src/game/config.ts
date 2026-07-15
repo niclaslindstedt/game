@@ -284,6 +284,24 @@ export const CAMPING = {
 } as const;
 
 /**
+ * NUKE AFTERMATH — the screen-nuke is a PANIC BUTTON, so its blast must buy
+ * real breathing room, not just a redrawn screen. Without this the live floor
+ * refills the ring the instant the pack dies (see stepSpawner) — the cleared
+ * mobs "reset to the outer skirts" and, if a swarm had heated the meter, come
+ * back EVOLVED — so the bomb that was meant to save you doomed you instead. The
+ * aftermath fixes both halves: `calmMs` holds every spawner refill after a
+ * detonation so the field stays clear long enough to break contact and lose the
+ * pack, and the transient menace heat is cooled to the earned permanent floor
+ * (the ratchet the player's own overkill locked in still stands) so the horde
+ * that eventually returns is no denser or tougher than the run's baseline. Ms.
+ */
+export const NUKE = {
+  /** How long the spawner holds all refills after a nuke — long enough to run
+   * out of the cleared screen and shake the pursuit, tuned to the phone view. */
+  calmMs: 4_000,
+} as const;
+
+/**
  * PLACED PACKS — the level-design counter to the survivors-style horde (see
  * stepPacks). A pack is a fixed cluster of monsters pinned to a spot on the
  * map that sleeps until the player walks near it: closing to `triggerRadius`

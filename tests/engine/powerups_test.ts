@@ -13,10 +13,14 @@ import {
   createGame,
   crowdBombChance,
   dismissIntro,
+  enemyDef,
   grantAbility,
   killEnemy,
   levelStatGains,
   magnetRadius,
+  MENACE,
+  menaceStage,
+  NUKE,
   step,
 } from "@game/core";
 import type { GameInput, GameState, Item } from "@game/core";
@@ -214,6 +218,58 @@ describe("the screen nuke", () => {
     step(state, useItem, DT);
     expect(state.enemies).toContain(sheltered); // the rock ate the blast
     expect(state.enemies).not.toContain(exposed); // no cover, no mercy
+  });
+
+  it("cools the transient menace heat to the earned floor and dumps the lure", () => {
+    // A swarm heats the meter; the bomb is the answer to it, so its blast must
+    // leave the horde no STRONGER than the run's baseline — the transient heat
+    // above the ratchet floor bleeds off, and the banked walk-credit that would
+    // dinner-bell a fresh crowd in is dumped. The earned floor itself stands.
+    const state = startGame();
+    clearStage(state);
+    state.player.heldAbilities = ["test_nuke"];
+    state.menaceFloor = MENACE.perStage * 2; // a floor the ratchet earned
+    state.menace = MENACE.perStage * 5; // three stages of transient heat on top
+    state.moveSpawnCredit = 999; // a fat lure bank primed to refill the screen
+    expect(menaceStage(state)).toBe(5);
+
+    step(state, useItem, DT);
+
+    // Heat cooled to the floor — no hotter than baseline — but the earned
+    // permanent floor (the "no breaks" ratchet) is untouched.
+    expect(state.menace).toBe(state.menaceFloor);
+    expect(menaceStage(state)).toBe(2);
+    // The banked lure is gone, so nothing bursts back the instant the calm ends.
+    expect(state.moveSpawnCredit).toBe(0);
+  });
+
+  it("holds the spawner's refill through the calm, then lets it resume", () => {
+    // The core of the fix: without the calm the live floor repopulates the ring
+    // the instant the pack dies — the cleared mobs "reset to the outer skirts."
+    // The bomb opens a breather so the screen it cleared stays clear long enough
+    // to break away; once it burns down the held horde flows again.
+    const state = startGame(); // test_level waves live (its floor pulls minions in)
+    state.player.heldAbilities = ["test_nuke"];
+    // Clear the field of minions (keep the far boss so the objective stays open).
+    state.enemies = state.enemies.filter(
+      (e) => enemyDef(e.defId).role !== "minion",
+    );
+    const minions = (s: GameState) =>
+      s.enemies.filter((e) => enemyDef(e.defId).role === "minion").length;
+    expect(minions(state)).toBe(0);
+
+    // Fire the bomb, then idle well INSIDE the calm window: the floor is held,
+    // so no fresh pack lands at the screen edge.
+    step(state, useItem, DT);
+    expect(state.nukeCalmMs).toBeGreaterThan(0);
+    const calmSteps = Math.floor(NUKE.calmMs / DT) - 4;
+    for (let i = 0; i < calmSteps; i++) step(state, idle, DT);
+    expect(minions(state)).toBe(0); // still clear — the breather held
+
+    // Idle on past the window: the deferred floor resumes and the horde returns.
+    for (let i = 0; i < 30; i++) step(state, idle, DT);
+    expect(state.nukeCalmMs).toBe(0);
+    expect(minions(state)).toBeGreaterThan(0);
   });
 });
 

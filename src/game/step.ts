@@ -43,6 +43,7 @@ import {
   LOOT,
   MAGIC_CRIT,
   MEDKIT,
+  NUKE,
   PACKS,
   PLAYER,
   PROJECTILE,
@@ -400,6 +401,15 @@ function stepSpawner(state: GameState, dtMs: number): void {
     1,
   );
   state.trickleMs = Math.max(0, state.trickleMs - dtMs);
+
+  // NUKE AFTERMATH (config NUKE, set by detonateNuke): hold EVERY refill —
+  // floor, walk-credit, timed stream, trickle — while the post-blast calm
+  // runs, so the screen a screen-nuke just cleared stays clear long enough to
+  // break away instead of the ring repopulating on the spot. The wave budget
+  // is only deferred, never canceled (the window math is monotone), so the
+  // held flood resumes intact once the calm burns down.
+  state.nukeCalmMs = Math.max(0, state.nukeCalmMs - dtMs);
+  if (state.nukeCalmMs > 0) return;
 
   // Difficulty scales the horde: every budget line grows by the mob
   // multiplier, and the live cap/floor stretch so the bigger budget can
@@ -927,6 +937,18 @@ function detonateNuke(state: GameState, radius: number): void {
       noMenace: true,
     });
   }
+  // THE AFTERMATH (config NUKE): a screen-nuke is a panic button, so it buys
+  // real breathing room. Open the calm window — stepSpawner holds every refill
+  // while it runs, so the ring can't instantly repopulate the screen the blast
+  // just cleared — and cool the transient menace heat down to the earned
+  // permanent floor (the ratchet the player's own overkill locked in still
+  // stands), dumping the banked walk-credit lure too. Together the pack the
+  // player fled from stays gone long enough to lose, and the horde that does
+  // return is no denser or more evolved than the run's baseline — the bomb
+  // helps instead of dooming the run.
+  state.nukeCalmMs = NUKE.calmMs;
+  state.menace = state.menaceFloor;
+  state.moveSpawnCredit = 0;
 }
 
 /**
