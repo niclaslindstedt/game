@@ -499,7 +499,10 @@ export function nextDifficultyFor(character: Character): Difficulty | null {
   for (let i = DIFFICULTY_ORDER.length - 1; i >= 0; i--) {
     const d = DIFFICULTY_ORDER[i] as Difficulty;
     if (STARTING_DIFFICULTIES.includes(d)) continue;
-    if (isDifficultyUnlocked(character, d) && !isDifficultyBeaten(character, d)) {
+    if (
+      isDifficultyUnlocked(character, d) &&
+      !isDifficultyBeaten(character, d)
+    ) {
       return d;
     }
   }
