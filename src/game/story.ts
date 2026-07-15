@@ -369,6 +369,12 @@ export function stepSightThoughts(
  * at this place" read always lands before the "good thing I came armed"
  * reaction — a no-op once armed, and it simply retries on a later tick if a
  * scene is already on stage.
+ *
+ * A safety net closes the one way the beat could never fire: if the vanguard
+ * is KILLED before it reaches the hero — a party (or a conjured power) cutting
+ * the lone rusher down — the hero would otherwise stay disarmed for the whole
+ * level, never swinging while his companions fight on. So a vanquished vanguard
+ * (none left alive) draws the blade too, just without the soft-hit flash.
  */
 export function stepOpeningStrike(state: GameState): void {
   if (state.dialogue !== null || !state.player.disarmed) return;
@@ -377,14 +383,27 @@ export function stepOpeningStrike(state: GameState): void {
   if (opening.after && !state.thoughtsSeen.includes(opening.after)) return;
   if (state.thoughtsSeen.includes(opening.thought)) return;
   const radius = opening.radius ?? DIALOGUE.strikeRadius;
-  const near = state.enemies.some(
-    (e) => e.vanguard && distance(e.pos, state.player.pos) <= radius,
+  const vanguards = state.enemies.filter((e) => e.vanguard);
+  const struck = vanguards.some(
+    (e) => distance(e.pos, state.player.pos) <= radius,
   );
-  if (!near) return;
+  // The vanguard's touch draws the blade — but a COMPANION (or a conjured
+  // power) can cut the lone rusher down before it ever reaches the holstered
+  // hero, and nothing else can trigger this beat. Left unhandled, the hero
+  // stays disarmed for the WHOLE level while his party fights on without him
+  // (a hero arriving with a full party — e.g. deep into a campaign — never
+  // gets to swing). So once the opening read has played, a VANQUISHED vanguard
+  // (none left on the board) draws the blade exactly as its strike would have.
+  const vanquished = vanguards.length === 0;
+  if (!struck && !vanquished) return;
   // Draw the blade: combat is live from here on.
   state.player.disarmed = false;
-  state.player.hurtFlashMs = 250;
-  state.events.push({ type: "playerHurt", crit: false });
+  // The soft first hit is a flash, no HP — but a vanguard cut down before it
+  // arrived landed no blow, so there is nothing to flash for the death path.
+  if (struck) {
+    state.player.hurtFlashMs = 250;
+    state.events.push({ type: "playerHurt", crit: false });
+  }
   state.thoughtsSeen.push(opening.thought);
   startPlayerThought(state, opening.thought);
 }
