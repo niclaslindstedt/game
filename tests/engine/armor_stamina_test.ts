@@ -281,57 +281,70 @@ describe("stamina", () => {
     expect(state.player.stamina).toBeGreaterThan(0);
   });
 
-  it("recovers while walking — never drains — but slower than standing still", () => {
+  it("spends the pool while walking — moving never refills — but slower than a run", () => {
     const state = startGame();
     clearStage(state); // isolate the pool from combat XP/level-up refills
     state.obstacles = []; // a clear lane so the walk never stalls on a rock
-    // A push at the walk anchor is a walk, not a run — it still trickles back.
+    // A push at the walk anchor is a walk, not a run — but it still MOVES, so it
+    // still spends the pool, just a fraction of a full run's drain.
     const walk = { ...steerTo(5000, 5000), throttle: STAMINA.walkThrottle };
 
-    // Spend the pool with a sustained run, then confirm a walk refills it.
-    run(state, steerTo(5000, 5000), 600);
-    expect(state.player.stamina).toBe(0);
-    // Clear the empty-on-exertion regen lockout so this measures the
-    // walk-vs-idle regen rule alone (the lockout has its own suite below).
-    state.staminaRegenLockMs = 0;
-
+    // From a full pool, a sustained walk drains it (moving spends, always) —
+    // but strictly less than the same steps at a flat-out run.
+    state.player.stamina = state.player.maxStamina;
     run(state, walk, 60);
-    const afterWalk = state.player.stamina;
-    expect(afterWalk).toBeGreaterThan(0); // a walk regains, it does not drain
+    const afterWalk = state.player.maxStamina - state.player.stamina;
+    expect(afterWalk).toBeGreaterThan(0); // a walk spends, it does not refill
 
-    // The same number of idle steps from empty refills strictly faster.
+    const fresh = startGame();
+    clearStage(fresh);
+    fresh.obstacles = [];
+    fresh.player.stamina = fresh.player.maxStamina;
+    run(fresh, steerTo(5000, 5000), 60); // full run
+    const afterRun = fresh.player.maxStamina - fresh.player.stamina;
+    expect(afterRun).toBeGreaterThan(afterWalk); // a run spends strictly more
+
+    // Only standing still refills — from empty, an idle stretch recovers.
     state.player.stamina = 0;
+    state.staminaRegenLockMs = 0;
     run(state, idle, 60);
-    const afterIdle = state.player.stamina;
-    expect(afterIdle).toBeGreaterThan(afterWalk);
-    // Walking recovers at walkRateFactor of the standing rate.
-    expect(afterWalk).toBeCloseTo(afterIdle * STAMINA.walkRateFactor, 4);
+    expect(state.player.stamina).toBeGreaterThan(0);
   });
 
-  it("scales the pace's stamina rate proportionally — analogue throttle", () => {
-    // At the walk anchor the pool trickles UP; at a flat sprint it burns; a
-    // mid push between the two drains only a fraction of the full run's drain.
-    const measure = (throttle: number): number => {
+  it("scales the pace's stamina drain proportionally — analogue throttle", () => {
+    // Moving always SPENDS, in proportion to pace: a bare creep barely dips the
+    // pool, a flat sprint burns it, and every push between drains a fraction
+    // that tracks the throttle. Only standing still (throttle-less) refills.
+    const measure = (input: Parameters<typeof run>[1]): number => {
       const state = startGame();
       clearStage(state);
       state.obstacles = [];
-      // Start mid-pool so a regain has headroom (a full pool would clamp) and a
-      // drain has depth — the delta reads the true signed rate either way.
+      // Start mid-pool so a drain has depth and any regain has headroom — the
+      // delta reads the true signed rate either way.
       state.player.stamina = state.player.maxStamina / 2;
       const before = state.player.stamina;
-      run(state, { ...steerTo(5000, 5000), throttle }, 60);
+      run(state, input, 60);
       return state.player.stamina - before; // + regained, − spent
     };
 
-    // A walk (walkThrottle) regains; a full run spends.
-    expect(measure(STAMINA.walkThrottle)).toBeGreaterThan(0);
-    expect(measure(1)).toBeLessThan(0);
+    // Every moving pace spends; standing still is the only refill.
+    expect(measure(idle)).toBeGreaterThan(0);
+    const walk = measure({
+      ...steerTo(5000, 5000),
+      throttle: STAMINA.walkThrottle,
+    });
+    const run60 = measure({ ...steerTo(5000, 5000), throttle: 1 });
+    expect(walk).toBeLessThan(0);
+    expect(run60).toBeLessThan(0);
 
-    // A push halfway between the walk and a full run drains, but strictly less
-    // than the flat-out sprint — the proportional, analogue edge.
-    const mid = measure((STAMINA.walkThrottle + 1) / 2);
-    expect(mid).toBeLessThan(0);
-    expect(mid).toBeGreaterThan(measure(1));
+    // The drain grows with pace: a full run spends strictly more than a walk,
+    // and a half-way push lands strictly between the two — the analogue edge.
+    const mid = measure({
+      ...steerTo(5000, 5000),
+      throttle: (STAMINA.walkThrottle + 1) / 2,
+    });
+    expect(mid).toBeLessThan(walk);
+    expect(mid).toBeGreaterThan(run60);
   });
 
   it("halves the top speed once the pool is empty", () => {
