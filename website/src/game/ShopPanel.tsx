@@ -158,50 +158,33 @@ function BulkSellButton({
   );
 }
 
-/** Mend the hero's whole kit for coins — a SPEND that lives in the stall as its
- * own slot: a wrench icon over the price, priced gold when affordable and red
- * when the purse is short. Unlike the goods around it, a tap acts immediately
- * (no detail-bar select). When the kit is already whole it dims to "OK" like a
- * sold-out weapon. */
-function RepairSlot({
-  font,
+/** Mend the hero's whole kit for coins — an icon-only button beside the sell
+ * tools: just the wrench, no label. Enabled (and tappable) only when something
+ * needs mending AND the purse can cover it; otherwise it dims like a spent
+ * action. A tap mends the whole kit at once. */
+function RepairButton({
   sprites,
   cost,
   coins,
   onRepair,
 }: {
-  font: PixelFont;
   sprites: Sprites;
   cost: number;
   coins: number;
   onRepair: () => void;
 }) {
-  const needsRepair = cost > 0;
-  const affordable = coins >= cost;
-  const enabled = needsRepair && affordable;
+  const enabled = cost > 0 && coins >= cost;
   const wrench = spriteDataUrl(sprites, "icon_wrench");
   return (
     <button
       type="button"
-      className={`shop-stall-item${needsRepair ? "" : " sold-out"}`}
+      className="pixel-button secondary shop-repair-btn"
       aria-label="repair-all"
       disabled={!enabled}
       onClick={enabled ? onRepair : undefined}
     >
-      <span className="inv-cell" style={{ borderColor: "#b8c2cc" }}>
-        {wrench && (
-          <img src={wrench} alt="" className="pixel-img inv-item-icon" />
-        )}
-      </span>
-      {needsRepair ? (
-        <CoinPrice
-          font={font}
-          sprites={sprites}
-          amount={cost}
-          color={affordable ? "#ffd75e" : "#e06a6a"}
-        />
-      ) : (
-        <PixelText font={font} text="OK" scale={2} color="#5a6470" />
+      {wrench && (
+        <img src={wrench} alt="" className="pixel-img shop-repair-icon" />
       )}
     </button>
   );
@@ -375,15 +358,6 @@ export function ShopPanel({
                 </button>
               );
             })}
-            {/* REPAIR ALL: mend the whole kit — a service slot beside the goods,
-                a wrench over its price. Acts on tap (no detail-bar select). */}
-            <RepairSlot
-              font={font}
-              sprites={sprites}
-              cost={repairTotal}
-              coins={player.coins}
-              onRepair={doRepair}
-            />
           </div>
         </div>
 
@@ -590,6 +564,13 @@ export function ShopPanel({
                 setSelected(null);
                 onChange();
               }}
+            />
+            {/* REPAIR ALL: mend the whole kit — an icon-only button, no label. */}
+            <RepairButton
+              sprites={sprites}
+              cost={repairTotal}
+              coins={player.coins}
+              onRepair={doRepair}
             />
           </div>
           <button

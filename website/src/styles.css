@@ -5008,6 +5008,22 @@ canvas.tier-artifact {
   height: 1.2rem;
 }
 
+/* REPAIR: an icon-only button beside the sell tools — just the wrench, no
+   label. Squared off and sized so it stands the same height as the sell
+   buttons next to it. */
+.shop-repair-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.4rem;
+  flex: 0 0 auto;
+}
+
+.shop-repair-icon {
+  width: 1.35rem;
+  height: 1.35rem;
+}
+
 .pixel-img {
   image-rendering: pixelated;
   pointer-events: none;
