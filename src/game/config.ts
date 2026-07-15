@@ -731,7 +731,9 @@ export const ARRIVAL = {
  * the meter heats. Standing idle — no damage, no kills — cools it, but never
  * below the PERMANENT floor the evolution ratchet has earned (see
  * `ratchetHealthbars`): a horde that evolved because it was getting one-shot
- * stays evolved — no breaks. Menace is read as an UNCAPPED stage that does
+ * stays evolved — no breaks, up to the difficulty's PEAK (the per-rung
+ * `menaceStageCap`: easy 3 … nightmare 100, JESUS uncapped). Menace is read as
+ * a stage that does
  * three things: it LURES more of the horde toward the player (the crowd
  * growth alone caps at `lureStageCap`), it EVOLVES freshly-spawned minions
  * (more hp → more xp, but WORSE loot — a leveling faucet, not a loot one),
@@ -805,9 +807,10 @@ export const MENACE = {
    * stage and the proof resets. The meter never decays below the floor, so a
    * horde that evolved to stage N because stage N−1 was getting one-shot
    * stays at N — it keeps evolving, stage by stage, until the player's blows
-   * stop dropping mobs outright. There is NO upper stage cap: the roof is
-   * wherever the player's power stops; the difficulty sets the SIZE of each
-   * step (`menaceEffectMult` scales `hpPerStage`), not whether it happens.
+   * stop dropping mobs outright OR the difficulty's PEAK is reached (the
+   * per-rung `menaceStageCap` bounds the floor; JESUS is uncapped). The
+   * difficulty also sets the SIZE of each step (`menaceEffectMult` scales
+   * `hpPerStage`), not just how many there are.
    */
   ratchetHealthbars: 6,
   /**

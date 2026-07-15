@@ -215,7 +215,8 @@ run against synthetic fixtures with no shipped content (see
   loot through their explicit `tierChanceBonus`/`lootIlvlBonus`, since the loot
   gates now key off the hero's earned LOOT level with the `mobLevelOffset`
   stripped back out, not the raw monster level), the stamina burn, dodge/miss accuracy multipliers, the
-  menace meter's trigger/decay/effect, and — on EASY/MEDIUM only — how far the
+  menace meter's trigger/decay/effect/PEAK (`menaceStageCap` — easy 3, medium 5,
+  hard 10, nightmare 100, JESUS uncapped), and — on EASY/MEDIUM only — how far the
   plain horde's chase speed drops once an elite or boss is ENGAGED
   (`mobPursuitNearElite`, 10%/50%, so the player can break past the swarm and
   run to the set piece). MEDIUM is the exact 1.0 baseline.
@@ -320,13 +321,17 @@ run against synthetic fixtures with no shipped content (see
   current evolution stage bank proof (`state.evoProof`; the crop's clean
   kills refund it), and enough proof lifts `state.menaceFloor` a full
   stage, at most one per `ratchetCooldownMs` — so a horde whose current
-  crop keeps getting one-shot evolves stage by stage, with NO upper cap,
-  until the player's blows stop dropping mobs outright. The transient
+  crop keeps getting one-shot evolves stage by stage until the player's
+  blows stop dropping mobs outright OR the difficulty's PEAK is reached
+  (the per-rung `menaceStageCap`: easy 3, medium 5, hard 10, nightmare 100;
+  JESUS uncapped — both the meter and the ratchet floor are clamped to
+  `menaceCeiling`). The transient
   gain is scaled by `menaceSensitivity` — the difficulty's `menaceMult`
   times an early-game `menaceWarmup` — but the ratchet is deliberately
-  difficulty-blind (warmup-damped only): every rung keeps evolving; the
-  difficulty sizes each step (`menaceEffectMult`), not whether it happens.
-  The (uncapped) `menaceStage` lures a denser horde (`lureMult`, read by
+  difficulty-blind (warmup-damped only, up to the cap): every rung keeps
+  evolving; the difficulty sizes each step (`menaceEffectMult`) and its peak
+  (`menaceStageCap`), not whether it happens.
+  The `menaceStage` lures a denser horde (`lureMult`, read by
   the wave spawner, its crowd growth alone capped at `lureStageCap`),
   evolves freshly-spawned minions (`evolutionHpMult`, stamped in
   `create.ts`'s `spawnEnemy` — more hp, hence more xp, but a WORSE loot

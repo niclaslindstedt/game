@@ -4,10 +4,11 @@
 // damage-per-second and kill rate (tickMenace) — with an extra jolt from
 // OVERKILL on a killing blow (bankOverkill); idling bleeds it back off, but
 // never below the PERMANENT floor the evolution RATCHET has earned: mobs of
-// the current stage getting one-shot lifts the floor a stage, without a roof,
-// so an overpowered player faces a horde that keeps evolving — no breaks.
-// Menace is read as an integer "stage" (uncapped) that drives three responses
-// (all tuned in config MENACE):
+// the current stage getting one-shot lifts the floor a stage, so an
+// overpowered player faces a horde that keeps evolving — no breaks — up to the
+// difficulty's PEAK (the per-rung `menaceStageCap`: easy 3, medium 5, hard 10,
+// nightmare 100; JESUS uncapped). Menace is read as an integer "stage" that
+// drives three responses (all tuned in config MENACE):
 //   1. LURE — the wave spawner keeps a denser, bigger crowd on the player
 //      (crowd growth alone caps at lureStageCap), and every overkill drags
 //      nearby mobs in through the walk-credit channel.
@@ -33,9 +34,11 @@ import { autoPowerScale } from "./leveling.ts";
 import { BALANCE } from "./tuning.ts";
 import type { Enemy, GameState } from "./types.ts";
 
-/** The current evolution stage: menace bucketed by `perStage`, UNCAPPED —
- * evolution has no roof; the horde keeps toughening as long as the player's
- * output keeps proving it too easy (see the ratchet in `bankOverkill`). */
+/** The current evolution stage: menace bucketed by `perStage`. The horde keeps
+ * toughening as long as the player's output keeps proving it too easy (see the
+ * ratchet in `bankOverkill`) — up to the difficulty's PEAK, which bounds the
+ * underlying meter (`menaceCeiling`), so this reads at most `menaceStageCap`
+ * stages on a capped rung (JESUS is uncapped). */
 export function menaceStage(state: GameState): number {
   return Math.floor(state.menace / MENACE.perStage);
 }
@@ -44,6 +47,25 @@ export function menaceStage(state: GameState): number {
  * in — the meter never decays below it (see `tickMenace`). */
 export function menaceFloorStage(state: GameState): number {
   return Math.floor(state.menaceFloor / MENACE.perStage);
+}
+
+/** The highest evolution STAGE this run's difficulty lets the meter reach —
+ * its PEAK. EASY tops out at 3, MEDIUM 5, HARD 10, NIGHTMARE 100; JESUS omits
+ * the knob and stays UNCAPPED (`Infinity` here). Both the live meter and the
+ * permanent ratchet floor are clamped to it (see `menaceCeiling`), so a gentle
+ * rung never evolves the horde past its ceiling however hard it is steamrolled. */
+export function menaceStageCap(state: GameState): number {
+  return difficultyDef(state.difficulty).menaceStageCap ?? Infinity;
+}
+
+/** The raw-menace ceiling: the cap stage's worth of points (`cap · perStage`),
+ * or `Infinity` when the rung is uncapped. Clamping the raw meter here — rather
+ * than only the `menaceStage` readout — keeps `state.menace`/`state.menaceFloor`
+ * themselves bounded, so every derived read (evolution, lure, power-match, the
+ * ratchet's own floor-stage check) respects the peak from one source of truth. */
+export function menaceCeiling(state: GameState): number {
+  const cap = menaceStageCap(state);
+  return cap === Infinity ? Infinity : cap * MENACE.perStage;
 }
 
 /**
@@ -339,7 +361,10 @@ export function bankOverkill(
   }
   const healths = spike / maxHp;
   const before = menaceStage(state);
-  state.menace += healths * MENACE.perOverkill * menaceSensitivity(state);
+  state.menace = Math.min(
+    menaceCeiling(state),
+    state.menace + healths * MENACE.perOverkill * menaceSensitivity(state),
+  );
   if (currentCrop) {
     // Proof is capped at two thresholds (a burst defers at most ONE extra
     // stage) and spends at most one stage per cooldown — the "one evolve per
@@ -353,7 +378,15 @@ export function bankOverkill(
       state.evoProof + healths * menaceWarmup(state),
       MENACE.ratchetHealthbars * 2,
     );
-    if (state.evoProof >= MENACE.ratchetHealthbars && state.evoRatchetMs <= 0) {
+    // The ratchet respects the difficulty's PEAK: once the permanent floor has
+    // reached the cap stage, one-shotting the crop no longer evolves it — the
+    // horde has toughened as far as this rung allows (JESUS is uncapped, so the
+    // check always passes there). Proof still accrues but simply can't spend.
+    if (
+      state.evoProof >= MENACE.ratchetHealthbars &&
+      state.evoRatchetMs <= 0 &&
+      menaceFloorStage(state) < menaceStageCap(state)
+    ) {
       state.evoProof -= MENACE.ratchetHealthbars;
       state.menaceFloor += MENACE.perStage;
       state.evoRatchetMs = MENACE.ratchetCooldownMs;
@@ -416,7 +449,12 @@ export function tickMenace(
   const decay =
     MENACE.decayPerSec * difficultyDef(state.difficulty).menaceDecayMult;
   const next = state.menace + (gain - decay) * dt;
-  state.menace = Math.max(state.menaceFloor, next);
+  // Bounded below by the earned floor, above by the difficulty's PEAK
+  // (`menaceCeiling` is Infinity on the uncapped JESUS rung).
+  state.menace = Math.min(
+    menaceCeiling(state),
+    Math.max(state.menaceFloor, next),
+  );
   const after = menaceStage(state);
   if (after > before) state.events.push({ type: "menaceRose", stage: after });
 }

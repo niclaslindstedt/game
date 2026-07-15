@@ -2,10 +2,11 @@
 // The menace system: the escalation meter that answers an overpowered player.
 // Overkilling and fast kills bank menace; idling bleeds it off — but never
 // below the permanent floor the evolution RATCHET earns by one-shotting the
-// current crop. The (uncapped) stage lures a denser horde, evolves
-// freshly-spawned minions (more hp → more xp, worse loot), and — with the
-// hero's power level — scales elites and bosses when they engage. Runs on
-// the synthetic engine fixtures.
+// current crop. The stage lures a denser horde, evolves freshly-spawned
+// minions (more hp → more xp, worse loot), and — with the hero's power level —
+// scales elites and bosses when they engage. Each difficulty caps the meter's
+// PEAK (easy 3, medium 5, hard 10, nightmare 100; JESUS uncapped). Runs on the
+// synthetic engine fixtures.
 
 import { describe, expect, it } from "vitest";
 
@@ -24,8 +25,10 @@ import {
   hitEnemy,
   LEVELING,
   MENACE,
+  menaceCeiling,
   menaceFloorStage,
   menaceStage,
+  menaceStageCap,
   menaceWarmup,
   mobHpScaleFor,
   mobLevelScale,
@@ -71,7 +74,7 @@ function bareStage(state: GameState): void {
 }
 
 describe("menace — the meter", () => {
-  it("buckets menace into evolution stages, with NO upper roof", () => {
+  it("buckets menace into evolution stages (the stage arithmetic itself is unbounded)", () => {
     const state = startGame();
     state.menace = 0;
     expect(menaceStage(state)).toBe(0);
@@ -79,8 +82,9 @@ describe("menace — the meter", () => {
     expect(menaceStage(state)).toBe(0);
     state.menace = MENACE.perStage;
     expect(menaceStage(state)).toBe(1);
-    // The old ten-stage cap is gone: the horde keeps evolving as long as the
-    // player's output keeps proving it too easy.
+    // `menaceStage` is pure floor-division arithmetic with no roof — the PEAK
+    // is enforced on the METER (see the "difficulty caps the peak" suite),
+    // which never lets `state.menace` grow past the rung's ceiling in play.
     state.menace = MENACE.perStage * 25;
     expect(menaceStage(state)).toBe(25);
   });
@@ -496,6 +500,72 @@ describe("menace — the evolution ratchet (no breaks)", () => {
     oneShot(state, 0);
     oneShot(state, 0);
     expect(menaceFloorStage(state)).toBe(0);
+  });
+});
+
+describe("menace — difficulty caps the peak", () => {
+  /** One-shot a staged 10-hp mob of the current crop with a crushing blow,
+   * skipping the between-stages breather — enough overkill (well past the
+   * ratchet threshold) that each qualifying kill spends a full stage, so the
+   * floor climbs one rung per call until the cap halts it. */
+  function ratchetOnce(state: GameState): void {
+    state.evoRatchetMs = 0; // ignore the cooldown; we're driving the floor up
+    const { x, y } = state.player.pos;
+    const enemy = makeEnemy(
+      { id: state.nextId++, pos: { x: x + 30, y }, hp: 10, maxHp: 10 },
+      "test_fodder",
+    );
+    enemy.evo = menaceFloorStage(state); // a mob of the CURRENT crop
+    state.enemies.push(enemy);
+    hitEnemy(state, enemy, 130); // ~12 healthbars of overkill (proof caps at 12)
+  }
+
+  it("each rung's peak matches the design (easy 3 … nightmare 100, jesus uncapped)", () => {
+    expect(menaceStageCap(startOn("easy"))).toBe(3);
+    expect(menaceStageCap(startOn("medium"))).toBe(5);
+    expect(menaceStageCap(startOn("hard"))).toBe(10);
+    expect(menaceStageCap(startOn("nightmare"))).toBe(100);
+    // JESUS omits the knob entirely — no roof.
+    expect(menaceStageCap(startOn("jesus"))).toBe(Infinity);
+    expect(menaceCeiling(startOn("medium"))).toBe(5 * MENACE.perStage);
+    expect(menaceCeiling(startOn("jesus"))).toBe(Infinity);
+  });
+
+  it("the live meter can't climb past the difficulty's peak", () => {
+    const state = startOn("medium"); // cap 5, ceiling 60 raw points
+    bareStage(state);
+    // Even a meter poked absurdly high is pulled back under the ceiling by the
+    // next tick — sustained output can never bank the horde past the rung's peak.
+    state.menace = MENACE.perStage * 40;
+    step(state, idle, DT);
+    expect(state.menace).toBeLessThanOrEqual(menaceCeiling(state));
+    expect(menaceStage(state)).toBe(5);
+  });
+
+  it("the ratchet stops evolving the horde at the peak (EASY tops out at 3)", () => {
+    // EASY's meter is near-inert, but the ratchet is difficulty-blind — so a
+    // relentless steamroll is exactly what would run it past a low cap. It
+    // climbs to stage 3 and then holds, no matter how long the one-shots last.
+    const state = startOn("easy");
+    bareStage(state);
+    state.player.level = 8; // past the warmup damping
+    state.rng = () => 0.99; // no crits/dodges/drops — clean overkill each blow
+    for (let i = 0; i < 40; i++) ratchetOnce(state);
+    expect(menaceFloorStage(state)).toBe(3);
+    expect(menaceStage(state)).toBe(3);
+    // The meter itself is likewise pinned at the ceiling, never a stage beyond.
+    expect(state.menace).toBeLessThanOrEqual(menaceCeiling(state));
+  });
+
+  it("JESUS is uncapped — the horde evolves without a roof", () => {
+    const state = startOn("jesus");
+    bareStage(state);
+    state.player.level = 8;
+    state.rng = () => 0.99;
+    // The same relentless steamroll ratchets far past any finite rung's peak.
+    for (let i = 0; i < 150; i++) ratchetOnce(state);
+    expect(menaceFloorStage(state)).toBeGreaterThan(100);
+    expect(menaceStage(state)).toBeGreaterThan(100);
   });
 });
 
