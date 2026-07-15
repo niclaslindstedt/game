@@ -672,14 +672,15 @@ export type EnemyMech = {
 export type GravityWell = {
   id: number;
   pos: Vec2;
-  /** Reach of the pull (world px). */
+  /** Reach of the pull on the player and enemies (world px). */
   pullRadius: number;
-  /** Inside this the hole devours minions and burns the player. */
+  /** Inside this the hole devours minions and the grounded player alike. */
   coreRadius: number;
   /** Peak pull at the core's edge (px/s), linear falloff to the reach. */
   pullSpeed: number;
-  /** Hp per second burned while the player stands in the core. */
-  coreDps: number;
+  /** Reach of the pull on loose loot (world px) — about a screen away, so
+   * drops slide in from well beyond the player's own pull. */
+  lootRadius: number;
 };
 
 /**
@@ -1315,6 +1316,12 @@ export type GameEvent =
    */
   | { type: "wellSwallowed"; pos: Vec2; defId: string }
   /**
+   * The grounded hero was dragged all the way into a black hole's core and
+   * devoured — instant death (the run drops to `defeat` this same tick).
+   * `pos` is the core he fell into; the app plays the swallow at the hole.
+   */
+  | { type: "wellDeath"; pos: Vec2 }
+  /**
    * An apparition finished its scene, walked off, and dissolved (see
    * `EnemyDef.apparition`). The app sparkles it out at `pos`.
    */
@@ -1744,8 +1751,6 @@ export type GameState = {
   asteroids: Asteroid[];
   /** Ms until the next asteroid spawns (levels with LevelDef.asteroids). */
   asteroidTimerMs: number;
-  /** Ms until the next gravity-well core-damage tick may land. */
-  wellTickMs: number;
   /**
    * Ms until another "bags are full" nudge may fire. Counts down each step;
    * a blocked pickup emits `pickupBlocked` only when this reaches 0, then

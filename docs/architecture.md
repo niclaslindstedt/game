@@ -385,12 +385,17 @@ run against synthetic fixtures with no shipped content (see
   BALANCE menu cycles them at runtime.
 - **`src/game/hazards.ts`** — environmental hazards, both pure level data:
   **gravity wells** (`LevelDef.wells`, config `WELLS`) drag the grounded
-  player/enemies/items toward their core — minions are devoured there
-  (`wellSwallowed`: no kill, no XP, no loot, so a hole can't be farmed),
-  the player burns on a damage tick, dragged items park on the rim, and a
-  jump no longer clears the pull — airborne the hero still drifts toward the
-  core and the hole's gravity fights his hop, so he jumps less high over the
-  horizon (`WELLS.airPullFraction`/`jumpGravity`) — and the **asteroid rain**
+  player/enemies toward their core — minions are devoured there
+  (`wellSwallowed`: no kill, no XP, no loot, so a hole can't be farmed), and
+  the grounded hero dragged into the core is devoured too (`wellDeath`:
+  instant death). Loose loot is pulled from a wider reach (`WELLS.lootRadius`,
+  about a screen away, eased so it crawls at the edge and quickens toward the
+  core) and parks on the rim — a hoard the player can dare the deadly core
+  for. A jump no longer clears the pull — airborne the hero still drifts
+  toward the core and the hole's gravity fights his hop, so he jumps less high
+  over the horizon (`WELLS.airPullFraction`/`jumpGravity`), though he floats
+  above the core. The level map pins every well (`map_well`) so its road's
+  hazards read at a glance — and the **asteroid rain**
   (`LevelDef.asteroids`, config `ASTEROIDS`): rocks spawned on a ring past
   the screen edge streak across the player (one strike per rock, jumpable,
   armor reduces) and shove minions aside unharmed. Related:

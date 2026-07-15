@@ -1,9 +1,10 @@
 // SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
 // Environmental hazards (src/game/hazards.ts): gravity wells drag the
-// grounded player/enemies/items and devour minions in the core (no kill, no
-// XP, no loot — the hole pays nobody); asteroids spawn on the level's
-// cadence, strike the player once per rock (jumpable), shove minions aside
-// unharmed, and despawn off the player's stage.
+// grounded player/enemies and devour minions in the core (no kill, no XP, no
+// loot — the hole pays nobody) and the grounded hero too (instant death),
+// while pulling loose loot in from a wider reach onto the rim; asteroids spawn
+// on the level's cadence, strike the player once per rock (jumpable), shove
+// minions aside unharmed, and despawn off the player's stage.
 
 import { describe, expect, it } from "vitest";
 
@@ -63,7 +64,7 @@ describe("gravity wells", () => {
     const state = startGame(42, "test_well_level");
     expect(state.wells).toHaveLength(1);
     expect(state.wells[0]!.pullRadius).toBe(WELLS.pullRadius);
-    expect(state.wells[0]!.coreDps).toBe(WELLS.coreDps);
+    expect(state.wells[0]!.lootRadius).toBe(WELLS.lootRadius);
   });
 
   it("drags the grounded player toward the core", () => {
@@ -104,21 +105,32 @@ describe("gravity wells", () => {
     expect(state.player.hp).toBe(hpBefore);
   });
 
-  it("burns the player in the core, ticked at WELLS.tickMs", () => {
+  it("devours the grounded player in the core: instant death", () => {
     const state = startGame(42, "test_well_level");
     const well = stageWell(state);
     state.player.pos = { ...well.pos };
-    const hpBefore = state.player.hp;
     step(state, idle, DT);
-    const tick = Math.round(well.coreDps * (WELLS.tickMs / 1000));
-    expect(state.player.hp).toBe(hpBefore - tick);
-    expect(state.events.some((e) => e.type === "playerHurt")).toBe(true);
-    // The next frames inside the cooldown burn nothing.
+    // Getting stuck in a black hole is instant death — hp to 0, the run drops
+    // to defeat this same tick, and the swallow event fires at the hole.
+    expect(state.player.hp).toBe(0);
+    expect(state.phase).toBe("defeat");
+    expect(
+      state.events.some(
+        (e) => e.type === "wellDeath" && e.pos.x === well.pos.x,
+      ),
+    ).toBe(true);
+  });
+
+  it("a player jumping over the core is not swallowed", () => {
+    const state = startGame(42, "test_well_level");
+    const well = stageWell(state);
+    state.player.pos = { ...well.pos };
+    state.player.z = JUMP.dodgeHeight + 30;
+    state.player.vz = 100;
     step(state, idle, DT);
-    expect(state.player.hp).toBe(hpBefore - tick);
-    // Past the cooldown the second tick lands.
-    run(state, idle, Math.ceil(WELLS.tickMs / DT) + 1);
-    expect(state.player.hp).toBe(hpBefore - tick * 2);
+    // He floats above the core — no swallow while airborne.
+    expect(state.player.hp).toBeGreaterThan(0);
+    expect(state.phase).not.toBe("defeat");
   });
 
   it("devours a minion at the core: no kill, no XP, no loot", () => {
@@ -165,6 +177,37 @@ describe("gravity wells", () => {
     const d = Math.hypot(item.pos.x - well.pos.x, item.pos.y - well.pos.y);
     expect(d).toBeGreaterThanOrEqual(WELLS.itemRestRadius - 1);
     expect(d).toBeLessThanOrEqual(WELLS.itemRestRadius + 2);
+  });
+
+  it("pulls loot from beyond the player's reach — about a screen away", () => {
+    const state = startGame(42, "test_well_level");
+    const well = stageWell(state);
+    state.player.pos = { x: well.pos.x + 900, y: well.pos.y };
+    // Past the player's own pull, but well inside the loot reach.
+    const startX = well.pos.x + WELLS.pullRadius + 60;
+    expect(startX).toBeLessThan(well.pos.x + WELLS.lootRadius);
+    state.items.push({
+      id: state.nextId++,
+      kind: "medkit",
+      pos: { x: startX, y: well.pos.y },
+    });
+    run(state, idle, 60);
+    // The loot has crept toward the hole even from out here.
+    expect(state.items[0]!.pos.x).toBeLessThan(startX);
+  });
+
+  it("leaves loot beyond the loot reach untouched", () => {
+    const state = startGame(42, "test_well_level");
+    const well = stageWell(state);
+    state.player.pos = { x: well.pos.x + 900, y: well.pos.y };
+    const x = well.pos.x + WELLS.lootRadius + 20;
+    state.items.push({
+      id: state.nextId++,
+      kind: "medkit",
+      pos: { x, y: well.pos.y },
+    });
+    run(state, idle, 60);
+    expect(state.items[0]!.pos.x).toBe(x);
   });
 });
 

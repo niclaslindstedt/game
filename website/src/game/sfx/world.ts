@@ -119,6 +119,27 @@ export function playWorldSound(synth: Synth, event: GameEvent): boolean {
       });
       return true;
 
+    case "wellDeath":
+      // The hole swallows the HERO: the swallow dive, longer and lower, with a
+      // heavier low rumble behind it — the same spiral, but this one is fatal.
+      synth.tone({
+        type: "sine",
+        from: 360,
+        to: 30,
+        durationMs: 620,
+        volume: 0.075,
+        detuneCents: 12,
+        echo: 0.45,
+      });
+      synth.noise({
+        durationMs: 340,
+        volume: 0.05,
+        delayMs: 160,
+        filter: { type: "lowpass", frequency: 240 },
+        echo: 0.4,
+      });
+      return true;
+
     case "apparitionVanished":
       // An apparition dissolves: a glassy shimmer rising out of hearing,
       // more sigh than event — the figure was never really there.

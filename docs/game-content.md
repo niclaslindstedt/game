@@ -78,11 +78,14 @@ names its in-run music with an optional `music` id (a key into the app's
   (dreamy between-universe glides, floatier than the moon). The level debuts
   both **environmental hazard systems**: seven **black holes**
   (`LevelDef.wells` → the engine's gravity wells: they drag the grounded
-  player, devour minions at the core, burn the player standing in one, and
-  hoard dragged loot on the event horizon — a jump no longer sails clean
-  over the pull: airborne the hero still drifts toward the core and the
-  hole's gravity drags his hop down early, so he jumps less high near the
-  horizon) and the **asteroid rain** (`LevelDef.asteroids`: rocks streak across
+  player, devour minions at the core, and pull loose loot in from about a
+  screen away — slow from the edges, then faster — to hoard it on the event
+  horizon. Getting dragged into the core is instant death, so daring the pull
+  for the rim loot is a real gamble. A jump no longer sails clean over the
+  pull: airborne the hero still drifts toward the core and the hole's gravity
+  drags his hop down early, so he jumps less high near the horizon — though he
+  floats above the core. The level map pins every hole so the road's hazards
+  read at a glance) and the **asteroid rain** (`LevelDef.asteroids`: rocks streak across
   the player's surroundings on a rolled cadence, take a difficulty-scaled
   bite of the hero's health on contact — once per rock, from 20% on EASY up
   to 75% on JESUS — shove minions aside, and are dodged with the feet or a

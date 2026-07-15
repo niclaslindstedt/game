@@ -279,19 +279,21 @@ export type LevelDef = {
   }[];
   /**
    * Black holes: static gravity wells that drag the grounded player,
-   * enemies and loose items toward their core — minions are devoured
-   * there, the player burns, items pile up on the rim. A jump no longer
-   * clears the pull: airborne the hero still drifts toward the core and the
-   * hole's gravity fights his hop (he jumps less high near the horizon),
-   * though he floats above the core's burn. Omitted numbers fall back to the
-   * config WELLS defaults; see GravityWell for what each means.
+   * enemies and loose loot toward their core — minions and the grounded
+   * player are devoured there (instant death for the hero), while loot piles
+   * up on the rim. Loot is pulled from a wider `lootRadius` (about a screen
+   * away) than the player. A jump no longer clears the pull: airborne the
+   * hero still drifts toward the core and the hole's gravity fights his hop
+   * (he jumps less high near the horizon), though he floats above the core.
+   * Omitted numbers fall back to the config WELLS defaults; see GravityWell
+   * for what each means.
    */
   wells?: {
     pos: Vec2;
     pullRadius?: number;
     coreRadius?: number;
     pullSpeed?: number;
-    coreDps?: number;
+    lootRadius?: number;
   }[];
   /**
    * Flying rocks: presence turns the asteroid spawner on. Every `everyMs`

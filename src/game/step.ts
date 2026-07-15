@@ -261,7 +261,7 @@ export function step(state: GameState, input: GameInput, dtMs: number): void {
   stepMagicCritBlobs(state);
   // Environmental hazards act on this tick's positions, after everyone has
   // moved: the wells drag (and devour), the asteroids fly (and strike).
-  stepWells(state, dt, dtMs);
+  stepWells(state, dt);
   stepAsteroids(state, dt, dtMs);
   // Sight-pinned inner monologues fire on this tick's positions — after the
   // horde has moved, so "the hero sees one" means it is actually on screen.
