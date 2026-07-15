@@ -13,6 +13,8 @@
 //   node website/scripts/art-audit.mjs levels
 //   node website/scripts/art-audit.mjs level moon
 //   node website/scripts/art-audit.mjs items
+//   node website/scripts/art-audit.mjs equipped
+//   node website/scripts/art-audit.mjs equipped icon_medieval_sword icon_tshirt
 //   node website/scripts/art-audit.mjs sheet wraith optimusk icon_stick
 //   node website/scripts/art-audit.mjs variants wraith boulder
 //   node website/scripts/art-audit.mjs snapshot wraith optimusk
@@ -36,6 +38,7 @@ import {
   blit,
   createSurface,
   fill,
+  mirrorX,
   tileSurface,
   upscale,
 } from "./asset-tools/surface.mjs";
@@ -91,6 +94,71 @@ function groundFor(entry) {
 
 function surfaceFor(key) {
   return gridToSurface(SPRITES[key], SPRITE_PALETTES[key]);
+}
+
+// ---- Equipped-on-hero (paper-doll) composition -----------------------------
+// A weapon or gear icon reads very differently as a loose inventory square than
+// it does WORN/WIELDED on the hero — so the audit can dress the hero in a
+// candidate and judge the equipped look, the way the field renderer draws it.
+// This mirrors website/src/game/paper-doll.ts (which can't be imported here:
+// it pulls in DOM-only canvas code via @ui/lib). Keep these constants in
+// lockstep with that module — HELD_DX/HELD_DY and LEFT_POINTING_ICONS.
+const HELD_DX = 9; // held weapon icon's anchor on the 16×16 hero body
+const HELD_DY = 2;
+const DOLL_WIDTH = HELD_DX + 12; // body plus the held icon's overhang
+const DOLL_HEIGHT = 16;
+const ARMOR_SLOTS = new Set(["head", "chest", "legs", "feet"]);
+// Icons drawn pointing LEFT (the pistol family and kin) — mirrored in place so
+// the business end leads in the facing direction like every other icon.
+const LEFT_POINTING_ICONS = new Set([
+  "icon_flare_gun",
+  "icon_longbow",
+  "icon_nine_mm",
+  "icon_overclocked_laser",
+  "icon_prototype_laser",
+  "icon_retro_raygun",
+  "icon_service_revolver",
+  "icon_smart_pistol",
+]);
+
+/** Compose an ordered [{ sprite, dx, dy, flip }] layer stack onto a doll-sized
+ * surface (a missing sprite degrades to "not drawn", as in the real doll). */
+function composeDoll(layers) {
+  const surface = createSurface(DOLL_WIDTH, DOLL_HEIGHT);
+  for (const layer of layers) {
+    if (!SPRITES[layer.sprite]) {
+      console.warn(`! no sprite "${layer.sprite}" — doll layer skipped`);
+      continue;
+    }
+    const s = surfaceFor(layer.sprite);
+    blit(surface, layer.flip ? mirrorX(s) : s, layer.dx, layer.dy);
+  }
+  return surface;
+}
+
+/** The hero holding one weapon icon — its inventory sprite gripped at the
+ * hand, exactly where the field renderer draws the held weapon. */
+function weaponDoll(icon) {
+  return composeDoll([
+    { sprite: "player_0", dx: 0, dy: 0 },
+    {
+      sprite: icon,
+      dx: HELD_DX,
+      dy: HELD_DY,
+      flip: LEFT_POINTING_ICONS.has(icon),
+    },
+  ]);
+}
+
+/** The hero wearing one armor piece — the generated `worn_<id>` overlay on the
+ * body (legs/feet use the `_0` stride frame; grades share their base's look). */
+function gearDoll(def) {
+  const base = def.gradeBase ?? def.id;
+  const suffix = def.slot === "legs" || def.slot === "feet" ? "_0" : "";
+  return composeDoll([
+    { sprite: "player_0", dx: 0, dy: 0 },
+    { sprite: `worn_${base}${suffix}`, dx: 0, dy: 0 },
+  ]);
 }
 
 /**
@@ -306,6 +374,68 @@ function itemEntries() {
   return entries;
 }
 
+/** The equipped catalog: every weapon held and every armor piece worn ON the
+ * hero — the companion to `items`, judging each icon as it looks equipped.
+ * The doll-surface entries key off `player_0` for the hero's family ground. */
+function equippedEntries() {
+  const entries = [];
+  for (const def of Object.values(WEAPON_DEFS)) {
+    entries.push({
+      key: "player_0",
+      label: def.icon,
+      context: `weapon: ${def.name}`,
+      surface: weaponDoll(def.icon),
+    });
+  }
+  for (const def of Object.values(GEAR_DEFS)) {
+    if (def.grade || !ARMOR_SLOTS.has(def.slot)) continue; // no worn overlay
+    entries.push({
+      key: "player_0",
+      label: def.icon,
+      context: `gear: ${def.name} (${def.slot})`,
+      surface: gearDoll(def),
+    });
+  }
+  return entries;
+}
+
+/** Named equippables (a weapon/armor def id OR its icon sprite) dressed on the
+ * hero — the funnel's companion to `sheet`, for a shortlist of weapons/gear. */
+function equippedNamed(names) {
+  const weapons = Object.values(WEAPON_DEFS);
+  const gear = Object.values(GEAR_DEFS);
+  const entries = [];
+  for (const name of names) {
+    const w = weapons.find((d) => d.id === name || d.icon === name);
+    if (w) {
+      entries.push({
+        key: "player_0",
+        label: w.icon,
+        context: `weapon: ${w.name}`,
+        surface: weaponDoll(w.icon),
+      });
+      continue;
+    }
+    const g = gear.find(
+      (d) =>
+        !d.grade &&
+        ARMOR_SLOTS.has(d.slot) &&
+        (d.id === name || d.gradeBase === name || d.icon === name),
+    );
+    if (g) {
+      entries.push({
+        key: "player_0",
+        label: g.icon,
+        context: `gear: ${g.name} (${g.slot})`,
+        surface: gearDoll(g),
+      });
+      continue;
+    }
+    console.warn(`! "${name}" is not an equippable weapon or armor — skipped`);
+  }
+  return entries;
+}
+
 // ---- Snapshots + before/after ----------------------------------------------
 
 async function readSnapshot(key) {
@@ -327,6 +457,7 @@ const USAGE = `usage:
   art-audit.mjs levels                      list level ids
   art-audit.mjs level <id>                  audit sheet of a level's main art
   art-audit.mjs items                       audit sheet(s) of the item catalog
+  art-audit.mjs equipped [name...]          items ON the hero (all, or named)
   art-audit.mjs sheet <name...>             numbered shortlist sheet
   art-audit.mjs variants <name...>          sheet incl. frames/wounds/footprints
   art-audit.mjs snapshot <name...>          save current renders as "before"
@@ -391,6 +522,20 @@ switch (cmd) {
 
   case "items": {
     await writeSheets(itemEntries(), out("items"), { cols: 12, ...opts });
+    break;
+  }
+
+  case "equipped": {
+    // Weapons/gear dressed on the hero — no args does the whole catalog
+    // (companion to `items`), names do a shortlist (companion to `sheet`).
+    const entries = args.length ? equippedNamed(args) : equippedEntries();
+    if (entries.length === 0) {
+      console.error(
+        "no equippable items — name a weapon/armor def id or icon sprite",
+      );
+      process.exit(1);
+    }
+    await writeSheets(entries, out("equipped"), { cols: 10, ...opts });
     break;
   }
 
