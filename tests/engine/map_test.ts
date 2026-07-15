@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
-// The level map: fog-of-war exploration (revealAround from the hero's steps,
-// spawn pre-revealed, the rest fogged), the `map` pause phase (frozen sim,
+// The level map: fog-of-war exploration (revealRect lifts fog from the whole
+// on-screen camera view, revealAround the spawn circle, the rest fogged), the
+// `map` pause phase (frozen sim,
 // openMap/closeMap toggles, level-up priority), and the map markers pinned by
 // story finds and elite/boss victories.
 
@@ -45,6 +46,33 @@ describe("fog of war", () => {
     state.player.pos = { x: there.x - 600, y: there.y };
     run(state, idle, 1);
     expect(isExplored(state, there)).toBe(true);
+  });
+
+  it("lifts the fog from the whole on-screen rect, not just a circle", () => {
+    const state = startGame();
+    clearStage(state);
+    // A wide camera view around the hero — corners well outside the reveal
+    // circle but plainly on screen.
+    const halfW = 220;
+    const halfH = 110;
+    const view = {
+      x: state.player.pos.x - halfW,
+      y: state.player.pos.y - halfH,
+      width: halfW * 2,
+      height: halfH * 2,
+    };
+    // A top corner of the view: too far for the circle (radius 120), but visible.
+    const corner = { x: view.x + MAP.cellSize, y: view.y + MAP.cellSize };
+    expect(isExplored(state, corner)).toBe(false);
+    run(state, { ...idle, view }, 1);
+    expect(isExplored(state, corner)).toBe(true);
+    // The far field beyond the view stays fogged.
+    expect(
+      isExplored(state, {
+        x: view.x + view.width + 200,
+        y: state.player.pos.y,
+      }),
+    ).toBe(false);
   });
 
   it("out-of-bounds positions read as unexplored instead of wrapping", () => {
