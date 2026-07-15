@@ -4843,6 +4843,11 @@ canvas.tier-artifact {
 .shop-panel {
   gap: 0.7rem;
   height: min(92vh, 33rem);
+  /* The shop is a tap-only surface (no drag-to-equip), so drop the inventory
+     panel's `touch-action: none`: a touch anywhere must be free to pan the bag
+     grid vertically. The ancestor's `none` would otherwise veto the cell-level
+     `pan-y` and a large bag couldn't be scrolled. */
+  touch-action: pan-y;
 }
 
 /* Merchant name on the left, the purse on the right. */
@@ -4907,10 +4912,15 @@ canvas.tier-artifact {
   height: 0.9rem;
 }
 
-/* Bag cells are buttons here (tap to select), not drag handles. */
+/* Bag cells are buttons here (tap to select), not drag handles. Unlike the
+   inventory (whose cells set `touch-action: none` so a touch-drag equips
+   instead of scrolling the page), the shop never drags — so let a touch on a
+   cell PAN the bag vertically, or a big carry can't be scrolled to its last
+   row on a phone. Overrides `.inv-cell { touch-action: none }`. */
 .shop-bag-cell {
   cursor: pointer;
   padding: 0;
+  touch-action: pan-y;
 }
 
 /* Keep the bag from swallowing the panel on tall bags. The scroll box clips at
