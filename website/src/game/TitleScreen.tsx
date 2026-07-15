@@ -576,7 +576,9 @@ export function TitleScreen({
       | "titleOrbits"
       | "vibration"
       | "xpFloat"
-      | "healthBars";
+      | "healthBars"
+      | "dialogue"
+      | "cutscenes";
     const onOffRow = (
       key: OnOffKey,
       label: string,
@@ -1325,6 +1327,18 @@ export function TitleScreen({
           "HEALTH BARS",
           "display-health-bars",
           "SHOW A TINY HP BAR OVER EVERY WOUNDED MOB",
+        ),
+        onOffRow(
+          "dialogue",
+          "DIALOGUE",
+          "display-dialogue",
+          "PLAY IN-WORLD TALK: ARRIVALS, THOUGHTS, LORE",
+        ),
+        onOffRow(
+          "cutscenes",
+          "CUTSCENES",
+          "display-cutscenes",
+          "PLAY THE PRELUDE SCENES THAT OPEN A LEVEL",
         ),
         // Land back on the DISPLAY row in SETTINGS (index 1, after CONTROLS).
         backTo("settings", 1),

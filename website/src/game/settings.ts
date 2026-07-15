@@ -10,6 +10,8 @@ import {
   setAutoEquipEnabled,
   setAutoStatGainsEnabled,
   setBalanceTuning,
+  setCutscenesEnabled,
+  setDialogueEnabled,
   type BalanceTuning,
 } from "@game/core";
 
@@ -88,6 +90,21 @@ export type XpFloat = "on" | "off";
  * clean — bosses and elites still show their bars once hurt either way. */
 export type HealthBars = "on" | "off";
 
+/** DIALOGUE: a display preference (SETTINGS → DISPLAY) for the in-world spoken
+ * scenes — elite/boss arrivals and last words, the hero's inner monologues,
+ * story-item lore, companion joins, and the merchant's greeting. `on` (the
+ * default) plays them; `off` silences every one, starting each level muted.
+ * Applied to the engine via `setDialogueEnabled` (mirrors how the mute button
+ * works) — it gates presentation only, no simulation rule. */
+export type DialogueScenes = "on" | "off";
+
+/** CUTSCENES: a display preference (SETTINGS → DISPLAY) for the prelude
+ * cutscenes that open a level (the launch, the flight — see cutscenes.ts).
+ * `on` (the default) plays them; `off` skips the whole prelude so the run opens
+ * straight on the hero's intro monologue. Applied to the engine via
+ * `setCutscenesEnabled` — a presentation gate only. */
+export type Cutscenes = "on" | "off";
+
 export type GameSettings = {
   steering: SteeringMode;
   itemUse: ItemUseMode;
@@ -120,6 +137,10 @@ export type GameSettings = {
   xpFloat: XpFloat;
   /** Display preference: hp bars over regular mobs' heads (see HealthBars). */
   healthBars: HealthBars;
+  /** Display preference: in-world spoken dialogue scenes (see DialogueScenes). */
+  dialogue: DialogueScenes;
+  /** Display preference: prelude cutscenes that open a level (see Cutscenes). */
+  cutscenes: Cutscenes;
   /** Developer slider: scales the OVERKILL corpse launch — how far an
    * overpowered kill flings the mob flying (see GameScreen `corpseLaunch`).
    * A multiplier in [0, KNOCKBACK_MAX]: 0 = bodies topple in place, 1 = the
@@ -177,6 +198,10 @@ function defaults(): GameSettings {
     // Health bars over regular mobs are on out of the box; a player who wants
     // a cleaner field turns them off (bosses/elites always show theirs).
     healthBars: "on",
+    // The story plays in full out of the box; a player who wants to skip the
+    // talking turns dialogue and/or cutscenes off.
+    dialogue: "on",
+    cutscenes: "on",
     // The overkill launch ships at 1× — a dev dials it up or down live.
     knockback: 1,
     // Balance multipliers start neutral — the shipped tuning.
@@ -290,6 +315,14 @@ function load(): GameSettings {
         stored.healthBars === "on" || stored.healthBars === "off"
           ? stored.healthBars
           : base.healthBars,
+      dialogue:
+        stored.dialogue === "on" || stored.dialogue === "off"
+          ? stored.dialogue
+          : base.dialogue,
+      cutscenes:
+        stored.cutscenes === "on" || stored.cutscenes === "off"
+          ? stored.cutscenes
+          : base.cutscenes,
       knockback:
         typeof stored.knockback === "number" &&
         Number.isFinite(stored.knockback)
@@ -307,6 +340,8 @@ setAudioVolumes({ music: settings.musicVolume, sfx: settings.sfxVolume });
 setHapticsEnabled(settings.vibration === "on");
 setAutoStatGainsEnabled(settings.autoLevelStats === "on");
 setAutoEquipEnabled(settings.autoEquip === "on");
+setDialogueEnabled(settings.dialogue === "on");
+setCutscenesEnabled(settings.cutscenes === "on");
 setBalanceTuning(settings.balance);
 
 /** The live settings singleton — cheap to read every simulation tick. */
@@ -324,6 +359,8 @@ export function updateSettings(patch: Partial<GameSettings>): GameSettings {
   setHapticsEnabled(settings.vibration === "on");
   setAutoStatGainsEnabled(settings.autoLevelStats === "on");
   setAutoEquipEnabled(settings.autoEquip === "on");
+  setDialogueEnabled(settings.dialogue === "on");
+  setCutscenesEnabled(settings.cutscenes === "on");
   setBalanceTuning(settings.balance);
   try {
     window.localStorage.setItem(STORAGE_KEY, JSON.stringify(settings));

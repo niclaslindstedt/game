@@ -399,7 +399,10 @@ run against synthetic fixtures with no shipped content (see
   (`wantsDialogue`/`startEnemyDialogue` inside the step,
   `advanceDialogue` as the player's tap, `muteDialogue` for the overlay's
   MUTE button — it latches `dialogueMuted`, silencing every in-world scene
-  for the rest of the level (a fresh level un-mutes), `dialogueContent` for the
+  for the rest of the level (a fresh level un-mutes). The DISPLAY-settings
+  toggles ride the same rails: `setDialogueEnabled(false)` starts every fresh
+  run muted (create.ts), and `setCutscenesEnabled(false)` drops the prelude
+  cutscenes at level build so a run opens straight on the intro. `dialogueContent` for the
   renderer — its `heroPages` flags mark the pages the HERO speaks in a
   two-way arrival scene, authored as `{ hero: [...] }` entries in
   `EnemyDef.dialogue`), story-item collection, and `stepDoors` (a carried key

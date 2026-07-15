@@ -305,10 +305,14 @@ export {
 // draws while `phase === "dialogue"`.
 export {
   advanceDialogue,
+  areCutscenesEnabled,
   collectStoryItem,
   dialogueContent,
+  isDialogueEnabled,
   markThoughtsSeen,
   muteDialogue,
+  setCutscenesEnabled,
+  setDialogueEnabled,
 } from "./game/story.ts";
 
 // Cutscenes: the generic player (@game/lib) plus the scene catalog. The app
