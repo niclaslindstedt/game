@@ -24,10 +24,9 @@ export const THE_RIFT: LevelDef = {
       "GRIP SOMETHING ANYWAY.",
     ],
     [
-      "THE STONE TABLET ON MARS SAID",
-      "IT PLAIN: ADA IS THE TRIBUTE,",
-      "AND THE HANDOVER HAPPENS IN",
-      "HERE. SHE CAME THROUGH THIS PLACE.",
+      "THE MARS TABLET SAID IT PLAIN:",
+      "ADA IS THE TRIBUTE, HANDED OVER",
+      "IN HERE. SHE CAME THROUGH THIS PLACE.",
     ],
     [
       "HER BEACON PINGS FROM",
@@ -57,14 +56,14 @@ export const THE_RIFT: LevelDef = {
     sprite: "merchant",
     greeting: [
       [
-        "AH. YOU AGAIN. DON'T LOOK SO",
-        "SURPRISED - EVERY MARKET I EVER",
-        "RAN FELL THROUGH HERE, IN THE END.",
+        "AH. YOU AGAIN. DON'T LOOK",
+        "SO SURPRISED - EVERY MARKET",
+        "I RAN FELL THROUGH HERE.",
       ],
       [
-        "THE VENDING MACHINES. THE MOON.",
-        "THE DOME. ALL ROADS LEAD HERE -",
-        "AND COIN SPENDS ON ALL OF THEM.",
+        "THE VENDING MACHINES. THE",
+        "MOON. THE DOME. ALL ROADS",
+        "LEAD HERE. COIN SPENDS ON ALL.",
       ],
       [
         "BRING ME RELICS, TRAVELER.",

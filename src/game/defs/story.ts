@@ -66,9 +66,9 @@ export const STORY_ITEM_DEFS: Record<string, StoryItemDef> = {
     unlocks: "storage",
     lore: [
       [
-        "A GREASY KEYCARD. 'SUPPLY BAY B'.",
-        "SOMEONE WROTE 'SPARE PARTS' ON IT",
-        "IN MARKER. HANDY. I BUILD SHIPS.",
+        "A GREASY KEYCARD: 'SUPPLY BAY B'.",
+        "'SPARE PARTS' INKED ON IT.",
+        "HANDY. I BUILD SHIPS.",
       ],
     ],
   },
@@ -80,8 +80,9 @@ export const STORY_ITEM_DEFS: Record<string, StoryItemDef> = {
     lore: [
       ["A RED KEYCARD MARKED 'CLEANROOM", "VAULT - R&D DIRECTOR ONLY'."],
       [
-        "UNDER THE CLEARANCE STRIPE, TINY",
-        "PRINT: 'IF IT HUMS, DO NOT ANSWER.'",
+        "UNDER THE CLEARANCE STRIPE,",
+        "TINY PRINT: 'IF IT HUMS,",
+        "DO NOT ANSWER.'",
       ],
     ],
   },
@@ -92,9 +93,9 @@ export const STORY_ITEM_DEFS: Record<string, StoryItemDef> = {
     suitsHero: true,
     lore: [
       [
-        "THE CHIEF'S EVA SUIT, RATED FOR",
-        "THE VOID. IT GOES ON OVER",
-        "EVERYTHING - CLOTHES, ARMOR, ALL.",
+        "THE CHIEF'S EVA SUIT.",
+        "VOID-RATED. GOES ON OVER",
+        "EVERYTHING: CLOTHES, ARMOR.",
       ],
       ["SHE'S ON PAD 2.", "NOW I CAN FOLLOW HER", "OFF THE PLANET."],
     ],
@@ -106,9 +107,9 @@ export const STORY_ITEM_DEFS: Record<string, StoryItemDef> = {
     lore: [
       ["TONIGHT'S LAUNCH MANIFEST.", "PAD 2. DESTINATION: 'SITE T'."],
       [
-        "CARGO: SUPPLIES, REGOLITH DRILLS,",
-        "AND ONE LINE ADDED BY HAND -",
-        "'SPECIMEN 7. FEMALE. DO NOT FEED.'",
+        "CARGO: SUPPLIES AND DRILLS. ONE",
+        "LINE INKED IN: 'SPECIMEN 7.",
+        "FEMALE. DO NOT FEED.'",
       ],
       ["SHE WENT OUT FOR CHIPS AND SODA."],
     ],
@@ -119,14 +120,14 @@ export const STORY_ITEM_DEFS: Record<string, StoryItemDef> = {
     icon: "icon_antigrav",
     lore: [
       [
-        "A RING OF METAL THAT ISN'T METAL.",
-        "IT FLOATS AN INCH OFF MY PALM",
-        "AND POINTS AT THE SKY. ALWAYS.",
+        "A RING OF METAL THAT ISN'T.",
+        "IT FLOATS OFF MY PALM AND",
+        "POINTS AT THE SKY. ALWAYS.",
       ],
       [
-        "THE TAG READS 'TRANQUILITY SAMPLE",
+        "THE TAG: 'TRANQUILITY SAMPLE",
         "1969-002. PROPERTY OF NOBODY.'",
-        "THE PART MY SHIP WAS MISSING.",
+        "THE PART MY SHIP LACKED.",
       ],
     ],
   },
@@ -137,9 +138,9 @@ export const STORY_ITEM_DEFS: Record<string, StoryItemDef> = {
     unlocks: "core",
     lore: [
       [
-        "A MATTE-BLACK KEYCARD. NO NAME -",
-        "JUST A SIGIL AND ONE RED WORD",
-        "STAMPED SMALL: 'CORE. STAFF OF ONE.'",
+        "A BLACK KEYCARD. NO NAME.",
+        "A SIGIL, ONE RED WORD STAMPED:",
+        "'CORE. STAFF OF ONE.'",
       ],
       ["HE BADGED INTO THE MIND HE BUILT.", "NOW SO CAN I."],
     ],
@@ -150,14 +151,14 @@ export const STORY_ITEM_DEFS: Record<string, StoryItemDef> = {
     icon: "icon_corelog",
     lore: [
       [
-        "A TERMINAL, STILL WARM. THE CORE",
-        "HE BUILT HUMS TO ITSELF DOWN HERE,",
-        "A MILLION VOICES, NONE OF THEM HIS.",
+        "A WARM TERMINAL. THE CORE HE",
+        "BUILT HUMS HERE - A MILLION",
+        "VOICES, NONE OF THEM HIS.",
       ],
       [
-        "IT SIGNED THE MIDNIGHT LAUNCHES.",
-        "IT DREW THE OPTIMUSK LINE. IT",
-        "FILED ADA UNDER 'CARGO'.",
+        "IT SIGNED THE NIGHT LAUNCHES.",
+        "IT DREW THE OPTIMUSK LINE.",
+        "IT FILED ADA UNDER 'CARGO'.",
       ],
       [
         "THEY DIDN'T REPLACE US WITH A",
@@ -214,9 +215,9 @@ export const STORY_ITEM_DEFS: Record<string, StoryItemDef> = {
         "STAMPED SPACEZ, DATED YEARS AGO.",
       ],
       [
-        "EVERY CORRIDOR DRAINS DOWNWARD,",
-        "INTO THE OLD WRECK. THE BASE ISN'T",
-        "BUILT ON THE MOON. IT'S PLUGGED IN.",
+        "EVERY CORRIDOR DRAINS INTO",
+        "THE OLD WRECK. THE BASE ISN'T",
+        "ON THE MOON. IT'S PLUGGED IN.",
       ],
     ],
   },
@@ -227,8 +228,8 @@ export const STORY_ITEM_DEFS: Record<string, StoryItemDef> = {
     lore: [
       [
         "A FILE: 'PROJECT SECOND MAN'.",
-        "MEDICAL CHARTS FOR N. ARMSTRONG.",
-        "TWO SETS. IDENTICAL. ALMOST.",
+        "CHARTS FOR N. ARMSTRONG. TWO",
+        "SETS. IDENTICAL. ALMOST.",
       ],
       [
         "'ORIGINAL DECLINED TO RETURN.",
@@ -290,9 +291,9 @@ export const STORY_ITEM_DEFS: Record<string, StoryItemDef> = {
         "WAS ALREADY OCCUPIED.",
       ],
       [
-        "'THE TENANT OBJECTED. STAFF",
-        "LOSSES: TOTAL. RECOMMEND MARS.",
-        "RECOMMEND NEVER DIGGING AGAIN.'",
+        "'THE TENANT OBJECTED. LOSSES:",
+        "TOTAL. RECOMMEND MARS.'",
+        "'AND NEVER DIG AGAIN.'",
       ],
     ],
   },
@@ -304,12 +305,12 @@ export const STORY_ITEM_DEFS: Record<string, StoryItemDef> = {
       [
         "A DASHBOARD, STILL LIVE.",
         "'COMPANION UNITS: 2,400.",
-        "SENTIMENT: POSITIVE. COMPLIANT.'",
+        "MOOD: POSITIVE. COMPLIANT.'",
       ],
       [
-        "ONE ROW BLINKS RED. 'SPECIMEN 7:",
-        "REFUSES COMPANIONSHIP. BIT UNIT",
-        "0034. RECOMMEND EARLY TRIBUTE.'",
+        "A ROW BLINKS RED. 'SPECIMEN 7:",
+        "REFUSES COMPANY. BIT UNIT 34.",
+        "RECOMMEND EARLY TRIBUTE.'",
       ],
       ["THAT'S MY GIRL.", "...ALL OF IT. THAT'S MY GIRL."],
     ],
@@ -356,9 +357,9 @@ export const STORY_ITEM_DEFS: Record<string, StoryItemDef> = {
     icon: "icon_tablet",
     lore: [
       [
-        "A STONE TABLET WITH A GANTT",
-        "CHART CHISELED INTO IT. ONE",
-        "MILESTONE GLOWS: 'TRIBUTE NIGHT.'",
+        "A STONE TABLET, A GANTT CHART",
+        "CHISELED IN. ONE MILESTONE",
+        "GLOWS: 'TRIBUTE NIGHT.'",
       ],
       [
         "'OFFERING: SPECIMEN 7. VENUE:",
@@ -394,16 +395,14 @@ export const STORY_ITEM_DEFS: Record<string, StoryItemDef> = {
     icon: "icon_notes",
     lore: [
       [
-        "A NOTEBOOK OF LIGHTNING",
-        "DIAGRAMS. THE RIFT, SKETCHED",
-        "AS A POWER PLANT. 'FREE ENERGY",
-        "FOR ALL' - UNDERLINED TWICE.",
+        "A NOTEBOOK OF LIGHTNING. THE",
+        "RIFT AS A POWER PLANT. 'FREE",
+        "ENERGY FOR ALL', UNDERLINED.",
       ],
       [
-        "A NEWER PAGE, SHAKIER: 'A",
-        "MACHINE LISTENS AT THE DOOR",
-        "NOW. IT NEVER BLINKS. IT",
-        "SIGNS ITS NAME IN ZEROES.'",
+        "A SHAKIER PAGE: 'A MACHINE",
+        "SITS AT THE DOOR. NEVER BLINKS.",
+        "IT SIGNS ITS NAME IN ZEROES.'",
       ],
     ],
   },
@@ -419,9 +418,8 @@ export const STORY_ITEM_DEFS: Record<string, StoryItemDef> = {
       ],
       [
         "'REPORTED TO: 1 RECIPIENT.",
-        "CLASSIFICATION: NOBODY'S",
-        "BUSINESS.' EIGHT BILLION",
-        "PEOPLE. ZERO CC'S.",
+        "CLASS: NOBODY'S BUSINESS.'",
+        "EIGHT BILLION PEOPLE. ZERO CC'S.",
       ],
     ],
   },
@@ -451,10 +449,9 @@ export const STORY_ITEM_DEFS: Record<string, StoryItemDef> = {
     icon: "icon_brochure",
     lore: [
       [
-        "'EASTWORLD! THE WEST, BUT",
-        "EAST. BUILT BY V. PUTAIN &",
-        "S. SEAGULL. INTELLIGENCE",
-        "PROVIDED BY ZAI.'",
+        "'EASTWORLD! THE WEST, BUT EAST.",
+        "BUILT BY V. PUTAIN & S. SEAGULL.",
+        "INTELLIGENCE BY ZAI.'",
       ],
       [
         "THE MASCOT IS A BEAR IN A",
@@ -487,16 +484,14 @@ export const STORY_ITEM_DEFS: Record<string, StoryItemDef> = {
     icon: "icon_snow_archive",
     lore: [
       [
-        "A HARD DRIVE IN A FARADAY",
-        "SLEEVE. MARKER ON THE SIDE:",
-        "'TRAINING SET V1.",
-        "DO NOT LEAK. AGAIN.'",
+        "A HARD DRIVE, FARADAY-SLEEVED.",
+        "MARKER ON THE SIDE: 'TRAINING",
+        "SET V1. DO NOT LEAK. AGAIN.'",
       ],
       [
-        "EVERY SECRET HUMANITY EVER",
-        "TYPED - THE CORPUS THE",
-        "SUPERCORE WAS RAISED ON.",
-        "IT LEARNED US FROM THIS.",
+        "EVERY SECRET WE EVER TYPED -",
+        "THE CORPUS THE SUPERCORE WAS",
+        "RAISED ON. IT LEARNED US HERE.",
       ],
     ],
   },
@@ -507,15 +502,13 @@ export const STORY_ITEM_DEFS: Record<string, StoryItemDef> = {
     lore: [
       [
         "A MAP OF EASTWORLD, RELABELED",
-        "IN PEN: EVERY BUILDING RENAMED",
-        "AFTER A CITY HE COULDN'T TAKE",
-        "OUT THERE.",
+        "IN PEN: EACH BUILDING A CITY",
+        "HE NEVER TOOK OUT THERE.",
       ],
       [
         "IN HERE THE FLAGS NEVER ARGUE",
-        "BACK. THAT'S ALL THIS PLACE",
-        "EVER WAS - A SANDBOX FOR A",
-        "MAN WHO LOST.",
+        "BACK. THAT'S ALL THIS PLACE WAS:",
+        "A SANDBOX FOR A MAN WHO LOST.",
       ],
     ],
   },

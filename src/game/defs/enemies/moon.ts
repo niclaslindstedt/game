@@ -150,28 +150,27 @@ export const MOON_ENEMIES: Record<string, EnemyDef> = {
       ],
       {
         hero: [
-          "YOU'RE AN ASTRONAUT. A DEAD",
-          "ONE. HOW ARE THERE DEAD PEOPLE",
-          "ON THE MOON? NOBODY DIED UP HERE.",
+          "YOU'RE A DEAD ASTRONAUT. HOW",
+          "ARE THERE DEAD MEN UP HERE?",
+          "NOBODY EVER DIED ON THE MOON.",
         ],
       },
       [
         "THAT'S WHAT THE BROADCAST SAID.",
-        "ONE SMALL STEP. IT DIDN'T SAY",
-        "ONTO WHAT. THERE'S A WRECKED",
-        "SHIP UNDER THE DUST, KID.",
+        "ONE SMALL STEP - ONTO WHAT? A",
+        "WRECK LIES UNDER THE DUST, KID.",
       ],
       {
         hero: [
           "A WRECK? UNDER THE SEA OF",
-          "TRANQUILITY? THAT WAS NEVER IN",
-          "ANY FOOTAGE I SAW.",
+          "TRANQUILITY? IT WAS NEVER IN",
+          "ANY FOOTAGE I EVER SAW.",
         ],
       },
       [
         "IT'S OLDER THAN THE DUST. WE",
-        "PLANTED THE FLAG ON A GRAVE AND",
-        "SMILED FOR THE CAMERA. SMILE'S OVER.",
+        "PLANTED THE FLAG ON A GRAVE,",
+        "SMILED. THE SMILE'S OVER.",
       ],
     ],
     lastWords: ["ONE SMALL... STEP...", "ONTO A... GRAVE... HHK"],
@@ -220,18 +219,17 @@ export const MOON_ENEMIES: Record<string, EnemyDef> = {
         ],
       },
       [
-        "BUILDING, MOSTLY. I DUG THEIR",
-        "TUNNELS AT SITE T, ON THE FAR",
-        "SIDE. YEARS OF SECRET FREIGHT",
-        "RUNS FROM EARTH. NOBODY TRACKED THEM.",
+        "BUILDING. I DUG THEIR TUNNELS",
+        "AT SITE T, ON THE FAR SIDE.",
+        "SECRET FREIGHT, NEVER TRACKED.",
       ],
       {
         hero: ["FREIGHT. WOULD THAT FREIGHT", "EVER INCLUDE PEOPLE?"],
       },
       [
         "LAST MONTH THE MANIFESTS",
-        "CHANGED. THE CRATES COMING UP",
-        "STARTED BREATHING. I QUIT. BADLY.",
+        "CHANGED. THE CRATES STARTED",
+        "BREATHING. I QUIT. BADLY.",
       ],
     ],
     lastWords: ["THE CLAIM'S... URGH...", "...YOURS NOW, KID..."],
@@ -276,10 +274,9 @@ export const MOON_ENEMIES: Record<string, EnemyDef> = {
         hero: ["I'LL RISK IT. YOU WERE THE", "CREW DOCTOR? BACK IN '69?"],
       },
       [
-        "I RAN EVERY PHYSICAL. AND THE",
-        "FIRST MAN ON THE MOON HAD TWO",
-        "MEDICAL CHARTS. IDENTICAL. ONLY",
-        "ONE OF THEM EVER FLEW HOME.",
+        "I RAN EVERY PHYSICAL. THE FIRST",
+        "MAN HAD TWO CHARTS, IDENTICAL.",
+        "ONLY ONE EVER FLEW HOME.",
       ],
       {
         hero: [
@@ -289,10 +286,9 @@ export const MOON_ENEMIES: Record<string, EnemyDef> = {
         ],
       },
       [
-        "THE COPY. GROWN IN A TANK ON",
-        "THE RIDE HOME. IT WAVED AT THE",
-        "PARADES. THE REAL ONE IS STILL",
-        "UP HERE. YOU'RE WALKING TOWARD HIM.",
+        "THE COPY, GROWN IN A TANK ON",
+        "THE RIDE HOME. THE REAL ONE'S",
+        "STILL HERE. HE'S JUST AHEAD.",
       ],
     ],
     lastWords: ["TWO CHARTS... HHH...", "ONE STILL... BEAT..."],
@@ -327,21 +323,19 @@ export const MOON_ENEMIES: Record<string, EnemyDef> = {
       [
         "SHH. I'M CHARTING. THE MAP",
         "KEEPS CHANGING UNDERNEATH.",
-        "TUNNELS WHERE NO TUNNELS WERE.",
+        "TUNNELS WHERE NONE WERE.",
       ],
       {
         hero: [
-          "THEN MAYBE YOU'VE SEEN WHAT",
-          "I'M TRACKING. A SMALL, WARM",
-          "SIGNAL - A BEACON IN A GIRL'S",
-          "JACKET. IT WENT QUIET NEAR HERE.",
+          "MAYBE YOU'VE SEEN IT TOO.",
+          "A SMALL, WARM SIGNAL. A BEACON",
+          "IN A GIRL'S JACKET, GONE QUIET.",
         ],
       },
       [
-        "IT CROSSED MY GRID LAST NIGHT.",
-        "MOVING FAST. THEN IT WENT",
-        "STRAIGHT DOWN - INTO THE WRECK",
-        "UNDER THE FLAG.",
+        "IT CROSSED MY GRID LAST NIGHT,",
+        "FAST. THEN STRAIGHT DOWN -",
+        "INTO THE WRECK UNDER THE FLAG.",
       ],
       {
         hero: [
@@ -352,8 +346,8 @@ export const MOON_ENEMIES: Record<string, EnemyDef> = {
       },
       [
         "YOU DON'T, FRIEND. EVERYTHING",
-        "GOES BELOW. NOTHING COMES BACK",
-        "UP. NOBODY MAPS BELOW.",
+        "GOES BELOW. NOTHING COMES",
+        "BACK UP. NOBODY MAPS BELOW.",
       ],
     ],
     lastWords: ["SHE WENT... STRAIGHT...", "...DOWN... OFF MY MAP..."],
@@ -395,20 +389,18 @@ export const MOON_ENEMIES: Record<string, EnemyDef> = {
         hero: [
           "NOT WITHOUT ADA. YOU'RE HIM,",
           "AREN'T YOU? THE FIRST MAN ON",
-          "THE MOON. YOU NEVER WENT HOME.",
+          "THE MOON. NEVER WENT HOME.",
         ],
       },
       [
         "I PLANTED THIS FLAG. ONE SMALL",
-        "STEP. THEN THEY FOUND THE WRECK",
-        "UNDER MY BOOTS AND EVERYTHING",
-        "AFTER THAT WAS THEATER.",
+        "STEP. THEN A WRECK TURNED UP",
+        "UNDER MY BOOTS. ALL THEATER.",
       ],
       [
-        "THEY GREW A SMILING COPY OF ME",
-        "ON THE RIDE HOME. HE SHOOK THE",
-        "HANDS. HE CUT THE RIBBONS. HE",
-        "DIED IN A BED. LUCKY HIM.",
+        "THEY GREW A SMILING COPY OF",
+        "ME. HE SHOOK HANDS, CUT RIBBONS",
+        "AND DIED IN BED. LUCKY HIM.",
       ],
       {
         hero: [
@@ -418,16 +410,14 @@ export const MOON_ENEMIES: Record<string, EnemyDef> = {
         ],
       },
       [
-        "THE THING IN THE WRECK. IT",
-        "SINGS, YOU KNOW. SPACEZ HEARD",
-        "IT TOO - AND PLUGGED THEIR",
-        "MACHINES STRAIGHT INTO IT.",
+        "THE THING IN THE WRECK SINGS,",
+        "YOU KNOW. SPACEZ HEARD IT TOO -",
+        "AND PLUGGED THEIR MACHINES IN.",
       ],
       [
         "THAT WAS THEIR GREAT MISTAKE.",
         "IT SANG, AND THE GRAVES OPENED.",
-        "NOW THE COMPANY MEN CRATE UP",
-        "EVERYTHING AND RUN TO MARS.",
+        "NOW THEY CRATE UP FOR MARS.",
       ],
       {
         hero: [
@@ -438,9 +428,8 @@ export const MOON_ENEMIES: Record<string, EnemyDef> = {
       },
       [
         "SNEAKERS. LOUD. SHE BIT TWO OF",
-        "THEM. THEY PUT HER IN A CRATE",
-        "FOR THE MARS RUN, WITH",
-        "EVERYTHING ELSE THEY OWN.",
+        "THEM. THEY CRATED HER FOR THE",
+        "MARS RUN WITH ALL THEY OWN.",
       ],
       [
         "YOU WANT TO FOLLOW? THEN TAKE",

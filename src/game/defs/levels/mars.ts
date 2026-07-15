@@ -20,16 +20,14 @@ export const MARS: LevelDef = {
   music: "red_dust",
   intro: [
     [
-      "HE SAID THE MOON WAS SPACEZ'S",
-      "BIG MISTAKE - THAT THE COMPANY",
-      "PACKED EVERYTHING INTO CRATES",
-      "AND RAN. TO MARS.",
+      "HE SAID THE MOON WAS SPACEZ'S BIG",
+      "MISTAKE - THE COMPANY PACKED IT",
+      "ALL INTO CRATES AND RAN. TO MARS.",
     ],
     [
-      "I KNOW WHAT A SPACEZ COLONY",
-      "LOOKS LIKE - I REBUILT THEIR",
-      "LANDER ONCE. DOMES. ROBOTS.",
-      "SECRETS.",
+      "I KNOW WHAT A SPACEZ COLONY LOOKS",
+      "LIKE - I REBUILT THEIR LANDER ONCE.",
+      "DOMES. ROBOTS. SECRETS.",
     ],
     [
       "SOMEBODY DOWN HERE TRADED MY",

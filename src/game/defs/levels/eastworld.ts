@@ -27,15 +27,13 @@ export const EASTWORLD: LevelDef = {
   intro: [
     ["I STEPPED THROUGH THE", "RIFT'S FAR SIDE... AND", "LANDED IN A WESTERN."],
     [
-      "DUST. SALOONS. A ROBOT",
-      "TIPPED ITS HAT AT ME.",
-      "ADA'S BEACON IS SCREAMING",
-      "FROM THE BIG BUILDING EAST.",
+      "DUST. SALOONS. A ROBOT TIPPED ITS",
+      "HAT AT ME. ADA'S BEACON IS",
+      "SCREAMING FROM THE BIG BUILDING.",
     ],
     [
-      "THE SIGN SAYS 'EASTWORLD'.",
-      "THE FINE PRINT SAYS",
-      "'POWERED BY ZAI'.",
+      "THE SIGN SAYS 'EASTWORLD'. THE FINE",
+      "PRINT SAYS 'POWERED BY ZAI'.",
       "OF COURSE IT IS. OF COURSE.",
     ],
     [
@@ -49,18 +47,14 @@ export const EASTWORLD: LevelDef = {
   // (the victory quake shakes the park through the loot-grab window first).
   outro: [
     [
-      "THE SUPERCORE DIED, AND THE",
-      "WHOLE PARK SHOOK LIKE IT",
-      "MISSED A HEARTBEAT. EVERY",
-      "HOST TOOK OFF ITS HAT AND",
-      "SAT DOWN.",
+      "THE SUPERCORE DIED, AND THE WHOLE",
+      "PARK SHOOK LIKE A MISSED HEARTBEAT.",
+      "EVERY HOST TIPPED ITS HAT AND SAT.",
     ],
     [
-      "SHE WAS IN THE CONTROL ROOM,",
-      "BEHIND GLASS, FURIOUS. FIRST",
-      "THING SHE SAID: 'YOU TOOK",
-      "YOUR TIME.' SECOND: 'NICE",
-      "HAT.'",
+      "SHE WAS IN THE CONTROL ROOM, BEHIND",
+      "GLASS, FURIOUS. FIRST SHE SAID: 'YOU",
+      "TOOK YOUR TIME.' THEN: 'NICE HAT.'",
     ],
     [
       "WE WALKED HOME THROUGH THE",
@@ -68,17 +62,14 @@ export const EASTWORLD: LevelDef = {
       "RUSTED IN PEACE.",
     ],
     [
-      "WITH THE CORE GONE, THE",
-      "MACHINES STOPPED WORKING",
-      "EVERYONE'S JOBS. PEOPLE GOT",
-      "HIRED BACK. PAYCHECKS.",
-      "RENT PAID.",
+      "WITH THE CORE GONE, THE MACHINES",
+      "STOPPED WORKING EVERYONE'S JOBS.",
+      "PEOPLE GOT HIRED BACK. RENT PAID.",
     ],
     [
-      "THE WORLD TURNED INTO A",
-      "PLACE WHERE PEOPLE HAD",
-      "JOBS AND COULD AFFORD TO",
-      "LIVE. AND ON FRIDAY -",
+      "THE WORLD TURNED INTO A PLACE WHERE",
+      "PEOPLE HAD JOBS AND COULD AFFORD",
+      "TO LIVE. AND ON FRIDAY -",
     ],
     [
       "MOVIE NIGHT. CHIPS AND",
@@ -128,9 +119,8 @@ export const EASTWORLD: LevelDef = {
       ],
       [
         "I'VE COME INTO SOME... ESTATE",
-        "PIECES. THE OWNER'S OWN",
-        "WARDROBE. PRICES ARE FIRM.",
-        "BRING WATCHES.",
+        "PIECES. THE OWNER'S WARDROBE.",
+        "PRICES FIRM. BRING WATCHES.",
       ],
     ],
     returnGreeting: ["WELL, LOOK WHO'S BACK.", "SAME STOOL, PARTNER?"],
