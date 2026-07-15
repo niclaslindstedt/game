@@ -1314,11 +1314,15 @@ export const ARMOR = {
 } as const;
 
 /**
- * Stamina — the sprint pool. Running (a decisive push, throttle above
- * `runThreshold`) drains it; walking or standing still lets it recover.
- * While any stamina is left the player runs at full speed; once it hits zero
- * the top speed is capped at `emptySpeedFactor` until it recovers. The
- * STAMINA stat deepens the pool AND — matching "drains slower, regains
+ * Stamina — the sprint pool. Movement spends or refills it in proportion to
+ * PACE (the analogue movement throttle): a flat-out sprint burns the full
+ * `drainPerSec`, a walk (`walkThrottle`) trickles a little back, and the rates
+ * between ease linearly across the zero-crossing — so a precise touch/mouse
+ * push that hovers just under a run barely dips the pool, while a bang against
+ * the ring drains it outright. Standing still (not moving) always takes the
+ * full breather. While any stamina is left the player runs at full speed; once
+ * it hits zero the top speed is capped at `emptySpeedFactor` until it recovers.
+ * The STAMINA stat deepens the pool AND — matching "drains slower, regains
  * faster" — cuts the drain rate and quickens the regen. Units: stamina points
  * (pool), points/second (rates).
  */
@@ -1344,13 +1348,25 @@ export const STAMINA = {
   /** Each STAMINA point multiplies the regen by `1 + points·this` (regains faster). */
   regenPerPoint: 0.12,
   /**
-   * Regen multiplier while walking (moving below `runThreshold`). A walk still
-   * recovers stamina — it never drains — but only half as fast as standing
-   * still, so a stroll is a partial breather rather than a full one.
+   * Pace anchoring the WALK end of the proportional stamina curve: a moving
+   * hero at (or below) this throttle counts as walking and REGAINS stamina at
+   * `walkRateFactor` of `regenPerSec`. It's also the pace a held WALK /
+   * keyboard-walk steers at (see GameScreen `KEYBOARD_WALK_THROTTLE`).
    */
-  walkRegenFactor: 0.5,
-  /** Throttle above which movement counts as a run that drains stamina. */
-  runThreshold: 0.5,
+  walkThrottle: 0.5,
+  /**
+   * Signed stamina rate factor at `walkThrottle`: a positive fraction of
+   * `regenPerSec` REGAINED, so a walk still catches a little breath (+10%).
+   */
+  walkRateFactor: 0.1,
+  /**
+   * Signed stamina rate factor at full throttle: a negative fraction of
+   * `drainPerSec` SPENT, so a flat-out sprint burns the whole base drain
+   * (−100%). The curve runs linearly from `walkRateFactor` at `walkThrottle` to
+   * this at throttle 1, crossing zero just above the walk — so an analogue push
+   * tires the hero in proportion to his pace.
+   */
+  runRateFactor: -1,
   /** Top-speed multiplier once the pool is empty (a winded jog). */
   emptySpeedFactor: 0.5,
 } as const;
