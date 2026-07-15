@@ -32,6 +32,7 @@ import {
   menaceWarmup,
   mobHpScaleFor,
   mobLevelScale,
+  recruitCompanion,
   resetBalanceTuning,
   setBalanceTuning,
   skipCutscene,
@@ -805,7 +806,7 @@ describe("menace — powerups don't trigger it", () => {
     expect(state.menace).toBe(0);
   });
 
-  it("the hero's OWN weapon still escalates — the exemption is powerup-only", () => {
+  it("the hero's OWN weapon still escalates — the exemption spares only non-hero output", () => {
     // Same overkillable fodder, but felled by the hero's weapon rather than a
     // bomb: the meter and the lure both react, proving nothing global changed.
     const state = startGame();
@@ -823,6 +824,62 @@ describe("menace — powerups don't trigger it", () => {
     expect(state.stats.kills).toBe(1);
     expect(state.menace).toBeGreaterThan(0);
     expect(state.moveSpawnCredit).toBeGreaterThan(creditBefore);
+  });
+});
+
+describe("menace — companions don't trigger it", () => {
+  /** A warmed-up, bare stage with the hero's own weapon silenced, so the only
+   * combat output is the recruited companion's — the party carries the fight
+   * while the hero swings nothing. */
+  function partyStage(state: GameState): void {
+    bareStage(state);
+    state.player.level = 8; // past the warmup, so a real hero kill WOULD escalate
+    state.player.weaponCooldownMs = 1_000_000; // the hero swings nothing himself
+  }
+
+  it("a companion clears the pack without heating the meter", () => {
+    const state = startGame();
+    partyStage(state);
+    // Recruit the fixture companion (melee wrench) a short way off, with
+    // overkillable fodder pressed right against it so its blows land.
+    const companion = recruitCompanion(state, "test_companion", {
+      x: state.player.pos.x + 120,
+      y: state.player.pos.y,
+    });
+    state.events = [];
+    for (let i = 0; i < 4; i++) {
+      state.enemies.push(
+        makeEnemy(
+          {
+            pos: { x: companion.pos.x + 12 + i * 6, y: companion.pos.y },
+            hp: 10,
+            maxHp: 10,
+          },
+          "test_fodder",
+        ),
+      );
+    }
+    const creditBefore = state.moveSpawnCredit;
+    const killsExemptBefore = state.menaceExemptKills;
+
+    const fodderLeft = () =>
+      state.enemies.filter((e) => e.defId === "test_fodder").length;
+    for (let i = 0; i < 200 && fodderLeft() > 0; i++) step(state, idle, DT);
+
+    // The party did its job — the fodder is dead and the kills are booked.
+    expect(fodderLeft()).toBe(0);
+    expect(state.stats.kills).toBeGreaterThan(0);
+    // …yet the whole menace side stayed cold: no meter, no rolling fuel, no
+    // dinner-bell lure, no permanent-floor ratchet — a party carrying the
+    // fight is not the hero being overpowered.
+    expect(state.menace).toBe(0);
+    expect(state.combatDps).toBe(0);
+    expect(state.combatKillRate).toBe(0);
+    expect(state.moveSpawnCredit).toBe(creditBefore);
+    expect(state.menaceFloor).toBe(0);
+    expect(state.evoProof).toBe(0);
+    // The kills are netted straight out of the meter's kill-rate fuel.
+    expect(state.menaceExemptKills).toBeGreaterThan(killsExemptBefore);
   });
 });
 

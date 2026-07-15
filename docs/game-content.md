@@ -785,7 +785,11 @@ and chest piece only** — never legs or feet (tap its portrait under the HUD
 avatar for the Diablo-2-style equip screen). Companions are never killed:
 at 0 hp one goes DOWN, kneels out of the fight (its aura silent), and stands
 back up on its own. When its blow kills a mob it may float one of its
-`killQuotes` — hovering banter, never a dialogue pause.
+`killQuotes` — hovering banter, never a dialogue pause. A companion's damage
+and kills are booked into the run stats and pay the hero XP, but they are kept
+**out of the menace meter** (like a powerup's — see `menace.ts`): the RAMPAGE
+escalation answers an overpowered HERO, and a party carrying the fight is not
+the hero out-fighting the horde by hand.
 
 **LUCKY's aura** is the recruitment pitch: +50% MAGIC FIND for the whole
 party while he's on his feet — every loot-tier roll's chance is half again

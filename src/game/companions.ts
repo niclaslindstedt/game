@@ -512,6 +512,10 @@ function companionAttack(
         (eligible[i] as (typeof eligible)[number]).enemy,
         damage,
         weapon.class,
+        // A companion's blow is booked for the run but kept OUT of the menace
+        // meter: menace answers an overpowered HERO, and a party carrying the
+        // fight is not the hero being too strong (see `noMenace` in hitEnemy).
+        { noMenace: true },
       );
     }
     if (state.stats.kills > killsBefore) {
