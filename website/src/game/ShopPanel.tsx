@@ -48,11 +48,15 @@ function CoinPrice({
   sprites,
   amount,
   color = "#ffd75e",
+  scale = 2,
 }: {
   font: PixelFont;
   sprites: Sprites;
   amount: number;
   color?: string;
+  /** Glyph scale — the shop's readable body size (2) by default, so a price is
+   * never the smallest thing on the counter. */
+  scale?: number;
 }) {
   const coin = spriteDataUrl(sprites, "icon_coin");
   return (
@@ -61,7 +65,7 @@ function CoinPrice({
       <PixelText
         font={font}
         text={formatCompact(amount)}
-        scale={1}
+        scale={scale}
         color={color}
       />
     </span>
@@ -139,14 +143,14 @@ function BulkSellButton({
       <PixelText
         font={font}
         text={label}
-        scale={1}
+        scale={2}
         color={enabled ? "#e6e8eb" : "#5a6470"}
       />
       {enabled && (
         <PixelText
           font={font}
           text={formatCompact(total)}
-          scale={1}
+          scale={2}
           color="#ffd75e"
         />
       )}
@@ -186,14 +190,14 @@ function RepairButton({
       <PixelText
         font={font}
         text="REPAIR"
-        scale={1}
+        scale={2}
         color={enabled ? "#e6e8eb" : "#5a6470"}
       />
       {needsRepair && (
         <PixelText
           font={font}
           text={formatCompact(cost)}
-          scale={1}
+          scale={2}
           color={affordable ? "#ffd75e" : "#c65f5f"}
         />
       )}
@@ -303,7 +307,7 @@ export function ShopPanel({
           <PixelText
             font={font}
             text={merchantName(state.level.id)}
-            scale={2}
+            scale={3}
             color="#ffd75e"
           />
           <CoinPrice font={font} sprites={sprites} amount={player.coins} />
@@ -312,7 +316,7 @@ export function ShopPanel({
         {/* The stall: his goods, priced. Sold-out weapons stay visible but
             dark — the run remembers what it passed up. */}
         <div className="shop-section">
-          <PixelText font={font} text="FOR SALE" scale={2} color="#9aa3ad" />
+          <PixelText font={font} text="FOR SALE" scale={3} color="#9aa3ad" />
           <div className="shop-stall">
             {merchant.stock.map((entry) => {
               const icon = stockIcon(entry);
@@ -355,7 +359,7 @@ export function ShopPanel({
                     <PixelText
                       font={font}
                       text="SOLD"
-                      scale={1}
+                      scale={2}
                       color="#5a6470"
                     />
                   ) : (
@@ -375,7 +379,7 @@ export function ShopPanel({
         {/* The hero's bag: tap a piece to see what he pays for it. */}
         <div className="shop-section">
           <div className="inv-bag-header">
-            <PixelText font={font} text="YOUR BAG" scale={2} color="#9aa3ad" />
+            <PixelText font={font} text="YOUR BAG" scale={3} color="#9aa3ad" />
             <div className="shop-bag-actions">
               {/* SELL JUNK: only the outgrown pieces, one coin. */}
               <BulkSellButton
