@@ -278,6 +278,10 @@ export function createGame(
     evoRatchetMs: 0,
     combatDps: 0,
     combatKillRate: 0,
+    minionSpawnRate: 0,
+    minionKillRate: 0,
+    pendingMinionSpawns: 0,
+    pendingMinionKills: 0,
     menaceExemptDamage: 0,
     menaceExemptKills: 0,
     level: {

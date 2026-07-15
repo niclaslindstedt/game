@@ -241,6 +241,10 @@ export function stepEnemyMechanics(
         add.awake = true; // called to the fight, not to a nap
         state.enemies.push(add);
         mech.summons.push(add.id);
+        // Summoned adds swell the horde like a wave spawn — count them so a
+        // boss's endless summons hold the clearance gate shut (see tickMenace).
+        if (enemyDef(summon.defId).role === "minion")
+          state.pendingMinionSpawns++;
       }
       if (count > 0) {
         mech.summonCooldownMs = summon.cooldownMs;

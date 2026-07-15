@@ -1569,6 +1569,30 @@ export type GameState = {
    */
   combatKillRate: number;
   /**
+   * Rolling estimate of the horde's SPAWN rate — minions/sec appearing from the
+   * wave spawner and woken packs, an EMA smoothed over `MENACE.clearanceWindowSec`.
+   * Paired with `minionKillRate` to answer "is the screen getting MORE or LESS
+   * crowded" — the CLEARANCE GATE that decides whether the rolling menace heat is
+   * allowed to fire (`tickMenace`): output only heats the meter while the player
+   * out-clears the spawn rate. Starts at 0.
+   */
+  minionSpawnRate: number;
+  /**
+   * Rolling estimate of the player's minion KILL rate — minions/sec felled by the
+   * hero's own hand (powerup kills exempt, like `combatKillRate`), an EMA over the
+   * same window as `minionSpawnRate`. Net kills over the throughput is the
+   * clearance fraction the gate reads. Starts at 0.
+   */
+  minionKillRate: number;
+  /**
+   * This step's minion spawns and the hero's own minion kills, awaiting the next
+   * `tickMenace` fold into the rate EMAs above (consumed and zeroed there). The
+   * spawner runs AFTER the menace tick within a step, so a spawn is booked on the
+   * following tick — a one-frame lag the EMA smooths over. Both start at 0.
+   */
+  pendingMinionSpawns: number;
+  pendingMinionKills: number;
+  /**
    * Cumulative damage dealt by sources that are not the hero's own weapon —
    * powerups (the screen-nuke bomb, the fire orbs, the storm cell) and the
    * COMPANIONS' attacks. Booked alongside `stats.damageDealt` but kept out of

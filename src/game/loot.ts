@@ -612,6 +612,10 @@ export function killEnemy(
   // A powerup kill (nuke/orbs/storm) counts for the run but not for the menace
   // kill-rate heat — step() nets it out of what tickMenace reads.
   if (opts?.noMenace) state.menaceExemptKills++;
+  // A minion the HERO felled feeds the clearance gate (see tickMenace): the
+  // kill side of "is the horde thinning or filling?". Powerup kills are exempt,
+  // exactly as they are from the kill-rate heat, so a bomb never opens the gate.
+  else if (def.role === "minion") state.pendingMinionKills++;
   // The kill's XP reward, resolved once so the same figure both credits the
   // hero (grantXp below) and rides the event out to the app, which floats it
   // off the corpse as rising blue combat text (WoW's "+42" xp popup). The
