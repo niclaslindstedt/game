@@ -277,6 +277,16 @@ export type Equipment = {
    * from before snapshots existed (handled best-effort on load).
    */
   def?: WeaponDef | GearDef;
+  /**
+   * WEAPONS ONLY: the sequence number stamped when this weapon was booted from
+   * the hand because its durability ran out (see `wearEquippedWeapon`). A
+   * broken weapon is no longer trashed — it drops into the bag at durability 0
+   * (unequippable until repaired), and this monotonic marker records the ORDER
+   * the hand shed its weapons so a repair can re-equip them in that order
+   * (`repairAll`). Cleared the moment the weapon is mended back above zero.
+   * Absent on every weapon that hasn't broken out of the hand.
+   */
+  unequippedAt?: number;
 };
 
 /**
@@ -364,6 +374,15 @@ export type Player = {
    * sprint pool; carried between levels via the loadout.
    */
   staminaPotions: number;
+  /**
+   * Stacked weapon repair kits (capped at `CONSUMABLES.stackCap`). A touched
+   * kit now banks into the consumable dock rather than firing on contact;
+   * `useRepairKit` spends one on the player's call to mend the WHOLE kit — the
+   * held weapon, every weapon in the bag (waking any that broke), and the worn
+   * armor — then re-equips the weapons durability booted from the hand. Carried
+   * between levels via the loadout.
+   */
+  repairKits: number;
   /** True while the player moved this step; drives the walk animation. */
   moving: boolean;
   /** Remaining ms until the weapon may fire again. */
@@ -1171,6 +1190,10 @@ export type GameEvent =
   /** A stacked stamina potion was spent from the consumable dock — the sprint
    * pool is now full. Drives the fizz-and-lift chime. */
   | { type: "staminaPotionUsed" }
+  /** A stacked weapon repair kit was spent from the consumable dock — the held
+   * weapon, every bagged weapon, and the worn armor are mended, and any
+   * durability-booted weapon is back in rotation. Drives the toolbox chime. */
+  | { type: "repairKitUsed" }
   /** An ability pickup kicked in (or refreshed its timer). */
   | { type: "abilityStarted"; defId: string }
   | { type: "abilityEnded"; defId: string }
@@ -1322,6 +1345,13 @@ export type GameInput = {
    */
   useStaminaPotion?: boolean;
   /**
+   * True on the step the player asked to spend a stacked repair kit (the repair
+   * consumable-dock slot / its key). Mends the whole kit and re-equips any
+   * durability-booted weapons; a no-op with none held or nothing to mend
+   * (`useRepairKit`).
+   */
+  useRepairKit?: boolean;
+  /**
    * The world rect currently on screen (the camera view). When set, the
    * auto-weapon only targets monsters inside it — the character never
    * shoots at enemies the player cannot see yet. Absent (headless tests,
@@ -1375,6 +1405,9 @@ export type Loadout = {
   /** Stacked stamina potions (see `Player.staminaPotions`). Optional for the
    * same backward-compatibility reason. */
   staminaPotions?: number;
+  /** Stacked weapon repair kits (see `Player.repairKits`). Optional so
+   * loadouts banked before repair kits stacked load with none held. */
+  repairKits?: number;
   /** The purse — merchant coins ride along between levels. Optional so
    * loadouts banked before the economy shipped load as an empty purse. */
   coins?: number;

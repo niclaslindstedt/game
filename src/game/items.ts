@@ -835,6 +835,18 @@ export function isArmorBroken(piece: Equipment): boolean {
   );
 }
 
+/**
+ * True when this is a BROKEN weapon: its durability has hit zero, so it can no
+ * longer be wielded until a repair kit mends it. Unlike the old rule that
+ * TRASHED a spent weapon, a broken weapon now falls into the bag at durability
+ * 0 (see `wearEquippedWeapon`) and hangs there, unequippable, until repaired —
+ * `canEquip` refuses it and the on-break swap skips over it. The held weapon is
+ * never in this state (breaking boots it out the same tick).
+ */
+export function isWeaponBroken(piece: Equipment): boolean {
+  return piece.slot === "weapon" && piece.durability === 0;
+}
+
 /** The worn pieces whose bonuses/affixes actually apply right now — everything
  * equipped minus broken armor. Every derived-stat read routes through this so
  * a worn-out piece goes silent the moment it breaks. */
@@ -1165,6 +1177,29 @@ export function repairAll(state: GameState): boolean {
     recomputeMaxHp(state);
     recomputeMaxStamina(state);
   }
+  // Re-equip the weapons durability booted from the hand, in the ORDER they
+  // were shed: the earliest-shed (the hero's main before the break cascade)
+  // reclaims the hand and the rest stay in the bag as now-wieldable spares.
+  // Runs after the mend, so every booted weapon is equippable again.
+  const booted = [];
+  for (let i = 0; i < p.inventory.length; i++) {
+    const cell = p.inventory[i];
+    if (cell && cell.slot === "weapon" && cell.unequippedAt !== undefined) {
+      booted.push({ index: i, seq: cell.unequippedAt });
+    }
+  }
+  booted.sort((a, b) => a.seq - b.seq);
+  for (const { index } of booted) {
+    if (equipFromInventory(state, index)) break;
+  }
+  // The whole kit is whole again: drop every shed marker (worn weapon and every
+  // bagged weapon) so a later break starts the ordering fresh.
+  if (p.equipment.weapon.unequippedAt !== undefined) {
+    delete p.equipment.weapon.unequippedAt;
+  }
+  for (const cell of p.inventory) {
+    if (cell && cell.unequippedAt !== undefined) delete cell.unequippedAt;
+  }
   return mended;
 }
 
@@ -1211,6 +1246,34 @@ export function bankMedkit(
 export function bankStaminaPotion(state: GameState): boolean {
   if (state.player.staminaPotions >= CONSUMABLES.stackCap) return false;
   state.player.staminaPotions += 1;
+  return true;
+}
+
+/**
+ * Bank a weapon repair kit into the consumable dock. False (leave it grounded)
+ * when the stack is already full — so a hoarded kit never overflows and a
+ * touched kit waits in the pouch until the player spends it (`useRepairKit`)
+ * rather than firing on contact.
+ */
+export function bankRepairKit(state: GameState): boolean {
+  if (state.player.repairKits >= CONSUMABLES.stackCap) return false;
+  state.player.repairKits += 1;
+  return true;
+}
+
+/**
+ * Spend one stacked repair kit to mend the hero's WHOLE kit — the held weapon,
+ * every weapon in the bag (waking any that broke), and the worn armor — then
+ * re-equip the weapons durability booted from the hand, in the order they were
+ * shed (`repairAll`). A no-op — returns false, nothing consumed — with no kit
+ * held or nothing to mend (`repairAll` reports no change), so a mistap keeps the
+ * kit. Emits `repairKitUsed`.
+ */
+export function consumeRepairKit(state: GameState): boolean {
+  if (state.player.repairKits <= 0) return false;
+  if (!repairAll(state)) return false;
+  state.player.repairKits -= 1;
+  state.events.push({ type: "repairKitUsed" });
   return true;
 }
 
@@ -1948,6 +2011,9 @@ export function meetsStatReq(state: GameState, equipment: Equipment): boolean {
  * `levelReq` vs monster level; only the hero's hands are gated by attributes.
  */
 export function canEquip(state: GameState, equipment: Equipment): boolean {
+  // A weapon worn out to zero durability is unequippable until a repair kit
+  // mends it — it rides in the bag as a broken spare, never worn.
+  if (isWeaponBroken(equipment)) return false;
   return meetsLevelReq(state, equipment) && meetsStatReq(state, equipment);
 }
 
@@ -2422,11 +2488,75 @@ export function autoEquipUpgradeCount(state: GameState): number {
 // ---- Durability -------------------------------------------------------------------
 
 /**
+ * The next de-equip sequence number: one past the highest `unequippedAt` on
+ * any weapon the hero holds (worn or bagged), or 0 for the first break. Lets
+ * `wearEquippedWeapon` stamp broken weapons in the order the hand shed them so
+ * a repair can re-equip them in that order (`repairAll`) — see `Equipment.
+ * unequippedAt`.
+ */
+function nextUnequipSeq(state: GameState): number {
+  let max = -1;
+  const consider = (piece: Equipment | null): void => {
+    if (piece && piece.unequippedAt !== undefined && piece.unequippedAt > max) {
+      max = piece.unequippedAt;
+    }
+  };
+  consider(state.player.equipment.weapon);
+  for (const cell of state.player.inventory) consider(cell);
+  return max + 1;
+}
+
+/**
+ * Pull the best WIELDABLE weapon out of the bag and return it (removing it from
+ * its cell), or null when the bag holds none the hero can draw. "Wieldable"
+ * routes through `canEquip`, so an under-leveled, under-statted, or BROKEN
+ * (durability 0) bag weapon is passed over — a broken spare stays put until a
+ * repair kit wakes it. Ranked by the build-aware `weaponScore` so a STRENGTH
+ * hero draws the heavier melee and an INTELLIGENCE hero the stronger spell.
+ */
+function takeBestBagWeapon(state: GameState): Equipment | null {
+  const inv = state.player.inventory;
+  let bestIndex = -1;
+  let bestScore = -Infinity;
+  for (let i = 0; i < inv.length; i++) {
+    const item = inv[i];
+    if (!item || item.slot !== "weapon") continue;
+    if (!canEquip(state, item)) continue;
+    const score = weaponScore(state, item);
+    if (score > bestScore) {
+      bestScore = score;
+      bestIndex = i;
+    }
+  }
+  if (bestIndex < 0) return null;
+  const weapon = inv[bestIndex] as Equipment;
+  inv[bestIndex] = null;
+  return weapon;
+}
+
+/** A fresh, unbreakable sidearm — the last-resort weapon drawn when the bag
+ * holds nothing wieldable, so the weapon slot honors its never-empty contract. */
+function drawSidearm(state: GameState): Equipment {
+  return {
+    id: state.nextId++,
+    defId: "blaster",
+    slot: "weapon",
+    tier: "regular",
+    ilvl: 1,
+    affixes: [],
+  };
+}
+
+/**
  * Spend one attack's worth of the equipped weapon's durability. At zero the
- * weapon is trashed (never returned to the bag) and the best surviving
- * weapon left in the bag — highest DPS with durability remaining — takes
- * its place. With an empty bag the player draws a fresh sidearm, so the
- * weapon slot honors its never-empty contract.
+ * weapon is NOT destroyed — it drops into the bag at durability 0, unequippable
+ * until a repair kit mends it (`isWeaponBroken`), stamped with the order the
+ * hand shed it (`unequippedAt`) so a repair re-equips in that order. In its
+ * place the hero draws the BEST wieldable weapon left in the bag (never the
+ * broken one just shed); only with nothing wieldable does he fall back to a
+ * fresh sidearm — so a good weapon is preferred over the starter blaster. A
+ * bag too full to hold the broken weapon drops it on the ground rather than
+ * destroying it.
  */
 export function wearEquippedWeapon(state: GameState): void {
   const player = state.player;
@@ -2437,42 +2567,22 @@ export function wearEquippedWeapon(state: GameState): void {
 
   state.events.push({ type: "weaponBroke", defId: weapon.defId });
 
-  // Bag weapons only wear while equipped, so any weapon found here still
-  // has durability — but guard anyway so a broken one is trashed, not worn.
-  let bestIndex = -1;
-  let bestScore = -Infinity;
-  for (let i = 0; i < player.inventory.length; i++) {
-    const item = player.inventory[i];
-    if (!item || item.slot !== "weapon") continue;
-    if (item.durability !== undefined && item.durability <= 0) {
-      player.inventory[i] = null;
-      continue;
-    }
-    // A banked find the hero hasn't grown into — in level or attribute —
-    // can't be drawn yet.
-    if (!canEquip(state, item)) continue;
-    const score = weaponScore(state, item);
-    if (score > bestScore) {
-      bestScore = score;
-      bestIndex = i;
-    }
-  }
-
-  if (bestIndex >= 0) {
-    const next = player.inventory[bestIndex] as Equipment;
-    player.inventory[bestIndex] = null;
-    player.equipment.weapon = next;
-  } else {
-    // The holster is never empty: draw a plain, unbreakable sidearm.
-    player.equipment.weapon = {
+  // Stamp the shed order BEFORE picking the replacement, then choose the best
+  // survivor from the bag (the just-broken blade is excluded — it isn't in the
+  // bag yet, and `canEquip` would refuse it anyway).
+  weapon.unequippedAt = nextUnequipSeq(state);
+  const replacement = takeBestBagWeapon(state);
+  // Stow the broken weapon so it can be repaired later; a full bag drops it on
+  // the ground rather than letting it vanish — a broken weapon is never lost.
+  if (!addToInventory(state, weapon)) {
+    state.items.push({
       id: state.nextId++,
-      defId: "blaster",
-      slot: "weapon",
-      tier: "regular",
-      ilvl: 1,
-      affixes: [],
-    };
+      kind: "equipment",
+      pos: { ...player.pos },
+      equipment: weapon,
+    });
   }
+  player.equipment.weapon = replacement ?? drawSidearm(state);
   player.weaponCooldownMs = 0;
   state.events.push({
     type: "autoEquipped",

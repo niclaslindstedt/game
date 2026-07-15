@@ -134,11 +134,13 @@ describe("loadout carry-over", () => {
   it("round-trips: extractLoadout of one run seeds the next", () => {
     const first = createGame(SEED, "test_level", "medium", sampleLoadout());
     first.player.xp = 12; // some progress made during the run
+    first.player.repairKits = 3; // a hoarded stack of repair kits
     const carried = extractLoadout(first);
     const next = createGame(SEED + 1, "test_level_2", "medium", carried);
     expect(next.player.level).toBe(first.player.level);
     expect(next.player.stats).toEqual(first.player.stats);
     expect(next.player.xp).toBe(12);
+    expect(next.player.repairKits).toBe(3); // the stack rides along
     expect(next.player.equipment.weapon.defId).toBe(
       first.player.equipment.weapon.defId,
     );

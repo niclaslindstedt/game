@@ -82,6 +82,7 @@ import {
   effectiveStat,
   enemyCritChance,
   bankMedkit,
+  bankRepairKit,
   bankStaminaPotion,
   consumeMedkit,
   consumeStaminaPotion,
@@ -94,8 +95,7 @@ import {
   playerSpeed,
   recomputeMaxHp,
   recomputeMaxStamina,
-  repairEquippedWeapon,
-  repairWornArmor,
+  consumeRepairKit,
   syncInventoryCapacity,
   weaponCooldownFor,
   weaponCritMult,
@@ -898,14 +898,17 @@ function stepUseItem(state: GameState, input: GameInput): void {
 }
 
 /**
- * Spend a stacked consumable on the player's input edge: `useMedkit` heals
- * with the best-quality kit held, `useStaminaPotion` refills the sprint pool.
- * Both are quiet no-ops when nothing is held or there is nothing to top up
- * (see consumeMedkit / consumeStaminaPotion), so a mistap never wastes a kit.
+ * Spend a stacked consumable on the player's input edge: `useMedkit` heals with
+ * the best-quality kit held, `useStaminaPotion` refills the sprint pool, and
+ * `useRepairKit` mends the whole kit (and re-equips durability-booted weapons).
+ * All three are quiet no-ops when nothing is held or there is nothing to top up
+ * (see consumeMedkit / consumeStaminaPotion / consumeRepairKit), so a mistap
+ * never wastes a kit.
  */
 function stepUseConsumables(state: GameState, input: GameInput): void {
   if (input.useMedkit) consumeMedkit(state);
   if (input.useStaminaPotion) consumeStaminaPotion(state);
+  if (input.useRepairKit) consumeRepairKit(state);
 }
 
 /**
@@ -2092,13 +2095,12 @@ function stepItems(state: GameState, dtMs: number): void {
       return false;
     }
 
-    // Repair kits mend the equipped weapon and every worn armor piece —
-    // waking any broken piece back up. With nothing short they stay on the
-    // ground for when something has actually taken a beating.
+    // Repair kits now STASH into the consumable dock (stacking, capped at
+    // CONSUMABLES.stackCap) rather than firing on contact — the hero spends one
+    // on his own call (useRepairKit) to mend the whole kit. A full stack turns
+    // the kit away: it stays on the ground.
     if (item.kind === "repair") {
-      const mended = repairEquippedWeapon(state);
-      const rearmored = repairWornArmor(state);
-      if (!mended && !rearmored) return true;
+      if (!bankRepairKit(state)) return true;
       state.stats.itemsCollected++;
       state.events.push({
         type: "itemCollected",

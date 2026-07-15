@@ -67,9 +67,9 @@ shipped 1× across the board.
 Desktop keyboard controls (when **Keys** is set to WASD): the shipped scheme is
 **WASD** steer, **Shift** walks, **Space** jumps, **Q** opens the weapon
 switcher (then **1-4** equip a weapon), **E** spends the oldest powerup, **C**
-uses a medkit and **X** drinks a stamina potion from the consumable dock, **I**
-toggles the bag, **M** the level map, and **P** pauses. **1/2/3** also fire the
-powerup dock slots (a fixed contextual range).
+uses a medkit, **X** drinks a stamina potion, and **V** spends a repair kit from
+the consumable dock, **I** toggles the bag, **M** the level map, and **P**
+pauses. **1/2/3** also fire the powerup dock slots (a fixed contextual range).
 Every one of those controls is **rebindable in Controls → Key Bindings** — a
 Quake-style list (action label left, bound key far right): choose a row, then
 press the keyboard key or mouse button to bind it (a rebind steals the key off
@@ -183,11 +183,18 @@ health or worn-down gear makes medkits, armor pieces, and repair kits rain
 harder, and a hero stranded with a bone-dry sprint pool (stamina at exactly 0,
 not merely low) is thrown STAMINA POTIONS — a per-kill chance that ramps with the
 time spent winded up to 15% on EASY, tapering down the ladder to zero on
-JESUS. Medkits and stamina potions no longer fire on contact: touching one
-banks it into the **consumable dock** (a medkit slot and a stamina slot above
-the powerups), stacked 5 deep — medkits per quality — and the hero spends them
-on his own call (tap the slot, or **C** / **X** on desktop), medkits
-biggest-heal-first, never wasting one at a full bar. Each signal keeps at most ONE rope on the ground: while the
+JESUS. Medkits, stamina potions, and repair kits no longer fire on contact:
+touching one banks it into the **consumable dock** (a medkit slot, a stamina
+slot, and a repair slot above the powerups), stacked 5 deep — medkits per
+quality — and the hero spends them on his own call (tap the slot, or **C** /
+**X** / **V** on desktop), medkits biggest-heal-first, never wasting one at a
+full bar. A repair kit mends the WHOLE arsenal at once — the held weapon and
+every weapon in the bag — and a weapon worn down to zero durability is no longer
+destroyed: it falls into the bag as a broken, unequippable spare (the hero draws
+the best remaining weapon instead of defaulting to the starter sidearm), waiting
+for a repair kit to wake it. Spending one restores the weapons it booted from
+the hand in the order they were shed, so the hero's main blade comes back to
+hand. Each signal keeps at most ONE rope on the ground: while the
 rescue it answers with (a medkit, repair kit, drink, screen-nuke, or armor
 piece) already lies un-collected within `MERCY.rescueRadius` of the hero, that
 signal holds fire — picking it up (or leaving it behind out of view) re-arms

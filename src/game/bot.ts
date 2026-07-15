@@ -13,7 +13,13 @@ import { clamp, distance } from "@game/lib/vec.ts";
 import type { Vec2 } from "@game/lib/vec.ts";
 import { enemyDef } from "./defs/enemies/index.ts";
 import { weaponDef } from "./defs/equipment.ts";
-import { bestMedkitTier, DAMAGE_STAT, REQ_STAT } from "./items.ts";
+import {
+  bestMedkitTier,
+  DAMAGE_STAT,
+  equipmentMaxDurability,
+  isWeaponBroken,
+  REQ_STAT,
+} from "./items.ts";
 import type {
   Enemy,
   GameInput,
@@ -133,7 +139,29 @@ export function botAct(bot: Bot, state: GameState): GameInput {
     player.staminaPotions > 0 &&
     (player.stamina <= 0 ||
       (threatNear && player.stamina < player.maxStamina * STAMINA_TOPUP_FRAC));
+  // Spend a repair kit once a weapon has actually broken out of the hand (a
+  // durability-0 spare sits in the bag) or the held blade is nearly spent — it
+  // mends the whole kit and restores the shed weapon (useRepairKit no-ops with
+  // nothing to mend, so a mistap is free).
+  decided.useRepairKit = player.repairKits > 0 && needsRepair(state);
   return decided;
+}
+
+/** Below this fraction of its max durability the held weapon is "nearly spent"
+ * — worth a repair before it breaks mid-fight. */
+const REPAIR_DURABILITY_FRAC = 0.2;
+
+/** Is there anything a repair kit would meaningfully mend right now — a broken
+ * weapon shed into the bag, or a held weapon worn down near breaking? */
+function needsRepair(state: GameState): boolean {
+  const bagBroken = state.player.inventory.some(
+    (cell) => cell !== null && isWeaponBroken(cell),
+  );
+  if (bagBroken) return true;
+  const weapon = state.player.equipment.weapon;
+  if (weapon.durability === undefined) return false; // unbreakable sidearm
+  const max = equipmentMaxDurability(weapon);
+  return max > 0 && weapon.durability <= max * REPAIR_DURABILITY_FRAC;
 }
 
 /**

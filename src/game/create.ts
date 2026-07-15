@@ -338,9 +338,11 @@ export function createGame(
       // tick (`syncItemSpells`) — nothing to seed here.
       itemSpells: [],
       heldAbilities: [],
-      // One empty medkit stack per quality; stamina potions share one stack.
+      // One empty medkit stack per quality; stamina potions and repair kits
+      // each share one stack.
       medkits: new Array<number>(MEDKIT.tiers.length).fill(0),
       staminaPotions: 0,
+      repairKits: 0,
       moving: false,
       weaponCooldownMs: 0,
       // Levels with a scripted opening strike (SpaceZ HQ) start the hero with

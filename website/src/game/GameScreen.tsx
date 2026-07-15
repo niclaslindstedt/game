@@ -48,6 +48,7 @@ import {
   equipmentIcon,
   itemLevelReq,
   extractLoadout,
+  isWeaponBroken,
   isWeaponDef,
   LEVELS,
   levelDef,
@@ -115,6 +116,8 @@ import { synth } from "./audio.ts";
 import {
   medkitColorFor,
   medkitIconFor,
+  REPAIR_KIT_COLOR,
+  REPAIR_KIT_ICON,
   STAMINA_POTION_COLOR,
   STAMINA_POTION_ICON,
 } from "./consumables.ts";
@@ -234,6 +237,8 @@ type Hud = {
   medkitCount: number;
   /** Stacked stamina potions held — the consumable dock's stamina slot count. */
   staminaPotions: number;
+  /** Stacked weapon repair kits held — the consumable dock's repair slot count. */
+  repairKits: number;
   /** Equipped weapon def id — drives the always-on weapon widget. */
   weaponDefId: string;
   /** Equipped weapon's durability 0..1, or null for the unbreakable sidearm. */
@@ -436,7 +441,14 @@ function weaponAlternatives(
 ): { item: Equipment; index: number; dmg: number }[] {
   return state.player.inventory
     .map((item, index) => ({ item, index }))
-    .filter((e) => e.item !== null && isWeaponDef(e.item.defId))
+    .filter(
+      (e) =>
+        e.item !== null &&
+        isWeaponDef(e.item.defId) &&
+        // A broken weapon (durability 0) can't be switched to until it's
+        // repaired — the engine refuses the equip, so hide it from the switcher.
+        !isWeaponBroken(e.item),
+    )
     .map((e) => ({
       item: e.item as Equipment,
       index: e.index,
@@ -586,10 +598,11 @@ export function GameScreen({
   const powerupDockRef = useRef<HTMLDivElement>(null);
   const jumpQueuedRef = useRef(false);
   const useItemQueuedRef = useRef(false);
-  // The consumable dock: a medkit / stamina-potion use queued this frame (a
-  // slot tap or its bindable key), spent on the next sim tick.
+  // The consumable dock: a medkit / stamina-potion / repair-kit use queued this
+  // frame (a slot tap or its bindable key), spent on the next sim tick.
   const useMedkitQueuedRef = useRef(false);
   const useStaminaQueuedRef = useRef(false);
+  const useRepairQueuedRef = useRef(false);
   // Where the last tap/click landed (CSS px on the canvas): the sim loop
   // checks it against the discovered merchant — a tap on him at the counter
   // opens the shop instead of jumping.
@@ -1154,6 +1167,10 @@ export function GameScreen({
           if (state.phase === "playing" && !weaponMenuOpenRef.current)
             useStaminaQueuedRef.current = true;
           return;
+        case "repair":
+          if (state.phase === "playing" && !weaponMenuOpenRef.current)
+            useRepairQueuedRef.current = true;
+          return;
       }
     };
 
@@ -1461,10 +1478,11 @@ export function GameScreen({
           input.jump = decided.jump;
           input.useItem = decided.useItem ?? false;
           // The bot spends stacked consumables on its own read of the state
-          // (botAct: medkit under half hp, drink when winded) — wire them
-          // through so autoplay actually heals instead of hoarding kits.
+          // (botAct: medkit under half hp, drink when winded, repair a broken
+          // weapon) — wire them through so autoplay actually spends them.
           input.useMedkit = decided.useMedkit ?? false;
           input.useStaminaPotion = decided.useStaminaPotion ?? false;
+          input.useRepairKit = decided.useRepairKit ?? false;
           input.useItemIndex = undefined;
           input.aim = undefined;
         } else {
@@ -1560,13 +1578,15 @@ export function GameScreen({
           input.useItemIndex = useItemIndexRef.current ?? undefined;
           useItemQueuedRef.current = false;
           useItemIndexRef.current = null;
-          // Stacked consumables: a queued medkit / stamina-potion use fires
-          // this tick (the engine no-ops when there's nothing to spend or top
-          // up, so a stray edge is harmless).
+          // Stacked consumables: a queued medkit / stamina-potion / repair-kit
+          // use fires this tick (the engine no-ops when there's nothing to
+          // spend or mend, so a stray edge is harmless).
           input.useMedkit = useMedkitQueuedRef.current;
           input.useStaminaPotion = useStaminaQueuedRef.current;
+          input.useRepairKit = useRepairQueuedRef.current;
           useMedkitQueuedRef.current = false;
           useStaminaQueuedRef.current = false;
+          useRepairQueuedRef.current = false;
         }
         // A tap that lands on the DISCOVERED merchant (and the hero close
         // enough to trade — openShop checks the counter distance) opens the
@@ -2122,6 +2142,10 @@ export function GameScreen({
           if (event.type === "gearRepaired") {
             pushPickup(`REPAIRED - ${event.paid} COIN`, "#ffd75e");
           }
+          // Spent a repair kit from the dock — the whole kit is mended.
+          if (event.type === "repairKitUsed") {
+            pushPickup("WEAPONS REPAIRED", "#d98c40");
+          }
           // A placed pack wiped out: toast the patch of ground as cleared —
           // the movement reward. The ambush and clear chimes ride the sfx bus.
           if (event.type === "packCleared") {
@@ -2429,12 +2453,13 @@ export function GameScreen({
           .sort((a, b) => a - b)
           .join(",");
         // The consumable dock: the best-quality medkit held (and its stack
-        // depth) plus the stamina-potion count. Both feed the change-key so the
-        // two slots re-render as kits are grabbed and spent.
+        // depth), the stamina-potion count, and the repair-kit count. All feed
+        // the change-key so the slots re-render as kits are grabbed and spent.
         const medkitTier = bestMedkitTier(state);
         const medkitCount =
           medkitTier >= 0 ? (state.player.medkits[medkitTier] ?? 0) : 0;
         const staminaPotions = state.player.staminaPotions;
+        const repairKits = state.player.repairKits;
         const weapon = state.player.equipment.weapon;
         const weaponWear =
           weapon.durability === undefined
@@ -2459,7 +2484,7 @@ export function GameScreen({
         // The prelude scene's id is part of the key: a chained prelude swaps
         // `state.cutscene` for the next scene with nothing else changing, and
         // the overlay only receives the fresh scene if this re-renders.
-        const key = `${state.phase}/${state.cutscene?.defId ?? ""}/${state.player.hp}/${Math.ceil(state.player.stamina)}/${state.player.xp}/${state.player.level}/${state.player.pendingStatPoints}/${state.enemies.length}/${bagCount}/${bagFree}/${bagFullHint ? 1 : 0}/${held}/${active}/${medkitTier}:${medkitCount}/${staminaPotions}/${weapon.defId}/${weaponWear?.toFixed(2) ?? ""}/${state.player.coins}/${appearance}/${outfit}/${stage}/${party}/${state.stats.kills}/${Math.floor(state.stats.combatMs / 1000)}`;
+        const key = `${state.phase}/${state.cutscene?.defId ?? ""}/${state.player.hp}/${Math.ceil(state.player.stamina)}/${state.player.xp}/${state.player.level}/${state.player.pendingStatPoints}/${state.enemies.length}/${bagCount}/${bagFree}/${bagFullHint ? 1 : 0}/${held}/${active}/${medkitTier}:${medkitCount}/${staminaPotions}/${repairKits}/${weapon.defId}/${weaponWear?.toFixed(2) ?? ""}/${state.player.coins}/${appearance}/${outfit}/${stage}/${party}/${state.stats.kills}/${Math.floor(state.stats.combatMs / 1000)}`;
         if (key !== lastHud) {
           lastHud = key;
           setHud({
@@ -2482,6 +2507,7 @@ export function GameScreen({
             medkitTier,
             medkitCount,
             staminaPotions,
+            repairKits,
             weaponDefId: weapon.defId,
             weaponWear,
             coins: state.player.coins,
@@ -3036,13 +3062,15 @@ export function GameScreen({
         </div>
       )}
 
-      {/* The consumable dock: two slots the same width as the powerup slots,
+      {/* The consumable dock: three slots the same width as the powerup slots,
           sitting just ABOVE them in the same corner. The medkit slot shows the
           best quality the hero holds (quality-tinted ring + count); the stamina
-          slot shows the potion count. Tapping a slot (or its bindable key, C /
-          X on desktop) spends one — the engine no-ops at a full bar so a mistap
-          never wastes a kit. The tap area runs well past the slot art (a padded
-          hit region) so the small icons are still easy to hit on a phone. */}
+          slot shows the potion count; the repair slot shows the repair-kit
+          count. Tapping a slot (or its bindable key, C / X / V on desktop)
+          spends one — the engine no-ops when there's nothing to spend or mend so
+          a mistap never wastes a kit. The tap area runs well past the slot art
+          (a padded hit region) so the small icons are still easy to hit on a
+          phone. */}
       {hud?.phase === "playing" && (
         <div className={`consumable-dock dock-${powerupSide}`}>
           <button
@@ -3138,6 +3166,50 @@ export function GameScreen({
                 <PixelText
                   font={font}
                   text={bindingLabel(getSettings().keybindings.stamina)}
+                  scale={1}
+                  color="#0b0d10"
+                />
+              </span>
+            )}
+          </button>
+          <button
+            type="button"
+            className={`consumable-slot${hud.repairKits > 0 ? " filled" : ""}`}
+            style={
+              hud.repairKits > 0
+                ? ({ "--slot-accent": REPAIR_KIT_COLOR } as CSSProperties)
+                : undefined
+            }
+            aria-label={
+              hud.repairKits > 0 ? "use-repair-kit" : "repair-slot-empty"
+            }
+            disabled={hud.repairKits === 0}
+            onPointerDown={() => {
+              useRepairQueuedRef.current = true;
+            }}
+          >
+            {hud.repairKits > 0 && (
+              <img
+                src={spriteDataUrl(assets.sprites, REPAIR_KIT_ICON) ?? ""}
+                alt=""
+                className="pixel-img consumable-icon"
+              />
+            )}
+            {hud.repairKits > 0 && (
+              <span className="consumable-count">
+                <PixelText
+                  font={font}
+                  text={String(hud.repairKits)}
+                  scale={2}
+                  color="#f4f4f4"
+                />
+              </span>
+            )}
+            {keyHints && (
+              <span className="slot-key consumable-key">
+                <PixelText
+                  font={font}
+                  text={bindingLabel(getSettings().keybindings.repair)}
                   scale={1}
                   color="#0b0d10"
                 />

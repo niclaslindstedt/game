@@ -483,11 +483,15 @@ run against synthetic fixtures with no shipped content (see
   monsters it faces), the auto-equip scoring (`weaponScore` DPS /
   `gearScore`) and the crit-inclusive `weaponDps` the item cards lead with,
   and the durability cycle
-  (`wearEquippedWeapon` — a broken weapon is trashed and the best bag
-  weapon takes over; `wearWornArmor` — armor spends a point per landed hit
-  and a piece at zero goes INACTIVE (`isArmorBroken`), never trashed — and
-  `repairEquippedWeapon` + `repairWornArmor` for repair-kit drops, which
-  mend the weapon's edge and the whole wardrobe together). Worn armor sums
+  (`wearEquippedWeapon` — a weapon worn to zero is NOT trashed: it falls into
+  the bag as a broken, unequippable spare (`isWeaponBroken`) and the best
+  wieldable bag weapon takes over, never defaulting to the sidearm while a good
+  weapon remains; `wearWornArmor` — armor spends a point per landed hit
+  and a piece at zero goes INACTIVE (`isArmorBroken`), never trashed — and the
+  stacked repair kit (`consumeRepairKit` → `repairAll`), banked into the
+  consumable dock like a medkit and spent on the player's call to mend the whole
+  kit (held weapon, every bag weapon, all worn armor) and re-equip the weapons
+  durability booted from the hand in shed order). Worn armor sums
   into a level-scaled physical reduction (`totalArmor`/`armorReduction`,
   config `ARMOR` — the D2/WoW diminishing-returns curve). Every drop is minted with a FROZEN snapshot of its
   catalog def (`Equipment.def`), so a kept item is version-proof: rebalancing

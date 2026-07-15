@@ -42,3 +42,9 @@ export const STAMINA_POTION_ICON = "drink";
 
 /** The stamina slot's accent — the drink's energetic green. */
 export const STAMINA_POTION_COLOR = "#5fd97a";
+
+/** The weapon repair-kit sprite — the same toolbox the ground drop shows. */
+export const REPAIR_KIT_ICON = "repair";
+
+/** The repair slot's accent — a toolbox bronze/amber. */
+export const REPAIR_KIT_COLOR = "#d98c40";
