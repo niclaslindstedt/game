@@ -12,6 +12,16 @@ import type { EnemyDef } from "./types.ts";
 // self-selects level-appropriate pieces). SENTINEL'S GREAVES (ilvl 43) sits a
 // full tier above where you first reach ARMSTRONG, so it lives on the NIGHTMARE
 // rung where its ilvl matches. nightmare/jesus keep their own.
+// THE SENTINEL'S VIGIL — ARMSTRONG's melee endurance SET (see defs/sets.ts):
+// four armor pieces plus the signature blade THE FALLEN STANDARD. The campaign
+// rungs drop the two low pieces; the endgame rungs open the whole set + the
+// signature so a nightmare/jesus ARMSTRONG farm completes it.
+const SENTINELS_VIGIL = [
+  "the_long_vigil",
+  "palegrave",
+  "sentinels_greaves",
+  "marewalkers",
+];
 const ARMSTRONG_EARLY = ["the_long_vigil", "palegrave"];
 
 export const MOON_ENEMIES: Record<string, EnemyDef> = {
@@ -475,8 +485,8 @@ export const MOON_ENEMIES: Record<string, EnemyDef> = {
       easy: ARMSTRONG_EARLY,
       medium: ARMSTRONG_EARLY,
       hard: ARMSTRONG_EARLY,
-      nightmare: ["marewalkers", "sentinels_greaves"],
-      jesus: ["the_fallen_standard"],
+      nightmare: SENTINELS_VIGIL,
+      jesus: [...SENTINELS_VIGIL, "the_fallen_standard"],
     },
   },
 };

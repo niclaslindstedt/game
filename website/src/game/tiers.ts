@@ -12,6 +12,8 @@ export const TIER_COLORS: Record<Tier, string> = {
   regular: "#e6e8eb",
   magic: "#4da6ff",
   rare: "#ffe14d",
+  // The Diablo GREEN: a boss SET piece, between rare and unique.
+  set: "#4ade80",
   // The Diablo palette: gold uniques, orange legendaries — and, above them,
   // the searing red-white of an ARTIFACT (the super-epic level-99 chase).
   unique: "#c7a25a",
@@ -29,20 +31,25 @@ export const TIER_COLORS: Record<Tier, string> = {
 export const TIER_LABELS: Partial<Record<Tier, string>> = {
   magic: "MAGIC ITEM",
   rare: "RARE ITEM",
+  set: "SET ITEM",
   unique: "UNIQUE ITEM",
   legendary: "LEGENDARY ITEM",
   artifact: "ARTIFACT",
 };
 
 /**
- * The hand-authored named drops (unique/legendary) SHINE: a `tier-unique` /
- * `tier-legendary` class (styles.css) puts a steady halo on any `.inv-cell`
- * grid cell and the item tooltip, and a matching drop-shadow on the card's
- * name — so a unique reads as unique before the tooltip is even raised.
- * Returns "" for the rolled tiers, so callers can append unconditionally.
+ * The hand-authored named drops (set/unique/legendary/artifact) SHINE: a
+ * `tier-set` / `tier-unique` / `tier-legendary` / `tier-artifact` class
+ * (styles.css) puts a steady halo on any `.inv-cell` grid cell and the item
+ * tooltip, and a matching drop-shadow on the card's name — so a green set
+ * piece reads as special before the tooltip is even raised. Returns "" for the
+ * rolled tiers, so callers can append unconditionally.
  */
 export function tierGlowClass(tier: Tier): string {
-  return tier === "unique" || tier === "legendary" || tier === "artifact"
+  return tier === "set" ||
+    tier === "unique" ||
+    tier === "legendary" ||
+    tier === "artifact"
     ? ` tier-${tier}`
     : "";
 }

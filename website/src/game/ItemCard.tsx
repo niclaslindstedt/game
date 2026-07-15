@@ -41,6 +41,9 @@ import {
   weaponDef,
   weaponDps,
   weaponRangeFor,
+  setForItem,
+  uniqueDef,
+  wornSetCount,
   type Affix,
   type Equipment,
   type GameState,
@@ -436,6 +439,77 @@ export function ItemIcon({
   );
 }
 
+/** Green when a set threshold is met (or a member is worn), dim green-grey when
+ * it isn't — the D2 set-tooltip read: what you have vs what you're chasing. */
+const SET_ACTIVE = "#4ade80";
+const SET_INACTIVE = "#5b6b60";
+
+/**
+ * The SET block on a green piece's card: the set name with worn/total count,
+ * the member checklist (worn pieces green, missing ones dim), and each bonus
+ * threshold's lines — active (enough pieces worn) in green, latent in dim. Reads
+ * `wornSetCount` (broken pieces excluded, like the engine's `setBonusAffixes`)
+ * so the card and the actual bonus never disagree. Renders nothing for a piece
+ * that isn't a set member.
+ */
+function SetBlock({
+  font,
+  state,
+  uniqueId,
+  lineScale,
+  maxWidth,
+}: {
+  font: PixelFont;
+  state: GameState;
+  uniqueId: string;
+  lineScale: number;
+  maxWidth?: number;
+}) {
+  const set = setForItem(uniqueId);
+  if (!set) return null;
+  const worn = wornSetCount(state, set.id);
+  const equipment = state.player.equipment;
+  const wornIds = new Set<string>();
+  for (const slot of ["head", "chest", "legs", "feet"] as const) {
+    const piece = equipment[slot];
+    if (piece?.uniqueId) wornIds.add(piece.uniqueId);
+  }
+  return (
+    <div className="item-card-set">
+      <PixelText
+        font={font}
+        text={`SET: ${set.name}  ${worn}/${set.members.length}`}
+        scale={lineScale}
+        color={SET_ACTIVE}
+        className="tier-set"
+        maxWidth={maxWidth}
+      />
+      {set.members.map((id) => (
+        <PixelText
+          key={id}
+          font={font}
+          text={`- ${uniqueDef(id).name}`}
+          scale={lineScale}
+          color={wornIds.has(id) ? SET_ACTIVE : SET_INACTIVE}
+          maxWidth={maxWidth}
+        />
+      ))}
+      {set.bonuses.flatMap((tier) =>
+        tier.bonuses.map((affix, j) => (
+          <PixelText
+            key={`${tier.pieces}-${j}`}
+            font={font}
+            text={`(${tier.pieces}) ${affixLine(affix)}`}
+            scale={lineScale}
+            color={worn >= tier.pieces ? SET_ACTIVE : SET_INACTIVE}
+            maxWidth={maxWidth}
+          />
+        )),
+      )}
+    </div>
+  );
+}
+
 /**
  * The card's CONTENT: the weapon-class glyph + tier-colored name, the
  * stat/affix lines, the rolled affixes, and the foot row (tier callout +
@@ -592,6 +666,15 @@ export function ItemCardBody({
           maxWidth={maxWidth}
         />
       ))}
+      {item.uniqueId && (
+        <SetBlock
+          font={font}
+          state={state}
+          uniqueId={item.uniqueId}
+          lineScale={lineScale}
+          maxWidth={maxWidth}
+        />
+      )}
       {/* The card's foot: the quality tier spelled out in the tier color on
           the left — the explicit answer to "is this rare or unique?" that
           the name color alone can't give (plain finds carry no label, see

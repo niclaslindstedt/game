@@ -14,6 +14,17 @@ import type { EnemyDef } from "./types.ts";
 // ELON MOSQUE's (Mars) BOTTOM-TIER pool: the former easy/medium/hard drops
 // merged (the three parallel starting lanes share one pool; `mlvl / ilvl`
 // self-selects level-appropriate pieces). nightmare/jesus keep their own.
+// THE MOSQUE BRAND — ELON MOSQUE's ranged glass-cannon SET (see defs/sets.ts):
+// four armor pieces plus the signature raygun WRATHFLAME. Campaign rungs drop
+// the three low pieces; the endgame rungs open the whole set (incl. the
+// high-ilvl SIGNAL CROWN) + the signature.
+const MOSQUE_BRAND = [
+  "gilded_carapace",
+  "lawless_stride",
+  "ovation_striders",
+  "the_signal_crown",
+];
+const MOSQUE_BRAND_FARM = [...MOSQUE_BRAND, "wrathflame"];
 const ELON_MARS_EARLY = [
   "gilded_carapace",
   "lawless_stride",
@@ -495,8 +506,8 @@ export const MARS_ENEMIES: Record<string, EnemyDef> = {
       easy: ELON_MARS_EARLY,
       medium: ELON_MARS_EARLY,
       hard: ELON_MARS_EARLY,
-      nightmare: ["wrathflame"],
-      jesus: ["the_signal_crown"],
+      nightmare: MOSQUE_BRAND_FARM,
+      jesus: MOSQUE_BRAND_FARM,
     },
   },
 };

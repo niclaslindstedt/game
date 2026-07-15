@@ -15,6 +15,18 @@ import type { EnemyDef } from "./types.ts";
 // any of them. The per-drop `mlvl / ilvl` scaling (see `maybeDropBossUnique`)
 // self-selects: the low-ilvl pieces drop as you first reach him, the higher-ilvl
 // ones as you out-level the run or return. nightmare/jesus keep their own tier.
+// THE SCAVENGER'S HIDE — MUSKRAT's melee SET (see defs/sets.ts). Its four
+// armor pieces plus the signature weapon MUSKRAT'S TOOTH are the boss's farm;
+// the whole set is listed on the endgame rungs so a nightmare/jesus MUSKRAT
+// grind completes it, while the campaign rungs drop a low-ilvl taste alongside
+// the difficulty's BAG.
+const SCAVENGERS_HIDE = [
+  "whiskerweave_hood",
+  "vermin_pelt",
+  "burrow_greaves",
+  "gnawed_sabatons",
+];
+const MUSKRAT_FARM = ["muskrats_tooth", ...SCAVENGERS_HIDE];
 const MUSKRAT_EARLY = [
   "muskrats_tooth",
   "the_hoard",
@@ -610,8 +622,8 @@ export const SPACEZ_ENEMIES: Record<string, EnemyDef> = {
       easy: MUSKRAT_EARLY,
       medium: MUSKRAT_EARLY,
       hard: MUSKRAT_EARLY,
-      nightmare: ["burrow_greaves", "voidcache"],
-      jesus: ["gnawed_sabatons", "adas_satchel"],
+      nightmare: [...MUSKRAT_FARM, "voidcache"],
+      jesus: [...MUSKRAT_FARM, "adas_satchel"],
     },
   },
 };

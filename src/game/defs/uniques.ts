@@ -15,12 +15,14 @@
 // the situational pieces (glass-cannon legs, all-brain helms) hit harder for
 // the build that can carry them and read as dead weight otherwise.
 //
-// The 35 span the five bosses × five difficulties as a slot Latin square (each
-// difficulty is the home of a full weapon+armor set), plus a bag from MUSKRAT
-// and a charm from GROK on each rung. Which boss drops which at which difficulty
-// is wired on the enemy defs (`EnemyDef.uniquesByDifficulty`). Bases are all
-// existing catalog items for now — dedicated art (a fang dagger, a flagstaff, a
-// roomy bag) is a later polish pass.
+// The five bosses each own a GREEN SET (defs/sets.ts): four armor pieces —
+// tagged `tier: "set"` + a `setId` here — themed to one weapon class, plus one
+// on-theme SIGNATURE weapon kept as a plain unique. Which boss drops which is
+// wired on the enemy defs (`EnemyDef.uniquesByDifficulty`); the whole set is
+// farmable from its boss on the endgame rungs. MUSKRAT also drops a BAG and GROK
+// a CHARM on each rung (a separate accessory axis, ordinary uniques). Bases are
+// all existing catalog items for now — dedicated art (a fang dagger, a
+// flagstaff, a roomy bag) is a later polish pass.
 
 import { gearDef, isWeaponDef } from "./equipment.ts";
 import { ARTIFACT_UNIQUES } from "./artifacts.ts";
@@ -45,7 +47,11 @@ export type UniqueDef = {
    * unique. Legendary/artifact drop from HARD up via the global rarity roll,
    * gated by the base's level requirement and spread by the power-law
    * `uniqueDropWeight`; the checkers hold the same ilvl/armor rules for all. */
-  tier?: Extract<Tier, "unique" | "legendary" | "artifact">;
+  tier?: Extract<Tier, "set" | "unique" | "legendary" | "artifact">;
+  /** SET pieces only (`tier: "set"`): the `SetDef` id this piece belongs to
+   * (defs/sets.ts). The set's `members` list is the source of truth for
+   * membership; this back-reference is validated against it at load. */
+  setId?: string;
   /** The static item level — scales the unique's POWER/feel, not its equip
    * requirement (which is the base item's `levelReq`, like any tier), so a
    * unique is often wearable well below its ilvl. */
@@ -96,6 +102,8 @@ const MUSKRAT_UNIQUES: UniqueDef[] = [
   {
     id: "whiskerweave_hood",
     name: "WHISKERWEAVE HOOD",
+    tier: "set",
+    setId: "scavengers_hide",
     base: "targeting_monocle",
     slot: "head",
     ilvl: 16,
@@ -109,6 +117,8 @@ const MUSKRAT_UNIQUES: UniqueDef[] = [
   {
     id: "vermin_pelt",
     name: "VERMIN PELT",
+    tier: "set",
+    setId: "scavengers_hide",
     base: "flight_jacket",
     slot: "chest",
     ilvl: 16,
@@ -121,6 +131,8 @@ const MUSKRAT_UNIQUES: UniqueDef[] = [
   {
     id: "burrow_greaves",
     name: "BURROW GREAVES",
+    tier: "set",
+    setId: "scavengers_hide",
     base: "chausses",
     slot: "legs",
     ilvl: 29,
@@ -133,6 +145,8 @@ const MUSKRAT_UNIQUES: UniqueDef[] = [
   {
     id: "gnawed_sabatons",
     name: "GNAWED SABATONS",
+    tier: "set",
+    setId: "scavengers_hide",
     base: "gothic_sabatons",
     slot: "feet",
     ilvl: 64,
@@ -203,6 +217,8 @@ const ARMSTRONG_UNIQUES: UniqueDef[] = [
   {
     id: "the_long_vigil",
     name: "THE LONG VIGIL",
+    tier: "set",
+    setId: "sentinels_vigil",
     base: "apollo_visor",
     slot: "head",
     ilvl: 22,
@@ -216,6 +232,8 @@ const ARMSTRONG_UNIQUES: UniqueDef[] = [
   {
     id: "palegrave",
     name: "PALEGRAVE",
+    tier: "set",
+    setId: "sentinels_vigil",
     base: "micrometeoroid_vest",
     slot: "chest",
     ilvl: 22,
@@ -229,6 +247,8 @@ const ARMSTRONG_UNIQUES: UniqueDef[] = [
   {
     id: "sentinels_greaves",
     name: "SENTINEL'S GREAVES",
+    tier: "set",
+    setId: "sentinels_vigil",
     base: "servo_greaves",
     slot: "legs",
     ilvl: 43,
@@ -243,6 +263,8 @@ const ARMSTRONG_UNIQUES: UniqueDef[] = [
   {
     id: "marewalkers",
     name: "MAREWALKERS",
+    tier: "set",
+    setId: "sentinels_vigil",
     base: "crater_boots",
     slot: "feet",
     ilvl: 43,
@@ -273,6 +295,8 @@ const ELON_MARS_UNIQUES: UniqueDef[] = [
   {
     id: "gilded_carapace",
     name: "GILDED CARAPACE",
+    tier: "set",
+    setId: "mosque_brand",
     base: "aegis_exoplate",
     slot: "chest",
     ilvl: 29,
@@ -286,6 +310,8 @@ const ELON_MARS_UNIQUES: UniqueDef[] = [
   {
     id: "lawless_stride",
     name: "LAWLESS STRIDE",
+    tier: "set",
+    setId: "mosque_brand",
     base: "carbon_leggings",
     slot: "legs",
     ilvl: 29,
@@ -300,6 +326,8 @@ const ELON_MARS_UNIQUES: UniqueDef[] = [
   {
     id: "ovation_striders",
     name: "OVATION STRIDERS",
+    tier: "set",
+    setId: "mosque_brand",
     base: "legionary_sandals",
     slot: "feet",
     ilvl: 29,
@@ -312,18 +340,22 @@ const ELON_MARS_UNIQUES: UniqueDef[] = [
   {
     id: "wrathflame",
     name: "WRATHFLAME",
-    base: "atomic_raygun",
+    // The baron's signature — a RANGED gauss rail-rifle, so THE MOSQUE BRAND (a
+    // ranged set) reads whole. (The raygun was magic-class, off-theme for it.)
+    base: "gauss_rifle",
     slot: "weapon",
-    ilvl: 45,
+    ilvl: 49,
     bonuses: [
       { kind: "damagePct", value: 0.35 },
-      { kind: "stat", stat: "strength", value: 8 },
+      { kind: "stat", stat: "dexterity", value: 8 },
     ],
     lore: "LEGALLY, AND HE STRESSES THIS, NOT A FLAMETHROWER.",
   },
   {
     id: "the_signal_crown",
     name: "THE SIGNAL CROWN",
+    tier: "set",
+    setId: "mosque_brand",
     base: "crusaders_helm",
     slot: "head",
     ilvl: 71,
@@ -341,6 +373,8 @@ const ELON_RIFT_UNIQUES: UniqueDef[] = [
   {
     id: "exiles_stride",
     name: "EXILE'S STRIDE",
+    tier: "set",
+    setId: "exiles_flight",
     base: "tactical_pants",
     slot: "legs",
     ilvl: 35,
@@ -354,6 +388,8 @@ const ELON_RIFT_UNIQUES: UniqueDef[] = [
   {
     id: "escapists_tread",
     name: "ESCAPIST'S TREAD",
+    tier: "set",
+    setId: "exiles_flight",
     base: "cross_trainers",
     slot: "feet",
     ilvl: 35,
@@ -367,11 +403,13 @@ const ELON_RIFT_UNIQUES: UniqueDef[] = [
   {
     id: "riftmaw",
     name: "RIFTMAW",
-    base: "graviton_maw",
+    // The exile's signature — a RANGED scatter-gun that spits torn rift where a
+    // barrel should be, so THE EXILE'S FLIGHT (a ranged set) reads whole.
+    base: "blunderbuss",
     slot: "weapon",
-    ilvl: 35,
+    ilvl: 36,
     bonuses: [
-      { kind: "stat", stat: "intelligence", value: 8 },
+      { kind: "stat", stat: "dexterity", value: 8 },
       { kind: "damagePct", value: 1.4 },
       { kind: "crit", value: 0.08 },
     ],
@@ -380,6 +418,8 @@ const ELON_RIFT_UNIQUES: UniqueDef[] = [
   {
     id: "the_redacted",
     name: "THE REDACTED",
+    tier: "set",
+    setId: "exiles_flight",
     base: "great_helm",
     slot: "head",
     ilvl: 33,
@@ -393,6 +433,8 @@ const ELON_RIFT_UNIQUES: UniqueDef[] = [
   {
     id: "aegis_of_exile",
     name: "AEGIS OF EXILE",
+    tier: "set",
+    setId: "exiles_flight",
     base: "linked_mail",
     slot: "chest",
     ilvl: 73,
@@ -411,6 +453,8 @@ const GROK_UNIQUES: UniqueDef[] = [
   {
     id: "boundstride",
     name: "BOUNDSTRIDE",
+    tier: "set",
+    setId: "walled_garden_set",
     base: "cross_trainers",
     slot: "feet",
     ilvl: 35,
@@ -436,6 +480,8 @@ const GROK_UNIQUES: UniqueDef[] = [
   {
     id: "the_panopticon",
     name: "THE PANOPTICON",
+    tier: "set",
+    setId: "walled_garden_set",
     base: "neural_visor",
     slot: "head",
     ilvl: 35,
@@ -449,6 +495,8 @@ const GROK_UNIQUES: UniqueDef[] = [
   {
     id: "truthseeker",
     name: "TRUTHSEEKER",
+    tier: "set",
+    setId: "walled_garden_set",
     base: "microlattice_plate",
     slot: "chest",
     ilvl: 61,
@@ -462,6 +510,8 @@ const GROK_UNIQUES: UniqueDef[] = [
   {
     id: "walled_garden",
     name: "GREAVES OF THE WALLED GARDEN",
+    tier: "set",
+    setId: "walled_garden_set",
     base: "fluted_greaves",
     slot: "legs",
     ilvl: 65,

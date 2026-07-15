@@ -14,14 +14,12 @@ import {
   LEVELING,
   LEVELS,
   SECRET_LEVEL_ORDER,
-  STARTING_DIFFICULTIES,
   meetsLevelReq,
   mintUnique,
   UNIQUE_IDS,
   uniqueDef,
   weaponDamageFor,
   weaponDef,
-  type Difficulty,
   type Equipment,
 } from "@game/core";
 import { describe, expect, it } from "vitest";
@@ -51,8 +49,9 @@ describe("unique registry", () => {
 describe("mintUnique", () => {
   it("stamps the fixed identity: name, tier, ilvl, bonuses, unbreakable", () => {
     const state = startGame();
-    const def = uniqueDef("boundstride");
-    const item = mintUnique(state, "boundstride");
+    // A plain unique (boundstride is now a green SET piece — see sets_test.ts).
+    const def = uniqueDef("architects_chip");
+    const item = mintUnique(state, "architects_chip");
     expect(item.tier).toBe("unique");
     expect(item.name).toBe(def.name);
     expect(item.slot).toBe(def.slot);
@@ -175,7 +174,7 @@ describe("boss unique drop tables", () => {
     }
   });
 
-  it("places every shipped UNIQUE exactly once (boss table, world drop, or stall)", () => {
+  it("places every shipped UNIQUE (set pieces farm across their boss's rungs)", () => {
     // LEGENDARY and ARTIFACT tiers drop GLOBALLY via the rarity roll (gated by
     // base levelReq, HARD+), so they have NO table home — the coverage
     // accounting is for plain uniques only.
@@ -183,24 +182,23 @@ describe("boss unique drop tables", () => {
       const t = uniqueDef(id).tier ?? "unique";
       return t !== "legendary" && t !== "artifact";
     };
-    // The three parallel starting lanes (easy/medium/hard) share ONE merged
-    // bottom-tier pool, so a bottom relic appears identically under all three
-    // rungs — that is one home mirrored across the lanes, not three homes.
-    // Collapse the lanes to a single "bottom" stage before the exactly-once
-    // accounting.
-    const stageOf = (diff: string) =>
-      STARTING_DIFFICULTIES.includes(diff as Difficulty) ? "bottom" : diff;
+    // A unique's HOME is its PLACE — a boss, a world level, or a stall — not a
+    // single rung: a set piece (and its boss's signature weapon) intentionally
+    // repeats across that boss's difficulty rungs (the campaign taste PLUS the
+    // endgame set farm), so collapse every rung of one place to one home.
     const homes = [
-      ...wiring.map((w) => `${w.id}@boss:${w.boss}:${stageOf(w.diff)}`),
-      ...worldWiring.map((w) => `${w.id}@world:${w.level}:${stageOf(w.diff)}`),
+      ...wiring.map((w) => `${w.id}@boss:${w.boss}`),
+      ...worldWiring.map((w) => `${w.id}@world:${w.level}`),
       ...stallWiring.map((w) => `${w.id}@stall:${w.level}`),
     ];
-    // Collapse the lane-mirrored duplicates, then recover the id of each home.
     const placed = [...new Set(homes)].map((h) => h.split("@")[0]).sort();
+    // Coverage: every table-tier unique is placed somewhere.
     expect([...new Set(placed)].sort()).toEqual(
       [...UNIQUE_IDS].filter(tableTiers).sort(),
     );
-    // No id has two DISTINCT homes (the lane mirroring already collapsed above).
+    // …and in exactly ONE place — a unique belongs to one boss/level/stall,
+    // however many of that place's rungs list it (that's what keeps a set the
+    // reward of ITS boss).
     expect(new Set(placed).size).toBe(placed.length);
     // Legendaries/artifacts are wired to NO table.
     for (const id of UNIQUE_IDS.filter((i) => !tableTiers(i))) {
@@ -237,16 +235,15 @@ describe("boss unique drop tables", () => {
     const easy = [...(perRung.easy ?? [])].sort();
     expect([...(perRung.medium ?? [])].sort()).toEqual(easy);
     expect([...(perRung.hard ?? [])].sort()).toEqual(easy);
-    // The merged pool is the three former rungs' boss sets combined (3 × 7 = 21),
-    // less SENTINEL'S GREAVES, promoted to nightmare (its ilvl outgrew the
-    // bottom tier) → 20.
+    // The campaign rungs list each boss's low-ilvl taste (+ MUSKRAT's bag /
+    // GROK's charm) — a merged 20 across the five bosses.
     expect(easy.length).toBe(20);
-    // Every bottom-tier gear/weapon is pitched ~10 ilvl over where its boss now
-    // drops (the D2 unique margin), so it lands as a level-appropriate upgrade.
-    // ARMSTRONG's nightmare rung gains the promoted greaves (2); the rest keep 1
-    // boss piece (MUSKRAT/GROK also pay a bag/charm) — 8 nightmare, 7 jesus.
-    expect((perRung.nightmare ?? []).length).toBe(8);
-    expect((perRung.jesus ?? []).length).toBe(7);
+    // The ENDGAME rungs are the SET FARM: each boss opens its whole green set +
+    // its signature weapon (MUSKRAT/GROK also pay a bag/charm), so a
+    // nightmare/jesus grind can complete a set from one boss. That's far more
+    // per rung than the campaign taste — see sets_test.ts for the per-set proof.
+    expect((perRung.nightmare ?? []).length).toBe(26);
+    expect((perRung.jesus ?? []).length).toBe(27);
   });
 });
 

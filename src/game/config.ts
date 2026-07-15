@@ -1499,6 +1499,10 @@ export const LOOT = {
     trash: 1,
     magic: 5,
     rare: 10,
+    // SET (green) shares the unique gate — both are AUTHORED boss drops, not
+    // random rolls, so `set` is deliberately absent from TIER_ROLL_ORDER and
+    // this gate only guards the authored-drop paths that consult it.
+    set: 15,
     unique: 15,
     legendary: 40,
     artifact: 40,
@@ -2310,6 +2314,8 @@ export const ECONOMY = {
     regular: 1,
     magic: 10,
     rare: 100,
+    // SET (green) sits between rare and unique on the sell ladder.
+    set: 300,
     unique: 1_000,
     legendary: 10_000,
     artifact: 100_000,
@@ -2318,6 +2324,7 @@ export const ECONOMY = {
     | "regular"
     | "magic"
     | "rare"
+    | "set"
     | "unique"
     | "legendary"
     | "artifact",
@@ -2352,6 +2359,9 @@ export const ECONOMY = {
       regular: 1,
       magic: 2,
       rare: 4,
+      // SET (green) — moot in practice (set pieces mint unbreakable), but the
+      // record is keyed by every Tier.
+      set: 6,
       unique: 8,
       legendary: 12,
       artifact: 16,
@@ -2360,6 +2370,7 @@ export const ECONOMY = {
       | "regular"
       | "magic"
       | "rare"
+      | "set"
       | "unique"
       | "legendary"
       | "artifact",
