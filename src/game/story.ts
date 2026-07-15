@@ -20,6 +20,7 @@ import { storyItemDef } from "./defs/story.ts";
 import { CAP_THOUGHT_IDS, thoughtDef } from "./defs/thoughts.ts";
 import { xpLevelCap } from "./leveling.ts";
 import { addMapMarker } from "./map.ts";
+import { menaceStage } from "./menace.ts";
 import type { DialogueState, Enemy, GameState } from "./types.ts";
 
 /**
@@ -309,9 +310,17 @@ export function maybeFirstKillThought(
  * a different variation each time. A no-op while a scene is up, off cooldown,
  * or below the cap — and it only advances the rotation / re-arms the cooldown
  * when it actually fires, so a blocked turn simply retries on the next kill.
+ *
+ * It also falls silent once menace has evolved the horde past
+ * `DIALOGUE.capThoughtMenaceStageCeiling`: on a high-menace rampage the mobs
+ * carry stacked evolution hp and the set pieces power-match the hero, so they
+ * are demonstrably no longer pathetic and the self-satisfied line would be
+ * wrong. The cooldown isn't re-armed on this skip, so the line resumes the
+ * moment the meter cools back down.
  */
 export function maybeCapThought(state: GameState): void {
   if (state.dialogue !== null || state.capThoughtMs > 0) return;
+  if (menaceStage(state) > DIALOGUE.capThoughtMenaceStageCeiling) return;
   const cap = xpLevelCap(state.level.id, state.difficulty);
   if (state.player.level < cap) return;
   const id = CAP_THOUGHT_IDS[state.capThoughtIdx % CAP_THOUGHT_IDS.length]!;
