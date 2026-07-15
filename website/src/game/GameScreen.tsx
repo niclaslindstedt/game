@@ -429,9 +429,9 @@ function cursorThrottle(dist: number, fullSpeedPx: number): number {
 // `event.code` so they stay layout-independent (AZERTY etc.).
 // The reduced pace while WALK is held; the default (no modifier) runs at full
 // speed. Pinned to the engine's walk anchor so a Shift-walk stays a *walk* for
-// the stamina system: the proportional curve REGAINS stamina at `walkThrottle`
-// (its +walkRateFactor low anchor), so a throttle at the walk recovers instead
-// of draining it. A bare 0.6 would sit above the walk and drain like a run.
+// the stamina system: moving always spends the pool in proportion to pace, so a
+// walk drains only `walkThrottle` of a full run's rate — a slower, cheaper pace
+// (the pool refills only while standing still). A bare 0.6 would spend more.
 const KEYBOARD_WALK_THROTTLE = STAMINA.walkThrottle;
 
 /** Other carried weapons, best first — the switch targets shared by the Q

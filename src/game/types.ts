@@ -343,8 +343,9 @@ export type Player = {
   hp: number;
   maxHp: number;
   /**
-   * Current stamina — the sprint pool. Running spends it, walking/idling
-   * refills it; an empty pool caps the top speed (see config `STAMINA`).
+   * Current stamina — the sprint pool. Any movement spends it (in proportion
+   * to pace); only standing still refills it. An empty pool caps the top speed
+   * (see config `STAMINA`).
    */
   stamina: number;
   /** Max stamina, from the base pool + STAMINA stat (see `computeMaxStamina`). */
