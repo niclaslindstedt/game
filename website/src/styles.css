@@ -4908,8 +4908,8 @@ canvas.tier-artifact {
 }
 
 .shop-coin {
-  width: 0.9rem;
-  height: 0.9rem;
+  width: 1.1rem;
+  height: 1.1rem;
 }
 
 /* Bag cells are buttons here (tap to select), not drag handles. Unlike the
@@ -5031,30 +5031,68 @@ canvas.tier-artifact {
   height: 1.3rem;
 }
 
-/* The bulk-sell tools (SELL JUNK + SELL ALL) cluster to the right of the BAG
-   title, wrapping onto a second line before they'd crowd the header. */
-.shop-bag-actions {
+/* The counter's bottom row: the bulk-sell tools on the left, the CLOSE button
+   on the right. Wraps before it would overflow a narrow panel; CLOSE keeps to
+   the right edge (via its `margin-left: auto`) even when it drops to its own
+   line. */
+.shop-footer {
   display: flex;
   flex-direction: row;
   flex-wrap: wrap;
-  justify-content: flex-end;
   align-items: center;
   gap: 0.5rem;
 }
 
-/* Each bulk button: its coin glyph, the label, and the coins it fetches. */
+/* SELL JUNK + SELL ALL sit together on the left, wrapping between themselves
+   before crowding CLOSE. */
+.shop-footer-sell {
+  display: flex;
+  flex-direction: row;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+/* In the footer row CLOSE hugs the right edge (`margin-left: auto` eats the
+   free space to its left, on a shared line or a wrapped line of its own). The
+   panel-level `flex-end` would otherwise pin it to the row's bottom rather than
+   centre it vertically. */
+.shop-footer .modal-close-btn {
+  align-self: center;
+  margin-left: auto;
+}
+
+/* Each bulk button: its coin glyph, the label, and the coins it fetches. The
+   label reads at the same scale as the section headers, so the button gets a
+   touch more padding to sit comfortably around it. */
 .shop-bulk-btn {
   display: flex;
   flex-direction: row;
   align-items: center;
-  gap: 0.3rem;
-  padding: 0.35rem 0.55rem;
+  gap: 0.4rem;
+  padding: 0.45rem 0.7rem;
   flex: 0 0 auto;
 }
 
 .shop-bulk-coin {
-  width: 1.1rem;
-  height: 1.1rem;
+  width: 1.2rem;
+  height: 1.2rem;
+}
+
+/* REPAIR: an icon-only button beside the sell tools — just the wrench, no
+   label. Squared off and sized so it stands the same height as the sell
+   buttons next to it. */
+.shop-repair-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.4rem;
+  flex: 0 0 auto;
+}
+
+.shop-repair-icon {
+  width: 1.35rem;
+  height: 1.35rem;
 }
 
 .pixel-img {
@@ -5624,6 +5662,10 @@ canvas.tier-artifact {
 
 .stat-button canvas,
 .pixel-button canvas,
+/* A shop price sets its number canvas beside the taller coin glyph; without
+   this the `.game-overlay canvas` rule above top-pins the number so it rides
+   high of the coin's centre (the stall prices and the purse). */
+.shop-price canvas,
 /* The round (i) toggle centers its glyph both ways; without this the
    `.game-overlay canvas` rule above pins the "i" to the top of the circle. */
 .info-button canvas {

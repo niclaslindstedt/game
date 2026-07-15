@@ -48,11 +48,15 @@ function CoinPrice({
   sprites,
   amount,
   color = "#ffd75e",
+  scale = 2,
 }: {
   font: PixelFont;
   sprites: Sprites;
   amount: number;
   color?: string;
+  /** Glyph scale — the shop's readable body size (2) by default, so a price is
+   * never the smallest thing on the counter. */
+  scale?: number;
 }) {
   const coin = spriteDataUrl(sprites, "icon_coin");
   return (
@@ -61,7 +65,7 @@ function CoinPrice({
       <PixelText
         font={font}
         text={formatCompact(amount)}
-        scale={1}
+        scale={scale}
         color={color}
       />
     </span>
@@ -139,14 +143,14 @@ function BulkSellButton({
       <PixelText
         font={font}
         text={label}
-        scale={1}
+        scale={2}
         color={enabled ? "#e6e8eb" : "#5a6470"}
       />
       {enabled && (
         <PixelText
           font={font}
           text={formatCompact(total)}
-          scale={1}
+          scale={2}
           color="#ffd75e"
         />
       )}
@@ -154,48 +158,33 @@ function BulkSellButton({
   );
 }
 
-/** Mend the hero's whole kit for coins — a SPEND, so it shows the price (gold
- * when affordable, red when the purse is short) and disables when nothing needs
- * mending or the hero can't cover it. */
+/** Mend the hero's whole kit for coins — an icon-only button beside the sell
+ * tools: just the wrench, no label. Enabled (and tappable) only when something
+ * needs mending AND the purse can cover it; otherwise it dims like a spent
+ * action. A tap mends the whole kit at once. */
 function RepairButton({
-  font,
   sprites,
   cost,
   coins,
   onRepair,
 }: {
-  font: PixelFont;
   sprites: Sprites;
   cost: number;
   coins: number;
   onRepair: () => void;
 }) {
-  const needsRepair = cost > 0;
-  const affordable = coins >= cost;
-  const enabled = needsRepair && affordable;
-  const coin = spriteDataUrl(sprites, "icon_coin");
+  const enabled = cost > 0 && coins >= cost;
+  const wrench = spriteDataUrl(sprites, "icon_wrench");
   return (
     <button
       type="button"
-      className="pixel-button secondary shop-bulk-btn"
+      className="pixel-button secondary shop-repair-btn"
       aria-label="repair-all"
       disabled={!enabled}
       onClick={enabled ? onRepair : undefined}
     >
-      {coin && <img src={coin} alt="" className="pixel-img shop-bulk-coin" />}
-      <PixelText
-        font={font}
-        text="REPAIR"
-        scale={1}
-        color={enabled ? "#e6e8eb" : "#5a6470"}
-      />
-      {needsRepair && (
-        <PixelText
-          font={font}
-          text={formatCompact(cost)}
-          scale={1}
-          color={affordable ? "#ffd75e" : "#c65f5f"}
-        />
+      {wrench && (
+        <img src={wrench} alt="" className="pixel-img shop-repair-icon" />
       )}
     </button>
   );
@@ -303,7 +292,7 @@ export function ShopPanel({
           <PixelText
             font={font}
             text={merchantName(state.level.id)}
-            scale={2}
+            scale={3}
             color="#ffd75e"
           />
           <CoinPrice font={font} sprites={sprites} amount={player.coins} />
@@ -312,7 +301,7 @@ export function ShopPanel({
         {/* The stall: his goods, priced. Sold-out weapons stay visible but
             dark — the run remembers what it passed up. */}
         <div className="shop-section">
-          <PixelText font={font} text="FOR SALE" scale={2} color="#9aa3ad" />
+          <PixelText font={font} text="FOR SALE" scale={3} color="#9aa3ad" />
           <div className="shop-stall">
             {merchant.stock.map((entry) => {
               const icon = stockIcon(entry);
@@ -355,7 +344,7 @@ export function ShopPanel({
                     <PixelText
                       font={font}
                       text="SOLD"
-                      scale={1}
+                      scale={2}
                       color="#5a6470"
                     />
                   ) : (
@@ -374,51 +363,7 @@ export function ShopPanel({
 
         {/* The hero's bag: tap a piece to see what he pays for it. */}
         <div className="shop-section">
-          <div className="inv-bag-header">
-            <PixelText font={font} text="YOUR BAG" scale={2} color="#9aa3ad" />
-            <div className="shop-bag-actions">
-              {/* SELL JUNK: only the outgrown pieces, one coin. */}
-              <BulkSellButton
-                font={font}
-                sprites={sprites}
-                coinIcon="icon_coin"
-                label="SELL JUNK"
-                ariaLabel="sell-junk"
-                total={junkTotal}
-                count={junk.length}
-                onSell={() => {
-                  for (const { index } of junk) sellItem(state, index);
-                  playUiSound(synth, "confirm");
-                  setSelected(null);
-                  onChange();
-                }}
-              />
-              {/* SELL ALL: the whole bag, a stack of three coins. */}
-              <BulkSellButton
-                font={font}
-                sprites={sprites}
-                coinIcon="icon_coins"
-                label="SELL ALL"
-                ariaLabel="sell-all"
-                total={bagTotal}
-                count={bag.length}
-                onSell={() => {
-                  for (const { index } of bag) sellItem(state, index);
-                  playUiSound(synth, "confirm");
-                  setSelected(null);
-                  onChange();
-                }}
-              />
-              {/* REPAIR ALL: mend the whole kit for coins. */}
-              <RepairButton
-                font={font}
-                sprites={sprites}
-                cost={repairTotal}
-                coins={player.coins}
-                onRepair={doRepair}
-              />
-            </div>
-          </div>
+          <PixelText font={font} text="YOUR BAG" scale={3} color="#9aa3ad" />
           <div className="inv-grid shop-bag-grid">
             {player.inventory.map((item, index) => (
               <button
@@ -584,14 +529,59 @@ export function ShopPanel({
           )}
         </div>
 
-        <button
-          type="button"
-          className="pixel-button secondary modal-close-btn"
-          aria-label="close-shop"
-          onClick={onClose}
-        >
-          <PixelText font={font} text="CLOSE" scale={2} />
-        </button>
+        {/* The counter's bottom row: the bulk-sell tools on the left, the
+            dismiss on the right. */}
+        <div className="shop-footer">
+          <div className="shop-footer-sell">
+            {/* SELL JUNK: only the outgrown pieces, one coin. */}
+            <BulkSellButton
+              font={font}
+              sprites={sprites}
+              coinIcon="icon_coin"
+              label="SELL JUNK"
+              ariaLabel="sell-junk"
+              total={junkTotal}
+              count={junk.length}
+              onSell={() => {
+                for (const { index } of junk) sellItem(state, index);
+                playUiSound(synth, "confirm");
+                setSelected(null);
+                onChange();
+              }}
+            />
+            {/* SELL ALL: the whole bag, a stack of three coins. */}
+            <BulkSellButton
+              font={font}
+              sprites={sprites}
+              coinIcon="icon_coins"
+              label="SELL ALL"
+              ariaLabel="sell-all"
+              total={bagTotal}
+              count={bag.length}
+              onSell={() => {
+                for (const { index } of bag) sellItem(state, index);
+                playUiSound(synth, "confirm");
+                setSelected(null);
+                onChange();
+              }}
+            />
+            {/* REPAIR ALL: mend the whole kit — an icon-only button, no label. */}
+            <RepairButton
+              sprites={sprites}
+              cost={repairTotal}
+              coins={player.coins}
+              onRepair={doRepair}
+            />
+          </div>
+          <button
+            type="button"
+            className="pixel-button secondary modal-close-btn"
+            aria-label="close-shop"
+            onClick={onClose}
+          >
+            <PixelText font={font} text="CLOSE" scale={2} />
+          </button>
+        </div>
       </div>
     </div>
   );
