@@ -198,7 +198,7 @@ const LAUNCH: CutsceneDef = {
       { kind: "stars_b", pos: { x: 168, y: 44 }, parallax: 0.15 },
       { kind: "stars_a", pos: { x: 82, y: 46 }, parallax: 0.15 },
       // Home, garage door up — the ship rolled out onto the back lawn.
-      { kind: "garage_house", pos: { x: 46, y: 88 } },
+      { kind: "garage_house", pos: { x: 46, y: 98 } },
     ],
   },
   actors: [
@@ -206,7 +206,7 @@ const LAUNCH: CutsceneDef = {
       id: "hero",
       name: "ME",
       sprite: "hero_tee",
-      at: { x: 74, y: 96 },
+      at: { x: 74, y: 102 },
     },
     // The garage ship — the mars level's parked `starship`, ten years
     // younger. Poses to `ship_fire` when the engine lights.
@@ -223,7 +223,7 @@ const LAUNCH: CutsceneDef = {
         "EVER NEEDED ONE MORE PART.",
       ],
     },
-    { kind: "move", actor: "hero", to: { x: 150, y: 97 }, speed: 40 },
+    { kind: "move", actor: "hero", to: { x: 150, y: 102 }, speed: 40 },
     {
       kind: "say",
       actor: "hero",
@@ -233,7 +233,7 @@ const LAUNCH: CutsceneDef = {
         "I COULDN'T HAVE.",
       ],
     },
-    { kind: "move", actor: "hero", to: { x: 166, y: 97 }, speed: 40 },
+    { kind: "move", actor: "hero", to: { x: 166, y: 102 }, speed: 40 },
     { kind: "wait", ms: 350 },
     { kind: "exit", actor: "hero" },
     { kind: "wait", ms: 700 },
