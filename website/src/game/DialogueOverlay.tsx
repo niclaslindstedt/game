@@ -73,6 +73,7 @@ export function DialogueOverlay({
   font,
   onAdvance,
   onBlip,
+  onMute,
   revealRef,
 }: {
   state: GameState;
@@ -82,6 +83,8 @@ export function DialogueOverlay({
   onAdvance: () => void;
   /** Play the letter-print blip — fired as characters land. */
   onBlip?: () => void;
+  /** Silence dialogue for the rest of the level and dismiss this scene. */
+  onMute?: () => void;
   /** Mirror of the live reveal state for out-of-overlay advance handlers. */
   revealRef?: MutableRefObject<DialogueReveal>;
 }) {
@@ -207,6 +210,28 @@ export function DialogueOverlay({
       onPointerDown={() => (done ? onAdvance() : advance())}
       role="presentation"
     >
+      {/* MUTE: silence every in-world scene for the rest of the level — the
+          chat bubble struck through. Its taps stop at the button so they never
+          fall through to the overlay's advance. Cutscenes keep their own SKIP;
+          this is only for the repeatable field chatter. */}
+      {onMute && (
+        <button
+          type="button"
+          className="dialogue-mute"
+          aria-label="mute-dialogue"
+          onClick={(event) => {
+            event.stopPropagation();
+            onMute();
+          }}
+          onPointerDown={(event) => event.stopPropagation()}
+        >
+          <img
+            src={spriteDataUrl(assets.sprites, "icon_dialogue_off") ?? ""}
+            alt=""
+            className="pixel-img dialogue-mute-icon"
+          />
+        </button>
+      )}
       <div className="dialogue-box">
         {isStoryItem && (
           <div className="dialogue-acquired">

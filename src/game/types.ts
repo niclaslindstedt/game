@@ -1591,6 +1591,15 @@ export type GameState = {
   landmarks: Landmark[];
   /** The running conversation while `phase === "dialogue"`; null otherwise. */
   dialogue: DialogueState | null;
+  /**
+   * Latched true when the player taps the dialogue MUTE button: every
+   * in-world scene (elite/boss dialogue, unique last words, companion join
+   * words, the hero's inner monologues, story-item lore, and the merchant's
+   * greeting) is suppressed for the rest of this level. A new level builds a
+   * fresh state, so the mute lifts on the next map. Cutscenes are unaffected —
+   * they own a SKIP button of their own.
+   */
+  dialogueMuted: boolean;
   /** The pending SPARE-or-KILL verdict while `phase === "choice"`. */
   choice: ChoiceState | null;
   /** The recruited party, in join order (see companions.ts). */

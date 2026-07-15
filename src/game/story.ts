@@ -148,12 +148,30 @@ export function advanceDialogue(state: GameState): void {
 }
 
 /**
+ * The dialogue MUTE button: silence every in-world scene for the rest of the
+ * level and dismiss whatever is on stage right now (resuming play, or a
+ * pending level-up, exactly like tapping through the last page). It only
+ * latches `dialogueMuted`; a new level rebuilds the state, so the mute lifts on
+ * the next map. Cutscenes are untouched — they own their own SKIP button.
+ */
+export function muteDialogue(state: GameState): void {
+  state.dialogueMuted = true;
+  if (state.phase === "dialogue" && state.dialogue) {
+    state.dialogue = null;
+    state.phase = state.player.pendingStatPoints > 0 ? "levelup" : "playing";
+  }
+}
+
+/**
  * Open an enemy's scene mid-step: pause the run and put the speaker on
  * stage. The `spoke` mark makes every scene a once-only — killing the
  * speaker first forfeits the scene, never the drops.
  */
 export function startEnemyDialogue(state: GameState, enemy: Enemy): void {
+  // Mark spoken first so a muted run forfeits the scene the same way killing
+  // the speaker does — the enemy never queues to try again.
   enemy.spoke = true;
+  if (state.dialogueMuted) return;
   state.dialogue = {
     source: { kind: "enemy", enemyId: enemy.id, defId: enemy.defId },
     page: 0,
@@ -177,7 +195,12 @@ export function startEnemyDialogue(state: GameState, enemy: Enemy): void {
  */
 export function startDeathWords(state: GameState, defId: string): void {
   const def = enemyDef(defId);
-  if (!def.lastWords || def.lastWords.length === 0 || state.dialogue !== null) {
+  if (
+    !def.lastWords ||
+    def.lastWords.length === 0 ||
+    state.dialogue !== null ||
+    state.dialogueMuted
+  ) {
     return;
   }
   state.dialogue = { source: { kind: "enemyDeath", defId }, page: 0 };
@@ -194,7 +217,12 @@ export function startDeathWords(state: GameState, defId: string): void {
  */
 export function startJoinWords(state: GameState, companionId: string): void {
   const def = companionDef(companionId);
-  if (!def.joinWords || def.joinWords.length === 0 || state.dialogue !== null) {
+  if (
+    !def.joinWords ||
+    def.joinWords.length === 0 ||
+    state.dialogue !== null ||
+    state.dialogueMuted
+  ) {
     return;
   }
   state.dialogue = {
@@ -214,7 +242,13 @@ export function startJoinWords(state: GameState, companionId: string): void {
  */
 export function startPlayerThought(state: GameState, thoughtId: string): void {
   const def = thoughtDef(thoughtId);
-  if (def.pages.length === 0 || state.dialogue !== null) return;
+  if (
+    def.pages.length === 0 ||
+    state.dialogue !== null ||
+    state.dialogueMuted
+  ) {
+    return;
+  }
   state.dialogue = {
     source: { kind: "playerThought", defId: thoughtId },
     page: 0,
@@ -388,7 +422,9 @@ export function collectStoryItem(
   state.events.push({ type: "storyItemCollected", defId });
   addMapMarker(state, "story", pos, defId);
   const def = storyItemDef(defId);
-  if (def.lore.length === 0 || state.dialogue !== null) return;
+  if (def.lore.length === 0 || state.dialogue !== null || state.dialogueMuted) {
+    return;
+  }
   state.dialogue = { source: { kind: "story", defId }, page: 0 };
   state.phase = "dialogue";
   state.events.push({ type: "dialogueStarted", speaker: def.name });

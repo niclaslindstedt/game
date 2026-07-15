@@ -2209,6 +2209,27 @@ const SPRITES = {
     "..OOOOOOOOOOOOOOO...",
     "....................",
   ],
+  // The dialogue MUTE button (DialogueOverlay): a speech bubble struck through
+  // with a red slash — "no more talking". Drawn in the HUD-icon size band next
+  // to the treasure map, at the top-right of the in-world dialogue overlay.
+  icon_dialogue_off: [
+    "................",
+    "..OOOOOOOOOOOO..",
+    ".OWWWWWWWWWWrrO.",
+    ".OWWWWWWWWWrrWO.",
+    ".OWWWWWWWWrrWWO.",
+    ".OWWWWWWWrrWWWO.",
+    ".OWWOWWOrrOWWWO.",
+    ".OWWWWWrrWWWWWO.",
+    ".OWWWWrrWWWWWWO.",
+    ".OWWWrrWWWWWWWO.",
+    "..OO..OOOOOOOO..",
+    "...OWWO.........",
+    "...OWO..........",
+    "...OO...........",
+    "................",
+    "................",
+  ],
   // The TRIBUTE SCHEDULE: a Gantt chart chiseled in stone, one milestone lit.
   icon_tablet: [
     "............",

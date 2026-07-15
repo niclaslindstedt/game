@@ -173,7 +173,12 @@ export function stepMerchant(state: GameState, dt: number, dtMs: number): void {
     // played once, through the ordinary dialogue box. It yields to any scene
     // already on stage (the meeting still happened; only the line is lost).
     const greeting = levelDef(state.level.id).merchant?.greeting;
-    if (greeting && greeting.length > 0 && state.dialogue === null) {
+    if (
+      greeting &&
+      greeting.length > 0 &&
+      state.dialogue === null &&
+      !state.dialogueMuted
+    ) {
       state.dialogue = {
         source: { kind: "merchant", levelId: state.level.id },
         page: 0,
@@ -262,6 +267,7 @@ function maybeGreetReturn(state: GameState, merchant: Merchant): void {
   if (!lineOfSight(state, state.player.pos, merchant.pos)) return;
   merchant.greetedReturn = true;
   merchant.faceLeft = state.player.pos.x < merchant.pos.x;
+  if (state.dialogueMuted) return;
   state.dialogue = {
     source: {
       kind: "merchant",
