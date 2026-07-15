@@ -114,7 +114,7 @@ import {
   queueStruckProcs,
   unspawnedMinions,
 } from "./loot.ts";
-import { revealAround } from "./map.ts";
+import { revealAround, revealRect } from "./map.ts";
 import {
   mechDamageMult,
   mechSpeedMult,
@@ -223,8 +223,12 @@ export function step(state: GameState, input: GameInput, dtMs: number): void {
   const exemptKillsBefore = state.menaceExemptKills;
 
   stepPlayer(state, input, dt, dtMs);
-  // Walking lifts the fog of war around wherever the hero now stands.
-  revealAround(state, state.player.pos);
+  // Playing lifts the fog of war from everything on screen: the camera view
+  // (input.view) is the exact world rect the player can see, so the map
+  // remembers all of it, not just a circle around the hero. Headless callers
+  // with no camera (bots, tests) fall back to the reveal circle.
+  if (input.view) revealRect(state, input.view);
+  else revealAround(state, state.player.pos);
   // The wandering merchant strolls (and may be MET) on this tick's player
   // position — right after the hero moves, so the meeting judges what the
   // player actually sees. A scenario FREEZE (state.freeze — the developer

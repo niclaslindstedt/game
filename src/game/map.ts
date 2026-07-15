@@ -1,9 +1,11 @@
 // SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
 // The level map and its fog of war. Exploration is a coarse byte grid on the
-// state (`state.explored`, one cell per MAP.cellSize world px): walking
-// uncovers everything within MAP.revealRadius of the hero, and what has been
-// uncovered stays uncovered for the rest of the run — Warcraft-style, minus
-// the re-fogging. Memorable events pin `state.mapMarkers` (story finds,
+// state (`state.explored`, one cell per MAP.cellSize world px): playing
+// uncovers every cell the on-screen camera view covers (`revealRect`), so the
+// map remembers everything the player has actually SEEN, not just a circle
+// around the hero. What has been uncovered stays uncovered for the rest of the
+// run — Warcraft-style, minus the re-fogging. The seed reveal at spawn (with no
+// camera view yet) still uses the MAP.revealRadius circle (`revealAround`). Memorable events pin `state.mapMarkers` (story finds,
 // elite/boss victories, the merchant) so the map tells the run's story back. The
 // `map` phase freezes the simulation exactly like the bag or the pause
 // screen; `openMap`/`closeMap` are the app's toggles, safe outside `step()`.
@@ -31,10 +33,36 @@ export function createExplored(level: {
 }
 
 /**
+ * Uncover the fog under a world-space rectangle: every cell the rect overlaps
+ * is marked explored. Fed the on-screen camera view each step (see
+ * `input.view`), so the fog lifts from *everything the player can see*, not
+ * just a circle around the hero — walk to a level's edge and the whole strip
+ * you looked at stays uncovered on the map.
+ */
+export function revealRect(
+  state: GameState,
+  rect: { x: number; y: number; width: number; height: number },
+): void {
+  const cell = MAP.cellSize;
+  const cols = mapCols(state.level);
+  const rows = mapRows(state.level);
+  const x0 = Math.max(0, Math.floor(rect.x / cell));
+  const y0 = Math.max(0, Math.floor(rect.y / cell));
+  const x1 = Math.min(cols - 1, Math.floor((rect.x + rect.width) / cell));
+  const y1 = Math.min(rows - 1, Math.floor((rect.y + rect.height) / cell));
+  for (let ty = y0; ty <= y1; ty++) {
+    for (let tx = x0; tx <= x1; tx++) {
+      state.explored[ty * cols + tx] = 1;
+    }
+  }
+}
+
+/**
  * Uncover the fog around a world position: every cell whose center lies
- * within MAP.revealRadius of `pos` is marked explored. Called from the step
- * on the hero's position each tick (a handful of byte writes — cheap) and
- * once at creation around the spawn.
+ * within MAP.revealRadius of `pos` is marked explored. The seed reveal at
+ * creation/scenario landing (and any headless caller without a camera view)
+ * uses this circle; the running game lifts fog by the on-screen rect instead
+ * (see `revealRect`).
  */
 export function revealAround(state: GameState, pos: Vec2): void {
   const cell = MAP.cellSize;

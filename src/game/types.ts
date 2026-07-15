@@ -1724,9 +1724,10 @@ export type GameState = {
   merchant: Merchant;
   /**
    * The fog of war: one byte per `MAP.cellSize` grid cell, row-major
-   * (`mapCols(level)` cells per row), 1 once the hero has walked within
-   * `MAP.revealRadius` of the cell. Stamped by `revealAround` each step and
-   * once at creation around the spawn; never re-fogged. See map.ts.
+   * (`mapCols(level)` cells per row), 1 once the cell has been on screen.
+   * Stamped by `revealRect` each step from the camera view (so everything
+   * seen is remembered) and by `revealAround` once at creation around the
+   * spawn; never re-fogged. See map.ts.
    */
   explored: Uint8Array;
   /** Pins on the level map: story finds, rare loot, elite/boss victories. */
