@@ -69,23 +69,6 @@ export type DebugMode = "on" | "off";
  * Applied to the engine via `setAutoStatGainsEnabled`. */
 export type AutoLevelStats = "on" | "off";
 
-/** CHARACTER WEAPON: a developer feature flag for drawing the held weapon on
- * the hero SPRITE in the field (the paper-doll — see paper-doll.ts /
- * render.ts). The worn armor always draws; only the held weapon is gated,
- * since posing/swinging it convincingly is the hard part. Opt-in: `off` (the
- * default) leaves the field hero empty-handed but still armored; `on` arms
- * him. The HUD avatar and inventory portrait stay armed regardless. */
-export type CharacterWeapon = "on" | "off";
-
-/** WEAPON SWING: an experimental developer feature flag that animates the
- * field hero's held weapon on each attack — a blade whips through its slash
- * arc, a gun recoils, a wand thrusts on the cast — timed to the swing/muzzle
- * effect so it reads as the weapon actually being used (see render.ts
- * `drawPlayer`). A pure render concern, like CHARACTER WEAPON, and it only
- * shows when that flag is on too (there is no held weapon to swing otherwise).
- * Opt-in: `off` (the default) leaves the weapon posed statically. */
-export type WeaponSwing = "on" | "off";
-
 /** ORBITAL MENU: a developer feature flag for the title-screen backdrop. `off`
  * (the default) keeps the classic sky — a lone sun arcing overhead that lights a
  * corner-fixed moon. `on` swaps in the solar-system look: a static sun with
@@ -131,10 +114,6 @@ export type GameSettings = {
   debug: DebugMode;
   /** Developer flag: automatic per-level base-stat growth (see AutoLevelStats). */
   autoLevelStats: AutoLevelStats;
-  /** Developer flag: held weapon on the field hero (see CharacterWeapon). */
-  characterWeapon: CharacterWeapon;
-  /** Developer flag: animate the held weapon on attack (see WeaponSwing). */
-  weaponSwing: WeaponSwing;
   /** Developer flag: the orbiting solar-system title backdrop (see TitleOrbits). */
   titleOrbits: TitleOrbits;
   /** Display preference: floating "+N XP" popups on kills (see XpFloat). */
@@ -186,12 +165,10 @@ function defaults(): GameSettings {
     // The developer menu stays hidden until the moon Easter egg is found.
     developerUnlocked: false,
     debug: "off",
-    // Developer feature flags are opt-in — all default off, so auto stat
-    // growth, the field hero's held weapon, and its swing animation stay dark
-    // until a dev enables them.
+    // Auto stat growth is opt-in — off until a dev enables it. The field
+    // hero's held weapon and its swing animation are now always on (shipped
+    // as the default look), so they are no longer settings.
     autoLevelStats: "off",
-    characterWeapon: "off",
-    weaponSwing: "off",
     // The title backdrop ships as the classic arcing-sun sky; the orbital
     // solar-system look is opt-in from the DEVELOPER menu.
     titleOrbits: "off",
@@ -301,14 +278,6 @@ function load(): GameSettings {
         stored.autoLevelStats === "on" || stored.autoLevelStats === "off"
           ? stored.autoLevelStats
           : base.autoLevelStats,
-      characterWeapon:
-        stored.characterWeapon === "on" || stored.characterWeapon === "off"
-          ? stored.characterWeapon
-          : base.characterWeapon,
-      weaponSwing:
-        stored.weaponSwing === "on" || stored.weaponSwing === "off"
-          ? stored.weaponSwing
-          : base.weaponSwing,
       titleOrbits:
         stored.titleOrbits === "on" || stored.titleOrbits === "off"
           ? stored.titleOrbits

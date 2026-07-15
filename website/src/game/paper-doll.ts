@@ -10,8 +10,9 @@
 // 16×16 hero body plan, so every layer draws at the body's own origin. The
 // held weapon is the def's inventory icon anchored at the hero's hand — the
 // icons are drawn as diagonal "held" items (grip lower-left), which is
-// exactly the pose a sidearm-scale sprite needs. The armor always draws; only
-// the held weapon is gated (the developer CHARACTER WEAPON flag).
+// exactly the pose a sidearm-scale sprite needs. Callers pass `weapon` to
+// include the held weapon layer (the field hero and the HUD/inventory avatars
+// all draw it).
 
 import {
   type ArmorSlot,
@@ -34,7 +35,7 @@ export type DollLayer = {
   /** Mirror this layer in place (icons drawn pointing left). */
   flip?: boolean;
   /** The held weapon layer — the field renderer pivots this one about the
-   * grip to swing it on attack (developer WEAPON SWING flag). */
+   * shoulder to swing it on attack. */
   weapon?: boolean;
 };
 

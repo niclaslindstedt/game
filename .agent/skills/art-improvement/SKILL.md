@@ -218,7 +218,7 @@ For each candidate, in the numbered order:
    | Enemy (minion/elite)    | `"spawns":[{"enemy":"<id>","at":{...}},{"enemy":"<id>","at":{...},"hpFrac":0.4},{"enemy":"<id>","at":{...},"hpFrac":0.2}]` — fresh, hurt, and wrecked in one row |
    | Boss                    | `"place":"boss"` — the level's own boss survives `clearEnemies`, so the base still-life stages it as-is; pose its wound stages with extra `spawns` copies at `hpFrac` 0.4 / 0.2 / 0.05                                              |
    | The merchant            | `"place":"merchant"` — posed a step outside his discovery radius, stall art over this biome's ground                                                            |
-   | Weapon/gear on the hero | `"weapon":"<id>"` / `"gear":{"<slot>":"<id>"}` — the paper doll wears it on the field (field weapon needs the CHARACTER WEAPON dev flag on)                     |
+   | Weapon/gear on the hero | `"weapon":"<id>"` / `"gear":{"<slot>":"<id>"}` — the paper doll wears it on the field (the field hero always shows his held weapon)                     |
    | Item/pickup icon        | `"drops":[{"item":"<id>","tier":"rare"}, …]` — the icon in the real drop rain; loose kinds, equipment ids, `UNIQUE_DEFS` ids, abilities, story items all work    |
    | Tile / decor / obstacle / landmark | **Not stageable** — placed at level creation. Judge on the level sheet, then wander the level with the playtest bot (`--strategy survivor`) and screenshot |
 

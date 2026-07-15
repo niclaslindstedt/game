@@ -140,7 +140,7 @@ scrollable gallery of every unique/legendary item, ordered by ilvl, each minted
 via `mintUnique` and drawn through the shared `ItemCard.tsx` icon + card the
 inventory tooltip reuses so the two never drift), a **BALANCE** subpage (see
 below), a **DEBUG MODE** toggle
-(`debug: "on" | "off"`, also persisted), and three feature flags. DEBUG MODE
+(`debug: "on" | "off"`, also persisted), and a feature flag. DEBUG MODE
 shows the in-run FPS meter (`GameScreen.tsx` `showFps`, written to the DOM by
 the render loop — the first probe for performance regressions) and is the hook
 further developer diagnostics wire to via `getSettings().debug`. Keep it
@@ -173,8 +173,8 @@ row (the BALANCE knobs and the SOUND music/SFX volumes); `PixelToggle.tsx` — a
 pixel ON/OFF switch drawn as the slider frozen at its two ends (same amber track
 
 - blocky knob; off is empty/knob-left, on is filled/knob-right) used by every
-  row that reads as a straight on/off (DEBUG MODE, AUTO LEVEL STATS, CHARACTER
-  WEAPON, WEAPON SWING, VIBRATION, XP ON KILL); and `PixelCheckbox.tsx` — a pixel
+  row that reads as a straight on/off (DEBUG MODE, AUTO LEVEL STATS, VIBRATION,
+  XP ON KILL); and `PixelCheckbox.tsx` — a pixel
   tick-box (an empty grey square that fills with a smaller amber square when
   checked) used by every **multi-select** row where one picks one of MANY rather
   than flipping a setting (the EXPORT CHARACTER roster picker). The control is
@@ -188,9 +188,9 @@ pixel ON/OFF switch drawn as the slider frozen at its two ends (same amber track
   equip/bag, POWERUPS left/right corner) stay label-cycling buttons — a switch
   implies enabled/disabled, which those don't.
 
-The feature flags gate recently-added systems so they can be toggled at
-runtime. All are **opt-in — off by default** (the app applies the off state on
-load); a developer turns them on from the DEVELOPER menu:
+The AUTO LEVEL STATS flag gates a recently-added system so it can be toggled at
+runtime — **opt-in, off by default** (the app applies the off state on load); a
+developer turns it on from the DEVELOPER menu:
 
 - **AUTO LEVEL STATS** (`autoLevelStats: "on" | "off"`) gates the automatic
   per-level base-stat growth (`src/game/leveling.ts`). The app applies it to
@@ -200,15 +200,16 @@ load); a developer turns them on from the DEVELOPER menu:
   hero's free gains AND the horde's compensating hp scale (menace.ts) switch
   off together and the balance stays whole. It gates simulation, so it needs an
   engine-side setter; a website-only flag would leave the engine unaware.
-- **CHARACTER WEAPON** (`characterWeapon: "on" | "off"`) gates drawing the
-  held weapon on the field hero sprite. The worn armor always draws — only the
-  weapon is gated, since posing/swinging it convincingly is the hard part. It
-  is a pure render concern: `render.ts` reads the flag and passes `{ weapon }`
-  to `playerDollLayers` (`paper-doll.ts`), which drops the held weapon (but
-  keeps the armor) when off. The HUD avatar and inventory portrait always pass
-  the weapon on, so only the field character changes.
-- **WEAPON SWING** (`weaponSwing: "on" | "off"`) is experimental: it animates
-  the field hero's held weapon on each attack — a blade whips through its slash
+
+The field hero **always shows and swings his held weapon** — these were the
+CHARACTER WEAPON and WEAPON SWING developer flags, now shipped as the default
+look (no toggle). Both are pure render concerns:
+
+- **The held weapon draws on the field hero sprite.** `render.ts` passes
+  `{ weapon: true }` to `playerDollLayers` (`paper-doll.ts`) so the weapon layer
+  rides the paper-doll alongside the worn armor. The HUD avatar and inventory
+  portrait draw the weapon too, so every surface agrees.
+- **The held weapon animates on each attack** — a blade whips through its slash
   arc, a gun recoils with the muzzle rising, a wand thrusts up on the cast —
   pivoting the weapon layer about the **shoulder** (`paper-doll.ts`
   `WEAPON_SHOULDER`, not the grip) so the whole implied arm sweeps. For a melee
@@ -223,11 +224,9 @@ load); a developer turns them on from the DEVELOPER menu:
   companion swings). The cone widens with INTELLIGENCE (`weaponSweepHalfAngle`,
   capped at a half circle — `STATS.aoeMaxHalfAngle`), so a max-INT slash swings
   a full 180° arc; the swing is handed the weapon's cone via `PlayerAction.arc`.
-  Like CHARACTER WEAPON it is a pure render concern: GameScreen captures the
-  hero's own `swing`/`shot` events into a `PlayerAction` (matched to his
-  position so a companion's blow is ignored), `render.ts` `drawPlayer` reads the
-  flag and poses the weapon layer via `weaponPose`. It only bites when CHARACTER
-  WEAPON is on too — there is no held weapon to swing otherwise.
+  GameScreen captures the hero's own `swing`/`shot` events into a `PlayerAction`
+  (matched to his position so a companion's blow is ignored), and `render.ts`
+  `drawPlayer` poses the weapon layer via `weaponPose`.
 
   **Signature effects (`weapon-fx.ts`).** Each weapon CLASS has a plain base
   look, and a UNIQUE gets its OWN — keyed off the equipped weapon's `uniqueId`

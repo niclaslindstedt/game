@@ -1382,9 +1382,9 @@ export function GameScreen({
     // Transient visuals driven by engine events (lightning strikes).
     let effects: Effect[] = [];
     // The hero's most recent attack, so the field renderer can swing the held
-    // weapon in step with its slash/muzzle effect (developer WEAPON SWING).
-    // Only the hero's own blows are captured — companions swing from their own
-    // spots (matched by proximity to the hero below).
+    // weapon in step with its slash/muzzle effect. Only the hero's own blows
+    // are captured — companions swing from their own spots (matched by
+    // proximity to the hero below).
     let heroAction: PlayerAction | undefined;
     // Weapon-swing tuning hook (?debug): `window.__swing({kind, weaponClass,
     // t})` PINS the held weapon to a fixed fraction `t` (0..1) of its swing arc
@@ -1740,14 +1740,12 @@ export function GameScreen({
         // Muramasa sprays crimson, Excalibur golden light. Detect the hero's
         // swing this tick (matched to his position, ignoring companions) and, if
         // his weapon carries a gore signature, mark it so this tick's enemy hits
-        // spray it. Bundled with the experimental WEAPON SWING flag.
-        const heroGore =
-          getSettings().weaponSwing === "on" &&
-          state.events.some(
-            (e) => e.type === "swing" && isHeroAttack(e.pos, state.player.pos),
-          )
-            ? goreStyleFor(state.player.equipment.weapon.uniqueId)
-            : null;
+        // spray it.
+        const heroGore = state.events.some(
+          (e) => e.type === "swing" && isHeroAttack(e.pos, state.player.pos),
+        )
+          ? goreStyleFor(state.player.equipment.weapon.uniqueId)
+          : null;
 
         for (const event of state.events) {
           if (event.type === "lightning") {
@@ -1802,12 +1800,10 @@ export function GameScreen({
               weaponClass: event.weaponClass,
               untilMs: state.stats.timeMs + 110,
               durationMs: 110,
-              // The hero's own shot flashes his weapon's signature (WEAPON
-              // SWING flag); companion/enemy shots keep the plain class look.
+              // The hero's own shot flashes his weapon's signature; companion/
+              // enemy shots keep the plain class look.
               fx:
-                heroShot &&
-                getSettings().weaponSwing === "on" &&
-                event.weaponClass !== "melee"
+                heroShot && event.weaponClass !== "melee"
                   ? shotStyleFor(
                       state.player.equipment.weapon.uniqueId,
                       event.weaponClass,
