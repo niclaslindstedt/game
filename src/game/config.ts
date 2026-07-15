@@ -1880,12 +1880,41 @@ export const COMPANIONS = {
    * supports the hero instead of clearing the field for him.
    */
   damageMult: 0.5,
-  /** Companion damage grows with the hero's level (they train together). */
+  /** Companion damage grows with its OWN level (it trains by fighting — see
+   * `companion-stats.ts`), NOT the hero's. */
   damagePerLevel: 0.04,
-  /** Companion max hp grows with the hero's level, same rationale. */
+  /** Companion max hp grows with its OWN level, same rationale. */
   hpPerLevel: 0.1,
-  /** Ms a downed companion kneels before getting back up on its own. */
+  /**
+   * COMPANION LEVELING (see `companion-stats.ts`). A companion earns its OWN
+   * levels from its OWN kills, decoupled from the hero: it starts trained to
+   * the hero's level when recruited and climbs from there, forever (the level
+   * rides the loadout, so it persists across every level AND difficulty). The
+   * curve is authored in KILLS, like the hero's (`xpToLevelUp`): a level costs
+   * `levelKills` of a reference-mob's worth of XP, growing gently per level, so
+   * a companion levels a handful of times a map early and slows as it climbs.
+   * The kill reward is the same figure the hero earns (`enemyKillXp`), so an
+   * elite finish lurches a companion's bar the way it does the hero's.
+   */
+  levelKills: 14,
+  /** Geometric growth of the per-level kill cost (mirrors the hero's gentle
+   * `killsPerLevelGrowth`). */
+  levelKillsGrowth: 1.04,
+  /** A companion levels up to here and no further — set high enough to read as
+   * "indefinite" without risking an unbounded loop on a colossal XP grant. */
+  maxLevel: 999,
+  /** Ms a downed companion kneels before getting back up on its own — but only
+   * counted down while OUT of combat (see `downedCombatRadius`). */
   reviveMs: 12_000,
+  /**
+   * A downed companion's revive count only ticks while the field around IT is
+   * clear: a live foe within this many world px freezes the count, so a
+   * companion beaten down in the middle of a swarm STAYS down until the area
+   * clears — or the hero speaks to a merchant, who stands the whole party back
+   * up (`reviveDownedCompanions`). A companion downed in a quick scrap still
+   * pops back up on its own once the mob is dead.
+   */
+  downedCombatRadius: 140,
   /** Fraction of max hp a companion stands back up with. */
   reviveHpFraction: 0.5,
   /**

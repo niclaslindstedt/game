@@ -487,11 +487,17 @@ export type Companion = {
   hp: number;
   maxHp: number;
   /**
-   * The hero's level this companion is currently scaled to — hp and damage
-   * grow with it (config `COMPANIONS.hpPerLevel` / `damagePerLevel`), and
-   * stepCompanions re-scales the moment the hero levels up.
+   * The companion's OWN level, earned by fighting (config
+   * `COMPANIONS.levelKills`) and decoupled from the hero: hp, damage, and its
+   * signature POWER all grow with it (`companion-stats.ts`). It starts trained
+   * to the hero's level on recruit and climbs from there forever — the level
+   * rides the loadout, so it persists across every level and difficulty.
    */
   level: number;
+  /** XP banked toward the next level, from this companion's OWN kills. */
+  xp: number;
+  /** XP needed to cross out of the current level (`companionXpToLevelUp`). */
+  xpToNext: number;
   /** Sprite mirror, following the walk direction like the player's. */
   faceLeft: boolean;
   /** True while it walked this step; drives the walk animation. */
@@ -1341,6 +1347,12 @@ export type GameEvent =
   /** A downed companion got back up (at `COMPANIONS.reviveHpFraction`). */
   | { type: "companionRevived"; defId: string; pos: Vec2 }
   /**
+   * A companion earned a level from its own kills (`companion-stats.ts`): the
+   * app floats a "LVL n" tag off its head and, on a power rank-up, cues the
+   * signature growing stronger. `level` is the new companion level.
+   */
+  | { type: "companionLeveledUp"; defId: string; level: number; pos: Vec2 }
+  /**
    * A companion's kill earned one of its def's `killQuotes`: the app floats
    * `text` above the companion at `pos` — banter, not a dialogue scene, so
    * the run never pauses for it.
@@ -1469,13 +1481,19 @@ export type Loadout = {
    * loadouts banked before the economy shipped load as an empty purse. */
   coins?: number;
   /**
-   * The recruited party rides along between levels: each companion's def and
-   * worn equipment (they arrive rested — hp re-derives from the carried
-   * level on apply). Optional so loadouts banked before companions shipped
-   * load as an empty party.
+   * The recruited party rides along between levels AND difficulties: each
+   * companion's def, its earned LEVEL and XP (so a companion levels up forever
+   * across the whole save), and its worn equipment. They arrive rested — hp
+   * re-derives from the carried level on apply. Optional so loadouts banked
+   * before companions shipped load as an empty party; `level`/`xp` are optional
+   * so a loadout banked before companion leveling loads at the hero's level.
    */
   companions?: {
     defId: string;
+    /** The companion's earned level (defaults to the hero's on an old save). */
+    level?: number;
+    /** XP banked toward the next level (defaults to 0 on an old save). */
+    xp?: number;
     equipment: {
       weapon: Equipment;
       head: Equipment | null;

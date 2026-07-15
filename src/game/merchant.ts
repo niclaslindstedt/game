@@ -16,6 +16,7 @@ import {
 } from "@game/lib/rng.ts";
 import { clamp, distance, moveToward, type Vec2 } from "@game/lib/vec.ts";
 import { canBankAbility } from "./abilities.ts";
+import { reviveDownedCompanions } from "./companions.ts";
 import { ECONOMY, MERCHANT, UNIQUE } from "./config.ts";
 import { gearDef, isWeaponDef, weaponDef } from "./defs/equipment.ts";
 import { levelDef } from "./defs/levels/index.ts";
@@ -169,6 +170,9 @@ export function stepMerchant(state: GameState, dt: number, dtMs: number): void {
       type: "merchantDiscovered",
       pos: { ...merchant.pos },
     });
+    // Speaking to the merchant brings the party back: any companion beaten
+    // down is stood up and the whole party mended (works in hardcore too).
+    reviveDownedCompanions(state);
     // The meeting scene: his own story for being here, and the sales pitch —
     // played once, through the ordinary dialogue box. It yields to any scene
     // already on stage (the meeting still happened; only the line is lost).
@@ -267,6 +271,9 @@ function maybeGreetReturn(state: GameState, merchant: Merchant): void {
   if (!lineOfSight(state, state.player.pos, merchant.pos)) return;
   merchant.greetedReturn = true;
   merchant.faceLeft = state.player.pos.x < merchant.pos.x;
+  // The welcome-back also revives the party — the same mercy the first meeting
+  // paid, so a companion downed since is stood back up on the return visit.
+  reviveDownedCompanions(state);
   if (state.dialogueMuted) return;
   state.dialogue = {
     source: {
@@ -455,6 +462,10 @@ export function openShop(state: GameState): boolean {
   if (distance(state.player.pos, merchant.pos) > MERCHANT.tradeRadius) {
     return false;
   }
+  // At the counter again: mend and revive the party. A companion downed after
+  // the merchant was first met (so no fresh greeting fires) still comes back
+  // the moment the hero opens the stall.
+  reviveDownedCompanions(state);
   state.phase = "shop";
   return true;
 }

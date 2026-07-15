@@ -104,12 +104,21 @@ run against synthetic fixtures with no shipped content (see
   [`game-content.md`](./game-content.md).
 - **`src/game/defs/companions.ts`** — the companion catalog: who a spared
   unique becomes. Each def carries the sprite family (the enemy twin's), a
-  base hp that grows with the hero's level, a signature starting weapon, an
-  optional party-wide `aura` (LUCKY's +50% magic find), an optional signature
-  `nova` (RASPUTIN's FROST NOVA — a chilling pulse that damages and slows the
-  foes around him), the `joinWords` scene played the moment the SPARE verdict
-  lands, and the `killQuotes` banter floated over the companion when its blow
-  downs a mob.
+  base hp that grows with the companion's OWN level, a signature starting
+  weapon, an optional party-wide `aura` (LUCKY's +50% magic find), an optional
+  signature `nova` (RASPUTIN's FROST NOVA — a chilling pulse that damages and
+  slows the foes around him), an optional signature `power` (how the companion
+  gets stronger as it levels — more shotgun pellets, chain-lightning arcs, a
+  wider nova, a swelling luck aura), the `joinWords` scene played the moment the
+  SPARE verdict lands, and the `killQuotes` banter floated over the companion
+  when its blow downs a mob.
+- **`src/game/companion-stats.ts`** — pure companion stat/level/power math
+  (config + def only, no engine state): the max-hp ramp, the level XP curve
+  (`companionXpToLevelUp`, authored in kills like the hero's), the power RANK a
+  level has reached, and the per-rank bonuses (extra pellets/chain/pierce, a
+  wider/harder nova, a bigger magic-find aura). Shared by the per-tick pass, the
+  kill rail that credits a companion's XP (`loot.ts`), the party's magic-find
+  aura (`items.ts`), and the loadout carry — none of which it imports back.
 - **`src/game/defs/story.ts`** — the story-item catalog: plot pieces
   (keycards, dossiers, recovered hardware) dropped by elites or placed in
   locked rooms. Pickups bank into `state.storyItems` (never the bag) and
@@ -429,24 +438,35 @@ run against synthetic fixtures with no shipped content (see
   `stepCompanions` (right after the enemy pass) walks the party's formation,
   picks fights inside the hero's engagement bubble _when he holds still_,
   strikes/shoots on the weapon's cadence (shots ride the ordinary projectile
-  pass, tagged `companionId` for kill-quote attribution), soaks the horde's
-  contact swings against helmet+chest armor, and beats companions DOWN — never
-  dead — until they stand back up on their own. Staying with the hero comes
-  first: while he moves the party keeps formation rather than peeling off after
-  a mob, and a companion he outruns to the camera's edge (`input.view`,
-  `COMPANIONS.screenEdgeMargin`) latches into FOLLOW mode — dropping the fight
-  to move with him until he stops. Companion auras
+  pass, tagged `companionId` for kill-quote attribution and XP credit), soaks
+  the horde's contact swings against helmet+chest armor, and beats companions
+  DOWN — never dead — until they stand back up on their own. Staying with the
+  hero comes first: while he moves the party keeps formation rather than peeling
+  off after a mob, and a companion he outruns to the camera's edge
+  (`input.view`, `COMPANIONS.screenEdgeMargin`) latches into FOLLOW mode —
+  dropping the fight to move with him until he stops. Companion auras
   (`CompanionDef.aura` — LUCKY's +50% magic find, read by items.ts
   `magicFindBonus` inside every tier roll) go silent while downed, and a
   `CompanionDef.nova` (RASPUTIN's FROST NOVA — `companionNova`) pulses a
   chilling ring on a cadence that damages and slows nearby foes (the frost
-  `chillMs`/`chillFactor` read live in `moveEnemy`). A spared companion's
+  `chillMs`/`chillFactor` read live in `moveEnemy`).
+  **Companions LEVEL UP on their own** (`companion-stats.ts`): a companion earns
+  its OWN levels from its OWN kills (credited on the `companionId` tag in
+  `killEnemy`), decoupled from the hero, and its hp/damage and signature `power`
+  grow with that level — the level and XP ride the loadout, so the party levels
+  up forever across every level and difficulty. A companion beaten down in a
+  swarm STAYS down (`COMPANIONS.downedCombatRadius` freezes the revive count
+  while a foe is on it) until the field clears or the hero speaks to the
+  wandering merchant, who stands the whole party back up
+  (`reviveDownedCompanions`, called on merchant discovery / return greeting /
+  shop-open — so it works in hardcore too). A spared companion's
   enemy twin is also held off the board while it rides the party (create.ts),
   so a replay never pits the hero against his own ally. The UI's
   mutators are `equipCompanionFromInventory` / `unequipCompanionToInventory`
   (weapon/helmet/chest only) and the `companion` pause-phase toggles
   `openCompanionPanel` / `closeCompanionPanel`; the party rides the loadout
-  (`Loadout.companions`) between levels.
+  (`Loadout.companions`, with each companion's earned level and XP) between
+  levels.
 - **`src/game/map.ts`** — the level map and its fog of war: run-scoped
   exploration as a coarse byte grid on the state (`state.explored`, one cell
   per config `MAP.cellSize` world px), stamped around the hero every step

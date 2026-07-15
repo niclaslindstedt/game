@@ -602,7 +602,10 @@ mobs two body-widths off his stall. He roams the level until the hero first
 walks up to him: the **meeting** roots him to the spot for the rest of the
 run, pins him on the level map (a gold MERCHANT coin marker), plays his greeting,
 and stocks his stall. A gold coin bobs over his head from then on; tapping him
-at the counter opens the **shop** (the run freezes like the bag).
+at the counter opens the **shop** (the run freezes like the bag). Speaking to
+him also **revives the party** — any companion beaten down is stood back up at
+full health, mercy that costs no coin and works even in hardcore (see
+**Companions** below).
 
 The shop trades in **coins**, earned one way — selling loot across the
 counter — and spent on the stall, so the economy recycles the loot rain
@@ -813,14 +816,30 @@ A companion follows the hero in formation, fights autonomously with whatever
 is in its weapon slot (its signature piece at first — Tesla's coil, Lucky's
 staff), and can be dressed from the hero's own bag in a **weapon, helmet,
 and chest piece only** — never legs or feet (tap its portrait under the HUD
-avatar for the Diablo-2-style equip screen). Companions are never killed:
-at 0 hp one goes DOWN, kneels out of the fight (its aura silent), and stands
-back up on its own. When its blow kills a mob it may float one of its
-`killQuotes` — hovering banter, never a dialogue pause. A companion's damage
-and kills are booked into the run stats and pay the hero XP, but they are kept
-**out of the menace meter** (like a powerup's — see `menace.ts`): the RAMPAGE
-escalation answers an overpowered HERO, and a party carrying the fight is not
-the hero out-fighting the horde by hand.
+avatar for the Diablo-2-style equip screen). When its blow kills a mob it may
+float one of its `killQuotes` — hovering banter, never a dialogue pause. A
+companion's damage and kills are booked into the run stats and pay the hero XP,
+but they are kept **out of the menace meter** (like a powerup's — see
+`menace.ts`): the RAMPAGE escalation answers an overpowered HERO, and a party
+carrying the fight is not the hero out-fighting the horde by hand.
+
+**Companions LEVEL UP on their own** (`companion-stats.ts`). A companion earns
+its OWN levels from its OWN kills — decoupled from the hero — and its hp,
+damage, and **signature power** all grow with that level. The level and XP ride
+the loadout, so a companion keeps climbing across every level _and difficulty_:
+level it up forever. Each companion's power grows a rank at a time: **Tesla's**
+coil learns to **chain lightning** to another foe, **Amelia's** blunderbuss
+packs **more pellets**, **Rasputin's** frost nova **widens and bites harder**,
+and **Lucky's** magic-find aura **swells**. The current level, XP bar, and power
+rank show on its equip screen.
+
+Companions are never permanently killed, but they can be **beaten DOWN**: at 0
+hp one kneels out of the fight (its aura silent). A companion downed in a quiet
+scrap stands back up on its own once the mob is dead — but one downed in the
+**middle of a swarm STAYS down** (a live foe beside it freezes the revive
+count) until the field clears. The lifeline is the **wandering merchant**:
+**just speaking to him revives the whole party** at full health — even in
+**hardcore**, where the hero himself gets no such mercy.
 
 **LUCKY's aura** is the recruitment pitch: +50% MAGIC FIND for the whole
 party while he's on his feet — every loot-tier roll's chance is half again
