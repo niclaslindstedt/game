@@ -345,16 +345,23 @@ function rollTier(
   lootLevel: number,
   tierBonus: number,
   role: EnemyRole = "minion",
+  mobRarity?: "rare" | "unique",
 ): Tier {
   const difficultyChances = difficultyDef(state.difficulty).tierChanceBonus;
   const mf = magicFind(state);
-  // The EXPLICIT set-piece boost on named tiers for elite/boss kills.
+  // The EXPLICIT set-piece boost on named tiers: bosses get the boss bonus;
+  // elites AND rare/unique MOBS share the elite bonus, so a special find is a
+  // real named-item source, not trash odds.
   const roleBonus: Partial<Record<Tier, number>> | undefined =
     role === "boss"
       ? LOOT.bossRarityBonus
-      : role === "elite"
+      : role === "elite" || mobRarity
         ? LOOT.eliteRarityBonus
         : undefined;
+  // A PLAIN minion (rank and file, no rarity) suffers the named-tier PENALTY:
+  // its unique/legendary/artifact odds are cut to a sliver (`minionNamedMult`),
+  // so trash can still surprise but the special fights own the chase gear.
+  const plainMinion = role === "minion" && !mobRarity;
   // The NAMED tiers (unique/legendary/artifact) are the hand-authored CHASE —
   // their odds are their own rarityBase + slope + the elite/boss set-piece
   // bonus ALONE. The generic per-kill `tierBonus` (the mob-level sweetener,
@@ -397,7 +404,8 @@ function rollTier(
         LOOT.raritySlope[tier] * (lootLevel - qlvl) +
         (difficultyChances[tier] ?? 0) +
         (roleBonus?.[tier] ?? 0)) *
-        (named ? namedMult : 1) +
+        (named ? namedMult : 1) *
+        (named && plainMinion ? LOOT.minionNamedMult : 1) +
       (named ? 0 : tierBonus);
     if (base <= 0) continue;
     const chance = Math.min(
@@ -539,6 +547,11 @@ export function rollEquipment(
      * unique/legendary (see `rollTier`) and are eligible to fold a named
      * unique into the drop. Omitted = minion (no bonus). */
     role?: EnemyRole;
+    /** The killer's RARITY tier (a RARE/UNIQUE mob, config RARE_MOBS): shares
+     * the elite named-tier bonus and skips the plain-minion named penalty, so
+     * a special find drops chase gear like a set piece does. Omitted = a plain
+     * minion (the penalty applies). */
+    mobRarity?: "rare" | "unique";
   } = {},
 ): Equipment {
   const rng = state.rng;
@@ -644,7 +657,8 @@ export function rollEquipment(
   const slot: EquipSlot = family === "weapon" ? "weapon" : gearDef(defId).slot;
 
   let tier =
-    opts.tier ?? rollTier(state, lootLevel, opts.tierBonus ?? 0, opts.role);
+    opts.tier ??
+    rollTier(state, lootLevel, opts.tierBonus ?? 0, opts.role, opts.mobRarity);
   // STAGE 3 — the D2 FOLD: a NATURALLY-rolled unique/legendary becomes a NAMED
   // item, chosen among those eligible for this slot by its per-item `rarity`
   // weight (`pickUniqueForDrop`). Only when the tier was ROLLED (not a

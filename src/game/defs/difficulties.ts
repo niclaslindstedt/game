@@ -95,11 +95,12 @@ export type DifficultyDef = {
   mobCountMult: number;
   /**
    * The horde's level RELATIVE to the player's: every monster spawns at
-   * `player level + this offset`, and each level off the baseline shifts its
-   * hp by `MENACE.mobHpPerLevel` (kill XP is hp-proportional, so a
-   * higher-level horde also pays more). EASY fields mobs three levels under
-   * the hero; NIGHTMARE matches him; JESUS fields mobs two levels ABOVE him,
-   * so the gap never closes. See `mobHpScaleFor` in menace.ts.
+   * `player level + this offset` (plus a per-mob random band, see
+   * `MENACE.mobLevelBand`), and each level off the baseline shifts its hp by
+   * `MENACE.mobHpPerLevel` (kill XP is LEVEL-based, so a higher-level horde
+   * also pays more — for its level). EASY fields mobs three levels under the
+   * hero; NIGHTMARE matches him; JESUS fields mobs two levels ABOVE him, so
+   * the gap never closes. See `mobHpScaleFor` in menace.ts.
    */
   mobLevelOffset: number;
   /** Multiplies the wave spawner's live cap AND floor (`maxAlive`,

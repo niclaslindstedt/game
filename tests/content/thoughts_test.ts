@@ -92,6 +92,9 @@ describe("first-kill thoughts", () => {
     const state = startGame();
     clearStage(state);
     equipBlaster(state); // kill at range — no hp traded for the story beat
+    // Kills now pay real (level-based) xp; hold the bar open so a story-beat
+    // kill doesn't ding the fresh hero and freeze the run in the levelup phase.
+    state.player.xpToNext = Number.MAX_SAFE_INTEGER;
 
     const first = placeDying(state, "optimusk");
     killAndCollect(state, first.id);
@@ -191,6 +194,9 @@ describe("first-kill thoughts", () => {
     const state = startGame();
     clearStage(state);
     equipBlaster(state);
+    // Kills now pay real (level-based) xp; hold the bar open so a story-beat
+    // kill doesn't ding the fresh hero and freeze the run in the levelup phase.
+    state.player.xpToNext = Number.MAX_SAFE_INTEGER;
     // Downed from beyond the sight radius: the gated kill beat holds, unspent.
     const sniped = makeEnemy(
       {

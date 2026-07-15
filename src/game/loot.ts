@@ -42,6 +42,7 @@ import {
 } from "./items.ts";
 import {
   levelStatGains,
+  mobLevelXp,
   statPointsAt,
   xpCapMultiplier,
   xpLevelCap,
@@ -553,14 +554,17 @@ export function queueStruckProcs(state: GameState, attacker?: Enemy): void {
 
 /**
  * The base XP a kill of `enemy` pays, BEFORE the overkill toll — the single
- * place the two reward rules live, so every death path (a normal kill, a
- * routed boss, a companion's finishing blow) reads the same figure. ELITES and
- * BOSSES pay a SHARE OF THE HERO'S CURRENT LEVEL BAR
- * (`xpToLevelUp(player.level)` × the def's `xpBarShare` or the role default
- * LEVELING.eliteXpBarShare / bossXpBarShare), so a set-piece kill lurches the
- * bar the same noticeable amount on every map and difficulty; the rank and
- * file pay the hp-proportional `xpPerHp × max hp`. A def's flat `xp` override,
- * when set, wins outright.
+ * place the reward rules live, so every death path (a normal kill, a routed
+ * boss, a companion's finishing blow) reads the same figure. ELITES and BOSSES
+ * pay a SHARE OF THE HERO'S CURRENT LEVEL BAR (`xpToLevelUp(player.level)` ×
+ * the def's `xpBarShare` or the role default LEVELING.eliteXpBarShare /
+ * bossXpBarShare), so a set-piece kill lurches the bar the same noticeable
+ * amount on every map and difficulty. The rank and file pay a MONSTER-LEVEL
+ * reward (`mobLevelXp` — proportional to the mob's level, NOT its hp), so a
+ * tank and a squishy of the same level pay alike and an evolved (extra-hp)
+ * minion is no richer; a RARE/UNIQUE mob multiplies that by its `xpMult`
+ * (config RARE_MOBS), a fat single payout for the special find. A def's flat
+ * `xp` override, when set, wins outright.
  */
 export function enemyKillXp(
   state: GameState,
@@ -576,7 +580,8 @@ export function enemyKillXp(
         : LEVELING.eliteXpBarShare);
     return share * xpToLevelUp(state.player.level);
   }
-  return enemy.maxHp * LEVELING.xpPerHp;
+  const rarity = def.rarity ? RARE_MOBS.tuning[def.rarity] : undefined;
+  return mobLevelXp(enemy.mlvl, state.player.level) * (rarity?.xpMult ?? 1);
 }
 
 /**
@@ -956,7 +961,14 @@ function dropMinionLoot(
         id: state.nextId++,
         kind: "equipment",
         pos,
-        equipment: rollEquipment(state, { tierBonus, mlvl }),
+        // A RARE/UNIQUE mob's payouts share the elite named-tier bonus and
+        // skip the plain-minion penalty (see `rollTier`); plain trash rolls
+        // named tiers at a fraction of the odds.
+        equipment: rollEquipment(state, {
+          tierBonus,
+          mlvl,
+          mobRarity: def.rarity,
+        }),
       });
     } else if (roll < equipmentShare + abilityShare) {
       state.items.push({

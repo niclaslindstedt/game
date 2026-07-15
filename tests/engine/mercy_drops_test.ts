@@ -244,6 +244,9 @@ const killForItems = (
     pos: { x: p.x + 20, y: p.y },
     hp: 1,
     maxHp: 45,
+    // Low mlvl → the kill pays trivial (level-based) xp, so no ding refills
+    // hp/stamina or freezes the run mid-test.
+    mlvl: 1,
   });
   state.enemies.push(victim);
   if (opts.hp !== undefined) state.player.hp = opts.hp;
@@ -332,7 +335,15 @@ describe("the energy drink drop and pickup", () => {
       );
     }
     state.enemies.push(
-      makeEnemy({ id: 9000, pos: { x: p.x + 20, y: p.y }, hp: 1, maxHp: 45 }),
+      makeEnemy({
+        id: 9000,
+        pos: { x: p.x + 20, y: p.y },
+        hp: 1,
+        maxHp: 45,
+        // Low mlvl → the kill pays trivial (level-based) xp, so no ding refills
+        // hp/stamina or freezes the run mid-test.
+        mlvl: 1,
+      }),
     );
     // Bone-dry and long stranded → the full 10% cap; running through the kill
     // keeps stepPlayer from refilling the pool before the drop rolls.
@@ -502,7 +513,15 @@ describe("the mercy angel's delivery window", () => {
       );
     }
     state.enemies.push(
-      makeEnemy({ id: 9000, pos: { x: p.x + 20, y: p.y }, hp: 1, maxHp: 45 }),
+      makeEnemy({
+        id: 9000,
+        pos: { x: p.x + 20, y: p.y },
+        hp: 1,
+        maxHp: 45,
+        // Low mlvl → the kill pays trivial (level-based) xp, so no ding refills
+        // hp/stamina or freezes the run mid-test.
+        mlvl: 1,
+      }),
     );
     state.player.stamina = 0;
     state.staminaEmptyMs = MERCY.staminaEmptyDrinkRampMs;

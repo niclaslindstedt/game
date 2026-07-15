@@ -123,10 +123,13 @@ if (!DIFFICULTY_ORDER.includes(difficulty)) {
 }
 
 if (campaign || byLevel) {
-  // The XP a full clear of a level's roster pays (mirrors arrival.ts rosterXp):
-  // every placed spawn + wave-budget mob at its catalog hp, difficulty-gated
-  // lines the run never fielded left out. The actual XP is that × how tough the
-  // horde is at the hero's CURRENT level (mobHpScaleFor) × the clear share.
+  // The XP a full clear of a level's roster pays (mirrors arrival.ts rosterXp).
+  // Kill XP is LEVEL-based now (mobLevelXp), not hp-proportional; a mob's
+  // catalog hp (≈ refMobHp for typical fodder) is a PROXY for its level-based
+  // reward, and the × mobHpScaleFor below supplies the level ramp — so for the
+  // common ~45-hp minion the estimate matches the game, drifting only for
+  // unusually tanky/squishy defs. Difficulty-gated lines the run never fielded
+  // are left out.
   const mobXp = (id) => {
     const e = enemyDef(id);
     return e.xp ?? Math.round(e.hp * LEVELING.xpPerHp);

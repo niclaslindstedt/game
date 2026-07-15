@@ -14,6 +14,7 @@ import {
   ENEMY_AI,
   LOOT,
   MEDKIT,
+  MENACE,
   OBSTACLES,
   PACKS,
   PLAYER,
@@ -650,13 +651,13 @@ function placeRareEncounters(
 
 /** Mint one enemy instance (also used by the wave spawner in step.ts).
  * `hpMult` is the horde's relative-level hp scale the caller resolved
- * (mobHpScaleFor / mobLevelScale) — kill XP scales with max hp, so tougher
- * monsters also pay out more. `evo` is the menace evolution stage stamped
- * onto a MINION spawned while the horde is rampaging (see menace.ts): it
- * stacks extra hp (worth more xp, scaled by the difficulty's
- * `menaceEffectMult` via `evoEffect`) and marks the mob so its drop rolls
- * better. Elites and bosses ignore `evo` — they instead power-match the
- * player when they engage (maybePowerScale). */
+ * (mobHpScaleFor / mobLevelScale). Kill XP is LEVEL-based (`mobLevelXp` off the
+ * mob's `mlvl`), not hp-based, so hp and xp are decoupled. `evo` is the menace
+ * evolution stage stamped onto a MINION spawned while the horde is rampaging
+ * (see menace.ts): it stacks extra hp (a challenge knob, scaled by the
+ * difficulty's `menaceEffectMult` via `evoEffect`) and marks the mob so its
+ * drop rolls WORSE. Elites and bosses ignore `evo` — they instead power-match
+ * the player when they engage (maybePowerScale). */
 export function spawnEnemy(
   defId: string,
   pos: Vec2,
@@ -676,15 +677,30 @@ export function spawnEnemy(
   // A RARE/UNIQUE mob's whole tier lands here (config RARE_MOBS): the def is
   // authored at ordinary minion numbers and the multipliers make it special.
   const rarity = def.rarity ? RARE_MOBS.tuning[def.rarity] : undefined;
+  // The PER-MOB SPAWN LEVEL BAND (config MENACE.mobLevelBand): a plain minion
+  // rolls a uniform integer offset a few levels either side of the horde
+  // baseline, so a wave is a mix of levels rather than a flat clone army. The
+  // offset shifts the mob's monster level (feeding its hp here, and its
+  // level-based kill XP and loot gates via `mlvl` below). Elites, bosses, and
+  // rare/unique mobs skip it — they settle a deterministic mlvl when their
+  // fight engages (`maybePowerScale`). Drawn from the same seeded rng as the
+  // speed jitter, so runs stay reproducible.
+  const band =
+    def.role === "minion" && !rarity
+      ? Math.floor(
+          rng() * (MENACE.mobLevelBand.max - MENACE.mobLevelBand.min + 1),
+        ) + MENACE.mobLevelBand.min
+      : 0;
   // The developer mob-hp knob multiplies in here — the one chokepoint every
   // spawn path funnels through — so placed mobs, waves, and rushers all
-  // toughen together (and pay proportionally more XP, since kill XP is
-  // hp-proportional).
+  // toughen together. The band adds its levels in RAMP space
+  // (`band × mobHpPerLevel`), floored by the same `mobHpScaleFloor` the caller
+  // already applied, so a deep-negative roll can't zero a mob out.
   const hp = Math.max(
     1,
     Math.round(
       def.hp *
-        hpMult *
+        Math.max(MENACE.mobHpScaleFloor, hpMult + band * MENACE.mobHpPerLevel) *
         evolutionHpMult(evolved, evoEffect) *
         BALANCE.mobHp *
         (rarity?.hpMult ?? 1),
@@ -704,7 +720,10 @@ export function spawnEnemy(
     // early, like elites do). Elites and bosses re-stamp it the moment their
     // fight engages (maybePowerScale), so their drops match the hero who
     // beat them — and rare/unique mobs re-stamp the same way.
-    mlvl: Math.max(1, mlvl + (def.levelBonus ?? 0) + (rarity?.levelBonus ?? 0)),
+    mlvl: Math.max(
+      1,
+      mlvl + (def.levelBonus ?? 0) + (rarity?.levelBonus ?? 0) + band,
+    ),
     speed: def.speed * (1 + jitter),
     contactCooldownMs: 0,
   };

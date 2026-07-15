@@ -13,6 +13,7 @@ import {
   enemyKillXp,
   hitEnemy,
   LEVELING,
+  mobLevelXp,
   overkillEfficiency,
   xpToLevelUp,
 } from "@game/core";
@@ -62,12 +63,21 @@ describe("enemyKillXp — elite/boss bar-share rule", () => {
     expect(low / xpToLevelUp(5)).toBeCloseTo(high / xpToLevelUp(50));
   });
 
-  it("minions still pay the hp-proportional reward (unchanged)", () => {
+  it("minions pay a LEVEL-based reward — the same xp whatever the hp", () => {
     const state = heroAt(20);
-    const enemy = makeEnemy({ pos: { x: 0, y: 0 }, maxHp: 90 }, "test_brute");
-    expect(enemyKillXp(state, enemyDef("test_brute"), enemy)).toBe(
-      90 * LEVELING.xpPerHp,
+    // Two brutes of the same monster level but wildly different hp pay alike:
+    // kill xp keys off `mobLevelXp(mlvl)`, never the health bar.
+    const squishy = makeEnemy(
+      { pos: { x: 0, y: 0 }, maxHp: 30, mlvl: 12 },
+      "test_brute",
     );
+    const tank = makeEnemy(
+      { pos: { x: 0, y: 0 }, maxHp: 300, mlvl: 12 },
+      "test_brute",
+    );
+    const expected = mobLevelXp(12, 20);
+    expect(enemyKillXp(state, enemyDef("test_brute"), squishy)).toBe(expected);
+    expect(enemyKillXp(state, enemyDef("test_brute"), tank)).toBe(expected);
   });
 });
 

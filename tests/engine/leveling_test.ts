@@ -23,6 +23,7 @@ import {
   LOOT,
   MENACE,
   mobHpScaleFor,
+  mobLevelXp,
   openInventory,
   PLAYER,
   playerCritChance,
@@ -53,10 +54,11 @@ import {
   steerTo,
 } from "./helpers.ts";
 
-/** Kill one hand-placed ghost of the given max hp and return the state. */
-function killGhostWorth(maxHp: number) {
-  // Ranged blaster: the XP maths is about the victim's hp, not the weapon, so
-  // pick it off from a fixed distance rather than closing with the melee sword.
+/** Kill one hand-placed ghost of the given max hp and monster level, return
+ * the state. Kill XP now keys off `mlvl`, not hp, so both are parameterized. */
+function killGhostWorth(maxHp: number, mlvl: number) {
+  // Ranged blaster: pick the ghost off from a fixed distance (its per-shot
+  // damage stays under the ghost's hp, so no overkill toll clips the xp).
   const state = equipBlaster(startGame());
   state.player.stats.luck = 0;
   clearStage(state); // keep the parked boss so the objective stays open
@@ -65,6 +67,7 @@ function killGhostWorth(maxHp: number) {
       pos: { x: state.player.pos.x + 60, y: state.player.pos.y },
       hp: maxHp,
       maxHp,
+      mlvl,
     }),
   );
   run(state, idle, 8000, (s) => s.enemies.length === 1);
@@ -86,13 +89,21 @@ function dingToLevel2() {
 }
 
 describe("xp", () => {
-  it("is proportional to the killed monster's max hp", () => {
-    const small = killGhostWorth(20);
-    expect(small.stats.xpGained).toBe(Math.round(20 * LEVELING.xpPerHp));
-    expect(small.player.xp).toBe(small.stats.xpGained); // below the threshold
+  it("is proportional to the mob's LEVEL, not its hp", () => {
+    // Same monster level, different hp: a tank and a squishy pay the SAME xp —
+    // kill xp keys off the level, never the health bar. (mlvl 5 keeps the
+    // reward under the tiny level-1 threshold, so no ding muddies the read.)
+    const squishy = killGhostWorth(20, 5);
+    const tank = killGhostWorth(50, 5);
+    const atFive = Math.round(mobLevelXp(5, 1));
+    expect(squishy.stats.xpGained).toBe(atFive);
+    expect(tank.stats.xpGained).toBe(atFive);
+    expect(squishy.player.xp).toBe(squishy.stats.xpGained); // below the threshold
 
-    const big = killGhostWorth(50);
-    expect(big.stats.xpGained).toBe(Math.round(50 * LEVELING.xpPerHp));
+    // A higher-level mob pays more, its hp held equal to the squishy above.
+    const hotter = killGhostWorth(20, 12);
+    expect(hotter.stats.xpGained).toBe(Math.round(mobLevelXp(12, 1)));
+    expect(hotter.stats.xpGained).toBeGreaterThan(atFive);
   });
 
   it("levels up at the threshold, celebrates, then pauses on a stat point", () => {
@@ -474,6 +485,10 @@ describe("stats", () => {
     // sooner — the first hit's damage is what we measure).
     state.player.stats.dexterity = 40;
     clearStage(state);
+    // Pin the rng mid-band: above the (DEX-trimmed) miss/dodge chances so the
+    // shot lands, below the saturated crit chance (~0.79 at DEX 40) so it
+    // always crits — deterministic regardless of the seeded stream position.
+    state.rng = () => 0.5;
     state.enemies.push(
       makeEnemy({
         pos: { x: state.player.pos.x + 60, y: state.player.pos.y },

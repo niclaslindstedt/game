@@ -256,6 +256,7 @@ export {
   chosenStatPointsThrough,
   diminishStat,
   levelStatGains,
+  mobLevelXp,
   referenceMobXp,
   setAutoStatGainsEnabled,
   statCap,

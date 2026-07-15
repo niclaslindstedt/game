@@ -85,11 +85,6 @@ export const BALANCE_KNOBS: BalanceKnob[] = [
     label: "CLEAR GATE",
     blurb: "HOW FAR YOU MUST OUT-CLEAR SPAWNS TO HEAT MENACE",
   },
-  {
-    key: "mobDamageTracking",
-    label: "MOB DMG TRACK",
-    blurb: "HOW MUCH MOB HP CHASES THE HERO'S WEAPON OUTPUT",
-  },
 ];
 
 /** A knob spans 0× (system off) to 100× the shipped tuning; 1× is baseline. */

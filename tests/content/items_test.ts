@@ -100,7 +100,7 @@ describe("boss loot", () => {
     // seed that clears the (capped) rare roll the haul reads rare + guaranteed
     // magic. A fixed seed pins that clear, since the ceiling makes each rolled
     // piece ~85%, not guaranteed.
-    const state = startGame(1);
+    const state = startGame(3);
     state.player.level = 7;
     state.player.stats.luck = 30;
     state.items = [];
@@ -175,6 +175,9 @@ describe("ghost drops", () => {
             pos: { x: state.player.pos.x + 40 + i * 12, y: state.player.pos.y },
             hp: 1,
             maxHp: 1,
+            // Low mlvl → trivial (level-based) kill xp, so clearing the three
+            // never dings the fresh hero and freezes the run mid-sweep.
+            mlvl: 1,
           }),
         );
       }

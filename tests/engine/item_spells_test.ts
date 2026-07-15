@@ -205,7 +205,9 @@ describe("procs (the `proc` affix)", () => {
     stopWaves(state);
     state.player.disarmed = true;
     const at = { x: state.player.pos.x + 200, y: state.player.pos.y };
-    const victim = makeEnemy({ pos: at, hp: 1, speed: 0 });
+    // Low mlvl → the kill pays trivial (level-based) xp, so no incidental ding
+    // inflates abilityPowerScale and the nova damage this test measures.
+    const victim = makeEnemy({ pos: at, hp: 1, speed: 0, mlvl: 1 });
     const neighbor = makeEnemy({
       id: 9001,
       pos: { x: at.x + SPELL.nova.radius - 10, y: at.y },
