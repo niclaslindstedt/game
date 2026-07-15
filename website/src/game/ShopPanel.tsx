@@ -158,10 +158,12 @@ function BulkSellButton({
   );
 }
 
-/** Mend the hero's whole kit for coins — a SPEND, so it shows the price (gold
- * when affordable, red when the purse is short) and disables when nothing needs
- * mending or the hero can't cover it. */
-function RepairButton({
+/** Mend the hero's whole kit for coins — a SPEND that lives in the stall as its
+ * own slot: a wrench icon over the price, priced gold when affordable and red
+ * when the purse is short. Unlike the goods around it, a tap acts immediately
+ * (no detail-bar select). When the kit is already whole it dims to "OK" like a
+ * sold-out weapon. */
+function RepairSlot({
   font,
   sprites,
   cost,
@@ -177,29 +179,29 @@ function RepairButton({
   const needsRepair = cost > 0;
   const affordable = coins >= cost;
   const enabled = needsRepair && affordable;
-  const coin = spriteDataUrl(sprites, "icon_coin");
+  const wrench = spriteDataUrl(sprites, "icon_wrench");
   return (
     <button
       type="button"
-      className="pixel-button secondary shop-bulk-btn"
+      className={`shop-stall-item${needsRepair ? "" : " sold-out"}`}
       aria-label="repair-all"
       disabled={!enabled}
       onClick={enabled ? onRepair : undefined}
     >
-      {coin && <img src={coin} alt="" className="pixel-img shop-bulk-coin" />}
-      <PixelText
-        font={font}
-        text="REPAIR"
-        scale={2}
-        color={enabled ? "#e6e8eb" : "#5a6470"}
-      />
-      {needsRepair && (
-        <PixelText
+      <span className="inv-cell" style={{ borderColor: "#b8c2cc" }}>
+        {wrench && (
+          <img src={wrench} alt="" className="pixel-img inv-item-icon" />
+        )}
+      </span>
+      {needsRepair ? (
+        <CoinPrice
           font={font}
-          text={formatCompact(cost)}
-          scale={2}
-          color={affordable ? "#ffd75e" : "#c65f5f"}
+          sprites={sprites}
+          amount={cost}
+          color={affordable ? "#ffd75e" : "#e06a6a"}
         />
+      ) : (
+        <PixelText font={font} text="OK" scale={2} color="#5a6470" />
       )}
     </button>
   );
@@ -373,56 +375,21 @@ export function ShopPanel({
                 </button>
               );
             })}
+            {/* REPAIR ALL: mend the whole kit — a service slot beside the goods,
+                a wrench over its price. Acts on tap (no detail-bar select). */}
+            <RepairSlot
+              font={font}
+              sprites={sprites}
+              cost={repairTotal}
+              coins={player.coins}
+              onRepair={doRepair}
+            />
           </div>
         </div>
 
         {/* The hero's bag: tap a piece to see what he pays for it. */}
         <div className="shop-section">
-          <div className="inv-bag-header">
-            <PixelText font={font} text="YOUR BAG" scale={3} color="#9aa3ad" />
-            <div className="shop-bag-actions">
-              {/* SELL JUNK: only the outgrown pieces, one coin. */}
-              <BulkSellButton
-                font={font}
-                sprites={sprites}
-                coinIcon="icon_coin"
-                label="SELL JUNK"
-                ariaLabel="sell-junk"
-                total={junkTotal}
-                count={junk.length}
-                onSell={() => {
-                  for (const { index } of junk) sellItem(state, index);
-                  playUiSound(synth, "confirm");
-                  setSelected(null);
-                  onChange();
-                }}
-              />
-              {/* SELL ALL: the whole bag, a stack of three coins. */}
-              <BulkSellButton
-                font={font}
-                sprites={sprites}
-                coinIcon="icon_coins"
-                label="SELL ALL"
-                ariaLabel="sell-all"
-                total={bagTotal}
-                count={bag.length}
-                onSell={() => {
-                  for (const { index } of bag) sellItem(state, index);
-                  playUiSound(synth, "confirm");
-                  setSelected(null);
-                  onChange();
-                }}
-              />
-              {/* REPAIR ALL: mend the whole kit for coins. */}
-              <RepairButton
-                font={font}
-                sprites={sprites}
-                cost={repairTotal}
-                coins={player.coins}
-                onRepair={doRepair}
-              />
-            </div>
-          </div>
+          <PixelText font={font} text="YOUR BAG" scale={3} color="#9aa3ad" />
           <div className="inv-grid shop-bag-grid">
             {player.inventory.map((item, index) => (
               <button
@@ -588,14 +555,52 @@ export function ShopPanel({
           )}
         </div>
 
-        <button
-          type="button"
-          className="pixel-button secondary modal-close-btn"
-          aria-label="close-shop"
-          onClick={onClose}
-        >
-          <PixelText font={font} text="CLOSE" scale={2} />
-        </button>
+        {/* The counter's bottom row: the bulk-sell tools on the left, the
+            dismiss on the right. */}
+        <div className="shop-footer">
+          <div className="shop-footer-sell">
+            {/* SELL JUNK: only the outgrown pieces, one coin. */}
+            <BulkSellButton
+              font={font}
+              sprites={sprites}
+              coinIcon="icon_coin"
+              label="SELL JUNK"
+              ariaLabel="sell-junk"
+              total={junkTotal}
+              count={junk.length}
+              onSell={() => {
+                for (const { index } of junk) sellItem(state, index);
+                playUiSound(synth, "confirm");
+                setSelected(null);
+                onChange();
+              }}
+            />
+            {/* SELL ALL: the whole bag, a stack of three coins. */}
+            <BulkSellButton
+              font={font}
+              sprites={sprites}
+              coinIcon="icon_coins"
+              label="SELL ALL"
+              ariaLabel="sell-all"
+              total={bagTotal}
+              count={bag.length}
+              onSell={() => {
+                for (const { index } of bag) sellItem(state, index);
+                playUiSound(synth, "confirm");
+                setSelected(null);
+                onChange();
+              }}
+            />
+          </div>
+          <button
+            type="button"
+            className="pixel-button secondary modal-close-btn"
+            aria-label="close-shop"
+            onClick={onClose}
+          >
+            <PixelText font={font} text="CLOSE" scale={2} />
+          </button>
+        </div>
       </div>
     </div>
   );

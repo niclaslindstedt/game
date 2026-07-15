@@ -519,6 +519,22 @@ const SPRITES = {
     "....OOOO....",
     "............",
   ],
+  // The shop's REPAIR mark: a chrome open-end wrench, jaws up over a straight
+  // handle and a rounded grip — the merchant's "mend the kit" slot.
+  icon_wrench: [
+    "..OO...OO...",
+    "..OvO.OVO...",
+    "..OvOOOvO...",
+    "..OVvvvvO...",
+    "...OvvvO....",
+    "....OvO.....",
+    "....OvO.....",
+    "....OvO.....",
+    "...OvvvO....",
+    "...OvvvO....",
+    "....OOO.....",
+    "............",
+  ],
   // The starter BAG: a leather satchel — a top carry handle over a rounded
   // body, a brass clasp down the middle, right and bottom edges shaded.
   icon_bag: [

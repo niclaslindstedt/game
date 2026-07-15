@@ -4960,15 +4960,35 @@ canvas.tier-artifact {
   height: 1.3rem;
 }
 
-/* The bulk-sell tools (SELL JUNK + SELL ALL) cluster to the right of the BAG
-   title, wrapping onto a second line before they'd crowd the header. */
-.shop-bag-actions {
+/* The counter's bottom row: the bulk-sell tools on the left, the CLOSE button
+   on the right. Wraps before it would overflow a narrow panel; CLOSE keeps to
+   the right edge (via its `margin-left: auto`) even when it drops to its own
+   line. */
+.shop-footer {
   display: flex;
   flex-direction: row;
   flex-wrap: wrap;
-  justify-content: flex-end;
   align-items: center;
   gap: 0.5rem;
+}
+
+/* SELL JUNK + SELL ALL sit together on the left, wrapping between themselves
+   before crowding CLOSE. */
+.shop-footer-sell {
+  display: flex;
+  flex-direction: row;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+/* In the footer row CLOSE hugs the right edge (`margin-left: auto` eats the
+   free space to its left, on a shared line or a wrapped line of its own). The
+   panel-level `flex-end` would otherwise pin it to the row's bottom rather than
+   centre it vertically. */
+.shop-footer .modal-close-btn {
+  align-self: center;
+  margin-left: auto;
 }
 
 /* Each bulk button: its coin glyph, the label, and the coins it fetches. The
