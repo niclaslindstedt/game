@@ -47,15 +47,18 @@ const MAX_ANGLE_ERR = 22;
 // its orbit around the Earth, so the sun sits at a varied azimuth relative to
 // the Moon. The disc is always half-lit, so every frame leaves a clear
 // terminator to read a direction from.
+// Each pins the Moon to a spot where it rides clear of both the sun's glare and
+// the Earth's disc, so its half-lit face leaves a clean terminator to read a
+// direction from (chosen against the tilted-orbit geometry in titleSky.ts).
 const SAMPLES = [
-  { p: 0.1, note: "moon leading the earth" },
-  { p: 0.2, note: "moon above the earth" },
-  { p: 0.4, note: "moon trailing, sun to the lower right" },
-  { p: 0.45, note: "moon trailing the earth" },
-  { p: 0.5, note: "moon below the earth" },
-  { p: 0.85, note: "moon leading, sun to the left" },
-  { p: 0.9, note: "moon above-left of the earth" },
-  { p: 0.94, note: "moon crossing toward the sun" },
+  { p: 0.1, note: "moon near side, sun to the left" },
+  { p: 0.15, note: "moon just past conjunction" },
+  { p: 0.34, note: "moon near side, sun below" },
+  { p: 0.48, note: "moon near side, sun upper-left" },
+  { p: 0.53, note: "moon far side, sun to the right" },
+  { p: 0.72, note: "moon near side, sun to the right" },
+  { p: 0.86, note: "moon near side, sun upper-left" },
+  { p: 0.91, note: "moon far side, sun below" },
 ];
 
 // Only assert direction where the lit fraction leaves a clear terminator (the
