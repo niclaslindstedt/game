@@ -11,7 +11,6 @@
 import { describe, expect, it } from "vitest";
 
 import {
-  autoPowerScale,
   createGame,
   currentMobLevel,
   dismissIntro,
@@ -23,7 +22,6 @@ import {
   heroGearLevel,
   heroPowerLevel,
   hitEnemy,
-  LEVELING,
   MENACE,
   menaceCeiling,
   menaceClearGate,
@@ -38,7 +36,7 @@ import {
   setBalanceTuning,
   skipCutscene,
   step,
-  weaponDps,
+  xpToLevelUp,
 } from "@game/core";
 import type { Equipment, GameInput, GameState } from "@game/core";
 
@@ -50,6 +48,22 @@ function startOn(difficulty: string, levelId = "test_level"): GameState {
   skipCutscene(state);
   dismissIntro(state);
   return state;
+}
+
+/** The [min, max] rounded hp a rank-and-file minion can carry off base `hp`,
+ * horde `scale`, and an optional evolution `mult`, once the per-mob spawn band
+ * (MENACE.mobLevelBand) rolls its ±level offset in ramp space. */
+function bandHpBounds(hp: number, scale: number, mult = 1): [number, number] {
+  const at = (offset: number) =>
+    Math.round(
+      hp *
+        Math.max(
+          MENACE.mobHpScaleFloor,
+          scale + offset * MENACE.mobHpPerLevel,
+        ) *
+        mult,
+    );
+  return [at(MENACE.mobLevelBand.min), at(MENACE.mobLevelBand.max)];
 }
 
 /** Slot a specific weapon so the swing/shot damage is known. */
@@ -333,10 +347,13 @@ describe("menace — evolution of the horde", () => {
     for (const e of spawned) {
       expect(e.evo).toBeUndefined();
       // No evolution — just the horde's relative-level scale (medium fields
-      // mobs two levels under a level-1 hero).
-      expect(e.maxHp).toBe(
-        Math.round(enemyDef(e.defId).hp * mobHpScaleFor(1, "medium")),
+      // mobs two levels under a level-1 hero) plus each mob's own spawn band.
+      const [lo, hi] = bandHpBounds(
+        enemyDef(e.defId).hp,
+        mobHpScaleFor(1, "medium"),
       );
+      expect(e.maxHp).toBeGreaterThanOrEqual(lo);
+      expect(e.maxHp).toBeLessThanOrEqual(hi);
     }
   });
 
@@ -350,14 +367,20 @@ describe("menace — evolution of the horde", () => {
     expect(evolved.length).toBeGreaterThan(0);
     for (const e of evolved) {
       expect(e.evo).toBeGreaterThanOrEqual(1);
-      // Each mob's hp is consistent with its OWN stamped stage, on top of
-      // the relative-level scale (medium menaceEffectMult is 1).
+      // Each mob's hp is consistent with its OWN stamped stage, on top of the
+      // relative-level scale (medium menaceEffectMult is 1) and its spawn band.
       const mult = 1 + (e.evo ?? 0) * MENACE.hpPerStage;
-      expect(e.maxHp).toBe(
-        Math.round(enemyDef(e.defId).hp * mobHpScaleFor(1, "medium") * mult),
+      const [lo, hi] = bandHpBounds(
+        enemyDef(e.defId).hp,
+        mobHpScaleFor(1, "medium"),
+        mult,
       );
-      // An evolved mob is worth more xp (xp is hp-proportional) than an
-      // un-evolved spawn of its kind.
+      expect(e.maxHp).toBeGreaterThanOrEqual(lo);
+      expect(e.maxHp).toBeLessThanOrEqual(hi);
+      // Even the lowest band roll on a stage-3 evolved mob out-toughens an
+      // un-evolved spawn's baseline — a rampage crop takes more killing.
+      // (It no longer pays more xp, though: kill xp is LEVEL-based now, and
+      // evolution stacks hp, not level.)
       expect(e.maxHp).toBeGreaterThan(
         Math.round(enemyDef(e.defId).hp * mobHpScaleFor(1, "medium")),
       );
@@ -426,6 +449,10 @@ describe("menace — the evolution ratchet (no breaks)", () => {
     const state = startOn(difficulty);
     bareStage(state);
     state.player.level = 8; // fully past the warmup damping
+    // Sync the bar to the pinned level: kills now pay real (level-based) xp, so
+    // a stale level-1 threshold would ding mid-test and freeze the run in the
+    // levelup phase — stalling the ratchet cooldown these tests measure.
+    state.player.xpToNext = xpToLevelUp(state.player.level);
     state.rng = () => 0.99;
     return state;
   }
@@ -609,147 +636,57 @@ describe("menace — difficulty caps the peak", () => {
   });
 });
 
-describe("hero power level — gear drives the horde", () => {
-  it("averages the total equipped ilvl over the whole rack", () => {
+describe("hero power level — character level only", () => {
+  it("power IS the character level, whatever the rack", () => {
     const state = startGame();
     // The fresh rack (wall weapon + street clothes, all ilvl 1-ish) reads
-    // well under the character level, so a fresh hero's power IS his level.
+    // well under the character level.
     expect(heroGearLevel(state)).toBeLessThan(1);
     expect(heroPowerLevel(state)).toBe(state.player.level);
-    // Deck the hero out: a 70-ilvl weapon alone averages 10 over 7 slots.
+    // Deck the hero out: a 70-ilvl weapon averages gear level 10 — but the
+    // horde no longer follows gear at all, so power stays the character level.
     state.player.equipment.weapon.ilvl = 70;
     expect(heroGearLevel(state)).toBe(10);
-    expect(heroPowerLevel(state)).toBe(10);
+    expect(heroPowerLevel(state)).toBe(state.player.level);
   });
 
-  it("a decked-out hero meets a horde TOUGHENED to his gear, not his sheet", () => {
+  it("gear and weapon damage never toughen the horde", () => {
     const state = startGame(); // medium: mobLevelOffset −2
     const mlvlBefore = currentMobLevel(state);
     const hpScaleBefore = mobLevelScale(state);
-    expect(mlvlBefore).toBe(1); // level-1 hero, floor at 1
-    state.player.equipment.weapon.ilvl = 70; // power level 10
-    // Gear buys harder fights — minion hp and the set-piece power-match —
-    // but the loot-facing monster level stays on the character sheet.
-    expect(mobLevelScale(state)).toBeGreaterThan(hpScaleBefore);
-    expect(enemyPowerScale(state)).toBeGreaterThan(1);
+    const bossScaleBefore = enemyPowerScale(state);
+    // A twink rack AND an absurd +900% damage affix — the old power-match would
+    // have toughened the horde to both. Now neither moves minion hp or the
+    // set-piece power-match.
+    state.player.equipment.weapon.ilvl = 70;
+    state.player.equipment.weapon.affixes.push({ kind: "damagePct", value: 9 });
+    expect(heroDamageLevel(state)).toBeGreaterThan(state.player.level);
+    expect(heroPowerLevel(state)).toBe(state.player.level);
+    expect(mobLevelScale(state)).toBe(hpScaleBefore);
+    expect(enemyPowerScale(state)).toBe(bossScaleBefore);
+    // …and the loot-facing monster level stays on the character sheet too.
     expect(currentMobLevel(state)).toBe(mlvlBefore);
   });
 
-  it("ordinary play is untouched — gear trailing the level changes nothing", () => {
-    const state = startGame();
-    state.player.level = 10;
-    // Mid-campaign gear sits a few levels under the mobs it dropped from.
-    state.player.equipment.weapon.ilvl = 8;
-    expect(heroPowerLevel(state)).toBe(10);
-    expect(currentMobLevel(state)).toBe(8); // 10 − 2, exactly as before
-  });
-});
-
-describe("hero power level — calculated damage drives the horde", () => {
-  /** The mapping's own arithmetic, from the exported pieces: the weapon's
-   * sustained output, read against the typical healthbar at the hero's
-   * autoPowerScale, inverted through the mob-hp-per-level ramp. */
-  const expectedDamageLevel = (state: GameState) => {
-    const dps = weaponDps(state, state.player.equipment.weapon);
-    const bar = LEVELING.refMobHp * autoPowerScale(state.player.level);
-    return (
-      1 + ((dps * MENACE.damageLevelKillSec) / bar - 1) / MENACE.mobHpPerLevel
-    );
-  };
-
-  it("maps the weapon's sustained output onto the mob-hp curve", () => {
-    const state = startGame();
-    expect(heroDamageLevel(state)).toBeCloseTo(expectedDamageLevel(state), 6);
-  });
-
-  it("fair-for-level damage reads WELL under the character level (grace)", () => {
-    const state = startGame();
-    // The fixture starter is level-appropriate: its damage level sits below
-    // the character level, so the max() never hears from it and ordinary
-    // play is exactly as before.
-    expect(heroDamageLevel(state)).toBeLessThan(state.player.level);
-    expect(heroPowerLevel(state)).toBe(state.player.level);
-  });
-
-  it("an absurd damage roll toughens the horde to what the hero swings", () => {
-    const state = startGame();
-    const hpScaleBefore = mobLevelScale(state);
-    const bossScaleBefore = enemyPowerScale(state);
-    // A +900% damage affix — the kind of roll ilvl never priced in. The
-    // weapon's ilvl stays put, so the GEAR level alone would miss it.
-    state.player.equipment.weapon.affixes.push({
-      kind: "damagePct",
-      value: 9,
-    });
-    expect(heroGearLevel(state)).toBeLessThan(state.player.level);
-    const damageLevel = heroDamageLevel(state);
-    expect(damageLevel).toBeGreaterThan(state.player.level);
-    // The horde tracks the damage only PARTIALLY — `MENACE.damageLevelTracking`
-    // (0.2) of its excess over the character level — so a strong weapon toughens
-    // the horde but the hero still pulls ahead (and can overkill → rampage).
-    const char = state.player.level;
-    expect(heroPowerLevel(state)).toBeCloseTo(
-      char + MENACE.damageLevelTracking * (damageLevel - char),
-    );
-    expect(heroPowerLevel(state)).toBeLessThan(damageLevel);
-    // The horde's TOUGHNESS still follows the damage (dampened): minion hp and
-    // the set-piece power-match both rise.
-    expect(mobLevelScale(state)).toBeGreaterThan(hpScaleBefore);
-    expect(enemyPowerScale(state)).toBeGreaterThan(bossScaleBefore);
-  });
-
-  it("neither damage nor gear opens loot gates — no good-find→better-finds loop", () => {
+  it("only the character level moves toughness and the loot gates", () => {
     const state = startGame();
     const mlvlBefore = currentMobLevel(state);
-    // An absurd damage roll: toughness answers (heroPowerLevel), but the
-    // monster level — and the levelReq/tier/item-level gates hanging off
-    // it — is exactly what the CHARACTER level says: harder fights and
-    // more xp, never a better successor.
-    state.player.equipment.weapon.affixes.push({
-      kind: "damagePct",
-      value: 9,
-    });
-    expect(heroPowerLevel(state)).toBeGreaterThan(state.player.level);
-    expect(currentMobLevel(state)).toBe(mlvlBefore);
-    // A twink rack: same rule — gear toughens the horde, not the drops.
-    state.player.equipment.weapon.affixes.pop();
-    state.player.equipment.weapon.ilvl = 70; // gear level 10 across 7 slots
-    expect(heroPowerLevel(state)).toBe(10);
-    expect(currentMobLevel(state)).toBe(mlvlBefore);
-    // Only the character level moves the loot gates.
+    const hpScaleBefore = mobLevelScale(state);
     state.player.level = 10;
+    expect(heroPowerLevel(state)).toBe(10);
+    expect(mobLevelScale(state)).toBeGreaterThan(hpScaleBefore);
     expect(currentMobLevel(state)).toBeGreaterThan(mlvlBefore);
+    expect(currentMobLevel(state)).toBe(8); // 10 − 2, the difficulty offset
   });
 
-  it("mob health answers the damage: the leveled bar meets the output", () => {
+  it("heroDamageLevel survives as a diagnostic (analytic readout)", () => {
     const state = startGame();
-    state.player.equipment.weapon.affixes.push({
-      kind: "damagePct",
-      value: 9,
-    });
-    // At equilibrium a typical minion of the answered level takes the
-    // weapon's sustained output ~damageLevelKillSec seconds to fell — the
-    // absurd weapon is pulled back to a fair fight instead of melting the
-    // campaign.
-    const dps = weaponDps(state, state.player.equipment.weapon);
-    const level = heroDamageLevel(state);
-    const bar =
-      LEVELING.refMobHp *
-      (1 + (level - 1) * MENACE.mobHpPerLevel) *
-      autoPowerScale(state.player.level);
-    expect(bar / dps).toBeCloseTo(MENACE.damageLevelKillSec, 6);
-  });
-
-  it("swapping the absurd weapon away drops the read again", () => {
-    const state = startGame();
+    // The mapping still computes the weapon's sustained output as a level; it
+    // simply no longer feeds heroPowerLevel.
     const fair = heroDamageLevel(state);
-    state.player.equipment.weapon.affixes.push({
-      kind: "damagePct",
-      value: 9,
-    });
+    state.player.equipment.weapon.affixes.push({ kind: "damagePct", value: 9 });
     expect(heroDamageLevel(state)).toBeGreaterThan(fair);
-    state.player.equipment.weapon.affixes.pop();
-    expect(heroDamageLevel(state)).toBeCloseTo(fair, 6);
+    expect(heroPowerLevel(state)).toBe(state.player.level);
   });
 });
 

@@ -338,9 +338,9 @@ run against synthetic fixtures with no shipped content (see
   The `menaceStage` lures a denser horde (`lureMult`, read by
   the wave spawner, its crowd growth alone capped at `lureStageCap`),
   evolves freshly-spawned minions (`evolutionHpMult`, stamped in
-  `create.ts`'s `spawnEnemy` — more hp, hence more xp, but a WORSE loot
-  tier roll via `tierPenaltyPerStage`, so a rampage levels rather than
-  farms), and — with the hero's power — power-matches elites/bosses when
+  `create.ts`'s `spawnEnemy` — more hp, but a WORSE loot tier roll via
+  `tierPenaltyPerStage`; evolution is a challenge knob, not an xp or loot
+  faucet, since kill xp is level-based), and power-matches elites/bosses when
   they engage (`enemyPowerScale`/`maybePowerScale`, called from both
   `step.ts` wake and `loot.ts` first-hit). POWERUP output — the screen-nuke
   bomb, fire orbs, and storm cell — is exempt from all of this: `hitEnemy`'s
@@ -348,37 +348,31 @@ run against synthetic fixtures with no shipped content (see
   `menaceExemptKills` (so `step.ts` nets them out of the rolling DPS/kill-rate
   `tickMenace` reads) and makes `killEnemy` skip `bankOverkill` entirely, so a
   consumable clearing the screen never jolts, lures, or ratchets — menace
-  answers only the hero's own weapon. Separately from that
-  moment-to-moment heat, the hero's POWER LEVEL (`heroPowerLevel`: the
-  character level, the gear rack's averaged total ilvl (`heroGearLevel`),
-  or the equipped weapon's calculated output mapped onto the mob-hp curve
-  (`heroDamageLevel` — the level whose typical minion the weapon's
-  sustained DPS would fell in `damageLevelKillSec` seconds, so an absurd
-  `damage`/`damagePct` roll ilvl never priced in still reads as the power
-  it actually swings), whichever is highest — so a decked-out hero meets a
-  horde levelled to what he actually wields. The DAMAGE term is DAMPENED to
-  `MENACE.damageLevelTracking` (0.2, ×the `mobDamageTracking` balance knob)
-  of its excess over the character level: a full 1:1 hp match pinned
-  time-to-kill flat and stopped a strong build ever OVERKILLING, which
-  starved the menace/evolution ratchet — the endgame's real challenge — so
-  the horde now only lag-follows a fifth of the hero's dps and the ratchet
-  answers the runaway instead) gives every minion a
-  non-decaying toughness floor at spawn (`mobLevelScale`, folded into
-  `spawnEnemy`'s hp mult) and richer drops (`mobLevelTierBonus`, added to
-  the loot tier roll), so a levelled hero keeps meeting a proportionally
-  sturdier, better-paying horde. The LOOT gates deliberately key to the
-  CHARACTER level alone (the monster level `currentMobLevel` stamps, which
-  decides base `levelReq`, tier unlocks, and the dropped item's own
-  level): the gear and damage reads buy toughness and xp, never better
-  drops, so one hot find can't roll itself an even better successor and
-  leapfrog the difficulty ladder. The kill side pays by the same honesty:
+  answers only the hero's own weapon. Separately from that moment-to-moment
+  heat, the hero's POWER LEVEL (`heroPowerLevel`) is simply his CHARACTER
+  level: neither his gear rack nor his weapon damage toughens the horde any
+  more, so out-gearing the campaign makes the fights easier (as it should)
+  and the menace EVOLUTION ratchet — not an hp match — answers a steamrolling
+  build. (`heroGearLevel`/`heroDamageLevel` survive only as `src/sim` analytic
+  readouts.) The character level gives every minion a non-decaying toughness
+  floor at spawn (`mobLevelScale`, folded into `spawnEnemy`'s hp mult) plus a
+  per-mob random level BAND (`MENACE.mobLevelBand`, −3…+2 stacked on the
+  difficulty offset, so a wave is a mix of levels), and richer drops
+  (`mobLevelTierBonus`), so a levelled hero keeps meeting a proportionally
+  sturdier, better-paying horde. Kill XP is LEVEL-based (`mobLevelXp` off the
+  mob's `mlvl`, NOT its hp — a tank and a squishy of the same level pay
+  alike), times a rare/unique mob's `xpMult`; elites/bosses instead pay a
+  share of the hero's current level bar. LOOT keys to the mob's level too: a
+  plain minion's chance at a NAMED tier (unique+) is cut to a sliver
+  (`LOOT.minionNamedMult`), while rare/unique/elite/boss kills carry the
+  set-piece rarity bonus, so the special fights — not trash farming — are the
+  chase-gear source. The kill side pays by the same honesty:
   `overkillEfficiency` scales a kill's xp AND its drop roll by
   `maxHp / damage` once the blow exceeds the full bar (2× the bar → half,
   3× → a third), so farming mobs far beneath you is deliberately
-  unrewarding. Both the minion floor and the elite/boss power-match
-  multiply by `autoPowerScale` (leveling.ts) — the free per-level stat
-  gains cancel out against the crowd, so only chosen points, gear, and
-  skill pull ahead.
+  unrewarding. The minion hp floor multiplies by `autoPowerScale`
+  (leveling.ts) — the free per-level stat gains cancel out against the crowd,
+  so only chosen points, gear, and skill pull ahead.
 - **`src/game/tuning.ts`** — runtime BALANCE TUNING: ~10 developer
   multipliers over the shipped config (XP gain, hero/mob damage, mob hp,
   horde size, drop rate, gear share/quality, unique drops, menace gain),

@@ -633,10 +633,12 @@ STRAY COMET…) that turns up on most runs — solo or a small pack — and a
 THE ONE-ARMED BANDIT…) that only appears about one run in five, always
 alone. Both are minion-role defs authored at ordinary numbers; the engine
 applies the whole tier at spawn — a rare is **5× tougher / 1.5× contact
-damage / 20× drop rate**, a unique **10× / 2× / 100×** — and both run a few
-monster levels hot (reaching the loot-tier gates early) and power-match the
-hero when the fight opens, so a special find deep in a run is a real fight
-with a loot burst, not a placed-at-level-1 speed bump. They carry no
+damage / 5× kill xp / 20× drop rate**, a unique **10× / 2× / 10× / 100×** —
+and both run a few monster levels hot (reaching the loot-tier gates early,
+and — since kill xp is level-based — paying more per kill on top of the
+`xpMult`) and power-match the hero (to his character level) when the fight
+opens, so a special find deep in a run is a real fight with a fat xp payout
+and a loot burst, not a placed-at-level-1 speed bump. They carry no
 dialogue: the recolored sprite (a per-biome palette variant of a base mob),
 a pulsing rarity aura (cool blue for rares, radiant gold for uniques), an
 over-head health bar, and the loot are the whole encounter.

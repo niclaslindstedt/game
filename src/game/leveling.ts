@@ -182,21 +182,37 @@ export function arrowXpShareAt(level: number): number {
 }
 
 /**
- * A reference minion's worth of XP at `level`: the flat per-level hp ramp
- * (`MENACE.mobHpPerLevel`) over `LEVELING.refMobHp`, carried by the same
- * `autoPowerScale` the horde scales by, priced at `LEVELING.xpPerHp`. This is
- * the "typical mob" unit the KILLS-per-level curve is authored against (see
- * `xpToLevelUp`), reused as the COLD arrow's payout unit so "5 mob kills"
- * means the same thing to the game and the calculator.
+ * The XP a rank-and-file minion of monster level `mlvl` pays — a function of
+ * its LEVEL ONLY, never its hp. A "reference" minion (`LEVELING.refMobHp` on
+ * the `mobHpPerLevel` ramp) priced at `LEVELING.xpPerHp` sets the scale, so a
+ * mob's XP is exactly what a typical 45-hp minion of that level would be worth
+ * — a bullet-sponge tank and a squishy of the same level pay the SAME, and an
+ * evolved (extra-hp) minion pays no more than an un-evolved one. `playerLevel`
+ * carries the `autoPowerScale` factor (the free-stat damage growth), keyed to
+ * the HERO's level so it cancels against the same factor in `xpToLevelUp`'s
+ * cost — the number of kills a level takes stays invariant to the auto-stat
+ * dev flag, exactly as it did when XP was hp-proportional (both are ×1 in the
+ * shipped auto-OFF baseline). The per-mob spawn band (see `spawnEnemy`) rolls
+ * `mlvl` up or down, so a hotter mob is worth proportionally more.
+ */
+export function mobLevelXp(mlvl: number, playerLevel: number): number {
+  return (
+    LEVELING.refMobHp *
+    (1 + (Math.max(1, mlvl) - 1) * MENACE.mobHpPerLevel) *
+    autoPowerScale(playerLevel) *
+    LEVELING.xpPerHp
+  );
+}
+
+/**
+ * A reference minion's worth of XP at `level`: `mobLevelXp` for a mob AT the
+ * hero's own level. This is the "typical mob" unit the KILLS-per-level curve
+ * is authored against (see `xpToLevelUp`), reused as the COLD arrow's payout
+ * unit so "5 mob kills" means the same thing to the game and the calculator.
  */
 export function referenceMobXp(level: number): number {
   const l = Math.max(1, level);
-  return (
-    LEVELING.refMobHp *
-    (1 + (l - 1) * MENACE.mobHpPerLevel) *
-    autoPowerScale(l) *
-    LEVELING.xpPerHp
-  );
+  return mobLevelXp(l, l);
 }
 
 /**
@@ -220,14 +236,14 @@ export function arrowColdXp(level: number): number {
  * (create.ts), and the arrival derivation (arrival.ts).
  *
  * The curve is authored in KILLS, not raw XP: each level costs
- * `killsPerLevel(L)` of a reference mob's worth of XP, where that mob's
- * toughness mirrors `mobHpScaleFor` at the neutral offset — the flat per-level
- * hp ramp (`MENACE.mobHpPerLevel`) times the automatic-stat damage curve
- * (`autoPowerScale`). Kill XP is hp-proportional, so the `autoPowerScale`
- * factor here CANCELS against the same factor in the mobs the hero is killing:
- * the number of kills a level takes is invariant to the auto-stat dev flag and
- * to how hard the hero hits, and rises only on the gentle geometric
- * `killsPerLevelGrowth`. That is what makes leveling taper predictably —
+ * `killsPerLevel(L)` of a reference mob's worth of XP (`referenceMobXp` =
+ * `mobLevelXp` for a mob at the hero's own level — the flat per-level ramp over
+ * `LEVELING.refMobHp` times the automatic-stat damage curve `autoPowerScale`).
+ * Kill XP is level-based off the SAME `mobLevelXp`, and both cost and reward
+ * carry `autoPowerScale(playerLevel)`, so that factor CANCELS: the number of
+ * kills a level takes is invariant to the auto-stat dev flag, and rises only on
+ * the gentle geometric `killsPerLevelGrowth`. That is what makes leveling taper
+ * predictably —
  * ~10–20 levels/day early, easing to ~2/day near the cap — instead of the old
  * pure-exponential bar that raced early then walled.
  */

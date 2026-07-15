@@ -45,6 +45,18 @@ function startOn(difficulty: Difficulty): GameState {
 const isBoss = (defId: string) => enemyDef(defId).role === "boss";
 const isMinion = (defId: string) => enemyDef(defId).role === "minion";
 
+/** The [min, max] rounded hp a rank-and-file minion can carry off a base `hp`
+ * and horde `scale`, once the per-mob spawn band (MENACE.mobLevelBand) rolls
+ * its ±level offset in ramp space (floored by `mobHpScaleFloor`). */
+function bandBounds(hp: number, scale: number): [number, number] {
+  const at = (offset: number) =>
+    Math.round(
+      hp *
+        Math.max(MENACE.mobHpScaleFloor, scale + offset * MENACE.mobHpPerLevel),
+    );
+  return [at(MENACE.mobLevelBand.min), at(MENACE.mobLevelBand.max)];
+}
+
 describe("difficulty catalog", () => {
   it("registers every ladder entry, gentlest first", () => {
     expect(DIFFICULTY_ORDER).toEqual([
@@ -156,20 +168,29 @@ describe("the horde's relative level (mobLevelOffset)", () => {
     ).toBeCloseTo(MENACE.mobHpPerLevel, 10);
   });
 
-  it("stamps placed monsters (bosses included) with the level-1 scale", () => {
+  it("stamps placed monsters — bosses exactly, minions within the spawn band", () => {
     const nightmare = startOn("nightmare");
     const jesus = startOn("jesus");
 
+    // Bosses skip the per-mob spawn band — exact level-1 scale.
     const nightmareBoss = nightmare.enemies.find((e) => isBoss(e.defId))!;
     expect(nightmareBoss.maxHp).toBe(
       Math.round(
         enemyDef(nightmareBoss.defId).hp * mobHpScaleFor(1, "nightmare"),
       ),
     );
+    // Rank-and-file minions carry the band: hp lands within [−3, +2] levels of
+    // the baseline; set pieces (boss/elite) stay exact.
+    const scale = mobHpScaleFor(1, "jesus");
     for (const enemy of jesus.enemies) {
-      expect(enemy.maxHp).toBe(
-        Math.round(enemyDef(enemy.defId).hp * mobHpScaleFor(1, "jesus")),
-      );
+      const def = enemyDef(enemy.defId);
+      if (def.role !== "minion" || def.rarity) {
+        expect(enemy.maxHp).toBe(Math.round(def.hp * scale));
+        continue;
+      }
+      const [lo, hi] = bandBounds(def.hp, scale);
+      expect(enemy.maxHp).toBeGreaterThanOrEqual(lo);
+      expect(enemy.maxHp).toBeLessThanOrEqual(hi);
     }
   });
 
@@ -179,9 +200,12 @@ describe("the horde's relative level (mobLevelOffset)", () => {
     expect(easy.enemies.length).toBeLessThan(medium.enemies.length);
     expect(easy.stats.totalEnemies).toBeLessThan(medium.stats.totalEnemies);
     const easyGhost = easy.enemies.find((e) => e.defId === "test_minion");
-    expect(easyGhost?.maxHp).toBe(
-      Math.round(enemyDef("test_minion").hp * mobHpScaleFor(1, "easy")),
+    const [lo, hi] = bandBounds(
+      enemyDef("test_minion").hp,
+      mobHpScaleFor(1, "easy"),
     );
+    expect(easyGhost?.maxHp).toBeGreaterThanOrEqual(lo);
+    expect(easyGhost?.maxHp).toBeLessThanOrEqual(hi);
   });
 });
 

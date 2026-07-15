@@ -211,9 +211,12 @@ export function applyLoadout(state: GameState, loadout: Loadout): void {
 }
 
 /** The XP a full clear of `def`'s roster pays at this difficulty: every
- * placed spawn and wave-budget mob at its catalog hp (base counts — the
- * derivation is a story baseline, not a difficulty simulation), with
- * difficulty-gated lines the cleared run never fielded left out. */
+ * placed spawn and wave-budget mob (base counts — the derivation is a story
+ * baseline, not a difficulty simulation), with difficulty-gated lines the
+ * cleared run never fielded left out. Live kill XP is LEVEL-based
+ * (`mobLevelXp`) now, but the derivation has no live mob level here; a mob's
+ * catalog `hp` (≈ `refMobHp` for typical fodder) is a good-enough PROXY for its
+ * level-based reward, so the estimate stays in the right ballpark. */
 function rosterXp(def: LevelDef, difficulty: Difficulty): number {
   const mobXp = (enemyId: string) => {
     const enemy = enemyDef(enemyId);

@@ -9,6 +9,7 @@ import { afterEach, describe, expect, it } from "vitest";
 
 import {
   hitEnemy,
+  mobLevelXp,
   overkillEfficiency,
   resetBalanceTuning,
   setBalanceTuning,
@@ -80,15 +81,19 @@ describe("kill event — launch inputs", () => {
 });
 
 describe("overkill toll — xp", () => {
-  it("a clean kill pays the mob's full hp-proportional xp", () => {
+  // The staged mob carries makeEnemy's default mlvl (99); kill xp is level-based
+  // now (`mobLevelXp`), and the overkill toll scales that base down.
+  const base = (state: GameState) => mobLevelXp(99, state.player.level);
+
+  it("a clean kill pays the mob's full level-based xp", () => {
     const state = bareStage();
-    expect(xpFromKill(state, 100, 100)).toBe(100);
+    expect(xpFromKill(state, 100, 100)).toBe(Math.round(base(state)));
   });
 
   it("a 2× blow pays half, a 3× blow a third", () => {
     const state = bareStage();
-    expect(xpFromKill(state, 100, 200)).toBe(50);
-    expect(xpFromKill(state, 100, 300)).toBe(33); // round(100/3)
+    expect(xpFromKill(state, 100, 200)).toBe(Math.round(base(state) * 0.5));
+    expect(xpFromKill(state, 100, 300)).toBe(Math.round(base(state) / 3));
   });
 
   it("never rounds a kill's reward below 1 xp", () => {

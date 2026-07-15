@@ -684,8 +684,17 @@ export const RARE_MOBS = {
   /** The per-tier multipliers over the def's authored minion baseline. */
   tuning: {
     rare: {
-      /** Hp multiplier — kill XP is hp-proportional, so the reward scales. */
+      /** Hp multiplier — a rare mob is a genuine fight, not fodder. */
       hpMult: 5,
+      /**
+       * Kill-XP multiplier over a same-level minion's level-based payout
+       * (`mobLevelXp`). Kill XP is now level-based, not hp-proportional, so a
+       * rare's reward needs its own lever — set to match the old hp-driven
+       * reward (it carried `hpMult`× the xp when xp tracked hp). A rare shows
+       * up ~once per map and can't be farmed, so a fat single payout is worth
+       * it without making mob-skipping the optimal XP route.
+       */
+      xpMult: 5,
       /** Contact-damage multiplier (folded into the mob's `contactMult`). */
       damageMult: 1.5,
       /** Multiplies the per-kill drop chance (~20× the rank and file). */
@@ -697,6 +706,7 @@ export const RARE_MOBS = {
     },
     unique: {
       hpMult: 10,
+      xpMult: 10,
       damageMult: 2,
       dropMult: 100,
       levelBonus: 4,
@@ -767,10 +777,10 @@ export const ARRIVAL = {
  * a stage that does
  * three things: it LURES more of the horde toward the player (the crowd
  * growth alone caps at `lureStageCap`), it EVOLVES freshly-spawned minions
- * (more hp → more xp, but WORSE loot — a leveling faucet, not a loot one),
- * and — folded in with the player's own power — it scales elites and bosses
- * when they engage, so the epic fights keep pace with the player's power
- * instead of melting. Units: raw menace points, world px, hp.
+ * (more hp and WORSE loot — a challenge knob, not an xp or loot faucet; kill
+ * xp is level-based now), and it scales elites and bosses when they engage
+ * (keyed to the hero's CHARACTER level), so the epic fights keep pace with the
+ * player instead of melting. Units: raw menace points, world px, hp.
  */
 export const MENACE = {
   /**
@@ -866,16 +876,16 @@ export const MENACE = {
   ratchetCooldownMs: 10_000,
   /**
    * Extra minion hp per evolution stage (+35% each), stamped when the mob
-   * spawns. Kill XP is hp-proportional, so an evolved mob is worth more xp
-   * automatically — evolution is a LEVELING faucet; its drops actually get
-   * WORSE per stage (see tierPenaltyPerStage below).
+   * spawns. Kill XP is LEVEL-based now (`mobLevelXp`), so evolution does NOT
+   * pay more xp — it is purely a challenge knob (more killing for the same
+   * reward), and its drops get WORSE per stage (see tierPenaltyPerStage below).
    */
   hpPerStage: 0.35,
   /**
    * Subtracted from an evolved minion's drop TIER roll per stage: malice
-   * mobs pay more xp (hp-proportional) but find WORSE gear — magic/rare odds
-   * thin out as the horde evolves, so a rampage is a decent way of leveling
-   * and a poor way of farming loot. Chances floor at 0 in `rollTier`.
+   * mobs take more killing but find WORSE gear — magic/rare odds thin out as
+   * the horde evolves, so a rampage is a poor way of farming loot. Chances
+   * floor at 0 in `rollTier`.
    */
   tierPenaltyPerStage: 0.03,
   /**
@@ -916,8 +926,9 @@ export const MENACE = {
    * JESUS two over — see mobHpScaleFor in menace.ts), and each level off the
    * baseline shifts its hp by this fraction (±8% each). Because the offset is
    * RELATIVE, the horde keeps pace as the hero grows and the difficulty gap
-   * never closes. Kill xp is hp-proportional, so a tougher mob is
-   * automatically worth more xp; its drops sweeten separately below. This is a
+   * never closes. Kill xp is LEVEL-based (`mobLevelXp`), so a higher-level mob
+   * is worth more xp for its LEVEL (not its hp); its drops sweeten separately
+   * below. This is a
    * NON-DECAYING floor from progression alone, distinct from (and stacking with)
    * the menace EVOLUTION stage that answers moment-to-moment overkill — the two
    * are the "you got stronger" and the "you're steamrolling right now" halves of
@@ -932,6 +943,21 @@ export const MENACE = {
    * 1) weakens the horde without turning it into paper.
    */
   mobHpScaleFloor: 0.5,
+  /**
+   * The PER-MOB SPAWN LEVEL BAND — the random spread each rank-and-file minion
+   * rolls on top of the horde baseline (`currentMobLevel` = player level + the
+   * difficulty's `mobLevelOffset`). At spawn every plain minion draws a uniform
+   * INTEGER offset in `[min, max]` (inclusive), which shifts its monster level
+   * — and with it its hp (via the `mobHpPerLevel` ramp), its kill XP
+   * (`mobLevelXp`, level-based), and the tier/ilvl gates its drops roll off. So
+   * a wave is a MIX: some fodder a few levels under the hero, the odd one a
+   * couple over, each worth (and dropping) accordingly, instead of a flat
+   * clone army. The band STACKS on the difficulty offset, so a JESUS mob can
+   * roll to player+4 and an EASY one to player−6, keeping the ladder's
+   * differentiation. Elites, bosses, and rare/unique mobs skip it — set-piece
+   * levels are deterministic (they settle their mlvl in `maybePowerScale`).
+   */
+  mobLevelBand: { min: -3, max: 2 } as { min: number; max: number },
   /**
    * The horde's per-level CONTACT-DAMAGE ramp (+3% per monster level over 1,
    * linear — see `mobContactScaleFor`, stamped at spawn): the damage sibling
@@ -968,29 +994,12 @@ export const MENACE = {
    * TYPICAL minion (`LEVELING.refMobHp` on the same `mobHpPerLevel` ramp
    * the spawner scales hp by) it would fell in this many SECONDS. DPS, not
    * the raw blow, so a slow crusher and a quick blade with the same true
-   * output read the same (one-shot excess is the overkill/ratchet system's
-   * job). Fair play fells the reference minion in ~4–5 s on the wall
-   * starter and ~2–3 s well-geared, so 1.5 grants a comfortable GRACE: gear
-   * merely good for its level still reads UNDER the character level (the
-   * max() in `heroPowerLevel` ignores it) and a strong find keeps feeling
-   * good; genuinely absurd output levels the horde until its health answers
-   * the damage instead of letting a lopsided drop melt the campaign.
+   * output read the same. DIAGNOSTIC ONLY now: weapon damage no longer
+   * toughens the horde (mob hp/level/xp key to the CHARACTER level alone —
+   * see `heroPowerLevel`), so this only shapes the analytic damage-level
+   * readout, never a spawned mob.
    */
   damageLevelKillSec: 1.5,
-  /**
-   * How much of the hero's DAMAGE level (`heroDamageLevel`) the horde tracks —
-   * the fraction of its EXCESS over the character level that toughens mobs
-   * (`heroPowerLevel`). At 1.0 the horde matched the hero's weapon output 1:1,
-   * which pinned time-to-kill flat and left a geared hero unable to ever
-   * OVERKILL — starving the menace/evolution ratchet (the endgame's real
-   * challenge). At 0.2 mobs only lag-follow a fifth of that excess, so a strong
-   * build pulls ahead of the base hp and starts overkilling — and the menace
-   * ratchet (not a 1:1 hp match) is what answers the runaway build. GEAR level
-   * still tracks fully; this dampens only the dps-derived term. Tunable at
-   * runtime via the DEVELOPER → BALANCE `mobDamageTracking` knob (multiplier
-   * over this shipped 0.2).
-   */
-  damageLevelTracking: 0.2,
   /**
    * The CLEARANCE GATE window (seconds). The rolling heat in `tickMenace` only
    * fires when the player is actually WINNING THE ATTRITION WAR — clearing the
@@ -1548,11 +1557,25 @@ export const LOOT = {
    */
   mfSaturation: { rare: 1.2, unique: 0.7, legendary: 0.45, artifact: 0.3 },
   /** The EXPLICIT set-piece boost: an additive bonus to the named-tier rarity
-   * BASE when the killer is an elite or a boss, so RARE/UNIQUE/ELITE mobs and
-   * BOSSES are a far better legendary/artifact farm than trash — a boss run is
-   * the efficient chase, but it still takes a long grind. */
+   * BASE when the killer is an elite or a boss (RARE/UNIQUE mobs share the
+   * elite bonus — see `rollTier`'s `mobRarity`), so those special fights are a
+   * far better legendary/artifact farm than trash — a boss run is the efficient
+   * chase, but it still takes a long grind. */
   eliteRarityBonus: { unique: 0.015, legendary: 0.002, artifact: 0.0002 },
   bossRarityBonus: { unique: 0.045, legendary: 0.0065, artifact: 0.00065 },
+  /**
+   * The PLAIN-MINION named-tier PENALTY: a rank-and-file minion's rolled
+   * chance at a NAMED tier (unique/legendary/artifact) is multiplied by this,
+   * so trash CAN still cough up a named item but at a fraction of the odds a
+   * rare/unique/elite/boss kill carries (which skip the penalty AND add the
+   * set-piece bonus above). Combined with the fact that trash also runs a few
+   * levels UNDER the horde (the spawn band, lower ilvl), farming regular mobs
+   * for chase gear just doesn't pay — the special fights are the loot. The
+   * everyday magic/rare rain is untouched (this hits named tiers only), so
+   * ordinary kills stay rewarding. 0 would slam the door entirely; keep it a
+   * sliver so a lucky trash drop is still possible.
+   */
+  minionNamedMult: 0.2,
   /** Ceiling on any single tier's rolled chance — keeps deep-campaign magic
    * from reaching 100% so PLAIN whites (and their make-quality roll) still
    * drop. Applied after slope, difficulty, role, and Magic Find. */

@@ -21,8 +21,8 @@ export type BalanceTuning = {
   /** Scales the knockback a melee/ranged weapon blow shoves a struck mob back
    * (config `KNOCKBACK.distance`) — 0 turns the push off entirely. */
   knockback: number;
-  /** Scales every monster's hp at spawn (kill XP is hp-proportional, so a
-   * tougher mob also pays more). */
+  /** Scales every monster's hp at spawn. (Kill XP is level-based now, so a
+   * hp-scaled mob is tougher but pays the same xp for its level.) */
   mobHp: number;
   /** Scales monster damage to the hero — contact blows and hostile shots. */
   mobDamage: number;
@@ -46,11 +46,6 @@ export type BalanceTuning = {
    * horde's spawn rate before sustained output heats the meter. 0× heats on any
    * positive clearance (out-kill spawns at all); higher demands a bigger rout. */
   menaceClearance: number;
-  /** Scales how much of the hero's DAMAGE level the horde tracks (over the
-   * shipped `MENACE.damageLevelTracking`, 0.2): higher = mobs hp-match a strong
-   * weapon more (harder to overkill/rampage), 0 = the horde ignores dps
-   * entirely and keys toughness to character/gear level alone. */
-  mobDamageTracking: number;
 };
 
 export const BALANCE_TUNING_DEFAULTS: BalanceTuning = {
@@ -67,7 +62,6 @@ export const BALANCE_TUNING_DEFAULTS: BalanceTuning = {
   uniqueDrops: 1,
   menaceGain: 1,
   menaceClearance: 1,
-  mobDamageTracking: 1,
 };
 
 /** Guard rails on any applied value — the developer BALANCE sliders span a

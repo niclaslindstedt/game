@@ -361,6 +361,7 @@ describe("melee sweep AoE", () => {
     const state = startGame();
     state.obstacles = [];
     equip(state, "test_wrench"); // default 120° cone, reach 42
+    state.rng = () => 0.99; // no miss, no crit — this is a geometry test
     // The swing's target cap starts at MELEE.baseAoeTargets (2); one point of
     // INT lifts it to 3 so the whole front rank is cleaved.
     state.player.stats.intelligence = 1;
@@ -391,6 +392,7 @@ describe("melee sweep AoE", () => {
     const state = startGame();
     state.obstacles = [];
     equip(state, "test_wrench"); // default 120° cone, reach 42
+    state.rng = () => 0.99; // no miss, no crit — this is a geometry test
     // No INTELLIGENCE: the cap sits at MELEE.baseAoeTargets (2).
     const { x, y } = state.player.pos;
     // Three foes in the cone at increasing distance; the swing must land on
@@ -423,6 +425,7 @@ describe("melee sweep AoE", () => {
     const state = startGame();
     state.obstacles = [];
     equip(state, "test_spear"); // narrow 40° cone, long reach 90
+    state.rng = () => 0.99; // no miss, no crit — this is a geometry test
     const { x, y } = state.player.pos;
     // Nearest monster straight ahead sets the aim.
     const near = makeEnemy({ pos: { x: x + 40, y } });
@@ -529,6 +532,7 @@ describe("weapon reach, cadence, and AoE", () => {
     const flankStruck = (intelligence: number) => {
       const state = startGame();
       equipWrench(state); // 120° cone (60° half-angle), reach 42
+      state.rng = () => 0.99; // no miss, no crit — this is a geometry test
       state.player.stats.intelligence = intelligence;
       stopWaves(state);
       const { x, y } = state.player.pos;

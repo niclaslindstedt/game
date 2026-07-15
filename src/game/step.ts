@@ -624,8 +624,9 @@ function spawnWaveEnemy(
     if (distance(pos, state.player.pos) < ENEMY_AI.minSpawnDistance) continue;
     if (insideObstacle(state, pos, def.radius)) continue;
     // Stamp the current menace stage: a mob spawned into a rampage evolves —
-    // more hp, more xp, better loot (see menace.ts / spawnEnemy), hitting as
-    // hard as the difficulty's menaceEffectMult says. The base hp is the
+    // more hp (a challenge knob; kill xp is level-based, and evolved drops roll
+    // WORSE, see menace.ts / spawnEnemy), hitting as hard as the difficulty's
+    // menaceEffectMult says. The base hp is the
     // horde's RELATIVE level: the player's live level plus the difficulty's
     // offset (mobLevelScale), so the swarm keeps its distance as he grows.
     state.enemies.push(

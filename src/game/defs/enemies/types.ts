@@ -236,10 +236,11 @@ export type EnemyDef = {
    */
   spareable?: { companion: string };
   /**
-   * XP granted on kill. Omitted = proportional to max hp
-   * (LEVELING.xpPerHp) for minions, or a share of the hero's current level
-   * bar for elites/bosses (LEVELING.eliteXpBarShare / bossXpBarShare) — the
-   * standing rules. Set only to override with a FLAT XP figure.
+   * XP granted on kill. Omitted = the standing rules: for minions, a reward
+   * proportional to the mob's LEVEL (`mobLevelXp`, not its hp), times any
+   * rare/unique `xpMult`; for elites/bosses, a share of the hero's current
+   * level bar (LEVELING.eliteXpBarShare / bossXpBarShare). Set only to override
+   * with a FLAT XP figure.
    */
   xp?: number;
   /**

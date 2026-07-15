@@ -13,14 +13,14 @@
 //      (crowd growth alone caps at lureStageCap), and every overkill drags
 //      nearby mobs in through the walk-credit channel.
 //   2. EVOLVE — minions spawned while menace is high carry extra hp (baked in
-//      at spawn), so they take more killing and pay more xp (xp is
-//      hp-proportional) — but their drops roll WORSE tiers, so a rampage is a
-//      leveling faucet, not a loot farm.
-//   3. POWER-MATCH — elites and bosses, folded together with the hero's own
-//      POWER level (character level, total-gear ilvl, or the equipped
-//      weapon's calculated damage mapped to a level — whichever is highest),
-//      scale their hp and contact damage when they first engage, so the
-//      set-piece fights keep pace instead of melting.
+//      at spawn), so they take more killing — but their drops roll WORSE
+//      tiers, so a rampage is a poor loot farm. (Kill XP is LEVEL-based now,
+//      not hp-proportional, so evolution no longer sweetens the xp; it is
+//      purely a challenge knob.)
+//   3. POWER-MATCH — elites and bosses scale their hp and contact damage when
+//      they first engage, keyed to the hero's CHARACTER level (plus the menace
+//      heat), so the set-piece fights keep pace instead of melting. Gear and
+//      weapon damage no longer feed this — see `heroPowerLevel`.
 // Kept out of step.ts/loot.ts so both stay lean and this rule reads in one place.
 
 import { LEVELING, MENACE, RARE_MOBS } from "./config.ts";
@@ -117,7 +117,8 @@ export function evolutionHpMult(stage: number, effectMult = 1): number {
  * "the horde keeps pace as the hero grows" rule and the difficulty's toughness
  * into ONE number: the offset keeps the gap constant as the player levels, so
  * a JESUS horde never falls behind and an EASY one never catches up. Kill xp
- * is hp-proportional, so a higher-level horde also pays more per kill.
+ * is LEVEL-based (`mobLevelXp`), so a higher-level horde also pays more per
+ * kill — but for its LEVEL, not its inflated hp.
  * Floored at `mobHpScaleFloor` so a deep negative offset can't zero a mob out.
  */
 export function mobHpScaleFor(playerLevel: number, difficulty: string): number {
@@ -168,15 +169,14 @@ export function heroGearLevel(state: GameState): number {
  * power level whose TYPICAL minion (`LEVELING.refMobHp` on the
  * `mobHpPerLevel` ramp, times the same `autoPowerScale` the spawner bakes
  * into mob hp) it would fell in `damageLevelKillSec` seconds — i.e. the
- * level whose spawned health this damage is fair against. Ilvl is a
- * promise; this is the delivery: an absurd `damage`/`damagePct` roll that
- * ilvl never priced in still reads as the deep-campaign power it actually
- * swings. Sustained DPS rather than the raw blow, so a slow crusher isn't
- * over-read for the same true output (one-shot excess is `bankOverkill`'s
- * job). Fair-for-level output maps well BELOW the character level (the knob
- * carries the grace — see config), so ordinary play never hears from this;
- * it can go below 1 for a bare fist — `heroPowerLevel`'s max() floors it at
- * the character level anyway.
+ * level whose spawned health this damage is fair against. Sustained DPS
+ * rather than the raw blow, so a slow crusher isn't over-read for the same
+ * true output.
+ *
+ * DIAGNOSTIC ONLY. This once fed `heroPowerLevel` (the horde toughened to a
+ * hero swinging above his level), but weapon damage no longer scales any
+ * mob's hp, level, or xp — the horde keys to the CHARACTER level alone (see
+ * `heroPowerLevel`). It survives purely for the analytic readout (`src/sim`).
  */
 export function heroDamageLevel(state: GameState): number {
   const dps = weaponDps(state, state.player.equipment.weapon);
@@ -193,39 +193,28 @@ export function heroDamageLevel(state: GameState): number {
 /**
  * The hero's POWER LEVEL — what the horde's TOUGHNESS (minion hp via
  * `mobLevelScale`, the elite/boss power-match via `enemyPowerScale`) keys
- * to: the character level, the gear level, or the damage level, whichever
- * is HIGHEST. In ordinary play gear trails the mobs it drops from and
- * damage sits inside its grace band, so this is simply the character level
- * and nothing changes; but a hero decked out ABOVE his level (a twink, a
- * lucky unique streak, a dev warp with endgame gear) — or one swinging a
- * weapon whose calculated damage is absurd for its ilvl
- * (`heroDamageLevel`) — meets a horde toughened to what he actually
- * wields: harder fights that pay more xp (kill xp is hp-proportional),
- * instead of a one-shot crowd his character sheet says is fair. TOUGHNESS
- * only: the loot-facing monster level (`currentMobLevel`) keys to the
- * CHARACTER level alone, so neither gear nor damage ever sweetens drops.
- *
- * The DAMAGE term is DAMPENED: only `MENACE.damageLevelTracking` (0.2, ×the
- * `mobDamageTracking` balance knob) of its excess over the character level
- * toughens the horde. A full 1:1 match pinned time-to-kill flat and stopped a
- * geared hero ever OVERKILLING — which starved the menace/evolution ratchet,
- * the endgame's real challenge. Lag-following a fifth lets a strong build pull
- * ahead of the base hp and start rampaging; the ratchet, not an hp match, then
- * answers the runaway. GEAR level still tracks fully.
+ * to: simply the CHARACTER LEVEL. Neither the hero's GEAR nor his WEAPON
+ * DAMAGE toughens the horde any more — a decked-out twink, a lucky unique
+ * streak, or a weapon with an absurd `damagePct` roll all meet a horde sized
+ * to their level (plus the difficulty offset and the per-mob spawn band, see
+ * `spawnEnemy`), never one silently scaled up to match what they swing. So
+ * out-gearing the campaign makes the fights EASIER, as it should, instead of
+ * the old power-match that kept them the same however hard the hero hit. The
+ * menace EVOLUTION ratchet — not an hp match — is what answers a steamrolling
+ * build (the horde keeps evolving while it is being one-shot). `heroGearLevel`
+ * and `heroDamageLevel` survive only as diagnostics (the analytic readout), no
+ * longer feeding any spawned mob's hp, level, or xp.
  */
 export function heroPowerLevel(state: GameState): number {
-  const char = state.player.level;
-  const track = MENACE.damageLevelTracking * BALANCE.mobDamageTracking;
-  const dampedDamage =
-    char + Math.max(0, heroDamageLevel(state) - char) * track;
-  return Math.max(char, heroGearLevel(state), dampedDamage);
+  return state.player.level;
 }
 
 /**
  * The live-state view of `mobHpScaleFor`: the toughness the whole horde —
- * rank-and-file minions included — locks in from the hero's POWER level
- * (character level, gear level, or damage level, whichever is highest) and
- * the run's difficulty. Stamped at spawn (see spawnEnemy); the menace EVOLUTION stage
+ * rank-and-file minions included — locks in from the hero's POWER level (now
+ * simply the CHARACTER level — gear and weapon damage no longer toughen the
+ * horde, see `heroPowerLevel`) and the run's difficulty. Stamped at spawn
+ * (see spawnEnemy); each mob then rolls its own ±level band on top. The menace EVOLUTION stage
  * (`evolutionHpMult`) is the moment-to-moment overkill half, and the two
  * multiply together. The auto-stat compensation (`autoPowerScale`) stays
  * keyed to the CHARACTER level — it cancels the free stat gains, which gear
@@ -257,13 +246,12 @@ export function mobLevelFor(playerLevel: number, difficulty: string): number {
 }
 
 /** `mobLevelFor` off the live state: the monster level a mob spawned right
- * now would carry (before its def's `levelBonus`). Keyed to the CHARACTER
- * level alone — deliberately not the gear or damage reads — so the loot
- * gates the mlvl opens (base `levelReq`, tier unlocks, the dropped item's
- * own level) track only earned progression: a hot weapon or a twink rack
- * buys harder fights and more xp (`heroPowerLevel`), never a better
- * successor — no good-find→better-finds elevator past the difficulty
- * ladder. */
+ * now would carry (before its def's `levelBonus` and its own per-mob spawn
+ * band). Keyed to the CHARACTER level alone — like every other mob read now,
+ * gear and weapon damage move nothing — so the loot gates the mlvl opens
+ * (base `levelReq`, tier unlocks, the dropped item's own level) track only
+ * earned progression, never a good-find→better-finds elevator past the
+ * difficulty ladder. */
 export function currentMobLevel(state: GameState): number {
   return mobLevelFor(state.player.level, state.difficulty);
 }
