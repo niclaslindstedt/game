@@ -348,11 +348,17 @@ const LAUNCH_MAX_PX = 380;
 // are huge), and flinging a giant across the map would read as a bug, so their
 // launch is scaled right down — the feature is for the flying HORDE.
 const LAUNCH_MASS: Record<string, number> = { elite: 0.32, boss: 0.14 };
+// One end-over-end spin per FULL extra starting-HP bar of overkill (see
+// `corpseLaunch`): 2× starting HP tumbles once, 3× twice, 4× thrice. Capped
+// so a monstrous one-shot stays a countable tumble rather than a spun blur.
+const LAUNCH_MAX_SPINS = 4;
 
 /**
- * Size an overkill corpse throw: the unit heading pointing AWAY from the hero
- * and how far the body sails, from the killing blow's overkill. Returns null
- * when the blow wasn't overkill enough to move the body.
+ * Size an overkill corpse throw from the killing blow measured against the
+ * mob's STARTING health (`damage / maxHp`): the unit heading pointing AWAY
+ * from the hero, how far the body sails, and how many whole times it tumbles.
+ * Returns null when the blow only finished the mob (≤ its full bar) — then it
+ * just topples in place instead of being knocked back.
  */
 function corpseLaunch(
   damage: number,
@@ -360,16 +366,26 @@ function corpseLaunch(
   from: { x: number; y: number },
   to: { x: number; y: number },
   role: string,
-): { dx: number; dy: number; dist: number } | null {
-  const healths = Math.max(0, (damage - maxHp) / Math.max(1, maxHp));
+): { dx: number; dy: number; dist: number; spins: number } | null {
+  // Overkill in whole starting-HP bars: how many times over its FULL health
+  // the blow hit for. ≤ 0 means it merely finished the mob — no knockback.
+  const overkill = damage / Math.max(1, maxHp) - 1;
+  if (overkill <= 0) return null;
   const mass = LAUNCH_MASS[role] ?? 1;
-  // The DEVELOPER → KNOCKBACK slider scales the whole throw live (1× shipped,
-  // 0× disables it, higher rockets bodies off the screen).
+  // How far it sails grows with the overkill; the DEVELOPER → KNOCKBACK slider
+  // scales the whole throw live (1× shipped, 0× disables it, higher rockets
+  // bodies off the screen), and heavy elites/bosses barely budge (LAUNCH_MASS).
   const dist =
-    Math.min(LAUNCH_MAX_PX, healths * LAUNCH_PX_PER_HEALTH) *
+    Math.min(LAUNCH_MAX_PX, overkill * LAUNCH_PX_PER_HEALTH) *
     mass *
     getSettings().knockback;
   if (dist <= 2) return null;
+  // Whole spins tied STRAIGHT to the overkill — one per full extra bar, so the
+  // tumble reads the hit's strength, not the (clamped, mass- and slider-scaled)
+  // distance: 2× → 1 spin, 3× → 2, 4× → 3. This is what makes the throw feel
+  // deliberate instead of random. Sub-bar overkill flies but doesn't complete
+  // a rotation; a huge one-shot is capped so its tumble stays countable.
+  const spins = Math.min(LAUNCH_MAX_SPINS, Math.floor(overkill));
   // Away from the hero — the corpse flies off in the direction it was struck.
   // If the body sits right on top of him (no clear heading), throw it upward.
   const vx = to.x - from.x;
@@ -377,7 +393,7 @@ function corpseLaunch(
   const len = Math.hypot(vx, vy);
   const dx = len > 0.01 ? vx / len : 0;
   const dy = len > 0.01 ? vy / len : -1;
-  return { dx, dy, dist };
+  return { dx, dy, dist, spins };
 }
 
 /** Map a dpad thumb distance (CSS px) to a walk throttle in [MIN_WALK, 1]. */

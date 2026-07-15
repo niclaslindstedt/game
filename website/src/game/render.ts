@@ -1166,10 +1166,11 @@ export type Effect = {
   persist?: boolean;
   /** Corpse: an OVERKILL launch — the body is knocked flying away from the
    * hero. `dx`/`dy` is the unit heading (already pointing away from the
-   * player), `dist` how far it sails in world px. Bigger overkill = further,
-   * up to clear off the screen (a legendary one-shot). Sized in GameScreen
-   * from the kill's `damage − maxHp`; absent for a plain keel-over. */
-  launch?: { dx: number; dy: number; dist: number };
+   * player), `dist` how far it sails in world px, `spins` how many whole
+   * end-over-end tumbles it turns in flight. Bigger overkill = further and
+   * more spins (one spin per full extra starting-HP bar). Sized in GameScreen
+   * from the kill's `damage / maxHp`; absent for a plain keel-over. */
+  launch?: { dx: number; dy: number; dist: number; spins: number };
   /** Swing: the arc's reach in world px (the weapon's effective range). */
   radius?: number;
   /** Swing: the full cone angle in radians (wide blade vs narrow spear). */
@@ -1283,8 +1284,11 @@ export function drawEffects(
         ? Math.round(Math.sin(flight * Math.PI) * launch.dist * 0.16)
         : 0;
       // Tumble whole spins (so it lands flat on its keel), forward along the
-      // throw, bleeding off as it decelerates.
-      const spins = launched ? Math.round(launch.dist / 64) : 0;
+      // throw, bleeding off as it decelerates. The count comes straight from
+      // the kill's overkill (GameScreen sized it: one spin per full extra
+      // starting-HP bar) — NOT from the distance — so it turns exactly as many
+      // times as the hit earned instead of a distance-derived guess.
+      const spins = launched ? launch.spins : 0;
       const tumble = launched
         ? (Math.sign(launch.dx) || 1) * spins * Math.PI * 2 * flightEase
         : 0;
