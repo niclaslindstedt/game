@@ -68,18 +68,29 @@ export type ArmorSlot = "head" | "chest" | "legs" | "feet";
 
 /**
  * Item quality, lowest to highest: grey trash, white regular, blue magic,
- * yellow rare, gold unique, orange legendary (the colors are the app's, see
- * tiers.ts) — the Diablo ladder. Every tier exists engine-wide, but a tier
- * only drops off a monster whose LEVEL has reached its unlock (config
+ * yellow rare, green SET, gold unique, orange legendary (the colors are the
+ * app's, see tiers.ts) — the Diablo ladder. Every tier exists engine-wide, but
+ * a tier only drops off a monster whose LEVEL has reached its unlock (config
  * `LOOT.tierUnlockMlvl`): magic from monster level 5, rare from 10, unique
  * from 15, legendary from 25 — so rares are the reward of the deeper levels
  * and harder difficulties, never the level-1 rank and file. TRASH sits BELOW
  * regular and never rolls: it exists only for scripted joke drops (zero-damage,
  * zero-stat garbage a story kill pays out on purpose — see EnemyDef.loot) and
- * sells for next to nothing.
+ * sells for next to nothing. SET is the D2 GREEN tier — hand-authored pieces
+ * that belong to a boss SET (defs/sets.ts) and grow set bonuses when several
+ * are worn together. Like uniques, sets are AUTHORED, never rolled: they drop
+ * only from their boss (`EnemyDef.uniquesByDifficulty`), so `set` is absent from
+ * the random `TIER_ROLL_ORDER`.
  */
 export type Tier =
-  "trash" | "regular" | "magic" | "rare" | "unique" | "legendary" | "artifact";
+  | "trash"
+  | "regular"
+  | "magic"
+  | "rare"
+  | "set"
+  | "unique"
+  | "legendary"
+  | "artifact";
 
 export type EquipSlot = "weapon" | ArmorSlot | "charm" | "bag";
 

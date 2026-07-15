@@ -31,6 +31,9 @@ export const TIERS: Record<Tier, { prefix: string; affixCount: number }> = {
   regular: { prefix: "", affixCount: 0 },
   magic: { prefix: "MAGIC ", affixCount: 1 },
   rare: { prefix: "RARE ", affixCount: 2 },
+  // SET (green) is AUTHORED like a unique — it never rolls, so `affixCount` is
+  // moot; its pieces carry their def's fixed bonuses and name (see mintUnique).
+  set: { prefix: "SET ", affixCount: 3 },
   unique: { prefix: "UNIQUE ", affixCount: 3 },
   legendary: { prefix: "LEGENDARY ", affixCount: 4 },
   // ARTIFACT — the tier above legendary: the super-epic hand-authored chase
@@ -40,8 +43,10 @@ export const TIERS: Record<Tier, { prefix: string; affixCount: number }> = {
 };
 
 /** Roll order: try the best tier first, fall through to regular. TRASH is
- * deliberately absent — it never rolls, only scripted drops mint it. */
-export const TIER_ROLL_ORDER: Exclude<Tier, "regular" | "trash">[] = [
+ * deliberately absent — it never rolls, only scripted drops mint it. SET
+ * (green) is absent too: like a named unique it is AUTHORED, minted only from
+ * its boss's `uniquesByDifficulty`, never chosen by a random rarity roll. */
+export const TIER_ROLL_ORDER: Exclude<Tier, "regular" | "trash" | "set">[] = [
   "artifact",
   "legendary",
   "unique",

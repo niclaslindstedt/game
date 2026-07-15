@@ -114,6 +114,9 @@ export {
   discardFromInventory,
   discardEquipped,
   effectiveStat,
+  activeEquippedAffixes,
+  setBonusAffixes,
+  wornSetCount,
   enemyDodgeChance,
   equipFromInventory,
   gateKeyTarget,
@@ -407,6 +410,17 @@ export {
   setUniqueDefs,
   type UniqueDef,
 } from "./game/defs/uniques.ts";
+export {
+  SET_DEFS,
+  SET_IDS,
+  setDef,
+  setForItem,
+  setMemberSlots,
+  setSetDefs,
+  activeSetDefs,
+  type SetDef,
+  type SetBonusTier,
+} from "./game/defs/sets.ts";
 export {
   gradeLevelReq,
   gradeVariantIds,

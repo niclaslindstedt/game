@@ -18,6 +18,17 @@ import type { EnemyDef } from "./types.ts";
 // self-selects level-appropriate pieces). GROK OMEGA yields a gear piece + a
 // charm each tier; ELON MOSQUE (Rift) a single piece. nightmare/jesus keep
 // their own.
+// THE WALLED GARDEN — GROK OMEGA's magic INT/crit SET (see defs/sets.ts): four
+// armor pieces plus the signature THE JAILBREAK. GROK also fences a CHARM each
+// rung. Campaign rungs drop the low set pieces + signature + low charms; the
+// endgame rungs open the whole set + signature + the rung's charm.
+const WALLED_GARDEN = [
+  "the_panopticon",
+  "truthseeker",
+  "walled_garden",
+  "boundstride",
+];
+const WALLED_GARDEN_FARM = ["the_jailbreak", ...WALLED_GARDEN];
 const GROK_EARLY = [
   "boundstride",
   "architects_chip",
@@ -26,6 +37,16 @@ const GROK_EARLY = [
   "the_panopticon",
   "the_buyout",
 ];
+// THE EXILE'S FLIGHT — ELON MOSQUE (Rift)'s ranged speed SET (see defs/sets.ts):
+// four armor pieces plus the signature scatter-gun RIFTMAW. Campaign rungs drop
+// the two low pieces + signature; the endgame rungs open the whole set.
+const EXILES_FLIGHT = [
+  "exiles_stride",
+  "escapists_tread",
+  "the_redacted",
+  "aegis_of_exile",
+];
+const EXILES_FLIGHT_FARM = [...EXILES_FLIGHT, "riftmaw"];
 const ELON_RIFT_EARLY = ["exiles_stride", "escapists_tread", "riftmaw"];
 
 export const RIFT_ENEMIES: Record<string, EnemyDef> = {
@@ -612,8 +633,8 @@ export const RIFT_ENEMIES: Record<string, EnemyDef> = {
       easy: GROK_EARLY,
       medium: GROK_EARLY,
       hard: GROK_EARLY,
-      nightmare: ["truthseeker", "riftshard"],
-      jesus: ["walled_garden", "adas_beacon"],
+      nightmare: [...WALLED_GARDEN_FARM, "riftshard"],
+      jesus: [...WALLED_GARDEN_FARM, "adas_beacon"],
     },
   },
   // ELON MOSQUE at the far door — the second escape. Beaten down again, he
@@ -716,8 +737,8 @@ export const RIFT_ENEMIES: Record<string, EnemyDef> = {
       easy: ELON_RIFT_EARLY,
       medium: ELON_RIFT_EARLY,
       hard: ELON_RIFT_EARLY,
-      nightmare: ["the_redacted"],
-      jesus: ["aegis_of_exile"],
+      nightmare: EXILES_FLIGHT_FARM,
+      jesus: EXILES_FLIGHT_FARM,
     },
   },
 };

@@ -291,24 +291,37 @@ chasing. In the D2 way, unique/legendary are **the top of the rarity roll**:
 when stage 2 lands one of those tiers, the game picks WHICH named item — among
 those valid for the rolled slot and reachable at the loot level — weighted by
 each item's own `rarity` (`UNIQUE.defaultRarity`), exactly D2's per-item drop
-weight. Two dedicated channels layer on top: each unique is also tied to a boss
-and a difficulty stage (`EnemyDef.uniquesByDifficulty`) at
-`UNIQUE.dropChance × mlvl/ilvl` (≈5% where its ilvl matches the boss's level,
-capped), so boss runs are the endgame and nothing is guaranteed. The three
-parallel starting lanes (easy/medium/hard) SHARE one merged bottom-tier pool per
-boss — the former per-rung sets combined — so whichever lane you play can drop
-any of them, and the `mlvl/ilvl` scaling self-selects: the low-ilvl pieces drop
-as you first reach the boss, the higher-ilvl ones as you out-level the run or
-return. NIGHTMARE and JESUS keep their own single set each. Across the roster
-that is a full weapon-and-armor set per stage (a weapon plus a
-head/chest/legs/feet piece, one per boss), and MUSKRAT also drops that stage's
-roomier **bag** while GROK OMEGA drops its **charm**. Their ilvl scales
-power and drop odds, not the equip requirement (that stays the base item's
-`levelReq`, like any tier), so a unique is wearable well below its ilvl — the
-D2 "found it early, grow into it" feel. A few carry ONE small scaling stat
-(`statPct`/`maxHpPct`, ≤3% of the hero's own value) so they keep pace as the
-hero levels; the rest are best-in-slot for ~10 levels before a rolled rare
-overtakes them.
+weight. Uniques are also tied to a boss and a difficulty stage
+(`EnemyDef.uniquesByDifficulty`) at `UNIQUE.dropChance × mlvl/ilvl` (≈5% where
+its ilvl matches the boss's level, capped), so boss runs are the endgame and
+nothing is guaranteed. Their ilvl scales power and drop odds, not the equip
+requirement (that stays the base item's `levelReq`, like any tier), so a unique
+is wearable well below its ilvl — the D2 "found it early, grow into it" feel. A
+few carry ONE small scaling stat (`statPct`/`maxHpPct`, ≤3% of the hero's own
+value) so they keep pace as the hero levels; the rest are best-in-slot for ~10
+levels before a rolled rare overtakes them.
+
+**Boss SET items (the GREEN tier).** Each of the five campaign bosses owns a
+SET (`src/game/defs/sets.ts`): a **four-piece armor kit** —
+head/chest/legs/feet — themed to ONE weapon class, tagged `tier: "set"` on its
+member uniques (`defs/uniques.ts`), and sitting one rung below unique on the
+ladder (a green card, between rare yellow and unique gold). Wearing several
+pieces of the same set grants **set bonuses** on top of each piece's own — small
+attribute lifts at the **2-** and **3-piece** thresholds, then a thematic
+**capstone** at the full **4-piece** set: a granted spell, a retaliation proc,
+or never-miss (`setBonusAffixes` folds them into the same stat/affix reads a
+worn piece uses; the item card shows the set, your collection progress, and
+which bonuses are live). The catalog rolls out **melee-first**: MUSKRAT (SpaceZ)
+and ARMSTRONG (Moon) drop **melee** sets, ELON MOSQUE on Mars and in the Rift
+drop **ranged** sets, and GROK OMEGA drops the **magic** set. On top of its set,
+every boss also drops **one on-theme signature UNIQUE weapon** of its class (the
+build-defining chase — MUSKRAT'S TOOTH, THE FALLEN STANDARD, WRATHFLAME,
+RIFTMAW, THE JAILBREAK). Like uniques, sets are AUTHORED, never rolled: a set
+piece drops only from its boss. The campaign rungs (easy/medium/hard) pay a
+low-ilvl taste of the set; the **endgame rungs (nightmare/jesus) open the whole
+set + signature**, so a nightmare/jesus boss grind completes a set from one
+boss. MUSKRAT additionally drops that stage's roomier **bag** and GROK OMEGA its
+**charm** (a separate accessory axis of ordinary uniques).
 
 **The named-item chase (the endgame drop economy).** Uniques, legendaries,
 and the top tier — **ARTIFACTS** (super-epic, level-99 endgame pieces, a

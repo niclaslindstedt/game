@@ -59,9 +59,11 @@ const TIER_RANK: Record<Tier, number> = {
   regular: 0,
   magic: 1,
   rare: 2,
-  unique: 3,
-  legendary: 4,
-  artifact: 5,
+  // SET (green) earns more reveal spectacle than a rare, less than a unique.
+  set: 3,
+  unique: 4,
+  legendary: 5,
+  artifact: 6,
 };
 
 /**

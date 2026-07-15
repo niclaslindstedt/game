@@ -62,6 +62,7 @@ import type { EnemyRole } from "./defs/enemies/index.ts";
 import { gateKeyIds, levelDef } from "./defs/levels/index.ts";
 import { storyItemDef } from "./defs/story.ts";
 import { activeUniqueDefs, uniqueDef, type UniqueDef } from "./defs/uniques.ts";
+import { activeSetDefs, setForItem } from "./defs/sets.ts";
 import { bonusBudget } from "./item-budget.ts";
 import {
   baseStatBonus,
@@ -895,7 +896,51 @@ function activePieces(state: GameState): Equipment[] {
 export function activeEquippedAffixes(state: GameState): Affix[] {
   const affixes: Affix[] = [];
   for (const piece of activePieces(state)) affixes.push(...piece.affixes);
+  affixes.push(...setBonusAffixes(state));
   return affixes;
+}
+
+/**
+ * How many pieces of the set `setId` are currently worn in an ACTIVE armor
+ * slot (broken pieces don't count — a set bonus goes quiet with its piece).
+ * The item card reads it to highlight which set thresholds are live.
+ */
+export function wornSetCount(state: GameState, setId: string): number {
+  let count = 0;
+  for (const piece of activePieces(state)) {
+    if (!piece.uniqueId) continue;
+    const set = setForItem(piece.uniqueId);
+    if (set?.id === setId) count++;
+  }
+  return count;
+}
+
+/**
+ * The extra affixes granted by SET BONUSES from the worn loadout — the whole
+ * point of a green set. For each active set, count its worn (non-broken)
+ * members; every bonus threshold at or below that count contributes its affixes
+ * (D2-style CUMULATIVE partial-set bonuses — the full set carries every tier).
+ * Folded into the four affix reads so a set's stat lifts (`statParts`,
+ * `computeMaxHp`, `playerCritChance`) AND its capstone spell/proc/sure-strike
+ * (`activeEquippedAffixes`, the read spells.ts and the sure-strike check share)
+ * all land through the same paths a worn piece's own affixes do. Two members
+ * never share a slot, so a member is worn at most once.
+ */
+export function setBonusAffixes(state: GameState): Affix[] {
+  const worn = new Set<string>();
+  for (const piece of activePieces(state)) {
+    if (piece.uniqueId) worn.add(piece.uniqueId);
+  }
+  const out: Affix[] = [];
+  for (const set of activeSetDefs()) {
+    let count = 0;
+    for (const id of set.members) if (worn.has(id)) count++;
+    if (count < 2) continue; // set bonuses start at the 2-piece threshold
+    for (const tier of set.bonuses) {
+      if (tier.pieces <= count) out.push(...tier.bonuses);
+    }
+  }
+  return out;
 }
 
 /**
@@ -991,6 +1036,12 @@ function statParts(
         pct += affix.value;
     }
   }
+  // SET BONUSES contribute stat/statPct just like a worn piece's own affixes.
+  for (const affix of setBonusAffixes(state)) {
+    if (affix.kind === "stat" && affix.stat === stat) value += affix.value;
+    else if (affix.kind === "statPct" && affix.stat === stat)
+      pct += affix.value;
+  }
   value += passiveStatBonus(state, stat);
   return { value, pct };
 }
@@ -1025,6 +1076,11 @@ export function computeMaxHp(state: GameState): number {
       // Scaling `maxHpPct` (uniques) grows with the hero's whole health pool.
       else if (affix.kind === "maxHpPct") pct += affix.value;
     }
+  }
+  // SET BONUSES add their maxHp/maxHpPct on top (e.g. the Sentinel's Vigil).
+  for (const affix of setBonusAffixes(state)) {
+    if (affix.kind === "maxHp") max += affix.value;
+    else if (affix.kind === "maxHpPct") pct += affix.value;
   }
   return Math.round(max * (1 + pct));
 }
@@ -1434,6 +1490,10 @@ export function playerCritChance(
     for (const affix of piece.affixes) {
       if (affix.kind === "crit") chance += affix.value;
     }
+  }
+  // SET BONUSES add their `crit` (several sets reward the full kit with crit).
+  for (const affix of setBonusAffixes(state)) {
+    if (affix.kind === "crit") chance += affix.value;
   }
   // Saturate toward the ceiling — high crit-stat/affix builds approach but never
   // reach `critCap`, with the last points crawling (see `saturateToward`).
@@ -2360,14 +2420,20 @@ export function discardEquipped(
 /**
  * A "special" bag piece the bulk-scrap sweep always spares, whatever the raw
  * numbers say: a passive trinket (it pays its bonus just by riding in the bag,
- * so a plain stat comparison misses its worth), a top-tier find (unique or
- * legendary — the rarest drops, kept as trophies and for their fat affix
- * rolls), or a travel-gate key (a zero-stat trinket whose worth is the door
- * it opens — see LevelDef.gates). Everything else is ordinary loot the sweep
- * may cull.
+ * so a plain stat comparison misses its worth), a top-tier find (a SET green,
+ * a unique or a legendary — the hand-authored drops, kept as trophies, for
+ * their fat affix rolls, and because a set piece is worth banking until its
+ * siblings turn up), or a travel-gate key (a zero-stat trinket whose worth is
+ * the door it opens — see LevelDef.gates). Everything else is ordinary loot the
+ * sweep may cull.
  */
 export function isSpecialItem(item: Equipment): boolean {
-  if (item.tier === "unique" || item.tier === "legendary") return true;
+  if (
+    item.tier === "set" ||
+    item.tier === "unique" ||
+    item.tier === "legendary"
+  )
+    return true;
   if (gateKeyIds().includes(item.defId)) return true;
   if (isWeaponDef(item.defId)) return false;
   const def = gearDef(item.defId);

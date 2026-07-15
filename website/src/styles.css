@@ -4692,6 +4692,23 @@ body {
    RGB components; the shared rules below turn it into a steady cell glow, a
    tooltip ring, and a name drop-shadow — the treatment that separates a
    hand-authored gold/orange drop from a rare's plain yellow border. */
+/* SET — the D2 green: a boss set piece, between rare and unique. */
+.tier-set {
+  --tier-glow: 74, 222, 128;
+}
+
+/* The SET block on a green piece's card (SetBlock in ItemCard.tsx): the set
+   name, member checklist, and tiered bonuses, fenced off from the item's own
+   stats by a faint green rule so the shared set reward reads as its own group. */
+.item-card-set {
+  display: flex;
+  flex-direction: column;
+  gap: inherit;
+  margin-top: 0.15rem;
+  padding-top: 0.15rem;
+  border-top: 1px solid rgba(74, 222, 128, 0.35);
+}
+
 .tier-unique {
   --tier-glow: 214, 176, 98;
 }
@@ -4705,6 +4722,7 @@ body {
   --tier-glow: 255, 94, 108;
 }
 
+.inv-cell.tier-set,
 .inv-cell.tier-unique,
 .inv-cell.tier-legendary,
 .inv-cell.tier-artifact {
@@ -4718,6 +4736,7 @@ body {
     inset 0 0 5px rgba(var(--tier-glow), 0.4);
 }
 
+.item-card.tier-set,
 .item-card.tier-unique,
 .item-card.tier-legendary,
 .item-card.tier-artifact {
@@ -4727,6 +4746,7 @@ body {
     0 0 14px 2px rgba(var(--tier-glow), 0.45);
 }
 
+canvas.tier-set,
 canvas.tier-unique,
 canvas.tier-legendary,
 canvas.tier-artifact {
