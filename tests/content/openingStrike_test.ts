@@ -222,13 +222,41 @@ describe("SpaceZ HQ opening strike", () => {
     expect(state.dialogue).toBeNull();
   });
 
+  it("arms the hero even if the vanguard dies before reaching him", () => {
+    // The party (or a conjured power) can cut the lone rusher down before it
+    // ever touches the holstered hero. Nothing else triggers the beat, so an
+    // unhandled kill leaves the hero disarmed for the whole level while his
+    // companions fight on without him — the "player won't attack" bug. Once
+    // the sighting read has played, a vanquished vanguard must still draw the
+    // blade.
+    const state = disarmedHQ();
+    isolateVanguard(state);
+    state.thoughtsSeen.push("spacez_staff"); // gate open
+    // The companions got there first: the vanguard is off the board, never
+    // having reached the hero.
+    state.enemies = [];
+    step(state, idle, DT);
+    expect(state.player.disarmed).toBe(false);
+    expect(state.thoughtsSeen).toContain("spacez_armed");
+    // A dead rusher landed no blow, so the arming costs no HP.
+    // (hp is untouched — nothing struck him.)
+  });
+
   it("keeps a non-vanguard touch harmless while disarmed", () => {
     const state = disarmedHQ();
-    stopWaves(state);
+    const v = isolateVanguard(state);
     state.thoughtsSeen.push("spacez_staff"); // gate open, so only the mob matters
+    // Keep the vanguard ALIVE but far across the lobby (never reaching him) so
+    // the safety net that arms on a vanquished vanguard stays out of it — here
+    // we test only that a NON-vanguard touch is harmless and never draws the
+    // blade.
+    v.pos = { x: state.player.pos.x + 400, y: state.player.pos.y };
     // A regular scientist (contactDamage > 0) right on the hero — not the
     // vanguard, so it neither hurts him nor draws the blade.
-    state.enemies = [makeEnemy({ pos: { ...state.player.pos } }, "scientist")];
+    state.enemies = [
+      v,
+      makeEnemy({ pos: { ...state.player.pos } }, "scientist"),
+    ];
     const hp = state.player.hp;
     for (let i = 0; i < 20; i++) step(state, idle, DT);
     expect(state.player.hp).toBe(hp);
