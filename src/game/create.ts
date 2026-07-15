@@ -48,6 +48,7 @@ import {
 } from "./menace.ts";
 import { BALANCE } from "./tuning.ts";
 import { boundingRadius, rockHalf } from "./obstacles.ts";
+import { areCutscenesEnabled, isDialogueEnabled } from "./story.ts";
 import type {
   Decor,
   Difficulty,
@@ -255,10 +256,14 @@ export function createGame(
   // The prelude may be a single scene or a chain (the launch, then the
   // flight); each scene resolves its per-difficulty variant when one is
   // registered (`<id>_<difficulty>`), so the weapon on the living-room wall
-  // is always the one this run actually starts with.
-  const preludes = (
-    typeof def.prelude === "string" ? [def.prelude] : (def.prelude ?? [])
-  ).map((id) => cutsceneVariant(id, difficulty));
+  // is always the one this run actually starts with. The CUTSCENES display
+  // preference drops the whole prelude (straight to the intro) when off.
+  const preludes = areCutscenesEnabled()
+    ? (typeof def.prelude === "string"
+        ? [def.prelude]
+        : (def.prelude ?? [])
+      ).map((id) => cutsceneVariant(id, difficulty))
+    : [];
 
   const state: GameState = {
     phase: preludes.length > 0 ? "cutscene" : "intro",
@@ -299,7 +304,9 @@ export function createGame(
       pos: { ...l.pos },
     })),
     dialogue: null,
-    dialogueMuted: false,
+    // The DIALOGUE display preference starts the run muted when off, silencing
+    // every in-world scene the same way the in-run MUTE button does.
+    dialogueMuted: !isDialogueEnabled(),
     choice: null,
     companions: [],
     companionFocus: null,
