@@ -424,11 +424,15 @@ run against synthetic fixtures with no shipped content (see
   books the withheld blow through `killEnemy`, SPARE recruits the figure as
   a party companion (`recruitCompanion`, its `joinWords` scene via story.ts).
   `stepCompanions` (right after the enemy pass) walks the party's formation,
-  picks fights inside the hero's engagement bubble, strikes/shoots on the
-  weapon's cadence (shots ride the ordinary projectile pass, tagged
-  `companionId` for kill-quote attribution), soaks the horde's contact
-  swings against helmet+chest armor, and beats companions DOWN — never
-  dead — until they stand back up on their own. Companion auras
+  picks fights inside the hero's engagement bubble _when he holds still_,
+  strikes/shoots on the weapon's cadence (shots ride the ordinary projectile
+  pass, tagged `companionId` for kill-quote attribution), soaks the horde's
+  contact swings against helmet+chest armor, and beats companions DOWN — never
+  dead — until they stand back up on their own. Staying with the hero comes
+  first: while he moves the party keeps formation rather than peeling off after
+  a mob, and a companion he outruns to the camera's edge (`input.view`,
+  `COMPANIONS.screenEdgeMargin`) latches into FOLLOW mode — dropping the fight
+  to move with him until he stops. Companion auras
   (`CompanionDef.aura` — LUCKY's +50% magic find, read by items.ts
   `magicFindBonus` inside every tier roll) go silent while downed. The UI's
   mutators are `equipCompanionFromInventory` / `unequipCompanionToInventory`

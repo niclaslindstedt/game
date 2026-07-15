@@ -249,7 +249,7 @@ export function step(state: GameState, input: GameInput, dtMs: number): void {
   // The party acts on the tick's final enemy positions: regroup, fight,
   // soak contact blows, stand back up (see companions.ts). A freeze poses
   // the party with the rest of the world's actors.
-  if (!state.freeze) stepCompanions(state, dt, dtMs);
+  if (!state.freeze) stepCompanions(state, input, dt, dtMs);
   // Procs queued by this tick's combat — the hero's weapon blows (melee
   // sweep, his projectiles) AND the blows that landed ON him (contact,
   // mechanic slams, hostile shots — the "when struck" trigger) — resolve

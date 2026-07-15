@@ -11,6 +11,12 @@
 // kneels out of the fight and stands back up on its own. The party rides the
 // loadout between levels (see arrival.ts).
 //
+// Staying WITH the hero comes before clearing the horde: while he moves, a
+// companion holds formation instead of peeling off after a mob (it still
+// shoots one already in reach), and a companion the moving hero outruns to
+// the camera's edge latches into FOLLOW mode — dropping the fight to move
+// with him until he stops (config `COMPANIONS.screenEdgeMargin`).
+//
 // Ordering: `stepCompanions` runs right after `stepEnemies`, so the party
 // acts on the tick's final enemy positions; its melee lands directly through
 // `hitEnemy`, its shots ride the ordinary projectile pass (tagged with
@@ -36,9 +42,13 @@ import type {
   CompanionSlot,
   Enemy,
   Equipment,
+  GameInput,
   GameState,
   Projectile,
 } from "./types.ts";
+
+/** The camera rect the app hands the engine, when there is one. */
+type View = NonNullable<GameInput["view"]>;
 
 /** A companion's three equip slots, in paperdoll order. */
 export const COMPANION_SLOTS: readonly CompanionSlot[] = [
@@ -237,22 +247,47 @@ export function maybeCompanionQuote(
 // ---- The per-tick companion pass ------------------------------------------------
 
 /**
- * Advance the party one tick: regroup on the hero, pick fights inside his
- * engagement bubble, strike/shoot on the weapon's cadence, soak the horde's
- * contact swings, and get back up from a beating. Runs right after
+ * Advance the party one tick: keep up with the hero, pick fights inside his
+ * engagement bubble when he holds still, strike/shoot on the weapon's cadence,
+ * soak the horde's contact swings, and get back up from a beating. The camera
+ * rect (`input.view`) drives the screen-edge FOLLOW latch. Runs right after
  * stepEnemies, so everything is judged on this tick's final positions.
  */
 export function stepCompanions(
   state: GameState,
+  input: GameInput,
   dt: number,
   dtMs: number,
 ): void {
   const count = state.companions.length;
   if (count === 0) return;
   for (let i = 0; i < count; i++) {
-    stepCompanion(state, state.companions[i] as Companion, i, count, dt, dtMs);
+    stepCompanion(
+      state,
+      state.companions[i] as Companion,
+      i,
+      count,
+      input.view,
+      dt,
+      dtMs,
+    );
   }
   separateCompanions(state);
+}
+
+/**
+ * Is `pos` at (or past) the camera's edge — within `screenEdgeMargin` of any
+ * side of the view rect? The trigger for the screen-edge FOLLOW latch: a
+ * companion this far behind the moving hero is about to slide off screen.
+ */
+function atScreenEdge(pos: { x: number; y: number }, view: View): boolean {
+  const m = COMPANIONS.screenEdgeMargin;
+  return (
+    pos.x <= view.x + m ||
+    pos.x >= view.x + view.width - m ||
+    pos.y <= view.y + m ||
+    pos.y >= view.y + view.height - m
+  );
 }
 
 function stepCompanion(
@@ -260,6 +295,7 @@ function stepCompanion(
   companion: Companion,
   index: number,
   count: number,
+  view: View | undefined,
   dt: number,
   dtMs: number,
 ): void {
@@ -302,25 +338,50 @@ function stepCompanion(
     companion.pos = { ...formationSpot(state, index, count) };
   }
 
+  // The party's first job is to stay WITH the hero as he ranges across the
+  // map, not to plant and trade shots while he walks off. A companion left at
+  // the camera's edge by a moving hero latches into FOLLOW mode: it drops the
+  // fight and moves with him until he stops (config `screenEdgeMargin`). The
+  // moving-hero test is his realized walk this tick; a headless run with no
+  // camera (`view` absent) never latches and keeps the plain formation play.
+  const heroMoving = player.moving;
+  if (heroMoving && view !== undefined && atScreenEdge(companion.pos, view)) {
+    companion.following = true;
+  } else if (!heroMoving) {
+    companion.following = false;
+  }
+
   const weapon = weaponDef(companion.equipment.weapon.defId);
   const target =
-    playerGap > COMPANIONS.leashRadius ? undefined : pickTarget(state);
+    playerGap > COMPANIONS.leashRadius || companion.following
+      ? undefined
+      : pickTarget(state);
+  const catchUp = Math.max(def.speed, playerSpeed(state) * 1.1) * dt;
 
-  if (playerGap > COMPANIONS.leashRadius) {
-    // Regroup at whatever it takes to keep up with a stat-built hero.
-    moveCompanion(
-      state,
-      companion,
-      player.pos,
-      Math.max(def.speed, playerSpeed(state) * 1.1) * dt,
-    );
+  if (playerGap > COMPANIONS.leashRadius || companion.following) {
+    // Regroup at whatever it takes to keep up with a stat-built hero — the
+    // hard leash catch-up, and the screen-edge follow that keeps the party on
+    // the move at the hero's side.
+    const spot = companion.following
+      ? formationSpot(state, index, count)
+      : player.pos;
+    moveCompanion(state, companion, spot, catchUp);
   } else if (target) {
     // A foe in the hero's engage bubble means the party is fighting — hold
     // off regen until the field is quiet again.
     companion.combatMs = COMPANIONS.regenCalmMs;
     const gap = distance(companion.pos, target.pos);
     const hold = weapon.range * COMPANIONS.holdFraction;
-    if (gap > hold) {
+    // Prioritise moving with the hero over closing on the mob: only step
+    // toward the target when he is stood still. While he moves, keep pace with
+    // the formation instead of peeling off (a mob already in reach is still
+    // shot below — the companion just never wanders after one).
+    if (heroMoving) {
+      const spot = formationSpot(state, index, count);
+      if (distance(companion.pos, spot) > 6) {
+        moveCompanion(state, companion, spot, catchUp);
+      }
+    } else if (gap > hold) {
       moveCompanion(state, companion, target.pos, def.speed * dt);
     }
     companion.faceLeft = target.pos.x < companion.pos.x;
@@ -334,12 +395,7 @@ function stepCompanion(
   } else {
     const spot = formationSpot(state, index, count);
     if (distance(companion.pos, spot) > 6) {
-      moveCompanion(
-        state,
-        companion,
-        spot,
-        Math.max(def.speed, playerSpeed(state) * 1.1) * dt,
-      );
+      moveCompanion(state, companion, spot, catchUp);
     }
   }
 
