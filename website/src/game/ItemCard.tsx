@@ -190,6 +190,24 @@ function compareChip(
 }
 
 /**
+ * The `(+N)` comparison chip for a bonus line whose VALUE is itself that bonus
+ * (`+30 MAX HP`, `16 ARMOR`, `+2 STRENGTH`) — the inspected piece's `value`
+ * against the `worn` piece's total for the same stat. Unlike `compareChip` it
+ * DROPS the chip when the delta would merely restate the value — i.e. the worn
+ * piece has none of this stat, so the whole bonus is new and `+30 MAX HP (+30)`
+ * says the same number twice. A real difference (the worn piece has some) still
+ * shows its `(+N)` / `(-N)`.
+ */
+function bonusDelta(
+  value: number,
+  worn: number,
+): { text: string; color: string } | null {
+  const chip = compareChip(value - worn);
+  // worn === 0 ⇒ delta === value ⇒ the chip only echoes the value: drop it.
+  return chip && worn === 0 ? null : chip;
+}
+
+/**
  * The item card's stat lines. When `equipped` is a different piece in the same
  * slot, each comparable stat carries a green/red `(+N)` delta versus what's
  * worn, so a bag find reads as an upgrade or a downgrade at a glance.
@@ -206,6 +224,52 @@ function levelReqColor(playerLevel: number, req: number): string {
   if (behind <= 2) return "#ffe14d";
   if (behind <= 7) return "#5fd97a";
   return "#9aa3ad";
+}
+
+/**
+ * A gear piece's TOTAL for a stat that can come from BOTH its base slot bonus
+ * AND rolled affixes — so the card shows ONE combined figure instead of a base
+ * row and an affix row for the same thing (the `+30 MAX HP` twice a unique with
+ * a base-HP slot plus an HP roll used to print). Mirrors how the engine sums
+ * each stat (`maxHpOf`, `critChanceOf`, `effectiveStat` in items.ts): the base
+ * `bonuses.*` plus every matching affix. `armorValueOf` already folds armor the
+ * same way, so armor isn't repeated here.
+ */
+function gearMaxHp(item: Equipment): number {
+  let v = gearDef(item.defId).bonuses.maxHp ?? 0;
+  for (const a of item.affixes) if (a.kind === "maxHp") v += a.value;
+  return v;
+}
+function gearCritPct(item: Equipment): number {
+  let f = gearDef(item.defId).bonuses.critChance ?? 0;
+  for (const a of item.affixes) if (a.kind === "crit") f += a.value;
+  return Math.round(f * 100);
+}
+function gearStat(item: Equipment, stat: StatName): number {
+  let v = 0;
+  for (const a of item.affixes)
+    if (a.kind === "stat" && a.stat === stat) v += a.value;
+  return v;
+}
+
+/** The affix kinds a GEAR piece folds into a combined stat row above (armor is
+ * folded by `armorValueOf`); everything else stays its own listed affix line. */
+const GEAR_FOLDED_AFFIX_KINDS = new Set<Affix["kind"]>([
+  "maxHp",
+  "crit",
+  "armor",
+  "stat",
+]);
+
+/**
+ * The affixes the card lists on their OWN line. A weapon lists all of them; a
+ * gear piece omits the ones already summed into a combined stat row (MAX HP,
+ * CRIT, ARMOR, the flat +STAT rolls) so nothing is shown twice — the base-plus-
+ * affix duplication the combined rows exist to fix.
+ */
+export function displayAffixes(item: Equipment): Affix[] {
+  if (isWeaponDef(item.defId)) return item.affixes;
+  return item.affixes.filter((a) => !GEAR_FOLDED_AFFIX_KINDS.has(a.kind));
 }
 
 export function itemLines(
@@ -363,42 +427,54 @@ export function itemLines(
     );
   } else {
     const def = gearDef(item.defId);
-    // Compare against the gear worn in the same slot.
-    const eqGear =
-      equipped && !isWeaponDef(equipped.defId) ? gearDef(equipped.defId) : null;
+    // Compare against the gear worn in the same slot (never a weapon there, but
+    // guard anyway) — its TOTAL for each stat, base bonus + affixes, so the
+    // `(+N)` chips weigh combined figure against combined figure.
+    const eqGear = equipped && !isWeaponDef(equipped.defId) ? equipped : null;
     // The slot itself is the glyph beside the name (ItemCardBody), like a
     // weapon's class — no headline row.
     if (reqLine) lines.push(reqLine);
-    // An armor piece leads with its rolled armor points (the ilvl-grown
-    // stamp), compared against what the same slot wears now.
+    // An armor piece leads with its rolled armor points (the ilvl-grown stamp
+    // plus any +armor affixes, already folded by armorValueOf), compared
+    // against what the same slot wears now.
     if (def.armor !== undefined) {
       const value = armorValueOf({ ...item, durability: undefined });
       const worn = equipped ? armorValueOf(equipped) : 0;
       lines.push({
         text: `${value} ARMOR`,
         color: AFFIX_COLORS.armor,
-        delta: equipped ? compareChip(value - worn) : null,
+        delta: equipped ? bonusDelta(value, worn) : null,
       });
     }
-    if (def.bonuses.maxHp) {
+    // MAX HP and CRIT each combine the base slot bonus with their rolled affixes
+    // into a single row (see gearMaxHp / gearCritPct), so a piece that carries
+    // both no longer prints the stat twice.
+    const maxHp = gearMaxHp(item);
+    if (maxHp) {
       lines.push({
-        text: `+${def.bonuses.maxHp} MAX HP`,
+        text: `+${maxHp} MAX HP`,
         color: AFFIX_COLORS.maxHp,
-        delta: eqGear
-          ? compareChip((def.bonuses.maxHp ?? 0) - (eqGear.bonuses.maxHp ?? 0))
-          : null,
+        delta: eqGear ? bonusDelta(maxHp, gearMaxHp(eqGear)) : null,
       });
     }
-    if (def.bonuses.critChance) {
+    const critPct = gearCritPct(item);
+    if (critPct) {
       lines.push({
-        text: `+${Math.round(def.bonuses.critChance * 100)}% CRIT`,
+        text: `+${critPct}% CRIT`,
         color: AFFIX_COLORS.crit,
-        delta: eqGear
-          ? compareChip(
-              Math.round(def.bonuses.critChance * 100) -
-                Math.round((eqGear.bonuses.critChance ?? 0) * 100),
-            )
-          : null,
+        delta: eqGear ? bonusDelta(critPct, gearCritPct(eqGear)) : null,
+      });
+    }
+    // Flat +STAT rolls, one combined row per stat (base gear carries none, so
+    // these come purely from affixes, but multiple rolls of the same stat still
+    // sum into one line).
+    for (const stat of Object.keys(STAT_LABELS) as StatName[]) {
+      const amount = gearStat(item, stat);
+      if (!amount) continue;
+      lines.push({
+        text: `+${amount} ${STAT_LABELS[stat]}`,
+        color: AFFIX_COLORS.stat,
+        delta: eqGear ? bonusDelta(amount, gearStat(eqGear, stat)) : null,
       });
     }
     if (def.durability !== undefined && item.durability !== undefined) {
@@ -656,7 +732,7 @@ export function ItemCardBody({
           />
         );
       })}
-      {item.affixes.map((affix, i) => (
+      {displayAffixes(item).map((affix, i) => (
         <PixelText
           key={i}
           font={font}
