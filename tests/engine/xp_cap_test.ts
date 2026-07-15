@@ -46,14 +46,22 @@ describe("xpLevelCap — the per-map ceiling", () => {
     expect(xpLevelCap("test_level_2", "medium")).toBe(band.last);
   });
 
-  it("the three bottom lanes share a cap; progression tiers cap higher", () => {
-    // easy/medium/hard are PARALLEL entry points over the same level band, so
-    // they share one cap band — the difference between them is help, not pace.
-    expect(xpLevelCap("test_level", "easy")).toBe(
-      xpLevelCap("test_level", "medium"),
-    );
+  it("medium/hard cap two over easy; progression tiers cap higher still", () => {
+    // easy/medium/hard run the same missions over the same level band, but the
+    // caps no longer coincide: EASY is tuned tight (a bare fadeLevels over each
+    // first-pass landing), while MEDIUM and HARD sit two levels higher across
+    // the band — a little farm headroom before nightmare. So easy < medium ==
+    // hard, and the difference is exactly the band offset.
     expect(xpLevelCap("test_level", "medium")).toBe(
       xpLevelCap("test_level", "hard"),
+    );
+    expect(xpLevelCap("test_level", "easy")).toBeLessThan(
+      xpLevelCap("test_level", "medium"),
+    );
+    expect(
+      xpLevelCap("test_level", "medium") - xpLevelCap("test_level", "easy"),
+    ).toBe(
+      XP_CAP.capByDifficulty.medium!.first - XP_CAP.capByDifficulty.easy!.first,
     );
     // The gated tiers pick up above the bottom band.
     expect(xpLevelCap("test_level", "hard")).toBeLessThan(
@@ -169,7 +177,7 @@ describe("grantXp obeys the per-map cap", () => {
   it("a hero well under the cap gains full XP", () => {
     const state = startGame();
     clearStage(state);
-    grantXp(state, 50); // level 1 (cap is 12): far below the fade band
+    grantXp(state, 50); // level 1 (cap is 14): far below the fade band
     expect(state.player.xp).toBe(50);
   });
 });
@@ -205,7 +213,7 @@ function killOne(state: GameState): void {
 
 describe("maybeCapThought — the recurring cap-farm mutter", () => {
   it("fires once the hero has capped the map, and never banks to thoughtsSeen", () => {
-    const state = startGame(); // test_level on medium → cap 12
+    const state = startGame(); // test_level on medium → cap 14
     clearStage(state);
     equipBlaster(state); // down mobs at range
     state.player.level = xpLevelCap("test_level", "medium");

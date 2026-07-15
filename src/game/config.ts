@@ -403,12 +403,13 @@ export const LEVELING = {
    * The base is tuned WITH the golden-arrow faucet counted (arrows are a second
    * XP source on top of kills — see LEVELING.arrowXpShare and the calculator's
    * `w/arrows` column): the CRITICAL PATH — one bottom lane (easy/medium/hard,
-   * the three are parallel entry points that share XP caps) → nightmare → jesus,
-   * three playthroughs, not five — lands the hero at level 60
+   * the three are parallel entry points over the same level band — easy's caps
+   * tuned tight, medium/hard's two levels over it) → nightmare → jesus,
+   * three playthroughs, not five — lands the hero at ~level 62
    * (`node scripts/leveling-curve.mjs --campaign`), leaving the rest as the
-   * grind-to-cap endgame. The bottom lane leaves the hero ~29, nightmare ~49,
-   * jesus 60; per-map first-pass landings are easy/medium/hard reached at
-   * ~1/7/12/17/23, nightmare ~29/33/37/41/44, jesus ~49/51/52/55/57
+   * grind-to-cap endgame. The bottom lane leaves the hero ~36, nightmare ~52,
+   * jesus 62; per-map first-pass landings are bottom-lane maps reached at
+   * ~1/9/16/23/29, nightmare ~36/39/42/45/48, jesus ~52/54/56/58/60
    * (`--by-level` prints them — XP_CAP bands, the WORLD_DROP gates, and every
    * level's arrowCapByDifficulty are all read off that table; `--start <lane>`
    * checks each bottom lane, `--full` the completionist who replays all three).
@@ -516,22 +517,28 @@ export const LEVELING = {
  * than retiring it outright, so a determined grinder can still crawl toward the
  * global `LEVELING.maxLevel` on an old map, just achingly slowly. Each rung
  * lists the cap on its FIRST and LAST story level; intermediate maps interpolate
- * linearly. Sized a few levels above where a first pass naturally lands (bottom
- * lane ends ~29, nightmare ~49, jesus 60 — read off `leveling-curve.mjs
- * --by-level`), so the story never starves; only the rerun grind hits the
- * trickle. The three bottom lanes (easy/medium/hard) are PARALLEL entry points
- * over the same level band, so they SHARE one cap band — the difference between
- * them is help, not pace; the shared cap also bounds the completionist who
- * replays all three (`--full`) to the same ~34 entering nightmare. JESUS's last
- * map runs to the global `LEVELING.maxLevel` — the endgame grind lives there.
+ * linearly. Every cap sits at least `fadeLevels` (3) ABOVE where a single first
+ * pass of that map naturally leaves the hero (the `--by-level` exit level — read
+ * off `leveling-curve.mjs --by-level`), so KILLING EVERYTHING ON A MAP ONCE never
+ * reaches — never even touches the fade under — that map's cap: the story never
+ * starves and a clean clear forfeits ~nothing. Only the RERUN grind, replaying an
+ * outgrown map, hits the trickle. The three bottom lanes (easy/medium/hard) run
+ * the same missions over the same hero-level band, but they NO LONGER share one
+ * cap band: EASY is tuned tight (caps a bare `fadeLevels` over each first-pass
+ * landing — enough to never clip a clear, no more), while MEDIUM and HARD sit two
+ * levels higher across the whole band, so those lanes leave a little FARM headroom
+ * to grind a level or two before moving on to nightmare. JESUS's last map runs to
+ * the global `LEVELING.maxLevel` — the endgame grind lives there.
  */
 export const XP_CAP = {
   capByDifficulty: {
-    easy: { first: 12, last: 33 },
-    medium: { first: 12, last: 33 },
-    hard: { first: 12, last: 33 },
-    nightmare: { first: 35, last: 52 },
-    jesus: { first: 52, last: 99 },
+    easy: { first: 12, last: 38 },
+    // MEDIUM/HARD sit two levels over EASY across the whole band — same missions,
+    // same first-pass landings, but a touch more room to farm before nightmare.
+    medium: { first: 14, last: 40 },
+    hard: { first: 14, last: 40 },
+    nightmare: { first: 42, last: 55 },
+    jesus: { first: 57, last: 99 },
   } as Record<Difficulty, { first: number; last: number }>,
   /**
    * XP starts diminishing this many levels UNDER the (soft) cap: the grant is
