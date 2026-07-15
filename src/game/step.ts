@@ -815,8 +815,13 @@ function stepPlayer(
   // the drain (a flat sprint burns the whole base drain) at full throttle, and
   // crossing zero just above the walk — so a precise sub-run push barely dips
   // the pool. The STAMINA stat deepens the reserve (computeMaxStamina) and,
-  // here, both slows the drain and quickens the regen.
+  // here, both slows the drain and quickens the regen. A JUMP takeoff also
+  // spends the pool (jumpCost), and any draining pace or jump that bottoms it
+  // out freezes regen for a beat (emptyRegenLockMs) — so the hero can't
+  // tap-run/tap-jump on fumes and must walk it off and wait the beat out.
   const staminaStat = effectiveStat(state, "stamina");
+  // A jump only fires from the ground; the takeoff physics below share this.
+  const jumping = input.jump && player.z === 0;
   let rate = 1;
   if (player.moving) {
     const t = clamp(
@@ -828,7 +833,8 @@ function stepPlayer(
       STAMINA.walkRateFactor +
       t * (STAMINA.runRateFactor - STAMINA.walkRateFactor);
   }
-  if (rate < 0) {
+  const draining = rate < 0;
+  if (draining) {
     // Draining — harder difficulties wind the hero a touch faster
     // (staminaDrainMult); the STAMINA stat slows the burn.
     const drain =
@@ -837,12 +843,27 @@ function stepPlayer(
         difficultyDef(state.difficulty).staminaDrainMult) /
       (1 + staminaStat * STAMINA.drainReductionPerPoint);
     player.stamina = Math.max(0, player.stamina - drain * dt);
-  } else {
-    // Regaining — the STAMINA stat quickens it.
+  }
+  if (jumping) {
+    // A hop costs a flat slice of the FULL pool per takeoff, independent of dt.
+    player.stamina = Math.max(
+      0,
+      player.stamina - STAMINA.jumpCost * player.maxStamina,
+    );
+  }
+  // A draining pace or a jump that bottoms the pool out arms the regen lockout;
+  // a later run/jump that re-empties it re-arms the full window.
+  if ((draining || jumping) && player.stamina <= 0) {
+    state.staminaRegenLockMs = STAMINA.emptyRegenLockMs;
+  }
+  // Recover only on a non-draining pace, when no jump fired this frame, and
+  // once the lockout has lapsed — the STAMINA stat quickens it.
+  if (!draining && !jumping && state.staminaRegenLockMs <= 0) {
     const regen =
       rate * STAMINA.regenPerSec * (1 + staminaStat * STAMINA.regenPerPoint);
     player.stamina = Math.min(player.maxStamina, player.stamina + regen * dt);
   }
+  state.staminaRegenLockMs = Math.max(0, state.staminaRegenLockMs - dtMs);
 
   // Track how long the pool has sat BONE-DRY so the stamina-drink mercy roll can
   // ramp its chance with time stranded (see `staminaDrinkChance`); any stamina
@@ -851,7 +872,7 @@ function stepPlayer(
 
   // Jump: only from the ground. Gravity is the level's — the moon's low g
   // turns the same takeoff into a high, floaty arc.
-  if (input.jump && player.z === 0) {
+  if (jumping) {
     player.vz = JUMP.velocity;
     player.z = player.vz * dt;
     state.events.push({ type: "jump" });

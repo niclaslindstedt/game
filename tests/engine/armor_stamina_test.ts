@@ -33,6 +33,7 @@ import {
   clearStage,
   DT,
   idle,
+  jumpOnce,
   makeEnemy,
   run,
   startGame,
@@ -290,6 +291,9 @@ describe("stamina", () => {
     // Spend the pool with a sustained run, then confirm a walk refills it.
     run(state, steerTo(5000, 5000), 600);
     expect(state.player.stamina).toBe(0);
+    // Clear the empty-on-exertion regen lockout so this measures the
+    // walk-vs-idle regen rule alone (the lockout has its own suite below).
+    state.staminaRegenLockMs = 0;
 
     run(state, walk, 60);
     const afterWalk = state.player.stamina;
@@ -355,5 +359,60 @@ describe("stamina", () => {
     );
 
     expect(empty).toBeCloseTo(full * STAMINA.emptySpeedFactor, 2);
+  });
+
+  it("spends a flat slice of the pool on each jump takeoff", () => {
+    const state = startGame();
+    clearStage(state); // isolate the pool from combat XP/level-up refills
+    state.obstacles = [];
+    state.player.stamina = state.player.maxStamina;
+    const before = state.player.stamina;
+
+    step(state, jumpOnce, DT);
+    expect(state.events.some((e) => e.type === "jump")).toBe(true);
+    expect(state.player.stamina).toBeCloseTo(
+      before - STAMINA.jumpCost * state.player.maxStamina,
+      4,
+    );
+  });
+
+  it("freezes regen for a beat after a run bottoms the pool out", () => {
+    const state = startGame();
+    clearStage(state);
+    state.obstacles = [];
+
+    // Empty the pool with a sustained run: the lockout arms as it hits zero.
+    run(state, steerTo(5000, 5000), 600);
+    expect(state.player.stamina).toBe(0);
+    expect(state.staminaRegenLockMs).toBeGreaterThan(0);
+
+    // Standing still INSIDE the lockout window regains nothing.
+    const locked = state.staminaRegenLockMs;
+    run(state, idle, Math.floor(locked / DT) - 1);
+    expect(state.player.stamina).toBe(0);
+
+    // Once the lockout lapses, standing still refills again.
+    run(state, idle, 4);
+    expect(state.player.stamina).toBeGreaterThan(0);
+  });
+
+  it("a jump that empties the pool trips the same regen lockout", () => {
+    const state = startGame();
+    clearStage(state);
+    state.obstacles = [];
+    // Leave less than one hop's worth so the next takeoff bottoms it out.
+    state.player.stamina = STAMINA.jumpCost * state.player.maxStamina * 0.5;
+
+    step(state, jumpOnce, DT);
+    expect(state.player.stamina).toBe(0);
+    expect(state.staminaRegenLockMs).toBeGreaterThan(0);
+
+    // A jump with pool to spare leaves regen unlocked.
+    const fresh = startGame();
+    clearStage(fresh);
+    fresh.obstacles = [];
+    fresh.player.stamina = fresh.player.maxStamina;
+    step(fresh, jumpOnce, DT);
+    expect(fresh.staminaRegenLockMs).toBe(0);
   });
 });

@@ -203,6 +203,9 @@ describe("the stamina-drink chance (empty-sprint bailout)", () => {
       DT,
     );
     expect(state.staminaEmptyMs).toBe(DT);
+    // Clear the empty-on-exertion regen lockout the running step armed, so this
+    // measures the empty-time accumulator alone (the lockout has its own suite).
+    state.staminaRegenLockMs = 0;
     // Standing still recovers stamina, which zeroes the accumulator again.
     step(state, idle, DT);
     expect(state.player.stamina).toBeGreaterThan(0);
