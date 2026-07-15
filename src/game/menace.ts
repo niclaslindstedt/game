@@ -398,13 +398,45 @@ export function bankOverkill(
 }
 
 /**
+ * The CLEARANCE GATE: how open the rolling heat is, from whether the player is
+ * winning the attrition war. Over the last `clearanceWindowSec`, is the horde
+ * getting THINNER (kills outrunning spawns) or THICKER? The clearance fraction
+ * is the net kill rate over the throughput — `(killRate − spawnRate) / max(the
+ * two)` — so it reads +1 when nothing spawns and the hero mows, 0 at a standstill
+ * (kills matched by spawns), and negative while the screen fills. The gate opens
+ * from 0 at `clearanceThreshold` (×the `menaceClearance` knob) to fully open by
+ * twice it, so sustained output only heats the meter once the player is clearing
+ * the crowd meaningfully faster than it arrives. It reads KILLS, not on-screen
+ * count, so WALKING AWAY from a crowd (which empties the screen but kills
+ * nothing) never opens the gate. With no minion activity at all — nothing
+ * spawning, nothing dying — it reads 0: grinding a lone tank you can't fell no
+ * longer heats the meter.
+ */
+export function menaceClearGate(state: GameState): number {
+  const kr = state.minionKillRate;
+  const sr = state.minionSpawnRate;
+  const norm = Math.max(kr, sr);
+  if (norm <= 1e-6) return 0;
+  const clearFrac = (kr - sr) / norm;
+  const threshold = MENACE.clearanceThreshold * BALANCE.menaceClearance;
+  return Math.min(
+    1,
+    Math.max(0, (clearFrac - threshold) / Math.max(1e-3, threshold)),
+  );
+}
+
+/**
  * Advance the meter one step from the player's ACTUAL combat output. The
  * per-step damage and kills feed rolling DPS / kill-rate estimates (EMAs
- * smoothed over `rateWindowSec`), and the meter heats in proportion to them:
- * the harder and faster you are clearing, the faster it climbs; idle output
- * lets `decayPerSec` bleed it back off. Emits `menaceRose` when the tick tips
- * the meter into a new stage so the app can sound the escalation. Replaces the
- * old per-kill banking + separate decay pass — called once per `step()`.
+ * smoothed over `rateWindowSec`), and the meter heats in proportion to them —
+ * but ONLY through the CLEARANCE GATE (`menaceClearGate`): output heats the
+ * meter solely while the player is clearing the horde faster than it spawns, so
+ * a strong SLOW weapon that pumps damage into a screen that keeps FILLING no
+ * longer rampages. The harder and faster you clear, the faster it climbs; idle
+ * output (or being out-spawned) lets `decayPerSec` bleed it back off. Emits
+ * `menaceRose` when the tick tips the meter into a new stage so the app can
+ * sound the escalation. The per-step minion spawns/kills booked since the last
+ * tick feed the gate's rate EMAs here. Called once per `step()`.
  */
 export function tickMenace(
   state: GameState,
@@ -425,6 +457,17 @@ export function tickMenace(
   state.combatDps += (damageDealt / dt - state.combatDps) * alpha;
   state.combatKillRate += (kills / dt - state.combatKillRate) * alpha;
 
+  // Fold the minion spawn/kill counts booked since the last tick into the
+  // clearance-gate rates (smoothed over the longer clearanceWindowSec so the
+  // gate reads a trend, not a single spike), then clear the pending tallies.
+  const clearAlpha = Math.min(1, dt / MENACE.clearanceWindowSec);
+  state.minionSpawnRate +=
+    (state.pendingMinionSpawns / dt - state.minionSpawnRate) * clearAlpha;
+  state.minionKillRate +=
+    (state.pendingMinionKills / dt - state.minionKillRate) * clearAlpha;
+  state.pendingMinionSpawns = 0;
+  state.pendingMinionKills = 0;
+
   const before = menaceStage(state);
   // The DPS channel is measured in REFERENCE HEALTHBARS per second, not raw
   // points: absolute damage inflates ~30× over a campaign (autoPowerScale
@@ -438,10 +481,16 @@ export function tickMenace(
     LEVELING.refMobHp *
     (1 + (Math.max(1, state.player.level) - 1) * MENACE.mobHpPerLevel) *
     autoPowerScale(state.player.level);
+  // The rolling heat only fires through the clearance gate: sustained DPS and
+  // kill rate escalate the meter while the player is THINNING the horde, and go
+  // inert the moment the screen is merely holding or filling. Overkill jolts
+  // (bankOverkill) and decay are ungated — a genuine one-shot still answers on
+  // the spot, and the meter always bleeds when it isn't being fed.
   const gain =
     ((state.combatDps / Math.max(1, bar)) * MENACE.perBarDps +
       state.combatKillRate * MENACE.perKillRate) *
-    menaceSensitivity(state);
+    menaceSensitivity(state) *
+    menaceClearGate(state);
   // The cooler is per-difficulty: EASY bleeds a hot streak off fast, the
   // hardest rungs let a rampage linger (menaceDecayMult below 1). It only
   // ever cools down to the PERMANENT floor the evolution ratchet has earned

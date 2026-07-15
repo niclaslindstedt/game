@@ -991,6 +991,30 @@ export const MENACE = {
    * over this shipped 0.2).
    */
   damageLevelTracking: 0.2,
+  /**
+   * The CLEARANCE GATE window (seconds). The rolling heat in `tickMenace` only
+   * fires when the player is actually WINNING THE ATTRITION WAR — clearing the
+   * horde faster than it spawns — so a strong SLOW weapon that pumps damage (or
+   * kill-rate bursts) while the screen keeps FILLING no longer heats the meter.
+   * Minion spawns and minion kills are folded into rolling per-second rates
+   * (`minionSpawnRate` / `minionKillRate`, EMAs smoothed over this window, ~5 s
+   * so a lone burst can't flip the gate), and their balance — net kills over the
+   * throughput — is the clearance fraction the gate reads. Kills, not on-screen
+   * count, are the signal, so WALKING AWAY from a crowd (which empties the screen
+   * without killing anything) never counts as clearing.
+   */
+  clearanceWindowSec: 5,
+  /**
+   * The net-clearance fraction the rolling heat needs before it fires: the
+   * player must be clearing minions this much FASTER than they spawn — "is the
+   * screen getting less crowded, and by more than 10%?" — for the meter to climb
+   * from sustained output. Below it (matched by, or swamped by, the spawn rate)
+   * only OVERKILL jolts and decay move the meter. The gate ramps from 0 at this
+   * threshold to full by twice it. Tunable at runtime via the DEVELOPER →
+   * BALANCE `menaceClearance` knob (a multiplier over this shipped 0.1, so 0×
+   * heats on any positive clearance and a high value demands a runaway rout).
+   */
+  clearanceThreshold: 0.1,
 } as const;
 
 /**

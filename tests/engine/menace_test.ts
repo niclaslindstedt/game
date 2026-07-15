@@ -26,6 +26,7 @@ import {
   LEVELING,
   MENACE,
   menaceCeiling,
+  menaceClearGate,
   menaceFloorStage,
   menaceStage,
   menaceStageCap,
@@ -166,30 +167,68 @@ describe("menace — the meter", () => {
     expect(menaceStage(state)).toBe(1);
   });
 
-  it("sustained damage output heats the meter even without overkill", () => {
-    // The rolling DPS/kill-rate driver: grind a tanky mob (no killing blow, so
-    // no overkill spike) and the meter still climbs purely from output. Run it
-    // on a sensitive difficulty with a warmed-up hero, since the DPS channel is
-    // deliberately a gentle supporting term (see MENACE.perBarDps).
-    const state = startOn("jesus");
-    bareStage(state);
-    state.player.level = 8;
-    equip(state, "test_hammer");
-    const { x, y } = state.player.pos;
-    state.enemies.push(
-      makeEnemy(
-        { pos: { x: x + 20, y }, hp: 100_000, maxHp: 100_000 },
-        "test_fodder",
-      ),
-    );
-    expect(state.menace).toBe(0);
+  it("sustained output heats the meter ONLY while out-clearing the spawn rate", () => {
+    // The rolling DPS/kill-rate driver now fires through the CLEARANCE GATE: the
+    // SAME brutal output heats the meter while the hero is THINNING the horde and
+    // goes inert the moment the screen is merely holding or filling — a strong
+    // slow weapon pumping damage into a rising crowd no longer rampages.
+    const heat = (killRate: number, spawnRate: number): number => {
+      const state = startOn("jesus");
+      bareStage(state);
+      state.player.level = 8;
+      equip(state, "test_hammer");
+      state.menace = 0;
+      // Pin identical output and the chosen clearance rates every tick (a real
+      // fight would sustain them) across a couple of seconds.
+      for (let i = 0; i < 120; i++) {
+        state.combatDps = 800;
+        state.combatKillRate = 4;
+        state.minionKillRate = killRate;
+        state.minionSpawnRate = spawnRate;
+        step(state, idle, DT);
+      }
+      return state.menace;
+    };
+    // Out-clearing (killing far faster than the horde spawns) opens the gate —
+    // the meter heats.
+    expect(heat(4, 0)).toBeGreaterThan(0);
+    // Being out-spawned (the screen filling) shuts the gate — the identical
+    // output banks nothing; only decay touches the meter.
+    expect(heat(1, 5)).toBe(0);
+  });
 
-    // A couple of seconds of sustained swings, never landing a kill.
-    run(state, idle, 180, (s) => s.stats.kills > 0);
+  it("the clearance gate: kills over spawns opens it, being swamped shuts it", () => {
+    const gate = (kr: number, sr: number): number => {
+      const state = startGame();
+      state.minionKillRate = kr;
+      state.minionSpawnRate = sr;
+      return menaceClearGate(state);
+    };
+    // No minion activity at all reads shut — grinding a lone unkillable tank no
+    // longer heats the meter.
+    expect(gate(0, 0)).toBe(0);
+    // Clearing with nothing spawning is a full rout — wide open.
+    expect(gate(3, 0)).toBe(1);
+    // Matched by the spawn rate (a standoff) or swamped by it: shut.
+    expect(gate(3, 3)).toBe(0);
+    expect(gate(1, 4)).toBe(0);
+    // Just past the 10% threshold cracks it open a sliver; well past it opens
+    // fully (the gate ramps from the threshold to twice it).
+    expect(gate(1.15, 1)).toBeGreaterThan(0);
+    expect(gate(1.15, 1)).toBeLessThan(1);
+    expect(gate(2, 1)).toBe(1);
+  });
 
-    expect(state.stats.kills).toBe(0); // never died: no overkill possible
-    expect(state.combatDps).toBeGreaterThan(0); // output was tracked
-    expect(state.menace).toBeGreaterThan(0); // and it heated the meter
+  it("the menaceClearance knob moves the clearance threshold", () => {
+    const state = startGame();
+    state.minionKillRate = 1.05; // clearing ~5% faster than spawns
+    state.minionSpawnRate = 1;
+    // At the shipped 10% threshold, a 5% edge isn't enough — the gate is shut.
+    expect(menaceClearGate(state)).toBe(0);
+    // Drop the threshold toward zero and any positive clearance opens it.
+    setBalanceTuning({ menaceClearance: 0 });
+    expect(menaceClearGate(state)).toBe(1);
+    resetBalanceTuning();
   });
 
   it("idling bleeds menace back off over time", () => {

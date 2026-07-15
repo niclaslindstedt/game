@@ -634,6 +634,9 @@ function spawnWaveEnemy(
         currentMobLevel(state),
       ),
     );
+    // Book the spawn for the menace CLEARANCE gate (minions only — the horde
+    // whose ebb and flow the gate weighs against the hero's kill rate).
+    if (def.role === "minion") state.pendingMinionSpawns++;
     return true;
   }
   return false;
@@ -708,6 +711,8 @@ function wakePack(state: GameState, pack: PackState, spec: PackSpec): void {
       );
       state.enemies.push(enemy);
       pack.memberIds.push(enemy.id);
+      // A woken pack member counts toward the clearance gate like a wave spawn.
+      if (enemyDef(member.enemy).role === "minion") state.pendingMinionSpawns++;
     }
   }
   if (pack.memberIds.length > 0) {

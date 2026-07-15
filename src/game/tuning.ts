@@ -41,6 +41,11 @@ export type BalanceTuning = {
   uniqueDrops: number;
   /** Scales how fast the menace meter heats from the player's output. */
   menaceGain: number;
+  /** Scales the CLEARANCE THRESHOLD (over `MENACE.clearanceThreshold`, 0.1) the
+   * rolling heat needs before it fires: how far the player must out-clear the
+   * horde's spawn rate before sustained output heats the meter. 0× heats on any
+   * positive clearance (out-kill spawns at all); higher demands a bigger rout. */
+  menaceClearance: number;
   /** Scales how much of the hero's DAMAGE level the horde tracks (over the
    * shipped `MENACE.damageLevelTracking`, 0.2): higher = mobs hp-match a strong
    * weapon more (harder to overkill/rampage), 0 = the horde ignores dps
@@ -61,6 +66,7 @@ export const BALANCE_TUNING_DEFAULTS: BalanceTuning = {
   gearQuality: 1,
   uniqueDrops: 1,
   menaceGain: 1,
+  menaceClearance: 1,
   mobDamageTracking: 1,
 };
 

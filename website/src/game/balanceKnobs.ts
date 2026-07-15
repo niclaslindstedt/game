@@ -81,6 +81,11 @@ export const BALANCE_KNOBS: BalanceKnob[] = [
     blurb: "HOW FAST THE RAMPAGE METER HEATS",
   },
   {
+    key: "menaceClearance",
+    label: "CLEAR GATE",
+    blurb: "HOW FAR YOU MUST OUT-CLEAR SPAWNS TO HEAT MENACE",
+  },
+  {
     key: "mobDamageTracking",
     label: "MOB DMG TRACK",
     blurb: "HOW MUCH MOB HP CHASES THE HERO'S WEAPON OUTPUT",

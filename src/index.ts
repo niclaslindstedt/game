@@ -224,6 +224,7 @@ export {
   heroGearLevel,
   heroPowerLevel,
   menaceCeiling,
+  menaceClearGate,
   menaceFloorStage,
   menaceSensitivity,
   menaceStage,
