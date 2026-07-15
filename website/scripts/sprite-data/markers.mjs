@@ -25,6 +25,10 @@ const PALETTE = {
   // BOSS — a bone skull.
   X: [230, 232, 238],
   Z: [248, 250, 252],
+  // BLACK HOLE — a violet-rimmed void (the rift's gravity wells).
+  u: [16, 12, 30], // the void core (near-black, a faint violet)
+  U: [138, 108, 224], // the accretion glow ring
+  Q: [206, 188, 250], // the bright inner rim
 };
 
 const SPRITES = {
@@ -93,6 +97,23 @@ const SPRITES = {
     "............",
     "............",
   ],
+  // BLACK HOLE: a violet-rimmed void — the rift's gravity wells, pinned on the
+  // map so the hero can read the road's hazards from the map screen. A dark
+  // core inside a bright rim inside a violet accretion glow.
+  map_well: [
+    "....UUUU....",
+    "..UUQQQQUU..",
+    ".UQQuuuuQQU.",
+    ".UQuuuuuuQU.",
+    "UQuuuuuuuuQU",
+    "UQuuuuuuuuQU",
+    "UQuuuuuuuuQU",
+    ".UQuuuuuuQU.",
+    ".UQQuuuuQQU.",
+    "..UUQQQQUU..",
+    "....UUUU....",
+    "............",
+  ],
   // MERCHANT reuses the icons family's gold `icon_coin` (the coin that bobs
   // over the vendor's head), so it lives there, not here.
 };
@@ -107,5 +128,5 @@ export default {
   animations: {},
   // UI-only markers: they live on the dark map modal and its legend, never on a
   // level's ground, so the ground-contrast lint doesn't apply.
-  contrastExempt: ["map_you", "map_story", "map_elite", "map_boss"],
+  contrastExempt: ["map_you", "map_story", "map_elite", "map_boss", "map_well"],
 };

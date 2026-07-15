@@ -102,10 +102,12 @@ export const THE_RIFT: LevelDef = {
       sprite: "bunker_gate",
     },
   ],
-  // Black holes strewn along the road: each drags the grounded, devours
-  // minions, and hoards dragged loot on its rim. Skirt them — a jump no
-  // longer clears the pull, it only lightens it (you still drift in and hop
-  // lower over the horizon), so the safe line is around, not over.
+  // Black holes strewn along the road: each drags the grounded (into the core
+  // is instant death), devours minions, and hoards loot dragged in from a
+  // screen away onto its rim. Skirt them — a jump no longer clears the pull,
+  // it only lightens it (you still drift in and hop lower over the horizon),
+  // so the safe line is around, not over. Dashing in for the rim loot is a
+  // real gamble: get stuck and the hole swallows you.
   wells: [
     { pos: { x: 700, y: 500 } },
     { pos: { x: 900, y: 1150 } },

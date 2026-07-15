@@ -1933,22 +1933,24 @@ export const GATES = {
 /**
  * Gravity wells — black holes placed by a level (LevelDef.wells). Each well
  * drags whatever crosses its pull radius toward the core: the grounded
- * player, enemies, and loose items — which pile up on the rim instead of
- * being destroyed, a dare to dash in. A jump no longer sails clean over a
- * hole: airborne the hero still drifts toward the core (`airPullFraction` of
- * the ground pull) and the hole's gravity fights his hop (`jumpGravity`), so
- * he can't hang over the horizon at full height. A MINION dragged into the
- * core is devoured outright: off the board with no kill, no XP and no loot —
- * the hole pays nobody. Elites and bosses are too massive to swallow (their
- * set pieces survive a bad camp spot) and apparitions too immaterial; both
- * only suffer the drag. A player in the core burns hp at `coreDps`, ticked
- * every `tickMs`. These are the per-well DEFAULTS — a level's well spec may
- * override each number. Units: world px, world px/s, hp/s, ms.
+ * player and enemies (reach `pullRadius`), and loose loot from much farther
+ * out (reach `lootRadius`, about a phone screen away) — which piles up on the
+ * rim instead of being destroyed, a dare to dash in. A jump no longer sails
+ * clean over a hole: airborne the hero still drifts toward the core
+ * (`airPullFraction` of the ground pull) and the hole's gravity fights his
+ * hop (`jumpGravity`), so he can't hang over the horizon at full height. A
+ * MINION dragged into the core is devoured outright: off the board with no
+ * kill, no XP and no loot — the hole pays nobody. Elites and bosses are too
+ * massive to swallow (their set pieces survive a bad camp spot) and
+ * apparitions too immaterial; both only suffer the drag. A grounded player
+ * dragged all the way into the core is DEVOURED too — instant death, the
+ * price of a loot dash gone wrong. These are the per-well DEFAULTS — a level's
+ * well spec may override each number. Units: world px, world px/s.
  */
 export const WELLS = {
-  /** Reach of the pull. */
+  /** Reach of the pull on the player and enemies. */
   pullRadius: 130,
-  /** Inside this the hole devours minions and burns the player. */
+  /** Inside this the hole devours minions and the grounded player alike. */
   coreRadius: 16,
   /**
    * Peak pull at the core's edge (px/s), falling off linearly to 0 at
@@ -1957,6 +1959,15 @@ export const WELLS = {
    * fight — SPEED, the sprint, or a jump is what gets him clear.
    */
   pullSpeed: 96,
+  /**
+   * Reach of the pull on loose LOOT — about a phone screen away, so drops
+   * scattered around a hole slide toward it from well beyond the player's own
+   * pull. The tug eases in (`1 - d/lootRadius` SQUARED): a crawl at the far
+   * edge, quickening as it nears the core — slow from the edges, then faster.
+   */
+  lootRadius: 300,
+  /** Peak loot pull at the core (px/s), eased to ~0 at `lootRadius`. */
+  lootPullSpeed: 96,
   /**
    * The share of the ground pull that still tugs the hero HORIZONTALLY while
    * he is airborne over the well: a jump over a hole no longer sails clean —
@@ -1970,13 +1981,6 @@ export const WELLS = {
    * gravity fights the hop, so he JUMPS LESS HIGH the nearer the horizon.
    */
   jumpGravity: 900,
-  /** Hp per second burned while the player stands in the core. */
-  coreDps: 40,
-  /**
-   * Core damage lands in ticks of this cadence (one `playerHurt` per tick,
-   * not per frame, so the flash and sfx read as a burn, not a buzzer).
-   */
-  tickMs: 250,
   /**
    * Dragged items park this far from the center — just outside the core, so
    * the loot hoard on the event horizon is grabbable at a price.

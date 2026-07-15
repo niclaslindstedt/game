@@ -49,6 +49,9 @@ const MARKER_SPRITE: Record<MapMarkerKind, string> = {
 /** The hero's own "you are here" pin. */
 const PLAYER_SPRITE = "map_you";
 
+/** The black-hole hazard pin (rift gravity wells). */
+const WELL_SPRITE = "map_well";
+
 const FOG_COLOR = "#0b0d10";
 
 /** The ground sprite for a world position — the level-wide pair, or the
@@ -137,15 +140,18 @@ function drawMap(
     );
   }
 
-  // Black holes: the devouring core, over explored ground only.
+  // Black holes ride above the canvas as `map_well` icons (see the overlay in
+  // the component) so they read at a legible size no matter how zoomed-out the
+  // level is — but their PULL is drawn here as a faint violet footprint, so the
+  // hazard's reach is legible on the map. Wells only exist on the rift, so this
+  // shows nowhere else.
   for (const well of state.wells) {
-    if (!seen(well.pos)) continue;
-    ctx.fillStyle = "#1a1030";
+    ctx.fillStyle = "rgba(138, 108, 224, 0.16)";
     ctx.beginPath();
     ctx.arc(
       well.pos.x * s,
       well.pos.y * s,
-      well.coreRadius * s,
+      well.pullRadius * s,
       0,
       Math.PI * 2,
     );
@@ -224,6 +230,10 @@ export function MapOverlay({
     { sprite: MARKER_SPRITE.elite, label: "ELITE" },
     { sprite: MARKER_SPRITE.boss, label: "BOSS" },
     { sprite: MARKER_SPRITE.merchant, label: "MERCHANT" },
+    // Only meaningful on the rift; harmless elsewhere (the legend is static).
+    ...(state.wells.length > 0
+      ? [{ sprite: WELL_SPRITE, label: "BLACK HOLE" }]
+      : []),
   ];
 
   return (
@@ -253,6 +263,18 @@ export function MapOverlay({
               merchant where they happened, and the hero's own pin last (on
               top). They show even over standing fog — the hero was there. */}
           <div className="map-markers">
+            {/* Black holes: the rift's gravity wells, always shown (a hazard
+                worth previewing) — they exist only on the rift, so nothing
+                pins here on any other level. */}
+            {state.wells.map((well) => (
+              <img
+                key={`well-${well.id}`}
+                className="pixel-img map-marker"
+                src={iconUrl(WELL_SPRITE)}
+                alt=""
+                style={at(well.pos)}
+              />
+            ))}
             {state.mapMarkers.map((marker, index) => (
               <img
                 key={`${marker.kind}-${index}`}

@@ -4,8 +4,9 @@
 // `LevelDef.asteroids` turns the rocks on — stepped from step() while the
 // run is `playing`, so any level can adopt either without engine changes.
 // Neither system flows through hitEnemy: a hole DEVOURS minions (no kill,
-// no XP, no loot) and a rock only SHOVES them, so environmental deaths can
-// never be farmed for drops or heat the menace meter.
+// no XP, no loot) — and the grounded hero too, an instant death — while a
+// rock only SHOVES them, so environmental deaths can never be farmed for
+// drops or heat the menace meter.
 
 import { randomRange } from "@game/lib/rng.ts";
 import { direction, distance, moveToward, vec } from "@game/lib/vec.ts";
@@ -26,22 +27,30 @@ export function buildWells(def: LevelDef, takeId: () => number): GravityWell[] {
     pullRadius: well.pullRadius ?? WELLS.pullRadius,
     coreRadius: well.coreRadius ?? WELLS.coreRadius,
     pullSpeed: well.pullSpeed ?? WELLS.pullSpeed,
-    coreDps: well.coreDps ?? WELLS.coreDps,
+    lootRadius: well.lootRadius ?? WELLS.lootRadius,
   }));
 }
 
-/** The pull (px/s) a well exerts at distance `d`: peak at the core's edge,
- * linear falloff to zero at the reach. */
+/** The pull (px/s) a well exerts on the player/enemies at distance `d`: peak
+ * at the core's edge, linear falloff to zero at the reach. */
 function pullAt(well: GravityWell, d: number): number {
   return well.pullSpeed * (1 - d / well.pullRadius);
+}
+
+/** The pull (px/s) a well exerts on loose LOOT at distance `d`: eased so it
+ * crawls at the far edge of `lootRadius` (about a screen away) and quickens
+ * toward the core — the falloff SQUARED, "slow from the edges, then faster". */
+function lootPullAt(well: GravityWell, d: number): number {
+  const t = 1 - d / well.lootRadius;
+  return WELLS.lootPullSpeed * t * t;
 }
 
 /**
  * Environmental damage to the player: worn armor turns its share like any
  * physical hit (judged against the live horde level — a hazard has no level
  * of its own) and wears a point, the rest bites into HP — but there is no
- * crit, no dodge and no last-stand math; a hazard is impartial. Shared by
- * the well core burn and the asteroid strike.
+ * crit, no dodge and no last-stand math; a hazard is impartial. Used by the
+ * asteroid strike (the well core is instant death, not a scaled bite).
  */
 function hurtPlayer(state: GameState, damage: number): void {
   const player = state.player;
@@ -57,27 +66,29 @@ function hurtPlayer(state: GameState, damage: number): void {
 }
 
 /**
- * Advance the gravity wells: drag the grounded player (burning them in the
- * core, ticked at WELLS.tickMs), drag enemies (devouring minions that reach
- * the core), and drag loose items until they park on the rim. Apparitions
- * are immaterial and ignore the pull entirely. A jump no longer sails clean
- * over a hole: airborne the hero still DRIFTS toward the core (a fraction of
- * the ground pull, `airPullFraction`) and the hole's gravity FIGHTS his hop
- * (`jumpGravity` heaped on `vz`), so he jumps less high the nearer the
- * horizon — but he is out of the core's reach, so the burn only bites the
- * grounded.
+ * Advance the gravity wells: drag the grounded player (DEVOURING him — instant
+ * death — if the pull drags him into the core), drag enemies (devouring
+ * minions that reach the core), and drag loose loot from a wider reach until
+ * it parks on the rim. Apparitions are immaterial and ignore the pull
+ * entirely. A jump no longer sails clean over a hole: airborne the hero still
+ * DRIFTS toward the core (a fraction of the ground pull, `airPullFraction`)
+ * and the hole's gravity FIGHTS his hop (`jumpGravity` heaped on `vz`), so he
+ * jumps less high the nearer the horizon — but he is out of the core's reach,
+ * so only the grounded hero can be swallowed.
  */
-export function stepWells(state: GameState, dt: number, dtMs: number): void {
+export function stepWells(state: GameState, dt: number): void {
   if (state.wells.length === 0) return;
-  state.wellTickMs = Math.max(0, state.wellTickMs - dtMs);
   const player = state.player;
   const airborne = player.z > JUMP.dodgeHeight;
 
   for (const well of state.wells) {
+    // A hole already claimed the hero this tick: the run is dropping to
+    // `defeat`, so leave the corpse where it fell and skip the rest.
+    if (player.hp <= 0) break;
     const d = distance(player.pos, well.pos);
     if (airborne) {
       // Over the hole: still tugged toward the core (weaker than grounded)
-      // and the hole's gravity drags the jump back down early. No core burn —
+      // and the hole's gravity drags the jump back down early. No swallow —
       // he floats above it.
       if (d < well.pullRadius) {
         const frac = 1 - d / well.pullRadius;
@@ -89,18 +100,16 @@ export function stepWells(state: GameState, dt: number, dtMs: number): void {
         player.vz -= WELLS.jumpGravity * frac * dt;
       }
     } else {
-      // The player: dragged while grounded, burned in the core.
+      // The player: dragged while grounded, DEVOURED at the core — instant
+      // death. Getting stuck in a black hole is the price of a loot dash gone
+      // wrong; the defeat check downstream this same tick ends the run.
       if (d < well.pullRadius) {
         player.pos = moveToward(player.pos, well.pos, pullAt(well, d) * dt);
-        if (
-          state.wellTickMs <= 0 &&
-          distance(player.pos, well.pos) <= well.coreRadius
-        ) {
-          state.wellTickMs = WELLS.tickMs;
-          hurtPlayer(
-            state,
-            Math.max(1, Math.round(well.coreDps * (WELLS.tickMs / 1000))),
-          );
+        if (distance(player.pos, well.pos) <= well.coreRadius) {
+          player.hp = 0;
+          player.hurtFlashMs = 250;
+          state.events.push({ type: "wellDeath", pos: { ...well.pos } });
+          break;
         }
       }
     }
@@ -131,12 +140,14 @@ export function stepWells(state: GameState, dt: number, dtMs: number): void {
       });
     }
 
-    // Items: dragged in but never destroyed — they park on the rim, so the
-    // event horizon hoards a loot pile the player can dare the pull for.
+    // Loot: pulled from a WIDER reach (`lootRadius`, about a screen away) but
+    // never destroyed — it parks on the rim, so the event horizon hoards a
+    // loot pile the player can dare the pull for. The tug eases in: a crawl
+    // from the far edge, quickening toward the core.
     for (const item of state.items) {
       const d = distance(item.pos, well.pos);
-      if (d >= well.pullRadius || d <= WELLS.itemRestRadius) continue;
-      const step = Math.min(pullAt(well, d) * dt, d - WELLS.itemRestRadius);
+      if (d >= well.lootRadius || d <= WELLS.itemRestRadius) continue;
+      const step = Math.min(lootPullAt(well, d) * dt, d - WELLS.itemRestRadius);
       item.pos = moveToward(item.pos, well.pos, step);
     }
   }
