@@ -464,6 +464,25 @@ const SPRITES = {
     ".AOOOOOOOOOOA.",
     "..............",
   ],
+  // The same crate SMASHED open — the break frame the loot topple swaps to
+  // (crates.ts / render's crateBreak effect). The lid has blown off (empty
+  // top), a dark gap is punched through the middle, splinters fly up, and the
+  // walls have caved into a low plank pile still pinned by its corner brackets
+  // (A). Shares the crate palette so it reads as the very same box, wrecked.
+  crate_broken: [
+    "..............",
+    "..............",
+    "..O.......O...",
+    ".OqOo...oOqO..",
+    ".oqoOSoqSOoqo.",
+    "OoqoOoqoqoOqoO",
+    "OqoOqoAoqoOqoO",
+    "oOqoqoqoqoqoOo",
+    ".OOOOOOOOOOOO.",
+    "..............",
+    "..............",
+    "..............",
+  ],
   // ---- SpaceZ HQ landmarks --------------------------------------------------
   // The lobby's glass double door — where the run begins.
   entrance: [

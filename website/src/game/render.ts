@@ -1152,7 +1152,8 @@ export type Effect = {
     | "swing"
     | "muzzle"
     | "text"
-    | "corpse";
+    | "corpse"
+    | "crateBreak";
   pos: { x: number; y: number };
   untilMs: number;
   /** Total effect length, for progress-driven animation. */
@@ -1344,6 +1345,72 @@ export function drawEffects(
       ctx.rotate(tip + tumble);
       ctx.drawImage(sprite, -Math.round(w / 2), -h);
       ctx.restore();
+      continue;
+    }
+
+    if (effect.kind === "crateBreak") {
+      // A smashed crate's send-off: the box keels over (like a slain mob) and
+      // bursts, then the broken-plank debris fades out, leaving just the loot
+      // the engine already spilled. Timeline over `duration` (~700ms): tip the
+      // intact crate onto its side (first ~200ms), swap to the `crate_broken`
+      // debris pile, then fade the wreck out — a spray of splinters flying the
+      // whole time. Purely cosmetic; the engine removed the obstacle the tick
+      // it broke, so this plays on top at the spot it stood.
+      const duration = effect.durationMs ?? 700;
+      const age = duration - (effect.untilMs - timeMs); // ms since the break
+      const tipMs = 200;
+      const box = spriteByName(assets.sprites, effect.sprite ?? "crate");
+      const debris = spriteByName(assets.sprites, "crate_broken");
+      // Splinters: a handful of wood chips thrown out from the box, arcing up
+      // then down and fading over the first ~360ms. Seeded off the effect so a
+      // burst is stable frame to frame (each chip a fixed bearing/speed).
+      const splinterMs = 360;
+      if (age < splinterMs) {
+        const st = age / splinterMs; // 0 → 1
+        const seed = effect.seed ?? 0;
+        const chips = 7;
+        ctx.save();
+        for (let i = 0; i < chips; i++) {
+          const ang = (i / chips) * Math.PI * 2 + (seed % 7) * 0.4;
+          const speed = 10 + ((seed * (i + 3)) % 11);
+          const reach = speed * st;
+          const cx = x + Math.round(Math.cos(ang) * reach);
+          const arc = Math.sin(st * Math.PI) * (6 + (i % 3) * 3);
+          const cy =
+            groundY - 5 + Math.round(Math.sin(ang) * reach * 0.5 - arc);
+          ctx.globalAlpha = Math.max(0, 1 - st);
+          ctx.fillStyle = i % 2 === 0 ? "#caa24d" : "#8a6a2c";
+          const s = i % 3 === 0 ? 2 : 1;
+          ctx.fillRect(cx, cy, s + 1, s);
+        }
+        ctx.restore();
+      }
+      if (age < tipMs && box) {
+        // Keel the intact box over onto its side, pivoting about its feet, with
+        // a little hop as it goes — the same read as a toppling mob.
+        const t = age / tipMs;
+        const eased = t * (2 - t);
+        const tip = (effect.angle ?? Math.PI / 2) * 0.75 * eased;
+        const hop = Math.round(Math.sin(t * Math.PI) * 3);
+        const w = box.width;
+        const h = box.height;
+        ctx.save();
+        ctx.translate(x, groundY + Math.round(h / 2) - hop);
+        ctx.rotate(tip);
+        ctx.drawImage(box, -Math.round(w / 2), -h);
+        ctx.restore();
+      } else if (debris) {
+        // The wreck lies where it fell and fades out over the rest of its life.
+        const fade = Math.min(1, (age - tipMs) / (duration - tipMs));
+        ctx.save();
+        ctx.globalAlpha = Math.max(0, 1 - fade);
+        ctx.drawImage(
+          debris,
+          x - Math.round(debris.width / 2),
+          groundY - Math.round(debris.height / 2),
+        );
+        ctx.restore();
+      }
       continue;
     }
 

@@ -1790,6 +1790,59 @@ export const OBSTACLES = {
 } as const;
 
 /**
+ * CRATES — the breakable loot boxes scattered on levels (see crates.ts). A
+ * crate is an ordinary jumpable obstacle (cover you can hop) that also carries
+ * `hp`: the hero's autonomous weapon SMASHES it — his melee cone and his shots
+ * damage it, and with no foe in reach the auto-attack turns on the nearest
+ * crate — so a struck crate keels over like a slain mob and bursts, ALWAYS
+ * spilling loot. The haul leans on healing and stamina (a reliable field
+ * resource), sometimes pays gear, and — its whole point over a plain kill —
+ * pays it GUARANTEED and rolls that gear HOTTER than a mob's, so a crate's
+ * unique is meaningfully likelier than a regular kill's.
+ */
+export const CRATES = {
+  /**
+   * A crate's hp as a fraction of the current REFERENCE minion's bar
+   * (`LEVELING.refMobHp` on the menace hp curve — the same anchor mob hp
+   * scales against). Since the hero's own damage tracks that same bar all
+   * campaign, this keeps a crate smashing open in about as many blows as a
+   * weak trash mob takes, early game to endgame — never a chore, never free.
+   */
+  hpFraction: 0.6,
+  /** Floor so an opening-level crate still takes a hit or two (world hp). */
+  minHp: 12,
+  /**
+   * The GUARANTEED drop's category weights — exactly one primary drop is paid
+   * every break, picked here. Healing and stamina dominate (the field
+   * resource); gear is the rarer prize (rolled via `gearTierBonus`).
+   */
+  drop: {
+    /** A medkit (the best tier the mob level has unlocked — `rollMedkitTier`). */
+    health: 5,
+    /** An energy drink (refills the sprint pool). */
+    stamina: 4,
+    /** A full equipment roll (see `gearTierBonus`). */
+    gear: 3,
+  },
+  /**
+   * Crate gear rolls HOTTER than a mob's: this tier-chance bonus sweetens the
+   * rarity roll so a crate reaches magic/rare/unique more often, and the
+   * natural unique FOLD (`rollEquipment`) fires more often — the reason a
+   * crate's unique is "more likely than a regular mob". A mob's plain drop
+   * gets only the small level-scaled bonus; a crate gets this on top.
+   */
+  gearTierBonus: 0.6,
+  /**
+   * After the guaranteed primary drop, the chance of ONE bonus consumable
+   * (a second health/stamina pickup) on top, so cracking a crate feels like a
+   * small haul rather than a single pickup.
+   */
+  bonusDropChance: 0.4,
+  /** Scatter of a crate's drops around the break point (world px, each axis). */
+  lootScatter: 26,
+} as const;
+
+/**
  * In-world dialogue (elite ambushes, boss confrontations, story-item lore).
  * Speakers hold their scene until the player has tapped through every page;
  * the world freezes in the `dialogue` phase meanwhile.

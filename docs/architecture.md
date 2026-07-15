@@ -62,7 +62,9 @@ run against synthetic fixtures with no shipped content (see
   everyone — including sight, shots and a nuke's blast; low/jumpable ones like
   craters can be cleared by the player but never by monsters; a `rockSizes`
   spec scatters rectangular rock footprints that collide as a box, not a
-  circle), deliberate `walls` (segments expanded into chains of solid circles
+  circle; a `breakable` spec marks CRATES — jumpable cover the hero's weapon
+  smashes for GUARANTEED loot, tracked with break `hp` and drop/scaling rules
+  in `crates.ts`), deliberate `walls` (segments expanded into chains of solid circles
   at creation — door gaps between segments carve rooms),
   locked `doors` (chains of `door_locked` obstacles tracked in
   `state.doors`, opened by carrying the matching story-item key up to

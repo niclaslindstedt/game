@@ -31,6 +31,7 @@ import {
 import { enemyDef } from "./defs/enemies/index.ts";
 import { gearDef, weaponDef } from "./defs/equipment.ts";
 import { LEVEL_ORDER, levelDef, type LevelDef } from "./defs/levels/index.ts";
+import { crateMaxHp } from "./crates.ts";
 import { buildWells } from "./hazards.ts";
 import {
   recomputeMaxHp,
@@ -130,8 +131,18 @@ export function createGame(
   // architecture.
   const obstacles = buildWalls(def, () => nextId++);
   const doors = buildDoors(def, obstacles, () => nextId++);
+  // Break hp for this run's crates, scaled once to the hero's starting level so
+  // a crate takes about as many blows as a weak trash mob all campaign.
+  const crateHp = crateMaxHp(loadout?.level ?? 1, difficulty);
   obstacles.push(
-    ...scatterObstacles(rng, def, playerSpawn, obstacles, () => nextId++),
+    ...scatterObstacles(
+      rng,
+      def,
+      playerSpawn,
+      obstacles,
+      crateHp,
+      () => nextId++,
+    ),
   );
   const blocked = (pos: Vec2, radius: number) =>
     obstacles.some((o) => distance(pos, o.pos) < o.radius + radius);
@@ -834,6 +845,7 @@ function scatterObstacles(
   def: LevelDef,
   playerSpawn: Vec2,
   walls: Obstacle[],
+  crateHp: number,
   takeId: () => number,
 ): Obstacle[] {
   const scattered: Obstacle[] = [];
@@ -880,6 +892,13 @@ function scatterObstacles(
           jumpable: spec.jumpable,
         };
         if (half) obstacle.half = half;
+        // A breakable crate carries live break hp — the hero's weapon smashes
+        // it for guaranteed loot (see crates.ts).
+        if (spec.breakable) {
+          obstacle.breakable = true;
+          obstacle.hp = crateHp;
+          obstacle.maxHp = crateHp;
+        }
         scattered.push(obstacle);
         break;
       }

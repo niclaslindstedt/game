@@ -247,6 +247,50 @@ export function playWorldSound(synth: Synth, event: GameEvent): boolean {
       });
       return true;
 
+    case "crateHit":
+      // A blow biting a wooden crate: a short, dry knock — a low filtered thud
+      // under a woody click, quiet so a flurry of hits doesn't drown the fight.
+      synth.noise({
+        durationMs: 40,
+        volume: 0.04,
+        filter: { type: "lowpass", frequency: 900 },
+      });
+      synth.tone({
+        type: "square",
+        from: 180,
+        to: 130,
+        durationMs: 55,
+        volume: 0.03,
+      });
+      return true;
+
+    case "crateBroken":
+      // The crate gives way: a wooden crash — a burst of broadband noise (the
+      // splintering) over a short falling tone (the box collapsing), a touch
+      // meatier than a single hit so the break lands.
+      synth.noise({
+        durationMs: 150,
+        volume: 0.075,
+        filter: { type: "lowpass", frequency: 2200 },
+      });
+      synth.tone({
+        type: "square",
+        from: 200,
+        to: 90,
+        durationMs: 160,
+        volume: 0.045,
+        detuneCents: 8,
+      });
+      synth.tone({
+        type: "triangle",
+        from: 320,
+        to: 160,
+        durationMs: 120,
+        volume: 0.025,
+        delayMs: 30,
+      });
+      return true;
+
     default:
       return false;
   }
