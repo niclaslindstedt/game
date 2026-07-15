@@ -392,7 +392,9 @@ run against synthetic fixtures with no shipped content (see
   player/enemies/items toward their core — minions are devoured there
   (`wellSwallowed`: no kill, no XP, no loot, so a hole can't be farmed),
   the player burns on a damage tick, dragged items park on the rim, and a
-  jump clears the pull entirely — and the **asteroid rain**
+  jump no longer clears the pull — airborne the hero still drifts toward the
+  core and the hole's gravity fights his hop, so he jumps less high over the
+  horizon (`WELLS.airPullFraction`/`jumpGravity`) — and the **asteroid rain**
   (`LevelDef.asteroids`, config `ASTEROIDS`): rocks spawned on a ring past
   the screen edge streak across the player (one strike per rock, jumpable,
   armor reduces) and shove minions aside unharmed. Related:

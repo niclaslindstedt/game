@@ -84,14 +84,24 @@ describe("gravity wells", () => {
     expect(state.player.pos.x).toBe(x);
   });
 
-  it("a jumping player sails over the pull", () => {
+  it("a jumping player drifts toward the core and jumps less high", () => {
     const state = startGame(42, "test_well_level");
     const well = stageWell(state);
     state.player.pos = { x: well.pos.x + 60, y: well.pos.y };
     state.player.z = JUMP.dodgeHeight + 30;
     state.player.vz = 100;
+    const vzBefore = state.player.vz;
+    const hpBefore = state.player.hp;
     step(state, idle, DT);
-    expect(state.player.pos.x).toBe(well.pos.x + 60);
+    // No longer sails clean over: the hole still tugs him toward the core...
+    expect(state.player.pos.x).toBeLessThan(well.pos.x + 60);
+    expect(state.player.pos.x).toBeGreaterThan(well.pos.x);
+    // ...and heaps gravity onto the hop, so vz drops FASTER than the level's
+    // gravity alone would carry it — he jumps less high near the horizon.
+    const levelOnly = vzBefore - state.level.gravity * (DT / 1000);
+    expect(state.player.vz).toBeLessThan(levelOnly - 0.001);
+    // But he floats above the core: no burn while airborne.
+    expect(state.player.hp).toBe(hpBefore);
   });
 
   it("burns the player in the core, ticked at WELLS.tickMs", () => {

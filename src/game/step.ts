@@ -1017,6 +1017,12 @@ function stepWeapon(state: GameState, input: GameInput, dtMs: number): void {
 
   const equipped = player.equipment.weapon;
   const weapon = weaponDef(equipped.defId);
+  // Airborne over the fight: a melee weapon can't reach the grounded horde
+  // while the hero floats above it — the same z rule (JUMP.dodgeHeight) that
+  // lets enemies pass beneath him stays his blade. The cooldown keeps ticking
+  // down mid-air (decremented above), so the swing is ready the instant he
+  // lands. Ranged and magic still fire from height (shots leave at his z).
+  if (!weapon.projectile && player.z > JUMP.dodgeHeight) return;
   // No target through a wall: the character never wastes a swing or a shot
   // on a monster it can't actually reach. INTELLIGENCE widens every weapon's
   // reach, so a high-INT build strikes from a touch further out.
@@ -2091,6 +2097,11 @@ function stepItems(state: GameState, dtMs: number): void {
   const displaced: Item[] = [];
   const pickupReach = MEDKIT.radius + PLAYER.radius;
   const pickupReachSq = pickupReach * pickupReach;
+  // Floating above the ground: the hero can't scoop loot mid-jump — a drop is
+  // grabbed only once he's back down (the same z rule that stays his blade and
+  // lets him clear the well pull). The magnet may still reel drops toward him
+  // while airborne, but they wait on the ground until he lands to be taken.
+  const airborne = player.z > JUMP.dodgeHeight;
   state.items = state.items.filter((item) => {
     // A mercy drop still riding its angel down is airborne: count off the
     // delivery, and until it lands it can't be picked up (the magnet leaves it
@@ -2100,7 +2111,10 @@ function stepItems(state: GameState, dtMs: number): void {
       item.deliverMs = Math.max(0, item.deliverMs - dtMs);
       return true;
     }
-    const overlapping = distanceSq(item.pos, player.pos) <= pickupReachSq;
+    // Mid-jump the hero floats past the drop without taking it — hold it on
+    // the ground until he lands (airborne short-circuits the reach test).
+    const overlapping =
+      !airborne && distanceSq(item.pos, player.pos) <= pickupReachSq;
     if (!overlapping) return true;
 
     if (item.kind === "medkit") {

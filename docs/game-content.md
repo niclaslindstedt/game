@@ -79,8 +79,10 @@ names its in-run music with an optional `music` id (a key into the app's
   both **environmental hazard systems**: seven **black holes**
   (`LevelDef.wells` → the engine's gravity wells: they drag the grounded
   player, devour minions at the core, burn the player standing in one, and
-  hoard dragged loot on the event horizon — a jump sails clean over the
-  pull) and the **asteroid rain** (`LevelDef.asteroids`: rocks streak across
+  hoard dragged loot on the event horizon — a jump no longer sails clean
+  over the pull: airborne the hero still drifts toward the core and the
+  hole's gravity drags his hop down early, so he jumps less high near the
+  horizon) and the **asteroid rain** (`LevelDef.asteroids`: rocks streak across
   the player's surroundings on a rolled cadence, take a difficulty-scaled
   bite of the hero's health on contact — once per rock, from 20% on EASY up
   to 75% on JESUS — shove minions aside, and are dodged with the feet or a

@@ -280,9 +280,11 @@ export type LevelDef = {
   /**
    * Black holes: static gravity wells that drag the grounded player,
    * enemies and loose items toward their core — minions are devoured
-   * there, the player burns, items pile up on the rim (a jump clears the
-   * pull entirely). Omitted numbers fall back to the config WELLS
-   * defaults; see GravityWell for what each means.
+   * there, the player burns, items pile up on the rim. A jump no longer
+   * clears the pull: airborne the hero still drifts toward the core and the
+   * hole's gravity fights his hop (he jumps less high near the horizon),
+   * though he floats above the core's burn. Omitted numbers fall back to the
+   * config WELLS defaults; see GravityWell for what each means.
    */
   wells?: {
     pos: Vec2;
