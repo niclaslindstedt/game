@@ -53,7 +53,8 @@ swing/muzzle effect; it needs CHARACTER WEAPON on to have anything to swing.
 The developer screen also holds a **BALANCE** subpage: a dozen runtime
 multipliers over the engine's shipped tuning (`src/game/tuning.ts`, applied via
 `setBalanceTuning`) for probing the game's balance without rebuilding — XP
-GAIN (leveling pace), HERO DAMAGE, MOB HP, MOB DAMAGE, HORDE SIZE (the wave
+GAIN (leveling pace), HERO DAMAGE, KNOCKBACK (how far a melee/ranged blow
+shoves a struck mob back), MOB HP, MOB DAMAGE, HORDE SIZE (the wave
 spawner's floor and cap), DROP RATE, GEAR SHARE (the equipment slice of the
 drop ladder), REPAIR DROPS (the repair-kit slice), GEAR QUALITY (magic/rare
 tier odds), UNIQUE DROPS, MENACE GAIN, and MOB DMG TRACK (how much mob hp

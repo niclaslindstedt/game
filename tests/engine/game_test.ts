@@ -3,7 +3,7 @@
 // fixed timestep, exactly like the app's game loop does, and assert on the
 // rules — level layout, steering, jumping, combat, enemy AI, win/lose.
 
-import { describe, expect, it } from "vitest";
+import { afterEach, describe, expect, it } from "vitest";
 
 import {
   advanceDialogue,
@@ -16,6 +16,8 @@ import {
   enemyDef,
   JUMP,
   levelDef,
+  resetBalanceTuning,
+  setBalanceTuning,
   weaponDef,
   weaponCooldownFor,
   weaponRangeFor,
@@ -43,6 +45,12 @@ const MOON = levelDef("test_level");
 const dist = (a: { x: number; y: number }, b: { x: number; y: number }) =>
   Math.hypot(a.x - b.x, a.y - b.y);
 const isBoss = (defId: string) => enemyDef(defId).role === "boss";
+
+// A few tests below park a single mob against a STATIONARY hero — a setup the
+// hero's new melee/ranged KNOCKBACK (config `KNOCKBACK`) would otherwise hold
+// at bay forever, so they turn the shove off to isolate the rule under test.
+// Always restore the neutral tuning afterward so the knob can't leak.
+afterEach(() => resetBalanceTuning());
 const isMinion = (defId: string) => enemyDef(defId).role === "minion";
 
 describe("createGame", () => {
@@ -264,6 +272,7 @@ describe("weapon", () => {
 
   it("kills a monster after enough hits and records the kill", () => {
     const state = startGame(); // default crude sword: melee, so keep it close
+    setBalanceTuning({ knockback: 0 }); // don't shove the parked mob out of reach
     stopWaves(state);
     state.enemies = [
       makeEnemy({ pos: { x: state.player.pos.x + 30, y: state.player.pos.y } }),
@@ -569,6 +578,7 @@ describe("enemy AI", () => {
 
   it("deals contact damage with a cooldown", () => {
     const state = startGame();
+    setBalanceTuning({ knockback: 0 }); // let the mob reach contact, not get shoved off
     stopWaves(state);
     state.enemies = [
       makeEnemy({

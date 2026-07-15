@@ -157,6 +157,37 @@ export const WEAPON = {
 } as const;
 
 /**
+ * KNOCKBACK — every landing MELEE or RANGED weapon blow of the hero's own
+ * shoves the struck mob a little straight back, away from him, so a swing or a
+ * shot buys ground and kiting the horde gets that bit easier. Magic weapons
+ * DON'T knock back (INT keeps its crowd control in the AoE cleave, the crit
+ * blob, and granted spells) — this is the physical arsenal's signature. It only
+ * nudges survivors: a killing blow is handled by the corpse launch, and a mob
+ * about to die isn't moved. The shove is a flat world-px displacement (not an
+ * impulse that decays), so repeated hits keep a chased pack at arm's length
+ * without ever launching it. Units: world px. The developer BALANCE › KNOCKBACK
+ * knob scales `distance` live (0× off, 1× this shipped baseline, up to 100×).
+ */
+export const KNOCKBACK = {
+  /** World px a struck mob is pushed directly away from the hero per landing
+   * melee/ranged blow, at the neutral (1×) knob. A few px: noticeable over a
+   * fight, never a launch — a body slid ~a third of the pack-separation each
+   * hit. */
+  distance: 10,
+  /**
+   * The fraction of the shove each ENEMY ROLE actually takes — heavier set
+   * pieces plant their feet. A `minion` (the horde) takes the full push; an
+   * `elite` half of it; a `boss` is anchored to its post and shrugs it off
+   * entirely, so a telegraphed charge or slam is never nudged off its mark by
+   * the hero chipping at it.
+   */
+  roleScale: { minion: 1, elite: 0.5, boss: 0 } as Record<
+    "minion" | "elite" | "boss",
+    number
+  >,
+} as const;
+
+/**
  * Desktop mouse aim. The character fights autonomously — it locks onto the
  * nearest visible foe — but a desktop mouse adds a second steering dimension:
  * the pointer nudges that choice toward whatever the cursor is aimed at. Each

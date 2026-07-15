@@ -18,6 +18,9 @@ export type BalanceTuning = {
   xpGain: number;
   /** Scales the hero's weapon damage (combat, scoring, and readouts). */
   playerDamage: number;
+  /** Scales the knockback a melee/ranged weapon blow shoves a struck mob back
+   * (config `KNOCKBACK.distance`) — 0 turns the push off entirely. */
+  knockback: number;
   /** Scales every monster's hp at spawn (kill XP is hp-proportional, so a
    * tougher mob also pays more). */
   mobHp: number;
@@ -48,6 +51,7 @@ export type BalanceTuning = {
 export const BALANCE_TUNING_DEFAULTS: BalanceTuning = {
   xpGain: 1,
   playerDamage: 1,
+  knockback: 1,
   mobHp: 1,
   mobDamage: 1,
   hordeSize: 1,
