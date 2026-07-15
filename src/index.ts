@@ -444,6 +444,7 @@ export {
   GATES,
   HELD_ITEMS,
   JUMP,
+  KNOCKBACK,
   LAST_STAND,
   LEVELING,
   LOOT,

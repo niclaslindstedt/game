@@ -5,10 +5,11 @@
 // and elites pay their def's guaranteed drops — equipment, story items, the
 // lot. Extracted from step.ts so the simulation step stays readable.
 
-import { clamp, distance, type Vec2 } from "@game/lib/vec.ts";
+import { clamp, direction, distance, type Vec2 } from "@game/lib/vec.ts";
 import {
   ACCURACY,
   ENEMY_AI,
+  KNOCKBACK,
   LEVELING,
   LOOT,
   MEDKIT,
@@ -47,6 +48,7 @@ import {
   xpToLevelUp,
 } from "./leveling.ts";
 import { addMapMarker } from "./map.ts";
+import { resolveObstacles } from "./obstacles.ts";
 import {
   bankOverkill,
   currentMobLevel,
@@ -230,6 +232,40 @@ export function staminaDrinkChance(state: GameState): number {
 }
 
 /**
+ * Shove a struck mob straight back from the hero (config `KNOCKBACK`). Only
+ * MELEE and RANGED weapon blows push — magic hits don't (its crowd control is
+ * the cleave and the crit blob). The displacement is flat, scaled by the mob's
+ * role (heavier set pieces plant their feet) and the developer BALANCE knob;
+ * the moved body is clamped back onto the map and pushed clear of any obstacle
+ * it lands inside, so a shove can never park a mob in a wall or off the level.
+ * Caller gates to the hero's own weapon blows (`rollAccuracy`) on survivors.
+ */
+function applyKnockback(
+  state: GameState,
+  enemy: Enemy,
+  weaponClass?: WeaponClass,
+): void {
+  if (weaponClass !== "melee" && weaponClass !== "ranged") return;
+  const def = enemyDef(enemy.defId);
+  const scale = KNOCKBACK.roleScale[def.role] * BALANCE.knockback;
+  if (scale <= 0) return;
+  const dir = direction(state.player.pos, enemy.pos);
+  if (dir.x === 0 && dir.y === 0) return; // sitting on the hero: no bearing
+  const push = KNOCKBACK.distance * scale;
+  enemy.pos.x = clamp(
+    enemy.pos.x + dir.x * push,
+    def.radius,
+    state.level.width - def.radius,
+  );
+  enemy.pos.y = clamp(
+    enemy.pos.y + dir.y * push,
+    def.radius,
+    state.level.height - def.radius,
+  );
+  resolveObstacles(state, enemy.pos, def.radius);
+}
+
+/**
  * Apply one player hit: roll the crit (the weapon class's CRIT stat plus a
  * marginal LUCK nudge), deal damage, and on a kill grant XP proportional to
  * max hp and roll loot. `weaponClass` names the blow that landed so the crit
@@ -365,6 +401,10 @@ export function hitEnemy(
   if (opts?.rollAccuracy) queueWeaponProcs(state, enemy, "hit");
 
   if (enemy.hp > 0) {
+    // KNOCKBACK (config `KNOCKBACK`): the hero's own melee/ranged blow shoves
+    // the surviving mob back — never a killing blow (the corpse launch owns
+    // that) nor a magic hit, a companion's, a proc's, or a conjured power's.
+    if (opts?.rollAccuracy) applyKnockback(state, enemy, weaponClass);
     // A critical hit flashes the victim (renderer blink; visual only).
     if (crit) enemy.critFlashMs = 300;
     state.events.push({

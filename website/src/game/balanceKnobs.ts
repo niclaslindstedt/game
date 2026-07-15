@@ -31,6 +31,11 @@ export const BALANCE_KNOBS: BalanceKnob[] = [
     blurb: "EVERY WEAPON'S DAMAGE (READOUTS FOLLOW)",
   },
   {
+    key: "knockback",
+    label: "KNOCKBACK",
+    blurb: "HOW FAR MELEE & RANGED BLOWS SHOVE MOBS BACK",
+  },
+  {
     key: "mobHp",
     label: "MOB HP",
     blurb: "MONSTER HEALTH AT SPAWN - XP PAYS OUT MORE TOO",
