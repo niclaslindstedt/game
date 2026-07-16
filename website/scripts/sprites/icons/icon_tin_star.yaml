@@ -2,12 +2,16 @@ name: icon_tin_star
 family: icons
 size: [12, 12]
 description: >
-  A grey chest cuirass with a bright five-point tin star riveted at its
-  center; the sheriff-host breastplate where the star is the armor.
+  A grey chest cuirass with a bright five-point tin star at its center.
+subject:
+  kind: armor icon
+  features: a rounded breastplate with a raised five-point star riveted to the center
+  accent: tin-star silver
+  flavor: the sheriff-host breastplate where the star is the armor
 palette:
-  O: "#1a1c2c"
-  a: "#d6dce4"
-  v: "#60687e"
+  O: "#1a1c2c" # dark outline
+  a: "#d6dce4" # bright tin star
+  v: "#60687e" # grey cuirass
 grid: |
   ............
   ..OOOOOOOO..

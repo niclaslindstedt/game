@@ -2,13 +2,17 @@ name: icon_carafe
 family: icons
 size: [12, 12]
 description: >
-  A glass carafe half-full of dark red wine with a gold rim, catching a
-  highlight; a bottomless self-refilling decanter charm.
+  A glass carafe half-full of dark red wine, catching a highlight.
+subject:
+  kind: item icon
+  features: a round-bellied glass decanter with a narrow neck holding red liquid
+  accent: dark red wine
+  flavor: a bottomless self-refilling decanter charm
 palette:
-  O: "#1a1c2c"
-  W: "#f4f4f4"
-  i: "#772020"
-  r: "#d83a3a"
+  O: "#1a1c2c" # dark outline
+  W: "#f4f4f4" # glass highlight
+  i: "#772020" # deep wine shadow
+  r: "#d83a3a" # red wine
 grid: |
   ............
   ....OOO.....

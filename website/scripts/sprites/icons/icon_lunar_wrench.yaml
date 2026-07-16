@@ -2,11 +2,15 @@ name: icon_lunar_wrench
 family: icons
 size: [12, 12]
 description: >
-  A chunky chrome service wrench laid diagonally, an open-ended jaw at one
-  end; a heavy lander's tool, honest and everywhere.
+  A chunky chrome service wrench with an open-ended jaw.
+subject:
+  kind: weapon icon
+  features: a diagonal wrench with an open-ended jaw at the head
+  accent: chrome steel
+  flavor: a heavy lander's tool, honest and everywhere
 palette:
-  A: "#8d9196"
-  O: "#1a1c2c"
+  A: "#8d9196" # chrome steel
+  O: "#1a1c2c" # dark outline
 grid: |
   ............
   .OO....OO...

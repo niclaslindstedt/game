@@ -2,14 +2,18 @@ name: icon_keycard_red
 family: icons
 size: [12, 12]
 description: >
-  A red access keycard with a dark magnetic stripe and a clearance band;
-  the R&D cleanroom VAULT key.
+  A red access keycard with a stripe and clearance band; the VAULT key.
+subject:
+  kind: item icon
+  features: an access card with a magnetic stripe and a clearance band
+  accent: red
+  flavor: the R&D cleanroom VAULT key
 palette:
-  O: "#1a1c2c"
-  W: "#f4f4f4"
-  r: "#d83a3a"
-  w: "#c6c6c6"
-  y: "#ffb02e"
+  O: "#1a1c2c" # dark outline
+  W: "#f4f4f4" # white stripe
+  r: "#d83a3a" # red card
+  w: "#c6c6c6" # grey sigil
+  y: "#ffb02e" # amber sigil mark
 grid: |
   ............
   ............

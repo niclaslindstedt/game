@@ -2,15 +2,19 @@ name: icon_treasure_map
 family: icons
 size: [20, 14]
 description: >
-  A tan rolled parchment map marked with a dashed route and a red X; a
-  treasure/objective map.
+  A tan rolled parchment map marked with a dashed route and a red X.
+subject:
+  kind: item icon
+  features: an unrolled parchment map with a dashed trail and a marked X
+  accent: tan parchment, red X
+  flavor: a treasure / objective map
 palette:
-  D: "#b28e5c"
-  O: "#1a1c2c"
-  j: "#4054bc"
-  k: "#342c26"
-  r: "#d83a3a"
-  t: "#dec08a"
+  D: "#b28e5c" # map fold shade
+  O: "#1a1c2c" # dark outline
+  j: "#4054bc" # blue water mark
+  k: "#342c26" # dark landmark ink
+  r: "#d83a3a" # red route / X
+  t: "#dec08a" # tan parchment
 grid: |
   ....................
   ..OOOOOOOOOOOOOOOO..

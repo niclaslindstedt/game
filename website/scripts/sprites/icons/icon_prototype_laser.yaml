@@ -2,12 +2,16 @@ name: icon_prototype_laser
 family: icons
 size: [12, 12]
 description: >
-  A dark lab-bench emitter rod on a diagonal tipped with a small red laser
-  lens; an unfinished prototype beam gun.
+  A dark emitter rod tipped with a small red laser lens, firing a spark.
+subject:
+  kind: weapon icon
+  features: a diagonal emitter rod with a lens tip and a small emitted spark
+  accent: red laser
+  flavor: an unfinished prototype beam gun
 palette:
-  O: "#1a1c2c"
-  b: "#3f4553"
-  r: "#d83a3a"
+  O: "#1a1c2c" # dark outline
+  b: "#3f4553" # dark rod body
+  r: "#d83a3a" # red laser spark
 grid: |
   ............
   .rr.........

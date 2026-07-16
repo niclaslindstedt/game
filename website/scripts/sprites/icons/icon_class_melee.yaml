@@ -2,11 +2,15 @@ name: icon_class_melee
 family: icons
 size: [12, 12]
 description: >
-  A weapon-class indicator glyph: a simple sword/blade shape, reading
-  instantly as "melee" (STR weapons).
+  Weapon-class glyph: a simple upright sword blade reading as MELEE.
+subject:
+  kind: UI weapon-class icon
+  features: an upright sword with blade, crossguard, and grip
+  accent: amber-gold blade
+  flavor: MELEE class — STR weapons
 palette:
-  K: "#e8b93e"
-  O: "#1a1c2c"
+  K: "#e8b93e" # amber-gold blade
+  O: "#1a1c2c" # dark outline
 grid: |
   .....OO.....
   ....OKKO....

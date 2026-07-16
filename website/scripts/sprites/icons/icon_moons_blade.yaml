@@ -2,14 +2,17 @@ name: icon_moons_blade
 family: icons
 size: [12, 12]
 description: >
-  A slim upward-diagonal sword blade in pale moon-cyan with a lighter
-  edge, tapering to a point over a short dark grip; a cold lunar-steel
-  shortsword.
+  A slim pale moon-cyan sword blade over a short dark grip.
+subject:
+  kind: weapon icon
+  features: a diagonal slim blade tapering to a point above a short grip
+  accent: pale moon-cyan
+  flavor: a cold lunar-steel shortsword
 palette:
-  O: "#1a1c2c"
-  c: "#8ccdd7e1"
-  k: "#342c26"
-  x: "#c5e6ebe1"
+  O: "#1a1c2c" # dark outline
+  c: "#8ccdd7e1" # moon-cyan edge
+  k: "#342c26" # dark grip
+  x: "#c5e6ebe1" # pale cyan blade
 grid: |
   ............
   .......OOO..

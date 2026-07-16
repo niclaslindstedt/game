@@ -2,12 +2,16 @@ name: icon_nine_mm
 family: icons
 size: [12, 12]
 description: >
-  A blocky black semi-automatic 9mm pistol in profile, short barrel and
-  squared slide; a plain desk-drawer sidearm.
+  A blocky black 9mm semi-auto pistol with a squared slide.
+subject:
+  kind: weapon icon
+  features: a semi-automatic pistol in profile, short barrel and squared slide
+  accent: matte black
+  flavor: a plain desk-drawer sidearm
 palette:
-  N: "#303444"
-  O: "#1a1c2c"
-  b: "#3f4553"
+  N: "#303444" # dark gunmetal
+  O: "#1a1c2c" # dark outline
+  b: "#3f4553" # slide highlight
 grid: |
   ............
   ............

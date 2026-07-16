@@ -2,13 +2,16 @@ name: icon_moon_boots
 family: icons
 size: [12, 12]
 description: >
-  A pair of chunky white-and-grey moon boots with thick treaded soles,
-  drawn side by side; the classic print-leaving kind, big-soled and
-  bulbous.
+  A pair of chunky white-and-grey moon boots with thick treaded soles.
+subject:
+  kind: armor icon
+  features: a pair of bulbous big-soled boots side by side with thick treads
+  accent: white-and-grey
+  flavor: the classic print-leaving moon boots
 palette:
-  A: "#8d9196"
-  O: "#1a1c2c"
-  a: "#d6dce4"
+  A: "#8d9196" # grey sole
+  O: "#1a1c2c" # dark outline
+  a: "#d6dce4" # white boot body
 grid: |
   ............
   ............

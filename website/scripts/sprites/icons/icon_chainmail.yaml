@@ -2,12 +2,16 @@ name: icon_chainmail
 family: icons
 size: [12, 12]
 description: >
-  A grey riveted chainmail hauberk — a short-sleeved mail shirt with a
-  fine linked-ring texture; medieval interlocked steel.
+  A grey chainmail hauberk with a fine linked-ring texture.
+subject:
+  kind: armor icon
+  features: a short-sleeved mail shirt with shoulder tabs and a woven ring texture
+  accent: interlocked steel mail
+  flavor: medieval interlocked steel
 palette:
-  O: "#1a1c2c"
-  V: "#9095a5"
-  v: "#60687e"
+  O: "#1a1c2c" # dark outline
+  V: "#9095a5" # bright mail ring
+  v: "#60687e" # dark mail ring
 grid: |
   ............
   ............

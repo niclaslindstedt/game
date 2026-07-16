@@ -2,14 +2,18 @@ name: icon_pass
 family: icons
 size: [12, 12]
 description: >
-  A white laminated all-access badge card with an orange stripe and a
-  scrawled signature line; the autographed VIP pass.
+  A white laminated all-access badge with an orange stripe and signature line.
+subject:
+  kind: item icon
+  features: a laminated card on a clip, an orange band and a scrawled signature line
+  accent: orange stripe
+  flavor: the autographed VIP pass
 palette:
-  N: "#303444"
-  O: "#1a1c2c"
-  W: "#f4f4f4"
-  w: "#c6c6c6"
-  y: "#ffb02e"
+  N: "#303444" # dark clip
+  O: "#1a1c2c" # dark outline
+  W: "#f4f4f4" # white card
+  w: "#c6c6c6" # grey signature line
+  y: "#ffb02e" # orange stripe
 grid: |
   ............
   .....OO.....

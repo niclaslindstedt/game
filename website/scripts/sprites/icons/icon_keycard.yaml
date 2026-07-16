@@ -2,14 +2,18 @@ name: icon_keycard
 family: icons
 size: [12, 12]
 description: >
-  A greasy grey-white access keycard with a dark magnetic stripe and a
-  small label; the plain storage/supply-bay key.
+  A grey-white access keycard with a magnetic stripe; the supply-bay key.
+subject:
+  kind: item icon
+  features: an access card with a magnetic stripe and a small label
+  accent: greasy grey-white with a blue stripe
+  flavor: the plain storage / supply-bay key
 palette:
-  O: "#1a1c2c"
-  W: "#f4f4f4"
-  j: "#4054bc"
-  w: "#c6c6c6"
-  y: "#ffb02e"
+  O: "#1a1c2c" # dark outline
+  W: "#f4f4f4" # white card
+  j: "#4054bc" # blue magnetic stripe
+  w: "#c6c6c6" # grey label
+  y: "#ffb02e" # amber label mark
 grid: |
   ............
   ............

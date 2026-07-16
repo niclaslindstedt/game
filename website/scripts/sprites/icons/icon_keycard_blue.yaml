@@ -2,14 +2,18 @@ name: icon_keycard_blue
 family: icons
 size: [12, 12]
 description: >
-  A blue access keycard with a dark magnetic stripe and a small stamped
-  sigil; the high-clearance CORE key.
+  A blue access keycard with a magnetic stripe; the CORE clearance key.
+subject:
+  kind: item icon
+  features: an access card with a magnetic stripe and a stamped sigil
+  accent: blue
+  flavor: the high-clearance CORE key
 palette:
-  O: "#1a1c2c"
-  e: "#5ab4ff"
-  s: "#d6f0ff"
-  w: "#c6c6c6"
-  y: "#ffb02e"
+  O: "#1a1c2c" # dark outline
+  e: "#5ab4ff" # blue card
+  s: "#d6f0ff" # pale blue stripe
+  w: "#c6c6c6" # grey sigil
+  y: "#ffb02e" # amber sigil mark
 grid: |
   ............
   ............

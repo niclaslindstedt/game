@@ -2,11 +2,15 @@ name: icon_chausses
 family: icons
 size: [12, 12]
 description: >
-  Grey mail chausses — chainmail leg coverings with the same fine linked-
-  ring texture as the hauberk; medieval leg armor.
+  Grey mail chausses — chainmail leg coverings, joined at the waist.
+subject:
+  kind: armor icon
+  features: a pair of mail leg coverings joined at the waist into an inverted-U
+  accent: grey mail
+  flavor: medieval leg armor
 palette:
-  O: "#1a1c2c"
-  v: "#60687e"
+  O: "#1a1c2c" # dark outline
+  v: "#60687e" # grey mail
 grid: |
   ............
   ............

@@ -2,14 +2,18 @@ name: icon_pulsar_rod
 family: icons
 size: [12, 12]
 description: >
-  A dark survey rod held upright, tipped with a bright white-cyan pulsing
-  node; a caster that ticks out fast, bright pulses.
+  A dark survey rod tipped with a bright white-cyan pulsing node.
+subject:
+  kind: weapon icon
+  features: an upright rod crowned with a bright pulsing node
+  accent: white-cyan pulse
+  flavor: a caster that ticks out fast, bright pulses
 palette:
-  O: "#1a1c2c"
-  W: "#f4f4f4"
-  b: "#3f4553"
-  e: "#5ab4ff"
-  s: "#d6f0ff"
+  O: "#1a1c2c" # dark outline
+  W: "#f4f4f4" # white node core
+  b: "#3f4553" # dark rod
+  e: "#5ab4ff" # blue pulse
+  s: "#d6f0ff" # pale cyan node
 grid: |
   ............
   ....OOO.....

@@ -2,13 +2,16 @@ name: icon_ada_host
 family: icons
 size: [12, 12]
 description: >
-  A dead Eastworld park host's head with its own tan cowboy hat rammed
-  down hard into its exposed robotic neck-works; reads as sabotage — a
-  hat crammed onto a broken machine.
+  A dead park host's head, its tan cowboy hat rammed into exposed neck-works.
+subject:
+  kind: item icon
+  features: a severed robot head with a cowboy hat crammed down onto broken neck machinery
+  accent: tan cowboy hat
+  flavor: an Eastworld park host, read as sabotage — a hat on a broken machine
 palette:
-  B: "#92643e"
-  E: "#5d4028"
-  O: "#1a1c2c"
+  B: "#92643e" # tan hat felt
+  E: "#5d4028" # dark hat band / neck shadow
+  O: "#1a1c2c" # dark outline
 grid: |
   ............
   ............

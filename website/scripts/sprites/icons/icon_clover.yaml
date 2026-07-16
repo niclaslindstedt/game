@@ -2,13 +2,17 @@ name: icon_clover
 family: icons
 size: [12, 12]
 description: >
-  A bright green four-leaf clover, the four heart-shaped leaves fanned on
-  a short stem; a lucky charm.
+  A bright green four-leaf clover on a short stem.
+subject:
+  kind: item icon
+  features: four heart-shaped leaves fanned on a short stem
+  accent: bright green
+  flavor: a lucky charm
 palette:
-  G: "#4a7a3e"
-  O: "#1a1c2c"
-  g: "#3d6433"
-  l: "#678f5d"
+  G: "#4a7a3e" # clover green
+  O: "#1a1c2c" # dark outline
+  g: "#3d6433" # darker clover shade / stem
+  l: "#678f5d" # lighter clover highlight
 grid: |
   ............
   ...OO.OO....

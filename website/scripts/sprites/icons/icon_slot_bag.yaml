@@ -2,12 +2,16 @@ name: icon_slot_bag
 family: icons
 size: [12, 12]
 description: >
-  A small flat-grey satchel silhouette glyph on a dark rounded tile; the
-  bag-slot marker.
+  The bag equipment-slot marker: a satchel silhouette on a dark rounded tile.
+subject:
+  kind: UI slot icon
+  features: a satchel silhouette with a flap, set in a rounded tile
+  accent: tan-brown satchel
+  flavor: the bag equipment slot
 palette:
-  B: "#92643e"
-  O: "#1a1c2c"
-  S: "#b39378"
+  B: "#92643e" # brown satchel body
+  O: "#1a1c2c" # dark tile outline
+  S: "#b39378" # tan satchel trim
 grid: |
   ............
   ...OOOOOO...

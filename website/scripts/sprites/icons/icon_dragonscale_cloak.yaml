@@ -2,15 +2,18 @@ name: icon_dragonscale_cloak
 family: icons
 size: [12, 12]
 description: >
-  A draped green dragonscale cloak — an overlapping-scale hide with an
-  emerald sheen and a darker clasp; the rift's heaviest, most valuable
-  hide.
+  A draped green dragonscale cloak with an emerald sheen and a gold clasp.
+subject:
+  kind: armor icon
+  features: a draped cloak of overlapping scales with a clasp at the collar
+  accent: emerald-green scales, gold clasp
+  flavor: the rift's heaviest, most valuable hide
 palette:
-  G: "#4a7a3e"
-  O: "#1a1c2c"
-  g: "#3d6433"
-  l: "#678f5d"
-  y: "#ffb02e"
+  G: "#4a7a3e" # scale green
+  O: "#1a1c2c" # dark outline
+  g: "#3d6433" # dark scale shade
+  l: "#678f5d" # scale sheen highlight
+  y: "#ffb02e" # gold clasp
 grid: |
   ............
   ..OOOOOOOO..

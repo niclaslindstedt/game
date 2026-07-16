@@ -2,13 +2,17 @@ name: icon_ada_soda
 family: icons
 size: [12, 12]
 description: >
-  A crushed red-and-white soda can, dented and flattened, still beaded
-  cold; Ada's brand, taken from her mid-sip.
+  A crushed red-and-white soda can, dented and flattened.
+subject:
+  kind: item icon
+  features: a dented cylindrical drink can with a crumpled midsection and metal ends
+  accent: red-and-white can
+  flavor: Ada's brand, taken from her mid-sip
 palette:
-  O: "#1a1c2c"
-  V: "#9095a5"
-  W: "#f4f4f4"
-  r: "#d83a3a"
+  O: "#1a1c2c" # dark outline
+  V: "#9095a5" # metal can ends
+  W: "#f4f4f4" # white label band
+  r: "#d83a3a" # red can body
 grid: |
   ............
   ...OOOO.....

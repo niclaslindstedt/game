@@ -2,13 +2,17 @@ name: icon_report
 family: icons
 size: [12, 12]
 description: >
-  A dark dashboard screen of horizontal status bars, most green with one
-  blinking red row; a live engagement report.
+  A dark dashboard of green status bars with one red row.
+subject:
+  kind: item icon
+  features: a screen of horizontal status bars, mostly green with one red row
+  accent: green bars, one red
+  flavor: a live engagement report
 palette:
-  G: "#4a7a3e"
-  O: "#1a1c2c"
-  b: "#3f4553"
-  r: "#d83a3a"
+  G: "#4a7a3e" # green status bar
+  O: "#1a1c2c" # dark outline
+  b: "#3f4553" # dark screen field
+  r: "#d83a3a" # red alert bar
 grid: |
   ............
   .OOOOOOOOO..

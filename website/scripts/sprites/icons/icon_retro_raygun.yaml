@@ -2,14 +2,18 @@ name: icon_retro_raygun
 family: icons
 size: [12, 12]
 description: >
-  A chrome atomic-age raygun in profile, a bulbous silver body with fins
-  and a wide muzzle; a pulp-cover ray pistol.
+  A chrome atomic-age raygun with a bulbous body, fins, and a wide muzzle.
+subject:
+  kind: weapon icon
+  features: a bulbous finned ray pistol in profile with a wide muzzle and grip
+  accent: chrome silver with a blue emitter
+  flavor: a pulp-cover ray pistol
 palette:
-  A: "#8d9196"
-  B: "#92643e"
-  O: "#1a1c2c"
-  a: "#d6dce4"
-  e: "#5ab4ff"
+  A: "#8d9196" # chrome shadow
+  B: "#92643e" # brown grip
+  O: "#1a1c2c" # dark outline
+  a: "#d6dce4" # bright chrome body
+  e: "#5ab4ff" # blue emitter
 grid: |
   ............
   ............

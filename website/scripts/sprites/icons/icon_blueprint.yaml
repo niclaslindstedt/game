@@ -2,12 +2,16 @@ name: icon_blueprint
 family: icons
 size: [12, 12]
 description: >
-  A blue architectural blueprint sheet with white schematic lines and
-  bars; the SpaceZ Site T moonbase plans, engineering-drawing blue.
+  A blue architectural blueprint sheet with white schematic lines.
+subject:
+  kind: item icon
+  features: a document sheet with rows of white schematic lines and bars
+  accent: engineering-drawing blue
+  flavor: the SpaceZ Site T moonbase plans
 palette:
-  O: "#1a1c2c"
-  W: "#f4f4f4"
-  j: "#4054bc"
+  O: "#1a1c2c" # dark outline
+  W: "#f4f4f4" # white schematic lines
+  j: "#4054bc" # blueprint blue
 grid: |
   ............
   .OOOOOOOOO..

@@ -2,14 +2,17 @@ name: icon_cyber_katana
 family: icons
 size: [12, 12]
 description: >
-  A sleek angular katana laid diagonally — a dark hilt and a hard-edged
-  blade with a glowing cyan energy edge; a printed, allegedly shatterproof
-  sword.
+  A sleek angular katana — dark hilt and a hard-edged cyan energy blade.
+subject:
+  kind: weapon icon
+  features: a diagonal katana, dark hilt and a straight blade with a glowing edge
+  accent: cyan energy edge
+  flavor: a printed, allegedly shatterproof sword
 palette:
-  N: "#303444"
-  O: "#1a1c2c"
-  V: "#9095a5"
-  x: "#c5e6ebe1"
+  N: "#303444" # dark hilt
+  O: "#1a1c2c" # dark outline
+  V: "#9095a5" # steel blade
+  x: "#c5e6ebe1" # cyan energy edge
 grid: |
   ............
   .......OOO..

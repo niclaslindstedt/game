@@ -2,12 +2,16 @@ name: icon_viking_helm
 family: icons
 size: [12, 12]
 description: >
-  A rounded grey iron viking helm with a nose guard and no horns; early
-  rift headgear.
+  A rounded grey iron viking helm with a nose guard and no horns.
+subject:
+  kind: armor icon
+  features: a domed iron cap with a central nose guard, hornless
+  accent: grey iron
+  flavor: early rift headgear
 palette:
-  O: "#1a1c2c"
-  V: "#9095a5"
-  v: "#60687e"
+  O: "#1a1c2c" # dark outline
+  V: "#9095a5" # bright iron highlight
+  v: "#60687e" # grey iron
 grid: |
   ............
   ............

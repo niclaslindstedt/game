@@ -2,11 +2,16 @@ name: icon_tshirt
 family: icons
 size: [12, 12]
 description: >
-  A plain white short-sleeved t-shirt; the hero's starting shirt.
+  A plain white short-sleeved t-shirt.
+subject:
+  kind: armor icon
+  features: a short-sleeved crew-neck shirt laid flat
+  accent: plain white
+  flavor: the hero's starting shirt
 palette:
-  O: "#1a1c2c"
-  W: "#f4f4f4"
-  w: "#c6c6c6"
+  O: "#1a1c2c" # dark outline
+  W: "#f4f4f4" # white cotton
+  w: "#c6c6c6" # grey fold shade
 grid: |
   ............
   ............

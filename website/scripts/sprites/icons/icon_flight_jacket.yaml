@@ -2,13 +2,17 @@ name: icon_flight_jacket
 family: icons
 size: [12, 12]
 description: >
-  A tan bomber flight jacket with a shearling collar and a front zip;
-  crew survival-kit outerwear.
+  A tan bomber flight jacket with a shearling collar and front zip.
+subject:
+  kind: armor icon
+  features: a bomber jacket with a fleece collar, front zip, and ribbed hem
+  accent: tan leather with a white collar
+  flavor: crew survival-kit outerwear
 palette:
-  D: "#b28e5c"
-  O: "#1a1c2c"
-  W: "#f4f4f4"
-  t: "#dec08a"
+  D: "#b28e5c" # tan leather shade
+  O: "#1a1c2c" # dark outline
+  W: "#f4f4f4" # white shearling collar
+  t: "#dec08a" # tan jacket body
 grid: |
   ............
   ............

@@ -2,15 +2,18 @@ name: icon_search_bar
 family: icons
 size: [12, 12]
 description: >
-  A slim chrome pole tipped with a small round magnifying lens over a
-  brown grip — a literal search bar swung as a melee pole; the crawler
-  weapon.
+  A slim pole tipped with a magnifying lens over a brown grip.
+subject:
+  kind: weapon icon
+  features: a diagonal pole tipped with a round magnifying lens above a wrapped grip
+  accent: chrome shaft with a gold lens
+  flavor: a literal "search bar" swung as a melee pole — the crawler weapon
 palette:
-  O: "#1a1c2c"
-  j: "#4054bc"
-  k: "#342c26"
-  r: "#d83a3a"
-  y: "#ffb02e"
+  O: "#1a1c2c" # dark outline
+  j: "#4054bc" # blue shaft segment
+  k: "#342c26" # brown grip
+  r: "#d83a3a" # red shaft segment
+  y: "#ffb02e" # gold lens
 grid: |
   ............
   .........OO.

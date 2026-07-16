@@ -2,15 +2,19 @@ name: icon_ember_wand
 family: icons
 size: [12, 12]
 description: >
-  A knotted dark-wood wand held diagonally, crowned at the tip with a
-  live red-orange flame; the rift's classic fire caster.
+  A knotted dark-wood wand crowned at the tip with a red-orange flame.
+subject:
+  kind: weapon icon
+  features: a diagonal wooden wand tipped with a live flame
+  accent: red-orange flame
+  flavor: the rift's classic fire caster
 palette:
-  B: "#92643e"
-  E: "#5d4028"
-  O: "#1a1c2c"
-  i: "#772020"
-  r: "#d83a3a"
-  y: "#ffb02e"
+  B: "#92643e" # wand wood
+  E: "#5d4028" # dark wood shade
+  O: "#1a1c2c" # dark outline
+  i: "#772020" # deep flame shadow
+  r: "#d83a3a" # red flame
+  y: "#ffb02e" # orange flame
 grid: |
   ............
   .......OO...

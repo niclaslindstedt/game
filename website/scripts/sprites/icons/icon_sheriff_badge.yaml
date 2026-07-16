@@ -2,11 +2,15 @@ name: icon_sheriff_badge
 family: icons
 size: [12, 12]
 description: >
-  A silver five-point sheriff's star badge; frontier authority cast in
-  metal.
+  A silver five-point sheriff's star badge.
+subject:
+  kind: item icon
+  features: a five-point star badge with balled points
+  accent: silver
+  flavor: frontier authority cast in metal
 palette:
-  O: "#1a1c2c"
-  a: "#d6dce4"
+  O: "#1a1c2c" # dark outline
+  a: "#d6dce4" # bright silver star
 grid: |
   ............
   ............

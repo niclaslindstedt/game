@@ -2,15 +2,19 @@ name: icon_core_drill
 family: icons
 size: [12, 12]
 description: >
-  A handheld mining core drill — a stubby body with a long spiral drill
-  bit, tipped orange; the prospector's rock-and-ghost tunneler.
+  A handheld mining core drill with a long spiral bit, tipped orange.
+subject:
+  kind: weapon icon
+  features: a stubby drill body with a long tapering spiral bit
+  accent: orange bit tip
+  flavor: the prospector's rock-and-ghost tunneler
 palette:
-  O: "#1a1c2c"
-  V: "#9095a5"
-  Y: "#ffe3b6"
-  b: "#3f4553"
-  v: "#60687e"
-  y: "#ffb02e"
+  O: "#1a1c2c" # dark outline
+  V: "#9095a5" # steel bit highlight
+  Y: "#ffe3b6" # pale hot tip
+  b: "#3f4553" # dark drill body
+  v: "#60687e" # grey bit
+  y: "#ffb02e" # orange tip
 grid: |
   ............
   ........OO..

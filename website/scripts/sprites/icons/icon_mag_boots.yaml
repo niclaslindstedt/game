@@ -2,12 +2,16 @@ name: icon_mag_boots
 family: icons
 size: [12, 12]
 description: >
-  A pair of heavy dark magnetic boots with thick soles and glowing blue
-  mag-plate accents; printed grip-to-anything footwear.
+  A pair of heavy dark magnetic boots with glowing blue mag-plate soles.
+subject:
+  kind: armor icon
+  features: a pair of chunky boots side by side with glowing sole plates
+  accent: blue mag-plate glow
+  flavor: printed grip-to-anything footwear
 palette:
-  O: "#1a1c2c"
-  e: "#5ab4ff"
-  v: "#60687e"
+  O: "#1a1c2c" # dark outline
+  e: "#5ab4ff" # blue mag-plate glow
+  v: "#60687e" # dark grey boot
 grid: |
   ............
   ............

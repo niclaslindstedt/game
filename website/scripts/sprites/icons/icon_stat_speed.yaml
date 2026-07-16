@@ -2,11 +2,16 @@ name: icon_stat_speed
 family: icons
 size: [12, 12]
 description: >
-  A bright blue forward-leaning speed streak/arrow; the SPEED stat glyph.
+  The SPEED stat glyph: a bright blue forward-leaning motion streak.
+subject:
+  kind: UI stat icon
+  features: a forward-leaning arrow with a trailing motion streak
+  accent: bright blue streak
+  flavor: SPEED — move and attack speed
 palette:
-  O: "#1a1c2c"
-  e: "#5ab4ff"
-  s: "#d6f0ff"
+  O: "#1a1c2c" # dark outline
+  e: "#5ab4ff" # bright blue streak
+  s: "#d6f0ff" # pale blue highlight
 grid: |
   ............
   .......OO...

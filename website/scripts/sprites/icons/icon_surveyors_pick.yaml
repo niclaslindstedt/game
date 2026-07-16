@@ -2,12 +2,16 @@ name: icon_surveyors_pick
 family: icons
 size: [12, 12]
 description: >
-  A grey iron pick-hammer with a curved spike head on a dark handle; a
-  heavy survey stake-hammer.
+  A grey iron pick-hammer with a curved spike head on a dark handle.
+subject:
+  kind: weapon icon
+  features: a pick-hammer with a curved spike head above a straight handle
+  accent: grey iron head, dark handle
+  flavor: a heavy survey stake-hammer
 palette:
-  O: "#1a1c2c"
-  k: "#342c26"
-  v: "#60687e"
+  O: "#1a1c2c" # dark outline
+  k: "#342c26" # dark handle
+  v: "#60687e" # grey iron head
 grid: |
   ............
   ..OvvvvvvO..

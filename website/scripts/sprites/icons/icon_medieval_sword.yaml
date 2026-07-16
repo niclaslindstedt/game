@@ -2,17 +2,20 @@ name: icon_medieval_sword
 family: icons
 size: [12, 12]
 description: >
-  A cruciform knight's sword pointed upward — a straight steel double-
-  edged blade, a simple crossguard, and a gold pommel; the baseline
-  starter blade.
+  A cruciform knight's sword — straight steel blade, crossguard, gold pommel.
+subject:
+  kind: weapon icon
+  features: an upright double-edged blade with a simple crossguard and pommel
+  accent: steel blade, gold crossguard and pommel
+  flavor: the baseline starter blade
 palette:
-  O: "#1a1c2c"
-  V: "#9095a5"
-  k: "#342c26"
-  o: "#d6a842"
-  q: "#96762e"
-  v: "#60687e"
-  y: "#ffb02e"
+  O: "#1a1c2c" # dark outline
+  V: "#9095a5" # blade edge
+  k: "#342c26" # dark grip
+  o: "#d6a842" # gold crossguard
+  q: "#96762e" # dark gold shade
+  v: "#60687e" # blade spine
+  y: "#ffb02e" # bright gold pommel
 grid: |
   ............
   .......OOO..

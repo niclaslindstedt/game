@@ -2,12 +2,16 @@ name: icon_stat_stamina
 family: icons
 size: [12, 12]
 description: >
-  A plump red heart with a white shine; the STAMINA stat glyph (sprint and
-  HP).
+  The STAMINA stat glyph: a plump red heart with a white shine.
+subject:
+  kind: UI stat icon
+  features: a plump heart with a small corner shine
+  accent: red heart
+  flavor: STAMINA — sprint and HP
 palette:
-  O: "#1a1c2c"
-  W: "#f4f4f4"
-  r: "#d83a3a"
+  O: "#1a1c2c" # dark outline
+  W: "#f4f4f4" # white shine
+  r: "#d83a3a" # red heart
 grid: |
   ............
   ..OO..OO....

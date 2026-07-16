@@ -2,14 +2,17 @@ name: icon_apollo_visor
 family: icons
 size: [12, 12]
 description: >
-  A rounded white space-helmet bubble fronted by a gold mirrored visor —
-  the Apollo look; the identity is the reflective gold band across the
-  white dome.
+  A rounded white space helmet fronted by a gold mirrored visor.
+subject:
+  kind: armor icon
+  features: a round helmet bubble with a boxed gold mirror visor across the front
+  accent: gold mirror visor on a white dome
+  flavor: the Apollo look
 palette:
-  O: "#1a1c2c"
-  Y: "#ffe3b6"
-  a: "#d6dce4"
-  y: "#ffb02e"
+  O: "#1a1c2c" # dark outline
+  Y: "#ffe3b6" # visor highlight
+  a: "#d6dce4" # white helmet dome
+  y: "#ffb02e" # gold visor
 grid: |
   ............
   ....OOOO....

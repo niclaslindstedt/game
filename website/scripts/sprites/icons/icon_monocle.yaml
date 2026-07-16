@@ -2,15 +2,18 @@ name: icon_monocle
 family: icons
 size: [12, 12]
 description: >
-  A single dark circular targeting eyepiece with a pale blue lens and a
-  slim gold rim and stem; the smart pistol's other half, read as a
-  high-tech monocle.
+  A dark circular targeting eyepiece with a pale blue lens and gold stem.
+subject:
+  kind: armor icon
+  features: a round eyepiece with a lens, a dark rim, and a short gold stem
+  accent: pale blue lens, gold stem
+  flavor: a high-tech targeting monocle
 palette:
-  N: "#303444"
-  O: "#1a1c2c"
-  e: "#5ab4ff"
-  s: "#d6f0ff"
-  y: "#ffb02e"
+  N: "#303444" # dark rim
+  O: "#1a1c2c" # dark outline
+  e: "#5ab4ff" # blue lens
+  s: "#d6f0ff" # pale lens highlight
+  y: "#ffb02e" # gold stem
 grid: |
   ............
   ............

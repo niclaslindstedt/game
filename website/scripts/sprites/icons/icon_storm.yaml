@@ -2,12 +2,16 @@ name: icon_storm
 family: icons
 size: [12, 12]
 description: >
-  A jagged blue-white lightning bolt; the STORM CELL power that calls down
-  strikes.
+  A jagged blue-white lightning bolt; the STORM CELL power.
+subject:
+  kind: item icon
+  features: a jagged forked lightning bolt
+  accent: blue-white
+  flavor: the STORM CELL power that calls down strikes
 palette:
-  O: "#1a1c2c"
-  e: "#5ab4ff"
-  s: "#d6f0ff"
+  O: "#1a1c2c" # dark outline
+  e: "#5ab4ff" # blue bolt
+  s: "#d6f0ff" # pale bolt core
 grid: |
   .....OOOO...
   ....OOseO...

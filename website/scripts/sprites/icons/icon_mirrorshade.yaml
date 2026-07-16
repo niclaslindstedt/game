@@ -2,12 +2,16 @@ name: icon_mirrorshade
 family: icons
 size: [12, 12]
 description: >
-  A sleek dark mirrored visor band — a horizontal wraparound eye-shade
-  with a bright reflective sheen; the gunslinger hosts' mirrorshades.
+  A sleek dark mirrored visor band with a bright reflective sheen.
+subject:
+  kind: armor icon
+  features: a horizontal wraparound eye-shade band with two sheen glints
+  accent: dark mirror sheen
+  flavor: the gunslinger hosts' mirrorshades
 palette:
-  N: "#303444"
-  O: "#1a1c2c"
-  c: "#8ccdd7e1"
+  N: "#303444" # dark lens body
+  O: "#1a1c2c" # dark outline
+  c: "#8ccdd7e1" # reflective sheen glint
 grid: |
   ............
   ............

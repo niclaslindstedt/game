@@ -2,13 +2,17 @@ name: icon_branding_iron
 family: icons
 size: [12, 12]
 description: >
-  A long dark iron rod tipped with a glowing plasma-hot brand head; a
-  frontier cattle brand searing white-orange at the business end.
+  A dark iron rod tipped with a glowing white-orange brand head.
+subject:
+  kind: weapon icon
+  features: a diagonal iron rod with a searing-hot brand head at the tip
+  accent: white-orange glowing tip
+  flavor: a frontier cattle brand, plasma-hot at the business end
 palette:
-  B: "#92643e"
-  O: "#1a1c2c"
-  Y: "#ffe3b6"
-  y: "#ffb02e"
+  B: "#92643e" # rust-brown shaft
+  O: "#1a1c2c" # dark outline
+  Y: "#ffe3b6" # white-hot brand core
+  y: "#ffb02e" # orange brand glow
 grid: |
   ............
   .........OO.

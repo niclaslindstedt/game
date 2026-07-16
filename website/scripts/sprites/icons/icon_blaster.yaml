@@ -2,12 +2,16 @@ name: icon_blaster
 family: icons
 size: [12, 12]
 description: >
-  A compact grey-and-blue sci-fi hand blaster in profile, stubby barrel
-  with a small orange emitter tip; the plain default sidearm.
+  A compact grey sci-fi hand blaster with an orange emitter tip.
+subject:
+  kind: weapon icon
+  features: a stubby-barreled hand blaster in profile with an emitter tip
+  accent: grey body, orange emitter
+  flavor: the plain default sidearm
 palette:
-  A: "#8d9196"
-  O: "#1a1c2c"
-  y: "#ffb02e"
+  A: "#8d9196" # grey blaster body
+  O: "#1a1c2c" # dark outline
+  y: "#ffb02e" # orange emitter tip
 grid: |
   ............
   ............

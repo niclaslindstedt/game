@@ -2,12 +2,16 @@ name: icon_stopwatch
 family: icons
 size: [12, 12]
 description: >
-  A dark handheld stopwatch with a small green digital readout; a
-  speed-record marker.
+  A handheld stopwatch with a crown button; a speed-record marker.
+subject:
+  kind: UI icon
+  features: a round stopwatch with a top crown button and a clock face
+  accent: white dial
+  flavor: a speed-record marker
 palette:
-  O: "#1a1c2c"
-  W: "#f4f4f4"
-  v: "#60687e"
+  O: "#1a1c2c" # dark outline / hands
+  W: "#f4f4f4" # white dial
+  v: "#60687e" # grey crown button
 grid: |
   ............
   .....OO.....

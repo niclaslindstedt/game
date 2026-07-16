@@ -2,11 +2,16 @@ name: icon_stat_strength
 family: icons
 size: [12, 12]
 description: >
-  A flexed skin-tone bicep arm; the STRENGTH stat glyph.
+  The STRENGTH stat glyph: a flexed skin-tone bicep arm.
+subject:
+  kind: UI stat icon
+  features: a flexed arm with a bulging bicep
+  accent: skin-tone arm
+  flavor: STRENGTH — melee damage and carry
 palette:
-  O: "#1a1c2c"
-  d: "#b0785c"
-  p: "#deaa86"
+  O: "#1a1c2c" # dark outline
+  d: "#b0785c" # forearm shadow
+  p: "#deaa86" # skin
 grid: |
   ............
   ......OOO...

@@ -2,15 +2,18 @@ name: icon_aegis_plate
 family: icons
 size: [12, 12]
 description: >
-  A seamless white-and-silver printed ceramic breastplate with a glowing
-  gold power core at its center; the Mars colony's capstone chest armor,
-  bracing and futuristic.
+  A white-and-silver ceramic breastplate with a glowing gold power core.
+subject:
+  kind: armor icon
+  features: a seamless breastplate with shoulder tabs and a central power core
+  accent: gold power core
+  flavor: the Mars colony's capstone chest armor
 palette:
-  A: "#8d9196"
-  O: "#1a1c2c"
-  Y: "#ffe3b6"
-  a: "#d6dce4"
-  y: "#ffb02e"
+  A: "#8d9196" # ceramic shadow
+  O: "#1a1c2c" # dark outline
+  Y: "#ffe3b6" # core highlight
+  a: "#d6dce4" # white-silver plate
+  y: "#ffb02e" # gold power core
 grid: |
   ............
   ............

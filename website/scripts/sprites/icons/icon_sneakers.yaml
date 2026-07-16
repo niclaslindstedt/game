@@ -2,13 +2,17 @@ name: icon_sneakers
 family: icons
 size: [12, 12]
 description: >
-  A pair of white low-top sneakers with red-trim laces drawn side by side;
-  plain everyday shoes.
+  A pair of white low-top sneakers with red-trim laces.
+subject:
+  kind: armor icon
+  features: a pair of low-top sneakers side by side with grey soles
+  accent: white with red lace trim
+  flavor: plain everyday shoes
 palette:
-  O: "#1a1c2c"
-  W: "#f4f4f4"
-  r: "#d83a3a"
-  w: "#c6c6c6"
+  O: "#1a1c2c" # dark outline
+  W: "#f4f4f4" # white canvas
+  r: "#d83a3a" # red lace trim
+  w: "#c6c6c6" # grey sole
 grid: |
   ............
   ............

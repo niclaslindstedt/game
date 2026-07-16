@@ -2,13 +2,17 @@ name: icon_sorcerers_staff
 family: icons
 size: [12, 12]
 description: >
-  A gnarled brown wooden staff held upright, crowned with a glowing purple
-  crystal; the rift's ancient caster.
+  A gnarled brown wooden staff crowned with a glowing purple crystal.
+subject:
+  kind: weapon icon
+  features: an upright gnarled staff topped with a faceted crystal
+  accent: purple crystal glow
+  flavor: the rift's ancient caster
 palette:
-  B: "#92643e"
-  L: "#d4a5ec"
-  O: "#1a1c2c"
-  P: "#b05cdc"
+  B: "#92643e" # staff wood
+  L: "#d4a5ec" # pale crystal highlight
+  O: "#1a1c2c" # dark outline
+  P: "#b05cdc" # purple crystal
 grid: |
   ............
   .....OO.....

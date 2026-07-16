@@ -2,12 +2,16 @@ name: icon_stick
 family: icons
 size: [12, 12]
 description: >
-  A plain thin brown stick on a diagonal with one pale whittled end; the
-  JESUS-mode starter melee.
+  A plain thin brown stick with one pale whittled end.
+subject:
+  kind: weapon icon
+  features: a diagonal wooden twig with a whittled tip
+  accent: bark brown
+  flavor: the JESUS-mode starter melee
 palette:
-  B: "#92643e"
-  E: "#5d4028"
-  O: "#1a1c2c"
+  B: "#92643e" # bark brown
+  E: "#5d4028" # dark wood shade
+  O: "#1a1c2c" # dark outline
 grid: |
   ............
   .........O..

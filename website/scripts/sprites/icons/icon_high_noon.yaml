@@ -2,14 +2,17 @@ name: icon_high_noon
 family: icons
 size: [12, 12]
 description: >
-  A golden sun-gun weapon — a bright radiant orb of captured noon
-  sunlight ringed with rays, on a short grip; a caged star fired one
-  blinding bolt at a time.
+  A golden sun-gun — a radiant orb of captured sunlight on a short grip.
+subject:
+  kind: weapon icon
+  features: a bright rayed sun orb mounted on a short pistol grip
+  accent: blazing gold
+  flavor: a caged star fired one blinding bolt at a time
 palette:
-  N: "#303444"
-  O: "#1a1c2c"
-  Y: "#ffe3b6"
-  y: "#ffb02e"
+  N: "#303444" # dark grip
+  O: "#1a1c2c" # dark outline
+  Y: "#ffe3b6" # white-hot core
+  y: "#ffb02e" # gold sun rays
 grid: |
   ............
   .....OO.....

@@ -2,13 +2,17 @@ name: icon_blunderbuss
 family: icons
 size: [12, 12]
 description: >
-  A stubby flintlock musket with a wide flared brass bell muzzle and a
-  dark wooden stock; the shotgun's antique great-grandfather.
+  A stubby flintlock with a flared brass bell muzzle and dark wooden stock.
+subject:
+  kind: weapon icon
+  features: a diagonal musket with a wide flared bell muzzle and a wooden stock
+  accent: brass muzzle, brown stock
+  flavor: the shotgun's antique great-grandfather
 palette:
-  B: "#92643e"
-  O: "#1a1c2c"
-  o: "#d6a842"
-  q: "#96762e"
+  B: "#92643e" # wooden stock
+  O: "#1a1c2c" # dark outline
+  o: "#d6a842" # brass muzzle
+  q: "#96762e" # dark brass shade
 grid: |
   ............
   .......OOOO.

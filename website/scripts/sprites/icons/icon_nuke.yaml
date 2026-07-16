@@ -2,14 +2,18 @@ name: icon_nuke
 family: icons
 size: [12, 12]
 description: >
-  A round grey cartoon bomb with a short lit fuse sparking gold at the
-  top; a pocket screen-wiper ready to blow.
+  A round grey cartoon bomb with a lit fuse sparking gold.
+subject:
+  kind: item icon
+  features: a spherical bomb with a highlight and a short lit fuse
+  accent: gold fuse spark
+  flavor: a pocket screen-wiper ready to blow
 palette:
-  A: "#8d9196"
-  O: "#1a1c2c"
-  a: "#d6dce4"
-  k: "#342c26"
-  y: "#ffb02e"
+  A: "#8d9196" # grey bomb body
+  O: "#1a1c2c" # dark outline
+  a: "#d6dce4" # bomb highlight
+  k: "#342c26" # dark fuse
+  y: "#ffb02e" # gold spark
 grid: |
   ........yy..
   ....OO..y...

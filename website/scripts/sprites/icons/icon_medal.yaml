@@ -2,15 +2,19 @@ name: icon_medal
 family: icons
 size: [12, 12]
 description: >
-  A gold circular medal hanging from a short striped ribbon; a level-
-  milestone achievement badge.
+  A gold circular medal hanging from a short striped ribbon.
+subject:
+  kind: UI icon
+  features: a round medal disc hung from a folded ribbon
+  accent: gold disc, blue ribbon
+  flavor: a level-milestone achievement badge
 palette:
-  O: "#1a1c2c"
-  W: "#f4f4f4"
-  Y: "#ffe3b6"
-  j: "#4054bc"
-  q: "#96762e"
-  y: "#ffb02e"
+  O: "#1a1c2c" # dark outline
+  W: "#f4f4f4" # white medal shine
+  Y: "#ffe3b6" # pale gold disc
+  j: "#4054bc" # blue ribbon
+  q: "#96762e" # dark gold shade
+  y: "#ffb02e" # gold disc
 grid: |
   ............
   ..OOO..OOO..

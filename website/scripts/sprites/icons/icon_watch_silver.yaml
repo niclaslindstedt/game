@@ -2,13 +2,17 @@ name: icon_watch_silver
 family: icons
 size: [12, 12]
 description: >
-  A luxury silver wristwatch, a round steel case and band with a white
-  dial; a pure-valuable trophy timepiece.
+  A luxury silver wristwatch with a round steel case and white dial.
+subject:
+  kind: item icon
+  features: a round wristwatch case and band with a white dial
+  accent: steel silver
+  flavor: a pure-valuable trophy timepiece
 palette:
-  A: "#8d9196"
-  O: "#1a1c2c"
-  W: "#f4f4f4"
-  a: "#d6dce4"
+  A: "#8d9196" # steel case shadow
+  O: "#1a1c2c" # dark outline
+  W: "#f4f4f4" # white dial
+  a: "#d6dce4" # bright silver case
 grid: |
   ............
   ....OOOO....

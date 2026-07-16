@@ -2,16 +2,20 @@ name: icon_snake_oil
 family: icons
 size: [12, 12]
 description: >
-  A green glass patent-medicine bottle with a white paper label; the
-  snake-oil sprayer's corrosive tonic.
+  A green glass patent-medicine bottle with a white paper label.
+subject:
+  kind: weapon icon
+  features: a corked bottle with a white label bearing a red mark
+  accent: green glass, white label
+  flavor: the snake-oil sprayer's corrosive tonic
 palette:
-  G: "#4a7a3e"
-  O: "#1a1c2c"
-  W: "#f4f4f4"
-  g: "#3d6433"
-  k: "#342c26"
-  l: "#678f5d"
-  r: "#d83a3a"
+  G: "#4a7a3e" # green glass
+  O: "#1a1c2c" # dark outline
+  W: "#f4f4f4" # white label
+  g: "#3d6433" # dark glass shade
+  k: "#342c26" # dark cork
+  l: "#678f5d" # glass highlight
+  r: "#d83a3a" # red label mark
 grid: |
   ............
   ....OOO.....

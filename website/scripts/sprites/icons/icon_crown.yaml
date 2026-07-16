@@ -2,14 +2,18 @@ name: icon_crown
 family: icons
 size: [12, 12]
 description: >
-  A golden five-point crown with small gem dots along the band; an
-  achievement badge marking a boss slain.
+  A golden crown with gem dots along the band.
+subject:
+  kind: UI icon
+  features: a multi-point crown with a jeweled band
+  accent: gold
+  flavor: an achievement badge marking a boss slain
 palette:
-  O: "#1a1c2c"
-  W: "#f4f4f4"
-  Y: "#ffe3b6"
-  q: "#96762e"
-  y: "#ffb02e"
+  O: "#1a1c2c" # dark outline
+  W: "#f4f4f4" # white gem sparkle
+  Y: "#ffe3b6" # pale gold points
+  q: "#96762e" # dark gold shadow
+  y: "#ffb02e" # bright gold band
 grid: |
   ............
   ............

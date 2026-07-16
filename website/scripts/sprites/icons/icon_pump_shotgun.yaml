@@ -2,13 +2,17 @@ name: icon_pump_shotgun
 family: icons
 size: [12, 12]
 description: >
-  A brown wood-stocked pump shotgun in profile, long barrel and pump grip;
-  a heavy short-range armory scattergun.
+  A brown wood-stocked pump shotgun with a long barrel and pump grip.
+subject:
+  kind: weapon icon
+  features: a diagonal shotgun, long steel barrel with a wooden stock and pump grip
+  accent: steel barrel, brown stock
+  flavor: a heavy short-range armory scattergun
 palette:
-  A: "#8d9196"
-  B: "#92643e"
-  O: "#1a1c2c"
-  a: "#d6dce4"
+  A: "#8d9196" # barrel shadow
+  B: "#92643e" # wooden stock
+  O: "#1a1c2c" # dark outline
+  a: "#d6dce4" # bright steel barrel
 grid: |
   ............
   .........OO.

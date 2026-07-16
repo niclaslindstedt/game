@@ -2,13 +2,16 @@ name: icon_antigrav
 family: icons
 size: [12, 12]
 description: >
-  A golden metal ring/torus hovering just above its own faint shadow, a
-  pale glow beneath it; a 1969 Tranquility sample that floats and points
-  at the sky.
+  A golden metal ring hovering above a pale glow.
+subject:
+  kind: item icon
+  features: a floating metal torus ring with a soft glow beneath it
+  accent: gold ring over a cyan glow
+  flavor: a 1969 Tranquility sample that floats and points at the sky
 palette:
-  O: "#1a1c2c"
-  c: "#8ccdd7e1"
-  y: "#ffb02e"
+  O: "#1a1c2c" # dark outline
+  c: "#8ccdd7e1" # pale cyan hover glow
+  y: "#ffb02e" # gold ring
 grid: |
   ............
   ............

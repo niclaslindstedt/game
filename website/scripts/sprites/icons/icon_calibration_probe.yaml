@@ -2,13 +2,16 @@ name: icon_calibration_probe
 family: icons
 size: [12, 12]
 description: >
-  A plain grey debug blade/rod laid diagonally with hot-red markers at
-  its tip and base; a calibration tool, not a real weapon — the red
-  points mark where the blade starts and ends.
+  A grey debug blade with hot-red markers at its tip and base.
+subject:
+  kind: weapon icon
+  features: a diagonal grey rod with red marker blocks at each end
+  accent: hot-red calibration markers
+  flavor: a debug calibration tool marking where the blade starts and ends
 palette:
-  O: "#1a1c2c"
-  R: "#ff5252"
-  V: "#9095a5"
+  O: "#1a1c2c" # dark outline
+  R: "#ff5252" # hot-red calibration marker
+  V: "#9095a5" # grey debug blade
 grid: |
   ............
   .......RR...

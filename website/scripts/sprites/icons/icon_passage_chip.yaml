@@ -2,14 +2,18 @@ name: icon_passage_chip
 family: icons
 size: [12, 12]
 description: >
-  A small square circuit implant in a gold frame around a glowing cyan
-  core node; a skull-cut badge chip that pulses like a machine.
+  A square circuit implant with a glowing cyan core and gold contact pins.
+subject:
+  kind: item icon
+  features: a square chip with a central glowing core and pins radiating from its edges
+  accent: cyan core, gold pins
+  flavor: a skull-cut badge chip that pulses like a machine
 palette:
-  O: "#1a1c2c"
-  c: "#8ccdd7e1"
-  v: "#60687e"
-  x: "#c5e6ebe1"
-  y: "#ffb02e"
+  O: "#1a1c2c" # dark outline
+  c: "#8ccdd7e1" # cyan core glow
+  v: "#60687e" # grey chip body
+  x: "#c5e6ebe1" # bright cyan core
+  y: "#ffb02e" # gold contact pins
 grid: |
   ............
   ...y.yy.y...

@@ -2,11 +2,15 @@ name: icon_skull
 family: icons
 size: [12, 12]
 description: >
-  A plain white human skull facing forward with dark hollow eye sockets; a
-  death/defeat marker.
+  A plain white human skull with dark hollow eye sockets.
+subject:
+  kind: UI icon
+  features: a human skull with hollow eye sockets and a row of teeth
+  accent: bone white
+  flavor: a death / defeat marker
 palette:
-  O: "#1a1c2c"
-  W: "#f4f4f4"
+  O: "#1a1c2c" # dark outline / sockets
+  W: "#f4f4f4" # bone white
 grid: |
   ............
   ...OOOOOO...

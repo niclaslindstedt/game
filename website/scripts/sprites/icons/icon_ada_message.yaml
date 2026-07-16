@@ -2,12 +2,15 @@ name: icon_ada_message
 family: icons
 size: [12, 12]
 description: >
-  A dark metal holding-pod panel with angry letters gouged into it —
-  "I AM NOT CARGO" scratched deep; reads as a scarred grey plate covered
-  in defiant scratch marks.
+  A scarred grey metal panel gouged with defiant scratch marks.
+subject:
+  kind: item icon
+  features: a rectangular metal plate covered in deep scratched letter-marks
+  accent: gouged grey steel
+  flavor: a holding-pod panel scratched "I AM NOT CARGO"
 palette:
-  O: "#1a1c2c"
-  v: "#60687e"
+  O: "#1a1c2c" # dark outline / gouges
+  v: "#60687e" # grey steel plate
 grid: |
   ............
   .OOOOOOOOO..

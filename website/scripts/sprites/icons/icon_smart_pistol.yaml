@@ -2,13 +2,17 @@ name: icon_smart_pistol
 family: icons
 size: [12, 12]
 description: >
-  A white ceramic pistol in profile with a blue accent and no visible
-  trigger; a self-aiming Mars dart gun.
+  A white ceramic pistol with a blue accent and no visible trigger.
+subject:
+  kind: weapon icon
+  features: a smooth ceramic pistol in profile, no visible trigger
+  accent: white with a blue sight
+  flavor: a self-aiming Mars dart gun
 palette:
-  O: "#1a1c2c"
-  W: "#f4f4f4"
-  e: "#5ab4ff"
-  w: "#c6c6c6"
+  O: "#1a1c2c" # dark outline
+  W: "#f4f4f4" # white ceramic body
+  e: "#5ab4ff" # blue sight accent
+  w: "#c6c6c6" # grey grip shade
 grid: |
   ............
   ............

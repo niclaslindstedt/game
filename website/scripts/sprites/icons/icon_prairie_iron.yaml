@@ -2,13 +2,17 @@ name: icon_prairie_iron
 family: icons
 size: [12, 12]
 description: >
-  A frontier revolver in profile with a warm brown grip and a metal barrel
-  glinting orange; a host's live-round stage prop.
+  A frontier revolver with a warm brown grip and an orange-glinting barrel.
+subject:
+  kind: weapon icon
+  features: a single-action revolver in profile, long barrel and curved grip
+  accent: orange barrel glint
+  flavor: a host's live-round stage prop
 palette:
-  B: "#92643e"
-  N: "#303444"
-  O: "#1a1c2c"
-  y: "#ffb02e"
+  B: "#92643e" # brown grip
+  N: "#303444" # dark gunmetal
+  O: "#1a1c2c" # dark outline
+  y: "#ffb02e" # orange barrel glint
 grid: |
   ............
   ............

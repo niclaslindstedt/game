@@ -2,14 +2,18 @@ name: icon_watch_gold
 family: icons
 size: [12, 12]
 description: >
-  A luxury gold wristwatch, a round gilt case and band with a white dial;
-  a pure-valuable trophy timepiece.
+  A luxury gold wristwatch with a round case and white dial.
+subject:
+  kind: item icon
+  features: a round wristwatch case and band with a white dial
+  accent: gilt gold
+  flavor: a pure-valuable trophy timepiece
 palette:
-  O: "#1a1c2c"
-  W: "#f4f4f4"
-  o: "#d6a842"
-  q: "#96762e"
-  y: "#ffb02e"
+  O: "#1a1c2c" # dark outline
+  W: "#f4f4f4" # white dial
+  o: "#d6a842" # gold case
+  q: "#96762e" # dark gold band
+  y: "#ffb02e" # bright gold highlight
 grid: |
   ............
   ....OOOO....

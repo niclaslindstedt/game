@@ -2,11 +2,15 @@ name: icon_class_magic
 family: icons
 size: [12, 12]
 description: >
-  A weapon-class indicator glyph: a purple-magenta arcane spark/burst,
-  reading instantly as "magic" (INT weapons).
+  Weapon-class glyph: a purple-magenta arcane spark burst reading as MAGIC.
+subject:
+  kind: UI weapon-class icon
+  features: a four-pointed arcane spark burst with a bright core
+  accent: purple-magenta glow
+  flavor: MAGIC class — INT weapons
 palette:
-  W: "#f4f4f4"
-  X: "#b45df0"
+  W: "#f4f4f4" # white spark core
+  X: "#b45df0" # purple-magenta burst
 grid: |
   ............
   .....XX..XX.

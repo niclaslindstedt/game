@@ -2,13 +2,17 @@ name: icon_suit
 family: icons
 size: [12, 12]
 description: >
-  A white-and-grey EVA spacesuit with a bubble helmet and a chest control
-  panel; the void-rated suit worn over everything.
+  A white-and-grey EVA spacesuit with a bubble helmet and chest panel.
+subject:
+  kind: armor icon
+  features: a bulky spacesuit torso with a bubble helmet and a chest control panel
+  accent: white-grey with a red panel
+  flavor: the void-rated suit worn over everything
 palette:
-  A: "#8d9196"
-  O: "#1a1c2c"
-  a: "#d6dce4"
-  r: "#d83a3a"
+  A: "#8d9196" # suit shadow
+  O: "#1a1c2c" # dark outline
+  a: "#d6dce4" # white-grey suit
+  r: "#d83a3a" # red chest panel
 grid: |
   ............
   ..OOOOOOOO..

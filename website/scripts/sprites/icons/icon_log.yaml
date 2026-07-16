@@ -2,12 +2,16 @@ name: icon_log
 family: icons
 size: [12, 12]
 description: >
-  A worn spiral-bound flight logbook, cover creased, a few written lines
-  showing; the 1969 Apollo mission log.
+  A worn spiral-bound flight logbook with a few written lines showing.
+subject:
+  kind: item icon
+  features: an open notebook page ruled with handwritten lines
+  accent: creased white paper
+  flavor: the 1969 Apollo mission log
 palette:
-  O: "#1a1c2c"
-  W: "#f4f4f4"
-  b: "#3f4553"
+  O: "#1a1c2c" # dark outline
+  W: "#f4f4f4" # white page
+  b: "#3f4553" # written text lines
 grid: |
   ............
   .OOOOOOOOO..

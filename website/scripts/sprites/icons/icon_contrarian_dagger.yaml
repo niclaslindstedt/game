@@ -2,13 +2,17 @@ name: icon_contrarian_dagger
 family: icons
 size: [12, 12]
 description: >
-  A slim letter-opener dagger laid diagonally, dark handle and a thin
-  teal-edged blade; short, fast, and pointed the wrong way on purpose.
+  A slim letter-opener dagger, dark handle and a thin teal-edged blade.
+subject:
+  kind: weapon icon
+  features: a diagonal thin dagger, dark handle and a slender blade
+  accent: teal blade edge
+  flavor: short, fast, and pointed the wrong way on purpose
 palette:
-  C: "#529ea8"
-  O: "#1a1c2c"
-  V: "#9095a5"
-  v: "#60687e"
+  C: "#529ea8" # teal handle
+  O: "#1a1c2c" # dark outline
+  V: "#9095a5" # blade edge
+  v: "#60687e" # blade spine
 grid: |
   ............
   ......OO....

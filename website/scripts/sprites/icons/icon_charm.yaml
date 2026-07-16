@@ -2,14 +2,18 @@ name: icon_charm
 family: icons
 size: [12, 12]
 description: >
-  A small gold amulet ring with a pale glowing gem at its center; the
-  generic lucky charm/trinket look (moon, red-dust, stardust variants).
+  A gold amulet ring with a pale glowing gem at its center.
+subject:
+  kind: item icon
+  features: a round gold amulet ring set with a glowing blue gem
+  accent: pale glowing gem
+  flavor: the generic lucky charm / trinket
 palette:
-  O: "#1a1c2c"
-  c: "#8ccdd7e1"
-  e: "#5ab4ff"
-  h: "#e2c640"
-  q: "#96762e"
+  O: "#1a1c2c" # dark outline
+  c: "#8ccdd7e1" # pale gem glow
+  e: "#5ab4ff" # blue gem
+  h: "#e2c640" # gold ring
+  q: "#96762e" # dark gold shadow
 grid: |
   ....OO......
   ...OhqO.....

@@ -2,12 +2,16 @@ name: icon_postmortem
 family: icons
 size: [12, 12]
 description: >
-  A pale-blue document slate ruled with white text lines; a recovered
-  colony post-mortem report page.
+  A pale-blue document slate ruled with white text lines.
+subject:
+  kind: item icon
+  features: a document sheet with rows of white ruled text lines
+  accent: pale blue
+  flavor: a recovered colony post-mortem report page
 palette:
-  O: "#1a1c2c"
-  W: "#f4f4f4"
-  e: "#5ab4ff"
+  O: "#1a1c2c" # dark outline
+  W: "#f4f4f4" # white text lines
+  e: "#5ab4ff" # pale-blue page
 grid: |
   ............
   .OOOOOOOOO..

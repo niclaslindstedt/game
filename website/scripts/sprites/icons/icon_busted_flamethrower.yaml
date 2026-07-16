@@ -2,14 +2,18 @@ name: icon_busted_flamethrower
 family: icons
 size: [12, 12]
 description: >
-  A dented, empty flamethrower nozzle and tank in grey — no flame, no
-  fuel, obviously broken; a junk weapon that does nothing.
+  A dented empty grey flamethrower nozzle and tank — no flame, no fuel.
+subject:
+  kind: weapon icon
+  features: a dented tank and detached nozzle, cold and empty
+  accent: dead grey metal
+  flavor: a junk weapon that does nothing
 palette:
-  E: "#5d4028"
-  N: "#303444"
-  O: "#1a1c2c"
-  b: "#3f4553"
-  v: "#60687e"
+  E: "#5d4028" # rust drip
+  N: "#303444" # dark nozzle
+  O: "#1a1c2c" # dark outline
+  b: "#3f4553" # dark tank dent
+  v: "#60687e" # grey tank body
 grid: |
   ............
   ............

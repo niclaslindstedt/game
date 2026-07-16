@@ -2,14 +2,18 @@ name: icon_hairy_wand
 family: icons
 size: [12, 12]
 description: >
-  A slim polished wooden wand held diagonally with a faint glowing spark
-  at its tip; a boy-wizard's starter wand.
+  A slim polished wooden wand with a faint glowing spark at its tip.
+subject:
+  kind: weapon icon
+  features: a diagonal slim wand with a small spark at the tip
+  accent: pale gold spark
+  flavor: a boy-wizard's starter wand
 palette:
-  B: "#92643e"
-  O: "#1a1c2c"
-  Y: "#ffe3b6"
-  k: "#342c26"
-  y: "#ffb02e"
+  B: "#92643e" # wand base wood
+  O: "#1a1c2c" # dark outline
+  Y: "#ffe3b6" # pale spark core
+  k: "#342c26" # dark wand shaft
+  y: "#ffb02e" # gold spark
 grid: |
   ............
   ........OO..

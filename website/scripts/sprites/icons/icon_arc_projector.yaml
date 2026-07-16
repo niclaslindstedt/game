@@ -2,16 +2,19 @@ name: icon_arc_projector
 family: icons
 size: [12, 12]
 description: >
-  A handheld emitter rod with twin prongs throwing a fork of blue-white
-  electric current; a lightning-caster's silhouette, crackling arcs at
-  the tip.
+  A handheld emitter rod with twin prongs forking blue-white current.
+subject:
+  kind: weapon icon
+  features: an upright rod with two prongs at the tip crackling with electric arcs
+  accent: blue-white electric arc
+  flavor: a lightning-caster
 palette:
-  O: "#1a1c2c"
-  V: "#9095a5"
-  e: "#5ab4ff"
-  k: "#342c26"
-  s: "#d6f0ff"
-  v: "#60687e"
+  O: "#1a1c2c" # dark outline
+  V: "#9095a5" # steel prong
+  e: "#5ab4ff" # blue arc
+  k: "#342c26" # dark grip
+  s: "#d6f0ff" # white arc spark
+  v: "#60687e" # grey rod
 grid: |
   ............
   ..Os.sO.....

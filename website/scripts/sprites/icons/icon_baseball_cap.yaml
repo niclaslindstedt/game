@@ -2,12 +2,16 @@ name: icon_baseball_cap
 family: icons
 size: [12, 12]
 description: >
-  A blue baseball cap seen side-on, curved brim jutting forward, a small
-  white team logo on the crown; casual company softball headwear.
+  A blue baseball cap with a curved brim and a small white logo.
+subject:
+  kind: armor icon
+  features: a side-on ball cap, curved brim jutting forward, a logo patch on the crown
+  accent: blue with a white logo
+  flavor: casual company softball headwear
 palette:
-  O: "#1a1c2c"
-  W: "#f4f4f4"
-  j: "#4054bc"
+  O: "#1a1c2c" # dark outline
+  W: "#f4f4f4" # white logo
+  j: "#4054bc" # blue cap
 grid: |
   ............
   ............
