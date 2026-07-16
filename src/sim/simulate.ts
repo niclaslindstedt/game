@@ -409,8 +409,15 @@ export type LevelReport = {
    * map grid the hero entered. Feeds the map renderer's `--heatmap` overlay.
    */
   spatial?: {
+    /** Hero dwell samples (where the map was used). */
     path: { x: number; y: number }[];
+    /** Every kill location. */
     kills: { x: number; y: number }[];
+    /** Where each mob first appeared — the horde's entry map. */
+    spawns: { x: number; y: number }[];
+    /** Coarse mob-presence grid (where the horde formed/moved), row-major. */
+    mobDensity: { cols: number; rows: number; cell: number; grid: number[] };
+    /** % of the map grid the hero entered. */
     coveragePct: number;
   };
 };
@@ -630,12 +637,22 @@ function playRun(args: {
   // positions, and a coarse coverage grid (which map cells he entered).
   const tracePath: { x: number; y: number }[] = [];
   const traceKills: { x: number; y: number }[] = [];
+  const traceSpawns: { x: number; y: number }[] = [];
   const coverageCells = new Set<number>();
   const TRACE_SAMPLE_MS = 500;
   const COVER_CELL = 96;
   const coverCols = Math.max(1, Math.ceil(state.level.width / COVER_CELL));
   const coverRows = Math.max(1, Math.ceil(state.level.height / COVER_CELL));
+  // Mob density: accumulated enemy presence per coarse cell over the run —
+  // where the horde actually FORMS and MOVES (vs the hero's dwell), so a map's
+  // packs/waves/geometry can be checked against where the pressure lands.
+  const mobDensity = new Float64Array(coverCols * coverRows);
+  const SPAWN_CAP = 4000; // bound the spawn-marker list on long runs
   let traceAccumMs = 0;
+  const coverIdx = (x: number, y: number) =>
+    Math.min(coverRows - 1, Math.max(0, Math.floor(y / COVER_CELL))) *
+      coverCols +
+    Math.min(coverCols - 1, Math.max(0, Math.floor(x / COVER_CELL)));
 
   // The hero can't fight his way out with the unbreakable fallback sidearm, or
   // with a weapon about to snap — the cue to run to the merchant (autoShop).
@@ -686,6 +703,13 @@ function playRun(args: {
       seenEnemies.add(enemy.id);
       const d = enemyDef(enemy.defId);
       if (d.apparition) continue; // scenery, not a combatant
+      // Spatial trace: where each mob first appeared (wave ring, pack anchor,
+      // placed spawn) — the horde's ENTRY map.
+      if (args.trace && traceSpawns.length < SPAWN_CAP)
+        traceSpawns.push({
+          x: Math.round(enemy.pos.x),
+          y: Math.round(enemy.pos.y),
+        });
       const acc = mobs.get(enemy.defId) ?? {
         spawned: 0,
         killed: 0,
@@ -833,14 +857,11 @@ function playRun(args: {
     step(state, botAct(bot, state), args.dtMs);
     phaseAdvances = 0;
 
-    // Spatial trace: mark the cell the hero is in, and sample his path on a
-    // fixed cadence (dwell time = how long he lingered where).
+    // Spatial trace: mark the cell the hero is in, and sample his path + the
+    // horde's positions on a fixed cadence (dwell time = how long he lingered
+    // where; mob density = where the horde formed and moved).
     if (args.trace) {
-      coverageCells.add(
-        Math.min(coverRows - 1, Math.floor(state.player.pos.y / COVER_CELL)) *
-          coverCols +
-          Math.min(coverCols - 1, Math.floor(state.player.pos.x / COVER_CELL)),
-      );
+      coverageCells.add(coverIdx(state.player.pos.x, state.player.pos.y));
       traceAccumMs += args.dtMs;
       if (traceAccumMs >= TRACE_SAMPLE_MS) {
         traceAccumMs -= TRACE_SAMPLE_MS;
@@ -848,6 +869,11 @@ function playRun(args: {
           x: Math.round(state.player.pos.x),
           y: Math.round(state.player.pos.y),
         });
+        for (const enemy of state.enemies) {
+          if (enemyDef(enemy.defId).apparition) continue;
+          const idx = coverIdx(enemy.pos.x, enemy.pos.y);
+          mobDensity[idx] = (mobDensity[idx] ?? 0) + 1;
+        }
       }
     }
     // Register same-step spawns BEFORE reading the events, so a mob hit the
@@ -1211,6 +1237,13 @@ function playRun(args: {
           spatial: {
             path: tracePath,
             kills: traceKills,
+            spawns: traceSpawns,
+            mobDensity: {
+              cols: coverCols,
+              rows: coverRows,
+              cell: COVER_CELL,
+              grid: Array.from(mobDensity),
+            },
             coveragePct: Math.round(
               (coverageCells.size / (coverCols * coverRows)) * 100,
             ),

@@ -516,6 +516,7 @@ async function renderLevel(entry, opts) {
     drawHeatmap(c, spatial);
     extra.push(
       `COVERAGE: ${spatial.coveragePct}% of map`,
+      `SPAWNS: ${spatial.spawns?.length ?? 0}  KILLS: ${spatial.kills?.length ?? 0}`,
       `PATH: bot ${opts.difficulty}`,
     );
   }
@@ -543,14 +544,42 @@ async function runTrace(id, seed, difficulty) {
 
 function drawHeatmap(c, spatial) {
   const { surf } = c;
-  // Dwell heat: accumulate path samples into the fog grid at image scale.
-  for (const p of spatial.path ?? []) {
+  // Layer 1 — MOB DENSITY (cool): where the horde formed and moved, per cell.
+  const md = spatial.mobDensity;
+  if (md?.grid?.length) {
+    const max = Math.max(1, ...md.grid);
+    for (let i = 0; i < md.grid.length; i++) {
+      const v = md.grid[i];
+      if (v <= 0) continue;
+      const col = i % md.cols;
+      const row = Math.floor(i / md.cols);
+      const a = Math.min(150, Math.round((v / max) * 150));
+      fillRect(
+        surf,
+        wx(c, col * md.cell),
+        wy(c, row * md.cell),
+        md.cell * c.S,
+        md.cell * c.S,
+        [70, 140, 240, a],
+      );
+    }
+  }
+  // Layer 2 — HERO DWELL (warm): where the map was actually used.
+  for (const p of spatial.path ?? [])
     fillCircle(surf, wx(c, p.x), wy(c, p.y), 3, [250, 180, 40, 26]);
-  }
-  for (const k of spatial.kills ?? []) {
-    fillRect(surf, wx(c, k.x), wy(c, k.y), 1, 1, [255, 60, 60, 160]);
-  }
-  label(surf, "DWELL (warm) + KILLS (red)", c.ox + 2, c.oy + 12, C.ink);
+  // Layer 3 — SPAWNS (faint cyan dots): the horde's entry points.
+  for (const s of spatial.spawns ?? [])
+    fillRect(surf, wx(c, s.x), wy(c, s.y), 1, 1, [120, 230, 230, 60]);
+  // Layer 4 — KILLS (red).
+  for (const k of spatial.kills ?? [])
+    fillRect(surf, wx(c, k.x), wy(c, k.y), 1, 1, [255, 60, 60, 170]);
+  label(
+    surf,
+    "MOB DENSITY (blue) . DWELL (warm) . SPAWNS (cyan) . KILLS (red)",
+    c.ox + 2,
+    c.oy + 12,
+    C.ink,
+  );
 }
 
 function parseArgs(argv) {
