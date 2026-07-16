@@ -2,21 +2,26 @@ name: haywire_greeter_1
 family: eastworld
 size: [16, 16]
 description: >
-  A top-down wheeled greeter android on a low dark chassis, with two glowing
-  turquoise eyes and a pair of thin arms raised overhead in a stuck welcoming
-  V — a welcome-committee host gone haywire, still smiling as it swings; a rare
-  pack mob. Its raised arms are on the opposite beat of its broken hospitality
-  loop, near-identical to the rest of the cycle.
+  A wheeled greeter android gone haywire, arms raised in a stuck welcoming V,
+  still smiling as it swings; a rare pack mob, on the alternate beat.
+subject:
+  kind: rare pack mob — greeter host
+  build: a wheeled android on a low dark chassis, thin arms raised overhead in a welcoming V
+  attire: a blue brim hat with an olive-gold band and an amber neckerchief
+  features: two glowing turquoise eyes, still smiling
+  accent: turquoise eyes over an amber neckerchief
+  pose: raised arms on the opposite beat of its broken hospitality loop
+  flavor: a welcome-committee host with its hospitality loop gone haywire
 palette:
-  A: "#8d9196"
-  C: "#466096"
-  H: "#9e8b2d"
-  N: "#3a3644"
-  O: "#1a1c2c"
-  Q: "#60f0d0"
-  U: "#f0c658"
-  V: "#9095a5"
-  v: "#60687e"
+  A: "#8d9196" # arm / wheel metal
+  C: "#466096" # blue hat brim
+  H: "#9e8b2d" # olive-gold hatband
+  N: "#3a3644" # dark head chassis
+  O: "#1a1c2c" # outline
+  Q: "#60f0d0" # turquoise eyes
+  U: "#f0c658" # amber neckerchief
+  V: "#9095a5" # chest panel highlight
+  v: "#60687e" # grey body / eye shade
 grid: |
   ......NOON......
   ......HHHH......

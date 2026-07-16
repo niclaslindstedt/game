@@ -2,13 +2,17 @@ name: hardpan_1
 family: eastworld
 size: [16, 16]
 description: >
-  Rare variant of the hardpan ground tile — the same sun-baked tan-brown
-  dirt with a few extra cracks and pebbles for subtle variation; the
-  every-15th accent tile.
+  A rare variant of the hardpan tile — the same tan-brown dirt with a few extra
+  cracks and pebbles; the every-15th accent tile.
+subject:
+  kind: ground tile — accent variant
+  build: a flat dirt tile with a few extra cracks and pebbles
+  accent: sparse pebble flecks over dusty tan-brown
+  flavor: the every-15th accent tile that breaks up the hardpan
 palette:
-  Z: "#b08e60"
-  u: "#e2c494"
-  z: "#ceac78"
+  Z: "#b08e60" # darker dirt fleck
+  u: "#e2c494" # pale dust fleck
+  z: "#ceac78" # tan-brown hardpan base
 grid: |
   zzzzzzzzzzzzzzzz
   zzzzzzzzzzuzzzzz

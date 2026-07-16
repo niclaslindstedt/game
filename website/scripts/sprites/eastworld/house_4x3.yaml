@@ -4,15 +4,21 @@ size: [64, 48]
 description: >
   A frontier-town house — a larger brown timber building with plank siding,
   warm-lit windows, and a central dark doorway; an impassable town obstacle.
+subject:
+  kind: building obstacle
+  build: a large rectangular timber house seen top-down
+  features: plank siding, a shingled roof band, warm-lit windows, a central dark doorway
+  accent: warm amber window light in the dark timber
+  flavor: an impassable town obstacle
 palette:
-  B: "#92643e"
-  E: "#5d4028"
-  K: "#0c0b12"
-  N: "#3a3644"
-  O: "#1a1c2c"
-  S: "#b39378"
-  U: "#f0c658"
-  v: "#60687e"
+  B: "#92643e" # plank wall brown
+  E: "#5d4028" # dark timber trim
+  K: "#0c0b12" # dark doorway
+  N: "#3a3644" # roof shingle
+  O: "#1a1c2c" # outline
+  S: "#b39378" # pale plank highlight
+  U: "#f0c658" # amber window light
+  v: "#60687e" # roof ridge
 grid: |
   OOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOO
   OvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvO

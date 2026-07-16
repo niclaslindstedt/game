@@ -2,17 +2,24 @@ name: gerald_depardieu_1
 family: eastworld
 size: [24, 24]
 description: >
-  An enormous front-facing man with the biggest body of any elite — a huge,
-  heavy-bellied, jowly figure in a dark maroon shirt and brown trousers,
-  moving at the speed of a long lunch. Reared back with his arms lifting away
-  from his sides, winding up an 'avalanche' belly-flop slam.
+  GERALD DEPARDIEU winding up his slam — a huge, heavy-bellied jowly man in a
+  dark maroon shirt; the biggest body an elite wears.
+subject:
+  kind: elite
+  name: GERALD DEPARDIEU
+  build: the biggest body of any elite — a huge, heavy-bellied, jowly man
+  attire: a dark maroon shirt over brown trousers
+  features: a jowly face with dark hair and dark eyes
+  accent: the deep maroon shirt over his bulk
+  pose: reared back, arms lifting away from his sides, winding up an 'avalanche' belly-flop slam
+  flavor: moving at the speed of a long lunch and ACTING at you
 palette:
-  D: "#5c3e28"
-  K: "#0c0b12"
-  O: "#1a1c2c"
-  X: "#963c46"
-  k: "#342c26"
-  p: "#deaa86"
+  D: "#5c3e28" # brown trousers
+  K: "#0c0b12" # eyes / shadow
+  O: "#1a1c2c" # outline
+  X: "#963c46" # dark maroon shirt
+  k: "#342c26" # dark hair
+  p: "#deaa86" # skin
 grid: |
   ........................
   ........................

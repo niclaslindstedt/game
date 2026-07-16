@@ -2,20 +2,25 @@ name: eastworld_gate
 family: eastworld
 size: [48, 32]
 description: >
-  The park's entry arch — two weathered wooden posts holding a signboard
-  that reads 'EASTWORLD' in the pixel font, spanning the road; the landmark
-  over the level's entrance.
+  The park's entry arch — two weathered wooden posts holding an 'EASTWORLD'
+  signboard spanning the road.
+subject:
+  kind: landmark — entry gate
+  build: two tall weathered timber posts holding a wide signboard across the road
+  features: a signboard lettered EASTWORLD with a lit turquoise panel below it
+  accent: turquoise sign panel over a dark-red base band
+  flavor: the landmark over the level's entrance
 palette:
-  B: "#92643e"
-  E: "#5d4028"
-  K: "#0c0b12"
-  N: "#3a3644"
-  O: "#1a1c2c"
-  Q: "#60f0d0"
-  S: "#b39378"
-  X: "#963c46"
-  c: "#8ccdd7e1"
-  u: "#e2c494"
+  B: "#92643e" # post plank brown
+  E: "#5d4028" # dark post timber
+  K: "#0c0b12" # sign lettering
+  N: "#3a3644" # panel frame
+  O: "#1a1c2c" # outline
+  Q: "#60f0d0" # turquoise sign panel
+  S: "#b39378" # pale signboard face
+  X: "#963c46" # dark-red base band
+  c: "#8ccdd7e1" # faint turquoise panel glaze
+  u: "#e2c494" # pale sign header
 grid: |
   ..OOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOO..
   ..OEOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOEO..

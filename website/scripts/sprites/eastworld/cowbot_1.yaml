@@ -2,21 +2,26 @@ name: cowbot_1
 family: eastworld
 size: [16, 16]
 description: >
-  A front-facing cowboy-robot host in a wide brown ten-gallon hat and a red
-  neckerchief over a dark metal body — a hospitality greeter android with its
-  welcome subroutines swapped for a grudge, the horde's fodder rank. Mid-walk,
-  its feet swapped to the alternate stride, near-identical to the rest of the
-  cycle.
+  A cowboy-robot host in a brown ten-gallon hat and red neckerchief, welcome
+  subroutines swapped for a grudge; the fodder rank, mid-walk.
+subject:
+  kind: minion — cowboy-robot host
+  build: a boxy dark-metal android on two stubby legs
+  attire: a wide brown ten-gallon hat and a red neckerchief
+  features: two glowing grey eye lenses on a dark face, a panelled chest
+  accent: red neckerchief and olive-gold hatband
+  pose: mid-walk, feet swapped to the alternate stride
+  flavor: a hospitality greeter with its welcome subroutines swapped for a grudge — the horde's fodder rank
 palette:
-  A: "#8d9196"
-  D: "#5c3e28"
-  E: "#5d4028"
-  H: "#9e8b2d"
-  O: "#1a1c2c"
-  R: "#ff5252"
-  V: "#9095a5"
-  r: "#d83a3a"
-  v: "#60687e"
+  A: "#8d9196" # foot / leg metal
+  D: "#5c3e28" # hat crown brown
+  E: "#5d4028" # hat brim brown
+  H: "#9e8b2d" # olive-gold hatband
+  O: "#1a1c2c" # outline and dark metal body
+  R: "#ff5252" # bright red neckerchief
+  V: "#9095a5" # chest panel highlight
+  r: "#d83a3a" # red neckerchief
+  v: "#60687e" # grey eye lenses / shoulder
 grid: |
   ......EOOE......
   ......HHHH......

@@ -2,17 +2,22 @@ name: storefront
 family: eastworld
 size: [16, 16]
 description: >
-  A western storefront facade — a brown wooden shop front of plank boards
-  with a glowing amber window/sign; tiled into the wall rows that squeeze
-  main street into a corridor.
+  A western storefront facade — a brown wooden shop front of plank boards with
+  a glowing amber window.
+subject:
+  kind: wall tile — storefront
+  build: a flat plank-board shop facade seen top-down
+  features: a shingled roof edge, a glowing amber window/sign, a dark window frame
+  accent: amber shop window against brown planks
+  flavor: tiled into the wall rows that squeeze main street into a corridor
 palette:
-  B: "#92643e"
-  E: "#5d4028"
-  N: "#3a3644"
-  O: "#1a1c2c"
-  S: "#b39378"
-  U: "#f0c658"
-  v: "#60687e"
+  B: "#92643e" # plank board brown
+  E: "#5d4028" # dark timber trim
+  N: "#3a3644" # dark window frame
+  O: "#1a1c2c" # outline
+  S: "#b39378" # pale plank highlight
+  U: "#f0c658" # amber window / sign
+  v: "#60687e" # roof ridge
 grid: |
   OOOOOOOOOOOOOOOO
   OvvvvvvvvvvvvvvO

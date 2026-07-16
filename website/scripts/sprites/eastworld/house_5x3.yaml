@@ -2,18 +2,23 @@ name: house_5x3
 family: eastworld
 size: [80, 48]
 description: >
-  The largest frontier house — a broad brown wooden building, plank walls
-  with lit windows and a dark central door; a building-sized wall the hero
-  must route around.
+  The largest frontier house — a broad brown wooden building, lit windows and a
+  dark central door; a building-sized wall to route around.
+subject:
+  kind: building obstacle
+  build: a broad rectangular timber house seen top-down, the largest in town
+  features: plank walls, a shingled roof band, lit windows, a dark central door
+  accent: warm amber window light in the dark timber
+  flavor: a building-sized wall the hero must route around
 palette:
-  B: "#92643e"
-  E: "#5d4028"
-  K: "#0c0b12"
-  N: "#3a3644"
-  O: "#1a1c2c"
-  S: "#b39378"
-  U: "#f0c658"
-  v: "#60687e"
+  B: "#92643e" # plank wall brown
+  E: "#5d4028" # dark timber trim
+  K: "#0c0b12" # dark central door
+  N: "#3a3644" # roof shingle
+  O: "#1a1c2c" # outline
+  S: "#b39378" # pale plank highlight
+  U: "#f0c658" # amber window light
+  v: "#60687e" # roof ridge
 grid: |
   OOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOO
   OvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvO

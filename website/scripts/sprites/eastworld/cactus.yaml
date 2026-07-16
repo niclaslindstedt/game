@@ -2,13 +2,19 @@ name: cactus
 family: eastworld
 size: [16, 16]
 description: >
-  A fake park cactus — a bright green saguaro with two upraised arms and a
-  darker outline dotted with tiny spines; a hoppable desert-street prop.
+  A fake park saguaro cactus with two upraised arms; a hoppable desert-street
+  prop.
+subject:
+  kind: prop — cactus
+  build: an upright saguaro with two upraised arms
+  features: tiny spines dotting the skin
+  accent: bright green body against a dark outline
+  flavor: a fake park cactus, hoppable desert-street dressing
 palette:
-  G: "#4a7a3e"
-  O: "#1a1c2c"
-  g: "#3d6433"
-  l: "#678f5d"
+  G: "#4a7a3e" # cactus green body
+  O: "#1a1c2c" # outline
+  g: "#3d6433" # shaded cactus green
+  l: "#678f5d" # lit cactus green highlight
 grid: |
   ................
   ......OOO.......

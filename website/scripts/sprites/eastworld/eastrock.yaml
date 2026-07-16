@@ -2,14 +2,19 @@ name: eastrock
 family: eastworld
 size: [16, 16]
 description: >
-  A desert boulder — a rounded sandy-tan rock with a darker shaded
-  underside; solid cover that stops sight, shots, and blasts.
+  A rounded sandy-tan desert boulder; solid cover that stops sight, shots, and
+  blasts.
+subject:
+  kind: cover prop — boulder
+  build: a rounded chunky rock, lit sandy-tan on top fading to a shaded underside
+  accent: pale sand highlight over a darker shaded base
+  flavor: solid cover that stops sight, shots, and blasts
 palette:
-  O: "#1a1c2c"
-  Z: "#b08e60"
-  d: "#665c34"
-  e: "#8a7e46"
-  u: "#e2c494"
+  O: "#1a1c2c" # outline
+  Z: "#b08e60" # mid sandy-tan rock
+  d: "#665c34" # shaded underside
+  e: "#8a7e46" # olive-tan mottling
+  u: "#e2c494" # pale lit sandstone
 grid: |
   ................
   ...OOOOOO.......

@@ -2,20 +2,28 @@ name: saloon_brawler_0
 family: eastworld
 size: [16, 16]
 description: >
-  A bar-fight host android, front-facing — a dark robotic body in a red-and-
-  white striped shirt with fists raised; built to lose a punch-up
-  convincingly, patched to win one.
+  A bar-fight host android — a dark robotic body in a red-and-white striped
+  shirt with fists raised; built to lose a punch-up convincingly, patched to
+  win one.
+subject:
+  kind: minion — brawler host
+  build: a dark robotic body with grey fists raised out to its sides
+  attire: a red-and-white vertically striped shirt
+  features: a dark head with a red brim
+  accent: red-and-white striped shirt with a stray gold stud
+  pose: fists raised, squared for a punch-up
+  flavor: built to lose a bar fight convincingly, patched to win one
 palette:
-  A: "#8d9196"
-  N: "#3a3644"
-  O: "#1a1c2c"
-  R: "#ff5252"
-  V: "#9095a5"
-  X: "#963c46"
-  o: "#d6a842"
-  r: "#d83a3a"
-  v: "#60687e"
-  w: "#c6c6c6"
+  A: "#8d9196" # fist / arm metal
+  N: "#3a3644" # dark head
+  O: "#1a1c2c" # outline
+  R: "#ff5252" # bright red hat brim
+  V: "#9095a5" # arm highlight
+  X: "#963c46" # maroon shirt stripe
+  o: "#d6a842" # gold shirt stud
+  r: "#d83a3a" # red shirt stripe
+  v: "#60687e" # grey shoulder
+  w: "#c6c6c6" # white shirt stripe
 grid: |
   ......OOOO......
   ......ONNO......

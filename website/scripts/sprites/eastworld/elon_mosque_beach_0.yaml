@@ -2,19 +2,27 @@ name: elon_mosque_beach_0
 family: eastworld
 size: [48, 48]
 description: >
-  ELON MOSQUE run to ground — the same tech mogul after two universes of
-  fleeing: shirtless, pale, and magnificent of belly in black board shorts,
-  one unsold gold watch on his wrist, jacket long gone and nowhere left to
-  run.
+  ELON MOSQUE run to ground — a shirtless, pale, pot-bellied tech mogul in
+  black board shorts with one gold watch; the boss cornered after fleeing
+  across universes.
+subject:
+  kind: boss
+  name: ELON MOSQUE
+  build: a heavy, pot-bellied man, shirtless and magnificent of belly
+  attire: black board shorts, jacket long gone
+  features: pale skin and dark hair
+  accent: a single unsold gold wristwatch
+  pose: standing planted, arms at his sides
+  flavor: the tech mogul cornered after two universes of fleeing, nowhere left to run
 palette:
-  K: "#0c0b12"
-  N: "#3a3644"
-  O: "#1a1c2c"
-  k: "#342c26"
-  p: "#deaa86"
-  r: "#d83a3a"
-  s: "#c48e6c"
-  y: "#ffb02e"
+  K: "#0c0b12" # black board shorts
+  N: "#3a3644" # dark shorts waistband
+  O: "#1a1c2c" # outline
+  k: "#342c26" # dark hair
+  p: "#deaa86" # skin
+  r: "#d83a3a" # red skin detail
+  s: "#c48e6c" # skin shadow
+  y: "#ffb02e" # gold wristwatch
 grid: |
   ................................................
   ................................................

@@ -2,22 +2,27 @@ name: counterfeit_outlaw_1
 family: eastworld
 size: [16, 16]
 description: >
-  A top-down cowboy-robot bandit in a wide brown ten-gallon hat and a dark-
-  red shirt over a boxy dark-metal body, a small pistol at its side —
-  a bootleg knockoff run off a pirated mold, mismatched panels and crooked
-  seams showing, twice as mean about it. A lone rare mob. Mid-walk, its feet
-  swapped to the alternate stride, near-identical to the rest of the cycle.
+  A top-down bootleg cowboy-robot bandit run off a pirated mold, twice as mean;
+  a lone rare mob, mid-walk.
+subject:
+  kind: rare mob — bootleg outlaw
+  build: a lean boxy cowboy robot on two legs, seams and mismatched panels showing
+  attire: a wide brown ten-gallon hat and an olive bandana over a dark-red shirt
+  features: a dark visor eye-slot, a small pistol at its side
+  accent: dark-red shirt with a gold belt buckle
+  pose: mid-walk, feet swapped to the alternate stride
+  flavor: a pirated print of the tin outlaw, twice as mean about it
 palette:
-  A: "#8d9196"
-  D: "#5c3e28"
-  E: "#5d4028"
-  K: "#0c0b12"
-  O: "#1a1c2c"
-  V: "#9095a5"
-  X: "#963c46"
-  e: "#8a7e46"
-  v: "#60687e"
-  y: "#ffb02e"
+  A: "#8d9196" # bright pistol metal
+  D: "#5c3e28" # dark hat and body brown
+  E: "#5d4028" # hat-brim brown
+  K: "#0c0b12" # eye-slot shadow
+  O: "#1a1c2c" # outline
+  V: "#9095a5" # pistol highlight
+  X: "#963c46" # dark-red shirt
+  e: "#8a7e46" # olive bandana
+  v: "#60687e" # grey eye lenses
+  y: "#ffb02e" # gold belt buckle
 grid: |
   ......OOOO......
   ......OOOO......

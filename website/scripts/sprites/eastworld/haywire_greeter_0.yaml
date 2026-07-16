@@ -3,18 +3,25 @@ family: eastworld
 size: [16, 16]
 description: >
   A welcome-committee host gone haywire — a wheeled greeter android with
-  turquoise eyes and thin arms raised mid-wave, still smiling, now swinging;
-  a rare pack mob.
+  turquoise eyes and thin arms raised mid-wave, still smiling; a rare pack mob.
+subject:
+  kind: rare pack mob — greeter host
+  build: a wheeled android on a low dark chassis, thin arms raised overhead in a welcoming V
+  attire: a blue brim hat with an olive-gold band and an amber neckerchief
+  features: two glowing turquoise eyes, still smiling
+  accent: turquoise eyes over an amber neckerchief
+  pose: arms raised mid-wave, swinging
+  flavor: a welcome-committee host with its hospitality loop gone haywire
 palette:
-  A: "#8d9196"
-  C: "#466096"
-  H: "#9e8b2d"
-  N: "#3a3644"
-  O: "#1a1c2c"
-  Q: "#60f0d0"
-  U: "#f0c658"
-  V: "#9095a5"
-  v: "#60687e"
+  A: "#8d9196" # arm / wheel metal
+  C: "#466096" # blue hat brim
+  H: "#9e8b2d" # olive-gold hatband
+  N: "#3a3644" # dark head chassis
+  O: "#1a1c2c" # outline
+  Q: "#60f0d0" # turquoise eyes
+  U: "#f0c658" # amber neckerchief
+  V: "#9095a5" # chest panel highlight
+  v: "#60687e" # grey body / eye shade
 grid: |
   ......NOON......
   ......HHHH......

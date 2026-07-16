@@ -2,16 +2,23 @@ name: steven_seagull_1
 family: eastworld
 size: [24, 24]
 description: >
-  A broad front-facing man dressed all in black with a pale face and a dark
-  ponytail, holding a slow, heavy martial-arts guard — a deadly, glacial
-  movie-star co-founder. Shifted into his aikido redirect, feet planted wide
-  apart in a spread stance.
+  STEVEN SEAGULL shifting into his aikido redirect — a broad man all in black
+  with a dark ponytail; deadly and glacial.
+subject:
+  kind: elite
+  name: STEVEN SEAGULL
+  build: a broad, heavy man
+  attire: dressed all in black, a dark belt
+  features: a pale face and a dark ponytail
+  accent: all-black outfit against a pale face
+  pose: shifted into his aikido redirect, feet planted wide apart
+  flavor: the movie-star co-founder — deadly and glacial
 palette:
-  K: "#0c0b12"
-  N: "#3a3644"
-  O: "#1a1c2c"
-  k: "#342c26"
-  p: "#deaa86"
+  K: "#0c0b12" # black belt / dark accents
+  N: "#3a3644" # black outfit
+  O: "#1a1c2c" # outline
+  k: "#342c26" # dark hair / ponytail
+  p: "#deaa86" # skin
 grid: |
   ........................
   ........................

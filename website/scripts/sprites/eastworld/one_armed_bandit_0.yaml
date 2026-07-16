@@ -2,19 +2,27 @@ name: one_armed_bandit_0
 family: eastworld
 size: [16, 16]
 description: >
-  THE ONE-ARMED BANDIT — the park's rigged slot machine on legs, gilded head
-  to toe in other people's gold coin: a boxy golden body with a dark slot-
-  machine head and one lever arm. The house always wins.
+  THE ONE-ARMED BANDIT — the park's rigged slot machine on legs, gilded in gold
+  coin with a dark slot-machine head and one lever arm. The house always wins.
+subject:
+  kind: elite — slot-machine robot
+  name: THE ONE-ARMED BANDIT
+  build: a boxy body on two legs with one lever arm jutting out to the side
+  attire: gilded head to toe in gold coin
+  features: a dark slot-machine head with a grey eye-slot, a small red reel-light on the body
+  accent: gold coin plating with a single red reel-light
+  pose: standing squared, lever arm out
+  flavor: the park's rigged slot machine — the house always wins
 palette:
-  A: "#8d9196"
-  B: "#92643e"
-  K: "#0c0b12"
-  O: "#1a1c2c"
-  S: "#b39378"
-  U: "#f0c658"
-  V: "#9095a5"
-  r: "#d83a3a"
-  v: "#60687e"
+  A: "#8d9196" # lever metal
+  B: "#92643e" # brown coin-shadow
+  K: "#0c0b12" # slot-head visor
+  O: "#1a1c2c" # outline
+  S: "#b39378" # pale coin trim
+  U: "#f0c658" # gold coin plating
+  V: "#9095a5" # lever highlight
+  r: "#d83a3a" # red reel-light
+  v: "#60687e" # grey eye-slot
 grid: |
   ......OOOO......
   ......OOOO......

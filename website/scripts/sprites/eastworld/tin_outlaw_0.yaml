@@ -2,19 +2,27 @@ name: tin_outlaw_0
 family: eastworld
 size: [16, 16]
 description: >
-  A quick-draw bandit android — a lean cowboy robot in a brown hat and
-  bandana over a tan vest, drawing a pistol; fast, vicious, and hard to pin.
+  A quick-draw bandit android — a lean cowboy robot in a brown hat and blue
+  bandana over a dark vest, drawing a pistol; fast, vicious, and hard to pin.
+subject:
+  kind: minion — quick-draw bandit
+  build: a lean boxy cowboy robot on two legs
+  attire: a wide brown ten-gallon hat and a blue bandana over a dark vest
+  features: a dark visor eye-slot, a pistol at its side
+  accent: blue bandana and a gold belt buckle
+  pose: mid-draw, squared to the viewer
+  flavor: fast, vicious, and hard to pin
 palette:
-  A: "#8d9196"
-  C: "#466096"
-  D: "#5c3e28"
-  E: "#5d4028"
-  K: "#0c0b12"
-  N: "#3a3644"
-  O: "#1a1c2c"
-  V: "#9095a5"
-  o: "#d6a842"
-  v: "#60687e"
+  A: "#8d9196" # bright pistol metal
+  C: "#466096" # blue bandana
+  D: "#5c3e28" # dark hat brown
+  E: "#5d4028" # hat-brim brown
+  K: "#0c0b12" # visor shadow
+  N: "#3a3644" # dark vest
+  O: "#1a1c2c" # outline
+  V: "#9095a5" # pistol highlight
+  o: "#d6a842" # gold belt buckle
+  v: "#60687e" # grey eye lenses
 grid: |
   ......OOOO......
   ......OOOO......

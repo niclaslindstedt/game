@@ -2,15 +2,21 @@ name: wagon
 family: eastworld
 size: [16, 16]
 description: >
-  A wooden buckboard wagon from above — a rectangular brown plank bed with
-  side rails and dark wheels showing beneath; hoppable street furniture.
+  A wooden buckboard wagon from above — a plank bed with side rails and dark
+  wheels beneath; hoppable street furniture.
+subject:
+  kind: prop — wagon
+  build: a rectangular plank bed with side rails, four dark wheels showing beneath
+  features: a wooden buckboard body with a raised rail
+  accent: pale plank highlights over brown timber
+  flavor: hoppable frontier street furniture
 palette:
-  B: "#92643e"
-  E: "#5d4028"
-  K: "#0c0b12"
-  N: "#3a3644"
-  O: "#1a1c2c"
-  S: "#b39378"
+  B: "#92643e" # plank bed brown
+  E: "#5d4028" # dark rail timber
+  K: "#0c0b12" # wheel hub
+  N: "#3a3644" # dark wheel
+  O: "#1a1c2c" # outline
+  S: "#b39378" # pale plank highlight
 grid: |
   ................
   ................
