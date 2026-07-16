@@ -88,6 +88,12 @@ const mobStats = (heroLevel, diff, def) => {
   };
 };
 
+// A non-combat "apparition" elite (a phasing story ghost — Houdini, The King)
+// deals no contact damage and carries a sliver of hp, so it's excluded from the
+// elite/boss scatter rather than dragging the axis down next to a real boss.
+const isApparition = (e) =>
+  e.apparition === true || (e.contactDamage ?? 0) === 0;
+
 // The per-kill golden-arrow drop chance at `diff` (mirrors the calculator).
 const arrowDropProb = (diff) => {
   const d = difficultyDef(diff);
@@ -172,7 +178,11 @@ for (const diff of PATH) {
             : arrowXpShareAt(level) * xpToLevelUp(level, diff);
         xp += (killXp + pArrow * arrowPerDrop) * xpCapMultiplier(level, mapCap);
         advance(diff);
-        if (isBoss) {
+        // Record a scatter row for real combat elites/bosses only. Non-combat
+        // "apparition" elites (phasing story ghosts like HOUDINI / THE KING deal
+        // zero contact damage and carry a sliver of hp) would just hug the axis
+        // and drag it down next to a 10k-hp boss, so they're left out.
+        if (isBoss && !isApparition(e)) {
           rows.push({
             kind: "boss",
             difficulty: diff,
@@ -181,7 +191,7 @@ for (const diff of PATH) {
             heroLevel: level,
             ...mobStats(level, diff, e),
           });
-        } else {
+        } else if (!isBoss) {
           bucketKills++;
           heroLevelSum += level;
           if (bucketKills >= bucketSize) flush();
@@ -354,7 +364,7 @@ p.sub{margin:0 0 8px;color:var(--faint)}
 <h1>Horde stats across a run</h1>
 <p class="sub">Critical path (${PATH.join(
     " → ",
-  )}), walked kill-by-kill. X axis: cumulative kills. The lines are the AVERAGE MINION over ${bucketSize}-kill buckets; the scatter charts plot each elite/boss at its OWN health and damage.</p>
+  )}), walked kill-by-kill. X axis: cumulative kills. The lines are the AVERAGE MINION over ${bucketSize}-kill buckets; the scatter charts plot each combat elite/boss at its OWN health and damage (non-combat apparition foes excluded).</p>
 <h2>Average minion (line, per ${bucketSize}-kill bucket)</h2>
 <div class="grid">${minionMetrics.map(lineChart).join("")}</div>
 <h2>Elites &amp; bosses (one dot per kill)</h2>
