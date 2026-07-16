@@ -8,7 +8,7 @@
 // killer's monster level, exactly like a weapon's.
 
 import { gearGradeVariants, type Grade } from "./grades.ts";
-import type { EquipSlot, StatName } from "../types.ts";
+import type { ArmorType, EquipSlot, StatName } from "../types.ts";
 
 export type GearDef = {
   id: string;
@@ -36,8 +36,24 @@ export type GearDef = {
    * base with its item level (`ARMOR.armorPerIlvl`, stamped at mint), so a
    * deep drop of an old base is genuinely better than an early one. Absent =
    * the piece is not armor (charms, bags).
+   *
+   * This is the piece's CLOTH-EQUIVALENT value (the slot curve the item-forge
+   * prices); the worn number is this times its material's `armorMult` (see
+   * `armorType` / `ARMOR_TYPES` / `armorValueOf`), so a mail piece protects far
+   * more than a cloth one of the same slot and level without re-authoring the
+   * catalog off the budget line.
    */
   armor?: number;
+  /**
+   * Armor pieces only: what the piece is MADE of — the D2/WoW material class
+   * (see `ArmorType` / config `ARMOR_TYPES`). Steers worn armor (heavier
+   * materials protect more), the STRENGTH needed to wear it (mail/plate demand
+   * a bruiser), and which stats its `+stat` affixes lean toward (cloth → INT,
+   * leather → DEX, mail/plate → STR). PLATE additionally drops only on the
+   * hardest rungs. Absent = `cloth` (the neutral, ungated baseline) — charms,
+   * bags, and fixture/legacy gear carry no material.
+   */
+  armorType?: ArmorType;
   /**
    * Armor pieces only: hits taken before the piece wears out. Worn armor
    * spends one point per landed hit; at zero the piece goes INACTIVE —
@@ -110,6 +126,7 @@ export const GEAR_DEFS: Record<string, GearDef> = {
     slot: "chest",
     bonuses: {},
     armor: 1,
+    armorType: "cloth",
     durability: 60,
     icon: "icon_tshirt",
   },
@@ -119,6 +136,7 @@ export const GEAR_DEFS: Record<string, GearDef> = {
     slot: "legs",
     bonuses: {},
     armor: 2,
+    armorType: "cloth",
     durability: 60,
     icon: "icon_jeans",
   },
@@ -128,6 +146,7 @@ export const GEAR_DEFS: Record<string, GearDef> = {
     slot: "feet",
     bonuses: {},
     armor: 2,
+    armorType: "leather",
     durability: 60,
     icon: "icon_leather_boots",
   },
@@ -154,6 +173,7 @@ export const GEAR_DEFS: Record<string, GearDef> = {
     // The company softball team's. Morale mandatory, protection minimal.
     bonuses: {},
     armor: 2,
+    armorType: "cloth",
     durability: 60,
     icon: "icon_baseball_cap",
     worn: "cap",
@@ -166,6 +186,7 @@ export const GEAR_DEFS: Record<string, GearDef> = {
     // Shipping-floor issue, box-cutter country.
     bonuses: {},
     armor: 5,
+    armorType: "leather",
     durability: 70,
     icon: "icon_hard_hat",
     worn: "cap",
@@ -179,6 +200,7 @@ export const GEAR_DEFS: Record<string, GearDef> = {
     // The fab shop's spare face. Sparks bounce; so do teeth.
     bonuses: {},
     armor: 8,
+    armorType: "mail",
     durability: 80,
     icon: "icon_welding_mask",
     worn: "mask",
@@ -191,6 +213,7 @@ export const GEAR_DEFS: Record<string, GearDef> = {
     // The armory shelf above the pump gun. HQ's hardest hat.
     bonuses: {},
     armor: 10,
+    armorType: "mail",
     durability: 90,
     icon: "icon_riot_helmet",
   },
@@ -201,6 +224,7 @@ export const GEAR_DEFS: Record<string, GearDef> = {
     // Thin cotton, deep pockets — it turns a scratch and buys a little life.
     bonuses: { maxHp: 15 },
     armor: 4,
+    armorType: "cloth",
     durability: 60,
     icon: "icon_lab_coat",
   },
@@ -212,6 +236,7 @@ export const GEAR_DEFS: Record<string, GearDef> = {
     // Maintenance issue, one size fits most.
     bonuses: {},
     armor: 8,
+    armorType: "leather",
     durability: 70,
     icon: "icon_coveralls",
   },
@@ -223,6 +248,7 @@ export const GEAR_DEFS: Record<string, GearDef> = {
     // The security desk's other drawer — the 9mm's counterpart.
     bonuses: {},
     armor: 16,
+    armorType: "leather",
     durability: 90,
     icon: "icon_kevlar_vest",
   },
@@ -233,6 +259,7 @@ export const GEAR_DEFS: Record<string, GearDef> = {
     levelReq: 1,
     bonuses: {},
     armor: 6,
+    armorType: "leather",
     durability: 70,
     icon: "icon_cargo_pants",
   },
@@ -244,6 +271,7 @@ export const GEAR_DEFS: Record<string, GearDef> = {
     // Knee pads sewn in — the warehouse knows its floors.
     bonuses: {},
     armor: 10,
+    armorType: "leather",
     durability: 80,
     icon: "icon_work_pants",
   },
@@ -253,6 +281,7 @@ export const GEAR_DEFS: Record<string, GearDef> = {
     slot: "feet",
     bonuses: {},
     armor: 3,
+    armorType: "cloth",
     durability: 60,
     icon: "icon_sneakers",
   },
@@ -264,6 +293,7 @@ export const GEAR_DEFS: Record<string, GearDef> = {
     levelReq: 3,
     bonuses: {},
     armor: 8,
+    armorType: "mail",
     durability: 80,
     icon: "icon_steel_boots",
   },
@@ -277,6 +307,7 @@ export const GEAR_DEFS: Record<string, GearDef> = {
     // Ground-crew cotton with the patch still on.
     bonuses: {},
     armor: 8,
+    armorType: "cloth",
     durability: 80,
     icon: "icon_mission_cap",
     worn: "cap",
@@ -290,6 +321,7 @@ export const GEAR_DEFS: Record<string, GearDef> = {
     // The gold-mirrored bubble. Fifty years of glare, turned.
     bonuses: {},
     armor: 16,
+    armorType: "leather",
     durability: 100,
     icon: "icon_apollo_visor",
     worn: "visor",
@@ -303,6 +335,7 @@ export const GEAR_DEFS: Record<string, GearDef> = {
     // Crew survival kit — packed beside the service revolver.
     bonuses: {},
     armor: 16,
+    armorType: "leather",
     durability: 90,
     icon: "icon_flight_jacket",
   },
@@ -314,6 +347,7 @@ export const GEAR_DEFS: Record<string, GearDef> = {
     // Layered like the landers: whipple shielding, tailored.
     bonuses: {},
     armor: 24,
+    armorType: "mail",
     durability: 110,
     icon: "icon_micro_vest",
   },
@@ -324,6 +358,7 @@ export const GEAR_DEFS: Record<string, GearDef> = {
     levelReq: 6,
     bonuses: {},
     armor: 12,
+    armorType: "cloth",
     durability: 80,
     icon: "icon_thermal_leggings",
   },
@@ -335,6 +370,7 @@ export const GEAR_DEFS: Record<string, GearDef> = {
     // The lower half of a suit that never got its top back.
     bonuses: {},
     armor: 16,
+    armorType: "leather",
     durability: 100,
     icon: "icon_pressure_trousers",
   },
@@ -346,6 +382,7 @@ export const GEAR_DEFS: Record<string, GearDef> = {
     // Galoshes rated for the Sea of Tranquility.
     bonuses: {},
     armor: 10,
+    armorType: "leather",
     durability: 80,
     icon: "icon_lunar_overshoes",
   },
@@ -357,6 +394,7 @@ export const GEAR_DEFS: Record<string, GearDef> = {
     // The classic print-leaving kind. Big soles, bigger history.
     bonuses: {},
     armor: 14,
+    armorType: "leather",
     durability: 100,
     icon: "icon_moon_boots",
   },
@@ -370,6 +408,7 @@ export const GEAR_DEFS: Record<string, GearDef> = {
     // The smart pistol's other half: it watches where the darts go.
     bonuses: {},
     armor: 16,
+    armorType: "leather",
     durability: 100,
     icon: "icon_monocle",
     worn: "visor",
@@ -381,6 +420,7 @@ export const GEAR_DEFS: Record<string, GearDef> = {
     levelReq: 12,
     bonuses: {},
     armor: 20,
+    armorType: "cloth",
     durability: 110,
     icon: "icon_neural_visor",
     worn: "visor",
@@ -393,6 +433,7 @@ export const GEAR_DEFS: Record<string, GearDef> = {
     // One seamless ceramic piece. The printer refused to explain it.
     bonuses: {},
     armor: 26,
+    armorType: "plate",
     durability: 120,
     icon: "icon_printed_helm",
   },
@@ -403,6 +444,7 @@ export const GEAR_DEFS: Record<string, GearDef> = {
     levelReq: 10,
     bonuses: {},
     armor: 22,
+    armorType: "mail",
     durability: 100,
     icon: "icon_polymer_shell",
   },
@@ -414,6 +456,7 @@ export const GEAR_DEFS: Record<string, GearDef> = {
     // Woven at a scale nobody audits.
     bonuses: {},
     armor: 28,
+    armorType: "mail",
     durability: 110,
     icon: "icon_nanoweave",
   },
@@ -425,6 +468,7 @@ export const GEAR_DEFS: Record<string, GearDef> = {
     // The colony pool's capstone: it braces before you know you're hit.
     bonuses: { maxHp: 20 },
     armor: 34,
+    armorType: "plate",
     durability: 130,
     icon: "icon_aegis_plate",
   },
@@ -435,6 +479,7 @@ export const GEAR_DEFS: Record<string, GearDef> = {
     levelReq: 11,
     bonuses: {},
     armor: 18,
+    armorType: "leather",
     durability: 100,
     icon: "icon_carbon_leggings",
   },
@@ -447,6 +492,7 @@ export const GEAR_DEFS: Record<string, GearDef> = {
     // They walk part of the walk for you.
     bonuses: {},
     armor: 24,
+    armorType: "mail",
     durability: 120,
     icon: "icon_servo_greaves",
   },
@@ -457,6 +503,7 @@ export const GEAR_DEFS: Record<string, GearDef> = {
     levelReq: 11,
     bonuses: {},
     armor: 14,
+    armorType: "leather",
     durability: 100,
     icon: "icon_gecko_soles",
   },
@@ -468,6 +515,7 @@ export const GEAR_DEFS: Record<string, GearDef> = {
     levelReq: 14,
     bonuses: {},
     armor: 20,
+    armorType: "mail",
     durability: 120,
     icon: "icon_mag_boots",
   },
@@ -483,6 +531,7 @@ export const GEAR_DEFS: Record<string, GearDef> = {
     // No horns. The horns were never real.
     bonuses: {},
     armor: 22,
+    armorType: "mail",
     durability: 110,
     icon: "icon_viking_helm",
   },
@@ -494,6 +543,7 @@ export const GEAR_DEFS: Record<string, GearDef> = {
     levelReq: 18,
     bonuses: {},
     armor: 30,
+    armorType: "mail",
     durability: 130,
     icon: "icon_knights_helm",
   },
@@ -506,6 +556,7 @@ export const GEAR_DEFS: Record<string, GearDef> = {
     // The executioner's era: a bucket that outlived every argument.
     bonuses: {},
     armor: 38,
+    armorType: "plate",
     durability: 140,
     icon: "icon_great_helm",
   },
@@ -518,6 +569,7 @@ export const GEAR_DEFS: Record<string, GearDef> = {
     // The gladius's partner, still legion-polished.
     bonuses: {},
     armor: 28,
+    armorType: "plate",
     durability: 110,
     icon: "icon_cuirass",
   },
@@ -529,6 +581,7 @@ export const GEAR_DEFS: Record<string, GearDef> = {
     levelReq: 19,
     bonuses: {},
     armor: 40,
+    armorType: "mail",
     durability: 130,
     icon: "icon_chainmail",
   },
@@ -541,6 +594,7 @@ export const GEAR_DEFS: Record<string, GearDef> = {
     // Shed, not taken — nobody skins a dragon. The rift's heaviest hide.
     bonuses: { maxHp: 35 },
     armor: 50,
+    armorType: "mail",
     durability: 150,
     icon: "icon_dragonscale_cloak",
   },
@@ -553,6 +607,7 @@ export const GEAR_DEFS: Record<string, GearDef> = {
     // Mail for the legs, ring by patient ring.
     bonuses: {},
     armor: 24,
+    armorType: "mail",
     durability: 110,
     icon: "icon_chausses",
   },
@@ -564,6 +619,7 @@ export const GEAR_DEFS: Record<string, GearDef> = {
     levelReq: 18,
     bonuses: {},
     armor: 34,
+    armorType: "plate",
     durability: 130,
     icon: "icon_plate_greaves",
   },
@@ -575,6 +631,7 @@ export const GEAR_DEFS: Record<string, GearDef> = {
     // Caligae: two thousand years broken-in.
     bonuses: {},
     armor: 18,
+    armorType: "leather",
     durability: 100,
     icon: "icon_sandals",
   },
@@ -586,6 +643,7 @@ export const GEAR_DEFS: Record<string, GearDef> = {
     levelReq: 20,
     bonuses: {},
     armor: 28,
+    armorType: "mail",
     durability: 130,
     icon: "icon_sabatons",
   },
@@ -719,6 +777,7 @@ export const GEAR_DEFS: Record<string, GearDef> = {
     // A ten-gallon hat with a one-gallon gyro: it tips itself at danger.
     bonuses: {},
     armor: 32,
+    armorType: "leather",
     durability: 130,
     icon: "icon_stetson",
     worn: "cap",
@@ -732,6 +791,7 @@ export const GEAR_DEFS: Record<string, GearDef> = {
     // The gunslinger hosts' eye-band: it shows the crowd only themselves.
     bonuses: {},
     armor: 40,
+    armorType: "leather",
     durability: 140,
     icon: "icon_mirrorshade",
     worn: "visor",
@@ -744,6 +804,7 @@ export const GEAR_DEFS: Record<string, GearDef> = {
     // A trail duster over a printed exoframe — flaps in the wind, stops a slug.
     bonuses: {},
     armor: 44,
+    armorType: "leather",
     durability: 140,
     icon: "icon_duster",
   },
@@ -756,6 +817,7 @@ export const GEAR_DEFS: Record<string, GearDef> = {
     // The sheriff hosts' chest plate, star included. The star is the armor.
     bonuses: {},
     armor: 48,
+    armorType: "plate",
     durability: 150,
     icon: "icon_tin_star",
   },
@@ -767,6 +829,7 @@ export const GEAR_DEFS: Record<string, GearDef> = {
     // Cut from the park's own robot rattlers. They still rattle. Ignore it.
     bonuses: {},
     armor: 30,
+    armorType: "leather",
     durability: 130,
     icon: "icon_chaps",
   },
@@ -779,6 +842,7 @@ export const GEAR_DEFS: Record<string, GearDef> = {
     // Riding boots with micro-thrusters in the spurs. The rowels are turbines.
     bonuses: {},
     armor: 31,
+    armorType: "leather",
     durability: 140,
     icon: "icon_spur_boots",
   },

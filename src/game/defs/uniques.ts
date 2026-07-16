@@ -238,7 +238,8 @@ const ARMSTRONG_UNIQUES: UniqueDef[] = [
     slot: "chest",
     ilvl: 22,
     bonuses: [
-      { kind: "stat", stat: "dexterity", value: 5 },
+      // MAIL leans melee (only a bruiser can heft it): STRENGTH, not DEXTERITY.
+      { kind: "stat", stat: "strength", value: 5 },
       { kind: "armor", value: 55 },
       { kind: "stat", stat: "stamina", value: 5 },
     ],
@@ -360,7 +361,9 @@ const ELON_MARS_UNIQUES: UniqueDef[] = [
     slot: "head",
     ilvl: 71,
     bonuses: [
-      { kind: "statPct", stat: "intelligence", value: 0.02 },
+      // MAIL helm — its scaling keeper leans melee STRENGTH, not the caster
+      // INTELLIGENCE it once scaled (a bruiser is the only one who can wear it).
+      { kind: "statPct", stat: "strength", value: 0.02 },
       { kind: "stat", stat: "luck", value: 8 },
       { kind: "maxHp", value: -40 },
     ],
@@ -501,7 +504,9 @@ const GROK_UNIQUES: UniqueDef[] = [
     slot: "chest",
     ilvl: 61,
     bonuses: [
-      { kind: "statPct", stat: "intelligence", value: 0.02 },
+      // MAIL chest — its scaling keeper leans melee STRENGTH, not INTELLIGENCE
+      // (the STR gate means only a bruiser wears it; a mage never could).
+      { kind: "statPct", stat: "strength", value: 0.02 },
       { kind: "crit", value: 0.08 },
       { kind: "damagePct", value: 0.15 },
     ],

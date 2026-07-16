@@ -246,7 +246,10 @@ STAMINA and the rest. Because the automatic floor is folded in, the requirement
 rises and falls with the **AUTO LEVEL STATS** developer flag by exactly the
 free points it hands out: the CHOSEN investment a weapon demands is the same
 whether WoW-style auto-attributes are on or off, so the whole arsenal stays
-calibrated without re-tuning a single item when the flag is toggled.
+calibrated without re-tuning a single item when the flag is toggled. **Heavy
+armor shares this gate**: leather, mail, and plate demand STRENGTH to wear the
+same derived way (sized by the material — see the armor MATERIALS below), so a
+caster or archer cannot heft a bruiser's plate.
 
 Every weapon deals its damage as a **range**, not a fixed number: each
 blow rolls inside a band around the catalog average (config
@@ -508,7 +511,7 @@ Alongside the weapon, the hero wears **four ARMOR slots — head, chest,
 legs, feet — plus a charm and a bag** (seven equip slots). Every armor
 piece carries flat **armor points** that sum into a physical damage
 reduction judged against the attacker's level (`armor / (armor + 40 + 12 ×
-level)`, capped at 75% — config `ARMOR`), so a set that turns a third of
+level)`, capped at 90% — config `ARMOR`), so a set that turns a third of
 every blow decays as the horde outlevels it, WoW-style; a rolled instance
 grows its base armor with its item level (`ARMOR.armorPerIlvl`), so deep
 drops genuinely out-arm early ones. Armor **wears**: each landed hit costs
@@ -530,6 +533,25 @@ floor); it drops from every level's gear pool and is the first of a family —
 roomier bags arrive later as their own defs. The character modal keeps the
 stat sheet tucked behind the portrait (hover or tap it) so the bag grid
 owns the screen.
+
+**Armor comes in four MATERIALS** (config `ARMOR_TYPES`, the D2/WoW classes),
+orthogonal to slot and grade, and each is its own lane. **CLOTH** is the
+lightest — it leans **magic** (its `+stat` rolls favor INTELLIGENCE) and any
+build wears it (no strength gate). **LEATHER** leans **ranged** (DEXTERITY) and
+asks a little STRENGTH. **MAIL** and **PLATE** lean **melee** (STRENGTH), carry
+far more armor (a mail piece protects ~1.6× and plate ~2.2× the cloth value of
+its slot), and demand a LOT of STRENGTH to heft — so only a bruiser can stand
+in the horde in heavy armor and survive it, while a caster or archer simply
+cannot wear it. **PLATE**, the heaviest, drops only on **NIGHTMARE and above**.
+The strength gate is derived from the material and the piece's `levelReq` the
+same way a weapon's attribute gate is (so it tracks the auto-stats flag), and a
+piece's material biases which stat its bonuses roll and shows on its card
+alongside the armor points and `REQUIRES N STRENGTH` line. Mail and plate can
+still roll DEXTERITY and INTELLIGENCE (a melee build leans on those for crit and
+cleave), but the hand-authored heavy (mail/plate) uniques, legendaries, and
+artifacts are geared toward melee stats, since only a bruiser can wear them.
+Materials ride the base def, so every grade variant and every unique inherits
+its base's material.
 
 What the campaign _does_ persist is the **character** and its **completion**,
 on-device (`website/src/game/characters.ts`). The app opens on the title menu;

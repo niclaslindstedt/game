@@ -97,6 +97,7 @@ export {
   tapCutscene,
   ARMOR_SLOTS,
   armorReduction,
+  armorTypeOf,
   armorValueOf,
   autoEquipBest,
   autoEquipUpgradeCount,

@@ -22,6 +22,7 @@ import {
 
 import {
   ACCURACY,
+  armorTypeOf,
   armorValueOf,
   enemyDodgeChance,
   equipmentIcon,
@@ -434,14 +435,29 @@ export function itemLines(
     // The slot itself is the glyph beside the name (ItemCardBody), like a
     // weapon's class — no headline row.
     if (reqLine) lines.push(reqLine);
+    // The STRENGTH gate right under the level gate — same read as a weapon's
+    // attribute gate: heavy armor (leather/mail/plate) demands muscle to heft,
+    // red until the hero's raw strength clears it (derived from the material
+    // and levelReq — see statRequirement). Cloth carries none.
+    const statReq = statRequirement(item.defId);
+    if (statReq) {
+      lines.push({
+        text: `REQUIRES ${statReq.amount} ${statReq.stat.toUpperCase()}`,
+        color:
+          rawStat(state, statReq.stat) >= statReq.amount
+            ? "#5fd97a"
+            : "#e06a6a",
+      });
+    }
     // An armor piece leads with its rolled armor points (the ilvl-grown stamp
     // plus any +armor affixes, already folded by armorValueOf), compared
-    // against what the same slot wears now.
+    // against what the same slot wears now. The MATERIAL rides the same row —
+    // it says at a glance what the piece is made of, and thus its stat lean.
     if (def.armor !== undefined) {
       const value = armorValueOf({ ...item, durability: undefined });
       const worn = equipped ? armorValueOf(equipped) : 0;
       lines.push({
-        text: `${value} ARMOR`,
+        text: `${value} ARMOR · ${armorTypeOf(item.defId).toUpperCase()}`,
         color: AFFIX_COLORS.armor,
         delta: equipped ? bonusDelta(value, worn) : null,
       });

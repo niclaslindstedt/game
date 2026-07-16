@@ -216,13 +216,15 @@ export const ARTIFACT_UNIQUES: UniqueDef[] = [
   {
     id: "helm_of_darkness",
     name: "HELM OF DARKNESS",
+    // MAIL helm — a bruiser's piece (STR-gated), so its raw stat is STRENGTH,
+    // not the caster INTELLIGENCE it once granted.
     base: "templars_helm",
     slot: "head",
     tier: "artifact",
     ilvl: 129,
     bonuses: [
       { kind: "proc", trigger: "struck", spell: "nova", chance: 0.2, rank: 3 },
-      { kind: "stat", stat: "intelligence", value: 18 },
+      { kind: "stat", stat: "strength", value: 18 },
       { kind: "maxHp", value: 120 },
       { kind: "stat", stat: "stamina", value: 8 },
     ],
@@ -368,7 +370,8 @@ export const ARTIFACT_UNIQUES: UniqueDef[] = [
     bonuses: [
       { kind: "statPct", stat: "speed", value: 0.02 },
       { kind: "stat", stat: "speed", value: 10 },
-      { kind: "stat", stat: "dexterity", value: 12 },
+      // MAIL boots — the raw combat stat is a bruiser's STRENGTH, not DEXTERITY.
+      { kind: "stat", stat: "strength", value: 12 },
       { kind: "stat", stat: "stamina", value: 10 },
     ],
     lore: "THE WIND SET OUT TO RACE THEM. THE WIND IS STILL RUNNING.",
@@ -383,7 +386,8 @@ export const ARTIFACT_UNIQUES: UniqueDef[] = [
     ilvl: 142,
     bonuses: [
       { kind: "stat", stat: "speed", value: 12 },
-      { kind: "stat", stat: "dexterity", value: 15 },
+      // MAIL sabatons — a bruiser's boots: STRENGTH over the ranged DEXTERITY.
+      { kind: "stat", stat: "strength", value: 15 },
       { kind: "stat", stat: "stamina", value: 12 },
       { kind: "maxHp", value: 120 },
       { kind: "armor", value: 60 },

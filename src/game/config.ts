@@ -5,7 +5,7 @@
 // defs/equipment.ts. Units: world pixels (one sprite pixel = one world unit
 // at scale 1), milliseconds, hit points.
 
-import type { Difficulty } from "./types.ts";
+import type { ArmorType, Difficulty, StatName } from "./types.ts";
 
 export const PLAYER = {
   /** Base max hp before equipment bonuses (no stat feeds hp — STAMINA now
@@ -1409,6 +1409,100 @@ export const ARMOR = {
   // 33% cut in damage taken. It never reaches 1.0.
   maxReduction: 0.9,
   armorPerIlvl: 0.06,
+} as const;
+
+/**
+ * ARMOR MATERIALS — the D2/WoW material classes (see `ArmorType`), the axis
+ * that turns the same slot into a light caster robe or a heavy bruiser plate.
+ * A base's authored `armor` is its CLOTH-equivalent value (the slot curve the
+ * item-forge prices); the material's `armorMult` scales the WORN value
+ * (`armorValueOf`), so a mail chest protects far more than the cloth one of the
+ * same slot/level. That extra plating is what lets a melee hero stand in the
+ * onslaught the design wants (`mail`/`plate`), while a caster in `cloth` stays
+ * fragile and kites.
+ *
+ * Each material also demands STRENGTH to WEAR it — `strReqFraction` is the share
+ * of the hero's trainable points it wants in STR, exactly like a weapon's
+ * `STAT_REQ.investFraction` (0.4). CLOTH asks nothing (any build wears it);
+ * LEATHER a little; MAIL and PLATE a LOT, so heavy armor is a melee-only lane —
+ * a caster or archer simply cannot heft it (see `statRequirement`). Worn `+STR`
+ * gear (which mail/plate itself rolls, via `statWeights`) counts toward the
+ * gate, so a bruiser stacking heavy armor naturally meets the next piece's req.
+ *
+ * `statWeights` biases which stat a rolled `+stat` affix picks (`rollAffix`):
+ * CLOTH leans INTELLIGENCE (a mage's robe) but can still roll DEX/STR; LEATHER
+ * leans DEXTERITY (a ranger's kit) and can roll STR; MAIL/PLATE lean STRENGTH
+ * but still roll DEX/INT (a bruiser leans on those too). The weights are
+ * relative — a bigger number just means that stat rolls more often.
+ *
+ * `minDifficulty` (PLATE only) gates the material to the hardest rungs: plate
+ * bases are filtered out of the random drop pool below it (`rollEquipment`), so
+ * the top armor tier is a NIGHTMARE-and-up chase.
+ */
+export const ARMOR_TYPES: Record<
+  ArmorType,
+  {
+    /** Worn-armor multiplier over the base's cloth-equivalent authored value. */
+    armorMult: number;
+    /** Share of trainable points demanded in STRENGTH to wear it (0 = ungated,
+     * mirrors weapon `STAT_REQ.investFraction`). */
+    strReqFraction: number;
+    /** Relative odds each stat is the one a rolled `+stat` affix grants. */
+    statWeights: Record<StatName, number>;
+    /** Lowest difficulty this material may randomly DROP on (index-compared in
+     * `rollEquipment`); omitted = drops on every rung. */
+    minDifficulty?: Difficulty;
+  }
+> = {
+  cloth: {
+    armorMult: 1,
+    strReqFraction: 0,
+    statWeights: {
+      intelligence: 6,
+      dexterity: 3,
+      strength: 2,
+      stamina: 2,
+      speed: 2,
+      luck: 1,
+    },
+  },
+  leather: {
+    armorMult: 1.15,
+    strReqFraction: 0.25,
+    statWeights: {
+      dexterity: 6,
+      strength: 3,
+      intelligence: 2,
+      stamina: 2,
+      speed: 2,
+      luck: 1,
+    },
+  },
+  mail: {
+    armorMult: 1.6,
+    strReqFraction: 0.6,
+    statWeights: {
+      strength: 6,
+      dexterity: 2,
+      intelligence: 2,
+      stamina: 3,
+      speed: 1,
+      luck: 1,
+    },
+  },
+  plate: {
+    armorMult: 2.2,
+    strReqFraction: 0.85,
+    statWeights: {
+      strength: 7,
+      dexterity: 2,
+      intelligence: 2,
+      stamina: 3,
+      speed: 1,
+      luck: 0,
+    },
+    minDifficulty: "nightmare",
+  },
 } as const;
 
 /**
