@@ -354,10 +354,10 @@ vote). Phase 3 removes the blank-canvas step, not the judgement.
       traces a reference into a self-describing YAML — per-cell mode resample
       (`image.mjs`), deterministic median-cut quantize in OKLab with stable
       lightness→hue key assignment (`quantize.mjs`, `oklab.mjs`), the reference
-      committed alongside as `<name>.ref.png`. `sprite-author.mjs compare
-      <name> <image>` is the numeric gate (SSIM + mean OKLab ΔE + coverage,
-      `compare.mjs`) — a triage signal for the refine loop, not an acceptance
-      test.
+      committed alongside as `<name>.ref.png`. The numeric gate is
+      `sprite-author.mjs compare <name> <image>` (SSIM + mean OKLab ΔE +
+      coverage, `compare.mjs`) — a triage signal for the refine loop, not an
+      acceptance test.
 - [x] **Phase 3 — close the loop.** `sprite-author.mjs prompt <name>`
       (`asset-tools/prompt.mjs`) synthesizes the image prompt from the tier-1
       fields — global style preamble + per-family style anchor (a `style:` line
