@@ -13,6 +13,8 @@ export default [
       "website/dist/**",
       "website/src/generated/**",
       "website/src/game/assets/**",
+      // Generated engine level catalog (source: website/scripts/levels/*.yaml).
+      "src/generated/**",
       // The native app (app/) is a self-contained Expo/React Native project
       // with its own toolchain (tsc, expo-doctor) and is not part of the npm
       // workspace; it is linted/typechecked on its own, not by the root config.

@@ -10,7 +10,9 @@
     "build": "npm run assets && npm run extract && vite build && node scripts/generate-seo.mjs",
     "check:seo": "node scripts/check-seo.mjs",
     "icons": "pwa-assets-generator && node scripts/generate-og.mjs",
-    "assets": "node scripts/generate-assets.mjs",
+    "assets": "node scripts/generate-assets.mjs && node scripts/generate-levels.mjs",
+    "levels": "node scripts/generate-levels.mjs",
+    "map": "node scripts/map-preview.mjs",
     "preview": "vite preview",
     "typecheck": "npm run assets && tsc --noEmit -p tsconfig.json"
   },

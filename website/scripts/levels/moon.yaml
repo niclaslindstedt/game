@@ -1,0 +1,329 @@
+description: |-
+  LEVEL 2 - THE MOON. Ada's beacon dies near the old flag: ghosts thicken with
+  distance from the landing site, and ARMSTRONG haunts the far side. Low gravity
+  (floaty hops), open regolith with craters to jump and slabs to break line of
+  sight.
+campaign: true
+id: moon
+index: 2
+name: THE MOON
+prelude:
+  - launch
+  - voyage_moon
+music: regolith_ride
+intro:
+  - - ADA'S TRACKER WENT QUIET
+    - SOMEWHERE NEAR THE OLD APOLLO
+    - FLAG. THAT'S WHERE I'M HEADED.
+  - - AND SOMETHING IS MOVING OUT
+    - THERE IN THE DUST. THIS PLACE
+    - IS SUPPOSED TO BE EMPTY.
+  - - I KNOW THIS LANDING SITE FROM THE
+    - OLD MISSION CHARTS. EVERY CRATER.
+    - THE FASTEST LINE RUNS TO THAT FLAG.
+  - - KEEP MOVING. I'M COMING, ADA.
+width: 2400
+height: 1600
+gravity: 340
+biome: moon
+tiles:
+  ground:
+    common: moon_0
+    rare: moon_1
+    rareEvery: 23
+  patch:
+    a: gravel_0
+    b: gravel_1
+    every: 7
+foes: GHOSTS
+merchant:
+  sprite: merchant_moon
+  greeting:
+    - - YOU'RE SOLID. THAT'S NEW.
+      - I CAME UP WITH THE '76 SALVAGE
+      - RUN. MISSED THE RIDE HOME.
+    - - THE GHOSTS DON'T CARRY COIN,
+      - SO YOU'RE MY WHOLE MARKET NOW.
+      - SELL ME SCRAP. BUY WHAT WORKS.
+  returnGreeting:
+    - STILL BREATHING, I SEE.
+    - GOOD - MY ONLY CUSTOMER.
+playerSpawn:
+  x: 340
+  y: 1320
+landmarks:
+  - kind: lander
+    pos:
+      x: 280
+      y: 1320
+  - kind: flag
+    pos:
+      x: 2130
+      y: 260
+    anchor: base
+objective:
+  type: killBoss
+rareSpawns:
+  rare:
+    - moonstruck_mourner
+    - lost_cosmonaut
+  unique:
+    - the_thirteenth_man
+spawns:
+  - enemy: wisp
+    count: 8
+    band:
+      - 0.05
+      - 0.45
+  - enemy: ghost
+    count: 6
+    band:
+      - 0.4
+      - 0.8
+  - enemy: wraith
+    count: 4
+    band:
+      - 0.75
+      - 1.05
+  - enemy: optimusk
+    count: 6
+    band:
+      - 0.3
+      - 0.95
+  - enemy: apollo_ghost
+    at:
+      x: 700
+      y: 1100
+  - enemy: prospector
+    at:
+      x: 1150
+      y: 850
+  - enemy: quarantine_medic
+    at:
+      x: 1600
+      y: 550
+  - enemy: cartographer
+    at:
+      x: 1880
+      y: 520
+  - enemy: armstrong
+    at:
+      x: 2130
+      y: 260
+packs:
+  - at:
+      x: 900
+      y: 1080
+    members:
+      - enemy: wisp
+        count: 6
+  - at:
+      x: 1350
+      y: 760
+    members:
+      - enemy: ghost
+        count: 5
+      - enemy: wisp
+        count: 3
+  - at:
+      x: 1780
+      y: 460
+    members:
+      - enemy: wraith
+        count: 3
+      - enemy: ghost
+        count: 4
+waves:
+  rampDurationMs: 300000
+  maxAlive: 220
+  minAlive: 20
+  moveSpawnEvery: 64
+  budget:
+    - enemy: wisp
+      count: 500
+      window:
+        - 0
+        - 0.55
+    - enemy: ghost
+      count: 400
+      window:
+        - 0.3
+        - 0.85
+    - enemy: wraith
+      count: 300
+      window:
+        - 0.55
+        - 1
+    - enemy: optimusk
+      count: 30
+      window:
+        - 0.45
+        - 1
+walls:
+  - kind: boulder
+    from:
+      x: 280
+      y: 480
+    to:
+      x: 520
+      y: 400
+    radius: 13
+    jumpable: false
+  - kind: boulder
+    from:
+      x: 620
+      y: 700
+    to:
+      x: 920
+      y: 640
+    radius: 13
+    jumpable: false
+  - kind: boulder
+    from:
+      x: 1250
+      y: 1250
+    to:
+      x: 1550
+      y: 1340
+    radius: 13
+    jumpable: false
+  - kind: boulder
+    from:
+      x: 1180
+      y: 300
+    to:
+      x: 1440
+      y: 230
+    radius: 13
+    jumpable: false
+  - kind: boulder
+    from:
+      x: 1780
+      y: 820
+    to:
+      x: 2060
+      y: 920
+    radius: 13
+    jumpable: false
+placedItems:
+  - kind: story
+    defId: ada_sneaker
+    pos:
+      x: 2010
+      y: 360
+obstacles:
+  - kind: moonrock
+    count: 30
+    radius: 8
+    jumpable: false
+    rockSizes:
+      - - 1
+        - 1
+      - - 1
+        - 1
+      - - 1
+        - 2
+      - - 2
+        - 2
+    cell: 16
+  - kind: crater
+    sprite: crater_small
+    count: 14
+    radius: 7
+    jumpable: true
+  - kind: crater
+    sprite: crater_big
+    count: 8
+    radius: 12
+    jumpable: true
+decor:
+  - kind: rocks
+    count: 20
+decorClearance: 80
+firstSightThoughts:
+  - enemy: wisp
+    thought: moon_wisp_sight
+firstKillThoughts:
+  - enemy: wisp
+    thought: moon_wisp_kill
+    after: moon_wisp_sight
+  - enemy: optimusk
+    thought: moon_optimusk
+loot:
+  weaponPool:
+    - lunar_wrench
+    - service_revolver
+    - geology_hammer
+    - surplus_carbine
+    - retro_raygun
+    - pulsar_rod
+    - box_cutter
+    - security_baton
+    - nine_mm
+    - prototype_laser
+    - microwave_emitter
+    - pump_shotgun
+  gearPool:
+    - mission_cap
+    - apollo_visor
+    - flight_jacket
+    - micrometeoroid_vest
+    - thermal_leggings
+    - pressure_trousers
+    - lunar_overshoes
+    - moon_boots
+    - moon_charm
+    - bag
+    - baseball_cap
+    - hard_hat
+    - welding_mask
+    - riot_helmet
+    - lab_coat
+    - coveralls
+    - kevlar_vest
+    - cargo_pants
+    - padded_work_pants
+    - sneakers
+    - steel_toe_boots
+  abilityPool:
+    - fire_orbs
+    - storm_cell
+    - stasis_field
+    - item_magnet
+  worldUniques:
+    easy:
+      - the_pale_covenant
+      - deadstar
+      - marecrest
+      - huntsmans_cowl
+    medium:
+      - the_pale_covenant
+      - deadstar
+      - marecrest
+      - huntsmans_cowl
+    hard:
+      - the_pale_covenant
+      - deadstar
+      - marecrest
+      - huntsmans_cowl
+    nightmare:
+      - omensight
+      - veilwalkers
+    jesus:
+      - worldsplitter
+      - titanstride
+      - the_immovable
+      - earthfast
+      - the_worldshell
+      - the_long_march
+  arrowCapByDifficulty:
+    easy: 17
+    medium: 19
+    hard: 20
+    nightmare: 41
+    jesus: 61
+  earlyDrops:
+    - atKills:
+        - 40
+        - 100
+      weapon: moons_blade

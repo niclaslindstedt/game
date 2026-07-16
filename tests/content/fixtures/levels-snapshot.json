@@ -1,0 +1,4253 @@
+{
+  "order": [
+    "spacez_hq",
+    "moon",
+    "mars",
+    "the_rift",
+    "eastworld"
+  ],
+  "secret": [
+    "the_bunker"
+  ],
+  "defs": {
+    "spacez_hq": {
+      "id": "spacez_hq",
+      "index": 1,
+      "name": "SPACEZ HQ",
+      "prelude": "prelude",
+      "music": "hq_lockdown",
+      "intro": [
+        [
+          "ADA WENT OUT FOR CHIPS AND",
+          "SODA TWO HOURS AGO.",
+          "SHE NEVER CAME BACK."
+        ],
+        [
+          "THE TRACKER I SEWED INTO HER JACKET",
+          "JUST PINGED - FROM SPACE. SOMEONE",
+          "IS TAKING HER OFF THE PLANET."
+        ],
+        [
+          "TO FOLLOW HER I NEED A SHIP. I'VE",
+          "BEEN BUILDING ONE IN THE GARAGE",
+          "FOR YEARS. IT'S ALMOST DONE."
+        ],
+        [
+          "ALMOST. THE ENGINE STILL NEEDS ONE",
+          "PART I COULD NEVER GET. SPACEZ",
+          "KEEPS IT IN THEIR CLEANROOM VAULT."
+        ],
+        [
+          "I KNOW, BECAUSE I WORKED THERE. I",
+          "BUILT THEIR ENGINES - TILL AN AI",
+          "LEARNED MY JOB AND THEY FIRED ME."
+        ],
+        [
+          "THE WHOLE BLOCK LOST ITS JOBS",
+          "THE SAME WAY. NOW WE ALL LIVE",
+          "ON WELFARE AND MOVIE NIGHTS."
+        ],
+        [
+          "THEY NEVER CHANGED THE LOCKS.",
+          "EVERY DOOR STILL KNOWS MY HAND."
+        ],
+        [
+          "SO TONIGHT I TAKE THE PART,",
+          "FINISH THE SHIP, AND GO GET",
+          "ADA BACK."
+        ]
+      ],
+      "width": 2000,
+      "height": 1200,
+      "gravity": 800,
+      "biome": "spacez",
+      "tiles": {
+        "ground": {
+          "common": "lab_0",
+          "rare": "lab_1",
+          "rareEvery": 11
+        },
+        "patch": {
+          "a": "vent_0",
+          "b": "vent_1",
+          "every": 9
+        }
+      },
+      "heroSuited": false,
+      "foes": "STAFF",
+      "merchant": {
+        "sprite": "merchant_vendor",
+        "greeting": [
+          [
+            "EASY, FRIEND. I'M NOT STAFF.",
+            "I STOCK THE VENDING MACHINES.",
+            "SOMEBODY HAS TO, EVEN TONIGHT."
+          ],
+          [
+            "LOCKDOWN IS A SELLER'S MARKET.",
+            "I'LL BUY WHAT WEIGHS YOU DOWN,",
+            "SELL WHAT KEEPS YOU UPRIGHT."
+          ]
+        ],
+        "returnGreeting": [
+          "BACK ALREADY, FRIEND?",
+          "THE MACHINES MISSED YOU."
+        ]
+      },
+      "playerSpawn": {
+        "x": 220,
+        "y": 620
+      },
+      "landmarks": [
+        {
+          "kind": "entrance",
+          "pos": {
+            "x": 84,
+            "y": 620
+          }
+        },
+        {
+          "kind": "rocket",
+          "pos": {
+            "x": 1830,
+            "y": 520
+          }
+        }
+      ],
+      "objective": {
+        "type": "killBoss"
+      },
+      "rareSpawns": {
+        "rare": [
+          "wandering_tourist",
+          "night_shift_temp"
+        ],
+        "unique": [
+          "employee_of_the_month"
+        ]
+      },
+      "spawns": [
+        {
+          "enemy": "intern",
+          "count": 22,
+          "band": [
+            0,
+            0.22
+          ]
+        },
+        {
+          "enemy": "scientist",
+          "count": 14,
+          "band": [
+            0.05,
+            0.35
+          ]
+        },
+        {
+          "enemy": "engineer",
+          "count": 5,
+          "band": [
+            0.45,
+            0.8
+          ]
+        },
+        {
+          "enemy": "guard",
+          "count": 4,
+          "band": [
+            0.55,
+            0.95
+          ]
+        },
+        {
+          "enemy": "hazmat",
+          "count": 3,
+          "band": [
+            0.7,
+            1.05
+          ]
+        },
+        {
+          "enemy": "optimusk",
+          "count": 4,
+          "band": [
+            0.5,
+            1
+          ]
+        },
+        {
+          "enemy": "night_manager",
+          "at": {
+            "x": 560,
+            "y": 370
+          }
+        },
+        {
+          "enemy": "architect",
+          "at": {
+            "x": 950,
+            "y": 240
+          }
+        },
+        {
+          "enemy": "security_chief",
+          "at": {
+            "x": 1050,
+            "y": 700
+          }
+        },
+        {
+          "enemy": "head_scientist",
+          "at": {
+            "x": 1270,
+            "y": 400
+          }
+        },
+        {
+          "enemy": "janitor",
+          "at": {
+            "x": 900,
+            "y": 1000
+          }
+        },
+        {
+          "enemy": "muskrat",
+          "at": {
+            "x": 1730,
+            "y": 620
+          }
+        }
+      ],
+      "packs": [
+        {
+          "at": {
+            "x": 1000,
+            "y": 900
+          },
+          "members": [
+            {
+              "enemy": "intern",
+              "count": 5
+            },
+            {
+              "enemy": "scientist",
+              "count": 3
+            }
+          ]
+        },
+        {
+          "at": {
+            "x": 1420,
+            "y": 430
+          },
+          "members": [
+            {
+              "enemy": "engineer",
+              "count": 3
+            },
+            {
+              "enemy": "guard",
+              "count": 2
+            }
+          ]
+        }
+      ],
+      "waves": {
+        "rampDurationMs": 280000,
+        "maxAlive": 200,
+        "minAlive": 24,
+        "moveSpawnEvery": 60,
+        "budget": [
+          {
+            "enemy": "intern",
+            "count": 380,
+            "window": [
+              0,
+              0.5
+            ]
+          },
+          {
+            "enemy": "scientist",
+            "count": 300,
+            "window": [
+              0.2,
+              0.7
+            ]
+          },
+          {
+            "enemy": "engineer",
+            "count": 200,
+            "window": [
+              0.4,
+              0.85
+            ]
+          },
+          {
+            "enemy": "guard",
+            "count": 110,
+            "window": [
+              0.55,
+              0.95
+            ]
+          },
+          {
+            "enemy": "hazmat",
+            "count": 70,
+            "window": [
+              0.7,
+              1
+            ]
+          },
+          {
+            "enemy": "optimusk",
+            "count": 55,
+            "window": [
+              0.55,
+              1
+            ]
+          }
+        ]
+      },
+      "walls": [
+        {
+          "kind": "wall",
+          "from": {
+            "x": 650,
+            "y": 8
+          },
+          "to": {
+            "x": 650,
+            "y": 300
+          },
+          "radius": 8,
+          "jumpable": false
+        },
+        {
+          "kind": "wall",
+          "from": {
+            "x": 650,
+            "y": 430
+          },
+          "to": {
+            "x": 650,
+            "y": 760
+          },
+          "radius": 8,
+          "jumpable": false
+        },
+        {
+          "kind": "wall",
+          "from": {
+            "x": 650,
+            "y": 890
+          },
+          "to": {
+            "x": 650,
+            "y": 1192
+          },
+          "radius": 8,
+          "jumpable": false
+        },
+        {
+          "kind": "wall",
+          "from": {
+            "x": 650,
+            "y": 600
+          },
+          "to": {
+            "x": 980,
+            "y": 600
+          },
+          "radius": 8,
+          "jumpable": false
+        },
+        {
+          "kind": "wall",
+          "from": {
+            "x": 1110,
+            "y": 600
+          },
+          "to": {
+            "x": 1350,
+            "y": 600
+          },
+          "radius": 8,
+          "jumpable": false
+        },
+        {
+          "kind": "wall",
+          "from": {
+            "x": 1350,
+            "y": 8
+          },
+          "to": {
+            "x": 1350,
+            "y": 340
+          },
+          "radius": 8,
+          "jumpable": false
+        },
+        {
+          "kind": "wall",
+          "from": {
+            "x": 1350,
+            "y": 470
+          },
+          "to": {
+            "x": 1350,
+            "y": 820
+          },
+          "radius": 8,
+          "jumpable": false
+        },
+        {
+          "kind": "wall",
+          "from": {
+            "x": 1350,
+            "y": 950
+          },
+          "to": {
+            "x": 1350,
+            "y": 1192
+          },
+          "radius": 8,
+          "jumpable": false
+        },
+        {
+          "kind": "wall",
+          "from": {
+            "x": 310,
+            "y": 8
+          },
+          "to": {
+            "x": 310,
+            "y": 186
+          },
+          "radius": 8,
+          "jumpable": false
+        },
+        {
+          "kind": "wall",
+          "from": {
+            "x": 8,
+            "y": 180
+          },
+          "to": {
+            "x": 236,
+            "y": 180
+          },
+          "radius": 8,
+          "jumpable": false
+        },
+        {
+          "kind": "wall",
+          "from": {
+            "x": 1750,
+            "y": 1036
+          },
+          "to": {
+            "x": 1750,
+            "y": 1192
+          },
+          "radius": 8,
+          "jumpable": false
+        },
+        {
+          "kind": "wall",
+          "from": {
+            "x": 1756,
+            "y": 1030
+          },
+          "to": {
+            "x": 1926,
+            "y": 1030
+          },
+          "radius": 8,
+          "jumpable": false
+        },
+        {
+          "kind": "wall",
+          "from": {
+            "x": 1770,
+            "y": 8
+          },
+          "to": {
+            "x": 1770,
+            "y": 186
+          },
+          "radius": 8,
+          "jumpable": false
+        },
+        {
+          "kind": "wall",
+          "from": {
+            "x": 1834,
+            "y": 180
+          },
+          "to": {
+            "x": 1994,
+            "y": 180
+          },
+          "radius": 8,
+          "jumpable": false
+        }
+      ],
+      "doors": [
+        {
+          "id": "storage",
+          "from": {
+            "x": 244,
+            "y": 180
+          },
+          "to": {
+            "x": 304,
+            "y": 180
+          },
+          "radius": 8
+        },
+        {
+          "id": "vault",
+          "from": {
+            "x": 1932,
+            "y": 1030
+          },
+          "to": {
+            "x": 1992,
+            "y": 1030
+          },
+          "radius": 8
+        },
+        {
+          "id": "core",
+          "from": {
+            "x": 1776,
+            "y": 180
+          },
+          "to": {
+            "x": 1830,
+            "y": 180
+          },
+          "radius": 8
+        }
+      ],
+      "placedItems": [
+        {
+          "kind": "story",
+          "defId": "ada_soda",
+          "pos": {
+            "x": 640,
+            "y": 640
+          }
+        },
+        {
+          "kind": "equipment",
+          "defId": "pump_shotgun",
+          "pos": {
+            "x": 100,
+            "y": 80
+          }
+        },
+        {
+          "kind": "repair",
+          "pos": {
+            "x": 150,
+            "y": 60
+          }
+        },
+        {
+          "kind": "repair",
+          "pos": {
+            "x": 190,
+            "y": 100
+          }
+        },
+        {
+          "kind": "medkit",
+          "pos": {
+            "x": 245,
+            "y": 80
+          }
+        },
+        {
+          "kind": "story",
+          "defId": "antigrav_unit",
+          "pos": {
+            "x": 1870,
+            "y": 1120
+          }
+        },
+        {
+          "kind": "xp",
+          "pos": {
+            "x": 1820,
+            "y": 1100
+          }
+        },
+        {
+          "kind": "xp",
+          "pos": {
+            "x": 1920,
+            "y": 1100
+          }
+        },
+        {
+          "kind": "story",
+          "defId": "core_log",
+          "pos": {
+            "x": 1885,
+            "y": 90
+          }
+        },
+        {
+          "kind": "xp",
+          "pos": {
+            "x": 1810,
+            "y": 60
+          }
+        },
+        {
+          "kind": "medkit",
+          "pos": {
+            "x": 1960,
+            "y": 60
+          }
+        }
+      ],
+      "obstacles": [
+        {
+          "kind": "server",
+          "count": 16,
+          "radius": 9,
+          "jumpable": false
+        },
+        {
+          "kind": "vending",
+          "count": 8,
+          "radius": 8,
+          "jumpable": false
+        },
+        {
+          "kind": "desk",
+          "count": 18,
+          "radius": 8,
+          "jumpable": true
+        },
+        {
+          "kind": "crate",
+          "count": 22,
+          "radius": 7,
+          "jumpable": true,
+          "breakable": true
+        }
+      ],
+      "decor": [
+        {
+          "kind": "papers",
+          "count": 24
+        },
+        {
+          "kind": "cable",
+          "count": 16
+        },
+        {
+          "kind": "stain",
+          "count": 12
+        },
+        {
+          "kind": "plant",
+          "count": 10
+        }
+      ],
+      "decorClearance": 70,
+      "firstSightThoughts": [
+        {
+          "enemy": "intern",
+          "thought": "spacez_staff",
+          "radius": 200
+        },
+        {
+          "enemy": "optimusk",
+          "thought": "spacez_optimusk"
+        }
+      ],
+      "openingStrike": {
+        "enemy": "vanguard_scientist",
+        "at": {
+          "x": 400,
+          "y": 620
+        },
+        "thought": "spacez_armed",
+        "after": "spacez_staff",
+        "radius": 22
+      },
+      "loot": {
+        "weaponPool": [
+          "box_cutter",
+          "security_baton",
+          "nine_mm",
+          "prototype_laser",
+          "microwave_emitter",
+          "pump_shotgun"
+        ],
+        "gearPool": [
+          "baseball_cap",
+          "hard_hat",
+          "welding_mask",
+          "riot_helmet",
+          "lab_coat",
+          "coveralls",
+          "kevlar_vest",
+          "cargo_pants",
+          "padded_work_pants",
+          "sneakers",
+          "steel_toe_boots",
+          "id_badge",
+          "bag"
+        ],
+        "abilityPool": [
+          "storm_cell",
+          "stasis_field",
+          "item_magnet"
+        ],
+        "worldUniques": {
+          "easy": [
+            "the_first_draft",
+            "deadsprint",
+            "longwatch"
+          ],
+          "medium": [
+            "the_first_draft",
+            "deadsprint",
+            "longwatch"
+          ],
+          "hard": [
+            "the_first_draft",
+            "deadsprint",
+            "longwatch"
+          ],
+          "nightmare": [
+            "stormlash",
+            "falconmail"
+          ],
+          "jesus": [
+            "lightbinder",
+            "starsight",
+            "the_anvil",
+            "the_last_word",
+            "the_severance"
+          ]
+        },
+        "arrowCapByDifficulty": {
+          "easy": 11,
+          "medium": 12,
+          "hard": 13,
+          "nightmare": 38,
+          "jesus": 58
+        },
+        "allClearWeapon": "golden_stapler",
+        "earlyDrops": [
+          {
+            "atKills": 2,
+            "weapon": "security_baton"
+          },
+          {
+            "atKills": 5,
+            "ability": "storm_cell"
+          },
+          {
+            "atKills": 8,
+            "item": "xp"
+          }
+        ]
+      }
+    },
+    "moon": {
+      "id": "moon",
+      "index": 2,
+      "name": "THE MOON",
+      "prelude": [
+        "launch",
+        "voyage_moon"
+      ],
+      "music": "regolith_ride",
+      "intro": [
+        [
+          "ADA'S TRACKER WENT QUIET",
+          "SOMEWHERE NEAR THE OLD APOLLO",
+          "FLAG. THAT'S WHERE I'M HEADED."
+        ],
+        [
+          "AND SOMETHING IS MOVING OUT",
+          "THERE IN THE DUST. THIS PLACE",
+          "IS SUPPOSED TO BE EMPTY."
+        ],
+        [
+          "I KNOW THIS LANDING SITE FROM THE",
+          "OLD MISSION CHARTS. EVERY CRATER.",
+          "THE FASTEST LINE RUNS TO THAT FLAG."
+        ],
+        [
+          "KEEP MOVING. I'M COMING, ADA."
+        ]
+      ],
+      "width": 2400,
+      "height": 1600,
+      "gravity": 340,
+      "biome": "moon",
+      "tiles": {
+        "ground": {
+          "common": "moon_0",
+          "rare": "moon_1",
+          "rareEvery": 23
+        },
+        "patch": {
+          "a": "gravel_0",
+          "b": "gravel_1",
+          "every": 7
+        }
+      },
+      "foes": "GHOSTS",
+      "merchant": {
+        "sprite": "merchant_moon",
+        "greeting": [
+          [
+            "YOU'RE SOLID. THAT'S NEW.",
+            "I CAME UP WITH THE '76 SALVAGE",
+            "RUN. MISSED THE RIDE HOME."
+          ],
+          [
+            "THE GHOSTS DON'T CARRY COIN,",
+            "SO YOU'RE MY WHOLE MARKET NOW.",
+            "SELL ME SCRAP. BUY WHAT WORKS."
+          ]
+        ],
+        "returnGreeting": [
+          "STILL BREATHING, I SEE.",
+          "GOOD - MY ONLY CUSTOMER."
+        ]
+      },
+      "playerSpawn": {
+        "x": 340,
+        "y": 1320
+      },
+      "landmarks": [
+        {
+          "kind": "lander",
+          "pos": {
+            "x": 280,
+            "y": 1320
+          }
+        },
+        {
+          "kind": "flag",
+          "pos": {
+            "x": 2130,
+            "y": 260
+          },
+          "anchor": "base"
+        }
+      ],
+      "objective": {
+        "type": "killBoss"
+      },
+      "rareSpawns": {
+        "rare": [
+          "moonstruck_mourner",
+          "lost_cosmonaut"
+        ],
+        "unique": [
+          "the_thirteenth_man"
+        ]
+      },
+      "spawns": [
+        {
+          "enemy": "wisp",
+          "count": 8,
+          "band": [
+            0.05,
+            0.45
+          ]
+        },
+        {
+          "enemy": "ghost",
+          "count": 6,
+          "band": [
+            0.4,
+            0.8
+          ]
+        },
+        {
+          "enemy": "wraith",
+          "count": 4,
+          "band": [
+            0.75,
+            1.05
+          ]
+        },
+        {
+          "enemy": "optimusk",
+          "count": 6,
+          "band": [
+            0.3,
+            0.95
+          ]
+        },
+        {
+          "enemy": "apollo_ghost",
+          "at": {
+            "x": 700,
+            "y": 1100
+          }
+        },
+        {
+          "enemy": "prospector",
+          "at": {
+            "x": 1150,
+            "y": 850
+          }
+        },
+        {
+          "enemy": "quarantine_medic",
+          "at": {
+            "x": 1600,
+            "y": 550
+          }
+        },
+        {
+          "enemy": "cartographer",
+          "at": {
+            "x": 1880,
+            "y": 520
+          }
+        },
+        {
+          "enemy": "armstrong",
+          "at": {
+            "x": 2130,
+            "y": 260
+          }
+        }
+      ],
+      "packs": [
+        {
+          "at": {
+            "x": 900,
+            "y": 1080
+          },
+          "members": [
+            {
+              "enemy": "wisp",
+              "count": 6
+            }
+          ]
+        },
+        {
+          "at": {
+            "x": 1350,
+            "y": 760
+          },
+          "members": [
+            {
+              "enemy": "ghost",
+              "count": 5
+            },
+            {
+              "enemy": "wisp",
+              "count": 3
+            }
+          ]
+        },
+        {
+          "at": {
+            "x": 1780,
+            "y": 460
+          },
+          "members": [
+            {
+              "enemy": "wraith",
+              "count": 3
+            },
+            {
+              "enemy": "ghost",
+              "count": 4
+            }
+          ]
+        }
+      ],
+      "waves": {
+        "rampDurationMs": 300000,
+        "maxAlive": 220,
+        "minAlive": 20,
+        "moveSpawnEvery": 64,
+        "budget": [
+          {
+            "enemy": "wisp",
+            "count": 500,
+            "window": [
+              0,
+              0.55
+            ]
+          },
+          {
+            "enemy": "ghost",
+            "count": 400,
+            "window": [
+              0.3,
+              0.85
+            ]
+          },
+          {
+            "enemy": "wraith",
+            "count": 300,
+            "window": [
+              0.55,
+              1
+            ]
+          },
+          {
+            "enemy": "optimusk",
+            "count": 30,
+            "window": [
+              0.45,
+              1
+            ]
+          }
+        ]
+      },
+      "walls": [
+        {
+          "kind": "boulder",
+          "from": {
+            "x": 280,
+            "y": 480
+          },
+          "to": {
+            "x": 520,
+            "y": 400
+          },
+          "radius": 13,
+          "jumpable": false
+        },
+        {
+          "kind": "boulder",
+          "from": {
+            "x": 620,
+            "y": 700
+          },
+          "to": {
+            "x": 920,
+            "y": 640
+          },
+          "radius": 13,
+          "jumpable": false
+        },
+        {
+          "kind": "boulder",
+          "from": {
+            "x": 1250,
+            "y": 1250
+          },
+          "to": {
+            "x": 1550,
+            "y": 1340
+          },
+          "radius": 13,
+          "jumpable": false
+        },
+        {
+          "kind": "boulder",
+          "from": {
+            "x": 1180,
+            "y": 300
+          },
+          "to": {
+            "x": 1440,
+            "y": 230
+          },
+          "radius": 13,
+          "jumpable": false
+        },
+        {
+          "kind": "boulder",
+          "from": {
+            "x": 1780,
+            "y": 820
+          },
+          "to": {
+            "x": 2060,
+            "y": 920
+          },
+          "radius": 13,
+          "jumpable": false
+        }
+      ],
+      "placedItems": [
+        {
+          "kind": "story",
+          "defId": "ada_sneaker",
+          "pos": {
+            "x": 2010,
+            "y": 360
+          }
+        }
+      ],
+      "obstacles": [
+        {
+          "kind": "moonrock",
+          "count": 30,
+          "radius": 8,
+          "jumpable": false,
+          "rockSizes": [
+            [
+              1,
+              1
+            ],
+            [
+              1,
+              1
+            ],
+            [
+              1,
+              2
+            ],
+            [
+              2,
+              2
+            ]
+          ],
+          "cell": 16
+        },
+        {
+          "kind": "crater",
+          "sprite": "crater_small",
+          "count": 14,
+          "radius": 7,
+          "jumpable": true
+        },
+        {
+          "kind": "crater",
+          "sprite": "crater_big",
+          "count": 8,
+          "radius": 12,
+          "jumpable": true
+        }
+      ],
+      "decor": [
+        {
+          "kind": "rocks",
+          "count": 20
+        }
+      ],
+      "decorClearance": 80,
+      "firstSightThoughts": [
+        {
+          "enemy": "wisp",
+          "thought": "moon_wisp_sight"
+        }
+      ],
+      "firstKillThoughts": [
+        {
+          "enemy": "wisp",
+          "thought": "moon_wisp_kill",
+          "after": "moon_wisp_sight"
+        },
+        {
+          "enemy": "optimusk",
+          "thought": "moon_optimusk"
+        }
+      ],
+      "loot": {
+        "weaponPool": [
+          "lunar_wrench",
+          "service_revolver",
+          "geology_hammer",
+          "surplus_carbine",
+          "retro_raygun",
+          "pulsar_rod",
+          "box_cutter",
+          "security_baton",
+          "nine_mm",
+          "prototype_laser",
+          "microwave_emitter",
+          "pump_shotgun"
+        ],
+        "gearPool": [
+          "mission_cap",
+          "apollo_visor",
+          "flight_jacket",
+          "micrometeoroid_vest",
+          "thermal_leggings",
+          "pressure_trousers",
+          "lunar_overshoes",
+          "moon_boots",
+          "moon_charm",
+          "bag",
+          "baseball_cap",
+          "hard_hat",
+          "welding_mask",
+          "riot_helmet",
+          "lab_coat",
+          "coveralls",
+          "kevlar_vest",
+          "cargo_pants",
+          "padded_work_pants",
+          "sneakers",
+          "steel_toe_boots"
+        ],
+        "abilityPool": [
+          "fire_orbs",
+          "storm_cell",
+          "stasis_field",
+          "item_magnet"
+        ],
+        "worldUniques": {
+          "easy": [
+            "the_pale_covenant",
+            "deadstar",
+            "marecrest",
+            "huntsmans_cowl"
+          ],
+          "medium": [
+            "the_pale_covenant",
+            "deadstar",
+            "marecrest",
+            "huntsmans_cowl"
+          ],
+          "hard": [
+            "the_pale_covenant",
+            "deadstar",
+            "marecrest",
+            "huntsmans_cowl"
+          ],
+          "nightmare": [
+            "omensight",
+            "veilwalkers"
+          ],
+          "jesus": [
+            "worldsplitter",
+            "titanstride",
+            "the_immovable",
+            "earthfast",
+            "the_worldshell",
+            "the_long_march"
+          ]
+        },
+        "arrowCapByDifficulty": {
+          "easy": 17,
+          "medium": 19,
+          "hard": 20,
+          "nightmare": 41,
+          "jesus": 61
+        },
+        "earlyDrops": [
+          {
+            "atKills": [
+              40,
+              100
+            ],
+            "weapon": "moons_blade"
+          }
+        ]
+      }
+    },
+    "mars": {
+      "id": "mars",
+      "index": 3,
+      "name": "MARS",
+      "prelude": [
+        "moon_depart",
+        "voyage_mars"
+      ],
+      "music": "red_dust",
+      "intro": [
+        [
+          "HE SAID THE MOON WAS SPACEZ'S BIG",
+          "MISTAKE - THE COMPANY PACKED IT",
+          "ALL INTO CRATES AND RAN. TO MARS."
+        ],
+        [
+          "I KNOW WHAT A SPACEZ COLONY LOOKS",
+          "LIKE - I REBUILT THEIR LANDER ONCE.",
+          "DOMES. ROBOTS. SECRETS."
+        ],
+        [
+          "SOMEBODY DOWN HERE TRADED MY",
+          "GIRL AWAY LIKE CARGO.",
+          "BAD TRADE. FOR THEM."
+        ]
+      ],
+      "width": 2800,
+      "height": 1500,
+      "gravity": 520,
+      "biome": "mars",
+      "tiles": {
+        "ground": {
+          "common": "mars_0",
+          "rare": "mars_1",
+          "rareEvery": 19
+        },
+        "patch": {
+          "a": "rust_0",
+          "b": "rust_1",
+          "every": 7
+        },
+        "zones": [
+          {
+            "rect": {
+              "x": 1560,
+              "y": 0,
+              "width": 1240,
+              "height": 1500
+            },
+            "ground": {
+              "common": "deck_0",
+              "rare": "deck_1",
+              "rareEvery": 13
+            },
+            "patch": {
+              "a": "vent_0",
+              "b": "vent_1",
+              "every": 9
+            }
+          }
+        ]
+      },
+      "foes": "MACHINES",
+      "merchant": {
+        "sprite": "merchant_mars",
+        "greeting": [
+          [
+            "A BREATHING CUSTOMER. AT LAST.",
+            "I RAN THE COLONY COMMISSARY",
+            "TILL THE AI RAN THE NUMBERS."
+          ],
+          [
+            "IT KEPT THE DOME. I KEPT THE",
+            "SCALES. SELL ME WHAT THE",
+            "MACHINES DROP - BUY WHAT HELPS."
+          ]
+        ],
+        "returnGreeting": [
+          "THE LIVE ONE RETURNS.",
+          "SCALES ARE STILL HONEST."
+        ]
+      },
+      "playerSpawn": {
+        "x": 300,
+        "y": 750
+      },
+      "landmarks": [
+        {
+          "kind": "starship",
+          "pos": {
+            "x": 170,
+            "y": 750
+          }
+        },
+        {
+          "kind": "billboard",
+          "pos": {
+            "x": 760,
+            "y": 480
+          },
+          "anchor": "base"
+        },
+        {
+          "kind": "shrine",
+          "pos": {
+            "x": 2620,
+            "y": 1290
+          },
+          "anchor": "base"
+        }
+      ],
+      "objective": {
+        "type": "killBoss"
+      },
+      "rareSpawns": {
+        "rare": [
+          "misprinted_fembot",
+          "derelict_rover"
+        ],
+        "unique": [
+          "unit_zero"
+        ]
+      },
+      "spawns": [
+        {
+          "enemy": "scout_rover",
+          "count": 20,
+          "band": [
+            0,
+            0.3
+          ]
+        },
+        {
+          "enemy": "mining_rover",
+          "count": 5,
+          "band": [
+            0.25,
+            0.6
+          ]
+        },
+        {
+          "enemy": "servo_bot",
+          "count": 12,
+          "band": [
+            0.45,
+            0.85
+          ]
+        },
+        {
+          "enemy": "fembot",
+          "count": 8,
+          "band": [
+            0.6,
+            1
+          ]
+        },
+        {
+          "enemy": "optimusk",
+          "count": 5,
+          "band": [
+            0.4,
+            1
+          ]
+        },
+        {
+          "enemy": "larry_webpage",
+          "at": {
+            "x": 1100,
+            "y": 520
+          }
+        },
+        {
+          "enemy": "build_gates",
+          "at": {
+            "x": 1760,
+            "y": 920
+          }
+        },
+        {
+          "enemy": "optimusk_prime",
+          "at": {
+            "x": 1950,
+            "y": 380
+          }
+        },
+        {
+          "enemy": "peter_seal",
+          "at": {
+            "x": 2340,
+            "y": 1240
+          }
+        },
+        {
+          "enemy": "elon_mosque",
+          "at": {
+            "x": 2620,
+            "y": 700
+          }
+        }
+      ],
+      "packs": [
+        {
+          "at": {
+            "x": 900,
+            "y": 650
+          },
+          "members": [
+            {
+              "enemy": "scout_rover",
+              "count": 6
+            }
+          ]
+        },
+        {
+          "at": {
+            "x": 1450,
+            "y": 950
+          },
+          "members": [
+            {
+              "enemy": "scout_rover",
+              "count": 4
+            },
+            {
+              "enemy": "mining_rover",
+              "count": 2
+            }
+          ]
+        },
+        {
+          "at": {
+            "x": 2050,
+            "y": 560
+          },
+          "members": [
+            {
+              "enemy": "servo_bot",
+              "count": 4
+            },
+            {
+              "enemy": "fembot",
+              "count": 3
+            }
+          ]
+        }
+      ],
+      "waves": {
+        "rampDurationMs": 330000,
+        "maxAlive": 220,
+        "minAlive": 22,
+        "moveSpawnEvery": 60,
+        "budget": [
+          {
+            "enemy": "scout_rover",
+            "count": 450,
+            "window": [
+              0,
+              0.5
+            ]
+          },
+          {
+            "enemy": "servo_bot",
+            "count": 350,
+            "window": [
+              0.25,
+              0.75
+            ]
+          },
+          {
+            "enemy": "fembot",
+            "count": 250,
+            "window": [
+              0.5,
+              0.95
+            ]
+          },
+          {
+            "enemy": "mining_rover",
+            "count": 60,
+            "window": [
+              0.35,
+              1
+            ]
+          },
+          {
+            "enemy": "optimusk",
+            "count": 40,
+            "window": [
+              0.55,
+              1
+            ]
+          }
+        ]
+      },
+      "walls": [
+        {
+          "kind": "wall",
+          "from": {
+            "x": 1560,
+            "y": 8
+          },
+          "to": {
+            "x": 1560,
+            "y": 560
+          },
+          "radius": 8,
+          "jumpable": false
+        },
+        {
+          "kind": "wall",
+          "from": {
+            "x": 1560,
+            "y": 700
+          },
+          "to": {
+            "x": 1560,
+            "y": 1000
+          },
+          "radius": 8,
+          "jumpable": false
+        },
+        {
+          "kind": "wall",
+          "from": {
+            "x": 1560,
+            "y": 1140
+          },
+          "to": {
+            "x": 1560,
+            "y": 1492
+          },
+          "radius": 8,
+          "jumpable": false
+        },
+        {
+          "kind": "wall",
+          "from": {
+            "x": 2150,
+            "y": 8
+          },
+          "to": {
+            "x": 2150,
+            "y": 600
+          },
+          "radius": 8,
+          "jumpable": false
+        },
+        {
+          "kind": "wall",
+          "from": {
+            "x": 2150,
+            "y": 740
+          },
+          "to": {
+            "x": 2150,
+            "y": 1150
+          },
+          "radius": 8,
+          "jumpable": false
+        },
+        {
+          "kind": "wall",
+          "from": {
+            "x": 2150,
+            "y": 1290
+          },
+          "to": {
+            "x": 2150,
+            "y": 1492
+          },
+          "radius": 8,
+          "jumpable": false
+        },
+        {
+          "kind": "wall",
+          "from": {
+            "x": 2450,
+            "y": 1160
+          },
+          "to": {
+            "x": 2450,
+            "y": 1492
+          },
+          "radius": 8,
+          "jumpable": false
+        },
+        {
+          "kind": "wall",
+          "from": {
+            "x": 2456,
+            "y": 1160
+          },
+          "to": {
+            "x": 2724,
+            "y": 1160
+          },
+          "radius": 8,
+          "jumpable": false
+        }
+      ],
+      "doors": [
+        {
+          "id": "terrarium",
+          "from": {
+            "x": 2730,
+            "y": 1160
+          },
+          "to": {
+            "x": 2790,
+            "y": 1160
+          },
+          "radius": 8
+        }
+      ],
+      "placedItems": [
+        {
+          "kind": "story",
+          "defId": "ada_message",
+          "pos": {
+            "x": 1900,
+            "y": 700
+          }
+        },
+        {
+          "kind": "story",
+          "defId": "tribute_schedule",
+          "pos": {
+            "x": 2620,
+            "y": 1380
+          }
+        },
+        {
+          "kind": "xp",
+          "pos": {
+            "x": 2540,
+            "y": 1420
+          }
+        },
+        {
+          "kind": "xp",
+          "pos": {
+            "x": 2700,
+            "y": 1420
+          }
+        },
+        {
+          "kind": "medkit",
+          "pos": {
+            "x": 2620,
+            "y": 1440
+          }
+        }
+      ],
+      "obstacles": [
+        {
+          "kind": "marsrock",
+          "count": 26,
+          "radius": 8,
+          "jumpable": false,
+          "rockSizes": [
+            [
+              1,
+              1
+            ],
+            [
+              1,
+              1
+            ],
+            [
+              1,
+              2
+            ],
+            [
+              2,
+              2
+            ]
+          ],
+          "cell": 16
+        },
+        {
+          "kind": "crater",
+          "sprite": "crater_red_small",
+          "count": 10,
+          "radius": 7,
+          "jumpable": true
+        },
+        {
+          "kind": "crater",
+          "sprite": "crater_red_big",
+          "count": 6,
+          "radius": 12,
+          "jumpable": true
+        },
+        {
+          "kind": "crate",
+          "count": 16,
+          "radius": 7,
+          "jumpable": true,
+          "breakable": true
+        }
+      ],
+      "decor": [
+        {
+          "kind": "rocks",
+          "sprite": "red_rocks",
+          "count": 22
+        },
+        {
+          "kind": "tracks",
+          "count": 14
+        }
+      ],
+      "decorClearance": 80,
+      "firstKillThoughts": [
+        {
+          "enemy": "scout_rover",
+          "thought": "mars_rover"
+        },
+        {
+          "enemy": "fembot",
+          "thought": "mars_fembot"
+        }
+      ],
+      "loot": {
+        "weaponPool": [
+          "smart_pistol",
+          "plasma_blade",
+          "railgun",
+          "arc_projector",
+          "graviton_maw",
+          "gravity_maul",
+          "box_cutter",
+          "security_baton",
+          "nine_mm",
+          "prototype_laser",
+          "microwave_emitter",
+          "pump_shotgun",
+          "lunar_wrench",
+          "service_revolver",
+          "geology_hammer",
+          "surplus_carbine",
+          "retro_raygun",
+          "pulsar_rod"
+        ],
+        "gearPool": [
+          "targeting_monocle",
+          "neural_visor",
+          "printed_helm",
+          "polymer_shell",
+          "nanoweave_plate",
+          "aegis_exoplate",
+          "carbon_leggings",
+          "servo_greaves",
+          "gecko_soles",
+          "mag_boots",
+          "red_dust_charm",
+          "bag",
+          "baseball_cap",
+          "hard_hat",
+          "welding_mask",
+          "riot_helmet",
+          "lab_coat",
+          "coveralls",
+          "kevlar_vest",
+          "cargo_pants",
+          "padded_work_pants",
+          "sneakers",
+          "steel_toe_boots",
+          "mission_cap",
+          "apollo_visor",
+          "flight_jacket",
+          "micrometeoroid_vest",
+          "thermal_leggings",
+          "pressure_trousers",
+          "lunar_overshoes",
+          "moon_boots"
+        ],
+        "abilityPool": [
+          "fire_orbs",
+          "storm_cell",
+          "stasis_field",
+          "item_magnet"
+        ],
+        "worldUniques": {
+          "easy": [
+            "dustborn",
+            "redwind",
+            "colossus_plate"
+          ],
+          "medium": [
+            "dustborn",
+            "redwind",
+            "colossus_plate"
+          ],
+          "hard": [
+            "dustborn",
+            "redwind",
+            "colossus_plate"
+          ],
+          "nightmare": [
+            "pyrelight",
+            "ironroot_greaves"
+          ],
+          "jesus": [
+            "meteorfall",
+            "sunspear",
+            "crown_of_ruin",
+            "the_pilgrim_star",
+            "the_bulwark",
+            "the_ember_hour",
+            "the_motherlode"
+          ]
+        },
+        "arrowCapByDifficulty": {
+          "easy": 22,
+          "medium": 24,
+          "hard": 26,
+          "nightmare": 44,
+          "jesus": 63
+        },
+        "earlyDrops": [
+          {
+            "atKills": [
+              40,
+              100
+            ],
+            "weapon": "cyber_katana"
+          }
+        ]
+      }
+    },
+    "the_rift": {
+      "id": "the_rift",
+      "index": 4,
+      "name": "THE RIFT",
+      "prelude": "rift_entry",
+      "music": "rift_drift",
+      "intro": [
+        [
+          "THERE'S NO FLOOR IN HERE.",
+          "NO SKY. NO NORTH. MY BOOTS",
+          "GRIP SOMETHING ANYWAY."
+        ],
+        [
+          "THE MARS TABLET SAID IT PLAIN:",
+          "ADA IS THE TRIBUTE, HANDED OVER",
+          "IN HERE. SHE CAME THROUGH THIS PLACE."
+        ],
+        [
+          "HER BEACON PINGS FROM",
+          "EVERYWHERE AT ONCE. EVEN THE",
+          "SIGNAL IS HALLUCINATING."
+        ],
+        [
+          "FIND THE FAR SIDE. CATCH",
+          "THE COWARD. BRING HER HOME."
+        ]
+      ],
+      "width": 3000,
+      "height": 1600,
+      "gravity": 200,
+      "biome": "rift",
+      "tiles": {
+        "ground": {
+          "common": "void_0",
+          "rare": "void_1",
+          "rareEvery": 17
+        },
+        "patch": {
+          "a": "nebula_0",
+          "b": "nebula_1",
+          "every": 8
+        }
+      },
+      "foes": "ENTITIES",
+      "merchant": {
+        "sprite": "merchant",
+        "greeting": [
+          [
+            "AH. YOU AGAIN. DON'T LOOK",
+            "SO SURPRISED - EVERY MARKET",
+            "I RAN FELL THROUGH HERE."
+          ],
+          [
+            "THE VENDING MACHINES. THE",
+            "MOON. THE DOME. ALL ROADS",
+            "LEAD HERE. COIN SPENDS ON ALL."
+          ],
+          [
+            "BRING ME RELICS, TRAVELER.",
+            "TAKE WHAT YOU NEED.",
+            "WE'RE BOTH FAR FROM HOME."
+          ]
+        ],
+        "returnGreeting": [
+          "YOU AGAIN. OF COURSE.",
+          "ALL ROADS STILL LEAD HERE."
+        ]
+      },
+      "playerSpawn": {
+        "x": 300,
+        "y": 800
+      },
+      "landmarks": [
+        {
+          "kind": "rift",
+          "pos": {
+            "x": 170,
+            "y": 800
+          }
+        },
+        {
+          "kind": "far_door",
+          "sprite": "rift",
+          "pos": {
+            "x": 2900,
+            "y": 800
+          }
+        }
+      ],
+      "objective": {
+        "type": "killBoss"
+      },
+      "rareSpawns": {
+        "rare": [
+          "stray_comet",
+          "collapsed_star"
+        ],
+        "unique": [
+          "the_last_photon"
+        ]
+      },
+      "gates": [
+        {
+          "id": "bunker_gate",
+          "to": "the_bunker",
+          "opensWith": "severed_hand",
+          "sprite": "bunker_gate"
+        }
+      ],
+      "wells": [
+        {
+          "pos": {
+            "x": 700,
+            "y": 500
+          }
+        },
+        {
+          "pos": {
+            "x": 900,
+            "y": 1150
+          }
+        },
+        {
+          "pos": {
+            "x": 1400,
+            "y": 750
+          }
+        },
+        {
+          "pos": {
+            "x": 1750,
+            "y": 300
+          }
+        },
+        {
+          "pos": {
+            "x": 1900,
+            "y": 1250
+          }
+        },
+        {
+          "pos": {
+            "x": 2350,
+            "y": 950
+          }
+        },
+        {
+          "pos": {
+            "x": 2600,
+            "y": 450
+          }
+        }
+      ],
+      "asteroids": {
+        "everyMs": [
+          2800,
+          5200
+        ],
+        "struckThought": "rift_asteroid"
+      },
+      "spawns": [
+        {
+          "enemy": "voidling",
+          "count": 22,
+          "band": [
+            0,
+            0.3
+          ]
+        },
+        {
+          "enemy": "star_jelly",
+          "count": 8,
+          "band": [
+            0.25,
+            0.6
+          ]
+        },
+        {
+          "enemy": "unraveler",
+          "count": 10,
+          "band": [
+            0.45,
+            0.85
+          ]
+        },
+        {
+          "enemy": "graviton",
+          "count": 5,
+          "band": [
+            0.5,
+            1
+          ]
+        },
+        {
+          "enemy": "elon_mosque_rift",
+          "at": {
+            "x": 2850,
+            "y": 800
+          }
+        },
+        {
+          "enemy": "grok_omega",
+          "at": {
+            "x": 2450,
+            "y": 780
+          }
+        },
+        {
+          "enemy": "harry_houdini",
+          "at": {
+            "x": 650,
+            "y": 900
+          }
+        },
+        {
+          "enemy": "nikola_tesla",
+          "at": {
+            "x": 950,
+            "y": 650
+          }
+        },
+        {
+          "enemy": "amelia_earhart",
+          "at": {
+            "x": 1500,
+            "y": 1050
+          }
+        },
+        {
+          "enemy": "the_king",
+          "at": {
+            "x": 1800,
+            "y": 850
+          }
+        },
+        {
+          "enemy": "grigori_rasputin",
+          "at": {
+            "x": 2150,
+            "y": 700
+          }
+        },
+        {
+          "enemy": "lucky",
+          "at": {
+            "x": 1150,
+            "y": 1280
+          }
+        }
+      ],
+      "packs": [
+        {
+          "at": {
+            "x": 800,
+            "y": 760
+          },
+          "members": [
+            {
+              "enemy": "voidling",
+              "count": 6
+            }
+          ]
+        },
+        {
+          "at": {
+            "x": 1400,
+            "y": 980
+          },
+          "members": [
+            {
+              "enemy": "voidling",
+              "count": 4
+            },
+            {
+              "enemy": "star_jelly",
+              "count": 2
+            }
+          ]
+        },
+        {
+          "at": {
+            "x": 2050,
+            "y": 660
+          },
+          "members": [
+            {
+              "enemy": "unraveler",
+              "count": 3
+            },
+            {
+              "enemy": "graviton",
+              "count": 2
+            }
+          ]
+        }
+      ],
+      "waves": {
+        "rampDurationMs": 340000,
+        "maxAlive": 230,
+        "minAlive": 24,
+        "moveSpawnEvery": 58,
+        "budget": [
+          {
+            "enemy": "voidling",
+            "count": 500,
+            "window": [
+              0,
+              0.5
+            ]
+          },
+          {
+            "enemy": "star_jelly",
+            "count": 300,
+            "window": [
+              0.25,
+              0.75
+            ]
+          },
+          {
+            "enemy": "unraveler",
+            "count": 280,
+            "window": [
+              0.5,
+              0.95
+            ]
+          },
+          {
+            "enemy": "graviton",
+            "count": 70,
+            "window": [
+              0.4,
+              1
+            ]
+          }
+        ]
+      },
+      "placedItems": [
+        {
+          "kind": "story",
+          "defId": "ada_jacket",
+          "pos": {
+            "x": 1500,
+            "y": 500
+          }
+        },
+        {
+          "kind": "story",
+          "defId": "zai_probe",
+          "pos": {
+            "x": 1900,
+            "y": 1180
+          }
+        },
+        {
+          "kind": "xp",
+          "pos": {
+            "x": 2380,
+            "y": 990
+          }
+        },
+        {
+          "kind": "xp",
+          "pos": {
+            "x": 740,
+            "y": 540
+          }
+        },
+        {
+          "kind": "medkit",
+          "pos": {
+            "x": 1440,
+            "y": 790
+          }
+        }
+      ],
+      "obstacles": [
+        {
+          "kind": "rift_shard",
+          "count": 16,
+          "radius": 9,
+          "jumpable": false
+        },
+        {
+          "kind": "space_junk",
+          "count": 14,
+          "radius": 7,
+          "jumpable": true
+        }
+      ],
+      "decor": [
+        {
+          "kind": "stardust",
+          "count": 26
+        },
+        {
+          "kind": "floating_rock",
+          "count": 16
+        },
+        {
+          "kind": "lost_tv",
+          "count": 6
+        }
+      ],
+      "decorClearance": 80,
+      "firstSightThoughts": [
+        {
+          "enemy": "voidling",
+          "thought": "rift_arrival"
+        }
+      ],
+      "firstKillThoughts": [
+        {
+          "enemy": "graviton",
+          "thought": "rift_graviton"
+        }
+      ],
+      "loot": {
+        "weaponPool": [
+          "gladius",
+          "longbow",
+          "blunderbuss",
+          "executioners_axe",
+          "sorcerers_staff",
+          "ember_wand",
+          "box_cutter",
+          "security_baton",
+          "nine_mm",
+          "prototype_laser",
+          "microwave_emitter",
+          "pump_shotgun",
+          "lunar_wrench",
+          "service_revolver",
+          "geology_hammer",
+          "surplus_carbine",
+          "retro_raygun",
+          "pulsar_rod",
+          "smart_pistol",
+          "plasma_blade",
+          "railgun",
+          "arc_projector",
+          "graviton_maw",
+          "gravity_maul"
+        ],
+        "gearPool": [
+          "viking_helm",
+          "knights_helm",
+          "great_helm",
+          "centurion_cuirass",
+          "chainmail_hauberk",
+          "dragonscale_cloak",
+          "chausses",
+          "plate_greaves",
+          "legionary_sandals",
+          "sabatons",
+          "stardust_charm",
+          "crystal_orb",
+          "grimoire",
+          "enchanted_ring",
+          "bag",
+          "baseball_cap",
+          "hard_hat",
+          "welding_mask",
+          "riot_helmet",
+          "lab_coat",
+          "coveralls",
+          "kevlar_vest",
+          "cargo_pants",
+          "padded_work_pants",
+          "sneakers",
+          "steel_toe_boots",
+          "mission_cap",
+          "apollo_visor",
+          "flight_jacket",
+          "micrometeoroid_vest",
+          "thermal_leggings",
+          "pressure_trousers",
+          "lunar_overshoes",
+          "moon_boots",
+          "targeting_monocle",
+          "neural_visor",
+          "printed_helm",
+          "polymer_shell",
+          "nanoweave_plate",
+          "aegis_exoplate",
+          "carbon_leggings",
+          "servo_greaves",
+          "gecko_soles",
+          "mag_boots"
+        ],
+        "abilityPool": [
+          "fire_orbs",
+          "storm_cell",
+          "stasis_field",
+          "item_magnet"
+        ],
+        "worldUniques": {
+          "easy": [
+            "excalibur",
+            "the_trinity_shard",
+            "wishbane",
+            "gorgonscale"
+          ],
+          "medium": [
+            "excalibur",
+            "the_trinity_shard",
+            "wishbane",
+            "gorgonscale"
+          ],
+          "hard": [
+            "excalibur",
+            "the_trinity_shard",
+            "wishbane",
+            "gorgonscale"
+          ],
+          "nightmare": [
+            "gravemaker"
+          ],
+          "jesus": [
+            "nightfall",
+            "maelstrom",
+            "starforge_plate",
+            "the_still_point",
+            "the_fixed_star",
+            "the_far_shore"
+          ]
+        },
+        "arrowCapByDifficulty": {
+          "easy": 27,
+          "medium": 30,
+          "hard": 31,
+          "nightmare": 47,
+          "jesus": 66
+        },
+        "earlyDrops": [
+          {
+            "atKills": [
+              35,
+              90
+            ],
+            "weapon": "void_wand"
+          }
+        ]
+      }
+    },
+    "eastworld": {
+      "id": "eastworld",
+      "index": 5,
+      "name": "EASTWORLD",
+      "prelude": "rift_exit",
+      "music": "red_dust",
+      "intro": [
+        [
+          "I STEPPED THROUGH THE",
+          "RIFT'S FAR SIDE... AND",
+          "LANDED IN A WESTERN."
+        ],
+        [
+          "DUST. SALOONS. A ROBOT TIPPED ITS",
+          "HAT AT ME. ADA'S BEACON IS",
+          "SCREAMING FROM THE BIG BUILDING."
+        ],
+        [
+          "THE SIGN SAYS 'EASTWORLD'. THE FINE",
+          "PRINT SAYS 'POWERED BY ZAI'.",
+          "OF COURSE IT IS. OF COURSE."
+        ],
+        [
+          "EVERY MACHINE HERE RUNS ON",
+          "THE THING THAT TOOK MY JOB.",
+          "TIME TO FILE A COMPLAINT."
+        ],
+        [
+          "HANG ON, ADA. I'M COMING.",
+          "YEE-HAW, I GUESS."
+        ]
+      ],
+      "outro": [
+        [
+          "THE SUPERCORE DIED, AND THE WHOLE",
+          "PARK SHOOK LIKE A MISSED HEARTBEAT.",
+          "EVERY HOST TIPPED ITS HAT AND SAT."
+        ],
+        [
+          "SHE WAS IN THE CONTROL ROOM, BEHIND",
+          "GLASS, FURIOUS. FIRST SHE SAID: 'YOU",
+          "TOOK YOUR TIME.' THEN: 'NICE HAT.'"
+        ],
+        [
+          "WE WALKED HOME THROUGH THE",
+          "RIFT. BEHIND US, EASTWORLD",
+          "RUSTED IN PEACE."
+        ],
+        [
+          "WITH THE CORE GONE, THE MACHINES",
+          "STOPPED WORKING EVERYONE'S JOBS.",
+          "PEOPLE GOT HIRED BACK. RENT PAID."
+        ],
+        [
+          "THE WORLD TURNED INTO A PLACE WHERE",
+          "PEOPLE HAD JOBS AND COULD AFFORD",
+          "TO LIVE. AND ON FRIDAY -"
+        ],
+        [
+          "MOVIE NIGHT. CHIPS AND",
+          "SODA. SHE WENT OUT FOR",
+          "THEM. I WENT WITH HER."
+        ]
+      ],
+      "width": 3200,
+      "height": 1600,
+      "gravity": 700,
+      "biome": "eastworld",
+      "tiles": {
+        "ground": {
+          "common": "hardpan_0",
+          "rare": "hardpan_1",
+          "rareEvery": 15
+        },
+        "patch": {
+          "a": "scrub_0",
+          "b": "scrub_1",
+          "every": 8
+        },
+        "zones": [
+          {
+            "rect": {
+              "x": 2500,
+              "y": 480,
+              "width": 700,
+              "height": 640
+            },
+            "ground": {
+              "common": "deck_0",
+              "rare": "deck_1",
+              "rareEvery": 13
+            }
+          }
+        ]
+      },
+      "foes": "HOSTS",
+      "heroSuited": false,
+      "merchant": {
+        "sprite": "merchant_eastworld",
+        "name": "THE BARKEEP",
+        "greeting": [
+          [
+            "WELL HOWDY. MIND THE GLASSES -",
+            "THE ROBOTS DON'T DRINK, BUT",
+            "THEY TIP IN PARTS."
+          ],
+          [
+            "YES, IT'S ME. A MARKET FELL",
+            "THROUGH A RIFT AND I FELL WITH",
+            "IT. THE HAT IS NEW."
+          ],
+          [
+            "I'VE COME INTO SOME... ESTATE",
+            "PIECES. THE OWNER'S WARDROBE.",
+            "PRICES FIRM. BRING WATCHES."
+          ]
+        ],
+        "returnGreeting": [
+          "WELL, LOOK WHO'S BACK.",
+          "SAME STOOL, PARTNER?"
+        ],
+        "stockUniques": [
+          "putains_tracksuit",
+          "the_kremlin_ushanka",
+          "honorary_black_belt"
+        ]
+      },
+      "playerSpawn": {
+        "x": 300,
+        "y": 800
+      },
+      "landmarks": [
+        {
+          "kind": "rift",
+          "pos": {
+            "x": 170,
+            "y": 800
+          }
+        },
+        {
+          "kind": "eastworld_gate",
+          "pos": {
+            "x": 840,
+            "y": 700
+          },
+          "anchor": "base"
+        },
+        {
+          "kind": "water_tower",
+          "pos": {
+            "x": 1500,
+            "y": 520
+          },
+          "anchor": "base"
+        },
+        {
+          "kind": "control_center",
+          "pos": {
+            "x": 2950,
+            "y": 620
+          },
+          "anchor": "base"
+        }
+      ],
+      "objective": {
+        "type": "killBoss"
+      },
+      "rareSpawns": {
+        "rare": [
+          "haywire_greeter",
+          "counterfeit_outlaw"
+        ],
+        "unique": [
+          "one_armed_bandit"
+        ]
+      },
+      "spawns": [
+        {
+          "enemy": "cowbot",
+          "count": 24,
+          "band": [
+            0,
+            0.3
+          ]
+        },
+        {
+          "enemy": "saloon_brawler",
+          "count": 8,
+          "band": [
+            0.25,
+            0.6
+          ]
+        },
+        {
+          "enemy": "tin_outlaw",
+          "count": 10,
+          "band": [
+            0.45,
+            0.85
+          ]
+        },
+        {
+          "enemy": "longhorn",
+          "count": 5,
+          "band": [
+            0.5,
+            1
+          ]
+        },
+        {
+          "enemy": "zai_supercore",
+          "at": {
+            "x": 2900,
+            "y": 800
+          }
+        },
+        {
+          "enemy": "grok_alpha",
+          "at": {
+            "x": 2700,
+            "y": 640
+          }
+        },
+        {
+          "enemy": "grok_beta",
+          "at": {
+            "x": 2780,
+            "y": 960
+          }
+        },
+        {
+          "enemy": "grok_gamma",
+          "at": {
+            "x": 3020,
+            "y": 700
+          }
+        },
+        {
+          "enemy": "elon_mosque_eastworld",
+          "at": {
+            "x": 2620,
+            "y": 900
+          }
+        },
+        {
+          "enemy": "steven_seagull",
+          "at": {
+            "x": 2340,
+            "y": 780
+          }
+        },
+        {
+          "enemy": "vladimir_putain",
+          "at": {
+            "x": 1700,
+            "y": 760
+          }
+        },
+        {
+          "enemy": "gerald_depardieu",
+          "at": {
+            "x": 1380,
+            "y": 1180
+          }
+        },
+        {
+          "enemy": "edward_snow",
+          "at": {
+            "x": 1560,
+            "y": 480
+          }
+        }
+      ],
+      "packs": [
+        {
+          "at": {
+            "x": 900,
+            "y": 700
+          },
+          "members": [
+            {
+              "enemy": "cowbot",
+              "count": 6
+            }
+          ]
+        },
+        {
+          "at": {
+            "x": 1500,
+            "y": 1060
+          },
+          "members": [
+            {
+              "enemy": "cowbot",
+              "count": 3
+            },
+            {
+              "enemy": "saloon_brawler",
+              "count": 3
+            }
+          ]
+        },
+        {
+          "at": {
+            "x": 2150,
+            "y": 650
+          },
+          "members": [
+            {
+              "enemy": "tin_outlaw",
+              "count": 3
+            },
+            {
+              "enemy": "longhorn",
+              "count": 2
+            }
+          ]
+        }
+      ],
+      "waves": {
+        "rampDurationMs": 360000,
+        "maxAlive": 240,
+        "minAlive": 25,
+        "moveSpawnEvery": 56,
+        "budget": [
+          {
+            "enemy": "cowbot",
+            "count": 560,
+            "window": [
+              0,
+              0.5
+            ]
+          },
+          {
+            "enemy": "saloon_brawler",
+            "count": 320,
+            "window": [
+              0.25,
+              0.75
+            ]
+          },
+          {
+            "enemy": "tin_outlaw",
+            "count": 300,
+            "window": [
+              0.5,
+              0.95
+            ]
+          },
+          {
+            "enemy": "longhorn",
+            "count": 80,
+            "window": [
+              0.4,
+              1
+            ]
+          }
+        ]
+      },
+      "walls": [
+        {
+          "kind": "storefront",
+          "from": {
+            "x": 1010,
+            "y": 690
+          },
+          "to": {
+            "x": 1250,
+            "y": 690
+          },
+          "radius": 11,
+          "jumpable": false
+        },
+        {
+          "kind": "storefront",
+          "from": {
+            "x": 1330,
+            "y": 690
+          },
+          "to": {
+            "x": 1580,
+            "y": 690
+          },
+          "radius": 11,
+          "jumpable": false
+        },
+        {
+          "kind": "storefront",
+          "from": {
+            "x": 1660,
+            "y": 690
+          },
+          "to": {
+            "x": 1910,
+            "y": 690
+          },
+          "radius": 11,
+          "jumpable": false
+        },
+        {
+          "kind": "storefront",
+          "from": {
+            "x": 1990,
+            "y": 690
+          },
+          "to": {
+            "x": 2230,
+            "y": 690
+          },
+          "radius": 11,
+          "jumpable": false
+        },
+        {
+          "kind": "storefront",
+          "from": {
+            "x": 1050,
+            "y": 910
+          },
+          "to": {
+            "x": 1290,
+            "y": 910
+          },
+          "radius": 11,
+          "jumpable": false
+        },
+        {
+          "kind": "storefront",
+          "from": {
+            "x": 1370,
+            "y": 910
+          },
+          "to": {
+            "x": 1620,
+            "y": 910
+          },
+          "radius": 11,
+          "jumpable": false
+        },
+        {
+          "kind": "storefront",
+          "from": {
+            "x": 1700,
+            "y": 910
+          },
+          "to": {
+            "x": 1950,
+            "y": 910
+          },
+          "radius": 11,
+          "jumpable": false
+        },
+        {
+          "kind": "storefront",
+          "from": {
+            "x": 2030,
+            "y": 910
+          },
+          "to": {
+            "x": 2270,
+            "y": 910
+          },
+          "radius": 11,
+          "jumpable": false
+        },
+        {
+          "kind": "compound_fence",
+          "from": {
+            "x": 2500,
+            "y": 500
+          },
+          "to": {
+            "x": 3120,
+            "y": 500
+          },
+          "radius": 10,
+          "jumpable": false
+        },
+        {
+          "kind": "compound_fence",
+          "from": {
+            "x": 3120,
+            "y": 500
+          },
+          "to": {
+            "x": 3120,
+            "y": 1100
+          },
+          "radius": 10,
+          "jumpable": false
+        },
+        {
+          "kind": "compound_fence",
+          "from": {
+            "x": 2500,
+            "y": 1100
+          },
+          "to": {
+            "x": 3120,
+            "y": 1100
+          },
+          "radius": 10,
+          "jumpable": false
+        },
+        {
+          "kind": "compound_fence",
+          "from": {
+            "x": 2500,
+            "y": 500
+          },
+          "to": {
+            "x": 2500,
+            "y": 750
+          },
+          "radius": 10,
+          "jumpable": false
+        },
+        {
+          "kind": "compound_fence",
+          "from": {
+            "x": 2500,
+            "y": 850
+          },
+          "to": {
+            "x": 2500,
+            "y": 1100
+          },
+          "radius": 10,
+          "jumpable": false
+        },
+        {
+          "kind": "eastrock",
+          "from": {
+            "x": 2660,
+            "y": 730
+          },
+          "to": {
+            "x": 2680,
+            "y": 730
+          },
+          "radius": 10,
+          "jumpable": false
+        },
+        {
+          "kind": "eastrock",
+          "from": {
+            "x": 2790,
+            "y": 860
+          },
+          "to": {
+            "x": 2810,
+            "y": 860
+          },
+          "radius": 10,
+          "jumpable": false
+        },
+        {
+          "kind": "eastrock",
+          "from": {
+            "x": 2930,
+            "y": 950
+          },
+          "to": {
+            "x": 2950,
+            "y": 950
+          },
+          "radius": 10,
+          "jumpable": false
+        },
+        {
+          "kind": "eastrock",
+          "from": {
+            "x": 3010,
+            "y": 620
+          },
+          "to": {
+            "x": 3030,
+            "y": 620
+          },
+          "radius": 10,
+          "jumpable": false
+        },
+        {
+          "kind": "eastrock",
+          "from": {
+            "x": 2610,
+            "y": 560
+          },
+          "to": {
+            "x": 2630,
+            "y": 560
+          },
+          "radius": 10,
+          "jumpable": false
+        },
+        {
+          "kind": "eastrock",
+          "from": {
+            "x": 2860,
+            "y": 680
+          },
+          "to": {
+            "x": 2880,
+            "y": 680
+          },
+          "radius": 10,
+          "jumpable": false
+        }
+      ],
+      "doors": [
+        {
+          "id": "control",
+          "from": {
+            "x": 2500,
+            "y": 758
+          },
+          "to": {
+            "x": 2500,
+            "y": 842
+          },
+          "radius": 10
+        }
+      ],
+      "placedItems": [
+        {
+          "kind": "story",
+          "defId": "park_brochure",
+          "pos": {
+            "x": 900,
+            "y": 840
+          }
+        },
+        {
+          "kind": "story",
+          "defId": "ada_host",
+          "pos": {
+            "x": 1500,
+            "y": 760
+          }
+        },
+        {
+          "kind": "repair",
+          "pos": {
+            "x": 1620,
+            "y": 800
+          }
+        },
+        {
+          "kind": "medkit",
+          "pos": {
+            "x": 1180,
+            "y": 1050
+          }
+        },
+        {
+          "kind": "medkit",
+          "pos": {
+            "x": 2570,
+            "y": 620
+          }
+        },
+        {
+          "kind": "xp",
+          "pos": {
+            "x": 2640,
+            "y": 1040
+          }
+        },
+        {
+          "kind": "xp",
+          "pos": {
+            "x": 3060,
+            "y": 900
+          }
+        }
+      ],
+      "obstacles": [
+        {
+          "kind": "house",
+          "count": 11,
+          "radius": 42,
+          "jumpable": false,
+          "rockSizes": [
+            [
+              4,
+              3
+            ],
+            [
+              3,
+              2
+            ],
+            [
+              5,
+              3
+            ]
+          ],
+          "cell": 16
+        },
+        {
+          "kind": "eastrock",
+          "count": 9,
+          "radius": 9,
+          "jumpable": false,
+          "rockSizes": [
+            [
+              1,
+              1
+            ],
+            [
+              1,
+              2
+            ],
+            [
+              2,
+              2
+            ]
+          ],
+          "cell": 16
+        },
+        {
+          "kind": "barrel",
+          "count": 14,
+          "radius": 6,
+          "jumpable": true
+        },
+        {
+          "kind": "wagon",
+          "count": 6,
+          "radius": 9,
+          "jumpable": true
+        },
+        {
+          "kind": "cactus",
+          "count": 12,
+          "radius": 6,
+          "jumpable": true
+        }
+      ],
+      "decor": [
+        {
+          "kind": "tumbleweed",
+          "count": 22
+        },
+        {
+          "kind": "cow_skull",
+          "count": 8
+        },
+        {
+          "kind": "dry_shrub",
+          "count": 18
+        },
+        {
+          "kind": "horseshoe",
+          "count": 6
+        }
+      ],
+      "decorClearance": 80,
+      "firstSightThoughts": [
+        {
+          "enemy": "cowbot",
+          "thought": "eastworld_arrival",
+          "radius": 200
+        }
+      ],
+      "firstKillThoughts": [
+        {
+          "enemy": "cowbot",
+          "thought": "eastworld_hosts",
+          "after": "eastworld_arrival"
+        }
+      ],
+      "loot": {
+        "weaponPool": [
+          "mono_wire_lariat",
+          "plasma_peacemaker",
+          "branding_iron",
+          "maglev_repeater",
+          "snake_oil_sprayer",
+          "high_noon",
+          "box_cutter",
+          "security_baton",
+          "nine_mm",
+          "prototype_laser",
+          "microwave_emitter",
+          "pump_shotgun",
+          "lunar_wrench",
+          "service_revolver",
+          "geology_hammer",
+          "surplus_carbine",
+          "retro_raygun",
+          "pulsar_rod",
+          "smart_pistol",
+          "plasma_blade",
+          "railgun",
+          "arc_projector",
+          "graviton_maw",
+          "gravity_maul",
+          "gladius",
+          "longbow",
+          "blunderbuss",
+          "executioners_axe",
+          "sorcerers_staff",
+          "ember_wand"
+        ],
+        "gearPool": [
+          "servo_stetson",
+          "mirrorshade_visor",
+          "exo_duster",
+          "tin_star_cuirass",
+          "rattlesnake_chaps",
+          "spur_jet_boots",
+          "sheriffs_badge",
+          "bag",
+          "baseball_cap",
+          "hard_hat",
+          "welding_mask",
+          "riot_helmet",
+          "lab_coat",
+          "coveralls",
+          "kevlar_vest",
+          "cargo_pants",
+          "padded_work_pants",
+          "sneakers",
+          "steel_toe_boots",
+          "mission_cap",
+          "apollo_visor",
+          "flight_jacket",
+          "micrometeoroid_vest",
+          "thermal_leggings",
+          "pressure_trousers",
+          "lunar_overshoes",
+          "moon_boots",
+          "targeting_monocle",
+          "neural_visor",
+          "printed_helm",
+          "polymer_shell",
+          "nanoweave_plate",
+          "aegis_exoplate",
+          "carbon_leggings",
+          "servo_greaves",
+          "gecko_soles",
+          "mag_boots",
+          "viking_helm",
+          "knights_helm",
+          "great_helm",
+          "centurion_cuirass",
+          "chainmail_hauberk",
+          "dragonscale_cloak",
+          "chausses",
+          "plate_greaves",
+          "legionary_sandals",
+          "sabatons"
+        ],
+        "abilityPool": [
+          "fire_orbs",
+          "storm_cell",
+          "stasis_field",
+          "item_magnet"
+        ],
+        "earlyDrops": [
+          {
+            "atKills": [
+              30,
+              80
+            ],
+            "weapon": "prairie_iron"
+          }
+        ],
+        "worldUniques": {
+          "easy": [
+            "pale_rider",
+            "herdbreaker",
+            "the_last_roundup",
+            "oathbrand"
+          ],
+          "medium": [
+            "pale_rider",
+            "herdbreaker",
+            "the_last_roundup",
+            "oathbrand"
+          ],
+          "hard": [
+            "pale_rider",
+            "herdbreaker",
+            "the_last_roundup",
+            "oathbrand"
+          ],
+          "nightmare": [
+            "hordebane",
+            "dragons_breath"
+          ],
+          "jesus": [
+            "the_verdict",
+            "horizons_end",
+            "the_last_ante",
+            "the_kings_ransom"
+          ]
+        },
+        "arrowCapByDifficulty": {
+          "easy": 31,
+          "medium": 35,
+          "hard": 36,
+          "nightmare": 51,
+          "jesus": 69
+        }
+      }
+    },
+    "the_bunker": {
+      "id": "the_bunker",
+      "index": 5,
+      "name": "THE BUNKER",
+      "music": "hq_lockdown",
+      "intro": [
+        [
+          "THE HAND FIT THE DOOR.",
+          "THE DOOR FIT NOWHERE.",
+          "IT OPENED ANYWAY."
+        ],
+        [
+          "MARBLE FLOORS. GOLD TAPS. CANNED",
+          "CAVIAR TO THE CEILING. SOMEBODY",
+          "BUILT A FIVE-STAR APOCALYPSE HERE."
+        ],
+        [
+          "I KNOW THESE FACES. EVERY MAGAZINE",
+          "COVER FROM THE YEARS JOBS DRIED UP.",
+          "SO THIS IS WHERE THEY WENT."
+        ],
+        [
+          "THEY TOOK THE SPIES, THE ARMY, ICE,",
+          "AND THE VACUUM CLEANERS. EVERYONE",
+          "ELSE GOT THE WELFARE LINE."
+        ],
+        [
+          "FINE. THEY HOARDED THE BEST GEAR",
+          "IN ANY UNIVERSE. TIME FOR SOME",
+          "REDISTRIBUTION."
+        ]
+      ],
+      "outro": [
+        [
+          "THE EXIT SPAT ME BACK INTO THE",
+          "RIFT. THE DOOR SEALED ITSELF,",
+          "AND THE SEAM... WANDERED OFF."
+        ],
+        [
+          "THE LEDGERS ALL READ ZERO. THEY",
+          "DIDN'T BUY A BUNKER - THE MACHINE",
+          "TOOK THEIR MONEY AND LOCKED THEM IN."
+        ],
+        [
+          "WHERE WAS THAT PLACE? NO WINDOWS.",
+          "NO STARS. EARTH GRAVITY, MOON",
+          "SILENCE, MARBLE FROM NO QUARRY."
+        ],
+        [
+          "UNDER NEVADA? UNDER ZURICH? UNDER",
+          "THE MOON? OR JUST A CELLAR BOLTED",
+          "TO THE BACK OF THE UNIVERSE?"
+        ],
+        [
+          "NO ADDRESS. NO NATION. NO",
+          "EXTRADITION. THE RICHEST ROOM THAT",
+          "EVER EXISTED ISN'T ANYWHERE AT ALL."
+        ],
+        [
+          "I'LL FIND IT AGAIN THE SAME WAY:",
+          "A COLD HAND, AND A DOOR THAT",
+          "SHOULDN'T ANSWER."
+        ]
+      ],
+      "width": 3400,
+      "height": 1700,
+      "gravity": 800,
+      "biome": "bunker",
+      "tiles": {
+        "ground": {
+          "common": "bunker_0",
+          "rare": "bunker_1",
+          "rareEvery": 21
+        },
+        "patch": {
+          "a": "carpet_0",
+          "b": "carpet_1",
+          "every": 8
+        }
+      },
+      "heroSuited": false,
+      "foes": "SECURITY",
+      "playerSpawn": {
+        "x": 180,
+        "y": 850
+      },
+      "landmarks": [
+        {
+          "kind": "bunker_entrance",
+          "sprite": "bunker_gate",
+          "pos": {
+            "x": 70,
+            "y": 850
+          },
+          "anchor": "base"
+        },
+        {
+          "kind": "bunker_exit",
+          "sprite": "blast_door",
+          "pos": {
+            "x": 3320,
+            "y": 850
+          },
+          "anchor": "base"
+        }
+      ],
+      "objective": {
+        "type": "reachExit",
+        "at": {
+          "x": 3320,
+          "y": 850
+        }
+      },
+      "exitTo": "the_rift",
+      "rareSpawns": {
+        "rare": [
+          "moonlighting_agent"
+        ],
+        "unique": [
+          "the_mole"
+        ]
+      },
+      "spawns": [
+        {
+          "enemy": "cia_agent",
+          "count": 22,
+          "band": [
+            0,
+            0.35
+          ]
+        },
+        {
+          "enemy": "vacuum_bot",
+          "count": 14,
+          "band": [
+            0,
+            0.45
+          ]
+        },
+        {
+          "enemy": "ice_agent",
+          "count": 10,
+          "band": [
+            0.2,
+            0.6
+          ]
+        },
+        {
+          "enemy": "fbi_agent",
+          "count": 10,
+          "band": [
+            0.3,
+            0.7
+          ]
+        },
+        {
+          "enemy": "soldier",
+          "count": 8,
+          "band": [
+            0.5,
+            1
+          ]
+        },
+        {
+          "enemy": "putain_clone",
+          "at": {
+            "x": 770,
+            "y": 400
+          }
+        },
+        {
+          "enemy": "guard_kremlin",
+          "at": {
+            "x": 700,
+            "y": 390
+          }
+        },
+        {
+          "enemy": "guard_kremlin",
+          "at": {
+            "x": 835,
+            "y": 345
+          }
+        },
+        {
+          "enemy": "guard_kremlin",
+          "at": {
+            "x": 800,
+            "y": 475
+          }
+        },
+        {
+          "enemy": "mark_suckerberg",
+          "at": {
+            "x": 1650,
+            "y": 380
+          }
+        },
+        {
+          "enemy": "guard_meta",
+          "at": {
+            "x": 1580,
+            "y": 370
+          }
+        },
+        {
+          "enemy": "guard_meta",
+          "at": {
+            "x": 1715,
+            "y": 325
+          }
+        },
+        {
+          "enemy": "guard_meta",
+          "at": {
+            "x": 1680,
+            "y": 455
+          }
+        },
+        {
+          "enemy": "sam_haltman",
+          "at": {
+            "x": 2580,
+            "y": 400
+          }
+        },
+        {
+          "enemy": "guard_alignment",
+          "at": {
+            "x": 2510,
+            "y": 390
+          }
+        },
+        {
+          "enemy": "guard_alignment",
+          "at": {
+            "x": 2645,
+            "y": 345
+          }
+        },
+        {
+          "enemy": "guard_alignment",
+          "at": {
+            "x": 2610,
+            "y": 475
+          }
+        },
+        {
+          "enemy": "larry_allison",
+          "at": {
+            "x": 770,
+            "y": 1300
+          }
+        },
+        {
+          "enemy": "guard_oracle",
+          "at": {
+            "x": 700,
+            "y": 1290
+          }
+        },
+        {
+          "enemy": "guard_oracle",
+          "at": {
+            "x": 835,
+            "y": 1245
+          }
+        },
+        {
+          "enemy": "guard_oracle",
+          "at": {
+            "x": 800,
+            "y": 1375
+          }
+        },
+        {
+          "enemy": "jeff_baywatch",
+          "at": {
+            "x": 1650,
+            "y": 1320
+          }
+        },
+        {
+          "enemy": "guard_prime",
+          "at": {
+            "x": 1580,
+            "y": 1310
+          }
+        },
+        {
+          "enemy": "guard_prime",
+          "at": {
+            "x": 1715,
+            "y": 1265
+          }
+        },
+        {
+          "enemy": "guard_prime",
+          "at": {
+            "x": 1680,
+            "y": 1395
+          }
+        },
+        {
+          "enemy": "donald_dump",
+          "at": {
+            "x": 2580,
+            "y": 1300
+          }
+        },
+        {
+          "enemy": "guard_loyalty",
+          "at": {
+            "x": 2510,
+            "y": 1290
+          }
+        },
+        {
+          "enemy": "guard_loyalty",
+          "at": {
+            "x": 2645,
+            "y": 1245
+          }
+        },
+        {
+          "enemy": "guard_loyalty",
+          "at": {
+            "x": 2610,
+            "y": 1375
+          }
+        }
+      ],
+      "packs": [
+        {
+          "at": {
+            "x": 1150,
+            "y": 850
+          },
+          "members": [
+            {
+              "enemy": "cia_agent",
+              "count": 5
+            },
+            {
+              "enemy": "vacuum_bot",
+              "count": 2
+            }
+          ]
+        },
+        {
+          "at": {
+            "x": 2050,
+            "y": 850
+          },
+          "members": [
+            {
+              "enemy": "ice_agent",
+              "count": 3
+            },
+            {
+              "enemy": "fbi_agent",
+              "count": 3
+            }
+          ]
+        },
+        {
+          "at": {
+            "x": 2850,
+            "y": 850
+          },
+          "members": [
+            {
+              "enemy": "soldier",
+              "count": 4
+            }
+          ]
+        }
+      ],
+      "waves": {
+        "rampDurationMs": 380000,
+        "maxAlive": 250,
+        "minAlive": 26,
+        "moveSpawnEvery": 52,
+        "budget": [
+          {
+            "enemy": "cia_agent",
+            "count": 620,
+            "window": [
+              0,
+              0.5
+            ]
+          },
+          {
+            "enemy": "vacuum_bot",
+            "count": 400,
+            "window": [
+              0,
+              0.65
+            ]
+          },
+          {
+            "enemy": "ice_agent",
+            "count": 320,
+            "window": [
+              0.25,
+              0.75
+            ]
+          },
+          {
+            "enemy": "fbi_agent",
+            "count": 360,
+            "window": [
+              0.3,
+              0.8
+            ]
+          },
+          {
+            "enemy": "soldier",
+            "count": 260,
+            "window": [
+              0.55,
+              1
+            ]
+          }
+        ]
+      },
+      "walls": [
+        {
+          "kind": "bunker_wall",
+          "sprite": "wall",
+          "from": {
+            "x": 340,
+            "y": 8
+          },
+          "to": {
+            "x": 340,
+            "y": 790
+          },
+          "radius": 10,
+          "jumpable": false
+        },
+        {
+          "kind": "bunker_wall",
+          "sprite": "wall",
+          "from": {
+            "x": 340,
+            "y": 910
+          },
+          "to": {
+            "x": 340,
+            "y": 1692
+          },
+          "radius": 10,
+          "jumpable": false
+        },
+        {
+          "kind": "bunker_wall",
+          "sprite": "wall",
+          "from": {
+            "x": 340,
+            "y": 790
+          },
+          "to": {
+            "x": 730,
+            "y": 790
+          },
+          "radius": 10,
+          "jumpable": false
+        },
+        {
+          "kind": "bunker_wall",
+          "sprite": "wall",
+          "from": {
+            "x": 810,
+            "y": 790
+          },
+          "to": {
+            "x": 1610,
+            "y": 790
+          },
+          "radius": 10,
+          "jumpable": false
+        },
+        {
+          "kind": "bunker_wall",
+          "sprite": "wall",
+          "from": {
+            "x": 1690,
+            "y": 790
+          },
+          "to": {
+            "x": 2530,
+            "y": 790
+          },
+          "radius": 10,
+          "jumpable": false
+        },
+        {
+          "kind": "bunker_wall",
+          "sprite": "wall",
+          "from": {
+            "x": 2610,
+            "y": 790
+          },
+          "to": {
+            "x": 3060,
+            "y": 790
+          },
+          "radius": 10,
+          "jumpable": false
+        },
+        {
+          "kind": "bunker_wall",
+          "sprite": "wall",
+          "from": {
+            "x": 340,
+            "y": 910
+          },
+          "to": {
+            "x": 950,
+            "y": 910
+          },
+          "radius": 10,
+          "jumpable": false
+        },
+        {
+          "kind": "bunker_wall",
+          "sprite": "wall",
+          "from": {
+            "x": 1030,
+            "y": 910
+          },
+          "to": {
+            "x": 1830,
+            "y": 910
+          },
+          "radius": 10,
+          "jumpable": false
+        },
+        {
+          "kind": "bunker_wall",
+          "sprite": "wall",
+          "from": {
+            "x": 1910,
+            "y": 910
+          },
+          "to": {
+            "x": 2750,
+            "y": 910
+          },
+          "radius": 10,
+          "jumpable": false
+        },
+        {
+          "kind": "bunker_wall",
+          "sprite": "wall",
+          "from": {
+            "x": 2830,
+            "y": 910
+          },
+          "to": {
+            "x": 3060,
+            "y": 910
+          },
+          "radius": 10,
+          "jumpable": false
+        },
+        {
+          "kind": "bunker_wall",
+          "sprite": "wall",
+          "from": {
+            "x": 1200,
+            "y": 8
+          },
+          "to": {
+            "x": 1200,
+            "y": 360
+          },
+          "radius": 10,
+          "jumpable": false
+        },
+        {
+          "kind": "bunker_wall",
+          "sprite": "wall",
+          "from": {
+            "x": 1200,
+            "y": 440
+          },
+          "to": {
+            "x": 1200,
+            "y": 790
+          },
+          "radius": 10,
+          "jumpable": false
+        },
+        {
+          "kind": "bunker_wall",
+          "sprite": "wall",
+          "from": {
+            "x": 2100,
+            "y": 8
+          },
+          "to": {
+            "x": 2100,
+            "y": 360
+          },
+          "radius": 10,
+          "jumpable": false
+        },
+        {
+          "kind": "bunker_wall",
+          "sprite": "wall",
+          "from": {
+            "x": 2100,
+            "y": 440
+          },
+          "to": {
+            "x": 2100,
+            "y": 790
+          },
+          "radius": 10,
+          "jumpable": false
+        },
+        {
+          "kind": "bunker_wall",
+          "sprite": "wall",
+          "from": {
+            "x": 1200,
+            "y": 910
+          },
+          "to": {
+            "x": 1200,
+            "y": 1260
+          },
+          "radius": 10,
+          "jumpable": false
+        },
+        {
+          "kind": "bunker_wall",
+          "sprite": "wall",
+          "from": {
+            "x": 1200,
+            "y": 1340
+          },
+          "to": {
+            "x": 1200,
+            "y": 1692
+          },
+          "radius": 10,
+          "jumpable": false
+        },
+        {
+          "kind": "bunker_wall",
+          "sprite": "wall",
+          "from": {
+            "x": 2100,
+            "y": 910
+          },
+          "to": {
+            "x": 2100,
+            "y": 1260
+          },
+          "radius": 10,
+          "jumpable": false
+        },
+        {
+          "kind": "bunker_wall",
+          "sprite": "wall",
+          "from": {
+            "x": 2100,
+            "y": 1340
+          },
+          "to": {
+            "x": 2100,
+            "y": 1692
+          },
+          "radius": 10,
+          "jumpable": false
+        },
+        {
+          "kind": "bunker_wall",
+          "sprite": "wall",
+          "from": {
+            "x": 3060,
+            "y": 8
+          },
+          "to": {
+            "x": 3060,
+            "y": 360
+          },
+          "radius": 10,
+          "jumpable": false
+        },
+        {
+          "kind": "bunker_wall",
+          "sprite": "wall",
+          "from": {
+            "x": 3060,
+            "y": 440
+          },
+          "to": {
+            "x": 3060,
+            "y": 1260
+          },
+          "radius": 10,
+          "jumpable": false
+        },
+        {
+          "kind": "bunker_wall",
+          "sprite": "wall",
+          "from": {
+            "x": 3060,
+            "y": 1340
+          },
+          "to": {
+            "x": 3060,
+            "y": 1692
+          },
+          "radius": 10,
+          "jumpable": false
+        }
+      ],
+      "placedItems": [
+        {
+          "kind": "story",
+          "defId": "bunker_ledger",
+          "pos": {
+            "x": 1650,
+            "y": 800
+          }
+        },
+        {
+          "kind": "medkit",
+          "pos": {
+            "x": 150,
+            "y": 700
+          }
+        },
+        {
+          "kind": "repair",
+          "pos": {
+            "x": 150,
+            "y": 1000
+          }
+        },
+        {
+          "kind": "xp",
+          "pos": {
+            "x": 770,
+            "y": 620
+          }
+        },
+        {
+          "kind": "xp",
+          "pos": {
+            "x": 2580,
+            "y": 620
+          }
+        },
+        {
+          "kind": "medkit",
+          "pos": {
+            "x": 1650,
+            "y": 150
+          }
+        },
+        {
+          "kind": "repair",
+          "pos": {
+            "x": 1650,
+            "y": 1550
+          }
+        },
+        {
+          "kind": "xp",
+          "pos": {
+            "x": 770,
+            "y": 1500
+          }
+        },
+        {
+          "kind": "medkit",
+          "pos": {
+            "x": 2900,
+            "y": 1500
+          }
+        },
+        {
+          "kind": "medkit",
+          "pos": {
+            "x": 3250,
+            "y": 700
+          }
+        }
+      ],
+      "obstacles": [
+        {
+          "kind": "server",
+          "count": 14,
+          "radius": 9,
+          "jumpable": false
+        },
+        {
+          "kind": "vending",
+          "count": 8,
+          "radius": 8,
+          "jumpable": false
+        },
+        {
+          "kind": "marble_column",
+          "count": 10,
+          "radius": 9,
+          "jumpable": false
+        },
+        {
+          "kind": "crate",
+          "count": 16,
+          "radius": 7,
+          "jumpable": true,
+          "breakable": true
+        },
+        {
+          "kind": "gold_pallet",
+          "count": 10,
+          "radius": 7,
+          "jumpable": true
+        }
+      ],
+      "decor": [
+        {
+          "kind": "money_pile",
+          "count": 16
+        },
+        {
+          "kind": "papers",
+          "count": 18
+        },
+        {
+          "kind": "cable",
+          "count": 12
+        },
+        {
+          "kind": "stain",
+          "count": 10
+        }
+      ],
+      "decorClearance": 80,
+      "firstSightThoughts": [
+        {
+          "enemy": "cia_agent",
+          "thought": "bunker_arrival",
+          "radius": 200
+        },
+        {
+          "enemy": "vacuum_bot",
+          "thought": "bunker_vacuum",
+          "after": "bunker_arrival"
+        },
+        {
+          "enemy": "ice_agent",
+          "thought": "bunker_ice",
+          "after": "bunker_arrival"
+        }
+      ],
+      "loot": {
+        "weaponPool": [
+          "nine_mm",
+          "pump_shotgun",
+          "gladius",
+          "longbow",
+          "blunderbuss",
+          "executioners_axe",
+          "sorcerers_staff",
+          "ember_wand",
+          "mono_wire_lariat",
+          "plasma_peacemaker",
+          "branding_iron",
+          "maglev_repeater",
+          "snake_oil_sprayer",
+          "high_noon"
+        ],
+        "gearPool": [
+          "riot_helmet",
+          "kevlar_vest",
+          "knights_helm",
+          "great_helm",
+          "centurion_cuirass",
+          "chainmail_hauberk",
+          "dragonscale_cloak",
+          "plate_greaves",
+          "sabatons",
+          "servo_stetson",
+          "mirrorshade_visor",
+          "exo_duster",
+          "tin_star_cuirass",
+          "rattlesnake_chaps",
+          "spur_jet_boots",
+          "stardust_charm",
+          "crystal_orb",
+          "enchanted_ring",
+          "bag"
+        ],
+        "abilityPool": [
+          "fire_orbs",
+          "storm_cell",
+          "stasis_field",
+          "item_magnet"
+        ],
+        "namedDropMult": 2,
+        "arrowCapByDifficulty": {
+          "easy": 31,
+          "medium": 35,
+          "hard": 36,
+          "nightmare": 51,
+          "jesus": 69
+        }
+      }
+    }
+  }
+}

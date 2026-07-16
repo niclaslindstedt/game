@@ -6,6 +6,7 @@ package-lock.json
 website/dist/
 website/src/generated/
 website/src/game/assets/
+src/generated/
 site/
 node_modules/
 
