@@ -1,7 +1,10 @@
 name: night_shift_temp_0
 family: spacez
 size: [16, 16]
-description: ""
+description: >
+  A NIGHT-SHIFT TEMP, the agency worker nobody onboarded: a lone figure in a
+  blue-and-white striped work shirt with a red cap and a visitor lanyard,
+  front-facing.
 palette:
   A: "#8d9196"
   O: "#1a1c2c"

@@ -1,7 +1,9 @@
 name: stain
 family: spacez
 size: [12, 8]
-description: ""
+description: >
+  A pale greenish-grey chemical stain spilled and dried on the lab floor;
+  flat ground decor.
 palette:
   n: "#b9e6cdf0"
 grid: |

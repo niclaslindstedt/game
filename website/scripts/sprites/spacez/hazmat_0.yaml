@@ -1,7 +1,9 @@
 name: hazmat_0
 family: spacez
 size: [18, 18]
-description: ""
+description: >
+  A HAZMAT TECH in a bulky bright-yellow containment suit with a hood and
+  visor, front-facing; the slow, tanky deep-lab worker.
 palette:
   H: "#9e8b2d"
   O: "#1a1c2c"

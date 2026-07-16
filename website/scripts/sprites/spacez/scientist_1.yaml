@@ -1,7 +1,9 @@
 name: scientist_1
 family: spacez
 size: [16, 16]
-description: ""
+description: >
+  The LAB SCIENTIST in his alternate stride — white lab coat over office
+  clothes, goggles, mid-step.
 palette:
   O: "#1a1c2c"
   W: "#f4f4f4"

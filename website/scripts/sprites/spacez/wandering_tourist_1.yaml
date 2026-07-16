@@ -1,7 +1,9 @@
 name: wandering_tourist_1
 family: spacez
 size: [16, 16]
-description: ""
+description: >
+  The WANDERING TOURIST in his alternate stride — blonde hair, green jacket,
+  purple shirt and blue shoes, camera out, ambling along lost.
 palette:
   B: "#92643e"
   G: "#4a7a3e"

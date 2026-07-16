@@ -1,7 +1,9 @@
 name: employee_of_the_month_1
 family: spacez
 size: [16, 16]
-description: ""
+description: >
+  EMPLOYEE OF THE MONTH in his alternate frame — the same proud beige-clad
+  staffer with the shiny gold badge, chest puffed out defending his turf.
 palette:
   O: "#1a1c2c"
   W: "#f4f4f4"

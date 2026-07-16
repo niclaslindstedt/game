@@ -1,7 +1,9 @@
 name: crate_broken
 family: spacez
 size: [14, 12]
-description: ""
+description: >
+  The shipping crate smashed open — splintered flaps and scattered packing
+  spilling out; the destroyed state of a broken crate.
 palette:
   A: "#8d9196"
   O: "#1a1c2c"

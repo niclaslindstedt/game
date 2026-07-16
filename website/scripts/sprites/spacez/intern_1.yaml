@@ -1,7 +1,9 @@
 name: intern_1
 family: spacez
 size: [16, 16]
-description: ""
+description: >
+  The INTERN in his alternate stride — oversized navy suit, red tie, nervous
+  posture; the weakest of the night shift.
 palette:
   O: "#1a1c2c"
   W: "#f4f4f4"

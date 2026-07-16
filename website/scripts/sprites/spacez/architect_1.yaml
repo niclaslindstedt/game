@@ -1,7 +1,10 @@
 name: architect_1
 family: spacez
 size: [24, 24]
-description: ""
+description: >
+  THE ARCHITECT in his alternate stride/idle frame — same composed man in a
+  grey blazer and glasses with the metal PASSAGE CHIP set into his temple; a
+  corporate, half-machine figure.
 palette:
   O: "#1a1c2c"
   V: "#9095a5"

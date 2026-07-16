@@ -1,7 +1,9 @@
 name: night_shift_temp_1
 family: spacez
 size: [16, 16]
-description: ""
+description: >
+  The NIGHT-SHIFT TEMP in his alternate stride — blue-and-white striped
+  shirt, red cap, dutifully clocking his rounds.
 palette:
   A: "#8d9196"
   O: "#1a1c2c"

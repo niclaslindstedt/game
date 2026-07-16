@@ -1,7 +1,9 @@
 name: vent_1
 family: spacez
 size: [16, 16]
-description: ""
+description: >
+  The alternate floor-vent tile — a metal grille with a slightly different
+  slat pattern; the paired ground patch.
 palette:
   O: "#1a1c2c"
   b: "#3f4553"

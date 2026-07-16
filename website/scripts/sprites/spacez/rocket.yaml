@@ -1,7 +1,10 @@
 name: rocket
 family: spacez
 size: [32, 48]
-description: ""
+description: >
+  The prototype rocket landmark: a white launch vehicle with a red nose cone
+  and fins standing on the pad on the far side of the floor, where MUSKRAT
+  nests beneath it.
 palette:
   A: "#8d9196"
   O: "#1a1c2c"

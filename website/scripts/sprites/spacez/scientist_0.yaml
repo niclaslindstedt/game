@@ -1,7 +1,9 @@
 name: scientist_0
 family: spacez
 size: [16, 16]
-description: ""
+description: >
+  A LAB SCIENTIST, the common lab-rank staffer: a figure in a white lab coat
+  over office clothes with safety goggles, front-facing.
 palette:
   O: "#1a1c2c"
   W: "#f4f4f4"

@@ -1,7 +1,9 @@
 name: hazmat_1
 family: spacez
 size: [18, 18]
-description: ""
+description: >
+  The HAZMAT TECH in his alternate frame — bulky bright-yellow hooded
+  containment suit, lumbering forward.
 palette:
   H: "#9e8b2d"
   O: "#1a1c2c"

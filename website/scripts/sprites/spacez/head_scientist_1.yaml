@@ -1,7 +1,9 @@
 name: head_scientist_1
 family: spacez
 size: [24, 24]
-description: ""
+description: >
+  DR. NOVA in her alternate frame — white cleanroom suit, purple visor,
+  cradling the glowing purple specimen orb.
 palette:
   F: "#a2a4ad"
   L: "#d4a5ec"

@@ -1,7 +1,9 @@
 name: server
 family: spacez
 size: [16, 16]
-description: ""
+description: >
+  A black server-rack tower with rows of blinking status LEDs down its face;
+  a solid, un-hoppable obstacle.
 palette:
   O: "#1a1c2c"
   b: "#3f4553"

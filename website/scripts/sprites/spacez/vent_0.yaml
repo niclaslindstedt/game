@@ -1,7 +1,9 @@
 name: vent_0
 family: spacez
 size: [16, 16]
-description: ""
+description: >
+  A floor air vent — a metal grille set flush into the lab floor; a ground
+  patch tile.
 palette:
   O: "#1a1c2c"
   b: "#3f4553"

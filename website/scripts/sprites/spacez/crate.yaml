@@ -1,7 +1,9 @@
 name: crate
 family: spacez
 size: [14, 12]
-description: ""
+description: >
+  A tan cardboard shipping crate stamped with a small SpaceZ rocket logo and
+  banded with tape, seen top-down; a jump-over, breakable obstacle.
 palette:
   A: "#8d9196"
   E: "#5d4028"

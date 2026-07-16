@@ -1,7 +1,9 @@
 name: muskrat_1
 family: spacez
 size: [48, 48]
-description: ""
+description: >
+  MUSKRAT in his alternate lunge frame — the same bloated brown rat with red
+  eyes, pink ears and long tail, mid-scurry.
 palette:
   B: "#92643e"
   E: "#5d4028"

@@ -1,7 +1,9 @@
 name: papers
 family: spacez
 size: [12, 8]
-description: ""
+description: >
+  A scatter of loose white office papers strewn across the floor; flat
+  ground decor.
 palette:
   W: "#f4f4f4"
   w: "#c6c6c6"

@@ -1,7 +1,10 @@
 name: intern_0
 family: spacez
 size: [16, 16]
-description: ""
+description: >
+  An INTERN, the flimsy front-rank staffer: a timid young worker in an
+  oversized navy suit and red tie with a lanyard, front-facing and slightly
+  hunched.
 palette:
   O: "#1a1c2c"
   W: "#f4f4f4"

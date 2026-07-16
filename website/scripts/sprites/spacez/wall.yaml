@@ -1,7 +1,9 @@
 name: wall
 family: spacez
 size: [16, 16]
-description: ""
+description: >
+  A section of solid dark-grey lab wall panel with a beveled metal edge;
+  blocks movement and carves the floor into lobby, labs and cleanroom.
 palette:
   O: "#1a1c2c"
   V: "#9095a5"
