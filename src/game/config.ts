@@ -324,12 +324,20 @@ export const CAMPING = {
  * detonation so the field stays clear long enough to break contact and lose the
  * pack, and the transient menace heat is cooled to the earned permanent floor
  * (the ratchet the player's own overkill locked in still stands) so the horde
- * that eventually returns is no denser or tougher than the run's baseline. Ms.
+ * that eventually returns is no denser or tougher than the run's baseline. Then
+ * `recoverMs` eases the near-floor back from empty to full so the swarm WALKS
+ * back in at the normal rate instead of snapping onto the player in a single
+ * frame the instant the calm ends. Ms.
  */
 export const NUKE = {
   /** How long the spawner holds all refills after a nuke — long enough to run
    * out of the cleared screen and shake the pursuit, tuned to the phone view. */
   calmMs: 4_000,
+  /** After the calm, the live near-floor ramps 0→1 back to full over this
+   * window rather than refilling to `minAlive` in one frame — so the bomb's
+   * breather tapers into the normal horde instead of dumping the whole floor's
+   * worth of mobs on the player at once. */
+  recoverMs: 3_000,
 } as const;
 
 /**

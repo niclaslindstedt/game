@@ -7,15 +7,18 @@ import { describe, expect, it } from "vitest";
 
 import {
   abilityDef,
+  allocateStat,
   arrowColdXp,
   arrowXpShareAt,
   canDropNuke,
   createGame,
   crowdBombChance,
+  difficultyDef,
   dismissIntro,
   enemyDef,
   grantAbility,
   killEnemy,
+  levelDef,
   levelStatGains,
   magnetRadius,
   MENACE,
@@ -270,6 +273,67 @@ describe("the screen nuke", () => {
     for (let i = 0; i < 30; i++) step(state, idle, DT);
     expect(state.nukeCalmMs).toBe(0);
     expect(minions(state)).toBeGreaterThan(0);
+  });
+
+  it("eases the near-floor back after the calm instead of snapping it in one frame", () => {
+    // The regression: once the calm burned off, the live near-floor refilled to
+    // minAlive in a SINGLE frame — the whole cleared swarm teleporting back
+    // around the player at once ("they respawn more than I killed / too fast").
+    // The recovery ramp must feed them back gradually, at the normal rate.
+    const state = startGame(); // test_level waves live (its floor pulls minions in)
+    const waves = levelDef("test_level").waves!;
+    const aliveMult = difficultyDef(state.difficulty).aliveMult;
+    const minAlive = Math.round(waves.minAlive * aliveMult);
+    expect(minAlive).toBeGreaterThan(4); // enough headroom for a real ramp
+    state.player.heldAbilities = ["test_nuke"];
+    const minions = (s: GameState) =>
+      s.enemies.filter((e) => enemyDef(e.defId).role === "minion").length;
+
+    // Let the floor build a full near-count around a stationary hero (reset the
+    // camp clock each step so starvation never fades it), then bomb it away.
+    for (let i = 0; i < 900; i++) {
+      state.campMs = 0;
+      step(state, idle, DT);
+      while (state.player.pendingStatPoints > 0) allocateStat(state, "stamina");
+    }
+    step(state, useItem, DT);
+    expect(state.nukeCalmMs).toBeGreaterThan(0);
+    expect(state.nukeRecoverMs).toBe(NUKE.recoverMs); // armed, not yet counting
+
+    // Idle out the calm. The recovery timer stays parked at full until the calm
+    // burns off — the field must be genuinely clear before the taper begins.
+    const calmSteps = Math.floor(NUKE.calmMs / DT) - 4;
+    for (let i = 0; i < calmSteps; i++) {
+      state.campMs = 0;
+      step(state, idle, DT);
+    }
+    expect(state.nukeRecoverMs).toBe(NUKE.recoverMs);
+
+    // Cross out of the calm and watch the very first refill frames: the floor
+    // must NOT snap back to minAlive at once — only a trickle lands per frame.
+    let before = minions(state);
+    let biggestJump = 0;
+    for (let i = 0; i < 20; i++) {
+      state.campMs = 0;
+      step(state, idle, DT);
+      const now = minions(state);
+      biggestJump = Math.max(biggestJump, now - before);
+      before = now;
+    }
+    expect(state.nukeCalmMs).toBe(0);
+    expect(state.nukeRecoverMs).toBeGreaterThan(0); // the ramp is running
+    // A pre-fix run slammed ~minAlive mobs in on the frame the calm ended; the
+    // ramp keeps any single frame to a small fraction of that.
+    expect(biggestJump).toBeLessThan(minAlive / 2);
+
+    // Ride the recovery to its end: the floor is whole again, proving the ramp
+    // restores the horde, just gradually.
+    for (let i = 0; i < Math.ceil(NUKE.recoverMs / DT) + 30; i++) {
+      state.campMs = 0;
+      step(state, idle, DT);
+    }
+    expect(state.nukeRecoverMs).toBe(0);
+    expect(minions(state)).toBeGreaterThanOrEqual(minAlive);
   });
 });
 

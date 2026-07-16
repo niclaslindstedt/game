@@ -425,7 +425,25 @@ function stepSpawner(state: GameState, dtMs: number): void {
   // is only deferred, never canceled (the window math is monotone), so the
   // held flood resumes intact once the calm burns down.
   state.nukeCalmMs = Math.max(0, state.nukeCalmMs - dtMs);
-  if (state.nukeCalmMs > 0) return;
+  if (state.nukeCalmMs > 0) {
+    // Fleeing during the calm still banks walk-credit (stepPlayer), but the
+    // cap below is never reached while we bail out here — so a multi-second
+    // run would bank an UNBOUNDED pile that dumps straight to maxAlive the
+    // instant the calm ends, slamming the screen fuller than the bomb left it
+    // ("they respawn more than I killed"). Clamp it to the same ceiling a
+    // normal flee banks, so refills resume at the ordinary walk rate.
+    state.moveSpawnCredit = Math.min(
+      state.moveSpawnCredit,
+      waves.moveSpawnEvery * 8,
+    );
+    return;
+  }
+  // The calm has burned off: now the RECOVERY window runs (config NUKE), easing
+  // the near-floor back 0→1 to full so the swarm walks back in at the normal
+  // rate instead of the whole floor snapping onto the player in one frame.
+  state.nukeRecoverMs = Math.max(0, state.nukeRecoverMs - dtMs);
+  const nukeRecover =
+    NUKE.recoverMs > 0 ? 1 - state.nukeRecoverMs / NUKE.recoverMs : 1;
 
   // Difficulty scales the horde: every budget line grows by the mob
   // multiplier, and the live cap/floor stretch so the bigger budget can
@@ -438,8 +456,12 @@ function stepSpawner(state: GameState, dtMs: number): void {
     BALANCE.hordeSize;
   const maxAlive = Math.round(waves.maxAlive * aliveMult);
   // The floor starves as the player camps: a parked hero watches his
-  // surroundings drain instead of farming an endless refill.
-  const minAlive = Math.round(waves.minAlive * aliveMult * (1 - starvation));
+  // surroundings drain instead of farming an endless refill. The post-nuke
+  // recovery ramp tapers it the same way for a few seconds after the calm, so
+  // the cleared screen refills gradually rather than all at once.
+  const minAlive = Math.round(
+    waves.minAlive * aliveMult * (1 - starvation) * nukeRecover,
+  );
 
   let alive = 0;
   let near = 0; // minions close enough to count as "on the player's screen"
@@ -1000,8 +1022,13 @@ function detonateNuke(state: GameState, radius: number): void {
   // stands), dumping the banked walk-credit lure too. Together the pack the
   // player fled from stays gone long enough to lose, and the horde that does
   // return is no denser or more evolved than the run's baseline — the bomb
-  // helps instead of dooming the run.
+  // helps instead of dooming the run. The recovery window arms alongside the
+  // calm and only starts counting once the calm burns off: it eases the near-
+  // floor back from empty to full so the swarm WALKS back in at the ordinary
+  // rate rather than the whole floor snapping onto the player the instant the
+  // hold releases ("they respawn more than I killed").
   state.nukeCalmMs = NUKE.calmMs;
+  state.nukeRecoverMs = NUKE.recoverMs;
   state.menace = state.menaceFloor;
   state.moveSpawnCredit = 0;
 }

@@ -479,6 +479,7 @@ export function createGame(
     campMs: 0,
     trickleMs: 0,
     nukeCalmMs: 0,
+    nukeRecoverMs: 0,
     // Resolve the scripted opening drops: a rolled [min, max] threshold picks
     // a concrete kill discovered in play; a fixed number stands as authored.
     earlyDropKills: (def.loot.earlyDrops ?? []).map((d) =>
