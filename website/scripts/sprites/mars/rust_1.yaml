@@ -1,7 +1,10 @@
 name: rust_1
 family: mars
 size: [16, 16]
-description: ""
+description: >
+  Variant oxide patch on the red regolith: rusty-orange dust marked by a
+  darker stain or gravel streak, alternating with rust_0 to break up the
+  terrain.
 palette:
   d: "#80482d"
   e: "#623722"

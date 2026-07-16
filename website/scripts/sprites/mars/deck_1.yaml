@@ -1,7 +1,10 @@
 name: deck_1
 family: mars
 size: [16, 16]
-description: ""
+description: >
+  Rare variant of the base deck plating: the same flat grey metal floor
+  panel, broken up by a subtle scuff or seam mark; sprinkled in
+  occasionally to weather the interior floor.
 palette:
   D: "#808698"
   V: "#9095a5"

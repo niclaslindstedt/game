@@ -1,7 +1,10 @@
 name: build_gates_1
 family: mars
 size: [24, 24]
-description: ""
+description: >
+  BUILD GATES, the software-mogul billionaire, front-facing in his pale
+  blue sweater and glasses; alternate idle frame (slight bob / arm
+  shift).
 palette:
   O: "#1a1c2c"
   W: "#f4f4f4"

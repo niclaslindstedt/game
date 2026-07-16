@@ -1,7 +1,9 @@
 name: derelict_rover_1
 family: mars
 size: [16, 16]
-description: ""
+description: >
+  The rusted DERELICT ROVER, corroded camera pod on wheels; alternate
+  frame (wheels turned / sensor twitch).
 palette:
   B: "#92643e"
   E: "#5d4028"

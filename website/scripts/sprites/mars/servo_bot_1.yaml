@@ -1,7 +1,9 @@
 name: servo_bot_1
 family: mars
 size: [16, 16]
-description: ""
+description: >
+  The grey SERVO UNIT staff droid, front-facing; alternate walk/idle
+  frame.
 palette:
   D: "#808698"
   F: "#a2a4ad"

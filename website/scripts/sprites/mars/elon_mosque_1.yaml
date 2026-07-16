@@ -1,7 +1,9 @@
 name: elon_mosque_1
 family: mars
 size: [48, 48]
-description: ""
+description: >
+  ELON MOSQUE, the dollar-sign-hoodie boss in dark sunglasses,
+  front-facing; alternate idle frame (shoulders shift / smirk).
 palette:
   N: "#303444"
   O: "#1a1c2c"

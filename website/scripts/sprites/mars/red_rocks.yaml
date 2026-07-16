@@ -1,7 +1,10 @@
 name: red_rocks
 family: mars
 size: [16, 16]
-description: ""
+description: >
+  Decor scatter of small Martian stones: a few loose clusters of
+  reddish-brown pebbles and rocks strewn across the dust, purely
+  cosmetic ground clutter.
 palette:
   d: "#80482d"
   e: "#623722"

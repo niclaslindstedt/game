@@ -1,7 +1,9 @@
 name: mining_rover_1
 family: mars
 size: [20, 20]
-description: ""
+description: >
+  The treaded MINING ROVER drill rig; alternate frame (treads rolled /
+  drill spun).
 palette:
   O: "#1a1c2c"
   V: "#9095a5"

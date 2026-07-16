@@ -1,7 +1,9 @@
 name: optimusk_prime_1
 family: mars
 size: [24, 24]
-description: ""
+description: >
+  OPTIMUSK PRIME, the gold-crested white foreman robot, front-facing;
+  alternate idle/stomp frame.
 palette:
   O: "#1a1c2c"
   V: "#9095a5"

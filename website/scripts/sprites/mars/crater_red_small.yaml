@@ -1,7 +1,10 @@
 name: crater_red_small
 family: mars
 size: [16, 16]
-description: ""
+description: >
+  A small jumpable crater in the red regolith: a dark oxide-brown pit
+  ringed by a raised lighter rim, a shadowed gap to hop across. The
+  smaller crater size.
 palette:
   A: "#8d9196"
   O: "#1a1c2c"

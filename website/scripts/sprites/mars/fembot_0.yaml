@@ -1,7 +1,10 @@
 name: fembot_0
 family: mars
 size: [16, 16]
-description: ""
+description: >
+  FEMBOT companion unit: a smiling blonde android in a pink dress,
+  front-facing, blowing a small pink heart off to one side. The kiss is
+  the weapon; cute and unsettlingly cheerful.
 palette:
   O: "#1a1c2c"
   Q: "#e878a8"

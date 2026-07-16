@@ -1,7 +1,11 @@
 name: misprinted_fembot_0
 family: mars
 size: [16, 16]
-description: ""
+description: >
+  MISPRINTED FEMBOT, a bad batch off the companion line: the fembot body
+  rendered wrong, glitch-green skin and a misaligned grey face still
+  locked in a smile, a green error-spark flicking off it. Uncanny and
+  broken.
 palette:
   G: "#4a7a3e"
   O: "#1a1c2c"

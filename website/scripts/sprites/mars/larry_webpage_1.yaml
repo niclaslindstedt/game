@@ -1,7 +1,9 @@
 name: larry_webpage_1
 family: mars
 size: [24, 24]
-description: ""
+description: >
+  LARRY WEBPAGE in his white rainbow-striped outfit, front-facing;
+  alternate idle frame (slight sway).
 palette:
   O: "#1a1c2c"
   W: "#f4f4f4"

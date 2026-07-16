@@ -1,7 +1,11 @@
 name: crater_red_big
 family: mars
 size: [32, 32]
-description: ""
+description: >
+  A large jumpable crater blasted into the red regolith: a dark
+  oxide-brown bowl with a raised lighter rim, the hole reading as a
+  shadowed gap the hero hops and rovers pile up against. The bigger of
+  the two crater sizes.
 palette:
   A: "#8d9196"
   O: "#1a1c2c"

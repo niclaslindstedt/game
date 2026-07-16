@@ -1,7 +1,9 @@
 name: peter_seal_1
 family: mars
 size: [24, 24]
-description: ""
+description: >
+  PETER SEAL, the pale dark-suited investor; alternate idle frame
+  (slight shift).
 palette:
   C: "#529ea8"
   N: "#303444"

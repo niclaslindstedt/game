@@ -1,7 +1,8 @@
 name: unit_zero_1
 family: mars
 size: [16, 16]
-description: ""
+description: >
+  The antique brass UNIT ZERO robot, front-facing; alternate idle frame.
 palette:
   D: "#808698"
   O: "#1a1c2c"

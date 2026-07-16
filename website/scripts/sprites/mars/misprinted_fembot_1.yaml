@@ -1,7 +1,9 @@
 name: misprinted_fembot_1
 family: mars
 size: [16, 16]
-description: ""
+description: >
+  The glitch-green MISPRINTED FEMBOT, still smiling; alternate frame
+  (error-spark flicker).
 palette:
   G: "#4a7a3e"
   O: "#1a1c2c"

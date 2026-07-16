@@ -1,7 +1,11 @@
 name: billboard
 family: mars
 size: [32, 24]
-description: ""
+description: >
+  A 32x24 roadside sign in the empty red dust: a white panel reading
+  "MARS" in blocky red pixel letters with a thin blue underbar, mounted
+  on two dark support posts. The colony's cheerful welcome in the middle
+  of nowhere.
 palette:
   O: "#1a1c2c"
   W: "#f4f4f4"

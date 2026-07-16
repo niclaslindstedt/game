@@ -1,7 +1,10 @@
 name: rift
 family: mars
 size: [32, 36]
-description: ""
+description: >
+  A vertical tear in space: a glowing upright slit edged in magenta and
+  violet around a bright white core, like a wound in reality. The portal
+  ELON MOSQUE flees through, left standing where he stood.
 palette:
   L: "#d4a5ec"
   M: "#644696e6"

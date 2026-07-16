@@ -1,7 +1,9 @@
 name: deck_0
 family: mars
 size: [16, 16]
-description: ""
+description: >
+  A base deck-plating floor tile: a flat panel of grey fabricated metal
+  with faint seams, the colony's interior floor east of the dome wall.
 palette:
   D: "#808698"
   V: "#9095a5"

@@ -1,7 +1,11 @@
 name: glitch
 family: mars
 size: [8, 8]
-description: ""
+description: >
+  An 8x8 corrupted-data projectile fired by the colony's gravity
+  weapons: a small pixelated mote of white and electric blue arranged in
+  a jittery diamond, reading as a torn chunk of glitched screen in
+  flight.
 palette:
   W: "#f4f4f4"
   j: "#4054bc"

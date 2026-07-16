@@ -1,7 +1,9 @@
 name: fembot_1
 family: mars
 size: [16, 16]
-description: ""
+description: >
+  FEMBOT companion unit blowing her pink kiss; alternate frame (heart
+  puff / blink).
 palette:
   O: "#1a1c2c"
   Q: "#e878a8"

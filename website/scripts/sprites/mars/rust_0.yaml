@@ -1,7 +1,10 @@
 name: rust_0
 family: mars
 size: [16, 16]
-description: ""
+description: >
+  An oxide-gravel patch overlaid on the red regolith: rusty-orange dust
+  flecked with darker gravel and grit, tiled in every few cells to
+  weather the ground.
 palette:
   d: "#80482d"
   e: "#623722"

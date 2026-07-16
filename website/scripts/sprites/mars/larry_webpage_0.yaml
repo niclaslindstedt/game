@@ -1,7 +1,11 @@
 name: larry_webpage_0
 family: mars
 size: [24, 24]
-description: ""
+description: >
+  LARRY WEBPAGE, the search-engine billionaire who indexed the whole
+  planet: a dark-haired man in a crisp white outfit crossed by a rainbow
+  search-brand stripe down the chest, standing front-facing. Clean,
+  corporate, smug.
 palette:
   O: "#1a1c2c"
   W: "#f4f4f4"

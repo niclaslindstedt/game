@@ -1,7 +1,10 @@
 name: tracks
 family: mars
 size: [16, 8]
-description: ""
+description: >
+  Rover tire tracks pressed into the dust: two parallel dashed tread
+  lines of dark brown across the regolith, proof someone's machines have
+  worked this ground for years.
 palette:
   d: "#80482d"
   e: "#623722"
