@@ -5,6 +5,10 @@ look → evaluate → loop workflow and the quality checklist live in `SKILL.md`
 this file records what is specific to this game's art. A sequel resets this
 file (and its `sprites/*` families).
 
+**Read the [art style guide](../../../docs/art-style.md) first** — the house
+style for the game's pixel art (the feel, the shared look every sprite obeys,
+and the design best practices). It is the _why_ behind this file's _what_.
+
 ## Families
 
 Discover the live set with `ls website/scripts/sprites/` (each directory is a

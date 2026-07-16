@@ -329,6 +329,7 @@ from GitHub Packages. **Prefer the framework over hand-rolling**:
 | deploy slots / pages workflow         | `docs/architecture.md`, `README.md` Play table, `website/pwa-plugin.ts` `DEPLOY_SLOTS`                     |
 | config knobs (env vars, URL params)   | `docs/configuration.md`, `README.md` Configuration                                                         |
 | PWA surface (manifest, icons, SW)     | `docs/architecture.md`, regenerate icons via `make icons`                                                  |
+| the shared art look (`STYLE_PREAMBLE`, a family `style:` anchor, the design rules) | `docs/art-style.md` — the house style guide; keep it and `STYLE_PREAMBLE` (`website/scripts/asset-tools/prompt.mjs`) in step |
 | version anywhere                      | never by hand — `scripts/update-versions.sh` owns it                                                       |
 
 The website must be regenerated whenever source-derived content changes
