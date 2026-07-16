@@ -197,8 +197,10 @@ function pickSpellToCast(state: GameState, threatNear: boolean): number {
     else if (e.kind === "nova") {
       const n = foesWithin(state, e.radius);
       score = n >= 2 ? 4 : n >= 1 ? 2 : 0;
-    } else if (e.kind === "bolt") score = foesWithin(state, e.range) >= 1 ? 3 : 0;
-    else if (e.kind === "slow") score = foesWithin(state, e.radius) >= 3 ? 3 : 0;
+    } else if (e.kind === "bolt")
+      score = foesWithin(state, e.range) >= 1 ? 3 : 0;
+    else if (e.kind === "slow")
+      score = foesWithin(state, e.radius) >= 3 ? 3 : 0;
     else if (e.kind === "shield") score = hurt || threatNear ? 2 : 0;
     if (score > bestScore) {
       bestScore = score;
