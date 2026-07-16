@@ -2,8 +2,10 @@ name: grok_beta_1
 family: eastworld
 size: [24, 24]
 description: >
-  Second frame of Grok Beta — the same dark android with the magenta square
-  face on its alternate shoot/cover beat.
+  A slim front-facing dark humanoid android whose head is a glowing
+  magenta/pink square screen — a controller-class shooter, the weather-runner
+  that ducks behind the compound rocks to reload. Mid-stride with its legs
+  braced wide apart.
 palette:
   I: "#ec60be"
   N: "#3a3644"

@@ -2,8 +2,10 @@ name: grok_gamma_1
 family: eastworld
 size: [24, 24]
 description: >
-  Second frame of Grok Gamma — the same dark android with the amber square
-  face, firing or scrambling to its rock.
+  A slim front-facing dark humanoid android whose head is a glowing
+  amber/yellow square screen — a controller-class shooter, the ex-gift-shop
+  unit that leads its target from behind cover. Mid-stride with its legs
+  braced wide apart.
 palette:
   N: "#3a3644"
   O: "#1a1c2c"

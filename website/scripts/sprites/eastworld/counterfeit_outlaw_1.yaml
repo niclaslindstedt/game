@@ -2,8 +2,11 @@ name: counterfeit_outlaw_1
 family: eastworld
 size: [16, 16]
 description: >
-  Second frame of the counterfeit outlaw — the same seam-showing knockoff
-  gunslinger on its alternate stride.
+  A top-down cowboy-robot bandit in a wide brown ten-gallon hat and a dark-
+  red shirt over a boxy dark-metal body, a small pistol at its side —
+  a bootleg knockoff run off a pirated mold, mismatched panels and crooked
+  seams showing, twice as mean about it. A lone rare mob. Mid-walk, its feet
+  swapped to the alternate stride, near-identical to the rest of the cycle.
 palette:
   A: "#8d9196"
   D: "#5c3e28"

@@ -2,8 +2,11 @@ name: one_armed_bandit_1
 family: eastworld
 size: [16, 16]
 description: >
-  Second frame of the one-armed bandit — the same gold-plated slot-machine
-  mob, its lever/reels on the alternate beat.
+  A front-facing slot-machine robot on legs, gilded head to toe in gold coin:
+  a boxy golden body with a small red reel-light, a dark slot-machine head, and
+  one lever arm jutting out to the side — the park's rigged one-armed bandit,
+  and the house always wins. Its lever and reels are on the alternate beat,
+  near-identical to the rest of the cycle.
 palette:
   A: "#8d9196"
   B: "#92643e"

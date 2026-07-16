@@ -2,8 +2,10 @@ name: grok_alpha_1
 family: eastworld
 size: [24, 24]
 description: >
-  Second frame of Grok Alpha — the same dark android with the cyan square
-  face, firing a ZAI bolt or leaning back to cover.
+  A slim front-facing dark humanoid android whose head is a glowing
+  cyan/turquoise square screen — a controller-class shooter that runs the
+  cowboy hosts and hides behind the rocks between shots. Mid-stride with its
+  legs braced wide apart.
 palette:
   N: "#3a3644"
   O: "#1a1c2c"
