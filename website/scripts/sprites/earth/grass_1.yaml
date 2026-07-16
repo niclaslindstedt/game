@@ -2,11 +2,12 @@ name: grass_1
 family: earth
 size: [16, 16]
 description: >
-  Litter variant of the Earth grass tile (see grass_0): the same seamless
-  mid-green field speckled with green blades and brown dirt flecks, but with a
-  small piece of dropped litter near the lower edge — a white-and-amber scrap
-  (a discarded wrapper or butt) that scatters occasionally across the ground so
-  the field reads as lived-in rather than pristine. 16x16 flat 16-bit pixel art.
+  A seamless top-down ground tile of mid-green grass, speckled all over with
+  slightly lighter and darker green blades and a few small brown dirt flecks
+  for texture. Near the lower-left edge sits a small piece of dropped litter —
+  a short white-and-amber scrap, like a discarded wrapper or cigarette butt —
+  so the field reads as lived-in rather than pristine. 16x16 flat 16-bit pixel
+  art.
 palette:
   D: "#685438"
   G: "#4a7a3e"
