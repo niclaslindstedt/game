@@ -1,7 +1,12 @@
 name: slime_0
 family: earth
 size: [16, 16]
-description: ""
+description: >
+  A basic slime critter, the generic Earth-stage minion: a front-facing rounded
+  purple blob, domed and gelatinous with a lighter lilac highlight up top and a
+  darker plum base, two small dark dot eyes and a little open mouth giving it a
+  dopey, harmless read. This is the tall/standing frame of its hop. 16x16 flat
+  16-bit pixel art.
 palette:
   L: "#d4a5ec"
   O: "#1a1c2c"

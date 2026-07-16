@@ -1,7 +1,12 @@
 name: player_1
 family: hero
 size: [16, 16]
-description: ""
+description: >
+  Walk-cycle frame of the suited hero (see player_0): the same front-facing
+  astronaut in a white and light-grey EVA suit, gold-visored helmet, grey
+  gloves and boots, and a red chest light, but with his feet planted wider in
+  the alternate stride step. The suited paper-doll base that worn armor and the
+  held weapon draw over. 16x16 flat 16-bit pixel art.
 palette:
   A: "#8d9196"
   O: "#1a1c2c"

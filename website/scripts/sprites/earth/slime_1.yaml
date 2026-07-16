@@ -1,7 +1,11 @@
 name: slime_1
 family: earth
 size: [16, 16]
-description: ""
+description: >
+  Squash frame of the slime critter (see slime_0): the same purple gelatinous
+  blob with lilac highlight, plum base, two dark dot eyes and a small mouth, but
+  flattened and spread wider — the landing/squash of its bouncing hop cycle.
+  16x16 flat 16-bit pixel art.
 palette:
   L: "#d4a5ec"
   O: "#1a1c2c"

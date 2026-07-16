@@ -1,7 +1,12 @@
 name: player_jump
 family: hero
 size: [16, 16]
-description: ""
+description: >
+  Airborne frame of the suited hero (see player_0): the same front-facing
+  astronaut in a white and light-grey EVA suit, gold-visored helmet, and red
+  chest light, legs pulled together and feet tucked up in a mid-jump hop. The
+  suited paper-doll base that worn armor and the held weapon draw over. 16x16
+  flat 16-bit pixel art.
 palette:
   A: "#8d9196"
   O: "#1a1c2c"
