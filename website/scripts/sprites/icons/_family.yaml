@@ -1,5 +1,8 @@
 name: icons
 ground: lab_0
+style: >
+  A tiny item pictogram — one object alone and centered, crisp and legible at a
+  glance, no scene or background clutter.
 palette:
   C: "#529ea8"
   D: "#b28e5c"

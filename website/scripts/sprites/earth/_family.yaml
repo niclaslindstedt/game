@@ -1,5 +1,8 @@
 name: earth
 ground: grass_0
+style: >
+  Suburban Earth at ground level — warm domestic greens and browns, everyday
+  lived-in objects, soft natural daylight.
 palette:
   D: "#685438"
   Q: "#723c8f"

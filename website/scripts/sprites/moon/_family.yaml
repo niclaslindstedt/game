@@ -1,5 +1,8 @@
 name: moon
 ground: moon_0
+style: >
+  The grey lunar surface and its stark station tech — desaturated regolith
+  greys, hard black shadow, cold vacuum light.
 palette:
   C: "#5b858ce1"
   N: "#73a087f0"

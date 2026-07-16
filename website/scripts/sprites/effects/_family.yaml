@@ -1,5 +1,8 @@
 name: effects
 ground: moon_0
+style: >
+  Transient combat VFX — bright saturated flashes, sparks, and bursts with no
+  fixed material, reading as pure light against the action.
 palette:
   Q: "#60f0d0"
   e: "#5ab4ff"

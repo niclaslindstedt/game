@@ -141,18 +141,28 @@ Never ship a sprite you have not looked at. For each asset, loop:
 
 ## Authoring from a description or a reference image
 
-The hand-authored grid is the default, but two tools bootstrap and tighten it —
-`website/scripts/sprite-author.mjs` (run `node website/scripts/sprite-author.mjs`
-with no args for usage):
+The hand-authored grid is the default, but a set of tools bootstrap and tighten
+it — `website/scripts/sprite-author.mjs` (run `node
+website/scripts/sprite-author.mjs` with no args for usage):
 
+- **`prompt <sprite-name> [--out path]`** — synthesize an image-generation
+  prompt from a sprite's fields alone: the shared style preamble, its family's
+  `style:` anchor (from `_family.yaml`), its `description`, size, and palette
+  (with the human color names off the palette comments). The grid is left out —
+  the prompt exists to regenerate it. This is the blank-canvas step: feed the
+  prompt to an image model, save the result, and hand it to `analyze`. Its
+  quality follows straight from the `description`, so write that first.
 - **`analyze <image.png> --name N --family F [--size WxH] [--colors K] [--out
-  path]`** — trace a reference image (one an art model produced, or a sketch)
-  into a self-describing sprite YAML. It resamples per-cell to the target grid,
-  quantizes to a stable palette (deterministic — same image, same letters), and
-  prints the YAML (or writes it and copies the reference next to it as
-  `<name>.ref.png` with `--out`). A clean pixel-art reference passes through with
-  no color loss; a larger illustration is resampled down. The emitted
-  `description` is an empty stub — fill it in, it is the acceptance target.
+  path] [--model M] [--seed S] [--prompt-file P]`** — trace a reference image
+  (one an art model produced, or a sketch) into a self-describing sprite YAML.
+  It resamples per-cell to the target grid, quantizes to a stable palette
+  (deterministic — same image, same letters), and prints the YAML (or writes it
+  and copies the reference next to it as `<name>.ref.png` with `--out`). A clean
+  pixel-art reference passes through with no color loss; a larger illustration
+  is resampled down. The emitted `description` is an empty stub — fill it in, it
+  is the acceptance target. Pass `--model`/`--seed`/`--prompt-file` to record
+  generation provenance beside the reference (`<name>.ref.json`) so the
+  generation is auditable — it is not deterministic the way the atlas is.
 - **`pose <sprite-name> [--scale N] [--out path]`** — render a base sprite
   centered on a patch of its OWN family ground (not transparency) and print its
   description. This is the review surface for the evaluate step: a sprite that

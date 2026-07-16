@@ -1,5 +1,8 @@
 name: hero
 ground: moon_0
+style: >
+  The protagonist and companions — a grounded working-man look, practical
+  everyday clothes and gear, muted realistic colors, no fantasy flourish.
 palette:
   z: "#0c0e166e"
 animations:

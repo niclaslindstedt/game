@@ -12,6 +12,12 @@ import {
   compareSurfaces,
   resizeNearest,
 } from "../website/scripts/asset-tools/compare.mjs";
+import {
+  STYLE_PREAMBLE,
+  buildImagePrompt,
+  paletteComments,
+  provenanceRecord,
+} from "../website/scripts/asset-tools/prompt.mjs";
 import { resampleToCells } from "../website/scripts/asset-tools/image.mjs";
 import {
   labSortKey,
@@ -132,6 +138,79 @@ describe("quantizeGrid", () => {
 
   it("throws when maxColors exceeds the key alphabet", () => {
     expect(() => quantizeGrid(cells, 99)).toThrow(/alphabet/);
+  });
+});
+
+describe("paletteComments", () => {
+  it("reads the human color name trailing each palette entry", () => {
+    const yaml =
+      'palette:\n  s: "#c8ccd4" # steel\n  g: "#f4c430" # gold crest\n';
+    expect(paletteComments(yaml)).toEqual({ s: "steel", g: "gold crest" });
+  });
+
+  it("returns an empty map for a plain, uncommented palette", () => {
+    expect(paletteComments('palette:\n  s: "#c8ccd4"\n')).toEqual({});
+  });
+});
+
+describe("buildImagePrompt", () => {
+  const full = {
+    description: "Front-facing knight in silver plate with a gold crest.",
+    familyStyle: "Grey lunar station tech.",
+    size: [16, 16] as [number, number],
+    palette: { s: "#c8ccd4", g: "#f4c430" },
+    paletteNames: { s: "steel", g: "gold crest" },
+  };
+
+  it("opens with the shared style preamble", () => {
+    expect(buildImagePrompt(full).startsWith(STYLE_PREAMBLE)).toBe(true);
+  });
+
+  it("carries the family anchor, description, size, and named palette", () => {
+    const prompt = buildImagePrompt(full);
+    expect(prompt).toContain("Grey lunar station tech");
+    expect(prompt).toContain("Subject: Front-facing knight");
+    expect(prompt).toContain("16×16 pixels");
+    expect(prompt).toContain("steel #c8ccd4");
+    expect(prompt).toContain("gold crest #f4c430");
+  });
+
+  it("excludes the grid — the prompt exists to regenerate it", () => {
+    // A grid field must never leak into the prompt even if handed in.
+    const prompt = buildImagePrompt({ ...full, grid: "ss\ngg" } as never);
+    expect(prompt).not.toContain("ss");
+  });
+
+  it("falls back to hex-only guidance when no names are known", () => {
+    const prompt = buildImagePrompt({ ...full, paletteNames: {} });
+    expect(prompt).toContain("#f4c430, #c8ccd4"); // ordered by palette key
+  });
+
+  it("flags an empty description as the unset acceptance target", () => {
+    const prompt = buildImagePrompt({ ...full, description: "" });
+    expect(prompt).toContain("no description");
+  });
+
+  it("is deterministic — same fields synthesize the same prompt", () => {
+    expect(buildImagePrompt(full)).toBe(buildImagePrompt(full));
+  });
+});
+
+describe("provenanceRecord", () => {
+  it("records prompt, model, and seed for an audit", () => {
+    expect(provenanceRecord({ prompt: "p", model: "m", seed: 7 })).toEqual({
+      prompt: "p",
+      model: "m",
+      seed: 7,
+    });
+  });
+
+  it("nulls whatever the caller did not supply", () => {
+    expect(provenanceRecord({})).toEqual({
+      prompt: null,
+      model: null,
+      seed: null,
+    });
   });
 });
 

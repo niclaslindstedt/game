@@ -1,5 +1,8 @@
 name: rift
 ground: void_0
+style: >
+  A tear between universes — void blacks shot through with unnatural violet and
+  teal glow, unstable geometry, nothing quite solid.
 palette:
   C: "#5b858ce1"
   K: "#0a0910"

@@ -3,13 +3,22 @@
 // The sprite authoring loop — the tooling behind "draw a sprite from a
 // description or a reference image, then refine it against the real game".
 // See the `pixel-assets` skill and docs/sprite-yaml-plan.md for the workflow.
-// Three subcommands, each one step of the loop:
+// Four subcommands, each one step of the loop:
+//
+//   prompt <sprite-name> [--out path]
+//       Synthesize an image-generation prompt from a sprite's fields — the
+//       global style preamble, its family's style anchor, its description, size,
+//       and palette. The grid is excluded: the prompt exists to regenerate it.
+//       This is the blank-canvas step — feed the prompt to an image model, save
+//       the result, then hand it to `analyze`.
 //
 //   analyze <image.png> --name N --family F [--size WxH] [--colors K]
 //       Trace a reference image into a self-describing sprite YAML: resample
 //       to the cell grid, quantize to a stable palette, emit the file. Prints
 //       to stdout, or writes into the tree (and copies the reference) with
-//       --out. This is the bootstrap — a hand-authored grid is optional.
+//       --out. This is the bootstrap — a hand-authored grid is optional. Pass
+//       --model/--seed/--prompt-file to record generation provenance beside the
+//       reference (`<name>.ref.json`) — auditable, not reproducible.
 //
 //   pose <sprite-name> [--scale N] [--out path]
 //       Render a base sprite centered on a patch of its OWN family ground,
@@ -33,6 +42,11 @@ import { compareSurfaces } from "./asset-tools/compare.mjs";
 import { gridToSurface } from "./asset-tools/grid.mjs";
 import { loadImage, resampleToCells } from "./asset-tools/image.mjs";
 import { writePng } from "./asset-tools/preview.mjs";
+import {
+  buildImagePrompt,
+  paletteComments,
+  provenanceRecord,
+} from "./asset-tools/prompt.mjs";
 import { quantizeGrid } from "./asset-tools/quantize.mjs";
 import { toYaml } from "./asset-tools/sprite-yaml.mjs";
 import {
@@ -132,10 +146,63 @@ async function analyze(positional, flags) {
       const refPath = outPath.replace(/\.ya?ml$/, ".ref.png");
       copyFileSync(resolve(imagePath), refPath);
       note += ` + ${basename(refPath)}`;
+
+      // Record what generated the reference, when told: the prompt, model, and
+      // seed. Generation isn't deterministic, so this makes it auditable (an
+      // RNG seed's analog) rather than reproducible.
+      const val = (f) => (flags[f] && flags[f] !== true ? flags[f] : undefined);
+      const promptFile = val("prompt-file");
+      if (val("model") || val("seed") || promptFile) {
+        const record = provenanceRecord({
+          prompt: promptFile
+            ? readFileSync(resolve(promptFile), "utf8").trim()
+            : undefined,
+          model: val("model"),
+          seed: val("seed"),
+        });
+        const jsonPath = outPath.replace(/\.ya?ml$/, ".ref.json");
+        writeFileSync(jsonPath, `${JSON.stringify(record, null, 2)}\n`);
+        note += ` + ${basename(jsonPath)}`;
+      }
     }
     console.log(note);
   } else {
     process.stdout.write(yaml);
+  }
+}
+
+// ---- prompt: sprite fields → image-generation prompt -----------------------
+
+function promptCmd(positional, flags) {
+  const name = positional[0];
+  if (!name) die("prompt needs a sprite name");
+  const { SPRITE_FAMILY, FAMILIES } = loadSprites();
+  const familyName = SPRITE_FAMILY[name];
+  if (!familyName) {
+    die(
+      `no base sprite "${name}" (derived wound/worn variants have no fields to ` +
+        `prompt from — pick a hand-authored sprite)`,
+    );
+  }
+  const family = FAMILIES.find((f) => f.name === familyName);
+  const text = readFileSync(`${spritesDir}/${familyName}/${name}.yaml`, "utf8");
+  const sprite = parse(text);
+
+  const prompt = buildImagePrompt({
+    description: sprite.description,
+    familyStyle: family.style,
+    size: sprite.size,
+    palette: sprite.palette,
+    paletteNames: paletteComments(text),
+  });
+
+  if (flags.out && flags.out !== true) {
+    const outPath = resolve(flags.out);
+    mkdirSync(dirname(outPath), { recursive: true });
+    writeFileSync(outPath, `${prompt}\n`);
+    console.log(`wrote ${outPath}`);
+  } else {
+    process.stdout.write(`${prompt}\n`);
   }
 }
 
@@ -220,12 +287,14 @@ async function compare(positional) {
 const [, , cmd, ...rest] = process.argv;
 const { flags, positional } = parseArgs(rest);
 
-const commands = { analyze, pose, compare };
+const commands = { prompt: promptCmd, analyze, pose, compare };
 if (!commands[cmd]) {
-  console.error("usage: sprite-author <analyze|pose|compare> ...");
+  console.error("usage: sprite-author <prompt|analyze|pose|compare> ...");
+  console.error("  prompt <sprite-name> [--out path]");
   console.error(
     "  analyze <image.png> --name N --family F [--size WxH] [--colors K] [--out path]",
   );
+  console.error("           [--model M] [--seed S] [--prompt-file P]");
   console.error("  pose <sprite-name> [--scale N] [--out path]");
   console.error("  compare <sprite-name> <reference.png>");
   process.exit(cmd ? 1 : 0);

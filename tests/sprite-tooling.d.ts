@@ -54,6 +54,27 @@ declare module "*/asset-tools/quantize.mjs" {
   ): { palette: Record<string, string>; grid: string };
 }
 
+declare module "*/asset-tools/prompt.mjs" {
+  export const STYLE_PREAMBLE: string;
+  export function paletteComments(yamlText: string): Record<string, string>;
+  export function buildImagePrompt(args: {
+    description?: string;
+    familyStyle?: string;
+    size?: [number, number];
+    palette?: Record<string, string>;
+    paletteNames?: Record<string, string>;
+  }): string;
+  export function provenanceRecord(args: {
+    prompt?: string | null;
+    model?: string | null;
+    seed?: string | number | null;
+  }): {
+    model: string | null;
+    seed: string | number | null;
+    prompt: string | null;
+  };
+}
+
 declare module "*/asset-tools/compare.mjs" {
   export function resizeNearest(
     surface: Surface,
