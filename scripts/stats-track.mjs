@@ -6,8 +6,10 @@
 // KILL-BY-KILL through the real rosters — the same fast, deterministic model the
 // leveling-curve calculator uses, NOT the autopilot — so a full run is modelled
 // in well under a second. It logs an AVERAGE over each bucket of ~100 kills
-// (`--bucket`), one CSV row per bucket, plus one row per elite/boss kill. Every
-// mob stat is the engine's own scaling read at the bucket's mean hero level.
+// (`--bucket`), one CSV row per bucket for the AVERAGE MINION, plus one row per
+// elite/boss kill carrying that foe's OWN scaled hp + contact damage. Every stat
+// is the engine's own scaling read at the (mean) hero level. `--graph run.html`
+// renders it: minion-average lines + an elite/boss scatter on its own axis.
 //
 //   node scripts/stats-track.mjs                      # critical path → stdout CSV
 //   node scripts/stats-track.mjs --out run.csv --graph run.html
@@ -65,12 +67,23 @@ const graphPath = opt("graph");
 // per-level contact ramp (`mobContactScaleFor`) rides, so "mob damage" reads as
 // an absolute whose trend is legible.
 const REF_CONTACT_L1 = 6;
-const mobStats = (heroLevel, diff) => {
-  const mlvl = mobLevelFor(heroLevel, diff);
+// Mob stats at a given hero level. For a MINION the synthetic reference minion
+// (refMobHp / REF_CONTACT_L1) stands in for "the average mob". Pass an elite/
+// boss `def` and its OWN authored hp + contact damage are scaled instead — and
+// its monster level picks up the def's `levelBonus`, the way `maybePowerScale`
+// re-stamps an elite/boss a few levels above the rank and file on engage — so a
+// boss reads at its real (far higher) toughness, not a minion's.
+const mobStats = (heroLevel, diff, def) => {
+  const mlvl = Math.max(
+    1,
+    mobLevelFor(heroLevel, diff) + (def?.levelBonus ?? 0),
+  );
+  const baseHp = def?.hp ?? LEVELING.refMobHp;
+  const baseContact = def?.contactDamage ?? REF_CONTACT_L1;
   return {
     mlvl,
-    hp: Math.round(LEVELING.refMobHp * mobHpScaleFor(heroLevel, diff)),
-    dmg: Math.round(REF_CONTACT_L1 * mobContactScaleFor(mlvl) * 10) / 10,
+    hp: Math.round(baseHp * mobHpScaleFor(heroLevel, diff)),
+    dmg: Math.round(baseContact * mobContactScaleFor(mlvl) * 10) / 10,
     armor: Math.round(mobArmorReduction(mlvl, diff) * 100),
   };
 };
@@ -166,7 +179,7 @@ for (const diff of PATH) {
             levelId: id,
             cumKills,
             heroLevel: level,
-            ...mobStats(level, diff),
+            ...mobStats(level, diff, e),
           });
         } else {
           bucketKills++;
@@ -221,30 +234,27 @@ function buildChartHtml(allRows) {
     nightmare: "#d98a57",
     jesus: "#d9578a",
   };
-  const metrics = [
-    { key: "mlvl", label: "Mob level", accent: "#7aa8ff" },
-    { key: "hp", label: "Mob health", accent: "#57d9c9" },
-    { key: "dmg", label: "Mob contact damage", accent: "#d9a857", dec: 1 },
-    { key: "armor", label: "Mob armor reduction (%)", accent: "#c98aff" },
-  ];
-  const W = 900;
-  const H = 220;
-  const pad = { l: 54, r: 16, t: 16, b: 30 };
-  const xs = line.map((r) => r.cumKills);
-  const xMin = Math.min(...xs);
-  const xMax = Math.max(...xs);
+  // A square-ish viewBox scaled UNIFORMLY (no preserveAspectRatio="none"), so
+  // circles stay circles and the line isn't vertically stretched into a
+  // saw-tooth. `.card svg { height: auto }` lets it fill the card width.
+  const W = 640;
+  const H = 300;
+  const pad = { l: 58, r: 16, t: 16, b: 30 };
+  const allK = allRows.map((r) => r.cumKills);
+  const xMin = Math.min(...allK);
+  const xMax = Math.max(...allK);
   const sx = (k) =>
     pad.l + ((k - xMin) / (xMax - xMin || 1)) * (W - pad.l - pad.r);
-  // Difficulty bands: contiguous cumKills spans, one shaded rect each.
+  // Difficulty bands: contiguous cumKills spans off the minion line (its
+  // buckets span the whole run), one shaded rect each.
   const bands = [];
   for (const r of line) {
     const last = bands[bands.length - 1];
     if (last && last.diff === r.difficulty) last.x2 = r.cumKills;
     else bands.push({ diff: r.difficulty, x1: r.cumKills, x2: r.cumKills });
   }
-  const chart = (m) => {
-    const ys = line.map((r) => r[m.key]);
-    const yMax = Math.max(...ys, 1) * 1.1;
+  // Shared frame (bands + horizontal gridlines/labels) for a given y-scale.
+  const frame = (yMax, dec) => {
     const sy = (v) => H - pad.b - (v / yMax) * (H - pad.t - pad.b);
     const band = bands
       .map(
@@ -253,25 +263,7 @@ function buildChartHtml(allRows) {
             sx(b.x2) - sx(b.x1)
           ).toFixed(1)}" height="${H - pad.t - pad.b}" fill="${
             diffColor[b.diff]
-          }" opacity="0.07"/>`,
-      )
-      .join("");
-    const d = line
-      .map(
-        (r, i) =>
-          `${i ? "L" : "M"}${sx(r.cumKills).toFixed(1)},${sy(r[m.key]).toFixed(
-            1,
-          )}`,
-      )
-      .join("");
-    const dots = bosses
-      .map(
-        (r) =>
-          `<circle cx="${sx(r.cumKills).toFixed(1)}" cy="${sy(r[m.key]).toFixed(
-            1,
-          )}" r="3" fill="${
-            diffColor[r.difficulty]
-          }" stroke="var(--panel)" stroke-width="1"/>`,
+          }" opacity="0.08"/>`,
       )
       .join("");
     const ticks = [0, 0.5, 1]
@@ -281,17 +273,58 @@ function buildChartHtml(allRows) {
         return `<line x1="${pad.l}" y1="${y}" x2="${W - pad.r}" y2="${y}" stroke="var(--grid)"/><text x="${
           pad.l - 8
         }" y="${(+y + 4).toFixed(1)}" text-anchor="end" class="tick">${
-          m.dec ? v.toFixed(m.dec) : Math.round(v)
+          dec ? v.toFixed(dec) : Math.round(v)
         }</text>`;
       })
       .join("");
-    return `<div class="card"><div class="title">${m.label}</div>
-<svg viewBox="0 0 ${W} ${H}" preserveAspectRatio="none" role="img" aria-label="${m.label}">
-${band}${ticks}
-<path d="${d}" fill="none" stroke="${m.accent}" stroke-width="2" stroke-linejoin="round"/>
-${dots}
-</svg></div>`;
+    return { sy, band, ticks };
   };
+  const card = (label, inner) =>
+    `<div class="card"><div class="title">${label}</div>
+<svg viewBox="0 0 ${W} ${H}" role="img" aria-label="${label}">${inner}</svg></div>`;
+  // A minion-average metric: a single connected line, no markers.
+  const lineChart = (m) => {
+    const yMax = Math.max(...line.map((r) => r[m.key]), 1) * 1.12;
+    const { sy, band, ticks } = frame(yMax, m.dec);
+    const d = line
+      .map(
+        (r, i) =>
+          `${i ? "L" : "M"}${sx(r.cumKills).toFixed(1)},${sy(r[m.key]).toFixed(
+            1,
+          )}`,
+      )
+      .join("");
+    return card(
+      m.label,
+      `${band}${ticks}<path d="${d}" fill="none" stroke="${m.accent}" stroke-width="2" stroke-linejoin="round"/>`,
+    );
+  };
+  // A boss/elite metric: one dot per kill at its OWN (far higher) value — a
+  // scatter, since different bosses carry different base stats, on its own axis
+  // so it never squashes the minion line.
+  const scatterChart = (m) => {
+    const yMax = Math.max(...bosses.map((r) => r[m.key]), 1) * 1.12;
+    const { sy, band, ticks } = frame(yMax, m.dec);
+    const dots = bosses
+      .map(
+        (r) =>
+          `<circle cx="${sx(r.cumKills).toFixed(1)}" cy="${sy(r[m.key]).toFixed(
+            1,
+          )}" r="3.4" fill="${diffColor[r.difficulty]}" fill-opacity="0.85"/>`,
+      )
+      .join("");
+    return card(m.label, `${band}${ticks}${dots}`);
+  };
+  const minionMetrics = [
+    { key: "mlvl", label: "Mob level", accent: "#7aa8ff" },
+    { key: "hp", label: "Mob health", accent: "#57d9c9" },
+    { key: "dmg", label: "Mob contact damage", accent: "#d9a857", dec: 1 },
+    { key: "armor", label: "Mob armor reduction (%)", accent: "#c98aff" },
+  ];
+  const bossMetrics = [
+    { key: "hp", label: "Elite / boss health" },
+    { key: "dmg", label: "Elite / boss contact damage", dec: 1 },
+  ];
   const legend = bands
     .filter((b, i, a) => a.findIndex((x) => x.diff === b.diff) === i)
     .map(
@@ -308,19 +341,23 @@ ${dots}
 :root[data-theme=light]{--bg:#eef1f6;--panel:#fff;--ink:#1b2430;--faint:#5a6b7f;--grid:#dce3ec}
 :root[data-theme=dark]{--bg:#0e151f;--panel:#121a26;--ink:#e6edf6;--faint:#8aa0b8;--grid:#22303f}
 body{margin:0;padding:22px;background:var(--bg);color:var(--ink);font:14px/1.4 system-ui,sans-serif}
-h1{font-size:18px;margin:0 0 4px}p.sub{margin:0 0 18px;color:var(--faint)}
-.grid{display:grid;gap:16px;grid-template-columns:repeat(auto-fit,minmax(360px,1fr))}
+h1{font-size:18px;margin:0 0 4px}h2{font-size:14px;margin:22px 0 10px;color:var(--faint);font-weight:600}
+p.sub{margin:0 0 8px;color:var(--faint)}
+.grid{display:grid;gap:16px;grid-template-columns:repeat(auto-fit,minmax(340px,1fr))}
 .card{background:var(--panel);border:1px solid var(--grid);border-radius:12px;padding:12px 12px 6px}
-.card svg{width:100%;height:200px;overflow:visible}
+.card svg{width:100%;height:auto;display:block;overflow:visible}
 .title{font-weight:600;margin-bottom:6px}
 .tick{fill:var(--faint);font-size:11px}
 .legend{margin:14px 0 0;display:flex;gap:16px;flex-wrap:wrap;color:var(--faint)}
 .lg{display:inline-flex;align-items:center;gap:6px}.lg i{width:12px;height:12px;border-radius:3px;display:inline-block}
 </style>
 <h1>Horde stats across a run</h1>
-<p class="sub">Averaged over ${bucketSize}-kill buckets along the critical path (${PATH.join(
+<p class="sub">Critical path (${PATH.join(
     " → ",
-  )}); dots mark elite/boss kills. X axis: cumulative kills.</p>
-<div class="grid">${metrics.map(chart).join("")}</div>
+  )}), walked kill-by-kill. X axis: cumulative kills. The lines are the AVERAGE MINION over ${bucketSize}-kill buckets; the scatter charts plot each elite/boss at its OWN health and damage.</p>
+<h2>Average minion (line, per ${bucketSize}-kill bucket)</h2>
+<div class="grid">${minionMetrics.map(lineChart).join("")}</div>
+<h2>Elites &amp; bosses (one dot per kill)</h2>
+<div class="grid">${bossMetrics.map(scatterChart).join("")}</div>
 <div class="legend">${legend}</div>`;
 }
