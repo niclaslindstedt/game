@@ -295,6 +295,7 @@ for how to add new _mechanics_ (not just new content).
 - [Game content](docs/game-content.md) — this game's story, levels, and roster
 - [Story](docs/story.md) — the plot in prose; the top of the story source-of-truth chain
 - [Manuscript](docs/manuscript.md) — the verbatim script (every line), extrapolated from the story
+- [Art style](docs/art-style.md) — the house style for the game's pixel art: the feel, the shared look, and the design best practices
 - [Configuration](docs/configuration.md)
 - [Troubleshooting](docs/troubleshooting.md)
 
