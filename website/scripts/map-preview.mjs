@@ -149,7 +149,7 @@ function star(surf, cx, cy, r, color) {
 }
 
 // ---- the design view -------------------------------------------------------
-function drawBase(c, description) {
+function drawBase(c) {
   const { def, surf, ox, oy, mapW, mapH } = c;
   // Title bar.
   label(surf, `${def.name}  (${def.id})  ${def.biome}`, ox, PAD - 1, C.ink);
@@ -509,7 +509,7 @@ async function drawActual(c, seed, difficulty) {
 async function renderLevel(entry, opts) {
   const { def, description } = entry;
   const c = makeCanvas(def);
-  drawBase(c, description);
+  drawBase(c);
   const extra = [];
   if (opts.heatmap) {
     const spatial = await runTrace(def.id, opts.seed, opts.difficulty);

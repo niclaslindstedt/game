@@ -68,9 +68,9 @@ export function createMerchant(
   const spawnPoints = level.merchantSpawns ?? [];
   const authored =
     !preDiscovered && spawnPoints.length > 0
-      ? ([...spawnPoints].sort(() => rng() - 0.5).find(
-          (p) => !blocked(p, MERCHANT.radius),
-        ) ?? spawnPoints[0])
+      ? ([...spawnPoints]
+          .sort(() => rng() - 0.5)
+          .find((p) => !blocked(p, MERCHANT.radius)) ?? spawnPoints[0])
       : null;
   let pos: Vec2 = preDiscovered
     ? nearSpawnSpot(playerSpawn, level, blocked)
