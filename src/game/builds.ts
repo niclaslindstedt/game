@@ -1,0 +1,158 @@
+// SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
+// STAT BUILDS — the single source of truth for HOW A HERO DISTRIBUTES STAT
+// POINTS AS THEY LEVEL. A build is not a character class; it is an allocation
+// strategy. Three of the four builds bias the spread toward a weapon CLASS
+// (`melee`/`ranged`/`magic`) so the stat-aware auto-equip then prefers that
+// class of weapon; the fourth, `balanced`, commits to no lane at all and simply
+// spreads points reasonably across every stat. Everything downstream — which
+// weapon the auto-equip wears, the armor/charms that out-score what's on — falls
+// out of the stats, so a build fully determines "stat allocation AND item
+// selection AND equipment" without any code choosing gear by hand.
+//
+// Two consumers share this ONE definition so a build means the same thing
+// everywhere:
+//   - the AUTOPILOT (src/game/bot.ts `botAllocate`) spends the live hero's
+//     points against the build rotation, tick by tick, in the real-loop
+//     simulator (src/sim/simulate.ts) and the app's `?bot=` autoplay;
+//   - the ANALYTIC paper sim (src/sim/analytic.ts) spends them via
+//     `buildStatWeights`, the same rotation expressed as a weight ratio, so the
+//     progression graphs read the same distribution.
+//
+// Adding/retuning a build here moves every balance instrument together — which
+// is the point: we always compare builds on the same footing to find whether
+// one is overpowered, and to aim each at being the strongest during its own
+// stretch of the game.
+
+import { STAT_NAMES } from "./defs/equipment.ts";
+import type { StatName, WeaponClass } from "./types.ts";
+
+/** The four stat-distribution strategies the analysis tooling sweeps.
+ * `melee`/`ranged`/`magic` bias the spread toward that weapon class; `balanced`
+ * spreads across every stat (no pinned lane — the gear is whatever scores
+ * best). Not a character class — a way of spending level-up points. */
+export type StatBuild = "melee" | "ranged" | "magic" | "balanced";
+
+/** Every build, for CLIs/UIs that validate a requested name. */
+export const STAT_BUILDS: StatBuild[] = [
+  "melee",
+  "ranged",
+  "magic",
+  "balanced",
+];
+
+/** Is `s` a valid stat-build name? */
+export function isStatBuild(s: string): s is StatBuild {
+  return (STAT_BUILDS as string[]).includes(s);
+}
+
+/**
+ * The allocation cycle each build spends its points on. A lane-biased build
+ * (`melee`/`ranged`/`magic`) commits to ONE weapon class — so the hero deepens
+ * one attribute instead of thrashing every time auto-equip swaps its weapon —
+ * yet spreads the rest across every stat that grows the lane's DAMAGE, not just
+ * its gate. Half of every lane cycle goes to the lane's REQUIRED attribute so
+ * the equip gates stay cleared as they scale (~50% comfortably clears the ~40%
+ * asked). The other half buys real output:
+ *
+ * - **INTELLIGENCE rides EVERY physical build** — it widens the swing/blast AoE
+ *   cone (`aoePerInt`), extends weapon reach (`rangePerInt`), and lifts crit
+ *   damage (`critDamagePerInt`), so a melee cleave hits more bodies from further
+ *   out and a gun reaches across the screen.
+ * - **DEXTERITY** is the SPEED attribute for melee & ranged (`SPEED_STAT`), so
+ *   both physical lanes buy swing/fire cadence with it; it also gates ranged.
+ * - **STRENGTH** is the DAMAGE attribute for BOTH physical lanes (guns scale off
+ *   STR, not DEX), so ranged banks it too.
+ * - **SPIRIT** feeds a caster's mana pool and health regen; **STAMINA** the legs
+ *   every lane needs to reposition.
+ *
+ * Keyed off total points already spent (not the level), so each individual point
+ * rotates through the cycle rather than a whole level-up dumping into one stat.
+ */
+export const BUILD_ROTATION: Record<StatBuild, StatName[]> = {
+  // STR both gates AND scales the blow (REQ==DAMAGE) → it dominates; DEX buys
+  // swing cadence, INT the cleave/reach/crit that turns a swing into an AoE.
+  melee: [
+    "strength",
+    "strength",
+    "intelligence",
+    "strength",
+    "dexterity",
+    "strength",
+    "intelligence",
+    "stamina",
+  ],
+  // DEX gates AND speeds the shots; STR is the ranged DAMAGE stat; INT buys
+  // reach/AoE/crit so the shots carry and cleave.
+  ranged: [
+    "dexterity",
+    "strength",
+    "dexterity",
+    "intelligence",
+    "dexterity",
+    "strength",
+    "dexterity",
+    "intelligence",
+  ],
+  // INT gates, scales, speeds, AND buys reach/AoE/crit all at once → it
+  // dominates; SPIRIT feeds the mana pool + regen, STAMINA the legs.
+  magic: [
+    "intelligence",
+    "intelligence",
+    "spirit",
+    "intelligence",
+    "intelligence",
+    "spirit",
+    "intelligence",
+    "stamina",
+  ],
+  // The even spread: a REASONABLE distribution across EVERY stat, not a naive
+  // even seventh each. Knowing the mechanics, it leans DOUBLE into the three
+  // attack stats (STR/DEX/INT) — those both gate and scale whatever weapon the
+  // auto-equip ends up wearing, so a generalist still needs them deep to stay
+  // wieldable and hit — then banks one beat each into the four support/utility
+  // stats: STAMINA (hp + legs), SPIRIT (mana, so a picked-up wand still casts +
+  // regen), SPEED (repositioning), and LUCK (crit + loot). No pinned lane — the
+  // auto-equip wears whatever the spread scores best, which is exactly the
+  // generalist read we compare the focused builds against.
+  balanced: [
+    "strength",
+    "dexterity",
+    "intelligence",
+    "stamina",
+    "strength",
+    "dexterity",
+    "intelligence",
+    "spirit",
+    "speed",
+    "luck",
+  ],
+};
+
+/** The weapon lane a build biases toward, or `null` for `balanced` (no pinned
+ * lane — the auto-equip picks emergently off the spread stats). */
+export function buildWeaponLane(build: StatBuild): WeaponClass | null {
+  return build === "balanced" ? null : build;
+}
+
+/**
+ * The build rotation expressed as a WEIGHT RATIO — the shape the analytic
+ * progression sim (`StatWeights`) spends points by (highest-averages). Derived
+ * by counting each stat's beats in {@link BUILD_ROTATION}, so the paper sim and
+ * the autopilot spend points the same way from one definition. e.g. melee →
+ * `{ strength: 4, intelligence: 2, dexterity: 1, stamina: 1 }`.
+ */
+export function buildStatWeights(
+  build: StatBuild,
+): Partial<Record<StatName, number>> {
+  const weights: Partial<Record<StatName, number>> = {};
+  for (const stat of BUILD_ROTATION[build]) {
+    weights[stat] = (weights[stat] ?? 0) + 1;
+  }
+  return weights;
+}
+
+/** All stats a build ever spends into, in a stable order (for labels/legends). */
+export function buildStats(build: StatBuild): StatName[] {
+  const weights = buildStatWeights(build);
+  return STAT_NAMES.filter((s) => (weights[s] ?? 0) > 0);
+}

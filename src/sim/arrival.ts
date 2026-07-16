@@ -17,6 +17,8 @@
 // kit it produces is exactly what that tier actually drops — no hand-waved
 // stand-in stats.
 
+import { buildStatWeights } from "../game/builds.ts";
+import type { StatBuild } from "../game/builds.ts";
 import { createGame } from "../game/create.ts";
 import { difficultyDef } from "../game/defs/difficulties.ts";
 import { LEVEL_ORDER } from "../game/defs/levels/index.ts";
@@ -57,6 +59,12 @@ export type SynthesizeArrivalOptions = {
   weaponTier?: Tier;
   /** Forced armor/charm tier (default `rare`). */
   gearTier?: Tier;
+  /** The stat-distribution BUILD to spend the hero's points by (melee/ranged/
+   * magic/balanced — see src/game/builds.ts). Omitted = the neutral four-combat
+   * -stat round-robin, a generalist arrival. Set it so a `--start-level`
+   * arrival hero represents the build being measured — his stats (and, through
+   * the stat-aware auto-equip, his weapon) bend toward that lane. */
+  build?: StatBuild;
 };
 
 /** How many pieces to roll when dressing the synthetic hero — a generous batch
@@ -92,6 +100,7 @@ export function synthesizeArrival(opts: SynthesizeArrivalOptions): Loadout {
     seed = 1,
     weaponTier = "rare",
     gearTier = "rare",
+    build,
   } = opts;
 
   const target = Math.max(1, Math.round(level));
@@ -109,11 +118,37 @@ export function synthesizeArrival(opts: SynthesizeArrivalOptions): Loadout {
   player.xpToNext = xpToLevelUp(target, difficulty);
   let points = 0;
   for (let l = 2; l <= target; l++) points += statPointsAt(l);
-  const order = ARRIVAL_STATS;
-  for (let i = 0; i < points; i++) {
-    const stat = order[i % order.length] as StatName;
-    player.stats[stat]++;
-    player.spentStats[stat]++;
+  // A named BUILD spends the points by its weight ratio (highest-averages, the
+  // same spend the analytic sim and autopilot use), so the arrival hero mirrors
+  // the build being measured; with none, the neutral four-combat-stat round
+  // robin stands in (a generalist who can wield the late gear).
+  if (build) {
+    const weights = buildStatWeights(build);
+    const lane = (Object.keys(weights) as StatName[]).filter(
+      (s) => (weights[s] ?? 0) > 0,
+    );
+    const spent: Partial<Record<StatName, number>> = {};
+    for (let i = 0; i < points; i++) {
+      let best = lane[0] as StatName;
+      let bestScore = -Infinity;
+      for (const stat of lane) {
+        const score = (weights[stat] ?? 0) / ((spent[stat] ?? 0) + 1);
+        if (score > bestScore) {
+          bestScore = score;
+          best = stat;
+        }
+      }
+      spent[best] = (spent[best] ?? 0) + 1;
+      player.stats[best]++;
+      player.spentStats[best]++;
+    }
+  } else {
+    const order = ARRIVAL_STATS;
+    for (let i = 0; i < points; i++) {
+      const stat = order[i % order.length] as StatName;
+      player.stats[stat]++;
+      player.spentStats[stat]++;
+    }
   }
   recomputeMaxHp(state);
   recomputeMaxStamina(state);

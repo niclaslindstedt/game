@@ -23,6 +23,8 @@
 // scripts and tests import this module directly.
 
 import { extractLoadout } from "../game/arrival.ts";
+import { buildStatWeights } from "../game/builds.ts";
+import type { StatBuild } from "../game/builds.ts";
 import { LEVELING, MENACE, RARE_MOBS } from "../game/config.ts";
 import { createGame, spawnEnemy } from "../game/create.ts";
 import { BALANCE } from "../game/tuning.ts";
@@ -88,8 +90,14 @@ export type ProgressionOptions = {
   levels?: string[];
   /** Deterministic seed — the same options replay the same run exactly. */
   seed?: number;
-  /** How level-up points are spent (see StatWeights). Default: a balanced
-   * bruiser, `{ strength: 2, stamina: 1, dexterity: 1 }`. */
+  /** The stat-distribution BUILD to spend level-up points by (melee/ranged/
+   * magic/balanced — see src/game/builds.ts). A shorthand that sets
+   * `statWeights` from the shared build catalog, so the paper sim spends points
+   * exactly as the autopilot does. An explicit `statWeights` overrides it. */
+  build?: StatBuild;
+  /** How level-up points are spent (see StatWeights). Overrides `build` when
+   * both are given. Default when neither is set: a balanced bruiser,
+   * `{ strength: 2, stamina: 1, dexterity: 1 }`. */
   statWeights?: StatWeights;
   /** Kills between hero-stat snapshots (default 25 — the batch the request
    * is framed around). Boss/elite/rare kills and level boundaries always
@@ -215,6 +223,9 @@ export type LevelResult = {
 
 export type ProgressionReport = {
   seed: number;
+  /** The stat-distribution build this run spent points by, if one was named
+   * (melee/ranged/magic/balanced) — for labeling graphs and comparisons. */
+  build?: StatBuild;
   statWeights: StatWeights;
   batchSize: number;
   levels: LevelResult[];
@@ -656,7 +667,10 @@ export function simulateProgression(
     difficulties = [...DIFFICULTY_ORDER],
     levels = [...LEVEL_ORDER],
     seed = 1,
-    statWeights = { strength: 2, stamina: 1, dexterity: 1 },
+    build,
+    statWeights = build
+      ? buildStatWeights(build)
+      : { strength: 2, stamina: 1, dexterity: 1 },
     batchSize = 25,
     carryLoadout = true,
     targetLevel = LEVELING.maxLevel,
@@ -737,6 +751,7 @@ export function simulateProgression(
   const heroLevelEnd = heroLevelOf(loadout);
   return {
     seed,
+    build,
     statWeights,
     batchSize,
     levels: levelResults,

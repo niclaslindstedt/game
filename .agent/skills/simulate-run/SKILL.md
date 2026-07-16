@@ -40,6 +40,8 @@ node scripts/simulate-run.mjs --difficulty medium,nightmare,jesus  # the critica
 node scripts/simulate-run.mjs --difficulty easy --level spacez_hq --full
 node scripts/simulate-run.mjs --farm --rerun 3           # ENDGAME: farm to the cap (L99 / artifact chase)
 node scripts/simulate-run.mjs --seed 42 --strategy kite  # different seed/autopilot
+node scripts/simulate-run.mjs --class all                # MATRIX every build (melee/ranged/magic/balanced) head to head
+node scripts/simulate-run.mjs --class magic --difficulty jesus --start-level 50  # a magic endgame arrival
 node scripts/simulate-run.mjs --verdict                  # one-screen PASS/WARN/FAIL read
 node scripts/simulate-run.mjs --balance xpGain=0.8,mobHp=1.5 --verdict   # probe a candidate tuning
 node scripts/simulate-run.mjs --compare baseline.json    # A/B diff vs an earlier --json dump
@@ -69,6 +71,29 @@ tuning**. Notes:
   ENDGAME read (how the L99 / full-artifact chase actually plays). Pair it with a
   big `--max-minutes` / `--rerun`. The DPS/deaths reads under `--farm` are an
   over-farmer's, not a real player's — don't tune level-relative rules off them.
+
+### Classes — ALWAYS consider all four builds (`--class`)
+
+Balance is per-BUILD, so **a balance question is never fully answered by one
+build** — a knob that fixes melee can break magic. The `--class` flag picks the
+stat-distribution build the hero levels as (`melee`/`ranged`/`magic` focus a
+weapon lane; `balanced` spreads across every stat), which through the stat-aware
+auto-equip also decides the weapon and gear. (`--profile` is the historical alias
+for the same axis, and also takes `auto`, the emergent lane.) The build catalog
+is one source of truth — `src/game/builds.ts` — shared with the analytic
+progression graphs, so a build means the same thing in both tools.
+
+- **`--class all`** runs the MATRIX (one campaign per build) and prints
+  `SPEC TOTALS` — the head-to-head that answers **"is one build overpowered?"**.
+  Make this the default read for any balance change: run `--class all --verdict`
+  and confirm no single build walls or one-shots where the others are on-curve.
+- **`--start-level N` mints the arrival hero PER BUILD**, so an endgame class
+  comparison (`--class all --difficulty jesus --start-level 50 --farm`) drops
+  each spec in as its own leveled + geared hero (a melee arrival wields a melee
+  weapon, etc.), not one shared generalist.
+- The design goal is that **each build leads during its own stretch of the
+  game** (e.g. melee early, ranged/magic mid/late) rather than one dominating
+  throughout — so read the matrix per rung, not just the campaign total.
 
 ### Shopping — ON by default; `--no-shop` to turn it off
 

@@ -45,7 +45,10 @@ const { LEVEL_ORDER } = await import(
 const { STAT_NAMES } = await import(
   pathToFileURL(path.join(root, "src/game/defs/equipment.ts")).href
 );
-const { buildChartHtml } = await import(
+const { STAT_BUILDS } = await import(
+  pathToFileURL(path.join(root, "src/game/builds.ts")).href
+);
+const { buildChartHtml, buildCompareChartHtml } = await import(
   pathToFileURL(path.join(here, "progression-chart.mjs")).href
 );
 const { setAutoStatGainsEnabled } = await import(
@@ -65,9 +68,16 @@ if (flag("help")) {
   console.log(
     "usage: node scripts/progression-sim.mjs " +
       "[--difficulty all|easy[,medium,…]] [--level all|spacez_hq[,…]] " +
-      "[--seed N] [--stats str=2,sta=1,dex=1] [--batch 25] " +
+      "[--seed N] [--class all|melee,ranged,magic,balanced] " +
+      "[--stats str=2,sta=1,dex=1] [--batch 25] " +
       "[--target-level 99] [--fresh] [--no-rares] [--auto] [--full] " +
-      "[--json out.json] [--html out.html]",
+      "[--json out.json] [--html out.html]\n\n" +
+      "--class picks the stat-distribution BUILD (how the hero spends level-up points,\n" +
+      "        which through the stat-aware auto-equip also picks the weapon and gear):\n" +
+      "        melee/ranged/magic focus a weapon lane, balanced spreads across every stat.\n" +
+      "        A comma list or `all` overlays every build on ONE comparison graph (aligned\n" +
+      "        by hero level) — the read for which build leads at each stage of the game.\n" +
+      "        --stats is the manual escape hatch (a custom weight ratio) for a single run.",
   );
   process.exit(0);
 }
@@ -110,36 +120,154 @@ function parseStatWeights(spec) {
 }
 const statWeights = parseStatWeights(opt("stats"));
 
-// ---- Run ------------------------------------------------------------------------
+// --class melee,ranged,… → the stat-distribution builds to run. One build → a
+// single detailed report + graph; more than one (or `all`) → a comparison that
+// overlays them on one graph. Validated against the shared build catalog.
+const classArg = opt("class");
+const builds =
+  classArg === undefined
+    ? []
+    : classArg === "all"
+      ? [...STAT_BUILDS]
+      : classArg.split(",").map((s) => s.trim());
+for (const b of builds) {
+  if (!STAT_BUILDS.includes(b)) {
+    console.error(
+      `unknown class "${b}" — expected one of ${STAT_BUILDS.join(", ")} (or "all")`,
+    );
+    process.exit(1);
+  }
+}
+if (builds.length > 1 && statWeights) {
+  console.error("--stats can't be combined with a multi-build --class");
+  process.exit(1);
+}
 
+const commonOptions = {
+  difficulties,
+  levels,
+  seed,
+  batchSize,
+  carryLoadout,
+  targetLevel,
+  includeRares,
+};
+
+const pad = (v, w) => String(v).padStart(w);
+const padE = (v, w) => String(v).padEnd(w);
+const pct = (x) => `${Math.round(x * 100)}%`;
+
+// ---- MULTI-BUILD comparison mode ------------------------------------------------
+
+if (builds.length > 1) {
+  const startedAt = Date.now();
+  console.log(
+    `Comparing ${builds.length} builds (${builds.join(", ")}) — ` +
+      `seed=${seed} batch=${batchSize} target=L${targetLevel} · one campaign each`,
+  );
+  const runs = builds.map((build) => ({
+    build,
+    report: simulateProgression({ ...commonOptions, build }),
+  }));
+
+  // A compact head-to-head at the deepest shared level — the "is one build
+  // overpowered?" read: DPS, per-hit, hp, and blows-to-kill a minion (lower =
+  // stronger) each build shows at the highest level they ALL reached.
+  const common = Math.min(...runs.map((r) => r.report.heroLevelEnd));
+  const at = (report, lvl) => {
+    let cp = report.checkpoints[0];
+    for (const c of report.checkpoints) {
+      if (c.heroLevel > lvl) break;
+      cp = c;
+    }
+    return cp;
+  };
+  console.log("");
+  console.log(
+    `BUILD COMPARISON — each build read at level ${common} (deepest level all builds reached)`,
+  );
+  const header =
+    padE("build", 10) +
+    pad("finalL", 8) +
+    pad("dps", 8) +
+    pad("perHit", 8) +
+    pad("maxHp", 8) +
+    pad("blows", 7) +
+    pad("menace", 8) +
+    pad("crit", 6) +
+    "  weapon";
+  console.log(header);
+  console.log("-".repeat(header.length + 14));
+  for (const { build, report } of runs) {
+    const cp = at(report, common);
+    console.log(
+      padE(build, 10) +
+        pad(report.heroLevelEnd, 8) +
+        pad(cp.dps, 8) +
+        pad(cp.perHit, 8) +
+        pad(cp.maxHp, 8) +
+        pad(cp.blowsToKill, 7) +
+        pad(cp.menaceStageEq, 8) +
+        pad(pct(cp.critChance), 6) +
+        `  ${cp.weapon} (${cp.weaponTier})`,
+    );
+  }
+  console.log("");
+  console.log(
+    `Compared in ${((Date.now() - startedAt) / 1000).toFixed(1)}s wall.`,
+  );
+
+  const jsonPath = opt("json");
+  if (jsonPath) {
+    writeFileSync(
+      jsonPath,
+      JSON.stringify(
+        runs.map((r) => ({ build: r.build, report: r.report })),
+        null,
+        2,
+      ),
+    );
+    console.log(`\nJSON report written to ${jsonPath}`);
+  }
+  const htmlPath =
+    opt("html") ??
+    (jsonPath
+      ? undefined
+      : path.join(process.cwd(), "progression-compare.html"));
+  if (htmlPath) {
+    writeFileSync(htmlPath, buildCompareChartHtml(runs));
+    console.log(
+      `Comparison graph written to ${htmlPath} — open it in a browser.`,
+    );
+  }
+  process.exit(0);
+}
+
+// ---- SINGLE run (default, or one --class / --stats build) -----------------------
+
+const build = builds[0]; // undefined = the default bruiser weights
 const startedAt = Date.now();
 console.log(
   `Simulating ${difficulties.length} difficulty(ies) × ${levels.length} level(s)` +
     ` — seed=${seed} batch=${batchSize} target=L${targetLevel} carry=${carryLoadout}` +
     ` rares=${includeRares}` +
-    (statWeights
-      ? ` stats=${Object.entries(statWeights)
-          .map(([k, v]) => `${k.slice(0, 3)}${v}`)
-          .join(",")}`
-      : " stats=default(str2,sta1,dex1)"),
+    (build
+      ? ` class=${build}`
+      : statWeights
+        ? ` stats=${Object.entries(statWeights)
+            .map(([k, v]) => `${k.slice(0, 3)}${v}`)
+            .join(",")}`
+        : " stats=default(str2,sta1,dex1)"),
 );
 
 const report = simulateProgression({
-  difficulties,
-  levels,
-  seed,
+  ...commonOptions,
+  build,
   statWeights,
-  batchSize,
-  carryLoadout,
-  targetLevel,
-  includeRares,
 });
 
 // ---- Render — per-level-pass summary --------------------------------------------
 
-const pad = (v, w) => String(v).padStart(w);
-const padE = (v, w) => String(v).padEnd(w);
-const pct = (x) => `${Math.round(x * 100)}%`;
 const dropDigest = (byTier) =>
   Object.entries(byTier)
     .sort(([, a], [, b]) => b - a)

@@ -52,6 +52,7 @@ const { BALANCE_TUNING_DEFAULTS } = await import(
 const { BOT_STRATEGIES, BOT_PROFILES, BOT_POSTURES } = await import(
   path.join(root, "src/game/bot.ts")
 );
+const { STAT_BUILDS } = await import(path.join(root, "src/game/builds.ts"));
 
 // ---- Flags ---------------------------------------------------------------------
 
@@ -67,17 +68,21 @@ if (flag("help")) {
     "usage: node scripts/simulate-run.mjs [--difficulty all|easy[,medium,…]] " +
       "[--level all|spacez_hq[,…]] [--rerun N] [--seed N] " +
       "[--strategy all|aggro,balanced,flee|survivor|rush|kite|boss] " +
-      "[--profile all|melee,ranged,magic|auto] " +
+      "[--class all|melee,ranged,magic,balanced|auto] " +
       "[--max-minutes N] [--fresh] [--full] [--verdict] [--farm] [--no-shop] " +
       "[--start-level N] [--gear-tier regular|magic|rare|legendary] " +
       "[--balance xpGain=0.8,mobHp=1.5] [--compare baseline.json] [--json out.json]\n\n" +
-      "specs (--strategy × --profile): STRATEGY is the positioning posture — `aggro` (close\n" +
+      "specs (--strategy × --class): STRATEGY is the positioning posture — `aggro` (close\n" +
       "                 and hold tight, tolerate a denser ring), `balanced`/`survivor` (the\n" +
-      "                 adaptive edge-hug), `flee` (hold far, disengage early). PROFILE is the\n" +
-      "                 weapon lane the build commits to — `melee`/`ranged`/`magic` steer stat\n" +
-      "                 allocation so the stat-aware auto-equip fights that way (`auto` = the\n" +
-      "                 emergent lane). Either flag takes a comma list or `all`; more than one\n" +
-      "                 spec runs a MATRIX (one campaign per strategy×profile) and compares.\n\n" +
+      "                 adaptive edge-hug), `flee` (hold far, disengage early). CLASS is the\n" +
+      "                 stat-distribution build — how the hero spends level-up points, which\n" +
+      "                 through the stat-aware auto-equip also picks the weapon and gear:\n" +
+      "                 `melee`/`ranged`/`magic` focus a weapon lane, `balanced` spreads across\n" +
+      "                 every stat, `auto` = the emergent lane. (`--profile` is the historical\n" +
+      "                 alias for --class.) Either flag takes a comma list or `all` (class `all`\n" +
+      "                 = melee,ranged,magic,balanced); more than one spec runs a MATRIX (one\n" +
+      "                 campaign per strategy×class) and compares — the read for whether one\n" +
+      "                 build is overpowered, and where each is strongest.\n\n" +
       "arrival (--start-level N): drop a REALISTIC leveled + geared hero into the first swept\n" +
       "                 rung instead of a fresh level-1 rookie — the campaign's intended entry\n" +
       "                 state, since the game scales to hero level. e.g. `--difficulty jesus\n" +
@@ -140,7 +145,17 @@ const seed = Number(opt("seed", "1"));
 // comma list or `all` (strategy `all` = the three postures aggro/balanced/flee;
 // profile `all` = melee/ranged/magic). More than one combo runs a MATRIX.
 const strategies = parseList(opt("strategy", "survivor"), BOT_POSTURES);
-const profiles = parseList(opt("profile", "auto"), BOT_PROFILES);
+// --class is the primary name for the stat-distribution BUILD (melee/ranged/
+// magic/balanced — how the hero spends level-up points, which through the
+// stat-aware auto-equip also picks the weapon and gear). `--profile` is the
+// historical alias for the same axis (and also takes `auto`, the emergent
+// lane). `--class all` sweeps the four real builds; `--profile all` also
+// includes `auto`.
+const classArg = opt("class");
+const profiles =
+  classArg !== undefined
+    ? parseList(classArg, STAT_BUILDS)
+    : parseList(opt("profile", "auto"), BOT_PROFILES);
 const validate = (names, allowed, what) => {
   for (const n of names) {
     if (!allowed.includes(n)) {
@@ -187,16 +202,21 @@ const autoShop = !flag("no-shop");
 // rolled kit's tier (default rare — a solid nightmare-cleared loadout).
 const startLevel = opt("start-level");
 const gearTier = opt("gear-tier", "rare");
-let startLoadout = null;
-if (startLevel !== undefined) {
-  startLoadout = synthesizeArrival({
-    difficulty: difficulties[0],
-    level: Number(startLevel),
-    seed,
-    weaponTier: gearTier,
-    gearTier,
-  });
-}
+// The arrival hero is minted per BUILD, so a class matrix with --start-level
+// drops each spec in as its OWN leveled + geared hero (a melee arrival wields a
+// melee weapon, etc.) rather than sharing one generalist loadout. `auto` has no
+// fixed build, so it arrives as the neutral generalist.
+const startLoadoutFor = (profile) =>
+  startLevel === undefined
+    ? null
+    : synthesizeArrival({
+        difficulty: difficulties[0],
+        level: Number(startLevel),
+        seed,
+        weaponTier: gearTier,
+        gearTier,
+        build: profile === "auto" ? undefined : profile,
+      });
 
 // ---- Run ------------------------------------------------------------------------
 
@@ -224,7 +244,7 @@ const campaignOptions = (strategy, profile) => ({
   balance,
   realisticPacing,
   autoShop,
-  startLoadout,
+  startLoadout: startLoadoutFor(profile),
 });
 
 // MATRIX MODE: more than one spec (strategy × profile) → run a campaign per
@@ -233,7 +253,7 @@ const campaignOptions = (strategy, profile) => ({
 if (combos.length > 1) {
   console.log(
     `Simulating a MATRIX of ${combos.length} specs ` +
-      `(${strategies.length} strategy × ${profiles.length} profile) — ` +
+      `(${strategies.length} strategy × ${profiles.length} class) — ` +
       `${difficulties.length} difficulty(ies) × ${levels.length} level(s) each, ` +
       `seed=${seed} maxMinutes=${maxMinutes} · balance: ${balanceLabel}`,
   );
@@ -248,7 +268,7 @@ if (combos.length > 1) {
   console.log("MATRIX — one row per run, grouped by spec");
   const mh =
     padE("strategy", 10) +
-    padE("profile", 8) +
+    padE("class", 9) +
     padE("difficulty", 11) +
     padE("level", 13) +
     padE("outcome", 9) +
@@ -264,7 +284,7 @@ if (combos.length > 1) {
     for (const run of report.runs) {
       console.log(
         padE(strategy, 10) +
-          padE(profile, 8) +
+          padE(profile, 9) +
           padE(run.difficulty, 11) +
           padE(run.levelId, 13) +
           padE(run.outcome, 9) +
@@ -283,7 +303,7 @@ if (combos.length > 1) {
   console.log("SPEC TOTALS — aggregate per spec (all runs summed)");
   const sh =
     padE("strategy", 10) +
-    padE("profile", 8) +
+    padE("class", 9) +
     pad("kills", 7) +
     pad("deaths", 7) +
     pad("avgDps", 8) +
@@ -299,7 +319,7 @@ if (combos.length > 1) {
     ).toFixed(1);
     console.log(
       padE(strategy, 10) +
-        padE(profile, 8) +
+        padE(profile, 9) +
         pad(report.totalKills, 7) +
         pad(report.totalDeaths, 7) +
         pad(avgDps, 8) +
@@ -320,9 +340,10 @@ if (combos.length > 1) {
 }
 
 const { strategy, profile } = combos[0];
+const startLoadout = startLoadoutFor(profile);
 console.log(
   `Simulating ${difficulties.length} difficulty(ies) × ${levels.length} level run(s)` +
-    ` — strategy=${strategy} profile=${profile} seed=${seed} maxMinutes=${maxMinutes}` +
+    ` — strategy=${strategy} class=${profile} seed=${seed} maxMinutes=${maxMinutes}` +
     ` carry=${carryLoadout}${rerun > 1 ? ` rerun=${rerun}` : ""} · balance: ${balanceLabel}` +
     (realisticPacing
       ? " · pacing: clear to the map's level & move on (realistic)"
