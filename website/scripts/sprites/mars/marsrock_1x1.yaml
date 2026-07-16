@@ -4,7 +4,7 @@ size: [16, 16]
 description: >
   A single oxidized boulder, the moon slabs' rusted Martian cousin: a
   rounded reddish-brown rock with darker crags that stops sight, shots
-  and machines. Smallest 1x1 size.
+  and machines. The smallest, single-tile boulder.
 palette:
   O: "#1a1c2c"
   d: "#80482d"

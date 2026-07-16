@@ -23,11 +23,28 @@ declare module "*/asset-tools/sprite-yaml.mjs" {
 
 declare module "*/asset-tools/sprite-schema.mjs" {
   export function validatePalette(label: string, palette: unknown): string[];
+  export function validateSubject(label: string, subject: unknown): string[];
   export function gridRows(block: string): string[];
   export function validateSprite(sprite: unknown): {
     errors: string[];
     warnings: string[];
   };
+}
+
+declare module "*/asset-tools/coherence.mjs" {
+  type Prose = { description?: string; subject?: Record<string, string> };
+  export function proseText(args: Prose): string;
+  export function sizeMentions(text: string): Array<[number, number]>;
+  export function proseSizeMismatch(
+    args: Prose & { size?: [number, number] },
+  ): [number, number] | null;
+  export function promptSelfCheck(args: {
+    description?: string;
+    subject?: Record<string, string>;
+    size?: [number, number];
+    palette?: Record<string, string>;
+    paletteNames?: Record<string, string>;
+  }): Array<{ level: "fix" | "trim" | "note"; message: string }>;
 }
 
 declare module "*/asset-tools/oklab.mjs" {
@@ -56,9 +73,12 @@ declare module "*/asset-tools/quantize.mjs" {
 
 declare module "*/asset-tools/prompt.mjs" {
   export const STYLE_PREAMBLE: string;
+  export const SUBJECT_SLOTS: Array<{ key: string; label: string }>;
+  export const SUBJECT_KEYS: string[];
   export function paletteComments(yamlText: string): Record<string, string>;
   export function buildImagePrompt(args: {
     description?: string;
+    subject?: Record<string, string>;
     familyStyle?: string;
     size?: [number, number];
     palette?: Record<string, string>;

@@ -12,6 +12,48 @@ const KEY_RE = /^[A-Za-z0-9]$/;
 const HEX_RE = /^#([0-9a-fA-F]{3}|[0-9a-fA-F]{6}|[0-9a-fA-F]{8})$/;
 
 /**
+ * The closed vocabulary of `subject:` slots (kept in step with `SUBJECT_KEYS`
+ * in `prompt.mjs`). A structured subject is optional, but if present it must use
+ * only these keys — a typo'd slot silently drops signal from the prompt, so it
+ * fails the build rather than passing unnoticed.
+ */
+const SUBJECT_KEYS = new Set([
+  "kind",
+  "name",
+  "build",
+  "attire",
+  "features",
+  "accent",
+  "pose",
+  "flavor",
+]);
+
+/**
+ * Validate an optional structured `subject` map: a plain object whose keys are
+ * all recognized slots and whose values are strings. `label` names the source.
+ * @returns array of error strings (empty when absent or valid).
+ */
+export function validateSubject(label, subject) {
+  if (subject === undefined || subject === null) return [];
+  const errors = [];
+  if (typeof subject !== "object" || Array.isArray(subject)) {
+    errors.push(`${label}: subject must be a map of slots`);
+    return errors;
+  }
+  for (const [key, value] of Object.entries(subject)) {
+    if (!SUBJECT_KEYS.has(key)) {
+      errors.push(
+        `${label}: unknown subject slot "${key}" (allowed: ${[...SUBJECT_KEYS].join(", ")})`,
+      );
+    }
+    if (typeof value !== "string") {
+      errors.push(`${label}: subject "${key}" must be a string`);
+    }
+  }
+  return errors;
+}
+
+/**
  * Validate a char → hex palette map. `label` names the source for errors.
  * @returns array of error strings (empty when valid).
  */
@@ -65,6 +107,7 @@ export function validateSprite(sprite) {
   if (!sizeOk) errors.push(`${name}: size must be [w, h] positive integers`);
 
   errors.push(...validatePalette(name, sprite?.palette));
+  errors.push(...validateSubject(name, sprite?.subject));
   const palette = sprite?.palette ?? {};
 
   if (typeof sprite?.grid !== "string") {
@@ -87,9 +130,19 @@ export function validateSprite(sprite) {
     });
   }
 
-  if (!sprite?.description || String(sprite.description).trim() === "") {
+  // The acceptance target is the free-prose description OR a structured
+  // subject; warn only when a sprite carries neither.
+  const hasSubjectTarget =
+    sprite?.subject &&
+    typeof sprite.subject === "object" &&
+    Object.values(sprite.subject).some(
+      (v) => typeof v === "string" && v.trim() !== "",
+    );
+  const hasDescription =
+    sprite?.description && String(sprite.description).trim() !== "";
+  if (!hasDescription && !hasSubjectTarget) {
     warnings.push(
-      `${name}: empty description (the acceptance target — fill it in)`,
+      `${name}: empty description (the acceptance target — fill it in, or add a subject)`,
     );
   }
 

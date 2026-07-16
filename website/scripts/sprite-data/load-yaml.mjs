@@ -18,6 +18,7 @@ import { fileURLToPath } from "node:url";
 
 import { parse } from "yaml";
 
+import { proseSizeMismatch } from "../asset-tools/coherence.mjs";
 import { buildPalette } from "../asset-tools/palette.mjs";
 import {
   gridRows,
@@ -104,6 +105,17 @@ export function loadSprites() {
         continue;
       }
       errors.push(...validateSprite(sprite).errors);
+      // Prompt↔sprite sync, the one coherence check cheap enough for every
+      // build: prose that states a size the `size` field contradicts (a stale
+      // "(20x20)" left behind after a resize). A warning, not an error — the
+      // full per-sprite check is `sprite-author verify`, and a description may
+      // legitimately name another sprite's size in passing.
+      const badSize = proseSizeMismatch(sprite);
+      if (badSize) {
+        console.warn(
+          `! ${sprite.name}: prose says ${badSize[0]}×${badSize[1]} but size is ${sprite.size?.[0]}×${sprite.size?.[1]} — run: sprite-author verify ${sprite.name}`,
+        );
+      }
       const grid = gridRows(sprite.grid);
       SPRITES[sprite.name] = grid;
       SPRITE_PALETTES[sprite.name] = paletteFromHex(sprite.palette ?? {});
