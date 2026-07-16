@@ -11,7 +11,9 @@ at every step, and gated by the user's vote before anything ships. This
 skill layers a *selection and approval workflow* on top of the
 [`pixel-assets`](../pixel-assets/SKILL.md) skill; load that one too — its
 palette rules, iteration cycle, and quality checklist govern every redraw
-here. Also load [`test-scenario`](../test-scenario/SKILL.md): stageable
+here. Judge every redraw against the [art style guide](../../../docs/art-style.md)
+— the game's feel, the shared look, and the design best practices are the bar a
+replacement has to clear. Also load [`test-scenario`](../test-scenario/SKILL.md): stageable
 winners get an **in-game pose check** (Phase 4 step 7) — the scenario
 engine freezes the redraw in the running game, over its real ground, at
 the phone viewport, before it is committed.

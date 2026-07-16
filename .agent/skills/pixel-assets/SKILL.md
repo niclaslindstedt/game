@@ -21,6 +21,14 @@ reference image (one fallible realization of it) and the pixels are always
 re-derivable from it; when a reference image and the description disagree, the
 description wins — fix the grid, not the description.
 
+**Before drawing, read the [art style guide](../../../docs/art-style.md)** — the
+house style for the game's pixel art: the feel, the shared look every sprite
+obeys, and the design best practices (silhouette-first, budgeted color pops,
+the outline/lighting conventions, contrast against the family ground). This
+skill is _how_ to build a sprite; the guide is _what_ it should look like and
+_why_. The [`GAME_NOTES.md`](./GAME_NOTES.md) beside this file records the
+per-family specifics.
+
 ## Files
 
 | File | Role |
