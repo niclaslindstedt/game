@@ -2,16 +2,22 @@ name: hero_couch_0
 family: prelude
 size: [16, 24]
 description: >
-  The hero seated on the couch beside Ada for movie night, drawn 16×24 with a
-  tall transparent footer that lifts him onto the cushion while his anchor
-  stays at floor level. Plain white t-shirt, blue jeans, short dark-brown hair,
-  turned left to watch the TV — the man who never gets up, which is the joke.
+  The hero seated on the couch beside Ada for movie night, turned left to watch
+  the TV — the man who never gets up.
+subject:
+  kind: prelude figure, seated
+  name: the hero
+  build: a lean everyman, a tall transparent footer that lifts him onto the cushion while his anchor stays at floor level
+  attire: plain white t-shirt, blue jeans
+  features: short dark-brown hair
+  pose: seated on the couch, turned left to watch the TV
+  flavor: the laid-off SpaceZ shipbuilder on movie night, the man who never gets up — which is the joke
 palette:
-  O: "#1a1c2c"
-  W: "#f4f4f4"
-  j: "#4054bc"
-  k: "#342c26"
-  p: "#deaa86"
+  O: "#1a1c2c" # outline
+  W: "#f4f4f4" # white t-shirt
+  j: "#4054bc" # blue jeans
+  k: "#342c26" # dark-brown hair
+  p: "#deaa86" # skin
 grid: |
   ................
   ................

@@ -2,14 +2,19 @@ name: lamp
 family: prelude
 size: [10, 22]
 description: >
-  A tall thin floor lamp, ~10×22 px: a slim dark stand on a small base topped
-  by a warm amber/gold lit shade that casts the room's cozy glow. Stands beside
-  the couch in the living room.
+  A tall thin floor lamp beside the couch, its lit shade casting the room's
+  cozy glow.
+subject:
+  kind: prop
+  build: a slim dark stand on a small base, topped by a lit shade
+  features: warm amber/gold glowing shade with a bright hotspot
+  accent: warm amber lampglow
+  flavor: stands beside the couch, the source of the living room's cozy movie-night light
 palette:
-  O: "#1a1c2c"
-  Y: "#ffe3b6"
-  b: "#3f4553"
-  y: "#ffb02e"
+  O: "#1a1c2c" # outline
+  Y: "#ffe3b6" # pale glow hotspot
+  b: "#3f4553" # dark lamp stand
+  y: "#ffb02e" # amber shade glow
 grid: |
   ..........
   ...OOOO...

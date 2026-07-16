@@ -2,13 +2,17 @@ name: table
 family: prelude
 size: [20, 10]
 description: >
-  A low wooden coffee table seen from the side, ~20×10 px: a flat brown top on
-  four short legs, flat 16-bit style. It sits in the gap between the couch and
-  the TV.
+  A low wooden coffee table seen from the side, sitting in the gap between the
+  couch and the TV.
+subject:
+  kind: prop
+  build: a low side-view coffee table, a flat top on four short legs
+  features: brown top over a darker apron and legs
+  flavor: sits in the gap between the couch and the TV in the movie-night living room
 palette:
-  B: "#92643e"
-  E: "#5d4028"
-  O: "#1a1c2c"
+  B: "#92643e" # brown tabletop
+  E: "#5d4028" # dark brown legs and apron
+  O: "#1a1c2c" # outline
 grid: |
   ....................
   ..OOOOOOOOOOOOOOOO..

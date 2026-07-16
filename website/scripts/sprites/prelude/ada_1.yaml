@@ -2,18 +2,24 @@ name: ada_1
 family: prelude
 size: [16, 16]
 description: >
-  Top-down 16px pixel figure of a woman standing and facing forward: an
-  unzipped red jacket over a white shirt, blue jeans, and short dark-brown
-  hair, arms at her sides. Caught mid-stride of her walk cycle with the blue-
-  jeaned legs planted wide apart, so she reads as stepping forward. This is
-  Ada, the hero's girlfriend, heading out for chips and soda.
+  Ada mid-stride, legs planted wide, stepping out for chips and soda — the
+  walk-cycle frame.
+subject:
+  kind: prelude figure
+  name: Ada
+  build: a slight everywoman
+  attire: unzipped red jacket over a white shirt, blue jeans
+  features: short dark-brown hair over a pale face
+  accent: red jacket, the one whose zipper the hero fixed
+  pose: caught mid-stride, the blue-jeaned legs planted wide apart, stepping forward
+  flavor: the girlfriend who steps out for five minutes on movie night and never comes back
 palette:
-  O: "#1a1c2c"
-  W: "#f4f4f4"
-  j: "#4054bc"
-  k: "#342c26"
-  p: "#deaa86"
-  r: "#d83a3a"
+  O: "#1a1c2c" # outline
+  W: "#f4f4f4" # white shirt
+  j: "#4054bc" # blue jeans
+  k: "#342c26" # dark-brown hair
+  p: "#deaa86" # skin
+  r: "#d83a3a" # red jacket
 grid: |
   ................
   .....OOOOO......

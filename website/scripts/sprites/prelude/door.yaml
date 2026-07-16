@@ -2,16 +2,20 @@ name: door
 family: prelude
 size: [18, 30]
 description: >
-  The apartment's front door, ~18×30 px: a closed brown wooden door in a
-  lighter frame, with a small brass knob/handle on one side. It stands on the
-  far right of the living room — the door Ada walks out of and never comes
-  back through.
+  The apartment's front door — the door Ada walks out of and never comes back
+  through.
+subject:
+  kind: prop
+  build: a tall closed wooden door set in a lighter frame, panelled
+  features: brown recessed panels, a small brass knob on one side
+  accent: brass door knob
+  flavor: far right of the living room, the door Ada walks out of on movie night and never comes back through
 palette:
-  B: "#92643e"
-  E: "#5d4028"
-  O: "#1a1c2c"
-  V: "#9095a5"
-  y: "#ffb02e"
+  B: "#92643e" # brown door
+  E: "#5d4028" # dark brown panel shadow
+  O: "#1a1c2c" # outline
+  V: "#9095a5" # grey door frame
+  y: "#ffb02e" # brass knob
 grid: |
   ..................
   .OOOOOOOOOOOOOOOO.

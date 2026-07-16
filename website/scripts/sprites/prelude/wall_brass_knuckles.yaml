@@ -2,16 +2,20 @@ name: wall_brass_knuckles
 family: prelude
 size: [12, 22]
 description: >
-  A pair of brass knuckles mounted on the living-room wall, ~12×22 px: a
-  gold/brass knuckle-duster with four finger holes and a grip bar, catching a
-  metallic highlight, hung on a small mount. The NIGHTMARE-difficulty starting
-  weapon.
+  A pair of brass knuckles mounted on the living-room wall — the
+  NIGHTMARE-difficulty starting weapon.
+subject:
+  kind: prop, wall-mounted weapon
+  build: a knuckle-duster with four finger holes and a grip bar, hung on a small mount
+  features: gold/brass metal catching a bright highlight
+  accent: brass metal sheen
+  flavor: the weapon the hero takes off the back wall on NIGHTMARE difficulty
 palette:
-  O: "#1a1c2c"
-  Y: "#ffe3b6"
-  b: "#3f4553"
-  q: "#96762e"
-  y: "#ffb02e"
+  O: "#1a1c2c" # outline
+  Y: "#ffe3b6" # bright brass highlight
+  b: "#3f4553" # dark wall mount
+  q: "#96762e" # dark brass shadow
+  y: "#ffb02e" # brass metal
 grid: |
   ............
   ............

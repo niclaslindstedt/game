@@ -2,16 +2,19 @@ name: couch
 family: prelude
 size: [36, 20]
 description: >
-  A worn side-view living-room sofa, ~36×20 px: a low brown/tan two-seater with
-  three seat cushions and a matching backrest, stubby feet, drawn in flat
-  16-bit style. It sits center-stage in the prelude with both figures seated on
-  it facing the TV.
+  A worn side-view living-room sofa, center-stage in the prelude with both
+  figures seated on it facing the TV.
+subject:
+  kind: prop
+  build: a low, wide two-seater sofa, three seat cushions and a matching backrest, on stubby feet
+  features: worn brown/tan upholstery, seam lines dividing the cushions
+  flavor: center-stage in the prelude, where movie night is held and the hero never gets up
 palette:
-  B: "#92643e"
-  E: "#5d4028"
-  O: "#1a1c2c"
-  S: "#b39378"
-  k: "#342c26"
+  B: "#92643e" # brown sofa frame
+  E: "#5d4028" # dark brown cushion shadow
+  O: "#1a1c2c" # outline
+  S: "#b39378" # tan cushion highlight
+  k: "#342c26" # near-black feet
 grid: |
   ....................................
   .OOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOO..
