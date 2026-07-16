@@ -968,13 +968,14 @@ function getShroud(ctx: CanvasRenderingContext2D): CanvasPattern | null {
 
 /**
  * The main-view FOG OF WAR, Warcraft-2 style (see src/game/map.ts). Built on an
- * offscreen buffer so its edges are ORGANIC, not a grid of squares: each fog
- * cell contributes an overlapping CIRCLE, so a region of cells fills as one
- * rounded blob (a single path fill per tier, so the translucent shroud never
- * double-darkens where circles overlap). Never-explored cells → solid black;
- * explored cells → the dithered shroud; then a soft radial `destination-out`
- * carves the hero's `MAP.sightRadius` vision circle clean. The buffer is drawn
- * over the world in one blit.
+ * offscreen buffer as fog you CARVE circles out of — so the boundary is
+ * concave (it curves AROUND the cleared circles, WC2's "inverted circle" look),
+ * not convex blobs. Steps: (1) fill the whole view solid black — unexplored
+ * everywhere; (2) punch the EXPLORED region out with a `destination-out` union
+ * of per-cell circles, leaving black only in never-seen ground with round
+ * concave edges; (3) lay the dithered SHROUD into that cleared region; (4) carve
+ * the hero's `MAP.sightRadius` vision circle out of the shroud with a soft
+ * radial edge. Blitted over the world in one draw.
  */
 function drawFog(
   ctx: CanvasRenderingContext2D,
@@ -992,8 +993,8 @@ function drawFog(
   const cols = mapCols(state.level);
   const rows = Math.ceil(state.level.height / cell);
   const explored = state.explored;
-  // Circle radius a touch over the cell half-diagonal so neighbours merge into
-  // a continuous blob with rounded outer edges (no square corners).
+  // Clearing-circle radius a touch over the cell half-diagonal so adjacent
+  // explored cells merge into one smooth cleared area (round concave edges).
   const r = cell * 0.78;
   const TAU = Math.PI * 2;
   const x0 = Math.max(0, Math.floor(camera.x / cell) - 1);
@@ -1001,11 +1002,12 @@ function drawFog(
   const x1 = Math.min(cols, Math.ceil((camera.x + view.width) / cell) + 1);
   const y1 = Math.min(rows, Math.ceil((camera.y + view.height) / cell) + 1);
 
-  const arcCells = (wantExplored: boolean) => {
+  // The union of clearing circles over every EXPLORED cell in view.
+  const exploredPath = () => {
     f.beginPath();
     for (let ty = y0; ty < y1; ty++) {
       for (let tx = x0; tx < x1; tx++) {
-        if ((explored[ty * cols + tx] === 1) !== wantExplored) continue;
+        if (explored[ty * cols + tx] !== 1) continue;
         const cx = (tx + 0.5) * cell - camera.x;
         const cy = (ty + 0.5) * cell - camera.y;
         f.moveTo(cx + r, cy);
@@ -1014,19 +1016,22 @@ function drawFog(
     }
   };
 
-  // Never-explored → one solid-black blob.
-  arcCells(false);
+  // 1. Unexplored baseline: solid black across the whole view.
   f.fillStyle = "#000";
+  f.fillRect(0, 0, view.width, view.height);
+  // 2. Punch the explored region OUT of the black — concave "inverted circle"
+  //    edges where the cleared circles bite into the never-seen dark.
+  f.globalCompositeOperation = "destination-out";
+  exploredPath();
   f.fill();
-  // Explored → one dithered-shroud blob (single fill = no overlap darkening).
+  f.globalCompositeOperation = "source-over";
+  // 3. Lay the dithered shroud into the cleared (explored) region.
   if (shroud) {
-    arcCells(true);
+    exploredPath();
     f.fillStyle = shroud;
     f.fill();
   }
-
-  // Carve the vision circle clean with a soft edge (destination-out erases the
-  // fog buffer's alpha, never the game underneath).
+  // 4. Carve the vision circle out of the shroud with a soft edge.
   const px = state.player.pos.x - camera.x;
   const py = state.player.pos.y - camera.y;
   const sight = MAP.sightRadius;
