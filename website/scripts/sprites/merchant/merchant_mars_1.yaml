@@ -2,8 +2,10 @@ name: merchant_mars_1
 family: merchant
 size: [16, 16]
 description: >
-  Alternate idle frame of the Mars commissary trader: the same brown-haired
-  man in the green sweater, shifted a beat in his idle bob.
+  A front-facing brown-haired man in a muted green colony sweater/turtleneck
+  over dark work trousers and boots. A Mars-dome commissary keeper running his
+  stall; this is a mid-bob idle frame, near-identical to the rest of the cycle
+  but with the feet planted a touch wider.
 palette:
   C: "#325d53"
   E: "#5d4028"

@@ -2,8 +2,13 @@ name: fembot_1
 family: mars
 size: [16, 16]
 description: >
-  FEMBOT companion unit blowing her pink kiss; alternate frame (heart
-  puff / blink).
+  FEMBOT: a cute, unsettlingly cheerful blonde android girl, front-
+  facing, with a rounded head of yellow hair under a gold hairband, a
+  pale face, and tiny pursed red lips. She wears a white dress trimmed
+  in soft pink at the shoulders and hem, with pink socks and tan legs,
+  and she blows a small pink heart that drifts off to her upper right.
+  The blown kiss is her weapon. In this frame she is caught mid-blink,
+  her cyan eyes darkened shut, and her feet planted slightly wider apart.
 palette:
   O: "#1a1c2c"
   Q: "#e878a8"

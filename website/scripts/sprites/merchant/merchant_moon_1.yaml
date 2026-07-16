@@ -2,8 +2,10 @@ name: merchant_moon_1
 family: merchant
 size: [16, 16]
 description: >
-  Alternate idle frame of the stranded moon trader: the same white-haired
-  man in the patched burnt-orange 70s suit, shifted a beat in his idle bob.
+  A front-facing, balding white-haired man in a patched burnt-orange 1970s
+  retro pressure suit over dark trousers and boots. A salvage-run trader
+  marooned on the moon; this is a mid-bob idle frame, near-identical to the
+  rest of the cycle but with the feet planted a touch wider.
 palette:
   D: "#8b5623"
   O: "#1a1c2c"

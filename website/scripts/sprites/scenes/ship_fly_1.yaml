@@ -2,9 +2,11 @@ name: ship_fly_1
 family: scenes
 size: [32, 24]
 description: >
-  Second frame of the rocket cruising in side profile: grey-white hull, nose
-  right, portholes along the flank, the tail flames flickering to a different
-  shape for the thrust animation. Same flying ship as ship_fly_0.
+  A homemade rocket cruising through space in side profile, 32×24 px: the grey-
+  and-white hull laid horizontal with its nose pointing right, a row of round
+  portholes along the flank, and yellow-orange engine flames trailing from the
+  tail on the left. The tail flames are flickered to a different, wispier shape
+  for this thrust frame, so the exhaust reads as pulsing. Flat 16-bit style.
 palette:
   A: "#8d9196"
   O: "#1a1c2c"

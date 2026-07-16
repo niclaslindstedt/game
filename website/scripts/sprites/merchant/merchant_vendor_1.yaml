@@ -2,8 +2,11 @@ name: merchant_vendor_1
 family: merchant
 size: [16, 16]
 description: >
-  Alternate idle frame of the vending-machine restocker: the same blue-capped
-  worker in blue coveralls, shifted a beat in his idle bob.
+  A front-facing working-stiff restocker in a blue ball cap and blue
+  coveralls/overalls over a lighter white work shirt, with dark boots. An
+  ordinary night-shift vendor who happens to sell gear; this is a mid-bob idle
+  frame, near-identical to the rest of the cycle but with the feet planted a
+  touch wider.
 palette:
   E: "#5d4028"
   J: "#2d3b84"

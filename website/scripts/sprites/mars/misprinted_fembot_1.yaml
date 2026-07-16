@@ -2,8 +2,13 @@ name: misprinted_fembot_1
 family: mars
 size: [16, 16]
 description: >
-  The glitch-green MISPRINTED FEMBOT, still smiling; alternate frame
-  (error-spark flicker).
+  MISPRINTED FEMBOT: a bad batch off the companion android line —
+  the fembot girl's body rendered wrong, her dress and rounded head
+  printed in sickly glitch-green with a gold hairband, and a misaligned
+  grey face still locked in a smile with tiny red lips and tan legs.
+  Front-facing and uncanny. A green error-spark flicks off her upper
+  right. In this frame she is caught mid-blink, her eyes darkened shut,
+  the error-spark flickering and her feet planted slightly wider apart.
 palette:
   G: "#4a7a3e"
   O: "#1a1c2c"

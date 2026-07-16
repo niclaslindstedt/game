@@ -2,9 +2,11 @@ name: merchant_1
 family: merchant
 size: [16, 16]
 description: >
-  Alternate idle frame of the rift merchant: the same purple-hooded cloaked
-  figure with glowing amber eyes and hip coin-satchel, shifted a beat in his
-  bob/breathing cycle.
+  A front-facing figure swathed in a deep-purple hooded cloak, two glowing
+  amber eyes the only feature under the hood, a small tan leather coin-satchel
+  slung at the hip. A mysterious between-worlds rift trader who buys scrap and
+  sells gear; this is a mid-bob idle frame, near-identical to the rest of the
+  cycle but with the feet planted a touch wider.
 palette:
   B: "#92643e"
   E: "#5d4028"

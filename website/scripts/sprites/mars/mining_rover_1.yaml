@@ -2,8 +2,12 @@ name: mining_rover_1
 family: mars
 size: [20, 20]
 description: >
-  The treaded MINING ROVER drill rig; alternate frame (treads rolled /
-  drill spun).
+  MINING ROVER: a low, blocky drill rig on twin treads, front-facing —
+  a dark grey chassis carrying a bright yellow ore-hopper and drill
+  housing up top, with a stubby drill bit protruding under the belly.
+  Slow and brutal. This frame catches it in motion: the tread segments
+  have advanced one notch and the yellow drill bit has rotated to its
+  next spin position.
 palette:
   O: "#1a1c2c"
   V: "#9095a5"

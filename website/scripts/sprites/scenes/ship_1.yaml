@@ -2,9 +2,11 @@ name: ship_1
 family: scenes
 size: [24, 32]
 description: >
-  Second frame of the upright garage rocket (a subtle idle shimmer/rattle):
-  slim grey-white hull, pointed nose, row of round portholes, tail fins, still
-  engines-off on the pad. Same ship as ship_0.
+  A homemade rocket standing upright on the launch pad, 24×32 px: a slim grey-
+  and-white hull with a pointed nose, a vertical row of round porthole windows
+  down the body, and swept tail fins at the base — cold, engines off. Mid-idle-
+  animation, near-identical to the rest of the cycle apart from a subtle shimmer
+  of the hull. Flat 16-bit style.
 palette:
   A: "#8d9196"
   O: "#1a1c2c"

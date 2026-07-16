@@ -2,10 +2,12 @@ name: hero_couch_1
 family: prelude
 size: [16, 24]
 description: >
-  Alternate frame of the seated hero (a small idle shift or blink): white
-  t-shirt, blue jeans, short dark-brown hair, facing left toward the TV. Same
-  16×24 figure as hero_couch_0 with a transparent footer seating him on the
-  cushion.
+  A man seated on a couch for movie night, drawn 16×24 with a tall transparent
+  footer that lifts him onto the cushion while his anchor stays at floor level:
+  a plain white t-shirt, blue jeans, short dark-brown hair, turned to face left
+  toward the TV. Mid-idle-animation, near-identical to the rest of the cycle
+  apart from a tiny settle of the head and shoulders. This is the hero, the man
+  who never gets up.
 palette:
   O: "#1a1c2c"
   W: "#f4f4f4"

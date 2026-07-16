@@ -2,9 +2,11 @@ name: hero_tee_1
 family: scenes
 size: [16, 16]
 description: >
-  Second walk frame of the hero in his everyday clothes: white t-shirt, blue
-  jeans, short dark-brown hair, facing forward. Same figure as hero_tee_0 on
-  the alternate stride.
+  Top-down 16px pixel figure of a man facing forward in everyday clothes: a
+  plain white t-shirt, blue jeans, and short dark-brown hair, arms at his
+  sides. Caught mid-stride of his walk cycle with the blue-jeaned legs planted
+  wide apart, so he reads as stepping forward. This is the hero in his at-home
+  look, walking out to the ship.
 palette:
   O: "#1a1c2c"
   W: "#f4f4f4"

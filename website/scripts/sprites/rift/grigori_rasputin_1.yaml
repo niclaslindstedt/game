@@ -2,9 +2,11 @@ name: grigori_rasputin_1
 family: rift
 size: [24, 24]
 description: >
-  GRIGORI RASPUTIN in a long dark cassock with gold frog-braid clasps, pale
-  gaunt face and long black beard; second frame on the alternate stride, robe
-  swaying. A brooding, unkillable mad monk.
+  A tall gaunt front-facing figure in a long dark Orthodox cassock with rows of
+  gold frog-braid clasps down the front, a pale hollow-eyed face with red-dot
+  eyes and a long black beard, robe falling to a fringed hem. Mid-animation, the
+  robe swayed and near-identical to the rest of the cycle. Reads as a brooding,
+  unkillable mad monk.
 palette:
   A: "#8d9196"
   O: "#1a1c2c"

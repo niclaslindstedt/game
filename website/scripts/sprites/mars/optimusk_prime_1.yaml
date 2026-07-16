@@ -2,8 +2,12 @@ name: optimusk_prime_1
 family: mars
 size: [24, 24]
 description: >
-  OPTIMUSK PRIME, the gold-crested white foreman robot, front-facing;
-  alternate idle/stomp frame.
+  OPTIMUSK PRIME: a tall, white-plated humanoid robot foreman standing a
+  head above its line units, with a gold crest/antenna on its rounded
+  white head and a blue-lit cyan panel on its broad chest, planted
+  self-satisfied on two blocky legs. Front-facing, reads as the boss of
+  the machines. This frame catches it mid-stomp, its two feet planted
+  wider apart than its resting stance.
 palette:
   O: "#1a1c2c"
   V: "#9095a5"

@@ -2,9 +2,11 @@ name: ship_fire_1
 family: scenes
 size: [24, 32]
 description: >
-  Second ignition frame of the upright garage rocket: same grey-white hull with
-  portholes and fins, the yellow-orange engine flame flickering to a different
-  shape for the burn animation. Same firing ship as ship_fire_0.
+  A homemade rocket standing upright at ignition, 24×32 px: a slim grey-and-
+  white hull with a pointed nose, a vertical row of round portholes, and swept
+  tail fins, with a bright yellow-orange engine flame and exhaust erupting from
+  its base. The twin flame plumes are flickered to a splayed, uneven shape for
+  this burn frame, so the fire reads as guttering. Flat 16-bit style.
 palette:
   A: "#8d9196"
   O: "#1a1c2c"

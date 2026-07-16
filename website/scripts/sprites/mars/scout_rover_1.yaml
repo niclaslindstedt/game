@@ -2,8 +2,11 @@ name: scout_rover_1
 family: mars
 size: [16, 16]
 description: >
-  The little wheeled SCOUT ROVER camera bot; alternate frame (wheels
-  turned).
+  SCOUT ROVER: a small camera pod — a boxy grey head with a single
+  cyan lens/eye — mounted on a low grey chassis with three wheels,
+  front-facing. A camera on wheels. This frame catches its status blink
+  mid-toggle, the little amber indicator light having jumped to the
+  opposite side of the chassis.
 palette:
   H: "#9e8b2d"
   O: "#1a1c2c"

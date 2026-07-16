@@ -2,8 +2,11 @@ name: merchant_eastworld_1
 family: merchant
 size: [16, 16]
 description: >
-  Alternate idle frame of the Eastworld barkeep: the same white-bearded
-  frontier trader in his apron, shifted a beat in his idle bob.
+  A front-facing frontier saloon barkeep with brown hair and a big bushy white
+  beard, in a white shirt/apron over dark trousers and boots. A homely Old-West
+  trader who pours for robots that tip in parts; this is a mid-bob idle frame,
+  near-identical to the rest of the cycle but with the feet planted a touch
+  wider.
 palette:
   E: "#5d4028"
   O: "#1a1c2c"
