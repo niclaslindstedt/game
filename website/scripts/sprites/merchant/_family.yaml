@@ -1,5 +1,8 @@
 name: merchant
 ground: moon_0
+style: >
+  The wandering vendor and their wares — travel-worn cloth and packs, warm
+  lantern-lit tones, a friendly figure amid hard places.
 palette:
   C: "#325d53"
   D: "#8b5623"

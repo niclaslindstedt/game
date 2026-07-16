@@ -1,5 +1,8 @@
 name: markers
 ground: lab_0
+style: >
+  A minimal navigational glyph — one bold flat shape, unambiguous and
+  high-contrast, drawn as UI signage rather than an object.
 palette:
   C: "#d696f0"
   D: "#eecdfc"

@@ -1,5 +1,8 @@
 name: eastworld
 ground: hardpan_0
+style: >
+  A knockoff robot western — dusty sun-bleached tans, weathered wood and tin,
+  saloon-and-sheriff frontier props with a synthetic sheen.
 palette:
   C: "#466096"
   D: "#5c3e28"

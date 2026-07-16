@@ -1,5 +1,8 @@
 name: scenes
 ground: grass_0
+style: >
+  Cutscene story tableaux — cinematic framing, softer domestic staging, warmer
+  light than the levels they bracket.
 palette:
   C: "#eb8e3e"
   D: "#9c4032"

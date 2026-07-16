@@ -1,5 +1,8 @@
 name: mars
 ground: mars_0
+style: >
+  The rust-red Martian surface and its colony — oxide reds and dust, riveted
+  weathered metal, thin cold light.
 palette:
   C: "#529ea8"
   D: "#808698"

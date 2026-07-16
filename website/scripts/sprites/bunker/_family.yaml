@@ -1,5 +1,8 @@
 name: bunker
 ground: bunker_0
+style: >
+  Underground reinforced bunker — cold grey concrete and riveted steel,
+  hazard-stripe accents, hard artificial light.
 palette:
   C: "#d23c42"
   D: "#602830"

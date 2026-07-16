@@ -75,6 +75,9 @@ export function loadSprites() {
       sprites: {},
       animations: manifest.animations ?? {},
       contrastExempt: manifest.contrastExempt ?? [],
+      // The family's shared look, in words — the anchor a generated sprite's
+      // prompt inherits so a whole biome renders as one set. Optional.
+      style: manifest.style ?? "",
     };
     if (manifest.wounds) family.wounds = manifest.wounds;
 

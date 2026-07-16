@@ -21,8 +21,18 @@ byte-identical `atlas.png` / `atlas.json`.
 `quantize.mjs`, `compare.mjs`). The deterministic pieces — trace an image into
 a palette + grid, and score a render against a reference — are scripts; the
 vision critique and the human vote stay the agent's/author's job (see the
-`pixel-assets` skill). Phases 1.1, 3, and 3.1 below remain a design proposal to
-react to.
+`pixel-assets` skill).
+
+**The blank-canvas step has shipped**, as `sprite-author.mjs prompt <name>`
+over `asset-tools/prompt.mjs`: it synthesizes an image-generation prompt from a
+sprite's fields alone — the global style preamble, its family's style anchor
+(a `style:` line in each `_family.yaml`), its description, size, and palette
+(with the human color names off the palette comments) — deliberately excluding
+the grid, which the prompt exists to regenerate. `analyze` records generation
+provenance (`--model` / `--seed` / `--prompt-file` → `<name>.ref.json`) so a
+generation is auditable. The image-model call and the nested refine loops stay
+the agent's job, the same as the vision critique in 2a. Phases 1.1 and 3.1
+below remain a design proposal to react to.
 
 ---
 
@@ -348,10 +358,15 @@ vote). Phase 3 removes the blank-canvas step, not the judgement.
       <name> <image>` is the numeric gate (SSIM + mean OKLab ΔE + coverage,
       `compare.mjs`) — a triage signal for the refine loop, not an acceptance
       test.
-- [ ] **Phase 3 — close the loop.** Prompt synthesis from YAML fields (global +
-      per-family style anchor), genAI image generation, ingest-and-refine with
-      inner (grid) / outer (re-prompt) loops, and generation provenance
-      (prompt/model/seed) recorded next to each reference image.
+- [x] **Phase 3 — close the loop.** `sprite-author.mjs prompt <name>`
+      (`asset-tools/prompt.mjs`) synthesizes the image prompt from the tier-1
+      fields — global style preamble + per-family style anchor (a `style:` line
+      in each `_family.yaml`) + `description` + size + palette color guidance
+      (hex plus the human names off the palette comments), grid excluded. The
+      genAI image call and the ingest-and-refine inner (grid) / outer
+      (re-prompt) loops are agent-driven (like the vision critique in 2a);
+      `analyze` records generation provenance (`--model`/`--seed`/`--prompt-file`
+      → `<name>.ref.json`) so a generation is auditable, not reproducible.
 - [ ] **Phase 3.1 — backfill `description` (and regenerate)** across the
       existing roster now that a sprite can be reborn from its metadata.
 

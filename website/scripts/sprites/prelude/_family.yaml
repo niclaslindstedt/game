@@ -1,5 +1,8 @@
 name: prelude
 ground: lab_0
+style: >
+  The sterile lab where it all begins — clinical whites and cyans, clean panels
+  and glass, flat even fluorescent light.
 palette:
   N: "#303444"
 animations:

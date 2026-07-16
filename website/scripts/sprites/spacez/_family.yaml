@@ -1,5 +1,8 @@
 name: spacez
 ground: lab_0
+style: >
+  The corporate SpaceZ headquarters — sleek brand whites and chrome, cool blue
+  accents, glass and clean product-design surfaces.
 palette:
   s: "#818690"
   t: "#aab0be"
