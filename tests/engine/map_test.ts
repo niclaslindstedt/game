@@ -1,9 +1,9 @@
 // SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
-// The level map: fog-of-war exploration (revealRect lifts fog from the whole
-// on-screen camera view, revealAround the spawn circle, the rest fogged), the
-// `map` pause phase (frozen sim,
-// openMap/closeMap toggles, level-up priority), and the map markers pinned by
-// story finds and elite/boss victories.
+// The level map: fog-of-war exploration (a `MAP.revealRadius` CIRCLE sweeps the
+// hero's path each step, Warcraft-style with no re-fogging; the rest stays
+// fogged), the `map` pause phase (frozen sim, openMap/closeMap toggles,
+// level-up priority), and the map markers pinned by story finds and elite/boss
+// victories.
 
 import { describe, expect, it } from "vitest";
 
@@ -48,31 +48,27 @@ describe("fog of war", () => {
     expect(isExplored(state, there)).toBe(true);
   });
 
-  it("lifts the fog from the whole on-screen rect, not just a circle", () => {
+  it("lifts fog as a CIRCLE around the hero, not the whole camera rect", () => {
     const state = startGame();
     clearStage(state);
-    // A wide camera view around the hero — corners well outside the reveal
-    // circle but plainly on screen.
-    const halfW = 220;
-    const halfH = 110;
+    // A corner of the on-screen camera view, well OUTSIDE the reveal circle:
+    // visible on screen, but the circular reveal must leave it fogged.
     const view = {
-      x: state.player.pos.x - halfW,
-      y: state.player.pos.y - halfH,
-      width: halfW * 2,
-      height: halfH * 2,
+      x: state.player.pos.x - 220,
+      y: state.player.pos.y - 110,
+      width: 440,
+      height: 220,
     };
-    // A top corner of the view: too far for the circle (radius 120), but visible.
     const corner = { x: view.x + MAP.cellSize, y: view.y + MAP.cellSize };
-    expect(isExplored(state, corner)).toBe(false);
     run(state, { ...idle, view }, 1);
-    expect(isExplored(state, corner)).toBe(true);
-    // The far field beyond the view stays fogged.
+    expect(isExplored(state, corner)).toBe(false);
+    // A point just inside the reveal circle IS lifted.
     expect(
       isExplored(state, {
-        x: view.x + view.width + 200,
+        x: state.player.pos.x + MAP.revealRadius - MAP.cellSize,
         y: state.player.pos.y,
       }),
-    ).toBe(false);
+    ).toBe(true);
   });
 
   it("out-of-bounds positions read as unexplored instead of wrapping", () => {

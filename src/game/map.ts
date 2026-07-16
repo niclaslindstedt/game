@@ -1,11 +1,13 @@
 // SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
 // The level map and its fog of war. Exploration is a coarse byte grid on the
-// state (`state.explored`, one cell per MAP.cellSize world px): playing
-// uncovers every cell the on-screen camera view covers (`revealRect`), so the
-// map remembers everything the player has actually SEEN, not just a circle
-// around the hero. What has been uncovered stays uncovered for the rest of the
-// run — Warcraft-style, minus the re-fogging. The seed reveal at spawn (with no
-// camera view yet) still uses the MAP.revealRadius circle (`revealAround`). Memorable events pin `state.mapMarkers` (story finds,
+// state (`state.explored`, one cell per MAP.cellSize world px): playing sweeps a
+// `MAP.revealRadius` CIRCLE around the hero every step (`revealAround`), so the
+// fog lifts along his actual path — Warcraft-style, and what has been uncovered
+// stays uncovered for the rest of the run (no re-fogging). The main-view fog
+// then re-dims explored terrain outside his live sight (MAP.sightRadius, in the
+// renderer). `revealRect` (lift fog from a world rect) remains available for a
+// caller that wants the whole camera view instead. Memorable events pin
+// `state.mapMarkers` (story finds,
 // elite/boss victories, the merchant) so the map tells the run's story back. The
 // `map` phase freezes the simulation exactly like the bag or the pause
 // screen; `openMap`/`closeMap` are the app's toggles, safe outside `step()`.

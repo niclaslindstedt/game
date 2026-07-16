@@ -2823,7 +2823,21 @@ export const MAP = {
    * as chunky pixel terrain, and the whole grid stays a few thousand cells
    * even on the widest level. */
   cellSize: 32,
-  /** Radius around the hero uncovered as he moves (world px) — roughly what
-   * the phone view shows around him, so "walked past it" ≈ "on the map". */
-  revealRadius: 120,
+  /** Radius around the hero PERMANENTLY uncovered as he moves (world px) — the
+   * fog lifts as a circle sweeping his path (Warcraft-style, no re-fogging), so
+   * the map (and minimap) show exactly where he has been, not the whole camera
+   * view. Roughly the phone's near view, so "walked past it" ≈ "on the map". */
+  revealRadius: 150,
+  /**
+   * Radius of the hero's CURRENT vision (world px) — the live-lit circle in the
+   * main-view fog of war. Cells inside it render full; explored cells outside it
+   * dim (seen-but-not-in-sight); never-explored cells go dark. A touch wider
+   * than `revealRadius` so the lit circle leads the permanently-revealed trail.
+   */
+  sightRadius: 170,
+  /** Fog dimness for explored-but-out-of-sight terrain (0 = clear, 1 = black) —
+   * kept light so an approaching threat at the screen edge stays readable. */
+  fogDim: 0.42,
+  /** Fog dimness for never-explored terrain (0 = clear, 1 = black). */
+  fogDark: 0.82,
 } as const;

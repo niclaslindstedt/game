@@ -19,6 +19,8 @@ import {
   LAST_STAND,
   LEVELING,
   magnetRadius,
+  MAP,
+  mapCols,
   MERCY,
   orbitSpellParams,
   orbPositions,
@@ -909,10 +911,74 @@ export function drawFrame(
     );
   }
 
+  // Fog of war — over the world, under the HUD/flash (StarCraft/Warcraft): the
+  // unwalked map is dark, terrain seen-but-out-of-sight dims, and the hero's
+  // live sight circle stays clear.
+  drawFog(ctx, state, camera, view);
+
   // Red flash while recently hurt.
   if (state.player.hurtFlashMs > 0) {
     ctx.fillStyle = `rgba(216, 58, 58, ${(0.25 * state.player.hurtFlashMs) / 250})`;
     ctx.fillRect(0, 0, view.width, view.height);
+  }
+}
+
+/**
+ * The main-view FOG OF WAR (see src/game/map.ts): three tiers drawn as a black
+ * overlay per fog cell — never-explored → dark (`MAP.fogDark`), explored but
+ * outside the hero's live sight → dim (`MAP.fogDim`), inside the sight circle →
+ * clear, with a soft ramp at the sight edge so it reads as vision. Kept light
+ * enough (fogDim) that a threat at the screen edge is still legible. Only the
+ * cells overlapping the camera view are visited, so it is cheap.
+ */
+function drawFog(
+  ctx: CanvasRenderingContext2D,
+  state: GameState,
+  camera: Camera,
+  view: { width: number; height: number },
+): void {
+  const cell = MAP.cellSize;
+  const cols = mapCols(state.level);
+  const explored = state.explored;
+  const px = state.player.pos.x;
+  const py = state.player.pos.y;
+  const sight = MAP.sightRadius;
+  const inner = sight * 0.6; // fully-lit core; ramp from here to the edge
+  const sightSq = sight * sight;
+  const innerSq = inner * inner;
+  // Only the cells overlapping the visible rect.
+  const x0 = Math.max(0, Math.floor(camera.x / cell));
+  const y0 = Math.max(0, Math.floor(camera.y / cell));
+  const x1 = Math.ceil((camera.x + view.width) / cell);
+  const y1 = Math.ceil((camera.y + view.height) / cell);
+  const rows = Math.ceil(state.level.height / cell);
+  for (let ty = y0; ty < Math.min(y1, rows); ty++) {
+    for (let tx = x0; tx < Math.min(x1, cols); tx++) {
+      const seen = explored[ty * cols + tx] === 1;
+      let alpha: number;
+      if (!seen) {
+        alpha = MAP.fogDark;
+      } else {
+        // Distance from the cell centre to the hero → dim outside sight.
+        const dx = (tx + 0.5) * cell - px;
+        const dy = (ty + 0.5) * cell - py;
+        const dSq = dx * dx + dy * dy;
+        if (dSq <= innerSq) alpha = 0;
+        else if (dSq >= sightSq) alpha = MAP.fogDim;
+        else {
+          const t = (Math.sqrt(dSq) - inner) / (sight - inner);
+          alpha = MAP.fogDim * t;
+        }
+      }
+      if (alpha <= 0) continue;
+      ctx.fillStyle = `rgba(6, 8, 12, ${alpha})`;
+      ctx.fillRect(
+        Math.round(tx * cell - camera.x),
+        Math.round(ty * cell - camera.y),
+        cell + 1,
+        cell + 1,
+      );
+    }
   }
 }
 
