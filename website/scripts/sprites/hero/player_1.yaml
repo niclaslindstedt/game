@@ -6,32 +6,33 @@ description: >
   paper-doll base's walk frame.
 subject:
   kind: hero paper-doll base, suited in his EVA pressure suit
-  build: a short, stocky, top-heavy astronaut
-  attire: a plain white-and-grey EVA pressure suit — a big rounded helmet dome capping a compact bulky torso over stubby grey boots
+  build: a short, stocky, top-heavy astronaut with broad shoulders
+  attire: a plain white-and-grey EVA pressure suit — a big rounded helmet dome capping a compact bulky torso over stubby boots, a boxy grey life-support unit on the chest
   features: a horizontal gold visor band across the helmet, its lower edge glowing amber
-  accent: a single small red indicator light on the chest
+  accent: a single small red indicator light set in the grey chest unit
   pose: a walk-stride frame, legs planted wide apart with boots spread to the outer edges mid-step
   flavor: recovered working gear, not a sleek hero suit — the laid-off SpaceZ shipbuilder suited up
 palette:
-  A: "#8d9196" # grey boots and suit shading
+  A: "#5c6474" # cool blue-grey suit shadow (waist, boots)
   O: "#1a1c2c" # outline
-  W: "#f4f4f4" # white gloves
-  Y: "#ffe3b6" # amber visor glow
+  W: "#f4f4f4" # white gloves and helmet highlight
+  Y: "#ffe3b6" # amber visor glow (lower edge)
   a: "#d6dce4" # light-grey suit and helmet
   r: "#d83a3a" # red chest indicator light
+  s: "#8f97a4" # grey life-support chest unit
   y: "#ffb02e" # gold visor band
 grid: |
   ................
   .....OOOOOO.....
+  ....OWaaaaaO....
+  ...OWaaaaaaaO...
+  ...OaOyyyyOaO...
+  ...OaOYYYYOaO...
   ....OaaaaaaO....
   ...OaaaaaaaaO...
-  ...OaOYyyyOaO...
-  ...OaOyyyyOaO...
-  ....OaaaaaaO....
-  ...OOaaaaaaOO...
   ..OaaaaaaaaaaO..
-  ..OAaaarraaaAO..
-  ..OWOaaaaaaOWO..
+  ..OaassssssaaO..
+  ..OWassrrssaWO..
   ...OAAAAAAAAO...
   ..OaaO....OaaO..
   ..OAAO....OAAO..
