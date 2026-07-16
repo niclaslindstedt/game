@@ -1,7 +1,10 @@
 name: lamp
 family: prelude
 size: [10, 22]
-description: ""
+description: >
+  A tall thin floor lamp, ~10×22 px: a slim dark stand on a small base topped
+  by a warm amber/gold lit shade that casts the room's cozy glow. Stands beside
+  the couch in the living room.
 palette:
   O: "#1a1c2c"
   Y: "#ffe3b6"

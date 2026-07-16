@@ -1,7 +1,10 @@
 name: ship_fly_1
 family: scenes
 size: [32, 24]
-description: ""
+description: >
+  Second frame of the rocket cruising in side profile: grey-white hull, nose
+  right, portholes along the flank, the tail flames flickering to a different
+  shape for the thrust animation. Same flying ship as ship_fly_0.
 palette:
   A: "#8d9196"
   O: "#1a1c2c"

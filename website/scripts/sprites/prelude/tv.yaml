@@ -1,7 +1,10 @@
 name: tv
 family: prelude
 size: [24, 20]
-description: ""
+description: >
+  A flat-screen television on a small stand, ~24×20 px: a dark bezel around a
+  softly glowing pale-blue screen (the movie playing), on a short base. It
+  faces the couch from the left side of the living room.
 palette:
   O: "#1a1c2c"
   b: "#3f4553"

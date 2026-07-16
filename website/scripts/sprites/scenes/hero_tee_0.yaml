@@ -1,7 +1,10 @@
 name: hero_tee_0
 family: scenes
 size: [16, 16]
-description: ""
+description: >
+  Top-down 16px pixel figure of the hero in his everyday clothes: a plain white
+  t-shirt, blue jeans, and short dark-brown hair, facing forward. His at-home
+  look, worn walking out to the ship in the launch cutscene.
 palette:
   O: "#1a1c2c"
   W: "#f4f4f4"

@@ -1,7 +1,10 @@
 name: hero_tee_1
 family: scenes
 size: [16, 16]
-description: ""
+description: >
+  Second walk frame of the hero in his everyday clothes: white t-shirt, blue
+  jeans, short dark-brown hair, facing forward. Same figure as hero_tee_0 on
+  the alternate stride.
 palette:
   O: "#1a1c2c"
   W: "#f4f4f4"

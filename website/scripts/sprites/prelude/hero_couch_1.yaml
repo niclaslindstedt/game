@@ -1,7 +1,11 @@
 name: hero_couch_1
 family: prelude
 size: [16, 24]
-description: ""
+description: >
+  Alternate frame of the seated hero (a small idle shift or blink): white
+  t-shirt, blue jeans, short dark-brown hair, facing left toward the TV. Same
+  16×24 figure as hero_couch_0 with a transparent footer seating him on the
+  cushion.
 palette:
   O: "#1a1c2c"
   W: "#f4f4f4"

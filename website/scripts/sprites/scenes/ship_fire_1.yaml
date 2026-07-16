@@ -1,7 +1,10 @@
 name: ship_fire_1
 family: scenes
 size: [24, 32]
-description: ""
+description: >
+  Second ignition frame of the upright garage rocket: same grey-white hull with
+  portholes and fins, the yellow-orange engine flame flickering to a different
+  shape for the burn animation. Same firing ship as ship_fire_0.
 palette:
   A: "#8d9196"
   O: "#1a1c2c"

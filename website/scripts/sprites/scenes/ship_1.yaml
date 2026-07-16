@@ -1,7 +1,10 @@
 name: ship_1
 family: scenes
 size: [24, 32]
-description: ""
+description: >
+  Second frame of the upright garage rocket (a subtle idle shimmer/rattle):
+  slim grey-white hull, pointed nose, row of round portholes, tail fins, still
+  engines-off on the pad. Same ship as ship_0.
 palette:
   A: "#8d9196"
   O: "#1a1c2c"

@@ -1,7 +1,11 @@
 name: rift_west
 family: scenes
 size: [32, 36]
-description: ""
+description: >
+  A tear in reality hanging in the air, 32×36 px: a tall almond/lens-shaped
+  slit glowing from within, recolored to a warm desert-sunset palette — gold
+  and orange core with a purple-pink fringed edge. The doorway out of the rift
+  into Eastworld, warm daylight leaking through.
 palette:
   C: "#eb8e3e"
   D: "#9c4032"

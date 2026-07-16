@@ -1,7 +1,10 @@
 name: hero_suit_1
 family: scenes
 size: [16, 16]
-description: ""
+description: >
+  Second frame of the hero in his EVA space suit (alternate stride/idle): bulky
+  white spacesuit, gold-visored dome helmet, red chest accent. Same figure as
+  hero_suit_0 on its walk-cycle alternate.
 palette:
   A: "#8d9196"
   O: "#1a1c2c"

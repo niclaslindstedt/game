@@ -1,7 +1,11 @@
 name: wall_stick
 family: prelude
 size: [10, 22]
-description: ""
+description: >
+  A plain gnarled wooden stick mounted vertically on the living-room wall,
+  ~10×22 px: a knotty brown branch, rough and bark-textured, hung as if it were
+  a prized weapon. The JESUS-difficulty starting weapon — the joke is that it's
+  just a stick.
 palette:
   B: "#92643e"
   E: "#5d4028"

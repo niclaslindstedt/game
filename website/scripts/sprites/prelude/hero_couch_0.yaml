@@ -1,7 +1,11 @@
 name: hero_couch_0
 family: prelude
 size: [16, 24]
-description: ""
+description: >
+  The hero seated on the couch beside Ada for movie night, drawn 16×24 with a
+  tall transparent footer that lifts him onto the cushion while his anchor
+  stays at floor level. Plain white t-shirt, blue jeans, short dark-brown hair,
+  turned left to watch the TV — the man who never gets up, which is the joke.
 palette:
   O: "#1a1c2c"
   W: "#f4f4f4"

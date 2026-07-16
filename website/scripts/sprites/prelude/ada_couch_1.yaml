@@ -1,7 +1,11 @@
 name: ada_couch_1
 family: prelude
 size: [16, 24]
-description: ""
+description: >
+  Alternate frame of seated Ada on the couch (a small idle/settle or blink):
+  red jacket over a white shirt, blue jeans, short dark-brown hair, facing left
+  toward the TV. Same 16×24 figure as ada_couch_0 with a transparent footer
+  lifting her onto the cushion.
 palette:
   O: "#1a1c2c"
   W: "#f4f4f4"

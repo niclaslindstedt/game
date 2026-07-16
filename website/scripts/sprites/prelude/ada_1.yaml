@@ -1,7 +1,10 @@
 name: ada_1
 family: prelude
 size: [16, 16]
-description: ""
+description: >
+  Second walk frame of standing Ada: unzipped red jacket over a white shirt,
+  blue jeans, short dark-brown hair, facing forward. Same figure as ada_0 on
+  the alternate stride so she reads as walking to the door.
 palette:
   O: "#1a1c2c"
   W: "#f4f4f4"

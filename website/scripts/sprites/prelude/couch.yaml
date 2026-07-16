@@ -1,7 +1,11 @@
 name: couch
 family: prelude
 size: [36, 20]
-description: ""
+description: >
+  A worn side-view living-room sofa, ~36×20 px: a low brown/tan two-seater with
+  three seat cushions and a matching backrest, stubby feet, drawn in flat
+  16-bit style. It sits center-stage in the prelude with both figures seated on
+  it facing the TV.
 palette:
   B: "#92643e"
   E: "#5d4028"

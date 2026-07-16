@@ -1,7 +1,11 @@
 name: garage_house
 family: scenes
 size: [48, 19]
-description: ""
+description: >
+  The hero's suburban home seen side-on, 48×19 px: a small single-storey house
+  with a warm-lit amber window and a peaked brown roof on the left, joined to
+  an open garage bay on the right — the garage where he spent ten years of
+  weekends building the ship. Flat 16-bit style, drawn against the night.
 palette:
   B: "#92643e"
   E: "#5d4028"

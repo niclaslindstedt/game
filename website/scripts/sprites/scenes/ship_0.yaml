@@ -1,7 +1,11 @@
 name: ship_0
 family: scenes
 size: [24, 32]
-description: ""
+description: >
+  The hero's garage-built rocket standing upright on the pad, 24×32 px: a
+  slim grey-and-white hull with a pointed nose, a vertical row of round
+  porthole windows, and swept tail fins — cold, engines off. Homemade but
+  proud, flat 16-bit style.
 palette:
   A: "#8d9196"
   O: "#1a1c2c"

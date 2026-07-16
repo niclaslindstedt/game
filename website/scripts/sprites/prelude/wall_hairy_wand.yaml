@@ -1,7 +1,10 @@
 name: wall_hairy_wand
 family: prelude
 size: [10, 22]
-description: ""
+description: >
+  "Hairy Potter's Wand" mounted on the living-room wall, ~10×22 px: a slim
+  tapered wooden wand with a glowing warm amber/gold tip, hung vertically. A
+  wizard-parody magic wand — the EASY-difficulty starting weapon.
 palette:
   B: "#92643e"
   O: "#1a1c2c"

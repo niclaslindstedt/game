@@ -1,7 +1,11 @@
 name: ada_0
 family: prelude
 size: [16, 16]
-description: ""
+description: >
+  Top-down 16px pixel figure of Ada, the hero's girlfriend, standing and
+  facing forward: an unzipped red jacket over a white shirt, blue jeans, and
+  short dark-brown hair. This is the walking sprite she swaps to when she
+  stands off the couch to head out for chips and soda.
 palette:
   O: "#1a1c2c"
   W: "#f4f4f4"

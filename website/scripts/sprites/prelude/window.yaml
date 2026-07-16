@@ -1,7 +1,10 @@
 name: window
 family: prelude
 size: [20, 16]
-description: ""
+description: >
+  A living-room window onto the night sky, ~20×16 px: a framed pane of deep
+  blue with scattered white stars and a small pale moon in one corner. The moon
+  hanging in it foreshadows level 2 — the destination waiting outside.
 palette:
   J: "#2d3b84"
   O: "#1a1c2c"

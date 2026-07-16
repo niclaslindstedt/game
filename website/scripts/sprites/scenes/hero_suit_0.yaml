@@ -1,7 +1,10 @@
 name: hero_suit_0
 family: scenes
 size: [16, 16]
-description: ""
+description: >
+  Top-down 16px pixel figure of the hero in his EVA space suit: a bulky white
+  spacesuit with a domed helmet showing a gold/amber visor and a red chest
+  accent, arms slightly out. His look for the voyage, moon, and Mars cutscenes.
 palette:
   A: "#8d9196"
   O: "#1a1c2c"
