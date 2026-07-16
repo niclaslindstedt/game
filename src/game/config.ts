@@ -363,6 +363,25 @@ export const LEVELING = {
   /** Default XP granted per point of a killed monster's max hp. */
   xpPerHp: 1,
   /**
+   * WoW-STYLE LEVEL-DIFFERENCE XP — a kill's base (level-priced) XP is scaled by
+   * how the mob's level compares to the HERO's (see `levelDiffXpMult` in
+   * leveling.ts, applied inside `mobLevelXp`). A mob ABOVE the hero pays a bonus
+   * (`+xpAbovePlayerPerLevel` per level, capped at `xpAboveMaxMult`); a mob
+   * BELOW pays a penalty (`−xpBelowPlayerPerLevel` per level) that bottoms out at
+   * ZERO (the "grey" mob, `1 / xpBelowPlayerPerLevel` levels under). A mob AT the
+   * hero's level is neutral (×1), so the kills-per-level curve — authored against
+   * a same-level reference mob (`referenceMobXp`) — is unchanged; the multiplier
+   * only bites where the difficulty's mob-level CAPS push the horde off the
+   * hero's level (a floored nightmare/jesus mob pays a bonus; an out-levelled,
+   * ceiling-stuck easy mob pays a pittance). Tunable at runtime with the
+   * BALANCE › REST XP slider (scales both slopes together).
+   */
+  xpAbovePlayerPerLevel: 0.08,
+  xpBelowPlayerPerLevel: 0.07,
+  /** Ceiling on the above-level XP bonus multiplier — a mob far above the hero
+   * pays richly, but not without bound. */
+  xpAboveMaxMult: 1.5,
+  /**
    * Elite and boss kills pay XP as a SHARE OF THE HERO'S CURRENT LEVEL BAR —
    * a flat fraction of `xpToLevelUp(player.level)` — rather than the
    * hp-proportional rule the rank and file ride (`xpPerHp`). A set-piece kill

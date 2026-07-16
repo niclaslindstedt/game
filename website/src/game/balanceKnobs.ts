@@ -36,6 +36,16 @@ export const BALANCE_KNOBS: BalanceKnob[] = [
     blurb: "HOW HARD THE CURVE WALLS UP PAST LEVEL 70 (5%/LEVEL)",
   },
   {
+    key: "restXp",
+    label: "REST XP",
+    blurb: "XP SWING FROM A MOB'S LEVEL VS YOURS - BONUS ABOVE, GREY BELOW",
+  },
+  {
+    key: "mobArmor",
+    label: "MOB ARMOR",
+    blurb: "PHYSICAL DAMAGE MOBS SHRUG OFF (MAGIC IGNORES IT) - RISES BY RUNG",
+  },
+  {
     key: "playerDamage",
     label: "HERO DAMAGE",
     blurb: "EVERY WEAPON'S DAMAGE (READOUTS FOLLOW)",

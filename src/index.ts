@@ -31,6 +31,7 @@ export {
   grantXp,
   hitEnemy,
   killEnemy,
+  mobArmorMult,
   staminaDrinkChance,
 } from "./game/loot.ts";
 export { mercyRescueWaiting, type MercyRescue } from "./game/items.ts";
@@ -238,6 +239,7 @@ export {
   enemyPowerLevelTerm,
   enemyPowerScale,
   currentMobLevel,
+  mobLevelFor,
   mobContactScaleFor,
   heroDamageLevel,
   heroGearLevel,
@@ -271,6 +273,7 @@ export {
   chosenStatPointsThrough,
   diminishStat,
   endgameSteepenMult,
+  levelDiffXpMult,
   levelStatGains,
   mobLevelXp,
   referenceMobXp,

@@ -1,0 +1,6 @@
+---
+type: Changed
+title: Mob-level caps, WoW-style level-difference XP, and mob armor
+---
+
+The horde's monster level is now hard-capped into a per-difficulty band — easy 1–34, medium 2–36, hard 3–38, nightmare 38–56, jesus 58+ — so a tier's mobs never scale past its ceiling nor drop below its floor. The floor makes a freshly-arrived nightmare or jesus hero fight mobs a touch above his level; the ceiling stops mobs scaling once he out-levels a tier. On top of that, kill XP now swings with the mob's level versus the hero's, like WoW: a mob above the hero pays a bonus, a mob below pays a shrinking penalty down to zero at the "grey" level, and a same-level mob is unchanged. Together they make an over-levelled farm run meet stuck, XP-poor (and lower-tier-loot) mobs, and give the low end of the hard tiers a catch-up bonus. Mobs also gain ARMOR that shrugs off a share of PHYSICAL damage (melee/ranged) while MAGIC ignores it — 5% on the bottom lanes, 10% on nightmare, 15% on jesus — nudging the armored endgame toward magic builds and laying the groundwork for an armor-piercing item stat. The XP swing and armor are both tunable at runtime on the DEVELOPER › BALANCE page (REST XP, MOB ARMOR).

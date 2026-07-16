@@ -24,6 +24,15 @@ export type BalanceTuning = {
    * hard the curve walls up past level 70. 1× is the shipped 5%/level; 0× a
    * pure geometric tail; higher makes the grind to 99 brutal. */
   endgameSteepen: number;
+  /** Scales the WoW-style LEVEL-DIFFERENCE XP slopes (`LEVELING.xpAbove/
+   * BelowPlayerPerLevel`) together: how much a mob's level vs the hero's swings
+   * its XP. 1× is shipped; 0× flattens it (every mob pays its level's XP flat);
+   * higher steepens the above-bonus / below-penalty. */
+  restXp: number;
+  /** Scales MOB ARMOR (`DifficultyDef.mobArmor`): the fraction of a PHYSICAL
+   * blow the horde shrugs off (magic ignores it). 1× is shipped; 0× strips
+   * armor (physical and magic hit alike); higher favors magic builds more. */
+  mobArmor: number;
   /** Scales the hero's weapon damage (combat, scoring, and readouts). */
   playerDamage: number;
   /** Scales the knockback a melee/ranged weapon blow shoves a struck mob back
@@ -60,6 +69,8 @@ export const BALANCE_TUNING_DEFAULTS: BalanceTuning = {
   xpGain: 1,
   levelingSlowdown: 1,
   endgameSteepen: 1,
+  restXp: 1,
+  mobArmor: 1,
   playerDamage: 1,
   knockback: 1,
   mobHp: 1,

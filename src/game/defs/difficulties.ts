@@ -103,6 +103,32 @@ export type DifficultyDef = {
    * the gap never closes. See `mobHpScaleFor` in menace.ts.
    */
   mobLevelOffset: number;
+  /**
+   * HARD CAPS on the horde's monster level (`mobLevelFor` clamps
+   * `player + mobLevelOffset` into `[mobLevelMin, mobLevelMax]`). This bounds a
+   * tier's mobs to a level BAND regardless of how far the hero out- or
+   * under-levels it: EASY 1–34, MEDIUM 2–36, HARD 3–38, NIGHTMARE 38–56,
+   * JESUS 58+. The floor makes the low end of a tier fight mobs a touch ABOVE
+   * a freshly-arrived hero (nightmare/jesus catch-up); the ceiling stops mobs
+   * scaling once the hero out-levels the tier, so an over-levelled farm run
+   * meets stuck (and, via the level-difference XP rule, XP-poor) mobs. Elites
+   * and bosses add their own `levelBonus` ON TOP and may run past the ceiling.
+   * Optional: a difficulty that omits them is UNCAPPED (the bare
+   * `player + mobLevelOffset`, as before) — the shipped rungs all set them; the
+   * test fixtures leave them off to keep the old uncapped calibration.
+   */
+  mobLevelMin?: number;
+  mobLevelMax?: number;
+  /**
+   * MOB ARMOR — the fraction of a PHYSICAL blow (a melee or ranged weapon) the
+   * horde shrugs off; MAGIC weapons (and powerups/procs) ignore it entirely, so
+   * armor is what tilts the endgame toward magic builds and gives a future
+   * ARMOR-PIERCING item stat something to bite. It RISES up the ladder: a small
+   * base on the bottom lanes, +5% on nightmare, +10% on jesus. Applied in
+   * `hitEnemy` (loot.ts) via `mobArmorMult`; the runtime BALANCE › MOB ARMOR
+   * knob scales it. Omitted (test fixtures) = 0, no mitigation.
+   */
+  mobArmor?: number;
   /** Multiplies the wave spawner's live cap AND floor (`maxAlive`,
    * `minAlive`) — harder difficulties keep a denser field on screen. */
   aliveMult: number;
@@ -263,6 +289,9 @@ export const DIFFICULTY_DEFS: Record<Difficulty, DifficultyDef> = {
     startingGear: ["t_shirt", "jeans", "leather_boots"],
     mobCountMult: 0.9,
     mobLevelOffset: -3,
+    mobLevelMin: 1,
+    mobLevelMax: 34,
+    mobArmor: 0.05,
     aliveMult: 0.9,
     // The gentlest rung all but parks the horde once a set piece is engaged:
     // 10% speed, so the player can walk straight through it to the boss.
@@ -307,6 +336,9 @@ export const DIFFICULTY_DEFS: Record<Difficulty, DifficultyDef> = {
     startingGear: ["t_shirt", "jeans", "leather_boots"],
     mobCountMult: 1,
     mobLevelOffset: -2,
+    mobLevelMin: 2,
+    mobLevelMax: 36,
+    mobArmor: 0.05,
     aliveMult: 1,
     // Halved pursuit once a set piece is engaged — enough to break for the
     // boss, not enough to ignore the swarm entirely.
@@ -356,6 +388,9 @@ export const DIFFICULTY_DEFS: Record<Difficulty, DifficultyDef> = {
     startingGear: ["t_shirt", "jeans", "leather_boots"],
     mobCountMult: 1.1,
     mobLevelOffset: -1,
+    mobLevelMin: 3,
+    mobLevelMax: 38,
+    mobArmor: 0.05,
     aliveMult: 1.1,
     menaceMult: 1.5,
     menaceDecayMult: 0.85,
@@ -396,6 +431,9 @@ export const DIFFICULTY_DEFS: Record<Difficulty, DifficultyDef> = {
     startingGear: ["t_shirt", "jeans", "leather_boots"],
     mobCountMult: 1.2,
     mobLevelOffset: 0,
+    mobLevelMin: 38,
+    mobLevelMax: 56,
+    mobArmor: 0.1,
     aliveMult: 1.3,
     menaceMult: 3.5,
     menaceDecayMult: 0.7,
@@ -435,6 +473,9 @@ export const DIFFICULTY_DEFS: Record<Difficulty, DifficultyDef> = {
     // One extra step of count PLUS the +50% pile-on: 1.2 × 1.5.
     mobCountMult: 1.8,
     mobLevelOffset: 2,
+    mobLevelMin: 58,
+    mobLevelMax: 999,
+    mobArmor: 0.15,
     aliveMult: 1.8,
     menaceMult: 6.0,
     menaceDecayMult: 0.5,

@@ -122,14 +122,22 @@ export function evolutionHpMult(stage: number, effectMult = 1): number {
  * Floored at `mobHpScaleFloor` so a deep negative offset can't zero a mob out.
  */
 export function mobHpScaleFor(playerLevel: number, difficulty: string): number {
-  const offset = difficultyDef(difficulty).mobLevelOffset;
-  const mobLevel = playerLevel + offset;
+  const d = difficultyDef(difficulty);
+  // The HARD-CAPPED horde level (clamped into the difficulty's [min, max] band
+  // when it defines one), so hp stops scaling once the hero out-levels a tier
+  // and sits a touch above him at a tier's floor. A difficulty WITHOUT caps is
+  // left uncapped — including below level 1, where the `mobHpScaleFloor` below
+  // still catches a deep negative offset (the old behaviour the fixtures ride).
+  const mobLevel = Math.min(
+    d.mobLevelMax ?? Infinity,
+    Math.max(d.mobLevelMin ?? -Infinity, playerLevel + d.mobLevelOffset),
+  );
   // Multiplied by `autoPowerScale` — the damage curve the AUTOMATIC per-level
   // stat gains (LEVELING.autoGainsPerLevel) hand the hero for free — so that
   // free growth cancels out against the crowd instead of turning it into
   // one-hit kills. Keyed to the PLAYER's level (what the hero actually has),
-  // not the offset mob level, so a difficulty's gap stays the same linear
-  // offset as before; the `mobHpPerLevel` term keeps answering the CHOSEN
+  // not the offset mob level, so within the band a difficulty's gap stays the
+  // same linear offset; the `mobHpPerLevel` term keeps answering the CHOSEN
   // points, exactly as it always did.
   return Math.max(
     MENACE.mobHpScaleFloor,
@@ -239,9 +247,19 @@ export function mobLevelScale(state: GameState): number {
  * A def's own `levelBonus` (elites/bosses run hot) is added by the caller.
  */
 export function mobLevelFor(playerLevel: number, difficulty: string): number {
+  const d = difficultyDef(difficulty);
+  // HARD CAP the horde level into the difficulty's [min, max] band (when it
+  // defines one — a difficulty that omits the caps is uncapped, the old
+  // behaviour), so a tier's mobs never scale past its ceiling (an over-levelled
+  // farm meets stuck mobs) nor drop below its floor (a freshly-arrived hero on
+  // nightmare/jesus meets mobs a touch above him). Elites/bosses add their
+  // `levelBonus` on top in `maybePowerScale` and may run past the ceiling.
   return Math.max(
     1,
-    Math.round(playerLevel + difficultyDef(difficulty).mobLevelOffset),
+    Math.min(
+      d.mobLevelMax ?? Infinity,
+      Math.max(d.mobLevelMin ?? 1, Math.round(playerLevel + d.mobLevelOffset)),
+    ),
   );
 }
 

@@ -54,7 +54,7 @@ const {
   xpCapMultiplier,
   mobLevelXp,
 } = await import(path.join(root, "src/game/leveling.ts"));
-const { mobHpScaleFor } = await import(path.join(root, "src/game/menace.ts"));
+const { mobLevelFor } = await import(path.join(root, "src/game/menace.ts"));
 const { DIFFICULTY_ORDER, meetsMinDifficulty, difficultyDef, scaledMobCount } =
   await import(path.join(root, "src/game/defs/difficulties.ts"));
 const { LEVELS, LEVEL_ORDER } = await import(
@@ -143,7 +143,7 @@ if (campaign || byLevel) {
   // a higher rung's bigger, higher-level horde pays proportionally more — the
   // whole reason harder lanes land the hero higher on a full clear.
   // Difficulty-gated lines the run never fielded are left out.
-  const killXpOf = (e, level, offset, diff) => {
+  const killXpOf = (e, level, diff) => {
     if (e.xp != null) return e.xp;
     if (e.role !== "minion") {
       const share =
@@ -153,7 +153,11 @@ if (campaign || byLevel) {
           : LEVELING.eliteXpBarShare);
       return share * xpToLevelUp(level, diff);
     }
-    return mobLevelXp(level + offset, level);
+    // The horde level is HARD-CAPPED into the difficulty's band (mobLevelFor),
+    // and mobLevelXp folds in the WoW-style level-difference multiplier — so a
+    // floored (above-hero) mob pays a bonus and a ceiling-stuck (below-hero) one
+    // pays a pittance, exactly as the engine's `enemyKillXp` does.
+    return mobLevelXp(mobLevelFor(level, diff), level);
   };
   // The roster as a flat list of [enemy def, scaled head-count] entries for the
   // difficulty (minDifficulty-gated, counts scaled by `mobCountMult`). The
@@ -207,7 +211,6 @@ if (campaign || byLevel) {
     const starts = [];
     for (const id of LEVEL_ORDER) {
       starts.push(level); // the hero's level as this level's clear BEGINS
-      const offset = difficultyDef(diff).mobLevelOffset;
       const pArrow = arrowDropProb(diff);
       const cap = LEVELS[id].loot.arrowCapByDifficulty?.[diff];
       const mapCap = xpLevelCap(id, diff);
@@ -221,7 +224,7 @@ if (campaign || byLevel) {
       for (const [e, count] of rosterEntries(LEVELS[id], diff)) {
         const n = clearShare < 1 ? count * clearShare : count;
         for (let k = 0; k < n; k++) {
-          const killXp = killXpOf(e, level, offset, diff);
+          const killXp = killXpOf(e, level, diff);
           const arrowPerDrop =
             cap !== undefined && level >= cap
               ? arrowColdXp(level)
@@ -250,13 +253,12 @@ if (campaign || byLevel) {
   process.exit(0);
 }
 
-// Kills to clear level L at this difficulty, from the real curve. xpToLevelUp
-// already bakes in refMobHp × the level ramp × autoPowerScale at offset 0; the
-// actual mob's toughness uses the difficulty's offset, so autoPowerScale
-// cancels and only the offset shifts the count.
+// Kills to clear level L at this difficulty, from the real curve: the level's
+// cost over the XP one hard-capped, level-difference-priced minion kill pays
+// (`mobLevelXp` at the clamped `mobLevelFor`). autoPowerScale cancels top and
+// bottom; the mob-level caps and the WoW-style diff multiplier move the count.
 const killsPerLevel = (L) =>
-  xpToLevelUp(L, difficulty) /
-  (LEVELING.refMobHp * mobHpScaleFor(L, difficulty));
+  xpToLevelUp(L, difficulty) / mobLevelXp(mobLevelFor(L, difficulty), L);
 
 // The same count with golden arrows folded in. Over the `k0` kills a level
 // takes on kill XP alone, arrows drip an extra `k0 × pArrow × arrowXpShareAt(L)`

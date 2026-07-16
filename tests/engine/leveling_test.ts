@@ -20,10 +20,12 @@ import {
   grantXp,
   inventoryCapacity,
   LEVELING,
+  levelDiffXpMult,
   levelStatGains,
   LOOT,
   MENACE,
   mobHpScaleFor,
+  mobLevelFor,
   mobLevelXp,
   openInventory,
   PLAYER,
@@ -242,6 +244,50 @@ describe("endgame steepening wall", () => {
   });
 });
 
+describe("hard-capped horde level (fixture difficulties are uncapped)", () => {
+  it("clamps into the difficulty's [min, max] band", () => {
+    // The fixture rungs carry a wide [1, 999] band (no clamp), so mobLevelFor
+    // is the bare player+offset here; the SHIPPED per-difficulty caps (easy
+    // 1–34, nightmare 38–56, …) and their hp/XP effects are asserted against
+    // the real catalog in tests/content/difficulty_caps_test.ts.
+    expect(mobLevelFor(10, "medium")).toBe(8); // player − 2, unclamped
+    expect(mobLevelFor(1, "medium")).toBe(1); // floored at 1
+  });
+});
+
+describe("WoW-style level-difference XP", () => {
+  it("is neutral at the hero's level, a bonus above, a penalty below", () => {
+    expect(levelDiffXpMult(30, 30)).toBe(1); // same level → neutral
+    expect(levelDiffXpMult(34, 30)).toBeCloseTo(
+      1 + 4 * LEVELING.xpAbovePlayerPerLevel,
+    );
+    expect(levelDiffXpMult(24, 30)).toBeCloseTo(
+      1 - 6 * LEVELING.xpBelowPlayerPerLevel,
+    );
+  });
+
+  it("bottoms out at ZERO for a grey mob and caps the above bonus", () => {
+    // Far enough below → the grey mob pays nothing (never negative).
+    const grey = 30 - Math.ceil(1 / LEVELING.xpBelowPlayerPerLevel) - 1;
+    expect(levelDiffXpMult(grey, 30)).toBe(0);
+    // Far above → capped at the ceiling multiplier.
+    expect(levelDiffXpMult(99, 1)).toBe(LEVELING.xpAboveMaxMult);
+  });
+
+  it("leaves a same-level reference mob (the curve anchor) untouched", () => {
+    // referenceMobXp uses mobLevelXp(L, L) → diff 0 → ×1, so the kills-per-level
+    // curve is unchanged by the multiplier.
+    expect(levelDiffXpMult(20, 20)).toBe(1);
+  });
+
+  it("flattens when the REST XP knob is off", () => {
+    setBalanceTuning({ restXp: 0 });
+    expect(levelDiffXpMult(24, 30)).toBe(1);
+    expect(levelDiffXpMult(40, 30)).toBe(1);
+    resetBalanceTuning();
+  });
+});
+
 describe("the ding: automatic base gains and the celebration window", () => {
   // Auto-stat growth is an experimental, opt-in feature (OFF by engine default);
   // this block exercises it, so turn it on and restore the default after each.
@@ -302,9 +348,11 @@ describe("the ding: automatic base gains and the celebration window", () => {
     // scale rides the same curve (autoPowerScale) the free stats produce.
     expect(hitsToKill(12)).toBeGreaterThanOrEqual(hitsToKill(1));
     // And the compensation is exact by construction: stripped of the auto
-    // curve, the ladder is the same linear ramp as ever.
-    expect(mobHpScaleFor(12, "nightmare") / autoPowerScale(12)).toBeCloseTo(
-      1 + 11 * MENACE.mobHpPerLevel,
+    // curve, the ladder is the same linear ramp as ever. Read at level 45,
+    // inside nightmare's [38, 56] mob-level band, so the horde tracks the hero
+    // (offset 0) rather than sitting on the tier's floor.
+    expect(mobHpScaleFor(45, "nightmare") / autoPowerScale(45)).toBeCloseTo(
+      1 + 44 * MENACE.mobHpPerLevel,
       10,
     );
   });
@@ -322,9 +370,10 @@ describe("the ding: automatic base gains and the celebration window", () => {
       expect(effectiveStat(state, "stamina")).toBe(state.player.stats.stamina);
       // …and the horde's hp scale drops the compensating curve in lockstep, so
       // the ladder is the bare linear ramp (autoPowerScale collapses to 1).
-      expect(autoPowerScale(12)).toBe(1);
-      expect(mobHpScaleFor(12, "nightmare")).toBeCloseTo(
-        1 + 11 * MENACE.mobHpPerLevel,
+      // Read at level 45, inside nightmare's [38, 56] band (offset 0 tracks).
+      expect(autoPowerScale(45)).toBe(1);
+      expect(mobHpScaleFor(45, "nightmare")).toBeCloseTo(
+        1 + 44 * MENACE.mobHpPerLevel,
         10,
       );
     } finally {

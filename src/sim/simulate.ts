@@ -142,6 +142,18 @@ export type SimulateLevelOptions = {
    * shopping. Counted in the report (`combat.shopVisits`).
    */
   autoShop?: boolean;
+  /**
+   * TELEMETRY hook: fired on every minion/elite/boss death with the hero's
+   * level and difficulty at that moment (and whether the victim was a set
+   * piece). Used by `scripts/stats-track.mjs` to bucket a run into a
+   * kills-vs-level time series — the engine itself never sets it.
+   */
+  onKill?: (sample: {
+    heroLevel: number;
+    difficulty: Difficulty;
+    levelId: string;
+    isBoss: boolean;
+  }) => void;
 };
 
 export type SimulateCampaignOptions = {
@@ -173,6 +185,8 @@ export type SimulateCampaignOptions = {
    * straight in. With `carryLoadout` on he then carries forward run to run.
    */
   startLoadout?: Loadout | null;
+  /** Telemetry hook forwarded to every run (see SimulateLevelOptions.onKill). */
+  onKill?: SimulateLevelOptions["onKill"];
 };
 
 // ---- Report shapes ---------------------------------------------------------------
@@ -447,6 +461,7 @@ export function runLevel(options: SimulateLevelOptions): {
     balance,
     realisticPacing,
     autoShop,
+    onKill,
   } = options;
 
   // Apply the requested balance knobs for the duration of the run, then put the
@@ -467,6 +482,7 @@ export function runLevel(options: SimulateLevelOptions): {
       unstick,
       realisticPacing,
       autoShop,
+      onKill,
     });
     return { report, loadout: extractLoadout(state) };
   } finally {
@@ -486,6 +502,7 @@ function playRun(args: {
   unstick: boolean;
   realisticPacing?: boolean;
   autoShop?: boolean;
+  onKill?: SimulateLevelOptions["onKill"];
 }): { report: LevelReport; state: GameState } {
   const state = createGame(
     args.seed,
@@ -797,6 +814,12 @@ function playRun(args: {
             boss.killed = true;
             boss.killedAtMs = state.stats.timeMs;
           }
+          args.onKill?.({
+            heroLevel: state.player.level,
+            difficulty: args.difficulty,
+            levelId: args.levelId,
+            isBoss: enemyDef(event.defId).role !== "minion",
+          });
           break;
         }
         case "playerHurt":
@@ -1132,6 +1155,7 @@ export function simulateCampaign(
     realisticPacing,
     autoShop,
     startLoadout = null,
+    onKill,
   } = options;
 
   const runs: LevelReport[] = [];
@@ -1151,6 +1175,7 @@ export function simulateCampaign(
         balance,
         realisticPacing,
         autoShop,
+        onKill,
       });
       runs.push(report);
       runIndex++;
