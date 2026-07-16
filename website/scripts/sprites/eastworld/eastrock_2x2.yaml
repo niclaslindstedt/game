@@ -1,7 +1,9 @@
 name: eastrock_2x2
 family: eastworld
 size: [32, 32]
-description: ""
+description: >
+  A large desert boulder — a broad, chunky sandy-tan rock, biggest of the
+  cover rocks the GROK shooters duck behind between shots.
 palette:
   O: "#1a1c2c"
   Z: "#b08e60"

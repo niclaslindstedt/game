@@ -1,7 +1,10 @@
 name: compound_fence
 family: eastworld
 size: [16, 16]
-description: ""
+description: >
+  A control-center compound fence panel — a dark metal barrier segment with
+  a yellow-and-black hazard stripe and small turquoise indicator lights; an
+  impassable ZAI-deck fence.
 palette:
   K: "#0c0b12"
   O: "#1a1c2c"

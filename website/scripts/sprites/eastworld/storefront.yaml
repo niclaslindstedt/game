@@ -1,7 +1,10 @@
 name: storefront
 family: eastworld
 size: [16, 16]
-description: ""
+description: >
+  A western storefront facade — a brown wooden shop front of plank boards
+  with a glowing amber window/sign; tiled into the wall rows that squeeze
+  main street into a corridor.
 palette:
   B: "#92643e"
   E: "#5d4028"

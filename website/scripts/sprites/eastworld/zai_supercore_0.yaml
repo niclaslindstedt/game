@@ -1,7 +1,11 @@
 name: zai_supercore_0
 family: eastworld
 size: [48, 48]
-description: ""
+description: >
+  THE ZAI SUPERCORE — a barn-sized dark mainframe cabinet with a single
+  large glowing turquoise lens-eye set in its face, ringed by tiny indicator
+  lights and an electrified case; the immobile finale that manufactures tin
+  outlaws.
 palette:
   K: "#0c0b12"
   N: "#3a3644"

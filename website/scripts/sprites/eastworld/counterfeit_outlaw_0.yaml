@@ -1,7 +1,10 @@
 name: counterfeit_outlaw_0
 family: eastworld
 size: [16, 16]
-description: ""
+description: >
+  A bootleg print of the tin-outlaw bandit — a cowboy robot in a brown hat
+  and red shirt run off a pirated mold, seams and mismatched panels showing,
+  twice as mean about it. A lone rare mob.
 palette:
   A: "#8d9196"
   D: "#5c3e28"

@@ -1,7 +1,9 @@
 name: zai_supercore_1
 family: eastworld
 size: [48, 48]
-description: ""
+description: >
+  Second frame of the ZAI Supercore — the same dark mainframe hulk with its
+  turquoise eye pulsing on the alternate beat.
 palette:
   K: "#0c0b12"
   N: "#3a3644"

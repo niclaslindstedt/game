@@ -1,7 +1,9 @@
 name: vladimir_putain_1
 family: eastworld
 size: [24, 24]
-description: ""
+description: >
+  Second frame of Vladimir Putain — the same tracksuited judo figure winding
+  up his telegraphed bare-chested charge.
 palette:
   C: "#466096"
   K: "#0c0b12"

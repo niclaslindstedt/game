@@ -1,7 +1,10 @@
 name: eastworld_gate
 family: eastworld
 size: [48, 32]
-description: ""
+description: >
+  The park's entry arch — two weathered wooden posts holding a signboard
+  that reads 'EASTWORLD' in the pixel font, spanning the road; the landmark
+  over the level's entrance.
 palette:
   B: "#92643e"
   E: "#5d4028"

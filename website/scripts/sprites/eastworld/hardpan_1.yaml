@@ -1,7 +1,10 @@
 name: hardpan_1
 family: eastworld
 size: [16, 16]
-description: ""
+description: >
+  Rare variant of the hardpan ground tile — the same sun-baked tan-brown
+  dirt with a few extra cracks and pebbles for subtle variation; the
+  every-15th accent tile.
 palette:
   Z: "#b08e60"
   u: "#e2c494"

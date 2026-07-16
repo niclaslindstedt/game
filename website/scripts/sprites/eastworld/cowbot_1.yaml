@@ -1,7 +1,9 @@
 name: cowbot_1
 family: eastworld
 size: [16, 16]
-description: ""
+description: >
+  Second walk frame of the cowbot host — the same brown-hatted, red-
+  kerchiefed cowboy android on its alternate stride.
 palette:
   A: "#8d9196"
   D: "#5c3e28"

@@ -1,7 +1,9 @@
 name: counterfeit_outlaw_1
 family: eastworld
 size: [16, 16]
-description: ""
+description: >
+  Second frame of the counterfeit outlaw — the same seam-showing knockoff
+  gunslinger on its alternate stride.
 palette:
   A: "#8d9196"
   D: "#5c3e28"

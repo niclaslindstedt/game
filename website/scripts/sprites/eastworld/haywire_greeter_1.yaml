@@ -1,7 +1,9 @@
 name: haywire_greeter_1
 family: eastworld
 size: [16, 16]
-description: ""
+description: >
+  Second frame of the haywire greeter — the same wheeled waving host, arms
+  on the opposite beat of its broken hospitality loop.
 palette:
   A: "#8d9196"
   C: "#466096"

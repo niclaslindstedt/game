@@ -1,7 +1,9 @@
 name: elon_mosque_beach_1
 family: eastworld
 size: [48, 48]
-description: ""
+description: >
+  Second frame of the cornered Elon Mosque — the same pot-bellied, board-
+  shorted wimp on his alternate stride, one gold watch flashing.
 palette:
   K: "#0c0b12"
   N: "#3a3644"

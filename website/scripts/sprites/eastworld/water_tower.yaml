@@ -1,7 +1,10 @@
 name: water_tower
 family: eastworld
 size: [28, 32]
-description: ""
+description: >
+  The town water tower — a round wooden tank on tall splayed timber legs,
+  weathered planks, dripping; a tall landmark standing over main street (and
+  Edward Snow's sightline).
 palette:
   B: "#92643e"
   E: "#5d4028"

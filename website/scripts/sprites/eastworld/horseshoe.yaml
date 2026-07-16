@@ -1,7 +1,9 @@
 name: horseshoe
 family: eastworld
 size: [8, 8]
-description: ""
+description: >
+  A single iron horseshoe lying in the dust — a grey U-shaped metal arc with
+  small nail holes; tiny good-luck ground decor.
 palette:
   O: "#1a1c2c"
   v: "#60687e"

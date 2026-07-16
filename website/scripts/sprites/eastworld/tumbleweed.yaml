@@ -1,7 +1,9 @@
 name: tumbleweed
 family: eastworld
 size: [12, 12]
-description: ""
+description: >
+  A round tumbleweed — a ball of tangled dry brown brush; rolls across the
+  desert as animated decor.
 palette:
   B: "#92643e"
   E: "#5d4028"

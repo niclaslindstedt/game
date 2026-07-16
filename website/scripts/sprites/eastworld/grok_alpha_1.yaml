@@ -1,7 +1,9 @@
 name: grok_alpha_1
 family: eastworld
 size: [24, 24]
-description: ""
+description: >
+  Second frame of Grok Alpha — the same dark android with the cyan square
+  face, firing a ZAI bolt or leaning back to cover.
 palette:
   N: "#3a3644"
   O: "#1a1c2c"

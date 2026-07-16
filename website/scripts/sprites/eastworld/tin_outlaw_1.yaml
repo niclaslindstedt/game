@@ -1,7 +1,9 @@
 name: tin_outlaw_1
 family: eastworld
 size: [16, 16]
-description: ""
+description: >
+  Second frame of the tin outlaw — the same lean gunslinger android mid
+  draw/step, alternate stride.
 palette:
   A: "#8d9196"
   C: "#466096"

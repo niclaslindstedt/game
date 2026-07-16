@@ -1,7 +1,9 @@
 name: steven_seagull_1
 family: eastworld
 size: [24, 24]
-description: ""
+description: >
+  Second frame of Steven Seagull — the same black-clad ponytailed martial
+  artist shifting into his aikido redirect.
 palette:
   K: "#0c0b12"
   N: "#3a3644"

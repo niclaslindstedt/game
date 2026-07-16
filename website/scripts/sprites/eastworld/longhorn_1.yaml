@@ -1,7 +1,9 @@
 name: longhorn_1
 family: eastworld
 size: [24, 20]
-description: ""
+description: >
+  Second frame of the longhorn — the same wide-horned mechanical steer on
+  its alternate lumbering step.
 palette:
   A: "#8d9196"
   B: "#92643e"

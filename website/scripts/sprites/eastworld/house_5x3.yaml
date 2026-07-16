@@ -1,7 +1,10 @@
 name: house_5x3
 family: eastworld
 size: [80, 48]
-description: ""
+description: >
+  The largest frontier house — a broad brown wooden building, plank walls
+  with lit windows and a dark central door; a building-sized wall the hero
+  must route around.
 palette:
   B: "#92643e"
   E: "#5d4028"

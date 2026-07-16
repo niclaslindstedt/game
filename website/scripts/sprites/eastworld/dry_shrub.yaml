@@ -1,7 +1,9 @@
 name: dry_shrub
 family: eastworld
 size: [12, 12]
-description: ""
+description: >
+  A dead desert shrub — a spindly leafless bush of thin bare brown twigs;
+  small ground decor scattered across the hardpan.
 palette:
   E: "#5d4028"
   O: "#1a1c2c"

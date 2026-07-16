@@ -1,7 +1,9 @@
 name: saloon_brawler_1
 family: eastworld
 size: [16, 16]
-description: ""
+description: >
+  Second frame of the saloon-brawler host — the same striped-shirt fighting
+  android on its alternate stride/swing.
 palette:
   A: "#8d9196"
   N: "#3a3644"

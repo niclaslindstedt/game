@@ -1,7 +1,9 @@
 name: one_armed_bandit_1
 family: eastworld
 size: [16, 16]
-description: ""
+description: >
+  Second frame of the one-armed bandit — the same gold-plated slot-machine
+  mob, its lever/reels on the alternate beat.
 palette:
   A: "#8d9196"
   B: "#92643e"

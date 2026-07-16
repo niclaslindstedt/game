@@ -1,7 +1,9 @@
 name: edward_snow_1
 family: eastworld
 size: [24, 24]
-description: ""
+description: >
+  Second frame of Edward Snow — the same hooded, device-clutching leaker
+  firing his ZAI bolt or ducking to cover.
 palette:
   K: "#0c0b12"
   N: "#3a3644"

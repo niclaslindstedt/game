@@ -1,7 +1,10 @@
 name: grok_alpha_0
 family: eastworld
 size: [24, 24]
-description: ""
+description: >
+  GROK ALPHA controller — a slim dark humanoid android whose head is a
+  glowing cyan/turquoise square screen; the shooter that runs the hosts and
+  hides behind the rocks between shots.
 palette:
   N: "#3a3644"
   O: "#1a1c2c"

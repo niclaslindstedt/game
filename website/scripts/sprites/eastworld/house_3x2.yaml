@@ -1,7 +1,10 @@
 name: house_3x2
 family: eastworld
 size: [48, 32]
-description: ""
+description: >
+  A small frontier-town house seen top-down — a wide brown wooden building
+  with plank walls, a shingled roof edge, and a dark doorway; a solid
+  building-sized obstacle.
 palette:
   B: "#92643e"
   E: "#5d4028"

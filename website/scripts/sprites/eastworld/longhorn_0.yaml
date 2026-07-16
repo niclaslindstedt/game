@@ -1,7 +1,10 @@
 name: longhorn_0
 family: eastworld
 size: [24, 20]
-description: ""
+description: >
+  A robotic steer the size of a stagecoach, top-down — a broad low metal
+  chassis on wheels with glowing turquoise eyes and wide up-curving horns;
+  the slow, brutal heavy of the horde.
 palette:
   A: "#8d9196"
   B: "#92643e"

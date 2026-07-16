@@ -1,7 +1,9 @@
 name: eastrock_1x1
 family: eastworld
 size: [16, 16]
-description: ""
+description: >
+  A small desert boulder — a single rounded sandy-tan rock, lightly shaded;
+  the smallest cover rock in the compound's rock garden.
 palette:
   O: "#1a1c2c"
   Z: "#b08e60"
