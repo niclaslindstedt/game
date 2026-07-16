@@ -7,6 +7,9 @@ website/dist/
 website/src/generated/
 website/src/game/assets/
 src/generated/
+# Round-trip level snapshot — emitted by scripts/update-level-snapshot.mjs as
+# JSON.stringify output, not prettier-shaped; regenerated, not hand-edited.
+tests/content/fixtures/levels-snapshot.json
 site/
 node_modules/
 
