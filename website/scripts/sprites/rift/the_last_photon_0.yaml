@@ -1,7 +1,10 @@
 name: the_last_photon_0
 family: rift
 size: [16, 16]
-description: ""
+description: >
+  The final flash of a dead universe: a white-hot jagged burst of light with
+  a spiky radiating corona and a warm orange-gold core, scattered sparks. One
+  of a kind, blindingly fast, reads as pure incandescence given a shape.
 palette:
   O: "#1a1c2c"
   W: "#f4f4f4"

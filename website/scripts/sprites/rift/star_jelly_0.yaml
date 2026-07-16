@@ -1,7 +1,10 @@
 name: star_jelly_0
 family: rift
 size: [16, 15]
-description: ""
+description: >
+  A translucent teal-and-cyan jellyfish drifting through the void: a glowing
+  luminous dome above trailing wispy tendrils, faintly see-through (it phases
+  through solid things), reads as a gentle glowing space-drifter.
 palette:
   M: "#644696e6"
   O: "#1a1c2c"

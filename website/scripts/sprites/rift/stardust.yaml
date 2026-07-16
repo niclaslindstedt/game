@@ -1,7 +1,10 @@
 name: stardust
 family: rift
 size: [16, 16]
-description: ""
+description: >
+  Ambient decor: a loose scatter of tiny pale-blue and white star-specks
+  hanging in the void, a faint sprinkle of glittering dust. Reads as a wisp of
+  drifting stardust, barely there.
 palette:
   u: "#8c8cb6"
   x: "#c5e6ebe1"

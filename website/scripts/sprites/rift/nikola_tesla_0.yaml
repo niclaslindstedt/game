@@ -1,7 +1,11 @@
 name: nikola_tesla_0
 family: rift
 size: [24, 24]
-description: ""
+description: >
+  NIKOLA TESLA, the vanished inventor: a lean man in a dark Victorian
+  frock-suit, pale face with slicked hair and small goggles, crackling arcs
+  of cyan-white electricity leaping from both raised hands. Reads at a glance
+  as an electric wizard in period dress.
 palette:
   N: "#2a2e46"
   O: "#1a1c2c"

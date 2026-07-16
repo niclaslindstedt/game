@@ -1,7 +1,10 @@
 name: graviton_0
 family: rift
 size: [20, 20]
-description: ""
+description: >
+  A fist-sized collapsed star that weighs a battleship: a bright golden
+  accretion ring around a pure-black core (its event horizon), wrapped in a
+  faint violet halo. Small and round but reads as immensely, dangerously heavy.
 palette:
   K: "#0a0910"
   L: "#d4a5ec"

@@ -1,7 +1,10 @@
 name: blackhole_1
 family: rift
 size: [32, 32]
-description: ""
+description: >
+  A black hole hazard: a black core ringed by a glowing gold-orange accretion
+  halo with a violet fringe; second frame with the ring's swirl rotated to
+  animate the pull. A lethal well that drags everything in.
 palette:
   K: "#0a0910"
   L: "#d4a5ec"

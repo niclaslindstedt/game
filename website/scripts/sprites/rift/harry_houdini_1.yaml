@@ -1,7 +1,10 @@
 name: harry_houdini_1
 family: rift
 size: [24, 24]
-description: ""
+description: >
+  HARRY HOUDINI, a translucent teal ghost with a golden padlock on his chest;
+  second frame with the apparition wavering to its alternate flicker as it
+  fades. A spectral escapologist half-dissolved into the void.
 palette:
   C: "#5b858ce1"
   O: "#1a1c2c"

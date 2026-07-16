@@ -1,7 +1,10 @@
 name: grok_omega_1
 family: rift
 size: [48, 48]
-description: ""
+description: >
+  GROK OMEGA: a hovering dark monolith/screen with one huge cyan eye and a
+  green data-waveform; second frame with the eye's gaze/readout shifted and
+  glitch-sparks repositioned. An all-seeing surveillance machine-mind.
 palette:
   K: "#0a0910"
   L: "#d4a5ec"

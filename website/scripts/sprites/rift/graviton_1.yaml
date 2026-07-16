@@ -1,7 +1,10 @@
 name: graviton_1
 family: rift
 size: [20, 20]
-description: ""
+description: >
+  A fist-sized collapsed star: a golden accretion ring around a pure-black
+  event-horizon core in a faint violet halo; second frame with the ring's
+  glow rotated/pulsed. Small and round but reads as immensely heavy.
 palette:
   K: "#0a0910"
   L: "#d4a5ec"

@@ -1,7 +1,10 @@
 name: icon_singularity_cannon
 family: rift
 size: [12, 12]
-description: ""
+description: >
+  Inventory icon for the SINGULARITY CANNON: a stubby dark gunmetal cannon
+  whose muzzle is a glowing violet-magenta aperture holding a pinpoint black
+  singularity. Reads as a heavy weapon that fires tiny black holes.
 palette:
   K: "#0a0910"
   O: "#1a1c2c"

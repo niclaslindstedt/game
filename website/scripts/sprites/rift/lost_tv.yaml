@@ -1,7 +1,11 @@
 name: lost_tv
 family: rift
 size: [16, 16]
-description: ""
+description: >
+  Decor: a boxy retro television with a dark casing and two bent rabbit-ear
+  antennae, its screen glowing teal with static — somebody's living-room set,
+  still tuned to WEBFLIX, floating lost in the void. A wry piece of set
+  dressing.
 palette:
   N: "#2a2e46"
   O: "#1a1c2c"

@@ -1,7 +1,10 @@
 name: asteroid_0
 family: rift
 size: [16, 16]
-description: ""
+description: >
+  A rock-rain asteroid: a chunky, roughly round grey space-boulder pocked with
+  darker craters, tumbling across the hero's patch of nothing as a hazard.
+  Reads as a plain hurtling meteor.
 palette:
   E: "#5d4028"
   F: "#a2a4ad"

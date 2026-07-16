@@ -1,7 +1,10 @@
 name: lucky_1
 family: rift
 size: [24, 24]
-description: ""
+description: >
+  LUCKY the leprechaun in a green coat and tall green hat with a ginger
+  beard; second frame on the alternate stride, mid-jig. A small impish
+  fairy-tale figure guarding his luck.
 palette:
   G: "#4a7a3e"
   O: "#1a1c2c"

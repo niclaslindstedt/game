@@ -1,7 +1,11 @@
 name: the_king_0
 family: rift
 size: [24, 24]
-description: ""
+description: >
+  THE KING (a not-quite-named Elvis) as a dialogue-only apparition: a figure
+  in a white rhinestone jumpsuit with a high collar and gold trim, dark
+  pompadour and sideburns. Reads instantly as a rock-and-roll idol who never
+  really left the building.
 palette:
   K: "#0a0910"
   O: "#1a1c2c"

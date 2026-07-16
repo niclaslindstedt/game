@@ -1,7 +1,10 @@
 name: rift_shard
 family: rift
 size: [16, 16]
-description: ""
+description: >
+  A solid obstacle: a jagged crystallized moment — a faceted violet-purple
+  crystal shard of somewhere else, frozen mid-fall. Angular and glassy, it
+  reads as a shard of reality that stops sight, shots and blasts.
 palette:
   L: "#d4a5ec"
   M: "#644696e6"

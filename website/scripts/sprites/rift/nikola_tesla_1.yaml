@@ -1,7 +1,10 @@
 name: nikola_tesla_1
 family: rift
 size: [24, 24]
-description: ""
+description: >
+  NIKOLA TESLA in a dark Victorian frock-suit with goggles, cyan-white
+  lightning arcing from his hands; second frame with the electric arcs flashed
+  to their alternate discharge. An electric wizard in period dress.
 palette:
   N: "#2a2e46"
   O: "#1a1c2c"

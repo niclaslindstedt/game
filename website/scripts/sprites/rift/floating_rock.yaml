@@ -1,7 +1,10 @@
 name: floating_rock
 family: rift
 size: [16, 16]
-description: ""
+description: >
+  Ambient decor: a small grey pebble of rock drifting weightlessly in the
+  void, softly shaded, a bit of harmless debris floating past. Reads as a
+  little chunk of stone hanging in nothing.
 palette:
   F: "#a2a4ad"
   O: "#1a1c2c"

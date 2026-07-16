@@ -1,7 +1,10 @@
 name: stray_comet_1
 family: rift
 size: [16, 16]
-description: ""
+description: >
+  A stray comet on a decaying orbit: an ice-blue crystalline shard with a
+  pale streaming tail; second frame with the tail flickering to its alternate
+  streak. One of a small flock of frozen voidlings.
 palette:
   O: "#1a1c2c"
   W: "#f4f4f4"

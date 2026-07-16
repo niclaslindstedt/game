@@ -1,7 +1,10 @@
 name: grigori_rasputin_1
 family: rift
 size: [24, 24]
-description: ""
+description: >
+  GRIGORI RASPUTIN in a long dark cassock with gold frog-braid clasps, pale
+  gaunt face and long black beard; second frame on the alternate stride, robe
+  swaying. A brooding, unkillable mad monk.
 palette:
   A: "#8d9196"
   O: "#1a1c2c"

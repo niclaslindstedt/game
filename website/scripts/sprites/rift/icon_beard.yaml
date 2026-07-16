@@ -1,7 +1,10 @@
 name: icon_beard
 family: rift
 size: [12, 12]
-description: ""
+description: >
+  Inventory icon for RASPUTIN'S BEARD: a long, dark, tapering black beard cut
+  free and floating on its own, coming to a point at the bottom. Reads as the
+  mad monk's signature relic, a disembodied wedge of black whiskers.
 palette:
   O: "#1a1c2c"
   k: "#342c26"

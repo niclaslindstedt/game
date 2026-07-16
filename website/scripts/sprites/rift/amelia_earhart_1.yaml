@@ -1,7 +1,10 @@
 name: amelia_earhart_1
 family: rift
 size: [24, 24]
-description: ""
+description: >
+  AMELIA EARHART in a brown leather flight jacket, short hair, brandishing a
+  blade; second frame on the alternate stride, weapon swung to its other pose.
+  A 1930s pilot who never stopped flying.
 palette:
   B: "#92643e"
   E: "#5d4028"

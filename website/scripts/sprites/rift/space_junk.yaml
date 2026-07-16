@@ -1,7 +1,10 @@
 name: space_junk
 family: rift
 size: [16, 16]
-description: ""
+description: >
+  A hoppable obstacle: a piece of drifting junk from a thousand universes — a
+  battered grey suitcase/crate of metal and rivets. Reads as reachable cover,
+  a lost-luggage chunk of debris floating in the void.
 palette:
   O: "#1a1c2c"
   V: "#9095a5"

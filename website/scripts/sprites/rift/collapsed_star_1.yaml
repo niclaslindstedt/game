@@ -1,7 +1,10 @@
 name: collapsed_star_1
 family: rift
 size: [16, 16]
-description: ""
+description: >
+  A violet-black translucent jellyfish drifter with its own tiny event
+  horizon at the core, darker and heavier-looking than the teal star jelly;
+  second frame with tendrils curled to the alternate drift. Phasing.
 palette:
   K: "#0a0910"
   L: "#d4a5ec"
