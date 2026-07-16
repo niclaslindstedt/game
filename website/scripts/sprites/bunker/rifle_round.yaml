@@ -2,12 +2,17 @@ name: rifle_round
 family: bunker
 size: [8, 8]
 description: >
-  A small bright brass rifle bullet in flight (8x8) with a short yellow tracer
-  streak — the SOLDIER's ranged round.
+  A small rifle bullet in flight with a short yellow tracer streak — the
+  SOLDIER's ranged round.
+subject:
+  kind: prop
+  build: a small bullet in flight trailing a short tracer streak
+  accent: yellow tracer streak
+  flavor: the SOLDIER's ranged round
 palette:
-  O: "#1a1c2c"
-  w: "#c6c6c6"
-  y: "#ffb02e"
+  O: "#1a1c2c" # navy outline
+  w: "#c6c6c6" # pale bullet casing
+  y: "#ffb02e" # yellow tracer streak
 grid: |
   ........
   ........

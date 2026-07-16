@@ -2,13 +2,18 @@ name: money_pile
 family: bunker
 size: [12, 8]
 description: >
-  A small heap of banded green banknotes with white currency wraps (12x8) —
-  loose cash scattered as decor across the vault floor.
+  A small heap of banded green banknotes with white currency wraps — loose cash
+  scattered as decor across the vault floor.
+subject:
+  kind: prop
+  build: a small heap of banded green banknotes with white currency wraps
+  accent: banded green banknotes
+  flavor: loose cash scattered as decor across the vault floor
 palette:
-  G: "#4a7a3e"
-  O: "#1a1c2c"
-  W: "#f4f4f4"
-  g: "#3d6433"
+  G: "#4a7a3e" # green banknote
+  O: "#1a1c2c" # navy outline
+  W: "#f4f4f4" # white currency wrap
+  g: "#3d6433" # dark banknote shadow
 grid: |
   ............
   ...OOOO.....

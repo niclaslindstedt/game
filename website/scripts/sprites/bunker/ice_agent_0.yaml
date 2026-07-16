@@ -2,15 +2,22 @@ name: ice_agent_0
 family: bunker
 size: [16, 16]
 description: >
-  A front-facing ICE border agent in dark tactical gear marked with a cyan
-  "ICE" accent, built to grab — faster and harder-hitting than the suits, the
-  detail that detains.
+  An ICE border agent in dark tactical gear marked with a cyan ICE band across
+  the chest, built to grab — faster and harder-hitting than the suits.
+subject:
+  kind: minion
+  build: a broad, hard-hitting build built to grab
+  attire: dark tactical gear
+  features: dark hair
+  accent: cyan ICE band across the chest
+  pose: standing, ready to detain
+  flavor: ICE's border detail, faster and harder-hitting than the suits — the detail that detains
 palette:
-  K: "#0c0b12"
-  N: "#3a3846"
-  O: "#1a1c2c"
-  Q: "#5cd2ff"
-  p: "#deaa86"
+  K: "#0c0b12" # near-black tactical gear and hair
+  N: "#3a3846" # dark boots
+  O: "#1a1c2c" # navy outline and eyes
+  Q: "#5cd2ff" # cyan ICE band
+  p: "#deaa86" # skin
 grid: |
   ................
   .....OOOO.......

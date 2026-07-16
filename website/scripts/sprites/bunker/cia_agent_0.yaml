@@ -2,15 +2,22 @@ name: cia_agent_0
 family: bunker
 size: [16, 16]
 description: >
-  A front-facing CIA agent in a plain black suit with a white shirt and red
-  tie, dark hair, arms slightly out — the fodder rank with a redacted job
-  description.
+  A CIA agent in a plain black suit with a white shirt and red tie, dark hair,
+  arms slightly out — the fodder rank with a redacted job description.
+subject:
+  kind: minion
+  build: an average agent's build, arms slightly out
+  attire: plain black suit over a white shirt
+  features: dark hair
+  accent: red tie
+  pose: standing, arms slightly out
+  flavor: the fodder rank with a redacted job description
 palette:
-  C: "#d23c42"
-  K: "#0c0b12"
-  O: "#1a1c2c"
-  W: "#f4f4f4"
-  p: "#deaa86"
+  C: "#d23c42" # red tie
+  K: "#0c0b12" # near-black suit and hair
+  O: "#1a1c2c" # navy outline
+  W: "#f4f4f4" # white shirt
+  p: "#deaa86" # skin
 grid: |
   ................
   .....OOOO.......

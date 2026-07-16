@@ -2,16 +2,20 @@ name: bunker_gate
 family: bunker
 size: [24, 32]
 description: >
-  A tall, narrow armored blast-gate seen head-on, much taller than wide, with a
-  heavy steel-grey frame around a solid black central door panel; rows of small
-  cool-blue light dots run in vertical columns down the left and right inner
-  edges of the panel. The vault entrance to the bunker.
+  A tall, narrow armored blast-gate seen head-on — a heavy steel-grey frame
+  around a solid black door panel, cool-blue light dots down its inner edges.
+subject:
+  kind: prop
+  build: a tall, narrow armored blast-gate, a heavy steel-grey frame around a solid black central door panel, much taller than wide
+  features: rows of small cool-blue light dots in vertical columns down the left and right inner edges of the panel
+  accent: cool-blue light dots
+  flavor: the vault entrance to the bunker
 palette:
-  K: "#0c0b12"
-  N: "#3a3846"
-  O: "#1a1c2c"
-  Q: "#5cd2ff"
-  v: "#60687e"
+  K: "#0c0b12" # black door panel
+  N: "#3a3846" # steel-grey frame
+  O: "#1a1c2c" # navy outline
+  Q: "#5cd2ff" # cool-blue light dots
+  v: "#60687e" # steel frame highlight
 grid: |
   ........................
   .......OOOOOOOOOO.......

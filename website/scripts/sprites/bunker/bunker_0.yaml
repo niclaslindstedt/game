@@ -2,12 +2,16 @@ name: bunker_0
 family: bunker
 size: [16, 16]
 description: >
-  A polished pale-grey bunker-concrete floor tile, faintly speckled, flat
-  top-down — the vault's climate-controlled hard floor.
+  A polished pale-grey bunker-concrete floor tile, faintly speckled — the
+  vault's climate-controlled hard floor.
+subject:
+  kind: ground tile
+  build: flat polished bunker-concrete floor, faintly speckled
+  flavor: the vault's climate-controlled hard floor
 palette:
-  Z: "#9c9eac"
-  u: "#d8dae4"
-  z: "#babcc6"
+  Z: "#9c9eac" # darker speckle
+  u: "#d8dae4" # light speckle
+  z: "#babcc6" # pale-grey concrete
 grid: |
   zzzzzzzzzzzzzzzz
   zzzzuzzzzzzzzzzz

@@ -2,18 +2,26 @@ name: donald_dump_0
 family: bunker
 size: [24, 24]
 description: >
-  DONALD DUMP, the biggest and slowest resident (24x24): a bulky figure in a
-  navy-blue suit and long red tie, ruddy face under a distinctive swoop of
-  amber-blond hair, hands out and planted immovably.
+  DONALD DUMP — the biggest, slowest resident: a bulky navy-suited man with a
+  long red tie and a swoop of amber-blond hair, hands planted.
+subject:
+  kind: elite
+  name: DONALD DUMP
+  build: bulky, the biggest and slowest resident of the set
+  attire: navy-blue business suit over a white shirt
+  features: ruddy face under a distinctive swoop of amber-blond hair
+  accent: long red tie
+  pose: hands out and planted immovably
+  flavor: a caged bunker resident boasting he sold the robots, oblivious they now guard his door
 palette:
-  C: "#d23c42"
-  J: "#2d3b84"
-  K: "#0c0b12"
-  O: "#1a1c2c"
-  W: "#f4f4f4"
-  p: "#deaa86"
-  t: "#ee9858"
-  y: "#ffb02e"
+  C: "#d23c42" # red tie
+  J: "#2d3b84" # navy-blue suit
+  K: "#0c0b12" # black shoes and eyes
+  O: "#1a1c2c" # navy outline
+  W: "#f4f4f4" # white shirt
+  p: "#deaa86" # skin
+  t: "#ee9858" # ruddy face
+  y: "#ffb02e" # amber-blond hair
 grid: |
   ........................
   ........................

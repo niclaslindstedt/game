@@ -2,15 +2,23 @@ name: larry_allison_0
 family: bunker
 size: [24, 24]
 description: >
-  LARRY ALLISON (24x24), the database emperor: an older resident with swept
-  silver-grey hair in dark tailored clothing, standing back and composed — he
-  fights like an audit, from range behind the furniture.
+  LARRY ALLISON — the database emperor: an older resident with swept
+  silver-grey hair in dark tailored clothing, standing back and composed.
+subject:
+  kind: elite
+  name: LARRY ALLISON
+  build: older and lean, a tall composed figure
+  attire: dark tailored suit
+  features: swept silver-grey hair, an older face
+  accent: swept silver-grey hair
+  pose: standing back and composed, hands held low
+  flavor: the database emperor who fights like an audit, from range behind the furniture
 palette:
-  K: "#0c0b12"
-  N: "#3a3846"
-  O: "#1a1c2c"
-  V: "#9095a5"
-  p: "#deaa86"
+  K: "#0c0b12" # black shoes and eyes
+  N: "#3a3846" # dark tailored suit
+  O: "#1a1c2c" # navy outline
+  V: "#9095a5" # swept silver-grey hair
+  p: "#deaa86" # skin
 grid: |
   ........................
   ........................

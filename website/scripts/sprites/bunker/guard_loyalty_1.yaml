@@ -2,16 +2,22 @@ name: guard_loyalty_1
 family: bunker
 size: [20, 20]
 description: >
-  A heavyset front-facing bodyguard in a matte-black suit with a white shirt, a
-  wall of a man with arms held out from his bulk, distinguished by a gold tie
-  and collar patch; caught mid-stride with the legs shifted from the planted
-  stance. Donald Dump's LOYALTY ENFORCER detail.
+  LOYALTY ENFORCER — Donald Dump's bodyguard, mid-stride: the heavyset
+  black-suited wall with the gold livery, legs shifted from the plant.
+subject:
+  kind: elite bodyguard
+  name: LOYALTY ENFORCER
+  build: heavyset, a size larger than the rank-and-file so his mass reads as menace
+  attire: matte-black suit over a white shirt
+  accent: gold tie and collar patch
+  pose: caught mid-stride, the legs shifted from the planted stance, arms out from the bulk
+  flavor: Donald Dump's personal detail; one of six identical guards told apart only by livery
 palette:
-  K: "#0c0b12"
-  O: "#1a1c2c"
-  W: "#f4f4f4"
-  o: "#d6a842"
-  p: "#deaa86"
+  K: "#0c0b12" # near-black suit
+  O: "#1a1c2c" # navy outline
+  W: "#f4f4f4" # white shirt
+  o: "#d6a842" # gold livery
+  p: "#deaa86" # skin
 grid: |
   ....................
   ........OOOO........

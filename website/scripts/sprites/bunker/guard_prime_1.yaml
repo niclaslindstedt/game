@@ -2,16 +2,22 @@ name: guard_prime_1
 family: bunker
 size: [20, 20]
 description: >
-  A heavyset front-facing bodyguard in a matte-black suit with a white shirt, a
-  wall of a man with arms held out from his bulk, distinguished by an amber tie
-  and collar patch; caught mid-stride with the legs shifted from the planted
-  stance. Jeff Baywatch's PRIME GUARDIAN detail.
+  PRIME GUARDIAN — Jeff Baywatch's bodyguard, mid-stride: the heavyset
+  black-suited wall with the amber livery, legs shifted from the plant.
+subject:
+  kind: elite bodyguard
+  name: PRIME GUARDIAN
+  build: heavyset, a size larger than the rank-and-file so his mass reads as menace
+  attire: matte-black suit over a white shirt
+  accent: amber tie and collar patch
+  pose: caught mid-stride, the legs shifted from the planted stance, arms out from the bulk
+  flavor: Jeff Baywatch's personal detail; one of six identical guards told apart only by livery
 palette:
-  K: "#0c0b12"
-  O: "#1a1c2c"
-  W: "#f4f4f4"
-  p: "#deaa86"
-  y: "#ffb02e"
+  K: "#0c0b12" # near-black suit
+  O: "#1a1c2c" # navy outline
+  W: "#f4f4f4" # white shirt
+  p: "#deaa86" # skin
+  y: "#ffb02e" # amber livery
 grid: |
   ....................
   ........OOOO........

@@ -2,16 +2,23 @@ name: the_mole_1
 family: bunker
 size: [16, 16]
 description: >
-  A nondescript front-facing figure with dark hair in a deep-maroon coat banded
-  by a horizontal gold stripe across the chest; caught mid-stride with the legs
-  shifted from the standing pose, near-identical to the base frame at sprite
-  size.
+  THE MOLE mid-stride — the nondescript double-agent in a deep-maroon coat
+  banded with a gold stripe, legs shifted from the standing pose.
+subject:
+  kind: minion
+  name: THE MOLE
+  build: a nondescript, average figure
+  attire: deep-maroon coat banded with a horizontal gold stripe across the chest
+  features: dark hair
+  accent: gold chest stripe
+  pose: caught mid-stride, the legs shifted from the standing pose
+  flavor: the leak every agency in the bunker hunts, quietly on all their payrolls
 palette:
-  D: "#602830"
-  I: "#f6d074"
-  K: "#0c0b12"
-  O: "#1a1c2c"
-  p: "#deaa86"
+  D: "#602830" # deep-maroon coat and hair
+  I: "#f6d074" # gold chest stripe
+  K: "#0c0b12" # black shoes
+  O: "#1a1c2c" # navy outline and eyes
+  p: "#deaa86" # skin
 grid: |
   ................
   .....OOOO.......

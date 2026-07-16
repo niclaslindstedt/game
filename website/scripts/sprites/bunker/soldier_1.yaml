@@ -2,16 +2,23 @@ name: soldier_1
 family: bunker
 size: [16, 16]
 description: >
-  A front-facing soldier in olive-green fatigues with darker webbing straps and
-  an amber muzzle-glint at his side, dark hair; caught mid-stride with the legs
-  shifted from the standing pose.
+  A soldier mid-stride — olive-green fatigues with darker webbing straps and an
+  amber muzzle-glint at his side, legs shifted from the standing pose.
+subject:
+  kind: minion
+  build: an average soldier's build
+  attire: olive-green fatigues with darker webbing straps
+  features: an olive helmet
+  accent: amber muzzle-glint of a readied rifle
+  pose: caught mid-stride, the legs shifted from the standing pose
+  flavor: the horde's rank-and-file shooter who fires from range and ducks behind furniture to reload
 palette:
-  N: "#3a3846"
-  O: "#1a1c2c"
-  d: "#464c2c"
-  e: "#6a7042"
-  p: "#deaa86"
-  y: "#ffb02e"
+  N: "#3a3846" # dark rifle
+  O: "#1a1c2c" # navy outline
+  d: "#464c2c" # darker webbing straps
+  e: "#6a7042" # olive-green fatigues and helmet
+  p: "#deaa86" # skin
+  y: "#ffb02e" # amber muzzle-glint
 grid: |
   ................
   .....OOOO.......

@@ -2,15 +2,21 @@ name: moonlighting_agent_1
 family: bunker
 size: [16, 16]
 description: >
-  A front-facing agent in a drab olive-grey suit with a horizontal gold accent
-  stripe across the chest, dark hair, arms slightly out; caught mid-stride with
-  the legs shifted from the standing pose.
+  The double-payroll suit mid-stride — a drab olive-grey suit with a gold
+  accent stripe, arms slightly out, legs shifted from the standing pose.
+subject:
+  kind: minion
+  build: an average agent's build, arms slightly out
+  attire: drab olive-grey suit with a horizontal gold accent stripe across the chest
+  accent: gold chest stripe
+  pose: caught mid-stride, the legs shifted from the standing pose
+  flavor: a double-payroll suit walking the bunker on one salary and selling its floor plan on another — a rare mob with a loot burst
 palette:
-  I: "#f6d074"
-  K: "#0c0b12"
-  O: "#1a1c2c"
-  e: "#6a7042"
-  p: "#deaa86"
+  I: "#f6d074" # gold accent stripe
+  K: "#0c0b12" # black shoes
+  O: "#1a1c2c" # navy outline and eyes
+  e: "#6a7042" # olive-grey suit and hair
+  p: "#deaa86" # skin
 grid: |
   ................
   .....OOOO.......

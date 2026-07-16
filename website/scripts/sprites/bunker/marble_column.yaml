@@ -2,13 +2,18 @@ name: marble_column
 family: bunker
 size: [16, 20]
 description: >
-  A white classical marble column with a fluted shaft and capital (16x20),
-  standing solid — an impassable pillar in the vault's suites.
+  A white classical marble column with a fluted shaft and capital — an
+  impassable pillar in the vault's suites.
+subject:
+  kind: prop
+  build: a white classical marble column, a fluted shaft between a capital and base, standing solid
+  features: fluted shaft, capital and base
+  flavor: an impassable pillar in the vault's suites
 palette:
-  O: "#1a1c2c"
-  W: "#f4f4f4"
-  u: "#d8dae4"
-  w: "#c6c6c6"
+  O: "#1a1c2c" # navy outline
+  W: "#f4f4f4" # marble highlight
+  u: "#d8dae4" # light marble
+  w: "#c6c6c6" # marble shadow
 grid: |
   ....OOOOOOOO....
   ...OWWWWWWWWO...

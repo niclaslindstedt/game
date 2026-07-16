@@ -2,13 +2,17 @@ name: bunker_1
 family: bunker
 size: [16, 16]
 description: >
-  The rare inlay floor tile: the same polished grey concrete with a glowing
-  gold ring/sigil inlaid at its center, scattered occasionally through the vault
-  floor.
+  The rare inlay floor tile: polished grey concrete with a glowing gold
+  ring-sigil inlaid at its center.
+subject:
+  kind: ground tile
+  build: polished grey concrete with a glowing gold ring-sigil inlaid at its center
+  accent: glowing gold sigil ring
+  flavor: scattered occasionally through the vault floor
 palette:
-  I: "#f6d074"
-  Z: "#9c9eac"
-  z: "#babcc6"
+  I: "#f6d074" # gold sigil inlay
+  Z: "#9c9eac" # concrete shading ring
+  z: "#babcc6" # pale-grey concrete
 grid: |
   zzzzzzzzzzzzzzzz
   zzzzzzzzzzzzzzzz

@@ -2,15 +2,20 @@ name: gold_pallet
 family: bunker
 size: [16, 12]
 description: >
-  A wooden shipping pallet stacked with gleaming gold bullion bars (16x12) —
-  the vault's hoard, low enough for the hero to hop over.
+  A wooden shipping pallet stacked with gleaming gold bullion bars — the
+  vault's hoard, low enough for the hero to hop over.
+subject:
+  kind: prop
+  build: a wooden shipping pallet stacked with gleaming gold bullion bars, low enough to hop over
+  accent: gleaming gold bullion
+  flavor: the vault's hoard
 palette:
-  B: "#92643e"
-  E: "#5d4028"
-  I: "#f6d074"
-  O: "#1a1c2c"
-  o: "#d6a842"
-  q: "#96762e"
+  B: "#92643e" # pallet wood
+  E: "#5d4028" # dark pallet shadow
+  I: "#f6d074" # gold bar highlight
+  O: "#1a1c2c" # navy outline
+  o: "#d6a842" # gold bar
+  q: "#96762e" # gold bar shadow
 grid: |
   ................
   ....OOOO.OOOO...

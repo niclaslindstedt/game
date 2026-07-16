@@ -4,10 +4,15 @@ size: [16, 16]
 description: >
   A plush burgundy carpet patch flecked with tiny gold specks — the deep-red
   runner that clumps where the money walks.
+subject:
+  kind: ground tile
+  build: plush burgundy carpet patch flecked with tiny gold specks
+  accent: gold flecks
+  flavor: the deep-red runner that clumps where the money walks
 palette:
-  D: "#602830"
-  I: "#f6d074"
-  X: "#963c46"
+  D: "#602830" # dark burgundy flecks
+  I: "#f6d074" # gold specks
+  X: "#963c46" # burgundy carpet
 grid: |
   XXXXXXXXXXXXXXXX
   XDXXXXXXXXXXXXDX

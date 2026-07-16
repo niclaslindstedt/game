@@ -2,15 +2,22 @@ name: ice_agent_1
 family: bunker
 size: [16, 16]
 description: >
-  A broad front-facing ICE border agent in dark tactical gear marked with a
-  horizontal cyan "ICE" band across the chest, dark hair — a hard-hitting build;
-  caught mid-stride with the legs shifted from the standing pose.
+  A broad ICE border agent mid-stride — dark tactical gear marked with a
+  horizontal cyan ICE band across the chest, legs shifted from the pose.
+subject:
+  kind: minion
+  build: a broad, hard-hitting build built to grab
+  attire: dark tactical gear
+  features: dark hair
+  accent: horizontal cyan ICE band across the chest
+  pose: caught mid-stride, the legs shifted from the standing pose
+  flavor: ICE's border detail, faster and harder-hitting than the suits — the detail that detains
 palette:
-  K: "#0c0b12"
-  N: "#3a3846"
-  O: "#1a1c2c"
-  Q: "#5cd2ff"
-  p: "#deaa86"
+  K: "#0c0b12" # near-black tactical gear and hair
+  N: "#3a3846" # dark boots
+  O: "#1a1c2c" # navy outline and eyes
+  Q: "#5cd2ff" # cyan ICE band
+  p: "#deaa86" # skin
 grid: |
   ................
   .....OOOO.......

@@ -2,17 +2,25 @@ name: sam_haltman_1
 family: bunker
 size: [24, 24]
 description: >
-  A wiry front-facing figure in a dark maroon zip hoodie over a white tee and
-  blue jeans, greyish and tense with a forced smile — a lean, upright build;
-  caught mid-step with the legs shifted from the standing pose.
+  SAM HALTMAN mid-step — the wiry figure in a grey and dark maroon zip hoodie
+  over blue jeans, greyish and tense, legs shifted from the standing pose.
+subject:
+  kind: elite
+  name: SAM HALTMAN
+  build: wiry, a lean upright figure
+  attire: grey zip hoodie with a dark maroon hood over blue jeans
+  features: greyish, tense face with a forced smile
+  accent: dark maroon hood
+  pose: caught mid-step, the legs shifted from the standing pose, tense
+  flavor: the AGI prepper in denial who knows the machine caged and emptied him but is too afraid to say it; fights from range, never melee
 palette:
-  D: "#602830"
-  K: "#0c0b12"
-  O: "#1a1c2c"
-  W: "#f4f4f4"
-  j: "#4054bc"
-  p: "#deaa86"
-  v: "#60687e"
+  D: "#602830" # dark maroon hood
+  K: "#0c0b12" # black eyes and hood shadow
+  O: "#1a1c2c" # navy outline
+  W: "#f4f4f4" # white sneakers
+  j: "#4054bc" # blue jeans
+  p: "#deaa86" # skin
+  v: "#60687e" # grey hoodie body
 grid: |
   ........................
   ........................
