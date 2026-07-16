@@ -15,7 +15,7 @@ import { spawnEnemy } from "./create.ts";
 import { enemyDef } from "./defs/enemies/index.ts";
 import type { EnemyDef, EnemyMechanics } from "./defs/enemies/types.ts";
 import { difficultyDef } from "./defs/difficulties.ts";
-import { armorReduction, wearWornArmor } from "./items.ts";
+import { absorbPlayerDamage, armorReduction, wearWornArmor } from "./items.ts";
 import { queueStruckProcs } from "./loot.ts";
 import { currentMobLevel, menaceStage, mobLevelScale } from "./menace.ts";
 import { lineOfSight } from "./obstacles.ts";
@@ -291,7 +291,7 @@ function resolveSlamHit(
     Math.round(damage * (1 - armorReduction(state, enemy.mlvl))),
   );
   wearWornArmor(state);
-  player.hp -= hpDamage;
+  player.hp -= absorbPlayerDamage(state, hpDamage);
   player.hurtFlashMs = 250;
   state.stats.damageTaken += damage;
   state.events.push({ type: "playerHurt", crit });

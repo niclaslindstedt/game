@@ -29,8 +29,10 @@ import {
   ARMOR_SLOTS,
   inventoryCapacity,
   recomputeMaxHp,
+  recomputeMaxMana,
   recomputeMaxStamina,
 } from "./items.ts";
+import { SPELL_SLOTS } from "./defs/spells.ts";
 import { statPointsAt, xpToLevelUp } from "./leveling.ts";
 import type {
   Difficulty,
@@ -77,7 +79,9 @@ export function extractLoadout(state: GameState): Loadout {
     heldAbilities: [...player.heldAbilities],
     medkits: [...player.medkits],
     staminaPotions: player.staminaPotions,
+    manaPotions: player.manaPotions,
     repairKits: player.repairKits,
+    spellSlots: [...player.spellSlots],
     coins: player.coins,
     // The party rides along: each companion's def, its EARNED level and XP (so
     // it keeps leveling across every level and difficulty), and its worn kit.
@@ -161,18 +165,32 @@ export function applyLoadout(state: GameState, loadout: Loadout): void {
     0,
     Math.min(loadout.staminaPotions ?? 0, CONSUMABLES.stackCap),
   );
+  player.manaPotions = Math.max(
+    0,
+    Math.min(loadout.manaPotions ?? 0, CONSUMABLES.stackCap),
+  );
   player.repairKits = Math.max(
     0,
     Math.min(loadout.repairKits ?? 0, CONSUMABLES.stackCap),
   );
+  // The spell bar rides along, re-fit to this build's slot count; a loadout
+  // banked before spells shipped (or a stale slot count) loads an empty bar the
+  // app then auto-fills from the hero's unlocked spells. Only ids the hero can
+  // still cast survive — an entry the carried INT no longer unlocks is dropped
+  // (`castSpell` re-checks anyway, but a clean bar reads better).
+  player.spellSlots = new Array<string | null>(SPELL_SLOTS)
+    .fill(null)
+    .map((_, i) => loadout.spellSlots?.[i] ?? null);
   // The purse rides along; loadouts banked before the economy existed carry
   // no coins field and load as an empty purse.
   player.coins = Math.max(0, loadout.coins ?? 0);
 
   recomputeMaxHp(state);
   recomputeMaxStamina(state);
+  recomputeMaxMana(state);
   player.hp = player.maxHp;
   player.stamina = player.maxStamina;
+  player.mana = player.maxMana;
 
   // The party walks in with him: each carried companion re-minted at the
   // hero's side, rested (full hp at its OWN earned level), wearing its carried
@@ -340,6 +358,7 @@ export function deriveArrivalLoadout(
     intelligence: 0,
     speed: 0,
     luck: 0,
+    spirit: 0,
   };
   const order = ARRIVAL.statOrder as readonly StatName[];
   for (let i = 0; i < points; i++) {

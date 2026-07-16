@@ -113,6 +113,7 @@ describe("spentStats — the chooser tracks only the player's own picks", () => 
       intelligence: 0,
       speed: 0,
       luck: 0,
+      spirit: 0,
     };
     delete legacy.spentStats;
 

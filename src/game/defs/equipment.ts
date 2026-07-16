@@ -1403,6 +1403,7 @@ export const STAT_NAMES: StatName[] = [
   "intelligence",
   "speed",
   "luck",
+  "spirit",
 ];
 
 // ---- Magic item naming (Diablo-style) -----------------------------------------
@@ -1420,6 +1421,7 @@ const STAT_SUFFIX: Record<StatName, string> = {
   intelligence: "OF THE OWL",
   speed: "OF THE HARE",
   luck: "OF FORTUNE",
+  spirit: "OF THE WHALE",
 };
 
 /**
