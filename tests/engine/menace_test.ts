@@ -277,7 +277,12 @@ describe("menace — difficulty and warmup gate the heat", () => {
     state.player.stats.strength = 8;
     const { x, y } = state.player.pos;
     state.enemies.push(
-      makeEnemy({ pos: { x: x + 20, y }, hp: 30, maxHp: 30 }, "test_fodder"),
+      // Level-1 fodder → ~no armor, so the overkill (and its jolt) is the pure
+      // formula rather than an armor-shaved remainder.
+      makeEnemy(
+        { pos: { x: x + 20, y }, hp: 30, maxHp: 30, mlvl: 1 },
+        "test_fodder",
+      ),
     );
     // Pin the rng high so the blow neither misses, is dodged, nor crits (and
     // no drop rolls) — the jolt is then the pure overkill formula, and the
@@ -830,6 +835,7 @@ describe("menace — companions don't trigger it", () => {
             pos: { x: companion.pos.x + 12 + i * 6, y: companion.pos.y },
             hp: 10,
             maxHp: 10,
+            mlvl: 1, // ~no armor, so the companion's wrench clears the fodder
           },
           "test_fodder",
         ),

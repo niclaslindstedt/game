@@ -69,6 +69,18 @@ actually ends.
 | `earlyRampStart` / `earlyRampLevels` | Onboarding ramp: level 1 costs this FRACTION of its curve value, lerping to full by `earlyRampLevels`. Makes the first ding land in a handful of kills to show off the level-up. |
 | `maxLevel` | The Diablo-style cap (99). At the cap XP stops banking levels (bar pins full) — the endgame becomes the gear hunt. Enforced in `grantXp` (loot.ts). |
 | `xpPerHp` | XP per point of a mob's max hp. The units the whole model rides on; rarely touched. |
+| `xpAbovePlayerPerLevel` / `xpBelowPlayerPerLevel` / `xpAboveMaxMult` | **WoW-style level-difference XP** (`levelDiffXpMult`, folded into `mobLevelXp`). A mob ABOVE the hero pays a bonus (`+above` per level, capped at `xpAboveMaxMult`); a mob BELOW pays a penalty (`−below` per level) down to ZERO — the "grey" mob `1/below` levels under. A SAME-level mob is ×1, so `referenceMobXp` (the curve's anchor) is untouched — this only bites where a difficulty's mob-level CAPS push the horde off the hero's level. Runtime-scalable via BALANCE › REST XP. |
+
+**Per-difficulty mob-level HARD CAPS** live on the difficulty, not `LEVELING`:
+`DifficultyDef.mobLevelMin/mobLevelMax` clamp the horde level (`mobLevelFor`) into
+a band — EASY 1–34, MEDIUM 2–36, HARD 3–38, NIGHTMARE 38–56, JESUS 58+. The
+floor makes a freshly-arrived nightmare/jesus hero fight mobs a touch above him
+(a level-difference XP bonus, catch-up); the ceiling stops mobs scaling once he
+out-levels a tier (stuck, grey-XP mobs — an over-levelled farm can't grind for
+pace or loot). The caps also gate LOOT: `lootLevel = mlvl − offset`, so the
+bottom lanes cap loot below the legendary gate (mlvl 40) — top tiers come from
+nightmare/jesus. `mobHpScaleFor`, `mobLevelXp`, and the loot gates all read the
+clamped level. A difficulty that omits the caps is uncapped (test fixtures do).
 
 `statPointsPerLevel`, `dingCelebrationMs`, `autoGainsPerLevel` are ding
 *rewards/feel*, not pacing — leave them unless that's the change. `arrowXpShare`

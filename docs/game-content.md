@@ -224,6 +224,13 @@ Every drop still carries an item level near that loot level (plus the harder
 rungs' `lootIlvlBonus`) that sizes its affixes — see the `weapon-system` skill
 for the full economy and its tuning tools.
 
+Because the horde level is now **hard-capped per difficulty**
+(`DifficultyDef.mobLevelMin/mobLevelMax` — easy 1–34 … jesus 58+), the loot
+level is capped with it: an over-levelled bottom-lane farm can't push its mobs
+(and so its loot) past the tier's ceiling, and the bottom lanes top out below
+the legendary gate (mlvl 40) — the top tiers come from NIGHTMARE and JESUS,
+where the caps run high enough to reach them.
+
 **Wielding a weapon takes a body for it.** On top of the Diablo `levelReq`
 (the hero must reach the base's level to equip it), every weapon carries an
 **attribute requirement** that forces a build to pick a lane: melee wants

@@ -309,11 +309,11 @@ export const MOON: LevelDef = {
     // Level a normal run reaches per rung (`leveling-curve.mjs --by-level`) —
     // past it golden arrows go cold so a Moon replay can't over-level.
     arrowCapByDifficulty: {
-      easy: 18,
+      easy: 17,
       medium: 19,
       hard: 20,
-      nightmare: 42,
-      jesus: 60,
+      nightmare: 41,
+      jesus: 61,
     },
     // MOON'S BLADE arrives early — at a kill rolled in the first hundred,
     // discovered in play — so the run's signature weapon shapes the run

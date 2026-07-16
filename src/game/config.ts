@@ -371,6 +371,25 @@ export const LEVELING = {
   /** Default XP granted per point of a killed monster's max hp. */
   xpPerHp: 1,
   /**
+   * WoW-STYLE LEVEL-DIFFERENCE XP — a kill's base (level-priced) XP is scaled by
+   * how the mob's level compares to the HERO's (see `levelDiffXpMult` in
+   * leveling.ts, applied inside `mobLevelXp`). A mob ABOVE the hero pays a bonus
+   * (`+xpAbovePlayerPerLevel` per level, capped at `xpAboveMaxMult`); a mob
+   * BELOW pays a penalty (`−xpBelowPlayerPerLevel` per level) that bottoms out at
+   * ZERO (the "grey" mob, `1 / xpBelowPlayerPerLevel` levels under). A mob AT the
+   * hero's level is neutral (×1), so the kills-per-level curve — authored against
+   * a same-level reference mob (`referenceMobXp`) — is unchanged; the multiplier
+   * only bites where the difficulty's mob-level CAPS push the horde off the
+   * hero's level (a floored nightmare/jesus mob pays a bonus; an out-levelled,
+   * ceiling-stuck easy mob pays a pittance). Tunable at runtime with the
+   * BALANCE › REST XP slider (scales both slopes together).
+   */
+  xpAbovePlayerPerLevel: 0.08,
+  xpBelowPlayerPerLevel: 0.07,
+  /** Ceiling on the above-level XP bonus multiplier — a mob far above the hero
+   * pays richly, but not without bound. */
+  xpAboveMaxMult: 1.5,
+  /**
    * Elite and boss kills pay XP as a SHARE OF THE HERO'S CURRENT LEVEL BAR —
    * a flat fraction of `xpToLevelUp(player.level)` — rather than the
    * hp-proportional rule the rank and file ride (`xpPerHp`). A set-piece kill
@@ -1339,6 +1358,29 @@ export const ACCURACY = {
   enemyDodge: 0.05,
   perDex: 0.02,
   minMiss: 0,
+} as const;
+
+/**
+ * MOB ARMOR — the fraction of a PHYSICAL blow (melee/ranged) the horde shrugs
+ * off (magic ignores it). It RISES STEADILY with the mob's level, like hp: a
+ * LEVEL base that ramps linearly from ~0 at level 1 to `maxLevelReduction` (35%)
+ * at `LEVELING.maxLevel`, PLUS the difficulty's flat bonus
+ * (`DifficultyDef.mobArmor` — easy 0, medium 2%, hard 5%, nightmare 10%, jesus
+ * 15%) stacked on top. The two are tuned so a JESUS mob at the cap lands at 50%
+ * (35% level + 15% rung), with the bottom rungs spread below it (easy 35% …), so
+ * the jump between rungs is felt and the armored endgame favours magic builds.
+ * Realized in `mobArmorReduction`/`mobArmorMult` (loot.ts) off the mob's LEVEL
+ * (so a difficulty's mob-level cap also caps its armor), clamped below full
+ * immunity by `maxReduction`. A future ARMOR-PIERCING item stat subtracts here.
+ */
+export const MOB_ARMOR = {
+  /** Physical reduction a mob at `LEVELING.maxLevel` reaches from level alone,
+   * before any difficulty bonus — the top of the linear per-level ramp. Tuned
+   * with jesus's +15% bonus to land the top rung at 50%. */
+  maxLevelReduction: 0.35,
+  /** Hard ceiling on the total reduction (level ramp + difficulty bonus + …),
+   * so armor never fully negates a physical blow. */
+  maxReduction: 0.9,
 } as const;
 
 /**

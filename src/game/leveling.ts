@@ -202,8 +202,31 @@ export function mobLevelXp(mlvl: number, playerLevel: number): number {
     LEVELING.refMobHp *
     (1 + (Math.max(1, mlvl) - 1) * MENACE.mobHpPerLevel) *
     autoPowerScale(playerLevel) *
-    LEVELING.xpPerHp
+    LEVELING.xpPerHp *
+    levelDiffXpMult(mlvl, playerLevel)
   );
+}
+
+/**
+ * WoW-STYLE LEVEL-DIFFERENCE XP multiplier (config `xpAbove/BelowPlayerPerLevel`,
+ * dev knob `BALANCE.restXp`): a mob ABOVE the hero pays a bonus
+ * (`+xpAbovePlayerPerLevel` per level, capped at `xpAboveMaxMult`); a mob BELOW
+ * pays a penalty (`−xpBelowPlayerPerLevel` per level) down to ZERO — the "grey"
+ * mob a full `1 / xpBelowPlayerPerLevel` levels under the hero. A mob AT the
+ * hero's level is neutral (×1), so `referenceMobXp` (the curve's anchor) is
+ * untouched — this only reshapes XP where a difficulty's mob-level CAPS push the
+ * horde off the hero's level.
+ */
+export function levelDiffXpMult(mlvl: number, playerLevel: number): number {
+  const diff = Math.max(1, mlvl) - Math.max(1, playerLevel);
+  const rest = Math.max(0, BALANCE.restXp);
+  if (diff >= 0) {
+    return Math.min(
+      LEVELING.xpAboveMaxMult,
+      1 + diff * LEVELING.xpAbovePlayerPerLevel * rest,
+    );
+  }
+  return Math.max(0, 1 + diff * LEVELING.xpBelowPlayerPerLevel * rest);
 }
 
 /**

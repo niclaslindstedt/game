@@ -134,11 +134,15 @@ describe("boss loot", () => {
     // affix roll). Past every gate, with heavy Magic Find, the top tiers turn
     // up — and each carries a unique's fixed name, not a rolled one.
     const state = startGame();
-    state.player.level = 60; // past every mlvl gate — chance is the only lock
+    state.player.level = 60;
     state.player.stats.luck = 100;
     let sawTop = false;
     for (let i = 0; i < 600; i++) {
-      const rolled = rollEquipment(state);
+      // A DEEP mob (nightmare/jesus depth) — past every mlvl gate, so chance is
+      // the only lock. On the bottom lanes the horde level now HARD-CAPS (medium
+      // 36), which strips loot below the legendary gate on purpose, so the fold
+      // is tested against a killer that actually reaches the top tiers.
+      const rolled = rollEquipment(state, { mlvl: 60, role: "boss" });
       if (rolled.tier === "unique" || rolled.tier === "legendary") {
         sawTop = true;
         expect(rolled.name).toBeTruthy(); // a named item, folded in

@@ -376,10 +376,10 @@ export const MARS: LevelDef = {
     // Level a normal run reaches per rung (`leveling-curve.mjs --by-level`) —
     // past it golden arrows go cold so a Mars replay can't over-level.
     arrowCapByDifficulty: {
-      easy: 23,
-      medium: 25,
+      easy: 22,
+      medium: 24,
       hard: 26,
-      nightmare: 45,
+      nightmare: 44,
       jesus: 63,
     },
     // The CYBER KATANA arrives early at a kill discovered in play — the

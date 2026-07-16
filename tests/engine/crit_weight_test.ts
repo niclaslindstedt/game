@@ -78,7 +78,12 @@ describe("class-based crit weight", () => {
   it("resolves the blow with the carried weight when it crits", () => {
     const state = startGame();
     state.enemies = [];
-    const sturdy = makeEnemy({ pos: { x: 500, y: 500 }, hp: 200, maxHp: 200 });
+    const sturdy = makeEnemy({
+      pos: { x: 500, y: 500 },
+      hp: 200,
+      maxHp: 200,
+      mlvl: 1, // a level-1 mob carries ~no armor, so we measure pure crit weight
+    });
     state.enemies.push(sturdy);
     state.rng = () => 0.001; // forces the crit roll (below base crit chance)
     hitEnemy(state, sturdy, 10, "melee", { critMult: 2.5 });
