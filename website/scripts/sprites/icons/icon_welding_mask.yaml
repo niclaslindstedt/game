@@ -1,0 +1,23 @@
+name: icon_welding_mask
+family: icons
+size: [12, 12]
+description: ""
+palette:
+  O: "#1a1c2c"
+  b: "#3f4553"
+  e: "#5ab4ff"
+  s: "#d6f0ff"
+  v: "#60687e"
+grid: |
+  ............
+  ...OOOOOO...
+  ..ObvvvvbO..
+  ..ObbbbbbO..
+  ..OesssebO..
+  ..OeeeeebO..
+  ..ObbbbbbO..
+  ..ObbbbbbO..
+  ...ObbbbO...
+  ....OOOO....
+  ............
+  ............

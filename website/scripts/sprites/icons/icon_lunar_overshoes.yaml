@@ -1,0 +1,21 @@
+name: icon_lunar_overshoes
+family: icons
+size: [12, 12]
+description: ""
+palette:
+  F: "#a2a4ad"
+  O: "#1a1c2c"
+  f: "#888a96"
+grid: |
+  ............
+  ............
+  ............
+  ..OOO..OOO..
+  ..OfO..OfO..
+  ..OfO..OfO..
+  ..OffO.OffO.
+  ..OFfO.OFfO.
+  .OfffOOfffO.
+  .OffffOffffO
+  .OOOOO.OOOO.
+  ............

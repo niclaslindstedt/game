@@ -1,0 +1,21 @@
+name: icon_nanoweave
+family: icons
+size: [12, 12]
+description: ""
+palette:
+  N: "#303444"
+  O: "#1a1c2c"
+  z: "#ec52be"
+grid: |
+  ............
+  ............
+  .OOO....OOO.
+  .ONOOOOOONO.
+  .ONNzNNzNNO.
+  .ONzNNzNNNO.
+  .ONNzNNzNNO.
+  ..ONNzNNzO..
+  ..OzNNzNNO..
+  ..ONNNNNNO..
+  ..OOOOOOOO..
+  ............

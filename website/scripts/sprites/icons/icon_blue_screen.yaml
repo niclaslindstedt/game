@@ -1,0 +1,21 @@
+name: icon_blue_screen
+family: icons
+size: [12, 12]
+description: ""
+palette:
+  O: "#1a1c2c"
+  e: "#5ab4ff"
+  s: "#d6f0ff"
+grid: |
+  ............
+  .OOOOOOOOO..
+  .OeeeeeeeO..
+  .OesssseeO..
+  .OeeeeeeeO..
+  .OessseeeO..
+  .OeeeeeeeO..
+  .OesseeeeO..
+  .OeeeeeeeO..
+  .OOOOOOOOO..
+  ............
+  ............

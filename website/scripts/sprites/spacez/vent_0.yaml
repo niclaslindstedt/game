@@ -1,0 +1,27 @@
+name: vent_0
+family: spacez
+size: [16, 16]
+description: ""
+palette:
+  O: "#1a1c2c"
+  b: "#3f4553"
+  s: "#818690"
+  t: "#aab0be"
+  v: "#60687e"
+grid: |
+  ssssssssssssssss
+  sttttttttttttttt
+  sttttttttttttttt
+  stttOOOOOOOOtttt
+  stttObbbbbbOtttt
+  stttOvvvvvvOtttt
+  stttObbbbbbOtttt
+  stttOvvvvvvOtttt
+  stttObbbbbbOtttt
+  stttOvvvvvvOtttt
+  stttObbbbbbOtttt
+  stttOOOOOOOOtttt
+  sttttttttttttttt
+  sttttttttttttttt
+  sttttttttttttttt
+  sttttttttttttttt

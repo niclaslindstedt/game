@@ -1,0 +1,17 @@
+name: ray
+family: effects
+size: [8, 8]
+description: ""
+palette:
+  O: "#1a1c2c"
+  W: "#f4f4f4"
+  r: "#d83a3a"
+grid: |
+  ........
+  ...OO...
+  ..OrrO..
+  .OrWWrO.
+  .OrWWrO.
+  ..OrrO..
+  ...OO...
+  ........

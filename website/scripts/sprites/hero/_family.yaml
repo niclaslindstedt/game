@@ -1,0 +1,8 @@
+name: hero
+ground: moon_0
+palette:
+  z: "#0c0e166e"
+animations:
+  player_walk: { frames: [player_0, player_1], delayMs: 160 }
+  hero_walk: { frames: [hero_0, hero_1], delayMs: 160 }
+contrastExempt: [shadow]

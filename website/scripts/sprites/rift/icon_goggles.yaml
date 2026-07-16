@@ -1,0 +1,21 @@
+name: icon_goggles
+family: rift
+size: [12, 12]
+description: ""
+palette:
+  B: "#92643e"
+  O: "#1a1c2c"
+  y: "#ffb02e"
+grid: |
+  ............
+  ............
+  ............
+  .OBBBBBBBBO.
+  OBOOOBBOOOBO
+  OByyOBBOyyBO
+  OByyOBBOyyBO
+  OBOOOBBOOOBO
+  .OBBBBBBBBO.
+  ............
+  ............
+  ............

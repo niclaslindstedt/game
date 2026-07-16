@@ -1,0 +1,43 @@
+name: moonrock_2x2
+family: moon
+size: [32, 32]
+description: ""
+palette:
+  F: "#a2a4ad"
+  O: "#1a1c2c"
+  d: "#676972"
+  e: "#4e4f56"
+  f: "#888a96"
+grid: |
+  ................................
+  ................................
+  ........OOOOOOOOOOOOOOO.........
+  .....OOOFFFFffffeffffffOOOO.....
+  ...OOFFFFFFfffffeffffffffddOO...
+  ..OFFFFFFFfffffffeffffffdddddO..
+  ..OFFFFFFffffffffefffffdddddddO.
+  .OFFFFFFffffffffffffffddddddddO.
+  .OFFFFFffffffffffffffdddddddddO.
+  .OFFFFffffffffffffffddddddddddO.
+  .OFFffffffffffffffddddddddddddO.
+  .OFffffffffffffffddddddddddddOO.
+  .OffffffffffffffddddddddddddO...
+  .OfffffffffffffddddddddddddO....
+  .OffffffffffffddddddddddddddOO..
+  .OfffffffffffddddddddddddddeeeO.
+  .OffffffffffddddddddddddddeeeeO.
+  .OOffffffffddddddddddddddeeeeeO.
+  ...OffffffddddddddddddddeeeeeeO.
+  ..OffffffddddddddddddddeeeeeeeO.
+  .OfffffddddddOeddddddeeeeeeeeeO.
+  .OffffdddddddOedddddeeeeeeeeeeO.
+  .OfffdddddddddOedddeeeeeeeeeeeO.
+  .OffddddddddddOedOeeeeeeeeeeeeO.
+  .OfddddddddddOeddeOeeeeeeeeeeeO.
+  .OddddddddddddOeeeeOeeeeeeeeeO..
+  ..OdddddddddddOeeeeeOeeeeeeeO...
+  ..OdddddddddddeOeeeeeeeeeeeO....
+  ...OOddddddddeeeeeeeeeeeeOO.....
+  .....OOOddddeeeeeeeeeOOOO.......
+  ........OOOOOOOOOOOOO...........
+  ................................

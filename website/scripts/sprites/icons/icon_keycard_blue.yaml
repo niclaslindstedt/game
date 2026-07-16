@@ -1,0 +1,23 @@
+name: icon_keycard_blue
+family: icons
+size: [12, 12]
+description: ""
+palette:
+  O: "#1a1c2c"
+  e: "#5ab4ff"
+  s: "#d6f0ff"
+  w: "#c6c6c6"
+  y: "#ffb02e"
+grid: |
+  ............
+  ............
+  .OOOOOOOOOO.
+  .OeeeeeeeeO.
+  .OssssssssO.
+  .OeeeeeeeeO.
+  .OeyyOeeweO.
+  .OeyyOewweO.
+  .OeeeeeeeeO.
+  .OOOOOOOOOO.
+  ............
+  ............

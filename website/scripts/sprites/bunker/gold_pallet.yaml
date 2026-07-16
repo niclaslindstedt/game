@@ -1,0 +1,24 @@
+name: gold_pallet
+family: bunker
+size: [16, 12]
+description: ""
+palette:
+  B: "#92643e"
+  E: "#5d4028"
+  I: "#f6d074"
+  O: "#1a1c2c"
+  o: "#d6a842"
+  q: "#96762e"
+grid: |
+  ................
+  ....OOOO.OOOO...
+  ...OIooOOIooO...
+  ..OOOOOOOOOOOO..
+  .OIooOOIooOOIooO
+  .OoqoOOoqoOOoqoO
+  .OOOOOOOOOOOOOO.
+  .OBBBBOBBOBBBBO.
+  .OEEEEOEEOEEEEO.
+  ..OOOO.OO.OOOO..
+  ................
+  ................

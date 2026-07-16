@@ -1,0 +1,32 @@
+name: bunker
+ground: bunker_0
+palette:
+  C: "#d23c42"
+  D: "#602830"
+  I: "#f6d074"
+  K: "#0c0b12"
+  N: "#3a3846"
+  Q: "#5cd2ff"
+  U: "#78eb8c"
+  X: "#963c46"
+  Z: "#9c9eac"
+  d: "#464c2c"
+  e: "#6a7042"
+  s: "#ead2ba"
+  t: "#ee9858"
+  u: "#d8dae4"
+  z: "#babcc6"
+animations:
+  cia_agent_walk: { frames: [cia_agent_0, cia_agent_1], delayMs: 320 }
+  fbi_agent_walk: { frames: [fbi_agent_0, fbi_agent_1], delayMs: 300 }
+  ice_agent_walk: { frames: [ice_agent_0, ice_agent_1], delayMs: 280 }
+  moonlighting_agent_walk:
+    { frames: [moonlighting_agent_0, moonlighting_agent_1], delayMs: 300 }
+  the_mole_walk: { frames: [the_mole_0, the_mole_1], delayMs: 280 }
+  soldier_walk: { frames: [soldier_0, soldier_1], delayMs: 320 }
+  vacuum_bot_roll: { frames: [vacuum_bot_0, vacuum_bot_1], delayMs: 240 }
+  bodyguard_walk: { frames: [bodyguard_0, bodyguard_1], delayMs: 340 }
+  donald_dump_walk: { frames: [donald_dump_0, donald_dump_1], delayMs: 380 }
+wounds:
+  the_mole: { splat: r, core: K, scuff: Z }
+contrastExempt: [bunker_0, bunker_1, carpet_0, carpet_1]

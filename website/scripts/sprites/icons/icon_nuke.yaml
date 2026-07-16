@@ -1,0 +1,23 @@
+name: icon_nuke
+family: icons
+size: [12, 12]
+description: ""
+palette:
+  A: "#8d9196"
+  O: "#1a1c2c"
+  a: "#d6dce4"
+  k: "#342c26"
+  y: "#ffb02e"
+grid: |
+  ........yy..
+  ....OO..y...
+  ...OkkOy....
+  ..OOkkOO....
+  .OaaAAAAO...
+  OaaAAAAAAO..
+  OaAAAAAAAO..
+  OaAAAAAAAO..
+  OAAAAAAAAO..
+  .OAAAAAAO...
+  ..OOOOOO....
+  ............

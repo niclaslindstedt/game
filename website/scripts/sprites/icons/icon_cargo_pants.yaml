@@ -1,0 +1,21 @@
+name: icon_cargo_pants
+family: icons
+size: [12, 12]
+description: ""
+palette:
+  G: "#4a7a3e"
+  O: "#1a1c2c"
+  g: "#3d6433"
+grid: |
+  ............
+  ............
+  ..OOOOOOOO..
+  ..OggggggO..
+  ..OgGGgGGO..
+  ..OggOOggO..
+  ..OggO.OggO.
+  ..OGgO.OgGO.
+  ..OggO.OggO.
+  ..OggO.OggO.
+  ..OOO...OOO.
+  ............

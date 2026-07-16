@@ -1,0 +1,21 @@
+name: icon_chaps
+family: icons
+size: [12, 12]
+description: ""
+palette:
+  B: "#92643e"
+  D: "#b28e5c"
+  O: "#1a1c2c"
+grid: |
+  ............
+  ............
+  ..OOOOOOOO..
+  ..ODDDDDDO..
+  ..ODDDDDDO..
+  ..ODDOODDO..
+  ..ODDO.ODDO.
+  ..OBDO.ODBO.
+  ..ODDO.ODDO.
+  ..OBDO.ODBO.
+  ..OOO...OOO.
+  ............

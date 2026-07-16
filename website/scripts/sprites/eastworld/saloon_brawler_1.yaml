@@ -1,0 +1,32 @@
+name: saloon_brawler_1
+family: eastworld
+size: [16, 16]
+description: ""
+palette:
+  A: "#8d9196"
+  N: "#3a3644"
+  O: "#1a1c2c"
+  R: "#ff5252"
+  V: "#9095a5"
+  X: "#963c46"
+  o: "#d6a842"
+  r: "#d83a3a"
+  v: "#60687e"
+  w: "#c6c6c6"
+grid: |
+  ......OOOO......
+  ......ONNO......
+  ......ORRO......
+  ......OOOO......
+  .OOOOOOOOOOOOOO.
+  .OvOOOOOOOOOOvO.
+  ..v.OXXwwXXr.v..
+  ..v.OXXowXXO.v..
+  OOOOOXXwwXXOOOOO
+  OVAOrXXwwXXOOAVO
+  OAAOOXXwwXXOOAAO
+  OOOOOOOOOOOOOOOO
+  ....OO....OO....
+  ....OO....OO....
+  ....OO....OO....
+  ................

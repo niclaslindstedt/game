@@ -1,0 +1,15 @@
+name: markers
+ground: lab_0
+palette:
+  C: "#d696f0"
+  D: "#eecdfc"
+  Q: "#cebcfa"
+  U: "#8a6ce0"
+  X: "#e6e8ee"
+  Z: "#f8fafc"
+  d: "#ffd55a"
+  e: "#ffeb96"
+  s: "#befce6"
+  t: "#7ef0c8"
+  u: "#100c1e"
+contrastExempt: [map_you, map_story, map_elite, map_boss, map_well]

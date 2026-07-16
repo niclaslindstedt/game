@@ -1,0 +1,20 @@
+name: icon_skull
+family: icons
+size: [12, 12]
+description: ""
+palette:
+  O: "#1a1c2c"
+  W: "#f4f4f4"
+grid: |
+  ............
+  ...OOOOOO...
+  ..OWWWWWWO..
+  .OWWWWWWWWO.
+  .OWWWWWWWWO.
+  .OWOOWWOOWO.
+  .OWOOWWOOWO.
+  ..OWWOOWWO..
+  ..OWWWWWWO..
+  ..OWOWOWO...
+  ...OOOOO....
+  ............

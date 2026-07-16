@@ -1,0 +1,21 @@
+name: icon_mag_boots
+family: icons
+size: [12, 12]
+description: ""
+palette:
+  O: "#1a1c2c"
+  e: "#5ab4ff"
+  v: "#60687e"
+grid: |
+  ............
+  ............
+  ............
+  ..OOO..OOO..
+  ..OvO..OvO..
+  ..OvO..OvO..
+  ..OvvO.OvvO.
+  ..OveO.OveO.
+  .OvvvOOvvvO.
+  .OeeeeOeeeeO
+  .OOOOO.OOOO.
+  ............

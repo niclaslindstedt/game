@@ -1,0 +1,20 @@
+name: icon_slot_legs
+family: icons
+size: [12, 12]
+description: ""
+palette:
+  O: "#1a1c2c"
+  V: "#9095a5"
+grid: |
+  ............
+  .OOOOOOOOOO.
+  .OVVVVVVVVO.
+  .OVVVVVVVVO.
+  .OVVVOOVVVO.
+  .OVVO..OVVO.
+  .OVVO..OVVO.
+  .OVVO..OVVO.
+  .OVVO..OVVO.
+  .OOOO..OOOO.
+  ............
+  ............

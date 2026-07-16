@@ -229,19 +229,19 @@ make build         # typecheck everything and produce website/dist
 
 ## Usage
 
-| Command                               | Purpose                                                                                                       |
-| ------------------------------------- | ------------------------------------------------------------------------------------------------------------- |
-| `make build`                          | Typecheck the engine + app and build the deployable bundle                                                    |
-| `make test`                           | Run the Vitest suite (`tests/*_test.ts`)                                                                      |
-| `make lint`                           | ESLint + TypeScript over the whole repo, zero warnings                                                        |
-| `make fmt` / `make fmt-check`         | Prettier format / verify                                                                                      |
-| `make website-dev`                    | Local dev server for the game app                                                                             |
-| `make website`                        | Production build of the game app                                                                              |
-| `make icons`                          | Regenerate all PWA icons + the OG card from `website/public/icon.svg`                                         |
-| `make assets`                         | Regenerate in-game pixel assets (sprite atlas, tiles, UI font) + previews from `website/scripts/sprite-data/` |
-| `make shellcheck` / `make actionlint` | Lint shell scripts / workflow YAML                                                                            |
-| `make bump`                           | Print the semver bump the release workflow derives from `.changes/unreleased/`                                |
-| `make changelog VERSION=X.Y.Z`        | Preview a release: collate the changeset fragments into `CHANGELOG.md`                                        |
+| Command                               | Purpose                                                                                                   |
+| ------------------------------------- | --------------------------------------------------------------------------------------------------------- |
+| `make build`                          | Typecheck the engine + app and build the deployable bundle                                                |
+| `make test`                           | Run the Vitest suite (`tests/*_test.ts`)                                                                  |
+| `make lint`                           | ESLint + TypeScript over the whole repo, zero warnings                                                    |
+| `make fmt` / `make fmt-check`         | Prettier format / verify                                                                                  |
+| `make website-dev`                    | Local dev server for the game app                                                                         |
+| `make website`                        | Production build of the game app                                                                          |
+| `make icons`                          | Regenerate all PWA icons + the OG card from `website/public/icon.svg`                                     |
+| `make assets`                         | Regenerate in-game pixel assets (sprite atlas, tiles, UI font) + previews from `website/scripts/sprites/` |
+| `make shellcheck` / `make actionlint` | Lint shell scripts / workflow YAML                                                                        |
+| `make bump`                           | Print the semver bump the release workflow derives from `.changes/unreleased/`                            |
+| `make changelog VERSION=X.Y.Z`        | Preview a release: collate the changeset fragments into `CHANGELOG.md`                                    |
 
 ## Configuration
 

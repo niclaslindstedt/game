@@ -1,0 +1,21 @@
+name: map_story
+family: markers
+size: [12, 12]
+description: ""
+palette:
+  O: "#1a1c2c"
+  d: "#ffd55a"
+  e: "#ffeb96"
+grid: |
+  .OOOOOOOOOO.
+  .OeeddddddO.
+  .OdOOOOOOdO.
+  .OddddddddO.
+  .OdOOOOdddO.
+  .OddddddddO.
+  .OdOOOOOOdO.
+  .OddddddddO.
+  .OdOOOOdddO.
+  .OOOOOOOOOO.
+  ............
+  ............

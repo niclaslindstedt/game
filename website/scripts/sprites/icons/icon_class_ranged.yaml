@@ -1,0 +1,19 @@
+name: icon_class_ranged
+family: icons
+size: [12, 12]
+description: ""
+palette:
+  Q: "#e0603a"
+grid: |
+  .....QQ.....
+  .....QQ.....
+  ...QQQQQQ...
+  ..Q......Q..
+  ..Q..QQ..Q..
+  QQQ.QQQQ.QQQ
+  QQQ.QQQQ.QQQ
+  ..Q..QQ..Q..
+  ..Q......Q..
+  ...QQQQQQ...
+  .....QQ.....
+  .....QQ.....

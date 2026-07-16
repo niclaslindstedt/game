@@ -1,0 +1,26 @@
+name: void_1
+family: rift
+size: [16, 16]
+description: ""
+palette:
+  Z: "#2e2a4c"
+  u: "#8c8cb6"
+  x: "#c5e6ebe1"
+  z: "#423c68"
+grid: |
+  zzzzzzzzzzzzzzzz
+  zzzzzzzzzzzzzzzz
+  zzzzzzzzzzuzzzzz
+  zzZZzzzzzzzzzzzz
+  zzZZzzzzzzzzzzzz
+  zzzzzzzzzzzzzzzz
+  zzzzzzxxzzzzzzzz
+  zzzzzxxxxzzzzzzz
+  zzzzzxxxxzzzzzzz
+  zzzzzzxxzzzzzzzz
+  zzzzzzzzzzzzZZzz
+  zzuzzzzzzzzzZZzz
+  zzzzzzzzzzzzzzzz
+  zzzzzzzzzuzzzzzz
+  zzzzzzzzzzzzzzzz
+  zzzzzzzzzzzzzzzz

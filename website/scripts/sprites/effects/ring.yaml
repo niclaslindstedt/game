@@ -1,0 +1,16 @@
+name: ring
+family: effects
+size: [8, 8]
+description: ""
+palette:
+  O: "#1a1c2c"
+  l: "#678f5d"
+grid: |
+  ........
+  ..OOOO..
+  .OllllO.
+  .Ol..lO.
+  .Ol..lO.
+  .OllllO.
+  ..OOOO..
+  ........

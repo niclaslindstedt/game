@@ -1,0 +1,28 @@
+name: wagon
+family: eastworld
+size: [16, 16]
+description: ""
+palette:
+  B: "#92643e"
+  E: "#5d4028"
+  K: "#0c0b12"
+  N: "#3a3644"
+  O: "#1a1c2c"
+  S: "#b39378"
+grid: |
+  ................
+  ................
+  ................
+  ..O..........O..
+  .OBOOOOOOOOOOBO.
+  .OBBBBBBBBBBBBO.
+  .OEBSBBBBSBBBEO.
+  .OEEEEEEEEEEEEO.
+  ..OOOOOOOOOOOO..
+  ...ONNO..ONNO...
+  ..ONKKNOONKKNO..
+  ..ONKKNOONKKNO..
+  ...ONNO..ONNO...
+  ....O......O....
+  ................
+  ................

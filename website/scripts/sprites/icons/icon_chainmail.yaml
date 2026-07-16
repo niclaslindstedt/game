@@ -1,0 +1,21 @@
+name: icon_chainmail
+family: icons
+size: [12, 12]
+description: ""
+palette:
+  O: "#1a1c2c"
+  V: "#9095a5"
+  v: "#60687e"
+grid: |
+  ............
+  ............
+  .OOO....OOO.
+  .OvOOOOOOvO.
+  .OvVvVvVvVO.
+  .OVvVvVvVvO.
+  .OvVvVvVvVO.
+  ..OvVvVvVO..
+  ..OVvVvVvO..
+  ..OvVvVvVO..
+  ..OOOOOOOO..
+  ............

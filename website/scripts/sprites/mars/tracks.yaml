@@ -1,0 +1,16 @@
+name: tracks
+family: mars
+size: [16, 8]
+description: ""
+palette:
+  d: "#80482d"
+  e: "#623722"
+grid: |
+  ................
+  .dd..dd..dd..dd.
+  .ee..ee..ee..ee.
+  ................
+  ................
+  ....dd..dd..dd..
+  ....ee..ee..ee..
+  ................

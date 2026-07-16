@@ -1,0 +1,22 @@
+name: icon_pressure_trousers
+family: icons
+size: [12, 12]
+description: ""
+palette:
+  A: "#8d9196"
+  O: "#1a1c2c"
+  a: "#d6dce4"
+  y: "#ffb02e"
+grid: |
+  ............
+  ............
+  ..OOOOOOOO..
+  ..OyyyyyyO..
+  ..OaaaaaaO..
+  ..OaaOOaaO..
+  ..OaaO.OaaO.
+  ..OaAO.OAaO.
+  ..OaaO.OaaO.
+  ..OyyO.OyyO.
+  ..OOO...OOO.
+  ............

@@ -1,0 +1,23 @@
+name: icon_crown
+family: icons
+size: [12, 12]
+description: ""
+palette:
+  O: "#1a1c2c"
+  W: "#f4f4f4"
+  Y: "#ffe3b6"
+  q: "#96762e"
+  y: "#ffb02e"
+grid: |
+  ............
+  ............
+  ............
+  ..OO.OO.OO..
+  .OYYOYYOYYO.
+  .OYYYYYYYYO.
+  .OYyyyyyyyO.
+  .OyWWyyyyqO.
+  .OOOOOOOOOO.
+  ............
+  ............
+  ............

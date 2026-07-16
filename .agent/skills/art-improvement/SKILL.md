@@ -31,7 +31,7 @@ the finalists' study sheets and in verification).
 ## The helper: `art-audit.mjs`
 
 Every step has a command (`node website/scripts/art-audit.mjs …`). Sheets
-render from the sprite-data grids — the same source `make assets` reads —
+render from the sprite YAML grids — the same source `make assets` reads —
 into `website/assets-preview/audit/` (gitignored). Every cell is numbered
 and legend-listed, so a shortlist round is "look at the sheet, write down
 numbers".
@@ -79,10 +79,10 @@ They live as fragments in [`.lessons/`](./.lessons/) next to this file.
    beat one-off decor).
 5. **Cut recently-redrawn art — never re-improve fresh work.** Before the
    list is locked, check what was touched in the last few passes:
-   `git log -n 30 --oneline -- website/scripts/sprite-data/<family>.mjs`
+   `git log -n 30 --oneline -- website/scripts/sprites/<family>/`
    (levels) or `.../icons.mjs` (items), and `git blame -- <file>` on a
    candidate's grid lines when unsure. A sprite whose grid was rewritten in a
-   recent art pass is **not weak art — it's fresh art**, and its sprite-data
+   recent art pass is **not weak art — it's fresh art**, and its sprite YAML
    comment usually says so out loud (an elaborate, just-finished rationale like
    _"drawn bulkier on an 18px canvas so it looms over the 16px staff"_ or
    _"drawn on a bigger 20×20 canvas… reads as a heavy machine, not an
@@ -200,7 +200,7 @@ For each candidate, in the numbered order:
    fix what doesn't) → render the pick + both refinements together →
    choose the best of the 3.
 5. **Install the winner** in its family module under
-   `website/scripts/sprite-data/` (both walk frames for animated sprites
+   `website/scripts/sprites/` (both walk frames for animated sprites
    — redraw `_1` to match, don't leave a mismatched old frame; new chars
    go in the FAMILY palette; check `wounds` overrides still apply). For a
    computed grid (above), generate BOTH frames from the one base — the `_1`
@@ -244,7 +244,7 @@ For each candidate, in the numbered order:
    redraw that passed the sheets but melts into the running game goes back
    to step 4, not into a commit. For an animated redesign, follow with a
    short *unfrozen* run (drop `freeze`) to see the walk cycle in motion.
-8. **Commit this candidate alone** — just the sprite-data grid change
+8. **Commit this candidate alone** — just the sprite YAML grid change
    (the atlas is gitignored and rebuilt on every build, so there is nothing
    binary to commit alongside it), conventional message, e.g.
    `feat(assets): redraw wraith with a torn-shroud silhouette`. One commit

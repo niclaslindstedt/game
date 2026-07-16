@@ -1,0 +1,21 @@
+name: map_you
+family: markers
+size: [12, 12]
+description: ""
+palette:
+  O: "#1a1c2c"
+  s: "#befce6"
+  t: "#7ef0c8"
+grid: |
+  ....OOOO....
+  ..OOssttOO..
+  .OssttttttO.
+  .OttOOOOttO.
+  .OttO..OttO.
+  .OttOOOOttO.
+  .OttttttttO.
+  ..OttttttO..
+  ...OttttO...
+  ....OttO....
+  .....OO.....
+  ............

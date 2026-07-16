@@ -1,0 +1,25 @@
+name: moon_0
+family: moon
+size: [16, 16]
+description: ""
+palette:
+  F: "#a2a4ad"
+  d: "#676972"
+  f: "#888a96"
+grid: |
+  ffffffffffffffff
+  fffffffffffffdff
+  ffFfffffffffFfff
+  fffffffffffdffff
+  ffffffffffffffff
+  ffffffffffFfffff
+  ffffffffffffffff
+  ffffffffffffffff
+  fffffdffffffffff
+  ffffffffffffffff
+  fffffffffffddfff
+  ffffffffffdfffff
+  fffFffffffffffff
+  fffffffffffffdff
+  ffffffffffffffff
+  ffffffffffffffff

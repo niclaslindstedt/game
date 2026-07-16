@@ -1,0 +1,21 @@
+name: icon_great_helm
+family: icons
+size: [12, 12]
+description: ""
+palette:
+  O: "#1a1c2c"
+  V: "#9095a5"
+  v: "#60687e"
+grid: |
+  ............
+  ...OOOOOO...
+  ..OvVVVVvO..
+  ..OvvvvvvO..
+  ..OOOOOOOO..
+  ..OvvOOvvO..
+  ..OvvvvvvO..
+  ..OvvOOvvO..
+  ..OvvvvvvO..
+  ..OvvvvvvO..
+  ...OOOOOO...
+  ............

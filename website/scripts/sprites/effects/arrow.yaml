@@ -1,0 +1,18 @@
+name: arrow
+family: effects
+size: [8, 8]
+description: ""
+palette:
+  B: "#92643e"
+  O: "#1a1c2c"
+  W: "#f4f4f4"
+  a: "#d6dce4"
+grid: |
+  ........
+  .....OO.
+  ....OaO.
+  ...OBO..
+  ..OBO...
+  .OBO....
+  .WWO....
+  .WW.....

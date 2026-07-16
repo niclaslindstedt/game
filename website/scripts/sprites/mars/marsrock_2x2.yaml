@@ -1,0 +1,43 @@
+name: marsrock_2x2
+family: mars
+size: [32, 32]
+description: ""
+palette:
+  O: "#1a1c2c"
+  d: "#80482d"
+  e: "#623722"
+  t: "#b2643e"
+  u: "#c38668"
+grid: |
+  ................................
+  ................................
+  ........OOOOOOOOOOOOOOO.........
+  .....OOOuuuuttttettttttOOOO.....
+  ...OOuuuuuutttttettttttttddOO...
+  ..OuuuuuuutttttttettttttdddddO..
+  ..OuuuuuuttttttttetttttdddddddO.
+  .OuuuuuuttttttttttttttddddddddO.
+  .OuuuuuttttttttttttttdddddddddO.
+  .OuuuuttttttttttttttddddddddddO.
+  .OuuttttttttttttttddddddddddddO.
+  .OuttttttttttttttddddddddddddOO.
+  .OttttttttttttttddddddddddddO...
+  .OtttttttttttttddddddddddddO....
+  .OttttttttttttddddddddddddddOO..
+  .OtttttttttttddddddddddddddeeeO.
+  .OttttttttttddddddddddddddeeeeO.
+  .OOttttttttddddddddddddddeeeeeO.
+  ...OttttttddddddddddddddeeeeeeO.
+  ..OttttttddddddddddddddeeeeeeeO.
+  .OtttttddddddOeddddddeeeeeeeeeO.
+  .OttttdddddddOedddddeeeeeeeeeeO.
+  .OtttdddddddddOedddeeeeeeeeeeeO.
+  .OttddddddddddOedOeeeeeeeeeeeeO.
+  .OtddddddddddOeddeOeeeeeeeeeeeO.
+  .OddddddddddddOeeeeOeeeeeeeeeO..
+  ..OdddddddddddOeeeeeOeeeeeeeO...
+  ..OdddddddddddeOeeeeeeeeeeeO....
+  ...OOddddddddeeeeeeeeeeeeOO.....
+  .....OOOddddeeeeeeeeeOOOO.......
+  ........OOOOOOOOOOOOO...........
+  ................................

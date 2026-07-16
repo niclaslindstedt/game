@@ -1,0 +1,17 @@
+name: glitch
+family: mars
+size: [8, 8]
+description: ""
+palette:
+  W: "#f4f4f4"
+  j: "#4054bc"
+  x: "#c5e6ebe1"
+grid: |
+  ........
+  ..jxj...
+  .jxWxj..
+  jxWjWxj.
+  .jxWxjx.
+  ..jxjx..
+  ...jx...
+  ........

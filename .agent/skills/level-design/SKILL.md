@@ -25,7 +25,7 @@ and the `sound-effects` skill for the score.
 | Unlock chain | **Derived, not authored** — `website/src/game/characters.ts` unlocks each level when its `LEVEL_ORDER` predecessor is cleared |
 | Difficulty ladder | `src/game/defs/difficulties.ts` — a new level needs NO edits there |
 | Enemy roster | `src/game/defs/enemies/<roster>.ts`, merged in `enemies/index.ts` (`mergeRosters`) — see the `enemy-design` skill |
-| Tiles + field sprites | a `website/scripts/sprite-data/<name>.mjs` family module, registered in `sprite-data/index.mjs` `FAMILIES` |
+| Tiles + field sprites | a `website/scripts/sprites/<name>/` family directory (`_family.yaml` + one YAML per sprite), auto-discovered by `sprite-data/load-yaml.mjs` |
 | Music | `website/src/game/music/<name>.ts` + a `LEVEL_TRACKS` entry (`music/index.ts`); the def's `music` id keys it (missing id = default theme) |
 | Story text | `intro`/`outro` pages, `foes` label, merchant `greeting`, `prelude` cutscene (`defs/cutscenes.ts`), thought pins (`defs/thoughts.ts`), lore items (`defs/story.ts`) — ALL manuscript-governed |
 | Per-level achievements | **Auto-generated** from `LEVEL_ORDER` (`website/src/game/achievement-defs.ts`); check `achievement-totals.ts`'s last-level trigger still points at the intended finale |

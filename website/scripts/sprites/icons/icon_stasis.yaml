@@ -1,0 +1,20 @@
+name: icon_stasis
+family: icons
+size: [12, 12]
+description: ""
+palette:
+  a: "#d6dce4"
+  x: "#c5e6ebe1"
+grid: |
+  ............
+  ....xxxx....
+  ..xx....xx..
+  .x........x.
+  .x........x.
+  x....aa....x
+  x....aa....x
+  .x........x.
+  .x........x.
+  ..xx....xx..
+  ....xxxx....
+  ............

@@ -1,0 +1,25 @@
+name: icon_dialogue_off
+family: icons
+size: [16, 16]
+description: ""
+palette:
+  O: "#1a1c2c"
+  W: "#f4f4f4"
+  r: "#d83a3a"
+grid: |
+  ................
+  ..OOOOOOOOOOOO..
+  .OWWWWWWWWWWrrO.
+  .OWWWWWWWWWrrWO.
+  .OWWWWWWWWrrWWO.
+  .OWWWWWWWrrWWWO.
+  .OWWOWWOrrOWWWO.
+  .OWWWWWrrWWWWWO.
+  .OWWWWrrWWWWWWO.
+  .OWWWrrWWWWWWWO.
+  ..OO..OOOOOOOO..
+  ...OWWO.........
+  ...OWO..........
+  ...OO...........
+  ................
+  ................

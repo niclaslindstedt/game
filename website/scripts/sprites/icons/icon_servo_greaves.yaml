@@ -1,0 +1,22 @@
+name: icon_servo_greaves
+family: icons
+size: [12, 12]
+description: ""
+palette:
+  O: "#1a1c2c"
+  V: "#9095a5"
+  e: "#5ab4ff"
+  v: "#60687e"
+grid: |
+  ............
+  ............
+  ..OOOOOOOO..
+  ..OvvvvvvO..
+  ..OvVvvVvO..
+  ..OvvOOvvO..
+  ..OveO.OevO.
+  ..OvvO.OvvO.
+  ..OveO.OevO.
+  ..OvvO.OvvO.
+  ..OOO...OOO.
+  ............

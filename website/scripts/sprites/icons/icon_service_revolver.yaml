@@ -1,0 +1,22 @@
+name: icon_service_revolver
+family: icons
+size: [12, 12]
+description: ""
+palette:
+  A: "#8d9196"
+  B: "#92643e"
+  O: "#1a1c2c"
+  a: "#d6dce4"
+grid: |
+  ............
+  ............
+  .OOOOOOOOO..
+  .OaaaaaaaAO.
+  .OOOAAAOaO..
+  ...OAAAOaO..
+  ....OOOBBO..
+  ......OBBO..
+  .......OO...
+  ............
+  ............
+  ............

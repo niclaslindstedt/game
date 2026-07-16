@@ -1,0 +1,24 @@
+name: glove
+family: effects
+size: [16, 16]
+description: ""
+palette:
+  O: "#1a1c2c"
+  W: "#f4f4f4"
+grid: |
+  ...OO...........
+  ..OWWO..........
+  ..OWWO..........
+  ..OWWO..........
+  ..OWWO.OO.OO....
+  ..OWWOOWWOWWWO..
+  ..OWWWWWWWWWWWO.
+  OOOOWWWWWWWWWWWO
+  OWWWWWWWWWWWWWWO
+  OWWWOWWOWWOWWWWO
+  .OWWWWWWWWWWWWWO
+  .OWWWWWWWWWWWWO.
+  .OWWWWWWWWWWWO..
+  .OWOOOOOOOOOWO..
+  .OWWWWWWWWWWWO..
+  ..OOOOOOOOOOO...

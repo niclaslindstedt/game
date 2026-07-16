@@ -1,0 +1,22 @@
+name: icon_coin
+family: icons
+size: [12, 12]
+description: ""
+palette:
+  O: "#1a1c2c"
+  o: "#d6a842"
+  q: "#96762e"
+  y: "#ffb02e"
+grid: |
+  ............
+  ...OOOOOO...
+  ..OyyooooO..
+  .OyyoooooqO.
+  .OyooooooqO.
+  .OyooOOooqO.
+  .OyooOOooqO.
+  .OoooooooqO.
+  .OooooooqqO.
+  ..OooooqqO..
+  ...OOOOOO...
+  ............

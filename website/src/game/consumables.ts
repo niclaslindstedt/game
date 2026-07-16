@@ -5,7 +5,7 @@
 // accent so the ground drop, the pickup card, and the HUD consumable dock all
 // draw the same grade the same way. Indexed by MEDKIT tier (0 = lightest).
 
-/** Per-tier medkit sprite names — see sprite-data/effects.mjs. Index 1 is the
+/** Per-tier medkit sprite names — see sprites/effects/*.yaml. Index 1 is the
  * bare `medkit` so it doubles as the renderer's untiered fallback. */
 export const MEDKIT_ICONS = [
   "medkit_light",

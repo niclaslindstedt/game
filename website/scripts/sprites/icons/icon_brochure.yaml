@@ -1,0 +1,23 @@
+name: icon_brochure
+family: icons
+size: [12, 12]
+description: ""
+palette:
+  O: "#1a1c2c"
+  W: "#f4f4f4"
+  r: "#d83a3a"
+  w: "#c6c6c6"
+  y: "#ffb02e"
+grid: |
+  ............
+  ..OOOOOOO...
+  .OWWWWWWWO..
+  .OWyyWWWWO..
+  .OWyyWWwWO..
+  .OWWWWwWWO..
+  .OWrWWWwWO..
+  .OWWWwWWWO..
+  .OWwWWWwWO..
+  .OOOOOOOO...
+  ............
+  ............

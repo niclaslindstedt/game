@@ -1,0 +1,25 @@
+name: bunker_1
+family: bunker
+size: [16, 16]
+description: ""
+palette:
+  I: "#f6d074"
+  Z: "#9c9eac"
+  z: "#babcc6"
+grid: |
+  zzzzzzzzzzzzzzzz
+  zzzzzzzzzzzzzzzz
+  zzzzzzZZZZzzzzzz
+  zzzzZZzzzzZZzzzz
+  zzzZzzzIIzzzZzzz
+  zzzZzzIIIIzzZzzz
+  zzZzzIIzzIIzzZzz
+  zzZzzIzzzzIzzZzz
+  zzZzzIzzzzIzzZzz
+  zzZzzIIzzIIzzZzz
+  zzzZzzIIIIzzZzzz
+  zzzZzzzIIzzzZzzz
+  zzzzZZzzzzZZzzzz
+  zzzzzzZZZZzzzzzz
+  zzzzzzzzzzzzzzzz
+  zzzzzzzzzzzzzzzz

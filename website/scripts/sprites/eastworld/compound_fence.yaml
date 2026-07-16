@@ -1,0 +1,29 @@
+name: compound_fence
+family: eastworld
+size: [16, 16]
+description: ""
+palette:
+  K: "#0c0b12"
+  O: "#1a1c2c"
+  Q: "#60f0d0"
+  V: "#9095a5"
+  b: "#3f4553"
+  v: "#60687e"
+  y: "#ffb02e"
+grid: |
+  OOOOOOOOOOOOOOOO
+  OVVVVVVVVVVVVVVO
+  OvvvvvvvvvvvvvvO
+  OvvQvvvvvvvvQvvO
+  OvvvvvvvvvvvvvvO
+  ObbbbbbbbbbbbbbO
+  OyyKKyyKKyyKKyyO
+  OKKyyKKyyKKyyKKO
+  ObbbbbbbbbbbbbbO
+  OvvvvvvvvvvvvvvO
+  OvvvvvvvvvvvvvvO
+  ObvvvvvvvvvvvvbO
+  ObbbbbbbbbbbbbbO
+  ObbbbbbbbbbbbbbO
+  ObbbbbbbbbbbbbbO
+  OOOOOOOOOOOOOOOO

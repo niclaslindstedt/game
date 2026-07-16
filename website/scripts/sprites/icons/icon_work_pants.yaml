@@ -1,0 +1,21 @@
+name: icon_work_pants
+family: icons
+size: [12, 12]
+description: ""
+palette:
+  D: "#b28e5c"
+  O: "#1a1c2c"
+  t: "#dec08a"
+grid: |
+  ............
+  ............
+  ..OOOOOOOO..
+  ..OttttttO..
+  ..OttttttO..
+  ..OttOOttO..
+  ..OttO.OttO.
+  ..ODDO.ODDO.
+  ..ODDO.ODDO.
+  ..OttO.OttO.
+  ..OOO...OOO.
+  ............

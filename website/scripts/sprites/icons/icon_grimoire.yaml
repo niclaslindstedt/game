@@ -1,0 +1,22 @@
+name: icon_grimoire
+family: icons
+size: [12, 12]
+description: ""
+palette:
+  L: "#d4a5ec"
+  O: "#1a1c2c"
+  P: "#b05cdc"
+  o: "#d6a842"
+grid: |
+  ............
+  .OOOOOOOOO..
+  .OPPPPPPPO..
+  .OPLLLLLPO..
+  .OPLPPPLPO..
+  .OPLLLLLPO..
+  .OPPPPPPPO..
+  .OPPPoPPPO..
+  .OOOOOOOOO..
+  ............
+  ............
+  ............

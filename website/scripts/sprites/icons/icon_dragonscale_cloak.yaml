@@ -1,0 +1,23 @@
+name: icon_dragonscale_cloak
+family: icons
+size: [12, 12]
+description: ""
+palette:
+  G: "#4a7a3e"
+  O: "#1a1c2c"
+  g: "#3d6433"
+  l: "#678f5d"
+  y: "#ffb02e"
+grid: |
+  ............
+  ..OOOOOOOO..
+  .OGGGyyGGGO.
+  .OGlGlGlGGO.
+  .OGGlGlGGGO.
+  .OGlGlGlGGO.
+  .OgGlGlGGgO.
+  ..OGGGGGGO..
+  ..OggggggO..
+  ...OOOOOO...
+  ............
+  ............

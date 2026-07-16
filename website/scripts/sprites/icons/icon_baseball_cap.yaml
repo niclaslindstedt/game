@@ -1,0 +1,21 @@
+name: icon_baseball_cap
+family: icons
+size: [12, 12]
+description: ""
+palette:
+  O: "#1a1c2c"
+  W: "#f4f4f4"
+  j: "#4054bc"
+grid: |
+  ............
+  ............
+  ....OOOO....
+  ...OjjjjO...
+  ..OjWWjjjO..
+  ..OjWWjjjO..
+  .OjjjjjjjO..
+  .OjjjjjjOOO.
+  ..OOOOOjjjO.
+  .......OOO..
+  ............
+  ............

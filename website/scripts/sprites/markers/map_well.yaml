@@ -1,0 +1,21 @@
+name: map_well
+family: markers
+size: [12, 12]
+description: ""
+palette:
+  Q: "#cebcfa"
+  U: "#8a6ce0"
+  u: "#100c1e"
+grid: |
+  ....UUUU....
+  ..UUQQQQUU..
+  .UQQuuuuQQU.
+  .UQuuuuuuQU.
+  UQuuuuuuuuQU
+  UQuuuuuuuuQU
+  UQuuuuuuuuQU
+  .UQuuuuuuQU.
+  .UQQuuuuQQU.
+  ..UUQQQQUU..
+  ....UUUU....
+  ............

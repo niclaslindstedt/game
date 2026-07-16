@@ -1,0 +1,21 @@
+name: icon_postmortem
+family: icons
+size: [12, 12]
+description: ""
+palette:
+  O: "#1a1c2c"
+  W: "#f4f4f4"
+  e: "#5ab4ff"
+grid: |
+  ............
+  .OOOOOOOOO..
+  .OeeeeeeeO..
+  .OeWWWWeeO..
+  .OeeeeeeeO..
+  .OeWWWWWeO..
+  .OeeeeeeeO..
+  .OeWWWWeeO..
+  .OeeeeeeeO..
+  .OOOOOOOOO..
+  ............
+  ............

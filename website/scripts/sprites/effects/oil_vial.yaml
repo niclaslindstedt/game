@@ -1,0 +1,19 @@
+name: oil_vial
+family: effects
+size: [8, 8]
+description: ""
+palette:
+  G: "#4a7a3e"
+  O: "#1a1c2c"
+  W: "#f4f4f4"
+  g: "#3d6433"
+  l: "#678f5d"
+grid: |
+  ........
+  ...OO...
+  ..OWWO..
+  .OGllGO.
+  .OGGGGO.
+  .OgGGgO.
+  ..OOOO..
+  ........

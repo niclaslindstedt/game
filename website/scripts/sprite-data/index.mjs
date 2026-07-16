@@ -1,73 +1,48 @@
 // SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
 // Source of truth for every in-game pixel sprite (see the `pixel-assets`
-// skill), split into per-family modules so one roster stays editable without
-// paging through the rest. Each family bundles its grids with a LOCAL
-// palette scope; this index merges every family with the shared core
-// (core.mjs) and resolves the per-sprite palettes the generator renders
-// with. Two families may map the same char to different colors — that's the
-// point: the single-character namespace is per-family, not global.
+// skill and docs/sprite-yaml-plan.md). Base sprites are one self-describing
+// YAML file each under `sprites/` — loaded here by load-yaml.mjs into the
+// SPRITES / SPRITE_PALETTES / SPRITE_FAMILY / FAMILIES / ANIMATIONS maps the
+// rest of the pipeline consumes. This module then derives the two families of
+// build-time variants that were never hand-drawn — battle-damage (wounds) and
+// worn-gear overlays — on top of those base sprites, exactly as before.
 //
 // Sprite grids: one string per pixel row, one character per pixel; `.` is
 // transparent. Animation frames are separate entries named `<sprite>_<n>`.
-// Sizes: characters/enemies 16×16 (elites 24×24, bosses 48×48), projectiles
-// 8×8, icons 12×12, tiles 16×16, lander 32×32, flag 16×24.
+// Palette chars are per-sprite (`sprites/<family>/<name>.yaml`); the shared
+// core (`sprites/_core.yaml`) and family-local scope (`_family.yaml`) back the
+// derived variants and the palette preview sheet.
 
 import { ENEMY_DEFS } from "../../../src/game/defs/enemies/index.ts";
 import { GEAR_DEFS } from "../../../src/game/defs/gear.ts";
 import { woundedFrames } from "../asset-tools/damage.mjs";
 import { buildPalette } from "../asset-tools/palette.mjs";
 import { wornFrames, wornRamp } from "../asset-tools/worn.mjs";
-import { CORE_PALETTE } from "./core.mjs";
-import bunker from "./bunker.mjs";
-import earth from "./earth.mjs";
-import eastworld from "./eastworld.mjs";
-import effects from "./effects.mjs";
-import hero from "./hero.mjs";
-import icons from "./icons.mjs";
-import markers from "./markers.mjs";
-import mars from "./mars.mjs";
-import merchant from "./merchant.mjs";
-import moon from "./moon.mjs";
-import prelude from "./prelude.mjs";
-import rift from "./rift.mjs";
-import scenes from "./scenes.mjs";
-import spacez from "./spacez.mjs";
+import { loadSprites } from "./load-yaml.mjs";
 
+const {
+  CORE_PALETTE,
+  FAMILIES,
+  SPRITES,
+  SPRITE_PALETTES,
+  SPRITE_FAMILY,
+  ANIMATIONS,
+} = loadSprites();
+
+/** The shared core palette (concrete `[r,g,b,a]`), for the palette sheet. */
+export { CORE_PALETTE };
 /** Every sprite family, each with its core-merged palette attached. */
-export const FAMILIES = [
-  hero,
-  merchant,
-  prelude,
-  earth,
-  moon,
-  effects,
-  icons,
-  markers,
-  spacez,
-  mars,
-  rift,
-  eastworld,
-  bunker,
-  scenes,
-].map((family) => ({
-  ...family,
-  // Throws on a char defined both locally and in the core — a family may
-  // shadow another FAMILY's char, never the shared core.
-  palette: buildPalette(CORE_PALETTE, family.palette),
-  // The local scope alone, normalized — the palette preview sheet renders
-  // it as this family's section.
-  localPalette: buildPalette(family.palette),
-}));
-
-/** All sprite grids, name → grid (wounded variants included). */
-export const SPRITES = {};
+export { FAMILIES };
+/** All sprite grids, name → grid (wounded/worn variants included). */
+export { SPRITES };
 /** The palette each sprite renders with, name → char map. */
-export const SPRITE_PALETTES = {};
+export { SPRITE_PALETTES };
 /** Which family a sprite belongs to, name → family name. */
-export const SPRITE_FAMILY = {};
+export { SPRITE_FAMILY };
 /** Frame sequences the generator turns into film strips + motion previews. */
-export const ANIMATIONS = {};
+export { ANIMATIONS };
 
+/** Register a derived sprite under a family, guarding against name clashes. */
 function register(family, name, grid) {
   if (name in SPRITES) {
     throw new Error(
@@ -77,13 +52,6 @@ function register(family, name, grid) {
   SPRITES[name] = grid;
   SPRITE_PALETTES[name] = family.palette;
   SPRITE_FAMILY[name] = family.name;
-}
-
-for (const family of FAMILIES) {
-  for (const [name, grid] of Object.entries(family.sprites)) {
-    register(family, name, grid);
-  }
-  Object.assign(ANIMATIONS, family.animations);
 }
 
 // ---- Battle-damage variants -------------------------------------------------

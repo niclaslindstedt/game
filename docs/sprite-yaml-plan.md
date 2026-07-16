@@ -8,8 +8,13 @@ description or by a reference image an art LLM produced.
 
 Status legend: `[ ]` not started · `[x]` done.
 
-This is a design proposal to react to, not shipped behavior. No code lands
-until the schema and migration guarantee below are agreed.
+**Phase 1 has shipped.** Base sprites now live as one self-describing YAML file
+each under `website/scripts/sprites/` (`_core.yaml`, per-family `_family.yaml`,
+and one `<name>.yaml` per sprite); `sprite-data/load-yaml.mjs` loads them and
+`sprite-data/index.mjs` derives the wound/worn variants on top exactly as
+before. The switch was proved lossless: `make assets` regenerates a
+byte-identical `atlas.png` / `atlas.json`. Phases 1.1–3.1 below remain a design
+proposal to react to.
 
 ---
 
@@ -312,9 +317,14 @@ vote). Phase 3 removes the blank-canvas step, not the judgement.
 
 ## Phased checklist
 
-- [ ] **Phase 0 — agree the schema.** This doc. Resolve the open questions.
-- [ ] **Phase 1 — format switch.** YAML loader, validator, converter script,
-      byte-identical atlas assertion, delete `.mjs` modules.
+- [x] **Phase 0 — agree the schema.** This doc. Resolve the open questions.
+- [x] **Phase 1 — format switch.** YAML loader (`sprite-data/load-yaml.mjs`),
+      validator (`asset-tools/sprite-schema.mjs`, run at load; tested in
+      `tests/sprite_yaml_test.ts`), converter script
+      (`scripts/migrate-sprites.mjs`, one-shot), byte-identical atlas assertion
+      (`make assets` reproduces the pre-migration atlas), `.mjs` grid modules
+      deleted. Family orchestration (ground, local palette, animations, wound
+      overrides, contrast exemptions) lives in each family's `_family.yaml`.
 - [ ] **Phase 1.1 — global damage palettes** extracted from `damage.mjs`;
       optional per-sprite `damage` override wired in.
 - [ ] **Phase 2a — description refine loop** (separate evaluator, real-ground

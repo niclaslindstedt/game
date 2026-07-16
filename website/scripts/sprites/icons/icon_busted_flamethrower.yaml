@@ -1,0 +1,23 @@
+name: icon_busted_flamethrower
+family: icons
+size: [12, 12]
+description: ""
+palette:
+  E: "#5d4028"
+  N: "#303444"
+  O: "#1a1c2c"
+  b: "#3f4553"
+  v: "#60687e"
+grid: |
+  ............
+  ............
+  ..OOOO......
+  .OvvvvO.OO..
+  .OvvvvOONNO.
+  .OvbbvvvNNO.
+  .OvvvvOONNO.
+  .OvvvvO.OO..
+  ..OOOO......
+  .....E......
+  ............
+  ............

@@ -1,0 +1,22 @@
+name: icon_annex_map
+family: icons
+size: [12, 12]
+description: ""
+palette:
+  D: "#b28e5c"
+  O: "#1a1c2c"
+  r: "#d83a3a"
+  t: "#dec08a"
+grid: |
+  ............
+  ..OOOOOOOO..
+  .OttttttttO.
+  .OtDtttrttO.
+  .OttttrrttO.
+  .OttrrrttDO.
+  .OtrrttttDO.
+  .OttttDDttO.
+  .OttttttttO.
+  ..OOOOOOOO..
+  ............
+  ............

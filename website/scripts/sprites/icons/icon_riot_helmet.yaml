@@ -1,0 +1,22 @@
+name: icon_riot_helmet
+family: icons
+size: [12, 12]
+description: ""
+palette:
+  J: "#2d3b84"
+  O: "#1a1c2c"
+  e: "#5ab4ff"
+  s: "#d6f0ff"
+grid: |
+  ............
+  ....OOOO....
+  ...OJJJJO...
+  ..OJJJJJJO..
+  ..OJJJJJJO..
+  ..OsssssJO..
+  ..OsseesJO..
+  ..OsssssJO..
+  ..OJOOOJJO..
+  ...OO..OO...
+  ............
+  ............

@@ -1,0 +1,52 @@
+name: mars
+ground: mars_0
+palette:
+  C: "#529ea8"
+  D: "#808698"
+  N: "#303444"
+  Q: "#e878a8"
+  Z: "#f6b6cd"
+  d: "#80482d"
+  e: "#623722"
+  s: "#5a5e6a"
+  t: "#b2643e"
+  u: "#c38668"
+animations:
+  scout_rover_roll: { frames: [scout_rover_0, scout_rover_1], delayMs: 240 }
+  mining_rover_grind: { frames: [mining_rover_0, mining_rover_1], delayMs: 340 }
+  servo_bot_walk: { frames: [servo_bot_0, servo_bot_1], delayMs: 300 }
+  fembot_walk: { frames: [fembot_0, fembot_1], delayMs: 260 }
+  misprinted_fembot_walk:
+    { frames: [misprinted_fembot_0, misprinted_fembot_1], delayMs: 260 }
+  derelict_rover_roll:
+    { frames: [derelict_rover_0, derelict_rover_1], delayMs: 300 }
+  unit_zero_walk: { frames: [unit_zero_0, unit_zero_1], delayMs: 320 }
+  larry_webpage_walk:
+    { frames: [larry_webpage_0, larry_webpage_1], delayMs: 280 }
+  build_gates_walk: { frames: [build_gates_0, build_gates_1], delayMs: 300 }
+  optimusk_prime_walk:
+    { frames: [optimusk_prime_0, optimusk_prime_1], delayMs: 340 }
+  peter_seal_walk: { frames: [peter_seal_0, peter_seal_1], delayMs: 300 }
+  elon_mosque_strut: { frames: [elon_mosque_0, elon_mosque_1], delayMs: 380 }
+wounds:
+  fembot: { splat: v, core: b }
+  misprinted_fembot: { splat: v, core: b }
+  unit_zero: { splat: x, core: b }
+  scout_rover: { splat: y, core: H }
+  servo_bot: { splat: y, core: Y, scuff: H }
+  mining_rover: { splat: x, core: b }
+  peter_seal: { splat: r, core: r }
+  elon_mosque: { splat: r, core: r }
+contrastExempt:
+  [
+    mars_0,
+    mars_1,
+    rust_0,
+    rust_1,
+    deck_0,
+    deck_1,
+    crater_red_big,
+    crater_red_small,
+    red_rocks,
+    tracks,
+  ]

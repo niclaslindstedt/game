@@ -6,10 +6,12 @@ description: "Use when creating or changing pixel-art sprites for the game. Driv
 # Creating Pixel Art Assets
 
 All in-game pixel graphics — sprites, tiles, the palette, even the UI font —
-are **generated, never hand-drawn binaries**. The source of truth is a set
-of pixel grids in the `website/scripts/sprite-data/` family modules (text:
-one string per pixel row, one character per pixel, palette chars mapped to
-RGBA). The asset pipeline renders them into ONE committed sprite atlas
+are **generated, never hand-drawn binaries**. The source of truth is a tree
+of **one self-describing YAML file per base sprite** under
+`website/scripts/sprites/` (a `grid` block scalar — one line per pixel row,
+one character per pixel — plus a concrete-hex `palette`; `.` is transparent).
+See [`docs/sprite-yaml-plan.md`](../../../docs/sprite-yaml-plan.md) for the
+schema. The asset pipeline renders them into ONE committed sprite atlas
 (PNG + JSON source rects) the app slices at load time. This keeps assets
 diffable, reviewable, and editable by agents.
 
@@ -17,9 +19,11 @@ diffable, reviewable, and editable by agents.
 
 | File | Role |
 | --- | --- |
-| `website/scripts/sprite-data/<family>.mjs` | Source of truth: one module per sprite family, each bundling its grids, LOCAL palette chars, animations, wound overrides, and lint exemptions. Discover the families dynamically — `ls website/scripts/sprite-data/*.mjs` (everything but `core.mjs`/`index.mjs`) — rather than assuming a fixed roster; this game's families and per-family learnings are in [`GAME_NOTES.md`](./GAME_NOTES.md) |
-| `website/scripts/sprite-data/core.mjs` | The shared palette core (outline, gore chars, common materials) + exported subject ramps families derive local chars from |
-| `website/scripts/sprite-data/index.mjs` | Merges the families, resolves each sprite's core+local palette, derives battle-damage variants from the enemy catalog |
+| `website/scripts/sprites/<family>/<name>.yaml` | Source of truth: one file per base sprite — `name`, `family`, `size` `[w,h]`, `description`, the `palette` keys it uses (concrete hex), and its `grid`. Discover the families dynamically — `ls website/scripts/sprites/` — rather than assuming a fixed roster; this game's families and per-family learnings are in [`GAME_NOTES.md`](./GAME_NOTES.md) |
+| `website/scripts/sprites/<family>/_family.yaml` | Family orchestration: `ground` tile, LOCAL `palette` chars, `animations`, wound-style overrides, and lint `contrastExempt` names |
+| `website/scripts/sprites/_core.yaml` | The shared palette core (outline, gore chars, common materials) every family merges under its local scope |
+| `website/scripts/sprite-data/load-yaml.mjs` | Globs the `sprites/` tree into the in-memory sprite maps; validates each file against the schema (`asset-tools/sprite-schema.mjs`) |
+| `website/scripts/sprite-data/index.mjs` | Loads the base sprites, then derives battle-damage + worn-gear variants from the enemy/gear catalogs |
 | `website/scripts/generate-assets.mjs` | The pipeline: grids + font → `website/src/game/assets/` (`atlas.png` + `atlas.json`, font atlas + metrics) + previews + contrast lint |
 | `website/scripts/asset-tools/` | The utility pool the pipeline composes (see below) |
 | `website/src/game/assets/` | Generated, **gitignored** — rebuilt on every build (`npm run assets` runs ahead of `vite`/`tsc`/`vitest`), loaded by `assets.ts`; **never edit by hand, never commit** |
@@ -27,15 +31,14 @@ diffable, reviewable, and editable by agents.
 
 ## Palette scoping
 
-The single-character namespace is **per family, not global**: each family
-module's `palette` maps the chars only it draws with, merged at build time
-with `CORE_PALETTE` (chars shared by two or more families: the outline
-`O`, the gore chars `r`/`i`/`E` the wound generator paints anywhere, and
-common materials). Two families may map the same char to different colors.
-A new subject's chars go in ITS family's palette — touch `core.mjs` only
-when a second family starts drawing with an existing char. Check char
-availability per scope on `assets-preview/palette.png` (one labeled
-section per scope).
+The single-character namespace is **per family, not global**. Each base
+sprite's YAML carries a self-contained `palette` (only the keys it paints
+with, as concrete hex). The shared core (`sprites/_core.yaml`) and the
+family-local scope (`_family.yaml` `palette`) back the derived wound/worn
+variants and the palette preview sheet; a family may not redefine a core
+char (the loader throws). Two families may map the same char to different
+colors — the namespace is scoped, not global. Check char availability per
+scope on `assets-preview/palette.png` (one labeled section per scope).
 
 ## The asset-tools utility pool
 
@@ -56,16 +59,16 @@ Programmatic building blocks for creating and iterating on assets
 
 Rules of the pool:
 
-- **Palettes are ramps, not loose hex values.** Each subject (hero, slime,
-  grass biome, medkit…) declares a base color; shades/highlights are derived
-  with `ramp`/`shade`/`tint`. Re-theming a character or a level biome means
-  changing ONE base color. A new colorway of an existing drawing (elite
-  enemy, autumn biome) is `swapPalette(grid, mapping)` — never a redraw.
+- **A sprite's palette is concrete hex, one entry per key it paints.** The
+  build-time derivations still lean on `ramp`/`shade`/`tint` (worn-gear ramps,
+  wound shading) and `swapPalette` for recolor variants, but an authored base
+  sprite carries resolved colors in its own `palette` block — keep a subject's
+  shade/highlight in sensible steps by eye (or paste values a ramp produced).
 - **Text is an asset too.** UI text uses the generated pixel font (atlas +
   metrics in `website/src/game/assets/`, runtime renderer in
   `website/src/lib/pixel-font.ts`). New glyphs are added to `GLYPHS` in
   `font.mjs` and evaluated via `assets-preview/font-specimen.png`.
-- **Animations are frame lists** in each family module's `animations` map.
+- **Animations are frame lists** in each family's `_family.yaml` `animations` map.
   Evaluate frames on the film strip (`<name>_strip.png` — the last cell is
   an onion-skin: a double image there means the anchor drifts) and motion
   in the animated `<name>.webp`.
@@ -80,8 +83,8 @@ Rules of the pool:
   A NEW ENEMY therefore needs NO wound registry entry — just its enemy def
   and base frames, then `make assets`; `tests/content/wounds_test.ts` fails until
   the frames land in the atlas. Only a mob whose body colors swallow the
-  default (dark-on-dark never reads) adds an override to its family
-  module's `wounds` map (splat/core/scuff chars). Retuning a base sprite
+  default (dark-on-dark never reads) adds an override to its family's
+  `_family.yaml` `wounds` map (splat/core/scuff chars). Retuning a base sprite
   re-wounds it automatically on the next generate.
 - **Derived-variant generators must be seeded and frame-stable.** Anything
   that decorates existing frames programmatically (damage.mjs is the model)
@@ -96,11 +99,11 @@ Rules of the pool:
 
 Never ship a sprite you have not looked at. For each asset, loop:
 
-1. **Sketch** — add or edit the sprite's grid in its family module under
-   `sprite-data/` (new roster/biome = new family module, registered in
-   `index.mjs`). Start from the silhouette: block the shape in one color,
-   then add shading. New chars go in the FAMILY's palette unless they're
-   genuinely shared.
+1. **Sketch** — add or edit the sprite's `grid` in its YAML file under
+   `sprites/<family>/` (new roster/biome = a new `<family>/` directory with a
+   `_family.yaml`). Start from the silhouette: block the shape in one color,
+   then add shading. New chars go in the sprite's own `palette` (concrete hex);
+   put a color the family shares across sprites in `_family.yaml`.
 2. **Generate** — run:
 
    ```sh
@@ -181,10 +184,10 @@ actually looked at**:
 - Gore/wound chars: `r` blood, `i` dried blood (dark core), `E` grime (all
   in the core palette — the wound generator paints them on any mob); `ecto`
   wounds in `c`/`C`, `sparks` in `y`/`Y`; per-sprite overrides live in the
-  `wounds` maps in the family modules.
+  `wounds` map in each family's `_family.yaml`.
 - Tiles must tile: check the sheet's tiled-ground strip for visible seams.
 - After changing any grid, run `make assets` and eyeball the render, but
-  commit only the `sprite-data/` change: the atlas (`atlas.png` +
+  commit only the `sprites/` change: the atlas (`atlas.png` +
   `atlas.json`, font atlas) under `website/src/game/assets/` is gitignored
   and rebuilt on every build (`npm run assets` runs ahead of `vite`, `tsc`,
   and `vitest`), so the grids are the sole committed source of truth and the

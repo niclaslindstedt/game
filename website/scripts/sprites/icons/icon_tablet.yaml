@@ -1,0 +1,22 @@
+name: icon_tablet
+family: icons
+size: [12, 12]
+description: ""
+palette:
+  G: "#4a7a3e"
+  O: "#1a1c2c"
+  b: "#3f4553"
+  v: "#60687e"
+grid: |
+  ............
+  ..OOOOOOO...
+  .OvvvvvvvO..
+  .OvbbbvvvO..
+  .OvvvvvvvO..
+  .OvbbbbvvO..
+  .OvvvvvvvO..
+  .OvGGvvvvO..
+  .OvvvvvvvO..
+  .OOOOOOOOO..
+  ............
+  ............

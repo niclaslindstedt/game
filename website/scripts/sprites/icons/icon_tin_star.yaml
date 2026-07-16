@@ -1,0 +1,21 @@
+name: icon_tin_star
+family: icons
+size: [12, 12]
+description: ""
+palette:
+  O: "#1a1c2c"
+  a: "#d6dce4"
+  v: "#60687e"
+grid: |
+  ............
+  ..OOOOOOOO..
+  .OvvvvvvvvO.
+  .OvvvaavvvO.
+  .OvvaaaavvO.
+  .OvaaaaaavO.
+  .OvvaaaavvO.
+  .OvvvaavvvO.
+  .OvvvvvvvvO.
+  ..OOOOOOOO..
+  ............
+  ............

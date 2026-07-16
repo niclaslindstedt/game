@@ -1,0 +1,31 @@
+name: scout_rover_1
+family: mars
+size: [16, 16]
+description: ""
+palette:
+  H: "#9e8b2d"
+  O: "#1a1c2c"
+  V: "#9095a5"
+  a: "#d6dce4"
+  b: "#3f4553"
+  c: "#8ccdd7e1"
+  o: "#d6a842"
+  v: "#60687e"
+  x: "#c5e6ebe1"
+grid: |
+  ................
+  .....OOOOOH.....
+  .....ObcxbO.....
+  .....OVxcVO.....
+  .....OOOOOO.....
+  ........b.......
+  ........b.......
+  .OOOHOOOOOOoOOO.
+  .OVVVVVVVVVVVVO.
+  .OvvvvvvvvvvvvO.
+  .OvvvvvvvvvvvvO.
+  .OOOOOOOOOOOOOO.
+  ..OaO.OaO..OaO..
+  ..OVO.OVO..OVO..
+  ..OOO.OOO..OOO..
+  ................

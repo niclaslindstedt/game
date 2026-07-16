@@ -1,0 +1,17 @@
+name: bolt
+family: effects
+size: [8, 8]
+description: ""
+palette:
+  O: "#1a1c2c"
+  Y: "#ffe3b6"
+  y: "#ffb02e"
+grid: |
+  ........
+  ...OO...
+  ..OyyO..
+  .OyYYyO.
+  .OyYYyO.
+  ..OyyO..
+  ...OO...
+  ........

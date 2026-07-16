@@ -1,0 +1,22 @@
+name: icon_flight_jacket
+family: icons
+size: [12, 12]
+description: ""
+palette:
+  D: "#b28e5c"
+  O: "#1a1c2c"
+  W: "#f4f4f4"
+  t: "#dec08a"
+grid: |
+  ............
+  ............
+  .OO.OOOO.OO.
+  .ODOWWWWODO.
+  .ODDOWWODDO.
+  .ODDDttDDDO.
+  .OODtttttOO.
+  ..ODttttDO..
+  ..ODtttttO..
+  ..ODDDDDDO..
+  ..OOOOOOOO..
+  ............

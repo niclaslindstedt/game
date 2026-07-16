@@ -1,0 +1,19 @@
+name: table
+family: prelude
+size: [20, 10]
+description: ""
+palette:
+  B: "#92643e"
+  E: "#5d4028"
+  O: "#1a1c2c"
+grid: |
+  ....................
+  ..OOOOOOOOOOOOOOOO..
+  .OBBBBBBBBBBBBBBBBO.
+  .OEEEEEEEEEEEEEEEEO.
+  ..OEEO........OEEO..
+  ..OEEO........OEEO..
+  ..OOOO........OOOO..
+  ....................
+  ....................
+  ....................

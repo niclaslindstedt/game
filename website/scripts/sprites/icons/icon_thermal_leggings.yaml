@@ -1,0 +1,20 @@
+name: icon_thermal_leggings
+family: icons
+size: [12, 12]
+description: ""
+palette:
+  O: "#1a1c2c"
+  w: "#c6c6c6"
+grid: |
+  ............
+  ............
+  ..OOOOOOOO..
+  ..OwwwwwwO..
+  ..OwwwwwwO..
+  ..OwwOOwwO..
+  ..OwwO.OwwO.
+  ..OwwO.OwwO.
+  ..OwwO.OwwO.
+  ..OwwO.OwwO.
+  ..OOO...OOO.
+  ............

@@ -3,15 +3,15 @@
 Sprite families and per-family learnings for **this** game. The generate →
 look → evaluate → loop workflow and the quality checklist live in `SKILL.md`;
 this file records what is specific to this game's art. A sequel resets this
-file (and its `sprite-data/*` families).
+file (and its `sprites/*` families).
 
 ## Families
 
-Discover the live set with `ls website/scripts/sprite-data/*.mjs` (all but
-`core.mjs` / `index.mjs`). As of 2026-07 this game ships: `hero`, `moon`,
-`spacez`, `prelude`, `earth`, `effects`, `icons`, `mars`, `rift`,
-`merchant`. A new roster or biome is a new family module registered in
-`sprite-data/index.mjs`.
+Discover the live set with `ls website/scripts/sprites/` (each directory is a
+family). As of 2026-07 this game ships: `hero`, `moon`, `spacez`, `prelude`,
+`earth`, `effects`, `icons`, `markers`, `mars`, `rift`, `eastworld`,
+`bunker`, `merchant`, `scenes`. A new roster or biome is a new `<family>/`
+directory with a `_family.yaml`.
 
 The `merchant` family shows the one-subject-many-costumes path: all four
 looks (hooded default, vendor, moon, mars) share the hero's 16×16 body plan

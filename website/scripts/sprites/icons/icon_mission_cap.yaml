@@ -1,0 +1,21 @@
+name: icon_mission_cap
+family: icons
+size: [12, 12]
+description: ""
+palette:
+  D: "#b28e5c"
+  O: "#1a1c2c"
+  t: "#dec08a"
+grid: |
+  ............
+  ............
+  ....OOOO....
+  ...OttttO...
+  ..OtDDtttO..
+  ..OtDDtttO..
+  .OtttttttO..
+  .OttttttOOO.
+  ..OOOOOtttO.
+  .......OOO..
+  ............
+  ............

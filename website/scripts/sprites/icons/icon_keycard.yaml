@@ -1,0 +1,23 @@
+name: icon_keycard
+family: icons
+size: [12, 12]
+description: ""
+palette:
+  O: "#1a1c2c"
+  W: "#f4f4f4"
+  j: "#4054bc"
+  w: "#c6c6c6"
+  y: "#ffb02e"
+grid: |
+  ............
+  ............
+  .OOOOOOOOOO.
+  .OWWWWWWWWO.
+  .OjjjjjjjjO.
+  .OWWWWWWWWO.
+  .OWyyOWWwWO.
+  .OWyyOWwwWO.
+  .OWWWWWWWWO.
+  .OOOOOOOOOO.
+  ............
+  ............

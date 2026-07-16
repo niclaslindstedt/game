@@ -1,0 +1,20 @@
+name: icon_chausses
+family: icons
+size: [12, 12]
+description: ""
+palette:
+  O: "#1a1c2c"
+  v: "#60687e"
+grid: |
+  ............
+  ............
+  ..OOOOOOOO..
+  ..OvvvvvvO..
+  ..OvvvvvvO..
+  ..OvvOOvvO..
+  ..OvvO.OvvO.
+  ..OvvO.OvvO.
+  ..OvvO.OvvO.
+  ..OvvO.OvvO.
+  ..OOO...OOO.
+  ............

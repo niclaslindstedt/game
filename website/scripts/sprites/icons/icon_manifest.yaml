@@ -1,0 +1,22 @@
+name: icon_manifest
+family: icons
+size: [12, 12]
+description: ""
+palette:
+  O: "#1a1c2c"
+  W: "#f4f4f4"
+  b: "#3f4553"
+  r: "#d83a3a"
+grid: |
+  ............
+  .OOOOOOOOO..
+  .OWWWWWWWO..
+  .OWbbbbWWO..
+  .OWWWWWWWO..
+  .OWbbbbbWO..
+  .OWWWWWWWO..
+  .OWrrrbWWO..
+  .OWWWWWWWO..
+  .OOOOOOOOO..
+  ............
+  ............

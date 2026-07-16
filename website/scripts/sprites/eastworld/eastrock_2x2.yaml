@@ -1,0 +1,43 @@
+name: eastrock_2x2
+family: eastworld
+size: [32, 32]
+description: ""
+palette:
+  O: "#1a1c2c"
+  Z: "#b08e60"
+  d: "#665c34"
+  e: "#8a7e46"
+  u: "#e2c494"
+grid: |
+  ................................
+  ................................
+  ........OOOOOOOOOOOOOOO.........
+  .....OOOuuuuZZZZeZZZZZZOOOO.....
+  ...OOuuuuuuZZZZZeZZZZZZZZddOO...
+  ..OuuuuuuuZZZZZZZeZZZZZZdddddO..
+  ..OuuuuuuZZZZZZZZeZZZZZdddddddO.
+  .OuuuuuuZZZZZZZZZZZZZZddddddddO.
+  .OuuuuuZZZZZZZZZZZZZZdddddddddO.
+  .OuuuuZZZZZZZZZZZZZZddddddddddO.
+  .OuuZZZZZZZZZZZZZZddddddddddddO.
+  .OuZZZZZZZZZZZZZZddddddddddddOO.
+  .OZZZZZZZZZZZZZZddddddddddddO...
+  .OZZZZZZZZZZZZZddddddddddddO....
+  .OZZZZZZZZZZZZddddddddddddddOO..
+  .OZZZZZZZZZZZddddddddddddddeeeO.
+  .OZZZZZZZZZZddddddddddddddeeeeO.
+  .OOZZZZZZZZddddddddddddddeeeeeO.
+  ...OZZZZZZddddddddddddddeeeeeeO.
+  ..OZZZZZZddddddddddddddeeeeeeeO.
+  .OZZZZZddddddOeddddddeeeeeeeeeO.
+  .OZZZZdddddddOedddddeeeeeeeeeeO.
+  .OZZZdddddddddOedddeeeeeeeeeeeO.
+  .OZZddddddddddOedOeeeeeeeeeeeeO.
+  .OZddddddddddOeddeOeeeeeeeeeeeO.
+  .OddddddddddddOeeeeOeeeeeeeeeO..
+  ..OdddddddddddOeeeeeOeeeeeeeO...
+  ..OdddddddddddeOeeeeeeeeeeeO....
+  ...OOddddddddeeeeeeeeeeeeOO.....
+  .....OOOddddeeeeeeeeeOOOO.......
+  ........OOOOOOOOOOOOO...........
+  ................................

@@ -1,0 +1,33 @@
+name: garage_house
+family: scenes
+size: [48, 19]
+description: ""
+palette:
+  B: "#92643e"
+  E: "#5d4028"
+  N: "#303444"
+  O: "#1a1c2c"
+  b: "#3f4553"
+  k: "#342c26"
+  w: "#c6c6c6"
+  y: "#ffb02e"
+grid: |
+  ................................................
+  ......OOOOOOOOOOOOOO............................
+  .....OEEEEEEEEEEEEEEO...........................
+  ....OEEBBBBBBBBBBBBEEO..........................
+  ...OEEBBBBBBBBBBBBBBEEO.........................
+  ..OEEBBBBBBBBBBBBBBBBEEO........................
+  .OEEBBBBBBBBBBBBBBBBBBEEOOOOOOOOOOOOOOOOOOOOOO..
+  OOOOOOOOOOOOOOOOOOOOOOOOOEEEEEEEEEEEEEEEEEEEEOO.
+  O.wwwwwwwwwwwwwwwwwwwww.OOOOOOOOOOOOOOOOOOOOOOO.
+  O.wwwwwwwwwwwwwwwwwwwww.O.wwwwwwwwwwwwwwwwwww.O.
+  O.wwOOOOOOwwwwwwwwwwwww.O.wwObbbbbbbbbbbbOwww.O.
+  O.wwOyyyyOwwwwwwwwwwwww.O.wwObbbbbbbbbbbbOwww.O.
+  O.wwOyyyyOwwwOOOOOOwwww.O.wwONNNNNNNNNNNNOwww.O.
+  O.wwOyyyyOwwwOkkkkOwwww.O.wwONNNNNNNNNNNNOwww.O.
+  O.wwOOOOOOwwwOkkkkOwwww.O.wwONNNNNNNNNNNNOwww.O.
+  O.wwwwwwwwwwwOkkOkOwwww.O.wwONNNNNNNNNNNNOwww.O.
+  O.wwwwwwwwwwwOkkkkOwwww.O.wwONNNNNNNNNNNNOwww.O.
+  O.wwwwwwwwwwwOkkkkOwwww.O.wwONNNNNNNNNNNNOwww.O.
+  OOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOO.

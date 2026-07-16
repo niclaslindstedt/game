@@ -1,0 +1,20 @@
+name: icon_leather_boots
+family: icons
+size: [12, 12]
+description: ""
+palette:
+  O: "#1a1c2c"
+  k: "#342c26"
+grid: |
+  ............
+  ............
+  ............
+  ..OOO..OOO..
+  ..OkO..OkO..
+  ..OkO..OkO..
+  ..OkkO.OkkO.
+  ..OkkO.OkkO.
+  .OkkkOOkkkO.
+  .OkkkkOkkkkO
+  .OOOOO.OOOO.
+  ............

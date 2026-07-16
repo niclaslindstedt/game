@@ -1,0 +1,23 @@
+name: icon_ledger
+family: icons
+size: [12, 12]
+description: ""
+palette:
+  E: "#5d4028"
+  O: "#1a1c2c"
+  W: "#f4f4f4"
+  b: "#3f4553"
+  y: "#ffb02e"
+grid: |
+  ............
+  ............
+  .OOOOOOOOO..
+  .OEEEEEEEO..
+  .OEWWWWWEO..
+  .OEWbbWWEO..
+  .OEWWWWWEO..
+  .OEWbyWWEO..
+  .OEWWWWWEO..
+  .OOOOOOOOO..
+  ............
+  ............

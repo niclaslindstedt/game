@@ -1,0 +1,21 @@
+name: icon_sabatons
+family: icons
+size: [12, 12]
+description: ""
+palette:
+  O: "#1a1c2c"
+  V: "#9095a5"
+  v: "#60687e"
+grid: |
+  ............
+  ............
+  ............
+  ..OOO..OOO..
+  ..OvO..OvO..
+  ..OVO..OVO..
+  ..OvvO.OvvO.
+  ..OVVO.OVVO.
+  .OvvvOOvvvO.
+  .OvVvVOvVvVO
+  .OOOOO.OOOO.
+  ............

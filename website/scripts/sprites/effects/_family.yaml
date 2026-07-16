@@ -1,0 +1,8 @@
+name: effects
+ground: moon_0
+palette:
+  Q: "#60f0d0"
+  e: "#5ab4ff"
+  s: "#d6f0ff"
+animations:
+  angel_fly: { frames: [angel_0, angel_1], delayMs: 200 }

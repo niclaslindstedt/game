@@ -1,0 +1,21 @@
+name: icon_slot_bag
+family: icons
+size: [12, 12]
+description: ""
+palette:
+  B: "#92643e"
+  O: "#1a1c2c"
+  S: "#b39378"
+grid: |
+  ............
+  ...OOOOOO...
+  ..OB....BO..
+  ..OBOOOOBO..
+  .OSSSSSSSSO.
+  .OSBBBBBBSO.
+  .OSBBBBBBSO.
+  .OSBBBBBBSO.
+  .OOOOOOOOOO.
+  ............
+  ............
+  ............

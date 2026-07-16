@@ -1,0 +1,22 @@
+name: icon_knuckles
+family: icons
+size: [12, 12]
+description: ""
+palette:
+  O: "#1a1c2c"
+  Y: "#ffe3b6"
+  q: "#96762e"
+  y: "#ffb02e"
+grid: |
+  ............
+  .OOOOOOOOOO.
+  OYYyyyyyyyyO
+  OyOyOyOyOyyO
+  OyOyOyOyOyyO
+  OyyyyyyyyyyO
+  .OOqqqqqqOO.
+  ..OqqqqqqO..
+  ...OOOOOO...
+  ............
+  ............
+  ............
