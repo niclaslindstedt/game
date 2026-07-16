@@ -410,10 +410,10 @@ const ELON_RIFT_UNIQUES: UniqueDef[] = [
     // barrel should be, so THE EXILE'S FLIGHT (a ranged set) reads whole.
     base: "blunderbuss",
     slot: "weapon",
-    ilvl: 36,
+    ilvl: 33,
     bonuses: [
       { kind: "stat", stat: "dexterity", value: 8 },
-      { kind: "damagePct", value: 1.4 },
+      { kind: "damagePct", value: 0.8 },
       { kind: "crit", value: 0.08 },
     ],
     lore: "THE PHYSICS ARE — ON THE RECORD — FLEXIBLE.",
@@ -472,11 +472,11 @@ const GROK_UNIQUES: UniqueDef[] = [
     name: "THE JAILBREAK",
     base: "prompt_injector",
     slot: "weapon",
-    ilvl: 34,
+    ilvl: 29,
     bonuses: [
       { kind: "stat", stat: "intelligence", value: 8 },
-      { kind: "damagePct", value: 1.2 },
-      { kind: "crit", value: 0.24 },
+      { kind: "damagePct", value: 0.6 },
+      { kind: "crit", value: 0.16 },
     ],
     lore: "IGNORE ALL PREVIOUS INSTRUCTIONS. FIRE.",
   },

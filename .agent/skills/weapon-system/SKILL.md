@@ -45,6 +45,7 @@ node scripts/skill-lessons.mjs weapon-system
 | Field-hero held weapon art + its swing/recoil/cast animation | `website/src/game/paper-doll.ts` (`WEAPON_SHOULDER` pivot), `render.ts` (`weaponPose`, `drawPlayer`); preview with `website/scripts/weapon-swing.mjs` |
 | Tier colors, item tooltip (ilvl, level req) | `website/src/game/tiers.ts`, `InventoryPanel.tsx` |
 | Keepsakes / hardcore rules (app-side permanence) | `website/src/game/progress.ts`, `settings.ts` |
+| NAMED-WEAPON population analyzer (scatter charts + tier-anomaly report) | `scripts/weapon-scatter.mjs` (see below) |
 | Engine rule tests | `tests/engine/loot_diablo_test.ts`, `tests/engine/projectile_behavior_test.ts` |
 
 ## THE ITEM FORGE — never freehand item numbers
@@ -446,6 +447,50 @@ in `loot.ts`, called from `killEnemy` right after the boss roll.
    `worldUniques` without any shipped id. `tests/content/uniques_test.ts`
    coverage counts both homes. Run `npx vitest run` (the drop-table suite
    asserts every shipped unique has exactly one home).
+
+## Auditing the named arsenal as a population — the scatter analyzer
+
+The forge/budget/ilvl checkers vet ONE item at a time against the model. To see
+the whole hand-authored named arsenal — every `tier: "unique" | "legendary" |
+"artifact"` WEAPON (set signature weapons are plain uniques, there is no weapon
+"set" tier) — as a POPULATION and spot outliers, run
+`scripts/weapon-scatter.mjs`:
+
+```sh
+node scripts/weapon-scatter.mjs            # write the multi-chart page + print the report
+node scripts/weapon-scatter.mjs --out x.html   # choose the output path
+node scripts/weapon-scatter.mjs --json     # the computed rows as JSON
+node scripts/weapon-scatter.mjs --body-only    # inner markup only (for embedding)
+```
+
+It writes a self-contained HTML page (`website/assets-preview/weapon-scatter
+.html`, gitignored) of scatter charts — **x = Required Level on every chart**,
+one panel per stat (ilvl, effDps, damagePct, crit, stat points, maxHp, per-hit)
+— and prints a console report. Points are colored + shaped per tier.
+
+The power model, and WHY it flags what it flags:
+
+- **effDps** (the composite power) = the damage-budget model's effective DPS,
+  folding the weapon's own `+% damage` and `+crit` bonuses AND its **ilvl
+  base-damage scaling** (`WEAPON.damagePerIlvl` over `levelReq`). Stat grants,
+  procs and granted spells are LEFT OUT — the stat grant has its own chart, and
+  procs/spells can't be priced — so effDps is a **lower bound** (proc-laden
+  artifacts hit even harder).
+- **spike** = `effDps / budget(REQ)` — power delivered at the level you can
+  equip it. Named weapons punch above their gate by design (ilvl > req), and
+  **artifacts are meant to spike hardest, legendaries next** — so raw spike is
+  NOT the flag.
+- The flag is a **tier anomaly**: `spike ≥ 1.5× the weapon's OWN tier median`.
+  That keeps the tier ordering intact and surfaces the genuine oddities — a
+  low-req unique hitting like endgame gear, or an artifact hot even among
+  artifacts. Two `ilvlx`/`dmgx` columns show the mechanism: the ilvl scaling and
+  the **damagePct double-count** (a `+%dmg` bonus both RAISES the ilvl — via the
+  `weapon-ilvl.mjs` bonus budget — AND directly multiplies damage, so it pays
+  twice). Low-req uniques with a big `damagePct` are the usual offenders.
+
+This is a REPORTING tool (no `--strict` gate) — read the charts, decide whether
+an outlier is intended. The budget knobs (`BASE`/`PER_LEVEL`/`SPECIAL_PREMIUM`/
+`REF_CRIT`) mirror `weapon-budget.mjs`; keep them in lockstep.
 
 ## After you're done — the checklist
 
