@@ -25,7 +25,7 @@ loop" — entirely manual, with a human eye as the only acceptance test.
 
 Three problems this plan targets:
 
-1. **No machine-checkable target.** Nothing states what a sprite is *supposed*
+1. **No machine-checkable target.** Nothing states what a sprite is _supposed_
    to look like, so the refine loop can't be closed automatically.
 2. **Bundled files** are harder to find, diff, and merge than one file per
    sprite (the same rationale the repo already uses for `.lessons/` fragments).
@@ -50,7 +50,7 @@ Three problems this plan targets:
 - **Two ingestion paths, one format:** author-from-description, and
   analyze-an-image (a tool quantizes an LLM image into palette + grid).
 - **Byte-identical migration.** Converting the existing `.mjs` grids to YAML
-  must regenerate the *exact same* `atlas.png` / `atlas.json`. The atlas is the
+  must regenerate the _exact same_ `atlas.png` / `atlas.json`. The atlas is the
   invariant that proves the migration is lossless.
 
 ## Non-goals
@@ -71,8 +71,8 @@ Art gets the same downward-flowing tier chain the story already uses
 (`story.md` → `manuscript.md` → data). Higher tier wins; when two disagree, fix
 the lower one:
 
-1. **`description`** — the intent, ground truth. What the sprite *is*.
-2. **reference image** *(optional)* — a concrete but **fallible** realization of
+1. **`description`** — the intent, ground truth. What the sprite _is_.
+2. **reference image** _(optional)_ — a concrete but **fallible** realization of
    the intent, produced by an art LLM and used to bootstrap the grid. A strong
    hint, not truth: if it conflicts with the description, the description wins.
 3. **palette + grid** — the YAML; what actually ships.
@@ -89,29 +89,30 @@ One file per atlas entry (one named sprite/frame). Proposed shape:
 
 ```yaml
 # website/scripts/sprites/hero/knight_0.yaml
-name: knight_0                # atlas key (unique across all sprites)
-family: hero                  # organizational + optional shared-palette source
-size: [16, 16]                # [w, h] — validator hard-fails mismatched rows
-description: >                 # the acceptance target (tier 1)
+name: knight_0 # atlas key (unique across all sprites)
+family: hero # organizational + optional shared-palette source
+size: [16, 16] # [w, h] — validator hard-fails mismatched rows
+description: > # the acceptance target (tier 1)
   Front-facing knight in silver plate with a gold crest and a blue tabard.
   Heavy melee silhouette, stance square, reads clearly at phone distance.
-reference: knight_0.ref.png   # optional (tier 2) — path to the LLM image used
-                              # to bootstrap this grid; committed next to the yaml
-palette:                      # per-sprite, single-char A-Za-z0-9 keys
-  s: '#c8ccd4'   # steel
-  d: '#8a8f9c'   # steel shadow
-  g: '#f4c430'   # gold crest
-  b: '#2a4d8f'   # tabard
+reference:
+  knight_0.ref.png # optional (tier 2) — path to the LLM image used
+  # to bootstrap this grid; committed next to the yaml
+palette: # per-sprite, single-char A-Za-z0-9 keys
+  s: "#c8ccd4" # steel
+  d: "#8a8f9c" # steel shadow
+  g: "#f4c430" # gold crest
+  b: "#2a4d8f" # tabard
   # '.' is implicit = transparent (reserved, never redefined)
-uses: []                      # optional: shared palette(s) to import, e.g. [moon]
+uses: [] # optional: shared palette(s) to import, e.g. [moon]
 grid: |
   ......ss......
   .....sdds.....
   ...           # exactly `size` rows, each exactly `size[0]` columns
-damage:                       # optional; omit → auto-derived wound is the floor
-  palette: blood              # references a GLOBAL damage palette (blood|ecto|sparks|…)
-  stages:                     # override art per wound stage the content def enables
-    hurt:   |
+damage: # optional; omit → auto-derived wound is the floor
+  palette: blood # references a GLOBAL damage palette (blood|ecto|sparks|…)
+  stages: # override art per wound stage the content def enables
+    hurt: |
       ...
     wrecked: |
       ...
@@ -127,7 +128,7 @@ Notes / decisions baked in:
 - **`uses:` (shared palette import)** is the base-palette escape hatch: a sprite
   is fully local by default, but may pull a family palette (moon-grey,
   mars-rust) and override/extend with local keys, so re-theming a family doesn't
-  mean editing every file. *(Open question — see below.)*
+  mean editing every file. _(Open question — see below.)_
 - **Animation is a naming convention, not a field.** `knight_0` / `knight_1` /
   `knight_jump` are separate files; which frames form a walk cycle stays in the
   animation manifest (as `ANIMATIONS` does today). Keeps each file single-purpose.
@@ -140,10 +141,10 @@ single manifest). A per-sprite `damage.palette: blood` references one. This
 centralizes the look of damage across the whole roster and lets one sprite opt
 into a bespoke overlay while everything else keeps the auto-derived floor.
 
-**Wound *stages* stay owned by the content defs.** Which stages a sprite gets
+**Wound _stages_ stay owned by the content defs.** Which stages a sprite gets
 (minion → `hurt`; elite → `+wrecked`; boss → `+dying`) and the gore style keep
 coming from `ENEMY_DEFS` (`role`, `gore`) via `index.mjs`, exactly as now — so
-art still can't drift from content. The YAML `damage` block is an *override* of
+art still can't drift from content. The YAML `damage` block is an _override_ of
 the generated art for a stage the content def already enables, not a new source
 of truth for which stages exist.
 
@@ -252,7 +253,7 @@ then the loop drives the sprite toward the image.
    still the authority on intent.
 
 The `reference` image is committed next to its YAML so the loop is
-reproducible; it is *not* shipped in the atlas (it's a source, like the grid).
+reproducible; it is _not_ shipped in the atlas (it's a source, like the grid).
 
 ---
 
@@ -278,7 +279,7 @@ reproducible; it is *not* shipped in the atlas (it's a source, like the grid).
    but re-theming a whole family means editing every file. Recommendation:
    **local by default, `uses:` may import a shared family palette.** Agree?
 2. **Wound-stage ownership.** Confirm stages stay owned by `ENEMY_DEFS`
-   (`role`/`gore`) and the YAML `damage` block is only an art *override* for an
+   (`role`/`gore`) and the YAML `damage` block is only an art _override_ for an
    already-enabled stage — never a new declaration of which stages exist.
 3. **Reference-image storage.** Commit alongside the YAML (reproducible, but
    grows the repo) vs. keep transient/gitignored (smaller, but the loop can't be
