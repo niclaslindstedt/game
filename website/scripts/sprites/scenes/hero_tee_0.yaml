@@ -2,15 +2,21 @@ name: hero_tee_0
 family: scenes
 size: [16, 16]
 description: >
-  Top-down 16px pixel figure of the hero in his everyday clothes: a plain white
-  t-shirt, blue jeans, and short dark-brown hair, facing forward. His at-home
-  look, worn walking out to the ship in the launch cutscene.
+  The hero in his everyday clothes — plain white t-shirt, blue jeans, short
+  dark-brown hair — his at-home look, worn walking out to the ship.
+subject:
+  kind: hero figure, in everyday clothes
+  build: a lean everyman
+  attire: plain white t-shirt and blue jeans
+  features: short dark-brown hair, arms at his sides
+  pose: standing idle
+  flavor: his at-home look, worn walking out to the ship in the launch cutscene
 palette:
-  O: "#1a1c2c"
-  W: "#f4f4f4"
-  j: "#4054bc"
-  k: "#342c26"
-  p: "#deaa86"
+  O: "#1a1c2c" # outline
+  W: "#f4f4f4" # white t-shirt
+  j: "#4054bc" # blue jeans
+  k: "#342c26" # dark-brown hair
+  p: "#deaa86" # skin
 grid: |
   ................
   .....OOOOO......

@@ -2,12 +2,16 @@ name: stars_a
 family: scenes
 size: [16, 12]
 description: >
-  A small parallax starfield tile, 16×12 px: a scatter of tiny white and pale
-  four-point star specks of varying brightness on transparent space, tiled and
-  drifted across the space cutscene backdrops.
+  A small parallax starfield tile — a scatter of tiny white and pale star
+  specks of varying brightness on transparent space.
+subject:
+  kind: scene backdrop / starfield tile
+  build: a scatter of tiny four-point star specks on transparent space
+  features: white and pale-grey specks of varying brightness
+  flavor: tiled and drifted across the space cutscene backdrops
 palette:
-  W: "#f4f4f4"
-  w: "#c6c6c6"
+  W: "#f4f4f4" # bright white star
+  w: "#c6c6c6" # faint grey star
 grid: |
   ................
   ...W............

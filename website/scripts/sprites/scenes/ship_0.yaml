@@ -2,16 +2,20 @@ name: ship_0
 family: scenes
 size: [24, 32]
 description: >
-  The hero's garage-built rocket standing upright on the pad, 24×32 px: a
-  slim grey-and-white hull with a pointed nose, a vertical row of round
-  porthole windows, and swept tail fins — cold, engines off. Homemade but
-  proud, flat 16-bit style.
+  The hero's garage-built rocket standing upright on the pad — a slim grey-white
+  hull with a pointed nose, portholes down the body, and swept tail fins, cold.
+subject:
+  kind: scene prop / rocket
+  build: a slim upright rocket with a pointed nose and swept tail fins at the base
+  features: a vertical row of round porthole windows down the hull
+  accent: pale cyan glass in the portholes
+  flavor: the hero's garage-built ship standing cold on the pad, engines off — homemade but proud
 palette:
-  A: "#8d9196"
-  O: "#1a1c2c"
-  a: "#d6dce4"
-  b: "#3f4553"
-  x: "#c5e6ebe1"
+  A: "#8d9196" # grey hull shadow
+  O: "#1a1c2c" # outline
+  a: "#d6dce4" # white hull
+  b: "#3f4553" # dark fin base / engine
+  x: "#c5e6ebe1" # pale cyan porthole glass
 grid: |
   ........................
   ...........OO...........
