@@ -2,19 +2,26 @@ name: nikola_tesla_0
 family: rift
 size: [24, 24]
 description: >
-  NIKOLA TESLA, the vanished inventor: a lean man in a dark Victorian
-  frock-suit, pale face with slicked hair and small goggles, crackling arcs
-  of cyan-white electricity leaping from both raised hands. Reads at a glance
-  as an electric wizard in period dress.
+  NIKOLA TESLA, the vanished inventor — a lean man in a dark Victorian frock-suit
+  throwing cyan-white lightning from both raised hands.
+subject:
+  kind: elite
+  name: NIKOLA TESLA
+  build: lean and upright
+  attire: a dark navy Victorian frock-suit
+  features: a pale face with slicked hair and small cyan goggles
+  accent: crackling arcs of cyan-white electricity leaping from both raised hands
+  pose: hands raised, discharging lightning
+  flavor: the inventor who fell through a torn sky in 1943 and warns of a machine mind humming at the far door
 palette:
-  N: "#2a2e46"
-  O: "#1a1c2c"
-  Q: "#60f0d0"
-  T: "#c0c5cf"
-  W: "#f4f4f4"
-  c: "#8ccdd7e1"
-  k: "#342c26"
-  p: "#deaa86"
+  N: "#2a2e46" # navy frock-suit
+  O: "#1a1c2c" # outline
+  Q: "#60f0d0" # cyan goggles and electric arcs
+  T: "#c0c5cf" # pale shirt stud
+  W: "#f4f4f4" # white shirt and arc cores
+  c: "#8ccdd7e1" # pale-cyan arc
+  k: "#342c26" # dark slicked hair
+  p: "#deaa86" # skin
 grid: |
   .........QOcOQO.........
   .......OckkkkkkcO.......

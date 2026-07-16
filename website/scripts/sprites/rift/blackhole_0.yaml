@@ -2,15 +2,20 @@ name: blackhole_0
 family: rift
 size: [32, 32]
 description: >
-  A black hole strewn along the road: a small pure-black core ringed by a
-  glowing gold-orange accretion halo, with a faint violet gravitational fringe
-  bending the void around it. Reads as a lethal well that drags everything in.
+  A black hole on the road — a pure-black core in a gold accretion ring, violet
+  gravity bending the void, dragging everything in.
+subject:
+  kind: hazard
+  build: a small round core ringed by a bright halo
+  features: gold-orange accretion ring around a pure-black event horizon, faint violet gravitational fringe curving in
+  accent: glowing gold accretion halo
+  flavor: a lethal well that drags everything toward it
 palette:
-  K: "#0a0910"
-  L: "#d4a5ec"
-  M: "#644696e6"
-  P: "#b05cdc"
-  y: "#ffb02e"
+  K: "#0a0910" # pure-black core
+  L: "#d4a5ec" # lilac gravity spark
+  M: "#644696e6" # deep violet gravity fringe
+  P: "#b05cdc" # violet gravity streak
+  y: "#ffb02e" # gold accretion ring
 grid: |
   ................................
   ................................

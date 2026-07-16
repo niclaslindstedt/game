@@ -2,16 +2,20 @@ name: unraveler_0
 family: rift
 size: [16, 16]
 description: >
-  A glitch in local reality: a flickering, unstable smear of magenta and
-  violet with cyan/pink chromatic-split fringing along its edges, like a
-  corrupted sprite mid-tear. Quick and hard to pin, it reads as reality
-  coming apart at the seam.
+  An unraveler — a flickering violet smear with cyan/pink chromatic fringing,
+  reality coming apart at the seam.
+subject:
+  kind: minion
+  build: a lumpy vertical blob, an unstable smear
+  features: violet body with cyan fringing down one edge and hot-pink fringing down the other, like a corrupted sprite mid-tear
+  accent: cyan-and-pink chromatic split
+  flavor: void fauna — a glitch in local reality, quick and hard to pin, reality coming apart at the seam
 palette:
-  M: "#644696e6"
-  O: "#1a1c2c"
-  Q: "#60f0d0"
-  X: "#ec52be"
-  m: "#a57de1e6"
+  M: "#644696e6" # deep violet body
+  O: "#1a1c2c" # outline
+  Q: "#60f0d0" # cyan fringe
+  X: "#ec52be" # hot-pink fringe
+  m: "#a57de1e6" # mid-violet body
 grid: |
   ......OOOO......
   .....QmmmmX.....

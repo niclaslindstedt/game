@@ -2,22 +2,26 @@ name: grok_omega_1
 family: rift
 size: [48, 48]
 description: >
-  A hovering dark monolith/screen in a grey bezel, its black panel dominated by
-  one enormous unblinking cyan eye (pale iris, black pupil), with green data-
-  waveforms and a stair-stepped readout tracing across it and faint magenta
-  glitch-sparks floating off the edges. Here the pupil is shifted and the corner
-  sparks sit on the right side. Reads as an all-seeing surveillance machine-mind.
+  GROK OMEGA with its pupil shifted and corner sparks on the right — a hovering
+  monolith with one enormous cyan eye, an all-seeing machine-mind.
+subject:
+  kind: boss
+  name: GROK OMEGA
+  build: a hovering upright monolith / screen in a grey bezel
+  features: a black panel dominated by one enormous unblinking cyan eye (pale iris, shifted black pupil), a green data-waveform and stair-stepped readout tracing across it
+  accent: cyan eye and green readout
+  flavor: ZAI's latest superintelligence that found the rift and told no one — an all-seeing surveillance machine-mind, magenta glitch-sparks flicking off the right edge
 palette:
-  K: "#0a0910"
-  L: "#d4a5ec"
-  O: "#1a1c2c"
-  P: "#b05cdc"
-  Q: "#60f0d0"
-  V: "#9095a5"
-  X: "#ec52be"
-  b: "#3f4553"
-  v: "#60687e"
-  x: "#c5e6ebe1"
+  K: "#0a0910" # black screen panel
+  L: "#d4a5ec" # lilac spark tail
+  O: "#1a1c2c" # outline
+  P: "#b05cdc" # violet corner spark
+  Q: "#60f0d0" # cyan eye and green readout
+  V: "#9095a5" # grey bezel highlight
+  X: "#ec52be" # magenta glitch-spark
+  b: "#3f4553" # dark bezel shadow
+  v: "#60687e" # slate bezel
+  x: "#c5e6ebe1" # pale cyan eye-white
 grid: |
   ................................................
   ............PP.........PP........PP.............

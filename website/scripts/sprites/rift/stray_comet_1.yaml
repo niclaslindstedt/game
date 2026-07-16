@@ -2,14 +2,18 @@ name: stray_comet_1
 family: rift
 size: [16, 16]
 description: >
-  A ragged ice-blue crystalline shard flecked with bright white glints, its
-  cluster of frozen chunks trailing a short streaming tail of scattered specks
-  below. Here the tail flickers to its alternate streak, the trailing specks
-  offset. Reads as a stray comet on a decaying orbit.
+  A stray comet with its tail flickered to the alternate streak — an ice-blue
+  crystalline shard on a decaying orbit.
+subject:
+  kind: minion
+  build: a ragged ice-blue crystalline shard trailing a short streaming tail
+  features: flecked with bright white glints, the tail flickered to its alternate streak with the trailing specks offset
+  accent: bright white ice glints
+  flavor: void fauna — one of a small flock on a decaying orbit, a frozen drifter that can't get back to wherever its tail points
 palette:
-  O: "#1a1c2c"
-  W: "#f4f4f4"
-  c: "#8ccdd7e1"
+  O: "#1a1c2c" # outline
+  W: "#f4f4f4" # white ice glint
+  c: "#8ccdd7e1" # ice-blue body
 grid: |
   ................
   ................

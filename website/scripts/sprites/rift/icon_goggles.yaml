@@ -2,13 +2,17 @@ name: icon_goggles
 family: rift
 size: [12, 12]
 description: >
-  Inventory icon for AVIATOR GOGGLES: a brown leather flight strap holding two
-  round amber-tinted lenses side by side. Earhart's headgear, reads instantly
-  as a pilot's goggles.
+  Inventory icon for AVIATOR GOGGLES — two amber lenses on a brown leather
+  flight strap.
+subject:
+  kind: UI icon
+  build: two round lenses side by side on a strap
+  features: brown leather flight strap, amber-tinted lenses
+  flavor: EARHART's headgear — a pilot's goggles
 palette:
-  B: "#92643e"
-  O: "#1a1c2c"
-  y: "#ffb02e"
+  B: "#92643e" # brown leather strap
+  O: "#1a1c2c" # outline
+  y: "#ffb02e" # amber lens
 grid: |
   ............
   ............

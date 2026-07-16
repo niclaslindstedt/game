@@ -2,17 +2,22 @@ name: collapsed_star_0
 family: rift
 size: [16, 15]
 description: >
-  A star jelly that fell all the way in: a violet-black translucent
-  jellyfish drifter, darker and heavier-looking than the teal star jelly,
-  carrying its own tiny event horizon at its core. Phases through solids.
+  A star jelly that fell all the way in — a violet-black jellyfish carrying its
+  own event horizon, phasing through solids.
+subject:
+  kind: drifter creature
+  build: a translucent jellyfish bell trailing four thin tendrils
+  features: violet-black bell with a tiny pure-black event horizon and a magenta glint at its core
+  accent: magenta glint at the core
+  flavor: a teal star jelly that fell all the way in, darker and heavier, faintly see-through and phasing through solids
 palette:
-  K: "#0a0910"
-  L: "#d4a5ec"
-  M: "#644696e6"
-  O: "#1a1c2c"
-  P: "#b05cdc"
-  X: "#ec52be"
-  m: "#a57de1e6"
+  K: "#0a0910" # pure-black event horizon
+  L: "#d4a5ec" # lilac bell highlight
+  M: "#644696e6" # deep violet tendril
+  O: "#1a1c2c" # outline
+  P: "#b05cdc" # violet bell
+  X: "#ec52be" # magenta core glint
+  m: "#a57de1e6" # mid-violet tendril
 grid: |
   ................
   ................

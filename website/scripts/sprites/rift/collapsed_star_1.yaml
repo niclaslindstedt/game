@@ -2,18 +2,22 @@ name: collapsed_star_1
 family: rift
 size: [16, 16]
 description: >
-  A small violet-black translucent jellyfish drifter: a purple bell with a tiny
-  pure-black event horizon and a magenta glint at its core, trailing four thin
-  fading tendrils below. Darker and heavier-looking than a teal jelly. Here the
-  tendrils hang slightly drawn up. Faintly see-through, phasing through solids.
+  A collapsed star jelly with its tendrils drawn slightly up — a violet-black
+  jellyfish carrying its own event horizon, phasing through solids.
+subject:
+  kind: drifter creature
+  build: a translucent jellyfish bell trailing four thin tendrils drawn slightly up
+  features: violet-black bell with a tiny pure-black event horizon and a magenta glint at its core
+  accent: magenta glint at the core
+  flavor: a teal star jelly that fell all the way in, darker and heavier, faintly see-through and phasing through solids
 palette:
-  K: "#0a0910"
-  L: "#d4a5ec"
-  M: "#644696e6"
-  O: "#1a1c2c"
-  P: "#b05cdc"
-  X: "#ec52be"
-  m: "#a57de1e6"
+  K: "#0a0910" # pure-black event horizon
+  L: "#d4a5ec" # lilac bell highlight
+  M: "#644696e6" # deep violet tendril
+  O: "#1a1c2c" # outline
+  P: "#b05cdc" # violet bell
+  X: "#ec52be" # magenta core glint
+  m: "#a57de1e6" # mid-violet tendril
 grid: |
   ................
   ................

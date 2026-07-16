@@ -2,15 +2,19 @@ name: floating_rock
 family: rift
 size: [16, 16]
 description: >
-  Ambient decor: a small grey pebble of rock drifting weightlessly in the
-  void, softly shaded, a bit of harmless debris floating past. Reads as a
-  little chunk of stone hanging in nothing.
+  A small grey pebble drifting weightlessly in the void — a harmless bit of
+  debris.
+subject:
+  kind: ambient decor prop
+  build: a small softly shaded grey pebble of rock
+  accent: a couple of faint violet glints drifting beneath it
+  flavor: a harmless chunk of stone hanging in nothing
 palette:
-  F: "#a2a4ad"
-  O: "#1a1c2c"
-  P: "#b05cdc"
-  b: "#3f4553"
-  f: "#888a96"
+  F: "#a2a4ad" # light grey rock
+  O: "#1a1c2c" # outline
+  P: "#b05cdc" # violet glint
+  b: "#3f4553" # dark slate shadow
+  f: "#888a96" # mid-grey rock
 grid: |
   ................
   ................

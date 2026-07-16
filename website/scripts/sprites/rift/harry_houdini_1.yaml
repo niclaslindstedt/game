@@ -2,20 +2,26 @@ name: harry_houdini_1
 family: rift
 size: [24, 24]
 description: >
-  A translucent teal ghost of a man, faintly luminous and see-through, with dark
-  hair, hollow eyes and a golden padlock hung on his chest, his lower body
-  tapering into two wispy dissolving legs. Here the apparition wavers mid-
-  flicker, the trailing legs shifted as it fades. Reads as a spectral
-  escapologist half-dissolved into the void.
+  HARRY HOUDINI wavering mid-flicker — the translucent teal ghost with a golden
+  padlock, trailing legs shifted as it fades.
+subject:
+  kind: apparition
+  name: HARRY HOUDINI
+  build: a see-through man tapering into two wispy dissolving legs
+  attire: faintly luminous and translucent
+  features: dark hair, hollow eyes, a golden padlock hung on his chest
+  accent: golden padlock
+  pose: wavering mid-flicker, the trailing legs shifted as it fades
+  flavor: the escape artist whose greatest escape in 1926 was out of the world itself; appears only to speak and dissolve
 palette:
-  C: "#5b858ce1"
-  O: "#1a1c2c"
-  V: "#9095a5"
-  c: "#8ccdd7e1"
-  k: "#342c26"
-  o: "#d6a842"
-  w: "#c6c6c6"
-  y: "#ffb02e"
+  C: "#5b858ce1" # deep teal collar shadow
+  O: "#1a1c2c" # outline
+  V: "#9095a5" # grey body highlight
+  c: "#8ccdd7e1" # translucent teal body
+  k: "#342c26" # dark hair and padlock keyhole
+  o: "#d6a842" # dark gold padlock ring
+  w: "#c6c6c6" # pale grey highlight
+  y: "#ffb02e" # bright gold padlock
 grid: |
   .......OkkkkkkkkO.......
   .......OkkkkkkkkO.......

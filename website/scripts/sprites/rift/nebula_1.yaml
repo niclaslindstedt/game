@@ -2,14 +2,18 @@ name: nebula_1
 family: rift
 size: [16, 16]
 description: >
-  A nebula patch tile, alternate variant: soft violet-and-magenta wisps of
-  glowing cloud over the dark star-flecked void floor, the swirls arranged
-  differently so tiled patches don't repeat. Drifting purple gas overlay.
+  A nebula patch tile, alternate variant — violet cloud wisps arranged
+  differently so tiled patches don't repeat.
+subject:
+  kind: ground overlay tile
+  build: soft wisps of glowing cloud over the void floor
+  features: violet gas over dark star-flecked ground, the swirls arranged differently so tiled patches don't repeat
+  flavor: drifting purple gas where the hallucination gathers
 palette:
-  d: "#503270"
-  e: "#6c4696"
-  u: "#8c8cb6"
-  z: "#423c68"
+  d: "#503270" # deep violet cloud
+  e: "#6c4696" # violet cloud
+  u: "#8c8cb6" # pale star-speck
+  z: "#423c68" # dark void ground
 grid: |
   zzzzzzzzzzzzzzzz
   zzzzzzzzzzeezzzz

@@ -2,23 +2,30 @@ name: amelia_earhart_1
 family: rift
 size: [24, 24]
 description: >
-  A front-facing figure in a brown leather flight jacket over dark trousers,
-  short tousled hair and a pale scarf, brandishing a thin light blade out to one
-  side; caught mid-stride with the feet staggered, one leg forward and the other
-  trailing. Reads as a 1930s aviator (AMELIA EARHART) who never stopped flying.
+  AMELIA EARHART mid-stride — the leather-jacketed 1930s pilot brandishing her
+  blade out to one side, feet staggered as she advances.
+subject:
+  kind: elite
+  name: AMELIA EARHART
+  build: a trim aviator
+  attire: a brown leather flight jacket and cap over dark trousers, a pale scarf
+  features: amber flight goggles across the eyes
+  accent: a thin light blade held out to one side
+  pose: caught mid-stride, feet staggered, one leg forward and the other trailing
+  flavor: the lost 1930s aviatrix who flew into a cloud with no other side and never stopped circling
 palette:
-  B: "#92643e"
-  E: "#5d4028"
-  O: "#1a1c2c"
-  S: "#b39378"
-  T: "#c0c5cf"
-  W: "#f4f4f4"
-  b: "#3f4553"
-  k: "#342c26"
-  p: "#deaa86"
-  q: "#96762e"
-  w: "#c6c6c6"
-  y: "#ffb02e"
+  B: "#92643e" # brown leather jacket
+  E: "#5d4028" # dark leather cap and trim
+  O: "#1a1c2c" # outline
+  S: "#b39378" # pale tan scarf
+  T: "#c0c5cf" # pale goggle frame
+  W: "#f4f4f4" # white blade
+  b: "#3f4553" # dark grey trousers
+  k: "#342c26" # near-black boots
+  p: "#deaa86" # skin
+  q: "#96762e" # brass jacket buttons
+  w: "#c6c6c6" # pale scarf highlight
+  y: "#ffb02e" # amber goggles and buckle
 grid: |
   ........................
   ........OOOOOOO.........

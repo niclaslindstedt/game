@@ -2,13 +2,17 @@ name: void_0
 family: rift
 size: [16, 16]
 description: >
-  The rift's ground tile: seamless dark-purple/near-black star-flecked nothing,
-  a few faint pinprick stars scattered on deep void. The floor that isn't
-  there — the common variant, reads as empty between-universes space.
+  The rift's ground tile — seamless dark-purple star-flecked void, the common
+  floor that isn't there.
+subject:
+  kind: ground tile
+  build: seamless dark-purple star-flecked nothing
+  features: a few faint pinprick stars scattered on deep void
+  flavor: the floor that isn't there — empty between-universes space
 palette:
-  Z: "#2e2a4c"
-  u: "#8c8cb6"
-  z: "#423c68"
+  Z: "#2e2a4c" # darker void patch
+  u: "#8c8cb6" # pale star-speck
+  z: "#423c68" # deep void ground
 grid: |
   zzzzzzzzzzzzzzzz
   zzzzzzzzzzzzzzzz

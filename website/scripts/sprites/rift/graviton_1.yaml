@@ -2,21 +2,24 @@ name: graviton_1
 family: rift
 size: [20, 20]
 description: >
-  A small round collapsed star: a bright golden accretion ring around a
-  pure-black event-horizon core with a white pinprick of light in it, all
-  wrapped in a mottled violet halo. Here two lilac spark-dots sit at the lower-
-  left and upper-right of the halo, the glow rotated mid-pulse. Small and round
-  but reads as immensely, dangerously heavy.
+  A graviton mid-pulse — a gold ring around a black core in a violet halo, two
+  lilac sparks at the corners, small but weighing a battleship.
+subject:
+  kind: minion
+  build: a small round body, a collapsed star
+  features: a bright golden accretion ring around a pure-black event-horizon core with a white pinprick of light, wrapped in a mottled violet halo
+  accent: golden accretion ring, with two lilac spark-dots at the lower-left and upper-right
+  flavor: void fauna — small and round but reads as immensely, dangerously heavy, the glow rotated mid-pulse
 palette:
-  K: "#0a0910"
-  L: "#d4a5ec"
-  M: "#644696e6"
-  O: "#1a1c2c"
-  W: "#f4f4f4"
-  Y: "#ffe3b6"
-  e: "#6c4696"
-  o: "#d6a842"
-  y: "#ffb02e"
+  K: "#0a0910" # pure-black core
+  L: "#d4a5ec" # lilac halo spark
+  M: "#644696e6" # deep violet halo
+  O: "#1a1c2c" # outline
+  W: "#f4f4f4" # white pinprick of light
+  Y: "#ffe3b6" # pale gold ring highlight
+  e: "#6c4696" # violet halo mottle
+  o: "#d6a842" # dark gold ring
+  y: "#ffb02e" # bright gold accretion ring
 grid: |
   ....................
   ....................

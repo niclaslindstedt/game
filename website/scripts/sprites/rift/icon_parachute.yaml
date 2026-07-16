@@ -2,14 +2,18 @@ name: icon_parachute
 family: rift
 size: [12, 12]
 description: >
-  Inventory icon for the GOLDEN PARACHUTE: a domed golden-yellow parachute
-  canopy with shroud lines gathering to a small dark payload beneath. A
-  satirical exec's escape, reads as a shining gold chute.
+  Inventory icon for the GOLDEN PARACHUTE — a golden canopy over a small dark
+  payload.
+subject:
+  kind: UI icon
+  build: a domed parachute canopy with shroud lines gathering to a small payload
+  features: golden-yellow canopy
+  flavor: a satirical exec's shining escape
 palette:
-  O: "#1a1c2c"
-  W: "#f4f4f4"
-  Y: "#ffe3b6"
-  y: "#ffb02e"
+  O: "#1a1c2c" # outline
+  W: "#f4f4f4" # white payload glint
+  Y: "#ffe3b6" # pale gold canopy highlight
+  y: "#ffb02e" # golden canopy
 grid: |
   ............
   ....yyyy....

@@ -2,14 +2,18 @@ name: rift_shard
 family: rift
 size: [16, 16]
 description: >
-  A solid obstacle: a jagged crystallized moment — a faceted violet-purple
-  crystal shard of somewhere else, frozen mid-fall. Angular and glassy, it
-  reads as a shard of reality that stops sight, shots and blasts.
+  A solid obstacle — a jagged violet crystal shard of somewhere else, frozen
+  mid-fall, blocking sight and shots.
+subject:
+  kind: obstacle prop
+  build: a jagged faceted crystal shard, angular and glassy
+  features: violet-purple crystal frozen mid-fall
+  flavor: a crystallized moment of somewhere else that stops sight, shots and blasts
 palette:
-  L: "#d4a5ec"
-  M: "#644696e6"
-  O: "#1a1c2c"
-  P: "#b05cdc"
+  L: "#d4a5ec" # lilac facet highlight
+  M: "#644696e6" # deep violet facet
+  O: "#1a1c2c" # outline
+  P: "#b05cdc" # violet crystal
 grid: |
   ................
   ......OO........

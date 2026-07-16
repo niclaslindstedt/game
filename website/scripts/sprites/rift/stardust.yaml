@@ -2,12 +2,16 @@ name: stardust
 family: rift
 size: [16, 16]
 description: >
-  Ambient decor: a loose scatter of tiny pale-blue and white star-specks
-  hanging in the void, a faint sprinkle of glittering dust. Reads as a wisp of
-  drifting stardust, barely there.
+  Ambient decor — a loose scatter of pale-blue and white star-specks, a faint
+  sprinkle of stardust.
+subject:
+  kind: ambient decor
+  build: a loose scatter of tiny star-specks
+  features: pale-blue and white specks hanging in the void
+  flavor: a faint sprinkle of glittering stardust, barely there
 palette:
-  u: "#8c8cb6"
-  x: "#c5e6ebe1"
+  u: "#8c8cb6" # pale-blue star-speck
+  x: "#c5e6ebe1" # white star-speck
 grid: |
   ................
   ................

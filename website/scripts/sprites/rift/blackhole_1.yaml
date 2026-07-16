@@ -2,16 +2,20 @@ name: blackhole_1
 family: rift
 size: [32, 32]
 description: >
-  A pure-black round core ringed by a glowing gold-orange accretion halo, with
-  faint violet gravitational streaks curving inward from the corners. Here the
-  spiral streaks sweep from the top-left and bottom-right, the swirl rotated
-  mid-pull. Reads as a lethal well that drags everything in.
+  A black hole mid-pull — a pure-black core in a gold accretion ring, violet
+  streaks spiralling from top-left and bottom-right, dragging everything in.
+subject:
+  kind: hazard
+  build: a small round core ringed by a bright halo
+  features: gold-orange accretion ring around a pure-black event horizon, violet gravitational streaks spiralling in from the corners
+  accent: glowing gold accretion halo
+  flavor: a lethal well that drags everything toward it, the swirl rotated mid-pull
 palette:
-  K: "#0a0910"
-  L: "#d4a5ec"
-  M: "#644696e6"
-  P: "#b05cdc"
-  y: "#ffb02e"
+  K: "#0a0910" # pure-black core
+  L: "#d4a5ec" # lilac gravity spark
+  M: "#644696e6" # deep violet gravity fringe
+  P: "#b05cdc" # violet gravity streak
+  y: "#ffb02e" # gold accretion ring
 grid: |
   ................................
   ................................

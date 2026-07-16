@@ -2,16 +2,24 @@ name: lucky_0
 family: rift
 size: [24, 24]
 description: >
-  LUCKY, the missing leprechaun: a small round man in a green coat and tall
-  green hat, ginger beard, tiny and impish, with a glint of gold about him.
-  Reads at a glance as a fairy-tale leprechaun guarding his luck.
+  LUCKY, the missing leprechaun — a small round man in a green coat and tall hat
+  with a ginger beard and a glint of gold.
+subject:
+  kind: elite
+  name: LUCKY
+  build: a small, round, impish man
+  attire: a green coat and tall green hat with a gold hatband and buckle
+  features: a bushy orange-ginger beard
+  accent: glints of gold
+  pose: standing planted
+  flavor: a leprechaun who stepped out of a fairy ring centuries ago and guards his pot of gold off the main road
 palette:
-  G: "#4a7a3e"
-  O: "#1a1c2c"
-  g: "#3d6433"
-  p: "#deaa86"
-  t: "#cc7028"
-  y: "#ffb02e"
+  G: "#4a7a3e" # green coat and hat
+  O: "#1a1c2c" # outline
+  g: "#3d6433" # dark green shadow
+  p: "#deaa86" # skin
+  t: "#cc7028" # orange-ginger beard
+  y: "#ffb02e" # gold hatband and buckle
 grid: |
   ........................
   ........................
