@@ -8,6 +8,7 @@
 import { describe, expect, it } from "vitest";
 
 import { simulateProgression } from "../../src/sim/analytic.ts";
+import { buildStatWeights } from "@game/core";
 // Installs the fixture catalogs before any simulation builds a game.
 import "./helpers.ts";
 
@@ -116,5 +117,36 @@ describe("simulateProgression", () => {
     for (let i = 1; i < levels.length; i++) {
       expect(levels[i]!).toBeGreaterThanOrEqual(levels[i - 1]!);
     }
+  });
+
+  it("a named build sets the stat weights from the shared catalog", () => {
+    const report = simulateProgression({
+      difficulties: ["medium"],
+      levels: ["test_level"],
+      seed: 7,
+      targetLevel: 1,
+      build: "magic",
+    });
+    // The report echoes the build, and its weights are exactly the magic
+    // catalog entry — so the paper sim spends points as the autopilot does.
+    expect(report.build).toBe("magic");
+    expect(report.statWeights).toEqual(buildStatWeights("magic"));
+    // A magic build pours the most into intelligence.
+    const top = Object.entries(report.statWeights).sort(
+      (a, b) => (b[1] ?? 0) - (a[1] ?? 0),
+    )[0]![0];
+    expect(top).toBe("intelligence");
+  });
+
+  it("an explicit statWeights overrides the build shorthand", () => {
+    const report = simulateProgression({
+      difficulties: ["medium"],
+      levels: ["test_level"],
+      seed: 7,
+      targetLevel: 1,
+      build: "magic",
+      statWeights: { strength: 3 },
+    });
+    expect(report.statWeights).toEqual({ strength: 3 });
   });
 });

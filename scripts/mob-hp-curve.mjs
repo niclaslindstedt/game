@@ -48,6 +48,7 @@ const { DIFFICULTY_ORDER } = await load("src/game/defs/difficulties.ts");
 const { mobHpScaleFor, mobLevelFor } = await load("src/game/menace.ts");
 const { mobArmorReduction } = await load("src/game/loot.ts");
 const { LEVELING } = await load("src/game/config.ts");
+const { STAT_BUILDS } = await load("src/game/builds.ts");
 
 // ---- Flags ---------------------------------------------------------------------
 
@@ -62,9 +63,23 @@ if (flag("help")) {
   console.log(
     "usage: node scripts/mob-hp-curve.mjs " +
       "[--difficulty all|easy[,jesus,…]] [--to 70] [--seed N] [--html out.html] " +
-      "[--no-unique] [--no-legendary] [--no-sets] [--no-artifact]",
+      "[--class melee|ranged|magic|balanced] " +
+      "[--no-unique] [--no-legendary] [--no-sets] [--no-artifact]\n\n" +
+      "--class picks the stat-distribution build the geared hero levels as (default: a\n" +
+      "        neutral bruiser). It changes the hero's per-hit/dps and the gear the\n" +
+      "        auto-equip wears, so the hits-to-kill curve reflects that build.",
   );
   process.exit(0);
+}
+
+// The stat-distribution build the geared hero levels as (default: the analytic
+// sim's neutral bruiser weights). Validated against the shared catalog.
+const heroClass = opt("class");
+if (heroClass !== undefined && !STAT_BUILDS.includes(heroClass)) {
+  console.error(
+    `unknown class "${heroClass}" — expected one of ${STAT_BUILDS.join(", ")}`,
+  );
+  process.exit(1);
 }
 
 // Named tiers the hero refuses to equip (NORMAL-gear calibration).
@@ -115,6 +130,7 @@ for (const difficulty of difficulties) {
   const report = simulateProgression({
     difficulties: [difficulty],
     seed,
+    build: heroClass,
     targetLevel: Math.min(LEVELING.maxLevel, toLevel + 4),
     excludeTiers,
   });
@@ -154,9 +170,10 @@ for (const difficulty of difficulties) {
 // ---- Console table --------------------------------------------------------------
 
 console.log(
-  excludeTiers.length
-    ? `Hero gear: NORMAL only (leaving on the ground: ${excludeTiers.join(", ")})`
-    : "Hero gear: ALL tiers (named drops included)",
+  `Hero build: ${heroClass ?? "default (neutral bruiser)"} · ` +
+    (excludeTiers.length
+      ? `gear: NORMAL only (leaving on the ground: ${excludeTiers.join(", ")})`
+      : "gear: ALL tiers (named drops included)"),
 );
 
 for (const difficulty of difficulties) {

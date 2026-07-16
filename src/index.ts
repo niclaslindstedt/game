@@ -70,6 +70,19 @@ export {
   type BotStrategy,
 } from "./game/bot.ts";
 
+// Stat-distribution builds — the one source of truth the balance tooling
+// compares builds against (melee/ranged/magic/balanced): how a hero spends
+// level-up points, and through the stat-aware auto-equip the gear that follows.
+export {
+  BUILD_ROTATION,
+  buildStats,
+  buildStatWeights,
+  buildWeaponLane,
+  isStatBuild,
+  STAT_BUILDS,
+  type StatBuild,
+} from "./game/builds.ts";
+
 // Player-driven mutations (level-up chooser, inventory UI, phase toggles).
 export {
   adoptEquipment,

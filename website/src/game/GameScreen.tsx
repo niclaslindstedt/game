@@ -1066,9 +1066,9 @@ export function GameScreen({
     }
 
     // Autoplay (?bot=<strategy>): the engine bot steers instead of the
-    // pointer and spends level-ups itself. An optional ?botProfile=<lane>
-    // (melee/ranged/magic/auto) commits the build to a weapon lane. See the
-    // playtest skill.
+    // pointer and spends level-ups itself. An optional ?botProfile=<build>
+    // (melee/ranged/magic/balanced/auto) commits the hero to a stat-distribution
+    // build — a lane, or the even `balanced` spread. See the playtest skill.
     const requested = params.get("bot");
     const requestedProfile = params.get("botProfile");
     const profile =

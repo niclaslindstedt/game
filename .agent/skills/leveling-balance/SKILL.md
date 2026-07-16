@@ -45,6 +45,19 @@ itself no matter how the horde scales.
 > `scripts/mob-hp-curve.mjs` (see the `simulate-run` skill); tune PACE with the
 > `LEVELING` knobs below. The two no longer move together.
 
+> **Balance is per-BUILD — always check all four.** The hero's damage,
+> survivability, and hits-to-kill depend on the stat-distribution build
+> (`melee`/`ranged`/`magic`/`balanced` — `src/game/builds.ts`), so any toughness
+> or pace change must be verified across every build, not just the default. The
+> **pace/XP curve itself is build-INVARIANT** (kills-per-level cancels the hero's
+> damage — so `scripts/leveling-curve.mjs` needs no `--class`), but **the
+> hits-to-kill / mob-hp reads are NOT**: pass `--class` to `scripts/mob-hp-curve.mjs`
+> and overlay every build with `node scripts/progression-sim.mjs --class all`
+> (one comparison graph, aligned by hero level — the read for which build leads
+> at each stage). Run `node scripts/simulate-run.mjs --class all --verdict` as the
+> matrix check. The goal is each build strongest in its own stretch, none walling
+> or one-shotting where the others are on-curve.
+
 **Golden XP arrows are a SECOND faucet — a CATCH-UP one.** They drop from the
 loot rain (`LOOT.dropChance × LOOT.arrowShare × the difficulty's `arrowDropMult`,
 tuned to ~one per 50 kills at medium) and, while the hero is UNDER-levelled for

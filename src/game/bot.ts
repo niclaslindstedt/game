@@ -11,6 +11,8 @@
 
 import { clamp, distance } from "@game/lib/vec.ts";
 import type { Vec2 } from "@game/lib/vec.ts";
+import { BUILD_ROTATION, STAT_BUILDS } from "./builds.ts";
+import type { StatBuild } from "./builds.ts";
 import { MANA } from "./config.ts";
 import { enemyDef } from "./defs/enemies/index.ts";
 import { weaponDef } from "./defs/equipment.ts";
@@ -63,18 +65,22 @@ export const BOT_STRATEGIES: BotStrategy[] = [
 export const BOT_POSTURES: BotStrategy[] = ["aggro", "balanced", "flee"];
 
 /**
- * A bot's COMBAT PROFILE: the weapon lane the build commits to, orthogonal to
- * the positioning {@link BotStrategy}. It steers stat allocation into that
- * lane's attributes; the stat-aware auto-equip (`weaponScore`) then naturally
- * prefers that class of weapon, so a `magic` bot ends up casting and a `melee`
- * bot ends up swinging without the bot ever touching equipment directly.
- * `auto` (the default) keeps the old emergent behavior: the lane is whichever
- * class the hero has invested the most in, falling back to the held weapon.
+ * A bot's COMBAT PROFILE: the stat-distribution build it spends level-up points
+ * on, orthogonal to the positioning {@link BotStrategy}. A fixed {@link StatBuild}
+ * (`melee`/`ranged`/`magic`) steers allocation into that weapon lane's
+ * attributes so the stat-aware auto-equip (`weaponScore`) naturally prefers that
+ * class of weapon — a `magic` bot ends up casting, a `melee` bot swinging —
+ * without the bot ever touching equipment directly; `balanced` spreads the
+ * points across every stat and lets the auto-equip pick emergently. `auto` (the
+ * default) keeps the old emergent behavior: the lane is whichever class the hero
+ * has invested the most in, falling back to the held weapon.
  */
-export type BotProfile = "auto" | "melee" | "ranged" | "magic";
+export type BotProfile = StatBuild | "auto";
 
-/** Every profile, for UIs and harnesses that validate a requested name. */
-export const BOT_PROFILES: BotProfile[] = ["auto", "melee", "ranged", "magic"];
+/** Every profile, for UIs and harnesses that validate a requested name. The
+ * four fixed profiles are the {@link StatBuild} distributions; `auto` keeps the
+ * emergent (whichever lane the hero has invested most in) behaviour. */
+export const BOT_PROFILES: BotProfile[] = ["auto", ...STAT_BUILDS];
 
 /**
  * A bot instance: the positioning `strategy` and the weapon-lane `profile`.
@@ -314,71 +320,22 @@ function needsRepair(state: GameState): boolean {
 }
 
 /**
- * The 8-beat allocation cycle each lane spends its points on — a WIELDABLE build
- * that commits to ONE lane (so the bot deepens one attribute instead of
- * thrashing every time auto-equip swaps its weapon) yet spreads the rest across
- * every stat that grows the lane's DAMAGE, not just its gate. Half of every
- * cycle goes to the lane's REQUIRED attribute (`REQ_STAT`) so the equip gates
- * stay cleared as they scale (~50% comfortably clears the ~40% asked). The other
- * half buys real output:
+ * Which stat the bot spends its next point on. The rotation each build walks —
+ * the lane-biased builds and the balanced spread — lives in the shared
+ * {@link BUILD_ROTATION} catalog (src/game/builds.ts), so the autopilot and the
+ * analytic paper sim spend points the same way from one definition. A fixed
+ * profile (`melee`/`ranged`/`magic`/`balanced`) walks that build's rotation
+ * outright; `auto` walks the EMERGENT lane's rotation (see {@link botLane}).
  *
- * - **INTELLIGENCE rides EVERY build**, physical lanes included — it widens the
- *   swing/blast AoE cone (`aoePerInt`), extends weapon reach (`rangePerInt`), and
- *   lifts crit damage (`critDamagePerInt`), so a melee cleave hits more bodies
- *   from further out and a gun reaches across the screen.
- * - **DEXTERITY** is the SPEED attribute for melee & ranged (`SPEED_STAT`), so
- *   both physical lanes buy swing/fire cadence with it; it also gates ranged.
- * - **STRENGTH** is the DAMAGE attribute for BOTH physical lanes (guns scale off
- *   STR, not DEX), so ranged banks it too.
- * - **SPIRIT** feeds a caster's mana pool and health regen; **STAMINA** the legs
- *   every lane needs to reposition.
- *
- * Keyed off total points already spent (not the level), so each individual point
- * rotates through the cycle rather than a whole level-up dumping into one stat.
- * Called whenever `pendingStatPoints > 0`.
+ * Keyed off total points already spent (not the level), so each individual
+ * point rotates through the cycle rather than a whole level-up dumping into one
+ * stat. Called whenever `pendingStatPoints > 0`.
  */
-const LANE_BUILD: Record<WeaponClass, StatName[]> = {
-  // STR both gates AND scales the blow (REQ==DAMAGE) → it dominates; DEX buys
-  // swing cadence, INT the cleave/reach/crit that turns a swing into an AoE.
-  melee: [
-    "strength",
-    "strength",
-    "intelligence",
-    "strength",
-    "dexterity",
-    "strength",
-    "intelligence",
-    "stamina",
-  ],
-  // DEX gates AND speeds the shots; STR is the ranged DAMAGE stat; INT buys
-  // reach/AoE/crit so the shots carry and cleave.
-  ranged: [
-    "dexterity",
-    "strength",
-    "dexterity",
-    "intelligence",
-    "dexterity",
-    "strength",
-    "dexterity",
-    "intelligence",
-  ],
-  // INT gates, scales, speeds, AND buys reach/AoE/crit all at once → it
-  // dominates; SPIRIT feeds the mana pool + regen, STAMINA the legs.
-  magic: [
-    "intelligence",
-    "intelligence",
-    "spirit",
-    "intelligence",
-    "intelligence",
-    "spirit",
-    "intelligence",
-    "stamina",
-  ],
-};
-
 export function botAllocate(bot: Bot, state: GameState): StatName {
-  const lane = botLane(state, bot.profile);
-  const build = LANE_BUILD[lane];
+  const build =
+    bot.profile === "auto"
+      ? BUILD_ROTATION[botLane(state)]
+      : BUILD_ROTATION[bot.profile];
   const spent = Object.values(state.player.spentStats).reduce(
     (a, b) => a + b,
     0,
@@ -387,17 +344,17 @@ export function botAllocate(bot: Bot, state: GameState): StatName {
 }
 
 /**
- * The weapon class a bot has committed to. A fixed {@link BotProfile}
- * (`melee`/`ranged`/`magic`) pins the lane outright, so the whole build — stat
- * allocation, and through the stat-aware auto-equip the weapon itself — bends
- * that way from level 1. Under `auto` the lane is emergent: the class whose
- * REQUIRED attribute the hero has poured the most CHOSEN points into, with a
- * tie (a brand-new hero with nothing invested included) falling back to the
- * class of the weapon in hand, so the first allocations follow the difficulty's
- * starter and every one after reinforces the deepest lane.
+ * The weapon class the EMERGENT (`auto`) profile has committed to: the class
+ * whose REQUIRED attribute the hero has poured the most CHOSEN points into, with
+ * a tie (a brand-new hero with nothing invested included) falling back to the
+ * class of the weapon in hand — so the first allocations follow the difficulty's
+ * starter and every one after reinforces the deepest lane. The fixed profiles
+ * (`melee`/`ranged`/`magic`/`balanced`) bypass this and index
+ * {@link BUILD_ROTATION} directly, so the whole build — stat allocation, and
+ * through the stat-aware auto-equip the weapon itself — bends that way from
+ * level 1.
  */
-function botLane(state: GameState, profile: BotProfile = "auto"): WeaponClass {
-  if (profile !== "auto") return profile;
+function botLane(state: GameState): WeaponClass {
   const stats = state.player.stats;
   const held = weaponDef(state.player.equipment.weapon.defId).class;
   let lane = held;

@@ -34,6 +34,30 @@ const STAT_KEYS = [
   "spirit",
 ];
 
+/** The metrics the BUILD COMPARISON overlays one line-per-build against hero
+ * level — the read for whether a build is overpowered and where each leads.
+ * `blowsToKill` and `menace` are the balance instrument: lower blows-to-kill /
+ * higher menace = the stronger build at that level. */
+const COMPARE_METRICS = [
+  { key: "dps", label: "Damage per second" },
+  { key: "perHit", label: "Damage per hit", decimals: 1 },
+  { key: "maxHp", label: "Max health" },
+  { key: "blowsToKill", label: "Blows to kill a minion", decimals: 1 },
+  { key: "menace", label: "Sustained RAMPAGE stage" },
+  { key: "crit", label: "Crit chance", isPct: true },
+  { key: "armorRed", label: "Armor reduction", isPct: true },
+  { key: "mobHp", label: "Minion HP faced" },
+];
+
+/** The accent colour each build draws in (all have light+dark overrides in
+ * STYLE, and adjacent pairs clear the CVD floor). */
+const BUILD_ACCENT = {
+  melee: "dmg",
+  ranged: "armor",
+  magic: "crit",
+  balanced: "hp",
+};
+
 export function buildChartHtml(report) {
   const points = report.checkpoints.map((cp) => ({
     k: cp.totalKills,
@@ -91,6 +115,7 @@ export function buildChartHtml(report) {
       <div><dt>Final level</dt><dd>${report.heroLevelEnd}</dd></div>
       <div><dt>Kills simulated</dt><dd>${report.totalKills.toLocaleString("en-US")}</dd></div>
       <div><dt>Level passes</dt><dd>${report.levels.length}</dd></div>
+      ${report.build ? `<div><dt>Class</dt><dd>${report.build}</dd></div>` : ""}
       <div><dt>Stat build</dt><dd>${weightDigest || "default"}</dd></div>
       <div><dt>Snapshot every</dt><dd>${report.batchSize} kills</dd></div>
       <div><dt>Seed</dt><dd>${report.seed}</dd></div>
@@ -115,6 +140,81 @@ export function buildChartHtml(report) {
 <script>
 const DATA = ${JSON.stringify(data)};
 ${CLIENT_JS}
+</script>`;
+}
+
+/**
+ * Overlay several builds on one page: for every metric, one line per build
+ * against HERO LEVEL (1 → target), so at any point in the game you can read
+ * which build leads on damage, survivability, and the blows-to-kill / menace
+ * balance instruments. `runs` is `[{ build, report }, …]` (the analytic reports
+ * from scripts/progression-sim.mjs). Reduces each report to one point per hero
+ * level — the last checkpoint reached at that level — so the x-axis aligns the
+ * builds by progression stage rather than by raw kill count.
+ */
+export function buildCompareChartHtml(runs) {
+  const seriesFor = (report) => {
+    const byLevel = new Map();
+    for (const cp of report.checkpoints) byLevel.set(cp.heroLevel, cp);
+    return [...byLevel.keys()]
+      .sort((a, b) => a - b)
+      .map((lvl) => {
+        const cp = byLevel.get(lvl);
+        return {
+          lvl,
+          dps: cp.dps,
+          perHit: cp.perHit,
+          maxHp: cp.maxHp,
+          blowsToKill: cp.blowsToKill,
+          menace: cp.menaceStageEq,
+          crit: cp.critChance,
+          armorRed: cp.armorReduction,
+          mobHp: cp.mobHp,
+          weapon: cp.weapon,
+        };
+      });
+  };
+
+  const series = runs.map(({ build, report }) => ({
+    build,
+    accent: BUILD_ACCENT[build] ?? "level",
+    finalLevel: report.heroLevelEnd,
+    points: seriesFor(report),
+  }));
+
+  const data = {
+    series,
+    metrics: COMPARE_METRICS,
+    seed: runs[0]?.report.seed ?? 0,
+    targetLevel: runs[0]?.report.targetLevel ?? 99,
+  };
+
+  const facts = series
+    .map((s) => `<div><dt>${s.build}</dt><dd>→ L${s.finalLevel}</dd></div>`)
+    .join("");
+
+  return `${STYLE}
+<main class="wrap">
+  <header class="masthead">
+    <div class="title-row">
+      <span class="glyph" aria-hidden="true"></span>
+      <h1>Build comparison</h1>
+    </div>
+    <p class="lede">Every stat-distribution build farmed clean through the whole campaign on real engine rules, overlaid against hero level — so you can see which build leads on damage, survivability, and the blows-to-kill / RAMPAGE balance instruments at each stage of the game.</p>
+    <dl class="facts">
+      ${facts}
+      <div><dt>Target level</dt><dd>${data.targetLevel}</dd></div>
+      <div><dt>Seed</dt><dd>${data.seed}</dd></div>
+    </dl>
+    <div class="bandkey" id="buildkey" aria-label="Builds"></div>
+  </header>
+
+  <section class="grid" id="charts" aria-label="Build comparison charts"></section>
+</main>
+<div class="tooltip" id="tooltip" role="status" aria-live="off"></div>
+<script>
+const DATA = ${JSON.stringify(data)};
+${COMPARE_CLIENT_JS}
 </script>`;
 }
 
@@ -446,5 +546,122 @@ function render() {
 }
 render();
 // Re-render on theme toggle so CSS-var colors are re-read.
+new MutationObserver(render).observe(document.documentElement, { attributes: true, attributeFilter: ["data-theme"] });
+`;
+
+// The BUILD COMPARISON client — one line per build against hero level, a shared
+// legend, and a crosshair tooltip that reads every build at the hovered level.
+const COMPARE_CLIENT_JS = String.raw`
+const $ = (s, r = document) => r.querySelector(s);
+const SVGNS = "http://www.w3.org/2000/svg";
+const el = (n, a = {}) => { const e = document.createElementNS(SVGNS, n);
+  for (const k in a) e.setAttribute(k, a[k]); return e; };
+const cssv = (name) => getComputedStyle(document.documentElement).getPropertyValue("--" + name).trim();
+const SERIES = DATA.series;
+const W = 520, H = 200, ML = 46, MR = 54, MT = 12, MB = 26;
+// Shared level axis: 1 → the furthest level any build reached.
+const L0 = 1;
+const L1 = Math.max(1, ...SERIES.flatMap((s) => s.points.map((p) => p.lvl)));
+const xOf = (l) => ML + ((l - L0) / Math.max(1, L1 - L0)) * (W - ML - MR);
+const fmtMetric = (m, v) => v == null ? "—" : m.isPct ? Math.round(v * 100) + "%"
+  : (m.decimals ? v.toFixed(m.decimals) : Math.round(v).toLocaleString());
+function niceMax(v) {
+  if (v <= 1) { const s = [0.1,0.2,0.25,0.5,1]; return s.find((x) => x >= v) ?? 1; }
+  const pow = Math.pow(10, Math.floor(Math.log10(v)));
+  for (const m of [1, 2, 2.5, 5, 10]) if (m * pow >= v) return m * pow;
+  return 10 * pow;
+}
+function fmtAxis(v) {
+  if (v >= 1000) return (v / 1000).toFixed(v >= 10000 ? 0 : 1) + "k";
+  return Math.round(v * (v < 1 ? 100 : 1)) + (v < 1 && v > 0 ? "%" : "");
+}
+// The value each series holds at level l (its last point at or below l), so a
+// build that levels slower still reads at every shared tick.
+function valueAt(points, key, l) {
+  let v = null;
+  for (const p of points) { if (p.lvl > l) break; v = p[key]; }
+  return v;
+}
+const tooltip = $("#tooltip");
+function chart(container, metric) {
+  const all = SERIES.flatMap((s) => s.points.map((p) => p[metric.key])).filter((v) => v != null);
+  const max = niceMax(Math.max(...all, metric.isPct ? 0.01 : 1));
+  const yOf = (v) => H - MB - (v / max) * (H - MT - MB);
+  const svg = el("svg", { viewBox: "0 0 " + W + " " + H, role: "img", "aria-label": metric.label });
+  const gaxis = el("g", { class: "axis" });
+  for (let i = 0; i <= 4; i++) {
+    const v = (max / 4) * i, y = yOf(v);
+    gaxis.appendChild(el("line", { class: "gridline", x1: ML, y1: y, x2: W - MR, y2: y }));
+    const t = el("text", { x: ML - 8, y: y + 3, "text-anchor": "end" });
+    t.textContent = metric.isPct ? Math.round(v * 100) + "%" : fmtAxis(v);
+    gaxis.appendChild(t);
+  }
+  for (let i = 0; i <= 4; i++) {
+    const l = Math.round(L0 + ((L1 - L0) / 4) * i), x = xOf(l);
+    const t = el("text", { x, y: H - 8, "text-anchor": i === 0 ? "start" : i === 4 ? "end" : "middle" });
+    t.textContent = "L" + l; gaxis.appendChild(t);
+  }
+  svg.appendChild(gaxis);
+  const ends = [];
+  for (const s of SERIES) {
+    const color = cssv(s.accent);
+    const pts = s.points.filter((p) => p[metric.key] != null);
+    if (pts.length === 0) continue;
+    const d = pts.map((p, i) => (i ? "L" : "M") + xOf(p.lvl).toFixed(1) + " " + yOf(p[metric.key]).toFixed(1)).join(" ");
+    svg.appendChild(el("path", { class: "series", d, stroke: color, opacity: 0.9 }));
+    const last = pts[pts.length - 1];
+    ends.push({ y: yOf(last[metric.key]), color, text: s.build.slice(0, 3).toUpperCase() });
+  }
+  ends.sort((a, b) => a.y - b.y);
+  const GAP = 11;
+  for (let i = 1; i < ends.length; i++)
+    if (ends[i].y - ends[i - 1].y < GAP) ends[i].y = ends[i - 1].y + GAP;
+  for (const e of ends) {
+    const lbl = el("text", { x: xOf(L1) + 6, y: e.y + 3, fill: e.color, "font-size": 10,
+      "font-family": "ui-monospace, Menlo, monospace" });
+    lbl.textContent = e.text; svg.appendChild(lbl);
+  }
+  const cross = el("line", { class: "crosshair", x1: 0, y1: MT, x2: 0, y2: H - MB });
+  svg.appendChild(cross);
+  const hit = el("rect", { class: "hit", x: ML, y: MT, width: W - ML - MR, height: H - MT - MB });
+  svg.appendChild(hit);
+  const move = (ev) => {
+    const pt = svg.createSVGPoint(); const src = ev.touches ? ev.touches[0] : ev;
+    pt.x = src.clientX; pt.y = src.clientY;
+    const loc = pt.matrixTransform(svg.getScreenCTM().inverse());
+    const l = Math.round(L0 + ((loc.x - ML) / (W - ML - MR)) * (L1 - L0));
+    const lc = Math.max(L0, Math.min(L1, l));
+    cross.setAttribute("x1", xOf(lc)); cross.setAttribute("x2", xOf(lc)); cross.style.opacity = 1;
+    const rows = SERIES.map((s) =>
+      "<div class='row'><span><i style='display:inline-block;width:9px;height:3px;background:" + cssv(s.accent) + "'></i> " + s.build + "</span>" +
+      "<span class='v'>" + fmtMetric(metric, valueAt(s.points, metric.key, lc)) + "</span></div>").join("");
+    tooltip.innerHTML = "<b>Hero level " + lc + "</b>" + rows;
+    tooltip.style.opacity = 1;
+    tooltip.style.left = Math.min(window.innerWidth - 220, src.clientX + 14) + "px";
+    tooltip.style.top = (src.clientY + 14) + "px";
+  };
+  hit.addEventListener("mousemove", move);
+  hit.addEventListener("mouseleave", () => { cross.style.opacity = 0; tooltip.style.opacity = 0; });
+  hit.addEventListener("touchmove", (e) => { move(e); e.preventDefault(); }, { passive: false });
+  hit.addEventListener("touchend", () => { cross.style.opacity = 0; tooltip.style.opacity = 0; });
+  container.innerHTML = "<h3>" + metric.label + "</h3>";
+  container.appendChild(svg);
+}
+function buildKey() {
+  const box = $("#buildkey");
+  SERIES.forEach((s) => {
+    box.insertAdjacentHTML("beforeend",
+      "<span class='b'><span class='sw' style='background:" + cssv(s.accent) + "'></span>" + s.build + " → L" + s.finalLevel + "</span>");
+  });
+}
+function render() {
+  const grid = $("#charts"); grid.innerHTML = "";
+  for (const m of DATA.metrics) {
+    const fig = document.createElement("figure"); fig.className = "card";
+    grid.appendChild(fig); chart(fig, m);
+  }
+  buildKey();
+}
+render();
 new MutationObserver(render).observe(document.documentElement, { attributes: true, attributeFilter: ["data-theme"] });
 `;

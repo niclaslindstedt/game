@@ -60,6 +60,22 @@ describe("synthesizeArrival", () => {
     expect(a.equipment.weapon.defId).toBe(b.equipment.weapon.defId);
     expect(a.stats).toEqual(b.stats);
   });
+
+  it("spends the arrival hero's points by the requested build", () => {
+    const base = {
+      difficulty: "medium" as const,
+      level: 30,
+      levelId: "test_level",
+      seed: 5,
+    };
+    // A melee arrival banks its points into STRENGTH; a magic arrival into
+    // INTELLIGENCE — so a --start-level class comparison drops in a hero who
+    // actually represents the build being measured.
+    const melee = synthesizeArrival({ ...base, build: "melee" });
+    const magic = synthesizeArrival({ ...base, build: "magic" });
+    expect(melee.stats.strength).toBeGreaterThan(magic.stats.strength);
+    expect(magic.stats.intelligence).toBeGreaterThan(melee.stats.intelligence);
+  });
 });
 
 describe("reviveHero", () => {
