@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
 // Ambient types for the build-tooling `.mjs` modules the sprite tests
-// exercise (see docs/sprite-yaml-plan.md). They're plain JavaScript with no
+// exercise (see the `pixel-assets` skill). They're plain JavaScript with no
 // declarations of their own; these wildcard module shims give the tests just
 // enough typing to import them without `any`.
 
