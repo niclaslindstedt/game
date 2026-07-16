@@ -2,14 +2,17 @@ name: glitch
 family: mars
 size: [8, 8]
 description: >
-  An 8x8 corrupted-data projectile fired by the colony's gravity
-  weapons: a small pixelated mote of white and electric blue arranged in
-  a jittery diamond, reading as a torn chunk of glitched screen in
-  flight.
+  A corrupted-data projectile fired by the colony's gravity weapons.
+subject:
+  kind: projectile (effect)
+  build: a small jittery diamond mote
+  features: a torn chunk of glitched screen — a white core studded with electric-blue and pale-cyan
+  accent: the electric-blue edge
+  flavor: a mote of gravity-weapon corruption in flight
 palette:
-  W: "#f4f4f4"
-  j: "#4054bc"
-  x: "#c5e6ebe1"
+  W: "#f4f4f4" # white core
+  j: "#4054bc" # electric-blue edge
+  x: "#c5e6ebe1" # pale-cyan flecks
 grid: |
   ........
   ..jxj...

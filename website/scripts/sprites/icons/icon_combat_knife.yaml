@@ -2,14 +2,18 @@ name: icon_combat_knife
 family: icons
 size: [12, 12]
 description: >
-  A military combat knife laid diagonally — a dark wrapped grip and a
-  clean steel blade with a swept point; compact and mean.
+  A military combat knife — dark wrapped grip and a swept steel blade.
+subject:
+  kind: weapon icon
+  features: a diagonal knife, wrapped grip and a clean blade with a swept point
+  accent: steel blade, dark grip
+  flavor: compact and mean
 palette:
-  N: "#303444"
-  O: "#1a1c2c"
-  V: "#9095a5"
-  a: "#d6dce4"
-  v: "#60687e"
+  N: "#303444" # grip shadow
+  O: "#1a1c2c" # dark outline
+  V: "#9095a5" # blade edge
+  a: "#d6dce4" # bright blade
+  v: "#60687e" # blade spine
 grid: |
   ............
   ............

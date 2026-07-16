@@ -2,15 +2,23 @@ name: jeff_baywatch_0
 family: bunker
 size: [24, 24]
 description: >
-  JEFF BAYWATCH (24x24), the delivery emperor retired to the gym: a bald,
-  jacked resident in a tight dark-grey tee and blue jeans, arms flexed out from
-  a barrel chest — the bunker's fastest, hardest-hitting resident.
+  JEFF BAYWATCH — the delivery emperor retired to the gym: a bald, jacked
+  resident in a tight dark-grey tee and blue jeans, arms flexed from a barrel chest.
+subject:
+  kind: elite
+  name: JEFF BAYWATCH
+  build: bald and heavily muscled, a barrel chest with bare arms flexed out — a tall, broad figure
+  attire: tight dark-grey tee and blue jeans
+  features: bald head, bare muscled arms
+  accent: blue jeans
+  pose: arms flexed out from the barrel chest, planted
+  flavor: the delivery emperor retired to the gym; the bunker's fastest, hardest-hitting resident
 palette:
-  K: "#0c0b12"
-  N: "#3a3846"
-  O: "#1a1c2c"
-  j: "#4054bc"
-  p: "#deaa86"
+  K: "#0c0b12" # black shoes and brow
+  N: "#3a3846" # dark-grey tee
+  O: "#1a1c2c" # navy outline
+  j: "#4054bc" # blue jeans
+  p: "#deaa86" # skin
 grid: |
   ........................
   ........................

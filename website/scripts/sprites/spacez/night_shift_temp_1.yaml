@@ -2,19 +2,27 @@ name: night_shift_temp_1
 family: spacez
 size: [16, 16]
 description: >
-  A NIGHT-SHIFT TEMP: a lone figure in a blue-and-white striped work shirt
-  with a red cap and a visitor lanyard, front-facing. Caught mid-stride, his
-  legs planted wide apart in a walking step.
+  A NIGHT-SHIFT TEMP mid-stride — the blue-and-white striped agency worker in
+  a red cap with a visitor lanyard, legs shifted into a walking step.
+subject:
+  kind: minion
+  name: NIGHT-SHIFT TEMP
+  build: a lone, ordinary worker
+  attire: a blue-and-white striped work shirt, a visitor lanyard
+  features: a red cap over the brow
+  accent: red cap
+  pose: caught mid-stride, legs planted wide apart in a walking step
+  flavor: an agency temp nobody bothered to onboard, working a shift he barely understands
 palette:
-  A: "#8d9196"
-  O: "#1a1c2c"
-  W: "#f4f4f4"
-  b: "#3f4553"
-  j: "#4054bc"
-  p: "#deaa86"
-  r: "#d83a3a"
-  v: "#60687e"
-  w: "#c6c6c6"
+  A: "#8d9196" # grey cap brim
+  O: "#1a1c2c" # outline
+  W: "#f4f4f4" # white shirt stripes
+  b: "#3f4553" # dark trousers
+  j: "#4054bc" # blue shirt stripes
+  p: "#deaa86" # skin
+  r: "#d83a3a" # red cap
+  v: "#60687e" # slate shoulders
+  w: "#c6c6c6" # pale cap panel
 grid: |
   ................
   ....OrrrrO......

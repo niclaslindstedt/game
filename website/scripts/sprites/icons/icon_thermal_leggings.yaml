@@ -2,11 +2,15 @@ name: icon_thermal_leggings
 family: icons
 size: [12, 12]
 description: >
-  Grey-and-white insulated thermal leggings, an inverted-U leg silhouette;
-  warm lunar legwear.
+  Grey-and-white insulated thermal leggings.
+subject:
+  kind: armor icon
+  features: a pair of padded trousers joined at the waist into an inverted-U
+  accent: grey-and-white insulation
+  flavor: warm lunar legwear
 palette:
-  O: "#1a1c2c"
-  w: "#c6c6c6"
+  O: "#1a1c2c" # dark outline
+  w: "#c6c6c6" # pale grey insulation
 grid: |
   ............
   ............

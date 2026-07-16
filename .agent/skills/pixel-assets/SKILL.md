@@ -21,6 +21,13 @@ reference image (one fallible realization of it) and the pixels are always
 re-derivable from it; when a reference image and the description disagree, the
 description wins — fix the grid, not the description.
 
+The description may be paired with — or replaced by — an optional structured
+`subject` map that splits the intent into **fixed named slots**, so the
+generation prompt is deterministic (see [Structured subject
+slots](#structured-subject-slots) below). When a `subject` is present the free
+`description` shrinks to a one-line human summary; the slots become the
+acceptance target.
+
 **Before drawing, read the [art style guide](../../../docs/art-style.md)** — the
 house style for the game's pixel art: the feel, the shared look every sprite
 obeys, and the design best practices (silhouette-first, budgeted color pops,
@@ -33,7 +40,7 @@ per-family specifics.
 
 | File | Role |
 | --- | --- |
-| `website/scripts/sprites/<family>/<name>.yaml` | Source of truth: one file per base sprite — `name`, `family`, `size` `[w,h]`, `description`, the `palette` keys it uses (concrete hex), and its `grid`. Discover the families dynamically — `ls website/scripts/sprites/` — rather than assuming a fixed roster; this game's families and per-family learnings are in [`GAME_NOTES.md`](./GAME_NOTES.md) |
+| `website/scripts/sprites/<family>/<name>.yaml` | Source of truth: one file per base sprite — `name`, `family`, `size` `[w,h]`, `description` (+ optional structured `subject`), the `palette` keys it uses (concrete hex), and its `grid`. Discover the families dynamically — `ls website/scripts/sprites/` — rather than assuming a fixed roster; this game's families and per-family learnings are in [`GAME_NOTES.md`](./GAME_NOTES.md) |
 | `website/scripts/sprites/<family>/_family.yaml` | Family orchestration: `ground` tile, LOCAL `palette` chars, `animations`, wound-style overrides, and lint `contrastExempt` names |
 | `website/scripts/sprites/_core.yaml` | The shared palette core (outline, gore chars, common materials) every family merges under its local scope |
 | `website/scripts/sprite-data/load-yaml.mjs` | Globs the `sprites/` tree into the in-memory sprite maps; validates each file against the schema (`asset-tools/sprite-schema.mjs`) |
@@ -182,6 +189,19 @@ website/scripts/sprite-author.mjs` with no args for usage):
   description. This is the review surface for the evaluate step: a sprite that
   reads on a checker can vanish on its own tiles. Read the emitted PNG, judge it
   against the description, edit the grid, `make assets`, pose again.
+- **`verify <sprite-name> [--scale N] [--out path]`** — the **sync gate**: print
+  the sprite's generation prompt AND render its pose in one shot, then run the
+  mechanical prompt↔sprite coherence check (`asset-tools/coherence.mjs`). It
+  answers two questions a genAI-authored sprite must pass — _could this prompt
+  recreate the sprite?_ and _does anything in the words fight the pixels?_ —
+  reporting `fix` (a prose size that contradicts the `size` field), `trim` (a
+  fact the `size` field or `STYLE_PREAMBLE` already owns, restated in prose where
+  it can drift — a size, "front-facing", the pixel-art medium), and `note` (a
+  recreatability gap — an unnamed palette color, an empty target). Run it
+  whenever a sprite is created or its `description`/`subject` changes; the
+  semantic "does it LOOK like the words" call still belongs to your eye on the
+  pose. (The `fix`-level size contradiction is also surfaced as a build warning
+  by `make assets`.)
 - **`compare <sprite-name> <reference.png>`** — score the rendered sprite
   against a reference (SSIM, mean OKLab ΔE, coverage). Use it as a triage number
   while refining toward a reference image — it is NOT an acceptance test. The
@@ -191,6 +211,48 @@ website/scripts/sprite-author.mjs` with no args for usage):
 The reference image is a source, like the grid — committed next to the YAML, not
 packed into the atlas. When the image and the description disagree, the
 description wins; fix the grid, not the description.
+
+## Structured subject slots
+
+A sprite's intent can be carried as one free-prose `description` OR split into a
+structured `subject` map of **fixed named slots**. The slots exist to make the
+generation `prompt` deterministic: the same facts always land in the same place
+with the same label, instead of being reweighted by how a sentence was phrased.
+Prefer `subject` for any sprite that describes a figure (heroes, enemies,
+merchants, companions); a plain tile or prop can stay on a one-line
+`description`.
+
+The slots, in the order the prompt renders them:
+
+| Slot       | Carries                                          | Example                                              |
+| ---------- | ------------------------------------------------ | ---------------------------------------------------- |
+| `kind`     | what it is (drives the silhouette expectation)   | `elite bodyguard`, `boss`, `ground tile`             |
+| `name`     | proper noun, if a named character (optional)     | `ARMSTRONG`, `DONALD DUMP`                           |
+| `build`    | body shape / overall form — the silhouette read  | `heavyset, a size larger than the rank-and-file`     |
+| `attire`   | clothing / covering                              | `matte-black suit over a white shirt`                |
+| `features` | head / face / distinguishing marks               | `a mop of dark brown hair over a pale face`          |
+| `accent`   | the single distinguishing color detail           | `mint-green tie and collar patch`                    |
+| `pose`     | stance                                           | `arms held out from the bulk, planted immovably`     |
+| `flavor`   | lore / mood hook — tone only, **not** a constraint | `one of six guards told apart only by livery`      |
+
+`kind` + `name` fold into the leading `Subject:` line; each visual slot becomes
+its own labeled line; `flavor` renders **last**, as `Mood:`, after the palette —
+downstream of every hard visual constraint so the mood tints without competing.
+
+Deliberately **NOT** slots — they are already structured elsewhere and must be
+kept OUT of the prose (the `verify` check flags them):
+
+- **facing** and the **pixel-art medium** → `STYLE_PREAMBLE` owns them.
+- **size / resolution** → the `size` field. Never restate `20x20` in words. A
+  tile footprint (a "1×1" / "2×2" rock) is a size too — say "single-tile" /
+  "four-tile" instead.
+- **colors** → the `palette`, named via `# name` comments so the prompt can
+  reproduce them (`U: "#78eb8c" # mint-green livery`).
+
+Near-identical rosters (the six bunker guards, merchant reskins, `_0`/`_1` walk
+frames) collapse to their real deltas — share every slot, differ only in `name`,
+`accent`, and the walk frame's `pose`. See `sprites/bunker/guard_alignment_0.yaml`
+and `sprites/hero/hero_0.yaml` for the canonical shape.
 
 ## Improving one named sprite
 

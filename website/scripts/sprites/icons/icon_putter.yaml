@@ -2,12 +2,16 @@ name: icon_putter
 family: icons
 size: [12, 12]
 description: >
-  A golf putter — a slim shaft angled down to a dark blocky club head; the
-  NIGHT MANAGER's back-nine special.
+  A golf putter — a slim shaft angled down to a blocky club head.
+subject:
+  kind: weapon icon
+  features: a diagonal putter shaft ending in a dark blocky club head
+  accent: dark club head
+  flavor: the NIGHT MANAGER's back-nine special
 palette:
-  O: "#1a1c2c"
-  k: "#342c26"
-  v: "#60687e"
+  O: "#1a1c2c" # dark outline
+  k: "#342c26" # dark shaft
+  v: "#60687e" # grey club head
 grid: |
   ............
   .........OO.

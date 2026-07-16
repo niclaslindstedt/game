@@ -2,17 +2,25 @@ name: merchant_mars_0
 family: merchant
 size: [16, 16]
 description: >
-  The merchant reskinned as the Mars colony commissary keeper: a front-facing
-  brown-haired man in a muted green colony sweater/turtleneck over dark work
-  trousers. The same trader, now running his stall inside the dome.
+  The merchant reskinned as the Mars-dome commissary keeper — a brown-haired
+  colonist in a muted green colony sweater running his stall inside the dome.
+subject:
+  kind: merchant reskin — the Mars colony commissary keeper
+  name: "THE MERCHANT, as the commissary keeper"
+  build: an ordinary colonist
+  attire: a muted green colony sweater/turtleneck over dark work trousers and boots
+  features: brown hair with a sandy highlight
+  accent: the teal-green colony sweater
+  pose: idle, arms at his sides at the stall
+  flavor: the same trader, now running the colony commissary inside the dome
 palette:
-  C: "#325d53"
-  E: "#5d4028"
-  O: "#1a1c2c"
-  S: "#b39378"
-  e: "#509686"
-  k: "#342c26"
-  p: "#deaa86"
+  C: "#325d53" # dark teal sweater ribbing and shadow
+  E: "#5d4028" # brown boots
+  O: "#1a1c2c" # navy outline
+  S: "#b39378" # sandy hair highlight
+  e: "#509686" # muted green colony sweater
+  k: "#342c26" # dark brown hair and trousers
+  p: "#deaa86" # skin
 grid: |
   ................
   ................

@@ -2,15 +2,21 @@ name: crate
 family: spacez
 size: [14, 12]
 description: >
-  A tan cardboard shipping crate stamped with a small SpaceZ rocket logo and
-  banded with tape, seen top-down; a jump-over, breakable obstacle.
+  A tan cardboard shipping crate stamped with a SpaceZ rocket logo and banded
+  with tape; a jump-over, breakable obstacle.
+subject:
+  kind: breakable obstacle prop
+  build: a boxy cardboard shipping crate seen from above
+  features: a small SpaceZ rocket logo stamped on the lid, tape banding across it
+  accent: gold-tan cardboard
+  flavor: SpaceZ freight; the company crates up everything and ships it out
 palette:
-  A: "#8d9196"
-  E: "#5d4028"
-  O: "#1a1c2c"
-  S: "#b39378"
-  o: "#d6a842"
-  q: "#96762e"
+  A: "#8d9196" # grey corner scuffs
+  E: "#5d4028" # brown rocket-logo stamp
+  O: "#1a1c2c" # outline
+  S: "#b39378" # pale tape band
+  o: "#d6a842" # gold-tan cardboard
+  q: "#96762e" # darker cardboard shadow
 grid: |
   ..............
   .AOOOOOOOOOOA.

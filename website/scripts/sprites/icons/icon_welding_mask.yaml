@@ -2,14 +2,18 @@ name: icon_welding_mask
 family: icons
 size: [12, 12]
 description: >
-  A dark-blue welding face mask with a bright horizontal viewing slit; the
-  fab-shop's spare face.
+  A dark-blue welding face mask with a bright horizontal viewing slit.
+subject:
+  kind: armor icon
+  features: a full face mask with a glowing horizontal viewing slit across the eyes
+  accent: dark blue with a bright slit
+  flavor: the fab-shop's spare face
 palette:
-  O: "#1a1c2c"
-  b: "#3f4553"
-  e: "#5ab4ff"
-  s: "#d6f0ff"
-  v: "#60687e"
+  O: "#1a1c2c" # dark outline
+  b: "#3f4553" # dark mask body
+  e: "#5ab4ff" # blue slit glow
+  s: "#d6f0ff" # bright viewing slit
+  v: "#60687e" # grey mask top
 grid: |
   ............
   ...OOOOOO...

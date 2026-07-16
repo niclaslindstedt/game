@@ -2,12 +2,17 @@ name: lab_0
 family: spacez
 size: [16, 16]
 description: >
-  The common ground tile of SPACEZ HQ: a polished light-grey lab floor panel
+  The common ground tile of SPACEZ HQ — a polished light-grey lab floor panel
   with faint seams and specks.
+subject:
+  kind: ground tile
+  build: a flat floor panel with a shaded left seam and a scatter of faint specks
+  accent: polished light-grey
+  flavor: the clean, cold floor the whole facility is tiled with
 palette:
-  T: "#c0c5cf"
-  s: "#818690"
-  t: "#aab0be"
+  T: "#c0c5cf" # pale speck highlights
+  s: "#818690" # grey seam shadow
+  t: "#aab0be" # light-grey floor field
 grid: |
   ssssssssssssssss
   sttttttttttttttt

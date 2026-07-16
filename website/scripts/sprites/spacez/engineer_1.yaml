@@ -3,18 +3,26 @@ family: spacez
 size: [16, 16]
 description: >
   A PROPULSION ENGINEER in a yellow-and-black hi-vis vest and coveralls,
-  front-facing; reads as a launch-floor industrial worker. Caught mid-stride,
-  his legs planted wide apart in a walking step.
+  mid-stride — a launch-floor industrial worker.
+subject:
+  kind: minion
+  name: PROPULSION ENGINEER
+  build: a sturdy launch-floor worker
+  attire: hi-vis orange-yellow vest and coveralls over a white shirt
+  features: a gold hard hat with a pale brim
+  accent: orange-yellow hi-vis
+  pose: caught mid-stride, legs planted wide apart in a walking step
+  flavor: rank-and-file of the SpaceZ night shift, straight off the launch floor
 palette:
-  A: "#8d9196"
-  O: "#1a1c2c"
-  W: "#f4f4f4"
-  Y: "#ffe3b6"
-  b: "#3f4553"
-  o: "#d6a842"
-  p: "#deaa86"
-  v: "#60687e"
-  y: "#ffb02e"
+  A: "#8d9196" # grey hard-hat brim
+  O: "#1a1c2c" # outline
+  W: "#f4f4f4" # white shirt
+  Y: "#ffe3b6" # pale hard-hat highlight
+  b: "#3f4553" # dark boots
+  o: "#d6a842" # gold hard hat
+  p: "#deaa86" # skin
+  v: "#60687e" # slate coverall shoulders
+  y: "#ffb02e" # orange-yellow hi-vis
 grid: |
   ................
   ....OooooO......

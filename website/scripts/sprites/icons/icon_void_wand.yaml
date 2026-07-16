@@ -2,13 +2,17 @@ name: icon_void_wand
 family: icons
 size: [12, 12]
 description: >
-  A dark slim wand on a diagonal tipped with a glowing purple void node;
-  the rift's early caster.
+  A dark slim wand tipped with a glowing purple void node.
+subject:
+  kind: weapon icon
+  features: a diagonal slim wand tipped with a small glowing node
+  accent: purple void glow
+  flavor: the rift's early caster
 palette:
-  M: "#644696e6"
-  O: "#1a1c2c"
-  k: "#342c26"
-  m: "#a57de1e6"
+  M: "#644696e6" # deep purple node core
+  O: "#1a1c2c" # dark outline
+  k: "#342c26" # dark wand shaft
+  m: "#a57de1e6" # lilac void glow
 grid: |
   ............
   .....OO.....

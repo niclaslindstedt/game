@@ -2,13 +2,17 @@ name: icon_pressure_trousers
 family: icons
 size: [12, 12]
 description: >
-  Grey pressure-suit trousers with yellow seam trim, an inverted-U leg
-  silhouette; the lower half of a spacesuit.
+  Grey pressure-suit trousers with yellow seam trim.
+subject:
+  kind: armor icon
+  features: a pair of padded trousers joined at the waist with banded seams
+  accent: grey with yellow seam trim
+  flavor: the lower half of a spacesuit
 palette:
-  A: "#8d9196"
-  O: "#1a1c2c"
-  a: "#d6dce4"
-  y: "#ffb02e"
+  A: "#8d9196" # trouser shadow
+  O: "#1a1c2c" # dark outline
+  a: "#d6dce4" # white-grey fabric
+  y: "#ffb02e" # yellow seam trim
 grid: |
   ............
   ............

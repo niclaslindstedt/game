@@ -3,16 +3,24 @@ family: spacez
 size: [18, 18]
 description: >
   A HAZMAT TECH in a bulky bright-yellow containment suit with a hood and
-  visor, front-facing. Caught mid-stride, his legs planted wide apart in a
-  lumbering walking step.
+  visor, mid-stride; the slow, tanky deep-lab worker.
+subject:
+  kind: minion
+  name: HAZMAT TECH
+  build: a bulky, padded figure swollen by the containment suit
+  attire: a heavy bright-yellow hazmat suit, hood and gloves sealed
+  features: a wide cyan visor across the hood
+  accent: cyan visor
+  pose: caught mid-stride in a lumbering step, legs planted wide apart
+  flavor: the slow, tanky worker who handles what the deep lab keeps sealed
 palette:
-  H: "#9e8b2d"
-  O: "#1a1c2c"
-  W: "#f4f4f4"
-  b: "#3f4553"
-  c: "#8ccdd7e1"
-  h: "#e2c640"
-  x: "#c5e6ebe1"
+  H: "#9e8b2d" # deep-yellow suit shadow
+  O: "#1a1c2c" # outline
+  W: "#f4f4f4" # white visor glint
+  b: "#3f4553" # dark hood seam
+  c: "#8ccdd7e1" # cyan visor tint
+  h: "#e2c640" # bright-yellow hazmat suit
+  x: "#c5e6ebe1" # pale visor highlight
 grid: |
   ..................
   .....OOOOOO.......

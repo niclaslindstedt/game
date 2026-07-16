@@ -2,14 +2,18 @@ name: icon_box_cutter
 family: icons
 size: [12, 12]
 description: >
-  A yellow-handled utility box cutter with a short angled steel blade
-  extended; a shipping-desk knife, small and fast.
+  A yellow-handled utility box cutter with a short steel blade extended.
+subject:
+  kind: weapon icon
+  features: a utility knife handle with a short angled snap-off blade
+  accent: yellow handle, steel blade
+  flavor: a shipping-desk knife, small and fast
 palette:
-  A: "#8d9196"
-  H: "#9e8b2d"
-  O: "#1a1c2c"
-  a: "#d6dce4"
-  h: "#e2c640"
+  A: "#8d9196" # blade shadow
+  H: "#9e8b2d" # dark yellow handle shade
+  O: "#1a1c2c" # dark outline
+  a: "#d6dce4" # bright steel blade
+  h: "#e2c640" # yellow handle
 grid: |
   ............
   ........OO..

@@ -2,22 +2,28 @@ name: misprinted_fembot_0
 family: mars
 size: [16, 16]
 description: >
-  MISPRINTED FEMBOT, a bad batch off the companion line: the fembot body
-  rendered wrong, glitch-green skin and a misaligned grey face still
-  locked in a smile, a green error-spark flicking off it. Uncanny and
-  broken.
+  MISPRINTED FEMBOT, a bad batch off the companion line, rendered wrong.
+subject:
+  kind: enemy (minion)
+  name: MISPRINTED FEMBOT
+  build: the fembot android body rendered wrong
+  attire: dress and rounded head printed in sickly glitch-green, gold hairband, tan legs
+  features: a misaligned grey face still locked in a smile with tiny red lips and cyan eyes
+  accent: a green error-spark flicking off her upper right
+  pose: standing, uncanny and broken
+  flavor: a bad batch off the companion line
 palette:
-  G: "#4a7a3e"
-  O: "#1a1c2c"
-  V: "#9095a5"
-  c: "#8ccdd7e1"
-  g: "#3d6433"
-  h: "#e2c640"
-  l: "#678f5d"
-  p: "#deaa86"
-  r: "#d83a3a"
-  v: "#60687e"
-  w: "#c6c6c6"
+  G: "#4a7a3e" # glitch-green dress and head
+  O: "#1a1c2c" # outline
+  V: "#9095a5" # grey face
+  c: "#8ccdd7e1" # cyan eyes
+  g: "#3d6433" # dark glitch-green shadow
+  h: "#e2c640" # gold hairband
+  l: "#678f5d" # light glitch-green
+  p: "#deaa86" # tan legs
+  r: "#d83a3a" # red lips
+  v: "#60687e" # grey face shading
+  w: "#c6c6c6" # face highlight
 grid: |
   ..............g.
   ...OOOOOOOO..glg

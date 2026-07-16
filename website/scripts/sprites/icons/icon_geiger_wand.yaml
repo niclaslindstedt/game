@@ -2,15 +2,18 @@ name: icon_geiger_wand
 family: icons
 size: [12, 12]
 description: >
-  A slim probe wand with a small meter/dish head glowing yellow at the
-  tip, held diagonally; a Geiger screening probe clicking past the safe
-  band.
+  A slim probe wand with a yellow meter head glowing at the tip.
+subject:
+  kind: weapon icon
+  features: a diagonal probe wand tipped with a small dish/meter head
+  accent: yellow glowing head with a red readout
+  flavor: a Geiger screening probe clicking past the safe band
 palette:
-  H: "#9e8b2d"
-  O: "#1a1c2c"
-  h: "#e2c640"
-  k: "#342c26"
-  r: "#d83a3a"
+  H: "#9e8b2d" # dark yellow head shade
+  O: "#1a1c2c" # dark outline
+  h: "#e2c640" # yellow meter head
+  k: "#342c26" # dark shaft
+  r: "#d83a3a" # red readout
 grid: |
   ............
   ....OOO.....

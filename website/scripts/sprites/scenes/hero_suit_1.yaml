@@ -2,18 +2,23 @@ name: hero_suit_1
 family: scenes
 size: [16, 16]
 description: >
-  Top-down 16px pixel figure of an astronaut facing forward: a bulky white EVA
-  spacesuit with a domed helmet showing a gold/amber visor slit and a small red
-  chest accent, arms slightly out. Caught mid-stride of his walk cycle with the
-  boots planted wide apart, so he reads as stepping forward. This is the hero
-  in his suit for the voyage, moon, and Mars cutscenes.
+  The hero in his bulky white EVA spacesuit caught mid-stride, boots planted
+  wide — his walk frame for the voyage, moon, and Mars cutscenes.
+subject:
+  kind: hero figure, in his EVA spacesuit
+  build: bulky suited astronaut, arms held slightly out from the body
+  attire: bulky white EVA spacesuit
+  features: a domed helmet with a gold-amber visor slit
+  accent: a small red chest patch
+  pose: caught mid-stride of his walk cycle, boots planted wide apart, stepping forward
+  flavor: the hero suited up for the voyage, moon, and Mars cutscenes
 palette:
-  A: "#8d9196"
-  O: "#1a1c2c"
-  Y: "#ffe3b6"
-  a: "#d6dce4"
-  r: "#d83a3a"
-  y: "#ffb02e"
+  A: "#8d9196" # grey suit shadow
+  O: "#1a1c2c" # outline
+  Y: "#ffe3b6" # pale visor highlight
+  a: "#d6dce4" # white suit
+  r: "#d83a3a" # red chest patch
+  y: "#ffb02e" # gold visor
 grid: |
   ................
   .....OOOOOO.....

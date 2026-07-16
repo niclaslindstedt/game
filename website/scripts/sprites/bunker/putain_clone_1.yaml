@@ -2,15 +2,23 @@ name: putain_clone_1
 family: bunker
 size: [24, 24]
 description: >
-  A pale, balding front-facing man in a white bathrobe with red trim and sash,
-  hands up in a judo stance — a stocky figure; caught mid-lunge with the legs
-  shifted from the set stance.
+  VLADIMIR PUTAIN's backup mid-lunge — the pale, balding figure in a white
+  bathrobe with red trim and sash, legs shifted from the set judo stance.
+subject:
+  kind: elite
+  name: VLADIMIR PUTAIN
+  build: a stocky, balding figure
+  attire: white bathrobe with red trim and sash
+  features: pale, balding head
+  accent: red robe trim and sash
+  pose: caught mid-lunge, the legs shifted from the set judo stance, hands up
+  flavor: a bathrobed continuity-of-leadership backup standing again between universes — the man the hero already buried
 palette:
-  K: "#0c0b12"
-  O: "#1a1c2c"
-  W: "#f4f4f4"
-  p: "#deaa86"
-  r: "#d83a3a"
+  K: "#0c0b12" # black shoes and eyes
+  O: "#1a1c2c" # navy outline
+  W: "#f4f4f4" # white bathrobe
+  p: "#deaa86" # skin
+  r: "#d83a3a" # red robe trim and sash
 grid: |
   ........................
   ........................

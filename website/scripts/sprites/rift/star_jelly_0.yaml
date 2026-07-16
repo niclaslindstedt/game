@@ -2,18 +2,23 @@ name: star_jelly_0
 family: rift
 size: [16, 15]
 description: >
-  A translucent teal-and-cyan jellyfish drifting through the void: a glowing
-  luminous dome above trailing wispy tendrils, faintly see-through (it phases
-  through solid things), reads as a gentle glowing space-drifter.
+  A star jelly — a translucent teal-and-cyan jellyfish drifting through the void,
+  phasing through solids.
+subject:
+  kind: drifter creature
+  build: a glowing luminous dome above four thin trailing tendrils
+  features: translucent teal-and-cyan, brightest white-cyan at the crown, tendrils fading to violet at the tips
+  accent: white-cyan glint at the crown
+  flavor: void fauna — a gentle glowing space-drifter, faintly see-through, phasing through solids
 palette:
-  M: "#644696e6"
-  O: "#1a1c2c"
-  Q: "#60f0d0"
-  W: "#f4f4f4"
-  c: "#8ccdd7e1"
-  m: "#a57de1e6"
-  n: "#b9e6cdf0"
-  x: "#c5e6ebe1"
+  M: "#644696e6" # deep violet tendril tip
+  O: "#1a1c2c" # outline
+  Q: "#60f0d0" # cyan crown glint
+  W: "#f4f4f4" # white crown
+  c: "#8ccdd7e1" # translucent teal body
+  m: "#a57de1e6" # mid-violet tendril
+  n: "#b9e6cdf0" # pale mint highlight
+  x: "#c5e6ebe1" # pale cyan highlight
 grid: |
   ................
   ................

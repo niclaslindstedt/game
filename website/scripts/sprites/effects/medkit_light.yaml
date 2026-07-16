@@ -2,14 +2,17 @@ name: medkit_light
 family: effects
 size: [12, 12]
 description: >
-  A small square white first-aid case with a bold red medical cross centered
-  on its face, bordered by a dull steel-grey inner trim and a near-black outer
-  frame. A modest low-tier health pickup.
+  The modest low-tier health pickup.
+subject:
+  kind: pickup
+  build: a square white first-aid case with a bold red medical cross centered on its face, dull steel-grey top and bottom inner trim inside a near-black frame
+  accent: red medical cross
+  flavor: the low-tier medkit grade
 palette:
-  O: "#1a1c2c"
-  W: "#f4f4f4"
-  b: "#3f4553"
-  r: "#d83a3a"
+  O: "#1a1c2c" # near-black frame
+  W: "#f4f4f4" # white case
+  b: "#3f4553" # steel-grey grade trim
+  r: "#d83a3a" # red medical cross
 grid: |
   ............
   .OOOOOOOOOO.

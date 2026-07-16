@@ -2,12 +2,16 @@ name: icon_surplus_carbine
 family: icons
 size: [12, 12]
 description: >
-  A long brown military-surplus carbine in profile with a wood stock and
-  long barrel; the moon pool's longest reach.
+  A long military-surplus carbine with a wood stock and long barrel.
+subject:
+  kind: weapon icon
+  features: a diagonal carbine, long steel barrel over a dark wood stock
+  accent: steel barrel, dark stock
+  flavor: the moon pool's longest reach
 palette:
-  O: "#1a1c2c"
-  a: "#d6dce4"
-  k: "#342c26"
+  O: "#1a1c2c" # dark outline
+  a: "#d6dce4" # bright steel barrel
+  k: "#342c26" # dark wood stock
 grid: |
   ............
   .........OO.

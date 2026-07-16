@@ -2,11 +2,20 @@ name: wisp_1
 family: moon
 size: [16, 16]
 description: >
-  WISP, the weakest minion: a faint pale-cyan will-o'-wisp, a small teardrop of luminous ectoplasm with a flickering tail; the horde's flimsiest fodder. Alternate flicker frame.
+  WISP, the weakest minion: a faint pale-cyan will-o'-wisp, a small teardrop of
+  luminous ectoplasm with a flickering tail. Alternate flicker frame.
+subject:
+  kind: minion
+  name: WISP
+  build: a small teardrop of luminous ectoplasm tapering to a flickering tail
+  features: a faint dark-dotted face
+  accent: a pale-cyan luminous glow
+  pose: drifting a little higher, tail flickering
+  flavor: the horde's flimsiest fodder that evaporates on contact
 palette:
-  O: "#1a1c2c"
-  U: "#94bcc7b9"
-  u: "#cde8f0b9"
+  O: "#1a1c2c" # dark outline and eye-dots
+  U: "#94bcc7b9" # translucent tail shadow
+  u: "#cde8f0b9" # translucent pale-cyan body
 grid: |
   ................
   ................

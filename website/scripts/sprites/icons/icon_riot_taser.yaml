@@ -2,13 +2,17 @@ name: icon_riot_taser
 family: icons
 size: [12, 12]
 description: >
-  A blocky dark-blue taser pistol in profile with a stubby twin-prong
-  muzzle; a desk taser flashed with export firmware.
+  A blocky dark-blue taser pistol with a stubby twin-prong muzzle.
+subject:
+  kind: weapon icon
+  features: a boxy pistol in profile with two prongs sparking at the muzzle
+  accent: dark blue with steel prongs
+  flavor: a desk taser flashed with export firmware
 palette:
-  J: "#2d3b84"
-  O: "#1a1c2c"
-  a: "#d6dce4"
-  j: "#4054bc"
+  J: "#2d3b84" # dark blue body
+  O: "#1a1c2c" # dark outline
+  a: "#d6dce4" # steel prong spark
+  j: "#4054bc" # blue highlight
 grid: |
   ............
   ...aa..aa...

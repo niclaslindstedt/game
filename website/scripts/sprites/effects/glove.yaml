@@ -2,12 +2,14 @@ name: glove
 family: effects
 size: [16, 16]
 description: >
-  The menu pointer cursor: a white pointing-hand/glove glyph with a dark
-  outline (index finger extended), the retro click-hand used to navigate the
-  UI screens.
+  The retro menu pointer cursor used to navigate the UI screens.
+subject:
+  kind: UI icon
+  build: a white pointing-hand glove glyph with a dark outline, index finger extended upward
+  flavor: the retro click-hand cursor
 palette:
-  O: "#1a1c2c"
-  W: "#f4f4f4"
+  O: "#1a1c2c" # dark outline
+  W: "#f4f4f4" # white glove
 grid: |
   ...OO...........
   ..OWWO..........

@@ -2,12 +2,16 @@ name: icon_cargo_pants
 family: icons
 size: [12, 12]
 description: >
-  Green utility cargo trousers with bulging side pockets and stitched
-  seams; practical warehouse legwear.
+  Green utility cargo trousers with bulging side pockets.
+subject:
+  kind: armor icon
+  features: a pair of trousers joined at the waist with bulging side cargo pockets
+  accent: utility green
+  flavor: practical warehouse legwear
 palette:
-  G: "#4a7a3e"
-  O: "#1a1c2c"
-  g: "#3d6433"
+  G: "#4a7a3e" # cargo green
+  O: "#1a1c2c" # dark outline
+  g: "#3d6433" # dark green pocket shade
 grid: |
   ............
   ............

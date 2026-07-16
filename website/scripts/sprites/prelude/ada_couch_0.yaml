@@ -2,17 +2,24 @@ name: ada_couch_0
 family: prelude
 size: [16, 24]
 description: >
-  Ada seated on the couch for movie night, drawn 16×24 with a tall transparent
-  lower half so the figure rides up onto the cushion while its anchor stays at
-  floor level. Red jacket over a white shirt, blue jeans, short dark-brown
-  hair, turned to watch the TV off to the left.
+  Ada seated on the couch for movie night, turned to watch the TV off to the
+  left.
+subject:
+  kind: prelude figure, seated
+  name: Ada
+  build: a slight everywoman, a tall transparent lower half so she rides up onto the cushion while her anchor stays at floor level
+  attire: red jacket over a white shirt, blue jeans
+  features: short dark-brown hair
+  accent: red jacket, the one whose zipper the hero fixed
+  pose: seated on the couch, turned left to watch the TV
+  flavor: the girlfriend keeping her spot warm before she steps out and never comes back
 palette:
-  O: "#1a1c2c"
-  W: "#f4f4f4"
-  j: "#4054bc"
-  k: "#342c26"
-  p: "#deaa86"
-  r: "#d83a3a"
+  O: "#1a1c2c" # outline
+  W: "#f4f4f4" # white shirt
+  j: "#4054bc" # blue jeans
+  k: "#342c26" # dark-brown hair
+  p: "#deaa86" # skin
+  r: "#d83a3a" # red jacket
 grid: |
   ................
   ................

@@ -2,13 +2,17 @@ name: icon_corelog
 family: icons
 size: [12, 12]
 description: >
-  A warm blue terminal screen with white log-text lines glowing on it; a
-  live console — the CORE's humming log readout.
+  A blue terminal screen with glowing white log-text lines.
+subject:
+  kind: item icon
+  features: a screen filled with rows of glowing log text
+  accent: warm blue console glow
+  flavor: the CORE's humming log readout
 palette:
-  O: "#1a1c2c"
-  b: "#3f4553"
-  e: "#5ab4ff"
-  s: "#d6f0ff"
+  O: "#1a1c2c" # dark outline
+  b: "#3f4553" # dark screen field
+  e: "#5ab4ff" # blue log text
+  s: "#d6f0ff" # bright white log line
 grid: |
   ............
   .OOOOOOOOO..

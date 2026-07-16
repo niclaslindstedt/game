@@ -2,16 +2,19 @@ name: asteroid_1
 family: rift
 size: [16, 16]
 description: >
-  A chunky, roughly round grey space-boulder, lighter grey on the upper-left and
-  darker slate on the lower-right, its surface pocked with a few brown-black
-  craters. Here the craters sit rotated toward the right side, mid-tumble. Reads
-  as a plain hurtling meteor hazard.
+  A grey space-boulder mid-tumble, its craters rotated toward the right side —
+  rock-rain hazard hurtling across the void.
+subject:
+  kind: hazard prop
+  build: a chunky, roughly round space-boulder
+  features: pocked with a few brown-black craters rotated toward the right side, lit grey on the upper-left and slate-dark on the lower-right
+  flavor: a plain meteor of the rift's asteroid rain, caught mid-tumble
 palette:
-  E: "#5d4028"
-  F: "#a2a4ad"
-  O: "#1a1c2c"
-  b: "#3f4553"
-  f: "#888a96"
+  E: "#5d4028" # brown-black crater
+  F: "#a2a4ad" # light grey rock
+  O: "#1a1c2c" # outline
+  b: "#3f4553" # dark slate underside
+  f: "#888a96" # mid-grey rock
 grid: |
   ................
   .....OOOOO......

@@ -2,13 +2,17 @@ name: icon_plasma_blade
 family: icons
 size: [12, 12]
 description: >
-  A humming magenta energy blade on an upward diagonal, hot-pink core with
-  a brighter edge over a short dark hilt; a cauterizing plasma sword.
+  A humming magenta plasma blade, hot-pink core over a short dark hilt.
+subject:
+  kind: weapon icon
+  features: a diagonal energy blade, bright edge and hot-pink core, over a dark hilt
+  accent: magenta plasma
+  flavor: a cauterizing plasma sword
 palette:
-  N: "#303444"
-  O: "#1a1c2c"
-  Z: "#fca8e2"
-  z: "#ec52be"
+  N: "#303444" # dark hilt
+  O: "#1a1c2c" # dark outline
+  Z: "#fca8e2" # bright pink edge
+  z: "#ec52be" # magenta core
 grid: |
   ............
   .......OOO..

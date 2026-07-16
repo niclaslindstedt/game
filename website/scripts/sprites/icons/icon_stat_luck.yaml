@@ -2,12 +2,17 @@ name: icon_stat_luck
 family: icons
 size: [12, 12]
 description: >
-  A green four-leaf clover on a short stem; the LUCK stat glyph.
+  The LUCK stat glyph: a green four-leaf clover on a short stem.
+subject:
+  kind: UI stat icon
+  features: a four-leaf clover on a short stem
+  accent: green clover leaves
+  flavor: LUCK — drop rate and crit chance
 palette:
-  G: "#4a7a3e"
-  O: "#1a1c2c"
-  g: "#3d6433"
-  l: "#678f5d"
+  G: "#4a7a3e" # clover green
+  O: "#1a1c2c" # dark outline
+  g: "#3d6433" # darker clover shade / stem
+  l: "#678f5d" # lighter clover highlight
 grid: |
   ............
   ..OO..OO....

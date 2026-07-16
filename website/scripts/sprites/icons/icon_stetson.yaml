@@ -2,12 +2,16 @@ name: icon_stetson
 family: icons
 size: [12, 12]
 description: >
-  A brown ten-gallon cowboy hat with a wide curled brim; the servo
-  stetson.
+  A brown ten-gallon cowboy hat with a wide curled brim.
+subject:
+  kind: armor icon
+  features: a tall-crowned cowboy hat with a wide curled brim and a band
+  accent: saddle brown
+  flavor: the servo stetson
 palette:
-  B: "#92643e"
-  E: "#5d4028"
-  O: "#1a1c2c"
+  B: "#92643e" # hat felt brown
+  E: "#5d4028" # dark hat band
+  O: "#1a1c2c" # dark outline
 grid: |
   ............
   ............

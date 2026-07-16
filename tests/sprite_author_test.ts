@@ -13,6 +13,11 @@ import {
   resizeNearest,
 } from "../website/scripts/asset-tools/compare.mjs";
 import {
+  promptSelfCheck,
+  proseSizeMismatch,
+  unnamedPaletteKeys,
+} from "../website/scripts/asset-tools/coherence.mjs";
+import {
   STYLE_PREAMBLE,
   buildImagePrompt,
   paletteComments,
@@ -26,7 +31,10 @@ import {
   rgbToOklab,
 } from "../website/scripts/asset-tools/oklab.mjs";
 import { quantizeGrid } from "../website/scripts/asset-tools/quantize.mjs";
-import { validateSprite } from "../website/scripts/asset-tools/sprite-schema.mjs";
+import {
+  validateSprite,
+  validateSubject,
+} from "../website/scripts/asset-tools/sprite-schema.mjs";
 import {
   createSurface,
   setPixel,
@@ -194,6 +202,53 @@ describe("buildImagePrompt", () => {
   it("is deterministic — same fields synthesize the same prompt", () => {
     expect(buildImagePrompt(full)).toBe(buildImagePrompt(full));
   });
+
+  describe("structured subject", () => {
+    const subject = {
+      kind: "elite bodyguard",
+      name: "ALIGNMENT OFFICER",
+      build: "heavyset, a wall of a man",
+      attire: "matte-black suit",
+      accent: "mint-green tie",
+      pose: "arms out from the bulk",
+      flavor: "one of six told apart only by livery",
+    };
+
+    it("folds kind + name into the Subject line and labels each slot", () => {
+      const prompt = buildImagePrompt({ ...full, subject });
+      expect(prompt).toContain(
+        'Subject: elite bodyguard named "ALIGNMENT OFFICER".',
+      );
+      expect(prompt).toContain("Build: heavyset, a wall of a man.");
+      expect(prompt).toContain("Wears: matte-black suit.");
+      expect(prompt).toContain("Accent: mint-green tie.");
+      expect(prompt).toContain("Pose: arms out from the bulk.");
+    });
+
+    it("renders flavor LAST, as Mood, after the palette", () => {
+      const prompt = buildImagePrompt({ ...full, subject });
+      expect(prompt.indexOf("Mood:")).toBeGreaterThan(
+        prompt.indexOf("Paint only with this palette"),
+      );
+      expect(prompt.trimEnd().endsWith("livery.")).toBe(true);
+    });
+
+    it("drops the free-prose description when a subject is present", () => {
+      const prompt = buildImagePrompt({ ...full, subject });
+      expect(prompt).not.toContain("Front-facing knight");
+    });
+
+    it("falls back to the description when the subject is empty", () => {
+      const prompt = buildImagePrompt({ ...full, subject: {} });
+      expect(prompt).toContain("Subject: Front-facing knight");
+    });
+
+    it("is deterministic with a subject too", () => {
+      expect(buildImagePrompt({ ...full, subject })).toBe(
+        buildImagePrompt({ ...full, subject }),
+      );
+    });
+  });
 });
 
 describe("provenanceRecord", () => {
@@ -211,6 +266,134 @@ describe("provenanceRecord", () => {
       model: null,
       seed: null,
     });
+  });
+});
+
+describe("validateSubject", () => {
+  it("accepts an absent subject", () => {
+    expect(validateSubject("s", undefined)).toEqual([]);
+    expect(validateSubject("s", null)).toEqual([]);
+  });
+
+  it("accepts a subject with only known slots", () => {
+    expect(
+      validateSubject("s", { kind: "boss", name: "X", accent: "gold" }),
+    ).toEqual([]);
+  });
+
+  it("rejects an unknown slot", () => {
+    const errors = validateSubject("s", { kind: "boss", color: "gold" });
+    expect(errors.join()).toMatch(/unknown subject slot "color"/);
+  });
+
+  it("rejects a non-string slot value", () => {
+    const errors = validateSubject("s", { kind: 3 });
+    expect(errors.join()).toMatch(/subject "kind" must be a string/);
+  });
+
+  it("rejects a non-map subject", () => {
+    expect(validateSubject("s", ["boss"]).join()).toMatch(/must be a map/);
+  });
+});
+
+describe("promptSelfCheck", () => {
+  const named = { s: "steel", g: "gold crest" };
+  const palette = { s: "#c8ccd4", g: "#f4c430" };
+
+  it("finds nothing when prompt and sprite are in sync", () => {
+    expect(
+      promptSelfCheck({
+        description: "A knight in silver plate with a gold crest.",
+        size: [16, 16],
+        palette,
+        paletteNames: named,
+      }),
+    ).toEqual([]);
+  });
+
+  it("flags a size the prose contradicts as a fix", () => {
+    const found = promptSelfCheck({
+      description: "A 20x20 knight.",
+      size: [16, 16],
+      palette,
+      paletteNames: named,
+    });
+    expect(found.some((f) => f.level === "fix")).toBe(true);
+  });
+
+  it("flags a restated matching size as trim", () => {
+    const found = promptSelfCheck({
+      description: "A 16x16 knight.",
+      size: [16, 16],
+      palette,
+      paletteNames: named,
+    });
+    expect(found.some((f) => f.level === "trim")).toBe(true);
+  });
+
+  it("flags restated facing and medium as trim", () => {
+    const found = promptSelfCheck({
+      description: "A front-facing knight in flat 16-bit pixel art.",
+      size: [16, 16],
+      palette,
+      paletteNames: named,
+    });
+    expect(found.filter((f) => f.level === "trim")).toHaveLength(2);
+  });
+
+  it("notes unnamed palette colors as a recreatability gap", () => {
+    const found = promptSelfCheck({
+      description: "A knight.",
+      size: [16, 16],
+      palette,
+      paletteNames: { s: "steel" }, // g is unnamed
+    });
+    expect(
+      found.some((f) => f.level === "note" && /g #f4c430/.test(f.message)),
+    ).toBe(true);
+  });
+
+  it("scans the subject slots too, not just the description", () => {
+    const found = promptSelfCheck({
+      subject: { kind: "boss", build: "a front-facing colossus" },
+      size: [16, 16],
+      palette,
+      paletteNames: named,
+    });
+    expect(found.some((f) => /front-facing/.test(f.message))).toBe(true);
+  });
+});
+
+describe("unnamedPaletteKeys", () => {
+  it("returns the sorted keys that carry no name", () => {
+    expect(
+      unnamedPaletteKeys({ s: "#c8ccd4", g: "#f4c430" }, { s: "steel" }),
+    ).toEqual(["g"]);
+  });
+
+  it("returns nothing when every color is named", () => {
+    expect(unnamedPaletteKeys({ s: "#c8ccd4" }, { s: "steel" })).toEqual([]);
+  });
+
+  it("treats a blank name as unnamed", () => {
+    expect(unnamedPaletteKeys({ s: "#c8ccd4" }, { s: "  " })).toEqual(["s"]);
+  });
+});
+
+describe("proseSizeMismatch", () => {
+  it("returns the offending size when prose contradicts the field", () => {
+    expect(
+      proseSizeMismatch({ description: "a 20x20 rock", size: [16, 16] }),
+    ).toEqual([20, 20]);
+  });
+
+  it("returns null when the prose agrees or is silent", () => {
+    expect(
+      proseSizeMismatch({ description: "a 16x16 rock", size: [16, 16] }),
+    ).toBeNull();
+    expect(
+      proseSizeMismatch({ description: "a rock", size: [16, 16] }),
+    ).toBeNull();
   });
 });
 

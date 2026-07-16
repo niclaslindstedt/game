@@ -2,15 +2,18 @@ name: grass_0
 family: earth
 size: [16, 16]
 description: >
-  A seamless Earth-biome grass ground tile: a field of mid-green speckled with
-  lighter and darker green blades and a few small brown dirt flecks, evenly
-  scattered so it tiles without an obvious seam. The default outdoor ground of
-  the early Earth stage. 16x16 flat 16-bit pixel art.
+  A seamless Earth-biome grass ground tile, mid-green speckled with lighter and darker blades.
+subject:
+  kind: ground tile
+  build: a seamless field of mid-green that tiles without an obvious seam
+  features: lighter and darker green blades and a few small brown dirt flecks, evenly scattered
+  accent: mid-green grass over sparse brown dirt specks
+  flavor: the default outdoor ground of the early Earth stage
 palette:
-  D: "#685438"
-  G: "#4a7a3e"
-  g: "#3d6433"
-  l: "#678f5d"
+  D: "#685438" # brown dirt fleck
+  G: "#4a7a3e" # mid-green grass base
+  g: "#3d6433" # darker green blade
+  l: "#678f5d" # lighter green blade
 grid: |
   GGGGGGGGGGGGGGGG
   GGlGGGGGGGGGgGGG

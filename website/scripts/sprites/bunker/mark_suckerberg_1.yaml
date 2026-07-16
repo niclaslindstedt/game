@@ -2,16 +2,24 @@ name: mark_suckerberg_1
 family: bunker
 size: [24, 24]
 description: >
-  A pale, unblinking front-facing figure with dark curly hair in a plain grey
-  tee and blue jeans, arms held stiffly out — a tall, upright figure; caught
-  mid-step with the legs shifted from the standing pose.
+  MARK SUCKERBERG mid-step — the pale, unblinking figure with dark curly hair
+  in a plain grey tee and blue jeans, legs shifted from the standing pose.
+subject:
+  kind: elite
+  name: MARK SUCKERBERG
+  build: a tall, upright figure with arms held stiffly out
+  attire: plain grey tee and blue jeans
+  features: pale, unblinking face under dark curly hair
+  accent: blue jeans
+  pose: caught mid-step, the legs shifted from the standing pose, arms stiffly out
+  flavor: the metaverse landlord performing humanity, insisting he is extremely normal and human — not quite convincing
 palette:
-  K: "#0c0b12"
-  N: "#3a3846"
-  O: "#1a1c2c"
-  W: "#f4f4f4"
-  j: "#4054bc"
-  s: "#ead2ba"
+  K: "#0c0b12" # dark curly hair and pupils
+  N: "#3a3846" # grey tee
+  O: "#1a1c2c" # navy outline
+  W: "#f4f4f4" # white eye-whites and sneakers
+  j: "#4054bc" # blue jeans
+  s: "#ead2ba" # pale skin
 grid: |
   ........................
   ........................

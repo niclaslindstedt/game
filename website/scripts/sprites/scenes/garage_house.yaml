@@ -2,19 +2,23 @@ name: garage_house
 family: scenes
 size: [48, 19]
 description: >
-  The hero's suburban home seen side-on, 48×19 px: a small single-storey house
-  with a warm-lit amber window and a peaked brown roof on the left, joined to
-  an open garage bay on the right — the garage where he spent ten years of
-  weekends building the ship. Flat 16-bit style, drawn against the night.
+  The hero's suburban home side-on: a small peaked-roof house with a warm
+  amber-lit window, joined to the open garage bay where he built the ship.
+subject:
+  kind: scene backdrop / building
+  build: a single-storey house under a peaked roof on the left, joined to an open garage bay on the right
+  features: a warm amber-lit window and a small dark window on the house; the garage door open on a dark interior
+  accent: the amber glow of the lit living-room window
+  flavor: the garage where he spent ten years of weekends building the ship, drawn against the night
 palette:
-  B: "#92643e"
-  E: "#5d4028"
-  N: "#303444"
-  O: "#1a1c2c"
-  b: "#3f4553"
-  k: "#342c26"
-  w: "#c6c6c6"
-  y: "#ffb02e"
+  B: "#92643e" # brown roof
+  E: "#5d4028" # dark roof shadow / eaves
+  N: "#303444" # dark garage interior
+  O: "#1a1c2c" # outline
+  b: "#3f4553" # slate garage-door panel
+  k: "#342c26" # dark house window
+  w: "#c6c6c6" # grey wall siding
+  y: "#ffb02e" # amber lit window
 grid: |
   ................................................
   ......OOOOOOOOOOOOOO............................

@@ -2,11 +2,15 @@ name: icon_magnet
 family: icons
 size: [12, 12]
 description: >
-  A classic red-and-white horseshoe magnet, U-shaped with silver pole
-  tips; the item-pulling powerup pickup.
+  A classic red horseshoe magnet with silver pole tips.
+subject:
+  kind: item icon
+  features: a U-shaped horseshoe magnet with two pole tips
+  accent: red body with silver tips
+  flavor: the item-pulling powerup pickup
 palette:
-  W: "#f4f4f4"
-  r: "#d83a3a"
+  W: "#f4f4f4" # silver pole tips
+  r: "#d83a3a" # red magnet body
 grid: |
   ............
   ...rrrrrr...

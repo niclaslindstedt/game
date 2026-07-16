@@ -4,15 +4,23 @@ size: [48, 48]
 description: >
   MUSKRAT in his alternate lunge frame — the same bloated brown rat with red
   eyes, pink ears and long tail, mid-scurry.
+subject:
+  kind: boss
+  name: MUSKRAT
+  build: a hulking, bloated rat lunging forward, a long fleshy tail trailing
+  features: beady red eyes, oversized pink ears, buck teeth
+  accent: a green glow leaking through the distended belly
+  pose: mid-scurry, body pitched forward in a lunge, tail flung out
+  flavor: ate the engine part from its cheese box; now it hums in his belly and he hears everything
 palette:
-  B: "#92643e"
-  E: "#5d4028"
-  O: "#1a1c2c"
-  R: "#ff5252"
-  S: "#b39378"
-  W: "#f4f4f4"
-  n: "#b9e6cdf0"
-  p: "#deaa86"
+  B: "#92643e" # brown fur
+  E: "#5d4028" # dark-brown belly and shadow
+  O: "#1a1c2c" # outline
+  R: "#ff5252" # beady red eyes
+  S: "#b39378" # pale tan underfur
+  W: "#f4f4f4" # white buck teeth
+  n: "#b9e6cdf0" # green belly glow
+  p: "#deaa86" # pink ears and tail
 grid: |
   ................................................
   ................................................

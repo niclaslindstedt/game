@@ -18,7 +18,12 @@ import { fileURLToPath } from "node:url";
 
 import { parse } from "yaml";
 
+import {
+  proseSizeMismatch,
+  unnamedPaletteKeys,
+} from "../asset-tools/coherence.mjs";
 import { buildPalette } from "../asset-tools/palette.mjs";
+import { paletteComments } from "../asset-tools/prompt.mjs";
 import {
   gridRows,
   validatePalette,
@@ -85,7 +90,8 @@ export function loadSprites() {
       .filter((f) => f.endsWith(".yaml") && f !== "_family.yaml")
       .sort();
     for (const file of files) {
-      const sprite = readYaml(`${dir}/${file}`);
+      const rawText = readFileSync(`${dir}/${file}`, "utf8");
+      const sprite = parse(rawText);
       const stem = file.slice(0, -".yaml".length);
       if (sprite.name !== stem) {
         errors.push(
@@ -104,6 +110,30 @@ export function loadSprites() {
         continue;
       }
       errors.push(...validateSprite(sprite).errors);
+      // Prompt↔sprite sync, the one coherence check cheap enough for every
+      // build: prose that states a size the `size` field contradicts (a stale
+      // "(20x20)" left behind after a resize). A warning, not an error — the
+      // full per-sprite check is `sprite-author verify`, and a description may
+      // legitimately name another sprite's size in passing.
+      const badSize = proseSizeMismatch(sprite);
+      if (badSize) {
+        console.warn(
+          `! ${sprite.name}: prose says ${badSize[0]}×${badSize[1]} but size is ${sprite.size?.[0]}×${sprite.size?.[1]} — run: sprite-author verify ${sprite.name}`,
+        );
+      }
+      // Recreatability: a palette color with no `# name` comment prompts as
+      // bare hex, so the generation prompt can't reliably reproduce it. Warn
+      // (never fail — a freshly `analyze`d sprite has an unnamed palette until
+      // it's refined) so naming stays an enforced, drift-checked invariant.
+      const unnamed = unnamedPaletteKeys(
+        sprite.palette,
+        paletteComments(rawText),
+      );
+      if (unnamed.length > 0) {
+        console.warn(
+          `! ${sprite.name}: ${unnamed.length} unnamed palette color(s) (${unnamed.join(", ")}) — add "# name" comments; see: sprite-author verify ${sprite.name}`,
+        );
+      }
       const grid = gridRows(sprite.grid);
       SPRITES[sprite.name] = grid;
       SPRITE_PALETTES[sprite.name] = paletteFromHex(sprite.palette ?? {});

@@ -2,13 +2,17 @@ name: icon_ponytail
 family: icons
 size: [12, 12]
 description: >
-  A hank of tied-off brown hair, a ponytail cut clean at the band and
-  tapering to its tip; a trophy charm.
+  A hank of tied-off brown hair, cut clean at a gold band.
+subject:
+  kind: item icon
+  features: a bundled ponytail bound by a band and tapering to its tip
+  accent: brown hair, gold band
+  flavor: a trophy charm
 palette:
-  O: "#1a1c2c"
-  f: "#888a96"
-  k: "#342c26"
-  o: "#d6a842"
+  O: "#1a1c2c" # dark outline
+  f: "#888a96" # grey hair strand highlight
+  k: "#342c26" # dark brown hair
+  o: "#d6a842" # gold hair band
 grid: |
   ..OOOO......
   .OkkkkO.....

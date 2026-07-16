@@ -2,20 +2,27 @@ name: counterfeit_outlaw_0
 family: eastworld
 size: [16, 16]
 description: >
-  A bootleg print of the tin-outlaw bandit — a cowboy robot in a brown hat
-  and red shirt run off a pirated mold, seams and mismatched panels showing,
-  twice as mean about it. A lone rare mob.
+  A bootleg knockoff of the tin-outlaw bandit — a cowboy robot run off a
+  pirated mold, twice as mean. A lone rare mob.
+subject:
+  kind: rare mob — bootleg outlaw
+  build: a lean boxy cowboy robot on two legs, seams and mismatched panels showing
+  attire: a wide brown ten-gallon hat and an olive bandana over a dark-red shirt
+  features: a dark visor eye-slot, a small pistol at its side
+  accent: dark-red shirt with a gold belt buckle
+  pose: mid-draw, robot body squared to the viewer
+  flavor: a pirated print of the tin outlaw, twice as mean about it
 palette:
-  A: "#8d9196"
-  D: "#5c3e28"
-  E: "#5d4028"
-  K: "#0c0b12"
-  O: "#1a1c2c"
-  V: "#9095a5"
-  X: "#963c46"
-  e: "#8a7e46"
-  v: "#60687e"
-  y: "#ffb02e"
+  A: "#8d9196" # bright pistol metal
+  D: "#5c3e28" # dark hat and body brown
+  E: "#5d4028" # hat-brim brown
+  K: "#0c0b12" # eye-slot shadow
+  O: "#1a1c2c" # outline
+  V: "#9095a5" # pistol highlight
+  X: "#963c46" # dark-red shirt
+  e: "#8a7e46" # olive bandana
+  v: "#60687e" # grey eye lenses
+  y: "#ffb02e" # gold belt buckle
 grid: |
   ......OOOO......
   ......OOOO......

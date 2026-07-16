@@ -2,13 +2,17 @@ name: icon_servo_greaves
 family: icons
 size: [12, 12]
 description: >
-  Grey powered leg greaves with glowing cyan servo joints, an inverted-U
-  silhouette; motorized Mars legwear.
+  Grey powered leg greaves with glowing cyan servo joints.
+subject:
+  kind: armor icon
+  features: a pair of plated leg greaves joined at the waist with glowing joint nodes
+  accent: cyan servo joints
+  flavor: motorized Mars legwear
 palette:
-  O: "#1a1c2c"
-  V: "#9095a5"
-  e: "#5ab4ff"
-  v: "#60687e"
+  O: "#1a1c2c" # dark outline
+  V: "#9095a5" # bright plate highlight
+  e: "#5ab4ff" # cyan servo joint
+  v: "#60687e" # grey plate
 grid: |
   ............
   ............

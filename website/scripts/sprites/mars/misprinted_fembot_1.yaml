@@ -2,25 +2,28 @@ name: misprinted_fembot_1
 family: mars
 size: [16, 16]
 description: >
-  MISPRINTED FEMBOT: a bad batch off the companion android line —
-  the fembot girl's body rendered wrong, her dress and rounded head
-  printed in sickly glitch-green with a gold hairband, and a misaligned
-  grey face still locked in a smile with tiny red lips and tan legs.
-  Front-facing and uncanny. A green error-spark flicks off her upper
-  right. In this frame she is caught mid-blink, her eyes darkened shut,
-  the error-spark flickering and her feet planted slightly wider apart.
+  MISPRINTED FEMBOT mid-blink, eyes shut and feet planted slightly wider.
+subject:
+  kind: enemy (minion)
+  name: MISPRINTED FEMBOT
+  build: the fembot android body rendered wrong
+  attire: dress and rounded head printed in sickly glitch-green, gold hairband, tan legs
+  features: a misaligned grey face still locked in a smile with tiny red lips, eyes darkened shut mid-blink
+  accent: a green error-spark flickering off her upper right
+  pose: uncanny and broken, caught mid-blink with feet planted slightly wider apart
+  flavor: a bad batch off the companion android line
 palette:
-  G: "#4a7a3e"
-  O: "#1a1c2c"
-  V: "#9095a5"
-  b: "#3f4553"
-  g: "#3d6433"
-  h: "#e2c640"
-  l: "#678f5d"
-  p: "#deaa86"
-  r: "#d83a3a"
-  v: "#60687e"
-  w: "#c6c6c6"
+  G: "#4a7a3e" # glitch-green dress and head
+  O: "#1a1c2c" # outline
+  V: "#9095a5" # grey face
+  b: "#3f4553" # closed eyes
+  g: "#3d6433" # dark glitch-green shadow
+  h: "#e2c640" # gold hairband
+  l: "#678f5d" # light glitch-green
+  p: "#deaa86" # tan legs
+  r: "#d83a3a" # red lips
+  v: "#60687e" # grey face shading
+  w: "#c6c6c6" # face highlight
 grid: |
   ..............g.
   ...OOOOOOOO..glg

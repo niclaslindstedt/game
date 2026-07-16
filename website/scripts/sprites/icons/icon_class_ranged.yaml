@@ -2,10 +2,14 @@ name: icon_class_ranged
 family: icons
 size: [12, 12]
 description: >
-  A weapon-class indicator glyph: an orange targeting reticle/crosshair,
-  reading instantly as "ranged" (DEX weapons).
+  Weapon-class glyph: an orange targeting crosshair reading as RANGED.
+subject:
+  kind: UI weapon-class icon
+  features: a circular crosshair reticle with extending tick marks
+  accent: orange reticle
+  flavor: RANGED class — DEX weapons
 palette:
-  Q: "#e0603a"
+  Q: "#e0603a" # orange reticle
 grid: |
   .....QQ.....
   .....QQ.....

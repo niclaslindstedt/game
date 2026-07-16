@@ -2,12 +2,16 @@ name: icon_dialogue_off
 family: icons
 size: [16, 16]
 description: >
-  A white speech bubble crossed out by a bold red diagonal slash; the
-  mute-dialogue toggle glyph.
+  A white speech bubble crossed out by a red slash; the mute-dialogue toggle.
+subject:
+  kind: UI icon
+  features: a rounded speech bubble with a tail, struck through by a diagonal slash
+  accent: red slash over a white bubble
+  flavor: the mute-dialogue toggle
 palette:
-  O: "#1a1c2c"
-  W: "#f4f4f4"
-  r: "#d83a3a"
+  O: "#1a1c2c" # dark outline
+  W: "#f4f4f4" # white bubble
+  r: "#d83a3a" # red slash
 grid: |
   ................
   ..OOOOOOOOOOOO..

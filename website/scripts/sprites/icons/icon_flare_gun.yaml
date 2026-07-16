@@ -2,12 +2,16 @@ name: icon_flare_gun
 family: icons
 size: [12, 12]
 description: >
-  A chunky orange-and-red flare pistol in profile, fat single barrel with
-  a wide bore; a survival-kit signal gun.
+  A chunky red flare pistol with a fat single barrel and wide bore.
+subject:
+  kind: weapon icon
+  features: a stubby single-barrel signal pistol in profile with a wide bore
+  accent: orange-red
+  flavor: a survival-kit signal gun
 palette:
-  O: "#1a1c2c"
-  q: "#96762e"
-  r: "#d83a3a"
+  O: "#1a1c2c" # dark outline
+  q: "#96762e" # dark bronze shade
+  r: "#d83a3a" # red pistol body
 grid: |
   ............
   ............

@@ -2,10 +2,15 @@ name: stain
 family: spacez
 size: [12, 8]
 description: >
-  A pale greenish-grey chemical stain spilled and dried on the lab floor;
-  flat ground decor.
+  A pale greenish-grey chemical stain spilled and dried on the lab floor; flat
+  ground decor.
+subject:
+  kind: ground decor prop
+  build: an irregular dried splotch spreading across the floor
+  accent: pale greenish-grey chemical residue
+  flavor: a spill nobody cleaned, dried into the lab floor
 palette:
-  n: "#b9e6cdf0"
+  n: "#b9e6cdf0" # pale greenish-grey stain
 grid: |
   ............
   ....nn......

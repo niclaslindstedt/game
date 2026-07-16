@@ -2,13 +2,16 @@ name: icon_mission_cap
 family: icons
 size: [12, 12]
 description: >
-  Ground-crew ball cap in faded khaki cotton with a curved brim and a
-  small round mission patch stitched on the front; a soft, unarmored
-  space-program lid.
+  A faded khaki ground-crew ball cap with a curved brim and a mission patch.
+subject:
+  kind: armor icon
+  features: a side-on ball cap, curved brim, with a small round patch on the front
+  accent: faded khaki
+  flavor: a soft, unarmored space-program lid
 palette:
-  D: "#b28e5c"
-  O: "#1a1c2c"
-  t: "#dec08a"
+  D: "#b28e5c" # khaki shade / patch
+  O: "#1a1c2c" # dark outline
+  t: "#dec08a" # khaki cap
 grid: |
   ............
   ............

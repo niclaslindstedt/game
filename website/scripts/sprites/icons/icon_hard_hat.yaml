@@ -2,12 +2,16 @@ name: icon_hard_hat
 family: icons
 size: [12, 12]
 description: >
-  A yellow construction hard hat seen from the front, rounded dome with a
-  short brim and ridged crown; shipping-floor headgear.
+  A yellow construction hard hat with a short brim and ridged crown.
+subject:
+  kind: armor icon
+  features: a rounded dome hard hat with a ridged crown and a short front brim
+  accent: safety yellow
+  flavor: shipping-floor headgear
 palette:
-  O: "#1a1c2c"
-  Y: "#ffe3b6"
-  y: "#ffb02e"
+  O: "#1a1c2c" # dark outline
+  Y: "#ffe3b6" # pale crown highlight
+  y: "#ffb02e" # safety yellow
 grid: |
   ............
   ............

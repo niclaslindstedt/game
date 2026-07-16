@@ -2,12 +2,17 @@ name: hardpan_0
 family: eastworld
 size: [16, 16]
 description: >
-  Sun-baked desert hardpan ground tile — flat, dusty tan-brown dirt, dry and
-  lightly cracked; the base floor tile of the western park.
+  Sun-baked desert hardpan — flat, dusty tan-brown dirt, dry and lightly
+  cracked; the base floor tile of the western park.
+subject:
+  kind: ground tile
+  build: a flat expanse of dry cracked dirt, evenly tiling
+  accent: sparse pebble flecks over dusty tan-brown
+  flavor: the base floor of the western park
 palette:
-  Z: "#b08e60"
-  u: "#e2c494"
-  z: "#ceac78"
+  Z: "#b08e60" # darker dirt fleck
+  u: "#e2c494" # pale dust fleck
+  z: "#ceac78" # tan-brown hardpan base
 grid: |
   zzzzzzzzzzzzzzzz
   zzzzuzzzzzzzzzzz

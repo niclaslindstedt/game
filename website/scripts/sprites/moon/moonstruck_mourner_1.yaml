@@ -2,11 +2,20 @@ name: moonstruck_mourner_1
 family: moon
 size: [16, 16]
 description: >
-  MOONSTRUCK MOURNER, a rare: a pale-gold wisp-ghost with a long trailing tail, drifting the craters in a small grieving funeral procession; a mournful golden spectre. Alternate drift frame.
+  MOONSTRUCK MOURNER, a rare: a pale-gold wisp-ghost with a long trailing tail.
+  Alternate drift frame.
+subject:
+  kind: rare minion
+  name: MOONSTRUCK MOURNER
+  build: a rounded pale-gold wisp-ghost tapering to a long trailing tail
+  features: a small dark-dotted face
+  accent: a mournful pale-gold glow
+  pose: drifting a little higher over the craters
+  flavor: grieving something under the dust in a small funeral procession
 palette:
-  O: "#1a1c2c"
-  s: "#bea56eb9"
-  t: "#ebd7a0b9"
+  O: "#1a1c2c" # dark outline and eyes
+  s: "#bea56eb9" # translucent gold tail shadow
+  t: "#ebd7a0b9" # translucent pale-gold body
 grid: |
   ................
   ................

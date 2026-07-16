@@ -4,10 +4,15 @@ size: [16, 16]
 description: >
   Alternate burgundy carpet patch — the same deep-red pile with a different
   scatter of gold flecks.
+subject:
+  kind: ground tile
+  build: burgundy carpet patch, the same deep-red pile with a different scatter of gold flecks
+  accent: gold flecks
+  flavor: the deep-red runner that clumps where the money walks
 palette:
-  D: "#602830"
-  I: "#f6d074"
-  X: "#963c46"
+  D: "#602830" # dark burgundy flecks
+  I: "#f6d074" # gold specks
+  X: "#963c46" # burgundy carpet
 grid: |
   XXXXXXXXXXXXXXXX
   XXXXXXXXXXXXXXXX

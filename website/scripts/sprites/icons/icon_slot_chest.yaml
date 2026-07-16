@@ -2,11 +2,15 @@ name: icon_slot_chest
 family: icons
 size: [12, 12]
 description: >
-  A small flat-grey vest/torso silhouette glyph on a dark rounded tile;
-  the chest-slot marker.
+  The chest equipment-slot marker: a vest/torso silhouette on a dark tile.
+subject:
+  kind: UI slot icon
+  features: a sleeveless vest/torso silhouette, set in a rounded tile
+  accent: flat grey vest
+  flavor: the chest equipment slot
 palette:
-  O: "#1a1c2c"
-  V: "#9095a5"
+  O: "#1a1c2c" # dark tile outline
+  V: "#9095a5" # grey vest
 grid: |
   ............
   .OOO....OOO.

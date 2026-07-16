@@ -2,16 +2,22 @@ name: wall_hairy_wand
 family: prelude
 size: [10, 22]
 description: >
-  "Hairy Potter's Wand" mounted on the living-room wall, ~10×22 px: a slim
-  tapered wooden wand with a glowing warm amber/gold tip, hung vertically. A
-  wizard-parody magic wand — the EASY-difficulty starting weapon.
+  "Hairy Potter's Wand" mounted on the living-room wall, a wizard-parody magic
+  wand — the EASY-difficulty starting weapon.
+subject:
+  kind: prop, wall-mounted weapon
+  name: Hairy Potter's Wand
+  build: a slim tapered wooden wand hung vertically, a dark shaft with a wooden grip
+  features: glowing warm amber/gold tip
+  accent: amber glowing wand tip
+  flavor: a wizard-parody magic wand, the weapon the hero takes off the back wall on EASY difficulty
 palette:
-  B: "#92643e"
-  O: "#1a1c2c"
-  Y: "#ffe3b6"
-  b: "#3f4553"
-  k: "#342c26"
-  y: "#ffb02e"
+  B: "#92643e" # brown wooden grip
+  O: "#1a1c2c" # outline
+  Y: "#ffe3b6" # pale glow hotspot
+  b: "#3f4553" # dark wall mount
+  k: "#342c26" # dark wand shaft
+  y: "#ffb02e" # amber wand tip
 grid: |
   ..........
   ...OOOO...

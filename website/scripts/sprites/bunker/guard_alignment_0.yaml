@@ -2,15 +2,22 @@ name: guard_alignment_0
 family: bunker
 size: [20, 20]
 description: >
-  One of the six identical heavyset black-suited bodyguards (20x20),
-  front-facing, distinguished only by livery: ALIGNMENT OFFICER, Sam Haltman's
-  detail, wears a mint-green tie/collar patch.
+  ALIGNMENT OFFICER — Sam Haltman's bodyguard, a heavyset black-suited wall
+  told apart only by his mint-green livery.
+subject:
+  kind: elite bodyguard
+  name: ALIGNMENT OFFICER
+  build: heavyset, a size larger than the rank-and-file so his mass reads as menace
+  attire: matte-black suit over a white shirt
+  accent: mint-green tie and collar patch
+  pose: arms held out from the bulk, planted immovably
+  flavor: Sam Haltman's personal detail; one of six identical guards told apart only by livery
 palette:
-  K: "#0c0b12"
-  O: "#1a1c2c"
-  U: "#78eb8c"
-  W: "#f4f4f4"
-  p: "#deaa86"
+  K: "#0c0b12" # near-black suit
+  O: "#1a1c2c" # navy outline
+  U: "#78eb8c" # mint-green livery
+  W: "#f4f4f4" # white shirt
+  p: "#deaa86" # skin
 grid: |
   ....................
   ........OOOO........

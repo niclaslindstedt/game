@@ -2,13 +2,16 @@ name: upgrade
 family: effects
 size: [12, 12]
 description: >
-  The "update available" icon shown in the app's update prompt: a bold
-  gold-orange upward arrow with a dark outline, reading as "a newer version is
-  ready — tap to upgrade."
+  The "update available" icon shown in the app's update prompt.
+subject:
+  kind: UI icon
+  build: a bold gold-orange upward-pointing arrow, wide triangular head over a short shaft, dark outline with a pale inner highlight
+  accent: gold-orange arrow
+  flavor: signals a newer version is ready — tap to upgrade
 palette:
-  O: "#1a1c2c"
-  Y: "#ffe3b6"
-  y: "#ffb02e"
+  O: "#1a1c2c" # dark outline
+  Y: "#ffe3b6" # pale inner highlight
+  y: "#ffb02e" # gold-orange arrow
 grid: |
   ............
   .....OO.....

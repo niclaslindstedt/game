@@ -2,13 +2,16 @@ name: crosshair
 family: effects
 size: [16, 16]
 description: >
-  The in-game aim cursor: a white plus-shaped crosshair — four short arms with
-  a gap around a small red center dot — reading as a clean targeting reticle
-  over the battlefield.
+  The in-game aim cursor, a clean targeting reticle over the battlefield.
+subject:
+  kind: UI icon
+  build: a white plus-shaped crosshair, four short outlined arms with a gap around a small red center dot
+  accent: red center dot
+  flavor: the aim reticle marking where fire lands
 palette:
-  O: "#1a1c2c"
-  W: "#f4f4f4"
-  r: "#d83a3a"
+  O: "#1a1c2c" # dark outline
+  W: "#f4f4f4" # white reticle arms
+  r: "#d83a3a" # red center dot
 grid: |
   ......OOOO......
   ......OWWO......

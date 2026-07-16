@@ -2,15 +2,19 @@ name: rift
 family: mars
 size: [32, 36]
 description: >
-  A vertical tear in space: a glowing upright slit edged in magenta and
-  violet around a bright white core, like a wound in reality. The portal
-  ELON MOSQUE flees through, left standing where he stood.
+  A vertical tear in space, glowing like a wound in reality.
+subject:
+  kind: portal (effect)
+  build: a glowing upright slit, a vertical tear in space
+  features: a bright white core edged in magenta and violet
+  accent: the bright white core
+  flavor: the portal ELON MOSQUE flees through, left standing where he stood
 palette:
-  L: "#d4a5ec"
-  M: "#644696e6"
-  P: "#b05cdc"
-  W: "#f4f4f4"
-  m: "#a57de1e6"
+  L: "#d4a5ec" # light violet halo
+  M: "#644696e6" # dim violet outer edge
+  P: "#b05cdc" # magenta-violet band
+  W: "#f4f4f4" # bright white core
+  m: "#a57de1e6" # mid violet glow
 grid: |
   ............MM..................
   ...........MmmM.................

@@ -2,12 +2,16 @@ name: icon_baton
 family: icons
 size: [12, 12]
 description: >
-  A black telescoping security baton laid diagonally, dark grip and
-  chrome-tipped shaft; a guard's collapsible nightstick.
+  A black telescoping security baton with a chrome-tipped shaft.
+subject:
+  kind: weapon icon
+  features: a diagonal collapsible baton, dark grip and lighter tipped shaft
+  accent: black with a chrome tip
+  flavor: a guard's collapsible nightstick
 palette:
-  O: "#1a1c2c"
-  b: "#3f4553"
-  k: "#342c26"
+  O: "#1a1c2c" # dark outline
+  b: "#3f4553" # steel shaft
+  k: "#342c26" # dark grip
 grid: |
   ............
   .........OO.

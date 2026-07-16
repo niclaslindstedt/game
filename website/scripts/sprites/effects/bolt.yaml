@@ -2,13 +2,17 @@ name: bolt
 family: effects
 size: [8, 8]
 description: >
-  The generic firearm/energy bolt fired by the pistols, revolvers, blaster and
-  carbine: a small round amber-gold slug with a bright pale-yellow core and a
-  dark outline, reading as a fast glowing bullet.
+  The generic firearm bolt fired by the pistols, revolvers, blaster and
+  carbine.
+subject:
+  kind: projectile
+  build: a small round slug with a bright pale-yellow core inside an amber-gold body and a dark outline
+  accent: glowing amber-gold body
+  flavor: a fast glowing bullet, the default gunshot round
 palette:
-  O: "#1a1c2c"
-  Y: "#ffe3b6"
-  y: "#ffb02e"
+  O: "#1a1c2c" # dark outline
+  Y: "#ffe3b6" # pale-yellow hot core
+  y: "#ffb02e" # amber-gold body
 grid: |
   ........
   ...OO...

@@ -2,18 +2,23 @@ name: zai_supercore_1
 family: eastworld
 size: [48, 48]
 description: >
-  A barn-sized dark mainframe cabinet, front-facing, with a single large
-  glowing turquoise lens-eye set in its face, ringed by rows of tiny turquoise
-  indicator lights along an electrified case — the immobile finale that
-  manufactures tin outlaws. Its lens-eye pupil contracts to a dark square on
-  this beat of its pulse.
+  THE ZAI SUPERCORE — a barn-sized dark mainframe cabinet with one large glowing
+  turquoise lens-eye on an electrified case; the immobile finale, its pupil
+  contracted on this beat of its pulse.
+subject:
+  kind: boss — immobile finale machine
+  name: THE ZAI SUPERCORE
+  build: a barn-sized rectangular mainframe cabinet
+  features: a single large glowing turquoise lens-eye whose pupil contracts to a dark square, rows of tiny indicator lights, a ridged base
+  accent: the turquoise lens-eye with a dark pupil on an electrified case
+  flavor: the immobile finale that manufactures tin outlaws, pulsing
 palette:
-  K: "#0c0b12"
-  N: "#3a3644"
-  O: "#1a1c2c"
-  Q: "#60f0d0"
-  b: "#3f4553"
-  v: "#60687e"
+  K: "#0c0b12" # lens pupil / dark core
+  N: "#3a3644" # dark cabinet metal
+  O: "#1a1c2c" # outline
+  Q: "#60f0d0" # turquoise lens-eye
+  b: "#3f4553" # base plating
+  v: "#60687e" # grey inner border
 grid: |
   ................................................
   ................................................

@@ -2,13 +2,17 @@ name: singularity
 family: rift
 size: [8, 8]
 description: >
-  The SINGULARITY CANNON's projectile: a small dense black hole in flight — a
-  pure-black core wrapped in a glowing magenta-violet event-horizon rim. Reads
-  as a tiny, very rude black hole hurled across the screen.
+  The SINGULARITY CANNON's projectile — a tiny black hole, pure-black core in a
+  magenta-violet rim, hurled across the screen.
+subject:
+  kind: projectile
+  build: a small dense black hole in flight
+  features: a pure-black core wrapped in a glowing magenta-violet event-horizon rim
+  flavor: the SINGULARITY CANNON's round — a tiny, very rude black hole hurled across the screen
 palette:
-  K: "#0a0910"
-  L: "#d4a5ec"
-  P: "#b05cdc"
+  K: "#0a0910" # pure-black core
+  L: "#d4a5ec" # lilac rim highlight
+  P: "#b05cdc" # magenta-violet rim
 grid: |
   ........
   ..PPP...

@@ -2,14 +2,18 @@ name: the_last_photon_1
 family: rift
 size: [16, 16]
 description: >
-  A white-hot jagged starburst of light with a spiky radiating corona, its body
-  shot through with warm orange-gold sparks, loose flecks flung off around it.
-  Here the corona has flared to its alternate flicker, the spikes shifted. One of
-  a kind, blindingly fast, reads as pure incandescence given a shape.
+  The last photon with its corona flared to the alternate flicker — a white-hot
+  starburst of light, pure incandescence given a shape.
+subject:
+  kind: minion
+  build: a jagged starburst of light with a spiky radiating corona flared to its alternate flicker
+  features: white-hot body shot through with warm orange-gold sparks, loose flecks flung off around it
+  accent: warm orange-gold core
+  flavor: the final flash of a dead universe — one of a kind, blindingly fast, pure incandescence given a shape
 palette:
-  O: "#1a1c2c"
-  W: "#f4f4f4"
-  y: "#ffb02e"
+  O: "#1a1c2c" # outline
+  W: "#f4f4f4" # white-hot light
+  y: "#ffb02e" # orange-gold spark
 grid: |
   ................
   ................

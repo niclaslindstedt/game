@@ -2,13 +2,17 @@ name: icon_swords
 family: icons
 size: [12, 12]
 description: >
-  Two crossed swords with pale blades and gold guards; an equip/compare
-  marker.
+  Two crossed swords with pale blades and gold guards.
+subject:
+  kind: UI icon
+  features: two swords crossed in an X, blades up, guards and grips at the base
+  accent: steel blades, gold guards
+  flavor: an equip / compare marker
 palette:
-  O: "#1a1c2c"
-  V: "#9095a5"
-  o: "#d6a842"
-  q: "#96762e"
+  O: "#1a1c2c" # dark outline
+  V: "#9095a5" # steel blades
+  o: "#d6a842" # gold guards
+  q: "#96762e" # dark gold grips
 grid: |
   ............
   ..VV....VV..

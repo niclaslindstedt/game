@@ -2,14 +2,18 @@ name: icon_notes
 family: rift
 size: [12, 12]
 description: >
-  Inventory icon for the WARDENCLYFFE NOTES: a white sheet of paper with a few
-  dark ruled lines of handwriting and a pooled amber ink-stain or sketch below.
-  Tesla's notebook page, reads as a page of scientific scribbling.
+  Inventory icon for the WARDENCLYFFE NOTES — a handwritten page with an amber
+  ink-stain.
+subject:
+  kind: UI icon
+  build: a white sheet of paper
+  features: a few dark ruled lines of handwriting and a pooled amber ink-stain below
+  flavor: TESLA's notebook page — scientific scribbling
 palette:
-  O: "#1a1c2c"
-  W: "#f4f4f4"
-  k: "#342c26"
-  y: "#ffb02e"
+  O: "#1a1c2c" # outline
+  W: "#f4f4f4" # white paper
+  k: "#342c26" # dark ink lines
+  y: "#ffb02e" # amber ink-stain
 grid: |
   ............
   ..OOOOOOOO..

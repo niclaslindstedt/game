@@ -2,20 +2,23 @@ name: derelict_rover_1
 family: mars
 size: [16, 16]
 description: >
-  DERELICT ROVER: a boxed camera pod on a low wheeled chassis, all of it
-  oxidized rust-brown and pitted to the axles, with a small reddish
-  sensor eye on top of the pod. Front-facing, three wheels beneath. This
-  frame catches its status blink mid-twitch, the little amber indicator
-  light having jumped to the opposite side of the chassis.
+  DERELICT ROVER mid-twitch, its amber status light jumped to the far side.
+subject:
+  kind: enemy machine (minion)
+  name: DERELICT ROVER
+  build: a boxed camera pod on a low three-wheeled chassis, oxidized rust-brown and pitted to the axles
+  features: a small reddish sensor eye on the pod, an amber status light jumped to the opposite side of the chassis
+  accent: the reddish sensor eye
+  flavor: a mission that lost contact decades ago, still crawling on its last order
 palette:
-  B: "#92643e"
-  E: "#5d4028"
-  O: "#1a1c2c"
-  R: "#ff5252"
-  S: "#b39378"
-  d: "#80482d"
-  o: "#d6a842"
-  r: "#d83a3a"
+  B: "#92643e" # rust-brown chassis
+  E: "#5d4028" # dark rust wheels
+  O: "#1a1c2c" # outline
+  R: "#ff5252" # bright red sensor eye
+  S: "#b39378" # pitted tan chassis top
+  d: "#80482d" # oxide-brown pitting
+  o: "#d6a842" # amber status light
+  r: "#d83a3a" # red sensor
 grid: |
   ................
   .....OOOOOd.....

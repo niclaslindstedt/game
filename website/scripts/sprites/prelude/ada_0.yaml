@@ -2,17 +2,24 @@ name: ada_0
 family: prelude
 size: [16, 16]
 description: >
-  Top-down 16px pixel figure of Ada, the hero's girlfriend, standing and
-  facing forward: an unzipped red jacket over a white shirt, blue jeans, and
-  short dark-brown hair. This is the walking sprite she swaps to when she
-  stands off the couch to head out for chips and soda.
+  Ada, the hero's girlfriend, standing to head out for chips and soda — her
+  walking sprite off the couch.
+subject:
+  kind: prelude figure
+  name: Ada
+  build: a slight everywoman
+  attire: unzipped red jacket over a white shirt, blue jeans
+  features: short dark-brown hair over a pale face
+  accent: red jacket, the one whose zipper the hero fixed
+  pose: standing upright, arms at her sides
+  flavor: the girlfriend who steps out for five minutes on movie night and never comes back
 palette:
-  O: "#1a1c2c"
-  W: "#f4f4f4"
-  j: "#4054bc"
-  k: "#342c26"
-  p: "#deaa86"
-  r: "#d83a3a"
+  O: "#1a1c2c" # outline
+  W: "#f4f4f4" # white shirt
+  j: "#4054bc" # blue jeans
+  k: "#342c26" # dark-brown hair
+  p: "#deaa86" # skin
+  r: "#d83a3a" # red jacket
 grid: |
   ................
   .....OOOOO......

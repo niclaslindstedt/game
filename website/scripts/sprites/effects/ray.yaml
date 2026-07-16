@@ -2,13 +2,16 @@ name: ray
 family: effects
 size: [8, 8]
 description: >
-  Laser bolt from the PROTOTYPE LASER and OVERCLOCKED LASER: a compact red
-  energy round with a bright white-hot core, reading as a searing laser
-  pulse.
+  Laser bolt from the PROTOTYPE LASER and OVERCLOCKED LASER.
+subject:
+  kind: projectile
+  build: a compact red energy round with a bright white-hot core, dark outline
+  accent: searing red laser
+  flavor: a searing laser pulse
 palette:
-  O: "#1a1c2c"
-  W: "#f4f4f4"
-  r: "#d83a3a"
+  O: "#1a1c2c" # dark outline
+  W: "#f4f4f4" # white-hot core
+  r: "#d83a3a" # red laser body
 grid: |
   ........
   ...OO...

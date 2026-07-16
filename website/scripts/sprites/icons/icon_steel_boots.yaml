@@ -2,12 +2,16 @@ name: icon_steel_boots
 family: icons
 size: [12, 12]
 description: >
-  A pair of dark steel-toe work boots with reinforced caps drawn side by
-  side; heavy HQ footwear.
+  A pair of dark steel-toe work boots with reinforced caps.
+subject:
+  kind: armor icon
+  features: a pair of boots side by side with reinforced steel toe caps
+  accent: dark with steel caps
+  flavor: heavy HQ footwear
 palette:
-  O: "#1a1c2c"
-  k: "#342c26"
-  v: "#60687e"
+  O: "#1a1c2c" # dark outline
+  k: "#342c26" # dark boot leather
+  v: "#60687e" # steel toe cap
 grid: |
   ............
   ............

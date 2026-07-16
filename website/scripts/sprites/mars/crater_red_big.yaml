@@ -2,18 +2,20 @@ name: crater_red_big
 family: mars
 size: [32, 32]
 description: >
-  A large jumpable crater blasted into the red regolith: a dark
-  oxide-brown bowl with a raised lighter rim, the hole reading as a
-  shadowed gap the hero hops and rovers pile up against. The bigger of
-  the two crater sizes.
+  A large jumpable crater blasted into the red regolith.
+subject:
+  kind: jumpable crater (ground obstacle)
+  build: a dark oxide-brown bowl with a raised lighter rim, the bigger of the two crater sizes
+  features: a shadowed gap at its center
+  flavor: the hero hops it and rovers pile up against it
 palette:
-  A: "#8d9196"
-  O: "#1a1c2c"
-  a: "#d6dce4"
-  d: "#80482d"
-  e: "#623722"
-  f: "#888a96"
-  u: "#c38668"
+  A: "#8d9196" # grey inner-rim rock
+  O: "#1a1c2c" # shadowed pit
+  a: "#d6dce4" # bright rim highlight
+  d: "#80482d" # oxide-brown rim
+  e: "#623722" # dark bowl floor
+  f: "#888a96" # grey rim shade
+  u: "#c38668" # dusty tan rim
 grid: |
   ................................
   ................................

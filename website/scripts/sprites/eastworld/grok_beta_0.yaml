@@ -2,15 +2,22 @@ name: grok_beta_0
 family: eastworld
 size: [24, 24]
 description: >
-  GROK BETA controller — a slim dark humanoid android with a glowing
-  magenta/pink square screen for a face; the weather-runner shooter that
-  ducks behind the compound rocks to reload.
+  GROK BETA controller — a slim dark android with a glowing magenta square
+  screen for a face; the weather-runner shooter.
+subject:
+  kind: elite — controller / shooter
+  name: GROK BETA
+  build: a slim dark humanoid android
+  features: a square screen for a head
+  accent: a glowing magenta/pink screen face
+  pose: standing, squared to the viewer
+  flavor: the weather-runner shooter that ducks behind the compound rocks to reload
 palette:
-  I: "#ec60be"
-  N: "#3a3644"
-  O: "#1a1c2c"
-  b: "#3f4553"
-  v: "#60687e"
+  I: "#ec60be" # magenta screen face
+  N: "#3a3644" # dark body panel
+  O: "#1a1c2c" # outline
+  b: "#3f4553" # dark feet
+  v: "#60687e" # grey limb joints
 grid: |
   ........................
   ........................

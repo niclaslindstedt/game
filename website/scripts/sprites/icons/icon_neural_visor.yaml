@@ -2,13 +2,17 @@ name: icon_neural_visor
 family: icons
 size: [12, 12]
 description: >
-  A wraparound white head-band visor with a single glowing amber
-  scan-stripe across the eyes; sleek printed Mars headgear.
+  A wraparound white visor band with a glowing scan-stripe across the eyes.
+subject:
+  kind: armor icon
+  features: a head-band visor with a single glowing scan-stripe across the eyes
+  accent: magenta scan-stripe
+  flavor: sleek printed Mars headgear
 palette:
-  O: "#1a1c2c"
-  Z: "#fca8e2"
-  a: "#d6dce4"
-  z: "#ec52be"
+  O: "#1a1c2c" # dark outline
+  Z: "#fca8e2" # bright scan highlight
+  a: "#d6dce4" # white visor band
+  z: "#ec52be" # magenta scan-stripe
 grid: |
   ............
   ............

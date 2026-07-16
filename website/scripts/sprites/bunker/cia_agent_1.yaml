@@ -2,15 +2,22 @@ name: cia_agent_1
 family: bunker
 size: [16, 16]
 description: >
-  A front-facing CIA agent in a plain matte-black suit over a white shirt with
-  a red tie, dark hair, arms slightly out; caught mid-stride with the legs
-  shifted from the standing pose.
+  A CIA agent mid-stride — a plain matte-black suit over a white shirt with a
+  red tie, dark hair, legs shifted from the standing pose.
+subject:
+  kind: minion
+  build: an average agent's build, arms slightly out
+  attire: plain matte-black suit over a white shirt
+  features: dark hair
+  accent: red tie
+  pose: caught mid-stride, the legs shifted from the standing pose
+  flavor: the fodder rank with a redacted job description
 palette:
-  C: "#d23c42"
-  K: "#0c0b12"
-  O: "#1a1c2c"
-  W: "#f4f4f4"
-  p: "#deaa86"
+  C: "#d23c42" # red tie
+  K: "#0c0b12" # near-black suit and hair
+  O: "#1a1c2c" # navy outline
+  W: "#f4f4f4" # white shirt
+  p: "#deaa86" # skin
 grid: |
   ................
   .....OOOO.......

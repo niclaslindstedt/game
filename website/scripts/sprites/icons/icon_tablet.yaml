@@ -2,13 +2,17 @@ name: icon_tablet
 family: icons
 size: [12, 12]
 description: >
-  A dark chiseled stone tablet slab ruled with a schedule of lines and
-  bars; the tribute-night gantt tablet.
+  A dark stone tablet slab ruled with a schedule of lines and bars.
+subject:
+  kind: item icon
+  features: a rectangular stone slab carved with rows of schedule bars
+  accent: grey stone with a green bar
+  flavor: the tribute-night gantt tablet
 palette:
-  G: "#4a7a3e"
-  O: "#1a1c2c"
-  b: "#3f4553"
-  v: "#60687e"
+  G: "#4a7a3e" # green schedule bar
+  O: "#1a1c2c" # dark outline
+  b: "#3f4553" # dark carved bar
+  v: "#60687e" # grey stone slab
 grid: |
   ............
   ..OOOOOOO...

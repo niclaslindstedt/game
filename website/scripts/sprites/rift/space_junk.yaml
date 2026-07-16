@@ -2,16 +2,20 @@ name: space_junk
 family: rift
 size: [16, 16]
 description: >
-  A hoppable obstacle: a piece of drifting junk from a thousand universes — a
-  battered grey suitcase/crate of metal and rivets. Reads as reachable cover,
-  a lost-luggage chunk of debris floating in the void.
+  A hoppable obstacle — a battered grey metal suitcase of rivets, lost luggage
+  drifting as cover in the void.
+subject:
+  kind: hoppable obstacle prop
+  build: a battered grey metal suitcase / crate
+  features: dented panels with gold latches and brass rivets
+  flavor: lost luggage from a thousand universes — reachable cover drifting in the void
 palette:
-  O: "#1a1c2c"
-  V: "#9095a5"
-  b: "#3f4553"
-  o: "#d6a842"
-  q: "#96762e"
-  v: "#60687e"
+  O: "#1a1c2c" # outline
+  V: "#9095a5" # grey highlight
+  b: "#3f4553" # dark metal shadow
+  o: "#d6a842" # gold latch
+  q: "#96762e" # brass rivet
+  v: "#60687e" # slate metal
 grid: |
   ................
   ................

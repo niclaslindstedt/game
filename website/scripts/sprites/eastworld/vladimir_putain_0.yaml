@@ -2,15 +2,24 @@ name: vladimir_putain_0
 family: eastworld
 size: [24, 24]
 description: >
-  VLADIMIR PUTAIN, the park's owner — a bare-armed man in a blue tracksuit
-  over a red top, planted in a wide judo stance with a pale, expressionless
-  face; the dictator who built a world he cannot lose.
+  VLADIMIR PUTAIN, the park's owner — a bare-armed man in a blue tracksuit over
+  a red top, planted in a wide judo stance; the dictator who built a world he
+  cannot lose.
+subject:
+  kind: boss
+  name: VLADIMIR PUTAIN
+  build: a bare-armed man of medium build
+  attire: a blue tracksuit over a red top
+  features: a pale, expressionless face with dark hair
+  accent: a red top under the blue tracksuit
+  pose: planted in a wide judo stance
+  flavor: the park's dictator-owner who built a world he cannot lose
 palette:
-  C: "#466096"
-  K: "#0c0b12"
-  O: "#1a1c2c"
-  p: "#deaa86"
-  r: "#d83a3a"
+  C: "#466096" # blue tracksuit
+  K: "#0c0b12" # eyes / shoes
+  O: "#1a1c2c" # outline
+  p: "#deaa86" # skin
+  r: "#d83a3a" # red top
 grid: |
   ........................
   ........................

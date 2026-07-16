@@ -2,14 +2,17 @@ name: icon_graviton_maw
 family: icons
 size: [12, 12]
 description: >
-  A black device housing cupping a swirling dark gravity well, faint
-  space bending at its mouth; a printed graviton weapon, heavy and
-  ominous.
+  A black housing cupping a swirling dark gravity well at its mouth.
+subject:
+  kind: weapon icon
+  features: a boxy emitter head on a short stem cupping a swirling well
+  accent: magenta gravity swirl
+  flavor: a printed graviton weapon, heavy and ominous
 palette:
-  N: "#303444"
-  O: "#1a1c2c"
-  Z: "#fca8e2"
-  z: "#ec52be"
+  N: "#303444" # dark housing
+  O: "#1a1c2c" # dark outline
+  Z: "#fca8e2" # bright pink swirl
+  z: "#ec52be" # magenta well core
 grid: |
   ............
   ...OOOOO....

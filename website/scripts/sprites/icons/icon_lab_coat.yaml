@@ -2,13 +2,17 @@ name: icon_lab_coat
 family: icons
 size: [12, 12]
 description: >
-  A white lab coat with a front placket, lapels, and a chest pocket; thin
-  cotton with deep pockets.
+  A white lab coat with lapels, a front placket, and a chest pocket.
+subject:
+  kind: armor icon
+  features: an open-lapel coat with a front placket and a chest pocket
+  accent: white cotton with a blue collar tab
+  flavor: thin cotton with deep pockets
 palette:
-  O: "#1a1c2c"
-  W: "#f4f4f4"
-  j: "#4054bc"
-  w: "#c6c6c6"
+  O: "#1a1c2c" # dark outline
+  W: "#f4f4f4" # white coat
+  j: "#4054bc" # blue collar tab
+  w: "#c6c6c6" # grey hem shade
 grid: |
   ............
   ..OOOOOOOO..

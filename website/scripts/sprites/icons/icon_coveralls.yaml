@@ -2,12 +2,16 @@ name: icon_coveralls
 family: icons
 size: [12, 12]
 description: >
-  A one-piece set of tan/grey maintenance coveralls with a front zip and
-  a chest pocket; generic janitorial work overalls.
+  One-piece tan maintenance coveralls with a front zip and chest pocket.
+subject:
+  kind: armor icon
+  features: a one-piece jumpsuit with short sleeves, a front zip, and a chest pocket
+  accent: work-tan / yellow
+  flavor: generic janitorial work overalls
 palette:
-  H: "#9e8b2d"
-  O: "#1a1c2c"
-  h: "#e2c640"
+  H: "#9e8b2d" # coverall shade
+  O: "#1a1c2c" # dark outline
+  h: "#e2c640" # tan-yellow coverall
 grid: |
   ............
   ............

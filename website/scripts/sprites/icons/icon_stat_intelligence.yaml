@@ -2,12 +2,17 @@ name: icon_stat_intelligence
 family: icons
 size: [12, 12]
 description: >
-  A tall purple wizard's hat with a gold band; the INTELLECT stat glyph.
+  The INTELLECT stat glyph: a tall purple wizard's hat with a gold band.
+subject:
+  kind: UI stat icon
+  features: a tall pointed wizard's hat with a gold band
+  accent: purple hat with a gold band
+  flavor: INTELLECT — spell power and mana
 palette:
-  M: "#644696e6"
-  O: "#1a1c2c"
-  m: "#a57de1e6"
-  y: "#ffb02e"
+  M: "#644696e6" # deep purple hat shadow
+  O: "#1a1c2c" # dark outline
+  m: "#a57de1e6" # lilac hat body
+  y: "#ffb02e" # gold hat band
 grid: |
   ............
   ......OO....

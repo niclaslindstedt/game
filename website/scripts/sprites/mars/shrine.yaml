@@ -2,21 +2,25 @@ name: shrine
 family: mars
 size: [24, 24]
 description: >
-  The lizard-god shrine hidden in the locked terrarium: a dark stone
-  frame around a carved green, scaled reptilian idol-face that glows
-  faintly. The altar PETER SEAL tends and tithes to.
+  The lizard-god shrine hidden in the locked terrarium.
+subject:
+  kind: shrine (prop / altar)
+  build: a dark stone frame around a carved reptilian idol-face
+  features: a green, scaled lizard-god visage that glows faintly, with gold trim
+  accent: the faint green glow
+  flavor: the altar PETER SEAL tends and tithes to
 palette:
-  G: "#4a7a3e"
-  O: "#1a1c2c"
-  d: "#80482d"
-  g: "#3d6433"
-  h: "#e2c640"
-  k: "#342c26"
-  l: "#678f5d"
-  n: "#b9e6cdf0"
-  o: "#d6a842"
-  q: "#96762e"
-  y: "#ffb02e"
+  G: "#4a7a3e" # green scaled visage
+  O: "#1a1c2c" # outline
+  d: "#80482d" # stone frame
+  g: "#3d6433" # dark green scale shadow
+  h: "#e2c640" # gold trim
+  k: "#342c26" # dark stone shadow
+  l: "#678f5d" # light green scale
+  n: "#b9e6cdf0" # pale idol glow
+  o: "#d6a842" # amber gold
+  q: "#96762e" # dim gold
+  y: "#ffb02e" # bright gold trim
 grid: |
   ........................
   .........OOOOOO.........

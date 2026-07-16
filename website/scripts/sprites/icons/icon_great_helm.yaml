@@ -2,12 +2,16 @@ name: icon_great_helm
 family: icons
 size: [12, 12]
 description: >
-  A grey flat-topped medieval great helm — a full steel bucket helmet
-  with a horizontal eye slit and breathing holes; faceless and heavy.
+  A grey flat-topped medieval great helm with an eye slit and air holes.
+subject:
+  kind: armor icon
+  features: a full bucket helm, flat top, a horizontal eye slit, and breathing holes
+  accent: grey steel
+  flavor: faceless and heavy
 palette:
-  O: "#1a1c2c"
-  V: "#9095a5"
-  v: "#60687e"
+  O: "#1a1c2c" # dark outline / slit
+  V: "#9095a5" # bright steel highlight
+  v: "#60687e" # grey steel
 grid: |
   ............
   ...OOOOOO...

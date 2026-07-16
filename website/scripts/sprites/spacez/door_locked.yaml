@@ -2,17 +2,22 @@ name: door_locked
 family: spacez
 size: [16, 16]
 description: >
-  A sealed metal security door set into the wall, split down the middle with
-  heavy panels and a red locked-status light; opens only with the matching
-  keycard.
+  A sealed metal security door split down the middle with heavy panels and a
+  red locked-status light; opens only with the matching keycard.
+subject:
+  kind: locked-door obstacle prop
+  build: a two-leaf sliding security door set flush in its frame, split down the centre
+  features: a red status panel glowing at the seam
+  accent: red locked-status light
+  flavor: the SpaceZ keycard gate; barred until the matching card is found
 palette:
-  O: "#1a1c2c"
-  R: "#ff5252"
-  V: "#9095a5"
-  b: "#3f4553"
-  f: "#888a96"
-  r: "#d83a3a"
-  v: "#60687e"
+  O: "#1a1c2c" # outline and frame
+  R: "#ff5252" # bright red lock-light core
+  V: "#9095a5" # light-grey door highlight
+  b: "#3f4553" # dark door shadow
+  f: "#888a96" # grey bolt studs
+  r: "#d83a3a" # red status-panel border
+  v: "#60687e" # slate door panels
 grid: |
   OOOOOOOOOOOOOOOO
   OVVVVVVbVVVVVVVO

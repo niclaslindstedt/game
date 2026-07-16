@@ -2,17 +2,21 @@ name: compound_fence
 family: eastworld
 size: [16, 16]
 description: >
-  A control-center compound fence panel — a dark metal barrier segment with
-  a yellow-and-black hazard stripe and small turquoise indicator lights; an
-  impassable ZAI-deck fence.
+  A control-center compound fence panel; an impassable ZAI-deck barrier.
+subject:
+  kind: prop — fence panel
+  build: a flat rectangular metal barrier segment
+  features: a hazard-stripe band across the middle, small indicator lights near the top
+  accent: yellow-and-black hazard stripe with turquoise indicator lights
+  flavor: an impassable ZAI-deck fence around the compound
 palette:
-  K: "#0c0b12"
-  O: "#1a1c2c"
-  Q: "#60f0d0"
-  V: "#9095a5"
-  b: "#3f4553"
-  v: "#60687e"
-  y: "#ffb02e"
+  K: "#0c0b12" # black hazard bar
+  O: "#1a1c2c" # outline
+  Q: "#60f0d0" # turquoise indicator light
+  V: "#9095a5" # bright metal cap
+  b: "#3f4553" # dark metal panel
+  v: "#60687e" # mid metal face
+  y: "#ffb02e" # yellow hazard bar
 grid: |
   OOOOOOOOOOOOOOOO
   OVVVVVVVVVVVVVVO

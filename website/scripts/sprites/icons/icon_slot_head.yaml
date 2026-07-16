@@ -2,12 +2,16 @@ name: icon_slot_head
 family: icons
 size: [12, 12]
 description: >
-  A small helmet silhouette glyph, a grey frame around an amber center, on
-  a dark rounded tile; the head-slot marker.
+  The head equipment-slot marker: a helmet silhouette on a dark rounded tile.
+subject:
+  kind: UI slot icon
+  features: a helmet silhouette, a grey frame around an amber visor, in a rounded tile
+  accent: amber visor
+  flavor: the head equipment slot
 palette:
-  O: "#1a1c2c"
-  V: "#9095a5"
-  y: "#ffb02e"
+  O: "#1a1c2c" # dark tile outline
+  V: "#9095a5" # grey helmet frame
+  y: "#ffb02e" # amber visor
 grid: |
   ............
   ...OOOOOO...

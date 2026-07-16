@@ -2,11 +2,13 @@ name: blood_1
 family: effects
 size: [12, 12]
 description: >
-  A gore spatter: small bright-red blood droplets scattered in a rough ring
-  flung outward from a central impact point, on a transparent background.
-  Reads as the moment a wound bursts and the blood sprays apart.
+  A gore spatter bursting apart the instant a wound sprays open.
+subject:
+  kind: impact effect
+  build: small bright-red droplets scattered in a rough ring flung outward from a central point
+  flavor: the burst frame, the wound spraying apart; the paired splat frame is the initial hit
 palette:
-  r: "#d83a3a"
+  r: "#d83a3a" # red blood
 grid: |
   ............
   ..rr....rr..

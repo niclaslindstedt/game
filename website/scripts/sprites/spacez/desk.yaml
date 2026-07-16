@@ -2,19 +2,25 @@ name: desk
 family: spacez
 size: [20, 12]
 description: >
-  A grey office desk seen from above with a small dark monitor and keyboard
-  on top; a hop-over obstacle of the office floor.
+  A grey office desk seen from above with a small dark monitor and keyboard on
+  top; a hop-over obstacle of the office floor.
+subject:
+  kind: hop-over obstacle prop
+  build: a rectangular office desk seen from above, drawers down one side
+  features: a small dark monitor and keyboard sitting on the surface
+  accent: cool-grey desktop with a cyan-lit screen
+  flavor: an abandoned workstation on the SpaceZ office floor
 palette:
-  O: "#1a1c2c"
-  T: "#c0c5cf"
-  V: "#9095a5"
-  W: "#f4f4f4"
-  b: "#3f4553"
-  c: "#8ccdd7e1"
-  o: "#d6a842"
-  s: "#818690"
-  v: "#60687e"
-  x: "#c5e6ebe1"
+  O: "#1a1c2c" # outline
+  T: "#c0c5cf" # pale desktop surface
+  V: "#9095a5" # light-grey keyboard
+  W: "#f4f4f4" # white screen bezel
+  b: "#3f4553" # dark drawer fronts
+  c: "#8ccdd7e1" # cyan monitor screen
+  o: "#d6a842" # small amber desk light
+  s: "#818690" # grey desktop shadow
+  v: "#60687e" # slate desk edge
+  x: "#c5e6ebe1" # bright screen highlight
 grid: |
   ....OOOOOOO.........
   ....OWxxxxO.........

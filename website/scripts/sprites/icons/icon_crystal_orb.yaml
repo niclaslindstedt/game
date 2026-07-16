@@ -2,15 +2,19 @@ name: icon_crystal_orb
 family: icons
 size: [12, 12]
 description: >
-  A glowing pale-blue crystal ball with an inner highlight, resting on a
-  small dark stand; a scrying orb that shows the blow before it lands.
+  A glowing pale-blue crystal ball on a small gold stand.
+subject:
+  kind: weapon icon
+  features: a round crystal ball with an inner highlight on a small stand
+  accent: pale-blue glow
+  flavor: a scrying orb that shows the blow before it lands
 palette:
-  O: "#1a1c2c"
-  W: "#f4f4f4"
-  e: "#5ab4ff"
-  o: "#d6a842"
-  q: "#96762e"
-  s: "#d6f0ff"
+  O: "#1a1c2c" # dark outline
+  W: "#f4f4f4" # white inner highlight
+  e: "#5ab4ff" # blue orb glow
+  o: "#d6a842" # gold stand
+  q: "#96762e" # dark gold stand shade
+  s: "#d6f0ff" # pale cyan glow
 grid: |
   ............
   ....OOOO....

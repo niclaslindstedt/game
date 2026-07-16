@@ -2,16 +2,23 @@ name: employee_of_the_month_1
 family: spacez
 size: [16, 16]
 description: >
-  EMPLOYEE OF THE MONTH: a smug beige-clad office worker standing proud with
-  his chest puffed out and a gleaming polished gold badge on his chest,
-  front-facing. Caught mid-stride, his legs planted wide apart in a walking
-  step.
+  EMPLOYEE OF THE MONTH mid-stride — the smug beige-clad staffer with his gold
+  badge, legs shifted into a walking step.
+subject:
+  kind: elite minion
+  name: EMPLOYEE OF THE MONTH
+  build: an office worker puffed up with pride, chest thrust out
+  attire: beige office suit
+  features: a gleaming gold badge pinned to the chest with a red centre
+  accent: polished gold badge
+  pose: caught mid-stride, legs planted wide apart in a walking step
+  flavor: guards the break room as if it were his by right
 palette:
-  O: "#1a1c2c"
-  W: "#f4f4f4"
-  o: "#d6a842"
-  p: "#deaa86"
-  r: "#d83a3a"
+  O: "#1a1c2c" # outline
+  W: "#f4f4f4" # white shirt
+  o: "#d6a842" # gold-beige suit
+  p: "#deaa86" # skin
+  r: "#d83a3a" # red badge centre
 grid: |
   ................
   .....OOOOO......

@@ -3,17 +3,22 @@ family: bunker
 size: [24, 32]
 description: >
   A tall, heavy service blast door set in the vault's far wall — a dark steel
-  slab framed by yellow-and-black hazard chevrons with a lit indicator strip;
-  the level's exit objective, larger than a doorway (24x32).
+  slab framed by yellow-and-black hazard chevrons with a lit indicator strip.
+subject:
+  kind: prop
+  build: a tall, heavy service blast door, a dark steel slab set in the vault's far wall, larger than a doorway
+  features: yellow-and-black hazard chevrons top and bottom, a lit indicator strip
+  accent: yellow hazard chevrons
+  flavor: the level's exit objective
 palette:
-  I: "#f6d074"
-  K: "#0c0b12"
-  N: "#3a3846"
-  O: "#1a1c2c"
-  V: "#9095a5"
-  b: "#3f4553"
-  v: "#60687e"
-  y: "#ffb02e"
+  I: "#f6d074" # lit indicator strip
+  K: "#0c0b12" # black chevron bars
+  N: "#3a3846" # dark steel frame
+  O: "#1a1c2c" # navy outline
+  V: "#9095a5" # steel highlight
+  b: "#3f4553" # dark steel panel
+  v: "#60687e" # steel slab
+  y: "#ffb02e" # yellow hazard chevrons
 grid: |
   ........................
   .......OOOOOOOOOO.......

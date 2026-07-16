@@ -2,11 +2,15 @@ name: icon_leather_boots
 family: icons
 size: [12, 12]
 description: >
-  A pair of brown leather boots with darker soles; the hero's plain
-  everyday starting footwear.
+  A pair of brown leather boots with darker soles.
+subject:
+  kind: armor icon
+  features: a pair of ankle boots drawn side by side with darker soles
+  accent: worn leather brown
+  flavor: the hero's plain everyday starting footwear
 palette:
-  O: "#1a1c2c"
-  k: "#342c26"
+  O: "#1a1c2c" # dark outline
+  k: "#342c26" # leather brown
 grid: |
   ............
   ............

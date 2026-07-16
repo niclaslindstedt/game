@@ -2,13 +2,16 @@ name: vial
 family: effects
 size: [8, 8]
 description: >
-  A small upright glass vial of pale, faintly-glowing liquid with a narrow
-  neck and a bright highlight, reading as a minor potion/tonic — a generic
-  flask pickup or shot sprite in the loot-cyan palette.
+  A minor potion/tonic — a generic flask pickup in the loot-cyan palette.
+subject:
+  kind: pickup
+  build: a small upright glass vial with a narrow neck and a bright highlight, holding pale faintly-glowing liquid
+  accent: pale loot-cyan glowing liquid
+  flavor: a minor tonic, a generic flask pickup or shot
 palette:
-  O: "#1a1c2c"
-  n: "#b9e6cdf0"
-  x: "#c5e6ebe1"
+  O: "#1a1c2c" # dark outline
+  n: "#b9e6cdf0" # pale mint liquid
+  x: "#c5e6ebe1" # cyan glass highlight
 grid: |
   ........
   ...OO...

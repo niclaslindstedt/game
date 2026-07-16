@@ -2,12 +2,16 @@ name: icon_longbow
 family: icons
 size: [12, 12]
 description: >
-  A tall wooden English longbow, gently curved and strung, held upright;
-  the longest-reaching bow, warm yew wood.
+  A tall wooden English longbow, gently curved and strung upright.
+subject:
+  kind: weapon icon
+  features: an upright curved bow limb with a taut bowstring
+  accent: warm yew wood, pale string
+  flavor: the longest-reaching bow
 palette:
-  B: "#92643e"
-  O: "#1a1c2c"
-  w: "#c6c6c6"
+  B: "#92643e" # yew wood limb
+  O: "#1a1c2c" # dark outline
+  w: "#c6c6c6" # pale bowstring
 grid: |
   ............
   ....OO......

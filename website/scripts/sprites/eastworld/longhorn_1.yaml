@@ -2,22 +2,28 @@ name: longhorn_1
 family: eastworld
 size: [24, 20]
 description: >
-  A top-down robotic steer the size of a stagecoach — a broad, low dark-metal
-  chassis on wheels with two glowing turquoise eyes and a pair of wide, pale
-  up-curving horns spreading from its head; the slow, brutal heavy of the
-  horde. Mid-step in its lumbering walk, near-identical to the rest of the
-  cycle.
+  A robotic steer the size of a stagecoach, top-down — a low metal chassis on
+  wheels with turquoise eyes and wide pale up-curving horns; the slow, brutal
+  heavy of the horde, mid-step.
+subject:
+  kind: minion — heavy
+  build: a broad low chassis on wheels, the size of a stagecoach
+  attire: a weathered wood-plank cart body over dark metal
+  features: two glowing turquoise eyes and a pair of wide pale up-curving horns
+  accent: turquoise eyes and an amber underlight between pale horns
+  pose: mid-step in its lumbering walk
+  flavor: the slow, brutal heavy of the horde
 palette:
-  A: "#8d9196"
-  B: "#92643e"
-  E: "#5d4028"
-  N: "#3a3644"
-  O: "#1a1c2c"
-  Q: "#60f0d0"
-  S: "#b39378"
-  U: "#f0c658"
-  a: "#d6dce4"
-  v: "#60687e"
+  A: "#8d9196" # horn-base / face metal
+  B: "#92643e" # wood-plank cart body
+  E: "#5d4028" # dark cart timber
+  N: "#3a3644" # dark head panel
+  O: "#1a1c2c" # outline
+  Q: "#60f0d0" # turquoise eyes
+  S: "#b39378" # pale plank highlight
+  U: "#f0c658" # amber underlight
+  a: "#d6dce4" # pale horns
+  v: "#60687e" # grey face strip
 grid: |
   ........................
   ..O..................O..

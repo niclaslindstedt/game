@@ -2,14 +2,20 @@ name: entrance
 family: spacez
 size: [32, 32]
 description: >
-  The HQ front entrance: a pair of automatic sliding glass doors in a metal
+  The HQ front entrance — a pair of automatic sliding glass doors in a metal
   frame, faintly lit blue; the lobby landmark the hero walks in through.
+subject:
+  kind: landmark prop
+  build: a tall doorway of paired sliding glass panels set in a heavy metal frame
+  features: a split down the centre where the two glass leaves meet, red header lights
+  accent: pale-blue tinted glass
+  flavor: the SpaceZ lobby threshold where the story begins
 palette:
-  O: "#1a1c2c"
-  V: "#9095a5"
-  b: "#3f4553"
-  r: "#d83a3a"
-  x: "#c5e6ebe1"
+  O: "#1a1c2c" # outline and frame
+  V: "#9095a5" # brushed-metal frame face
+  b: "#3f4553" # dark floor sill
+  r: "#d83a3a" # red header status lights
+  x: "#c5e6ebe1" # pale-blue tinted glass
 grid: |
   ................................
   ....OOOOOOOOOOOOOOOOOOOOOOOO....

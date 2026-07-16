@@ -2,11 +2,15 @@ name: icon_jeans
 family: icons
 size: [12, 12]
 description: >
-  A pair of blue denim jeans with stitched seams and a hint of pocket
-  detail; the hero's everyday starting legwear.
+  A pair of blue denim jeans with stitched seams.
+subject:
+  kind: armor icon
+  features: a pair of trousers joined at the waist into an inverted-U with seam detail
+  accent: blue denim
+  flavor: the hero's everyday starting legwear
 palette:
-  O: "#1a1c2c"
-  j: "#4054bc"
+  O: "#1a1c2c" # dark outline
+  j: "#4054bc" # blue denim
 grid: |
   ............
   ............

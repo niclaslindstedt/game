@@ -2,15 +2,18 @@ name: icon_badge
 family: icons
 size: [12, 12]
 description: >
-  A clip-on corporate ID badge — a laminated card with a photo strip and
-  a colored access band, hung from a clip; reads as an all-areas security
-  pass.
+  A clip-on corporate ID badge with a photo strip and access band.
+subject:
+  kind: item icon
+  features: a laminated ID card with a photo strip and colored band, hung from a clip
+  accent: amber clip
+  flavor: an all-areas security pass
 palette:
-  O: "#1a1c2c"
-  W: "#f4f4f4"
-  p: "#deaa86"
-  w: "#c6c6c6"
-  y: "#ffb02e"
+  O: "#1a1c2c" # dark outline
+  W: "#f4f4f4" # white card
+  p: "#deaa86" # photo skin tone
+  w: "#c6c6c6" # grey access band
+  y: "#ffb02e" # amber clip
 grid: |
   ............
   ....OyO.....

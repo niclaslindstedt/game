@@ -2,13 +2,17 @@ name: icon_bag
 family: icons
 size: [12, 12]
 description: >
-  A plain brown carry-all satchel with a flap and strap; the simplest
-  storage bag, unadorned leather-tan.
+  A plain brown carry-all satchel with a flap and strap.
+subject:
+  kind: item icon
+  features: a leather satchel with a top flap and a carry strap
+  accent: leather-tan brown
+  flavor: the simplest storage bag
 palette:
-  B: "#92643e"
-  E: "#5d4028"
-  O: "#1a1c2c"
-  o: "#d6a842"
+  B: "#92643e" # tan leather body
+  E: "#5d4028" # dark leather shadow
+  O: "#1a1c2c" # dark outline
+  o: "#d6a842" # gold buckle
 grid: |
   ....OOOO....
   ...OB..BO...

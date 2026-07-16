@@ -2,14 +2,18 @@ name: icon_star
 family: icons
 size: [12, 12]
 description: >
-  A bright gold four-pointed sparkle star with a white center highlight; a
-  reward/favorite marker glyph.
+  A bright gold four-pointed sparkle star with a white center.
+subject:
+  kind: UI icon
+  features: a four-pointed sparkle star with a white center highlight
+  accent: bright gold
+  flavor: a reward / favorite marker
 palette:
-  O: "#1a1c2c"
-  W: "#f4f4f4"
-  Y: "#ffe3b6"
-  q: "#96762e"
-  y: "#ffb02e"
+  O: "#1a1c2c" # dark outline
+  W: "#f4f4f4" # white center
+  Y: "#ffe3b6" # pale gold tips
+  q: "#96762e" # dark gold shadow
+  y: "#ffb02e" # bright gold
 grid: |
   ............
   .....OO.....

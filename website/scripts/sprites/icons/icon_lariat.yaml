@@ -2,13 +2,16 @@ name: icon_lariat
 family: icons
 size: [12, 12]
 description: >
-  A coiled silver mono-wire lasso — a looping bright-metal rope forming a
-  wide open noose; a monomolecular cattle lariat that cracks a whole
-  circle.
+  A coiled mono-wire lasso looping into a wide open noose.
+subject:
+  kind: weapon icon
+  features: a coiled rope forming a wide open loop with a trailing tail
+  accent: tan rope with a bright-metal wire tail
+  flavor: a monomolecular cattle lariat that cracks a whole circle
 palette:
-  B: "#92643e"
-  O: "#1a1c2c"
-  V: "#9095a5"
+  B: "#92643e" # tan rope
+  O: "#1a1c2c" # dark outline
+  V: "#9095a5" # bright wire tail
 grid: |
   ............
   ...OOOOO....

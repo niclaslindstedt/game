@@ -2,13 +2,17 @@ name: icon_golden_stapler
 family: icons
 size: [12, 12]
 description: >
-  A gleaming gold office stapler in profile; a CEO's desk ornament that
-  somehow fires staples — precious and absurd.
+  A gleaming gold office stapler in profile.
+subject:
+  kind: weapon icon
+  features: an office stapler with a hinged top arm and base
+  accent: gleaming gold
+  flavor: a CEO's desk ornament that somehow fires staples — precious and absurd
 palette:
-  O: "#1a1c2c"
-  o: "#d6a842"
-  q: "#96762e"
-  y: "#ffb02e"
+  O: "#1a1c2c" # dark outline
+  o: "#d6a842" # gold body
+  q: "#96762e" # dark gold base
+  y: "#ffb02e" # bright gold top
 grid: |
   ............
   ..OOOOOO....

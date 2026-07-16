@@ -2,21 +2,26 @@ name: grok_omega_0
 family: rift
 size: [48, 48]
 description: >
-  GROK OMEGA, ZAI's superintelligence avatar: a hovering dark monolith/screen
-  dominated by one enormous unblinking cyan eye, a green data-waveform and
-  stair-stepped readout tracing across the panel, faint magenta glitch-sparks
-  at the corners. Reads as an all-seeing surveillance machine-mind.
+  GROK OMEGA, ZAI's superintelligence — a hovering dark monolith dominated by
+  one enormous unblinking cyan eye, an all-seeing machine-mind.
+subject:
+  kind: boss
+  name: GROK OMEGA
+  build: a hovering upright monolith / screen in a grey bezel
+  features: a black panel dominated by one enormous unblinking cyan eye (pale iris, black pupil), a green data-waveform and stair-stepped readout tracing across it
+  accent: cyan eye and green readout
+  flavor: ZAI's latest superintelligence that found the rift and told no one — an all-seeing surveillance machine-mind, magenta glitch-sparks flicking off its edges
 palette:
-  K: "#0a0910"
-  L: "#d4a5ec"
-  O: "#1a1c2c"
-  P: "#b05cdc"
-  Q: "#60f0d0"
-  V: "#9095a5"
-  X: "#ec52be"
-  b: "#3f4553"
-  v: "#60687e"
-  x: "#c5e6ebe1"
+  K: "#0a0910" # black screen panel
+  L: "#d4a5ec" # lilac spark tail
+  O: "#1a1c2c" # outline
+  P: "#b05cdc" # violet corner spark
+  Q: "#60f0d0" # cyan eye and green readout
+  V: "#9095a5" # grey bezel highlight
+  X: "#ec52be" # magenta glitch-spark
+  b: "#3f4553" # dark bezel shadow
+  v: "#60687e" # slate bezel
+  x: "#c5e6ebe1" # pale cyan eye-white
 grid: |
   ............PP.........PP........PP.............
   ............LP.........LP........LP.............

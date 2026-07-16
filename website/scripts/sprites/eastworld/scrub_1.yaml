@@ -2,12 +2,17 @@ name: scrub_1
 family: eastworld
 size: [16, 16]
 description: >
-  Alternate dry-scrub patch — tan dirt with a slightly different scatter of
-  olive-green brush tufts; pairs with scrub_0 for variety.
+  An alternate dry-scrub patch — tan dirt with a different scatter of
+  olive-green tufts; pairs with scrub_0 for variety.
+subject:
+  kind: ground tile — scrub patch variant
+  build: a flat dirt tile with a different scatter of brush tufts
+  accent: sparse olive-green tufts over tan dirt
+  flavor: pairs with the base scrub tile for variety
 palette:
-  d: "#665c34"
-  e: "#8a7e46"
-  z: "#ceac78"
+  d: "#665c34" # dark brush fleck
+  e: "#8a7e46" # olive-green tuft
+  z: "#ceac78" # tan dirt base
 grid: |
   zzzzzzzzzzzzzzzz
   zzzzzzzzezzzzzzz

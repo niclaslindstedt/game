@@ -2,13 +2,17 @@ name: icon_prompt_injector
 family: icons
 size: [12, 12]
 description: >
-  A dark magic sidearm on a diagonal with a glowing blue-white injector
-  muzzle tip; PRIME's prompt-firing pistol.
+  A dark magic sidearm with a glowing blue-white injector muzzle.
+subject:
+  kind: weapon icon
+  features: a diagonal sidearm with a glowing injector nozzle at the muzzle
+  accent: blue-white injector glow
+  flavor: PRIME's prompt-firing pistol
 palette:
-  O: "#1a1c2c"
-  b: "#3f4553"
-  c: "#8ccdd7e1"
-  v: "#60687e"
+  O: "#1a1c2c" # dark outline
+  b: "#3f4553" # dark grip
+  c: "#8ccdd7e1" # cyan injector glow
+  v: "#60687e" # grey body
 grid: |
   ............
   .OvO........

@@ -2,13 +2,17 @@ name: icon_coins
 family: icons
 size: [12, 12]
 description: >
-  A small pile of stacked gold coins, a few loose ones at the base; the
-  currency in quantity — merchant/money marker.
+  A pile of stacked gold coins; the money/merchant marker.
+subject:
+  kind: item icon
+  features: two stacks of coins with a loose stack at the base
+  accent: gold
+  flavor: currency in quantity — the merchant/money marker
 palette:
-  O: "#1a1c2c"
-  o: "#d6a842"
-  q: "#96762e"
-  y: "#ffb02e"
+  O: "#1a1c2c" # dark outline
+  o: "#d6a842" # coin gold
+  q: "#96762e" # dark gold shadow
+  y: "#ffb02e" # bright gold highlight
 grid: |
   .OOOO..OOOO.
   OyyooOOyyooO

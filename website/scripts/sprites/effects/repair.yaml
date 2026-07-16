@@ -2,15 +2,18 @@ name: repair
 family: effects
 size: [12, 12]
 description: >
-  The weapon repair-kit pickup: a small dark toolbox/briefcase with a handle
-  and an amber-orange latch or tool showing, reading as a case of tools that
-  patches up your gear.
+  The weapon repair-kit pickup that patches up your gear.
+subject:
+  kind: pickup
+  build: a small toolbox briefcase with a handle on top, silver-grey body over a dark base, an amber-orange tool showing
+  accent: amber-orange latch/tool
+  flavor: a case of tools that repairs worn weapons
 palette:
-  A: "#8d9196"
-  O: "#1a1c2c"
-  Y: "#ffe3b6"
-  a: "#d6dce4"
-  y: "#ffb02e"
+  A: "#8d9196" # grey toolbox body
+  O: "#1a1c2c" # dark outline and base
+  Y: "#ffe3b6" # pale tool highlight
+  a: "#d6dce4" # silver toolbox lid
+  y: "#ffb02e" # amber-orange tool
 grid: |
   ....OOOO....
   ...OO..OO...

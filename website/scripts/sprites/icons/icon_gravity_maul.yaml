@@ -2,14 +2,18 @@ name: icon_gravity_maul
 family: icons
 size: [12, 12]
 description: >
-  A heavy black cube head on a short handle, edges rimmed with orange
-  gravitic glow; a maul so dense swinging it moves the ground.
+  A heavy black cube maul head on a short handle, rimmed with purple glow.
+subject:
+  kind: weapon icon
+  features: a dense cubic maul head on a short handle
+  accent: purple gravitic rim glow
+  flavor: a maul so dense swinging it moves the ground
 palette:
-  B: "#92643e"
-  N: "#303444"
-  O: "#1a1c2c"
-  P: "#b05cdc"
-  b: "#3f4553"
+  B: "#92643e" # wooden handle
+  N: "#303444" # dark cube face
+  O: "#1a1c2c" # dark outline
+  P: "#b05cdc" # purple gravitic glow
+  b: "#3f4553" # cube edge shade
 grid: |
   ............
   ..OOOOO.....

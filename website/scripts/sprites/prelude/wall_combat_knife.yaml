@@ -2,17 +2,21 @@ name: wall_combat_knife
 family: prelude
 size: [10, 22]
 description: >
-  A military combat knife mounted point-down on the living-room wall, ~10×22
-  px: a grey steel blade with a dark wrapped handle and a small guard, hung
-  vertically on a mount. The HARD-difficulty starting weapon the hero takes off
-  the wall.
+  A military combat knife mounted point-down on the living-room wall — the
+  HARD-difficulty starting weapon.
+subject:
+  kind: prop, wall-mounted weapon
+  build: a combat knife hung point-down, a straight blade, a small crossguard, and a wrapped handle
+  features: grey steel blade with a bright edge, dark wrapped grip
+  accent: steel blade sheen
+  flavor: the weapon the hero takes off the back wall on HARD difficulty
 palette:
-  N: "#303444"
-  O: "#1a1c2c"
-  V: "#9095a5"
-  a: "#d6dce4"
-  b: "#3f4553"
-  v: "#60687e"
+  N: "#303444" # dark wrapped handle
+  O: "#1a1c2c" # outline
+  V: "#9095a5" # grey steel blade
+  a: "#d6dce4" # bright guard highlight
+  b: "#3f4553" # dark wall mount
+  v: "#60687e" # blade shadow
 grid: |
   ..........
   ..........

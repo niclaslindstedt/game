@@ -2,12 +2,14 @@ name: tracks
 family: mars
 size: [16, 8]
 description: >
-  Rover tire tracks pressed into the dust: two parallel dashed tread
-  lines of dark brown across the regolith, proof someone's machines have
-  worked this ground for years.
+  Rover tire tracks pressed into the dust.
+subject:
+  kind: decor (ground overlay)
+  build: two parallel dashed tread lines of dark brown across the regolith
+  flavor: proof someone's machines have worked this ground for years
 palette:
-  d: "#80482d"
-  e: "#623722"
+  d: "#80482d" # tread mark
+  e: "#623722" # dark tread shade
 grid: |
   ................
   .dd..dd..dd..dd.

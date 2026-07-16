@@ -2,12 +2,16 @@ name: icon_duster
 family: icons
 size: [12, 12]
 description: >
-  A long brown western trail duster coat with a split hem and a collar;
-  worn over a printed exoframe.
+  A long brown western trail duster coat with a split hem and collar.
+subject:
+  kind: armor icon
+  features: a long coat with a raised collar, front seam, and a split hem
+  accent: trail-worn brown
+  flavor: worn over a printed exoframe
 palette:
-  B: "#92643e"
-  E: "#5d4028"
-  O: "#1a1c2c"
+  B: "#92643e" # duster brown
+  E: "#5d4028" # dark coat shadow
+  O: "#1a1c2c" # dark outline
 grid: |
   ............
   ...OOOOOO...

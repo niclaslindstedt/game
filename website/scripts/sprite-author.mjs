@@ -27,6 +27,16 @@
 //       vanish on its own tiles). Defaults to writing an @Nx PNG under the
 //       preview dir.
 //
+//   verify <sprite-name> [--scale N] [--out path]
+//       The sync gate — generate the sprite's prompt AND render its pose in one
+//       shot, then run the mechanical prompt↔sprite coherence check
+//       (`coherence.mjs`): is the prompt whole enough to recreate the sprite,
+//       and does anything in the words (a restated size, a stray "front-facing",
+//       an unnamed color) fight the pixels? Prints the prompt, the pose path,
+//       and the findings, then hands the semantic "does it LOOK like the words"
+//       call to the eye. Run it whenever a sprite is created or its
+//       description/subject changes.
+//
 //   compare <sprite-name> <reference.png>
 //       Score the rendered sprite against a reference image (SSIM + mean OKLab
 //       ΔE + coverage). A triage number for the refine loop, NOT an acceptance
@@ -39,6 +49,7 @@ import { fileURLToPath } from "node:url";
 import { parse } from "yaml";
 
 import { compareSurfaces } from "./asset-tools/compare.mjs";
+import { promptSelfCheck } from "./asset-tools/coherence.mjs";
 import { gridToSurface } from "./asset-tools/grid.mjs";
 import { loadImage, resampleToCells } from "./asset-tools/image.mjs";
 import { writePng } from "./asset-tools/preview.mjs";
@@ -190,6 +201,7 @@ function promptCmd(positional, flags) {
 
   const prompt = buildImagePrompt({
     description: sprite.description,
+    subject: sprite.subject,
     familyStyle: family.style,
     size: sprite.size,
     palette: sprite.palette,
@@ -208,11 +220,13 @@ function promptCmd(positional, flags) {
 
 // ---- pose: render a base sprite on its own family ground -------------------
 
-function pose(positional, flags) {
-  const name = positional[0];
-  if (!name) die("pose needs a sprite name");
-  const { SPRITES, SPRITE_PALETTES, SPRITE_FAMILY, FAMILIES } = loadSprites();
-
+/**
+ * Render a base sprite centered on a patch of its own family ground and write
+ * the upscaled PNG — the shared review surface for `pose` and `verify`. Returns
+ * `{ outPath, ground }`. Dies if the name isn't a posable hand-authored sprite.
+ */
+async function renderPose(name, flags, data) {
+  const { SPRITES, SPRITE_PALETTES, SPRITE_FAMILY, FAMILIES } = data;
   const grid = SPRITES[name];
   if (!grid) {
     die(
@@ -220,8 +234,7 @@ function pose(positional, flags) {
         `pick a hand-authored sprite)`,
     );
   }
-  const familyName = SPRITE_FAMILY[name];
-  const family = FAMILIES.find((f) => f.name === familyName);
+  const family = FAMILIES.find((f) => f.name === SPRITE_FAMILY[name]);
   const groundGrid = SPRITES[family.ground];
   const ground = gridToSurface(groundGrid, SPRITE_PALETTES[family.ground]);
   const sprite = gridToSurface(grid, SPRITE_PALETTES[name]);
@@ -241,13 +254,20 @@ function pose(positional, flags) {
       ? resolve(flags.out)
       : `${previewDir}/pose_${name}@${scale}x.png`;
   mkdirSync(dirname(outPath), { recursive: true });
-  return writePng(upscale(canvas, scale), outPath).then(() => {
-    const desc = readDescription(familyName, name);
-    console.log(`pose → ${outPath}  (${family.ground} ground)`);
-    console.log(
-      `description: ${desc || "(empty — the acceptance target is unset)"}`,
-    );
-  });
+  await writePng(upscale(canvas, scale), outPath);
+  return { outPath, ground: family.ground };
+}
+
+async function pose(positional, flags) {
+  const name = positional[0];
+  if (!name) die("pose needs a sprite name");
+  const data = loadSprites();
+  const { outPath, ground } = await renderPose(name, flags, data);
+  const desc = readDescription(data.SPRITE_FAMILY[name], name);
+  console.log(`pose → ${outPath}  (${ground} ground)`);
+  console.log(
+    `description: ${desc || "(empty — the acceptance target is unset)"}`,
+  );
 }
 
 /** Read a base sprite's `description` straight from its YAML for the pose readout. */
@@ -258,6 +278,62 @@ function readDescription(family, name) {
   } catch {
     return "";
   }
+}
+
+// ---- verify: prompt ↔ sprite coherence -------------------------------------
+
+async function verify(positional, flags) {
+  const name = positional[0];
+  if (!name) die("verify needs a sprite name");
+  const data = loadSprites();
+  const familyName = data.SPRITE_FAMILY[name];
+  if (!familyName) {
+    die(
+      `no base sprite "${name}" (derived wound/worn variants have no fields to ` +
+        `verify — pick a hand-authored sprite)`,
+    );
+  }
+  const family = data.FAMILIES.find((f) => f.name === familyName);
+  const text = readFileSync(`${spritesDir}/${familyName}/${name}.yaml`, "utf8");
+  const sprite = parse(text);
+  const paletteNames = paletteComments(text);
+
+  // The two halves the sync check compares: the prompt words and the rendered
+  // pixels. Build both, then run the mechanical desync check between them.
+  const prompt = buildImagePrompt({
+    description: sprite.description,
+    subject: sprite.subject,
+    familyStyle: family.style,
+    size: sprite.size,
+    palette: sprite.palette,
+    paletteNames,
+  });
+  const { outPath, ground } = await renderPose(name, flags, data);
+  const findings = promptSelfCheck({
+    description: sprite.description,
+    subject: sprite.subject,
+    size: sprite.size,
+    palette: sprite.palette,
+    paletteNames,
+  });
+
+  console.log(prompt);
+  console.log(`\npose  → ${outPath}  (${ground} ground)\n`);
+  if (findings.length === 0) {
+    console.log("coherence: ✓ nothing in the words fights the pixels");
+  } else {
+    const mark = { fix: "✗", trim: "~", note: "·" };
+    console.log("coherence:");
+    for (const f of findings) {
+      console.log(`  ${mark[f.level] ?? "-"} [${f.level}] ${f.message}`);
+    }
+  }
+  console.log(
+    "\nNow read the prompt against the pose: could you recreate this sprite from\n" +
+      "the prompt alone, and does the sprite look like the prompt says? If the two\n" +
+      "disagree, sync them — the description/subject is the acceptance target, so\n" +
+      "the grid usually yields (see the pixel-assets skill).",
+  );
 }
 
 // ---- compare: rendered sprite vs a reference image -------------------------
@@ -287,15 +363,18 @@ async function compare(positional) {
 const [, , cmd, ...rest] = process.argv;
 const { flags, positional } = parseArgs(rest);
 
-const commands = { prompt: promptCmd, analyze, pose, compare };
+const commands = { prompt: promptCmd, analyze, pose, verify, compare };
 if (!commands[cmd]) {
-  console.error("usage: sprite-author <prompt|analyze|pose|compare> ...");
+  console.error(
+    "usage: sprite-author <prompt|analyze|pose|verify|compare> ...",
+  );
   console.error("  prompt <sprite-name> [--out path]");
   console.error(
     "  analyze <image.png> --name N --family F [--size WxH] [--colors K] [--out path]",
   );
   console.error("           [--model M] [--seed S] [--prompt-file P]");
   console.error("  pose <sprite-name> [--scale N] [--out path]");
+  console.error("  verify <sprite-name> [--scale N] [--out path]");
   console.error("  compare <sprite-name> <reference.png>");
   process.exit(cmd ? 1 : 0);
 }

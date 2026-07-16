@@ -2,14 +2,23 @@ name: security_chief_0
 family: spacez
 size: [24, 24]
 description: >
-  THE CHIEF OF SECURITY, elite: a broad, imposing man in a dark navy
-  security uniform with a peaked cap and a gold badge, front-facing.
+  THE CHIEF OF SECURITY — a broad, imposing man in a dark navy security
+  uniform with a peaked cap and a gold badge.
+subject:
+  kind: elite
+  name: THE CHIEF OF SECURITY
+  build: a broad, imposing, heavyset man
+  attire: a dark navy security uniform with a lighter blue placket
+  features: a peaked navy cap, a gold badge on the chest
+  accent: gold badge
+  pose: standing squarely, arms held out from the bulk
+  flavor: saw Ada put on Pad 2, was paid to forget it, and wants the hero to forget too
 palette:
-  J: "#2d3b84"
-  O: "#1a1c2c"
-  j: "#4054bc"
-  p: "#deaa86"
-  y: "#ffb02e"
+  J: "#2d3b84" # dark-navy uniform
+  O: "#1a1c2c" # outline
+  j: "#4054bc" # lighter blue placket
+  p: "#deaa86" # skin
+  y: "#ffb02e" # gold badge
 grid: |
   ........................
   .........OOOOOO.........

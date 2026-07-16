@@ -2,19 +2,24 @@ name: servo_bot_1
 family: mars
 size: [16, 16]
 description: >
-  SERVO UNIT: a boxy grey humanoid staff droid, front-facing, with a
-  small visored head lit cyan on a short neck stalk, a panel-lit torso,
-  two stubby arms, and a treaded/footed base instead of legs. This walk
-  frame catches the treaded base shifted one step to the side, mid-roll.
+  SERVO UNIT mid-roll, its treaded base shifted one step to the side.
+subject:
+  kind: enemy machine (minion)
+  name: SERVO UNIT
+  build: a boxy grey humanoid staff droid on a treaded/footed base instead of legs
+  features: a small visored head lit cyan on a short neck stalk, a panel-lit torso, two stubby arms
+  accent: the cyan visor
+  pose: the treaded base shifted one step to the side, mid-roll
+  flavor: the colony's staff robot; the base runs on these instead of workers
 palette:
-  D: "#808698"
-  F: "#a2a4ad"
-  O: "#1a1c2c"
-  V: "#9095a5"
-  c: "#8ccdd7e1"
-  s: "#5a5e6a"
-  v: "#60687e"
-  x: "#c5e6ebe1"
+  D: "#808698" # grey tread
+  F: "#a2a4ad" # light head plate
+  O: "#1a1c2c" # outline
+  V: "#9095a5" # mid-grey body
+  c: "#8ccdd7e1" # cyan visor and panel
+  s: "#5a5e6a" # dark tread gap
+  v: "#60687e" # grey body shading
+  x: "#c5e6ebe1" # pale visor glint
 grid: |
   ........O.......
   ........Vc......

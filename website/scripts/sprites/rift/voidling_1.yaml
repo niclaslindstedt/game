@@ -2,15 +2,19 @@ name: voidling_1
 family: rift
 size: [16, 16]
 description: >
-  A small, ragged blob of hungry void-black rimmed in deep indigo, its lumpy
-  formless body studded with several pale-cyan pinprick eyes and glints. Here the
-  eyes are shifted, some blinking, as it writhes. Reads as the rift's lowest
-  fodder, a scrap of dark with too many eyes.
+  A voidling writhing, its eyes shifted and blinking — a ragged blob of hungry
+  void-black, the rift's lowest fodder.
+subject:
+  kind: minion
+  build: a small, ragged, lumpy formless blob
+  features: hungry void-black rimmed in deep indigo, studded with several pale-cyan pinprick eyes and glints, the eyes shifted and some blinking as it writhes
+  accent: pale-cyan pinprick eyes
+  flavor: the rift's lowest fodder — a formless scrap of dark with too many eyes
 palette:
-  K: "#0a0910"
-  O: "#1a1c2c"
-  c: "#8ccdd7e1"
-  x: "#c5e6ebe1"
+  K: "#0a0910" # hungry void-black
+  O: "#1a1c2c" # deep indigo rim and outline
+  c: "#8ccdd7e1" # pale-cyan eye
+  x: "#c5e6ebe1" # bright pale-cyan glint
 grid: |
   ................
   ................

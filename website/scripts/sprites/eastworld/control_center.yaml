@@ -2,16 +2,21 @@ name: control_center
 family: eastworld
 size: [60, 21]
 description: >
-  The ZAI control-center building — a low, wide dark-grey machine structure
-  on ZAI deck plating, studded with turquoise indicator lights and a dark
-  screen; the big building Ada's beacon points at.
+  The ZAI control-center building — a low, wide dark-grey machine structure the
+  beacon points at.
+subject:
+  kind: machine building
+  build: a low, wide dark-grey rectangular structure on deck plating
+  features: rows of turquoise indicator lights and a large dark central screen
+  accent: turquoise indicator lights against dark-grey metal
+  flavor: the big ZAI building Ada's beacon points at
 palette:
-  K: "#0c0b12"
-  N: "#3a3644"
-  O: "#1a1c2c"
-  Q: "#60f0d0"
-  b: "#3f4553"
-  v: "#60687e"
+  K: "#0c0b12" # dark central screen
+  N: "#3a3644" # dark-grey roof band
+  O: "#1a1c2c" # outline
+  Q: "#60f0d0" # turquoise indicator light
+  b: "#3f4553" # dark deck plating
+  v: "#60687e" # mid-grey wall face
 grid: |
   ....OOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOO....
   ...OvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvO...

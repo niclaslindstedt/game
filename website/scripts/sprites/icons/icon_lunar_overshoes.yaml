@@ -2,12 +2,16 @@ name: icon_lunar_overshoes
 family: icons
 size: [12, 12]
 description: >
-  A pair of pale bulky overshoe galoshes with ribbed soles; rubber
-  moon-walking overboots.
+  A pair of pale bulky overshoe galoshes with ribbed soles.
+subject:
+  kind: armor icon
+  features: a pair of bulky slip-on overshoes side by side with ribbed soles
+  accent: pale grey rubber
+  flavor: rubber moon-walking overboots
 palette:
-  F: "#a2a4ad"
-  O: "#1a1c2c"
-  f: "#888a96"
+  F: "#a2a4ad" # light grey rubber
+  O: "#1a1c2c" # dark outline
+  f: "#888a96" # grey overshoe body
 grid: |
   ............
   ............

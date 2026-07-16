@@ -2,14 +2,18 @@ name: icon_keycard_green
 family: icons
 size: [12, 12]
 description: >
-  A green translucent-glass access keycard with faint scales etched under
-  the foil and a stripe; the warm TERRARIUM tithe-keeper key.
+  A green glass access keycard with a stripe; the TERRARIUM key.
+subject:
+  kind: item icon
+  features: a translucent-glass access card with etched scales and a stripe
+  accent: green
+  flavor: the warm TERRARIUM tithe-keeper key
 palette:
-  G: "#4a7a3e"
-  O: "#1a1c2c"
-  W: "#f4f4f4"
-  w: "#c6c6c6"
-  y: "#ffb02e"
+  G: "#4a7a3e" # green card
+  O: "#1a1c2c" # dark outline
+  W: "#f4f4f4" # white stripe
+  w: "#c6c6c6" # grey sigil
+  y: "#ffb02e" # amber sigil mark
 grid: |
   ............
   ............

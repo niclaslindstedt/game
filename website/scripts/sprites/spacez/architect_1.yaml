@@ -2,19 +2,26 @@ name: architect_1
 family: spacez
 size: [24, 24]
 description: >
-  THE ARCHITECT: a composed man in a grey business-casual blazer with glasses
-  and a pale face, front-facing, a small metal PASSAGE CHIP grafted into his
-  temple hinting at a machine cut into his own skull. Caught mid-stride, his
-  legs planted wide apart in a walking step.
+  THE ARCHITECT mid-stride — the grey-blazered superintelligence lead with a
+  PASSAGE CHIP grafted into his temple, legs shifted into a walking step.
+subject:
+  kind: elite boss
+  name: THE ARCHITECT
+  build: a composed, upright man of average frame
+  attire: grey business-casual blazer over a white shirt, dark slacks
+  features: glasses and a pale face; a small metal PASSAGE CHIP grafted into his temple
+  accent: cyan glint of the glasses lenses and the grafted chip
+  pose: caught mid-stride, legs planted wide apart in a walking step
+  flavor: cut a machine into his own skull to pass as one; believes flesh is a rough draft
 palette:
-  O: "#1a1c2c"
-  V: "#9095a5"
-  W: "#f4f4f4"
-  b: "#3f4553"
-  c: "#8ccdd7e1"
-  p: "#deaa86"
-  v: "#60687e"
-  x: "#c5e6ebe1"
+  O: "#1a1c2c" # outline
+  V: "#9095a5" # light-grey collar and shoulders
+  W: "#f4f4f4" # white shirt
+  b: "#3f4553" # dark slacks
+  c: "#8ccdd7e1" # cyan lens tint and chip glow
+  p: "#deaa86" # skin
+  v: "#60687e" # slate-grey blazer
+  x: "#c5e6ebe1" # bright cyan glasses highlight
 grid: |
   ........................
   .........OOOOOO.........

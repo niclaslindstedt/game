@@ -2,11 +2,15 @@ name: icon_stasis
 family: icons
 size: [12, 12]
 description: >
-  A pale-cyan translucent bubble field ring around a dim grey core; a
-  slow-time stasis zone.
+  A pale-cyan translucent bubble ring around a dim grey core.
+subject:
+  kind: item icon
+  features: a hollow ring of bubble field around a small central core
+  accent: pale translucent cyan
+  flavor: a slow-time stasis zone
 palette:
-  a: "#d6dce4"
-  x: "#c5e6ebe1"
+  a: "#d6dce4" # grey core
+  x: "#c5e6ebe1" # translucent cyan field
 grid: |
   ............
   ....xxxx....

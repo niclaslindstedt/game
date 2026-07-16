@@ -2,13 +2,17 @@ name: icon_grimoire
 family: icons
 size: [12, 12]
 description: >
-  A thick purple leather-bound spellbook with a metal clasp and a rune on
-  the cover; a grimoire that reads you back.
+  A thick purple leather-bound spellbook with a clasp and a cover rune.
+subject:
+  kind: weapon icon
+  features: a closed thick book with a rune panel and a metal clasp on the cover
+  accent: purple leather
+  flavor: a grimoire that reads you back
 palette:
-  L: "#d4a5ec"
-  O: "#1a1c2c"
-  P: "#b05cdc"
-  o: "#d6a842"
+  L: "#d4a5ec" # pale rune / page edge
+  O: "#1a1c2c" # dark outline
+  P: "#b05cdc" # purple leather cover
+  o: "#d6a842" # gold clasp
 grid: |
   ............
   .OOOOOOOOO..

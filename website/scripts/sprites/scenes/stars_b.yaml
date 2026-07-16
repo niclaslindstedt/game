@@ -2,12 +2,16 @@ name: stars_b
 family: scenes
 size: [16, 12]
 description: >
-  An alternate parallax starfield tile, 16×12 px: a different, sparser scatter
-  of faint white star specks on transparent space, paired with stars_a to break
-  up repetition in the drifting space backdrops.
+  An alternate parallax starfield tile — a sparser scatter of faint white star
+  specks on transparent space.
+subject:
+  kind: scene backdrop / starfield tile
+  build: a sparse scatter of tiny four-point star specks on transparent space
+  features: faint white and pale-grey specks
+  flavor: paired with stars_a to break up repetition in the drifting space backdrops
 palette:
-  W: "#f4f4f4"
-  w: "#c6c6c6"
+  W: "#f4f4f4" # bright white star
+  w: "#c6c6c6" # faint grey star
 grid: |
   ................
   ..........W.....

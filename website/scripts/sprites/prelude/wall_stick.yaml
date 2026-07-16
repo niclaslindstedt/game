@@ -2,15 +2,19 @@ name: wall_stick
 family: prelude
 size: [10, 22]
 description: >
-  A plain gnarled wooden stick mounted vertically on the living-room wall,
-  ~10×22 px: a knotty brown branch, rough and bark-textured, hung as if it were
-  a prized weapon. The JESUS-difficulty starting weapon — the joke is that it's
-  just a stick.
+  A plain gnarled wooden stick mounted on the living-room wall — the
+  JESUS-difficulty starting weapon, the joke being it's just a stick.
+subject:
+  kind: prop, wall-mounted weapon
+  build: a knotty crooked branch hung vertically on a small mount
+  features: rough bark-textured brown wood, knots and dark grain
+  accent: dark wood grain
+  flavor: hung as if it were a prized weapon; the JESUS-difficulty starting weapon, the joke being it's just a stick
 palette:
-  B: "#92643e"
-  E: "#5d4028"
-  O: "#1a1c2c"
-  b: "#3f4553"
+  B: "#92643e" # brown wood
+  E: "#5d4028" # dark wood grain
+  O: "#1a1c2c" # outline
+  b: "#3f4553" # dark wall mount
 grid: |
   ..........
   ....OO....

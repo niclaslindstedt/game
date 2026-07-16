@@ -2,15 +2,18 @@ name: oil_vial
 family: effects
 size: [8, 8]
 description: >
-  The SNAKE-OIL SPRAYER's thrown vial: a small green glass flask of corrosive
-  snake-oil with a dark cap/neck and a bright liquid glint, tumbling as it
-  flies — a quack-remedy bottle turned weapon.
+  The SNAKE-OIL SPRAYER's thrown vial of corrosive snake-oil.
+subject:
+  kind: projectile
+  build: a small green glass flask with a dark cap and neck and a bright liquid glint, tumbling as it flies
+  accent: green corrosive contents
+  flavor: a quack-remedy bottle turned weapon
 palette:
-  G: "#4a7a3e"
-  O: "#1a1c2c"
-  W: "#f4f4f4"
-  g: "#3d6433"
-  l: "#678f5d"
+  G: "#4a7a3e" # green glass body
+  O: "#1a1c2c" # dark cap and outline
+  W: "#f4f4f4" # bright liquid glint
+  g: "#3d6433" # dark green base shading
+  l: "#678f5d" # light green highlight
 grid: |
   ........
   ...OO...

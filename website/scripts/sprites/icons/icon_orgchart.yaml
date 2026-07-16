@@ -2,13 +2,17 @@ name: icon_orgchart
 family: icons
 size: [12, 12]
 description: >
-  A dark tablet screen displaying an org-chart tree of small boxes joined
-  by connector lines; an auto-generated hierarchy of machines.
+  An org-chart tree of small boxes joined by connector lines.
+subject:
+  kind: item icon
+  features: a top box branching down connector lines to two lower boxes
+  accent: cyan top node
+  flavor: an auto-generated hierarchy of machines
 palette:
-  O: "#1a1c2c"
-  W: "#f4f4f4"
-  c: "#8ccdd7e1"
-  v: "#60687e"
+  O: "#1a1c2c" # dark outline
+  W: "#f4f4f4" # white node box
+  c: "#8ccdd7e1" # cyan top node
+  v: "#60687e" # grey connector lines
 grid: |
   ............
   ....OOOO....

@@ -33,6 +33,52 @@ const oneLine = (text) =>
     .replace(/\.$/, "");
 
 /**
+ * The structured subject slots, in the FIXED order the prompt renders them.
+ * A sprite's `subject:` map fills whichever slots carry signal; the rest are
+ * omitted. Splitting the intent into named slots — instead of one free-prose
+ * sentence — is what makes the prompt deterministic: the same facts always land
+ * in the same place with the same label, so the model can't reweight them by
+ * how a sentence happened to be phrased.
+ *
+ * `kind`/`name` are folded into the leading `Subject:` line; the other visual
+ * slots each get their own labeled line; `flavor` is special — it renders LAST,
+ * after the palette, as `Mood:` so the mood tints without competing with the
+ * hard visual constraints above it.
+ */
+export const SUBJECT_SLOTS = [
+  { key: "build", label: "Build" },
+  { key: "attire", label: "Wears" },
+  { key: "features", label: "Features" },
+  { key: "accent", label: "Accent" },
+  { key: "pose", label: "Pose" },
+];
+
+/** Every recognized `subject:` key (the closed vocabulary the schema enforces). */
+export const SUBJECT_KEYS = [
+  "kind",
+  "name",
+  ...SUBJECT_SLOTS.map((s) => s.key),
+  "flavor",
+];
+
+/** True when `subject` is a map carrying at least one recognized slot value. */
+function hasSubject(subject) {
+  return (
+    subject &&
+    typeof subject === "object" &&
+    SUBJECT_KEYS.some((k) => oneLine(subject[k]) !== "")
+  );
+}
+
+/** The leading `Subject:` clause from `kind` + `name` (either may be absent). */
+function subjectHeadline(subject) {
+  const kind = oneLine(subject.kind);
+  const name = oneLine(subject.name);
+  if (kind && name) return `${kind} named "${name}"`;
+  return name || kind || "";
+}
+
+/**
  * Extract the human color names from a sprite file's palette comments — the
  * `# steel` trailing each `s: "#c8ccd4"` line. Returns a `char → name` map
  * (only the keys that carry a comment); absent for a plain palette. Reads the
@@ -71,8 +117,15 @@ function paletteGuidance(palette, names = {}) {
 /**
  * Synthesize the image-generation prompt for one sprite from its tier-1 fields.
  *
+ * When a structured `subject` map is present it drives the subject sections
+ * (fixed slot order, `flavor` as a trailing `Mood:`), and the free-prose
+ * `description` is left out — the two would only duplicate or contradict each
+ * other. When `subject` is absent the `description` fills the `Subject:` line,
+ * the original behavior, so every un-migrated sprite still prompts unchanged.
+ *
  * @param {object} args
  * @param {string} args.description  the sprite's intent (the acceptance target)
+ * @param {object} [args.subject]  structured subject slots (see SUBJECT_SLOTS)
  * @param {string} [args.familyStyle]  the family's shared style anchor
  * @param {[number, number]} [args.size]  `[w, h]` target resolution
  * @param {Record<string,string>} [args.palette]  char → hex the sprite paints with
@@ -81,6 +134,7 @@ function paletteGuidance(palette, names = {}) {
  */
 export function buildImagePrompt({
   description,
+  subject,
   familyStyle,
   size,
   palette,
@@ -91,10 +145,20 @@ export function buildImagePrompt({
   const anchor = oneLine(familyStyle);
   if (anchor) sections.push(anchor);
 
-  const subject = oneLine(description);
-  sections.push(
-    `Subject: ${subject || "(no description — the acceptance target is unset; describe the sprite before generating)"}.`,
-  );
+  const structured = hasSubject(subject);
+  if (structured) {
+    const headline = subjectHeadline(subject);
+    sections.push(`Subject: ${headline || "(no subject kind/name)"}.`);
+    for (const { key, label } of SUBJECT_SLOTS) {
+      const value = oneLine(subject[key]);
+      if (value) sections.push(`${label}: ${value}.`);
+    }
+  } else {
+    const line = oneLine(description);
+    sections.push(
+      `Subject: ${line || "(no description — the acceptance target is unset; describe the sprite before generating)"}.`,
+    );
+  }
 
   if (Array.isArray(size) && size.length === 2) {
     sections.push(`Target resolution: ${size[0]}×${size[1]} pixels.`);
@@ -103,6 +167,13 @@ export function buildImagePrompt({
   const guidance = paletteGuidance(palette, paletteNames);
   if (guidance) {
     sections.push(`Paint only with this palette: ${guidance}.`);
+  }
+
+  // Mood renders last, after the palette — tone for the model to lean into,
+  // deliberately downstream of every hard visual constraint above it.
+  if (structured) {
+    const mood = oneLine(subject.flavor);
+    if (mood) sections.push(`Mood: ${mood}.`);
   }
 
   return sections.join("\n\n");

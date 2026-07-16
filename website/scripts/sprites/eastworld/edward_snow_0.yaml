@@ -2,18 +2,27 @@ name: edward_snow_0
 family: eastworld
 size: [24, 24]
 description: >
-  EDWARD SNOW, the whistleblower in exile — a wary young man in a dark grey
-  hoodie clutching a glowing turquoise device (his dead man's switch),
-  watching everything; a ranged elite who fights from cover.
+  EDWARD SNOW, the whistleblower in exile — a wary young man in a grey hoodie
+  clutching a glowing turquoise dead man's switch; a ranged elite who fights
+  from cover.
+subject:
+  kind: elite — ranged
+  name: EDWARD SNOW
+  build: a lean young man
+  attire: a dark grey hoodie over dark trousers
+  features: short dark-brown hair over a pale, wary face
+  accent: a small glowing turquoise device — his dead man's switch — in one hand
+  pose: standing watchful, the device held at his side
+  flavor: the whistleblower in exile, watching everything, fighting from cover
 palette:
-  K: "#0c0b12"
-  N: "#3a3644"
-  O: "#1a1c2c"
-  Q: "#60f0d0"
-  V: "#9095a5"
-  k: "#342c26"
-  p: "#deaa86"
-  v: "#60687e"
+  K: "#0c0b12" # shoe / dark shadow
+  N: "#3a3644" # dark hoodie panel
+  O: "#1a1c2c" # outline
+  Q: "#60f0d0" # turquoise device glow
+  V: "#9095a5" # pale grey hands
+  k: "#342c26" # dark-brown hair
+  p: "#deaa86" # skin
+  v: "#60687e" # mid-grey hoodie
 grid: |
   ........................
   ..........OOOO..........

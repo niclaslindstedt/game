@@ -2,17 +2,24 @@ name: lucky_1
 family: rift
 size: [24, 24]
 description: >
-  A small round front-facing man in a green coat and tall green hat with a gold
-  hatband, a bushy orange-ginger beard and a gold buckle, tiny and impish. Here
-  he is caught mid-jig, the little legs staggered on the alternate stride. Reads
-  at a glance as a fairy-tale leprechaun guarding his luck.
+  LUCKY caught mid-jig — the small round leprechaun in a green coat and tall hat,
+  little legs staggered on the alternate stride.
+subject:
+  kind: elite
+  name: LUCKY
+  build: a small, round, impish man
+  attire: a green coat and tall green hat with a gold hatband and buckle
+  features: a bushy orange-ginger beard
+  accent: glints of gold
+  pose: caught mid-jig, the little legs staggered on the alternate stride
+  flavor: a leprechaun who stepped out of a fairy ring centuries ago and guards his pot of gold off the main road
 palette:
-  G: "#4a7a3e"
-  O: "#1a1c2c"
-  g: "#3d6433"
-  p: "#deaa86"
-  t: "#cc7028"
-  y: "#ffb02e"
+  G: "#4a7a3e" # green coat and hat
+  O: "#1a1c2c" # outline
+  g: "#3d6433" # dark green shadow
+  p: "#deaa86" # skin
+  t: "#cc7028" # orange-ginger beard
+  y: "#ffb02e" # gold hatband and buckle
 grid: |
   ........................
   ........................

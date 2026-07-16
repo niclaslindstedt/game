@@ -2,14 +2,17 @@ name: icon_not_a_flamethrower
 family: icons
 size: [12, 12]
 description: >
-  A black pistol-gripped emitter aimed right with a gout of orange flame
-  licking from the muzzle; a stubby not-fire projector (legally not a
-  flamethrower).
+  A black pistol-gripped emitter with a gout of orange flame at the muzzle.
+subject:
+  kind: weapon icon
+  features: a stubby pistol-gripped projector spitting a flame gout from the muzzle
+  accent: orange flame
+  flavor: legally not a flamethrower
 palette:
-  N: "#303444"
-  O: "#1a1c2c"
-  r: "#d83a3a"
-  y: "#ffb02e"
+  N: "#303444" # dark projector body
+  O: "#1a1c2c" # dark outline
+  r: "#d83a3a" # deep flame red
+  y: "#ffb02e" # orange flame
 grid: |
   ............
   .........y..

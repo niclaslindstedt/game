@@ -2,14 +2,18 @@ name: icon_brochure
 family: icons
 size: [12, 12]
 description: >
-  A folded glossy tri-fold theme-park brochure, tan cover with a small
-  logo and colored fold panels; the EASTWORLD tourist pamphlet.
+  A folded glossy tri-fold theme-park brochure with a small logo.
+subject:
+  kind: item icon
+  features: a folded tri-fold pamphlet with a corner logo and colored panels
+  accent: white with amber logo
+  flavor: the EASTWORLD tourist pamphlet
 palette:
-  O: "#1a1c2c"
-  W: "#f4f4f4"
-  r: "#d83a3a"
-  w: "#c6c6c6"
-  y: "#ffb02e"
+  O: "#1a1c2c" # dark outline
+  W: "#f4f4f4" # white paper
+  r: "#d83a3a" # red panel detail
+  w: "#c6c6c6" # grey fold shade
+  y: "#ffb02e" # amber logo
 grid: |
   ............
   ..OOOOOOO...

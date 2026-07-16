@@ -2,13 +2,16 @@ name: pellet
 family: effects
 size: [8, 8]
 description: >
-  Shotgun shot from the PUMP SHOTGUN and BLUNDERBUSS: a scatter of small
-  gold-brass pellets, a couple of tiny bright specks flying together so the
-  spread reads as buckshot.
+  Shotgun shot from the PUMP SHOTGUN and BLUNDERBUSS.
+subject:
+  kind: projectile
+  build: a scatter of two small round gold-brass pellets flying together, each a tiny bright speck with a dark outline
+  accent: gold-brass shot
+  flavor: a buckshot spread
 palette:
-  O: "#1a1c2c"
-  o: "#d6a842"
-  q: "#96762e"
+  O: "#1a1c2c" # dark outline
+  o: "#d6a842" # bright gold-brass pellet
+  q: "#96762e" # darker brass shading
 grid: |
   ........
   ..OO....

@@ -2,12 +2,16 @@ name: icon_knights_helm
 family: icons
 size: [12, 12]
 description: >
-  A polished steel knight's helm with a hinged visor and a narrow eye
-  slot; a medieval close helm.
+  A polished steel knight's helm with a hinged visor and narrow eye slot.
+subject:
+  kind: armor icon
+  features: a rounded close helm with a hinged visor and a narrow eye slot
+  accent: polished steel
+  flavor: a medieval close helm
 palette:
-  O: "#1a1c2c"
-  V: "#9095a5"
-  v: "#60687e"
+  O: "#1a1c2c" # dark outline / eye slot
+  V: "#9095a5" # bright steel highlight
+  v: "#60687e" # grey steel
 grid: |
   ............
   ....OOOO....

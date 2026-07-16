@@ -2,15 +2,23 @@ name: jeff_baywatch_1
 family: bunker
 size: [24, 24]
 description: >
-  A bald, heavily muscled front-facing man in a tight dark-grey tee and blue
-  jeans, arms flexed out from a barrel chest — a tall, broad figure; caught
-  mid-step with the legs shifted from the planted stance.
+  JEFF BAYWATCH mid-step — the bald, jacked resident in a tight dark-grey tee
+  and blue jeans, legs shifted from the planted stance.
+subject:
+  kind: elite
+  name: JEFF BAYWATCH
+  build: bald and heavily muscled, a barrel chest with bare arms flexed out — a tall, broad figure
+  attire: tight dark-grey tee and blue jeans
+  features: bald head, bare muscled arms
+  accent: blue jeans
+  pose: caught mid-step, the legs shifted from the planted stance, arms flexed out
+  flavor: the delivery emperor retired to the gym; the bunker's fastest, hardest-hitting resident
 palette:
-  K: "#0c0b12"
-  N: "#3a3846"
-  O: "#1a1c2c"
-  j: "#4054bc"
-  p: "#deaa86"
+  K: "#0c0b12" # black shoes and brow
+  N: "#3a3846" # dark-grey tee
+  O: "#1a1c2c" # navy outline
+  j: "#4054bc" # blue jeans
+  p: "#deaa86" # skin
 grid: |
   ........................
   ........................

@@ -2,18 +2,23 @@ name: house_3x2
 family: eastworld
 size: [48, 32]
 description: >
-  A small frontier-town house seen top-down — a wide brown wooden building
-  with plank walls, a shingled roof edge, and a dark doorway; a solid
-  building-sized obstacle.
+  A small frontier-town house, top-down — brown plank walls, a shingled roof
+  edge, and a dark doorway; a solid building-sized obstacle.
+subject:
+  kind: building obstacle
+  build: a wide rectangular timber house seen top-down, a small footprint
+  features: plank walls, a shingled roof edge along the top, a dark doorway, lit windows
+  accent: warm amber window light in the dark timber
+  flavor: a solid building-sized obstacle in the frontier town
 palette:
-  B: "#92643e"
-  E: "#5d4028"
-  K: "#0c0b12"
-  N: "#3a3644"
-  O: "#1a1c2c"
-  S: "#b39378"
-  U: "#f0c658"
-  v: "#60687e"
+  B: "#92643e" # plank wall brown
+  E: "#5d4028" # dark timber trim
+  K: "#0c0b12" # dark doorway
+  N: "#3a3644" # roof shingle
+  O: "#1a1c2c" # outline
+  S: "#b39378" # pale plank highlight
+  U: "#f0c658" # amber window light
+  v: "#60687e" # roof ridge
 grid: |
   OOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOO
   OvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvO

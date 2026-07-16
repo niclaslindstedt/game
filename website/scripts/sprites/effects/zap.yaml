@@ -2,12 +2,15 @@ name: zap
 family: effects
 size: [8, 8]
 description: >
-  Electric bolt from the ARC PROJECTOR, RIOT TASER and TESLA COIL: a jagged
-  gold-orange lightning zigzag, an angular crackle of arcing current rather
-  than a round slug.
+  Electric bolt from the ARC PROJECTOR, RIOT TASER and TESLA COIL.
+subject:
+  kind: projectile
+  build: a jagged gold-orange lightning zigzag, an angular bolt with a dark outline
+  accent: gold-orange arcing current
+  flavor: a crackle of electricity rather than a round slug
 palette:
-  O: "#1a1c2c"
-  y: "#ffb02e"
+  O: "#1a1c2c" # dark outline
+  y: "#ffb02e" # gold-orange lightning
 grid: |
   ........
   ....OO..

@@ -2,18 +2,26 @@ name: merchant_vendor_0
 family: merchant
 size: [16, 16]
 description: >
-  The merchant in his first appearance: a SpaceZ vending-machine restocker,
-  front-facing, in a blue ball cap and blue coveralls/overalls with a lighter
-  work shirt underneath. An ordinary working stiff who happens to sell gear on
-  the locked-down night shift.
+  The merchant in his first appearance — a SpaceZ vending-machine restocker in
+  a blue ball cap and blue coveralls, selling gear on the locked-down night
+  shift.
+subject:
+  kind: merchant in his first appearance — a SpaceZ vending-machine restocker
+  name: "THE MERCHANT, as the vending-machine man"
+  build: an ordinary working stiff
+  attire: a blue ball cap and blue coveralls over a lighter white work shirt, dark boots
+  features: clean-cut, cap pulled down
+  accent: the gold buckle on the coveralls
+  pose: idle, arms at his sides
+  flavor: an ordinary working stiff who happens to sell gear on the locked-down night shift
 palette:
-  E: "#5d4028"
-  J: "#2d3b84"
-  O: "#1a1c2c"
-  W: "#f4f4f4"
-  j: "#4054bc"
-  o: "#d6a842"
-  p: "#deaa86"
+  E: "#5d4028" # brown boots
+  J: "#2d3b84" # dark navy ball cap and coveralls
+  O: "#1a1c2c" # navy outline
+  W: "#f4f4f4" # white work shirt
+  j: "#4054bc" # blue trouser legs
+  o: "#d6a842" # gold coveralls buckle
+  p: "#deaa86" # skin and hands
 grid: |
   ................
   .....OOOOOO.....

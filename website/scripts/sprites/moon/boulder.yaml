@@ -2,13 +2,19 @@ name: boulder
 family: moon
 size: [28, 22]
 description: >
-  A single large solid grey moonrock, rounded and softly shaded with a few dark pocks; a ridge stone that walls the walk to the flag (the living stop at it, the haunting drifts through).
+  A single large solid grey moonrock, rounded and softly shaded with a few dark pocks.
+subject:
+  kind: prop
+  build: a single large rounded solid grey moonrock, softly shaded
+  features: a few dark pocks
+  accent: desaturated stone grey
+  flavor: a ridge stone that walls the walk to the flag — the living stop at it, the haunting drifts through
 palette:
-  F: "#a2a4ad"
-  O: "#1a1c2c"
-  d: "#676972"
-  e: "#4e4f56"
-  f: "#888a96"
+  F: "#a2a4ad" # light stone face
+  O: "#1a1c2c" # dark outline
+  d: "#676972" # mid stone shadow
+  e: "#4e4f56" # deep stone shadow
+  f: "#888a96" # base stone grey
 grid: |
   ............OOOOO...........
   ..........OOFFFFOOO.........

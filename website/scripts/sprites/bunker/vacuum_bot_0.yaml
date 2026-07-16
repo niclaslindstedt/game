@@ -3,15 +3,20 @@ family: bunker
 size: [16, 16]
 description: >
   Armed housekeeping: a low, flat grey robot-vacuum disc with a glowing cyan
-  sensor strip along its front rim — a fast swarm unit that keeps the marble
-  spotless and the intruders bleeding.
+  sensor strip along its front rim.
+subject:
+  kind: machine minion
+  build: a low, flat, wide ground-hugging robot-vacuum disc
+  features: a glowing cyan sensor strip along the front rim
+  accent: glowing cyan sensor strip
+  flavor: armed housekeeping — a fast swarm unit that keeps the marble spotless and the intruders bleeding
 palette:
-  K: "#0c0b12"
-  O: "#1a1c2c"
-  Q: "#5cd2ff"
-  V: "#9095a5"
-  b: "#3f4553"
-  v: "#60687e"
+  K: "#0c0b12" # black wheel gaps
+  O: "#1a1c2c" # navy outline
+  Q: "#5cd2ff" # cyan sensor strip
+  V: "#9095a5" # light-grey top plate
+  b: "#3f4553" # dark underside
+  v: "#60687e" # grey chassis
 grid: |
   ................
   ................

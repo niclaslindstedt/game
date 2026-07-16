@@ -2,15 +2,23 @@ name: steven_seagull_0
 family: eastworld
 size: [24, 24]
 description: >
-  STEVEN SEAGULL, the movie-star co-founder — a broad man dressed all in
-  black with a dark ponytail, standing in a slow, heavy ju-jutsu guard; pale
-  face, deadly and glacial.
+  STEVEN SEAGULL, the movie-star co-founder — a broad man dressed all in black
+  with a dark ponytail, in a slow, heavy ju-jutsu guard; deadly and glacial.
+subject:
+  kind: elite
+  name: STEVEN SEAGULL
+  build: a broad, heavy man
+  attire: dressed all in black, a dark belt
+  features: a pale face and a dark ponytail
+  accent: all-black outfit against a pale face
+  pose: a slow, heavy ju-jutsu guard
+  flavor: the movie-star co-founder — deadly and glacial
 palette:
-  K: "#0c0b12"
-  N: "#3a3644"
-  O: "#1a1c2c"
-  k: "#342c26"
-  p: "#deaa86"
+  K: "#0c0b12" # black belt / dark accents
+  N: "#3a3644" # black outfit
+  O: "#1a1c2c" # outline
+  k: "#342c26" # dark hair / ponytail
+  p: "#deaa86" # skin
 grid: |
   ........................
   ........................

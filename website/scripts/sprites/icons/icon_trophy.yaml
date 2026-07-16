@@ -2,12 +2,17 @@ name: icon_trophy
 family: icons
 size: [12, 12]
 description: >
-  A gold two-handled trophy cup on a base; an achievement award.
+  A gold two-handled trophy cup on a base.
+subject:
+  kind: UI icon
+  features: a two-handled cup on a stem and base
+  accent: gold
+  flavor: an achievement award
 palette:
-  O: "#1a1c2c"
-  Y: "#ffe3b6"
-  q: "#96762e"
-  y: "#ffb02e"
+  O: "#1a1c2c" # dark outline
+  Y: "#ffe3b6" # pale gold highlight
+  q: "#96762e" # dark gold shade
+  y: "#ffb02e" # gold cup
 grid: |
   ............
   .OOOOOOOOOO.

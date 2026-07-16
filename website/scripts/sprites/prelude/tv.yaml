@@ -2,14 +2,19 @@ name: tv
 family: prelude
 size: [24, 20]
 description: >
-  A flat-screen television on a small stand, ~24×20 px: a dark bezel around a
-  softly glowing pale-blue screen (the movie playing), on a short base. It
-  faces the couch from the left side of the living room.
+  A flat-screen television on a small stand, the movie playing, facing the
+  couch from the left of the living room.
+subject:
+  kind: prop
+  build: a wide flat-screen TV on a short central stand
+  features: dark bezel around a softly glowing pale-blue screen with a brighter blob (the movie playing)
+  accent: pale-blue screen glow
+  flavor: faces the couch from the left of the living room, the movie-night screen the pair watch
 palette:
-  O: "#1a1c2c"
-  b: "#3f4553"
-  c: "#8ccdd7e1"
-  x: "#c5e6ebe1"
+  O: "#1a1c2c" # outline
+  b: "#3f4553" # dark bezel
+  c: "#8ccdd7e1" # brighter screen blob
+  x: "#c5e6ebe1" # pale-blue screen glow
 grid: |
   ........................
   ..OOOOOOOOOOOOOOOOOOOO..

@@ -2,13 +2,18 @@ name: dry_shrub
 family: eastworld
 size: [12, 12]
 description: >
-  A dead desert shrub — a spindly leafless bush of thin bare brown twigs;
-  small ground decor scattered across the hardpan.
+  A dead desert shrub — a spindly leafless bush of bare brown twigs; small
+  ground decor.
+subject:
+  kind: ground decor — dead shrub
+  build: a spindly leafless bush of thin bare twigs on a short stem
+  accent: dry brown and olive twig tones
+  flavor: scattered across the hardpan
 palette:
-  E: "#5d4028"
-  O: "#1a1c2c"
-  d: "#665c34"
-  e: "#8a7e46"
+  E: "#5d4028" # dark stem brown
+  O: "#1a1c2c" # stem outline
+  d: "#665c34" # shadowed twig
+  e: "#8a7e46" # olive-tan twig
 grid: |
   ............
   ............

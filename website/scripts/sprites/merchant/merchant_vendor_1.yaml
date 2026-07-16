@@ -2,19 +2,26 @@ name: merchant_vendor_1
 family: merchant
 size: [16, 16]
 description: >
-  A front-facing working-stiff restocker in a blue ball cap and blue
-  coveralls/overalls over a lighter white work shirt, with dark boots. An
-  ordinary night-shift vendor who happens to sell gear; this is a mid-bob idle
-  frame, near-identical to the rest of the cycle but with the feet planted a
-  touch wider.
+  The vending-machine restocker mid-bob — a working stiff in a blue ball cap
+  and blue coveralls over a white work shirt, dark boots, feet planted a touch
+  wider.
+subject:
+  kind: merchant in his first appearance — a SpaceZ vending-machine restocker
+  name: "THE MERCHANT, as the vending-machine man"
+  build: an ordinary working stiff
+  attire: a blue ball cap and blue coveralls over a lighter white work shirt, dark boots
+  features: clean-cut, cap pulled down
+  accent: the gold buckle on the coveralls
+  pose: a mid-bob idle frame, the feet planted a touch wider
+  flavor: an ordinary night-shift vendor who happens to sell gear
 palette:
-  E: "#5d4028"
-  J: "#2d3b84"
-  O: "#1a1c2c"
-  W: "#f4f4f4"
-  j: "#4054bc"
-  o: "#d6a842"
-  p: "#deaa86"
+  E: "#5d4028" # brown boots
+  J: "#2d3b84" # dark navy ball cap and coveralls
+  O: "#1a1c2c" # navy outline
+  W: "#f4f4f4" # white work shirt
+  j: "#4054bc" # blue trouser legs
+  o: "#d6a842" # gold coveralls buckle
+  p: "#deaa86" # skin and hands
 grid: |
   ................
   .....OOOOOO.....

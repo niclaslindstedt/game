@@ -2,14 +2,19 @@ name: sky_mars
 family: scenes
 size: [16, 16]
 description: >
-  Mars as a distant 16×16 backdrop globe: a rusty red-orange sphere mottled
-  with darker maroon patches and a shaded rim. The red planet the hero crosses
-  to in the second voyage.
+  Mars as a distant backdrop globe — a rusty red-orange sphere mottled with
+  darker maroon patches and a shaded rim.
+subject:
+  kind: scene backdrop / planet
+  build: a small distant globe
+  features: a rusty red-orange sphere mottled with darker maroon patches, a shaded rim
+  accent: the rust-red surface
+  flavor: the red planet the hero crosses to in the second voyage
 palette:
-  O: "#1a1c2c"
-  e: "#eac4ac"
-  t: "#b2643e"
-  u: "#7c4228"
+  O: "#1a1c2c" # outline
+  e: "#eac4ac" # pale surface highlight
+  t: "#b2643e" # rusty red-orange surface
+  u: "#7c4228" # darker maroon patches
 grid: |
   ................
   .....OOOO.......

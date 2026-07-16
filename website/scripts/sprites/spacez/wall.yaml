@@ -2,14 +2,20 @@ name: wall
 family: spacez
 size: [16, 16]
 description: >
-  A section of solid dark-grey lab wall panel with a beveled metal edge;
-  blocks movement and carves the floor into lobby, labs and cleanroom.
+  A section of solid dark-grey lab wall panel with a beveled metal edge; blocks
+  movement and carves the floor into rooms.
+subject:
+  kind: solid obstacle prop
+  build: a full square wall panel, a bright bevel down two edges, dark shadow on the others
+  features: two small bolt studs set into the panel face
+  accent: beveled brushed-metal edge
+  flavor: the partition walls dividing the SpaceZ lobby, labs and cleanroom
 palette:
-  O: "#1a1c2c"
-  V: "#9095a5"
-  b: "#3f4553"
-  f: "#888a96"
-  v: "#60687e"
+  O: "#1a1c2c" # outline
+  V: "#9095a5" # bright bevel highlight
+  b: "#3f4553" # dark shadow edge
+  f: "#888a96" # grey bolt studs
+  v: "#60687e" # slate panel face
 grid: |
   OOOOOOOOOOOOOOOO
   OVVVVVVVVVVVVVvO

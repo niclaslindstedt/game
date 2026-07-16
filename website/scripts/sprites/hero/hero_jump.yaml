@@ -2,19 +2,22 @@ name: hero_jump
 family: hero
 size: [16, 16]
 description: >
-  A front-facing everyman in a plain white t-shirt, blue jeans, and brown
-  shoes, with dark brown hair, a peach face, and arms at his sides — a
-  short, stocky top-down hero doll (the unsuited paper-doll base that worn
-  armor and a held weapon draw over). This is the airborne hop frame: both
-  legs are pulled together and the feet are tucked up close under him,
-  clear of the ground in mid-jump. 16x16 flat 16-bit pixel art.
+  The hero out of his spacesuit, airborne — the plain-clothes paper-doll
+  base's jump frame.
+subject:
+  kind: hero paper-doll base, out of his spacesuit
+  build: a lean everyman
+  attire: white t-shirt, blue jeans, brown shoes
+  features: a mop of dark brown hair over a pale face
+  pose: an airborne hop frame, legs pulled together with feet tucked up close under him clear of the ground
+  flavor: the laid-off SpaceZ spaceship builder on his living-room movie night
 palette:
-  O: "#1a1c2c"
-  W: "#f4f4f4"
-  j: "#4054bc"
-  k: "#342c26"
-  p: "#deaa86"
-  w: "#c6c6c6"
+  O: "#1a1c2c" # outline
+  W: "#f4f4f4" # white t-shirt
+  j: "#4054bc" # blue jeans
+  k: "#342c26" # dark brown hair
+  p: "#deaa86" # skin
+  w: "#c6c6c6" # t-shirt shadow
 grid: |
   ................
   .....OOOOOO.....

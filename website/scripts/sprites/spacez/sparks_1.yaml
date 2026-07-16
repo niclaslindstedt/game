@@ -2,10 +2,15 @@ name: sparks_1
 family: spacez
 size: [12, 12]
 description: >
-  A wider spark-burst frame — a spray of orange-yellow electrical sparks;
-  OPTIMUSK's shatter effect at fuller spread.
+  A wider spark-burst frame — a spray of pale-yellow electrical flecks at
+  fuller spread; OPTIMUSK's shatter effect.
+subject:
+  kind: effect
+  build: a scattered spray of spark flecks flung out in all directions
+  accent: pale electrical yellow
+  flavor: the OPTIMUSK shatter spark at its widest, fading spread
 palette:
-  Y: "#ffe3b6"
+  Y: "#ffe3b6" # pale electrical yellow sparks
 grid: |
   ............
   ..YY....YY..

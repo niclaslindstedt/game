@@ -2,17 +2,25 @@ name: merchant_moon_0
 family: merchant
 size: [16, 16]
 description: >
-  The merchant reskinned as a stranded 1970s salvage-run trader: a balding,
-  white-haired man, front-facing, in a patched burnt-orange retro pressure
-  suit. Same friendly vendor role, marooned on the moon since he missed the
-  ride home.
+  The merchant reskinned as a stranded 1970s salvage-run trader — a balding,
+  white-haired man in a patched burnt-orange pressure suit, marooned on the
+  moon.
+subject:
+  kind: merchant reskin — the marooned moon salvage trader
+  name: "THE MERCHANT, as the salvage-run trader"
+  build: an ordinary man gone soft in middle age
+  attire: a patched burnt-orange 1970s retro pressure suit over dark trousers and boots
+  features: balding, with white hair around the sides
+  accent: the gold chest gauge on the suit
+  pose: idle, arms at his sides
+  flavor: the same friendly vendor, marooned on the moon since he missed the ride home
 palette:
-  D: "#8b5623"
-  O: "#1a1c2c"
-  W: "#f4f4f4"
-  o: "#d6a842"
-  p: "#deaa86"
-  t: "#e08a38"
+  D: "#8b5623" # brown suit patches and boots
+  O: "#1a1c2c" # navy outline
+  W: "#f4f4f4" # white hair and balding pate
+  o: "#d6a842" # gold chest gauge
+  p: "#deaa86" # skin
+  t: "#e08a38" # burnt-orange pressure suit
 grid: |
   ................
   .....OOOOOO.....

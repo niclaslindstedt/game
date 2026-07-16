@@ -2,16 +2,19 @@ name: billboard
 family: mars
 size: [32, 24]
 description: >
-  A 32x24 roadside sign in the empty red dust: a white panel reading
-  "MARS" in blocky red pixel letters with a thin blue underbar, mounted
-  on two dark support posts. The colony's cheerful welcome in the middle
-  of nowhere.
+  A roadside welcome sign standing in the empty red dust.
+subject:
+  kind: roadside sign / prop
+  build: a white panel mounted on two dark support posts
+  features: blocky MARS lettering with a thin blue underbar
+  accent: the red MARS letters
+  flavor: the colony's cheerful welcome in the middle of nowhere
 palette:
-  O: "#1a1c2c"
-  W: "#f4f4f4"
-  j: "#4054bc"
-  k: "#342c26"
-  r: "#d83a3a"
+  O: "#1a1c2c" # frame and post outline
+  W: "#f4f4f4" # white panel
+  j: "#4054bc" # blue underbar
+  k: "#342c26" # dark support posts
+  r: "#d83a3a" # red MARS letters
 grid: |
   ................................
   ..OOOOOOOOOOOOOOOOOOOOOOOOOOOO..

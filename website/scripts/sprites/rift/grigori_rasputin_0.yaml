@@ -2,19 +2,27 @@ name: grigori_rasputin_0
 family: rift
 size: [24, 24]
 description: >
-  GRIGORI RASPUTIN, the unkillable mystic: a tall gaunt figure in a long dark
-  Orthodox cassock with rows of gold frog-braid clasps down the front, a pale
-  hollow-eyed face and a long black beard. Reads as a brooding mad monk.
+  GRIGORI RASPUTIN, the unkillable mystic — a gaunt mad monk in a dark Orthodox
+  cassock with gold frog-braid clasps and a long beard.
+subject:
+  kind: elite
+  name: GRIGORI RASPUTIN
+  build: tall and gaunt
+  attire: a long dark Orthodox cassock with rows of gold frog-braid clasps down the front, falling to a fringed hem
+  features: a pale hollow-eyed face with red-dot eyes above a long beard, ash-grey shading to black
+  accent: gold frog-braid clasps
+  pose: standing, robe hanging straight
+  flavor: the mad monk poisoned, shot, clubbed and drowned who tired of dying and now watches the scaled gods' tribute road
 palette:
-  A: "#8d9196"
-  O: "#1a1c2c"
-  R: "#ff5252"
-  S: "#b39378"
-  f: "#888a96"
-  h: "#e2c640"
-  k: "#342c26"
-  v: "#60687e"
-  y: "#ffb02e"
+  A: "#8d9196" # ash-grey beard
+  O: "#1a1c2c" # outline
+  R: "#ff5252" # red eyes
+  S: "#b39378" # pale skin
+  f: "#888a96" # grey beard and collar shading
+  h: "#e2c640" # dark gold clasp
+  k: "#342c26" # black cassock and beard
+  v: "#60687e" # slate-blue robe shading
+  y: "#ffb02e" # bright gold frog-braid clasp
 grid: |
   ........................
   .......OOOOOOOOOO.......

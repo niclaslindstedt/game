@@ -2,19 +2,24 @@ name: scout_rover_0
 family: mars
 size: [16, 16]
 description: >
-  SCOUT ROVER, the fodder rank: a small camera pod (a boxy head with a
-  single lens/eye) on a low grey chassis with three wheels,
-  front-facing. A camera on wheels that evaporates on contact.
+  SCOUT ROVER, the fodder rank: a camera on wheels.
+subject:
+  kind: enemy machine (fodder minion)
+  name: SCOUT ROVER
+  build: a small boxy camera pod on a low grey chassis with three wheels
+  features: a single cyan lens/eye in the pod, an amber status light
+  accent: the cyan lens
+  flavor: a camera on wheels that evaporates on contact
 palette:
-  H: "#9e8b2d"
-  O: "#1a1c2c"
-  V: "#9095a5"
-  a: "#d6dce4"
-  b: "#3f4553"
-  c: "#8ccdd7e1"
-  o: "#d6a842"
-  v: "#60687e"
-  x: "#c5e6ebe1"
+  H: "#9e8b2d" # dim amber status light
+  O: "#1a1c2c" # outline
+  V: "#9095a5" # light chassis
+  a: "#d6dce4" # wheel highlight
+  b: "#3f4553" # dark pod frame
+  c: "#8ccdd7e1" # cyan lens
+  o: "#d6a842" # amber status light
+  v: "#60687e" # grey chassis
+  x: "#c5e6ebe1" # pale lens glint
 grid: |
   ................
   .....OOOOOo.....

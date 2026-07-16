@@ -3,11 +3,16 @@ family: icons
 size: [12, 12]
 description: >
   A grey ribbed trash can with a lid; the discard/delete marker.
+subject:
+  kind: UI icon
+  features: a lidded trash can with vertical ribs
+  accent: flat grey
+  flavor: the discard / delete marker
 palette:
-  O: "#1a1c2c"
-  V: "#9095a5"
-  b: "#3f4553"
-  v: "#60687e"
+  O: "#1a1c2c" # dark outline
+  V: "#9095a5" # grey lid
+  b: "#3f4553" # dark rib groove
+  v: "#60687e" # mid-grey rib
 grid: |
   ............
   ....OOOO....

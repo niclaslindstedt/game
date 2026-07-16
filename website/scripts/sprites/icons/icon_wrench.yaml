@@ -2,12 +2,16 @@ name: icon_wrench
 family: icons
 size: [12, 12]
 description: >
-  A blue adjustable wrench/spanner tool; the shop's repair and upgrade
-  glyph.
+  A blue adjustable wrench; the shop's repair and upgrade glyph.
+subject:
+  kind: UI icon
+  features: an adjustable spanner with an open double-jaw head
+  accent: grey-blue steel
+  flavor: the shop's repair and upgrade glyph
 palette:
-  O: "#1a1c2c"
-  V: "#9095a5"
-  v: "#60687e"
+  O: "#1a1c2c" # dark outline
+  V: "#9095a5" # bright steel highlight
+  v: "#60687e" # grey-blue steel
 grid: |
   ..OO...OO...
   ..OvO.OVO...

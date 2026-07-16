@@ -3,14 +3,19 @@ family: eastworld
 size: [28, 32]
 description: >
   The town water tower — a round wooden tank on tall splayed timber legs,
-  weathered planks, dripping; a tall landmark standing over main street (and
-  Edward Snow's sightline).
+  weathered and dripping; a tall landmark over main street.
+subject:
+  kind: landmark — water tower
+  build: a round planked tank raised on tall splayed timber legs
+  features: weathered plank staves, a metal cap band, drips beneath
+  accent: pale plank highlights over weathered brown timber
+  flavor: a tall landmark over main street and Edward Snow's sightline
 palette:
-  B: "#92643e"
-  E: "#5d4028"
-  O: "#1a1c2c"
-  S: "#b39378"
-  v: "#60687e"
+  B: "#92643e" # tank plank brown
+  E: "#5d4028" # dark timber band
+  O: "#1a1c2c" # outline
+  S: "#b39378" # pale plank highlight
+  v: "#60687e" # metal cap band
 grid: |
   ....OOOOOOOOOOOOOOOOOOOO....
   ...OvvvvvvvvvvvvvvvvvvvvO...

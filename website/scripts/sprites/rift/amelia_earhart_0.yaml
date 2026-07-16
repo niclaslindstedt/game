@@ -2,22 +2,30 @@ name: amelia_earhart_0
 family: rift
 size: [24, 24]
 description: >
-  AMELIA EARHART, the lost aviatrix: a figure in a brown leather flight
-  jacket over trousers, short tousled hair, a pale scarf, brandishing a blade
-  in one hand. Reads as a 1930s pilot who never stopped flying.
+  AMELIA EARHART, the lost aviatrix — a leather-jacketed 1930s pilot
+  brandishing a blade, still circling a cloud with no other side.
+subject:
+  kind: elite
+  name: AMELIA EARHART
+  build: a trim aviator
+  attire: a brown leather flight jacket and cap over dark trousers, a pale scarf
+  features: amber flight goggles across the eyes
+  accent: a thin light blade held out to one side
+  pose: standing squared up, blade brandished
+  flavor: the lost 1930s aviatrix who flew into a cloud with no other side and never stopped circling
 palette:
-  B: "#92643e"
-  E: "#5d4028"
-  O: "#1a1c2c"
-  S: "#b39378"
-  T: "#c0c5cf"
-  W: "#f4f4f4"
-  b: "#3f4553"
-  k: "#342c26"
-  p: "#deaa86"
-  q: "#96762e"
-  w: "#c6c6c6"
-  y: "#ffb02e"
+  B: "#92643e" # brown leather jacket
+  E: "#5d4028" # dark leather cap and trim
+  O: "#1a1c2c" # outline
+  S: "#b39378" # pale tan scarf
+  T: "#c0c5cf" # pale goggle frame
+  W: "#f4f4f4" # white blade
+  b: "#3f4553" # dark grey trousers
+  k: "#342c26" # near-black boots
+  p: "#deaa86" # skin
+  q: "#96762e" # brass jacket buttons
+  w: "#c6c6c6" # pale scarf highlight
+  y: "#ffb02e" # amber goggles and buckle
 grid: |
   ........................
   ........OOOOOOO.........

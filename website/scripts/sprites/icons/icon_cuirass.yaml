@@ -2,12 +2,16 @@ name: icon_cuirass
 family: icons
 size: [12, 12]
 description: >
-  A bronze-gold Roman muscle cuirass — a polished breastplate sculpted
-  with abdominal contours; the centurion's legion-polished chest armor.
+  A bronze-gold Roman muscle cuirass sculpted with abdominal contours.
+subject:
+  kind: armor icon
+  features: a breastplate with shoulder tabs and sculpted muscle contours
+  accent: polished bronze-gold
+  flavor: the centurion's legion-polished chest armor
 palette:
-  O: "#1a1c2c"
-  o: "#d6a842"
-  q: "#96762e"
+  O: "#1a1c2c" # dark outline
+  o: "#d6a842" # bronze-gold plate
+  q: "#96762e" # dark bronze contour
 grid: |
   ............
   ............

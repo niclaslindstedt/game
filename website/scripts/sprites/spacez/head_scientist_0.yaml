@@ -2,21 +2,29 @@ name: head_scientist_0
 family: spacez
 size: [24, 24]
 description: >
-  DR. NOVA, the lead researcher, in a clean white cleanroom bunny-suit with
-  a purple-tinted face visor and a glowing purple containment orb held at
-  the chest; poised and front-facing.
+  DR. NOVA — the lead researcher in a white cleanroom bunny-suit, cradling a
+  glowing purple containment orb.
+subject:
+  kind: elite boss
+  name: DR. NOVA
+  build: a poised figure bulked out by a full cleanroom bunny-suit
+  attire: a clean white cleanroom bunny-suit, hood and gloves sealed
+  features: a purple-tinted face visor over a pale face
+  accent: a glowing purple containment orb held at the chest
+  pose: standing poised, the orb cradled to the chest in both hands
+  flavor: guards the cleanroom vault and the alien engine dug from the Sea of Tranquility
 palette:
-  F: "#a2a4ad"
-  L: "#d4a5ec"
-  M: "#644696e6"
-  O: "#1a1c2c"
-  P: "#b05cdc"
-  W: "#f4f4f4"
-  b: "#3f4553"
-  c: "#8ccdd7e1"
-  n: "#b9e6cdf0"
-  p: "#deaa86"
-  x: "#c5e6ebe1"
+  F: "#a2a4ad" # grey suit shading
+  L: "#d4a5ec" # light-purple orb highlight
+  M: "#644696e6" # deep-purple orb shadow
+  O: "#1a1c2c" # outline
+  P: "#b05cdc" # bright purple orb glow
+  W: "#f4f4f4" # white bunny-suit
+  b: "#3f4553" # dark boots
+  c: "#8ccdd7e1" # cyan visor tint
+  n: "#b9e6cdf0" # pale mint visor and orb core
+  p: "#deaa86" # skin
+  x: "#c5e6ebe1" # pale visor highlight
 grid: |
   ........................
   .......OWWWWWWWWO.......

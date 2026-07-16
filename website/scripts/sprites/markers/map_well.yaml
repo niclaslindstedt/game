@@ -2,13 +2,16 @@ name: map_well
 family: markers
 size: [12, 12]
 description: >
-  Map marker for a rift gravity well (black-hole hazard): a glowing violet
-  ring encircling a pitch-black void center, reading as a swirling pit that
-  drags you in — a warning pin shown only on the rift level.
+  Minimap marker for a rift gravity well — a glowing violet ring around a black void.
+subject:
+  kind: minimap marker
+  build: a glowing violet ring encircling a pitch-black void center
+  accent: luminous violet halo around the dead-black pit
+  flavor: reads as a swirling black-hole hazard that drags you in; shown only on the rift level
 palette:
-  Q: "#cebcfa"
-  U: "#8a6ce0"
-  u: "#100c1e"
+  Q: "#cebcfa" # pale violet ring highlight
+  U: "#8a6ce0" # glowing violet ring
+  u: "#100c1e" # pitch-black void center
 grid: |
   ....UUUU....
   ..UUQQQQUU..

@@ -2,14 +2,19 @@ name: eastrock_1x2
 family: eastworld
 size: [16, 32]
 description: >
-  A tall desert boulder — a sandy-tan rock stacked taller than wide, shaded
-  down one side; mid-height cover in the rock garden.
+  A sandy-tan boulder stacked taller than wide; mid-height cover in the rock
+  garden.
+subject:
+  kind: cover prop — tall boulder
+  build: a rounded rock stacked taller than wide, shaded down one side
+  accent: pale sand highlight over a darker shaded base
+  flavor: mid-height cover in the rock garden
 palette:
-  O: "#1a1c2c"
-  Z: "#b08e60"
-  d: "#665c34"
-  e: "#8a7e46"
-  u: "#e2c494"
+  O: "#1a1c2c" # outline
+  Z: "#b08e60" # mid sandy-tan rock
+  d: "#665c34" # shaded side
+  e: "#8a7e46" # olive-tan mottling
+  u: "#e2c494" # pale lit sandstone
 grid: |
   ................
   .....OOOOO......

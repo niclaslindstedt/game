@@ -2,15 +2,22 @@ name: bodyguard_0
 family: bunker
 size: [20, 20]
 description: >
-  A heavyset personal bodyguard, front-facing — a wall in a black suit with a
-  white shirt and red tie, arms held out from the bulk; drawn a size larger
-  than the crew (20x20) so his mass reads as menace.
+  A heavyset personal bodyguard — a wall in a black suit with a white shirt and
+  red tie, arms held out from the bulk, drawn a size larger than the crew.
+subject:
+  kind: elite bodyguard
+  build: heavyset, a size larger than the crew so his mass reads as menace
+  attire: matte-black suit over a white shirt
+  features: dark hair
+  accent: red tie
+  pose: arms held out from the bulk, planted
+  flavor: a resident's personal bodyguard, reframed as one of the machine's wardens
 palette:
-  C: "#d23c42"
-  K: "#0c0b12"
-  O: "#1a1c2c"
-  W: "#f4f4f4"
-  p: "#deaa86"
+  C: "#d23c42" # red tie
+  K: "#0c0b12" # near-black suit and hair
+  O: "#1a1c2c" # navy outline
+  W: "#f4f4f4" # white shirt
+  p: "#deaa86" # skin
 grid: |
   ....................
   ........OOOO........

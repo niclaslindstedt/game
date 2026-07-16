@@ -2,12 +2,16 @@ name: icon_cardboard_sword
 family: icons
 size: [12, 12]
 description: >
-  A floppy brown cardboard sword, drooping and soggy at the tip, edges
-  soft and peeling; an obvious worthless joke weapon.
+  A floppy brown cardboard sword, drooping and soggy at the tip.
+subject:
+  kind: weapon icon
+  features: a limp sword shape with a drooping tip and soft peeling edges
+  accent: soggy cardboard brown
+  flavor: an obvious worthless joke weapon
 palette:
-  B: "#92643e"
-  E: "#5d4028"
-  O: "#1a1c2c"
+  B: "#92643e" # cardboard tan
+  E: "#5d4028" # damp cardboard shadow
+  O: "#1a1c2c" # dark outline
 grid: |
   ............
   .....OO.....

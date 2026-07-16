@@ -2,14 +2,17 @@ name: medkit
 family: effects
 size: [12, 12]
 description: >
-  The standard health pickup: a white first-aid case with a bold red cross and
-  a plain white/steel frame. The baseline medkit grade — reads instantly as
-  "heal here."
+  The standard baseline health pickup, reads instantly as "heal here."
+subject:
+  kind: pickup
+  build: a square white first-aid case with a plain white body, bold red medical cross centered on its face, a steel-grey lower edge and dark frame
+  accent: red medical cross
+  flavor: the baseline medkit grade
 palette:
-  O: "#1a1c2c"
-  W: "#f4f4f4"
-  r: "#d83a3a"
-  w: "#c6c6c6"
+  O: "#1a1c2c" # dark frame
+  W: "#f4f4f4" # white case
+  r: "#d83a3a" # red medical cross
+  w: "#c6c6c6" # steel-grey lower edge
 grid: |
   ............
   .OOOOOOOOOO.

@@ -2,13 +2,17 @@ name: icon_severed_hand
 family: icons
 size: [12, 12]
 description: >
-  A pale severed human hand, palm out, cut clean at the wrist with a red
-  stump; a cold, manicured biometric key.
+  A pale severed hand, palm out, cut clean at the wrist with a red stump.
+subject:
+  kind: item icon
+  features: a splayed hand, palm out, severed at the wrist
+  accent: pale skin, red stump
+  flavor: a cold, manicured biometric key
 palette:
-  O: "#1a1c2c"
-  i: "#772020"
-  p: "#deaa86"
-  r: "#d83a3a"
+  O: "#1a1c2c" # dark outline
+  i: "#772020" # deep wound shadow
+  p: "#deaa86" # skin
+  r: "#d83a3a" # red stump
 grid: |
   ............
   ..O.O.O.....

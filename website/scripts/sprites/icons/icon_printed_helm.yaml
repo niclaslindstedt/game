@@ -2,12 +2,16 @@ name: icon_printed_helm
 family: icons
 size: [12, 12]
 description: >
-  A seamless cream-ceramic full helm, one smooth rounded piece with a
-  narrow eye slit; a printed Mars helmet with no visible joins.
+  A seamless cream-ceramic full helm with a narrow eye slit.
+subject:
+  kind: armor icon
+  features: one smooth rounded helm piece with a narrow eye slit, no visible joins
+  accent: cream ceramic
+  flavor: a printed Mars helmet
 palette:
-  O: "#1a1c2c"
-  W: "#f4f4f4"
-  w: "#c6c6c6"
+  O: "#1a1c2c" # dark outline / slit
+  W: "#f4f4f4" # cream ceramic
+  w: "#c6c6c6" # grey ceramic shade
 grid: |
   ............
   ....OOOO....

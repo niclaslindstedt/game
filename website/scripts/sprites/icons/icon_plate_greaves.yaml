@@ -2,12 +2,16 @@ name: icon_plate_greaves
 family: icons
 size: [12, 12]
 description: >
-  A pair of grey riveted steel leg plates drawn as an inverted-U
-  silhouette; heavy articulated medieval greaves.
+  A pair of grey riveted steel leg plates joined at the waist.
+subject:
+  kind: armor icon
+  features: a pair of plated leg greaves joined at the waist into an inverted-U
+  accent: grey riveted steel
+  flavor: heavy articulated medieval greaves
 palette:
-  O: "#1a1c2c"
-  V: "#9095a5"
-  v: "#60687e"
+  O: "#1a1c2c" # dark outline
+  V: "#9095a5" # bright steel highlight
+  v: "#60687e" # grey steel
 grid: |
   ............
   ............

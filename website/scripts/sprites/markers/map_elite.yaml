@@ -2,13 +2,16 @@ name: map_elite
 family: markers
 size: [12, 12]
 description: >
-  Map marker for an elite (mini-boss) location: a bright magenta/violet
-  four-pointed star or diamond glyph on a dark tile — a distinct pointed
-  shape that reads as a notable foe without a full skull.
+  Minimap marker for an elite (mini-boss) — a violet four-pointed star on a dark tile.
+subject:
+  kind: minimap marker
+  build: a four-pointed star / diamond glyph with sharp points on a dark tile
+  accent: bright magenta-violet star against near-black backing
+  flavor: a distinct pointed shape reading as a notable foe, short of a full skull
 palette:
-  C: "#d696f0"
-  D: "#eecdfc"
-  O: "#1a1c2c"
+  C: "#d696f0" # magenta-violet star body
+  D: "#eecdfc" # pale violet star highlight
+  O: "#1a1c2c" # near-black tile backing
 grid: |
   ............
   .....OO.....

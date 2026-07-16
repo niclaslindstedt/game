@@ -2,13 +2,17 @@ name: icon_dossier
 family: icons
 size: [12, 12]
 description: >
-  A manila file folder with a red tab and a sheet of paper peeking out;
-  the Project Second Man dossier.
+  A manila file folder with a red tab and a sheet peeking out.
+subject:
+  kind: item icon
+  features: a file folder with a corner tab and a paper sheet showing inside
+  accent: manila tan, red marking
+  flavor: the Project Second Man dossier
 palette:
-  O: "#1a1c2c"
-  W: "#f4f4f4"
-  o: "#d6a842"
-  r: "#d83a3a"
+  O: "#1a1c2c" # dark outline
+  W: "#f4f4f4" # white paper sheet
+  o: "#d6a842" # manila folder
+  r: "#d83a3a" # red marking
 grid: |
   ............
   ............

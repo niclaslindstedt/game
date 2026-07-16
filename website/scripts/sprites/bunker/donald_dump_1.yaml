@@ -2,19 +2,26 @@ name: donald_dump_1
 family: bunker
 size: [24, 24]
 description: >
-  A heavyset front-facing man in a navy-blue business suit with a long red tie,
-  a ruddy face under a distinctive swoop of amber-blond hair, hands out and
-  planted; the biggest and bulkiest figure of the set, caught mid-step with the
-  weight shifted from its immovable stance.
+  DONALD DUMP mid-step — the bulky navy-suited resident with the long red tie
+  and amber-blond swoop, weight shifted from its planted stance.
+subject:
+  kind: elite
+  name: DONALD DUMP
+  build: bulky, the biggest and slowest resident of the set
+  attire: navy-blue business suit over a white shirt
+  features: ruddy face under a distinctive swoop of amber-blond hair
+  accent: long red tie
+  pose: caught mid-step, the weight shifted from its immovable planted stance, hands out
+  flavor: a caged bunker resident boasting he sold the robots, oblivious they now guard his door
 palette:
-  C: "#d23c42"
-  J: "#2d3b84"
-  K: "#0c0b12"
-  O: "#1a1c2c"
-  W: "#f4f4f4"
-  p: "#deaa86"
-  t: "#ee9858"
-  y: "#ffb02e"
+  C: "#d23c42" # red tie
+  J: "#2d3b84" # navy-blue suit
+  K: "#0c0b12" # black shoes and eyes
+  O: "#1a1c2c" # navy outline
+  W: "#f4f4f4" # white shirt
+  p: "#deaa86" # skin
+  t: "#ee9858" # ruddy face
+  y: "#ffb02e" # amber-blond hair
 grid: |
   ........................
   ........................

@@ -2,18 +2,26 @@ name: scientist_1
 family: spacez
 size: [16, 16]
 description: >
-  A LAB SCIENTIST in a white lab coat over office clothes with safety goggles,
-  front-facing. Caught mid-stride, his legs planted wide apart in a walking
-  step.
+  A LAB SCIENTIST mid-stride — the white-coated lab staffer with safety
+  goggles, legs shifted into a walking step.
+subject:
+  kind: minion
+  name: LAB SCIENTIST
+  build: an ordinary staffer of average frame
+  attire: a white lab coat over office clothes
+  features: safety goggles with a blue strap across the eyes
+  accent: blue safety goggles
+  pose: caught mid-stride, legs planted wide apart in a walking step
+  flavor: rank-and-file of the SpaceZ labs, pulled onto the night shift
 palette:
-  O: "#1a1c2c"
-  W: "#f4f4f4"
-  a: "#d6dce4"
-  b: "#3f4553"
-  j: "#4054bc"
-  p: "#deaa86"
-  r: "#d83a3a"
-  w: "#c6c6c6"
+  O: "#1a1c2c" # outline
+  W: "#f4f4f4" # white lab coat
+  a: "#d6dce4" # pale goggle frame
+  b: "#3f4553" # dark trousers
+  j: "#4054bc" # blue goggle strap
+  p: "#deaa86" # skin
+  r: "#d83a3a" # red pocket pen
+  w: "#c6c6c6" # grey goggle lens
 grid: |
   ................
   ....OaaaaO......
