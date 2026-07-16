@@ -2,15 +2,20 @@ name: crater_small
 family: moon
 size: [16, 16]
 description: >
-  A small impact crater in the grey regolith, top-down: a round dark pit with a pale dusted rim; a minor gap to jump across.
+  A small impact crater in the grey regolith: a round dark pit with a pale dusted rim.
+subject:
+  kind: prop
+  build: a small round impact crater, a dark pit with a pale dusted rim
+  accent: desaturated regolith grey
+  flavor: a minor gap to jump across
 palette:
-  A: "#8d9196"
-  F: "#a2a4ad"
-  O: "#1a1c2c"
-  a: "#d6dce4"
-  d: "#676972"
-  e: "#4e4f56"
-  f: "#888a96"
+  A: "#8d9196" # rim mid-grey
+  F: "#a2a4ad" # rim highlight
+  O: "#1a1c2c" # dark pit shadow
+  a: "#d6dce4" # bright rim edge
+  d: "#676972" # inner slope grey
+  e: "#4e4f56" # pit-wall shadow
+  f: "#888a96" # base regolith grey
 grid: |
   ................
   ................

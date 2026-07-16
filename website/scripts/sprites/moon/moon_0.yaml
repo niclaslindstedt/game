@@ -2,11 +2,17 @@ name: moon_0
 family: moon
 size: [16, 16]
 description: >
-  The base lunar ground tile: flat grey regolith, faintly pocked and dusted, a seamless top-down surface that tiles across the moonscape.
+  The base lunar ground tile: flat grey regolith, faintly pocked and dusted.
+subject:
+  kind: ground tile
+  build: a seamless flat regolith surface that tiles across the moonscape
+  features: faint scattered pocks and dust flecks
+  accent: desaturated regolith grey
+  flavor: the base lunar floor of the moonscape
 palette:
-  F: "#a2a4ad"
-  d: "#676972"
-  f: "#888a96"
+  F: "#a2a4ad" # light regolith fleck
+  d: "#676972" # dark dust pock
+  f: "#888a96" # base regolith grey
 grid: |
   ffffffffffffffff
   fffffffffffffdff

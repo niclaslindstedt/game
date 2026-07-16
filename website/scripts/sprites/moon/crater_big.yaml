@@ -2,15 +2,22 @@ name: crater_big
 family: moon
 size: [32, 32]
 description: >
-  A large impact crater punched into the grey regolith, seen top-down: a deep dark shadowed pit ringed by a lighter raised rim; a gap the hero must jump, not cross.
+  A large impact crater punched into the grey regolith: a deep dark shadowed pit
+  ringed by a lighter raised rim.
+subject:
+  kind: prop
+  build: a large impact crater, a deep dark shadowed pit ringed by a lighter raised rim
+  features: a dark inner pit and sloped crater walls
+  accent: desaturated regolith grey
+  flavor: a gap the hero must jump, not cross
 palette:
-  A: "#8d9196"
-  F: "#a2a4ad"
-  O: "#1a1c2c"
-  a: "#d6dce4"
-  d: "#676972"
-  e: "#4e4f56"
-  f: "#888a96"
+  A: "#8d9196" # rim mid-grey
+  F: "#a2a4ad" # rim highlight
+  O: "#1a1c2c" # dark pit shadow
+  a: "#d6dce4" # bright rim edge
+  d: "#676972" # inner slope grey
+  e: "#4e4f56" # pit-wall shadow
+  f: "#888a96" # base regolith grey
 grid: |
   ................................
   ................................

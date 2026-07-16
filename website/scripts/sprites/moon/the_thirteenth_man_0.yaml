@@ -2,13 +2,23 @@ name: the_thirteenth_man_0
 family: moon
 size: [16, 16]
 description: >
-  THE THIRTEENTH MAN, a unique: a hooded violet-purple ghost with gold trim along the hood and a glowing gold visor-slit for a face; the moonwalker the record never counted, one per haunting.
+  THE THIRTEENTH MAN, a unique: a hooded violet-purple ghost with gold hood trim
+  and a glowing gold visor-slit for a face.
+subject:
+  kind: unique minion
+  name: THE THIRTEENTH MAN
+  build: a hooded translucent ghost
+  attire: a violet-purple hood
+  features: a glowing gold visor-slit for a face
+  accent: gold trim along the hood
+  pose: drifting upright, hooded
+  flavor: the moonwalker the record never counted, one per haunting
 palette:
-  M: "#644696e6"
-  O: "#1a1c2c"
-  Y: "#ffe3b6"
-  m: "#a57de1e6"
-  y: "#ffb02e"
+  M: "#644696e6" # deep-violet hood shadow
+  O: "#1a1c2c" # dark outline
+  Y: "#ffe3b6" # pale gold visor glint
+  m: "#a57de1e6" # translucent violet body
+  y: "#ffb02e" # gold hood trim and visor
 grid: |
   ......OOOO......
   .....OymmMO.....

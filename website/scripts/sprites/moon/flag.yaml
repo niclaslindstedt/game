@@ -2,13 +2,20 @@ name: flag
 family: moon
 size: [16, 24]
 description: >
-  The old Apollo flag planted in the dust on its pole: a red-and-white striped banner with a blue star canton, held stiff on its wire crossbar in the airless vacuum; ARMSTRONG's landmark at the far side.
+  The old Apollo flag planted on its pole: a red-and-white striped banner with a
+  blue star canton, held stiff on its wire crossbar in the airless vacuum.
+subject:
+  kind: prop
+  build: a flag on a tall grey pole, the banner held stiff on a wire crossbar in the airless vacuum
+  features: red-and-white stripes with a blue star canton
+  accent: the blue star canton
+  flavor: ARMSTRONG's landmark at the far side, the flag planted on a grave
 palette:
-  A: "#8d9196"
-  O: "#1a1c2c"
-  W: "#f4f4f4"
-  j: "#4054bc"
-  r: "#d83a3a"
+  A: "#8d9196" # grey flagpole
+  O: "#1a1c2c" # dark outline
+  W: "#f4f4f4" # white stripes and stars
+  j: "#4054bc" # blue canton
+  r: "#d83a3a" # red stripes
 grid: |
   ................
   ...OO...........

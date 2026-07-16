@@ -2,10 +2,15 @@ name: rocks
 family: moon
 size: [16, 16]
 description: >
-  A loose scatter of small grey pebbles and rock chips strewn across the regolith, a top-down decor cluster; scenery, not an obstacle.
+  A loose scatter of small grey pebbles and rock chips strewn across the regolith.
+subject:
+  kind: prop
+  build: a loose scatter of small grey pebbles and rock chips
+  accent: desaturated stone grey
+  flavor: a scenery cluster, not an obstacle
 palette:
-  d: "#676972"
-  e: "#4e4f56"
+  d: "#676972" # pebble grey
+  e: "#4e4f56" # pebble shadow
 grid: |
   ................
   ................

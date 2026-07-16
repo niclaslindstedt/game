@@ -2,15 +2,25 @@ name: armstrong_1
 family: moon
 size: [48, 48]
 description: >
-  ARMSTRONG, the boss: a giant (48x48) translucent pale-green astronaut ghost looming over the field, broad round body on stubby limbs, two large dark hollow eyes, a gold-and-red chest control panel; the first man on the moon as a sorrowful colossus guarding his flag. Alternate looming/breathing frame.
+  ARMSTRONG, the boss: a giant translucent pale-green astronaut ghost looming
+  over the field, a gold-and-red control panel on his chest. Alternate breathing frame.
+subject:
+  kind: boss
+  name: ARMSTRONG
+  build: a giant translucent astronaut colossus, broad round body on stubby limbs, looming over the field
+  attire: a pale mint-green pressure suit
+  features: two large dark hollow eyes in a domed helmet
+  accent: a gold-and-red control panel on his chest
+  pose: looming over the field, caught mid-breath with the legs settled
+  flavor: the first man on the moon as a sorrowful colossus who never went home, guarding his flag
 palette:
-  N: "#73a087f0"
-  O: "#1a1c2c"
-  W: "#f4f4f4"
-  n: "#b9e6cdf0"
-  o: "#d6a842"
-  r: "#d83a3a"
-  y: "#ffb02e"
+  N: "#73a087f0" # deep-green suit shadow
+  O: "#1a1c2c" # dark outline and hollow eyes
+  W: "#f4f4f4" # white helmet highlight and eye-lights
+  n: "#b9e6cdf0" # translucent mint-green body
+  o: "#d6a842" # gold chest-panel frame
+  r: "#d83a3a" # red panel button
+  y: "#ffb02e" # amber panel button
 grid: |
   ................................................
   ................................................

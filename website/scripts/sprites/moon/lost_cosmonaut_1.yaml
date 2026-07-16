@@ -2,12 +2,22 @@ name: lost_cosmonaut_1
 family: moon
 size: [16, 16]
 description: >
-  LOST COSMONAUT, a rare drifter: a lone salmon-pink suited ghost with red suit trim, the other side's casualty nobody admitted to, wandering the far side always alone. Alternate float frame.
+  LOST COSMONAUT, a rare drifter: a lone salmon-pink suited ghost with red suit
+  trim. Alternate float frame.
+subject:
+  kind: rare minion
+  name: LOST COSMONAUT
+  build: a lone translucent suited ghost
+  attire: a salmon-pink pressure suit with red trim
+  features: dark eyes and a white helmet glint
+  accent: red suit trim
+  pose: drifting alone, a little higher off the dust
+  flavor: the other side's casualty nobody ever admitted to, always alone
 palette:
-  O: "#1a1c2c"
-  W: "#f4f4f4"
-  Z: "#ac6e68e6"
-  z: "#e8aca2e6"
+  O: "#1a1c2c" # dark outline and eyes
+  W: "#f4f4f4" # white helmet glint
+  Z: "#ac6e68e6" # translucent red suit trim
+  z: "#e8aca2e6" # translucent salmon-pink suit
 grid: |
   ................
   ................

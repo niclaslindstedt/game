@@ -2,9 +2,15 @@ name: ecto_0
 family: moon
 size: [12, 12]
 description: >
-  The moon horde's gore splat: a small burst of pale-cyan ectoplasm thrown when a ghost is downed, a spectral diamond splatter of glowing goo fading into the dust.
+  The moon horde's gore splat: a small diamond burst of pale-cyan ectoplasm
+  thrown when a ghost is downed.
+subject:
+  kind: gore splat effect
+  build: a small compact diamond splatter of glowing goo
+  accent: pale-cyan ectoplasm
+  flavor: thrown when a ghost is downed, fading into the dust
 palette:
-  c: "#8ccdd7e1"
+  c: "#8ccdd7e1" # pale-cyan ectoplasm
 grid: |
   ............
   ............

@@ -2,21 +2,31 @@ name: prospector_1
 family: moon
 size: [24, 24]
 description: >
-  THE PROSPECTOR, an elite: a pale spectral miner in a gold hardhat with a lamp, a pickaxe slung across his chest over suit straps; the claim-jumper who dug SpaceZ's secret far-side tunnels. Alternate float / charge frame.
+  THE PROSPECTOR, an elite: a pale spectral miner in a gold lamp-hardhat, a
+  pickaxe slung across his chest over dark suit straps. Alternate float/charge frame.
+subject:
+  kind: elite minion
+  name: THE PROSPECTOR
+  build: a pale translucent spectral miner
+  attire: a translucent pressure suit crossed by dark straps
+  features: a gold hardhat with a white headlamp casting an amber beam
+  accent: a pickaxe slung across his chest
+  pose: leaning into a charge, the pick riding across his chest
+  flavor: the claim-jumper who dug SpaceZ's secret far-side tunnels
 palette:
-  A: "#8d9196"
-  E: "#5d4028"
-  H: "#9e8b2d"
-  O: "#1a1c2c"
-  T: "#c0c5cf"
-  U: "#94bcc7b9"
-  W: "#f4f4f4"
-  Y: "#ffe3b6"
-  d: "#676972"
-  k: "#342c26"
-  o: "#d6a842"
-  u: "#cde8f0b9"
-  y: "#ffb02e"
+  A: "#8d9196" # pickaxe-head steel
+  E: "#5d4028" # brown pickaxe haft
+  H: "#9e8b2d" # gold hardhat shadow
+  O: "#1a1c2c" # dark outline
+  T: "#c0c5cf" # pickaxe steel highlight
+  U: "#94bcc7b9" # translucent suit shadow
+  W: "#f4f4f4" # white headlamp
+  Y: "#ffe3b6" # pale lamp-beam highlight
+  d: "#676972" # pickaxe and strap shadow
+  k: "#342c26" # dark chest straps
+  o: "#d6a842" # gold hardhat
+  u: "#cde8f0b9" # translucent pale suit
+  y: "#ffb02e" # amber lamp glow
 grid: |
   .........OyyyO..........
   ........OYyyyyO.........

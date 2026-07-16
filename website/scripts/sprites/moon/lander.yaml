@@ -2,13 +2,20 @@ name: lander
 family: moon
 size: [32, 32]
 description: >
-  The abandoned Apollo lunar module at the landing site: a squat descent stage wrapped in gold foil on splayed spider legs, a pale-white upper hull; the hero's start-point landmark on the dust.
+  The abandoned Apollo lunar module: a squat gold-foil descent stage on splayed
+  spider legs under a pale-white upper hull.
+subject:
+  kind: prop
+  build: a squat lunar module, a boxy descent stage on splayed spider legs under a pale-white upper hull
+  features: gold foil wrapping the descent stage
+  accent: the gold foil
+  flavor: the abandoned landing-site module, the hero's start-point landmark
 palette:
-  A: "#8d9196"
-  O: "#1a1c2c"
-  a: "#d6dce4"
-  o: "#d6a842"
-  q: "#96762e"
+  A: "#8d9196" # grey leg and hull shadow
+  O: "#1a1c2c" # dark outline
+  a: "#d6dce4" # pale-white upper hull
+  o: "#d6a842" # gold foil
+  q: "#96762e" # gold-foil shadow
 grid: |
   ................................
   ..................AA............

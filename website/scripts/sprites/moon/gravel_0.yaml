@@ -2,12 +2,18 @@ name: gravel_0
 family: moon
 size: [16, 16]
 description: >
-  A clustered patch of grey lunar gravel scattered across the regolith ground, a flat top-down texture of small pebbles and dust flecks; a decorative floor variant, not an obstacle.
+  A clustered patch of grey lunar gravel scattered across the regolith, small
+  pebbles and dust flecks.
+subject:
+  kind: ground-tile decoration
+  build: a clustered patch of small pebbles and dust flecks scattered on the regolith
+  accent: desaturated regolith grey
+  flavor: a decorative floor variant, not an obstacle
 palette:
-  F: "#a2a4ad"
-  d: "#676972"
-  e: "#4e4f56"
-  f: "#888a96"
+  F: "#a2a4ad" # light gravel fleck
+  d: "#676972" # mid pebble grey
+  e: "#4e4f56" # dark pebble shadow
+  f: "#888a96" # base regolith grey
 grid: |
   ffffffffffffffff
   ffffffffFfffffff

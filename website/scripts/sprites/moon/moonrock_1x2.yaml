@@ -2,13 +2,20 @@ name: moonrock_1x2
 family: moon
 size: [16, 32]
 description: >
-  A taller two-cell stack of grey lunar moonrock, a standing stone slab, angular and shaded; solid cover that blocks sight and shots but the haunting drifts straight through.
+  A tall two-tile stack of grey lunar moonrock, a standing stone slab, angular
+  and shaded.
+subject:
+  kind: prop
+  build: a tall two-tile standing slab of grey moonrock, angular and shaded
+  features: shaded angular facets
+  accent: desaturated stone grey
+  flavor: solid cover that blocks sight and shots, but the haunting drifts straight through
 palette:
-  F: "#a2a4ad"
-  O: "#1a1c2c"
-  d: "#676972"
-  e: "#4e4f56"
-  f: "#888a96"
+  F: "#a2a4ad" # light stone face
+  O: "#1a1c2c" # dark outline
+  d: "#676972" # mid stone shadow
+  e: "#4e4f56" # deep stone shadow
+  f: "#888a96" # base stone grey
 grid: |
   ................
   .....OOOOO......

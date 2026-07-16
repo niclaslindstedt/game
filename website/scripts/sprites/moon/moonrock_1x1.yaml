@@ -2,13 +2,20 @@ name: moonrock_1x1
 family: moon
 size: [16, 16]
 description: >
-  A single solid slab of grey lunar moonrock in a one-cell footprint, an angular shaded boulder that blocks sight and shots; cover against SpaceZ's robots, but the haunting phases through it.
+  A single solid angular slab of grey lunar moonrock, a single-tile boulder that
+  blocks sight and shots.
+subject:
+  kind: prop
+  build: a single solid angular slab of grey moonrock, a single-tile footprint
+  features: shaded angular facets
+  accent: desaturated stone grey
+  flavor: cover against SpaceZ's robots that blocks sight and shots, but the haunting phases through it
 palette:
-  F: "#a2a4ad"
-  O: "#1a1c2c"
-  d: "#676972"
-  e: "#4e4f56"
-  f: "#888a96"
+  F: "#a2a4ad" # light stone face
+  O: "#1a1c2c" # dark outline
+  d: "#676972" # mid stone shadow
+  e: "#4e4f56" # deep stone shadow
+  f: "#888a96" # base stone grey
 grid: |
   ................
   ...OOOOOO.......

@@ -2,16 +2,25 @@ name: cartographer_1
 family: moon
 size: [24, 24]
 description: >
-  THE CARTOGRAPHER, an elite: a violet-purple ghost with glowing red eyes clutching an unrolled blue-and-white survey chart to its chest; the mapmaker still charting tunnels that keep shifting under the dust. Alternate float frame.
+  THE CARTOGRAPHER, an elite: a violet-purple ghost with glowing red eyes
+  clutching an unrolled survey chart to its chest. Alternate float frame.
+subject:
+  kind: elite minion
+  name: THE CARTOGRAPHER
+  build: a rounded translucent violet-purple ghost, hunched over what it holds
+  features: glowing red eyes
+  accent: an unrolled blue-and-white survey chart clutched to its chest
+  pose: clutching the chart to its chest, drifting a little higher off the dust
+  flavor: the mapmaker still charting tunnels that keep shifting under the dust
 palette:
-  J: "#2d3b84"
-  M: "#644696e6"
-  O: "#1a1c2c"
-  R: "#ff5252"
-  S: "#b39378"
-  Y: "#ffe3b6"
-  j: "#4054bc"
-  m: "#a57de1e6"
+  J: "#2d3b84" # dark blue chart lines
+  M: "#644696e6" # deep-violet body shadow
+  O: "#1a1c2c" # dark outline
+  R: "#ff5252" # glowing red eyes
+  S: "#b39378" # tan chart backing and rolled edges
+  Y: "#ffe3b6" # pale parchment highlight
+  j: "#4054bc" # blue chart ink
+  m: "#a57de1e6" # translucent violet body
 grid: |
   ........................
   ........................
