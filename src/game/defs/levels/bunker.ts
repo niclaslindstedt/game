@@ -484,11 +484,11 @@ export const THE_BUNKER: LevelDef = {
     // the vault farms LOOT, not levels — a grind here can't out-level the
     // campaign's pacing.
     arrowCapByDifficulty: {
-      easy: 30,
-      medium: 30,
-      hard: 30,
-      nightmare: 50,
-      jesus: 60,
+      easy: 33,
+      medium: 35,
+      hard: 36,
+      nightmare: 51,
+      jesus: 69,
     },
   },
 };

@@ -26,6 +26,16 @@ export const BALANCE_KNOBS: BalanceKnob[] = [
     blurb: "ALL XP FROM KILLS AND ARROWS - LEVELING PACE",
   },
   {
+    key: "levelingSlowdown",
+    label: "LEVEL SLOWDOWN",
+    blurb: "HOW MUCH LONGER A LEVEL TAKES PER DIFFICULTY TIER (25%/TIER)",
+  },
+  {
+    key: "endgameSteepen",
+    label: "ENDGAME WALL",
+    blurb: "HOW HARD THE CURVE WALLS UP PAST LEVEL 70 (5%/LEVEL)",
+  },
+  {
     key: "playerDamage",
     label: "HERO DAMAGE",
     blurb: "EVERY WEAPON'S DAMAGE (READOUTS FOLLOW)",

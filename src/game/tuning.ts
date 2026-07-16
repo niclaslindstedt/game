@@ -16,6 +16,14 @@
 export type BalanceTuning = {
   /** Scales all XP granted (kills and golden arrows alike) — leveling pace. */
   xpGain: number;
+  /** Scales the PER-TIER leveling slowdown (`LEVELING.tierLevelCostStep`): how
+   * much longer a level takes on nightmare/jesus than on a bottom lane. 1× is
+   * the shipped 25%/tier; 0× levels every difficulty alike; 2× is 50%/tier. */
+  levelingSlowdown: number;
+  /** Scales the ENDGAME steepening rate (`LEVELING.endgameSteepenRate`): how
+   * hard the curve walls up past level 70. 1× is the shipped 5%/level; 0× a
+   * pure geometric tail; higher makes the grind to 99 brutal. */
+  endgameSteepen: number;
   /** Scales the hero's weapon damage (combat, scoring, and readouts). */
   playerDamage: number;
   /** Scales the knockback a melee/ranged weapon blow shoves a struck mob back
@@ -50,6 +58,8 @@ export type BalanceTuning = {
 
 export const BALANCE_TUNING_DEFAULTS: BalanceTuning = {
   xpGain: 1,
+  levelingSlowdown: 1,
+  endgameSteepen: 1,
   playerDamage: 1,
   knockback: 1,
   mobHp: 1,

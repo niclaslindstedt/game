@@ -61,8 +61,10 @@ actually ends.
 
 | Knob | Does |
 | --- | --- |
-| `killsPerLevelBase` | Kills a mid level costs (the curve's height). Bigger = slower everywhere. |
-| `killsPerLevelGrowth` | Per-level rise (the taper). Ships at `1.035` (≈×29 over 99 levels): a STEEP taper on purpose — cheap low levels make the accessible bottom tier level fast, expensive high levels let the jesus pass land at ~60 on the curve alone (no cap wall) and keep the 60→99 endgame a real grind. Bigger = steeper. |
+| `killsPerLevelBase` | Kills a mid level costs (the curve's height). Bigger = slower everywhere. Ships at `150` — tuned so a FULL CLEAR (kill the whole roster, no deaths) lands the hero UNDER each tier's cap. |
+| `killsPerLevelGrowth` | Per-level rise (the taper). Ships at `1.041` (≈×48 over 99 levels): a STEEP geometric on purpose — cheap low levels make the accessible bottom tier level fast, expensive high levels keep the endgame a real grind. Bigger = steeper. |
+| `tierLevelCostStep` | **Per-difficulty slowdown.** Each difficulty TIER above the three bottom lanes makes a level cost this fraction MORE, COMPOUNDING per tier (`(1+step)^tier`, tier = `difficultyDef.index−3`): nightmare ×1.25, jesus ×1.5625 at the shipped `0.25`. So harder rungs take "longer and longer" to level. Applied in `xpToLevelUp(level, difficulty)`; runtime-scalable via BALANCE › LEVEL SLOWDOWN. 0 = every difficulty alike. |
+| `endgameSteepenFrom` / `endgameSteepenRate` | **Endgame wall.** Past level `endgameSteepenFrom` (70), every level costs an extra `endgameSteepenRate` (5%) COMPOUNDING on top of `killsPerLevelGrowth`, so the grind to 99 walls up (D2's 90→99). Applies to EVERY difficulty (shared curve); runtime-scalable via BALANCE › ENDGAME WALL. Rate 0 = pure geometric tail. |
 | `refMobHp` | The "typical minion hp" anchor kills-per-level is stated against. Keep near the common wave minions' catalog hp. Scales the whole curve's height with `killsPerLevelBase`. |
 | `earlyRampStart` / `earlyRampLevels` | Onboarding ramp: level 1 costs this FRACTION of its curve value, lerping to full by `earlyRampLevels`. Makes the first ding land in a handful of kills to show off the level-up. |
 | `maxLevel` | The Diablo-style cap (99). At the cap XP stops banking levels (bar pins full) — the endgame becomes the gear hunt. Enforced in `grantXp` (loot.ts). |
@@ -113,8 +115,10 @@ entering nightmare as someone who played just one (`--full` shows it).
    node scripts/leveling-curve.mjs --difficulty easy --to 20   # early game
    node scripts/leveling-curve.mjs --luck 20                   # more arrows
    node scripts/leveling-curve.mjs --campaign                  # critical path
-   node scripts/leveling-curve.mjs --by-level                  # per (stage × level)
+   node scripts/leveling-curve.mjs --by-level                  # per (stage × level), HALF clear
+   node scripts/leveling-curve.mjs --by-level --clear-share 1  # FULL clear — the cap-sizing view
    node scripts/leveling-curve.mjs --by-level --start hard     # a different lane
+   node scripts/leveling-curve.mjs --by-level --tier-entry nightmare:34,jesus:56  # tier entry pts
    node scripts/leveling-curve.mjs --by-level --full           # completionist
    ```
    The default table reads the live `LEVELING`/`MENACE`/`LOOT` config and prints,

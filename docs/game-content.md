@@ -377,8 +377,8 @@ the whole channel). ELITES and BOSSES drop these relics DURING the normal
 campaign — a set-piece kill is a reliable relic source the first time through —
 while the MINION lottery stays shut until the hero passes
 `WORLD_DROP.minPlayerLevel[difficulty]`, a gate sized a few levels above where a
-first pass of that stage ends (the three bottom lanes share one value, 30, since
-they cover the same band; nightmare 50, jesus 60; see
+first pass of that stage ends (the three bottom lanes share one value, 34, since
+they cover the same band; nightmare 52, jesus 63; see
 `leveling-curve.mjs --by-level`), so trash relics can only be farmed by
 RETURNING once you've out-levelled the run. The bottom-tier batch (shared across
 the three starting lanes) gathers relics themed to their levels

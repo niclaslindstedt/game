@@ -202,7 +202,7 @@ export function applyScenario(state: GameState, spec: ScenarioSpec): void {
   if (spec.level !== undefined) {
     player.level = Math.max(1, Math.floor(spec.level));
     player.xp = 0;
-    player.xpToNext = xpToLevelUp(player.level);
+    player.xpToNext = xpToLevelUp(player.level, state.difficulty);
   }
   if (spec.stats) {
     for (const [stat, points] of Object.entries(spec.stats)) {

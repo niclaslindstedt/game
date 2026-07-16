@@ -106,7 +106,7 @@ export function synthesizeArrival(opts: SynthesizeArrivalOptions): Loadout {
   // per-level chooser caps don't gate a stand-in build.
   player.level = target;
   player.xp = 0;
-  player.xpToNext = xpToLevelUp(target);
+  player.xpToNext = xpToLevelUp(target, difficulty);
   let points = 0;
   for (let l = 2; l <= target; l++) points += statPointsAt(l);
   const order = ARRIVAL_STATS;

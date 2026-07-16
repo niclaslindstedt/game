@@ -394,7 +394,7 @@ export function createGame(
       hurtFlashMs: 0,
       level: 1,
       xp: 0,
-      xpToNext: xpToLevelUp(1),
+      xpToNext: xpToLevelUp(1, difficulty),
       pendingStatPoints: 0,
       // The purse opens empty — coins come from selling loot to the merchant
       // (a carried loadout restores its banked purse below).

@@ -40,9 +40,10 @@ import type {
   StatName,
 } from "./types.ts";
 
-/** XP required to leave `level` (the same curve grantXp walks). */
-function xpToNextAt(level: number): number {
-  return xpToLevelUp(level);
+/** XP required to leave `level` (the same curve grantXp walks — difficulty
+ * carries the per-tier leveling slowdown). */
+function xpToNextAt(level: number, difficulty?: Difficulty): number {
+  return xpToLevelUp(level, difficulty);
 }
 
 /** A deep copy of an equipment piece (or null), safe to carry across runs. */
@@ -104,7 +105,7 @@ export function extractLoadout(state: GameState): Loadout {
 export function applyLoadout(state: GameState, loadout: Loadout): void {
   const player = state.player;
   player.level = Math.max(1, loadout.level);
-  player.xpToNext = xpToNextAt(player.level);
+  player.xpToNext = xpToNextAt(player.level, state.difficulty);
   player.xp = Math.max(0, Math.min(loadout.xp, player.xpToNext - 1));
   player.stats = { ...loadout.stats };
   // The player's own spent tally rides along; a pre-`spentStats` loadout falls

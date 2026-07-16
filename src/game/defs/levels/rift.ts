@@ -334,11 +334,11 @@ export const THE_RIFT: LevelDef = {
     // Level a normal run reaches per rung (`leveling-curve.mjs --by-level`) —
     // past it golden arrows go cold so a Rift replay can't over-level.
     arrowCapByDifficulty: {
-      easy: 24,
-      medium: 24,
-      hard: 24,
-      nightmare: 45,
-      jesus: 58,
+      easy: 28,
+      medium: 30,
+      hard: 31,
+      nightmare: 48,
+      jesus: 65,
     },
     // The VOID WAND arrives early at a kill discovered in play — the level's
     // signature caster, same cadence as Mars's katana.
