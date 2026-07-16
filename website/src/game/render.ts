@@ -923,13 +923,35 @@ export function drawFrame(
   }
 }
 
+// The Warcraft-2 SHROUD stipple: a cached 2×2 (config `MAP.fogStipple`) black
+// checkerboard pattern, screen-aligned, painted over explored-but-out-of-sight
+// terrain so the ground shows through a 50% dither. Rebuilt if the size changes.
+let shroudPattern: { pattern: CanvasPattern; size: number } | null = null;
+function getShroud(ctx: CanvasRenderingContext2D): CanvasPattern | null {
+  const size = MAP.fogStipple;
+  if (shroudPattern && shroudPattern.size === size)
+    return shroudPattern.pattern;
+  const tile = document.createElement("canvas");
+  tile.width = size * 2;
+  tile.height = size * 2;
+  const g = tile.getContext("2d");
+  if (!g) return null;
+  g.fillStyle = `rgba(0,0,0,${MAP.shroudAlpha})`;
+  g.fillRect(0, 0, size, size);
+  g.fillRect(size, size, size, size);
+  const pattern = ctx.createPattern(tile, "repeat");
+  if (!pattern) return null;
+  shroudPattern = { pattern, size };
+  return pattern;
+}
+
 /**
- * The main-view FOG OF WAR (see src/game/map.ts): three tiers drawn as a black
- * overlay per fog cell — never-explored → dark (`MAP.fogDark`), explored but
- * outside the hero's live sight → dim (`MAP.fogDim`), inside the sight circle →
- * clear, with a soft ramp at the sight edge so it reads as vision. Kept light
- * enough (fogDim) that a threat at the screen edge is still legible. Only the
- * cells overlapping the camera view are visited, so it is cheap.
+ * The main-view FOG OF WAR, Warcraft-2 style (see src/game/map.ts): per fog cell
+ * over the visible rect — never-explored → SOLID BLACK, explored but outside the
+ * hero's live `MAP.sightRadius` → the dithered SHROUD (a 50% black stipple the
+ * ground shows through), inside the sight circle → clear. Cell-resolution edges
+ * (32 world px, like WC2's terrain tiles). A revealed cell is always explored,
+ * so the bright circle never exposes black.
  */
 function drawFog(
   ctx: CanvasRenderingContext2D,
@@ -939,45 +961,34 @@ function drawFog(
 ): void {
   const cell = MAP.cellSize;
   const cols = mapCols(state.level);
+  const rows = Math.ceil(state.level.height / cell);
   const explored = state.explored;
   const px = state.player.pos.x;
   const py = state.player.pos.y;
-  const sight = MAP.sightRadius;
-  const inner = sight * 0.6; // fully-lit core; ramp from here to the edge
-  const sightSq = sight * sight;
-  const innerSq = inner * inner;
-  // Only the cells overlapping the visible rect.
+  const sightSq = MAP.sightRadius * MAP.sightRadius;
+  const shroud = getShroud(ctx);
   const x0 = Math.max(0, Math.floor(camera.x / cell));
   const y0 = Math.max(0, Math.floor(camera.y / cell));
-  const x1 = Math.ceil((camera.x + view.width) / cell);
-  const y1 = Math.ceil((camera.y + view.height) / cell);
-  const rows = Math.ceil(state.level.height / cell);
-  for (let ty = y0; ty < Math.min(y1, rows); ty++) {
-    for (let tx = x0; tx < Math.min(x1, cols); tx++) {
-      const seen = explored[ty * cols + tx] === 1;
-      let alpha: number;
-      if (!seen) {
-        alpha = MAP.fogDark;
-      } else {
-        // Distance from the cell centre to the hero → dim outside sight.
-        const dx = (tx + 0.5) * cell - px;
-        const dy = (ty + 0.5) * cell - py;
-        const dSq = dx * dx + dy * dy;
-        if (dSq <= innerSq) alpha = 0;
-        else if (dSq >= sightSq) alpha = MAP.fogDim;
-        else {
-          const t = (Math.sqrt(dSq) - inner) / (sight - inner);
-          alpha = MAP.fogDim * t;
+  const x1 = Math.min(cols, Math.ceil((camera.x + view.width) / cell));
+  const y1 = Math.min(rows, Math.ceil((camera.y + view.height) / cell));
+  for (let ty = y0; ty < y1; ty++) {
+    for (let tx = x0; tx < x1; tx++) {
+      const dx = (tx + 0.5) * cell - px;
+      const dy = (ty + 0.5) * cell - py;
+      if (dx * dx + dy * dy <= sightSq) continue; // in sight → clear
+      const rx = Math.round(tx * cell - camera.x);
+      const ry = Math.round(ty * cell - camera.y);
+      if (explored[ty * cols + tx] === 1) {
+        // Explored, out of sight → the dithered shroud.
+        if (shroud) {
+          ctx.fillStyle = shroud;
+          ctx.fillRect(rx, ry, cell + 1, cell + 1);
         }
+      } else {
+        // Never explored → solid black.
+        ctx.fillStyle = "#000";
+        ctx.fillRect(rx, ry, cell + 1, cell + 1);
       }
-      if (alpha <= 0) continue;
-      ctx.fillStyle = `rgba(6, 8, 12, ${alpha})`;
-      ctx.fillRect(
-        Math.round(tx * cell - camera.x),
-        Math.round(ty * cell - camera.y),
-        cell + 1,
-        cell + 1,
-      );
     }
   }
 }

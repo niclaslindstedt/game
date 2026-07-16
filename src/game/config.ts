@@ -2827,17 +2827,21 @@ export const MAP = {
    * fog lifts as a circle sweeping his path (Warcraft-style, no re-fogging), so
    * the map (and minimap) show exactly where he has been, not the whole camera
    * view. Roughly the phone's near view, so "walked past it" ≈ "on the map". */
-  revealRadius: 150,
+  revealRadius: 160,
   /**
-   * Radius of the hero's CURRENT vision (world px) — the live-lit circle in the
-   * main-view fog of war. Cells inside it render full; explored cells outside it
-   * dim (seen-but-not-in-sight); never-explored cells go dark. A touch wider
-   * than `revealRadius` so the lit circle leads the permanently-revealed trail.
+   * Radius of the hero's CURRENT vision (world px) — the bright CLEAR circle in
+   * the Warcraft-2-style main-view fog. Inside it the world renders full; the
+   * explored ring between it and `revealRadius` (and all explored terrain out of
+   * sight) shows the dithered SHROUD; never-explored terrain is solid black.
+   * Smaller than `revealRadius` so vision's edge reads as a thin dim ring.
    */
-  sightRadius: 170,
-  /** Fog dimness for explored-but-out-of-sight terrain (0 = clear, 1 = black) —
-   * kept light so an approaching threat at the screen edge stays readable. */
-  fogDim: 0.42,
-  /** Fog dimness for never-explored terrain (0 = clear, 1 = black). */
-  fogDark: 0.82,
+  sightRadius: 130,
+  /**
+   * The Warcraft-2 SHROUD over explored-but-out-of-sight terrain: a 50% black
+   * checkerboard STIPPLE (the signature look — you can still make out the
+   * terrain through it) at this pixel size, painted at `shroudAlpha`. Never-
+   * explored terrain is solid opaque black instead.
+   */
+  fogStipple: 2,
+  shroudAlpha: 0.86,
 } as const;
