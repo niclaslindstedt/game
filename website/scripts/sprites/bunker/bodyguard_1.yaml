@@ -2,8 +2,10 @@ name: bodyguard_1
 family: bunker
 size: [20, 20]
 description: >
-  Alternate stride of the black-suited, red-tied bodyguard — the same heavyset
-  front-facing wall in a suit, legs shifted mid-step.
+  A heavyset front-facing bodyguard drawn a size larger than the crew — a wall
+  of a man in a matte-black suit with a white shirt and red tie, dark hair,
+  arms held out from his bulk; caught mid-stride with the legs shifted from the
+  planted stance.
 palette:
   C: "#d23c42"
   K: "#0c0b12"

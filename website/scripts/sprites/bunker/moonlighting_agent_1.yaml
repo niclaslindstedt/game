@@ -2,8 +2,9 @@ name: moonlighting_agent_1
 family: bunker
 size: [16, 16]
 description: >
-  Alternate stride of the olive-grey moonlighting agent — same front-facing
-  double-agent suit, legs shifted mid-step.
+  A front-facing agent in a drab olive-grey suit with a horizontal gold accent
+  stripe across the chest, dark hair, arms slightly out; caught mid-stride with
+  the legs shifted from the standing pose.
 palette:
   I: "#f6d074"
   K: "#0c0b12"

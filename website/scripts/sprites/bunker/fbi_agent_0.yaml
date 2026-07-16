@@ -2,9 +2,9 @@ name: fbi_agent_0
 family: bunker
 size: [16, 16]
 description: >
-  A front-facing FBI agent in a dark windbreaker over a white shirt with a red
-  accent, lean and quick — the trained rank certain it has jurisdiction between
-  universes.
+  A lean front-facing FBI agent in a dark navy windbreaker over a white shirt,
+  with a bright amber-gold accent stripe across the chest and dark hair — the
+  trained rank certain it has jurisdiction between universes.
 palette:
   J: "#2d3b84"
   K: "#0c0b12"

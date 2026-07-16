@@ -2,8 +2,10 @@ name: bunker_gate
 family: bunker
 size: [24, 32]
 description: >
-  The vault entrance the severed hand tore open, still ajar — a tall, dark
-  armored gateway with cool blue tech-lit seams running down its frame (24x32).
+  A tall, narrow armored blast-gate seen head-on, much taller than wide, with a
+  heavy steel-grey frame around a solid black central door panel; rows of small
+  cool-blue light dots run in vertical columns down the left and right inner
+  edges of the panel. The vault entrance to the bunker.
 palette:
   K: "#0c0b12"
   N: "#3a3846"
