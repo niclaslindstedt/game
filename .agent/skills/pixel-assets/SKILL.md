@@ -56,6 +56,10 @@ Programmatic building blocks for creating and iterating on assets
 | `damage.mjs` | `woundedFrames`: battle-damage variants (`hurt`/`wrecked`/`dying`) overlaid on an enemy's base frames — seeded, frame-stable, progressive |
 | `atlas.mjs` | `packAtlas`: deterministic shelf-pack of every sprite surface into one texture + source rects |
 | `lint.mjs` | Generation-time contrast lint: `groundContrast` (silhouette vs family ground) and `woundVisibility` (does the wound overlay visibly change the body) |
+| `oklab.mjs` | sRGB↔OKLab conversion, perceptual ΔE, and the lightness→hue sort key — the shared color metric for tracing and comparing |
+| `image.mjs` | `loadImage` (PNG → surface via sharp) and `resampleToCells` (per-cell DOMINANT color down to the target grid — no edge-smearing average) |
+| `quantize.mjs` | `quantizeGrid`: a resampled cell grid → `{ palette, grid }`, deterministic median-cut in OKLab with stable single-char keys |
+| `compare.mjs` | `compareSurfaces`: SSIM + mean OKLab ΔE + coverage between a rendered sprite and a reference — the numeric triage gate |
 
 Rules of the pool:
 
@@ -134,6 +138,35 @@ Never ship a sprite you have not looked at. For each asset, loop:
    (the `playtest` skill) at real scale — `?debug` exposes
    `window.__game`, so you can force the state that shows the sprite
    (e.g. set an enemy's hp fraction) and screenshot it.
+
+## Authoring from a description or a reference image
+
+The hand-authored grid is the default, but two tools bootstrap and tighten it —
+`website/scripts/sprite-author.mjs` (run `node website/scripts/sprite-author.mjs`
+with no args for usage):
+
+- **`analyze <image.png> --name N --family F [--size WxH] [--colors K] [--out
+  path]`** — trace a reference image (one an art model produced, or a sketch)
+  into a self-describing sprite YAML. It resamples per-cell to the target grid,
+  quantizes to a stable palette (deterministic — same image, same letters), and
+  prints the YAML (or writes it and copies the reference next to it as
+  `<name>.ref.png` with `--out`). A clean pixel-art reference passes through with
+  no color loss; a larger illustration is resampled down. The emitted
+  `description` is an empty stub — fill it in, it is the acceptance target.
+- **`pose <sprite-name> [--scale N] [--out path]`** — render a base sprite
+  centered on a patch of its OWN family ground (not transparency) and print its
+  description. This is the review surface for the evaluate step: a sprite that
+  reads on a checker can vanish on its own tiles. Read the emitted PNG, judge it
+  against the description, edit the grid, `make assets`, pose again.
+- **`compare <sprite-name> <reference.png>`** — score the rendered sprite
+  against a reference (SSIM, mean OKLab ΔE, coverage). Use it as a triage number
+  while refining toward a reference image — it is NOT an acceptance test. The
+  description (what the sprite IS) outranks any reference image (one fallible
+  realization of it), and the human vote is still the gate.
+
+The reference image is a source, like the grid — committed next to the YAML, not
+packed into the atlas. When the image and the description disagree, the
+description wins; fix the grid, not the description.
 
 ## Quality checklist
 

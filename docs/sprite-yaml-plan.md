@@ -13,8 +13,16 @@ each under `website/scripts/sprites/` (`_core.yaml`, per-family `_family.yaml`,
 and one `<name>.yaml` per sprite); `sprite-data/load-yaml.mjs` loads them and
 `sprite-data/index.mjs` derives the wound/worn variants on top exactly as
 before. The switch was proved lossless: `make assets` regenerates a
-byte-identical `atlas.png` / `atlas.json`. Phases 1.1–3.1 below remain a design
-proposal to react to.
+byte-identical `atlas.png` / `atlas.json`.
+
+**The authoring loops (2a/2b) have shipped too**, as
+`website/scripts/sprite-author.mjs` (subcommands `analyze` / `pose` /
+`compare`) over new `asset-tools/` libraries (`oklab.mjs`, `image.mjs`,
+`quantize.mjs`, `compare.mjs`). The deterministic pieces — trace an image into
+a palette + grid, and score a render against a reference — are scripts; the
+vision critique and the human vote stay the agent's/author's job (see the
+`pixel-assets` skill). Phases 1.1, 3, and 3.1 below remain a design proposal to
+react to.
 
 ---
 
@@ -327,10 +335,19 @@ vote). Phase 3 removes the blank-canvas step, not the judgement.
       overrides, contrast exemptions) lives in each family's `_family.yaml`.
 - [ ] **Phase 1.1 — global damage palettes** extracted from `damage.mjs`;
       optional per-sprite `damage` override wired in.
-- [ ] **Phase 2a — description refine loop** (separate evaluator, real-ground
-      pose, human vote, stop guards).
-- [ ] **Phase 2b — image analyze tool** (deterministic quantize → YAML) and the
-      compare-to-image loop.
+- [x] **Phase 2a — description refine loop.** `sprite-author.mjs pose <name>`
+      renders a base sprite on a patch of its OWN family ground (upscaled) and
+      prints its `description` — the real-background review surface the vision
+      evaluator and the human vote judge against. The evaluate → edit-grid →
+      re-render loop is agent-driven; the pose command is its render step.
+- [x] **Phase 2b — image analyze tool.** `sprite-author.mjs analyze <image>`
+      traces a reference into a self-describing YAML — per-cell mode resample
+      (`image.mjs`), deterministic median-cut quantize in OKLab with stable
+      lightness→hue key assignment (`quantize.mjs`, `oklab.mjs`), the reference
+      committed alongside as `<name>.ref.png`. `sprite-author.mjs compare
+      <name> <image>` is the numeric gate (SSIM + mean OKLab ΔE + coverage,
+      `compare.mjs`) — a triage signal for the refine loop, not an acceptance
+      test.
 - [ ] **Phase 3 — close the loop.** Prompt synthesis from YAML fields (global +
       per-family style anchor), genAI image generation, ingest-and-refine with
       inner (grid) / outer (re-prompt) loops, and generation provenance
