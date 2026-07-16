@@ -135,7 +135,8 @@ for (const diff of PATH) {
   }
   const pArrow = arrowDropProb(diff);
   for (const id of LEVEL_ORDER) {
-    if (bucketDiff !== null && (diff !== bucketDiff || id !== bucketLevel)) flush();
+    if (bucketDiff !== null && (diff !== bucketDiff || id !== bucketLevel))
+      flush();
     bucketDiff = diff;
     bucketLevel = id;
     const cap = LEVELS[id].loot.arrowCapByDifficulty?.[diff];
