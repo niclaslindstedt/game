@@ -1908,6 +1908,15 @@ export type GameState = {
    */
   nukeCalmMs: number;
   /**
+   * Ms of post-NUKE RECOVERY still to run (config `NUKE.recoverMs`, counts down
+   * in stepSpawner only once `nukeCalmMs` has burned off). While positive the
+   * live near-floor eases back from 0 to full instead of snapping the cleared
+   * swarm back the instant the calm ends — so the horde walks back in at the
+   * ordinary rate, not all in a single frame. Set by `detonateNuke`; starts
+   * at 0.
+   */
+  nukeRecoverMs: number;
+  /**
    * Resolved kill thresholds for the level's `loot.earlyDrops` schedule,
    * parallel to it: a rolled `[min, max]` entry gets a concrete count here at
    * creation, a fixed entry keeps its number. Empty when the level has no
