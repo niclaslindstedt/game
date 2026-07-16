@@ -6,7 +6,7 @@
 // mana cost, and a one-line flavor blurb. Dismissing it drains one entry from
 // the queue (`takeSpellUnlock`) and the next unlock, if any, reveals in turn.
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, type CSSProperties } from "react";
 
 import { spellDef } from "@game/core";
 
@@ -36,20 +36,21 @@ export function SpellUnlockOverlay({
   const deep = SPELL_ELEMENT_DEEP[def.element] ?? accent;
 
   // A short reveal lockout so a stray steering tap can't instantly dismiss the
-  // modal the instant it pops (mirrors the level-up chooser's arm window).
+  // modal the instant it pops (mirrors the level-up chooser's arm window). The
+  // component is keyed by `spellId` at the call site, so a queued chain remounts
+  // with these initial values — no synchronous reset needed in the effect.
   const [armed, setArmed] = useState(false);
-  // Re-run the bloom animation whenever the spell changes (a queued chain).
   const [shown, setShown] = useState(false);
   useEffect(() => {
-    setArmed(false);
-    setShown(false);
+    // Trigger the bloom on the next frame and arm dismissal after the beat;
+    // both fire in async callbacks (not synchronously in the effect body).
     const raf = requestAnimationFrame(() => setShown(true));
     const t = window.setTimeout(() => setArmed(true), 650);
     return () => {
       cancelAnimationFrame(raf);
       window.clearTimeout(t);
     };
-  }, [spellId]);
+  }, []);
 
   return (
     <div
@@ -64,7 +65,7 @@ export function SpellUnlockOverlay({
           {
             "--spell-accent": accent,
             "--spell-deep": deep,
-          } as React.CSSProperties
+          } as CSSProperties
         }
         onPointerDown={(e) => e.stopPropagation()}
       >

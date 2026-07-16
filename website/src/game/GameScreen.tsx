@@ -35,7 +35,6 @@ import {
   recomputeMaxMana,
   setSpellSlot,
   spellDef,
-  SPELL_SLOTS,
   takeSpellUnlock,
   unlockedSpellIds,
   BOT_STRATEGIES,
@@ -3903,6 +3902,7 @@ export function GameScreen({
           slot (autofill). */}
       {state && hud && hud.spellUnlocks.length > 0 && (
         <SpellUnlockOverlay
+          key={hud.spellUnlocks[0]!}
           spellId={hud.spellUnlocks[0]!}
           font={font}
           sprites={assets.sprites}

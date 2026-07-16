@@ -130,13 +130,22 @@ and something enormous haunts the old flag.
   go **cold** — a handful of kills' worth — once you've reached the level a
   normal run of that map and difficulty leaves you at, so grinding old ground
   can't push you past it.
-- **Medkits, stamina potions, and repair kits** are carried, not spent on
-  contact: grabbing one banks it into the **consumable dock** — a medkit slot, a
-  stamina slot, and a repair slot just above the powerups — stacked **five deep**
-  (medkits stack per quality, from LIGHT up to SUPERIOR, and the slot shows the
-  best grade you hold). **Tap a slot** (or on desktop press **C** to heal, **X**
-  to drink, **V** to repair — all rebindable) to spend one when you need it; a
+- **Medkits, stamina potions, mana potions, and repair kits** are carried, not
+  spent on contact: grabbing one banks it into the **consumable dock** — a
+  medkit slot, a stamina slot, a blue-gatorade **mana** slot (casters only), and
+  a repair slot just above the powerups — stacked **five deep** (medkits stack
+  per quality, from LIGHT up to SUPERIOR, and the slot shows the best grade you
+  hold). **Tap a slot** (or on desktop press **C** to heal, **X** to drink, **Z**
+  for mana, **V** to repair — all rebindable) to spend one when you need it; a
   medkit always uses your biggest heal first and none is wasted at a full bar.
+- **Cast spells.** Pour points into **INTELLIGENCE** and you grow a **mana
+  pool** and learn a new **spell every 10 points** — 25 in all, from a
+  single-target ARC BOLT to a screen-shaking ARMAGEDDON, across single-target,
+  area, and defensive (heal / ward / slow) schools. Slot a few onto the **spell
+  bar** in the corner and **tap to cast** (**long-press a slot** to swap which
+  spell it holds); each unlock lands with a magical reveal. The new seventh
+  stat, **SPIRIT**, regenerates your mana (after a lull in casting) and your
+  health, and rolls on caster gear.
 - The horde drops **loot**, Diablo-style — medkits, gear, repair kits, stamina
   potions, XP arrows, and **base weapons themed to each level** (a box cutter or the
   armory's pump shotgun on earth, 70s hardware on the moon, AI-forged

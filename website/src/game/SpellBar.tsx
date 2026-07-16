@@ -8,7 +8,7 @@
 // assignments through the callbacks GameScreen wires to `castSpell` /
 // `setSpellSlot`.
 
-import { useRef, useState } from "react";
+import { useRef, useState, type CSSProperties } from "react";
 
 import { spellDef, type SpellDef } from "@game/core";
 
@@ -94,7 +94,7 @@ export function SpellBar({
             className={`spell-slot${def ? " filled" : ""}${
               ready ? " ready" : ""
             }`}
-            style={{ "--slot-accent": accent } as React.CSSProperties}
+            style={{ "--slot-accent": accent } as CSSProperties}
             aria-label={def ? `cast-${def.id}` : "spell-slot-empty"}
             onPointerDown={(e) => {
               e.preventDefault();
@@ -217,7 +217,7 @@ function SpellPicker({
               style={
                 {
                   "--slot-accent": spellColor(def.element),
-                } as React.CSSProperties
+                } as CSSProperties
               }
               onPointerDown={(e) => {
                 e.stopPropagation();

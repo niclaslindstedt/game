@@ -45,7 +45,7 @@ describe("code lookups", () => {
   });
 
   it("returns null for unbound or steering codes", () => {
-    expect(actionForCode("KeyZ", DEFAULT_KEYBINDINGS)).toBeNull();
+    expect(actionForCode("KeyO", DEFAULT_KEYBINDINGS)).toBeNull();
     expect(actionForCode("", DEFAULT_KEYBINDINGS)).toBeNull();
     // Steering keys are handled by moveVectorForCode, not actionForCode.
     expect(actionForCode("KeyW", DEFAULT_KEYBINDINGS)).toBeNull();

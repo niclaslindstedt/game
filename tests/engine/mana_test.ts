@@ -9,7 +9,6 @@ import {
   absorbPlayerDamage,
   computeMaxMana,
   consumeManaPotion,
-  castSpell,
   effectiveStat,
   hpRegenPerSec,
   MANA,

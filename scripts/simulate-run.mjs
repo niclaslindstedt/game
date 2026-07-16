@@ -388,6 +388,15 @@ if (full) {
           : ` (map cap ${run.xpCap.cap} never neared)`),
     );
 
+    // The spell economy — only meaningful for a caster who actually casts.
+    if (run.combat.spellsCast > 0) {
+      console.log(
+        `spells: ${run.combat.spellsCast} cast ` +
+          `(${run.combat.spellsPerMinute}/min) · ` +
+          `${run.combat.manaSpent} mana spent`,
+      );
+    }
+
     if (run.weaponTimeline.length > 0) {
       console.log("weapon timeline (auto-equip swaps):");
       for (const swap of run.weaponTimeline) {
