@@ -2,8 +2,9 @@ name: scientist_1
 family: spacez
 size: [16, 16]
 description: >
-  The LAB SCIENTIST in his alternate stride — white lab coat over office
-  clothes, goggles, mid-step.
+  A LAB SCIENTIST in a white lab coat over office clothes with safety goggles,
+  front-facing. Caught mid-stride, his legs planted wide apart in a walking
+  step.
 palette:
   O: "#1a1c2c"
   W: "#f4f4f4"

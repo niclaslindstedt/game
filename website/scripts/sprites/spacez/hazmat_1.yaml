@@ -2,8 +2,9 @@ name: hazmat_1
 family: spacez
 size: [18, 18]
 description: >
-  The HAZMAT TECH in his alternate frame — bulky bright-yellow hooded
-  containment suit, lumbering forward.
+  A HAZMAT TECH in a bulky bright-yellow containment suit with a hood and
+  visor, front-facing. Caught mid-stride, his legs planted wide apart in a
+  lumbering walking step.
 palette:
   H: "#9e8b2d"
   O: "#1a1c2c"
