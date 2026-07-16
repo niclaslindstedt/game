@@ -1,0 +1,24 @@
+name: crate
+family: spacez
+size: [14, 12]
+description: ""
+palette:
+  A: "#8d9196"
+  E: "#5d4028"
+  O: "#1a1c2c"
+  S: "#b39378"
+  o: "#d6a842"
+  q: "#96762e"
+grid: |
+  ..............
+  .AOOOOOOOOOOA.
+  .OASSSSSSSSAO.
+  .OooooEoooooO.
+  .OooooEEooooO.
+  .OooooEEooooO.
+  .OooooEEooooO.
+  .OoooEEEEoooO.
+  .OoooEooEoooO.
+  .OAqqqqqqqqAO.
+  .AOOOOOOOOOOA.
+  ..............

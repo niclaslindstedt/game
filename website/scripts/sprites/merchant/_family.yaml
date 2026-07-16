@@ -1,0 +1,19 @@
+name: merchant
+ground: moon_0
+palette:
+  C: "#325d53"
+  D: "#8b5623"
+  d: "#402f5b"
+  e: "#509686"
+  t: "#e08a38"
+  u: "#6a4e98"
+animations:
+  merchant_walk: { frames: [merchant_0, merchant_1], delayMs: 200 }
+  merchant_vendor_walk:
+    { frames: [merchant_vendor_0, merchant_vendor_1], delayMs: 200 }
+  merchant_moon_walk:
+    { frames: [merchant_moon_0, merchant_moon_1], delayMs: 200 }
+  merchant_mars_walk:
+    { frames: [merchant_mars_0, merchant_mars_1], delayMs: 200 }
+  merchant_eastworld_walk:
+    { frames: [merchant_eastworld_0, merchant_eastworld_1], delayMs: 200 }

@@ -1,0 +1,18 @@
+name: rail_slug
+family: effects
+size: [8, 8]
+description: ""
+palette:
+  A: "#8d9196"
+  O: "#1a1c2c"
+  W: "#f4f4f4"
+  a: "#d6dce4"
+grid: |
+  ........
+  ........
+  .OOOOOO.
+  OWaaaaAO
+  .OOOOOO.
+  ........
+  ........
+  ........

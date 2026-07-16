@@ -1,0 +1,35 @@
+name: rift
+ground: void_0
+palette:
+  C: "#5b858ce1"
+  K: "#0a0910"
+  N: "#2a2e46"
+  Q: "#60f0d0"
+  X: "#ec52be"
+  Z: "#2e2a4c"
+  d: "#503270"
+  e: "#6c4696"
+  t: "#cc7028"
+  u: "#8c8cb6"
+  z: "#423c68"
+animations:
+  voidling_squish: { frames: [voidling_0, voidling_1], delayMs: 320 }
+  star_jelly_drift: { frames: [star_jelly_0, star_jelly_1], delayMs: 360 }
+  stray_comet_squish: { frames: [stray_comet_0, stray_comet_1], delayMs: 280 }
+  collapsed_star_drift:
+    { frames: [collapsed_star_0, collapsed_star_1], delayMs: 400 }
+  the_last_photon_squish:
+    { frames: [the_last_photon_0, the_last_photon_1], delayMs: 180 }
+  unraveler_glitch: { frames: [unraveler_0, unraveler_1], delayMs: 200 }
+  graviton_orbit: { frames: [graviton_0, graviton_1], delayMs: 260 }
+  lucky_jig: { frames: [lucky_0, lucky_1], delayMs: 280 }
+  grok_omega_hum: { frames: [grok_omega_0, grok_omega_1], delayMs: 380 }
+  blackhole_spin: { frames: [blackhole_0, blackhole_1], delayMs: 240 }
+  asteroid_tumble: { frames: [asteroid_0, asteroid_1], delayMs: 220 }
+wounds:
+  star_jelly: { splat: P, core: M }
+  stray_comet: { splat: P, core: M }
+  the_last_photon: { splat: P, core: M }
+  collapsed_star: { splat: X, core: Q }
+  graviton: { splat: X, core: P }
+contrastExempt: [void_0, void_1, nebula_0, nebula_1, stardust]

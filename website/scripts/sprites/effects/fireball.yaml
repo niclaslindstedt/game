@@ -1,0 +1,17 @@
+name: fireball
+family: effects
+size: [8, 8]
+description: ""
+palette:
+  O: "#1a1c2c"
+  Y: "#ffe3b6"
+  r: "#d83a3a"
+grid: |
+  ........
+  ...OO...
+  ..OrrO..
+  .OrYYrO.
+  .OrYYrO.
+  ..OrrO..
+  ...OO...
+  ........

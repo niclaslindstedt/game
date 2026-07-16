@@ -1,0 +1,36 @@
+name: moon
+ground: moon_0
+palette:
+  C: "#5b858ce1"
+  N: "#73a087f0"
+  U: "#94bcc7b9"
+  Z: "#ac6e68e6"
+  d: "#676972"
+  e: "#4e4f56"
+  s: "#bea56eb9"
+  t: "#ebd7a0b9"
+  u: "#cde8f0b9"
+  z: "#e8aca2e6"
+animations:
+  wisp_float: { frames: [wisp_0, wisp_1], delayMs: 340 }
+  ghost_float: { frames: [ghost_0, ghost_1], delayMs: 300 }
+  wraith_float: { frames: [wraith_0, wraith_1], delayMs: 240 }
+  moonstruck_mourner_float:
+    { frames: [moonstruck_mourner_0, moonstruck_mourner_1], delayMs: 360 }
+  lost_cosmonaut_float:
+    { frames: [lost_cosmonaut_0, lost_cosmonaut_1], delayMs: 300 }
+  the_thirteenth_man_float:
+    { frames: [the_thirteenth_man_0, the_thirteenth_man_1], delayMs: 240 }
+  armstrong_loom: { frames: [armstrong_0, armstrong_1], delayMs: 420 }
+  apollo_ghost_float: { frames: [apollo_ghost_0, apollo_ghost_1], delayMs: 340 }
+  prospector_float: { frames: [prospector_0, prospector_1], delayMs: 320 }
+  quarantine_medic_float:
+    { frames: [quarantine_medic_0, quarantine_medic_1], delayMs: 340 }
+  cartographer_float: { frames: [cartographer_0, cartographer_1], delayMs: 280 }
+wounds:
+  wisp: { splat: C }
+  ghost: { splat: C }
+  prospector: { splat: U, core: C }
+  armstrong: { splat: N }
+contrastExempt:
+  [moon_0, moon_1, gravel_0, gravel_1, crater_big, crater_small, rocks]

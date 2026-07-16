@@ -40,8 +40,8 @@ node scripts/skill-lessons.mjs weapon-system
 | Kill → drop funnel (pity rule, tierDrops payout) | `src/game/loot.ts` |
 | Monster level stamping | `src/game/create.ts` (`spawnEnemy`), `src/game/menace.ts` (`mobLevelFor`, re-stamp in `maybePowerScale`) |
 | Firing + projectile behaviors (spread/pierce/homing/chain) | `src/game/step.ts` (`stepWeapon`, `stepProjectiles`) |
-| Icons (12×12) | `website/scripts/sprite-data/icons.mjs` |
-| Projectile sprites (8×8) | `website/scripts/sprite-data/effects.mjs` |
+| Icons (12×12) | one YAML per icon in `website/scripts/sprites/icons/` |
+| Projectile sprites (8×8) | one YAML per sprite in `website/scripts/sprites/effects/` |
 | Field-hero held weapon art + its swing/recoil/cast animation | `website/src/game/paper-doll.ts` (`WEAPON_SHOULDER` pivot), `render.ts` (`weaponPose`, `drawPlayer`); preview with `website/scripts/weapon-swing.mjs` |
 | Tier colors, item tooltip (ilvl, level req) | `website/src/game/tiers.ts`, `InventoryPanel.tsx` |
 | Keepsakes / hardcore rules (app-side permanence) | `website/src/game/progress.ts`, `settings.ts` |
@@ -461,7 +461,7 @@ in `loot.ts`, called from `killEnemy` right after the boss roll.
       integrity, ilvl drift + over-budget via weapon-ilvl.mjs, armor monotonicity,
       Latin-square coverage).
 - [ ] `node website/scripts/weapon-sheet.mjs` and LOOK at the sheet.
-- [ ] `make assets` committed together with the sprite-data change
+- [ ] `make assets` committed together with the sprite YAML change
       (atlas.png + atlas.json are the build inputs).
 - [ ] `make test` green, `make lint` clean.
 - [ ] Playtest at the phone viewport if feel/tuning changed.

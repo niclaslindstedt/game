@@ -1,0 +1,23 @@
+name: icon_keycard_green
+family: icons
+size: [12, 12]
+description: ""
+palette:
+  G: "#4a7a3e"
+  O: "#1a1c2c"
+  W: "#f4f4f4"
+  w: "#c6c6c6"
+  y: "#ffb02e"
+grid: |
+  ............
+  ............
+  .OOOOOOOOOO.
+  .OGGGGGGGGO.
+  .OWWWWWWWWO.
+  .OGGGGGGGGO.
+  .OGyyOGGwGO.
+  .OGyyOGwwGO.
+  .OGGGGGGGGO.
+  .OOOOOOOOOO.
+  ............
+  ............

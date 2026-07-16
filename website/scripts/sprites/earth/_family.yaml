@@ -1,0 +1,8 @@
+name: earth
+ground: grass_0
+palette:
+  D: "#685438"
+  Q: "#723c8f"
+animations:
+  slime_bounce: { frames: [slime_0, slime_1], delayMs: 280 }
+contrastExempt: [grass_0, grass_1]

@@ -24,9 +24,9 @@ import { groundContrast, woundVisibility } from "./asset-tools/lint.mjs";
 import { buildPalette } from "./asset-tools/palette.mjs";
 import { buildContactSheet, writePng } from "./asset-tools/preview.mjs";
 import { blit, createSurface, fill, upscale } from "./asset-tools/surface.mjs";
-import { CORE_PALETTE } from "./sprite-data/core.mjs";
 import {
   ANIMATIONS,
+  CORE_PALETTE,
   FAMILIES,
   SPRITE_FAMILY,
   SPRITE_PALETTES,
@@ -109,7 +109,10 @@ for (const [sprite, plan] of Object.entries(WOUND_PLANS)) {
   const failing = woundVisibility(
     SPRITES[`${sprite}_0`],
     SPRITES[`${sprite}_hurt_0`],
-    SPRITE_PALETTES[`${sprite}_0`],
+    // The wounded frame's palette (full family scope) — it covers both the
+    // body chars and the gore chars the overlay paints, where the base
+    // sprite's own per-sprite palette carries only its used keys.
+    SPRITE_PALETTES[`${sprite}_hurt_0`],
   );
   if (failing !== null) {
     console.warn(

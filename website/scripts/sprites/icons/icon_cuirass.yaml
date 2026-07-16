@@ -1,0 +1,21 @@
+name: icon_cuirass
+family: icons
+size: [12, 12]
+description: ""
+palette:
+  O: "#1a1c2c"
+  o: "#d6a842"
+  q: "#96762e"
+grid: |
+  ............
+  ............
+  .OOO....OOO.
+  .OoOOOOOOoO.
+  .OooooooooO.
+  .OoqooooqoO.
+  .OooqooqooO.
+  ..OoooooqO..
+  ..OoqqqqoO..
+  ..OooooooO..
+  ..OOOOOOOO..
+  ............

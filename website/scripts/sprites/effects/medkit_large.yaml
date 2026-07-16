@@ -1,0 +1,22 @@
+name: medkit_large
+family: effects
+size: [12, 12]
+description: ""
+palette:
+  O: "#1a1c2c"
+  W: "#f4f4f4"
+  j: "#4054bc"
+  r: "#d83a3a"
+grid: |
+  ............
+  .OOOOOOOOOO.
+  .OjjjjjjjjO.
+  .OWWWrrWWWO.
+  .OWWWrrWWWO.
+  .OWrrrrrrWO.
+  .OWrrrrrrWO.
+  .OWWWrrWWWO.
+  .OWWWrrWWWO.
+  .OjjjjjjjjO.
+  .OOOOOOOOOO.
+  ............

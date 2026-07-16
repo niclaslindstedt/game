@@ -1,0 +1,21 @@
+name: icon_log
+family: icons
+size: [12, 12]
+description: ""
+palette:
+  O: "#1a1c2c"
+  W: "#f4f4f4"
+  b: "#3f4553"
+grid: |
+  ............
+  .OOOOOOOOO..
+  .OWWWWWWWO..
+  .OWOOOOWWO..
+  .OWWWWWWWO..
+  .OWOOOOOWO..
+  .OWWWWWWWO..
+  .OWbbbOWWO..
+  .OWWWWWWWO..
+  .OOOOOOOOO..
+  ............
+  ............

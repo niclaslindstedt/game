@@ -1,0 +1,38 @@
+name: vending
+family: spacez
+size: [16, 20]
+description: ""
+palette:
+  O: "#1a1c2c"
+  V: "#9095a5"
+  W: "#f4f4f4"
+  b: "#3f4553"
+  i: "#772020"
+  j: "#4054bc"
+  o: "#d6a842"
+  q: "#96762e"
+  r: "#d83a3a"
+  v: "#60687e"
+  x: "#c5e6ebe1"
+  y: "#ffb02e"
+grid: |
+  ..OOOOOOOOOOOO..
+  ..OWOWOWWWWWWi..
+  ..OOOOOOOOOrri..
+  ..OOqoqoqxOVyi..
+  ..OOVVVVxVOrri..
+  ..OOjrjrjrOVyi..
+  ..OOVVVVVVOrri..
+  ..OOqoqoqoOVyi..
+  ..OOVVVVVVOrri..
+  ..OOjrjrjrOVyi..
+  ..OOVVVVVVOrri..
+  ..OObbbbbbObbi..
+  ..OOOOOOOOOrri..
+  ..Orrrrrrrrrri..
+  ..OrOvvvvvvOri..
+  ..OrObbbbbbOri..
+  ..OrOOOOOOOOri..
+  ..Orrrrrrrrrri..
+  ..Orrrrrrrrrri..
+  ..OiiiiiiiiiiO..

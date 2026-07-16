@@ -1,0 +1,20 @@
+name: icon_jeans
+family: icons
+size: [12, 12]
+description: ""
+palette:
+  O: "#1a1c2c"
+  j: "#4054bc"
+grid: |
+  ............
+  ............
+  ..OOOOOOOO..
+  ..OjjjjjjO..
+  ..OjjjjjjO..
+  ..OjjOOjjO..
+  ..OjjO.OjjO.
+  ..OjjO.OjjO.
+  ..OjjO.OjjO.
+  ..OjjO.OjjO.
+  ..OOO...OOO.
+  ............

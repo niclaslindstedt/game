@@ -1,0 +1,28 @@
+name: desk
+family: spacez
+size: [20, 12]
+description: ""
+palette:
+  O: "#1a1c2c"
+  T: "#c0c5cf"
+  V: "#9095a5"
+  W: "#f4f4f4"
+  b: "#3f4553"
+  c: "#8ccdd7e1"
+  o: "#d6a842"
+  s: "#818690"
+  v: "#60687e"
+  x: "#c5e6ebe1"
+grid: |
+  ....OOOOOOO.........
+  ....OWxxxxO.........
+  ....OcccccO.........
+  ....OOOOOOO.......o.
+  .......b...OvVvVvVW.
+  .OOOOOOOOOOOOOOOOOO.
+  .OTTTTTTTTTTTTTTTTO.
+  .OssssssssssssssssO.
+  ..OOOVOOO......OOO..
+  ..ObbbbbO......ObO..
+  ..OvvVvvO......ObO..
+  ..OOOOOOO......OOO..

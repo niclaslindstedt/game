@@ -1,0 +1,22 @@
+name: icon_notes
+family: rift
+size: [12, 12]
+description: ""
+palette:
+  O: "#1a1c2c"
+  W: "#f4f4f4"
+  k: "#342c26"
+  y: "#ffb02e"
+grid: |
+  ............
+  ..OOOOOOOO..
+  .OWWWWWWWWO.
+  .OWkkkkkWWO.
+  .OWWWWWWWWO.
+  .OWkkkkkkWO.
+  .OWWWyyWWWO.
+  .OWWyyWWWWO.
+  .OWyyyyWWWO.
+  .OWWWWWWWWO.
+  ..OOOOOOOO..
+  ............

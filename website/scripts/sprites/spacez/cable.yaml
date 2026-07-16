@@ -1,0 +1,12 @@
+name: cable
+family: spacez
+size: [14, 5]
+description: ""
+palette:
+  b: "#3f4553"
+grid: |
+  ..............
+  .bb...bbb.....
+  ..bb.bb.bb.bb.
+  ...bbb...bbb..
+  ..............

@@ -1,0 +1,43 @@
+name: marsrock_1x2
+family: mars
+size: [16, 32]
+description: ""
+palette:
+  O: "#1a1c2c"
+  d: "#80482d"
+  e: "#623722"
+  t: "#b2643e"
+  u: "#c38668"
+grid: |
+  ................
+  .....OOOOO......
+  ...OOuuuttOO....
+  ..OuuuuuttttOO..
+  ..OuuuuttttttO..
+  .OuuuuttttttttO.
+  .OuuuuttttttttO.
+  .OuuuttttetttdO.
+  OuuuutttteOttdO.
+  OuuutttttteOdddO
+  OuuttttttteOddO.
+  OuutttttttteddO.
+  .OttttttttedddO.
+  .OtttttttdeddO..
+  .OtttttttdddddO.
+  .OttttttddddddO.
+  OtttttttddddddO.
+  OttttttdddddddO.
+  OtttttddddddddO.
+  .OttttdddddddddO
+  .OtttdddddddddO.
+  .OttdedddddddeO.
+  .OttddeOdddddeO.
+  .OtdddeOddddeO..
+  .OtddddeddddeO..
+  ..OddddedddeeeO.
+  .OddddddddeeeeO.
+  ..OdddddddeeeO..
+  ..OddddddeeeeO..
+  ...OOddddeeOO...
+  .....OOOOOO.....
+  ................

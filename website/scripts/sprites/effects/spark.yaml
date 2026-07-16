@@ -1,0 +1,17 @@
+name: spark
+family: effects
+size: [8, 8]
+description: ""
+palette:
+  L: "#d4a5ec"
+  O: "#1a1c2c"
+  P: "#b05cdc"
+grid: |
+  ........
+  ...OO...
+  ..OLLO..
+  .OLPPLO.
+  .OLPPLO.
+  ..OLLO..
+  ...OO...
+  ........

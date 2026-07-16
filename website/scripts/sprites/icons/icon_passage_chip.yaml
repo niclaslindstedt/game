@@ -1,0 +1,23 @@
+name: icon_passage_chip
+family: icons
+size: [12, 12]
+description: ""
+palette:
+  O: "#1a1c2c"
+  c: "#8ccdd7e1"
+  v: "#60687e"
+  x: "#c5e6ebe1"
+  y: "#ffb02e"
+grid: |
+  ............
+  ...y.yy.y...
+  ..OOOOOOOO..
+  ..OvvvvvvO..
+  ..OvOccOvO..
+  y.OvcxxcvO.y
+  y.OvcxxcvO.y
+  ..OvOccOvO..
+  ..OvvvvvvO..
+  ..OOOOOOOO..
+  ...y.yy.y...
+  ............

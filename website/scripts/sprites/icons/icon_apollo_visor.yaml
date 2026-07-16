@@ -1,0 +1,22 @@
+name: icon_apollo_visor
+family: icons
+size: [12, 12]
+description: ""
+palette:
+  O: "#1a1c2c"
+  Y: "#ffe3b6"
+  a: "#d6dce4"
+  y: "#ffb02e"
+grid: |
+  ............
+  ....OOOO....
+  ...OaaaaO...
+  ..OaaaaaaO..
+  ..OaOOOOaO..
+  .OaOYYyyOaO.
+  .OaOYyyyOaO.
+  .OaOyyyyOaO.
+  ..OaOOOOaO..
+  ...OaaaaO...
+  ....OOOO....
+  ............

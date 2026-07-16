@@ -1,0 +1,30 @@
+name: derelict_rover_0
+family: mars
+size: [16, 16]
+description: ""
+palette:
+  B: "#92643e"
+  E: "#5d4028"
+  O: "#1a1c2c"
+  R: "#ff5252"
+  S: "#b39378"
+  d: "#80482d"
+  o: "#d6a842"
+  r: "#d83a3a"
+grid: |
+  ................
+  .....OOOOOo.....
+  .....OERrEO.....
+  .....OSrRSO.....
+  .....OOOOOO.....
+  ........E.......
+  ........E.......
+  .OOOoOOOOOOdOOO.
+  .OSSSSSSSSSSSSO.
+  .OBBBBBBBBBBBBO.
+  .OBBBBBBBBBBBBO.
+  .OOOOOOOOOOOOOO.
+  ..OEO.OEO..OEO..
+  ..OSO.OSO..OSO..
+  ..OOO.OOO..OOO..
+  ................

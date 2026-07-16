@@ -1,0 +1,16 @@
+name: horseshoe
+family: eastworld
+size: [8, 8]
+description: ""
+palette:
+  O: "#1a1c2c"
+  v: "#60687e"
+grid: |
+  ........
+  .OO..OO.
+  .OvO.OvO
+  .OvO.OvO
+  .OvO.OvO
+  .OvvOvvO
+  ..OvvvO.
+  ...OOO..

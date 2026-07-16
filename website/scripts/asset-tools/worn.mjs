@@ -3,7 +3,7 @@
 // per-slot silhouette template plus the piece's inventory-icon colors. The
 // hero never gets a hand-drawn sprite per outfit: a worn overlay is a sparse
 // 16×16 grid that repaints only the clothing pixels of the shared hero body
-// plan (sprite-data/hero.mjs — hair rows 2–4, shirt rows 7–10, hips/legs
+// plan (sprites/hero/*.yaml — hair rows 2–4, shirt rows 7–10, hips/legs
 // rows 11–12, shoes row 13), so drawing it over ANY frame of either costume
 // lines up by construction. Head pieces pick one of four silhouette styles
 // (GearDef.worn); the other slots have one silhouette each. Colors are a

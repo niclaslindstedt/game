@@ -206,7 +206,7 @@ if (mode === "weapon") {
   1. Add "${id}" to a level's loot.weaponPool (cumulative pools: later maps
      inherit it automatically) — its grade variants unfold on their own.
   2. Name its EXCEPTIONAL/ELITE variants in src/game/defs/grades.ts.
-  3. Icon (12×12) in website/scripts/sprite-data/icons.mjs${
+  3. Icon (12×12): a new website/scripts/sprites/icons/<name>.yaml${
     candidate.projectile
       ? ` and the
      projectile sprite (8×8) in effects.mjs`
@@ -267,5 +267,5 @@ console.log(`
 ── Wiring checklist:
   1. Add "${id}" to a level's loot.gearPool (later maps inherit it).
   2. Grade-variant names in src/game/defs/grades.ts if the slot has them.
-  3. Icon (12×12) in website/scripts/sprite-data/icons.mjs; \`make assets\`.
+  3. Icon (12×12): a new website/scripts/sprites/icons/<name>.yaml; \`make assets\`.
   4. node scripts/item-forge.mjs check   # the full battery must stay green.`);

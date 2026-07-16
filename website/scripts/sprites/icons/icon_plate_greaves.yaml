@@ -1,0 +1,21 @@
+name: icon_plate_greaves
+family: icons
+size: [12, 12]
+description: ""
+palette:
+  O: "#1a1c2c"
+  V: "#9095a5"
+  v: "#60687e"
+grid: |
+  ............
+  ............
+  ..OOOOOOOO..
+  ..OvVVVvvO..
+  ..OvvvvvvO..
+  ..OVvOOvVO..
+  ..OvvO.OvvO.
+  ..OVVO.OVVO.
+  ..OvvO.OvvO.
+  ..OvvO.OvvO.
+  ..OOO...OOO.
+  ............

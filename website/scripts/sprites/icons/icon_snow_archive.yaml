@@ -1,0 +1,23 @@
+name: icon_snow_archive
+family: icons
+size: [12, 12]
+description: ""
+palette:
+  N: "#303444"
+  O: "#1a1c2c"
+  W: "#f4f4f4"
+  e: "#5ab4ff"
+  w: "#c6c6c6"
+grid: |
+  ............
+  ..OOOOOOOO..
+  .ONNNNNNNNO.
+  .ONWWWWwNNO.
+  .ONWwwwwNNO.
+  .ONNNNNNNNO.
+  .ONeeeeeeNO.
+  .ONNNNNNNNO.
+  .ONNONNONNO.
+  ..OOOOOOOO..
+  ............
+  ............

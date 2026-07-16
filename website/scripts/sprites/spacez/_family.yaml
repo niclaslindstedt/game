@@ -1,0 +1,30 @@
+name: spacez
+ground: lab_0
+palette:
+  s: "#818690"
+  t: "#aab0be"
+animations:
+  intern_walk: { frames: [intern_0, intern_1], delayMs: 300 }
+  scientist_walk: { frames: [scientist_0, scientist_1], delayMs: 300 }
+  engineer_walk: { frames: [engineer_0, engineer_1], delayMs: 280 }
+  guard_walk: { frames: [guard_0, guard_1], delayMs: 220 }
+  wandering_tourist_walk:
+    { frames: [wandering_tourist_0, wandering_tourist_1], delayMs: 300 }
+  night_shift_temp_walk:
+    { frames: [night_shift_temp_0, night_shift_temp_1], delayMs: 280 }
+  employee_of_the_month_walk:
+    { frames: [employee_of_the_month_0, employee_of_the_month_1], delayMs: 240 }
+  hazmat_walk: { frames: [hazmat_0, hazmat_1], delayMs: 380 }
+  optimusk_walk: { frames: [optimusk_0, optimusk_1], delayMs: 300 }
+  muskrat_loom: { frames: [muskrat_0, muskrat_1], delayMs: 400 }
+  night_manager_walk:
+    { frames: [night_manager_0, night_manager_1], delayMs: 300 }
+  security_chief_walk:
+    { frames: [security_chief_0, security_chief_1], delayMs: 240 }
+  head_scientist_walk:
+    { frames: [head_scientist_0, head_scientist_1], delayMs: 300 }
+  janitor_walk: { frames: [janitor_0, janitor_1], delayMs: 340 }
+  architect_walk: { frames: [architect_0, architect_1], delayMs: 300 }
+wounds:
+  wandering_tourist: { splat: r, core: O }
+contrastExempt: [lab_0, lab_1, vent_0, vent_1, cable, stain]

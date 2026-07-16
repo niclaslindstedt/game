@@ -1,0 +1,23 @@
+name: drink
+family: effects
+size: [12, 12]
+description: ""
+palette:
+  G: "#4a7a3e"
+  O: "#1a1c2c"
+  V: "#9095a5"
+  b: "#3f4553"
+  y: "#ffb02e"
+grid: |
+  ............
+  ....OOOO....
+  ...OVVVVO...
+  ..OVbbbbVO..
+  ..OGGyyGGO..
+  ..OGyyyGGO..
+  ..OGGyyyGO..
+  ..OGGyyyGO..
+  ..OGyyyGGO..
+  ..OGGGGGGO..
+  ..OOOOOOOO..
+  ............

@@ -1,0 +1,26 @@
+name: nebula_1
+family: rift
+size: [16, 16]
+description: ""
+palette:
+  d: "#503270"
+  e: "#6c4696"
+  u: "#8c8cb6"
+  z: "#423c68"
+grid: |
+  zzzzzzzzzzzzzzzz
+  zzzzzzzzzzeezzzz
+  zzzzzzzzzeddeezz
+  zzzzzzzzeddddeez
+  zzzzzzzzzeddeezz
+  zzzzzzzzzzeezzzz
+  zzuzzzzzzzzzzzzz
+  zzzzzzzzzzzzzzzz
+  zzeeezzzzzzzzzzz
+  zeddeezzzzzzzzzz
+  zeddeezzzzuzzzzz
+  zzeeezzzzzzzzzzz
+  zzzzzzzzzzzzzzzz
+  zzzzzzzeezzzzzzz
+  zzzzzzeddezzzzzz
+  zzzzzzzeezzzzzzz

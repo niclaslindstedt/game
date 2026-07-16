@@ -1,0 +1,23 @@
+name: icon_badge
+family: icons
+size: [12, 12]
+description: ""
+palette:
+  O: "#1a1c2c"
+  W: "#f4f4f4"
+  p: "#deaa86"
+  w: "#c6c6c6"
+  y: "#ffb02e"
+grid: |
+  ............
+  ....OyO.....
+  ..OOOOOOOO..
+  .OWWWWWWWWO.
+  .OWppOwwwWO.
+  .OWppOwwwWO.
+  .OWWWWWWWWO.
+  .OWwwwwWWWO.
+  .OOOOOOOOOO.
+  ............
+  ............
+  ............

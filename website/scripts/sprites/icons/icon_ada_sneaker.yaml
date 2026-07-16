@@ -1,0 +1,22 @@
+name: icon_ada_sneaker
+family: icons
+size: [12, 12]
+description: ""
+palette:
+  O: "#1a1c2c"
+  V: "#9095a5"
+  W: "#f4f4f4"
+  j: "#4054bc"
+grid: |
+  ............
+  ............
+  ......OOOO..
+  .....OWWWO..
+  .....OWWWO..
+  ....OWWWWOO.
+  ..OOWjWWWWWO
+  .OWWWWWWWWWO
+  .OWjWWWWWWWO
+  .OOOOOOOOOOO
+  .OVVVVVVVVV.
+  ............

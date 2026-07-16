@@ -1,0 +1,36 @@
+name: longhorn_0
+family: eastworld
+size: [24, 20]
+description: ""
+palette:
+  A: "#8d9196"
+  B: "#92643e"
+  E: "#5d4028"
+  N: "#3a3644"
+  O: "#1a1c2c"
+  Q: "#60f0d0"
+  S: "#b39378"
+  U: "#f0c658"
+  a: "#d6dce4"
+  v: "#60687e"
+grid: |
+  ........................
+  ..O..................O..
+  ..a..................a..
+  ..a..................a..
+  ...Aa..............aA...
+  .....aaOOOOOOOOOOaa.....
+  .......ONNNAvNNNO.......
+  .......OQQNAvNQQO.......
+  .......ONNNAvNNNO.......
+  .......ONNNAvNNNO.......
+  .......ONOOOOOONO.......
+  ..OOOOOOOOOOOOOOOOOOOO..
+  ..OESSSSSSSSSSSSSSSSEO..
+  ..OEBBBBBBOOOOBBBBBBEO..
+  ..OEEEEEEEOUUOEEEEEEEO..
+  ..OEBBBBBBOOOOBBBBBBEO..
+  ..OEEEEEEEEEEEEEEEEEEO..
+  ..OOOOOOOOOOOOOOOOOOOO..
+  ...OO...OO....OO...OO...
+  ...OO...OO....OO...OO...

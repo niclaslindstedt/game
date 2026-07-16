@@ -1,0 +1,20 @@
+name: icon_sandals
+family: icons
+size: [12, 12]
+description: ""
+palette:
+  D: "#b28e5c"
+  O: "#1a1c2c"
+grid: |
+  ............
+  ............
+  ............
+  ............
+  ..OOO..OOO..
+  ..ODO..ODO..
+  ..O.DO.O.DO.
+  ..OD.O.OD.O.
+  .ODDDOODDDO.
+  .ODDDDODDDDO
+  .OOOOO.OOOO.
+  ............

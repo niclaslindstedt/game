@@ -1,0 +1,33 @@
+name: control_center
+family: eastworld
+size: [60, 21]
+description: ""
+palette:
+  K: "#0c0b12"
+  N: "#3a3644"
+  O: "#1a1c2c"
+  Q: "#60f0d0"
+  b: "#3f4553"
+  v: "#60687e"
+grid: |
+  ....OOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOO....
+  ...OvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvO...
+  ..ONNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNO..
+  ..ONNQNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNQNNNO..
+  ..ONNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNO..
+  ..OOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOO..
+  ..OvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvO..
+  ..OvvQQvvvvvvvvQQvvvvvvvvvvvvvvvvvvvvvvQQvvvvvvvvvvvvQQvvO..
+  ..OvvQQvvvvvvvvQQvvvvvvvvvvvvvvvvvvvvvvQQvvvvvvvvvvvvQQvvO..
+  ..OvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvO..
+  ..ObbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbO..
+  ..OvvvvvvvvvvvvvvvvvvvvvKKKKKKKKvvvvvvvvvvvvvvvvvvvvvvvvvO..
+  ..OvvvvvvvvvvvvvvvvvvvvKKKKKKKKKKvvvvvvvvvvvvvvvvvvvvvvvvO..
+  ..OvvvvvvvvvvvvvvvvvvvvKKQQQQQQKKvvvvvvvvvvvvvvvvvvvvvvvvO..
+  ..OvvvvvvvvvvvvvvvvvvvvKKKKKKKKKKvvvvvvvvvvvvvvvvvvvvvvvvO..
+  ..OvvvvvvvvvvvvvvvvvvvvKKKKKKKKKKvvvvvvvvvvvvvvvvvvvvvvvvO..
+  ..ObbbbbbbbbbbbbbbbbbbbKKKKKKKKKKbbbbbbbbbbbbbbbbbbbbbbbbO..
+  ..ObbbbbbbbbbbbbbbbbbbbKKKKKKKKKKbbbbbbbbbbbbbbbbbbbbbbbbO..
+  ...OOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOO...
+  ............................................................
+  ............................................................

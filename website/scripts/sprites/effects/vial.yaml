@@ -1,0 +1,17 @@
+name: vial
+family: effects
+size: [8, 8]
+description: ""
+palette:
+  O: "#1a1c2c"
+  n: "#b9e6cdf0"
+  x: "#c5e6ebe1"
+grid: |
+  ........
+  ...OO...
+  ..OxxO..
+  ..OxxO..
+  .OxnnxO.
+  .OnnnnO.
+  ..OOOO..
+  ........

@@ -1,0 +1,20 @@
+name: icon_magnet
+family: icons
+size: [12, 12]
+description: ""
+palette:
+  W: "#f4f4f4"
+  r: "#d83a3a"
+grid: |
+  ............
+  ...rrrrrr...
+  ..rrrrrrrr..
+  .rrr....rrr.
+  .rr......rr.
+  .rr......rr.
+  .rr......rr.
+  .rr......rr.
+  .WW......WW.
+  .WW......WW.
+  ............
+  ............

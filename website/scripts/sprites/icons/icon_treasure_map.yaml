@@ -1,0 +1,26 @@
+name: icon_treasure_map
+family: icons
+size: [20, 14]
+description: ""
+palette:
+  D: "#b28e5c"
+  O: "#1a1c2c"
+  j: "#4054bc"
+  k: "#342c26"
+  r: "#d83a3a"
+  t: "#dec08a"
+grid: |
+  ....................
+  ..OOOOOOOOOOOOOOOO..
+  .OttttttttttttttttO.
+  .OtkttttttttrtttrtO.
+  OtkkkttttttttrtrttO.
+  OttkttttttttttrtttO.
+  .OtttttttttttrtrtDO.
+  .OttttttttttrtttrDO.
+  OttttttttkkttttttDO.
+  OtttttkktttttjjjtDO.
+  .OtkktttttttttttDDO.
+  .OtttttttttttDDDDO..
+  ..OOOOOOOOOOOOOOO...
+  ....................

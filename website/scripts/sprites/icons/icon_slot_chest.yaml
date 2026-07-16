@@ -1,0 +1,20 @@
+name: icon_slot_chest
+family: icons
+size: [12, 12]
+description: ""
+palette:
+  O: "#1a1c2c"
+  V: "#9095a5"
+grid: |
+  ............
+  .OOO....OOO.
+  .OVVOOOOVVO.
+  .OVVVVVVVVO.
+  ..OVVVVVVO..
+  ..OVVVVVVO..
+  ..OVVVVVVO..
+  ..OVVVVVVO..
+  ..OOOOOOOO..
+  ............
+  ............
+  ............

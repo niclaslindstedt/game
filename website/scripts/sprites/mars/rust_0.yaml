@@ -1,0 +1,26 @@
+name: rust_0
+family: mars
+size: [16, 16]
+description: ""
+palette:
+  d: "#80482d"
+  e: "#623722"
+  t: "#b2643e"
+  u: "#c38668"
+grid: |
+  tttttttttttttttt
+  ttttttttuttttttt
+  tttttutttttttttt
+  tttttddutttttttt
+  tttttdutdttttttt
+  ttuttttddttttttt
+  ttddtttttttttttt
+  ttddtttttttttttt
+  ttttttttttedtett
+  tttttttttttttedd
+  ttttttuttttttutt
+  ttedttddttuttttt
+  ttddttdttttttttt
+  tttttedtddtutttt
+  tuttttttdttttttt
+  tttttttttttttttt

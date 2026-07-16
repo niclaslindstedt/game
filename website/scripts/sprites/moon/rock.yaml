@@ -1,0 +1,23 @@
+name: rock
+family: moon
+size: [18, 12]
+description: ""
+palette:
+  F: "#a2a4ad"
+  O: "#1a1c2c"
+  d: "#676972"
+  e: "#4e4f56"
+  f: "#888a96"
+grid: |
+  ..................
+  .....OOOOOOOO.....
+  ...OOFFFfffffOO...
+  ..OFFFFffffffffO..
+  .OFFFfddffffffddO.
+  .OFFfffffffffdddO.
+  .OfffffffffdddddO.
+  .OfffdfffdddeddeO.
+  ..OfffffddddddeO..
+  ...OOfddddddeOO...
+  .....OOOOOOOO.....
+  ..................

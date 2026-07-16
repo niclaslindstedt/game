@@ -1,0 +1,21 @@
+name: icon_blueprint
+family: icons
+size: [12, 12]
+description: ""
+palette:
+  O: "#1a1c2c"
+  W: "#f4f4f4"
+  j: "#4054bc"
+grid: |
+  ............
+  .OOOOOOOOO..
+  .OjjjjjjjO..
+  .OjWWWWjjO..
+  .OjjjjjjjO..
+  .OjWWWWWjO..
+  .OjjjjjjjO..
+  .OjWWWWjjO..
+  .OjjjjjjjO..
+  .OOOOOOOOO..
+  ............
+  ............

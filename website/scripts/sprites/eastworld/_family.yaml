@@ -1,0 +1,39 @@
+name: eastworld
+ground: hardpan_0
+palette:
+  C: "#466096"
+  D: "#5c3e28"
+  I: "#ec60be"
+  K: "#0c0b12"
+  N: "#3a3644"
+  Q: "#60f0d0"
+  U: "#f0c658"
+  X: "#963c46"
+  Z: "#b08e60"
+  d: "#665c34"
+  e: "#8a7e46"
+  s: "#c48e6c"
+  u: "#e2c494"
+  z: "#ceac78"
+animations:
+  cowbot_walk: { frames: [cowbot_0, cowbot_1], delayMs: 320 }
+  saloon_brawler_walk:
+    { frames: [saloon_brawler_0, saloon_brawler_1], delayMs: 320 }
+  tin_outlaw_walk: { frames: [tin_outlaw_0, tin_outlaw_1], delayMs: 260 }
+  haywire_greeter_walk:
+    { frames: [haywire_greeter_0, haywire_greeter_1], delayMs: 300 }
+  counterfeit_outlaw_walk:
+    { frames: [counterfeit_outlaw_0, counterfeit_outlaw_1], delayMs: 260 }
+  one_armed_bandit_walk:
+    { frames: [one_armed_bandit_0, one_armed_bandit_1], delayMs: 300 }
+  longhorn_walk: { frames: [longhorn_0, longhorn_1], delayMs: 340 }
+  mosque_beach_walk:
+    { frames: [elon_mosque_beach_0, elon_mosque_beach_1], delayMs: 340 }
+  supercore_pulse: { frames: [zai_supercore_0, zai_supercore_1], delayMs: 420 }
+wounds:
+  cowbot: { splat: y, core: Y, scuff: H }
+  tin_outlaw: { splat: y, core: Y, scuff: H }
+  haywire_greeter: { splat: y, core: Y, scuff: H }
+  counterfeit_outlaw: { splat: y, core: Y, scuff: H }
+  one_armed_bandit: { splat: Q, core: K, scuff: N }
+contrastExempt: [hardpan_0, hardpan_1, scrub_0, scrub_1, dry_shrub, tumbleweed]

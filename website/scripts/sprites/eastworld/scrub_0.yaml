@@ -1,0 +1,25 @@
+name: scrub_0
+family: eastworld
+size: [16, 16]
+description: ""
+palette:
+  d: "#665c34"
+  e: "#8a7e46"
+  z: "#ceac78"
+grid: |
+  zzzzzzzzzzzzzzzz
+  zzzezzzzzzzzzzzz
+  zzeeezzzzzzdzzzz
+  zzzezzzzzzzzzzzz
+  zzzzzzzzezzzzzzz
+  zzzzzzzeeezzzzzz
+  zzdzzzzzezzzzzzz
+  zzzzzzzzzzzzezzz
+  zzzzzzzzzzzeeezz
+  zzzezzzzzzzzezzz
+  zzeeezzzzzzzzzzz
+  zzzezzzdzzzzzzzz
+  zzzzzzzzzzzzzzzz
+  zzzzzzzzzzezzzzz
+  zzzzzezzzeeezzzz
+  zzzzzzzzzzezzzzz

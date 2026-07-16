@@ -1,0 +1,17 @@
+name: zai_orb
+family: effects
+size: [8, 8]
+description: ""
+palette:
+  O: "#1a1c2c"
+  Q: "#60f0d0"
+  s: "#d6f0ff"
+grid: |
+  ..OOO...
+  .OQQQO..
+  OQQsQQO.
+  OQsssQO.
+  OQQsQQO.
+  .OQQQO..
+  ..OOO...
+  ........

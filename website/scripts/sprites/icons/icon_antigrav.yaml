@@ -1,0 +1,21 @@
+name: icon_antigrav
+family: icons
+size: [12, 12]
+description: ""
+palette:
+  O: "#1a1c2c"
+  c: "#8ccdd7e1"
+  y: "#ffb02e"
+grid: |
+  ............
+  ............
+  ....OOOO....
+  ..OOyyyyOO..
+  .OyyOOOOyyO.
+  .OyO....OyO.
+  .OyyOOOOyyO.
+  ..OOyyyyOO..
+  ....OOOO....
+  ..cc....cc..
+  ....cccc....
+  ............

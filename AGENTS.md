@@ -405,8 +405,9 @@ render them are `website/src/game/DialogueOverlay.tsx` and `CutsceneOverlay.tsx`
 - Icons are generated from `website/public/icon.svg` only (`make icons`) —
   never edit the PNGs.
 - In-game pixel assets (the sprite atlas, tiles, the UI font atlas) are
-  generated from the `website/scripts/sprite-data/` family modules +
-  `asset-tools/` only (`make assets`) — never edit the files under
+  generated from the `website/scripts/sprites/` YAML tree (one self-describing
+  file per base sprite — see `docs/sprite-yaml-plan.md`) + `asset-tools/` only
+  (`make assets`) — never edit the files under
   `website/src/game/assets/`. Those files are **gitignored and regenerated
   on every build** (like `src/generated/`, §11.2): `npm run assets` runs
   ahead of `vite`, `tsc`, and `vitest`, so the pixel grids are the sole

@@ -1,0 +1,21 @@
+name: icon_micro_vest
+family: icons
+size: [12, 12]
+description: ""
+palette:
+  A: "#8d9196"
+  O: "#1a1c2c"
+  a: "#d6dce4"
+grid: |
+  ............
+  ............
+  .OOO....OOO.
+  .OaOOOOOOaO.
+  .OaaaaaaaaO.
+  .OAAAAAAAAO.
+  .OaaaaaaaaO.
+  ..OAAAAAAO..
+  ..OaaaaaaO..
+  ..OAAAAAAO..
+  ..OOOOOOOO..
+  ............

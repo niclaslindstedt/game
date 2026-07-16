@@ -49,7 +49,7 @@ Delete or empty each of these — they are 100% this-game data:
       `TileSpec`, `EnemyRole`, …); replace the **entries**. The engine
       references content only by id, so it compiles against an
       empty-but-typed catalog.
-- [ ] **`website/scripts/sprite-data/*`** — the sprite families. Keep
+- [ ] **`website/scripts/sprites/*`** — the sprite families. Keep
       `core.mjs` conventions and `index.mjs` wiring; replace the family
       modules. Then `make assets`.
 - [ ] **`website/src/game/music/*.ts`** (every score file — `title.ts`,

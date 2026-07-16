@@ -1,0 +1,21 @@
+name: cow_skull
+family: eastworld
+size: [12, 12]
+description: ""
+palette:
+  K: "#0c0b12"
+  O: "#1a1c2c"
+  a: "#d6dce4"
+grid: |
+  ............
+  .OO......OO.
+  OaaO....OaaO
+  OaaaOOOOaaaO
+  .OOaaaaaaOO.
+  ..OaaaaaaO..
+  ..OaKaaKaO..
+  ..OaaaaaaO..
+  ...OaaaaO...
+  ...OaKKaO...
+  ....OOOO....
+  ............

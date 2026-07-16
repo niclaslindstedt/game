@@ -1,0 +1,17 @@
+name: scenes
+ground: grass_0
+palette:
+  C: "#eb8e3e"
+  D: "#9c4032"
+  N: "#303444"
+  d: "#60626c"
+  e: "#eac4ac"
+  s: "#ffeca0"
+  t: "#b2643e"
+  u: "#7c4228"
+animations:
+  hero_tee_walk: { frames: [hero_tee_0, hero_tee_1], delayMs: 220 }
+  hero_suit_walk: { frames: [hero_suit_0, hero_suit_1], delayMs: 220 }
+  ship_fire_burn: { frames: [ship_fire_0, ship_fire_1], delayMs: 120 }
+  ship_fly_cruise: { frames: [ship_fly_0, ship_fly_1], delayMs: 160 }
+contrastExempt: [stars_a, stars_b, sky_moon]

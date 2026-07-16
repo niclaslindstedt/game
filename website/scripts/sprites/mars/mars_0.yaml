@@ -1,0 +1,25 @@
+name: mars_0
+family: mars
+size: [16, 16]
+description: ""
+palette:
+  d: "#80482d"
+  t: "#b2643e"
+  u: "#c38668"
+grid: |
+  tttttttttttttttt
+  ttttttttttttttdt
+  ttuttttttttttttt
+  ttttttttttttdttt
+  tttttttttttttttt
+  ttttttttttuttttt
+  tttttttttttttttt
+  tttttttttttttttt
+  tttttdtttttttttt
+  tttttttttttttttt
+  tttttttttttddttt
+  ttttttttttdttttt
+  tttutttttttttttt
+  ttttttttttttttdt
+  tttttttttttttttt
+  tttttttttttttttt

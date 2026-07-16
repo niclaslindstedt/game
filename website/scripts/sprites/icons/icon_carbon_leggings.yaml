@@ -1,0 +1,20 @@
+name: icon_carbon_leggings
+family: icons
+size: [12, 12]
+description: ""
+palette:
+  N: "#303444"
+  O: "#1a1c2c"
+grid: |
+  ............
+  ............
+  ..OOOOOOOO..
+  ..ONNNNNNO..
+  ..ONNNNNNO..
+  ..ONNOONNO..
+  ..ONNO.ONNO.
+  ..ONNO.ONNO.
+  ..ONNO.ONNO.
+  ..ONNO.ONNO.
+  ..OOO...OOO.
+  ............

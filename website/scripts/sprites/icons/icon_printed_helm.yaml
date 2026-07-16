@@ -1,0 +1,21 @@
+name: icon_printed_helm
+family: icons
+size: [12, 12]
+description: ""
+palette:
+  O: "#1a1c2c"
+  W: "#f4f4f4"
+  w: "#c6c6c6"
+grid: |
+  ............
+  ....OOOO....
+  ...OWWWWO...
+  ..OWWWWWwO..
+  ..OWWWWWwO..
+  ..OWwwwwWO..
+  ..OWWWWWwO..
+  ..OWWWWWwO..
+  ..OWwWWwWO..
+  ...OOOOOO...
+  ............
+  ............

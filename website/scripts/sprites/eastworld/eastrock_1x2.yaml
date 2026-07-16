@@ -1,0 +1,43 @@
+name: eastrock_1x2
+family: eastworld
+size: [16, 32]
+description: ""
+palette:
+  O: "#1a1c2c"
+  Z: "#b08e60"
+  d: "#665c34"
+  e: "#8a7e46"
+  u: "#e2c494"
+grid: |
+  ................
+  .....OOOOO......
+  ...OOuuuZZOO....
+  ..OuuuuuZZZZOO..
+  ..OuuuuZZZZZZO..
+  .OuuuuZZZZZZZZO.
+  .OuuuuZZZZZZZZO.
+  .OuuuZZZZeZZZdO.
+  OuuuuZZZZeOZZdO.
+  OuuuZZZZZZeOdddO
+  OuuZZZZZZZeOddO.
+  OuuZZZZZZZZeddO.
+  .OZZZZZZZZedddO.
+  .OZZZZZZZdeddO..
+  .OZZZZZZZdddddO.
+  .OZZZZZZddddddO.
+  OZZZZZZZddddddO.
+  OZZZZZZdddddddO.
+  OZZZZZddddddddO.
+  .OZZZZdddddddddO
+  .OZZZdddddddddO.
+  .OZZdedddddddeO.
+  .OZZddeOdddddeO.
+  .OZdddeOddddeO..
+  .OZddddeddddeO..
+  ..OddddedddeeeO.
+  .OddddddddeeeeO.
+  ..OdddddddeeeO..
+  ..OddddddeeeeO..
+  ...OOddddeeOO...
+  .....OOOOOO.....
+  ................

@@ -1,0 +1,23 @@
+name: icon_pass
+family: icons
+size: [12, 12]
+description: ""
+palette:
+  N: "#303444"
+  O: "#1a1c2c"
+  W: "#f4f4f4"
+  w: "#c6c6c6"
+  y: "#ffb02e"
+grid: |
+  ............
+  .....OO.....
+  ....ONNO....
+  ..OOOOOOOO..
+  .OWWWWWWWWO.
+  .OWyyyyyyWO.
+  .OWWWWWWWWO.
+  .OWwwwWWWWO.
+  .OWWWWWwwWO.
+  ..OOOOOOOO..
+  ............
+  ............

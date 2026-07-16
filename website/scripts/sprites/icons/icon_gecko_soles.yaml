@@ -1,0 +1,22 @@
+name: icon_gecko_soles
+family: icons
+size: [12, 12]
+description: ""
+palette:
+  G: "#4a7a3e"
+  N: "#303444"
+  O: "#1a1c2c"
+  l: "#678f5d"
+grid: |
+  ............
+  ............
+  ............
+  ..OOO..OOO..
+  ..ONO..ONO..
+  ..ONO..ONO..
+  ..ONNO.ONNO.
+  ..ONNO.ONNO.
+  .ONNNOONNNO.
+  .OlGlGOlGlGO
+  .OOOOO.OOOO.
+  ............

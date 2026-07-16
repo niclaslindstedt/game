@@ -1,0 +1,27 @@
+name: eastrock
+family: eastworld
+size: [16, 16]
+description: ""
+palette:
+  O: "#1a1c2c"
+  Z: "#b08e60"
+  d: "#665c34"
+  e: "#8a7e46"
+  u: "#e2c494"
+grid: |
+  ................
+  ...OOOOOO.......
+  .OOuuuuZZOOO....
+  .OuuuuZZZZZZOO..
+  OuuuuZZZZZZZZdO.
+  OuuuZZZZZZZZddO.
+  OuuZZZZZZeZddddO
+  OZZZZZZZZeOddddO
+  OZZZZZZZddeOddO.
+  OZZZZZZdddeOddO.
+  OZZZZZdddddeddO.
+  .OZZZddddddddO..
+  .OZZddddddddeO..
+  ..OOdddddddOO...
+  ....OOOOOOO.....
+  ................

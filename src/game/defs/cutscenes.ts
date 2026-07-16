@@ -101,7 +101,7 @@ function buildPrelude(
       // cushions). pos.y drives paint order AND floor placement together, so
       // it can't be raised to lift them onto the cushions without dropping
       // them behind the couch — instead the seated sprites carry a tall
-      // transparent footer (sprite-data/prelude.mjs) that lifts the figure up
+      // transparent footer (sprites/prelude/*.yaml) that lifts the figure up
       // onto the seat while the anchor stays at floor level.
       {
         id: "hero",

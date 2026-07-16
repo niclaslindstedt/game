@@ -1,0 +1,25 @@
+name: lab_0
+family: spacez
+size: [16, 16]
+description: ""
+palette:
+  T: "#c0c5cf"
+  s: "#818690"
+  t: "#aab0be"
+grid: |
+  ssssssssssssssss
+  sttttttttttttttt
+  sttttttttttttttt
+  sttttttttTtttttt
+  sttttttttttttttt
+  stttTttttttttttt
+  sttttttttttttttt
+  sttttttttttttstt
+  sttttttttttttttt
+  sttttttttttttttt
+  stttttTttttttttt
+  sttttttttttttttt
+  stttttttttttTttt
+  sttttttttttttttt
+  sttstttttttttttt
+  sttttttttttttttt

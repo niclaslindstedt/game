@@ -1,0 +1,22 @@
+name: icon_polymer_shell
+family: icons
+size: [12, 12]
+description: ""
+palette:
+  N: "#303444"
+  O: "#1a1c2c"
+  W: "#f4f4f4"
+  w: "#c6c6c6"
+grid: |
+  ............
+  ............
+  .OOO....OOO.
+  .ONOOOOOONO.
+  .ONWWWWWWNO.
+  .OWWwWWWWWO.
+  .OWWWWwWWWO.
+  ..OWwWWWWO..
+  ..OWWWWwWO..
+  ..ONNNNNNO..
+  ..OOOOOOOO..
+  ............

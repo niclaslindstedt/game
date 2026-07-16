@@ -1,0 +1,22 @@
+name: icon_trash
+family: icons
+size: [12, 12]
+description: ""
+palette:
+  O: "#1a1c2c"
+  V: "#9095a5"
+  b: "#3f4553"
+  v: "#60687e"
+grid: |
+  ............
+  ....OOOO....
+  ..OOOOOOOO..
+  ..OVVVVVVO..
+  .OOOOOOOOOO.
+  ..OvbvbvbO..
+  ..OvbvbvbO..
+  ..OvbvbvbO..
+  ..OvbvbvbO..
+  ..OOOOOOOO..
+  ............
+  ............

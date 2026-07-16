@@ -1,0 +1,26 @@
+name: rift_shard
+family: rift
+size: [16, 16]
+description: ""
+palette:
+  L: "#d4a5ec"
+  M: "#644696e6"
+  O: "#1a1c2c"
+  P: "#b05cdc"
+grid: |
+  ................
+  ......OO........
+  .....OLPO..OO...
+  .....OLPO.OLPO..
+  ....OLPPPOOLPO..
+  ....OLPPPOLPPO..
+  ...OLPPMPPPPMO..
+  ...OLPPMPPPPMO..
+  ...OLPPPMPPMMO..
+  ..OLPPPPMPPMMO..
+  ..OLPPPPPMPMMO..
+  ..OLPPMPPPPMMO..
+  ..OPPPMMPPMMMO..
+  ...OOOOOOOOOO...
+  ................
+  ................

@@ -1,0 +1,27 @@
+name: lost_tv
+family: rift
+size: [16, 16]
+description: ""
+palette:
+  N: "#2a2e46"
+  O: "#1a1c2c"
+  Q: "#60f0d0"
+  v: "#60687e"
+  x: "#c5e6ebe1"
+grid: |
+  ................
+  ....vv.....vv...
+  .....vv...vv....
+  ......v...v.....
+  ....OOOOOOOOO...
+  ...ONNNNNNNNNO..
+  ...ONOOOOOOONO..
+  ...ONOxxQxxONO..
+  ...ONOxQxxxONO..
+  ...ONOxxxQxONO..
+  ...ONOOOOOOONO..
+  ...ONNNNNNNNNO..
+  ...OOOOOOOOOOO..
+  ....ON.....NO...
+  ................
+  ................

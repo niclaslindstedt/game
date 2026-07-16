@@ -1,0 +1,21 @@
+name: icon_slot_head
+family: icons
+size: [12, 12]
+description: ""
+palette:
+  O: "#1a1c2c"
+  V: "#9095a5"
+  y: "#ffb02e"
+grid: |
+  ............
+  ...OOOOOO...
+  ..OVVVVVVO..
+  .OVVOOOOVVO.
+  .OVOyyyyOVO.
+  .OVOyyyyOVO.
+  .OVVOOOOVVO.
+  ..OVVVVVVO..
+  ...OOOOOO...
+  ............
+  ............
+  ............

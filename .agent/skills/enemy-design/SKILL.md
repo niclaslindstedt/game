@@ -20,7 +20,7 @@ the map wiring, `weapon-system` for named drops.
 | --- | --- |
 | The def | `src/game/defs/enemies/<roster>.ts` (one roster module per biome; `mars.ts` is the reference) — merged in `enemies/index.ts` `mergeRosters` (duplicate ids throw) |
 | Field reference | `src/game/defs/enemies/types.ts` — every field documented at the type |
-| Sprites | `website/scripts/sprite-data/<family>.mjs` — frames named exactly `<sprite>_0`/`<sprite>_1`; **minions 16×16, elites 24×24, bosses 48×48** |
+| Sprites | one YAML per frame in `website/scripts/sprites/<family>/` — frames named exactly `<sprite>_0`/`<sprite>_1`; **minions 16×16, elites 24×24, bosses 48×48** |
 | Wound stages | **Auto-derived** by `sprite-data/index.mjs` from `role` (minion `hurt`; elite +`wrecked`; boss +`dying`) and `gore` (`blood`/`ecto`/`sparks`); a family `wounds` override only when the default splat can't contrast the body |
 | Mechanics engine | `src/game/mechanics.ts` — `charge`, `slam`, `enrage`, `summon`; `phases` (hp-gated mechanic swaps) |
 | Companions (spareable elites) | `src/game/defs/companions.ts` (`COMPANION_DEFS`); resolution in `src/game/companions.ts` |

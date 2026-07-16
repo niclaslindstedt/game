@@ -1,0 +1,17 @@
+name: singularity
+family: rift
+size: [8, 8]
+description: ""
+palette:
+  K: "#0a0910"
+  L: "#d4a5ec"
+  P: "#b05cdc"
+grid: |
+  ........
+  ..PPP...
+  .PKKKL..
+  .PKKKKL.
+  .PKKKKL.
+  ..LKKL..
+  ...LLL..
+  ........

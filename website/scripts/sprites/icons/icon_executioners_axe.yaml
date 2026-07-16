@@ -1,0 +1,22 @@
+name: icon_executioners_axe
+family: icons
+size: [12, 12]
+description: ""
+palette:
+  A: "#8d9196"
+  B: "#92643e"
+  O: "#1a1c2c"
+  a: "#d6dce4"
+grid: |
+  ............
+  .......OO...
+  ..OOOO.OBO..
+  .OaaaAOOBO..
+  .OaaaaAOBO..
+  .OaaaaAOBO..
+  .OaaaAOOBO..
+  ..OAAO.OBO..
+  ...OO..OBO..
+  .......OBO..
+  ........O...
+  ............

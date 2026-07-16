@@ -1,0 +1,22 @@
+name: icon_dossier
+family: icons
+size: [12, 12]
+description: ""
+palette:
+  O: "#1a1c2c"
+  W: "#f4f4f4"
+  o: "#d6a842"
+  r: "#d83a3a"
+grid: |
+  ............
+  ............
+  .OOOO.......
+  .OooOOOOOO..
+  .OooooooooO.
+  .OoWWWWWWoO.
+  .OoWrrrrWoO.
+  .OoWWWWWWoO.
+  .OooooooooO.
+  .OOOOOOOOOO.
+  ............
+  ............

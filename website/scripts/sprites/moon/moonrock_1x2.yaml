@@ -1,0 +1,43 @@
+name: moonrock_1x2
+family: moon
+size: [16, 32]
+description: ""
+palette:
+  F: "#a2a4ad"
+  O: "#1a1c2c"
+  d: "#676972"
+  e: "#4e4f56"
+  f: "#888a96"
+grid: |
+  ................
+  .....OOOOO......
+  ...OOFFFffOO....
+  ..OFFFFFffffOO..
+  ..OFFFFffffffO..
+  .OFFFFffffffffO.
+  .OFFFFffffffffO.
+  .OFFFffffefffdO.
+  OFFFFffffeOffdO.
+  OFFFffffffeOdddO
+  OFFfffffffeOddO.
+  OFFffffffffeddO.
+  .OffffffffedddO.
+  .OfffffffdeddO..
+  .OfffffffdddddO.
+  .OffffffddddddO.
+  OfffffffddddddO.
+  OffffffdddddddO.
+  OfffffddddddddO.
+  .OffffdddddddddO
+  .OfffdddddddddO.
+  .OffdedddddddeO.
+  .OffddeOdddddeO.
+  .OfdddeOddddeO..
+  .OfddddeddddeO..
+  ..OddddedddeeeO.
+  .OddddddddeeeeO.
+  ..OdddddddeeeO..
+  ..OddddddeeeeO..
+  ...OOddddeeOO...
+  .....OOOOOO.....
+  ................

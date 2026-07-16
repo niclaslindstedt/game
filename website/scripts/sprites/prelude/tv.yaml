@@ -1,0 +1,30 @@
+name: tv
+family: prelude
+size: [24, 20]
+description: ""
+palette:
+  O: "#1a1c2c"
+  b: "#3f4553"
+  c: "#8ccdd7e1"
+  x: "#c5e6ebe1"
+grid: |
+  ........................
+  ..OOOOOOOOOOOOOOOOOOOO..
+  .ObbbbbbbbbbbbbbbbbbbbO.
+  .ObOOOOOOOOOOOOOOOOOObO.
+  .ObOxxxxxxxxxxxxxxxxObO.
+  .ObOxxxxxxccccxxxxxxObO.
+  .ObOxxxcccccccccxxxxObO.
+  .ObOxxxxxcccxxxxxxxxObO.
+  .ObOxxxxxxxxxxxxxxxxObO.
+  .ObOOOOOOOOOOOOOOOOOObO.
+  .ObbbbbbbbbbbbbbbbbbbbO.
+  ..OOOOOOOOOOOOOOOOOOOO..
+  ........ObbbbO..........
+  ......ObbbbbbbbO........
+  ......OOOOOOOOOO........
+  ........................
+  ........................
+  ........................
+  ........................
+  ........................

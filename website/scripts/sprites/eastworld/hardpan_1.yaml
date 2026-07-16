@@ -1,0 +1,25 @@
+name: hardpan_1
+family: eastworld
+size: [16, 16]
+description: ""
+palette:
+  Z: "#b08e60"
+  u: "#e2c494"
+  z: "#ceac78"
+grid: |
+  zzzzzzzzzzzzzzzz
+  zzzzzzzzzzuzzzzz
+  zzZZzzzzzzzzzzzz
+  zzzZzzzzzzzzuzzz
+  zzzzzzzzzzzzzzzz
+  zzzzzzzZZzzzzzzz
+  zuzzzzzZzzzzzzzz
+  zzzzzzzzzzzzzzzz
+  zzzzzzzzzzzzZzzz
+  zzzzuzzzzzzzzzzz
+  zzzzzzzzzzzzzzzz
+  zzzzzzzzuzzzzzzz
+  zzZzzzzzzzzzzzzz
+  zzzzzzzzzzzzzuzz
+  zzzzzzzzZzzzzzzz
+  zzzzzzzzzzzzzzzz

@@ -1,0 +1,16 @@
+name: zap
+family: effects
+size: [8, 8]
+description: ""
+palette:
+  O: "#1a1c2c"
+  y: "#ffb02e"
+grid: |
+  ........
+  ....OO..
+  ...OyyO.
+  ..OyyO..
+  ...OyyO.
+  ..OyO...
+  ..OO....
+  ........

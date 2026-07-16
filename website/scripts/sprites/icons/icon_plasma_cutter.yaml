@@ -1,0 +1,23 @@
+name: icon_plasma_cutter
+family: icons
+size: [12, 12]
+description: ""
+palette:
+  O: "#1a1c2c"
+  W: "#f4f4f4"
+  c: "#8ccdd7e1"
+  k: "#342c26"
+  v: "#60687e"
+grid: |
+  ..........cc
+  .........cWc
+  ........cWWc
+  .......cWWc.
+  .....OvvWc..
+  ....OvvO....
+  ...OvvO.....
+  ..OkkO......
+  .OkkO.......
+  .OO.........
+  ............
+  ............

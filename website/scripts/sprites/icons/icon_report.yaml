@@ -1,0 +1,22 @@
+name: icon_report
+family: icons
+size: [12, 12]
+description: ""
+palette:
+  G: "#4a7a3e"
+  O: "#1a1c2c"
+  b: "#3f4553"
+  r: "#d83a3a"
+grid: |
+  ............
+  .OOOOOOOOO..
+  .ObbbbbbbO..
+  .ObGGGbbbO..
+  .ObbbbbbbO..
+  .ObGGGGbbO..
+  .ObbbbbbbO..
+  .ObrrbbbbO..
+  .ObbbbbbbO..
+  .OOOOOOOOO..
+  ............
+  ............
