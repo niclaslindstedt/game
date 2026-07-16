@@ -2,13 +2,16 @@ name: map_you
 family: markers
 size: [12, 12]
 description: >
-  The hero's "you are here" pin: a bright teal/mint location teardrop with a
-  dark round center, the one warm-cyan marker that stands out from the enemy
-  glyphs so the player instantly finds themselves on the map.
+  The hero's "you are here" pin — a bright mint location teardrop with a dark center.
+subject:
+  kind: minimap marker
+  build: a location teardrop / pin shape with a dark round hole at its center
+  accent: warm teal-mint pin, the one cool marker that stands out from the enemy glyphs
+  flavor: the player's own position, so they instantly find themselves on the map
 palette:
-  O: "#1a1c2c"
-  s: "#befce6"
-  t: "#7ef0c8"
+  O: "#1a1c2c" # dark outline and pin center
+  s: "#befce6" # pale mint highlight
+  t: "#7ef0c8" # teal-mint pin body
 grid: |
   ....OOOO....
   ..OOssttOO..

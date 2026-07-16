@@ -2,13 +2,17 @@ name: map_story
 family: markers
 size: [12, 12]
 description: >
-  Map marker for a story/lore point of interest: a gold document or page glyph
-  with dark horizontal text lines on it, reading as "something to read here"
-  at minimap scale.
+  Minimap marker for a story/lore point — a gold document glyph with text lines.
+subject:
+  kind: minimap marker
+  build: a gold document / page glyph ruled with dark horizontal text lines
+  features: stacked dark text-line strokes across the page
+  accent: warm gold page against near-black backing
+  flavor: reads as something to read here — a lore point of interest
 palette:
-  O: "#1a1c2c"
-  d: "#ffd55a"
-  e: "#ffeb96"
+  O: "#1a1c2c" # dark outline and text lines
+  d: "#ffd55a" # gold page body
+  e: "#ffeb96" # pale gold page highlight
 grid: |
   .OOOOOOOOOO.
   .OeeddddddO.

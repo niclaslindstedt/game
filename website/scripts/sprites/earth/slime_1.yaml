@@ -2,17 +2,18 @@ name: slime_1
 family: earth
 size: [16, 16]
 description: >
-  A basic slime critter: a front-facing rounded purple blob, gelatinous, with
-  a lighter lilac highlight across the top and a darker plum base, and a dark
-  outline. It has two small dark dot eyes and a little open mouth, giving it a
-  dopey, harmless read. This is the squash frame of its hop — the body is
-  flattened low and spread wide, a broad squat puddle as it lands. 16x16 flat
-  16-bit pixel art.
+  A basic purple slime critter, the squashed landing frame of its hop.
+subject:
+  kind: minion
+  build: a rounded gelatinous blob with a dark outline; the squash frame — flattened low and spread wide into a broad squat puddle as it lands
+  features: two small dark dot eyes and a little open mouth, a dopey harmless read
+  accent: purple body with a lighter lilac highlight up top over a darker plum base
+  flavor: the lowliest Earth critter, more nuisance than threat
 palette:
-  L: "#d4a5ec"
-  O: "#1a1c2c"
-  P: "#b05cdc"
-  Q: "#723c8f"
+  L: "#d4a5ec" # lilac top highlight
+  O: "#1a1c2c" # dark outline, eyes and mouth
+  P: "#b05cdc" # purple body
+  Q: "#723c8f" # darker plum base
 grid: |
   ................
   ................

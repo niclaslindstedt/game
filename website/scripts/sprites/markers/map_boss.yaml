@@ -2,13 +2,17 @@ name: map_boss
 family: markers
 size: [12, 12]
 description: >
-  Map marker for a boss location: a bold white skull glyph (hollow eye
-  sockets, blocky teeth) on a dark rounded tile, reading instantly as
-  "danger — boss here" at minimap scale.
+  Minimap marker for a boss location — a white skull glyph on a dark tile.
+subject:
+  kind: minimap marker
+  build: a bold white skull glyph — hollow eye sockets, blocky teeth — set on a dark rounded tile
+  features: two square eye sockets over a row of blocky teeth
+  accent: bright bone-white skull against the near-black backing
+  flavor: "reads instantly as danger — a boss waits here"
 palette:
-  O: "#1a1c2c"
-  X: "#e6e8ee"
-  Z: "#f8fafc"
+  O: "#1a1c2c" # near-black tile backing
+  X: "#e6e8ee" # bone-white skull
+  Z: "#f8fafc" # skull highlight
 grid: |
   ............
   ...OOOOO....
