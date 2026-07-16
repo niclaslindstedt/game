@@ -1,7 +1,9 @@
 name: merchant_mars_1
 family: merchant
 size: [16, 16]
-description: ""
+description: >
+  Alternate idle frame of the Mars commissary trader: the same brown-haired
+  man in the green sweater, shifted a beat in his idle bob.
 palette:
   C: "#325d53"
   E: "#5d4028"

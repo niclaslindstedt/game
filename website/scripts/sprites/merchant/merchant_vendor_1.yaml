@@ -1,7 +1,9 @@
 name: merchant_vendor_1
 family: merchant
 size: [16, 16]
-description: ""
+description: >
+  Alternate idle frame of the vending-machine restocker: the same blue-capped
+  worker in blue coveralls, shifted a beat in his idle bob.
 palette:
   E: "#5d4028"
   J: "#2d3b84"

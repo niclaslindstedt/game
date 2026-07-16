@@ -1,7 +1,9 @@
 name: merchant_moon_1
 family: merchant
 size: [16, 16]
-description: ""
+description: >
+  Alternate idle frame of the stranded moon trader: the same white-haired
+  man in the patched burnt-orange 70s suit, shifted a beat in his idle bob.
 palette:
   D: "#8b5623"
   O: "#1a1c2c"

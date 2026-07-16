@@ -1,7 +1,9 @@
 name: merchant_eastworld_1
 family: merchant
 size: [16, 16]
-description: ""
+description: >
+  Alternate idle frame of the Eastworld barkeep: the same white-bearded
+  frontier trader in his apron, shifted a beat in his idle bob.
 palette:
   E: "#5d4028"
   O: "#1a1c2c"

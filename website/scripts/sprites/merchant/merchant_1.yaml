@@ -1,7 +1,10 @@
 name: merchant_1
 family: merchant
 size: [16, 16]
-description: ""
+description: >
+  Alternate idle frame of the rift merchant: the same purple-hooded cloaked
+  figure with glowing amber eyes and hip coin-satchel, shifted a beat in his
+  bob/breathing cycle.
 palette:
   B: "#92643e"
   E: "#5d4028"

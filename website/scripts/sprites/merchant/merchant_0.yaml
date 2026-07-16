@@ -1,7 +1,11 @@
 name: merchant_0
 family: merchant
 size: [16, 16]
-description: ""
+description: >
+  The wandering trader in his rift form: a front-facing figure swathed in a
+  deep-purple hooded cloak, two glowing amber eyes the only feature under the
+  hood, a small leather coin-satchel slung at the hip. Reads as a mysterious
+  between-worlds merchant who buys scrap and sells gear.
 palette:
   B: "#92643e"
   E: "#5d4028"

@@ -1,7 +1,11 @@
 name: merchant_eastworld_0
 family: merchant
 size: [16, 16]
-description: ""
+description: >
+  The merchant reskinned as THE BARKEEP of the Eastworld saloon: a front-facing
+  frontier trader with brown hair and a big bushy white beard, in a white
+  shirt/apron over dark trousers and boots. Same vendor, now pouring for
+  robots that tip in parts.
 palette:
   E: "#5d4028"
   O: "#1a1c2c"
