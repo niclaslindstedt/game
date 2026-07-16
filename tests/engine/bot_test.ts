@@ -153,6 +153,89 @@ describe("bot strategies", () => {
     expect(input.jump).toBe(false);
   });
 
+  it("balanced is the survivor alias (identical play)", () => {
+    const a = startGame();
+    const b = startGame();
+    drive(a, createBot("survivor"), 500);
+    drive(b, createBot("balanced"), 500);
+    expect(a.player.pos).toEqual(b.player.pos);
+    expect(a.stats).toEqual(b.stats);
+  });
+
+  it("aggro holds tighter to a pack than flee", () => {
+    // Both postures share the survivor core; the difference is the standoff.
+    // Against a stationary cluster, aggro closes to fighting range while flee
+    // widens the gap — so flee ends farther from the pack's centre.
+    const distToCluster = (posture: "aggro" | "flee") => {
+      const state = equipBlaster(startGame());
+      clearStage(state);
+      const c = { ...state.player.pos };
+      const foes = [];
+      for (let i = 0; i < 4; i++) {
+        const foe = makeEnemy({
+          pos: { x: c.x + 130 + i * 6, y: c.y - 24 + i * 16 },
+          hp: 1_000_000,
+          maxHp: 1_000_000,
+          mlvl: 1,
+          speed: 0, // stationary — the distance is the bot's chosen standoff
+        });
+        state.enemies.push(foe);
+        foes.push(foe);
+      }
+      drive(state, createBot(posture), 150);
+      const cx = foes.reduce((s, e) => s + e.pos.x, 0) / foes.length;
+      const cy = foes.reduce((s, e) => s + e.pos.y, 0) / foes.length;
+      return dist(state.player.pos, { x: cx, y: cy });
+    };
+    expect(distToCluster("flee")).toBeGreaterThan(distToCluster("aggro"));
+  });
+});
+
+describe("bot profiles", () => {
+  // Tally the stats an 8-beat allocation cycle spends, advancing spentStats
+  // directly so the rotation index (which keys off spent points) walks the whole
+  // cycle without tangling with the level-scaled stat cap.
+  const tally = (profile: "melee" | "ranged" | "magic", n = 48) => {
+    const state = startGame();
+    const bot = createBot("balanced", profile);
+    const counts: Partial<Record<string, number>> = {};
+    for (let i = 0; i < n; i++) {
+      const stat = botAllocate(bot, state);
+      counts[stat] = (counts[stat] ?? 0) + 1;
+      state.player.spentStats[stat]++;
+    }
+    return counts;
+  };
+  const top = (counts: Partial<Record<string, number>>) =>
+    Object.entries(counts).sort((a, b) => (b[1] ?? 0) - (a[1] ?? 0))[0]![0];
+
+  it("melee pours into strength but still banks INT for the AoE cleave", () => {
+    const c = tally("melee");
+    expect(top(c)).toBe("strength");
+    expect(c.intelligence ?? 0).toBeGreaterThan(0); // reach/AoE/crit
+    expect(c.dexterity ?? 0).toBeGreaterThan(0); // swing cadence
+  });
+
+  it("ranged gates on DEX yet banks STR (its damage) and INT", () => {
+    const c = tally("ranged");
+    expect(top(c)).toBe("dexterity");
+    expect(c.strength ?? 0).toBeGreaterThan(0); // guns scale off STR
+    expect(c.intelligence ?? 0).toBeGreaterThan(0); // reach/AoE/crit
+  });
+
+  it("magic commits to INT and feeds SPIRIT", () => {
+    const c = tally("magic");
+    expect(top(c)).toBe("intelligence");
+    expect(c.spirit ?? 0).toBeGreaterThan(0); // mana pool + regen
+  });
+
+  it("a fixed profile pins the lane regardless of the held weapon", () => {
+    // A magic profile allocates INT even with the default melee sword in hand.
+    const state = startGame();
+    const bot = createBot("balanced", "magic");
+    expect(botAllocate(bot, state)).toBe("intelligence");
+  });
+
   it("keeps a botted horde run deterministic", () => {
     const a = startGame();
     const b = startGame();

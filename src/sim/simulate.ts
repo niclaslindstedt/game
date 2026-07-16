@@ -30,6 +30,7 @@ import {
   botAct,
   botAllocate,
   createBot,
+  type BotProfile,
   type BotStrategy,
 } from "../game/bot.ts";
 import { resolveChoice } from "../game/companions.ts";
@@ -93,6 +94,8 @@ export type SimulateLevelOptions = {
   loadout?: Loadout | null;
   /** Autopilot strategy (default "survivor" — the competent horde player). */
   strategy?: BotStrategy;
+  /** Combat profile — the weapon lane the build commits to (default "auto"). */
+  profile?: BotProfile;
   /** Cap on SIMULATED minutes of play before the run is called a timeout. */
   maxMinutes?: number;
   /** Fixed step size in ms (16 ≈ the app's frame cadence). */
@@ -172,6 +175,7 @@ export type SimulateCampaignOptions = {
   levels?: string[];
   seed?: number;
   strategy?: BotStrategy;
+  profile?: BotProfile;
   maxMinutes?: number;
   dtMs?: number;
   snapshotEveryMs?: number;
@@ -304,6 +308,7 @@ export type LevelReport = {
   difficulty: Difficulty;
   seed: number;
   strategy: BotStrategy;
+  profile: BotProfile;
   outcome: "victory" | "timeout" | "cleared";
   /** Times the hero WOULD have died — booked, revived at spawn, marched on. */
   deaths: number;
@@ -425,6 +430,7 @@ export type LevelReport = {
 export type CampaignReport = {
   seed: number;
   strategy: BotStrategy;
+  profile: BotProfile;
   runs: LevelReport[];
   /** The hero walking out of the last run. */
   finalLevel: number;
@@ -491,6 +497,7 @@ export function runLevel(options: SimulateLevelOptions): {
     seed = 1,
     loadout = null,
     strategy = "survivor",
+    profile = "auto",
     maxMinutes = 15,
     dtMs = 16,
     snapshotEveryMs = 60_000,
@@ -514,6 +521,7 @@ export function runLevel(options: SimulateLevelOptions): {
       seed,
       loadout,
       strategy,
+      profile,
       maxMinutes,
       dtMs,
       snapshotEveryMs,
@@ -535,6 +543,7 @@ function playRun(args: {
   seed: number;
   loadout: Loadout | null;
   strategy: BotStrategy;
+  profile: BotProfile;
   maxMinutes: number;
   dtMs: number;
   snapshotEveryMs: number;
@@ -550,7 +559,7 @@ function playRun(args: {
     args.difficulty,
     args.loadout ?? undefined,
   );
-  const bot = createBot(args.strategy);
+  const bot = createBot(args.strategy, args.profile);
   // A carried caster may arrive with unlocked spells but a blank bar — fill it
   // so the bot casts from the first tick (the app does this on level start).
   autofillSpellSlots(state);
@@ -1149,6 +1158,7 @@ function playRun(args: {
     difficulty: args.difficulty,
     seed: args.seed,
     strategy: args.strategy,
+    profile: args.profile,
     outcome,
     deaths: reviveDeaths,
     timeMs: state.stats.timeMs,
@@ -1272,6 +1282,7 @@ export function simulateCampaign(
     levels = [...LEVEL_ORDER],
     seed = 1,
     strategy = "survivor",
+    profile = "auto",
     maxMinutes = 15,
     dtMs = 16,
     snapshotEveryMs = 60_000,
@@ -1294,6 +1305,7 @@ export function simulateCampaign(
         seed: (seed + runIndex * 104_729) >>> 0,
         loadout,
         strategy,
+        profile,
         maxMinutes,
         dtMs,
         snapshotEveryMs,
@@ -1316,6 +1328,7 @@ export function simulateCampaign(
   return {
     seed,
     strategy,
+    profile,
     runs,
     finalLevel: last?.hero.levelEnd ?? 1,
     finalMaxHp: last?.hero.maxHp ?? 0,

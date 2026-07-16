@@ -17,7 +17,6 @@ import { weaponDef } from "./defs/equipment.ts";
 import { isSpellUnlocked, spellDef } from "./defs/spells.ts";
 import {
   bestMedkitTier,
-  DAMAGE_STAT,
   effectiveStat,
   equipmentMaxDurability,
   isWeaponBroken,
@@ -32,7 +31,20 @@ import type {
   WeaponClass,
 } from "./types.ts";
 
-export type BotStrategy = "idle" | "rush" | "kite" | "boss" | "survivor";
+export type BotStrategy =
+  | "idle"
+  | "rush"
+  | "kite"
+  | "boss"
+  | "survivor"
+  // The three POSTURES — the horde-survival read at three aggression levels.
+  // `balanced` is exactly the old `survivor` (kept as an alias); `aggro` trades
+  // safety for kills (closes and holds tight, tolerates more bodies before it
+  // punches out); `flee` trades kills for safety (holds far, disengages early,
+  // widens the gap on every edge tick).
+  | "aggro"
+  | "flee"
+  | "balanced";
 
 /** Every strategy, for UIs and harnesses that validate a requested name. */
 export const BOT_STRATEGIES: BotStrategy[] = [
@@ -41,18 +53,44 @@ export const BOT_STRATEGIES: BotStrategy[] = [
   "kite",
   "boss",
   "survivor",
+  "aggro",
+  "flee",
+  "balanced",
 ];
 
+/** The three POSTURES a `simulate` matrix sweeps ("all strategies"): the
+ * playstyle axis, orthogonal to the weapon-lane {@link BotProfile}. */
+export const BOT_POSTURES: BotStrategy[] = ["aggro", "balanced", "flee"];
+
 /**
- * A bot instance. Only the strategy today; per-bot memory (wander targets,
- * reaction delays, a second player's personality) hangs off this later.
+ * A bot's COMBAT PROFILE: the weapon lane the build commits to, orthogonal to
+ * the positioning {@link BotStrategy}. It steers stat allocation into that
+ * lane's attributes; the stat-aware auto-equip (`weaponScore`) then naturally
+ * prefers that class of weapon, so a `magic` bot ends up casting and a `melee`
+ * bot ends up swinging without the bot ever touching equipment directly.
+ * `auto` (the default) keeps the old emergent behavior: the lane is whichever
+ * class the hero has invested the most in, falling back to the held weapon.
+ */
+export type BotProfile = "auto" | "melee" | "ranged" | "magic";
+
+/** Every profile, for UIs and harnesses that validate a requested name. */
+export const BOT_PROFILES: BotProfile[] = ["auto", "melee", "ranged", "magic"];
+
+/**
+ * A bot instance: the positioning `strategy` and the weapon-lane `profile`.
+ * Per-bot memory (wander targets, reaction delays, a second player's
+ * personality) hangs off this later.
  */
 export type Bot = {
   strategy: BotStrategy;
+  profile: BotProfile;
 };
 
-export function createBot(strategy: BotStrategy): Bot {
-  return { strategy };
+export function createBot(
+  strategy: BotStrategy,
+  profile: BotProfile = "auto",
+): Bot {
+  return { strategy, profile };
 }
 
 /** "Local pack" radius the survivor reasons about (threat, escape, powerups). */
@@ -89,6 +127,39 @@ const ESCAPE_DISTANCE = 340;
 /** How near a pickup must be to be worth a detour. */
 const ITEM_REACH = 240;
 
+/** The three survival POSTURES and how each weights safety against kills. The
+ * `balanced` row reproduces the classic survivor exactly (the shared constants
+ * above are its values), so a run tagged `survivor`/`balanced` is unchanged;
+ * `aggro` and `flee` scale off those anchors. */
+type Posture = "aggro" | "balanced" | "flee";
+const POSTURE_TUNING: Record<
+  Posture,
+  {
+    /** Scales the hold distance from the nearest body (>1 backs off further). */
+    standoffMul: number;
+    /** HP fraction below which the hero breaks contact to heal/reset. */
+    fleeHp: number;
+    /** Packed-foe count that (with encirclement) triggers a punch-out. */
+    surround: number;
+    /** How far along the open lane the hero drifts on a safe edge tick. */
+    edgeDrift: number;
+  }
+> = {
+  // Trades safety for kills: fights up close, tolerates a denser ring before it
+  // bails, and on a safe edge presses the nearest foe instead of drifting out.
+  aggro: { standoffMul: 0.65, fleeHp: 0.28, surround: 7, edgeDrift: 40 },
+  // The classic survivor — the shared anchors, unchanged.
+  balanced: {
+    standoffMul: 1,
+    fleeHp: FLEE_HP_FRAC,
+    surround: SURROUND_COUNT,
+    edgeDrift: 40,
+  },
+  // Trades kills for safety: holds well out of reach, disengages early, and
+  // widens the gap hard on every edge tick.
+  flee: { standoffMul: 1.7, fleeHp: 0.6, surround: 4, edgeDrift: 90 },
+};
+
 const idleInput = (): GameInput => ({
   steering: false,
   target: { x: 0, y: 0 },
@@ -115,8 +186,13 @@ export function botAct(bot: Bot, state: GameState): GameInput {
       }
       case "boss":
         return pushBoss(state);
+      case "aggro":
+        return survive(state, "aggro");
+      case "flee":
+        return survive(state, "flee");
       case "survivor":
-        return survive(state);
+      case "balanced":
+        return survive(state, "balanced");
       default:
         return idleInput();
     }
@@ -238,44 +314,90 @@ function needsRepair(state: GameState): boolean {
 }
 
 /**
- * The level-up build a bot spends its points on: a focused, WIELDABLE build
- * that commits to ONE lane instead of chasing whatever weapon happens to be in
- * hand. The lane is the class the hero has invested most in so far (ties and a
- * fresh, un-invested hero fall back to the held weapon's class), so once a bot
- * starts down a lane it deepens the same attribute rather than thrashing every
- * time auto-equip swaps its weapon. Half the points go into that lane's
- * REQUIRED attribute (`REQ_STAT`) so the bot keeps clearing the weapon stat
- * gates as they grow — ~50% comfortably clears the ~40% the requirement asks
- * for — the rest split between the lane's DAMAGE attribute (`DAMAGE_STAT`, so
- * its hits keep pace) and STAMINA for the legs to keep kiting the pack. Called
- * whenever `pendingStatPoints > 0`.
+ * The 8-beat allocation cycle each lane spends its points on — a WIELDABLE build
+ * that commits to ONE lane (so the bot deepens one attribute instead of
+ * thrashing every time auto-equip swaps its weapon) yet spreads the rest across
+ * every stat that grows the lane's DAMAGE, not just its gate. Half of every
+ * cycle goes to the lane's REQUIRED attribute (`REQ_STAT`) so the equip gates
+ * stay cleared as they scale (~50% comfortably clears the ~40% asked). The other
+ * half buys real output:
+ *
+ * - **INTELLIGENCE rides EVERY build**, physical lanes included — it widens the
+ *   swing/blast AoE cone (`aoePerInt`), extends weapon reach (`rangePerInt`), and
+ *   lifts crit damage (`critDamagePerInt`), so a melee cleave hits more bodies
+ *   from further out and a gun reaches across the screen.
+ * - **DEXTERITY** is the SPEED attribute for melee & ranged (`SPEED_STAT`), so
+ *   both physical lanes buy swing/fire cadence with it; it also gates ranged.
+ * - **STRENGTH** is the DAMAGE attribute for BOTH physical lanes (guns scale off
+ *   STR, not DEX), so ranged banks it too.
+ * - **SPIRIT** feeds a caster's mana pool and health regen; **STAMINA** the legs
+ *   every lane needs to reposition.
+ *
+ * Keyed off total points already spent (not the level), so each individual point
+ * rotates through the cycle rather than a whole level-up dumping into one stat.
+ * Called whenever `pendingStatPoints > 0`.
  */
+const LANE_BUILD: Record<WeaponClass, StatName[]> = {
+  // STR both gates AND scales the blow (REQ==DAMAGE) → it dominates; DEX buys
+  // swing cadence, INT the cleave/reach/crit that turns a swing into an AoE.
+  melee: [
+    "strength",
+    "strength",
+    "intelligence",
+    "strength",
+    "dexterity",
+    "strength",
+    "intelligence",
+    "stamina",
+  ],
+  // DEX gates AND speeds the shots; STR is the ranged DAMAGE stat; INT buys
+  // reach/AoE/crit so the shots carry and cleave.
+  ranged: [
+    "dexterity",
+    "strength",
+    "dexterity",
+    "intelligence",
+    "dexterity",
+    "strength",
+    "dexterity",
+    "intelligence",
+  ],
+  // INT gates, scales, speeds, AND buys reach/AoE/crit all at once → it
+  // dominates; SPIRIT feeds the mana pool + regen, STAMINA the legs.
+  magic: [
+    "intelligence",
+    "intelligence",
+    "spirit",
+    "intelligence",
+    "intelligence",
+    "spirit",
+    "intelligence",
+    "stamina",
+  ],
+};
+
 export function botAllocate(bot: Bot, state: GameState): StatName {
-  void bot; // strategy-specific builds can key off this later
-  const lane = botLane(state);
-  // A 4-beat cycle: two points into the lane's required attribute (the equip
-  // gate), one into its damage attribute, one into STAMINA — except a MAGIC
-  // (caster) lane spends that fourth beat on SPIRIT instead, growing the mana/
-  // health regen a spellcaster leans on, so the sim exercises spirit's effect.
-  switch (state.player.level % 4) {
-    case 0:
-    case 1:
-      return REQ_STAT[lane];
-    case 2:
-      return DAMAGE_STAT[lane];
-    default:
-      return lane === "magic" ? "spirit" : "stamina";
-  }
+  const lane = botLane(state, bot.profile);
+  const build = LANE_BUILD[lane];
+  const spent = Object.values(state.player.spentStats).reduce(
+    (a, b) => a + b,
+    0,
+  );
+  return build[spent % build.length]!;
 }
 
 /**
- * The weapon class a bot has committed to — the one whose REQUIRED attribute it
- * has already poured the most CHOSEN points into. A tie (including a brand-new
- * hero with nothing invested) falls back to the class of the weapon currently
- * in hand, so the very first allocations follow the difficulty's starter and
- * every one after that reinforces the deepest lane.
+ * The weapon class a bot has committed to. A fixed {@link BotProfile}
+ * (`melee`/`ranged`/`magic`) pins the lane outright, so the whole build — stat
+ * allocation, and through the stat-aware auto-equip the weapon itself — bends
+ * that way from level 1. Under `auto` the lane is emergent: the class whose
+ * REQUIRED attribute the hero has poured the most CHOSEN points into, with a
+ * tie (a brand-new hero with nothing invested included) falling back to the
+ * class of the weapon in hand, so the first allocations follow the difficulty's
+ * starter and every one after reinforces the deepest lane.
  */
-function botLane(state: GameState): WeaponClass {
+function botLane(state: GameState, profile: BotProfile = "auto"): WeaponClass {
+  if (profile !== "auto") return profile;
   const stats = state.player.stats;
   const held = weaponDef(state.player.equipment.weapon.defId).class;
   let lane = held;
@@ -325,8 +447,9 @@ function pushBoss(state: GameState, jumpTravel = false): GameInput {
  * hero is thin he drifts toward the objective, so he clears without ever
  * standing still in the flood.
  */
-function survive(state: GameState): GameInput {
+function survive(state: GameState, posture: Posture): GameInput {
   const player = state.player;
+  const tune = POSTURE_TUNING[posture];
   const near = threatsWithin(state, THREAT_RADIUS);
 
   // 1. Breathing room: grab a pickup within reach, else advance on the boss.
@@ -347,15 +470,14 @@ function survive(state: GameState): GameInput {
   //    edge-hugging can't open the gap). Then punch out, HOPPING THE WHOLE WAY:
   //    every airborne frame above JUMP.dodgeHeight is untouchable, so continuous
   //    jumps carry the hero clean OVER the bodies to open ground. A dense pack
-  //    on ONE side isn't an emergency — that's the edge he hugs (step 3).
+  //    on ONE side isn't an emergency — that's the edge he hugs (step 3). The
+  //    posture sets the trip wires: `flee` bails early and at a looser ring,
+  //    `aggro` holds on through a low bar and a denser ring.
   const packed = near.filter(
     (e) => distance(e.pos, player.pos) < SURROUND_RADIUS,
   );
-  const lowHp = player.hp < player.maxHp * FLEE_HP_FRAC;
-  if (
-    lowHp ||
-    (packed.length >= SURROUND_COUNT && isEncircled(state, packed))
-  ) {
+  const lowHp = player.hp < player.maxHp * tune.fleeHp;
+  if (lowHp || (packed.length >= tune.surround && isEncircled(state, packed))) {
     // A medkit within reach is worth the detour when we're bleeding.
     if (lowHp) {
       const item = nearestItem(state);
@@ -383,22 +505,26 @@ function survive(state: GameState): GameInput {
   //    can't swing mid-air, so it gives ground on foot instead of hopping.
   const weapon = weaponDef(player.equipment.weapon.defId);
   const range = weapon.range;
-  const standoff =
+  const baseStandoff =
     range >= GRASP_STANDOFF ? GRASP_STANDOFF : Math.max(40, range * 0.9);
+  // The posture scales the hold: `flee` backs off well beyond grasp, `aggro`
+  // hugs in tight so the front line stays in weapon reach.
+  const standoff = baseStandoff * tune.standoffMul;
   const away = awayFromPack(state, near);
   // A melee hero can't swing mid-air — the blade is stayed above
   // JUMP.dodgeHeight (see stepWeapon) — so hopping to dodge contact in the
   // DPS-hugging phase would only forfeit his swings; he gives ground on FOOT
-  // instead. Ranged/magic fire from the air, so they still hop the bite away.
-  // (The emergency ESCAPE hop in step 2 is invulnerable flight, not attacking,
-  // so it stands for either loadout.)
+  // instead. Ranged/magic fire from the air, so they still hop the bite away —
+  // and `flee` hops at the first sign of a body, milking the untouchable frames.
   const canHopAndFight = weapon.projectile !== undefined;
   const hop =
     canHopAndFight &&
     grounded &&
-    (nearestD < CONTACT_DODGE_RADIUS || packed.length >= 3);
+    (nearestD < CONTACT_DODGE_RADIUS ||
+      packed.length >= 3 ||
+      (posture === "flee" && near.length > 0));
   if (nearestD < standoff) {
-    // Pressed into grasp → give ground toward the open side, fast.
+    // Pressed inside the standoff → give ground toward the open side, fast.
     return steer(
       state,
       { x: player.pos.x + away.x * 150, y: player.pos.y + away.y * 150 },
@@ -406,17 +532,27 @@ function survive(state: GameState): GameInput {
     );
   }
   if (packed.length <= 1) {
-    // Field near him is thin → close on the boss to actually clear the map.
+    // Field near him is thin → close on the boss to actually clear the map,
+    // stopping at the posture's standoff (aggro presses closest, flee farthest).
     return steer(
       state,
       holdOff(state, bossPos(state) ?? nearest.pos, standoff),
       hop,
     );
   }
-  // Safe on the edge → drift out a touch to keep the gap open as the pack chases.
+  if (posture === "aggro") {
+    // Keep the pressure on — hold at fighting range of the nearest body rather
+    // than drifting off the pack, so the auto-weapon never falls idle.
+    return steer(state, holdOff(state, nearest.pos, standoff), hop);
+  }
+  // Safe on the edge → drift out along the open lane to keep the gap open as the
+  // pack chases (flee widens it hard; balanced just holds it).
   return steer(
     state,
-    { x: player.pos.x + away.x * 40, y: player.pos.y + away.y * 40 },
+    {
+      x: player.pos.x + away.x * tune.edgeDrift,
+      y: player.pos.y + away.y * tune.edgeDrift,
+    },
     hop,
   );
 }

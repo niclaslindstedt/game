@@ -59,11 +59,14 @@ export {
 // The autopilot: bot strategies producing player input (tests, ?bot=, and
 // the future AI second player).
 export {
+  BOT_POSTURES,
+  BOT_PROFILES,
   BOT_STRATEGIES,
   botAct,
   botAllocate,
   createBot,
   type Bot,
+  type BotProfile,
   type BotStrategy,
 } from "./game/bot.ts";
 

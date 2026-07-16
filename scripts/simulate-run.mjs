@@ -49,6 +49,9 @@ const { LEVEL_ORDER } = await import(
 const { BALANCE_TUNING_DEFAULTS } = await import(
   path.join(root, "src/game/tuning.ts")
 );
+const { BOT_STRATEGIES, BOT_PROFILES, BOT_POSTURES } = await import(
+  path.join(root, "src/game/bot.ts")
+);
 
 // ---- Flags ---------------------------------------------------------------------
 
@@ -62,10 +65,19 @@ const flag = (name) => args.includes(`--${name}`);
 if (flag("help")) {
   console.log(
     "usage: node scripts/simulate-run.mjs [--difficulty all|easy[,medium,…]] " +
-      "[--level all|spacez_hq[,…]] [--rerun N] [--seed N] [--strategy survivor|rush|kite|boss] " +
+      "[--level all|spacez_hq[,…]] [--rerun N] [--seed N] " +
+      "[--strategy all|aggro,balanced,flee|survivor|rush|kite|boss] " +
+      "[--profile all|melee,ranged,magic|auto] " +
       "[--max-minutes N] [--fresh] [--full] [--verdict] [--farm] [--no-shop] " +
       "[--start-level N] [--gear-tier regular|magic|rare|legendary] " +
       "[--balance xpGain=0.8,mobHp=1.5] [--compare baseline.json] [--json out.json]\n\n" +
+      "specs (--strategy × --profile): STRATEGY is the positioning posture — `aggro` (close\n" +
+      "                 and hold tight, tolerate a denser ring), `balanced`/`survivor` (the\n" +
+      "                 adaptive edge-hug), `flee` (hold far, disengage early). PROFILE is the\n" +
+      "                 weapon lane the build commits to — `melee`/`ranged`/`magic` steer stat\n" +
+      "                 allocation so the stat-aware auto-equip fights that way (`auto` = the\n" +
+      "                 emergent lane). Either flag takes a comma list or `all`; more than one\n" +
+      "                 spec runs a MATRIX (one campaign per strategy×profile) and compares.\n\n" +
       "arrival (--start-level N): drop a REALISTIC leveled + geared hero into the first swept\n" +
       "                 rung instead of a fresh level-1 rookie — the campaign's intended entry\n" +
       "                 state, since the game scales to hero level. e.g. `--difficulty jesus\n" +
@@ -124,7 +136,27 @@ const levelsOnce = parseList(opt("level"), LEVEL_ORDER);
 const rerun = Math.max(1, Number(opt("rerun", "1")));
 const levels = levelsOnce.flatMap((id) => Array(rerun).fill(id));
 const seed = Number(opt("seed", "1"));
-const strategy = opt("strategy", "survivor");
+// SPECS: the positioning strategy × the weapon-lane profile. Either flag takes a
+// comma list or `all` (strategy `all` = the three postures aggro/balanced/flee;
+// profile `all` = melee/ranged/magic). More than one combo runs a MATRIX.
+const strategies = parseList(opt("strategy", "survivor"), BOT_POSTURES);
+const profiles = parseList(opt("profile", "auto"), BOT_PROFILES);
+const validate = (names, allowed, what) => {
+  for (const n of names) {
+    if (!allowed.includes(n)) {
+      console.error(
+        `unknown ${what} "${n}" — expected one of ${allowed.join(", ")}` +
+          ` (or "all")`,
+      );
+      process.exit(1);
+    }
+  }
+};
+validate(strategies, BOT_STRATEGIES, "strategy");
+validate(profiles, BOT_PROFILES, "profile");
+const combos = strategies.flatMap((strategy) =>
+  profiles.map((profile) => ({ strategy, profile })),
+);
 const maxMinutes = Number(opt("max-minutes", "15"));
 const carryLoadout = !flag("fresh");
 const full = flag("full");
@@ -168,15 +200,129 @@ if (startLevel !== undefined) {
 
 // ---- Run ------------------------------------------------------------------------
 
+// Formatting helpers (shared by the matrix render and the single-campaign render).
+const min = (ms) => (ms / 60000).toFixed(1);
+const pct = (x) => `${Math.round(x * 100)}%`;
+const pad = (v, w) => String(v).padStart(w);
+const padE = (v, w) => String(v).padEnd(w);
+
 const startedAt = Date.now();
 const balanceLabel = balance
   ? Object.entries(balance)
       .map(([k, v]) => `${k}=${v}×`)
       .join(" ")
   : "shipped 1×";
+
+const campaignOptions = (strategy, profile) => ({
+  difficulties,
+  levels,
+  seed,
+  strategy,
+  profile,
+  maxMinutes,
+  carryLoadout,
+  balance,
+  realisticPacing,
+  autoShop,
+  startLoadout,
+});
+
+// MATRIX MODE: more than one spec (strategy × profile) → run a campaign per
+// combo and compare them side by side, then exit. A single spec falls through
+// to the detailed single-campaign render below (unchanged).
+if (combos.length > 1) {
+  console.log(
+    `Simulating a MATRIX of ${combos.length} specs ` +
+      `(${strategies.length} strategy × ${profiles.length} profile) — ` +
+      `${difficulties.length} difficulty(ies) × ${levels.length} level(s) each, ` +
+      `seed=${seed} maxMinutes=${maxMinutes} · balance: ${balanceLabel}`,
+  );
+  const matrix = combos.map(({ strategy, profile }) => ({
+    strategy,
+    profile,
+    report: simulateCampaign(campaignOptions(strategy, profile)),
+  }));
+
+  // Per-run rows, tagged with their spec — the full grid.
+  console.log("");
+  console.log("MATRIX — one row per run, grouped by spec");
+  const mh =
+    padE("strategy", 10) +
+    padE("profile", 8) +
+    padE("difficulty", 11) +
+    padE("level", 13) +
+    padE("outcome", 9) +
+    pad("hero", 8) +
+    pad("deaths", 7) +
+    pad("kills", 7) +
+    pad("k/min", 7) +
+    pad("dpsOut", 8) +
+    "  weapon";
+  console.log(mh);
+  console.log("-".repeat(mh.length + 18));
+  for (const { strategy, profile, report } of matrix) {
+    for (const run of report.runs) {
+      console.log(
+        padE(strategy, 10) +
+          padE(profile, 8) +
+          padE(run.difficulty, 11) +
+          padE(run.levelId, 13) +
+          padE(run.outcome, 9) +
+          pad(`${run.hero.levelStart}→${run.hero.levelEnd}`, 8) +
+          pad(run.deaths, 7) +
+          pad(run.combat.kills, 7) +
+          pad(run.combat.killsPerMinute, 7) +
+          pad(run.combat.dpsOut, 8) +
+          `  ${run.hero.weapon.name} (${run.hero.weapon.dps} dps)`,
+      );
+    }
+  }
+
+  // One aggregate row per spec — the head-to-head read.
+  console.log("");
+  console.log("SPEC TOTALS — aggregate per spec (all runs summed)");
+  const sh =
+    padE("strategy", 10) +
+    padE("profile", 8) +
+    pad("kills", 7) +
+    pad("deaths", 7) +
+    pad("avgDps", 8) +
+    pad("finalL", 8) +
+    pad("finalHp", 8) +
+    "  finalWeapon";
+  console.log(sh);
+  console.log("-".repeat(sh.length + 12));
+  for (const { strategy, profile, report } of matrix) {
+    const avgDps = (
+      report.runs.reduce((s, r) => s + r.combat.dpsOut, 0) /
+      Math.max(1, report.runs.length)
+    ).toFixed(1);
+    console.log(
+      padE(strategy, 10) +
+        padE(profile, 8) +
+        pad(report.totalKills, 7) +
+        pad(report.totalDeaths, 7) +
+        pad(avgDps, 8) +
+        pad(report.finalLevel, 8) +
+        pad(report.finalMaxHp, 8) +
+        `  ${report.finalWeapon}`,
+    );
+  }
+  console.log("");
+  console.log(
+    `Matrix done in ${((Date.now() - startedAt) / 1000).toFixed(1)}s wall.`,
+  );
+  if (jsonPath) {
+    writeFileSync(jsonPath, JSON.stringify(matrix, null, 2));
+    console.log(`Wrote ${jsonPath}`);
+  }
+  process.exit(0);
+}
+
+const { strategy, profile } = combos[0];
 console.log(
   `Simulating ${difficulties.length} difficulty(ies) × ${levels.length} level run(s)` +
-    ` — strategy=${strategy} seed=${seed} maxMinutes=${maxMinutes}` +
+    ` — strategy=${strategy} profile=${profile} seed=${seed} maxMinutes=${maxMinutes}` +
     ` carry=${carryLoadout}${rerun > 1 ? ` rerun=${rerun}` : ""} · balance: ${balanceLabel}` +
     (realisticPacing
       ? " · pacing: clear to the map's level & move on (realistic)"
@@ -189,25 +335,9 @@ console.log(
       : ""),
 );
 
-const report = simulateCampaign({
-  difficulties,
-  levels,
-  seed,
-  strategy,
-  maxMinutes,
-  carryLoadout,
-  balance,
-  realisticPacing,
-  autoShop,
-  startLoadout,
-});
+const report = simulateCampaign(campaignOptions(strategy, profile));
 
 // ---- Render ----------------------------------------------------------------------
-
-const min = (ms) => (ms / 60000).toFixed(1);
-const pct = (x) => `${Math.round(x * 100)}%`;
-const pad = (v, w) => String(v).padStart(w);
-const padE = (v, w) => String(v).padEnd(w);
 
 console.log("");
 console.log("CAMPAIGN SUMMARY — one row per run");
