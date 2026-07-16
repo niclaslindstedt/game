@@ -349,6 +349,7 @@ describe("inventory", () => {
     const state = startGame();
     state.enemies = [];
     state.player.level = 5; // grown into the vest's requirement
+    state.player.stats.strength = 20; // …and its LEATHER strength requirement
     state.items = [
       {
         id: 1,
@@ -439,6 +440,7 @@ describe("inventory", () => {
   it("equips gear from the bag and applies its bonuses", () => {
     const state = startGame();
     state.player.level = 5;
+    state.player.stats.strength = 20; // heft the LEATHER vest's strength gate
     // Bare the chest first so the swap math below is a plain add/remove.
     discardEquipped(state, "chest");
     const before = state.player.maxHp;
@@ -509,6 +511,7 @@ describe("inventory", () => {
   it("discards worn armor — strips it off the body, armor total drops", () => {
     const state = startGame();
     state.player.level = 5;
+    state.player.stats.strength = 20; // heft the LEATHER vest's strength gate
     state.player.inventory[0] = makeVest(88);
     expect(equipFromInventory(state, 0)).toBe(true);
     expect(state.player.equipment.chest?.id).toBe(88);

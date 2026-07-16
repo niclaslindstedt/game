@@ -108,7 +108,8 @@ export const WORLD_UNIQUES: UniqueDef[] = [
     ilvl: 22,
     bonuses: [
       { kind: "stat", stat: "stamina", value: 6 },
-      { kind: "stat", stat: "intelligence", value: 1 },
+      // MAIL leans melee: STRENGTH, not INTELLIGENCE.
+      { kind: "stat", stat: "strength", value: 1 },
     ],
     lore: "CROWNED FOR A SEA WITH NO WATER. NOTHING HAS STIRRED IT IN AN AGE.",
   },
@@ -372,9 +373,11 @@ export const WORLD_UNIQUES: UniqueDef[] = [
     slot: "feet",
     ilvl: 55,
     bonuses: [
+      // MAIL leans melee: keep the fleet-footed SPEED, but the raw stats are a
+      // bruiser's STRENGTH and STAMINA, not the ranged DEX/INT it once carried.
       { kind: "stat", stat: "speed", value: 5 },
-      { kind: "stat", stat: "dexterity", value: 5 },
-      { kind: "stat", stat: "intelligence", value: 4 },
+      { kind: "stat", stat: "strength", value: 5 },
+      { kind: "stat", stat: "stamina", value: 4 },
     ],
     lore: "THEY CROSS THE FLOOR THE WAY NIGHT CROSSES IT. NOTHING HEARS.",
   },

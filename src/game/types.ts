@@ -67,6 +67,19 @@ export type WeaponClass = "melee" | "ranged" | "magic";
 export type ArmorSlot = "head" | "chest" | "legs" | "feet";
 
 /**
+ * What a piece of armor is MADE of — the D2/WoW material class, orthogonal to
+ * its slot and its grade. It steers three things at once (see config
+ * `ARMOR_TYPES`): how much armor the piece carries (heavier materials protect
+ * more), how much STRENGTH the hero needs to WEAR it (heavier materials demand
+ * a bruiser), and which stats its rolled `+stat` affixes lean toward (cloth →
+ * INTELLIGENCE, leather → DEXTERITY, mail/plate → STRENGTH). PLATE is the
+ * heaviest, gated to the hardest rungs (`ARMOR_TYPES.plate.minDifficulty`).
+ * A piece with no `armorType` (charms, bags, legacy/fixture gear) is treated
+ * as `cloth` — the neutral, ungated baseline.
+ */
+export type ArmorType = "cloth" | "leather" | "mail" | "plate";
+
+/**
  * Item quality, lowest to highest: grey trash, white regular, blue magic,
  * yellow rare, green SET, gold unique, orange legendary (the colors are the
  * app's, see tiers.ts) — the Diablo ladder. Every tier exists engine-wide, but

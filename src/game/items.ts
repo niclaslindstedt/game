@@ -14,6 +14,7 @@ import { clamp, distance } from "@game/lib/vec.ts";
 import {
   ACCURACY,
   ARMOR,
+  ARMOR_TYPES,
   CONSUMABLES,
   DODGE,
   ECONOMY,
@@ -77,6 +78,7 @@ import { BALANCE } from "./tuning.ts";
 import type {
   Affix,
   ArmorSlot,
+  ArmorType,
   EquipSlot,
   Equipment,
   GameState,
@@ -254,7 +256,12 @@ function pickWeighted<T extends { weight: number }>(rng: Rng, pool: T[]): T {
  * `ilvl × perIlvl` line. Stat and hp affixes round to whole points and never
  * fall below 1, so even an ilvl-1 magic find pays something.
  */
-function rollAffix(rng: Rng, def: AffixDef, ilvl: number): Affix {
+function rollAffix(
+  rng: Rng,
+  def: AffixDef,
+  ilvl: number,
+  statWeights?: Record<StatName, number>,
+): Affix {
   const unlocked = def.brackets.filter((b) => b.minIlvl <= Math.max(1, ilvl));
   // The first bracket unlocks at 1, so `unlocked` is never empty; the top
   // generation rolls three times as often as the one under it.
@@ -275,9 +282,35 @@ function rollAffix(rng: Rng, def: AffixDef, ilvl: number): Affix {
       return {
         kind: "stat",
         value: Math.max(1, Math.round(value)),
-        stat: STAT_NAMES[Math.floor(rng() * STAT_NAMES.length)] as StatName,
+        // Which stat the bonus grants: an even draw across all six by default,
+        // but a piece of armor BIASES the pick toward its material's lane (a
+        // cloth robe leans INTELLIGENCE, leather DEXTERITY, mail/plate
+        // STRENGTH — config `ARMOR_TYPES[…].statWeights`). One rng draw either
+        // way, so the seeded loot sequence is unshifted; only which stat lands.
+        stat: pickStat(rng, statWeights),
       };
   }
+}
+
+/** Pick the stat a `+stat` affix grants: an even draw across all six
+ * (`STAT_NAMES`) when no weights are given, else a weighted pick that leans the
+ * roll toward the armor material's lane (config `ARMOR_TYPES[…].statWeights`).
+ * Consumes exactly ONE rng draw in both cases, so biasing a stat never shifts
+ * the seeded loot stream — it only changes which stat comes up. */
+function pickStat(rng: Rng, weights?: Record<StatName, number>): StatName {
+  if (!weights) {
+    return STAT_NAMES[Math.floor(rng() * STAT_NAMES.length)] as StatName;
+  }
+  const total = STAT_NAMES.reduce((sum, stat) => sum + weights[stat], 0);
+  if (total <= 0) {
+    return STAT_NAMES[Math.floor(rng() * STAT_NAMES.length)] as StatName;
+  }
+  let roll = rng() * total;
+  for (const stat of STAT_NAMES) {
+    roll -= weights[stat];
+    if (roll <= 0) return stat;
+  }
+  return STAT_NAMES[STAT_NAMES.length - 1] as StatName;
 }
 
 /**
@@ -592,12 +625,24 @@ export function rollEquipment(
   // which grades this killer can actually pay. Filtered against the active
   // catalog so a swapped-in fixture catalog (tests) sees no phantom ids.
   const authoredPool = family === "weapon" ? loot.weaponPool : loot.gearPool;
-  const fullPool = authoredPool.flatMap((id) => [
+  let fullPool = authoredPool.flatMap((id) => [
     id,
     ...gradeVariantIds(id).filter((variantId) =>
       family === "weapon" ? isWeaponDef(variantId) : isGearDef(variantId),
     ),
   ]);
+  // The MATERIAL drop-gate: PLATE (and any future material with a
+  // `minDifficulty`) is filtered out of the random pool below the rung it is
+  // gated to, so the heaviest armor is a NIGHTMARE-and-up chase — it never
+  // drops on easy/medium/hard. Gear only; scripted mints (opts.defId — a boss
+  // trophy) bypass the pool and are unaffected, so a story-placed plate piece
+  // still lands where it's authored.
+  if (family === "gear") {
+    fullPool = fullPool.filter((id) => {
+      const min = ARMOR_TYPES[armorTypeOf(id)].minDifficulty;
+      return min === undefined || meetsMinDifficulty(state.difficulty, min);
+    });
+  }
   // The levelReq drop gate: a base whose requirement the killer's level
   // hasn't reached stays out of the draw. If the whole pool is still out of
   // reach (a fresh run on a late-game pool), the lowest-requirement bases
@@ -707,10 +752,17 @@ export function rollEquipment(
   const qMult = qualityRoll ?? 1;
   const affixes: Affix[] = [];
   const available = [...AFFIX_POOLS[family]];
+  // A piece of ARMOR biases its rolled `+stat` affixes toward its material's
+  // lane (cloth → INT, leather → DEX, mail/plate → STR); weapons and non-armor
+  // gear (charms/bags) roll an even spread. Computed once for the whole item.
+  const statWeights =
+    family === "gear" && gearDef(defId).armor !== undefined
+      ? ARMOR_TYPES[armorTypeOf(defId)].statWeights
+      : undefined;
   for (let i = 0; i < TIERS[tier].affixCount && available.length > 0; i++) {
     const affixDef = pickWeighted(rng, available);
     available.splice(available.indexOf(affixDef), 1);
-    affixes.push(rollAffix(rng, affixDef, ilvl));
+    affixes.push(rollAffix(rng, affixDef, ilvl, statWeights));
   }
 
   const rolled: Equipment = {
@@ -1119,15 +1171,33 @@ export function recomputeMaxHp(state: GameState): void {
 }
 
 /**
+ * A gear def's ARMOR MATERIAL (see `ArmorType` / config `ARMOR_TYPES`): the
+ * def's own `armorType`, defaulting to `cloth` for anything that names none —
+ * charms, bags, and legacy/fixture armor. Weapons have no material. The single
+ * accessor every material rule reads (worn armor, the STR gate, the affix
+ * stat-lean, the plate drop-gate), so a piece's material is decided in one
+ * place.
+ */
+export function armorTypeOf(defId: string): ArmorType {
+  if (isWeaponDef(defId)) return "cloth";
+  return gearDef(defId).armorType ?? "cloth";
+}
+
+/**
  * The armor points ONE piece contributes while worn: the instance's rolled
  * value (stamped at mint — the def's base grown by item level), falling back
  * to the def's base for pieces minted before the stamp existed, plus any
- * rolled `+armor` affixes. Zero for weapons and for BROKEN armor — a piece
- * at durability 0 hangs silent until repaired.
+ * rolled `+armor` affixes. The base value is the piece's CLOTH-equivalent
+ * number; its MATERIAL multiplier (config `ARMOR_TYPES[…].armorMult`) scales
+ * the plated part — so a mail chest turns far more than a cloth one of the
+ * same slot — while rolled `+armor` affixes are material-neutral (a studded
+ * charm is a charm). Zero for weapons and for BROKEN armor — a piece at
+ * durability 0 hangs silent until repaired.
  */
 export function armorValueOf(piece: Equipment): number {
   if (isWeaponDef(piece.defId) || isArmorBroken(piece)) return 0;
-  let value = piece.armor ?? gearDef(piece.defId).armor ?? 0;
+  const base = piece.armor ?? gearDef(piece.defId).armor ?? 0;
+  let value = base * ARMOR_TYPES[armorTypeOf(piece.defId)].armorMult;
   for (const affix of piece.affixes) {
     if (affix.kind === "armor") value += affix.value;
   }
@@ -2072,34 +2142,57 @@ export function meetsLevelReq(state: GameState, equipment: Equipment): boolean {
 }
 
 /**
- * A weapon's ATTRIBUTE requirement — the Diablo stat gate that forces a build
- * to pick a lane (STRENGTH for melee, DEXTERITY for ranged, INTELLIGENCE for
- * magic; see `REQ_STAT`). Gear carries none, so this returns null for anything
- * that is not a weapon.
+ * An item's ATTRIBUTE requirement — the Diablo stat gate that forces a build to
+ * pick a lane. TWO families carry one:
  *
- * The amount is DERIVED, never authored per item, so the whole arsenal is
- * calibrated by the single `STAT_REQ.investFraction` knob: it is a fraction of
- * the trainable points a hero has banked by the weapon's `levelReq`
- * (`chosenStatPointsThrough`) plus the AUTOMATIC growth that stat has accrued
- * by then (`baseStatBonus`). Folding in the auto floor is what makes the gate
- * track the AUTO LEVEL STATS dev flag: `baseStatBonus` is zero for every stat
- * while the flag is off (and always zero for INTELLIGENCE, which has no auto
- * growth), so the requirement drops by exactly the free points the hero no
- * longer receives — leaving the CHOSEN investment it demands unchanged. That
- * invariance is the point: toggling WoW-style auto-attributes never requires
- * re-tuning a single weapon. A `levelReq`-1 starter derives to zero and is
- * ungated.
+ * - WEAPONS demand their class attribute (STRENGTH for melee, DEXTERITY for
+ *   ranged, INTELLIGENCE for magic; see `REQ_STAT`), a fraction
+ *   (`STAT_REQ.investFraction`) of the hero's banked points.
+ * - HEAVY ARMOR demands STRENGTH to heft it — the material's
+ *   `ARMOR_TYPES[…].strReqFraction` of the same banked points: none for CLOTH
+ *   (any build wears a robe), a little for LEATHER, a LOT for MAIL and PLATE,
+ *   so heavy armor is a melee-only lane a caster or archer cannot enter. Worn
+ *   `+STR` gear counts toward the gate (`meetsStatReq` reads `rawStat`), so a
+ *   bruiser stacking mail naturally meets the next piece's demand. Charms and
+ *   bags carry no material (`cloth` default → fraction 0) and stay ungated.
+ *
+ * The amount is DERIVED, never authored per item, so the whole catalog is
+ * calibrated by those two fractions: it is a fraction of the trainable points a
+ * hero has banked by the item's `levelReq` (`chosenStatPointsThrough`) plus the
+ * AUTOMATIC growth that stat has accrued by then (`baseStatBonus`). Folding in
+ * the auto floor is what makes the gate track the AUTO LEVEL STATS dev flag:
+ * `baseStatBonus` is zero for every stat while the flag is off (and always zero
+ * for INTELLIGENCE, which has no auto growth), so the requirement drops by
+ * exactly the free points the hero no longer receives — leaving the CHOSEN
+ * investment it demands unchanged. That invariance is the point: toggling
+ * WoW-style auto-attributes never requires re-tuning a single item. A
+ * `levelReq`-1 starter derives to zero and is ungated.
  */
 export function statRequirement(
   defId: string,
 ): { stat: StatName; amount: number } | null {
-  if (!isWeaponDef(defId)) return null;
-  const def = weaponDef(defId);
-  const stat = REQ_STAT[def.class];
+  if (isWeaponDef(defId)) {
+    const def = weaponDef(defId);
+    const stat = REQ_STAT[def.class];
+    const amount =
+      baseStatBonus(def.levelReq, stat) +
+      Math.round(
+        STAT_REQ.investFraction * chosenStatPointsThrough(def.levelReq),
+      );
+    return amount > 0 ? { stat, amount } : null;
+  }
+  // Heavy ARMOR demands STRENGTH to wear — sized by the material's
+  // `strReqFraction` (cloth 0, up to plate), the exact analogue of a weapon's
+  // class gate. Non-armor gear (charms, bags → cloth default) derives to zero.
+  const def = gearDef(defId);
+  if (def.armor === undefined) return null;
+  const fraction = ARMOR_TYPES[def.armorType ?? "cloth"].strReqFraction;
+  if (fraction <= 0) return null;
+  const levelReq = def.levelReq ?? 1;
   const amount =
-    baseStatBonus(def.levelReq, stat) +
-    Math.round(STAT_REQ.investFraction * chosenStatPointsThrough(def.levelReq));
-  return amount > 0 ? { stat, amount } : null;
+    baseStatBonus(levelReq, "strength") +
+    Math.round(fraction * chosenStatPointsThrough(levelReq));
+  return amount > 0 ? { stat: "strength", amount } : null;
 }
 
 /**
