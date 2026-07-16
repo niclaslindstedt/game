@@ -3833,6 +3833,75 @@ body {
   box-shadow: var(--panel-shadow);
 }
 
+/* Reveal pop: the chooser scales up from the celebration burst instead of
+   snapping in. Scoped to `.levelup-reveal` (only the level-up chooser adds it),
+   so the shared-skin respec box is untouched. */
+.levelup-reveal {
+  animation: levelup-reveal-pop 320ms cubic-bezier(0.2, 1.1, 0.35, 1) both;
+  transform-origin: center;
+}
+
+@keyframes levelup-reveal-pop {
+  from {
+    opacity: 0;
+    transform: scale(0.82);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+/* While the reveal freeze is up the stat buttons are inert AND look it: dim
+   them and swallow pointer events so a hold-over tap from steering can't land
+   on a stat. The keyboard is locked separately in LevelUpOverlay. */
+.levelup-reveal.arming .stat-buttons {
+  pointer-events: none;
+  opacity: 0.5;
+  filter: saturate(0.4);
+  transition: opacity 160ms linear;
+}
+
+/* The "arming" bar: an amber sliver that fills across LEVELUP_ARM_MS so the
+   locked buttons read as an intentional beat, not a hung UI. The fill duration
+   comes from the inline `animation-duration` LevelUpOverlay sets from the same
+   constant that lifts the lockout. */
+.levelup-arming-bar {
+  width: min(18rem, 70%);
+  height: 0.4rem;
+  border-radius: 999px;
+  overflow: hidden;
+  background: rgba(255, 215, 94, 0.16);
+  box-shadow: inset 0 0 0 1px rgba(255, 215, 94, 0.25);
+}
+
+.levelup-arming-bar > span {
+  display: block;
+  height: 100%;
+  width: 100%;
+  border-radius: inherit;
+  background: linear-gradient(90deg, #ffd75e, #ffe9a6);
+  transform-origin: left center;
+  animation: levelup-arming-fill linear both;
+}
+
+@keyframes levelup-arming-fill {
+  from {
+    transform: scaleX(0);
+  }
+  to {
+    transform: scaleX(1);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  /* Drop the decorative pop, but keep the functional freeze: the bar still
+     fills (it communicates why the buttons won't respond yet). */
+  .levelup-reveal {
+    animation: none;
+  }
+}
+
 /* ---- Level-intro monologue (the hero, alone on black, over a dialogue box) - */
 
 /* A full black screen: the hero stands in the open space above a JRPG box

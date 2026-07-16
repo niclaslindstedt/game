@@ -5,6 +5,13 @@
 // spent. Each button carries a short blurb; the (i) toggle opens a panel with
 // the full per-stat effects (kept in sync with the engine's STATS rules).
 //
+// Reveal freeze: the chooser pops open under a short lockout (`LEVELUP_ARM_MS`)
+// during which the stat buttons are dimmed and inert — pointer AND keyboard.
+// The modal appears the instant the celebration ends, while the player may
+// still be holding/tapping to steer, so an un-frozen chooser would eat that
+// stray input as a permanent stat pick. An "arming" bar fills across the wait
+// so the pause reads as intentional, then the buttons light up and accept input.
+//
 // Keyboard: a cursor highlights one stat; the arrow keys (and WASD) move it and
 // Enter/Space spends a point on it. GameScreen cedes the keyboard to this
 // overlay while the `levelup` phase is up, so these keys never leak to steering
@@ -19,6 +26,11 @@ import type { PixelFont } from "@ui/lib/pixel-font.ts";
 
 import { type Sprites } from "./assets.ts";
 import { STAT_CHOICES as CHOICES, StatGlyph } from "./statChoices.tsx";
+
+// How long the chooser stays inert after it reveals, so an accidental
+// hold-over tap from steering can't spend a point. Kept in sync with the CSS
+// `levelup-arming-bar` fill by feeding this value to its `animationDuration`.
+const LEVELUP_ARM_MS = 2000;
 
 export function LevelUpOverlay({
   state,
@@ -38,10 +50,27 @@ export function LevelUpOverlay({
   // ring-free look until the player actually engages the cursor.
   const [cursor, setCursor] = useState(0);
   const [active, setActive] = useState(false);
+  // Reveal lockout: the buttons stay inert until this flips true, a couple of
+  // seconds after the chooser mounts. It arms once and stays armed for the
+  // life of the overlay, so spending a second banked point is instant (the
+  // wait already happened) — only a brand-new level-up (a fresh mount) re-arms.
+  const [armed, setArmed] = useState(false);
   const points = state.player.pendingStatPoints;
 
   useEffect(() => {
+    const timer = window.setTimeout(() => setArmed(true), LEVELUP_ARM_MS);
+    return () => window.clearTimeout(timer);
+  }, []);
+
+  useEffect(() => {
     const onKeyDown = (event: KeyboardEvent) => {
+      // While the reveal freeze is up the whole chooser is inert: swallow every
+      // key (GameScreen already stops steering from seeing them) so a stray
+      // Enter/Space held over from play can't spend a point before it arms.
+      if (!armed) {
+        event.preventDefault();
+        return;
+      }
       if (showInfo) {
         // While the (i) breakdown is open the buttons are hidden — any
         // confirm/cancel key just closes it back to the chooser.
@@ -89,7 +118,7 @@ export function LevelUpOverlay({
     };
     window.addEventListener("keydown", onKeyDown);
     return () => window.removeEventListener("keydown", onKeyDown);
-  }, [showInfo, cursor, state, onChange]);
+  }, [armed, showInfo, cursor, state, onChange]);
 
   return (
     <div
@@ -98,7 +127,10 @@ export function LevelUpOverlay({
       // the box swallows its own taps so a mis-tap between buttons never does.
       onPointerDown={showInfo ? () => setShowInfo(false) : undefined}
     >
-      <div className="levelup-box" onPointerDown={(e) => e.stopPropagation()}>
+      <div
+        className={`levelup-box levelup-reveal${armed ? "" : " arming"}`}
+        onPointerDown={(e) => e.stopPropagation()}
+      >
         <button
           type="button"
           className={`info-button${showInfo ? " active" : ""}`}
@@ -129,6 +161,15 @@ export function LevelUpOverlay({
           scale={2}
           color="#9aa3ad"
         />
+        {!armed && !showInfo && (
+          // The "arming" bar fills across LEVELUP_ARM_MS so the inert buttons
+          // read as a deliberate pause, not a frozen UI. Its fill duration is
+          // driven from the same constant that flips `armed`, so the bar and
+          // the lockout always end together.
+          <div className="levelup-arming-bar" aria-hidden="true">
+            <span style={{ animationDuration: `${LEVELUP_ARM_MS}ms` }} />
+          </div>
+        )}
         {showInfo ? (
           <div className="stat-info">
             {CHOICES.map(({ stat, label, info, icon }) => (
@@ -178,6 +219,10 @@ export function LevelUpOverlay({
                     setCursor(i);
                   }}
                   onClick={() => {
+                    // Belt-and-suspenders: CSS already blocks pointer events on
+                    // the buttons while arming, but never spend a point before
+                    // the lockout lifts even if a click slips through.
+                    if (!armed) return;
                     setCursor(i);
                     allocateStat(state, stat);
                     onChange();
