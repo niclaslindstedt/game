@@ -22,17 +22,28 @@ killsPerLevel(L) = killsPerLevelBase × killsPerLevelGrowth^(L-1) × earlyRamp(L
 referenceMobXp(L) = refMobHp × (1 + (L-1)·mobHpPerLevel) × autoPowerScale(L) × xpPerHp
 ```
 
-Kill XP is hp-proportional (`xpPerHp`), and a mob's hp carries the SAME
-`autoPowerScale` factor `referenceMobXp` does, so it **cancels**:
+Kill XP is LEVEL-priced (`mobLevelXp`), on the SAME `refMobHp × (1 +
+(L-1)·mobHpPerLevel) × autoPowerScale × xpPerHp` unit `referenceMobXp` uses — a
+mob is worth what a "typical" minion of its level would be, NOT its actual hp
+(a tank and a squishy of the same level pay the same). So the reward carries the
+same factors as the cost and they **cancel**:
 
 ```
-actual kills for level L ≈ xpToLevelUp(L) / (refMobHp × mobHpScaleFor(L, difficulty))
+actual kills for level L ≈ killsPerLevel(L)   — invariant
 ```
 
-is invariant to the auto-stat dev flag and to how hard the hero hits — only the
-difficulty's `mobLevelOffset` nudges it. That is the whole point: you tune
-*kills per level*, and the XP number takes care of itself no matter how the
-horde scales.
+is invariant to the auto-stat dev flag, to how hard the hero hits, AND to the
+mob-hp toughness curve — only the difficulty's `mobLevelOffset` nudges it. That
+is the whole point: you tune *kills per level*, and the XP number takes care of
+itself no matter how the horde scales.
+
+> **Mob HP toughness is a SEPARATE curve from XP.** A mob's actual health rides
+> the GEOMETRIC `mobHpLevelFactor` (`MENACE.mobHpGrowthPerLevel`, eased past
+> `mobHpGrowthKnee`), decoupled from the linear `mobHpPerLevel` XP ramp above —
+> so mobs get tankier over the game (hits-to-kill rise to ~10 by L60) with **zero
+> effect on leveling pace**. Tune toughness there, verify with
+> `scripts/mob-hp-curve.mjs` (see the `simulate-run` skill); tune PACE with the
+> `LEVELING` knobs below. The two no longer move together.
 
 **Golden XP arrows are a SECOND faucet — a CATCH-UP one.** They drop from the
 loot rain (`LOOT.dropChance × LOOT.arrowShare × the difficulty's `arrowDropMult`,

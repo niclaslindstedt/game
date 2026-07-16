@@ -105,6 +105,13 @@ export type ProgressionOptions = {
   /** Roll each level's rare/unique visitors per the real encounter chances
    * (rare 0.8, unique 0.2). Default true. */
   includeRares?: boolean;
+  /** Loot TIERS the hero refuses to pick up — left on the ground, never
+   * auto-equipped (see `collectDrops`). Default none. The balance calibrator
+   * passes `["unique","legendary","set","artifact"]` to measure the hero on
+   * NORMAL gear (magic/rare) only, so the mob-hp curve is tuned against
+   * everyday loot rather than a lucky named-drop streak. Rare/unique VISITORS
+   * still SPAWN (see `includeRares`); this only governs what the hero equips. */
+  excludeTiers?: Tier[];
 };
 
 // ---- Report shapes ---------------------------------------------------------------
@@ -403,9 +410,17 @@ function mobContactDamage(enemy: Enemy): number {
 }
 
 /** Equip every dropped piece that out-scores what's worn, through the real
- * auto-equip rule — the on-pickup upgrade the engine applies in step(). */
-function collectDrops(state: GameState, dropped: Equipment[]): void {
+ * auto-equip rule — the on-pickup upgrade the engine applies in step(). Tiers
+ * in `excludeTiers` are LEFT ON THE GROUND (never equipped): the balance calibrator
+ * uses this to measure the hero on NORMAL gear only (magic/rare), so the mob-hp
+ * curve is tuned against everyday loot rather than a lucky legendary streak. */
+function collectDrops(
+  state: GameState,
+  dropped: Equipment[],
+  excludeTiers?: Set<Tier>,
+): void {
   for (const eq of dropped) {
+    if (excludeTiers?.has(eq.tier)) continue;
     if (!isBetterEquipment(state, eq)) continue;
     if (eq.slot === "weapon") {
       state.player.equipment.weapon = eq;
@@ -529,6 +544,7 @@ function runLevelPass(
   weights: StatWeights,
   spent: Record<StatName, number>,
   totalKillsBefore: number,
+  excludeTiers: Set<Tier>,
 ): LevelResult {
   const level = levelDef(levelId);
   const heroLevelStart = state.player.level;
@@ -581,7 +597,7 @@ function runLevelPass(
         mlvl: enemy.mlvl,
       };
     }
-    collectDrops(state, dropped);
+    collectDrops(state, dropped, excludeTiers);
     bankDrops(batch, dropped);
     for (const eq of dropped) {
       levelDrops[eq.tier] = (levelDrops[eq.tier] ?? 0) + 1;
@@ -645,7 +661,9 @@ export function simulateProgression(
     carryLoadout = true,
     targetLevel = LEVELING.maxLevel,
     includeRares = true,
+    excludeTiers = [],
   } = options;
+  const excludeTierSet = new Set<Tier>(excludeTiers);
 
   const spent = {} as Record<StatName, number>;
   for (const stat of STAT_NAMES) spent[stat] = 0;
@@ -682,6 +700,7 @@ export function simulateProgression(
       statWeights,
       spent,
       totalKills,
+      excludeTierSet,
     );
     totalKills += result.mobsKilled;
     levelResults.push(result);

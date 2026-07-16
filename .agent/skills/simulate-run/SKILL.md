@@ -131,6 +131,30 @@ Use the autopilot simulator (above) for "how hard is the pressure / does the
 drop rain keep DPS on the mob-hp curve"; use `progression-sim` for "where does
 the stat/XP/loot curve actually land, batch by batch, to the cap."
 
+### The HITS-TO-KILL calibrator — `mob-hp-curve`
+
+When the question is specifically **"how many hits does a mob take, over the
+game?"** — the mob-toughness / one-shotting / rampage-meter read — use
+`scripts/mob-hp-curve.mjs`. For each rung it walks the geared hero (off the
+analytic sim) across its realistic level band and records the reference minion's
+hp + armor, the hero's per-hit, and HITS REQUIRED, as a console table and a
+self-contained HTML graph. This is the instrument the geometric mob-hp curve
+(`MENACE.mobHpGrowthPerLevel` / `mobHpLevelFactor`) is calibrated against — a
+healthy campaign RISES from ~2 hits early to ~10 by L60 then plateaus; a line
+pinned near the bottom means the hero one-shots the horde (which pins the
+rampage meter at its cap).
+
+```sh
+node scripts/mob-hp-curve.mjs                                       # every rung → mob-hp-curve.html
+node scripts/mob-hp-curve.mjs --difficulty easy,jesus --to 72
+node scripts/mob-hp-curve.mjs --no-unique --no-legendary --no-sets  # NORMAL magic/rare gear
+```
+
+The `--no-*` flags leave those tiers on the ground (via
+`ProgressionOptions.excludeTiers`), so the curve reads the hero on everyday loot
+— the baseline the horde is tuned to, with named drops a bounded BONUS spike
+(keep them under ~10× a normal loadout sub-99).
+
 ## Reading the report
 
 The summary table prints one row per run: hero level `start→end`, deaths,

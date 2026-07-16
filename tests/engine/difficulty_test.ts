@@ -19,7 +19,9 @@ import {
   isBetterEquipment,
   levelDef,
   MENACE,
+  mobHpLevelFactor,
   mobHpScaleFor,
+  mobLevelFor,
   PLAYER,
   playerDodgeChance,
   playerMissChance,
@@ -46,13 +48,24 @@ const isBoss = (defId: string) => enemyDef(defId).role === "boss";
 const isMinion = (defId: string) => enemyDef(defId).role === "minion";
 
 /** The [min, max] rounded hp a rank-and-file minion can carry off a base `hp`
- * and horde `scale`, once the per-mob spawn band (MENACE.mobLevelBand) rolls
- * its ±level offset in ramp space (floored by `mobHpScaleFloor`). */
-function bandBounds(hp: number, scale: number): [number, number] {
+ * on `difficulty` at `playerLevel`, once the per-mob spawn band
+ * (MENACE.mobLevelBand) shifts its monster level ±a few levels through the
+ * geometric `mobHpLevelFactor` (floored by `mobHpScaleFloor`) — mirroring the
+ * spawn path in create.ts. */
+function bandBounds(
+  hp: number,
+  difficulty: Difficulty,
+  playerLevel = 1,
+): [number, number] {
+  const scale = mobHpScaleFor(playerLevel, difficulty);
+  const mlvl = mobLevelFor(playerLevel, difficulty);
   const at = (offset: number) =>
     Math.round(
       hp *
-        Math.max(MENACE.mobHpScaleFloor, scale + offset * MENACE.mobHpPerLevel),
+        Math.max(
+          MENACE.mobHpScaleFloor,
+          scale * (mobHpLevelFactor(mlvl + offset) / mobHpLevelFactor(mlvl)),
+        ),
     );
   return [at(MENACE.mobLevelBand.min), at(MENACE.mobLevelBand.max)];
 }
@@ -150,22 +163,27 @@ describe("difficulty catalog", () => {
 
 describe("the horde's relative level (mobLevelOffset)", () => {
   it("scales hp per level off the baseline, keyed to the player's level", () => {
-    // NIGHTMARE matches the hero: catalog hp at player level 1 (no automatic
-    // gains have landed yet, so autoPowerScale(1) is 1 and drops out).
+    // NIGHTMARE matches the hero: catalog hp at player level 1 (mob level 1,
+    // so the geometric factor is ×1; autoPowerScale(1) is 1 too and drops out).
     expect(mobHpScaleFor(1, "nightmare")).toBe(1);
-    // EASY fields mobs three levels under a level-1 hero: −4 × 8%.
-    expect(mobHpScaleFor(1, "easy")).toBeCloseTo(0.76, 10);
-    expect(mobHpScaleFor(1, "medium")).toBeCloseTo(0.84, 10);
+    // EASY fields mobs three levels under a level-1 hero (mob level −2): the
+    // geometric factor scales DOWN below the baseline.
+    expect(mobHpScaleFor(1, "easy")).toBeCloseTo(mobHpLevelFactor(-2), 10);
+    expect(mobHpScaleFor(1, "medium")).toBeCloseTo(mobHpLevelFactor(-1), 10);
     // JESUS stays two levels ahead however far the hero climbs.
-    expect(mobHpScaleFor(1, "jesus")).toBeCloseTo(1.16, 10);
-    expect(mobHpScaleFor(5, "jesus")).toBeCloseTo(1.48 * autoPowerScale(5), 10);
-    // The gap is CONSTANT once the automatic-growth curve is factored out:
-    // relative to what leveling hands the hero for free (autoPowerScale),
-    // leveling shifts every rung by the same 8%.
+    expect(mobHpScaleFor(1, "jesus")).toBeCloseTo(mobHpLevelFactor(3), 10);
+    expect(mobHpScaleFor(5, "jesus")).toBeCloseTo(
+      mobHpLevelFactor(7) * autoPowerScale(5),
+      10,
+    );
+    // The gap is a CONSTANT RATIO once the automatic-growth curve is factored
+    // out: relative to what leveling hands the hero for free (autoPowerScale),
+    // each mob level compounds hp by `mobHpGrowthPerLevel`.
     expect(
-      mobHpScaleFor(6, "easy") / autoPowerScale(6) -
-        mobHpScaleFor(5, "easy") / autoPowerScale(5),
-    ).toBeCloseTo(MENACE.mobHpPerLevel, 10);
+      mobHpScaleFor(6, "easy") /
+        autoPowerScale(6) /
+        (mobHpScaleFor(5, "easy") / autoPowerScale(5)),
+    ).toBeCloseTo(MENACE.mobHpGrowthPerLevel, 10);
   });
 
   it("stamps placed monsters — bosses exactly, minions within the spawn band", () => {
@@ -188,7 +206,7 @@ describe("the horde's relative level (mobLevelOffset)", () => {
         expect(enemy.maxHp).toBe(Math.round(def.hp * scale));
         continue;
       }
-      const [lo, hi] = bandBounds(def.hp, scale);
+      const [lo, hi] = bandBounds(def.hp, "jesus");
       expect(enemy.maxHp).toBeGreaterThanOrEqual(lo);
       expect(enemy.maxHp).toBeLessThanOrEqual(hi);
     }
@@ -200,10 +218,7 @@ describe("the horde's relative level (mobLevelOffset)", () => {
     expect(easy.enemies.length).toBeLessThan(medium.enemies.length);
     expect(easy.stats.totalEnemies).toBeLessThan(medium.stats.totalEnemies);
     const easyGhost = easy.enemies.find((e) => e.defId === "test_minion");
-    const [lo, hi] = bandBounds(
-      enemyDef("test_minion").hp,
-      mobHpScaleFor(1, "easy"),
-    );
+    const [lo, hi] = bandBounds(enemyDef("test_minion").hp, "easy");
     expect(easyGhost?.maxHp).toBeGreaterThanOrEqual(lo);
     expect(easyGhost?.maxHp).toBeLessThanOrEqual(hi);
   });

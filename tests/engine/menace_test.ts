@@ -29,7 +29,9 @@ import {
   menaceStage,
   menaceStageCap,
   menaceWarmup,
+  mobHpLevelFactor,
   mobHpScaleFor,
+  mobLevelFor,
   mobLevelScale,
   recruitCompanion,
   resetBalanceTuning,
@@ -53,13 +55,20 @@ function startOn(difficulty: string, levelId = "test_level"): GameState {
 /** The [min, max] rounded hp a rank-and-file minion can carry off base `hp`,
  * horde `scale`, and an optional evolution `mult`, once the per-mob spawn band
  * (MENACE.mobLevelBand) rolls its ±level offset in ramp space. */
-function bandHpBounds(hp: number, scale: number, mult = 1): [number, number] {
+function bandHpBounds(
+  hp: number,
+  difficulty: string,
+  mult = 1,
+  playerLevel = 1,
+): [number, number] {
+  const scale = mobHpScaleFor(playerLevel, difficulty);
+  const mlvl = mobLevelFor(playerLevel, difficulty);
   const at = (offset: number) =>
     Math.round(
       hp *
         Math.max(
           MENACE.mobHpScaleFloor,
-          scale + offset * MENACE.mobHpPerLevel,
+          scale * (mobHpLevelFactor(mlvl + offset) / mobHpLevelFactor(mlvl)),
         ) *
         mult,
     );
@@ -353,10 +362,7 @@ describe("menace — evolution of the horde", () => {
       expect(e.evo).toBeUndefined();
       // No evolution — just the horde's relative-level scale (medium fields
       // mobs two levels under a level-1 hero) plus each mob's own spawn band.
-      const [lo, hi] = bandHpBounds(
-        enemyDef(e.defId).hp,
-        mobHpScaleFor(1, "medium"),
-      );
+      const [lo, hi] = bandHpBounds(enemyDef(e.defId).hp, "medium");
       expect(e.maxHp).toBeGreaterThanOrEqual(lo);
       expect(e.maxHp).toBeLessThanOrEqual(hi);
     }
@@ -375,11 +381,7 @@ describe("menace — evolution of the horde", () => {
       // Each mob's hp is consistent with its OWN stamped stage, on top of the
       // relative-level scale (medium menaceEffectMult is 1) and its spawn band.
       const mult = 1 + (e.evo ?? 0) * MENACE.hpPerStage;
-      const [lo, hi] = bandHpBounds(
-        enemyDef(e.defId).hp,
-        mobHpScaleFor(1, "medium"),
-        mult,
-      );
+      const [lo, hi] = bandHpBounds(enemyDef(e.defId).hp, "medium", mult);
       expect(e.maxHp).toBeGreaterThanOrEqual(lo);
       expect(e.maxHp).toBeLessThanOrEqual(hi);
       // Even the lowest band roll on a stage-3 evolved mob out-toughens an

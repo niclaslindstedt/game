@@ -987,22 +987,55 @@ export const MENACE = {
    * scaled boss hits harder, but not as steeply as its health grows). */
   bossContactShare: 0.4,
   /**
-   * The size of one horde "level" in hp terms. Every monster spawns at the
-   * player's level plus the difficulty's `mobLevelOffset` (EASY three under,
-   * JESUS two over — see mobHpScaleFor in menace.ts), and each level off the
-   * baseline shifts its hp by this fraction (±8% each). Because the offset is
-   * RELATIVE, the horde keeps pace as the hero grows and the difficulty gap
-   * never closes. Kill xp is LEVEL-based (`mobLevelXp`), so a higher-level mob
-   * is worth more xp for its LEVEL (not its hp); its drops sweeten separately
-   * below. This is a
-   * NON-DECAYING floor from progression alone, distinct from (and stacking with)
-   * the menace EVOLUTION stage that answers moment-to-moment overkill — the two
-   * are the "you got stronger" and the "you're steamrolling right now" halves of
-   * keeping the fight honest. Gentler than `bossLevelWeight`: a swarm at full
-   * boss scaling would be a wall, so the mass of mobs ramps at two-thirds the
-   * rate a set-piece does.
+   * The XP-ANCHOR per-level ramp (NOT the hp curve any more — see
+   * `mobHpGrowthPerLevel` below). Kill XP is LEVEL-priced: `mobLevelXp`
+   * (leveling.ts) values a mob as a "typical" `refMobHp`-minion of its level on
+   * THIS gentle linear ramp (±8%/level), and `referenceMobXp` (the kills-per-
+   * level anchor) reads the same, so the two cancel and the leveling PACE stays
+   * exactly what the curve authors. A mob's real HP no longer rides this ramp
+   * (a tank and a squishy of the same level still pay the SAME xp — see
+   * `mobHpGrowthPerLevel`), so tuning the hp curve leaves leveling untouched.
+   * Left LINEAR and gentle on purpose: it is the xp yardstick, not the toughness.
    */
   mobHpPerLevel: 0.08,
+  /**
+   * THE HP CURVE — how a mob's HEALTH grows with its monster level, decoupled
+   * from the xp ramp above. GEOMETRIC (compounding `mobHpGrowthPerLevel` per
+   * level), because the hero's damage compounds too — gear item-level scaling
+   * and chosen stat points push per-hit output up ~10%/level, so a LINEAR mob-hp
+   * ramp (the old `mobHpPerLevel`) fell ever further behind and the hero slid
+   * into one-shotting the whole horde by mid-game (which pinned the rampage
+   * meter at its cap — the "menace 3 on easy" complaint). A compounding ramp
+   * keeps HITS-TO-KILL rising with level instead: a reference minion demands a
+   * couple of blows early, climbing toward ~10 by level ~60, so out-DPSing the
+   * horde is a slow, earned drift rather than the default. Because it is keyed
+   * to the mob's LEVEL (not the hero's gear), better-than-average finds
+   * (uniques/legendaries) still DIP hits-to-kill below the curve — out-gearing
+   * still eases the fight, it just no longer trivialises it. The rate is
+   * calibrated against a NORMAL (magic/rare) loadout via
+   * `scripts/mob-hp-curve.mjs`; verify there after any change. Applied at every
+   * spawn through `mobHpLevelFactor` (menace.ts) — the one chokepoint mob hp,
+   * the per-mob spawn band, the menace DPS-normaliser, and ability scaling all
+   * read — so they move together. Kill XP does NOT read it (see `mobHpPerLevel`).
+   */
+  mobHpGrowthPerLevel: 1.1,
+  /**
+   * The PLATEAU KNEE: past this monster level the hp compounding eases to
+   * `mobHpGrowthTailFactor` of its rate, so hits-to-kill rises steadily to
+   * ~level 60 then LEVELS OFF into a gentle climb rather than walling to
+   * hundreds of hits at the level cap. Below the knee the full
+   * `mobHpGrowthPerLevel` applies. Keyed to monster level, so a difficulty's
+   * `mobLevelMax` cap already bounds the bottom rungs under it; the knee is what
+   * tames the uncapped JESUS tail.
+   */
+  mobHpGrowthKnee: 60,
+  /**
+   * Fraction of `mobHpGrowthPerLevel`'s excess-over-1 that still compounds ABOVE
+   * the knee (0 = a hard plateau, 1 = no taper at all). At the shipped 0.34 a
+   * post-knee level compounds ~3.4% instead of 10%, so the endgame keeps getting
+   * a touch tougher without exploding.
+   */
+  mobHpGrowthTailFactor: 0.34,
   /**
    * The floor under `mobHpScaleFor`: no relative-level deficit can scale a
    * monster below half its catalog hp, so a deep negative offset (EASY, level
