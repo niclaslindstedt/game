@@ -1,7 +1,10 @@
 name: bodyguard_0
 family: bunker
 size: [20, 20]
-description: ""
+description: >
+  A heavyset personal bodyguard, front-facing — a wall in a black suit with a
+  white shirt and red tie, arms held out from the bulk; drawn a size larger
+  than the crew (20x20) so his mass reads as menace.
 palette:
   C: "#d23c42"
   K: "#0c0b12"

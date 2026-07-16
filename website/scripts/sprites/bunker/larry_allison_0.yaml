@@ -1,7 +1,10 @@
 name: larry_allison_0
 family: bunker
 size: [24, 24]
-description: ""
+description: >
+  LARRY ALLISON (24x24), the database emperor: an older resident with swept
+  silver-grey hair in dark tailored clothing, standing back and composed — he
+  fights like an audit, from range behind the furniture.
 palette:
   K: "#0c0b12"
   N: "#3a3846"

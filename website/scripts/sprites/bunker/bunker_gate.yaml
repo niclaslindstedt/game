@@ -1,7 +1,9 @@
 name: bunker_gate
 family: bunker
 size: [24, 32]
-description: ""
+description: >
+  The vault entrance the severed hand tore open, still ajar — a tall, dark
+  armored gateway with cool blue tech-lit seams running down its frame (24x32).
 palette:
   K: "#0c0b12"
   N: "#3a3846"

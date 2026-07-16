@@ -1,7 +1,9 @@
 name: guard_loyalty_1
 family: bunker
 size: [20, 20]
-description: ""
+description: >
+  Alternate stride of the gold-tied LOYALTY ENFORCER bodyguard — same heavyset
+  black-suited body, legs shifted mid-step.
 palette:
   K: "#0c0b12"
   O: "#1a1c2c"

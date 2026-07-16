@@ -1,7 +1,10 @@
 name: bunker_1
 family: bunker
 size: [16, 16]
-description: ""
+description: >
+  The rare inlay floor tile: the same polished grey concrete with a glowing
+  gold ring/sigil inlaid at its center, scattered occasionally through the vault
+  floor.
 palette:
   I: "#f6d074"
   Z: "#9c9eac"

@@ -1,7 +1,9 @@
 name: sam_haltman_1
 family: bunker
 size: [24, 24]
-description: ""
+description: >
+  Alternate frame of SAM HALTMAN — same maroon-hoodie, blue-jeans figure,
+  shifted mid-step.
 palette:
   D: "#602830"
   K: "#0c0b12"

@@ -1,7 +1,9 @@
 name: the_mole_1
 family: bunker
 size: [16, 16]
-description: ""
+description: >
+  Alternate stride of THE MOLE — same maroon-coated, gold-banded figure, legs
+  shifted mid-step.
 palette:
   D: "#602830"
   I: "#f6d074"

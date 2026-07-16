@@ -1,7 +1,9 @@
 name: money_pile
 family: bunker
 size: [12, 8]
-description: ""
+description: >
+  A small heap of banded green banknotes with white currency wraps (12x8) —
+  loose cash scattered as decor across the vault floor.
 palette:
   G: "#4a7a3e"
   O: "#1a1c2c"

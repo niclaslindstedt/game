@@ -1,7 +1,9 @@
 name: gold_pallet
 family: bunker
 size: [16, 12]
-description: ""
+description: >
+  A wooden shipping pallet stacked with gleaming gold bullion bars (16x12) —
+  the vault's hoard, low enough for the hero to hop over.
 palette:
   B: "#92643e"
   E: "#5d4028"

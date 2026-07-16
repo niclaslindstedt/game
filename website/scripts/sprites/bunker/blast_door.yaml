@@ -1,7 +1,10 @@
 name: blast_door
 family: bunker
 size: [24, 32]
-description: ""
+description: >
+  A tall, heavy service blast door set in the vault's far wall — a dark steel
+  slab framed by yellow-and-black hazard chevrons with a lit indicator strip;
+  the level's exit objective, larger than a doorway (24x32).
 palette:
   I: "#f6d074"
   K: "#0c0b12"

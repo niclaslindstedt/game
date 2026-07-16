@@ -1,7 +1,9 @@
 name: mark_suckerberg_1
 family: bunker
 size: [24, 24]
-description: ""
+description: >
+  Alternate frame of MARK SUCKERBERG — same pale grey-tee, blue-jeans figure,
+  legs shifted mid-step.
 palette:
   K: "#0c0b12"
   N: "#3a3846"

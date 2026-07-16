@@ -1,7 +1,10 @@
 name: cia_agent_0
 family: bunker
 size: [16, 16]
-description: ""
+description: >
+  A front-facing CIA agent in a plain black suit with a white shirt and red
+  tie, dark hair, arms slightly out — the fodder rank with a redacted job
+  description.
 palette:
   C: "#d23c42"
   K: "#0c0b12"

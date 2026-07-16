@@ -1,7 +1,9 @@
 name: ice_agent_1
 family: bunker
 size: [16, 16]
-description: ""
+description: >
+  Alternate stride of the cyan-marked ICE agent — same dark-tactical
+  front-facing figure, legs shifted mid-step.
 palette:
   K: "#0c0b12"
   N: "#3a3846"

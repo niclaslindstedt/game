@@ -1,7 +1,9 @@
 name: guard_prime_1
 family: bunker
 size: [20, 20]
-description: ""
+description: >
+  Alternate stride of the amber-tied PRIME GUARDIAN bodyguard — same heavyset
+  black-suited body, legs shifted mid-step.
 palette:
   K: "#0c0b12"
   O: "#1a1c2c"

@@ -1,7 +1,9 @@
 name: gpu_bolt
 family: bunker
 size: [8, 8]
-description: ""
+description: >
+  A small glowing green energy bolt with a four-point spark (8x8) — Sam
+  Haltman's ranged shot, a spat bolt of raw compute.
 palette:
   O: "#1a1c2c"
   U: "#78eb8c"

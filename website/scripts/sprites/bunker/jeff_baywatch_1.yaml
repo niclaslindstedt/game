@@ -1,7 +1,9 @@
 name: jeff_baywatch_1
 family: bunker
 size: [24, 24]
-description: ""
+description: >
+  Alternate frame of JEFF BAYWATCH — same bald, jacked, dark-tee-and-jeans
+  figure, shifted mid-step.
 palette:
   K: "#0c0b12"
   N: "#3a3846"

@@ -1,7 +1,9 @@
 name: fbi_agent_1
 family: bunker
 size: [16, 16]
-description: ""
+description: >
+  Alternate stride of the dark-windbreaker FBI agent — same lean front-facing
+  figure, legs shifted mid-step.
 palette:
   J: "#2d3b84"
   K: "#0c0b12"

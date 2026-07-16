@@ -1,7 +1,9 @@
 name: bunker_0
 family: bunker
 size: [16, 16]
-description: ""
+description: >
+  A polished pale-grey bunker-concrete floor tile, faintly speckled, flat
+  top-down — the vault's climate-controlled hard floor.
 palette:
   Z: "#9c9eac"
   u: "#d8dae4"

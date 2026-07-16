@@ -1,7 +1,9 @@
 name: larry_allison_1
 family: bunker
 size: [24, 24]
-description: ""
+description: >
+  Alternate frame of LARRY ALLISON — same silver-haired, dark-clad figure,
+  shifted mid-step.
 palette:
   K: "#0c0b12"
   N: "#3a3846"

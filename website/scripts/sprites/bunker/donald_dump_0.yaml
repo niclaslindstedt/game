@@ -1,7 +1,10 @@
 name: donald_dump_0
 family: bunker
 size: [24, 24]
-description: ""
+description: >
+  DONALD DUMP, the biggest and slowest resident (24x24): a bulky figure in a
+  navy-blue suit and long red tie, ruddy face under a distinctive swoop of
+  amber-blond hair, hands out and planted immovably.
 palette:
   C: "#d23c42"
   J: "#2d3b84"

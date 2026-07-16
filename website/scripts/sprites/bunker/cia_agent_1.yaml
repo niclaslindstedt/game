@@ -1,7 +1,9 @@
 name: cia_agent_1
 family: bunker
 size: [16, 16]
-description: ""
+description: >
+  Alternate stride of the black-suited, red-tied CIA agent — the same
+  front-facing fodder suit, legs shifted mid-step.
 palette:
   C: "#d23c42"
   K: "#0c0b12"

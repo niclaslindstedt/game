@@ -1,7 +1,9 @@
 name: carpet_1
 family: bunker
 size: [16, 16]
-description: ""
+description: >
+  Alternate burgundy carpet patch — the same deep-red pile with a different
+  scatter of gold flecks.
 palette:
   D: "#602830"
   I: "#f6d074"

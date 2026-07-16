@@ -1,7 +1,10 @@
 name: the_mole_0
 family: bunker
 size: [16, 16]
-description: ""
+description: >
+  THE MOLE, the unique double-agent: a nondescript front-facing figure with
+  dark hair in a deep-maroon coat banded with a gold stripe — the leak every
+  agency in the bunker hunts, quietly on all their payrolls.
 palette:
   D: "#602830"
   I: "#f6d074"

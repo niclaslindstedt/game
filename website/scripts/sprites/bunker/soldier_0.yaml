@@ -1,7 +1,10 @@
 name: soldier_0
 family: bunker
 size: [16, 16]
-description: ""
+description: >
+  The horde's rank-and-file shooter: a front-facing soldier in olive-green
+  fatigues with darker webbing and an amber muzzle-glint at the ready — fires
+  from range and ducks behind furniture to reload.
 palette:
   N: "#3a3846"
   O: "#1a1c2c"

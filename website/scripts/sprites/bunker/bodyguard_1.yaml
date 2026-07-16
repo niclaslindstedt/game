@@ -1,7 +1,9 @@
 name: bodyguard_1
 family: bunker
 size: [20, 20]
-description: ""
+description: >
+  Alternate stride of the black-suited, red-tied bodyguard — the same heavyset
+  front-facing wall in a suit, legs shifted mid-step.
 palette:
   C: "#d23c42"
   K: "#0c0b12"

@@ -1,7 +1,9 @@
 name: donald_dump_1
 family: bunker
 size: [24, 24]
-description: ""
+description: >
+  Alternate frame of DONALD DUMP — same navy-suited, red-tied, blond-swept
+  bulk, shifted mid-slam/step.
 palette:
   C: "#d23c42"
   J: "#2d3b84"
