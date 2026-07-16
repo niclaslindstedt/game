@@ -2,14 +2,16 @@ name: arrow
 family: effects
 size: [8, 8]
 description: >
-  The LONGBOW's arrow in flight: a slim wooden shaft with a dark pointed head
-  and pale fletching at the tail, drawn diagonally along its travel line so it
-  reads as a loosed arrow.
+  The LONGBOW's loosed arrow in flight.
+subject:
+  kind: projectile
+  build: a slim wooden shaft angled diagonally along its travel line, dark pointed head at the leading tip, pale fletching at the trailing tail
+  flavor: a single arrow mid-flight from the longbow
 palette:
-  B: "#92643e"
-  O: "#1a1c2c"
-  W: "#f4f4f4"
-  a: "#d6dce4"
+  B: "#92643e" # wooden shaft
+  O: "#1a1c2c" # dark arrowhead and outline
+  W: "#f4f4f4" # white fletching
+  a: "#d6dce4" # pale fletching shading
 grid: |
   ........
   .....OO.

@@ -2,11 +2,13 @@ name: blood_0
 family: effects
 size: [12, 12]
 description: >
-  A hit/kill gore splat: a compact red blood splotch, an irregular blob of
-  spatter marking a wound. (blood_0 = the initial splat; blood_1 = the burst
-  scattered outward.)
+  A hit/kill gore splat marking a fresh wound.
+subject:
+  kind: impact effect
+  build: a compact irregular blob of red spatter clustered at one point
+  flavor: the initial splat of a wound; the paired burst frame scatters it outward
 palette:
-  r: "#d83a3a"
+  r: "#d83a3a" # red blood
 grid: |
   ............
   ............

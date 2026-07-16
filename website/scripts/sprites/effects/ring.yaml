@@ -2,11 +2,15 @@ name: ring
 family: effects
 size: [8, 8]
 description: >
-  The RETRO RAYGUN's shot: a small hollow green energy ring/loop with a dark
-  center, reading as a retro-sci-fi ray pulse rather than a solid slug.
+  The RETRO RAYGUN's shot.
+subject:
+  kind: projectile
+  build: a small hollow green energy loop with an open dark center, dark outline
+  accent: green energy ring
+  flavor: a retro-sci-fi ray pulse rather than a solid slug
 palette:
-  O: "#1a1c2c"
-  l: "#678f5d"
+  O: "#1a1c2c" # dark outline and center
+  l: "#678f5d" # green energy ring
 grid: |
   ........
   ..OOOO..

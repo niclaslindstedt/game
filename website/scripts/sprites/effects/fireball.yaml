@@ -2,13 +2,17 @@ name: fireball
 family: effects
 size: [8, 8]
 description: >
-  Fireball from the EMBER WAND, FLARE GUN and GEIGER WAND (and the fireball
-  ability): a round orange-red ball of flame with a bright white-yellow core,
-  reading as a hot lobbed fire round.
+  Fireball from the EMBER WAND, FLARE GUN and GEIGER WAND and the fireball
+  ability.
+subject:
+  kind: projectile
+  build: a round ball of flame, orange-red body around a bright white-yellow core, dark outline
+  accent: orange-red flame body
+  flavor: a hot lobbed fire round
 palette:
-  O: "#1a1c2c"
-  Y: "#ffe3b6"
-  r: "#d83a3a"
+  O: "#1a1c2c" # dark outline
+  Y: "#ffe3b6" # white-yellow hot core
+  r: "#d83a3a" # orange-red flame
 grid: |
   ........
   ...OO...

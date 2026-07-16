@@ -2,14 +2,17 @@ name: orb
 family: effects
 size: [8, 8]
 description: >
-  Arcane bolt from the PULSAR ROD and SORCERER'S STAFF: a round purple-violet
-  magic orb with a glowing white-lilac core, reading as a slow, heavy sphere
-  of spellfire.
+  Arcane bolt from the PULSAR ROD and SORCERER'S STAFF.
+subject:
+  kind: projectile
+  build: a round magic orb, purple-violet body around a glowing white-lilac core, dark outline
+  accent: purple-violet spellfire glow
+  flavor: a slow, heavy sphere of spellfire
 palette:
-  L: "#d4a5ec"
-  O: "#1a1c2c"
-  P: "#b05cdc"
-  W: "#f4f4f4"
+  L: "#d4a5ec" # lilac inner glow
+  O: "#1a1c2c" # dark outline
+  P: "#b05cdc" # purple-violet body
+  W: "#f4f4f4" # white core
 grid: |
   ........
   ...OO...

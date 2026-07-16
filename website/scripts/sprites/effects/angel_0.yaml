@@ -2,19 +2,22 @@ name: angel_0
 family: effects
 size: [24, 24]
 description: >
-  The mercy-drop guardian angel that swoops in to deliver a rescue gift: a
-  small front-facing white-robed figure with a gold halo and two spread white
-  wings, wings held high in this frame. Reads as a benevolent cherub
-  descending. (angel_0 = wings-high; angel_1 = wings-low, the pair flapping.)
+  The mercy-drop guardian angel descending to deliver a rescue gift, wings
+  held high on this frame.
+subject:
+  kind: rescue effect
+  build: a small white-robed cherub with a gold halo above and two spread white wings, wings raised high on this beat
+  accent: gold halo ring
+  flavor: a benevolent guardian swooping in with a gift; alternates with the wings-low frame to flap its way down
 palette:
-  A: "#8d9196"
-  O: "#1a1c2c"
-  W: "#f4f4f4"
-  a: "#d6dce4"
-  o: "#d6a842"
-  p: "#deaa86"
-  s: "#d6f0ff"
-  y: "#ffb02e"
+  A: "#8d9196" # grey wing shadow
+  O: "#1a1c2c" # dark outline
+  W: "#f4f4f4" # white robe and wings
+  a: "#d6dce4" # pale robe shading
+  o: "#d6a842" # gold halo rim
+  p: "#deaa86" # skin
+  s: "#d6f0ff" # cool wing highlight
+  y: "#ffb02e" # bright gold halo
 grid: |
   ..OWO..............OWO..
   .OWWWO............OWWWO.

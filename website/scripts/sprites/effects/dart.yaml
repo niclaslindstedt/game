@@ -2,12 +2,16 @@ name: dart
 family: effects
 size: [8, 8]
 description: >
-  The SMART PISTOL's guided dart: a tiny sharp blue projectile with a bright
-  cyan-white tip, reading as a small high-tech tracking round.
+  The SMART PISTOL's guided tracking dart.
+subject:
+  kind: projectile
+  build: a tiny sharp blue point with a bright cyan-white leading tip
+  accent: cyan-white tip
+  flavor: a high-tech guided tracking round
 palette:
-  O: "#1a1c2c"
-  e: "#5ab4ff"
-  s: "#d6f0ff"
+  O: "#1a1c2c" # dark outline
+  e: "#5ab4ff" # blue dart body
+  s: "#d6f0ff" # cyan-white tip
 grid: |
   ........
   ...OO...

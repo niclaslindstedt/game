@@ -2,13 +2,16 @@ name: zai_orb
 family: effects
 size: [8, 8]
 description: >
-  The ZAI SUPERCORE's heavy projectile: a large slow glowing teal-cyan orb
-  with a bright white core, a bigger, more menacing version of the zai_bolt
-  fired by the final mainframe.
+  The ZAI SUPERCORE's heavy projectile fired by the final mainframe.
+subject:
+  kind: projectile
+  build: a large round glowing teal-cyan orb with a bright white core, dark outline
+  accent: menacing teal-cyan glow
+  flavor: a bigger, heavier, more menacing version of the zai_bolt
 palette:
-  O: "#1a1c2c"
-  Q: "#60f0d0"
-  s: "#d6f0ff"
+  O: "#1a1c2c" # dark outline
+  Q: "#60f0d0" # teal-cyan orb body
+  s: "#d6f0ff" # bright white core
 grid: |
   ..OOO...
   .OQQQO..

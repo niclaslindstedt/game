@@ -2,13 +2,17 @@ name: rail
 family: effects
 size: [8, 8]
 description: >
-  The RAILGUN's slug: a bright white-silver diamond/sliver of hypervelocity
-  metal with a hot pale core, reading as a single high-speed rail round.
+  The RAILGUN's hypervelocity slug.
+subject:
+  kind: projectile
+  build: a bright white-silver diamond sliver of metal with a hot pale core and cool blue edges, dark outline
+  accent: white-silver hypervelocity metal
+  flavor: a single high-speed rail round
 palette:
-  O: "#1a1c2c"
-  W: "#f4f4f4"
-  e: "#5ab4ff"
-  s: "#d6f0ff"
+  O: "#1a1c2c" # dark outline
+  W: "#f4f4f4" # white-silver core
+  e: "#5ab4ff" # blue trailing edge
+  s: "#d6f0ff" # pale cyan leading edge
 grid: |
   ........
   ...OO...
