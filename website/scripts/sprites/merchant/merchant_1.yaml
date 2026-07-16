@@ -2,19 +2,25 @@ name: merchant_1
 family: merchant
 size: [16, 16]
 description: >
-  A front-facing figure swathed in a deep-purple hooded cloak, two glowing
-  amber eyes the only feature under the hood, a small tan leather coin-satchel
-  slung at the hip. A mysterious between-worlds rift trader who buys scrap and
-  sells gear; this is a mid-bob idle frame, near-identical to the rest of the
-  cycle but with the feet planted a touch wider.
+  The rift trader mid-bob — a hooded figure swathed in a deep-purple cloak,
+  glowing amber eyes, coin-satchel at the hip, feet planted a touch wider.
+subject:
+  kind: merchant (wandering trader)
+  name: THE MERCHANT
+  build: a hunched, robed figure swathed head to foot
+  attire: a deep-purple hooded cloak, hood pulled low
+  features: two glowing amber eyes, the only thing visible under the hood
+  accent: the glowing amber eyes
+  pose: a mid-bob idle frame, the feet planted a touch wider, coin-satchel at the hip
+  flavor: the between-worlds rift trader who buys scrap and sells gear — every market he ever ran fell through to here
 palette:
-  B: "#92643e"
-  E: "#5d4028"
-  O: "#1a1c2c"
-  d: "#402f5b"
-  o: "#d6a842"
-  u: "#6a4e98"
-  y: "#ffb02e"
+  B: "#92643e" # tan leather coin-satchel
+  E: "#5d4028" # dark leather satchel base
+  O: "#1a1c2c" # navy outline
+  d: "#402f5b" # deep-purple cloak shadow, lower hem and legs
+  o: "#d6a842" # gold coin glint on the satchel
+  u: "#6a4e98" # purple hooded cloak
+  y: "#ffb02e" # glowing amber eyes
 grid: |
   ................
   ......OOOO......

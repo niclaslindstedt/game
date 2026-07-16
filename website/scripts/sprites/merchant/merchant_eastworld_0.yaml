@@ -2,17 +2,25 @@ name: merchant_eastworld_0
 family: merchant
 size: [16, 16]
 description: >
-  The merchant reskinned as THE BARKEEP of the Eastworld saloon: a front-facing
-  frontier trader with brown hair and a big bushy white beard, in a white
-  shirt/apron over dark trousers and boots. Same vendor, now pouring for
-  robots that tip in parts.
+  The merchant reskinned as THE BARKEEP of the Eastworld saloon — a bearded
+  frontier trader in a white shirt and apron who pours for robots that tip in
+  parts.
+subject:
+  kind: merchant reskin — the Eastworld saloon barkeep
+  name: "THE MERCHANT, as THE BARKEEP"
+  build: a sturdy frontier trader
+  attire: a white shirt and apron over dark trousers and boots
+  features: brown hair and a bushy pale beard
+  accent: the grey-white bar apron
+  pose: idle, arms at his sides behind the bar
+  flavor: the same wandering vendor, now pouring for robots that tip in parts
 palette:
-  E: "#5d4028"
-  O: "#1a1c2c"
-  W: "#f4f4f4"
-  a: "#d6dce4"
-  k: "#342c26"
-  p: "#deaa86"
+  E: "#5d4028" # brown boots
+  O: "#1a1c2c" # navy outline
+  W: "#f4f4f4" # white shirt sleeves and shoulders
+  a: "#d6dce4" # grey-white apron front
+  k: "#342c26" # dark brown hair and trousers
+  p: "#deaa86" # skin
 grid: |
   ................
   .....OOOOO......

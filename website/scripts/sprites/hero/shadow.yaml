@@ -2,12 +2,12 @@ name: shadow
 family: hero
 size: [12, 4]
 description: >
-  The soft blob shadow drawn on the ground beneath characters: a small, flat
-  oval of semi-transparent dark blue-grey, wider than it is tall, with softly
-  rounded ends and no detail. Grounds a sprite to the floor and lifts away from
-  it as the character jumps. A 12x4 flat pixel-art shadow.
+  The soft drop-shadow blob drawn on the ground beneath the hero.
+subject:
+  kind: cast shadow
+  build: a small flat oval of semi-transparent dark blue-grey, wider than it is tall, with softly rounded ends and no detail
 palette:
-  z: "#0c0e166e"
+  z: "#0c0e166e" # semi-transparent dark blue-grey shadow
 grid: |
   ...zzzzzz...
   .zzzzzzzzzz.

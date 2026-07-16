@@ -2,25 +2,24 @@ name: player_0
 family: hero
 size: [16, 16]
 description: >
-  The hero suited up in a plain, working EVA pressure suit — recovered gear, not
-  a sleek hero suit: a short, stocky, top-heavy astronaut doll seen front-on. The
-  silhouette reads at a glance as a big rounded white-and-light-grey helmet dome
-  capping the figure, crossed by one horizontal gold visor band whose lower edge
-  glows amber, over a compact bulky torso and stubby grey boots. On the otherwise
-  white-and-grey suit only two accents carry at tiny size: that gold visor and a
-  single small red indicator light on the chest. Arms hang plain at the sides,
-  gloved hands empty and held low, in a symmetric neutral idle stance with no
-  props — this is the suited paper-doll BASE the worn-armor and held-weapon
-  layers composite onto, so it must stay clean and layer-friendly. Lit from the
-  top-left. 16x16 flat 16-bit pixel art.
+  The hero suited up in a plain working EVA pressure suit — the suited
+  paper-doll base the worn-armor and held-weapon layers composite onto.
+subject:
+  kind: hero paper-doll base, suited in his EVA pressure suit
+  build: a short, stocky, top-heavy astronaut
+  attire: a plain white-and-grey EVA pressure suit — a big rounded helmet dome capping a compact bulky torso over stubby grey boots
+  features: a horizontal gold visor band across the helmet, its lower edge glowing amber
+  accent: a single small red indicator light on the chest
+  pose: a neutral idle stance, gloved hands empty and held low at the sides
+  flavor: recovered working gear, not a sleek hero suit — the laid-off SpaceZ shipbuilder suited up
 palette:
-  A: "#8d9196"
-  O: "#1a1c2c"
-  W: "#f4f4f4"
-  Y: "#ffe3b6"
-  a: "#d6dce4"
-  r: "#d83a3a"
-  y: "#ffb02e"
+  A: "#8d9196" # grey boots and suit shading
+  O: "#1a1c2c" # outline
+  W: "#f4f4f4" # white gloves
+  Y: "#ffe3b6" # amber visor glow
+  a: "#d6dce4" # light-grey suit and helmet
+  r: "#d83a3a" # red chest indicator light
+  y: "#ffb02e" # gold visor band
 grid: |
   ................
   .....OOOOOO.....
