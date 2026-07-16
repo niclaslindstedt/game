@@ -164,10 +164,35 @@ export function validateLevel(def, refs, description = "") {
     if (off) err(`${where} rect ${JSON.stringify(r)} runs off the map`);
   };
   for (const z of def.tiles?.zones ?? []) rectOnMap(z.rect, "tiles.zones");
-  for (const z of def.safeZones ?? [])
-    if (z.shape === "rect") rectOnMap(z.rect, "safeZones");
-  for (const z of def.quietZones ?? [])
-    if (z.shape === "rect") rectOnMap(z.rect, "quietZones");
+
+  // Design zones: rect | circle, each on the map.
+  const checkZone = (z, where) => {
+    if (z.shape === "rect") rectOnMap(z.rect, where);
+    else if (z.shape === "circle") {
+      if (!isVec(z.pos) || typeof z.radius !== "number")
+        err(`${where} circle needs { pos, radius }`);
+      else if (!inBounds(z.pos)) err(`${where} circle center is off the map`);
+    } else err(`${where} zone needs shape "rect" or "circle"`);
+  };
+  for (const z of def.safeZones ?? []) checkZone(z, "safeZones");
+  for (const z of def.quietZones ?? []) checkZone(z, "quietZones");
+
+  // Tempo curve: ascending `at` in [0,1], numeric intensity.
+  let lastAt = -Infinity;
+  for (const pt of def.tempo ?? []) {
+    if (typeof pt.at !== "number" || pt.at < 0 || pt.at > 1)
+      err(`tempo point at ${JSON.stringify(pt.at)} must be 0..1`);
+    if (typeof pt.intensity !== "number")
+      err(`tempo point intensity must be a number`);
+    if (pt.at < lastAt) err(`tempo points must ascend by "at"`);
+    lastAt = pt.at;
+  }
+
+  // Chests + merchant spawn points must sit on the map.
+  for (const c of def.chests ?? [])
+    if (!inBounds(c.at)) err(`chest at ${JSON.stringify(c.at)} is off the map`);
+  for (const p of def.merchantSpawns ?? [])
+    if (!inBounds(p)) err(`merchantSpawn ${JSON.stringify(p)} is off the map`);
 
   // ---- soft checks -----------------------------------------------------------
   if (!description || /^\s*TODO/i.test(description))

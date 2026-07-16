@@ -11,6 +11,7 @@ import { createRng, randomRange, type Rng } from "@game/lib/rng.ts";
 import { clamp, distance, vec, type Vec2 } from "@game/lib/vec.ts";
 import { applyLoadout } from "./arrival.ts";
 import {
+  CHESTS,
   ENEMY_AI,
   LOOT,
   MANA,
@@ -55,6 +56,7 @@ import {
 import { BALANCE } from "./tuning.ts";
 import { boundingRadius, rockHalf } from "./obstacles.ts";
 import { areCutscenesEnabled, isDialogueEnabled } from "./story.ts";
+import { anyZoneContains } from "./zones.ts";
 import type {
   Decor,
   Difficulty,
@@ -148,8 +150,30 @@ export function createGame(
       () => nextId++,
     ),
   );
+  // Special chests (LevelDef.chests): placed reward containers, minted like a
+  // crate but hardier (CHESTS.hpMult) and flagged so they spill a richer haul
+  // (crates.ts). They join the obstacle field so collision, cover, and the
+  // hero's auto-smash targeting all treat them like a breakable crate.
+  for (const chest of def.chests ?? []) {
+    obstacles.push({
+      id: nextId++,
+      kind: "chest",
+      sprite: chest.sprite ?? CHESTS.sprite,
+      pos: vec(chest.at.x, chest.at.y),
+      radius: CHESTS.radius,
+      jumpable: true,
+      breakable: true,
+      chest: true,
+      hp: Math.round(crateHp * CHESTS.hpMult),
+      maxHp: Math.round(crateHp * CHESTS.hpMult),
+    });
+  }
   const blocked = (pos: Vec2, radius: number) =>
     obstacles.some((o) => distance(pos, o.pos) < o.radius + radius);
+  // A procedural placement must dodge both flavors of design zone: no mobs,
+  // obstacles or decor spawn inside a safe or quiet region (see zones.ts).
+  const inNoSpawnZone = (pos: Vec2) =>
+    anyZoneContains(def.safeZones, pos) || anyZoneContains(def.quietZones, pos);
 
   // A spareable unique the hero already SPARED walks the campaign at his side
   // (carried in the loadout's party), so its ENEMY twin must not spawn to be
@@ -205,7 +229,8 @@ export function createGame(
           fromSpawn >= bandMin &&
           fromSpawn <= bandMax &&
           distance(pos, playerSpawn) >= ENEMY_AI.minSpawnDistance &&
-          !blocked(pos, margin)
+          !blocked(pos, margin) &&
+          !inNoSpawnZone(pos)
         ) {
           break;
         }

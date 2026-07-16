@@ -1331,6 +1331,29 @@ export const FIX_RECRUIT_LEVEL: LevelDef = {
   ],
 };
 
+// A level exercising the DESIGN ZONE systems (src/game/zones.ts): a safe
+// circle near the spawn (no spawns + repel), a quiet rectangular dead area
+// mid-field holding a chest, a tempo curve, and two merchant spawn points.
+// Geometry is otherwise the reference level's.
+export const FIX_ZONE_LEVEL: LevelDef = {
+  ...FIX_LEVEL,
+  id: "test_zone_level",
+  safeZones: [{ shape: "circle", pos: { x: 340, y: 1320 }, radius: 150 }],
+  quietZones: [
+    { shape: "rect", rect: { x: 1400, y: 1000, width: 300, height: 300 } },
+  ],
+  chests: [{ at: { x: 1550, y: 1150 } }],
+  merchantSpawns: [
+    { x: 520, y: 1180 },
+    { x: 1820, y: 420 },
+  ],
+  tempo: [
+    { at: 0, intensity: 0.4 },
+    { at: 0.5, intensity: 1.6 },
+    { at: 1, intensity: 1 },
+  ],
+};
+
 let installed = false;
 
 /** Register the synthetic fixtures as the engine's active catalogs. Idempotent
@@ -1358,6 +1381,7 @@ export function installFixtures(force = false): void {
       test_gate_level: FIX_GATE_LEVEL,
       test_exit_level: FIX_EXIT_LEVEL,
       test_recruit_level: FIX_RECRUIT_LEVEL,
+      test_zone_level: FIX_ZONE_LEVEL,
     },
     uniques: FIX_UNIQUES,
     enemies: FIX_ENEMIES,

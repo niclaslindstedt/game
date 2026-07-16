@@ -7,6 +7,7 @@
 // defs live one to a file; ./index.ts merges them.
 
 import type { Difficulty, TileSpec } from "../../types.ts";
+import type { Zone } from "../../zones.ts";
 import type { Vec2 } from "@game/lib/vec.ts";
 
 /** A monster placement: banded by difficulty distance, or pinned to a spot. */
@@ -240,6 +241,50 @@ export type LevelDef = {
    */
   packs?: PackSpec[];
   /**
+   * SAFE ZONES (see `src/game/zones.ts`): regions — rects or circles — where NO
+   * monster spawns and the wandering horde is gently repelled OUT, so the pocket
+   * stays clear even of chasers. The design lever for a genuine breather: a rest
+   * spot, a merchant nook, the calm strip before the boss door. Set pieces
+   * (pinned elites/bosses) are NOT repelled — author safe zones clear of them.
+   */
+  safeZones?: Zone[];
+  /**
+   * QUIET ZONES / DEAD AREAS (see `src/game/zones.ts`): regions where the
+   * ambient wave/pack horde does NOT spawn — a lull in the pressure — but
+   * authored content still lives: a `chest` to find, a lone rare/unique mob
+   * guarding it, hand-placed pickups. The reward for exploring off the main
+   * line. Unlike a safe zone the horde is not repelled, so a mob you walk in
+   * with (or a pinned guardian) still fights.
+   */
+  quietZones?: Zone[];
+  /**
+   * TEMPO CURVE: keyframes `{ at, intensity }` over the run's timeline (`at` is
+   * a fraction of `waves.rampDurationMs`, ascending) that scale the wave
+   * pressure envelope (the live cap and floor) — a map builds and releases
+   * pressure instead of ramping flat. `intensity` 1 is baseline; >1 crowds the
+   * field, <1 thins it. Interpolated linearly and clamped (config `TEMPO`).
+   * Omitted = flat baseline (today's behavior). Composes with `quietZones`
+   * (spatial lulls) — tempo is the temporal arc, quiet zones the local pockets.
+   */
+  tempo?: TempoPoint[];
+  /**
+   * SPECIAL CHESTS: hand-placed reward containers (distinct from scattered
+   * breakable `crate` obstacles). The hero's weapon smashes one open like a
+   * crate, but it spills a RICHER, guaranteed haul (config `CHESTS`) — the
+   * payoff that makes a `quietZone` dead area worth the detour. Author them
+   * where the map wants a destination.
+   */
+  chests?: ChestSpec[];
+  /**
+   * MERCHANT SPAWN POINTS: authored spots the wandering trader may first appear
+   * at (world px). When present, the merchant starts at one of these (rolled on
+   * his own stream) instead of a random search across the map — so the shop
+   * lands somewhere designed (a safe nook, a crossroads). Omitted = the default
+   * random placement. Ignored when the trader is pre-placed at the door (a
+   * met-before restart).
+   */
+  merchantSpawns?: Vec2[];
+  /**
    * Solid features scattered at level creation. Nothing moves through one;
    * `jumpable` ones can be hopped over — monsters never jump, so low rocks
    * are walls to the horde and shortcuts to the player.
@@ -459,6 +504,30 @@ export type LevelDef = {
      */
     earlyDrops?: EarlyDrop[];
   };
+};
+
+/**
+ * One keyframe of a level's `tempo` curve: at fraction `at` of the wave ramp
+ * (0 = level start, 1 = full ramp), the wave pressure envelope is scaled by
+ * `intensity` (1 = baseline). Points are authored in ascending `at` order and
+ * interpolated linearly between (see `tempoIntensity` in step.ts).
+ */
+export type TempoPoint = {
+  /** Fraction of `waves.rampDurationMs` (0..1). */
+  at: number;
+  /** Pressure multiplier at this point (1 = baseline; clamped by config TEMPO). */
+  intensity: number;
+};
+
+/**
+ * One special CHEST (`LevelDef.chests`): a placed breakable container that
+ * spills a richer, guaranteed haul than a scattered crate (config `CHESTS`).
+ */
+export type ChestSpec = {
+  /** Where the chest sits (world px). */
+  at: Vec2;
+  /** Sprite the renderer blits; defaults to `chest`. */
+  sprite?: string;
 };
 
 /**

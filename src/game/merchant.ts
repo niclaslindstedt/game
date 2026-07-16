@@ -47,6 +47,8 @@ export function createMerchant(
     width: number;
     height: number;
     merchant?: { sprite?: string };
+    /** Authored spots the trader may first appear at (LevelDef.merchantSpawns). */
+    merchantSpawns?: Vec2[];
   },
   playerSpawn: Vec2,
   blocked: (pos: Vec2, radius: number) => boolean,
@@ -59,10 +61,21 @@ export function createMerchant(
   // A fixed XOR keeps his stream distinct from the run's (same seed).
   const rng: Rng = createRngFromState((seed ^ 0x5eed) >>> 0 || 1);
   const margin = MERCHANT.radius + 8;
+  // Authored MERCHANT SPAWN POINTS: when the level names them, drop the trader
+  // at one designed spot (rolled on his own stream) instead of searching the
+  // whole map — the shop lands somewhere intended. A pre-placed (met-before)
+  // trader keeps his door post, so this only steers a fresh placement.
+  const spawnPoints = level.merchantSpawns ?? [];
+  const authored =
+    !preDiscovered && spawnPoints.length > 0
+      ? ([...spawnPoints].sort(() => rng() - 0.5).find(
+          (p) => !blocked(p, MERCHANT.radius),
+        ) ?? spawnPoints[0])
+      : null;
   let pos: Vec2 = preDiscovered
     ? nearSpawnSpot(playerSpawn, level, blocked)
-    : { x: level.width / 2, y: level.height / 2 };
-  if (!preDiscovered) {
+    : (authored ?? { x: level.width / 2, y: level.height / 2 });
+  if (!preDiscovered && !authored) {
     for (let attempts = 0; attempts < 60; attempts++) {
       const candidate = {
         x: randomRange(rng, margin, level.width - margin),
