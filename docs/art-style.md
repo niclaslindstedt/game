@@ -35,15 +35,15 @@ Each biome and roster is a **family** with its own one-line `style:` anchor —
 the mood in a sentence — but the medium and the read never change between them.
 The families are the authority on their own color world:
 
-| Family | The mood, in a line |
-| --- | --- |
-| `hero` | Grounded working-man look; practical clothes and gear, muted realistic colors, no fantasy flourish. |
-| `spacez` | Corporate HQ: sleek brand whites and chrome, cool blue accents, clean product-design surfaces. |
-| `moon` | Desaturated regolith greys, hard black shadow, cold vacuum light. |
-| `mars` | Rust-red oxide and dust, riveted weathered metal, thin cold light. |
-| `rift` | Void blacks shot through with unnatural violet and teal glow, nothing quite solid. |
-| `eastworld` | Knockoff robot western: dusty sun-bleached tans, weathered wood and tin, a synthetic sheen. |
-| `earth` / `merchant` / `scenes` | The warm bracket: domestic greens and browns, lantern tones, cinematic domestic staging. |
+| Family                          | The mood, in a line                                                                                 |
+| ------------------------------- | --------------------------------------------------------------------------------------------------- |
+| `hero`                          | Grounded working-man look; practical clothes and gear, muted realistic colors, no fantasy flourish. |
+| `spacez`                        | Corporate HQ: sleek brand whites and chrome, cool blue accents, clean product-design surfaces.      |
+| `moon`                          | Desaturated regolith greys, hard black shadow, cold vacuum light.                                   |
+| `mars`                          | Rust-red oxide and dust, riveted weathered metal, thin cold light.                                  |
+| `rift`                          | Void blacks shot through with unnatural violet and teal glow, nothing quite solid.                  |
+| `eastworld`                     | Knockoff robot western: dusty sun-bleached tans, weathered wood and tin, a synthetic sheen.         |
+| `earth` / `merchant` / `scenes` | The warm bracket: domestic greens and browns, lantern tones, cinematic domestic staging.            |
 | `effects` / `icons` / `markers` | Function over material: pure light for VFX, one clean pictogram for items, bold UI signage for nav. |
 
 The live set is whatever `ls website/scripts/sprites/` shows; each `_family.yaml`
@@ -195,15 +195,15 @@ for this game's wound→effect color pairings.
 
 ## Where the sources of truth live
 
-| Concern | Source of truth |
-| --- | --- |
-| The feel, the why, the design principles | **this document** |
-| The fixed medium/framing/read (machine form) | `STYLE_PREAMBLE` in `website/scripts/asset-tools/prompt.mjs` |
-| A family's mood, ground, palette scope | that family's `_family.yaml` `style:` + `palette` |
-| What one sprite should look like | that sprite's `description` (the acceptance target) |
-| How to build/iterate a sprite (workflow + checklist) | [`pixel-assets` skill](../.agent/skills/pixel-assets/SKILL.md) |
-| This game's per-family art learnings | [`GAME_NOTES.md`](../.agent/skills/pixel-assets/GAME_NOTES.md) |
-| Finding and replacing the worst art | [`art-improvement` skill](../.agent/skills/art-improvement/SKILL.md) |
+| Concern                                              | Source of truth                                                      |
+| ---------------------------------------------------- | -------------------------------------------------------------------- |
+| The feel, the why, the design principles             | **this document**                                                    |
+| The fixed medium/framing/read (machine form)         | `STYLE_PREAMBLE` in `website/scripts/asset-tools/prompt.mjs`         |
+| A family's mood, ground, palette scope               | that family's `_family.yaml` `style:` + `palette`                    |
+| What one sprite should look like                     | that sprite's `description` (the acceptance target)                  |
+| How to build/iterate a sprite (workflow + checklist) | [`pixel-assets` skill](../.agent/skills/pixel-assets/SKILL.md)       |
+| This game's per-family art learnings                 | [`GAME_NOTES.md`](../.agent/skills/pixel-assets/GAME_NOTES.md)       |
+| Finding and replacing the worst art                  | [`art-improvement` skill](../.agent/skills/art-improvement/SKILL.md) |
 
 When two tiers disagree, the more specific machine-readable one wins for its own
 scope (a family anchor owns that family's mood; a description owns that sprite),

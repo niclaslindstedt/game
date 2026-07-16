@@ -318,19 +318,19 @@ from GitHub Packages. **Prefer the framework over hand-rolling**:
 
 ## Documentation sync points
 
-| When you change…                      | Update…                                                                                                    |
-| ------------------------------------- | ---------------------------------------------------------------------------------------------------------- |
-| game identity (title, domain, …)      | `game.config.json` only — the single source of truth; then `make icons` (OG art)                           |
-| engine public API (`src/index.ts`)    | `docs/architecture.md`, `README.md` Usage                                                                  |
-| game content (levels, enemies, story) | `docs/game-content.md` (this game's walkthrough; a sequel replaces it wholesale)                           |
-| a plot beat / the story as a whole    | `docs/story.md` (the gist — top of the chain), then push down (see **Story & dialogue** below)             |
-| story or dialogue text (any line)     | `docs/manuscript.md` — the verbatim script; `docs/story.md` sits above it (see **Story & dialogue** below) |
-| Make targets / npm scripts            | `README.md` Usage, `CONTRIBUTING.md`, this file                                                            |
-| deploy slots / pages workflow         | `docs/architecture.md`, `README.md` Play table, `website/pwa-plugin.ts` `DEPLOY_SLOTS`                     |
-| config knobs (env vars, URL params)   | `docs/configuration.md`, `README.md` Configuration                                                         |
-| PWA surface (manifest, icons, SW)     | `docs/architecture.md`, regenerate icons via `make icons`                                                  |
+| When you change…                                                                   | Update…                                                                                                                      |
+| ---------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------- |
+| game identity (title, domain, …)                                                   | `game.config.json` only — the single source of truth; then `make icons` (OG art)                                             |
+| engine public API (`src/index.ts`)                                                 | `docs/architecture.md`, `README.md` Usage                                                                                    |
+| game content (levels, enemies, story)                                              | `docs/game-content.md` (this game's walkthrough; a sequel replaces it wholesale)                                             |
+| a plot beat / the story as a whole                                                 | `docs/story.md` (the gist — top of the chain), then push down (see **Story & dialogue** below)                               |
+| story or dialogue text (any line)                                                  | `docs/manuscript.md` — the verbatim script; `docs/story.md` sits above it (see **Story & dialogue** below)                   |
+| Make targets / npm scripts                                                         | `README.md` Usage, `CONTRIBUTING.md`, this file                                                                              |
+| deploy slots / pages workflow                                                      | `docs/architecture.md`, `README.md` Play table, `website/pwa-plugin.ts` `DEPLOY_SLOTS`                                       |
+| config knobs (env vars, URL params)                                                | `docs/configuration.md`, `README.md` Configuration                                                                           |
+| PWA surface (manifest, icons, SW)                                                  | `docs/architecture.md`, regenerate icons via `make icons`                                                                    |
 | the shared art look (`STYLE_PREAMBLE`, a family `style:` anchor, the design rules) | `docs/art-style.md` — the house style guide; keep it and `STYLE_PREAMBLE` (`website/scripts/asset-tools/prompt.mjs`) in step |
-| version anywhere                      | never by hand — `scripts/update-versions.sh` owns it                                                       |
+| version anywhere                                                                   | never by hand — `scripts/update-versions.sh` owns it                                                                         |
 
 The website must be regenerated whenever source-derived content changes
 (§11.2): `website/scripts/extract-source-data.mjs` runs on every build and
