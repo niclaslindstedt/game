@@ -513,9 +513,13 @@ export function drawFrame(
   }
 
   // The fallen boss, left as a tap target once the player chooses STAY on a
-  // cleared field (see stayOnField). A pulsing amber ring marks it as the way
-  // out — tapping it re-opens the victory menu (GameScreen). Drawn under the
-  // moving actors so loot dropped over the corpse still reads on top.
+  // cleared field (see stayOnField). A pulsing amber ring marks the boss's own
+  // corpse — the persistent `corpse` effect keeled over at the same spot when it
+  // died — as the way out; tapping it re-opens the victory menu (GameScreen). We
+  // draw ONLY the ring, never a second body: the dead boss is already on the
+  // field, so minting another sprite here just stacks a duplicate boss on top of
+  // it. Drawn under the moving actors so loot dropped over the corpse reads on
+  // top.
   if (state.staying && state.bossCorpse) {
     const bc = state.bossCorpse;
     if (inView(bc.pos.x, bc.pos.y, 48)) {
@@ -530,20 +534,6 @@ export function drawFrame(
       ctx.ellipse(cx, cy, 13 + pulse * 3, 6.5 + pulse * 1.5, 0, 0, Math.PI * 2);
       ctx.stroke();
       ctx.restore();
-      const corpse = spriteByName(sprites, `${bc.sprite}_0`);
-      if (corpse) {
-        ctx.save();
-        ctx.globalAlpha = 0.85;
-        ctx.translate(cx, cy);
-        // Toppled onto its side: a 90° roll reads as fallen, not standing.
-        ctx.rotate(Math.PI / 2);
-        ctx.drawImage(
-          corpse,
-          -Math.round(corpse.width / 2),
-          -Math.round(corpse.height / 2),
-        );
-        ctx.restore();
-      }
     }
   }
 
