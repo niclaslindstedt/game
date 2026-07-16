@@ -1,7 +1,11 @@
 name: merchant_moon_0
 family: merchant
 size: [16, 16]
-description: ""
+description: >
+  The merchant reskinned as a stranded 1970s salvage-run trader: a balding,
+  white-haired man, front-facing, in a patched burnt-orange retro pressure
+  suit. Same friendly vendor role, marooned on the moon since he missed the
+  ride home.
 palette:
   D: "#8b5623"
   O: "#1a1c2c"

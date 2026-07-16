@@ -1,7 +1,11 @@
 name: guard_kremlin_1
 family: bunker
 size: [20, 20]
-description: ""
+description: >
+  A heavyset front-facing bodyguard in a matte-black suit with a white shirt, a
+  wall of a man with arms held out from his bulk, distinguished by a red tie and
+  collar patch; caught mid-stride with the legs shifted from the planted stance.
+  Vladimir Putain's KREMLIN SHADOW detail.
 palette:
   C: "#d23c42"
   K: "#0c0b12"

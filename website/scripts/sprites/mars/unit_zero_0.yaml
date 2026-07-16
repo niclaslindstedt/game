@@ -1,7 +1,11 @@
 name: unit_zero_0
 family: mars
 size: [16, 16]
-description: ""
+description: >
+  UNIT ZERO, the first robot SpaceZ ever printed and never
+  decommissioned: the servo-unit silhouette cast in tarnished antique
+  brass and gold, a gold crest on its head and a single lit eye. Old
+  firmware, older grudge.
 palette:
   D: "#808698"
   O: "#1a1c2c"

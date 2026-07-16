@@ -1,7 +1,10 @@
 name: one_armed_bandit_0
 family: eastworld
 size: [16, 16]
-description: ""
+description: >
+  THE ONE-ARMED BANDIT — the park's rigged slot machine on legs, gilded head
+  to toe in other people's gold coin: a boxy golden body with a dark slot-
+  machine head and one lever arm. The house always wins.
 palette:
   A: "#8d9196"
   B: "#92643e"

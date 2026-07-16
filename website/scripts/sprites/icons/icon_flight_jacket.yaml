@@ -1,7 +1,9 @@
 name: icon_flight_jacket
 family: icons
 size: [12, 12]
-description: ""
+description: >
+  A tan bomber flight jacket with a shearling collar and a front zip;
+  crew survival-kit outerwear.
 palette:
   D: "#b28e5c"
   O: "#1a1c2c"

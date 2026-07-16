@@ -1,7 +1,9 @@
 name: icon_pulsar_rod
 family: icons
 size: [12, 12]
-description: ""
+description: >
+  A dark survey rod held upright, tipped with a bright white-cyan pulsing
+  node; a caster that ticks out fast, bright pulses.
 palette:
   O: "#1a1c2c"
   W: "#f4f4f4"

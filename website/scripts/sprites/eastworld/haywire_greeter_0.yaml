@@ -1,7 +1,10 @@
 name: haywire_greeter_0
 family: eastworld
 size: [16, 16]
-description: ""
+description: >
+  A welcome-committee host gone haywire — a wheeled greeter android with
+  turquoise eyes and thin arms raised mid-wave, still smiling, now swinging;
+  a rare pack mob.
 palette:
   A: "#8d9196"
   C: "#466096"

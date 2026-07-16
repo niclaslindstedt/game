@@ -1,7 +1,9 @@
 name: icon_machete
 family: icons
 size: [12, 12]
-description: ""
+description: >
+  A long broad machete laid diagonally — a wide single-edged steel blade
+  with a simple dark handle.
 palette:
   A: "#8d9196"
   O: "#1a1c2c"

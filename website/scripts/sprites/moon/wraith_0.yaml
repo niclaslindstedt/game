@@ -1,7 +1,8 @@
 name: wraith_0
 family: moon
 size: [16, 16]
-description: ""
+description: >
+  WRAITH, the heaviest minion: a hooded violet-purple wraith with burning red eyes and a tapering spectral shroud; the horde's toughest common ghost.
 palette:
   L: "#d4a5ec"
   M: "#644696e6"

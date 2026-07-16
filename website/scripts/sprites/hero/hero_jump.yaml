@@ -1,7 +1,13 @@
 name: hero_jump
 family: hero
 size: [16, 16]
-description: ""
+description: >
+  A front-facing everyman in a plain white t-shirt, blue jeans, and brown
+  shoes, with dark brown hair, a peach face, and arms at his sides — a
+  short, stocky top-down hero doll (the unsuited paper-doll base that worn
+  armor and a held weapon draw over). This is the airborne hop frame: both
+  legs are pulled together and the feet are tucked up close under him,
+  clear of the ground in mid-jump. 16x16 flat 16-bit pixel art.
 palette:
   O: "#1a1c2c"
   W: "#f4f4f4"

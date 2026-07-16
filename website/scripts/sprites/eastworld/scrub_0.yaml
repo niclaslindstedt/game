@@ -1,7 +1,10 @@
 name: scrub_0
 family: eastworld
 size: [16, 16]
-description: ""
+description: >
+  Dry-scrub ground patch — a tan dirt tile flecked with sparse olive-green
+  desert brush tufts; the level's occasional vegetation over the bare
+  hardpan.
 palette:
   d: "#665c34"
   e: "#8a7e46"

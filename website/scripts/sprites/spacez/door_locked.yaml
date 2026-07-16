@@ -1,7 +1,10 @@
 name: door_locked
 family: spacez
 size: [16, 16]
-description: ""
+description: >
+  A sealed metal security door set into the wall, split down the middle with
+  heavy panels and a red locked-status light; opens only with the matching
+  keycard.
 palette:
   O: "#1a1c2c"
   R: "#ff5252"

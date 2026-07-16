@@ -1,7 +1,10 @@
 name: merchant_mars_0
 family: merchant
 size: [16, 16]
-description: ""
+description: >
+  The merchant reskinned as the Mars colony commissary keeper: a front-facing
+  brown-haired man in a muted green colony sweater/turtleneck over dark work
+  trousers. The same trader, now running his stall inside the dome.
 palette:
   C: "#325d53"
   E: "#5d4028"

@@ -1,7 +1,11 @@
 name: ship_fly_0
 family: scenes
 size: [32, 24]
-description: ""
+description: >
+  The garage rocket cruising through space in side profile, 32×24 px: the
+  grey-white hull laid horizontal with its nose pointing right, a row of round
+  portholes along the flank and yellow-orange engine flames trailing from the
+  tail on the left. The hero is inside it for the deep-space voyage cutscenes.
 palette:
   A: "#8d9196"
   O: "#1a1c2c"

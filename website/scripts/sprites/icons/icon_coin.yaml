@@ -1,7 +1,9 @@
 name: icon_coin
 family: icons
 size: [12, 12]
-description: ""
+description: >
+  A single round gold coin with a bright rim and a darker stamped center,
+  catching a highlight; the game's currency.
 palette:
   O: "#1a1c2c"
   o: "#d6a842"

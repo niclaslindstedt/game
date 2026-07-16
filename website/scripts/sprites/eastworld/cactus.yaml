@@ -1,7 +1,9 @@
 name: cactus
 family: eastworld
 size: [16, 16]
-description: ""
+description: >
+  A fake park cactus — a bright green saguaro with two upraised arms and a
+  darker outline dotted with tiny spines; a hoppable desert-street prop.
 palette:
   G: "#4a7a3e"
   O: "#1a1c2c"

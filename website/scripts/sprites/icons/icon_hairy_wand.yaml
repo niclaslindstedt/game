@@ -1,7 +1,9 @@
 name: icon_hairy_wand
 family: icons
 size: [12, 12]
-description: ""
+description: >
+  A slim polished wooden wand held diagonally with a faint glowing spark
+  at its tip; a boy-wizard's starter wand.
 palette:
   B: "#92643e"
   O: "#1a1c2c"

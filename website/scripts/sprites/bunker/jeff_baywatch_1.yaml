@@ -1,7 +1,10 @@
 name: jeff_baywatch_1
 family: bunker
 size: [24, 24]
-description: ""
+description: >
+  A bald, heavily muscled front-facing man in a tight dark-grey tee and blue
+  jeans, arms flexed out from a barrel chest — a tall, broad figure; caught
+  mid-step with the legs shifted from the planted stance.
 palette:
   K: "#0c0b12"
   N: "#3a3846"

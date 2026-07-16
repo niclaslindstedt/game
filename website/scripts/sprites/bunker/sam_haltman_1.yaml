@@ -1,7 +1,10 @@
 name: sam_haltman_1
 family: bunker
 size: [24, 24]
-description: ""
+description: >
+  A wiry front-facing figure in a dark maroon zip hoodie over a white tee and
+  blue jeans, greyish and tense with a forced smile — a lean, upright build;
+  caught mid-step with the legs shifted from the standing pose.
 palette:
   D: "#602830"
   K: "#0c0b12"

@@ -1,7 +1,9 @@
 name: icon_sorcerers_staff
 family: icons
 size: [12, 12]
-description: ""
+description: >
+  A gnarled brown wooden staff held upright, crowned with a glowing purple
+  crystal; the rift's ancient caster.
 palette:
   B: "#92643e"
   L: "#d4a5ec"

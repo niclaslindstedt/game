@@ -1,7 +1,8 @@
 name: rocks
 family: moon
 size: [16, 16]
-description: ""
+description: >
+  A loose scatter of small grey pebbles and rock chips strewn across the regolith, a top-down decor cluster; scenery, not an obstacle.
 palette:
   d: "#676972"
   e: "#4e4f56"

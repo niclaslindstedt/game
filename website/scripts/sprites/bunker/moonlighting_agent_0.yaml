@@ -1,7 +1,10 @@
 name: moonlighting_agent_0
 family: bunker
 size: [16, 16]
-description: ""
+description: >
+  A double-payroll suit: a front-facing agent in a drab olive-grey suit with a
+  gold accent, patrolling the bunker on one salary and selling its floor plan
+  on another — a rare mob with a loot burst.
 palette:
   I: "#f6d074"
   K: "#0c0b12"

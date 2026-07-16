@@ -1,7 +1,9 @@
 name: icon_busted_flamethrower
 family: icons
 size: [12, 12]
-description: ""
+description: >
+  A dented, empty flamethrower nozzle and tank in grey — no flame, no
+  fuel, obviously broken; a junk weapon that does nothing.
 palette:
   E: "#5d4028"
   N: "#303444"

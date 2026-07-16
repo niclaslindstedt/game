@@ -1,7 +1,9 @@
 name: optimusk_1
 family: spacez
 size: [20, 20]
-description: ""
+description: >
+  OPTIMUSK in its alternate step — white rounded android body, glowing blue
+  eye-strip, marching at a steady unbothered pace.
 palette:
   O: "#1a1c2c"
   W: "#f4f4f4"

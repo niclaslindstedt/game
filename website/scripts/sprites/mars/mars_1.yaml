@@ -1,7 +1,10 @@
 name: mars_1
 family: mars
 size: [16, 16]
-description: ""
+description: >
+  Rare variant of the Martian regolith ground: the same rusty-orange
+  dust marked by a darker pit or embedded rock, sprinkled in
+  occasionally to break up the field.
 palette:
   d: "#80482d"
   e: "#623722"

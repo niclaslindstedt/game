@@ -1,7 +1,9 @@
 name: icon_carbon_leggings
 family: icons
 size: [12, 12]
-description: ""
+description: >
+  Dark carbon-fiber leg armor — sleek near-black trousers with a subtle
+  woven sheen and grey seams; printed Mars-colony legwear.
 palette:
   N: "#303444"
   O: "#1a1c2c"

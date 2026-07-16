@@ -1,7 +1,9 @@
 name: icon_snake_oil
 family: icons
 size: [12, 12]
-description: ""
+description: >
+  A green glass patent-medicine bottle with a white paper label; the
+  snake-oil sprayer's corrosive tonic.
 palette:
   G: "#4a7a3e"
   O: "#1a1c2c"

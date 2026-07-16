@@ -1,7 +1,10 @@
 name: grok_gamma_0
 family: eastworld
 size: [24, 24]
-description: ""
+description: >
+  GROK GAMMA controller — a slim dark humanoid android with a glowing
+  amber/yellow square screen face; the ex-gift-shop shooter that leads its
+  target from behind cover.
 palette:
   N: "#3a3644"
   O: "#1a1c2c"

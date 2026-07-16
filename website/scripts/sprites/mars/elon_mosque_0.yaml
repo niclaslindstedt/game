@@ -1,7 +1,11 @@
 name: elon_mosque_0
 family: mars
 size: [48, 48]
-description: ""
+description: >
+  ELON MOSQUE, the smug mogul who owns the planet: a tan-faced man in
+  dark sunglasses and a black hoodie stamped with a gold dollar-sign,
+  standing front-facing with a self-satisfied posture. The level boss
+  and the game's first fleeing unique.
 palette:
   N: "#303444"
   O: "#1a1c2c"

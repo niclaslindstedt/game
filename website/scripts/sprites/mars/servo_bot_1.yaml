@@ -1,7 +1,11 @@
 name: servo_bot_1
 family: mars
 size: [16, 16]
-description: ""
+description: >
+  SERVO UNIT: a boxy grey humanoid staff droid, front-facing, with a
+  small visored head lit cyan on a short neck stalk, a panel-lit torso,
+  two stubby arms, and a treaded/footed base instead of legs. This walk
+  frame catches the treaded base shifted one step to the side, mid-roll.
 palette:
   D: "#808698"
   F: "#a2a4ad"

@@ -1,7 +1,13 @@
 name: hero_1
 family: hero
 size: [16, 16]
-description: ""
+description: >
+  A front-facing everyman in a plain white t-shirt, blue jeans, and brown
+  shoes, with dark brown hair, a peach face, and arms at his sides — a
+  short, stocky top-down hero doll (the unsuited paper-doll base that worn
+  armor and a held weapon draw over). This is the walk-stride frame: his two
+  legs are planted wide apart, feet spread to the outer edges mid-step. 16x16
+  flat 16-bit pixel art.
 palette:
   E: "#5d4028"
   O: "#1a1c2c"

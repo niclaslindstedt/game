@@ -1,7 +1,9 @@
 name: icon_brochure
 family: icons
 size: [12, 12]
-description: ""
+description: >
+  A folded glossy tri-fold theme-park brochure, tan cover with a small
+  logo and colored fold panels; the EASTWORLD tourist pamphlet.
 palette:
   O: "#1a1c2c"
   W: "#f4f4f4"

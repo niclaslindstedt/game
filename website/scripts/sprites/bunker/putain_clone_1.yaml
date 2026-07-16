@@ -1,7 +1,10 @@
 name: putain_clone_1
 family: bunker
 size: [24, 24]
-description: ""
+description: >
+  A pale, balding front-facing man in a white bathrobe with red trim and sash,
+  hands up in a judo stance — a stocky figure; caught mid-lunge with the legs
+  shifted from the set stance.
 palette:
   K: "#0c0b12"
   O: "#1a1c2c"

@@ -1,7 +1,9 @@
 name: icon_pass
 family: icons
 size: [12, 12]
-description: ""
+description: >
+  A white laminated all-access badge card with an orange stripe and a
+  scrawled signature line; the autographed VIP pass.
 palette:
   N: "#303444"
   O: "#1a1c2c"

@@ -1,7 +1,13 @@
 name: hero_couch_1
 family: prelude
 size: [16, 24]
-description: ""
+description: >
+  A man seated on a couch for movie night, drawn 16×24 with a tall transparent
+  footer that lifts him onto the cushion while his anchor stays at floor level:
+  a plain white t-shirt, blue jeans, short dark-brown hair, turned to face left
+  toward the TV. Mid-idle-animation, near-identical to the rest of the cycle
+  apart from a tiny settle of the head and shoulders. This is the hero, the man
+  who never gets up.
 palette:
   O: "#1a1c2c"
   W: "#f4f4f4"

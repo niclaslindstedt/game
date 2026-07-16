@@ -1,7 +1,10 @@
 name: vacuum_bot_0
 family: bunker
 size: [16, 16]
-description: ""
+description: >
+  Armed housekeeping: a low, flat grey robot-vacuum disc with a glowing cyan
+  sensor strip along its front rim — a fast swarm unit that keeps the marble
+  spotless and the intruders bleeding.
 palette:
   K: "#0c0b12"
   O: "#1a1c2c"

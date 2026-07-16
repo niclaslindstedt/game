@@ -1,7 +1,12 @@
 name: peter_seal_1
 family: mars
 size: [24, 24]
-description: ""
+description: >
+  PETER SEAL: a pale, gaunt, balding man with a faintly vampiric
+  stillness, front-facing in a dark navy suit with a teal-and-cyan
+  patterned tie down the chest and a white shirt collar. This idle frame
+  catches a slight weight shift, his two dark trouser legs planted a
+  touch wider apart than his resting stance.
 palette:
   C: "#529ea8"
   N: "#303444"

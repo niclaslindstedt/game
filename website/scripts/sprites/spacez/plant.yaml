@@ -1,7 +1,9 @@
 name: plant
 family: spacez
 size: [12, 12]
-description: ""
+description: >
+  A leafy green potted office plant, a small bushy ficus in a dark pot;
+  lobby greenery decor.
 palette:
   G: "#4a7a3e"
   O: "#1a1c2c"

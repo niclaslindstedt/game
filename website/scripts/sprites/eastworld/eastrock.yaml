@@ -1,7 +1,9 @@
 name: eastrock
 family: eastworld
 size: [16, 16]
-description: ""
+description: >
+  A desert boulder — a rounded sandy-tan rock with a darker shaded
+  underside; solid cover that stops sight, shots, and blasts.
 palette:
   O: "#1a1c2c"
   Z: "#b08e60"

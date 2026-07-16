@@ -1,7 +1,9 @@
 name: icon_prairie_iron
 family: icons
 size: [12, 12]
-description: ""
+description: >
+  A frontier revolver in profile with a warm brown grip and a metal barrel
+  glinting orange; a host's live-round stage prop.
 palette:
   B: "#92643e"
   N: "#303444"

@@ -1,7 +1,9 @@
 name: db_shard
 family: bunker
 size: [8, 8]
-description: ""
+description: >
+  A small spinning red-and-white data crystal (8x8) — Larry Allison's ranged
+  projectile, a razor-edged database shard fired as his thrown "row."
 palette:
   C: "#d23c42"
   O: "#1a1c2c"

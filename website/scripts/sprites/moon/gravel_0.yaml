@@ -1,7 +1,8 @@
 name: gravel_0
 family: moon
 size: [16, 16]
-description: ""
+description: >
+  A clustered patch of grey lunar gravel scattered across the regolith ground, a flat top-down texture of small pebbles and dust flecks; a decorative floor variant, not an obstacle.
 palette:
   F: "#a2a4ad"
   d: "#676972"

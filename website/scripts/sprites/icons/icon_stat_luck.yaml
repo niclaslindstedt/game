@@ -1,7 +1,8 @@
 name: icon_stat_luck
 family: icons
 size: [12, 12]
-description: ""
+description: >
+  A green four-leaf clover on a short stem; the LUCK stat glyph.
 palette:
   G: "#4a7a3e"
   O: "#1a1c2c"

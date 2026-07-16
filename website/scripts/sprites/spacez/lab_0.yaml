@@ -1,7 +1,9 @@
 name: lab_0
 family: spacez
 size: [16, 16]
-description: ""
+description: >
+  The common ground tile of SPACEZ HQ: a polished light-grey lab floor panel
+  with faint seams and specks.
 palette:
   T: "#c0c5cf"
   s: "#818690"

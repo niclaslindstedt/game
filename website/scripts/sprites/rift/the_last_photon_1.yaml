@@ -1,7 +1,11 @@
 name: the_last_photon_1
 family: rift
 size: [16, 16]
-description: ""
+description: >
+  A white-hot jagged starburst of light with a spiky radiating corona, its body
+  shot through with warm orange-gold sparks, loose flecks flung off around it.
+  Here the corona has flared to its alternate flicker, the spikes shifted. One of
+  a kind, blindingly fast, reads as pure incandescence given a shape.
 palette:
   O: "#1a1c2c"
   W: "#f4f4f4"

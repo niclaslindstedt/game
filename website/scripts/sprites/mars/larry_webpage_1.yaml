@@ -1,7 +1,12 @@
 name: larry_webpage_1
 family: mars
 size: [24, 24]
-description: ""
+description: >
+  LARRY WEBPAGE: a dark-haired man in a crisp all-white outfit crossed
+  by a vertical rainbow search-brand stripe (blue-red-yellow-blue) down
+  the center of the chest, standing front-facing. Clean, corporate,
+  smug. This idle frame catches a slight sway, his two grey trouser legs
+  planted a touch wider apart than his resting stance.
 palette:
   O: "#1a1c2c"
   W: "#f4f4f4"

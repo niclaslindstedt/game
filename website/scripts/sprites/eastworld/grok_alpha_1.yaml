@@ -1,7 +1,11 @@
 name: grok_alpha_1
 family: eastworld
 size: [24, 24]
-description: ""
+description: >
+  A slim front-facing dark humanoid android whose head is a glowing
+  cyan/turquoise square screen — a controller-class shooter that runs the
+  cowboy hosts and hides behind the rocks between shots. Mid-stride with its
+  legs braced wide apart.
 palette:
   N: "#3a3644"
   O: "#1a1c2c"

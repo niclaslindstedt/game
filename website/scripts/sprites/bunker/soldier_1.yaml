@@ -1,7 +1,10 @@
 name: soldier_1
 family: bunker
 size: [16, 16]
-description: ""
+description: >
+  A front-facing soldier in olive-green fatigues with darker webbing straps and
+  an amber muzzle-glint at his side, dark hair; caught mid-stride with the legs
+  shifted from the standing pose.
 palette:
   N: "#3a3846"
   O: "#1a1c2c"

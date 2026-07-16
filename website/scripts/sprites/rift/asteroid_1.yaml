@@ -1,7 +1,11 @@
 name: asteroid_1
 family: rift
 size: [16, 16]
-description: ""
+description: >
+  A chunky, roughly round grey space-boulder, lighter grey on the upper-left and
+  darker slate on the lower-right, its surface pocked with a few brown-black
+  craters. Here the craters sit rotated toward the right side, mid-tumble. Reads
+  as a plain hurtling meteor hazard.
 palette:
   E: "#5d4028"
   F: "#a2a4ad"

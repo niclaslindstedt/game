@@ -1,7 +1,10 @@
 name: sky_moon
 family: scenes
 size: [16, 16]
-description: ""
+description: >
+  The Moon as a distant 16×16 backdrop globe: a pale grey sphere pocked with
+  darker craters and a soft shaded rim. The destination that hangs in the
+  hero's window and waits ahead on the voyage.
 palette:
   F: "#a2a4ad"
   O: "#1a1c2c"

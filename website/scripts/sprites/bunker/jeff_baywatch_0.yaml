@@ -1,7 +1,10 @@
 name: jeff_baywatch_0
 family: bunker
 size: [24, 24]
-description: ""
+description: >
+  JEFF BAYWATCH (24x24), the delivery emperor retired to the gym: a bald,
+  jacked resident in a tight dark-grey tee and blue jeans, arms flexed out from
+  a barrel chest — the bunker's fastest, hardest-hitting resident.
 palette:
   K: "#0c0b12"
   N: "#3a3846"

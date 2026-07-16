@@ -1,7 +1,10 @@
 name: ice_agent_1
 family: bunker
 size: [16, 16]
-description: ""
+description: >
+  A broad front-facing ICE border agent in dark tactical gear marked with a
+  horizontal cyan "ICE" band across the chest, dark hair — a hard-hitting build;
+  caught mid-stride with the legs shifted from the standing pose.
 palette:
   K: "#0c0b12"
   N: "#3a3846"

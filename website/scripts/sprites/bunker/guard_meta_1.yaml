@@ -1,7 +1,11 @@
 name: guard_meta_1
 family: bunker
 size: [20, 20]
-description: ""
+description: >
+  A heavyset front-facing bodyguard in a matte-black suit with a white shirt, a
+  wall of a man with arms held out from his bulk, distinguished by a cyan tie
+  and collar patch; caught mid-stride with the legs shifted from the planted
+  stance. Mark Suckerberg's META SENTINEL detail.
 palette:
   K: "#0c0b12"
   O: "#1a1c2c"

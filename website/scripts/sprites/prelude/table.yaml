@@ -1,7 +1,10 @@
 name: table
 family: prelude
 size: [20, 10]
-description: ""
+description: >
+  A low wooden coffee table seen from the side, ~20×10 px: a flat brown top on
+  four short legs, flat 16-bit style. It sits in the gap between the couch and
+  the TV.
 palette:
   B: "#92643e"
   E: "#5d4028"

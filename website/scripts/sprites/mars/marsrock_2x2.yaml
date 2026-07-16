@@ -1,7 +1,10 @@
 name: marsrock_2x2
 family: mars
 size: [32, 32]
-description: ""
+description: >
+  A large oxidized boulder mass (2x2): a big rounded reddish-brown
+  Martian rock with darker cragged shadows, an impassable cover the
+  horde routes around.
 palette:
   O: "#1a1c2c"
   d: "#80482d"

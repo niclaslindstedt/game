@@ -1,7 +1,9 @@
 name: mars_0
 family: mars
 size: [16, 16]
-description: ""
+description: >
+  The base red-regolith ground tile: flat rusty-orange Martian dust with
+  faint darker speckle, the open terrain west of the colony dome.
 palette:
   d: "#80482d"
   t: "#b2643e"

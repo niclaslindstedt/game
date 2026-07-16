@@ -1,7 +1,10 @@
 name: void_1
 family: rift
 size: [16, 16]
-description: ""
+description: >
+  The rift's rare ground tile: dark-purple star-flecked void like the common
+  floor, accented with a single brighter pale star/glint to break the field.
+  Between-universes emptiness with an occasional highlight.
 palette:
   Z: "#2e2a4c"
   u: "#8c8cb6"

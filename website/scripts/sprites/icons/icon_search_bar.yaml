@@ -1,7 +1,10 @@
 name: icon_search_bar
 family: icons
 size: [12, 12]
-description: ""
+description: >
+  A slim chrome pole tipped with a small round magnifying lens over a
+  brown grip — a literal search bar swung as a melee pole; the crawler
+  weapon.
 palette:
   O: "#1a1c2c"
   j: "#4054bc"

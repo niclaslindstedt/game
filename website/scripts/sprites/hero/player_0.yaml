@@ -1,7 +1,13 @@
 name: player_0
 family: hero
 size: [16, 16]
-description: ""
+description: >
+  The hero in his EVA space suit: a front-facing astronaut in a white and
+  light-grey pressure suit, a rounded helmet with a gold sun-visor, grey gloves
+  and boots, and a small red indicator light on the chest, standing in a neutral
+  idle stance. This is the suited-body paper-doll base onto which the worn-armor
+  and held-weapon layers composite, so it stays a plain, layer-friendly hero
+  form. 16x16 flat 16-bit pixel art.
 palette:
   A: "#8d9196"
   O: "#1a1c2c"

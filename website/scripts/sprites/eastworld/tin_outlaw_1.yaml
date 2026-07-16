@@ -1,7 +1,11 @@
 name: tin_outlaw_1
 family: eastworld
 size: [16, 16]
-description: ""
+description: >
+  A top-down quick-draw bandit android — a lean cowboy robot in a brown hat
+  and bandana over a tan vest, a dark pistol at its side; fast, vicious, and
+  hard to pin. Mid draw-step on the alternate stride, near-identical to the
+  rest of the cycle.
 palette:
   A: "#8d9196"
   C: "#466096"

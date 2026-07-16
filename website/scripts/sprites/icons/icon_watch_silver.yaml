@@ -1,7 +1,9 @@
 name: icon_watch_silver
 family: icons
 size: [12, 12]
-description: ""
+description: >
+  A luxury silver wristwatch, a round steel case and band with a white
+  dial; a pure-valuable trophy timepiece.
 palette:
   A: "#8d9196"
   O: "#1a1c2c"

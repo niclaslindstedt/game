@@ -1,7 +1,9 @@
 name: icon_dialogue_off
 family: icons
 size: [16, 16]
-description: ""
+description: >
+  A white speech bubble crossed out by a bold red diagonal slash; the
+  mute-dialogue toggle glyph.
 palette:
   O: "#1a1c2c"
   W: "#f4f4f4"

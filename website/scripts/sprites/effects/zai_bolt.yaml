@@ -1,7 +1,10 @@
 name: zai_bolt
 family: effects
 size: [8, 8]
-description: ""
+description: >
+  Energy bolt fired by ZAI's Eastworld robots and the GROK controllers: a
+  four-pointed cyan-teal spark with a bright white core, the machine faction's
+  cold signature shot.
 palette:
   O: "#1a1c2c"
   Q: "#60f0d0"

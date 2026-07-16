@@ -1,7 +1,11 @@
 name: steven_seagull_1
 family: eastworld
 size: [24, 24]
-description: ""
+description: >
+  A broad front-facing man dressed all in black with a pale face and a dark
+  ponytail, holding a slow, heavy martial-arts guard — a deadly, glacial
+  movie-star co-founder. Shifted into his aikido redirect, feet planted wide
+  apart in a spread stance.
 palette:
   K: "#0c0b12"
   N: "#3a3644"

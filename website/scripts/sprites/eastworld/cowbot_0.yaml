@@ -1,7 +1,10 @@
 name: cowbot_0
 family: eastworld
 size: [16, 16]
-description: ""
+description: >
+  A cowboy-robot host, front-facing — a friendly greeter android in a wide
+  brown ten-gallon hat and red neckerchief over a dark metal body;
+  hospitality subroutines swapped for a grudge. The fodder rank.
 palette:
   A: "#8d9196"
   D: "#5c3e28"

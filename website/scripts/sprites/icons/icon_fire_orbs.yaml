@@ -1,7 +1,9 @@
 name: icon_fire_orbs
 family: icons
 size: [12, 12]
-description: ""
+description: >
+  Three small orbiting fireballs arranged around a common center, each a
+  bright orange flame with a hot core; a spinning-fire powerup pickup.
 palette:
   O: "#1a1c2c"
   Y: "#ffe3b6"

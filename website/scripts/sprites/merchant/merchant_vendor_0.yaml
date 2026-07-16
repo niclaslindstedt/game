@@ -1,7 +1,11 @@
 name: merchant_vendor_0
 family: merchant
 size: [16, 16]
-description: ""
+description: >
+  The merchant in his first appearance: a SpaceZ vending-machine restocker,
+  front-facing, in a blue ball cap and blue coveralls/overalls with a lighter
+  work shirt underneath. An ordinary working stiff who happens to sell gear on
+  the locked-down night shift.
 palette:
   E: "#5d4028"
   J: "#2d3b84"

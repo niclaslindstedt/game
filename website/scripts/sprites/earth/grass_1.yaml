@@ -1,7 +1,13 @@
 name: grass_1
 family: earth
 size: [16, 16]
-description: ""
+description: >
+  A seamless top-down ground tile of mid-green grass, speckled all over with
+  slightly lighter and darker green blades and a few small brown dirt flecks
+  for texture. Near the lower-left edge sits a small piece of dropped litter —
+  a short white-and-amber scrap, like a discarded wrapper or cigarette butt —
+  so the field reads as lived-in rather than pristine. 16x16 flat 16-bit pixel
+  art.
 palette:
   D: "#685438"
   G: "#4a7a3e"

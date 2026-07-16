@@ -1,7 +1,11 @@
 name: wall_combat_knife
 family: prelude
 size: [10, 22]
-description: ""
+description: >
+  A military combat knife mounted point-down on the living-room wall, ~10×22
+  px: a grey steel blade with a dark wrapped handle and a small guard, hung
+  vertically on a mount. The HARD-difficulty starting weapon the hero takes off
+  the wall.
 palette:
   N: "#303444"
   O: "#1a1c2c"

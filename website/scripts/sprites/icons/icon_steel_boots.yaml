@@ -1,7 +1,9 @@
 name: icon_steel_boots
 family: icons
 size: [12, 12]
-description: ""
+description: >
+  A pair of dark steel-toe work boots with reinforced caps drawn side by
+  side; heavy HQ footwear.
 palette:
   O: "#1a1c2c"
   k: "#342c26"

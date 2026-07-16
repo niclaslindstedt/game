@@ -1,7 +1,10 @@
 name: amelia_earhart_0
 family: rift
 size: [24, 24]
-description: ""
+description: >
+  AMELIA EARHART, the lost aviatrix: a figure in a brown leather flight
+  jacket over trousers, short tousled hair, a pale scarf, brandishing a blade
+  in one hand. Reads as a 1930s pilot who never stopped flying.
 palette:
   B: "#92643e"
   E: "#5d4028"

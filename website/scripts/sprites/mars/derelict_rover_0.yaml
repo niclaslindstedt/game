@@ -1,7 +1,11 @@
 name: derelict_rover_0
 family: mars
 size: [16, 16]
-description: ""
+description: >
+  DERELICT ROVER, the mission that lost contact decades ago and still
+  crawls on its last order: a boxed camera pod on a low wheeled chassis,
+  all of it oxidized rust-brown and pitted with a small reddish sensor
+  on top. Same rover silhouette as the scouts but corroded to the axles.
 palette:
   B: "#92643e"
   E: "#5d4028"

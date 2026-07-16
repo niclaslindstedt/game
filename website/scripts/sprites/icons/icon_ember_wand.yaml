@@ -1,7 +1,9 @@
 name: icon_ember_wand
 family: icons
 size: [12, 12]
-description: ""
+description: >
+  A knotted dark-wood wand held diagonally, crowned at the tip with a
+  live red-orange flame; the rift's classic fire caster.
 palette:
   B: "#92643e"
   E: "#5d4028"

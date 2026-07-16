@@ -1,7 +1,10 @@
 name: medkit_light
 family: effects
 size: [12, 12]
-description: ""
+description: >
+  A small square white first-aid case with a bold red medical cross centered
+  on its face, bordered by a dull steel-grey inner trim and a near-black outer
+  frame. A modest low-tier health pickup.
 palette:
   O: "#1a1c2c"
   W: "#f4f4f4"

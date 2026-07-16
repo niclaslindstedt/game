@@ -1,7 +1,9 @@
 name: icon_blueprint
 family: icons
 size: [12, 12]
-description: ""
+description: >
+  A blue architectural blueprint sheet with white schematic lines and
+  bars; the SpaceZ Site T moonbase plans, engineering-drawing blue.
 palette:
   O: "#1a1c2c"
   W: "#f4f4f4"

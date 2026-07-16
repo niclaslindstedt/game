@@ -1,7 +1,11 @@
 name: unraveler_0
 family: rift
 size: [16, 16]
-description: ""
+description: >
+  A glitch in local reality: a flickering, unstable smear of magenta and
+  violet with cyan/pink chromatic-split fringing along its edges, like a
+  corrupted sprite mid-tear. Quick and hard to pin, it reads as reality
+  coming apart at the seam.
 palette:
   M: "#644696e6"
   O: "#1a1c2c"

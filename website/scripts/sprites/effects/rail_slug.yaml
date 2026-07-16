@@ -1,7 +1,10 @@
 name: rail_slug
 family: effects
 size: [8, 8]
-description: ""
+description: >
+  The MAGLEV REPEATER's round: a short horizontal silver-white streak/bar of
+  magnetically-driven metal, elongated along its travel so it reads as a
+  flat, fast maglev slug.
 palette:
   A: "#8d9196"
   O: "#1a1c2c"

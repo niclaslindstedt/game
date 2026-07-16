@@ -1,7 +1,11 @@
 name: gerald_depardieu_1
 family: eastworld
 size: [24, 24]
-description: ""
+description: >
+  An enormous front-facing man with the biggest body of any elite — a huge,
+  heavy-bellied, jowly figure in a dark maroon shirt and brown trousers,
+  moving at the speed of a long lunch. Reared back with his arms lifting away
+  from his sides, winding up an 'avalanche' belly-flop slam.
 palette:
   D: "#5c3e28"
   K: "#0c0b12"

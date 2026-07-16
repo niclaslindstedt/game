@@ -1,7 +1,10 @@
 name: optimusk_0
 family: spacez
 size: [20, 20]
-description: ""
+description: >
+  OPTIMUSK, the humanoid service robot SpaceZ rolled out to replace the
+  night shift: a white android with a smooth rounded head and torso, a
+  glowing blue eye-strip and blocky limbs, front-facing.
 palette:
   O: "#1a1c2c"
   W: "#f4f4f4"

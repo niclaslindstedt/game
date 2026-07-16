@@ -1,7 +1,10 @@
 name: janitor_0
 family: spacez
 size: [24, 24]
-description: ""
+description: >
+  THE JANITOR, thirty years mopping this lab: a weathered older man in grey
+  coveralls gripping a mop, a yellow mop-bucket at his feet, front-facing
+  and stooped.
 palette:
   B: "#92643e"
   H: "#9e8b2d"

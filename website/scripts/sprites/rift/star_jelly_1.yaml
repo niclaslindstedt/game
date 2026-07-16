@@ -1,7 +1,11 @@
 name: star_jelly_1
 family: rift
 size: [16, 16]
-description: ""
+description: >
+  A translucent teal-and-cyan jellyfish drifting through the void: a glowing
+  luminous dome, brightest white-cyan at its crown, above four thin trailing
+  wispy tendrils fading to violet at the tips. Here the tendrils are curled up on
+  the alternate pulse of its drift. Faintly see-through, it phases through solids.
 palette:
   M: "#644696e6"
   O: "#1a1c2c"

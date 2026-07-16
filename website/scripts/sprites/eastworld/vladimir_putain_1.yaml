@@ -1,7 +1,11 @@
 name: vladimir_putain_1
 family: eastworld
 size: [24, 24]
-description: ""
+description: >
+  A front-facing man with a pale, expressionless face and dark hair, bare-
+  armed in a blue tracksuit over a red top — the park's dictator-owner in a
+  judo fighter's stance. Winding up his telegraphed charge, legs planted in a
+  wide, spread stance.
 palette:
   C: "#466096"
   K: "#0c0b12"

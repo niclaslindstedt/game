@@ -1,7 +1,10 @@
 name: glove
 family: effects
 size: [16, 16]
-description: ""
+description: >
+  The menu pointer cursor: a white pointing-hand/glove glyph with a dark
+  outline (index finger extended), the retro click-hand used to navigate the
+  UI screens.
 palette:
   O: "#1a1c2c"
   W: "#f4f4f4"

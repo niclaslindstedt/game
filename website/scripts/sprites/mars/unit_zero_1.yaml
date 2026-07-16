@@ -1,7 +1,12 @@
 name: unit_zero_1
 family: mars
 size: [16, 16]
-description: ""
+description: >
+  UNIT ZERO: a boxy humanoid staff droid cast in tarnished antique brass
+  and gold, front-facing, with a gold crest on its head, a single lit
+  yellow eye in a visored face, two stubby arms, and a grey treaded base
+  instead of legs. Old firmware, older grudge. This idle frame catches
+  the treaded base shifted one step to the side, mid-roll.
 palette:
   D: "#808698"
   O: "#1a1c2c"

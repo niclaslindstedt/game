@@ -1,7 +1,11 @@
 name: employee_of_the_month_1
 family: spacez
 size: [16, 16]
-description: ""
+description: >
+  EMPLOYEE OF THE MONTH: a smug beige-clad office worker standing proud with
+  his chest puffed out and a gleaming polished gold badge on his chest,
+  front-facing. Caught mid-stride, his legs planted wide apart in a walking
+  step.
 palette:
   O: "#1a1c2c"
   W: "#f4f4f4"

@@ -1,7 +1,10 @@
 name: ship_fire_0
 family: scenes
 size: [24, 32]
-description: ""
+description: >
+  The upright garage rocket at ignition, 24×32 px: the same slim grey-white
+  hull with portholes and fins, now with a bright yellow-orange engine flame
+  and exhaust erupting from its base as it fires up on the pad.
 palette:
   A: "#8d9196"
   O: "#1a1c2c"

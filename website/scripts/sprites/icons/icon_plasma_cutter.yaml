@@ -1,7 +1,9 @@
 name: icon_plasma_cutter
 family: icons
 size: [12, 12]
-description: ""
+description: >
+  A dark handle firing a narrow blue-white plasma lance, held like a short
+  spear; a cleanroom cutting tool rated for rocket hulls.
 palette:
   O: "#1a1c2c"
   W: "#f4f4f4"

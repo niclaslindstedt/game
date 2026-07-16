@@ -1,7 +1,10 @@
 name: map_boss
 family: markers
 size: [12, 12]
-description: ""
+description: >
+  Map marker for a boss location: a bold white skull glyph (hollow eye
+  sockets, blocky teeth) on a dark rounded tile, reading instantly as
+  "danger — boss here" at minimap scale.
 palette:
   O: "#1a1c2c"
   X: "#e6e8ee"

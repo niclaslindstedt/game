@@ -1,7 +1,11 @@
 name: wall_medieval_sword
 family: prelude
 size: [10, 22]
-description: ""
+description: >
+  An old medieval longsword mounted point-down on the living-room wall, ~10×22
+  px: a grey steel blade with a fuller, a straight crossguard, a wrapped brown
+  grip, and a round pommel. The MEDIUM-difficulty starting weapon — "the old
+  sword off the wall."
 palette:
   O: "#1a1c2c"
   V: "#9095a5"

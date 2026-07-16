@@ -1,7 +1,10 @@
 name: drink
 family: effects
 size: [12, 12]
-description: ""
+description: >
+  The stamina/energy-drink pickup: a green can or bottle with a metal top and
+  a bright orange-yellow liquid glint, reading as a fizzy energy drink that
+  restores stamina — a nod to the chips-and-soda run that started it all.
 palette:
   G: "#4a7a3e"
   O: "#1a1c2c"

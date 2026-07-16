@@ -1,7 +1,8 @@
 name: lander
 family: moon
 size: [32, 32]
-description: ""
+description: >
+  The abandoned Apollo lunar module at the landing site: a squat descent stage wrapped in gold foil on splayed spider legs, a pale-white upper hull; the hero's start-point landmark on the dust.
 palette:
   A: "#8d9196"
   O: "#1a1c2c"

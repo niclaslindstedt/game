@@ -1,7 +1,9 @@
 name: icon_slot_charm
 family: icons
 size: [12, 12]
-description: ""
+description: >
+  A small flat-grey four-leaf clover silhouette glyph on a dark rounded
+  tile; the charm-slot marker.
 palette:
   O: "#1a1c2c"
   y: "#ffb02e"

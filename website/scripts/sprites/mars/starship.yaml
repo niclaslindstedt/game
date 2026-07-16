@@ -1,7 +1,10 @@
 name: starship
 family: mars
 size: [24, 32]
-description: ""
+description: >
+  The hero's parked ship at the landing site: a small upright white
+  rocket/shuttle with a pointed nose, dark window ports down its
+  fuselage, and fins at the base.
 palette:
   A: "#8d9196"
   O: "#1a1c2c"

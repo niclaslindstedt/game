@@ -1,7 +1,9 @@
 name: cable
 family: spacez
 size: [14, 5]
-description: ""
+description: >
+  A loose black power/data cable coiled and snaking across the polished lab
+  floor, a small connector at one end; low flat ground decor.
 palette:
   b: "#3f4553"
 grid: |

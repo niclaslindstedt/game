@@ -1,7 +1,10 @@
 name: blood_1
 family: effects
 size: [12, 12]
-description: ""
+description: >
+  A gore spatter: small bright-red blood droplets scattered in a rough ring
+  flung outward from a central impact point, on a transparent background.
+  Reads as the moment a wound bursts and the blood sprays apart.
 palette:
   r: "#d83a3a"
 grid: |

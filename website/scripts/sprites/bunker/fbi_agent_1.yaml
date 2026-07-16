@@ -1,7 +1,10 @@
 name: fbi_agent_1
 family: bunker
 size: [16, 16]
-description: ""
+description: >
+  A lean front-facing FBI agent in a dark navy windbreaker over a white shirt,
+  with a bright amber-gold accent stripe across the chest and dark hair; caught
+  mid-stride with the legs shifted from the standing pose.
 palette:
   J: "#2d3b84"
   K: "#0c0b12"

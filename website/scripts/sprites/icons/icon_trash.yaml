@@ -1,7 +1,8 @@
 name: icon_trash
 family: icons
 size: [12, 12]
-description: ""
+description: >
+  A grey ribbed trash can with a lid; the discard/delete marker.
 palette:
   O: "#1a1c2c"
   V: "#9095a5"

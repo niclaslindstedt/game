@@ -1,7 +1,9 @@
 name: icon_golden_stapler
 family: icons
 size: [12, 12]
-description: ""
+description: >
+  A gleaming gold office stapler in profile; a CEO's desk ornament that
+  somehow fires staples — precious and absurd.
 palette:
   O: "#1a1c2c"
   o: "#d6a842"

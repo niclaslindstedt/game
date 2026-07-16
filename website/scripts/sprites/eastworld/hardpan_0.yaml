@@ -1,7 +1,9 @@
 name: hardpan_0
 family: eastworld
 size: [16, 16]
-description: ""
+description: >
+  Sun-baked desert hardpan ground tile — flat, dusty tan-brown dirt, dry and
+  lightly cracked; the base floor tile of the western park.
 palette:
   Z: "#b08e60"
   u: "#e2c494"

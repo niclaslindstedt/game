@@ -1,7 +1,11 @@
 name: the_mole_1
 family: bunker
 size: [16, 16]
-description: ""
+description: >
+  A nondescript front-facing figure with dark hair in a deep-maroon coat banded
+  by a horizontal gold stripe across the chest; caught mid-stride with the legs
+  shifted from the standing pose, near-identical to the base frame at sprite
+  size.
 palette:
   D: "#602830"
   I: "#f6d074"

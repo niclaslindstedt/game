@@ -1,7 +1,10 @@
 name: icon_parachute
 family: rift
 size: [12, 12]
-description: ""
+description: >
+  Inventory icon for the GOLDEN PARACHUTE: a domed golden-yellow parachute
+  canopy with shroud lines gathering to a small dark payload beneath. A
+  satirical exec's escape, reads as a shining gold chute.
 palette:
   O: "#1a1c2c"
   W: "#f4f4f4"

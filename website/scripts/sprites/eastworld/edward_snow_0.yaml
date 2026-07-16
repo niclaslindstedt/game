@@ -1,7 +1,10 @@
 name: edward_snow_0
 family: eastworld
 size: [24, 24]
-description: ""
+description: >
+  EDWARD SNOW, the whistleblower in exile — a wary young man in a dark grey
+  hoodie clutching a glowing turquoise device (his dead man's switch),
+  watching everything; a ranged elite who fights from cover.
 palette:
   K: "#0c0b12"
   N: "#3a3644"

@@ -1,7 +1,9 @@
 name: icon_knights_helm
 family: icons
 size: [12, 12]
-description: ""
+description: >
+  A polished steel knight's helm with a hinged visor and a narrow eye
+  slot; a medieval close helm.
 palette:
   O: "#1a1c2c"
   V: "#9095a5"

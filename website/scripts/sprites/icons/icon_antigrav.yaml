@@ -1,7 +1,10 @@
 name: icon_antigrav
 family: icons
 size: [12, 12]
-description: ""
+description: >
+  A golden metal ring/torus hovering just above its own faint shadow, a
+  pale glow beneath it; a 1969 Tranquility sample that floats and points
+  at the sky.
 palette:
   O: "#1a1c2c"
   c: "#8ccdd7e1"

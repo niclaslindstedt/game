@@ -1,7 +1,9 @@
 name: icon_chaps
 family: icons
 size: [12, 12]
-description: ""
+description: >
+  Brown leather cowboy chaps with a scaly rattlesnake-skin pattern down
+  the legs; frontier legwear cut from robot rattlers.
 palette:
   B: "#92643e"
   D: "#b28e5c"

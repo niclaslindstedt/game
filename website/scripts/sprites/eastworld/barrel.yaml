@@ -1,7 +1,10 @@
 name: barrel
 family: eastworld
 size: [16, 16]
-description: ""
+description: >
+  A short wooden saloon barrel seen top-down — brown vertical staves bound
+  by darker hoop bands with a lighter lid on top; a hoppable piece of
+  frontier-town street furniture.
 palette:
   B: "#92643e"
   E: "#5d4028"

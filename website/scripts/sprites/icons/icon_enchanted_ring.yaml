@@ -1,7 +1,9 @@
 name: icon_enchanted_ring
 family: icons
 size: [12, 12]
-description: ""
+description: >
+  A gold band ring set with a glowing blue gem, a faint sparkle on the
+  metal; a single covetable enchanted ring.
 palette:
   O: "#1a1c2c"
   e: "#5ab4ff"

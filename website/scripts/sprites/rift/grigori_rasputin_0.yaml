@@ -1,7 +1,10 @@
 name: grigori_rasputin_0
 family: rift
 size: [24, 24]
-description: ""
+description: >
+  GRIGORI RASPUTIN, the unkillable mystic: a tall gaunt figure in a long dark
+  Orthodox cassock with rows of gold frog-braid clasps down the front, a pale
+  hollow-eyed face and a long black beard. Reads as a brooding mad monk.
 palette:
   A: "#8d9196"
   O: "#1a1c2c"

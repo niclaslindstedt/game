@@ -1,7 +1,10 @@
 name: icon_probe
 family: rift
 size: [12, 12]
-description: ""
+description: >
+  Inventory icon for the burnt ZAI PROBE: a scorched dark bell-shaped space
+  probe with an amber sensor beacon on top and a glowing magenta panel on its
+  body. Reads as a small charred piece of alien reconnaissance hardware.
 palette:
   O: "#1a1c2c"
   V: "#9095a5"

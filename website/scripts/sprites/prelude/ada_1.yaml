@@ -1,7 +1,12 @@
 name: ada_1
 family: prelude
 size: [16, 16]
-description: ""
+description: >
+  Top-down 16px pixel figure of a woman standing and facing forward: an
+  unzipped red jacket over a white shirt, blue jeans, and short dark-brown
+  hair, arms at her sides. Caught mid-stride of her walk cycle with the blue-
+  jeaned legs planted wide apart, so she reads as stepping forward. This is
+  Ada, the hero's girlfriend, heading out for chips and soda.
 palette:
   O: "#1a1c2c"
   W: "#f4f4f4"

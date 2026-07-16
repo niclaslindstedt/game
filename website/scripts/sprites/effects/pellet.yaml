@@ -1,7 +1,10 @@
 name: pellet
 family: effects
 size: [8, 8]
-description: ""
+description: >
+  Shotgun shot from the PUMP SHOTGUN and BLUNDERBUSS: a scatter of small
+  gold-brass pellets, a couple of tiny bright specks flying together so the
+  spread reads as buckshot.
 palette:
   O: "#1a1c2c"
   o: "#d6a842"

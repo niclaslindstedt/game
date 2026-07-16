@@ -1,7 +1,9 @@
 name: icon_leather_boots
 family: icons
 size: [12, 12]
-description: ""
+description: >
+  A pair of brown leather boots with darker soles; the hero's plain
+  everyday starting footwear.
 palette:
   O: "#1a1c2c"
   k: "#342c26"

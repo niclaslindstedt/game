@@ -1,7 +1,9 @@
 name: entrance
 family: spacez
 size: [32, 32]
-description: ""
+description: >
+  The HQ front entrance: a pair of automatic sliding glass doors in a metal
+  frame, faintly lit blue; the lobby landmark the hero walks in through.
 palette:
   O: "#1a1c2c"
   V: "#9095a5"

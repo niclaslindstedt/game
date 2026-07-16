@@ -1,7 +1,9 @@
 name: icon_class_ranged
 family: icons
 size: [12, 12]
-description: ""
+description: >
+  A weapon-class indicator glyph: an orange targeting reticle/crosshair,
+  reading instantly as "ranged" (DEX weapons).
 palette:
   Q: "#e0603a"
 grid: |

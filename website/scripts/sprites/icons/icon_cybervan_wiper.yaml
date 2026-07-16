@@ -1,7 +1,9 @@
 name: icon_cybervan_wiper
 family: icons
 size: [12, 12]
-description: ""
+description: >
+  A bent car windshield wiper blade pressed into service as a sword — a
+  thin dark rubber-and-metal strip, obviously improvised junk.
 palette:
   N: "#303444"
   O: "#1a1c2c"

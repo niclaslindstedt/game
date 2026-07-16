@@ -1,7 +1,10 @@
 name: cow_skull
 family: eastworld
 size: [12, 12]
-description: ""
+description: >
+  A bleached white cattle skull, front-facing — rounded cranium, two dark
+  empty eye sockets, and a pair of horns curving out to the sides; small
+  desert ground decor.
 palette:
   K: "#0c0b12"
   O: "#1a1c2c"

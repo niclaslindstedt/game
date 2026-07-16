@@ -1,7 +1,14 @@
 name: player_jump
 family: hero
 size: [16, 16]
-description: ""
+description: >
+  A front-facing astronaut in a bulky white and light-grey EVA space suit,
+  with a rounded helmet whose gold visor-slit glows amber, grey gloves and
+  boots, and a small red light on the chest — a short, stocky top-down hero
+  doll (the suited paper-doll base that worn armor and a held weapon draw
+  over). This is the airborne hop frame: both legs are pulled together and the
+  boots are tucked up close under him, clear of the ground in mid-jump. 16x16
+  flat 16-bit pixel art.
 palette:
   A: "#8d9196"
   O: "#1a1c2c"

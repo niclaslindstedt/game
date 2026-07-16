@@ -1,7 +1,11 @@
 name: door
 family: prelude
 size: [18, 30]
-description: ""
+description: >
+  The apartment's front door, ~18×30 px: a closed brown wooden door in a
+  lighter frame, with a small brass knob/handle on one side. It stands on the
+  far right of the living room — the door Ada walks out of and never comes
+  back through.
 palette:
   B: "#92643e"
   E: "#5d4028"

@@ -1,7 +1,9 @@
 name: icon_branding_iron
 family: icons
 size: [12, 12]
-description: ""
+description: >
+  A long dark iron rod tipped with a glowing plasma-hot brand head; a
+  frontier cattle brand searing white-orange at the business end.
 palette:
   B: "#92643e"
   O: "#1a1c2c"

@@ -1,7 +1,11 @@
 name: optimusk_prime_0
 family: mars
 size: [24, 24]
-description: ""
+description: >
+  OPTIMUSK PRIME, the robot foreman: a tall white-plated humanoid robot
+  standing a head above its line units, a gold crest/antenna on its
+  rounded head and a blue-lit panel on its broad chest, planted
+  self-satisfied on two legs. Reads as the boss of the machines.
 palette:
   O: "#1a1c2c"
   V: "#9095a5"

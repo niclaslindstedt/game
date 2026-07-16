@@ -1,7 +1,9 @@
 name: icon_treasure_map
 family: icons
 size: [20, 14]
-description: ""
+description: >
+  A tan rolled parchment map marked with a dashed route and a red X; a
+  treasure/objective map.
 palette:
   D: "#b28e5c"
   O: "#1a1c2c"

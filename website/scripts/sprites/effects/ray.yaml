@@ -1,7 +1,10 @@
 name: ray
 family: effects
 size: [8, 8]
-description: ""
+description: >
+  Laser bolt from the PROTOTYPE LASER and OVERCLOCKED LASER: a compact red
+  energy round with a bright white-hot core, reading as a searing laser
+  pulse.
 palette:
   O: "#1a1c2c"
   W: "#f4f4f4"

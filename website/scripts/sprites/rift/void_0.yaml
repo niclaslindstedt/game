@@ -1,7 +1,10 @@
 name: void_0
 family: rift
 size: [16, 16]
-description: ""
+description: >
+  The rift's ground tile: seamless dark-purple/near-black star-flecked nothing,
+  a few faint pinprick stars scattered on deep void. The floor that isn't
+  there — the common variant, reads as empty between-universes space.
 palette:
   Z: "#2e2a4c"
   u: "#8c8cb6"

@@ -1,7 +1,9 @@
 name: icon_sabatons
 family: icons
 size: [12, 12]
-description: ""
+description: >
+  A pair of grey articulated steel foot-plates, pointed armored sabatons
+  drawn side by side; medieval foot armor.
 palette:
   O: "#1a1c2c"
   V: "#9095a5"

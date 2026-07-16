@@ -1,7 +1,12 @@
 name: cowbot_1
 family: eastworld
 size: [16, 16]
-description: ""
+description: >
+  A front-facing cowboy-robot host in a wide brown ten-gallon hat and a red
+  neckerchief over a dark metal body — a hospitality greeter android with its
+  welcome subroutines swapped for a grudge, the horde's fodder rank. Mid-walk,
+  its feet swapped to the alternate stride, near-identical to the rest of the
+  cycle.
 palette:
   A: "#8d9196"
   D: "#5c3e28"

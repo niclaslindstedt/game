@@ -1,7 +1,13 @@
 name: ada_couch_1
 family: prelude
 size: [16, 24]
-description: ""
+description: >
+  A woman seated on a couch for movie night, drawn 16×24 with a tall
+  transparent lower half so the figure rides up onto the cushion while its
+  anchor stays at floor level: red jacket over a white shirt, blue jeans, short
+  dark-brown hair, turned to face left toward the TV. Mid-idle-animation, near-
+  identical to the rest of the cycle apart from a tiny settle of the head and
+  shoulders. This is Ada, the hero's girlfriend.
 palette:
   O: "#1a1c2c"
   W: "#f4f4f4"

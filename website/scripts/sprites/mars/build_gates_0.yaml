@@ -1,7 +1,11 @@
 name: build_gates_0
 family: mars
 size: [24, 24]
-description: ""
+description: >
+  BUILD GATES, the billionaire who wrote the colony's OS: a soft,
+  balding man with grey hair and glasses in a pale blue V-neck sweater,
+  standing front-facing with a mild bureaucratic slouch. Reads as a
+  genial software mogul.
 palette:
   O: "#1a1c2c"
   W: "#f4f4f4"

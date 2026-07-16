@@ -1,7 +1,11 @@
 name: elon_mosque_beach_1
 family: eastworld
 size: [48, 48]
-description: ""
+description: >
+  A shirtless, pale, pot-bellied tech mogul in side profile, wearing black
+  board shorts and a single gold wristwatch, jacket long gone — a cornered
+  billionaire run to ground after fleeing across universes. Mid-walk on the
+  alternate stride, one foot forward, the gold watch flashing.
 palette:
   K: "#0c0b12"
   N: "#3a3644"

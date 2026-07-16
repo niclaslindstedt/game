@@ -1,7 +1,12 @@
 name: graviton_1
 family: rift
 size: [20, 20]
-description: ""
+description: >
+  A small round collapsed star: a bright golden accretion ring around a
+  pure-black event-horizon core with a white pinprick of light in it, all
+  wrapped in a mottled violet halo. Here two lilac spark-dots sit at the lower-
+  left and upper-right of the halo, the glow rotated mid-pulse. Small and round
+  but reads as immensely, dangerously heavy.
 palette:
   K: "#0a0910"
   L: "#d4a5ec"

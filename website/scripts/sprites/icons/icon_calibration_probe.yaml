@@ -1,7 +1,10 @@
 name: icon_calibration_probe
 family: icons
 size: [12, 12]
-description: ""
+description: >
+  A plain grey debug blade/rod laid diagonally with hot-red markers at
+  its tip and base; a calibration tool, not a real weapon — the red
+  points mark where the blade starts and ends.
 palette:
   O: "#1a1c2c"
   R: "#ff5252"

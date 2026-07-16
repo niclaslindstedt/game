@@ -1,7 +1,11 @@
 name: edward_snow_1
 family: eastworld
 size: [24, 24]
-description: ""
+description: >
+  A wary front-facing young man with short brown hair in a dark grey hoodie,
+  clutching a small glowing turquoise device (a dead man's switch) in one hand
+  at his side — a whistleblower in exile, a ranged elite who fights from cover.
+  Caught mid-stride with his legs braced wide apart.
 palette:
   K: "#0c0b12"
   N: "#3a3644"

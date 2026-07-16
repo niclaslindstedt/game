@@ -1,7 +1,12 @@
 name: the_king_1
 family: rift
 size: [24, 24]
-description: ""
+description: >
+  A front-facing figure in a white rhinestone jumpsuit with a high gold-trimmed
+  collar and a gold sunburst on the chest, a dark pompadour and sideburns over a
+  pale face. Here he is caught mid hip-swing, the white legs staggered on the
+  alternate stride. Reads instantly as a rock-and-roll idol who never really
+  left the building.
 palette:
   K: "#0a0910"
   O: "#1a1c2c"

@@ -1,7 +1,10 @@
 name: muskrat_0
 family: spacez
 size: [48, 48]
-description: ""
+description: >
+  MUSKRAT the boss, a hulking mutant brown rat bloated from swallowing the
+  alien engine part: beady red eyes, oversized pink ears, buck teeth and a
+  long fleshy tail, hunched over a swollen glowing belly.
 palette:
   B: "#92643e"
   E: "#5d4028"

@@ -1,7 +1,9 @@
 name: icon_contrarian_dagger
 family: icons
 size: [12, 12]
-description: ""
+description: >
+  A slim letter-opener dagger laid diagonally, dark handle and a thin
+  teal-edged blade; short, fast, and pointed the wrong way on purpose.
 palette:
   C: "#529ea8"
   O: "#1a1c2c"

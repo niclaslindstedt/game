@@ -1,7 +1,10 @@
 name: staple
 family: effects
 size: [8, 8]
-description: ""
+description: >
+  The GOLDEN STAPLER's ammunition: a single bent metal staple, a small
+  squared-off silver/gold staple-shape tumbling through the air — an
+  office-supply projectile played for the joke.
 palette:
   O: "#1a1c2c"
   a: "#d6dce4"

@@ -1,7 +1,9 @@
 name: icon_swords
 family: icons
 size: [12, 12]
-description: ""
+description: >
+  Two crossed swords with pale blades and gold guards; an equip/compare
+  marker.
 palette:
   O: "#1a1c2c"
   V: "#9095a5"

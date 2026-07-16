@@ -1,7 +1,10 @@
 name: sky_earth
 family: scenes
 size: [16, 16]
-description: ""
+description: >
+  Earth as a distant 16×16 backdrop globe: a blue ocean sphere with green
+  continents and swirls of white cloud, a soft shaded rim. The home planet
+  shrinking behind the ship in the voyage cutscenes.
 palette:
   G: "#4a7a3e"
   O: "#1a1c2c"

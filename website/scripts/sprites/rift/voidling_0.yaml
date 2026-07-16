@@ -1,7 +1,10 @@
 name: voidling_0
 family: rift
 size: [16, 16]
-description: ""
+description: >
+  A small, ragged blob of hungry void-black rimmed in deep indigo, studded
+  with several pale-cyan pinprick eyes and glints; the rift's lowest fodder,
+  a formless scrap of dark with too many eyes.
 palette:
   K: "#0a0910"
   O: "#1a1c2c"

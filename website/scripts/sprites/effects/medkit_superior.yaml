@@ -1,7 +1,10 @@
 name: medkit_superior
 family: effects
 size: [12, 12]
-description: ""
+description: >
+  The best medkit grade: a white first-aid case with a red cross, framed in a
+  rich gold trim to mark it as the top-tier heal. Same cross silhouette,
+  graded up by its gold border.
 palette:
   O: "#1a1c2c"
   W: "#f4f4f4"

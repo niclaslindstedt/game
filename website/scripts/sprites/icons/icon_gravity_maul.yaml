@@ -1,7 +1,9 @@
 name: icon_gravity_maul
 family: icons
 size: [12, 12]
-description: ""
+description: >
+  A heavy black cube head on a short handle, edges rimmed with orange
+  gravitic glow; a maul so dense swinging it moves the ground.
 palette:
   B: "#92643e"
   N: "#303444"

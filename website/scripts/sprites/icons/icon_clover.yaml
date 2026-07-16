@@ -1,7 +1,9 @@
 name: icon_clover
 family: icons
 size: [12, 12]
-description: ""
+description: >
+  A bright green four-leaf clover, the four heart-shaped leaves fanned on
+  a short stem; a lucky charm.
 palette:
   G: "#4a7a3e"
   O: "#1a1c2c"

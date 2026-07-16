@@ -1,7 +1,9 @@
 name: icon_ada_jacket
 family: icons
 size: [12, 12]
-description: ""
+description: >
+  A ragged torn scrap of Ada's blue denim jacket, the mended zipper
+  still catching the light; a small blue rag of cloth snagged off a shard.
 palette:
   O: "#1a1c2c"
   V: "#9095a5"

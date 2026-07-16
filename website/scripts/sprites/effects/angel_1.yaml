@@ -1,7 +1,10 @@
 name: angel_1
 family: effects
 size: [24, 24]
-description: ""
+description: >
+  The mercy-drop guardian angel, wings-low frame: the same small white-robed
+  figure with a gold halo, wings swept down on the beat, so alternating with
+  angel_0 it flaps its way down to deliver the gift.
 palette:
   A: "#8d9196"
   O: "#1a1c2c"

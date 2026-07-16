@@ -1,7 +1,10 @@
 name: icon_mission_cap
 family: icons
 size: [12, 12]
-description: ""
+description: >
+  Ground-crew ball cap in faded khaki cotton with a curved brim and a
+  small round mission patch stitched on the front; a soft, unarmored
+  space-program lid.
 palette:
   D: "#b28e5c"
   O: "#1a1c2c"

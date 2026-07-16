@@ -1,7 +1,10 @@
 name: icon_tesla_coil
 family: rift
 size: [12, 12]
-description: ""
+description: >
+  Inventory icon for the TESLA COIL: a slim grey coil-wound tower on a dark
+  base, topped by a glowing amber-white electric bulb crackling with charge.
+  Reads instantly as Tesla's signature electrical device.
 palette:
   O: "#1a1c2c"
   Y: "#ffe3b6"

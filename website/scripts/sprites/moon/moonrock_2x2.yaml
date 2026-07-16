@@ -1,7 +1,8 @@
 name: moonrock_2x2
 family: moon
 size: [32, 32]
-description: ""
+description: >
+  A big two-by-two block of grey lunar moonrock, a chunky boulder mass that fully walls off sight, shots, and blast; cover against robots, phased through by the dead.
 palette:
   F: "#a2a4ad"
   O: "#1a1c2c"

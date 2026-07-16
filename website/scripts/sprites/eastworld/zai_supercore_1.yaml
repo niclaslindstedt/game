@@ -1,7 +1,12 @@
 name: zai_supercore_1
 family: eastworld
 size: [48, 48]
-description: ""
+description: >
+  A barn-sized dark mainframe cabinet, front-facing, with a single large
+  glowing turquoise lens-eye set in its face, ringed by rows of tiny turquoise
+  indicator lights along an electrified case — the immobile finale that
+  manufactures tin outlaws. Its lens-eye pupil contracts to a dark square on
+  this beat of its pulse.
 palette:
   K: "#0c0b12"
   N: "#3a3644"

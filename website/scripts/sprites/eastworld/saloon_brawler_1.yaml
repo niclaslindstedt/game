@@ -1,7 +1,11 @@
 name: saloon_brawler_1
 family: eastworld
 size: [16, 16]
-description: ""
+description: >
+  A front-facing bar-fight host android on a dark robotic body, wearing a red-
+  and-white vertically striped shirt with both grey fists raised out to its
+  sides — built to lose a punch-up convincingly, patched to win one. Its raised
+  fists are on the alternate swing, near-identical to the rest of the cycle.
 palette:
   A: "#8d9196"
   N: "#3a3644"

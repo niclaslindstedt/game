@@ -1,7 +1,9 @@
 name: house_4x3
 family: eastworld
 size: [64, 48]
-description: ""
+description: >
+  A frontier-town house — a larger brown timber building with plank siding,
+  warm-lit windows, and a central dark doorway; an impassable town obstacle.
 palette:
   B: "#92643e"
   E: "#5d4028"

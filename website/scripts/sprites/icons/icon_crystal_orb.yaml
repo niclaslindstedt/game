@@ -1,7 +1,9 @@
 name: icon_crystal_orb
 family: icons
 size: [12, 12]
-description: ""
+description: >
+  A glowing pale-blue crystal ball with an inner highlight, resting on a
+  small dark stand; a scrying orb that shows the blow before it lands.
 palette:
   O: "#1a1c2c"
   W: "#f4f4f4"

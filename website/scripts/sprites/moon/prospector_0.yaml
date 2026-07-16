@@ -1,7 +1,8 @@
 name: prospector_0
 family: moon
 size: [24, 23]
-description: ""
+description: >
+  THE PROSPECTOR, an elite: a pale spectral miner in a gold hardhat with a lamp, a pickaxe slung across his chest over suit straps; the claim-jumper who dug SpaceZ's secret far-side tunnels.
 palette:
   A: "#8d9196"
   E: "#5d4028"

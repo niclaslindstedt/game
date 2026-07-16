@@ -1,7 +1,10 @@
 name: servo_bot_0
 family: mars
 size: [16, 16]
-description: ""
+description: >
+  SERVO UNIT, the colony's staff robot: a boxy grey humanoid droid with
+  a small visored head, a panel-lit torso, two stubby arms and a
+  treaded/footed base. The base runs on these instead of workers.
 palette:
   D: "#808698"
   F: "#a2a4ad"

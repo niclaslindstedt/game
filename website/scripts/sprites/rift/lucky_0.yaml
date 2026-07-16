@@ -1,7 +1,10 @@
 name: lucky_0
 family: rift
 size: [24, 24]
-description: ""
+description: >
+  LUCKY, the missing leprechaun: a small round man in a green coat and tall
+  green hat, ginger beard, tiny and impish, with a glint of gold about him.
+  Reads at a glance as a fairy-tale leprechaun guarding his luck.
 palette:
   G: "#4a7a3e"
   O: "#1a1c2c"

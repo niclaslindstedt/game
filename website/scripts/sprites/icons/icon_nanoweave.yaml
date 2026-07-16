@@ -1,7 +1,9 @@
 name: icon_nanoweave
 family: icons
 size: [12, 12]
-description: ""
+description: >
+  A dark charcoal Mars chest plate laced with a lattice of tiny glowing
+  magenta weave-nodes; a seamless printed cuirass whose fibers shimmer.
 palette:
   N: "#303444"
   O: "#1a1c2c"

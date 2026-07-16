@@ -1,7 +1,9 @@
 name: icon_crown
 family: icons
 size: [12, 12]
-description: ""
+description: >
+  A golden five-point crown with small gem dots along the band; an
+  achievement badge marking a boss slain.
 palette:
   O: "#1a1c2c"
   W: "#f4f4f4"

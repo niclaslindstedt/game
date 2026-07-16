@@ -1,7 +1,11 @@
 name: lucky_1
 family: rift
 size: [24, 24]
-description: ""
+description: >
+  A small round front-facing man in a green coat and tall green hat with a gold
+  hatband, a bushy orange-ginger beard and a gold buckle, tiny and impish. Here
+  he is caught mid-jig, the little legs staggered on the alternate stride. Reads
+  at a glance as a fairy-tale leprechaun guarding his luck.
 palette:
   G: "#4a7a3e"
   O: "#1a1c2c"

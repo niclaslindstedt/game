@@ -1,7 +1,10 @@
 name: peter_seal_0
 family: mars
 size: [24, 24]
-description: ""
+description: >
+  PETER SEAL, the cold-blooded investor who tithes to the lizard gods: a
+  pale, gaunt, balding man in a dark navy suit, front-facing with a
+  faintly vampiric stillness.
 palette:
   C: "#529ea8"
   N: "#303444"

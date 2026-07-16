@@ -1,7 +1,10 @@
 name: map_well
 family: markers
 size: [12, 12]
-description: ""
+description: >
+  Map marker for a rift gravity well (black-hole hazard): a glowing violet
+  ring encircling a pitch-black void center, reading as a swirling pit that
+  drags you in — a warning pin shown only on the rift level.
 palette:
   Q: "#cebcfa"
   U: "#8a6ce0"

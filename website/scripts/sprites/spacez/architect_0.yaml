@@ -1,7 +1,12 @@
 name: architect_0
 family: spacez
 size: [24, 24]
-description: ""
+description: >
+  THE ARCHITECT, the hero's old engineering bench partner now heading the
+  superintelligence program: a composed man in a grey business-casual
+  blazer, glasses and pale face, front-facing. A small metal PASSAGE CHIP is
+  grafted into his temple, hinting at the man who cut a machine into his own
+  skull.
 palette:
   O: "#1a1c2c"
   V: "#9095a5"

@@ -1,7 +1,9 @@
 name: lab_1
 family: spacez
 size: [16, 16]
-description: ""
+description: >
+  The rare ground-tile variant: the same polished lab floor scuffed with a
+  few dark scratches and scuff marks.
 palette:
   T: "#c0c5cf"
   s: "#818690"

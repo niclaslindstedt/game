@@ -1,7 +1,9 @@
 name: vending
 family: spacez
 size: [16, 20]
-description: ""
+description: >
+  A red-and-chrome snack vending machine with a lit product window and coin
+  slot; a solid obstacle — the machines Ada was last seen at.
 palette:
   O: "#1a1c2c"
   V: "#9095a5"

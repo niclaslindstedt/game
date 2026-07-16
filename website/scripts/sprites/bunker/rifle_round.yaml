@@ -1,7 +1,9 @@
 name: rifle_round
 family: bunker
 size: [8, 8]
-description: ""
+description: >
+  A small bright brass rifle bullet in flight (8x8) with a short yellow tracer
+  streak — the SOLDIER's ranged round.
 palette:
   O: "#1a1c2c"
   w: "#c6c6c6"

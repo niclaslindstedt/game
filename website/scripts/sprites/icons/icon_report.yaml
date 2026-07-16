@@ -1,7 +1,9 @@
 name: icon_report
 family: icons
 size: [12, 12]
-description: ""
+description: >
+  A dark dashboard screen of horizontal status bars, most green with one
+  blinking red row; a live engagement report.
 palette:
   G: "#4a7a3e"
   O: "#1a1c2c"

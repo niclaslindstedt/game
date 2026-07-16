@@ -1,7 +1,9 @@
 name: icon_carafe
 family: icons
 size: [12, 12]
-description: ""
+description: >
+  A glass carafe half-full of dark red wine with a gold rim, catching a
+  highlight; a bottomless self-refilling decanter charm.
 palette:
   O: "#1a1c2c"
   W: "#f4f4f4"

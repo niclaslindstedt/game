@@ -1,7 +1,10 @@
 name: spark
 family: effects
 size: [8, 8]
-description: ""
+description: >
+  Magic bolt from the wands (HAIRY POTTER'S WAND, VOID WAND, PROMPT INJECTOR
+  and kin): a small four-pointed violet-magenta spark/star with a bright core,
+  reading as a crackle of cast energy.
 palette:
   L: "#d4a5ec"
   O: "#1a1c2c"

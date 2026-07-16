@@ -1,7 +1,9 @@
 name: desk
 family: spacez
 size: [20, 12]
-description: ""
+description: >
+  A grey office desk seen from above with a small dark monitor and keyboard
+  on top; a hop-over obstacle of the office floor.
 palette:
   O: "#1a1c2c"
   T: "#c0c5cf"

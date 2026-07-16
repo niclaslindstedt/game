@@ -1,7 +1,8 @@
 name: moonstruck_mourner_0
 family: moon
 size: [16, 16]
-description: ""
+description: >
+  MOONSTRUCK MOURNER, a rare: a pale-gold wisp-ghost with a long trailing tail, drifting the craters in a small grieving funeral procession; a mournful golden spectre.
 palette:
   O: "#1a1c2c"
   s: "#bea56eb9"

@@ -1,7 +1,10 @@
 name: steven_seagull_0
 family: eastworld
 size: [24, 24]
-description: ""
+description: >
+  STEVEN SEAGULL, the movie-star co-founder — a broad man dressed all in
+  black with a dark ponytail, standing in a slow, heavy ju-jutsu guard; pale
+  face, deadly and glacial.
 palette:
   K: "#0c0b12"
   N: "#3a3644"

@@ -1,7 +1,10 @@
 name: nebula_0
 family: rift
 size: [16, 16]
-description: ""
+description: >
+  A nebula patch tile clustered over the void floor: soft violet-and-magenta
+  wisps of glowing cloud pooling on the dark star-flecked ground where the
+  hallucination gathers. A seamless overlay of drifting purple gas.
 palette:
   d: "#503270"
   e: "#6c4696"

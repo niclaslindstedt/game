@@ -1,7 +1,8 @@
 name: moon_0
 family: moon
 size: [16, 16]
-description: ""
+description: >
+  The base lunar ground tile: flat grey regolith, faintly pocked and dusted, a seamless top-down surface that tiles across the moonscape.
 palette:
   F: "#a2a4ad"
   d: "#676972"

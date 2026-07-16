@@ -1,7 +1,10 @@
 name: map_you
 family: markers
 size: [12, 12]
-description: ""
+description: >
+  The hero's "you are here" pin: a bright teal/mint location teardrop with a
+  dark round center, the one warm-cyan marker that stands out from the enemy
+  glyphs so the player instantly finds themselves on the map.
 palette:
   O: "#1a1c2c"
   s: "#befce6"

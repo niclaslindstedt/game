@@ -1,7 +1,9 @@
 name: icon_polymer_shell
 family: icons
 size: [12, 12]
-description: ""
+description: >
+  A smooth cream-white printed chest shell, a rounded torso plate with
+  faint panel seams; a light Mars colony cuirass.
 palette:
   N: "#303444"
   O: "#1a1c2c"

@@ -1,7 +1,9 @@
 name: icon_lunar_overshoes
 family: icons
 size: [12, 12]
-description: ""
+description: >
+  A pair of pale bulky overshoe galoshes with ribbed soles; rubber
+  moon-walking overboots.
 palette:
   F: "#a2a4ad"
   O: "#1a1c2c"

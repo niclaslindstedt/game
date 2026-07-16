@@ -1,7 +1,10 @@
 name: map_story
 family: markers
 size: [12, 12]
-description: ""
+description: >
+  Map marker for a story/lore point of interest: a gold document or page glyph
+  with dark horizontal text lines on it, reading as "something to read here"
+  at minimap scale.
 palette:
   O: "#1a1c2c"
   d: "#ffd55a"

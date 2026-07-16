@@ -1,7 +1,10 @@
 name: wandering_tourist_1
 family: spacez
 size: [16, 16]
-description: ""
+description: >
+  A WANDERING TOURIST: a middle-aged man with blonde hair in a green jacket
+  over a purple shirt, a camera at his neck and blue shoes, front-facing.
+  Caught mid-stride, his legs planted wide apart in a walking step.
 palette:
   B: "#92643e"
   G: "#4a7a3e"

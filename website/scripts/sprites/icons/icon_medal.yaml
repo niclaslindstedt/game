@@ -1,7 +1,9 @@
 name: icon_medal
 family: icons
 size: [12, 12]
-description: ""
+description: >
+  A gold circular medal hanging from a short striped ribbon; a level-
+  milestone achievement badge.
 palette:
   O: "#1a1c2c"
   W: "#f4f4f4"

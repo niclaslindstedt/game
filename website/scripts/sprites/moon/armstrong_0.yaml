@@ -1,7 +1,8 @@
 name: armstrong_0
 family: moon
 size: [48, 48]
-description: ""
+description: >
+  ARMSTRONG, the boss: a giant (48x48) translucent pale-green astronaut ghost looming over the field, broad round body on stubby limbs, two large dark hollow eyes, a gold-and-red chest control panel; the first man on the moon as a sorrowful colossus guarding his flag.
 palette:
   N: "#73a087f0"
   O: "#1a1c2c"

@@ -1,7 +1,13 @@
 name: slime_0
 family: earth
 size: [16, 16]
-description: ""
+description: >
+  A basic slime critter: a front-facing rounded purple blob, domed and
+  gelatinous, with a lighter lilac highlight across the top and a darker plum
+  base, and a dark outline. It has two small dark dot eyes and a little open
+  mouth, giving it a dopey, harmless read. This is the tall/standing frame of
+  its hop — the body sits upright and bunched, taller than it is wide, resting
+  on the ground. 16x16 flat 16-bit pixel art.
 palette:
   L: "#d4a5ec"
   O: "#1a1c2c"

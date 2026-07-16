@@ -1,7 +1,9 @@
 name: icon_micro_vest
 family: icons
 size: [12, 12]
-description: ""
+description: >
+  A layered white-and-silver micrometeoroid vest, quilted whipple-shield
+  panels stacked like the landers; padded spacefaring body armor.
 palette:
   A: "#8d9196"
   O: "#1a1c2c"

@@ -1,7 +1,9 @@
 name: icon_ada_soda
 family: icons
 size: [12, 12]
-description: ""
+description: >
+  A crushed red-and-white soda can, dented and flattened, still beaded
+  cold; Ada's brand, taken from her mid-sip.
 palette:
   O: "#1a1c2c"
   V: "#9095a5"

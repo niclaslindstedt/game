@@ -1,7 +1,9 @@
 name: eastrock_1x2
 family: eastworld
 size: [16, 32]
-description: ""
+description: >
+  A tall desert boulder — a sandy-tan rock stacked taller than wide, shaded
+  down one side; mid-height cover in the rock garden.
 palette:
   O: "#1a1c2c"
   Z: "#b08e60"

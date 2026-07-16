@@ -1,7 +1,9 @@
 name: icon_surplus_carbine
 family: icons
 size: [12, 12]
-description: ""
+description: >
+  A long brown military-surplus carbine in profile with a wood stock and
+  long barrel; the moon pool's longest reach.
 palette:
   O: "#1a1c2c"
   a: "#d6dce4"

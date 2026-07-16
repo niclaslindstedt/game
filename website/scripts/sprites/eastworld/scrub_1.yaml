@@ -1,7 +1,9 @@
 name: scrub_1
 family: eastworld
 size: [16, 16]
-description: ""
+description: >
+  Alternate dry-scrub patch — tan dirt with a slightly different scatter of
+  olive-green brush tufts; pairs with scrub_0 for variety.
 palette:
   d: "#665c34"
   e: "#8a7e46"

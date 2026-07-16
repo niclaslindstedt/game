@@ -1,7 +1,9 @@
 name: wagon
 family: eastworld
 size: [16, 16]
-description: ""
+description: >
+  A wooden buckboard wagon from above — a rectangular brown plank bed with
+  side rails and dark wheels showing beneath; hoppable street furniture.
 palette:
   B: "#92643e"
   E: "#5d4028"

@@ -1,7 +1,13 @@
 name: build_gates_1
 family: mars
 size: [24, 24]
-description: ""
+description: >
+  BUILD GATES: a soft, balding man with grey hair and round glasses,
+  wearing a pale blue V-neck sweater over a lighter shirt, standing
+  front-facing with a mild bureaucratic slouch and arms at his sides.
+  Reads as a genial software mogul. This idle frame catches a slight
+  bob, his two dark trouser legs planted a touch wider apart than his
+  resting stance.
 palette:
   O: "#1a1c2c"
   W: "#f4f4f4"

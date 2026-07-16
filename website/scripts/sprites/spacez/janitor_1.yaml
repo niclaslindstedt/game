@@ -1,7 +1,9 @@
 name: janitor_1
 family: spacez
 size: [24, 24]
-description: ""
+description: >
+  THE JANITOR in his mop-swing frame — the mop raised for his telegraphed
+  ground slam; grey coveralls, yellow bucket, weathered and worn.
 palette:
   B: "#92643e"
   H: "#9e8b2d"
