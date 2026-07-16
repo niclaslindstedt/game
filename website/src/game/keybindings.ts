@@ -25,7 +25,12 @@ export type BindableAction =
   | "pause"
   | "medkit"
   | "stamina"
-  | "repair";
+  | "mana"
+  | "repair"
+  | "spell1"
+  | "spell2"
+  | "spell3"
+  | "spell4";
 
 /** The live control scheme: one physical binding code per action. An empty
  * string means the action is unbound (a rebind cleared it off a key that got
@@ -50,7 +55,13 @@ export const DEFAULT_KEYBINDINGS: KeyBindings = {
   pause: "KeyP",
   medkit: "KeyC",
   stamina: "KeyX",
+  mana: "KeyZ",
   repair: "KeyV",
+  // The spell bar (four slots) — F/G/H/B cast slots 1-4.
+  spell1: "KeyF",
+  spell2: "KeyG",
+  spell3: "KeyH",
+  spell4: "KeyB",
 };
 
 /** The menu's row order (Quake-style: steering first, then the actions) with
@@ -90,9 +101,34 @@ export const KEYBIND_ROWS: {
     blurb: "DRINK A STAMINA POTION FROM THE CONSUMABLE DOCK",
   },
   {
+    action: "mana",
+    label: "USE MANA POTION",
+    blurb: "DRINK A BLUE GATORADE TO REFILL THE MANA POOL",
+  },
+  {
     action: "repair",
     label: "USE REPAIR KIT",
     blurb: "MEND EVERY WEAPON WITH A REPAIR KIT FROM THE DOCK",
+  },
+  {
+    action: "spell1",
+    label: "CAST SPELL 1",
+    blurb: "CAST THE SPELL IN THE FIRST SPELL-BAR SLOT",
+  },
+  {
+    action: "spell2",
+    label: "CAST SPELL 2",
+    blurb: "CAST THE SPELL IN THE SECOND SPELL-BAR SLOT",
+  },
+  {
+    action: "spell3",
+    label: "CAST SPELL 3",
+    blurb: "CAST THE SPELL IN THE THIRD SPELL-BAR SLOT",
+  },
+  {
+    action: "spell4",
+    label: "CAST SPELL 4",
+    blurb: "CAST THE SPELL IN THE FOURTH SPELL-BAR SLOT",
   },
 ];
 
@@ -121,7 +157,12 @@ const DISCRETE_ACTIONS: BindableAction[] = [
   "pause",
   "medkit",
   "stamina",
+  "mana",
   "repair",
+  "spell1",
+  "spell2",
+  "spell3",
+  "spell4",
 ];
 
 /** The steering vector a held binding code contributes, or null if the code

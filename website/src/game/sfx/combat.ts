@@ -6,7 +6,7 @@
 // band-shaped noise transient, with pitch dives and lowpass booms giving
 // kills and explosions their weight.
 
-import type { GameEvent } from "@game/core";
+import { spellDef, type GameEvent } from "@game/core";
 
 import type { Synth } from "@ui/lib/synth.ts";
 
@@ -248,6 +248,105 @@ export function playCombatSound(synth: Synth, event: GameEvent): boolean {
         durationMs: 150,
         volume: 0.03,
         delayMs: 15,
+      });
+      return true;
+
+    case "spellCast": {
+      // A cast: an arcane bloom shaped by the spell's school — a sharp zap for
+      // an attack, a big shimmering whump for AOE, a warm swelling chord for a
+      // defensive ward/heal. All get the echo tail so magic hangs in the air.
+      const school = spellDef(event.spellId).category;
+      if (school === "aoe") {
+        synth.noise({
+          durationMs: 200,
+          volume: 0.05,
+          filter: { type: "lowpass", frequency: 1600 },
+          echo: 0.3,
+        });
+        synth.tone({
+          type: "triangle",
+          from: 300,
+          to: 1100,
+          durationMs: 220,
+          volume: 0.045,
+          echo: 0.3,
+        });
+      } else if (school === "defense") {
+        synth.tone({
+          type: "sine",
+          from: 520,
+          to: 880,
+          durationMs: 260,
+          volume: 0.05,
+          echo: 0.35,
+          detuneCents: 6,
+        });
+        synth.tone({
+          type: "triangle",
+          from: 780,
+          to: 1320,
+          durationMs: 240,
+          volume: 0.03,
+          delayMs: 40,
+          echo: 0.3,
+        });
+      } else {
+        // attack: a crisp rising zap with a shimmer flick.
+        synth.tone({
+          type: "square",
+          from: 720,
+          to: 1500,
+          durationMs: 110,
+          volume: 0.045,
+          detuneCents: 8,
+          echo: 0.25,
+        });
+        synth.tone({
+          type: "sine",
+          from: 1900,
+          durationMs: 80,
+          volume: 0.02,
+          delayMs: 50,
+          echo: 0.3,
+        });
+      }
+      return true;
+    }
+
+    case "spellFizzled":
+      // A refused cast: a short, dull descending buzz — the pool is dry or the
+      // spell still cooling.
+      synth.tone({
+        type: "sawtooth",
+        from: 360,
+        to: 150,
+        durationMs: 130,
+        volume: 0.035,
+        filter: { type: "lowpass", frequency: 900 },
+      });
+      return true;
+
+    case "playerShielded":
+      // A ward snapping up: a warm rising swell with a glassy top.
+      synth.tone({
+        type: "sine",
+        from: 440,
+        to: 760,
+        durationMs: 240,
+        volume: 0.05,
+        echo: 0.3,
+      });
+      return true;
+
+    case "spellHealed":
+      // Arcane mending: a soft bright two-note lift, gentler than a medkit.
+      synth.tone({
+        type: "triangle",
+        from: 660,
+        to: 990,
+        durationMs: 200,
+        volume: 0.045,
+        echo: 0.25,
       });
       return true;
 

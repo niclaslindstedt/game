@@ -1,0 +1,28 @@
+name: spell_time_dilation
+family: icons
+size: [12, 12]
+description: >
+  The TIME DILATION spell icon — a arcane swirl glyph.
+subject:
+  kind: spell icon
+  features: a bold arcane-tinted swirl motif, centered and outlined
+  accent: arcane magic
+  flavor: the TIME DILATION cast-spell pictogram
+palette:
+  O: "#0c0e18" # dark outline
+  E: "#ff7bd5" # arcane bright
+  D: "#c0338f" # arcane deep
+  H: "#ffd6f0" # arcane highlight
+grid: |
+  ............
+  .....OO.....
+  ...OOHEOO...
+  ..OEOOOOEO..
+  .OEOOHEOO...
+  ..OOEOHOHO.O
+  .OHOHHHHEOOH
+  ..OOEOHEO.OO
+  .OEOOEHOOOEO
+  ..OOEOOOEOO.
+  ....OOHOO...
+  ......O.....

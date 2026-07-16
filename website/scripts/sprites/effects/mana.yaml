@@ -1,0 +1,30 @@
+name: mana
+family: effects
+size: [12, 12]
+description: >
+  The blue-gatorade mana potion pickup that refills the spell pool.
+subject:
+  kind: pickup
+  build: an upright blue sports bottle with a white sports cap and a bright cyan glowing liquid
+  accent: glowing cyan arcane liquid
+  flavor: a blue gatorade, the mana twin of the energy drink
+palette:
+  B: "#2f6fd0" # blue bottle body
+  O: "#1a1c2c" # dark outline
+  V: "#e6e8eb" # white sports cap
+  b: "#22406e" # deep bottle shade
+  y: "#79e0ff" # glowing cyan liquid
+  s: "#d6f6ff" # bright liquid glint
+grid: |
+  ....OOOO....
+  ....OVVO....
+  ...OVVVVO...
+  ..OVbbbbVO..
+  ..OBByyBBO..
+  ..OByysyBO..
+  ..OBysssBO..
+  ..OByyssBO..
+  ..OBByyBBO..
+  ..OBBBBBBO..
+  ..OOOOOOOO..
+  ............

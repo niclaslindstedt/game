@@ -1,0 +1,28 @@
+name: spell_renewal
+family: icons
+size: [12, 12]
+description: >
+  The RENEWAL spell icon — a holy cross glyph.
+subject:
+  kind: spell icon
+  features: a bold holy-tinted cross motif, centered and outlined
+  accent: holy magic
+  flavor: the RENEWAL cast-spell pictogram
+palette:
+  O: "#0c0e18" # dark outline
+  E: "#ffe08a" # holy bright
+  D: "#c9932f" # holy deep
+  H: "#fff6d0" # holy highlight
+grid: |
+  ............
+  ....OOO.....
+  ...OEEEO....
+  ..OOEHEOOO..
+  .OEEEHEEEEO.
+  .OEHHHHHHEO.
+  .OEEEHEEEEO.
+  ..OOEHEOOO..
+  ...OEHEO....
+  ...OEEEO....
+  ....OOO.....
+  ............

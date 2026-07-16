@@ -89,7 +89,11 @@ export function castSpell(state: GameState, slotIndex: number): boolean {
     return false;
   }
   if ((player.spellCooldowns[id] ?? 0) > 0) {
-    state.events.push({ type: "spellFizzled", spellId: id, reason: "cooldown" });
+    state.events.push({
+      type: "spellFizzled",
+      spellId: id,
+      reason: "cooldown",
+    });
     return false;
   }
   if (player.mana < def.manaCost) {

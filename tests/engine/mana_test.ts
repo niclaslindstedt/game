@@ -76,7 +76,8 @@ describe("mana regen (SPIRIT)", () => {
     state.player.manaRegenMs = 0;
     const rate = manaRegenPerSec(state);
     expect(rate).toBeCloseTo(
-      REGEN.manaBasePerSec + effectiveStat(state, "spirit") * REGEN.manaPerSpirit,
+      REGEN.manaBasePerSec +
+        effectiveStat(state, "spirit") * REGEN.manaPerSpirit,
     );
     stepRegen(state, 1, 1000);
     expect(state.player.mana).toBeCloseTo(rate);

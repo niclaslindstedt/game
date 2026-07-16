@@ -61,7 +61,13 @@ import {
   equipmentBaseName,
 } from "./defs/equipment.ts";
 import { gradeVariantIds } from "./defs/grades.ts";
-import { SPELL_STAT, spellsUnlockedBetween } from "./defs/spells.ts";
+import {
+  isSpellUnlocked,
+  spellDefs,
+  spellsUnlockedBetween,
+  SPELL_SLOTS,
+  SPELL_STAT,
+} from "./defs/spells.ts";
 import { difficultyDef, meetsMinDifficulty } from "./defs/difficulties.ts";
 import type { EnemyRole } from "./defs/enemies/index.ts";
 import { gateKeyIds, levelDef } from "./defs/levels/index.ts";
@@ -1611,6 +1617,72 @@ export function bankManaPotion(state: GameState): boolean {
 }
 
 /**
+ * Assign a spell to a HUD spell-bar slot (or clear it with `null`) — the
+ * long-press picker's commit. Refuses an out-of-range slot, an unknown spell,
+ * or one the hero's effective INTELLIGENCE doesn't yet unlock (the picker only
+ * offers unlocked spells, but the mutator re-checks). Assigning a spell already
+ * in another slot MOVES it (no duplicate slot). Returns whether the bar changed.
+ */
+export function setSpellSlot(
+  state: GameState,
+  slotIndex: number,
+  spellId: string | null,
+): boolean {
+  if (slotIndex < 0 || slotIndex >= SPELL_SLOTS) return false;
+  const slots = state.player.spellSlots;
+  if (spellId === null) {
+    if (slots[slotIndex] === null) return false;
+    slots[slotIndex] = null;
+    return true;
+  }
+  const def = spellDefs()[spellId];
+  if (!def) return false;
+  if (!isSpellUnlocked(def, effectiveStat(state, SPELL_STAT))) return false;
+  // Moving a spell already slotted elsewhere clears its old slot first.
+  for (let i = 0; i < slots.length; i++) {
+    if (i !== slotIndex && slots[i] === spellId) slots[i] = null;
+  }
+  slots[slotIndex] = spellId;
+  return true;
+}
+
+/**
+ * Auto-fill any EMPTY spell-bar slots with the hero's newest unlocked spells
+ * not already on the bar — called by the app when a fresh caster (or a loaded
+ * loadout with a short bar) has open slots, so the bar is never blank when
+ * spells are available. Fills highest-`minInt` first (the newest, strongest).
+ * Returns whether anything was placed.
+ */
+export function autofillSpellSlots(state: GameState): boolean {
+  const slots = state.player.spellSlots;
+  const effInt = effectiveStat(state, SPELL_STAT);
+  const onBar = new Set(slots.filter((s): s is string => s !== null));
+  const available = Object.values(spellDefs())
+    .filter((def) => isSpellUnlocked(def, effInt) && !onBar.has(def.id))
+    .sort((a, b) => b.minInt - a.minInt)
+    .map((def) => def.id);
+  let placed = false;
+  let cursor = 0;
+  for (let i = 0; i < slots.length && cursor < available.length; i++) {
+    if (slots[i] === null) {
+      slots[i] = available[cursor++] ?? null;
+      placed = true;
+    }
+  }
+  return placed;
+}
+
+/**
+ * Drain the next queued spell unlock (see `GameState.pendingSpellUnlocks`,
+ * filled by `allocateStat` when INT crosses a ×10 milestone) — returns its
+ * SPELL_DEFS id and removes it from the queue, or null when the queue is empty.
+ * The app calls this as the "SPELL UNLOCKED" modal is dismissed, one at a time.
+ */
+export function takeSpellUnlock(state: GameState): string | null {
+  return state.pendingSpellUnlocks.shift() ?? null;
+}
+
+/**
  * Spend one stacked mana potion to refill the spell pool. A no-op — returns
  * false, nothing consumed — with none held or the pool already full
  * (`restoreMana`), so a mistap keeps the potion. Emits `manaPotionUsed`.
@@ -1873,12 +1945,7 @@ export function lowDurabilityDesperation(state: GameState): number {
  * the low-durability repair kit, the empty-sprint energy drink, the
  * packed-field screen-nuke, and the low-health plated-armor pull. */
 export type MercyRescue =
-  | "medkit"
-  | "repair"
-  | "drink"
-  | "mana"
-  | "bomb"
-  | "armor";
+  "medkit" | "repair" | "drink" | "mana" | "bomb" | "armor";
 
 /** Whether a ground item answers the given mercy signal. */
 function answersMercy(item: Item, rescue: MercyRescue): boolean {

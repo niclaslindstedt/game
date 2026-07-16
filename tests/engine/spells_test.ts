@@ -63,9 +63,7 @@ describe("unlock gating", () => {
     expect(at55).toContain("arc_bolt");
     expect(at55).toContain("gravitic_pulse"); // minInt 50
     expect(at55).not.toContain("mending_light"); // minInt 60
-    expect(unlockedSpellIds(250)).toHaveLength(
-      Object.keys(SPELL_DEFS).length,
-    );
+    expect(unlockedSpellIds(250)).toHaveLength(Object.keys(SPELL_DEFS).length);
   });
 
   it("a cast is refused (locked) while INT is below the spell's minInt", () => {
@@ -214,12 +212,11 @@ describe("the unlock queue", () => {
     state.player.level = 99;
     state.player.stats.intelligence = 9;
     state.player.pendingStatPoints = 3;
-    state.player.pendingSpellUnlocks = [];
+    state.pendingSpellUnlocks = [];
     // 9 → 10 effective INT crosses arc_bolt's threshold.
     expect(effectiveStat(state, "intelligence")).toBe(9);
     allocateStat(state, "intelligence");
     expect(effectiveStat(state, "intelligence")).toBe(10);
-    expect(state.player.stats).toBeTruthy();
     expect(state.pendingSpellUnlocks).toContain("arc_bolt");
   });
 });

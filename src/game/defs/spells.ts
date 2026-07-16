@@ -38,13 +38,7 @@ export type SpellCategory = "attack" | "aoe" | "defense";
  * engine never branches on it.
  */
 export type SpellElement =
-  | "storm"
-  | "fire"
-  | "frost"
-  | "holy"
-  | "void"
-  | "arcane"
-  | "blood";
+  "storm" | "fire" | "frost" | "holy" | "void" | "arcane" | "blood";
 
 /**
  * What a cast DOES. A small primitive set the cast step (sorcery.ts) knows how

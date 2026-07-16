@@ -1,0 +1,28 @@
+name: spell_frost_lance
+family: icons
+size: [12, 12]
+description: >
+  The FROST LANCE spell icon — a frost spear glyph.
+subject:
+  kind: spell icon
+  features: a bold frost-tinted spear motif, centered and outlined
+  accent: frost magic
+  flavor: the FROST LANCE cast-spell pictogram
+palette:
+  O: "#0c0e18" # dark outline
+  E: "#9fe8ff" # frost bright
+  D: "#3aa6d9" # frost deep
+  H: "#eafaff" # frost highlight
+grid: |
+  .........OO.
+  .......OOHHO
+  ......OHHEHO
+  .......OEHO.
+  ......OEDHO.
+  .....OEDOO..
+  ....OEDO....
+  ...OEDO.....
+  ..OEDO......
+  .OEDO.......
+  OEDO........
+  .OO.........

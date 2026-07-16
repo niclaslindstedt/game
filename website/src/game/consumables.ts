@@ -43,6 +43,12 @@ export const STAMINA_POTION_ICON = "drink";
 /** The stamina slot's accent — the drink's energetic green. */
 export const STAMINA_POTION_COLOR = "#5fd97a";
 
+/** The blue-gatorade mana-potion sprite — one grade, one icon. */
+export const MANA_POTION_ICON = "mana";
+
+/** The mana slot's accent — a bright arcane blue. */
+export const MANA_POTION_COLOR = "#4da6ff";
+
 /** The weapon repair-kit sprite — the same toolbox the ground drop shows. */
 export const REPAIR_KIT_ICON = "repair";
 

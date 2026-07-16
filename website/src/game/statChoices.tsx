@@ -2,7 +2,7 @@
 // Shared stat metadata for the stat-allocation overlays (the level-up chooser
 // and the LEVEL TOKEN respec). One entry per trainable stat: its label, the
 // short button blurb, the full (i)-panel breakdown, and the pixel glyph. Both
-// overlays render the same six stats, so this is the single source they draw
+// overlays render the same seven stats, so this is the single source they draw
 // from — keep the blurbs/info honest against the engine's STATS rules
 // (src/game/config.ts) + src/game/items.ts; every stat now touches more than
 // damage.
@@ -54,11 +54,12 @@ export const STAT_CHOICES: {
   {
     stat: "intelligence",
     label: "INTELLECT",
-    blurb: "MAGIC + AOE",
+    blurb: "MANA + SPELLS",
     info: [
-      "MAGIC POWER & CRITS. LONGER",
-      "RANGE & A BIGGER MELEE AOE",
-      "CONE (HITS MORE).",
+      "MAGIC POWER & CRITS. SIZES",
+      "THE MANA POOL AND UNLOCKS A",
+      "SPELL EVERY 10 POINTS. LONGER",
+      "RANGE & A BIGGER MELEE AOE.",
     ],
     icon: "icon_stat_intelligence",
   },
@@ -79,6 +80,17 @@ export const STAT_CHOICES: {
       "BETTER LOOT.",
     ],
     icon: "icon_stat_luck",
+  },
+  {
+    stat: "spirit",
+    label: "SPIRIT",
+    blurb: "MANA + HP REGEN",
+    info: [
+      "REGENERATES MANA AFTER A LULL",
+      "IN CASTING, AND SLOWLY MENDS",
+      "HEALTH OUT OF COMBAT.",
+    ],
+    icon: "icon_stat_spirit",
   },
 ];
 

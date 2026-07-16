@@ -1,0 +1,28 @@
+name: spell_ember_burst
+family: icons
+size: [12, 12]
+description: >
+  The EMBER BURST spell icon — a fire burst glyph.
+subject:
+  kind: spell icon
+  features: a bold fire-tinted burst motif, centered and outlined
+  accent: fire magic
+  flavor: the EMBER BURST cast-spell pictogram
+palette:
+  O: "#0c0e18" # dark outline
+  E: "#ff8a3c" # fire bright
+  D: "#c0431a" # fire deep
+  H: "#ffd9a0" # fire highlight
+grid: |
+  ............
+  .....O......
+  ...OOHO.O...
+  ..OHOEOOHO..
+  ...OEHEEO...
+  ..OOHEEEOOO.
+  .OHEEEEEEEHO
+  ..OOEEEEOOO.
+  ..OHOOEOHO..
+  ...O.OEOO...
+  .....OHO....
+  ......O.....
