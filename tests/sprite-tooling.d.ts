@@ -1,10 +1,13 @@
 // SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
-// Ambient types for the build-tooling `.mjs` modules the sprite-YAML test
-// exercises (see docs/sprite-yaml-plan.md). They're plain JavaScript with no
-// declarations of their own; these wildcard module shims give the test just
+// Ambient types for the build-tooling `.mjs` modules the sprite tests
+// exercise (see docs/sprite-yaml-plan.md). They're plain JavaScript with no
+// declarations of their own; these wildcard module shims give the tests just
 // enough typing to import them without `any`.
 
 type Rgba = [number, number, number, number];
+type Rgb = [number, number, number];
+type Lab = [number, number, number];
+type Surface = { width: number; height: number; data: Uint8Array };
 
 declare module "*/asset-tools/sprite-yaml.mjs" {
   export function rgbaToHex(rgba: number[]): string;
@@ -25,6 +28,52 @@ declare module "*/asset-tools/sprite-schema.mjs" {
     errors: string[];
     warnings: string[];
   };
+}
+
+declare module "*/asset-tools/oklab.mjs" {
+  export function rgbToOklab(rgb: Rgb): Lab;
+  export function oklabToRgb(lab: Lab): Rgb;
+  export function oklabDistance(a: Lab, b: Lab): number;
+  export function labSortKey(lab: Lab): [number, number];
+}
+
+declare module "*/asset-tools/image.mjs" {
+  export function loadImage(path: string): Promise<Surface>;
+  export function resampleToCells(
+    surface: Surface,
+    tw: number,
+    th: number,
+    alphaThreshold?: number,
+  ): Array<Array<Rgb | null>>;
+}
+
+declare module "*/asset-tools/quantize.mjs" {
+  export function quantizeGrid(
+    cells: Array<Array<Rgb | null>>,
+    maxColors?: number,
+  ): { palette: Record<string, string>; grid: string };
+}
+
+declare module "*/asset-tools/compare.mjs" {
+  export function resizeNearest(
+    surface: Surface,
+    w: number,
+    h: number,
+  ): Surface;
+  export function compareSurfaces(
+    sprite: Surface,
+    reference: Surface,
+  ): { ssim: number; meanDeltaE: number; coverage: number };
+}
+
+declare module "*/asset-tools/surface.mjs" {
+  export function createSurface(width: number, height: number): Surface;
+  export function setPixel(
+    surface: Surface,
+    x: number,
+    y: number,
+    rgba: number[],
+  ): void;
 }
 
 declare module "*/sprite-data/load-yaml.mjs" {
