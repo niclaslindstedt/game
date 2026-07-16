@@ -158,6 +158,20 @@ For each candidate, in the numbered order:
    sprite must communicate, straight from the fiction. Art must serve the
    manuscript — if a redesign would contradict it, redesign differently
    or ask the user; never edit the manuscript for an art pass.
+
+   Then generate the sprite's **acceptance prompt** —
+   `node website/scripts/sprite-author.mjs prompt <base>` — which renders the
+   structured `description`/`subject` slots and named palette into the exact
+   words a redraw must satisfy (the pixel-assets skill's structured-subject
+   spec). This prompt, alongside the brief, is what every concept below is
+   **grounded on and judged against** — the words-level acceptance target the
+   pixels have to hit. The prompt is only as sharp as the words behind it: if
+   this pass deliberately changes WHAT the sprite is (not just how well it's
+   drawn), first update its `description`/`subject` (and, if the fiction moved,
+   the manuscript per its two-step rule) so the prompt reflects the new intent,
+   then regenerate it — otherwise you would ground the candidates on the old
+   target. If the change is pure fidelity (same intent, better pixels), leave
+   the words and ground on the current prompt.
 2. **Sketch 5 concepts** in a scratch module in the session scratchpad
    (never under `website/`):
 
@@ -170,16 +184,17 @@ For each candidate, in the numbered order:
    };
    ```
 
-   Make the five genuinely different answers to the brief (pose, anatomy,
-   bulk, read), not one drawing five times. Follow the pixel-assets rules:
-   silhouette first, family palette ramps, 2–5 colors plus outline,
-   top-left light, correct size class for its role.
+   Make the five genuinely different answers to the brief and the acceptance
+   prompt (pose, anatomy, bulk, read), not one drawing five times. Follow the
+   pixel-assets rules: silhouette first, family palette ramps, 2–5 colors plus
+   outline, top-left light, correct size class for its role.
 
-   A concept can also be bootstrapped from a genAI image instead of drawn by
-   hand: `sprite-author.mjs prompt <base>` synthesizes the image prompt from the
-   sprite's fields, and `analyze <image>` traces the returned image into a grid
-   (the pixel-assets skill). Either way the brief above still governs, and the
-   grid is refined against it before it competes in the vote.
+   Whether a concept is drawn by hand or bootstrapped from genAI, it must
+   answer the **acceptance prompt** from step 1. For the genAI path, feed that
+   same prompt to the image model, then `analyze <image>` traces the returned
+   image into a grid (the pixel-assets skill); for the hand-drawn path, sketch
+   to satisfy it directly. Either way the prompt and the brief govern, and the
+   grid is refined against them before it competes in the vote.
 
    **Compute grids in JS for anything prop-heavy or multi-frame** (a mob
    holding a tool, a machine with panels, both walk frames) — hand-aligning
@@ -203,10 +218,11 @@ For each candidate, in the numbered order:
    ```
 3. **Render and pick**: `concepts <module>` → Read the sheet (the current
    sprite renders first for comparison) → judge each concept against the
-   brief and the rubric → pick the strongest **one**.
+   acceptance prompt, the brief, and the rubric (does it read as the words
+   describe? could the prompt have produced it?) → pick the strongest **one**.
 4. **Refine**: make **2 more variations** of the pick (push what works,
    fix what doesn't) → render the pick + both refinements together →
-   choose the best of the 3.
+   choose the best of the 3, re-reading the acceptance prompt as you judge.
 5. **Install the winner** in its family module under
    `website/scripts/sprites/` (both walk frames for animated sprites
    — redraw `_1` to match, don't leave a mismatched old frame; new chars
@@ -216,9 +232,14 @@ For each candidate, in the numbered order:
    in one last concept sheet to check the walk cycle reads before you paste.
    Then print the joined rows (a tiny `console.log` builder) and paste them
    in; nothing hand-retypes the winning grid.
-6. **Verify on the sheets**: `make assets` (heed every warning), then Read
-   the family sheet and the `@8x` preview per the pixel-assets checklist,
-   and `variants <name>` to confirm frames, wounds, and overlays still read.
+6. **Verify on the sheets**: `make assets` (heed every warning), then
+   `node website/scripts/sprite-author.mjs verify <name>` to confirm the redraw
+   and its words are still in sync — a redraw usually shifts colors or details,
+   so update the `description`/`subject` and the palette `# name`s to match the
+   new grid until `verify` reports clean coherence (this keeps the very prompt
+   the next pass grounds on honest). Then Read the family sheet and the `@8x`
+   preview per the pixel-assets checklist, and `variants <name>` to confirm
+   frames, wounds, and overlays still read.
    For a redrawn weapon or armor icon, also `equipped <name>` and confirm
    the new icon still reads held/worn on the hero (the `worn_<id>` overlay
    regenerates from the icon on `make assets`, so a re-themed icon re-themes
