@@ -8,7 +8,9 @@
 // pace) can read it without a cycle.
 
 import { LEVELING, MENACE, STATS, XP_CAP } from "./config.ts";
+import { difficultyDef } from "./defs/difficulties.ts";
 import { levelPosition } from "./defs/levels/index.ts";
+import { BALANCE } from "./tuning.ts";
 import type { Difficulty, StatName } from "./types.ts";
 
 const AUTO_GAINS: Partial<Record<StatName, number>> =
@@ -247,7 +249,7 @@ export function arrowColdXp(level: number): number {
  * ~10–20 levels/day early, easing to ~2/day near the cap — instead of the old
  * pure-exponential bar that raced early then walled.
  */
-export function xpToLevelUp(level: number): number {
+export function xpToLevelUp(level: number, difficulty?: Difficulty): number {
   const l = Math.max(1, level);
   // Onboarding ramp: the opening levels cost a fraction of the curve so the
   // first ding is quick, easing to full by `earlyRampLevels`.
@@ -259,8 +261,42 @@ export function xpToLevelUp(level: number): number {
   const kills =
     LEVELING.killsPerLevelBase *
     Math.pow(LEVELING.killsPerLevelGrowth, l - 1) *
-    ramp;
+    ramp *
+    endgameSteepenMult(l) *
+    tierLevelCostMult(difficulty);
   return Math.round(kills * referenceMobXp(l));
+}
+
+/**
+ * ENDGAME STEEPENING factor for a level (config `endgameSteepenFrom`/Rate, dev
+ * knob `BALANCE.endgameSteepen`): 1 up to the threshold, then a compounding
+ * `(1 + rate)` per level past it, so the last stretch to the cap walls up.
+ * Shared by every difficulty — it is a property of the level curve itself.
+ */
+export function endgameSteepenMult(level: number): number {
+  const over = level - LEVELING.endgameSteepenFrom;
+  if (over <= 0) return 1;
+  const rate = LEVELING.endgameSteepenRate * BALANCE.endgameSteepen;
+  return Math.pow(1 + Math.max(0, rate), over);
+}
+
+/**
+ * PER-TIER leveling slowdown for a difficulty (config `tierLevelCostStep`, dev
+ * knob `BALANCE.levelingSlowdown`): `(1 + step)^tier`, where the tier is the
+ * difficulty's rung above the three bottom lanes (`difficultyDef.index − 3`,
+ * floored at 0 — easy/medium/hard share tier 0, nightmare 1, jesus 2). So a
+ * level costs progressively more the deeper the difficulty. No difficulty (the
+ * bare curve, e.g. the companion/derivation reads) is tier 0 → ×1.
+ */
+export function tierLevelCostMult(difficulty?: Difficulty): number {
+  if (!difficulty) return 1;
+  const tier = Math.max(0, difficultyDef(difficulty).index - 3);
+  if (tier === 0) return 1;
+  const step = Math.max(
+    0,
+    LEVELING.tierLevelCostStep * BALANCE.levelingSlowdown,
+  );
+  return Math.pow(1 + step, tier);
 }
 
 /**

@@ -15,6 +15,7 @@ import {
   closeInventory,
   DODGE,
   effectiveStat,
+  endgameSteepenMult,
   equipFromInventory,
   grantXp,
   inventoryCapacity,
@@ -28,12 +29,15 @@ import {
   PLAYER,
   playerCritChance,
   playerDodgeChance,
+  resetBalanceTuning,
   saturateToward,
   setAutoStatGainsEnabled,
+  setBalanceTuning,
   STAMINA,
   STATS,
   step,
   syncInventoryCapacity,
+  tierLevelCostMult,
   WEAPON,
   weaponCooldownFor,
   weaponDef,
@@ -91,19 +95,19 @@ function dingToLevel2() {
 describe("xp", () => {
   it("is proportional to the mob's LEVEL, not its hp", () => {
     // Same monster level, different hp: a tank and a squishy pay the SAME xp —
-    // kill xp keys off the level, never the health bar. (mlvl 5 keeps the
+    // kill xp keys off the level, never the health bar. (mlvl 3 keeps the
     // reward under the tiny level-1 threshold, so no ding muddies the read.)
-    const squishy = killGhostWorth(20, 5);
-    const tank = killGhostWorth(50, 5);
-    const atFive = Math.round(mobLevelXp(5, 1));
-    expect(squishy.stats.xpGained).toBe(atFive);
-    expect(tank.stats.xpGained).toBe(atFive);
+    const squishy = killGhostWorth(20, 3);
+    const tank = killGhostWorth(50, 3);
+    const atThree = Math.round(mobLevelXp(3, 1));
+    expect(squishy.stats.xpGained).toBe(atThree);
+    expect(tank.stats.xpGained).toBe(atThree);
     expect(squishy.player.xp).toBe(squishy.stats.xpGained); // below the threshold
 
     // A higher-level mob pays more, its hp held equal to the squishy above.
     const hotter = killGhostWorth(20, 12);
     expect(hotter.stats.xpGained).toBe(Math.round(mobLevelXp(12, 1)));
-    expect(hotter.stats.xpGained).toBeGreaterThan(atFive);
+    expect(hotter.stats.xpGained).toBeGreaterThan(atThree);
   });
 
   it("levels up at the threshold, celebrates, then pauses on a stat point", () => {
@@ -170,6 +174,71 @@ describe("golden-arrow XP share tapers with level", () => {
     expect(arrowXpShareAt(99)).toBeGreaterThan(0);
     // A level floor: absurd inputs clamp to the level-1 share, never blow up.
     expect(arrowXpShareAt(0)).toBeCloseTo(LEVELING.arrowXpShare);
+  });
+});
+
+describe("per-tier leveling slowdown", () => {
+  it("compounds the level cost 25% per difficulty tier above the bottom lanes", () => {
+    // Bottom lanes (easy/medium/hard) share tier 0 — no slowdown.
+    expect(tierLevelCostMult("easy")).toBe(1);
+    expect(tierLevelCostMult("medium")).toBe(1);
+    expect(tierLevelCostMult("hard")).toBe(1);
+    // nightmare (tier 1) and jesus (tier 2) compound the step.
+    const step = LEVELING.tierLevelCostStep;
+    expect(tierLevelCostMult("nightmare")).toBeCloseTo(1 + step);
+    expect(tierLevelCostMult("jesus")).toBeCloseTo((1 + step) ** 2);
+    // No difficulty (the bare curve) is tier 0.
+    expect(tierLevelCostMult()).toBe(1);
+  });
+
+  it("makes a level cost more on harder difficulties (below the endgame wall)", () => {
+    const base = xpToLevelUp(30);
+    expect(xpToLevelUp(30, "medium")).toBe(base); // bottom = bare curve
+    expect(xpToLevelUp(30, "nightmare")).toBe(
+      Math.round(base * tierLevelCostMult("nightmare")),
+    );
+    expect(xpToLevelUp(30, "jesus")).toBeGreaterThan(
+      xpToLevelUp(30, "nightmare"),
+    );
+  });
+
+  it("scales the slowdown with the runtime BALANCE knob", () => {
+    const shipped = tierLevelCostMult("nightmare");
+    setBalanceTuning({ levelingSlowdown: 0 });
+    expect(tierLevelCostMult("nightmare")).toBe(1); // knob off → no slowdown
+    setBalanceTuning({ levelingSlowdown: 2 });
+    expect(tierLevelCostMult("nightmare")).toBeCloseTo(
+      1 + LEVELING.tierLevelCostStep * 2,
+    );
+    resetBalanceTuning();
+    expect(tierLevelCostMult("nightmare")).toBeCloseTo(shipped);
+  });
+});
+
+describe("endgame steepening wall", () => {
+  it("is neutral up to the threshold, then compounds per level past it", () => {
+    expect(endgameSteepenMult(LEVELING.endgameSteepenFrom)).toBe(1);
+    expect(endgameSteepenMult(LEVELING.endgameSteepenFrom - 5)).toBe(1);
+    // One level past the threshold pays exactly (1 + rate).
+    expect(endgameSteepenMult(LEVELING.endgameSteepenFrom + 1)).toBeCloseTo(
+      1 + LEVELING.endgameSteepenRate,
+    );
+    // It compounds: deeper levels wall up geometrically.
+    expect(endgameSteepenMult(LEVELING.endgameSteepenFrom + 10)).toBeCloseTo(
+      (1 + LEVELING.endgameSteepenRate) ** 10,
+    );
+    expect(endgameSteepenMult(99)).toBeGreaterThan(
+      endgameSteepenMult(LEVELING.endgameSteepenFrom + 1),
+    );
+  });
+
+  it("steepens the level curve past the threshold and scales with its knob", () => {
+    const from = LEVELING.endgameSteepenFrom;
+    // A level past the wall costs strictly more than the bare geometric would.
+    expect(xpToLevelUp(from + 8)).toBeGreaterThan(xpToLevelUp(from));
+    setBalanceTuning({ endgameSteepen: 0 });
+    expect(endgameSteepenMult(from + 8)).toBe(1); // knob off → pure geometric tail
+    resetBalanceTuning();
   });
 });
 

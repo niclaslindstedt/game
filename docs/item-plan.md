@@ -52,8 +52,9 @@ Status legend: `[ ]` not started · `[x]` done.
   (`LevelDef.loot.worldUniques` + `WORLD_DROP` role odds), per-item `rarity`
   weights. The engine needs **no new drop channel** — only new bonus
   mechanics and the legendary rarity law.
-- Campaign landings (`leveling-curve.mjs --by-level`): hard ends ~43,
-  nightmare ~53, jesus ~60; hard cap `LEVELING.maxLevel` = 99. JESUS mobs run
+- Full-clear landings (`leveling-curve.mjs --by-level --clear-share 1`): a bottom
+  lane ends ~36, nightmare ~53, jesus ~67 (each under its 40/58/70 tier cap);
+  hard cap `LEVELING.maxLevel` = 99. JESUS mobs run
   at `player + 2`, elites/bosses higher still (`levelBonus`, menace re-stamp)
   — the endgame grind the 99+ legendaries' high-req bases gate behind.
 

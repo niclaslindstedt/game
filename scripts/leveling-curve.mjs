@@ -52,11 +52,11 @@ const {
   arrowColdXp,
   xpLevelCap,
   xpCapMultiplier,
+  mobLevelXp,
 } = await import(path.join(root, "src/game/leveling.ts"));
 const { mobHpScaleFor } = await import(path.join(root, "src/game/menace.ts"));
-const { DIFFICULTY_ORDER, meetsMinDifficulty, difficultyDef } = await import(
-  path.join(root, "src/game/defs/difficulties.ts")
-);
+const { DIFFICULTY_ORDER, meetsMinDifficulty, difficultyDef, scaledMobCount } =
+  await import(path.join(root, "src/game/defs/difficulties.ts"));
 const { LEVELS, LEVEL_ORDER } = await import(
   path.join(root, "src/game/defs/levels/index.ts")
 );
@@ -114,6 +114,17 @@ const campaign = args.includes("--campaign");
 // cleared at and the drop can only be farmed on a RETURN (boss-run) pass.
 const byLevel = args.includes("--by-level");
 const clearShare = Number(opt("clear-share", "0.5"));
+// The INTENDED entry level for each tier on the critical path — where a full
+// clear of the tier below leaves the hero (bottom lanes ~34 → nightmare, then
+// nightmare ~56 → jesus). The campaign model resets to these when a tier begins
+// (instead of carrying the exact prior-tier level), so each tier is analysed
+// from its intended entry regardless of which bottom lane was taken. Override
+// with `--tier-entry nightmare:34,jesus:56`.
+const TIER_ENTRY = { nightmare: 34, jesus: 56 };
+for (const pair of (opt("tier-entry", "") || "").split(",").filter(Boolean)) {
+  const [k, v] = pair.split(":");
+  if (k && v) TIER_ENTRY[k] = Number(v);
+}
 
 if (!DIFFICULTY_ORDER.includes(difficulty)) {
   console.error(
@@ -123,48 +134,53 @@ if (!DIFFICULTY_ORDER.includes(difficulty)) {
 }
 
 if (campaign || byLevel) {
-  // The XP a full clear of a level's roster pays (mirrors arrival.ts rosterXp).
-  // Kill XP is LEVEL-based now (mobLevelXp), not hp-proportional; a mob's
-  // catalog hp (≈ refMobHp for typical fodder) is a PROXY for its level-based
-  // reward, and the × mobHpScaleFor below supplies the level ramp — so for the
-  // common ~45-hp minion the estimate matches the game, drifting only for
-  // unusually tanky/squishy defs. Difficulty-gated lines the run never fielded
-  // are left out.
-  const mobXp = (id) => {
-    const e = enemyDef(id);
-    return e.xp ?? Math.round(e.hp * LEVELING.xpPerHp);
+  // The XP a clear of a level's roster pays, computed exactly as the engine
+  // does (`enemyKillXp`, loot.ts): a MINION pays a LEVEL-based reward
+  // (`mobLevelXp` at mlvl = hero level + the difficulty's `mobLevelOffset`),
+  // while an ELITE/BOSS pays a SHARE OF THE HERO'S BAR (`xpBarShare` or the role
+  // default). A def's flat `xp` override wins. Roster counts scale by the
+  // difficulty's `mobCountMult` exactly like the spawner (`scaledMobCount`), so
+  // a higher rung's bigger, higher-level horde pays proportionally more — the
+  // whole reason harder lanes land the hero higher on a full clear.
+  // Difficulty-gated lines the run never fielded are left out.
+  const killXpOf = (e, level, offset, diff) => {
+    if (e.xp != null) return e.xp;
+    if (e.role !== "minion") {
+      const share =
+        e.xpBarShare ??
+        (e.role === "boss"
+          ? LEVELING.bossXpBarShare
+          : LEVELING.eliteXpBarShare);
+      return share * xpToLevelUp(level, diff);
+    }
+    return mobLevelXp(level + offset, level);
   };
-  const rosterXp = (def, diff) => {
-    let t = 0;
+  // The roster as a flat list of [enemy def, scaled head-count] entries for the
+  // difficulty (minDifficulty-gated, counts scaled by `mobCountMult`). The
+  // clear is then walked kill-by-kill so the hero LEVELS UP MID-MAP — each kill
+  // priced at the hero's rising level (the engine spawns mobs scaled to the
+  // CURRENT level, so later kills in a big map pay more), which the old
+  // whole-map-at-start-level grant under-counted.
+  const rosterEntries = (def, diff) => {
+    const out = [];
     for (const s of def.spawns ?? []) {
       if (!meetsMinDifficulty(diff, s.minDifficulty)) continue;
-      t += mobXp(s.enemy) * ("count" in s ? s.count : 1);
+      out.push([
+        enemyDef(s.enemy),
+        scaledMobCount("count" in s ? s.count : 1, diff),
+      ]);
     }
     for (const e of def.waves?.budget ?? []) {
       if (!meetsMinDifficulty(diff, e.minDifficulty)) continue;
-      t += mobXp(e.enemy) * e.count;
+      out.push([enemyDef(e.enemy), scaledMobCount(e.count, diff)]);
     }
-    return t;
-  };
-  // The head-count of the same roster — how many kills the clear yields, so the
-  // arrow drops (a per-kill roll) can be estimated on top of the kill XP.
-  const rosterCount = (def, diff) => {
-    let n = 0;
-    for (const s of def.spawns ?? []) {
-      if (!meetsMinDifficulty(diff, s.minDifficulty)) continue;
-      n += "count" in s ? s.count : 1;
-    }
-    for (const e of def.waves?.budget ?? []) {
-      if (!meetsMinDifficulty(diff, e.minDifficulty)) continue;
-      n += e.count;
-    }
-    return n;
+    return out;
   };
   let level = 1;
   let xp = 0;
-  const advance = () => {
-    while (level < LEVELING.maxLevel && xp >= xpToLevelUp(level)) {
-      xp -= xpToLevelUp(level);
+  const advance = (diff) => {
+    while (level < LEVELING.maxLevel && xp >= xpToLevelUp(level, diff)) {
+      xp -= xpToLevelUp(level, diff);
       level++;
     }
   };
@@ -181,33 +197,41 @@ if (campaign || byLevel) {
     );
   }
   for (const diff of PLAYTHROUGH) {
+    // Reset to the tier's INTENDED entry level (nightmare ~34, jesus ~56) so
+    // each tier is measured from where the tier below leaves the hero, not from
+    // the exact carried level. Only bumps UP (never demotes a further-along hero).
+    if (TIER_ENTRY[diff] !== undefined && level < TIER_ENTRY[diff]) {
+      level = TIER_ENTRY[diff];
+      xp = 0;
+    }
     const starts = [];
     for (const id of LEVEL_ORDER) {
       starts.push(level); // the hero's level as this level's clear BEGINS
-      const kills = rosterCount(LEVELS[id], diff) * clearShare;
-      const killXp =
-        rosterXp(LEVELS[id], diff) * clearShare * mobHpScaleFor(level, diff);
-      // Arrow XP for the clear: each of `kills` mobs has `arrowDropProb` to
-      // drop an arrow. While the hero is UNDER this map/difficulty's arrow cap
-      // it pays `arrowXpShareAt(level)` of the current bar; once he is AT/ABOVE
-      // the cap the arrow goes COLD (`arrowColdXp`, a flat few mob kills). The
-      // level is taken at the clear's START (an approximation — it climbs as
-      // the clear plays out), so on a clean first pass START < cap = END and
-      // arrows read hot; only an over-levelled start (high --luck, a replay)
-      // trips the cold branch — which is exactly the anti-over-level behaviour.
+      const offset = difficultyDef(diff).mobLevelOffset;
+      const pArrow = arrowDropProb(diff);
       const cap = LEVELS[id].loot.arrowCapByDifficulty?.[diff];
-      const arrowPerDrop =
-        cap !== undefined && level >= cap
-          ? arrowColdXp(level)
-          : arrowXpShareAt(level) * xpToLevelUp(level);
-      const arrowXp = kills * arrowDropProb(diff) * arrowPerDrop;
-      // Apply the per-map XP cap the same way grantXp does: the map pays full XP
-      // until the hero nears its cap, then the grant fades (halving per level
-      // over fadeLevels) to zero AT the cap. Approximated at the clear's START
-      // level — good enough to see where each stage's cap halts the climb.
-      const capMult = xpCapMultiplier(level, xpLevelCap(id, diff));
-      xp += (killXp + arrowXp) * capMult;
-      advance();
+      const mapCap = xpLevelCap(id, diff);
+      // Walk the roster kill-by-kill, leveling up as XP banks. Each kill is
+      // priced at the hero's CURRENT level: minion → `mobLevelXp`, set piece →
+      // bar-share; plus the golden-arrow drip (hot below the map's arrowCap,
+      // COLD once the hero reaches it — the anti-over-level branch); all faded
+      // by the per-map XP cap (`xpCapMultiplier`) exactly as `grantXp` does.
+      // xpToLevelUp is keyed on the difficulty, so the per-tier leveling
+      // slowdown and the endgame steepening both bite here.
+      for (const [e, count] of rosterEntries(LEVELS[id], diff)) {
+        const n = clearShare < 1 ? count * clearShare : count;
+        for (let k = 0; k < n; k++) {
+          const killXp = killXpOf(e, level, offset, diff);
+          const arrowPerDrop =
+            cap !== undefined && level >= cap
+              ? arrowColdXp(level)
+              : arrowXpShareAt(level) * xpToLevelUp(level, diff);
+          const arrowXp = pArrow * arrowPerDrop;
+          const capMult = xpCapMultiplier(level, mapCap);
+          xp += (killXp + arrowXp) * capMult;
+          advance(diff);
+        }
+      }
     }
     if (byLevel) {
       console.log(
@@ -231,7 +255,8 @@ if (campaign || byLevel) {
 // actual mob's toughness uses the difficulty's offset, so autoPowerScale
 // cancels and only the offset shifts the count.
 const killsPerLevel = (L) =>
-  xpToLevelUp(L) / (LEVELING.refMobHp * mobHpScaleFor(L, difficulty));
+  xpToLevelUp(L, difficulty) /
+  (LEVELING.refMobHp * mobHpScaleFor(L, difficulty));
 
 // The same count with golden arrows folded in. Over the `k0` kills a level
 // takes on kill XP alone, arrows drip an extra `k0 × pArrow × arrowXpShareAt(L)`
@@ -278,7 +303,7 @@ for (let L = 1; L < target; L++) {
   if (rows.includes(L)) {
     const lpd = killsPerDay / kplA;
     console.log(
-      `${String(L).padStart(4)}  ${String(xpToLevelUp(L)).padStart(11)}  ${kpl
+      `${String(L).padStart(4)}  ${String(xpToLevelUp(L, difficulty)).padStart(11)}  ${kpl
         .toFixed(0)
         .padStart(9)}  ${kplA.toFixed(0).padStart(8)}  ${lpd
         .toFixed(1)

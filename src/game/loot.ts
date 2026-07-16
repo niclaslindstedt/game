@@ -586,7 +586,7 @@ export function enemyKillXp(
       (def.role === "boss"
         ? LEVELING.bossXpBarShare
         : LEVELING.eliteXpBarShare);
-    return share * xpToLevelUp(state.player.level);
+    return share * xpToLevelUp(state.player.level, state.difficulty);
   }
   const rarity = def.rarity ? RARE_MOBS.tuning[def.rarity] : undefined;
   return mobLevelXp(enemy.mlvl, state.player.level) * (rarity?.xpMult ?? 1);
@@ -1323,7 +1323,7 @@ export function grantXp(state: GameState, amount: number): void {
     player.xp -= player.xpToNext;
     player.level++;
     leveled = true;
-    player.xpToNext = xpToLevelUp(player.level);
+    player.xpToNext = xpToLevelUp(player.level, state.difficulty);
     player.pendingStatPoints += statPointsAt(player.level);
     // The automatic base gains land with the level itself (they derive from
     // `player.level` — see leveling.ts), so re-derive everything they feed:

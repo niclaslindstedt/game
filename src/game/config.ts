@@ -400,27 +400,56 @@ export const LEVELING = {
    * The count rises with level on a gentle geometric, so leveling tapers from
    * ~10–20/day early to ~2/day near the cap.
    *
-   * The base is tuned WITH the golden-arrow faucet counted (arrows are a second
-   * XP source on top of kills — see LEVELING.arrowXpShare and the calculator's
-   * `w/arrows` column): the CRITICAL PATH — one bottom lane (easy/medium/hard,
-   * the three are parallel entry points over the same level band — easy's caps
-   * tuned tight, medium/hard's two levels over it) → nightmare → jesus,
-   * three playthroughs, not five — lands the hero at ~level 62
-   * (`node scripts/leveling-curve.mjs --campaign`), leaving the rest as the
-   * grind-to-cap endgame. The bottom lane leaves the hero ~36, nightmare ~52,
-   * jesus 62; per-map first-pass landings are bottom-lane maps reached at
-   * ~1/9/16/23/29, nightmare ~36/39/42/45/48, jesus ~52/54/56/58/60
-   * (`--by-level` prints them — XP_CAP bands, the WORLD_DROP gates, and every
-   * level's arrowCapByDifficulty are all read off that table; `--start <lane>`
-   * checks each bottom lane, `--full` the completionist who replays all three).
-   * The growth is steeper than a flat curve on purpose: cheap low levels make
-   * the accessible bottom tier level FAST, while expensive high levels let the
-   * jesus pass land at 60 without the cap having to wall it, preserving the
-   * jesus last-map endgame grind to the cap. Whenever this base/growth or the
-   * roster moves, re-run both views and re-read the gates; don't tune by feel.
+   * The base/growth are tuned against a FULL CLEAR (kill the whole roster, no
+   * deaths) so the caps are ceilings the hero lands UNDER, not targets: on the
+   * CRITICAL PATH — one bottom lane (easy/medium/hard) → nightmare → jesus,
+   * three playthroughs, not five — a full clear leaves the hero at ~33/35/36
+   * (easy/medium/hard), ~51 after nightmare (entering at ~34), and ~69 after
+   * jesus (entering at ~56), each UNDER that tier's XP cap (40 / 58 / 70), then
+   * the steep endgame grind to the cap. The bottom lanes DIFFER on purpose
+   * (medium/hard field bigger, higher-level hordes than easy — `mobCountMult` ×
+   * the difficulty `mobLevelOffset` — so their clears pay more XP and land a
+   * level or two higher). The upper tiers level SLOWER by design: `xpToLevelUp`
+   * charges nightmare/jesus `tierLevelCostStep` more per level (compounding per
+   * tier), and past level 70 `endgameSteepenRate` walls the curve up — so it
+   * takes "longer and longer" the deeper you go. Read the per-map full-clear
+   * landings off `node scripts/leveling-curve.mjs --by-level --clear-share 1`
+   * (a full clear; the default 0.5 models a half clear; `--tier-entry` sets the
+   * nightmare/jesus entry levels). XP_CAP bands, the WORLD_DROP gates, and every
+   * level's arrowCapByDifficulty are sized off that table; `--start <lane>`
+   * checks each bottom lane. Real play (a PARTIAL clear) lands the hero under
+   * these full-clear numbers — under the caps by even more, which is the design
+   * intent. Whenever base/growth, the tier knobs, or the roster move, re-run the
+   * view and re-read the caps/gates; don't tune by feel.
    */
-  killsPerLevelBase: 60,
-  killsPerLevelGrowth: 1.035,
+  killsPerLevelBase: 150,
+  killsPerLevelGrowth: 1.041,
+  /**
+   * PER-TIER LEVELING SLOWDOWN — one of the two "endgame is harder" knobs (both
+   * runtime-tunable on the DEVELOPER › BALANCE page). Each difficulty TIER above
+   * the three bottom lanes (easy/medium/hard, which share tier 0) makes every
+   * level cost this fraction MORE XP, COMPOUNDING per tier: nightmare (tier 1)
+   * costs `×(1 + step)`, jesus (tier 2) `×(1 + step)²`. At the shipped 0.25 a
+   * level on nightmare takes 25% more time than the same level on a bottom lane,
+   * and jesus ~56% more — so it takes "longer and longer" the deeper you go. The
+   * tier is `difficultyDef.index − 3` floored at 0; applied in `xpToLevelUp`
+   * keyed on the run's difficulty (so the bar, the arrow/boss bar-shares, and
+   * the kills-per-level all move together). 0 makes every difficulty level
+   * alike. Turn it with the BALANCE › LEVEL SLOWDOWN slider (scales this step).
+   */
+  tierLevelCostStep: 0.25,
+  /**
+   * ENDGAME STEEPENING — the second "harder" knob. Past `endgameSteepenFrom`,
+   * every level costs an extra `endgameSteepenRate` COMPOUNDING on TOP of the
+   * base geometric `killsPerLevelGrowth`, so the last stretch to the cap turns
+   * into a wall (Diablo 2's 90→99). At the shipped 5%/level from 70, level 80
+   * costs ~1.6× and level 99 ~2.6× what the base curve alone would ask. Applied
+   * in `xpToLevelUp` for EVERY difficulty (it is the shared level curve). Set
+   * the rate to 0 for a pure geometric tail. Turn it with the BALANCE › ENDGAME
+   * WALL slider (scales the rate); the threshold stays config-only.
+   */
+  endgameSteepenFrom: 70,
+  endgameSteepenRate: 0.05,
   /**
    * Onboarding ramp: the opening levels cost only a FRACTION of their curve
    * value so the first ding lands in a handful of kills — the level-up, the
@@ -517,28 +546,29 @@ export const LEVELING = {
  * than retiring it outright, so a determined grinder can still crawl toward the
  * global `LEVELING.maxLevel` on an old map, just achingly slowly. Each rung
  * lists the cap on its FIRST and LAST story level; intermediate maps interpolate
- * linearly. Every cap sits at least `fadeLevels` (3) ABOVE where a single first
- * pass of that map naturally leaves the hero (the `--by-level` exit level — read
- * off `leveling-curve.mjs --by-level`), so KILLING EVERYTHING ON A MAP ONCE never
- * reaches — never even touches the fade under — that map's cap: the story never
- * starves and a clean clear forfeits ~nothing. Only the RERUN grind, replaying an
- * outgrown map, hits the trickle. The three bottom lanes (easy/medium/hard) run
- * the same missions over the same hero-level band, but they NO LONGER share one
- * cap band: EASY is tuned tight (caps a bare `fadeLevels` over each first-pass
- * landing — enough to never clip a clear, no more), while MEDIUM and HARD sit two
- * levels higher across the whole band, so those lanes leave a little FARM headroom
- * to grind a level or two before moving on to nightmare. JESUS's last map runs to
- * the global `LEVELING.maxLevel` — the endgame grind lives there.
+ * linearly. Every cap sits at least `fadeLevels` (3) ABOVE where a single FULL
+ * CLEAR of that map leaves the hero (the `--by-level --clear-share 1` exit
+ * level), so KILLING EVERYTHING ON A MAP ONCE never reaches — never even touches
+ * the fade under — that map's cap: the story never starves and a clean clear
+ * forfeits ~nothing. Only the RERUN grind, replaying an outgrown map, hits the
+ * trickle. The `last` value on each bottom rung is the tier ceiling the player
+ * quotes ("to level 40 / 58 / 70"): the three bottom lanes (easy/medium/hard)
+ * SHARE the 40 ceiling — they run the same missions over the same band and only
+ * differ in how much XP their hordes pay, so a full clear lands each a level or
+ * two apart (33/35/36) but all under 40. NIGHTMARE tops at 58, JESUS's early
+ * maps at ~68 rising to the global `LEVELING.maxLevel` on its last map — the
+ * 67→99 endgame grind lives there.
  */
 export const XP_CAP = {
   capByDifficulty: {
-    easy: { first: 12, last: 38 },
-    // MEDIUM/HARD sit two levels over EASY across the whole band — same missions,
-    // same first-pass landings, but a touch more room to farm before nightmare.
-    medium: { first: 14, last: 40 },
-    hard: { first: 14, last: 40 },
-    nightmare: { first: 42, last: 55 },
-    jesus: { first: 57, last: 99 },
+    easy: { first: 16, last: 40 },
+    // MEDIUM/HARD field more (and higher-level) mobs than EASY, so their full
+    // clears land a level or two higher — but all three bottom lanes share the
+    // same 40 ceiling (the "to level 40" tier top), a first pass landing under it.
+    medium: { first: 18, last: 40 },
+    hard: { first: 18, last: 40 },
+    nightmare: { first: 44, last: 58 },
+    jesus: { first: 68, last: 99 },
   } as Record<Difficulty, { first: number; last: number }>,
   /**
    * XP starts diminishing this many levels UNDER the (soft) cap: the grant is
@@ -623,11 +653,13 @@ export const UNIQUE = {
  * boss run is by far the efficient farm: a trash minion is a lottery ticket, an
  * elite ten times likelier, the boss forty. `minPlayerLevel` gates the whole
  * table shut until the hero out-levels a first campaign pass — PER RUNG, since a
- * later rung's relics sit behind a later, higher first-pass level. The campaign
- * is continuous (see `leveling-curve.mjs --by-level`): EASY ends 19, MEDIUM 32,
- * HARD 43, NIGHTMARE 53, JESUS 60, so each gate sits a few levels above its
- * rung's end — the relics can only be farmed by RETURNING for boss runs once the
- * difficulty is beaten. Rolled per unique, per kill, on `maybeDropWorldUnique`.
+ * later rung's relics sit behind a later, higher first-pass level. A full clear
+ * of the critical path (one bottom lane → nightmare → jesus; see
+ * `leveling-curve.mjs --by-level --clear-share 1`) leaves the hero at ~36 after a
+ * bottom lane, ~53 after nightmare, and ~67 after jesus, so each gate sits a
+ * couple levels under its rung's end — the relics can only be farmed by
+ * RETURNING for boss runs once the difficulty is beaten.
+ * Rolled per unique, per kill, on `maybeDropWorldUnique`.
  */
 // Calibrated (with the folded rarity roll and the boss `uniquesByDifficulty`
 // tables) so a JESUS farm run drops ≈ ONE named unique — see
@@ -664,11 +696,11 @@ export const WORLD_DROP = {
    * they share one gate. ELITES and BOSSES ignore this gate (they drop during
    * the campaign); it holds back only the minion lottery. */
   minPlayerLevel: {
-    easy: 30,
-    medium: 30,
-    hard: 30,
-    nightmare: 50,
-    jesus: 60,
+    easy: 34,
+    medium: 34,
+    hard: 34,
+    nightmare: 54,
+    jesus: 67,
   } as Record<Difficulty, number>,
 } as const;
 
