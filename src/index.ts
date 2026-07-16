@@ -32,6 +32,7 @@ export {
   hitEnemy,
   killEnemy,
   mobArmorMult,
+  mobArmorReduction,
   staminaDrinkChance,
 } from "./game/loot.ts";
 export { mercyRescueWaiting, type MercyRescue } from "./game/items.ts";
@@ -500,6 +501,7 @@ export {
   MENACE,
   MERCHANT,
   MERCY,
+  MOB_ARMOR,
   NUKE,
   OBSTACLES,
   PLAYER,

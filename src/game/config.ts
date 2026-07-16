@@ -1353,6 +1353,29 @@ export const ACCURACY = {
 } as const;
 
 /**
+ * MOB ARMOR — the fraction of a PHYSICAL blow (melee/ranged) the horde shrugs
+ * off (magic ignores it). It RISES STEADILY with the mob's level, like hp: a
+ * LEVEL base that ramps linearly from ~0 at level 1 to `maxLevelReduction` (35%)
+ * at `LEVELING.maxLevel`, PLUS the difficulty's flat bonus
+ * (`DifficultyDef.mobArmor` — easy 0, medium 2%, hard 5%, nightmare 10%, jesus
+ * 15%) stacked on top. The two are tuned so a JESUS mob at the cap lands at 50%
+ * (35% level + 15% rung), with the bottom rungs spread below it (easy 35% …), so
+ * the jump between rungs is felt and the armored endgame favours magic builds.
+ * Realized in `mobArmorReduction`/`mobArmorMult` (loot.ts) off the mob's LEVEL
+ * (so a difficulty's mob-level cap also caps its armor), clamped below full
+ * immunity by `maxReduction`. A future ARMOR-PIERCING item stat subtracts here.
+ */
+export const MOB_ARMOR = {
+  /** Physical reduction a mob at `LEVELING.maxLevel` reaches from level alone,
+   * before any difficulty bonus — the top of the linear per-level ramp. Tuned
+   * with jesus's +15% bonus to land the top rung at 50%. */
+  maxLevelReduction: 0.35,
+  /** Hard ceiling on the total reduction (level ramp + difficulty bonus + …),
+   * so armor never fully negates a physical blow. */
+  maxReduction: 0.9,
+} as const;
+
+/**
  * Armor — the D2/WoW-shaped physical mitigation. Every worn armor piece
  * (head/chest/legs/feet) carries flat armor points; the ACTIVE pieces sum
  * (a broken piece counts zero — see `isArmorBroken`), and the total turns

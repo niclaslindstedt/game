@@ -612,6 +612,7 @@ describe("stats", () => {
         pos: { x: state.player.pos.x + 60, y: state.player.pos.y },
         hp: 1_000_000,
         maxHp: 1_000_000,
+        mlvl: 1, // a level-1 mob carries ~no armor, so we measure pure crit
       }),
     );
     run(state, idle, 400, (s) => s.stats.damageDealt > 0);

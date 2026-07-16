@@ -120,13 +120,15 @@ export type DifficultyDef = {
   mobLevelMin?: number;
   mobLevelMax?: number;
   /**
-   * MOB ARMOR — the fraction of a PHYSICAL blow (a melee or ranged weapon) the
-   * horde shrugs off; MAGIC weapons (and powerups/procs) ignore it entirely, so
-   * armor is what tilts the endgame toward magic builds and gives a future
-   * ARMOR-PIERCING item stat something to bite. It RISES up the ladder: a small
-   * base on the bottom lanes, +5% on nightmare, +10% on jesus. Applied in
-   * `hitEnemy` (loot.ts) via `mobArmorMult`; the runtime BALANCE › MOB ARMOR
-   * knob scales it. Omitted (test fixtures) = 0, no mitigation.
+   * MOB ARMOR — this rung's flat bonus to PHYSICAL-damage mitigation, STACKED ON
+   * TOP of the steady per-level armor ramp (config `MOB_ARMOR`, applied in
+   * `mobArmorReduction`/`mobArmorMult`, loot.ts). The level ramp climbs to 35%
+   * by the cap on every rung; this bonus is what makes the JUMP between rungs
+   * felt: EASY 0, MEDIUM +2%, HARD +5%, NIGHTMARE +10%, JESUS +15% — so a JESUS
+   * mob reaches the full 50% reduction at the level cap. MAGIC weapons (and
+   * powerups/procs) ignore armor entirely, so the armored top rungs tilt toward
+   * magic builds. Runtime-scaled by BALANCE › MOB ARMOR; omitted (test fixtures)
+   * = 0.
    */
   mobArmor?: number;
   /** Multiplies the wave spawner's live cap AND floor (`maxAlive`,
@@ -291,7 +293,7 @@ export const DIFFICULTY_DEFS: Record<Difficulty, DifficultyDef> = {
     mobLevelOffset: -3,
     mobLevelMin: 1,
     mobLevelMax: 34,
-    mobArmor: 0.05,
+    mobArmor: 0,
     aliveMult: 0.9,
     // The gentlest rung all but parks the horde once a set piece is engaged:
     // 10% speed, so the player can walk straight through it to the boss.
@@ -338,7 +340,7 @@ export const DIFFICULTY_DEFS: Record<Difficulty, DifficultyDef> = {
     mobLevelOffset: -2,
     mobLevelMin: 2,
     mobLevelMax: 36,
-    mobArmor: 0.05,
+    mobArmor: 0.02,
     aliveMult: 1,
     // Halved pursuit once a set piece is engaged — enough to break for the
     // boss, not enough to ignore the swarm entirely.

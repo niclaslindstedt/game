@@ -43,7 +43,8 @@ export const BALANCE_KNOBS: BalanceKnob[] = [
   {
     key: "mobArmor",
     label: "MOB ARMOR",
-    blurb: "PHYSICAL DAMAGE MOBS SHRUG OFF (MAGIC IGNORES IT) - RISES BY RUNG",
+    blurb:
+      "PHYSICAL DAMAGE MOBS SHRUG OFF (MAGIC IGNORES IT) - RISES BY LEVEL & RUNG",
   },
   {
     key: "playerDamage",

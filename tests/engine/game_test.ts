@@ -329,7 +329,11 @@ describe("weapon", () => {
       affixes: [],
     };
     state.enemies = [
-      makeEnemy({ pos: { x: state.player.pos.x + 20, y: state.player.pos.y } }),
+      // Level-1 mob → ~no armor, so the swing lands its full catalog damage.
+      makeEnemy({
+        pos: { x: state.player.pos.x + 20, y: state.player.pos.y },
+        mlvl: 1,
+      }),
     ];
     step(state, idle, DT);
     expect(state.projectiles).toHaveLength(0);

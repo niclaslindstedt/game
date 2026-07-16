@@ -174,17 +174,19 @@ describe("chain lightning", () => {
     const state = quietStage();
     const p = state.player.pos;
     const first = makeEnemy(
-      { id: 9300, pos: { x: p.x + 60, y: p.y }, hp: 1, maxHp: 1 },
+      { id: 9300, pos: { x: p.x + 60, y: p.y }, hp: 1, maxHp: 1, mlvl: 1 },
       "test_fodder",
     );
     // The neighbor: inside chainRange of the first, sturdy enough to survive
-    // the leap so the softened damage is measurable.
+    // the leap so the softened damage is measurable. Level-1 → ~no armor, so
+    // the leap lands its pure chainDamageFrac rather than an armor-shaved cut.
     const second = makeEnemy(
       {
         id: 9301,
         pos: { x: p.x + 60 + WEAPON.chainRange / 2, y: p.y },
         hp: 100,
         maxHp: 100,
+        mlvl: 1,
       },
       "test_fodder",
     );

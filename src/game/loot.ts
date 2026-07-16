@@ -17,6 +17,7 @@ import {
   MEDKIT,
   MENACE,
   MERCY,
+  MOB_ARMOR,
   RARE_MOBS,
   RUN,
   STATS,
@@ -283,21 +284,41 @@ function applyKnockback(
  * conjured abilities (orbit, storm, nuke) omit it and always connect.
  */
 /**
- * The PHYSICAL-damage multiplier the horde's armor leaves after mitigation
- * (config `DifficultyDef.mobArmor`, dev knob `BALANCE.mobArmor`): a melee or
- * ranged blow keeps `1 − armor` of its damage, while MAGIC weapons (and any
- * class-less source — powerups, procs, environmental) pass at full value. This
- * is what makes armored rungs favour magic builds, and the seam a future
- * armor-piercing item stat will widen. Armor is clamped to [0, 1) so a blow
- * always lands SOMETHING.
+ * The fraction of a PHYSICAL blow a mob of monster level `mlvl` on `difficulty`
+ * shrugs off (config `MOB_ARMOR` + `DifficultyDef.mobArmor`, dev knob
+ * `BALANCE.mobArmor`). It RISES STEADILY with the mob's level — a linear ramp
+ * from ~0 at level 1 to `MOB_ARMOR.maxLevelReduction` (35%) at `LEVELING.maxLevel`,
+ * so armor keeps pace with hp and damage instead of fading — PLUS the
+ * difficulty's flat bonus (0 / 2 / 5 / 10 / 15% up the ladder), so JESUS tops out
+ * at 50% at the level cap, the whole scaled by the dev knob and capped below full
+ * immunity by `MOB_ARMOR.maxReduction`. A
+ * future ARMOR-PIERCING item stat subtracts from this. Keyed to the mob's LEVEL,
+ * so a difficulty's mob-level cap also caps its armor.
+ */
+export function mobArmorReduction(mlvl: number, difficulty: string): number {
+  const ramp =
+    MOB_ARMOR.maxLevelReduction *
+    Math.max(0, Math.min(1, (Math.max(1, mlvl) - 1) / (LEVELING.maxLevel - 1)));
+  const bonus = difficultyDef(difficulty).mobArmor ?? 0;
+  return Math.max(
+    0,
+    Math.min(MOB_ARMOR.maxReduction, (ramp + bonus) * BALANCE.mobArmor),
+  );
+}
+
+/**
+ * The PHYSICAL-damage multiplier a mob's armor leaves after mitigation: a melee
+ * or ranged blow keeps `1 − reduction` of its damage, while MAGIC weapons (and
+ * any class-less source — powerups, procs, environmental) pass at FULL value —
+ * the reason armored rungs favour magic builds.
  */
 export function mobArmorMult(
+  mlvl: number,
   difficulty: string,
   weaponClass?: WeaponClass,
 ): number {
   if (weaponClass !== "melee" && weaponClass !== "ranged") return 1;
-  const armor = (difficultyDef(difficulty).mobArmor ?? 0) * BALANCE.mobArmor;
-  return 1 - Math.max(0, Math.min(0.95, armor));
+  return 1 - mobArmorReduction(mlvl, difficulty);
 }
 
 export function hitEnemy(
@@ -395,12 +416,13 @@ export function hitEnemy(
   const crit = state.rng() < playerCritChance(state, weaponClass);
   // MOB ARMOR shaves a PHYSICAL blow (melee/ranged weapon); magic weapons,
   // powerups, procs and environmental hits (no melee/ranged class) ignore it —
-  // the reason armor tilts the endgame toward magic. Scales up the difficulty
-  // ladder (nightmare +5%, jesus +10%) and by the BALANCE › MOB ARMOR knob.
+  // the reason armor tilts the endgame toward magic. It rises steadily with the
+  // mob's LEVEL (to 50% by the cap) plus the difficulty's flat bonus, all scaled
+  // by the BALANCE › MOB ARMOR knob.
   const damage = Math.round(
     baseDamage *
       (crit ? (opts?.critMult ?? STATS.critMultiplier) : 1) *
-      mobArmorMult(state.difficulty, weaponClass),
+      mobArmorMult(enemy.mlvl, state.difficulty, weaponClass),
   );
   enemy.hp -= damage;
   state.stats.damageDealt += damage;

@@ -7,8 +7,10 @@
 import { describe, expect, it } from "vitest";
 
 import {
+  MOB_ARMOR,
   levelDiffXpMult,
   mobArmorMult,
+  mobArmorReduction,
   mobHpScaleFor,
   mobLevelFor,
   mobLevelXp,
@@ -57,23 +59,51 @@ describe("shipped mob-level hard caps", () => {
   });
 });
 
-describe("mob armor (physical mitigation, rises by rung)", () => {
+describe("mob armor (physical mitigation, a level ramp + difficulty bonus)", () => {
   it("shaves physical blows but lets magic through untouched", () => {
-    // Melee/ranged (physical) are mitigated on every rung that carries armor…
-    expect(mobArmorMult("medium", "melee")).toBeCloseTo(0.95); // 5% base
-    expect(mobArmorMult("nightmare", "ranged")).toBeCloseTo(0.9); // +5%
-    expect(mobArmorMult("jesus", "melee")).toBeCloseTo(0.85); // +10%
+    // Melee/ranged (physical) are mitigated; the reduction climbs with the
+    // mob's level and the difficulty's flat bonus stacks on top.
+    expect(mobArmorMult(99, "jesus", "melee")).toBeLessThan(1);
+    expect(mobArmorMult(99, "jesus", "ranged")).toBeLessThan(1);
     // …MAGIC and class-less sources (powerups, procs, environment) ignore it.
-    expect(mobArmorMult("jesus", "magic")).toBe(1);
-    expect(mobArmorMult("jesus", undefined)).toBe(1);
+    expect(mobArmorMult(99, "jesus", "magic")).toBe(1);
+    expect(mobArmorMult(99, "jesus", undefined)).toBe(1);
   });
 
-  it("rises up the difficulty ladder", () => {
-    expect(mobArmorMult("jesus", "melee")).toBeLessThan(
-      mobArmorMult("nightmare", "melee"),
+  it("ramps the level component from ~0 at level 1 to the cap at level 99", () => {
+    // A level-1 mob has essentially no level armor; only the difficulty bonus
+    // remains. On easy (0% bonus) that means no mitigation at all.
+    expect(mobArmorReduction(1, "easy")).toBeCloseTo(0);
+    // The level ramp reaches maxLevelReduction (35%) at the level cap.
+    expect(mobArmorReduction(99, "easy")).toBeCloseTo(
+      MOB_ARMOR.maxLevelReduction,
     );
-    expect(mobArmorMult("nightmare", "melee")).toBeLessThanOrEqual(
-      mobArmorMult("medium", "melee"),
+  });
+
+  it("lands JESUS at 50% reduction at the level cap (35% ramp + 15% bonus)", () => {
+    expect(mobArmorReduction(99, "jesus")).toBeCloseTo(0.5);
+    // Nightmare is a notch below (35% + 10%).
+    expect(mobArmorReduction(99, "nightmare")).toBeCloseTo(0.45);
+  });
+
+  it("rises with mob level and up the difficulty ladder", () => {
+    // Higher level → more armor, on the same difficulty.
+    expect(mobArmorReduction(60, "jesus")).toBeGreaterThan(
+      mobArmorReduction(30, "jesus"),
+    );
+    // Same level → the difficulty bonus orders the rungs (easy < medium < hard
+    // < nightmare < jesus).
+    expect(mobArmorReduction(50, "easy")).toBeLessThan(
+      mobArmorReduction(50, "medium"),
+    );
+    expect(mobArmorReduction(50, "medium")).toBeLessThan(
+      mobArmorReduction(50, "hard"),
+    );
+    expect(mobArmorReduction(50, "hard")).toBeLessThan(
+      mobArmorReduction(50, "nightmare"),
+    );
+    expect(mobArmorReduction(50, "nightmare")).toBeLessThan(
+      mobArmorReduction(50, "jesus"),
     );
   });
 });
