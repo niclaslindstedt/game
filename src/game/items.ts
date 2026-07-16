@@ -2115,10 +2115,14 @@ export function weaponRangeFor(state: GameState, weapon: Equipment): number {
 export function weaponCooldownFor(state: GameState, weapon: Equipment): number {
   const def = weaponDef(weapon.defId);
   const stat = effectiveStat(state, SPEED_STAT[def.class]);
-  return (
-    (def.cooldownMs * WEAPON.baseCooldownMult) /
-    (1 + stat * STATS.attackSpeedPerStat)
-  );
+  // Magic's speed stat is the same INT that scales its damage/crit, so it uses a
+  // discounted per-point rate (see STATS.magicAttackSpeedPerStat) to stop the
+  // damage×speed compounding from running a deep-INT mage away from the field.
+  const perStat =
+    def.class === "magic"
+      ? STATS.magicAttackSpeedPerStat
+      : STATS.attackSpeedPerStat;
+  return (def.cooldownMs * WEAPON.baseCooldownMult) / (1 + stat * perStat);
 }
 
 /**

@@ -1231,8 +1231,25 @@ export const STATS = {
    * speed stat, so standing still stops clearing the horde for free. Kept
    * gentle so the speed stat sweetens cadence rather than dominating a build:
    * pumping DEX/INT ramps fire rate roughly half as fast as damage climbs.
+   *
+   * PHYSICAL lanes only (DEX quickens melee & ranged). Magic uses the lower
+   * `magicAttackSpeedPerStat` below, because a caster's SPEED stat is the SAME
+   * INTELLIGENCE that already scales its damage AND crit — so a point of INT
+   * would otherwise compound cadence ON TOP of damage on the same investment,
+   * and a deep-INT mage's DPS ran away from the physical lanes (which must split
+   * points between a damage stat and DEX) by ~5× in the late game. The reduced
+   * magic value keeps INT sweetening cast cadence without the multiplicative
+   * runaway; magic still leads mid/late, just no longer by a blowout.
    */
   attackSpeedPerStat: 0.02,
+  /**
+   * Attack-speed per point of INTELLIGENCE for MAGIC weapons only (INT is
+   * magic's speed stat — see `SPEED_STAT`). Lower than the physical
+   * `attackSpeedPerStat` because INT already buys a caster's damage and crit, so
+   * its cadence contribution is discounted to stop the DPS compounding (damage ×
+   * speed on one stat) from letting a high-INT mage out-scale every other build.
+   */
+  magicAttackSpeedPerStat: 0.012,
   /** Player base crit chance before stats and equipment. */
   baseCritChance: 0.05,
   /**
