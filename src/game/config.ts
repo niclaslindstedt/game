@@ -2138,6 +2138,60 @@ export const CRATES = {
 } as const;
 
 /**
+ * DESIGN ZONES (see src/game/zones.ts / the `level-design` skill): the shared
+ * tuning for `LevelDef.safeZones` (no spawns + repel) and `quietZones` (no
+ * ambient spawns). Only the repel margin is a number — the exclusion itself is
+ * geometry.
+ */
+export const ZONES = {
+  /**
+   * How far past a safe zone's edge the horde is ejected each tick (world px),
+   * added to the enemy radius by `repelFromZones`. A touch of slack so a mob
+   * pinned at the boundary reads as kept-out, not glued to the line.
+   */
+  repelMargin: 6,
+} as const;
+
+/**
+ * TEMPO (see `LevelDef.tempo` / `tempoIntensity` in step.ts): the clamp on the
+ * interpolated wave-pressure multiplier, so an authored curve can't drive the
+ * horde to zero or to a runaway flood.
+ */
+export const TEMPO = {
+  /** Lowest pressure multiplier a tempo curve can dip to (a genuine lull). */
+  min: 0.2,
+  /** Highest pressure multiplier a tempo curve can peak at (a hard surge). */
+  max: 3,
+} as const;
+
+/**
+ * SPECIAL CHESTS (see `LevelDef.chests` / crates.ts): a placed reward container
+ * — smashed open like a crate, but hardier and with a richer, guaranteed haul.
+ * The payoff that makes a `quietZone` dead area worth the detour.
+ */
+export const CHESTS = {
+  /** Break hp as a multiple of a crate's (a chest is a tougher nut). */
+  hpMult: 2,
+  /** Default sprite when a chest names none. */
+  sprite: "chest",
+  /**
+   * Collision/cover radius (world px). Larger than a crate — a chest is a
+   * landmark you can hide behind.
+   */
+  radius: 9,
+  /**
+   * The chest's gear tier bonus (hotter than a crate's `gearTierBonus`) — a
+   * chest reaches magic/rare/unique and folds a natural unique far more often,
+   * so its haul feels like a real find.
+   */
+  gearTierBonus: 1.1,
+  /** How many equipment rolls a chest always spills (a small hoard). */
+  gearDrops: 2,
+  /** Guaranteed consumables (health/stamina) alongside the gear. */
+  consumables: 2,
+} as const;
+
+/**
  * In-world dialogue (elite ambushes, boss confrontations, story-item lore).
  * Speakers hold their scene until the player has tapped through every page;
  * the world freezes in the `dialogue` phase meanwhile.
@@ -2769,7 +2823,25 @@ export const MAP = {
    * as chunky pixel terrain, and the whole grid stays a few thousand cells
    * even on the widest level. */
   cellSize: 32,
-  /** Radius around the hero uncovered as he moves (world px) — roughly what
-   * the phone view shows around him, so "walked past it" ≈ "on the map". */
-  revealRadius: 120,
+  /** Radius around the hero PERMANENTLY uncovered as he moves (world px) — the
+   * fog lifts as a circle sweeping his path (Warcraft-style, no re-fogging), so
+   * the map (and minimap) show exactly where he has been, not the whole camera
+   * view. Roughly the phone's near view, so "walked past it" ≈ "on the map". */
+  revealRadius: 160,
+  /**
+   * Radius of the hero's CURRENT vision (world px) — the bright CLEAR circle in
+   * the Warcraft-2-style main-view fog. Inside it the world renders full; the
+   * explored ring between it and `revealRadius` (and all explored terrain out of
+   * sight) shows the dithered SHROUD; never-explored terrain is solid black.
+   * Smaller than `revealRadius` so vision's edge reads as a thin dim ring.
+   */
+  sightRadius: 130,
+  /**
+   * The Warcraft-2 SHROUD over explored-but-out-of-sight terrain: a 50% black
+   * checkerboard STIPPLE (the signature look — you can still make out the
+   * terrain through it) at this pixel size, painted at `shroudAlpha`. Never-
+   * explored terrain is solid opaque black instead.
+   */
+  fogStipple: 2,
+  shroudAlpha: 0.86,
 } as const;

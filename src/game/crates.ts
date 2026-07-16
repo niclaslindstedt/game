@@ -9,7 +9,7 @@
 // from step.ts/loot.ts so the crate rules live in one place.
 
 import { clamp, distanceSq, type Vec2 } from "@game/lib/vec.ts";
-import { CRATES, LEVELING } from "./config.ts";
+import { CHESTS, CRATES, LEVELING } from "./config.ts";
 import { rollEquipment } from "./items.ts";
 import { rollMedkitTier } from "./loot.ts";
 import { currentMobLevel, mobHpScaleFor } from "./menace.ts";
@@ -149,7 +149,8 @@ function breakCrate(state: GameState, crate: Obstacle): void {
     pos: { ...crate.pos },
     sprite: crate.sprite,
   });
-  dropCrateLoot(state, crate.pos);
+  if (crate.chest) dropChestLoot(state, crate.pos);
+  else dropCrateLoot(state, crate.pos);
   state.obstacles = state.obstacles.filter((o) => o !== crate);
 }
 
@@ -223,6 +224,32 @@ function dropCrateLoot(state: GameState, at: Vec2): void {
   }
   // A chance at a second consumable so a break rewards more than one pickup.
   if (state.rng() < CRATES.bonusDropChance) {
+    dropConsumable(state, state.rng() < 0.5 ? "health" : "stamina", at);
+  }
+  state.events.push({ type: "itemDropped", pos: { ...at } });
+}
+
+/**
+ * A special CHEST's spill (config `CHESTS`): a small HOARD, not a single drop —
+ * several equipment rolls at a tier bonus hotter than a crate's (so a chest
+ * reaches magic/rare/unique and folds a natural unique far more often) plus a
+ * couple of guaranteed consumables. The payoff that makes a `quietZone` dead
+ * area worth the detour. Tier gates still apply (mlvl-scaled).
+ */
+function dropChestLoot(state: GameState, at: Vec2): void {
+  const mlvl = currentMobLevel(state);
+  for (let i = 0; i < CHESTS.gearDrops; i++) {
+    state.items.push({
+      id: state.nextId++,
+      kind: "equipment",
+      pos: scatter(state, at),
+      equipment: rollEquipment(state, {
+        tierBonus: CHESTS.gearTierBonus,
+        mlvl,
+      }),
+    });
+  }
+  for (let i = 0; i < CHESTS.consumables; i++) {
     dropConsumable(state, state.rng() < 0.5 ? "health" : "stamina", at);
   }
   state.events.push({ type: "itemDropped", pos: { ...at } });

@@ -49,6 +49,18 @@ icons:
 assets:
 	npm run assets
 
+# Compile the YAML level tree (website/scripts/levels/*.yaml) into the engine's
+# generated level catalog — see the level-design skill. Also runs inside
+# `make assets`; this target is the fast path when only a level changed.
+levels:
+	npm run levels
+
+# Render an annotated top-down map of a level for game-design review —
+# `make map LEVEL=mars` (add ARGS="--actual --seed 1 --heatmap"). See the
+# level-design skill.
+map:
+	npm run map --workspace website -- $(LEVEL) $(ARGS)
+
 # Pass the planned version: `make changelog VERSION=0.2.0`. Consumes the
 # fragments in .changes/unreleased/ — run inside a scratch branch or
 # revert afterwards if you only wanted a preview.

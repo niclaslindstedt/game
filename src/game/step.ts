@@ -51,7 +51,9 @@ import {
   SPELL,
   STAMINA,
   STATS,
+  TEMPO,
   WEAPON,
+  ZONES,
 } from "./config.ts";
 import {
   boltProcDamage,
@@ -124,13 +126,14 @@ import {
   damageCrate,
   nearestCrate,
 } from "./crates.ts";
-import { revealAround, revealRect } from "./map.ts";
+import { revealAround } from "./map.ts";
 import {
   mechDamageMult,
   mechSpeedMult,
   stepEnemyMechanics,
 } from "./mechanics.ts";
 import { repelFromMerchant, stepMerchant } from "./merchant.ts";
+import { anyZoneContains, repelFromZones } from "./zones.ts";
 import {
   blockedByObstacle,
   insideObstacle,
@@ -233,12 +236,12 @@ export function step(state: GameState, input: GameInput, dtMs: number): void {
   const exemptKillsBefore = state.menaceExemptKills;
 
   stepPlayer(state, input, dt, dtMs);
-  // Playing lifts the fog of war from everything on screen: the camera view
-  // (input.view) is the exact world rect the player can see, so the map
-  // remembers all of it, not just a circle around the hero. Headless callers
-  // with no camera (bots, tests) fall back to the reveal circle.
-  if (input.view) revealRect(state, input.view);
-  else revealAround(state, state.player.pos);
+  // Playing lifts the fog of war as a CIRCLE sweeping the hero's path
+  // (Warcraft-style, no re-fogging): a `MAP.revealRadius` disc around him is
+  // uncovered every tick, so the map (and minimap) show exactly where he has
+  // walked, not the whole camera view. The main-view fog then re-dims explored
+  // terrain that falls outside his live sight (see render.ts / MAP.sightRadius).
+  revealAround(state, state.player.pos);
   // The wandering merchant strolls (and may be MET) on this tick's player
   // position — right after the hero moves, so the meeting judges what the
   // player actually sees. A scenario FREEZE (state.freeze — the developer
@@ -459,10 +462,15 @@ function stepSpawner(state: GameState, dtMs: number): void {
   // actually crowd the field instead of queueing behind medium's cap. Menace
   // stacks on top — a rampaging player lures a denser, bigger crowd (lureMult
   // ≥ 1), so the floor and cap both swell with the escalation.
+  // The level's TEMPO curve scales the whole pressure envelope over the run —
+  // a lull dips both cap and floor, a surge lifts them (LevelDef.tempo). Flat 1
+  // when the level authors no curve.
+  const tempo = tempoIntensity(state);
   const aliveMult =
     difficultyDef(state.difficulty).aliveMult *
     lureMult(state) *
-    BALANCE.hordeSize;
+    BALANCE.hordeSize *
+    tempo;
   const maxAlive = Math.round(waves.maxAlive * aliveMult);
   // The floor starves as the player camps: a parked hero watches his
   // surroundings drain instead of farming an endless refill. The post-nuke
@@ -626,6 +634,51 @@ function spawnStraggler(
 }
 
 /**
+ * Is `pos` inside a design zone that forbids procedural spawns — a safe zone
+ * (kept clear, and the horde repelled out) or a quiet zone (a dead area with no
+ * ambient horde)? The shared exclusion the wave spawner and pack scatter both
+ * honor (see zones.ts). Authored set pieces and packs pinned by `at` ignore it.
+ */
+function insideNoSpawnZone(state: GameState, pos: Vec2): boolean {
+  const def = levelDef(state.level.id);
+  return (
+    anyZoneContains(def.safeZones, pos) || anyZoneContains(def.quietZones, pos)
+  );
+}
+
+/**
+ * The current wave-pressure multiplier from the level's `tempo` curve
+ * (LevelDef.tempo): the piecewise-linear intensity at the run's progress
+ * through `waves.rampDurationMs`, clamped to config TEMPO. A level with no
+ * tempo curve stays at baseline 1 — today's flat behavior — so this is neutral
+ * everywhere it is read.
+ */
+function tempoIntensity(state: GameState): number {
+  const def = levelDef(state.level.id);
+  const tempo = def.tempo;
+  if (!tempo || tempo.length === 0) return 1;
+  const dur = def.waves?.rampDurationMs ?? 1;
+  const p = clamp(state.stats.timeMs / Math.max(1, dur), 0, 1);
+  let value = (tempo[0] as (typeof tempo)[number]).intensity;
+  for (let i = 0; i < tempo.length; i++) {
+    const cur = tempo[i] as (typeof tempo)[number];
+    if (p <= cur.at) {
+      if (i === 0) {
+        value = cur.intensity;
+        break;
+      }
+      const prev = tempo[i - 1] as (typeof tempo)[number];
+      const span = Math.max(1e-6, cur.at - prev.at);
+      const f = (p - prev.at) / span;
+      value = prev.intensity + (cur.intensity - prev.intensity) * f;
+      break;
+    }
+    value = cur.intensity; // past the last authored point → hold its level
+  }
+  return clamp(value, TEMPO.min, TEMPO.max);
+}
+
+/**
  * Drop one wave monster into the spawn ring around the player. Near a wall
  * the clamped ring can collapse onto the player — rejection-sample a few
  * angles and defer the spawn (false) rather than place an unfair one.
@@ -664,6 +717,8 @@ function spawnWaveEnemy(
     };
     if (distance(pos, state.player.pos) < ENEMY_AI.minSpawnDistance) continue;
     if (insideObstacle(state, pos, def.radius)) continue;
+    // Never stream the horde into a safe or quiet region (see zones.ts).
+    if (insideNoSpawnZone(state, pos)) continue;
     // Stamp the current menace stage: a mob spawned into a rampage evolves —
     // more hp (a challenge knob; kill xp is level-based, and evolved drops roll
     // WORSE, see menace.ts / spawnEnemy), hitting as hard as the difficulty's
@@ -795,7 +850,8 @@ function packMemberPos(
       x: clamp(pack.at.x + Math.cos(angle) * dist, radius, width - radius),
       y: clamp(pack.at.y + Math.sin(angle) * dist, radius, height - radius),
     };
-    if (!insideObstacle(state, pos, radius)) return pos;
+    if (!insideObstacle(state, pos, radius) && !insideNoSpawnZone(state, pos))
+      return pos;
   }
   return {
     x: clamp(pack.at.x, radius, width - radius),
@@ -1834,6 +1890,16 @@ function stepEnemies(state: GameState, dt: number, dtMs: number): void {
     // immaterial; everything else keeps its distance.
     if (def.role !== "boss" && !def.apparition) {
       repelFromMerchant(state, enemy.pos);
+    }
+    // SAFE ZONES keep the trash horde out of the pocket (see zones.ts): only
+    // the minion swarm is ejected — set pieces (elites/bosses) hold their
+    // authored posts, so a safe zone must be authored clear of them.
+    if (def.role === "minion") {
+      repelFromZones(
+        levelDef(state.level.id).safeZones,
+        enemy.pos,
+        def.radius + ZONES.repelMargin,
+      );
     }
     enemy.pos.x = clamp(
       enemy.pos.x,

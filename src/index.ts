@@ -229,6 +229,16 @@ export {
 // helpers the map overlay draws from (`state.explored` + MAP.cellSize).
 export { closeMap, isExplored, mapCols, mapRows, openMap } from "./game/map.ts";
 
+// Design zones — the safe/quiet region geometry LevelDefs carve maps with.
+export {
+  anyZoneContains,
+  repelFromZones,
+  zoneContains,
+  type Zone,
+  type ZoneCircle,
+  type ZoneRect,
+} from "./game/zones.ts";
+
 // The wandering merchant and his coin economy: the shop pause phase, the
 // buy/sell mutators the shop UI calls, and the valuation every price tag
 // reads (see merchant.ts / config MERCHANT + ECONOMY).

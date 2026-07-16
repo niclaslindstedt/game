@@ -1,0 +1,610 @@
+description: |
+  THE BUNKER - the secret cow level (SECRET, off-campaign). The only way in is a
+  ritual nothing explains: kill RASPUTIN in the rift, notice the SEVERED HAND he
+  drops, USE it, step through the blast door it tears open. Inside: the
+  billionaires' continuity-of-wealth vault, six marble suites on one narrow
+  corridor spine, each resident ringed by bodyguards while the privatized security
+  state floods the halls. NO boss - the exit door at the far end is the objective,
+  the world-drop table is the whole game's relic list at sweetened odds. The exit
+  leads back to the rift.
+secret: true
+id: the_bunker
+index: 5
+name: THE BUNKER
+music: hq_lockdown
+intro:
+  - - THE HAND FIT THE DOOR.
+    - THE DOOR FIT NOWHERE.
+    - IT OPENED ANYWAY.
+  - - MARBLE FLOORS. GOLD TAPS. CANNED
+    - CAVIAR TO THE CEILING. SOMEBODY
+    - BUILT A FIVE-STAR APOCALYPSE HERE.
+  - - I KNOW THESE FACES. EVERY MAGAZINE
+    - COVER FROM THE YEARS JOBS DRIED UP.
+    - SO THIS IS WHERE THEY WENT.
+  - - THEY TOOK THE SPIES, THE ARMY, ICE,
+    - AND THE VACUUM CLEANERS. EVERYONE
+    - ELSE GOT THE WELFARE LINE.
+  - - FINE. THEY HOARDED THE BEST GEAR
+    - IN ANY UNIVERSE. TIME FOR SOME
+    - REDISTRIBUTION.
+outro:
+  - - THE EXIT SPAT ME BACK INTO THE
+    - RIFT. THE DOOR SEALED ITSELF,
+    - AND THE SEAM... WANDERED OFF.
+  - - THE LEDGERS ALL READ ZERO. THEY
+    - DIDN'T BUY A BUNKER - THE MACHINE
+    - TOOK THEIR MONEY AND LOCKED THEM IN.
+  - - WHERE WAS THAT PLACE? NO WINDOWS.
+    - NO STARS. EARTH GRAVITY, MOON
+    - SILENCE, MARBLE FROM NO QUARRY.
+  - - UNDER NEVADA? UNDER ZURICH? UNDER
+    - THE MOON? OR JUST A CELLAR BOLTED
+    - TO THE BACK OF THE UNIVERSE?
+  - - NO ADDRESS. NO NATION. NO
+    - EXTRADITION. THE RICHEST ROOM THAT
+    - EVER EXISTED ISN'T ANYWHERE AT ALL.
+  - - "I'LL FIND IT AGAIN THE SAME WAY:"
+    - A COLD HAND, AND A DOOR THAT
+    - SHOULDN'T ANSWER.
+width: 3400
+height: 1700
+gravity: 800
+biome: bunker
+tiles:
+  ground:
+    common: bunker_0
+    rare: bunker_1
+    rareEvery: 21
+  patch:
+    a: carpet_0
+    b: carpet_1
+    every: 8
+heroSuited: false
+foes: SECURITY
+playerSpawn:
+  x: 180
+  y: 850
+landmarks:
+  - kind: bunker_entrance
+    sprite: bunker_gate
+    pos:
+      x: 70
+      y: 850
+    anchor: base
+  - kind: bunker_exit
+    sprite: blast_door
+    pos:
+      x: 3320
+      y: 850
+    anchor: base
+objective:
+  type: reachExit
+  at:
+    x: 3320
+    y: 850
+exitTo: the_rift
+rareSpawns:
+  rare:
+    - moonlighting_agent
+  unique:
+    - the_mole
+spawns:
+  - enemy: cia_agent
+    count: 22
+    band:
+      - 0
+      - 0.35
+  - enemy: vacuum_bot
+    count: 14
+    band:
+      - 0
+      - 0.45
+  - enemy: ice_agent
+    count: 10
+    band:
+      - 0.2
+      - 0.6
+  - enemy: fbi_agent
+    count: 10
+    band:
+      - 0.3
+      - 0.7
+  - enemy: soldier
+    count: 8
+    band:
+      - 0.5
+      - 1
+  - enemy: putain_clone
+    at:
+      x: 770
+      y: 400
+  - enemy: guard_kremlin
+    at:
+      x: 700
+      y: 390
+  - enemy: guard_kremlin
+    at:
+      x: 835
+      y: 345
+  - enemy: guard_kremlin
+    at:
+      x: 800
+      y: 475
+  - enemy: mark_suckerberg
+    at:
+      x: 1650
+      y: 380
+  - enemy: guard_meta
+    at:
+      x: 1580
+      y: 370
+  - enemy: guard_meta
+    at:
+      x: 1715
+      y: 325
+  - enemy: guard_meta
+    at:
+      x: 1680
+      y: 455
+  - enemy: sam_haltman
+    at:
+      x: 2580
+      y: 400
+  - enemy: guard_alignment
+    at:
+      x: 2510
+      y: 390
+  - enemy: guard_alignment
+    at:
+      x: 2645
+      y: 345
+  - enemy: guard_alignment
+    at:
+      x: 2610
+      y: 475
+  - enemy: larry_allison
+    at:
+      x: 770
+      y: 1300
+  - enemy: guard_oracle
+    at:
+      x: 700
+      y: 1290
+  - enemy: guard_oracle
+    at:
+      x: 835
+      y: 1245
+  - enemy: guard_oracle
+    at:
+      x: 800
+      y: 1375
+  - enemy: jeff_baywatch
+    at:
+      x: 1650
+      y: 1320
+  - enemy: guard_prime
+    at:
+      x: 1580
+      y: 1310
+  - enemy: guard_prime
+    at:
+      x: 1715
+      y: 1265
+  - enemy: guard_prime
+    at:
+      x: 1680
+      y: 1395
+  - enemy: donald_dump
+    at:
+      x: 2580
+      y: 1300
+  - enemy: guard_loyalty
+    at:
+      x: 2510
+      y: 1290
+  - enemy: guard_loyalty
+    at:
+      x: 2645
+      y: 1245
+  - enemy: guard_loyalty
+    at:
+      x: 2610
+      y: 1375
+packs:
+  - at:
+      x: 1150
+      y: 850
+    members:
+      - enemy: cia_agent
+        count: 5
+      - enemy: vacuum_bot
+        count: 2
+  - at:
+      x: 2050
+      y: 850
+    members:
+      - enemy: ice_agent
+        count: 3
+      - enemy: fbi_agent
+        count: 3
+  - at:
+      x: 2850
+      y: 850
+    members:
+      - enemy: soldier
+        count: 4
+waves:
+  rampDurationMs: 380000
+  maxAlive: 250
+  minAlive: 26
+  moveSpawnEvery: 52
+  budget:
+    - enemy: cia_agent
+      count: 620
+      window:
+        - 0
+        - 0.5
+    - enemy: vacuum_bot
+      count: 400
+      window:
+        - 0
+        - 0.65
+    - enemy: ice_agent
+      count: 320
+      window:
+        - 0.25
+        - 0.75
+    - enemy: fbi_agent
+      count: 360
+      window:
+        - 0.3
+        - 0.8
+    - enemy: soldier
+      count: 260
+      window:
+        - 0.55
+        - 1
+walls:
+  - kind: bunker_wall
+    sprite: wall
+    from:
+      x: 340
+      y: 8
+    to:
+      x: 340
+      y: 790
+    radius: 10
+    jumpable: false
+  - kind: bunker_wall
+    sprite: wall
+    from:
+      x: 340
+      y: 910
+    to:
+      x: 340
+      y: 1692
+    radius: 10
+    jumpable: false
+  - kind: bunker_wall
+    sprite: wall
+    from:
+      x: 340
+      y: 790
+    to:
+      x: 730
+      y: 790
+    radius: 10
+    jumpable: false
+  - kind: bunker_wall
+    sprite: wall
+    from:
+      x: 810
+      y: 790
+    to:
+      x: 1610
+      y: 790
+    radius: 10
+    jumpable: false
+  - kind: bunker_wall
+    sprite: wall
+    from:
+      x: 1690
+      y: 790
+    to:
+      x: 2530
+      y: 790
+    radius: 10
+    jumpable: false
+  - kind: bunker_wall
+    sprite: wall
+    from:
+      x: 2610
+      y: 790
+    to:
+      x: 3060
+      y: 790
+    radius: 10
+    jumpable: false
+  - kind: bunker_wall
+    sprite: wall
+    from:
+      x: 340
+      y: 910
+    to:
+      x: 950
+      y: 910
+    radius: 10
+    jumpable: false
+  - kind: bunker_wall
+    sprite: wall
+    from:
+      x: 1030
+      y: 910
+    to:
+      x: 1830
+      y: 910
+    radius: 10
+    jumpable: false
+  - kind: bunker_wall
+    sprite: wall
+    from:
+      x: 1910
+      y: 910
+    to:
+      x: 2750
+      y: 910
+    radius: 10
+    jumpable: false
+  - kind: bunker_wall
+    sprite: wall
+    from:
+      x: 2830
+      y: 910
+    to:
+      x: 3060
+      y: 910
+    radius: 10
+    jumpable: false
+  - kind: bunker_wall
+    sprite: wall
+    from:
+      x: 1200
+      y: 8
+    to:
+      x: 1200
+      y: 360
+    radius: 10
+    jumpable: false
+  - kind: bunker_wall
+    sprite: wall
+    from:
+      x: 1200
+      y: 440
+    to:
+      x: 1200
+      y: 790
+    radius: 10
+    jumpable: false
+  - kind: bunker_wall
+    sprite: wall
+    from:
+      x: 2100
+      y: 8
+    to:
+      x: 2100
+      y: 360
+    radius: 10
+    jumpable: false
+  - kind: bunker_wall
+    sprite: wall
+    from:
+      x: 2100
+      y: 440
+    to:
+      x: 2100
+      y: 790
+    radius: 10
+    jumpable: false
+  - kind: bunker_wall
+    sprite: wall
+    from:
+      x: 1200
+      y: 910
+    to:
+      x: 1200
+      y: 1260
+    radius: 10
+    jumpable: false
+  - kind: bunker_wall
+    sprite: wall
+    from:
+      x: 1200
+      y: 1340
+    to:
+      x: 1200
+      y: 1692
+    radius: 10
+    jumpable: false
+  - kind: bunker_wall
+    sprite: wall
+    from:
+      x: 2100
+      y: 910
+    to:
+      x: 2100
+      y: 1260
+    radius: 10
+    jumpable: false
+  - kind: bunker_wall
+    sprite: wall
+    from:
+      x: 2100
+      y: 1340
+    to:
+      x: 2100
+      y: 1692
+    radius: 10
+    jumpable: false
+  - kind: bunker_wall
+    sprite: wall
+    from:
+      x: 3060
+      y: 8
+    to:
+      x: 3060
+      y: 360
+    radius: 10
+    jumpable: false
+  - kind: bunker_wall
+    sprite: wall
+    from:
+      x: 3060
+      y: 440
+    to:
+      x: 3060
+      y: 1260
+    radius: 10
+    jumpable: false
+  - kind: bunker_wall
+    sprite: wall
+    from:
+      x: 3060
+      y: 1340
+    to:
+      x: 3060
+      y: 1692
+    radius: 10
+    jumpable: false
+placedItems:
+  - kind: story
+    defId: bunker_ledger
+    pos:
+      x: 1650
+      y: 800
+  - kind: medkit
+    pos:
+      x: 150
+      y: 700
+  - kind: repair
+    pos:
+      x: 150
+      y: 1000
+  - kind: xp
+    pos:
+      x: 770
+      y: 620
+  - kind: xp
+    pos:
+      x: 2580
+      y: 620
+  - kind: medkit
+    pos:
+      x: 1650
+      y: 150
+  - kind: repair
+    pos:
+      x: 1650
+      y: 1550
+  - kind: xp
+    pos:
+      x: 770
+      y: 1500
+  - kind: medkit
+    pos:
+      x: 2900
+      y: 1500
+  - kind: medkit
+    pos:
+      x: 3250
+      y: 700
+obstacles:
+  - kind: server
+    count: 14
+    radius: 9
+    jumpable: false
+  - kind: vending
+    count: 8
+    radius: 8
+    jumpable: false
+  - kind: marble_column
+    count: 10
+    radius: 9
+    jumpable: false
+  - kind: crate
+    count: 16
+    radius: 7
+    jumpable: true
+    breakable: true
+  - kind: gold_pallet
+    count: 10
+    radius: 7
+    jumpable: true
+decor:
+  - kind: money_pile
+    count: 16
+  - kind: papers
+    count: 18
+  - kind: cable
+    count: 12
+  - kind: stain
+    count: 10
+decorClearance: 80
+firstSightThoughts:
+  - enemy: cia_agent
+    thought: bunker_arrival
+    radius: 200
+  - enemy: vacuum_bot
+    thought: bunker_vacuum
+    after: bunker_arrival
+  - enemy: ice_agent
+    thought: bunker_ice
+    after: bunker_arrival
+loot:
+  weaponPool:
+    - nine_mm
+    - pump_shotgun
+    - gladius
+    - longbow
+    - blunderbuss
+    - executioners_axe
+    - sorcerers_staff
+    - ember_wand
+    - mono_wire_lariat
+    - plasma_peacemaker
+    - branding_iron
+    - maglev_repeater
+    - snake_oil_sprayer
+    - high_noon
+  gearPool:
+    - riot_helmet
+    - kevlar_vest
+    - knights_helm
+    - great_helm
+    - centurion_cuirass
+    - chainmail_hauberk
+    - dragonscale_cloak
+    - plate_greaves
+    - sabatons
+    - servo_stetson
+    - mirrorshade_visor
+    - exo_duster
+    - tin_star_cuirass
+    - rattlesnake_chaps
+    - spur_jet_boots
+    - stardust_charm
+    - crystal_orb
+    - enchanted_ring
+    - bag
+  abilityPool:
+    - fire_orbs
+    - storm_cell
+    - stasis_field
+    - item_magnet
+  namedDropMult: 2
+  arrowCapByDifficulty:
+    easy: 31
+    medium: 35
+    hard: 36
+    nightmare: 51
+    jesus: 69

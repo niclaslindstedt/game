@@ -155,6 +155,14 @@ export type SimulateLevelOptions = {
     levelId: string;
     isBoss: boolean;
   }) => void;
+  /**
+   * SPATIAL TRACE: sample the hero's position over the run and every kill's
+   * location into `report.spatial` — the data the map renderer's `--heatmap`
+   * overlay draws (dwell time = where the map was actually USED, plus where the
+   * fights happened) and a coverage % of the map the hero entered. Off by
+   * default so an ordinary run keeps the report lean.
+   */
+  trace?: boolean;
 };
 
 export type SimulateCampaignOptions = {
@@ -395,6 +403,23 @@ export type LevelReport = {
     /** XP the cap's taper withheld across the run. */
     forfeited: number;
   };
+  /**
+   * SPATIAL TRACE (only when `trace` was set): the hero's sampled path (dwell —
+   * where the map was actually used), every kill's location, and the % of the
+   * map grid the hero entered. Feeds the map renderer's `--heatmap` overlay.
+   */
+  spatial?: {
+    /** Hero dwell samples (where the map was used). */
+    path: { x: number; y: number }[];
+    /** Every kill location. */
+    kills: { x: number; y: number }[];
+    /** Where each mob first appeared — the horde's entry map. */
+    spawns: { x: number; y: number }[];
+    /** Coarse mob-presence grid (where the horde formed/moved), row-major. */
+    mobDensity: { cols: number; rows: number; cell: number; grid: number[] };
+    /** % of the map grid the hero entered. */
+    coveragePct: number;
+  };
 };
 
 export type CampaignReport = {
@@ -474,6 +499,7 @@ export function runLevel(options: SimulateLevelOptions): {
     realisticPacing,
     autoShop,
     onKill,
+    trace,
   } = options;
 
   // Apply the requested balance knobs for the duration of the run, then put the
@@ -495,6 +521,7 @@ export function runLevel(options: SimulateLevelOptions): {
       realisticPacing,
       autoShop,
       onKill,
+      trace,
     });
     return { report, loadout: extractLoadout(state) };
   } finally {
@@ -515,6 +542,7 @@ function playRun(args: {
   realisticPacing?: boolean;
   autoShop?: boolean;
   onKill?: SimulateLevelOptions["onKill"];
+  trace?: boolean;
 }): { report: LevelReport; state: GameState } {
   const state = createGame(
     args.seed,
@@ -605,6 +633,27 @@ function playRun(args: {
   let lastDamage = 0;
   let progressPos = { x: state.player.pos.x, y: state.player.pos.y };
 
+  // Spatial trace (opt-in, `args.trace`): the hero's sampled dwell path, kill
+  // positions, and a coarse coverage grid (which map cells he entered).
+  const tracePath: { x: number; y: number }[] = [];
+  const traceKills: { x: number; y: number }[] = [];
+  const traceSpawns: { x: number; y: number }[] = [];
+  const coverageCells = new Set<number>();
+  const TRACE_SAMPLE_MS = 500;
+  const COVER_CELL = 96;
+  const coverCols = Math.max(1, Math.ceil(state.level.width / COVER_CELL));
+  const coverRows = Math.max(1, Math.ceil(state.level.height / COVER_CELL));
+  // Mob density: accumulated enemy presence per coarse cell over the run —
+  // where the horde actually FORMS and MOVES (vs the hero's dwell), so a map's
+  // packs/waves/geometry can be checked against where the pressure lands.
+  const mobDensity = new Float64Array(coverCols * coverRows);
+  const SPAWN_CAP = 4000; // bound the spawn-marker list on long runs
+  let traceAccumMs = 0;
+  const coverIdx = (x: number, y: number) =>
+    Math.min(coverRows - 1, Math.max(0, Math.floor(y / COVER_CELL))) *
+      coverCols +
+    Math.min(coverCols - 1, Math.max(0, Math.floor(x / COVER_CELL)));
+
   // The hero can't fight his way out with the unbreakable fallback sidearm, or
   // with a weapon about to snap — the cue to run to the merchant (autoShop).
   const weaponStarved = (): boolean => {
@@ -654,6 +703,13 @@ function playRun(args: {
       seenEnemies.add(enemy.id);
       const d = enemyDef(enemy.defId);
       if (d.apparition) continue; // scenery, not a combatant
+      // Spatial trace: where each mob first appeared (wave ring, pack anchor,
+      // placed spawn) — the horde's ENTRY map.
+      if (args.trace && traceSpawns.length < SPAWN_CAP)
+        traceSpawns.push({
+          x: Math.round(enemy.pos.x),
+          y: Math.round(enemy.pos.y),
+        });
       const acc = mobs.get(enemy.defId) ?? {
         spawned: 0,
         killed: 0,
@@ -800,6 +856,26 @@ function playRun(args: {
     const beforeXpGained = state.stats.xpGained;
     step(state, botAct(bot, state), args.dtMs);
     phaseAdvances = 0;
+
+    // Spatial trace: mark the cell the hero is in, and sample his path + the
+    // horde's positions on a fixed cadence (dwell time = how long he lingered
+    // where; mob density = where the horde formed and moved).
+    if (args.trace) {
+      coverageCells.add(coverIdx(state.player.pos.x, state.player.pos.y));
+      traceAccumMs += args.dtMs;
+      if (traceAccumMs >= TRACE_SAMPLE_MS) {
+        traceAccumMs -= TRACE_SAMPLE_MS;
+        tracePath.push({
+          x: Math.round(state.player.pos.x),
+          y: Math.round(state.player.pos.y),
+        });
+        for (const enemy of state.enemies) {
+          if (enemyDef(enemy.defId).apparition) continue;
+          const idx = coverIdx(enemy.pos.x, enemy.pos.y);
+          mobDensity[idx] = (mobDensity[idx] ?? 0) + 1;
+        }
+      }
+    }
     // Register same-step spawns BEFORE reading the events, so a mob hit the
     // tick it appeared still attributes its blows to the right accumulator.
     trackSpawns();
@@ -837,6 +913,11 @@ function playRun(args: {
             boss.killed = true;
             boss.killedAtMs = state.stats.timeMs;
           }
+          if (args.trace)
+            traceKills.push({
+              x: Math.round(event.pos.x),
+              y: Math.round(event.pos.y),
+            });
           args.onKill?.({
             heroLevel: state.player.level,
             difficulty: args.difficulty,
@@ -1151,6 +1232,24 @@ function playRun(args: {
       .sort((a, b) => b.spawned - a.spawned),
     bosses: bossList.sort((a, b) => a.metAtMs - b.metAtMs),
     xpCap: { cap, reachedAtMs, forfeited },
+    ...(args.trace
+      ? {
+          spatial: {
+            path: tracePath,
+            kills: traceKills,
+            spawns: traceSpawns,
+            mobDensity: {
+              cols: coverCols,
+              rows: coverRows,
+              cell: COVER_CELL,
+              grid: Array.from(mobDensity),
+            },
+            coveragePct: Math.round(
+              (coverageCells.size / (coverCols * coverRows)) * 100,
+            ),
+          },
+        }
+      : {}),
   };
   return { report, state };
 }

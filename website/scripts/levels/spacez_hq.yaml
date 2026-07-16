@@ -1,0 +1,498 @@
+description: |-
+  LEVEL 1 - SPACEZ HQ. Ada's trail points off-planet and our hero builds
+  spaceships for a living - but his garage ship's engine needs the one part
+  SpaceZ keeps in its cleanroom, and the night shift is not letting it leave the
+  building. Office rooms and lab corridors are carved by solid walls with door
+  gaps; MUSKRAT, the mutant rat who ate the part, nests under the prototype rocket
+  on the far side. The onboarding level: an opening-strike beat draws the weapon,
+  early drops teach the loot loop.
+campaign: true
+id: spacez_hq
+index: 1
+name: SPACEZ HQ
+prelude: prelude
+music: hq_lockdown
+intro:
+  - - ADA WENT OUT FOR CHIPS AND
+    - SODA TWO HOURS AGO.
+    - SHE NEVER CAME BACK.
+  - - THE TRACKER I SEWED INTO HER JACKET
+    - JUST PINGED - FROM SPACE. SOMEONE
+    - IS TAKING HER OFF THE PLANET.
+  - - TO FOLLOW HER I NEED A SHIP. I'VE
+    - BEEN BUILDING ONE IN THE GARAGE
+    - FOR YEARS. IT'S ALMOST DONE.
+  - - ALMOST. THE ENGINE STILL NEEDS ONE
+    - PART I COULD NEVER GET. SPACEZ
+    - KEEPS IT IN THEIR CLEANROOM VAULT.
+  - - I KNOW, BECAUSE I WORKED THERE. I
+    - BUILT THEIR ENGINES - TILL AN AI
+    - LEARNED MY JOB AND THEY FIRED ME.
+  - - THE WHOLE BLOCK LOST ITS JOBS
+    - THE SAME WAY. NOW WE ALL LIVE
+    - ON WELFARE AND MOVIE NIGHTS.
+  - - THEY NEVER CHANGED THE LOCKS.
+    - EVERY DOOR STILL KNOWS MY HAND.
+  - - SO TONIGHT I TAKE THE PART,
+    - FINISH THE SHIP, AND GO GET
+    - ADA BACK.
+width: 2000
+height: 1200
+gravity: 800
+biome: spacez
+tiles:
+  ground:
+    common: lab_0
+    rare: lab_1
+    rareEvery: 11
+  patch:
+    a: vent_0
+    b: vent_1
+    every: 9
+heroSuited: false
+foes: STAFF
+merchant:
+  sprite: merchant_vendor
+  greeting:
+    - - EASY, FRIEND. I'M NOT STAFF.
+      - I STOCK THE VENDING MACHINES.
+      - SOMEBODY HAS TO, EVEN TONIGHT.
+    - - LOCKDOWN IS A SELLER'S MARKET.
+      - I'LL BUY WHAT WEIGHS YOU DOWN,
+      - SELL WHAT KEEPS YOU UPRIGHT.
+  returnGreeting:
+    - BACK ALREADY, FRIEND?
+    - THE MACHINES MISSED YOU.
+playerSpawn:
+  x: 220
+  y: 620
+landmarks:
+  - kind: entrance
+    pos:
+      x: 84
+      y: 620
+  - kind: rocket
+    pos:
+      x: 1830
+      y: 520
+objective:
+  type: killBoss
+rareSpawns:
+  rare:
+    - wandering_tourist
+    - night_shift_temp
+  unique:
+    - employee_of_the_month
+spawns:
+  - enemy: intern
+    count: 22
+    band:
+      - 0
+      - 0.22
+  - enemy: scientist
+    count: 14
+    band:
+      - 0.05
+      - 0.35
+  - enemy: engineer
+    count: 5
+    band:
+      - 0.45
+      - 0.8
+  - enemy: guard
+    count: 4
+    band:
+      - 0.55
+      - 0.95
+  - enemy: hazmat
+    count: 3
+    band:
+      - 0.7
+      - 1.05
+  - enemy: optimusk
+    count: 4
+    band:
+      - 0.5
+      - 1
+  - enemy: night_manager
+    at:
+      x: 560
+      y: 370
+  - enemy: architect
+    at:
+      x: 950
+      y: 240
+  - enemy: security_chief
+    at:
+      x: 1050
+      y: 700
+  - enemy: head_scientist
+    at:
+      x: 1270
+      y: 400
+  - enemy: janitor
+    at:
+      x: 900
+      y: 1000
+  - enemy: muskrat
+    at:
+      x: 1730
+      y: 620
+packs:
+  - at:
+      x: 1000
+      y: 900
+    members:
+      - enemy: intern
+        count: 5
+      - enemy: scientist
+        count: 3
+  - at:
+      x: 1420
+      y: 430
+    members:
+      - enemy: engineer
+        count: 3
+      - enemy: guard
+        count: 2
+waves:
+  rampDurationMs: 280000
+  maxAlive: 200
+  minAlive: 24
+  moveSpawnEvery: 60
+  budget:
+    - enemy: intern
+      count: 380
+      window:
+        - 0
+        - 0.5
+    - enemy: scientist
+      count: 300
+      window:
+        - 0.2
+        - 0.7
+    - enemy: engineer
+      count: 200
+      window:
+        - 0.4
+        - 0.85
+    - enemy: guard
+      count: 110
+      window:
+        - 0.55
+        - 0.95
+    - enemy: hazmat
+      count: 70
+      window:
+        - 0.7
+        - 1
+    - enemy: optimusk
+      count: 55
+      window:
+        - 0.55
+        - 1
+walls:
+  - kind: wall
+    from:
+      x: 650
+      y: 8
+    to:
+      x: 650
+      y: 300
+    radius: 8
+    jumpable: false
+  - kind: wall
+    from:
+      x: 650
+      y: 430
+    to:
+      x: 650
+      y: 760
+    radius: 8
+    jumpable: false
+  - kind: wall
+    from:
+      x: 650
+      y: 890
+    to:
+      x: 650
+      y: 1192
+    radius: 8
+    jumpable: false
+  - kind: wall
+    from:
+      x: 650
+      y: 600
+    to:
+      x: 980
+      y: 600
+    radius: 8
+    jumpable: false
+  - kind: wall
+    from:
+      x: 1110
+      y: 600
+    to:
+      x: 1350
+      y: 600
+    radius: 8
+    jumpable: false
+  - kind: wall
+    from:
+      x: 1350
+      y: 8
+    to:
+      x: 1350
+      y: 340
+    radius: 8
+    jumpable: false
+  - kind: wall
+    from:
+      x: 1350
+      y: 470
+    to:
+      x: 1350
+      y: 820
+    radius: 8
+    jumpable: false
+  - kind: wall
+    from:
+      x: 1350
+      y: 950
+    to:
+      x: 1350
+      y: 1192
+    radius: 8
+    jumpable: false
+  - kind: wall
+    from:
+      x: 310
+      y: 8
+    to:
+      x: 310
+      y: 186
+    radius: 8
+    jumpable: false
+  - kind: wall
+    from:
+      x: 8
+      y: 180
+    to:
+      x: 236
+      y: 180
+    radius: 8
+    jumpable: false
+  - kind: wall
+    from:
+      x: 1750
+      y: 1036
+    to:
+      x: 1750
+      y: 1192
+    radius: 8
+    jumpable: false
+  - kind: wall
+    from:
+      x: 1756
+      y: 1030
+    to:
+      x: 1926
+      y: 1030
+    radius: 8
+    jumpable: false
+  - kind: wall
+    from:
+      x: 1770
+      y: 8
+    to:
+      x: 1770
+      y: 186
+    radius: 8
+    jumpable: false
+  - kind: wall
+    from:
+      x: 1834
+      y: 180
+    to:
+      x: 1994
+      y: 180
+    radius: 8
+    jumpable: false
+doors:
+  - id: storage
+    from:
+      x: 244
+      y: 180
+    to:
+      x: 304
+      y: 180
+    radius: 8
+  - id: vault
+    from:
+      x: 1932
+      y: 1030
+    to:
+      x: 1992
+      y: 1030
+    radius: 8
+  - id: core
+    from:
+      x: 1776
+      y: 180
+    to:
+      x: 1830
+      y: 180
+    radius: 8
+placedItems:
+  - kind: story
+    defId: ada_soda
+    pos:
+      x: 640
+      y: 640
+  - kind: equipment
+    defId: pump_shotgun
+    pos:
+      x: 100
+      y: 80
+  - kind: repair
+    pos:
+      x: 150
+      y: 60
+  - kind: repair
+    pos:
+      x: 190
+      y: 100
+  - kind: medkit
+    pos:
+      x: 245
+      y: 80
+  - kind: story
+    defId: antigrav_unit
+    pos:
+      x: 1870
+      y: 1120
+  - kind: xp
+    pos:
+      x: 1820
+      y: 1100
+  - kind: xp
+    pos:
+      x: 1920
+      y: 1100
+  - kind: story
+    defId: core_log
+    pos:
+      x: 1885
+      y: 90
+  - kind: xp
+    pos:
+      x: 1810
+      y: 60
+  - kind: medkit
+    pos:
+      x: 1960
+      y: 60
+obstacles:
+  - kind: server
+    count: 16
+    radius: 9
+    jumpable: false
+  - kind: vending
+    count: 8
+    radius: 8
+    jumpable: false
+  - kind: desk
+    count: 18
+    radius: 8
+    jumpable: true
+  - kind: crate
+    count: 22
+    radius: 7
+    jumpable: true
+    breakable: true
+decor:
+  - kind: papers
+    count: 24
+  - kind: cable
+    count: 16
+  - kind: stain
+    count: 12
+  - kind: plant
+    count: 10
+decorClearance: 70
+firstSightThoughts:
+  - enemy: intern
+    thought: spacez_staff
+    radius: 200
+  - enemy: optimusk
+    thought: spacez_optimusk
+openingStrike:
+  enemy: vanguard_scientist
+  at:
+    x: 400
+    y: 620
+  thought: spacez_armed
+  after: spacez_staff
+  radius: 22
+loot:
+  weaponPool:
+    - box_cutter
+    - security_baton
+    - nine_mm
+    - prototype_laser
+    - microwave_emitter
+    - pump_shotgun
+  gearPool:
+    - baseball_cap
+    - hard_hat
+    - welding_mask
+    - riot_helmet
+    - lab_coat
+    - coveralls
+    - kevlar_vest
+    - cargo_pants
+    - padded_work_pants
+    - sneakers
+    - steel_toe_boots
+    - id_badge
+    - bag
+  abilityPool:
+    - storm_cell
+    - stasis_field
+    - item_magnet
+  worldUniques:
+    easy:
+      - the_first_draft
+      - deadsprint
+      - longwatch
+    medium:
+      - the_first_draft
+      - deadsprint
+      - longwatch
+    hard:
+      - the_first_draft
+      - deadsprint
+      - longwatch
+    nightmare:
+      - stormlash
+      - falconmail
+    jesus:
+      - lightbinder
+      - starsight
+      - the_anvil
+      - the_last_word
+      - the_severance
+  arrowCapByDifficulty:
+    easy: 11
+    medium: 12
+    hard: 13
+    nightmare: 38
+    jesus: 58
+  allClearWeapon: golden_stapler
+  earlyDrops:
+    - atKills: 2
+      weapon: security_baton
+    - atKills: 5
+      ability: storm_cell
+    - atKills: 8
+      item: xp

@@ -1,0 +1,431 @@
+description: |-
+  LEVEL 3 - MARS. SpaceZ wrote the moon off and moved the whole operation here.
+  Open red desert on the west - rovers working dust already full of tire tracks -
+  hardens into the colony base on the east (a tile zones split at the dome wall):
+  deck plating, servo robots, the fembot line, and the billionaires who bought the
+  lifeboat. ELON MOSQUE holds court at the far end; he doesn't die - he flees into
+  a rift, and the rift stays. Two airlock gaps funnel the horde; the TERRARIUM
+  sits locked in the SE corner behind a keycard.
+campaign: true
+id: mars
+index: 3
+name: MARS
+prelude:
+  - moon_depart
+  - voyage_mars
+music: red_dust
+intro:
+  - - HE SAID THE MOON WAS SPACEZ'S BIG
+    - MISTAKE - THE COMPANY PACKED IT
+    - ALL INTO CRATES AND RAN. TO MARS.
+  - - I KNOW WHAT A SPACEZ COLONY LOOKS
+    - LIKE - I REBUILT THEIR LANDER ONCE.
+    - DOMES. ROBOTS. SECRETS.
+  - - SOMEBODY DOWN HERE TRADED MY
+    - GIRL AWAY LIKE CARGO.
+    - BAD TRADE. FOR THEM.
+width: 2800
+height: 1500
+gravity: 520
+biome: mars
+tiles:
+  ground:
+    common: mars_0
+    rare: mars_1
+    rareEvery: 19
+  patch:
+    a: rust_0
+    b: rust_1
+    every: 7
+  zones:
+    - rect:
+        x: 1560
+        y: 0
+        width: 1240
+        height: 1500
+      ground:
+        common: deck_0
+        rare: deck_1
+        rareEvery: 13
+      patch:
+        a: vent_0
+        b: vent_1
+        every: 9
+foes: MACHINES
+merchant:
+  sprite: merchant_mars
+  greeting:
+    - - A BREATHING CUSTOMER. AT LAST.
+      - I RAN THE COLONY COMMISSARY
+      - TILL THE AI RAN THE NUMBERS.
+    - - IT KEPT THE DOME. I KEPT THE
+      - SCALES. SELL ME WHAT THE
+      - MACHINES DROP - BUY WHAT HELPS.
+  returnGreeting:
+    - THE LIVE ONE RETURNS.
+    - SCALES ARE STILL HONEST.
+playerSpawn:
+  x: 300
+  y: 750
+landmarks:
+  - kind: starship
+    pos:
+      x: 170
+      y: 750
+  - kind: billboard
+    pos:
+      x: 760
+      y: 480
+    anchor: base
+  - kind: shrine
+    pos:
+      x: 2620
+      y: 1290
+    anchor: base
+objective:
+  type: killBoss
+rareSpawns:
+  rare:
+    - misprinted_fembot
+    - derelict_rover
+  unique:
+    - unit_zero
+spawns:
+  - enemy: scout_rover
+    count: 20
+    band:
+      - 0
+      - 0.3
+  - enemy: mining_rover
+    count: 5
+    band:
+      - 0.25
+      - 0.6
+  - enemy: servo_bot
+    count: 12
+    band:
+      - 0.45
+      - 0.85
+  - enemy: fembot
+    count: 8
+    band:
+      - 0.6
+      - 1
+  - enemy: optimusk
+    count: 5
+    band:
+      - 0.4
+      - 1
+  - enemy: larry_webpage
+    at:
+      x: 1100
+      y: 520
+  - enemy: build_gates
+    at:
+      x: 1760
+      y: 920
+  - enemy: optimusk_prime
+    at:
+      x: 1950
+      y: 380
+  - enemy: peter_seal
+    at:
+      x: 2340
+      y: 1240
+  - enemy: elon_mosque
+    at:
+      x: 2620
+      y: 700
+packs:
+  - at:
+      x: 900
+      y: 650
+    members:
+      - enemy: scout_rover
+        count: 6
+  - at:
+      x: 1450
+      y: 950
+    members:
+      - enemy: scout_rover
+        count: 4
+      - enemy: mining_rover
+        count: 2
+  - at:
+      x: 2050
+      y: 560
+    members:
+      - enemy: servo_bot
+        count: 4
+      - enemy: fembot
+        count: 3
+waves:
+  rampDurationMs: 330000
+  maxAlive: 220
+  minAlive: 22
+  moveSpawnEvery: 60
+  budget:
+    - enemy: scout_rover
+      count: 450
+      window:
+        - 0
+        - 0.5
+    - enemy: servo_bot
+      count: 350
+      window:
+        - 0.25
+        - 0.75
+    - enemy: fembot
+      count: 250
+      window:
+        - 0.5
+        - 0.95
+    - enemy: mining_rover
+      count: 60
+      window:
+        - 0.35
+        - 1
+    - enemy: optimusk
+      count: 40
+      window:
+        - 0.55
+        - 1
+walls:
+  - kind: wall
+    from:
+      x: 1560
+      y: 8
+    to:
+      x: 1560
+      y: 560
+    radius: 8
+    jumpable: false
+  - kind: wall
+    from:
+      x: 1560
+      y: 700
+    to:
+      x: 1560
+      y: 1000
+    radius: 8
+    jumpable: false
+  - kind: wall
+    from:
+      x: 1560
+      y: 1140
+    to:
+      x: 1560
+      y: 1492
+    radius: 8
+    jumpable: false
+  - kind: wall
+    from:
+      x: 2150
+      y: 8
+    to:
+      x: 2150
+      y: 600
+    radius: 8
+    jumpable: false
+  - kind: wall
+    from:
+      x: 2150
+      y: 740
+    to:
+      x: 2150
+      y: 1150
+    radius: 8
+    jumpable: false
+  - kind: wall
+    from:
+      x: 2150
+      y: 1290
+    to:
+      x: 2150
+      y: 1492
+    radius: 8
+    jumpable: false
+  - kind: wall
+    from:
+      x: 2450
+      y: 1160
+    to:
+      x: 2450
+      y: 1492
+    radius: 8
+    jumpable: false
+  - kind: wall
+    from:
+      x: 2456
+      y: 1160
+    to:
+      x: 2724
+      y: 1160
+    radius: 8
+    jumpable: false
+doors:
+  - id: terrarium
+    from:
+      x: 2730
+      y: 1160
+    to:
+      x: 2790
+      y: 1160
+    radius: 8
+placedItems:
+  - kind: story
+    defId: ada_message
+    pos:
+      x: 1900
+      y: 700
+  - kind: story
+    defId: tribute_schedule
+    pos:
+      x: 2620
+      y: 1380
+  - kind: xp
+    pos:
+      x: 2540
+      y: 1420
+  - kind: xp
+    pos:
+      x: 2700
+      y: 1420
+  - kind: medkit
+    pos:
+      x: 2620
+      y: 1440
+obstacles:
+  - kind: marsrock
+    count: 26
+    radius: 8
+    jumpable: false
+    rockSizes:
+      - - 1
+        - 1
+      - - 1
+        - 1
+      - - 1
+        - 2
+      - - 2
+        - 2
+    cell: 16
+  - kind: crater
+    sprite: crater_red_small
+    count: 10
+    radius: 7
+    jumpable: true
+  - kind: crater
+    sprite: crater_red_big
+    count: 6
+    radius: 12
+    jumpable: true
+  - kind: crate
+    count: 16
+    radius: 7
+    jumpable: true
+    breakable: true
+decor:
+  - kind: rocks
+    sprite: red_rocks
+    count: 22
+  - kind: tracks
+    count: 14
+decorClearance: 80
+firstKillThoughts:
+  - enemy: scout_rover
+    thought: mars_rover
+  - enemy: fembot
+    thought: mars_fembot
+loot:
+  weaponPool:
+    - smart_pistol
+    - plasma_blade
+    - railgun
+    - arc_projector
+    - graviton_maw
+    - gravity_maul
+    - box_cutter
+    - security_baton
+    - nine_mm
+    - prototype_laser
+    - microwave_emitter
+    - pump_shotgun
+    - lunar_wrench
+    - service_revolver
+    - geology_hammer
+    - surplus_carbine
+    - retro_raygun
+    - pulsar_rod
+  gearPool:
+    - targeting_monocle
+    - neural_visor
+    - printed_helm
+    - polymer_shell
+    - nanoweave_plate
+    - aegis_exoplate
+    - carbon_leggings
+    - servo_greaves
+    - gecko_soles
+    - mag_boots
+    - red_dust_charm
+    - bag
+    - baseball_cap
+    - hard_hat
+    - welding_mask
+    - riot_helmet
+    - lab_coat
+    - coveralls
+    - kevlar_vest
+    - cargo_pants
+    - padded_work_pants
+    - sneakers
+    - steel_toe_boots
+    - mission_cap
+    - apollo_visor
+    - flight_jacket
+    - micrometeoroid_vest
+    - thermal_leggings
+    - pressure_trousers
+    - lunar_overshoes
+    - moon_boots
+  abilityPool:
+    - fire_orbs
+    - storm_cell
+    - stasis_field
+    - item_magnet
+  worldUniques:
+    easy:
+      - dustborn
+      - redwind
+      - colossus_plate
+    medium:
+      - dustborn
+      - redwind
+      - colossus_plate
+    hard:
+      - dustborn
+      - redwind
+      - colossus_plate
+    nightmare:
+      - pyrelight
+      - ironroot_greaves
+    jesus:
+      - meteorfall
+      - sunspear
+      - crown_of_ruin
+      - the_pilgrim_star
+      - the_bulwark
+      - the_ember_hour
+      - the_motherlode
+  arrowCapByDifficulty:
+    easy: 22
+    medium: 24
+    hard: 26
+    nightmare: 44
+    jesus: 63
+  earlyDrops:
+    - atKills:
+        - 40
+        - 100
+      weapon: cyber_katana

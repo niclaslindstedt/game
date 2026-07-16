@@ -933,6 +933,11 @@ export type Obstacle = {
   hp?: number;
   /** Full break hp (breakable obstacles only). */
   maxHp?: number;
+  /**
+   * A special CHEST (see `LevelDef.chests` / crates.ts): a breakable that spills
+   * a richer, guaranteed haul than a scattered crate. Absent on plain crates.
+   */
+  chest?: boolean;
 };
 
 /** A fixed story prop (a lander, a flag, …) placed by the level def. */

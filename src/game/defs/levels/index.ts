@@ -1,18 +1,18 @@
 // SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
-// The level registry: one LevelDef per file under this directory (spacez_hq,
-// moon, …), merged into LEVELS here and ordered by LEVEL_ORDER. This split
-// keeps each level's ~250 lines of geometry, walls, waves, and loot in its
-// own file so the catalog scales to 20+ levels without any file passing the
-// source-size cap. Merging throws loudly on a duplicate id.
+// The level registry: one YAML file per level under
+// `website/scripts/levels/<id>.yaml` (spacez_hq, moon, …), compiled by
+// `website/scripts/generate-levels.mjs` into `src/generated/levels.ts` (the
+// map/atlas equivalent for levels — gitignored, regenerated on build). This
+// module merges the generated defs into LEVELS and re-exposes the same
+// accessor surface the app, the campaign progression, and the tests read.
+// Merging throws loudly on a duplicate id.
 
+import {
+  GENERATED_CAMPAIGN_ORDER,
+  GENERATED_LEVELS,
+  GENERATED_SECRET_ORDER,
+} from "../../../generated/levels.ts";
 import type { LevelDef } from "./types.ts";
-
-import { THE_BUNKER } from "./bunker.ts";
-import { EASTWORLD } from "./eastworld.ts";
-import { MARS } from "./mars.ts";
-import { MOON } from "./moon.ts";
-import { THE_RIFT } from "./rift.ts";
-import { SPACEZ_HQ } from "./spacez_hq.ts";
 
 export type {
   LevelDef,
@@ -22,23 +22,6 @@ export type {
   WaveBudget,
   WaveSpec,
 } from "./types.ts";
-
-/**
- * The levels in story order. Adding a level = a new file + one entry here;
- * `index.ts` keeps the order and the merged map in one place so the app,
- * the campaign progression, and the tests all read the same source.
- */
-const ORDERED: LevelDef[] = [SPACEZ_HQ, MOON, MARS, THE_RIFT, EASTWORLD];
-
-/**
- * SECRET levels: playable venues deliberately OUTSIDE the campaign order —
- * no unlock chain, no NEXT LEVEL slot, no per-level achievement badge, no
- * "beaten difficulty" trigger. They resolve through `levelDef` like any
- * level, but only a travel gate (or a dev warp) reaches them. Each shares a
- * story `index` with its campaign peer so `levelPosition`'s interpolation
- * axis (the per-map XP caps) never shifts under the shipped maps.
- */
-const SECRET: LevelDef[] = [THE_BUNKER];
 
 /** Merge the defs into one registry, failing loudly on a duplicate
  * id so a clash surfaces at module load, not as a silently shadowed level. */
@@ -53,16 +36,22 @@ function mergeLevels(defs: LevelDef[]): Record<string, LevelDef> {
   return merged;
 }
 
-export const LEVELS: Record<string, LevelDef> = mergeLevels([
-  ...ORDERED,
-  ...SECRET,
-]);
+export const LEVELS: Record<string, LevelDef> = mergeLevels(GENERATED_LEVELS);
 
-/** Story order of the levels shipped so far (campaign only — see SECRET). */
-export const LEVEL_ORDER: string[] = ORDERED.map((def) => def.id);
+/**
+ * Story order of the campaign levels (see SECRET below). Compiled from each
+ * YAML level's `campaign: true` flag, sorted by story `index`.
+ */
+export const LEVEL_ORDER: string[] = GENERATED_CAMPAIGN_ORDER;
 
-/** The secret venues' ids — the dev warp picker's extra rows. */
-export const SECRET_LEVEL_ORDER: string[] = SECRET.map((def) => def.id);
+/**
+ * SECRET venues: playable levels deliberately OUTSIDE the campaign order — no
+ * unlock chain, no NEXT LEVEL slot, no per-level achievement badge, no "beaten
+ * difficulty" trigger. They resolve through `levelDef` like any level, but only
+ * a travel gate (or a dev warp) reaches them. Compiled from each YAML level's
+ * `secret: true` flag; the dev warp picker's extra rows.
+ */
+export const SECRET_LEVEL_ORDER: string[] = GENERATED_SECRET_ORDER;
 
 // Active registry the accessor reads (defaults to the shipped catalog;
 // tests swap in fixtures via `registerDefs`). See src/index.ts.

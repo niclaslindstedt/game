@@ -35,10 +35,18 @@ run against synthetic fixtures with no shipped content (see
 
 - **`src/game/config.ts`** — the GLOBAL balance knobs (player, jumping, XP
   curve, stat effects, loot rules), nothing hardcoded in logic.
-- **`src/game/defs/levels/`** — the level registry: one `LevelDef` per file
-  (`spacez_hq.ts`, `moon.ts`, …) merged and ordered by `levels/index.ts`
-  (which owns `LEVELS`, `LEVEL_ORDER`, `levelDef`; the split keeps each
-  level's ~250 lines under the source-size cap as the campaign grows).
+- **`src/game/defs/levels/`** — the level registry. Levels are authored as
+  **YAML** (`website/scripts/levels/<id>.yaml`, one file per level) and
+  compiled into `src/generated/levels.ts` by
+  `website/scripts/generate-levels.mjs` (`make levels`, folded into
+  `make assets`) — the map/atlas equivalent for levels: a schema validates
+  every referenced enemy/weapon/gear/thought/story id and fails the build on a
+  typo, and the generated file is gitignored + regenerated (a round-trip test
+  pins it to a snapshot of the original defs). `levels/index.ts` reads the
+  generated catalog and owns `LEVELS`, `LEVEL_ORDER`, `levelDef`. Read a map's
+  design with the annotated renderer `make map LEVEL=<id>`
+  (`website/scripts/map-preview.mjs` — hero path, encounters, zones, walls,
+  tempo, and a played dwell/mob-density/coverage heatmap).
   SECRET venues (`SECRET_LEVEL_ORDER` — the bunker) register in `LEVELS`
   but sit OUTSIDE `LEVEL_ORDER`: no unlock chain, no NEXT LEVEL slot, no
   per-level badge — only a travel gate (or a dev warp) reaches them, and
@@ -78,7 +86,13 @@ run against synthetic fixtures with no shipped content (see
   decor, and the loot table (the level's thematic base pools — tier
   availability is the global monster-level gate, not per-level data; a
   `worldUniques` table may carry a `worldDropMult` sweetener on a farm
-  venue).
+  venue). **Design-zone systems** (`src/game/zones.ts`) shape a map's feel:
+  `safeZones` (no spawns + the horde repelled out — a breather pocket),
+  `quietZones` (dead areas: no ambient horde, but authored chests + a pinned
+  unique still live there), a `tempo` curve (keyframes that scale wave pressure
+  over the run — build and release instead of a flat ramp), `chests` (placed
+  containers with a richer haul than a crate), and `merchantSpawns` (authored
+  trader spots).
 - **`src/game/defs/enemies/`** — the monster catalog, split one file per
   roster (`spacez.ts`, `moon.ts`, …) merged into `ENEMY_DEFS` by
   `enemies/index.ts` (which throws on a duplicate id): stats, AI radii,
@@ -476,9 +490,13 @@ run against synthetic fixtures with no shipped content (see
   levels.
 - **`src/game/map.ts`** — the level map and its fog of war: run-scoped
   exploration as a coarse byte grid on the state (`state.explored`, one cell
-  per config `MAP.cellSize` world px), stamped around the hero every step
-  (`revealAround`, called from `step()`; the spawn is pre-revealed at
-  creation) and queried with `isExplored`. Memorable events pin
+  per config `MAP.cellSize` world px), stamped as a `MAP.revealRadius` CIRCLE
+  around the hero every step (`revealAround`, called from `step()`; the spawn is
+  pre-revealed at creation) and queried with `isExplored` — the fog lifts along
+  his path (Warcraft-style, no re-fogging), feeding both the minimap and the
+  MAIN-VIEW fog of war (`render.ts` `drawFog`): a three-tier overlay where
+  never-explored terrain goes dark, explored-but-out-of-sight dims, and the
+  hero's live `MAP.sightRadius` circle stays clear. Memorable events pin
   `state.mapMarkers` via `addMapMarker` — story-item finds (story.ts),
   unique/legendary pickups (the pickup switch in step.ts), and elite/boss
   victories including fled uniques (loot.ts). `openMap`/`closeMap` toggle the

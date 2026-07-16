@@ -19,6 +19,8 @@ import {
   LAST_STAND,
   LEVELING,
   magnetRadius,
+  MAP,
+  mapCols,
   MERCY,
   orbitSpellParams,
   orbPositions,
@@ -909,11 +911,139 @@ export function drawFrame(
     );
   }
 
+  // Fog of war — over the world, under the HUD/flash (StarCraft/Warcraft): the
+  // unwalked map is dark, terrain seen-but-out-of-sight dims, and the hero's
+  // live sight circle stays clear.
+  drawFog(ctx, state, camera, view);
+
   // Red flash while recently hurt.
   if (state.player.hurtFlashMs > 0) {
     ctx.fillStyle = `rgba(216, 58, 58, ${(0.25 * state.player.hurtFlashMs) / 250})`;
     ctx.fillRect(0, 0, view.width, view.height);
   }
+}
+
+// The offscreen buffer the fog is composited on (so the vision circle can be
+// carved with destination-out without punching holes in the game), plus the
+// cached WC2 SHROUD stipple: a 2×2 (config `MAP.fogStipple`) black checkerboard
+// pattern the ground shows through. Both rebuilt when the view/size changes.
+let fogBuffer: {
+  canvas: HTMLCanvasElement;
+  ctx: CanvasRenderingContext2D;
+  w: number;
+  h: number;
+} | null = null;
+let shroudPattern: { pattern: CanvasPattern; size: number } | null = null;
+
+function ensureFogBuffer(w: number, h: number) {
+  if (fogBuffer && fogBuffer.w === w && fogBuffer.h === h) return fogBuffer;
+  const canvas = document.createElement("canvas");
+  canvas.width = w;
+  canvas.height = h;
+  const bctx = canvas.getContext("2d");
+  if (!bctx) return null;
+  bctx.imageSmoothingEnabled = false;
+  fogBuffer = { canvas, ctx: bctx, w, h };
+  shroudPattern = null; // pattern is bound to a ctx — rebuild for the new one
+  return fogBuffer;
+}
+
+function getShroud(ctx: CanvasRenderingContext2D): CanvasPattern | null {
+  const size = MAP.fogStipple;
+  if (shroudPattern && shroudPattern.size === size)
+    return shroudPattern.pattern;
+  const tile = document.createElement("canvas");
+  tile.width = size * 2;
+  tile.height = size * 2;
+  const g = tile.getContext("2d");
+  if (!g) return null;
+  g.fillStyle = `rgba(0,0,0,${MAP.shroudAlpha})`;
+  g.fillRect(0, 0, size, size);
+  g.fillRect(size, size, size, size);
+  const pattern = ctx.createPattern(tile, "repeat");
+  if (!pattern) return null;
+  shroudPattern = { pattern, size };
+  return pattern;
+}
+
+/**
+ * The main-view FOG OF WAR, Warcraft-2 style (see src/game/map.ts). Built on an
+ * offscreen buffer as fog you CARVE circles out of — so the boundary is
+ * concave (it curves AROUND the cleared circles, WC2's "inverted circle" look),
+ * not convex blobs. Steps: (1) fill the whole view solid black — unexplored
+ * everywhere; (2) punch the EXPLORED region out with a `destination-out` union
+ * of per-cell circles, leaving black only in never-seen ground with round
+ * concave edges; (3) lay the dithered SHROUD into that cleared region; (4) carve
+ * the hero's `MAP.sightRadius` vision circle out of the shroud with a soft
+ * radial edge. Blitted over the world in one draw.
+ */
+function drawFog(
+  ctx: CanvasRenderingContext2D,
+  state: GameState,
+  camera: Camera,
+  view: { width: number; height: number },
+): void {
+  const buffer = ensureFogBuffer(view.width, view.height);
+  if (!buffer) return;
+  const f = buffer.ctx;
+  const shroud = getShroud(f);
+  f.clearRect(0, 0, view.width, view.height);
+
+  const cell = MAP.cellSize;
+  const cols = mapCols(state.level);
+  const rows = Math.ceil(state.level.height / cell);
+  const explored = state.explored;
+  // Clearing-circle radius a touch over the cell half-diagonal so adjacent
+  // explored cells merge into one smooth cleared area (round concave edges).
+  const r = cell * 0.78;
+  const TAU = Math.PI * 2;
+  const x0 = Math.max(0, Math.floor(camera.x / cell) - 1);
+  const y0 = Math.max(0, Math.floor(camera.y / cell) - 1);
+  const x1 = Math.min(cols, Math.ceil((camera.x + view.width) / cell) + 1);
+  const y1 = Math.min(rows, Math.ceil((camera.y + view.height) / cell) + 1);
+
+  // The union of clearing circles over every EXPLORED cell in view.
+  const exploredPath = () => {
+    f.beginPath();
+    for (let ty = y0; ty < y1; ty++) {
+      for (let tx = x0; tx < x1; tx++) {
+        if (explored[ty * cols + tx] !== 1) continue;
+        const cx = (tx + 0.5) * cell - camera.x;
+        const cy = (ty + 0.5) * cell - camera.y;
+        f.moveTo(cx + r, cy);
+        f.arc(cx, cy, r, 0, TAU);
+      }
+    }
+  };
+
+  // 1. Unexplored baseline: solid black across the whole view.
+  f.fillStyle = "#000";
+  f.fillRect(0, 0, view.width, view.height);
+  // 2. Punch the explored region OUT of the black — concave "inverted circle"
+  //    edges where the cleared circles bite into the never-seen dark.
+  f.globalCompositeOperation = "destination-out";
+  exploredPath();
+  f.fill();
+  f.globalCompositeOperation = "source-over";
+  // 3. Lay the dithered shroud into the cleared (explored) region.
+  if (shroud) {
+    exploredPath();
+    f.fillStyle = shroud;
+    f.fill();
+  }
+  // 4. Carve the vision circle out of the shroud with a soft edge.
+  const px = state.player.pos.x - camera.x;
+  const py = state.player.pos.y - camera.y;
+  const sight = MAP.sightRadius;
+  const grad = f.createRadialGradient(px, py, sight * 0.5, px, py, sight);
+  grad.addColorStop(0, "rgba(0,0,0,1)");
+  grad.addColorStop(1, "rgba(0,0,0,0)");
+  f.globalCompositeOperation = "destination-out";
+  f.fillStyle = grad;
+  f.fillRect(px - sight, py - sight, sight * 2, sight * 2);
+  f.globalCompositeOperation = "source-over";
+
+  ctx.drawImage(buffer.canvas, 0, 0);
 }
 
 /**
