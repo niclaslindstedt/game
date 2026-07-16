@@ -252,6 +252,7 @@ export {
   menaceStage,
   menaceStageCap,
   menaceWarmup,
+  mobHpLevelFactor,
   mobHpScaleFor,
   mobLevelScale,
   overkillEfficiency,

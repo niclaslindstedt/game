@@ -16,7 +16,7 @@ import {
   diminishStat,
   DODGE,
   effectiveStat,
-  MENACE,
+  mobHpLevelFactor,
   mobHpScaleFor,
   playerCritChance,
   playerDodgeChance,
@@ -180,11 +180,12 @@ describe("autoPowerScale mirrors the curve when the auto flag is on", () => {
         diminishStat(baseStatBonus(level, "dexterity"), level) *
           STATS.attackSpeedPerStat);
     expect(autoPowerScale(level)).toBeCloseTo(expected, 10);
-    // And stripped of the auto curve, the mob ladder is still the bare linear
-    // ramp — the cancellation the leveling model rides.
+    // And stripped of the auto curve, the mob ladder is the geometric hp-by-
+    // level factor (fixture nightmare is uncapped at the neutral offset, so the
+    // mob level IS the hero's) — the free growth still cancels out.
     expect(
       mobHpScaleFor(level, "nightmare") / autoPowerScale(level),
-    ).toBeCloseTo(1 + (level - 1) * MENACE.mobHpPerLevel, 10);
+    ).toBeCloseTo(mobHpLevelFactor(level), 10);
   });
 
   it("is neutral (1) while the auto flag is off — the shipped default", () => {

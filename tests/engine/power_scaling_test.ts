@@ -12,7 +12,7 @@ import {
   autoPowerScale,
   LEVELING,
   MEDKIT,
-  MENACE,
+  mobHpLevelFactor,
   statPointsAt,
   stasisRadius,
 } from "@game/core";
@@ -37,8 +37,7 @@ describe("abilityPowerScale", () => {
     for (const level of [1, 10, 30, 55]) {
       state.player.level = level;
       const scale = abilityPowerScale(state);
-      const bar =
-        (1 + (level - 1) * MENACE.mobHpPerLevel) * autoPowerScale(level);
+      const bar = mobHpLevelFactor(level) * autoPowerScale(level);
       // The INT term contributes the auto-stat INT... none is automatic
       // (only stamina/strength/dexterity are), so with 0 chosen INT the
       // ratio is exactly 1.

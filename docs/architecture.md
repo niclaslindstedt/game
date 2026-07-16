@@ -229,8 +229,10 @@ run against synthetic fixtures with no shipped content (see
   opening kit (`startingWeapon` — the wall weapon, mirrored by a
   per-difficulty prelude variant — and `startingStats`), spawn counts and
   the wave spawner's live cap, the horde's RELATIVE level (`mobLevelOffset`
-  — every monster spawns at player level + offset, hp shifted per level by
-  `MENACE.mobHpPerLevel`), the drop economy (medkit/armor/powerup
+  — every monster spawns at player level + offset, hp scaled per level by the
+  GEOMETRIC `mobHpLevelFactor`, config `MENACE.mobHpGrowthPerLevel` — so
+  hits-to-kill rises with level instead of collapsing as the hero out-damages a
+  linear ramp), the drop economy (medkit/armor/powerup
   multipliers down, drop-chance/tier bonuses up — the harder rungs pay richer
   loot through their explicit `tierChanceBonus`/`lootIlvlBonus`, since the loot
   gates now key off the hero's earned LOOT level with the `mobLevelOffset`

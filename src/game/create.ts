@@ -45,6 +45,7 @@ import { createMerchant, revealMerchant } from "./merchant.ts";
 import {
   evolutionHpMult,
   mobContactScaleFor,
+  mobHpLevelFactor,
   mobHpScaleFor,
   mobLevelFor,
 } from "./menace.ts";
@@ -704,14 +705,20 @@ export function spawnEnemy(
       : 0;
   // The developer mob-hp knob multiplies in here — the one chokepoint every
   // spawn path funnels through — so placed mobs, waves, and rushers all
-  // toughen together. The band adds its levels in RAMP space
-  // (`band × mobHpPerLevel`), floored by the same `mobHpScaleFloor` the caller
-  // already applied, so a deep-negative roll can't zero a mob out.
+  // toughen together. The band shifts the mob's monster LEVEL, so it moves hp
+  // through the same geometric `mobHpLevelFactor` the caller used for the
+  // baseline (`hpMult` = factor(mlvl) × autoPowerScale): the band ratio
+  // `factor(mlvl+band) / factor(mlvl)` re-levels the bar, floored by the same
+  // `mobHpScaleFloor` so a deep-negative roll can't zero a mob out.
+  const bandHpMult =
+    band === 0
+      ? hpMult
+      : hpMult * (mobHpLevelFactor(mlvl + band) / mobHpLevelFactor(mlvl));
   const hp = Math.max(
     1,
     Math.round(
       def.hp *
-        Math.max(MENACE.mobHpScaleFloor, hpMult + band * MENACE.mobHpPerLevel) *
+        Math.max(MENACE.mobHpScaleFloor, bandHpMult) *
         evolutionHpMult(evolved, evoEffect) *
         BALANCE.mobHp *
         (rarity?.hpMult ?? 1),

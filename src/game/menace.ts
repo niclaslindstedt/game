@@ -110,6 +110,35 @@ export function evolutionHpMult(stage: number, effectMult = 1): number {
 }
 
 /**
+ * THE HP-BY-LEVEL CURVE (config `mobHpGrowthPerLevel`/`Knee`/`TailFactor`): how
+ * a mob's HEALTH scales with its monster level, as a multiple of the level-1
+ * catalog bar. GEOMETRIC — it compounds per level — because the hero's damage
+ * compounds too (weapon item-level + chosen stats), so a linear ramp fell behind
+ * and let the hero one-shot the horde (which pins the rampage meter). Compounding
+ * keeps HITS-TO-KILL rising with level; past `mobHpGrowthKnee` the rate eases to
+ * `mobHpGrowthTailFactor` of itself so the uncapped endgame plateaus into a
+ * gentle climb rather than a wall of hundreds of hits. This is the ONE place the
+ * per-level hp shape lives: `mobHpScaleFor`, `mobLevelScale`, the per-mob spawn
+ * band (create.ts), the menace DPS-normaliser (`tickMenace`), and ability scaling
+ * (abilities.ts) all read it, so mob hp, the crowd's toughness, and the meter's
+ * "healthbars per second" yardstick move together. Kill XP does NOT — it keeps
+ * its own gentle linear ramp (`mobHpPerLevel`, see `mobLevelXp`), so this curve
+ * never touches leveling pace. Never below 1 (a level-1 mob is its catalog bar).
+ */
+export function mobHpLevelFactor(mobLevel: number): number {
+  const knee = MENACE.mobHpGrowthKnee;
+  const g = MENACE.mobHpGrowthPerLevel;
+  // Below the knee: plain geometric, level 1 = ×1. A mob BELOW level 1 (a
+  // relative-level deficit, e.g. a low-level EASY hero) scales DOWN — the
+  // negative exponent — and the caller's `mobHpScaleFloor` is the hard floor.
+  if (mobLevel <= knee) return Math.pow(g, mobLevel - 1);
+  // Past the knee the rate eases to `TailFactor` of itself, so the uncapped
+  // endgame plateaus into a gentle climb rather than a wall of hundreds of hits.
+  const tailG = 1 + (g - 1) * MENACE.mobHpGrowthTailFactor;
+  return Math.pow(g, knee - 1) * Math.pow(tailG, mobLevel - knee);
+}
+
+/**
  * The hp scale a monster locks in at spawn, from the horde's RELATIVE LEVEL:
  * every mob spawns at `playerLevel + mobLevelOffset` (the difficulty's knob —
  * EASY fields mobs three levels under the hero, JESUS two levels above), and
@@ -137,11 +166,11 @@ export function mobHpScaleFor(playerLevel: number, difficulty: string): number {
   // free growth cancels out against the crowd instead of turning it into
   // one-hit kills. Keyed to the PLAYER's level (what the hero actually has),
   // not the offset mob level, so within the band a difficulty's gap stays the
-  // same linear offset; the `mobHpPerLevel` term keeps answering the CHOSEN
-  // points, exactly as it always did.
+  // same offset; `mobHpLevelFactor` (geometric) answers the hero's compounding
+  // damage so hits-to-kill rises with level instead of collapsing.
   return Math.max(
     MENACE.mobHpScaleFloor,
-    (1 + (mobLevel - 1) * MENACE.mobHpPerLevel) * autoPowerScale(playerLevel),
+    mobHpLevelFactor(mobLevel) * autoPowerScale(playerLevel),
   );
 }
 
@@ -193,9 +222,12 @@ export function heroDamageLevel(state: GameState): number {
   // in the hero's output AND in every spawned bar).
   const bar = LEVELING.refMobHp * autoPowerScale(state.player.level);
   if (bar <= 0) return 1;
-  return (
-    1 + ((dps * MENACE.damageLevelKillSec) / bar - 1) / MENACE.mobHpPerLevel
-  );
+  // Invert `mobHpLevelFactor` (geometric below the knee): the level whose bar
+  // this dps would fell in `damageLevelKillSec`. Diagnostic only, so the
+  // below-knee log inverse is close enough for the analytic readout.
+  const ratio = (dps * MENACE.damageLevelKillSec) / bar;
+  if (ratio <= 1) return 1;
+  return 1 + Math.log(ratio) / Math.log(MENACE.mobHpGrowthPerLevel);
 }
 
 /**
@@ -233,8 +265,7 @@ export function mobLevelScale(state: GameState): number {
     heroPowerLevel(state) + difficultyDef(state.difficulty).mobLevelOffset;
   return Math.max(
     MENACE.mobHpScaleFloor,
-    (1 + (mobLevel - 1) * MENACE.mobHpPerLevel) *
-      autoPowerScale(state.player.level),
+    mobHpLevelFactor(mobLevel) * autoPowerScale(state.player.level),
   );
 }
 
@@ -485,7 +516,7 @@ export function tickMenace(
   // kill-rate channels were relative already.
   const bar =
     LEVELING.refMobHp *
-    (1 + (Math.max(1, state.player.level) - 1) * MENACE.mobHpPerLevel) *
+    mobHpLevelFactor(Math.max(1, state.player.level)) *
     autoPowerScale(state.player.level);
   // The rolling heat only fires through the clearance gate: sustained DPS and
   // kill rate escalate the meter while the player is THINNING the horde, and go

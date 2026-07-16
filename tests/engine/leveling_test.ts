@@ -23,7 +23,7 @@ import {
   levelDiffXpMult,
   levelStatGains,
   LOOT,
-  MENACE,
+  mobHpLevelFactor,
   mobHpScaleFor,
   mobLevelFor,
   mobLevelXp,
@@ -348,11 +348,11 @@ describe("the ding: automatic base gains and the celebration window", () => {
     // scale rides the same curve (autoPowerScale) the free stats produce.
     expect(hitsToKill(12)).toBeGreaterThanOrEqual(hitsToKill(1));
     // And the compensation is exact by construction: stripped of the auto
-    // curve, the ladder is the same linear ramp as ever. Read at level 45,
+    // curve, the ladder is the geometric hp-by-level factor. Read at level 45,
     // inside nightmare's [38, 56] mob-level band, so the horde tracks the hero
     // (offset 0) rather than sitting on the tier's floor.
     expect(mobHpScaleFor(45, "nightmare") / autoPowerScale(45)).toBeCloseTo(
-      1 + 44 * MENACE.mobHpPerLevel,
+      mobHpLevelFactor(45),
       10,
     );
   });
@@ -373,7 +373,7 @@ describe("the ding: automatic base gains and the celebration window", () => {
       // Read at level 45, inside nightmare's [38, 56] band (offset 0 tracks).
       expect(autoPowerScale(45)).toBe(1);
       expect(mobHpScaleFor(45, "nightmare")).toBeCloseTo(
-        1 + 44 * MENACE.mobHpPerLevel,
+        mobHpLevelFactor(45),
         10,
       );
     } finally {

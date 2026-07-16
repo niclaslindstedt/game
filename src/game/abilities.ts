@@ -5,10 +5,11 @@
 // so all combat flows through one hitEnemy path.
 
 import { distance, type Vec2 } from "@game/lib/vec.ts";
-import { ABILITY, HELD_ITEMS, MENACE } from "./config.ts";
+import { ABILITY, HELD_ITEMS } from "./config.ts";
 import { abilityDef, type AbilityDef } from "./defs/abilities.ts";
 import { effectiveStat } from "./items.ts";
 import { autoPowerScale } from "./leveling.ts";
+import { mobHpLevelFactor } from "./menace.ts";
 import { stasisSpellParams } from "./spells.ts";
 import type { ActiveAbility, GameState, Player } from "./types.ts";
 
@@ -104,8 +105,8 @@ export function discardHeldAbility(
 /**
  * The damage multiplier every conjured ability blow carries (config
  * `ABILITY`): the catalog numbers are authored at level 1, and this scale is
- * EXACTLY the minion healthbar's growth — `(1 + (L−1)·mobHpPerLevel) ×
- * autoPowerScale(L)`, the same formula `mobHpScaleFor` bakes into every
+ * EXACTLY the minion healthbar's growth — `mobHpLevelFactor(L) ×
+ * autoPowerScale(L)`, the same geometric curve `mobHpScaleFor` bakes into every
  * spawn at the neutral offset — times an INTELLIGENCE deepening. So a
  * FIRE ORB that clipped a third of a level-1 bar still clips a third of a
  * level-50 bar, INT makes it bite deeper, and the difficulty offset is the
@@ -118,7 +119,7 @@ export function discardHeldAbility(
 export function abilityPowerScale(state: GameState): number {
   const level = Math.max(1, state.player.level);
   return (
-    (1 + (level - 1) * MENACE.mobHpPerLevel) *
+    mobHpLevelFactor(level) *
     autoPowerScale(level) *
     (1 + effectiveStat(state, "intelligence") * ABILITY.intDamagePerPoint)
   );
