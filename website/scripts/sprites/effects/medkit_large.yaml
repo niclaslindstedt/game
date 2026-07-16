@@ -1,7 +1,10 @@
 name: medkit_large
 family: effects
 size: [12, 12]
-description: ""
+description: >
+  The large medkit grade: a white first-aid case with a red cross, framed in
+  flag-blue trim to mark it as a bigger heal than the plain white kit. Same
+  cross silhouette, graded up by its blue border.
 palette:
   O: "#1a1c2c"
   W: "#f4f4f4"

@@ -1,7 +1,9 @@
 name: icon_service_revolver
 family: icons
 size: [12, 12]
-description: ""
+description: >
+  A silver .38 service revolver in profile with a brown grip and swing-out
+  cylinder; a crew survival-kit sidearm.
 palette:
   A: "#8d9196"
   B: "#92643e"

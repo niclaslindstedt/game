@@ -1,7 +1,10 @@
 name: icon_blue_screen
 family: icons
 size: [12, 12]
-description: ""
+description: >
+  A flat tablet screen glowing crash-blue with white error-text lines —
+  a blue-screen-of-death panel wielded as a weapon; BUILD GATES's
+  crash-everything tablet.
 palette:
   O: "#1a1c2c"
   e: "#5ab4ff"

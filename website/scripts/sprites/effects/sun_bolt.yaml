@@ -1,7 +1,10 @@
 name: sun_bolt
 family: effects
 size: [8, 8]
-description: ""
+description: >
+  The HIGH NOON revolver's round: a radiant gold-orange sun bolt with a
+  blazing white core, larger and brighter than a plain bullet — a little
+  piece of daylight fired downrange.
 palette:
   O: "#1a1c2c"
   Y: "#ffe3b6"

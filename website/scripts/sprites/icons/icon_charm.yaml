@@ -1,7 +1,9 @@
 name: icon_charm
 family: icons
 size: [12, 12]
-description: ""
+description: >
+  A small gold amulet ring with a pale glowing gem at its center; the
+  generic lucky charm/trinket look (moon, red-dust, stardust variants).
 palette:
   O: "#1a1c2c"
   c: "#8ccdd7e1"

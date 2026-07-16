@@ -1,7 +1,10 @@
 name: icon_ada_message
 family: icons
 size: [12, 12]
-description: ""
+description: >
+  A dark metal holding-pod panel with angry letters gouged into it —
+  "I AM NOT CARGO" scratched deep; reads as a scarred grey plate covered
+  in defiant scratch marks.
 palette:
   O: "#1a1c2c"
   v: "#60687e"

@@ -1,7 +1,9 @@
 name: icon_pressure_trousers
 family: icons
 size: [12, 12]
-description: ""
+description: >
+  Grey pressure-suit trousers with yellow seam trim, an inverted-U leg
+  silhouette; the lower half of a spacesuit.
 palette:
   A: "#8d9196"
   O: "#1a1c2c"

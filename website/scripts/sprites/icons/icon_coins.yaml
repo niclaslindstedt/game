@@ -1,7 +1,9 @@
 name: icon_coins
 family: icons
 size: [12, 12]
-description: ""
+description: >
+  A small pile of stacked gold coins, a few loose ones at the base; the
+  currency in quantity — merchant/money marker.
 palette:
   O: "#1a1c2c"
   o: "#d6a842"

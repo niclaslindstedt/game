@@ -1,7 +1,8 @@
 name: icon_trophy
 family: icons
 size: [12, 12]
-description: ""
+description: >
+  A gold two-handled trophy cup on a base; an achievement award.
 palette:
   O: "#1a1c2c"
   Y: "#ffe3b6"

@@ -1,7 +1,9 @@
 name: icon_executioners_axe
 family: icons
 size: [12, 12]
-description: ""
+description: >
+  A broad single-bit executioner's axe — a dark haft and a heavy
+  crescent steel blade; the slowest, hardest chop on the ladder.
 palette:
   A: "#8d9196"
   B: "#92643e"

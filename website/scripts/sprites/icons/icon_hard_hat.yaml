@@ -1,7 +1,9 @@
 name: icon_hard_hat
 family: icons
 size: [12, 12]
-description: ""
+description: >
+  A yellow construction hard hat seen from the front, rounded dome with a
+  short brim and ridged crown; shipping-floor headgear.
 palette:
   O: "#1a1c2c"
   Y: "#ffe3b6"

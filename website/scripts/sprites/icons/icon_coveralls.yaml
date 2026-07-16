@@ -1,7 +1,9 @@
 name: icon_coveralls
 family: icons
 size: [12, 12]
-description: ""
+description: >
+  A one-piece set of tan/grey maintenance coveralls with a front zip and
+  a chest pocket; generic janitorial work overalls.
 palette:
   H: "#9e8b2d"
   O: "#1a1c2c"

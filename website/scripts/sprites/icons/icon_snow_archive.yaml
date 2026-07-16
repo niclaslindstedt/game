@@ -1,7 +1,9 @@
 name: icon_snow_archive
 family: icons
 size: [12, 12]
-description: ""
+description: >
+  A dark faraday-sleeved external hard drive with a blue label stripe; the
+  leaked training-set archive.
 palette:
   N: "#303444"
   O: "#1a1c2c"

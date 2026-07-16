@@ -1,7 +1,9 @@
 name: icon_orgchart
 family: icons
 size: [12, 12]
-description: ""
+description: >
+  A dark tablet screen displaying an org-chart tree of small boxes joined
+  by connector lines; an auto-generated hierarchy of machines.
 palette:
   O: "#1a1c2c"
   W: "#f4f4f4"

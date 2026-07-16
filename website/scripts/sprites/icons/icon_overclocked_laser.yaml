@@ -1,7 +1,10 @@
 name: icon_overclocked_laser
 family: icons
 size: [12, 12]
-description: ""
+description: >
+  A slim dark conference-pointer rod on a diagonal with a hot red emitter
+  tip glowing orange along its length; a laser pointer three safety screws
+  short of legal.
 palette:
   O: "#1a1c2c"
   r: "#d83a3a"

@@ -1,7 +1,9 @@
 name: icon_putter
 family: icons
 size: [12, 12]
-description: ""
+description: >
+  A golf putter — a slim shaft angled down to a dark blocky club head; the
+  NIGHT MANAGER's back-nine special.
 palette:
   O: "#1a1c2c"
   k: "#342c26"

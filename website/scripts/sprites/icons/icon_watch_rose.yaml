@@ -1,7 +1,9 @@
 name: icon_watch_rose
 family: icons
 size: [12, 12]
-description: ""
+description: >
+  A luxury rose-gold wristwatch, a round pink case and band with a pale
+  dial; a pure-valuable trophy timepiece.
 palette:
   O: "#1a1c2c"
   U: "#c46884"

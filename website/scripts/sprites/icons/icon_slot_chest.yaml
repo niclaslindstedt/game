@@ -1,7 +1,9 @@
 name: icon_slot_chest
 family: icons
 size: [12, 12]
-description: ""
+description: >
+  A small flat-grey vest/torso silhouette glyph on a dark rounded tile;
+  the chest-slot marker.
 palette:
   O: "#1a1c2c"
   V: "#9095a5"

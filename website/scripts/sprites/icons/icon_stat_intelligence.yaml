@@ -1,7 +1,8 @@
 name: icon_stat_intelligence
 family: icons
 size: [12, 12]
-description: ""
+description: >
+  A tall purple wizard's hat with a gold band; the INTELLECT stat glyph.
 palette:
   M: "#644696e6"
   O: "#1a1c2c"

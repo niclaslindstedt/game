@@ -1,7 +1,10 @@
 name: plasma_slug
 family: effects
 size: [8, 8]
-description: ""
+description: >
+  Plasma round from the PLASMA PEACEMAKER and PRAIRIE IRON: a glowing
+  blue-cyan bolt of superheated plasma with a bright white core, reading as a
+  hot energy slug.
 palette:
   O: "#1a1c2c"
   e: "#5ab4ff"

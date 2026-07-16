@@ -1,7 +1,10 @@
 name: arrow
 family: effects
 size: [8, 8]
-description: ""
+description: >
+  The LONGBOW's arrow in flight: a slim wooden shaft with a dark pointed head
+  and pale fletching at the tail, drawn diagonally along its travel line so it
+  reads as a loosed arrow.
 palette:
   B: "#92643e"
   O: "#1a1c2c"

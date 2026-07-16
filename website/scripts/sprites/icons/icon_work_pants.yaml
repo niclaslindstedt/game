@@ -1,7 +1,9 @@
 name: icon_work_pants
 family: icons
 size: [12, 12]
-description: ""
+description: >
+  Tan padded work trousers with sewn-in knee pads, an inverted-U leg
+  silhouette; warehouse legwear.
 palette:
   D: "#b28e5c"
   O: "#1a1c2c"

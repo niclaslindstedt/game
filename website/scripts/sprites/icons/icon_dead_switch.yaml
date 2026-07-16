@@ -1,7 +1,9 @@
 name: icon_dead_switch
 family: icons
 size: [12, 12]
-description: ""
+description: >
+  A handheld dead-man's-switch detonator — a dark boxy grip topped with a
+  red push button/trigger; SNOW's leak-everything insurance device.
 palette:
   N: "#303444"
   O: "#1a1c2c"

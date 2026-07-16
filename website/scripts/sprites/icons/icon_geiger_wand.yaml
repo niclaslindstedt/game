@@ -1,7 +1,10 @@
 name: icon_geiger_wand
 family: icons
 size: [12, 12]
-description: ""
+description: >
+  A slim probe wand with a small meter/dish head glowing yellow at the
+  tip, held diagonally; a Geiger screening probe clicking past the safe
+  band.
 palette:
   H: "#9e8b2d"
   O: "#1a1c2c"

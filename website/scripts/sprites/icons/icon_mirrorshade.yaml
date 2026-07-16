@@ -1,7 +1,9 @@
 name: icon_mirrorshade
 family: icons
 size: [12, 12]
-description: ""
+description: >
+  A sleek dark mirrored visor band — a horizontal wraparound eye-shade
+  with a bright reflective sheen; the gunslinger hosts' mirrorshades.
 palette:
   N: "#303444"
   O: "#1a1c2c"

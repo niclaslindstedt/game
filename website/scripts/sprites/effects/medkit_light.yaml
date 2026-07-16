@@ -1,7 +1,10 @@
 name: medkit_light
 family: effects
 size: [12, 12]
-description: ""
+description: >
+  The lightest medkit grade: a white first-aid case with a red cross, framed
+  in a dull steel-grey trim to mark it as the smallest heal. Same silhouette
+  as the other medkits, distinguished only by the darker/steel border.
 palette:
   O: "#1a1c2c"
   W: "#f4f4f4"

@@ -1,7 +1,10 @@
 name: blood_1
 family: effects
 size: [12, 12]
-description: ""
+description: >
+  The burst frame of the gore splat: a ring of small red blood droplets
+  flung outward from the impact point, the spatter expanding after the
+  initial blood_0 splotch.
 palette:
   r: "#d83a3a"
 grid: |

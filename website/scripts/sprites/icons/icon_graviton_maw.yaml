@@ -1,7 +1,10 @@
 name: icon_graviton_maw
 family: icons
 size: [12, 12]
-description: ""
+description: >
+  A black device housing cupping a swirling dark gravity well, faint
+  space bending at its mouth; a printed graviton weapon, heavy and
+  ominous.
 palette:
   N: "#303444"
   O: "#1a1c2c"

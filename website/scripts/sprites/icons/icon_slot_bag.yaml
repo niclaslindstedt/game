@@ -1,7 +1,9 @@
 name: icon_slot_bag
 family: icons
 size: [12, 12]
-description: ""
+description: >
+  A small flat-grey satchel silhouette glyph on a dark rounded tile; the
+  bag-slot marker.
 palette:
   B: "#92643e"
   O: "#1a1c2c"

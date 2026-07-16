@@ -1,7 +1,9 @@
 name: icon_railgun
 family: icons
 size: [12, 12]
-description: ""
+description: >
+  A dark boxy rifle in profile with twin rails and a glowing cyan
+  charge-stripe along the barrel; a slug-piercing magnetic gun.
 palette:
   N: "#303444"
   O: "#1a1c2c"

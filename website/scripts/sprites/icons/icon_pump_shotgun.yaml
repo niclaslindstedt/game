@@ -1,7 +1,9 @@
 name: icon_pump_shotgun
 family: icons
 size: [12, 12]
-description: ""
+description: >
+  A brown wood-stocked pump shotgun in profile, long barrel and pump grip;
+  a heavy short-range armory scattergun.
 palette:
   A: "#8d9196"
   B: "#92643e"

@@ -1,7 +1,10 @@
 name: icon_apollo_visor
 family: icons
 size: [12, 12]
-description: ""
+description: >
+  A rounded white space-helmet bubble fronted by a gold mirrored visor —
+  the Apollo look; the identity is the reflective gold band across the
+  white dome.
 palette:
   O: "#1a1c2c"
   Y: "#ffe3b6"

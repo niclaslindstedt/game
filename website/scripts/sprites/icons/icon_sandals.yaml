@@ -1,7 +1,9 @@
 name: icon_sandals
 family: icons
 size: [12, 12]
-description: ""
+description: >
+  A pair of brown leather legionary sandals with crossed straps; broken-in
+  caligae.
 palette:
   D: "#b28e5c"
   O: "#1a1c2c"

@@ -1,7 +1,9 @@
 name: icon_postmortem
 family: icons
 size: [12, 12]
-description: ""
+description: >
+  A pale-blue document slate ruled with white text lines; a recovered
+  colony post-mortem report page.
 palette:
   O: "#1a1c2c"
   W: "#f4f4f4"

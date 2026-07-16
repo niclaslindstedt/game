@@ -1,7 +1,9 @@
 name: icon_printed_helm
 family: icons
 size: [12, 12]
-description: ""
+description: >
+  A seamless cream-ceramic full helm, one smooth rounded piece with a
+  narrow eye slit; a printed Mars helmet with no visible joins.
 palette:
   O: "#1a1c2c"
   W: "#f4f4f4"

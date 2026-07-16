@@ -1,7 +1,9 @@
 name: icon_stetson
 family: icons
 size: [12, 12]
-description: ""
+description: >
+  A brown ten-gallon cowboy hat with a wide curled brim; the servo
+  stetson.
 palette:
   B: "#92643e"
   E: "#5d4028"

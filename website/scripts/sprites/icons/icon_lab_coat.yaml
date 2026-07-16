@@ -1,7 +1,9 @@
 name: icon_lab_coat
 family: icons
 size: [12, 12]
-description: ""
+description: >
+  A white lab coat with a front placket, lapels, and a chest pocket; thin
+  cotton with deep pockets.
 palette:
   O: "#1a1c2c"
   W: "#f4f4f4"

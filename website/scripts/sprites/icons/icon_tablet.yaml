@@ -1,7 +1,9 @@
 name: icon_tablet
 family: icons
 size: [12, 12]
-description: ""
+description: >
+  A dark chiseled stone tablet slab ruled with a schedule of lines and
+  bars; the tribute-night gantt tablet.
 palette:
   G: "#4a7a3e"
   O: "#1a1c2c"

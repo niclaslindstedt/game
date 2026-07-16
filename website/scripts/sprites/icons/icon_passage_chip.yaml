@@ -1,7 +1,9 @@
 name: icon_passage_chip
 family: icons
 size: [12, 12]
-description: ""
+description: >
+  A small square circuit implant in a gold frame around a glowing cyan
+  core node; a skull-cut badge chip that pulses like a machine.
 palette:
   O: "#1a1c2c"
   c: "#8ccdd7e1"

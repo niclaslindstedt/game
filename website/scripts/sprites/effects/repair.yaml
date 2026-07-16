@@ -1,7 +1,10 @@
 name: repair
 family: effects
 size: [12, 12]
-description: ""
+description: >
+  The weapon repair-kit pickup: a small dark toolbox/briefcase with a handle
+  and an amber-orange latch or tool showing, reading as a case of tools that
+  patches up your gear.
 palette:
   A: "#8d9196"
   O: "#1a1c2c"

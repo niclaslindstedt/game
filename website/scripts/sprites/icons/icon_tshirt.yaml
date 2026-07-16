@@ -1,7 +1,8 @@
 name: icon_tshirt
 family: icons
 size: [12, 12]
-description: ""
+description: >
+  A plain white short-sleeved t-shirt; the hero's starting shirt.
 palette:
   O: "#1a1c2c"
   W: "#f4f4f4"

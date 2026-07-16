@@ -1,7 +1,9 @@
 name: icon_gecko_soles
 family: icons
 size: [12, 12]
-description: ""
+description: >
+  A pair of dark low-profile shoes with textured grip soles; printed
+  Mars-colony climbing footwear.
 palette:
   G: "#4a7a3e"
   N: "#303444"

@@ -1,7 +1,8 @@
 name: icon_stat_strength
 family: icons
 size: [12, 12]
-description: ""
+description: >
+  A flexed skin-tone bicep arm; the STRENGTH stat glyph.
 palette:
   O: "#1a1c2c"
   d: "#b0785c"

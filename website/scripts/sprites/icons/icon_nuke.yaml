@@ -1,7 +1,9 @@
 name: icon_nuke
 family: icons
 size: [12, 12]
-description: ""
+description: >
+  A round grey cartoon bomb with a short lit fuse sparking gold at the
+  top; a pocket screen-wiper ready to blow.
 palette:
   A: "#8d9196"
   O: "#1a1c2c"

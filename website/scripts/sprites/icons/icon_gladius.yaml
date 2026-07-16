@@ -1,7 +1,10 @@
 name: icon_gladius
 family: icons
 size: [12, 12]
-description: ""
+description: >
+  A short broad Roman gladius pointed upward — a steel double-edged blade
+  with a dark grip and a round pommel; a legionary's still-keen short
+  sword.
 palette:
   A: "#8d9196"
   O: "#1a1c2c"

@@ -1,7 +1,9 @@
 name: icon_bag
 family: icons
 size: [12, 12]
-description: ""
+description: >
+  A plain brown carry-all satchel with a flap and strap; the simplest
+  storage bag, unadorned leather-tan.
 palette:
   B: "#92643e"
   E: "#5d4028"

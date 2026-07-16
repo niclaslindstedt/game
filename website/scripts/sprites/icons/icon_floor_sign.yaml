@@ -1,7 +1,9 @@
 name: icon_floor_sign
 family: icons
 size: [12, 12]
-description: ""
+description: >
+  A yellow A-frame "wet floor" caution sign standing upright, a small
+  warning figure on its face; the janitor's improvised halberd.
 palette:
   O: "#1a1c2c"
   h: "#e2c640"

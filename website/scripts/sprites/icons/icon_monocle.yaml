@@ -1,7 +1,10 @@
 name: icon_monocle
 family: icons
 size: [12, 12]
-description: ""
+description: >
+  A single dark circular targeting eyepiece with a pale blue lens and a
+  slim gold rim and stem; the smart pistol's other half, read as a
+  high-tech monocle.
 palette:
   N: "#303444"
   O: "#1a1c2c"

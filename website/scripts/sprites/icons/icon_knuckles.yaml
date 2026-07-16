@@ -1,7 +1,9 @@
 name: icon_knuckles
 family: icons
 size: [12, 12]
-description: ""
+description: >
+  A set of brass knuckle-dusters — four gold finger holes and a solid
+  grip bar; a single-target brawler's weapon.
 palette:
   O: "#1a1c2c"
   Y: "#ffe3b6"

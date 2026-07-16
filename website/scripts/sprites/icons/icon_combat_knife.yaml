@@ -1,7 +1,9 @@
 name: icon_combat_knife
 family: icons
 size: [12, 12]
-description: ""
+description: >
+  A military combat knife laid diagonally — a dark wrapped grip and a
+  clean steel blade with a swept point; compact and mean.
 palette:
   N: "#303444"
   O: "#1a1c2c"

@@ -1,7 +1,9 @@
 name: icon_stat_dexterity
 family: icons
 size: [12, 12]
-description: ""
+description: >
+  A dark targeting reticle with a small red center dot and side notches;
+  the DEXTERITY stat glyph for aim, hit, and crit.
 palette:
   O: "#1a1c2c"
   r: "#d83a3a"

@@ -1,7 +1,10 @@
 name: blood_0
 family: effects
 size: [12, 12]
-description: ""
+description: >
+  A hit/kill gore splat: a compact red blood splotch, an irregular blob of
+  spatter marking a wound. (blood_0 = the initial splat; blood_1 = the burst
+  scattered outward.)
 palette:
   r: "#d83a3a"
 grid: |

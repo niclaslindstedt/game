@@ -1,7 +1,11 @@
 name: angel_0
 family: effects
 size: [24, 24]
-description: ""
+description: >
+  The mercy-drop guardian angel that swoops in to deliver a rescue gift: a
+  small front-facing white-robed figure with a gold halo and two spread white
+  wings, wings held high in this frame. Reads as a benevolent cherub
+  descending. (angel_0 = wings-high; angel_1 = wings-low, the pair flapping.)
 palette:
   A: "#8d9196"
   O: "#1a1c2c"

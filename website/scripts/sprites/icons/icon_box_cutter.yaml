@@ -1,7 +1,9 @@
 name: icon_box_cutter
 family: icons
 size: [12, 12]
-description: ""
+description: >
+  A yellow-handled utility box cutter with a short angled steel blade
+  extended; a shipping-desk knife, small and fast.
 palette:
   A: "#8d9196"
   H: "#9e8b2d"

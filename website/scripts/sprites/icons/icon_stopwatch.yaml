@@ -1,7 +1,9 @@
 name: icon_stopwatch
 family: icons
 size: [12, 12]
-description: ""
+description: >
+  A dark handheld stopwatch with a small green digital readout; a
+  speed-record marker.
 palette:
   O: "#1a1c2c"
   W: "#f4f4f4"

@@ -1,7 +1,9 @@
 name: icon_spur_boots
 family: icons
 size: [12, 12]
-description: ""
+description: >
+  A brown riding boot in profile with a spinning metal spur at the heel
+  hiding a thruster; frontier jet-boots.
 palette:
   D: "#b28e5c"
   O: "#1a1c2c"

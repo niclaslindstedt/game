@@ -1,7 +1,9 @@
 name: icon_jeans
 family: icons
 size: [12, 12]
-description: ""
+description: >
+  A pair of blue denim jeans with stitched seams and a hint of pocket
+  detail; the hero's everyday starting legwear.
 palette:
   O: "#1a1c2c"
   j: "#4054bc"

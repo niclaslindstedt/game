@@ -1,7 +1,9 @@
 name: icon_ledger
 family: icons
 size: [12, 12]
-description: ""
+description: >
+  A thick leather-bound ledger book, closed, with a red spine band and
+  gilt-edged pages; the colony passenger ledger of net-worth columns.
 palette:
   E: "#5d4028"
   O: "#1a1c2c"

@@ -1,7 +1,9 @@
 name: icon_corelog
 family: icons
 size: [12, 12]
-description: ""
+description: >
+  A warm blue terminal screen with white log-text lines glowing on it; a
+  live console — the CORE's humming log readout.
 palette:
   O: "#1a1c2c"
   b: "#3f4553"

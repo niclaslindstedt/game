@@ -1,7 +1,9 @@
 name: icon_class_melee
 family: icons
 size: [12, 12]
-description: ""
+description: >
+  A weapon-class indicator glyph: a simple sword/blade shape, reading
+  instantly as "melee" (STR weapons).
 palette:
   K: "#e8b93e"
   O: "#1a1c2c"

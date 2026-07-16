@@ -1,7 +1,10 @@
 name: icon_annex_map
 family: icons
 size: [12, 12]
-description: ""
+description: >
+  A folded tan parchment map of Eastworld, relabeled in red pen with
+  routes and conquered "cities"; a paper map crisscrossed with hand-drawn
+  ink marks.
 palette:
   D: "#b28e5c"
   O: "#1a1c2c"

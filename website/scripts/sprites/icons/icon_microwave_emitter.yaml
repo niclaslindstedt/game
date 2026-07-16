@@ -1,7 +1,9 @@
 name: icon_microwave_emitter
 family: icons
 size: [12, 12]
-description: ""
+description: >
+  A boxy improvised sidearm built from a break-room magnetron, a stubby
+  emitter cone glowing blue; a slow, heavy microwave pulse gun.
 palette:
   O: "#1a1c2c"
   V: "#9095a5"

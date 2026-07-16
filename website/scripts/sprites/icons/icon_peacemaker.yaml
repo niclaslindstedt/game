@@ -1,7 +1,9 @@
 name: icon_peacemaker
 family: icons
 size: [12, 12]
-description: ""
+description: >
+  A frontier six-shooter revolver in profile, glowing cyan plasma cylinder
+  and barrel over a dark grip; the park's honest sidearm.
 palette:
   B: "#92643e"
   O: "#1a1c2c"

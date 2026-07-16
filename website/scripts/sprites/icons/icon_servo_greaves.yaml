@@ -1,7 +1,9 @@
 name: icon_servo_greaves
 family: icons
 size: [12, 12]
-description: ""
+description: >
+  Grey powered leg greaves with glowing cyan servo joints, an inverted-U
+  silhouette; motorized Mars legwear.
 palette:
   O: "#1a1c2c"
   V: "#9095a5"

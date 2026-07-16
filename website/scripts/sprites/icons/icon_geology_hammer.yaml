@@ -1,7 +1,9 @@
 name: icon_geology_hammer
 family: icons
 size: [12, 12]
-description: ""
+description: >
+  A geologist's rock hammer — a wooden handle and a steel head with a
+  flat striking face and a pointed pick end; slow and single-minded.
 palette:
   A: "#8d9196"
   B: "#92643e"

@@ -1,7 +1,10 @@
 name: icon_not_a_flamethrower
 family: icons
 size: [12, 12]
-description: ""
+description: >
+  A black pistol-gripped emitter aimed right with a gout of orange flame
+  licking from the muzzle; a stubby not-fire projector (legally not a
+  flamethrower).
 palette:
   N: "#303444"
   O: "#1a1c2c"

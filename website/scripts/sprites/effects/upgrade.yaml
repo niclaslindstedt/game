@@ -1,7 +1,10 @@
 name: upgrade
 family: effects
 size: [12, 12]
-description: ""
+description: >
+  The "update available" icon shown in the app's update prompt: a bold
+  gold-orange upward arrow with a dark outline, reading as "a newer version is
+  ready — tap to upgrade."
 palette:
   O: "#1a1c2c"
   Y: "#ffe3b6"

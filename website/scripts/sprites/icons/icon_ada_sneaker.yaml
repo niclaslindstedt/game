@@ -1,7 +1,9 @@
 name: icon_ada_sneaker
 family: icons
 size: [12, 12]
-description: ""
+description: >
+  A single white canvas sneaker with a blue accent, side-on; the shoe
+  Ada kicked off half-sunk in moon regolith.
 palette:
   O: "#1a1c2c"
   V: "#9095a5"

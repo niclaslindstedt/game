@@ -1,7 +1,8 @@
 name: icon_stat_speed
 family: icons
 size: [12, 12]
-description: ""
+description: >
+  A bright blue forward-leaning speed streak/arrow; the SPEED stat glyph.
 palette:
   O: "#1a1c2c"
   e: "#5ab4ff"
