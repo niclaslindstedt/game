@@ -3,19 +3,28 @@ family: spacez
 size: [24, 24]
 description: >
   THE JANITOR in his mop-swing frame — the mop raised for his telegraphed
-  ground slam; grey coveralls, yellow bucket, weathered and worn.
+  ground slam, grey coveralls, yellow bucket, weathered and worn.
+subject:
+  kind: elite
+  name: THE JANITOR
+  build: a stooped, weathered older man
+  attire: grey coveralls
+  features: a mop of brown hair, a pale lined face
+  accent: a yellow mop-bucket beside him
+  pose: mop raised overhead, cocked for a telegraphed ground slam, legs braced apart
+  flavor: knows what he learned mopping — badges pinging from the dead on the moon
 palette:
-  B: "#92643e"
-  H: "#9e8b2d"
-  O: "#1a1c2c"
-  V: "#9095a5"
-  h: "#e2c640"
-  k: "#342c26"
-  o: "#d6a842"
-  p: "#deaa86"
-  q: "#96762e"
-  v: "#60687e"
-  w: "#c6c6c6"
+  B: "#92643e" # brown hair
+  H: "#9e8b2d" # dark-yellow bucket base
+  O: "#1a1c2c" # outline
+  V: "#9095a5" # grey coverall highlights
+  h: "#e2c640" # bright-yellow bucket
+  k: "#342c26" # dark mop handle
+  o: "#d6a842" # gold mop head
+  p: "#deaa86" # skin
+  q: "#96762e" # mop-head shadow
+  v: "#60687e" # slate-grey coveralls
+  w: "#c6c6c6" # pale shirt collar
 grid: |
   ..................qoq...
   .........OOOOOO..qoqoq..

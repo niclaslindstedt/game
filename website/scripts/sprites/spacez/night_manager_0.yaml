@@ -2,16 +2,25 @@ name: night_manager_0
 family: spacez
 size: [24, 24]
 description: >
-  THE NIGHT MANAGER, a mid-level corporate elite: a tired officious man in a
-  sharp dark-navy suit and red tie, front-facing.
+  THE NIGHT MANAGER — a tired, officious mid-level corporate man in a sharp
+  dark-navy suit and red tie.
+subject:
+  kind: elite
+  name: THE NIGHT MANAGER
+  build: an average-framed corporate man standing stiffly
+  attire: a sharp dark-navy suit over a white shirt
+  features: dark hair, a tired officious face
+  accent: a red tie
+  pose: standing squarely, arms at his sides
+  flavor: signs nothing and sees nothing; runs the secret night-shift launches
 palette:
-  J: "#2d3b84"
-  O: "#1a1c2c"
-  W: "#f4f4f4"
-  b: "#3f4553"
-  k: "#342c26"
-  p: "#deaa86"
-  r: "#d83a3a"
+  J: "#2d3b84" # dark-navy suit
+  O: "#1a1c2c" # outline
+  W: "#f4f4f4" # white shirt
+  b: "#3f4553" # dark trousers
+  k: "#342c26" # dark hair
+  p: "#deaa86" # skin
+  r: "#d83a3a" # red tie
 grid: |
   ........................
   .........OOOOOO.........

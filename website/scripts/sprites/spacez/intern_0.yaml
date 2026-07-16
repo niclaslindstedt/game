@@ -2,16 +2,24 @@ name: intern_0
 family: spacez
 size: [16, 16]
 description: >
-  An INTERN, the flimsy front-rank staffer: a timid young worker in an
-  oversized navy suit and red tie with a lanyard, front-facing and slightly
-  hunched.
+  An INTERN — the flimsy front-rank staffer, a timid young worker swamped in
+  an oversized navy suit with a lanyard.
+subject:
+  kind: minion
+  name: INTERN
+  build: a timid young worker, slightly hunched, swamped in an oversized suit
+  attire: an oversized navy suit over a white shirt, a blue tie
+  features: a mop of dark hair, a lanyard at the collar
+  accent: navy suit a size too big
+  pose: standing hunched, arms at his sides
+  flavor: the flimsiest of the SpaceZ night shift, first to fall
 palette:
-  O: "#1a1c2c"
-  W: "#f4f4f4"
-  j: "#4054bc"
-  k: "#342c26"
-  p: "#deaa86"
-  v: "#60687e"
+  O: "#1a1c2c" # outline
+  W: "#f4f4f4" # white shirt
+  j: "#4054bc" # blue tie and trousers
+  k: "#342c26" # dark hair
+  p: "#deaa86" # skin
+  v: "#60687e" # slate navy suit
 grid: |
   ................
   .....OkkkkO.....

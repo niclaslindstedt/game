@@ -2,14 +2,20 @@ name: vent_1
 family: spacez
 size: [16, 16]
 description: >
-  The alternate floor-vent tile — a metal grille with a slightly different
-  slat pattern; the paired ground patch.
+  The alternate floor-vent tile — a metal grille with a slightly different slat
+  pattern; the paired ground patch.
+subject:
+  kind: ground tile
+  build: a square metal grille recessed into the floor, vertical slats across it
+  features: repeating dark-and-slate vertical louver bars
+  accent: dark metal grille on light-grey floor
+  flavor: the paired floor-vent variant with an upright slat pattern
 palette:
-  O: "#1a1c2c"
-  b: "#3f4553"
-  s: "#818690"
-  t: "#aab0be"
-  v: "#60687e"
+  O: "#1a1c2c" # grille frame
+  b: "#3f4553" # dark louver bar
+  s: "#818690" # grey floor seam
+  t: "#aab0be" # light-grey floor field
+  v: "#60687e" # slate louver bar
 grid: |
   ssssssssssssssss
   sttttttttttttttt

@@ -2,14 +2,20 @@ name: plant
 family: spacez
 size: [12, 12]
 description: >
-  A leafy green potted office plant, a small bushy ficus in a dark pot;
-  lobby greenery decor.
+  A leafy green potted office plant — a small bushy ficus in a dark pot; lobby
+  greenery decor.
+subject:
+  kind: decor prop
+  build: a small bushy ficus, a rounded crown of leaves above a dark pot
+  features: a tapered dark planter at the base
+  accent: leafy green foliage
+  flavor: the token bit of greenery softening the SpaceZ lobby
 palette:
-  G: "#4a7a3e"
-  O: "#1a1c2c"
-  g: "#3d6433"
-  k: "#342c26"
-  l: "#678f5d"
+  G: "#4a7a3e" # mid-green leaves
+  O: "#1a1c2c" # outline
+  g: "#3d6433" # dark-green leaf shadow
+  k: "#342c26" # dark soil in the pot
+  l: "#678f5d" # light-green leaf highlight
 grid: |
   ............
   ...G.GG.G...

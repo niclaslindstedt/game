@@ -4,19 +4,25 @@ size: [16, 20]
 description: >
   A red-and-chrome snack vending machine with a lit product window and coin
   slot; a solid obstacle — the machines Ada was last seen at.
+subject:
+  kind: solid obstacle prop
+  build: a tall boxy vending machine, a glass product window beside a control column
+  features: shelved snacks behind the window, a red keypad-and-slot column down the side
+  accent: red-and-chrome casing
+  flavor: the vending bank where the cameras last caught Ada before the suits took her
 palette:
-  O: "#1a1c2c"
-  V: "#9095a5"
-  W: "#f4f4f4"
-  b: "#3f4553"
-  i: "#772020"
-  j: "#4054bc"
-  o: "#d6a842"
-  q: "#96762e"
-  r: "#d83a3a"
-  v: "#60687e"
-  x: "#c5e6ebe1"
-  y: "#ffb02e"
+  O: "#1a1c2c" # outline
+  V: "#9095a5" # chrome shelf trim
+  W: "#f4f4f4" # white header panel
+  b: "#3f4553" # dark shelf gap
+  i: "#772020" # deep-red side shadow
+  j: "#4054bc" # blue snack packet
+  o: "#d6a842" # gold snack packet
+  q: "#96762e" # gold packet shadow
+  r: "#d83a3a" # red casing
+  v: "#60687e" # slate coin-return
+  x: "#c5e6ebe1" # cyan glass glint
+  y: "#ffb02e" # amber button light
 grid: |
   ..OOOOOOOOOOOO..
   ..OWOWOWWWWWWi..

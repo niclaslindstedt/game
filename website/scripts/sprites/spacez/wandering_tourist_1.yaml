@@ -2,18 +2,26 @@ name: wandering_tourist_1
 family: spacez
 size: [16, 16]
 description: >
-  A WANDERING TOURIST: a middle-aged man with blonde hair in a green jacket
-  over a purple shirt, a camera at his neck and blue shoes, front-facing.
-  Caught mid-stride, his legs planted wide apart in a walking step.
+  A WANDERING TOURIST mid-stride — the blonde middle-aged man in a green jacket
+  over a purple shirt with a camera, legs shifted into a walking step.
+subject:
+  kind: minion
+  name: WANDERING TOURIST
+  build: an ordinary middle-aged man of average frame
+  attire: a green jacket over a purple shirt, blue shoes
+  features: blonde hair, a camera slung at the neck
+  accent: a green jacket over a purple shirt
+  pose: caught mid-stride, legs planted wide apart in a walking step
+  flavor: a tour visitor left behind by the evacuation, still wandering the halls
 palette:
-  B: "#92643e"
-  G: "#4a7a3e"
-  L: "#d4a5ec"
-  O: "#1a1c2c"
-  P: "#b05cdc"
-  j: "#4054bc"
-  p: "#deaa86"
-  y: "#ffb02e"
+  B: "#92643e" # blonde-brown hair
+  G: "#4a7a3e" # green jacket
+  L: "#d4a5ec" # light-lilac camera body
+  O: "#1a1c2c" # outline
+  P: "#b05cdc" # purple shirt
+  j: "#4054bc" # blue shoes
+  p: "#deaa86" # skin
+  y: "#ffb02e" # blonde hair highlight
 grid: |
   ................
   ....OyyyyO......

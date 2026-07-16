@@ -2,12 +2,17 @@ name: lab_1
 family: spacez
 size: [16, 16]
 description: >
-  The rare ground-tile variant: the same polished lab floor scuffed with a
-  few dark scratches and scuff marks.
+  The rare ground-tile variant — the same polished lab floor scuffed with a
+  few dark scratches.
+subject:
+  kind: ground tile
+  build: the floor panel marked with clusters of darker scuff streaks
+  accent: dark scuff marks on light-grey
+  flavor: the worn variant that breaks up the repeated clean floor
 palette:
-  T: "#c0c5cf"
-  s: "#818690"
-  t: "#aab0be"
+  T: "#c0c5cf" # pale speck highlights
+  s: "#818690" # grey scuff marks
+  t: "#aab0be" # light-grey floor field
 grid: |
   ssssssssssssssss
   sttttttttttttttt

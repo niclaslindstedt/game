@@ -2,16 +2,24 @@ name: optimusk_0
 family: spacez
 size: [20, 20]
 description: >
-  OPTIMUSK, the humanoid service robot SpaceZ rolled out to replace the
-  night shift: a white android with a smooth rounded head and torso, a
-  glowing blue eye-strip and blocky limbs, front-facing.
+  OPTIMUSK — the humanoid service robot SpaceZ rolled out to replace the night
+  shift, a white android with a glowing blue eye-strip.
+subject:
+  kind: minion
+  name: OPTIMUSK
+  build: a boxy white android, smooth rounded head and torso, blocky limbs
+  attire: a seamless white chassis with slate joints
+  features: a glowing blue eye-strip across the head, a lit blue core panel on the chest
+  accent: glowing blue eye-strip
+  pose: standing squarely, arms at its sides
+  flavor: the automation line that took the night-shift jobs; the hero built the first chassis
 palette:
-  O: "#1a1c2c"
-  W: "#f4f4f4"
-  b: "#3f4553"
-  c: "#8ccdd7e1"
-  v: "#60687e"
-  x: "#c5e6ebe1"
+  O: "#1a1c2c" # outline
+  W: "#f4f4f4" # white chassis
+  b: "#3f4553" # dark feet
+  c: "#8ccdd7e1" # blue eye-strip and core
+  v: "#60687e" # slate joints
+  x: "#c5e6ebe1" # bright blue core highlight
 grid: |
   ....................
   ....................

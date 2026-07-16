@@ -2,20 +2,26 @@ name: architect_0
 family: spacez
 size: [24, 24]
 description: >
-  THE ARCHITECT, the hero's old engineering bench partner now heading the
-  superintelligence program: a composed man in a grey business-casual
-  blazer, glasses and pale face, front-facing. A small metal PASSAGE CHIP is
-  grafted into his temple, hinting at the man who cut a machine into his own
-  skull.
+  THE ARCHITECT — the hero's old bench partner, now heading the
+  superintelligence program, with a PASSAGE CHIP cut into his own temple.
+subject:
+  kind: elite boss
+  name: THE ARCHITECT
+  build: a composed, upright man of average frame
+  attire: grey business-casual blazer over a white shirt, dark slacks
+  features: glasses and a pale face; a small metal PASSAGE CHIP grafted into his temple
+  accent: cyan glint of the glasses lenses and the grafted chip
+  pose: standing squarely, arms at his sides
+  flavor: cut a machine into his own skull to pass as one; believes flesh is a rough draft
 palette:
-  O: "#1a1c2c"
-  V: "#9095a5"
-  W: "#f4f4f4"
-  b: "#3f4553"
-  c: "#8ccdd7e1"
-  p: "#deaa86"
-  v: "#60687e"
-  x: "#c5e6ebe1"
+  O: "#1a1c2c" # outline
+  V: "#9095a5" # light-grey collar and shoulders
+  W: "#f4f4f4" # white shirt
+  b: "#3f4553" # dark slacks
+  c: "#8ccdd7e1" # cyan lens tint and chip glow
+  p: "#deaa86" # skin
+  v: "#60687e" # slate-grey blazer
+  x: "#c5e6ebe1" # bright cyan glasses highlight
 grid: |
   ........................
   .........OOOOOO.........

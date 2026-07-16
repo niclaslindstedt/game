@@ -4,12 +4,18 @@ size: [14, 12]
 description: >
   The shipping crate smashed open — splintered flaps and scattered packing
   spilling out; the destroyed state of a broken crate.
+subject:
+  kind: destroyed obstacle prop
+  build: a burst-open crate, splintered flaps jutting up over a spill of debris
+  features: scattered packing strewn out from where the lid gave way
+  accent: gold-tan cardboard shards
+  flavor: the wrecked remains once the crate is smashed through
 palette:
-  A: "#8d9196"
-  O: "#1a1c2c"
-  S: "#b39378"
-  o: "#d6a842"
-  q: "#96762e"
+  A: "#8d9196" # grey packing scrap
+  O: "#1a1c2c" # outline
+  S: "#b39378" # pale tape scrap
+  o: "#d6a842" # gold-tan cardboard shards
+  q: "#96762e" # darker cardboard shadow
 grid: |
   ..............
   ..............

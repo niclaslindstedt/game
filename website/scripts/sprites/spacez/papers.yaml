@@ -2,11 +2,16 @@ name: papers
 family: spacez
 size: [12, 8]
 description: >
-  A scatter of loose white office papers strewn across the floor; flat
-  ground decor.
+  A scatter of loose white office papers strewn across the floor; flat ground
+  decor.
+subject:
+  kind: ground decor prop
+  build: a few loose sheets of paper strewn in a loose scatter
+  accent: white office paper
+  flavor: paperwork dropped and left where the night shift stopped caring
 palette:
-  W: "#f4f4f4"
-  w: "#c6c6c6"
+  W: "#f4f4f4" # white paper
+  w: "#c6c6c6" # grey paper shadow
 grid: |
   ............
   ..WWW..W....

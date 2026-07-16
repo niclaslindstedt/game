@@ -2,10 +2,15 @@ name: sparks_0
 family: spacez
 size: [12, 12]
 description: >
-  A burst of electrical sparks — bright orange and yellow flecks scattering
-  outward; the destruction effect thrown when an OPTIMUSK robot is broken.
+  A burst of electrical sparks — bright yellow flecks scattering outward; the
+  effect thrown when an OPTIMUSK robot is broken.
+subject:
+  kind: effect
+  build: a tight diamond burst of sparks radiating from a centre point
+  accent: bright electrical yellow
+  flavor: the shatter spark thrown when an OPTIMUSK unit is downed
 palette:
-  y: "#ffb02e"
+  y: "#ffb02e" # bright electrical yellow sparks
 grid: |
   ............
   ............

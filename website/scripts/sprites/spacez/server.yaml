@@ -2,14 +2,20 @@ name: server
 family: spacez
 size: [16, 16]
 description: >
-  A black server-rack tower with rows of blinking status LEDs down its face;
-  a solid, un-hoppable obstacle.
+  A black server-rack tower with rows of blinking status LEDs down its face; a
+  solid, un-hoppable obstacle.
+subject:
+  kind: solid obstacle prop
+  build: a tall dark server rack, stacked slate blade shelves behind a frame
+  features: rows of small blinking status LEDs down the face
+  accent: red and cyan status LEDs
+  flavor: a humming rack of the SpaceZ server room, too tall to climb over
 palette:
-  O: "#1a1c2c"
-  b: "#3f4553"
-  c: "#8ccdd7e1"
-  r: "#d83a3a"
-  v: "#60687e"
+  O: "#1a1c2c" # outline
+  b: "#3f4553" # dark rack frame
+  c: "#8ccdd7e1" # cyan status LED
+  r: "#d83a3a" # red status LED
+  v: "#60687e" # slate blade shelf
 grid: |
   ....OOOOOOOO....
   ...ObbbbbbbbO...
