@@ -37,6 +37,7 @@ import {
   spellDef,
   takeSpellUnlock,
   unlockedSpellIds,
+  BOT_PROFILES,
   BOT_STRATEGIES,
   botAct,
   botAllocate,
@@ -86,6 +87,7 @@ import {
   warn,
   weaponDamageFor,
   weaponDef,
+  type BotProfile,
   type BotStrategy,
   type Difficulty,
   type Equipment,
@@ -1064,11 +1066,18 @@ export function GameScreen({
     }
 
     // Autoplay (?bot=<strategy>): the engine bot steers instead of the
-    // pointer and spends level-ups itself. See the playtest skill.
+    // pointer and spends level-ups itself. An optional ?botProfile=<lane>
+    // (melee/ranged/magic/auto) commits the build to a weapon lane. See the
+    // playtest skill.
     const requested = params.get("bot");
+    const requestedProfile = params.get("botProfile");
+    const profile =
+      requestedProfile && (BOT_PROFILES as string[]).includes(requestedProfile)
+        ? (requestedProfile as BotProfile)
+        : "auto";
     const bot =
       requested && (BOT_STRATEGIES as string[]).includes(requested)
-        ? createBot(requested as BotStrategy)
+        ? createBot(requested as BotStrategy, profile)
         : null;
 
     // Audio can only start from a user gesture; the run itself begins with

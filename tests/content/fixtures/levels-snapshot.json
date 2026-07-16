@@ -252,6 +252,105 @@
           ]
         }
       ],
+      "safeZones": [
+        {
+          "shape": "circle",
+          "pos": {
+            "x": 1520,
+            "y": 560
+          },
+          "radius": 135,
+          "label": "PIT STOP"
+        }
+      ],
+      "quietZones": [
+        {
+          "shape": "rect",
+          "rect": {
+            "x": 8,
+            "y": 8,
+            "width": 296,
+            "height": 166
+          },
+          "label": "STARTER STASH"
+        },
+        {
+          "shape": "rect",
+          "rect": {
+            "x": 1772,
+            "y": 8,
+            "width": 224,
+            "height": 166
+          },
+          "label": "CORE LAB"
+        },
+        {
+          "shape": "rect",
+          "rect": {
+            "x": 1752,
+            "y": 1032,
+            "width": 244,
+            "height": 162
+          },
+          "label": "CLEANROOM"
+        }
+      ],
+      "chests": [
+        {
+          "at": {
+            "x": 160,
+            "y": 130
+          }
+        },
+        {
+          "at": {
+            "x": 1930,
+            "y": 130
+          }
+        },
+        {
+          "at": {
+            "x": 1810,
+            "y": 1150
+          }
+        }
+      ],
+      "tempo": [
+        {
+          "at": 0,
+          "intensity": 0.5
+        },
+        {
+          "at": 0.18,
+          "intensity": 0.8
+        },
+        {
+          "at": 0.42,
+          "intensity": 1.15
+        },
+        {
+          "at": 0.6,
+          "intensity": 0.7
+        },
+        {
+          "at": 0.82,
+          "intensity": 1
+        },
+        {
+          "at": 1,
+          "intensity": 1.4
+        }
+      ],
+      "merchantSpawns": [
+        {
+          "x": 1520,
+          "y": 560
+        },
+        {
+          "x": 760,
+          "y": 640
+        }
+      ],
       "waves": {
         "rampDurationMs": 280000,
         "maxAlive": 200,

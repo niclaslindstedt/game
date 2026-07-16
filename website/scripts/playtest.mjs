@@ -12,7 +12,8 @@
 // Usage:
 //   npx vite --port 5199 &            # dev server (from website/)
 //   node scripts/playtest.mjs [--url http://localhost:5199] \
-//     [--strategy idle|rush|kite|boss|survivor] [--timeout 120] \
+//     [--strategy aggro|balanced|flee|survivor|rush|kite|boss] \
+//     [--profile auto|melee|ranged|magic] [--timeout 120] \
 //     [--difficulty easy|medium|hard|nightmare|jesus] \
 //     [--level spacez_hq|moon] [--seed 42] \
 //     [--scenario '{"place":"boss","hp":2}']
@@ -41,6 +42,7 @@ const opt = (name, fallback) => {
 };
 const url = opt("url", "http://localhost:5199");
 const strategy = opt("strategy", "survivor");
+const profile = opt("profile", "auto");
 const timeoutMs = Number(opt("timeout", "120")) * 1000;
 // A fresh character (the harness always starts one) has only EASY unlocked —
 // the ladder unlocks in order. Testing a harder rung needs a character that has
@@ -74,7 +76,8 @@ page.on("pageerror", (e) => console.error("PAGE ERROR:", e.message));
 // the moment the run is created.
 const extras =
   (scenario ? `&scenario=${encodeURIComponent(scenario)}` : "") +
-  (seed ? `&seed=${seed}` : "");
+  (seed ? `&seed=${seed}` : "") +
+  (profile && profile !== "auto" ? `&botProfile=${profile}` : "");
 await page.goto(`${url}/?debug&bot=${strategy}${extras}`);
 // The app opens on the Doom-style title menu. Wait for it (asset load) before
 // shooting the splash, then PLAY → NEW GAME opens the character create form.
@@ -153,6 +156,7 @@ console.log(
   JSON.stringify(
     {
       strategy,
+      profile,
       outcome: s.phase,
       hp: s.hp,
       level: s.level,
