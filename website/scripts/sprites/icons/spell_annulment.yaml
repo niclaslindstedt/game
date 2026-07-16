@@ -1,0 +1,28 @@
+name: spell_annulment
+family: icons
+size: [12, 12]
+description: >
+  The ANNULMENT spell icon — a void orb glyph.
+subject:
+  kind: spell icon
+  features: a bold void-tinted orb motif, centered and outlined
+  accent: void magic
+  flavor: the ANNULMENT cast-spell pictogram
+palette:
+  O: "#0c0e18" # dark outline
+  E: "#c07bff" # void bright
+  D: "#7736c0" # void deep
+  H: "#ecd6ff" # void highlight
+grid: |
+  ...OOOOOO...
+  ..OEEEEEEO..
+  .OEOOOOOOEO.
+  OEO.OODOOOEO
+  OEOODHEDDOEO
+  .O.OHHHEDOOO
+  OEODEHEEEDOE
+  OEOODEEEDOEO
+  OEOODDEDDOEO
+  .OEOOODOOEO.
+  ..OEEEEEEO..
+  ...OOOOOO...

@@ -27,8 +27,16 @@ import {
   applyScenario,
   skipOutro,
   allocateStat,
+  autofillSpellSlots,
   bestMedkitTier,
   confirmRespec,
+  effectiveStat,
+  MANA,
+  recomputeMaxMana,
+  setSpellSlot,
+  spellDef,
+  takeSpellUnlock,
+  unlockedSpellIds,
   BOT_STRATEGIES,
   botAct,
   botAllocate,
@@ -117,6 +125,8 @@ import {
 } from "./AchievementToast.tsx";
 import { synth } from "./audio.ts";
 import {
+  MANA_POTION_COLOR,
+  MANA_POTION_ICON,
   medkitColorFor,
   medkitIconFor,
   REPAIR_KIT_COLOR,
@@ -139,6 +149,10 @@ import { IntroOverlay, type IntroReveal } from "./IntroOverlay.tsx";
 import { TitleCard } from "./TitleCard.tsx";
 import { InventoryPanel } from "./InventoryPanel.tsx";
 import { LevelUpOverlay } from "./LevelUpOverlay.tsx";
+import { SpellBar, type SpellSlotView } from "./SpellBar.tsx";
+import { SpellUnlockOverlay } from "./SpellUnlockOverlay.tsx";
+import { spellCastEffects } from "./spell-fx.ts";
+import { spellColor } from "./spellVisuals.ts";
 import { MapOverlay } from "./MapOverlay.tsx";
 import { dollDataUrl, playerDollLayers } from "./paper-doll.ts";
 import { RespecOverlay } from "./RespecOverlay.tsx";
@@ -242,6 +256,22 @@ type Hud = {
   staminaPotions: number;
   /** Stacked weapon repair kits held — the consumable dock's repair slot count. */
   repairKits: number;
+  /** Stacked blue-gatorade mana potions held — the mana slot count. */
+  manaPotions: number;
+  /** Current mana (ceil) and max — the mana bar + the spell-bar affordability. */
+  mana: number;
+  maxMana: number;
+  /** True once the hero has an INT-sized pool (past MANA.base) — the mana bar
+   * and spell bar only show for a caster. */
+  isCaster: boolean;
+  /** The spell-bar slots (per HUD slot): assigned spell id, recharge fraction
+   * (0 = ready), and whether the pool affords it. */
+  spells: SpellSlotView[];
+  /** Every spell the hero has unlocked (ascending) — the picker's menu. */
+  unlockedSpells: string[];
+  /** SPELL_DEFS ids queued for the "SPELL UNLOCKED" modal (see
+   * `pendingSpellUnlocks`); the first drives the overlay. */
+  spellUnlocks: string[];
   /** Equipped weapon def id — drives the always-on weapon widget. */
   weaponDefId: string;
   /** Equipped weapon's durability 0..1, or null for the unbreakable sidearm. */
@@ -605,7 +635,12 @@ export function GameScreen({
   // frame (a slot tap or its bindable key), spent on the next sim tick.
   const useMedkitQueuedRef = useRef(false);
   const useStaminaQueuedRef = useRef(false);
+  const useManaQueuedRef = useRef(false);
   const useRepairQueuedRef = useRef(false);
+  // Which spell-bar slot the player asked to cast this frame (index into
+  // Player.spellSlots), or null. A slot tap / spell key sets it; the sim tick
+  // reads it into GameInput.castSpell + castSpellIndex, then clears it.
+  const castSpellIndexRef = useRef<number | null>(null);
   // Where the last tap/click landed (CSS px on the canvas): the sim loop
   // checks it against the discovered merchant — a tap on him at the counter
   // opens the shop instead of jumping.
@@ -660,6 +695,29 @@ export function GameScreen({
   // so React re-reads the frozen state.
   const [, setUiTick] = useState(0);
   const bumpUi = () => setUiTick((t) => t + 1);
+  // The transient SPELL STATUS echo shown high on the HUD: the name of the spell
+  // just cast, or why a cast fizzled. Auto-clears after a beat (see the timer
+  // ref). Set from the event loop on spellCast / spellFizzled.
+  const [spellStatus, setSpellStatus] = useState<{
+    text: string;
+    tone: "cast" | "fizzle";
+    accent: string;
+  } | null>(null);
+  const spellStatusTimerRef = useRef<number | null>(null);
+  const flashSpellStatus = (
+    text: string,
+    tone: "cast" | "fizzle",
+    accent: string,
+  ) => {
+    setSpellStatus({ text, tone, accent });
+    if (spellStatusTimerRef.current !== null) {
+      window.clearTimeout(spellStatusTimerRef.current);
+    }
+    spellStatusTimerRef.current = window.setTimeout(
+      () => setSpellStatus(null),
+      1300,
+    );
+  };
   // The lower-right pickup feed ("PICKED UP X"). Lines are appended as loot is
   // scooped and expire on individual PICKUP_TTL_MS timers (see the loop).
   const [pickups, setPickups] = useState<PickupMessage[]>([]);
@@ -837,6 +895,11 @@ export function GameScreen({
         warn(`?scenario= is not valid JSON — ignored: ${scenarioParam}`);
       }
     }
+    // A carried/derived caster may arrive with unlocked spells but a blank bar
+    // (the loadout restores an empty bar) — drop his newest spells onto it so
+    // the spell bar is never empty when spells are available. Manual clears and
+    // later unlocks are handled by the picker / the unlock modal.
+    autofillSpellSlots(state);
     setState(state);
     setNewRecord(false);
     debug(`run ${runId} started (seed ${seed}, ${difficulty})`);
@@ -1170,9 +1233,21 @@ export function GameScreen({
           if (state.phase === "playing" && !weaponMenuOpenRef.current)
             useStaminaQueuedRef.current = true;
           return;
+        case "mana":
+          if (state.phase === "playing" && !weaponMenuOpenRef.current)
+            useManaQueuedRef.current = true;
+          return;
         case "repair":
           if (state.phase === "playing" && !weaponMenuOpenRef.current)
             useRepairQueuedRef.current = true;
+          return;
+        case "spell1":
+        case "spell2":
+        case "spell3":
+        case "spell4":
+          // Cast the matching spell-bar slot; the engine gates it.
+          if (state.phase === "playing" && !weaponMenuOpenRef.current)
+            castSpellIndexRef.current = Number(action.slice(5)) - 1;
           return;
       }
     };
@@ -1429,6 +1504,25 @@ export function GameScreen({
         (f) => {
           timeScale = Number.isFinite(f) && f > 0 ? f : 1;
         };
+      // Spell-cast tuning hook (?debug): `window.__cast(spellId)` makes the hero
+      // a caster who unlocks and affords the named spell, drops it in slot 0,
+      // and fires it — so the element-tinted cast FX (spell-fx.ts) can be
+      // eyeballed or screenshotted (pair with __scenario to stage a target and
+      // __timeScale to slow it). Drives the `spell-preview` dev script. See the
+      // `spell-fx` skill and docs/configuration.md.
+      (window as unknown as { __cast?: (id: string) => void }).__cast = (
+        id,
+      ) => {
+        state.player.stats.intelligence = Math.max(
+          state.player.stats.intelligence,
+          260,
+        );
+        recomputeMaxMana(state);
+        state.player.mana = state.player.maxMana;
+        state.player.spellCooldowns = {};
+        setSpellSlot(state, 0, id);
+        castSpellIndexRef.current = 0;
+      };
     }
 
     const stop = startGameLoop({
@@ -1586,10 +1680,19 @@ export function GameScreen({
           // spend or mend, so a stray edge is harmless).
           input.useMedkit = useMedkitQueuedRef.current;
           input.useStaminaPotion = useStaminaQueuedRef.current;
+          input.useManaPotion = useManaQueuedRef.current;
           input.useRepairKit = useRepairQueuedRef.current;
           useMedkitQueuedRef.current = false;
           useStaminaQueuedRef.current = false;
+          useManaQueuedRef.current = false;
           useRepairQueuedRef.current = false;
+          // A tapped spell-bar slot (or its cast key) casts this tick; the
+          // engine gates mana/cooldown/unlock, so a stray edge is harmless.
+          if (castSpellIndexRef.current !== null) {
+            input.castSpell = true;
+            input.castSpellIndex = castSpellIndexRef.current;
+            castSpellIndexRef.current = null;
+          }
         }
         // A tap that lands on the DISCOVERED merchant (and the hero close
         // enough to trade — openShop checks the counter distance) opens the
@@ -2000,6 +2103,58 @@ export function GameScreen({
               durationMs: 320,
               radius: event.radius,
               frost: event.frost,
+            });
+          }
+          // A spell was CAST: echo its name high on the HUD (element-tinted),
+          // and paint the marvellous element-themed cast FX over the shared
+          // bolt/nova cues (see spellCastEffects). The base bolt/nova visuals
+          // still fire from the underlying hits; this adds the flourish.
+          if (event.type === "spellCast") {
+            const sdef = spellDef(event.spellId);
+            flashSpellStatus(sdef.name, "cast", spellColor(sdef.element));
+            for (const fx of spellCastEffects(
+              sdef,
+              event.pos,
+              state.stats.timeMs,
+            )) {
+              effects.push(fx);
+            }
+          }
+          // A refused cast: flash why (not enough mana, cooldown, locked, or
+          // nothing to do) and pip a soft denial.
+          if (event.type === "spellFizzled") {
+            const reason =
+              event.reason === "mana"
+                ? "NO MANA"
+                : event.reason === "cooldown"
+                  ? "RECHARGING"
+                  : event.reason === "locked"
+                    ? "LOCKED"
+                    : "NO TARGET";
+            flashSpellStatus(reason, "fizzle", "#c98a8a");
+          }
+          // A defensive HEAL: float the amount off the hero in arcane green.
+          if (event.type === "spellHealed") {
+            effects.push({
+              kind: "text",
+              pos: {
+                x: state.player.pos.x,
+                y: state.player.pos.y - PLAYER.radius,
+              },
+              untilMs: state.stats.timeMs + 800,
+              durationMs: 800,
+              text: `+${event.heal}`,
+              color: "#8ef0a8",
+            });
+          }
+          // A raised WARD: a ring pulses out from the hero.
+          if (event.type === "playerShielded") {
+            effects.push({
+              kind: "nova",
+              pos: { ...state.player.pos },
+              untilMs: state.stats.timeMs + 360,
+              durationMs: 360,
+              radius: PLAYER.radius * 3,
             });
           }
           // A sidestep: float a "DODGE" tag off the hero so the whiff reads.
@@ -2531,6 +2686,30 @@ export function GameScreen({
           medkitTier >= 0 ? (state.player.medkits[medkitTier] ?? 0) : 0;
         const staminaPotions = state.player.staminaPotions;
         const repairKits = state.player.repairKits;
+        // The mana pool + spell bar. Mana is coarsened into the change-key so
+        // the bar re-renders a few times a second (not every frame); the
+        // cooldown wipe reads at tenths — smooth enough for a 2–8s recharge.
+        const effInt = effectiveStat(state, "intelligence");
+        const isCaster = state.player.maxMana > MANA.base;
+        const unlockedSpells = unlockedSpellIds(effInt);
+        const spellViews: SpellSlotView[] = state.player.spellSlots.map(
+          (id) => {
+            if (!id) return { id: null, cooldownFrac: 0, affordable: false };
+            const sdef = spellDef(id);
+            const cd = state.player.spellCooldowns[id] ?? 0;
+            return {
+              id,
+              cooldownFrac: Math.max(
+                0,
+                Math.min(1, cd / Math.max(1, sdef.cooldownMs)),
+              ),
+              affordable: state.player.mana >= sdef.manaCost,
+            };
+          },
+        );
+        const spellUnlocks = [...state.pendingSpellUnlocks];
+        const manaPotions = state.player.manaPotions;
+        const spellKey = `${Math.ceil(state.player.mana)}/${state.player.maxMana}/${manaPotions}/${state.player.spellSlots.join(",")}/${spellViews.map((v) => Math.round(v.cooldownFrac * 10)).join("")}/${effInt}/${spellUnlocks.join(",")}`;
         const weapon = state.player.equipment.weapon;
         const weaponWear =
           weapon.durability === undefined
@@ -2555,7 +2734,7 @@ export function GameScreen({
         // The prelude scene's id is part of the key: a chained prelude swaps
         // `state.cutscene` for the next scene with nothing else changing, and
         // the overlay only receives the fresh scene if this re-renders.
-        const key = `${state.phase}/${state.cutscene?.defId ?? ""}/${state.player.hp}/${Math.ceil(state.player.stamina)}/${state.player.xp}/${state.player.level}/${state.player.pendingStatPoints}/${state.enemies.length}/${bagCount}/${bagFree}/${bagFullHint ? 1 : 0}/${held}/${active}/${medkitTier}:${medkitCount}/${staminaPotions}/${repairKits}/${weapon.defId}/${weaponWear?.toFixed(2) ?? ""}/${state.player.coins}/${appearance}/${outfit}/${stage}/${party}/${state.stats.kills}/${Math.floor(state.stats.combatMs / 1000)}`;
+        const key = `${state.phase}/${state.cutscene?.defId ?? ""}/${state.player.hp}/${Math.ceil(state.player.stamina)}/${state.player.xp}/${state.player.level}/${state.player.pendingStatPoints}/${state.enemies.length}/${bagCount}/${bagFree}/${bagFullHint ? 1 : 0}/${held}/${active}/${medkitTier}:${medkitCount}/${staminaPotions}/${repairKits}/${weapon.defId}/${weaponWear?.toFixed(2) ?? ""}/${state.player.coins}/${appearance}/${outfit}/${stage}/${party}/${state.stats.kills}/${Math.floor(state.stats.combatMs / 1000)}/${spellKey}`;
         if (key !== lastHud) {
           lastHud = key;
           setHud({
@@ -2579,6 +2758,13 @@ export function GameScreen({
             medkitCount,
             staminaPotions,
             repairKits,
+            manaPotions,
+            mana: Math.round(state.player.mana),
+            maxMana: state.player.maxMana,
+            isCaster,
+            spells: spellViews,
+            unlockedSpells,
+            spellUnlocks,
             weaponDefId: weapon.defId,
             weaponWear,
             coins: state.player.coins,
@@ -2777,6 +2963,23 @@ export function GameScreen({
             </span>
           </div>
 
+          {/* The SPELL STATUS echo — the name of the spell just cast (or why a
+              cast fizzled), flashed high and centred so it reads without
+              covering the fight. Auto-clears after a beat. */}
+          {spellStatus && (
+            <div
+              className={`spell-status spell-status-${spellStatus.tone}`}
+              aria-live="polite"
+            >
+              <PixelText
+                font={font}
+                text={spellStatus.text}
+                scale={2}
+                color={spellStatus.accent}
+              />
+            </div>
+          )}
+
           <div className="hud-top">
             {/* Left: one framed unit — the hero avatar (inventory button)
                 beside HP over the always-on weapon widget, matching the
@@ -2834,6 +3037,33 @@ export function GameScreen({
                         />
                       </span>
                     </div>
+                    {/* The mana pool — shown only once the hero is a caster
+                        (some INT invested), so a melee build's HUD stays lean. */}
+                    {hud.isCaster && (
+                      <div className="hud-stat-row">
+                        <PixelText
+                          font={font}
+                          text="MP"
+                          scale={2}
+                          color="#9aa3ad"
+                        />
+                        <div className="hud-bar hp-bar">
+                          <div
+                            className="hud-bar-fill mana-fill"
+                            style={{
+                              width: `${(100 * hud.mana) / Math.max(1, hud.maxMana)}%`,
+                            }}
+                          />
+                        </div>
+                        <span className="hud-stat-val">
+                          <PixelText
+                            font={font}
+                            text={String(hud.mana)}
+                            scale={2}
+                          />
+                        </span>
+                      </div>
+                    )}
                   </div>
                   <div className="hud-vitals-group hud-vitals-gear">
                     <div className="hud-stat-row hud-weapon-row">
@@ -3195,6 +3425,56 @@ export function GameScreen({
               </span>
             )}
           </button>
+          {/* The blue-gatorade mana slot — right of the medkit, shown only for
+              a caster (an INT-sized pool) so a melee build's dock stays lean. */}
+          {hud.isCaster && (
+            <button
+              type="button"
+              className={`consumable-slot${
+                hud.manaPotions > 0 ? " filled" : ""
+              }`}
+              style={
+                hud.manaPotions > 0
+                  ? ({ "--slot-accent": MANA_POTION_COLOR } as CSSProperties)
+                  : undefined
+              }
+              aria-label={
+                hud.manaPotions > 0 ? "use-mana-potion" : "mana-slot-empty"
+              }
+              disabled={hud.manaPotions === 0}
+              onPointerDown={() => {
+                useManaQueuedRef.current = true;
+              }}
+            >
+              {hud.manaPotions > 0 && (
+                <img
+                  src={spriteDataUrl(assets.sprites, MANA_POTION_ICON) ?? ""}
+                  alt=""
+                  className="pixel-img consumable-icon"
+                />
+              )}
+              {hud.manaPotions > 0 && (
+                <span className="consumable-count">
+                  <PixelText
+                    font={font}
+                    text={String(hud.manaPotions)}
+                    scale={2}
+                    color="#f4f4f4"
+                  />
+                </span>
+              )}
+              {keyHints && (
+                <span className="slot-key consumable-key">
+                  <PixelText
+                    font={font}
+                    text={bindingLabel(getSettings().keybindings.mana)}
+                    scale={1}
+                    color="#0b0d10"
+                  />
+                </span>
+              )}
+            </button>
+          )}
           <button
             type="button"
             className={`consumable-slot${
@@ -3288,6 +3568,35 @@ export function GameScreen({
             )}
           </button>
         </div>
+      )}
+
+      {/* The SPELL BAR: the caster's row of cast slots, stacked just ABOVE the
+          consumable dock in the same thumb corner. A tap casts a slot (dimmed
+          while short on mana / recharging); a long-press opens the picker to
+          reassign it from the unlocked spells. Only shown once the hero is a
+          caster (some INT invested). */}
+      {hud?.phase === "playing" && hud.isCaster && (
+        <SpellBar
+          sprites={assets.sprites}
+          font={font}
+          side={powerupSide}
+          slots={hud.spells}
+          unlockedIds={hud.unlockedSpells}
+          keyHints={keyHints}
+          keyLabels={[
+            bindingLabel(getSettings().keybindings.spell1),
+            bindingLabel(getSettings().keybindings.spell2),
+            bindingLabel(getSettings().keybindings.spell3),
+            bindingLabel(getSettings().keybindings.spell4),
+          ]}
+          onCast={(slot) => {
+            castSpellIndexRef.current = slot;
+          }}
+          onAssign={(slot, spellId) => {
+            if (state) setSpellSlot(state, slot, spellId);
+            bumpUi();
+          }}
+        />
       )}
 
       {/* The powerup dock: three big, thumb-sized slots. Oldest sits leftmost
@@ -3584,6 +3893,24 @@ export function GameScreen({
           font={font}
           sprites={assets.sprites}
           onChange={bumpUi}
+        />
+      )}
+
+      {/* The "SPELL UNLOCKED" modal — sits ABOVE everything (including the
+          level-up chooser it usually pops over) and drains the engine's unlock
+          queue one at a time. Learning a spell drops it onto an empty spell-bar
+          slot (autofill). */}
+      {state && hud && hud.spellUnlocks.length > 0 && (
+        <SpellUnlockOverlay
+          key={hud.spellUnlocks[0]!}
+          spellId={hud.spellUnlocks[0]!}
+          font={font}
+          sprites={assets.sprites}
+          onDismiss={() => {
+            takeSpellUnlock(state);
+            autofillSpellSlots(state);
+            bumpUi();
+          }}
         />
       )}
 

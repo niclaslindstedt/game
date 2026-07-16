@@ -11,7 +11,12 @@ import { direction, distance, moveToward, type Vec2 } from "@game/lib/vec.ts";
 import { ENEMY_RANGED, JUMP, PLAYER } from "./config.ts";
 import { difficultyDef } from "./defs/difficulties.ts";
 import { enemyDef } from "./defs/enemies/index.ts";
-import { armorReduction, playerDodgeChance, wearWornArmor } from "./items.ts";
+import {
+  absorbPlayerDamage,
+  armorReduction,
+  playerDodgeChance,
+  wearWornArmor,
+} from "./items.ts";
 import { queueStruckProcs } from "./loot.ts";
 import { lineOfSight } from "./obstacles.ts";
 import { BALANCE } from "./tuning.ts";
@@ -212,7 +217,7 @@ export function resolveHostileHit(
     ),
   );
   wearWornArmor(state);
-  player.hp -= hpDamage;
+  player.hp -= absorbPlayerDamage(state, hpDamage);
   player.hurtFlashMs = 250;
   state.stats.damageTaken += damage;
   state.events.push({ type: "playerHurt", crit: false });

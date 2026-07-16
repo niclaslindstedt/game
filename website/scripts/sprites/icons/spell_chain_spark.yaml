@@ -1,0 +1,28 @@
+name: spell_chain_spark
+family: icons
+size: [12, 12]
+description: >
+  The CHAIN SPARK spell icon — a storm bolt glyph.
+subject:
+  kind: spell icon
+  features: a bold storm-tinted bolt motif, centered and outlined
+  accent: storm magic
+  flavor: the CHAIN SPARK cast-spell pictogram
+palette:
+  O: "#0c0e18" # dark outline
+  E: "#7ec8ff" # storm bright
+  D: "#2f6fd0" # storm deep
+  H: "#e6f4ff" # storm highlight
+grid: |
+  ....OEEO....
+  ...OEEEO....
+  ..OEEEO.O...
+  .OEEEEEODO..
+  .OEEEEHEODO.
+  ..OOHEEEOOEO
+  ..OEEEEEEOO.
+  ...OOEEEO...
+  ...OEEEO....
+  ..OEEEO.....
+  .OEEEO......
+  .OEEO.......

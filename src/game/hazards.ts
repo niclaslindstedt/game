@@ -14,7 +14,7 @@ import { ASTEROIDS, JUMP, PLAYER, WELLS } from "./config.ts";
 import { difficultyDef } from "./defs/difficulties.ts";
 import { enemyDef } from "./defs/enemies/index.ts";
 import { levelDef, type LevelDef } from "./defs/levels/index.ts";
-import { armorReduction, wearWornArmor } from "./items.ts";
+import { absorbPlayerDamage, armorReduction, wearWornArmor } from "./items.ts";
 import { currentMobLevel } from "./menace.ts";
 import { startPlayerThought } from "./story.ts";
 import type { Asteroid, Enemy, GameState, GravityWell } from "./types.ts";
@@ -59,7 +59,7 @@ function hurtPlayer(state: GameState, damage: number): void {
     Math.round(damage * (1 - armorReduction(state, currentMobLevel(state)))),
   );
   wearWornArmor(state);
-  player.hp -= hpDamage;
+  player.hp -= absorbPlayerDamage(state, hpDamage);
   player.hurtFlashMs = 250;
   state.stats.damageTaken += damage;
   state.events.push({ type: "playerHurt", crit: false });

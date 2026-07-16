@@ -21,11 +21,13 @@ import {
   GATES,
   LEVELING,
   LOOT,
+  MANA,
   MEDKIT,
   MELEE,
   MERCY,
   PLAYER,
   QUALITY,
+  REGEN,
   STAMINA,
   STATS,
   STAT_REQ,
@@ -59,6 +61,13 @@ import {
   equipmentBaseName,
 } from "./defs/equipment.ts";
 import { gradeVariantIds } from "./defs/grades.ts";
+import {
+  isSpellUnlocked,
+  spellDefs,
+  spellsUnlockedBetween,
+  SPELL_SLOTS,
+  SPELL_STAT,
+} from "./defs/spells.ts";
 import { difficultyDef, meetsMinDifficulty } from "./defs/difficulties.ts";
 import type { EnemyRole } from "./defs/enemies/index.ts";
 import { gateKeyIds, levelDef } from "./defs/levels/index.ts";
@@ -1525,6 +1534,168 @@ export function recomputeMaxStamina(state: GameState): void {
     delta > 0 ? player.stamina + delta : Math.min(player.stamina, next);
 }
 
+/** Max mana from the base pool + the INTELLIGENCE stat (affixes folded in) —
+ * the spell fuel INT both sizes and unlocks (see MANA / defs/spells.ts). */
+export function computeMaxMana(state: GameState): number {
+  return MANA.base + effectiveStat(state, "intelligence") * MANA.perInt;
+}
+
+/**
+ * Re-derive max mana after INTELLIGENCE changed — the mana twin of
+ * `recomputeMaxStamina`. A deeper pool lifts the current reserve by the same
+ * amount (a level-up feels good); a shallower one only clamps.
+ */
+export function recomputeMaxMana(state: GameState): void {
+  const player = state.player;
+  const next = computeMaxMana(state);
+  const delta = next - player.maxMana;
+  player.maxMana = next;
+  player.mana = delta > 0 ? player.mana + delta : Math.min(player.mana, next);
+}
+
+/**
+ * Route an incoming (post-armor) blow through the hero's magical SHIELD and
+ * arm the health-regen pause. Every player-damage site calls this instead of
+ * subtracting hp directly: it resets `hpRegenMs` (so SPIRIT regen holds off
+ * after a hit) and, when a ward is up, absorbs up to `shieldHp` of the blow —
+ * returning the hp damage that GETS THROUGH. A lapsed/undamaged shield is a
+ * clean passthrough. Reads `REGEN.hpDelayMs`.
+ */
+export function absorbPlayerDamage(state: GameState, hpDamage: number): number {
+  const player = state.player;
+  player.hpRegenMs = REGEN.hpDelayMs;
+  if (player.shieldMs <= 0 || player.shieldHp <= 0) return hpDamage;
+  const absorbed = Math.min(player.shieldHp, hpDamage);
+  player.shieldHp -= absorbed;
+  if (player.shieldHp <= 0) {
+    player.shieldHp = 0;
+    player.shieldMs = 0;
+  }
+  return hpDamage - absorbed;
+}
+
+/** Mana regenerated per second at the hero's effective SPIRIT once the
+ * post-cast idle window (`REGEN.manaDelayMs`) has lapsed (config REGEN). */
+export function manaRegenPerSec(state: GameState): number {
+  return (
+    REGEN.manaBasePerSec + effectiveStat(state, "spirit") * REGEN.manaPerSpirit
+  );
+}
+
+/** Health regenerated per second at the hero's effective SPIRIT once the
+ * post-hit pause (`REGEN.hpDelayMs`) has lapsed — 0 at 0 SPIRIT (config REGEN). */
+export function hpRegenPerSec(state: GameState): number {
+  return effectiveStat(state, "spirit") * REGEN.hpPerSpirit;
+}
+
+/**
+ * Refill the spell pool to full — the blue-gatorade mana potion. False when
+ * there is nothing to top up (already at max), so, like the energy drink, the
+ * potion stays on the ground for a caster who has actually spent mana. Returns
+ * the mana actually restored (for the pickup float) via the second slot of the
+ * tuple — kept simple as a boolean here; the amount is read off hp-style deltas
+ * by the caller. */
+export function restoreMana(state: GameState): number {
+  const player = state.player;
+  if (player.mana >= player.maxMana) return 0;
+  const restored = Math.min(
+    player.maxMana - player.mana,
+    Math.max(1, Math.round(player.maxMana * MANA.potionRestore)),
+  );
+  player.mana = Math.min(player.maxMana, player.mana + restored);
+  return restored;
+}
+
+/**
+ * Bank a blue-gatorade mana potion into the consumable dock. False (leave it
+ * grounded) when the stack is already full. Mirrors `bankStaminaPotion`.
+ */
+export function bankManaPotion(state: GameState): boolean {
+  if (state.player.manaPotions >= CONSUMABLES.stackCap) return false;
+  state.player.manaPotions += 1;
+  return true;
+}
+
+/**
+ * Assign a spell to a HUD spell-bar slot (or clear it with `null`) — the
+ * long-press picker's commit. Refuses an out-of-range slot, an unknown spell,
+ * or one the hero's effective INTELLIGENCE doesn't yet unlock (the picker only
+ * offers unlocked spells, but the mutator re-checks). Assigning a spell already
+ * in another slot MOVES it (no duplicate slot). Returns whether the bar changed.
+ */
+export function setSpellSlot(
+  state: GameState,
+  slotIndex: number,
+  spellId: string | null,
+): boolean {
+  if (slotIndex < 0 || slotIndex >= SPELL_SLOTS) return false;
+  const slots = state.player.spellSlots;
+  if (spellId === null) {
+    if (slots[slotIndex] === null) return false;
+    slots[slotIndex] = null;
+    return true;
+  }
+  const def = spellDefs()[spellId];
+  if (!def) return false;
+  if (!isSpellUnlocked(def, effectiveStat(state, SPELL_STAT))) return false;
+  // Moving a spell already slotted elsewhere clears its old slot first.
+  for (let i = 0; i < slots.length; i++) {
+    if (i !== slotIndex && slots[i] === spellId) slots[i] = null;
+  }
+  slots[slotIndex] = spellId;
+  return true;
+}
+
+/**
+ * Auto-fill any EMPTY spell-bar slots with the hero's newest unlocked spells
+ * not already on the bar — called by the app when a fresh caster (or a loaded
+ * loadout with a short bar) has open slots, so the bar is never blank when
+ * spells are available. Fills highest-`minInt` first (the newest, strongest).
+ * Returns whether anything was placed.
+ */
+export function autofillSpellSlots(state: GameState): boolean {
+  const slots = state.player.spellSlots;
+  const effInt = effectiveStat(state, SPELL_STAT);
+  const onBar = new Set(slots.filter((s): s is string => s !== null));
+  const available = Object.values(spellDefs())
+    .filter((def) => isSpellUnlocked(def, effInt) && !onBar.has(def.id))
+    .sort((a, b) => b.minInt - a.minInt)
+    .map((def) => def.id);
+  let placed = false;
+  let cursor = 0;
+  for (let i = 0; i < slots.length && cursor < available.length; i++) {
+    if (slots[i] === null) {
+      slots[i] = available[cursor++] ?? null;
+      placed = true;
+    }
+  }
+  return placed;
+}
+
+/**
+ * Drain the next queued spell unlock (see `GameState.pendingSpellUnlocks`,
+ * filled by `allocateStat` when INT crosses a ×10 milestone) — returns its
+ * SPELL_DEFS id and removes it from the queue, or null when the queue is empty.
+ * The app calls this as the "SPELL UNLOCKED" modal is dismissed, one at a time.
+ */
+export function takeSpellUnlock(state: GameState): string | null {
+  return state.pendingSpellUnlocks.shift() ?? null;
+}
+
+/**
+ * Spend one stacked mana potion to refill the spell pool. A no-op — returns
+ * false, nothing consumed — with none held or the pool already full
+ * (`restoreMana`), so a mistap keeps the potion. Emits `manaPotionUsed`.
+ */
+export function consumeManaPotion(state: GameState): boolean {
+  if (state.player.manaPotions <= 0) return false;
+  const restored = restoreMana(state);
+  if (restored <= 0) return false;
+  state.player.manaPotions -= 1;
+  state.events.push({ type: "manaPotionUsed", restored });
+  return true;
+}
+
 /**
  * A weapon's LIVE crit-damage multiplier in this player's hands: the flat
  * class base (`baseCritMult` — physical ×2, magic ×1.5) deepened by the build's
@@ -1773,7 +1944,8 @@ export function lowDurabilityDesperation(state: GameState): number {
 /** The rescue pickups a mercy signal can answer with: the low-health medkit,
  * the low-durability repair kit, the empty-sprint energy drink, the
  * packed-field screen-nuke, and the low-health plated-armor pull. */
-export type MercyRescue = "medkit" | "repair" | "drink" | "bomb" | "armor";
+export type MercyRescue =
+  "medkit" | "repair" | "drink" | "mana" | "bomb" | "armor";
 
 /** Whether a ground item answers the given mercy signal. */
 function answersMercy(item: Item, rescue: MercyRescue): boolean {
@@ -2831,6 +3003,13 @@ export function allocateStat(state: GameState, stat: StatName): boolean {
   // cap sits above any achievable chosen pile, so this only bites at the 250
   // hard ceiling; the UI greys a maxed stat.
   if (player.stats[stat] >= statCap(player.level)) return false;
+  // SPELL UNLOCKS ride effective INTELLIGENCE crossing a ×10 milestone — read it
+  // before the point lands so we can enqueue any spell the jump unlocks (skipped
+  // during a respec, where the player already knows their spellbook).
+  const intBefore =
+    stat === SPELL_STAT && state.phase !== "respec"
+      ? effectiveStat(state, SPELL_STAT)
+      : 0;
   player.stats[stat]++;
   // Tally the player's own pick so the chooser can show it apart from the
   // head-start/auto-growth/gear baked into the effective stat.
@@ -2838,6 +3017,22 @@ export function allocateStat(state: GameState, stat: StatName): boolean {
   player.pendingStatPoints--;
   recomputeMaxHp(state);
   recomputeMaxStamina(state);
+  // INTELLIGENCE also deepens the mana pool — resize it as the point lands, and
+  // surface any spell the higher effective INT just unlocked.
+  if (stat === SPELL_STAT) {
+    recomputeMaxMana(state);
+    if (state.phase !== "respec") {
+      const unlocked = spellsUnlockedBetween(
+        intBefore,
+        effectiveStat(state, SPELL_STAT),
+      );
+      for (const id of unlocked) {
+        if (!state.pendingSpellUnlocks.includes(id)) {
+          state.pendingSpellUnlocks.push(id);
+        }
+      }
+    }
+  }
   // STRENGTH also widens the carry bag — grow it as the point lands.
   if (stat === "strength") syncInventoryCapacity(state);
   // A level-up resumes the moment its last point lands; a respec never
@@ -2875,11 +3070,13 @@ export function beginRespec(state: GameState): void {
   player.pendingStatPoints = pool;
   recomputeMaxHp(state);
   recomputeMaxStamina(state);
+  recomputeMaxMana(state);
   syncInventoryCapacity(state);
-  // Refunding STRENGTH shrinks the bag; keep current hp/stamina inside the
+  // Refunding STRENGTH shrinks the bag; keep current hp/stamina/mana inside the
   // freshly-zeroed pools so the readouts never show an over-full bar.
   player.hp = Math.min(player.hp, player.maxHp);
   player.stamina = Math.min(player.stamina, player.maxStamina);
+  player.mana = Math.min(player.mana, player.maxMana);
   state.phase = "respec";
 }
 
@@ -2898,9 +3095,11 @@ export function deallocateStat(state: GameState, stat: StatName): boolean {
   player.pendingStatPoints++;
   recomputeMaxHp(state);
   recomputeMaxStamina(state);
+  if (stat === SPELL_STAT) recomputeMaxMana(state);
   if (stat === "strength") syncInventoryCapacity(state);
   player.hp = Math.min(player.hp, player.maxHp);
   player.stamina = Math.min(player.stamina, player.maxStamina);
+  player.mana = Math.min(player.mana, player.maxMana);
   return true;
 }
 
@@ -2916,6 +3115,7 @@ export function confirmRespec(state: GameState): boolean {
   if (state.phase !== "respec" || player.pendingStatPoints > 0) return false;
   player.hp = player.maxHp;
   player.stamina = player.maxStamina;
+  player.mana = player.maxMana;
   state.phase = "playing";
   return true;
 }

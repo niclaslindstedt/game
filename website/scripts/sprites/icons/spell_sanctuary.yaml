@@ -1,0 +1,28 @@
+name: spell_sanctuary
+family: icons
+size: [12, 12]
+description: >
+  The SANCTUARY spell icon — a holy shield glyph.
+subject:
+  kind: spell icon
+  features: a bold holy-tinted shield motif, centered and outlined
+  accent: holy magic
+  flavor: the SANCTUARY cast-spell pictogram
+palette:
+  O: "#0c0e18" # dark outline
+  E: "#ffe08a" # holy bright
+  D: "#c9932f" # holy deep
+  H: "#fff6d0" # holy highlight
+grid: |
+  ..OOOOOOOOO.
+  .OHHHHHHHHHO
+  .OHHHHHHHHHO
+  .OEEEEEEEEEO
+  .OEEEEEEEEEO
+  .OEEEEEEEEEO
+  .OEEEEEEEEEO
+  ..OEEEEEEEO.
+  ...ODDDDDO..
+  ....ODDDO...
+  .....ODO....
+  ......O.....

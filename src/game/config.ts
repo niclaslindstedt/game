@@ -1492,6 +1492,9 @@ export const ARMOR_TYPES: Record<
     strReqFraction: 0,
     statWeights: {
       intelligence: 6,
+      // CLOTH is the caster material — SPIRIT (mana/regen) leans here alongside
+      // INT so a robe rolls the mage's support stat, second only to raw INT.
+      spirit: 4,
       dexterity: 3,
       strength: 2,
       stamina: 2,
@@ -1508,6 +1511,7 @@ export const ARMOR_TYPES: Record<
       intelligence: 2,
       stamina: 2,
       speed: 2,
+      spirit: 1,
       luck: 1,
     },
   },
@@ -1520,6 +1524,7 @@ export const ARMOR_TYPES: Record<
       intelligence: 2,
       stamina: 3,
       speed: 1,
+      spirit: 1,
       luck: 1,
     },
   },
@@ -1532,6 +1537,7 @@ export const ARMOR_TYPES: Record<
       intelligence: 2,
       stamina: 3,
       speed: 1,
+      spirit: 1,
       luck: 0,
     },
     minDifficulty: "nightmare",
@@ -1608,6 +1614,67 @@ export const STAMINA = {
 } as const;
 
 /**
+ * MANA — the spell resource (the sprint pool's arcane twin; mirrors STAMINA).
+ * The pool is INTELLIGENCE's: a caster's max mana is `base + effectiveINT ×
+ * perInt`, so pouring points into INT both UNLOCKS spells (one per 10 effective
+ * INT, see defs/spells.ts) AND deepens the pool that fuels them. Spent by
+ * casting (each spell's `manaCost`) and refilled by the blue-gatorade mana
+ * potion (`potionRestore`) or, after an idle beat, by regen (see REGEN). Units:
+ * mana points. Recomputed off INT via `computeMaxMana` (items.ts), the exact
+ * shape `computeMaxStamina` takes off STAMINA.
+ */
+export const MANA = {
+  /** Pool at zero INTELLIGENCE — enough that the first unlocked spell (INT 10,
+   * pool 45) can be cast a couple of times before regen matters. */
+  base: 25,
+  /** Extra max mana per point of effective INTELLIGENCE. At INT 250 (the stat
+   * hard cap) the pool reaches 525 — deep enough to chain the costly high-tier
+   * spells a maxed mage unlocks. */
+  perInt: 2,
+  /** Fraction of the max pool a blue-gatorade MANA POTION restores on use
+   * (1 = a full refill, like the energy drink tops the sprint pool). */
+  potionRestore: 1,
+} as const;
+
+/**
+ * REGEN — the passive trickle SPIRIT drives, on both pools it touches: MANA
+ * (every build's spell fuel) and HEALTH (a slow out-of-combat mend). Spirit is
+ * the caster-support stat: it grows neither pool's SIZE (INT sizes mana,
+ * STAMINA sizes hp) but how fast each refills on its own. Both regens PAUSE
+ * briefly after the triggering action — mana after a cast, health after a hit —
+ * so regen rewards a lull in the fight, never spilling free resource mid-cast
+ * or mid-swarm. Units: points/second, ms. Applied in `stepRegen` (step.ts);
+ * the per-second rates are read through `manaRegenPerSec` / `hpRegenPerSec`
+ * (items.ts) so the HUD and the sim quote the same numbers the sim measures.
+ */
+export const REGEN = {
+  /**
+   * Mana regen idles for this long after the last cast — the "5 seconds of no
+   * spell" rule. A fresh cast re-arms the full window, so spamming spells keeps
+   * the pool from refilling and the caster must pace their casts (or drink).
+   */
+  manaDelayMs: 5000,
+  /** Mana/sec once regen is active, at zero SPIRIT — a slow drip so a
+   * spirit-less caster leans on the pool and the potion, not on waiting. */
+  manaBasePerSec: 3,
+  /** Extra mana/sec per point of effective SPIRIT: the stat's headline payoff.
+   * At SPIRIT 60 (a committed support build) regen reaches ~75/sec — a costly
+   * spell's worth every couple of seconds. */
+  manaPerSpirit: 1.2,
+  /**
+   * Health regen pauses this long after the hero takes a hit — a shorter window
+   * than mana's, so the mend resumes soon after a clean dodge but never ticks
+   * while blows are landing. A hit re-arms the full window.
+   */
+  hpDelayMs: 4000,
+  /** Hp/sec per point of effective SPIRIT once the pause lapses (0 at 0 SPIRIT
+   * — health regen is entirely spirit's gift, off by default). Gentle: at
+   * SPIRIT 60 the hero mends ~3.6 hp/sec, a real between-fights top-up but never
+   * a substitute for a medkit mid-swarm. */
+  hpPerSpirit: 0.06,
+} as const;
+
+/**
  * Melee area-of-effect. A swing is not a single tap but a sector of effect:
  * every monster within the weapon's reach and inside the cone of the aim
  * takes the blow, so a blade cleaves the crowd it faces instead of one mob.
@@ -1679,6 +1746,14 @@ export const LOOT = {
    * turn up in the ordinary rain.
    */
   drinkShare: 0.05,
+  /**
+   * …the share that is a BLUE GATORADE (a MANA POTION — refills the spell pool
+   * on the player's call). Sits beside the energy drink on the ladder and, like
+   * it, is only worth anything to a caster who has actually spent mana, so the
+   * baseline slice is lean; a low-mana MERCY DROP (see `manaEmptyChance`) rains
+   * them harder when a spellcaster is genuinely tapped out.
+   */
+  manaShare: 0.05,
   /**
    * …the share that is a GOLDEN XP ARROW (grants a share of the level bar —
    * see LEVELING.arrowXpShare). Unlike the medkit/repair/drink slices, this
@@ -1958,6 +2033,17 @@ export const MERCY = {
    * `staminaDrinkChance` and `GameState.staminaEmptyMs`.
    */
   staminaEmptyDrinkRampMs: 6000,
+  /**
+   * THE LOW-MANA ROPE — the blue-gatorade twin of the stamina bailout, but
+   * keyed on the POOL FRACTION (mana has no bone-dry timer): a CASTER (a hero
+   * with an INT-sized pool past `MANA.base`) whose mana sits at or below
+   * `lowManaFraction` of the max has this flat per-kill chance to be thrown a
+   * mana potion, so a tapped-out mage isn't stranded unable to cast. Gated by
+   * the shared one-rope-at-a-time rule (`mercyRescueWaiting`). See
+   * `manaDrinkChance`.
+   */
+  lowManaFraction: 0.15,
+  lowManaDropChance: 0.06,
   /**
    * ONE ROPE AT A TIME — how near (world px) an un-collected rescue pickup
    * must lie for its mercy signal to hold fire. While the medkit, repair kit,

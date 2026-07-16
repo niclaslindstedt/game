@@ -11,11 +11,14 @@
 
 import { clamp, distance } from "@game/lib/vec.ts";
 import type { Vec2 } from "@game/lib/vec.ts";
+import { MANA } from "./config.ts";
 import { enemyDef } from "./defs/enemies/index.ts";
 import { weaponDef } from "./defs/equipment.ts";
+import { isSpellUnlocked, spellDef } from "./defs/spells.ts";
 import {
   bestMedkitTier,
   DAMAGE_STAT,
+  effectiveStat,
   equipmentMaxDurability,
   isWeaponBroken,
   REQ_STAT,
@@ -145,7 +148,76 @@ export function botAct(bot: Bot, state: GameState): GameInput {
   // mends the whole kit and restores the shed weapon (useRepairKit no-ops with
   // nothing to mend, so a mistap is free).
   decided.useRepairKit = player.repairKits > 0 && needsRepair(state);
+  // CASTER play: drink a mana potion when the pool runs low, and fire the best
+  // castable spell at the fight — a heal when hurt, an AOE into a crowd, a bolt
+  // at a lone foe, a ward/slow under pressure. Only a hero with an INT-sized
+  // pool (past MANA.base) casts. The spell bar is filled by the harness/app;
+  // the bot reads it and stays pure (input only, no state mutation).
+  if (player.maxMana > MANA.base) {
+    decided.useManaPotion =
+      player.manaPotions > 0 && player.mana < player.maxMana * MANA_TOPUP_FRAC;
+    const slot = pickSpellToCast(state, threatNear);
+    if (slot >= 0) {
+      decided.castSpell = true;
+      decided.castSpellIndex = slot;
+    }
+  }
   return decided;
+}
+
+/** Drink a mana potion once the pool dips below this fraction of its max. */
+const MANA_TOPUP_FRAC = 0.25;
+
+/**
+ * The spell-bar slot the bot should cast this tick, or -1 for none. Scores each
+ * castable slot (unlocked, off cooldown, affordable) by how well its school
+ * fits the moment — a heal when hurt outranks everything, then an AOE into a
+ * packed crowd, then a lone-target bolt, then a defensive ward/slow under
+ * pressure — and returns the best. Pure: reads state only.
+ */
+function pickSpellToCast(state: GameState, threatNear: boolean): number {
+  const p = state.player;
+  const effInt = effectiveStat(state, "intelligence");
+  const hurt = p.hp < p.maxHp * HEAL_HP_FRAC;
+  let best = -1;
+  let bestScore = 0;
+  for (let i = 0; i < p.spellSlots.length; i++) {
+    const id = p.spellSlots[i];
+    if (!id) continue;
+    const def = spellDef(id);
+    if (!isSpellUnlocked(def, effInt)) continue;
+    if ((p.spellCooldowns[id] ?? 0) > 0) continue;
+    if (p.mana < def.manaCost) continue;
+    const e = def.effect;
+    // Only cast where the spell would actually connect — an attack bolt needs a
+    // foe in RANGE, an AOE/slow needs a crowd in RADIUS — so the bot never
+    // spams a whiffing cast (a wasted nova, a targetless fizzle).
+    let score = 0;
+    if (e.kind === "heal") score = hurt ? 5 : 0;
+    else if (e.kind === "nova") {
+      const n = foesWithin(state, e.radius);
+      score = n >= 2 ? 4 : n >= 1 ? 2 : 0;
+    } else if (e.kind === "bolt")
+      score = foesWithin(state, e.range) >= 1 ? 3 : 0;
+    else if (e.kind === "slow")
+      score = foesWithin(state, e.radius) >= 3 ? 3 : 0;
+    else if (e.kind === "shield") score = hurt || threatNear ? 2 : 0;
+    if (score > bestScore) {
+      bestScore = score;
+      best = i;
+    }
+  }
+  return best;
+}
+
+/** Count of live, targetable foes within `radius` of the hero (bot heuristics). */
+function foesWithin(state: GameState, radius: number): number {
+  let n = 0;
+  for (const enemy of state.enemies) {
+    if (enemyDef(enemy.defId).apparition) continue;
+    if (distance(state.player.pos, enemy.pos) <= radius) n++;
+  }
+  return n;
 }
 
 /** Below this fraction of its max durability the held weapon is "nearly spent"
@@ -182,7 +254,9 @@ export function botAllocate(bot: Bot, state: GameState): StatName {
   void bot; // strategy-specific builds can key off this later
   const lane = botLane(state);
   // A 4-beat cycle: two points into the lane's required attribute (the equip
-  // gate), one into its damage attribute, one into STAMINA.
+  // gate), one into its damage attribute, one into STAMINA — except a MAGIC
+  // (caster) lane spends that fourth beat on SPIRIT instead, growing the mana/
+  // health regen a spellcaster leans on, so the sim exercises spirit's effect.
   switch (state.player.level % 4) {
     case 0:
     case 1:
@@ -190,7 +264,7 @@ export function botAllocate(bot: Bot, state: GameState): StatName {
     case 2:
       return DAMAGE_STAT[lane];
     default:
-      return "stamina";
+      return lane === "magic" ? "spirit" : "stamina";
   }
 }
 

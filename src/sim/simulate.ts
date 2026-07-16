@@ -43,6 +43,7 @@ import {
   allocateStat,
   armorReduction,
   autoEquipBest,
+  autofillSpellSlots,
   canEquip,
   dismissIntro,
   effectiveStat,
@@ -203,6 +204,11 @@ export type HeroSnapshot = {
   armor: number;
   kills: number;
   menaceStage: number;
+  /** Current mana / max — the spell pool climbing with INTELLIGENCE. */
+  mana: number;
+  maxMana: number;
+  /** Effective SPIRIT (the mana/health regen driver). */
+  spirit: number;
 };
 
 export type WeaponSwap = {
@@ -326,6 +332,12 @@ export type LevelReport = {
     dpsOut: number;
     /** Kills per simulated minute — feeds the leveling calculator. */
     killsPerMinute: number;
+    /** Total mana spent casting this run, and spells cast — the spell-economy
+     * read (0 for a non-caster build). */
+    manaSpent: number;
+    spellsCast: number;
+    /** Spells cast per simulated minute — how hard the caster leans on spells. */
+    spellsPerMinute: number;
     /** Stall-breaker teleports the runner had to apply (see `unstick`). */
     unstuckNudges: number;
     /** Merchant recovery visits the sim made (see `autoShop`) — how often the
@@ -511,6 +523,9 @@ function playRun(args: {
     args.loadout ?? undefined,
   );
   const bot = createBot(args.strategy);
+  // A carried caster may arrive with unlocked spells but a blank bar — fill it
+  // so the bot casts from the first tick (the app does this on level start).
+  autofillSpellSlots(state);
   const def = levelDef(args.levelId);
   const cap = xpLevelCap(args.levelId, args.difficulty);
 
@@ -701,6 +716,9 @@ function playRun(args: {
       armor: totalArmor(state),
       kills: state.stats.kills,
       menaceStage: menaceStage(state),
+      mana: Math.round(state.player.mana),
+      maxMana: state.player.maxMana,
+      spirit: Math.round(effectiveStat(state, "spirit")),
     });
   };
 
@@ -750,6 +768,11 @@ function playRun(args: {
         if (!allocateStat(state, botAllocate(bot, state))) {
           for (const s of STAT_NAMES) if (allocateStat(state, s)) break;
         }
+        // A ding may have unlocked a spell (INT crossed a ×10 mark): clear the
+        // modal queue and drop the newest spells onto the bar so the bot casts
+        // them (the app does this via the unlock modal / autofill).
+        state.pendingSpellUnlocks.length = 0;
+        autofillSpellSlots(state);
         guardPhase(++phaseAdvances);
         continue;
       }
@@ -1078,6 +1101,9 @@ function playRun(args: {
         : 0,
       dpsOut: round1(state.stats.damageDealt / timeSec),
       killsPerMinute: round1(state.stats.kills / (timeSec / 60)),
+      manaSpent: Math.round(state.stats.manaSpent),
+      spellsCast: state.stats.spellsCast,
+      spellsPerMinute: round1(state.stats.spellsCast / (timeSec / 60)),
       unstuckNudges,
       shopVisits,
     },

@@ -52,9 +52,19 @@ export type GamePhase =
  */
 export type Difficulty = string;
 
-/** The six trainable stats, one point awarded per level-up. */
+/**
+ * The seven trainable stats, points awarded per level-up. SPIRIT is the
+ * caster-support stat: it drives mana and health REGEN (see config REGEN),
+ * where INTELLIGENCE sizes the mana pool and unlocks spells.
+ */
 export type StatName =
-  "stamina" | "strength" | "dexterity" | "intelligence" | "speed" | "luck";
+  | "stamina"
+  | "strength"
+  | "dexterity"
+  | "intelligence"
+  | "speed"
+  | "luck"
+  | "spirit";
 
 export type WeaponClass = "melee" | "ranged" | "magic";
 
@@ -363,6 +373,34 @@ export type Player = {
   stamina: number;
   /** Max stamina, from the base pool + STAMINA stat (see `computeMaxStamina`). */
   maxStamina: number;
+  /**
+   * Current mana — the spell pool. Spent by casting; refilled by the mana
+   * potion or, after `manaRegenMs` idles out, by SPIRIT-driven regen (config
+   * MANA / REGEN). Sized by INTELLIGENCE (`computeMaxMana`).
+   */
+  mana: number;
+  /** Max mana, from the base pool + INTELLIGENCE (see `computeMaxMana`). */
+  maxMana: number;
+  /**
+   * Ms until mana regen resumes — set to `REGEN.manaDelayMs` on every cast and
+   * counted down each tick (`stepRegen`). While positive the pool holds; the
+   * "5 seconds of no spell being used" rule. 0 = regenerating.
+   */
+  manaRegenMs: number;
+  /**
+   * Ms until health regen resumes — set to `REGEN.hpDelayMs` whenever the hero
+   * takes a hit and counted down each tick. Gates the SPIRIT-driven hp trickle
+   * so it only mends out of the line of fire. 0 = regenerating.
+   */
+  hpRegenMs: number;
+  /**
+   * Active magical SHIELD (a defensive spell): `shieldHp` absorbs incoming
+   * damage before the hero's own hp for `shieldMs`. Both count to 0 (the shield
+   * lapses when either its pool is drained or its timer runs out — see the
+   * player-damage path and `stepRegen`). 0/0 = no shield.
+   */
+  shieldHp: number;
+  shieldMs: number;
   /** Unit vector of the last movement direction; drives sprite facing. */
   facing: Vec2;
   /**
@@ -386,6 +424,22 @@ export type Player = {
    * scratch state across the sync.
    */
   itemSpells: ItemSpell[];
+  /**
+   * The HUD spell bar: one entry per slot (`SPELL_SLOTS` long), each a
+   * SPELL_DEFS id assigned to that slot or null for an empty slot. Tapping a
+   * slot casts its spell (`GameInput.castSpell`); a long-press opens the picker
+   * to reassign it from the hero's UNLOCKED spells (effective INT ≥ the spell's
+   * `minInt`). Carried between levels via the loadout, so a caster's bar
+   * persists.
+   */
+  spellSlots: (string | null)[];
+  /**
+   * Per-spell cast cooldowns (ms remaining, keyed by SPELL_DEFS id), counted
+   * down each tick (`stepRegen`). A spell with time on its clock can't be cast
+   * again; absent/0 = ready. Keyed by spell id (not slot) so the same spell in
+   * two slots shares one cooldown.
+   */
+  spellCooldowns: Record<string, number>;
   /**
    * The powerup dock (ABILITY_DEFS ids, oldest first, HELD_ITEMS.cap deep). A
    * slot holds a pickup from the moment it is scooped: first as a banked power
@@ -411,6 +465,12 @@ export type Player = {
    * sprint pool; carried between levels via the loadout.
    */
   staminaPotions: number;
+  /**
+   * Stacked BLUE GATORADE mana potions (capped at `CONSUMABLES.stackCap`).
+   * Spent by `consumeManaPotion` to refill the spell pool; carried between
+   * levels via the loadout. Mirrors `staminaPotions`.
+   */
+  manaPotions: number;
   /**
    * Stacked weapon repair kits (capped at `CONSUMABLES.stackCap`). A touched
    * kit now banks into the consumable dock rather than firing on contact;
@@ -801,6 +861,10 @@ export type Item =
      * kit it stays grounded when there is nothing to top up (stamina already
      * full), so it is never wasted on a rested hero. */
     | { id: number; kind: "drink"; pos: Vec2 }
+    /** A blue gatorade: refills the mana pool on touch (banked into the dock).
+     * Like the energy drink it stays grounded when there's nothing to top up
+     * (mana already full), so it is never wasted on a full caster. */
+    | { id: number; kind: "mana"; pos: Vec2 }
     | { id: number; kind: "equipment"; pos: Vec2; equipment: Equipment }
     /** A time-limited power pickup; `defId` keys into ABILITY_DEFS. */
     | { id: number; kind: "ability"; pos: Vec2; defId: string }
@@ -1070,6 +1134,11 @@ export type GameStats = {
   damageTaken: number;
   itemsCollected: number;
   xpGained: number;
+  /** Total mana spent casting spells this run — the spell-economy readout the
+   * balance sim reports (alongside `spellsCast`). */
+  manaSpent: number;
+  /** Total spells cast this run (successful casts only). */
+  spellsCast: number;
   /** Wall-clock ms of simulated play time — ticks every frame, drives every
    * timed sub-system (spawner, menace, effects). */
   timeMs: number;
@@ -1285,6 +1354,36 @@ export type GameEvent =
   /** A stacked stamina potion was spent from the consumable dock — the sprint
    * pool is now full. Drives the fizz-and-lift chime. */
   | { type: "staminaPotionUsed" }
+  /** A stacked BLUE GATORADE mana potion was spent — the spell pool is now
+   * full. `restored` is the mana actually returned (clamped at max). Drives the
+   * fizz chime and a "+N MANA" float. */
+  | { type: "manaPotionUsed"; restored: number }
+  /**
+   * A spell was CAST (sorcery.ts): `spellId` keys SPELL_DEFS, `pos` the hero,
+   * `cost` the mana spent. The app echoes the name in the status line, pips the
+   * cast chime, and plays the spell's signature effect (bolt/nova/heal/shield/
+   * slow — most reuse the existing `lightning`/`nova` cues).
+   */
+  | { type: "spellCast"; spellId: string; pos: Vec2; cost: number }
+  /**
+   * A cast was REFUSED and nothing was spent: `reason` says why (not enough
+   * mana, still on cooldown, or the slot's spell is no longer unlocked). The
+   * app flashes the reason in the status line and pips a soft denial. */
+  | {
+      type: "spellFizzled";
+      spellId: string;
+      /** Why the cast was refused: not enough `mana`, still on `cooldown`, the
+       * slot's spell is no longer `locked` (INT dropped below its unlock), or
+       * there was `nothing` to do (an attack bolt with no foe in range, a heal
+       * at full hp). */
+      reason: "mana" | "cooldown" | "locked" | "nothing";
+    }
+  /** A defensive spell raised a magical SHIELD around the hero (`shieldHp`
+   * absorb for `ms`). The app wraps him in a ward glow. */
+  | { type: "playerShielded"; shieldHp: number; ms: number }
+  /** A defensive HEAL spell restored the hero's hp (`heal` actually healed).
+   * Distinct from `medkitUsed` so the app can give a spell its arcane cue. */
+  | { type: "spellHealed"; heal: number }
   /** A stacked weapon repair kit was spent from the consumable dock — the held
    * weapon, every bagged weapon, and the worn armor are mended, and any
    * durability-booted weapon is back in rotation. Drives the toolbox chime. */
@@ -1459,6 +1558,22 @@ export type GameInput = {
    */
   useRepairKit?: boolean;
   /**
+   * True on the step the player asked to spend a stacked BLUE GATORADE mana
+   * potion (its consumable-dock slot / key). Refills the spell pool; a no-op
+   * with none held or mana already full (`consumeManaPotion`).
+   */
+  useManaPotion?: boolean;
+  /**
+   * True on the step the player tapped a spell-bar slot to CAST it.
+   * `castSpellIndex` names which slot (index into `Player.spellSlots`). A cast
+   * is a no-op when the slot is empty, the spell is still on cooldown, the pool
+   * lacks the mana, or the hero's INT no longer unlocks it (`castSpell` in
+   * sorcery.ts) — an edge like `useItem`, driven by the HUD button / bot.
+   */
+  castSpell?: boolean;
+  /** Which spell-bar slot `castSpell` fires (index into `Player.spellSlots`). */
+  castSpellIndex?: number;
+  /**
    * The world rect currently on screen (the camera view). When set, the
    * auto-weapon only targets monsters inside it — the character never
    * shoots at enemies the player cannot see yet. Absent (headless tests,
@@ -1512,6 +1627,13 @@ export type Loadout = {
   /** Stacked stamina potions (see `Player.staminaPotions`). Optional for the
    * same backward-compatibility reason. */
   staminaPotions?: number;
+  /** Stacked blue-gatorade mana potions (see `Player.manaPotions`). Optional so
+   * loadouts banked before mana shipped load with none held. */
+  manaPotions?: number;
+  /** The HUD spell-bar assignment (see `Player.spellSlots`). Optional so
+   * loadouts banked before spells shipped load with an empty bar (the app then
+   * auto-fills it from the hero's unlocked spells). */
+  spellSlots?: (string | null)[];
   /** Stacked weapon repair kits (see `Player.repairKits`). Optional so
    * loadouts banked before repair kits stacked load with none held. */
   repairKits?: number;
@@ -1762,6 +1884,16 @@ export type GameState = {
    * inner monologue plays exactly once per run.
    */
   thoughtsSeen: string[];
+  /**
+   * SPELL_DEFS ids newly UNLOCKED but not yet shown to the player — filled by
+   * `allocateStat` when spending an INTELLIGENCE point pushes effective INT
+   * across a spell's ×10 threshold (10, 20, … 250). The app drains this queue
+   * to raise the "SPELL UNLOCKED" modal, one entry at a time
+   * (`takeSpellUnlock`). Not an event (which would die at the next step's
+   * `events = []`) because stat allocation runs OUTSIDE `step()`; a persistent
+   * queue survives until the modal consumes it.
+   */
+  pendingSpellUnlocks: string[];
   /**
    * Cooldown (ms, counts down each step) gating the RECURRING cap-farm mutter
    * (`maybeCapThought`): the "these enemies are pathetic — go find Ada" thought

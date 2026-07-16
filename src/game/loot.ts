@@ -14,6 +14,7 @@ import {
   KNOCKBACK,
   LEVELING,
   LOOT,
+  MANA,
   MEDKIT,
   MENACE,
   MERCY,
@@ -234,6 +235,22 @@ export function staminaDrinkChance(state: GameState): number {
   const ramp = MERCY.staminaEmptyDrinkRampMs;
   if (ramp <= 0) return max;
   return max * Math.min(1, state.staminaEmptyMs / ramp);
+}
+
+/**
+ * The per-kill chance a tapped-out CASTER is thrown a blue-gatorade mana potion
+ * (config `MERCY.lowMana*`) — the mana twin of `staminaDrinkChance`, keyed on
+ * the pool FRACTION rather than a bone-dry timer. Zero unless the hero has an
+ * INT-sized pool (past `MANA.base` — i.e. actually casts) AND his mana sits at
+ * or below `MERCY.lowManaFraction` of the max; suppressed while an un-collected
+ * mana potion already waits in view (the shared one-rope rule).
+ */
+export function manaDrinkChance(state: GameState): number {
+  const player = state.player;
+  if (player.maxMana <= MANA.base) return 0;
+  if (player.mana > player.maxMana * MERCY.lowManaFraction) return 0;
+  if (mercyRescueWaiting(state, "mana")) return 0;
+  return MERCY.lowManaDropChance;
 }
 
 /**
@@ -924,6 +941,18 @@ function dropMinionLoot(
     return;
   }
 
+  // The low-mana bailout: the blue-gatorade twin of the empty-sprint rescue,
+  // thrown to a tapped-out caster so a spell build is never stranded unable to
+  // cast. Zero unless the hero actually casts and his pool is nearly empty
+  // (`manaDrinkChance`), so no roll is drawn on a full/non-caster kill.
+  const manaChance = manaDrinkChance(state);
+  if (manaChance > 0 && state.rng() < manaChance) {
+    state.items.push({ id: state.nextId++, kind: "mana", pos: { ...at } });
+    state.events.push({ type: "itemDropped", pos: { ...at } });
+    flyInByAngel(state, at);
+    return;
+  }
+
   const remaining =
     state.enemies.filter((e) => enemyDef(e.defId).role === "minion").length +
     unspawnedMinions(state);
@@ -1121,6 +1150,21 @@ function dropMinionLoot(
         medkitShare +
         repairShare +
         LOOT.drinkShare +
+        LOOT.manaShare
+    ) {
+      // A blue gatorade in the ordinary rain — the mana twin of the energy
+      // drink, worth nothing to a full caster (it stays grounded until mana is
+      // spent) but far likelier to fall for a tapped-out one via the low-mana
+      // mercy roll above.
+      state.items.push({ id: state.nextId++, kind: "mana", pos });
+    } else if (
+      roll <
+      equipmentShare +
+        abilityShare +
+        medkitShare +
+        repairShare +
+        LOOT.drinkShare +
+        LOOT.manaShare +
         arrowShare
     ) {
       // Golden XP arrows — the field's steady drip of levels (points to spend on

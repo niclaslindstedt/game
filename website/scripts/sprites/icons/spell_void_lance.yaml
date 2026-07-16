@@ -1,0 +1,28 @@
+name: spell_void_lance
+family: icons
+size: [12, 12]
+description: >
+  The VOID LANCE spell icon — a void spear glyph.
+subject:
+  kind: spell icon
+  features: a bold void-tinted spear motif, centered and outlined
+  accent: void magic
+  flavor: the VOID LANCE cast-spell pictogram
+palette:
+  O: "#0c0e18" # dark outline
+  E: "#c07bff" # void bright
+  D: "#7736c0" # void deep
+  H: "#ecd6ff" # void highlight
+grid: |
+  .........OO.
+  .......OOHHO
+  ......OHHEHO
+  .......OEHO.
+  ......OEDHO.
+  .....OEDOO..
+  ....OEDO....
+  ...OEDO.....
+  ..OEDO......
+  .OEDO.......
+  OEDO........
+  .OO.........

@@ -341,6 +341,7 @@ describe("the opening kit (startingWeapon / startingStats)", () => {
       intelligence: 1,
       speed: 0,
       luck: 0,
+      spirit: 0,
     });
     // STAMINA's point deepens both pools; STRENGTH's widens the bag.
     expect(easy.player.maxHp).toBe(PLAYER.maxHp + STAMINA.hpPerPoint);

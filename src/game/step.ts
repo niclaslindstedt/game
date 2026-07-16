@@ -81,9 +81,12 @@ import {
   armorReduction,
   effectiveStat,
   enemyCritChance,
+  absorbPlayerDamage,
+  bankManaPotion,
   bankMedkit,
   bankRepairKit,
   bankStaminaPotion,
+  consumeManaPotion,
   consumeMedkit,
   consumeStaminaPotion,
   equipmentName,
@@ -106,6 +109,7 @@ import {
   wearWornArmor,
   wouldUpgradeSlot,
 } from "./items.ts";
+import { castSpell, stepRegen } from "./sorcery.ts";
 import { arrowColdXp, arrowXpShareAt } from "./leveling.ts";
 import {
   grantXp,
@@ -244,6 +248,11 @@ export function step(state: GameState, input: GameInput, dtMs: number): void {
   if (!state.freeze) stepMerchant(state, dt, dtMs);
   stepUseItem(state, input);
   stepUseConsumables(state, input);
+  // A tapped spell-bar slot casts (mana/cooldown/unlock gated in sorcery.ts).
+  if (input.castSpell) castSpell(state, input.castSpellIndex ?? 0);
+  // SPIRIT-driven mana/health regen, the shield timer, and spell cooldowns all
+  // tick here — every playing frame, before the combat passes read the pools.
+  stepRegen(state, dt, dtMs);
   stepWeapon(state, input, dtMs);
   stepAbilities(state, dt, dtMs);
   // The forever spells worn gear grants (the `spell` affix) tick beside the
@@ -982,6 +991,7 @@ function stepUseItem(state: GameState, input: GameInput): void {
 function stepUseConsumables(state: GameState, input: GameInput): void {
   if (input.useMedkit) consumeMedkit(state);
   if (input.useStaminaPotion) consumeStaminaPotion(state);
+  if (input.useManaPotion) consumeManaPotion(state);
   if (input.useRepairKit) consumeRepairKit(state);
 }
 
@@ -1895,7 +1905,9 @@ function stepEnemies(state: GameState, dt: number, dtMs: number): void {
         Math.round(damage * (1 - armorReduction(state, enemy.mlvl))),
       );
       wearWornArmor(state);
-      player.hp -= hpDamage;
+      // The magical ward soaks its share first (and every hit pauses SPIRIT
+      // health regen — see `absorbPlayerDamage`).
+      player.hp -= absorbPlayerDamage(state, hpDamage);
       player.hurtFlashMs = 250;
       state.stats.damageTaken += damage;
       state.events.push({ type: "playerHurt", crit });
@@ -2271,6 +2283,20 @@ function stepItems(state: GameState, dtMs: number): void {
         type: "itemCollected",
         kind: "drink",
         name: "STAMINA POTION",
+      });
+      return false;
+    }
+
+    // Blue gatorade (mana potions) stack into the consumable dock and are spent
+    // on the player's call (consumeManaPotion) to refill the spell pool. A full
+    // stack turns it away — it stays on the ground, like the energy drink.
+    if (item.kind === "mana") {
+      if (!bankManaPotion(state)) return true;
+      state.stats.itemsCollected++;
+      state.events.push({
+        type: "itemCollected",
+        kind: "mana",
+        name: "MANA POTION",
       });
       return false;
     }

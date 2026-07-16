@@ -1,0 +1,28 @@
+name: spell_annihilate
+family: icons
+size: [12, 12]
+description: >
+  The ANNIHILATE spell icon — a blood spear glyph.
+subject:
+  kind: spell icon
+  features: a bold blood-tinted spear motif, centered and outlined
+  accent: blood magic
+  flavor: the ANNIHILATE cast-spell pictogram
+palette:
+  O: "#0c0e18" # dark outline
+  E: "#ff6a6a" # blood bright
+  D: "#a82424" # blood deep
+  H: "#ffcaca" # blood highlight
+grid: |
+  .........OO.
+  .......OOHHO
+  ......OHHEHO
+  .......OEHO.
+  ......OEDHO.
+  .....OEDOO..
+  ....OEDO....
+  ...OEDO.....
+  ..OEDO......
+  .OEDO.......
+  OEDO........
+  .OO.........

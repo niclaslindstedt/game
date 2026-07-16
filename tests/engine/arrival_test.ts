@@ -42,6 +42,7 @@ function sampleLoadout(): Loadout {
       intelligence: 1,
       speed: 1,
       luck: 0,
+      spirit: 0,
     },
     equipment: {
       weapon: {

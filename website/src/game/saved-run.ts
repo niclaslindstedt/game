@@ -43,7 +43,12 @@ const KEY = storageKey("current-run");
 // v10: companions grew their own level/XP (`xp`/`xpToNext` — decoupled from the
 // hero, see companion-stats.ts); a v9 companion would thaw without an XP bar and
 // never level, so its power scaling would be wrong.
-const SAVE_VERSION = 10;
+// v11: the mana/spell system — the hero grew mana/maxMana/manaRegenMs/hpRegenMs/
+// shield fields, a SPIRIT stat, spellSlots/spellCooldowns, and a manaPotions
+// stack; stats grew manaSpent/spellsCast and the state a pendingSpellUnlocks
+// queue. A v10 snapshot would thaw without a mana pool (casting → NaN) and
+// without spirit in its stat record.
+const SAVE_VERSION = 11;
 
 /** A run parked between sessions: enough to drop the player straight back in. */
 export type ParkedRun = {

@@ -1,0 +1,28 @@
+name: spell_frost_nova
+family: icons
+size: [12, 12]
+description: >
+  The FROST NOVA spell icon — a frost snowflake glyph.
+subject:
+  kind: spell icon
+  features: a bold frost-tinted snowflake motif, centered and outlined
+  accent: frost magic
+  flavor: the FROST NOVA cast-spell pictogram
+palette:
+  O: "#0c0e18" # dark outline
+  E: "#9fe8ff" # frost bright
+  D: "#3aa6d9" # frost deep
+  H: "#eafaff" # frost highlight
+grid: |
+  ...O....O...
+  ..OEOOOOEO..
+  ...OEHHOEO..
+  ..OHEOOEHO..
+  ..OOOEOEOO..
+  .OHOOEHOOHOO
+  OEEEEHHHEEEE
+  .OHOOEHOOHOO
+  ..OHOEOEHO..
+  ...OEHHEO...
+  ..OEOOOOEO..
+  ...O....O...
