@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
 // Source of truth for every in-game pixel sprite (see the `pixel-assets`
-// skill and docs/sprite-yaml-plan.md). Base sprites are one self-describing
+// skill). Base sprites are one self-describing
 // YAML file each under `sprites/` — loaded here by load-yaml.mjs into the
 // SPRITES / SPRITE_PALETTES / SPRITE_FAMILY / FAMILIES / ANIMATIONS maps the
 // rest of the pipeline consumes. This module then derives the two families of

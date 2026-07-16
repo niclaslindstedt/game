@@ -173,6 +173,12 @@ For each candidate, in the numbered order:
    silhouette first, family palette ramps, 2–5 colors plus outline,
    top-left light, correct size class for its role.
 
+   A concept can also be bootstrapped from a genAI image instead of drawn by
+   hand: `sprite-author.mjs prompt <base>` synthesizes the image prompt from the
+   sprite's fields, and `analyze <image>` traces the returned image into a grid
+   (the pixel-assets skill). Either way the brief above still governs, and the
+   grid is refined against it before it competes in the vote.
+
    **Compute grids in JS for anything prop-heavy or multi-frame** (a mob
    holding a tool, a machine with panels, both walk frames) — hand-aligning
    fixed-width ASCII is where off-by-one errors creep in. The concept module

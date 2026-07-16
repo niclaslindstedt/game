@@ -2,7 +2,7 @@
 // SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
 // The sprite authoring loop — the tooling behind "draw a sprite from a
 // description or a reference image, then refine it against the real game".
-// See the `pixel-assets` skill and docs/sprite-yaml-plan.md for the workflow.
+// See the `pixel-assets` skill for the workflow.
 // Four subcommands, each one step of the loop:
 //
 //   prompt <sprite-name> [--out path]

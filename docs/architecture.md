@@ -675,7 +675,7 @@ pixelated`; enemies swap to generated wounded sprite variants as hp falls
   each base sprite is one self-describing YAML file under `sprites/` (a
   character-grid `grid` block scalar + a concrete-hex `palette`; family
   orchestration and the shared core palette in `_family.yaml` / `_core.yaml` —
-  see `docs/sprite-yaml-plan.md`), loaded by `sprite-data/load-yaml.mjs` and
+  see the `pixel-assets` skill), loaded by `sprite-data/load-yaml.mjs` and
   rendered into one sprite atlas (PNG + JSON source rects) plus previews
   (per-family contact sheets, film strips, palette sheet, font specimen).
   The atlas and previews are both gitignored and regenerated on every build

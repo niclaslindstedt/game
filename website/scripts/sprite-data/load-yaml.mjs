@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
-// The YAML sprite loader (see docs/sprite-yaml-plan.md, Phase 1). Globs the
+// The YAML sprite loader (see the `pixel-assets` skill). Globs the
 // `sprites/` tree — one self-describing file per base sprite — and produces
 // the same in-memory maps the old per-family `.mjs` merge did, so everything
 // downstream (wound/worn derivation in index.mjs, then the whole

@@ -406,7 +406,7 @@ render them are `website/src/game/DialogueOverlay.tsx` and `CutsceneOverlay.tsx`
   never edit the PNGs.
 - In-game pixel assets (the sprite atlas, tiles, the UI font atlas) are
   generated from the `website/scripts/sprites/` YAML tree (one self-describing
-  file per base sprite — see `docs/sprite-yaml-plan.md`) + `asset-tools/` only
+  file per base sprite — see the `pixel-assets` skill) + `asset-tools/` only
   (`make assets`) — never edit the files under
   `website/src/game/assets/`. Those files are **gitignored and regenerated
   on every build** (like `src/generated/`, §11.2): `npm run assets` runs

@@ -1,8 +1,8 @@
 #!/usr/bin/env node
 // SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
-// Sprite preview sheets for description authoring (see docs/sprite-yaml-plan.md,
-// Phase 3.1 — backfilling every sprite's `description`). Renders one labeled
-// contact sheet per family: every sprite drawn large over a neutral two-tone
+// Sprite preview sheets for description authoring (see the `pixel-assets`
+// skill) — for writing or backfilling a sprite's `description`. Renders one
+// labeled contact sheet per family: every sprite drawn large over a two-tone
 // checker (so both light and dark pixels survive), captioned with its exact
 // atlas name, and numbered to a plain-text legend. The point is a single PNG an
 // agent can Read to SEE what a sprite looks like while it writes the target

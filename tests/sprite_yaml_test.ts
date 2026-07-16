@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
-// The YAML sprite format (see docs/sprite-yaml-plan.md, Phase 1): one
+// The YAML sprite format (see the `pixel-assets` skill): one
 // self-describing file per base sprite, loaded into the same maps the old
 // per-family `.mjs` merge produced. These tests pin the schema validator (the
 // guard that fails `make assets` on a malformed file — the block-scalar

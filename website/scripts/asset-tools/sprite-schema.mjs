@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
-// Schema validator for the YAML sprite format (see docs/sprite-yaml-plan.md,
-// Phase 1). `make assets` fails on any hard error so a malformed file never
+// Schema validator for the YAML sprite format (see the `pixel-assets` skill).
+// `make assets` fails on any hard error so a malformed file never
 // reaches the atlas; the `size` guard in particular neutralizes the YAML
 // block-scalar trailing-space footgun (an editor that strips trailing
 // whitespace would otherwise silently narrow a sprite — here the row width no
@@ -89,7 +89,7 @@ export function validateSprite(sprite) {
 
   if (!sprite?.description || String(sprite.description).trim() === "") {
     warnings.push(
-      `${name}: empty description (the acceptance target — backfill in Phase 3.1)`,
+      `${name}: empty description (the acceptance target — fill it in)`,
     );
   }
 

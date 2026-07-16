@@ -10,10 +10,16 @@ are **generated, never hand-drawn binaries**. The source of truth is a tree
 of **one self-describing YAML file per base sprite** under
 `website/scripts/sprites/` (a `grid` block scalar — one line per pixel row,
 one character per pixel — plus a concrete-hex `palette`; `.` is transparent).
-See [`docs/sprite-yaml-plan.md`](../../../docs/sprite-yaml-plan.md) for the
-schema. The asset pipeline renders them into ONE committed sprite atlas
-(PNG + JSON source rects) the app slices at load time. This keeps assets
-diffable, reviewable, and editable by agents.
+The YAML tree is the committed source of truth; the asset pipeline renders it
+into ONE sprite atlas (PNG + JSON source rects) that the app slices at load
+time — a **gitignored build output**, regenerated on every build (never
+committed). This keeps the assets diffable, reviewable, and editable by agents.
+
+Each sprite's YAML also carries a `description` — the **acceptance target**:
+what the sprite is _supposed_ to look like, in words. It outranks any
+reference image (one fallible realization of it) and the pixels are always
+re-derivable from it; when a reference image and the description disagree, the
+description wins — fix the grid, not the description.
 
 ## Files
 
@@ -177,6 +183,33 @@ website/scripts/sprite-author.mjs` with no args for usage):
 The reference image is a source, like the grid — committed next to the YAML, not
 packed into the atlas. When the image and the description disagree, the
 description wins; fix the grid, not the description.
+
+## Improving one named sprite
+
+When asked to improve a specific sprite ("let's improve the `fembot` sprite"),
+first locate its YAML (`grep -rl "name: <sprite>" website/scripts/sprites/`) and
+read its `description`. If the description is empty or thin, **write/sharpen it
+first** — it is the acceptance target both paths below are judged against, and
+the manuscript (`docs/manuscript.md`) / `docs/story.md` are the authority on
+what a character or object should look like. Then take whichever path the user
+picks:
+
+- **Image path (bring your own genAI).** Run
+  `node website/scripts/sprite-author.mjs prompt <sprite>` and hand the printed
+  prompt to the user to paste into an image tool. When they return the image,
+  save it and run `analyze <image> --name <sprite> --family <family> --size WxH
+  --out website/scripts/sprites/<family>/<sprite>.yaml` (record provenance with
+  `--model`/`--seed`/`--prompt-file`), then drop into the refine loop below to
+  clean up the trace against the description.
+- **Iterate-in-place path (no image).** Skip the image entirely: edit the
+  `grid` toward the `description` by hand, `make assets`, then LOOK — either the
+  `<sprite>@8x.png` / `family_<family>.png` previews or `pose <sprite>` on its
+  own ground — judge against the description, edit, and loop (the iterative
+  cycle above). This is the default when the user just says "iterate on it".
+
+Either way the loop is the same: render → look → judge against the description →
+edit the grid → repeat, until it passes the checklist. Commit per sprite and let
+the user make the final call before shipping.
 
 ## Quality checklist
 

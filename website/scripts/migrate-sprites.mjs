@@ -1,8 +1,8 @@
 #!/usr/bin/env node
 // SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
 // One-shot converter: the bundled per-family `.mjs` grid modules → one
-// self-describing YAML file per atlas entry (see docs/sprite-yaml-plan.md,
-// Phase 1). It consumes the RESOLVED in-memory sprite data (families are
+// self-describing YAML file per atlas entry. It consumes the RESOLVED
+// in-memory sprite data (families are
 // built with palette ramps, `swapPalette` recolors, and cross-module imports,
 // so only the evaluated grids + concrete palettes are lossless to convert),
 // and emits:

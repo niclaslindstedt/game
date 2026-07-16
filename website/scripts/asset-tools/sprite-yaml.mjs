@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
-// Shared helpers for the YAML sprite format (see docs/sprite-yaml-plan.md).
+// Shared helpers for the YAML sprite format (see the `pixel-assets` skill).
 // One self-describing YAML file per atlas entry replaces the bundled
 // per-family `.mjs` grid modules: colors are concrete hex, the grid is a
 // literal block scalar, and `.` is the reserved transparent key. These
