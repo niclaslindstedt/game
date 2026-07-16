@@ -1,7 +1,8 @@
 name: lost_cosmonaut_1
 family: moon
 size: [16, 16]
-description: ""
+description: >
+  LOST COSMONAUT, a rare drifter: a lone salmon-pink suited ghost with red suit trim, the other side's casualty nobody admitted to, wandering the far side always alone. Alternate float frame.
 palette:
   O: "#1a1c2c"
   W: "#f4f4f4"

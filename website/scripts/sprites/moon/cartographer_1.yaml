@@ -1,7 +1,8 @@
 name: cartographer_1
 family: moon
 size: [24, 24]
-description: ""
+description: >
+  THE CARTOGRAPHER, an elite: a violet-purple ghost with glowing red eyes clutching an unrolled blue-and-white survey chart to its chest; the mapmaker still charting tunnels that keep shifting under the dust. Alternate float frame.
 palette:
   J: "#2d3b84"
   M: "#644696e6"

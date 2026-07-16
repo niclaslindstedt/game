@@ -1,7 +1,8 @@
 name: flag
 family: moon
 size: [16, 24]
-description: ""
+description: >
+  The old Apollo flag planted in the dust on its pole: a red-and-white striped banner with a blue star canton, held stiff on its wire crossbar in the airless vacuum; ARMSTRONG's landmark at the far side.
 palette:
   A: "#8d9196"
   O: "#1a1c2c"

@@ -1,7 +1,8 @@
 name: quarantine_medic_1
 family: moon
 size: [24, 23]
-description: ""
+description: >
+  QUARANTINE MEDIC, an elite: a rounded pale-white ghost-medic marked with a bold red cross on its body, a spectral field doctor still running its endless screenings on the dead. Alternate float frame.
 palette:
   C: "#5b858ce1"
   O: "#1a1c2c"

@@ -1,7 +1,8 @@
 name: moon_1
 family: moon
 size: [16, 16]
-description: ""
+description: >
+  A rare variant of the lunar ground tile: the same flat grey regolith with a few extra pocks and scuffs of dust; breaks up the repeating floor.
 palette:
   F: "#a2a4ad"
   d: "#676972"

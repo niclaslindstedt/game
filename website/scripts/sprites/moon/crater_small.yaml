@@ -1,7 +1,8 @@
 name: crater_small
 family: moon
 size: [16, 16]
-description: ""
+description: >
+  A small impact crater in the grey regolith, top-down: a round dark pit with a pale dusted rim; a minor gap to jump across.
 palette:
   A: "#8d9196"
   F: "#a2a4ad"

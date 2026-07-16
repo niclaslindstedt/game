@@ -1,7 +1,8 @@
 name: ghost_0
 family: moon
 size: [16, 16]
-description: ""
+description: >
+  MOON GHOST, a minion: a classic rounded cyan sheet-ghost with two dark eyes and a wavy scalloped hem, drifting the regolith; the mid-weight body of the haunting horde.
 palette:
   C: "#5b858ce1"
   O: "#1a1c2c"

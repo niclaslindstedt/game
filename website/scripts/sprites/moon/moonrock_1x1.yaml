@@ -1,7 +1,8 @@
 name: moonrock_1x1
 family: moon
 size: [16, 16]
-description: ""
+description: >
+  A single solid slab of grey lunar moonrock in a one-cell footprint, an angular shaded boulder that blocks sight and shots; cover against SpaceZ's robots, but the haunting phases through it.
 palette:
   F: "#a2a4ad"
   O: "#1a1c2c"
