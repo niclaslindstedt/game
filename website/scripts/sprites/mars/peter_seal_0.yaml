@@ -2,17 +2,24 @@ name: peter_seal_0
 family: mars
 size: [24, 24]
 description: >
-  PETER SEAL, the cold-blooded investor who tithes to the lizard gods: a
-  pale, gaunt, balding man in a dark navy suit, front-facing with a
-  faintly vampiric stillness.
+  PETER SEAL, the cold-blooded investor who tithes to the lizard gods.
+subject:
+  kind: elite
+  name: PETER SEAL
+  build: a pale, gaunt, balding man
+  attire: a dark navy suit with a teal-and-cyan patterned tie, white shirt collar
+  features: a gaunt pale face with a faintly vampiric stillness
+  accent: the teal-and-cyan tie
+  pose: standing still
+  flavor: the cold-blooded investor who tithes to the lizard gods
 palette:
-  C: "#529ea8"
-  N: "#303444"
-  O: "#1a1c2c"
-  W: "#f4f4f4"
-  a: "#d6dce4"
-  c: "#8ccdd7e1"
-  k: "#342c26"
+  C: "#529ea8" # teal tie
+  N: "#303444" # navy suit
+  O: "#1a1c2c" # outline
+  W: "#f4f4f4" # white shirt collar
+  a: "#d6dce4" # pale skin
+  c: "#8ccdd7e1" # cyan tie detail
+  k: "#342c26" # dark hair
 grid: |
   ........................
   .........OOOOOO.........

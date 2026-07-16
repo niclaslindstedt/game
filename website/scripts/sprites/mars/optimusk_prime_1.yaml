@@ -2,22 +2,25 @@ name: optimusk_prime_1
 family: mars
 size: [24, 24]
 description: >
-  OPTIMUSK PRIME: a tall, white-plated humanoid robot foreman standing a
-  head above its line units, with a gold crest/antenna on its rounded
-  white head and a blue-lit cyan panel on its broad chest, planted
-  self-satisfied on two blocky legs. Front-facing, reads as the boss of
-  the machines. This frame catches it mid-stomp, its two feet planted
-  wider apart than its resting stance.
+  OPTIMUSK PRIME mid-stomp, its two feet planted wider apart.
+subject:
+  kind: elite (robot foreman)
+  name: OPTIMUSK PRIME
+  build: a tall white-plated humanoid robot standing a head above its line units
+  features: a gold crest/antenna on a rounded white head, a blue-lit cyan panel on the broad chest
+  accent: the gold crest
+  pose: mid-stomp, its two blocky feet planted wider apart than its resting stance
+  flavor: the foreman running the OPTIMUSK line; the boss of the machines
 palette:
-  O: "#1a1c2c"
-  V: "#9095a5"
-  W: "#f4f4f4"
-  b: "#3f4553"
-  c: "#8ccdd7e1"
-  v: "#60687e"
-  w: "#c6c6c6"
-  x: "#c5e6ebe1"
-  y: "#ffb02e"
+  O: "#1a1c2c" # outline
+  V: "#9095a5" # mid-grey plate
+  W: "#f4f4f4" # white plating
+  b: "#3f4553" # dark joints
+  c: "#8ccdd7e1" # blue-lit cyan chest panel
+  v: "#60687e" # grey plate shading
+  w: "#c6c6c6" # plate shade
+  x: "#c5e6ebe1" # pale visor glint
+  y: "#ffb02e" # gold crest / antenna
 grid: |
   ........................
   ..........OyyO..........

@@ -2,21 +2,28 @@ name: fembot_0
 family: mars
 size: [16, 16]
 description: >
-  FEMBOT companion unit: a smiling blonde android in a pink dress,
-  front-facing, blowing a small pink heart off to one side. The kiss is
-  the weapon; cute and unsettlingly cheerful.
+  FEMBOT companion unit, a cheerful android blowing a small pink heart.
+subject:
+  kind: companion unit (android)
+  name: FEMBOT
+  build: a rounded-headed android girl
+  attire: white dress trimmed in soft pink at the shoulders and hem, pink socks, tan legs
+  features: yellow hair under a gold hairband, pale face, tiny pursed red lips, cyan eyes
+  accent: the small pink heart she blows to her upper right
+  pose: blowing a kiss off to one side
+  flavor: cute and unsettlingly cheerful; the blown kiss is her weapon
 palette:
-  O: "#1a1c2c"
-  Q: "#e878a8"
-  W: "#f4f4f4"
-  Y: "#ffe3b6"
-  Z: "#f6b6cd"
-  c: "#8ccdd7e1"
-  h: "#e2c640"
-  p: "#deaa86"
-  r: "#d83a3a"
-  w: "#c6c6c6"
-  y: "#ffb02e"
+  O: "#1a1c2c" # outline
+  Q: "#e878a8" # pink dress trim and heart
+  W: "#f4f4f4" # white dress
+  Y: "#ffe3b6" # hair highlight
+  Z: "#f6b6cd" # soft pink trim
+  c: "#8ccdd7e1" # cyan eyes
+  h: "#e2c640" # gold hairband
+  p: "#deaa86" # tan legs
+  r: "#d83a3a" # red lips
+  w: "#c6c6c6" # face shading
+  y: "#ffb02e" # yellow hair
 grid: |
   ..............Q.
   ...OOOOOOOO..QZQ

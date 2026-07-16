@@ -2,22 +2,26 @@ name: mining_rover_0
 family: mars
 size: [20, 20]
 description: >
-  MINING ROVER, the outdoor heavy: a low blocky drill rig on twin
-  treads, a dark chassis carrying a yellow ore-hopper and drill housing
-  up top with a drill bit under the belly. Slow, brutal to touch, worth
-  killing for its sweetened loot.
+  MINING ROVER, the outdoor heavy: a slow, brutal drill rig on treads.
+subject:
+  kind: enemy machine (heavy elite)
+  name: MINING ROVER
+  build: a low blocky drill rig on twin treads
+  features: a dark chassis carrying a yellow ore-hopper and drill housing up top, a drill bit under the belly
+  accent: the bright yellow ore-hopper
+  flavor: slow and brutal to touch, worth killing for its sweetened loot
 palette:
-  O: "#1a1c2c"
-  V: "#9095a5"
-  W: "#f4f4f4"
-  b: "#3f4553"
-  c: "#8ccdd7e1"
-  h: "#e2c640"
-  k: "#342c26"
-  o: "#d6a842"
-  v: "#60687e"
-  x: "#c5e6ebe1"
-  y: "#ffb02e"
+  O: "#1a1c2c" # outline
+  V: "#9095a5" # light chassis top
+  W: "#f4f4f4" # white drill tip
+  b: "#3f4553" # dark chassis
+  c: "#8ccdd7e1" # cyan sensor panel
+  h: "#e2c640" # gold ore-hopper shade
+  k: "#342c26" # dark treads
+  o: "#d6a842" # amber ore
+  v: "#60687e" # grey chassis side
+  x: "#c5e6ebe1" # pale panel glint
+  y: "#ffb02e" # yellow ore-hopper and drill
 grid: |
   ....................
   ....................

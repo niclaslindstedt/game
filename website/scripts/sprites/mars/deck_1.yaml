@@ -2,13 +2,15 @@ name: deck_1
 family: mars
 size: [16, 16]
 description: >
-  Rare variant of the base deck plating: the same flat grey metal floor
-  panel, broken up by a subtle scuff or seam mark; sprinkled in
-  occasionally to weather the interior floor.
+  Rare variant of the deck plating, broken up by a subtle scuff mark.
+subject:
+  kind: ground tile (interior floor)
+  build: the same flat grey metal floor panel, marked by a subtle scuff or seam
+  flavor: sprinkled in occasionally to weather the interior floor
 palette:
-  D: "#808698"
-  V: "#9095a5"
-  s: "#5a5e6a"
+  D: "#808698" # grey deck plate
+  V: "#9095a5" # lighter plate fleck
+  s: "#5a5e6a" # dark scuff / seam
 grid: |
   ssssssssssssssss
   sDDDDDDDDDDDDDDD

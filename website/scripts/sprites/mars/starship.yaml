@@ -2,15 +2,19 @@ name: starship
 family: mars
 size: [24, 32]
 description: >
-  The hero's parked ship at the landing site: a small upright white
-  rocket/shuttle with a pointed nose, dark window ports down its
-  fuselage, and fins at the base.
+  The hero's parked ship at the landing site.
+subject:
+  kind: vehicle (prop)
+  build: a small upright white rocket/shuttle with a pointed nose and fins at the base
+  features: dark window ports down its fuselage
+  accent: the cyan-glinted window ports
+  flavor: the hero's parked ship at the landing site
 palette:
-  A: "#8d9196"
-  O: "#1a1c2c"
-  a: "#d6dce4"
-  b: "#3f4553"
-  x: "#c5e6ebe1"
+  A: "#8d9196" # grey hull shading
+  O: "#1a1c2c" # outline
+  a: "#d6dce4" # white hull
+  b: "#3f4553" # dark fins
+  x: "#c5e6ebe1" # window-port glint
 grid: |
   ........................
   ...........OO...........

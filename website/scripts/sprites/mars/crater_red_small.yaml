@@ -2,17 +2,20 @@ name: crater_red_small
 family: mars
 size: [16, 16]
 description: >
-  A small jumpable crater in the red regolith: a dark oxide-brown pit
-  ringed by a raised lighter rim, a shadowed gap to hop across. The
-  smaller crater size.
+  A small jumpable crater in the red regolith.
+subject:
+  kind: jumpable crater (ground obstacle)
+  build: a dark oxide-brown pit ringed by a raised lighter rim, the smaller crater size
+  features: a shadowed gap to hop across
+  flavor: a pit the hero hops and rovers pile against
 palette:
-  A: "#8d9196"
-  O: "#1a1c2c"
-  a: "#d6dce4"
-  d: "#80482d"
-  e: "#623722"
-  f: "#888a96"
-  u: "#c38668"
+  A: "#8d9196" # grey inner-rim rock
+  O: "#1a1c2c" # shadowed pit
+  a: "#d6dce4" # bright rim highlight
+  d: "#80482d" # oxide-brown rim
+  e: "#623722" # dark pit floor
+  f: "#888a96" # grey rim shade
+  u: "#c38668" # dusty tan rim
 grid: |
   ................
   ................

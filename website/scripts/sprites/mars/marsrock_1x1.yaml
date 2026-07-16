@@ -2,15 +2,18 @@ name: marsrock_1x1
 family: mars
 size: [16, 16]
 description: >
-  A single oxidized boulder, the moon slabs' rusted Martian cousin: a
-  rounded reddish-brown rock with darker crags that stops sight, shots
-  and machines. The smallest, single-tile boulder.
+  A single oxidized boulder, the moon slabs' rusted Martian cousin.
+subject:
+  kind: rock (obstacle / cover)
+  build: a rounded reddish-brown boulder, the smallest single-tile size
+  features: darker crags across it
+  flavor: stops sight, shots and machines
 palette:
-  O: "#1a1c2c"
-  d: "#80482d"
-  e: "#623722"
-  t: "#b2643e"
-  u: "#c38668"
+  O: "#1a1c2c" # outline
+  d: "#80482d" # oxide-brown body
+  e: "#623722" # dark crag shadow
+  t: "#b2643e" # rust-red highlight
+  u: "#c38668" # light tan highlight
 grid: |
   ................
   ...OOOOOO.......

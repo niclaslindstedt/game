@@ -2,15 +2,18 @@ name: marsrock_2x2
 family: mars
 size: [32, 32]
 description: >
-  A large oxidized boulder mass spanning four tiles: a big rounded
-  reddish-brown Martian rock with darker cragged shadows, an impassable
-  cover the horde routes around.
+  A large oxidized boulder mass spanning four tiles.
+subject:
+  kind: rock (obstacle / cover)
+  build: a big rounded reddish-brown Martian rock spanning four tiles
+  features: darker cragged shadows
+  flavor: an impassable cover the horde routes around
 palette:
-  O: "#1a1c2c"
-  d: "#80482d"
-  e: "#623722"
-  t: "#b2643e"
-  u: "#c38668"
+  O: "#1a1c2c" # outline
+  d: "#80482d" # oxide-brown body
+  e: "#623722" # dark crag shadow
+  t: "#b2643e" # rust-red highlight
+  u: "#c38668" # light tan highlight
 grid: |
   ................................
   ................................

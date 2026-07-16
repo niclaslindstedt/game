@@ -2,14 +2,16 @@ name: rust_0
 family: mars
 size: [16, 16]
 description: >
-  An oxide-gravel patch overlaid on the red regolith: rusty-orange dust
-  flecked with darker gravel and grit, tiled in every few cells to
-  weather the ground.
+  An oxide-gravel patch overlaid on the red regolith.
+subject:
+  kind: ground tile (oxide-gravel overlay)
+  build: rusty-orange dust flecked with darker gravel and grit
+  flavor: tiled in every few cells to weather the ground
 palette:
-  d: "#80482d"
-  e: "#623722"
-  t: "#b2643e"
-  u: "#c38668"
+  d: "#80482d" # gravel fleck
+  e: "#623722" # dark grit
+  t: "#b2643e" # rusty-orange dust
+  u: "#c38668" # light dust fleck
 grid: |
   tttttttttttttttt
   ttttttttuttttttt
