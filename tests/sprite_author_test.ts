@@ -15,6 +15,7 @@ import {
 import {
   promptSelfCheck,
   proseSizeMismatch,
+  unnamedPaletteKeys,
 } from "../website/scripts/asset-tools/coherence.mjs";
 import {
   STYLE_PREAMBLE,
@@ -360,6 +361,22 @@ describe("promptSelfCheck", () => {
       paletteNames: named,
     });
     expect(found.some((f) => /front-facing/.test(f.message))).toBe(true);
+  });
+});
+
+describe("unnamedPaletteKeys", () => {
+  it("returns the sorted keys that carry no name", () => {
+    expect(
+      unnamedPaletteKeys({ s: "#c8ccd4", g: "#f4c430" }, { s: "steel" }),
+    ).toEqual(["g"]);
+  });
+
+  it("returns nothing when every color is named", () => {
+    expect(unnamedPaletteKeys({ s: "#c8ccd4" }, { s: "steel" })).toEqual([]);
+  });
+
+  it("treats a blank name as unnamed", () => {
+    expect(unnamedPaletteKeys({ s: "#c8ccd4" }, { s: "  " })).toEqual(["s"]);
   });
 });
 

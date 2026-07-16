@@ -66,6 +66,19 @@ export function proseSizeMismatch({ description, subject, size } = {}) {
 }
 
 /**
+ * The palette keys that carry no human `# name` comment — the colors that would
+ * prompt as bare hex and so can't be reliably recreated. `palette` is the char →
+ * hex map; `paletteNames` is the char → name map from `paletteComments`. Returns
+ * the sorted unnamed keys (empty when every color is named). Cheap enough to run
+ * on every build (given the raw text `paletteComments` already needs).
+ */
+export function unnamedPaletteKeys(palette, paletteNames = {}) {
+  return Object.keys(palette ?? {})
+    .filter((k) => !(paletteNames[k] ?? "").trim())
+    .sort();
+}
+
+/**
  * The full authoring-time self-check, run by `sprite-author verify`. Answers
  * "could I recreate the sprite from this prompt, and does anything in the words
  * fight the pixels?" as a list of `{ level, message }` findings (empty when the
@@ -137,9 +150,7 @@ export function promptSelfCheck({
   // Recreatability: an unnamed palette color prompts as bare hex — a weaker
   // instruction than a named one ("gold crest #f4c430" reproduces; "#f4c430"
   // is a guess). Name every color the sprite paints with.
-  const unnamed = Object.keys(palette ?? {})
-    .filter((k) => !(paletteNames[k] ?? "").trim())
-    .sort();
+  const unnamed = unnamedPaletteKeys(palette, paletteNames);
   if (unnamed.length > 0) {
     findings.push({
       level: "note",

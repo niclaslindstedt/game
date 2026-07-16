@@ -38,6 +38,10 @@ declare module "*/asset-tools/coherence.mjs" {
   export function proseSizeMismatch(
     args: Prose & { size?: [number, number] },
   ): [number, number] | null;
+  export function unnamedPaletteKeys(
+    palette?: Record<string, string>,
+    paletteNames?: Record<string, string>,
+  ): string[];
   export function promptSelfCheck(args: {
     description?: string;
     subject?: Record<string, string>;
