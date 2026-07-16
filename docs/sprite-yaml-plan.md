@@ -81,6 +81,14 @@ the lower one:
 "Match meaningfully" is judged against tiers 1 and 2 together: does the render
 realize the description, and does it resemble the reference image.
 
+**The chain is fully generative from the top.** In Phase 3 the tier-1 fields
+(`description`, `family`, `size`, palette hints — everything _except_ the
+`grid`) synthesize the genAI **image prompt**; the prompt produces the reference
+image (tier 2); the analyze tool ingests that image into palette + grid
+(tier 3); the atlas is built from it (tier 4). So the `grid` is an _output_ of
+the pipeline, not required input — a sprite can be regenerated end-to-end from
+its metadata alone, and the pixels are always re-derivable from the description.
+
 ---
 
 ## The YAML schema
@@ -257,6 +265,51 @@ reproducible; it is _not_ shipped in the atlas (it's a source, like the grid).
 
 ---
 
+## Phase 3 — closing the loop (full regeneration)
+
+Phases 2a/2b start from a hand-authored grid or a supplied image. Phase 3 closes
+the loop so a sprite can be born from its metadata alone:
+
+```
+YAML fields ──▶ prompt ──▶ genAI image ──▶ analyze ──▶ grid ──▶ render
+   (─grid)     synth      (tier 2)       (2b)       (tier 3)     │
+     ▲                                                            │
+     └──────────────── compare vs description + image ◀───────────┘
+                          refine (inner) · re-prompt (outer)
+```
+
+1. **Prompt synthesis (`fields → prompt`).** A builder turns the tier-1 fields
+   into an image-generation prompt: a **global style preamble** (flat 16-bit
+   pixel art, no anti-aliasing, transparent background, single sprite centered,
+   front-facing, target resolution ~`size`) + a **per-family style anchor** (so
+   moon/mars/bunker sprites share a look) + the sprite's `description` + color
+   guidance derived from the palette (its hex values and the human names in the
+   `# comments`). The grid is deliberately _excluded_ — it's what we're
+   regenerating.
+2. **Image generation (`prompt → image`).** Feed the prompt to the image model;
+   the output is the tier-2 reference image.
+3. **Ingest + refine.** Hand the image to the Phase-2b analyze tool
+   (`image → palette + grid`), then run the compare-and-refine loop against
+   **both** the description and the image (description wins on conflict).
+4. **Two nested loops.** The **inner** loop edits the grid to match (2b). The
+   **outer** loop decides the _whole image_ is wrong and re-prompts (tweaking
+   the description or style anchor) — the escalation when pixel edits can't get
+   there.
+
+**Reproducibility vs. determinism — an explicit boundary.** Image generation is
+**not** deterministic (model version + sampling), so this bootstrap is _not_
+byte-reproducible the way the atlas is. That's fine: the generative step runs
+**once**, its output is frozen into the committed `grid`, and everything
+downstream of the grid (quantize keys, packing, atlas) stays fully
+deterministic. To make a generation _auditable_ (not reproducible), record the
+exact prompt, model id, and seed next to the reference image (e.g.
+`knight_0.ref.json`) — the analog of recording an RNG seed.
+
+**The human still gates every sprite** (the `art-improvement` before/after
+vote). Phase 3 removes the blank-canvas step, not the judgement.
+
+---
+
 ## Phased checklist
 
 - [ ] **Phase 0 — agree the schema.** This doc. Resolve the open questions.
@@ -268,8 +321,12 @@ reproducible; it is _not_ shipped in the atlas (it's a source, like the grid).
       pose, human vote, stop guards).
 - [ ] **Phase 2b — image analyze tool** (deterministic quantize → YAML) and the
       compare-to-image loop.
-- [ ] **Phase 3 — backfill `description` (and reference images)** across the
-      existing roster.
+- [ ] **Phase 3 — close the loop.** Prompt synthesis from YAML fields (global +
+      per-family style anchor), genAI image generation, ingest-and-refine with
+      inner (grid) / outer (re-prompt) loops, and generation provenance
+      (prompt/model/seed) recorded next to each reference image.
+- [ ] **Phase 3.1 — backfill `description` (and regenerate)** across the
+      existing roster now that a sprite can be reborn from its metadata.
 
 ---
 
