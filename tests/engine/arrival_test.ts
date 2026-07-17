@@ -133,9 +133,9 @@ describe("loadout carry-over", () => {
     // spentStats backfills too — it falls back to the carried stats here.
     expect(state.player.spentStats.spirit).toBe(0);
     // Every stat is a real number, none left undefined.
-    expect(Object.values(state.player.stats).every((v) => v === 0 || v > 0)).toBe(
-      true,
-    );
+    expect(
+      Object.values(state.player.stats).every((v) => v === 0 || v > 0),
+    ).toBe(true);
   });
 
   it("drops a legacy loadout's double bomb (uniqueHeld docks once)", () => {
