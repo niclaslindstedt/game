@@ -23,7 +23,12 @@ import { abilityDef } from "./defs/abilities.ts";
 import { companionDef, isCompanionDef } from "./defs/companions.ts";
 import { difficultyDef, meetsMinDifficulty } from "./defs/difficulties.ts";
 import { enemyDef } from "./defs/enemies/index.ts";
-import { equipmentLevelReq, gearDef, weaponDef } from "./defs/equipment.ts";
+import {
+  equipmentLevelReq,
+  gearDef,
+  STAT_NAMES,
+  weaponDef,
+} from "./defs/equipment.ts";
 import { levelsBefore, type LevelDef } from "./defs/levels/index.ts";
 import {
   ARMOR_SLOTS,
@@ -46,6 +51,21 @@ import type {
  * carries the per-tier leveling slowdown). */
 function xpToNextAt(level: number, difficulty?: Difficulty): number {
   return xpToLevelUp(level, difficulty);
+}
+
+/**
+ * A complete stat record from a carried one that may predate a stat. A loadout
+ * banked before a stat existed (e.g. SPIRIT, added with the mana/spell system)
+ * has no key for it, so a bare spread leaves that stat `undefined` — which the
+ * level-up chooser renders as "SPIRIT UNDEFINED". Backfilling every StatName to
+ * 0 keeps an old build wieldable and the chooser honest.
+ */
+function fillStats(
+  carried: Partial<Record<StatName, number>>,
+): Record<StatName, number> {
+  const stats = {} as Record<StatName, number>;
+  for (const name of STAT_NAMES) stats[name] = carried[name] ?? 0;
+  return stats;
 }
 
 /** A deep copy of an equipment piece (or null), safe to carry across runs. */
@@ -111,11 +131,14 @@ export function applyLoadout(state: GameState, loadout: Loadout): void {
   player.level = Math.max(1, loadout.level);
   player.xpToNext = xpToNextAt(player.level, state.difficulty);
   player.xp = Math.max(0, Math.min(loadout.xp, player.xpToNext - 1));
-  player.stats = { ...loadout.stats };
+  // Backfill every StatName to 0 so a loadout banked before a stat existed
+  // (SPIRIT, added with mana/spells) arrives whole rather than with an
+  // `undefined` the chooser would render as "SPIRIT UNDEFINED".
+  player.stats = fillStats(loadout.stats);
   // The player's own spent tally rides along; a pre-`spentStats` loadout falls
   // back to the carried stats (best-effort — the chooser then shows the whole
   // carried build rather than crashing on a missing field).
-  player.spentStats = { ...(loadout.spentStats ?? loadout.stats) };
+  player.spentStats = fillStats(loadout.spentStats ?? loadout.stats);
   player.pendingStatPoints = 0;
 
   // Re-mint every carried piece with THIS run's ids so nothing collides
