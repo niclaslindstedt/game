@@ -370,10 +370,6 @@ export function Minimap({
   timerText,
   kills,
   menaceStage,
-  bagFree,
-  bagIcon,
-  bagFullHint,
-  onOpenBag,
   onExpand,
   onPause,
 }: {
@@ -384,14 +380,6 @@ export function Minimap({
   timerText: string;
   kills: number;
   menaceStage: number;
-  /** Empty bag cells — the count on the corner pouch, red at 0. */
-  bagFree: number;
-  /** The worn bag's icon (data URL), or null when the sprite is missing. */
-  bagIcon: string | null;
-  /** Pulse the pouch when a full bag just turned loot away. */
-  bagFullHint: boolean;
-  /** Open the inventory (the pouch is a tap target, like the hero avatar). */
-  onOpenBag: () => void;
   onExpand: () => void;
   onPause: () => void;
 }) {
@@ -407,35 +395,6 @@ export function Minimap({
           <canvas ref={canvasRef} className="hud-minimap-canvas" />
         </button>
         <RampageRing stage={menaceStage} />
-        {/* The carry pouch, hung on the map's bottom-left corner: the worn
-            bag's own icon with the free-cell count on it (red at 0). Tapping
-            it opens the inventory, and it pulses when a full bag just refused
-            loot — the bag readout that used to ride the hero avatar. */}
-        <button
-          type="button"
-          className={`hud-minimap-bag${bagFullHint ? " bag-full" : ""}`}
-          aria-label="open-inventory"
-          onClick={(e) => {
-            e.stopPropagation();
-            onOpenBag();
-          }}
-        >
-          {bagIcon ? (
-            <img
-              src={bagIcon}
-              alt=""
-              className="pixel-img hud-minimap-bag-img"
-            />
-          ) : null}
-          <span className="hud-minimap-bag-count">
-            <PixelText
-              font={font}
-              text={String(bagFree)}
-              scale={1}
-              color={bagFree === 0 ? "#d83a3a" : "#f4f4f4"}
-            />
-          </span>
-        </button>
         {/* Timer plate — centered at the top of the map (the WoW-clock spot);
             doubles as the PAUSE target the old clock owned (stopPropagation so
             it doesn't also open the map). */}
