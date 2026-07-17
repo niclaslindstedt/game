@@ -1,32 +1,22 @@
 // SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
-// Where the native shell points its WebView. The app is a thin wrapper whose
-// entire content IS the deployed website — so it looks and plays exactly like
-// the PWA — with the game's URL sourced from the identity config
-// (game.config.json → app.config.js `extra.gameUrl`).
+// Where the native shell points its WebView. By default the app is
+// self-contained: it serves the website bundled inside the app over a local
+// HTTP server (src/localServer.ts), so the game runs on-device and offline and
+// updates only when a new build ships to the store.
 //
-// Override at build time with EXPO_PUBLIC_GAME_URL (e.g. to point a preview
-// build at the `/preview/` slot) without touching code.
+// A build-time override, EXPO_PUBLIC_GAME_URL, points the WebView at a remote
+// URL instead (e.g. the `/preview/` deploy slot for debugging against live
+// content). When set, the local server is skipped entirely.
 
 import Constants from "expo-constants";
 
 const extra = (Constants.expoConfig?.extra ?? {}) as { gameUrl?: string };
 
-/** The URL the WebView loads. Priority: build-time env override → app.config
- * `extra.gameUrl` → the production site as a last-resort default. */
-export const GAME_URL: string =
-  process.env.EXPO_PUBLIC_GAME_URL ??
-  extra.gameUrl ??
-  "https://game.niclaslindstedt.se";
-
-/** The origin of {@link GAME_URL}, used to tell in-app navigation (stay in the
- * WebView) from outbound links (hand off to the system browser). */
-export const GAME_ORIGIN: string = (() => {
-  try {
-    return new URL(GAME_URL).origin;
-  } catch {
-    return "https://game.niclaslindstedt.se";
-  }
-})();
+/** A remote URL to load instead of the bundled site, or undefined to serve the
+ * bundle locally. Priority: build-time env override → app.config
+ * `extra.gameUrl` (unset by default). */
+export const REMOTE_GAME_URL: string | undefined =
+  process.env.EXPO_PUBLIC_GAME_URL ?? extra.gameUrl;
 
 /** The dark brand background (game.config.json theme_color / color-scheme). It
  * paints the shell behind the WebView so no white flash shows through while the
