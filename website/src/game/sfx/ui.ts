@@ -7,10 +7,31 @@
 import type { Synth } from "@ui/lib/synth.ts";
 
 export type UiSound =
-  "move" | "confirm" | "back" | "start" | "equip" | "blip" | "boom";
+  "move" | "confirm" | "back" | "start" | "equip" | "blip" | "boom" | "guide";
 
 export function playUiSound(synth: Synth, sound: UiSound): void {
   switch (sound) {
+    case "guide":
+      // The "go this way" beacon: a soft sonar ping in step with the guidance
+      // arrow's blink (~once a second while the way is clear). A gentle sine
+      // pulse with a glassy octave sparkle and a breath of echo — it sits at
+      // the very bottom of the mix, a nudge onward, never an alert. Repeats
+      // often, so it stays among the quietest and shortest voices in the set.
+      synth.tone({
+        type: "sine",
+        from: 1245,
+        durationMs: 70,
+        volume: 0.02,
+        echo: 0.18,
+      });
+      synth.tone({
+        type: "sine",
+        from: 2490,
+        durationMs: 40,
+        volume: 0.01,
+        echo: 0.15,
+      });
+      break;
     case "blip":
       // The letter-print tick: the dry, quiet square pip heard under scrolling
       // 16-bit dialogue as each character lands. Fired many times per line, so
