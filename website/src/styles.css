@@ -209,91 +209,87 @@ body {
   display: flex;
   flex-direction: column;
   gap: 0.4rem;
-  padding: max(0.5rem, env(safe-area-inset-top))
-    max(0.6rem, env(safe-area-inset-right)) 0
-    max(0.6rem, env(safe-area-inset-left));
+  /* No outer padding — the XP strip hugs the very top edge, edge to edge; the
+     status row below carries its own safe-area padding. */
+  padding: 0;
   pointer-events: none;
 }
 
-/* The XP strip: a slim bar spanning the top edge with the level badge on it. */
+/* The XP strip: a slim bar hugging the very top edge, edge to edge (no side or
+   top border, so nothing insets it from the screen). The level is NOT shown
+   here — it reads off the portrait's corner badge. */
 .hud-xp {
   position: relative;
-  height: 0.6rem;
+  height: 0.9rem;
   background: #1d2530;
-  border: 2px solid #1a1c2c;
+  border: 0;
+  border-bottom: 2px solid #1a1c2c;
 }
 
 .hud-xp-fill {
   height: 100%;
   background: linear-gradient(180deg, #ffd75e, #d8a018);
-  transition: width 120ms steps(4);
+  transition: width 280ms cubic-bezier(0.22, 1, 0.36, 1);
 }
 
-.hud-xp-badge {
-  position: absolute;
-  top: 50%;
-  left: 0.3rem;
-  transform: translateY(-50%);
-  padding: 0.15rem 0.3rem;
-  background: #0b0d10;
-  border: 2px solid #1a1c2c;
-  border-radius: 4px;
-  line-height: 0;
-}
-
+/* The status row and minimap carry the safe-area padding the XP strip drops. */
 /* Status unit left, clock stack (clock + MAP) far right; the flexible
-   middle track keeps the two units apart in both orientations. */
+   middle track keeps the two units apart in both orientations. The row carries
+   the safe-area padding the edge-hugging XP strip above it drops. */
 .hud-top {
   display: grid;
   grid-template-columns: auto 1fr auto;
   align-items: start;
   gap: 0.5rem;
+  padding: 0 max(0.6rem, env(safe-area-inset-right)) 0
+    max(0.6rem, env(safe-area-inset-left));
 }
 
-/* The left vitals are now ONE framed unit — avatar + HP + weapon + durability
-   — sharing the center clock unit's border and backdrop. */
+/* The left vitals unit, WoW-portrait style: a column — the merged
+   portrait+bars plate on top, the weapon floating free beneath it. */
 .hud-status {
   justify-self: start;
   display: flex;
-  align-items: center;
-  gap: 0.4rem;
-  padding: 0.25rem 0.45rem;
-  background: rgba(11, 13, 16, 0.55);
-  border: 2px solid #1a1c2c;
-  border-radius: 6px;
-}
-
-.hud-vitals {
-  display: flex;
   flex-direction: column;
-  gap: 0.3rem;
-}
-
-/* HP/ST share the "primary" group; weapon + durability and the purse share the
-   "gear" group. Portrait keeps both groups stacked in one column, so the order
-   stays HP, ST, weapon, coin. Landscape turns .hud-vitals into a row and floats
-   the gear group to the RIGHT of the vitals (see the landscape block below). */
-.hud-vitals-group {
-  display: flex;
-  flex-direction: column;
-  gap: 0.3rem;
-}
-
-.hud-stat-row {
-  display: flex;
-  align-items: center;
+  align-items: flex-start;
   gap: 0.4rem;
 }
 
-/* The trailing HP/ST readout: a fixed-width, right-aligned slot so a 2-digit
-   value ("85") reserves the same room as a 3-digit one ("100"/"126"). Without
-   it the whole vitals panel widened and narrowed as the numbers changed
-   digits. Sized for three scale-2 digits (11 font px × 2 = 1.375rem). */
-.hud-stat-val {
-  min-width: 1.4rem;
+/* The MERGED plate: the hero bust and the color bars share one framed panel so
+   they read as a single unit (WoW-style). A sci-fi HUD frame sprite (the `ui`
+   family's `hud_frame`) is dropped in as a 9-slice border-image at runtime (its
+   URL comes in via GameScreen's inline `borderImageSource`); the frame's own
+   translucent middle (the `fill` slice) is the plate's backing, and the color
+   underneath is the fallback for when the sprite hasn't loaded. The 16px sprite
+   has a 4px border ring, drawn here at 8px (a crisp 2× so the pixels stay
+   square). The bars center vertically, a touch shorter than the portrait. */
+.hud-portrait-unit {
   display: flex;
-  justify-content: flex-end;
-  flex: none;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0.15rem 0.3rem 0.15rem 0.15rem;
+  background: rgba(11, 13, 16, 0.5);
+  border-style: solid;
+  border-width: 8px;
+  border-color: #2a3444;
+  border-image-slice: 4 fill;
+  border-image-width: 8px;
+  border-image-repeat: stretch;
+  image-rendering: pixelated;
+}
+
+/* One MERGED bar stack: the three color bars butted together inside a single
+   border (the frame color fills the hairline gaps between them), all the same
+   width. */
+.vital-stack {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: 2px;
+  background: #14161d;
+  border: 2px solid #14161d;
+  border-radius: 3px;
+  overflow: hidden;
 }
 
 /* The clock and foe counter float over the play field, so they carry their
@@ -391,6 +387,72 @@ body {
   cursor: pointer;
 }
 
+/* The carry pouch, hung on the map's bottom-left corner (the WoW satellite-icon
+   spot): the worn bag's own icon with the free-cell count on it. Tapping it
+   opens the inventory; it pulses when a full bag just refused loot. This is the
+   bag readout that used to ride the hero avatar. */
+.hud-minimap-bag {
+  position: absolute;
+  left: -0.3rem;
+  bottom: -0.3rem;
+  z-index: 2;
+  box-sizing: border-box;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 1.85rem;
+  height: 1.85rem;
+  padding: 0.1rem;
+  border: 2px solid #2a3444;
+  border-radius: 999px;
+  background: rgba(11, 13, 16, 0.9);
+  appearance: none;
+  -webkit-tap-highlight-color: transparent;
+  pointer-events: auto;
+  cursor: pointer;
+  line-height: 0;
+}
+
+.hud-minimap-bag:active {
+  transform: translateY(1px);
+}
+
+.hud-minimap-bag-img {
+  width: 1.2rem;
+  height: 1.2rem;
+}
+
+/* The free-cell count, tucked into the pouch's lower-right so it reads over the
+   icon (dark chip, white number, red at 0). */
+.hud-minimap-bag-count {
+  position: absolute;
+  right: -0.15rem;
+  bottom: -0.15rem;
+  box-sizing: border-box;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 0.8rem;
+  height: 0.8rem;
+  padding: 0 0.12rem;
+  background: #0b0d10;
+  border-radius: 999px;
+  line-height: 0;
+}
+
+.hud-minimap-bag.bag-full {
+  border-color: #ffcf6b;
+  animation: bag-full-pulse 0.9s ease-in-out infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .hud-minimap-bag.bag-full {
+    animation: none;
+    border-color: #ffcf6b;
+    box-shadow: 0 0 0 2px rgba(255, 207, 107, 0.5);
+  }
+}
+
 /* The strip under the map: rampage stage (left) and kill tally (right), framed
    like the map so the hub reads as one unit. */
 .hud-minimap-strip {
@@ -411,24 +473,6 @@ body {
   display: inline-flex;
   align-items: center;
   min-width: 0;
-}
-
-/* Landscape (the reference grip): tighten the upper HUD. HP/stamina and the
-   weapon + durability + purse sit side by side instead of in one tall column,
-   so the left status unit doesn't stack as tall. Portrait keeps the vertical
-   stacks from the base rules above. The minimap hub on the right is a single
-   compact unit either way. */
-@media (min-aspect-ratio: 4/3) {
-  .hud-status {
-    padding: 0.2rem 0.4rem;
-    gap: 0.35rem;
-  }
-
-  .hud-vitals {
-    flex-direction: row;
-    align-items: flex-start;
-    gap: 0.6rem;
-  }
 }
 
 /* The kill tally jolts on every frag (see KillCounter). The throw distance,
@@ -481,40 +525,54 @@ body {
   }
 }
 
-.hud-bar {
-  width: 7rem;
-  height: 0.75rem;
-  background: #1d2530;
-  border: 2px solid #1a1c2c;
-}
-
-.hud-bar.hp-bar {
+/* The color-coded vitals bars — the whole vitals read at a glance without a
+   single label: RED is health, BLUE is mana, WHITE is stamina. All the SAME
+   width (they share one frame); the empty track is the frame's dark backing
+   showing through. HP is the tallest and stamina the shortest, so the eye still
+   ranks them by size the way it ranks them by importance. No per-bar border —
+   the merged .vital-stack frames them as one. */
+.vital-bar {
   width: 6rem;
+  background: #1d2530;
+  overflow: hidden;
 }
 
-.hud-bar.wpn-bar {
-  width: 4.5rem;
-  height: 0.55rem;
-}
-
-.hud-bar-fill {
+/* Smooth, easing fills so a hit, a heal, a sip, or a sprint glides instead of
+   snapping — the whole vitals block feels alive. */
+.vital-fill {
   height: 100%;
+  transition: width 280ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+/* Health — red, the tallest bar. */
+.vital-hp {
+  height: 0.66rem;
+}
+.vital-hp .vital-fill {
   background: linear-gradient(180deg, #d83a3a, #a02424);
-  transition: width 120ms steps(4);
 }
 
-.hud-bar-fill.wpn-fill {
-  background: #9aa3ad;
+/* Mana — arcane blue, a touch shorter than HP. */
+.vital-mp {
+  height: 0.54rem;
+}
+.vital-mp .vital-fill {
+  background: linear-gradient(180deg, #79c2ff, #2f6fd0);
 }
 
-/* Stamina: a bright white sprint gauge, distinct from the red HP bar. */
-.hud-bar-fill.stamina-fill {
+/* Stamina — bright white, the shortest bar (a thin sprint sliver). */
+.vital-st {
+  height: 0.42rem;
+}
+.vital-st .vital-fill {
   background: linear-gradient(180deg, #ffffff, #c8ced6);
 }
 
-/* Mana: an arcane blue pool gauge, distinct from HP (red) and ST (white). */
-.hud-bar-fill.mana-fill {
-  background: linear-gradient(180deg, #79c2ff, #2f6fd0);
+@media (prefers-reduced-motion: reduce) {
+  .vital-fill,
+  .hud-xp-fill {
+    transition: none;
+  }
 }
 
 /* The weapon widget: a prominent bordered slot tinted by the equipped
@@ -553,6 +611,33 @@ body {
   height: 1.5rem;
 }
 
+/* The main (equipped) weapon slot under the portrait: round, its class tint
+   sitting inside the durability RING that circles it. No hard border of its
+   own — the ring is the frame — so the ring reads as "the weapon's condition". */
+.wpn-slot-main {
+  width: 2.1rem;
+  height: 2.1rem;
+  border: 0;
+  border-radius: 999px;
+  box-shadow: none;
+}
+
+.wpn-slot-main:active {
+  transform: none;
+}
+
+/* The durability ring drawn around the main slot: the SVG scales to fill the
+   control, sitting just outside the round slot. Non-interactive so taps hit the
+   button under it. */
+.wpn-ring {
+  position: absolute;
+  inset: -0.18rem;
+  width: calc(100% + 0.36rem);
+  height: calc(100% + 0.36rem);
+  pointer-events: none;
+  overflow: visible;
+}
+
 /* The expanded switcher: alternate weapons in a row to the right of the slot,
    overlaying the field (best damage first). */
 .wpn-switcher {
@@ -584,22 +669,25 @@ body {
 }
 
 /* The hero avatar doubles as the inventory button — it opens the run's left
-   HUD unit (see .hud-status). Big enough to thumb; a small badge counts what
-   is stashed in the bag. Framed to read as a portrait inside the unit. */
+   HUD unit (see .hud-status). A framed SQUARE portrait bust (WoW-style), the
+   level tucked into its top-left corner. */
 .inventory-avatar {
   position: relative;
   appearance: none;
-  /* Hold the portrait's size no matter how tight the HUD row gets. On a narrow
-     (portrait) viewport the status row runs out of width and the flex layout
-     would otherwise shrink this button — and because the sprite carries the
-     global `img { max-width: 100% }`, a collapsed button drags the avatar image
-     to zero width, so it vanishes (landscape has spare width and never hits
-     this). Refusing to shrink keeps the framed hero visible in both. */
+  /* A fixed square that never collapses — see the flex note: the global
+     `img { max-width: 100% }` would otherwise drag a shrunk button's sprite to
+     zero width and the hero would vanish on a narrow row. */
   flex: 0 0 auto;
+  box-sizing: border-box;
+  width: 2.6rem;
+  height: 2.6rem;
   border: 2px solid #2a3444;
-  border-radius: 5px;
-  padding: 0.15rem;
+  border-radius: 6px;
+  padding: 0.1rem;
   background: rgba(20, 26, 34, 0.6);
+  /* NOT clipped: the level badge is a child that must overhang the corner. The
+     bust is clipped by its own inner frame instead. */
+  overflow: visible;
   cursor: pointer;
   pointer-events: auto;
   line-height: 0;
@@ -609,14 +697,51 @@ body {
   transform: translateY(2px);
 }
 
-/* The bag just turned away loot: pulse the button's border (and a soft ring)
-   to draw the eye here and hint the player to open the bag and make room.
-   Lit for BAG_FULL_HINT_MS from GameScreen, then the .bag-full class drops. */
-.inventory-avatar.bag-full {
-  border-color: #ffcf6b;
-  animation: bag-full-pulse 0.9s ease-in-out infinite;
+/* The inner frame that clips the zoomed bust to the square (the button itself
+   stays unclipped so the level chip can overhang). */
+.avatar-frame {
+  display: block;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  border-radius: 4px;
 }
 
+.avatar-img {
+  /* Zoom into the paper-doll's TORSO AND ABOVE (a WoW bust): the sprite is
+     scaled up and pinned to the top of the square, so the head and chest fill
+     the frame while the legs fall past the clipped bottom edge. Pixelated
+     rendering keeps the enlarged pixels crisp and chunky. */
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: top center;
+  transform: scale(1.75);
+  transform-origin: top center;
+}
+
+/* The level, hung on the portrait's LOWER-LEFT corner (WoW-style): a small
+   gold-bordered chip whose edges sit OUTSIDE the frame border, the number gold,
+   so the hero's rank reads implicitly without a "LV" label anywhere. */
+.avatar-level {
+  position: absolute;
+  bottom: -0.28rem;
+  left: -0.28rem;
+  box-sizing: border-box;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 0.95rem;
+  height: 0.95rem;
+  padding: 0 0.15rem;
+  background: #0b0d10;
+  border: 1px solid #ffd75e;
+  border-radius: 4px;
+  line-height: 0;
+}
+
+/* The bag turned away loot: pulse the minimap pouch (its own .bag-full) to
+   draw the eye and hint the player to open it and make room. */
 @keyframes bag-full-pulse {
   0%,
   100% {
@@ -627,41 +752,6 @@ body {
     border-color: #ffe6a8;
     box-shadow: 0 0 0 4px rgba(255, 207, 107, 0);
   }
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .inventory-avatar.bag-full {
-    animation: none;
-    border-color: #ffcf6b;
-    box-shadow: 0 0 0 2px rgba(255, 207, 107, 0.5);
-  }
-}
-
-.avatar-img {
-  /* The dressed paper-doll (paper-doll.ts) is wider than the 16px body —
-     the held weapon overhangs to the right — so only the height is pinned
-     and the width follows the composed image's aspect. */
-  width: auto;
-  height: 2.25rem;
-}
-
-.avatar-badge {
-  position: absolute;
-  top: -0.4rem;
-  right: -0.4rem;
-  box-sizing: border-box;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  /* A snug circle for one digit; the min-width matching the height keeps it
-     round for "4" and only stretches into a pill once a second digit arrives.
-     Side padding gives that two-digit case a little breathing room. */
-  min-width: 0.85rem;
-  height: 0.85rem;
-  padding: 0 0.15rem;
-  background: #f4f4f4;
-  border-radius: 999px;
-  line-height: 0;
 }
 
 /* Pickup feed: WoW-style "PICKED UP X" lines stacked in the lower-right.
@@ -5319,16 +5409,6 @@ canvas.tier-artifact {
   align-items: center;
   gap: 0.3rem;
   margin-left: auto;
-}
-
-/* The HUD purse: the coin icon sized to the stat-row text. */
-.hud-coin-row {
-  gap: 0.3rem;
-}
-
-.hud-coin {
-  width: 0.85rem;
-  height: 0.85rem;
 }
 
 /* ---- The merchant's shop (ShopPanel.tsx) --------------------------------- */

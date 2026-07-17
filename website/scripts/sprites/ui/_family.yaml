@@ -1,0 +1,10 @@
+name: ui
+ground: lab_0
+style: >
+  Flat HUD chrome — metal frames and panels for the on-screen interface, not
+  world objects. Clean beveled steel edges, small bolt accents, a dark
+  translucent fill; authored to be sliced as a 9-patch so it stretches to any
+  panel size.
+palette: {}
+contrastExempt:
+  - hud_frame
