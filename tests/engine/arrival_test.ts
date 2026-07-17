@@ -121,6 +121,23 @@ describe("loadout carry-over", () => {
     expect(totalArmor(state)).toBeGreaterThan(0);
   });
 
+  it("backfills a stat a legacy loadout predates (no undefined spirit)", () => {
+    // A build banked before SPIRIT shipped carries no key for it; a bare spread
+    // would leave player.stats.spirit undefined, which the level-up chooser
+    // renders as "SPIRIT UNDEFINED". Applying such a loadout must backfill 0.
+    const legacy = sampleLoadout();
+    // Drop the stat the way a pre-spirit save would have — it never existed.
+    delete (legacy.stats as Partial<Record<string, number>>).spirit;
+    const state = createGame(SEED, "test_level_2", "medium", legacy);
+    expect(state.player.stats.spirit).toBe(0);
+    // spentStats backfills too — it falls back to the carried stats here.
+    expect(state.player.spentStats.spirit).toBe(0);
+    // Every stat is a real number, none left undefined.
+    expect(
+      Object.values(state.player.stats).every((v) => v === 0 || v > 0),
+    ).toBe(true);
+  });
+
   it("drops a legacy loadout's double bomb (uniqueHeld docks once)", () => {
     // Loadouts banked before the one-bomb rule could pocket two nukes; on
     // arrival only the first docks, and the powers around it close ranks.
