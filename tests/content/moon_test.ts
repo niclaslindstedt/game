@@ -40,7 +40,7 @@ describe("THE MOON level def", () => {
       expect(segs.length).toBeGreaterThanOrEqual(1);
     }
     // The authored path threads from the lander toward the flag.
-    expect((MOON.path?.length ?? 0)).toBeGreaterThan(3);
+    expect(MOON.path?.length ?? 0).toBeGreaterThan(3);
   });
 });
 
