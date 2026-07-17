@@ -164,9 +164,11 @@ by turning these levers, cheapest first:
 - **Mob totals** — aim ~800–1200 killable mobs per map (a full-clear battle); the
   cap, not the head-count, bounds leveling, so more mobs ≠ more levels past the cap.
   A spawner's big `count` is its whole QUEUE, not what stands at once: each point
-  holds only `maxAlive` (default `SPAWNERS.maxAlive`, ~15) live members and drips a
-  replacement per kill while the hero is in range, so a 100-count point reads as
-  steady local pressure rather than a dumped pile.
+  holds only `maxAlive` (default `SPAWNERS.maxAlive`, ~15) live members IN ITS ZONE
+  (`triggerRadius`) and drips a replacement per kill while the hero is in range, so
+  a 100-count point reads as steady local pressure rather than a dumped pile. A
+  member that drifts out of the zone (chases the hero off) counts as gone and is
+  replaced, keeping the fight populated where the hero stands.
 - **The con slopes / kills-per-level curve** (`LEVELING`) — global; touch last, it
   moves every rung and JESUS.
 

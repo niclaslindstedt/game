@@ -8,7 +8,9 @@
 // runs while the hero is in trigger range: at the cap (or once he steps out) the
 // point pauses, then drips a fresh batch to REPLACE each kill — steady local
 // pressure rather than a dumped pile — and the queue still drains as he grinds
-// the cap down. A point may CHAIN off another (`after`): it arms `afterDelayMs`
+// the cap down. The cap counts only the point's LOCAL members: one that has
+// drifted past its trigger zone (given chase and left the fight) is treated as
+// gone, so the point drips a replacement to keep pressure where the hero stands. A point may CHAIN off another (`after`): it arms `afterDelayMs`
 // after that one drains, but only while the hero is still in its trigger range,
 // so pressure follows him without a bottomless refill. This is what lets a level
 // actually be CLEARED and a maze be traversed without an infinite bog. Emitted
@@ -28,7 +30,7 @@ import {
   resolveMobScaling,
 } from "./menace.ts";
 import { insideObstacle, lineOfSight } from "./obstacles.ts";
-import type { GameState, SpawnerRuntime } from "./types.ts";
+import type { Enemy, GameState, SpawnerRuntime } from "./types.ts";
 import { anyZoneContains } from "./zones.ts";
 
 /** A spawn spot for one emitted mob: scattered within the point's `spawnRadius`
@@ -119,8 +121,9 @@ export function stepSpawners(state: GameState): void {
   const canWake = !state.freeze && state.victoryCountdownMs === null;
   // Built lazily the first time an active point needs to count its own live
   // members against the alive cap — one pass over the enemy list, reused across
-  // every spawner this tick (mirrors stepPacks).
-  let aliveIds: Set<number> | null = null;
+  // every spawner this tick (mirrors stepPacks). A Map (not a Set) so the count
+  // can read each member's position and drop the ones that have drifted away.
+  let enemyById: Map<number, Enemy> | null = null;
 
   for (const spawner of spawners) {
     if (spawner.status === "dormant") {
@@ -156,9 +159,13 @@ export function stepSpawners(state: GameState): void {
       const inRange =
         distance(state.player.pos, spawner.at) <= spawner.triggerRadius;
       if (inRange) {
-        // Count this point's live members ONCE from the tick's enemy snapshot,
-        // then track emissions incrementally — so a multi-batch catch-up tick
-        // still respects the cap (the snapshot can't see mobs it just emitted).
+        // Count this point's LOCAL live members ONCE from the tick's enemy
+        // snapshot, then track emissions incrementally — so a multi-batch
+        // catch-up tick still respects the cap (the snapshot can't see mobs it
+        // just emitted). A member that has DRIFTED past the point's zone (its
+        // `triggerRadius`) no longer counts: it's given chase to the hero and
+        // left the fight, so the point treats it as gone and drips a fresh one
+        // to hold pressure where it stands.
         let live = -1;
         // Release a batch every interval; a guard caps catch-up after a long tick.
         let batches = 0;
@@ -168,9 +175,16 @@ export function stepSpawners(state: GameState): void {
           batches < 8
         ) {
           if (live < 0) {
-            if (!aliveIds) aliveIds = new Set(state.enemies.map((e) => e.id));
+            if (!enemyById) {
+              enemyById = new Map(state.enemies.map((e) => [e.id, e]));
+            }
             live = 0;
-            for (const id of spawner.memberIds) if (aliveIds.has(id)) live++;
+            for (const id of spawner.memberIds) {
+              const e = enemyById.get(id);
+              if (e && distance(e.pos, spawner.at) <= spawner.triggerRadius) {
+                live++;
+              }
+            }
           }
           const room = spawner.maxAlive - live;
           if (room <= 0) break; // at the cap — hold until a kill frees a slot
