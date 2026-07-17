@@ -144,6 +144,15 @@ export type Affix =
   | { kind: "maxHp"; value: number }
   | { kind: "crit"; value: number }
   | { kind: "armor"; value: number }
+  /**
+   * ARMOR PIERCING — the fraction of a mob's armor the hero's PHYSICAL blows
+   * IGNORE on top of the class baseline (`STATS.armorPenByClass`), summed across
+   * worn pieces (see `heroArmorPen`). A ranged (or melee) endgame chase stat:
+   * the more pierce a hero's uniques/legendaries carry, the more of the armored
+   * late game their shots/blows punch through. Does nothing for magic (it
+   * bypasses armor already). Unique/legendary authoring territory.
+   */
+  | { kind: "armorPen"; value: number }
   | { kind: "stat"; value: number; stat: StatName }
   // Scaling bonuses (uniques): a fraction of the hero's OWN value.
   | { kind: "statPct"; value: number; stat: StatName }

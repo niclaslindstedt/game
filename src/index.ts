@@ -157,6 +157,7 @@ export {
   inventoryCapacity,
   syncInventoryCapacity,
   gearScore,
+  heroArmorPen,
   isBetterEquipment,
   setAutoEquipEnabled,
   isAutoEquipEnabled,

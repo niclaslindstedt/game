@@ -42,6 +42,7 @@ import {
   tierLevelCostMult,
   WEAPON,
   weaponCooldownFor,
+  weaponCritMult,
   weaponDef,
   weaponDamage,
   weaponDamageFor,
@@ -618,9 +619,13 @@ describe("stats", () => {
     );
     run(state, idle, 400, (s) => s.stats.damageDealt > 0);
     // The unbreakable blaster keeps full damage (looted-only lever), so a
-    // guaranteed crit deals exactly double its catalog damage.
+    // guaranteed crit deals its catalog damage times the RANGED crit weight
+    // (the class floor deepened by the stacked DEXTERITY).
     expect(state.stats.damageDealt).toBe(
-      Math.round(weaponDef("blaster").damage * STATS.critMultiplier),
+      Math.round(
+        weaponDef("blaster").damage *
+          weaponCritMult(state, state.player.equipment.weapon),
+      ),
     );
   });
 

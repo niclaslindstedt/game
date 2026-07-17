@@ -73,6 +73,11 @@ export const PER_ILVL = {
   armor: hpPerIlvl / armorHpPerPoint, // flat-HP rate ÷ EHP-per-armor
   statPct: 0.01 / SCALING_PREMIUM, // +1% scaling stat = SCALING_PREMIUM ilvl
   maxHpPct: 0.01 / SCALING_PREMIUM / FLAT_HP_FRACTION, // HP-discounted
+  // ARMOR PIERCING: ignoring a point of the mob's armor restores roughly that
+  // fraction of a physical blow against the armored late game — a conditional
+  // damage bonus, so priced near `damagePct` but a touch dearer for being the
+  // endgame-defining chase stat. +10 pen ≈ 2 ilvl.
+  armorPen: 0.05,
 } as const;
 
 /** One bonus → its ilvl worth (signed — a downside subtracts). */
@@ -92,6 +97,8 @@ export function bonusIlvlPoints(affix: Affix): number {
       return affix.value / PER_ILVL.statPct;
     case "maxHpPct":
       return affix.value / PER_ILVL.maxHpPct;
+    case "armorPen":
+      return affix.value / PER_ILVL.armorPen;
     case "spell":
       return affix.rank * SPELL_RANK_ILVL[affix.spell];
     case "proc":
