@@ -3221,6 +3221,7 @@ export function GameScreen({
             <div className="hud-clock-stack">
               <Minimap
                 font={font}
+                hudFont={assets.hudFont}
                 canvasRef={minimapRef}
                 timerText={formatTime(hud.stats.combatMs)}
                 kills={hud.stats.kills}

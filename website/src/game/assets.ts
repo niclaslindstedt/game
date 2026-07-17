@@ -13,6 +13,8 @@ import atlasRects from "./assets/atlas.json";
 import atlasUrl from "./assets/atlas.png";
 import fontMeta from "./assets/font.json";
 import fontUrl from "./assets/font.png";
+import hudFontMeta from "./assets/font-hud.json";
+import hudFontUrl from "./assets/font-hud.png";
 import relicMeta from "./assets/font-relic.json";
 import relicArtifactUrl from "./assets/font-relic-artifact.png";
 import relicLegendaryUrl from "./assets/font-relic-legendary.png";
@@ -27,6 +29,12 @@ export type RelicTier = "unique" | "legendary" | "artifact";
 export type GameAssets = {
   sprites: Sprites;
   font: PixelFont;
+  /**
+   * A taller (7px) HUD font for small readouts that want a size between the UI
+   * font's 1× and 2× — currently the minimap strip's rampage stage + kills.
+   * Tinted at runtime like the UI font.
+   */
+  hudFont: PixelFont;
   /**
    * The pre-colored golden display fonts for unique/legendary/artifact item
    * NAMES — one per tier, escalating in metallic richness. Pre-shaded, so
@@ -112,6 +120,7 @@ export function loadGameAssets(): Promise<GameAssets> {
   loaded ??= loadImages({
     atlas: atlasUrl,
     font: fontUrl,
+    hudFont: hudFontUrl,
     relicUnique: relicUniqueUrl,
     relicLegendary: relicLegendaryUrl,
     relicArtifact: relicArtifactUrl,
@@ -119,6 +128,7 @@ export function loadGameAssets(): Promise<GameAssets> {
     const assets: GameAssets = {
       sprites: await sliceAtlas(images.atlas, atlasRects),
       font: createPixelFont(images.font, fontMeta),
+      hudFont: createPixelFont(images.hudFont, hudFontMeta),
       relicFonts: {
         unique: createPixelFont(images.relicUnique, relicMeta, {
           tinted: false,

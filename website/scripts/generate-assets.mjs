@@ -14,6 +14,7 @@ import { fileURLToPath } from "node:url";
 import { buildFilmStrip, writeAnimatedWebp } from "./asset-tools/animation.mjs";
 import { packAtlas } from "./asset-tools/atlas.mjs";
 import { buildFontAtlas, renderText } from "./asset-tools/font.mjs";
+import { buildHudFontAtlas, renderHudText } from "./asset-tools/font-hud.mjs";
 import {
   buildRelicFonts,
   RELIC_TIERS,
@@ -155,6 +156,31 @@ specimenLines.forEach((line, i) => {
   blit(specimen, renderText(line, [244, 244, 244, 255]), 2, 2 + i * 8);
 });
 await writePng(upscale(specimen, 4), `${previewDir}/font-specimen.png`);
+
+// ---- HUD font: taller 7px atlas + metrics for the small HUD readouts --------
+// (the minimap strip's rampage stage + kill tally). White, tinted at runtime
+// like the UI font. Both gitignored, rebuilt on build.
+
+const hud = buildHudFontAtlas();
+await writePng(hud.atlas, `${assetsDir}/font-hud.png`);
+writeFileSync(
+  `${assetsDir}/font-hud.json`,
+  `${JSON.stringify(hud.meta, null, 2)}\n`,
+);
+
+const hudSpecimenLines = [
+  "THE QUICK BROWN FOX JUMPS OVER THE LAZY DOG",
+  "0123456789 .:-/",
+  "RAMPAGE 6    128 KILLS    1:23",
+];
+const hudSpecimen = fill(
+  createSurface(220, hudSpecimenLines.length * 10 + 4),
+  [24, 24, 28, 255],
+);
+hudSpecimenLines.forEach((line, i) => {
+  blit(hudSpecimen, renderHudText(line, [244, 244, 244, 255]), 2, 2 + i * 10);
+});
+await writePng(upscale(hudSpecimen, 4), `${previewDir}/font-hud-specimen.png`);
 
 // ---- Relic font: one shared metrics JSON + one pre-colored atlas per tier --
 // (unique/legendary/artifact item names). Both gitignored, rebuilt on build.

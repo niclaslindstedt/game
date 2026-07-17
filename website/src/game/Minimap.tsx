@@ -365,6 +365,7 @@ function KillCounter({ font, kills }: { font: PixelFont; kills: number }) {
 
 export function Minimap({
   font,
+  hudFont,
   canvasRef,
   timerText,
   kills,
@@ -373,6 +374,8 @@ export function Minimap({
   onPause,
 }: {
   font: PixelFont;
+  /** The taller HUD font for the strip readouts (see assets.hudFont). */
+  hudFont: PixelFont;
   canvasRef: RefObject<HTMLCanvasElement | null>;
   timerText: string;
   kills: number;
@@ -413,14 +416,14 @@ export function Minimap({
         <span className="hud-minimap-rampage">
           {menaceStage > 0 && (
             <PixelText
-              font={font}
+              font={hudFont}
               text={`RAMPAGE ${menaceStage}`}
               scale={1}
               color="#f4f4f4"
             />
           )}
         </span>
-        <KillCounter font={font} kills={kills} />
+        <KillCounter font={hudFont} kills={kills} />
       </div>
     </div>
   );
