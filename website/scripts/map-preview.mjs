@@ -2,8 +2,9 @@
 // SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
 // The MAP PREVIEW renderer (see the `level-design` skill): draws an annotated
 // top-down diagram of a whole level so its design can be READ and iterated on —
-// the hero's path, the boss/elite/unique/rare/pack encounters, the safe & quiet
-// zones, chests, the merchant, and the tempo curve. Three modes:
+// the hero's path, the boss/elite/unique/rare/pack encounters, the SPAWNER
+// knots + an authored mob-density heatmap (read straight off the YAML), the
+// safe & quiet zones, chests, the merchant, and the tempo curve. Three modes:
 //
 //   node website/scripts/map-preview.mjs <id>              design view (YAML)
 //   node website/scripts/map-preview.mjs <id> --actual     real scattered layout
@@ -60,6 +61,8 @@ const C = {
   unique: [250, 220, 80, 255],
   rare: [120, 200, 255, 255],
   pack: [240, 120, 200, 255],
+  spawner: [235, 90, 205, 255],
+  spawnerDens: [225, 80, 200, 255],
   chest: [250, 200, 90, 255],
   merchant: [90, 220, 220, 255],
   landmark: [170, 170, 190, 255],
@@ -327,6 +330,104 @@ function drawEncounters(c) {
   }
 }
 
+/** Total mob count an emitter (pack member or spawner member) queues. A `count`
+ * is the literal head-count; a member without one (a pack triple) is ~3. */
+function memberCount(members) {
+  return (members ?? []).reduce(
+    (sum, m) => sum + (typeof m.count === "number" ? m.count : 3),
+    0,
+  );
+}
+
+/** The dominant mob type of an emitter — the member with the highest count,
+ * uppercased for a label. */
+function dominantType(members) {
+  const top = (members ?? [])
+    .slice()
+    .sort((a, b) => memberCount([b]) - memberCount([a]))[0];
+  return top ? String(top.enemy).toUpperCase().replace(/_/g, " ") : "";
+}
+
+/** The AUTHORED mob-density heatmap: where the level's SPAWNERS are DESIGNED to
+ * put pressure, read straight off the YAML (no sim). Each knot smears its
+ * head-count over a radial falloff (peak at the knot, fading toward its spread),
+ * the contributions sum, and the grid is drawn like the played heatmap's mob
+ * layer — so the design view answers "where is the horde meant to be?" before a
+ * single bot run. Design view only; the --actual/--heatmap views draw their own
+ * mob layers. */
+function drawSpawnerDensity(c) {
+  const { def, surf } = c;
+  const spawners = def.spawners ?? [];
+  if (!spawners.length) return;
+  const cell = Math.max(16, Math.round(def.width / 80));
+  const cols = Math.ceil(def.width / cell);
+  const rows = Math.ceil(def.height / cell);
+  const grid = new Float32Array(cols * rows);
+  for (const s of spawners) {
+    const count = memberCount(s.members);
+    if (count <= 0) continue;
+    // A chained follow-up (`after`) borrows a modest spread; an armed point
+    // spreads over ~0.7 of its trigger reach so the peak reads as the knot.
+    const spread = (s.triggerRadius ?? 320) * 0.7;
+    const { x: cx, y: cy } = s.at;
+    for (let row = 0; row < rows; row++) {
+      const wyp = (row + 0.5) * cell;
+      for (let col = 0; col < cols; col++) {
+        const wxp = (col + 0.5) * cell;
+        const d = Math.hypot(wxp - cx, wyp - cy);
+        if (d > spread) continue;
+        const f = 1 - d / spread;
+        grid[row * cols + col] += count * f * f;
+      }
+    }
+  }
+  const max = Math.max(1, ...grid);
+  for (let i = 0; i < grid.length; i++) {
+    const v = grid[i];
+    if (v <= 0) continue;
+    const col = i % cols;
+    const row = Math.floor(i / cols);
+    const a = Math.min(150, Math.round((v / max) * 150));
+    fillRect(
+      surf,
+      wx(c, col * cell),
+      wy(c, row * cell),
+      cell * c.S,
+      cell * c.S,
+      [C.spawnerDens[0], C.spawnerDens[1], C.spawnerDens[2], a],
+    );
+  }
+}
+
+/** The SPAWNER knots themselves: each point's trigger ring (a chained `after`
+ * follow-up draws fainter), its centre dot, and a label of its head-count +
+ * dominant mob type. Returns the level's total queued mob count. */
+function drawSpawners(c) {
+  const { def, surf } = c;
+  const spawners = def.spawners ?? [];
+  let total = 0;
+  for (const s of spawners) {
+    const count = memberCount(s.members);
+    total += count;
+    const px = wx(c, s.at.x);
+    const py = wy(c, s.at.y);
+    const chained = "after" in s;
+    const tr = (s.triggerRadius ?? 320) * c.S;
+    strokeCircle(
+      surf,
+      px,
+      py,
+      tr,
+      [C.spawner[0], C.spawner[1], C.spawner[2], chained ? 55 : 110],
+      1,
+    );
+    fillCircle(surf, px, py, 3, C.spawner);
+    const tag = chained ? `+${count}` : `${count}`;
+    label(surf, `${tag} ${dominantType(s.members)}`, px + 5, py + 2, C.spawner);
+  }
+  return total;
+}
+
 function drawTempo(c) {
   if (!c.tempoH) return;
   const { def, surf } = c;
@@ -401,6 +502,7 @@ function drawLegend(c, description, extra = []) {
   swatch(C.boss, "BOSS");
   swatch(C.elite, "ELITE");
   swatch(C.pack, "MOB PACK");
+  swatch(C.spawner, "SPAWNER");
   swatch(C.chest, "CHEST");
   swatch(C.merchant, "MERCHANT");
   swatch(C.safe, "SAFE ZONE");
@@ -522,7 +624,17 @@ async function renderLevel(entry, opts) {
   }
   if (opts.actual && !opts.heatmap)
     await drawActual(c, opts.seed, opts.difficulty);
+  // Authored mob-density heatmap under the markers — design view only (the
+  // --actual/--heatmap views already draw their own mob layers).
+  if (!opts.heatmap && !opts.actual) drawSpawnerDensity(c);
   drawEncounters(c);
+  // Spawner knots on top — but not over the played heatmap, which shows the
+  // sim's real spawns already.
+  if (!opts.heatmap) {
+    const totalMobs = drawSpawners(c);
+    const pts = (def.spawners ?? []).length;
+    if (pts) extra.push(`SPAWNERS: ${pts} pts, ${totalMobs} mobs`);
+  }
   drawTempo(c);
   drawLegend(c, description, extra);
   const out = `${previewDir}/map_${def.id}${opts.heatmap ? "_heat" : opts.actual ? "_actual" : ""}.png`;
