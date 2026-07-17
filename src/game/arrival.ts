@@ -204,6 +204,10 @@ export function applyLoadout(state: GameState, loadout: Loadout): void {
   player.spellSlots = new Array<string | null>(SPELL_SLOTS)
     .fill(null)
     .map((_, i) => loadout.spellSlots?.[i] ?? null);
+  // The cast queue and global cooldown are transient combat state — a fresh
+  // level starts with an empty queue and no lingering global cooldown.
+  player.spellQueue = [];
+  player.globalCooldownMs = 0;
   // The purse rides along; loadouts banked before the economy existed carry
   // no coins field and load as an empty purse.
   player.coins = Math.max(0, loadout.coins ?? 0);
