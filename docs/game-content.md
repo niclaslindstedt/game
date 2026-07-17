@@ -61,12 +61,21 @@ names its in-run music with an optional `music` id (a key into the app's
   here. Music: `hq_lockdown` ("LOCKDOWN", a tense infiltration theme).
 - **Level 2 — THE MOON** (`levels/moon.ts`). The beacon dies near the old
   flag. `moon` biome (regolith + gravel patches), ~340 px/s² gravity (jumps
-  soar), moonrock ridge `walls` the haunting phases straight through. Scattered
-  **moonrock** slabs (1×1/1×2/2×2 rectangular obstacles) wall off sight, shots
-  and even a nuke's blast — cover against SpaceZ's grounded robots, useless
-  against the phasing dead — while jumpable **craters** are gaps the player
-  hops (landing on the near lip when short) but the horde must route around.
-  Music: `regolith_ride` ("REGOLITH RIDE", the heroic action theme).
+  soar). Three long **rock ridges** with offset pass-gaps break the open
+  regolith into a handful of BASINS, so the climb from the lander to ARMSTRONG
+  sweeps low, then up, then up again across most of the moon (an authored
+  `path` threads the gaps) rather than cutting one straight diagonal — clearing
+  the finite ridge-gap `spawners` (wisps → ghosts → wraiths → OPTIMUSK) on the
+  way. **Two off-path detours** reward exploring a dead pocket: the CRASHED
+  LANDER, a walled wreck where the LOST COSMONAUT guards a chest, and THE
+  THIRTEENTH GRAVE, a deep crater where THE THIRTEENTH MAN guards his own — each
+  a quiet cul-de-sac (no ambient horde). A STILL POINT safe nook by the flag
+  lets the moon salvage merchant trade before the boss. Scattered **moonrock**
+  slabs (1×1/1×2/2×2 rectangular obstacles) wall off sight, shots and even a
+  nuke's blast — cover against SpaceZ's grounded robots, useless against the
+  phasing dead — while jumpable **craters** are gaps the player hops (landing on
+  the near lip when short) but the horde must route around. Music:
+  `regolith_ride` ("REGOLITH RIDE", the heroic action theme).
 - **Level 3 — MARS** (`levels/mars.ts`). The trail from the moon: SpaceZ wrote
   the moon off as a disaster and moved everything — Ada included — to a secret
   colony. `mars` biome, ~520 px/s² gravity. The level TRANSITIONS mid-map: red
