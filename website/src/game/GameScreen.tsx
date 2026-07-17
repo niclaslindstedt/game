@@ -104,6 +104,7 @@ import { formatCompact } from "@ui/lib/format-number.ts";
 import { startGameLoop } from "@ui/lib/game-loop.ts";
 import { PixelText } from "@ui/lib/PixelText.tsx";
 import { trackPointer } from "@ui/lib/pointer.ts";
+import { useMediaQuery } from "@ui/lib/useMediaQuery.ts";
 
 import {
   loadGameAssets,
@@ -679,6 +680,12 @@ export function GameScreen({
       new URLSearchParams(window.location.search).has("debug"),
   );
   const fpsRef = useRef<HTMLDivElement | null>(null);
+  // Landscape (the reference orientation) splits the bottom docks across BOTH
+  // corners — the powerup (+ spell) buttons in the player's chosen corner, the
+  // consumable items in the opposite one — so neither stack crowds the middle of
+  // the short landscape field. Portrait keeps them all stacked in one corner
+  // (there's room up the tall edge, and one thumb covers both). See the dock CSS.
+  const wide = useMediaQuery("(min-aspect-ratio: 4/3)");
   useEffect(() => {
     weaponMenuOpenRef.current = weaponMenuOpen;
   }, [weaponMenuOpen]);
@@ -2784,6 +2791,11 @@ export function GameScreen({
   // Which bottom corner the powerup dock lives in; the pickup feed takes the
   // opposite one. Read live so the title-screen toggle applies next run.
   const powerupSide = getSettings().powerupSide;
+  // The consumable dock rides with the powerups in portrait (stacked above
+  // them), but crosses to the OPPOSITE corner in landscape so the two rows split
+  // left/right instead of piling up on one side of the field.
+  const oppositeSide = powerupSide === "left" ? "right" : "left";
+  const consumableSide = wide ? oppositeSide : powerupSide;
   // Show 1/2/3 · Q · 1-4 key caps on the dock and weapon switcher only when
   // desktop keyboard controls are on (touch has no keys to hint).
   const keyHints = getSettings().keyboardMove === "on";
@@ -3300,7 +3312,9 @@ export function GameScreen({
           (a padded hit region) so the small icons are still easy to hit on a
           phone. */}
       {hud?.phase === "playing" && (
-        <div className={`consumable-dock dock-${powerupSide}`}>
+        <div
+          className={`consumable-dock dock-${consumableSide}${wide ? " split" : ""}`}
+        >
           <button
             type="button"
             className={`consumable-slot${hud.medkitCount > 0 ? " filled" : ""}`}
@@ -3507,6 +3521,7 @@ export function GameScreen({
           sprites={assets.sprites}
           font={font}
           side={powerupSide}
+          split={wide}
           slots={hud.spells}
           unlockedIds={hud.unlockedSpells}
           keyHints={keyHints}

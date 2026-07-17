@@ -35,6 +35,7 @@ export function SpellBar({
   sprites,
   font,
   side,
+  split = false,
   slots,
   unlockedIds,
   keyLabels,
@@ -45,6 +46,9 @@ export function SpellBar({
   sprites: Sprites;
   font: PixelFont;
   side: "left" | "right";
+  /** Landscape splits the docks across corners, so the consumable row no longer
+   * sits below the spell dock — drop it one row closer to the screen edge. */
+  split?: boolean;
   slots: SpellSlotView[];
   /** Every spell the hero has unlocked (ascending), the picker's menu. */
   unlockedIds: string[];
@@ -82,7 +86,7 @@ export function SpellBar({
   };
 
   return (
-    <div className={`spell-dock dock-${side}`}>
+    <div className={`spell-dock dock-${side}${split ? " split" : ""}`}>
       {slots.map((view, i) => {
         const def = view.id ? spellDef(view.id) : null;
         const accent = def ? spellColor(def.element) : "#3a4150";

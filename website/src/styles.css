@@ -776,23 +776,29 @@ body {
    passes straight through. */
 .pickup-feed {
   position: absolute;
-  bottom: max(0.75rem, env(safe-area-inset-bottom));
+  /* Landscape parks the consumable dock in this same (anti-powerup) corner, so
+     the feed rises to sit just ABOVE that row rather than behind it. Portrait
+     re-homes the consumables on the powerup side, freeing the corner — the feed
+     drops back to the screen edge (below). */
+  bottom: calc(max(0.75rem, env(safe-area-inset-bottom)) + 2.3rem + 0.6rem);
   display: flex;
   flex-direction: column;
   gap: 0.25rem;
   pointer-events: none;
   /* Cap the feed so long item names wrap into an upward-growing column instead
      of sprawling across the bottom edge and colliding with the powerup dock in
-     the far corner. Landscape (the reference) fits a wide column; the dock is
-     full-size (~13rem incl. margin), so leave that band clear. */
-  max-width: min(40rem, calc(100vw - 15rem));
+     the far corner. Landscape (the reference) fits a wide column; leave the far
+     powerup band clear. */
+  max-width: min(40rem, calc(100vw - 13rem));
 }
 
 /* Portrait (phone held vertically): the dock slots are halved (see the powerup
-   breakpoint below), so the dock only claims ~7rem of the narrow bottom edge —
-   hand the feed the wider strip that's left, but still short of the dock. */
+   breakpoint below) and all stack in the powerup corner, so this corner is clear
+   — drop the feed to the bottom edge and hand it the wider strip that's left,
+   still short of the dock. */
 @media (max-aspect-ratio: 4/3) {
   .pickup-feed {
+    bottom: max(0.75rem, env(safe-area-inset-bottom));
     max-width: calc(100vw - 9rem);
   }
 }
@@ -3471,10 +3477,11 @@ body {
 
 .powerup-slot {
   appearance: none;
-  /* ~1.5× the portrait slot (1.9rem): tighter than the old 3.75rem landscape
-     dock, but still larger than vertical mode given the extra screen estate. */
-  width: 2.85rem;
-  height: 2.85rem;
+  /* A hair over the portrait slot (1.9rem). Landscape splits the docks across
+     both corners (see GameScreen `wide`), so the row no longer needs to be big
+     to feel reachable — kept lean so the buttons stay clear of the field. */
+  width: 2.3rem;
+  height: 2.3rem;
   display: grid;
   place-items: center;
   padding: 0;
@@ -3505,8 +3512,8 @@ body {
 }
 
 .powerup-icon {
-  width: 1.95rem;
-  height: 1.95rem;
+  width: 1.6rem;
+  height: 1.6rem;
 }
 
 /* The banked powerup icon itself glows blue. */
@@ -3607,7 +3614,11 @@ body {
    rows line up. */
 .consumable-dock {
   position: absolute;
-  bottom: calc(max(0.75rem, env(safe-area-inset-bottom)) + 2.85rem + 0.6rem);
+  /* Landscape (`.split`): the consumable dock crosses to the OPPOSITE corner and
+     becomes that corner's own bottom row, so it hugs the screen edge like the
+     powerup row does on its side. Portrait re-stacks it above the powerups (see
+     the portrait breakpoint below). */
+  bottom: max(0.75rem, env(safe-area-inset-bottom));
   display: flex;
   gap: 0.6rem;
   pointer-events: none;
@@ -3625,8 +3636,8 @@ body {
   position: relative;
   appearance: none;
   /* Same footprint as the landscape powerup slot so the two rows line up. */
-  width: 2.85rem;
-  height: 2.85rem;
+  width: 2.3rem;
+  height: 2.3rem;
   display: grid;
   place-items: center;
   padding: 0;
@@ -3658,8 +3669,8 @@ body {
 }
 
 .consumable-icon {
-  width: 1.95rem;
-  height: 1.95rem;
+  width: 1.6rem;
+  height: 1.6rem;
 }
 
 /* The stack count, bottom-right, over a dark chip so it reads on any icon. */
@@ -3695,24 +3706,41 @@ body {
   inset: -0.95rem -0.3rem -0.2rem -0.3rem;
 }
 
+/* Landscape splits the docks apart, so the consumable row becomes its own
+   corner's bottom row with nothing below it — reach down toward the screen edge
+   like the powerup row instead of up toward the (now absent) neighbour. */
+.consumable-dock.split .consumable-slot.filled::before {
+  inset: -0.2rem -0.3rem -0.95rem -0.3rem;
+}
+
 .powerup-slot.filled::before {
   inset: -0.2rem -0.3rem -0.95rem -0.3rem;
 }
 
 /* ---- The spell bar (cast slots) ------------------------------------------ */
 
-/* The spell dock: the caster's cast-slot row, one row ABOVE the consumable
-   dock in the same corner (its bottom clears the powerup row + the consumable
-   row and their gaps). Same slot footprint so all three rows line up. */
+/* The spell dock: the caster's cast-slot row, stacked above the powerup dock in
+   the same corner. In landscape (`.split`) the consumable row has crossed to the
+   other corner, so the spell dock sits directly above the powerups (one row up).
+   Portrait re-stacks it above BOTH the consumable and powerup rows (below). Same
+   slot footprint as those rows so the stack lines up. */
 .spell-dock {
   position: absolute;
+  /* Portrait: above BOTH the consumable and powerup rows (both at the portrait
+     1.9rem footprint). Landscape overrides this to a single row up (`.split`). */
   bottom: calc(
-    max(0.75rem, env(safe-area-inset-bottom)) + 2.85rem + 0.6rem + 2.85rem +
-      0.6rem
+    max(0.75rem, env(safe-area-inset-bottom)) + 1.9rem + 0.5rem + 1.9rem +
+      0.5rem
   );
   display: flex;
   gap: 0.6rem;
   pointer-events: none;
+}
+
+/* Landscape: the consumable row has crossed corners, so the spell dock sits one
+   row directly above the powerups (both at the landscape 2.3rem footprint). */
+.spell-dock.split {
+  bottom: calc(max(0.75rem, env(safe-area-inset-bottom)) + 2.3rem + 0.6rem);
 }
 
 .spell-dock.dock-left {
@@ -3726,8 +3754,8 @@ body {
 .spell-slot {
   position: relative;
   appearance: none;
-  width: 2.85rem;
-  height: 2.85rem;
+  width: 2.3rem;
+  height: 2.3rem;
   display: grid;
   place-items: center;
   padding: 0;
@@ -3764,8 +3792,8 @@ body {
 }
 
 .spell-icon {
-  width: 1.95rem;
-  height: 1.95rem;
+  width: 1.6rem;
+  height: 1.6rem;
 }
 
 .spell-slot-plus {
@@ -4111,6 +4139,23 @@ body {
     gap: 0.4rem;
     bottom: calc(max(0.75rem, env(safe-area-inset-bottom)) + 1.9rem + 0.5rem);
   }
+
+  /* The spell dock shrinks in lockstep and keeps its three-high stack (spells
+     above the consumable and powerup rows) — all in the one portrait corner. */
+  .spell-slot {
+    width: 1.9rem;
+    height: 1.9rem;
+    border-radius: 5px;
+  }
+
+  .spell-icon {
+    width: 1.3rem;
+    height: 1.3rem;
+  }
+
+  .spell-dock {
+    gap: 0.4rem;
+  }
 }
 
 /* The lifted powerup icon trailing the finger/cursor mid-discard. Fixed to the
@@ -4128,7 +4173,9 @@ body {
    aligned to whichever corner the dock lives in. */
 .powerup-discard-hint {
   position: absolute;
-  bottom: calc(max(0.75rem, env(safe-area-inset-bottom)) + 4.6rem);
+  /* Rises just above the powerup row (landscape 2.3rem). The consumable row no
+     longer stacks on this side, so it need only clear the one row. */
+  bottom: calc(max(0.75rem, env(safe-area-inset-bottom)) + 2.85rem);
   padding: 0.25rem 0.5rem;
   background: rgba(20, 26, 34, 0.88);
   border: 1px solid #e06a6a;
