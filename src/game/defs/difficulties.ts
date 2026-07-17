@@ -135,6 +135,18 @@ export type DifficultyDef = {
    * `minAlive`) — harder difficulties keep a denser field on screen. */
   aliveMult: number;
   /**
+   * The most SPAWN POINTS (finite spawners — `SpawnerRuntime`, `stepSpawners`)
+   * allowed ACTIVE at once on this rung. When more than this many points are in
+   * trigger range, only the ones CLOSEST to the hero (and in clear line of
+   * sight) arm; the rest wait dormant until an active wave drains and frees a
+   * slot. Keeps a maze from lighting every spawner around the hero at once — the
+   * pressure follows him instead of piling on. Climbs with the ladder: EASY 2,
+   * MEDIUM 3, HARD 4, NIGHTMARE 5. Omitted = UNCAPPED (every eligible point arms,
+   * as before) — JESUS leaves it off, and the test fixtures inherit whatever
+   * they set.
+   */
+  activeSpawnerCap?: number;
+  /**
    * The fraction of its normal chase speed the plain horde keeps once the
    * player has ENGAGED an elite or boss — a gentle-rung mercy that lets him
    * push past the swarm and close on the set piece instead of being dog-piled
@@ -305,6 +317,8 @@ export const DIFFICULTY_DEFS: Record<Difficulty, DifficultyDef> = {
     mobLevelMax: 34,
     mobArmor: 0,
     aliveMult: 0.9,
+    // Only the two closest spawn points light at once — the gentlest crowd.
+    activeSpawnerCap: 2,
     // The gentlest rung all but parks the horde once a set piece is engaged:
     // 10% speed, so the player can walk straight through it to the boss.
     mobPursuitNearElite: 0.1,
@@ -353,6 +367,7 @@ export const DIFFICULTY_DEFS: Record<Difficulty, DifficultyDef> = {
     mobLevelMax: 36,
     mobArmor: 0.02,
     aliveMult: 1,
+    activeSpawnerCap: 3,
     // Halved pursuit once a set piece is engaged — enough to break for the
     // boss, not enough to ignore the swarm entirely.
     mobPursuitNearElite: 0.5,
@@ -406,6 +421,7 @@ export const DIFFICULTY_DEFS: Record<Difficulty, DifficultyDef> = {
     mobLevelMax: 38,
     mobArmor: 0.05,
     aliveMult: 1.1,
+    activeSpawnerCap: 4,
     menaceMult: 1.5,
     menaceDecayMult: 0.85,
     menaceEffectMult: 1.15,
@@ -450,6 +466,7 @@ export const DIFFICULTY_DEFS: Record<Difficulty, DifficultyDef> = {
     mobLevelMax: 56,
     mobArmor: 0.1,
     aliveMult: 1.3,
+    activeSpawnerCap: 5,
     menaceMult: 3.5,
     menaceDecayMult: 0.7,
     menaceEffectMult: 1.3,
@@ -497,6 +514,8 @@ export const DIFFICULTY_DEFS: Record<Difficulty, DifficultyDef> = {
     mobLevelMax: 999,
     mobArmor: 0.15,
     aliveMult: 1.8,
+    // No `activeSpawnerCap`: JESUS lights every spawn point in range at once —
+    // the "abandon all hope" horde has no proximity mercy.
     menaceMult: 6.0,
     menaceDecayMult: 0.5,
     menaceEffectMult: 1.5,

@@ -241,8 +241,10 @@ run against synthetic fixtures with no shipped content (see
   MEDIUM → HARD → NIGHTMARE → JESUS CHRIST!), chosen on the main menu and
   layered over every level. A rung turns a whole rack of knobs: the hero's
   opening kit (`startingWeapon` — the wall weapon, mirrored by a
-  per-difficulty prelude variant — and `startingStats`), spawn counts and
-  the wave spawner's live cap, the horde's RELATIVE level (`mobLevelOffset`
+  per-difficulty prelude variant — and `startingStats`), spawn counts,
+  the wave spawner's live cap, how many finite SPAWN POINTS may be active at
+  once (`activeSpawnerCap` — only the closest, in-line-of-sight points arm;
+  easy 2, medium 3, hard 4, nightmare 5, JESUS uncapped), the horde's RELATIVE level (`mobLevelOffset`
   — every monster spawns at player level + offset, hp scaled per level by the
   GEOMETRIC `mobHpLevelFactor`, config `MENACE.mobHpGrowthPerLevel` — so
   hits-to-kill rises with level instead of collapsing as the hero out-damages a
