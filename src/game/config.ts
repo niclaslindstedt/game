@@ -5,7 +5,7 @@
 // defs/equipment.ts. Units: world pixels (one sprite pixel = one world unit
 // at scale 1), milliseconds, hit points.
 
-import type { ArmorType, Difficulty, StatName } from "./types.ts";
+import type { ArmorType, Difficulty, StatName, WeaponClass } from "./types.ts";
 
 export const PLAYER = {
   /** Base max hp before equipment bonuses (no stat feeds hp — STAMINA now
@@ -1174,24 +1174,6 @@ export const STATS = {
     number
   >,
   /**
-   * ARTIFACT MELEE AFFINITY — the endgame payoff that lets the MELEE lane take
-   * over once the hero is decked in artifact-tier relics. Every worn ARTIFACT
-   * piece (weapon, armor, charm, or bag — the level-99 red-card tier, the rarest
-   * loot) MULTIPLIES a MELEE weapon's damage by this fraction (+85% each), so a
-   * bruiser reclaims the top of the endgame from the casters AS THE ARTIFACT SET
-   * FILLS OUT: with a partial set a caster still leads, but a committed relic
-   * hoard (a near-full set) puts melee clearly on top — measured against a
-   * full-artifact caster, melee crosses ~1.0× around five relics and reaches
-   * ~1.25× at a full seven-piece set (weapon + 6 gear). Gated to a MELEE weapon
-   * in hand (applied in `weaponDamageFor` only when `def.class === "melee"`), so
-   * it rewards actually SWINGING the relics — a mage in artifact armor gets
-   * nothing from it, and the stat-aware auto-equip therefore also swings the
-   * build toward melee once relics pile up. Thematic: the myth-relics (Durendal,
-   * Gram, Mjölnir) are weapons of the ARM; wearing the legend empowers the
-   * strike. The natural cap is the seven equip slots.
-   */
-  artifactMeleeDamagePerPiece: 0.85,
-  /**
    * STRENGTH's downside: every point of muscle to haul slows the walk by this
    * fraction (−1% each), floored at `strengthSlowFloor` so even a pure bruiser
    * still moves. It is a gentle tax — a few points are unnoticeable, but a build
@@ -1298,34 +1280,63 @@ export const STATS = {
   /** Extra chance per LUCK point that a drop upgrades its tier roll. */
   tierChancePerLuck: 0.04,
   /**
-   * The PHYSICAL crit-damage multiplier — a melee or ranged crit deals this
-   * many times the blow (`baseCritMult`). Also the fallback multiplier for
-   * conjured blows that carry no weapon (nova, storm, bolt, the nuke).
+   * The fallback crit-damage multiplier for conjured blows that carry no weapon
+   * (nova, storm, bolt, the nuke) and the projectile default. Weapon crits use
+   * the per-class `critMultByClass` below instead.
    */
   critMultiplier: 2,
   /**
-   * The MAGIC crit-damage multiplier at zero INTELLIGENCE — deliberately
-   * softer than the physical ×2, because a magic weapon's lighter crit buys
-   * it more per-hit base damage in the budget model and INT then deepens the
-   * crit back up (`critDamagePerInt`) as the mage's own investment.
+   * CRIT DAMAGE — how many times the blow a crit deals. It is a CLASS FLOOR
+   * (ranged > melee > magic) deepened by DEXTERITY, the precision stat, and NOT
+   * a per-item number (the item card shows no crit-damage line). The order is
+   * the classes' identity:
+   *   - RANGED crits HARDEST — the ranged build maxes DEX (its gate/speed/crit-
+   *     chance stat), so DEX-scaled crit weight makes the marksman crit both
+   *     OFTEN and HARD: precision is its whole payoff.
+   *   - MELEE next — a moderate DEX build lifts its solid physical crit a little.
+   *   - MAGIC softest — a caster builds ZERO DEX, so it sits at its floor; its
+   *     edge is AoE + spell utility + ignoring armor, not crit weight.
+   * DEX (not STR, which the bruiser stacks most, nor INT, which would re-inflate
+   * the mage) is what makes RANGED the crit king. The budget model prices crit
+   * off the stat-independent floor.
    */
-  magicCritMultiplier: 1.5,
+  critMultByClass: {
+    melee: 1.75,
+    ranged: 2.0,
+    magic: 1.5,
+  } as Record<WeaponClass, number>,
+  /** Crit DAMAGE deepens by this per point of DEXTERITY (all weapon classes) —
+   * the precision slope that makes a DEX-max ranged build crit hardest while a
+   * DEX-less caster stays at its floor. Kept gentle so ranged's crit edge is a
+   * clear identity, not a blowout that buries the other lanes. */
+  critDamagePerDex: 0.004,
   /**
-   * STRENGTH deepens a MELEE crit: each point adds this to the crit
-   * multiplier (a 50-STR bruiser crits for ×3 off the ×2 base). Ranged crits
-   * take the flat physical base — the bow is DEXTERITY's, and DEX already
-   * buys its crit CHANCE, accuracy, and cadence, so it earns no crit-damage
-   * slope on top.
+   * MAGIC crit HARD CAP — a magic weapon's crit multiplier can never exceed this,
+   * pinned to melee's floor (`critMultByClass.melee`) so a caster that stacks
+   * gear DEX still never out-crits a bruiser. The guarantee that crit is a
+   * physical-class identity, magic the softest.
    */
-  critDamagePerStr: 0.02,
+  magicCritCap: 1.75,
+  /** Crit DAMAGE of a conjured SPELL/ability blow (nova, storm, bolt, the nuke)
+   * — a flat static value, low like a magic weapon: a caster's spells hit wide,
+   * not crit-hard. Weaponless mob crits still use `critMultiplier`. */
+  spellCritMult: 1.5,
   /**
-   * INTELLIGENCE deepens a MAGIC crit: each point adds this to the crit
-   * multiplier — steeper than STRENGTH's melee slope so a mage's crit climbs
-   * from the softer ×1.5 base up past a bruiser's, the payoff that makes a
-   * high-INT build's spells spike (alongside the crit BLOB below). This is
-   * the one place INT buys raw crit power rather than utility.
+   * ARMOR PIERCING — the fraction of a mob's armor reduction a class's weapon
+   * IGNORES (subtracted from `mobArmorReduction` in `mobArmorMult`, floored at
+   * 0). Mob armor rises to 50% by the JESUS cap and cuts PHYSICAL blows, which
+   * is why the armored mid/late game tilted toward MAGIC (it ignores armor
+   * outright). Giving the physical lanes their own penetration is the honest
+   * counter: RANGED pierces most (a bolt/round punches through plate — its
+   * late-game identity), MELEE some (raw force cleaves), MAGIC needs none (it
+   * already bypasses armor via `mobArmorMult`). So a class's standing through the
+   * armored endgame EMERGES from armor-vs-penetration, not a flat damage knob.
    */
-  critDamagePerInt: 0.03,
+  armorPenByClass: {
+    melee: 0.25,
+    ranged: 0.45,
+    magic: 0,
+  } as Record<WeaponClass, number>,
 } as const;
 
 /**

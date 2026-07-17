@@ -950,6 +950,24 @@ export function isArmorBroken(piece: Equipment): boolean {
 }
 
 /**
+ * The hero's total GEAR armor piercing — the summed `armorPen` affixes across
+ * every worn piece (a broken armor piece counts for nothing). Added ON TOP of
+ * the class baseline (`STATS.armorPenByClass`) in `mobArmorMult`, so a physical
+ * hero's uniques/legendaries deepen how much of the armored endgame their
+ * blows punch through. The whole late-game ranged (and melee) chase stat.
+ */
+export function heroArmorPen(state: GameState): number {
+  let pen = 0;
+  for (const piece of equippedPieces(state)) {
+    if (isArmorBroken(piece)) continue;
+    for (const affix of piece.affixes) {
+      if (affix.kind === "armorPen") pen += affix.value;
+    }
+  }
+  return pen;
+}
+
+/**
  * True when this is a BROKEN weapon: its durability has hit zero, so it can no
  * longer be wielded until a repair kit mends it. Unlike the old rule that
  * TRASHED a spent weapon, a broken weapon now falls into the bag at durability
@@ -1697,23 +1715,22 @@ export function consumeManaPotion(state: GameState): boolean {
 }
 
 /**
- * A weapon's LIVE crit-damage multiplier in this player's hands: the flat
- * class base (`baseCritMult` — physical ×2, magic ×1.5) deepened by the build's
- * stat. STRENGTH deepens a MELEE crit (`critDamagePerStr`), INTELLIGENCE a
- * MAGIC one (`critDamagePerInt`); a ranged crit takes the flat physical base
- * (DEX earns its crit CHANCE, not its weight). The one source every stat-scaled
- * crit surface reads — the blow itself (via step.ts), the DPS readouts, and
- * auto-equip scoring — so a stronger build deepens all three together. The
- * budget model prices crit off the stat-independent `baseCritMult`, not this.
+ * A weapon's crit-damage multiplier in this player's hands: the class FLOOR
+ * (`baseCritMult` — ranged > melee > magic) deepened by DEXTERITY, the precision
+ * slope (`STATS.critDamagePerDex`). A DEX-max ranged build crits hardest; a
+ * moderate-DEX melee build a little over its floor; a DEX-less caster stays at
+ * its floor. MAGIC is HARD-CAPPED at `STATS.magicCritCap` (melee's floor) so a
+ * mage who stacks gear DEX can never out-crit a bruiser — crit weight is a
+ * physical identity. The one source every crit surface reads (the blow in
+ * step.ts, the DPS readouts, auto-equip scoring); the budget model prices off
+ * the stat-independent floor.
  */
 export function weaponCritMult(state: GameState, weapon: Equipment): number {
   const def = weaponDef(weapon.defId);
-  let mult = baseCritMult(def);
-  if (def.class === "melee") {
-    mult += effectiveStat(state, "strength") * STATS.critDamagePerStr;
-  } else if (def.class === "magic") {
-    mult += effectiveStat(state, "intelligence") * STATS.critDamagePerInt;
-  }
+  const mult =
+    baseCritMult(def) +
+    effectiveStat(state, "dexterity") * STATS.critDamagePerDex;
+  if (def.class === "magic") return Math.min(mult, STATS.magicCritCap);
   return mult;
 }
 
@@ -2023,23 +2040,6 @@ export function weaponDamageFor(state: GameState, weapon: Equipment): number {
   // baseline the difficulty ladder is calibrated on — is exempt and keeps its
   // full catalog damage, so the opening fight stays exactly as tuned.
   const lootMult = weapon.durability === undefined ? 1 : WEAPON.damageMult;
-  // ARTIFACT MELEE AFFINITY — the endgame chase pays off for the ARM. Every worn
-  // artifact-tier relic (weapon/armor/charm/bag — the rarest, level-99 tier)
-  // MULTIPLIES a MELEE weapon's damage by STATS.artifactMeleeDamagePerPiece, so
-  // a bruiser in a full set of relics swings for multiples of his bare blow and
-  // reclaims the top of the endgame from the casters. A separate factor (not
-  // folded into the stat `multiplier`) so it isn't swamped by the huge endgame
-  // stat term. Melee weapon ONLY — a mage in artifact armor gets nothing; it
-  // rewards actually SWINGING the legend. Non-melee and artifact-less heroes
-  // keep exactly their old damage (factor 1).
-  let artifactMeleeMult = 1;
-  if (def.class === "melee") {
-    let artifacts = 0;
-    for (const piece of equippedPieces(state)) {
-      if (piece.tier === "artifact") artifacts++;
-    }
-    artifactMeleeMult = 1 + artifacts * STATS.artifactMeleeDamagePerPiece;
-  }
   // The instance's MAKE QUALITY scales the blow: a BROKEN pipe swings soft,
   // a PERFECT one over its catalog weight — the specific figure this copy
   // rolled within its quality band (`qualityMult` → `Equipment.qualityRoll`,
@@ -2055,7 +2055,6 @@ export function weaponDamageFor(state: GameState, weapon: Equipment): number {
     multiplier *
     ilvlMult *
     lootMult *
-    artifactMeleeMult *
     qualityMult(weapon) *
     (weapon.baseRoll ?? 1) *
     BALANCE.playerDamage
@@ -2227,8 +2226,21 @@ export function weaponScore(state: GameState, weapon: Equipment): number {
     ((weaponDamageFor(state, weapon) * 1000) /
       weaponCooldownFor(state, weapon)) *
     targets *
-    critLift
+    critLift *
+    // Armor piercing on the weapon reads as effective damage against the armored
+    // late game — fold it into the ranking so auto-equip prefers a piercing
+    // weapon (a fraction of the pen, since it only pays against armored foes).
+    (1 + weaponArmorPen(weapon) * 0.5)
   );
+}
+
+/** The `armorPen` a WEAPON instance carries in its own affixes (for scoring). */
+function weaponArmorPen(weapon: Equipment): number {
+  let pen = 0;
+  for (const affix of weapon.affixes) {
+    if (affix.kind === "armorPen") pen += affix.value;
+  }
+  return pen;
 }
 
 /**
@@ -2288,6 +2300,9 @@ export function gearScore(gear: Equipment): number {
     else if (affix.kind === "proc") score += affix.chance * affix.rank * 250;
     else if (affix.kind === "sureStrike") score += 40;
     else if (affix.kind === "damagePct") score += affix.value * 100;
+    // Armor piercing is worth roughly a conditional damage% — value it a touch
+    // above so the endgame chase piece reads as the upgrade it is.
+    else if (affix.kind === "armorPen") score += affix.value * 150;
   }
   return score;
 }

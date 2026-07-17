@@ -34,8 +34,6 @@ import {
   playerMissChance,
   rawStat,
   statRequirement,
-  STATS,
-  weaponCritMult,
   weaponCooldownFor,
   weaponDamageFor,
   weaponDamageRange,
@@ -120,6 +118,8 @@ export function affixLine(affix: Affix): string {
       return `+${Math.round(affix.value * 100)}% CRIT`;
     case "armor":
       return `+${affix.value} ARMOR`;
+    case "armorPen":
+      return `+${Math.round(affix.value * 100)}% ARMOR PIERCE`;
     case "stat":
       return `+${affix.value} ${STAT_LABELS[affix.stat]}`;
     case "statPct":
@@ -397,23 +397,8 @@ export function itemLines(
     if (label) {
       lines.push({ text: label, color: "#7ecbff" });
     }
-    // The stat-scaled crit weight when it differs from the flat physical ×2:
-    // a magic weapon's softer base grown by INTELLIGENCE, a melee weapon's ×2
-    // deepened by STRENGTH. Ranged sits exactly at the default, so it shows no
-    // line — the bow carries no crit-damage stat.
-    const critMult = weaponCritMult(state, item);
-    if (critMult !== STATS.critMultiplier) {
-      lines.push({
-        text: `CRIT DAMAGE X${critMult.toFixed(1)}`,
-        label: "CRIT DAMAGE",
-        value: `X${critMult.toFixed(1)}`,
-        delta: eq
-          ? compareChip(critMult - weaponCritMult(state, eq), {
-              digits: 1,
-            })
-          : null,
-      });
-    }
+    // Crit DAMAGE is a CLASS trait now (ranged > melee > magic, deepened by DEX),
+    // not a per-item number — so the item card carries no crit-damage line.
     const maxDur = equipmentMaxDurability(item);
     lines.push(
       item.durability === undefined

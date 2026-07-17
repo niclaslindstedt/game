@@ -1461,6 +1461,8 @@ export function affixNaming(affix: Affix): {
       return { suffix: STAT_SUFFIX[affix.stat] };
     case "maxHpPct":
       return { prefix: "REINFORCED" };
+    case "armorPen":
+      return { suffix: "OF SUNDERING" };
     // Granted spells, procs, and sure strike are unique/legendary authoring
     // territory — they never roll onto magic items, so they lend no name.
     case "spell":
@@ -1594,19 +1596,15 @@ export function equipmentDropWeight(defId: string): number {
 // ---- The damage-budget model (see the weapon-system skill) --------------------
 
 /**
- * A weapon's BASE crit-damage multiplier — the flat class rule, before any
- * stat scaling: physical (melee & ranged) crit for `STATS.critMultiplier`
- * (×2), magic for the softer `STATS.magicCritMultiplier` (×1.5). Weapons carry
- * no per-weapon crit stat, so this is the whole of a weapon's crit weight at
- * zero stats. The damage-budget model prices crit off THIS (stat-independent)
- * figure — a magic weapon's lighter base buys it more per-hit budget; the live
- * per-swing multiplier `weaponCritMult` (items.ts) adds STR/INT on top for
- * combat, the DPS readouts, and auto-equip scoring.
+ * A weapon's crit-damage multiplier — a flat CLASS TRAIT (`STATS.critMultByClass`),
+ * ordered RANGED > MELEE > MAGIC. It is the WHOLE of a weapon's crit weight:
+ * there is no per-weapon and no stat-scaled crit-damage term, so every weapon of
+ * a class crits for the same weight and the item card shows no per-item crit
+ * number. A build earns its crit CHANCE from stats/gear; the class fixes crit
+ * WEIGHT. The damage-budget model prices crit off this same figure.
  */
 export function baseCritMult(def: WeaponDef): number {
-  return def.class === "magic"
-    ? STATS.magicCritMultiplier
-    : STATS.critMultiplier;
+  return STATS.critMultByClass[def.class] ?? STATS.critMultiplier;
 }
 
 /**

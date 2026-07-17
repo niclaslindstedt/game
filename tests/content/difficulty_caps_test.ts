@@ -70,6 +70,18 @@ describe("mob armor (physical mitigation, a level ramp + difficulty bonus)", () 
     expect(mobArmorMult(99, "jesus", undefined)).toBe(1);
   });
 
+  it("pierces armor by class — ranged most, melee some, magic bypasses", () => {
+    // Against the 50% JESUS-cap armor, ranged keeps MORE of its blow than melee
+    // (it pierces most), and both keep more than the un-pierced reduction would
+    // leave — so the physical lanes punch through the armored endgame.
+    const melee = mobArmorMult(99, "jesus", "melee");
+    const ranged = mobArmorMult(99, "jesus", "ranged");
+    expect(ranged).toBeGreaterThan(melee);
+    // Melee still pays SOME armor (its pen is partial); magic pays none.
+    expect(melee).toBeLessThan(1);
+    expect(mobArmorMult(99, "jesus", "magic")).toBe(1);
+  });
+
   it("ramps the level component from ~0 at level 1 to the cap at level 99", () => {
     // A level-1 mob has essentially no level armor; only the difficulty bonus
     // remains. On easy (0% bonus) that means no mitigation at all.
