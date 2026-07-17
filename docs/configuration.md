@@ -22,6 +22,7 @@ own namespace, and a sequel changes it there once:
 | Developer → Debug mode       | on / off                                                     | off (shows the in-run FPS meter; row hidden until unlocked)                                                   |
 | Developer → Auto level stats | on / off                                                     | off (opt-in free per-level base-stat growth; the row is hidden until unlocked)                                |
 | Developer → Balance          | ten multiplier sliders, 0×–100× (exponential)                | 1× each (the shipped tuning; a RESET ALL row restores it)                                                     |
+| Developer → Seed characters  | mint melee/ranged/magic heroes at LV 34/56/70/99             | none (a manual action — each press banks specimens into the roster; the row is hidden until unlocked)         |
 
 A hidden **DEVELOPER** row unlocks at the bottom of SETTINGS after the title
 screen's moon Easter egg is found — a long-press on the title moon detonates it
@@ -59,6 +60,20 @@ tuning, where **1× is baseline**. The track is exponential: its four quarters
 cover 0→1, 1→2, 2→10, then 10→100, so the useful low end gets most of the
 travel. Values persist with the settings, and a **RESET ALL** row restores the
 shipped 1× across the board.
+
+The developer screen also holds a **SEED CHARACTERS** subpage — a shortcut that
+mints ready-to-play heroes straight into the roster so a developer can jump into
+late-game content without grinding a build out. It offers **SEED ALL** (the
+whole matrix) plus one row per power tier — **NIGHTMARE (LV 34)**, **JESUS
+(LV 56)**, **POST-JESUS (LV 70)**, and **ENDGAME (LV 99)** — each of which banks
+three softcore specimens: a **melee**, a **ranged**, and a **magic** hero built
+at that level. Each seed carries a lane-optimized stat spread (melee → STRENGTH,
+ranged → DEXTERITY, magic → INTELLIGENCE), level-appropriate rerolled gear whose
+armor material follows the lane (heavy STR plate/mail, DEX leather, INT cloth), a
+class-correct weapon, a stock of consumables, and — for casters — a filled spell
+bar. A seed is stamped as having beaten every difficulty up to its tier, so its
+level picker is open; re-seeding a tier refreshes its specimens rather than
+piling up duplicates. The heroes appear under **PLAY → LOAD GAME**.
 
 Desktop keyboard controls (when **Keys** is set to WASD): the shipped scheme is
 **WASD** steer, **Shift** walks, **Space** jumps, **Q** opens the weapon
