@@ -18,6 +18,14 @@ adds the two things a browser can't give iOS:
   scaling. No engine code changes.
 - **An audio session.** `setAudioModeAsync({ playsInSilentMode: true })` lets the
   game's WebAudio play through the iOS ringer switch.
+- **Store-driven updates.** The shell flags the page as native (`src/injected.ts`
+  sets `window.__GIS_NATIVE__`), and the web app reads it to disable its whole
+  PWA update lifecycle — no service worker, no precache, and no "a new version
+  is ready" toast (`website/src/app/native.ts`). Players update by installing a
+  new build from the store instead of an in-page reload. Because the service
+  worker is what makes a remote-loaded page work offline, this switch belongs
+  with a **locally bundled** game, not a shell that still loads the site over
+  the network.
 
 The engine and PWA are unchanged — see the repo-root `README.md` and
 `docs/architecture.md`. This directory is **not** part of the npm workspace; it

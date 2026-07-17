@@ -5,6 +5,7 @@ import { CUTSCENE_DEFS, type Difficulty, type GameState } from "@game/core";
 
 import { usePwaUpdate } from "@niclaslindstedt/oss-framework/pwa";
 
+import { isNativeApp } from "./app/native.ts";
 import { cacheIdForBase } from "./app/pwa.ts";
 import {
   createCharacter,
@@ -93,7 +94,13 @@ export function App() {
   const pwa = usePwaUpdate({
     base: import.meta.env.BASE_URL,
     cacheId: cacheIdForBase(import.meta.env.BASE_URL),
-    enabled: !import.meta.env.DEV,
+    // The native shell (app/) bundles the game on-device and ships updates
+    // through the app store, so the whole PWA update lifecycle stays dormant
+    // there — no service-worker registration, no precache, and no "a new
+    // version is ready" toast (needRefresh never flips). Players update by
+    // downloading a new build. In a browser/PWA it runs as before (idle only
+    // in dev). See website/src/app/native.ts.
+    enabled: !import.meta.env.DEV && !isNativeApp(),
   });
 
   // The framework surfaces the update prompt from the service worker's
