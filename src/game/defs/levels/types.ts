@@ -10,6 +10,40 @@ import type { Difficulty, TileSpec } from "../../types.ts";
 import type { Zone } from "../../zones.ts";
 import type { Vec2 } from "@game/lib/vec.ts";
 
+/**
+ * A HARD-CODED monster level for one difficulty: either an exact level
+ * (`5`), or a `[min, max]` range rolled uniformly per spawn (`[3, 4]`). Used
+ * in a {@link DifficultyMobLevels} tuple.
+ */
+export type MobLevelBand = number | readonly [number, number];
+
+/**
+ * A level's HARD-CODED mob levels, one entry per non-JESUS difficulty in ladder
+ * order: `[easy, medium, hard, nightmare]`. Each entry is a {@link MobLevelBand}
+ * (exact level or a rolled range). This REPLACES the player-relative
+ * `playerLevel + mobLevelOffset` scaling for those four rungs — the level spec
+ * owns exactly how tough its mobs are, so a map can be tuned per difficulty
+ * without touching global config. JESUS is deliberately excluded: it keeps the
+ * relative scaling (a JESUS hero has out-levelled every hand-authored number).
+ * Required on every level for the four rungs (enforced by the level checker);
+ * a spawn point may OVERRIDE it with its own tuple for a within-map ramp.
+ */
+export type DifficultyMobLevels = readonly [
+  MobLevelBand,
+  MobLevelBand,
+  MobLevelBand,
+  MobLevelBand,
+];
+
+/**
+ * A per-difficulty HP tuple for a pinned elite/boss, in ladder order
+ * `[easy, medium, hard, nightmare]`. Each is the mob's BASE max HP on that rung
+ * — the authored healthbar — which the live menace/relative power-match then
+ * multiplies on top (a deep-run set piece still runs hotter than its number).
+ * JESUS is excluded (relative scaling off the def, as before).
+ */
+export type DifficultyHp = readonly [number, number, number, number];
+
 /** A monster placement: banded by difficulty distance, or pinned to a spot. */
 export type SpawnSpec =
   | {
@@ -35,6 +69,21 @@ export type SpawnSpec =
       at: Vec2;
       /** Difficulty gate — same rule as the banded form. */
       minDifficulty?: Difficulty;
+      /**
+       * HARD-CODED per-difficulty level for this pinned elite/boss (ladder
+       * order `[easy, medium, hard, nightmare]`; JESUS stays relative). Sets
+       * the mob's `mlvl` — its loot tier and contact scaling — instead of the
+       * player-relative `currentMobLevel + levelBonus`. REQUIRED on every
+       * pinned elite/boss for the four rungs (the level checker enforces it).
+       */
+      level?: DifficultyMobLevels;
+      /**
+       * HARD-CODED per-difficulty BASE HP for this pinned elite/boss (ladder
+       * order; JESUS relative). The authored healthbar, which the live
+       * menace/relative power-match multiplies on top. REQUIRED alongside
+       * `level` on every pinned elite/boss.
+       */
+      hp?: DifficultyHp;
     };
 
 /** One line of a level's wave budget: `count` monsters streamed in over a
@@ -92,6 +141,66 @@ export type PackSpec = {
   /** Radius (world px) the members scatter within when woken; defaults to
    * `PACKS.spawnRadius`. */
   spawnRadius?: number;
+};
+
+/** One mob line of a SPAWN POINT: a kind and how many of it the point emits
+ * over its lifetime (a flat count, scaled by difficulty like every other spawn
+ * count — see `scaledMobCount`). */
+export type SpawnerMember = {
+  /** Key into ENEMY_DEFS. */
+  enemy: string;
+  /** How many this spawner emits (difficulty-scaled). */
+  count: number;
+};
+
+/**
+ * A SPAWN POINT (config SPAWNERS / spawners.ts) — the finite, local horde model
+ * that replaces the endless `waves` stream. It sleeps at `at` until the hero
+ * closes to `triggerRadius`, then EMITS its `members` a few (`perEmit`) at a
+ * time every `intervalMs` until it DRAINS empty: one readable wave the hero can
+ * clear and move on from. Set `id` + `after` to CHAIN one off another — the
+ * chained point arms `afterDelayMs` after its predecessor drains, but only while
+ * the hero is still in its trigger range, so pressure follows him without a
+ * bottomless refill. A map built from spawn points can actually be CLEARED (and,
+ * in a maze, traversed). Difficulty scales the counts; `minDifficulty` gates the
+ * whole point out below a rung.
+ */
+export type SpawnerSpec = {
+  /** Optional id so another spawner can chain `after` this one. */
+  id?: string;
+  /** Where the point sits on the map (world px). */
+  at: Vec2;
+  /** The mobs it emits — one line per kind. */
+  members: SpawnerMember[];
+  /**
+   * OVERRIDE the level's default {@link DifficultyMobLevels} for THIS point —
+   * the within-map difficulty ramp (a light opener at level 1, the boss bay a
+   * few levels hotter). Omitted = the point uses the level's `mobLevels`.
+   */
+  mobLevels?: DifficultyMobLevels;
+  /**
+   * How many of the point's mobs are PRE-PLACED, scattered around it at level
+   * creation — a cluster already lingering there (dormant, waking on approach
+   * like a pack) rather than streamed in. Drawn from the front of the `members`
+   * mix and counted against their totals; the rest stream in when the point
+   * arms. Difficulty-scaled. Omitted/0 = the point is empty until it arms.
+   */
+  lingering?: number;
+  /** Proximity (world px) that arms it; defaults to `SPAWNERS.triggerRadius`. */
+  triggerRadius?: number;
+  /** Radius (world px) emitted mobs scatter within; default `SPAWNERS.spawnRadius`. */
+  spawnRadius?: number;
+  /** Time (ms) between emission ticks; default `SPAWNERS.intervalMs`. */
+  intervalMs?: number;
+  /** Mobs released per tick; default `SPAWNERS.perEmit`. */
+  perEmit?: number;
+  /** Arm only AFTER the spawner with this id drains. */
+  after?: string;
+  /** Delay (ms) after the `after` spawner drains before arming (counted only
+   * while the hero is in range); default `SPAWNERS.chainDelayMs`. */
+  afterDelayMs?: number;
+  /** Difficulty floor: the point sits out rungs below this. */
+  minDifficulty?: Difficulty;
 };
 
 /** The continuous spawner that turns a level into a survivors-style horde. */
@@ -191,6 +300,20 @@ export type LevelDef = {
     | { type: "clearAll" }
     | { type: "reachExit"; at: Vec2; radius?: number };
   /**
+   * THE INTENDED PATH: an ordered polyline of waypoints (world px) tracing the
+   * route the designer means the hero to walk from `playerSpawn` toward the
+   * objective, threaded through the level's corridors. Purely a navigation aid,
+   * it changes no simulation rule — but two systems read it:
+   *   • the autopilot (`bot.ts`) FOLLOWS it as its macro-travel target so a
+   *     no-pathfinding runner rounds walls instead of wedging on them, and
+   *   • the app draws a "go this way" guidance arrow toward the next waypoint
+   *     when the local area is clear.
+   * Author it in navigable open floor (each leg in line-of-sight of the next);
+   * omit it on open maps that need no steering. The engine helper
+   * `pathHeading`/`nextPathWaypoint` (`path.ts`) resolves the current target.
+   */
+  path?: Vec2[];
+  /**
    * Latent travel gates: doorways to ANOTHER LEVEL that do not exist on the
    * board until the player USES the matching bag trinket (`opensWith`, a
    * GEAR_DEFS id) while standing on this level — the Diablo cow-level ritual.
@@ -215,6 +338,15 @@ export type LevelDef = {
    * The farm-loop return door; omitted = the campaign's NEXT LEVEL rules.
    */
   exitTo?: string;
+  /**
+   * HARD-CODED per-difficulty mob levels (see {@link DifficultyMobLevels}) —
+   * the level default every regular spawn (spawn points, packs, waves, the
+   * opening scatter) reads for easy/medium/hard/nightmare instead of the
+   * player-relative `mobLevelOffset`. A spawn point may override it per point.
+   * REQUIRED on every level (the checker rejects a level missing it); JESUS
+   * ignores it and keeps the relative scaling.
+   */
+  mobLevels?: DifficultyMobLevels;
   /** Monsters placed at level creation — the "few on screen" at the start. */
   spawns: SpawnSpec[];
   /**
@@ -231,6 +363,14 @@ export type LevelDef = {
   };
   /** The horde: thousands more streamed in around the player over time. */
   waves?: WaveSpec;
+  /**
+   * SPAWN POINTS: the finite, local horde model (see `SpawnerSpec`) — the
+   * alternative to the endless `waves` stream. Placed points that arm on
+   * approach, emit their mob count over time, drain empty, and can chain — so
+   * the map reads as clearable waves and can be traversed without a bottomless
+   * bog. A level uses `spawners` OR `waves` for its ambient horde, not both.
+   */
+  spawners?: SpawnerSpec[];
   /**
    * PLACED PACKS: fixed clusters of monsters pinned around the map that sleep
    * until the player nears them, then boil up and give chase (see `PackSpec`

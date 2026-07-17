@@ -169,6 +169,7 @@ import {
   PICKUP_TTL_MS,
   type PickupMessage,
 } from "./PickupFeed.tsx";
+import { AreaCaption, currentAreaLabel } from "./AreaCaption.tsx";
 import {
   PickupModal,
   PICKUP_CARD_TTL_MS,
@@ -653,6 +654,15 @@ export function GameScreen({
   // The lower-right pickup feed ("PICKED UP X"). Lines are appended as loot is
   // scooped and expire on individual PICKUP_TTL_MS timers (see the loop).
   const [pickups, setPickups] = useState<PickupMessage[]>([]);
+  // The area caption ("STOCK ROOM"): the last named zone the hero walked into,
+  // flashed over the field. The render loop detects the entry (comparing to
+  // `lastAreaRef`) and bumps `id` so the caption remounts and replays its fade.
+  const [areaCaption, setAreaCaption] = useState<{
+    label: string;
+    id: number;
+  } | null>(null);
+  const lastAreaRef = useRef<string | null>(null);
+  const areaCaptionSeq = useRef(0);
   // The framed pickup card ("PICKED UP <gear>") for bag gear — one at a time,
   // the newest replacing the last, cleared on its own PICKUP_CARD_TTL_MS timer.
   const [pickupCard, setPickupCard] = useState<PickupCard | null>(null);
@@ -2491,6 +2501,18 @@ export function GameScreen({
             }
           : heroAction;
         drawFrame(ctx, state, assets, camera, timeMs, action);
+        // Area caption: flash a named zone's label the moment the hero walks in
+        // (only while actually playing — no captions mid-cutscene/menu). Guarded
+        // on the ref so it fires once per entry, not every frame.
+        if (state.phase === "playing") {
+          const area = currentAreaLabel(state);
+          if (area !== lastAreaRef.current) {
+            lastAreaRef.current = area;
+            if (area) {
+              setAreaCaption({ label: area, id: ++areaCaptionSeq.current });
+            }
+          }
+        }
         // A pinned melee swing (with `arc`/`range`) also draws its slash cone
         // frozen at the SAME fraction, so the preview strip shows the blade and
         // its AoE moving together. The untilMs is set so drawEffects resolves
@@ -3637,6 +3659,16 @@ export function GameScreen({
           font={font}
           messages={pickups}
           side={powerupSide === "left" ? "right" : "left"}
+        />
+      )}
+
+      {/* The area caption — keyed on its bump id so walking into a room remounts
+          the label and replays its one-shot fade. */}
+      {hud?.phase === "playing" && areaCaption && (
+        <AreaCaption
+          key={areaCaption.id}
+          label={areaCaption.label}
+          font={font}
         />
       )}
 

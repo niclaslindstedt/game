@@ -46,29 +46,20 @@ describe("xpLevelCap — the per-map ceiling", () => {
     expect(xpLevelCap("test_level_2", "medium")).toBe(band.last);
   });
 
-  it("medium/hard cap two over easy; progression tiers cap higher still", () => {
-    // easy/medium/hard run the same missions over the same level band, but the
-    // caps no longer coincide: EASY is tuned tight (a bare fadeLevels over each
-    // first-pass landing), while MEDIUM and HARD sit two levels higher across
-    // the band — a little farm headroom before nightmare. So easy < medium ==
-    // hard, and the difference is exactly the band offset.
-    expect(xpLevelCap("test_level", "medium")).toBe(
-      xpLevelCap("test_level", "hard"),
-    );
-    expect(xpLevelCap("test_level", "easy")).toBeLessThan(
-      xpLevelCap("test_level", "medium"),
-    );
-    expect(
-      xpLevelCap("test_level", "medium") - xpLevelCap("test_level", "easy"),
-    ).toBe(
-      XP_CAP.capByDifficulty.medium!.first - XP_CAP.capByDifficulty.easy!.first,
-    );
-    // The gated tiers pick up above the bottom band.
-    expect(xpLevelCap("test_level", "hard")).toBeLessThan(
-      xpLevelCap("test_level", "nightmare"),
-    );
-    expect(xpLevelCap("test_level", "nightmare")).toBeLessThan(
-      xpLevelCap("test_level", "jesus"),
+  it("caps rise easy ≤ medium ≤ hard, and the gated tiers cap higher still", () => {
+    // The three bottom lanes are tuned to the SAME hero ladder (easy 1→32,
+    // medium 1→34, hard 1→36), so their caps rise together — easy tightest,
+    // medium/hard reaching a little higher by the last map for a touch of farm
+    // headroom. The gated tiers (nightmare, jesus) cap well above them.
+    const at = (d: string) => xpLevelCap("test_level", d as never);
+    expect(at("easy")).toBeLessThanOrEqual(at("medium"));
+    expect(at("medium")).toBeLessThanOrEqual(at("hard"));
+    expect(at("hard")).toBeLessThan(at("nightmare"));
+    expect(at("nightmare")).toBeLessThan(at("jesus"));
+    // The three bottom lanes SHARE the 40 ceiling on the LAST map (the "to level
+    // 40" tier top that unlocks nightmare) — they only differ in the early maps.
+    expect(xpLevelCap("test_level_2", "easy")).toBe(
+      xpLevelCap("test_level_2", "hard"),
     );
   });
 

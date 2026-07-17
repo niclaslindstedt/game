@@ -1,0 +1,41 @@
+name: locker
+family: spacez
+size: [14, 18]
+description: >
+  A tall white-and-chrome SpaceZ staff locker with louvered vents, a blue brand
+  band, and a latched handle with a cyan lock light; a hardier breakable that
+  spills a guaranteed haul — the level's placed reward container.
+subject:
+  kind: breakable reward container prop
+  build: a tall metal staff locker seen front-on, a single vented door in a chrome frame
+  features: louver vents near the top, a blue SpaceZ brand band across the middle, a vertical latch handle with a lit lock down the right side
+  accent: cool blue brand band and a cyan lock light
+  flavor: a SpaceZ employee locker the night shift never cleared out — worth prying open
+palette:
+  O: "#1a1c2c" # outline
+  t: "#aab0be" # chrome frame trim
+  s: "#818690" # grey door face
+  b: "#3f4553" # dark louver slit
+  j: "#4054bc" # blue brand band
+  W: "#f4f4f4" # white nameplate
+  y: "#d6a842" # gold latch handle
+  c: "#8ccdd7e1" # cyan lock light
+grid: |
+  ..OOOOOOOOOO..
+  .OttttttttttO.
+  .OtsssssssstO.
+  .OtbbbbbbsstO.
+  .OtsssssssstO.
+  .OtbbbbbbsstO.
+  .OtsssssssstO.
+  .OtsssssssytO.
+  .OtjjjjjjsytO.
+  .OtjWWWWjsctO.
+  .OtjjjjjjsytO.
+  .OtsssssssytO.
+  .OtsssssssstO.
+  .OtsssssssstO.
+  .OtsssssssstO.
+  .OtsssssssstO.
+  .OttttttttttO.
+  ..OOOOOOOOOO..

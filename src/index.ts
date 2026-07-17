@@ -268,6 +268,15 @@ export {
   type ZoneRect,
 } from "./game/zones.ts";
 
+// The intended path — the authored waypoint route the autopilot follows and the
+// app points its guidance arrow at (see path.ts).
+export {
+  advancePath,
+  nextPathWaypoint,
+  onPathLevel,
+  pathWalked,
+} from "./game/path.ts";
+
 // The wandering merchant and his coin economy: the shop pause phase, the
 // buy/sell mutators the shop UI calls, and the valuation every price tag
 // reads (see merchant.ts / config MERCHANT + ECONOMY).
@@ -467,6 +476,8 @@ export {
   type LevelDef,
   type PackMember,
   type PackSpec,
+  type SpawnerMember,
+  type SpawnerSpec,
   type SpawnSpec,
   type WaveBudget,
   type WaveSpec,
@@ -558,6 +569,7 @@ export {
   ARRIVAL,
   ASTEROIDS,
   CAMPING,
+  CHESTS,
   COMPANIONS,
   CONSUMABLES,
   CRATES,

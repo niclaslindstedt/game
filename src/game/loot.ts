@@ -1403,10 +1403,13 @@ function dropGuaranteedLoot(
  * only pauses the run once `levelUpFxMs` has burned down (see step()).
  */
 export function grantXp(state: GameState, amount: number): void {
-  // The developer XP knob scales every grant at the door — kills, golden
-  // arrows, and scripted awards alike — so it purely paces leveling without
-  // touching the curve (`xpToLevelUp`) the costs are stated in.
-  amount = Math.round(amount * BALANCE.xpGain);
+  // The developer XP knob AND the per-difficulty `xpBonus` both scale every
+  // grant at the door — kills, golden arrows, and scripted awards alike — so
+  // they pace leveling without touching the cost curve (`xpToLevelUp`). The
+  // `xpBonus` lifts a big-span tier (nightmare) that lands short of its finish.
+  amount = Math.round(
+    amount * BALANCE.xpGain * (difficultyDef(state.difficulty).xpBonus ?? 1),
+  );
   // The PER-MAP SOFT CAP (config XP_CAP): every grant on this map diminishes as
   // the hero closes on the (level × difficulty) cap and, a couple of levels
   // past it, decays to the never-zero ~1/100 floor trickle, so re-running an

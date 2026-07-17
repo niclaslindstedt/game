@@ -66,12 +66,15 @@ describe("xp arrows", () => {
     // tapers with level (arrowXpShareAt), so arrows recede as the run goes on.
     const later = startGame();
     clearStage(later);
-    later.player.level = 8;
+    // Level 4: past the level-1 opening but well UNDER the first map's soft XP
+    // cap, so the share taper (arrowXpShareAt) is the only thing scaling the
+    // grant here — the cap fade doesn't bite yet.
+    later.player.level = 4;
     later.player.xpToNext = 4000;
     later.items = [dropArrow(later, 1)];
     step(later, idle, DT);
-    expect(later.player.xp).toBe(Math.round(4000 * arrowXpShareAt(8)));
-    expect(arrowXpShareAt(8)).toBeLessThan(arrowXpShareAt(1));
+    expect(later.player.xp).toBe(Math.round(4000 * arrowXpShareAt(4)));
+    expect(arrowXpShareAt(4)).toBeLessThan(arrowXpShareAt(1));
   });
 
   it("go COLD once the hero passes the map/difficulty cap", () => {

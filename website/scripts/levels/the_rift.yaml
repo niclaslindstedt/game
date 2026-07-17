@@ -105,6 +105,10 @@ asteroids:
     - 2800
     - 5200
   struckThought: rift_asteroid
+# HARD-CODED per-difficulty mob levels [easy, medium, hard, nightmare];
+# JESUS stays player-relative. Placeholder ramp for this campaign slot —
+# retune when this level is reworked. A spawner may override per point.
+mobLevels: [[20, 26], [21, 28], [24, 31], [51, 55]]
 spawns:
   - enemy: voidling
     count: 22
@@ -130,34 +134,50 @@ spawns:
     at:
       x: 2850
       y: 800
+    level: [28, 30, 33, 56]
+    hp: [750, 1125, 1725, 4500]
   - enemy: grok_omega
     at:
       x: 2450
       y: 780
+    level: [28, 30, 33, 56]
+    hp: [850, 1275, 1955, 5100]
   - enemy: harry_houdini
     at:
       x: 650
       y: 900
+    level: [26, 28, 31, 55]
+    hp: [50, 75, 115, 300]
   - enemy: nikola_tesla
     at:
       x: 950
       y: 650
+    level: [26, 28, 31, 55]
+    hp: [320, 480, 736, 1920]
   - enemy: amelia_earhart
     at:
       x: 1500
       y: 1050
+    level: [26, 28, 31, 55]
+    hp: [290, 435, 667, 1740]
   - enemy: the_king
     at:
       x: 1800
       y: 850
+    level: [26, 28, 31, 55]
+    hp: [50, 75, 115, 300]
   - enemy: grigori_rasputin
     at:
       x: 2150
       y: 700
+    level: [26, 28, 31, 55]
+    hp: [360, 540, 828, 2160]
   - enemy: lucky
     at:
       x: 1150
       y: 1280
+    level: [26, 28, 31, 55]
+    hp: [300, 450, 690, 1800]
 packs:
   - at:
       x: 800

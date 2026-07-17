@@ -26,6 +26,9 @@ export const REQUIRED_FIELDS = [
   "decorClearance",
   "intro",
   "loot",
+  // HARD-CODED per-difficulty mob levels (easy/medium/hard/nightmare); JESUS
+  // stays player-relative. Required on every level — a spawner may override it.
+  "mobLevels",
 ];
 
 const OBJECTIVES = new Set(["killBoss", "clearAll", "reachExit"]);
@@ -55,6 +58,42 @@ export function validateLevel(def, refs, description = "") {
   const inBounds = (v) =>
     isVec(v) && v.x >= 0 && v.x <= def.width && v.y >= 0 && v.y <= def.height;
 
+  // ---- hard-coded per-difficulty mob levels / hp ----------------------------
+  // A LEVEL BAND is one difficulty's authored mob level: an exact level (>=1) or
+  // a rolled [min,max] range. A tuple is four of them (easy/medium/hard/
+  // nightmare); JESUS is deliberately absent (it stays player-relative).
+  const isBand = (b) =>
+    (typeof b === "number" && b >= 1) ||
+    (Array.isArray(b) &&
+      b.length === 2 &&
+      b.every((n) => typeof n === "number" && n >= 1) &&
+      b[0] <= b[1]);
+  const validMobLevels = (spec, where) => {
+    if (!Array.isArray(spec) || spec.length !== 4) {
+      err(
+        `${where} mobLevels must be 4 entries [easy, medium, hard, nightmare]`,
+      );
+      return;
+    }
+    spec.forEach((b, i) => {
+      if (!isBand(b))
+        err(
+          `${where} mobLevels[${i}] must be a level >=1 or a [min,max] range`,
+        );
+    });
+  };
+  const validHp = (spec, where) => {
+    if (!Array.isArray(spec) || spec.length !== 4) {
+      err(`${where} hp must be 4 entries [easy, medium, hard, nightmare]`);
+      return;
+    }
+    spec.forEach((n, i) => {
+      if (typeof n !== "number" || n < 1)
+        err(`${where} hp[${i}] must be a positive number`);
+    });
+  };
+  if (def.mobLevels !== undefined) validMobLevels(def.mobLevels, "level");
+
   // ---- enemy references -----------------------------------------------------
   const enemy = (id, where) => {
     if (id !== undefined && !refs.enemies.has(id))
@@ -71,11 +110,44 @@ export function validateLevel(def, refs, description = "") {
         err(`spawn band ${JSON.stringify(s.band)} must have 0<=lo<=hi`);
     } else if (!isVec(s.at)) {
       err(`pinned spawn for "${s.enemy}" needs an { at } position`);
+    } else {
+      // A PINNED elite/boss/guardian hard-codes its level + base hp per
+      // difficulty (JESUS stays relative). Both are required.
+      if (s.level === undefined)
+        err(`pinned spawn "${s.enemy}" needs a per-difficulty "level"`);
+      else validMobLevels(s.level, `pinned spawn "${s.enemy}"`);
+      if (s.hp === undefined)
+        err(`pinned spawn "${s.enemy}" needs a per-difficulty "hp"`);
+      else validHp(s.hp, `pinned spawn "${s.enemy}"`);
     }
   }
   for (const p of def.packs ?? []) {
     if (!isVec(p.at)) err("pack needs an { at } position");
     for (const m of p.members ?? []) enemy(m.enemy, "pack");
+  }
+  // Spawn points: each on the map, every member resolves, and a chain `after`
+  // must name a spawner that actually exists.
+  const spawnerIds = new Set(
+    (def.spawners ?? []).map((s) => s.id).filter(Boolean),
+  );
+  for (const s of def.spawners ?? []) {
+    if (!isVec(s.at)) err("spawner needs an { at } position");
+    else if (!inBounds(s.at))
+      err(`spawner at ${JSON.stringify(s.at)} is off the map`);
+    for (const m of s.members ?? []) enemy(m.enemy, "spawner");
+    if (s.mobLevels !== undefined)
+      validMobLevels(s.mobLevels, `spawner${s.id ? ` "${s.id}"` : ""}`);
+    if (s.after !== undefined && !spawnerIds.has(s.after))
+      err(`spawner chains after unknown spawner id "${s.after}"`);
+    if (s.lingering !== undefined) {
+      const total = (s.members ?? []).reduce((n, m) => n + (m.count ?? 0), 0);
+      if (typeof s.lingering !== "number" || s.lingering < 0)
+        err(`spawner lingering must be a non-negative number`);
+      else if (s.lingering > total)
+        err(
+          `spawner lingering (${s.lingering}) exceeds its member total (${total})`,
+        );
+    }
   }
   for (const b of def.waves?.budget ?? []) enemy(b.enemy, "wave budget");
   for (const id of def.rareSpawns?.rare ?? []) enemy(id, "rareSpawns.rare");
@@ -152,6 +224,13 @@ export function validateLevel(def, refs, description = "") {
   if (def.objective?.type === "reachExit" && !isVec(def.objective.at))
     err("reachExit objective needs an { at }");
   if (!inBounds(def.playerSpawn)) err("playerSpawn is off the map");
+
+  // The intended-path waypoints (navigation aid) must sit on the map.
+  for (const p of def.path ?? []) {
+    if (!isVec(p)) err(`path waypoint ${JSON.stringify(p)} is not a { x, y }`);
+    else if (!inBounds(p))
+      err(`path waypoint ${JSON.stringify(p)} is off the map`);
+  }
 
   // Tile zones + the new design zones must sit on the map.
   const rectOnMap = (r, where) => {

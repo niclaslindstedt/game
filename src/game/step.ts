@@ -133,6 +133,8 @@ import {
   stepEnemyMechanics,
 } from "./mechanics.ts";
 import { repelFromMerchant, stepMerchant } from "./merchant.ts";
+import { advancePath } from "./path.ts";
+import { stepSpawners } from "./spawners.ts";
 import { anyZoneContains, repelFromZones } from "./zones.ts";
 import {
   blockedByObstacle,
@@ -146,6 +148,7 @@ import {
   maybePowerScale,
   menaceStage,
   mobLevelScale,
+  resolveMobScaling,
   tickMenace,
 } from "./menace.ts";
 import {
@@ -236,6 +239,9 @@ export function step(state: GameState, input: GameInput, dtMs: number): void {
   const exemptKillsBefore = state.menaceExemptKills;
 
   stepPlayer(state, input, dt, dtMs);
+  // Mark off the intended-path waypoints the hero just reached, so the autopilot
+  // and the guidance arrow both target the next leg (harmless with no path).
+  advancePath(state);
   // Playing lifts the fog of war as a CIRCLE sweeping the hero's path
   // (Warcraft-style, no re-fogging): a `MAP.revealRadius` disc around him is
   // uncovered every tick, so the map (and minimap) show exactly where he has
@@ -320,6 +326,7 @@ export function step(state: GameState, input: GameInput, dtMs: number): void {
   const stage = menaceStage(state);
   if (stage > state.stats.peakMenace) state.stats.peakMenace = stage;
   stepPacks(state);
+  stepSpawners(state);
   stepSpawner(state, dtMs);
   stepItems(state, dtMs);
   stepDoors(state);
@@ -726,16 +733,27 @@ function spawnWaveEnemy(
     // menaceEffectMult says. The base hp is the
     // horde's RELATIVE level: the player's live level plus the difficulty's
     // offset (mobLevelScale), so the swarm keeps its distance as he grows.
+    // Hard-coded level (the level default) sets hp + mlvl; else player-relative.
+    // The menace evolution stage still stacks its extra hp on top.
+    const wsc = resolveMobScaling(
+      levelDef(state.level.id).mobLevels,
+      state.difficulty,
+      state.player.level,
+      state.rng,
+      mobLevelScale(state),
+      currentMobLevel(state),
+    );
     state.enemies.push(
       spawnEnemy(
         defId,
         pos,
         state.rng,
         state.nextId++,
-        mobLevelScale(state),
+        wsc.hpMult,
         menaceStage(state),
         difficultyDef(state.difficulty).menaceEffectMult,
-        currentMobLevel(state),
+        wsc.mlvl,
+        wsc.banded,
       ),
     );
     // Book the spawn for the menace CLEARANCE gate (minions only — the horde
@@ -803,15 +821,24 @@ function wakePack(state: GameState, pack: PackState, spec: PackSpec): void {
     const count = resolvePackCount(member.count, state.difficulty);
     const radius = enemyDef(member.enemy).radius;
     for (let n = 0; n < count; n++) {
+      const psc = resolveMobScaling(
+        levelDef(state.level.id).mobLevels,
+        state.difficulty,
+        state.player.level,
+        state.rng,
+        mobLevelScale(state),
+        currentMobLevel(state),
+      );
       const enemy = spawnEnemy(
         member.enemy,
         packMemberPos(state, pack, radius),
         state.rng,
         state.nextId++,
-        mobLevelScale(state),
+        psc.hpMult,
         menaceStage(state),
         difficultyDef(state.difficulty).menaceEffectMult,
-        currentMobLevel(state),
+        psc.mlvl,
+        psc.banded,
       );
       state.enemies.push(enemy);
       pack.memberIds.push(enemy.id);
@@ -2185,18 +2212,23 @@ function moveEnemy(
     return;
   }
 
-  // Minions: an aggro latch. Waking needs the player in range AND in sight;
-  // once awake the chase holds even when a wall breaks line of sight — only
-  // escaping the radius entirely puts the monster back to sleep.
+  // Minions aggro on RANGE *and* a clear LINE. Waking needs the hero in range
+  // and in sight; and the chase now needs that sight to HOLD — a wall between
+  // the monster and the hero breaks the aggro, so it drifts back home instead of
+  // grinding into the wall toward a hero it can't see. A hero who rounds a shelf
+  // out of view leaves the patch quiet; step back into the lane and it re-locks.
+  // (In the open, sight is always clear, so the horde chases as relentlessly as
+  // before — only walls change anything.)
   const inRange =
     distanceSq(player.pos, enemy.pos) < def.ai.aggroRadius * def.ai.aggroRadius;
+  const sees = senses();
   if (!inRange) {
     enemy.awake = false;
   } else if (!enemy.awake) {
-    enemy.awake = enemy.hp < enemy.maxHp || senses();
+    enemy.awake = enemy.hp < enemy.maxHp || sees;
   }
 
-  if (inRange && enemy.awake) {
+  if (inRange && enemy.awake && sees) {
     // Gentle-rung mercy: once the player has engaged an elite/boss the plain
     // horde crawls (easy 10%, medium 50%) so he can break for the set piece.
     const pursuit = setPieceEngaged

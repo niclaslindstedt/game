@@ -21,7 +21,7 @@ import { buildStatWeights } from "../game/builds.ts";
 import type { StatBuild } from "../game/builds.ts";
 import { createGame } from "../game/create.ts";
 import { difficultyDef } from "../game/defs/difficulties.ts";
-import { LEVEL_ORDER } from "../game/defs/levels/index.ts";
+import { LEVEL_ORDER, levelDef } from "../game/defs/levels/index.ts";
 import { enemyDef } from "../game/defs/enemies/index.ts";
 import {
   addToInventory,
@@ -194,9 +194,42 @@ export function reviveHero(state: GameState): void {
   const player = state.player;
   player.hp = player.maxHp;
   player.stamina = player.maxStamina;
-  player.pos = safestPoint(state);
+  const path = levelDef(state.level.id).path;
+  if (path && path.length > 0) {
+    // MAZE (path level): an arbitrary far corner can be walled off from the
+    // route, stranding the no-pathfinding hero forever. Revive instead ON the
+    // authored corridor — at the safest node AT OR BEHIND his furthest progress
+    // (never skip him forward past the fight) — and resume the route from there,
+    // so he's always somewhere he can actually navigate out of.
+    const reached = Math.min(state.pathIndex, path.length - 1);
+    let bestIdx = 0;
+    let bestClear = -Infinity;
+    for (let i = 0; i <= reached; i++) {
+      const clear = nearestFoeDist(state, path[i] as Vec2);
+      if (clear > bestClear) {
+        bestClear = clear;
+        bestIdx = i;
+      }
+    }
+    player.pos = { ...(path[bestIdx] as Vec2) };
+    state.pathIndex = bestIdx;
+  } else {
+    player.pos = safestPoint(state);
+  }
   player.z = 0;
   state.phase = "playing";
+}
+
+/** Distance from `point` to the nearest live (non-apparition) foe, or +∞ when
+ * the field is empty. */
+function nearestFoeDist(state: GameState, point: Vec2): number {
+  let nearest = Infinity;
+  for (const enemy of state.enemies) {
+    if (enemyDef(enemy.defId).apparition) continue;
+    const d = Math.hypot(enemy.pos.x - point.x, enemy.pos.y - point.y);
+    if (d < nearest) nearest = d;
+  }
+  return nearest;
 }
 
 /** The candidate open point furthest from the nearest live (non-apparition)

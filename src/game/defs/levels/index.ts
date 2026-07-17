@@ -18,6 +18,8 @@ export type {
   LevelDef,
   PackMember,
   PackSpec,
+  SpawnerMember,
+  SpawnerSpec,
   SpawnSpec,
   WaveBudget,
   WaveSpec,

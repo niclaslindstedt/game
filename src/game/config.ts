@@ -371,6 +371,36 @@ export const PACKS = {
   placeAttempts: 12,
 } as const;
 
+/**
+ * SPAWN POINTS (`LevelDef.spawners` / spawners.ts): the FINITE, LOCAL horde
+ * model — the alternative to the endless `waves` stream. A spawner sleeps at a
+ * spot until the hero closes to `triggerRadius`, then EMITS its authored mob
+ * count a few at a time (`perEmit` every `intervalMs`) until it DRAINS empty —
+ * one readable wave the hero can clear and walk away from. A spawner may CHAIN
+ * off another (`after`): it arms `chainDelayMs` after that one drains, but only
+ * while the hero is still in range — so pressure follows him without an infinite
+ * refill. The design lever for a level that can actually be CLEARED (and, in a
+ * maze, traversed without a bottomless bog). Counts scale with difficulty
+ * (`scaledMobCount`). These are the defaults; each spawner may override them.
+ */
+export const SPAWNERS = {
+  /** How close (world px) the hero must get to arm a spawner — about a phone
+   * screen-width ahead, so a wave boils up as he advances into it. */
+  triggerRadius: 300,
+  /** Emitted mobs scatter within this radius (world px) of the spawn point. */
+  spawnRadius: 110,
+  /** Time (ms) between emission ticks while a spawner drains. */
+  intervalMs: 650,
+  /** Mobs released per emission tick. */
+  perEmit: 3,
+  /** Default delay (ms) after a spawner drains before a chained one arms —
+   * only counted while the hero is in the chained spawner's trigger range. */
+  chainDelayMs: 4000,
+  /** Rejection-sampling attempts per mob to find a spot clear of obstacles and
+   * the map edge before falling back to the anchor. */
+  placeAttempts: 12,
+} as const;
+
 /** XP and level-ups. Each level-up grants stat points to spend. */
 export const LEVELING = {
   /** Default XP granted per point of a killed monster's max hp. */
@@ -461,15 +491,15 @@ export const LEVELING = {
    * runtime-tunable on the DEVELOPER › BALANCE page). Each difficulty TIER above
    * the three bottom lanes (easy/medium/hard, which share tier 0) makes every
    * level cost this fraction MORE XP, COMPOUNDING per tier: nightmare (tier 1)
-   * costs `×(1 + step)`, jesus (tier 2) `×(1 + step)²`. At the shipped 0.25 a
-   * level on nightmare takes 25% more time than the same level on a bottom lane,
-   * and jesus ~56% more — so it takes "longer and longer" the deeper you go. The
+   * costs `×(1 + step)`, jesus (tier 2) `×(1 + step)²`. At the shipped 0.15 a
+   * level on nightmare takes 15% more time than the same level on a bottom lane,
+   * and jesus ~32% more — so it takes "longer and longer" the deeper you go. The
    * tier is `difficultyDef.index − 3` floored at 0; applied in `xpToLevelUp`
    * keyed on the run's difficulty (so the bar, the arrow/boss bar-shares, and
    * the kills-per-level all move together). 0 makes every difficulty level
    * alike. Turn it with the BALANCE › LEVEL SLOWDOWN slider (scales this step).
    */
-  tierLevelCostStep: 0.25,
+  tierLevelCostStep: 0.15,
   /**
    * ENDGAME STEEPENING — the second "harder" knob. Past `endgameSteepenFrom`,
    * every level costs an extra `endgameSteepenRate` COMPOUNDING on TOP of the
@@ -593,13 +623,17 @@ export const LEVELING = {
  */
 export const XP_CAP = {
   capByDifficulty: {
-    easy: { first: 16, last: 40 },
-    // MEDIUM/HARD field more (and higher-level) mobs than EASY, so their full
-    // clears land a level or two higher — but all three bottom lanes share the
-    // same 40 ceiling (the "to level 40" tier top), a first pass landing under it.
-    medium: { first: 18, last: 40 },
-    hard: { first: 18, last: 40 },
-    nightmare: { first: 44, last: 58 },
+    // The per-map soft cap interpolates first (map 1) → last (map 5). The three
+    // bottom lanes share the same 40 CEILING (the "to level 40" tier top): a
+    // FULL CLEAR lands the hero at ~34 / 36 / 38 (easy/medium/hard), then the
+    // last few levels to 40 are a GRIND — and hitting 40 unlocks nightmare.
+    // NIGHTMARE runs 40→56 (a full clear; grind 56→58 unlocks jesus). JESUS is
+    // player-relative. The cap sits ABOVE each rung's full-clear finish so the
+    // clear itself isn't clamped — the fade only bites in the grind stretch.
+    easy: { first: 15, last: 40 },
+    medium: { first: 15, last: 40 },
+    hard: { first: 16, last: 40 },
+    nightmare: { first: 47, last: 60 },
     jesus: { first: 68, last: 99 },
   } as Record<Difficulty, { first: number; last: number }>,
   /**
@@ -2227,8 +2261,8 @@ export const TEMPO = {
 export const CHESTS = {
   /** Break hp as a multiple of a crate's (a chest is a tougher nut). */
   hpMult: 2,
-  /** Default sprite when a chest names none. */
-  sprite: "chest",
+  /** Default sprite when a chest names none (the SpaceZ staff locker). */
+  sprite: "locker",
   /**
    * Collision/cover radius (world px). Larger than a crate — a chest is a
    * landmark you can hide behind.
@@ -2240,10 +2274,45 @@ export const CHESTS = {
    * so its haul feels like a real find.
    */
   gearTierBonus: 1.1,
-  /** How many equipment rolls a chest always spills (a small hoard). */
-  gearDrops: 2,
-  /** Guaranteed consumables (health/stamina) alongside the gear. */
+  /**
+   * Chance the chest spills its MARQUEE equipment item — a Diablo-2 chest: the
+   * prize drops most of the time (rolled hot enough to reach rare/unique), and
+   * on the rare miss the container still gives up its guaranteed supplies. This
+   * is the "80% item guarantee" a SpaceZ locker advertises.
+   */
+  itemChance: 0.8,
+  /**
+   * Chance at a SECOND bonus equipment item, rolled only when the marquee item
+   * dropped — so a lucky locker occasionally coughs up two pieces of gear.
+   */
+  bonusItemChance: 0.35,
+  /**
+   * Guaranteed consumables (health/stamina) spilled regardless of the item
+   * rolls — the "some other items" that make cracking a locker always worth it.
+   */
   consumables: 2,
+} as const;
+
+/**
+ * THE INTENDED PATH (`LevelDef.path` / path.ts): the authored waypoint route the
+ * hero is meant to walk. A pure navigation aid the autopilot follows and the app
+ * points a guidance arrow at.
+ */
+export const PATH = {
+  /**
+   * How close (world px) the hero must get to a waypoint to count it reached and
+   * advance to the next. Generous — a bit under a phone half-view (≈211×97) — so
+   * brushing through a corridor node counts even when the hero cuts the corner,
+   * and the arrow flips to the next leg before he's on top of the old one.
+   */
+  reachRadius: 90,
+  /**
+   * Keep-clear margin (world px) around the path polyline: no scattered obstacle
+   * is placed within this of the route, so the authored legs stay walkable and a
+   * no-pathfinding runner marching between waypoints never wedges on furniture.
+   * A clear lane ~2× this wide down the whole path.
+   */
+  clearance: 44,
 } as const;
 
 /**

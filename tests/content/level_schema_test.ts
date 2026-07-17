@@ -34,6 +34,7 @@ const goodLevel = () => ({
   tiles: { ground: { common: "g" } },
   playerSpawn: { x: 100, y: 100 },
   objective: { type: "killBoss" },
+  mobLevels: [1, [2, 3], 5, 40],
   spawns: [{ enemy: "grunt", band: [0, 0.6] }],
   obstacles: [],
   decor: [],

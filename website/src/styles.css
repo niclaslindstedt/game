@@ -809,6 +809,40 @@ body {
   text-align: left;
 }
 
+/* The AREA CAPTION: a named zone's label (AreaCaption.tsx) flashed centered near
+   the top of the field as the hero walks into a room. One-shot — fades in,
+   holds, fades out over ~2.6s; a new React key remounts it to replay. */
+.area-caption {
+  position: absolute;
+  top: 20%;
+  left: 50%;
+  pointer-events: none;
+  white-space: nowrap;
+  animation: area-caption 2.6s ease-out forwards;
+  /* A dark drop shadow lifts the amber label off any floor tint. */
+  filter: drop-shadow(0 1px 0 #0b0d10)
+    drop-shadow(0 0 3px rgba(11, 13, 16, 0.85));
+}
+
+@keyframes area-caption {
+  0% {
+    opacity: 0;
+    transform: translate(-50%, 8px);
+  }
+  10% {
+    opacity: 1;
+    transform: translate(-50%, 0);
+  }
+  75% {
+    opacity: 1;
+    transform: translate(-50%, 0);
+  }
+  100% {
+    opacity: 0;
+    transform: translate(-50%, -4px);
+  }
+}
+
 .pickup-line {
   display: flex;
   flex-direction: column;

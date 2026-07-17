@@ -1,8 +1,9 @@
 // SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
 // Wall-aware aggro: a wall the player can't jump over also hides them from
-// grounded monsters — waking on proximity needs line of sight. Ghostly
-// (phasing) monsters sense straight through stone, wounds wake anything,
-// and an already-awake chase holds even when a wall breaks the sightline.
+// grounded monsters — both WAKING and the ongoing CHASE need line of sight, so
+// ducking behind stone breaks a chase (the mob drifts home) instead of grinding
+// into the wall. Ghostly (phasing) monsters sense straight through stone, and a
+// wound still wakes a mob (though a wall then stalls its advance).
 // Plus the pack-overlap rule that lets a kited horde bunch into one clump.
 
 import { describe, expect, it } from "vitest";
@@ -82,32 +83,37 @@ describe("aggro through walls", () => {
     expect(mob.awake).toBe(true);
   });
 
-  it("wounding a mob wakes it, wall or no wall", () => {
+  it("wounding a mob wakes it even behind a wall, but the wall stalls its advance", () => {
     const state = startGame();
     clearStage(state);
     placeObstacle(state, 50, false);
     const mob = placeStalker(state, 100);
+    const post = { ...mob.pos };
     mob.hp -= 1;
 
-    step(state, idle, DT);
-    expect(mob.awake).toBe(true);
-    expect(mob.pos.x).toBeLessThan(state.player.pos.x + 100);
+    run(state, idle, 30);
+    expect(mob.awake).toBe(true); // a wound wakes it, wall or no wall
+    // …but with no line of sight it can't chase THROUGH the wall — it holds/
+    // drifts around its post rather than closing on the hidden hero.
+    expect(mob.pos.x).toBeGreaterThan(post.x - 20);
   });
 
-  it("an awake chase holds even when a wall breaks the sightline", () => {
+  it("an awake chase BREAKS when a wall cuts the sightline", () => {
     const state = startGame();
     clearStage(state);
     state.obstacles = [];
     const mob = placeStalker(state, 120);
     run(state, idle, 10); // acquires the player in the open
     expect(mob.awake).toBe(true);
+    const acquired = dist(mob.pos, state.player.pos);
+    expect(acquired).toBeLessThan(120); // was closing in
 
-    // The player ducks behind stone — the mob stays locked on.
+    // The player ducks behind stone — the sightline breaks, so the chase stops
+    // closing (the mob no longer grinds toward a hero it can't see).
     placeObstacle(state, 40, false);
     const before = dist(mob.pos, state.player.pos);
-    run(state, idle, 10);
-    expect(mob.awake).toBe(true);
-    expect(dist(mob.pos, state.player.pos)).toBeLessThan(before);
+    run(state, idle, 20);
+    expect(dist(mob.pos, state.player.pos)).toBeGreaterThanOrEqual(before - 2);
   });
 
   it("escaping the aggro radius puts the mob back to sleep", () => {

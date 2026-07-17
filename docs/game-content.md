@@ -48,11 +48,17 @@ names its in-run music with an optional `music` id (a key into the app's
   tiles + floor vents), ~800 px/s² gravity (hoppable desks, and CRATES the
   hero's weapon smashes for guaranteed loot — mostly health/stamina, sometimes
   gear, a unique likelier than a plain kill; the same breakable crates appear
-  on the bunker and Mars, see `crates.ts`), rooms
-  carved by `walls` with door gaps and three locked `doors` (storage, vault,
-  and the AI CORE — THE ARCHITECT's keycard opens the last). The hero opens in
-  plain clothes (`heroSuited: false`) and recovers the EVA suit here. Music:
-  `hq_lockdown` ("LOCKDOWN", a tense infiltration theme).
+  on the bunker and Mars, see `crates.ts`). The sales floor is laid out like a
+  **grocery store**: a serpentine of five shelf-aisle `walls` with alternating
+  end-gaps herds the hero up and down the whole floor toward MUSKRAT's bay, so
+  clearing the level walks almost every square. **Two off-path detour lockers**
+  reward exploring a dead-end (`chests`, the SpaceZ locker sprite spilling a
+  Diablo-2 haul — an 80% marquee item plus guaranteed supplies): the STOCK ROOM
+  and the BREAK ROOM, the latter guarded by the EMPLOYEE OF THE MONTH unique.
+  Three keycard-locked `doors` (storage, vault, and the AI CORE — THE
+  ARCHITECT's keycard opens the last) still gate the corner story vaults. The
+  hero opens in plain clothes (`heroSuited: false`) and recovers the EVA suit
+  here. Music: `hq_lockdown` ("LOCKDOWN", a tense infiltration theme).
 - **Level 2 — THE MOON** (`levels/moon.ts`). The beacon dies near the old
   flag. `moon` biome (regolith + gravel patches), ~340 px/s² gravity (jumps
   soar), moonrock ridge `walls` the haunting phases straight through. Scattered
