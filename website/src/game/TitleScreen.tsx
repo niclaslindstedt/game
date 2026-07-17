@@ -2359,24 +2359,24 @@ export function TitleScreen({
 
           {/* The import/export result line, under the SETTINGS - DATA menu and
               the EXPORT CHARACTER picker. */}
-          {(screen === "data" ||
-            screen === "export" ||
-            screen === "seed") &&
+          {(screen === "data" || screen === "export" || screen === "seed") &&
             transferNotice && (
-            <p
-              className={`title-notice ${transferNotice.tone}`}
-              role="status"
-              aria-live="polite"
-            >
-              <PixelText
-                font={font}
-                text={transferNotice.text}
-                scale={2}
-                color={transferNotice.tone === "error" ? "#ff6d6d" : "#7ef0c8"}
-                maxWidth={24}
-              />
-            </p>
-          )}
+              <p
+                className={`title-notice ${transferNotice.tone}`}
+                role="status"
+                aria-live="polite"
+              >
+                <PixelText
+                  font={font}
+                  text={transferNotice.text}
+                  scale={2}
+                  color={
+                    transferNotice.tone === "error" ? "#ff6d6d" : "#7ef0c8"
+                  }
+                  maxWidth={24}
+                />
+              </p>
+            )}
         </div>
       )}
 

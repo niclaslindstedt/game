@@ -156,7 +156,10 @@ function mintPiece(
 
 /** Spend a hero-of-`level`'s worth of trainable points through `build`'s
  * rotation — the same cycle the autopilot and the analytic sim spend by. */
-function spendPoints(build: StatBuild, level: number): Record<StatName, number> {
+function spendPoints(
+  build: StatBuild,
+  level: number,
+): Record<StatName, number> {
   const stats = zeroStats();
   const rotation = BUILD_ROTATION[build];
   const total = chosenStatPointsThrough(level);
@@ -250,7 +253,10 @@ function beatenThrough(tier: SeedTier): Difficulty[] {
 
 /** Mint and bank one seed hero for `build` at `tier`, returning the stored
  * Character. Re-seeding replaces any existing hero of the same name. */
-export function seedBuildCharacter(build: StatBuild, tier: SeedTier): Character {
+export function seedBuildCharacter(
+  build: StatBuild,
+  tier: SeedTier,
+): Character {
   return seedCharacter({
     name: `${build.toUpperCase()} ${tier.level}`,
     loadout: buildSeedLoadout(build, tier),
