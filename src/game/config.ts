@@ -1174,6 +1174,24 @@ export const STATS = {
     number
   >,
   /**
+   * ARTIFACT MELEE AFFINITY — the endgame payoff that lets the MELEE lane take
+   * over once the hero is decked in artifact-tier relics. Every worn ARTIFACT
+   * piece (weapon, armor, charm, or bag — the level-99 red-card tier, the rarest
+   * loot) MULTIPLIES a MELEE weapon's damage by this fraction (+85% each), so a
+   * bruiser reclaims the top of the endgame from the casters AS THE ARTIFACT SET
+   * FILLS OUT: with a partial set a caster still leads, but a committed relic
+   * hoard (a near-full set) puts melee clearly on top — measured against a
+   * full-artifact caster, melee crosses ~1.0× around five relics and reaches
+   * ~1.25× at a full seven-piece set (weapon + 6 gear). Gated to a MELEE weapon
+   * in hand (applied in `weaponDamageFor` only when `def.class === "melee"`), so
+   * it rewards actually SWINGING the relics — a mage in artifact armor gets
+   * nothing from it, and the stat-aware auto-equip therefore also swings the
+   * build toward melee once relics pile up. Thematic: the myth-relics (Durendal,
+   * Gram, Mjölnir) are weapons of the ARM; wearing the legend empowers the
+   * strike. The natural cap is the seven equip slots.
+   */
+  artifactMeleeDamagePerPiece: 0.85,
+  /**
    * STRENGTH's downside: every point of muscle to haul slows the walk by this
    * fraction (−1% each), floored at `strengthSlowFloor` so even a pure bruiser
    * still moves. It is a gentle tax — a few points are unnoticeable, but a build

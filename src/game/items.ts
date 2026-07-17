@@ -2023,6 +2023,23 @@ export function weaponDamageFor(state: GameState, weapon: Equipment): number {
   // baseline the difficulty ladder is calibrated on — is exempt and keeps its
   // full catalog damage, so the opening fight stays exactly as tuned.
   const lootMult = weapon.durability === undefined ? 1 : WEAPON.damageMult;
+  // ARTIFACT MELEE AFFINITY — the endgame chase pays off for the ARM. Every worn
+  // artifact-tier relic (weapon/armor/charm/bag — the rarest, level-99 tier)
+  // MULTIPLIES a MELEE weapon's damage by STATS.artifactMeleeDamagePerPiece, so
+  // a bruiser in a full set of relics swings for multiples of his bare blow and
+  // reclaims the top of the endgame from the casters. A separate factor (not
+  // folded into the stat `multiplier`) so it isn't swamped by the huge endgame
+  // stat term. Melee weapon ONLY — a mage in artifact armor gets nothing; it
+  // rewards actually SWINGING the legend. Non-melee and artifact-less heroes
+  // keep exactly their old damage (factor 1).
+  let artifactMeleeMult = 1;
+  if (def.class === "melee") {
+    let artifacts = 0;
+    for (const piece of equippedPieces(state)) {
+      if (piece.tier === "artifact") artifacts++;
+    }
+    artifactMeleeMult = 1 + artifacts * STATS.artifactMeleeDamagePerPiece;
+  }
   // The instance's MAKE QUALITY scales the blow: a BROKEN pipe swings soft,
   // a PERFECT one over its catalog weight — the specific figure this copy
   // rolled within its quality band (`qualityMult` → `Equipment.qualityRoll`,
@@ -2038,6 +2055,7 @@ export function weaponDamageFor(state: GameState, weapon: Equipment): number {
     multiplier *
     ilvlMult *
     lootMult *
+    artifactMeleeMult *
     qualityMult(weapon) *
     (weapon.baseRoll ?? 1) *
     BALANCE.playerDamage
