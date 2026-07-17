@@ -2172,8 +2172,8 @@ export const TEMPO = {
 export const CHESTS = {
   /** Break hp as a multiple of a crate's (a chest is a tougher nut). */
   hpMult: 2,
-  /** Default sprite when a chest names none. */
-  sprite: "chest",
+  /** Default sprite when a chest names none (the SpaceZ staff locker). */
+  sprite: "locker",
   /**
    * Collision/cover radius (world px). Larger than a crate — a chest is a
    * landmark you can hide behind.
@@ -2185,9 +2185,22 @@ export const CHESTS = {
    * so its haul feels like a real find.
    */
   gearTierBonus: 1.1,
-  /** How many equipment rolls a chest always spills (a small hoard). */
-  gearDrops: 2,
-  /** Guaranteed consumables (health/stamina) alongside the gear. */
+  /**
+   * Chance the chest spills its MARQUEE equipment item — a Diablo-2 chest: the
+   * prize drops most of the time (rolled hot enough to reach rare/unique), and
+   * on the rare miss the container still gives up its guaranteed supplies. This
+   * is the "80% item guarantee" a SpaceZ locker advertises.
+   */
+  itemChance: 0.8,
+  /**
+   * Chance at a SECOND bonus equipment item, rolled only when the marquee item
+   * dropped — so a lucky locker occasionally coughs up two pieces of gear.
+   */
+  bonusItemChance: 0.35,
+  /**
+   * Guaranteed consumables (health/stamina) spilled regardless of the item
+   * rolls — the "some other items" that make cracking a locker always worth it.
+   */
   consumables: 2,
 } as const;
 

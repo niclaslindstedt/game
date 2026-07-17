@@ -1,0 +1,32 @@
+name: locker_broken
+family: spacez
+size: [14, 12]
+description: >
+  The SpaceZ locker pried open and toppled — a buckled chrome shell with its
+  door torn off, the blue brand band crumpled over scattered scrap; the
+  destroyed state of a broken locker.
+subject:
+  kind: destroyed obstacle prop
+  build: a burst-open metal locker, the door hinged off over a spill of scrap
+  features: a caved chrome shell, a crumpled blue brand strip, bent grey panels strewn out
+  accent: dented chrome and torn blue brand scrap
+  flavor: the wrecked remains once the locker is smashed through
+palette:
+  O: "#1a1c2c" # outline
+  t: "#aab0be" # chrome scrap
+  s: "#818690" # grey panel scrap
+  b: "#3f4553" # dark seam scrap
+  j: "#4054bc" # blue brand scrap
+grid: |
+  ..............
+  ..............
+  ..O.......O...
+  .OtOs...sOtO..
+  .stsObsjbOsts.
+  OstsOsbsbsOstO
+  OtsOsbtsjsbOsO
+  sOtsjsbsbsjsOt
+  .OOOOOOOOOOOO.
+  ..............
+  ..............
+  ..............

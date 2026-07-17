@@ -6,7 +6,7 @@
 
 import { describe, expect, it } from "vitest";
 
-import { CRATES } from "@game/core";
+import { CHESTS, CRATES } from "@game/core";
 import type { GameState, Obstacle } from "@game/core";
 
 import {
@@ -118,6 +118,81 @@ describe("crate loot", () => {
     // …but gear is a real, if rarer, prize (the crate's whole draw over a
     // plain consumable pickup).
     expect(gear).toBeGreaterThan(0);
+  });
+});
+
+/** Drop a fresh CHEST (a SpaceZ locker) onto the field — a breakable that
+ * carries the `chest` flag so it spills the richer D2-style haul. */
+function addChest(
+  state: GameState,
+  pos: { x: number; y: number },
+  hp = 10,
+): Obstacle {
+  const chest: Obstacle = {
+    id: state.nextId++,
+    kind: "chest",
+    sprite: CHESTS.sprite,
+    pos: { ...pos },
+    radius: CHESTS.radius,
+    jumpable: false,
+    breakable: true,
+    chest: true,
+    hp,
+    maxHp: hp,
+  };
+  state.obstacles = [...state.obstacles, chest];
+  return chest;
+}
+
+describe("locker (chest) loot", () => {
+  it("spills a marquee item ~80% of the time plus its guaranteed supplies", () => {
+    const state = startGame(SEED);
+    clearStage(state);
+    // A leveled hero so the gear roll clears the tier gates it would early on.
+    state.player.level = 30;
+
+    let gearBreaks = 0;
+    let consumables = 0;
+    const breaks = 600;
+    for (let i = 0; i < breaks; i++) {
+      const chest = addChest(state, { x: 500, y: 500 }, 10);
+      const before = state.items.length;
+      damageCrate(state, chest, 20);
+      const dropped = state.items.splice(before); // take just this break's spill
+      // A locker ALWAYS gives up its guaranteed consumables ("some other items").
+      const cons = dropped.filter(
+        (it) => it.kind === "medkit" || it.kind === "drink",
+      ).length;
+      expect(cons).toBe(CHESTS.consumables);
+      consumables += cons;
+      if (dropped.some((it) => it.kind === "equipment")) gearBreaks++;
+    }
+
+    // The marquee item lands about 80% of the time — a real find, not a
+    // guarantee (D2 chest feel). Wide bounds so the RNG never flakes.
+    const rate = gearBreaks / breaks;
+    expect(rate).toBeGreaterThan(0.7);
+    expect(rate).toBeLessThan(0.9);
+    // Every break paid out its supplies.
+    expect(consumables).toBe(breaks * CHESTS.consumables);
+  });
+
+  it("is a richer haul than a plain crate — a break can spill two gear pieces", () => {
+    const state = startGame(SEED);
+    clearStage(state);
+    state.player.level = 30;
+
+    let twoGearBreaks = 0;
+    for (let i = 0; i < 400; i++) {
+      const chest = addChest(state, { x: 500, y: 500 }, 10);
+      const before = state.items.length;
+      damageCrate(state, chest, 20);
+      const dropped = state.items.splice(before);
+      const gear = dropped.filter((it) => it.kind === "equipment").length;
+      if (gear >= 2) twoGearBreaks++;
+    }
+    // The bonus second item fires often enough to see across 400 breaks.
+    expect(twoGearBreaks).toBeGreaterThan(0);
   });
 });
 

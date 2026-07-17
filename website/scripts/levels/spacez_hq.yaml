@@ -2,17 +2,22 @@ description: |-
   LEVEL 1 - SPACEZ HQ. Ada's trail points off-planet and our hero builds
   spaceships for a living - but his garage ship's engine needs the one part
   SpaceZ keeps in its cleanroom, and the night shift is not letting it leave the
-  building. Office rooms and lab corridors are carved by solid walls with door
-  gaps; MUSKRAT, the mutant rat who ate the part, nests under the prototype rocket
-  on the far side.
+  building. The sales floor is laid out like a grocery store: a serpentine of
+  solid SHELF AISLES with alternating end-gaps herds the player up and down the
+  whole floor left-to-right, so clearing the level means walking almost every
+  square of it. MUSKRAT, the mutant rat who ate the part, nests under the
+  prototype rocket in the bay past the last aisle.
   THE ONBOARDING FEEL: a gentle start that eases the player into steering and the
   loot loop (an opening-strike beat draws the weapon, early drops reward the first
-  kills), then a build-and-release arc - the horde swells through the mid-floor,
+  kills), then a build-and-release arc - the horde swells through the aisles,
   eases into a calm strip by the prototype where the vending-machine merchant
-  waits so the player can shop, then surges for MUSKRAT. The three corner vaults
-  (starter stash, core lab, cleanroom) are quiet dead pockets the player can
-  detour into for a guaranteed chest - the "explore for loot" lesson - without
-  ever forcing it off the left-to-right line to the boss.
+  waits so the player can shop, then surges for MUSKRAT.
+  TWO OFF-PATH DETOURS reward the player who pokes into a dead-end - the "explore
+  for loot" lesson: the STOCK ROOM, a walled cul-de-sac off the last aisle
+  holding a SpaceZ locker, and the BREAK ROOM, a pocket off an early aisle where
+  the EMPLOYEE OF THE MONTH guards a locker of his own. Three keycard-locked
+  corner vaults (starter stash, core lab, cleanroom) stay as gated story pockets
+  the elites' keycards open.
 campaign: true
 id: spacez_hq
 index: 1
@@ -121,62 +126,85 @@ spawns:
     band:
       - 0.5
       - 1
+  # The five speaking elites are strung along the aisles so the serpentine walks
+  # the player past each in turn (and their keycards open the corner vaults).
+  # NIGHT MANAGER sits behind aisle 1's solid upper run — out of the opening
+  # strike, met on the first up-sweep.
   - enemy: night_manager
     at:
       x: 560
       y: 370
-  - enemy: architect
-    at:
-      x: 950
-      y: 240
   - enemy: security_chief
     at:
-      x: 1050
-      y: 700
-  - enemy: head_scientist
-    at:
-      x: 1270
-      y: 400
+      x: 900
+      y: 600
   - enemy: janitor
     at:
-      x: 900
-      y: 1000
+      x: 960
+      y: 880
+  - enemy: head_scientist
+    at:
+      x: 1200
+      y: 600
+  - enemy: architect
+    at:
+      x: 1480
+      y: 400
+  # The level's UNIQUE, pinned as the guardian of the BREAK ROOM detour locker.
+  - enemy: employee_of_the_month
+    at:
+      x: 910
+      y: 150
   - enemy: muskrat
     at:
-      x: 1730
-      y: 620
+      x: 1850
+      y: 590
 packs:
   - at:
-      x: 1000
-      y: 900
+      x: 950
+      y: 880
     members:
       - enemy: intern
         count: 5
       - enemy: scientist
         count: 3
   - at:
-      x: 1420
-      y: 430
+      x: 1200
+      y: 320
     members:
       - enemy: engineer
         count: 3
       - enemy: guard
         count: 2
 safeZones:
-  # The calm strip by the prototype rocket, just inside the boss room and left of
+  # The calm strip in the boss-room mouth, just inside the last aisle and west of
   # MUSKRAT: the horde is repelled out so the player gets a breather and can shop
   # the vending-machine merchant before the final fight. Clear of the boss aggro
-  # (muskrat sits ~220px east) and of the head_scientist funnel (west of the wall).
+  # (muskrat sits ~160px east) and of the head_scientist funnel (west of the wall).
   - shape: circle
     pos:
-      x: 1520
-      y: 560
-    radius: 135
+      x: 1680
+      y: 600
+    radius: 115
     label: PIT STOP
 quietZones:
-  # The three corner vaults are dead pockets - no ambient horde spawns inside, so
-  # the detour for the chest + story pickup stays calm. Each rect hugs the room's
-  # walls (door gaps left open).
+  # The two off-path detours and the three keycard vaults are dead pockets - no
+  # ambient horde spawns inside, so poking into a cul-de-sac for its locker or
+  # story pickup stays calm. Each rect hugs the pocket's walls (entrance left open).
+  - shape: rect
+    rect:
+      x: 820
+      y: 8
+      width: 180
+      height: 202
+    label: BREAK ROOM
+  - shape: rect
+    rect:
+      x: 1420
+      y: 940
+      width: 180
+      height: 252
+    label: STOCK ROOM
   - shape: rect
     rect:
       x: 8
@@ -199,17 +227,15 @@ quietZones:
       height: 162
     label: CLEANROOM
 chests:
-  # A guaranteed haul in each corner vault - the "explore for loot" lesson. The
-  # starter-stash chest is the very first smashable, right where the shotgun is.
+  # The two off-path detour lockers - the whole reward for exploring a dead-end.
+  # BREAK ROOM (guarded by the EMPLOYEE OF THE MONTH) and STOCK ROOM. Each sits
+  # in open floor, off the pocket walls, so its chrome reads against the room.
   - at:
-      x: 160
-      y: 130
+      x: 910
+      y: 110
   - at:
-      x: 1930
-      y: 130
-  - at:
-      x: 1810
-      y: 1150
+      x: 1510
+      y: 1050
 tempo:
   # Build-and-release onboarding arc over the 280s ramp: a gentle start while the
   # player learns to steer, a mid-floor swell, a breather at the PIT STOP / shop
@@ -228,12 +254,12 @@ tempo:
     intensity: 1.4
 merchantSpawns:
   # Primary: the PIT STOP safe nook before the boss. Secondary: the early
-  # crossroads by the ada_soda pickup, so the shop sometimes greets the player
+  # aisle by the ada_soda pickup, so the shop sometimes greets the player
   # mid-floor instead.
-  - x: 1520
-    y: 560
-  - x: 760
-    y: 640
+  - x: 1680
+    y: 600
+  - x: 600
+    y: 450
 waves:
   rampDurationMs: 280000
   maxAlive: 200
@@ -271,78 +297,222 @@ waves:
         - 0.55
         - 1
 walls:
+  # === GROCERY-STORE SHELF AISLES ===
+  # Five vertical shelf walls span the floor, each with ONE ~250px pass-gap that
+  # STEPS up and down the mid-band aisle to aisle — a checkout-line weave that
+  # herds the player left-to-right past every shelf without a full-height detour
+  # (so the path is always walkable, never a dead maze). Horizontal shelf stubs
+  # jut into the upper and lower thirds to give the store its aisle nooks.
+  # --- Aisle 1 (x=470), gap 450-700. ---
   - kind: wall
     from:
-      x: 650
+      x: 470
       y: 8
     to:
-      x: 650
-      y: 300
+      x: 470
+      y: 440
     radius: 8
     jumpable: false
   - kind: wall
     from:
-      x: 650
-      y: 430
-    to:
-      x: 650
+      x: 470
       y: 760
-    radius: 8
-    jumpable: false
-  - kind: wall
-    from:
-      x: 650
-      y: 890
     to:
-      x: 650
+      x: 470
       y: 1192
     radius: 8
     jumpable: false
+  # --- Aisle 2 (x=770), gap 300-550 (steps up). ---
   - kind: wall
     from:
-      x: 650
-      y: 600
-    to:
-      x: 980
-      y: 600
-    radius: 8
-    jumpable: false
-  - kind: wall
-    from:
-      x: 1110
-      y: 600
-    to:
-      x: 1350
-      y: 600
-    radius: 8
-    jumpable: false
-  - kind: wall
-    from:
-      x: 1350
+      x: 770
       y: 8
     to:
-      x: 1350
-      y: 340
+      x: 770
+      y: 360
     radius: 8
     jumpable: false
   - kind: wall
     from:
-      x: 1350
-      y: 470
+      x: 770
+      y: 680
     to:
-      x: 1350
-      y: 820
-    radius: 8
-    jumpable: false
-  - kind: wall
-    from:
-      x: 1350
-      y: 950
-    to:
-      x: 1350
+      x: 770
       y: 1192
     radius: 8
     jumpable: false
+  # --- Aisle 3 (x=1070), gap 500-750 (steps down). ---
+  - kind: wall
+    from:
+      x: 1070
+      y: 8
+    to:
+      x: 1070
+      y: 480
+    radius: 8
+    jumpable: false
+  - kind: wall
+    from:
+      x: 1070
+      y: 800
+    to:
+      x: 1070
+      y: 1192
+    radius: 8
+    jumpable: false
+  # --- Aisle 4 (x=1370), gap 350-600 (steps up). ---
+  - kind: wall
+    from:
+      x: 1370
+      y: 8
+    to:
+      x: 1370
+      y: 400
+    radius: 8
+    jumpable: false
+  - kind: wall
+    from:
+      x: 1370
+      y: 720
+    to:
+      x: 1370
+      y: 1192
+    radius: 8
+    jumpable: false
+  # --- Aisle 5 (x=1610), gap MID (460-740): the mouth into MUSKRAT's bay. ---
+  - kind: wall
+    from:
+      x: 1610
+      y: 8
+    to:
+      x: 1610
+      y: 460
+    radius: 8
+    jumpable: false
+  - kind: wall
+    from:
+      x: 1610
+      y: 740
+    to:
+      x: 1610
+      y: 1192
+    radius: 8
+    jumpable: false
+  # === Horizontal shelf stubs — store texture in the upper/lower thirds, off
+  # the mid-band walk line, so they never wall off the path. ===
+  - kind: wall
+    from:
+      x: 520
+      y: 200
+    to:
+      x: 700
+      y: 200
+    radius: 8
+    jumpable: false
+  - kind: wall
+    from:
+      x: 840
+      y: 980
+    to:
+      x: 1010
+      y: 980
+    radius: 8
+    jumpable: false
+  - kind: wall
+    from:
+      x: 1120
+      y: 220
+    to:
+      x: 1300
+      y: 220
+    radius: 8
+    jumpable: false
+  - kind: wall
+    from:
+      x: 1160
+      y: 980
+    to:
+      x: 1320
+      y: 980
+    radius: 8
+    jumpable: false
+  # === BREAK ROOM detour (off aisle 2, top tip) — the EMPLOYEE OF THE MONTH
+  # guards a locker in this walled cul-de-sac; entrance is the bottom gap. ===
+  - kind: wall
+    from:
+      x: 820
+      y: 8
+    to:
+      x: 820
+      y: 210
+    radius: 8
+    jumpable: false
+  - kind: wall
+    from:
+      x: 1000
+      y: 8
+    to:
+      x: 1000
+      y: 210
+    radius: 8
+    jumpable: false
+  - kind: wall
+    from:
+      x: 820
+      y: 210
+    to:
+      x: 880
+      y: 210
+    radius: 8
+    jumpable: false
+  - kind: wall
+    from:
+      x: 940
+      y: 210
+    to:
+      x: 1000
+      y: 210
+    radius: 8
+    jumpable: false
+  # === STOCK ROOM detour (off aisle 4, bottom) — a locker cul-de-sac;
+  # entrance is the top gap. ===
+  - kind: wall
+    from:
+      x: 1420
+      y: 940
+    to:
+      x: 1420
+      y: 1192
+    radius: 8
+    jumpable: false
+  - kind: wall
+    from:
+      x: 1600
+      y: 940
+    to:
+      x: 1600
+      y: 1192
+    radius: 8
+    jumpable: false
+  - kind: wall
+    from:
+      x: 1420
+      y: 940
+    to:
+      x: 1480
+      y: 940
+    radius: 8
+    jumpable: false
+  - kind: wall
+    from:
+      x: 1540
+      y: 940
+    to:
+      x: 1600
+      y: 940
+    radius: 8
+    jumpable: false
+  # === Corner keycard vaults (unchanged) ===
   - kind: wall
     from:
       x: 310
@@ -426,8 +596,8 @@ placedItems:
   - kind: story
     defId: ada_soda
     pos:
-      x: 640
-      y: 640
+      x: 600
+      y: 450
   - kind: equipment
     defId: pump_shotgun
     pos:

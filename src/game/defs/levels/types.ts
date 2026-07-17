@@ -191,6 +191,20 @@ export type LevelDef = {
     | { type: "clearAll" }
     | { type: "reachExit"; at: Vec2; radius?: number };
   /**
+   * THE INTENDED PATH: an ordered polyline of waypoints (world px) tracing the
+   * route the designer means the hero to walk from `playerSpawn` toward the
+   * objective, threaded through the level's corridors. Purely a navigation aid,
+   * it changes no simulation rule — but two systems read it:
+   *   • the autopilot (`bot.ts`) FOLLOWS it as its macro-travel target so a
+   *     no-pathfinding runner rounds walls instead of wedging on them, and
+   *   • the app draws a "go this way" guidance arrow toward the next waypoint
+   *     when the local area is clear.
+   * Author it in navigable open floor (each leg in line-of-sight of the next);
+   * omit it on open maps that need no steering. The engine helper
+   * `pathHeading`/`nextPathWaypoint` (`path.ts`) resolves the current target.
+   */
+  path?: Vec2[];
+  /**
    * Latent travel gates: doorways to ANOTHER LEVEL that do not exist on the
    * board until the player USES the matching bag trinket (`opensWith`, a
    * GEAR_DEFS id) while standing on this level — the Diablo cow-level ritual.

@@ -183,46 +183,53 @@
           }
         },
         {
-          "enemy": "architect",
-          "at": {
-            "x": 950,
-            "y": 240
-          }
-        },
-        {
           "enemy": "security_chief",
           "at": {
-            "x": 1050,
-            "y": 700
-          }
-        },
-        {
-          "enemy": "head_scientist",
-          "at": {
-            "x": 1270,
-            "y": 400
+            "x": 900,
+            "y": 600
           }
         },
         {
           "enemy": "janitor",
           "at": {
-            "x": 900,
-            "y": 1000
+            "x": 960,
+            "y": 880
+          }
+        },
+        {
+          "enemy": "head_scientist",
+          "at": {
+            "x": 1200,
+            "y": 600
+          }
+        },
+        {
+          "enemy": "architect",
+          "at": {
+            "x": 1480,
+            "y": 400
+          }
+        },
+        {
+          "enemy": "employee_of_the_month",
+          "at": {
+            "x": 910,
+            "y": 150
           }
         },
         {
           "enemy": "muskrat",
           "at": {
-            "x": 1730,
-            "y": 620
+            "x": 1850,
+            "y": 590
           }
         }
       ],
       "packs": [
         {
           "at": {
-            "x": 1000,
-            "y": 900
+            "x": 950,
+            "y": 880
           },
           "members": [
             {
@@ -237,8 +244,8 @@
         },
         {
           "at": {
-            "x": 1420,
-            "y": 430
+            "x": 1200,
+            "y": 320
           },
           "members": [
             {
@@ -256,14 +263,34 @@
         {
           "shape": "circle",
           "pos": {
-            "x": 1520,
-            "y": 560
+            "x": 1680,
+            "y": 600
           },
-          "radius": 135,
+          "radius": 115,
           "label": "PIT STOP"
         }
       ],
       "quietZones": [
+        {
+          "shape": "rect",
+          "rect": {
+            "x": 820,
+            "y": 8,
+            "width": 180,
+            "height": 202
+          },
+          "label": "BREAK ROOM"
+        },
+        {
+          "shape": "rect",
+          "rect": {
+            "x": 1420,
+            "y": 940,
+            "width": 180,
+            "height": 252
+          },
+          "label": "STOCK ROOM"
+        },
         {
           "shape": "rect",
           "rect": {
@@ -298,20 +325,14 @@
       "chests": [
         {
           "at": {
-            "x": 160,
-            "y": 130
+            "x": 910,
+            "y": 110
           }
         },
         {
           "at": {
-            "x": 1930,
-            "y": 130
-          }
-        },
-        {
-          "at": {
-            "x": 1810,
-            "y": 1150
+            "x": 1510,
+            "y": 1050
           }
         }
       ],
@@ -343,12 +364,12 @@
       ],
       "merchantSpawns": [
         {
-          "x": 1520,
-          "y": 560
+          "x": 1680,
+          "y": 600
         },
         {
-          "x": 760,
-          "y": 640
+          "x": 600,
+          "y": 450
         }
       ],
       "waves": {
@@ -411,12 +432,12 @@
         {
           "kind": "wall",
           "from": {
-            "x": 650,
+            "x": 470,
             "y": 8
           },
           "to": {
-            "x": 650,
-            "y": 300
+            "x": 470,
+            "y": 440
           },
           "radius": 8,
           "jumpable": false
@@ -424,24 +445,11 @@
         {
           "kind": "wall",
           "from": {
-            "x": 650,
-            "y": 430
-          },
-          "to": {
-            "x": 650,
+            "x": 470,
             "y": 760
           },
-          "radius": 8,
-          "jumpable": false
-        },
-        {
-          "kind": "wall",
-          "from": {
-            "x": 650,
-            "y": 890
-          },
           "to": {
-            "x": 650,
+            "x": 470,
             "y": 1192
           },
           "radius": 8,
@@ -450,38 +458,12 @@
         {
           "kind": "wall",
           "from": {
-            "x": 650,
-            "y": 600
-          },
-          "to": {
-            "x": 980,
-            "y": 600
-          },
-          "radius": 8,
-          "jumpable": false
-        },
-        {
-          "kind": "wall",
-          "from": {
-            "x": 1110,
-            "y": 600
-          },
-          "to": {
-            "x": 1350,
-            "y": 600
-          },
-          "radius": 8,
-          "jumpable": false
-        },
-        {
-          "kind": "wall",
-          "from": {
-            "x": 1350,
+            "x": 770,
             "y": 8
           },
           "to": {
-            "x": 1350,
-            "y": 340
+            "x": 770,
+            "y": 360
           },
           "radius": 8,
           "jumpable": false
@@ -489,25 +471,246 @@
         {
           "kind": "wall",
           "from": {
-            "x": 1350,
-            "y": 470
+            "x": 770,
+            "y": 680
           },
           "to": {
-            "x": 1350,
-            "y": 820
-          },
-          "radius": 8,
-          "jumpable": false
-        },
-        {
-          "kind": "wall",
-          "from": {
-            "x": 1350,
-            "y": 950
-          },
-          "to": {
-            "x": 1350,
+            "x": 770,
             "y": 1192
+          },
+          "radius": 8,
+          "jumpable": false
+        },
+        {
+          "kind": "wall",
+          "from": {
+            "x": 1070,
+            "y": 8
+          },
+          "to": {
+            "x": 1070,
+            "y": 480
+          },
+          "radius": 8,
+          "jumpable": false
+        },
+        {
+          "kind": "wall",
+          "from": {
+            "x": 1070,
+            "y": 800
+          },
+          "to": {
+            "x": 1070,
+            "y": 1192
+          },
+          "radius": 8,
+          "jumpable": false
+        },
+        {
+          "kind": "wall",
+          "from": {
+            "x": 1370,
+            "y": 8
+          },
+          "to": {
+            "x": 1370,
+            "y": 400
+          },
+          "radius": 8,
+          "jumpable": false
+        },
+        {
+          "kind": "wall",
+          "from": {
+            "x": 1370,
+            "y": 720
+          },
+          "to": {
+            "x": 1370,
+            "y": 1192
+          },
+          "radius": 8,
+          "jumpable": false
+        },
+        {
+          "kind": "wall",
+          "from": {
+            "x": 1610,
+            "y": 8
+          },
+          "to": {
+            "x": 1610,
+            "y": 460
+          },
+          "radius": 8,
+          "jumpable": false
+        },
+        {
+          "kind": "wall",
+          "from": {
+            "x": 1610,
+            "y": 740
+          },
+          "to": {
+            "x": 1610,
+            "y": 1192
+          },
+          "radius": 8,
+          "jumpable": false
+        },
+        {
+          "kind": "wall",
+          "from": {
+            "x": 520,
+            "y": 200
+          },
+          "to": {
+            "x": 700,
+            "y": 200
+          },
+          "radius": 8,
+          "jumpable": false
+        },
+        {
+          "kind": "wall",
+          "from": {
+            "x": 840,
+            "y": 980
+          },
+          "to": {
+            "x": 1010,
+            "y": 980
+          },
+          "radius": 8,
+          "jumpable": false
+        },
+        {
+          "kind": "wall",
+          "from": {
+            "x": 1120,
+            "y": 220
+          },
+          "to": {
+            "x": 1300,
+            "y": 220
+          },
+          "radius": 8,
+          "jumpable": false
+        },
+        {
+          "kind": "wall",
+          "from": {
+            "x": 1160,
+            "y": 980
+          },
+          "to": {
+            "x": 1320,
+            "y": 980
+          },
+          "radius": 8,
+          "jumpable": false
+        },
+        {
+          "kind": "wall",
+          "from": {
+            "x": 820,
+            "y": 8
+          },
+          "to": {
+            "x": 820,
+            "y": 210
+          },
+          "radius": 8,
+          "jumpable": false
+        },
+        {
+          "kind": "wall",
+          "from": {
+            "x": 1000,
+            "y": 8
+          },
+          "to": {
+            "x": 1000,
+            "y": 210
+          },
+          "radius": 8,
+          "jumpable": false
+        },
+        {
+          "kind": "wall",
+          "from": {
+            "x": 820,
+            "y": 210
+          },
+          "to": {
+            "x": 880,
+            "y": 210
+          },
+          "radius": 8,
+          "jumpable": false
+        },
+        {
+          "kind": "wall",
+          "from": {
+            "x": 940,
+            "y": 210
+          },
+          "to": {
+            "x": 1000,
+            "y": 210
+          },
+          "radius": 8,
+          "jumpable": false
+        },
+        {
+          "kind": "wall",
+          "from": {
+            "x": 1420,
+            "y": 940
+          },
+          "to": {
+            "x": 1420,
+            "y": 1192
+          },
+          "radius": 8,
+          "jumpable": false
+        },
+        {
+          "kind": "wall",
+          "from": {
+            "x": 1600,
+            "y": 940
+          },
+          "to": {
+            "x": 1600,
+            "y": 1192
+          },
+          "radius": 8,
+          "jumpable": false
+        },
+        {
+          "kind": "wall",
+          "from": {
+            "x": 1420,
+            "y": 940
+          },
+          "to": {
+            "x": 1480,
+            "y": 940
+          },
+          "radius": 8,
+          "jumpable": false
+        },
+        {
+          "kind": "wall",
+          "from": {
+            "x": 1540,
+            "y": 940
+          },
+          "to": {
+            "x": 1600,
+            "y": 940
           },
           "radius": 8,
           "jumpable": false
@@ -634,8 +837,8 @@
           "kind": "story",
           "defId": "ada_soda",
           "pos": {
-            "x": 640,
-            "y": 640
+            "x": 600,
+            "y": 450
           }
         },
         {

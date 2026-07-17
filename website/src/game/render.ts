@@ -1491,7 +1491,13 @@ export function drawEffects(
       const age = duration - (effect.untilMs - timeMs); // ms since the break
       const tipMs = 200;
       const box = spriteByName(assets.sprites, effect.sprite ?? "crate");
-      const debris = spriteByName(assets.sprites, "crate_broken");
+      // Debris matches the container that broke: a `<sprite>_broken` twin if the
+      // family ships one (a locker leaves buckled chrome, not cardboard planks),
+      // falling back to the generic crate wreck.
+      const debris =
+        (effect.sprite &&
+          spriteByName(assets.sprites, `${effect.sprite}_broken`)) ||
+        spriteByName(assets.sprites, "crate_broken");
       // Splinters: a handful of wood chips thrown out from the box, arcing up
       // then down and fading over the first ~360ms. Seeded off the effect so a
       // burst is stable frame to frame (each chip a fixed bearing/speed).

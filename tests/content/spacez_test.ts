@@ -8,6 +8,7 @@ import { describe, expect, it } from "vitest";
 import {
   abilityDef,
   allocateStat,
+  CHESTS,
   createGame,
   enemyDef,
   gearDef,
@@ -237,6 +238,57 @@ describe("SPACEZ HQ level def", () => {
         wall.radius + PLAYER.radius,
       );
     }
+  });
+
+  it("lays the floor out as grocery-store aisles: five shelf walls with gaps", () => {
+    // Each aisle is authored as two vertical segments (a gap in the middle),
+    // so the serpentine reads as five shelf runs at the aisle x-positions.
+    const aisleX = [470, 770, 1070, 1370, 1610];
+    for (const x of aisleX) {
+      const segs = (HQ.walls ?? []).filter(
+        (w) => w.from.x === x && w.to.x === x && w.from.y !== w.to.y,
+      );
+      // Two segments (top + bottom of the aisle) leaving a single pass-gap.
+      expect(segs.length).toBe(2);
+    }
+  });
+});
+
+describe("the two off-path detour lockers", () => {
+  it("places exactly two SpaceZ lockers, both breakable reward containers", () => {
+    const state = startGame(SEED, "spacez_hq");
+    const lockers = state.obstacles.filter((o) => o.chest);
+    expect(lockers).toHaveLength(2);
+    for (const locker of lockers) {
+      expect(locker.sprite).toBe("locker");
+      expect(locker.breakable).toBe(true);
+      expect(locker.hp ?? 0).toBeGreaterThan(0);
+    }
+    // The default chest sprite is the locker (a SpaceZ staff locker), not a
+    // fallback rock.
+    expect(CHESTS.sprite).toBe("locker");
+  });
+
+  it("guards the BREAK ROOM locker with the level's pinned UNIQUE", () => {
+    // The EMPLOYEE OF THE MONTH is pinned (not just a random rare) and stands
+    // between the detour entrance and its locker.
+    const guard = HQ.spawns.find(
+      (s) => "at" in s && s.enemy === "employee_of_the_month",
+    ) as { enemy: string; at: { x: number; y: number } } | undefined;
+    expect(guard).toBeDefined();
+    expect(enemyDef("employee_of_the_month").rarity).toBe("unique");
+    const breakRoomLocker = (HQ.chests ?? []).find((c) => c.at.y < 600)!;
+    expect(breakRoomLocker).toBeDefined();
+    // The guardian sits within the same shallow pocket as the locker it holds.
+    expect(dist(guard!.at, breakRoomLocker.at)).toBeLessThan(120);
+  });
+
+  it("spills a Diablo-2 haul: an 80% marquee item plus guaranteed supplies", () => {
+    // The locker's whole draw over a scattered crate — see crates_test for the
+    // spill sim; here we pin the tuning the level relies on.
+    expect(CHESTS.itemChance).toBeCloseTo(0.8);
+    expect(CHESTS.consumables).toBeGreaterThan(0);
+    expect(CHESTS.bonusItemChance).toBeGreaterThan(0);
   });
 });
 

@@ -230,15 +230,16 @@ function dropCrateLoot(state: GameState, at: Vec2): void {
 }
 
 /**
- * A special CHEST's spill (config `CHESTS`): a small HOARD, not a single drop —
- * several equipment rolls at a tier bonus hotter than a crate's (so a chest
- * reaches magic/rare/unique and folds a natural unique far more often) plus a
- * couple of guaranteed consumables. The payoff that makes a `quietZone` dead
- * area worth the detour. Tier gates still apply (mlvl-scaled).
+ * A special CHEST's spill (config `CHESTS`): a Diablo-2 locker, not a single
+ * crate drop — an 80% shot at a MARQUEE equipment item (rolled at a tier bonus
+ * hotter than a crate's, so it reaches magic/rare/unique and folds a natural
+ * unique far more often), a smaller chance at a second bonus piece on top, and
+ * a couple of guaranteed consumables regardless. The payoff that makes a
+ * `quietZone` dead area worth the detour. Tier gates still apply (mlvl-scaled).
  */
 function dropChestLoot(state: GameState, at: Vec2): void {
   const mlvl = currentMobLevel(state);
-  for (let i = 0; i < CHESTS.gearDrops; i++) {
+  const dropGear = () => {
     state.items.push({
       id: state.nextId++,
       kind: "equipment",
@@ -248,6 +249,12 @@ function dropChestLoot(state: GameState, at: Vec2): void {
         mlvl,
       }),
     });
+  };
+  // The marquee item — an 80% spill; only on that hit can a second bonus piece
+  // follow, so a locker gives one prize most of the time and two now and then.
+  if (state.rng() < CHESTS.itemChance) {
+    dropGear();
+    if (state.rng() < CHESTS.bonusItemChance) dropGear();
   }
   for (let i = 0; i < CHESTS.consumables; i++) {
     dropConsumable(state, state.rng() < 0.5 ? "health" : "stamina", at);
