@@ -1,0 +1,28 @@
+name: spell_venom_shot
+family: icons
+size: [12, 12]
+description: >
+  The VENOM SHOT ranged technique icon — a venom-tinted ranged glyph.
+subject:
+  kind: spell icon
+  features: a bold venom-tinted motif, centered and outlined
+  accent: venom precision
+  flavor: the VENOM SHOT cast-power pictogram
+palette:
+  O: "#0c0e18" # dark outline
+  E: "#b6f05a" # venom bright
+  D: "#5a9a2a" # venom deep
+  H: "#eaffc0" # venom highlight
+grid: |
+  ............
+  ............
+  ......OOO...
+  OOO...OEOO..
+  ODOO..OOEOO.
+  OODOOOOOOEOO
+  OEEEEEEEEEHO
+  OODOOOOOOEOO
+  ODOO..OOEOO.
+  OOO...OEOO..
+  ......OOO...
+  ............

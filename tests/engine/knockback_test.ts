@@ -1,9 +1,11 @@
 // SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
-// KNOCKBACK (config `KNOCKBACK`): the hero's own MELEE/RANGED weapon blow
-// shoves a surviving mob straight back, away from him, so kiting the horde is
-// that bit easier. Magic hits don't push; companions/procs/abilities don't;
-// heavier roles (elite half, boss none) plant their feet; the developer
-// BALANCE › KNOCKBACK knob scales the shove. Runs on synthetic fixtures.
+// KNOCKBACK (config `KNOCKBACK`): a RARE weapon signature (the `knockback`
+// affix) — only a hero wielding one of the handful of authored knockback
+// weapons shoves a surviving mob straight back on his own MELEE/RANGED blow, so
+// kiting the horde is that bit easier. A plain weapon never pushes; magic hits
+// don't push even with the affix; companions/procs/abilities don't; heavier
+// roles (elite half, boss none) plant their feet; the developer BALANCE ›
+// KNOCKBACK knob scales the shove. Runs on synthetic fixtures.
 
 import { afterEach, describe, expect, it } from "vitest";
 
@@ -21,13 +23,16 @@ afterEach(() => resetBalanceTuning());
 /**
  * A landing-guaranteed test rig: the hero can't whiff (huge DEXTERITY zeroes
  * both his innate miss and the foe's dodge, so `rollAccuracy` always connects)
- * and the map is bare (no obstacle can deflect the shove). Returns the mob
- * parked `dx` to the hero's RIGHT on his own row, so a push reads as a clean
- * +x displacement.
+ * and the map is bare (no obstacle can deflect the shove). By default the held
+ * weapon carries the rare KNOCKBACK signature (`knockback` affix) so the blow
+ * pushes; pass `knockback: false` for a plain weapon that must NOT shove.
+ * Returns the mob parked `dx` to the hero's RIGHT on his own row, so a push
+ * reads as a clean +x displacement.
  */
 function rig(
   defId = "test_minion",
   dx = 60,
+  knockback = true,
 ): { state: GameState; enemy: Enemy } {
   const state = startGame();
   clearStage(state);
@@ -35,6 +40,11 @@ function rig(
   // Never miss, never get dodged — the blow always lands, so the knockback is
   // deterministic (its magnitude carries no rng of its own).
   state.player.stats.dexterity = 1000;
+  // Only a weapon carrying the knockback affix shoves — grant the signature to
+  // the held weapon so the blow pushes (a plain weapon leaves it off).
+  if (knockback) {
+    state.player.equipment.weapon?.affixes.push({ kind: "knockback" });
+  }
   const enemy = makeEnemy(
     {
       pos: { x: state.player.pos.x + dx, y: state.player.pos.y },
@@ -63,6 +73,15 @@ describe("knockback", () => {
     const before = enemy.pos.x;
     hitEnemy(state, enemy, 20, "ranged", { rollAccuracy: true });
     expect(enemy.pos.x).toBeCloseTo(before + KNOCKBACK.distance, 6);
+  });
+
+  it("does NOT shove when the weapon lacks the knockback signature", () => {
+    // The rare-stat rule: a plain melee weapon (no `knockback` affix) never
+    // pushes, so most builds don't knock back at all.
+    const { state, enemy } = rig("test_minion", 60, false);
+    const before = enemy.pos.x;
+    hitEnemy(state, enemy, 20, "melee", { rollAccuracy: true });
+    expect(enemy.pos.x).toBe(before);
   });
 
   it("does NOT shove on a magic blow", () => {

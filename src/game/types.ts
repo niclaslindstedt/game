@@ -145,6 +145,15 @@ export type Affix =
   | { kind: "maxHp"; value: number }
   | { kind: "crit"; value: number }
   | { kind: "armor"; value: number }
+  /**
+   * ARMOR PIERCING — the fraction of a mob's armor the hero's PHYSICAL blows
+   * IGNORE on top of the class baseline (`STATS.armorPenByClass`), summed across
+   * worn pieces (see `heroArmorPen`). A ranged (or melee) endgame chase stat:
+   * the more pierce a hero's uniques/legendaries carry, the more of the armored
+   * late game their shots/blows punch through. Does nothing for magic (it
+   * bypasses armor already). Unique/legendary authoring territory.
+   */
+  | { kind: "armorPen"; value: number }
   | { kind: "stat"; value: number; stat: StatName }
   // Scaling bonuses (uniques): a fraction of the hero's OWN value.
   | { kind: "statPct"; value: number; stat: StatName }
@@ -179,7 +188,21 @@ export type Affix =
    * chance reads zero while the piece is worn (`playerMissChance`; the foe's
    * dodge is still its own move). Legendary authoring territory.
    */
-  | { kind: "sureStrike" };
+  | { kind: "sureStrike" }
+  /**
+   * KNOCKBACK — a landing MELEE or RANGED weapon blow of the hero's own SHOVES
+   * the struck survivor straight back, away from him (config `KNOCKBACK`), so a
+   * swing or a shot buys ground and kiting the horde gets easier. It is a RARE
+   * signature the physical arsenal buys on a HANDFUL of authored uniques/
+   * legendaries/artifacts — an overpowered stat kept scarce; it never rolls
+   * onto a magic/rare drop and no plain weapon carries it. A marker, not a
+   * value: the shove magnitude is the shared `KNOCKBACK.distance`, so a weapon
+   * either has the push or it doesn't. Magic blows never push, whatever the
+   * weapon carries (INT keeps its crowd control in the cleave/crit blob). The
+   * developer BALANCE › KNOCKBACK knob still scales the shove live.
+   * Unique/legendary/artifact authoring territory.
+   */
+  | { kind: "knockback" };
 
 /** The spells an item can GRANT permanently (see the `spell` affix): the
  * forever twins of the orbit/storm/stasis powerups, stepped off worn gear. */
@@ -402,6 +425,20 @@ export type Player = {
    */
   shieldHp: number;
   shieldMs: number;
+  /**
+   * Active SELF-BUFF (a martial-class `buff` power — war cry, berserk, rapid
+   * fire, take aim). While `buffMs > 0` the hero's own weapon blows, attack
+   * cadence, and walk speed are scaled by `buffDamageMult` / `buffHasteMult` /
+   * `buffSpeedMult` (all 1 when idle). A re-cast refreshes to the stronger of
+   * each and the longer timer (no stacking); the timer ebbs in `stepRegen`,
+   * which resets the mults to 1 when it hits 0. The mults are read through
+   * `heroBuffMult` at the three combat sites (`weaponDamageFor`,
+   * `weaponCooldownFor`, `playerSpeed`).
+   */
+  buffMs: number;
+  buffDamageMult: number;
+  buffHasteMult: number;
+  buffSpeedMult: number;
   /** Unit vector of the last movement direction; drives sprite facing. */
   facing: Vec2;
   /**
@@ -429,9 +466,9 @@ export type Player = {
    * The HUD spell bar: one entry per slot (`SPELL_SLOTS` long), each a
    * SPELL_DEFS id assigned to that slot or null for an empty slot. Tapping a
    * slot casts its spell (`GameInput.castSpell`); a long-press opens the picker
-   * to reassign it from the hero's UNLOCKED spells (effective INT ≥ the spell's
-   * `minInt`). Carried between levels via the loadout, so a caster's bar
-   * persists.
+   * to reassign it from the hero's UNLOCKED spells (of the hero's class —
+   * effective governing stat ≥ the spell's `minStat`). Carried between levels
+   * via the loadout, so a caster's bar persists.
    */
   spellSlots: (string | null)[];
   /**
@@ -1399,6 +1436,10 @@ export type GameEvent =
   /** A defensive HEAL spell restored the hero's hp (`heal` actually healed).
    * Distinct from `medkitUsed` so the app can give a spell its arcane cue. */
   | { type: "spellHealed"; heal: number }
+  /** A martial SELF-BUFF power went off (a `buff` effect): the hero is amped for
+   * `durationMs`. The app blooms a self-aura tinted to the power and echoes its
+   * name; the mults live on the player (see `buffMs`). */
+  | { type: "playerBuffed"; durationMs: number }
   /** A stacked weapon repair kit was spent from the consumable dock — the held
    * weapon, every bagged weapon, and the worn armor are mended, and any
    * durability-booted weapon is back in rotation. Drives the toolbox chime. */

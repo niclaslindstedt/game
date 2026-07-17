@@ -42,6 +42,7 @@ import {
   armorReduction,
   effectiveStat,
   equipmentName,
+  heroArmorPen,
   isBetterEquipment,
   playerCritChance,
   recomputeMaxHp,
@@ -52,7 +53,7 @@ import {
   weaponDamageFor,
   weaponDps,
 } from "../game/items.ts";
-import { killEnemy } from "../game/loot.ts";
+import { killEnemy, mobArmorMult } from "../game/loot.ts";
 import { statCap, xpLevelCap } from "../game/leveling.ts";
 import {
   currentMobLevel,
@@ -65,7 +66,11 @@ import {
   resolveMobScaling,
 } from "../game/menace.ts";
 import { createRng } from "../lib/rng.ts";
-import { STAT_NAMES } from "../game/defs/equipment.ts";
+import {
+  STAT_NAMES,
+  weaponAssumedTargets,
+  weaponDef,
+} from "../game/defs/equipment.ts";
 import type {
   Difficulty,
   Enemy,
@@ -150,8 +155,14 @@ export type Checkpoint = {
   maxHp: number;
   /** Expected damage of one landed blow (real `weaponDamageFor`). */
   perHit: number;
-  /** Expected DPS in the hero's hands (real `weaponDps`). */
+  /** Expected DPS in the hero's hands (real `weaponDps`) — SINGLE-TARGET. */
   dps: number;
+  /** HORDE-effective DPS — the single-target `dps` scaled by the weapon's AoE
+   * assumption (`weaponAssumedTargets`) and the mob-armor multiplier the class
+   * actually faces (`mobArmorMult`, folding class + gear armor piercing). The
+   * closest fast proxy for "how fast does this build clear the armored horde",
+   * so a class comparison sees crit AND AoE AND armor together. */
+  hordeDps: number;
   /** Crit chance in [0, 1] (real `playerCritChance`). */
   critChance: number;
   /** Crit-damage multiplier of the equipped weapon. */
@@ -525,6 +536,19 @@ function snapshot(
 
   // ---- The mob-side + menace read, measured against the last real minion bar.
   const dps = weaponDps(state, weapon);
+  // HORDE-effective DPS: single-target dps × the weapon's AoE assumption × the
+  // mob-armor multiplier this class actually faces (class + gear pierce folded
+  // in). Folds crit (already in dps), reach, and armor into one comparable read.
+  const wdef = weaponDef(weapon.defId);
+  const hordeDps =
+    dps *
+    weaponAssumedTargets(wdef) *
+    mobArmorMult(
+      currentMobLevel(state),
+      difficulty,
+      wdef.class,
+      heroArmorPen(state),
+    );
   const perHit = weaponDamageFor(state, weapon);
   // The expected KILLING BLOW: one landed hit, crit folded in as its average
   // lift — what the menace ratchet weighs its overkill against.
@@ -556,6 +580,7 @@ function snapshot(
     maxHp: player.maxHp,
     perHit: round1(weaponDamageFor(state, weapon)),
     dps: round1(weaponDps(state, weapon)),
+    hordeDps: round1(hordeDps),
     critChance: round3(playerCritChance(state, undefined)),
     critMult: round2(weaponCritMult(state, weapon)),
     armor: totalArmor(state),

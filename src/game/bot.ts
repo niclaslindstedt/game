@@ -13,17 +13,18 @@ import { clamp, distance } from "@game/lib/vec.ts";
 import type { Vec2 } from "@game/lib/vec.ts";
 import { BUILD_ROTATION, STAT_BUILDS } from "./builds.ts";
 import type { StatBuild } from "./builds.ts";
-import { MANA, PLAYER } from "./config.ts";
+import { PLAYER } from "./config.ts";
 import { nextPathWaypoint, onPathLevel, pathWalked } from "./path.ts";
 import { blockedByObstacle, insideObstacle } from "./obstacles.ts";
 import { enemyDef } from "./defs/enemies/index.ts";
 import { levelDef } from "./defs/levels/index.ts";
 import { weaponDef } from "./defs/equipment.ts";
-import { isSpellUnlocked, spellDef } from "./defs/spells.ts";
+import { spellDef } from "./defs/spells.ts";
 import {
   bestMedkitTier,
-  effectiveStat,
   equipmentMaxDurability,
+  heroSpellStat,
+  isSpellAvailable,
   isWeaponBroken,
   REQ_STAT,
 } from "./items.ts";
@@ -290,12 +291,13 @@ export function botAct(bot: Bot, state: GameState): GameInput {
   // mends the whole kit and restores the shed weapon (useRepairKit no-ops with
   // nothing to mend, so a mistap is free).
   decided.useRepairKit = player.repairKits > 0 && needsRepair(state);
-  // CASTER play: drink a mana potion when the pool runs low, and fire the best
-  // castable spell at the fight — a heal when hurt, an AOE into a crowd, a bolt
-  // at a lone foe, a ward/slow under pressure. Only a hero with an INT-sized
-  // pool (past MANA.base) casts. The spell bar is filled by the harness/app;
-  // the bot reads it and stays pure (input only, no state mutation).
-  if (player.maxMana > MANA.base) {
+  // CLASS play: drink a mana potion when the pool runs low, and fire the best
+  // castable power at the fight — a heal when hurt, an AOE into a crowd, a bolt
+  // at a lone foe, a buff under pressure, a ward/slow to control. Only a hero
+  // with a CLASS (a dominant STR/DEX/INT that unlocks a spell list) casts. The
+  // spell bar is filled by the harness/app; the bot reads it and stays pure
+  // (input only, no state mutation).
+  if (heroSpellStat(state) !== null) {
     decided.useManaPotion =
       player.manaPotions > 0 && player.mana < player.maxMana * MANA_TOPUP_FRAC;
     const slot = pickSpellToCast(state, threatNear);
@@ -319,31 +321,38 @@ const MANA_TOPUP_FRAC = 0.25;
  */
 function pickSpellToCast(state: GameState, threatNear: boolean): number {
   const p = state.player;
-  const effInt = effectiveStat(state, "intelligence");
   const hurt = p.hp < p.maxHp * HEAL_HP_FRAC;
+  const buffed = p.buffMs > 0;
   let best = -1;
   let bestScore = 0;
   for (let i = 0; i < p.spellSlots.length; i++) {
     const id = p.spellSlots[i];
     if (!id) continue;
     const def = spellDef(id);
-    if (!isSpellUnlocked(def, effInt)) continue;
+    if (!isSpellAvailable(state, def)) continue;
     if ((p.spellCooldowns[id] ?? 0) > 0) continue;
     if (p.mana < def.manaCost) continue;
     const e = def.effect;
-    // Only cast where the spell would actually connect — an attack bolt needs a
-    // foe in RANGE, an AOE/slow needs a crowd in RADIUS — so the bot never
+    // Only cast where the power would actually connect — an attack bolt needs a
+    // foe in RANGE, an AOE/rain/slow needs a crowd in reach — so the bot never
     // spams a whiffing cast (a wasted nova, a targetless fizzle).
     let score = 0;
     if (e.kind === "heal") score = hurt ? 5 : 0;
     else if (e.kind === "nova") {
       const n = foesWithin(state, e.radius);
       score = n >= 2 ? 4 : n >= 1 ? 2 : 0;
+    } else if (e.kind === "rain") {
+      const n = foesWithin(state, e.castRange);
+      score = n >= 2 ? 4 : n >= 1 ? 2 : 0;
     } else if (e.kind === "bolt")
       score = foesWithin(state, e.range) >= 1 ? 3 : 0;
     else if (e.kind === "slow")
       score = foesWithin(state, e.radius) >= 3 ? 3 : 0;
     else if (e.kind === "shield") score = hurt || threatNear ? 2 : 0;
+    // A self-buff: pop it when there's a fight on and one isn't already running,
+    // so the amp isn't wasted on an empty field or double-cast.
+    else if (e.kind === "buff")
+      score = !buffed && foesWithin(state, 260) >= 1 ? 3 : 0;
     if (score > bestScore) {
       bestScore = score;
       best = i;

@@ -137,6 +137,11 @@ export {
   restoreMana,
   setSpellSlot,
   takeSpellUnlock,
+  unlockedSpellIds,
+  heroSpellStat,
+  heroSpellClass,
+  isSpellAvailable,
+  heroBuffMult,
   dropChance,
   desperationRamp,
   lowHealthDesperation,
@@ -157,6 +162,8 @@ export {
   inventoryCapacity,
   syncInventoryCapacity,
   gearScore,
+  heroArmorPen,
+  heroHasKnockback,
   isBetterEquipment,
   setAutoEquipEnabled,
   isAutoEquipEnabled,
@@ -244,6 +251,12 @@ export {
 // The level map: fog-of-war queries, the map pause phase, and the grid
 // helpers the map overlay draws from (`state.explored` + MAP.cellSize).
 export { closeMap, isExplored, mapCols, mapRows, openMap } from "./game/map.ts";
+
+// Obstacle sight queries: the swept "does this line clear every TALL obstacle?"
+// test the simulation runs against solid features (walls, boulders, rocks —
+// jumpable low ones never occlude). The renderer reuses `lineOfSight` to cull
+// mobs the hero can't actually see (hidden behind cover).
+export { lineOfSight } from "./game/obstacles.ts";
 
 // Design zones — the safe/quiet region geometry LevelDefs carve maps with.
 export {
@@ -417,19 +430,26 @@ export {
   type AbilityDef,
   type AbilityKind,
 } from "./game/defs/abilities.ts";
-// The player-cast SPELL catalog (mana-costed, INT-unlocked) + its helpers.
+// The player-cast catalog (mana-costed, class-unlocked: melee ARTS on STR,
+// ranged TECHNIQUES on DEX, magic SPELLS on INT) + its class helpers.
 export {
   SPELL_DEFS,
   SPELL_SLOTS,
-  SPELL_STAT,
+  SPELL_STATS,
+  SPELL_STAT_CLASS,
+  SPELL_CLASS_STAT,
   SPELL_UNLOCK_STEP,
   spellDef,
   spellDefs,
   setSpellDefs,
+  spellClassOf,
   isSpellUnlocked,
-  unlockedSpellIds,
-  spellsUnlockedBetween,
+  dominantSpellStat,
+  spellsForStat,
+  unlockedSpellIdsForStat,
+  spellsUnlockedBetweenForStat,
   type SpellDef,
+  type SpellClass,
   type SpellCategory,
   type SpellElement,
   type SpellEffect,

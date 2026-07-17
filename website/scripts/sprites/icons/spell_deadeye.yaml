@@ -1,0 +1,28 @@
+name: spell_deadeye
+family: icons
+size: [12, 12]
+description: >
+  The DEADEYE ranged technique icon — a void-tinted ranged glyph.
+subject:
+  kind: spell icon
+  features: a bold void-tinted motif, centered and outlined
+  accent: void precision
+  flavor: the DEADEYE cast-power pictogram
+palette:
+  O: "#0c0e18" # dark outline
+  E: "#c07bff" # void bright
+  D: "#7736c0" # void deep
+  H: "#ead6ff" # void highlight
+grid: |
+  ...OOOOOOO..
+  ..OOEEEEEOO.
+  .OOEOOOOEEOO
+  OOEOOOOOOOEO
+  OEEOOOEOOOOE
+  OOOOOEDEOOOO
+  DDDDDDDDDDDD
+  OOOOOEDEOOOO
+  OEOOOOEOOOEE
+  OOEOOOOOOOEO
+  .OOEEOOOOEOO
+  ..OOEEEEEOO.

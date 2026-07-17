@@ -22,6 +22,7 @@ own namespace, and a sequel changes it there once:
 | Developer → Debug mode       | on / off                                                     | off (shows the in-run FPS meter; row hidden until unlocked)                                                   |
 | Developer → Auto level stats | on / off                                                     | off (opt-in free per-level base-stat growth; the row is hidden until unlocked)                                |
 | Developer → Balance          | ten multiplier sliders, 0×–100× (exponential)                | 1× each (the shipped tuning; a RESET ALL row restores it)                                                     |
+| Developer → Seed characters  | mint melee/ranged/magic heroes at LV 34/56/70/99             | none (a manual action — each press banks specimens into the roster; the row is hidden until unlocked)         |
 
 A hidden **DEVELOPER** row unlocks at the bottom of SETTINGS after the title
 screen's moon Easter egg is found — a long-press on the title moon detonates it
@@ -48,8 +49,8 @@ recoils, a wand thrusts on the cast — so these are no longer toggles.)
 The developer screen also holds a **BALANCE** subpage: a set of runtime
 multipliers over the engine's shipped tuning (`src/game/tuning.ts`, applied via
 `setBalanceTuning`) for probing the game's balance without rebuilding — XP
-GAIN (leveling pace), HERO DAMAGE, KNOCKBACK (how far a melee/ranged blow
-shoves a struck mob back), MOB HP, MOB DAMAGE, HORDE SIZE (the wave
+GAIN (leveling pace), HERO DAMAGE, KNOCKBACK (how far the rare knockback
+weapons shove a struck mob back), MOB HP, MOB DAMAGE, HORDE SIZE (the wave
 spawner's floor and cap), DROP RATE, GEAR SHARE (the equipment slice of the
 drop ladder), REPAIR DROPS (the repair-kit slice), GEAR QUALITY (magic/rare
 tier odds), UNIQUE DROPS, MENACE GAIN, and CLEAR GATE (how far you must
@@ -59,6 +60,20 @@ tuning, where **1× is baseline**. The track is exponential: its four quarters
 cover 0→1, 1→2, 2→10, then 10→100, so the useful low end gets most of the
 travel. Values persist with the settings, and a **RESET ALL** row restores the
 shipped 1× across the board.
+
+The developer screen also holds a **SEED CHARACTERS** subpage — a shortcut that
+mints ready-to-play heroes straight into the roster so a developer can jump into
+late-game content without grinding a build out. It offers **SEED ALL** (the
+whole matrix) plus one row per power tier — **NIGHTMARE (LV 34)**, **JESUS
+(LV 56)**, **POST-JESUS (LV 70)**, and **ENDGAME (LV 99)** — each of which banks
+three softcore specimens: a **melee**, a **ranged**, and a **magic** hero built
+at that level. Each seed carries a lane-optimized stat spread (melee → STRENGTH,
+ranged → DEXTERITY, magic → INTELLIGENCE), level-appropriate rerolled gear whose
+armor material follows the lane (heavy STR plate/mail, DEX leather, INT cloth), a
+class-correct weapon, a stock of consumables, and — for casters — a filled spell
+bar. A seed is stamped as having beaten every difficulty up to its tier, so its
+level picker is open; re-seeding a tier refreshes its specimens rather than
+piling up duplicates. The heroes appear under **PLAY → LOAD GAME**.
 
 Desktop keyboard controls (when **Keys** is set to WASD): the shipped scheme is
 **WASD** steer, **Shift** walks, **Space** jumps, **Q** opens the weapon
@@ -164,6 +179,7 @@ environment.
 | `?seed=<n>`           | Pins the run's layout seed (a positive integer) so retries and bug reports lay the level out identically. Absent or invalid, the seed derives from the clock. See the debug-game skill.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                         |
 | `?scenario=<json>`    | Dev/test override that mutates a fresh run into an exact situation (`applyScenario`, `src/game/scenario.ts` — see the `test-scenario` skill): teleport the hero (`"place":"boss"`, `"place":"merchant"`, or `{x,y}`), set hp/stamina/level/stats/coins, swap or strip the weapon and worn gear, bank powerups, stock the consumable dock (`medkits` per-quality counts, `staminaPotions`), clear the field, silence the wave spawner, spawn rings of extra mobs around the player at a minimum distance (optionally pre-wounded via `hpFrac`, to pose battle-damage sprite stages), lay ground items out around the hero (`drops`: loose pickups, equipment/unique/ability/story ids), and `freeze` the world's actors for a stable screenshot (enemies/merchant/companions hold still; the hero stays playable — pair with `disarmed`). The value is URL-encoded JSON, e.g. `?scenario={"place":"boss","hp":2,"weapon":null,"spawns":[{"enemy":"ghost","count":60,"minDistance":60}]}`. Applies once at run start (not to resumed or checkpointed runs); by default it also skips the opening. Invalid JSON is ignored with a warning. Combine with `?level=`, `?seed=` (the spawn ring draws on the run's seeded rng, so repros are exact), `?bot=`, and `?debug`.                                                            |
 | `?cutscene=<id>`      | Opens the cutscene workbench instead of the game: plays one scene from the catalog (`src/game/defs/cutscenes.ts`) with TAP/SKIP/REPLAY controls, for iterating on scene authoring. With `?debug`, exposes the live scene as `window.__cutscene` for the preview harness (`website/scripts/cutscene-preview.mjs`).                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                               |
+| `?skytest`            | Planetarium test view of the title screen: forces the ORBITAL MENU solar system on (regardless of the developer flag) and strips the menu chrome (logo, menu, footer) so the sun-lit, rotating planet globes can be inspected on a bare sky. Pair with `window.__skyFreeze` (0..1 pins the master orbital loop) and `window.__skyState` / `window.__skyLabels` (`website/src/game/titleSky.ts`); the correctness harness `website/scripts/verify-sky.mjs` reads the same hooks.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                 |
 
 ## Gameplay tuning
 

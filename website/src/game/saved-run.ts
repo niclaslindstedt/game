@@ -9,7 +9,7 @@
 // rebuilding the generator on load so a resumed run picks up the exact same
 // stream (proven in tests/engine/persistence_test.ts).
 
-import { adoptEquipment, LEVELS, warn } from "@game/core";
+import { adoptEquipment, LEVELS, mapCols, mapRows, warn } from "@game/core";
 import type { Difficulty, Equipment, GameState } from "@game/core";
 
 import { createRngFromState, rngState } from "@game/lib/rng.ts";
@@ -153,6 +153,35 @@ function adoptRunEquipment(state: GameState): void {
   }
 }
 
+/**
+ * Rebuild `state.explored` as a real `Uint8Array`. `JSON.stringify` turns the
+ * fog grid's typed array into a plain object (`{"0":0,"1":1,…}`), and
+ * `JSON.parse` leaves it that way — so a thawed run's `explored` has no
+ * `.length` and none of the typed-array semantics the fog renderers lean on.
+ * Both the main-view fog field (render.ts) and the minimap (Minimap.tsx) size
+ * their invalidation off `explored.length`, which is `undefined` on the plain
+ * object → the reveal count reads 0 forever → the cached fog never rebuilds and
+ * the map freezes at the resumed frontier (the "fog won't clear after resume"
+ * bug). Reviving to the level-sized typed array on load restores every consumer
+ * at once. Sized from the level (not the object's key count) so a partial or
+ * corrupt blob still yields a full, correctly-indexed grid.
+ */
+function reviveExplored(state: GameState): void {
+  if (state.explored instanceof Uint8Array) return;
+  const size = mapCols(state.level) * mapRows(state.level);
+  const grid = new Uint8Array(size);
+  const raw = state.explored as unknown;
+  if (raw && typeof raw === "object") {
+    for (const [key, value] of Object.entries(raw as Record<string, unknown>)) {
+      const idx = Number(key);
+      if (Number.isInteger(idx) && idx >= 0 && idx < size) {
+        grid[idx] = value ? 1 : 0;
+      }
+    }
+  }
+  state.explored = grid;
+}
+
 /** Drop any parked run — called when one is resumed, abandoned, or replaced. */
 export function clearSavedRun(): void {
   try {
@@ -199,6 +228,9 @@ export function loadSavedRun(): ParkedRun | null {
         payload.fxRngState ?? (payload.rngState ^ 0x9e3779b9) >>> 0,
       ),
     };
+    // Rebuild the fog grid as a real Uint8Array — JSON round-trips it to a
+    // plain object, which freezes the fog renderers (see reviveExplored).
+    reviveExplored(state);
     // Freeze every kept item to its dropped-with stats before the run resumes,
     // so a catalog edge that landed while the run was parked can't reach it.
     adoptRunEquipment(state);

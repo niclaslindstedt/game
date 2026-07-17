@@ -35,8 +35,9 @@ export type BalanceTuning = {
   mobArmor: number;
   /** Scales the hero's weapon damage (combat, scoring, and readouts). */
   playerDamage: number;
-  /** Scales the knockback a melee/ranged weapon blow shoves a struck mob back
-   * (config `KNOCKBACK.distance`) — 0 turns the push off entirely. */
+  /** Scales the knockback a KNOCKBACK weapon's melee/ranged blow shoves a
+   * struck mob back (config `KNOCKBACK.distance`; only the rare weapons that
+   * carry the `knockback` affix push at all) — 0 turns the push off entirely. */
   knockback: number;
   /** Scales every monster's hp at spawn. (Kill XP is level-based now, so a
    * hp-scaled mob is tougher but pays the same xp for its level.) */

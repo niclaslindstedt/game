@@ -5,7 +5,14 @@
 
 import { describe, expect, it } from "vitest";
 
-import { createGame, enemyDef, OBSTACLES, PLAYER, step } from "@game/core";
+import {
+  createGame,
+  enemyDef,
+  lineOfSight,
+  OBSTACLES,
+  PLAYER,
+  step,
+} from "@game/core";
 import type { GameState, Obstacle } from "@game/core";
 import {
   clearStage,
@@ -292,6 +299,33 @@ describe("walls block shots", () => {
     state.enemies.push(target);
     run(state, idle, 300);
     expect(state.stats.shotsFired).toBeGreaterThan(0);
+  });
+});
+
+describe("lineOfSight (the render cull query)", () => {
+  it("reports no sight through a tall obstacle", () => {
+    const state = startGame();
+    clearStage(state);
+    const wall = placeObstacle(state, 40, false);
+    const behind = { x: wall.pos.x + 40, y: wall.pos.y };
+    expect(lineOfSight(state, state.player.pos, behind)).toBe(false);
+  });
+
+  it("sees straight over a jumpable low obstacle", () => {
+    const state = startGame();
+    clearStage(state);
+    const rock = placeObstacle(state, 40, true);
+    const behind = { x: rock.pos.x + 40, y: rock.pos.y };
+    expect(lineOfSight(state, state.player.pos, behind)).toBe(true);
+  });
+
+  it("sees a target beside the obstacle, past its edge", () => {
+    const state = startGame();
+    clearStage(state);
+    const wall = placeObstacle(state, 40, false, 12);
+    // Well clear of the wall's footprint on the y-axis: an unobstructed line.
+    const beside = { x: wall.pos.x, y: wall.pos.y + 80 };
+    expect(lineOfSight(state, state.player.pos, beside)).toBe(true);
   });
 });
 

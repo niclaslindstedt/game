@@ -5,7 +5,7 @@
 // defs/equipment.ts. Units: world pixels (one sprite pixel = one world unit
 // at scale 1), milliseconds, hit points.
 
-import type { ArmorType, Difficulty, StatName } from "./types.ts";
+import type { ArmorType, Difficulty, StatName, WeaponClass } from "./types.ts";
 
 export const PLAYER = {
   /** Base max hp before equipment bonuses (no stat feeds hp — STAMINA now
@@ -157,22 +157,27 @@ export const WEAPON = {
 } as const;
 
 /**
- * KNOCKBACK — every landing MELEE or RANGED weapon blow of the hero's own
- * shoves the struck mob a little straight back, away from him, so a swing or a
- * shot buys ground and kiting the horde gets that bit easier. Magic weapons
- * DON'T knock back (INT keeps its crowd control in the AoE cleave, the crit
- * blob, and granted spells) — this is the physical arsenal's signature. It only
- * nudges survivors: a killing blow is handled by the corpse launch, and a mob
- * about to die isn't moved. The shove is a flat world-px displacement (not an
- * impulse that decays), so repeated hits keep a chased pack at arm's length
- * without ever launching it. Units: world px. The developer BALANCE › KNOCKBACK
- * knob scales `distance` live (0× off, 1× this shipped baseline, up to 100×).
+ * KNOCKBACK — a landing MELEE or RANGED weapon blow of the hero's own shoves
+ * the struck mob a little straight back, away from him, so a swing or a shot
+ * buys ground and kiting the horde gets that bit easier. It is a RARE weapon
+ * SIGNATURE (the `knockback` affix), not a universal rule: only a handful of
+ * authored uniques/legendaries/artifacts carry it — an overpowered stat kept
+ * scarce — so most weapons never push at all (see `applyKnockback`, gated on
+ * `heroHasKnockback`). Magic weapons DON'T knock back whatever they carry (INT
+ * keeps its crowd control in the AoE cleave, the crit blob, and granted
+ * spells). It only nudges survivors: a killing blow is handled by the corpse
+ * launch, and a mob about to die isn't moved. The shove is a flat world-px
+ * displacement (not an impulse that decays), so repeated hits keep a chased
+ * pack at arm's length without ever launching it. Units: world px. The
+ * developer BALANCE › KNOCKBACK knob scales `distance` live (0× off, 1× this
+ * shipped baseline, up to 100×).
  */
 export const KNOCKBACK = {
   /** World px a struck mob is pushed directly away from the hero per landing
-   * melee/ranged blow, at the neutral (1×) knob. A few px: noticeable over a
-   * fight, never a launch — a body slid ~a third of the pack-separation each
-   * hit. */
+   * melee/ranged blow of a KNOCKBACK weapon, at the neutral (1×) knob. A few
+   * px: noticeable over a fight, never a launch — a body slid ~a third of the
+   * pack-separation each hit. The single magnitude every knockback weapon
+   * shares (the affix is a marker, not a per-weapon value). */
   distance: 10,
   /**
    * The fraction of the shove each ENEMY ROLE actually takes — heavier set
@@ -1265,8 +1270,25 @@ export const STATS = {
    * speed stat, so standing still stops clearing the horde for free. Kept
    * gentle so the speed stat sweetens cadence rather than dominating a build:
    * pumping DEX/INT ramps fire rate roughly half as fast as damage climbs.
+   *
+   * PHYSICAL lanes only (DEX quickens melee & ranged). Magic uses the lower
+   * `magicAttackSpeedPerStat` below, because a caster's SPEED stat is the SAME
+   * INTELLIGENCE that already scales its damage AND crit — so a point of INT
+   * would otherwise compound cadence ON TOP of damage on the same investment,
+   * and a deep-INT mage's DPS ran away from the physical lanes (which must split
+   * points between a damage stat and DEX) by ~5× in the late game. The reduced
+   * magic value keeps INT sweetening cast cadence without the multiplicative
+   * runaway; magic still leads mid/late, just no longer by a blowout.
    */
   attackSpeedPerStat: 0.02,
+  /**
+   * Attack-speed per point of INTELLIGENCE for MAGIC weapons only (INT is
+   * magic's speed stat — see `SPEED_STAT`). Lower than the physical
+   * `attackSpeedPerStat` because INT already buys a caster's damage and crit, so
+   * its cadence contribution is discounted to stop the DPS compounding (damage ×
+   * speed on one stat) from letting a high-INT mage out-scale every other build.
+   */
+  magicAttackSpeedPerStat: 0.012,
   /** Player base crit chance before stats and equipment. */
   baseCritChance: 0.05,
   /**
@@ -1297,34 +1319,67 @@ export const STATS = {
   /** Extra chance per LUCK point that a drop upgrades its tier roll. */
   tierChancePerLuck: 0.04,
   /**
-   * The PHYSICAL crit-damage multiplier — a melee or ranged crit deals this
-   * many times the blow (`baseCritMult`). Also the fallback multiplier for
-   * conjured blows that carry no weapon (nova, storm, bolt, the nuke).
+   * The fallback crit-damage multiplier for conjured blows that carry no weapon
+   * (nova, storm, bolt, the nuke) and the projectile default. Weapon crits use
+   * the per-class `critMultByClass` below instead.
    */
   critMultiplier: 2,
   /**
-   * The MAGIC crit-damage multiplier at zero INTELLIGENCE — deliberately
-   * softer than the physical ×2, because a magic weapon's lighter crit buys
-   * it more per-hit base damage in the budget model and INT then deepens the
-   * crit back up (`critDamagePerInt`) as the mage's own investment.
+   * CRIT DAMAGE — how many times the blow a crit deals. It is a CLASS FLOOR
+   * (ranged > melee > magic) deepened by DEXTERITY, the precision stat, and NOT
+   * a per-item number (the item card shows no crit-damage line). The order is
+   * the classes' identity:
+   *   - RANGED crits HARDEST — the ranged build maxes DEX (its gate/speed/crit-
+   *     chance stat), so DEX-scaled crit weight makes the marksman crit both
+   *     OFTEN and HARD: precision is its whole payoff.
+   *   - MELEE next — a moderate DEX build lifts its solid physical crit a little.
+   *   - MAGIC softest — a caster builds ZERO DEX, so it sits at its floor; its
+   *     edge is AoE + spell utility + ignoring armor, not crit weight.
+   * DEX (not STR, which the bruiser stacks most, nor INT, which would re-inflate
+   * the mage) is what makes RANGED the crit king. The budget model prices crit
+   * off the stat-independent floor.
    */
-  magicCritMultiplier: 1.5,
+  critMultByClass: {
+    melee: 1.9,
+    ranged: 2.05,
+    magic: 1.6,
+  } as Record<WeaponClass, number>,
+  /** Crit DAMAGE deepens by this per point of DEXTERITY (all weapon classes) —
+   * the precision slope that makes a DEX-max ranged build crit hardest while a
+   * DEX-less caster stays at its floor. Deliberately GENTLE: ranged's crit is a
+   * clear FLAVOUR edge, not a power gap so wide that the armored endgame (where
+   * MELEE's armor piercing is meant to decide it) can never catch up. */
+  critDamagePerDex: 0.0015,
   /**
-   * STRENGTH deepens a MELEE crit: each point adds this to the crit
-   * multiplier (a 50-STR bruiser crits for ×3 off the ×2 base). Ranged crits
-   * take the flat physical base — the bow is DEXTERITY's, and DEX already
-   * buys its crit CHANCE, accuracy, and cadence, so it earns no crit-damage
-   * slope on top.
+   * MAGIC crit HARD CAP — a magic weapon's crit multiplier can never exceed this,
+   * pinned to melee's floor (`critMultByClass.melee`) so a caster that stacks
+   * gear DEX still never out-crits a bruiser. The guarantee that crit is a
+   * physical-class identity, magic the softest.
    */
-  critDamagePerStr: 0.02,
+  magicCritCap: 1.9,
+  /** Crit DAMAGE of a conjured SPELL/ability blow (nova, storm, bolt, the nuke)
+   * — a flat static value, low like a magic weapon: a caster's spells hit wide,
+   * not crit-hard. Weaponless mob crits still use `critMultiplier`. */
+  spellCritMult: 1.5,
   /**
-   * INTELLIGENCE deepens a MAGIC crit: each point adds this to the crit
-   * multiplier — steeper than STRENGTH's melee slope so a mage's crit climbs
-   * from the softer ×1.5 base up past a bruiser's, the payoff that makes a
-   * high-INT build's spells spike (alongside the crit BLOB below). This is
-   * the one place INT buys raw crit power rather than utility.
+   * ARMOR PIERCING — the fraction of a mob's armor reduction a class's weapon
+   * IGNORES (subtracted from `mobArmorReduction` in `mobArmorMult`, floored at
+   * 0). Mob armor rises to 50% by the JESUS cap and cuts PHYSICAL blows, which
+   * is why the armored mid/late game tilted toward MAGIC (it ignores armor
+   * outright). Giving the physical lanes their own penetration is the honest
+   * counter, and it is MELEE'S endgame identity: a bruiser sunders armor with
+   * raw force, so MELEE pierces most at baseline AND carries the strongest
+   * `armorPen` relics — the two together let a decked-out melee hero fully
+   * negate the 50%-armored JESUS endgame and reclaim the top. RANGED pierces
+   * some (its edge is crit, not sundering, so it still eats a sliver of armor
+   * late unless it finds pierce), MAGIC none (it bypasses armor already). So the
+   * class order through the armored endgame EMERGES from armor-vs-penetration.
    */
-  critDamagePerInt: 0.03,
+  armorPenByClass: {
+    melee: 0.3,
+    ranged: 0.25,
+    magic: 0,
+  } as Record<WeaponClass, number>,
 } as const;
 
 /**
@@ -2898,19 +2953,14 @@ export const MAP = {
    * view. Roughly the phone's near view, so "walked past it" ≈ "on the map". */
   revealRadius: 160,
   /**
-   * Radius of the hero's CURRENT vision (world px) — the bright CLEAR circle in
-   * the Warcraft-2-style main-view fog. Inside it the world renders full; the
-   * explored ring between it and `revealRadius` (and all explored terrain out of
-   * sight) shows the dithered SHROUD; never-explored terrain is solid black.
-   * Smaller than `revealRadius` so vision's edge reads as a thin dim ring.
+   * Width (world px) of the Warcraft-2 fog's TRANSITION band — the graded
+   * ordered-dither frontier between the CLEAR terrain the hero has uncovered
+   * and the solid-black terrain he never has. Everything he has explored reads
+   * fully clear; only this thin outer rim of the exploration frontier stipples,
+   * dense black against the dark and thinning to nothing as it meets the clear.
+   * Mobs standing inside the band (or the dark beyond) are not drawn — the
+   * horde only appears on ground the hero can actually see. Roughly a cell and
+   * a half so the stipple reads as a soft edge, not a hard line.
    */
-  sightRadius: 130,
-  /**
-   * The Warcraft-2 SHROUD over explored-but-out-of-sight terrain: a 50% black
-   * checkerboard STIPPLE (the signature look — you can still make out the
-   * terrain through it) at this pixel size, painted at `shroudAlpha`. Never-
-   * explored terrain is solid opaque black instead.
-   */
-  fogStipple: 2,
-  shroudAlpha: 0.86,
+  fogBand: 48,
 } as const;

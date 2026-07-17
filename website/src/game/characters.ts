@@ -274,6 +274,43 @@ export function createCharacter(name: string, hardcore: boolean): Character {
   return character;
 }
 
+/**
+ * Mint a DEVELOPER seed character (see seedCharacters.ts): a softcore hero
+ * dropped in with a pre-built `loadout` and stamped as having already BEATEN
+ * `beaten` (so every listed difficulty's level picker is open and the ladder
+ * above them is unlocked). Unlike `createCharacter` it does NOT switch the
+ * active hero, and it replaces any existing roster entry of the SAME NAME so
+ * re-seeding refreshes the specimen instead of piling up duplicates. Persists
+ * and returns the stored character.
+ */
+export function seedCharacter(opts: {
+  name: string;
+  loadout: Loadout;
+  beaten: Difficulty[];
+}): Character {
+  const name = opts.name.trim() || "HERO";
+  const character: Character = {
+    id: newId(),
+    name,
+    hardcore: false,
+    createdAt: Date.now(),
+    dead: false,
+    loadout: opts.loadout,
+    // A beaten difficulty's whole campaign counts as cleared — open every
+    // level for free replay/warp.
+    clears: opts.beaten.flatMap((d) =>
+      LEVEL_ORDER.map((id) => clearKey(id, d)),
+    ),
+    beaten: [...opts.beaten],
+    storySeen: [],
+    merchantsMet: [],
+  };
+  const roster = loadCharacters().filter((c) => c.name !== name);
+  roster.push(character);
+  saveCharacters(roster);
+  return character;
+}
+
 // ---- Import / export (see character-transfer.ts) -----------------------------
 
 /** Serialize a character to canonical JSON — the `character.json` an export

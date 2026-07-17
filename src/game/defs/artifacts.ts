@@ -50,15 +50,17 @@ export const ARTIFACT_UNIQUES: UniqueDef[] = [
     lore: "IT DID NOT BREAK ON THE STONE. THE STONE BROKE.",
   },
   // GRAM — Sigurd's dragon-slaying sword, reforged from the shards of a god's
-  // blade. Every cleave blooms into ruin.
+  // blade. Every cleave blooms into ruin — and HURLS the struck back (the rare
+  // knockback signature on the great sweeping blade).
   {
     id: "gram",
     name: "GRAM",
     base: "glorious_axe",
     slot: "weapon",
     tier: "artifact",
-    ilvl: 144,
+    ilvl: 149,
     bonuses: [
+      { kind: "knockback" },
       { kind: "proc", trigger: "hit", spell: "nova", chance: 0.25, rank: 3 },
       { kind: "stat", stat: "strength", value: 22 },
       { kind: "damagePct", value: 0.7 },
@@ -86,17 +88,23 @@ export const ARTIFACT_UNIQUES: UniqueDef[] = [
     lore: "IT DEMANDS BLOOD. IT DOES NOT CARE WHOSE. USUALLY IT IS SATISFIED.",
   },
   // ── Weapons: ranged ─────────────────────────────────────────────────────
-  // FAIL-NOT — Tristan's bow that could not miss. The sure-strike showcase:
-  // every arrow lands, and every landing sparks.
+  // FAIL-NOT — Tristan's bow that could not miss. The ranged APEX: a
+  // single-shot bow (siege_bow, the hardest-hitting ranged base) that never
+  // whiffs and drives each true arrow home for crushing single-target damage —
+  // the marksman's answer to DURENDAL, the boss-killer a ranged endgame is
+  // built around. Its whole budget used to buy utility (never-miss, a spark
+  // proc, DEX) with no raw damage, so the rarest ranged relic hit softest; the
+  // heavy `damagePct` makes the apex finally strike like one.
   {
     id: "fail_not",
     name: "FAIL-NOT",
     base: "siege_bow",
     slot: "weapon",
     tier: "artifact",
-    ilvl: 161,
+    ilvl: 166,
     bonuses: [
       { kind: "sureStrike" },
+      { kind: "damagePct", value: 1.0 },
       { kind: "statPct", stat: "dexterity", value: 0.02 },
       { kind: "proc", trigger: "hit", spell: "bolt", chance: 0.3, rank: 5 },
       { kind: "stat", stat: "dexterity", value: 30 },
@@ -105,15 +113,17 @@ export const ARTIFACT_UNIQUES: UniqueDef[] = [
     lore: "IT HAS LOOSED TEN THOUSAND ARROWS. NONE HAVE LANDED ANYWHERE BUT HOME.",
   },
   // SHARANGA — Vishnu's celestial bow, a storm strung on a stave. Its arrows
-  // burst where they strike.
+  // burst where they strike, and the burst HURLS the struck back (the rare
+  // knockback signature — the one ranged relic that shoves).
   {
     id: "sharanga",
     name: "SHARANGA",
     base: "railstorm_repeater",
     slot: "weapon",
     tier: "artifact",
-    ilvl: 143,
+    ilvl: 148,
     bonuses: [
+      { kind: "knockback" },
       { kind: "proc", trigger: "hit", spell: "nova", chance: 0.25, rank: 3 },
       { kind: "stat", stat: "dexterity", value: 25 },
       { kind: "crit", value: 0.12 },

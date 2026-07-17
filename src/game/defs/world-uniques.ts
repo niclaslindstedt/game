@@ -113,14 +113,16 @@ export const WORLD_UNIQUES: UniqueDef[] = [
     ],
     lore: "CROWNED FOR A SEA WITH NO WATER. NOTHING HAS STIRRED IT IN AN AGE.",
   },
-  // MARS — the dust-storm frontier gun that shrugs off the grit.
+  // MARS — the dust-storm frontier gun that shrugs off the grit. Its scatter
+  // blast SHOVES what it hits (the rare knockback signature).
   {
     id: "redwind",
     name: "REDWIND",
     base: "blunderbuss",
     slot: "weapon",
-    ilvl: 29,
+    ilvl: 34,
     bonuses: [
+      { kind: "knockback" },
       { kind: "damagePct", value: 1.0 },
       { kind: "stat", stat: "dexterity", value: 3 },
       { kind: "stat", stat: "speed", value: 2 },
@@ -217,16 +219,18 @@ export const WORLD_UNIQUES: UniqueDef[] = [
     lore: "ONE THROW TOOK THE WHOLE HERD. THE HERD DID NOT GET UP.",
   },
   // THE RIFT — the first LEGENDARY: the thunder-hammer of a dead god, fallen
-  // out of a colder, older sky than this one.
+  // out of a colder, older sky than this one. Its blow HURLS what it strikes
+  // back (the rare knockback signature — the thunder-hammer that made it).
   {
     id: "mjolnir",
     name: "MJÖLNIR",
     base: "seismic_hammer",
     slot: "weapon",
     tier: "legendary",
-    ilvl: 53,
+    ilvl: 58,
     keeper: true,
     bonuses: [
+      { kind: "knockback" },
       { kind: "damagePct", value: 1.0 },
       { kind: "statPct", stat: "strength", value: 0.01 },
       { kind: "crit", value: 0.2 },
@@ -408,14 +412,16 @@ export const WORLD_UNIQUES: UniqueDef[] = [
     ],
     lore: "STAND WHERE THEY ARE PLANTED AND NOTHING MOVES YOU. NOTHING HAS.",
   },
-  // THE RIFT — the maul that buries what it fells.
+  // THE RIFT — the maul that buries what it fells. Each swing HAMMERS the
+  // struck back off their feet (the rare knockback signature).
   {
     id: "gravemaker",
     name: "GRAVEMAKER",
     base: "neutron_maul",
     slot: "weapon",
-    ilvl: 57,
+    ilvl: 62,
     bonuses: [
+      { kind: "knockback" },
       { kind: "damagePct", value: 0.3 },
       { kind: "stat", stat: "strength", value: 10 },
       { kind: "maxHp", value: 40 },
@@ -459,12 +465,13 @@ export const WORLD_UNIQUES: UniqueDef[] = [
     base: "fusion_brand",
     slot: "weapon",
     tier: "legendary",
-    ilvl: 68,
+    ilvl: 73,
     bonuses: [
       { kind: "sureStrike" },
       { kind: "proc", trigger: "struck", spell: "bolt", chance: 0.25, rank: 2 },
       { kind: "statPct", stat: "strength", value: 0.01 },
       { kind: "damagePct", value: 0.6 },
+      { kind: "armorPen", value: 0.25 },
       { kind: "maxHp", value: -60 },
     ],
     lore: "EVERY DEBT COMES DUE. THIS IS HOW.",
@@ -477,12 +484,13 @@ export const WORLD_UNIQUES: UniqueDef[] = [
     base: "ion_peacemaker",
     slot: "weapon",
     tier: "legendary",
-    ilvl: 67,
+    ilvl: 69,
     bonuses: [
       { kind: "proc", trigger: "hit", spell: "bolt", chance: 0.25, rank: 2 },
       { kind: "statPct", stat: "dexterity", value: 0.01 },
       { kind: "crit", value: 0.08 },
       { kind: "damagePct", value: 0.4 },
+      { kind: "armorPen", value: 0.1 },
     ],
     lore: "EVERY SHOT TEARS THE SKY, AND THE SKY ANSWERS.",
   },
@@ -509,17 +517,22 @@ export const WORLD_UNIQUES: UniqueDef[] = [
   // armor pieces, a charm — and the rung's six pre-99 LEGENDARIES, every one
   // carrying a forever power. Gate: minion lottery at lvl 60; the 99+ roster
   // (phase 5) sits above these on higher-req bases. Ilvls ~67–96.
-  // THE MOON — the hammer that made the craters' little brothers.
+  // THE MOON — the hammer that made the craters' little brothers. Its impact
+  // FLINGS the struck back across the regolith (the rare knockback signature).
   {
     id: "worldsplitter",
     name: "WORLDSPLITTER",
     base: "meteor_hammer",
     slot: "weapon",
-    ilvl: 75,
+    ilvl: 86,
     bonuses: [
+      { kind: "knockback" },
       { kind: "damagePct", value: 0.3 },
       { kind: "stat", stat: "strength", value: 10 },
       { kind: "maxHp", value: 40 },
+      // A bruiser's endgame relic SUNDERS armor — the melee lane's answer to the
+      // armored late game, so a decked-out melee hero reclaims the top.
+      { kind: "armorPen", value: 0.3 },
     ],
     lore: "THE CRATERS HAVE OLDER SIBLINGS. THIS MADE THEM.",
   },
@@ -627,11 +640,12 @@ export const WORLD_UNIQUES: UniqueDef[] = [
     name: "NIGHTFALL",
     base: "plasma_claymore",
     slot: "weapon",
-    ilvl: 84,
+    ilvl: 90,
     bonuses: [
       { kind: "damagePct", value: 0.3 },
       { kind: "crit", value: 0.08 },
       { kind: "stat", stat: "strength", value: 8 },
+      { kind: "armorPen", value: 0.3 },
     ],
     lore: "QUENCHED IN THE DARK BETWEEN UNIVERSES. IT NEVER QUITE CAME BACK OUT.",
   },
@@ -744,13 +758,16 @@ export const WORLD_UNIQUES: UniqueDef[] = [
     base: "falcata",
     slot: "weapon",
     tier: "legendary",
-    ilvl: 99,
+    ilvl: 106,
     bonuses: [
       { kind: "sureStrike" },
       { kind: "proc", trigger: "hit", spell: "nova", chance: 0.2, rank: 2 },
       { kind: "damagePct", value: 0.6 },
       { kind: "crit", value: 0.12 },
       { kind: "stat", stat: "strength", value: 3 },
+      // The apex melee legendary sunders armor outright — the L99 bruiser's
+      // crown, the piece that reclaims the armored endgame for the arm.
+      { kind: "armorPen", value: 0.35 },
     ],
     lore: "CROWNS DO NOT STOP IT. CROWNS NEVER HAVE.",
   },
@@ -761,12 +778,13 @@ export const WORLD_UNIQUES: UniqueDef[] = [
     base: "oracle_pistol",
     slot: "weapon",
     tier: "legendary",
-    ilvl: 86,
+    ilvl: 89,
     bonuses: [
       { kind: "proc", trigger: "kill", spell: "nova", chance: 0.25, rank: 2 },
       { kind: "crit", value: 0.12 },
       { kind: "stat", stat: "dexterity", value: 7 },
       { kind: "damagePct", value: 0.6 },
+      { kind: "armorPen", value: 0.15 },
     ],
     lore: "AFTER IT SPEAKS, NOTHING ELSE DOES.",
   },

@@ -1,0 +1,28 @@
+name: spell_scatter_shot
+family: icons
+size: [12, 12]
+description: >
+  The SCATTER SHOT ranged technique icon — a wind-tinted ranged glyph.
+subject:
+  kind: spell icon
+  features: a bold wind-tinted motif, centered and outlined
+  accent: wind precision
+  flavor: the SCATTER SHOT cast-power pictogram
+palette:
+  O: "#0c0e18" # dark outline
+  E: "#b6f0c8" # wind bright
+  D: "#4fae86" # wind deep
+  H: "#eafff2" # wind highlight
+grid: |
+  .OOO.OEO.OOO
+  .OEO.OEO.OEO
+  .OEO.OEO.OEO
+  .OEOOOEOOOEO
+  OOEOOEEEOOEO
+  OEEEOOEOOEEE
+  OOEOOOHOOOEO
+  .OHO.OOO.OHO
+  .OOO.....OOO
+  ............
+  ............
+  ............

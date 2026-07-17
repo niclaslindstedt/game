@@ -201,7 +201,7 @@ function SpellPicker({
             <div className="spell-picker-empty">
               <PixelText
                 font={font}
-                text="RAISE INTELLECT TO LEARN SPELLS"
+                text="RAISE YOUR PRIME STAT TO LEARN POWERS"
                 scale={1}
                 color="#8a93a0"
               />

@@ -34,6 +34,8 @@ import { uniqueDef } from "./defs/uniques.ts";
 import {
   dropChance,
   enemyDodgeChance,
+  heroArmorPen,
+  heroHasKnockback,
   lowDurabilityDesperation,
   lowHealthDesperation,
   mercyRescueWaiting,
@@ -254,13 +256,17 @@ export function manaDrinkChance(state: GameState): number {
 }
 
 /**
- * Shove a struck mob straight back from the hero (config `KNOCKBACK`). Only
- * MELEE and RANGED weapon blows push — magic hits don't (its crowd control is
- * the cleave and the crit blob). The displacement is flat, scaled by the mob's
- * role (heavier set pieces plant their feet) and the developer BALANCE knob;
- * the moved body is clamped back onto the map and pushed clear of any obstacle
- * it lands inside, so a shove can never park a mob in a wall or off the level.
- * Caller gates to the hero's own weapon blows (`rollAccuracy`) on survivors.
+ * Shove a struck mob straight back from the hero (config `KNOCKBACK`). It is a
+ * RARE weapon SIGNATURE, not a universal rule: the blow only pushes when the
+ * hero's loadout carries the `knockback` affix (`heroHasKnockback`) — a handful
+ * of authored uniques/legendaries/artifacts — so most weapons never shove at
+ * all. Even then only MELEE and RANGED blows push; magic hits never do (its
+ * crowd control is the cleave and the crit blob). The displacement is flat,
+ * scaled by the mob's role (heavier set pieces plant their feet) and the
+ * developer BALANCE knob; the moved body is clamped back onto the map and
+ * pushed clear of any obstacle it lands inside, so a shove can never park a mob
+ * in a wall or off the level. Caller gates to the hero's own weapon blows
+ * (`rollAccuracy`) on survivors.
  */
 function applyKnockback(
   state: GameState,
@@ -268,6 +274,7 @@ function applyKnockback(
   weaponClass?: WeaponClass,
 ): void {
   if (weaponClass !== "melee" && weaponClass !== "ranged") return;
+  if (!heroHasKnockback(state)) return;
   const def = enemyDef(enemy.defId);
   const scale = KNOCKBACK.roleScale[def.role] * BALANCE.knockback;
   if (scale <= 0) return;
@@ -325,17 +332,24 @@ export function mobArmorReduction(mlvl: number, difficulty: string): number {
 
 /**
  * The PHYSICAL-damage multiplier a mob's armor leaves after mitigation: a melee
- * or ranged blow keeps `1 − reduction` of its damage, while MAGIC weapons (and
- * any class-less source — powerups, procs, environmental) pass at FULL value —
- * the reason armored rungs favour magic builds.
+ * or ranged blow keeps `1 − reduction` of its damage, where the reduction is the
+ * mob's armor LESS the class's ARMOR PIERCING (`STATS.armorPenByClass` — ranged
+ * pierces most, melee some), floored at 0. MAGIC weapons (and any class-less
+ * source — powerups, procs, environmental) pass at FULL value, bypassing armor
+ * outright. So the physical lanes punch through the armored endgame that once
+ * belonged to magic, and each class's late-game standing emerges from
+ * armor-vs-penetration rather than a flat knob.
  */
 export function mobArmorMult(
   mlvl: number,
   difficulty: string,
   weaponClass?: WeaponClass,
+  gearPen = 0,
 ): number {
   if (weaponClass !== "melee" && weaponClass !== "ranged") return 1;
-  return 1 - mobArmorReduction(mlvl, difficulty);
+  const pen = (STATS.armorPenByClass[weaponClass] ?? 0) + gearPen;
+  const reduction = Math.max(0, mobArmorReduction(mlvl, difficulty) - pen);
+  return 1 - reduction;
 }
 
 export function hitEnemy(
@@ -436,10 +450,18 @@ export function hitEnemy(
   // the reason armor tilts the endgame toward magic. It rises steadily with the
   // mob's LEVEL (to 50% by the cap) plus the difficulty's flat bonus, all scaled
   // by the BALANCE › MOB ARMOR knob.
+  // Weapon blows pass their class crit weight (`opts.critMult`); a conjured
+  // blow (a cast SPELL, a powerup, a proc) carries none and crits for the flat
+  // static `spellCritMult` — a caster's spells hit wide, not crit-hard.
+  // Gear ARMOR PIERCING (the hero's worn `armorPen` affixes) deepens how much
+  // armor a physical blow ignores — but only the hero's OWN weapon blow; a
+  // powerup or companion attack doesn't wield the hero's relics.
+  const gearPen =
+    opts?.noMenace || opts?.companionId !== undefined ? 0 : heroArmorPen(state);
   const damage = Math.round(
     baseDamage *
-      (crit ? (opts?.critMult ?? STATS.critMultiplier) : 1) *
-      mobArmorMult(enemy.mlvl, state.difficulty, weaponClass),
+      (crit ? (opts?.critMult ?? STATS.spellCritMult) : 1) *
+      mobArmorMult(enemy.mlvl, state.difficulty, weaponClass, gearPen),
   );
   enemy.hp -= damage;
   state.stats.damageDealt += damage;

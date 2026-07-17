@@ -1,0 +1,28 @@
+name: spell_second_wind
+family: icons
+size: [12, 12]
+description: >
+  The SECOND WIND melee art icon — a holy-tinted martial glyph.
+subject:
+  kind: spell icon
+  features: a bold holy-tinted motif, centered and outlined
+  accent: holy might
+  flavor: the SECOND WIND cast-power pictogram
+palette:
+  O: "#0c0e18" # dark outline
+  E: "#ffe08a" # holy bright
+  D: "#c9932f" # holy deep
+  H: "#fff6d8" # holy highlight
+grid: |
+  .....OOO....
+  ....OOEOO...
+  ..OOOEOEOOO.
+  .OOEEOOOEEOO
+  .OEOOOEOOOEO
+  .OOOOEOEOOOO
+  .OOEEOOOEEOO
+  .OEOOOHOOOEO
+  .OOOOHOHOOOO
+  .OOHHOOOHHOO
+  .OHOOO.OOOHO
+  .OOO.....OOO

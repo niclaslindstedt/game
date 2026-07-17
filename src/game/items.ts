@@ -62,11 +62,15 @@ import {
 } from "./defs/equipment.ts";
 import { gradeVariantIds } from "./defs/grades.ts";
 import {
-  isSpellUnlocked,
+  dominantSpellStat,
   spellDefs,
-  spellsUnlockedBetween,
+  spellsUnlockedBetweenForStat,
+  unlockedSpellIdsForStat,
   SPELL_SLOTS,
-  SPELL_STAT,
+  SPELL_STATS,
+  SPELL_STAT_CLASS,
+  type SpellClass,
+  type SpellDef,
 } from "./defs/spells.ts";
 import { difficultyDef, meetsMinDifficulty } from "./defs/difficulties.ts";
 import type { EnemyRole } from "./defs/enemies/index.ts";
@@ -950,6 +954,36 @@ export function isArmorBroken(piece: Equipment): boolean {
 }
 
 /**
+ * The hero's total GEAR armor piercing — the summed `armorPen` affixes across
+ * every worn piece (a broken armor piece counts for nothing). Added ON TOP of
+ * the class baseline (`STATS.armorPenByClass`) in `mobArmorMult`, so a physical
+ * hero's uniques/legendaries deepen how much of the armored endgame their
+ * blows punch through. The whole late-game ranged (and melee) chase stat.
+ */
+export function heroArmorPen(state: GameState): number {
+  let pen = 0;
+  for (const piece of equippedPieces(state)) {
+    if (isArmorBroken(piece)) continue;
+    for (const affix of piece.affixes) {
+      if (affix.kind === "armorPen") pen += affix.value;
+    }
+  }
+  return pen;
+}
+
+/**
+ * True when the hero's WORN loadout carries the KNOCKBACK signature (the
+ * `knockback` affix on any active piece — a set-bonus capstone counts too). It
+ * is the gate on the shove: only a hero wielding one of the rare authored
+ * knockback weapons pushes struck survivors back (see `applyKnockback`), so
+ * most builds never knock back at all. A marker affix, so this reads as a
+ * boolean — the magnitude is the shared `KNOCKBACK.distance`.
+ */
+export function heroHasKnockback(state: GameState): boolean {
+  return activeEquippedAffixes(state).some((a) => a.kind === "knockback");
+}
+
+/**
  * True when this is a BROKEN weapon: its durability has hit zero, so it can no
  * longer be wielded until a repair kit mends it. Unlike the old rule that
  * TRASHED a spent weapon, a broken weapon now falls into the bag at durability
@@ -1617,11 +1651,70 @@ export function bankManaPotion(state: GameState): boolean {
 }
 
 /**
+ * The hero's spell-class STAT — the dominant of STRENGTH / DEXTERITY /
+ * INTELLIGENCE, or null when none reaches the first unlock step (a balanced or
+ * un-invested build has no class, hence no spell bar). This is the one gate the
+ * whole cast system reads: your class picks your spell list.
+ */
+export function heroSpellStat(state: GameState): StatName | null {
+  return dominantSpellStat(
+    effectiveStat(state, "strength"),
+    effectiveStat(state, "dexterity"),
+    effectiveStat(state, "intelligence"),
+  );
+}
+
+/** The hero's spell CLASS (melee/ranged/magic), or null when they have none. */
+export function heroSpellClass(state: GameState): SpellClass | null {
+  const stat = heroSpellStat(state);
+  return stat ? (SPELL_STAT_CLASS[stat] ?? null) : null;
+}
+
+/**
+ * True when `def` is available to the hero right now: it belongs to the hero's
+ * class (its `stat` is the dominant one) AND the hero's effective governing
+ * stat has reached its `minStat`. The single availability gate the picker, the
+ * cast path (`castSpell`), and the bot all read.
+ */
+export function isSpellAvailable(state: GameState, def: SpellDef): boolean {
+  const stat = heroSpellStat(state);
+  return stat === def.stat && effectiveStat(state, def.stat) >= def.minStat;
+}
+
+/**
+ * Every spell the hero has unlocked — their class's list up to their governing
+ * stat, ascending by `minStat`. Empty when the hero has no class. The pool the
+ * spell-bar picker offers, and the predicate the HUD reads to decide whether to
+ * show the bar at all (no spells → no bar).
+ */
+export function unlockedSpellIds(state: GameState): string[] {
+  const stat = heroSpellStat(state);
+  if (!stat) return [];
+  return unlockedSpellIdsForStat(stat, effectiveStat(state, stat));
+}
+
+/**
+ * The active self-buff multiplier for one combat field (1 when no buff runs) —
+ * read at the three sites a martial `buff` power touches: `weaponDamageFor`
+ * (damage), `weaponCooldownFor` (haste), and `playerSpeed` (move speed).
+ */
+export function heroBuffMult(
+  state: GameState,
+  field: "damage" | "haste" | "speed",
+): number {
+  const p = state.player;
+  if (p.buffMs <= 0) return 1;
+  if (field === "damage") return p.buffDamageMult;
+  if (field === "haste") return p.buffHasteMult;
+  return p.buffSpeedMult;
+}
+
+/**
  * Assign a spell to a HUD spell-bar slot (or clear it with `null`) — the
  * long-press picker's commit. Refuses an out-of-range slot, an unknown spell,
- * or one the hero's effective INTELLIGENCE doesn't yet unlock (the picker only
- * offers unlocked spells, but the mutator re-checks). Assigning a spell already
- * in another slot MOVES it (no duplicate slot). Returns whether the bar changed.
+ * or one not available to the hero's class (the picker only offers available
+ * spells, but the mutator re-checks). Assigning a spell already in another slot
+ * MOVES it (no duplicate slot). Returns whether the bar changed.
  */
 export function setSpellSlot(
   state: GameState,
@@ -1637,7 +1730,7 @@ export function setSpellSlot(
   }
   const def = spellDefs()[spellId];
   if (!def) return false;
-  if (!isSpellUnlocked(def, effectiveStat(state, SPELL_STAT))) return false;
+  if (!isSpellAvailable(state, def)) return false;
   // Moving a spell already slotted elsewhere clears its old slot first.
   for (let i = 0; i < slots.length; i++) {
     if (i !== slotIndex && slots[i] === spellId) slots[i] = null;
@@ -1648,19 +1741,19 @@ export function setSpellSlot(
 
 /**
  * Auto-fill any EMPTY spell-bar slots with the hero's newest unlocked spells
- * not already on the bar — called by the app when a fresh caster (or a loaded
+ * not already on the bar — called by the app when a fresh hero (or a loaded
  * loadout with a short bar) has open slots, so the bar is never blank when
- * spells are available. Fills highest-`minInt` first (the newest, strongest).
+ * spells are available. Fills highest-`minStat` first (the newest, strongest).
  * Returns whether anything was placed.
  */
 export function autofillSpellSlots(state: GameState): boolean {
   const slots = state.player.spellSlots;
-  const effInt = effectiveStat(state, SPELL_STAT);
   const onBar = new Set(slots.filter((s): s is string => s !== null));
-  const available = Object.values(spellDefs())
-    .filter((def) => isSpellUnlocked(def, effInt) && !onBar.has(def.id))
-    .sort((a, b) => b.minInt - a.minInt)
-    .map((def) => def.id);
+  // unlockedSpellIds is ascending by minStat; reverse so the strongest lands
+  // first. Already class-filtered, so a warrior never auto-slots a magic spell.
+  const available = unlockedSpellIds(state)
+    .filter((id) => !onBar.has(id))
+    .reverse();
   let placed = false;
   let cursor = 0;
   for (let i = 0; i < slots.length && cursor < available.length; i++) {
@@ -1674,9 +1767,9 @@ export function autofillSpellSlots(state: GameState): boolean {
 
 /**
  * Drain the next queued spell unlock (see `GameState.pendingSpellUnlocks`,
- * filled by `allocateStat` when INT crosses a ×10 milestone) — returns its
- * SPELL_DEFS id and removes it from the queue, or null when the queue is empty.
- * The app calls this as the "SPELL UNLOCKED" modal is dismissed, one at a time.
+ * filled by `allocateStat` when a class stat crosses a ×10 milestone) — returns
+ * its SPELL_DEFS id and removes it from the queue, or null when the queue is
+ * empty. The app calls this as the unlock modal is dismissed, one at a time.
  */
 export function takeSpellUnlock(state: GameState): string | null {
   return state.pendingSpellUnlocks.shift() ?? null;
@@ -1697,23 +1790,22 @@ export function consumeManaPotion(state: GameState): boolean {
 }
 
 /**
- * A weapon's LIVE crit-damage multiplier in this player's hands: the flat
- * class base (`baseCritMult` — physical ×2, magic ×1.5) deepened by the build's
- * stat. STRENGTH deepens a MELEE crit (`critDamagePerStr`), INTELLIGENCE a
- * MAGIC one (`critDamagePerInt`); a ranged crit takes the flat physical base
- * (DEX earns its crit CHANCE, not its weight). The one source every stat-scaled
- * crit surface reads — the blow itself (via step.ts), the DPS readouts, and
- * auto-equip scoring — so a stronger build deepens all three together. The
- * budget model prices crit off the stat-independent `baseCritMult`, not this.
+ * A weapon's crit-damage multiplier in this player's hands: the class FLOOR
+ * (`baseCritMult` — ranged > melee > magic) deepened by DEXTERITY, the precision
+ * slope (`STATS.critDamagePerDex`). A DEX-max ranged build crits hardest; a
+ * moderate-DEX melee build a little over its floor; a DEX-less caster stays at
+ * its floor. MAGIC is HARD-CAPPED at `STATS.magicCritCap` (melee's floor) so a
+ * mage who stacks gear DEX can never out-crit a bruiser — crit weight is a
+ * physical identity. The one source every crit surface reads (the blow in
+ * step.ts, the DPS readouts, auto-equip scoring); the budget model prices off
+ * the stat-independent floor.
  */
 export function weaponCritMult(state: GameState, weapon: Equipment): number {
   const def = weaponDef(weapon.defId);
-  let mult = baseCritMult(def);
-  if (def.class === "melee") {
-    mult += effectiveStat(state, "strength") * STATS.critDamagePerStr;
-  } else if (def.class === "magic") {
-    mult += effectiveStat(state, "intelligence") * STATS.critDamagePerInt;
-  }
+  const mult =
+    baseCritMult(def) +
+    effectiveStat(state, "dexterity") * STATS.critDamagePerDex;
+  if (def.class === "magic") return Math.min(mult, STATS.magicCritCap);
   return mult;
 }
 
@@ -1856,7 +1948,8 @@ export function playerSpeed(state: GameState): number {
     STATS.strengthSlowFloor,
     1 - effectiveStat(state, "strength") * STATS.strengthSlowPerPoint,
   );
-  return PLAYER.speed * quickness * burden;
+  // A running move-speed buff (a charge/sprint art) quickens the walk (1 idle).
+  return PLAYER.speed * quickness * burden * heroBuffMult(state, "speed");
 }
 
 /** Enemy crit chance against the player, after LUCK's avoidance. */
@@ -2033,6 +2126,10 @@ export function weaponDamageFor(state: GameState, weapon: Equipment): number {
   // The developer damage knob scales the final figure, so combat, auto-equip
   // scoring, and every DPS readout move together (rankings are unchanged —
   // it's one factor on all of them).
+  // A running martial self-buff (WAR CRY / BERSERK) pumps the hero's own blows;
+  // 1 when no buff is up. Applied here — the one source of stat-scaled damage —
+  // so combat and every readout move together while it lasts (auto-equip
+  // rankings are unchanged: it's one factor on every candidate alike).
   return (
     def.damage *
     multiplier *
@@ -2040,7 +2137,8 @@ export function weaponDamageFor(state: GameState, weapon: Equipment): number {
     lootMult *
     qualityMult(weapon) *
     (weapon.baseRoll ?? 1) *
-    BALANCE.playerDamage
+    BALANCE.playerDamage *
+    heroBuffMult(state, "damage")
   );
 }
 
@@ -2115,9 +2213,18 @@ export function weaponRangeFor(state: GameState, weapon: Equipment): number {
 export function weaponCooldownFor(state: GameState, weapon: Equipment): number {
   const def = weaponDef(weapon.defId);
   const stat = effectiveStat(state, SPEED_STAT[def.class]);
+  // Magic's speed stat is the same INT that scales its damage/crit, so it uses a
+  // discounted per-point rate (see STATS.magicAttackSpeedPerStat) to stop the
+  // damage×speed compounding from running a deep-INT mage away from the field.
+  const perStat =
+    def.class === "magic"
+      ? STATS.magicAttackSpeedPerStat
+      : STATS.attackSpeedPerStat;
+  // A running RAPID FIRE / BERSERK haste buff shortens the cadence (1 when idle).
   return (
     (def.cooldownMs * WEAPON.baseCooldownMult) /
-    (1 + stat * STATS.attackSpeedPerStat)
+    (1 + stat * perStat) /
+    heroBuffMult(state, "haste")
   );
 }
 
@@ -2205,8 +2312,21 @@ export function weaponScore(state: GameState, weapon: Equipment): number {
     ((weaponDamageFor(state, weapon) * 1000) /
       weaponCooldownFor(state, weapon)) *
     targets *
-    critLift
+    critLift *
+    // Armor piercing on the weapon reads as effective damage against the armored
+    // late game — fold it into the ranking so auto-equip prefers a piercing
+    // weapon (a fraction of the pen, since it only pays against armored foes).
+    (1 + weaponArmorPen(weapon) * 0.5)
   );
+}
+
+/** The `armorPen` a WEAPON instance carries in its own affixes (for scoring). */
+function weaponArmorPen(weapon: Equipment): number {
+  let pen = 0;
+  for (const affix of weapon.affixes) {
+    if (affix.kind === "armorPen") pen += affix.value;
+  }
+  return pen;
 }
 
 /**
@@ -2265,7 +2385,13 @@ export function gearScore(gear: Equipment): number {
     else if (affix.kind === "spell") score += affix.rank * 45;
     else if (affix.kind === "proc") score += affix.chance * affix.rank * 250;
     else if (affix.kind === "sureStrike") score += 40;
+    // Knockback is a kiting/crowd-control edge, not damage — worth a modest
+    // nudge so a piece that carries the rare signature reads as an upgrade.
+    else if (affix.kind === "knockback") score += 30;
     else if (affix.kind === "damagePct") score += affix.value * 100;
+    // Armor piercing is worth roughly a conditional damage% — value it a touch
+    // above so the endgame chase piece reads as the upgrade it is.
+    else if (affix.kind === "armorPen") score += affix.value * 150;
   }
   return score;
 }
@@ -3003,13 +3129,12 @@ export function allocateStat(state: GameState, stat: StatName): boolean {
   // cap sits above any achievable chosen pile, so this only bites at the 250
   // hard ceiling; the UI greys a maxed stat.
   if (player.stats[stat] >= statCap(player.level)) return false;
-  // SPELL UNLOCKS ride effective INTELLIGENCE crossing a ×10 milestone — read it
-  // before the point lands so we can enqueue any spell the jump unlocks (skipped
-  // during a respec, where the player already knows their spellbook).
-  const intBefore =
-    stat === SPELL_STAT && state.phase !== "respec"
-      ? effectiveStat(state, SPELL_STAT)
-      : 0;
+  // SPELL UNLOCKS ride a CLASS STAT (STR/DEX/INT) crossing a ×10 milestone —
+  // read it before the point lands so we can enqueue any power the jump unlocks
+  // (skipped during a respec, where the player already knows their spellbook).
+  const isClassStat = (SPELL_STATS as readonly StatName[]).includes(stat);
+  const classStatBefore =
+    isClassStat && state.phase !== "respec" ? effectiveStat(state, stat) : 0;
   player.stats[stat]++;
   // Tally the player's own pick so the chooser can show it apart from the
   // head-start/auto-growth/gear baked into the effective stat.
@@ -3017,19 +3142,25 @@ export function allocateStat(state: GameState, stat: StatName): boolean {
   player.pendingStatPoints--;
   recomputeMaxHp(state);
   recomputeMaxStamina(state);
-  // INTELLIGENCE also deepens the mana pool — resize it as the point lands, and
-  // surface any spell the higher effective INT just unlocked.
-  if (stat === SPELL_STAT) {
-    recomputeMaxMana(state);
-    if (state.phase !== "respec") {
-      const unlocked = spellsUnlockedBetween(
-        intBefore,
-        effectiveStat(state, SPELL_STAT),
-      );
-      for (const id of unlocked) {
-        if (!state.pendingSpellUnlocks.includes(id)) {
-          state.pendingSpellUnlocks.push(id);
-        }
+  // INTELLIGENCE always sizes the mana pool (every class's fuel) — resize it as
+  // the point lands, regardless of which class the hero is.
+  if (stat === "intelligence") recomputeMaxMana(state);
+  // Surface any power the higher stat just unlocked — but only when this stat is
+  // (now) the hero's dominant CLASS, so a warrior never gets a "spell unlocked"
+  // pop for magic, and points into an off-class stat stay silent.
+  if (
+    isClassStat &&
+    state.phase !== "respec" &&
+    heroSpellStat(state) === stat
+  ) {
+    const unlocked = spellsUnlockedBetweenForStat(
+      stat,
+      classStatBefore,
+      effectiveStat(state, stat),
+    );
+    for (const id of unlocked) {
+      if (!state.pendingSpellUnlocks.includes(id)) {
+        state.pendingSpellUnlocks.push(id);
       }
     }
   }
@@ -3095,7 +3226,7 @@ export function deallocateStat(state: GameState, stat: StatName): boolean {
   player.pendingStatPoints++;
   recomputeMaxHp(state);
   recomputeMaxStamina(state);
-  if (stat === SPELL_STAT) recomputeMaxMana(state);
+  if (stat === "intelligence") recomputeMaxMana(state);
   if (stat === "strength") syncInventoryCapacity(state);
   player.hp = Math.min(player.hp, player.maxHp);
   player.stamina = Math.min(player.stamina, player.maxStamina);

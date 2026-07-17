@@ -30,8 +30,6 @@ import {
   autofillSpellSlots,
   bestMedkitTier,
   confirmRespec,
-  effectiveStat,
-  MANA,
   recomputeMaxMana,
   setSpellSlot,
   spellDef,
@@ -105,7 +103,6 @@ import { clusterByTouch } from "@ui/lib/cluster.ts";
 import { formatCompact } from "@ui/lib/format-number.ts";
 import { startGameLoop } from "@ui/lib/game-loop.ts";
 import { PixelText } from "@ui/lib/PixelText.tsx";
-import type { PixelFont } from "@ui/lib/pixel-font.ts";
 import { trackPointer } from "@ui/lib/pointer.ts";
 
 import {
@@ -156,6 +153,7 @@ import { SpellUnlockOverlay } from "./SpellUnlockOverlay.tsx";
 import { spellCastEffects } from "./spell-fx.ts";
 import { spellColor } from "./spellVisuals.ts";
 import { MapOverlay } from "./MapOverlay.tsx";
+import { Minimap, drawMinimap } from "./Minimap.tsx";
 import { dollDataUrl, playerDollLayers } from "./paper-doll.ts";
 import { RespecOverlay } from "./RespecOverlay.tsx";
 import { PauseOverlay } from "./PauseOverlay.tsx";
@@ -235,10 +233,13 @@ type Hud = {
   enemiesLeft: number;
   /** Current menace/rampage stage (uncapped) driving the gauge. */
   menaceStage: number;
-  /** Free (empty) bag cells — shown on the avatar badge, red at 0. */
+  /** Free (empty) bag cells — shown on the minimap-corner bag badge, red at 0. */
   bagFree: number;
+  /** Icon sprite of the worn bag (or the default carry-all when none is worn) —
+   * drawn on the minimap-corner bag badge so the pouch matches the equipped bag. */
+  bagIcon: string;
   /** True for a short window after the full bag turned away loot — pulses the
-   * inventory button to nudge the player to open it and make room. */
+   * minimap bag badge to nudge the player to open it and make room. */
   bagFullHint: boolean;
   /** The powerup dock, oldest first (ABILITY_DEFS ids) — banked and running. */
   heldAbilities: string[];
@@ -264,8 +265,9 @@ type Hud = {
   /** Current mana (ceil) and max — the mana bar + the spell-bar affordability. */
   mana: number;
   maxMana: number;
-  /** True once the hero has an INT-sized pool (past MANA.base) — the mana bar
-   * and spell bar only show for a caster. */
+  /** True once the hero has UNLOCKED at least one power of their class (a
+   * dominant STR/DEX/INT that reached the first ×10 step) — the mana bar and
+   * spell bar only show once there is a real power to put on the bar. */
   isCaster: boolean;
   /** The spell-bar slots (per HUD slot): assigned spell id, recharge fraction
    * (0 = ready), and whether the pool affords it. */
@@ -500,82 +502,6 @@ function formatTime(ms: number): string {
   return `${minutes}:${String(seconds).padStart(2, "0")}`;
 }
 
-/** Pips on the rampage gauge. The menace stage itself is UNCAPPED (the
- * evolution ratchet climbs as long as the player out-hits the horde); the
- * gauge fills its ten pips and then counts the deeper stages numerically. */
-const RAMPAGE_PIPS = 10;
-
-/** The rampage gauge heats from amber to red as the menace stage climbs —
- * the top stages glow a hotter red so the deadly end of the meter reads at
- * a glance. */
-function rampageColor(stage: number): string {
-  if (stage >= 8) return "#ff3020";
-  if (stage >= 5) return "#ff5030";
-  if (stage >= 2) return "#ff9040";
-  return "#ffd050";
-}
-
-/** The live kill tally, which jolts on every kill so a fresh frag is felt.
- * The jolt scales with the recent kill rate: a lone kill is a small nudge,
- * but a burst — several mobs downed inside a one-second window (a nuke, a
- * cleaving swing) — stacks into a hard, wide shake. Amplitude/rotation/duration
- * all ride the burst count so a rampage reads as chaos, not a metronome. */
-function KillCounter({
-  font,
-  label,
-  kills,
-}: {
-  font: PixelFont;
-  label: string;
-  kills: number;
-}) {
-  const ref = useRef<HTMLDivElement>(null);
-  const prevKills = useRef(kills);
-  // Timestamps of kills landed within the last second — its length is the
-  // burst size that drives how hard the counter shakes.
-  const recent = useRef<number[]>([]);
-
-  useEffect(() => {
-    const delta = kills - prevKills.current;
-    prevKills.current = kills;
-    // Ignore resets (retry) and no-ops; only a rising tally shakes.
-    if (delta <= 0) return;
-    const el = ref.current;
-    if (!el) return;
-
-    const now = performance.now();
-    for (let i = 0; i < delta; i++) recent.current.push(now);
-    recent.current = recent.current.filter((t) => now - t <= 1000);
-    const burst = recent.current.length;
-
-    // Map the burst onto a felt shake: a single kill nudges ~3px, and each
-    // further kill this second widens the throw and tilt toward a hard cap.
-    const amp = Math.min(3 + (burst - 1) * 1.6, 12);
-    const rot = Math.min(1.5 + (burst - 1) * 1.1, 9);
-    const dur = Math.min(160 + (burst - 1) * 24, 420);
-    el.style.setProperty("--shake-amp", `${amp}px`);
-    el.style.setProperty("--shake-rot", `${rot}deg`);
-    el.style.setProperty("--shake-dur", `${dur}ms`);
-
-    // Restart the animation from the top on every kill: drop the class, force a
-    // reflow so the browser sees a genuine state change, then re-add it.
-    el.classList.remove("kill-shake");
-    void el.offsetWidth;
-    el.classList.add("kill-shake");
-  }, [kills]);
-
-  return (
-    <div ref={ref} className="hud-kills">
-      <PixelText
-        font={font}
-        text={`${label} ${kills}`}
-        scale={2}
-        color="#d9a0f0"
-      />
-    </div>
-  );
-}
-
 export function GameScreen({
   character,
   difficulty,
@@ -626,6 +552,10 @@ export function GameScreen({
     null,
   );
   const canvasRef = useRef<HTMLCanvasElement>(null);
+  // The live HUD minimap canvas: the render loop paints the fog-of-war map and
+  // its blips straight onto it each frame (like the dpad/powerup DOM writes),
+  // so the map tracks the hero without a React re-render.
+  const minimapRef = useRef<HTMLCanvasElement>(null);
   const dpadRef = useRef<HTMLDivElement>(null);
   // The powerup dock: a spent powerup keeps its slot and counts down in place,
   // its radial cooldown sweep and countdown numbers written straight to the DOM
@@ -2621,6 +2551,13 @@ export function GameScreen({
         }
         drawEffects(ctx, debugEffects, camera, state.stats.timeMs, assets);
 
+        // The live HUD minimap: paint the fog-of-war map (cached terrain +
+        // live blips + the hero's pin) straight onto its canvas each frame, so
+        // it tracks the run without a React re-render. Only mounted while the
+        // playing HUD is up, so the ref is null otherwise.
+        const minimapNode = minimapRef.current;
+        if (minimapNode) drawMinimap(minimapNode, state, assets);
+
         // The FPS readout: smooth the frame delta (EMA) and write the number
         // straight to the DOM every quarter second — no React re-render, so
         // the meter itself costs nothing worth measuring.
@@ -2698,6 +2635,13 @@ export function GameScreen({
         // Empty cells: the capacity (which grows with STRENGTH / a worn bag)
         // minus what's carried — shown on the avatar badge, red at 0.
         const bagFree = state.player.inventory.length - bagCount;
+        // The worn bag's own icon (the default carry-all when none is worn) —
+        // drawn on the minimap-corner bag badge so the pouch matches the gear.
+        const wornBag = state.player.equipment.bag;
+        const bagIcon =
+          wornBag && !isWeaponDef(wornBag.defId)
+            ? equipmentIcon(wornBag.defId)
+            : "icon_bag";
         const bagFullHint = state.stats.timeMs < bagFullHintUntilMs;
         const held = state.player.heldAbilities.join(",");
         // Only *which* slots are banked vs running mounts/unmounts dock chrome;
@@ -2720,9 +2664,10 @@ export function GameScreen({
         // The mana pool + spell bar. Mana is coarsened into the change-key so
         // the bar re-renders a few times a second (not every frame); the
         // cooldown wipe reads at tenths — smooth enough for a 2–8s recharge.
-        const effInt = effectiveStat(state, "intelligence");
-        const isCaster = state.player.maxMana > MANA.base;
-        const unlockedSpells = unlockedSpellIds(effInt);
+        // The hero's class list (empty when they have no class) — the bar and
+        // mana pool only show once there is a real power to slot.
+        const unlockedSpells = unlockedSpellIds(state);
+        const isCaster = unlockedSpells.length > 0;
         const spellViews: SpellSlotView[] = state.player.spellSlots.map(
           (id) => {
             if (!id) return { id: null, cooldownFrac: 0, affordable: false };
@@ -2740,7 +2685,7 @@ export function GameScreen({
         );
         const spellUnlocks = [...state.pendingSpellUnlocks];
         const manaPotions = state.player.manaPotions;
-        const spellKey = `${Math.ceil(state.player.mana)}/${state.player.maxMana}/${manaPotions}/${state.player.spellSlots.join(",")}/${spellViews.map((v) => Math.round(v.cooldownFrac * 10)).join("")}/${effInt}/${spellUnlocks.join(",")}`;
+        const spellKey = `${Math.ceil(state.player.mana)}/${state.player.maxMana}/${manaPotions}/${state.player.spellSlots.join(",")}/${spellViews.map((v) => Math.round(v.cooldownFrac * 10)).join("")}/${unlockedSpells.join(",")}/${spellUnlocks.join(",")}`;
         const weapon = state.player.equipment.weapon;
         const weaponWear =
           weapon.durability === undefined
@@ -2765,7 +2710,7 @@ export function GameScreen({
         // The prelude scene's id is part of the key: a chained prelude swaps
         // `state.cutscene` for the next scene with nothing else changing, and
         // the overlay only receives the fresh scene if this re-renders.
-        const key = `${state.phase}/${state.cutscene?.defId ?? ""}/${state.player.hp}/${Math.ceil(state.player.stamina)}/${state.player.xp}/${state.player.level}/${state.player.pendingStatPoints}/${state.enemies.length}/${bagCount}/${bagFree}/${bagFullHint ? 1 : 0}/${held}/${active}/${medkitTier}:${medkitCount}/${staminaPotions}/${repairKits}/${weapon.defId}/${weaponWear?.toFixed(2) ?? ""}/${state.player.coins}/${appearance}/${outfit}/${stage}/${party}/${state.stats.kills}/${Math.floor(state.stats.combatMs / 1000)}/${spellKey}`;
+        const key = `${state.phase}/${state.cutscene?.defId ?? ""}/${state.player.hp}/${Math.ceil(state.player.stamina)}/${state.player.xp}/${state.player.level}/${state.player.pendingStatPoints}/${state.enemies.length}/${bagCount}/${bagFree}/${bagIcon}/${bagFullHint ? 1 : 0}/${held}/${active}/${medkitTier}:${medkitCount}/${staminaPotions}/${repairKits}/${weapon.defId}/${weaponWear?.toFixed(2) ?? ""}/${state.player.coins}/${appearance}/${outfit}/${stage}/${party}/${state.stats.kills}/${Math.floor(state.stats.combatMs / 1000)}/${spellKey}`;
         if (key !== lastHud) {
           lastHud = key;
           setHud({
@@ -2780,6 +2725,7 @@ export function GameScreen({
             enemiesLeft: state.enemies.length,
             menaceStage: stage,
             bagFree,
+            bagIcon,
             bagFullHint,
             heldAbilities: [...state.player.heldAbilities],
             activeSlots: state.player.abilities
@@ -2924,7 +2870,7 @@ export function GameScreen({
   const heroAvatar = hud && (
     <button
       type="button"
-      className={`inventory-avatar${hud.bagFullHint ? " bag-full" : ""}`}
+      className="inventory-avatar"
       aria-label="open-inventory"
       onClick={() => {
         if (state) {
@@ -2935,24 +2881,34 @@ export function GameScreen({
         }
       }}
     >
-      {(() => {
-        // The dressed paper-doll (worn armor + held weapon), so
-        // the portrait always matches the character on the field.
-        const src = state
-          ? dollDataUrl(assets.sprites, playerDollLayers(state, "0"))
-          : spriteDataUrl(assets.sprites, `${hud.appearance}_0`);
-        return src ? (
-          <img src={src} alt="" className="pixel-img avatar-img" />
-        ) : null;
-      })()}
-      {/* Empty bag slots, always shown — dark on the white badge,
-          flipping red the moment the bag is full (0). */}
-      <span className="avatar-badge">
+      {/* The bust lives in its own clipping frame so it can be zoomed to the
+          torso; the level badge is a sibling OUTSIDE that frame, free to
+          overhang the portrait's corner (the button itself doesn't clip). */}
+      <span className="avatar-frame">
+        {(() => {
+          // The dressed paper-doll in worn armor — but WITHOUT the held weapon,
+          // so the portrait is a clean square bust (the weapon has its own slot
+          // right below it now).
+          const src = state
+            ? dollDataUrl(
+                assets.sprites,
+                playerDollLayers(state, "0", { weapon: false }),
+              )
+            : spriteDataUrl(assets.sprites, `${hud.appearance}_0`);
+          return src ? (
+            <img src={src} alt="" className="pixel-img avatar-img" />
+          ) : null;
+        })()}
+      </span>
+      {/* The level, hung on the portrait's LOWER-LEFT corner (WoW-style) so its
+          edges sit OUTSIDE the frame border — gold, so the hero's rank reads
+          without a "LV" label. */}
+      <span className="avatar-level">
         <PixelText
           font={font}
-          text={String(hud.bagFree)}
+          text={String(hud.level)}
           scale={1}
-          color={hud.bagFree === 0 ? "#d83a3a" : "#0b0d10"}
+          color="#ffd75e"
         />
       </span>
     </button>
@@ -2978,20 +2934,14 @@ export function GameScreen({
 
       {hud && hud.phase === "playing" && (
         <div className="game-hud">
-          {/* Full-width XP strip along the very top (top-scroller staple). */}
+          {/* Full-width XP strip along the very top (top-scroller staple).
+              The level itself reads off the avatar's corner badge now, so this
+              stays a bare progress bar. */}
           <div className="hud-xp">
             <div
               className="hud-xp-fill"
               style={{ width: `${(100 * hud.xp) / hud.xpToNext}%` }}
             />
-            <span className="hud-xp-badge">
-              <PixelText
-                font={font}
-                text={`LV ${hud.level}`}
-                scale={2}
-                color="#ffd75e"
-              />
-            </span>
           </div>
 
           {/* The SPELL STATUS echo — the name of the spell just cast (or why a
@@ -3018,238 +2968,243 @@ export function GameScreen({
                 party's portraits railed underneath (tap one to equip it). */}
             <div className="hud-left">
               <div className="hud-status">
-                {heroAvatar}
-                <div className="hud-vitals">
-                  {/* HP + stamina stay together; the weapon + durability and
-                      purse form a second group that reflows to the RIGHT of
-                      the vitals in landscape (stacks below in portrait). */}
-                  <div className="hud-vitals-group hud-vitals-primary">
-                    <div className="hud-stat-row">
-                      <PixelText
-                        font={font}
-                        text="HP"
-                        scale={2}
-                        color="#9aa3ad"
+                {/* The portrait and the vitals share ONE framed plate (a sci-fi
+                    HUD frame sprite backs it as a 9-slice) so the two read as a
+                    single unit — the bust at left, the color bars nested at its
+                    right, a touch shorter than the portrait. */}
+                <div
+                  className="hud-portrait-unit"
+                  style={(() => {
+                    const frame = spriteDataUrl(assets.sprites, "hud_frame");
+                    return frame
+                      ? { borderImageSource: `url(${frame})` }
+                      : undefined;
+                  })()}
+                >
+                  {heroAvatar}
+                  {/* The vitals read implicitly by color: red HP on top, blue
+                      mana below (casters only), a shorter white stamina sliver
+                      at the foot. Same width, butted together; the color IS the
+                      label. (Coins live in the inventory view.) */}
+                  <div className="vital-stack">
+                    <div className="vital-bar vital-hp">
+                      <div
+                        className="vital-fill"
+                        style={{ width: `${(100 * hud.hp) / hud.maxHp}%` }}
                       />
-                      <div className="hud-bar hp-bar">
-                        <div
-                          className="hud-bar-fill"
-                          style={{ width: `${(100 * hud.hp) / hud.maxHp}%` }}
-                        />
-                      </div>
-                      <span className="hud-stat-val">
-                        <PixelText
-                          font={font}
-                          text={String(hud.hp)}
-                          scale={2}
-                        />
-                      </span>
                     </div>
-                    <div className="hud-stat-row">
-                      <PixelText
-                        font={font}
-                        text="ST"
-                        scale={2}
-                        color="#9aa3ad"
-                      />
-                      <div className="hud-bar hp-bar">
+                    {hud.isCaster && (
+                      <div className="vital-bar vital-mp">
                         <div
-                          className="hud-bar-fill stamina-fill"
+                          className="vital-fill"
                           style={{
-                            width: `${(100 * hud.stamina) / hud.maxStamina}%`,
+                            width: `${(100 * hud.mana) / Math.max(1, hud.maxMana)}%`,
                           }}
                         />
                       </div>
-                      <span className="hud-stat-val">
-                        <PixelText
-                          font={font}
-                          text={String(Math.ceil(hud.stamina))}
-                          scale={2}
-                        />
-                      </span>
+                    )}
+                    <div className="vital-bar vital-st">
+                      <div
+                        className="vital-fill"
+                        style={{
+                          width: `${(100 * hud.stamina) / hud.maxStamina}%`,
+                        }}
+                      />
                     </div>
-                    {/* The mana pool — shown only once the hero is a caster
-                        (some INT invested), so a melee build's HUD stays lean. */}
-                    {hud.isCaster && (
-                      <div className="hud-stat-row">
-                        <PixelText
-                          font={font}
-                          text="MP"
-                          scale={2}
-                          color="#9aa3ad"
-                        />
-                        <div className="hud-bar hp-bar">
-                          <div
-                            className="hud-bar-fill mana-fill"
+                  </div>
+                </div>
+                {/* Below the portrait unit, floating free: the held weapon
+                    circle and the bag pouch — same size, side by side. */}
+                <div className="hud-gear-row">
+                  {/* The held weapon: a round slot whose ring border IS the
+                      durability gauge — it depletes and reddens as the weapon
+                      wears, and reads a full teal ring for the unbreakable
+                      sidearm. Tapping it opens the weapon switcher (Q). */}
+                  {(() => {
+                    if (!state) return null;
+                    const equipped = state.player.equipment.weapon;
+                    const equippedColor =
+                      WEAPON_CLASS_COLORS[weaponDef(equipped.defId).class];
+                    const icon = spriteDataUrl(
+                      assets.sprites,
+                      weaponDef(equipped.defId).icon,
+                    );
+                    // Durability ring: full teal for the unbreakable sidearm,
+                    // else the wear fraction ramped steel → amber → red as it
+                    // runs down.
+                    const wear = hud.weaponWear;
+                    const ringFrac = wear === null ? 1 : Math.max(0.03, wear);
+                    const ringColor =
+                      wear === null
+                        ? "#7ef0c8"
+                        : wear < 0.25
+                          ? "#d83a3a"
+                          : wear < 0.5
+                            ? "#ffb14a"
+                            : "#c2ccd6";
+                    // Other carried weapons, highest damage first — the switch
+                    // targets, shared with the Q menu / 1-4 hotkeys.
+                    const alternatives = weaponAlternatives(state);
+                    return (
+                      <div className="wpn-control">
+                        <button
+                          type="button"
+                          className="wpn-slot wpn-slot-main"
+                          aria-label="switch-weapon"
+                          style={{ background: equippedColor.bg }}
+                          onClick={() => {
+                            setWeaponMenuOpen((open) => !open);
+                            playUiSound(synth, "confirm");
+                          }}
+                        >
+                          {icon ? (
+                            <img
+                              src={icon}
+                              alt=""
+                              className="pixel-img wpn-slot-img"
+                            />
+                          ) : null}
+                        </button>
+                        {/* The durability ring drawn around the slot. */}
+                        <svg
+                          className="wpn-ring"
+                          viewBox="0 0 44 44"
+                          aria-hidden
+                        >
+                          <circle
+                            cx="22"
+                            cy="22"
+                            r="20"
+                            fill="none"
+                            stroke="rgba(255,255,255,0.2)"
+                            strokeWidth="3.5"
+                          />
+                          <circle
+                            cx="22"
+                            cy="22"
+                            r="20"
+                            fill="none"
+                            stroke={ringColor}
+                            strokeWidth="3.5"
+                            strokeLinecap="round"
+                            pathLength={1}
+                            strokeDasharray={`${ringFrac} 1`}
+                            transform="rotate(-90 22 22)"
                             style={{
-                              width: `${(100 * hud.mana) / Math.max(1, hud.maxMana)}%`,
+                              filter: `drop-shadow(0 0 1.5px ${ringColor})`,
+                              transition:
+                                "stroke-dasharray 280ms cubic-bezier(0.22,1,0.36,1), stroke 200ms linear",
                             }}
                           />
-                        </div>
-                        <span className="hud-stat-val">
-                          <PixelText
-                            font={font}
-                            text={String(hud.mana)}
-                            scale={2}
-                          />
-                        </span>
-                      </div>
-                    )}
-                  </div>
-                  <div className="hud-vitals-group hud-vitals-gear">
-                    <div className="hud-stat-row hud-weapon-row">
-                      {(() => {
-                        if (!state) return null;
-                        const equipped = state.player.equipment.weapon;
-                        const equippedColor =
-                          WEAPON_CLASS_COLORS[weaponDef(equipped.defId).class];
-                        const icon = spriteDataUrl(
-                          assets.sprites,
-                          weaponDef(equipped.defId).icon,
-                        );
-                        // Other carried weapons, highest damage first — the switch
-                        // targets, shared with the Q menu / 1-4 hotkeys.
-                        const alternatives = weaponAlternatives(state);
-                        return (
-                          <div className="wpn-control">
-                            <button
-                              type="button"
-                              className="wpn-slot"
-                              aria-label="switch-weapon"
-                              style={{
-                                borderColor: equippedColor.border,
-                                background: equippedColor.bg,
-                              }}
-                              onClick={() => {
-                                setWeaponMenuOpen((open) => !open);
-                                playUiSound(synth, "confirm");
-                              }}
-                            >
-                              {icon ? (
-                                <img
-                                  src={icon}
-                                  alt=""
-                                  className="pixel-img wpn-slot-img"
-                                />
-                              ) : null}
-                            </button>
-                            {weaponMenuOpen && (
-                              <div className="wpn-switcher">
-                                {alternatives.length === 0 ? (
-                                  <PixelText
-                                    font={font}
-                                    text="NO OTHER WEAPONS"
-                                    scale={2}
-                                    color="#9aa3ad"
-                                  />
-                                ) : (
-                                  alternatives.map(
-                                    ({ item, index, dmg }, order) => {
-                                      const color =
-                                        WEAPON_CLASS_COLORS[
-                                          weaponDef(item.defId).class
-                                        ];
-                                      const wpnIcon = spriteDataUrl(
-                                        assets.sprites,
-                                        weaponDef(item.defId).icon,
-                                      );
-                                      return (
-                                        <button
-                                          key={item.id}
-                                          type="button"
-                                          className="wpn-slot wpn-switch-slot"
-                                          aria-label={`equip-${item.defId}`}
-                                          style={{
-                                            borderColor: color.border,
-                                            background: color.bg,
-                                          }}
-                                          onClick={() => {
-                                            if (
-                                              equipFromInventory(state, index)
-                                            ) {
-                                              playUiSound(synth, "equip");
-                                              setWeaponMenuOpen(false);
-                                              bumpUi();
-                                            }
-                                          }}
-                                        >
-                                          {wpnIcon ? (
-                                            <img
-                                              src={wpnIcon}
-                                              alt=""
-                                              className="pixel-img wpn-slot-img"
-                                            />
-                                          ) : null}
-                                          {keyHints && order < 4 && (
-                                            <span className="slot-key">
-                                              <PixelText
-                                                font={font}
-                                                text={String(order + 1)}
-                                                scale={1}
-                                                color="#0b0d10"
-                                              />
-                                            </span>
-                                          )}
-                                          <span className="wpn-switch-dmg">
-                                            <PixelText
-                                              font={font}
-                                              text={formatCompact(dmg)}
-                                              scale={1}
-                                            />
-                                          </span>
-                                        </button>
-                                      );
-                                    },
-                                  )
-                                )}
-                              </div>
+                        </svg>
+                        {weaponMenuOpen && (
+                          <div className="wpn-switcher">
+                            {alternatives.length === 0 ? (
+                              <PixelText
+                                font={font}
+                                text="NO OTHER WEAPONS"
+                                scale={2}
+                                color="#9aa3ad"
+                              />
+                            ) : (
+                              alternatives.map(
+                                ({ item, index, dmg }, order) => {
+                                  const color =
+                                    WEAPON_CLASS_COLORS[
+                                      weaponDef(item.defId).class
+                                    ];
+                                  const wpnIcon = spriteDataUrl(
+                                    assets.sprites,
+                                    weaponDef(item.defId).icon,
+                                  );
+                                  return (
+                                    <button
+                                      key={item.id}
+                                      type="button"
+                                      className="wpn-slot wpn-switch-slot"
+                                      aria-label={`equip-${item.defId}`}
+                                      style={{
+                                        borderColor: color.border,
+                                        background: color.bg,
+                                      }}
+                                      onClick={() => {
+                                        if (equipFromInventory(state, index)) {
+                                          playUiSound(synth, "equip");
+                                          setWeaponMenuOpen(false);
+                                          bumpUi();
+                                        }
+                                      }}
+                                    >
+                                      {wpnIcon ? (
+                                        <img
+                                          src={wpnIcon}
+                                          alt=""
+                                          className="pixel-img wpn-slot-img"
+                                        />
+                                      ) : null}
+                                      {keyHints && order < 4 && (
+                                        <span className="slot-key">
+                                          <PixelText
+                                            font={font}
+                                            text={String(order + 1)}
+                                            scale={1}
+                                            color="#0b0d10"
+                                          />
+                                        </span>
+                                      )}
+                                      <span className="wpn-switch-dmg">
+                                        <PixelText
+                                          font={font}
+                                          text={formatCompact(dmg)}
+                                          scale={1}
+                                        />
+                                      </span>
+                                    </button>
+                                  );
+                                },
+                              )
                             )}
                           </div>
-                        );
-                      })()}
-                      <div className="hud-bar wpn-bar">
-                        <div
-                          className="hud-bar-fill wpn-fill"
-                          style={
-                            hud.weaponWear === null
-                              ? { width: "100%", background: "#7ef0c8" }
-                              : {
-                                  width: `${Math.max(4, Math.round(100 * hud.weaponWear))}%`,
-                                  background:
-                                    hud.weaponWear < 0.25
-                                      ? "#d83a3a"
-                                      : "#9aa3ad",
-                                }
-                          }
-                        />
+                        )}
                       </div>
+                    );
+                  })()}
+                  {/* The bag pouch — the same round slot as the weapon, sitting
+                      to its right. Shows the worn bag's icon + free-cell count
+                      (red at 0), pulses when a full bag turns loot away, and
+                      opens the inventory on tap. */}
+                  <button
+                    type="button"
+                    className={`hud-bag-slot${hud.bagFullHint ? " bag-full" : ""}`}
+                    aria-label="open-inventory"
+                    onClick={() => {
+                      if (state && canOpenInventory(state)) {
+                        setWeaponMenuOpen(false);
+                        openInventory(state);
+                        playUiSound(synth, "confirm");
+                        bumpUi();
+                      }
+                    }}
+                  >
+                    {(() => {
+                      const bag = spriteDataUrl(assets.sprites, hud.bagIcon);
+                      return bag ? (
+                        <img
+                          src={bag}
+                          alt=""
+                          className="pixel-img hud-bag-img"
+                        />
+                      ) : null;
+                    })()}
+                    <span className="hud-bag-count">
                       <PixelText
                         font={font}
-                        text={hud.weaponWear === null ? "∞" : ""}
-                        scale={2}
-                        color="#7ef0c8"
+                        text={String(hud.bagFree)}
+                        scale={1}
+                        color={hud.bagFree === 0 ? "#d83a3a" : "#f4f4f4"}
                       />
-                    </div>
-                    {/* The purse: coins earned selling loot to the merchant. */}
-                    <div className="hud-stat-row hud-coin-row">
-                      {(() => {
-                        const coin = spriteDataUrl(assets.sprites, "icon_coin");
-                        return coin ? (
-                          <img
-                            src={coin}
-                            alt=""
-                            className="pixel-img hud-coin"
-                          />
-                        ) : null;
-                      })()}
-                      <PixelText
-                        font={font}
-                        text={formatCompact(hud.coins)}
-                        scale={2}
-                        color="#ffd75e"
-                      />
-                    </div>
-                  </div>
+                    </span>
+                  </button>
                 </div>
               </div>
 
@@ -3298,17 +3253,30 @@ export function GameScreen({
               )}
             </div>
 
-            {/* Top-right: run clock over the foe counter, with the MAP button
-                tucked underneath in the same column so the pair reads as one
-                unit. Tapping the clock pauses the run (the same freeze as
-                P/Escape) — a big, thumb-reachable target for the phone, where
-                there's no keyboard. */}
+            {/* Top-right: the WoW-style minimap hub. The live fog-of-war map
+                sits in a rounded frame, with the run's edge widgets hung off
+                it — the survival timer at the inner top (which also PAUSES the
+                run, the tap the old clock owned), the kill count as a bare
+                number at the inner bottom, and RAMPAGE as a gauge that fills
+                and reddens around the border (it replaced the pips). Tapping
+                the map body opens the full-screen map (M on desktop). */}
             <div className="hud-clock-stack">
-              <button
-                type="button"
-                className="hud-center"
-                aria-label="pause"
-                onClick={() => {
+              <Minimap
+                font={font}
+                hudFont={assets.hudFont}
+                canvasRef={minimapRef}
+                timerText={formatTime(hud.stats.combatMs)}
+                kills={hud.stats.kills}
+                menaceStage={hud.menaceStage}
+                onExpand={() => {
+                  if (state?.phase === "playing") {
+                    setWeaponMenuOpen(false);
+                    openMap(state);
+                    playUiSound(synth, "confirm");
+                    bumpUi();
+                  }
+                }}
+                onPause={() => {
                   if (state?.phase === "playing") {
                     pauseGame(state);
                     pauseMusic();
@@ -3316,79 +3284,7 @@ export function GameScreen({
                     bumpUi();
                   }
                 }}
-              >
-                <PixelText
-                  font={font}
-                  text={formatTime(hud.stats.combatMs)}
-                  scale={3}
-                />
-                <KillCounter
-                  font={font}
-                  label={state?.level.foes ?? "FOES"}
-                  kills={hud.stats.kills}
-                />
-                {/* Rampage gauge: overkilling and fast kills evolve and lure the
-                  horde. Shown only while the meter is hot, reddening as the
-                  stage climbs so the escalation is legible. */}
-                {hud.menaceStage > 0 && (
-                  <div className="hud-rampage" aria-hidden>
-                    <PixelText
-                      font={font}
-                      text={
-                        hud.menaceStage > RAMPAGE_PIPS
-                          ? `RAMPAGE ${hud.menaceStage}`
-                          : "RAMPAGE"
-                      }
-                      scale={2}
-                      color={rampageColor(hud.menaceStage)}
-                    />
-                    <div className="hud-rampage-pips">
-                      {Array.from({ length: RAMPAGE_PIPS }, (_, i) => (
-                        <span
-                          key={i}
-                          className="hud-rampage-pip"
-                          style={{
-                            background:
-                              i < hud.menaceStage
-                                ? rampageColor(hud.menaceStage)
-                                : "rgba(255,255,255,0.15)",
-                          }}
-                        />
-                      ))}
-                    </div>
-                  </div>
-                )}
-              </button>
-
-              {/* MAP + ACHIEVEMENTS ride together in one aux group. In
-                landscape it reflows to the LEFT of the clock (tighter HUD);
-                in portrait it stacks under the clock as before. */}
-              <div className="hud-clock-aux">
-                {/* The MAP button — a treasure map that opens the fog-of-war
-                level map (M on desktop) and pauses the run under it, like
-                the bag. Stretched to the clock unit's width by the stack. */}
-                <button
-                  type="button"
-                  className="hud-map-btn"
-                  aria-label="open-map"
-                  onClick={() => {
-                    if (state?.phase === "playing") {
-                      setWeaponMenuOpen(false);
-                      openMap(state);
-                      playUiSound(synth, "confirm");
-                      bumpUi();
-                    }
-                  }}
-                >
-                  <img
-                    src={
-                      spriteDataUrl(assets.sprites, "icon_treasure_map") ?? ""
-                    }
-                    alt=""
-                    className="pixel-img hud-map-icon"
-                  />
-                </button>
-              </div>
+              />
             </div>
           </div>
         </div>

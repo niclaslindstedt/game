@@ -65,15 +65,18 @@ export const AFFIX_COLORS: Record<Affix["kind"], string> = {
   crit: "#e8b93e",
   maxHp: "#5fd97a",
   armor: "#9ab3c9",
+  // Armor piercing — a steely cyan, the "punches through plate" hue.
+  armorPen: "#6fd0d6",
   stat: "#4da6ff",
   // Scaling bonuses (uniques) share their flat cousin's hue.
   statPct: "#4da6ff",
   maxHpPct: "#5fd97a",
-  // The forever powers (granted spells, procs, sure strike) read in one
-  // arcane violet — the "this piece DOES something" hue.
+  // The forever powers (granted spells, procs, sure strike, knockback) read in
+  // one arcane violet — the "this piece DOES something" hue.
   spell: "#b88ae8",
   proc: "#b88ae8",
   sureStrike: "#b88ae8",
+  knockback: "#b88ae8",
 };
 
 /**

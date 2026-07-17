@@ -245,8 +245,9 @@ export function step(state: GameState, input: GameInput, dtMs: number): void {
   // Playing lifts the fog of war as a CIRCLE sweeping the hero's path
   // (Warcraft-style, no re-fogging): a `MAP.revealRadius` disc around him is
   // uncovered every tick, so the map (and minimap) show exactly where he has
-  // walked, not the whole camera view. The main-view fog then re-dims explored
-  // terrain that falls outside his live sight (see render.ts / MAP.sightRadius).
+  // walked, not the whole camera view. Everything uncovered reads fully clear
+  // in the main view; only the exploration frontier stipples (see render.ts /
+  // MAP.fogBand).
   revealAround(state, state.player.pos);
   // The wandering merchant strolls (and may be MET) on this tick's player
   // position — right after the hero moves, so the meeting judges what the

@@ -54,7 +54,7 @@ export const BALANCE_KNOBS: BalanceKnob[] = [
   {
     key: "knockback",
     label: "KNOCKBACK",
-    blurb: "HOW FAR MELEE & RANGED BLOWS SHOVE MOBS BACK",
+    blurb: "HOW FAR KNOCKBACK WEAPONS SHOVE MOBS BACK",
   },
   {
     key: "mobHp",
