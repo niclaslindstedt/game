@@ -147,32 +147,69 @@ packs:
         count: 3
       - enemy: ghost
         count: 4
-waves:
-  rampDurationMs: 300000
-  maxAlive: 220
-  minAlive: 20
-  moveSpawnEvery: 64
-  budget:
-    - enemy: wisp
-      count: 500
-      window:
-        - 0
-        - 0.55
-    - enemy: ghost
-      count: 400
-      window:
-        - 0.3
-        - 0.85
-    - enemy: wraith
-      count: 300
-      window:
-        - 0.55
-        - 1
-    - enemy: optimusk
-      count: 30
-      window:
-        - 0.45
-        - 1
+spawners:
+  # Finite spawn points (converted from the old wave budget): placed
+  # knots the hero clears on the way to the boss. Counts preserve the
+  # wave total; refine placement/mix in a later pass.
+  - id: p0
+    at: { x: 447, y: 1256 }
+    triggerRadius: 520
+    members:
+      - enemy: wisp
+        count: 84
+  - id: p1
+    at: { x: 800, y: 1167 }
+    members:
+      - enemy: wisp
+        count: 84
+  - id: p2
+    at: { x: 992, y: 814 }
+    members:
+      - enemy: wisp
+        count: 83
+      - enemy: ghost
+        count: 80
+  - id: p3
+    at: { x: 1184, y: 940 }
+    members:
+      - enemy: wisp
+        count: 83
+      - enemy: ghost
+        count: 80
+  - id: p4
+    at: { x: 1376, y: 587 }
+    members:
+      - enemy: wisp
+        count: 83
+      - enemy: ghost
+        count: 80
+      - enemy: wraith
+        count: 75
+  - id: p5
+    at: { x: 1567, y: 713 }
+    members:
+      - enemy: wisp
+        count: 83
+      - enemy: ghost
+        count: 80
+      - enemy: wraith
+        count: 75
+  - id: p6
+    at: { x: 1759, y: 360 }
+    members:
+      - enemy: ghost
+        count: 80
+      - enemy: wraith
+        count: 75
+      - enemy: optimusk
+        count: 15
+  - id: p7
+    at: { x: 1951, y: 486 }
+    members:
+      - enemy: wraith
+        count: 75
+      - enemy: optimusk
+        count: 15
 walls:
   - kind: boulder
     from:

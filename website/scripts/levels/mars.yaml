@@ -173,37 +173,71 @@ packs:
         count: 4
       - enemy: fembot
         count: 3
-waves:
-  rampDurationMs: 330000
-  maxAlive: 220
-  minAlive: 22
-  moveSpawnEvery: 60
-  budget:
-    - enemy: scout_rover
-      count: 450
-      window:
-        - 0
-        - 0.5
-    - enemy: servo_bot
-      count: 350
-      window:
-        - 0.25
-        - 0.75
-    - enemy: fembot
-      count: 250
-      window:
-        - 0.5
-        - 0.95
-    - enemy: mining_rover
-      count: 60
-      window:
-        - 0.35
-        - 1
-    - enemy: optimusk
-      count: 40
-      window:
-        - 0.55
-        - 1
+spawners:
+  # Finite spawn points (converted from the old wave budget): placed
+  # knots the hero clears on the way to the boss. Counts preserve the
+  # wave total; refine placement/mix in a later pass.
+  - id: p0
+    at: { x: 439, y: 747 }
+    triggerRadius: 520
+    members:
+      - enemy: scout_rover
+        count: 75
+  - id: p1
+    at: { x: 897, y: 857 }
+    members:
+      - enemy: scout_rover
+        count: 75
+  - id: p2
+    at: { x: 1145, y: 612 }
+    members:
+      - enemy: scout_rover
+        count: 75
+      - enemy: servo_bot
+        count: 70
+  - id: p3
+    at: { x: 1394, y: 846 }
+    members:
+      - enemy: scout_rover
+        count: 75
+      - enemy: servo_bot
+        count: 70
+  - id: p4
+    at: { x: 1642, y: 601 }
+    members:
+      - enemy: scout_rover
+        count: 75
+      - enemy: servo_bot
+        count: 70
+      - enemy: fembot
+        count: 63
+  - id: p5
+    at: { x: 1891, y: 836 }
+    members:
+      - enemy: scout_rover
+        count: 75
+      - enemy: servo_bot
+        count: 70
+      - enemy: fembot
+        count: 63
+  - id: p6
+    at: { x: 2139, y: 590 }
+    members:
+      - enemy: servo_bot
+        count: 70
+      - enemy: fembot
+        count: 62
+      - enemy: mining_rover
+        count: 30
+  - id: p7
+    at: { x: 2388, y: 825 }
+    members:
+      - enemy: fembot
+        count: 62
+      - enemy: mining_rover
+        count: 30
+      - enemy: optimusk
+        count: 40
 walls:
   - kind: wall
     from:
