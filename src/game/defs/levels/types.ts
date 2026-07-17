@@ -196,10 +196,12 @@ export type SpawnerSpec = {
   perEmit?: number;
   /**
    * CONCURRENT-ALIVE CAP for this point (default `SPAWNERS.maxAlive`): the most
-   * of its own live members it lets stand at once. At the cap the point PAUSES
-   * and drips a fresh batch only to REPLACE each kill — steady local pressure
-   * rather than one big dump — and it also holds while the hero is out of
-   * `triggerRadius`. The queue still drains as he grinds the cap down, so the
+   * of its own live members it lets stand in its zone (`triggerRadius`) at once.
+   * At the cap the point PAUSES and drips a fresh batch only to REPLACE each
+   * kill — steady local pressure rather than one big dump — and it also holds
+   * while the hero is out of range. A member that DRIFTS out of the zone (chases
+   * the hero off) is counted as gone and replaced, so the fight stays populated
+   * where the hero is. The queue still drains as he grinds the cap down, so the
    * point (and its chain) still finishes.
    */
   maxAlive?: number;

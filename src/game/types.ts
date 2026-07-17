@@ -1760,9 +1760,10 @@ export type SpawnerRuntime = {
   spawnRadius: number;
   intervalMs: number;
   perEmit: number;
-  /** Concurrent-alive cap: the most of THIS point's live members allowed on the
-   * field at once. At the cap the point pauses and drips only to replace kills;
-   * emission is also suspended whenever the hero is outside `triggerRadius`. */
+  /** Concurrent-alive cap: the most of THIS point's live members allowed inside
+   * its zone (`triggerRadius`) at once. At the cap the point pauses and drips
+   * only to replace kills; a member that drifts out of the zone is counted as
+   * gone (replaced), and emission is suspended while the hero is out of range. */
   maxAlive: number;
   /** The enemy defIds still to emit, resolved for the run's difficulty. */
   queue: string[];

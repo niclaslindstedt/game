@@ -57,6 +57,31 @@ describe("spawn points arm, drip, and drain", () => {
     expect(aliveMembers()).toBe(3);
   });
 
+  it("replaces a member that drifts out of the point's zone", () => {
+    const state = startGame(1, "test_spawner_level");
+    const s = state.spawners[0]!;
+    s.maxAlive = 2; // a small cap against the queue of 6
+    state.player.pos = { x: 520, y: 1320 }; // on the point, in range
+    const localMembers = () =>
+      state.enemies.filter(
+        (e) =>
+          s.memberIds.includes(e.id) &&
+          Math.hypot(e.pos.x - s.at.x, e.pos.y - s.at.y) <= s.triggerRadius,
+      ).length;
+    // Fill to the cap and hold.
+    run(state, idle, 40);
+    expect(localMembers()).toBe(2);
+    const emitted = s.memberIds.length;
+
+    // Drag one member far past the point's trigger zone — it has "drifted away".
+    const drifter = state.enemies.find((e) => s.memberIds.includes(e.id))!;
+    drifter.pos = { x: s.at.x + 5000, y: s.at.y };
+    // The point sees a free LOCAL slot and drips a replacement back to the cap.
+    run(state, idle, 20);
+    expect(localMembers()).toBe(2);
+    expect(s.memberIds.length).toBeGreaterThan(emitted);
+  });
+
   it("stops emitting while the hero is outside trigger range", () => {
     const state = startGame(1, "test_spawner_level");
     const s = state.spawners[0]!;
