@@ -113,14 +113,16 @@ export const WORLD_UNIQUES: UniqueDef[] = [
     ],
     lore: "CROWNED FOR A SEA WITH NO WATER. NOTHING HAS STIRRED IT IN AN AGE.",
   },
-  // MARS — the dust-storm frontier gun that shrugs off the grit.
+  // MARS — the dust-storm frontier gun that shrugs off the grit. Its scatter
+  // blast SHOVES what it hits (the rare knockback signature).
   {
     id: "redwind",
     name: "REDWIND",
     base: "blunderbuss",
     slot: "weapon",
-    ilvl: 29,
+    ilvl: 34,
     bonuses: [
+      { kind: "knockback" },
       { kind: "damagePct", value: 1.0 },
       { kind: "stat", stat: "dexterity", value: 3 },
       { kind: "stat", stat: "speed", value: 2 },
@@ -217,16 +219,18 @@ export const WORLD_UNIQUES: UniqueDef[] = [
     lore: "ONE THROW TOOK THE WHOLE HERD. THE HERD DID NOT GET UP.",
   },
   // THE RIFT — the first LEGENDARY: the thunder-hammer of a dead god, fallen
-  // out of a colder, older sky than this one.
+  // out of a colder, older sky than this one. Its blow HURLS what it strikes
+  // back (the rare knockback signature — the thunder-hammer that made it).
   {
     id: "mjolnir",
     name: "MJÖLNIR",
     base: "seismic_hammer",
     slot: "weapon",
     tier: "legendary",
-    ilvl: 53,
+    ilvl: 58,
     keeper: true,
     bonuses: [
+      { kind: "knockback" },
       { kind: "damagePct", value: 1.0 },
       { kind: "statPct", stat: "strength", value: 0.01 },
       { kind: "crit", value: 0.2 },
@@ -408,14 +412,16 @@ export const WORLD_UNIQUES: UniqueDef[] = [
     ],
     lore: "STAND WHERE THEY ARE PLANTED AND NOTHING MOVES YOU. NOTHING HAS.",
   },
-  // THE RIFT — the maul that buries what it fells.
+  // THE RIFT — the maul that buries what it fells. Each swing HAMMERS the
+  // struck back off their feet (the rare knockback signature).
   {
     id: "gravemaker",
     name: "GRAVEMAKER",
     base: "neutron_maul",
     slot: "weapon",
-    ilvl: 57,
+    ilvl: 62,
     bonuses: [
+      { kind: "knockback" },
       { kind: "damagePct", value: 0.3 },
       { kind: "stat", stat: "strength", value: 10 },
       { kind: "maxHp", value: 40 },
@@ -511,14 +517,16 @@ export const WORLD_UNIQUES: UniqueDef[] = [
   // armor pieces, a charm — and the rung's six pre-99 LEGENDARIES, every one
   // carrying a forever power. Gate: minion lottery at lvl 60; the 99+ roster
   // (phase 5) sits above these on higher-req bases. Ilvls ~67–96.
-  // THE MOON — the hammer that made the craters' little brothers.
+  // THE MOON — the hammer that made the craters' little brothers. Its impact
+  // FLINGS the struck back across the regolith (the rare knockback signature).
   {
     id: "worldsplitter",
     name: "WORLDSPLITTER",
     base: "meteor_hammer",
     slot: "weapon",
-    ilvl: 81,
+    ilvl: 86,
     bonuses: [
+      { kind: "knockback" },
       { kind: "damagePct", value: 0.3 },
       { kind: "stat", stat: "strength", value: 10 },
       { kind: "maxHp", value: 40 },

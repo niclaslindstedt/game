@@ -972,6 +972,18 @@ export function heroArmorPen(state: GameState): number {
 }
 
 /**
+ * True when the hero's WORN loadout carries the KNOCKBACK signature (the
+ * `knockback` affix on any active piece — a set-bonus capstone counts too). It
+ * is the gate on the shove: only a hero wielding one of the rare authored
+ * knockback weapons pushes struck survivors back (see `applyKnockback`), so
+ * most builds never knock back at all. A marker affix, so this reads as a
+ * boolean — the magnitude is the shared `KNOCKBACK.distance`.
+ */
+export function heroHasKnockback(state: GameState): boolean {
+  return activeEquippedAffixes(state).some((a) => a.kind === "knockback");
+}
+
+/**
  * True when this is a BROKEN weapon: its durability has hit zero, so it can no
  * longer be wielded until a repair kit mends it. Unlike the old rule that
  * TRASHED a spent weapon, a broken weapon now falls into the bag at durability
@@ -2373,6 +2385,9 @@ export function gearScore(gear: Equipment): number {
     else if (affix.kind === "spell") score += affix.rank * 45;
     else if (affix.kind === "proc") score += affix.chance * affix.rank * 250;
     else if (affix.kind === "sureStrike") score += 40;
+    // Knockback is a kiting/crowd-control edge, not damage — worth a modest
+    // nudge so a piece that carries the rare signature reads as an upgrade.
+    else if (affix.kind === "knockback") score += 30;
     else if (affix.kind === "damagePct") score += affix.value * 100;
     // Armor piercing is worth roughly a conditional damage% — value it a touch
     // above so the endgame chase piece reads as the upgrade it is.

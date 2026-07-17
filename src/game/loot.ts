@@ -35,6 +35,7 @@ import {
   dropChance,
   enemyDodgeChance,
   heroArmorPen,
+  heroHasKnockback,
   lowDurabilityDesperation,
   lowHealthDesperation,
   mercyRescueWaiting,
@@ -255,13 +256,17 @@ export function manaDrinkChance(state: GameState): number {
 }
 
 /**
- * Shove a struck mob straight back from the hero (config `KNOCKBACK`). Only
- * MELEE and RANGED weapon blows push — magic hits don't (its crowd control is
- * the cleave and the crit blob). The displacement is flat, scaled by the mob's
- * role (heavier set pieces plant their feet) and the developer BALANCE knob;
- * the moved body is clamped back onto the map and pushed clear of any obstacle
- * it lands inside, so a shove can never park a mob in a wall or off the level.
- * Caller gates to the hero's own weapon blows (`rollAccuracy`) on survivors.
+ * Shove a struck mob straight back from the hero (config `KNOCKBACK`). It is a
+ * RARE weapon SIGNATURE, not a universal rule: the blow only pushes when the
+ * hero's loadout carries the `knockback` affix (`heroHasKnockback`) — a handful
+ * of authored uniques/legendaries/artifacts — so most weapons never shove at
+ * all. Even then only MELEE and RANGED blows push; magic hits never do (its
+ * crowd control is the cleave and the crit blob). The displacement is flat,
+ * scaled by the mob's role (heavier set pieces plant their feet) and the
+ * developer BALANCE knob; the moved body is clamped back onto the map and
+ * pushed clear of any obstacle it lands inside, so a shove can never park a mob
+ * in a wall or off the level. Caller gates to the hero's own weapon blows
+ * (`rollAccuracy`) on survivors.
  */
 function applyKnockback(
   state: GameState,
@@ -269,6 +274,7 @@ function applyKnockback(
   weaponClass?: WeaponClass,
 ): void {
   if (weaponClass !== "melee" && weaponClass !== "ranged") return;
+  if (!heroHasKnockback(state)) return;
   const def = enemyDef(enemy.defId);
   const scale = KNOCKBACK.roleScale[def.role] * BALANCE.knockback;
   if (scale <= 0) return;

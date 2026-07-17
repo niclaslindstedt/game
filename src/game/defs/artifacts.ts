@@ -50,15 +50,17 @@ export const ARTIFACT_UNIQUES: UniqueDef[] = [
     lore: "IT DID NOT BREAK ON THE STONE. THE STONE BROKE.",
   },
   // GRAM — Sigurd's dragon-slaying sword, reforged from the shards of a god's
-  // blade. Every cleave blooms into ruin.
+  // blade. Every cleave blooms into ruin — and HURLS the struck back (the rare
+  // knockback signature on the great sweeping blade).
   {
     id: "gram",
     name: "GRAM",
     base: "glorious_axe",
     slot: "weapon",
     tier: "artifact",
-    ilvl: 144,
+    ilvl: 149,
     bonuses: [
+      { kind: "knockback" },
       { kind: "proc", trigger: "hit", spell: "nova", chance: 0.25, rank: 3 },
       { kind: "stat", stat: "strength", value: 22 },
       { kind: "damagePct", value: 0.7 },
@@ -111,15 +113,17 @@ export const ARTIFACT_UNIQUES: UniqueDef[] = [
     lore: "IT HAS LOOSED TEN THOUSAND ARROWS. NONE HAVE LANDED ANYWHERE BUT HOME.",
   },
   // SHARANGA — Vishnu's celestial bow, a storm strung on a stave. Its arrows
-  // burst where they strike.
+  // burst where they strike, and the burst HURLS the struck back (the rare
+  // knockback signature — the one ranged relic that shoves).
   {
     id: "sharanga",
     name: "SHARANGA",
     base: "railstorm_repeater",
     slot: "weapon",
     tier: "artifact",
-    ilvl: 143,
+    ilvl: 148,
     bonuses: [
+      { kind: "knockback" },
       { kind: "proc", trigger: "hit", spell: "nova", chance: 0.25, rank: 3 },
       { kind: "stat", stat: "dexterity", value: 25 },
       { kind: "crit", value: 0.12 },

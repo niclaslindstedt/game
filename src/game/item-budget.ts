@@ -57,6 +57,13 @@ export const PROC_RANK_ILVL: Record<ProcSpell, number> = {
 export const SURE_STRIKE_ILVL =
   ACCURACY.baseMiss / STATS.damageBonusPerPoint.strength + 5;
 
+/** ilvl points KNOCKBACK is worth: a marker signature (a flat `KNOCKBACK.distance`
+ * shove on every landing melee/ranged blow), so it prices as one fixed premium
+ * like sure strike. It buys no damage — a kiting/crowd-control edge with no
+ * combat-constant analogue — but a strong one, kept RARE by design, so it costs
+ * a handful of stat points. */
+export const KNOCKBACK_ILVL = 5;
+
 // ---- The conversion table, DERIVED from the live constants -------------------
 
 const hpPerIlvl = STAMINA.hpPerPoint / FLAT_HP_FRACTION;
@@ -105,6 +112,8 @@ export function bonusIlvlPoints(affix: Affix): number {
       return affix.chance * affix.rank * PROC_RANK_ILVL[affix.spell];
     case "sureStrike":
       return SURE_STRIKE_ILVL;
+    case "knockback":
+      return KNOCKBACK_ILVL;
   }
 }
 

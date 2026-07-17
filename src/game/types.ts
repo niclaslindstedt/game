@@ -187,7 +187,21 @@ export type Affix =
    * chance reads zero while the piece is worn (`playerMissChance`; the foe's
    * dodge is still its own move). Legendary authoring territory.
    */
-  | { kind: "sureStrike" };
+  | { kind: "sureStrike" }
+  /**
+   * KNOCKBACK — a landing MELEE or RANGED weapon blow of the hero's own SHOVES
+   * the struck survivor straight back, away from him (config `KNOCKBACK`), so a
+   * swing or a shot buys ground and kiting the horde gets easier. It is a RARE
+   * signature the physical arsenal buys on a HANDFUL of authored uniques/
+   * legendaries/artifacts — an overpowered stat kept scarce; it never rolls
+   * onto a magic/rare drop and no plain weapon carries it. A marker, not a
+   * value: the shove magnitude is the shared `KNOCKBACK.distance`, so a weapon
+   * either has the push or it doesn't. Magic blows never push, whatever the
+   * weapon carries (INT keeps its crowd control in the cleave/crit blob). The
+   * developer BALANCE › KNOCKBACK knob still scales the shove live.
+   * Unique/legendary/artifact authoring territory.
+   */
+  | { kind: "knockback" };
 
 /** The spells an item can GRANT permanently (see the `spell` affix): the
  * forever twins of the orbit/storm/stasis powerups, stepped off worn gear. */
