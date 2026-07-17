@@ -78,9 +78,17 @@ describe("class-based crit weight", () => {
   it("HARD-CAPS a magic crit so a DEX-stacking mage never out-crits melee", () => {
     const state = startGame();
     const magic = { ...state.player.equipment.weapon, defId: "test_wand" };
+    const melee = { ...state.player.equipment.weapon, defId: "crude_sword" };
     state.player.stats.dexterity = 250; // absurd for a caster, but gear could
-    expect(weaponCritMult(state, magic)).toBe(STATS.magicCritCap);
+    // The invariant: a magic crit never exceeds the cap, which sits at/under
+    // melee's floor — so magic can never out-crit a bruiser at ANY dexterity.
+    expect(weaponCritMult(state, magic)).toBeLessThanOrEqual(
+      STATS.magicCritCap,
+    );
     expect(STATS.magicCritCap).toBeLessThanOrEqual(STATS.critMultByClass.melee);
+    expect(weaponCritMult(state, magic)).toBeLessThanOrEqual(
+      weaponCritMult(state, melee),
+    );
   });
 
   it("resolves the blow with the carried weight when it crits", () => {

@@ -70,15 +70,16 @@ describe("mob armor (physical mitigation, a level ramp + difficulty bonus)", () 
     expect(mobArmorMult(99, "jesus", undefined)).toBe(1);
   });
 
-  it("pierces armor by class — ranged most, melee some, magic bypasses", () => {
-    // Against the 50% JESUS-cap armor, ranged keeps MORE of its blow than melee
-    // (it pierces most), and both keep more than the un-pierced reduction would
-    // leave — so the physical lanes punch through the armored endgame.
+  it("pierces armor by class — melee most (its endgame identity), then ranged, magic bypasses", () => {
+    // Against the 50% JESUS-cap armor, MELEE keeps more of its blow than ranged
+    // (it pierces most at baseline — the bruiser's endgame identity), and both
+    // punch through more than the un-pierced reduction would leave.
     const melee = mobArmorMult(99, "jesus", "melee");
     const ranged = mobArmorMult(99, "jesus", "ranged");
-    expect(ranged).toBeGreaterThan(melee);
-    // Melee still pays SOME armor (its pen is partial); magic pays none.
-    expect(melee).toBeLessThan(1);
+    expect(melee).toBeGreaterThan(ranged);
+    // Ranged still pays SOME armor at baseline (its edge is crit, not sunder);
+    // magic pays none.
+    expect(ranged).toBeLessThan(1);
     expect(mobArmorMult(99, "jesus", "magic")).toBe(1);
   });
 

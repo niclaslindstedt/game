@@ -1301,22 +1301,23 @@ export const STATS = {
    * off the stat-independent floor.
    */
   critMultByClass: {
-    melee: 1.75,
-    ranged: 2.0,
-    magic: 1.5,
+    melee: 1.9,
+    ranged: 2.05,
+    magic: 1.6,
   } as Record<WeaponClass, number>,
   /** Crit DAMAGE deepens by this per point of DEXTERITY (all weapon classes) —
    * the precision slope that makes a DEX-max ranged build crit hardest while a
-   * DEX-less caster stays at its floor. Kept gentle so ranged's crit edge is a
-   * clear identity, not a blowout that buries the other lanes. */
-  critDamagePerDex: 0.004,
+   * DEX-less caster stays at its floor. Deliberately GENTLE: ranged's crit is a
+   * clear FLAVOUR edge, not a power gap so wide that the armored endgame (where
+   * MELEE's armor piercing is meant to decide it) can never catch up. */
+  critDamagePerDex: 0.0015,
   /**
    * MAGIC crit HARD CAP — a magic weapon's crit multiplier can never exceed this,
    * pinned to melee's floor (`critMultByClass.melee`) so a caster that stacks
    * gear DEX still never out-crits a bruiser. The guarantee that crit is a
    * physical-class identity, magic the softest.
    */
-  magicCritCap: 1.75,
+  magicCritCap: 1.9,
   /** Crit DAMAGE of a conjured SPELL/ability blow (nova, storm, bolt, the nuke)
    * — a flat static value, low like a magic weapon: a caster's spells hit wide,
    * not crit-hard. Weaponless mob crits still use `critMultiplier`. */
@@ -1327,14 +1328,17 @@ export const STATS = {
    * 0). Mob armor rises to 50% by the JESUS cap and cuts PHYSICAL blows, which
    * is why the armored mid/late game tilted toward MAGIC (it ignores armor
    * outright). Giving the physical lanes their own penetration is the honest
-   * counter: RANGED pierces most (a bolt/round punches through plate — its
-   * late-game identity), MELEE some (raw force cleaves), MAGIC needs none (it
-   * already bypasses armor via `mobArmorMult`). So a class's standing through the
-   * armored endgame EMERGES from armor-vs-penetration, not a flat damage knob.
+   * counter, and it is MELEE'S endgame identity: a bruiser sunders armor with
+   * raw force, so MELEE pierces most at baseline AND carries the strongest
+   * `armorPen` relics — the two together let a decked-out melee hero fully
+   * negate the 50%-armored JESUS endgame and reclaim the top. RANGED pierces
+   * some (its edge is crit, not sundering, so it still eats a sliver of armor
+   * late unless it finds pierce), MAGIC none (it bypasses armor already). So the
+   * class order through the armored endgame EMERGES from armor-vs-penetration.
    */
   armorPenByClass: {
-    melee: 0.25,
-    ranged: 0.45,
+    melee: 0.3,
+    ranged: 0.25,
     magic: 0,
   } as Record<WeaponClass, number>,
 } as const;
