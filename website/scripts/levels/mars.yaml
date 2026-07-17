@@ -179,17 +179,20 @@ spawners:
   # wave total; refine placement/mix in a later pass.
   - id: p0
     at: { x: 439, y: 747 }
+    maxAlive: 15
     triggerRadius: 520
     members:
       - enemy: scout_rover
         count: 75
   - id: p1
     at: { x: 897, y: 857 }
+    maxAlive: 15
     members:
       - enemy: scout_rover
         count: 75
   - id: p2
     at: { x: 1145, y: 612 }
+    maxAlive: 15
     members:
       - enemy: scout_rover
         count: 75
@@ -197,6 +200,7 @@ spawners:
         count: 70
   - id: p3
     at: { x: 1394, y: 846 }
+    maxAlive: 15
     members:
       - enemy: scout_rover
         count: 75
@@ -204,6 +208,7 @@ spawners:
         count: 70
   - id: p4
     at: { x: 1642, y: 601 }
+    maxAlive: 15
     members:
       - enemy: scout_rover
         count: 75
@@ -213,6 +218,7 @@ spawners:
         count: 63
   - id: p5
     at: { x: 1891, y: 836 }
+    maxAlive: 15
     members:
       - enemy: scout_rover
         count: 75
@@ -222,6 +228,7 @@ spawners:
         count: 63
   - id: p6
     at: { x: 2139, y: 590 }
+    maxAlive: 15
     members:
       - enemy: servo_bot
         count: 70
@@ -231,6 +238,7 @@ spawners:
         count: 30
   - id: p7
     at: { x: 2388, y: 825 }
+    maxAlive: 15
     members:
       - enemy: fembot
         count: 62

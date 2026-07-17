@@ -393,6 +393,12 @@ export const SPAWNERS = {
   intervalMs: 650,
   /** Mobs released per emission tick. */
   perEmit: 3,
+  /** Per-point CONCURRENT-ALIVE CAP: the most of a point's own live members it
+   * lets stand at once. While the field is full it PAUSES, then drips a fresh
+   * batch to REPLACE each kill — holding steady local pressure instead of
+   * dumping its whole queue in a pile. The queue still drains (and the point's
+   * chain still follows) as the hero grinds the cap down. */
+  maxAlive: 14,
   /** Default delay (ms) after a spawner drains before a chained one arms —
    * only counted while the hero is in the chained spawner's trigger range. */
   chainDelayMs: 4000,

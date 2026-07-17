@@ -194,6 +194,15 @@ export type SpawnerSpec = {
   intervalMs?: number;
   /** Mobs released per tick; default `SPAWNERS.perEmit`. */
   perEmit?: number;
+  /**
+   * CONCURRENT-ALIVE CAP for this point (default `SPAWNERS.maxAlive`): the most
+   * of its own live members it lets stand at once. At the cap the point PAUSES
+   * and drips a fresh batch only to REPLACE each kill — steady local pressure
+   * rather than one big dump — and it also holds while the hero is out of
+   * `triggerRadius`. The queue still drains as he grinds the cap down, so the
+   * point (and its chain) still finishes.
+   */
+  maxAlive?: number;
   /** Arm only AFTER the spawner with this id drains. */
   after?: string;
   /** Delay (ms) after the `after` spawner drains before arming (counted only

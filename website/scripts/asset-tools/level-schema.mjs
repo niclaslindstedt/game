@@ -139,6 +139,11 @@ export function validateLevel(def, refs, description = "") {
       validMobLevels(s.mobLevels, `spawner${s.id ? ` "${s.id}"` : ""}`);
     if (s.after !== undefined && !spawnerIds.has(s.after))
       err(`spawner chains after unknown spawner id "${s.after}"`);
+    if (
+      s.maxAlive !== undefined &&
+      (typeof s.maxAlive !== "number" || s.maxAlive < 1)
+    )
+      err(`spawner maxAlive must be a positive number`);
     if (s.lingering !== undefined) {
       const total = (s.members ?? []).reduce((n, m) => n + (m.count ?? 0), 0);
       if (typeof s.lingering !== "number" || s.lingering < 0)

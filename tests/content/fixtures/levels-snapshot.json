@@ -429,6 +429,7 @@
             "x": 400,
             "y": 680
           },
+          "maxAlive": 15,
           "mobLevels": [
             1,
             3,
@@ -450,6 +451,7 @@
             "x": 560,
             "y": 900
           },
+          "maxAlive": 15,
           "mobLevels": [
             [
               1,
@@ -487,6 +489,7 @@
             "x": 600,
             "y": 400
           },
+          "maxAlive": 15,
           "mobLevels": [
             [
               1,
@@ -518,6 +521,7 @@
             "x": 900,
             "y": 460
           },
+          "maxAlive": 15,
           "mobLevels": [
             [
               2,
@@ -555,6 +559,7 @@
             "x": 950,
             "y": 860
           },
+          "maxAlive": 15,
           "mobLevels": [
             [
               2,
@@ -590,6 +595,7 @@
             "x": 1180,
             "y": 720
           },
+          "maxAlive": 15,
           "mobLevels": [
             [
               3,
@@ -627,6 +633,7 @@
             "x": 1200,
             "y": 340
           },
+          "maxAlive": 15,
           "mobLevels": [
             [
               3,
@@ -662,6 +669,7 @@
             "x": 1450,
             "y": 400
           },
+          "maxAlive": 15,
           "mobLevels": [
             [
               4,
@@ -1678,6 +1686,7 @@
             "x": 500,
             "y": 1240
           },
+          "maxAlive": 15,
           "mobLevels": [
             [
               7,
@@ -1711,6 +1720,7 @@
             "x": 820,
             "y": 1140
           },
+          "maxAlive": 15,
           "mobLevels": [
             [
               8,
@@ -1748,6 +1758,7 @@
             "x": 1080,
             "y": 760
           },
+          "maxAlive": 15,
           "mobLevels": [
             [
               9,
@@ -1789,6 +1800,7 @@
             "x": 1450,
             "y": 540
           },
+          "maxAlive": 15,
           "mobLevels": [
             [
               10,
@@ -1830,6 +1842,7 @@
             "x": 2020,
             "y": 380
           },
+          "maxAlive": 15,
           "mobLevels": [
             [
               11,
@@ -2519,6 +2532,7 @@
             "x": 439,
             "y": 747
           },
+          "maxAlive": 15,
           "triggerRadius": 520,
           "members": [
             {
@@ -2533,6 +2547,7 @@
             "x": 897,
             "y": 857
           },
+          "maxAlive": 15,
           "members": [
             {
               "enemy": "scout_rover",
@@ -2546,6 +2561,7 @@
             "x": 1145,
             "y": 612
           },
+          "maxAlive": 15,
           "members": [
             {
               "enemy": "scout_rover",
@@ -2563,6 +2579,7 @@
             "x": 1394,
             "y": 846
           },
+          "maxAlive": 15,
           "members": [
             {
               "enemy": "scout_rover",
@@ -2580,6 +2597,7 @@
             "x": 1642,
             "y": 601
           },
+          "maxAlive": 15,
           "members": [
             {
               "enemy": "scout_rover",
@@ -2601,6 +2619,7 @@
             "x": 1891,
             "y": 836
           },
+          "maxAlive": 15,
           "members": [
             {
               "enemy": "scout_rover",
@@ -2622,6 +2641,7 @@
             "x": 2139,
             "y": 590
           },
+          "maxAlive": 15,
           "members": [
             {
               "enemy": "servo_bot",
@@ -2643,6 +2663,7 @@
             "x": 2388,
             "y": 825
           },
+          "maxAlive": 15,
           "members": [
             {
               "enemy": "fembot",
@@ -3413,6 +3434,7 @@
             "x": 351,
             "y": 829
           },
+          "maxAlive": 15,
           "triggerRadius": 520,
           "members": [
             {
@@ -3427,6 +3449,7 @@
             "x": 519,
             "y": 1043
           },
+          "maxAlive": 15,
           "members": [
             {
               "enemy": "voidling",
@@ -3440,6 +3463,7 @@
             "x": 610,
             "y": 855
           },
+          "maxAlive": 15,
           "members": [
             {
               "enemy": "voidling",
@@ -3457,6 +3481,7 @@
             "x": 701,
             "y": 1146
           },
+          "maxAlive": 15,
           "members": [
             {
               "enemy": "voidling",
@@ -3474,6 +3499,7 @@
             "x": 792,
             "y": 958
           },
+          "maxAlive": 15,
           "members": [
             {
               "enemy": "voidling",
@@ -3495,6 +3521,7 @@
             "x": 883,
             "y": 1249
           },
+          "maxAlive": 15,
           "members": [
             {
               "enemy": "voidling",
@@ -3516,6 +3543,7 @@
             "x": 974,
             "y": 1061
           },
+          "maxAlive": 15,
           "members": [
             {
               "enemy": "star_jelly",
@@ -3537,6 +3565,7 @@
             "x": 1065,
             "y": 1352
           },
+          "maxAlive": 15,
           "members": [
             {
               "enemy": "unraveler",
@@ -4209,6 +4238,7 @@
             "x": 376,
             "y": 781
           },
+          "maxAlive": 15,
           "triggerRadius": 520,
           "members": [
             {
@@ -4223,6 +4253,7 @@
             "x": 624,
             "y": 838
           },
+          "maxAlive": 15,
           "members": [
             {
               "enemy": "cowbot",
@@ -4236,6 +4267,7 @@
             "x": 759,
             "y": 563
           },
+          "maxAlive": 15,
           "members": [
             {
               "enemy": "cowbot",
@@ -4253,6 +4285,7 @@
             "x": 894,
             "y": 769
           },
+          "maxAlive": 15,
           "members": [
             {
               "enemy": "cowbot",
@@ -4270,6 +4303,7 @@
             "x": 1029,
             "y": 495
           },
+          "maxAlive": 15,
           "members": [
             {
               "enemy": "cowbot",
@@ -4291,6 +4325,7 @@
             "x": 1164,
             "y": 701
           },
+          "maxAlive": 15,
           "members": [
             {
               "enemy": "cowbot",
@@ -4312,6 +4347,7 @@
             "x": 1299,
             "y": 426
           },
+          "maxAlive": 15,
           "members": [
             {
               "enemy": "saloon_brawler",
@@ -4333,6 +4369,7 @@
             "x": 1434,
             "y": 632
           },
+          "maxAlive": 15,
           "members": [
             {
               "enemy": "tin_outlaw",

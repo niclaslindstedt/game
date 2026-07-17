@@ -230,17 +230,20 @@ spawners:
   # wave total; refine placement/mix in a later pass.
   - id: p0
     at: { x: 376, y: 781 }
+    maxAlive: 15
     triggerRadius: 520
     members:
       - enemy: cowbot
         count: 94
   - id: p1
     at: { x: 624, y: 838 }
+    maxAlive: 15
     members:
       - enemy: cowbot
         count: 94
   - id: p2
     at: { x: 759, y: 563 }
+    maxAlive: 15
     members:
       - enemy: cowbot
         count: 93
@@ -248,6 +251,7 @@ spawners:
         count: 64
   - id: p3
     at: { x: 894, y: 769 }
+    maxAlive: 15
     members:
       - enemy: cowbot
         count: 93
@@ -255,6 +259,7 @@ spawners:
         count: 64
   - id: p4
     at: { x: 1029, y: 495 }
+    maxAlive: 15
     members:
       - enemy: cowbot
         count: 93
@@ -264,6 +269,7 @@ spawners:
         count: 75
   - id: p5
     at: { x: 1164, y: 701 }
+    maxAlive: 15
     members:
       - enemy: cowbot
         count: 93
@@ -273,6 +279,7 @@ spawners:
         count: 75
   - id: p6
     at: { x: 1299, y: 426 }
+    maxAlive: 15
     members:
       - enemy: saloon_brawler
         count: 64
@@ -282,6 +289,7 @@ spawners:
         count: 40
   - id: p7
     at: { x: 1434, y: 632 }
+    maxAlive: 15
     members:
       - enemy: tin_outlaw
         count: 75
