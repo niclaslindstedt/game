@@ -4,8 +4,9 @@
 // `MAP.revealRadius` CIRCLE around the hero every step (`revealAround`), so the
 // fog lifts along his actual path — Warcraft-style, and what has been uncovered
 // stays uncovered for the rest of the run (no re-fogging). The main-view fog
-// then re-dims explored terrain outside his live sight (MAP.sightRadius, in the
-// renderer). `revealRect` (lift fog from a world rect) remains available for a
+// then draws everything uncovered fully clear and stipples only the frontier
+// band between clear and never-seen (MAP.fogBand, in the renderer).
+// `revealRect` (lift fog from a world rect) remains available for a
 // caller that wants the whole camera view instead. Memorable events pin
 // `state.mapMarkers` (story finds,
 // elite/boss victories, the merchant) so the map tells the run's story back. The

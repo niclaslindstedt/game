@@ -2879,19 +2879,14 @@ export const MAP = {
    * view. Roughly the phone's near view, so "walked past it" ≈ "on the map". */
   revealRadius: 160,
   /**
-   * Radius of the hero's CURRENT vision (world px) — the bright CLEAR circle in
-   * the Warcraft-2-style main-view fog. Inside it the world renders full; the
-   * explored ring between it and `revealRadius` (and all explored terrain out of
-   * sight) shows the dithered SHROUD; never-explored terrain is solid black.
-   * Smaller than `revealRadius` so vision's edge reads as a thin dim ring.
+   * Width (world px) of the Warcraft-2 fog's TRANSITION band — the graded
+   * ordered-dither frontier between the CLEAR terrain the hero has uncovered
+   * and the solid-black terrain he never has. Everything he has explored reads
+   * fully clear; only this thin outer rim of the exploration frontier stipples,
+   * dense black against the dark and thinning to nothing as it meets the clear.
+   * Mobs standing inside the band (or the dark beyond) are not drawn — the
+   * horde only appears on ground the hero can actually see. Roughly a cell and
+   * a half so the stipple reads as a soft edge, not a hard line.
    */
-  sightRadius: 130,
-  /**
-   * The Warcraft-2 SHROUD over explored-but-out-of-sight terrain: a 50% black
-   * checkerboard STIPPLE (the signature look — you can still make out the
-   * terrain through it) at this pixel size, painted at `shroudAlpha`. Never-
-   * explored terrain is solid opaque black instead.
-   */
-  fogStipple: 2,
-  shroudAlpha: 0.86,
+  fogBand: 48,
 } as const;
