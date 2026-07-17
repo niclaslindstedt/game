@@ -157,22 +157,27 @@ export const WEAPON = {
 } as const;
 
 /**
- * KNOCKBACK — every landing MELEE or RANGED weapon blow of the hero's own
- * shoves the struck mob a little straight back, away from him, so a swing or a
- * shot buys ground and kiting the horde gets that bit easier. Magic weapons
- * DON'T knock back (INT keeps its crowd control in the AoE cleave, the crit
- * blob, and granted spells) — this is the physical arsenal's signature. It only
- * nudges survivors: a killing blow is handled by the corpse launch, and a mob
- * about to die isn't moved. The shove is a flat world-px displacement (not an
- * impulse that decays), so repeated hits keep a chased pack at arm's length
- * without ever launching it. Units: world px. The developer BALANCE › KNOCKBACK
- * knob scales `distance` live (0× off, 1× this shipped baseline, up to 100×).
+ * KNOCKBACK — a landing MELEE or RANGED weapon blow of the hero's own shoves
+ * the struck mob a little straight back, away from him, so a swing or a shot
+ * buys ground and kiting the horde gets that bit easier. It is a RARE weapon
+ * SIGNATURE (the `knockback` affix), not a universal rule: only a handful of
+ * authored uniques/legendaries/artifacts carry it — an overpowered stat kept
+ * scarce — so most weapons never push at all (see `applyKnockback`, gated on
+ * `heroHasKnockback`). Magic weapons DON'T knock back whatever they carry (INT
+ * keeps its crowd control in the AoE cleave, the crit blob, and granted
+ * spells). It only nudges survivors: a killing blow is handled by the corpse
+ * launch, and a mob about to die isn't moved. The shove is a flat world-px
+ * displacement (not an impulse that decays), so repeated hits keep a chased
+ * pack at arm's length without ever launching it. Units: world px. The
+ * developer BALANCE › KNOCKBACK knob scales `distance` live (0× off, 1× this
+ * shipped baseline, up to 100×).
  */
 export const KNOCKBACK = {
   /** World px a struck mob is pushed directly away from the hero per landing
-   * melee/ranged blow, at the neutral (1×) knob. A few px: noticeable over a
-   * fight, never a launch — a body slid ~a third of the pack-separation each
-   * hit. */
+   * melee/ranged blow of a KNOCKBACK weapon, at the neutral (1×) knob. A few
+   * px: noticeable over a fight, never a launch — a body slid ~a third of the
+   * pack-separation each hit. The single magnitude every knockback weapon
+   * shares (the affix is a marker, not a per-weapon value). */
   distance: 10,
   /**
    * The fraction of the shove each ENEMY ROLE actually takes — heavier set

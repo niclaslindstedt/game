@@ -46,10 +46,12 @@ const dist = (a: { x: number; y: number }, b: { x: number; y: number }) =>
   Math.hypot(a.x - b.x, a.y - b.y);
 const isBoss = (defId: string) => enemyDef(defId).role === "boss";
 
-// A few tests below park a single mob against a STATIONARY hero — a setup the
-// hero's new melee/ranged KNOCKBACK (config `KNOCKBACK`) would otherwise hold
-// at bay forever, so they turn the shove off to isolate the rule under test.
-// Always restore the neutral tuning afterward so the knob can't leak.
+// A few tests below park a single mob against a STATIONARY hero. KNOCKBACK
+// (config `KNOCKBACK`) is now a rare weapon signature the default fixture
+// weapon doesn't carry, so it wouldn't shove anyway — but they zero the
+// BALANCE › KNOCKBACK knob as belt-and-suspenders so no future knockback
+// weapon in the rig could hold the parked mob at bay. Always restore the
+// neutral tuning afterward so the knob can't leak.
 afterEach(() => resetBalanceTuning());
 const isMinion = (defId: string) => enemyDef(defId).role === "minion";
 

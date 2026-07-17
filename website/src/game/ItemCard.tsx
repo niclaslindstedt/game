@@ -139,6 +139,8 @@ export function affixLine(affix: Affix): string {
     }
     case "sureStrike":
       return "NEVER MISSES";
+    case "knockback":
+      return "KNOCKS BACK";
   }
 }
 

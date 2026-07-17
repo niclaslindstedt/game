@@ -1463,11 +1463,13 @@ export function affixNaming(affix: Affix): {
       return { prefix: "REINFORCED" };
     case "armorPen":
       return { suffix: "OF SUNDERING" };
-    // Granted spells, procs, and sure strike are unique/legendary authoring
-    // territory — they never roll onto magic items, so they lend no name.
+    // Granted spells, procs, sure strike, and knockback are unique/legendary
+    // authoring territory — they never roll onto magic items, so they lend no
+    // name (the named item carries its own).
     case "spell":
     case "proc":
     case "sureStrike":
+    case "knockback":
       return {};
   }
 }
