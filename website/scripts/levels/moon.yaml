@@ -1,8 +1,20 @@
 description: |-
-  LEVEL 2 - THE MOON. Ada's beacon dies near the old flag: ghosts thicken with
-  distance from the landing site, and ARMSTRONG haunts the far side. Low gravity
-  (floaty hops), open regolith with craters to jump and slabs to break line of
-  sight.
+  LEVEL 2 - THE MOON. Ada's beacon dies near the old Apollo flag; ARMSTRONG
+  haunts the far side and the ghosts thicken with every step from the lander.
+  THE READ: an open lunar plain, but the regolith is broken into a handful of
+  BASINS by long rock RIDGES with OFFSET gaps, so the climb from the lander to
+  the flag SWEEPS the hero low, then up, then up again across most of the moon
+  instead of cutting one straight diagonal. Floaty low-gravity hops, craters to
+  jump, slabs to break line of sight - it still feels like open moon, just no
+  longer an empty field.
+  TWO OFF-PATH DETOURS reward poking into a dead pocket - the "explore for loot"
+  lesson. The CRASHED LANDER is a walled wreck off the low opening leg where the
+  LOST COSMONAUT drifts a supply cache; THE THIRTEENTH GRAVE is a deep walled
+  crater off the boss approach where THE THIRTEENTH MAN keeps his own. Each is a
+  quiet cul-de-sac (no ambient horde) holding a chest and its lone guardian.
+  TEMPO: a gentle opening while the player learns the floaty steering, a swell
+  through the mid basins, a breather at the STILL POINT by the flag where the
+  salvage merchant trades, then a final surge as ARMSTRONG wakes.
 campaign: true
 id: moon
 index: 2
@@ -63,197 +75,323 @@ landmarks:
     anchor: base
 objective:
   type: killBoss
+# THE INTENDED PATH: the sweep through the ridge gaps from the lander to
+# ARMSTRONG. The autopilot follows it (so it rounds the ridges instead of
+# wedging) and the app points its "go this way" arrow along it. Each leg
+# threads the next basin's offset gap: low out of the lander, up through the
+# mid basin, up again through the boss-bay mouth, ending at the STILL POINT
+# and the flag.
+path:
+  - x: 340
+    y: 1320
+  - x: 560
+    y: 1220
+  - x: 760
+    y: 1180
+  - x: 1000
+    y: 900
+  - x: 1180
+    y: 500
+  - x: 1440
+    y: 520
+  - x: 1650
+    y: 600
+  - x: 1900
+    y: 420
+  - x: 2130
+    y: 260
 rareSpawns:
   rare:
     - moonstruck_mourner
     - lost_cosmonaut
   unique:
     - the_thirteenth_man
-# HARD-CODED per-difficulty mob levels [easy, medium, hard, nightmare];
-# JESUS stays player-relative. Placeholder ramp for this campaign slot —
-# retune when this level is reworked. A spawner may override per point.
+# HARD-CODED per-difficulty mob levels [easy, medium, hard, nightmare]; JESUS
+# stays player-relative. This is the LEVEL DEFAULT (the pinned scatter + rare
+# spawns read it); the ridge-gap spawn points below RAMP their own levels up as
+# the hero climbs toward the flag (see each `mobLevels`).
 mobLevels: [[7, 13], [7, 14], [10, 17], [45, 48]]
 spawns:
-  - enemy: wisp
-    count: 8
-    band:
-      - 0.05
-      - 0.45
-  - enemy: ghost
-    count: 6
-    band:
-      - 0.4
-      - 0.8
-  - enemy: wraith
-    count: 4
-    band:
-      - 0.75
-      - 1.05
-  - enemy: optimusk
-    count: 6
-    band:
-      - 0.3
-      - 0.95
+  # The four speaking elites, pinned along the sweep so the conspiracy unspools
+  # in order — the grave under the dust, the corporate claim, the quarantine,
+  # and Ada's trail — each guarding the basin its keycard/loot belongs to.
+  # Levels ramp with the basin; HP scales up the campaign ladder.
   - enemy: apollo_ghost
     at:
-      x: 700
-      y: 1100
+      x: 820
+      y: 1160
     level: [13, 14, 17, 48]
     hp: [220, 330, 506, 1320]
   - enemy: prospector
     at:
-      x: 1150
-      y: 850
+      x: 1180
+      y: 640
     level: [13, 14, 17, 48]
     hp: [240, 360, 552, 1440]
   - enemy: quarantine_medic
     at:
-      x: 1600
-      y: 550
+      x: 1480
+      y: 460
     level: [13, 14, 17, 48]
     hp: [260, 390, 598, 1560]
   - enemy: cartographer
     at:
-      x: 1880
-      y: 520
+      x: 1720
+      y: 540
     level: [13, 14, 17, 48]
     hp: [240, 360, 552, 1440]
+  # The two detour guardians, PINNED (not just random rares) between each
+  # pocket's mouth and its chest — the whole reward for exploring a dead end.
+  - enemy: lost_cosmonaut
+    at:
+      x: 640
+      y: 1500
+    level: [10, 11, 14, 45]
+    hp: [170, 250, 380, 1020]
+  - enemy: the_thirteenth_man
+    at:
+      x: 1960
+      y: 1200
+    level: [14, 15, 18, 48]
+    hp: [320, 480, 736, 1920]
   - enemy: armstrong
     at:
       x: 2130
       y: 260
     level: [15, 16, 19, 49]
     hp: [550, 825, 1265, 3300]
-packs:
-  - at:
-      x: 900
-      y: 1080
-    members:
-      - enemy: wisp
-        count: 6
-  - at:
-      x: 1350
-      y: 760
-    members:
-      - enemy: ghost
-        count: 5
-      - enemy: wisp
-        count: 3
-  - at:
-      x: 1780
+safeZones:
+  # THE STILL POINT: a calm nook on the flag approach, centred on the boss-bay
+  # mouth so the horde is repelled OUT of the entrance and the hero (and the
+  # autopilot) walks in clean. A breather + the salvage merchant before
+  # ARMSTRONG (who haunts the flag ~250px north-east, outside the zone).
+  - shape: circle
+    pos:
+      x: 1880
       y: 460
-    members:
-      - enemy: wraith
-        count: 3
-      - enemy: ghost
-        count: 4
+    radius: 185
+    label: STILL POINT
+quietZones:
+  # The two detour pockets are dead cul-de-sacs — no ambient horde spawns
+  # inside, so poking in for the chest and its lone guardian stays calm. Each
+  # rect hugs the pocket walls, entrance left open.
+  - shape: rect
+    rect:
+      x: 500
+      y: 1380
+      width: 300
+      height: 212
+    label: CRASHED LANDER
+  - shape: rect
+    rect:
+      x: 1820
+      y: 1060
+      width: 300
+      height: 292
+    label: THE THIRTEENTH GRAVE
+chests:
+  # The two off-path caches — the payoff for the detour. Each sits in open
+  # regolith, off the pocket walls, so its chrome reads against the dust.
+  - at:
+      x: 660
+      y: 1500
+  - at:
+      x: 1970
+      y: 1250
+tempo:
+  # Build-and-release over the ramp: a gentle floaty-steering opener, a swell
+  # through the mid basins, a breather at the STILL POINT / shop beat, then a
+  # surge for ARMSTRONG.
+  - at: 0
+    intensity: 0.5
+  - at: 0.18
+    intensity: 0.85
+  - at: 0.45
+    intensity: 1.15
+  - at: 0.62
+    intensity: 0.7
+  - at: 0.82
+    intensity: 1
+  - at: 1
+    intensity: 1.35
+merchantSpawns:
+  # Primary: the STILL POINT nook before the flag. Secondary: the mid basin by
+  # the prospector, so the trader sometimes greets the hero mid-climb.
+  - x: 1900
+    y: 500
+  - x: 1120
+    y: 720
 spawners:
-  # Finite spawn points (converted from the old wave budget): placed
-  # knots the hero clears on the way to the boss. Counts preserve the
-  # wave total; refine placement/mix in a later pass.
-  - id: p0
-    at: { x: 447, y: 1256 }
+  # THE HORDE AS FINITE SPAWN POINTS (not a bottomless wave): one knot per basin
+  # sweep, each arming as the hero advances into it (wide `triggerRadius` so a
+  # cut corner still trips it) and DRAINING its count — the mobs give chase, so
+  # he clears them ON THE MOVE, then walks on to an empty patch. Counts sum to
+  # ~900 across the sweep (a "clear the whole moon" battle), back-loaded so the
+  # opener stays the gentle onboarding knot and the basins swell toward the
+  # flag. The mob TYPE ramps basin to basin (wisps → ghosts → wraiths →
+  # OPTIMUSK) and the per-point `mobLevels` climb with it. The per-map XP cap
+  # (not the head-count) bounds how far a clear levels the hero.
+  - id: open
+    at: { x: 500, y: 1240 }
+    mobLevels: [[7, 8], [7, 8], [10, 11], [45, 46]]
+    triggerRadius: 560
+    lingering: 12
+    members:
+      - enemy: wisp
+        count: 100
+  # --- Low basin, out of the lander toward the first ridge gap. ---
+  - id: low
+    at: { x: 820, y: 1140 }
+    mobLevels: [[8, 9], [8, 9], [11, 12], [45, 46]]
     triggerRadius: 520
+    lingering: 10
     members:
       - enemy: wisp
-        count: 84
-  - id: p1
-    at: { x: 800, y: 1167 }
-    members:
-      - enemy: wisp
-        count: 84
-  - id: p2
-    at: { x: 992, y: 814 }
-    members:
-      - enemy: wisp
-        count: 83
+        count: 120
       - enemy: ghost
-        count: 80
-  - id: p3
-    at: { x: 1184, y: 940 }
+        count: 60
+  # --- The climb into the mid basin (through the high gap). ---
+  - id: mid
+    at: { x: 1080, y: 760 }
+    mobLevels: [[9, 10], [9, 11], [12, 14], [46, 47]]
+    triggerRadius: 520
+    lingering: 10
     members:
       - enemy: wisp
-        count: 83
+        count: 90
       - enemy: ghost
-        count: 80
-  - id: p4
-    at: { x: 1376, y: 587 }
-    members:
-      - enemy: wisp
-        count: 83
-      - enemy: ghost
-        count: 80
+        count: 100
       - enemy: wraith
-        count: 75
-  - id: p5
-    at: { x: 1567, y: 713 }
-    members:
-      - enemy: wisp
-        count: 83
-      - enemy: ghost
-        count: 80
-      - enemy: wraith
-        count: 75
-  - id: p6
-    at: { x: 1759, y: 360 }
+        count: 40
+  # --- The upper basin, along the ridge toward the boss mouth. ---
+  - id: upper
+    at: { x: 1450, y: 540 }
+    mobLevels: [[10, 11], [10, 12], [13, 15], [46, 47]]
+    triggerRadius: 500
+    lingering: 8
     members:
       - enemy: ghost
-        count: 80
+        count: 90
       - enemy: wraith
-        count: 75
+        count: 70
       - enemy: optimusk
-        count: 15
-  - id: p7
-    at: { x: 1951, y: 486 }
+        count: 20
+  # --- The boss-bay mouth: a last surge as ARMSTRONG stirs. ---
+  - id: bay
+    at: { x: 2020, y: 380 }
+    mobLevels: [[11, 12], [11, 13], [14, 17], [47, 48]]
+    triggerRadius: 360
+    lingering: 6
     members:
       - enemy: wraith
-        count: 75
+        count: 70
       - enemy: optimusk
-        count: 15
+        count: 40
+      - enemy: ghost
+        count: 40
 walls:
+  # === ROCK RIDGES: three long rubble spines that break the plain into basins,
+  # each leaving ONE wide (~560px) OFFSET pass-gap so the sweep threads LOW,
+  # then HIGH, then the boss-bay MID mouth. Wide on purpose — a pressured hero
+  # (and the autopilot) rounds them without pixel-perfect lining-up. ===
+  # --- Ridge 1 (x=760), gap LOW (y 1000-1600 open): the hero stays low out of
+  # the lander and rounds the spine's bottom. ---
   - kind: boulder
     from:
-      x: 280
-      y: 480
+      x: 760
+      y: 200
     to:
-      x: 520
+      x: 760
+      y: 1000
+    radius: 13
+    jumpable: false
+  # --- Ridge 2 (x=1180), gap HIGH (y 200-760 open): the hero climbs to the top
+  # of the basin to round it. ---
+  - kind: boulder
+    from:
+      x: 1180
+      y: 760
+    to:
+      x: 1180
+      y: 1600
+    radius: 13
+    jumpable: false
+  # --- Ridge 3 (x=1650), gap MID (y 400-780 open): the mouth into ARMSTRONG's
+  # bay by the flag. ---
+  - kind: boulder
+    from:
+      x: 1650
+      y: 200
+    to:
+      x: 1650
       y: 400
     radius: 13
     jumpable: false
   - kind: boulder
     from:
-      x: 620
-      y: 700
+      x: 1650
+      y: 780
     to:
-      x: 920
-      y: 640
+      x: 1650
+      y: 1600
+    radius: 13
+    jumpable: false
+  # === CRASHED LANDER detour (off the low opening leg) — the LOST COSMONAUT
+  # drifts a supply cache in this walled wreck; entrance is the top gap. ===
+  - kind: boulder
+    from:
+      x: 500
+      y: 1380
+    to:
+      x: 500
+      y: 1592
     radius: 13
     jumpable: false
   - kind: boulder
     from:
-      x: 1250
-      y: 1250
+      x: 800
+      y: 1380
     to:
-      x: 1550
-      y: 1340
+      x: 800
+      y: 1592
     radius: 13
     jumpable: false
   - kind: boulder
     from:
-      x: 1180
-      y: 300
+      x: 500
+      y: 1592
     to:
-      x: 1440
-      y: 230
+      x: 800
+      y: 1592
+    radius: 13
+    jumpable: false
+  # === THE THIRTEENTH GRAVE detour (off the boss approach) — a deep walled
+  # crater the THIRTEENTH MAN keeps; entrance is the top gap. ===
+  - kind: boulder
+    from:
+      x: 1820
+      y: 1060
+    to:
+      x: 1820
+      y: 1350
     radius: 13
     jumpable: false
   - kind: boulder
     from:
-      x: 1780
-      y: 820
+      x: 2120
+      y: 1060
     to:
-      x: 2060
-      y: 920
+      x: 2120
+      y: 1350
+    radius: 13
+    jumpable: false
+  - kind: boulder
+    from:
+      x: 1820
+      y: 1350
+    to:
+      x: 2120
+      y: 1350
     radius: 13
     jumpable: false
 placedItems:
@@ -262,9 +400,21 @@ placedItems:
     pos:
       x: 2010
       y: 360
+  - kind: medkit
+    pos:
+      x: 300
+      y: 1250
+  - kind: xp
+    pos:
+      x: 720
+      y: 1520
+  - kind: medkit
+    pos:
+      x: 1990
+      y: 1290
 obstacles:
   - kind: moonrock
-    count: 30
+    count: 26
     radius: 8
     jumpable: false
     rockSizes:
