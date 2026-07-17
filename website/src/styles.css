@@ -299,54 +299,78 @@ body {
 /* The clock and foe counter float over the play field, so they carry their
    own semi-transparent backdrop (matching the xp badge / avatar panels) to
    stay legible against the bright floor tiles. */
-/* A <button> so tapping the clock/foe unit pauses the run — reset the native
-   chrome and opt back into pointer events (the HUD itself is pass-through). */
-.hud-center {
-  display: flex;
-  flex-direction: column;
-  align-items: flex-end;
-  text-align: right;
-  gap: 0.15rem;
-  padding: 0.2rem 0.6rem 0.3rem;
-  background: rgba(11, 13, 16, 0.55);
-  border: 2px solid #1a1c2c;
-  border-radius: 6px;
-  text-shadow: 0 2px 0 rgba(11, 13, 16, 0.6);
-  font: inherit;
-  color: inherit;
-  appearance: none;
-  -webkit-tap-highlight-color: transparent;
-  pointer-events: auto;
-  cursor: pointer;
-}
-
-.hud-center:active {
-  transform: translateY(1px);
-}
-
-/* The clock unit and the MAP button share one column stack anchored to the
-   top-right; stretch alignment makes the button exactly as wide as the
-   clock box so the pair reads as a single HUD unit. */
+/* The minimap hub is anchored to the top-right of the HUD grid. */
 .hud-clock-stack {
   grid-column: 3;
   justify-self: end;
   display: flex;
   flex-direction: column;
   align-items: stretch;
-  gap: 0.3rem;
 }
 
-/* The MAP button: a treasure map tucked under the clock unit — opens the
-   fog-of-war level map (M on desktop) and pauses the run under it. Framed
-   like the clock unit so the stack reads as one family. */
-.hud-map-btn {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: 0.2rem 0.6rem;
-  background: rgba(11, 13, 16, 0.55);
+/* The WoW-style minimap hub: a live fog-of-war map in a rounded frame, with
+   the run's edge widgets hung off its border (timer top, kills bottom, the
+   rampage ring around it). A positioning parent for those absolute widgets. */
+.hud-minimap {
+  position: relative;
+  width: 8rem;
+  height: 5.25rem;
+  pointer-events: auto;
+}
+
+/* The map frame: a rounded window the live canvas fills; tapping it opens the
+   full-screen map. `overflow: hidden` clips the chunky map to the rounded
+   corners; the rampage ring is a sibling drawn over this border. */
+.hud-minimap-frame {
+  position: absolute;
+  inset: 0;
+  padding: 0;
   border: 2px solid #1a1c2c;
-  border-radius: 6px;
+  border-radius: 10px;
+  overflow: hidden;
+  background: #0b0d10;
+  font: inherit;
+  color: inherit;
+  appearance: none;
+  -webkit-tap-highlight-color: transparent;
+  cursor: pointer;
+}
+
+.hud-minimap-frame:active {
+  transform: translateY(1px);
+}
+
+.hud-minimap-canvas {
+  display: block;
+  width: 100%;
+  height: 100%;
+  image-rendering: pixelated;
+}
+
+/* The rampage gauge ring, laid over the frame border and drawn by the SVG in
+   Minimap.tsx (a dim track with a colored fraction filled clockwise from the
+   top). Non-interactive; overflow visible so the glow isn't clipped. */
+.hud-minimap-ring {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  overflow: visible;
+}
+
+/* Timer plate — inner top center. Doubles as the PAUSE tap-target (the tap the
+   old clock owned); reset the native button chrome. */
+.hud-minimap-timer {
+  position: absolute;
+  top: 0.15rem;
+  left: 50%;
+  transform: translateX(-50%);
+  padding: 0.08rem 0.35rem;
+  background: rgba(11, 13, 16, 0.72);
+  border: 0;
+  border-radius: 5px;
+  text-shadow: 0 1px 0 rgba(11, 13, 16, 0.8);
   font: inherit;
   color: inherit;
   appearance: none;
@@ -355,31 +379,25 @@ body {
   cursor: pointer;
 }
 
-/* The 20×14 treasure-map sprite at a crisp 2x. */
-.hud-map-icon {
-  width: 2.5rem;
-  height: 1.75rem;
-}
-
-.hud-map-btn:active {
-  transform: translateY(1px);
-}
-
-/* MAP + ACHIEVEMENTS ride in one aux group. Portrait: a column under the clock
-   (map above the star), stretched to the clock unit's width by the stack.
-   Landscape reflows it into a row LEFT of the clock (see the landscape block). */
-.hud-clock-aux {
-  display: flex;
-  flex-direction: column;
-  align-items: stretch;
-  gap: 0.3rem;
+/* Kill count — inner bottom center, a bare number. A positioning wrapper so
+   the inner .hud-kills can own the shake transform without fighting the
+   centering translate. Non-interactive so a tap still opens the map. */
+.hud-minimap-kills {
+  position: absolute;
+  bottom: 0.12rem;
+  left: 50%;
+  transform: translateX(-50%);
+  padding: 0.04rem 0.32rem;
+  background: rgba(11, 13, 16, 0.72);
+  border-radius: 5px;
+  pointer-events: none;
 }
 
 /* Landscape (the reference grip): tighten the upper HUD. HP/stamina and the
    weapon + durability + purse sit side by side instead of in one tall column,
-   and MAP + ACHIEVEMENTS move to the LEFT of the clock — so neither the left
-   status unit nor the right clock unit stacks as tall. Portrait keeps the
-   vertical stacks from the base rules above. */
+   so the left status unit doesn't stack as tall. Portrait keeps the vertical
+   stacks from the base rules above. The minimap hub on the right is a single
+   compact unit either way. */
 @media (min-aspect-ratio: 4/3) {
   .hud-status {
     padding: 0.2rem 0.4rem;
@@ -390,17 +408,6 @@ body {
     flex-direction: row;
     align-items: flex-start;
     gap: 0.6rem;
-  }
-
-  .hud-clock-stack {
-    flex-direction: row-reverse;
-    align-items: flex-start;
-    gap: 0.35rem;
-  }
-
-  .hud-clock-aux {
-    flex-direction: row;
-    align-items: flex-start;
   }
 }
 
@@ -452,26 +459,6 @@ body {
   .hud-kills.kill-shake {
     animation: none;
   }
-}
-
-.hud-rampage {
-  display: flex;
-  flex-direction: column;
-  align-items: flex-end;
-  gap: 0.12rem;
-  margin-top: 0.1rem;
-}
-
-.hud-rampage-pips {
-  display: flex;
-  gap: 0.15rem;
-}
-
-.hud-rampage-pip {
-  width: 0.4rem;
-  height: 0.4rem;
-  border-radius: 1px;
-  box-shadow: 0 1px 0 rgba(11, 13, 16, 0.6);
 }
 
 .hud-bar {

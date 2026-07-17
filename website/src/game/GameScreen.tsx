@@ -105,7 +105,6 @@ import { clusterByTouch } from "@ui/lib/cluster.ts";
 import { formatCompact } from "@ui/lib/format-number.ts";
 import { startGameLoop } from "@ui/lib/game-loop.ts";
 import { PixelText } from "@ui/lib/PixelText.tsx";
-import type { PixelFont } from "@ui/lib/pixel-font.ts";
 import { trackPointer } from "@ui/lib/pointer.ts";
 
 import {
@@ -156,6 +155,7 @@ import { SpellUnlockOverlay } from "./SpellUnlockOverlay.tsx";
 import { spellCastEffects } from "./spell-fx.ts";
 import { spellColor } from "./spellVisuals.ts";
 import { MapOverlay } from "./MapOverlay.tsx";
+import { Minimap, drawMinimap } from "./Minimap.tsx";
 import { dollDataUrl, playerDollLayers } from "./paper-doll.ts";
 import { RespecOverlay } from "./RespecOverlay.tsx";
 import { PauseOverlay } from "./PauseOverlay.tsx";
@@ -499,82 +499,6 @@ function formatTime(ms: number): string {
   return `${minutes}:${String(seconds).padStart(2, "0")}`;
 }
 
-/** Pips on the rampage gauge. The menace stage itself is UNCAPPED (the
- * evolution ratchet climbs as long as the player out-hits the horde); the
- * gauge fills its ten pips and then counts the deeper stages numerically. */
-const RAMPAGE_PIPS = 10;
-
-/** The rampage gauge heats from amber to red as the menace stage climbs —
- * the top stages glow a hotter red so the deadly end of the meter reads at
- * a glance. */
-function rampageColor(stage: number): string {
-  if (stage >= 8) return "#ff3020";
-  if (stage >= 5) return "#ff5030";
-  if (stage >= 2) return "#ff9040";
-  return "#ffd050";
-}
-
-/** The live kill tally, which jolts on every kill so a fresh frag is felt.
- * The jolt scales with the recent kill rate: a lone kill is a small nudge,
- * but a burst — several mobs downed inside a one-second window (a nuke, a
- * cleaving swing) — stacks into a hard, wide shake. Amplitude/rotation/duration
- * all ride the burst count so a rampage reads as chaos, not a metronome. */
-function KillCounter({
-  font,
-  label,
-  kills,
-}: {
-  font: PixelFont;
-  label: string;
-  kills: number;
-}) {
-  const ref = useRef<HTMLDivElement>(null);
-  const prevKills = useRef(kills);
-  // Timestamps of kills landed within the last second — its length is the
-  // burst size that drives how hard the counter shakes.
-  const recent = useRef<number[]>([]);
-
-  useEffect(() => {
-    const delta = kills - prevKills.current;
-    prevKills.current = kills;
-    // Ignore resets (retry) and no-ops; only a rising tally shakes.
-    if (delta <= 0) return;
-    const el = ref.current;
-    if (!el) return;
-
-    const now = performance.now();
-    for (let i = 0; i < delta; i++) recent.current.push(now);
-    recent.current = recent.current.filter((t) => now - t <= 1000);
-    const burst = recent.current.length;
-
-    // Map the burst onto a felt shake: a single kill nudges ~3px, and each
-    // further kill this second widens the throw and tilt toward a hard cap.
-    const amp = Math.min(3 + (burst - 1) * 1.6, 12);
-    const rot = Math.min(1.5 + (burst - 1) * 1.1, 9);
-    const dur = Math.min(160 + (burst - 1) * 24, 420);
-    el.style.setProperty("--shake-amp", `${amp}px`);
-    el.style.setProperty("--shake-rot", `${rot}deg`);
-    el.style.setProperty("--shake-dur", `${dur}ms`);
-
-    // Restart the animation from the top on every kill: drop the class, force a
-    // reflow so the browser sees a genuine state change, then re-add it.
-    el.classList.remove("kill-shake");
-    void el.offsetWidth;
-    el.classList.add("kill-shake");
-  }, [kills]);
-
-  return (
-    <div ref={ref} className="hud-kills">
-      <PixelText
-        font={font}
-        text={`${label} ${kills}`}
-        scale={2}
-        color="#d9a0f0"
-      />
-    </div>
-  );
-}
-
 export function GameScreen({
   character,
   difficulty,
@@ -625,6 +549,10 @@ export function GameScreen({
     null,
   );
   const canvasRef = useRef<HTMLCanvasElement>(null);
+  // The live HUD minimap canvas: the render loop paints the fog-of-war map and
+  // its blips straight onto it each frame (like the dpad/powerup DOM writes),
+  // so the map tracks the hero without a React re-render.
+  const minimapRef = useRef<HTMLCanvasElement>(null);
   const dpadRef = useRef<HTMLDivElement>(null);
   // The powerup dock: a spent powerup keeps its slot and counts down in place,
   // its radial cooldown sweep and countdown numbers written straight to the DOM
@@ -2599,6 +2527,13 @@ export function GameScreen({
         }
         drawEffects(ctx, debugEffects, camera, state.stats.timeMs, assets);
 
+        // The live HUD minimap: paint the fog-of-war map (cached terrain +
+        // live blips + the hero's pin) straight onto its canvas each frame, so
+        // it tracks the run without a React re-render. Only mounted while the
+        // playing HUD is up, so the ref is null otherwise.
+        const minimapNode = minimapRef.current;
+        if (minimapNode) drawMinimap(minimapNode, state, assets);
+
         // The FPS readout: smooth the frame delta (EMA) and write the number
         // straight to the DOM every quarter second — no React re-render, so
         // the meter itself costs nothing worth measuring.
@@ -3276,17 +3211,29 @@ export function GameScreen({
               )}
             </div>
 
-            {/* Top-right: run clock over the foe counter, with the MAP button
-                tucked underneath in the same column so the pair reads as one
-                unit. Tapping the clock pauses the run (the same freeze as
-                P/Escape) — a big, thumb-reachable target for the phone, where
-                there's no keyboard. */}
+            {/* Top-right: the WoW-style minimap hub. The live fog-of-war map
+                sits in a rounded frame, with the run's edge widgets hung off
+                it — the survival timer at the inner top (which also PAUSES the
+                run, the tap the old clock owned), the kill count as a bare
+                number at the inner bottom, and RAMPAGE as a gauge that fills
+                and reddens around the border (it replaced the pips). Tapping
+                the map body opens the full-screen map (M on desktop). */}
             <div className="hud-clock-stack">
-              <button
-                type="button"
-                className="hud-center"
-                aria-label="pause"
-                onClick={() => {
+              <Minimap
+                font={font}
+                canvasRef={minimapRef}
+                timerText={formatTime(hud.stats.combatMs)}
+                kills={hud.stats.kills}
+                menaceStage={hud.menaceStage}
+                onExpand={() => {
+                  if (state?.phase === "playing") {
+                    setWeaponMenuOpen(false);
+                    openMap(state);
+                    playUiSound(synth, "confirm");
+                    bumpUi();
+                  }
+                }}
+                onPause={() => {
                   if (state?.phase === "playing") {
                     pauseGame(state);
                     pauseMusic();
@@ -3294,79 +3241,7 @@ export function GameScreen({
                     bumpUi();
                   }
                 }}
-              >
-                <PixelText
-                  font={font}
-                  text={formatTime(hud.stats.combatMs)}
-                  scale={3}
-                />
-                <KillCounter
-                  font={font}
-                  label={state?.level.foes ?? "FOES"}
-                  kills={hud.stats.kills}
-                />
-                {/* Rampage gauge: overkilling and fast kills evolve and lure the
-                  horde. Shown only while the meter is hot, reddening as the
-                  stage climbs so the escalation is legible. */}
-                {hud.menaceStage > 0 && (
-                  <div className="hud-rampage" aria-hidden>
-                    <PixelText
-                      font={font}
-                      text={
-                        hud.menaceStage > RAMPAGE_PIPS
-                          ? `RAMPAGE ${hud.menaceStage}`
-                          : "RAMPAGE"
-                      }
-                      scale={2}
-                      color={rampageColor(hud.menaceStage)}
-                    />
-                    <div className="hud-rampage-pips">
-                      {Array.from({ length: RAMPAGE_PIPS }, (_, i) => (
-                        <span
-                          key={i}
-                          className="hud-rampage-pip"
-                          style={{
-                            background:
-                              i < hud.menaceStage
-                                ? rampageColor(hud.menaceStage)
-                                : "rgba(255,255,255,0.15)",
-                          }}
-                        />
-                      ))}
-                    </div>
-                  </div>
-                )}
-              </button>
-
-              {/* MAP + ACHIEVEMENTS ride together in one aux group. In
-                landscape it reflows to the LEFT of the clock (tighter HUD);
-                in portrait it stacks under the clock as before. */}
-              <div className="hud-clock-aux">
-                {/* The MAP button — a treasure map that opens the fog-of-war
-                level map (M on desktop) and pauses the run under it, like
-                the bag. Stretched to the clock unit's width by the stack. */}
-                <button
-                  type="button"
-                  className="hud-map-btn"
-                  aria-label="open-map"
-                  onClick={() => {
-                    if (state?.phase === "playing") {
-                      setWeaponMenuOpen(false);
-                      openMap(state);
-                      playUiSound(synth, "confirm");
-                      bumpUi();
-                    }
-                  }}
-                >
-                  <img
-                    src={
-                      spriteDataUrl(assets.sprites, "icon_treasure_map") ?? ""
-                    }
-                    alt=""
-                    className="pixel-img hud-map-icon"
-                  />
-                </button>
-              </div>
+              />
             </div>
           </div>
         </div>
