@@ -207,17 +207,20 @@ spawners:
   # wave total; refine placement/mix in a later pass.
   - id: p0
     at: { x: 351, y: 829 }
+    maxAlive: 15
     triggerRadius: 520
     members:
       - enemy: voidling
         count: 84
   - id: p1
     at: { x: 519, y: 1043 }
+    maxAlive: 15
     members:
       - enemy: voidling
         count: 84
   - id: p2
     at: { x: 610, y: 855 }
+    maxAlive: 15
     members:
       - enemy: voidling
         count: 83
@@ -225,6 +228,7 @@ spawners:
         count: 60
   - id: p3
     at: { x: 701, y: 1146 }
+    maxAlive: 15
     members:
       - enemy: voidling
         count: 83
@@ -232,6 +236,7 @@ spawners:
         count: 60
   - id: p4
     at: { x: 792, y: 958 }
+    maxAlive: 15
     members:
       - enemy: voidling
         count: 83
@@ -241,6 +246,7 @@ spawners:
         count: 70
   - id: p5
     at: { x: 883, y: 1249 }
+    maxAlive: 15
     members:
       - enemy: voidling
         count: 83
@@ -250,6 +256,7 @@ spawners:
         count: 70
   - id: p6
     at: { x: 974, y: 1061 }
+    maxAlive: 15
     members:
       - enemy: star_jelly
         count: 60
@@ -259,6 +266,7 @@ spawners:
         count: 35
   - id: p7
     at: { x: 1065, y: 1352 }
+    maxAlive: 15
     members:
       - enemy: unraveler
         count: 70

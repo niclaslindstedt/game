@@ -436,6 +436,7 @@ export function createGame(
       spawnRadius,
       intervalMs: s.intervalMs ?? SPAWNERS.intervalMs,
       perEmit: s.perEmit ?? SPAWNERS.perEmit,
+      maxAlive: s.maxAlive ?? SPAWNERS.maxAlive,
       queue,
       total: queue.length,
       status: "dormant" as const,

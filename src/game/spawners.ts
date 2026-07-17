@@ -4,9 +4,13 @@
 // (stepSpawner). Each point sleeps until the hero trips its `triggerRadius`,
 // then EMITS its queued mobs a few (`perEmit`) at a time every `intervalMs`
 // until it DRAINS empty — one readable wave the hero can clear and walk away
-// from. A point may CHAIN off another (`after`): it arms `afterDelayMs` after
-// that one drains, but only while the hero is still in its trigger range, so
-// pressure follows him without a bottomless refill. This is what lets a level
+// from. Emission holds to a per-point CONCURRENT-ALIVE CAP (`maxAlive`) and only
+// runs while the hero is in trigger range: at the cap (or once he steps out) the
+// point pauses, then drips a fresh batch to REPLACE each kill — steady local
+// pressure rather than a dumped pile — and the queue still drains as he grinds
+// the cap down. A point may CHAIN off another (`after`): it arms `afterDelayMs`
+// after that one drains, but only while the hero is still in its trigger range,
+// so pressure follows him without a bottomless refill. This is what lets a level
 // actually be CLEARED and a maze be traversed without an infinite bog. Emitted
 // mobs are scaled exactly like a woken pack's (menace stage + mob level), so a
 // spawner wave hits as hard as the difficulty's horde.
@@ -59,11 +63,17 @@ function emitPos(
   };
 }
 
-/** Emit up to `perEmit` queued mobs from a spawner (fewer if the queue runs
- * out), scaled to the run's horde like a woken pack. */
-function emitBatch(state: GameState, spawner: SpawnerRuntime): void {
+/** Emit up to `limit` queued mobs from a spawner (fewer if the queue runs out),
+ * scaled to the run's horde like a woken pack. `limit` is `perEmit` clamped by
+ * the room left under the concurrent-alive cap. */
+function emitBatch(
+  state: GameState,
+  spawner: SpawnerRuntime,
+  limit: number,
+): number {
   const levelDefault = levelDef(state.level.id).mobLevels;
-  for (let k = 0; k < spawner.perEmit && spawner.queue.length > 0; k++) {
+  let emitted = 0;
+  for (let k = 0; k < limit && spawner.queue.length > 0; k++) {
     const defId = spawner.queue.pop()!;
     // Hard-coded level (point override → level default) sets hp + mlvl from the
     // rolled authored band; else the player-relative fallback. The menace
@@ -90,7 +100,9 @@ function emitBatch(state: GameState, spawner: SpawnerRuntime): void {
     state.enemies.push(enemy);
     spawner.memberIds.push(enemy.id);
     if (enemyDef(defId).role === "minion") state.pendingMinionSpawns++;
+    emitted++;
   }
+  return emitted;
 }
 
 /**
@@ -105,6 +117,10 @@ export function stepSpawners(state: GameState): void {
   if (spawners.length === 0) return;
   const now = state.stats.timeMs;
   const canWake = !state.freeze && state.victoryCountdownMs === null;
+  // Built lazily the first time an active point needs to count its own live
+  // members against the alive cap — one pass over the enemy list, reused across
+  // every spawner this tick (mirrors stepPacks).
+  let aliveIds: Set<number> | null = null;
 
   for (const spawner of spawners) {
     if (spawner.status === "dormant") {
@@ -132,17 +148,41 @@ export function stepSpawners(state: GameState): void {
     }
 
     if (spawner.status === "active") {
-      // Release a batch every interval; a guard caps catch-up after a long tick.
-      let batches = 0;
-      while (
-        now >= spawner.emitAtMs &&
-        spawner.queue.length > 0 &&
-        batches < 8
-      ) {
-        emitBatch(state, spawner);
-        spawner.emitAtMs += spawner.intervalMs;
-        batches++;
+      // Emit ONLY while the hero is in trigger range, and only up to the
+      // concurrent-alive cap: the point drips to REPLACE kills, holding steady
+      // local pressure instead of dumping its whole queue at once. It pauses
+      // when its live members hit `maxAlive` or the hero walks out of range,
+      // and drips again as a slot frees or he returns.
+      const inRange =
+        distance(state.player.pos, spawner.at) <= spawner.triggerRadius;
+      if (inRange) {
+        // Count this point's live members ONCE from the tick's enemy snapshot,
+        // then track emissions incrementally — so a multi-batch catch-up tick
+        // still respects the cap (the snapshot can't see mobs it just emitted).
+        let live = -1;
+        // Release a batch every interval; a guard caps catch-up after a long tick.
+        let batches = 0;
+        while (
+          now >= spawner.emitAtMs &&
+          spawner.queue.length > 0 &&
+          batches < 8
+        ) {
+          if (live < 0) {
+            if (!aliveIds) aliveIds = new Set(state.enemies.map((e) => e.id));
+            live = 0;
+            for (const id of spawner.memberIds) if (aliveIds.has(id)) live++;
+          }
+          const room = spawner.maxAlive - live;
+          if (room <= 0) break; // at the cap — hold until a kill frees a slot
+          live += emitBatch(state, spawner, Math.min(spawner.perEmit, room));
+          spawner.emitAtMs += spawner.intervalMs;
+          batches++;
+        }
       }
+      // Clamp the clock to now whenever the point spent this tick paused (at the
+      // cap or out of range) so a stretch of holding never banks a catch-up
+      // burst — the drip always resumes at the normal cadence.
+      if (now > spawner.emitAtMs) spawner.emitAtMs = now;
       if (spawner.queue.length === 0) {
         spawner.status = "drained";
         spawner.drainedAtMs = now;

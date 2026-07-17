@@ -36,6 +36,50 @@ describe("spawn points arm, drip, and drain", () => {
     expect(state.spawners[0]!.drainedAtMs).not.toBeNull();
   });
 
+  it("holds at the alive cap and drips only to replace kills", () => {
+    const state = startGame(1, "test_spawner_level");
+    const s = state.spawners[0]!;
+    s.maxAlive = 3; // a small cap against the queue of 6
+    // Stand on the point (in trigger range) and let it fill.
+    state.player.pos = { x: 520, y: 1320 };
+    const aliveMembers = () =>
+      state.enemies.filter((e) => s.memberIds.includes(e.id)).length;
+    run(state, idle, 60);
+    // It stops at the cap — half the queue is still owed, so it never drained.
+    expect(aliveMembers()).toBe(3);
+    expect(s.status).toBe("active");
+    expect(s.queue.length).toBeGreaterThan(0);
+
+    // Free a slot (as a kill would) — the point drips a replacement back to cap.
+    const idx = state.enemies.findIndex((e) => s.memberIds.includes(e.id));
+    state.enemies.splice(idx, 1);
+    run(state, idle, 20);
+    expect(aliveMembers()).toBe(3);
+  });
+
+  it("stops emitting while the hero is outside trigger range", () => {
+    const state = startGame(1, "test_spawner_level");
+    const s = state.spawners[0]!;
+    // Arm it and let the first batch boil up.
+    state.player.pos = { x: 520, y: 1320 };
+    run(state, idle, 4, (st) => st.spawners[0]!.memberIds.length > 0);
+    expect(s.status).toBe("active");
+    const emitted = s.memberIds.length;
+    expect(emitted).toBeGreaterThan(0);
+    expect(s.queue.length).toBeGreaterThan(0);
+
+    // Walk out of trigger range — emission pauses, the queue holds.
+    state.player.pos = { x: 2000, y: 260 };
+    run(state, idle, 40);
+    expect(s.memberIds.length).toBe(emitted);
+    expect(s.status).toBe("active");
+
+    // Return — it drips again, no banked catch-up burst.
+    state.player.pos = { x: 520, y: 1320 };
+    run(state, idle, 40);
+    expect(s.memberIds.length).toBeGreaterThan(emitted);
+  });
+
   it("a chained point waits for its predecessor to drain plus the delay", () => {
     const state = startGame(1, "test_spawner_level");
     // Sit between both points so range never gates — only the chain does.
