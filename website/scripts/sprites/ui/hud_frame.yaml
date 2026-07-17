@@ -1,0 +1,35 @@
+name: hud_frame
+family: ui
+size: [16, 16]
+description: >
+  A sci-fi HUD panel frame: a beveled steel rim with teal corner bolts around a
+  dark translucent hollow, meant to be sliced as a 9-patch to back the player
+  portrait and vitals plate.
+subject:
+  kind: ui frame
+  features: a beveled metal border with teal corner bolts and a hollow translucent center
+  accent: teal corner bolts
+  flavor: on-screen interface chrome
+palette:
+  O: "#12141c" # dark outline
+  H: "#5b6b82" # steel highlight rim
+  M: "#333b49" # metal body
+  A: "#7fe8f0" # teal corner bolt
+  f: "#0b0d10d8" # translucent dark fill
+grid: |
+  OOOOOOOOOOOOOOOO
+  OAAHHHHHHHHHHAAO
+  OAAMMMMMMMMMMAAO
+  OHMOOOOOOOOOOMHO
+  OHMOffffffffOMHO
+  OHMOffffffffOMHO
+  OHMOffffffffOMHO
+  OHMOffffffffOMHO
+  OHMOffffffffOMHO
+  OHMOffffffffOMHO
+  OHMOffffffffOMHO
+  OHMOffffffffOMHO
+  OHMOOOOOOOOOOMHO
+  OAAMMMMMMMMMMAAO
+  OAAHHHHHHHHHHAAO
+  OOOOOOOOOOOOOOOO

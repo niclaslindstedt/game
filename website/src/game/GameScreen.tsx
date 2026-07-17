@@ -232,10 +232,13 @@ type Hud = {
   enemiesLeft: number;
   /** Current menace/rampage stage (uncapped) driving the gauge. */
   menaceStage: number;
-  /** Free (empty) bag cells — shown on the avatar badge, red at 0. */
+  /** Free (empty) bag cells — shown on the minimap-corner bag badge, red at 0. */
   bagFree: number;
+  /** Icon sprite of the worn bag (or the default carry-all when none is worn) —
+   * drawn on the minimap-corner bag badge so the pouch matches the equipped bag. */
+  bagIcon: string;
   /** True for a short window after the full bag turned away loot — pulses the
-   * inventory button to nudge the player to open it and make room. */
+   * minimap bag badge to nudge the player to open it and make room. */
   bagFullHint: boolean;
   /** The powerup dock, oldest first (ABILITY_DEFS ids) — banked and running. */
   heldAbilities: string[];
@@ -2610,6 +2613,13 @@ export function GameScreen({
         // Empty cells: the capacity (which grows with STRENGTH / a worn bag)
         // minus what's carried — shown on the avatar badge, red at 0.
         const bagFree = state.player.inventory.length - bagCount;
+        // The worn bag's own icon (the default carry-all when none is worn) —
+        // drawn on the minimap-corner bag badge so the pouch matches the gear.
+        const wornBag = state.player.equipment.bag;
+        const bagIcon =
+          wornBag && !isWeaponDef(wornBag.defId)
+            ? equipmentIcon(wornBag.defId)
+            : "icon_bag";
         const bagFullHint = state.stats.timeMs < bagFullHintUntilMs;
         const held = state.player.heldAbilities.join(",");
         // Only *which* slots are banked vs running mounts/unmounts dock chrome;
@@ -2678,7 +2688,7 @@ export function GameScreen({
         // The prelude scene's id is part of the key: a chained prelude swaps
         // `state.cutscene` for the next scene with nothing else changing, and
         // the overlay only receives the fresh scene if this re-renders.
-        const key = `${state.phase}/${state.cutscene?.defId ?? ""}/${state.player.hp}/${Math.ceil(state.player.stamina)}/${state.player.xp}/${state.player.level}/${state.player.pendingStatPoints}/${state.enemies.length}/${bagCount}/${bagFree}/${bagFullHint ? 1 : 0}/${held}/${active}/${medkitTier}:${medkitCount}/${staminaPotions}/${repairKits}/${weapon.defId}/${weaponWear?.toFixed(2) ?? ""}/${state.player.coins}/${appearance}/${outfit}/${stage}/${party}/${state.stats.kills}/${Math.floor(state.stats.combatMs / 1000)}/${spellKey}`;
+        const key = `${state.phase}/${state.cutscene?.defId ?? ""}/${state.player.hp}/${Math.ceil(state.player.stamina)}/${state.player.xp}/${state.player.level}/${state.player.pendingStatPoints}/${state.enemies.length}/${bagCount}/${bagFree}/${bagIcon}/${bagFullHint ? 1 : 0}/${held}/${active}/${medkitTier}:${medkitCount}/${staminaPotions}/${repairKits}/${weapon.defId}/${weaponWear?.toFixed(2) ?? ""}/${state.player.coins}/${appearance}/${outfit}/${stage}/${party}/${state.stats.kills}/${Math.floor(state.stats.combatMs / 1000)}/${spellKey}`;
         if (key !== lastHud) {
           lastHud = key;
           setHud({
@@ -2693,6 +2703,7 @@ export function GameScreen({
             enemiesLeft: state.enemies.length,
             menaceStage: stage,
             bagFree,
+            bagIcon,
             bagFullHint,
             heldAbilities: [...state.player.heldAbilities],
             activeSlots: state.player.abilities
@@ -2837,7 +2848,7 @@ export function GameScreen({
   const heroAvatar = hud && (
     <button
       type="button"
-      className={`inventory-avatar${hud.bagFullHint ? " bag-full" : ""}`}
+      className="inventory-avatar"
       aria-label="open-inventory"
       onClick={() => {
         if (state) {
@@ -2848,24 +2859,34 @@ export function GameScreen({
         }
       }}
     >
-      {(() => {
-        // The dressed paper-doll (worn armor + held weapon), so
-        // the portrait always matches the character on the field.
-        const src = state
-          ? dollDataUrl(assets.sprites, playerDollLayers(state, "0"))
-          : spriteDataUrl(assets.sprites, `${hud.appearance}_0`);
-        return src ? (
-          <img src={src} alt="" className="pixel-img avatar-img" />
-        ) : null;
-      })()}
-      {/* Empty bag slots, always shown — dark on the white badge,
-          flipping red the moment the bag is full (0). */}
-      <span className="avatar-badge">
+      {/* The bust lives in its own clipping frame so it can be zoomed to the
+          torso; the level badge is a sibling OUTSIDE that frame, free to
+          overhang the portrait's corner (the button itself doesn't clip). */}
+      <span className="avatar-frame">
+        {(() => {
+          // The dressed paper-doll in worn armor — but WITHOUT the held weapon,
+          // so the portrait is a clean square bust (the weapon has its own slot
+          // right below it now).
+          const src = state
+            ? dollDataUrl(
+                assets.sprites,
+                playerDollLayers(state, "0", { weapon: false }),
+              )
+            : spriteDataUrl(assets.sprites, `${hud.appearance}_0`);
+          return src ? (
+            <img src={src} alt="" className="pixel-img avatar-img" />
+          ) : null;
+        })()}
+      </span>
+      {/* The level, hung on the portrait's LOWER-LEFT corner (WoW-style) so its
+          edges sit OUTSIDE the frame border — gold, so the hero's rank reads
+          without a "LV" label. */}
+      <span className="avatar-level">
         <PixelText
           font={font}
-          text={String(hud.bagFree)}
+          text={String(hud.level)}
           scale={1}
-          color={hud.bagFree === 0 ? "#d83a3a" : "#0b0d10"}
+          color="#ffd75e"
         />
       </span>
     </button>
@@ -2891,20 +2912,14 @@ export function GameScreen({
 
       {hud && hud.phase === "playing" && (
         <div className="game-hud">
-          {/* Full-width XP strip along the very top (top-scroller staple). */}
+          {/* Full-width XP strip along the very top (top-scroller staple).
+              The level itself reads off the avatar's corner badge now, so this
+              stays a bare progress bar. */}
           <div className="hud-xp">
             <div
               className="hud-xp-fill"
               style={{ width: `${(100 * hud.xp) / hud.xpToNext}%` }}
             />
-            <span className="hud-xp-badge">
-              <PixelText
-                font={font}
-                text={`LV ${hud.level}`}
-                scale={2}
-                color="#ffd75e"
-              />
-            </span>
           </div>
 
           {/* The SPELL STATUS echo — the name of the spell just cast (or why a
@@ -2931,239 +2946,199 @@ export function GameScreen({
                 party's portraits railed underneath (tap one to equip it). */}
             <div className="hud-left">
               <div className="hud-status">
-                {heroAvatar}
-                <div className="hud-vitals">
-                  {/* HP + stamina stay together; the weapon + durability and
-                      purse form a second group that reflows to the RIGHT of
-                      the vitals in landscape (stacks below in portrait). */}
-                  <div className="hud-vitals-group hud-vitals-primary">
-                    <div className="hud-stat-row">
-                      <PixelText
-                        font={font}
-                        text="HP"
-                        scale={2}
-                        color="#9aa3ad"
+                {/* The portrait and the vitals share ONE framed plate (a sci-fi
+                    HUD frame sprite backs it as a 9-slice) so the two read as a
+                    single unit — the bust at left, the color bars nested at its
+                    right, a touch shorter than the portrait. */}
+                <div
+                  className="hud-portrait-unit"
+                  style={(() => {
+                    const frame = spriteDataUrl(assets.sprites, "hud_frame");
+                    return frame
+                      ? { borderImageSource: `url(${frame})` }
+                      : undefined;
+                  })()}
+                >
+                  {heroAvatar}
+                  {/* The vitals read implicitly by color: red HP on top, blue
+                      mana below (casters only), a shorter white stamina sliver
+                      at the foot. Same width, butted together; the color IS the
+                      label. (Coins live in the inventory view.) */}
+                  <div className="vital-stack">
+                    <div className="vital-bar vital-hp">
+                      <div
+                        className="vital-fill"
+                        style={{ width: `${(100 * hud.hp) / hud.maxHp}%` }}
                       />
-                      <div className="hud-bar hp-bar">
-                        <div
-                          className="hud-bar-fill"
-                          style={{ width: `${(100 * hud.hp) / hud.maxHp}%` }}
-                        />
-                      </div>
-                      <span className="hud-stat-val">
-                        <PixelText
-                          font={font}
-                          text={String(hud.hp)}
-                          scale={2}
-                        />
-                      </span>
                     </div>
-                    <div className="hud-stat-row">
-                      <PixelText
-                        font={font}
-                        text="ST"
-                        scale={2}
-                        color="#9aa3ad"
-                      />
-                      <div className="hud-bar hp-bar">
+                    {hud.isCaster && (
+                      <div className="vital-bar vital-mp">
                         <div
-                          className="hud-bar-fill stamina-fill"
+                          className="vital-fill"
                           style={{
-                            width: `${(100 * hud.stamina) / hud.maxStamina}%`,
+                            width: `${(100 * hud.mana) / Math.max(1, hud.maxMana)}%`,
                           }}
                         />
                       </div>
-                      <span className="hud-stat-val">
-                        <PixelText
-                          font={font}
-                          text={String(Math.ceil(hud.stamina))}
-                          scale={2}
-                        />
-                      </span>
-                    </div>
-                    {/* The mana pool — shown only once the hero is a caster
-                        (some INT invested), so a melee build's HUD stays lean. */}
-                    {hud.isCaster && (
-                      <div className="hud-stat-row">
-                        <PixelText
-                          font={font}
-                          text="MP"
-                          scale={2}
-                          color="#9aa3ad"
-                        />
-                        <div className="hud-bar hp-bar">
-                          <div
-                            className="hud-bar-fill mana-fill"
-                            style={{
-                              width: `${(100 * hud.mana) / Math.max(1, hud.maxMana)}%`,
-                            }}
-                          />
-                        </div>
-                        <span className="hud-stat-val">
-                          <PixelText
-                            font={font}
-                            text={String(hud.mana)}
-                            scale={2}
-                          />
-                        </span>
-                      </div>
                     )}
-                  </div>
-                  <div className="hud-vitals-group hud-vitals-gear">
-                    <div className="hud-stat-row hud-weapon-row">
-                      {(() => {
-                        if (!state) return null;
-                        const equipped = state.player.equipment.weapon;
-                        const equippedColor =
-                          WEAPON_CLASS_COLORS[weaponDef(equipped.defId).class];
-                        const icon = spriteDataUrl(
-                          assets.sprites,
-                          weaponDef(equipped.defId).icon,
-                        );
-                        // Other carried weapons, highest damage first — the switch
-                        // targets, shared with the Q menu / 1-4 hotkeys.
-                        const alternatives = weaponAlternatives(state);
-                        return (
-                          <div className="wpn-control">
-                            <button
-                              type="button"
-                              className="wpn-slot"
-                              aria-label="switch-weapon"
-                              style={{
-                                borderColor: equippedColor.border,
-                                background: equippedColor.bg,
-                              }}
-                              onClick={() => {
-                                setWeaponMenuOpen((open) => !open);
-                                playUiSound(synth, "confirm");
-                              }}
-                            >
-                              {icon ? (
-                                <img
-                                  src={icon}
-                                  alt=""
-                                  className="pixel-img wpn-slot-img"
-                                />
-                              ) : null}
-                            </button>
-                            {weaponMenuOpen && (
-                              <div className="wpn-switcher">
-                                {alternatives.length === 0 ? (
-                                  <PixelText
-                                    font={font}
-                                    text="NO OTHER WEAPONS"
-                                    scale={2}
-                                    color="#9aa3ad"
-                                  />
-                                ) : (
-                                  alternatives.map(
-                                    ({ item, index, dmg }, order) => {
-                                      const color =
-                                        WEAPON_CLASS_COLORS[
-                                          weaponDef(item.defId).class
-                                        ];
-                                      const wpnIcon = spriteDataUrl(
-                                        assets.sprites,
-                                        weaponDef(item.defId).icon,
-                                      );
-                                      return (
-                                        <button
-                                          key={item.id}
-                                          type="button"
-                                          className="wpn-slot wpn-switch-slot"
-                                          aria-label={`equip-${item.defId}`}
-                                          style={{
-                                            borderColor: color.border,
-                                            background: color.bg,
-                                          }}
-                                          onClick={() => {
-                                            if (
-                                              equipFromInventory(state, index)
-                                            ) {
-                                              playUiSound(synth, "equip");
-                                              setWeaponMenuOpen(false);
-                                              bumpUi();
-                                            }
-                                          }}
-                                        >
-                                          {wpnIcon ? (
-                                            <img
-                                              src={wpnIcon}
-                                              alt=""
-                                              className="pixel-img wpn-slot-img"
-                                            />
-                                          ) : null}
-                                          {keyHints && order < 4 && (
-                                            <span className="slot-key">
-                                              <PixelText
-                                                font={font}
-                                                text={String(order + 1)}
-                                                scale={1}
-                                                color="#0b0d10"
-                                              />
-                                            </span>
-                                          )}
-                                          <span className="wpn-switch-dmg">
-                                            <PixelText
-                                              font={font}
-                                              text={formatCompact(dmg)}
-                                              scale={1}
-                                            />
-                                          </span>
-                                        </button>
-                                      );
-                                    },
-                                  )
-                                )}
-                              </div>
-                            )}
-                          </div>
-                        );
-                      })()}
-                      <div className="hud-bar wpn-bar">
-                        <div
-                          className="hud-bar-fill wpn-fill"
-                          style={
-                            hud.weaponWear === null
-                              ? { width: "100%", background: "#7ef0c8" }
-                              : {
-                                  width: `${Math.max(4, Math.round(100 * hud.weaponWear))}%`,
-                                  background:
-                                    hud.weaponWear < 0.25
-                                      ? "#d83a3a"
-                                      : "#9aa3ad",
-                                }
-                          }
-                        />
-                      </div>
-                      <PixelText
-                        font={font}
-                        text={hud.weaponWear === null ? "∞" : ""}
-                        scale={2}
-                        color="#7ef0c8"
-                      />
-                    </div>
-                    {/* The purse: coins earned selling loot to the merchant. */}
-                    <div className="hud-stat-row hud-coin-row">
-                      {(() => {
-                        const coin = spriteDataUrl(assets.sprites, "icon_coin");
-                        return coin ? (
-                          <img
-                            src={coin}
-                            alt=""
-                            className="pixel-img hud-coin"
-                          />
-                        ) : null;
-                      })()}
-                      <PixelText
-                        font={font}
-                        text={formatCompact(hud.coins)}
-                        scale={2}
-                        color="#ffd75e"
+                    <div className="vital-bar vital-st">
+                      <div
+                        className="vital-fill"
+                        style={{
+                          width: `${(100 * hud.stamina) / hud.maxStamina}%`,
+                        }}
                       />
                     </div>
                   </div>
                 </div>
+                {/* The held weapon, floating FREE below the portrait unit: a
+                    round slot whose ring border IS the durability gauge —
+                    it depletes and reddens as the weapon wears, and reads a
+                    full teal ring for the unbreakable sidearm. Tapping it
+                    opens the weapon switcher (Q). */}
+                {(() => {
+                  if (!state) return null;
+                  const equipped = state.player.equipment.weapon;
+                  const equippedColor =
+                    WEAPON_CLASS_COLORS[weaponDef(equipped.defId).class];
+                  const icon = spriteDataUrl(
+                    assets.sprites,
+                    weaponDef(equipped.defId).icon,
+                  );
+                  // Durability ring: full teal for the unbreakable sidearm,
+                  // else the wear fraction ramped steel → amber → red as it
+                  // runs down.
+                  const wear = hud.weaponWear;
+                  const ringFrac = wear === null ? 1 : Math.max(0.03, wear);
+                  const ringColor =
+                    wear === null
+                      ? "#7ef0c8"
+                      : wear < 0.25
+                        ? "#d83a3a"
+                        : wear < 0.5
+                          ? "#ffb14a"
+                          : "#c2ccd6";
+                  // Other carried weapons, highest damage first — the switch
+                  // targets, shared with the Q menu / 1-4 hotkeys.
+                  const alternatives = weaponAlternatives(state);
+                  return (
+                    <div className="wpn-control">
+                      <button
+                        type="button"
+                        className="wpn-slot wpn-slot-main"
+                        aria-label="switch-weapon"
+                        style={{ background: equippedColor.bg }}
+                        onClick={() => {
+                          setWeaponMenuOpen((open) => !open);
+                          playUiSound(synth, "confirm");
+                        }}
+                      >
+                        {icon ? (
+                          <img
+                            src={icon}
+                            alt=""
+                            className="pixel-img wpn-slot-img"
+                          />
+                        ) : null}
+                      </button>
+                      {/* The durability ring drawn around the slot. */}
+                      <svg className="wpn-ring" viewBox="0 0 44 44" aria-hidden>
+                        <circle
+                          cx="22"
+                          cy="22"
+                          r="20"
+                          fill="none"
+                          stroke="rgba(255,255,255,0.2)"
+                          strokeWidth="3.5"
+                        />
+                        <circle
+                          cx="22"
+                          cy="22"
+                          r="20"
+                          fill="none"
+                          stroke={ringColor}
+                          strokeWidth="3.5"
+                          strokeLinecap="round"
+                          pathLength={1}
+                          strokeDasharray={`${ringFrac} 1`}
+                          transform="rotate(-90 22 22)"
+                          style={{
+                            filter: `drop-shadow(0 0 1.5px ${ringColor})`,
+                            transition:
+                              "stroke-dasharray 280ms cubic-bezier(0.22,1,0.36,1), stroke 200ms linear",
+                          }}
+                        />
+                      </svg>
+                      {weaponMenuOpen && (
+                        <div className="wpn-switcher">
+                          {alternatives.length === 0 ? (
+                            <PixelText
+                              font={font}
+                              text="NO OTHER WEAPONS"
+                              scale={2}
+                              color="#9aa3ad"
+                            />
+                          ) : (
+                            alternatives.map(({ item, index, dmg }, order) => {
+                              const color =
+                                WEAPON_CLASS_COLORS[
+                                  weaponDef(item.defId).class
+                                ];
+                              const wpnIcon = spriteDataUrl(
+                                assets.sprites,
+                                weaponDef(item.defId).icon,
+                              );
+                              return (
+                                <button
+                                  key={item.id}
+                                  type="button"
+                                  className="wpn-slot wpn-switch-slot"
+                                  aria-label={`equip-${item.defId}`}
+                                  style={{
+                                    borderColor: color.border,
+                                    background: color.bg,
+                                  }}
+                                  onClick={() => {
+                                    if (equipFromInventory(state, index)) {
+                                      playUiSound(synth, "equip");
+                                      setWeaponMenuOpen(false);
+                                      bumpUi();
+                                    }
+                                  }}
+                                >
+                                  {wpnIcon ? (
+                                    <img
+                                      src={wpnIcon}
+                                      alt=""
+                                      className="pixel-img wpn-slot-img"
+                                    />
+                                  ) : null}
+                                  {keyHints && order < 4 && (
+                                    <span className="slot-key">
+                                      <PixelText
+                                        font={font}
+                                        text={String(order + 1)}
+                                        scale={1}
+                                        color="#0b0d10"
+                                      />
+                                    </span>
+                                  )}
+                                  <span className="wpn-switch-dmg">
+                                    <PixelText
+                                      font={font}
+                                      text={formatCompact(dmg)}
+                                      scale={1}
+                                    />
+                                  </span>
+                                </button>
+                              );
+                            })
+                          )}
+                        </div>
+                      )}
+                    </div>
+                  );
+                })()}
               </div>
 
               {/* The party rail: one clickable portrait per companion under the
@@ -3226,6 +3201,17 @@ export function GameScreen({
                 timerText={formatTime(hud.stats.combatMs)}
                 kills={hud.stats.kills}
                 menaceStage={hud.menaceStage}
+                bagFree={hud.bagFree}
+                bagIcon={spriteDataUrl(assets.sprites, hud.bagIcon) ?? null}
+                bagFullHint={hud.bagFullHint}
+                onOpenBag={() => {
+                  if (state && canOpenInventory(state)) {
+                    setWeaponMenuOpen(false);
+                    openInventory(state);
+                    playUiSound(synth, "confirm");
+                    bumpUi();
+                  }
+                }}
                 onExpand={() => {
                   if (state?.phase === "playing") {
                     setWeaponMenuOpen(false);
