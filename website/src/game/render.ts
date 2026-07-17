@@ -18,6 +18,7 @@ import {
   itemSpellOrbPositions,
   LAST_STAND,
   LEVELING,
+  lineOfSight,
   magnetRadius,
   MAP,
   mapCols,
@@ -432,6 +433,36 @@ function enemySprites(sprites: Sprites, family: string): EnemyVariants {
   return variants;
 }
 
+/**
+ * Can the hero actually SEE a body of `radius` at `pos` — or is it fully hidden
+ * behind cover? A mob tucked behind a wall or boulder (the same TALL obstacles
+ * that stop shots; jumpable low rocks never occlude) isn't drawn. We test the
+ * hero's sightline to the body's centre first, and — only if that's blocked —
+ * to its two silhouette edges (the points ±radius across the line of sight), so
+ * a mob merely PEEKING out from behind cover still reads. It's culled only when
+ * no part of it has line of sight, matching "the player has no line of sight to
+ * it". The centre test alone clears every mob standing in the open in one query.
+ */
+function enemyVisible(
+  state: GameState,
+  eye: { x: number; y: number },
+  pos: { x: number; y: number },
+  radius: number,
+): boolean {
+  if (lineOfSight(state, eye, pos)) return true;
+  const dx = pos.x - eye.x;
+  const dy = pos.y - eye.y;
+  const len = Math.hypot(dx, dy) || 1;
+  // Unit perpendicular to the sightline, scaled to the body's half-width: the
+  // left/right edges of the silhouette as the hero sees it.
+  const ex = (-dy / len) * radius;
+  const ey = (dx / len) * radius;
+  return (
+    lineOfSight(state, eye, { x: pos.x + ex, y: pos.y + ey }) ||
+    lineOfSight(state, eye, { x: pos.x - ex, y: pos.y - ey })
+  );
+}
+
 export function drawFrame(
   ctx: CanvasRenderingContext2D,
   state: GameState,
@@ -716,6 +747,11 @@ export function drawFrame(
     // on ground the hero has fully uncovered.
     if (fogDistanceAt(field, enemy.pos.x, enemy.pos.y) < MAP.fogBand) continue;
     const def = enemyDef(enemy.defId);
+    // Line of sight: a mob standing behind a wall or boulder — cover the hero
+    // genuinely cannot see through, the same solids that eat his shots — is not
+    // drawn until it steps into view (a peeking silhouette still shows). Runs
+    // after the cheap view/fog culls so only on-screen mobs pay for the query.
+    if (!enemyVisible(state, state.player.pos, enemy.pos, def.radius)) continue;
     // Offset the float phase per enemy so the haunting doesn't bob in sync.
     // This same idle bob keeps speakers visibly alive during dialogue —
     // it runs on render time, which never freezes.
