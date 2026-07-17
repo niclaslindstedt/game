@@ -357,7 +357,7 @@ function KillCounter({ font, kills }: { font: PixelFont; kills: number }) {
         font={font}
         text={`${kills} kills`}
         scale={1}
-        color="#d9a0f0"
+        color="#f4f4f4"
       />
     </div>
   );
@@ -416,7 +416,7 @@ export function Minimap({
               font={font}
               text={`RAMPAGE ${menaceStage}`}
               scale={1}
-              color={rampageColor(menaceStage)}
+              color="#f4f4f4"
             />
           )}
         </span>
