@@ -199,6 +199,8 @@ import {
   computeCamera,
   drawEffects,
   drawFrame,
+  guidanceArrowBlinkIndex,
+  guidanceArrowVisible,
   MELEE_SWING_MS,
   VIEW_SCALE,
   viewScaleFor,
@@ -663,6 +665,11 @@ export function GameScreen({
   } | null>(null);
   const lastAreaRef = useRef<string | null>(null);
   const areaCaptionSeq = useRef(0);
+  // The guidance arrow's last-pinged blink index — the render loop pings the
+  // "go this way" beacon each time the pulse reaches a fresh peak while the
+  // arrow is visible. Reset to null whenever the arrow hides, so a reappearance
+  // re-baselines instead of firing a backlog of missed blinks.
+  const guideBlinkRef = useRef<number | null>(null);
   // The framed pickup card ("PICKED UP <gear>") for bag gear — one at a time,
   // the newest replacing the last, cleared on its own PICKUP_CARD_TTL_MS timer.
   const [pickupCard, setPickupCard] = useState<PickupCard | null>(null);
@@ -2511,6 +2518,19 @@ export function GameScreen({
             if (area) {
               setAreaCaption({ label: area, id: ++areaCaptionSeq.current });
             }
+          }
+          // Ping the "go this way" beacon in step with the guidance arrow's
+          // blink: one soft ping each time the pulse crosses a fresh peak while
+          // the arrow shows. Baseline (no ping) on the frame it first appears,
+          // and clear on hide so it never replays missed blinks in a burst.
+          if (guidanceArrowVisible(state)) {
+            const idx = guidanceArrowBlinkIndex(timeMs);
+            if (guideBlinkRef.current !== null && idx > guideBlinkRef.current) {
+              playUiSound(synth, "guide");
+            }
+            guideBlinkRef.current = idx;
+          } else {
+            guideBlinkRef.current = null;
           }
         }
         // A pinned melee swing (with `arc`/`range`) also draws its slash cone
