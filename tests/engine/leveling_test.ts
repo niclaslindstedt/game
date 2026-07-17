@@ -515,10 +515,11 @@ describe("stats", () => {
     state.player.stats.dexterity = 4;
     expect(weaponCooldownFor(state, wand)).toBeCloseTo(wandBase);
 
-    // INT (the wand's own class stat) does.
+    // INT (the wand's own class stat) does — at the discounted MAGIC rate
+    // (magicAttackSpeedPerStat), since INT already scales a caster's damage/crit.
     state.player.stats.intelligence = 3;
     expect(weaponCooldownFor(state, wand)).toBeCloseTo(
-      wandBase / (1 + 3 * STATS.attackSpeedPerStat),
+      wandBase / (1 + 3 * STATS.magicAttackSpeedPerStat),
     );
   });
 

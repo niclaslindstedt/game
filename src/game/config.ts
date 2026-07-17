@@ -1174,6 +1174,24 @@ export const STATS = {
     number
   >,
   /**
+   * ARTIFACT MELEE AFFINITY — the endgame payoff that lets the MELEE lane take
+   * over once the hero is decked in artifact-tier relics. Every worn ARTIFACT
+   * piece (weapon, armor, charm, or bag — the level-99 red-card tier, the rarest
+   * loot) MULTIPLIES a MELEE weapon's damage by this fraction (+85% each), so a
+   * bruiser reclaims the top of the endgame from the casters AS THE ARTIFACT SET
+   * FILLS OUT: with a partial set a caster still leads, but a committed relic
+   * hoard (a near-full set) puts melee clearly on top — measured against a
+   * full-artifact caster, melee crosses ~1.0× around five relics and reaches
+   * ~1.25× at a full seven-piece set (weapon + 6 gear). Gated to a MELEE weapon
+   * in hand (applied in `weaponDamageFor` only when `def.class === "melee"`), so
+   * it rewards actually SWINGING the relics — a mage in artifact armor gets
+   * nothing from it, and the stat-aware auto-equip therefore also swings the
+   * build toward melee once relics pile up. Thematic: the myth-relics (Durendal,
+   * Gram, Mjölnir) are weapons of the ARM; wearing the legend empowers the
+   * strike. The natural cap is the seven equip slots.
+   */
+  artifactMeleeDamagePerPiece: 0.85,
+  /**
    * STRENGTH's downside: every point of muscle to haul slows the walk by this
    * fraction (−1% each), floored at `strengthSlowFloor` so even a pure bruiser
    * still moves. It is a gentle tax — a few points are unnoticeable, but a build
@@ -1231,8 +1249,25 @@ export const STATS = {
    * speed stat, so standing still stops clearing the horde for free. Kept
    * gentle so the speed stat sweetens cadence rather than dominating a build:
    * pumping DEX/INT ramps fire rate roughly half as fast as damage climbs.
+   *
+   * PHYSICAL lanes only (DEX quickens melee & ranged). Magic uses the lower
+   * `magicAttackSpeedPerStat` below, because a caster's SPEED stat is the SAME
+   * INTELLIGENCE that already scales its damage AND crit — so a point of INT
+   * would otherwise compound cadence ON TOP of damage on the same investment,
+   * and a deep-INT mage's DPS ran away from the physical lanes (which must split
+   * points between a damage stat and DEX) by ~5× in the late game. The reduced
+   * magic value keeps INT sweetening cast cadence without the multiplicative
+   * runaway; magic still leads mid/late, just no longer by a blowout.
    */
   attackSpeedPerStat: 0.02,
+  /**
+   * Attack-speed per point of INTELLIGENCE for MAGIC weapons only (INT is
+   * magic's speed stat — see `SPEED_STAT`). Lower than the physical
+   * `attackSpeedPerStat` because INT already buys a caster's damage and crit, so
+   * its cadence contribution is discounted to stop the DPS compounding (damage ×
+   * speed on one stat) from letting a high-INT mage out-scale every other build.
+   */
+  magicAttackSpeedPerStat: 0.012,
   /** Player base crit chance before stats and equipment. */
   baseCritChance: 0.05,
   /**
