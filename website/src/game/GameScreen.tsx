@@ -367,6 +367,13 @@ const XP_MERGE_SLACK_PX = 16;
 const XP_MERGE_MIN_SCALE = 1.4;
 const XP_MERGE_MAX_SCALE = 4;
 
+// XP-bar kill heat. Every kill that grants XP lights the top XP strip a
+// brighter blue as it grows; a kill-chain keeps it lit, and once no XP has
+// landed for this long the fill eases back to its resting color (the CSS
+// transition on `.hud-xp-fill.is-hot`). One second so back-to-back kills read
+// as a sustained streak, not a flicker.
+const XP_BAR_HOT_MS = 1000;
+
 // A `swing`/`shot` event is the hero's (not a companion's) when it was thrown
 // from his own position — both fire in the same step, so the hero hasn't moved
 // off the spot the event recorded. A generous world-px slop absorbs any drift.
@@ -686,6 +693,9 @@ export function GameScreen({
   // the short landscape field. Portrait keeps them all stacked in one corner
   // (there's room up the tall edge, and one thumb covers both). See the dock CSS.
   const wide = useMediaQuery("(min-aspect-ratio: 4/3)");
+  // The XP strip's fill — the render loop toggles its `is-hot` class straight
+  // on the DOM (like fpsRef) so a kill lights it up without a React re-render.
+  const xpFillRef = useRef<HTMLDivElement | null>(null);
   useEffect(() => {
     weaponMenuOpenRef.current = weaponMenuOpen;
   }, [weaponMenuOpen]);
@@ -1415,6 +1425,10 @@ export function GameScreen({
     let fpsNextFlushMs = 0;
     // Transient visuals driven by engine events (lightning strikes).
     let effects: Effect[] = [];
+    // Sim-clock ms of the most recent XP-granting kill. render() keeps the XP
+    // strip lit (`is-hot`) while this is within XP_BAR_HOT_MS, so a kill-chain
+    // holds the bright color and it eases back once the kills stop.
+    let lastXpGainMs: number | undefined;
     // The hero's most recent attack, so the field renderer can swing the held
     // weapon in step with its slash/muzzle effect. Only the hero's own blows
     // are captured — companions swing from their own spots (matched by
@@ -1770,6 +1784,13 @@ export function GameScreen({
             }
           }
           celebrateAchievements(recordWornEquipment(worn));
+        }
+
+        // Any kill that grants XP lights the top XP strip: mark this instant so
+        // render() holds the fill's brighter color through the kill-chain and
+        // eases it back once XP_BAR_HOT_MS passes without another kill.
+        if (state.events.some((e) => e.type === "enemyKilled" && e.xp > 0)) {
+          lastXpGainMs = state.stats.timeMs;
         }
 
         // Big kills merge their XP: when one step drops a knot of foes packed
@@ -2565,6 +2586,19 @@ export function GameScreen({
         const minimapNode = minimapRef.current;
         if (minimapNode) drawMinimap(minimapNode, state, assets);
 
+        // XP-bar kill heat: while a recent kill's XP is still "hot" (this and
+        // any chained kills within XP_BAR_HOT_MS), light the fill a brighter
+        // blue; the moment the chain lapses the class drops and CSS eases it
+        // back to the resting color. Toggled straight on the DOM so React never
+        // clobbers it (className prop is a constant, so React leaves it alone).
+        const xpFillNode = xpFillRef.current;
+        if (xpFillNode) {
+          const hot =
+            lastXpGainMs !== undefined &&
+            state.stats.timeMs - lastXpGainMs <= XP_BAR_HOT_MS;
+          xpFillNode.classList.toggle("is-hot", hot);
+        }
+
         // The FPS readout: smooth the frame delta (EMA) and write the number
         // straight to the DOM every quarter second — no React re-render, so
         // the meter itself costs nothing worth measuring.
@@ -2951,6 +2985,7 @@ export function GameScreen({
               stays a bare progress bar. */}
           <div className="hud-xp">
             <div
+              ref={xpFillRef}
               className="hud-xp-fill"
               style={{ width: `${(100 * hud.xp) / hud.xpToNext}%` }}
             />

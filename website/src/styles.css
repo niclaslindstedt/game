@@ -236,7 +236,26 @@ body {
 .hud-xp-fill {
   height: 100%;
   background: linear-gradient(180deg, #5ab4ff, #2f6fd0);
-  transition: width 280ms cubic-bezier(0.22, 1, 0.36, 1);
+  /* The width eases as the bar grows; the color/glow eases SLOWLY on the way
+     out so the freshly-earned XP fades back into the resting blue (see
+     `.is-hot`, which snaps the brightness on fast when a kill lands). */
+  transition:
+    width 280ms cubic-bezier(0.22, 1, 0.36, 1),
+    background 650ms ease-out,
+    box-shadow 650ms ease-out;
+}
+
+/* Kill heat: while XP is landing (and through a kill-chain — GameScreen holds
+   this class for XP_BAR_HOT_MS after the last kill) the fill glows a brighter
+   cyan-blue. The brighten snaps on quickly; dropping the class lets the base
+   rule's slower transition ease it back into the same resting color. */
+.hud-xp-fill.is-hot {
+  background: linear-gradient(180deg, #b9e8ff, #4f9bff);
+  box-shadow: 0 0 6px rgba(150, 224, 255, 0.85);
+  transition:
+    width 280ms cubic-bezier(0.22, 1, 0.36, 1),
+    background 120ms ease-out,
+    box-shadow 120ms ease-out;
 }
 
 /* The status row and minimap carry the safe-area padding the XP strip drops. */
@@ -515,7 +534,8 @@ body {
 
 @media (prefers-reduced-motion: reduce) {
   .vital-fill,
-  .hud-xp-fill {
+  .hud-xp-fill,
+  .hud-xp-fill.is-hot {
     transition: none;
   }
 }
