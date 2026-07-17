@@ -236,26 +236,38 @@ body {
 .hud-xp-fill {
   height: 100%;
   background: linear-gradient(180deg, #5ab4ff, #2f6fd0);
-  /* The width eases as the bar grows; the color/glow eases SLOWLY on the way
-     out so the freshly-earned XP fades back into the resting blue (see
-     `.is-hot`, which snaps the brightness on fast when a kill lands). */
-  transition:
-    width 280ms cubic-bezier(0.22, 1, 0.36, 1),
-    background 650ms ease-out,
-    box-shadow 650ms ease-out;
+  transition: width 280ms cubic-bezier(0.22, 1, 0.36, 1);
 }
 
-/* Kill heat: while XP is landing (and through a kill-chain — GameScreen holds
-   this class for XP_BAR_HOT_MS after the last kill) the fill glows a brighter
-   cyan-blue. The brighten snaps on quickly; dropping the class lets the base
-   rule's slower transition ease it back into the same resting color. */
-.hud-xp-fill.is-hot {
-  background: linear-gradient(180deg, #b9e8ff, #4f9bff);
-  box-shadow: 0 0 6px rgba(150, 224, 255, 0.85);
+/* Kill heat: ONLY the freshly-earned slice of the bar flashes. GameScreen sizes
+   this overlay to span [streak-start XP → current XP] and toggles `is-hot`
+   while kills keep landing (held for XP_BAR_HOT_MS after the last one). It sits
+   on top of the resting fill in a brighter cyan-blue with a glow; once the
+   streak lapses the class drops and it fades out, leaving the added XP settled
+   into the same resting color underneath. Left/width ease in step with the
+   fill's growth; opacity snaps on fast and eases out slow. */
+.hud-xp-heat {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 0;
+  width: 0;
+  background: linear-gradient(180deg, #cdeeff, #6bb8ff);
+  box-shadow: 0 0 6px rgba(150, 224, 255, 0.9);
+  opacity: 0;
+  pointer-events: none;
   transition:
     width 280ms cubic-bezier(0.22, 1, 0.36, 1),
-    background 120ms ease-out,
-    box-shadow 120ms ease-out;
+    left 280ms cubic-bezier(0.22, 1, 0.36, 1),
+    opacity 650ms ease-out;
+}
+
+.hud-xp-heat.is-hot {
+  opacity: 1;
+  transition:
+    width 280ms cubic-bezier(0.22, 1, 0.36, 1),
+    left 280ms cubic-bezier(0.22, 1, 0.36, 1),
+    opacity 120ms ease-out;
 }
 
 /* The status row and minimap carry the safe-area padding the XP strip drops. */
@@ -535,7 +547,8 @@ body {
 @media (prefers-reduced-motion: reduce) {
   .vital-fill,
   .hud-xp-fill,
-  .hud-xp-fill.is-hot {
+  .hud-xp-heat,
+  .hud-xp-heat.is-hot {
     transition: none;
   }
 }

@@ -3,4 +3,4 @@ type: Added
 title: XP bar kill heat
 ---
 
-Killing mobs now flashes the XP strip a brighter blue as it fills, chained kills keep it lit, and it eases back to its resting color about a second after the streak ends.
+Killing mobs now flashes only the freshly-earned slice of the XP bar a brighter blue; chained kills keep it lit, and it fades back into the resting fill about a second after the streak ends.

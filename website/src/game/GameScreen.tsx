@@ -693,9 +693,10 @@ export function GameScreen({
   // the short landscape field. Portrait keeps them all stacked in one corner
   // (there's room up the tall edge, and one thumb covers both). See the dock CSS.
   const wide = useMediaQuery("(min-aspect-ratio: 4/3)");
-  // The XP strip's fill — the render loop toggles its `is-hot` class straight
-  // on the DOM (like fpsRef) so a kill lights it up without a React re-render.
-  const xpFillRef = useRef<HTMLDivElement | null>(null);
+  // The XP strip's kill-heat overlay — the render loop sizes it to the
+  // freshly-earned slice and toggles its `is-hot` class straight on the DOM
+  // (like fpsRef) so a kill lights it up without a React re-render.
+  const xpHeatRef = useRef<HTMLDivElement | null>(null);
   useEffect(() => {
     weaponMenuOpenRef.current = weaponMenuOpen;
   }, [weaponMenuOpen]);
@@ -1426,9 +1427,12 @@ export function GameScreen({
     // Transient visuals driven by engine events (lightning strikes).
     let effects: Effect[] = [];
     // Sim-clock ms of the most recent XP-granting kill. render() keeps the XP
-    // strip lit (`is-hot`) while this is within XP_BAR_HOT_MS, so a kill-chain
-    // holds the bright color and it eases back once the kills stop.
+    // strip's heat overlay lit (`is-hot`) while this is within XP_BAR_HOT_MS, so
+    // a kill-chain holds the bright slice and it fades once the kills stop.
     let lastXpGainMs: number | undefined;
+    // The XP value where the current bright slice begins — the fill level at the
+    // moment the streak started, so only XP earned during the streak glows.
+    let xpHeatBaseXp = 0;
     // The hero's most recent attack, so the field renderer can swing the held
     // weapon in step with its slash/muzzle effect. Only the hero's own blows
     // are captured — companions swing from their own spots (matched by
@@ -1714,6 +1718,9 @@ export function GameScreen({
             bumpUi();
           }
         }
+        // The fill level BEFORE this step, so a kill that starts a fresh streak
+        // can anchor the bright slice at the XP the hero already had.
+        const xpBeforeStep = state.player.xp;
         // `timeScale` (?debug `window.__timeScale`) slows the whole run for
         // animation tuning — a neutral 1 in normal play.
         step(state, input, dtMs * timeScale);
@@ -1786,10 +1793,16 @@ export function GameScreen({
           celebrateAchievements(recordWornEquipment(worn));
         }
 
-        // Any kill that grants XP lights the top XP strip: mark this instant so
-        // render() holds the fill's brighter color through the kill-chain and
-        // eases it back once XP_BAR_HOT_MS passes without another kill.
+        // Any kill that grants XP lights the freshly-earned slice of the XP
+        // strip. A kill while the streak is COLD anchors the bright slice at the
+        // pre-kill fill (so only the new XP glows); chained kills extend the
+        // same slice. render() holds it through the chain and fades it once
+        // XP_BAR_HOT_MS passes without another kill.
         if (state.events.some((e) => e.type === "enemyKilled" && e.xp > 0)) {
+          const wasHot =
+            lastXpGainMs !== undefined &&
+            state.stats.timeMs - lastXpGainMs <= XP_BAR_HOT_MS;
+          if (!wasHot) xpHeatBaseXp = xpBeforeStep;
           lastXpGainMs = state.stats.timeMs;
         }
 
@@ -2586,17 +2599,28 @@ export function GameScreen({
         const minimapNode = minimapRef.current;
         if (minimapNode) drawMinimap(minimapNode, state, assets);
 
-        // XP-bar kill heat: while a recent kill's XP is still "hot" (this and
-        // any chained kills within XP_BAR_HOT_MS), light the fill a brighter
-        // blue; the moment the chain lapses the class drops and CSS eases it
-        // back to the resting color. Toggled straight on the DOM so React never
-        // clobbers it (className prop is a constant, so React leaves it alone).
-        const xpFillNode = xpFillRef.current;
-        if (xpFillNode) {
+        // XP-bar kill heat: light ONLY the freshly-earned slice. Size the heat
+        // overlay to span [streak-start XP → current XP] and, while a recent
+        // kill's XP is still "hot" (this and any chained kills within
+        // XP_BAR_HOT_MS), show it a brighter blue; the moment the chain lapses
+        // the class drops and CSS fades it out, leaving the added XP settled
+        // into the resting fill underneath. Written straight to the DOM so React
+        // never clobbers it (className/style props here are constants).
+        const xpHeatNode = xpHeatRef.current;
+        if (xpHeatNode) {
+          const xp = state.player.xp;
+          const toNext = Math.max(1, state.player.xpToNext);
+          // A level-up wraps XP below the baseline — flash the whole new level's
+          // fill from empty rather than a stale (old-level) offset.
+          const base = xp < xpHeatBaseXp ? 0 : xpHeatBaseXp;
+          const leftPct = Math.max(0, Math.min(100, (100 * base) / toNext));
+          const rightPct = Math.max(0, Math.min(100, (100 * xp) / toNext));
+          xpHeatNode.style.left = `${leftPct}%`;
+          xpHeatNode.style.width = `${Math.max(0, rightPct - leftPct)}%`;
           const hot =
             lastXpGainMs !== undefined &&
             state.stats.timeMs - lastXpGainMs <= XP_BAR_HOT_MS;
-          xpFillNode.classList.toggle("is-hot", hot);
+          xpHeatNode.classList.toggle("is-hot", hot);
         }
 
         // The FPS readout: smooth the frame delta (EMA) and write the number
@@ -2985,9 +3009,16 @@ export function GameScreen({
               stays a bare progress bar. */}
           <div className="hud-xp">
             <div
-              ref={xpFillRef}
               className="hud-xp-fill"
               style={{ width: `${(100 * hud.xp) / hud.xpToNext}%` }}
+            />
+            {/* The kill-heat overlay: only the freshly-earned slice glows. The
+                render loop sizes and lights it straight on the DOM (see
+                xpHeatRef) so a kill flashes it without a React re-render. */}
+            <div
+              ref={xpHeatRef}
+              className="hud-xp-heat"
+              aria-hidden="true"
             />
           </div>
 
