@@ -3035,11 +3035,7 @@ export function GameScreen({
             {/* The kill-heat overlay: only the freshly-earned slice glows. The
                 render loop sizes and lights it straight on the DOM (see
                 xpHeatRef) so a kill flashes it without a React re-render. */}
-            <div
-              ref={xpHeatRef}
-              className="hud-xp-heat"
-              aria-hidden="true"
-            />
+            <div ref={xpHeatRef} className="hud-xp-heat" aria-hidden="true" />
           </div>
 
           {/* The SPELL STATUS echo — the name of the spell just cast (or why a
