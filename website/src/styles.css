@@ -308,14 +308,25 @@ body {
   align-items: stretch;
 }
 
-/* The WoW-style minimap hub: a live fog-of-war map in a rounded frame, with
-   the run's edge widgets hung off its border (timer top, kills bottom, the
-   rampage ring around it). A positioning parent for those absolute widgets. */
+/* The WoW-style minimap hub: a live fog-of-war map in a rounded frame (with
+   the rampage ring around it and the timer centered on top), over a strip
+   carrying the rampage stage and kill tally. A column so the strip sits below
+   the map. */
 .hud-minimap {
-  position: relative;
   width: 8rem;
-  height: 5.25rem;
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 0.2rem;
   pointer-events: auto;
+}
+
+/* The map area: a positioning parent for the frame, the ring, and the centered
+   timer plate. Its height sets how tall the round map reads. */
+.hud-minimap-map {
+  position: relative;
+  width: 100%;
+  height: 5.25rem;
 }
 
 /* The map frame: a rounded window the live canvas fills; tapping it opens the
@@ -359,12 +370,14 @@ body {
   overflow: visible;
 }
 
-/* Timer plate — inner top-LEFT. Doubles as the PAUSE tap-target (the tap the
-   old clock owned); reset the native button chrome. */
+/* Timer plate — centered on the top edge of the map (the WoW-clock spot).
+   Doubles as the PAUSE tap-target (the tap the old clock owned); reset the
+   native button chrome. */
 .hud-minimap-timer {
   position: absolute;
   top: 0.15rem;
-  left: 0.28rem;
+  left: 50%;
+  transform: translateX(-50%);
   padding: 0.08rem 0.35rem;
   background: rgba(11, 13, 16, 0.72);
   border: 0;
@@ -378,17 +391,26 @@ body {
   cursor: pointer;
 }
 
-/* Kill count — inner top-RIGHT, "N kills". A positioning wrapper so the inner
-   .hud-kills can own the shake transform without fighting the placement.
-   Non-interactive so a tap still opens the map. */
-.hud-minimap-kills {
-  position: absolute;
-  top: 0.15rem;
-  right: 0.28rem;
-  padding: 0.06rem 0.32rem;
-  background: rgba(11, 13, 16, 0.72);
-  border-radius: 5px;
-  pointer-events: none;
+/* The strip under the map: rampage stage (left) and kill tally (right), framed
+   like the map so the hub reads as one unit. */
+.hud-minimap-strip {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.3rem;
+  min-height: 0.9rem;
+  padding: 0.06rem 0.4rem;
+  background: rgba(11, 13, 16, 0.55);
+  border: 2px solid #1a1c2c;
+  border-radius: 6px;
+}
+
+/* Left slot of the strip: keeps its width so the kills stay pinned right even
+   when the rampage readout is hidden (stage 0). */
+.hud-minimap-rampage {
+  display: inline-flex;
+  align-items: center;
+  min-width: 0;
 }
 
 /* Landscape (the reference grip): tighten the upper HUD. HP/stamina and the

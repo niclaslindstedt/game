@@ -1,14 +1,14 @@
 // SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
 // The live HUD minimap: a World-of-Warcraft-style hub in the upper HUD that
-// shows the actual fog-of-war level (not a static icon) and hangs the run's
-// edge widgets off its frame — the survival timer plate at the inner top
-// (which doubles as the PAUSE target, the same tap the old clock owned), the
-// kill count as a bare number at the inner bottom, and the RAMPAGE meter as a
-// gauge that fills and reddens around the rounded-rect border (it replaced the
-// row of pips). Tapping the map body opens the full-screen `MapOverlay` (the
-// expand). The map itself is the same chunky fog-of-war render as the overlay,
-// drawn whole-level (contain-fit, letterboxed in fog) and refreshed every
-// frame from the render loop via `drawMinimap`.
+// shows the actual fog-of-war level (not a static icon). The survival timer
+// plate sits centered on the top of the map (and doubles as the PAUSE target,
+// the same tap the old clock owned), the RAMPAGE meter fills and reddens as a
+// gauge around the rounded-rect border (it replaced the row of pips), and a
+// strip below the map carries the rampage STAGE on the left and the kill tally
+// ("N kills") on the right. Tapping the map body opens the full-screen
+// `MapOverlay` (the expand). The map itself is the same chunky fog-of-war
+// render as the overlay, drawn whole-level (contain-fit, letterboxed in fog)
+// and refreshed every frame from the render loop via `drawMinimap`.
 
 import { useEffect, useRef, type RefObject } from "react";
 
@@ -320,7 +320,7 @@ function RampageRing({ stage }: { stage: number }) {
 /** The live kill tally, jolting on every kill so a fresh frag is felt. The jolt
  * scales with the recent kill rate: a lone kill is a small nudge, but a burst —
  * several mobs downed inside a one-second window — stacks into a hard, wide
- * shake. Reads "N kills" in the minimap's top-right corner. */
+ * shake. Reads "N kills" at the right of the strip under the minimap. */
 function KillCounter({ font, kills }: { font: PixelFont; kills: number }) {
   const ref = useRef<HTMLDivElement>(null);
   const prevKills = useRef(kills);
@@ -352,15 +352,13 @@ function KillCounter({ font, kills }: { font: PixelFont; kills: number }) {
   }, [kills]);
 
   return (
-    <div className="hud-minimap-kills" aria-hidden>
-      <div ref={ref} className="hud-kills">
-        <PixelText
-          font={font}
-          text={`${kills} kills`}
-          scale={2}
-          color="#d9a0f0"
-        />
-      </div>
+    <div ref={ref} className="hud-kills" aria-hidden>
+      <PixelText
+        font={font}
+        text={`${kills} kills`}
+        scale={1}
+        color="#d9a0f0"
+      />
     </div>
   );
 }
@@ -384,31 +382,46 @@ export function Minimap({
 }) {
   return (
     <div className="hud-minimap">
-      <button
-        type="button"
-        className="hud-minimap-frame"
-        aria-label="open-map"
-        onClick={onExpand}
-      >
-        <canvas ref={canvasRef} className="hud-minimap-canvas" />
-      </button>
-      <RampageRing stage={menaceStage} />
-      {/* Timer plate — inner top-LEFT; doubles as the PAUSE target the old
-          clock owned (stopPropagation so it doesn't also open the map). */}
-      <button
-        type="button"
-        className="hud-minimap-timer"
-        aria-label="pause"
-        onClick={(e) => {
-          e.stopPropagation();
-          onPause();
-        }}
-      >
-        <PixelText font={font} text={timerText} scale={2} />
-      </button>
-      {/* Kill count — inner top-RIGHT, "N kills", jolting on each frag.
-          Non-interactive so a tap here still opens the map. */}
-      <KillCounter font={font} kills={kills} />
+      <div className="hud-minimap-map">
+        <button
+          type="button"
+          className="hud-minimap-frame"
+          aria-label="open-map"
+          onClick={onExpand}
+        >
+          <canvas ref={canvasRef} className="hud-minimap-canvas" />
+        </button>
+        <RampageRing stage={menaceStage} />
+        {/* Timer plate — centered at the top of the map (the WoW-clock spot);
+            doubles as the PAUSE target the old clock owned (stopPropagation so
+            it doesn't also open the map). */}
+        <button
+          type="button"
+          className="hud-minimap-timer"
+          aria-label="pause"
+          onClick={(e) => {
+            e.stopPropagation();
+            onPause();
+          }}
+        >
+          <PixelText font={font} text={timerText} scale={2} />
+        </button>
+      </div>
+      {/* The strip under the map: the rampage stage on the left (hot-colored,
+          shown only while the meter is up) and the kill tally on the right. */}
+      <div className="hud-minimap-strip" aria-hidden>
+        <span className="hud-minimap-rampage">
+          {menaceStage > 0 && (
+            <PixelText
+              font={font}
+              text={`RAMPAGE ${menaceStage}`}
+              scale={1}
+              color={rampageColor(menaceStage)}
+            />
+          )}
+        </span>
+        <KillCounter font={font} kills={kills} />
+      </div>
     </div>
   );
 }
