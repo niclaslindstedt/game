@@ -769,6 +769,7 @@ export const FIX_DIFFICULTIES: Record<string, DifficultyDef> = {
     mobCountMult: 0.9,
     mobLevelOffset: -3,
     aliveMult: 0.9,
+    activeSpawnerCap: 2,
     mobPursuitNearElite: 0.1,
     menaceMult: 0.05,
     menaceDecayMult: 1.5,
@@ -805,6 +806,7 @@ export const FIX_DIFFICULTIES: Record<string, DifficultyDef> = {
     mobCountMult: 1,
     mobLevelOffset: -2,
     aliveMult: 1,
+    activeSpawnerCap: 3,
     mobPursuitNearElite: 0.5,
     menaceMult: 0.7,
     menaceDecayMult: 1,
@@ -841,6 +843,7 @@ export const FIX_DIFFICULTIES: Record<string, DifficultyDef> = {
     mobCountMult: 1.1,
     mobLevelOffset: -1,
     aliveMult: 1.1,
+    activeSpawnerCap: 4,
     menaceMult: 1.5,
     menaceDecayMult: 0.85,
     menaceEffectMult: 1.15,
@@ -876,6 +879,7 @@ export const FIX_DIFFICULTIES: Record<string, DifficultyDef> = {
     mobCountMult: 1.2,
     mobLevelOffset: 0,
     aliveMult: 1.2,
+    activeSpawnerCap: 5,
     menaceMult: 3.0,
     menaceDecayMult: 0.7,
     menaceEffectMult: 1.3,
@@ -1385,6 +1389,61 @@ export const FIX_SPAWNER_LEVEL: LevelDef = {
   ],
 };
 
+/** A level with FOUR independent spawn points strung along one open row (no
+ * walls, no obstacles, no chains) at rising distance from the player spawn —
+ * so the simultaneous-active cap + closest-first arming (and the line-of-sight
+ * gate, injected in-test) can be driven in isolation. Each point holds a long
+ * fodder queue behind a small alive cap, so an armed point STAYS active (its
+ * queue never empties while the hero idles) and the cap is observable. */
+export const FIX_SPAWNER_CAP_LEVEL: LevelDef = {
+  ...FIX_LEVEL,
+  id: "test_spawner_cap_level",
+  spawns: [{ enemy: "test_boss", at: { x: 2130, y: 260 } }],
+  waves: undefined,
+  obstacles: [],
+  walls: [],
+  decor: [],
+  spawners: [
+    // Distances from the {340,1320} player spawn: 100, 300, 500, 700.
+    {
+      id: "near",
+      at: { x: 440, y: 1320 },
+      triggerRadius: 900,
+      perEmit: 2,
+      intervalMs: 100,
+      maxAlive: 3,
+      members: [{ enemy: "test_fodder", count: 20 }],
+    },
+    {
+      id: "mid",
+      at: { x: 640, y: 1320 },
+      triggerRadius: 900,
+      perEmit: 2,
+      intervalMs: 100,
+      maxAlive: 3,
+      members: [{ enemy: "test_fodder", count: 20 }],
+    },
+    {
+      id: "far",
+      at: { x: 840, y: 1320 },
+      triggerRadius: 900,
+      perEmit: 2,
+      intervalMs: 100,
+      maxAlive: 3,
+      members: [{ enemy: "test_fodder", count: 20 }],
+    },
+    {
+      id: "farthest",
+      at: { x: 1040, y: 1320 },
+      triggerRadius: 900,
+      perEmit: 2,
+      intervalMs: 100,
+      maxAlive: 3,
+      members: [{ enemy: "test_fodder", count: 20 }],
+    },
+  ],
+};
+
 let installed = false;
 
 /** Register the synthetic fixtures as the engine's active catalogs. Idempotent
@@ -1414,6 +1473,7 @@ export function installFixtures(force = false): void {
       test_recruit_level: FIX_RECRUIT_LEVEL,
       test_zone_level: FIX_ZONE_LEVEL,
       test_spawner_level: FIX_SPAWNER_LEVEL,
+      test_spawner_cap_level: FIX_SPAWNER_CAP_LEVEL,
     },
     uniques: FIX_UNIQUES,
     enemies: FIX_ENEMIES,

@@ -33,6 +33,15 @@ import { MAGIC_SPELLS } from "./spell-ladders/magic.ts";
  * stays thumb-reachable in the phone-landscape corner. */
 export const SPELL_SLOTS = 4;
 
+/**
+ * The GLOBAL COOLDOWN every cast shares: after ANY spell is cast, no other
+ * spell can fire (nor can the queue dequeue the next one) until this lapses.
+ * Distinct from each spell's own `cooldownMs` — it paces the whole bar so a
+ * queued chain fires one spell at a time rather than all at once, and stops a
+ * single mana-rich cast from spamming. Ticked down in `stepRegen`.
+ */
+export const SPELL_GLOBAL_COOLDOWN_MS = 500;
+
 /** A class's governing stat unlocks one power per this many points (10, 20, …). */
 export const SPELL_UNLOCK_STEP = 10;
 

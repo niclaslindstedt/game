@@ -435,6 +435,7 @@ export {
 export {
   SPELL_DEFS,
   SPELL_SLOTS,
+  SPELL_GLOBAL_COOLDOWN_MS,
   SPELL_STATS,
   SPELL_STAT_CLASS,
   SPELL_CLASS_STAT,
@@ -454,8 +455,13 @@ export {
   type SpellElement,
   type SpellEffect,
 } from "./game/defs/spells.ts";
-// The cast path + SPIRIT-driven regen tick (sorcery.ts).
-export { castSpell, stepRegen } from "./game/sorcery.ts";
+// The cast path (enqueue + queue drain) + SPIRIT-driven regen tick (sorcery.ts).
+export {
+  castSpell,
+  enqueueSpell,
+  stepRegen,
+  stepSpellQueue,
+} from "./game/sorcery.ts";
 export {
   DIFFICULTY_DEFS,
   DIFFICULTY_ORDER,

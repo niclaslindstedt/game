@@ -111,7 +111,7 @@ import {
   wearWornArmor,
   wouldUpgradeSlot,
 } from "./items.ts";
-import { castSpell, stepRegen } from "./sorcery.ts";
+import { enqueueSpell, stepRegen, stepSpellQueue } from "./sorcery.ts";
 import { arrowColdXp, arrowXpShareAt } from "./leveling.ts";
 import {
   grantXp,
@@ -258,8 +258,12 @@ export function step(state: GameState, input: GameInput, dtMs: number): void {
   if (!state.freeze) stepMerchant(state, dt, dtMs);
   stepUseItem(state, input);
   stepUseConsumables(state, input);
-  // A tapped spell-bar slot casts (mana/cooldown/unlock gated in sorcery.ts).
-  if (input.castSpell) castSpell(state, input.castSpellIndex ?? 0);
+  // A spell-bar press ENQUEUES its slot; the queue then drains one cast per
+  // global cooldown while mana lasts (mana/cooldown/unlock gated in sorcery.ts),
+  // so a press casts ONCE and a chain of presses fires in order — never a spell
+  // held "on" until the pool empties.
+  if (input.castSpell) enqueueSpell(state, input.castSpellIndex ?? 0);
+  stepSpellQueue(state);
   // SPIRIT-driven mana/health regen, the shield timer, and spell cooldowns all
   // tick here — every playing frame, before the combat passes read the pools.
   stepRegen(state, dt, dtMs);

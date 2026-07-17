@@ -33,6 +33,7 @@ import {
   recomputeMaxMana,
   setSpellSlot,
   spellDef,
+  SPELL_GLOBAL_COOLDOWN_MS,
   takeSpellUnlock,
   unlockedSpellIds,
   BOT_PROFILES,
@@ -200,6 +201,8 @@ import {
   computeCamera,
   drawEffects,
   drawFrame,
+  guidanceArrowBlinkIndex,
+  guidanceArrowVisible,
   MELEE_SWING_MS,
   VIEW_SCALE,
   viewScaleFor,
@@ -366,6 +369,13 @@ const XP_MERGE_MIN_KILLS = 3;
 const XP_MERGE_SLACK_PX = 16;
 const XP_MERGE_MIN_SCALE = 1.4;
 const XP_MERGE_MAX_SCALE = 4;
+
+// XP-bar kill heat. Every kill that grants XP lights the top XP strip a
+// brighter blue as it grows; a kill-chain keeps it lit, and once no XP has
+// landed for this long the fill eases back to its resting color (the CSS
+// transition on `.hud-xp-fill.is-hot`). One second so back-to-back kills read
+// as a sustained streak, not a flicker.
+const XP_BAR_HOT_MS = 1000;
 
 // A `swing`/`shot` event is the hero's (not a companion's) when it was thrown
 // from his own position — both fire in the same step, so the hero hasn't moved
@@ -664,6 +674,11 @@ export function GameScreen({
   } | null>(null);
   const lastAreaRef = useRef<string | null>(null);
   const areaCaptionSeq = useRef(0);
+  // The guidance arrow's last-pinged blink index — the render loop pings the
+  // "go this way" beacon each time the pulse reaches a fresh peak while the
+  // arrow is visible. Reset to null whenever the arrow hides, so a reappearance
+  // re-baselines instead of firing a backlog of missed blinks.
+  const guideBlinkRef = useRef<number | null>(null);
   // The framed pickup card ("PICKED UP <gear>") for bag gear — one at a time,
   // the newest replacing the last, cleared on its own PICKUP_CARD_TTL_MS timer.
   const [pickupCard, setPickupCard] = useState<PickupCard | null>(null);
@@ -686,6 +701,10 @@ export function GameScreen({
   // the short landscape field. Portrait keeps them all stacked in one corner
   // (there's room up the tall edge, and one thumb covers both). See the dock CSS.
   const wide = useMediaQuery("(min-aspect-ratio: 4/3)");
+  // The XP strip's kill-heat overlay — the render loop sizes it to the
+  // freshly-earned slice and toggles its `is-hot` class straight on the DOM
+  // (like fpsRef) so a kill lights it up without a React re-render.
+  const xpHeatRef = useRef<HTMLDivElement | null>(null);
   useEffect(() => {
     weaponMenuOpenRef.current = weaponMenuOpen;
   }, [weaponMenuOpen]);
@@ -1415,6 +1434,13 @@ export function GameScreen({
     let fpsNextFlushMs = 0;
     // Transient visuals driven by engine events (lightning strikes).
     let effects: Effect[] = [];
+    // Sim-clock ms of the most recent XP-granting kill. render() keeps the XP
+    // strip's heat overlay lit (`is-hot`) while this is within XP_BAR_HOT_MS, so
+    // a kill-chain holds the bright slice and it fades once the kills stop.
+    let lastXpGainMs: number | undefined;
+    // The XP value where the current bright slice begins — the fill level at the
+    // moment the streak started, so only XP earned during the streak glows.
+    let xpHeatBaseXp = 0;
     // The hero's most recent attack, so the field renderer can swing the held
     // weapon in step with its slash/muzzle effect. Only the hero's own blows
     // are captured — companions swing from their own spots (matched by
@@ -1476,6 +1502,10 @@ export function GameScreen({
         recomputeMaxMana(state);
         state.player.mana = state.player.maxMana;
         state.player.spellCooldowns = {};
+        // Clear both cooldowns and the queue so a preview cast always fires this
+        // instant, no matter how recently the last one went off.
+        state.player.globalCooldownMs = 0;
+        state.player.spellQueue = [];
         setSpellSlot(state, 0, id);
         castSpellIndexRef.current = 0;
       };
@@ -1538,6 +1568,12 @@ export function GameScreen({
           input.useRepairKit = decided.useRepairKit ?? false;
           input.useItemIndex = undefined;
           input.aim = undefined;
+          // The bot casts too — wire its spell pick through as an enqueue edge
+          // (the queue dedupes a slot re-picked every tick, so it just paces to
+          // the global cooldown). Reset when it isn't casting so the flag never
+          // sticks true and re-fires every frame.
+          input.castSpell = decided.castSpell ?? false;
+          input.castSpellIndex = decided.castSpellIndex;
         } else {
           const settings = getSettings();
           // Desktop mouse aim: the pointer adds a second steering dimension —
@@ -1642,10 +1678,14 @@ export function GameScreen({
           useStaminaQueuedRef.current = false;
           useManaQueuedRef.current = false;
           useRepairQueuedRef.current = false;
-          // A tapped spell-bar slot (or its cast key) casts this tick; the
-          // engine gates mana/cooldown/unlock, so a stray edge is harmless.
+          // A tapped spell-bar slot (or its cast key) ENQUEUES one cast this
+          // tick; the engine queues it and drains one per global cooldown
+          // (mana/cooldown/unlock gated in sorcery.ts). castSpell is a discrete
+          // EDGE — reset it every tick so a single press casts exactly ONCE
+          // instead of leaving the flag stuck true (which re-cast every frame
+          // until the pool emptied, and kept going after).
+          input.castSpell = castSpellIndexRef.current !== null;
           if (castSpellIndexRef.current !== null) {
-            input.castSpell = true;
             input.castSpellIndex = castSpellIndexRef.current;
             castSpellIndexRef.current = null;
           }
@@ -1700,6 +1740,9 @@ export function GameScreen({
             bumpUi();
           }
         }
+        // The fill level BEFORE this step, so a kill that starts a fresh streak
+        // can anchor the bright slice at the XP the hero already had.
+        const xpBeforeStep = state.player.xp;
         // `timeScale` (?debug `window.__timeScale`) slows the whole run for
         // animation tuning — a neutral 1 in normal play.
         step(state, input, dtMs * timeScale);
@@ -1770,6 +1813,19 @@ export function GameScreen({
             }
           }
           celebrateAchievements(recordWornEquipment(worn));
+        }
+
+        // Any kill that grants XP lights the freshly-earned slice of the XP
+        // strip. A kill while the streak is COLD anchors the bright slice at the
+        // pre-kill fill (so only the new XP glows); chained kills extend the
+        // same slice. render() holds it through the chain and fades it once
+        // XP_BAR_HOT_MS passes without another kill.
+        if (state.events.some((e) => e.type === "enemyKilled" && e.xp > 0)) {
+          const wasHot =
+            lastXpGainMs !== undefined &&
+            state.stats.timeMs - lastXpGainMs <= XP_BAR_HOT_MS;
+          if (!wasHot) xpHeatBaseXp = xpBeforeStep;
+          lastXpGainMs = state.stats.timeMs;
         }
 
         // Big kills merge their XP: when one step drops a knot of foes packed
@@ -2519,6 +2575,19 @@ export function GameScreen({
               setAreaCaption({ label: area, id: ++areaCaptionSeq.current });
             }
           }
+          // Ping the "go this way" beacon in step with the guidance arrow's
+          // blink: one soft ping each time the pulse crosses a fresh peak while
+          // the arrow shows. Baseline (no ping) on the frame it first appears,
+          // and clear on hide so it never replays missed blinks in a burst.
+          if (guidanceArrowVisible(state)) {
+            const idx = guidanceArrowBlinkIndex(timeMs);
+            if (guideBlinkRef.current !== null && idx > guideBlinkRef.current) {
+              playUiSound(synth, "guide");
+            }
+            guideBlinkRef.current = idx;
+          } else {
+            guideBlinkRef.current = null;
+          }
         }
         // A pinned melee swing (with `arc`/`range`) also draws its slash cone
         // frozen at the SAME fraction, so the preview strip shows the blade and
@@ -2564,6 +2633,30 @@ export function GameScreen({
         // playing HUD is up, so the ref is null otherwise.
         const minimapNode = minimapRef.current;
         if (minimapNode) drawMinimap(minimapNode, state, assets);
+
+        // XP-bar kill heat: light ONLY the freshly-earned slice. Size the heat
+        // overlay to span [streak-start XP → current XP] and, while a recent
+        // kill's XP is still "hot" (this and any chained kills within
+        // XP_BAR_HOT_MS), show it a brighter blue; the moment the chain lapses
+        // the class drops and CSS fades it out, leaving the added XP settled
+        // into the resting fill underneath. Written straight to the DOM so React
+        // never clobbers it (className/style props here are constants).
+        const xpHeatNode = xpHeatRef.current;
+        if (xpHeatNode) {
+          const xp = state.player.xp;
+          const toNext = Math.max(1, state.player.xpToNext);
+          // A level-up wraps XP below the baseline — flash the whole new level's
+          // fill from empty rather than a stale (old-level) offset.
+          const base = xp < xpHeatBaseXp ? 0 : xpHeatBaseXp;
+          const leftPct = Math.max(0, Math.min(100, (100 * base) / toNext));
+          const rightPct = Math.max(0, Math.min(100, (100 * xp) / toNext));
+          xpHeatNode.style.left = `${leftPct}%`;
+          xpHeatNode.style.width = `${Math.max(0, rightPct - leftPct)}%`;
+          const hot =
+            lastXpGainMs !== undefined &&
+            state.stats.timeMs - lastXpGainMs <= XP_BAR_HOT_MS;
+          xpHeatNode.classList.toggle("is-hot", hot);
+        }
 
         // The FPS readout: smooth the frame delta (EMA) and write the number
         // straight to the DOM every quarter second — no React re-render, so
@@ -2675,6 +2768,13 @@ export function GameScreen({
         // mana pool only show once there is a real power to slot.
         const unlockedSpells = unlockedSpellIds(state);
         const isCaster = unlockedSpells.length > 0;
+        // The shared global cooldown sweeps EVERY slot (a queued spell waits
+        // behind it), so the whole bar reads as recharging between casts —
+        // shown as whichever runs longer, the spell's own cooldown or the GCD.
+        const gcdFrac = Math.max(
+          0,
+          Math.min(1, state.player.globalCooldownMs / SPELL_GLOBAL_COOLDOWN_MS),
+        );
         const spellViews: SpellSlotView[] = state.player.spellSlots.map(
           (id) => {
             if (!id) return { id: null, cooldownFrac: 0, affordable: false };
@@ -2683,7 +2783,7 @@ export function GameScreen({
             return {
               id,
               cooldownFrac: Math.max(
-                0,
+                gcdFrac,
                 Math.min(1, cd / Math.max(1, sdef.cooldownMs)),
               ),
               affordable: state.player.mana >= sdef.manaCost,
@@ -2954,6 +3054,10 @@ export function GameScreen({
               className="hud-xp-fill"
               style={{ width: `${(100 * hud.xp) / hud.xpToNext}%` }}
             />
+            {/* The kill-heat overlay: only the freshly-earned slice glows. The
+                render loop sizes and lights it straight on the DOM (see
+                xpHeatRef) so a kill flashes it without a React re-render. */}
+            <div ref={xpHeatRef} className="hud-xp-heat" aria-hidden="true" />
           </div>
 
           {/* The SPELL STATUS echo — the name of the spell just cast (or why a

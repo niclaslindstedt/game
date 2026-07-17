@@ -8,12 +8,22 @@
 // runs while the hero is in trigger range: at the cap (or once he steps out) the
 // point pauses, then drips a fresh batch to REPLACE each kill — steady local
 // pressure rather than a dumped pile — and the queue still drains as he grinds
-// the cap down. A point may CHAIN off another (`after`): it arms `afterDelayMs`
+// the cap down. The cap counts only the point's LOCAL members: one that has
+// drifted past its trigger zone (given chase and left the fight) is treated as
+// gone, so the point drips a replacement to keep pressure where the hero stands. A point may CHAIN off another (`after`): it arms `afterDelayMs`
 // after that one drains, but only while the hero is still in its trigger range,
 // so pressure follows him without a bottomless refill. This is what lets a level
 // actually be CLEARED and a maze be traversed without an infinite bog. Emitted
 // mobs are scaled exactly like a woken pack's (menace stage + mob level), so a
 // spawner wave hits as hard as the difficulty's horde.
+//
+// A point only ARMS when the hero has a clear LINE OF SIGHT to it (never a wave
+// through a wall), and only up to the rung's simultaneous-active cap
+// (`DifficultyDef.activeSpawnerCap`): when more points are in range than the cap
+// allows, the ones CLOSEST to the hero light and the rest wait dormant until an
+// active wave drains and frees a slot — so a maze keeps the pressure where he
+// stands instead of igniting every spawner around him at once. An omitted cap
+// (JESUS) is uncapped.
 
 import { clamp, distance, type Vec2 } from "@game/lib/vec.ts";
 import { SPAWNERS } from "./config.ts";
@@ -28,7 +38,7 @@ import {
   resolveMobScaling,
 } from "./menace.ts";
 import { insideObstacle, lineOfSight } from "./obstacles.ts";
-import type { GameState, SpawnerRuntime } from "./types.ts";
+import type { Enemy, GameState, SpawnerRuntime } from "./types.ts";
 import { anyZoneContains } from "./zones.ts";
 
 /** A spawn spot for one emitted mob: scattered within the point's `spawnRadius`
@@ -105,48 +115,81 @@ function emitBatch(
   return emitted;
 }
 
+/** Is this chained point's predecessor drained and past its `afterDelayMs`? A
+ * point with no `after` is always ready; a broken/unfinished chain waits. */
+function chainReady(
+  spawner: SpawnerRuntime,
+  spawners: SpawnerRuntime[],
+  now: number,
+): boolean {
+  if (spawner.after === null) return true;
+  const pred = spawners.find((p) => p.id === spawner.after);
+  return (
+    !!pred &&
+    pred.status === "drained" &&
+    pred.drainedAtMs !== null &&
+    now - pred.drainedAtMs >= spawner.afterDelayMs
+  );
+}
+
 /**
- * Advance every spawn point one tick: arm the ones the hero has walked into (and
- * whose chain predecessor has drained + delayed), drip their queue out on the
- * emission clock, and mark the drained ones so their chains can follow. A no-op
- * on a level that authors no spawners. Frozen poses and the victory lap never
- * arm a fresh wave (matching stepPacks).
+ * Arm the dormant points the hero has walked into — but only up to this rung's
+ * simultaneous-active cap (`activeSpawnerCap`), and preferring the ones CLOSEST
+ * to him. A point is eligible only if it is in trigger range, in clear LINE OF
+ * SIGHT (never a wave through a wall), and its chain predecessor has drained +
+ * delayed. When more points are eligible than the cap has room for, the nearest
+ * arm and the rest stay dormant until an active wave drains and frees a slot —
+ * so a maze never lights every spawner around the hero at once. An omitted cap
+ * (JESUS, test fixtures without one) is uncapped: every eligible point arms.
+ */
+function armEligibleSpawners(state: GameState, now: number): void {
+  const spawners = state.spawners;
+  const cap = difficultyDef(state.difficulty).activeSpawnerCap;
+  let active = 0;
+  for (const s of spawners) if (s.status === "active") active++;
+  let room = cap === undefined ? Infinity : cap - active;
+  if (room <= 0) return;
+
+  const eligible: { spawner: SpawnerRuntime; dist: number }[] = [];
+  for (const spawner of spawners) {
+    if (spawner.status !== "dormant") continue;
+    const dist = distance(state.player.pos, spawner.at);
+    if (dist > spawner.triggerRadius) continue;
+    if (!lineOfSight(state, state.player.pos, spawner.at)) continue;
+    if (!chainReady(spawner, spawners, now)) continue;
+    eligible.push({ spawner, dist });
+  }
+  // Nearest first, so the cap always fills with the points the hero is standing
+  // among — the ones farther off wait their turn.
+  eligible.sort((a, b) => a.dist - b.dist);
+  for (const { spawner } of eligible) {
+    if (room <= 0) break;
+    spawner.status = "active";
+    spawner.emitAtMs = now; // the wave boils up at once, then drips
+    room--;
+  }
+}
+
+/**
+ * Advance every spawn point one tick: arm the ones the hero has walked into (up
+ * to the rung's cap, nearest first, and whose chain predecessor has drained +
+ * delayed), drip their queue out on the emission clock, and mark the drained
+ * ones so their chains can follow. A no-op on a level that authors no spawners.
+ * Frozen poses and the victory lap never arm a fresh wave (matching stepPacks).
  */
 export function stepSpawners(state: GameState): void {
   const spawners = state.spawners;
   if (spawners.length === 0) return;
   const now = state.stats.timeMs;
   const canWake = !state.freeze && state.victoryCountdownMs === null;
+  if (canWake) armEligibleSpawners(state, now);
   // Built lazily the first time an active point needs to count its own live
   // members against the alive cap — one pass over the enemy list, reused across
-  // every spawner this tick (mirrors stepPacks).
-  let aliveIds: Set<number> | null = null;
+  // every spawner this tick (mirrors stepPacks). A Map (not a Set) so the count
+  // can read each member's position and drop the ones that have drifted away.
+  let enemyById: Map<number, Enemy> | null = null;
 
   for (const spawner of spawners) {
-    if (spawner.status === "dormant") {
-      if (!canWake) continue;
-      if (distance(state.player.pos, spawner.at) > spawner.triggerRadius) {
-        continue;
-      }
-      // Don't arm across a wall: the hero must have a clear LINE to the point,
-      // so a spawn tucked behind a shelf boils up only once he rounds into view
-      // of it — never a wave materialising through a solid wall beside him.
-      if (!lineOfSight(state, state.player.pos, spawner.at)) continue;
-      if (spawner.after !== null) {
-        const pred = spawners.find((p) => p.id === spawner.after);
-        if (
-          !pred ||
-          pred.status !== "drained" ||
-          pred.drainedAtMs === null ||
-          now - pred.drainedAtMs < spawner.afterDelayMs
-        ) {
-          continue; // chain not ready — wait (the hero is here, keep counting)
-        }
-      }
-      spawner.status = "active";
-      spawner.emitAtMs = now; // the wave boils up at once, then drips
-    }
-
     if (spawner.status === "active") {
       // Emit ONLY while the hero is in trigger range, and only up to the
       // concurrent-alive cap: the point drips to REPLACE kills, holding steady
@@ -156,9 +199,13 @@ export function stepSpawners(state: GameState): void {
       const inRange =
         distance(state.player.pos, spawner.at) <= spawner.triggerRadius;
       if (inRange) {
-        // Count this point's live members ONCE from the tick's enemy snapshot,
-        // then track emissions incrementally — so a multi-batch catch-up tick
-        // still respects the cap (the snapshot can't see mobs it just emitted).
+        // Count this point's LOCAL live members ONCE from the tick's enemy
+        // snapshot, then track emissions incrementally — so a multi-batch
+        // catch-up tick still respects the cap (the snapshot can't see mobs it
+        // just emitted). A member that has DRIFTED past the point's zone (its
+        // `triggerRadius`) no longer counts: it's given chase to the hero and
+        // left the fight, so the point treats it as gone and drips a fresh one
+        // to hold pressure where it stands.
         let live = -1;
         // Release a batch every interval; a guard caps catch-up after a long tick.
         let batches = 0;
@@ -168,9 +215,16 @@ export function stepSpawners(state: GameState): void {
           batches < 8
         ) {
           if (live < 0) {
-            if (!aliveIds) aliveIds = new Set(state.enemies.map((e) => e.id));
+            if (!enemyById) {
+              enemyById = new Map(state.enemies.map((e) => [e.id, e]));
+            }
             live = 0;
-            for (const id of spawner.memberIds) if (aliveIds.has(id)) live++;
+            for (const id of spawner.memberIds) {
+              const e = enemyById.get(id);
+              if (e && distance(e.pos, spawner.at) <= spawner.triggerRadius) {
+                live++;
+              }
+            }
           }
           const room = spawner.maxAlive - live;
           if (room <= 0) break; // at the cap — hold until a kill frees a slot

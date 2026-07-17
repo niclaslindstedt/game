@@ -6,6 +6,8 @@
 
 import { describe, expect, it } from "vitest";
 
+import { createGame, dismissIntro } from "@game/core";
+import type { Difficulty, GameState } from "@game/core";
 import { idle, run, startGame } from "./helpers.ts";
 
 describe("spawn points arm, drip, and drain", () => {
@@ -57,6 +59,31 @@ describe("spawn points arm, drip, and drain", () => {
     expect(aliveMembers()).toBe(3);
   });
 
+  it("replaces a member that drifts out of the point's zone", () => {
+    const state = startGame(1, "test_spawner_level");
+    const s = state.spawners[0]!;
+    s.maxAlive = 2; // a small cap against the queue of 6
+    state.player.pos = { x: 520, y: 1320 }; // on the point, in range
+    const localMembers = () =>
+      state.enemies.filter(
+        (e) =>
+          s.memberIds.includes(e.id) &&
+          Math.hypot(e.pos.x - s.at.x, e.pos.y - s.at.y) <= s.triggerRadius,
+      ).length;
+    // Fill to the cap and hold.
+    run(state, idle, 40);
+    expect(localMembers()).toBe(2);
+    const emitted = s.memberIds.length;
+
+    // Drag one member far past the point's trigger zone — it has "drifted away".
+    const drifter = state.enemies.find((e) => s.memberIds.includes(e.id))!;
+    drifter.pos = { x: s.at.x + 5000, y: s.at.y };
+    // The point sees a free LOCAL slot and drips a replacement back to the cap.
+    run(state, idle, 20);
+    expect(localMembers()).toBe(2);
+    expect(s.memberIds.length).toBeGreaterThan(emitted);
+  });
+
   it("stops emitting while the hero is outside trigger range", () => {
     const state = startGame(1, "test_spawner_level");
     const s = state.spawners[0]!;
@@ -93,5 +120,93 @@ describe("spawn points arm, drip, and drain", () => {
     run(state, idle, 80, (s) => s.spawners[1]!.status !== "dormant");
     expect(state.spawners[1]!.status).not.toBe("dormant");
     expect(state.enemies.some((e) => e.defId === "test_minion")).toBe(true);
+  });
+});
+
+describe("only the closest N points light at once (activeSpawnerCap)", () => {
+  // Four independent points strung along one open row at rising distance from
+  // the {340,1320} player spawn (near 100 → farthest 700). Each holds a long
+  // queue behind a small alive cap, so an armed point STAYS active while the
+  // hero idles — the cap and the closest-first pick are observable.
+  const startCap = (difficulty: Difficulty): GameState => {
+    const state = createGame(1, "test_spawner_cap_level", difficulty);
+    dismissIntro(state);
+    return state;
+  };
+  const byId = (state: GameState, id: string) =>
+    state.spawners.find((s) => s.id === id)!;
+  const activeCount = (state: GameState) =>
+    state.spawners.filter((s) => s.status === "active").length;
+
+  it("arms only the two CLOSEST points on easy (cap 2), rest stay dormant", () => {
+    const state = startCap("easy");
+    run(state, idle, 4);
+    // The two nearest lit; the two farther points wait their turn.
+    expect(byId(state, "near").status).toBe("active");
+    expect(byId(state, "mid").status).toBe("active");
+    expect(byId(state, "far").status).toBe("dormant");
+    expect(byId(state, "farthest").status).toBe("dormant");
+    expect(activeCount(state)).toBe(2);
+  });
+
+  it("lifts the cap up the ladder (medium 3, nightmare 5)", () => {
+    const medium = startCap("medium");
+    run(medium, idle, 4);
+    expect(activeCount(medium)).toBe(3);
+    expect(byId(medium, "farthest").status).toBe("dormant");
+
+    // NIGHTMARE's cap (5) exceeds the four points here — so every one arms.
+    const nightmare = startCap("nightmare");
+    run(nightmare, idle, 4);
+    expect(activeCount(nightmare)).toBe(4);
+    expect(nightmare.spawners.every((s) => s.status === "active")).toBe(true);
+  });
+
+  it("is UNCAPPED on jesus — every point in range arms at once", () => {
+    const state = startCap("jesus");
+    run(state, idle, 4);
+    expect(state.spawners.every((s) => s.status === "active")).toBe(true);
+  });
+
+  it("frees a slot for the next-closest point when an active wave drains", () => {
+    const state = startCap("easy");
+    run(state, idle, 4);
+    expect(byId(state, "far").status).toBe("dormant");
+
+    // The nearest wave finishes — its slot opens for the next-closest point.
+    const near = byId(state, "near");
+    near.status = "drained";
+    near.drainedAtMs = state.stats.timeMs;
+    near.queue = [];
+    run(state, idle, 3);
+    // `far` (next closest) arms; `farthest` still waits behind the cap.
+    expect(byId(state, "far").status).toBe("active");
+    expect(byId(state, "farthest").status).toBe("dormant");
+    expect(activeCount(state)).toBe(2);
+  });
+
+  it("never arms a point across a wall — line of sight gates the pick too", () => {
+    const state = startCap("easy");
+    // Drop a tall wall on the row between the hero and every point — no sight,
+    // so none arm even though two are the closest and the cap has room.
+    state.obstacles = [
+      {
+        id: 8100,
+        kind: "boulder",
+        sprite: "boulder",
+        pos: { x: 390, y: 1320 },
+        radius: 30,
+        jumpable: false,
+      },
+    ];
+    run(state, idle, 4);
+    expect(state.spawners.every((s) => s.status === "dormant")).toBe(true);
+
+    // Clear the wall — the two closest points come into view and light.
+    state.obstacles = [];
+    run(state, idle, 4);
+    expect(byId(state, "near").status).toBe("active");
+    expect(byId(state, "mid").status).toBe("active");
+    expect(activeCount(state)).toBe(2);
   });
 });

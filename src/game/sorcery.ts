@@ -2,8 +2,10 @@
 // Player-CAST powers (see defs/spells.ts): the mana-costed, class-unlocked
 // spells / arts / techniques the hero taps off the HUD spell bar. This module
 // owns the cast path — availability/cooldown/mana gates, mana spend, and effect
-// resolution (bolt, nova, rain, heal, shield, slow, self-buff) — plus the
-// SPIRIT-driven mana/health regen tick and the buff-timer tick. Damage routes
+// resolution (bolt, nova, rain, heal, shield, slow, self-buff) — plus the cast
+// QUEUE and the shared GLOBAL cooldown (a press enqueues; `stepSpellQueue`
+// drains one cast per global cooldown while mana lasts, then flushes on empty),
+// the SPIRIT-driven mana/health regen tick, and the buff-timer tick. Damage routes
 // through the shared `hitEnemy` funnel at "magic" class (always hits, ignores
 // mob armor) scaled by the same `abilityPowerScale` the abilities and granted
 // spells use, so a power keeps meaning the same fraction of a level-appropriate
@@ -13,7 +15,11 @@ import { distanceSq } from "@game/lib/vec.ts";
 import { REGEN, WEAPON } from "./config.ts";
 import { abilityPowerScale } from "./abilities.ts";
 import { enemyDef } from "./defs/enemies/index.ts";
-import { spellDef, type SpellDef } from "./defs/spells.ts";
+import {
+  spellDef,
+  SPELL_GLOBAL_COOLDOWN_MS,
+  type SpellDef,
+} from "./defs/spells.ts";
 import { hpRegenPerSec, isSpellAvailable, manaRegenPerSec } from "./items.ts";
 import { hitEnemy } from "./loot.ts";
 import type { Enemy, GameState } from "./types.ts";
@@ -75,9 +81,14 @@ function hasEffect(state: GameState, def: SpellDef): boolean {
  * available (the hero's class, governing stat ≥ its `minStat`), off cooldown,
  * enough mana, and it
  * would actually do something — refusing with a `spellFizzled` event (nothing
- * spent) on any miss. On success it spends the mana, arms the cooldown, pauses
- * mana regen (`REGEN.manaDelayMs`), books the spell-economy stats, emits
- * `spellCast`, and resolves the effect. Returns whether a cast happened.
+ * spent) on any miss. On success it spends the mana, arms the spell's own
+ * cooldown AND the shared global cooldown, pauses mana regen
+ * (`REGEN.manaDelayMs`), books the spell-economy stats, emits `spellCast`, and
+ * resolves the effect. Returns whether a cast happened.
+ *
+ * Casting the spell NOW; the global-cooldown gate that stops the next cast
+ * lives in `stepSpellQueue` (the only real-play caller), so this stays directly
+ * callable back-to-back by tests / the `?debug __cast` hook.
  */
 export function castSpell(state: GameState, slotIndex: number): boolean {
   const player = state.player;
@@ -106,10 +117,12 @@ export function castSpell(state: GameState, slotIndex: number): boolean {
     return false;
   }
 
-  // Spend the mana, arm the cooldown, and hold mana regen off for the idle
-  // window — a cast is what resets the "5 seconds of no spell" timer.
+  // Spend the mana, arm the spell's own cooldown AND the shared global
+  // cooldown, and hold mana regen off for the idle window — a cast is what
+  // resets the "5 seconds of no spell" timer.
   player.mana -= def.manaCost;
   player.spellCooldowns[id] = def.cooldownMs;
+  player.globalCooldownMs = SPELL_GLOBAL_COOLDOWN_MS;
   player.manaRegenMs = REGEN.manaDelayMs;
   state.stats.manaSpent += def.manaCost;
   state.stats.spellsCast += 1;
@@ -122,6 +135,56 @@ export function castSpell(state: GameState, slotIndex: number): boolean {
 
   resolveEffect(state, def);
   return true;
+}
+
+/**
+ * Queue spell-bar slot `slotIndex` for casting — what a spell press does. The
+ * queue drains one cast per global cooldown (`stepSpellQueue`), so a press casts
+ * ONCE and a burst of presses fires in order. Deduped by slot: a slot already
+ * waiting isn't queued again (so mashing one key, or the bot re-picking the same
+ * slot every tick, can't bank a backlog), which also caps the queue at one entry
+ * per slot. A slot with no assigned spell is ignored.
+ */
+export function enqueueSpell(state: GameState, slotIndex: number): void {
+  const player = state.player;
+  if (slotIndex < 0 || slotIndex >= player.spellSlots.length) return;
+  if (!player.spellSlots[slotIndex]) return;
+  if (player.spellQueue.includes(slotIndex)) return;
+  player.spellQueue.push(slotIndex);
+}
+
+/**
+ * Drain the cast queue one step. While the GLOBAL cooldown is clear, cast the
+ * front queued slot; a successful cast arms the global cooldown, so only one
+ * spell fires per cooldown. Entries that can't cast for any reason OTHER than
+ * mana (empty slot, still on their own cooldown, nothing in range, off-class)
+ * are dropped so the queue never stalls. The first entry the pool can't afford
+ * FLUSHES the whole queue — the "cast until mana runs out, then wait for mana to
+ * regen before casting again" rule. Called every playing tick from `step`.
+ */
+export function stepSpellQueue(state: GameState): void {
+  const player = state.player;
+  if (player.globalCooldownMs > 0) return; // no cast (nor dequeue) mid-GCD
+  while (player.spellQueue.length > 0) {
+    const slot = player.spellQueue[0];
+    if (slot === undefined) break;
+    const id = player.spellSlots[slot];
+    if (!id) {
+      // The slot was cleared/reassigned to empty since the press — drop it.
+      player.spellQueue.shift();
+      continue;
+    }
+    if (player.mana < spellDef(id).manaCost) {
+      // Out of mana: the queue is spent. Drop the rest and wait for regen.
+      player.spellQueue.length = 0;
+      return;
+    }
+    player.spellQueue.shift();
+    // A successful cast arms the global cooldown — stop here (one per GCD). A
+    // failed cast (own cooldown / no target / locked) spent nothing and armed
+    // nothing, so fall through and try the next queued spell this same tick.
+    if (castSpell(state, slot)) return;
+  }
 }
 
 /** Resolve a cast spell's effect (mana already spent). */
@@ -301,6 +364,11 @@ export function stepRegen(state: GameState, dt: number, dtMs: number): void {
       player.buffHasteMult = 1;
       player.buffSpeedMult = 1;
     }
+  }
+
+  // The shared global cooldown between casts ebbs each tick.
+  if (player.globalCooldownMs > 0) {
+    player.globalCooldownMs = Math.max(0, player.globalCooldownMs - dtMs);
   }
 
   // Per-spell cooldowns tick down.
