@@ -40,17 +40,17 @@ manages its own dependencies.
 
 ## Layout
 
-| File                    | Purpose                                                                               |
-| ----------------------- | ------------------------------------------------------------------------------------- |
-| `App.tsx`               | The WebView shell, message bridge, loading/offline states.                            |
-| `src/localServer.ts`    | Unzips the bundled site on first launch and serves it over a local HTTP server.        |
-| `src/config.ts`         | Bundled by default; the optional `EXPO_PUBLIC_GAME_URL` remote override.               |
-| `src/injected.ts`       | JS injected into the page: the `navigator.vibrate` bridge + viewport hardening.        |
-| `src/nativeHaptics.ts`  | Translates Web-Vibration patterns → Taptic Engine impacts.                            |
-| `scripts/bundle-web.mjs`| Builds the website and packs `dist/` into `assets/webroot.zip`.                        |
-| `metro.config.js`       | Teaches Metro that `.zip` is a bundled asset.                                          |
-| `app.config.js`         | Dynamic Expo config; reads identity from `game.config.json`, pins the EAS project id.  |
-| `eas.json`              | EAS build/submit profiles.                                                             |
+| File                     | Purpose                                                                               |
+| ------------------------ | ------------------------------------------------------------------------------------- |
+| `App.tsx`                | The WebView shell, message bridge, loading/offline states.                            |
+| `src/localServer.ts`     | Unzips the bundled site on first launch and serves it over a local HTTP server.       |
+| `src/config.ts`          | Bundled by default; the optional `EXPO_PUBLIC_GAME_URL` remote override.              |
+| `src/injected.ts`        | JS injected into the page: the `navigator.vibrate` bridge + viewport hardening.       |
+| `src/nativeHaptics.ts`   | Translates Web-Vibration patterns → Taptic Engine impacts.                            |
+| `scripts/bundle-web.mjs` | Builds the website and packs `dist/` into `assets/webroot.zip`.                       |
+| `metro.config.js`        | Teaches Metro that `.zip` is a bundled asset.                                         |
+| `app.config.js`          | Dynamic Expo config; reads identity from `game.config.json`, pins the EAS project id. |
+| `eas.json`               | EAS build/submit profiles.                                                            |
 
 ## Prerequisites
 

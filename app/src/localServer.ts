@@ -83,7 +83,8 @@ async function ensureExtracted(): Promise<void> {
 
   // Stale (or first run): wipe any previous extraction and unzip fresh.
   const dir = await FileSystem.getInfoAsync(WEBROOT_DIR);
-  if (dir.exists) await FileSystem.deleteAsync(WEBROOT_DIR, { idempotent: true });
+  if (dir.exists)
+    await FileSystem.deleteAsync(WEBROOT_DIR, { idempotent: true });
   await FileSystem.makeDirectoryAsync(WEBROOT_DIR, { intermediates: true });
 
   const asset = Asset.fromModule(require("../assets/webroot.zip"));
