@@ -1,14 +1,15 @@
 // SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
-// The "SPELL UNLOCKED" modal — the reward moment when spending an INTELLECT
-// point crosses a ×10 milestone (the engine queues the spell in
-// `pendingSpellUnlocks`; see allocateStat). It reveals the new spell with an
-// arcane bloom: a glowing rune-ring behind the icon, the name, its school and
-// mana cost, and a one-line flavor blurb. Dismissing it drains one entry from
-// the queue (`takeSpellUnlock`) and the next unlock, if any, reveals in turn.
+// The power-unlocked modal — the reward moment when a CLASS stat (STR/DEX/INT)
+// crosses a ×10 milestone (the engine queues the power in `pendingSpellUnlocks`;
+// see allocateStat). It reveals the new ART / TECHNIQUE / SPELL with a bloom: a
+// glowing rune-ring behind the icon, the name, its school and mana cost, and a
+// one-line flavor blurb. The kicker names the class ("ART UNLOCKED", …).
+// Dismissing it drains one entry from the queue (`takeSpellUnlock`) and the
+// next unlock, if any, reveals in turn.
 
 import { useEffect, useState, type CSSProperties } from "react";
 
-import { spellDef } from "@game/core";
+import { spellClassOf, spellDef } from "@game/core";
 
 import { PixelText } from "@ui/lib/PixelText.tsx";
 import type { PixelFont } from "@ui/lib/pixel-font.ts";
@@ -16,6 +17,8 @@ import type { PixelFont } from "@ui/lib/pixel-font.ts";
 import { spriteDataUrl, type Sprites } from "./assets.ts";
 import {
   SPELL_CATEGORY_LABEL,
+  SPELL_CLASS_LABEL,
+  SPELL_CLASS_STAT_LABEL,
   SPELL_ELEMENT_DEEP,
   spellColor,
 } from "./spellVisuals.ts";
@@ -32,6 +35,7 @@ export function SpellUnlockOverlay({
   onDismiss: () => void;
 }) {
   const def = spellDef(spellId);
+  const cls = spellClassOf(def);
   const accent = spellColor(def.element);
   const deep = SPELL_ELEMENT_DEEP[def.element] ?? accent;
 
@@ -72,7 +76,7 @@ export function SpellUnlockOverlay({
         <div className="spell-unlock-kicker">
           <PixelText
             font={font}
-            text="SPELL UNLOCKED"
+            text={`${SPELL_CLASS_LABEL[cls]} UNLOCKED`}
             scale={2}
             color={accent}
           />
@@ -93,7 +97,7 @@ export function SpellUnlockOverlay({
         <div className="spell-unlock-meta">
           <PixelText
             font={font}
-            text={`${SPELL_CATEGORY_LABEL[def.category]}   ${def.manaCost} MANA   INT ${def.minInt}`}
+            text={`${SPELL_CATEGORY_LABEL[def.category]}   ${def.manaCost} MANA   ${SPELL_CLASS_STAT_LABEL[cls]} ${def.minStat}`}
             scale={1}
             color="#aab4c0"
           />

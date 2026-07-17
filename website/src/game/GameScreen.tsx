@@ -30,8 +30,6 @@ import {
   autofillSpellSlots,
   bestMedkitTier,
   confirmRespec,
-  effectiveStat,
-  MANA,
   recomputeMaxMana,
   setSpellSlot,
   spellDef,
@@ -263,8 +261,9 @@ type Hud = {
   /** Current mana (ceil) and max — the mana bar + the spell-bar affordability. */
   mana: number;
   maxMana: number;
-  /** True once the hero has an INT-sized pool (past MANA.base) — the mana bar
-   * and spell bar only show for a caster. */
+  /** True once the hero has UNLOCKED at least one power of their class (a
+   * dominant STR/DEX/INT that reached the first ×10 step) — the mana bar and
+   * spell bar only show once there is a real power to put on the bar. */
   isCaster: boolean;
   /** The spell-bar slots (per HUD slot): assigned spell id, recharge fraction
    * (0 = ready), and whether the pool affords it. */
@@ -2698,9 +2697,10 @@ export function GameScreen({
         // The mana pool + spell bar. Mana is coarsened into the change-key so
         // the bar re-renders a few times a second (not every frame); the
         // cooldown wipe reads at tenths — smooth enough for a 2–8s recharge.
-        const effInt = effectiveStat(state, "intelligence");
-        const isCaster = state.player.maxMana > MANA.base;
-        const unlockedSpells = unlockedSpellIds(effInt);
+        // The hero's class list (empty when they have no class) — the bar and
+        // mana pool only show once there is a real power to slot.
+        const unlockedSpells = unlockedSpellIds(state);
+        const isCaster = unlockedSpells.length > 0;
         const spellViews: SpellSlotView[] = state.player.spellSlots.map(
           (id) => {
             if (!id) return { id: null, cooldownFrac: 0, affordable: false };
@@ -2718,7 +2718,7 @@ export function GameScreen({
         );
         const spellUnlocks = [...state.pendingSpellUnlocks];
         const manaPotions = state.player.manaPotions;
-        const spellKey = `${Math.ceil(state.player.mana)}/${state.player.maxMana}/${manaPotions}/${state.player.spellSlots.join(",")}/${spellViews.map((v) => Math.round(v.cooldownFrac * 10)).join("")}/${effInt}/${spellUnlocks.join(",")}`;
+        const spellKey = `${Math.ceil(state.player.mana)}/${state.player.maxMana}/${manaPotions}/${state.player.spellSlots.join(",")}/${spellViews.map((v) => Math.round(v.cooldownFrac * 10)).join("")}/${unlockedSpells.join(",")}/${spellUnlocks.join(",")}`;
         const weapon = state.player.equipment.weapon;
         const weaponWear =
           weapon.durability === undefined

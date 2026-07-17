@@ -1,0 +1,28 @@
+name: spell_crushing_shout
+family: icons
+size: [12, 12]
+description: >
+  The CRUSHING SHOUT melee art icon — a earth-tinted martial glyph.
+subject:
+  kind: spell icon
+  features: a bold earth-tinted motif, centered and outlined
+  accent: earth might
+  flavor: the CRUSHING SHOUT cast-power pictogram
+palette:
+  O: "#0c0e18" # dark outline
+  E: "#e0a35c" # earth bright
+  D: "#8a5a2b" # earth deep
+  H: "#ffd9a0" # earth highlight
+grid: |
+  ............
+  .........OOO
+  .........ODO
+  ..OOO..OOODH
+  .OOEOO.OEEDD
+  OOEHEOOOOEOD
+  OEEEDEO.OEOD
+  OOEEEOOOOEOD
+  .OOEOO.OEEDD
+  ..OOO..OOODH
+  .........OOO
+  ............

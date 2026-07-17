@@ -1,24 +1,20 @@
 // SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
-// Player-CAST spells (see defs/spells.ts): the mana-costed, INT-unlocked powers
-// the hero taps off the HUD spell bar. This module owns the cast path —
-// unlock/cooldown/mana gates, mana spend, and effect resolution — plus the
-// SPIRIT-driven mana/health regen tick. Damage routes through the shared
-// `hitEnemy` funnel at "magic" class (always hits, ignores mob armor) scaled by
-// the same `abilityPowerScale` the abilities and granted spells use, so a
-// spell keeps meaning the same fraction of a level-appropriate healthbar all
-// campaign. Effects reuse the existing `lightning` / `nova` event cues.
+// Player-CAST powers (see defs/spells.ts): the mana-costed, class-unlocked
+// spells / arts / techniques the hero taps off the HUD spell bar. This module
+// owns the cast path — availability/cooldown/mana gates, mana spend, and effect
+// resolution (bolt, nova, rain, heal, shield, slow, self-buff) — plus the
+// SPIRIT-driven mana/health regen tick and the buff-timer tick. Damage routes
+// through the shared `hitEnemy` funnel at "magic" class (always hits, ignores
+// mob armor) scaled by the same `abilityPowerScale` the abilities and granted
+// spells use, so a power keeps meaning the same fraction of a level-appropriate
+// healthbar all campaign. Effects reuse the existing `lightning` / `nova` cues.
 
 import { distanceSq } from "@game/lib/vec.ts";
 import { REGEN, WEAPON } from "./config.ts";
 import { abilityPowerScale } from "./abilities.ts";
 import { enemyDef } from "./defs/enemies/index.ts";
-import {
-  isSpellUnlocked,
-  spellDef,
-  SPELL_STAT,
-  type SpellDef,
-} from "./defs/spells.ts";
-import { effectiveStat, hpRegenPerSec, manaRegenPerSec } from "./items.ts";
+import { spellDef, type SpellDef } from "./defs/spells.ts";
+import { hpRegenPerSec, isSpellAvailable, manaRegenPerSec } from "./items.ts";
 import { hitEnemy } from "./loot.ts";
 import type { Enemy, GameState } from "./types.ts";
 
@@ -63,6 +59,11 @@ function hasEffect(state: GameState, def: SpellDef): boolean {
   if (effect.kind === "bolt") {
     return nearestTarget(state, state.player.pos, effect.range) !== undefined;
   }
+  if (effect.kind === "rain") {
+    return (
+      nearestTarget(state, state.player.pos, effect.castRange) !== undefined
+    );
+  }
   if (effect.kind === "heal") {
     return state.player.hp < state.player.maxHp;
   }
@@ -71,7 +72,8 @@ function hasEffect(state: GameState, def: SpellDef): boolean {
 
 /**
  * Cast the spell in spell-bar slot `slotIndex`. Runs the gates in order —
- * unlocked (effective INT ≥ its `minInt`), off cooldown, enough mana, and it
+ * available (the hero's class, governing stat ≥ its `minStat`), off cooldown,
+ * enough mana, and it
  * would actually do something — refusing with a `spellFizzled` event (nothing
  * spent) on any miss. On success it spends the mana, arms the cooldown, pauses
  * mana regen (`REGEN.manaDelayMs`), books the spell-economy stats, emits
@@ -83,8 +85,7 @@ export function castSpell(state: GameState, slotIndex: number): boolean {
   if (!id) return false;
   const def = spellDef(id);
 
-  const effInt = effectiveStat(state, SPELL_STAT);
-  if (!isSpellUnlocked(def, effInt)) {
+  if (!isSpellAvailable(state, def)) {
     state.events.push({ type: "spellFizzled", spellId: id, reason: "locked" });
     return false;
   }
@@ -134,17 +135,39 @@ function resolveEffect(state: GameState, def: SpellDef): void {
     return;
   }
   if (effect.kind === "nova") {
-    const reachSq = effect.radius * effect.radius;
-    const victims = state.enemies.filter(
-      (e) => isTargetable(state, e) && distanceSq(e.pos, player.pos) <= reachSq,
+    novaBurst(state, player.pos, effect.radius, effect.damage * power);
+    return;
+  }
+  if (effect.kind === "rain") {
+    // The ranged class's AOE: land the burst on the best foe cluster within
+    // `castRange` (its centre is the nearest targetable foe there), so a volley
+    // reaches out across the field rather than blooming at the hero's feet.
+    const target = nearestTarget(state, player.pos, effect.castRange);
+    const center = target ? target.pos : player.pos;
+    novaBurst(state, center, effect.radius, effect.damage * power);
+    return;
+  }
+  if (effect.kind === "buff") {
+    // Refresh to the stronger buff — a re-cast tops up each mult and the timer
+    // rather than stacking (mirrors the shield). The mults reset to 1 when the
+    // timer lapses in `stepRegen`.
+    player.buffMs = Math.max(player.buffMs, effect.durationMs);
+    player.buffDamageMult = Math.max(
+      player.buffDamageMult,
+      effect.damageMult ?? 1,
+    );
+    player.buffHasteMult = Math.max(
+      player.buffHasteMult,
+      effect.hasteMult ?? 1,
+    );
+    player.buffSpeedMult = Math.max(
+      player.buffSpeedMult,
+      effect.speedMult ?? 1,
     );
     state.events.push({
-      type: "nova",
-      pos: { ...player.pos },
-      radius: effect.radius,
+      type: "playerBuffed",
+      durationMs: effect.durationMs,
     });
-    const damage = effect.damage * power;
-    for (const victim of victims) hitEnemy(state, victim, damage, "magic");
     return;
   }
   if (effect.kind === "heal") {
@@ -180,6 +203,27 @@ function resolveEffect(state: GameState, def: SpellDef): void {
     if (distanceSq(enemy.pos, player.pos) > reachSq) continue;
     enemy.chillMs = effect.durationMs;
     enemy.chillFactor = effect.factor;
+  }
+}
+
+/**
+ * An AOE burst centred at `pos` — flash the `nova` cue and deal `damage`
+ * (already power-scaled) to every targetable foe within `radius`. Shared by the
+ * hero-centred `nova` (magic/melee) and the ranged `rain` (centred on a distant
+ * cluster); both route damage through the shared funnel at "magic" class.
+ */
+function novaBurst(
+  state: GameState,
+  pos: { x: number; y: number },
+  radius: number,
+  damage: number,
+): void {
+  const reachSq = radius * radius;
+  state.events.push({ type: "nova", pos: { ...pos }, radius });
+  for (const enemy of state.enemies) {
+    if (!isTargetable(state, enemy)) continue;
+    if (distanceSq(enemy.pos, pos) > reachSq) continue;
+    hitEnemy(state, enemy, damage, "magic");
   }
 }
 
@@ -246,6 +290,17 @@ export function stepRegen(state: GameState, dt: number, dtMs: number): void {
   if (player.shieldMs > 0) {
     player.shieldMs = Math.max(0, player.shieldMs - dtMs);
     if (player.shieldMs === 0) player.shieldHp = 0;
+  }
+
+  // A martial self-buff ebbs with its timer; when it lapses the combat mults
+  // (damage/haste/speed) snap back to neutral 1.
+  if (player.buffMs > 0) {
+    player.buffMs = Math.max(0, player.buffMs - dtMs);
+    if (player.buffMs === 0) {
+      player.buffDamageMult = 1;
+      player.buffHasteMult = 1;
+      player.buffSpeedMult = 1;
+    }
   }
 
   // Per-spell cooldowns tick down.

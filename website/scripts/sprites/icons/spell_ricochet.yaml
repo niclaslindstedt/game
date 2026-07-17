@@ -1,0 +1,28 @@
+name: spell_ricochet
+family: icons
+size: [12, 12]
+description: >
+  The RICOCHET ranged technique icon — a storm-tinted ranged glyph.
+subject:
+  kind: spell icon
+  features: a bold storm-tinted motif, centered and outlined
+  accent: storm precision
+  flavor: the RICOCHET cast-power pictogram
+palette:
+  O: "#0c0e18" # dark outline
+  E: "#7ec8ff" # storm bright
+  D: "#2f6fd0" # storm deep
+  H: "#e6f4ff" # storm highlight
+grid: |
+  ............
+  .......OOOO.
+  .......OEEOO
+  .......OOOHO
+  OOO...OOEEHO
+  ODOOOOOEOOHO
+  OEEEEEEOOOOO
+  ODOOOOOEOOHO
+  OOO...OOEEHO
+  .......OOOHO
+  .......OEEOO
+  .......OOOO.
