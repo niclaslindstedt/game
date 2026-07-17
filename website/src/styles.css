@@ -209,9 +209,13 @@ body {
   display: flex;
   flex-direction: column;
   gap: 0.4rem;
-  /* No outer padding — the XP strip hugs the very top edge, edge to edge; the
-     status row below carries its own safe-area padding. */
-  padding: 0;
+  /* Clear the top safe area (iOS notch / Dynamic Island): the whole HUD — the
+     XP strip, the portrait unit, AND the minimap, all children here — is pushed
+     down by the inset so nothing hides behind the island. On a display with no
+     inset this is 0, so the XP strip still hugs the very top edge. The status
+     row below carries the LEFT/RIGHT safe-area padding (for a landscape island
+     on the side). */
+  padding: env(safe-area-inset-top) 0 0;
   pointer-events: none;
 }
 
