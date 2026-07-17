@@ -317,10 +317,10 @@ function RampageRing({ stage }: { stage: number }) {
   );
 }
 
-/** The live kill tally as a bare number, jolting on every kill so a fresh frag
- * is felt. The jolt scales with the recent kill rate: a lone kill is a small
- * nudge, but a burst — several mobs downed inside a one-second window — stacks
- * into a hard, wide shake. */
+/** The live kill tally, jolting on every kill so a fresh frag is felt. The jolt
+ * scales with the recent kill rate: a lone kill is a small nudge, but a burst —
+ * several mobs downed inside a one-second window — stacks into a hard, wide
+ * shake. Reads "N kills" in the minimap's top-right corner. */
 function KillCounter({ font, kills }: { font: PixelFont; kills: number }) {
   const ref = useRef<HTMLDivElement>(null);
   const prevKills = useRef(kills);
@@ -354,7 +354,12 @@ function KillCounter({ font, kills }: { font: PixelFont; kills: number }) {
   return (
     <div className="hud-minimap-kills" aria-hidden>
       <div ref={ref} className="hud-kills">
-        <PixelText font={font} text={String(kills)} scale={2} color="#d9a0f0" />
+        <PixelText
+          font={font}
+          text={`${kills} kills`}
+          scale={2}
+          color="#d9a0f0"
+        />
       </div>
     </div>
   );
@@ -388,9 +393,8 @@ export function Minimap({
         <canvas ref={canvasRef} className="hud-minimap-canvas" />
       </button>
       <RampageRing stage={menaceStage} />
-      {/* Timer plate — inner top, WoW-clock position; doubles as the PAUSE
-          target the old clock owned (stopPropagation so it doesn't also open
-          the map). */}
+      {/* Timer plate — inner top-LEFT; doubles as the PAUSE target the old
+          clock owned (stopPropagation so it doesn't also open the map). */}
       <button
         type="button"
         className="hud-minimap-timer"
@@ -402,7 +406,7 @@ export function Minimap({
       >
         <PixelText font={font} text={timerText} scale={2} />
       </button>
-      {/* Kill count — inner bottom, a bare number that jolts on each frag.
+      {/* Kill count — inner top-RIGHT, "N kills", jolting on each frag.
           Non-interactive so a tap here still opens the map. */}
       <KillCounter font={font} kills={kills} />
     </div>

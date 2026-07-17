@@ -359,13 +359,12 @@ body {
   overflow: visible;
 }
 
-/* Timer plate — inner top center. Doubles as the PAUSE tap-target (the tap the
+/* Timer plate — inner top-LEFT. Doubles as the PAUSE tap-target (the tap the
    old clock owned); reset the native button chrome. */
 .hud-minimap-timer {
   position: absolute;
   top: 0.15rem;
-  left: 50%;
-  transform: translateX(-50%);
+  left: 0.28rem;
   padding: 0.08rem 0.35rem;
   background: rgba(11, 13, 16, 0.72);
   border: 0;
@@ -379,15 +378,14 @@ body {
   cursor: pointer;
 }
 
-/* Kill count — inner bottom center, a bare number. A positioning wrapper so
-   the inner .hud-kills can own the shake transform without fighting the
-   centering translate. Non-interactive so a tap still opens the map. */
+/* Kill count — inner top-RIGHT, "N kills". A positioning wrapper so the inner
+   .hud-kills can own the shake transform without fighting the placement.
+   Non-interactive so a tap still opens the map. */
 .hud-minimap-kills {
   position: absolute;
-  bottom: 0.12rem;
-  left: 50%;
-  transform: translateX(-50%);
-  padding: 0.04rem 0.32rem;
+  top: 0.15rem;
+  right: 0.28rem;
+  padding: 0.06rem 0.32rem;
   background: rgba(11, 13, 16, 0.72);
   border-radius: 5px;
   pointer-events: none;
