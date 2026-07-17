@@ -47,6 +47,7 @@ import {
   nudgeBalance,
 } from "./balanceKnobs.ts";
 import { HELP_LINES } from "./copy.ts";
+import { SEED_TIERS, seedTierCharacters } from "./seedCharacters.ts";
 
 import {
   topCampaigns,
@@ -119,6 +120,7 @@ type MenuScreen =
   | "export"
   | "developer"
   | "balance"
+  | "seed"
   | "arsenal"
   | "achievements"
   | "help";
@@ -448,7 +450,8 @@ export function TitleScreen({
   // The screens whose row lists can genuinely outgrow a short viewport — the
   // level ladder and the developer BALANCE knobs — share the measure-then-cap
   // treatment (see the levelsOverflow effect below).
-  const tallMenu = screen === "levels" || screen === "balance";
+  const tallMenu =
+    screen === "levels" || screen === "balance" || screen === "seed";
   // Settings live in a plain singleton; mirror a tick so labels re-render.
   const [settingsTick, setSettingsTick] = useState(0);
 
@@ -575,6 +578,16 @@ export function TitleScreen({
     });
     input.click();
   }, [runImport]);
+
+  // DEVELOPER → SEED CHARACTERS: mint the melee/ranged/magic specimens for a
+  // tier (or the whole 3×4 matrix with no tier) straight into the roster, then
+  // refresh the roster snapshot and report the count under the menu.
+  const runSeed = useCallback((tier: (typeof SEED_TIERS)[number] | null) => {
+    playUiSound(synth, "confirm");
+    const count = seedTierCharacters(tier);
+    setExportTick((t) => t + 1);
+    setTransferNotice({ tone: "info", text: `SEEDED ${count} HEROES` });
+  }, []);
 
   const entries: MenuEntry[] = useMemo(() => {
     const backTo = (target: MenuScreen, at = 0): MenuEntry => ({
@@ -998,6 +1011,17 @@ export function TitleScreen({
             setCursor(0);
           },
         },
+        {
+          label: "SEED CHARACTERS",
+          aria: "developer-seed",
+          blurb: "MINT MELEE / RANGED / MAGIC HEROES AT THE HIGH TIERS",
+          action: () => {
+            playUiSound(synth, "confirm");
+            setTransferNotice(null);
+            setScreen("seed");
+            setCursor(0);
+          },
+        },
         onOffRow(
           "debug",
           "DEBUG MODE",
@@ -1081,6 +1105,29 @@ export function TitleScreen({
         // Land back on the BALANCE row in DEVELOPER (after SELECT LEVEL and
         // VIEW ARSENAL).
         backTo("developer", 2),
+      ];
+    }
+    if (screen === "seed") {
+      // Mint ready-to-play specimens into the roster (see seedCharacters.ts):
+      // SEED ALL drops the whole melee/ranged/magic × four-tier matrix; each
+      // tier row drops just that tier's three lane builds. The heroes appear
+      // under PLAY → LOAD GAME.
+      return [
+        {
+          label: "SEED ALL",
+          aria: "seed-all",
+          blurb: "EVERY BUILD AT EVERY TIER - 12 HEROES",
+          action: () => runSeed(null),
+        },
+        ...SEED_TIERS.map((tier) => ({
+          label: `${tier.label} (LV ${tier.level})`,
+          aria: `seed-${tier.id}`,
+          blurb: "MELEE, RANGED AND MAGIC AT THIS TIER",
+          action: () => runSeed(tier),
+        })),
+        // Land back on the SEED CHARACTERS row in DEVELOPER (after SELECT
+        // LEVEL, VIEW ARSENAL and BALANCE).
+        backTo("developer", 3),
       ];
     }
     if (screen === "data") {
@@ -1388,6 +1435,7 @@ export function TitleScreen({
     toggleExportPick,
     exportPicked,
     pickImport,
+    runSeed,
   ]);
 
   // The HIGH SCORES board is steered on two axes rather than a cursor list:
@@ -1954,6 +2002,14 @@ export function TitleScreen({
               color="#7ef0c8"
             />
           )}
+          {screen === "seed" && (
+            <PixelText
+              font={font}
+              text="DEVELOPER - SEED CHARACTERS"
+              scale={2}
+              color="#7ef0c8"
+            />
+          )}
 
           {screen === "help" && (
             <div className="title-help">
@@ -2303,21 +2359,24 @@ export function TitleScreen({
 
           {/* The import/export result line, under the SETTINGS - DATA menu and
               the EXPORT CHARACTER picker. */}
-          {(screen === "data" || screen === "export") && transferNotice && (
-            <p
-              className={`title-notice ${transferNotice.tone}`}
-              role="status"
-              aria-live="polite"
-            >
-              <PixelText
-                font={font}
-                text={transferNotice.text}
-                scale={2}
-                color={transferNotice.tone === "error" ? "#ff6d6d" : "#7ef0c8"}
-                maxWidth={24}
-              />
-            </p>
-          )}
+          {(screen === "data" || screen === "export" || screen === "seed") &&
+            transferNotice && (
+              <p
+                className={`title-notice ${transferNotice.tone}`}
+                role="status"
+                aria-live="polite"
+              >
+                <PixelText
+                  font={font}
+                  text={transferNotice.text}
+                  scale={2}
+                  color={
+                    transferNotice.tone === "error" ? "#ff6d6d" : "#7ef0c8"
+                  }
+                  maxWidth={24}
+                />
+              </p>
+            )}
         </div>
       )}
 
