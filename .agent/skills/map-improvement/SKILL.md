@@ -61,8 +61,18 @@ the user confirms the existing description is right, say so and keep it.
      `--actual` scatter leave an open field?
 3. **Improve** the YAML — retune walls/packs/tempo, add or move a safe/quiet
    zone, place a chest + a pinned unique in a dead pocket, adjust merchant spawns,
-   reshape the path. Change one lever at a time so the next render attributes the
-   effect.
+   reshape the path, **or retune the per-difficulty `mobLevels`** (see below).
+   Change one lever at a time so the next render attributes the effect.
+
+   **Difficulty tuning is `mobLevels`, not global config.** Below JESUS every
+   mob's level is HARD-CODED in the level spec (level-default tuple + per-spawner
+   override; pinned elites/bosses hard-code `level` + base `hp`) — see the
+   `level-design` skill's "Mob levels are HARD-CODED per difficulty" section for
+   the shape and the full lever list. The ladder is **hero character levels**,
+   start→finish: Easy 1→32, Medium 1→34, Hard 1→36, Nightmare 40→56 (opens HIGH —
+   a grind gate, mobs ~40 even on map 1), Jesus 58→70 (player-relative, never
+   authored). Author each map's `mobLevels` to the hero's intended level band ON
+   that map so the con system self-regulates the hero onto the ladder.
 4. **Re-render, re-evaluate, loop** until it matches the intent.
 5. **Present before/after.** Show the user the before and after design maps (and
    heatmaps if pacing changed) side by side, and get sign-off before shipping.
@@ -74,8 +84,21 @@ A shipped level is content — treat the change like `level-design` says:
 - `make levels` compiles clean; then **accept the new baseline** for the
   round-trip guard: `node scripts/update-level-snapshot.mjs` (review the snapshot
   diff — it's the record of exactly what you changed).
-- Re-run the pacing wiring if you touched population/loot
-  (`scripts/leveling-curve.mjs --by-level`, `scripts/weapon-stats.mjs --coverage`).
+- **RE-TUNE XP after the redesign (required if you touched the roster).** Changing
+  counts, spawner mix, or mob bands changes how much XP a clear pays, so the hero
+  drifts off the intended ladder. Run the programmatic full-clear check and drive
+  every rung to OK (±1 of easy 32 / medium 34 / hard 36 / nightmare 56):
+
+  ```sh
+  node scripts/leveling-curve.mjs --targets
+  ```
+
+  Levers, cheapest first: the map's `mobLevels` band, then `XP_CAP.capByDifficulty`
+  (config.ts), then mob totals (~800–1200 killable per map), then the global con
+  slopes / kills-per-level curve (touch last). See the `level-design` skill's
+  "Re-tune XP after EVERY map redesign" section for the full procedure.
+- Re-run the rest of the pacing wiring if you touched population/loot
+  (`scripts/weapon-stats.mjs --coverage`).
 - If you changed any dialogue/story text, `docs/manuscript.md` + `docs/story.md`
   update in the same change (user-confirmed — CLAUDE.md "Story & dialogue").
 - `simulate-run` + `playtest` at 844×390 to feel it in the running game, not just

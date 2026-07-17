@@ -96,6 +96,89 @@ Optional `LevelDef` fields (all neutral when omitted; see `src/game/zones.ts`):
    cumulative-pool rule (the bunker idiom): later maps re-list every earlier
    stage's bases.** Forge any new base via `weapon-system`.
 
+## Mob levels are HARD-CODED per difficulty (`mobLevels`)
+
+Below JESUS, a mob's level is **authored in the level spec, not floated off the
+player's level.** Every level MUST declare a `mobLevels` tuple — the checker
+rejects one that doesn't — and JESUS alone keeps the old player-relative
+scaling (a JESUS hero has out-levelled every hand-authored number).
+
+- **Shape:** `mobLevels: [easy, medium, hard, nightmare]` — four entries, one per
+  non-JESUS rung in ladder order. Each entry is an exact level (`5`) or a rolled
+  `[min, max]` range (`[3, 4]`), rolled per spawn. The resolved level drives BOTH
+  the mob's HP (via `mobHpLevelFactor`) and its loot (tier gates, dropped ilvl),
+  so a spawn is internally consistent.
+- **Level default + per-spawner override:** the level's top-level `mobLevels` is
+  the default every regular spawn reads (the opening scatter, `waves`, `packs`,
+  and any spawn point without its own). A `spawners:` point may set its own
+  `mobLevels` to RAMP within the map — a light opener, a hotter boss bay.
+- **Pinned elites/bosses (`spawns` with `at`) hard-code BOTH `level` and `hp`**,
+  each a per-difficulty tuple (JESUS relative). `level` sets the set piece's
+  `mlvl`; `hp` is its BASE healthbar, which the live power-match still multiplies
+  on top. Both are required on every pinned set piece.
+
+### The intended HERO ladder — mob levels TRACK it
+
+The numbers below are **hero character levels** (start → finish per difficulty),
+NOT abstract mob tiers. The campaign is meant to level the hero along this ladder:
+
+| Rung | Hero start → finish | Notes |
+| --- | --- | --- |
+| Easy | **1 → 32** | clear any of easy/medium/hard to unlock nightmare |
+| Medium | **1 → 34** | |
+| Hard | **1 → 36** | |
+| Nightmare | **40 → 56** | entered after a grind (36→40); mobs open at ~40, not 1 |
+| Jesus | 58 → 70 | player-relative; do NOT author mob levels for it |
+
+**Mob levels track the hero.** Slice each rung's start→finish across the five
+campaign maps and author every map's `mobLevels` to the hero's intended level
+band ON that map (spacez ≈ easy 1–7 / nightmare 40–43; eastworld ≈ easy 26–32 /
+nightmare 53–56). Mobs near the hero's level make the WoW-style con system
+(`levelDiffXpMult`, config `LEVELING.xpAbove/BelowPlayerPerLevel`) self-regulate:
+fighting up pays a bonus, fighting down decays to a grey-mob pittance, so the
+hero's level converges to the map's mob band and replaying an outgrown map barely
+levels him (anti-farm). Ramp the per-spawner `mobLevels` up within a map (light
+opener → hotter boss bay); set the level default near the map's band. **Nightmare
+mobs on level 1 are ~40, not ~12** — nightmare is a separate high band, not a
+multiplier on the early game.
+
+### Re-tune XP after EVERY map redesign (required)
+
+Changing a map's roster (counts, spawner mix, mob bands) changes how much XP a
+clear pays, so the hero drifts off the ladder. After any redesign, RE-TUNE so a
+full clear lands the finish levels, using the programmatic full-clear check:
+
+```sh
+node scripts/leveling-curve.mjs --targets   # full clears per difficulty vs the ladder
+```
+
+It prints each rung's per-map landing and the finish vs target (OK / LOW / HIGH).
+Drive every rung to **OK** (±1 of easy 32 / medium 34 / hard 36 / nightmare 56)
+by turning these levers, cheapest first:
+
+- **Mob bands** (`mobLevels`) — the primary lever. Nudge a map's band up/down so
+  the hero converges onto the intended level there (the con system does the rest).
+- **Per-map XP caps** (`XP_CAP.capByDifficulty` in config.ts) — the `first`→`last`
+  band interpolated across the campaign; set each rung a touch ABOVE its finish so
+  the soft-cap fade doesn't clamp the hero UNDER target.
+- **Mob totals** — aim ~800–1200 killable mobs per map (a full-clear battle); the
+  cap, not the head-count, bounds leveling, so more mobs ≠ more levels past the cap.
+- **The con slopes / kills-per-level curve** (`LEVELING`) — global; touch last, it
+  moves every rung and JESUS.
+
+Then confirm with a real sim (`scripts/simulate-run.mjs --full`), not just the
+calculator. Keep the calculator honest: `killOne` (analytic.ts) and the roster
+walk both resolve mob level through the hard-coded bands — if you add a new spawn
+SOURCE, teach both.
+
+Verify a spawn dump too (`createGame(seed, id, "nightmare")` → read `enemy.mlvl`):
+nightmare lands in-band, `"jesus"` still reads player-relative.
+
+The engine plumbing lives in `menace.ts` (`resolveMobScaling`, `rollMobLevel`,
+`hardMobHpScale`, `mobLevelMidpoint`), stamped at every spawn site
+(`create.ts`, `spawners.ts`, the wave/pack spawners in `step.ts`); the schema
+enforcing the tuples is `level-schema.mjs`.
+
 ## The cross-cutting wiring — where new maps actually break
 
 - **Pacing caps come from the calculator, not intuition.** Run

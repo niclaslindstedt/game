@@ -13,8 +13,11 @@ import { clamp, distance } from "@game/lib/vec.ts";
 import type { Vec2 } from "@game/lib/vec.ts";
 import { BUILD_ROTATION, STAT_BUILDS } from "./builds.ts";
 import type { StatBuild } from "./builds.ts";
-import { MANA } from "./config.ts";
+import { MANA, PLAYER } from "./config.ts";
+import { nextPathWaypoint, onPathLevel, pathWalked } from "./path.ts";
+import { blockedByObstacle, insideObstacle } from "./obstacles.ts";
 import { enemyDef } from "./defs/enemies/index.ts";
+import { levelDef } from "./defs/levels/index.ts";
 import { weaponDef } from "./defs/equipment.ts";
 import { isSpellUnlocked, spellDef } from "./defs/spells.ts";
 import {
@@ -90,6 +93,28 @@ export const BOT_PROFILES: BotProfile[] = ["auto", ...STAT_BUILDS];
 export type Bot = {
   strategy: BotStrategy;
   profile: BotProfile;
+  /**
+   * Anti-wedge memory for the {@link unstuckInput} stall detector. Mutated by
+   * `botAct` each tick — it lives on the BOT, never on `GameState`, so a botted
+   * run stays exactly as deterministic as a recorded human one (same seed +
+   * fresh bot → same memory evolution). Lazily created on the first tick.
+   */
+  nav?: {
+    /** Hero position at the last progress check. */
+    lastPos: Vec2;
+    /** `state.stats.timeMs` at the last progress check. */
+    lastTimeMs: number;
+    /** How long (ms) the hero has been all-but-frozen while unable to fight. */
+    stuckMs: number;
+    /** True while COMMITTED to the escape sweep — held (with hysteresis) until he
+     * has physically moved clear of the wedge, so a full sweep can round a wall
+     * instead of aborting the instant he twitches and flees back in. */
+    escaping: boolean;
+    /** `timeMs` the current escape began (drives which heading is swept). */
+    escapeStartMs: number;
+    /** Where the escape began — the exit baseline (moved far enough → free). */
+    escapeStartPos: Vec2;
+  };
 };
 
 export function createBot(
@@ -111,6 +136,23 @@ const CONTACT_DODGE_RADIUS = 46;
  * instead and gives ground on foot (it can't swing mid-air, so it doesn't hop
  * to dodge in the DPS phase — only to ESCAPE an encirclement). */
 const GRASP_STANDOFF = 72;
+
+/** How hard the intended-path heading biases the survivor's retreat bearing (a
+ * fraction of the unit away-from-pack vector). High enough that backing off the
+ * pack drifts the hero down the corridor toward the next waypoint, low enough
+ * that dodging the horde still wins when the waypoint lies straight through it. */
+const PATH_RETREAT_BIAS = 0.9;
+
+/** On a path level, how close (world px) the hero must be to the boss to LOCK
+ * onto it and fight it down rather than kite its adds — a boss-room-sized ring,
+ * so he commits the moment he's in the arena even if a straggler waypoint went
+ * untagged. */
+const BOSS_LOCK_RANGE = 300;
+
+/** A spawn point still owing mobs within this range keeps the hero CLEARING this
+ * patch before the path lets him advance (the level's "clear the area, then move
+ * on" contract) — so he levels up on the way instead of rushing under-levelled. */
+const SPAWNER_CLEAR_RANGE = 540;
 /** Enemies within this ring count toward being SURROUNDED. */
 const SURROUND_RADIUS = 150;
 /** This many foes packed inside SURROUND_RADIUS = punch out through the gap. */
@@ -181,6 +223,24 @@ export function botAct(bot: Bot, state: GameState): GameInput {
     // With only untouchable apparitions left on the board there is no foe
     // to fight — push for the objective instead of chasing a hallucination.
     const foe = nearestEnemy(state);
+    // DISARMED (the scripted opening strike hasn't put the weapon in his hand
+    // yet): close on the nearest foe so the vanguard's contact fires the strike
+    // and arms him. Path-marching off toward the objective would strand him
+    // unarmed for the whole run — the weapon only comes from that first strike.
+    if (state.player.disarmed) {
+      return foe ? steer(state, foe.pos) : idleInput();
+    }
+    // LAST-RESORT UNSTUCK: if he's made no progress for a while and has nothing
+    // he can reach to fight, the strategy has wedged him — override it with the
+    // deterministic escape sweep until he's moving again. (Also keeps the
+    // progress bookkeeping, so it must run before every strategy branch.)
+    const escape = unstuckInput(bot, state);
+    if (escape) return escape;
+    // Dodge a telegraphed set-piece move (a rushing charge, a ground slam) the
+    // instant one threatens — stepping off the line beats whatever the strategy
+    // below would do, so the hero doesn't eat a boss's rush while planted on it.
+    const dodge = dodgeTelegraph(state);
+    if (dodge) return dodge;
     switch (bot.strategy) {
       case "rush":
         return foe ? steer(state, foe.pos) : pushBoss(state);
@@ -378,13 +438,20 @@ function botLane(state: GameState): WeaponClass {
  * it can never touch; a ranged loadout still keeps its distance.
  */
 function pushBoss(state: GameState, jumpTravel = false): GameInput {
+  const jump = jumpTravel && state.player.z === 0;
+  // Follow the level's intended path first: steer STRAIGHT to the next waypoint
+  // (no weapon-range hold-off — a waypoint is a travel node to walk onto, not a
+  // foe to fight) so the runner rounds the walls instead of beelining the boss
+  // through them. `advancePath` retires each node as he reaches it; once the
+  // path is walked, `nextPathWaypoint` is null and he closes on the boss below.
+  const waypoint = travelWaypoint(state);
+  if (waypoint) return navSteer(state, waypoint, jump);
   const boss = state.enemies.find((e) => enemyDef(e.defId).role === "boss");
   const target = boss?.pos ?? furthestLandmark(state);
   if (!target) return idleInput();
   const d = distance(state.player.pos, target);
-  const jump = jumpTravel && state.player.z === 0;
   const hold = weaponDef(state.player.equipment.weapon.defId).range * 0.7;
-  if (d > hold + 60) return steer(state, target, jump);
+  if (d > hold + 60) return navSteer(state, target, jump);
   return steer(state, holdOff(state, target, hold), jump);
 }
 
@@ -409,12 +476,20 @@ function survive(state: GameState, posture: Posture): GameInput {
   const tune = POSTURE_TUNING[posture];
   const near = threatsWithin(state, THREAT_RADIUS);
 
-  // 1. Breathing room: grab a pickup within reach, else advance on the boss.
+  // A spawn point still owing mobs nearby means this patch ISN'T cleared yet —
+  // the hero holds and drains it before the path lets him move on (the "stick
+  // around until no spawn points in aggro range" clear rule), so he levels up on
+  // the way instead of rushing to the boss under-levelled. Null on wave levels.
+  const spawner = activeSpawnerNear(state);
+
+  // 1. Breathing room: grab a pickup within reach; else, if a spawn point here
+  //    is still emitting, close on it to trip/drain the rest; else advance.
   if (near.length === 0) {
     const item = nearestItem(state);
     if (item && distance(player.pos, item.pos) < ITEM_REACH) {
       return steer(state, item.pos);
     }
+    if (spawner) return navSteer(state, spawner, true);
     return pushBoss(state, true);
   }
 
@@ -434,7 +509,34 @@ function survive(state: GameState, posture: Posture): GameInput {
     (e) => distance(e.pos, player.pos) < SURROUND_RADIUS,
   );
   const lowHp = player.hp < player.maxHp * tune.fleeHp;
-  if (lowHp || (packed.length >= tune.surround && isEncircled(state, packed))) {
+  // BOSS LOCK. On a path level, once the boss is awake, the whole route is
+  // walked, or the hero has closed to within `BOSS_LOCK_RANGE`, lock onto the
+  // BOSS and fight it down. Deliberately the boss ONLY — the elites along the
+  // way are marched PAST (they are optional; stopping to finish each one bogs
+  // the hero in the wave grind and he never reaches the boss). Committing is
+  // safe: the horde crawls during a set-piece fight (`mobPursuitNearElite`, 10%
+  // on easy), so he can plant and DPS rather than kite.
+  const bossEnemy = state.enemies.find(
+    (e) => enemyDef(e.defId).role === "boss",
+  );
+  const lockTarget =
+    onPathLevel(state) &&
+    bossEnemy !== undefined &&
+    (bossEnemy.awake === true ||
+      pathWalked(state) ||
+      distance(player.pos, bossEnemy.pos) < BOSS_LOCK_RANGE)
+      ? bossEnemy
+      : undefined;
+  // Emergency bail: low on HP (heal), or ENCIRCLED with no clean lane out. A
+  // hero locked on the boss does NOT bail on encirclement — the crawling horde
+  // always rings him, so fleeing every ring would forfeit the kill; he holds and
+  // only breaks to HEAL when actually bleeding, then re-commits.
+  if (
+    lowHp ||
+    (!lockTarget &&
+      packed.length >= tune.surround &&
+      isEncircled(state, packed))
+  ) {
     // A medkit within reach is worth the detour when we're bleeding.
     if (lowHp) {
       const item = nearestItem(state);
@@ -446,7 +548,33 @@ function survive(state: GameState, posture: Posture): GameInput {
         return steer(state, item.pos, grounded);
       }
     }
-    return steer(state, bestEscapeTarget(state, near), grounded);
+    return navSteer(state, bestEscapeTarget(state, near), grounded);
+  }
+
+  // 2.4. Fight the locked set piece down — hold at weapon range and press it,
+  //    hopping through contact with a ranged loadout — instead of kiting past.
+  if (lockTarget) {
+    const w = weaponDef(player.equipment.weapon.defId);
+    const lockHop =
+      w.projectile !== undefined && grounded && nearestD < CONTACT_DODGE_RADIUS;
+    return steer(state, holdOff(state, lockTarget.pos, w.range * 0.7), lockHop);
+  }
+
+  // 2.5. MARCH THE INTENDED PATH — but NOT while a spawn point here is still
+  //    owing mobs (`spawner`): the hero holds and clears this patch first, so he
+  //    levels on the way rather than rushing to the boss under-levelled. With the
+  //    patch clear (or on a wave level), push toward the next waypoint and let
+  //    the auto-weapon carve through the front line instead of standing to trade
+  //    blows with the endless wave (a walled level never clears from a
+  //    standstill). A ranged/magic loadout HOPS through contact; a melee one
+  //    marches on foot so it can keep swinging. Falls through to the edge-hug
+  //    once the path is walked or on a level that authors none.
+  const marchTo = spawner ? null : travelWaypoint(state);
+  if (marchTo) {
+    const canHop =
+      weaponDef(player.equipment.weapon.defId).projectile !== undefined;
+    const hopMarch = canHop && grounded && nearestD < CONTACT_DODGE_RADIUS;
+    return navSteer(state, marchTo, hopMarch);
   }
 
   // 3. HUG THE PACK'S EDGE. Stay just outside the nearest body's grasp so the
@@ -467,7 +595,7 @@ function survive(state: GameState, posture: Posture): GameInput {
   // The posture scales the hold: `flee` backs off well beyond grasp, `aggro`
   // hugs in tight so the front line stays in weapon reach.
   const standoff = baseStandoff * tune.standoffMul;
-  const away = awayFromPack(state, near);
+  const away = awayFromPack(state, near, waypointHeading(state));
   // A melee hero can't swing mid-air — the blade is stayed above
   // JUMP.dodgeHeight (see stepWeapon) — so hopping to dodge contact in the
   // DPS-hugging phase would only forfeit his swings; he gives ground on FOOT
@@ -489,13 +617,18 @@ function survive(state: GameState, posture: Posture): GameInput {
     );
   }
   if (packed.length <= 1) {
-    // Field near him is thin → close on the boss to actually clear the map,
-    // stopping at the posture's standoff (aggro presses closest, flee farthest).
-    return steer(
-      state,
-      holdOff(state, bossPos(state) ?? nearest.pos, standoff),
-      hop,
-    );
+    // Field near him is thin → advance the map. Follow the intended path when
+    // there's a waypoint left (steer straight onto it, so the drift-while-
+    // fighting still rounds the walls); otherwise close on the boss, stopping at
+    // the posture's standoff (aggro presses closest, flee farthest).
+    const waypoint = travelWaypoint(state);
+    return waypoint
+      ? navSteer(state, waypoint, hop)
+      : steer(
+          state,
+          holdOff(state, bossPos(state) ?? nearest.pos, standoff),
+          hop,
+        );
   }
   if (posture === "aggro") {
     // Keep the pressure on — hold at fighting range of the nearest body rather
@@ -514,9 +647,84 @@ function survive(state: GameState, posture: Posture): GameInput {
   );
 }
 
+/**
+ * A dodge input when a set-piece's TELEGRAPHED move (mechanics.ts) is about to
+ * land on the hero — else null. Every dangerous move roots the mob for a
+ * readable windup, so a competent player (and the bot) reads it and gets clear:
+ *   • SLAM — an AoE around the mob: step straight out of its `radius` ring.
+ *   • CHARGE — a dash down a locked bearing at the hero: sidestep PERPENDICULAR
+ *     off the dash line (handled during the windup AND while the dash is in
+ *     flight). Standing planted on a rushing boss and eating the hit is what
+ *     kept the finisher from ever landing. Highest priority in `botAct`.
+ */
+function dodgeTelegraph(state: GameState): GameInput | null {
+  const player = state.player;
+  const grounded = player.z === 0;
+  for (const e of state.enemies) {
+    const mech = e.mech;
+    if (!mech) continue;
+    const def = enemyDef(e.defId);
+    const slamR = def.mechanics?.slam?.radius;
+    if (mech.telegraph?.kind === "slam" && slamR !== undefined) {
+      const dx = player.pos.x - e.pos.x;
+      const dy = player.pos.y - e.pos.y;
+      const d = Math.hypot(dx, dy) || 1;
+      if (d < slamR + 28) {
+        return steer(
+          state,
+          {
+            x: player.pos.x + (dx / d) * 140,
+            y: player.pos.y + (dy / d) * 140,
+          },
+          grounded,
+        );
+      }
+    }
+    // A charge's locked bearing — from the windup telegraph, or the live dash.
+    const dir =
+      mech.telegraph?.kind === "charge"
+        ? mech.telegraph.dir
+        : mech.dashMs && mech.dashMs > 0
+          ? mech.dashDir
+          : undefined;
+    if (dir) {
+      const tx = player.pos.x - e.pos.x;
+      const ty = player.pos.y - e.pos.y;
+      const along = tx * dir.x + ty * dir.y; // hero's projection onto the dash
+      if (along > -20) {
+        const perpX = tx - dir.x * along;
+        const perpY = ty - dir.y * along;
+        if (Math.hypot(perpX, perpY) < 46) {
+          // On the dash line — step to whichever side he's already leaning.
+          let px = -dir.y;
+          let py = dir.x;
+          if (perpX * px + perpY * py < 0) {
+            px = -px;
+            py = -py;
+          }
+          return steer(
+            state,
+            { x: player.pos.x + px * 150, y: player.pos.y + py * 150 },
+            grounded,
+          );
+        }
+      }
+    }
+  }
+  return null;
+}
+
 /** A unit vector pointing away from the local pack, weighted so the NEAREST
- * bodies dominate the bearing (and a gap in a ring pulls the hero toward it). */
-function awayFromPack(state: GameState, near: Enemy[]): Vec2 {
+ * bodies dominate the bearing (and a gap in a ring pulls the hero toward it).
+ * When `prefer` is given (a unit heading toward the intended-path waypoint) the
+ * retreat is BIASED toward it, so backing off the pack also walks the hero down
+ * the corridor — yet `away` stays dominant, so a waypoint that lies through the
+ * pack never drags him INTO it. */
+function awayFromPack(
+  state: GameState,
+  near: Enemy[],
+  prefer?: Vec2 | null,
+): Vec2 {
   const pos = state.player.pos;
   let ax = 0;
   let ay = 0;
@@ -528,8 +736,23 @@ function awayFromPack(state: GameState, near: Enemy[]): Vec2 {
     ay += dy / (d * d);
   }
   const m = Math.hypot(ax, ay);
-  if (m < 1e-6) return { x: 1, y: 0 }; // dead-symmetric ring → any way out
-  return { x: ax / m, y: ay / m };
+  const away = m < 1e-6 ? (prefer ?? { x: 1, y: 0 }) : { x: ax / m, y: ay / m };
+  if (!prefer) return away;
+  const bx = away.x + prefer.x * PATH_RETREAT_BIAS;
+  const by = away.y + prefer.y * PATH_RETREAT_BIAS;
+  const bm = Math.hypot(bx, by) || 1;
+  return { x: bx / bm, y: by / bm };
+}
+
+/** A unit heading from the hero toward the next intended-path waypoint, or null
+ * when the level has no path (or the hero has walked it all). */
+function waypointHeading(state: GameState): Vec2 | null {
+  const wp = nextPathWaypoint(state);
+  if (!wp) return null;
+  const dx = wp.x - state.player.pos.x;
+  const dy = wp.y - state.player.pos.y;
+  const d = Math.hypot(dx, dy) || 1;
+  return { x: dx / d, y: dy / d };
 }
 
 /** Non-apparition enemies within `radius`, nearest first. */
@@ -549,6 +772,29 @@ function threatsWithin(state: GameState, radius: number): Enemy[] {
 /** The current boss's position, if one is on the field. */
 function bossPos(state: GameState): Vec2 | undefined {
   return state.enemies.find((e) => enemyDef(e.defId).role === "boss")?.pos;
+}
+
+/** The anchor of the nearest spawn point that still owes mobs (dormant or
+ * mid-drip) within `SPAWNER_CLEAR_RANGE` of the hero, or null — the patch the
+ * bot holds and clears before the path lets it advance. Null on levels that
+ * author no spawners (inherently gating this behavior to spawner levels). */
+function activeSpawnerNear(state: GameState): Vec2 | null {
+  let best: Vec2 | null = null;
+  let bestD = SPAWNER_CLEAR_RANGE;
+  for (const spawner of state.spawners) {
+    // Only a point that is ACTIVELY emitting holds the hero — a dormant one
+    // lying ahead must not, or the next point would always pin him short of it
+    // and he would never advance. It arms (→ active) as he walks into range,
+    // and once it has emitted its queue (→ drained) he moves on, mopping up the
+    // chasers as he goes.
+    if (spawner.status !== "active" || spawner.queue.length === 0) continue;
+    const d = distance(state.player.pos, spawner.at);
+    if (d < bestD) {
+      best = spawner.at;
+      bestD = d;
+    }
+  }
+  return best;
 }
 
 /**
@@ -633,6 +879,235 @@ function steer(state: GameState, target: Vec2, jump = false): GameInput {
     },
     jump,
   };
+}
+
+/** How far ahead the wall-avoidance probe casts a candidate heading. */
+const NAV_LOOKAHEAD = 140;
+/** Candidate heading deflections (radians) fanned out from the straight bearing,
+ * nearest-to-straight first so the hero deflects as little as the wall demands. */
+const NAV_DEFLECTIONS = [
+  0,
+  0.6,
+  -0.6,
+  1.15,
+  -1.15,
+  1.7,
+  -1.7,
+  2.3,
+  -2.3,
+  Math.PI,
+];
+
+/**
+ * A no-pathfinding runner's LOCAL wall avoidance: turn a raw nav goal into a
+ * steering sub-target the hero can actually walk to without wedging on a shelf.
+ * If his body can sweep straight to the goal, aim straight; otherwise fan
+ * candidate headings out from the direct bearing and pick the openest one that
+ * still makes progress — so a shelf between him and the next waypoint gets
+ * ROUNDED instead of pressed into. This is what unsticks a hero the horde has
+ * shoved off the corridor into a wall pocket (straight-line steering there just
+ * grinds him into the wall forever). Only for TRAVEL goals (path/boss/escape),
+ * never for the fight hold-offs. Falls back to the raw goal when nothing is
+ * clear (better to nudge than freeze).
+ */
+function navTarget(state: GameState, goal: Vec2): Vec2 {
+  // Wall avoidance is a MAZE tactic — it's for the authored-path levels whose
+  // corridors a straight steer would wedge on. On an open map (no path) the
+  // engine's wall-slide already carries a straight steer past the odd ridge, and
+  // deflecting there only wanders, so keep the old behaviour.
+  if (!onPathLevel(state)) return goal;
+  const from = state.player.pos;
+  const r = PLAYER.radius;
+  // A clear body-width sweep straight to the goal → just go.
+  if (!blockedByObstacle(state, from, goal, r)) return goal;
+  const dx = goal.x - from.x;
+  const dy = goal.y - from.y;
+  const dist = Math.hypot(dx, dy) || 1;
+  const probe = Math.min(dist, NAV_LOOKAHEAD);
+  const base = Math.atan2(dy, dx);
+  let best: Vec2 | null = null;
+  let bestScore = -Infinity;
+  for (const off of NAV_DEFLECTIONS) {
+    const a = base + off;
+    const p = {
+      x: clamp(from.x + Math.cos(a) * probe, 20, state.level.width - 20),
+      y: clamp(from.y + Math.sin(a) * probe, 20, state.level.height - 20),
+    };
+    if (insideObstacle(state, p, r)) continue;
+    if (blockedByObstacle(state, from, p, r)) continue;
+    // Prefer a step that (a) can then SEE the goal (rounds the corner) and (b)
+    // ends closer to it, penalising a bigger turn so we deflect minimally.
+    const nd = Math.hypot(goal.x - p.x, goal.y - p.y);
+    const sees = blockedByObstacle(state, p, goal, r) ? 0 : 1000;
+    const score = sees - nd - Math.abs(off) * 40;
+    if (score > bestScore) {
+      bestScore = score;
+      best = p;
+    }
+  }
+  return best ?? goal;
+}
+
+/** Steer toward a TRAVEL goal with local wall avoidance (see {@link navTarget}) —
+ * the movement equivalent of {@link steer} for path/boss/escape headings. */
+function navSteer(state: GameState, goal: Vec2, jump = false): GameInput {
+  return steer(state, navTarget(state, goal), jump);
+}
+
+/**
+ * The travel waypoint the survivor heads for — a corridor-aware upgrade of
+ * {@link nextPathWaypoint} that keeps a no-pathfinding runner ON the authored
+ * route. Normally it STRING-PULLS forward: the furthest-ahead node the hero can
+ * currently SEE (walls naturally cap that to his straightaway, so he never skips
+ * an uncleared aisle), so a slightly-off drift still cuts the corner cleanly.
+ * When the horde has shoved him clean off the corridor with NO node in sight, it
+ * aims for the NEAREST node to climb back on (navTarget then deflects him around
+ * the wall), which is what breaks a wall-pocket wedge. Null when no path / walked.
+ */
+function travelWaypoint(state: GameState): Vec2 | null {
+  const wp = nextPathWaypoint(state);
+  if (!wp) return null;
+  const path = levelDef(state.level.id).path;
+  if (!path || path.length === 0) return wp;
+  const from = state.player.pos;
+  const r = PLAYER.radius;
+  // Furthest visible node at/after current progress → head straight for it.
+  for (let i = path.length - 1; i >= state.pathIndex; i--) {
+    if (!blockedByObstacle(state, from, path[i] as Vec2, r))
+      return path[i] as Vec2;
+  }
+  // Nothing ahead in sight (shoved into a pocket) → nearest node, to rejoin.
+  let best = wp;
+  let bestD = Infinity;
+  for (const node of path) {
+    const d = distance(from, node);
+    if (d < bestD) {
+      bestD = d;
+      best = node;
+    }
+  }
+  return best;
+}
+
+// === ANTI-WEDGE UNSTUCK ===
+// A deterministic escape hatch for the LAST-RESORT wedge the smart nav can't
+// think its way out of: the hero pinned in a concave wall pocket, or locked in
+// perpetual flee at low HP with no medkit and nothing he can reach to fight, or
+// oscillating on the spot. When he has made no PROGRESS for a while AND has no
+// foe he could actually hit, the strategy has clearly failed — so we override it
+// with a blind, deterministic sweep: drive a fixed heading for a burst, and if
+// still stuck rotate the heading (goalward first, then fanning ± around it, out
+// to a full circle). One of those headings is always open (short of being walled
+// in on all sides), so this dislodges him from anything and hands control back
+// to the normal nav the instant he's moving again.
+
+/** Re-measure movement on this cadence (ms) — coarser than a tick so per-frame
+ * jitter doesn't read as movement. */
+const UNSTUCK_CHECK_MS = 400;
+/** Physically moving less than this (world px) over a check window counts as
+ * FROZEN. A full-speed hero clears far more per window, so only a genuine pin
+ * (wall pocket, flee-lock at low HP with nothing reachable) trips it. */
+const UNSTUCK_MIN_DISP = 34;
+/** Frozen this long (with nothing to fight) → last-resort escape sweep. Kept
+ * long so the escape is RARE — the smart nav owns ordinary threading; this only
+ * breaks a true wedge the strategy can't think its way out of. */
+const UNSTUCK_TRIGGER_MS = 2400;
+/** Hold each swept heading this long before rotating to the next. */
+const UNSTUCK_BURST_MS = 600;
+/** How far ahead the escape steer aims along the swept heading. */
+const UNSTUCK_REACH = 240;
+/** Once escaping, keep committing until the hero has physically moved THIS far
+ * from where the wedge began — the hysteresis that lets a full sweep round a
+ * wall instead of aborting the instant he twitches and the flee drags him back. */
+const UNSTUCK_EXIT_DIST = 160;
+
+/** Is there a foe the hero could actually strike right now — in weapon range with
+ * a clear line? While there is, standing still is FIGHTING, not being wedged, so
+ * the stall detector holds off (a boss/pack brawl never trips the unstuck). */
+function hasReachableFoe(state: GameState): boolean {
+  const range = weaponDef(state.player.equipment.weapon.defId).range;
+  const r = PLAYER.radius;
+  for (const enemy of state.enemies) {
+    if (enemyDef(enemy.defId).apparition) continue;
+    if (distance(state.player.pos, enemy.pos) > range) continue;
+    if (!blockedByObstacle(state, state.player.pos, enemy.pos, r)) return true;
+  }
+  return false;
+}
+
+/**
+ * The deterministic anti-wedge override (see the block comment above), or null
+ * when the hero is making progress or legitimately fighting. Also OWNS the
+ * progress bookkeeping on `bot.nav`, so it must run every tick. Deterministic:
+ * the swept heading is a pure function of how long he's been stuck and where the
+ * objective lies — no RNG, no wall clock.
+ */
+function unstuckInput(bot: Bot, state: GameState): GameInput | null {
+  // Same as the wall avoidance: the deterministic escape is a MAZE last-resort
+  // (path levels). Open maps never wedged the old bot, so leave them untouched.
+  if (!onPathLevel(state)) return null;
+  const p = state.player.pos;
+  const now = state.stats.timeMs;
+  if (!bot.nav) {
+    bot.nav = {
+      lastPos: { x: p.x, y: p.y },
+      lastTimeMs: now,
+      stuckMs: 0,
+      escaping: false,
+      escapeStartMs: 0,
+      escapeStartPos: { x: p.x, y: p.y },
+    };
+    return null;
+  }
+  const nav = bot.nav;
+  const elapsed = now - nav.lastTimeMs;
+  if (elapsed >= UNSTUCK_CHECK_MS) {
+    // FROZEN = barely moved this window AND nothing he could reach to fight (a
+    // patch brawl legitimately holds him in place, so it never reads as wedged).
+    const moved = distance(p, nav.lastPos);
+    if (moved >= UNSTUCK_MIN_DISP || hasReachableFoe(state)) nav.stuckMs = 0;
+    else nav.stuckMs += elapsed;
+    nav.lastPos = { x: p.x, y: p.y };
+    nav.lastTimeMs = now;
+  }
+
+  // Enter the escape only once genuinely frozen; stay committed (hysteresis)
+  // until he's physically clear of the wedge, so a full sweep can round a wall
+  // instead of aborting the moment he twitches and the flee drags him back in.
+  if (!nav.escaping) {
+    if (nav.stuckMs < UNSTUCK_TRIGGER_MS) return null;
+    nav.escaping = true;
+    nav.escapeStartMs = now;
+    nav.escapeStartPos = { x: p.x, y: p.y };
+  } else if (
+    hasReachableFoe(state) ||
+    distance(p, nav.escapeStartPos) >= UNSTUCK_EXIT_DIST
+  ) {
+    // Moved clear of the wedge, or reached something to fight → hand back.
+    nav.escaping = false;
+    nav.stuckMs = 0;
+    return null;
+  }
+
+  // The travel goal orients the escape sweep (goalward heading first).
+  const goal =
+    travelWaypoint(state) ?? bossPos(state) ?? furthestLandmark(state);
+
+  // Sweep a heading that rotates as the escape persists: goalward first, then ±
+  // around it (±45, ±90, ±135), out to a full turn — deterministic, so a botted
+  // run stays reproducible. A full turn without breaking free just keeps sweeping.
+  const phase = Math.floor((now - nav.escapeStartMs) / UNSTUCK_BURST_MS) % 8;
+  const heading = goal ?? { ...state.playerSpawn };
+  const base = Math.atan2(heading.y - p.y, heading.x - p.x);
+  const step = Math.ceil(phase / 2) * (Math.PI / 4);
+  const angle = base + (phase % 2 === 0 ? step : -step);
+  const target = {
+    x: p.x + Math.cos(angle) * UNSTUCK_REACH,
+    y: p.y + Math.sin(angle) * UNSTUCK_REACH,
+  };
+  // Hop along the way: airborne clears low hop-obstacles and buys untouchable
+  // frames if the wedge was a body pinning him.
+  return steer(state, target, state.player.z === 0);
 }
 
 /** The point `dist` away from `from`, on the player's side of it. */

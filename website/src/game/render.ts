@@ -22,6 +22,7 @@ import {
   MAP,
   mapCols,
   MERCY,
+  nextPathWaypoint,
   orbitSpellParams,
   orbPositions,
   stasisSpellParams,
@@ -911,6 +912,10 @@ export function drawFrame(
     );
   }
 
+  // "Go this way" — a blinking arrow toward the next intended-path waypoint,
+  // shown once the hero's immediate area is clear, to point him onward.
+  drawGuidanceArrow(ctx, state, camera, timeMs);
+
   // Fog of war — over the world, under the HUD/flash (StarCraft/Warcraft): the
   // unwalked map is dark, terrain seen-but-out-of-sight dims, and the hero's
   // live sight circle stays clear.
@@ -921,6 +926,73 @@ export function drawFrame(
     ctx.fillStyle = `rgba(216, 58, 58, ${(0.25 * state.player.hurtFlashMs) / 250})`;
     ctx.fillRect(0, 0, view.width, view.height);
   }
+}
+
+/** How near a foe can be and still suppress the guidance arrow — the arrow is a
+ * "you're clear, head on" cue, so any body inside this ring hides it. Sized to
+ * the local threat pocket (a bit over a phone half-view's short side). */
+const GUIDE_CLEAR_RADIUS = 150;
+
+/**
+ * The "GO THIS WAY" guidance arrow: a blinking amber chevron floating just ahead
+ * of the hero, pointing toward the next intended-path waypoint (`level.path`).
+ * It appears only once the hero's immediate area is CLEAR (no live foe within
+ * `GUIDE_CLEAR_RADIUS`) — a nudge onward the moment a room is cleared, never
+ * clutter mid-fight — and stays hidden on a level that authors no path or once
+ * the whole route is walked (`nextPathWaypoint` null). Purely cosmetic; it reads
+ * the same shared path progress (`state.pathIndex`) the autopilot navigates by.
+ */
+function drawGuidanceArrow(
+  ctx: CanvasRenderingContext2D,
+  state: GameState,
+  camera: { x: number; y: number },
+  timeMs: number,
+): void {
+  const wp = nextPathWaypoint(state);
+  if (!wp) return;
+  const hero = state.player.pos;
+  const clearSq = GUIDE_CLEAR_RADIUS * GUIDE_CLEAR_RADIUS;
+  for (const e of state.enemies) {
+    if (enemyDef(e.defId).apparition) continue;
+    const dx = e.pos.x - hero.x;
+    const dy = e.pos.y - hero.y;
+    if (dx * dx + dy * dy < clearSq) return; // a foe is near — no arrow yet
+  }
+  // A spawn point in range still owing mobs means this patch isn't cleared —
+  // hold the arrow until it drains ("clear the area, then it points you on").
+  for (const s of state.spawners) {
+    if (s.status === "drained" || s.queue.length === 0) continue;
+    const dx = s.at.x - hero.x;
+    const dy = s.at.y - hero.y;
+    if (dx * dx + dy * dy < s.triggerRadius * s.triggerRadius) return;
+  }
+  const dx = wp.x - hero.x;
+  const dy = wp.y - hero.y;
+  const dist = Math.hypot(dx, dy);
+  if (dist < 8) return;
+  const ux = dx / dist;
+  const uy = dy / dist;
+  // A soft blink so the cue pulses without strobing.
+  const alpha = 0.4 + 0.45 * Math.abs(Math.sin(timeMs / 320));
+  const cx = Math.round(hero.x + ux * 34 - camera.x);
+  const cy = Math.round(hero.y + uy * 34 - camera.y) - 6; // chest height
+  ctx.save();
+  ctx.translate(cx, cy);
+  ctx.rotate(Math.atan2(uy, ux)); // arrow points along +x, toward the waypoint
+  // A blocky arrowhead (dark outline under an amber fill) to sit in the pixel
+  // look. Drawn as stacked bars narrowing to the tip.
+  const bar = (fill: string, o: number) => {
+    ctx.fillStyle = fill;
+    ctx.fillRect(-6 - o, -7 - o, 4 + 2 * o, 14 + 2 * o);
+    ctx.fillRect(-2 - o, -5 - o, 4 + 2 * o, 10 + 2 * o);
+    ctx.fillRect(2 - o, -3 - o, 4 + 2 * o, 6 + 2 * o);
+    ctx.fillRect(6 - o, -1 - o, 3 + 2 * o, 2 + 2 * o);
+  };
+  ctx.globalAlpha = alpha;
+  bar("#1a1c2c", 1); // outline
+  bar("#ffb02e", 0); // amber fill
+  ctx.restore();
+  ctx.globalAlpha = 1;
 }
 
 // The offscreen buffer the fog is composited on (so the vision circle can be

@@ -1354,6 +1354,37 @@ export const FIX_ZONE_LEVEL: LevelDef = {
   ],
 };
 
+/** A level whose horde is SPAWN POINTS (spawners.ts), not a wave: one point near
+ * the spawn plus a chained follow-up, so the spawner_test can watch a point arm,
+ * drip its queue, drain, and hand off to its chain. Waves off, banded spawns
+ * off — just the boss and the two points. */
+export const FIX_SPAWNER_LEVEL: LevelDef = {
+  ...FIX_LEVEL,
+  id: "test_spawner_level",
+  spawns: [{ enemy: "test_boss", at: { x: 2130, y: 260 } }],
+  waves: undefined,
+  spawners: [
+    {
+      id: "s1",
+      at: { x: 520, y: 1320 },
+      triggerRadius: 400,
+      perEmit: 2,
+      intervalMs: 100,
+      members: [{ enemy: "test_fodder", count: 6 }],
+    },
+    {
+      id: "s2",
+      after: "s1",
+      afterDelayMs: 500,
+      at: { x: 560, y: 1320 },
+      triggerRadius: 400,
+      perEmit: 2,
+      intervalMs: 100,
+      members: [{ enemy: "test_minion", count: 4 }],
+    },
+  ],
+};
+
 let installed = false;
 
 /** Register the synthetic fixtures as the engine's active catalogs. Idempotent
@@ -1382,6 +1413,7 @@ export function installFixtures(force = false): void {
       test_exit_level: FIX_EXIT_LEVEL,
       test_recruit_level: FIX_RECRUIT_LEVEL,
       test_zone_level: FIX_ZONE_LEVEL,
+      test_spawner_level: FIX_SPAWNER_LEVEL,
     },
     uniques: FIX_UNIQUES,
     enemies: FIX_ENEMIES,

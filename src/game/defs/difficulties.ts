@@ -185,6 +185,16 @@ export type DifficultyDef = {
    * a roof for as long as the player keeps proving it too easy.
    */
   menaceStageCap?: number;
+  /**
+   * A flat XP-GAIN multiplier for this rung, applied to EVERY grant (kills,
+   * arrows, scripted awards) at the one `grantXp` door. It paces how far a
+   * campaign clear levels the hero WITHOUT touching mob levels, counts, or the
+   * cost curve — the lever for lifting a tier that lands short of its intended
+   * finish (a big-span tier like NIGHTMARE, whose per-level cost outruns the
+   * map XP). Omitted = 1 (no change). Distinct from the dev BALANCE › XP knob,
+   * which scales all rungs together.
+   */
+  xpBonus?: number;
   /** Added to the base minion drop chance (LOOT.dropChance). */
   dropChanceBonus: number;
   /**
@@ -302,6 +312,7 @@ export const DIFFICULTY_DEFS: Record<Difficulty, DifficultyDef> = {
     menaceDecayMult: 1.5,
     menaceEffectMult: 0.5,
     menaceStageCap: 3,
+    xpBonus: 2.0,
     dropChanceBonus: 0,
     medkitDropMult: 1.05,
     armorDropMult: 1.05,
@@ -351,6 +362,7 @@ export const DIFFICULTY_DEFS: Record<Difficulty, DifficultyDef> = {
     menaceStageCap: 5,
     // Every step up the ladder pays in drop VOLUME too (easy 0 → jesus 0.1);
     // medium's small step is what makes the first climb feel it.
+    xpBonus: 1.8,
     dropChanceBonus: 0.01,
     medkitDropMult: 1,
     armorDropMult: 1,
@@ -398,6 +410,7 @@ export const DIFFICULTY_DEFS: Record<Difficulty, DifficultyDef> = {
     menaceDecayMult: 0.85,
     menaceEffectMult: 1.15,
     menaceStageCap: 10,
+    xpBonus: 1.75,
     dropChanceBonus: 0.03,
     medkitDropMult: 0.95,
     armorDropMult: 0.95,
@@ -441,6 +454,11 @@ export const DIFFICULTY_DEFS: Record<Difficulty, DifficultyDef> = {
     menaceDecayMult: 0.7,
     menaceEffectMult: 1.3,
     menaceStageCap: 100,
+    // NIGHTMARE spans 16 levels (40→56) over the same five maps easy climbs 30+
+    // cheap levels through — at these high levels each level's XP cost outruns a
+    // map's kill XP, so a flat clear lands ~3 short. A per-kill XP bonus closes
+    // the gap without inflating mob levels/counts off the hero curve.
+    xpBonus: 1.35,
     dropChanceBonus: 0.06,
     medkitDropMult: 0.9,
     armorDropMult: 0.9,
@@ -484,6 +502,7 @@ export const DIFFICULTY_DEFS: Record<Difficulty, DifficultyDef> = {
     menaceEffectMult: 1.5,
     // No `menaceStageCap`: JESUS stays UNCAPPED — the horde evolves without a
     // roof, matching the "abandon all hope" promise.
+    xpBonus: 1.4,
     dropChanceBonus: 0.1,
     // A step below nightmare, then the extra −10% squeeze: 0.855 × 0.9.
     medkitDropMult: 0.77,

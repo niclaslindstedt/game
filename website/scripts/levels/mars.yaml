@@ -90,6 +90,10 @@ rareSpawns:
     - derelict_rover
   unique:
     - unit_zero
+# HARD-CODED per-difficulty mob levels [easy, medium, hard, nightmare];
+# JESUS stays player-relative. Placeholder ramp for this campaign slot —
+# retune when this level is reworked. A spawner may override per point.
+mobLevels: [[13, 20], [14, 21], [17, 24], [48, 51]]
 spawns:
   - enemy: scout_rover
     count: 20
@@ -120,22 +124,32 @@ spawns:
     at:
       x: 1100
       y: 520
+    level: [20, 21, 24, 51]
+    hp: [260, 390, 598, 1560]
   - enemy: build_gates
     at:
       x: 1760
       y: 920
+    level: [20, 21, 24, 51]
+    hp: [250, 375, 575, 1500]
   - enemy: optimusk_prime
     at:
       x: 1950
       y: 380
+    level: [20, 21, 24, 51]
+    hp: [340, 510, 782, 2040]
   - enemy: peter_seal
     at:
       x: 2340
       y: 1240
+    level: [20, 21, 24, 51]
+    hp: [280, 420, 644, 1680]
   - enemy: elon_mosque
     at:
       x: 2620
       y: 700
+    level: [22, 23, 26, 52]
+    hp: [700, 1050, 1610, 4200]
 packs:
   - at:
       x: 900

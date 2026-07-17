@@ -62,6 +62,7 @@ import {
   maybePowerScale,
   menaceStage,
   mobLevelScale,
+  resolveMobScaling,
 } from "../game/menace.ts";
 import { createRng } from "../lib/rng.ts";
 import { STAT_NAMES } from "../game/defs/equipment.ts";
@@ -106,6 +107,15 @@ export type ProgressionOptions = {
   /** Carry the hero's loadout from clear to clear (the real campaign) —
    * default true. */
   carryLoadout?: boolean;
+  /** Seed the FIRST clear with this loadout instead of a fresh level-1 hero —
+   * how a tier that is ENTERED mid-campaign (nightmare at ~40, jesus at ~58) is
+   * measured from its real entry level. Mint it with `synthesizeArrival`.
+   * Omitted = the authored fresh start. */
+  startLoadout?: Loadout;
+  /** Fraction of each map's MINION roster actually killed per clear (0..1,
+   * default 1 = a full clear). Set-pieces (rares/elites/boss) are always killed.
+   * Models a partial clear — a hero who rushes the boss instead of mopping up. */
+  clearShare?: number;
   /** Keep re-farming the final rung's levels until the hero reaches this
    * level (default 99, the cap). The last rung (JESUS) is the one whose XP
    * caps actually reach 99. */
@@ -256,6 +266,7 @@ function enumerateRoster(
   difficulty: Difficulty,
   rareRng: () => number,
   includeRares: boolean,
+  clearShare = 1,
 ): RosterEntry[] {
   const level = levelDef(levelId);
   const minions: RosterEntry[] = [];
@@ -295,12 +306,23 @@ function enumerateRoster(
     }
   }
 
-  // The survivors-style wave budget — the bulk of the horde.
+  // The survivors-style wave budget — the bulk of the horde on wave maps.
   if (level.waves) {
     for (const budget of level.waves.budget) {
       if (!meetsMinDifficulty(difficulty, budget.minDifficulty)) continue;
       const n = scaledMobCount(budget.count, difficulty);
       for (let i = 0; i < n; i++) push(budget.enemy);
+    }
+  }
+
+  // SPAWN POINTS — the finite horde on spawner maps (every queued member across
+  // every point, including its lingering pre-placement, all killed on a full
+  // clear). The alternative to `waves`; a map uses one or the other.
+  for (const spawner of level.spawners ?? []) {
+    if (!meetsMinDifficulty(difficulty, spawner.minDifficulty)) continue;
+    for (const member of spawner.members) {
+      const n = scaledMobCount(member.count, difficulty);
+      for (let i = 0; i < n; i++) push(member.enemy);
     }
   }
 
@@ -319,7 +341,13 @@ function enumerateRoster(
     }
   }
 
-  const roster = [...minions, ...rares, ...elites];
+  // A PARTIAL clear kills only a fraction of the mopping-up minions; the set
+  // pieces (rares/elites/boss) are always killed (you can't skip the boss).
+  const keptMinions =
+    clearShare >= 1
+      ? minions
+      : minions.slice(0, Math.round(minions.length * Math.max(0, clearShare)));
+  const roster = [...keptMinions, ...rares, ...elites];
   if (boss) roster.push(boss);
   return roster;
 }
@@ -376,15 +404,28 @@ function killOne(
   state: GameState,
   defId: string,
 ): { dropped: Equipment[]; enemy: Enemy } {
+  // Mint at the level the level spec hard-codes for this rung (the level
+  // default — killOne has no spawner context), matching every live spawn path;
+  // JESUS still runs player-relative. This is what keeps the analytic XP/loot
+  // model in step with actual play now that mob level is authored, not floated.
+  const sc = resolveMobScaling(
+    levelDef(state.level.id).mobLevels,
+    state.difficulty,
+    state.player.level,
+    state.rng,
+    mobLevelScale(state),
+    currentMobLevel(state),
+  );
   const enemy: Enemy = spawnEnemy(
     defId,
     { x: 0, y: 0 },
     state.rng,
     state.nextId++,
-    mobLevelScale(state),
+    sc.hpMult,
     menaceStage(state),
     1,
-    currentMobLevel(state),
+    sc.mlvl,
+    sc.banded,
   );
   // Set pieces (elites/bosses) and rare/unique visitors meet the hero's power
   // the instant their fight opens — the real engage-time re-stamp of hp and
@@ -676,6 +717,8 @@ export function simulateProgression(
     targetLevel = LEVELING.maxLevel,
     includeRares = true,
     excludeTiers = [],
+    startLoadout,
+    clearShare = 1,
   } = options;
   const excludeTierSet = new Set<Tier>(excludeTiers);
 
@@ -684,7 +727,7 @@ export function simulateProgression(
 
   const levelResults: LevelResult[] = [];
   const allCheckpoints: Checkpoint[] = [];
-  let loadout: Loadout | null = null;
+  let loadout: Loadout | null = startLoadout ?? null;
   let totalKills = 0;
   let runIndex = 0;
   const visits = new Map<string, number>();
@@ -700,7 +743,13 @@ export function simulateProgression(
     state.enemies = [];
     state.items = [];
     const rareRng = createRng((seed ^ (runIndex * 2_654_435_761)) >>> 0);
-    const roster = enumerateRoster(levelId, difficulty, rareRng, includeRares);
+    const roster = enumerateRoster(
+      levelId,
+      difficulty,
+      rareRng,
+      includeRares,
+      clearShare,
+    );
     const visit = (visits.get(`${difficulty}/${levelId}`) ?? 0) + 1;
     visits.set(`${difficulty}/${levelId}`, visit);
 

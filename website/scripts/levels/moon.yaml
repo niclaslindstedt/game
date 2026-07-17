@@ -69,6 +69,10 @@ rareSpawns:
     - lost_cosmonaut
   unique:
     - the_thirteenth_man
+# HARD-CODED per-difficulty mob levels [easy, medium, hard, nightmare];
+# JESUS stays player-relative. Placeholder ramp for this campaign slot —
+# retune when this level is reworked. A spawner may override per point.
+mobLevels: [[7, 13], [7, 14], [10, 17], [45, 48]]
 spawns:
   - enemy: wisp
     count: 8
@@ -94,22 +98,32 @@ spawns:
     at:
       x: 700
       y: 1100
+    level: [13, 14, 17, 48]
+    hp: [220, 330, 506, 1320]
   - enemy: prospector
     at:
       x: 1150
       y: 850
+    level: [13, 14, 17, 48]
+    hp: [240, 360, 552, 1440]
   - enemy: quarantine_medic
     at:
       x: 1600
       y: 550
+    level: [13, 14, 17, 48]
+    hp: [260, 390, 598, 1560]
   - enemy: cartographer
     at:
       x: 1880
       y: 520
+    level: [13, 14, 17, 48]
+    hp: [240, 360, 552, 1440]
   - enemy: armstrong
     at:
       x: 2130
       y: 260
+    level: [15, 16, 19, 49]
+    hp: [550, 825, 1265, 3300]
 packs:
   - at:
       x: 900

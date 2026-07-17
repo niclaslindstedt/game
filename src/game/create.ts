@@ -19,8 +19,10 @@ import {
   MENACE,
   OBSTACLES,
   PACKS,
+  PATH,
   PLAYER,
   RARE_MOBS,
+  SPAWNERS,
   STAMINA,
 } from "./config.ts";
 import { cutsceneDef, cutsceneVariant } from "./defs/cutscenes.ts";
@@ -33,6 +35,7 @@ import {
 import { enemyDef } from "./defs/enemies/index.ts";
 import { gearDef, weaponDef } from "./defs/equipment.ts";
 import { LEVEL_ORDER, levelDef, type LevelDef } from "./defs/levels/index.ts";
+import type { DifficultyHp, DifficultyMobLevels } from "./defs/levels/types.ts";
 import { crateMaxHp } from "./crates.ts";
 import { buildWells } from "./hazards.ts";
 import {
@@ -47,11 +50,14 @@ import { xpToLevelUp } from "./leveling.ts";
 import { createExplored, revealAround } from "./map.ts";
 import { createMerchant, revealMerchant } from "./merchant.ts";
 import {
+  difficultyBandIndex,
   evolutionHpMult,
   mobContactScaleFor,
   mobHpLevelFactor,
   mobHpScaleFor,
   mobLevelFor,
+  resolveMobScaling,
+  rollMobLevel,
 } from "./menace.ts";
 import { BALANCE } from "./tuning.ts";
 import { boundingRadius, rockHalf } from "./obstacles.ts";
@@ -68,6 +74,7 @@ import type {
   Loadout,
   Obstacle,
   PackState,
+  SpawnerRuntime,
   StatName,
 } from "./types.ts";
 
@@ -115,6 +122,42 @@ export function createGame(
   // downstream combat/loot roll) byte-identical to what it was without them.
   const rareRng = createRng((seed ^ 0x5f356495) >>> 0);
   const playerSpawn = vec(def.playerSpawn.x, def.playerSpawn.y);
+  const heroLevel = loadout?.level ?? 1;
+  // REGULAR-mob scaling (spawn points, packs, waves, the opening scatter): when
+  // the level (or a spawner override) hard-codes a level for this rung, hp AND
+  // mlvl come from the rolled authored band and the ±spawn band is off; else the
+  // player-relative fallbacks (mobHp/mobLvl) — JESUS, and the synthetic fixtures
+  // that author no band, so their rng order is unchanged. Rolled per mob.
+  const scaleRegular = (override?: DifficultyMobLevels) =>
+    resolveMobScaling(
+      override ?? def.mobLevels,
+      difficulty,
+      heroLevel,
+      rng,
+      mobHp,
+      mobLvl,
+    );
+  // A pinned ELITE/BOSS's authored per-difficulty level + base hp (required for
+  // non-JESUS). Mutates a freshly-spawned instance: pins its `mlvl` (so
+  // maybePowerScale keeps it instead of re-stamping player-relative) and sets its
+  // authored base maxHp (which the live power-match then multiplies). A no-op on
+  // JESUS / when unauthored, leaving the relative placement untouched.
+  const applyAuthored = (
+    enemy: Enemy,
+    level?: DifficultyMobLevels,
+    hp?: DifficultyHp,
+  ): Enemy => {
+    const lvl = rollMobLevel(level, difficulty, rng);
+    if (lvl === null) return enemy; // JESUS / unauthored → relative as before
+    enemy.mlvl = lvl;
+    enemy.authoredMlvl = lvl;
+    const idx = difficultyBandIndex(difficulty);
+    if (hp && idx !== null) {
+      enemy.maxHp = Math.max(1, Math.round(hp[idx]!));
+      enemy.hp = enemy.maxHp;
+    }
+    return enemy;
+  };
   let nextId = 1;
 
   // The difficulty axis: bands are fractions of the distance from the player
@@ -199,15 +242,19 @@ export function createGame(
     if (alreadyRecruited(spawn.enemy)) continue;
     if ("at" in spawn) {
       enemies.push(
-        spawnEnemy(
-          spawn.enemy,
-          vec(spawn.at.x, spawn.at.y),
-          rng,
-          nextId++,
-          mobHp,
-          0,
-          1,
-          mobLvl,
+        applyAuthored(
+          spawnEnemy(
+            spawn.enemy,
+            vec(spawn.at.x, spawn.at.y),
+            rng,
+            nextId++,
+            mobHp,
+            0,
+            1,
+            mobLvl,
+          ),
+          spawn.level,
+          spawn.hp,
         ),
       );
       continue;
@@ -235,8 +282,19 @@ export function createGame(
           break;
         }
       }
+      const s = scaleRegular();
       enemies.push(
-        spawnEnemy(spawn.enemy, pos, rng, nextId++, mobHp, 0, 1, mobLvl),
+        spawnEnemy(
+          spawn.enemy,
+          pos,
+          rng,
+          nextId++,
+          s.hpMult,
+          0,
+          1,
+          s.mlvl,
+          s.banded,
+        ),
       );
     }
   }
@@ -244,15 +302,17 @@ export function createGame(
   // The scripted vanguard (see LevelDef.openingStrike): a lone rusher placed
   // ahead of the pack, marked so only ITS first touch arms the holstered hero.
   if (def.openingStrike) {
+    const s = scaleRegular();
     const rusher = spawnEnemy(
       def.openingStrike.enemy,
       vec(def.openingStrike.at.x, def.openingStrike.at.y),
       rng,
       nextId++,
-      mobHp,
+      s.hpMult,
       0,
       1,
-      mobLvl,
+      s.mlvl,
+      s.banded,
     );
     rusher.vanguard = true;
     enemies.push(rusher);
@@ -311,6 +371,84 @@ export function createGame(
     };
   });
   const packTotal = packs.reduce((sum, pack) => sum + pack.total, 0);
+
+  // SPAWN POINTS (spawners.ts): flatten each point's difficulty-scaled members
+  // into an emission queue it drips out once the hero trips it. The `lingering`
+  // front of that queue is PRE-PLACED around the point right now — a cluster
+  // already standing guard (dormant, waking on approach) — so a point reads as a
+  // knot of mobs with reinforcements, not an empty tile. Gated by `minDifficulty`.
+  const spawners: SpawnerRuntime[] = [];
+  let spawnerLingering = 0;
+  for (const s of def.spawners ?? []) {
+    if (!meetsMinDifficulty(difficulty, s.minDifficulty)) continue;
+    const queue: string[] = [];
+    for (const member of s.members) {
+      const n = scaledMobCount(member.count, difficulty);
+      for (let i = 0; i < n; i++) queue.push(member.enemy);
+    }
+    const at = vec(s.at.x, s.at.y);
+    const spawnRadius = s.spawnRadius ?? SPAWNERS.spawnRadius;
+    // Stand the lingering cluster around the point at creation, scattered clear
+    // of walls; they wake on approach like any placed mob. Pulled off the queue
+    // so they aren't ALSO streamed in later.
+    const linger = s.lingering
+      ? Math.min(queue.length, scaledMobCount(s.lingering, difficulty))
+      : 0;
+    for (let i = 0; i < linger; i++) {
+      const enemyId = queue.shift()!;
+      const radius = enemyDef(enemyId).radius;
+      let pos = {
+        x: clamp(at.x, radius, def.width - radius),
+        y: clamp(at.y, radius, def.height - radius),
+      };
+      for (let attempt = 0; attempt < SPAWNERS.placeAttempts; attempt++) {
+        const angle = rng() * Math.PI * 2;
+        const d = Math.sqrt(rng()) * spawnRadius;
+        const p = {
+          x: clamp(at.x + Math.cos(angle) * d, radius, def.width - radius),
+          y: clamp(at.y + Math.sin(angle) * d, radius, def.height - radius),
+        };
+        if (!blocked(p, radius)) {
+          pos = p;
+          break;
+        }
+      }
+      const sc = scaleRegular(s.mobLevels);
+      enemies.push(
+        spawnEnemy(
+          enemyId,
+          pos,
+          rng,
+          nextId++,
+          sc.hpMult,
+          0,
+          1,
+          sc.mlvl,
+          sc.banded,
+        ),
+      );
+      spawnerLingering++;
+    }
+    spawners.push({
+      id: s.id ?? null,
+      at,
+      triggerRadius: s.triggerRadius ?? SPAWNERS.triggerRadius,
+      spawnRadius,
+      intervalMs: s.intervalMs ?? SPAWNERS.intervalMs,
+      perEmit: s.perEmit ?? SPAWNERS.perEmit,
+      queue,
+      total: queue.length,
+      status: "dormant" as const,
+      drainedAtMs: null,
+      emitAtMs: 0,
+      memberIds: [],
+      after: s.after ?? null,
+      afterDelayMs: s.afterDelayMs ?? SPAWNERS.chainDelayMs,
+      mobLevels: s.mobLevels,
+    });
+  }
+  const spawnerTotal =
+    spawners.reduce((sum, s) => sum + s.total, 0) + spawnerLingering;
 
   // The prelude may be a single scene or a chain (the launch, then the
   // flight); each scene resolves its per-difficulty variant when one is
@@ -393,6 +531,7 @@ export function createGame(
     ),
     explored: createExplored(def),
     mapMarkers: [],
+    pathIndex: 0,
     player: {
       pos: { ...playerSpawn },
       z: 0,
@@ -517,6 +656,7 @@ export function createGame(
     minionEquipmentDrops: 0,
     waveSpawned: (def.waves?.budget ?? []).map(() => 0),
     packs,
+    spawners,
     moveSpawnCredit: 0,
     // The camp clock opens anchored on the spawn — standing at the lander
     // farming the opening waves is exactly the camping the starvation answers.
@@ -536,7 +676,7 @@ export function createGame(
     earlyDropCursor: 0,
     stats: {
       kills: 0,
-      totalEnemies: foeCount + waveTotal + packTotal,
+      totalEnemies: foeCount + waveTotal + packTotal + spawnerTotal,
       shotsFired: 0,
       damageDealt: 0,
       damageTaken: 0,
@@ -727,6 +867,10 @@ export function spawnEnemy(
   evo = 0,
   evoEffect = 1,
   mlvl = 1,
+  // HARD-CODED level? Then `mlvl` is the mob's final level (the level spec's
+  // rolled band already varies it), so skip the internal ±spawn band that the
+  // relative path adds — no double-dip. `true` = the old banded behaviour.
+  banded = true,
 ): Enemy {
   const def = enemyDef(defId);
   const jitter =
@@ -743,10 +887,11 @@ export function spawnEnemy(
   // offset shifts the mob's monster level (feeding its hp here, and its
   // level-based kill XP and loot gates via `mlvl` below). Elites, bosses, and
   // rare/unique mobs skip it — they settle a deterministic mlvl when their
-  // fight engages (`maybePowerScale`). Drawn from the same seeded rng as the
-  // speed jitter, so runs stay reproducible.
+  // fight engages (`maybePowerScale`). A HARD-CODED-level spawn skips it too
+  // (`banded=false`) — its authored range is the spread. Drawn from the same
+  // seeded rng as the speed jitter, so runs stay reproducible.
   const band =
-    def.role === "minion" && !rarity
+    banded && def.role === "minion" && !rarity
       ? Math.floor(
           rng() * (MENACE.mobLevelBand.max - MENACE.mobLevelBand.min + 1),
         ) + MENACE.mobLevelBand.min
@@ -896,6 +1041,33 @@ function buildDoors(
  * reach his flag), clear of the player spawn, and spaced apart from each
  * other (walls included) so the field always leaves walkable lanes.
  */
+/** Shortest distance from `p` to segment `a`–`b` (a point-to-segment clamp). */
+function distToSegment(p: Vec2, a: Vec2, b: Vec2): number {
+  const abx = b.x - a.x;
+  const aby = b.y - a.y;
+  const lenSq = abx * abx + aby * aby;
+  const t =
+    lenSq === 0
+      ? 0
+      : clamp(((p.x - a.x) * abx + (p.y - a.y) * aby) / lenSq, 0, 1);
+  return distance(p, { x: a.x + abx * t, y: a.y + aby * t });
+}
+
+/**
+ * Shortest distance from `p` to the intended path — the polyline through the
+ * spawn and every `LevelDef.path` waypoint. Infinity on a level with no path, so
+ * the keep-clear check below no-ops there.
+ */
+function distToPath(def: LevelDef, spawn: Vec2, p: Vec2): number {
+  const pts = [spawn, ...(def.path ?? [])];
+  if (pts.length < 2) return Infinity;
+  let best = Infinity;
+  for (let i = 0; i < pts.length - 1; i++) {
+    best = Math.min(best, distToSegment(p, pts[i]!, pts[i + 1]!));
+  }
+  return best;
+}
+
 function scatterObstacles(
   rng: Rng,
   def: LevelDef,
@@ -936,6 +1108,8 @@ function scatterObstacles(
           def.landmarks.every(
             (l) => distance(pos, l.pos) > def.decorClearance + radius,
           ) &&
+          // Keep the intended path walkable — no furniture on the route.
+          distToPath(def, playerSpawn, pos) > PATH.clearance + radius &&
           clearOf(walls, pos, radius) &&
           clearOf(scattered, pos, radius);
         if (!clear) continue;

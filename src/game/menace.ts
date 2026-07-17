@@ -26,6 +26,9 @@
 import { LEVELING, MENACE, RARE_MOBS } from "./config.ts";
 import { difficultyDef } from "./defs/difficulties.ts";
 import { enemyDef } from "./defs/enemies/index.ts";
+import { levelDef } from "./defs/levels/index.ts";
+import type { DifficultyMobLevels, MobLevelBand } from "./defs/levels/types.ts";
+import type { Rng } from "@game/lib/rng.ts";
 // items.ts also imports from this module (currentMobLevel) — a runtime-only
 // cycle: both sides only reference the other inside function bodies, never
 // during module evaluation, so ESM resolves it safely.
@@ -302,7 +305,104 @@ export function mobLevelFor(playerLevel: number, difficulty: string): number {
  * earned progression, never a good-find→better-finds elevator past the
  * difficulty ladder. */
 export function currentMobLevel(state: GameState): number {
-  return mobLevelFor(state.player.level, state.difficulty);
+  // A level that hard-codes its mob levels (every non-JESUS level does) owns the
+  // horde level for the reads not tied to one spawned mob (hazard armor, chest
+  // loot): the level-default band's midpoint. JESUS (and a level without a band)
+  // falls back to the player-relative ladder.
+  const authored = mobLevelMidpoint(
+    levelDef(state.level.id).mobLevels,
+    state.difficulty,
+  );
+  return authored ?? mobLevelFor(state.player.level, state.difficulty);
+}
+
+// === HARD-CODED MOB LEVELS (level-spec `mobLevels` / spawner override) ===
+// The alternative to the player-relative `playerLevel + mobLevelOffset` scaling:
+// a level authors each non-JESUS rung's mob level outright (a range rolled per
+// spawn), so a map's difficulty is a designed number, not a floating offset.
+// JESUS keeps the relative ladder (a JESUS hero has out-levelled every authored
+// number). Both the HP scale and the loot level derive from the SAME resolved
+// level, so a spawn is internally consistent.
+
+/** Ladder index (0=easy … 3=nightmare) into a {@link DifficultyMobLevels} tuple,
+ * or null for JESUS (and anything past nightmare) — those keep player-relative
+ * scaling. Keyed off the difficulty's `index` (easy=1 … jesus=5). */
+export function difficultyBandIndex(difficulty: string): number | null {
+  const idx = difficultyDef(difficulty).index - 1;
+  return idx >= 0 && idx < 4 ? idx : null;
+}
+
+/** Resolve one band to a concrete level: an exact number as-is, a `[min,max]`
+ * range rolled uniformly on `rng` (inclusive). Floored at 1. */
+function bandToLevel(band: MobLevelBand, rng: Rng): number {
+  if (typeof band === "number") return Math.max(1, Math.round(band));
+  const lo = Math.min(band[0], band[1]);
+  const hi = Math.max(band[0], band[1]);
+  return Math.max(1, lo + Math.floor(rng() * (hi - lo + 1)));
+}
+
+/** Roll a per-spawn mob level from a hard-coded tuple for this difficulty, or
+ * null when the tuple is absent or the difficulty runs relative (JESUS). */
+export function rollMobLevel(
+  spec: DifficultyMobLevels | undefined,
+  difficulty: string,
+  rng: Rng,
+): number | null {
+  const idx = difficultyBandIndex(difficulty);
+  if (!spec || idx === null) return null;
+  return bandToLevel(spec[idx]!, rng);
+}
+
+/** The scalar "representative" level of a hard-coded band — its rounded midpoint
+ * — for horde reads not tied to a single spawned mob. Null when absent/relative. */
+export function mobLevelMidpoint(
+  spec: DifficultyMobLevels | undefined,
+  difficulty: string,
+): number | null {
+  const idx = difficultyBandIndex(difficulty);
+  if (!spec || idx === null) return null;
+  const band = spec[idx]!;
+  if (typeof band === "number") return Math.max(1, Math.round(band));
+  return Math.max(1, Math.round((band[0] + band[1]) / 2));
+}
+
+/** The hp scale a HARD-CODED-level mob locks in: the same geometric
+ * `mobHpLevelFactor` the relative path uses, but from the AUTHORED level rather
+ * than `playerLevel + offset`. Still multiplied by `autoPowerScale` (=1 unless
+ * AUTO LEVEL STATS is on) so the free-stat compensation stays whole. */
+export function hardMobHpScale(level: number, playerLevel: number): number {
+  return Math.max(
+    MENACE.mobHpScaleFloor,
+    mobHpLevelFactor(level) * autoPowerScale(playerLevel),
+  );
+}
+
+/**
+ * The hp scale, monster level, and band flag one REGULAR mob (spawn point,
+ * pack, wave, opening scatter) spawns with. When `spec` hard-codes a level for
+ * this difficulty, HP and level BOTH come from the rolled authored level and the
+ * ±band is suppressed (`banded:false`). Otherwise (JESUS, or no band) it hands
+ * back the caller's player-relative fallbacks unchanged. One chokepoint so every
+ * regular-spawn path resolves the level the same way. `spec` is the
+ * already-merged tuple (spawner override ?? level default).
+ */
+export function resolveMobScaling(
+  spec: DifficultyMobLevels | undefined,
+  difficulty: string,
+  playerLevel: number,
+  rng: Rng,
+  relHpMult: number,
+  relMlvl: number,
+): { hpMult: number; mlvl: number; banded: boolean } {
+  const level = rollMobLevel(spec, difficulty, rng);
+  if (level !== null) {
+    return {
+      hpMult: hardMobHpScale(level, playerLevel),
+      mlvl: level,
+      banded: false,
+    };
+  }
+  return { hpMult: relHpMult, mlvl: relMlvl, banded: true };
 }
 
 /**
@@ -611,10 +711,17 @@ export function maybePowerScale(state: GameState, enemy: Enemy): void {
   // elite/boss met deep into a run drops loot worthy of the hero who beat it,
   // not of the level it was placed at. Its `levelBonus` keeps it a few levels
   // above the rank and file, so the set pieces reach the tier gates first.
-  enemy.mlvl = Math.max(
-    1,
-    currentMobLevel(state) + (def.levelBonus ?? 0) + (rarity?.levelBonus ?? 0),
-  );
+  // A pinned elite/boss with a HARD-CODED level (level spec) keeps that number —
+  // the level owns it, not the player-relative ladder or the def's levelBonus.
+  // Otherwise settle it from the horde baseline + the def's head start.
+  enemy.mlvl =
+    enemy.authoredMlvl ??
+    Math.max(
+      1,
+      currentMobLevel(state) +
+        (def.levelBonus ?? 0) +
+        (rarity?.levelBonus ?? 0),
+    );
   const levelTerm = enemyPowerLevelTerm(state);
   enemy.contactMult =
     mobContactScaleFor(enemy.mlvl) *

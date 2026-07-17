@@ -89,103 +89,102 @@ landmarks:
       y: 520
 objective:
   type: killBoss
+# THE INTENDED PATH: the route through the shelf-aisle gaps from spawn to
+# MUSKRAT. The autopilot follows it (so it rounds the walls instead of wedging),
+# and the app points its "go this way" arrow along it. Each leg threads the next
+# aisle's pass-gap, ending at the PIT STOP and the boss.
+path:
+  - x: 470
+    y: 820
+  - x: 770
+    y: 380
+  - x: 1070
+    y: 820
+  - x: 1370
+    y: 380
+  - x: 1610
+    y: 600
+  - x: 1680
+    y: 600
+  - x: 1830
+    y: 590
 rareSpawns:
   rare:
     - wandering_tourist
     - night_shift_temp
   unique:
     - employee_of_the_month
+# HARD-CODED per-difficulty mob levels [easy, medium, hard, nightmare] (JESUS
+# stays player-relative). This is the LEVEL DEFAULT — the opening scatter, waves
+# and any spawn point that doesn't override it use this. The aisle spawn points
+# below RAMP their own levels up as the hero pushes deeper (see each `mobLevels`).
+# An entry is an exact level or a rolled [min, max] range.
+mobLevels: [[1, 7], [1, 7], [3, 10], [42, 45]]
+# The ambient horde is authored as SPAWN POINTS (see `spawners` below), not a
+# banded scatter or a continuous wave — so `spawns` holds only the PINNED set
+# pieces: the five speaking elites, the unique locker guardian, and the boss.
 spawns:
-  - enemy: intern
-    count: 22
-    band:
-      - 0
-      - 0.22
-  - enemy: scientist
-    count: 14
-    band:
-      - 0.05
-      - 0.35
-  - enemy: engineer
-    count: 5
-    band:
-      - 0.45
-      - 0.8
-  - enemy: guard
-    count: 4
-    band:
-      - 0.55
-      - 0.95
-  - enemy: hazmat
-    count: 3
-    band:
-      - 0.7
-      - 1.05
-  - enemy: optimusk
-    count: 4
-    band:
-      - 0.5
-      - 1
   # The five speaking elites are strung along the aisles so the serpentine walks
   # the player past each in turn (and their keycards open the corner vaults).
   # NIGHT MANAGER sits behind aisle 1's solid upper run — out of the opening
   # strike, met on the first up-sweep.
+  # Each pinned set piece hard-codes its per-difficulty LEVEL (loot tier +
+  # contact) and BASE HP (the live power-match multiplies it on top). Levels ramp
+  # with the aisle the elite guards; HP scales up the ladder.
   - enemy: night_manager
     at:
       x: 560
       y: 370
+    level: [2, 2, 4, 43]
+    hp: [150, 210, 300, 520]
   - enemy: security_chief
     at:
       x: 900
       y: 600
+    level: [3, 3, 5, 44]
+    hp: [210, 290, 420, 730]
   - enemy: janitor
     at:
       x: 960
       y: 880
+    level: [3, 3, 6, 44]
+    hp: [230, 320, 460, 800]
   - enemy: head_scientist
     at:
       x: 1200
       y: 600
+    level: [4, 4, 6, 45]
+    hp: [190, 270, 380, 670]
   - enemy: architect
     at:
       x: 1480
       y: 400
+    level: [4, 5, 7, 45]
+    hp: [190, 270, 380, 670]
   # The level's UNIQUE, pinned as the guardian of the BREAK ROOM detour locker.
   - enemy: employee_of_the_month
     at:
       x: 910
       y: 150
+    level: [3, 3, 5, 44]
+    hp: [180, 250, 360, 630]
   - enemy: muskrat
     at:
       x: 1850
       y: 590
-packs:
-  - at:
-      x: 950
-      y: 880
-    members:
-      - enemy: intern
-        count: 5
-      - enemy: scientist
-        count: 3
-  - at:
-      x: 1200
-      y: 320
-    members:
-      - enemy: engineer
-        count: 3
-      - enemy: guard
-        count: 2
+    level: [6, 7, 9, 47]
+    hp: [480, 660, 950, 1650]
 safeZones:
-  # The calm strip in the boss-room mouth, just inside the last aisle and west of
-  # MUSKRAT: the horde is repelled out so the player gets a breather and can shop
-  # the vending-machine merchant before the final fight. Clear of the boss aggro
-  # (muskrat sits ~160px east) and of the head_scientist funnel (west of the wall).
+  # The calm strip in the boss-room MOUTH: centred ON the last aisle's gap so the
+  # horde is repelled out of the entrance itself, not just the room beyond — the
+  # player (and the autopilot) walks IN clean instead of grinding through a wave
+  # bottlenecked at the chokepoint. A breather + the vending-machine merchant
+  # before MUSKRAT (who sits ~240px east, outside the zone).
   - shape: circle
     pos:
-      x: 1680
+      x: 1610
       y: 600
-    radius: 115
+    radius: 175
     label: PIT STOP
 quietZones:
   # The two off-path detours and the three keycard vaults are dead pockets - no
@@ -260,180 +259,214 @@ merchantSpawns:
     y: 600
   - x: 600
     y: 450
-waves:
-  rampDurationMs: 280000
-  maxAlive: 200
-  minAlive: 24
-  moveSpawnEvery: 60
-  budget:
-    - enemy: intern
-      count: 380
-      window:
-        - 0
-        - 0.5
-    - enemy: scientist
-      count: 300
-      window:
-        - 0.2
-        - 0.7
-    - enemy: engineer
-      count: 200
-      window:
-        - 0.4
-        - 0.85
-    - enemy: guard
-      count: 110
-      window:
-        - 0.55
-        - 0.95
-    - enemy: hazmat
-      count: 70
-      window:
-        - 0.7
-        - 1
-    - enemy: optimusk
-      count: 55
-      window:
-        - 0.55
-        - 1
+spawners:
+  # THE HORDE AS SPAWN POINTS (not an endless wave): one big point per aisle
+  # sweep, each arming as the hero advances into it (wide `triggerRadius` so a
+  # cut corner still trips it) and DRAINING its mob count — the emitted mobs give
+  # chase, so he fights and clears them ON THE MOVE, then the patch is empty and
+  # he walks on. The counts are sized so clearing the sweep levels him enough to
+  # finish MUSKRAT (a finite total, not a bottomless wave). Each aisle also
+  # chains a lighter follow-up (`after`) that only arms if he lingers — a bonus
+  # for the completionist, never a bog for the runner. The mob TYPE ramps aisle
+  # to aisle (interns → scientists → engineers/guards → hazmat/OPTIMUSK).
+  # --- Opening: a light knot of interns the level-1 hero can actually clear to
+  # find his feet — deliberately small so the opener LEVELS him instead of
+  # pinning him against the first shelf. ---
+  # Counts sum to ~900 across the sweep (an 800–1200 "clear the whole floor"
+  # battle), back-loaded so the opener stays the gentle onboarding knot and the
+  # aisles swell toward the boss. The per-map XP cap (not the head-count) bounds
+  # how far a clear levels the hero, so a big fight never over-levels him.
+  - id: open
+    at: { x: 400, y: 680 }
+    # Easy opens at level 1 (gentle onboarding); medium/hard bite harder from the
+    # first knot (higher-level interns), so standing still is never free on the
+    # intended fight and up.
+    mobLevels: [1, 3, 7, 42]
+    triggerRadius: 540
+    lingering: 12
+    members:
+      - enemy: intern
+        count: 100
+  # --- Aisle 1 (the first down-sweep). ---
+  - id: a1
+    at: { x: 560, y: 900 }
+    mobLevels: [[1, 2], [1, 2], [3, 4], [42, 43]]
+    triggerRadius: 500
+    lingering: 10
+    members:
+      - enemy: intern
+        count: 70
+      - enemy: scientist
+        count: 50
+  - after: a1
+    at: { x: 600, y: 400 }
+    mobLevels: [[1, 2], [1, 2], [3, 4], [42, 43]]
+    members:
+      - enemy: scientist
+        count: 50
+  # --- Aisle 2 (down-sweep). ---
+  - id: a2
+    at: { x: 900, y: 460 }
+    mobLevels: [[2, 3], [2, 3], [4, 5], [43, 44]]
+    triggerRadius: 500
+    lingering: 10
+    members:
+      - enemy: scientist
+        count: 80
+      - enemy: engineer
+        count: 50
+  - after: a2
+    at: { x: 950, y: 860 }
+    mobLevels: [[2, 3], [2, 3], [4, 5], [43, 44]]
+    members:
+      - enemy: engineer
+        count: 40
+      - enemy: guard
+        count: 30
+  # --- Aisle 3 (up-sweep). ---
+  - id: a3
+    at: { x: 1180, y: 720 }
+    mobLevels: [[3, 4], [3, 4], [5, 6], [44, 45]]
+    triggerRadius: 500
+    lingering: 10
+    members:
+      - enemy: engineer
+        count: 70
+      - enemy: guard
+        count: 70
+  - after: a3
+    at: { x: 1200, y: 340 }
+    mobLevels: [[3, 4], [3, 4], [5, 6], [44, 45]]
+    members:
+      - enemy: guard
+        count: 40
+      - enemy: hazmat
+        count: 30
+  # --- Aisle 4 (up-sweep toward the boss mouth). ---
+  - id: a4
+    at: { x: 1450, y: 400 }
+    mobLevels: [[4, 5], [4, 5], [6, 8], [45, 46]]
+    triggerRadius: 500
+    lingering: 8
+    members:
+      - enemy: guard
+        count: 60
+      - enemy: hazmat
+        count: 50
+      - enemy: optimusk
+        count: 40
+  # --- The boss bay: a last surge of OPTIMUSK units as MUSKRAT wakes. ---
+  - at: { x: 1780, y: 600 }
+    triggerRadius: 320
+    lingering: 6
+    members:
+      - enemy: optimusk
+        count: 45
+      - enemy: hazmat
+        count: 35
 walls:
   # === GROCERY-STORE SHELF AISLES ===
-  # Five vertical shelf walls span the floor, each with ONE ~250px pass-gap that
-  # STEPS up and down the mid-band aisle to aisle — a checkout-line weave that
-  # herds the player left-to-right past every shelf without a full-height detour
-  # (so the path is always walkable, never a dead maze). Horizontal shelf stubs
-  # jut into the upper and lower thirds to give the store its aisle nooks.
-  # --- Aisle 1 (x=470), gap 450-700. ---
+  # Five full-height shelf walls, each with ONE wide (~440px) pass-gap that
+  # ALTERNATES between a LOW band and a HIGH band, so crossing the floor sweeps
+  # the hero DOWN then UP then down then up, aisle by aisle, before the mid mouth
+  # into MUSKRAT's bay. The gaps are deliberately WIDE — a pressured hero (and the
+  # autopilot) can thread them without pixel-perfect lining-up — and the swing is
+  # kept to ~370px centre-to-centre so the weave reads without being a marathon
+  # climb. The authored `path` threads the gap centres so the autopilot (and the
+  # guidance arrow) follow the intended weave instead of cutting the centre.
+  # --- Aisle 1 (x=470), gap LOW (600-1040): the hero drops down to round it. ---
   - kind: wall
     from:
       x: 470
       y: 8
     to:
       x: 470
-      y: 440
+      y: 600
     radius: 8
     jumpable: false
   - kind: wall
     from:
       x: 470
-      y: 760
+      y: 1040
     to:
       x: 470
       y: 1192
     radius: 8
     jumpable: false
-  # --- Aisle 2 (x=770), gap 300-550 (steps up). ---
+  # --- Aisle 2 (x=770), gap HIGH (160-600): back up to the top to round it. ---
   - kind: wall
     from:
       x: 770
       y: 8
     to:
       x: 770
-      y: 360
+      y: 160
     radius: 8
     jumpable: false
   - kind: wall
     from:
       x: 770
-      y: 680
+      y: 600
     to:
       x: 770
       y: 1192
     radius: 8
     jumpable: false
-  # --- Aisle 3 (x=1070), gap 500-750 (steps down). ---
+  # --- Aisle 3 (x=1070), gap LOW (600-1040): down again. ---
   - kind: wall
     from:
       x: 1070
       y: 8
     to:
       x: 1070
-      y: 480
+      y: 600
     radius: 8
     jumpable: false
   - kind: wall
     from:
       x: 1070
-      y: 800
+      y: 1040
     to:
       x: 1070
       y: 1192
     radius: 8
     jumpable: false
-  # --- Aisle 4 (x=1370), gap 350-600 (steps up). ---
+  # --- Aisle 4 (x=1370), gap HIGH (160-600): up again. ---
   - kind: wall
     from:
       x: 1370
       y: 8
     to:
       x: 1370
-      y: 400
+      y: 160
     radius: 8
     jumpable: false
   - kind: wall
     from:
       x: 1370
-      y: 720
+      y: 600
     to:
       x: 1370
       y: 1192
     radius: 8
     jumpable: false
-  # --- Aisle 5 (x=1610), gap MID (460-740): the mouth into MUSKRAT's bay. ---
+  # --- Aisle 5 (x=1610), gap MID (430-780): the mouth into MUSKRAT's bay. ---
   - kind: wall
     from:
       x: 1610
       y: 8
     to:
       x: 1610
-      y: 460
+      y: 430
     radius: 8
     jumpable: false
   - kind: wall
     from:
       x: 1610
-      y: 740
+      y: 780
     to:
       x: 1610
       y: 1192
-    radius: 8
-    jumpable: false
-  # === Horizontal shelf stubs — store texture in the upper/lower thirds, off
-  # the mid-band walk line, so they never wall off the path. ===
-  - kind: wall
-    from:
-      x: 520
-      y: 200
-    to:
-      x: 700
-      y: 200
-    radius: 8
-    jumpable: false
-  - kind: wall
-    from:
-      x: 840
-      y: 980
-    to:
-      x: 1010
-      y: 980
-    radius: 8
-    jumpable: false
-  - kind: wall
-    from:
-      x: 1120
-      y: 220
-    to:
-      x: 1300
-      y: 220
-    radius: 8
-    jumpable: false
-  - kind: wall
-    from:
-      x: 1160
-      y: 980
-    to:
-      x: 1320
-      y: 980
     radius: 8
     jumpable: false
   # === BREAK ROOM detour (off aisle 2, top tip) — the EMPLOYEE OF THE MONTH

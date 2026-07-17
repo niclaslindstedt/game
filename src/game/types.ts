@@ -10,6 +10,7 @@
 // The catalogs scale to hundreds of entries without these shapes changing.
 
 import type { GearDef, WeaponDef } from "./defs/equipment.ts";
+import type { DifficultyMobLevels } from "./defs/levels/types.ts";
 import type { CutsceneState } from "@game/lib/cutscene.ts";
 import type { Rng } from "@game/lib/rng.ts";
 import type { Vec2 } from "@game/lib/vec.ts";
@@ -684,6 +685,15 @@ export type Enemy = {
    */
   powerScaled?: boolean;
   contactMult?: number;
+  /**
+   * A HARD-CODED monster level from the level spec (an elite/boss's authored
+   * per-difficulty `level`, or a regular mob's rolled `mobLevels` band). When
+   * set, `maybePowerScale` keeps this as the mob's `mlvl` instead of re-stamping
+   * it from the player-relative `currentMobLevel` — the level spec owns the
+   * number, not the difficulty offset. Unset on JESUS and on any spawn that
+   * still runs player-relative.
+   */
+  authoredMlvl?: number;
   /**
    * FROST CHILL bookkeeping (a companion's frost nova — see `companionNova`):
    * `chillMs` counts down the slow's remaining life, and `chillFactor` is the
@@ -1694,6 +1704,42 @@ export type LevelInfo = {
  * dead it is `cleared`. Serialized with the run, so a resumed game remembers
  * which patches of ground are already emptied.
  */
+/**
+ * A SPAWN POINT's live state (parallel to `LevelDef.spawners`, see spawners.ts).
+ * Dormant until the hero trips it, then it emits its `queue` a few at a time on
+ * the `emitAtMs` clock until drained. A chained point watches its predecessor's
+ * `drainedAtMs`.
+ */
+export type SpawnerRuntime = {
+  /** Author id (for chaining), or null. */
+  id: string | null;
+  /** The spawn point's anchor (world px). */
+  at: Vec2;
+  triggerRadius: number;
+  spawnRadius: number;
+  intervalMs: number;
+  perEmit: number;
+  /** The enemy defIds still to emit, resolved for the run's difficulty. */
+  queue: string[];
+  /** The queue's original length — the foe count still owed while it drains. */
+  total: number;
+  /** dormant → arming pending; active → emitting; drained → empty. */
+  status: "dormant" | "active" | "drained";
+  /** Sim time (ms) the point emptied, or null until then (for chaining). */
+  drainedAtMs: number | null;
+  /** Next emission time (sim ms) while active. */
+  emitAtMs: number;
+  /** `Enemy.id`s emitted so far (for "is this wave cleared?"). */
+  memberIds: number[];
+  /** Chain: arm after the spawner with this id drains, this long after. */
+  after: string | null;
+  afterDelayMs: number;
+  /** This point's HARD-CODED per-difficulty mob levels (a within-map override of
+   * the level default), carried so `emitBatch` scales its drip like its lingering
+   * cluster. Undefined = the point uses the level's `mobLevels`. */
+  mobLevels?: DifficultyMobLevels;
+};
+
 export type PackState = {
   /** Where the pack sits on the map — the anchor its members spawn around. */
   at: Vec2;
@@ -1932,6 +1978,13 @@ export type GameState = {
   explored: Uint8Array;
   /** Pins on the level map: story finds, rare loot, elite/boss victories. */
   mapMarkers: MapMarker[];
+  /**
+   * Progress along the level's INTENDED PATH (`LevelDef.path`): the index of the
+   * next waypoint the hero is steering toward. Advanced by `advancePath` each
+   * step as he reaches each node; read by the autopilot (to navigate) and the
+   * app (to point the guidance arrow). 0 with no path — inert.
+   */
+  pathIndex: number;
   player: Player;
   enemies: Enemy[];
   projectiles: Projectile[];
@@ -2023,6 +2076,12 @@ export type GameState = {
    * packs.
    */
   packs: PackState[];
+  /**
+   * SPAWN POINTS for this run, parallel to `LevelDef.spawners` (see
+   * `SpawnerRuntime` / stepSpawners): finite points that arm on approach and
+   * drain their mob count over time. Empty when the level authors none.
+   */
+  spawners: SpawnerRuntime[];
   /**
    * World px the player has walked that the spawner hasn't converted into
    * monsters yet — moving through the level stirs more of the horde awake

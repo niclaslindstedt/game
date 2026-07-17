@@ -89,6 +89,10 @@ rareSpawns:
     - moonlighting_agent
   unique:
     - the_mole
+# HARD-CODED per-difficulty mob levels [easy, medium, hard, nightmare];
+# JESUS stays player-relative. Placeholder ramp for this campaign slot —
+# retune when this level is reworked. A spawner may override per point.
+mobLevels: [[25, 28], [25, 30], [27, 34], [54, 57]]
 spawns:
   - enemy: cia_agent
     count: 22
@@ -119,98 +123,146 @@ spawns:
     at:
       x: 770
       y: 400
+    level: [28, 29, 32, 56]
+    hp: [2000, 3000, 4600, 12000]
   - enemy: guard_kremlin
     at:
       x: 700
       y: 390
+    level: [28, 29, 32, 56]
+    hp: [380, 570, 874, 2280]
   - enemy: guard_kremlin
     at:
       x: 835
       y: 345
+    level: [28, 29, 32, 56]
+    hp: [380, 570, 874, 2280]
   - enemy: guard_kremlin
     at:
       x: 800
       y: 475
+    level: [28, 29, 32, 56]
+    hp: [380, 570, 874, 2280]
   - enemy: mark_suckerberg
     at:
       x: 1650
       y: 380
+    level: [28, 29, 32, 56]
+    hp: [1700, 2550, 3910, 10200]
   - enemy: guard_meta
     at:
       x: 1580
       y: 370
+    level: [28, 29, 32, 56]
+    hp: [380, 570, 874, 2280]
   - enemy: guard_meta
     at:
       x: 1715
       y: 325
+    level: [28, 29, 32, 56]
+    hp: [380, 570, 874, 2280]
   - enemy: guard_meta
     at:
       x: 1680
       y: 455
+    level: [28, 29, 32, 56]
+    hp: [380, 570, 874, 2280]
   - enemy: sam_haltman
     at:
       x: 2580
       y: 400
+    level: [28, 29, 32, 56]
+    hp: [1600, 2400, 3680, 9600]
   - enemy: guard_alignment
     at:
       x: 2510
       y: 390
+    level: [28, 29, 32, 56]
+    hp: [380, 570, 874, 2280]
   - enemy: guard_alignment
     at:
       x: 2645
       y: 345
+    level: [28, 29, 32, 56]
+    hp: [380, 570, 874, 2280]
   - enemy: guard_alignment
     at:
       x: 2610
       y: 475
+    level: [28, 29, 32, 56]
+    hp: [380, 570, 874, 2280]
   - enemy: larry_allison
     at:
       x: 770
       y: 1300
+    level: [28, 29, 32, 56]
+    hp: [1800, 2700, 4140, 10800]
   - enemy: guard_oracle
     at:
       x: 700
       y: 1290
+    level: [28, 29, 32, 56]
+    hp: [380, 570, 874, 2280]
   - enemy: guard_oracle
     at:
       x: 835
       y: 1245
+    level: [28, 29, 32, 56]
+    hp: [380, 570, 874, 2280]
   - enemy: guard_oracle
     at:
       x: 800
       y: 1375
+    level: [28, 29, 32, 56]
+    hp: [380, 570, 874, 2280]
   - enemy: jeff_baywatch
     at:
       x: 1650
       y: 1320
+    level: [28, 29, 32, 56]
+    hp: [2200, 3300, 5060, 13200]
   - enemy: guard_prime
     at:
       x: 1580
       y: 1310
+    level: [28, 29, 32, 56]
+    hp: [380, 570, 874, 2280]
   - enemy: guard_prime
     at:
       x: 1715
       y: 1265
+    level: [28, 29, 32, 56]
+    hp: [380, 570, 874, 2280]
   - enemy: guard_prime
     at:
       x: 1680
       y: 1395
+    level: [28, 29, 32, 56]
+    hp: [380, 570, 874, 2280]
   - enemy: donald_dump
     at:
       x: 2580
       y: 1300
+    level: [28, 29, 32, 56]
+    hp: [2600, 3900, 5980, 15600]
   - enemy: guard_loyalty
     at:
       x: 2510
       y: 1290
+    level: [28, 29, 32, 56]
+    hp: [380, 570, 874, 2280]
   - enemy: guard_loyalty
     at:
       x: 2645
       y: 1245
+    level: [28, 29, 32, 56]
+    hp: [380, 570, 874, 2280]
   - enemy: guard_loyalty
     at:
       x: 2610
       y: 1375
+    level: [28, 29, 32, 56]
+    hp: [380, 570, 874, 2280]
 packs:
   - at:
       x: 1150

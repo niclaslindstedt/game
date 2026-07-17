@@ -49,10 +49,13 @@ describe("SPACEZ HQ level def", () => {
   });
 
   it("fields the night shift: five staff types plus the OPTIMUSK units and MUSKRAT at the rocket", () => {
-    const minionIds = HQ.spawns
-      .filter((s) => "band" in s)
-      .map((s) => s.enemy)
-      .sort();
+    // The ambient horde is authored as SPAWN POINTS now, not a banded scatter —
+    // so the roster is the union of every spawn point's mob types.
+    const minionIds = [
+      ...new Set(
+        (HQ.spawners ?? []).flatMap((s) => s.members.map((m) => m.enemy)),
+      ),
+    ].sort();
     expect(minionIds).toEqual([
       "engineer",
       "guard",
@@ -155,6 +158,7 @@ describe("SPACEZ HQ level def", () => {
     const dropsFrom = (defId: string, seed: number): number => {
       const state = equipBlaster(startGame(seed, "spacez_hq")); // pick off at range
       clearStage(state); // just the parked boss remains, waves silenced
+      state.spawners = []; // silence the spawn points so only the parked stack drops
       state.items = [];
       state.player.stats.luck = 0; // isolate the base rate + the profile bonus
       // The parked stack sits inside the sight radius — mute the level's
@@ -377,6 +381,9 @@ describe("level catalog integrity", () => {
         expect(enemyDef(spawn.enemy)).toBeDefined();
       for (const line of level.waves?.budget ?? []) {
         expect(enemyDef(line.enemy)).toBeDefined();
+      }
+      for (const s of level.spawners ?? []) {
+        for (const m of s.members) expect(enemyDef(m.enemy)).toBeDefined();
       }
       for (const id of level.loot.weaponPool)
         expect(weaponDef(id)).toBeDefined();
