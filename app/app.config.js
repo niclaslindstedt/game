@@ -31,6 +31,10 @@ module.exports = () => ({
     scheme: "goneinspace",
     userInterfaceStyle: "dark",
     backgroundColor: BRAND_BG,
+    // Ship the packed website (assets/webroot.zip) inside the app so the game
+    // is fully self-contained; the shell unzips + serves it locally on launch
+    // (src/localServer.ts). Generate the zip with `npm run bundle` before a build.
+    assetBundlePatterns: ["**/*"],
     // The whole game is one WebView pointed at the deployed site, so it looks
     // and plays exactly like the PWA; the native shell adds haptics + audio.
     ios: {
@@ -73,6 +77,9 @@ module.exports = () => ({
       // The game never records — disable the microphone permission the plugin
       // would otherwise request, so App Store review doesn't ask why.
       ["expo-audio", { microphonePermission: false }],
+      // The bundled static server (lighttpd, via @dr.pogodin/react-native-static-server)
+      // needs Android minSdk 28.
+      ["expo-build-properties", { android: { minSdkVersion: 28 } }],
     ],
     extra: {
       // The URL the WebView loads (game.config.json siteUrl). Override per

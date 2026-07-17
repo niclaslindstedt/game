@@ -20,6 +20,13 @@
  * to evaluate to a primitive or it warns/aborts). */
 export const HAPTICS_BRIDGE = `(function () {
   try {
+    // Mark the page as running inside the native shell BEFORE the game boots,
+    // so the web app can tell it apart from a browser/PWA on the very first
+    // render. It uses this to disable the whole PWA update lifecycle (service
+    // worker + "a new version is ready" toast): the app bundles the game and
+    // ships updates through the store, so players update by downloading a new
+    // build, never by an in-page reload (website/src/app/native.ts).
+    try { window.__GIS_NATIVE__ = true; } catch (e) {}
     var forward = function (pattern) {
       try {
         if (window.ReactNativeWebView) {

@@ -9,6 +9,10 @@ dist/
 web-build/
 expo-env.d.ts
 
+# Generated web bundle (built by scripts/bundle-web.mjs before an EAS build).
+# A build artifact, not source; .easignore re-includes it in the EAS upload.
+assets/webroot.zip
+
 # Native
 .kotlin/
 *.orig.*

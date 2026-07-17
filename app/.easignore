@@ -1,0 +1,45 @@
+# When present, EAS uses this file (not .gitignore) to decide what to upload
+# for a cloud build. It mirrors .gitignore EXCEPT it does NOT ignore the
+# generated assets/webroot.zip — that bundle must ride along in the upload even
+# though it's a gitignored build artifact. Generate it with `npm run bundle`
+# before `eas build` (the App Build workflow does this in CI).
+
+# dependencies
+node_modules/
+
+# Expo
+.expo/
+dist/
+web-build/
+expo-env.d.ts
+
+# Native
+.kotlin/
+*.orig.*
+*.jks
+*.p8
+*.p12
+*.key
+*.mobileprovision
+
+# Metro
+.metro-health-check*
+
+# debug
+npm-debug.*
+yarn-debug.*
+yarn-error.*
+
+# macOS
+.DS_Store
+*.pem
+
+# local env files
+.env*.local
+
+# typescript
+*.tsbuildinfo
+
+# generated native folders
+/ios
+/android
