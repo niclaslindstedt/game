@@ -1,0 +1,28 @@
+name: spell_take_aim
+family: icons
+size: [12, 12]
+description: >
+  The TAKE AIM ranged technique icon — a holy-tinted ranged glyph.
+subject:
+  kind: spell icon
+  features: a bold holy-tinted motif, centered and outlined
+  accent: holy precision
+  flavor: the TAKE AIM cast-power pictogram
+palette:
+  O: "#0c0e18" # dark outline
+  E: "#ffe08a" # holy bright
+  D: "#c9932f" # holy deep
+  H: "#fff6d8" # holy highlight
+grid: |
+  .....ODO....
+  ....OODOO...
+  ..OOOEEEOOO.
+  .OOEEODOEEOO
+  .OEEOODOOEEO
+  OOEOOODOOOEO
+  DDEDDDHDDDED
+  OOEOOODOOOEO
+  .OEEOODOOEEO
+  .OOEEODOEEOO
+  ..OOOEEEOOO.
+  ....OODOO...

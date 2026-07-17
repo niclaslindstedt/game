@@ -28,6 +28,11 @@ function bloomRadius(def: SpellDef): number {
   if (e.kind === "slow") return Math.max(48, e.radius);
   if (e.kind === "shield") return 40;
   if (e.kind === "heal") return 36;
+  // A ranged volley (`rain`) lands its burst on a distant cluster (the engine's
+  // `nova` cue draws it there); the bloom at the hero is just a tight muzzle
+  // flash as the shots loose. A self-`buff` blooms a tight aura at the hero.
+  if (e.kind === "rain") return 40;
+  if (e.kind === "buff") return 38;
   return 44; // bolt
 }
 

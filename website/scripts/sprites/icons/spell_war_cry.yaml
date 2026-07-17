@@ -1,0 +1,28 @@
+name: spell_war_cry
+family: icons
+size: [12, 12]
+description: >
+  The WAR CRY melee art icon — a blood-tinted martial glyph.
+subject:
+  kind: spell icon
+  features: a bold blood-tinted motif, centered and outlined
+  accent: blood might
+  flavor: the WAR CRY cast-power pictogram
+palette:
+  O: "#0c0e18" # dark outline
+  E: "#ff5a5a" # blood bright
+  D: "#b02a2a" # blood deep
+  H: "#ffd0d0" # blood highlight
+grid: |
+  ............
+  .........OOO
+  .........ODO
+  ..OOO..OOODH
+  .OOEOO.OEEDD
+  OOEHEOOOOEOD
+  OEEEDEO.OEOD
+  OOEEEOOOOEOD
+  .OOEOO.OEEDD
+  ..OOO..OOODH
+  .........OOO
+  ............

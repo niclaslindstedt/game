@@ -410,6 +410,20 @@ export type Player = {
    */
   shieldHp: number;
   shieldMs: number;
+  /**
+   * Active SELF-BUFF (a martial-class `buff` power — war cry, berserk, rapid
+   * fire, take aim). While `buffMs > 0` the hero's own weapon blows, attack
+   * cadence, and walk speed are scaled by `buffDamageMult` / `buffHasteMult` /
+   * `buffSpeedMult` (all 1 when idle). A re-cast refreshes to the stronger of
+   * each and the longer timer (no stacking); the timer ebbs in `stepRegen`,
+   * which resets the mults to 1 when it hits 0. The mults are read through
+   * `heroBuffMult` at the three combat sites (`weaponDamageFor`,
+   * `weaponCooldownFor`, `playerSpeed`).
+   */
+  buffMs: number;
+  buffDamageMult: number;
+  buffHasteMult: number;
+  buffSpeedMult: number;
   /** Unit vector of the last movement direction; drives sprite facing. */
   facing: Vec2;
   /**
@@ -437,9 +451,9 @@ export type Player = {
    * The HUD spell bar: one entry per slot (`SPELL_SLOTS` long), each a
    * SPELL_DEFS id assigned to that slot or null for an empty slot. Tapping a
    * slot casts its spell (`GameInput.castSpell`); a long-press opens the picker
-   * to reassign it from the hero's UNLOCKED spells (effective INT ≥ the spell's
-   * `minInt`). Carried between levels via the loadout, so a caster's bar
-   * persists.
+   * to reassign it from the hero's UNLOCKED spells (of the hero's class —
+   * effective governing stat ≥ the spell's `minStat`). Carried between levels
+   * via the loadout, so a caster's bar persists.
    */
   spellSlots: (string | null)[];
   /**
@@ -1398,6 +1412,10 @@ export type GameEvent =
   /** A defensive HEAL spell restored the hero's hp (`heal` actually healed).
    * Distinct from `medkitUsed` so the app can give a spell its arcane cue. */
   | { type: "spellHealed"; heal: number }
+  /** A martial SELF-BUFF power went off (a `buff` effect): the hero is amped for
+   * `durationMs`. The app blooms a self-aura tinted to the power and echoes its
+   * name; the mults live on the player (see `buffMs`). */
+  | { type: "playerBuffed"; durationMs: number }
   /** A stacked weapon repair kit was spent from the consumable dock — the held
    * weapon, every bagged weapon, and the worn armor are mended, and any
    * durability-booted weapon is back in rotation. Drives the toolbox chime. */

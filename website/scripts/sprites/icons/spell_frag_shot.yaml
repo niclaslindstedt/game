@@ -1,0 +1,28 @@
+name: spell_frag_shot
+family: icons
+size: [12, 12]
+description: >
+  The FRAG SHOT ranged technique icon — a fire-tinted ranged glyph.
+subject:
+  kind: spell icon
+  features: a bold fire-tinted motif, centered and outlined
+  accent: fire precision
+  flavor: the FRAG SHOT cast-power pictogram
+palette:
+  O: "#0c0e18" # dark outline
+  E: "#ff8a3c" # fire bright
+  D: "#c0431a" # fire deep
+  H: "#ffd9a0" # fire highlight
+grid: |
+  .....OOO....
+  .OOO.OEO.OOO
+  .OEOOOEOOOEO
+  .OOEOOEOOEOO
+  ..OOEOEOEOO.
+  OOOOOEHEOOOO
+  OEEEEHHHEEEE
+  OOOOOEHEOOOO
+  ..OOEOEOEOO.
+  .OOEOOEOOEOO
+  .OEOOOEOOOEO
+  .OOO.OEO.OOO

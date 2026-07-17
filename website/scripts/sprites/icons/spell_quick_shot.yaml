@@ -1,0 +1,28 @@
+name: spell_quick_shot
+family: icons
+size: [12, 12]
+description: >
+  The QUICK SHOT ranged technique icon — a wind-tinted ranged glyph.
+subject:
+  kind: spell icon
+  features: a bold wind-tinted motif, centered and outlined
+  accent: wind precision
+  flavor: the QUICK SHOT cast-power pictogram
+palette:
+  O: "#0c0e18" # dark outline
+  E: "#b6f0c8" # wind bright
+  D: "#4fae86" # wind deep
+  H: "#eafff2" # wind highlight
+grid: |
+  ............
+  ............
+  ......OOO...
+  OOO...OEOO..
+  ODOO..OOEOO.
+  OODOOOOOOEOO
+  OEEEEEEEEEHO
+  OODOOOOOOEOO
+  ODOO..OOEOO.
+  OOO...OEOO..
+  ......OOO...
+  ............

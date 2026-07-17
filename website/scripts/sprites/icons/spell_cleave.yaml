@@ -1,0 +1,28 @@
+name: spell_cleave
+family: icons
+size: [12, 12]
+description: >
+  The CLEAVE melee art icon — a steel-tinted martial glyph.
+subject:
+  kind: spell icon
+  features: a bold steel-tinted motif, centered and outlined
+  accent: steel might
+  flavor: the CLEAVE cast-power pictogram
+palette:
+  O: "#0c0e18" # dark outline
+  E: "#cfdaea" # steel bright
+  D: "#7d8da0" # steel deep
+  H: "#ffffff" # steel highlight
+grid: |
+  ...OOOO.....
+  ..OOEEO.OOO.
+  .OOEOOO.OEOO
+  OOEOO...OOEO
+  OEEO.OOO.OEE
+  OEOOOODOOOOH
+  OEO.ODDDO.OE
+  OHOOOODOOOOE
+  OEEO.OOO.OEE
+  OOEOOO..OOEO
+  .OOEEOOOOEOO
+  ..OOOOOEEOO.

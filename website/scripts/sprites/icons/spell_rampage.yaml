@@ -1,0 +1,28 @@
+name: spell_rampage
+family: icons
+size: [12, 12]
+description: >
+  The RAMPAGE melee art icon — a storm-tinted martial glyph.
+subject:
+  kind: spell icon
+  features: a bold storm-tinted motif, centered and outlined
+  accent: storm might
+  flavor: the RAMPAGE cast-power pictogram
+palette:
+  O: "#0c0e18" # dark outline
+  E: "#7ec8ff" # storm bright
+  D: "#2f6fd0" # storm deep
+  H: "#e6f4ff" # storm highlight
+grid: |
+  .....OOO....
+  .OOO.OEO.OOO
+  .OEOOOEOOOEO
+  .OOEOOEOOEOO
+  ..OOEOEOEOO.
+  OOOOOEHEOOOO
+  OEEEEHHHEEEE
+  OOOOOEHEOOOO
+  ..OOEOEOEOO.
+  .OOEOOEOOEOO
+  .OEOOOEOOOEO
+  .OOO.OEO.OOO

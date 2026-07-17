@@ -62,11 +62,15 @@ import {
 } from "./defs/equipment.ts";
 import { gradeVariantIds } from "./defs/grades.ts";
 import {
-  isSpellUnlocked,
+  dominantSpellStat,
   spellDefs,
-  spellsUnlockedBetween,
+  spellsUnlockedBetweenForStat,
+  unlockedSpellIdsForStat,
   SPELL_SLOTS,
-  SPELL_STAT,
+  SPELL_STATS,
+  SPELL_STAT_CLASS,
+  type SpellClass,
+  type SpellDef,
 } from "./defs/spells.ts";
 import { difficultyDef, meetsMinDifficulty } from "./defs/difficulties.ts";
 import type { EnemyRole } from "./defs/enemies/index.ts";
@@ -1635,11 +1639,70 @@ export function bankManaPotion(state: GameState): boolean {
 }
 
 /**
+ * The hero's spell-class STAT — the dominant of STRENGTH / DEXTERITY /
+ * INTELLIGENCE, or null when none reaches the first unlock step (a balanced or
+ * un-invested build has no class, hence no spell bar). This is the one gate the
+ * whole cast system reads: your class picks your spell list.
+ */
+export function heroSpellStat(state: GameState): StatName | null {
+  return dominantSpellStat(
+    effectiveStat(state, "strength"),
+    effectiveStat(state, "dexterity"),
+    effectiveStat(state, "intelligence"),
+  );
+}
+
+/** The hero's spell CLASS (melee/ranged/magic), or null when they have none. */
+export function heroSpellClass(state: GameState): SpellClass | null {
+  const stat = heroSpellStat(state);
+  return stat ? (SPELL_STAT_CLASS[stat] ?? null) : null;
+}
+
+/**
+ * True when `def` is available to the hero right now: it belongs to the hero's
+ * class (its `stat` is the dominant one) AND the hero's effective governing
+ * stat has reached its `minStat`. The single availability gate the picker, the
+ * cast path (`castSpell`), and the bot all read.
+ */
+export function isSpellAvailable(state: GameState, def: SpellDef): boolean {
+  const stat = heroSpellStat(state);
+  return stat === def.stat && effectiveStat(state, def.stat) >= def.minStat;
+}
+
+/**
+ * Every spell the hero has unlocked — their class's list up to their governing
+ * stat, ascending by `minStat`. Empty when the hero has no class. The pool the
+ * spell-bar picker offers, and the predicate the HUD reads to decide whether to
+ * show the bar at all (no spells → no bar).
+ */
+export function unlockedSpellIds(state: GameState): string[] {
+  const stat = heroSpellStat(state);
+  if (!stat) return [];
+  return unlockedSpellIdsForStat(stat, effectiveStat(state, stat));
+}
+
+/**
+ * The active self-buff multiplier for one combat field (1 when no buff runs) —
+ * read at the three sites a martial `buff` power touches: `weaponDamageFor`
+ * (damage), `weaponCooldownFor` (haste), and `playerSpeed` (move speed).
+ */
+export function heroBuffMult(
+  state: GameState,
+  field: "damage" | "haste" | "speed",
+): number {
+  const p = state.player;
+  if (p.buffMs <= 0) return 1;
+  if (field === "damage") return p.buffDamageMult;
+  if (field === "haste") return p.buffHasteMult;
+  return p.buffSpeedMult;
+}
+
+/**
  * Assign a spell to a HUD spell-bar slot (or clear it with `null`) — the
  * long-press picker's commit. Refuses an out-of-range slot, an unknown spell,
- * or one the hero's effective INTELLIGENCE doesn't yet unlock (the picker only
- * offers unlocked spells, but the mutator re-checks). Assigning a spell already
- * in another slot MOVES it (no duplicate slot). Returns whether the bar changed.
+ * or one not available to the hero's class (the picker only offers available
+ * spells, but the mutator re-checks). Assigning a spell already in another slot
+ * MOVES it (no duplicate slot). Returns whether the bar changed.
  */
 export function setSpellSlot(
   state: GameState,
@@ -1655,7 +1718,7 @@ export function setSpellSlot(
   }
   const def = spellDefs()[spellId];
   if (!def) return false;
-  if (!isSpellUnlocked(def, effectiveStat(state, SPELL_STAT))) return false;
+  if (!isSpellAvailable(state, def)) return false;
   // Moving a spell already slotted elsewhere clears its old slot first.
   for (let i = 0; i < slots.length; i++) {
     if (i !== slotIndex && slots[i] === spellId) slots[i] = null;
@@ -1666,19 +1729,19 @@ export function setSpellSlot(
 
 /**
  * Auto-fill any EMPTY spell-bar slots with the hero's newest unlocked spells
- * not already on the bar — called by the app when a fresh caster (or a loaded
+ * not already on the bar — called by the app when a fresh hero (or a loaded
  * loadout with a short bar) has open slots, so the bar is never blank when
- * spells are available. Fills highest-`minInt` first (the newest, strongest).
+ * spells are available. Fills highest-`minStat` first (the newest, strongest).
  * Returns whether anything was placed.
  */
 export function autofillSpellSlots(state: GameState): boolean {
   const slots = state.player.spellSlots;
-  const effInt = effectiveStat(state, SPELL_STAT);
   const onBar = new Set(slots.filter((s): s is string => s !== null));
-  const available = Object.values(spellDefs())
-    .filter((def) => isSpellUnlocked(def, effInt) && !onBar.has(def.id))
-    .sort((a, b) => b.minInt - a.minInt)
-    .map((def) => def.id);
+  // unlockedSpellIds is ascending by minStat; reverse so the strongest lands
+  // first. Already class-filtered, so a warrior never auto-slots a magic spell.
+  const available = unlockedSpellIds(state)
+    .filter((id) => !onBar.has(id))
+    .reverse();
   let placed = false;
   let cursor = 0;
   for (let i = 0; i < slots.length && cursor < available.length; i++) {
@@ -1692,9 +1755,9 @@ export function autofillSpellSlots(state: GameState): boolean {
 
 /**
  * Drain the next queued spell unlock (see `GameState.pendingSpellUnlocks`,
- * filled by `allocateStat` when INT crosses a ×10 milestone) — returns its
- * SPELL_DEFS id and removes it from the queue, or null when the queue is empty.
- * The app calls this as the "SPELL UNLOCKED" modal is dismissed, one at a time.
+ * filled by `allocateStat` when a class stat crosses a ×10 milestone) — returns
+ * its SPELL_DEFS id and removes it from the queue, or null when the queue is
+ * empty. The app calls this as the unlock modal is dismissed, one at a time.
  */
 export function takeSpellUnlock(state: GameState): string | null {
   return state.pendingSpellUnlocks.shift() ?? null;
@@ -1873,7 +1936,8 @@ export function playerSpeed(state: GameState): number {
     STATS.strengthSlowFloor,
     1 - effectiveStat(state, "strength") * STATS.strengthSlowPerPoint,
   );
-  return PLAYER.speed * quickness * burden;
+  // A running move-speed buff (a charge/sprint art) quickens the walk (1 idle).
+  return PLAYER.speed * quickness * burden * heroBuffMult(state, "speed");
 }
 
 /** Enemy crit chance against the player, after LUCK's avoidance. */
@@ -2050,6 +2114,10 @@ export function weaponDamageFor(state: GameState, weapon: Equipment): number {
   // The developer damage knob scales the final figure, so combat, auto-equip
   // scoring, and every DPS readout move together (rankings are unchanged —
   // it's one factor on all of them).
+  // A running martial self-buff (WAR CRY / BERSERK) pumps the hero's own blows;
+  // 1 when no buff is up. Applied here — the one source of stat-scaled damage —
+  // so combat and every readout move together while it lasts (auto-equip
+  // rankings are unchanged: it's one factor on every candidate alike).
   return (
     def.damage *
     multiplier *
@@ -2057,7 +2125,8 @@ export function weaponDamageFor(state: GameState, weapon: Equipment): number {
     lootMult *
     qualityMult(weapon) *
     (weapon.baseRoll ?? 1) *
-    BALANCE.playerDamage
+    BALANCE.playerDamage *
+    heroBuffMult(state, "damage")
   );
 }
 
@@ -2139,7 +2208,12 @@ export function weaponCooldownFor(state: GameState, weapon: Equipment): number {
     def.class === "magic"
       ? STATS.magicAttackSpeedPerStat
       : STATS.attackSpeedPerStat;
-  return (def.cooldownMs * WEAPON.baseCooldownMult) / (1 + stat * perStat);
+  // A running RAPID FIRE / BERSERK haste buff shortens the cadence (1 when idle).
+  return (
+    (def.cooldownMs * WEAPON.baseCooldownMult) /
+    (1 + stat * perStat) /
+    heroBuffMult(state, "haste")
+  );
 }
 
 /**
@@ -3040,13 +3114,12 @@ export function allocateStat(state: GameState, stat: StatName): boolean {
   // cap sits above any achievable chosen pile, so this only bites at the 250
   // hard ceiling; the UI greys a maxed stat.
   if (player.stats[stat] >= statCap(player.level)) return false;
-  // SPELL UNLOCKS ride effective INTELLIGENCE crossing a ×10 milestone — read it
-  // before the point lands so we can enqueue any spell the jump unlocks (skipped
-  // during a respec, where the player already knows their spellbook).
-  const intBefore =
-    stat === SPELL_STAT && state.phase !== "respec"
-      ? effectiveStat(state, SPELL_STAT)
-      : 0;
+  // SPELL UNLOCKS ride a CLASS STAT (STR/DEX/INT) crossing a ×10 milestone —
+  // read it before the point lands so we can enqueue any power the jump unlocks
+  // (skipped during a respec, where the player already knows their spellbook).
+  const isClassStat = (SPELL_STATS as readonly StatName[]).includes(stat);
+  const classStatBefore =
+    isClassStat && state.phase !== "respec" ? effectiveStat(state, stat) : 0;
   player.stats[stat]++;
   // Tally the player's own pick so the chooser can show it apart from the
   // head-start/auto-growth/gear baked into the effective stat.
@@ -3054,19 +3127,25 @@ export function allocateStat(state: GameState, stat: StatName): boolean {
   player.pendingStatPoints--;
   recomputeMaxHp(state);
   recomputeMaxStamina(state);
-  // INTELLIGENCE also deepens the mana pool — resize it as the point lands, and
-  // surface any spell the higher effective INT just unlocked.
-  if (stat === SPELL_STAT) {
-    recomputeMaxMana(state);
-    if (state.phase !== "respec") {
-      const unlocked = spellsUnlockedBetween(
-        intBefore,
-        effectiveStat(state, SPELL_STAT),
-      );
-      for (const id of unlocked) {
-        if (!state.pendingSpellUnlocks.includes(id)) {
-          state.pendingSpellUnlocks.push(id);
-        }
+  // INTELLIGENCE always sizes the mana pool (every class's fuel) — resize it as
+  // the point lands, regardless of which class the hero is.
+  if (stat === "intelligence") recomputeMaxMana(state);
+  // Surface any power the higher stat just unlocked — but only when this stat is
+  // (now) the hero's dominant CLASS, so a warrior never gets a "spell unlocked"
+  // pop for magic, and points into an off-class stat stay silent.
+  if (
+    isClassStat &&
+    state.phase !== "respec" &&
+    heroSpellStat(state) === stat
+  ) {
+    const unlocked = spellsUnlockedBetweenForStat(
+      stat,
+      classStatBefore,
+      effectiveStat(state, stat),
+    );
+    for (const id of unlocked) {
+      if (!state.pendingSpellUnlocks.includes(id)) {
+        state.pendingSpellUnlocks.push(id);
       }
     }
   }
@@ -3132,7 +3211,7 @@ export function deallocateStat(state: GameState, stat: StatName): boolean {
   player.pendingStatPoints++;
   recomputeMaxHp(state);
   recomputeMaxStamina(state);
-  if (stat === SPELL_STAT) recomputeMaxMana(state);
+  if (stat === "intelligence") recomputeMaxMana(state);
   if (stat === "strength") syncInventoryCapacity(state);
   player.hp = Math.min(player.hp, player.maxHp);
   player.stamina = Math.min(player.stamina, player.maxStamina);
