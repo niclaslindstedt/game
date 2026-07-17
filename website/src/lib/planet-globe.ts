@@ -51,11 +51,41 @@ type GlobeStyle = {
 const DEG = Math.PI / 180;
 
 const STYLES: Record<GlobeKind, GlobeStyle> = {
-  earth: { obliquity: 23.4 * DEG, soft: 0.16, ambient: 0.05, rim: 1, rimColor: [150, 205, 255] },
-  mars: { obliquity: 25.2 * DEG, soft: 0.1, ambient: 0.035, rim: 0.4, rimColor: [255, 180, 130] },
-  venus: { obliquity: 2.6 * DEG, soft: 0.24, ambient: 0.06, rim: 0.7, rimColor: [255, 235, 180] },
-  mercury: { obliquity: 0.03 * DEG, soft: 0.05, ambient: 0.025, rim: 0, rimColor: [0, 0, 0] },
-  moon: { obliquity: 6.7 * DEG, soft: 0.055, ambient: 0.03, rim: 0, rimColor: [0, 0, 0] },
+  earth: {
+    obliquity: 23.4 * DEG,
+    soft: 0.16,
+    ambient: 0.05,
+    rim: 1,
+    rimColor: [150, 205, 255],
+  },
+  mars: {
+    obliquity: 25.2 * DEG,
+    soft: 0.1,
+    ambient: 0.035,
+    rim: 0.4,
+    rimColor: [255, 180, 130],
+  },
+  venus: {
+    obliquity: 2.6 * DEG,
+    soft: 0.24,
+    ambient: 0.06,
+    rim: 0.7,
+    rimColor: [255, 235, 180],
+  },
+  mercury: {
+    obliquity: 0.03 * DEG,
+    soft: 0.05,
+    ambient: 0.025,
+    rim: 0,
+    rimColor: [0, 0, 0],
+  },
+  moon: {
+    obliquity: 6.7 * DEG,
+    soft: 0.055,
+    ambient: 0.03,
+    rim: 0,
+    rimColor: [0, 0, 0],
+  },
 };
 
 /** The camera looks slightly down onto the orbital plane, so the sunlit tops of
@@ -69,9 +99,15 @@ const CAM_PITCH = 18 * DEG;
  * shared camera pitch (lean toward the viewer). The absolute longitude origin is
  * arbitrary — the spin rotates it — so any equatorial basis will do. */
 type Axis = {
-  nx: number; ny: number; nz: number; // north pole
-  ex: number; ey: number; ez: number; // east (prime-meridian tangent)
-  fx: number; fy: number; fz: number; // front (prime meridian)
+  nx: number;
+  ny: number;
+  nz: number; // north pole
+  ex: number;
+  ey: number;
+  ez: number; // east (prime-meridian tangent)
+  fx: number;
+  fy: number;
+  fz: number; // front (prime meridian)
 };
 
 const buildAxis = (obliquity: number): Axis => {
@@ -234,7 +270,11 @@ const skinTexel = (
   if (kind === "mars") {
     const n = fbm3(x * 2.3, y * 2.3, z * 2.3, 5, 7.7);
     const base = mix([150, 74, 42], [190, 104, 66], clamp01(n * 1.3));
-    const maria = smoothstep(0.32, 0.5, fbm3(x * 1.4, y * 1.4, z * 1.4, 3, 2.2));
+    const maria = smoothstep(
+      0.32,
+      0.5,
+      fbm3(x * 1.4, y * 1.4, z * 1.4, 3, 2.2),
+    );
     let surface = mix(base, [110, 52, 34], maria * 0.6);
     const ice = smoothstep(1.2, 1.45, absLat);
     surface = mix(surface, [232, 224, 220], ice);
