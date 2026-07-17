@@ -211,20 +211,23 @@ body {
   gap: 0.4rem;
   /* Clear the top safe area (iOS notch / Dynamic Island): the whole HUD — the
      XP strip, the portrait unit, AND the minimap, all children here — is pushed
-     down by the inset so nothing hides behind the island. On a display with no
-     inset this is 0, so the XP strip still hugs the very top edge. The status
-     row below carries the LEFT/RIGHT safe-area padding (for a landscape island
-     on the side). */
-  padding: env(safe-area-inset-top) 0 0;
+     down by the inset so nothing hides behind the island. The reported inset
+     carries a little slack past the opaque island, so we tuck back up ~0.35rem
+     to sit snug beneath it (clamped so it never goes negative). On a display
+     with no inset this is 0, so the XP strip still hugs the very top edge. The
+     status row below carries the LEFT/RIGHT safe-area padding (for a landscape
+     island on the side). */
+  padding: max(0px, calc(env(safe-area-inset-top) - 0.35rem)) 0 0;
   pointer-events: none;
 }
 
-/* The XP strip: a slim bar hugging the very top edge, edge to edge (no side or
-   top border, so nothing insets it from the screen). The level is NOT shown
-   here — it reads off the portrait's corner badge. */
+/* The XP strip: a thin blue bar hugging the very top edge, edge to edge (no
+   side or top border, so nothing insets it from the screen) — as slim as the
+   stamina sliver in the vitals plate. The level is NOT shown here — it reads
+   off the portrait's corner badge. */
 .hud-xp {
   position: relative;
-  height: 0.9rem;
+  height: 0.42rem;
   background: #1d2530;
   border: 0;
   border-bottom: 2px solid #1a1c2c;
@@ -232,7 +235,7 @@ body {
 
 .hud-xp-fill {
   height: 100%;
-  background: linear-gradient(180deg, #ffd75e, #d8a018);
+  background: linear-gradient(180deg, #5ab4ff, #2f6fd0);
   transition: width 280ms cubic-bezier(0.22, 1, 0.36, 1);
 }
 
