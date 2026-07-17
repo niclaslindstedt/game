@@ -65,6 +65,8 @@ export const AFFIX_COLORS: Record<Affix["kind"], string> = {
   crit: "#e8b93e",
   maxHp: "#5fd97a",
   armor: "#9ab3c9",
+  // Armor piercing — a steely cyan, the "punches through plate" hue.
+  armorPen: "#6fd0d6",
   stat: "#4da6ff",
   // Scaling bonuses (uniques) share their flat cousin's hue.
   statPct: "#4da6ff",
