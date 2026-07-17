@@ -459,12 +459,17 @@ export function TitleScreen({
   // the orbiting solar system. Re-read each render (a toggle bumps settingsTick,
   // which re-renders), so flipping it in the menu restarts the sky driver live.
   const titleOrbits = getSettings().titleOrbits === "on";
+  // Planetarium test view (`?skytest`): force the orbital solar system on and
+  // strip the menu chrome, so the planets can be inspected on a bare sky — no
+  // dev flag to toggle, no logo/menu/footer overlapping the bodies.
+  const skyTest = new URLSearchParams(window.location.search).has("skytest");
+  const orbital = titleOrbits || skyTest;
   useEffect(() => {
     const moon = moonRef.current;
     const sun = sunRef.current;
     const glare = glareRef.current;
     if (!moon || !sun || !glare) return;
-    if (titleOrbits) {
+    if (orbital) {
       const mercury = mercuryRef.current;
       const venus = venusRef.current;
       const earth = earthRef.current;
@@ -485,7 +490,7 @@ export function TitleScreen({
       });
     }
     return startTitleArcSky({ moon, sun, glare });
-  }, [assets, titleOrbits]);
+  }, [assets, orbital]);
 
   // Character transfer (SETTINGS → DATA → EXPORT / IMPORT CHARACTER): the last
   // result, shown as a line under the menu.
@@ -1800,7 +1805,7 @@ export function TitleScreen({
   return (
     <div
       ref={screenRef}
-      className={`title-screen${titleOrbits ? " orbits" : ""}`}
+      className={`title-screen${orbital ? " orbits" : ""}${skyTest ? " sky-test" : ""}`}
       onPointerDown={unlockAudio}
       style={{ "--menu-cursor": menuCursor } as CSSProperties}
     >
@@ -1835,7 +1840,7 @@ export function TitleScreen({
           (below) orbits Earth. Positions and lighting are driven each frame by
           startTitleSky (titleSky.ts) — the CSS only supplies each surface. With
           the flag off they are not rendered and the moon hangs in its corner. */}
-      {titleOrbits && (
+      {orbital && (
         <>
           <div
             ref={mercuryRef}
@@ -1900,7 +1905,7 @@ export function TitleScreen({
       <div ref={sunRef} className="title-sun" aria-hidden="true" />
       <div ref={glareRef} className="title-sun-glare" aria-hidden="true" />
 
-      {!browserOpen && (
+      {!browserOpen && !skyTest && (
         <div className="title-content" ref={contentRef}>
           <header className="title-logo">
             <h1 className="visually-hidden">{IDENTITY.title}</h1>
@@ -2412,7 +2417,7 @@ export function TitleScreen({
         />
       )}
 
-      {!browserOpen && (
+      {!browserOpen && !skyTest && (
         <footer className="title-footer">
           <PixelText
             font={font}

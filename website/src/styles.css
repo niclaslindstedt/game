@@ -1698,18 +1698,62 @@ body {
   will-change: left, top;
 }
 
-/* The terminator: a soft-edged shadow disc, clipped to the planet by the
-   parent's overflow. Slid off (by the JS-set offset) it uncovers the lit half
-   facing the sun. Slightly oversized (inset) so a half-offset reads as a clean
-   day/night split rather than a hard edge. */
+/* The rotating, sun-lit globe: a canvas the shader (planet-globe.ts) paints
+   each frame, filling the body over its flat CSS gradient. It covers the whole
+   disc, so `has-globe` retires the CSS terminator/shading pseudo-elements —
+   the per-pixel-lit sphere is the whole look. pointer-events off so the moon's
+   long-press gesture still lands on the parent. */
+.title-globe {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  border-radius: 50%;
+  pointer-events: none;
+}
+
+.title-planet.has-globe::before,
+.title-planet.has-globe::after {
+  content: none;
+}
+
+/* Spherical shading + atmosphere, drawn BENEATH the night disc (::after) so the
+   night disc masks it on the dark side and it only shows where the sun strikes.
+   A gentle limb-darkening vignette rounds the disc into a ball, and a thin
+   bright ring at the very edge (--sky-rim, per body) reads as the sunlit
+   atmosphere hazing the limb — the day-side glow the reference photos show. */
+.title-planet::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
+  background: radial-gradient(
+    circle at 50% 50%,
+    transparent 0 58%,
+    rgba(0, 0, 0, 0.22) 84%,
+    var(--sky-rim, transparent) 94%,
+    transparent 100%
+  );
+  z-index: 1;
+  pointer-events: none;
+}
+
+/* The terminator: a soft-edged night disc, clipped to the planet by the
+   parent's overflow, riding ABOVE the shading (::before). The JS slides it away
+   from the sun by an amount set by the body's phase — centred for a half, fully
+   off for a full, back over the whole face for a new — so the disc waxes and
+   wanes. Slightly oversized (inset) and blurred by --sky-soft (scaled to the
+   disc) so the day/night boundary melts like a real terminator, not a scored
+   edge. */
 .title-planet::after {
   content: "";
   position: absolute;
   inset: -3%;
   border-radius: 50%;
-  background: radial-gradient(circle at 60% 42%, #0c1017 0 68%, #05070b 100%);
-  filter: blur(1.5px);
+  background: radial-gradient(circle at 60% 42%, #0b0f16 0 66%, #04060a 100%);
+  filter: blur(var(--sky-soft, 1.5px));
   transform: translate(var(--sky-sx, -140%), var(--sky-sy, 0));
+  z-index: 2;
   will-change: transform;
 }
 
@@ -1727,6 +1771,8 @@ body {
     radial-gradient(circle at 30% 42%, #4c8a52 0 6%, transparent 7%),
     radial-gradient(circle at 40% 34%, #6fb7e6, #2f6fb0 55%, #1c4a80);
   box-shadow: 0 0 26px rgba(120, 170, 235, 0.32);
+  /* A pronounced blue atmospheric limb — Earth's signature sunlit haze. */
+  --sky-rim: rgba(150, 205, 255, 0.85);
 }
 
 /* Mars — the rusty wanderer on the wide outer orbit. Only rendered with
@@ -1742,6 +1788,8 @@ body {
     radial-gradient(circle at 68% 70%, #b5623a 0 6%, transparent 7%),
     radial-gradient(circle at 42% 40%, #d9764a, #c05a30 55%, #9c4322);
   box-shadow: 0 0 18px rgba(235, 140, 90, 0.3);
+  /* A faint dusty-orange limb — Mars's thin atmosphere. */
+  --sky-rim: rgba(255, 180, 130, 0.4);
 }
 
 /* Mercury — a tiny scorched cinder on the innermost orbit. Only rendered with
@@ -1767,6 +1815,8 @@ body {
   height: clamp(18px, 4vmin, 34px);
   background: radial-gradient(circle at 40% 36%, #f4e4b4, #e0c078 55%, #b89048);
   box-shadow: 0 0 12px rgba(235, 205, 150, 0.3);
+  /* A soft gold limb — Venus's dense reflective cloud deck. */
+  --sky-rim: rgba(255, 235, 180, 0.5);
 }
 
 /* The Moon — grey and cratered. By default it hangs in the top-right corner
