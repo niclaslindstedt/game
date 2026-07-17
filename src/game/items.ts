@@ -2023,22 +2023,24 @@ export function weaponDamageFor(state: GameState, weapon: Equipment): number {
   // baseline the difficulty ladder is calibrated on — is exempt and keeps its
   // full catalog damage, so the opening fight stays exactly as tuned.
   const lootMult = weapon.durability === undefined ? 1 : WEAPON.damageMult;
-  // ARTIFACT MELEE AFFINITY — the endgame chase pays off for the ARM. Every worn
+  // ARTIFACT AFFINITY — the endgame chase decides the class order. Every worn
   // artifact-tier relic (weapon/armor/charm/bag — the rarest, level-99 tier)
-  // MULTIPLIES a MELEE weapon's damage by STATS.artifactMeleeDamagePerPiece, so
-  // a bruiser in a full set of relics swings for multiples of his bare blow and
-  // reclaims the top of the endgame from the casters. A separate factor (not
-  // folded into the stat `multiplier`) so it isn't swamped by the huge endgame
-  // stat term. Melee weapon ONLY — a mage in artifact armor gets nothing; it
-  // rewards actually SWINGING the legend. Non-melee and artifact-less heroes
-  // keep exactly their old damage (factor 1).
-  let artifactMeleeMult = 1;
-  if (def.class === "melee") {
+  // MULTIPLIES the held weapon's damage by its CLASS's rate
+  // (STATS.artifactDamagePerPieceByClass, ordered melee > ranged > magic), so as
+  // relics pile up the endgame settles into melee ahead of ranged ahead of
+  // magic. A separate factor (not folded into the stat `multiplier`) so it isn't
+  // swamped by the huge endgame stat term. It counts ANY artifact — the common,
+  // easy-to-find relics and the shared armor pool — so the order emerges from a
+  // couple of ordinary drops. Gated on the HELD weapon's class; the stat-aware
+  // auto-equip reads the same lift. Artifact-less heroes keep their old damage.
+  let artifactMult = 1;
+  const affinity = STATS.artifactDamagePerPieceByClass[def.class] ?? 0;
+  if (affinity > 0) {
     let artifacts = 0;
     for (const piece of equippedPieces(state)) {
       if (piece.tier === "artifact") artifacts++;
     }
-    artifactMeleeMult = 1 + artifacts * STATS.artifactMeleeDamagePerPiece;
+    artifactMult = 1 + artifacts * affinity;
   }
   // The instance's MAKE QUALITY scales the blow: a BROKEN pipe swings soft,
   // a PERFECT one over its catalog weight — the specific figure this copy
@@ -2055,7 +2057,7 @@ export function weaponDamageFor(state: GameState, weapon: Equipment): number {
     multiplier *
     ilvlMult *
     lootMult *
-    artifactMeleeMult *
+    artifactMult *
     qualityMult(weapon) *
     (weapon.baseRoll ?? 1) *
     BALANCE.playerDamage
