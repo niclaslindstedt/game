@@ -497,7 +497,11 @@ run against synthetic fixtures with no shipped content (see
   MAIN-VIEW fog of war (`render.ts` `drawFog`): everything uncovered reads
   fully clear, never-explored terrain is solid black, and the frontier between
   them is a graded ordered-dither transition band (`MAP.fogBand` wide) that also
-  hides any mob standing in it or the dark beyond. Memorable events pin
+  hides any mob standing in it or the dark beyond. A sibling render-side cull
+  drops any enemy the hero has no LINE OF SIGHT to — one tucked fully behind a
+  wall or boulder — reusing the engine's `lineOfSight` (`src/game/obstacles.ts`,
+  the same tall-obstacle query that stops shots); a mob only peeking out from an
+  edge still draws. Memorable events pin
   `state.mapMarkers` via `addMapMarker` — story-item finds (story.ts),
   unique/legendary pickups (the pickup switch in step.ts), and elite/boss
   victories including fled uniques (loot.ts). `openMap`/`closeMap` toggle the

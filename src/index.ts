@@ -251,6 +251,12 @@ export {
 // helpers the map overlay draws from (`state.explored` + MAP.cellSize).
 export { closeMap, isExplored, mapCols, mapRows, openMap } from "./game/map.ts";
 
+// Obstacle sight queries: the swept "does this line clear every TALL obstacle?"
+// test the simulation runs against solid features (walls, boulders, rocks —
+// jumpable low ones never occlude). The renderer reuses `lineOfSight` to cull
+// mobs the hero can't actually see (hidden behind cover).
+export { lineOfSight } from "./game/obstacles.ts";
+
 // Design zones — the safe/quiet region geometry LevelDefs carve maps with.
 export {
   anyZoneContains,
