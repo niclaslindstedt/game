@@ -1024,18 +1024,21 @@ function drawGuidanceArrow(
   ctx.save();
   ctx.translate(cx, cy);
   ctx.rotate(Math.atan2(uy, ux)); // arrow points along +x, toward the waypoint
-  // A blocky arrowhead (dark outline under an amber fill) to sit in the pixel
-  // look. Drawn as stacked bars narrowing to the tip.
-  const bar = (fill: string, o: number) => {
-    ctx.fillStyle = fill;
-    ctx.fillRect(-6 - o, -7 - o, 4 + 2 * o, 14 + 2 * o);
-    ctx.fillRect(-2 - o, -5 - o, 4 + 2 * o, 10 + 2 * o);
-    ctx.fillRect(2 - o, -3 - o, 4 + 2 * o, 6 + 2 * o);
-    ctx.fillRect(6 - o, -1 - o, 3 + 2 * o, 2 + 2 * o);
-  };
+  // A solid amber arrowhead with a dark outline: a clean filled triangle with a
+  // notched back, pointing along +x toward the waypoint.
+  ctx.beginPath();
+  ctx.moveTo(10, 0); // tip
+  ctx.lineTo(-6, -9); // top back corner
+  ctx.lineTo(-2, 0); // back notch
+  ctx.lineTo(-6, 9); // bottom back corner
+  ctx.closePath();
   ctx.globalAlpha = alpha;
-  bar("#1a1c2c", 1); // outline
-  bar("#ffb02e", 0); // amber fill
+  ctx.lineJoin = "round";
+  ctx.lineWidth = 3;
+  ctx.strokeStyle = "#1a1c2c"; // dark outline
+  ctx.stroke();
+  ctx.fillStyle = "#ffb02e"; // amber fill
+  ctx.fill();
   ctx.restore();
   ctx.globalAlpha = 1;
 }
