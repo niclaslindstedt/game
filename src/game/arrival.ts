@@ -259,6 +259,14 @@ function rosterXp(def: LevelDef, difficulty: Difficulty): number {
     if (!meetsMinDifficulty(difficulty, entry.minDifficulty)) continue;
     total += mobXp(entry.enemy) * entry.count;
   }
+  // Spawn points — the finite-horde alternative to waves; every queued member is
+  // killed on a full clear, so it pays like the wave budget it replaced.
+  for (const spawner of def.spawners ?? []) {
+    if (!meetsMinDifficulty(difficulty, spawner.minDifficulty)) continue;
+    for (const member of spawner.members) {
+      total += mobXp(member.enemy) * member.count;
+    }
+  }
   return total;
 }
 

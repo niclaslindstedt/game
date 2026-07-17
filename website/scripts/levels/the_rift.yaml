@@ -201,32 +201,69 @@ packs:
         count: 3
       - enemy: graviton
         count: 2
-waves:
-  rampDurationMs: 340000
-  maxAlive: 230
-  minAlive: 24
-  moveSpawnEvery: 58
-  budget:
-    - enemy: voidling
-      count: 500
-      window:
-        - 0
-        - 0.5
-    - enemy: star_jelly
-      count: 300
-      window:
-        - 0.25
-        - 0.75
-    - enemy: unraveler
-      count: 280
-      window:
-        - 0.5
-        - 0.95
-    - enemy: graviton
-      count: 70
-      window:
-        - 0.4
-        - 1
+spawners:
+  # Finite spawn points (converted from the old wave budget): placed
+  # knots the hero clears on the way to the boss. Counts preserve the
+  # wave total; refine placement/mix in a later pass.
+  - id: p0
+    at: { x: 351, y: 829 }
+    triggerRadius: 520
+    members:
+      - enemy: voidling
+        count: 84
+  - id: p1
+    at: { x: 519, y: 1043 }
+    members:
+      - enemy: voidling
+        count: 84
+  - id: p2
+    at: { x: 610, y: 855 }
+    members:
+      - enemy: voidling
+        count: 83
+      - enemy: star_jelly
+        count: 60
+  - id: p3
+    at: { x: 701, y: 1146 }
+    members:
+      - enemy: voidling
+        count: 83
+      - enemy: star_jelly
+        count: 60
+  - id: p4
+    at: { x: 792, y: 958 }
+    members:
+      - enemy: voidling
+        count: 83
+      - enemy: star_jelly
+        count: 60
+      - enemy: unraveler
+        count: 70
+  - id: p5
+    at: { x: 883, y: 1249 }
+    members:
+      - enemy: voidling
+        count: 83
+      - enemy: star_jelly
+        count: 60
+      - enemy: unraveler
+        count: 70
+  - id: p6
+    at: { x: 974, y: 1061 }
+    members:
+      - enemy: star_jelly
+        count: 60
+      - enemy: unraveler
+        count: 70
+      - enemy: graviton
+        count: 35
+  - id: p7
+    at: { x: 1065, y: 1352 }
+    members:
+      - enemy: unraveler
+        count: 70
+      - enemy: graviton
+        count: 35
 placedItems:
   - kind: story
     defId: ada_jacket

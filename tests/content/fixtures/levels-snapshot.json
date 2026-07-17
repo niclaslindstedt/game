@@ -1590,46 +1590,149 @@
           ]
         }
       ],
-      "waves": {
-        "rampDurationMs": 300000,
-        "maxAlive": 220,
-        "minAlive": 20,
-        "moveSpawnEvery": 64,
-        "budget": [
-          {
-            "enemy": "wisp",
-            "count": 500,
-            "window": [
-              0,
-              0.55
-            ]
+      "spawners": [
+        {
+          "id": "p0",
+          "at": {
+            "x": 447,
+            "y": 1256
           },
-          {
-            "enemy": "ghost",
-            "count": 400,
-            "window": [
-              0.3,
-              0.85
-            ]
+          "triggerRadius": 520,
+          "members": [
+            {
+              "enemy": "wisp",
+              "count": 84
+            }
+          ]
+        },
+        {
+          "id": "p1",
+          "at": {
+            "x": 800,
+            "y": 1167
           },
-          {
-            "enemy": "wraith",
-            "count": 300,
-            "window": [
-              0.55,
-              1
-            ]
+          "members": [
+            {
+              "enemy": "wisp",
+              "count": 84
+            }
+          ]
+        },
+        {
+          "id": "p2",
+          "at": {
+            "x": 992,
+            "y": 814
           },
-          {
-            "enemy": "optimusk",
-            "count": 30,
-            "window": [
-              0.45,
-              1
-            ]
-          }
-        ]
-      },
+          "members": [
+            {
+              "enemy": "wisp",
+              "count": 83
+            },
+            {
+              "enemy": "ghost",
+              "count": 80
+            }
+          ]
+        },
+        {
+          "id": "p3",
+          "at": {
+            "x": 1184,
+            "y": 940
+          },
+          "members": [
+            {
+              "enemy": "wisp",
+              "count": 83
+            },
+            {
+              "enemy": "ghost",
+              "count": 80
+            }
+          ]
+        },
+        {
+          "id": "p4",
+          "at": {
+            "x": 1376,
+            "y": 587
+          },
+          "members": [
+            {
+              "enemy": "wisp",
+              "count": 83
+            },
+            {
+              "enemy": "ghost",
+              "count": 80
+            },
+            {
+              "enemy": "wraith",
+              "count": 75
+            }
+          ]
+        },
+        {
+          "id": "p5",
+          "at": {
+            "x": 1567,
+            "y": 713
+          },
+          "members": [
+            {
+              "enemy": "wisp",
+              "count": 83
+            },
+            {
+              "enemy": "ghost",
+              "count": 80
+            },
+            {
+              "enemy": "wraith",
+              "count": 75
+            }
+          ]
+        },
+        {
+          "id": "p6",
+          "at": {
+            "x": 1759,
+            "y": 360
+          },
+          "members": [
+            {
+              "enemy": "ghost",
+              "count": 80
+            },
+            {
+              "enemy": "wraith",
+              "count": 75
+            },
+            {
+              "enemy": "optimusk",
+              "count": 15
+            }
+          ]
+        },
+        {
+          "id": "p7",
+          "at": {
+            "x": 1951,
+            "y": 486
+          },
+          "members": [
+            {
+              "enemy": "wraith",
+              "count": 75
+            },
+            {
+              "enemy": "optimusk",
+              "count": 15
+            }
+          ]
+        }
+      ],
       "walls": [
         {
           "kind": "boulder",
@@ -2190,54 +2293,153 @@
           ]
         }
       ],
-      "waves": {
-        "rampDurationMs": 330000,
-        "maxAlive": 220,
-        "minAlive": 22,
-        "moveSpawnEvery": 60,
-        "budget": [
-          {
-            "enemy": "scout_rover",
-            "count": 450,
-            "window": [
-              0,
-              0.5
-            ]
+      "spawners": [
+        {
+          "id": "p0",
+          "at": {
+            "x": 439,
+            "y": 747
           },
-          {
-            "enemy": "servo_bot",
-            "count": 350,
-            "window": [
-              0.25,
-              0.75
-            ]
+          "triggerRadius": 520,
+          "members": [
+            {
+              "enemy": "scout_rover",
+              "count": 75
+            }
+          ]
+        },
+        {
+          "id": "p1",
+          "at": {
+            "x": 897,
+            "y": 857
           },
-          {
-            "enemy": "fembot",
-            "count": 250,
-            "window": [
-              0.5,
-              0.95
-            ]
+          "members": [
+            {
+              "enemy": "scout_rover",
+              "count": 75
+            }
+          ]
+        },
+        {
+          "id": "p2",
+          "at": {
+            "x": 1145,
+            "y": 612
           },
-          {
-            "enemy": "mining_rover",
-            "count": 60,
-            "window": [
-              0.35,
-              1
-            ]
+          "members": [
+            {
+              "enemy": "scout_rover",
+              "count": 75
+            },
+            {
+              "enemy": "servo_bot",
+              "count": 70
+            }
+          ]
+        },
+        {
+          "id": "p3",
+          "at": {
+            "x": 1394,
+            "y": 846
           },
-          {
-            "enemy": "optimusk",
-            "count": 40,
-            "window": [
-              0.55,
-              1
-            ]
-          }
-        ]
-      },
+          "members": [
+            {
+              "enemy": "scout_rover",
+              "count": 75
+            },
+            {
+              "enemy": "servo_bot",
+              "count": 70
+            }
+          ]
+        },
+        {
+          "id": "p4",
+          "at": {
+            "x": 1642,
+            "y": 601
+          },
+          "members": [
+            {
+              "enemy": "scout_rover",
+              "count": 75
+            },
+            {
+              "enemy": "servo_bot",
+              "count": 70
+            },
+            {
+              "enemy": "fembot",
+              "count": 63
+            }
+          ]
+        },
+        {
+          "id": "p5",
+          "at": {
+            "x": 1891,
+            "y": 836
+          },
+          "members": [
+            {
+              "enemy": "scout_rover",
+              "count": 75
+            },
+            {
+              "enemy": "servo_bot",
+              "count": 70
+            },
+            {
+              "enemy": "fembot",
+              "count": 63
+            }
+          ]
+        },
+        {
+          "id": "p6",
+          "at": {
+            "x": 2139,
+            "y": 590
+          },
+          "members": [
+            {
+              "enemy": "servo_bot",
+              "count": 70
+            },
+            {
+              "enemy": "fembot",
+              "count": 62
+            },
+            {
+              "enemy": "mining_rover",
+              "count": 30
+            }
+          ]
+        },
+        {
+          "id": "p7",
+          "at": {
+            "x": 2388,
+            "y": 825
+          },
+          "members": [
+            {
+              "enemy": "fembot",
+              "count": 62
+            },
+            {
+              "enemy": "mining_rover",
+              "count": 30
+            },
+            {
+              "enemy": "optimusk",
+              "count": 40
+            }
+          ]
+        }
+      ],
       "walls": [
         {
           "kind": "wall",
@@ -2985,46 +3187,149 @@
           ]
         }
       ],
-      "waves": {
-        "rampDurationMs": 340000,
-        "maxAlive": 230,
-        "minAlive": 24,
-        "moveSpawnEvery": 58,
-        "budget": [
-          {
-            "enemy": "voidling",
-            "count": 500,
-            "window": [
-              0,
-              0.5
-            ]
+      "spawners": [
+        {
+          "id": "p0",
+          "at": {
+            "x": 351,
+            "y": 829
           },
-          {
-            "enemy": "star_jelly",
-            "count": 300,
-            "window": [
-              0.25,
-              0.75
-            ]
+          "triggerRadius": 520,
+          "members": [
+            {
+              "enemy": "voidling",
+              "count": 84
+            }
+          ]
+        },
+        {
+          "id": "p1",
+          "at": {
+            "x": 519,
+            "y": 1043
           },
-          {
-            "enemy": "unraveler",
-            "count": 280,
-            "window": [
-              0.5,
-              0.95
-            ]
+          "members": [
+            {
+              "enemy": "voidling",
+              "count": 84
+            }
+          ]
+        },
+        {
+          "id": "p2",
+          "at": {
+            "x": 610,
+            "y": 855
           },
-          {
-            "enemy": "graviton",
-            "count": 70,
-            "window": [
-              0.4,
-              1
-            ]
-          }
-        ]
-      },
+          "members": [
+            {
+              "enemy": "voidling",
+              "count": 83
+            },
+            {
+              "enemy": "star_jelly",
+              "count": 60
+            }
+          ]
+        },
+        {
+          "id": "p3",
+          "at": {
+            "x": 701,
+            "y": 1146
+          },
+          "members": [
+            {
+              "enemy": "voidling",
+              "count": 83
+            },
+            {
+              "enemy": "star_jelly",
+              "count": 60
+            }
+          ]
+        },
+        {
+          "id": "p4",
+          "at": {
+            "x": 792,
+            "y": 958
+          },
+          "members": [
+            {
+              "enemy": "voidling",
+              "count": 83
+            },
+            {
+              "enemy": "star_jelly",
+              "count": 60
+            },
+            {
+              "enemy": "unraveler",
+              "count": 70
+            }
+          ]
+        },
+        {
+          "id": "p5",
+          "at": {
+            "x": 883,
+            "y": 1249
+          },
+          "members": [
+            {
+              "enemy": "voidling",
+              "count": 83
+            },
+            {
+              "enemy": "star_jelly",
+              "count": 60
+            },
+            {
+              "enemy": "unraveler",
+              "count": 70
+            }
+          ]
+        },
+        {
+          "id": "p6",
+          "at": {
+            "x": 974,
+            "y": 1061
+          },
+          "members": [
+            {
+              "enemy": "star_jelly",
+              "count": 60
+            },
+            {
+              "enemy": "unraveler",
+              "count": 70
+            },
+            {
+              "enemy": "graviton",
+              "count": 35
+            }
+          ]
+        },
+        {
+          "id": "p7",
+          "at": {
+            "x": 1065,
+            "y": 1352
+          },
+          "members": [
+            {
+              "enemy": "unraveler",
+              "count": 70
+            },
+            {
+              "enemy": "graviton",
+              "count": 35
+            }
+          ]
+        }
+      ],
       "placedItems": [
         {
           "kind": "story",
@@ -3678,46 +3983,149 @@
           ]
         }
       ],
-      "waves": {
-        "rampDurationMs": 360000,
-        "maxAlive": 240,
-        "minAlive": 25,
-        "moveSpawnEvery": 56,
-        "budget": [
-          {
-            "enemy": "cowbot",
-            "count": 560,
-            "window": [
-              0,
-              0.5
-            ]
+      "spawners": [
+        {
+          "id": "p0",
+          "at": {
+            "x": 376,
+            "y": 781
           },
-          {
-            "enemy": "saloon_brawler",
-            "count": 320,
-            "window": [
-              0.25,
-              0.75
-            ]
+          "triggerRadius": 520,
+          "members": [
+            {
+              "enemy": "cowbot",
+              "count": 94
+            }
+          ]
+        },
+        {
+          "id": "p1",
+          "at": {
+            "x": 624,
+            "y": 838
           },
-          {
-            "enemy": "tin_outlaw",
-            "count": 300,
-            "window": [
-              0.5,
-              0.95
-            ]
+          "members": [
+            {
+              "enemy": "cowbot",
+              "count": 94
+            }
+          ]
+        },
+        {
+          "id": "p2",
+          "at": {
+            "x": 759,
+            "y": 563
           },
-          {
-            "enemy": "longhorn",
-            "count": 80,
-            "window": [
-              0.4,
-              1
-            ]
-          }
-        ]
-      },
+          "members": [
+            {
+              "enemy": "cowbot",
+              "count": 93
+            },
+            {
+              "enemy": "saloon_brawler",
+              "count": 64
+            }
+          ]
+        },
+        {
+          "id": "p3",
+          "at": {
+            "x": 894,
+            "y": 769
+          },
+          "members": [
+            {
+              "enemy": "cowbot",
+              "count": 93
+            },
+            {
+              "enemy": "saloon_brawler",
+              "count": 64
+            }
+          ]
+        },
+        {
+          "id": "p4",
+          "at": {
+            "x": 1029,
+            "y": 495
+          },
+          "members": [
+            {
+              "enemy": "cowbot",
+              "count": 93
+            },
+            {
+              "enemy": "saloon_brawler",
+              "count": 64
+            },
+            {
+              "enemy": "tin_outlaw",
+              "count": 75
+            }
+          ]
+        },
+        {
+          "id": "p5",
+          "at": {
+            "x": 1164,
+            "y": 701
+          },
+          "members": [
+            {
+              "enemy": "cowbot",
+              "count": 93
+            },
+            {
+              "enemy": "saloon_brawler",
+              "count": 64
+            },
+            {
+              "enemy": "tin_outlaw",
+              "count": 75
+            }
+          ]
+        },
+        {
+          "id": "p6",
+          "at": {
+            "x": 1299,
+            "y": 426
+          },
+          "members": [
+            {
+              "enemy": "saloon_brawler",
+              "count": 64
+            },
+            {
+              "enemy": "tin_outlaw",
+              "count": 75
+            },
+            {
+              "enemy": "longhorn",
+              "count": 40
+            }
+          ]
+        },
+        {
+          "id": "p7",
+          "at": {
+            "x": 1434,
+            "y": 632
+          },
+          "members": [
+            {
+              "enemy": "tin_outlaw",
+              "count": 75
+            },
+            {
+              "enemy": "longhorn",
+              "count": 40
+            }
+          ]
+        }
+      ],
       "walls": [
         {
           "kind": "storefront",

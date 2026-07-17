@@ -224,32 +224,69 @@ packs:
         count: 3
       - enemy: longhorn
         count: 2
-waves:
-  rampDurationMs: 360000
-  maxAlive: 240
-  minAlive: 25
-  moveSpawnEvery: 56
-  budget:
-    - enemy: cowbot
-      count: 560
-      window:
-        - 0
-        - 0.5
-    - enemy: saloon_brawler
-      count: 320
-      window:
-        - 0.25
-        - 0.75
-    - enemy: tin_outlaw
-      count: 300
-      window:
-        - 0.5
-        - 0.95
-    - enemy: longhorn
-      count: 80
-      window:
-        - 0.4
-        - 1
+spawners:
+  # Finite spawn points (converted from the old wave budget): placed
+  # knots the hero clears on the way to the boss. Counts preserve the
+  # wave total; refine placement/mix in a later pass.
+  - id: p0
+    at: { x: 376, y: 781 }
+    triggerRadius: 520
+    members:
+      - enemy: cowbot
+        count: 94
+  - id: p1
+    at: { x: 624, y: 838 }
+    members:
+      - enemy: cowbot
+        count: 94
+  - id: p2
+    at: { x: 759, y: 563 }
+    members:
+      - enemy: cowbot
+        count: 93
+      - enemy: saloon_brawler
+        count: 64
+  - id: p3
+    at: { x: 894, y: 769 }
+    members:
+      - enemy: cowbot
+        count: 93
+      - enemy: saloon_brawler
+        count: 64
+  - id: p4
+    at: { x: 1029, y: 495 }
+    members:
+      - enemy: cowbot
+        count: 93
+      - enemy: saloon_brawler
+        count: 64
+      - enemy: tin_outlaw
+        count: 75
+  - id: p5
+    at: { x: 1164, y: 701 }
+    members:
+      - enemy: cowbot
+        count: 93
+      - enemy: saloon_brawler
+        count: 64
+      - enemy: tin_outlaw
+        count: 75
+  - id: p6
+    at: { x: 1299, y: 426 }
+    members:
+      - enemy: saloon_brawler
+        count: 64
+      - enemy: tin_outlaw
+        count: 75
+      - enemy: longhorn
+        count: 40
+  - id: p7
+    at: { x: 1434, y: 632 }
+    members:
+      - enemy: tin_outlaw
+        count: 75
+      - enemy: longhorn
+        count: 40
 walls:
   - kind: storefront
     from:

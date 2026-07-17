@@ -154,6 +154,18 @@ const BOSS_LOCK_RANGE = 300;
  * patch before the path lets him advance (the level's "clear the area, then move
  * on" contract) — so he levels up on the way instead of rushing under-levelled. */
 const SPAWNER_CLEAR_RANGE = 540;
+
+/**
+ * BOSS-READY LEVEL. The hero FARMS the spawn-point patches (leveling as he goes)
+ * until he reaches the level he needs to beat the boss, then RUSHES it —
+ * marching past the remaining horde instead of draining every point. That
+ * target is the boss's own monster level minus this margin: with the run's gear
+ * a hero a couple of levels UNDER the boss still wins, and waiting for exact
+ * parity just bogs him in the wave grind. Raise it to make the bot farm more
+ * before committing, lower it to rush sooner. A level with no boss (reachExit)
+ * has no gate — the bot always pushes the objective.
+ */
+const BOSS_ENGAGE_MARGIN = 2;
 /** Enemies within this ring count toward being SURROUNDED. */
 const SURROUND_RADIUS = 150;
 /** This many foes packed inside SURROUND_RADIUS = punch out through the gap. */
@@ -486,10 +498,12 @@ function survive(state: GameState, posture: Posture): GameInput {
   const near = threatsWithin(state, THREAT_RADIUS);
 
   // A spawn point still owing mobs nearby means this patch ISN'T cleared yet —
-  // the hero holds and drains it before the path lets him move on (the "stick
-  // around until no spawn points in aggro range" clear rule), so he levels up on
-  // the way instead of rushing to the boss under-levelled. Null on wave levels.
-  const spawner = activeSpawnerNear(state);
+  // while the hero is UNDER the boss-ready level he holds and drains it (farming
+  // up before the path lets him move on). Once he's leveled enough to beat the
+  // boss (`readyForBoss`), the hold releases: he RUSHES, marching past the
+  // remaining horde toward the boss instead of draining every point. Null on
+  // wave levels / when there's nothing left owing here.
+  const spawner = readyForBoss(state) ? null : activeSpawnerNear(state);
 
   // 1. Breathing room: grab a pickup within reach; else, if a spawn point here
   //    is still emitting, close on it to trip/drain the rest; else advance.
@@ -778,9 +792,27 @@ function threatsWithin(state: GameState, radius: number): Enemy[] {
     );
 }
 
+/** The current boss enemy, if one is on the field. */
+function bossOf(state: GameState): Enemy | undefined {
+  return state.enemies.find((e) => enemyDef(e.defId).role === "boss");
+}
+
 /** The current boss's position, if one is on the field. */
 function bossPos(state: GameState): Vec2 | undefined {
-  return state.enemies.find((e) => enemyDef(e.defId).role === "boss")?.pos;
+  return bossOf(state)?.pos;
+}
+
+/**
+ * Is the hero leveled enough to STOP farming and rush the boss? True when he has
+ * reached the boss's monster level minus {@link BOSS_ENGAGE_MARGIN} — or when the
+ * level has no boss to gate on (a reachExit map), so the bot always pushes the
+ * objective there. Until then the bot keeps clearing the spawn-point patches to
+ * level up (see the `spawner` hold in {@link survive}).
+ */
+function readyForBoss(state: GameState): boolean {
+  const boss = bossOf(state);
+  if (!boss) return true;
+  return state.player.level >= Math.max(1, boss.mlvl - BOSS_ENGAGE_MARGIN);
 }
 
 /** The anchor of the nearest spawn point that still owes mobs (dormant or
