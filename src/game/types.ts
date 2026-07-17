@@ -479,6 +479,22 @@ export type Player = {
    */
   spellCooldowns: Record<string, number>;
   /**
+   * Queued spell-bar SLOT indices awaiting cast (FIFO). A press ENQUEUES its
+   * slot (`GameInput.castSpell`); `stepSpellQueue` drains the front one per
+   * GLOBAL cooldown while mana lasts — so a press casts ONCE and a burst of
+   * presses fires in order instead of holding a spell "on". Deduped by slot
+   * (a slot already waiting isn't queued twice), so it holds at most one entry
+   * per slot. The first queued cast the pool can't afford FLUSHES the whole
+   * queue: cast until mana runs out, then wait for regen.
+   */
+  spellQueue: number[];
+  /**
+   * The GLOBAL COOLDOWN remaining (ms). After any cast, every spell — and the
+   * queue's next dequeue — is locked out until this hits 0. Ticked down each
+   * frame in `stepRegen`; distinct from the per-spell `spellCooldowns`.
+   */
+  globalCooldownMs: number;
+  /**
    * The powerup dock (ABILITY_DEFS ids, oldest first, HELD_ITEMS.cap deep). A
    * slot holds a pickup from the moment it is scooped: first as a banked power
    * the `useItem` input can spend, then — once spent — as the running copy,
@@ -1620,11 +1636,14 @@ export type GameInput = {
    */
   useManaPotion?: boolean;
   /**
-   * True on the step the player tapped a spell-bar slot to CAST it.
-   * `castSpellIndex` names which slot (index into `Player.spellSlots`). A cast
-   * is a no-op when the slot is empty, the spell is still on cooldown, the pool
-   * lacks the mana, or the hero's INT no longer unlocks it (`castSpell` in
-   * sorcery.ts) — an edge like `useItem`, driven by the HUD button / bot.
+   * True on the step the player tapped a spell-bar slot — a discrete EDGE (like
+   * `useItem`), driven by the HUD button / cast key / bot. It ENQUEUES the slot
+   * (`castSpellIndex`, index into `Player.spellSlots`); the engine then drains
+   * the queue one cast per GLOBAL cooldown while mana lasts (`stepSpellQueue`).
+   * A queued cast is a no-op — dropped — when the slot is empty, the spell is
+   * still on its own cooldown, there's nothing to hit, or the hero's stat no
+   * longer unlocks it; the first cast the pool can't afford flushes the queue.
+   * Must be reset to false each tick so a single press casts exactly ONCE.
    */
   castSpell?: boolean;
   /** Which spell-bar slot `castSpell` fires (index into `Player.spellSlots`). */

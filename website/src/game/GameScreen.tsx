@@ -33,6 +33,7 @@ import {
   recomputeMaxMana,
   setSpellSlot,
   spellDef,
+  SPELL_GLOBAL_COOLDOWN_MS,
   takeSpellUnlock,
   unlockedSpellIds,
   BOT_PROFILES,
@@ -1501,6 +1502,10 @@ export function GameScreen({
         recomputeMaxMana(state);
         state.player.mana = state.player.maxMana;
         state.player.spellCooldowns = {};
+        // Clear both cooldowns and the queue so a preview cast always fires this
+        // instant, no matter how recently the last one went off.
+        state.player.globalCooldownMs = 0;
+        state.player.spellQueue = [];
         setSpellSlot(state, 0, id);
         castSpellIndexRef.current = 0;
       };
@@ -1563,6 +1568,12 @@ export function GameScreen({
           input.useRepairKit = decided.useRepairKit ?? false;
           input.useItemIndex = undefined;
           input.aim = undefined;
+          // The bot casts too — wire its spell pick through as an enqueue edge
+          // (the queue dedupes a slot re-picked every tick, so it just paces to
+          // the global cooldown). Reset when it isn't casting so the flag never
+          // sticks true and re-fires every frame.
+          input.castSpell = decided.castSpell ?? false;
+          input.castSpellIndex = decided.castSpellIndex;
         } else {
           const settings = getSettings();
           // Desktop mouse aim: the pointer adds a second steering dimension —
@@ -1667,10 +1678,14 @@ export function GameScreen({
           useStaminaQueuedRef.current = false;
           useManaQueuedRef.current = false;
           useRepairQueuedRef.current = false;
-          // A tapped spell-bar slot (or its cast key) casts this tick; the
-          // engine gates mana/cooldown/unlock, so a stray edge is harmless.
+          // A tapped spell-bar slot (or its cast key) ENQUEUES one cast this
+          // tick; the engine queues it and drains one per global cooldown
+          // (mana/cooldown/unlock gated in sorcery.ts). castSpell is a discrete
+          // EDGE — reset it every tick so a single press casts exactly ONCE
+          // instead of leaving the flag stuck true (which re-cast every frame
+          // until the pool emptied, and kept going after).
+          input.castSpell = castSpellIndexRef.current !== null;
           if (castSpellIndexRef.current !== null) {
-            input.castSpell = true;
             input.castSpellIndex = castSpellIndexRef.current;
             castSpellIndexRef.current = null;
           }
@@ -2753,6 +2768,13 @@ export function GameScreen({
         // mana pool only show once there is a real power to slot.
         const unlockedSpells = unlockedSpellIds(state);
         const isCaster = unlockedSpells.length > 0;
+        // The shared global cooldown sweeps EVERY slot (a queued spell waits
+        // behind it), so the whole bar reads as recharging between casts —
+        // shown as whichever runs longer, the spell's own cooldown or the GCD.
+        const gcdFrac = Math.max(
+          0,
+          Math.min(1, state.player.globalCooldownMs / SPELL_GLOBAL_COOLDOWN_MS),
+        );
         const spellViews: SpellSlotView[] = state.player.spellSlots.map(
           (id) => {
             if (!id) return { id: null, cooldownFrac: 0, affordable: false };
@@ -2761,7 +2783,7 @@ export function GameScreen({
             return {
               id,
               cooldownFrac: Math.max(
-                0,
+                gcdFrac,
                 Math.min(1, cd / Math.max(1, sdef.cooldownMs)),
               ),
               affordable: state.player.mana >= sdef.manaCost,
@@ -3035,11 +3057,7 @@ export function GameScreen({
             {/* The kill-heat overlay: only the freshly-earned slice glows. The
                 render loop sizes and lights it straight on the DOM (see
                 xpHeatRef) so a kill flashes it without a React re-render. */}
-            <div
-              ref={xpHeatRef}
-              className="hud-xp-heat"
-              aria-hidden="true"
-            />
+            <div ref={xpHeatRef} className="hud-xp-heat" aria-hidden="true" />
           </div>
 
           {/* The SPELL STATUS echo — the name of the spell just cast (or why a

@@ -14,13 +14,16 @@ import {
   castSpell,
   dominantSpellStat,
   effectiveStat,
+  enqueueSpell,
   heroSpellStat,
   recomputeMaxMana,
   spellDef,
   spellsForStat,
+  SPELL_GLOBAL_COOLDOWN_MS,
   SPELL_SLOTS,
   spellsUnlockedBetweenForStat,
   stepRegen,
+  stepSpellQueue,
   unlockedSpellIds,
   unlockedSpellIdsForStat,
   weaponDamageFor,
@@ -192,6 +195,114 @@ describe("casting economy", () => {
     const before = state.player.mana;
     expect(castSpell(state, 0)).toBe(false);
     expect(state.player.mana).toBe(before);
+  });
+
+  it("a cast arms the shared global cooldown", () => {
+    const state = startGame();
+    clearStage(state);
+    ready(state, "arc_bolt");
+    state.enemies = [tallMob(state, 40)];
+    expect(state.player.globalCooldownMs).toBe(0);
+    expect(castSpell(state, 0)).toBe(true);
+    expect(state.player.globalCooldownMs).toBe(SPELL_GLOBAL_COOLDOWN_MS);
+  });
+});
+
+describe("the cast queue & global cooldown", () => {
+  it("a press ENQUEUES; the queue drains one cast", () => {
+    const state = startGame();
+    clearStage(state);
+    ready(state, "arc_bolt");
+    state.enemies = [tallMob(state, 40)];
+    const before = state.player.mana;
+    const def = spellDef("arc_bolt");
+
+    enqueueSpell(state, 0);
+    expect(state.player.spellQueue).toEqual([0]);
+    stepSpellQueue(state);
+    // Cast this tick: mana spent, queue drained, global cooldown armed.
+    expect(state.player.mana).toBe(before - def.manaCost);
+    expect(state.player.spellQueue).toHaveLength(0);
+    expect(state.player.globalCooldownMs).toBe(SPELL_GLOBAL_COOLDOWN_MS);
+  });
+
+  it("the global cooldown blocks the next queued cast until it lapses", () => {
+    const state = startGame();
+    clearStage(state);
+    ready(state, "arc_bolt");
+    state.player.spellSlots[1] = "ember_burst"; // a second castable spell
+    state.enemies = [tallMob(state, 40)];
+
+    enqueueSpell(state, 0);
+    enqueueSpell(state, 1);
+    stepSpellQueue(state);
+    // Slot 0 fired; slot 1 waits behind the global cooldown.
+    expect(state.player.spellQueue).toEqual([1]);
+    const manaAfterFirst = state.player.mana;
+
+    // Still on the global cooldown → nothing dequeues, no mana spent.
+    stepSpellQueue(state);
+    expect(state.player.spellQueue).toEqual([1]);
+    expect(state.player.mana).toBe(manaAfterFirst);
+
+    // Let the global cooldown lapse; now the second cast fires.
+    stepRegen(state, SPELL_GLOBAL_COOLDOWN_MS / 1000, SPELL_GLOBAL_COOLDOWN_MS);
+    expect(state.player.globalCooldownMs).toBe(0);
+    stepSpellQueue(state);
+    expect(state.player.spellQueue).toHaveLength(0);
+    expect(state.player.mana).toBeLessThan(manaAfterFirst);
+  });
+
+  it("a press is deduped — the same slot never queues twice", () => {
+    const state = startGame();
+    clearStage(state);
+    ready(state, "arc_bolt");
+    enqueueSpell(state, 0);
+    enqueueSpell(state, 0);
+    enqueueSpell(state, 0);
+    expect(state.player.spellQueue).toEqual([0]);
+  });
+
+  it("an empty or out-of-range slot press is ignored", () => {
+    const state = startGame();
+    clearStage(state);
+    ready(state, "arc_bolt");
+    enqueueSpell(state, 2); // slot 2 holds no spell
+    enqueueSpell(state, 99); // out of range
+    enqueueSpell(state, -1);
+    expect(state.player.spellQueue).toHaveLength(0);
+  });
+
+  it("running out of mana FLUSHES the queue (wait for regen)", () => {
+    const state = startGame();
+    clearStage(state);
+    ready(state, "arc_bolt");
+    state.player.spellSlots[1] = "ember_burst";
+    state.enemies = [tallMob(state, 40)];
+    state.player.mana = 0; // pool empty
+    state.events = [];
+
+    enqueueSpell(state, 0);
+    enqueueSpell(state, 1);
+    stepSpellQueue(state);
+    // Can't afford the front → the whole queue is dropped, nothing cast.
+    expect(state.player.spellQueue).toHaveLength(0);
+    expect(state.events.some((e) => e.type === "spellCast")).toBe(false);
+  });
+
+  it("an uncastable entry (no target) is DROPPED, not stalled", () => {
+    const state = startGame();
+    clearStage(state);
+    ready(state, "arc_bolt"); // a bolt needs a foe in range
+    state.player.spellSlots[1] = "ember_burst"; // a nova always connects
+    state.enemies = []; // no target for the bolt
+    enqueueSpell(state, 0);
+    enqueueSpell(state, 1);
+    stepSpellQueue(state);
+    // The targetless bolt drops; the nova behind it still fires this tick.
+    expect(state.player.spellQueue).toHaveLength(0);
+    expect(state.player.globalCooldownMs).toBe(SPELL_GLOBAL_COOLDOWN_MS);
+    expect(state.events.some((e) => e.type === "spellCast")).toBe(true);
   });
 });
 

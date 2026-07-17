@@ -565,6 +565,10 @@ export function createGame(
       // carried loadout restores the player's arrangement).
       spellSlots: new Array<string | null>(SPELL_SLOTS).fill(null),
       spellCooldowns: {},
+      // The cast queue opens empty and the global cooldown clear — filled by
+      // spell presses, drained one cast per global cooldown (`stepSpellQueue`).
+      spellQueue: [],
+      globalCooldownMs: 0,
       heldAbilities: [],
       // One empty medkit stack per quality; stamina/mana potions and repair
       // kits each share one stack.

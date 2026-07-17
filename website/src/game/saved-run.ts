@@ -48,7 +48,10 @@ const KEY = storageKey("current-run");
 // stack; stats grew manaSpent/spellsCast and the state a pendingSpellUnlocks
 // queue. A v10 snapshot would thaw without a mana pool (casting → NaN) and
 // without spirit in its stat record.
-const SAVE_VERSION = 11;
+// v12: the cast QUEUE + GLOBAL cooldown — the hero grew spellQueue/
+// globalCooldownMs (a press now enqueues, drained one cast per global cooldown).
+// A v11 snapshot would thaw without a queue and crash stepSpellQueue.
+const SAVE_VERSION = 12;
 
 /** A run parked between sessions: enough to drop the player straight back in. */
 export type ParkedRun = {
