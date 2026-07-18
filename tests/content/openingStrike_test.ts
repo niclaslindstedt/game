@@ -13,6 +13,8 @@ import { describe, expect, it } from "vitest";
 
 import {
   advanceDialogue,
+  botAct,
+  createBot,
   createGame,
   dismissIntro,
   enemyDef,
@@ -326,5 +328,41 @@ describe("SpaceZ HQ opening strike", () => {
     const before = state.stats.damageDealt;
     for (let i = 0; i < 60; i++) step(state, idle, DT);
     expect(state.stats.damageDealt).toBeGreaterThan(before);
+  });
+
+  it("the autopilot arms at the pack's edge, not by diving in", () => {
+    // Regression for the "ARM UP" pack-dive: while holstered the bot used to
+    // steer ONTO the nearest foe, burying the hero mid-crowd unarmed. It now
+    // holds a standoff short of the pack — close enough to trip the first-sight
+    // beat so the scripted vanguard rushes in and draws the blade, but outside
+    // the swarm. Measured: the fix keeps 2–4 bodies inside the surround ring
+    // while holstered across seeds; the old dive buried him in 12–17. The bar
+    // below sits between the two.
+    const state = disarmedHQ();
+    const bot = createBot("survivor");
+    let maxCrowdWhileDisarmed = 0;
+    let armedStep = -1;
+    for (let i = 0; i < 1200; i++) {
+      if (state.dialogue) {
+        advanceDialogue(state);
+        continue;
+      }
+      step(state, botAct(bot, state), DT);
+      if (!state.player.disarmed) {
+        armedStep = i;
+        break;
+      }
+      const p = state.player.pos;
+      const crowd = state.enemies.filter(
+        (e) =>
+          !enemyDef(e.defId).apparition &&
+          Math.hypot(e.pos.x - p.x, e.pos.y - p.y) < 150,
+      ).length;
+      maxCrowdWhileDisarmed = Math.max(maxCrowdWhileDisarmed, crowd);
+    }
+    // He got armed (the vanguard reached him) …
+    expect(armedStep).toBeGreaterThanOrEqual(0);
+    // … without burying himself in the pack (a dive lands 12+ bodies here).
+    expect(maxCrowdWhileDisarmed).toBeLessThanOrEqual(6);
   });
 });

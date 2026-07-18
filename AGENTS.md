@@ -422,8 +422,10 @@ render them are `website/src/game/DialogueOverlay.tsx` and `CutsceneOverlay.tsx`
   per-difficulty × per-map LEVEL LADDER — each map's default mob band + intended
   hero level per rung — lives in `website/scripts/ladder.yaml` (NOT in the level
   files); `loadLevels()` stamps `mobLevels` + `intendedLevel` onto every def from
-  it, so the con viz and the engine read one ladder. That
-  file is **gitignored and regenerated** — never edit or commit it. The
+  it, so the con viz and the engine read one ladder. That file is a
+  **hand-authored, committed source of truth** (like the level YAML) — edit it to
+  retune the ladder; only `src/generated/levels.ts` is the gitignored build
+  output. The
   round-trip guard (`tests/content/yaml_roundtrip_test.ts`) pins the compiled
   catalog to `tests/content/fixtures/levels-snapshot.json`; accept an intentional
   level change with `node scripts/update-level-snapshot.mjs`. Read a map's
@@ -433,6 +435,14 @@ render them are `website/src/game/DialogueOverlay.tsx` and `CutsceneOverlay.tsx`
   = count, colour = con vs the YAML's `intendedLevel`); read it alongside the
   YAML), and how it plays with `make map LEVEL=<id>`
   (`website/scripts/map-preview.mjs` — design/`--actual`/`--heatmap`).
+- The **autopilot's positioning knobs** compile the same way. `website/scripts/bot.yaml`
+  (a global `default:` layer + per-level `levels:` overrides, mirroring
+  `ladder.yaml`) is the hand-authored source of truth; `make levels` runs
+  `generate-bot-tuning.mjs` to emit `src/generated/botTuning.ts`, which
+  `src/game/bot.ts` resolves per level via `botTuningFor(state.level.id)`
+  (`src/game/bot-tuning.ts` holds the `BotTuning` schema + neutral defaults). See
+  the `bot-improvement` skill. The generated file is gitignored/regenerated; the
+  YAML is committed.
 - The **pixel font glyph set** is hand-defined in
   `website/scripts/asset-tools/font.mjs` (the `GLYPHS` map — `#` lit, `.`
   transparent, 3×5 variable-width cells); `make assets` packs it into the font
@@ -465,6 +475,7 @@ relevant `SKILL.md` before starting that kind of work:
 | `sound-effects`    | Adding or tuning synthesized WebAudio SFX — the sound vocabulary, mixing rules, and audition loop.                                                                                                                                                                                                                                                                                                                                                                                                                            |
 | `spell-fx`         | Creating or tuning the cast SPELLS — their pixel icons, element-tinted cast effects, and catalog balance (mana cost, cooldown, unlock INT, effect numbers) — via the generate → look → evaluate → iterate loop with `website/scripts/spell-preview.mjs` (icon contact sheet + cast-effect frames) and the `?debug` `window.__cast` hook.                                                                                                                                                                                      |
 | `playtest`         | Verifying changes in the running game and tuning game feel with the autoplay bot (`website/scripts/playtest.mjs`).                                                                                                                                                                                                                                                                                                                                                                                                            |
+| `bot-improvement`  | Improving the AUTOPILOT (`src/game/bot.ts`) — how the bot reads a fight and moves, toward HUMAN-capability play (approach but hold at weapon reach, kill from a distance, no dives). The reproduce → read the thought trail → hypothesize → edit `bot.ts`/`bot.yaml` → re-measure loop, the `bot.yaml` knob pipeline (`website/scripts/bot.yaml` → `src/generated/botTuning.ts` → `botTuningFor`), the `think()`/BOT VIEW discipline, and the determinism rules.                                                              |
 | `debug-game`       | Investigating gameplay/render/input/audio bugs — deterministic seed repros, `?debug` + `window.__game`, failing-test-first fixes.                                                                                                                                                                                                                                                                                                                                                                                             |
 | `test-scenario`    | Staging an exact in-game situation to reproduce a bug, probe fps, or eyeball a context — the `?scenario=` URL param / `applyScenario` spec (place the hero at the boss or merchant, set hp/gear, clear the field, spawn mob rings — pre-wounded if asked, lay out ground items, freeze the world into a pose) plus the FPS meter (DEBUG MODE or `?debug`).                                                                                                                                                                    |
 | `ui-review`        | A fit-and-finish pass over the game's UI (screens, modals, popups, toasts) — the screenshot-audit loop: capture every surface at the nine reference viewports (`website/scripts/ui-shots.mjs`), judge against the quality bar, unify off-skin surfaces, fix clipping/overflow, verify with re-captures.                                                                                                                                                                                                                       |

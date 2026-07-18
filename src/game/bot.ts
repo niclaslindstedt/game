@@ -13,6 +13,9 @@ import { clamp, distance, segmentDistanceSq } from "@game/lib/vec.ts";
 import type { Vec2 } from "@game/lib/vec.ts";
 import { BUILD_ROTATION, STAT_BUILDS } from "./builds.ts";
 import type { StatBuild } from "./builds.ts";
+import { resolveBotTuning } from "./bot-tuning.ts";
+import type { BotTuning } from "./bot-tuning.ts";
+import { BOT_TUNING_OVERRIDES } from "../generated/botTuning.ts";
 import { MAP, PLAYER } from "./config.ts";
 import { mapCols, mapRows } from "./map.ts";
 import { onPathLevel } from "./path.ts";
@@ -190,18 +193,21 @@ function think(bot: Bot, label: string): void {
   bot.lastThought = label;
 }
 
+/**
+ * The effective {@link BotTuning} for a level — the hand-authored `bot.yaml`
+ * overrides (compiled to `src/generated/botTuning.ts`) resolved over the shipped
+ * defaults. Called once per tick with `state.level.id`. Pure (a function of its
+ * argument + the static generated table), so a botted run stays deterministic.
+ */
+export function botTuningFor(levelId: string): BotTuning {
+  return resolveBotTuning(BOT_TUNING_OVERRIDES, levelId);
+}
+
 /** "Local pack" radius the survivor reasons about (threat, escape, powerups). */
 const THREAT_RADIUS = 320;
 /** A foe this close is about to bite — hop to dodge its blow (airborne is
  * untouchable above JUMP.dodgeHeight, see step.ts). */
 const CONTACT_DODGE_RADIUS = 46;
-/** The standoff the survivor HOLDS from the nearest body — just beyond a foe's
- * ~34px grasp. He hugs the pack's edge at this range (not fleeing to the far
- * corner), so the auto-weapon keeps mowing the front line while he stays out of
- * reach. A melee loadout can't reach this far, so it holds at its own range
- * instead and gives ground on foot (it can't swing mid-air, so it doesn't hop
- * to dodge in the DPS phase — only to ESCAPE an encirclement). */
-const GRASP_STANDOFF = 72;
 
 /** How hard the intended-path heading biases the survivor's retreat bearing (a
  * fraction of the unit away-from-pack vector). High enough that backing off the
@@ -233,11 +239,6 @@ const SPAWNER_CLEAR_RANGE = 540;
 const BOSS_ENGAGE_MARGIN = 2;
 /** Enemies within this ring count toward being SURROUNDED. */
 const SURROUND_RADIUS = 150;
-/** This many foes packed inside SURROUND_RADIUS = punch out through the gap. */
-const SURROUND_COUNT = 5;
-/** Below this fraction of HP the survivor disengages — heal and break contact
- * rather than trade into a horde that can burst him down. */
-const FLEE_HP_FRAC = 0.4;
 /** Bots pop a medkit once health falls below this fraction of the bar. */
 const HEAL_HP_FRAC = 0.55;
 /** Top up stamina when the pool dips below this AND a threat is near — a winded
@@ -253,38 +254,12 @@ const ESCAPE_DISTANCE = 340;
 /** How near a pickup must be to be worth a detour. */
 const ITEM_REACH = 240;
 
-/** The three survival POSTURES and how each weights safety against kills. The
- * `balanced` row reproduces the classic survivor exactly (the shared constants
- * above are its values), so a run tagged `survivor`/`balanced` is unchanged;
- * `aggro` and `flee` scale off those anchors. */
+/** The three survival POSTURES — the playstyle axis `survive()` reads. Their
+ * per-row tuning (standoffMul/fleeHp/surround/edgeDrift) lives in the resolved
+ * {@link BotTuning} `postures` table (bot-tuning.ts + bot.yaml), so a level can
+ * bend a posture the same way it bends any other knob. `balanced` reproduces
+ * the classic survivor exactly. */
 type Posture = "aggro" | "balanced" | "flee";
-const POSTURE_TUNING: Record<
-  Posture,
-  {
-    /** Scales the hold distance from the nearest body (>1 backs off further). */
-    standoffMul: number;
-    /** HP fraction below which the hero breaks contact to heal/reset. */
-    fleeHp: number;
-    /** Packed-foe count that (with encirclement) triggers a punch-out. */
-    surround: number;
-    /** How far along the open lane the hero drifts on a safe edge tick. */
-    edgeDrift: number;
-  }
-> = {
-  // Trades safety for kills: fights up close, tolerates a denser ring before it
-  // bails, and on a safe edge presses the nearest foe instead of drifting out.
-  aggro: { standoffMul: 0.65, fleeHp: 0.28, surround: 7, edgeDrift: 40 },
-  // The classic survivor — the shared anchors, unchanged.
-  balanced: {
-    standoffMul: 1,
-    fleeHp: FLEE_HP_FRAC,
-    surround: SURROUND_COUNT,
-    edgeDrift: 40,
-  },
-  // Trades kills for safety: holds well out of reach, disengages early, and
-  // widens the gap hard on every edge tick.
-  flee: { standoffMul: 1.7, fleeHp: 0.6, surround: 4, edgeDrift: 90 },
-};
 
 const idleInput = (): GameInput => ({
   steering: false,
@@ -302,17 +277,27 @@ export function botAct(bot: Bot, state: GameState): GameInput {
   // Gauge headway toward the committed content target once per tick, so a cache
   // the sweep can't reach gets abandoned rather than deadlocking the run.
   trackContentAbandon(bot, state);
+  // The effective positioning knobs for this level (bot.yaml overrides resolved
+  // over the shipped defaults) — resolved once per tick and threaded into the
+  // combat branches. Pure, so determinism holds.
+  const tune = botTuningFor(state.level.id);
   const decided = ((): GameInput => {
     // With only untouchable apparitions left on the board there is no foe
     // to fight — push for the objective instead of chasing a hallucination.
     const foe = nearestEnemy(state);
     // DISARMED (the scripted opening strike hasn't put the weapon in his hand
-    // yet): close on the nearest foe so the vanguard's contact fires the strike
-    // and arms him. Path-marching off toward the objective would strand him
-    // unarmed for the whole run — the weapon only comes from that first strike.
+    // yet): the blade is drawn by a scripted VANGUARD rushing him — but the
+    // rusher only breaks from the pack once the hero is close enough to trip the
+    // level's first-sight beat. So APPROACH the pack's edge and HOLD at a
+    // standoff short of the nearest foe (inside that trigger range, outside the
+    // swarm) rather than steering onto the foe and barging into the middle
+    // unarmed — then the rusher comes to him. Path-marching off toward the
+    // objective would strand him unarmed for the whole run.
     if (state.player.disarmed) {
       think(bot, "ARM UP");
-      return foe ? steer(state, foe.pos) : idleInput();
+      return foe
+        ? steer(state, holdOff(state, foe.pos, tune.armApproachStandoff))
+        : idleInput();
     }
     // LAST-RESORT UNSTUCK: if he's made no progress for a while and has nothing
     // he can reach to fight, the strategy has wedged him — override it with the
@@ -349,12 +334,12 @@ export function botAct(bot: Bot, state: GameState): GameInput {
         think(bot, "TO BOSS");
         return pushBoss(bot, state);
       case "aggro":
-        return survive(bot, state, "aggro");
+        return survive(bot, state, "aggro", tune);
       case "flee":
-        return survive(bot, state, "flee");
+        return survive(bot, state, "flee", tune);
       case "survivor":
       case "balanced":
-        return survive(bot, state, "balanced");
+        return survive(bot, state, "balanced", tune);
       default:
         think(bot, "IDLE");
         return idleInput();
@@ -579,9 +564,14 @@ function pushBoss(bot: Bot, state: GameState, jumpTravel = false): GameInput {
  * hero is thin he drifts toward the objective, so he clears without ever
  * standing still in the flood.
  */
-function survive(bot: Bot, state: GameState, posture: Posture): GameInput {
+function survive(
+  bot: Bot,
+  state: GameState,
+  posture: Posture,
+  tune: BotTuning,
+): GameInput {
   const player = state.player;
-  const tune = POSTURE_TUNING[posture];
+  const pt = tune.postures[posture];
   const near = threatsWithin(state, THREAT_RADIUS);
 
   // 1. Breathing room: grab a pickup within reach; else follow the MACRO TRAVEL
@@ -612,7 +602,7 @@ function survive(bot: Bot, state: GameState, posture: Posture): GameInput {
   const packed = near.filter(
     (e) => distance(e.pos, player.pos) < SURROUND_RADIUS,
   );
-  const lowHp = player.hp < player.maxHp * tune.fleeHp;
+  const lowHp = player.hp < player.maxHp * pt.fleeHp;
   // BOSS LOCK. Lock onto the BOSS and fight it DOWN once he's actually in the
   // arena — the hero has closed to within `BOSS_LOCK_RANGE` or the boss has woken
   // — rather than kiting his adds. Getting THERE is the macro plan's job
@@ -636,9 +626,7 @@ function survive(bot: Bot, state: GameState, posture: Posture): GameInput {
   // only breaks to HEAL when actually bleeding, then re-commits.
   if (
     lowHp ||
-    (!lockTarget &&
-      packed.length >= tune.surround &&
-      isEncircled(state, packed))
+    (!lockTarget && packed.length >= pt.surround && isEncircled(state, packed))
   ) {
     // A medkit within reach is worth the detour when we're bleeding.
     if (lowHp) {
@@ -679,28 +667,42 @@ function survive(bot: Bot, state: GameState, posture: Posture): GameInput {
   //    can't swing mid-air, so it gives ground on foot instead of hopping.
   const weapon = weaponDef(player.equipment.weapon.defId);
   const range = weapon.range;
-  const baseStandoff =
-    range >= GRASP_STANDOFF ? GRASP_STANDOFF : Math.max(40, range * 0.9);
-  // The posture scales the hold: `flee` backs off well beyond grasp, `aggro`
-  // hugs in tight so the front line stays in weapon reach.
-  const standoff = baseStandoff * tune.standoffMul;
+  const ranged = weapon.projectile !== undefined;
+  // TWO distances, so a ranged hero fights from range without backpedalling to
+  // the far corner:
+  //  • dangerDist — a body THIS close is a real threat: give ground hard. Grasp-
+  //    based (small), so full retreat only fires when something actually breaches
+  //    his bubble, not merely enters weapon range.
+  //  • engageDist — the reach-aware HOLD: a ranged/magic loadout holds near its
+  //    max reach (`range * engageRangeFrac`) so it kills from a distance; melee,
+  //    which can't reach that far, holds at its own swing range. He ADVANCES on
+  //    the objective only when the nearest threat is beyond this, so as the auto-
+  //    weapon thins the front he steps in — kiting FORWARD, never diving.
+  // For melee the two collapse together, so melee play is unchanged.
+  const dangerDist = tune.graspStandoff * pt.standoffMul;
+  const baseEngage = ranged
+    ? Math.max(tune.graspStandoff, range * tune.engageRangeFrac)
+    : range >= tune.graspStandoff
+      ? tune.graspStandoff
+      : Math.max(40, range * 0.9);
+  const engageDist = baseEngage * pt.standoffMul;
   const away = awayFromPack(state, near, travelHeading(bot, state));
   // A melee hero can't swing mid-air — the blade is stayed above
   // JUMP.dodgeHeight (see stepWeapon) — so hopping to dodge contact in the
   // DPS-hugging phase would only forfeit his swings; he gives ground on FOOT
   // instead. Ranged/magic fire from the air, so they still hop the bite away —
   // and `flee` hops at the first sign of a body, milking the untouchable frames.
-  const canHopAndFight = weapon.projectile !== undefined;
+  const canHopAndFight = ranged;
   const hop =
     canHopAndFight &&
     grounded &&
     (nearestD < CONTACT_DODGE_RADIUS ||
       packed.length >= 3 ||
       (posture === "flee" && near.length > 0));
-  if (nearestD < standoff) {
-    // Pressed inside the standoff → give ground toward the open side, fast. Route
-    // it through the obstacle-aware nav so the retreat rounds a solid rock (or
-    // ridge) instead of grinding the hero into it while the pack closes.
+  if (nearestD < dangerDist) {
+    // A body inside the danger bubble → give ground toward the open side, fast.
+    // Route it through the obstacle-aware nav so the retreat rounds a solid rock
+    // (or ridge) instead of grinding the hero into it while the pack closes.
     think(bot, "GIVE GROUND");
     return navSteer(
       state,
@@ -708,38 +710,57 @@ function survive(bot: Bot, state: GameState, posture: Posture): GameInput {
       hop,
     );
   }
-  // Not pressed → PUSH ON toward the macro goal (the next chest/elite, then the
-  // boss), letting the auto-weapon carve the front line as he goes. This is the
-  // forward march that TRAVERSES a designed level instead of edge-hugging in
-  // place while the horde flows around him — the runner has to cross the map to
-  // reach the walled caches and the boss. Gated to designed (routed) levels: on
-  // a pathless fixture or open arena there's nowhere to march, so he falls to the
-  // posture edge-hug below (which the aggro/flee standoff read depends on).
-  if (onPathLevel(state)) {
-    return macroSteer(bot, state, hop);
+  // The macro objective is the drift target: the next chest/elite, then the
+  // boss, routed globally (A*) so the push rounds every wall. On an open arena /
+  // pathless fixture there's no route, so the away vector alone holds him off the
+  // pack (the old edge-hug read).
+  const goal = macroTarget(bot, state);
+  const routeTgt = onPathLevel(state) ? routeTarget(bot, state, goal) : goal;
+  let hx = routeTgt.x - player.pos.x;
+  let hy = routeTgt.y - player.pos.y;
+  const hm = Math.hypot(hx, hy);
+  if (hm < 1) {
+    hx = away.x;
+    hy = away.y;
+  } else {
+    hx /= hm;
+    hy /= hm;
   }
-  if (packed.length <= 1) {
-    // Field near him is thin → advance the macro plan (close on this patch's
-    // spawner to drain it, or sweep on toward the next chest/elite/boss),
-    // globally routed so the drift-while-fighting rounds the walls.
-    return macroSteer(bot, state, hop);
+  // The lane ahead is clear enough (nearest beyond engage range, not ringed by a
+  // crowd) → straight ADVANCE toward the objective, letting the auto-weapon carve
+  // the front as he goes.
+  const laneClear =
+    nearestD >= engageDist && packed.length <= tune.pushThroughMax;
+  if (laneClear) {
+    think(bot, "ADVANCE");
+    return navSteer(
+      state,
+      { x: player.pos.x + hx * 150, y: player.pos.y + hy * 150 },
+      hop,
+    );
   }
-  if (posture === "aggro") {
-    // Keep the pressure on — hold at fighting range of the nearest body rather
-    // than drifting off the pack, so the auto-weapon never falls idle.
-    think(bot, "PRESS");
-    return navSteer(state, holdOff(state, nearest.pos, standoff), hop);
-  }
-  // Safe on the edge → drift out along the open lane to keep the gap open as the
-  // pack chases (flee widens it hard; balanced just holds it). Obstacle-aware so
-  // the drift rounds a rock instead of pinning the hero against it.
-  think(bot, "EDGE-HUG");
+  // KITE FORWARD. A body sits inside the engage band, so BLEND the objective
+  // heading with a push OFF the pack, proportional to how far inside the band the
+  // nearest is: at the engage edge it's almost pure forward; as the body closes
+  // it peels harder to the open side. The hero flows toward the goal while
+  // holding the front line at weapon reach — pushing the map WITHOUT diving into
+  // the mass or backpedalling to the corner (which stalled a ranged hero on a
+  // wave level, where something is always inside his reach). `aggro` peels less
+  // (presses in), `flee` peels more, via `standoffMul` shaping `engageDist`.
+  const skirt = clamp((engageDist - nearestD) / engageDist, 0, 1);
+  // Peel stays BELOW 1 so the blended heading is always net-forward even when the
+  // pack sits dead ahead (the objective is usually behind it) — the hero keeps
+  // pushing the map, holding the front at reach, while the `dangerDist` retreat
+  // above owns the genuinely-close body. Quadratic, so he barely deviates near
+  // the engage edge and peels hardest just above the danger bubble.
+  const peel = skirt * skirt * 0.9;
+  hx += away.x * peel;
+  hy += away.y * peel;
+  const bm = Math.hypot(hx, hy) || 1;
+  think(bot, skirt > 0.7 ? "GIVE GROUND" : "KITE");
   return navSteer(
     state,
-    {
-      x: player.pos.x + away.x * tune.edgeDrift,
-      y: player.pos.y + away.y * tune.edgeDrift,
-    },
+    { x: player.pos.x + (hx / bm) * 150, y: player.pos.y + (hy / bm) * 150 },
     hop,
   );
 }
