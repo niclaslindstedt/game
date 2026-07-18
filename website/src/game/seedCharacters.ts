@@ -27,6 +27,7 @@ import {
   chosenStatPointsThrough,
   createGame,
   difficultyDef,
+  levelDef,
   rollEquipment,
   type Difficulty,
   type Equipment,
@@ -241,6 +242,47 @@ function buildSeedLoadout(build: StatBuild, tier: SeedTier): Loadout {
   loadout.spellSlots = [...state.player.spellSlots];
 
   return loadout;
+}
+
+/** The hero LEVEL a player would reach the chosen map at on `difficulty`: the low
+ * end of the map's own authored mob band for that rung, with SAFETY FLOORS so the
+ * BOT VIEW hero is never dropped in under-leveled. The band is the primary source
+ * (moon/easy ≈ 7, later maps higher); the floors guarantee a sane minimum even if
+ * a band reads low or is missing:
+ *   • JESUS is player-relative (no authored band) — arrive at a late ceiling.
+ *   • NIGHTMARE opens HIGH — a grind gate, mobs ~40 even on map 1 — so never < 40.
+ *   • Every map past SPACEZ (campaign index 1) must arrive LEVELED: never a
+ *     level-1 hero on a mid/late map, so the level floors by campaign position.
+ * SPACEZ on easy/medium/hard is the one map that legitimately starts at level 1. */
+function arrivalLevelFor(levelId: string, difficulty: Difficulty): number {
+  if (difficulty === "jesus") return 58;
+  const order: Difficulty[] = ["easy", "medium", "hard", "nightmare"];
+  const band = levelDef(levelId).mobLevels?.[order.indexOf(difficulty)];
+  const lo = Array.isArray(band)
+    ? band[0]
+    : typeof band === "number"
+      ? band
+      : 0;
+  const index = Math.max(1, LEVEL_ORDER.indexOf(levelId) + 1);
+  const floor = difficulty === "nightmare" ? 40 : (index - 1) * 5;
+  return Math.max(lo, floor, 1);
+}
+
+/** A realistic hero for the DEVELOPER → BOT VIEW mode: a ranged specimen minted
+ * at the level a player would REACH the chosen map on the chosen difficulty (the
+ * map's own low mob band) in level-appropriate rerolled gear — so the watched
+ * autopilot plays the level the way a real arriving hero would, not a naked
+ * rookie. Gear is freshly rolled each launch, like the seed-character picker. */
+export function buildBotViewLoadout(
+  levelId: string,
+  difficulty: Difficulty,
+): Loadout {
+  return buildSeedLoadout("ranged", {
+    id: "botview",
+    label: "BOT VIEW",
+    level: arrivalLevelFor(levelId, difficulty),
+    difficulty,
+  });
 }
 
 /** The difficulties a seed of `tier` is stamped as having BEATEN — every rung

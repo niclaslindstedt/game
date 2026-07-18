@@ -31,8 +31,9 @@ describe("THE MOON level def", () => {
 
   it("breaks the plain into basins with three offset ridge gaps", () => {
     // Each ridge is a vertical boulder spine at its x with a single pass-gap; the
-    // gaps alternate low / high / mid so the route weaves across the map.
-    const ridgeX = [760, 1180, 1650];
+    // gaps alternate low / high / low so the route weaves a full serpentine
+    // across the four basins.
+    const ridgeX = [680, 1180, 1680];
     for (const x of ridgeX) {
       const segs = (MOON.walls ?? []).filter(
         (w) => w.from.x === x && w.to.x === x && w.from.y !== w.to.y,

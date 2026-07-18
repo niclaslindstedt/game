@@ -13,9 +13,10 @@ import { clamp, distance } from "@game/lib/vec.ts";
 import type { Vec2 } from "@game/lib/vec.ts";
 import { BUILD_ROTATION, STAT_BUILDS } from "./builds.ts";
 import type { StatBuild } from "./builds.ts";
-import { PLAYER } from "./config.ts";
+import { MAP, PLAYER } from "./config.ts";
+import { mapCols, mapRows } from "./map.ts";
 import { nextPathWaypoint, onPathLevel, pathWalked } from "./path.ts";
-import { blockedByObstacle, insideObstacle } from "./obstacles.ts";
+import { blockedByObstacle, insideObstacle, lineOfSight } from "./obstacles.ts";
 import { enemyDef } from "./defs/enemies/index.ts";
 import { levelDef } from "./defs/levels/index.ts";
 import { weaponDef } from "./defs/equipment.ts";
@@ -116,6 +117,13 @@ export type Bot = {
     /** Where the escape began — the exit baseline (moved far enough → free). */
     escapeStartPos: Vec2;
   };
+  /**
+   * The label of the decision `botAct` took this tick (e.g. "MARCH PATH",
+   * "EXPLORE FOG", "GIVE GROUND") — surfaced over the hero's head by the BOT VIEW
+   * debug overlay. Set via {@link think}; like `nav`, it's a pure per-bot
+   * annotation the sim never reads back, so determinism is untouched.
+   */
+  lastThought?: string;
 };
 
 export function createBot(
@@ -123,6 +131,14 @@ export function createBot(
   profile: BotProfile = "auto",
 ): Bot {
   return { strategy, profile };
+}
+
+/** Record the autopilot's current decision as a short debug label (drawn over
+ * the hero's head in BOT VIEW). A pure annotation on the bot — never read back
+ * into the sim — so it can't affect determinism. Labels stay within the pixel
+ * font's glyph set (caps, digits, `. , : - ( )` …). */
+function think(bot: Bot, label: string): void {
+  bot.lastThought = label;
 }
 
 /** "Local pack" radius the survivor reasons about (threat, escape, powerups). */
@@ -227,9 +243,11 @@ const idleInput = (): GameInput => ({
   jump: false,
 });
 
-/** Decide this tick's input. Pure — reads the state, never mutates it. */
+/** Decide this tick's input. Pure w.r.t. `state` (reads it, never mutates it);
+ * only annotates the bot with its `nav` memory and `lastThought` debug label. */
 export function botAct(bot: Bot, state: GameState): GameInput {
   if (bot.strategy === "idle" || state.enemies.length === 0) {
+    think(bot, "IDLE");
     return idleInput();
   }
   const decided = ((): GameInput => {
@@ -241,6 +259,7 @@ export function botAct(bot: Bot, state: GameState): GameInput {
     // and arms him. Path-marching off toward the objective would strand him
     // unarmed for the whole run — the weapon only comes from that first strike.
     if (state.player.disarmed) {
+      think(bot, "ARM UP");
       return foe ? steer(state, foe.pos) : idleInput();
     }
     // LAST-RESORT UNSTUCK: if he's made no progress for a while and has nothing
@@ -248,31 +267,44 @@ export function botAct(bot: Bot, state: GameState): GameInput {
     // deterministic escape sweep until he's moving again. (Also keeps the
     // progress bookkeeping, so it must run before every strategy branch.)
     const escape = unstuckInput(bot, state);
-    if (escape) return escape;
+    if (escape) {
+      think(bot, "UNSTICK");
+      return escape;
+    }
     // Dodge a telegraphed set-piece move (a rushing charge, a ground slam) the
     // instant one threatens — stepping off the line beats whatever the strategy
     // below would do, so the hero doesn't eat a boss's rush while planted on it.
     const dodge = dodgeTelegraph(state);
-    if (dodge) return dodge;
+    if (dodge) {
+      think(bot, "DODGE");
+      return dodge;
+    }
     switch (bot.strategy) {
       case "rush":
-        return foe ? steer(state, foe.pos) : pushBoss(state);
+        think(bot, foe ? "RUSH" : "RUSH BOSS");
+        return foe ? steer(state, foe.pos) : pushBoss(bot, state);
       case "kite": {
-        if (!foe) return pushBoss(state);
+        if (!foe) {
+          think(bot, "PUSH BOSS");
+          return pushBoss(bot, state);
+        }
         // Hold inside weapon range, outside the pack's grasp.
+        think(bot, "KITE");
         const range = weaponDef(state.player.equipment.weapon.defId).range;
         return steer(state, holdOff(state, foe.pos, range * 0.7));
       }
       case "boss":
-        return pushBoss(state);
+        think(bot, "TO BOSS");
+        return pushBoss(bot, state);
       case "aggro":
-        return survive(state, "aggro");
+        return survive(bot, state, "aggro");
       case "flee":
-        return survive(state, "flee");
+        return survive(bot, state, "flee");
       case "survivor":
       case "balanced":
-        return survive(state, "balanced");
+        return survive(bot, state, "balanced");
       default:
+        think(bot, "IDLE");
         return idleInput();
     }
   })();
@@ -458,7 +490,7 @@ function botLane(state: GameState): WeaponClass {
  * sword included — actually close to swinging range instead of kiting a boss
  * it can never touch; a ranged loadout still keeps its distance.
  */
-function pushBoss(state: GameState, jumpTravel = false): GameInput {
+function pushBoss(bot: Bot, state: GameState, jumpTravel = false): GameInput {
   const jump = jumpTravel && state.player.z === 0;
   // Follow the level's intended path first: steer STRAIGHT to the next waypoint
   // (no weapon-range hold-off — a waypoint is a travel node to walk onto, not a
@@ -466,13 +498,23 @@ function pushBoss(state: GameState, jumpTravel = false): GameInput {
   // through them. `advancePath` retires each node as he reaches it; once the
   // path is walked, `nextPathWaypoint` is null and he closes on the boss below.
   const waypoint = travelWaypoint(state);
-  if (waypoint) return navSteer(state, waypoint, jump);
+  if (waypoint) {
+    think(bot, "MARCH PATH");
+    return navSteer(state, waypoint, jump);
+  }
   const boss = state.enemies.find((e) => enemyDef(e.defId).role === "boss");
   const target = boss?.pos ?? furthestLandmark(state);
-  if (!target) return idleInput();
+  if (!target) {
+    think(bot, "IDLE");
+    return idleInput();
+  }
   const d = distance(state.player.pos, target);
   const hold = weaponDef(state.player.equipment.weapon.defId).range * 0.7;
-  if (d > hold + 60) return navSteer(state, target, jump);
+  if (d > hold + 60) {
+    think(bot, "APPROACH BOSS");
+    return navSteer(state, target, jump);
+  }
+  think(bot, "FIGHT BOSS");
   return steer(state, holdOff(state, target, hold), jump);
 }
 
@@ -492,7 +534,7 @@ function pushBoss(state: GameState, jumpTravel = false): GameInput {
  * hero is thin he drifts toward the objective, so he clears without ever
  * standing still in the flood.
  */
-function survive(state: GameState, posture: Posture): GameInput {
+function survive(bot: Bot, state: GameState, posture: Posture): GameInput {
   const player = state.player;
   const tune = POSTURE_TUNING[posture];
   const near = threatsWithin(state, THREAT_RADIUS);
@@ -506,14 +548,27 @@ function survive(state: GameState, posture: Posture): GameInput {
   const spawner = readyForBoss(state) ? null : activeSpawnerNear(state);
 
   // 1. Breathing room: grab a pickup within reach; else, if a spawn point here
-  //    is still emitting, close on it to trip/drain the rest; else advance.
+  //    is still emitting, close on it to trip/drain the rest; else, while still
+  //    farming up, UNCOVER THE MAP — steer to the nearest reachable patch of fog
+  //    so a run sweeps the whole level (and its off-path detours) rather than
+  //    diving at the boss the instant the field goes quiet; only once boss-ready
+  //    does exploration stop and he push the objective.
   if (near.length === 0) {
     const item = nearestItem(state);
     if (item && distance(player.pos, item.pos) < ITEM_REACH) {
+      think(bot, "GRAB ITEM");
       return steer(state, item.pos);
     }
-    if (spawner) return navSteer(state, spawner, true);
-    return pushBoss(state, true);
+    if (spawner) {
+      think(bot, "CLEAR SPAWNER");
+      return navSteer(state, spawner, true);
+    }
+    const fog = readyForBoss(state) ? null : exploreTarget(state);
+    if (fog) {
+      think(bot, "EXPLORE FOG");
+      return navSteer(state, fog, true);
+    }
+    return pushBoss(bot, state, true);
   }
 
   const grounded = player.z === 0;
@@ -568,9 +623,11 @@ function survive(state: GameState, posture: Posture): GameInput {
         item.kind === "medkit" &&
         distance(player.pos, item.pos) < ITEM_REACH
       ) {
+        think(bot, "GRAB MEDKIT");
         return steer(state, item.pos, grounded);
       }
     }
+    think(bot, lowHp ? "FALL BACK" : "PUNCH OUT");
     return navSteer(state, bestEscapeTarget(state, near), grounded);
   }
 
@@ -580,7 +637,21 @@ function survive(state: GameState, posture: Posture): GameInput {
     const w = weaponDef(player.equipment.weapon.defId);
     const lockHop =
       w.projectile !== undefined && grounded && nearestD < CONTACT_DODGE_RADIUS;
+    think(bot, "FIGHT BOSS");
     return steer(state, holdOff(state, lockTarget.pos, w.range * 0.7), lockHop);
+  }
+
+  // 2.45. RIGHT AT AN UNEXPLORED POCKET'S MOUTH → dip IN to uncover it before the
+  //    spawner-clear/edge-hug pins him outside. The off-path caches are guarded,
+  //    so this fires mid-fight: a pocket THIS close (in clear sight) is worth the
+  //    few hits to walk in and reveal it. Tight range keeps it to a pocket he is
+  //    already beside; stops once boss-ready so a leveled hero rushes the boss.
+  if (!readyForBoss(state)) {
+    const pocket = exploreTarget(state, FOG_POCKET_RANGE);
+    if (pocket) {
+      think(bot, "EXPLORE FOG");
+      return navSteer(state, pocket, grounded);
+    }
   }
 
   // 2.5. MARCH THE INTENDED PATH — but NOT while a spawn point here is still
@@ -597,6 +668,18 @@ function survive(state: GameState, posture: Posture): GameInput {
     const canHop =
       weaponDef(player.equipment.weapon.defId).projectile !== undefined;
     const hopMarch = canHop && grounded && nearestD < CONTACT_DODGE_RADIUS;
+    // Before marching on, DIP into an unexplored pocket the sweep is passing
+    // right by (the detours hug the path's low turns) — so the bot discovers the
+    // off-path caches instead of walking past them. Tight range keeps the
+    // authored path the spine; stops once he's boss-ready.
+    const detour = readyForBoss(state)
+      ? null
+      : exploreTarget(state, FOG_DETOUR_RANGE);
+    if (detour) {
+      think(bot, "EXPLORE FOG");
+      return navSteer(state, detour, hopMarch);
+    }
+    think(bot, "MARCH PATH");
     return navSteer(state, marchTo, hopMarch);
   }
 
@@ -632,8 +715,11 @@ function survive(state: GameState, posture: Posture): GameInput {
       packed.length >= 3 ||
       (posture === "flee" && near.length > 0));
   if (nearestD < standoff) {
-    // Pressed inside the standoff → give ground toward the open side, fast.
-    return steer(
+    // Pressed inside the standoff → give ground toward the open side, fast. Route
+    // it through the obstacle-aware nav so the retreat rounds a solid rock (or
+    // ridge) instead of grinding the hero into it while the pack closes.
+    think(bot, "GIVE GROUND");
+    return navSteer(
       state,
       { x: player.pos.x + away.x * 150, y: player.pos.y + away.y * 150 },
       hop,
@@ -642,25 +728,37 @@ function survive(state: GameState, posture: Posture): GameInput {
   if (packed.length <= 1) {
     // Field near him is thin → advance the map. Follow the intended path when
     // there's a waypoint left (steer straight onto it, so the drift-while-
-    // fighting still rounds the walls); otherwise close on the boss, stopping at
-    // the posture's standoff (aggro presses closest, flee farthest).
+    // fighting still rounds the walls); else uncover remaining fog while still
+    // farming up; otherwise close on the boss, stopping at the posture's standoff
+    // (aggro presses closest, flee farthest).
     const waypoint = travelWaypoint(state);
-    return waypoint
-      ? navSteer(state, waypoint, hop)
-      : steer(
-          state,
-          holdOff(state, bossPos(state) ?? nearest.pos, standoff),
-          hop,
-        );
+    if (waypoint) {
+      think(bot, "ADVANCE PATH");
+      return navSteer(state, waypoint, hop);
+    }
+    const fog = readyForBoss(state) ? null : exploreTarget(state);
+    if (fog) {
+      think(bot, "EXPLORE FOG");
+      return navSteer(state, fog, hop);
+    }
+    think(bot, "APPROACH BOSS");
+    return navSteer(
+      state,
+      holdOff(state, bossPos(state) ?? nearest.pos, standoff),
+      hop,
+    );
   }
   if (posture === "aggro") {
     // Keep the pressure on — hold at fighting range of the nearest body rather
     // than drifting off the pack, so the auto-weapon never falls idle.
-    return steer(state, holdOff(state, nearest.pos, standoff), hop);
+    think(bot, "PRESS");
+    return navSteer(state, holdOff(state, nearest.pos, standoff), hop);
   }
   // Safe on the edge → drift out along the open lane to keep the gap open as the
-  // pack chases (flee widens it hard; balanced just holds it).
-  return steer(
+  // pack chases (flee widens it hard; balanced just holds it). Obstacle-aware so
+  // the drift rounds a rock instead of pinning the hero against it.
+  think(bot, "EDGE-HUG");
+  return navSteer(
     state,
     {
       x: player.pos.x + away.x * tune.edgeDrift,
@@ -815,6 +913,84 @@ function readyForBoss(state: GameState): boolean {
   return state.player.level >= Math.max(1, boss.mlvl - BOSS_ENGAGE_MARGIN);
 }
 
+/** How far the bot will strike out to uncover fog once the field is quiet / the
+ * path is walked — a reachable cap so it pokes a nearby unexplored pocket without
+ * trekking to a far corner it may not be able to path to (no global pathfinding). */
+const FOG_EXPLORE_RANGE = 760;
+/** The tighter reach for a mid-MARCH detour: only dip off the authored path for a
+ * pocket the sweep is passing right by (the moon's detours hug the path's low
+ * turns), so the spine still carries the run around the ridges. */
+const FOG_DETOUR_RANGE = 340;
+/** The tightest reach — an unexplored pocket the hero is right at the MOUTH of.
+ * Dipping in wins even mid-fight (the detour guardian is holding the cache), so a
+ * pocket this close is uncovered before the spawner-clear/edge-hug takes over. */
+const FOG_POCKET_RANGE = 240;
+/** A fogged patch smaller than this many cells (in a ~7×7 window) is a stray
+ * sliver — a rock's shadow, a wall nook — not a pocket worth a detour, so it
+ * never yanks the hero around. */
+const FOG_BLOB_MIN_CELLS = 8;
+
+/**
+ * The world-space centroid of the nearest sizable UNEXPLORED pocket the hero can
+ * actually reach — the fog the survivor steers into to sweep the whole map (and
+ * its off-path detours) before committing to the boss (see {@link survive}).
+ *
+ * Scans the coarse fog grid (`state.explored`, `map.ts`) for the nearest fogged
+ * cell that is within {@link FOG_EXPLORE_RANGE} AND in clear LINE OF SIGHT — never
+ * fog walled off behind a ridge the pathfinding-free bot can't round — then
+ * averages the fog in a small window around it into a centroid, returning it only
+ * if the pocket is big enough ({@link FOG_BLOB_MIN_CELLS}). A one-cell inset skips
+ * the never-quite-revealed level rim. Null when the reachable map is uncovered.
+ * Pure (a function of `state.explored` + geometry, no RNG/clock) so botted runs
+ * stay deterministic. `maxRange` caps how far it reaches — wide when the field is
+ * quiet, tight ({@link FOG_DETOUR_RANGE}) for a mid-march detour.
+ */
+function exploreTarget(
+  state: GameState,
+  maxRange = FOG_EXPLORE_RANGE,
+): Vec2 | null {
+  const cell = MAP.cellSize;
+  const cols = mapCols(state.level);
+  const rows = mapRows(state.level);
+  const pos = state.player.pos;
+  // Nearest fogged, in-range, in-LoS cell (the seed of the pocket).
+  let seedTx = -1;
+  let seedTy = -1;
+  let bestDistSq = maxRange * maxRange;
+  for (let ty = 1; ty < rows - 1; ty++) {
+    for (let tx = 1; tx < cols - 1; tx++) {
+      if (state.explored[ty * cols + tx] === 1) continue;
+      const wx = (tx + 0.5) * cell;
+      const wy = (ty + 0.5) * cell;
+      const dSq = (wx - pos.x) * (wx - pos.x) + (wy - pos.y) * (wy - pos.y);
+      if (dSq >= bestDistSq) continue;
+      if (!lineOfSight(state, pos, { x: wx, y: wy })) continue;
+      bestDistSq = dSq;
+      seedTx = tx;
+      seedTy = ty;
+    }
+  }
+  if (seedTx < 0) return null;
+  // Grow the pocket: average the fogged cells in a small window around the seed,
+  // requiring a minimum size so a lone stray cell never becomes a detour.
+  const win = 3;
+  let sumX = 0;
+  let sumY = 0;
+  let count = 0;
+  for (let ty = seedTy - win; ty <= seedTy + win; ty++) {
+    if (ty < 0 || ty >= rows) continue;
+    for (let tx = seedTx - win; tx <= seedTx + win; tx++) {
+      if (tx < 0 || tx >= cols) continue;
+      if (state.explored[ty * cols + tx] === 1) continue;
+      sumX += (tx + 0.5) * cell;
+      sumY += (ty + 0.5) * cell;
+      count++;
+    }
+  }
+  if (count < FOG_BLOB_MIN_CELLS) return null;
+  return { x: sumX / count, y: sumY / count };
+}
+
 /** The anchor of the nearest spawn point that still owes mobs (dormant or
  * mid-drip) within `SPAWNER_CLEAR_RANGE` of the hero, or null — the patch the
  * bot holds and clears before the path lets it advance. Null on levels that
@@ -947,9 +1123,11 @@ const NAV_DEFLECTIONS = [
  * still makes progress — so a shelf between him and the next waypoint gets
  * ROUNDED instead of pressed into. This is what unsticks a hero the horde has
  * shoved off the corridor into a wall pocket (straight-line steering there just
- * grinds him into the wall forever). Only for TRAVEL goals (path/boss/escape),
- * never for the fight hold-offs. Falls back to the raw goal when nothing is
- * clear (better to nudge than freeze).
+ * grinds him into the wall forever). Used for the TRAVEL goals (path/boss/escape)
+ * AND the fight give-ground/drift/hold-off moves, so a retreat under pressure
+ * rounds a scattered rock instead of wedging on it. Gated to path levels (an open
+ * map's wall-slide handles the odd ridge, and deflecting there only wanders), and
+ * falls back to the raw goal when nothing is clear (better to nudge than freeze).
  */
 function navTarget(state: GameState, goal: Vec2): Vec2 {
   // Wall avoidance is a MAZE tactic — it's for the authored-path levels whose
