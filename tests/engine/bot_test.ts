@@ -12,9 +12,11 @@ import {
   botAllocate,
   createBot,
   enemyDef,
+  metaLane,
   step,
   weaponDef,
   type Bot,
+  type Equipment,
   type GameState,
 } from "@game/core";
 import {
@@ -273,6 +275,98 @@ describe("bot profiles", () => {
     const state = startGame();
     const bot = createBot("balanced", "magic");
     expect(botAllocate(bot, state)).toBe("intelligence");
+  });
+
+  it("defaults to the META (level-band) profile", () => {
+    expect(createBot("survivor").profile).toBe("meta");
+  });
+
+  it("meta walks melee -> magic -> melee across the level bands", () => {
+    // The lane itself: melee early, magic mid–high, melee at the cap.
+    expect(metaLane(1)).toBe("melee");
+    expect(metaLane(50)).toBe("magic");
+    expect(metaLane(99)).toBe("melee");
+
+    // And it drives the allocation: with nothing spent yet, each band's rotation
+    // opens on its lane's primary — STR for melee, INT for magic.
+    const state = startGame();
+    const bot = createBot("survivor"); // default meta
+    const laneStat = (level: number): string => {
+      state.player.level = level;
+      return botAllocate(bot, state);
+    };
+    expect(laneStat(5)).toBe("strength"); // early melee
+    expect(laneStat(50)).toBe("intelligence"); // mid–high magic
+    expect(laneStat(99)).toBe("strength"); // endgame melee (artifacts)
+  });
+});
+
+describe("bot repair awareness", () => {
+  /** A held weapon worn down to `durability`, so the wear heuristics fire. */
+  function wornWeapon(durability: number): Equipment {
+    return {
+      id: 7000,
+      defId: "test_pipe",
+      slot: "weapon",
+      tier: "regular",
+      ilvl: 5,
+      affixes: [],
+      durability,
+    };
+  }
+
+  it("detours to a repair kit when the blade is wearing thin and it holds none", () => {
+    const state = startGame();
+    clearStage(state);
+    state.player.repairKits = 0;
+    state.player.equipment.weapon = wornWeapon(1); // nearly spent
+    // A threat present but well beyond the danger bubble, so the hero is free to
+    // scoop the kit rather than give ground.
+    state.enemies.push(
+      makeEnemy({
+        pos: { x: state.player.pos.x + 200, y: state.player.pos.y },
+      }),
+    );
+    // A repair kit on the ground within detour reach.
+    state.items.push({
+      id: 8001,
+      kind: "repair",
+      pos: { x: state.player.pos.x + 100, y: state.player.pos.y },
+    });
+    const bot = createBot("survivor");
+    const input = botAct(bot, state);
+    expect(bot.lastThought).toBe("GET REPAIR");
+    expect(input.target.x).toBeGreaterThan(state.player.pos.x); // toward the kit
+  });
+
+  it("spends a held repair kit once the weapon is nearly spent", () => {
+    const state = startGame();
+    clearStage(state);
+    state.player.repairKits = 1;
+    state.player.equipment.weapon = wornWeapon(1);
+    state.enemies.push(
+      makeEnemy({
+        pos: { x: state.player.pos.x + 200, y: state.player.pos.y },
+      }),
+    );
+    const input = botAct(createBot("survivor"), state);
+    expect(input.useRepairKit).toBe(true);
+  });
+
+  it("holds the kit while the blade is still healthy", () => {
+    const state = startGame();
+    clearStage(state);
+    state.player.repairKits = 1;
+    state.player.equipment.weapon = wornWeapon(
+      weaponDef("test_pipe").durability, // fresh
+    );
+    state.enemies.push(
+      makeEnemy({
+        pos: { x: state.player.pos.x + 200, y: state.player.pos.y },
+      }),
+    );
+    const input = botAct(createBot("survivor"), state);
+    expect(input.useRepairKit).toBeFalsy();
   });
 
   it("keeps a botted horde run deterministic", () => {

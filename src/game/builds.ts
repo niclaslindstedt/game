@@ -23,6 +23,7 @@
 // one is overpowered, and to aim each at being the strongest during its own
 // stretch of the game.
 
+import { LEVELING } from "./config.ts";
 import { STAT_NAMES } from "./defs/equipment.ts";
 import type { StatName, WeaponClass } from "./types.ts";
 
@@ -132,6 +133,49 @@ export const BUILD_ROTATION: Record<StatBuild, StatName[]> = {
  * lane — the auto-equip picks emergently off the spread stats). */
 export function buildWeaponLane(build: StatBuild): WeaponClass | null {
   return build === "balanced" ? null : build;
+}
+
+// ---- The META (level-band) lane ---------------------------------------------
+// The DEFAULT autopilot's take on "which weapon lane is strongest WHEN". It is
+// NOT a balanced generalist — it commits to the lane that wins each stretch of
+// the game and walks between them as the hero levels:
+//
+//   • EARLY (melee) — the starter is a heavy blade, STR gates are cheap, and
+//     there is no mana economy to spin up, so a swing out-damages everything.
+//   • MID–HIGH (magic) — once INT is deep and the spell list has opened, spells
+//     out-scale a physical swing (INT gates, scales, speeds, AND buys reach/AoE/
+//     crit all at once), so the hero pivots to casting.
+//   • ENDGAME (melee) — at the LEVEL CAP the ARTIFACTS start dropping (they gate
+//     on level 99 to both drop and wear — see items.ts `rollTier`/`itemLevelReq`),
+//     and the top melee chase is pure DAMAGE + ARMOR PIERCE against the armored
+//     cap. The INT banked through the magic phase also SUPERCHARGES the swing's
+//     AoE/reach/crit, so a melee hero who came up through magic cleaves a full
+//     arc. So the lane returns to melee for the final grind.
+//
+// The bands are keyed off hero LEVEL (not difficulty), so one hero's own
+// progression walks melee → magic → melee. Because INT rides every physical
+// build anyway (`BUILD_ROTATION.melee` banks it for the cleave), the mid-game
+// magic detour is not wasted stat investment — it front-loads the INT the
+// endgame melee lane wants.
+
+/** Hero level at/above which the META lane leaves early-game melee for magic. */
+export const META_MAGIC_MIN_LEVEL = 20;
+/** Hero level at/above which the META lane returns from magic to endgame melee —
+ * the LEVEL CAP, where artifacts (pure damage + armor pierce) start dropping. */
+export const META_MELEE_ENDGAME_LEVEL = LEVELING.maxLevel;
+
+/**
+ * The weapon lane the META (level-band) build commits to at hero `level`:
+ * MELEE below {@link META_MAGIC_MIN_LEVEL}, MAGIC up to
+ * {@link META_MELEE_ENDGAME_LEVEL}, then MELEE again for the endgame. This is
+ * the DEFAULT autopilot strategy (see `bot.ts` `botAllocate`); a fixed profile
+ * (`melee`/`ranged`/`magic`/`balanced`) overrides it, and `auto` keeps the
+ * emergent whichever-lane-is-deepest behaviour.
+ */
+export function metaLane(level: number): WeaponClass {
+  if (level < META_MAGIC_MIN_LEVEL) return "melee";
+  if (level < META_MELEE_ENDGAME_LEVEL) return "magic";
+  return "melee";
 }
 
 /**

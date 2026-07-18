@@ -88,6 +88,9 @@ export {
   buildStatWeights,
   buildWeaponLane,
   isStatBuild,
+  metaLane,
+  META_MAGIC_MIN_LEVEL,
+  META_MELEE_ENDGAME_LEVEL,
   STAT_BUILDS,
   type StatBuild,
 } from "./game/builds.ts";

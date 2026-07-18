@@ -1054,7 +1054,7 @@ export function GameScreen({
     const profile =
       requestedProfile && (BOT_PROFILES as string[]).includes(requestedProfile)
         ? (requestedProfile as BotProfile)
-        : "auto";
+        : "meta";
     const bot = botView
       ? createBot("survivor", profile)
       : requested && (BOT_STRATEGIES as string[]).includes(requested)

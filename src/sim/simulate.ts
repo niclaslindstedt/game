@@ -94,7 +94,8 @@ export type SimulateLevelOptions = {
   loadout?: Loadout | null;
   /** Autopilot strategy (default "survivor" — the competent horde player). */
   strategy?: BotStrategy;
-  /** Combat profile — the weapon lane the build commits to (default "auto"). */
+  /** Combat profile — the weapon lane the build commits to (default "meta", the
+   * level-band melee → magic → melee strategy). */
   profile?: BotProfile;
   /** Cap on SIMULATED minutes of play before the run is called a timeout. */
   maxMinutes?: number;
@@ -503,7 +504,7 @@ export function runLevel(options: SimulateLevelOptions): {
     seed = 1,
     loadout = null,
     strategy = "survivor",
-    profile = "auto",
+    profile = "meta",
     maxMinutes = 15,
     dtMs = 16,
     snapshotEveryMs = 60_000,
@@ -1294,7 +1295,7 @@ export function simulateCampaign(
     levels = [...LEVEL_ORDER],
     seed = 1,
     strategy = "survivor",
-    profile = "auto",
+    profile = "meta",
     maxMinutes = 15,
     dtMs = 16,
     snapshotEveryMs = 60_000,

@@ -151,14 +151,14 @@ const strategies = parseList(opt("strategy", "survivor"), BOT_POSTURES);
 // --class is the primary name for the stat-distribution BUILD (melee/ranged/
 // magic/balanced — how the hero spends level-up points, which through the
 // stat-aware auto-equip also picks the weapon and gear). `--profile` is the
-// historical alias for the same axis (and also takes `auto`, the emergent
-// lane). `--class all` sweeps the four real builds; `--profile all` also
-// includes `auto`.
+// historical alias for the same axis (and also takes `auto`, the emergent lane,
+// and `meta`, the DEFAULT level-band melee → magic → melee strategy). `--class
+// all` sweeps the four real builds; `--profile all` also includes `auto`/`meta`.
 const classArg = opt("class");
 const profiles =
   classArg !== undefined
     ? parseList(classArg, STAT_BUILDS)
-    : parseList(opt("profile", "auto"), BOT_PROFILES);
+    : parseList(opt("profile", "meta"), BOT_PROFILES);
 const validate = (names, allowed, what) => {
   for (const n of names) {
     if (!allowed.includes(n)) {
@@ -245,7 +245,10 @@ const startLoadoutFor = (profile) =>
         seed,
         weaponTier: gearTier,
         gearTier,
-        build: profile === "auto" ? undefined : profile,
+        // Only the fixed stat-BUILDS synthesize a biased starting kit; the
+        // emergent `auto` and the level-band `meta` arrive as the neutral
+        // generalist (no single lane to pre-load gear for).
+        build: profile === "auto" || profile === "meta" ? undefined : profile,
       });
 
 // ---- Run ------------------------------------------------------------------------

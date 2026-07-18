@@ -11,7 +11,7 @@
 
 import { clamp, distance, segmentDistanceSq } from "@game/lib/vec.ts";
 import type { Vec2 } from "@game/lib/vec.ts";
-import { BUILD_ROTATION, STAT_BUILDS } from "./builds.ts";
+import { BUILD_ROTATION, metaLane, STAT_BUILDS } from "./builds.ts";
 import type { StatBuild } from "./builds.ts";
 import { resolveBotTuning } from "./bot-tuning.ts";
 import type { BotTuning } from "./bot-tuning.ts";
@@ -80,16 +80,20 @@ export const BOT_POSTURES: BotStrategy[] = ["aggro", "balanced", "flee"];
  * attributes so the stat-aware auto-equip (`weaponScore`) naturally prefers that
  * class of weapon — a `magic` bot ends up casting, a `melee` bot swinging —
  * without the bot ever touching equipment directly; `balanced` spreads the
- * points across every stat and lets the auto-equip pick emergently. `auto` (the
- * default) keeps the old emergent behavior: the lane is whichever class the hero
- * has invested the most in, falling back to the held weapon.
+ * points across every stat and lets the auto-equip pick emergently. `auto` keeps
+ * the old emergent behavior: the lane is whichever class the hero has invested
+ * the most in, falling back to the held weapon. `meta` (the DEFAULT) is the
+ * level-band STRATEGY — melee early, magic mid–high, melee at the endgame (see
+ * {@link metaLane}) — so an un-parameterised bot commits to the strongest lane
+ * for its current level instead of spreading thin.
  */
-export type BotProfile = StatBuild | "auto";
+export type BotProfile = StatBuild | "auto" | "meta";
 
 /** Every profile, for UIs and harnesses that validate a requested name. The
  * four fixed profiles are the {@link StatBuild} distributions; `auto` keeps the
- * emergent (whichever lane the hero has invested most in) behaviour. */
-export const BOT_PROFILES: BotProfile[] = ["auto", ...STAT_BUILDS];
+ * emergent (whichever lane the hero has invested most in) behaviour; `meta` is
+ * the level-band default (melee → magic → melee). */
+export const BOT_PROFILES: BotProfile[] = ["auto", "meta", ...STAT_BUILDS];
 
 /**
  * A bot instance: the positioning `strategy` and the weapon-lane `profile`.
@@ -188,7 +192,7 @@ export type Bot = {
 
 export function createBot(
   strategy: BotStrategy,
-  profile: BotProfile = "auto",
+  profile: BotProfile = "meta",
 ): Bot {
   return { strategy, profile };
 }
@@ -464,20 +468,63 @@ function foesWithin(state: GameState, radius: number): number {
 }
 
 /** Below this fraction of its max durability the held weapon is "nearly spent"
- * — worth a repair before it breaks mid-fight. */
+ * — worth SPENDING a held repair kit before it breaks mid-fight. */
 const REPAIR_DURABILITY_FRAC = 0.2;
+
+/** Below this (looser) fraction the held weapon is "wearing thin" — worth going
+ * out of the way to SCOOP a repair kit off the ground now, so one is in hand
+ * before the blade actually gives out. Higher than the spend threshold so the
+ * hero stocks the kit early, then spends it late (`REPAIR_DURABILITY_FRAC`). */
+const REPAIR_SEEK_FRAC = 0.45;
+
+/** Is a spent weapon (durability 0) sitting in the bag, shed there when it broke
+ * out of the hand — waiting on a repair kit to wake it? */
+function hasBrokenBagWeapon(state: GameState): boolean {
+  return state.player.inventory.some(
+    (cell) => cell !== null && isWeaponBroken(cell),
+  );
+}
+
+/** The held weapon's remaining wear as a fraction of its full budget (1 = fresh,
+ * 0 = about to break), or 1 for the unbreakable sidearm — the "how spent is my
+ * blade" gauge the repair heuristics read. */
+function weaponWearFrac(state: GameState): number {
+  const weapon = state.player.equipment.weapon;
+  if (weapon.durability === undefined) return 1; // unbreakable sidearm
+  const max = equipmentMaxDurability(weapon);
+  return max > 0 ? weapon.durability / max : 1;
+}
 
 /** Is there anything a repair kit would meaningfully mend right now — a broken
  * weapon shed into the bag, or a held weapon worn down near breaking? */
 function needsRepair(state: GameState): boolean {
-  const bagBroken = state.player.inventory.some(
-    (cell) => cell !== null && isWeaponBroken(cell),
-  );
-  if (bagBroken) return true;
-  const weapon = state.player.equipment.weapon;
-  if (weapon.durability === undefined) return false; // unbreakable sidearm
-  const max = equipmentMaxDurability(weapon);
-  return max > 0 && weapon.durability <= max * REPAIR_DURABILITY_FRAC;
+  if (hasBrokenBagWeapon(state)) return true;
+  return weaponWearFrac(state) <= REPAIR_DURABILITY_FRAC;
+}
+
+/** Should the bot go pick up a repair kit? Only when it holds NONE (a kit on
+ * hand is spent via {@link needsRepair}, not hoarded) AND its weapon is wearing
+ * thin or a broken spare waits in the bag — the "stock a kit before the blade
+ * gives out" read that makes the downgrade → repair → re-equip cycle work. */
+function wantsRepairKitPickup(state: GameState): boolean {
+  if (state.player.repairKits > 0) return false;
+  return hasBrokenBagWeapon(state) || weaponWearFrac(state) <= REPAIR_SEEK_FRAC;
+}
+
+/** The nearest grounded REPAIR-KIT pickup, or undefined when none is on the
+ * field — the detour target for {@link wantsRepairKitPickup}. */
+function nearestRepairKit(state: GameState): Item | undefined {
+  let best: Item | undefined;
+  let bestD = Infinity;
+  for (const item of state.items) {
+    if (item.kind !== "repair") continue;
+    const d = distance(item.pos, state.player.pos);
+    if (d < bestD) {
+      best = item;
+      bestD = d;
+    }
+  }
+  return best;
 }
 
 /**
@@ -486,7 +533,10 @@ function needsRepair(state: GameState): boolean {
  * {@link BUILD_ROTATION} catalog (src/game/builds.ts), so the autopilot and the
  * analytic paper sim spend points the same way from one definition. A fixed
  * profile (`melee`/`ranged`/`magic`/`balanced`) walks that build's rotation
- * outright; `auto` walks the EMERGENT lane's rotation (see {@link botLane}).
+ * outright; `auto` walks the EMERGENT lane's rotation (see {@link botLane}); the
+ * default `meta` walks the LEVEL-BAND lane's rotation (melee → magic → melee, see
+ * {@link metaLane}), so the same hero deepens whichever lane wins its current
+ * stretch of the game.
  *
  * Keyed off total points already spent (not the level), so each individual
  * point rotates through the cycle rather than a whole level-up dumping into one
@@ -496,7 +546,9 @@ export function botAllocate(bot: Bot, state: GameState): StatName {
   const build =
     bot.profile === "auto"
       ? BUILD_ROTATION[botLane(state)]
-      : BUILD_ROTATION[bot.profile];
+      : bot.profile === "meta"
+        ? BUILD_ROTATION[metaLane(state.player.level)]
+        : BUILD_ROTATION[bot.profile];
   const spent = Object.values(state.player.spentStats).reduce(
     (a, b) => a + b,
     0,
@@ -681,6 +733,23 @@ function survive(
     );
   }
 
+  // 2.6. STOCK A REPAIR KIT. The held weapon is wearing thin (or a broken spare
+  //    waits in the bag) and the hero holds no kit — detour to a repair kit lying
+  //    within reach so it's in hand before the blade gives out. The engine swaps
+  //    to the next-best spare the instant a weapon breaks, and spending the kit
+  //    (`needsRepair`, above in botAct) mends the whole loadout and RE-EQUIPS the
+  //    shed weapon (`repairAll`), so a stocked kit is what makes the whole
+  //    downgrade → repair → re-arm cycle close. Only when not pressed (nearest
+  //    body beyond the danger bubble), so scooping loot never walks into a bite.
+  const dangerHold = tune.graspStandoff * pt.standoffMul;
+  if (wantsRepairKitPickup(state) && nearestD > dangerHold) {
+    const kit = nearestRepairKit(state);
+    if (kit && distance(player.pos, kit.pos) < ITEM_REACH) {
+      think(bot, "GET REPAIR");
+      return steer(state, kit.pos, grounded);
+    }
+  }
+
   // 3. HUG THE PACK'S EDGE. Stay just outside the nearest body's grasp so the
   //    auto-weapon mows the front line while the hero keeps out of reach —
   //    orbiting the edge, backing off toward the OPEN side (away from the pack's
@@ -706,7 +775,7 @@ function survive(
   //    the objective only when the nearest threat is beyond this, so as the auto-
   //    weapon thins the front he steps in — kiting FORWARD, never diving.
   // For melee the two collapse together, so melee play is unchanged.
-  const dangerDist = tune.graspStandoff * pt.standoffMul;
+  const dangerDist = dangerHold;
   const baseEngage = ranged
     ? Math.max(tune.graspStandoff, range * tune.engageRangeFrac)
     : range >= tune.graspStandoff
