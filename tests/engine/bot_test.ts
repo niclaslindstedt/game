@@ -189,6 +189,45 @@ describe("bot strategies", () => {
     };
     expect(distToCluster("flee")).toBeGreaterThan(distToCluster("aggro"));
   });
+
+  it("a ranged loadout holds further off a pack than a melee one (reach-aware)", () => {
+    // Reach-aware standoff: a projectile weapon holds near its own range so it
+    // kills from a distance, while a melee loadout — which can only reach at arm's
+    // length — closes to swing. So the same survivor against the same stationary
+    // cluster keeps MORE distance with a gun than with the sword, and never gets
+    // touched holding at bolt reach. (`ranged` here is the blaster; the default
+    // startGame hero carries a melee sword.)
+    const standoff = (equip: (s: GameState) => GameState) => {
+      const state = equip(startGame());
+      clearStage(state);
+      const foes = [];
+      for (let i = 0; i < 5; i++) {
+        const foe = makeEnemy({
+          pos: {
+            x: state.player.pos.x + 130 + i * 8,
+            y: state.player.pos.y - 32 + i * 16,
+          },
+          hp: 1_000_000,
+          maxHp: 1_000_000,
+          mlvl: 1,
+          speed: 0, // stationary — the gap is the bot's chosen standoff
+        });
+        state.enemies.push(foe);
+        foes.push(foe);
+      }
+      drive(state, createBot("balanced"), 200);
+      const nearest = Math.min(
+        ...foes.map((e) => dist(state.player.pos, e.pos)),
+      );
+      return { nearest, dmg: state.stats.damageTaken };
+    };
+    const ranged = standoff(equipBlaster);
+    const melee = standoff((s) => s);
+    expect(ranged.nearest).toBeGreaterThan(melee.nearest);
+    // The gun holds well outside a foe's ~34px grasp and never takes a hit.
+    expect(ranged.nearest).toBeGreaterThan(72);
+    expect(ranged.dmg).toBe(0);
+  });
 });
 
 describe("bot profiles", () => {

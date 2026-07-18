@@ -585,7 +585,12 @@ run against synthetic fixtures with no shipped content (see
 - **`src/game/bot.ts`** — the autopilot: pure strategies (`idle`, `rush`,
   `kite`, `boss`, `survivor`) that turn the live state into ordinary
   `GameInput`, so a bot can sit anywhere a player does — headless tests,
-  the app's `?bot=` autoplay mode, and later an AI-driven second player.
+  the app's `?bot=` autoplay mode, and later an AI-driven second player. Its
+  positioning is data-tuned: `src/game/bot-tuning.ts` holds the `BotTuning`
+  schema + neutral defaults, and `botTuningFor(levelId)` resolves the
+  hand-authored `website/scripts/bot.yaml` (a global `default` layer + per-level
+  overrides, compiled to `src/generated/botTuning.ts` by `make levels`, mirroring
+  `ladder.yaml`). See the `bot-improvement` skill.
 - **`src/game/scenario.ts`** — test scenarios: `applyScenario(state, spec)`
   mutates a fresh run into an exact declared situation (hero position and
   vitals, build, gear, cleared field, silenced waves, spawned mob rings) for

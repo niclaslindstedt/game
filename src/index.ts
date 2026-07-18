@@ -64,11 +64,20 @@ export {
   BOT_STRATEGIES,
   botAct,
   botAllocate,
+  botTuningFor,
   createBot,
   type Bot,
   type BotProfile,
   type BotStrategy,
 } from "./game/bot.ts";
+export {
+  BOT_TUNING_DEFAULTS,
+  resolveBotTuning,
+  type BotTuning,
+  type BotTuningOverrides,
+  type BotTuningPatch,
+  type PostureTuning,
+} from "./game/bot-tuning.ts";
 
 // Stat-distribution builds — the one source of truth the balance tooling
 // compares builds against (melee/ranged/magic/balanced): how a hero spends
