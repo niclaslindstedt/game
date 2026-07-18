@@ -342,6 +342,11 @@ const DOCK_DRAG_THRESHOLD_PX = 16;
 // How long a discard smoke poof lives before it clears itself (ms) — matches
 // the .powerup-poof CSS animation.
 const POOF_TTL_MS = 600;
+// Fast-forward ceiling: the most the `?speed=` param / `__speed` debug hook may
+// crank the sim clock. High enough to blitz a bot playtest, capped so a single
+// frame's step burst stays bounded (the game loop's own maxStepsPerFrame is the
+// hard backstop).
+const MAX_SIM_SPEED = 16;
 // How long the inventory button keeps pulsing after the bag turns away loot,
 // nudging the player to open it and make room (ms). A few pulse cycles — long
 // enough to notice without nagging.
@@ -1505,7 +1510,30 @@ export function GameScreen({
     // `weapon-swing` dev script drives it to sample weapon EFFECTS. See the
     // `weapon-system` skill and docs/configuration.md.
     let timeScale = 1;
+    // FAST-FORWARD: `?speed=<n>` (or the ?debug `window.__speed(n)`) runs the
+    // whole run N× faster by simulating more fixed steps per frame — genuinely
+    // advancing the game quicker, so a `?bot=` playtest clears a level in a
+    // fraction of the wall-clock time. This is the OPPOSITE of `__timeScale`:
+    // fast-forward runs MORE steps at the same step size (deterministic — a
+    // fast-forwarded bot run is identical to a real-time one), while
+    // `__timeScale` slows by scaling the step SIZE. Clamped to [1, MAX_SIM_SPEED].
+    //
+    // The BASE speed is the player's persisted GAME SPEED choice (SETTINGS →
+    // GAME SPEED, chosen before the run). An automated bot playtest can OVERRIDE
+    // it higher via `?speed=` (and `__speed` retunes live). See
+    // docs/configuration.md.
+    let simSpeed = Math.min(getSettings().gameSpeed, MAX_SIM_SPEED);
+    const speedParam = Number(params.get("speed"));
+    if (Number.isFinite(speedParam) && speedParam > 1) {
+      simSpeed = Math.min(speedParam, MAX_SIM_SPEED);
+    }
     if (params.has("debug")) {
+      (window as unknown as { __speed?: (f: number) => void }).__speed = (
+        f,
+      ) => {
+        simSpeed =
+          Number.isFinite(f) && f >= 1 ? Math.min(f, MAX_SIM_SPEED) : 1;
+      };
       (window as unknown as { __timeScale?: (f: number) => void }).__timeScale =
         (f) => {
           timeScale = Number.isFinite(f) && f > 0 ? f : 1;
@@ -1536,6 +1564,9 @@ export function GameScreen({
     }
 
     const stop = startGameLoop({
+      // Fast-forward (`?speed=` / `__speed`) advances the sim faster by running
+      // more fixed steps per frame — read live so `__speed` can retune mid-run.
+      speed: () => simSpeed,
       simulate(dtMs) {
         const camera = computeCamera(state, canvas.width, canvas.height);
         // The character only targets what the player can see.

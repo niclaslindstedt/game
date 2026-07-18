@@ -89,6 +89,7 @@ import {
 } from "./keybindings.ts";
 import { uiScaleFor } from "./render.ts";
 import {
+  GAME_SPEEDS,
   getSettings,
   KNOCKBACK_MAX,
   updateSettings,
@@ -110,6 +111,7 @@ type MenuScreen =
   | "play"
   | "difficulty"
   | "levels"
+  | "botspeed"
   | "scores"
   | "settings"
   | "controls"
@@ -333,6 +335,10 @@ export function TitleScreen({
   // level hands the run to the engine autopilot (a realistic arrival hero) rather
   // than starting a normal playable run. Rides on top of `warp` (same pickers).
   const [botView, setBotView] = useState(false);
+  // The level a BOT VIEW run was launched at, stashed while the GAME SPEED step
+  // (the `botspeed` screen, shown AFTER difficulty + level) picks the
+  // fast-forward multiplier before the run finally starts. Null off that flow.
+  const [botLevel, setBotLevel] = useState<string | null>(null);
   // The scrollable menu column: each screen change starts reading from the
   // top (the selected row's scrollIntoView would otherwise land a tall screen
   // — HOW TO PLAY — scrolled to its BACK row, hiding the content).
@@ -790,6 +796,7 @@ export function TitleScreen({
           playUiSound(synth, "back");
           setWarp(false);
           setBotView(false);
+          setBotLevel(null);
           setScreen("developer");
           setCursor(0);
         },
@@ -897,6 +904,15 @@ export function TitleScreen({
                 playUiSound(synth, "back");
                 return;
               }
+              // BOT VIEW picks the fast-forward speed next (the `botspeed`
+              // step); a normal/warp pick drops straight in.
+              if (botView) {
+                playUiSound(synth, "confirm");
+                setBotLevel(id);
+                setScreen("botspeed");
+                setCursor(0);
+                return;
+              }
               playUiSound(synth, "start");
               onStart(
                 difficulty,
@@ -916,6 +932,13 @@ export function TitleScreen({
               color: "#c9a2ff",
               blurb: "SECRET - WARP DROPS STRAIGHT IN",
               action: () => {
+                if (botView) {
+                  playUiSound(synth, "confirm");
+                  setBotLevel(id);
+                  setScreen("botspeed");
+                  setCursor(0);
+                  return;
+                }
                 playUiSound(synth, "start");
                 onStart(difficulty, id, { skipIntro: true, botView });
               },
@@ -924,6 +947,54 @@ export function TitleScreen({
         warp
           ? warpBack
           : backTo("difficulty", DIFFICULTY_ORDER.indexOf(difficulty)),
+      ];
+    }
+    if (screen === "botspeed" && character) {
+      // The GAME SPEED step of BOT VIEW, reached AFTER a difficulty and level
+      // are chosen. A developer-only fast-forward: it runs more fixed game-loop
+      // steps per frame, so the autopilot blitzes the level in a fraction of the
+      // wall-clock time (deterministic — the step size never changes). The pick
+      // persists in the settings and the game loop reads it (GameScreen
+      // `simSpeed`); START launches the stashed level under the bot.
+      const s = getSettings();
+      const target = botLevel;
+      return [
+        {
+          label: "GAME SPEED",
+          value: `${s.gameSpeed}×`,
+          aria: "botspeed-speed",
+          blurb: "FAST-FORWARD THE BOT RUN - MORE STEPS PER FRAME",
+          action: () => {
+            playUiSound(synth, "confirm");
+            const i = GAME_SPEEDS.indexOf(s.gameSpeed);
+            const next = GAME_SPEEDS[(i + 1) % GAME_SPEEDS.length];
+            updateSettings({ gameSpeed: next });
+            setSettingsTick((t) => t + 1);
+          },
+        },
+        {
+          label: "START",
+          aria: "botspeed-start",
+          color: "#7ef0c8",
+          blurb: target
+            ? `WATCH THE BOT PLAY ${levelDef(target).name} AT ${s.gameSpeed}×`
+            : "WATCH THE BOT PLAY",
+          action: () => {
+            if (!target) return;
+            playUiSound(synth, "start");
+            onStart(difficulty, target, { skipIntro: true, botView: true });
+          },
+        },
+        {
+          label: "BACK",
+          aria: "menu-back",
+          action: () => {
+            playUiSound(synth, "back");
+            setBotLevel(null);
+            setScreen("levels");
+            setCursor(0);
+          },
+        },
       ];
     }
     if (screen === "settings") {
@@ -1599,6 +1670,7 @@ export function TitleScreen({
         if (screen === "difficulty" && warp) {
           setWarp(false);
           setBotView(false);
+          setBotLevel(null);
         }
         const back: Record<string, MenuScreen> = {
           play: "main",
@@ -1612,6 +1684,7 @@ export function TitleScreen({
           balance: "developer",
           difficulty: warp ? "developer" : "main",
           levels: "difficulty",
+          botspeed: "levels",
         };
         setScreen(back[screen] ?? "main");
         setCursor(0);
@@ -1969,6 +2042,14 @@ export function TitleScreen({
               text={warp ? "WARP TO ANY MISSION" : "CHOOSE YOUR MISSION"}
               scale={2}
               color={warp ? "#7ef0c8" : "#d9a0f0"}
+            />
+          )}
+          {screen === "botspeed" && (
+            <PixelText
+              font={font}
+              text="BOT VIEW - GAME SPEED"
+              scale={2}
+              color="#7ef0c8"
             />
           )}
           {screen === "settings" && (

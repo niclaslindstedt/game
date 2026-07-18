@@ -15,8 +15,14 @@
 //     [--strategy aggro|balanced|flee|survivor|rush|kite|boss] \
 //     [--profile auto|melee|ranged|magic] [--timeout 120] \
 //     [--difficulty easy|medium|hard|nightmare|jesus] \
-//     [--level spacez_hq|moon] [--seed 42] \
+//     [--level spacez_hq|moon] [--seed 42] [--speed 4] \
 //     [--scenario '{"place":"boss","hp":2}']
+//
+// `--speed <n>` FAST-FORWARDS the run: the app simulates n× as many game-loop
+// steps per frame, so a bot playtest finishes in a fraction of the wall-clock
+// time (deterministic — the fixed timestep is preserved, so a fast-forwarded
+// run is identical to a real-time one, just quicker). 1 = real time; the app
+// clamps to [1, 16].
 //
 // `--scenario` forwards a ScenarioSpec (JSON) into the app's `?scenario=`
 // param, staging the run into an exact situation before the bot takes over
@@ -55,6 +61,9 @@ const level = opt("level", "spacez_hq");
 // the app as `?scenario=` / `?seed=` (see docs/configuration.md).
 const scenario = opt("scenario", "");
 const seed = opt("seed", "");
+// Fast-forward multiplier, forwarded to the app as `?speed=`: run the bot
+// through the level faster (more sim steps per frame). Empty / 1 = real time.
+const speed = opt("speed", "");
 
 const shotDir = fileURLToPath(
   new URL("../assets-preview/playtest", import.meta.url),
@@ -77,7 +86,8 @@ page.on("pageerror", (e) => console.error("PAGE ERROR:", e.message));
 const extras =
   (scenario ? `&scenario=${encodeURIComponent(scenario)}` : "") +
   (seed ? `&seed=${seed}` : "") +
-  (profile && profile !== "auto" ? `&botProfile=${profile}` : "");
+  (profile && profile !== "auto" ? `&botProfile=${profile}` : "") +
+  (speed && Number(speed) > 1 ? `&speed=${encodeURIComponent(speed)}` : "");
 await page.goto(`${url}/?debug&bot=${strategy}${extras}`);
 // The app opens on the Doom-style title menu. Wait for it (asset load) before
 // shooting the splash, then PLAY → NEW GAME opens the character create form.
@@ -157,6 +167,7 @@ console.log(
     {
       strategy,
       profile,
+      speed: speed && Number(speed) > 1 ? Number(speed) : 1,
       outcome: s.phase,
       hp: s.hp,
       level: s.level,
