@@ -123,26 +123,26 @@ spawns:
     at:
       x: 880
       y: 1120
-    level: [8, 9, 11, 44]
-    hp: [200, 300, 460, 1320]
+    ramp: brutal
+    hp: 200
   - enemy: prospector
     at:
       x: 1040
       y: 720
-    level: [9, 10, 12, 45]
-    hp: [220, 330, 500, 1440]
+    ramp: merciless
+    hp: 220
   - enemy: quarantine_medic
     at:
       x: 1340
       y: 500
-    level: [10, 11, 13, 47]
-    hp: [240, 360, 540, 1560]
+    ramp: monstrous
+    hp: 240
   - enemy: cartographer
     at:
       x: 1560
       y: 940
-    level: [11, 12, 14, 47]
-    hp: [220, 330, 500, 1440]
+    ramp: endgame
+    hp: 220
   # The two detour guardians, PINNED (not just random rares) inside each pocket
   # off the sweep's low turns — the whole reward for exploring a dead end. The
   # opener's guardian cons EVEN (~L11); the boss-basin one cons RED (~L17), part
@@ -151,20 +151,20 @@ spawns:
     at:
       x: 500
       y: 1470
-    level: [7, 8, 10, 45]
-    hp: [160, 240, 360, 1020]
+    ramp: savage
+    hp: 160
   - enemy: the_thirteenth_man
     at:
       x: 1980
       y: 1440
-    level: [12, 13, 15, 48]
-    hp: [300, 450, 680, 1920]
+    ramp: endgame
+    hp: 300
   - enemy: armstrong
     at:
       x: 2130
       y: 260
-    level: [11, 12, 14, 49]
-    hp: [450, 675, 1030, 3300]
+    ramp: endgame
+    hp: 450
 safeZones:
   # THE STILL POINT: a calm nook on the last climb to the flag, so the horde is
   # repelled off the boss approach and the hero (and the autopilot) walks in
@@ -249,7 +249,7 @@ spawners:
   - id: open
     at: { x: 500, y: 1280 }
     maxAlive: 10
-    mobLevels: [[4, 5], [4, 6], [6, 8], [42, 43]]
+    ramp: meek
     triggerRadius: 560
     lingering: 5
     members:
@@ -259,7 +259,7 @@ spawners:
   - id: low
     at: { x: 900, y: 1120 }
     maxAlive: 10
-    mobLevels: [[5, 6], [5, 7], [7, 9], [43, 44]]
+    ramp: bold
     triggerRadius: 520
     lingering: 5
     members:
@@ -271,7 +271,7 @@ spawners:
   - id: climb
     at: { x: 1040, y: 720 }
     maxAlive: 10
-    mobLevels: [[6, 7], [6, 8], [8, 10], [44, 45]]
+    ramp: fierce
     triggerRadius: 500
     lingering: 5
     members:
@@ -285,7 +285,7 @@ spawners:
   - id: top
     at: { x: 1360, y: 520 }
     maxAlive: 10
-    mobLevels: [[7, 8], [7, 9], [9, 11], [44, 46]]
+    ramp: savage
     triggerRadius: 500
     lingering: 5
     members:
@@ -297,7 +297,7 @@ spawners:
   - id: desc
     at: { x: 1540, y: 980 }
     maxAlive: 10
-    mobLevels: [[8, 9], [8, 10], [10, 12], [45, 47]]
+    ramp: brutal
     triggerRadius: 500
     lingering: 5
     members:
@@ -309,7 +309,7 @@ spawners:
   - id: low4
     at: { x: 1860, y: 1180 }
     maxAlive: 10
-    mobLevels: [[9, 10], [9, 11], [11, 13], [46, 48]]
+    ramp: merciless
     triggerRadius: 480
     lingering: 5
     members:
@@ -327,7 +327,7 @@ spawners:
   - id: bay
     at: { x: 1980, y: 820 }
     maxAlive: 8
-    mobLevels: [[10, 11], [10, 12], [12, 14], [47, 49]]
+    ramp: monstrous
     triggerRadius: 320
     lingering: 4
     members:
