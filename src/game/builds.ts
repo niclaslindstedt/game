@@ -23,6 +23,7 @@
 // one is overpowered, and to aim each at being the strongest during its own
 // stretch of the game.
 
+import { LEVELING } from "./config.ts";
 import { STAT_NAMES } from "./defs/equipment.ts";
 import type { StatName, WeaponClass } from "./types.ts";
 
@@ -132,6 +133,55 @@ export const BUILD_ROTATION: Record<StatBuild, StatName[]> = {
  * lane — the auto-equip picks emergently off the spread stats). */
 export function buildWeaponLane(build: StatBuild): WeaponClass | null {
   return build === "balanced" ? null : build;
+}
+
+// ---- The META (level-band) lane ---------------------------------------------
+// The DEFAULT autopilot's take on "which weapon lane is strongest WHEN". It is
+// NOT a balanced generalist — it commits to the lane that wins each stretch of
+// the game and walks between them as the hero levels:
+//
+//   • EARLY (melee) — up to ~level 40 (easy/medium/hard, into early nightmare)
+//     the starter is a heavy blade, STR gates are cheap, and there is no mana
+//     economy to spin up, so a swing out-damages everything.
+//   • MID–HIGH (magic) — from ~level 40 the mobs' ARMOR starts climbing (the
+//     nightmare-and-up armored horde), which blunts a physical swing far more
+//     than a spell; with INT now deep and the spell list open, magic (INT gates,
+//     scales, speeds, AND buys reach/AoE/crit all at once) out-scales the blade,
+//     so the hero pivots to casting.
+//   • ENDGAME (melee) — at the LEVEL CAP the ARTIFACTS start dropping (they gate
+//     on level 99 to both drop and wear — see items.ts `rollTier`/`itemLevelReq`),
+//     and the top melee chase is pure DAMAGE + ARMOR PIERCE against the armored
+//     cap. The INT banked through the magic phase also SUPERCHARGES the swing's
+//     AoE/reach/crit, so a melee hero who came up through magic cleaves a full
+//     arc. So the lane returns to melee for the final grind.
+//
+// The bands are keyed off the level the hero is CONSTRUCTED at (see `bot.ts`
+// `botAllocate`, which freezes the lane on the bot at its starting level and
+// commits to it for the whole run) — NOT re-evaluated per tick. A hero can't
+// reallocate spent points, so thrashing lanes mid-run would just waste
+// investment; instead the level a bot is spun up at decides its lane once. So an
+// easy/medium/hard run (fresh) commits MELEE, a nightmare run (spun up past ~40)
+// commits MAGIC, and a level-cap run commits MELEE for the artifact endgame.
+
+/** Hero level at/above which the META lane prefers magic over early-game melee —
+ * where the nightmare-and-up horde's ARMOR starts blunting a physical swing. */
+export const META_MAGIC_MIN_LEVEL = 40;
+/** Hero level at/above which the META lane returns from magic to endgame melee —
+ * the LEVEL CAP, where artifacts (pure damage + armor pierce) start dropping. */
+export const META_MELEE_ENDGAME_LEVEL = LEVELING.maxLevel;
+
+/**
+ * The weapon lane the META (level-band) build commits to at hero `level`:
+ * MELEE below {@link META_MAGIC_MIN_LEVEL}, MAGIC up to
+ * {@link META_MELEE_ENDGAME_LEVEL}, then MELEE again for the endgame. This is
+ * the DEFAULT autopilot strategy (see `bot.ts` `botAllocate`); a fixed profile
+ * (`melee`/`ranged`/`magic`/`balanced`) overrides it, and `auto` keeps the
+ * emergent whichever-lane-is-deepest behaviour.
+ */
+export function metaLane(level: number): WeaponClass {
+  if (level < META_MAGIC_MIN_LEVEL) return "melee";
+  if (level < META_MELEE_ENDGAME_LEVEL) return "magic";
+  return "melee";
 }
 
 /**
