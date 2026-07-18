@@ -9,7 +9,7 @@
 // from state.rng, so a botted run is exactly as deterministic as a recorded
 // human run with the same seed.
 
-import { clamp, distance } from "@game/lib/vec.ts";
+import { clamp, distance, segmentDistanceSq } from "@game/lib/vec.ts";
 import type { Vec2 } from "@game/lib/vec.ts";
 import { BUILD_ROTATION, STAT_BUILDS } from "./builds.ts";
 import type { StatBuild } from "./builds.ts";
@@ -991,6 +991,39 @@ function exploreTarget(
   return { x: sumX / count, y: sumY / count };
 }
 
+/** Is a sizable patch of unexplored fog still within `range` of `pos`? A cheap
+ * boolean scan of the fog grid (no LoS, no centroid) — used to tell a DETOUR
+ * waypoint (one the designer dipped toward an unentered pocket) from a plain
+ * straightaway node. */
+function fogNear(state: GameState, pos: Vec2, range: number): boolean {
+  const cell = MAP.cellSize;
+  const cols = mapCols(state.level);
+  const rows = mapRows(state.level);
+  const reach = Math.ceil(range / cell);
+  const cx = Math.floor(pos.x / cell);
+  const cy = Math.floor(pos.y / cell);
+  const rangeSq = range * range;
+  let fogged = 0;
+  for (let ty = cy - reach; ty <= cy + reach; ty++) {
+    if (ty < 1 || ty >= rows - 1) continue;
+    for (let tx = cx - reach; tx <= cx + reach; tx++) {
+      if (tx < 1 || tx >= cols - 1) continue;
+      if (state.explored[ty * cols + tx] === 1) continue;
+      const wx = (tx + 0.5) * cell;
+      const wy = (ty + 0.5) * cell;
+      if ((wx - pos.x) * (wx - pos.x) + (wy - pos.y) * (wy - pos.y) > rangeSq)
+        continue;
+      if (++fogged >= FOG_BLOB_MIN_CELLS) return true;
+    }
+  }
+  return false;
+}
+
+/** How far off the string-pull line a path waypoint must sit to read as a
+ * deliberate DETOUR dip (rather than a node roughly on the way) — the bot honors
+ * a fogged dip this far off the route instead of cutting straight past it. */
+const DETOUR_OFFSET = 160;
+
 /** The anchor of the nearest spawn point that still owes mobs (dormant or
  * mid-drip) within `SPAWNER_CLEAR_RANGE` of the hero, or null — the patch the
  * bot holds and clears before the path lets it advance. Null on levels that
@@ -1190,10 +1223,36 @@ function travelWaypoint(state: GameState): Vec2 | null {
   if (!path || path.length === 0) return wp;
   const from = state.player.pos;
   const r = PLAYER.radius;
-  // Furthest visible node at/after current progress → head straight for it.
+  // Furthest visible node at/after current progress → the string-pull target.
+  let furthest = null;
   for (let i = path.length - 1; i >= state.pathIndex; i--) {
-    if (!blockedByObstacle(state, from, path[i] as Vec2, r))
-      return path[i] as Vec2;
+    if (!blockedByObstacle(state, from, path[i] as Vec2, r)) {
+      furthest = path[i] as Vec2;
+      break;
+    }
+  }
+  if (furthest) {
+    // KNOW THE DESIGNED DETOURS. While still exploring (not yet boss-ready), don't
+    // string-pull PAST a waypoint that BOTH dips well off the route AND still
+    // guards unexplored fog — that's a deliberate dip toward an off-path cache.
+    // Head for the first such reachable dip instead, so the sweep pokes the
+    // pocket the designer placed rather than cutting straight to the boss. Once
+    // its fog is uncovered (or the hero is boss-ready) the dip stops pulling and
+    // the normal string-pull resumes.
+    if (!readyForBoss(state)) {
+      for (let i = state.pathIndex; i < path.length; i++) {
+        const node = path[i] as Vec2;
+        if (node === furthest) break;
+        if (blockedByObstacle(state, from, node, r)) continue;
+        if (
+          segmentDistanceSq(from, furthest, node) <
+          DETOUR_OFFSET * DETOUR_OFFSET
+        )
+          continue;
+        if (fogNear(state, node, FOG_DETOUR_RANGE)) return node;
+      }
+    }
+    return furthest;
   }
   // Nothing ahead in sight (shoved into a pocket) → nearest node, to rejoin.
   let best = wp;

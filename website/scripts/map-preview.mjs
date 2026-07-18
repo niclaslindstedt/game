@@ -614,12 +614,14 @@ async function renderLevel(entry, opts) {
   drawBase(c);
   const extra = [];
   if (opts.heatmap) {
-    const spatial = await runTrace(def.id, opts.seed, opts.difficulty);
+    const spatial = await runTrace(def.id, opts);
     drawHeatmap(c, spatial);
     extra.push(
       `COVERAGE: ${spatial.coveragePct}% of map`,
       `SPAWNS: ${spatial.spawns?.length ?? 0}  KILLS: ${spatial.kills?.length ?? 0}`,
-      `PATH: bot ${opts.difficulty}`,
+      opts.startLevel
+        ? `PATH: bot ${opts.difficulty}, arrival L${opts.startLevel}`
+        : `PATH: bot ${opts.difficulty}`,
     );
   }
   if (opts.actual && !opts.heatmap)
@@ -642,12 +644,29 @@ async function renderLevel(entry, opts) {
   console.log(`wrote ${out} (${c.width}x${c.height} @2x)`);
 }
 
-async function runTrace(id, seed, difficulty) {
+async function runTrace(id, opts) {
+  const { seed, difficulty, startLevel, gearTier } = opts;
   const { simulateLevel } = await import(engine("src/sim/simulate.ts"));
+  // --start-level mints a REALISTIC arrival hero (leveled + rolled gear) so the
+  // heatmap shows how the level plays for a hero who reaches it in a campaign —
+  // not a fresh level-1 rookie who death-spirals against the map's real mobs.
+  let loadout = null;
+  if (startLevel) {
+    const { synthesizeArrival } = await import(engine("src/sim/arrival.ts"));
+    loadout = synthesizeArrival({
+      difficulty,
+      level: startLevel,
+      levelId: id,
+      gearTier: gearTier ?? "magic",
+      weaponTier: gearTier ?? "magic",
+    });
+  }
   const report = simulateLevel({
     levelId: id,
     difficulty,
     seed,
+    loadout,
+    realisticPacing: Boolean(startLevel),
     autoShop: true,
     trace: true,
   });
@@ -710,6 +729,8 @@ function parseArgs(argv) {
     else if (a === "--all") opts.all = true;
     else if (a === "--seed") opts.seed = Number(argv[++i]);
     else if (a === "--difficulty") opts.difficulty = argv[++i];
+    else if (a === "--start-level") opts.startLevel = Number(argv[++i]);
+    else if (a === "--gear-tier") opts.gearTier = argv[++i];
     else rest.push(a);
   }
   opts.id = rest[0];
