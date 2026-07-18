@@ -149,7 +149,7 @@ describe("level-up heal", () => {
 });
 
 describe("the screen nuke", () => {
-  it("is banked on pickup and wipes nearby minions on use", () => {
+  it("is banked on pickup, then wipes minions and chunks elites and bosses", () => {
     const state = startGame();
     clearStage(state);
     const boss = state.enemies[0]!;
@@ -165,35 +165,49 @@ describe("the screen nuke", () => {
     expect(state.player.heldAbilities).toContain("test_nuke");
 
     const radius = abilityDef("test_nuke").nuke!.radius;
-    const near = makeEnemy({
-      id: 9001,
-      pos: { x: state.player.pos.x + 100, y: state.player.pos.y },
-    });
+    const px = state.player.pos.x;
+    const py = state.player.pos.y;
+    // A crowd of rank-and-file minions inside the blast keeps the mean health
+    // low, so the fixed 200%-of-mean hit lands as many times its own size on a
+    // minion but only a chunk of a heavyweight.
+    const minions = Array.from({ length: 10 }, (_, i) =>
+      makeEnemy({ id: 9100 + i, pos: { x: px + 100, y: py + (i - 5) * 6 } }),
+    );
     const far = makeEnemy({
       id: 9002,
-      pos: { x: state.player.pos.x + radius + 60, y: state.player.pos.y },
+      pos: { x: px + radius + 60, y: py },
     });
-    // Park a boss and an elite inside the blast to prove their immunity — the
-    // set-piece fights still have to be fought, nuke or not.
-    boss.pos = { x: state.player.pos.x + 80, y: state.player.pos.y };
+    // A boss and an elite parked inside the blast — no monster is exempt from
+    // the nuke now, so both take real damage. Give them tall, already-power-
+    // scaled bars so the diluted mean (and even a lucky crit) only chunks them
+    // instead of clearing the set-piece fight outright.
+    boss.pos = { x: px + 80, y: py };
     boss.home = { ...boss.pos };
+    boss.powerScaled = true;
+    boss.hp = 2000;
+    boss.maxHp = 2000;
     const elite = makeEnemy(
-      { id: 9003, pos: { x: state.player.pos.x + 90, y: state.player.pos.y } },
+      { id: 9003, pos: { x: px + 90, y: py }, powerScaled: true },
       "test_elite",
     );
-    state.enemies.push(near, far, elite);
+    elite.hp = 2000;
+    elite.maxHp = 2000;
+    state.enemies.push(...minions, far, elite);
 
     const xpBefore = state.stats.xpGained;
     step(state, useItem, DT);
     expect(state.player.heldAbilities).toHaveLength(0);
-    expect(state.enemies).toContain(boss); // bosses shrug it off
-    expect(state.enemies).toContain(elite); // so do elites
+    // The rank and file are gone; the heavyweights are hurt but still standing.
+    for (const minion of minions) expect(state.enemies).not.toContain(minion);
+    expect(state.enemies).toContain(boss); // hit, not exempt…
+    expect(boss.hp).toBeLessThan(2000); // …and its bar took a real chunk
+    expect(state.enemies).toContain(elite);
+    expect(elite.hp).toBeLessThan(2000);
     expect(state.enemies).toContain(far); // out of the blast
-    expect(state.enemies).not.toContain(near);
     expect(state.events).toContainEqual(
       expect.objectContaining({ type: "nuke" }),
     );
-    // The kill pays out like any other: XP flowed.
+    // The kills pay out like any other: XP flowed.
     expect(state.stats.xpGained).toBeGreaterThan(xpBefore);
   });
 
