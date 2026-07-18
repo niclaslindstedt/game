@@ -358,6 +358,16 @@ export type LevelDef = {
    * ignores it and keeps the relative scaling.
    */
   mobLevels?: DifficultyMobLevels;
+  /**
+   * The INTENDED hero character level while playing this map, per non-JESUS
+   * difficulty in ladder order `[easy, medium, hard, nightmare]` — the leveling
+   * curve's expected player level here (a single representative point of the
+   * arrives→leaves band). NOT read by the simulation: it is the design-intent
+   * anchor the `map-layout` tool colours spawner CON against (each spawn point's
+   * mob level vs this number), so an over/under-tuned difficulty ramp is visible
+   * at a glance. JESUS is excluded (the hero has out-levelled every number).
+   */
+  intendedLevel?: readonly [number, number, number, number];
   /** Monsters placed at level creation — the "few on screen" at the start. */
   spawns: SpawnSpec[];
   /**

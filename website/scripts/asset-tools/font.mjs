@@ -72,6 +72,9 @@ export const GLYPHS = {
   "(": [".#", "#.", "#.", "#.", ".#"],
   ")": ["#.", ".#", ".#", ".#", "#."],
   "&": [".##..", "#..#.", ".##..", "#..#.", ".##.#"],
+  // Right arrow — a shaft with a ">" head, for "opens → destination" notes.
+  "→": ["..#..", "...#.", "#####", "...#.", "..#.."],
+  "=": ["...", "###", "...", "###", "..."],
 };
 
 /** Pixel width of one glyph (unknown chars fall back to "?"). */

@@ -93,6 +93,9 @@ rareSpawns:
 # JESUS stays player-relative. Placeholder ramp for this campaign slot —
 # retune when this level is reworked. A spawner may override per point.
 mobLevels: [[25, 28], [25, 30], [27, 34], [54, 57]]
+# INTENDED hero level per difficulty [easy, medium, hard, nightmare] — the
+# design-intent anchor the map-layout tool colours spawner CON against.
+intendedLevel: [28, 29, 32, 56]
 spawns:
   - enemy: cia_agent
     count: 22
