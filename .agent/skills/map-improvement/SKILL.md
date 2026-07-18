@@ -7,21 +7,68 @@ description: "Use when improving the DESIGN and FEEL of an existing level (not a
 
 The sibling of `art-improvement` (which hunts the worst art) — this one improves
 how a level *plays and feels*. A level is data (`website/scripts/levels/<id>.yaml`,
-compiled by `make levels`); the annotated **map renderer**
-(`website/scripts/map-preview.mjs`) makes its design legible, and the **heatmap**
-shows how it actually plays. This skill drives the loop that turns that
-visibility into better maps. Load the `level-design` skill for the format,
-fields, and the cross-cutting wiring; this skill is the *iteration method*.
+compiled by `make levels`). Two renderers make it legible:
+
+- **`map-layout.mjs` — the LAYOUT BLUEPRINT.** A clean, high-res, top-down
+  reference of the AUTHORED layout: a coordinate grid you read x/y off for
+  editing, every wall + gap, the authored hero path (numbered), every spawn
+  point, pinned elite/boss/guardian, chest, merchant, zone, landmark and placed
+  item — plus a side dossier of the per-difficulty mob-level bands and each
+  encounter's hp/level. **LOOK at this FIRST, every session** (`make map-layout
+  LEVEL=<id>`) — it is how you understand what you're working with before you
+  change anything.
+- **`map-preview.mjs` — the ANALYSIS view.** The design view (trigger rings,
+  authored mob-density smear, derived path, tempo strip) plus `--actual` (the
+  real scattered layout) and `--heatmap` (how the map actually PLAYS — dwell,
+  mob density, spawns, kills, coverage %). This is how you judge the change.
+
+This skill drives the loop that turns that visibility into better maps. Load the
+`level-design` skill for the format, fields, and the cross-cutting wiring; this
+skill is the *iteration method*.
 
 **Before starting, read past lessons:** `node scripts/skill-lessons.mjs map-improvement`.
 
-## Step 0 — CONFIRM THE INTENT (do this first, always)
+## The whole design surface is on the table
 
-**The YAML `description` may not capture the real design intent.** The shipped
-descriptions were seeded from old code comments; they describe what the map *is*,
-not always what it should *feel* like. Do not tune toward a description you can't
-trust. Before any edit, use `AskUserQuestion` to confirm the map's intended feel
-with the user:
+Improving a map is **not** limited to nudging YAML knobs. When the map's problem
+demands it, a real fix — up to a **complete redesign** — is expected, and every
+lever below is fair game. Reach for the sibling skill when you cross into its
+domain:
+
+- **Geometry** — move, add, remove, or reshape walls/ridges/gaps; re-cut the
+  basins; re-route or re-author the `path`; add/remove safe & quiet zones, chests,
+  merchant spawns, landmarks. Reshaping the *space* is the highest-leverage fix
+  for a traversal/pacing problem.
+- **Enemies** (`enemy-design`) — add or rework minions/elites/bosses: their **hp,
+  contact damage, level ranges, mechanics/phases, and capabilities**. A map that
+  is unbeatable or trivial is often an ENEMY problem, not a count problem.
+- **New sprites** (`pixel-assets`) — a new enemy, tile, obstacle, or biome look
+  the redesign needs.
+- **Weapons & loot** (`weapon-system`) — the drop pool, tiers, and any new
+  weapon/unique the map should hand out.
+- **Leveling & difficulty** (`leveling-balance`) — the XP curve, kills-per-level
+  pacing, the per-map `mobLevels` bands and XP caps that keep the hero on the
+  ladder.
+
+Hold the result to **best-practice game design**: a legible read, a deliberate
+tempo (build → release), fair-but-rising difficulty, teachable mechanics,
+risk/reward that pays, and — the hard floor — **beatable and worth playing**
+(prove it with `simulate-run` and `playtest`, not vibes). If the shipped design
+is fundamentally at odds with that, propose the redesign to the user rather than
+polishing a broken frame.
+
+## Step 0 — LOOK, then CONFIRM THE INTENT (do this first, always)
+
+**Render the layout blueprint and study it before anything else:** `make
+map-layout LEVEL=<id>` — read the geometry, the path, where every spawn point and
+encounter sits, the mob-level bands and hp in the dossier. This is how you build
+an accurate mental model of the map before you form an opinion about it.
+
+**Then confirm the intent — the YAML `description` may not capture it.** The
+shipped descriptions were seeded from old code comments; they describe what the
+map *is*, not always what it should *feel* like. Do not tune toward a description
+you can't trust. Use `AskUserQuestion` to confirm the map's intended feel with the
+user:
 
 - **The fantasy / read** — what is this place, what should the player feel walking
   it (dread, a power fantasy, a frantic escape, a careful clear)?
@@ -41,6 +88,9 @@ the user confirms the existing description is right, say so and keep it.
 ## The loop
 
 1. **Render** the current state and LOOK:
+   - `node website/scripts/map-layout.mjs <id>` — the LAYOUT BLUEPRINT (grid,
+     walls + gaps, authored path, every spawn point + encounter with hp/level,
+     zones, items). The reference you keep open while editing.
    - `node website/scripts/map-preview.mjs <id>` — the design view (path,
      encounters, zones, walls, tempo, legend).
    - `node website/scripts/map-preview.mjs <id> --actual --seed 1` — the real

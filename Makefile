@@ -61,6 +61,12 @@ levels:
 map:
 	npm run map --workspace website -- $(LEVEL) $(ARGS)
 
+# Render the CLEAN high-res LAYOUT BLUEPRINT of a level — the first thing to
+# LOOK at to understand a map: `make map-layout LEVEL=moon` (add ARGS="--all"
+# or "--seed 1"). See the map-improvement / level-design skills.
+map-layout:
+	npm run map-layout --workspace website -- $(LEVEL) $(ARGS)
+
 # Pass the planned version: `make changelog VERSION=0.2.0`. Consumes the
 # fragments in .changes/unreleased/ — run inside a scratch branch or
 # revert afterwards if you only wanted a preview.

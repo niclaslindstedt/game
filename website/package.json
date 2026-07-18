@@ -13,6 +13,7 @@
     "assets": "node scripts/generate-assets.mjs && node scripts/generate-levels.mjs",
     "levels": "node scripts/generate-levels.mjs",
     "map": "node scripts/map-preview.mjs",
+    "map-layout": "node scripts/map-layout.mjs",
     "preview": "vite preview",
     "typecheck": "npm run assets && tsc --noEmit -p tsconfig.json"
   },

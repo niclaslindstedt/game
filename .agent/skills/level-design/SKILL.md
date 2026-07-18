@@ -39,11 +39,19 @@ with the user first, then iterates render → evaluate → improve.
 - The loader/schema/generator live at `website/scripts/level-data/load-yaml.mjs`,
   `website/scripts/asset-tools/level-schema.mjs`, `website/scripts/generate-levels.mjs`.
 
-## Read the map before you tune it — the renderer
+## Read the map before you tune it — the renderers
 
-`node website/scripts/map-preview.mjs <id>` renders an annotated top-down
-diagram to `website/assets-preview/map_<id>.png` (also `make map LEVEL=<id>`).
-LOOK at it — it's the fastest way to judge a level's design:
+**Start with the LAYOUT BLUEPRINT:** `node website/scripts/map-layout.mjs <id>`
+(also `make map-layout LEVEL=<id>`) renders a clean, high-res top-down reference
+to `website/assets-preview/map_<id>_layout.png` — a labelled coordinate grid you
+read x/y off for editing, every wall + gap, the authored path (numbered), every
+spawn point, pinned elite/boss/guardian, chest, merchant, zone, landmark and
+placed item, plus a dossier of the per-difficulty mob-level bands and each
+encounter's hp/level. It's the fastest way to understand a map's structure.
+
+**Then the ANALYSIS view:** `node website/scripts/map-preview.mjs <id>` renders an
+annotated top-down diagram to `website/assets-preview/map_<id>.png` (also `make
+map LEVEL=<id>`). LOOK at it — it's the fastest way to judge how a level plays:
 
 - **design view** (default, from YAML): the hero path (START → elites →
   objective), boss/elite markers, mob packs with trigger rings, safe/quiet

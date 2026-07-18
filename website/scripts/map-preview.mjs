@@ -112,8 +112,13 @@ function makeCanvas(def, targetW = 620) {
   };
 }
 
-const wx = (c, x) => c.ox + x * c.S;
-const wy = (c, y) => c.oy + y * c.S;
+// World→image transform. ROUND to integers: the raw surface primitives write
+// pixels by a `(y*width + x)*4` index with no flooring, so a FRACTIONAL y adds
+// 0.5·width to the index and WRAPS the x by width/2 — labels (and any marker at
+// a fractional centre) would land in the wrong place. Integer pixel coords are
+// also simply correct for pixel art.
+const wx = (c, x) => Math.round(c.ox + x * c.S);
+const wy = (c, y) => Math.round(c.oy + y * c.S);
 
 /** Draw a label with a dark backing so it reads over any ground. The pixel
  * font has no `_` glyph, so underscores in ids become spaces. */
