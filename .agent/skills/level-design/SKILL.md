@@ -110,21 +110,33 @@ Optional `LevelDef` fields (all neutral when omitted; see `src/game/zones.ts`):
 Below JESUS, a mob's level is **authored, not floated off the player's level** —
 and the per-difficulty × per-map defaults live in ONE place: `ladder.yaml`. Each
 `[difficulty][map]` cell holds `hero` (the intended hero level on that map — the
-con anchor) and `mob: [lo, hi]` (the map's DEFAULT mob band). `loadLevels()`
-stamps these onto every def as `mobLevels` (the four [easy, medium, hard,
-nightmare] bands) and `intendedLevel` (the four hero anchors), so the numbers are
-never copied into a level file. JESUS is omitted (player-relative). Tune a map's
-whole difficulty by editing its ladder cells; the con viz + engine both follow.
+con anchor) and `mob: [start, end]` (the map's mob band — `start` = the first
+mobs met, `end` = the level near the boss). `loadLevels()` stamps these onto
+every def as `mobLevels` (the four [easy, medium, hard, nightmare] bands) and
+`intendedLevel` (the four hero anchors), so the numbers are never copied into a
+level file. JESUS is omitted (player-relative). Tune a map's whole difficulty by
+editing its ladder cells; the con viz + engine both follow.
 
-- **Level default (ladder) + per-spawner override (level YAML):** the ladder's
-  `mob` band is the default every regular spawn reads (opening scatter, `waves`,
-  `packs`, any spawn point without its own). A `spawners:` point may set its own
-  `mobLevels` to RAMP within the map — see the con-ramp rule below. A level MUST
-  NOT declare a top-level `mobLevels`/`intendedLevel` (the loader errors); those
-  belong to the ladder.
-- **Pinned elites/bosses (`spawns` with `at`) hard-code BOTH `level` and `hp`**
-  in the level YAML, each a per-difficulty tuple (JESUS relative). `level` sets
-  the `mlvl` (loot tier + con); `hp` is the BASE healthbar the power-match scales.
+The per-difficulty RAMPS also live in `ladder.yaml` (its `ramps:` catalog), named
+once and shared by every map. A ramp is RELATIVE to the map+difficulty's own band
+(`fromStart: n` or `fromEnd: n`), so one definition yields the right absolute
+level on every difficulty and map. Names are NEUTRAL and ORDERED — they describe
+a mob's menace within the ramp, never the difficulty tier (a `meek` wave on
+NIGHTMARE is still level 42+):
+
+- **Wave tiers** `meek`→`bold`→`fierce`→`savage`→`brutal`→`merciless`→`monstrous`
+  climb off the band **start** (`fromStart: 0..6`). **Boss-room ranks** `endgame`
+  (band end) and `apex` (end + 2) sit off the band **end**.
+- **Spawn-point override (`spawners:`):** a point names a `ramp:` to RAMP within
+  the map (rolling the two-wide band `[start+off, start+off+1]`) — see the con-ramp
+  rule below. A point without a `ramp` rolls the map's whole default band. A level
+  MUST NOT declare a top-level `mobLevels`/`intendedLevel`, or a spawner
+  `mobLevels` (the loader errors); those belong to the ladder's ramps.
+- **Pinned elites/bosses (`spawns` with `at`) name a `ramp:` + a single base
+  `hp`** (the easy value). The loader expands the ramp into the pinned `level`
+  (single per difficulty → the `mlvl`, loot tier + con) and scales the base hp
+  across the four rungs by the map's `hpCurves` entry (`pinnedHp` picks
+  `standard`/`gentle`). Do NOT hard-code a per-difficulty `level`/`hp` tuple.
 
 ### RAMP THE CON UP along the path (green → yellow → red)
 
@@ -132,8 +144,8 @@ A good map gets **tougher as it progresses**: the `map-layout` con circles shoul
 read GREEN near START, YELLOW mid, and ORANGE/RED at the boss. Mobs should track
 the hero's own level as he climbs (killing the swarm levels him) and PULL A TOUCH
 AHEAD toward the end, so the finale cons hot. Author it by RAMPING each spawn
-point's `mobLevels` (and the pinned elites/boss) UP in path order — the opener
-cons even, the boss bay cons red.
+point's `ramp:` (and the pinned elites/boss) UP the tier order in path order — a
+`meek` opener cons even, an `endgame`/`apex` boss bay cons red.
 
 Judge it deterministically, no sim: the `map-layout` decode key prints **HERO IF
 CLEARED — the projected hero level at 25/50/75/100 % cleared** (XP is
@@ -162,8 +174,9 @@ nightmare 53–56). Mobs near the hero's level make the WoW-style con system
 (`levelDiffXpMult`, config `LEVELING.xpAbove/BelowPlayerPerLevel`) self-regulate:
 fighting up pays a bonus, fighting down decays to a grey-mob pittance, so the
 hero's level converges to the map's mob band and replaying an outgrown map barely
-levels him (anti-farm). Ramp the per-spawner `mobLevels` up within a map (light
-opener → hotter boss bay); set the level default near the map's band. **Nightmare
+levels him (anti-farm). Ramp the per-spawner `ramp:` tier up within a map (a
+`meek` opener → a hotter boss bay); the map's `mob: [start, end]` band sets the
+default a rampless spawn rolls. **Nightmare
 mobs on level 1 are ~40, not ~12** — nightmare is a separate high band, not a
 multiplier on the early game.
 
@@ -181,8 +194,9 @@ It prints each rung's per-map landing and the finish vs target (OK / LOW / HIGH)
 Drive every rung to **OK** (±1 of easy 32 / medium 34 / hard 36 / nightmare 56)
 by turning these levers, cheapest first:
 
-- **Mob bands** (`mobLevels`) — the primary lever. Nudge a map's band up/down so
-  the hero converges onto the intended level there (the con system does the rest).
+- **Mob bands** (the ladder's `mob: [start, end]` cell) — the primary lever. Nudge
+  a map's band up/down so the hero converges onto the intended level there (the
+  con system does the rest); the named ramps shift with it automatically.
 - **Per-map XP caps** (`XP_CAP.capByDifficulty` in config.ts) — the `first`→`last`
   band interpolated across the campaign; set each rung a touch ABOVE its finish so
   the soft-cap fade doesn't clamp the hero UNDER target.

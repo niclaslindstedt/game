@@ -129,45 +129,45 @@ spawns:
     at:
       x: 560
       y: 370
-    level: [2, 2, 4, 43]
-    hp: [150, 210, 300, 520]
+    ramp: bold
+    hp: 150
   - enemy: security_chief
     at:
       x: 900
       y: 600
-    level: [3, 3, 5, 44]
-    hp: [210, 290, 420, 730]
+    ramp: fierce
+    hp: 210
   - enemy: janitor
     at:
       x: 960
       y: 880
-    level: [3, 3, 6, 44]
-    hp: [230, 320, 460, 800]
+    ramp: fierce
+    hp: 230
   - enemy: head_scientist
     at:
       x: 1200
       y: 600
-    level: [4, 4, 6, 45]
-    hp: [190, 270, 380, 670]
+    ramp: savage
+    hp: 190
   - enemy: architect
     at:
       x: 1480
       y: 400
-    level: [4, 5, 7, 45]
-    hp: [190, 270, 380, 670]
+    ramp: savage
+    hp: 190
   # The level's UNIQUE, pinned as the guardian of the BREAK ROOM detour locker.
   - enemy: employee_of_the_month
     at:
       x: 910
       y: 150
-    level: [3, 3, 5, 44]
-    hp: [180, 250, 360, 630]
+    ramp: fierce
+    hp: 180
   - enemy: muskrat
     at:
       x: 1850
       y: 590
-    level: [6, 7, 9, 47]
-    hp: [480, 660, 950, 1650]
+    ramp: merciless
+    hp: 480
 safeZones:
   # The calm strip in the boss-room MOUTH: centred ON the last aisle's gap so the
   # horde is repelled out of the entrance itself, not just the room beyond — the
@@ -280,7 +280,7 @@ spawners:
     # Easy opens at level 1 (gentle onboarding); medium/hard bite harder from the
     # first knot (higher-level interns), so standing still is never free on the
     # intended fight and up.
-    mobLevels: [1, 3, 7, 42]
+    ramp: vanguard
     triggerRadius: 540
     lingering: 12
     members:
@@ -290,7 +290,7 @@ spawners:
   - id: a1
     at: { x: 560, y: 900 }
     maxAlive: 20
-    mobLevels: [[1, 2], [1, 2], [3, 4], [42, 43]]
+    ramp: meek
     triggerRadius: 500
     lingering: 10
     members:
@@ -301,7 +301,7 @@ spawners:
   - after: a1
     at: { x: 600, y: 400 }
     maxAlive: 20
-    mobLevels: [[1, 2], [1, 2], [3, 4], [42, 43]]
+    ramp: meek
     members:
       - enemy: scientist
         count: 50
@@ -309,7 +309,7 @@ spawners:
   - id: a2
     at: { x: 900, y: 460 }
     maxAlive: 20
-    mobLevels: [[2, 3], [2, 3], [4, 5], [43, 44]]
+    ramp: bold
     triggerRadius: 500
     lingering: 10
     members:
@@ -320,7 +320,7 @@ spawners:
   - after: a2
     at: { x: 950, y: 860 }
     maxAlive: 20
-    mobLevels: [[2, 3], [2, 3], [4, 5], [43, 44]]
+    ramp: bold
     members:
       - enemy: engineer
         count: 40
@@ -330,7 +330,7 @@ spawners:
   - id: a3
     at: { x: 1180, y: 720 }
     maxAlive: 20
-    mobLevels: [[3, 4], [3, 4], [5, 6], [44, 45]]
+    ramp: fierce
     triggerRadius: 500
     lingering: 10
     members:
@@ -341,7 +341,7 @@ spawners:
   - after: a3
     at: { x: 1200, y: 340 }
     maxAlive: 20
-    mobLevels: [[3, 4], [3, 4], [5, 6], [44, 45]]
+    ramp: fierce
     members:
       - enemy: guard
         count: 40
@@ -351,7 +351,7 @@ spawners:
   - id: a4
     at: { x: 1450, y: 400 }
     maxAlive: 20
-    mobLevels: [[4, 5], [4, 5], [6, 8], [45, 46]]
+    ramp: savage
     triggerRadius: 500
     lingering: 8
     members:

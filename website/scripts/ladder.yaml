@@ -6,11 +6,11 @@
 #         curve's expected level here — see `scripts/leveling-curve.mjs --targets`).
 #         The map-layout tool colours CON against it; it is the design anchor a
 #         map's mobs are meant to sit near (±~4).
-#   mob   the map's DEFAULT mob-level band [lo, hi] for this rung — what every
-#         regular spawn (the opening scatter, waves, packs, and any spawn point
-#         WITHOUT its own `mobLevels`) rolls. A spawn point may still OVERRIDE it
-#         per point (the within-map ramp), and pinned elites/bosses hard-code
-#         their own `level` — both stay in the level YAML (they are spatial).
+#   mob   the map's mob-level band [start, end] for this rung — `start` is the
+#         level of the FIRST mobs a fresh arrival meets, `end` the level near the
+#         boss. Every regular spawn without its own ramp rolls the whole band;
+#         the named RAMPS below place a spawn point / set-piece at a RELATIVE
+#         position within it (see `ramps`).
 #
 # `loadLevels()` stamps `mobLevels` (the four [easy, medium, hard, nightmare]
 # bands) and `intendedLevel` (the four hero anchors) onto each LevelDef from this
@@ -20,6 +20,54 @@
 #
 # Ladder shape (finish levels per map, easy→hard climbing across the campaign):
 #   easy/medium 1 → ~34/35 · hard 1 → ~38 · nightmare 40 → ~55.
+#
+# ─── RAMPS (the difficulty ramps, named once, here) ──────────────────────────
+# A level YAML no longer hard-codes per-difficulty mob levels or hp. Instead a
+# spawn point / pinned set-piece names a RAMP, and the loader expands it into the
+# four [easy, medium, hard, nightmare] values from THIS map's `mob` band. Because
+# every difficulty carries its own `[start, end]`, one relative ramp yields the
+# right absolute level on every difficulty AND every map — so the whole ladder's
+# difficulty is trimmed from ONE file, and the level files read as intent
+# ("a `savage` wave", "the `apex` boss") instead of number soup.
+#
+# A ramp's mob level is RELATIVE to the map+difficulty's own band:
+#   fromStart: n   →  a wave that sits n levels above the band START.
+#   fromEnd:   n   →  a boss-room set-piece n levels off the band END.
+#   fromStart: [e, m, h, n]  →  explicit per-difficulty offsets (rare; the one
+#                               opener that deliberately bites harder mid-tier).
+# A SPAWN POINT rolls the two-wide band [base+off, base+off+1]; a PINNED
+# elite/boss sits at the single level base+off. Every offset clamps to >= 1.
+#
+# The names are NEUTRAL and ORDERED — they describe a mob's menace WITHIN the
+# map's ramp, never the difficulty tier: a `meek` wave on NIGHTMARE is still
+# level 42+, because "meek" only means "at this map's starting level".
+ramps:
+  # wave tiers — anchored to the band START, climbing the ramp
+  meek: { fromStart: 0 }
+  bold: { fromStart: 1 }
+  fierce: { fromStart: 2 }
+  savage: { fromStart: 3 }
+  brutal: { fromStart: 4 }
+  merciless: { fromStart: 5 }
+  monstrous: { fromStart: 6 }
+  # boss-room ranks — anchored to the band END
+  endgame: { fromEnd: 0 }
+  apex: { fromEnd: 2 }
+  # the SPACEZ HQ onboarding opener: gentle on easy/nightmare, a deliberate bite
+  # on medium/hard so standing still is never free once past the tutorial rung.
+  vanguard: { fromStart: [0, 2, 4, 0] }
+
+# ─── HP CURVES ───────────────────────────────────────────────────────────────
+# A pinned elite/boss carries a single BASE hp (its easy value) in the level
+# YAML; the loader scales it across the four difficulties by the named curve its
+# map uses (see `pinnedHp`). `standard` is the campaign-wide curve; `gentle`
+# keeps the SPACEZ HQ onboarding boss from spiking on the high rungs.
+hpCurves:
+  standard: [1, 1.5, 2.3, 6]
+  gentle: [1, 1.4, 2, 3.5]
+pinnedHp:
+  default: standard
+  spacez_hq: gentle
 
 easy:
   spacez_hq: { hero: 6, mob: [1, 7] }

@@ -147,56 +147,56 @@ spawns:
     at:
       x: 2900
       y: 800
-    level: [34, 36, 40, 58]
-    hp: [1400, 2100, 3220, 8400]
+    ramp: apex
+    hp: 1400
   - enemy: grok_alpha
     at:
       x: 2700
       y: 640
-    level: [34, 36, 40, 58]
-    hp: [380, 570, 874, 2280]
+    ramp: apex
+    hp: 380
   - enemy: grok_beta
     at:
       x: 2780
       y: 960
-    level: [34, 36, 40, 58]
-    hp: [380, 570, 874, 2280]
+    ramp: apex
+    hp: 380
   - enemy: grok_gamma
     at:
       x: 3020
       y: 700
-    level: [34, 36, 40, 58]
-    hp: [380, 570, 874, 2280]
+    ramp: apex
+    hp: 380
   - enemy: elon_mosque_eastworld
     at:
       x: 2620
       y: 900
-    level: [34, 36, 40, 58]
-    hp: [900, 1350, 2070, 5400]
+    ramp: apex
+    hp: 900
   - enemy: steven_seagull
     at:
       x: 2340
       y: 780
-    level: [32, 34, 38, 58]
-    hp: [520, 780, 1196, 3120]
+    ramp: endgame
+    hp: 520
   - enemy: vladimir_putain
     at:
       x: 1700
       y: 760
-    level: [32, 34, 38, 58]
-    hp: [700, 1050, 1610, 4200]
+    ramp: endgame
+    hp: 700
   - enemy: gerald_depardieu
     at:
       x: 1380
       y: 1180
-    level: [32, 34, 38, 58]
-    hp: [950, 1425, 2185, 5700]
+    ramp: endgame
+    hp: 950
   - enemy: edward_snow
     at:
       x: 1560
       y: 480
-    level: [32, 34, 38, 58]
-    hp: [480, 720, 1104, 2880]
+    ramp: endgame
+    hp: 480
 packs:
   - at:
       x: 900

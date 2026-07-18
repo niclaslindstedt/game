@@ -418,14 +418,19 @@ render them are `website/src/game/DialogueOverlay.tsx` and `CutsceneOverlay.tsx`
 - **Levels are compiled from YAML**, the same way. `website/scripts/levels/<id>.yaml`
   is the source of truth; `make levels` (folded into `make assets`, plus a root
   `pretypecheck`) validates it against the live engine catalogs and generates
-  `src/generated/levels.ts`, which `src/game/defs/levels/index.ts` reads. The
-  per-difficulty × per-map LEVEL LADDER — each map's default mob band + intended
-  hero level per rung — lives in `website/scripts/ladder.yaml` (NOT in the level
-  files); `loadLevels()` stamps `mobLevels` + `intendedLevel` onto every def from
-  it, so the con viz and the engine read one ladder. That file is a
-  **hand-authored, committed source of truth** (like the level YAML) — edit it to
-  retune the ladder; only `src/generated/levels.ts` is the gitignored build
-  output. The
+  `src/generated/levels.ts` (the gitignored, regenerated-on-build output — never
+  edit or commit it), which `src/game/defs/levels/index.ts` reads. The
+  per-difficulty × per-map LEVEL LADDER — each map's `[start, end]` mob band +
+  intended hero level per rung, PLUS the named DIFFICULTY RAMPS and hp curves —
+  lives in `website/scripts/ladder.yaml` (a hand-authored, committed source of
+  truth like the level YAML, NOT in the level files). A level's spawn points and
+  pinned elites/bosses name a neutral, ordered **ramp** (`meek`→`monstrous` wave
+  tiers off the band start, `endgame`/`apex` off the band end) and a single base
+  `hp`; `loadLevels()` expands each ramp into the four [easy, medium, hard,
+  nightmare] `mobLevels` / `level` + `hp` tuples (scaling hp by the map's
+  `hpCurves` entry) and stamps `mobLevels` + `intendedLevel` onto every def — so
+  the con viz and the engine read one ladder and every difficulty number is tuned
+  from that one file. The
   round-trip guard (`tests/content/yaml_roundtrip_test.ts`) pins the compiled
   catalog to `tests/content/fixtures/levels-snapshot.json`; accept an intentional
   level change with `node scripts/update-level-snapshot.mjs`. Read a map's
