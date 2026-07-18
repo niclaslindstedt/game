@@ -123,26 +123,26 @@ spawns:
     at:
       x: 880
       y: 1120
-    level: [11, 12, 14, 44]
-    hp: [220, 330, 506, 1320]
+    level: [8, 9, 11, 44]
+    hp: [200, 300, 460, 1320]
   - enemy: prospector
     at:
       x: 1040
       y: 720
-    level: [13, 14, 16, 45]
-    hp: [240, 360, 552, 1440]
+    level: [9, 10, 12, 45]
+    hp: [220, 330, 500, 1440]
   - enemy: quarantine_medic
     at:
       x: 1340
       y: 500
-    level: [15, 16, 18, 47]
-    hp: [260, 390, 598, 1560]
+    level: [10, 11, 13, 47]
+    hp: [240, 360, 540, 1560]
   - enemy: cartographer
     at:
       x: 1560
       y: 940
-    level: [16, 17, 19, 47]
-    hp: [240, 360, 552, 1440]
+    level: [11, 12, 14, 47]
+    hp: [220, 330, 500, 1440]
   # The two detour guardians, PINNED (not just random rares) inside each pocket
   # off the sweep's low turns — the whole reward for exploring a dead end. The
   # opener's guardian cons EVEN (~L11); the boss-basin one cons RED (~L17), part
@@ -151,20 +151,20 @@ spawns:
     at:
       x: 500
       y: 1470
-    level: [11, 12, 14, 45]
-    hp: [170, 250, 380, 1020]
+    level: [7, 8, 10, 45]
+    hp: [160, 240, 360, 1020]
   - enemy: the_thirteenth_man
     at:
       x: 1980
       y: 1440
-    level: [17, 18, 20, 48]
-    hp: [320, 480, 736, 1920]
+    level: [12, 13, 15, 48]
+    hp: [300, 450, 680, 1920]
   - enemy: armstrong
     at:
       x: 2130
       y: 260
-    level: [18, 19, 21, 49]
-    hp: [550, 825, 1265, 3300]
+    level: [11, 12, 14, 49]
+    hp: [450, 675, 1030, 3300]
 safeZones:
   # THE STILL POINT: a calm nook on the last climb to the flag, so the horde is
   # repelled off the boss approach and the hero (and the autopilot) walks in
@@ -231,108 +231,112 @@ spawners:
   # the serpentine, each arming as the hero sweeps into it (wide `triggerRadius`
   # so a cut corner still trips it) and DRAINING its count — the mobs give chase,
   # so he clears them ON THE MOVE, then walks on to an empty patch. Counts sum to
-  # ~410 across the sweep (thinned from a heavier "clear the whole moon" battle so
-  # the knots DRAIN and a snappy ~6-min clear reaches the flag), back-loaded so
-  # the opener stays the gentle onboarding knot and the basins swell toward it.
-  # `maxAlive` is a low 10 so only a handful chase at once — steady local pressure
-  # the hero out-DPSes, not a pin. The mob TYPE ramps basin to basin (wisps →
-  # ghosts → wraiths → OPTIMUSK) and the per-point `mobLevels` TRACK the hero's
-  # own climb (opener ~L4, boss bay ~L9 on easy) for an even, fair-but-rising con
-  # — never the old wall that death-spiralled the hero back to the lander. Easy's
-  # active-spawner cap (2) lights only the two nearest knots, spreading the fight
-  # across the whole moon. The per-map XP cap bounds how far a clear levels him.
+  # ~275 across the sweep (thinned hard from a heavier "clear the whole moon"
+  # battle so the finite knots actually DRAIN and a snappy ~6-min clear reaches
+  # the flag — a fat horde never drained, so the hero stayed pinned in the basins
+  # and never made the boss), back-loaded so the opener stays the gentle
+  # onboarding knot and the basins swell toward it. `maxAlive` is a low 10 so only
+  # a handful chase at once — steady local pressure the hero out-DPSes, not a pin,
+  # and `lingering` is a short 4–5 so chasers give up and he can advance. The mob
+  # TYPE ramps basin to basin (wisps → ghosts → wraiths → OPTIMUSK, the tanky
+  # optimusks kept to the last two knots only so they never wall the mid sweep)
+  # and the per-point `mobLevels` TRACK the hero's own climb (opener ~L4, boss bay
+  # ~L10 on easy) for an even, fair-but-rising con — never the old wall that
+  # death-spiralled the hero back to the lander. Easy's active-spawner cap (2)
+  # lights only the two nearest knots, spreading the fight across the whole moon.
+  # The per-map XP cap bounds how far a clear levels him.
   # --- Opening basin, low out of the lander. ---
   - id: open
     at: { x: 500, y: 1280 }
     maxAlive: 10
-    mobLevels: [[9, 10], [9, 11], [12, 13], [42, 43]]
+    mobLevels: [[4, 5], [4, 6], [6, 8], [42, 43]]
     triggerRadius: 560
-    lingering: 8
+    lingering: 5
     members:
       - enemy: wisp
-        count: 55
+        count: 44
   # --- Low turn into basin two, past the first ridge gap. ---
   - id: low
     at: { x: 900, y: 1120 }
     maxAlive: 10
-    mobLevels: [[10, 11], [10, 12], [13, 14], [43, 44]]
+    mobLevels: [[5, 6], [5, 7], [7, 9], [43, 44]]
     triggerRadius: 520
-    lingering: 6
+    lingering: 5
     members:
       - enemy: wisp
-        count: 40
+        count: 32
       - enemy: ghost
-        count: 20
+        count: 14
   # --- The full climb UP basin two toward the high gap. ---
   - id: climb
     at: { x: 1040, y: 720 }
     maxAlive: 10
-    mobLevels: [[11, 12], [11, 13], [14, 15], [44, 45]]
+    mobLevels: [[6, 7], [6, 8], [8, 10], [44, 45]]
     triggerRadius: 500
-    lingering: 6
+    lingering: 5
     members:
       - enemy: wisp
-        count: 22
+        count: 16
       - enemy: ghost
-        count: 33
+        count: 26
       - enemy: wraith
-        count: 12
+        count: 6
   # --- Top of basin three, entering high from the ridge-B gap. ---
   - id: top
     at: { x: 1360, y: 520 }
     maxAlive: 10
-    mobLevels: [[12, 13], [12, 14], [15, 16], [44, 46]]
+    mobLevels: [[7, 8], [7, 9], [9, 11], [44, 46]]
     triggerRadius: 500
-    lingering: 6
+    lingering: 5
     members:
       - enemy: ghost
-        count: 33
+        count: 30
       - enemy: wraith
-        count: 20
-      - enemy: optimusk
-        count: 7
+        count: 14
   # --- The descent DOWN basin three toward the low ridge-C gap. ---
   - id: desc
     at: { x: 1540, y: 980 }
     maxAlive: 10
-    mobLevels: [[13, 14], [13, 15], [16, 17], [45, 47]]
+    mobLevels: [[8, 9], [8, 10], [10, 12], [45, 47]]
     triggerRadius: 500
-    lingering: 6
+    lingering: 5
     members:
       - enemy: ghost
-        count: 28
-      - enemy: wraith
         count: 24
-      - enemy: optimusk
-        count: 8
+      - enemy: wraith
+        count: 20
   # --- Low turn into the boss basin, past THE THIRTEENTH GRAVE. ---
   - id: low4
     at: { x: 1860, y: 1180 }
     maxAlive: 10
-    mobLevels: [[15, 16], [15, 17], [17, 19], [46, 48]]
+    mobLevels: [[9, 10], [9, 11], [11, 13], [46, 48]]
     triggerRadius: 480
-    lingering: 6
+    lingering: 5
     members:
       - enemy: wraith
-        count: 26
+        count: 16
       - enemy: ghost
-        count: 20
+        count: 10
       - enemy: optimusk
-        count: 9
-  # --- The boss basin's upper climb: a last surge as ARMSTRONG stirs. ---
+        count: 4
+  # --- The boss basin's climb: a last surge as ARMSTRONG stirs. Pinned on the
+  # APPROACH below the STILL POINT (not on the flag) and kept LIGHT, so the hero
+  # clears it climbing, breathes at the shop, then walks into the boss CLEAN —
+  # the surge thickens the road to ARMSTRONG instead of a horde that floods the
+  # boss melee and kites the hero off him. ---
   - id: bay
-    at: { x: 2080, y: 440 }
-    maxAlive: 10
-    mobLevels: [[16, 18], [16, 18], [18, 20], [47, 49]]
-    triggerRadius: 360
-    lingering: 6
+    at: { x: 1980, y: 820 }
+    maxAlive: 8
+    mobLevels: [[10, 11], [10, 12], [12, 14], [47, 49]]
+    triggerRadius: 320
+    lingering: 4
     members:
       - enemy: wraith
-        count: 24
+        count: 12
       - enemy: optimusk
-        count: 18
+        count: 3
       - enemy: ghost
-        count: 13
+        count: 6
 walls:
   # === ROCK RIDGES: three long rubble spines that break the plain into FOUR
   # basins, each leaving ONE wide OFFSET pass-gap that ALTERNATES low, high, low

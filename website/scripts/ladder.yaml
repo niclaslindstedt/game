@@ -23,7 +23,7 @@
 
 easy:
   spacez_hq: { hero: 6, mob: [1, 7] }
-  moon: { hero: 12, mob: [9, 14] }
+  moon: { hero: 10, mob: [4, 11] }
   mars: { hero: 18, mob: [13, 20] }
   the_rift: { hero: 25, mob: [20, 26] }
   eastworld: { hero: 31, mob: [26, 32] }
@@ -31,7 +31,7 @@ easy:
 
 medium:
   spacez_hq: { hero: 6, mob: [1, 7] }
-  moon: { hero: 12, mob: [9, 15] }
+  moon: { hero: 10, mob: [4, 12] }
   mars: { hero: 18, mob: [14, 21] }
   the_rift: { hero: 25, mob: [21, 28] }
   eastworld: { hero: 32, mob: [28, 34] }
@@ -39,7 +39,7 @@ medium:
 
 hard:
   spacez_hq: { hero: 8, mob: [3, 10] }
-  moon: { hero: 15, mob: [12, 18] }
+  moon: { hero: 13, mob: [6, 14] }
   mars: { hero: 21, mob: [17, 24] }
   the_rift: { hero: 29, mob: [24, 31] }
   eastworld: { hero: 35, mob: [31, 38] }
@@ -47,7 +47,7 @@ hard:
 
 nightmare:
   spacez_hq: { hero: 42, mob: [42, 45] }
-  moon: { hero: 44, mob: [45, 48] }
+  moon: { hero: 44, mob: [42, 49] }
   mars: { hero: 47, mob: [48, 51] }
   the_rift: { hero: 50, mob: [51, 55] }
   eastworld: { hero: 54, mob: [55, 58] }
