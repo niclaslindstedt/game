@@ -1084,15 +1084,17 @@ function stepUseConsumables(state: GameState, input: GameInput): void {
 }
 
 /**
- * The screen-nuke pickup: every horde minion within the radius, and not
- * behind a rock, dies on the spot. Elites and bosses shrug it off — the
- * set-piece fights are meant to be fought, not skipped, so the blast only
- * clears the rank and file. A tall obstacle stops the blast the same way it
- * stops a shot — a mob sheltered behind the stone rides it out. Kills flow
- * through hitEnemy, so XP, loot rolls, the pity rule, and the all-clear
- * trophy all behave exactly as if the player had done it the hard way —
- * except the screen-nuke slices themselves (`noNukeDrop`): a bomb's kills
- * never chain into another bomb.
+ * The screen-nuke pickup: a blast over the radius that hits EVERY monster it
+ * reaches — minion, elite, or boss, no one exempt — for 200% of the mean health
+ * of the mobs on screen (`NUKE.meanHpDamageMult`). That mean is low against a
+ * horde of rank and file, so the blast wipes them outright, while the far
+ * heavier elites and bosses are only chunked — the set-piece fights still have
+ * to be finished by hand. A tall obstacle stops the blast the same way it stops
+ * a shot — a mob sheltered behind the stone rides it out. Damage flows through
+ * hitEnemy, so the blow can CRIT like any other and XP, loot rolls, the pity
+ * rule, and the all-clear trophy all behave exactly as if the player had done
+ * it the hard way — except the screen-nuke slices themselves (`noNukeDrop`): a
+ * bomb's kills never chain into another bomb.
  */
 function detonateNuke(state: GameState, radius: number): void {
   state.events.push({ type: "nuke", pos: { ...state.player.pos } });
@@ -1100,14 +1102,22 @@ function detonateNuke(state: GameState, radius: number): void {
   const caught = state.enemies.filter((enemy) => {
     const def = enemyDef(enemy.defId);
     return (
-      def.role === "minion" &&
       !def.apparition &&
       distanceSq(enemy.pos, state.player.pos) <= radiusSq &&
       lineOfSight(state, state.player.pos, enemy.pos)
     );
   });
+  // Flat blast damage: NUKE.meanHpDamageMult (200%) of the MEAN current hp of
+  // everything caught. Snapshot the mean BEFORE any blow lands so a lone
+  // heavyweight can't be measured against its own already-chunked bar, and so
+  // every mob in the blast takes the same size hit.
+  const meanHp =
+    caught.length > 0
+      ? caught.reduce((sum, enemy) => sum + enemy.hp, 0) / caught.length
+      : 0;
+  const blast = meanHp * NUKE.meanHpDamageMult;
   for (const enemy of caught) {
-    hitEnemy(state, enemy, enemy.hp, undefined, {
+    hitEnemy(state, enemy, blast, undefined, {
       noNukeDrop: true,
       noMenace: true,
     });

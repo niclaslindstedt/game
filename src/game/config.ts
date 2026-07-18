@@ -335,6 +335,13 @@ export const CAMPING = {
  * frame the instant the calm ends. Ms.
  */
 export const NUKE = {
+  /** The blast's damage, expressed as a multiple of the MEAN current hp of
+   * every monster it catches on screen. At 2 (200%) it wipes the rank and file
+   * — anything at or below twice the average — outright while only chunking the
+   * far heavier elites and bosses, so a lone set-piece foe still has to be worn
+   * down by hand. The blow rolls a crit like any other, so a lucky bomb bites
+   * deeper. Applied in `detonateNuke`. */
+  meanHpDamageMult: 2,
   /** How long the spawner holds all refills after a nuke — long enough to run
    * out of the cleared screen and shake the pursuit, tuned to the phone view. */
   calmMs: 4_000,

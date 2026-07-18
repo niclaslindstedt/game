@@ -203,8 +203,10 @@ run against synthetic fixtures with no shipped content (see
   magnet whose pull radius grows with INTELLIGENCE — and which only reels in
   gear the hero can actually keep, leaving loot a full bag has no room for
   where it lies) plus the instant
-  screen nuke (wipes every horde minion on screen — elites and bosses are
-  immune — its drop rate kept rare by `LOOT.nukeShare`, and its own kills
+  screen nuke (a blast dealing 200% of the mean on-screen monster health —
+  `NUKE.meanHpDamageMult` — to everything it catches, no monster exempt: the low
+  average wipes the horde outright while elites and bosses are only chunked, and
+  the blow can crit — its drop rate kept rare by `LOOT.nukeShare`, and its own kills
   never chain: a nuke blast's loot rolls skip both screen-nuke slices, so a
   bomb can't pay out another bomb). As a panic button it also buys real
   breathing room — the AFTERMATH (`NUKE.calmMs`, `NUKE.recoverMs`,

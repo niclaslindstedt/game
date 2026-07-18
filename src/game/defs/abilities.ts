@@ -63,9 +63,11 @@ export type AbilityDef = {
     slowFactor: number;
   };
   /**
-   * `nuke`: instant, not timed — using it kills every horde minion within
-   * the radius (roughly the visible screen) on the spot. Elites and bosses
-   * are immune; the set-piece fights still have to be fought.
+   * `nuke`: instant, not timed — using it detonates a blast over the radius
+   * (roughly the visible screen) that deals 200% of the MEAN health of every
+   * monster it catches — minions, elites, and bosses alike, no one exempt — so
+   * the rank and file are wiped outright while the heavier foes are only
+   * chunked. The blow can crit like any other.
    */
   nuke?: {
     radius: number;
