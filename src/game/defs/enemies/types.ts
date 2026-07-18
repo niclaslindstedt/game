@@ -187,8 +187,14 @@ export type EnemyDef = {
    * it as a kill, and drops a `landmark` prop (the rift it tore open, drawn
    * by the sprite of the same name) where it vanished. A `killBoss` objective
    * still clears — the field is rid of it either way.
+   *
+   * `belowHpFrac` (0..1) makes the flight TRIGGER EARLY: the coward bolts the
+   * instant his health crosses that fraction of `maxHp`, rather than only at 0.
+   * The fight then reliably RESOLVES (no last-pixel grind against a fast,
+   * summoning boss) and the escape reads as a rout. Omitted = the classic
+   * flee-at-0 behavior.
    */
-  flees?: { landmark: string };
+  flees?: { landmark: string; belowHpFrac?: number };
   /**
    * A RANGED attacker: instead of only biting on contact, this enemy fires a
    * hostile projectile at the player whenever its reload has run down, the

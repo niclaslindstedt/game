@@ -8,7 +8,11 @@
 
 import { describe, expect, it } from "vitest";
 
-import { autoEquipBest, autoEquipUpgradeCount } from "@game/core";
+import {
+  autoEquipBest,
+  autoEquipUpgradeCount,
+  committedLane,
+} from "@game/core";
 import type { Equipment, GameState, Tier } from "@game/core";
 
 import { startGame } from "./helpers.ts";
@@ -207,6 +211,43 @@ describe("autoEquipBest", () => {
 
     expect(autoEquipBest(state)).toBe(1);
     expect(state.player.equipment.weapon.defId).toBe("test_scattergun");
+  });
+
+  it("committedLane reads the hero's spec: deepest attribute, else the held weapon", () => {
+    const state = startGame();
+    // A STRENGTH lean reads MELEE regardless of the gun in hand.
+    state.player.stats.strength = 50;
+    state.player.stats.dexterity = 10;
+    state.player.stats.intelligence = 10;
+    state.player.equipment.weapon = weapon("test_pistol"); // ranged, ignored
+    expect(committedLane(state)).toBe("melee");
+
+    // An INTELLIGENCE lean reads MAGIC.
+    state.player.stats.strength = 10;
+    state.player.stats.intelligence = 50;
+    expect(committedLane(state)).toBe("magic");
+
+    // No lean (equal attack stats) falls back to the class in hand.
+    state.player.stats.strength = 20;
+    state.player.stats.dexterity = 20;
+    state.player.stats.intelligence = 20;
+    state.player.equipment.weapon = weapon("test_pistol"); // ranged
+    expect(committedLane(state)).toBe("ranged");
+  });
+
+  it("still swaps to the off-lane weapon once it clears the affinity margin", () => {
+    // Affinity is a margin, not a ban: a melee find that out-budgets the held
+    // gun by MORE than the lane bonus is a real upgrade and still wins the slot.
+    const state = startGame();
+    state.player.stats.strength = 20;
+    state.player.stats.dexterity = 20;
+    state.player.stats.intelligence = 20;
+    state.player.equipment.weapon = weapon("test_pistol"); // ranged, feeble (7 dmg)
+    const strong = weapon("test_hammer"); // melee, far higher budget
+    stock(state, [strong]);
+
+    expect(autoEquipBest(state)).toBe(1);
+    expect(state.player.equipment.weapon.defId).toBe("test_hammer");
   });
 
   it("autoEquipUpgradeCount matches the sweep it predicts", () => {
