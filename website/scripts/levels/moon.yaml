@@ -1,22 +1,21 @@
 description: |-
   LEVEL 2 - THE MOON. Ada's beacon dies near the old Apollo flag; ARMSTRONG
-  haunts the far side and the ghosts thicken with every step from the lander.
-  THE READ: an open lunar plain, but the regolith is broken into FOUR BASINS by
-  three long rock RIDGES with OFFSET gaps that ALTERNATE low, high, low - so the
-  climb from the lander to the flag is a full SERPENTINE SWEEP, down through the
-  opening basin, UP the whole height of the second, back DOWN the third, then UP
-  the last to the flag. The hero walks most of the moon, not one straight
-  diagonal - it still feels like open floaty moon, just no longer a half-empty
-  field. Low-gravity hops, craters to jump, slabs to break line of sight.
-  TWO OFF-PATH DETOURS sit right on the sweep's low turns, each a short dip into
-  a walled pocket for a cache - the "explore for loot" lesson. The CRASHED
-  LANDER is a walled wreck under the opening basin where the LOST COSMONAUT
-  drifts a supply cache; THE THIRTEENTH GRAVE is a deep walled crater at the
-  bottom of the boss basin where THE THIRTEENTH MAN keeps his own. Each is a
-  quiet cul-de-sac (no ambient horde) holding a chest and its lone guardian.
-  TEMPO: a gentle opening while the player learns the floaty steering, a swell
-  through the mid basins, a breather at the STILL POINT by the flag where the
-  salvage merchant trades, then a final surge as ARMSTRONG wakes.
+  haunts the far side. THE READ: an open lunar plain broken into FOUR BASINS by
+  three rock RIDGES with OFFSET gaps that ALTERNATE low, high, low - a SERPENTINE
+  SWEEP from the lander to the flag, threaded through the gaps (down the opening
+  basin, up the second, back down the third, up to the flag). A SNAPPY level-2
+  clear (~6 min, the second mission): the mobs TRACK the hero's own level as he
+  climbs - an EVEN, fair-but-rising con, never a wall - and the knots are THINNED
+  so the finite ridge-gap spawn points DRAIN and he clears them ON THE MOVE
+  instead of getting pinned. It still feels like open floaty moon: low-gravity
+  hops, craters to jump, slabs to break line of sight. TWO OFF-PATH DETOURS sit
+  on the sweep's low turns - each an OPTIONAL walled pocket to dip into for a
+  cache (the "explore for loot" lesson), left OFF the intended line: the CRASHED
+  LANDER where the LOST COSMONAUT drifts a supply cache, and THE THIRTEENTH GRAVE
+  where THE THIRTEENTH MAN keeps his own. Each is a quiet cul-de-sac (no ambient
+  horde) holding a chest and its lone guardian. TEMPO: a gentle floaty-steering
+  opener, a swell through the mid basins, a breather at the STILL POINT by the
+  flag where the salvage merchant trades, then a final surge as ARMSTRONG wakes.
 campaign: true
 id: moon
 index: 2
@@ -115,14 +114,6 @@ rareSpawns:
     - lost_cosmonaut
   unique:
     - the_thirteenth_man
-# HARD-CODED per-difficulty mob levels [easy, medium, hard, nightmare]; JESUS
-# stays player-relative. This is the LEVEL DEFAULT (the pinned scatter + rare
-# spawns read it); the ridge-gap spawn points below RAMP their own levels up as
-# the hero climbs toward the flag (see each `mobLevels`).
-mobLevels: [[7, 13], [7, 14], [10, 17], [45, 48]]
-# INTENDED hero level per difficulty [easy, medium, hard, nightmare] — the
-# design-intent anchor the map-layout tool colours spawner CON against.
-intendedLevel: [7, 7, 10, 46]
 spawns:
   # The four speaking elites, pinned along the sweep so the conspiracy unspools
   # in order — the grave under the dust, the corporate claim, the quarantine,
@@ -132,45 +123,47 @@ spawns:
     at:
       x: 880
       y: 1120
-    level: [13, 14, 17, 48]
+    level: [11, 12, 14, 44]
     hp: [220, 330, 506, 1320]
   - enemy: prospector
     at:
       x: 1040
       y: 720
-    level: [13, 14, 17, 48]
+    level: [13, 14, 16, 45]
     hp: [240, 360, 552, 1440]
   - enemy: quarantine_medic
     at:
       x: 1340
       y: 500
-    level: [13, 14, 17, 48]
+    level: [15, 16, 18, 47]
     hp: [260, 390, 598, 1560]
   - enemy: cartographer
     at:
       x: 1560
       y: 940
-    level: [13, 14, 17, 48]
+    level: [16, 17, 19, 47]
     hp: [240, 360, 552, 1440]
   # The two detour guardians, PINNED (not just random rares) inside each pocket
-  # off the sweep's low turns — the whole reward for exploring a dead end.
+  # off the sweep's low turns — the whole reward for exploring a dead end. The
+  # opener's guardian cons EVEN (~L11); the boss-basin one cons RED (~L17), part
+  # of the map's rising con — the swarm gets tougher the closer the flag comes.
   - enemy: lost_cosmonaut
     at:
       x: 500
       y: 1470
-    level: [10, 11, 14, 45]
+    level: [11, 12, 14, 45]
     hp: [170, 250, 380, 1020]
   - enemy: the_thirteenth_man
     at:
       x: 1980
       y: 1440
-    level: [14, 15, 18, 48]
+    level: [17, 18, 20, 48]
     hp: [320, 480, 736, 1920]
   - enemy: armstrong
     at:
       x: 2130
       y: 260
-    level: [15, 16, 19, 49]
+    level: [18, 19, 21, 49]
     hp: [550, 825, 1265, 3300]
 safeZones:
   # THE STILL POINT: a calm nook on the last climb to the flag, so the horde is
@@ -238,106 +231,108 @@ spawners:
   # the serpentine, each arming as the hero sweeps into it (wide `triggerRadius`
   # so a cut corner still trips it) and DRAINING its count — the mobs give chase,
   # so he clears them ON THE MOVE, then walks on to an empty patch. Counts sum to
-  # ~1140 across the sweep (a fuller "clear the whole moon" battle), back-loaded
-  # so the opener stays the gentle onboarding knot and the basins swell toward
-  # the flag. The mob TYPE ramps basin to basin (wisps → ghosts → wraiths →
-  # OPTIMUSK) and the per-point `mobLevels` climb with it. Easy's active-spawner
-  # cap (2) means only the two nearest knots light at once, so the longer sweep
-  # spreads the fight across the whole moon instead of stacking it on the
-  # diagonal. The per-map XP cap (not the head-count) bounds how far a clear
-  # levels the hero.
+  # ~410 across the sweep (thinned from a heavier "clear the whole moon" battle so
+  # the knots DRAIN and a snappy ~6-min clear reaches the flag), back-loaded so
+  # the opener stays the gentle onboarding knot and the basins swell toward it.
+  # `maxAlive` is a low 10 so only a handful chase at once — steady local pressure
+  # the hero out-DPSes, not a pin. The mob TYPE ramps basin to basin (wisps →
+  # ghosts → wraiths → OPTIMUSK) and the per-point `mobLevels` TRACK the hero's
+  # own climb (opener ~L4, boss bay ~L9 on easy) for an even, fair-but-rising con
+  # — never the old wall that death-spiralled the hero back to the lander. Easy's
+  # active-spawner cap (2) lights only the two nearest knots, spreading the fight
+  # across the whole moon. The per-map XP cap bounds how far a clear levels him.
   # --- Opening basin, low out of the lander. ---
   - id: open
     at: { x: 500, y: 1280 }
-    maxAlive: 15
-    mobLevels: [[7, 8], [7, 8], [10, 11], [45, 46]]
+    maxAlive: 10
+    mobLevels: [[9, 10], [9, 11], [12, 13], [42, 43]]
     triggerRadius: 560
-    lingering: 12
+    lingering: 8
     members:
       - enemy: wisp
-        count: 110
+        count: 55
   # --- Low turn into basin two, past the first ridge gap. ---
   - id: low
     at: { x: 900, y: 1120 }
-    maxAlive: 16
-    mobLevels: [[8, 9], [8, 9], [11, 12], [45, 46]]
+    maxAlive: 10
+    mobLevels: [[10, 11], [10, 12], [13, 14], [43, 44]]
     triggerRadius: 520
-    lingering: 10
+    lingering: 6
     members:
       - enemy: wisp
-        count: 110
+        count: 40
       - enemy: ghost
-        count: 60
+        count: 20
   # --- The full climb UP basin two toward the high gap. ---
   - id: climb
     at: { x: 1040, y: 720 }
-    maxAlive: 16
-    mobLevels: [[9, 10], [9, 11], [12, 14], [46, 47]]
+    maxAlive: 10
+    mobLevels: [[11, 12], [11, 13], [14, 15], [44, 45]]
     triggerRadius: 500
-    lingering: 10
+    lingering: 6
     members:
       - enemy: wisp
-        count: 70
+        count: 22
       - enemy: ghost
-        count: 90
+        count: 33
       - enemy: wraith
-        count: 40
+        count: 12
   # --- Top of basin three, entering high from the ridge-B gap. ---
   - id: top
     at: { x: 1360, y: 520 }
-    maxAlive: 16
-    mobLevels: [[10, 11], [10, 12], [13, 15], [46, 47]]
+    maxAlive: 10
+    mobLevels: [[12, 13], [12, 14], [15, 16], [44, 46]]
     triggerRadius: 500
-    lingering: 8
+    lingering: 6
     members:
       - enemy: ghost
-        count: 90
+        count: 33
       - enemy: wraith
-        count: 70
-      - enemy: optimusk
         count: 20
+      - enemy: optimusk
+        count: 7
   # --- The descent DOWN basin three toward the low ridge-C gap. ---
   - id: desc
     at: { x: 1540, y: 980 }
-    maxAlive: 16
-    mobLevels: [[10, 11], [10, 12], [13, 15], [46, 47]]
+    maxAlive: 10
+    mobLevels: [[13, 14], [13, 15], [16, 17], [45, 47]]
     triggerRadius: 500
-    lingering: 8
+    lingering: 6
     members:
       - enemy: ghost
-        count: 70
+        count: 28
       - enemy: wraith
-        count: 80
+        count: 24
       - enemy: optimusk
-        count: 30
+        count: 8
   # --- Low turn into the boss basin, past THE THIRTEENTH GRAVE. ---
   - id: low4
     at: { x: 1860, y: 1180 }
-    maxAlive: 16
-    mobLevels: [[11, 12], [11, 13], [14, 16], [47, 48]]
+    maxAlive: 10
+    mobLevels: [[15, 16], [15, 17], [17, 19], [46, 48]]
     triggerRadius: 480
-    lingering: 8
+    lingering: 6
     members:
       - enemy: wraith
-        count: 60
+        count: 26
       - enemy: ghost
-        count: 50
+        count: 20
       - enemy: optimusk
-        count: 30
+        count: 9
   # --- The boss basin's upper climb: a last surge as ARMSTRONG stirs. ---
   - id: bay
     at: { x: 2080, y: 440 }
-    maxAlive: 15
-    mobLevels: [[11, 12], [11, 13], [14, 17], [47, 48]]
+    maxAlive: 10
+    mobLevels: [[16, 18], [16, 18], [18, 20], [47, 49]]
     triggerRadius: 360
     lingering: 6
     members:
       - enemy: wraith
-        count: 70
+        count: 24
       - enemy: optimusk
-        count: 50
+        count: 18
       - enemy: ghost
-        count: 40
+        count: 13
 walls:
   # === ROCK RIDGES: three long rubble spines that break the plain into FOUR
   # basins, each leaving ONE wide OFFSET pass-gap that ALTERNATES low, high, low

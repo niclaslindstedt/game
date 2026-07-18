@@ -105,13 +105,6 @@ asteroids:
     - 2800
     - 5200
   struckThought: rift_asteroid
-# HARD-CODED per-difficulty mob levels [easy, medium, hard, nightmare];
-# JESUS stays player-relative. Placeholder ramp for this campaign slot —
-# retune when this level is reworked. A spawner may override per point.
-mobLevels: [[20, 26], [21, 28], [24, 31], [51, 55]]
-# INTENDED hero level per difficulty [easy, medium, hard, nightmare] — the
-# design-intent anchor the map-layout tool colours spawner CON against.
-intendedLevel: [16, 17, 20, 52]
 spawns:
   - enemy: voidling
     count: 22

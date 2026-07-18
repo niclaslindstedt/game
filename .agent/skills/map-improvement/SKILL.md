@@ -158,8 +158,19 @@ A shipped level is content — treat the change like `level-design` says:
   (`scripts/weapon-stats.mjs --coverage`).
 - If you changed any dialogue/story text, `docs/manuscript.md` + `docs/story.md`
   update in the same change (user-confirmed — CLAUDE.md "Story & dialogue").
-- `simulate-run` + `playtest` at 844×390 to feel it in the running game, not just
-  on the map image.
+- **Measure the map AT ITS INTENDED LEVEL, not with the under-levelled campaign
+  bot.** A whole-campaign `simulate-run` under-clears the early maps, so the hero
+  arrives late maps below the ladder — a map can look "unbeatable" only because
+  the bot showed up 7 levels light. To judge THIS map, drop a realistic hero in
+  at its arrival level: `simulate-run --level <id> --start-level <N> --gear-tier
+  magic` (N = the map's ladder `hero`; `--start-level` mints a levelled + rolled-
+  gear arrival). If it's beatable there but not in the full run, the fix is
+  UPSTREAM leveling (why the hero arrives light), not this map's mobs.
+- **Ramp the con up the path** (see `level-design` "RAMP THE CON UP"): the
+  `map-layout` con circles should read green → yellow → red START → boss, and the
+  key's HERO-IF-CLEARED projection should show mobs keeping pace then pulling
+  ahead. A flat or inverted ramp is a design smell.
+- `playtest` at 844×390 to feel it in the running game, not just on the map image.
 - `make test`, `make lint` green; a changelog fragment (`type: Changed`).
 
 ## Skill self-improvement
