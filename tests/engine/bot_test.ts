@@ -115,14 +115,44 @@ describe("bot strategies", () => {
     expect(state.stats.itemsCollected).toBe(1);
   });
 
-  it("survivor pushes for the boss once levelled", () => {
+  it("survivor pushes for the boss once levelled and the map is discovered", () => {
     const state = startGame();
     clearStage(state);
     state.player.level = 6;
+    // The bot now DISCOVERS its side of the map before the boss (coverage-gated
+    // exploration). Reveal the whole map so there is nothing left to uncover —
+    // then the levelled hero commits to the boss, the contract this asserts.
+    state.explored.fill(1);
     const boss = state.enemies.find((e) => enemyDef(e.defId).role === "boss")!;
     const before = dist(state.player.pos, boss.home);
     drive(state, createBot("survivor"), 600);
     expect(dist(state.player.pos, boss.home)).toBeLessThan(before - 300);
+  });
+
+  it("explores its own side of the map before heading for the boss", () => {
+    // Under-levelled with a clear field, the bot should DISCOVER new ground — its
+    // own side first — rather than beeline the far-off boss. Drive it and watch
+    // the fog coverage climb while it stays out of the boss's half of the map.
+    const state = startGame();
+    clearStage(state); // just the parked boss; no waves, no threats near
+    const boss = state.enemies.find((e) => enemyDef(e.defId).role === "boss")!;
+    // Keep the hero UNDER the boss-ready level (exploration fills the leveling
+    // window) — the boss out-levels a fresh hero, as on the real maps.
+    boss.mlvl = 20;
+    const exploredFrac = (s: GameState) => {
+      let n = 0;
+      for (let i = 0; i < s.explored.length; i++) n += s.explored[i]!;
+      return n / s.explored.length;
+    };
+    const before = exploredFrac(state);
+    const bot = createBot("survivor");
+    drive(state, bot, 400);
+    // It genuinely uncovered more of the map (the fog sweep is live)…
+    expect(exploredFrac(state)).toBeGreaterThan(before);
+    // …via the directional fog sweep, not a boss beeline…
+    expect(bot.lastThought).toBe("EXPLORE FOG");
+    // …and it kept to its OWN side — nowhere near the boss's corner yet.
+    expect(state.player.pos.x).toBeLessThan(boss.home.x - 600);
   });
 
   it("survivor punches out the gap when surrounded", () => {

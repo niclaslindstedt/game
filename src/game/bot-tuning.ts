@@ -58,6 +58,31 @@ export type BotTuning = {
    * into a moving orbit, so enemy shots aimed at his current spot slip past
    * while his auto-aimed weapon keeps hitting. 0 = stand still (the old hold). */
   orbitStep: number;
+  /** How far (world px) the bot strikes out to uncover FOG — the reach of the
+   * frontier search that picks the next unexplored pocket. Larger = the hero
+   * ranges further off the path to discover new ground before the boss. */
+  exploreReach: number;
+  /** How many DIRECTIONAL BANDS the spawn→boss axis is split into for exploration
+   * priority. The bot uncovers the lowest (spawn-side) band's fog before the next,
+   * so it sweeps its OWN SIDE → the MIDDLE → the boss's side rather than beelining.
+   * The final (boss-side) band is left for the approach — the bot commits to the
+   * boss once the near map is uncovered instead of poking every corner beside it.
+   * A single band (or a level with no objective axis) is the old undirected
+   * nearest-pocket sweep. */
+  exploreBands: number;
+  /** The fraction of the map the bot uncovers before it STOPS exploring and heads
+   * for the boss (0..1). Discovery is deliberately partial — the bot sweeps its
+   * own side and the middle to about this coverage, then commits, leaving the
+   * boss's side of the map dark until the approach. Keeps the sweep from chasing
+   * every last fogged corner (which stalls the run) — the boss is still the goal. */
+  exploreTargetFrac: number;
+  /** How many levels UNDER the boss's monster level the hero will engage it at.
+   * 0 = wait for LEVEL PARITY (the default — don't fight the boss under-levelled);
+   * a positive value engages that many levels early (rushes sooner); negative
+   * over-levels first. Coverage still commits the bot to the boss short of parity
+   * ({@link BotTuning.exploreTargetFrac}), so this never strands a hero who tops
+   * out under the boss. */
+  bossEngageMargin: number;
   /** The three posture rows (aggro/balanced/flee). */
   postures: Record<"aggro" | "balanced" | "flee", PostureTuning>;
 };
@@ -70,6 +95,10 @@ export const BOT_TUNING_DEFAULTS: BotTuning = {
   armApproachStandoff: 140,
   pushThroughMax: 2,
   orbitStep: 0.6,
+  exploreReach: 900,
+  exploreBands: 3,
+  exploreTargetFrac: 0.55,
+  bossEngageMargin: 0,
   postures: {
     // Trades safety for kills: fights up close, tolerates a denser ring.
     aggro: { standoffMul: 0.65, fleeHp: 0.28, surround: 7 },
