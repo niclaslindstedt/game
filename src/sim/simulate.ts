@@ -356,6 +356,12 @@ export type LevelReport = {
     /** Merchant recovery visits the sim made (see `autoShop`) — how often the
      * hero had to run to the counter to re-arm after a weapon broke. */
     shopVisits: number;
+    /** Special CHESTS the level placed (`LevelDef.chests`), and how many the
+     * runner actually reached and cracked open — the reachability check for the
+     * off-path caches. A level whose chest goes forever unlooted is telling the
+     * designer a cache is walled off from the natural sweep. */
+    chestsTotal: number;
+    chestsLooted: number;
   };
   drops: {
     /** Items that appeared on the ground, by kind. */
@@ -630,6 +636,10 @@ function playRun(args: {
   let forfeited = 0;
   let reachedAtMs: number | null = null;
   let reviveDeaths = 0;
+  // The special chests the level placed — counted up front so the report can say
+  // how many the runner actually reached (a looted chest is gone from
+  // `state.obstacles`), the reachability check for the off-path caches.
+  const chestsTotal = state.obstacles.filter((o) => o.chest).length;
   let hitsLanded = 0;
   let critsLanded = 0;
   let damagePerHitSum = 0;
@@ -1197,6 +1207,8 @@ function playRun(args: {
       spellsPerMinute: round1(state.stats.spellsCast / (timeSec / 60)),
       unstuckNudges,
       shopVisits,
+      chestsTotal,
+      chestsLooted: chestsTotal - state.obstacles.filter((o) => o.chest).length,
     },
     drops: {
       spawnedByKind,

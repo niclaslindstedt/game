@@ -410,6 +410,22 @@ console.log(
     `${min(report.totalTimeMs)} simulated minutes (${((Date.now() - startedAt) / 1000).toFixed(1)}s wall).`,
 );
 
+// ---- Content reach — did the runner crack every off-path chest? -----------------
+const chestRuns = report.runs.filter(
+  (run) => (run.combat.chestsTotal ?? 0) > 0,
+);
+if (chestRuns.length > 0) {
+  console.log("");
+  console.log("CONTENT REACH — off-path chests the runner cracked open");
+  for (const run of chestRuns) {
+    const { chestsLooted, chestsTotal } = run.combat;
+    const flag = chestsLooted < chestsTotal ? "  ⚠ a cache went unreached" : "";
+    console.log(
+      `  ${run.difficulty} ${run.levelId}: ${chestsLooted}/${chestsTotal} chests${flag}`,
+    );
+  }
+}
+
 // ---- Boss encounters — where, at what level, and what dropped -------------------
 
 const allBosses = report.runs.flatMap((run) =>
