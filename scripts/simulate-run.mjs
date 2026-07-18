@@ -43,7 +43,7 @@ const { synthesizeArrival } = await import(
 const { DIFFICULTY_ORDER } = await import(
   path.join(root, "src/game/defs/difficulties.ts")
 );
-const { LEVEL_ORDER } = await import(
+const { LEVEL_ORDER, levelDef } = await import(
   path.join(root, "src/game/defs/levels/index.ts")
 );
 const { BALANCE_TUNING_DEFAULTS } = await import(
@@ -87,7 +87,10 @@ if (flag("help")) {
       "                 rung instead of a fresh level-1 rookie — the campaign's intended entry\n" +
       "                 state, since the game scales to hero level. e.g. `--difficulty jesus\n" +
       "                 --start-level 50` measures a nightmare-geared L50 hero on JESUS. Pair\n" +
-      "                 with --gear-tier (default rare) to set the rolled kit's tier.\n\n" +
+      "                 with --gear-tier (default rare) to set the rolled kit's tier. On\n" +
+      "                 NIGHTMARE and JESUS --start-level DEFAULTS to the first swept level's\n" +
+      "                 ladder hero level (nightmare ~40+; those rungs are never played from\n" +
+      "                 L1) — pass --start-level 1 to force a fresh rookie there anyway.\n\n" +
       "shopping (DEFAULT on): a weapon-starved hero is walked to the merchant to sell →\n" +
       "                 repair → buy → equip, the way a real player recovers a broken weapon.\n" +
       "                 --no-shop turns it off (the bot-never-shops read) to A/B how much a\n" +
@@ -202,16 +205,43 @@ const autoShop = !flag("no-shop");
 // rolled kit's tier (default rare — a solid nightmare-cleared loadout).
 const startLevel = opt("start-level");
 const gearTier = opt("gear-tier", "rare");
+// NIGHTMARE and JESUS are NEVER played from level 1 — the campaign ladder
+// (website/scripts/ladder.yaml, stamped onto each level as `intendedLevel`) puts
+// the hero at ~40+ by the time those rungs' mobs appear. So when --start-level is
+// omitted on those difficulties, DEFAULT the arrival to the first swept level's
+// intended hero level, so the run reproduces where the map is actually reached
+// instead of a naked L1 rookie death-spiralling on the starter weapon. easy/
+// medium/hard keep the fresh-L1 default (their realistic entry — you DO climb
+// them from a rookie). JESUS has no authored ladder level (it is player-relative,
+// so `intendedLevel` omits it) — it borrows nightmare's as the entry-from-
+// nightmare proxy. An explicit --start-level always wins.
+function defaultStartLevel(difficulty, levelId) {
+  if (difficulty !== "nightmare" && difficulty !== "jesus") return undefined;
+  const intended = levelDef(levelId).intendedLevel ?? [];
+  const nightmareIdx = DIFFICULTY_ORDER.indexOf("nightmare");
+  const idx =
+    difficulty === "jesus"
+      ? nightmareIdx
+      : DIFFICULTY_ORDER.indexOf(difficulty);
+  return intended[idx] ?? intended[nightmareIdx];
+}
+// The arrival level actually used: an explicit --start-level, else the nightmare/
+// jesus ladder default (undefined on easy/medium/hard → a fresh L1 rookie).
+const startLevelDefaulted = startLevel === undefined;
+const resolvedStartLevel =
+  startLevel !== undefined
+    ? Number(startLevel)
+    : defaultStartLevel(difficulties[0], levels[0]);
 // The arrival hero is minted per BUILD, so a class matrix with --start-level
 // drops each spec in as its OWN leveled + geared hero (a melee arrival wields a
 // melee weapon, etc.) rather than sharing one generalist loadout. `auto` has no
 // fixed build, so it arrives as the neutral generalist.
 const startLoadoutFor = (profile) =>
-  startLevel === undefined
+  resolvedStartLevel === undefined
     ? null
     : synthesizeArrival({
         difficulty: difficulties[0],
-        level: Number(startLevel),
+        level: resolvedStartLevel,
         seed,
         weaponTier: gearTier,
         gearTier,
@@ -352,7 +382,9 @@ console.log(
       ? " · shopping: ON (merchant recovery)"
       : " · shopping: OFF (--no-shop, bot never shops)") +
     (startLoadout
-      ? ` · arrival: L${startLoadout.level} ${gearTier}-geared (${startLoadout.equipment.weapon.defId})`
+      ? ` · arrival: L${startLoadout.level}${
+          startLevelDefaulted ? " (ladder default)" : ""
+        } ${gearTier}-geared (${startLoadout.equipment.weapon.defId})`
       : ""),
 );
 

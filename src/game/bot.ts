@@ -170,6 +170,14 @@ export type Bot = {
    */
   contentSkip?: { levelId: string; keys: string[] };
   /**
+   * CIRCLE-STRAFE direction (+1 / −1) the hero is currently orbiting a held
+   * target in — the committed sense of a human's circle-strafe, held until the
+   * next arc would run into a wall or the map edge, then reversed (see
+   * {@link orbitHold}). Per-bot mutable memory keyed off pure state, so a fresh
+   * bot on the same seed strafes identically and determinism holds. Lazily set.
+   */
+  orbitSign?: number;
+  /**
    * The label of the decision `botAct` took this tick (e.g. "SEEK CHEST",
    * "EXPLORE FOG", "GIVE GROUND") — surfaced over the hero's head by the BOT VIEW
    * debug overlay. Set via {@link think}; like `nav`, it's a pure per-bot
@@ -319,20 +327,23 @@ export function botAct(bot: Bot, state: GameState): GameInput {
     switch (bot.strategy) {
       case "rush":
         think(bot, foe ? "RUSH" : "RUSH BOSS");
-        return foe ? steer(state, foe.pos) : pushBoss(bot, state);
+        return foe ? steer(state, foe.pos) : pushBoss(bot, state, tune);
       case "kite": {
         if (!foe) {
           think(bot, "PUSH BOSS");
-          return pushBoss(bot, state);
+          return pushBoss(bot, state, tune);
         }
-        // Hold inside weapon range, outside the pack's grasp.
+        // Hold inside weapon range, outside the pack's grasp. A lone chaser is
+        // back-pedalled straight (holdOff) — circling one that out-runs you only
+        // lets it cut the chord; the orbit is for a boss/set-piece the hero is
+        // committed to DPSing (pushBoss / the survive boss-lock).
         think(bot, "KITE");
         const range = weaponDef(state.player.equipment.weapon.defId).range;
         return steer(state, holdOff(state, foe.pos, range * 0.7));
       }
       case "boss":
         think(bot, "TO BOSS");
-        return pushBoss(bot, state);
+        return pushBoss(bot, state, tune);
       case "aggro":
         return survive(bot, state, "aggro", tune);
       case "flee":
@@ -527,7 +538,12 @@ function botLane(state: GameState): WeaponClass {
  * sword included — actually close to swinging range instead of kiting a boss
  * it can never touch; a ranged loadout still keeps its distance.
  */
-function pushBoss(bot: Bot, state: GameState, jumpTravel = false): GameInput {
+function pushBoss(
+  bot: Bot,
+  state: GameState,
+  tune: BotTuning,
+  jumpTravel = false,
+): GameInput {
   const jump = jumpTravel && state.player.z === 0;
   const boss = state.enemies.find((e) => enemyDef(e.defId).role === "boss");
   const target = boss?.pos ?? furthestLandmark(state);
@@ -539,13 +555,17 @@ function pushBoss(bot: Bot, state: GameState, jumpTravel = false): GameInput {
   const hold = weaponDef(state.player.equipment.weapon.defId).range * 0.7;
   // Far from the boss → follow a global A* route to him, so the runner rounds
   // every wall on the way instead of beelining through them. Close enough →
-  // hold at weapon range and fight.
+  // circle-strafe at weapon range and fight (a moving orbit slips his fire).
   if (d > hold + 60) {
     think(bot, "APPROACH BOSS");
     return routeSteer(bot, state, target, jump);
   }
   think(bot, "FIGHT BOSS");
-  return steer(state, holdOff(state, target, hold), jump);
+  return steer(
+    state,
+    orbitHold(bot, state, target, hold, tune.orbitStep),
+    jump,
+  );
 }
 
 /**
@@ -651,7 +671,14 @@ function survive(
     const lockHop =
       w.projectile !== undefined && grounded && nearestD < CONTACT_DODGE_RADIUS;
     think(bot, "FIGHT BOSS");
-    return steer(state, holdOff(state, lockTarget.pos, w.range * 0.7), lockHop);
+    // Circle-strafe the boss at weapon range rather than planting on the hold
+    // point — a moving target slips his shots between the telegraphs the
+    // dedicated dodge already reads.
+    return steer(
+      state,
+      orbitHold(bot, state, lockTarget.pos, w.range * 0.7, tune.orbitStep),
+      lockHop,
+    );
   }
 
   // 3. HUG THE PACK'S EDGE. Stay just outside the nearest body's grasp so the
@@ -1576,6 +1603,58 @@ function holdOff(state: GameState, from: Vec2, dist: number): Vec2 {
   const dy = state.player.pos.y - from.y;
   const d = Math.hypot(dx, dy) || 1;
   return { x: from.x + (dx / d) * dist, y: from.y + (dy / d) * dist };
+}
+
+/** Keep a circle-strafe target this far off the level edge/wall — enough that a
+ * strafe never noses the hero into a corner it then has to unwedge from. */
+const ORBIT_CLEARANCE = 44;
+
+/**
+ * A weapon-range hold that ORBITS the target instead of standing on it: the same
+ * `dist` radius as {@link holdOff}, but advanced tangentially around `center` by
+ * `step` radians in the bot's committed orbit direction, so the hero
+ * circle-strafes at range. The auto-aimed weapon still tracks the nearest foe
+ * (step.ts), so DPS is unchanged — but a hero who keeps sliding laterally slips
+ * the enemy fire aimed at his CURRENT spot (leading is partial even on the hard
+ * rungs — ranged.ts), instead of eating every shot planted on the hold point.
+ *
+ * The orbit sense is per-bot memory and REVERSES when the next arc would run
+ * into a wall or the map edge — a human circling one way until the room ends,
+ * then the other. With both ways blocked (a tight pocket) it falls back to a
+ * straight radial hold. `step` ≤ 0 disables the orbit (the classic stand-still
+ * hold). Pure w.r.t. state + the bot's `orbitSign`, so determinism holds.
+ */
+function orbitHold(
+  bot: Bot,
+  state: GameState,
+  center: Vec2,
+  dist: number,
+  step: number,
+): Vec2 {
+  if (step <= 0) return holdOff(state, center, dist);
+  const p = state.player.pos;
+  const ang = Math.atan2(p.y - center.y, p.x - center.x);
+  if (bot.orbitSign === undefined) bot.orbitSign = 1;
+  const r = PLAYER.radius;
+  for (const sign of [bot.orbitSign, -bot.orbitSign]) {
+    const a = ang + step * sign;
+    const pt = {
+      x: center.x + Math.cos(a) * dist,
+      y: center.y + Math.sin(a) * dist,
+    };
+    const edge = Math.min(
+      pt.x,
+      state.level.width - pt.x,
+      pt.y,
+      state.level.height - pt.y,
+    );
+    if (edge < ORBIT_CLEARANCE) continue; // strafing into the level edge
+    if (insideObstacle(state, pt, r)) continue; // into a rock/wall
+    if (blockedByObstacle(state, p, pt, r)) continue; // a wall in the way
+    bot.orbitSign = sign;
+    return pt;
+  }
+  return holdOff(state, center, dist); // hemmed in → back straight out/in
 }
 
 function nearestEnemy(state: GameState): Enemy | undefined {
