@@ -15,10 +15,11 @@ import { BUILD_ROTATION, STAT_BUILDS } from "./builds.ts";
 import type { StatBuild } from "./builds.ts";
 import { MAP, PLAYER } from "./config.ts";
 import { mapCols, mapRows } from "./map.ts";
-import { nextPathWaypoint, onPathLevel, pathWalked } from "./path.ts";
+import { onPathLevel } from "./path.ts";
+import { buildNavGrid, findPath } from "./pathfind.ts";
+import type { NavGrid } from "./pathfind.ts";
 import { blockedByObstacle, insideObstacle, lineOfSight } from "./obstacles.ts";
 import { enemyDef } from "./defs/enemies/index.ts";
-import { levelDef } from "./defs/levels/index.ts";
 import { weaponDef } from "./defs/equipment.ts";
 import { spellDef } from "./defs/spells.ts";
 import {
@@ -118,7 +119,55 @@ export type Bot = {
     escapeStartPos: Vec2;
   };
   /**
-   * The label of the decision `botAct` took this tick (e.g. "MARCH PATH",
+   * GLOBAL PATHFINDING memory (see pathfind.ts). The nav grid is STATIC per level
+   * so it's built once and cached; the route is the current A* plan the bot is
+   * following toward its macro goal, replanned only when the goal moves, the hero
+   * is shoved off the route, or he reaches the end. Like `nav`, it's per-bot
+   * mutable memory keyed off pure state — a fresh bot on the same seed evolves it
+   * identically, so a botted run stays deterministic. Lazily created.
+   */
+  route?: {
+    /** The level the cached grid/route belong to (rebuilt on a level change). */
+    levelId: string;
+    /** The static walkability grid for this level (built once). */
+    grid: NavGrid;
+    /** The world goal the current `path` was planned to reach. */
+    goal: Vec2;
+    /** A* waypoints from the plan origin to the goal (turning points). */
+    path: Vec2[];
+    /** Index of the next unreached waypoint in `path`. */
+    index: number;
+  };
+  /**
+   * The committed CONTENT target (a chest to loot or an elite to engage) the bot
+   * is sweeping toward — the automatic "discover everything before the boss"
+   * memory. Recomputed (nearest A*-reachable piece) only when the content
+   * inventory changes (`sig`), so the bot commits to one piece until it's
+   * consumed rather than dithering between two each tick. Per-bot, pure — same
+   * determinism guarantee as `route`.
+   */
+  content?: {
+    levelId: string;
+    /** A cheap signature of the remaining content — recompute when it changes. */
+    sig: number;
+    /** The chosen nearest reachable content position, or null if none remain. */
+    target: Vec2 | null;
+    /** Closest the hero has come to `target` (world px²) and when — the progress
+     * gauge that ABANDONS a target he can't make headway on. */
+    bestDistSq: number;
+    bestTimeMs: number;
+  };
+  /**
+   * Content targets the bot has GIVEN UP on — A*-reachable but ones it couldn't
+   * make headway toward within the abandon window (a cache walled behind a fight
+   * it keeps getting shoved out of). Skipped on re-pick so the sweep moves on to
+   * the next piece (and ultimately the boss) instead of deadlocking. Keyed per
+   * level; a fresh bot on the same seed abandons identically, so determinism
+   * holds.
+   */
+  contentSkip?: { levelId: string; keys: string[] };
+  /**
+   * The label of the decision `botAct` took this tick (e.g. "SEEK CHEST",
    * "EXPLORE FOG", "GIVE GROUND") — surfaced over the hero's head by the BOT VIEW
    * debug overlay. Set via {@link think}; like `nav`, it's a pure per-bot
    * annotation the sim never reads back, so determinism is untouched.
@@ -250,6 +299,9 @@ export function botAct(bot: Bot, state: GameState): GameInput {
     think(bot, "IDLE");
     return idleInput();
   }
+  // Gauge headway toward the committed content target once per tick, so a cache
+  // the sweep can't reach gets abandoned rather than deadlocking the run.
+  trackContentAbandon(bot, state);
   const decided = ((): GameInput => {
     // With only untouchable apparitions left on the board there is no foe
     // to fight — push for the objective instead of chasing a hallucination.
@@ -492,16 +544,6 @@ function botLane(state: GameState): WeaponClass {
  */
 function pushBoss(bot: Bot, state: GameState, jumpTravel = false): GameInput {
   const jump = jumpTravel && state.player.z === 0;
-  // Follow the level's intended path first: steer STRAIGHT to the next waypoint
-  // (no weapon-range hold-off — a waypoint is a travel node to walk onto, not a
-  // foe to fight) so the runner rounds the walls instead of beelining the boss
-  // through them. `advancePath` retires each node as he reaches it; once the
-  // path is walked, `nextPathWaypoint` is null and he closes on the boss below.
-  const waypoint = travelWaypoint(state);
-  if (waypoint) {
-    think(bot, "MARCH PATH");
-    return navSteer(state, waypoint, jump);
-  }
   const boss = state.enemies.find((e) => enemyDef(e.defId).role === "boss");
   const target = boss?.pos ?? furthestLandmark(state);
   if (!target) {
@@ -510,9 +552,12 @@ function pushBoss(bot: Bot, state: GameState, jumpTravel = false): GameInput {
   }
   const d = distance(state.player.pos, target);
   const hold = weaponDef(state.player.equipment.weapon.defId).range * 0.7;
+  // Far from the boss → follow a global A* route to him, so the runner rounds
+  // every wall on the way instead of beelining through them. Close enough →
+  // hold at weapon range and fight.
   if (d > hold + 60) {
     think(bot, "APPROACH BOSS");
-    return navSteer(state, target, jump);
+    return routeSteer(bot, state, target, jump);
   }
   think(bot, "FIGHT BOSS");
   return steer(state, holdOff(state, target, hold), jump);
@@ -539,36 +584,17 @@ function survive(bot: Bot, state: GameState, posture: Posture): GameInput {
   const tune = POSTURE_TUNING[posture];
   const near = threatsWithin(state, THREAT_RADIUS);
 
-  // A spawn point still owing mobs nearby means this patch ISN'T cleared yet —
-  // while the hero is UNDER the boss-ready level he holds and drains it (farming
-  // up before the path lets him move on). Once he's leveled enough to beat the
-  // boss (`readyForBoss`), the hold releases: he RUSHES, marching past the
-  // remaining horde toward the boss instead of draining every point. Null on
-  // wave levels / when there's nothing left owing here.
-  const spawner = readyForBoss(state) ? null : activeSpawnerNear(state);
-
-  // 1. Breathing room: grab a pickup within reach; else, if a spawn point here
-  //    is still emitting, close on it to trip/drain the rest; else, while still
-  //    farming up, UNCOVER THE MAP — steer to the nearest reachable patch of fog
-  //    so a run sweeps the whole level (and its off-path detours) rather than
-  //    diving at the boss the instant the field goes quiet; only once boss-ready
-  //    does exploration stop and he push the objective.
+  // 1. Breathing room: grab a pickup within reach; else follow the MACRO TRAVEL
+  //    plan — farm this patch's spawner, sweep to the nearest reachable
+  //    chest/elite, uncover remaining fog, and only then push the boss — routed
+  //    globally (A*) so the runner threads the whole map to whatever's next.
   if (near.length === 0) {
     const item = nearestItem(state);
     if (item && distance(player.pos, item.pos) < ITEM_REACH) {
       think(bot, "GRAB ITEM");
       return steer(state, item.pos);
     }
-    if (spawner) {
-      think(bot, "CLEAR SPAWNER");
-      return navSteer(state, spawner, true);
-    }
-    const fog = readyForBoss(state) ? null : exploreTarget(state);
-    if (fog) {
-      think(bot, "EXPLORE FOG");
-      return navSteer(state, fog, true);
-    }
-    return pushBoss(bot, state, true);
+    return macroSteer(bot, state, true);
   }
 
   const grounded = player.z === 0;
@@ -587,21 +613,20 @@ function survive(bot: Bot, state: GameState, posture: Posture): GameInput {
     (e) => distance(e.pos, player.pos) < SURROUND_RADIUS,
   );
   const lowHp = player.hp < player.maxHp * tune.fleeHp;
-  // BOSS LOCK. On a path level, once the boss is awake, the whole route is
-  // walked, or the hero has closed to within `BOSS_LOCK_RANGE`, lock onto the
-  // BOSS and fight it down. Deliberately the boss ONLY — the elites along the
-  // way are marched PAST (they are optional; stopping to finish each one bogs
-  // the hero in the wave grind and he never reaches the boss). Committing is
-  // safe: the horde crawls during a set-piece fight (`mobPursuitNearElite`, 10%
-  // on easy), so he can plant and DPS rather than kite.
+  // BOSS LOCK. Lock onto the BOSS and fight it DOWN once he's actually in the
+  // arena — the hero has closed to within `BOSS_LOCK_RANGE` or the boss has woken
+  // — rather than kiting his adds. Getting THERE is the macro plan's job
+  // (`shouldCommitBoss` steers the sweep at the boss only once every reachable
+  // chest/elite is engaged), so this proximity lock just seals the set-piece.
+  // The horde crawls during it (`mobPursuitNearElite`, 10% on easy), so he can
+  // plant and DPS rather than kite.
   const bossEnemy = state.enemies.find(
     (e) => enemyDef(e.defId).role === "boss",
   );
   const lockTarget =
-    onPathLevel(state) &&
     bossEnemy !== undefined &&
+    readyForBoss(state) &&
     (bossEnemy.awake === true ||
-      pathWalked(state) ||
       distance(player.pos, bossEnemy.pos) < BOSS_LOCK_RANGE)
       ? bossEnemy
       : undefined;
@@ -641,48 +666,6 @@ function survive(bot: Bot, state: GameState, posture: Posture): GameInput {
     return steer(state, holdOff(state, lockTarget.pos, w.range * 0.7), lockHop);
   }
 
-  // 2.45. RIGHT AT AN UNEXPLORED POCKET'S MOUTH → dip IN to uncover it before the
-  //    spawner-clear/edge-hug pins him outside. The off-path caches are guarded,
-  //    so this fires mid-fight: a pocket THIS close (in clear sight) is worth the
-  //    few hits to walk in and reveal it. Tight range keeps it to a pocket he is
-  //    already beside; stops once boss-ready so a leveled hero rushes the boss.
-  if (!readyForBoss(state)) {
-    const pocket = exploreTarget(state, FOG_POCKET_RANGE);
-    if (pocket) {
-      think(bot, "EXPLORE FOG");
-      return navSteer(state, pocket, grounded);
-    }
-  }
-
-  // 2.5. MARCH THE INTENDED PATH — but NOT while a spawn point here is still
-  //    owing mobs (`spawner`): the hero holds and clears this patch first, so he
-  //    levels on the way rather than rushing to the boss under-levelled. With the
-  //    patch clear (or on a wave level), push toward the next waypoint and let
-  //    the auto-weapon carve through the front line instead of standing to trade
-  //    blows with the endless wave (a walled level never clears from a
-  //    standstill). A ranged/magic loadout HOPS through contact; a melee one
-  //    marches on foot so it can keep swinging. Falls through to the edge-hug
-  //    once the path is walked or on a level that authors none.
-  const marchTo = spawner ? null : travelWaypoint(state);
-  if (marchTo) {
-    const canHop =
-      weaponDef(player.equipment.weapon.defId).projectile !== undefined;
-    const hopMarch = canHop && grounded && nearestD < CONTACT_DODGE_RADIUS;
-    // Before marching on, DIP into an unexplored pocket the sweep is passing
-    // right by (the detours hug the path's low turns) — so the bot discovers the
-    // off-path caches instead of walking past them. Tight range keeps the
-    // authored path the spine; stops once he's boss-ready.
-    const detour = readyForBoss(state)
-      ? null
-      : exploreTarget(state, FOG_DETOUR_RANGE);
-    if (detour) {
-      think(bot, "EXPLORE FOG");
-      return navSteer(state, detour, hopMarch);
-    }
-    think(bot, "MARCH PATH");
-    return navSteer(state, marchTo, hopMarch);
-  }
-
   // 3. HUG THE PACK'S EDGE. Stay just outside the nearest body's grasp so the
   //    auto-weapon mows the front line while the hero keeps out of reach —
   //    orbiting the edge, backing off toward the OPEN side (away from the pack's
@@ -701,7 +684,7 @@ function survive(bot: Bot, state: GameState, posture: Posture): GameInput {
   // The posture scales the hold: `flee` backs off well beyond grasp, `aggro`
   // hugs in tight so the front line stays in weapon reach.
   const standoff = baseStandoff * tune.standoffMul;
-  const away = awayFromPack(state, near, waypointHeading(state));
+  const away = awayFromPack(state, near, travelHeading(bot, state));
   // A melee hero can't swing mid-air — the blade is stayed above
   // JUMP.dodgeHeight (see stepWeapon) — so hopping to dodge contact in the
   // DPS-hugging phase would only forfeit his swings; he gives ground on FOOT
@@ -725,28 +708,21 @@ function survive(bot: Bot, state: GameState, posture: Posture): GameInput {
       hop,
     );
   }
+  // Not pressed → PUSH ON toward the macro goal (the next chest/elite, then the
+  // boss), letting the auto-weapon carve the front line as he goes. This is the
+  // forward march that TRAVERSES a designed level instead of edge-hugging in
+  // place while the horde flows around him — the runner has to cross the map to
+  // reach the walled caches and the boss. Gated to designed (routed) levels: on
+  // a pathless fixture or open arena there's nowhere to march, so he falls to the
+  // posture edge-hug below (which the aggro/flee standoff read depends on).
+  if (onPathLevel(state)) {
+    return macroSteer(bot, state, hop);
+  }
   if (packed.length <= 1) {
-    // Field near him is thin → advance the map. Follow the intended path when
-    // there's a waypoint left (steer straight onto it, so the drift-while-
-    // fighting still rounds the walls); else uncover remaining fog while still
-    // farming up; otherwise close on the boss, stopping at the posture's standoff
-    // (aggro presses closest, flee farthest).
-    const waypoint = travelWaypoint(state);
-    if (waypoint) {
-      think(bot, "ADVANCE PATH");
-      return navSteer(state, waypoint, hop);
-    }
-    const fog = readyForBoss(state) ? null : exploreTarget(state);
-    if (fog) {
-      think(bot, "EXPLORE FOG");
-      return navSteer(state, fog, hop);
-    }
-    think(bot, "APPROACH BOSS");
-    return navSteer(
-      state,
-      holdOff(state, bossPos(state) ?? nearest.pos, standoff),
-      hop,
-    );
+    // Field near him is thin → advance the macro plan (close on this patch's
+    // spawner to drain it, or sweep on toward the next chest/elite/boss),
+    // globally routed so the drift-while-fighting rounds the walls.
+    return macroSteer(bot, state, hop);
   }
   if (posture === "aggro") {
     // Keep the pressure on — hold at fighting range of the nearest body rather
@@ -865,14 +841,16 @@ function awayFromPack(
   return { x: bx / bm, y: by / bm };
 }
 
-/** A unit heading from the hero toward the next intended-path waypoint, or null
- * when the level has no path (or the hero has walked it all). */
-function waypointHeading(state: GameState): Vec2 | null {
-  const wp = nextPathWaypoint(state);
-  if (!wp) return null;
-  const dx = wp.x - state.player.pos.x;
-  const dy = wp.y - state.player.pos.y;
-  const d = Math.hypot(dx, dy) || 1;
+/** A unit heading from the hero toward the current macro-travel goal (the next
+ * chest/elite/boss the sweep is bound for) — the bias that drifts a retreat off
+ * the pack DOWN the route rather than straight back, so backing off still makes
+ * map progress. Reads the bot's cached route goal; pure. */
+function travelHeading(bot: Bot, state: GameState): Vec2 | null {
+  const goal = macroTarget(bot, state);
+  const dx = goal.x - state.player.pos.x;
+  const dy = goal.y - state.player.pos.y;
+  const d = Math.hypot(dx, dy);
+  if (d < 1) return null;
   return { x: dx / d, y: dy / d };
 }
 
@@ -913,18 +891,11 @@ function readyForBoss(state: GameState): boolean {
   return state.player.level >= Math.max(1, boss.mlvl - BOSS_ENGAGE_MARGIN);
 }
 
-/** How far the bot will strike out to uncover fog once the field is quiet / the
- * path is walked — a reachable cap so it pokes a nearby unexplored pocket without
- * trekking to a far corner it may not be able to path to (no global pathfinding). */
+/** How far the bot will strike out to uncover fog once every discrete content
+ * piece is engaged — a reachable cap so it pokes a nearby unexplored pocket
+ * rather than trekking to a far corner. Fog is the COVERAGE fallback behind the
+ * chest/elite content sweep, so a level with no chests still gets explored. */
 const FOG_EXPLORE_RANGE = 760;
-/** The tighter reach for a mid-MARCH detour: only dip off the authored path for a
- * pocket the sweep is passing right by (the moon's detours hug the path's low
- * turns), so the spine still carries the run around the ridges. */
-const FOG_DETOUR_RANGE = 340;
-/** The tightest reach — an unexplored pocket the hero is right at the MOUTH of.
- * Dipping in wins even mid-fight (the detour guardian is holding the cache), so a
- * pocket this close is uncovered before the spawner-clear/edge-hug takes over. */
-const FOG_POCKET_RANGE = 240;
 /** A fogged patch smaller than this many cells (in a ~7×7 window) is a stray
  * sliver — a rock's shadow, a wall nook — not a pocket worth a detour, so it
  * never yanks the hero around. */
@@ -932,18 +903,17 @@ const FOG_BLOB_MIN_CELLS = 8;
 
 /**
  * The world-space centroid of the nearest sizable UNEXPLORED pocket the hero can
- * actually reach — the fog the survivor steers into to sweep the whole map (and
- * its off-path detours) before committing to the boss (see {@link survive}).
+ * actually reach — the COVERAGE fallback the survivor steers into once every
+ * discrete chest/elite is engaged, so even a chest-less level gets swept before
+ * the boss (see {@link macroTarget}).
  *
  * Scans the coarse fog grid (`state.explored`, `map.ts`) for the nearest fogged
- * cell that is within {@link FOG_EXPLORE_RANGE} AND in clear LINE OF SIGHT — never
- * fog walled off behind a ridge the pathfinding-free bot can't round — then
+ * cell that is within {@link FOG_EXPLORE_RANGE} AND in clear LINE OF SIGHT, then
  * averages the fog in a small window around it into a centroid, returning it only
  * if the pocket is big enough ({@link FOG_BLOB_MIN_CELLS}). A one-cell inset skips
  * the never-quite-revealed level rim. Null when the reachable map is uncovered.
  * Pure (a function of `state.explored` + geometry, no RNG/clock) so botted runs
- * stay deterministic. `maxRange` caps how far it reaches — wide when the field is
- * quiet, tight ({@link FOG_DETOUR_RANGE}) for a mid-march detour.
+ * stay deterministic.
  */
 function exploreTarget(
   state: GameState,
@@ -990,39 +960,6 @@ function exploreTarget(
   if (count < FOG_BLOB_MIN_CELLS) return null;
   return { x: sumX / count, y: sumY / count };
 }
-
-/** Is a sizable patch of unexplored fog still within `range` of `pos`? A cheap
- * boolean scan of the fog grid (no LoS, no centroid) — used to tell a DETOUR
- * waypoint (one the designer dipped toward an unentered pocket) from a plain
- * straightaway node. */
-function fogNear(state: GameState, pos: Vec2, range: number): boolean {
-  const cell = MAP.cellSize;
-  const cols = mapCols(state.level);
-  const rows = mapRows(state.level);
-  const reach = Math.ceil(range / cell);
-  const cx = Math.floor(pos.x / cell);
-  const cy = Math.floor(pos.y / cell);
-  const rangeSq = range * range;
-  let fogged = 0;
-  for (let ty = cy - reach; ty <= cy + reach; ty++) {
-    if (ty < 1 || ty >= rows - 1) continue;
-    for (let tx = cx - reach; tx <= cx + reach; tx++) {
-      if (tx < 1 || tx >= cols - 1) continue;
-      if (state.explored[ty * cols + tx] === 1) continue;
-      const wx = (tx + 0.5) * cell;
-      const wy = (ty + 0.5) * cell;
-      if ((wx - pos.x) * (wx - pos.x) + (wy - pos.y) * (wy - pos.y) > rangeSq)
-        continue;
-      if (++fogged >= FOG_BLOB_MIN_CELLS) return true;
-    }
-  }
-  return false;
-}
-
-/** How far off the string-pull line a path waypoint must sit to read as a
- * deliberate DETOUR dip (rather than a node roughly on the way) — the bot honors
- * a fogged dip this far off the route instead of cutting straight past it. */
-const DETOUR_OFFSET = 160;
 
 /** The anchor of the nearest spawn point that still owes mobs (dormant or
  * mid-drip) within `SPAWNER_CLEAR_RANGE` of the hero, or null — the patch the
@@ -1201,70 +1138,295 @@ function navTarget(state: GameState, goal: Vec2): Vec2 {
 }
 
 /** Steer toward a TRAVEL goal with local wall avoidance (see {@link navTarget}) —
- * the movement equivalent of {@link steer} for path/boss/escape headings. */
+ * the movement equivalent of {@link steer} for the short reactive FIGHT moves
+ * (give-ground, edge-drift, punch-out) that steer a fixed distance, not toward a
+ * far goal. Long-haul travel uses {@link routeSteer} (global A*) instead. */
 function navSteer(state: GameState, goal: Vec2, jump = false): GameInput {
   return steer(state, navTarget(state, goal), jump);
 }
 
+// === GLOBAL PATHFINDING TRAVEL (see pathfind.ts) ===
+// The macro-travel primitive: instead of only sliding along the walls it can see
+// ~140px ahead (navTarget), the bot plans a real A* ROUTE across the whole level
+// to any goal — a chest deep in a walled pocket, an elite two basins over, the
+// boss — and follows it. This is what lets a level be validated WITHOUT hand-
+// authoring a bot path: the runner finds its own way to every reachable thing.
+
+/** Retire a route waypoint once the hero is this close (world px). */
+const ROUTE_REACH = 48;
+/** Replan when the goal has moved more than this from the planned goal. */
+const ROUTE_REPLAN_GOAL = 80;
+/** Replan when the hero has been shoved this far off the planned route. */
+const ROUTE_STRAY = 170;
+
+/** Lazily build + cache the level's static nav grid on the bot (see the `route`
+ * memory). Rebuilds on a level change. Returns the route cache. */
+function ensureRoute(bot: Bot, state: GameState): NonNullable<Bot["route"]> {
+  if (!bot.route || bot.route.levelId !== state.level.id) {
+    bot.route = {
+      levelId: state.level.id,
+      grid: buildNavGrid(state),
+      goal: { x: 0, y: 0 },
+      path: [],
+      index: 0,
+    };
+  }
+  return bot.route;
+}
+
+/** How far the hero sits from the nearest remaining route segment — the "shoved
+ * off the corridor" gauge that forces a replan. */
+function strayedFromRoute(rc: NonNullable<Bot["route"]>, from: Vec2): boolean {
+  if (rc.index >= rc.path.length) return true;
+  let bestSq = Infinity;
+  let prev = from;
+  for (let i = rc.index; i < rc.path.length; i++) {
+    const node = rc.path[i]!;
+    const dSq = segmentDistanceSq(from, prev, node);
+    if (dSq < bestSq) bestSq = dSq;
+    prev = node;
+  }
+  return bestSq > ROUTE_STRAY * ROUTE_STRAY;
+}
+
 /**
- * The travel waypoint the survivor heads for — a corridor-aware upgrade of
- * {@link nextPathWaypoint} that keeps a no-pathfinding runner ON the authored
- * route. Normally it STRING-PULLS forward: the furthest-ahead node the hero can
- * currently SEE (walls naturally cap that to his straightaway, so he never skips
- * an uncleared aisle), so a slightly-off drift still cuts the corner cleanly.
- * When the horde has shoved him clean off the corridor with NO node in sight, it
- * aims for the NEAREST node to climb back on (navTarget then deflects him around
- * the wall), which is what breaks a wall-pocket wedge. Null when no path / walked.
+ * The immediate world sub-target to steer toward on the A* route to `goal`:
+ * (re)plans a route when the cache is stale, retires reached waypoints, then
+ * STRING-PULLS to the furthest waypoint still in clear line of body-sight — so
+ * the hero cuts straight across open ground and only kinks at the turning points
+ * the walls actually force. Falls back to the raw goal when it's unreachable
+ * (let the local steering try). Pure w.r.t. state + the bot's route memory.
  */
-function travelWaypoint(state: GameState): Vec2 | null {
-  const wp = nextPathWaypoint(state);
-  if (!wp) return null;
-  const path = levelDef(state.level.id).path;
-  if (!path || path.length === 0) return wp;
+function routeTarget(bot: Bot, state: GameState, goal: Vec2): Vec2 {
+  const rc = ensureRoute(bot, state);
   const from = state.player.pos;
+  const stale =
+    rc.path.length === 0 ||
+    distance(goal, rc.goal) > ROUTE_REPLAN_GOAL ||
+    strayedFromRoute(rc, from);
+  if (stale) {
+    const path = findPath(rc.grid, from, goal);
+    rc.goal = { x: goal.x, y: goal.y };
+    rc.path = path ?? [];
+    rc.index = 0;
+    if (!path) return goal; // walled off — nudge straight and hope
+  }
+  while (
+    rc.index < rc.path.length &&
+    distance(from, rc.path[rc.index]!) <= ROUTE_REACH
+  )
+    rc.index++;
+  if (rc.index >= rc.path.length) return goal;
   const r = PLAYER.radius;
-  // Furthest visible node at/after current progress → the string-pull target.
-  let furthest = null;
-  for (let i = path.length - 1; i >= state.pathIndex; i--) {
-    if (!blockedByObstacle(state, from, path[i] as Vec2, r)) {
-      furthest = path[i] as Vec2;
+  let target = rc.path[rc.index]!;
+  for (let i = rc.path.length - 1; i >= rc.index; i--) {
+    if (!blockedByObstacle(state, from, rc.path[i]!, r)) {
+      target = rc.path[i]!;
       break;
     }
   }
-  if (furthest) {
-    // KNOW THE DESIGNED DETOURS. While still exploring (not yet boss-ready), don't
-    // string-pull PAST a waypoint that BOTH dips well off the route AND still
-    // guards unexplored fog — that's a deliberate dip toward an off-path cache.
-    // Head for the first such reachable dip instead, so the sweep pokes the
-    // pocket the designer placed rather than cutting straight to the boss. Once
-    // its fog is uncovered (or the hero is boss-ready) the dip stops pulling and
-    // the normal string-pull resumes.
-    if (!readyForBoss(state)) {
-      for (let i = state.pathIndex; i < path.length; i++) {
-        const node = path[i] as Vec2;
-        if (node === furthest) break;
-        if (blockedByObstacle(state, from, node, r)) continue;
-        if (
-          segmentDistanceSq(from, furthest, node) <
-          DETOUR_OFFSET * DETOUR_OFFSET
-        )
-          continue;
-        if (fogNear(state, node, FOG_DETOUR_RANGE)) return node;
+  return target;
+}
+
+/** Steer toward a far TRAVEL goal along a global A* route (see {@link routeTarget})
+ * — the macro-travel movement primitive that rounds every wall on the way, not
+ * just the one 140px ahead. */
+function routeSteer(
+  bot: Bot,
+  state: GameState,
+  goal: Vec2,
+  jump = false,
+): GameInput {
+  return steer(state, routeTarget(bot, state, goal), jump);
+}
+
+// === AUTOMATIC CONTENT ENGAGEMENT ===
+// The bot is the level's CONTROL: it proves every chest and elite the designer
+// placed is reachable and the map is beatable, WITHOUT the level authoring any
+// bot-specific hint. It sweeps to the nearest A*-reachable un-engaged piece,
+// commits until that piece is consumed, then re-picks — and only commits to the
+// boss once nothing reachable is left to discover.
+
+/** The world positions of every un-looted CHEST on the field (a chest is a
+ * breakable obstacle flagged `chest`; looting removes it). These are the OFF-PATH
+ * caches the sweep detours for — the whole point of "discover the map". Elites,
+ * by contrast, sit ON the main route and are fought in passing (no detour), so
+ * they are NOT content targets: routing back to each one only bogs the runner in
+ * the horde and it never reaches the boss. */
+function chestTargets(state: GameState): Vec2[] {
+  return state.obstacles.filter((o) => o.chest).map((o) => o.pos);
+}
+
+/** A cheap signature of the remaining content — the un-looted chest count. The
+ * committed content target is re-picked only when this changes (a chest was
+ * cracked), so the bot holds one target instead of dithering every tick. */
+function contentSig(state: GameState): number {
+  return chestTargets(state).length;
+}
+
+/** A stable key for a content position (rounded), so an ABANDONED target can be
+ * recognised and skipped across re-picks even as the hero moves. */
+function contentKey(p: Vec2): string {
+  return `${Math.round(p.x)},${Math.round(p.y)}`;
+}
+
+/** How long (sim ms) the bot may fail to shorten its ROUTE to a committed content
+ * target before giving up on it — a cache it's A*-reachable to but keeps getting
+ * shoved away from. Generous, so it's a genuine can't-get-there, not a scuffle. */
+const CONTENT_ABANDON_MS = 12_000;
+/** The remaining route must shrink by this many px² to count as headway, so
+ * jitter around a wall doesn't reset the timer. */
+const CONTENT_PROGRESS_EPS = 80 * 80;
+/** Once the remaining route is this short the bot is basically ON the target
+ * (engaging it) — combat/looting will consume it, so the abandon timer holds
+ * off. Above it, a stalled route means he genuinely can't get there. */
+const CONTENT_ENGAGE_ROUTE = 320;
+
+/** The remaining A* route length from the hero through the cached route to its
+ * goal (world px) — the TRUE "how far to actually reach it", which (unlike
+ * euclidean distance) reflects the up-and-around a wall forces. */
+function remainingRoute(rc: NonNullable<Bot["route"]>, from: Vec2): number {
+  if (rc.index >= rc.path.length) return distance(from, rc.goal);
+  let len = distance(from, rc.path[rc.index]!);
+  for (let i = rc.index; i < rc.path.length - 1; i++)
+    len += distance(rc.path[i]!, rc.path[i + 1]!);
+  return len;
+}
+
+/** Once per tick, gauge headway toward the committed content target by its
+ * remaining ROUTE length and ABANDON it if that hasn't shrunk within
+ * {@link CONTENT_ABANDON_MS} — pushing its key onto the per-level skip set so the
+ * next re-pick moves on (and the boss finally gets committed). Route length, not
+ * euclidean distance, so a hero pinned against the wall of a sealed pocket still
+ * reads as "can't get there". Called from {@link botAct}; mutates only bot
+ * memory, so determinism holds. */
+function trackContentAbandon(bot: Bot, state: GameState): void {
+  const c = bot.content;
+  const rc = bot.route;
+  if (!c || !c.target || !rc) return;
+  // Only gauge while the cached route actually leads to this target.
+  if (distance(rc.goal, c.target) > ROUTE_REPLAN_GOAL) return;
+  const rem = remainingRoute(rc, state.player.pos);
+  const remSq = rem * rem;
+  // Basically there (engaging it) → hold the timer; combat/looting finishes it.
+  if (
+    rem <= CONTENT_ENGAGE_ROUTE ||
+    remSq < c.bestDistSq - CONTENT_PROGRESS_EPS
+  ) {
+    c.bestDistSq = remSq;
+    c.bestTimeMs = state.stats.timeMs;
+    return;
+  }
+  if (state.stats.timeMs - c.bestTimeMs > CONTENT_ABANDON_MS) {
+    if (!bot.contentSkip || bot.contentSkip.levelId !== state.level.id)
+      bot.contentSkip = { levelId: state.level.id, keys: [] };
+    bot.contentSkip.keys.push(contentKey(c.target));
+    c.target = null; // force a re-pick (excluding the skipped key) next read
+  }
+}
+
+/** Total route length of an A* waypoint list from `from` (world px) — the cost
+ * used to pick the NEAREST reachable content piece. */
+function routeLength(from: Vec2, path: Vec2[]): number {
+  let len = 0;
+  let prev = from;
+  for (const p of path) {
+    len += distance(prev, p);
+    prev = p;
+  }
+  return len;
+}
+
+/**
+ * The nearest A*-REACHABLE un-engaged content (chest or elite), or null when
+ * every reachable piece has been consumed. Cached on the bot and recomputed only
+ * when the content inventory changes — so the run commits to one piece, sweeps to
+ * it (engaging it as combat takes over near it), and re-picks the next once it's
+ * gone. Unreachable pieces (walled off with no key) are skipped, so a genuinely
+ * sealed cache never stalls the sweep. Pure w.r.t. state + the bot's memory.
+ */
+function nearestContent(bot: Bot, state: GameState): Vec2 | null {
+  const rc = ensureRoute(bot, state);
+  const sig = contentSig(state);
+  const needPick =
+    !bot.content ||
+    bot.content.levelId !== state.level.id ||
+    bot.content.sig !== sig ||
+    bot.content.target === null; // abandoned → re-pick, excluding the skip set
+  if (needPick) {
+    const from = state.player.pos;
+    const skip =
+      bot.contentSkip && bot.contentSkip.levelId === state.level.id
+        ? bot.contentSkip.keys
+        : [];
+    const candidates = chestTargets(state).filter(
+      (c) => !skip.includes(contentKey(c)),
+    );
+    let best: Vec2 | null = null;
+    let bestCost = Infinity;
+    for (const c of candidates) {
+      const path = findPath(rc.grid, from, c);
+      if (!path) continue;
+      const cost = routeLength(from, path);
+      if (cost < bestCost) {
+        bestCost = cost;
+        best = { x: c.x, y: c.y };
       }
     }
-    return furthest;
+    bot.content = {
+      levelId: state.level.id,
+      sig,
+      target: best,
+      // Seed the route-length gauge at Infinity so the first measured route
+      // counts as progress and starts the abandon clock cleanly.
+      bestDistSq: Infinity,
+      bestTimeMs: state.stats.timeMs,
+    };
   }
-  // Nothing ahead in sight (shoved into a pocket) → nearest node, to rejoin.
-  let best = wp;
-  let bestD = Infinity;
-  for (const node of path) {
-    const d = distance(from, node);
-    if (d < bestD) {
-      bestD = d;
-      best = node;
-    }
+  return bot.content?.target ?? null;
+}
+
+/**
+ * The macro destination the bot travels toward when it's free to move: FARM the
+ * active spawner in this patch (level up before advancing) while still under the
+ * boss-ready level, else sweep to the nearest reachable un-engaged CONTENT
+ * (chest/elite), else uncover any remaining reachable FOG (coverage), else — with
+ * nothing left to discover — the BOSS. This is the whole automatic-engagement
+ * order in one place; the callers just route to whatever it returns.
+ */
+function macroTarget(bot: Bot, state: GameState): Vec2 {
+  if (!readyForBoss(state)) {
+    const spawner = activeSpawnerNear(state);
+    if (spawner) return spawner;
   }
-  return best;
+  const content = nearestContent(bot, state);
+  if (content) return content;
+  if (!readyForBoss(state)) {
+    const fog = exploreTarget(state);
+    if (fog) return fog;
+  }
+  return bossPos(state) ?? furthestLandmark(state) ?? state.player.pos;
+}
+
+/** The short label for the macro goal `macroTarget` returned, for the BOT VIEW
+ * thought bubble — so the overlay reads "SEEK CHEST" / "CLEAR SPAWNER" / "TO
+ * BOSS" as the sweep works through the map. */
+function macroThought(bot: Bot, state: GameState, goal: Vec2): string {
+  if (!readyForBoss(state) && activeSpawnerNear(state)) return "CLEAR SPAWNER";
+  const content = bot.content?.target;
+  if (content && content.x === goal.x && content.y === goal.y)
+    return "SEEK CHEST";
+  const boss = bossPos(state);
+  if (boss && boss.x === goal.x && boss.y === goal.y) return "TO BOSS";
+  return "EXPLORE FOG";
+}
+
+/** Steer toward the current macro goal along its A* route, tagging the thought.
+ * The unified macro-travel move — replaces the old authored-path march. */
+function macroSteer(bot: Bot, state: GameState, jump = false): GameInput {
+  const goal = macroTarget(bot, state);
+  think(bot, macroThought(bot, state, goal));
+  return routeSteer(bot, state, goal, jump);
 }
 
 // === ANTI-WEDGE UNSTUCK ===
@@ -1367,9 +1529,8 @@ function unstuckInput(bot: Bot, state: GameState): GameInput | null {
     return null;
   }
 
-  // The travel goal orients the escape sweep (goalward heading first).
-  const goal =
-    travelWaypoint(state) ?? bossPos(state) ?? furthestLandmark(state);
+  // The macro goal orients the escape sweep (goalward heading first).
+  const goal = macroTarget(bot, state);
 
   // Sweep a heading that rotates as the escape persists: goalward first, then ±
   // around it (±45, ±90, ±135), out to a full turn — deterministic, so a botted
