@@ -281,23 +281,38 @@ describe("bot profiles", () => {
     expect(createBot("survivor").profile).toBe("meta");
   });
 
-  it("meta walks melee -> magic -> melee across the level bands", () => {
-    // The lane itself: melee early, magic mid–high, melee at the cap.
+  it("meta picks melee / magic / melee by the level it is spun up at", () => {
+    // The lane itself: melee early, magic mid–high (armor climbs ~40), melee at
+    // the artifact cap.
     expect(metaLane(1)).toBe("melee");
-    expect(metaLane(50)).toBe("magic");
+    expect(metaLane(39)).toBe("melee");
+    expect(metaLane(40)).toBe("magic");
+    expect(metaLane(98)).toBe("magic");
     expect(metaLane(99)).toBe("melee");
 
-    // And it drives the allocation: with nothing spent yet, each band's rotation
-    // opens on its lane's primary — STR for melee, INT for magic.
-    const state = startGame();
-    const bot = createBot("survivor"); // default meta
+    // And it drives the allocation off the STARTING level: a fresh bot per level
+    // opens its lane's rotation on its primary — STR for melee, INT for magic.
     const laneStat = (level: number): string => {
+      const state = startGame();
       state.player.level = level;
-      return botAllocate(bot, state);
+      return botAllocate(createBot("survivor"), state); // default meta
     };
     expect(laneStat(5)).toBe("strength"); // early melee
     expect(laneStat(50)).toBe("intelligence"); // mid–high magic
     expect(laneStat(99)).toBe("strength"); // endgame melee (artifacts)
+  });
+
+  it("meta COMMITS its lane at spin-up and does not thrash as the hero levels", () => {
+    // A bot spun up in the nightmare mid-game locks MAGIC and keeps allocating
+    // INT even after it levels into the endgame band — spent points can't be
+    // reallocated, so the lane is decided once, not re-evaluated per level.
+    const state = startGame();
+    state.player.level = 50; // constructed mid-game → magic
+    const bot = createBot("survivor");
+    expect(botAllocate(bot, state)).toBe("intelligence");
+    state.player.level = 99; // now at the cap — lane stays put
+    expect(botAllocate(bot, state)).toBe("intelligence");
+    expect(bot.metaLaneChoice).toBe("magic");
   });
 });
 

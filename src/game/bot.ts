@@ -182,6 +182,17 @@ export type Bot = {
    */
   orbitSign?: number;
   /**
+   * The META profile's COMMITTED weapon lane — frozen the first time the bot
+   * allocates a point, off the hero's level THEN (its construction/starting
+   * level), and held for the rest of the run. A hero can't reallocate spent
+   * points, so the lane is decided once at spin-up (melee early, magic from the
+   * nightmare-armored mid-game, melee at the artifact cap — see {@link metaLane})
+   * rather than thrashed per level. Per-bot memory keyed off pure state, so a
+   * fresh bot on the same seed freezes the same lane — determinism holds. Unused
+   * by the fixed/`auto` profiles.
+   */
+  metaLaneChoice?: WeaponClass;
+  /**
    * The label of the decision `botAct` took this tick (e.g. "SEEK CHEST",
    * "EXPLORE FOG", "GIVE GROUND") — surfaced over the hero's head by the BOT VIEW
    * debug overlay. Set via {@link think}; like `nav`, it's a pure per-bot
@@ -534,21 +545,28 @@ function nearestRepairKit(state: GameState): Item | undefined {
  * analytic paper sim spend points the same way from one definition. A fixed
  * profile (`melee`/`ranged`/`magic`/`balanced`) walks that build's rotation
  * outright; `auto` walks the EMERGENT lane's rotation (see {@link botLane}); the
- * default `meta` walks the LEVEL-BAND lane's rotation (melee → magic → melee, see
- * {@link metaLane}), so the same hero deepens whichever lane wins its current
- * stretch of the game.
+ * default `meta` walks the lane {@link metaLane} picks for the level the bot was
+ * SPUN UP at — frozen on the bot the first time it allocates and held for the
+ * run (melee early, magic from the nightmare-armored mid-game, melee at the
+ * artifact cap), so the lane is chosen once at construction rather than thrashed
+ * as the hero levels (spent points can't be reallocated).
  *
  * Keyed off total points already spent (not the level), so each individual
  * point rotates through the cycle rather than a whole level-up dumping into one
  * stat. Called whenever `pendingStatPoints > 0`.
  */
 export function botAllocate(bot: Bot, state: GameState): StatName {
-  const build =
-    bot.profile === "auto"
-      ? BUILD_ROTATION[botLane(state)]
-      : bot.profile === "meta"
-        ? BUILD_ROTATION[metaLane(state.player.level)]
-        : BUILD_ROTATION[bot.profile];
+  let build: StatName[];
+  if (bot.profile === "auto") {
+    build = BUILD_ROTATION[botLane(state)];
+  } else if (bot.profile === "meta") {
+    // Freeze the lane at the level the bot first allocates at (its starting
+    // level) and commit to it — see `Bot.metaLaneChoice`.
+    bot.metaLaneChoice ??= metaLane(state.player.level);
+    build = BUILD_ROTATION[bot.metaLaneChoice];
+  } else {
+    build = BUILD_ROTATION[bot.profile];
+  }
   const spent = Object.values(state.player.spentStats).reduce(
     (a, b) => a + b,
     0,

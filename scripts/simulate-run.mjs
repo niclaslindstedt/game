@@ -52,7 +52,9 @@ const { BALANCE_TUNING_DEFAULTS } = await import(
 const { BOT_STRATEGIES, BOT_PROFILES, BOT_POSTURES } = await import(
   path.join(root, "src/game/bot.ts")
 );
-const { STAT_BUILDS } = await import(path.join(root, "src/game/builds.ts"));
+const { STAT_BUILDS, metaLane } = await import(
+  path.join(root, "src/game/builds.ts")
+);
 
 // ---- Flags ---------------------------------------------------------------------
 
@@ -245,10 +247,17 @@ const startLoadoutFor = (profile) =>
         seed,
         weaponTier: gearTier,
         gearTier,
-        // Only the fixed stat-BUILDS synthesize a biased starting kit; the
-        // emergent `auto` and the level-band `meta` arrive as the neutral
-        // generalist (no single lane to pre-load gear for).
-        build: profile === "auto" || profile === "meta" ? undefined : profile,
+        // The fixed stat-BUILDS synthesize a biased starting kit; the level-band
+        // `meta` resolves its lane from the level it's SPUN UP at (magic in the
+        // nightmare mid-game, melee at the artifact cap) so its starting kit
+        // matches the lane it will commit to. The emergent `auto` has no lane to
+        // pre-load for, so it arrives as the neutral generalist.
+        build:
+          profile === "meta"
+            ? metaLane(resolvedStartLevel)
+            : profile === "auto"
+              ? undefined
+              : profile,
       });
 
 // ---- Run ------------------------------------------------------------------------
