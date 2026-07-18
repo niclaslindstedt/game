@@ -27,6 +27,10 @@ default:
   # Bodies packed close the hero will still march straight through; above it he
   # holds at reach and thins the front line first.
   pushThroughMax: 99
+  # Circle-strafe arc (radians) the hero advances around a target he's holding
+  # at weapon range — a moving orbit slips enemy fire while his auto-aimed
+  # weapon keeps hitting. 0 = the old stand-still hold.
+  orbitStep: 0.6
 
 # Per-level overrides. Add a block under a level id to bend a knob for that map.
 levels:

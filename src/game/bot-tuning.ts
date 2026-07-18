@@ -53,6 +53,11 @@ export type BotTuning = {
    * macro goal straight through; above it he holds at reach and thins the front
    * line first instead of walking into a thick field. */
   pushThroughMax: number;
+  /** CIRCLE-STRAFE arc (radians) the hero advances around a target he's holding
+   * at weapon range — the tangential lead that turns a static weapon-range hold
+   * into a moving orbit, so enemy shots aimed at his current spot slip past
+   * while his auto-aimed weapon keeps hitting. 0 = stand still (the old hold). */
+  orbitStep: number;
   /** The three posture rows (aggro/balanced/flee). */
   postures: Record<"aggro" | "balanced" | "flee", PostureTuning>;
 };
@@ -64,6 +69,7 @@ export const BOT_TUNING_DEFAULTS: BotTuning = {
   engageRangeFrac: 0.8,
   armApproachStandoff: 140,
   pushThroughMax: 2,
+  orbitStep: 0.6,
   postures: {
     // Trades safety for kills: fights up close, tolerates a denser ring.
     aggro: { standoffMul: 0.65, fleeHp: 0.28, surround: 7 },
