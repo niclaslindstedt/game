@@ -105,13 +105,15 @@ export type DialogueScenes = "on" | "off";
  * `setCutscenesEnabled` — a presentation gate only. */
 export type Cutscenes = "on" | "off";
 
-/** GAME SPEED (SETTINGS → GAME SPEED): how fast the run plays. The whole
- * simulation is fast-forwarded by running MORE fixed game-loop steps per frame
- * — never bigger steps — so `1` is real time and `2`/`3` run the run twice /
- * three times as fast while staying deterministic (the hero acts autonomously,
- * so a brisker pace just gets through a level sooner). Chosen before a run and
- * read app-side by the game loop (GameScreen `simSpeed`) — a pure pacing lever,
- * so it needs no engine setter. Automated bot playtests can crank it higher via
+/** GAME SPEED: how fast a run plays. The whole simulation is fast-forwarded by
+ * running MORE fixed game-loop steps per frame — never bigger steps — so `1` is
+ * real time and `2`/`4`/`8` run the run that many times as fast while staying
+ * deterministic. A DEVELOPER control, not a user setting: it's chosen in the
+ * DEVELOPER → BOT VIEW flow (the GAME SPEED step shown after difficulty + level)
+ * so the autopilot can blitz a level for a quick read — a normal player never
+ * sees it and plays at `1`. Persisted like the other developer flags and read
+ * app-side by the game loop (GameScreen `simSpeed`); a pure pacing lever, so it
+ * needs no engine setter. Automated bot playtests can crank it higher still via
  * the `?speed=` URL param / `window.__speed` debug hook. */
 export type GameSpeed = number;
 
@@ -151,7 +153,8 @@ export type GameSettings = {
   dialogue: DialogueScenes;
   /** Display preference: prelude cutscenes that open a level (see Cutscenes). */
   cutscenes: Cutscenes;
-  /** How fast the run plays — real time (1) up to a brisk 3× (see GameSpeed). */
+  /** Developer fast-forward: how fast a run plays, real time (1) up to 8×,
+   * chosen in the DEVELOPER → BOT VIEW flow (see GameSpeed). */
   gameSpeed: GameSpeed;
   /** Developer slider: scales the OVERKILL corpse launch — how far an
    * overpowered kill flings the mob flying (see GameScreen `corpseLaunch`).
@@ -214,8 +217,8 @@ function defaults(): GameSettings {
     // talking turns dialogue and/or cutscenes off.
     dialogue: "on",
     cutscenes: "on",
-    // Runs play at real time out of the box; a player who wants to blitz the
-    // autonomous run dials GAME SPEED up to 2× or 3×.
+    // Runs play at real time; only a developer changes this, from the BOT VIEW
+    // flow, to fast-forward the autopilot (a normal player never sees it).
     gameSpeed: 1,
     // The overkill launch ships at 1× — a dev dials it up or down live.
     knockback: 1,
@@ -248,11 +251,11 @@ export const KNOCKBACK_MAX = 3;
 const clampKnockback = (v: number) =>
   Math.round(Math.min(KNOCKBACK_MAX, Math.max(0, v)) * 20) / 20;
 
-/** The GAME SPEED choices the SETTINGS row cycles through — real time up to a
- * brisk 3× for the autonomous run. Kept discrete so the menu row cycles cleanly
- * (bot playtests bypass this and go higher via `?speed=` / `__speed`). Shared by
- * the menu row and the stored-value clamp. */
-export const GAME_SPEEDS = [1, 2, 3];
+/** The GAME SPEED choices the DEVELOPER → BOT VIEW step cycles through — real
+ * time up to a brisk 8× fast-forward for the autopilot. Kept discrete so the
+ * row cycles cleanly (bot playtests bypass this and go higher via `?speed=` /
+ * `__speed`). Shared by the menu row and the stored-value clamp. */
+export const GAME_SPEEDS = [1, 2, 4, 8];
 /** Snap a stored/patched game speed to one of the allowed steps, real time (1)
  * on anything unexpected. */
 const clampGameSpeed = (v: unknown): number => {

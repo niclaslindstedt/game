@@ -1,6 +1,6 @@
 ---
 type: Added
-title: Fast-forward
+title: Bot fast-forward
 ---
 
-A new GAME SPEED setting (and matching `?speed=` / `__speed` bot-playtest hook) fast-forwards a run — the autonomous hero plays out the level at up to 3× real time.
+DEVELOPER → BOT VIEW now has a GAME SPEED step (after picking difficulty and level) that fast-forwards the autopilot run up to 8× — it runs more game-loop steps per frame, so it blitzes a level deterministically for a quick read (also driveable headlessly via `?speed=` / `playtest.mjs --speed`).
