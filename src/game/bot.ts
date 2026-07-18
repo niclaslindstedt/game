@@ -27,11 +27,11 @@ import { weaponDef } from "./defs/equipment.ts";
 import { spellDef } from "./defs/spells.ts";
 import {
   bestMedkitTier,
+  committedLane,
   equipmentMaxDurability,
   heroSpellStat,
   isSpellAvailable,
   isWeaponBroken,
-  REQ_STAT,
 } from "./items.ts";
 import type {
   Enemy,
@@ -589,17 +589,9 @@ export function botAllocate(bot: Bot, state: GameState): StatName {
  * level 1.
  */
 function botLane(state: GameState): WeaponClass {
-  const stats = state.player.stats;
-  const held = weaponDef(state.player.equipment.weapon.defId).class;
-  let lane = held;
-  let best = stats[REQ_STAT[held]];
-  for (const c of ["melee", "ranged", "magic"] as const) {
-    if (stats[REQ_STAT[c]] > best) {
-      best = stats[REQ_STAT[c]];
-      lane = c;
-    }
-  }
-  return lane;
+  // Shared with the auto-equip's on-lane preference (`weaponScore`), so the
+  // lane the bot spends points on and the lane its gear favours are ONE rule.
+  return committedLane(state);
 }
 
 // ---- Strategy bodies -------------------------------------------------------
@@ -1135,7 +1127,10 @@ function exploreTarget(state: GameState, tune: BotTuning): Vec2 | null {
       const dSq = (wx - pos.x) * (wx - pos.x) + (wy - pos.y) * (wy - pos.y);
       if (dSq > reachSq) continue;
       const band = axis
-        ? Math.min(bands - 1, Math.floor(axisProgress(axis, { x: wx, y: wy }) * bands))
+        ? Math.min(
+            bands - 1,
+            Math.floor(axisProgress(axis, { x: wx, y: wy }) * bands),
+          )
         : 0;
       if (band > maxBand) continue;
       if (band > bestBand || (band === bestBand && dSq >= bestDistSq)) continue;
@@ -1197,7 +1192,12 @@ function trackExploreStall(bot: Bot, state: GameState): void {
   const frac = exploredFraction(state);
   const now = state.stats.timeMs;
   if (!bot.explore || bot.explore.levelId !== state.level.id) {
-    bot.explore = { levelId: state.level.id, mark: frac, markMs: now, done: false };
+    bot.explore = {
+      levelId: state.level.id,
+      mark: frac,
+      markMs: now,
+      done: false,
+    };
     return;
   }
   const e = bot.explore;

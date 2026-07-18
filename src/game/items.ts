@@ -158,6 +158,29 @@ export const REQ_STAT: Record<WeaponClass, StatName> = {
 };
 
 /**
+ * The weapon LANE the hero has committed to: the class whose REQUIRED attribute
+ * he has the most of, with a tie (a bare starter, nothing invested) falling
+ * back to the class in hand. A pure read of the hero's SPEC — so the auto-equip
+ * (`weaponScore`) can PREFER on-lane weapons: a STR-deep melee build keeps its
+ * blades instead of thrashing onto a marginally higher-DPS gun, and a hero
+ * stranded on an off-lane starter upgrades to his lane the moment one drops.
+ * This is the single source of truth the autopilot's `botLane` also reads.
+ */
+export function committedLane(state: GameState): WeaponClass {
+  const stats = state.player.stats;
+  const held = weaponDef(state.player.equipment.weapon.defId).class;
+  let lane: WeaponClass = held;
+  let best = stats[REQ_STAT[held]];
+  for (const c of ["melee", "ranged", "magic"] as const) {
+    if (stats[REQ_STAT[c]] > best) {
+      best = stats[REQ_STAT[c]];
+      lane = c;
+    }
+  }
+  return lane;
+}
+
+/**
  * Display name of an equipment instance, Diablo-style: a plain base type when
  * it rolled no affixes (regular tier), otherwise decorated with a prefix
  * and/or "of the X" suffix drawn from its affixes — CRUEL BEAKER OF THE FOX.
@@ -2308,11 +2331,18 @@ export function weaponScore(state: GameState, weapon: Equipment): number {
   const targets = def.projectile
     ? 1 + (assumed - 1) * WEAPON.aoeRealization
     : Math.min(weaponMeleeRealizedTargets(def), maxMeleeTargets(state));
+  // ON-LANE PREFERENCE: a weapon of the hero's committed lane (`committedLane`)
+  // is worth more to HIM than its raw budget — it rides his deepened attribute
+  // and keeps his build coherent — so it out-ranks a marginally stronger
+  // off-lane find rather than yanking him off his spec. See `WEAPON.laneAffinity`.
+  const laneBonus =
+    def.class === committedLane(state) ? WEAPON.laneAffinity : 1;
   return (
     ((weaponDamageFor(state, weapon) * 1000) /
       weaponCooldownFor(state, weapon)) *
     targets *
     critLift *
+    laneBonus *
     // Armor piercing on the weapon reads as effective damage against the armored
     // late game — fold it into the ranking so auto-equip prefers a piercing
     // weapon (a fraction of the pen, since it only pays against armored foes).

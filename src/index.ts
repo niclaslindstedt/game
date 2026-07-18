@@ -136,6 +136,7 @@ export {
   bankRepairKit,
   bankStaminaPotion,
   bestMedkitTier,
+  committedLane,
   computeMaxHp,
   computeMaxMana,
   computeMaxStamina,

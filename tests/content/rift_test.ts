@@ -184,8 +184,10 @@ describe("THE RIFT level def", () => {
     // kills-per-level curve yields a lower campaign level than the old
     // exponential did, so this is a floor, not the old exact figure.
     expect(loadout!.level).toBeGreaterThan(4);
-    // Carrying Mars's signature kit.
-    expect(loadout!.equipment.weapon.defId).toBe("cyber_katana");
+    // Carrying Mars's signature kit — its guaranteed early sidearm (the ranged
+    // SMART PISTOL the level now hands out first, so a hero has a kiting tool
+    // for the fleeing colony boss).
+    expect(loadout!.equipment.weapon.defId).toBe("smart_pistol");
     // Mars's best wardrobe rides along.
     expect(loadout!.equipment.chest?.defId).toBe("aegis_exoplate");
     expect(loadout!.equipment.charm?.defId).toBe("red_dust_charm");

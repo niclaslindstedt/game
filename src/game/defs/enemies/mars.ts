@@ -419,7 +419,7 @@ export const MARS_ENEMIES: Record<string, EnemyDef> = {
     hp: 700,
     speed: 42,
     radius: 20,
-    contactDamage: 34,
+    contactDamage: 30,
     critChance: 0.15,
     contactCooldownMs: 900,
     dialogue: [
@@ -469,11 +469,15 @@ export const MARS_ENEMIES: Record<string, EnemyDef> = {
     // Not a death rattle — the coward's exit, played through the same box as
     // he scrambles into the rift he tears open behind himself.
     lastWords: ["OKAY! OKAY! NOT THE FACE!", "BOARD MEETING. OTHER UNIVERSE."],
-    flees: { landmark: "rift" },
+    // The coward doesn't wait to be finished: past his panic phase he bolts
+    // into the rift at a quarter health, so the boss fight always resolves.
+    flees: { landmark: "rift", belowHpFrac: 0.25 },
     // The factory boss: he doesn't fight fair, he SHIPS — servo bots roll
-    // off the line mid-fight, and past a third he panics into overdrive.
+    // off the line mid-fight, and past a third he panics into overdrive. The
+    // add stream is kept thin enough that the hero can commit to the boss
+    // himself instead of being walled off by a line of servos.
     mechanics: {
-      summon: { defId: "servo_bot", count: 3, cooldownMs: 12000, maxAlive: 6 },
+      summon: { defId: "servo_bot", count: 2, cooldownMs: 13000, maxAlive: 4 },
     },
     phases: [
       {
@@ -481,9 +485,9 @@ export const MARS_ENEMIES: Record<string, EnemyDef> = {
         mechanics: {
           summon: {
             defId: "servo_bot",
-            count: 4,
-            cooldownMs: 10000,
-            maxAlive: 8,
+            count: 3,
+            cooldownMs: 11000,
+            maxAlive: 5,
           },
           enrage: { belowHpFrac: 0.35, speedMult: 1.35, damageMult: 1.25 },
         },

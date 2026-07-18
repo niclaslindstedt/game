@@ -117,6 +117,18 @@ export const WEAPON = {
    */
   meleeAoeRealized: { cone: 2.5, full: 3.5 },
   /**
+   * LANE AFFINITY — how much the auto-equip ranking (`weaponScore`) favours a
+   * weapon of the class the hero has COMMITTED to (his deepest required
+   * attribute, `committedLane`). An on-lane weapon's score is multiplied by
+   * this; off-lane weapons stay at 1×, so a marginally higher-DPS OFF-lane find
+   * can't yank a speccing hero off his blade (or his gun) and thrash the whole
+   * build — it must clear the on-lane weapon by this margin to win the slot.
+   * Two on-lane weapons compare unchanged (both scaled), and a hero stranded on
+   * an off-lane starter still upgrades to his on-lane weapon the moment one
+   * drops. 1 = no bias (pure DPS, the old behaviour).
+   */
+  laneAffinity: 1.3,
+  /**
    * Global damage scale on every weapon's catalog `damage` — the single lever
    * for "how hard does any weapon hit", the damage counterpart to
    * `baseCooldownMult`. Applied in `weaponDamageFor` (the one source of truth

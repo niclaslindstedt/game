@@ -111,6 +111,35 @@ describe("fleeing uniques", () => {
     ]);
   });
 
+  it("with belowHpFrac, bolts at the threshold instead of grinding to 0", () => {
+    const state = startGame();
+    clearStage(state);
+    state.enemies = [];
+    state.enemies.push(
+      makeEnemy(
+        {
+          pos: { x: state.player.pos.x + 80, y: state.player.pos.y },
+          hp: 100,
+          maxHp: 100,
+          powerScaled: true,
+          spoke: true,
+        },
+        "test_coward_early",
+      ),
+    );
+    equipBlaster(state);
+    const events = runUntilFled(state);
+
+    // It fled (off the board, bossFled booked, no kill) — same escape path.
+    expect(state.enemies).toHaveLength(0);
+    expect(events.some((e) => e.type === "bossFled")).toBe(true);
+    expect(state.stats.kills).toBe(0);
+    // The proof it triggered EARLY: it escaped having taken only the top slice
+    // of its bar (threshold 0.75), not the full ~100 a flee-at-0 would need.
+    expect(state.stats.damageDealt).toBeGreaterThan(0);
+    expect(state.stats.damageDealt).toBeLessThan(60);
+  });
+
   it("clears a killBoss objective — fled is gone", () => {
     const state = startGame();
     stageCoward(state);

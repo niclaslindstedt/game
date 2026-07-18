@@ -273,6 +273,34 @@ export const FIX_ENEMIES: Record<string, EnemyDef> = {
       tierBonus: 0,
     },
   },
+  // A THRESHOLD-FLEE unique (mirrors ELON MOSQUE's `belowHpFrac`): the coward
+  // bolts the instant his health crosses 75% of maxHp instead of grinding to 0,
+  // so the fight resolves early. Set high so the test reads unambiguously — a
+  // plain flee-at-0 would have to eat the whole 100 hp bar.
+  test_coward_early: {
+    id: "test_coward_early",
+    name: "TEST EARLY COWARD",
+    role: "boss",
+    sprite: "test_coward",
+    hp: 100,
+    speed: 30,
+    radius: 14,
+    contactDamage: 20,
+    critChance: 0.1,
+    contactCooldownMs: 900,
+    lastWords: ["NOT THE FACE...", "GOODBYE..."],
+    flees: { landmark: "test_rift", belowHpFrac: 0.75 },
+    ai: { aggroRadius: 280, leashRadius: 460 },
+    loot: {
+      items: ["test_hammer"],
+      weapons: 0,
+      gear: 0,
+      xpArrows: 1,
+      repairs: 0,
+      medkits: 1,
+      tierBonus: 0,
+    },
+  },
 };
 
 // A SHOOTER elite (mirrors the Eastworld GROK controllers): fires hostile

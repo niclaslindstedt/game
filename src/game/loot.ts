@@ -494,6 +494,20 @@ export function hitEnemy(
   // sweep that triggered it.
   if (opts?.rollAccuracy) queueWeaponProcs(state, enemy, "hit");
 
+  // A THRESHOLD-FLEE boss doesn't need grinding to 0: the coward bolts the
+  // instant his health crosses `belowHpFrac`, so the fight reliably RESOLVES
+  // against a fast, summoning boss. Snap hp to 0 so the shared flee path below
+  // books the rout, its guaranteed drops, and the parting words — the same
+  // escape, just triggered early. The overkill XP scaler reads the small last
+  // blow against full maxHp, so a routed boss still pays out like a win.
+  if (
+    enemy.hp > 0 &&
+    def.flees?.belowHpFrac !== undefined &&
+    enemy.hp <= enemy.maxHp * def.flees.belowHpFrac
+  ) {
+    enemy.hp = 0;
+  }
+
   if (enemy.hp > 0) {
     // KNOCKBACK (config `KNOCKBACK`): the hero's own melee/ranged blow shoves
     // the surviving mob back — never a killing blow (the corpse launch owns
