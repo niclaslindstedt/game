@@ -401,12 +401,14 @@ placedItems:
     pos:
       x: 1820
       y: 580
-  # THE ZAI PROBE on the boss approach - the machine-mind reveal made physical.
+  # THE ZAI PROBE on the boss approach - the machine-mind reveal made physical,
+  # caught in the pull of the north-flank black hole (2100,400): the paper trail
+  # snagged on an event horizon, a dash-past-the-hole grab.
   - kind: story
     defId: zai_probe
     pos:
-      x: 2340
-      y: 620
+      x: 2100
+      y: 490
   - kind: medkit
     pos:
       x: 2300
