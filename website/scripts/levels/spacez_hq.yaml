@@ -114,15 +114,6 @@ rareSpawns:
     - night_shift_temp
   unique:
     - employee_of_the_month
-# HARD-CODED per-difficulty mob levels [easy, medium, hard, nightmare] (JESUS
-# stays player-relative). This is the LEVEL DEFAULT — the opening scatter, waves
-# and any spawn point that doesn't override it use this. The aisle spawn points
-# below RAMP their own levels up as the hero pushes deeper (see each `mobLevels`).
-# An entry is an exact level or a rolled [min, max] range.
-mobLevels: [[1, 7], [1, 7], [3, 10], [42, 45]]
-# INTENDED hero level per difficulty [easy, medium, hard, nightmare] — the
-# design-intent anchor the map-layout tool colours spawner CON against.
-intendedLevel: [3, 3, 6, 43]
 # The ambient horde is authored as SPAWN POINTS (see `spawners` below), not a
 # banded scatter or a continuous wave — so `spawns` holds only the PINNED set
 # pieces: the five speaking elites, the unique locker guardian, and the boss.

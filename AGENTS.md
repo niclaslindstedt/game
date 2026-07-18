@@ -418,7 +418,11 @@ render them are `website/src/game/DialogueOverlay.tsx` and `CutsceneOverlay.tsx`
 - **Levels are compiled from YAML**, the same way. `website/scripts/levels/<id>.yaml`
   is the source of truth; `make levels` (folded into `make assets`, plus a root
   `pretypecheck`) validates it against the live engine catalogs and generates
-  `src/generated/levels.ts`, which `src/game/defs/levels/index.ts` reads. That
+  `src/generated/levels.ts`, which `src/game/defs/levels/index.ts` reads. The
+  per-difficulty × per-map LEVEL LADDER — each map's default mob band + intended
+  hero level per rung — lives in `website/scripts/ladder.yaml` (NOT in the level
+  files); `loadLevels()` stamps `mobLevels` + `intendedLevel` onto every def from
+  it, so the con viz and the engine read one ladder. That
   file is **gitignored and regenerated** — never edit or commit it. The
   round-trip guard (`tests/content/yaml_roundtrip_test.ts`) pins the compiled
   catalog to `tests/content/fixtures/levels-snapshot.json`; accept an intentional

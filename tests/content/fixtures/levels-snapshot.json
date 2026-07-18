@@ -156,30 +156,6 @@
           "employee_of_the_month"
         ]
       },
-      "mobLevels": [
-        [
-          1,
-          7
-        ],
-        [
-          1,
-          7
-        ],
-        [
-          3,
-          10
-        ],
-        [
-          42,
-          45
-        ]
-      ],
-      "intendedLevel": [
-        3,
-        3,
-        6,
-        43
-      ],
       "spawns": [
         {
           "enemy": "night_manager",
@@ -1311,7 +1287,31 @@
             "item": "xp"
           }
         ]
-      }
+      },
+      "mobLevels": [
+        [
+          1,
+          7
+        ],
+        [
+          1,
+          7
+        ],
+        [
+          3,
+          10
+        ],
+        [
+          42,
+          45
+        ]
+      ],
+      "intendedLevel": [
+        6,
+        6,
+        8,
+        42
+      ]
     },
     "moon": {
       "id": "moon",
@@ -1461,30 +1461,6 @@
           "the_thirteenth_man"
         ]
       },
-      "mobLevels": [
-        [
-          7,
-          13
-        ],
-        [
-          7,
-          14
-        ],
-        [
-          10,
-          17
-        ],
-        [
-          45,
-          48
-        ]
-      ],
-      "intendedLevel": [
-        7,
-        7,
-        10,
-        46
-      ],
       "spawns": [
         {
           "enemy": "apollo_ghost",
@@ -1493,10 +1469,10 @@
             "y": 1120
           },
           "level": [
-            13,
+            11,
+            12,
             14,
-            17,
-            48
+            44
           ],
           "hp": [
             220,
@@ -1514,8 +1490,8 @@
           "level": [
             13,
             14,
-            17,
-            48
+            16,
+            45
           ],
           "hp": [
             240,
@@ -1531,10 +1507,10 @@
             "y": 500
           },
           "level": [
-            13,
-            14,
-            17,
-            48
+            15,
+            16,
+            18,
+            47
           ],
           "hp": [
             260,
@@ -1550,10 +1526,10 @@
             "y": 940
           },
           "level": [
-            13,
-            14,
+            16,
             17,
-            48
+            19,
+            47
           ],
           "hp": [
             240,
@@ -1569,8 +1545,8 @@
             "y": 1470
           },
           "level": [
-            10,
             11,
+            12,
             14,
             45
           ],
@@ -1588,9 +1564,9 @@
             "y": 1440
           },
           "level": [
-            14,
-            15,
+            17,
             18,
+            20,
             48
           ],
           "hp": [
@@ -1607,9 +1583,9 @@
             "y": 260
           },
           "level": [
-            15,
-            16,
+            18,
             19,
+            21,
             49
           ],
           "hp": [
@@ -1710,79 +1686,7 @@
             "x": 500,
             "y": 1280
           },
-          "maxAlive": 15,
-          "mobLevels": [
-            [
-              7,
-              8
-            ],
-            [
-              7,
-              8
-            ],
-            [
-              10,
-              11
-            ],
-            [
-              45,
-              46
-            ]
-          ],
-          "triggerRadius": 560,
-          "lingering": 12,
-          "members": [
-            {
-              "enemy": "wisp",
-              "count": 110
-            }
-          ]
-        },
-        {
-          "id": "low",
-          "at": {
-            "x": 900,
-            "y": 1120
-          },
-          "maxAlive": 16,
-          "mobLevels": [
-            [
-              8,
-              9
-            ],
-            [
-              8,
-              9
-            ],
-            [
-              11,
-              12
-            ],
-            [
-              45,
-              46
-            ]
-          ],
-          "triggerRadius": 520,
-          "lingering": 10,
-          "members": [
-            {
-              "enemy": "wisp",
-              "count": 110
-            },
-            {
-              "enemy": "ghost",
-              "count": 60
-            }
-          ]
-        },
-        {
-          "id": "climb",
-          "at": {
-            "x": 1040,
-            "y": 720
-          },
-          "maxAlive": 16,
+          "maxAlive": 10,
           "mobLevels": [
             [
               9,
@@ -1794,27 +1698,99 @@
             ],
             [
               12,
-              14
+              13
             ],
             [
-              46,
-              47
+              42,
+              43
             ]
           ],
-          "triggerRadius": 500,
-          "lingering": 10,
+          "triggerRadius": 560,
+          "lingering": 8,
           "members": [
             {
               "enemy": "wisp",
-              "count": 70
+              "count": 55
+            }
+          ]
+        },
+        {
+          "id": "low",
+          "at": {
+            "x": 900,
+            "y": 1120
+          },
+          "maxAlive": 10,
+          "mobLevels": [
+            [
+              10,
+              11
+            ],
+            [
+              10,
+              12
+            ],
+            [
+              13,
+              14
+            ],
+            [
+              43,
+              44
+            ]
+          ],
+          "triggerRadius": 520,
+          "lingering": 6,
+          "members": [
+            {
+              "enemy": "wisp",
+              "count": 40
             },
             {
               "enemy": "ghost",
-              "count": 90
+              "count": 20
+            }
+          ]
+        },
+        {
+          "id": "climb",
+          "at": {
+            "x": 1040,
+            "y": 720
+          },
+          "maxAlive": 10,
+          "mobLevels": [
+            [
+              11,
+              12
+            ],
+            [
+              11,
+              13
+            ],
+            [
+              14,
+              15
+            ],
+            [
+              44,
+              45
+            ]
+          ],
+          "triggerRadius": 500,
+          "lingering": 6,
+          "members": [
+            {
+              "enemy": "wisp",
+              "count": 22
+            },
+            {
+              "enemy": "ghost",
+              "count": 33
             },
             {
               "enemy": "wraith",
-              "count": 40
+              "count": 12
             }
           ]
         },
@@ -1824,39 +1800,39 @@
             "x": 1360,
             "y": 520
           },
-          "maxAlive": 16,
+          "maxAlive": 10,
           "mobLevels": [
             [
-              10,
-              11
+              12,
+              13
             ],
             [
-              10,
-              12
+              12,
+              14
             ],
             [
-              13,
-              15
+              15,
+              16
             ],
             [
-              46,
-              47
+              44,
+              46
             ]
           ],
           "triggerRadius": 500,
-          "lingering": 8,
+          "lingering": 6,
           "members": [
             {
               "enemy": "ghost",
-              "count": 90
+              "count": 33
             },
             {
               "enemy": "wraith",
-              "count": 70
+              "count": 20
             },
             {
               "enemy": "optimusk",
-              "count": 20
+              "count": 7
             }
           ]
         },
@@ -1866,39 +1842,39 @@
             "x": 1540,
             "y": 980
           },
-          "maxAlive": 16,
+          "maxAlive": 10,
           "mobLevels": [
             [
-              10,
-              11
-            ],
-            [
-              10,
-              12
+              13,
+              14
             ],
             [
               13,
               15
             ],
             [
-              46,
+              16,
+              17
+            ],
+            [
+              45,
               47
             ]
           ],
           "triggerRadius": 500,
-          "lingering": 8,
+          "lingering": 6,
           "members": [
             {
               "enemy": "ghost",
-              "count": 70
+              "count": 28
             },
             {
               "enemy": "wraith",
-              "count": 80
+              "count": 24
             },
             {
               "enemy": "optimusk",
-              "count": 30
+              "count": 8
             }
           ]
         },
@@ -1908,39 +1884,39 @@
             "x": 1860,
             "y": 1180
           },
-          "maxAlive": 16,
+          "maxAlive": 10,
           "mobLevels": [
             [
-              11,
-              12
-            ],
-            [
-              11,
-              13
-            ],
-            [
-              14,
+              15,
               16
             ],
             [
-              47,
+              15,
+              17
+            ],
+            [
+              17,
+              19
+            ],
+            [
+              46,
               48
             ]
           ],
           "triggerRadius": 480,
-          "lingering": 8,
+          "lingering": 6,
           "members": [
             {
               "enemy": "wraith",
-              "count": 60
+              "count": 26
             },
             {
               "enemy": "ghost",
-              "count": 50
+              "count": 20
             },
             {
               "enemy": "optimusk",
-              "count": 30
+              "count": 9
             }
           ]
         },
@@ -1950,23 +1926,23 @@
             "x": 2080,
             "y": 440
           },
-          "maxAlive": 15,
+          "maxAlive": 10,
           "mobLevels": [
             [
-              11,
-              12
+              16,
+              18
             ],
             [
-              11,
-              13
+              16,
+              18
             ],
             [
-              14,
-              17
+              18,
+              20
             ],
             [
               47,
-              48
+              49
             ]
           ],
           "triggerRadius": 360,
@@ -1974,15 +1950,15 @@
           "members": [
             {
               "enemy": "wraith",
-              "count": 70
+              "count": 24
             },
             {
               "enemy": "optimusk",
-              "count": 50
+              "count": 18
             },
             {
               "enemy": "ghost",
-              "count": 40
+              "count": 13
             }
           ]
         }
@@ -2294,7 +2270,31 @@
             "weapon": "moons_blade"
           }
         ]
-      }
+      },
+      "mobLevels": [
+        [
+          9,
+          14
+        ],
+        [
+          9,
+          15
+        ],
+        [
+          12,
+          18
+        ],
+        [
+          45,
+          48
+        ]
+      ],
+      "intendedLevel": [
+        12,
+        12,
+        15,
+        44
+      ]
     },
     "mars": {
       "id": "mars",
@@ -2419,30 +2419,6 @@
           "unit_zero"
         ]
       },
-      "mobLevels": [
-        [
-          13,
-          20
-        ],
-        [
-          14,
-          21
-        ],
-        [
-          17,
-          24
-        ],
-        [
-          48,
-          51
-        ]
-      ],
-      "intendedLevel": [
-        12,
-        13,
-        16,
-        49
-      ],
       "spawns": [
         {
           "enemy": "scout_rover",
@@ -3116,7 +3092,31 @@
             "weapon": "cyber_katana"
           }
         ]
-      }
+      },
+      "mobLevels": [
+        [
+          13,
+          20
+        ],
+        [
+          14,
+          21
+        ],
+        [
+          17,
+          24
+        ],
+        [
+          48,
+          51
+        ]
+      ],
+      "intendedLevel": [
+        18,
+        18,
+        21,
+        47
+      ]
     },
     "the_rift": {
       "id": "the_rift",
@@ -3278,30 +3278,6 @@
         ],
         "struckThought": "rift_asteroid"
       },
-      "mobLevels": [
-        [
-          20,
-          26
-        ],
-        [
-          21,
-          28
-        ],
-        [
-          24,
-          31
-        ],
-        [
-          51,
-          55
-        ]
-      ],
-      "intendedLevel": [
-        16,
-        17,
-        20,
-        52
-      ],
       "spawns": [
         {
           "enemy": "voidling",
@@ -3891,7 +3867,31 @@
             "weapon": "void_wand"
           }
         ]
-      }
+      },
+      "mobLevels": [
+        [
+          20,
+          26
+        ],
+        [
+          21,
+          28
+        ],
+        [
+          24,
+          31
+        ],
+        [
+          51,
+          55
+        ]
+      ],
+      "intendedLevel": [
+        25,
+        25,
+        29,
+        50
+      ]
     },
     "eastworld": {
       "id": "eastworld",
@@ -4069,30 +4069,6 @@
           "one_armed_bandit"
         ]
       },
-      "mobLevels": [
-        [
-          26,
-          32
-        ],
-        [
-          28,
-          34
-        ],
-        [
-          31,
-          38
-        ],
-        [
-          55,
-          58
-        ]
-      ],
-      "intendedLevel": [
-        20,
-        21,
-        24,
-        55
-      ],
       "spawns": [
         {
           "enemy": "cowbot",
@@ -5040,7 +5016,31 @@
           "nightmare": 51,
           "jesus": 69
         }
-      }
+      },
+      "mobLevels": [
+        [
+          26,
+          32
+        ],
+        [
+          28,
+          34
+        ],
+        [
+          31,
+          38
+        ],
+        [
+          55,
+          58
+        ]
+      ],
+      "intendedLevel": [
+        31,
+        32,
+        35,
+        54
+      ]
     },
     "the_bunker": {
       "id": "the_bunker",
@@ -5164,30 +5164,6 @@
           "the_mole"
         ]
       },
-      "mobLevels": [
-        [
-          25,
-          28
-        ],
-        [
-          25,
-          30
-        ],
-        [
-          27,
-          34
-        ],
-        [
-          54,
-          57
-        ]
-      ],
-      "intendedLevel": [
-        28,
-        29,
-        32,
-        56
-      ],
       "spawns": [
         {
           "enemy": "cia_agent",
@@ -6270,7 +6246,31 @@
           "nightmare": 51,
           "jesus": 69
         }
-      }
+      },
+      "mobLevels": [
+        [
+          25,
+          28
+        ],
+        [
+          25,
+          30
+        ],
+        [
+          27,
+          34
+        ],
+        [
+          54,
+          57
+        ]
+      ],
+      "intendedLevel": [
+        28,
+        28,
+        31,
+        55
+      ]
     }
   }
 }

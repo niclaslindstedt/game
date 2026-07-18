@@ -105,32 +105,42 @@ Optional `LevelDef` fields (all neutral when omitted; see `src/game/zones.ts`):
    cumulative-pool rule (the bunker idiom): later maps re-list every earlier
    stage's bases.** Forge any new base via `weapon-system`.
 
-## Mob levels are HARD-CODED per difficulty (`mobLevels`)
+## Mob levels come from the LADDER (`website/scripts/ladder.yaml`)
 
-Below JESUS, a mob's level is **authored in the level spec, not floated off the
-player's level.** Every level MUST declare a `mobLevels` tuple — the checker
-rejects one that doesn't — and JESUS alone keeps the old player-relative
-scaling (a JESUS hero has out-levelled every hand-authored number).
+Below JESUS, a mob's level is **authored, not floated off the player's level** —
+and the per-difficulty × per-map defaults live in ONE place: `ladder.yaml`. Each
+`[difficulty][map]` cell holds `hero` (the intended hero level on that map — the
+con anchor) and `mob: [lo, hi]` (the map's DEFAULT mob band). `loadLevels()`
+stamps these onto every def as `mobLevels` (the four [easy, medium, hard,
+nightmare] bands) and `intendedLevel` (the four hero anchors), so the numbers are
+never copied into a level file. JESUS is omitted (player-relative). Tune a map's
+whole difficulty by editing its ladder cells; the con viz + engine both follow.
 
-- **Shape:** `mobLevels: [easy, medium, hard, nightmare]` — four entries, one per
-  non-JESUS rung in ladder order. Each entry is an exact level (`5`) or a rolled
-  `[min, max]` range (`[3, 4]`), rolled per spawn. The resolved level drives BOTH
-  the mob's HP (via `mobHpLevelFactor`) and its loot (tier gates, dropped ilvl),
-  so a spawn is internally consistent.
-- **Level default + per-spawner override:** the level's top-level `mobLevels` is
-  the default every regular spawn reads (the opening scatter, `waves`, `packs`,
-  and any spawn point without its own). A `spawners:` point may set its own
-  `mobLevels` to RAMP within the map — a light opener, a hotter boss bay.
-- **Pinned elites/bosses (`spawns` with `at`) hard-code BOTH `level` and `hp`**,
-  each a per-difficulty tuple (JESUS relative). `level` sets the set piece's
-  `mlvl`; `hp` is its BASE healthbar, which the live power-match still multiplies
-  on top. Both are required on every pinned set piece.
-- **`intendedLevel: [easy, medium, hard, nightmare]`** (four single numbers) —
-  the design-intent anchor: the hero level the leveling curve puts a player at
-  while playing THIS map, per rung. The simulation ignores it; the `map-layout`
-  tool colours every spawn/mob by CON (its `mobLevels` mid minus this), so an
-  over/under-tuned ramp is visible at a glance. Author it to roughly the map's
-  opening mob band so the start reads EVEN and the boss bay reads TOUGH/BRUTAL.
+- **Level default (ladder) + per-spawner override (level YAML):** the ladder's
+  `mob` band is the default every regular spawn reads (opening scatter, `waves`,
+  `packs`, any spawn point without its own). A `spawners:` point may set its own
+  `mobLevels` to RAMP within the map — see the con-ramp rule below. A level MUST
+  NOT declare a top-level `mobLevels`/`intendedLevel` (the loader errors); those
+  belong to the ladder.
+- **Pinned elites/bosses (`spawns` with `at`) hard-code BOTH `level` and `hp`**
+  in the level YAML, each a per-difficulty tuple (JESUS relative). `level` sets
+  the `mlvl` (loot tier + con); `hp` is the BASE healthbar the power-match scales.
+
+### RAMP THE CON UP along the path (green → yellow → red)
+
+A good map gets **tougher as it progresses**: the `map-layout` con circles should
+read GREEN near START, YELLOW mid, and ORANGE/RED at the boss. Mobs should track
+the hero's own level as he climbs (killing the swarm levels him) and PULL A TOUCH
+AHEAD toward the end, so the finale cons hot. Author it by RAMPING each spawn
+point's `mobLevels` (and the pinned elites/boss) UP in path order — the opener
+cons even, the boss bay cons red.
+
+Judge it deterministically, no sim: the `map-layout` decode key prints **HERO IF
+CLEARED — the projected hero level at 25/50/75/100 % cleared** (XP is
+deterministic: kills × `mobLevelXp`). Compare that rise to the con circles: mobs
+should keep pace (con even) then pull ahead (con up). If the hero out-levels the
+mobs, the tail greys out — raise the late bands; if mobs sprint away, the tail
+goes solid red — ease them.
 
 ### The intended HERO ladder — mob levels TRACK it
 

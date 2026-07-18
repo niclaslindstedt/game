@@ -90,13 +90,6 @@ rareSpawns:
     - derelict_rover
   unique:
     - unit_zero
-# HARD-CODED per-difficulty mob levels [easy, medium, hard, nightmare];
-# JESUS stays player-relative. Placeholder ramp for this campaign slot —
-# retune when this level is reworked. A spawner may override per point.
-mobLevels: [[13, 20], [14, 21], [17, 24], [48, 51]]
-# INTENDED hero level per difficulty [easy, medium, hard, nightmare] — the
-# design-intent anchor the map-layout tool colours spawner CON against.
-intendedLevel: [12, 13, 16, 49]
 spawns:
   - enemy: scout_rover
     count: 20
