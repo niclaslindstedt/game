@@ -279,7 +279,7 @@ export function TitleScreen({
   onStart: (
     difficulty: Difficulty,
     levelId: string,
-    opts?: { skipIntro?: boolean },
+    opts?: { skipIntro?: boolean; botView?: boolean },
   ) => void;
   /** Present only while a run sits parked in memory (the player exited to the
    * menu from the pause screen). When set, the menu offers RESUME, which
@@ -329,6 +329,10 @@ export function TitleScreen({
   // so every level is reachable regardless of progress and picking one skips
   // the intro.
   const [warp, setWarp] = useState(false);
+  // BOT VIEW: the warp pickers were opened via DEVELOPER → BOT VIEW, so picking a
+  // level hands the run to the engine autopilot (a realistic arrival hero) rather
+  // than starting a normal playable run. Rides on top of `warp` (same pickers).
+  const [botView, setBotView] = useState(false);
   // The scrollable menu column: each screen change starts reading from the
   // top (the selected row's scrollIntoView would otherwise land a tall screen
   // — HOW TO PLAY — scrolled to its BACK row, hiding the content).
@@ -785,6 +789,7 @@ export function TitleScreen({
         action: () => {
           playUiSound(synth, "back");
           setWarp(false);
+          setBotView(false);
           setScreen("developer");
           setCursor(0);
         },
@@ -872,13 +877,15 @@ export function TitleScreen({
           const def = levelDef(id);
           const unlocked = warp || isLevelUnlocked(character, id, difficulty);
           const cleared = hasClearedLevel(character, id, difficulty);
-          const blurb = warp
-            ? "WARP - DROPS STRAIGHT IN"
-            : !unlocked
-              ? "LOCKED - CLEAR THE PREVIOUS LEVEL"
-              : cleared
-                ? "CLEARED - REPLAY"
-                : "NEW";
+          const blurb = botView
+            ? "BOT VIEW - WATCH THE BOT PLAY IT"
+            : warp
+              ? "WARP - DROPS STRAIGHT IN"
+              : !unlocked
+                ? "LOCKED - CLEAR THE PREVIOUS LEVEL"
+                : cleared
+                  ? "CLEARED - REPLAY"
+                  : "NEW";
           return {
             label: `${i + 1}. ${def.name}`,
             aria: `level-${id}`,
@@ -891,7 +898,11 @@ export function TitleScreen({
                 return;
               }
               playUiSound(synth, "start");
-              onStart(difficulty, id, warp ? { skipIntro: true } : undefined);
+              onStart(
+                difficulty,
+                id,
+                warp ? { skipIntro: true, botView } : undefined,
+              );
             },
           };
         }),
@@ -906,7 +917,7 @@ export function TitleScreen({
               blurb: "SECRET - WARP DROPS STRAIGHT IN",
               action: () => {
                 playUiSound(synth, "start");
-                onStart(difficulty, id, { skipIntro: true });
+                onStart(difficulty, id, { skipIntro: true, botView });
               },
             }))
           : []),
@@ -992,6 +1003,18 @@ export function TitleScreen({
           action: () => {
             playUiSound(synth, "confirm");
             setWarp(true);
+            setScreen("difficulty");
+            setCursor(0);
+          },
+        },
+        {
+          label: "BOT VIEW",
+          aria: "developer-bot-view",
+          blurb: "WATCH THE AUTOPILOT PLAY ANY LEVEL WITH A REAL HERO",
+          action: () => {
+            playUiSound(synth, "confirm");
+            setWarp(true);
+            setBotView(true);
             setScreen("difficulty");
             setCursor(0);
           },
@@ -1434,6 +1457,7 @@ export function TitleScreen({
     captureBind,
     difficulty,
     warp,
+    botView,
     hasFinePointer,
     roster,
     exportPicks,
@@ -1572,7 +1596,10 @@ export function TitleScreen({
         // The warp picker walks developer → difficulty → levels; Escape backs
         // out one rung at a time, leaving warp mode only once it returns to the
         // developer menu (from the warp difficulty picker).
-        if (screen === "difficulty" && warp) setWarp(false);
+        if (screen === "difficulty" && warp) {
+          setWarp(false);
+          setBotView(false);
+        }
         const back: Record<string, MenuScreen> = {
           play: "main",
           controls: "settings",

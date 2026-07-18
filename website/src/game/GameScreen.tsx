@@ -137,6 +137,7 @@ import {
 } from "./consumables.ts";
 
 import { cloneGameState } from "./checkpoint.ts";
+import { buildBotViewLoadout } from "./seedCharacters.ts";
 import {
   playAchievementHaptic,
   playEventHaptics,
@@ -520,6 +521,7 @@ export function GameScreen({
   onQuit,
   onExitToMenu,
   skipIntro: skipOpening = false,
+  botView = false,
   resume,
 }: {
   /** The hero playing this run — the run starts from their persistent build,
@@ -535,6 +537,10 @@ export function GameScreen({
   /** Warp-in (the title moon's long-press): drop straight into play, skipping
    * the prelude cutscene and the hero's level-intro monologue. */
   skipIntro?: boolean;
+  /** DEVELOPER → BOT VIEW: hand the run to the engine autopilot with a realistic
+   * leveled + rolled-gear hero, and print the bot's live decision over its head —
+   * a watchable, debuggable autoplay of any level/difficulty. */
+  botView?: boolean;
   /** Resuming a run parked in memory: adopt this frozen (paused) engine state
    * as-is instead of starting fresh. Consumed once — a later RETRY / NEXT
    * LEVEL in this same mount recreates the game normally. */
@@ -814,6 +820,12 @@ export function GameScreen({
     // the exact level, stats and items they carry right now — into any level,
     // any difficulty. A brand-new hero (no banked build yet) starts from the
     // authored fresh start (level 1, the difficulty's wall weapon).
+    // BOT VIEW drops a REALISTIC arrival hero (leveled + rolled gear for this
+    // map/difficulty) so the watched autopilot plays the level as an arriving
+    // player would, not from the character's own build.
+    const botViewLoadout = botView
+      ? buildBotViewLoadout(runLevelId, difficulty)
+      : null;
     const state =
       resumed ??
       (checkpoint
@@ -822,7 +834,7 @@ export function GameScreen({
             seed,
             runLevelId,
             difficulty,
-            characterRef.current.loadout ?? undefined,
+            botViewLoadout ?? characterRef.current.loadout ?? undefined,
             false,
             // Campaign progress the engine gates drops on (the bunker key
             // stays latent until Eastworld is cleared on this difficulty).
@@ -1031,18 +1043,21 @@ export function GameScreen({
       dev.__scenario = (spec) => applyScenario(state, spec);
     }
 
-    // Autoplay (?bot=<strategy>): the engine bot steers instead of the
-    // pointer and spends level-ups itself. An optional ?botProfile=<build>
-    // (melee/ranged/magic/balanced/auto) commits the hero to a stat-distribution
-    // build — a lane, or the even `balanced` spread. See the playtest skill.
+    // Autoplay: the engine bot steers instead of the pointer and spends level-ups
+    // itself. Turned on by DEVELOPER → BOT VIEW (a survivor bot, the realistic
+    // playstyle) or the `?bot=<strategy>` URL param. An optional
+    // ?botProfile=<build> (melee/ranged/magic/balanced/auto) commits the hero to a
+    // stat-distribution build — a lane, or the even `balanced` spread. See the
+    // playtest skill.
     const requested = params.get("bot");
     const requestedProfile = params.get("botProfile");
     const profile =
       requestedProfile && (BOT_PROFILES as string[]).includes(requestedProfile)
         ? (requestedProfile as BotProfile)
         : "auto";
-    const bot =
-      requested && (BOT_STRATEGIES as string[]).includes(requested)
+    const bot = botView
+      ? createBot("survivor", profile)
+      : requested && (BOT_STRATEGIES as string[]).includes(requested)
         ? createBot(requested as BotStrategy, profile)
         : null;
 
@@ -2627,6 +2642,22 @@ export function GameScreen({
         }
         drawEffects(ctx, debugEffects, camera, state.stats.timeMs, assets);
 
+        // BOT VIEW / debug: pin the autopilot's current decision (`bot.lastThought`,
+        // set by `botAct`) over the hero's head so what the bot is "thinking" each
+        // moment is legible while watching. Drawn statically (not the rising float
+        // channel) so a per-frame label reads steady, in the debug amber.
+        if (bot && (botView || showFps) && bot.lastThought) {
+          const font = assets.font;
+          const label = bot.lastThought;
+          const sx = Math.round(state.player.pos.x - camera.x);
+          const sy = Math.round(
+            state.player.pos.y - camera.y - PLAYER.radius - state.player.z - 14,
+          );
+          const tx = sx - Math.round(font.measure(label) / 2);
+          font.draw(ctx, label, tx + 1, sy + 1, { color: "#0b0d10" });
+          font.draw(ctx, label, tx, sy, { color: "#ffd23f" });
+        }
+
         // The live HUD minimap: paint the fog-of-war map (cached terrain +
         // live blips + the hero's pin) straight onto its canvas each frame, so
         // it tracks the run without a React re-render. Only mounted while the
@@ -2882,7 +2913,16 @@ export function GameScreen({
       pickupTimers.forEach(clearTimeout);
       if (pickupCardTimer) clearTimeout(pickupCardTimer);
     };
-  }, [assets, runId, difficulty, levelId, initialLevelId, skipOpening]);
+  }, [
+    assets,
+    runId,
+    difficulty,
+    levelId,
+    initialLevelId,
+    skipOpening,
+    botView,
+    showFps,
+  ]);
 
   if (!assets) {
     return <div className="game-loading">Loading…</div>;

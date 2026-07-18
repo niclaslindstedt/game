@@ -69,6 +69,9 @@ export function App() {
     // Warp-in from the title moon's long-press: skip the prelude and intro
     // monologue and drop straight into the level.
     skipIntro?: boolean;
+    // DEVELOPER → BOT VIEW: hand the run to the engine autopilot with a realistic
+    // arrival hero (see GameScreen `botView`).
+    botView?: boolean;
     // Resuming a run parked in memory: GameScreen adopts this live engine
     // state instead of starting a fresh one (see `parked` below).
     resume?: GameState;
@@ -155,6 +158,7 @@ export function App() {
           difficulty={run.difficulty}
           levelId={run.levelId}
           skipIntro={run.skipIntro}
+          botView={run.botView}
           resume={run.resume}
           // Exited to the menu from the pause screen: keep the frozen run in
           // memory (still paused) so CONTINUE can resume it, and drop to the
@@ -282,6 +286,7 @@ export function App() {
             difficulty,
             levelId,
             skipIntro: opts?.skipIntro,
+            botView: opts?.botView,
           });
         }}
         onNewGame={() => {

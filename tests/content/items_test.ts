@@ -100,7 +100,7 @@ describe("boss loot", () => {
     // seed that clears the (capped) rare roll the haul reads rare + guaranteed
     // magic. A fixed seed pins that clear, since the ceiling makes each rolled
     // piece ~85%, not guaranteed.
-    const state = startGame(3);
+    const state = startGame(1);
     state.player.level = 7;
     state.player.stats.luck = 30;
     state.items = [];
@@ -408,6 +408,10 @@ describe("inventory", () => {
   it("nudges once when a full bag turns away loot, then throttles the cue", () => {
     const state = startGame();
     state.enemies = [];
+    // Silence the level's spawn points too: the cooldown re-nudge steps a big dt,
+    // during which an armed moon spawner would otherwise emit a mob into the
+    // staged field and perturb the pickup probe.
+    stopWaves(state);
     state.player.level = 5;
     state.player.equipment.chest = makeVest(90, "magic");
     state.player.inventory = state.player.inventory.map((_, i) =>

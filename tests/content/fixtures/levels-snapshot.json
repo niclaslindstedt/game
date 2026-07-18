@@ -1402,32 +1402,44 @@
           "y": 1320
         },
         {
-          "x": 560,
-          "y": 1220
+          "x": 520,
+          "y": 1360
         },
         {
-          "x": 760,
-          "y": 1180
+          "x": 700,
+          "y": 1300
         },
         {
-          "x": 1000,
-          "y": 900
+          "x": 880,
+          "y": 1140
+        },
+        {
+          "x": 1020,
+          "y": 720
         },
         {
           "x": 1180,
-          "y": 500
+          "y": 420
         },
         {
-          "x": 1440,
+          "x": 1340,
           "y": 520
         },
         {
-          "x": 1650,
-          "y": 600
+          "x": 1520,
+          "y": 960
+        },
+        {
+          "x": 1690,
+          "y": 1300
+        },
+        {
+          "x": 1880,
+          "y": 1260
         },
         {
           "x": 1900,
-          "y": 420
+          "y": 600
         },
         {
           "x": 2130,
@@ -1465,8 +1477,8 @@
         {
           "enemy": "apollo_ghost",
           "at": {
-            "x": 820,
-            "y": 1160
+            "x": 880,
+            "y": 1120
           },
           "level": [
             13,
@@ -1484,8 +1496,8 @@
         {
           "enemy": "prospector",
           "at": {
-            "x": 1180,
-            "y": 640
+            "x": 1040,
+            "y": 720
           },
           "level": [
             13,
@@ -1503,8 +1515,8 @@
         {
           "enemy": "quarantine_medic",
           "at": {
-            "x": 1480,
-            "y": 460
+            "x": 1340,
+            "y": 500
           },
           "level": [
             13,
@@ -1522,8 +1534,8 @@
         {
           "enemy": "cartographer",
           "at": {
-            "x": 1720,
-            "y": 540
+            "x": 1560,
+            "y": 940
           },
           "level": [
             13,
@@ -1541,8 +1553,8 @@
         {
           "enemy": "lost_cosmonaut",
           "at": {
-            "x": 640,
-            "y": 1500
+            "x": 500,
+            "y": 1470
           },
           "level": [
             10,
@@ -1560,8 +1572,8 @@
         {
           "enemy": "the_thirteenth_man",
           "at": {
-            "x": 1960,
-            "y": 1200
+            "x": 1980,
+            "y": 1440
           },
           "level": [
             14,
@@ -1600,10 +1612,10 @@
         {
           "shape": "circle",
           "pos": {
-            "x": 1880,
-            "y": 460
+            "x": 1900,
+            "y": 600
           },
-          "radius": 185,
+          "radius": 175,
           "label": "STILL POINT"
         }
       ],
@@ -1611,20 +1623,20 @@
         {
           "shape": "rect",
           "rect": {
-            "x": 500,
-            "y": 1380,
-            "width": 300,
-            "height": 212
+            "x": 380,
+            "y": 1410,
+            "width": 280,
+            "height": 180
           },
           "label": "CRASHED LANDER"
         },
         {
           "shape": "rect",
           "rect": {
-            "x": 1820,
-            "y": 1060,
-            "width": 300,
-            "height": 292
+            "x": 1800,
+            "y": 1350,
+            "width": 360,
+            "height": 210
           },
           "label": "THE THIRTEENTH GRAVE"
         }
@@ -1632,14 +1644,14 @@
       "chests": [
         {
           "at": {
-            "x": 660,
+            "x": 520,
             "y": 1500
           }
         },
         {
           "at": {
-            "x": 1970,
-            "y": 1250
+            "x": 1980,
+            "y": 1480
           }
         }
       ],
@@ -1649,34 +1661,34 @@
           "intensity": 0.5
         },
         {
-          "at": 0.18,
+          "at": 0.16,
           "intensity": 0.85
         },
         {
-          "at": 0.45,
+          "at": 0.42,
           "intensity": 1.15
         },
         {
-          "at": 0.62,
-          "intensity": 0.7
-        },
-        {
-          "at": 0.82,
+          "at": 0.66,
           "intensity": 1
         },
         {
+          "at": 0.84,
+          "intensity": 0.68
+        },
+        {
           "at": 1,
-          "intensity": 1.35
+          "intensity": 1.4
         }
       ],
       "merchantSpawns": [
         {
           "x": 1900,
-          "y": 500
+          "y": 640
         },
         {
-          "x": 1120,
-          "y": 720
+          "x": 1040,
+          "y": 760
         }
       ],
       "spawners": [
@@ -1684,7 +1696,7 @@
           "id": "open",
           "at": {
             "x": 500,
-            "y": 1240
+            "y": 1280
           },
           "maxAlive": 15,
           "mobLevels": [
@@ -1710,17 +1722,17 @@
           "members": [
             {
               "enemy": "wisp",
-              "count": 100
+              "count": 110
             }
           ]
         },
         {
           "id": "low",
           "at": {
-            "x": 820,
-            "y": 1140
+            "x": 900,
+            "y": 1120
           },
-          "maxAlive": 15,
+          "maxAlive": 16,
           "mobLevels": [
             [
               8,
@@ -1744,7 +1756,7 @@
           "members": [
             {
               "enemy": "wisp",
-              "count": 120
+              "count": 110
             },
             {
               "enemy": "ghost",
@@ -1753,12 +1765,12 @@
           ]
         },
         {
-          "id": "mid",
+          "id": "climb",
           "at": {
-            "x": 1080,
-            "y": 760
+            "x": 1040,
+            "y": 720
           },
-          "maxAlive": 15,
+          "maxAlive": 16,
           "mobLevels": [
             [
               9,
@@ -1777,16 +1789,16 @@
               47
             ]
           ],
-          "triggerRadius": 520,
+          "triggerRadius": 500,
           "lingering": 10,
           "members": [
             {
               "enemy": "wisp",
-              "count": 90
+              "count": 70
             },
             {
               "enemy": "ghost",
-              "count": 100
+              "count": 90
             },
             {
               "enemy": "wraith",
@@ -1795,12 +1807,12 @@
           ]
         },
         {
-          "id": "upper",
+          "id": "top",
           "at": {
-            "x": 1450,
-            "y": 540
+            "x": 1360,
+            "y": 520
           },
-          "maxAlive": 15,
+          "maxAlive": 16,
           "mobLevels": [
             [
               10,
@@ -1837,10 +1849,94 @@
           ]
         },
         {
+          "id": "desc",
+          "at": {
+            "x": 1540,
+            "y": 980
+          },
+          "maxAlive": 16,
+          "mobLevels": [
+            [
+              10,
+              11
+            ],
+            [
+              10,
+              12
+            ],
+            [
+              13,
+              15
+            ],
+            [
+              46,
+              47
+            ]
+          ],
+          "triggerRadius": 500,
+          "lingering": 8,
+          "members": [
+            {
+              "enemy": "ghost",
+              "count": 70
+            },
+            {
+              "enemy": "wraith",
+              "count": 80
+            },
+            {
+              "enemy": "optimusk",
+              "count": 30
+            }
+          ]
+        },
+        {
+          "id": "low4",
+          "at": {
+            "x": 1860,
+            "y": 1180
+          },
+          "maxAlive": 16,
+          "mobLevels": [
+            [
+              11,
+              12
+            ],
+            [
+              11,
+              13
+            ],
+            [
+              14,
+              16
+            ],
+            [
+              47,
+              48
+            ]
+          ],
+          "triggerRadius": 480,
+          "lingering": 8,
+          "members": [
+            {
+              "enemy": "wraith",
+              "count": 60
+            },
+            {
+              "enemy": "ghost",
+              "count": 50
+            },
+            {
+              "enemy": "optimusk",
+              "count": 30
+            }
+          ]
+        },
+        {
           "id": "bay",
           "at": {
-            "x": 2020,
-            "y": 380
+            "x": 2080,
+            "y": 440
           },
           "maxAlive": 15,
           "mobLevels": [
@@ -1870,7 +1966,7 @@
             },
             {
               "enemy": "optimusk",
-              "count": 40
+              "count": 50
             },
             {
               "enemy": "ghost",
@@ -1883,11 +1979,37 @@
         {
           "kind": "boulder",
           "from": {
-            "x": 760,
+            "x": 680,
             "y": 200
           },
           "to": {
-            "x": 760,
+            "x": 680,
+            "y": 1040
+          },
+          "radius": 13,
+          "jumpable": false
+        },
+        {
+          "kind": "boulder",
+          "from": {
+            "x": 1180,
+            "y": 640
+          },
+          "to": {
+            "x": 1180,
+            "y": 1600
+          },
+          "radius": 13,
+          "jumpable": false
+        },
+        {
+          "kind": "boulder",
+          "from": {
+            "x": 1680,
+            "y": 200
+          },
+          "to": {
+            "x": 1680,
             "y": 1000
           },
           "radius": 13,
@@ -1896,12 +2018,12 @@
         {
           "kind": "boulder",
           "from": {
-            "x": 1180,
-            "y": 760
+            "x": 400,
+            "y": 1420
           },
           "to": {
-            "x": 1180,
-            "y": 1600
+            "x": 400,
+            "y": 1592
           },
           "radius": 13,
           "jumpable": false
@@ -1909,12 +2031,12 @@
         {
           "kind": "boulder",
           "from": {
-            "x": 1650,
-            "y": 200
+            "x": 640,
+            "y": 1420
           },
           "to": {
-            "x": 1650,
-            "y": 400
+            "x": 640,
+            "y": 1592
           },
           "radius": 13,
           "jumpable": false
@@ -1922,12 +2044,12 @@
         {
           "kind": "boulder",
           "from": {
-            "x": 1650,
-            "y": 780
+            "x": 400,
+            "y": 1592
           },
           "to": {
-            "x": 1650,
-            "y": 1600
+            "x": 640,
+            "y": 1592
           },
           "radius": 13,
           "jumpable": false
@@ -1935,11 +2057,11 @@
         {
           "kind": "boulder",
           "from": {
-            "x": 500,
+            "x": 1820,
             "y": 1380
           },
           "to": {
-            "x": 500,
+            "x": 1820,
             "y": 1592
           },
           "radius": 13,
@@ -1948,24 +2070,11 @@
         {
           "kind": "boulder",
           "from": {
-            "x": 800,
+            "x": 2140,
             "y": 1380
           },
           "to": {
-            "x": 800,
-            "y": 1592
-          },
-          "radius": 13,
-          "jumpable": false
-        },
-        {
-          "kind": "boulder",
-          "from": {
-            "x": 500,
-            "y": 1592
-          },
-          "to": {
-            "x": 800,
+            "x": 2140,
             "y": 1592
           },
           "radius": 13,
@@ -1975,37 +2084,11 @@
           "kind": "boulder",
           "from": {
             "x": 1820,
-            "y": 1060
+            "y": 1592
           },
           "to": {
-            "x": 1820,
-            "y": 1350
-          },
-          "radius": 13,
-          "jumpable": false
-        },
-        {
-          "kind": "boulder",
-          "from": {
-            "x": 2120,
-            "y": 1060
-          },
-          "to": {
-            "x": 2120,
-            "y": 1350
-          },
-          "radius": 13,
-          "jumpable": false
-        },
-        {
-          "kind": "boulder",
-          "from": {
-            "x": 1820,
-            "y": 1350
-          },
-          "to": {
-            "x": 2120,
-            "y": 1350
+            "x": 2140,
+            "y": 1592
           },
           "radius": 13,
           "jumpable": false
@@ -2030,22 +2113,22 @@
         {
           "kind": "xp",
           "pos": {
-            "x": 720,
+            "x": 560,
             "y": 1520
           }
         },
         {
           "kind": "medkit",
           "pos": {
-            "x": 1990,
-            "y": 1290
+            "x": 1940,
+            "y": 1500
           }
         }
       ],
       "obstacles": [
         {
           "kind": "moonrock",
-          "count": 26,
+          "count": 30,
           "radius": 8,
           "jumpable": false,
           "rockSizes": [
