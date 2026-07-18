@@ -1061,6 +1061,15 @@ export function GameScreen({
         ? createBot(requested as BotStrategy, profile)
         : null;
 
+    // Autoplay mutes the in-world dialogue: with the engine bot steering there
+    // is nobody to read (or tap through) the arrival scenes, last words,
+    // thoughts, lore, companion joins and merchant greeting — un-muted they'd
+    // freeze the run in the `dialogue` phase and flash one page per tick as the
+    // bot clicks through them. Muting latches `state.dialogueMuted` so those
+    // scenes never enter the stage at all (BOT VIEW and the `?bot=` playtests
+    // watch the fight, not the story).
+    if (bot) muteDialogue(state);
+
     // Audio can only start from a user gesture; the run itself begins with
     // a click/tap, and steering keeps the context alive after that.
     synth.unlock();
