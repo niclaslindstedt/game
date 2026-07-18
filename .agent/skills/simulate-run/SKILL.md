@@ -16,6 +16,15 @@ playtest, and to answer the questions the analytic calculators can't:
   hp curve, rung by rung?
 - Where does leveling actually stall or race — and how much XP do the
   per-map caps (`XP_CAP`, see leveling.ts `xpLevelCap`) withhold on reruns?
+- **Are the LADDER numbers themselves right?** A stall, a runaway, or a hero who
+  reaches the boss badly under/over its level may mean the map's `intendedLevel` /
+  `hero:` band (`ladder.yaml`) is mis-set — the intended level is a BALANCE KNOB,
+  not a fact to tune everything else around. Always hold it as a candidate for the
+  fix. And because the hero carries level + gear forward, moving one map's band
+  cascades to every FOLLOWING map, so a range change is never a one-level edit:
+  re-flow it through all maps × difficulties and re-verify the whole chain is
+  beatable back-to-back (campaign run with carry). This is one of the big things a
+  balance pass must look at.
 - How hard does each mob actually hit, at what hp and monster level, and how
   many of them does a run field?
 - How hard does the hero's blow actually land — per hit, per mob type, and
