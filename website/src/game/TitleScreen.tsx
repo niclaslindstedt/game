@@ -89,6 +89,7 @@ import {
 } from "./keybindings.ts";
 import { uiScaleFor } from "./render.ts";
 import {
+  GAME_SPEEDS,
   getSettings,
   KNOCKBACK_MAX,
   updateSettings,
@@ -949,6 +950,23 @@ export function TitleScreen({
             setCursor(0);
           },
         },
+        // GAME SPEED: fast-forward the whole run before starting it. A
+        // value-cycling row (like GEAR / POWERUPS) that steps through GAME_SPEEDS
+        // — the hero acts autonomously, so a brisker pace just clears a level
+        // sooner. Read app-side by the game loop (GameScreen `simSpeed`).
+        {
+          label: "GAME SPEED",
+          value: `${s.gameSpeed}×`,
+          aria: "settings-game-speed",
+          blurb: "FAST-FORWARD THE RUN - 1x REAL TIME UP TO 3x",
+          action: () => {
+            playUiSound(synth, "confirm");
+            const i = GAME_SPEEDS.indexOf(s.gameSpeed);
+            const next = GAME_SPEEDS[(i + 1) % GAME_SPEEDS.length];
+            updateSettings({ gameSpeed: next });
+            setSettingsTick((t) => t + 1);
+          },
+        },
         // Music and sound-fx volume live together in their own SOUND submenu,
         // keeping the SETTINGS list short.
         {
@@ -1091,8 +1109,8 @@ export function TitleScreen({
           "SPIN EARTH, MARS AND THE MOON AROUND A STATIC SUN ON THE TITLE",
         ),
         // Land back on the DEVELOPER row in SETTINGS. It sits just above BACK,
-        // after CONTROLS / DISPLAY / SOUND / DATA.
-        backTo("settings", 4),
+        // after CONTROLS / DISPLAY / GAME SPEED / SOUND / DATA.
+        backTo("settings", 5),
       ];
     }
     if (screen === "balance") {
@@ -1183,8 +1201,8 @@ export function TitleScreen({
           action: pickImport,
         },
         // Land back on the DATA row in SETTINGS (after CONTROLS / DISPLAY /
-        // SOUND).
-        backTo("settings", 3),
+        // GAME SPEED / SOUND).
+        backTo("settings", 4),
       ];
     }
     if (screen === "export") {
@@ -1265,8 +1283,9 @@ export function TitleScreen({
           "sound-sfx-volume",
           "BLASTERS, GHOSTS, PICKUPS",
         ),
-        // Land back on the SOUND row in SETTINGS (after CONTROLS / DISPLAY).
-        backTo("settings", 2),
+        // Land back on the SOUND row in SETTINGS (after CONTROLS / DISPLAY /
+        // GAME SPEED).
+        backTo("settings", 3),
       ];
     }
     if (screen === "controls") {
