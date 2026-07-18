@@ -31,6 +31,22 @@ default:
   # at weapon range — a moving orbit slips enemy fire while his auto-aimed
   # weapon keeps hitting. 0 = the old stand-still hold.
   orbitStep: 0.6
+  # EXPLORATION. The hero eagerly discovers new ground before the boss, sweeping
+  # his OWN SIDE → the MIDDLE → the boss's side of the map. `exploreReach` is how
+  # far (px) he strikes out to uncover the next fog pocket; `exploreBands` splits
+  # the spawn→boss axis into that many directional slices and he clears the near
+  # ones first (the final, boss-side slice is left for the approach). 1 band = the
+  # old undirected nearest-pocket sweep. Discovery is PARTIAL: once `exploreTargetFrac`
+  # of the map is uncovered (his side + the middle) he stops fanning out and heads
+  # for the boss, leaving the boss's side dark until the approach.
+  exploreReach: 900
+  exploreBands: 3
+  exploreTargetFrac: 0.55
+  # Engage the boss at LEVEL PARITY: farm + explore until the hero matches the
+  # boss's level rather than fighting it under-levelled. 0 = parity; a positive
+  # value engages that many levels early; negative over-levels first. (Coverage
+  # still commits him to the boss if he tops out under the boss's level.)
+  bossEngageMargin: 0
 
 # Per-level overrides. Add a block under a level id to bend a knob for that map.
 levels:

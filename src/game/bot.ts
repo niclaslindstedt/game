@@ -170,6 +170,17 @@ export type Bot = {
    */
   contentSkip?: { levelId: string; keys: string[] };
   /**
+   * EXPLORATION-STALL memory: the "am I still discovering ground" gauge that
+   * releases the bot to the boss when it stops making COVERAGE headway — the
+   * safety that keeps a hero who can't reach boss-level parity (a combat-bogged
+   * run that neither levels up nor uncovers more map) from looping on fog forever
+   * instead of committing. `mark`/`markMs` are the last coverage the sweep counted
+   * as real progress and when; `done` latches once it has stalled, so the bot
+   * heads for the boss for the rest of the level. Per-level, pure — same
+   * determinism guarantee as `content`.
+   */
+  explore?: { levelId: string; mark: number; markMs: number; done: boolean };
+  /**
    * CIRCLE-STRAFE direction (+1 / −1) the hero is currently orbiting a held
    * target in — the committed sense of a human's circle-strafe, held until the
    * next arc would run into a wall or the map edge, then reversed (see
@@ -234,17 +245,6 @@ const BOSS_LOCK_RANGE = 300;
  * on" contract) — so he levels up on the way instead of rushing under-levelled. */
 const SPAWNER_CLEAR_RANGE = 540;
 
-/**
- * BOSS-READY LEVEL. The hero FARMS the spawn-point patches (leveling as he goes)
- * until he reaches the level he needs to beat the boss, then RUSHES it —
- * marching past the remaining horde instead of draining every point. That
- * target is the boss's own monster level minus this margin: with the run's gear
- * a hero a couple of levels UNDER the boss still wins, and waiting for exact
- * parity just bogs him in the wave grind. Raise it to make the bot farm more
- * before committing, lower it to rush sooner. A level with no boss (reachExit)
- * has no gate — the bot always pushes the objective.
- */
-const BOSS_ENGAGE_MARGIN = 2;
 /** Enemies within this ring count toward being SURROUNDED. */
 const SURROUND_RADIUS = 150;
 /** Bots pop a medkit once health falls below this fraction of the bar. */
@@ -285,6 +285,9 @@ export function botAct(bot: Bot, state: GameState): GameInput {
   // Gauge headway toward the committed content target once per tick, so a cache
   // the sweep can't reach gets abandoned rather than deadlocking the run.
   trackContentAbandon(bot, state);
+  // Gauge map-coverage headway too, so a bogged run that can't reach boss-level
+  // parity gives up exploring and commits to the boss instead of looping on fog.
+  trackExploreStall(bot, state);
   // The effective positioning knobs for this level (bot.yaml overrides resolved
   // over the shipped defaults) — resolved once per tick and threaded into the
   // combat branches. Pure, so determinism holds.
@@ -311,7 +314,7 @@ export function botAct(bot: Bot, state: GameState): GameInput {
     // he can reach to fight, the strategy has wedged him — override it with the
     // deterministic escape sweep until he's moving again. (Also keeps the
     // progress bookkeeping, so it must run before every strategy branch.)
-    const escape = unstuckInput(bot, state);
+    const escape = unstuckInput(bot, state, tune);
     if (escape) {
       think(bot, "UNSTICK");
       return escape;
@@ -604,7 +607,7 @@ function survive(
       think(bot, "GRAB ITEM");
       return steer(state, item.pos);
     }
-    return macroSteer(bot, state, true);
+    return macroSteer(bot, state, tune, true);
   }
 
   const grounded = player.z === 0;
@@ -635,7 +638,7 @@ function survive(
   );
   const lockTarget =
     bossEnemy !== undefined &&
-    readyForBoss(state) &&
+    readyForBoss(state, tune) &&
     (bossEnemy.awake === true ||
       distance(player.pos, bossEnemy.pos) < BOSS_LOCK_RANGE)
       ? bossEnemy
@@ -713,7 +716,7 @@ function survive(
       ? tune.graspStandoff
       : Math.max(40, range * 0.9);
   const engageDist = baseEngage * pt.standoffMul;
-  const away = awayFromPack(state, near, travelHeading(bot, state));
+  const away = awayFromPack(state, near, travelHeading(bot, state, tune));
   // A melee hero can't swing mid-air — the blade is stayed above
   // JUMP.dodgeHeight (see stepWeapon) — so hopping to dodge contact in the
   // DPS-hugging phase would only forfeit his swings; he gives ground on FOOT
@@ -741,7 +744,7 @@ function survive(
   // boss, routed globally (A*) so the push rounds every wall. On an open arena /
   // pathless fixture there's no route, so the away vector alone holds him off the
   // pack (the old edge-hug read).
-  const goal = macroTarget(bot, state);
+  const goal = macroTarget(bot, state, tune);
   const routeTgt = onPathLevel(state) ? routeTarget(bot, state, goal) : goal;
   let hx = routeTgt.x - player.pos.x;
   let hy = routeTgt.y - player.pos.y;
@@ -893,8 +896,12 @@ function awayFromPack(
  * chest/elite/boss the sweep is bound for) — the bias that drifts a retreat off
  * the pack DOWN the route rather than straight back, so backing off still makes
  * map progress. Reads the bot's cached route goal; pure. */
-function travelHeading(bot: Bot, state: GameState): Vec2 | null {
-  const goal = macroTarget(bot, state);
+function travelHeading(
+  bot: Bot,
+  state: GameState,
+  tune: BotTuning,
+): Vec2 | null {
+  const goal = macroTarget(bot, state, tune);
   const dx = goal.x - state.player.pos.x;
   const dy = goal.y - state.player.pos.y;
   const d = Math.hypot(dx, dy);
@@ -928,61 +935,125 @@ function bossPos(state: GameState): Vec2 | undefined {
 
 /**
  * Is the hero leveled enough to STOP farming and rush the boss? True when he has
- * reached the boss's monster level minus {@link BOSS_ENGAGE_MARGIN} — or when the
- * level has no boss to gate on (a reachExit map), so the bot always pushes the
- * objective there. Until then the bot keeps clearing the spawn-point patches to
- * level up (see the `spawner` hold in {@link survive}).
+ * reached the boss's monster level minus {@link BotTuning.bossEngageMargin}
+ * (default 0 — he waits for LEVEL PARITY with the boss, so he doesn't engage it
+ * under-levelled) — or when the level has no boss to gate on (a reachExit map),
+ * so the bot always pushes the objective there. Until then the bot keeps farming
+ * the spawn-point patches to level up (see the `spawner` hold in {@link survive})
+ * and discovering its side of the map. Coverage still commits the sweep to the
+ * boss even short of parity ({@link macroTarget}), so this can't strand a hero
+ * who tops out under the boss's level.
  */
-function readyForBoss(state: GameState): boolean {
+function readyForBoss(state: GameState, tune: BotTuning): boolean {
   const boss = bossOf(state);
   if (!boss) return true;
-  return state.player.level >= Math.max(1, boss.mlvl - BOSS_ENGAGE_MARGIN);
+  return state.player.level >= Math.max(1, boss.mlvl - tune.bossEngageMargin);
 }
 
-/** How far the bot will strike out to uncover fog once every discrete content
- * piece is engaged — a reachable cap so it pokes a nearby unexplored pocket
- * rather than trekking to a far corner. Fog is the COVERAGE fallback behind the
- * chest/elite content sweep, so a level with no chests still gets explored. */
-const FOG_EXPLORE_RANGE = 760;
 /** A fogged patch smaller than this many cells (in a ~7×7 window) is a stray
  * sliver — a rock's shadow, a wall nook — not a pocket worth a detour, so it
  * never yanks the hero around. */
 const FOG_BLOB_MIN_CELLS = 8;
 
-/**
- * The world-space centroid of the nearest sizable UNEXPLORED pocket the hero can
- * actually reach — the COVERAGE fallback the survivor steers into once every
- * discrete chest/elite is engaged, so even a chest-less level gets swept before
- * the boss (see {@link macroTarget}).
- *
- * Scans the coarse fog grid (`state.explored`, `map.ts`) for the nearest fogged
- * cell that is within {@link FOG_EXPLORE_RANGE} AND in clear LINE OF SIGHT, then
- * averages the fog in a small window around it into a centroid, returning it only
- * if the pocket is big enough ({@link FOG_BLOB_MIN_CELLS}). A one-cell inset skips
- * the never-quite-revealed level rim. Null when the reachable map is uncovered.
- * Pure (a function of `state.explored` + geometry, no RNG/clock) so botted runs
- * stay deterministic.
- */
-function exploreTarget(
+/** The spawn→objective AXIS the exploration bands hang off — the bot's "where did
+ * I start vs where's the boss" read. Origin is the player spawn (the near, t=0
+ * end); the heading points at the boss (the far, t=1 end), or, before the boss is
+ * on the field, the FURTHEST LANDMARK (the objective marker), so the axis is known
+ * from the first tick even while the boss sleeps off-screen. Null when there's no
+ * objective to orient on (an open arena with no landmark) — the caller then falls
+ * back to an undirected nearest-pocket sweep. Pure, so determinism holds. */
+function objectiveAxis(
   state: GameState,
-  maxRange = FOG_EXPLORE_RANGE,
-): Vec2 | null {
+): { origin: Vec2; dir: Vec2; len: number } | null {
+  const origin = state.playerSpawn;
+  const goal = bossPos(state) ?? furthestLandmark(state);
+  if (!goal) return null;
+  const dx = goal.x - origin.x;
+  const dy = goal.y - origin.y;
+  const len = Math.hypot(dx, dy);
+  if (len < 1) return null;
+  return { origin, dir: { x: dx / len, y: dy / len }, len };
+}
+
+/** How far along the spawn→boss axis a world point sits: 0 at the spawn end, 1 at
+ * the boss end — the "which slice of the map is this" the exploration priority
+ * bands off. Clamped, so a point behind the spawn reads 0 and one past the boss
+ * reads 1. */
+function axisProgress(
+  axis: { origin: Vec2; dir: Vec2; len: number },
+  p: Vec2,
+): number {
+  const t =
+    ((p.x - axis.origin.x) * axis.dir.x + (p.y - axis.origin.y) * axis.dir.y) /
+    axis.len;
+  return clamp(t, 0, 1);
+}
+
+/**
+ * The world-space centroid of the sizable UNEXPLORED pocket the bot should uncover
+ * NEXT — the directional coverage sweep that discovers the map from the hero's own
+ * side outward before it ever commits to the boss (see {@link macroTarget}).
+ *
+ * Scans the coarse fog grid (`state.explored`, `map.ts`) for FRONTIER cells — fog
+ * on the boundary of the known region (≥1 uncovered 4-neighbour) that is within
+ * {@link BotTuning.exploreReach} and in clear LINE OF SIGHT — and ranks them by
+ * DIRECTIONAL BAND first, nearest second: the axis (spawn→boss) is split into
+ * `exploreBands` slices and the hero clears the lowest (spawn-side) slice's fog
+ * before the next, so he sweeps his OWN SIDE → the MIDDLE → the boss's. The final
+ * (boss-side) band is deliberately left unexplored so he commits to the boss on
+ * approach rather than poking every corner beside it — reaching it uncovers that
+ * band anyway. With no axis (an open arena) every cell is band 0, i.e. the old
+ * undirected nearest-pocket sweep.
+ *
+ * Averages the fog in a small window around the winning seed into a centroid,
+ * returning it only if the pocket is big enough ({@link FOG_BLOB_MIN_CELLS}). A
+ * one-cell inset skips the never-quite-revealed level rim. Null when no explorable
+ * frontier remains — the signal to push the boss. Pure (a function of
+ * `state.explored` + geometry, no RNG/clock) so botted runs stay deterministic.
+ */
+function exploreTarget(state: GameState, tune: BotTuning): Vec2 | null {
   const cell = MAP.cellSize;
   const cols = mapCols(state.level);
   const rows = mapRows(state.level);
   const pos = state.player.pos;
-  // Nearest fogged, in-range, in-LoS cell (the seed of the pocket).
+  const reachSq = tune.exploreReach * tune.exploreReach;
+  const axis = objectiveAxis(state);
+  const bands = Math.max(1, Math.floor(tune.exploreBands));
+  // Explorable bands: with an axis, sweep all but the FINAL (boss-side) one so the
+  // hero heads for the boss once his side + the middle are uncovered; with no axis
+  // (open arena) every cell is band 0, so nothing is excluded.
+  const maxBand = axis ? Math.max(0, bands - 2) : 0;
+  // Rank frontier by (band asc, distance asc): the lowest band anywhere in reach
+  // wins, so the spawn-side fog is cleared before the hero advances toward the
+  // boss's side, and within a band the nearest pocket is taken first.
   let seedTx = -1;
   let seedTy = -1;
-  let bestDistSq = maxRange * maxRange;
+  let bestBand = Infinity;
+  let bestDistSq = Infinity;
   for (let ty = 1; ty < rows - 1; ty++) {
     for (let tx = 1; tx < cols - 1; tx++) {
-      if (state.explored[ty * cols + tx] === 1) continue;
+      const idx = ty * cols + tx;
+      if (state.explored[idx] === 1) continue;
+      // FRONTIER only: a fully-fogged cell walled off deep inside the dark is not
+      // a target — one whose 4-neighbourhood already touches uncovered ground is.
+      if (
+        state.explored[idx - 1] !== 1 &&
+        state.explored[idx + 1] !== 1 &&
+        state.explored[idx - cols] !== 1 &&
+        state.explored[idx + cols] !== 1
+      )
+        continue;
       const wx = (tx + 0.5) * cell;
       const wy = (ty + 0.5) * cell;
       const dSq = (wx - pos.x) * (wx - pos.x) + (wy - pos.y) * (wy - pos.y);
-      if (dSq >= bestDistSq) continue;
+      if (dSq > reachSq) continue;
+      const band = axis
+        ? Math.min(bands - 1, Math.floor(axisProgress(axis, { x: wx, y: wy }) * bands))
+        : 0;
+      if (band > maxBand) continue;
+      if (band > bestBand || (band === bestBand && dSq >= bestDistSq)) continue;
       if (!lineOfSight(state, pos, { x: wx, y: wy })) continue;
+      bestBand = band;
       bestDistSq = dSq;
       seedTx = tx;
       seedTy = ty;
@@ -1007,6 +1078,55 @@ function exploreTarget(
   }
   if (count < FOG_BLOB_MIN_CELLS) return null;
   return { x: sumX / count, y: sumY / count };
+}
+
+/** The fraction of the fog grid the hero has uncovered so far (0..1) — the
+ * COVERAGE gauge that tells the sweep when it has discovered enough (his side +
+ * the middle) and should stop fanning out and head for the boss. Pure. */
+function exploredFraction(state: GameState): number {
+  const grid = state.explored;
+  if (grid.length === 0) return 1;
+  let n = 0;
+  for (let i = 0; i < grid.length; i++) n += grid[i]!;
+  return n / grid.length;
+}
+
+/** Coverage (fraction of the map) the sweep must gain to count as real EXPLORATION
+ * HEADWAY — below it, the crawl of the reveal circle around a bogged hero doesn't
+ * read as progress. */
+const EXPLORE_PROGRESS_EPS = 0.03;
+/** Making no {@link EXPLORE_PROGRESS_EPS} coverage headway for this long (sim ms)
+ * means the sweep is STUCK — the bot gives up discovering and commits to the boss
+ * (the safety that stops boss-level parity from trapping a bogged run). Generous,
+ * so it's a genuine stall, not a brief scuffle. */
+const EXPLORE_STALL_MS = 15_000;
+
+/** Once per tick, gauge EXPLORATION HEADWAY by map coverage and LATCH `done` once
+ * it stalls ({@link EXPLORE_STALL_MS} without an {@link EXPLORE_PROGRESS_EPS}
+ * gain) — so a hero who can neither reach boss-level parity nor uncover more map
+ * stops looping on fog and heads for the boss. Called from {@link botAct}; mutates
+ * only bot memory, so determinism holds. */
+function trackExploreStall(bot: Bot, state: GameState): void {
+  const frac = exploredFraction(state);
+  const now = state.stats.timeMs;
+  if (!bot.explore || bot.explore.levelId !== state.level.id) {
+    bot.explore = { levelId: state.level.id, mark: frac, markMs: now, done: false };
+    return;
+  }
+  const e = bot.explore;
+  if (e.done) return;
+  if (frac >= e.mark + EXPLORE_PROGRESS_EPS) {
+    e.mark = frac;
+    e.markMs = now;
+  } else if (now - e.markMs > EXPLORE_STALL_MS) {
+    e.done = true; // stalled for good — commit to the boss for the rest of the run
+  }
+}
+
+/** Has the exploration sweep given up on this level (coverage stalled)? Then the
+ * bot commits to the boss even short of parity/coverage — see {@link macroTarget}. */
+function exploreStalled(bot: Bot): boolean {
+  return bot.explore?.done === true;
 }
 
 /** The anchor of the nearest spawn point that still owes mobs (dormant or
@@ -1438,19 +1558,35 @@ function nearestContent(bot: Bot, state: GameState): Vec2 | null {
  * The macro destination the bot travels toward when it's free to move: FARM the
  * active spawner in this patch (level up before advancing) while still under the
  * boss-ready level, else sweep to the nearest reachable un-engaged CONTENT
- * (chest/elite), else uncover any remaining reachable FOG (coverage), else — with
- * nothing left to discover — the BOSS. This is the whole automatic-engagement
- * order in one place; the callers just route to whatever it returns.
+ * (chest/elite), else DISCOVER NEW GROUND from the hero's own side outward
+ * (directional fog coverage), else — with nothing left to discover — the BOSS.
+ * This is the whole automatic-engagement order in one place; the callers just
+ * route to whatever it returns.
+ *
+ * Exploration is EAGER but PARTIAL and DIRECTIONAL: while still UNDER the
+ * boss-ready level the bot discovers new ground from its own side outward (spawn
+ * side → middle, via {@link exploreTarget}) — but only up to
+ * {@link BotTuning.exploreTargetFrac} of the map, then it stops fanning out. So
+ * the leveling window is spent uncovering the hero's half rather than beelining
+ * the path, the boss's side stays dark until the approach, and the sweep always
+ * terminates at the boss: the moment he's boss-ready (or the coverage target is
+ * hit) discovery ends and he commits — a combat-bogged run can't get stuck
+ * chasing fog it will never fully clear.
  */
-function macroTarget(bot: Bot, state: GameState): Vec2 {
-  if (!readyForBoss(state)) {
+function macroTarget(bot: Bot, state: GameState, tune: BotTuning): Vec2 {
+  const underLevel = !readyForBoss(state, tune);
+  if (underLevel) {
     const spawner = activeSpawnerNear(state);
     if (spawner) return spawner;
   }
   const content = nearestContent(bot, state);
   if (content) return content;
-  if (!readyForBoss(state)) {
-    const fog = exploreTarget(state);
+  if (
+    underLevel &&
+    !exploreStalled(bot) &&
+    exploredFraction(state) < tune.exploreTargetFrac
+  ) {
+    const fog = exploreTarget(state, tune);
     if (fog) return fog;
   }
   return bossPos(state) ?? furthestLandmark(state) ?? state.player.pos;
@@ -1459,8 +1595,14 @@ function macroTarget(bot: Bot, state: GameState): Vec2 {
 /** The short label for the macro goal `macroTarget` returned, for the BOT VIEW
  * thought bubble — so the overlay reads "SEEK CHEST" / "CLEAR SPAWNER" / "TO
  * BOSS" as the sweep works through the map. */
-function macroThought(bot: Bot, state: GameState, goal: Vec2): string {
-  if (!readyForBoss(state) && activeSpawnerNear(state)) return "CLEAR SPAWNER";
+function macroThought(
+  bot: Bot,
+  state: GameState,
+  tune: BotTuning,
+  goal: Vec2,
+): string {
+  if (!readyForBoss(state, tune) && activeSpawnerNear(state))
+    return "CLEAR SPAWNER";
   const content = bot.content?.target;
   if (content && content.x === goal.x && content.y === goal.y)
     return "SEEK CHEST";
@@ -1471,9 +1613,14 @@ function macroThought(bot: Bot, state: GameState, goal: Vec2): string {
 
 /** Steer toward the current macro goal along its A* route, tagging the thought.
  * The unified macro-travel move — replaces the old authored-path march. */
-function macroSteer(bot: Bot, state: GameState, jump = false): GameInput {
-  const goal = macroTarget(bot, state);
-  think(bot, macroThought(bot, state, goal));
+function macroSteer(
+  bot: Bot,
+  state: GameState,
+  tune: BotTuning,
+  jump = false,
+): GameInput {
+  const goal = macroTarget(bot, state, tune);
+  think(bot, macroThought(bot, state, tune, goal));
   return routeSteer(bot, state, goal, jump);
 }
 
@@ -1530,7 +1677,11 @@ function hasReachableFoe(state: GameState): boolean {
  * the swept heading is a pure function of how long he's been stuck and where the
  * objective lies — no RNG, no wall clock.
  */
-function unstuckInput(bot: Bot, state: GameState): GameInput | null {
+function unstuckInput(
+  bot: Bot,
+  state: GameState,
+  tune: BotTuning,
+): GameInput | null {
   // Same as the wall avoidance: the deterministic escape is a MAZE last-resort
   // (path levels). Open maps never wedged the old bot, so leave them untouched.
   if (!onPathLevel(state)) return null;
@@ -1578,7 +1729,7 @@ function unstuckInput(bot: Bot, state: GameState): GameInput | null {
   }
 
   // The macro goal orients the escape sweep (goalward heading first).
-  const goal = macroTarget(bot, state);
+  const goal = macroTarget(bot, state, tune);
 
   // Sweep a heading that rotates as the escape persists: goalward first, then ±
   // around it (±45, ±90, ±135), out to a full turn — deterministic, so a botted
