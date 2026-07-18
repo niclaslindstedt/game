@@ -93,6 +93,17 @@ export function validateLevel(def, refs, description = "") {
     });
   };
   if (def.mobLevels !== undefined) validMobLevels(def.mobLevels, "level");
+  // Optional design-intent anchor: the intended hero level per difficulty.
+  if (def.intendedLevel !== undefined) {
+    if (
+      !Array.isArray(def.intendedLevel) ||
+      def.intendedLevel.length !== 4 ||
+      def.intendedLevel.some((n) => typeof n !== "number" || n < 1)
+    )
+      err(
+        "intendedLevel must be 4 positive numbers [easy, medium, hard, nightmare]",
+      );
+  }
 
   // ---- enemy references -----------------------------------------------------
   const enemy = (id, where) => {

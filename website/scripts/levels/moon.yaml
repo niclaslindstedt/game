@@ -120,6 +120,9 @@ rareSpawns:
 # spawns read it); the ridge-gap spawn points below RAMP their own levels up as
 # the hero climbs toward the flag (see each `mobLevels`).
 mobLevels: [[7, 13], [7, 14], [10, 17], [45, 48]]
+# INTENDED hero level per difficulty [easy, medium, hard, nightmare] — the
+# design-intent anchor the map-layout tool colours spawner CON against.
+intendedLevel: [7, 7, 10, 46]
 spawns:
   # The four speaking elites, pinned along the sweep so the conspiracy unspools
   # in order — the grave under the dust, the corporate claim, the quarantine,

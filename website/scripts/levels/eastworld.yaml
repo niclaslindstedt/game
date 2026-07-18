@@ -126,6 +126,9 @@ rareSpawns:
 # JESUS stays player-relative. Placeholder ramp for this campaign slot —
 # retune when this level is reworked. A spawner may override per point.
 mobLevels: [[26, 32], [28, 34], [31, 38], [55, 58]]
+# INTENDED hero level per difficulty [easy, medium, hard, nightmare] — the
+# design-intent anchor the map-layout tool colours spawner CON against.
+intendedLevel: [20, 21, 24, 55]
 spawns:
   - enemy: cowbot
     count: 24

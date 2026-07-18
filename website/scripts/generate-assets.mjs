@@ -145,7 +145,7 @@ writeFileSync(`${assetsDir}/font.json`, `${JSON.stringify(meta, null, 2)}\n`);
 
 const specimenLines = [
   "THE QUICK BROWN FOX JUMPS OVER THE LAZY DOG",
-  "0123456789 .,:!?-+×/%'()",
+  "0123456789 .,:!?-+×/%'()→=",
   "YOU DIED! LEVEL CLEAR: 8/8 KILLS IN 1:23",
 ];
 const specimen = fill(
@@ -170,7 +170,7 @@ writeFileSync(
 
 const hudSpecimenLines = [
   "THE QUICK BROWN FOX JUMPS OVER THE LAZY DOG",
-  "0123456789 .:-/",
+  "0123456789 .:-/×+·",
   "RAMPAGE 6    128 KILLS    1:23",
 ];
 const hudSpecimen = fill(

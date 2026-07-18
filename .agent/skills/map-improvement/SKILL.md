@@ -9,14 +9,18 @@ The sibling of `art-improvement` (which hunts the worst art) — this one improv
 how a level *plays and feels*. A level is data (`website/scripts/levels/<id>.yaml`,
 compiled by `make levels`). Two renderers make it legible:
 
-- **`map-layout.mjs` — the LAYOUT BLUEPRINT.** A clean, high-res, top-down
-  reference of the AUTHORED layout: a coordinate grid you read x/y off for
-  editing, every wall + gap, the authored hero path (numbered), every spawn
-  point, pinned elite/boss/guardian, chest, merchant, zone, landmark and placed
-  item — plus a side dossier of the per-difficulty mob-level bands and each
-  encounter's hp/level. **LOOK at this FIRST, every session** (`make map-layout
-  LEVEL=<id>`) — it is how you understand what you're working with before you
-  change anything.
+- **`map-layout.mjs` — the VISUAL OVERVIEW.** A clean, high-res, top-down
+  picture of the AUTHORED layout: a labelled coordinate grid for orientation
+  (world x/y you read straight off for editing), every wall + gap, the numbered
+  hero path, the zones, and every placed thing as a DISTINCT SHAPE (star=boss,
+  diamond=elite, triangle=rare/unique, circle=spawn knot, cluster=pack,
+  square=chest, …). Spawn points are **CON CIRCLES** — area ∝ mob count, colour
+  = con (mob level vs the map's `intendedLevel` on the chosen difficulty:
+  grey→green→yellow→orange→red), so an over/under-tuned difficulty ramp reads at
+  a glance. It shows only what benefits from being SEEN; the numbers stay in the
+  YAML. **Do BOTH before touching anything, every session:** read the level's
+  YAML AND `make map-layout LEVEL=<id>` and study the image — the picture gives
+  you the spatial/difficulty read, the YAML gives you the exact values.
 - **`map-preview.mjs` — the ANALYSIS view.** The design view (trigger rings,
   authored mob-density smear, derived path, tempo strip) plus `--actual` (the
   real scattered layout) and `--heatmap` (how the map actually PLAYS — dwell,
@@ -59,10 +63,13 @@ polishing a broken frame.
 
 ## Step 0 — LOOK, then CONFIRM THE INTENT (do this first, always)
 
-**Render the layout blueprint and study it before anything else:** `make
-map-layout LEVEL=<id>` — read the geometry, the path, where every spawn point and
-encounter sits, the mob-level bands and hp in the dossier. This is how you build
-an accurate mental model of the map before you form an opinion about it.
+**Read the YAML and render the overview before anything else — do both:** open
+`website/scripts/levels/<id>.yaml` for the exact values AND `make map-layout
+LEVEL=<id>` and study the image for the geometry, the path, where every spawn
+point/encounter sits, and the con read (the spawn circles' size + colour). Check
+the con across difficulties (`--difficulty hard`, etc.). This is how you build an
+accurate mental model of the map before you form an opinion about it. If a map
+has no `intendedLevel`, add it (the con anchor) as part of the pass.
 
 **Then confirm the intent — the YAML `description` may not capture it.** The
 shipped descriptions were seeded from old code comments; they describe what the
@@ -88,9 +95,9 @@ the user confirms the existing description is right, say so and keep it.
 ## The loop
 
 1. **Render** the current state and LOOK:
-   - `node website/scripts/map-layout.mjs <id>` — the LAYOUT BLUEPRINT (grid,
-     walls + gaps, authored path, every spawn point + encounter with hp/level,
-     zones, items). The reference you keep open while editing.
+   - `node website/scripts/map-layout.mjs <id>` — the VISUAL OVERVIEW (grid,
+     walls + gaps, authored path, zones, and the CON CIRCLES: spawn size = count,
+     colour = con). The picture you keep open (with the YAML) while editing.
    - `node website/scripts/map-preview.mjs <id>` — the design view (path,
      encounters, zones, walls, tempo, legend).
    - `node website/scripts/map-preview.mjs <id> --actual --seed 1` — the real
