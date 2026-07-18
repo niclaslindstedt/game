@@ -259,10 +259,14 @@ spawners:
   # cut corner still trips it) and DRAINING its mob count — the emitted mobs give
   # chase, so he fights and clears them ON THE MOVE, then the patch is empty and
   # he walks on. The counts are sized so clearing the sweep levels him enough to
-  # finish MUSKRAT (a finite total, not a bottomless wave). Each aisle also
-  # chains a lighter follow-up (`after`) that only arms if he lingers — a bonus
-  # for the completionist, never a bog for the runner. The mob TYPE ramps aisle
-  # to aisle (interns → scientists → engineers/guards → hazmat/OPTIMUSK).
+  # finish MUSKRAT (a finite total, not a bottomless wave). `maxAlive` is a
+  # generous 20 (up from 15) so a player who WANTS to fight has a thick enough
+  # crowd on screen to level on — the onboarding floor should reward engaging the
+  # horde with real levels before the boss, not throttle the fight down to a
+  # trickle. Each aisle also chains a lighter follow-up (`after`) that only arms
+  # if he lingers — a bonus for the completionist, never a bog for the runner. The
+  # mob TYPE ramps aisle to aisle (interns → scientists → engineers/guards →
+  # hazmat/OPTIMUSK).
   # --- Opening: a light knot of interns the level-1 hero can actually clear to
   # find his feet — deliberately small so the opener LEVELS him instead of
   # pinning him against the first shelf. ---
@@ -272,7 +276,7 @@ spawners:
   # how far a clear levels the hero, so a big fight never over-levels him.
   - id: open
     at: { x: 400, y: 680 }
-    maxAlive: 15
+    maxAlive: 20
     # Easy opens at level 1 (gentle onboarding); medium/hard bite harder from the
     # first knot (higher-level interns), so standing still is never free on the
     # intended fight and up.
@@ -285,7 +289,7 @@ spawners:
   # --- Aisle 1 (the first down-sweep). ---
   - id: a1
     at: { x: 560, y: 900 }
-    maxAlive: 15
+    maxAlive: 20
     mobLevels: [[1, 2], [1, 2], [3, 4], [42, 43]]
     triggerRadius: 500
     lingering: 10
@@ -296,7 +300,7 @@ spawners:
         count: 50
   - after: a1
     at: { x: 600, y: 400 }
-    maxAlive: 15
+    maxAlive: 20
     mobLevels: [[1, 2], [1, 2], [3, 4], [42, 43]]
     members:
       - enemy: scientist
@@ -304,7 +308,7 @@ spawners:
   # --- Aisle 2 (down-sweep). ---
   - id: a2
     at: { x: 900, y: 460 }
-    maxAlive: 15
+    maxAlive: 20
     mobLevels: [[2, 3], [2, 3], [4, 5], [43, 44]]
     triggerRadius: 500
     lingering: 10
@@ -315,7 +319,7 @@ spawners:
         count: 50
   - after: a2
     at: { x: 950, y: 860 }
-    maxAlive: 15
+    maxAlive: 20
     mobLevels: [[2, 3], [2, 3], [4, 5], [43, 44]]
     members:
       - enemy: engineer
@@ -325,7 +329,7 @@ spawners:
   # --- Aisle 3 (up-sweep). ---
   - id: a3
     at: { x: 1180, y: 720 }
-    maxAlive: 15
+    maxAlive: 20
     mobLevels: [[3, 4], [3, 4], [5, 6], [44, 45]]
     triggerRadius: 500
     lingering: 10
@@ -336,7 +340,7 @@ spawners:
         count: 70
   - after: a3
     at: { x: 1200, y: 340 }
-    maxAlive: 15
+    maxAlive: 20
     mobLevels: [[3, 4], [3, 4], [5, 6], [44, 45]]
     members:
       - enemy: guard
@@ -346,7 +350,7 @@ spawners:
   # --- Aisle 4 (up-sweep toward the boss mouth). ---
   - id: a4
     at: { x: 1450, y: 400 }
-    maxAlive: 15
+    maxAlive: 20
     mobLevels: [[4, 5], [4, 5], [6, 8], [45, 46]]
     triggerRadius: 500
     lingering: 8
