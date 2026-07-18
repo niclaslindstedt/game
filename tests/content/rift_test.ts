@@ -277,13 +277,18 @@ describe("ELON MOSQUE flees again", () => {
       enemyDef("elon_mosque_rift").lastWords,
     ]);
 
-    // The exit package deploys on the way out.
-    expect(
+    // The exit package deploys on the way out — dropped on the ground, or (when
+    // the autonomous hero is standing right on the drop, as here) snapped
+    // straight onto him. Either way the parachute left MOSQUE's corpse.
+    const parachuteDeployed =
       state.items.some(
         (i) =>
           i.kind === "equipment" && i.equipment.defId === "golden_parachute",
-      ),
-    ).toBe(true);
+      ) ||
+      events.some(
+        (e) => e.type === "autoEquipped" && e.defId === "golden_parachute",
+      );
+    expect(parachuteDeployed).toBe(true);
 
     // GROK OMEGA still stands, so the objective hasn't cleared yet — the
     // rift needs BOTH bosses gone.

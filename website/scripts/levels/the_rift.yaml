@@ -1,10 +1,18 @@
 description: |
-  LEVEL 4 - THE RIFT. MOSQUE tore a hole in the world on Mars and ran; the hero
-  walks in after him. A hallucinatory space between universes: no ground (the void
-  tiles ARE the floor), gravity turned soft, black holes strewn across the road,
-  asteroids streaking through, and history's missing wandering the noise. GROK
-  OMEGA guards the deep end and spills the reveal; MOSQUE flees a second time at
-  the far door. A travel gate to the secret bunker opens here.
+  LEVEL 4 - THE RIFT. A hallucinatory void between universes, walked LEFT to
+  RIGHT toward the far door MOSQUE fled through. There is no floor and no north:
+  the road is defined by the BLACK HOLES strewn across it - a gauntlet of gravity
+  wells FLANKING the winding corridor the hero threads, denser and hungrier the
+  deeper he goes. The feel is DREAD and DISORIENTATION on a rising tide - the
+  noise thickens and the con CLIMBS from a meek voidling drift at the entrance to
+  a graviton-heavy crush at the deep end. History's missing wander the road in
+  walking order, spread the WHOLE width so the hero fights his way the whole way:
+  HOUDINI and TESLA early, LUCKY on a southern dare, THE KING beside a black hole
+  (his own tutorial), EARHART on Ada's trail, RASPUTIN the doorman barring the
+  deep end. An EYE of calm (the merchant) sits just off the mid-road; a
+  black-hole-guarded EDDY in the SE hides a chest. GROK OMEGA guards the deep end
+  and spills the reveal; ELON MOSQUE flees a second time at the far door. A travel
+  gate to the secret bunker opens here.
 campaign: true
 id: the_rift
 index: 4
@@ -52,6 +60,11 @@ merchant:
   returnGreeting:
     - YOU AGAIN. OF COURSE.
     - ALL ROADS STILL LEAD HERE.
+# The trader keeps the EYE - a bubble of calm just north of the mid-road, so the
+# restock lands before the deep end's escalating dread.
+merchantSpawns:
+  - x: 1560
+    y: 430
 playerSpawn:
   x: 300
   y: 800
@@ -65,6 +78,31 @@ landmarks:
     pos:
       x: 2900
       y: 800
+# THE INTENDED ROUTE - a left-to-right serpentine that WEAVES up and down the
+# void (no north, so the road disorients), threading the corridors BETWEEN the
+# flanking black holes. It passes the ghosts in walking order, dips up to the EYE
+# (merchant), and closes on RASPUTIN's gate, GROK's arena, and the far door.
+path:
+  - x: 300
+    y: 800
+  - x: 560
+    y: 640
+  - x: 940
+    y: 860
+  - x: 1300
+    y: 740
+  - x: 1560
+    y: 620
+  - x: 1820
+    y: 820
+  - x: 2100
+    y: 680
+  - x: 2320
+    y: 840
+  - x: 2470
+    y: 780
+  - x: 2860
+    y: 800
 objective:
   type: killBoss
 rareSpawns:
@@ -78,34 +116,57 @@ gates:
     to: the_bunker
     opensWith: severed_hand
     sprite: bunker_gate
+# BLACK HOLES STREWN ACROSS THE ROAD - the void's real geometry, FLANKING the
+# winding corridor (never sitting ON it: a core devours on contact, so the safe
+# path threads BETWEEN the holes). They alternate north/south along the road and
+# grow DENSER and HUNGRIER (bigger pull) toward the deep end - one flanks GROK's
+# arena and one guards the SE chest EDDY, a dare the greedy dash past.
 wells:
+  # --- early: small, sparse, flanking the mouth of the road ---
   - pos:
-      x: 700
-      y: 500
+      x: 560
+      y: 400
+    pullRadius: 120
   - pos:
       x: 900
+      y: 1160
+    pullRadius: 130
+  - pos:
+      x: 1180
+      y: 1220
+    pullRadius: 130
+  # THE KING'S tutorial hole, looming north of where he stands (1380,700).
+  - pos:
+      x: 1380
+      y: 470
+    pullRadius: 120
+  # --- mid-to-late: the field tightens toward the deep end ---
+  - pos:
+      x: 1820
+      y: 1210
+    pullRadius: 140
+  - pos:
+      x: 2100
+      y: 400
+    pullRadius: 140
+  # Guards the SE chest EDDY - the dash-past-the-hole dare.
+  - pos:
+      x: 2380
       y: 1150
+    pullRadius: 160
+  # Flanks GROK's arena from the north - the deep end's hungriest hole.
   - pos:
-      x: 1400
-      y: 750
-  - pos:
-      x: 1750
-      y: 300
-  - pos:
-      x: 1900
-      y: 1250
-  - pos:
-      x: 2350
-      y: 950
-  - pos:
-      x: 2600
-      y: 450
+      x: 2650
+      y: 560
+    pullRadius: 150
 asteroids:
   everyMs:
     - 2800
     - 5200
   struckThought: rift_asteroid
 spawns:
+  # Ambient drift, banded across the run - a thin scatter of the void's fauna
+  # over the whole road, on top of the placed knots below.
   - enemy: voidling
     count: 22
     band:
@@ -126,171 +187,239 @@ spawns:
     band:
       - 0.5
       - 1
-  - enemy: elon_mosque_rift
+  # HISTORY'S MISSING, pinned along the road in WALKING ORDER and SPREAD the
+  # whole width (never clustered, so the hero duels each cleanly then advances),
+  # con climbing west->east with the road.
+  # HOUDINI (apparition) - the first ghost, escape-artist color near the mouth.
+  - enemy: harry_houdini
     at:
-      x: 2850
-      y: 800
-    ramp: apex
-    hp: 750
+      x: 560
+      y: 640
+    ramp: savage
+    hp: 50
+  # TESLA - the first real fight, and he foreshadows the machine mind at the door.
+  - enemy: nikola_tesla
+    at:
+      x: 940
+      y: 880
+    ramp: brutal
+    hp: 320
+  # LUCKY - folklore's missing, a slippery side fight on a southern dare.
+  - enemy: lucky
+    at:
+      x: 1280
+      y: 1200
+    ramp: merciless
+    hp: 300
+  # THE KING (apparition) - stands beside a black hole and teaches it: "keep
+  # your blue suedes off the event horizon". His tutorial well looms just north.
+  - enemy: the_king
+    at:
+      x: 1380
+      y: 700
+    ramp: merciless
+    hp: 50
+  # EARHART - Ada's trail: she flew this way toward the far door "last night".
+  - enemy: amelia_earhart
+    at:
+      x: 1820
+      y: 760
+    ramp: merciless
+    hp: 290
+  # RASPUTIN - the doorman barring the deep end; drops the bunker key. The last
+  # gate before the boss arena, so he cons hot (endgame).
+  - enemy: grigori_rasputin
+    at:
+      x: 2220
+      y: 820
+    ramp: endgame
+    hp: 360
+  # THE DEEP END - the reveal, then the second escape.
   - enemy: grok_omega
     at:
-      x: 2450
+      x: 2470
       y: 780
     ramp: apex
     hp: 850
-  - enemy: harry_houdini
+  - enemy: elon_mosque_rift
     at:
-      x: 650
-      y: 900
-    ramp: endgame
-    hp: 50
-  - enemy: nikola_tesla
-    at:
-      x: 950
-      y: 650
-    ramp: endgame
-    hp: 320
-  - enemy: amelia_earhart
-    at:
-      x: 1500
-      y: 1050
-    ramp: endgame
-    hp: 290
-  - enemy: the_king
-    at:
-      x: 1800
-      y: 850
-    ramp: endgame
-    hp: 50
-  - enemy: grigori_rasputin
-    at:
-      x: 2150
-      y: 700
-    ramp: endgame
-    hp: 360
-  - enemy: lucky
-    at:
-      x: 1150
-      y: 1280
-    ramp: endgame
-    hp: 300
+      x: 2860
+      y: 800
+    ramp: apex
+    hp: 750
 packs:
+  # Dormant clusters woken by proximity, threaded on the mid-to-late road so the
+  # weave is punctuated by ambushes as the mix hardens.
   - at:
-      x: 800
-      y: 760
+      x: 1160
+      y: 860
     members:
       - enemy: voidling
-        count: 6
+        count: 5
   - at:
-      x: 1400
-      y: 980
+      x: 1720
+      y: 940
     members:
-      - enemy: voidling
-        count: 4
       - enemy: star_jelly
-        count: 2
+        count: 3
+      - enemy: unraveler
+        count: 3
   - at:
-      x: 2050
-      y: 660
+      x: 2240
+      y: 680
     members:
       - enemy: unraveler
         count: 3
       - enemy: graviton
         count: 2
 spawners:
-  # Finite spawn points (converted from the old wave budget): placed
-  # knots the hero clears on the way to the boss. Counts preserve the
-  # wave total; refine placement/mix in a later pass.
+  # Finite spawn points THREADED ALONG THE WHOLE ROUTE (west -> east), OFFSET
+  # from the pinned elites (>=180px) so each ghost stays a clean duel instead of
+  # a blender. Each knot carries a con RAMP so difficulty CLIMBS from a meek
+  # voidling drift at the mouth to a graviton-heavy crush at the deep end. Counts
+  # and maxAlive are kept MODERATE so each knot arrives as a burst the hero
+  # punches THROUGH and advances past, and the mob MIX hardens with the ramp
+  # (voidling -> star jelly -> unraveler -> graviton).
   - id: p0
-    at: { x: 351, y: 829 }
-    maxAlive: 15
-    triggerRadius: 520
+    at: { x: 500, y: 720 }
+    maxAlive: 10
+    ramp: meek
     members:
       - enemy: voidling
-        count: 84
+        count: 26
   - id: p1
-    at: { x: 519, y: 1043 }
-    maxAlive: 15
+    at: { x: 740, y: 640 }
+    maxAlive: 10
+    ramp: bold
     members:
       - enemy: voidling
-        count: 84
+        count: 26
   - id: p2
-    at: { x: 610, y: 855 }
-    maxAlive: 15
+    at: { x: 1140, y: 900 }
+    maxAlive: 11
+    ramp: fierce
     members:
       - enemy: voidling
-        count: 83
+        count: 16
       - enemy: star_jelly
-        count: 60
+        count: 16
   - id: p3
-    at: { x: 701, y: 1146 }
-    maxAlive: 15
+    at: { x: 1440, y: 960 }
+    maxAlive: 11
+    ramp: savage
     members:
-      - enemy: voidling
-        count: 83
       - enemy: star_jelly
-        count: 60
+        count: 18
+      - enemy: unraveler
+        count: 16
   - id: p4
-    at: { x: 792, y: 958 }
-    maxAlive: 15
+    at: { x: 1620, y: 620 }
+    maxAlive: 12
+    ramp: brutal
     members:
-      - enemy: voidling
-        count: 83
       - enemy: star_jelly
-        count: 60
+        count: 14
       - enemy: unraveler
-        count: 70
+        count: 22
   - id: p5
-    at: { x: 883, y: 1249 }
-    maxAlive: 15
+    at: { x: 1980, y: 940 }
+    maxAlive: 12
+    ramp: merciless
     members:
-      - enemy: voidling
-        count: 83
-      - enemy: star_jelly
-        count: 60
       - enemy: unraveler
-        count: 70
+        count: 24
+      - enemy: graviton
+        count: 6
   - id: p6
-    at: { x: 974, y: 1061 }
-    maxAlive: 15
+    at: { x: 2080, y: 640 }
+    maxAlive: 12
+    ramp: monstrous
     members:
-      - enemy: star_jelly
-        count: 60
       - enemy: unraveler
-        count: 70
+        count: 18
       - enemy: graviton
-        count: 35
+        count: 8
+  # The last knot sits ~300px SHORT of GROK so his arena stays a duel: clear this
+  # then close on the boss with room to trade blows.
   - id: p7
-    at: { x: 1065, y: 1352 }
-    maxAlive: 15
+    at: { x: 2320, y: 1000 }
+    maxAlive: 10
+    ramp: monstrous
     members:
-      - enemy: unraveler
-        count: 70
       - enemy: graviton
-        count: 35
+        count: 8
+      - enemy: unraveler
+        count: 14
+# BUILD-AND-RELEASE on a rising floor: a thin drift at the mouth, a swell through
+# the mid weave, a short breather at the EYE (merchant), then a hard climb to the
+# graviton crush and the surge at the deep-end bosses.
+tempo:
+  - at: 0
+    intensity: 0.55
+  - at: 0.2
+    intensity: 0.82
+  - at: 0.4
+    intensity: 1.05
+  - at: 0.5
+    intensity: 0.7
+  - at: 0.65
+    intensity: 1.12
+  - at: 0.85
+    intensity: 1.3
+  - at: 1
+    intensity: 1.45
+safeZones:
+  # THE EYE: a bubble of calm just north of the mid-road where the merchant
+  # surfaces. The horde is repelled out so the restock reads clean before the
+  # deep end. THE KING and his well sit ~230px south-west, well outside it.
+  - shape: circle
+    pos:
+      x: 1560
+      y: 430
+    radius: 120
+    label: EYE
+quietZones:
+  # THE EDDY: an SE dead pocket, no ambient spawns, guarded by a black hole
+  # (2380,1150) the hero must dash past for the chest. A dare, not a demand -
+  # it hangs off the main line, opt-in.
+  - shape: rect
+    rect:
+      x: 2280
+      y: 1180
+      width: 520
+      height: 420
+    label: EDDY
+chests:
+  # The EDDY payoff, tucked deep in the pocket past the guarding well.
+  - at:
+      x: 2540
+      y: 1340
 placedItems:
+  # ADA'S JACKET on her trail, mid-road by EARHART.
   - kind: story
     defId: ada_jacket
     pos:
-      x: 1500
-      y: 500
+      x: 1820
+      y: 580
+  # THE ZAI PROBE on the boss approach - the machine-mind reveal made physical.
   - kind: story
     defId: zai_probe
     pos:
-      x: 1900
-      y: 1180
-  - kind: xp
-    pos:
-      x: 2380
-      y: 990
-  - kind: xp
-    pos:
-      x: 740
-      y: 540
+      x: 2340
+      y: 620
   - kind: medkit
     pos:
-      x: 1440
-      y: 790
+      x: 2300
+      y: 900
+  - kind: xp
+    pos:
+      x: 720
+      y: 520
+  # The EDDY reward, deep in the chest pocket.
+  - kind: xp
+    pos:
+      x: 2500
+      y: 1400
 obstacles:
   - kind: rift_shard
     count: 16
