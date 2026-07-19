@@ -725,10 +725,8 @@ function survive(
   // of it, keeping the pool full so he outpaces it rather than hopping the whole
   // way and winding himself. `hasHopStamina` is the pool floor a hop needs, so
   // the bot never asks for a takeoff the engine would refuse.
-  const surrounded =
-    packed.length >= pt.surround && isEncircled(state, packed);
-  const hasHopStamina =
-    player.stamina >= STAMINA.jumpCost * player.maxStamina;
+  const surrounded = packed.length >= pt.surround && isEncircled(state, packed);
+  const hasHopStamina = player.stamina >= STAMINA.jumpCost * player.maxStamina;
   // BOSS LOCK. Lock onto the BOSS and fight it DOWN once he's actually in the
   // arena — the hero has closed to within `BOSS_LOCK_RANGE` or the boss has woken
   // — rather than kiting his adds. Getting THERE is the macro plan's job
