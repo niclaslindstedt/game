@@ -543,6 +543,16 @@ export type LevelDef = {
    */
   asteroids?: { everyMs: [number, number]; struckThought?: string };
   /**
+   * Spinning hay balls: presence rolls the bale hazard on (config HAY_BALLS).
+   * Every `everyMs` (rolled per bale) one mints just past the right screen edge
+   * in its own lane and rolls straight to the LEFT across the hero's
+   * surroundings, spinning and bouncing. A bale caught on the grounded hero
+   * costs a very slight flat hp (once per bale) and SHOVES him left every tick
+   * it overlaps — he must step out of the lane (or jump it) to stop being
+   * pushed back down the street. Eastworld's western prop hazard.
+   */
+  hayBalls?: { everyMs: [number, number] };
+  /**
    * Locked doors: built exactly like walls (chains of solid `door_locked`
    * circles) but tracked in `state.doors` — carrying the story-item key
    * whose `unlocks` names the door's `id` up to it slides it open. Pair

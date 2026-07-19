@@ -845,6 +845,27 @@ export type Asteroid = {
   struck: boolean;
 };
 
+/**
+ * A spinning HAY BALL (config HAY_BALLS; a level rolls them in with
+ * LevelDef.hayBalls): mints just past the right screen edge and rolls straight
+ * to the LEFT across the field, spinning and hopping (both renderer-only). It
+ * costs the grounded hero a very slight flat hp once on contact and SHOVES him
+ * left every tick it overlaps, plows minions aside, and despawns once past the
+ * player's stage. Ignores obstacles and level bounds.
+ */
+export type HayBall = {
+  id: number;
+  pos: Vec2;
+  /** Roll speed to the left (px/s). */
+  speed: number;
+  radius: number;
+  /** Visual spin rate in radians/s (rolled at spawn; renderer only). */
+  spin: number;
+  /** Latched once it has taken its one slight hp bite from the hero — the
+   * shove keeps coming every tick, but the bale only nicks him once. */
+  struck: boolean;
+};
+
 export type Projectile = {
   id: number;
   pos: Vec2;
@@ -1537,6 +1558,13 @@ export type GameEvent =
    */
   | { type: "wellDeath"; pos: Vec2 }
   /**
+   * A rolling hay bale shoved the grounded hero (config HAY_BALLS). `pos` is
+   * the bale — the app plays a soft thump and a puff. Fires once per bale (the
+   * tick it first bites), even though the leftward shove continues while it
+   * overlaps.
+   */
+  | { type: "hayBallHit"; pos: Vec2 }
+  /**
    * An apparition finished its scene, walked off, and dissolved (see
    * `EnemyDef.apparition`). The app sparkles it out at `pos`.
    */
@@ -2063,6 +2091,10 @@ export type GameState = {
   asteroids: Asteroid[];
   /** Ms until the next asteroid spawns (levels with LevelDef.asteroids). */
   asteroidTimerMs: number;
+  /** Hay bales currently rolling (levels with LevelDef.hayBalls). */
+  hayBalls: HayBall[];
+  /** Ms until the next hay bale rolls in (levels with LevelDef.hayBalls). */
+  hayBallTimerMs: number;
   /**
    * Ms until another "bags are full" nudge may fire. Counts down each step;
    * a blocked pickup emits `pickupBlocked` only when this reaches 0, then

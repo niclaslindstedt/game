@@ -64,7 +64,7 @@ import {
   syncItemSpells,
 } from "./spells.ts";
 import { maybeCompanionQuote, stepCompanions } from "./companions.ts";
-import { stepAsteroids, stepWells } from "./hazards.ts";
+import { stepAsteroids, stepHayBalls, stepWells } from "./hazards.ts";
 import { spawnEnemy } from "./create.ts";
 import { abilityDef } from "./defs/abilities.ts";
 import { cutsceneDef } from "./defs/cutscenes.ts";
@@ -296,6 +296,7 @@ export function step(state: GameState, input: GameInput, dtMs: number): void {
   // moved: the wells drag (and devour), the asteroids fly (and strike).
   stepWells(state, dt);
   stepAsteroids(state, dt, dtMs);
+  stepHayBalls(state, dt, dtMs);
   // Sight-pinned inner monologues fire on this tick's positions — after the
   // horde has moved, so "the hero sees one" means it is actually on screen.
   stepSightThoughts(state, levelDef(state.level.id).firstSightThoughts);

@@ -125,6 +125,13 @@ names its in-run music with an optional `music` id (a key into the app's
   genuinely hard. A fenced CONTROL CENTER compound walls off the east end
   behind a locked door (`control`) that SEAGULL's ALL-ACCESS PASS opens;
   inside, a hand-placed rock garden gives the GROK controllers their cover.
+  The park's signature environmental hazard is the **spinning hay balls**
+  (`LevelDef.hayBalls`, config `HAY_BALLS`): golden bales roll in from the east
+  and bounce straight down main street to the west, spinning as they go. A bale
+  caught on the grounded hero costs a **very slight** flat bite of hp (once per
+  bale) and **shoves him left**, back down the street — he must step out of its
+  lane (or jump it, like clearing enemy contact) to stop being pushed. Like the
+  rift's asteroids the bales plow minions aside unharmed and never mint a kill.
   Beating the boss arms the **victory quake** (the whole park shakes through
   the loot-grab window) and plays the campaign's **outro epilogue**
   (`LevelDef.outro` — the intro's black-screen mirror) before the victory

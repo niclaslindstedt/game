@@ -4590,6 +4590,12 @@
       "objective": {
         "type": "killBoss"
       },
+      "hayBalls": {
+        "everyMs": [
+          1600,
+          3000
+        ]
+      },
       "rareSpawns": {
         "rare": [
           "haywire_greeter",

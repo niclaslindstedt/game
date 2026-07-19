@@ -291,6 +291,24 @@ export function playWorldSound(synth: Synth, event: GameEvent): boolean {
       });
       return true;
 
+    case "hayBallHit":
+      // A hay bale bumping the hero: a soft, muffled WHUMP — a low band of
+      // noise (the straw) under a short low tone (the shove), gentle so a bale
+      // caught in the lane doesn't nag on every overlap tick.
+      synth.noise({
+        durationMs: 120,
+        volume: 0.05,
+        filter: { type: "lowpass", frequency: 700 },
+      });
+      synth.tone({
+        type: "sine",
+        from: 150,
+        to: 90,
+        durationMs: 130,
+        volume: 0.035,
+      });
+      return true;
+
     default:
       return false;
   }

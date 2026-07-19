@@ -1158,6 +1158,11 @@ export const FIX_ASTEROID_LEVEL: LevelDef = hazardLevel("test_asteroid_level", {
   asteroids: { everyMs: [800, 800] },
 });
 
+// A level with rolling hay balls on, at a fixed cadence for determinism.
+export const FIX_HAYBALL_LEVEL: LevelDef = hazardLevel("test_hayball_level", {
+  hayBalls: { everyMs: [800, 800] },
+});
+
 // A level with a dialogue-only apparition parked ahead of the spawn.
 export const FIX_APPARITION_LEVEL: LevelDef = hazardLevel(
   "test_apparition_level",
@@ -1492,6 +1497,7 @@ export function installFixtures(force = false): void {
       test_gated_level: FIX_GATED_LEVEL,
       test_well_level: FIX_WELL_LEVEL,
       test_asteroid_level: FIX_ASTEROID_LEVEL,
+      test_hayball_level: FIX_HAYBALL_LEVEL,
       test_apparition_level: FIX_APPARITION_LEVEL,
       test_outro_level: FIX_OUTRO_LEVEL,
       test_ranged_level: FIX_RANGED_LEVEL,
