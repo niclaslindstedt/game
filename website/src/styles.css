@@ -4517,8 +4517,16 @@ body {
    locked buttons read as an intentional beat, not a hung UI. The fill duration
    comes from the inline `animation-duration` LevelUpOverlay sets from the same
    constant that lifts the lockout. */
+/* The CHOOSE A STAT caption and its arming bar share one row, the bar sitting
+   just to the right of the text. */
+.levelup-choose-row {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
 .levelup-arming-bar {
-  width: min(18rem, 70%);
+  width: 6rem;
   height: 0.4rem;
   border-radius: 999px;
   overflow: hidden;
