@@ -83,6 +83,16 @@ export type BotTuning = {
    * ({@link BotTuning.exploreTargetFrac}), so this never strands a hero who tops
    * out under the boss. */
   bossEngageMargin: number;
+  /** How far AHEAD (world px, along its roll) a bouncing hay ball
+   * (`state.hayBalls`, Eastworld) must be before the hero sidesteps out of its
+   * lane. Bigger = he reacts to a bale from further off; 0 disables the dodge.
+   * Only bales in his lane and bearing down trigger it (see `dodgeHayBall`). */
+  hayBallDodgeDist: number;
+  /** Extra half-width (world px) added to the hero+bale radii when judging
+   * whether a bale shares the hero's LANE — the slack that decides "this bale
+   * will hit me" vs "it rolls past clear". Larger = he leaves the lane with more
+   * margin to spare. */
+  hayBallLaneMargin: number;
   /** The three posture rows (aggro/balanced/flee). */
   postures: Record<"aggro" | "balanced" | "flee", PostureTuning>;
 };
@@ -99,6 +109,8 @@ export const BOT_TUNING_DEFAULTS: BotTuning = {
   exploreBands: 3,
   exploreTargetFrac: 0.55,
   bossEngageMargin: 0,
+  hayBallDodgeDist: 96,
+  hayBallLaneMargin: 12,
   postures: {
     // Trades safety for kills: fights up close, tolerates a denser ring.
     aggro: { standoffMul: 0.65, fleeHp: 0.28, surround: 7 },
