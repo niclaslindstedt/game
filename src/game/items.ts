@@ -2614,12 +2614,58 @@ export function isBetterEquipment(
 }
 
 /**
- * Would wearing `candidate` improve its slot over what's equipped right now?
- * A purely informational cousin of `isBetterEquipment` for the pickup card's
- * "UPGRADE" marker: it drops the auto-equip rule's exclusions (passive charms,
- * the equal-firepower durability tiebreak) so a stronger passive still reads as
- * an upgrade, but keeps the level gate — a piece the hero can't wear yet is
- * not an upgrade he can act on. Never mutates state.
+ * How much the hero's SPEC values a point of `stat`, as a multiplier around 1:
+ * the stat's share of the hero's ALLOCATED (base) stats against an even share.
+ * A stat he has poured points into scores above 1 (it matters to his build); an
+ * off-spec stat he left at the floor scores below 1. So a +INTELLECT roll is
+ * worth more to a caster than a +STRENGTH one, and vice-versa — the item card's
+ * "is this an upgrade FOR MY SPEC?" read. Reads `player.stats` (the pure
+ * allocation, gear excluded — the same source `committedLane` reads the spec
+ * from), so worn gear can't feed back into what counts as an upgrade. An
+ * un-invested hero (flat stats) weights every stat at ~1, i.e. the old
+ * stat-agnostic behaviour.
+ */
+function specStatWeight(state: GameState, stat: StatName): number {
+  const stats = state.player.stats;
+  let total = 0;
+  for (const s of STAT_NAMES) total += stats[s];
+  if (total <= 0) return 1;
+  const evenShare = total / STAT_NAMES.length;
+  return stats[stat] / evenShare;
+}
+
+/**
+ * A gear piece's worth, spec-weighted: `gearScore` with each +STAT / +STAT%
+ * roll scaled by how much the hero's build values that stat (`specStatWeight`).
+ * Every other affix (armor, HP, crit, procs, …) helps any build the same, so
+ * it keeps its flat `gearScore` worth. Used only by the pickup-card / inventory
+ * upgrade read — NOT by the auto-equip rule (`isBetterEquipment`/`gearScore`),
+ * which stays stat-agnostic so the balance sims read one stable ranking.
+ */
+function specGearScore(state: GameState, gear: Equipment): number {
+  let score = gearScore(gear);
+  for (const affix of gear.affixes) {
+    // gearScore counted these at their flat worth; re-weight only the stat
+    // portion by the hero's spec (a bonus of value×15, a %-bonus of value×600).
+    if (affix.kind === "stat") {
+      score += affix.value * 15 * (specStatWeight(state, affix.stat) - 1);
+    } else if (affix.kind === "statPct") {
+      score += affix.value * 600 * (specStatWeight(state, affix.stat) - 1);
+    }
+  }
+  return score;
+}
+
+/**
+ * Would wearing `candidate` improve its slot over what's equipped right now,
+ * FOR THIS HERO'S SPEC? A purely informational cousin of `isBetterEquipment`
+ * for the pickup card's "UPGRADE" marker and the inventory glow: it drops the
+ * auto-equip rule's exclusions (passive charms, the equal-firepower durability
+ * tiebreak) so a stronger passive still reads as an upgrade, keeps the level
+ * gate — a piece the hero can't wear yet is not an upgrade he can act on — and
+ * ranks gear by the spec-aware `specGearScore` (weapons already rank by the
+ * spec-aware `weaponScore`), so an off-spec find no longer flashes UPGRADE.
+ * Never mutates state.
  */
 export function wouldUpgradeSlot(
   state: GameState,
@@ -2633,7 +2679,42 @@ export function wouldUpgradeSlot(
     );
   }
   const current = state.player.equipment[candidate.slot];
-  return current === null || gearScore(candidate) > gearScore(current);
+  return (
+    current === null ||
+    specGearScore(state, candidate) > specGearScore(state, current)
+  );
+}
+
+/**
+ * How much better/worse a find must score than the worn piece before the pickup
+ * card calls it a clear up- or down-grade rather than a side-grade. A find
+ * inside this band of the worn score is "about the same" — worth keeping the
+ * tap-to-equip on, since the player may still prefer it.
+ */
+const PICKUP_SIDEGRADE_BAND = 0.05;
+
+/**
+ * Is `candidate` CLEARLY worse for its slot than what the hero wears now, judged
+ * by the same spec-aware scores as `wouldUpgradeSlot` (weapons by `weaponScore`,
+ * gear by `specGearScore`)? The pickup card drops its TAP-TO-EQUIP affordance
+ * when this is true — a piece that plainly won't improve the hero isn't worth a
+ * tap. An EMPTY slot and a near-tie (within `PICKUP_SIDEGRADE_BAND`) are NOT
+ * downgrades: filling an empty slot always helps, and a side-grade may still be
+ * one the player wants to wear. Never mutates state.
+ */
+export function isSlotDowngrade(
+  state: GameState,
+  candidate: Equipment,
+): boolean {
+  const floor = 1 - PICKUP_SIDEGRADE_BAND;
+  if (candidate.slot === "weapon") {
+    const worn = weaponScore(state, state.player.equipment.weapon);
+    return worn > 0 && weaponScore(state, candidate) < worn * floor;
+  }
+  const current = state.player.equipment[candidate.slot];
+  if (current === null) return false;
+  const worn = specGearScore(state, current);
+  return worn > 0 && specGearScore(state, candidate) < worn * floor;
 }
 
 // ---- Inventory capacity (STRENGTH-scaled) --------------------------------------

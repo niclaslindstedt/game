@@ -56,6 +56,7 @@ import {
   equipmentIcon,
   itemLevelReq,
   extractLoadout,
+  isSlotDowngrade,
   isWeaponBroken,
   isWeaponDef,
   LEVELS,
@@ -969,11 +970,14 @@ export function GameScreen({
       const color = TIER_COLORS[tier] ?? TIER_COLORS.regular;
       const id = ++pickupCardSeq;
       // Tap-to-equip is offered only for a bagged find the hero can wear right
-      // now — an auto-equipped upgrade is already worn, and an under-leveled
-      // find would be refused. The item is located by its stable id so a bag
-      // rearranged while the card is up still equips the right piece, and its
-      // requirement is read off the INSTANCE (`itemLevelReq`) so an artifact's
-      // cap gate matches the engine's refusal instead of its lower base req.
+      // now AND that isn't clearly a downgrade for his spec — an auto-equipped
+      // upgrade is already worn, an under-leveled find would be refused, and a
+      // piece plainly worse than what's on (judged spec-aware, see
+      // `isSlotDowngrade`) isn't worth a tap, so it drops the affordance. The
+      // item is located by its stable id so a bag rearranged while the card is
+      // up still equips the right piece, and its requirement is read off the
+      // INSTANCE (`itemLevelReq`) so an artifact's cap gate matches the engine's
+      // refusal instead of its lower base req.
       const bagged =
         itemId != null
           ? (state.player.inventory.find((it) => it?.id === itemId) ?? null)
@@ -982,7 +986,8 @@ export function GameScreen({
         !equipped &&
         defId != null &&
         bagged != null &&
-        state.player.level >= itemLevelReq(bagged);
+        state.player.level >= itemLevelReq(bagged) &&
+        !isSlotDowngrade(state, bagged);
       const onEquip = canEquip
         ? () => {
             const index = state.player.inventory.findIndex(

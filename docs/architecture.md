@@ -570,6 +570,10 @@ run against synthetic fixtures with no shipped content (see
   `maxMeleeTargets` (INT raises the cap), makes a swing cleave the nearest few
   monsters it faces), the auto-equip scoring (`weaponScore` DPS /
   `gearScore`) and the crit-inclusive `weaponDps` the item cards lead with,
+  the pickup-card upgrade read (`wouldUpgradeSlot` / `isSlotDowngrade`, which
+  score gear SPEC-aware via `specGearScore` — a `+STAT` roll weighted by the
+  hero's own allocation — so an off-spec find neither flashes UPGRADE nor keeps
+  its tap-to-equip),
   and the durability cycle
   (`wearEquippedWeapon` — a weapon worn to zero is NOT trashed: it falls into
   the bag as a broken, unequippable spare (`isWeaponBroken`) and the best

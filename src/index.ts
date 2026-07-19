@@ -184,6 +184,7 @@ export {
   isScrappableLoot,
   isArmorBroken,
   isWeaponBroken,
+  isSlotDowngrade,
   isSpecialItem,
   magicFindBonus,
   itemLevelReq,
