@@ -1736,6 +1736,16 @@ export type GameEvent =
    */
   | { type: "stampedeTrample"; pos: Vec2; defId: string }
   /**
+   * The approach rumble of an employee stampede (config STAMPEDES): a low roll
+   * of feet emitted at `rumbleEveryMs` cadence, first while a herd is still
+   * DUE (the last `warnMs` of the countdown, so the hero hears it before the
+   * wall appears) and then all the while a herd charges. `intensity` (0..1)
+   * swells toward the spawn, peaks as the wall passes, and fades as it leaves;
+   * the app scales a puff of low noise by it. Carries no position — it is the
+   * whole-floor rumble, not a point sound.
+   */
+  | { type: "stampedeRumble"; intensity: number }
+  /**
    * The hero shook off a knockout and got back to his feet (his `knockoutMs`
    * hit 0). `pos` is where he stood up; the app plays a small "up you get"
    * cue.
@@ -2292,6 +2302,9 @@ export type GameState = {
   stampedes: Stampede[];
   /** Ms until the next stampede charges in (levels with LevelDef.stampedes). */
   stampedeTimerMs: number;
+  /** Countdown to the next approach-rumble grain (config STAMPEDES.rumbleEveryMs);
+   * the herd's roll is emitted on this cadence (levels with LevelDef.stampedes). */
+  stampedeRumbleMs: number;
   /**
    * Ms until another "bags are full" nudge may fire. Counts down each step;
    * a blocked pickup emits `pickupBlocked` only when this reaches 0, then

@@ -194,6 +194,72 @@ describe("stampedes — trampling the horde", () => {
   });
 });
 
+/** Step `ticks` times, collecting the intensity of every rumble grain emitted. */
+function collectRumbles(state: GameState, ticks: number): number[] {
+  const out: number[] = [];
+  for (let k = 0; k < ticks; k++) {
+    step(state, idle, DT);
+    for (const e of state.events) {
+      if (e.type === "stampedeRumble") out.push(e.intensity);
+    }
+  }
+  return out;
+}
+
+describe("stampedes — the approach is heard before it is seen", () => {
+  it("rumbles before any herd appears and swells as the spawn nears", () => {
+    // First herd is owed in 800ms (fixture everyMs) — inside the warn window,
+    // so the floor rumbles from the very first tick, with no herd on the board.
+    const state = startGame(42, "test_stampede_level");
+    clearStage(state);
+    expect(state.stampedes).toHaveLength(0);
+    // 40 ticks (640ms) stays entirely BEFORE the 800ms spawn.
+    const rumbles = collectRumbles(state, 40);
+    expect(state.stampedes).toHaveLength(0);
+    expect(rumbles.length).toBeGreaterThan(0);
+    // Starts quiet (below the pre-spawn ceiling) and grows as the wall nears.
+    expect(rumbles[0]).toBeGreaterThan(0);
+    expect(rumbles[0]).toBeLessThan(STAMPEDES.warnPeak);
+    expect(rumbles[rumbles.length - 1]).toBeGreaterThan(rumbles[0]!);
+  });
+
+  it("stays silent when no herd is anywhere near due", () => {
+    // startStampedes parks the timer far out and clears the board — nothing
+    // charging, nothing imminent, so no rumble at all.
+    const state = startStampedes();
+    expect(collectRumbles(state, 30)).toHaveLength(0);
+  });
+
+  it("a charging herd's rumble is louder the closer it is", () => {
+    const near = startStampedes();
+    near.stampedes.push(
+      makeStampede({
+        pos: { x: near.player.pos.x + 30, y: near.player.pos.y },
+      }),
+    );
+    const far = startStampedes();
+    far.stampedes.push(
+      makeStampede({ pos: { x: far.player.pos.x + 500, y: far.player.pos.y } }),
+    );
+    const nearRumble = collectRumbles(near, 1)[0];
+    const farRumble = collectRumbles(far, 1)[0];
+    expect(nearRumble).toBeGreaterThan(farRumble!);
+  });
+
+  it("emits grains on a cadence, not every tick", () => {
+    const state = startStampedes();
+    state.stampedes.push(makeStampede({ pos: { ...state.player.pos } }));
+    // 5 ticks (80ms) is under one rumble cadence (rumbleEveryMs) — one grain.
+    expect(collectRumbles(state, 5)).toHaveLength(1);
+  });
+
+  it("never rumbles on a level without stampedes", () => {
+    const state = startGame(42, "test_well_level");
+    clearStage(state);
+    expect(collectRumbles(state, 30)).toHaveLength(0);
+  });
+});
+
 describe("stampedes — charging off the stage", () => {
   it("despawns a herd that has charged clear of the player", () => {
     const state = startStampedes();

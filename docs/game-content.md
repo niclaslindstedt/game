@@ -66,7 +66,9 @@ names its in-run music with an optional `music` id (a key into the app's
   outright (an environmental death: no XP, no loot), elites and bosses are only
   shoved — and a grounded hero it catches takes a difficulty-scaled bite of his
   max hp (`DifficultyDef.stampedeDamageFrac`, 10%→40% up the ladder) AND a
-  two-second knockdown. Jumping sails clean over the whole wall (the
+  two-second knockdown. The wall is HEARD before it is seen — a low rumble of
+  feet fades up just before the herd appears and swells as it charges in, so it
+  never arrives on a silent floor. Jumping sails clean over the whole wall (the
   intended dodge) and stepping out of its lane clears it. Music: `hq_lockdown`
   ("LOCKDOWN", a tense infiltration theme).
 - **Level 2 — THE MOON** (`levels/moon.ts`). The beacon dies near the old

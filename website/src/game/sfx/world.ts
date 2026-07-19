@@ -198,6 +198,33 @@ export function playWorldSound(synth: Synth, event: GameEvent): boolean {
       return true;
     }
 
+    case "stampedeRumble": {
+      // The herd's approach: a low roll of many feet that SWELLS as the wall
+      // nears. `intensity` (0..1) comes from the engine — a whisper while the
+      // herd is still off-screen and due, loudest as it passes the hero. One
+      // grain per engine cadence, each a touch longer than that cadence so
+      // successive grains overlap into a continuous, building rumble.
+      const i = Math.max(0, Math.min(1, event.intensity));
+      synth.noise({
+        durationMs: 230,
+        volume: 0.018 + 0.05 * i,
+        filter: { type: "lowpass", frequency: 150 + 140 * i },
+        echo: 0.2,
+      });
+      if (i > 0.5) {
+        // Close now: a dull sub swell under the roll gives the wall its weight.
+        synth.tone({
+          type: "sine",
+          from: 58,
+          to: 46,
+          durationMs: 220,
+          volume: 0.032 * i,
+          detuneCents: 8,
+        });
+      }
+      return true;
+    }
+
     case "stampedeTrample": {
       // A runner bowls a mob over: a quick, dry crunch — a short click of
       // bandpassed noise with a stubby low knock under it, well below the
