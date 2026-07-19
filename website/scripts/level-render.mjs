@@ -24,7 +24,15 @@ import { fileURLToPath } from "node:url";
 import { writePng } from "./asset-tools/preview.mjs";
 import { renderText } from "./asset-tools/font.mjs";
 import { gridToSurface } from "./asset-tools/grid.mjs";
-import { blit, createSurface, fill, fillRect, upscale } from "./asset-tools/surface.mjs";
+import {
+  blit,
+  createSurface,
+  fill,
+  fillRect,
+  strokeCircle,
+  strokeRect,
+  upscale,
+} from "./asset-tools/surface.mjs";
 import { SPRITES, SPRITE_PALETTES } from "./sprite-data/index.mjs";
 import { loadLevels } from "./level-data/load-yaml.mjs";
 
@@ -87,6 +95,54 @@ function groundName(tiles, tx, ty) {
   return tileHash(tx, ty) % rareEvery === 0 ? rare : common;
 }
 
+// ---- showcase overlay ------------------------------------------------------
+// The surface is 1:1 world px, so world coords ARE image coords here.
+const ROLE_COLOR = {
+  boss: [255, 90, 90, 255],
+  elite: [255, 170, 70, 255],
+  minion: [230, 230, 235, 255],
+};
+
+/** A small label with a dark backing so it reads over the art. */
+function label(surf, text, x, y, color = [235, 235, 240, 255]) {
+  const clean = String(text).toUpperCase().replace(/_/g, " ");
+  const t = renderText(clean, color);
+  fillRect(surf, x - 1, y - 1, t.width + 2, t.height + 2, [0, 0, 0, 205]);
+  blit(surf, t, x, y);
+  return t.width;
+}
+
+/** Outline every design zone, landmark, pinned elite/boss, merchant and the
+ * spawn — so the render SHOWCASES every part of the level, not just the art. */
+function drawShowcase(surf, def) {
+  const zoneEdge = [220, 220, 230, 210];
+  // Room + design zones (quiet pockets, safe strips) — outline + name.
+  for (const z of [...(def.quietZones ?? []), ...(def.safeZones ?? [])]) {
+    if (z.rect) {
+      strokeRect(surf, z.rect.x, z.rect.y, z.rect.width, z.rect.height, zoneEdge, 2);
+      if (z.label) label(surf, z.label, z.rect.x + 4, z.rect.y + 4, [180, 210, 255, 255]);
+    } else if (z.pos) {
+      strokeCircle(surf, z.pos.x, z.pos.y, z.radius, zoneEdge, 2);
+      if (z.label) label(surf, z.label, z.pos.x - z.radius + 4, z.pos.y - 4, [140, 240, 180, 255]);
+    }
+  }
+  // Landmarks (entrance, prototype rocket…).
+  for (const lm of def.landmarks ?? [])
+    label(surf, lm.kind, lm.pos.x + 6, lm.pos.y - 6, [180, 180, 200, 255]);
+  // Merchant spawn nooks.
+  for (const m of def.merchantSpawns ?? [])
+    label(surf, "SHOP", m.x + 4, m.y - 4, [90, 220, 220, 255]);
+  // Player start.
+  label(surf, "START", def.playerSpawn.x + 6, def.playerSpawn.y - 4, [110, 230, 150, 255]);
+  // Pinned elites / unique / boss — named, coloured by role.
+  for (const s of def.spawns ?? []) {
+    if (!s.at) continue;
+    const d = ENEMY_DEFS[s.enemy];
+    const col = ROLE_COLOR[d?.role ?? "minion"] ?? ROLE_COLOR.minion;
+    label(surf, d?.name ?? s.enemy, s.at.x + 10, s.at.y - 6, col);
+  }
+}
+
 // ---- render one level ------------------------------------------------------
 function renderLevel(def, opts) {
   const state = createGame(opts.seed, def.id, opts.difficulty);
@@ -123,6 +179,10 @@ function renderLevel(def, opts) {
     counts.set(e.defId, (counts.get(e.defId) ?? 0) + 1);
   }
 
+  // 6. Showcase overlay — label every zone, room, landmark, elite, boss,
+  //    merchant and the spawn (unless --bare, for a pure art view).
+  if (!opts.bare) drawShowcase(surf, def);
+
   // Thin title strip so the render is self-identifying.
   const title = renderText(
     `${def.name}  ${def.id}  seed ${opts.seed} ${opts.difficulty}  ${W}x${H}`.toUpperCase(),
@@ -137,11 +197,12 @@ function renderLevel(def, opts) {
 
 // ---- entry -----------------------------------------------------------------
 function parseArgs(argv) {
-  const opts = { seed: 1, difficulty: "medium", zoom: 2, all: false };
+  const opts = { seed: 1, difficulty: "medium", zoom: 2, all: false, bare: false };
   const rest = [];
   for (let i = 0; i < argv.length; i++) {
     const a = argv[i];
     if (a === "--all") opts.all = true;
+    else if (a === "--bare") opts.bare = true;
     else if (a === "--seed") opts.seed = Number(argv[++i]);
     else if (a === "--difficulty") opts.difficulty = argv[++i];
     else if (a === "--zoom") opts.zoom = Math.max(1, Number(argv[++i]));
