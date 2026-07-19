@@ -2599,6 +2599,47 @@ export const ASTEROIDS = {
 } as const;
 
 /**
+ * Hay balls — the spinning, bouncing bales a level rolls in with
+ * LevelDef.hayBalls (Eastworld's western prop hazard). Each spawns just past
+ * the RIGHT screen edge in a lane of its own and rolls straight to the LEFT
+ * across the player's surroundings, spinning and hopping (the bounce is a
+ * renderer-only sine off `bouncePeriodMs`/`bounceHeight`). Unlike the asteroid
+ * rain a bale does NOT take a scaled bite: contact costs a VERY SLIGHT flat hp
+ * (`damage`, once per bale) and SHOVES the grounded hero LEFT (`knockback`,
+ * every tick it overlaps) — so a bale caught standing in the lane drags him
+ * back down the street and he must step OUT of the lane (or jump, z above
+ * JUMP.dodgeHeight, like clearing enemy contact) to stop being pushed. Bales
+ * plow minions aside unharmed, ignore obstacles and level bounds, and despawn
+ * once past the player's stage. Units: world px, px/s, ms.
+ */
+export const HAY_BALLS = {
+  /** Spawn distance to the RIGHT of the player — just past the screen edge. */
+  spawnDistance: 260,
+  /** Vertical spread of the spawn lane around the player (px), so successive
+   * bales roll down different lanes rather than one groove. */
+  laneJitter: 150,
+  /** Roll speed, rolled per bale (px/s) — slower than an asteroid so the shove
+   * reads as a drag, not a flick. */
+  speed: [70, 110] as [number, number],
+  /** Collision radius, rolled per bale (px) — small, light bales. */
+  radius: [6, 9] as [number, number],
+  /** Leftward shove speed (px/s) applied every tick the grounded hero overlaps
+   * a bale — kept under the roll speed so a bale drags him a stretch before it
+   * rolls on past. */
+  knockback: 78,
+  /** The VERY SLIGHT flat hp a bale costs on contact, once per bale. */
+  damage: 3,
+  /** Peak of the visual hop (px, renderer only). */
+  bounceHeight: 9,
+  /** Time for one full bounce (ms, renderer only). */
+  bouncePeriodMs: 620,
+  /** Bales in flight are capped here; the spawner defers above it. */
+  maxAlive: 4,
+  /** A bale this far from the player despawns — it has left the stage. */
+  despawnDistance: 620,
+} as const;
+
+/**
  * Sand storms — small, animated dust squalls a level turns on with
  * LevelDef.sandstorms (Mars). Each spawns on a ring just past the phone screen
  * edge (the asteroid/enemy-spawn rationale) and DRIFTS across the player's

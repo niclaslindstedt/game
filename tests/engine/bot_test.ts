@@ -434,3 +434,54 @@ describe("bot repair awareness", () => {
     expect(state.stats.kills).toBeGreaterThan(0);
   });
 });
+
+describe("bot hay-ball awareness", () => {
+  /** A hay-ball level, staged clean with just the hero. */
+  function stageHayLevel(): GameState {
+    const state = startGame(1, "test_hayball_level");
+    clearStage(state);
+    state.hayBalls = [];
+    return state;
+  }
+
+  const bale = (pos: { x: number; y: number }) => ({
+    id: 9300,
+    pos,
+    speed: 90,
+    radius: 8,
+    spin: 0,
+    struck: false,
+  });
+
+  it("sidesteps out of the lane of a bale bearing down on it", () => {
+    const state = stageHayLevel();
+    const p = state.player.pos;
+    // A bale just ahead (up-street) and a touch below the hero's lane.
+    state.hayBalls.push(bale({ x: p.x + 40, y: p.y + 20 }));
+    const bot = createBot("survivor");
+    const input = botAct(bot, state);
+    expect(bot.lastThought).toBe("HAY");
+    // Steps perpendicular AWAY from the bale (up, since it is below him), not
+    // forward into the roll — the target holds his x and clears his lane.
+    expect(input.target.y).toBeLessThan(p.y);
+    expect(Math.abs(input.target.x - p.x)).toBeLessThan(2);
+  });
+
+  it("ignores a bale rolling down a different lane", () => {
+    const state = stageHayLevel();
+    const p = state.player.pos;
+    state.hayBalls.push(bale({ x: p.x + 40, y: p.y + 300 }));
+    const bot = createBot("survivor");
+    botAct(bot, state);
+    expect(bot.lastThought).not.toBe("HAY");
+  });
+
+  it("ignores a bale that has already rolled past it", () => {
+    const state = stageHayLevel();
+    const p = state.player.pos;
+    state.hayBalls.push(bale({ x: p.x - 100, y: p.y }));
+    const bot = createBot("survivor");
+    botAct(bot, state);
+    expect(bot.lastThought).not.toBe("HAY");
+  });
+});

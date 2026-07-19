@@ -13,12 +13,19 @@ import {
   createGame,
   difficultyDef,
   dismissIntro,
+  HAY_BALLS,
   JUMP,
   skipCutscene,
   step,
   WELLS,
 } from "@game/core";
-import type { Asteroid, Difficulty, GameState, GravityWell } from "@game/core";
+import type {
+  Asteroid,
+  Difficulty,
+  GameState,
+  GravityWell,
+  HayBall,
+} from "@game/core";
 import { clearStage, DT, idle, makeEnemy, run, startGame } from "./helpers.ts";
 
 /** An asteroid-rain run started on a given rung, staged clean. */
@@ -53,6 +60,20 @@ function makeRock(overrides: Partial<Asteroid> & { pos: Asteroid["pos"] }) {
     dir: { x: 1, y: 0 },
     speed: 0,
     radius: 10,
+    spin: 0,
+    struck: false,
+    ...overrides,
+  };
+}
+
+/** A hand-built hay bale, parked (speed 0) by the test rather than the roller. */
+function makeBall(
+  overrides: Partial<HayBall> & { pos: HayBall["pos"] },
+): HayBall {
+  return {
+    id: 9200,
+    speed: 0,
+    radius: 12,
     spin: 0,
     struck: false,
     ...overrides,
@@ -321,5 +342,119 @@ describe("asteroids", () => {
     );
     step(state, idle, DT);
     expect(state.asteroids).toHaveLength(0);
+  });
+});
+
+describe("hay balls", () => {
+  it("rolls in on the level's cadence, capped at maxAlive", () => {
+    const state = startGame(42, "test_hayball_level");
+    clearStage(state);
+    expect(state.hayBalls).toHaveLength(0);
+    // Fixed 800ms cadence; each bale lives long enough (despawn at 620px) that
+    // the cap must engage within a few intervals.
+    run(state, idle, Math.ceil((800 * (HAY_BALLS.maxAlive + 3)) / DT));
+    expect(state.hayBalls.length).toBeGreaterThan(0);
+    expect(state.hayBalls.length).toBeLessThanOrEqual(HAY_BALLS.maxAlive);
+  });
+
+  it("never rolls on levels without them", () => {
+    const state = startGame(42, "test_asteroid_level");
+    clearStage(state);
+    run(state, idle, 200);
+    expect(state.hayBalls).toHaveLength(0);
+  });
+
+  it("shoves the grounded hero LEFT and nicks slight hp once per bale", () => {
+    const state = startGame(42, "test_hayball_level");
+    clearStage(state);
+    state.hayBallTimerMs = 999_999; // the hand-built bale is the only one
+    const startX = state.player.pos.x;
+    const hpBefore = state.player.hp;
+    state.hayBalls.push(
+      makeBall({ pos: { x: startX, y: state.player.pos.y } }),
+    );
+    step(state, idle, DT);
+    // Pushed left, and nicked exactly the slight flat bite.
+    expect(state.player.pos.x).toBeLessThan(startX);
+    expect(state.player.hp).toBe(hpBefore - HAY_BALLS.damage);
+    expect(state.events.some((e) => e.type === "hayBallHit")).toBe(true);
+    // The bite latches — the same bale keeps shoving but never nicks again.
+    const xAfterFirst = state.player.pos.x;
+    step(state, idle, DT);
+    expect(state.player.pos.x).toBeLessThan(xAfterFirst);
+    expect(state.player.hp).toBe(hpBefore - HAY_BALLS.damage);
+  });
+
+  it("stops shoving once the hero steps out of the lane", () => {
+    const state = startGame(42, "test_hayball_level");
+    clearStage(state);
+    state.hayBallTimerMs = 999_999;
+    // A bale far off the hero's lane never touches him.
+    state.hayBalls.push(
+      makeBall({
+        pos: { x: state.player.pos.x, y: state.player.pos.y + 400 },
+      }),
+    );
+    const startX = state.player.pos.x;
+    const hpBefore = state.player.hp;
+    step(state, idle, DT);
+    expect(state.player.pos.x).toBe(startX);
+    expect(state.player.hp).toBe(hpBefore);
+  });
+
+  it("a jumping hero clears a bale untouched", () => {
+    const state = startGame(42, "test_hayball_level");
+    clearStage(state);
+    state.hayBallTimerMs = 999_999;
+    state.player.z = JUMP.dodgeHeight + 30;
+    state.player.vz = 100;
+    const startX = state.player.pos.x;
+    const hpBefore = state.player.hp;
+    state.hayBalls.push(
+      makeBall({ pos: { x: startX, y: state.player.pos.y } }),
+    );
+    step(state, idle, DT);
+    expect(state.player.pos.x).toBe(startX);
+    expect(state.player.hp).toBe(hpBefore);
+  });
+
+  it("shoves minions out of its path without hurting them", () => {
+    const state = startGame(42, "test_hayball_level");
+    clearStage(state);
+    state.hayBallTimerMs = 999_999;
+    const minion = makeEnemy({
+      pos: { x: state.player.pos.x + 200, y: state.player.pos.y + 3 },
+    });
+    state.enemies.push(minion);
+    state.hayBalls.push(
+      makeBall({
+        pos: { x: minion.pos.x - 4, y: minion.pos.y - 3 },
+        speed: 90,
+      }),
+    );
+    step(state, idle, DT);
+    expect(minion.hp).toBe(minion.maxHp);
+    const ball = state.hayBalls[0]!;
+    const gap = Math.hypot(
+      minion.pos.x - ball.pos.x,
+      minion.pos.y - ball.pos.y,
+    );
+    expect(gap).toBeGreaterThanOrEqual(ball.radius + 9 - 0.01);
+  });
+
+  it("despawns once it leaves the player's stage", () => {
+    const state = startGame(42, "test_hayball_level");
+    clearStage(state);
+    state.hayBallTimerMs = 999_999;
+    state.hayBalls.push(
+      makeBall({
+        pos: {
+          x: state.player.pos.x - HAY_BALLS.despawnDistance - 10,
+          y: state.player.pos.y,
+        },
+      }),
+    );
+    step(state, idle, DT);
+    expect(state.hayBalls).toHaveLength(0);
   });
 });

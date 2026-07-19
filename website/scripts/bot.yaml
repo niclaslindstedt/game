@@ -47,6 +47,12 @@ default:
   # value engages that many levels early; negative over-levels first. (Coverage
   # still commits him to the boss if he tops out under the boss's level.)
   bossEngageMargin: 0
+  # HAY BALLS (Eastworld): step out of a rolling bale's lane before it shoves the
+  # hero back down the street. `hayBallDodgeDist` is how far ahead (px, along the
+  # roll) a bale triggers the sidestep; `hayBallLaneMargin` is the slack added to
+  # the hero+bale radii when judging whether it shares his lane. 0 dist disables.
+  hayBallDodgeDist: 96
+  hayBallLaneMargin: 12
 
 # Per-level overrides. Add a block under a level id to bend a knob for that map.
 levels:

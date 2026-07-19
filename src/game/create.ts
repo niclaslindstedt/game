@@ -657,6 +657,11 @@ export function createGame(
     asteroidTimerMs: def.asteroids
       ? randomRange(rng, def.asteroids.everyMs[0], def.asteroids.everyMs[1])
       : 0,
+    hayBalls: [],
+    // The first bale is owed a full interval; 0 on levels without them.
+    hayBallTimerMs: def.hayBalls
+      ? randomRange(rng, def.hayBalls.everyMs[0], def.hayBalls.everyMs[1])
+      : 0,
     sandstorms: [],
     // The first storm is owed a full interval; 0 on levels without squalls.
     sandstormTimerMs: def.sandstorms

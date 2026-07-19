@@ -1,0 +1,27 @@
+name: hay_ball_0
+family: eastworld
+size: [9, 9]
+description: >
+  A small, loose ball of straw — a thin see-through tangle of golden strands in
+  a rough ring, mostly transparent. The spinning, bouncing hay-ball hazard that
+  rolls down Eastworld's Main Street.
+subject:
+  kind: hazard prop — small rolling hay ball
+  build: a small, airy round tuft of loose straw, thin and see-through
+  features: a broken ring of golden strands with a sparse tangle inside, lit pale on the upper-left, transparent gaps throughout
+  flavor: a light wild-west prop ball rolling right-to-left across the street
+palette:
+  H: "#f6e69a" # pale straw highlight
+  Y: "#e8c860" # light straw
+  y: "#c89a3a" # mid straw
+  d: "#93702c" # dark straw shadow
+grid: |
+  .........
+  ...YYY...
+  ..YH.dY..
+  .YH...d..
+  .Y...yd..
+  .Yd...d..
+  ..Yy.d...
+  ...Ydd...
+  .........

@@ -10,7 +10,14 @@
 
 import { randomRange } from "@game/lib/rng.ts";
 import { direction, distance, moveToward, vec } from "@game/lib/vec.ts";
-import { ASTEROIDS, JUMP, PLAYER, SANDSTORMS, WELLS } from "./config.ts";
+import {
+  ASTEROIDS,
+  HAY_BALLS,
+  JUMP,
+  PLAYER,
+  SANDSTORMS,
+  WELLS,
+} from "./config.ts";
 import { difficultyDef } from "./defs/difficulties.ts";
 import { enemyDef } from "./defs/enemies/index.ts";
 import { levelDef, type LevelDef } from "./defs/levels/index.ts";
@@ -22,6 +29,7 @@ import type {
   Enemy,
   GameState,
   GravityWell,
+  HayBall,
   SandStorm,
 } from "./types.ts";
 
@@ -245,6 +253,96 @@ function maybeHazardThought(
   if (state.thoughtsSeen.includes(thought)) return;
   state.thoughtsSeen.push(thought);
   startPlayerThought(state, thought);
+}
+
+/**
+ * Advance the rolling hay bales: mint on the level's `everyMs` cadence (capped
+ * at HAY_BALLS.maxAlive in flight), roll each straight to the left, SHOVE the
+ * grounded hero left every tick it overlaps (nicking a very slight flat hp the
+ * first time, once per bale), plow minions out of the path unharmed, and
+ * despawn bales that have left the player's stage. A jump (z above
+ * JUMP.dodgeHeight) clears a bale like it clears enemy contact.
+ */
+export function stepHayBalls(state: GameState, dt: number, dtMs: number): void {
+  const spec = levelDef(state.level.id).hayBalls;
+  if (spec) {
+    state.hayBallTimerMs -= dtMs;
+    if (
+      state.hayBallTimerMs <= 0 &&
+      state.hayBalls.length < HAY_BALLS.maxAlive
+    ) {
+      spawnHayBall(state);
+      state.hayBallTimerMs = randomRange(
+        state.rng,
+        spec.everyMs[0],
+        spec.everyMs[1],
+      );
+    }
+  }
+  if (state.hayBalls.length === 0) return;
+
+  const player = state.player;
+  const grounded = player.z <= JUMP.dodgeHeight;
+  const survivors: HayBall[] = [];
+  for (const ball of state.hayBalls) {
+    ball.pos.x -= ball.speed * dt;
+
+    // Contact: while the grounded hero overlaps a bale it SHOVES him left every
+    // tick (so a bale caught in the lane drags him back down the street), and
+    // nicks a very slight flat hp the FIRST time — one bite per bale. Stepping
+    // out of the lane, or jumping the bale, is the only way to stop the push.
+    if (
+      grounded &&
+      distance(ball.pos, player.pos) <= ball.radius + PLAYER.radius
+    ) {
+      player.pos.x = Math.max(
+        PLAYER.radius,
+        player.pos.x - HAY_BALLS.knockback * dt,
+      );
+      if (!ball.struck) {
+        ball.struck = true;
+        player.hp -= Math.max(1, HAY_BALLS.damage);
+        player.hurtFlashMs = 250;
+        state.stats.damageTaken += HAY_BALLS.damage;
+        state.events.push({ type: "hayBallHit", pos: { ...ball.pos } });
+      }
+    }
+
+    // Minions in the path are shoved aside, not hurt — the bale plows the crowd
+    // open, which reads as impact without minting farmable kills.
+    for (const enemy of state.enemies) {
+      const def = enemyDef(enemy.defId);
+      if (def.role !== "minion" || def.apparition) continue;
+      const gap = def.radius + ball.radius;
+      const d = distance(enemy.pos, ball.pos);
+      if (d >= gap || d === 0) continue;
+      const push = direction(ball.pos, enemy.pos);
+      enemy.pos.x += push.x * (gap - d);
+      enemy.pos.y += push.y * (gap - d);
+    }
+
+    if (distance(ball.pos, player.pos) <= HAY_BALLS.despawnDistance) {
+      survivors.push(ball);
+    }
+  }
+  state.hayBalls = survivors;
+}
+
+/** Mint one hay bale just past the right screen edge, in its own lane. */
+function spawnHayBall(state: GameState): void {
+  const pos = vec(
+    state.player.pos.x + HAY_BALLS.spawnDistance,
+    state.player.pos.y +
+      randomRange(state.rng, -HAY_BALLS.laneJitter, HAY_BALLS.laneJitter),
+  );
+  state.hayBalls.push({
+    id: state.nextId++,
+    pos,
+    speed: randomRange(state.rng, HAY_BALLS.speed[0], HAY_BALLS.speed[1]),
+    radius: randomRange(state.rng, HAY_BALLS.radius[0], HAY_BALLS.radius[1]),
+    spin: randomRange(state.rng, 4, 9),
+    struck: false,
+  });
 }
 
 /** Mint one rock on the spawn ring, aimed across the player with scatter. */

@@ -543,6 +543,16 @@ export type LevelDef = {
    */
   asteroids?: { everyMs: [number, number]; struckThought?: string };
   /**
+   * Spinning hay balls: presence rolls the bale hazard on (config HAY_BALLS).
+   * Every `everyMs` (rolled per bale) one mints just past the right screen edge
+   * in its own lane and rolls straight to the LEFT across the hero's
+   * surroundings, spinning and bouncing. A bale caught on the grounded hero
+   * costs a very slight flat hp (once per bale) and SHOVES him left every tick
+   * it overlaps — he must step out of the lane (or jump it) to stop being
+   * pushed back down the street. Eastworld's western prop hazard.
+   */
+  hayBalls?: { everyMs: [number, number] };
+  /**
    * Sand storms: presence turns the squall spawner on. Every `everyMs` (rolled
    * per storm) one small dust gust drifts across the player's surroundings —
    * SLOW enough to walk clear of, which is the whole defence. A storm that

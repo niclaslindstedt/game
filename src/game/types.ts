@@ -855,6 +855,27 @@ export type Asteroid = {
 };
 
 /**
+ * A spinning HAY BALL (config HAY_BALLS; a level rolls them in with
+ * LevelDef.hayBalls): mints just past the right screen edge and rolls straight
+ * to the LEFT across the field, spinning and hopping (both renderer-only). It
+ * costs the grounded hero a very slight flat hp once on contact and SHOVES him
+ * left every tick it overlaps, plows minions aside, and despawns once past the
+ * player's stage. Ignores obstacles and level bounds.
+ */
+export type HayBall = {
+  id: number;
+  pos: Vec2;
+  /** Roll speed to the left (px/s). */
+  speed: number;
+  radius: number;
+  /** Visual spin rate in radians/s (rolled at spawn; renderer only). */
+  spin: number;
+  /** Latched once it has taken its one slight hp bite from the hero — the
+   * shove keeps coming every tick, but the bale only nicks him once. */
+  struck: boolean;
+};
+
+/**
  * A drifting SAND STORM (config SANDSTORMS; a level turns the squalls on with
  * LevelDef.sandstorms): a small dust gust that crosses the field in a straight
  * line, shoves minions aside like an asteroid, and — catching the grounded
@@ -1574,6 +1595,13 @@ export type GameEvent =
    */
   | { type: "wellDeath"; pos: Vec2 }
   /**
+   * A rolling hay bale shoved the grounded hero (config HAY_BALLS). `pos` is
+   * the bale — the app plays a soft thump and a puff. Fires once per bale (the
+   * tick it first bites), even though the leftward shove continues while it
+   * overlaps.
+   */
+  | { type: "hayBallHit"; pos: Vec2 }
+  /**
    * A sand storm caught the grounded hero: it took its scaled bite AND knocked
    * him out (he drops prone for SANDSTORMS.knockoutMs). `pos` is the hero at
    * the moment the gust hit; the app plays the whump + dust and shakes the
@@ -2113,6 +2141,10 @@ export type GameState = {
   asteroids: Asteroid[];
   /** Ms until the next asteroid spawns (levels with LevelDef.asteroids). */
   asteroidTimerMs: number;
+  /** Hay bales currently rolling (levels with LevelDef.hayBalls). */
+  hayBalls: HayBall[];
+  /** Ms until the next hay bale rolls in (levels with LevelDef.hayBalls). */
+  hayBallTimerMs: number;
   /** Sand storms currently drifting (levels with LevelDef.sandstorms). */
   sandstorms: SandStorm[];
   /** Ms until the next sand storm spawns (levels with LevelDef.sandstorms). */

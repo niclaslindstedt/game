@@ -15,6 +15,7 @@ import {
   companionDef,
   enemyDef,
   equipmentIcon,
+  HAY_BALLS,
   itemSpellOrbPositions,
   LAST_STAND,
   LEVELING,
@@ -953,6 +954,45 @@ export function drawFrame(
       sprite,
       Math.round(rock.pos.x - size / 2 - camera.x),
       Math.round(rock.pos.y - size / 2 - camera.y),
+      size,
+      size,
+    );
+  }
+
+  // Hay bales roll along the ground plane, spinning (the frame flip) and
+  // bouncing (a sine hop off `bouncePeriodMs`/`bounceHeight`, renderer only) —
+  // a ground shadow that tightens as the bale rises sells the hop.
+  for (const ball of state.hayBalls) {
+    if (!inView(ball.pos.x, ball.pos.y, 40)) continue;
+    const size = Math.max(12, Math.round(ball.radius * 2 + 2));
+    const phase = (((timeMs / HAY_BALLS.bouncePeriodMs + ball.id) % 1) + 1) % 1;
+    const hop = HAY_BALLS.bounceHeight * Math.abs(Math.sin(Math.PI * phase));
+    const sx = Math.round(ball.pos.x - camera.x);
+    const sy = Math.round(ball.pos.y - camera.y);
+    // Ground shadow (drawn first, at the resting pos), shrinking as it rises.
+    const shrink = 1 - (0.45 * hop) / HAY_BALLS.bounceHeight;
+    ctx.save();
+    ctx.globalAlpha = 0.28 * shrink;
+    ctx.fillStyle = "#1a1c2c";
+    ctx.beginPath();
+    ctx.ellipse(
+      sx,
+      sy + size / 2 - 2,
+      (size / 2) * shrink,
+      size / 5,
+      0,
+      0,
+      Math.PI * 2,
+    );
+    ctx.fill();
+    ctx.restore();
+    const frame = Math.floor(timeMs / 90 + ball.id) % 2;
+    const sprite = spriteByName(sprites, `hay_ball_${frame}`);
+    if (!sprite) continue;
+    ctx.drawImage(
+      sprite,
+      Math.round(sx - size / 2),
+      Math.round(sy - size / 2 - hop),
       size,
       size,
     );

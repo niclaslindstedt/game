@@ -161,6 +161,16 @@ path:
     y: 780
 objective:
   type: killBoss
+# SPINNING HAY BALLS: the park's western prop hazard. Bales roll in from the
+# right (east) and bounce straight down Main Street to the left, spinning as
+# they go. A bale caught on the grounded hero costs a very slight bite of hp and
+# SHOVES him left, back down the street he came - he has to step out of its lane
+# (or jump it) to stop being pushed. A rolling-tumbleweed nuisance that fits the
+# west-to-east march without threatening the pinned duels.
+hayBalls:
+  everyMs:
+    - 1600
+    - 3000
 rareSpawns:
   rare:
     - haywire_greeter

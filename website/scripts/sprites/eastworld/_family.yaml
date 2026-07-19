@@ -33,6 +33,7 @@ animations:
   mosque_beach_walk:
     { frames: [elon_mosque_beach_0, elon_mosque_beach_1], delayMs: 340 }
   supercore_pulse: { frames: [zai_supercore_0, zai_supercore_1], delayMs: 420 }
+  hay_ball_roll: { frames: [hay_ball_0, hay_ball_1], delayMs: 120 }
 wounds:
   cowbot: { splat: y, core: Y, scuff: H }
   tin_outlaw: { splat: y, core: Y, scuff: H }

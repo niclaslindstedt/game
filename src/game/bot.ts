@@ -342,6 +342,14 @@ export function botAct(bot: Bot, state: GameState): GameInput {
       think(bot, "DODGE");
       return dodge;
     }
+    // Step out of a rolling hay ball's lane before it shoves him back down the
+    // street (Eastworld's `state.hayBalls`). A quick sidestep, like a human
+    // giving a rolling bale room — below the boss-move dodge, above the fight.
+    const hay = dodgeHayBall(state, tune);
+    if (hay) {
+      think(bot, "HAY");
+      return hay;
+    }
     switch (bot.strategy) {
       case "rush":
         think(bot, foe ? "RUSH" : "RUSH BOSS");
@@ -939,6 +947,45 @@ function dodgeTelegraph(state: GameState): GameInput | null {
     }
   }
   return null;
+}
+
+/**
+ * A sidestep input when a bouncing HAY BALL (`state.hayBalls`, Eastworld) is
+ * bearing down the hero's lane — else null. Bales roll straight LEFT at a fixed
+ * `y`, so a body in the same lane gets shoved back down the street; the human
+ * read is to step PERPENDICULAR (up/down) out of the lane before it arrives.
+ * Considers only bales still to the hero's right (ahead of the roll) and within
+ * `hayBallDodgeDist`, whose lane overlaps his within the combined radii plus
+ * `hayBallLaneMargin`. Dodges toward the OPEN side (the map centre, so he never
+ * sidesteps off the field), and hops if a bale is right on top of him — an
+ * airborne hero clears a bale like he clears enemy contact.
+ */
+function dodgeHayBall(state: GameState, tune: BotTuning): GameInput | null {
+  if (state.hayBalls.length === 0 || tune.hayBallDodgeDist <= 0) return null;
+  const player = state.player;
+  const midY = state.level.height / 2;
+  let threat: (typeof state.hayBalls)[number] | null = null;
+  let best = Infinity;
+  for (const ball of state.hayBalls) {
+    const ahead = ball.pos.x - player.pos.x; // >0 = still up-street, closing
+    if (ahead < -ball.radius || ahead > tune.hayBallDodgeDist) continue;
+    const laneGap = Math.abs(ball.pos.y - player.pos.y);
+    const laneReach = ball.radius + PLAYER.radius + tune.hayBallLaneMargin;
+    if (laneGap > laneReach) continue;
+    if (ahead < best) {
+      best = ahead;
+      threat = ball;
+    }
+  }
+  if (!threat) return null;
+  // Step away from the bale's lane, toward the roomier side (map centre) when
+  // the hero straddles its centreline, so the dodge never walks him off-field.
+  let sign = player.pos.y < threat.pos.y ? -1 : 1;
+  if (Math.abs(player.pos.y - threat.pos.y) < 2)
+    sign = player.pos.y > midY ? -1 : 1;
+  const grounded = player.z === 0;
+  const jump = grounded && best <= threat.radius + PLAYER.radius;
+  return steer(state, { x: player.pos.x, y: player.pos.y + sign * 90 }, jump);
 }
 
 /** A unit vector pointing away from the local pack, weighted so the NEAREST

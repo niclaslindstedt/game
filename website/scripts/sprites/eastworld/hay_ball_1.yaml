@@ -1,0 +1,26 @@
+name: hay_ball_1
+family: eastworld
+size: [9, 9]
+description: >
+  The small hay ball's second frame — the loose strands rotated a step so the
+  see-through tuft reads as spinning as it rolls.
+subject:
+  kind: hazard prop — small rolling hay ball
+  build: a small, airy round tuft of loose straw, thin and see-through
+  features: the ring and inner strands from hay_ball_0 turned one step to sell the roll
+  flavor: a light wild-west prop ball rolling right-to-left across the street
+palette:
+  H: "#f6e69a" # pale straw highlight
+  Y: "#e8c860" # light straw
+  y: "#c89a3a" # mid straw
+  d: "#93702c" # dark straw shadow
+grid: |
+  .........
+  ...YYd...
+  ..YH.dd..
+  .YHy..d..
+  .Y.yy.d..
+  .YH.yyd..
+  ..Yd.d...
+  ...Ydd...
+  .........
