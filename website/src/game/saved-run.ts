@@ -51,7 +51,10 @@ const KEY = storageKey("current-run");
 // v12: the cast QUEUE + GLOBAL cooldown — the hero grew spellQueue/
 // globalCooldownMs (a press now enqueues, drained one cast per global cooldown).
 // A v11 snapshot would thaw without a queue and crash stepSpellQueue.
-const SAVE_VERSION = 12;
+// v13: sand storms — the state grew sandstorms/sandstormTimerMs and the hero a
+// knockoutMs. A v12 snapshot would thaw without a storm list (stepSandstorms
+// reads .length on undefined) and without the knockout timer.
+const SAVE_VERSION = 13;
 
 /** A run parked between sessions: enough to drop the player straight back in. */
 export type ParkedRun = {

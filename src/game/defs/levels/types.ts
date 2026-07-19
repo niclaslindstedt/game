@@ -543,6 +543,18 @@ export type LevelDef = {
    */
   asteroids?: { everyMs: [number, number]; struckThought?: string };
   /**
+   * Sand storms: presence turns the squall spawner on. Every `everyMs` (rolled
+   * per storm) one small dust gust drifts across the player's surroundings —
+   * SLOW enough to walk clear of, which is the whole defence. A storm that
+   * catches the grounded hero takes a difficulty-scaled bite of his max hp
+   * (DifficultyDef.sandstormDamageFrac) AND knocks him out — he drops prone and
+   * helpless for SANDSTORMS.knockoutMs while the storm passes over him and
+   * fades. Shared tuning lives in config SANDSTORMS. `struckThought` (a
+   * THOUGHT_DEFS id) fires a one-time inner monologue the first time a storm
+   * downs the hero this run, tracked in the same `thoughtsSeen` ledger.
+   */
+  sandstorms?: { everyMs: [number, number]; struckThought?: string };
+  /**
    * Locked doors: built exactly like walls (chains of solid `door_locked`
    * circles) but tracked in `state.doors` — carrying the story-item key
    * whose `unlocks` names the door's `id` up to it slides it open. Pair

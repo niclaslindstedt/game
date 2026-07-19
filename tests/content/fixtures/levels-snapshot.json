@@ -2351,6 +2351,12 @@
         ]
       },
       "foes": "MACHINES",
+      "sandstorms": {
+        "everyMs": [
+          9000,
+          16000
+        ]
+      },
       "merchant": {
         "sprite": "merchant_mars",
         "greeting": [

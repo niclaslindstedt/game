@@ -196,12 +196,17 @@ describe("ELON MOSQUE flees", () => {
       enemyDef("elon_mosque").lastWords,
     ]);
 
-    // He drops the NOT-A-FLAMETHROWER as he bolts.
-    expect(
-      state.items.some(
-        (i) =>
-          i.kind === "equipment" && i.equipment.defId === "not_a_flamethrower",
-      ),
-    ).toBe(true);
+    // He drops the NOT-A-FLAMETHROWER as he bolts. It may land close enough
+    // that the hero walks onto it and banks it, so accept it on the ground OR
+    // already carried — the guaranteed DROP is what's under test, not where it
+    // came to rest.
+    const onGround = state.items.some(
+      (i) =>
+        i.kind === "equipment" && i.equipment.defId === "not_a_flamethrower",
+    );
+    const carried = state.player.inventory.some(
+      (e) => e?.defId === "not_a_flamethrower",
+    );
+    expect(onGround || carried).toBe(true);
   });
 });

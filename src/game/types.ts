@@ -548,6 +548,15 @@ export type Player = {
   disarmed?: boolean;
   /** Remaining ms of post-hit invulnerability flash (visual only). */
   hurtFlashMs: number;
+  /**
+   * KNOCKED OUT: ms the hero lies prone and HELPLESS on the floor (config
+   * SANDSTORMS.knockoutMs, landed by a sand storm). While `> 0` he can't move,
+   * jump, attack, cast, or use an item — every player-driven pass is gated on
+   * it (`stepPlayer` freezes him; `stepWeapon`/spells/consumables sit out) —
+   * yet he stays fully vulnerable to the horde. Ticked down in `stepPlayer`;
+   * 0 = up and in control. Not carried between levels (a fresh run starts up).
+   */
+  knockoutMs: number;
   level: number;
   xp: number;
   /** XP still needed to reach the next level. */
@@ -843,6 +852,34 @@ export type Asteroid = {
   spin: number;
   /** Latched once it has hit the player — one blow per rock. */
   struck: boolean;
+};
+
+/**
+ * A drifting SAND STORM (config SANDSTORMS; a level turns the squalls on with
+ * LevelDef.sandstorms): a small dust gust that crosses the field in a straight
+ * line, shoves minions aside like an asteroid, and — catching the grounded
+ * hero — strikes him ONCE (a scaled bite AND a knockout, `Player.knockoutMs`)
+ * before drifting on and thinning out. Ignores obstacles and level bounds.
+ */
+export type SandStorm = {
+  id: number;
+  pos: Vec2;
+  /** Unit direction of drift. */
+  dir: Vec2;
+  speed: number;
+  /** Body radius (world px). */
+  radius: number;
+  /** Visual swirl phase (rolled at spawn; renderer only). */
+  spin: number;
+  /** Latched once it has caught the hero — one knockout per storm. */
+  struck: boolean;
+  /**
+   * Ms left in the fade-out that begins when the storm strikes (config
+   * SANDSTORMS.fadeMs). `null` until it strikes; once it hits 0 the storm is
+   * spent and despawns. The renderer thins the gust as it counts down, so the
+   * storm visibly passes over the fallen hero and vanishes.
+   */
+  fadeMs: number | null;
 };
 
 export type Projectile = {
@@ -1537,6 +1574,19 @@ export type GameEvent =
    */
   | { type: "wellDeath"; pos: Vec2 }
   /**
+   * A sand storm caught the grounded hero: it took its scaled bite AND knocked
+   * him out (he drops prone for SANDSTORMS.knockoutMs). `pos` is the hero at
+   * the moment the gust hit; the app plays the whump + dust and shakes the
+   * camera. The storm keeps drifting and thins out from here.
+   */
+  | { type: "sandstormHit"; pos: Vec2 }
+  /**
+   * The hero shook off a knockout and got back to his feet (his `knockoutMs`
+   * hit 0). `pos` is where he stood up; the app plays a small "up you get"
+   * cue.
+   */
+  | { type: "knockoutRecovered"; pos: Vec2 }
+  /**
    * An apparition finished its scene, walked off, and dissolved (see
    * `EnemyDef.apparition`). The app sparkles it out at `pos`.
    */
@@ -2063,6 +2113,10 @@ export type GameState = {
   asteroids: Asteroid[];
   /** Ms until the next asteroid spawns (levels with LevelDef.asteroids). */
   asteroidTimerMs: number;
+  /** Sand storms currently drifting (levels with LevelDef.sandstorms). */
+  sandstorms: SandStorm[];
+  /** Ms until the next sand storm spawns (levels with LevelDef.sandstorms). */
+  sandstormTimerMs: number;
   /**
    * Ms until another "bags are full" nudge may fire. Counts down each step;
    * a blocked pickup emits `pickupBlocked` only when this reaches 0, then
