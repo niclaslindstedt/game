@@ -153,29 +153,31 @@ export function LevelUpOverlay({
             color="#7ef0c8"
           />
         </div>
-        <PixelText
-          font={font}
-          text={
-            points > 1 ? `CHOOSE A STAT (${points} POINTS)` : "CHOOSE A STAT"
-          }
-          scale={2}
-          color="#9aa3ad"
-        />
-        {!showInfo && (
-          // The "arming" bar fills across LEVELUP_ARM_MS so the inert buttons
-          // read as a deliberate pause, not a frozen UI. Its fill duration is
-          // driven from the same constant that flips `armed`, so the bar and
-          // the lockout always end together. Once armed it's hidden with
-          // `visibility` rather than unmounted, so its height + gap stay
-          // reserved and the box doesn't shrink (the buttons jumping up the
-          // instant they become clickable felt bad).
-          <div
-            className={`levelup-arming-bar${armed ? " armed" : ""}`}
-            aria-hidden="true"
-          >
-            <span style={{ animationDuration: `${LEVELUP_ARM_MS}ms` }} />
-          </div>
-        )}
+        <div className="levelup-choose-row">
+          <PixelText
+            font={font}
+            text={
+              points > 1 ? `CHOOSE A STAT (${points} POINTS)` : "CHOOSE A STAT"
+            }
+            scale={2}
+            color="#9aa3ad"
+          />
+          {!showInfo && (
+            // The "arming" bar fills across LEVELUP_ARM_MS so the inert buttons
+            // read as a deliberate pause, not a frozen UI. It sits to the right
+            // of the CHOOSE A STAT text. Its fill duration is driven from the
+            // same constant that flips `armed`, so the bar and the lockout
+            // always end together. Once armed it's hidden with `visibility`
+            // rather than unmounted, so its slot stays reserved and the row
+            // (and the box) doesn't shift.
+            <div
+              className={`levelup-arming-bar${armed ? " armed" : ""}`}
+              aria-hidden="true"
+            >
+              <span style={{ animationDuration: `${LEVELUP_ARM_MS}ms` }} />
+            </div>
+          )}
+        </div>
         {showInfo ? (
           <div className="stat-info">
             {CHOICES.map(({ stat, label, info, icon }) => (
