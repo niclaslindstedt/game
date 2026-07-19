@@ -246,7 +246,10 @@ run against synthetic fixtures with no shipped content (see
   per-difficulty prelude variant — and `startingStats`), spawn counts,
   the wave spawner's live cap, how many finite SPAWN POINTS may be active at
   once (`activeSpawnerCap` — only the closest, in-line-of-sight points arm;
-  easy 2, medium 3, hard 4, nightmare 5, JESUS uncapped), the horde's RELATIVE level (`mobLevelOffset`
+  easy 2, medium 3, hard 4, nightmare 5, JESUS uncapped), how fast a thinned
+  spawn point REFILLS (`spawnerRespawnMult` — the post-kill respawn delay
+  shrinks down the ladder, easy 1.6× → jesus 0.45×; see `spawners.ts`), the
+  horde's RELATIVE level (`mobLevelOffset`
   — every monster spawns at player level + offset, hp scaled per level by the
   GEOMETRIC `mobHpLevelFactor`, config `MENACE.mobHpGrowthPerLevel` — so
   hits-to-kill rises with level instead of collapsing as the hero out-damages a
@@ -296,7 +299,13 @@ run against synthetic fixtures with no shipped content (see
   weapon auto-attack (wearing the weapon's durability) → abilities →
   projectiles → enemies (aggro/guard/elite AI, dialogue triggers, contact
   damage, obstacle push-out) → hazards (gravity wells, asteroids) → menace
-  decay → placed packs (waking clusters the hero nears) → wave spawner →
+  decay → placed packs (waking clusters the hero nears) → finite SPAWN POINTS
+  (`spawners.ts` — points that arm on approach and SUMMON their queue in from
+  off-screen: a summoned mob appears just outside the camera and RUNS IN at a
+  sprint until it crosses the approach circle, the shorter viewport dimension,
+  then drops to its normal pace; refills a thinned wave after a post-kill
+  respawn delay that shrinks with difficulty, boss proximity, and campaign
+  progress) → wave spawner →
   item pickups →
   locked doors → objective → win/lose. The wave spawner also enforces
   CAMPING PRESSURE (config `CAMPING`): a player who holds the same ground

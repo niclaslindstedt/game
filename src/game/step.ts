@@ -48,6 +48,7 @@ import {
   PLAYER,
   PROJECTILE,
   RUN,
+  SPAWNERS,
   SPELL,
   STAMINA,
   STATS,
@@ -345,7 +346,10 @@ export function step(state: GameState, input: GameInput, dtMs: number): void {
   const stage = menaceStage(state);
   if (stage > state.stats.peakMenace) state.stats.peakMenace = stage;
   stepPacks(state);
-  stepSpawners(state);
+  // The camera rect sizes the approach circle and the off-screen summon distance
+  // so mobs run into view instead of popping on screen; headless callers have no
+  // view and fall back to the phone baseline (see summonGeometry).
+  stepSpawners(state, input.view);
   stepSpawner(state, dtMs);
   stepItems(state, dtMs);
   stepDoors(state);
@@ -2152,6 +2156,28 @@ function moveEnemy(
     mechSpeedMult(enemy, def);
   const senses = () =>
     def.phasing === true || lineOfSight(state, enemy.pos, player.pos);
+
+  // SUMMONED reinforcements (spawners.ts) RUN IN from off-screen at a sprint —
+  // straight at the hero, ignoring line of sight, since they were called to him —
+  // until they cross the APPROACH CIRCLE stamped at summon time (the shorter
+  // viewport dimension). On crossing it they shed the marker and fall through to
+  // their normal role AI at their own pace; they were summoned awake, so a minion
+  // engages at once instead of dozing at the post it never had.
+  if (enemy.approachRadius !== undefined) {
+    if (
+      distanceSq(enemy.pos, player.pos) >
+      enemy.approachRadius * enemy.approachRadius
+    ) {
+      enemy.pos = moveToward(
+        enemy.pos,
+        player.pos,
+        speed * SPAWNERS.runInSpeedMult * dt,
+      );
+      return;
+    }
+    enemy.approachRadius = undefined;
+    enemy.awake = true;
+  }
 
   if (def.role === "boss") {
     const awake =

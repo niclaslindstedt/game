@@ -798,6 +798,7 @@ export const FIX_DIFFICULTIES: Record<string, DifficultyDef> = {
     mobLevelOffset: -3,
     aliveMult: 0.9,
     activeSpawnerCap: 2,
+    spawnerRespawnMult: 1.6,
     mobPursuitNearElite: 0.1,
     menaceMult: 0.05,
     menaceDecayMult: 1.5,
@@ -836,6 +837,7 @@ export const FIX_DIFFICULTIES: Record<string, DifficultyDef> = {
     mobLevelOffset: -2,
     aliveMult: 1,
     activeSpawnerCap: 3,
+    spawnerRespawnMult: 1.0,
     mobPursuitNearElite: 0.5,
     menaceMult: 0.7,
     menaceDecayMult: 1,
@@ -874,6 +876,7 @@ export const FIX_DIFFICULTIES: Record<string, DifficultyDef> = {
     mobLevelOffset: -1,
     aliveMult: 1.1,
     activeSpawnerCap: 4,
+    spawnerRespawnMult: 0.8,
     menaceMult: 1.5,
     menaceDecayMult: 0.85,
     menaceEffectMult: 1.15,
@@ -911,6 +914,7 @@ export const FIX_DIFFICULTIES: Record<string, DifficultyDef> = {
     mobLevelOffset: 0,
     aliveMult: 1.2,
     activeSpawnerCap: 5,
+    spawnerRespawnMult: 0.6,
     menaceMult: 3.0,
     menaceDecayMult: 0.7,
     menaceEffectMult: 1.3,
@@ -947,6 +951,7 @@ export const FIX_DIFFICULTIES: Record<string, DifficultyDef> = {
     mobCountMult: 1.8,
     mobLevelOffset: 2,
     aliveMult: 1.8,
+    spawnerRespawnMult: 0.45,
     menaceMult: 7.0,
     menaceDecayMult: 0.5,
     menaceEffectMult: 1.5,
@@ -1418,6 +1423,10 @@ export const FIX_SPAWNER_LEVEL: LevelDef = {
       triggerRadius: 400,
       perEmit: 2,
       intervalMs: 100,
+      // A tiny base so the resolved post-kill respawn delay floors at
+      // SPAWNERS.respawnDelayMin (250ms) — predictable regardless of the
+      // difficulty/boss/map factors the spawner_test doesn't want to reason about.
+      respawnDelayMs: 50,
       members: [{ enemy: "test_fodder", count: 6 }],
     },
     {
@@ -1428,6 +1437,7 @@ export const FIX_SPAWNER_LEVEL: LevelDef = {
       triggerRadius: 400,
       perEmit: 2,
       intervalMs: 100,
+      respawnDelayMs: 50,
       members: [{ enemy: "test_minion", count: 4 }],
     },
   ],
@@ -1488,6 +1498,35 @@ export const FIX_SPAWNER_CAP_LEVEL: LevelDef = {
   ],
 };
 
+/** Two BOSSLESS spawn-point levels at opposite ends of the fixture campaign
+ * (index 1 = first map, index 2 = last), each a single point authoring the SAME
+ * base respawn delay. With no boss (bossMult = 1), a fixed difficulty, and a
+ * fixed base, the ONLY factor that differs is CAMPAIGN PROGRESS — so the
+ * spawner_test can prove a later map refills faster than an earlier one. They
+ * reuse the existing index values (1, 2), so `levelPosition`'s total is
+ * unchanged and the XP-cap suite is undisturbed. */
+export const FIX_SPAWNER_EARLY_LEVEL: LevelDef = {
+  ...FIX_LEVEL,
+  id: "test_spawner_early_level",
+  index: 1,
+  spawns: [],
+  waves: undefined,
+  spawners: [
+    {
+      id: "s",
+      at: { x: 520, y: 1320 },
+      respawnDelayMs: 1000,
+      members: [{ enemy: "test_fodder", count: 4 }],
+    },
+  ],
+};
+
+export const FIX_SPAWNER_LATE_LEVEL: LevelDef = {
+  ...FIX_SPAWNER_EARLY_LEVEL,
+  id: "test_spawner_late_level",
+  index: 2,
+};
+
 let installed = false;
 
 /** Register the synthetic fixtures as the engine's active catalogs. Idempotent
@@ -1520,6 +1559,8 @@ export function installFixtures(force = false): void {
       test_zone_level: FIX_ZONE_LEVEL,
       test_spawner_level: FIX_SPAWNER_LEVEL,
       test_spawner_cap_level: FIX_SPAWNER_CAP_LEVEL,
+      test_spawner_early_level: FIX_SPAWNER_EARLY_LEVEL,
+      test_spawner_late_level: FIX_SPAWNER_LATE_LEVEL,
     },
     uniques: FIX_UNIQUES,
     enemies: FIX_ENEMIES,

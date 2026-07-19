@@ -424,6 +424,54 @@ export const SPAWNERS = {
   /** Rejection-sampling attempts per mob to find a spot clear of obstacles and
    * the map edge before falling back to the anchor. */
   placeAttempts: 12,
+  /**
+   * SUMMON-IN behaviour. A spawner no longer pops its mobs into existence on
+   * screen: it SUMMONS them just OUTSIDE the camera and they RUN IN toward the
+   * hero at a sprint (`runInSpeedMult` × their speed), dropping to their normal
+   * pace only once they cross the APPROACH CIRCLE around him — a circle as wide
+   * as the SHORTER viewport dimension (height in landscape, width in portrait),
+   * so a mob reaches full speed just as it comes into view.
+   */
+  /** Sprint multiplier on a summoned mob's speed while it runs in from
+   * off-screen, before it reaches the approach circle. */
+  runInSpeedMult: 1.8,
+  /** Approach-circle radius (world px) used HEADLESS — bots and the sim carry no
+   * camera, so the live "shorter viewport dimension" is unavailable; this
+   * approximates the phone baseline (~195 world units tall). */
+  approachRadiusFallback: 200,
+  /** Extra world px beyond the camera's half-diagonal a summoned mob is placed,
+   * so it starts fully off-screen regardless of the arrival bearing. */
+  spawnMargin: 48,
+  /** The summon bearing (hero → spawn point) is scattered by up to ±half this
+   * many radians, so a batch fans into view rather than filing in single-file. */
+  summonArcRad: 2.1,
+  /** A summoned member counts toward the alive cap while it is alive AND within
+   * `approachRadius × this` of the hero. Past that it has been left behind (the
+   * hero ran off) and the point drips a replacement — the fight follows him. */
+  leashMult: 2.5,
+  /**
+   * POST-KILL RESPAWN DELAY. Once a point has filled to its alive cap, a killed
+   * (or left-behind) member is not replaced instantly — the point waits this
+   * long before summoning the next mob in from off-screen. This is the base
+   * (medium, first map, far from the boss); the resolved delay SHRINKS with
+   * difficulty (`DifficultyDef.spawnerRespawnMult`), with proximity to the
+   * level's boss (`bossProximityMin`), and as the campaign progresses
+   * (`mapProgressionMin`) — so later maps and the rooms around each boss refill
+   * relentlessly. A spawner may author its own base (`SpawnerSpec.respawnDelayMs`),
+   * which the same factors still scale.
+   */
+  respawnDelayMs: 2200,
+  /** Floor (ms) on the resolved post-kill respawn delay after every factor is
+   * applied — the fastest any point may refill. */
+  respawnDelayMin: 250,
+  /** The respawn-delay multiplier for a point sitting ON the level's boss (0
+   * distance). Ramps linearly up to 1× at the boss's distance from the hero's
+   * spawn, so the boss bay refills far faster than the opening rooms. */
+  bossProximityMin: 0.5,
+  /** The respawn-delay multiplier on the LAST map of the campaign; the first map
+   * is 1× and every map between interpolates — the "maps get progressively
+   * harder" lever, tightening the refill cadence map by map. */
+  mapProgressionMin: 0.6,
 } as const;
 
 /** XP and level-ups. Each level-up grants stat points to spend. */

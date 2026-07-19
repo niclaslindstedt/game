@@ -34,7 +34,12 @@ import {
 } from "./defs/difficulties.ts";
 import { enemyDef } from "./defs/enemies/index.ts";
 import { gearDef, weaponDef } from "./defs/equipment.ts";
-import { LEVEL_ORDER, levelDef, type LevelDef } from "./defs/levels/index.ts";
+import {
+  LEVEL_ORDER,
+  levelDef,
+  levelPosition,
+  type LevelDef,
+} from "./defs/levels/index.ts";
 import type { DifficultyHp, DifficultyMobLevels } from "./defs/levels/types.ts";
 import { crateMaxHp } from "./crates.ts";
 import { buildWells } from "./hazards.ts";
@@ -430,6 +435,12 @@ export function createGame(
       );
       spawnerLingering++;
     }
+    // The post-kill refill pace: the authored (or default) base delay, shortened
+    // for the rung, for how close this point sits to the level's boss, and for
+    // how deep into the campaign the map is — so later maps and boss bays refill
+    // relentlessly (see resolveSpawnerRespawnDelay).
+    const distToBoss =
+      bossSpawn && "at" in bossSpawn ? distance(at, bossSpawn.at) : Infinity;
     spawners.push({
       id: s.id ?? null,
       at,
@@ -438,6 +449,14 @@ export function createGame(
       intervalMs: s.intervalMs ?? SPAWNERS.intervalMs,
       perEmit: s.perEmit ?? SPAWNERS.perEmit,
       maxAlive: s.maxAlive ?? SPAWNERS.maxAlive,
+      respawnDelayMs: resolveSpawnerRespawnDelay(
+        s.respawnDelayMs ?? SPAWNERS.respawnDelayMs,
+        difficulty,
+        distToBoss,
+        bandReach,
+        levelId,
+      ),
+      lastLive: 0,
       queue,
       total: queue.length,
       status: "dormant" as const,
@@ -767,6 +786,41 @@ export function createGame(
   if (merchantDiscovered) revealMerchant(state);
 
   return state;
+}
+
+/**
+ * Resolve a spawn point's POST-KILL RESPAWN DELAY from its base (ms). Three
+ * factors shorten it, each ≤ 1 and multiplied together (then floored at
+ * `SPAWNERS.respawnDelayMin`):
+ *
+ * - DIFFICULTY (`DifficultyDef.spawnerRespawnMult`): harder rungs refill faster.
+ * - BOSS PROXIMITY: `bossProximityMin` at the boss's spot, ramping to 1× at the
+ *   boss's distance from the hero's spawn (`bandReach`) — the boss bay refills
+ *   far quicker than the opening rooms. No boss on the map ⇒ 1× everywhere.
+ * - CAMPAIGN PROGRESS: 1× on the first map, `mapProgressionMin` on the last, the
+ *   maps between interpolated — so the campaign gets progressively harder.
+ */
+function resolveSpawnerRespawnDelay(
+  baseMs: number,
+  difficulty: Difficulty,
+  distToBoss: number,
+  bandReach: number,
+  levelId: string,
+): number {
+  const diffMult = difficultyDef(difficulty).spawnerRespawnMult ?? 1;
+  const t =
+    bandReach > 0 && Number.isFinite(distToBoss)
+      ? clamp(distToBoss / bandReach, 0, 1)
+      : 1;
+  const bossMult =
+    SPAWNERS.bossProximityMin + (1 - SPAWNERS.bossProximityMin) * t;
+  const { position, total } = levelPosition(levelId);
+  const progress = total > 1 ? position / (total - 1) : 0;
+  const mapMult = 1 + (SPAWNERS.mapProgressionMin - 1) * progress;
+  return Math.max(
+    SPAWNERS.respawnDelayMin,
+    Math.round(baseMs * diffMult * bossMult * mapMult),
+  );
 }
 
 /** Mint one of the level def's hand-placed pickups. */

@@ -772,6 +772,15 @@ export type Enemy = {
    */
   vanguard?: boolean;
   /**
+   * SUMMON RUN-IN (config SPAWNERS): a mob summoned by a spawn point appears
+   * just OFF-SCREEN and SPRINTS toward the hero (`runInSpeedMult` × its speed)
+   * until it crosses the APPROACH CIRCLE of this radius (world px) around him —
+   * the shorter viewport dimension, stamped at summon time so the chase needs no
+   * live camera. On crossing it, the field is cleared and the mob drops into its
+   * normal AI at its own pace. Absent on every mob placed or woken the old way.
+   */
+  approachRadius?: number;
+  /**
    * An apparition's dissolve countdown (config APPARITION.lingerMs), armed on
    * the first playing tick after its scene ends. At 0 the figure leaves the
    * board with an `apparitionVanished` event. Absent on everything else.
@@ -1857,11 +1866,20 @@ export type SpawnerRuntime = {
   spawnRadius: number;
   intervalMs: number;
   perEmit: number;
-  /** Concurrent-alive cap: the most of THIS point's live members allowed inside
-   * its zone (`triggerRadius`) at once. At the cap the point pauses and drips
-   * only to replace kills; a member that drifts out of the zone is counted as
-   * gone (replaced), and emission is suspended while the hero is out of range. */
+  /** Concurrent-alive cap: the most of THIS point's live members allowed near
+   * the hero at once. At the cap the point pauses and drips only to replace
+   * kills; a member left behind (out of `approachRadius × SPAWNERS.leashMult`
+   * of the hero) is counted as gone (replaced), and emission is suspended while
+   * the hero is out of trigger range. */
   maxAlive: number;
+  /** POST-KILL RESPAWN DELAY (ms): once at the alive cap, the wait after a
+   * member dies (or is left behind) before the replacement is summoned in.
+   * Resolved at level creation from `SPAWNERS.respawnDelayMs` scaled by
+   * difficulty, boss proximity, and campaign progress (see create.ts). */
+  respawnDelayMs: number;
+  /** The live-member count from the previous tick — a drop signals a kill so the
+   * respawn delay can be armed. */
+  lastLive: number;
   /** The enemy defIds still to emit, resolved for the run's difficulty. */
   queue: string[];
   /** The queue's original length — the foe count still owed while it drains. */
