@@ -622,6 +622,7 @@ export {
   REGEN,
   RUN,
   SANDSTORMS,
+  SPAWNERS,
   SPELL,
   STAMINA,
   STATS,

@@ -192,6 +192,15 @@ export type SpawnerSpec = {
   spawnRadius?: number;
   /** Time (ms) between emission ticks; default `SPAWNERS.intervalMs`. */
   intervalMs?: number;
+  /**
+   * BASE post-kill respawn delay (ms) for THIS point — the wait, once at the
+   * alive cap, before a killed member is replaced (default
+   * `SPAWNERS.respawnDelayMs`). The resolved delay is this base SCALED by
+   * difficulty, proximity to the level's boss, and campaign progress (see
+   * create.ts), so a harder rung / a boss-bay point / a later map all refill
+   * faster regardless of the authored base.
+   */
+  respawnDelayMs?: number;
   /** Mobs released per tick; default `SPAWNERS.perEmit`. */
   perEmit?: number;
   /**
