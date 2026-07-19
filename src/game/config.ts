@@ -2621,8 +2621,8 @@ export const HAY_BALLS = {
   /** Roll speed, rolled per bale (px/s) — slower than an asteroid so the shove
    * reads as a drag, not a flick. */
   speed: [70, 110] as [number, number],
-  /** Collision radius, rolled per bale (px) — bales are chunky. */
-  radius: [11, 16] as [number, number],
+  /** Collision radius, rolled per bale (px) — small, light bales. */
+  radius: [6, 9] as [number, number],
   /** Leftward shove speed (px/s) applied every tick the grounded hero overlaps
    * a bale — kept under the roll speed so a bale drags him a stretch before it
    * rolls on past. */
@@ -2630,7 +2630,7 @@ export const HAY_BALLS = {
   /** The VERY SLIGHT flat hp a bale costs on contact, once per bale. */
   damage: 3,
   /** Peak of the visual hop (px, renderer only). */
-  bounceHeight: 12,
+  bounceHeight: 9,
   /** Time for one full bounce (ms, renderer only). */
   bouncePeriodMs: 620,
   /** Bales in flight are capped here; the spawner defers above it. */

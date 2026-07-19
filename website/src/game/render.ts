@@ -963,7 +963,7 @@ export function drawFrame(
   // a ground shadow that tightens as the bale rises sells the hop.
   for (const ball of state.hayBalls) {
     if (!inView(ball.pos.x, ball.pos.y, 40)) continue;
-    const size = Math.max(16, Math.round(ball.radius * 2 + 6));
+    const size = Math.max(12, Math.round(ball.radius * 2 + 2));
     const phase = (((timeMs / HAY_BALLS.bouncePeriodMs + ball.id) % 1) + 1) % 1;
     const hop = HAY_BALLS.bounceHeight * Math.abs(Math.sin(Math.PI * phase));
     const sx = Math.round(ball.pos.x - camera.x);
