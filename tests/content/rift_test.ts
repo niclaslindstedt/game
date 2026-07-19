@@ -141,12 +141,13 @@ describe("THE RIFT level def", () => {
     const hpBefore = state.player.hp;
     state.asteroids.push({
       id: state.nextId++,
-      pos: { x: state.player.pos.x - 2, y: state.player.pos.y },
-      dir: { x: 1, y: 0 },
-      speed: 0,
-      radius: 10,
+      target: { x: state.player.pos.x, y: state.player.pos.y },
+      entry: { x: state.player.pos.x - 100, y: state.player.pos.y - 100 },
+      fallMs: 1000,
+      ageMs: 1000, // already at impact — it detonates on the player this tick
+      blastRadius: 50,
+      rockRadius: 9,
       spin: 0,
-      struck: false,
     });
     step(state, idle, DT);
     // It hurt (a fraction of max hp) and stopped the run for the monologue.

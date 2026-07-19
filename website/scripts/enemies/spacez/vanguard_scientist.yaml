@@ -1,0 +1,13 @@
+id: vanguard_scientist
+name: LAB SCIENTIST
+role: minion
+sprite: scientist
+hp: 24
+speed: 15
+radius: 8
+contactDamage: 0
+critChance: 0
+contactCooldownMs: 700
+ai:
+  aggroRadius: 1200
+  rushSpeed: 72

@@ -1,0 +1,13 @@
+id: scout_rover
+name: SCOUT ROVER
+role: minion
+sprite: scout_rover
+gore: sparks
+hp: 14
+speed: 18
+radius: 8
+contactDamage: 8
+critChance: 0.1
+contactCooldownMs: 700
+ai:
+  aggroRadius: 950

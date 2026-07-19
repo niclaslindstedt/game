@@ -48,6 +48,7 @@ import {
   PLAYER,
   PROJECTILE,
   RUN,
+  SPAWNERS,
   SPELL,
   STAMINA,
   STATS,
@@ -66,7 +67,9 @@ import {
 import { maybeCompanionQuote, stepCompanions } from "./companions.ts";
 import {
   stepAsteroids,
+  stepCraters,
   stepHayBalls,
+  stepKnockback,
   stepSandstorms,
   stepStampedes,
   stepWells,
@@ -313,6 +316,11 @@ export function step(state: GameState, input: GameInput, dtMs: number): void {
   stepHayBalls(state, dt, dtMs);
   stepSandstorms(state, dt, dtMs);
   stepStampedes(state, dt, dtMs);
+  // Meteor-blast knockback settles after the hazards fire, so an impulse armed
+  // by an impact this tick lands its first shove the same frame; a flung mob's
+  // AI (moveEnemy) sat the fling out. Crater scars age down alongside.
+  stepKnockback(state, dt, dtMs);
+  stepCraters(state, dtMs);
   // Sight-pinned inner monologues fire on this tick's positions — after the
   // horde has moved, so "the hero sees one" means it is actually on screen.
   stepSightThoughts(state, levelDef(state.level.id).firstSightThoughts);
@@ -347,7 +355,10 @@ export function step(state: GameState, input: GameInput, dtMs: number): void {
   const stage = menaceStage(state);
   if (stage > state.stats.peakMenace) state.stats.peakMenace = stage;
   stepPacks(state);
-  stepSpawners(state);
+  // The camera rect sizes the approach circle and the off-screen summon distance
+  // so mobs run into view instead of popping on screen; headless callers have no
+  // view and fall back to the phone baseline (see summonGeometry).
+  stepSpawners(state, input.view);
   stepSpawner(state, dtMs);
   stepItems(state, dtMs);
   stepDoors(state);
@@ -985,8 +996,16 @@ function stepPlayer(
   // out freezes regen for a beat (emptyRegenLockMs) — so the hero can't
   // tap-run/tap-jump on fumes and must stand it off and wait the beat out.
   const staminaStat = effectiveStat(state, "stamina");
-  // A jump only fires from the ground; the takeoff physics below share this.
-  const jumping = input.jump && player.z === 0;
+  // A jump only fires from the ground AND only when the sprint pool can cover
+  // its takeoff cost — a winded hero (too little stamina to pay `jumpCost`)
+  // can't hop and must walk it off, the same way an empty pool caps him to a
+  // jog. Gated on the pool as it stands at the FRAME START (before this frame's
+  // run drain), so it reads the same value the caller sees. The takeoff physics
+  // below share this flag.
+  const jumping =
+    input.jump &&
+    player.z === 0 &&
+    player.stamina >= STAMINA.jumpCost * player.maxStamina;
   let rate = 1;
   if (player.moving) {
     rate = throttle * STAMINA.runRateFactor;
@@ -2142,6 +2161,10 @@ function moveEnemy(
 ): void {
   const player = state.player;
   const def = enemyDef(enemy.defId);
+  // A meteor blast flung this mob: while the launch coasts (stepKnockback owns
+  // the movement) the AI sits out, so the fling reads as a fling instead of the
+  // chase immediately fighting it back.
+  if (enemy.knockMs && enemy.knockMs > 0) return;
   // Set-piece mechanics first (mechanics.ts): a mob rooted in a telegraph
   // windup or riding a charge dash is owned by the mechanic this tick.
   if (stepEnemyMechanics(state, enemy, dt, dt * 1000)) return;
@@ -2154,6 +2177,28 @@ function moveEnemy(
     mechSpeedMult(enemy, def);
   const senses = () =>
     def.phasing === true || lineOfSight(state, enemy.pos, player.pos);
+
+  // SUMMONED reinforcements (spawners.ts) RUN IN from off-screen at a sprint —
+  // straight at the hero, ignoring line of sight, since they were called to him —
+  // until they cross the APPROACH CIRCLE stamped at summon time (the shorter
+  // viewport dimension). On crossing it they shed the marker and fall through to
+  // their normal role AI at their own pace; they were summoned awake, so a minion
+  // engages at once instead of dozing at the post it never had.
+  if (enemy.approachRadius !== undefined) {
+    if (
+      distanceSq(enemy.pos, player.pos) >
+      enemy.approachRadius * enemy.approachRadius
+    ) {
+      enemy.pos = moveToward(
+        enemy.pos,
+        player.pos,
+        speed * SPAWNERS.runInSpeedMult * dt,
+      );
+      return;
+    }
+    enemy.approachRadius = undefined;
+    enemy.awake = true;
+  }
 
   if (def.role === "boss") {
     const awake =

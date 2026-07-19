@@ -1,0 +1,14 @@
+id: tin_outlaw
+name: TIN OUTLAW
+role: minion
+sprite: tin_outlaw
+gore: sparks
+hp: 110
+speed: 26
+radius: 8
+contactDamage: 20
+critChance: 0.2
+dodgeChance: 0.15
+contactCooldownMs: 700
+ai:
+  aggroRadius: 1000

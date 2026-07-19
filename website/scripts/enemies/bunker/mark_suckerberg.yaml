@@ -1,0 +1,55 @@
+id: mark_suckerberg
+name: MARK SUCKERBERG
+role: elite
+levelBonus: 6
+sprite: mark_suckerberg
+hp: 1700
+speed: 30
+radius: 11
+contactDamage: 38
+critChance: 0.12
+dodgeChance: 0.3
+contactCooldownMs: 700
+dialogue:
+  - - WELCOME, FELLOW HUMAN. I
+    - ALSO AM ENJOYING WALKING
+    - AROUND THIS PHYSICAL SPACE.
+  - hero:
+      - MARK SUCKERBERG. WHAT IS
+      - THE METAVERSE GUY DOING IN
+      - A HOLE IN THE GROUND?
+  - - A HOLE? AN IMMERSIVE OFFLINE
+    - EXPERIENCE. EVERYONE LIVES IN
+    - MY SERVERS. I LIVE NEAR THEM.
+  - - I SMOKE MY MEATS. I DO
+    - JIU-JITSU. I AM EXTREMELY
+    - NORMAL. ASK MY SECURITY.
+  - hero:
+      - YOUR SECURITY IS A RING OF
+      - MEN WITH HEADSETS STAPLED
+      - ON. MOVE. I'M SHOPPING.
+  - - ENGAGEMENT DETECTED.
+    - INITIATING COMMUNITY
+    - STANDARDS.
+lastWords:
+  - LOGGING OFF...
+  - ...FOR REAL THIS TIME...
+mechanics:
+  summon:
+    defId: vacuum_bot
+    count: 3
+    cooldownMs: 10000
+    maxAlive: 6
+ai:
+  aggroRadius: 280
+  rushSpeed: 120
+loot:
+  tierDrops:
+    rare: 1
+    magic: 1.5
+  weapons: 0
+  gear: 1
+  xpArrows: 2
+  repairs: 1
+  medkits: 1
+  tierBonus: 0.4

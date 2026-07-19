@@ -1,0 +1,12 @@
+id: cia_agent
+name: CIA AGENT
+role: minion
+sprite: cia_agent
+hp: 30
+speed: 22
+radius: 8
+contactDamage: 14
+critChance: 0.12
+contactCooldownMs: 700
+ai:
+  aggroRadius: 1000

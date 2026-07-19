@@ -1,0 +1,12 @@
+id: intern
+name: INTERN
+role: minion
+sprite: intern
+hp: 8
+speed: 14
+radius: 8
+contactDamage: 5
+critChance: 0.08
+contactCooldownMs: 700
+ai:
+  aggroRadius: 900

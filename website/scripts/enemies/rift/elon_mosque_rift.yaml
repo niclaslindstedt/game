@@ -1,0 +1,101 @@
+id: elon_mosque_rift
+name: ELON MOSQUE
+role: boss
+levelBonus: 5
+sprite: elon_mosque
+hp: 750
+speed: 44
+radius: 20
+contactDamage: 34
+critChance: 0.15
+contactCooldownMs: 900
+dialogue:
+  - - YOU?! HOW ARE YOU - I FIRED
+    - YOU, SUED YOU, AND LEFT YOU
+    - IN ANOTHER UNIVERSE.
+  - hero:
+      - AND I'M STILL RIGHT BEHIND
+      - YOU. NO SECURITY IN HERE,
+      - MOSQUE. WHERE IS SHE?
+  - - FINE. EXIT INTERVIEW. THE GODS
+    - GOT PAID. I GET ASYLUM - NO
+    - REGULATORS, AND NO YOU.
+  - hero:
+      - "'PAYMENT'. SAY HER NAME."
+      - YOU SOLD A HUMAN BEING TO
+      - SAVE YOUR OWN SKIN.
+  - - DELIVERED, TECHNICALLY. IN
+    - TRANSIT. PAPERWORK'S CLEAN. IF
+    - IT HELPS, SHE KICKED A LIZARD.
+  - hero:
+      - IT DOESN'T. WHERE DOES THE
+      - FAR DOOR GO, MOSQUE?
+  - - NICE TRY. THAT'S PROPRIETARY.
+    - LET'S JUST SAY THE PHYSICS
+    - ARE... FLEXIBLE.
+  - - SECURITY! ...RIGHT. ALL DEAD OR
+    - HALLUCINATIONS. KEEP THE RIFT,
+    - GARAGE MAN. IT'S A BAD MARKET.
+lastWords:
+  - INVESTOR CALL! OTHER SIDE!
+  - DON'T FOLLOW ME - LEGALLY!
+flees:
+  landmark: rift
+mechanics:
+  summon:
+    defId: voidling
+    count: 3
+    cooldownMs: 12000
+    maxAlive: 6
+phases:
+  - belowHpFrac: 0.35
+    mechanics:
+      summon:
+        defId: voidling
+        count: 4
+        cooldownMs: 10000
+        maxAlive: 8
+      enrage:
+        belowHpFrac: 0.35
+        speedMult: 1.35
+        damageMult: 1.25
+ai:
+  aggroRadius: 280
+  leashRadius: 460
+loot:
+  items:
+    - golden_parachute
+  tierDrops:
+    magic: 2
+    rare: 1
+  weapons: 0
+  gear: 1
+  xpArrows: 2
+  repairs: 1
+  medkits: 2
+  tierBonus: 0.35
+uniquesByDifficulty:
+  easy:
+    - exiles_stride
+    - escapists_tread
+    - riftmaw
+  medium:
+    - exiles_stride
+    - escapists_tread
+    - riftmaw
+  hard:
+    - exiles_stride
+    - escapists_tread
+    - riftmaw
+  nightmare:
+    - exiles_stride
+    - escapists_tread
+    - the_redacted
+    - aegis_of_exile
+    - riftmaw
+  jesus:
+    - exiles_stride
+    - escapists_tread
+    - the_redacted
+    - aegis_of_exile
+    - riftmaw

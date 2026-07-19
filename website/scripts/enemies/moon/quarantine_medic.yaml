@@ -1,0 +1,49 @@
+id: quarantine_medic
+name: QUARANTINE MEDIC
+role: elite
+levelBonus: 3
+sprite: quarantine_medic
+gore: ecto
+phasing: true
+hp: 260
+speed: 20
+radius: 12
+contactDamage: 24
+critChance: 0.1
+contactCooldownMs: 700
+dialogue:
+  - - HOLD STILL. ROUTINE SCREENING.
+    - HEARTBEAT... PRESENT. UNUSUAL.
+    - YOU'LL WANT THAT LOOKED AT.
+  - hero:
+      - I'LL RISK IT. YOU WERE THE
+      - CREW DOCTOR? BACK IN '69?
+  - - I RAN EVERY PHYSICAL. THE FIRST
+    - MAN HAD TWO CHARTS, IDENTICAL.
+    - ONLY ONE EVER FLEW HOME.
+  - hero:
+      - TWO CHARTS... YOU'RE SAYING
+      - THERE WERE TWO OF HIM. THEN
+      - WHICH ONE CAME BACK TO EARTH?
+  - - THE COPY, GROWN IN A TANK ON
+    - THE RIDE HOME. THE REAL ONE'S
+    - STILL HERE. HE'S JUST AHEAD.
+lastWords:
+  - TWO CHARTS... HHH...
+  - ONE STILL... BEAT...
+ai:
+  aggroRadius: 250
+  rushSpeed: 115
+loot:
+  items:
+    - geiger_wand
+  tierDrops:
+    magic: 1
+  storyItems:
+    - clone_dossier
+  weapons: 0
+  gear: 0
+  xpArrows: 1
+  repairs: 1
+  medkits: 1
+  tierBonus: 0.3

@@ -83,8 +83,14 @@ names its in-run music with an optional `music` id (a key into the app's
   slabs (1×1/1×2/2×2 rectangular obstacles) wall off sight, shots and even a
   nuke's blast — cover against SpaceZ's grounded robots, useless against the
   phasing dead — while jumpable **craters** are gaps the player hops (landing on
-  the near lip when short) but the horde must route around. Music:
-  `regolith_ride` ("REGOLITH RIDE", the heroic action theme).
+  the near lip when short) but the horde must route around. The airless plain
+  also draws **meteor strikes** (`LevelDef.asteroids`, config `ASTEROIDS`): on a
+  gentle cadence a rock falls from the black sky onto a patch near the hero —
+  telegraphed by a firming ground shadow — and DETONATES, vaporizing weak mobs
+  at the core, flinging the rest (and the hero) to the sides for a
+  distance-scaled bite of hp, and punching a fresh crater into the regolith (the
+  moon is pocked with them for a reason). A rare, dodgeable spectacle, not a
+  barrage. Music: `regolith_ride` ("REGOLITH RIDE", the heroic action theme).
 - **Level 3 — MARS** (`levels/mars.ts`). The trail from the moon: SpaceZ wrote
   the moon off as a disaster and moved everything — Ada included — to a secret
   colony. `mars` biome, ~520 px/s² gravity. The level TRANSITIONS mid-map: red
@@ -117,11 +123,14 @@ names its in-run music with an optional `music` id (a key into the app's
   pull: airborne the hero still drifts toward the core and the hole's gravity
   drags his hop down early, so he jumps less high near the horizon — though he
   floats above the core. The level map pins every hole so the road's hazards
-  read at a glance) and the **asteroid rain** (`LevelDef.asteroids`: rocks streak across
-  the player's surroundings on a rolled cadence, take a difficulty-scaled
-  bite of the hero's health on contact — once per rock, from 20% on EASY up
-  to 75% on JESUS — shove minions aside, and are dodged with the feet or a
-  jump; the first strike pauses for the hero's "watch out for these" read).
+  read at a glance) and the **meteor strikes** (`LevelDef.asteroids`: rocks fall
+  from the sky onto a patch near the hero on a rolled cadence, telegraphed by a
+  firming ground shadow, then DETONATE — an AoE that vaporizes weak mobs at the
+  core, flings the rest (and the hero) to the sides, takes a difficulty-scaled
+  bite of the hero's health scaled by how near the centre he stood — from 20% on
+  EASY up to 75% on JESUS at ground zero — and punches a fading crater into the
+  void's edge; the first strike to catch him pauses for the "watch out for these"
+  read, and stepping off the mark or a well-timed jump avoids it).
   Crystallized **rift shards** block sight and shots; drifting **space
   junk** is hoppable cover; lost TVs and floating rocks decorate the
   nothing. The far door — a second rift at the east end — is where the
@@ -145,7 +154,8 @@ names its in-run music with an optional `music` id (a key into the app's
   caught on the grounded hero costs a **very slight** flat bite of hp (once per
   bale) and **shoves him left**, back down the street — he must step out of its
   lane (or jump it, like clearing enemy contact) to stop being pushed. Like the
-  rift's asteroids the bales plow minions aside unharmed and never mint a kill.
+  other environmental hazards the bales plow minions aside unharmed and never
+  mint a farmable kill.
   Beating the boss arms the **victory quake** (the whole park shakes through
   the loot-grab window) and plays the campaign's **outro epilogue**
   (`LevelDef.outro` — the intro's black-screen mirror) before the victory

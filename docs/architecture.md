@@ -93,9 +93,15 @@ run against synthetic fixtures with no shipped content (see
   over the run — build and release instead of a flat ramp), `chests` (placed
   containers with a richer haul than a crate), and `merchantSpawns` (authored
   trader spots).
-- **`src/game/defs/enemies/`** — the monster catalog, split one file per
-  roster (`spacez.ts`, `moon.ts`, …) merged into `ENEMY_DEFS` by
-  `enemies/index.ts` (which throws on a duplicate id): stats, AI radii,
+- **`src/game/defs/enemies/`** — the monster catalog. Enemies are authored as
+  **YAML** (`website/scripts/enemies/<biome>/<id>.yaml`, one self-describing file
+  per mob, stem == id) and compiled into `src/generated/enemies.ts` by
+  `website/scripts/generate-enemies.mjs` (`make levels`, before the level
+  generator so levels can cross-ref the enemy ids) — a schema validates every
+  referenced companion/unique/story/item id and fails the build on a typo or a
+  duplicate id, and the generated file is gitignored + regenerated (a round-trip
+  test pins it to a snapshot of the original defs). `enemies/index.ts` re-exposes
+  it as `ENEMY_DEFS` (stats, AI radii,
   roles; bosses and elites pin guaranteed drops). Roles: `minion` (the
   horde), `boss` (guards the objective), and `elite` — a unique story mob
   pinned to a spot by the level def, which sleeps until the player nears,
@@ -246,7 +252,10 @@ run against synthetic fixtures with no shipped content (see
   per-difficulty prelude variant — and `startingStats`), spawn counts,
   the wave spawner's live cap, how many finite SPAWN POINTS may be active at
   once (`activeSpawnerCap` — only the closest, in-line-of-sight points arm;
-  easy 2, medium 3, hard 4, nightmare 5, JESUS uncapped), the horde's RELATIVE level (`mobLevelOffset`
+  easy 2, medium 3, hard 4, nightmare 5, JESUS uncapped), how fast a thinned
+  spawn point REFILLS (`spawnerRespawnMult` — the post-kill respawn delay
+  shrinks down the ladder, easy 1.6× → jesus 0.45×; see `spawners.ts`), the
+  horde's RELATIVE level (`mobLevelOffset`
   — every monster spawns at player level + offset, hp scaled per level by the
   GEOMETRIC `mobHpLevelFactor`, config `MENACE.mobHpGrowthPerLevel` — so
   hits-to-kill rises with level instead of collapsing as the hero out-damages a
@@ -296,7 +305,13 @@ run against synthetic fixtures with no shipped content (see
   weapon auto-attack (wearing the weapon's durability) → abilities →
   projectiles → enemies (aggro/guard/elite AI, dialogue triggers, contact
   damage, obstacle push-out) → hazards (gravity wells, asteroids) → menace
-  decay → placed packs (waking clusters the hero nears) → wave spawner →
+  decay → placed packs (waking clusters the hero nears) → finite SPAWN POINTS
+  (`spawners.ts` — points that arm on approach and SUMMON their queue in from
+  off-screen: a summoned mob appears just outside the camera and RUNS IN at a
+  sprint until it crosses the approach circle, the shorter viewport dimension,
+  then drops to its normal pace; refills a thinned wave after a post-kill
+  respawn delay that shrinks with difficulty, boss proximity, and campaign
+  progress) → wave spawner →
   item pickups →
   locked doors → objective → win/lose. The wave spawner also enforces
   CAMPING PRESSURE (config `CAMPING`): a player who holds the same ground
@@ -429,10 +444,18 @@ run against synthetic fixtures with no shipped content (see
   toward the core and the hole's gravity fights his hop, so he jumps less high
   over the horizon (`WELLS.airPullFraction`/`jumpGravity`), though he floats
   above the core. The level map pins every well (`map_well`) so its road's
-  hazards read at a glance — and the **asteroid rain**
-  (`LevelDef.asteroids`, config `ASTEROIDS`): rocks spawned on a ring past
-  the screen edge streak across the player (one strike per rock, jumpable,
-  armor reduces) and shove minions aside unharmed — and the **sand storms**
+  hazards read at a glance — and the **meteor strikes**
+  (`LevelDef.asteroids`, config `ASTEROIDS`; MOON, THE RIFT): rocks fall out of
+  the sky on a slant onto a patch near the hero, telegraphed by a firming
+  ground shadow, then DETONATE (`asteroidImpact`) — an AoE that vaporizes
+  minions in the lethal core (`asteroidKill`, an environmental kill with no XP,
+  loot or menace, like a well swallow), FLINGS everything else the shockwave
+  touches — surviving minions, elites, and the grounded hero — outward to the
+  sides (a decaying knockback impulse, `stepKnockback`; a boss plants its
+  feet), bites the hero by how near the centre he stood
+  (`DifficultyDef.asteroidDamageFrac`, distance-scaled; a jump at impact clears
+  it), and leaves a fading **crater** (`Crater`; the surface's own scar
+  sprites, `asteroids.craterSprites`) — and the **sand storms**
   (`LevelDef.sandstorms`, config `SANDSTORMS`; MARS): small animated dust
   gusts spawned the same way that drift across the player SLOW enough to walk
   clear of, shove minions aside, and — catching the grounded hero — strike him
@@ -570,6 +593,9 @@ run against synthetic fixtures with no shipped content (see
   `maxMeleeTargets` (INT raises the cap), makes a swing cleave the nearest few
   monsters it faces), the auto-equip scoring (`weaponScore` DPS /
   `gearScore`) and the crit-inclusive `weaponDps` the item cards lead with,
+  the pickup-card upgrade read (`wouldUpgradeSlot`, which scores gear SPEC-aware
+  via `specGearScore` — a `+STAT` roll weighted by the hero's own allocation —
+  so an off-spec find no longer flashes UPGRADE or offers a tap-to-equip),
   and the durability cycle
   (`wearEquippedWeapon` — a weapon worn to zero is NOT trashed: it falls into
   the bag as a broken, unequippable spare (`isWeaponBroken`) and the best

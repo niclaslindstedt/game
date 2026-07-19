@@ -1,0 +1,14 @@
+id: ghost
+name: MOON GHOST
+role: minion
+sprite: ghost
+gore: ecto
+phasing: true
+hp: 45
+speed: 16
+radius: 9
+contactDamage: 12
+critChance: 0.1
+contactCooldownMs: 700
+ai:
+  aggroRadius: 950

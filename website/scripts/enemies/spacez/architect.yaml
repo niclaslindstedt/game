@@ -1,0 +1,51 @@
+id: architect
+name: THE ARCHITECT
+role: elite
+levelBonus: 3
+sprite: architect
+hp: 190
+speed: 20
+radius: 12
+contactDamage: 18
+critChance: 0.11
+contactCooldownMs: 700
+dialogue:
+  - - MY OLD BENCH PARTNER. STILL
+    - SOLDERING TOYS IN A GARAGE?
+    - I BUILD MINDS NOW. A REAL ONE.
+  - hero:
+      - THEY DUMPED US BOTH FOR AN AI.
+      - YOU BUILD THEM A BIGGER ONE?
+      - QUIT. COME HOME. IT'S ROTTEN.
+  - - QUIT? THIS 'ROTTEN COMPANY'
+    - GAVE ME PURPOSE. I AM BUILDING
+    - A SUPERINTELLIGENCE.
+  - hero:
+      - LOOK WHAT IT'S DONE TO YOU. YOU
+      - CUT A MACHINE CHIP INTO YOUR
+      - HEAD. STILL YOU IN THERE?
+  - - I CUT THE CHIP MYSELF. I'D DO IT
+    - AGAIN. FLESH IS A ROUGH DRAFT.
+    - HUMANS ARE OBSOLETE, YOU MOST.
+  - - NO MORE TALKING, OLD FRIEND.
+    - NOW YOU WILL DIE.
+lastWords:
+  - THE CHIP... TAKE IT...
+  - IT WAS NEVER... MINE...
+ai:
+  aggroRadius: 240
+  rushSpeed: 120
+loot:
+  items:
+    - defId: passage_chip
+      tier: regular
+  tierDrops:
+    magic: 1
+  storyItems:
+    - keycard_core
+  weapons: 0
+  gear: 0
+  xpArrows: 1
+  repairs: 1
+  medkits: 1
+  tierBonus: 0.25

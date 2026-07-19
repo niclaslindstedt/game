@@ -2,11 +2,14 @@
 // `wouldUpgradeSlot`: the pickup card's "is this an upgrade?" probe. Unlike
 // `isBetterEquipment` (the auto-equip rule), it keeps the level gate but drops
 // the passive-charm and equal-durability exclusions, so a stronger passive
-// still reads as an upgrade the player can act on with a tap.
+// still reads as an upgrade the player can act on with a tap. It ranks gear by
+// the SPEC-AWARE score (`specGearScore`), so an off-spec +STAT find no longer
+// reads as an upgrade (and so the pickup card no longer offers a tap-to-equip
+// for it — non-upgrades are non-interactive).
 
 import { describe, expect, it } from "vitest";
 
-import type { GameState } from "@game/core";
+import type { Affix, GameState, StatName } from "@game/core";
 import { wouldUpgradeSlot, type Equipment } from "@game/core";
 import { clearStage, idle, run, startGame } from "./helpers.ts";
 
@@ -15,9 +18,28 @@ function weapon(id: number, defId: string): Equipment {
   return { id, defId, slot: "weapon", tier: "regular", ilvl: 1, affixes: [] };
 }
 
-/** Mint a fixture gear instance in its natural slot. */
-function gear(id: number, defId: string, slot: Equipment["slot"]): Equipment {
-  return { id, defId, slot, tier: "regular", ilvl: 1, affixes: [] };
+/** Mint a fixture gear instance in its natural slot, with optional affixes. */
+function gear(
+  id: number,
+  defId: string,
+  slot: Equipment["slot"],
+  affixes: Affix[] = [],
+): Equipment {
+  return { id, defId, slot, tier: "regular", ilvl: 1, affixes };
+}
+
+/** A flat `+value STAT` affix — the roll the spec-weighting reads. */
+function statAffix(stat: StatName, value: number): Affix {
+  return { kind: "stat", stat, value };
+}
+
+/** Bias the hero's ALLOCATED stats toward `stat` (the spec the upgrade read
+ * weights by), leaving the rest at a low floor. */
+function specInto(state: GameState, stat: StatName): void {
+  for (const s of Object.keys(state.player.stats) as StatName[]) {
+    state.player.stats[s] = 1;
+  }
+  state.player.stats[stat] = 30;
 }
 
 describe("wouldUpgradeSlot", () => {
@@ -50,6 +72,26 @@ describe("wouldUpgradeSlot", () => {
     const state = startGame();
     expect(state.player.equipment.chest).toBeNull();
     expect(wouldUpgradeSlot(state, gear(1, "test_vest", "chest"))).toBe(true);
+  });
+
+  it("weighs a +STAT find by the hero's spec", () => {
+    const state = startGame();
+    specInto(state, "intelligence"); // a caster
+    // Wear a charm rolling +5 STRENGTH — dead weight for a caster.
+    state.player.equipment.charm = gear(1, "test_charm", "charm", [
+      statAffix("strength", 5),
+    ]);
+    // Same base, same-size roll, but into INTELLECT — the caster's stat: an
+    // upgrade FOR HIS SPEC even though the raw point totals tie.
+    const intCharm = gear(2, "test_charm", "charm", [
+      statAffix("intelligence", 5),
+    ]);
+    expect(wouldUpgradeSlot(state, intCharm)).toBe(true);
+    // The mirror: swapping the worn INT charm for the same-size STR one is a
+    // downgrade for this spec, so it flags neither upgrade nor tap.
+    state.player.equipment.charm = intCharm;
+    const strCharm = gear(3, "test_charm", "charm", [statAffix("strength", 5)]);
+    expect(wouldUpgradeSlot(state, strCharm)).toBe(false);
   });
 });
 

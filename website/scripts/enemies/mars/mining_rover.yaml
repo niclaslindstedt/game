@@ -1,0 +1,16 @@
+id: mining_rover
+name: MINING ROVER
+role: minion
+sprite: mining_rover
+gore: sparks
+hp: 210
+speed: 10
+radius: 11
+contactDamage: 32
+critChance: 0.14
+contactCooldownMs: 750
+ai:
+  aggroRadius: 1000
+dropProfile:
+  dropBonus: 0.4
+  tierBonus: 0.3

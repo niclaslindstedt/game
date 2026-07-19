@@ -1,0 +1,13 @@
+id: fembot
+name: FEMBOT
+role: minion
+sprite: fembot
+gore: sparks
+hp: 85
+speed: 24
+radius: 8
+contactDamage: 17
+critChance: 0.18
+contactCooldownMs: 700
+ai:
+  aggroRadius: 1000

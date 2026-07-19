@@ -18,15 +18,16 @@ the map wiring, `weapon-system` for named drops.
 
 | Piece | File |
 | --- | --- |
-| The def | `src/game/defs/enemies/<roster>.ts` (one roster module per biome; `mars.ts` is the reference) — merged in `enemies/index.ts` `mergeRosters` (duplicate ids throw) |
-| Field reference | `src/game/defs/enemies/types.ts` — every field documented at the type |
+| The def | `website/scripts/enemies/<biome>/<id>.yaml` (one YAML file per mob, file stem == id) — compiled to `src/generated/enemies.ts` by `website/scripts/generate-enemies.mjs` (gitignored, regenerated on build; a bad field / dangling cross-ref / duplicate id fails there), read by `enemies/index.ts` |
+| Field reference | `src/game/defs/enemies/types.ts` — the `EnemyDef` contract the YAML fills, every field documented at the type |
+| Pipeline | loader `website/scripts/enemy-data/load-yaml.mjs`, schema `website/scripts/asset-tools/enemy-schema.mjs`, generator `generate-enemies.mjs`; regenerate with `make levels` (or `make assets`) |
 | Sprites | one YAML per frame in `website/scripts/sprites/<family>/` — frames named exactly `<sprite>_0`/`<sprite>_1`; **minions 16×16, elites 24×24, bosses 48×48** |
 | Wound stages | **Auto-derived** by `sprite-data/index.mjs` from `role` (minion `hurt`; elite +`wrecked`; boss +`dying`) and `gore` (`blood`/`ecto`/`sparks`); a family `wounds` override only when the default splat can't contrast the body |
 | Mechanics engine | `src/game/mechanics.ts` — `charge`, `slam`, `enrage`, `summon`; `phases` (hp-gated mechanic swaps) |
 | Companions (spareable elites) | `src/game/defs/companions.ts` (`COMPANION_DEFS`); resolution in `src/game/companions.ts` |
 | Inner monologues | `src/game/defs/thoughts.ts` + a `firstKillThoughts`/`firstSightThoughts` pin on the level |
 | Scaling | `src/game/create.ts` (`spawnEnemy` stamps hp/mlvl/contact), `src/game/menace.ts` (`mobLevelFor`, `maybePowerScale` re-stamp on elite/boss engagement) |
-| Content tests | `tests/content/`: `wounds_test.ts`, `last_words_test.ts`, `last_stand_test.ts`, `aggro_test.ts`, `catalog_test.ts`, `companions_test.ts`, the per-level suites |
+| Content tests | `tests/content/`: `wounds_test.ts`, `last_words_test.ts`, `last_stand_test.ts`, `aggro_test.ts`, `catalog_test.ts`, `companions_test.ts`, `enemy_roundtrip_test.ts` (pins the compiled catalog to `fixtures/enemies-snapshot.json` — accept an intentional change with `node scripts/update-enemy-snapshot.mjs`), the per-level suites |
 
 ## The def, by concern
 
@@ -80,10 +81,12 @@ blows-to-kill.
 
 ## Workflow
 
-1. **Write the def** in the roster module (new roster file → import +
-   `mergeRosters` entry in `enemies/index.ts`). Reference it from the
-   level's `spawns`/`waves` (`level-design` skill) —
-   `catalog_test.ts` fails on any dangling id.
+1. **Write the def** as a YAML file at `website/scripts/enemies/<biome>/<id>.yaml`
+   (file stem == the enemy `id`; the biome directory is organizational only).
+   Run `make levels` to compile + validate it into `src/generated/enemies.ts`.
+   Reference it from the level's `spawns`/`waves` (`level-design` skill) —
+   `catalog_test.ts` fails on any dangling id, and
+   `enemy_roundtrip_test.ts` catches an unintended change to a shipped mob.
 2. **Draw the two frames** (`pixel-assets` skill) at the role's canvas
    size, named `<sprite>_0`/`_1`; `make assets`. Wound frames derive
    automatically; `tests/content/wounds_test.ts` fails until the frames
@@ -108,7 +111,9 @@ blows-to-kill.
 
 ## After you're done — the checklist
 
-- [ ] Def registered; `catalog_test.ts` + the level suite green.
+- [ ] Def authored as YAML + compiled (`make levels`); `catalog_test.ts`,
+      `enemy_roundtrip_test.ts` (snapshot accepted for a new/changed mob), and
+      the level suite green.
 - [ ] Frames + auto-wounds in the atlas (`make assets`,
       `wounds_test.ts` green); family sheet looked at (silhouette,
       ground contrast, size hierarchy vs role).

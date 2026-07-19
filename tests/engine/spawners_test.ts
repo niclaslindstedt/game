@@ -6,7 +6,7 @@
 
 import { describe, expect, it } from "vitest";
 
-import { createGame, dismissIntro } from "@game/core";
+import { createGame, dismissIntro, SPAWNERS } from "@game/core";
 import type { Difficulty, GameState } from "@game/core";
 import { idle, run, startGame } from "./helpers.ts";
 
@@ -38,10 +38,12 @@ describe("spawn points arm, drip, and drain", () => {
     expect(state.spawners[0]!.drainedAtMs).not.toBeNull();
   });
 
-  it("holds at the alive cap and drips only to replace kills", () => {
+  it("holds at the alive cap and refills a kill after the respawn delay", () => {
     const state = startGame(1, "test_spawner_level");
     const s = state.spawners[0]!;
     s.maxAlive = 3; // a small cap against the queue of 6
+    // The tiny fixture base floors at SPAWNERS.respawnDelayMin (250ms).
+    expect(s.respawnDelayMs).toBe(250);
     // Stand on the point (in trigger range) and let it fill.
     state.player.pos = { x: 520, y: 1320 };
     const aliveMembers = () =>
@@ -52,10 +54,15 @@ describe("spawn points arm, drip, and drain", () => {
     expect(s.status).toBe("active");
     expect(s.queue.length).toBeGreaterThan(0);
 
-    // Free a slot (as a kill would) — the point drips a replacement back to cap.
+    // Free a slot (as a kill would). The point does NOT refill instantly — it
+    // holds for the post-kill respawn delay before summoning a replacement.
     const idx = state.enemies.findIndex((e) => s.memberIds.includes(e.id));
     state.enemies.splice(idx, 1);
-    run(state, idle, 20);
+    run(state, idle, 8); // ~128ms — inside the 250ms delay
+    expect(aliveMembers()).toBe(2);
+
+    // Past the delay the replacement is summoned back to the cap.
+    run(state, idle, 20); // ~320ms more, comfortably past the delay
     expect(aliveMembers()).toBe(3);
   });
 
@@ -75,11 +82,13 @@ describe("spawn points arm, drip, and drain", () => {
     expect(localMembers()).toBe(2);
     const emitted = s.memberIds.length;
 
-    // Drag one member far past the point's trigger zone — it has "drifted away".
+    // Drag one member far past the leash — it has "drifted away", the hero left
+    // it behind.
     const drifter = state.enemies.find((e) => s.memberIds.includes(e.id))!;
     drifter.pos = { x: s.at.x + 5000, y: s.at.y };
-    // The point sees a free LOCAL slot and drips a replacement back to the cap.
-    run(state, idle, 20);
+    // The point sees a free slot and (past the respawn delay) summons a
+    // replacement back to the cap.
+    run(state, idle, 30);
     expect(localMembers()).toBe(2);
     expect(s.memberIds.length).toBeGreaterThan(emitted);
   });
@@ -208,5 +217,87 @@ describe("only the closest N points light at once (activeSpawnerCap)", () => {
     expect(byId(state, "near").status).toBe("active");
     expect(byId(state, "mid").status).toBe("active");
     expect(activeCount(state)).toBe(2);
+  });
+});
+
+describe("summoned mobs appear off-screen and run in to the approach circle", () => {
+  it("summons OUTSIDE the circle, then sheds the run-in marker on crossing it", () => {
+    const state = startGame(1, "test_spawner_level");
+    const s = state.spawners[0]!;
+    // Stand on the point so it arms and summons at once.
+    state.player.pos = { x: 520, y: 1320 };
+    run(state, idle, 6, (st) => st.spawners[0]!.memberIds.length > 0);
+    const summoned = state.enemies.find((e) => s.memberIds.includes(e.id))!;
+    expect(summoned).toBeDefined();
+    // Headless (no camera) uses the fallback approach radius, and the mob is
+    // placed OFF-SCREEN — beyond that circle — carrying the run-in marker.
+    expect(summoned.approachRadius).toBe(SPAWNERS.approachRadiusFallback);
+    const startDist = Math.hypot(
+      summoned.pos.x - state.player.pos.x,
+      summoned.pos.y - state.player.pos.y,
+    );
+    expect(startDist).toBeGreaterThan(SPAWNERS.approachRadiusFallback);
+
+    // Hold still — a summoned mob sprints in and, on crossing the circle, drops
+    // the marker and joins the fight at its own pace.
+    run(state, idle, 400, (st) =>
+      st.enemies.some(
+        (e) => s.memberIds.includes(e.id) && e.approachRadius === undefined,
+      ),
+    );
+    const arrived = state.enemies.find(
+      (e) => s.memberIds.includes(e.id) && e.approachRadius === undefined,
+    );
+    expect(arrived).toBeDefined();
+    const dist = Math.hypot(
+      arrived!.pos.x - state.player.pos.x,
+      arrived!.pos.y - state.player.pos.y,
+    );
+    expect(dist).toBeLessThanOrEqual(SPAWNERS.approachRadiusFallback + 1);
+  });
+});
+
+describe("post-kill respawn delay scales down with difficulty, boss, and map", () => {
+  const near = (state: GameState) =>
+    state.spawners.find((s) => s.id === "near")!.respawnDelayMs;
+
+  it("is shorter on harder rungs (easy → jesus)", () => {
+    const delays = (
+      ["easy", "medium", "hard", "nightmare", "jesus"] as const
+    ).map((d) => {
+      const state = createGame(1, "test_spawner_cap_level", d);
+      dismissIntro(state);
+      return near(state);
+    });
+    // Strictly decreasing down the ladder — every rung refills faster.
+    for (let i = 1; i < delays.length; i++) {
+      expect(delays[i]!).toBeLessThan(delays[i - 1]!);
+    }
+  });
+
+  it("is shorter for points nearer the level's boss", () => {
+    // The four points rise in x (440 → 1040) toward the boss at {2130,260}, so
+    // each is closer to it than the last — its respawn delay shrinks in step.
+    const state = createGame(1, "test_spawner_cap_level", "medium");
+    dismissIntro(state);
+    const byX = [...state.spawners].sort((a, b) => a.at.x - b.at.x);
+    for (let i = 1; i < byX.length; i++) {
+      expect(byX[i]!.respawnDelayMs).toBeLessThan(byX[i - 1]!.respawnDelayMs);
+    }
+  });
+
+  it("is shorter deeper into the campaign (later maps refill faster)", () => {
+    // Two bossless points with the SAME base — only the campaign-progress factor
+    // differs (first map vs last), so the later map's delay is strictly shorter.
+    const early = createGame(1, "test_spawner_early_level", "medium");
+    dismissIntro(early);
+    const late = createGame(1, "test_spawner_late_level", "medium");
+    dismissIntro(late);
+    expect(late.spawners[0]!.respawnDelayMs).toBeLessThan(
+      early.spawners[0]!.respawnDelayMs,
+    );
+    // The exact factors: base 1000 × medium (1.0) × no-boss (1.0) × map.
+    expect(early.spawners[0]!.respawnDelayMs).toBe(1000);
+    expect(late.spawners[0]!.respawnDelayMs).toBe(600);
   });
 });

@@ -1,0 +1,17 @@
+id: stray_comet
+name: STRAY COMET
+role: minion
+rarity: rare
+pack:
+  - 2
+  - 5
+sprite: stray_comet
+gore: ecto
+hp: 20
+speed: 22
+radius: 8
+contactDamage: 10
+critChance: 0.1
+contactCooldownMs: 700
+ai:
+  aggroRadius: 950

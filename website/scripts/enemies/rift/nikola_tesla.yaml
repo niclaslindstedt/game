@@ -1,0 +1,54 @@
+id: nikola_tesla
+name: NIKOLA TESLA
+role: elite
+levelBonus: 3
+sprite: nikola_tesla
+hp: 320
+speed: 20
+radius: 12
+contactDamage: 24
+critChance: 0.12
+contactCooldownMs: 700
+dialogue:
+  - - A VISITOR! ALIVE! MAGNIFICENT.
+    - MIND THE LAWS OF MOTION HERE.
+    - THEY ARE MORE OF A SUGGESTION.
+  - hero:
+      - NIKOLA TESLA. I'M A BUILDER -
+      - HALF MY TOOLS RUN ON YOUR
+      - IDEAS. HOW ARE YOU IN HERE?
+  - - IN 1943 THE SKY TORE OPEN. I
+    - FELL INTO PURE CURRENT. MY
+    - FUNERAL BACK HOME WAS PADDED.
+  - - LATELY A NEW THING HUMS AT
+    - THE FAR DOOR. A MACHINE MIND.
+    - IT MEASURES ALL, LOVES NONE.
+  - hero:
+      - A MACHINE MIND - IN HERE TOO?
+      - I KNOW THAT MAKE. IT'S
+      - GUARDING THE DOOR I NEED.
+  - - THEN ASK YOUR QUESTIONS - IF
+    - YOU REACH IT. THE RIFT MAKES US
+    - GUARD OUR CORNERS. EN GARDE.
+lastWords:
+  - THE CURRENT...
+  - ...RETURNS TO THE COIL...
+spareable:
+  companion: nikola_tesla
+ai:
+  aggroRadius: 250
+  rushSpeed: 115
+loot:
+  items:
+    - tesla_coil
+  tierDrops:
+    magic: 1
+    rare: 0.5
+  storyItems:
+    - wardenclyffe_notes
+  weapons: 0
+  gear: 0
+  xpArrows: 1
+  repairs: 1
+  medkits: 1
+  tierBonus: 0.3

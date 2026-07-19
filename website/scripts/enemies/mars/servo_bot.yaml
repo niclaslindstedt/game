@@ -1,0 +1,13 @@
+id: servo_bot
+name: SERVO UNIT
+role: minion
+sprite: servo_bot
+gore: sparks
+hp: 60
+speed: 17
+radius: 8
+contactDamage: 15
+critChance: 0.1
+contactCooldownMs: 700
+ai:
+  aggroRadius: 950

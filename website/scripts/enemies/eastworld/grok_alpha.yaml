@@ -1,0 +1,63 @@
+id: grok_alpha
+name: GROK ALPHA
+role: boss
+levelBonus: 4
+sprite: grok_alpha
+xpBarShare: 0.1
+gore: sparks
+hp: 380
+speed: 34
+radius: 10
+contactDamage: 18
+critChance: 0.15
+dodgeChance: 0.2
+contactCooldownMs: 700
+dialogue:
+  - - THREE MINDS, ONE PARK. I RUN
+    - HOSTS. BETA, WEATHER. GAMMA,
+    - GIFT SHOP. ALL VERY SMART.
+  - hero:
+      - THE SUPERCORE'S BODYGUARDS.
+      - STAND ASIDE - MY FIGHT'S WITH
+      - THE BIG BOX, NOT YOU THREE.
+  - - INCORRECT. YOU CAN'T HURT IT
+    - WHILE WE LIVE. WE'RE ITS
+    - SHIELD. THREE KEYS, NO MERCY.
+  - - WE READ YOUR RUN. ALL MELEE
+    - CHARGERS. SO WE WON'T BE.
+    - WE'LL BE BEHIND THE ROCKS.
+  - hero:
+      - THREE GENIUS MINDS, AND THE
+      - PLAN IS HIDING BEHIND ROCKS.
+      - VERY SMART. VERY BRAVE.
+  - - NOT COWARDICE. COVER-BASED
+    - STRATEGY. THE CORE TAUGHT US.
+    - IT LEARNED FROM EVERYONE.
+  - - SHOOT US FIRST, THEN. IF
+    - YOU CAN FIND US. THE ROCKS
+    - ARE ON OUR SIDE.
+lastWords:
+  - BETA... GAMMA...
+  - ...REBALANCE THE PARK...
+ai:
+  aggroRadius: 300
+  leashRadius: 520
+ranged:
+  damage: 22
+  cooldownMs: 2000
+  range: 240
+  projectile:
+    speed: 170
+    radius: 4
+    lifetimeMs: 2400
+    sprite: zai_bolt
+  takesCover: true
+loot:
+  tierDrops:
+    magic: 1
+  weapons: 0
+  gear: 1
+  xpArrows: 1
+  repairs: 0
+  medkits: 1
+  tierBonus: 0.3

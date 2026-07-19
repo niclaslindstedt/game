@@ -424,6 +424,54 @@ export const SPAWNERS = {
   /** Rejection-sampling attempts per mob to find a spot clear of obstacles and
    * the map edge before falling back to the anchor. */
   placeAttempts: 12,
+  /**
+   * SUMMON-IN behaviour. A spawner no longer pops its mobs into existence on
+   * screen: it SUMMONS them just OUTSIDE the camera and they RUN IN toward the
+   * hero at a sprint (`runInSpeedMult` × their speed), dropping to their normal
+   * pace only once they cross the APPROACH CIRCLE around him — a circle as wide
+   * as the SHORTER viewport dimension (height in landscape, width in portrait),
+   * so a mob reaches full speed just as it comes into view.
+   */
+  /** Sprint multiplier on a summoned mob's speed while it runs in from
+   * off-screen, before it reaches the approach circle. */
+  runInSpeedMult: 1.8,
+  /** Approach-circle radius (world px) used HEADLESS — bots and the sim carry no
+   * camera, so the live "shorter viewport dimension" is unavailable; this
+   * approximates the phone baseline (~195 world units tall). */
+  approachRadiusFallback: 200,
+  /** Extra world px beyond the camera's half-diagonal a summoned mob is placed,
+   * so it starts fully off-screen regardless of the arrival bearing. */
+  spawnMargin: 48,
+  /** The summon bearing (hero → spawn point) is scattered by up to ±half this
+   * many radians, so a batch fans into view rather than filing in single-file. */
+  summonArcRad: 2.1,
+  /** A summoned member counts toward the alive cap while it is alive AND within
+   * `approachRadius × this` of the hero. Past that it has been left behind (the
+   * hero ran off) and the point drips a replacement — the fight follows him. */
+  leashMult: 2.5,
+  /**
+   * POST-KILL RESPAWN DELAY. Once a point has filled to its alive cap, a killed
+   * (or left-behind) member is not replaced instantly — the point waits this
+   * long before summoning the next mob in from off-screen. This is the base
+   * (medium, first map, far from the boss); the resolved delay SHRINKS with
+   * difficulty (`DifficultyDef.spawnerRespawnMult`), with proximity to the
+   * level's boss (`bossProximityMin`), and as the campaign progresses
+   * (`mapProgressionMin`) — so later maps and the rooms around each boss refill
+   * relentlessly. A spawner may author its own base (`SpawnerSpec.respawnDelayMs`),
+   * which the same factors still scale.
+   */
+  respawnDelayMs: 2200,
+  /** Floor (ms) on the resolved post-kill respawn delay after every factor is
+   * applied — the fastest any point may refill. */
+  respawnDelayMin: 250,
+  /** The respawn-delay multiplier for a point sitting ON the level's boss (0
+   * distance). Ramps linearly up to 1× at the boss's distance from the hero's
+   * spawn, so the boss bay refills far faster than the opening rooms. */
+  bossProximityMin: 0.5,
+  /** The respawn-delay multiplier on the LAST map of the campaign; the first map
+   * is 1× and every map between interpolates — the "maps get progressively
+   * harder" lever, tightening the refill cadence map by map. */
+  mapProgressionMin: 0.6,
 } as const;
 
 /** XP and level-ups. Each level-up grants stat points to spend. */
@@ -2572,30 +2620,64 @@ export const WELLS = {
 } as const;
 
 /**
- * Asteroids — the flying rocks a level turns on with LevelDef.asteroids.
- * Each spawns on a ring just past the phone screen edge (the enemy-spawn
- * rationale), streaks across the player's surroundings with a little aim
- * scatter, shoves minions out of its path without hurting them, and takes a
- * difficulty-scaled bite of the player's MAX hp once on contact (the fraction
- * is DifficultyDef.asteroidDamageFrac, 20%→75% up the ladder) — jumping (z
- * above JUMP.dodgeHeight) sails over a rock exactly like it clears enemy
- * contact. Rocks ignore obstacles and level bounds (nothing in the void stops
- * one) and despawn once they have left the player's stage. Units: world px,
- * px/s.
+ * Asteroids — the meteor strikes a level turns on with LevelDef.asteroids.
+ * Each rock falls OUT OF THE SKY at a slanting angle onto a target patch near
+ * the player: a faint ground mark (a shadow that firms as the rock nears)
+ * telegraphs the impact, then the rock lands and DETONATES. The blast is an
+ * AoE — minions caught in the lethal CORE are vaporized (an environmental
+ * kill: no XP, no loot, no menace — like a well swallow, so strikes can't be
+ * farmed), and everything the shockwave touches (surviving minions, elites,
+ * and the grounded hero) is FLUNG outward to the sides. The hero also takes a
+ * difficulty-scaled bite of his MAX hp scaled by how near the centre he stood
+ * (the fraction is DifficultyDef.asteroidDamageFrac, 20%→75% up the ladder) —
+ * jumping (z above JUMP.dodgeHeight) at the moment of impact sails clear of
+ * the blast exactly like it clears enemy contact. The impact leaves a CRATER
+ * on the surface (levels whose ground can scar name the sprites via
+ * `asteroids.craterSprites`) that lingers, then fades once the dust settles.
+ * Rocks come in from varied angles and ignore obstacles and level bounds.
+ * Units: world px, px/s, ms.
  */
 export const ASTEROIDS = {
-  /** Spawn distance from the player — just past the screen edge. */
-  ringDistance: 240,
-  /** Aim scatter around the player (px): rocks threaten, they don't home. */
-  targetJitter: 110,
-  /** Flight speed, rolled per rock (px/s). */
-  speed: [110, 190] as [number, number],
-  /** Collision radius, rolled per rock (px). */
-  radius: [8, 13] as [number, number],
-  /** Rocks in flight are capped here; the spawner defers above it. */
-  maxAlive: 5,
-  /** A rock this far from the player despawns — it has left the stage. */
-  despawnDistance: 640,
+  /** Impact points land within this radius of the player (px): a strike
+   * threatens the hero's patch, it does not home onto him. */
+  targetJitter: 150,
+  /** How far up-range the rock enters from, measured along the ground from its
+   * impact point (px). Combined with `entryHeight` it sets the slant of the
+   * fall; a fresh random bearing each rock makes them rain from every angle. */
+  entryGroundDist: 210,
+  /** The visual altitude a rock enters at, easing to 0 at impact (px, renderer
+   * only — the engine tracks the strike by its fall timer, not a z). */
+  entryHeight: 340,
+  /** Fall time from entry to impact, rolled per rock (ms) — this IS the
+   * telegraph window the hero (and the bot) get to clear the mark. */
+  fallMs: [1250, 1900] as [number, number],
+  /** Explosion (AoE) radius, rolled per rock (px). */
+  blastRadius: [44, 64] as [number, number],
+  /** The lethal CORE as a fraction of the blast radius: a minion within it is
+   * vaporized; mobs in the outer ring are flung, not killed. */
+  killFraction: 0.6,
+  /** Visual rock radius, rolled per rock (px) — the sprite size, not the
+   * blast. */
+  rockRadius: [7, 11] as [number, number],
+  /** Peak outward launch speed at ground zero (px/s), easing to 0 at the blast
+   * edge — the shockwave that flings mobs and the hero to the sides. */
+  knockbackSpeed: 360,
+  /** How long a flung body coasts before the launch bleeds out (ms). */
+  knockbackMs: 320,
+  /** e-folding time of the launch's velocity decay (ms): the fling is fast at
+   * first and eases as it settles, rather than stopping dead. */
+  knockbackTauMs: 130,
+  /** Rocks falling at once are capped here; the spawner defers above it. */
+  maxAlive: 3,
+  /** Crater radius as a fraction of the blast radius. */
+  craterFraction: 0.55,
+  /** How long a fresh crater lingers before it fades from the surface (ms). */
+  craterMs: 9000,
+  /** The crater's fade-out tail at the end of its life (ms). */
+  craterFadeMs: 2500,
+  /** Craters on the field are capped here; the oldest is retired first so a
+   * long run's scars never pile up unbounded. */
+  maxCraters: 14,
 } as const;
 
 /**

@@ -1,0 +1,55 @@
+id: security_chief
+name: CHIEF OF SECURITY
+role: elite
+levelBonus: 3
+sprite: security_chief
+hp: 210
+speed: 30
+radius: 12
+contactDamage: 20
+critChance: 0.12
+contactCooldownMs: 700
+dialogue:
+  - - STOP RIGHT THERE.
+    - I KNOW WHY YOU'RE HERE.
+    - THE GIRL IN THE JACKET, RIGHT?
+  - hero:
+      - HER NAME IS ADA. TELL ME
+      - WHERE SHE IS AND YOU WALK
+      - AWAY FROM THIS.
+  - - CAMERAS CAUGHT HER AT THE
+    - VENDING MACHINES. THEN SUITS
+    - CAME AND PUT HER ON PAD 2.
+  - hero:
+      - PUT HER ON A ROCKET? SHE WENT
+      - OUT FOR SNACKS. WHY WOULD
+      - ANYONE WANT ADA?
+  - - THE PAPERS CALLED HER NO
+    - PASSENGER. A SPECIMEN. I WAS
+    - PAID TO FORGET THAT. YOU TOO.
+lastWords:
+  - UGH... PAD 2...
+  - SHE'S ON... PAD... 2...
+mechanics:
+  charge:
+    windupMs: 700
+    speedMult: 3.5
+    range: 180
+    cooldownMs: 6000
+ai:
+  aggroRadius: 240
+  rushSpeed: 130
+loot:
+  items:
+    - riot_taser
+  tierDrops:
+    magic: 1
+  storyItems:
+    - cargo_manifest
+    - space_suit
+  weapons: 0
+  gear: 1
+  xpArrows: 1
+  repairs: 0
+  medkits: 1
+  tierBonus: 0.25

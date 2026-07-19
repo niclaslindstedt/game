@@ -1,0 +1,48 @@
+id: cartographer
+name: THE CARTOGRAPHER
+role: elite
+levelBonus: 3
+sprite: cartographer
+gore: ecto
+phasing: true
+hp: 240
+speed: 26
+radius: 12
+contactDamage: 22
+critChance: 0.12
+contactCooldownMs: 700
+dialogue:
+  - - SHH. I'M CHARTING. THE MAP
+    - KEEPS CHANGING UNDERNEATH.
+    - TUNNELS WHERE NONE WERE.
+  - hero:
+      - MAYBE YOU'VE SEEN IT TOO.
+      - A SMALL, WARM SIGNAL. A BEACON
+      - IN A GIRL'S JACKET, GONE QUIET.
+  - - IT CROSSED MY GRID LAST NIGHT,
+    - FAST. THEN STRAIGHT DOWN -
+    - INTO THE WRECK UNDER THE FLAG.
+  - hero:
+      - DOWN INTO THE WRECK? THEN
+      - THAT'S WHERE I'M GOING. HOW
+      - DO I FOLLOW HER?
+  - - YOU DON'T, FRIEND. EVERYTHING
+    - GOES BELOW. NOTHING COMES
+    - BACK UP. NOBODY MAPS BELOW.
+lastWords:
+  - SHE WENT... STRAIGHT...
+  - ...DOWN... OFF MY MAP...
+ai:
+  aggroRadius: 250
+  rushSpeed: 125
+loot:
+  items:
+    - surveyors_pick
+  tierDrops:
+    magic: 1
+  weapons: 0
+  gear: 0
+  xpArrows: 1
+  repairs: 1
+  medkits: 1
+  tierBonus: 0.3

@@ -1,0 +1,46 @@
+id: lucky
+name: LUCKY
+role: elite
+levelBonus: 3
+sprite: lucky
+hp: 300
+speed: 22
+radius: 9
+contactDamage: 20
+critChance: 0.12
+dodgeChance: 0.25
+contactCooldownMs: 700
+dialogue:
+  - - WELL WELL. A BIG ONE, WALKED
+    - RIGHT INTO ME RING. THAT'S
+    - THREE CENTURIES OF BAD LUCK.
+  - hero:
+      - A LEPRECHAUN. OF COURSE. AFTER
+      - GHOSTS AND LIZARDS, WHY NOT. I
+      - DON'T WANT YOUR GOLD, WEE MAN.
+  - - EVERYONE WANTS THE GOLD. IT'S
+    - REAL - FELL THROUGH WITH ME.
+    - ME BAD LUCK? I GAVE IT TO ALL.
+  - - TELL YOU WHAT. BEAT ME AND
+    - IT'S YOURS. NOBODY'S MANAGED
+    - YET. FEELING LUCKY?
+lastWords:
+  - AH WELL...
+  - ...LUCK ALWAYS RUNS OUT...
+spareable:
+  companion: lucky
+ai:
+  aggroRadius: 250
+  rushSpeed: 120
+loot:
+  items:
+    - lucky_clover
+  tierDrops:
+    magic: 1.5
+    rare: 0.5
+  weapons: 0
+  gear: 1
+  xpArrows: 2
+  repairs: 0
+  medkits: 1
+  tierBonus: 0.5

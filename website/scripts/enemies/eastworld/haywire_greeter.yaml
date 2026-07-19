@@ -1,0 +1,17 @@
+id: haywire_greeter
+name: HAYWIRE GREETER
+role: minion
+rarity: rare
+pack:
+  - 2
+  - 4
+sprite: haywire_greeter
+gore: sparks
+hp: 40
+speed: 20
+radius: 8
+contactDamage: 12
+critChance: 0.1
+contactCooldownMs: 700
+ai:
+  aggroRadius: 950

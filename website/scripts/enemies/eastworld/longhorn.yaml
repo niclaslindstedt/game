@@ -1,0 +1,16 @@
+id: longhorn
+name: LONGHORN
+role: minion
+sprite: longhorn
+gore: sparks
+hp: 290
+speed: 10
+radius: 12
+contactDamage: 38
+critChance: 0.14
+contactCooldownMs: 750
+ai:
+  aggroRadius: 1000
+dropProfile:
+  dropBonus: 0.4
+  tierBonus: 0.3

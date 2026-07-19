@@ -1,0 +1,18 @@
+id: moonstruck_mourner
+name: MOONSTRUCK MOURNER
+role: minion
+rarity: rare
+pack:
+  - 2
+  - 4
+sprite: moonstruck_mourner
+gore: ecto
+phasing: true
+hp: 25
+speed: 15
+radius: 8
+contactDamage: 8
+critChance: 0.1
+contactCooldownMs: 700
+ai:
+  aggroRadius: 950

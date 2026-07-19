@@ -74,6 +74,9 @@ export const GLYPHS = {
   "&": [".##..", "#..#.", ".##..", "#..#.", ".##.#"],
   // Right arrow — a shaft with a ">" head, for "opens → destination" notes.
   "→": ["..#..", "...#.", "#####", "...#.", "..#.."],
+  // Up triangle — a solid filled ▲, vertically centered like the operators
+  // above, for the pickup card's "▲ UPGRADE" marker.
+  "▲": [".....", "..#..", ".###.", "#####", "....."],
   "=": ["...", "###", "...", "###", "..."],
 };
 

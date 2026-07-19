@@ -678,3 +678,57 @@ describe("bot stampede awareness", () => {
     expect(bot.lastThought).not.toBe("HERD");
   });
 });
+
+describe("bot meteor awareness", () => {
+  /** An asteroid level, staged clean with just the hero. */
+  function stageAsteroidLevel(): GameState {
+    const state = startGame(1, "test_asteroid_level");
+    clearStage(state);
+    state.asteroids = [];
+    state.asteroidTimerMs = 999_999;
+    return state;
+  }
+
+  const rock = (target: { x: number; y: number }, timeToImpact: number) => ({
+    id: 9400,
+    target,
+    entry: { x: target.x - 120, y: target.y - 120 },
+    fallMs: 1500,
+    ageMs: 1500 - timeToImpact,
+    blastRadius: 55,
+    rockRadius: 9,
+    spin: 0,
+  });
+
+  it("steps off an impact mark about to land on it", () => {
+    const state = stageAsteroidLevel();
+    const p = { ...state.player.pos };
+    // A rock landing right on the hero in 600ms — inside the lead window.
+    state.asteroids.push(rock({ x: p.x + 8, y: p.y }, 600));
+    const bot = createBot("survivor");
+    const input = botAct(bot, state);
+    expect(bot.lastThought).toBe("METEOR");
+    // Steers clear of the blast circle — the target is outside the reach.
+    const d = Math.hypot(input.target.x - (p.x + 8), input.target.y - p.y);
+    expect(d).toBeGreaterThan(55);
+  });
+
+  it("ignores a strike landing well away from it", () => {
+    const state = stageAsteroidLevel();
+    const p = state.player.pos;
+    state.asteroids.push(rock({ x: p.x + 300, y: p.y }, 600));
+    const bot = createBot("survivor");
+    botAct(bot, state);
+    expect(bot.lastThought).not.toBe("METEOR");
+  });
+
+  it("does not flinch at a rock still high in the sky", () => {
+    const state = stageAsteroidLevel();
+    const p = state.player.pos;
+    // Aimed at him, but a full 1.4s from impact — too early to bother yet.
+    state.asteroids.push(rock({ x: p.x, y: p.y }, 1400));
+    const bot = createBot("survivor");
+    botAct(bot, state);
+    expect(bot.lastThought).not.toBe("METEOR");
+  });
+});

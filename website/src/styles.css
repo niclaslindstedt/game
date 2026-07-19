@@ -955,8 +955,10 @@ body {
    units' border + backdrop, tinted to the find's rarity (--rarity), with a
    spark that laps the frame and a sheen that glimmers across the face so a fresh
    drop sparkles. Special tiers get a reveal burst on top (see below). The card
-   only eats pointer events when it is a tap-to-equip button (--clickable);
-   otherwise steering passes straight through. */
+   only eats pointer events when it is a tap-to-equip UPGRADE button
+   (--clickable); a non-upgrade card is pointer-events:none, so a hold steers
+   straight through it (the virtual dpad) and a quick tap over it dismisses it
+   (handled on the canvas — see GameScreen's onTap). */
 .pickup-card {
   position: absolute;
   /* Anchored to the lower part of the screen, below the centered hero, so the
@@ -4522,6 +4524,13 @@ body {
   overflow: hidden;
   background: rgba(255, 215, 94, 0.16);
   box-shadow: inset 0 0 0 1px rgba(255, 215, 94, 0.25);
+}
+
+/* Once the lockout lifts, hide the bar but keep its box in the flow so the
+   modal's height (and the stat buttons' position) never changes — the bar
+   vanishing must not make the chooser jump. */
+.levelup-arming-bar.armed {
+  visibility: hidden;
 }
 
 .levelup-arming-bar > span {

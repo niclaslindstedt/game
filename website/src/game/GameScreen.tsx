@@ -586,6 +586,11 @@ export function GameScreen({
   const powerupDockRef = useRef<HTMLDivElement>(null);
   const jumpQueuedRef = useRef(false);
   const useItemQueuedRef = useRef(false);
+  // A pause the VIEWER opened by hand (clicking the timer / pressing P) while
+  // watching BOT VIEW. The bot's input loop clears auto-pauses (tab blur) so
+  // autoplay keeps running, but must LEAVE a hand-opened pause alone — that's
+  // the only way a viewer can reach the pause menu to quit to the main menu.
+  const userPausedRef = useRef(false);
   // The consumable dock: a medkit / stamina-potion / repair-kit use queued this
   // frame (a slot tap or its bindable key), spent on the next sim tick.
   const useMedkitQueuedRef = useRef(false);
@@ -600,6 +605,15 @@ export function GameScreen({
   // checks it against the discovered merchant — a tap on him at the counter
   // opens the shop instead of jumping.
   const shopTapRef = useRef<{ x: number; y: number } | null>(null);
+  // The live pickup-card <button> element, so a tap landing over a
+  // NON-INTERACTIVE (non-upgrade) card can dismiss it instead of jumping — its
+  // steering already passes straight through (pointer-events:none). Null when
+  // no card is up. `pickupDismissRef` carries the dismiss action for the
+  // current card, or null when the card is a tap-to-equip upgrade (which owns
+  // its own tap) — so the canvas only steals the tap for a card meant to be
+  // flicked away.
+  const pickupCardElRef = useRef<HTMLButtonElement | null>(null);
+  const pickupDismissRef = useRef<(() => void) | null>(null);
   // Desktop keyboard steering: which movement-bound key codes are held right
   // now, and whether the walk modifier is down. Read every sim tick (the loop
   // resolves each held code to a direction via the player's key bindings).
@@ -928,6 +942,15 @@ export function GameScreen({
     const cardQueue: PickupCard[] = [];
     let cardShowing = false;
 
+    // Clear the card on screen now and roll the queue forward (the tap-to-
+    // dismiss action and the dwell timer both land here).
+    const dismissCurrentCard = () => {
+      if (pickupCardTimer) clearTimeout(pickupCardTimer);
+      setPickupCard(null);
+      pickupDismissRef.current = null;
+      pumpPickupCards();
+    };
+
     // Pull the next queued card onto the screen, sizing its dwell to the state
     // at show time: a better find lingers, an ordinary one is halved while a
     // backlog still waits behind it, and otherwise runs the full base time.
@@ -936,9 +959,15 @@ export function GameScreen({
       const next = cardQueue.shift();
       if (!next) {
         cardShowing = false;
+        pickupDismissRef.current = null;
         return;
       }
       cardShowing = true;
+      // A NON-INTERACTIVE card (no tap-to-equip — every non-upgrade) is
+      // tap-to-dismiss: the canvas flicks it away when a tap lands over it, so
+      // a non-upgrade never squats in the thumb zone. A tap-to-equip upgrade
+      // owns its own tap, so it isn't dismissable this way.
+      pickupDismissRef.current = next.onEquip ? null : dismissCurrentCard;
       const better = next.upgrade || next.equipped;
       const ttlMs = better
         ? PICKUP_CARD_TTL_UPGRADE_MS
@@ -949,6 +978,7 @@ export function GameScreen({
       if (pickupCardTimer) clearTimeout(pickupCardTimer);
       pickupCardTimer = setTimeout(() => {
         setPickupCard(null);
+        pickupDismissRef.current = null;
         pumpPickupCards();
       }, ttlMs);
     };
@@ -968,17 +998,20 @@ export function GameScreen({
         : undefined;
       const color = TIER_COLORS[tier] ?? TIER_COLORS.regular;
       const id = ++pickupCardSeq;
-      // Tap-to-equip is offered only for a bagged find the hero can wear right
-      // now — an auto-equipped upgrade is already worn, and an under-leveled
-      // find would be refused. The item is located by its stable id so a bag
-      // rearranged while the card is up still equips the right piece, and its
-      // requirement is read off the INSTANCE (`itemLevelReq`) so an artifact's
-      // cap gate matches the engine's refusal instead of its lower base req.
+      // Tap-to-equip is offered ONLY for a bagged UPGRADE the hero can wear
+      // right now — a non-upgrade is never interactive (it's tap-to-dismiss /
+      // steer-through instead), an auto-equipped upgrade is already worn, and an
+      // under-leveled find would be refused. The item is located by its stable
+      // id so a bag rearranged while the card is up still equips the right
+      // piece, and its requirement is read off the INSTANCE (`itemLevelReq`) so
+      // an artifact's cap gate matches the engine's refusal instead of its lower
+      // base req.
       const bagged =
         itemId != null
           ? (state.player.inventory.find((it) => it?.id === itemId) ?? null)
           : null;
       const canEquip =
+        upgrade &&
         !equipped &&
         defId != null &&
         bagged != null &&
@@ -1139,10 +1172,33 @@ export function GameScreen({
     // steering setting — cursor-follow mode turns clicks into item use
     // (Space jumps), classic mode keeps click-tap = jump.
     const pointer = trackPointer(canvas, {
-      onTap: ({ pointerType }) => {
+      onTap: ({ fingers, pointerType }) => {
         // Remember where the tap landed (CSS px): the sim loop checks it
         // against the merchant before letting it act as a jump.
         shopTapRef.current = { x: pointer.state.x, y: pointer.state.y };
+        // A single-finger tap landing ON a non-interactive pickup card flicks
+        // it away instead of jumping — the card is pointer-events:none so the
+        // press already steers/jumps through it, and this makes a quick tap the
+        // deliberate way to clear a non-upgrade out of the thumb zone.
+        if (fingers === 1) {
+          const dismiss = pickupDismissRef.current;
+          const el = pickupCardElRef.current;
+          if (dismiss && el) {
+            const card = el.getBoundingClientRect();
+            const view = canvas.getBoundingClientRect();
+            const px = view.left + pointer.state.x;
+            const py = view.top + pointer.state.y;
+            if (
+              px >= card.left &&
+              px <= card.right &&
+              py >= card.top &&
+              py <= card.bottom
+            ) {
+              dismiss();
+              return; // swallow the jump — the tap was spent dismissing
+            }
+          }
+        }
         if (pointerType !== "mouse" || getSettings().steering === "hold") {
           jumpQueuedRef.current = true;
         }
@@ -1162,14 +1218,18 @@ export function GameScreen({
     // together; resume lifts both. Music truly resumes in place — the chiptune
     // player keeps its position across the pause. Guarded so it only toggles
     // mid-run, never over an intro/level-up/end splash.
-    const pause = () => {
+    const pause = (userInitiated = false) => {
       if (state.phase !== "playing") return;
+      // A hand-opened pause latches so the bot's input loop won't clear it (an
+      // auto-pause from tab blur passes userInitiated=false and stays clearable).
+      if (userInitiated) userPausedRef.current = true;
       pauseGame(state);
       pauseMusic();
       bumpUi();
     };
     const resume = () => {
       if (state.phase !== "paused") return;
+      userPausedRef.current = false;
       resumeGame(state);
       resumeMusic();
       bumpUi();
@@ -1220,7 +1280,7 @@ export function GameScreen({
           return;
         case "pause":
           if (state.phase === "playing") {
-            pause();
+            pause(true);
             playUiSound(synth, "confirm");
           } else if (state.phase === "paused") {
             resume();
@@ -1353,7 +1413,7 @@ export function GameScreen({
           playUiSound(synth, "back");
           bumpUi();
         } else if (state.phase === "playing") {
-          pause();
+          pause(true);
           playUiSound(synth, "confirm");
         } else if (state.phase === "paused") {
           resume();
@@ -1579,8 +1639,13 @@ export function GameScreen({
         if (bot) {
           // The bot is a drop-in input source; it also clears the paused
           // phases a human would click through (including an auto-pause from
-          // the headless tab reporting itself hidden/unfocused).
-          if (state.phase === "paused") resumeGame(state);
+          // the headless tab reporting itself hidden/unfocused). But a pause the
+          // VIEWER opened by hand (timer tap / P while watching BOT VIEW) is left
+          // alone so the pause menu holds and they can quit to the main menu —
+          // the loop still runs, step() just no-ops under the paused phase.
+          if (state.phase === "paused" && !userPausedRef.current) {
+            resumeGame(state);
+          }
           if (state.phase === "cutscene") skipCutscene(state);
           if (state.phase === "intro") skipIntro(state);
           if (state.phase === "outro") skipOutro(state);
@@ -2186,6 +2251,18 @@ export function GameScreen({
               sprite: event.sprite,
               angle: (Math.random() < 0.5 ? -1 : 1) * (Math.PI / 2),
               seed: Math.floor(Math.random() * 997),
+            });
+          }
+          // A METEOR DETONATION: the flash + shockwave + settling dust cloud,
+          // sized to the engine's blast radius. The crater the engine spawned
+          // is left under the fading dust.
+          if (event.type === "asteroidImpact") {
+            effects.push({
+              kind: "asteroidImpact",
+              pos: event.pos,
+              untilMs: state.stats.timeMs + 620,
+              durationMs: 620,
+              radius: event.radius,
             });
           }
           // A NOVA burst: the expanding ring sized to the engine's damage
@@ -2980,6 +3057,7 @@ export function GameScreen({
       canvas.removeEventListener("pointerdown", unlock);
       pickupTimers.forEach(clearTimeout);
       if (pickupCardTimer) clearTimeout(pickupCardTimer);
+      pickupDismissRef.current = null;
     };
   }, [
     assets,
@@ -3502,6 +3580,9 @@ export function GameScreen({
                 }}
                 onPause={() => {
                   if (state?.phase === "playing") {
+                    // Latch it as viewer-initiated so BOT VIEW's autopilot won't
+                    // clear the pause before the menu can show (see the sim loop).
+                    userPausedRef.current = true;
                     pauseGame(state);
                     pauseMusic();
                     playUiSound(synth, "confirm");
@@ -3907,6 +3988,7 @@ export function GameScreen({
           font={font}
           relicFonts={assets.relicFonts}
           card={pickupCard}
+          cardRef={pickupCardElRef}
         />
       )}
 
@@ -4140,6 +4222,7 @@ export function GameScreen({
           font={font}
           onResume={() => {
             if (state.phase !== "paused") return;
+            userPausedRef.current = false;
             resumeGame(state);
             resumeMusic();
             bumpUi();

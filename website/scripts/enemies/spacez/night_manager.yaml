@@ -1,0 +1,48 @@
+id: night_manager
+name: THE NIGHT MANAGER
+role: elite
+levelBonus: 3
+sprite: night_manager
+hp: 150
+speed: 22
+radius: 12
+contactDamage: 16
+critChance: 0.1
+contactCooldownMs: 700
+dialogue:
+  - - YOU. YOU'RE NOT ON THE ROSTER.
+    - NOBODY IS ON THE ROSTER. THAT'S
+    - THE POINT OF THE NIGHT SHIFT.
+  - hero:
+      - I DON'T WORK HERE ANYMORE.
+      - I'M LOOKING FOR A GIRL WHO WAS
+      - TAKEN TONIGHT. WHERE IS SHE?
+  - - IF THEY TOOK HER, SHE'S ON A
+    - MIDNIGHT LAUNCH. NO MANIFEST,
+    - NO NAMES. ALL GO TO THE MOON.
+  - hero:
+      - THE MOON? WHY WOULD SPACEZ
+      - FLY PEOPLE TO THE MOON
+      - IN SECRET?
+  - - I DON'T ASK. I SIGN NOTHING,
+    - I SEE NOTHING. AND YOU -
+    - YOU WERE NEVER HERE.
+lastWords:
+  - HHK... TELL THEM...
+  - I WAS NEVER... HERE...
+ai:
+  aggroRadius: 240
+  rushSpeed: 120
+loot:
+  items:
+    - executive_putter
+  tierDrops:
+    magic: 1
+  storyItems:
+    - keycard_storage
+  weapons: 0
+  gear: 0
+  xpArrows: 1
+  repairs: 0
+  medkits: 1
+  tierBonus: 0.25

@@ -1,0 +1,104 @@
+id: armstrong
+name: ARMSTRONG
+role: boss
+levelBonus: 5
+sprite: armstrong
+gore: ecto
+phasing: true
+hp: 550
+speed: 40
+radius: 20
+contactDamage: 30
+critChance: 0.15
+contactCooldownMs: 900
+dialogue:
+  - - YOU SMELL LIKE EARTH.
+    - RAIN AND CUT GRASS AND
+    - TELEVISION. GO HOME.
+  - hero:
+      - NOT WITHOUT ADA. YOU'RE HIM,
+      - AREN'T YOU? THE FIRST MAN ON
+      - THE MOON. NEVER WENT HOME.
+  - - I PLANTED THIS FLAG. ONE SMALL
+    - STEP. THEN A WRECK TURNED UP
+    - UNDER MY BOOTS. ALL THEATER.
+  - - THEY GREW A SMILING COPY OF
+    - ME. HE SHOOK HANDS, CUT RIBBONS
+    - AND DIED IN BED. LUCKY HIM.
+  - hero:
+      - AND YOU'VE BEEN UP HERE ALONE
+      - EVER SINCE? FIFTY YEARS?
+      - GUARDING WHAT?
+  - - THE THING IN THE WRECK SINGS,
+    - YOU KNOW. SPACEZ HEARD IT TOO -
+    - AND PLUGGED THEIR MACHINES IN.
+  - - THAT WAS THEIR GREAT MISTAKE.
+    - IT SANG, AND THE GRAVES OPENED.
+    - NOW THEY CRATE UP FOR MARS.
+  - hero:
+      - MARS? THEN THE CRATES - THEY
+      - CARRIED A GIRL THROUGH HERE
+      - LAST NIGHT. DID YOU SEE HER?
+  - - SNEAKERS. LOUD. SHE BIT TWO OF
+    - THEM. THEY CRATED HER FOR THE
+    - MARS RUN WITH ALL THEY OWN.
+  - - YOU WANT TO FOLLOW? THEN TAKE
+    - THE WATCH FROM ME, EARTHLING.
+    - I ONLY EVER LOSE TO THE WORTHY.
+lastWords:
+  - THE WATCH... HHH...
+  - IT'S... YOURS... NOW...
+mechanics:
+  slam:
+    windupMs: 900
+    radius: 75
+    damageFrac: 1.2
+    cooldownMs: 8000
+phases:
+  - belowHpFrac: 0.4
+    mechanics:
+      slam:
+        windupMs: 700
+        radius: 80
+        damageFrac: 1.3
+        cooldownMs: 6000
+      enrage:
+        belowHpFrac: 0.4
+        speedMult: 1.4
+        damageMult: 1.25
+ai:
+  aggroRadius: 280
+  leashRadius: 460
+loot:
+  items:
+    - machete
+  tierDrops:
+    magic: 1.5
+    rare: 0.5
+  weapons: 0
+  gear: 1
+  xpArrows: 2
+  repairs: 1
+  medkits: 2
+  tierBonus: 0.35
+uniquesByDifficulty:
+  easy:
+    - the_long_vigil
+    - palegrave
+  medium:
+    - the_long_vigil
+    - palegrave
+  hard:
+    - the_long_vigil
+    - palegrave
+  nightmare:
+    - the_long_vigil
+    - palegrave
+    - sentinels_greaves
+    - marewalkers
+  jesus:
+    - the_long_vigil
+    - palegrave
+    - sentinels_greaves
+    - marewalkers
+    - the_fallen_standard

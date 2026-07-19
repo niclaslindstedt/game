@@ -192,6 +192,15 @@ export type SpawnerSpec = {
   spawnRadius?: number;
   /** Time (ms) between emission ticks; default `SPAWNERS.intervalMs`. */
   intervalMs?: number;
+  /**
+   * BASE post-kill respawn delay (ms) for THIS point — the wait, once at the
+   * alive cap, before a killed member is replaced (default
+   * `SPAWNERS.respawnDelayMs`). The resolved delay is this base SCALED by
+   * difficulty, proximity to the level's boss, and campaign progress (see
+   * create.ts), so a harder rung / a boss-bay point / a later map all refill
+   * faster regardless of the authored base.
+   */
+  respawnDelayMs?: number;
   /** Mobs released per tick; default `SPAWNERS.perEmit`. */
   perEmit?: number;
   /**
@@ -532,16 +541,24 @@ export type LevelDef = {
     lootRadius?: number;
   }[];
   /**
-   * Flying rocks: presence turns the asteroid spawner on. Every `everyMs`
-   * (rolled per rock) one streaks across the player's surroundings — dodge
-   * it or jump it. Each strike takes a difficulty-scaled bite of the hero's
-   * max hp (DifficultyDef.asteroidDamageFrac); the shared tuning lives in
-   * config ASTEROIDS. `struckThought` (a THOUGHT_DEFS id) fires a one-time
-   * inner monologue the first time a rock lands on the hero this run — the
-   * "watch out for these" beat, tracked in the same `thoughtsSeen` ledger as
-   * the kill/sight pins.
+   * Meteor strikes: presence turns the asteroid spawner on. Every `everyMs`
+   * (rolled per rock) one falls out of the sky onto a patch near the hero,
+   * telegraphed by a firming ground shadow, and DETONATES — vaporizing minions
+   * at the lethal core and flinging everything else (the hero included) to the
+   * sides. A blast that catches the grounded hero takes a difficulty-scaled
+   * bite of his max hp scaled by how near the centre he stood
+   * (DifficultyDef.asteroidDamageFrac); the shared tuning lives in config
+   * ASTEROIDS. `craterSprites` names the scar sprites this level's surface
+   * leaves behind (omit on a floorless biome to skip persistent craters).
+   * `struckThought` (a THOUGHT_DEFS id) fires a one-time inner monologue the
+   * first time a blast catches the hero this run — the "watch out for these"
+   * beat, tracked in the same `thoughtsSeen` ledger as the kill/sight pins.
    */
-  asteroids?: { everyMs: [number, number]; struckThought?: string };
+  asteroids?: {
+    everyMs: [number, number];
+    craterSprites?: string[];
+    struckThought?: string;
+  };
   /**
    * Spinning hay balls: presence rolls the bale hazard on (config HAY_BALLS).
    * Every `everyMs` (rolled per bale) one mints just past the right screen edge

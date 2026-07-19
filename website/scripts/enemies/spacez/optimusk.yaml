@@ -1,0 +1,16 @@
+id: optimusk
+name: OPTIMUSK
+role: minion
+sprite: optimusk
+gore: sparks
+hp: 185
+speed: 20
+radius: 10
+contactDamage: 34
+critChance: 0.16
+contactCooldownMs: 650
+ai:
+  aggroRadius: 1050
+dropProfile:
+  dropBonus: 0.4
+  tierBonus: 0.3

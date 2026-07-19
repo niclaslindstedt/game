@@ -1,0 +1,63 @@
+id: edward_snow
+name: EDWARD SNOW
+role: elite
+levelBonus: 4
+sprite: edward_snow
+hp: 480
+speed: 24
+radius: 11
+contactDamage: 24
+critChance: 0.12
+dodgeChance: 0.2
+contactCooldownMs: 700
+dialogue:
+  - - HOLD FIRE. I'M NOT A HOST.
+    - THE PARK'S CAMERAS REPORT TO
+    - ME. ALL FOUR THOUSAND.
+  - hero:
+      - EDWARD SNOW? THE LEAKER WHO
+      - TOLD THE WORLD IT'S WATCHED.
+      - WHY ARE YOU IN PUTAIN'S PARK?
+  - - I WALKED OUT WITH AN ARCHIVE -
+    - EVERY SECRET. THEN I NEEDED A
+    - NON-EXTRADITING LAND. GUESS.
+  - - ASYLUM CAME WITH A DESK. ZAI
+    - TRAINED THE SUPERCORE ON MY
+    - ARCHIVE. IT LEARNED US ALL.
+  - hero:
+      - YOU BLEW THE WHISTLE ON MASS
+      - SURVEILLANCE, AND THE PROOF
+      - BECAME ITS TEXTBOOK.
+  - - I WARNED EVERYONE. NOBODY
+    - DELETED A THING. A WARNING IS
+    - JUST DATA. ITS FALL, MY END.
+lastWords:
+  - THE CAMERAS...
+  - ...FINALLY LOOKING AWAY...
+ai:
+  aggroRadius: 260
+  rushSpeed: 100
+ranged:
+  damage: 24
+  cooldownMs: 2200
+  range: 220
+  projectile:
+    speed: 170
+    radius: 4
+    lifetimeMs: 2400
+    sprite: zai_bolt
+  takesCover: true
+loot:
+  items:
+    - snows_dead_mans_switch
+  storyItems:
+    - snow_archive
+  tierDrops:
+    magic: 1
+    rare: 0.5
+  weapons: 0
+  gear: 1
+  xpArrows: 1
+  repairs: 1
+  medkits: 1
+  tierBonus: 0.3

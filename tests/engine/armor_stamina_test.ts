@@ -413,10 +413,12 @@ describe("stamina", () => {
     const state = startGame();
     clearStage(state);
     state.obstacles = [];
-    // Leave less than one hop's worth so the next takeoff bottoms it out.
-    state.player.stamina = STAMINA.jumpCost * state.player.maxStamina * 0.5;
+    // Leave EXACTLY one hop's worth so the takeoff bottoms the pool out — any
+    // less and the hop no longer fires (a winded hero can't jump).
+    state.player.stamina = STAMINA.jumpCost * state.player.maxStamina;
 
     step(state, jumpOnce, DT);
+    expect(state.events.some((e) => e.type === "jump")).toBe(true);
     expect(state.player.stamina).toBe(0);
     expect(state.staminaRegenLockMs).toBeGreaterThan(0);
 
@@ -427,5 +429,31 @@ describe("stamina", () => {
     fresh.player.stamina = fresh.player.maxStamina;
     step(fresh, jumpOnce, DT);
     expect(fresh.staminaRegenLockMs).toBe(0);
+  });
+
+  it("refuses to jump when the pool can't cover the takeoff cost", () => {
+    const state = startGame();
+    clearStage(state);
+    state.obstacles = [];
+    // A winded hero — less than one hop's worth in the pool — stays grounded.
+    state.player.stamina = STAMINA.jumpCost * state.player.maxStamina * 0.5;
+    const before = state.player.stamina;
+
+    step(state, jumpOnce, DT);
+    expect(state.events.some((e) => e.type === "jump")).toBe(false);
+    expect(state.player.z).toBe(0);
+    // The refused hop spends nothing — standing still, the reserve only regens.
+    expect(state.player.stamina).toBeGreaterThanOrEqual(before);
+  });
+
+  it("won't hop on a bone-dry pool", () => {
+    const state = startGame();
+    clearStage(state);
+    state.obstacles = [];
+    state.player.stamina = 0;
+
+    step(state, jumpOnce, DT);
+    expect(state.events.some((e) => e.type === "jump")).toBe(false);
+    expect(state.player.z).toBe(0);
   });
 });
