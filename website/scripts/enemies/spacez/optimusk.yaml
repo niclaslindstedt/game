@@ -3,7 +3,7 @@ name: OPTIMUSK
 role: minion
 sprite: optimusk
 gore: sparks
-hp: 185
+hp: 145
 speed: 20
 radius: 10
 contactDamage: 34

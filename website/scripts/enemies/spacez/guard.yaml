@@ -2,7 +2,7 @@ id: guard
 name: SECURITY GUARD
 role: minion
 sprite: guard
-hp: 80
+hp: 64
 speed: 26
 radius: 9
 contactDamage: 18

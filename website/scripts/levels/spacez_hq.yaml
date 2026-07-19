@@ -878,3 +878,14 @@ loot:
       weapon: security_baton
     - atKills: 20
       gear: smart_glasses
+    # A guaranteed RANGED sidearm for the BACK HALF — the fix for the "past the
+    # night manager but no further" wall: where the probabilistic rain used to
+    # leave the hero stranded on a worn starter (or the feeble blaster) as the
+    # aisles swell toward DOGE-1, this hands him a real kiting tool so his DPS
+    # never craters. Landed around aisle 2-3.
+    - atKills: [34, 46]
+      weapon: nine_mm
+    # A repair kit alongside it, so the freshly-armed hero can also keep his
+    # weapon of choice alive through the surge instead of watching it snap.
+    - atKills: [50, 64]
+      item: repair

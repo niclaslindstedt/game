@@ -343,7 +343,10 @@ export const DIFFICULTY_DEFS: Record<Difficulty, DifficultyDef> = {
     name: "EASY",
     tagline: "A GENTLE WARM-UP",
     color: "#7ef0c8",
-    startingWeapon: "hairy_potters_wand",
+    // A short-range CONE spray off the garage wall — a crowd-clear tool, not a
+    // single-target wand, so the kindest rung teaches the AoE read from the
+    // opening knot (see WEAPON_DEFS.fire_extinguisher).
+    startingWeapon: "fire_extinguisher",
     // Four banked points — a broad head start, one in each combat stat.
     startingStats: { stamina: 1, strength: 1, dexterity: 1, intelligence: 1 },
     startingGear: ["t_shirt", "jeans", "leather_boots"],

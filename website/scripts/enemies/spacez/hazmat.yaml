@@ -2,7 +2,7 @@ id: hazmat
 name: HAZMAT TECH
 role: minion
 sprite: hazmat
-hp: 140
+hp: 105
 speed: 9
 radius: 10
 contactDamage: 24

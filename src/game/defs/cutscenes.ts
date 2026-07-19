@@ -19,9 +19,9 @@ import type { CutsceneDef } from "@game/lib/cutscene.ts";
  */
 const WALL_ARMS = {
   easy: {
-    prop: "wall_hairy_wand",
+    prop: "wall_fire_extinguisher",
     take: [
-      "HAIRY POTTER'S WAND, OFF THE WALL.",
+      "THE OLD EXTINGUISHER OFF THE WALL.",
       "IT'S ALL I NEED TO BRING HER HOME.",
     ],
   },

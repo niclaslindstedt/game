@@ -131,8 +131,8 @@ _(Ada crosses to the door and exits.)_
 
 _(The closing caption names the wall weapon, per difficulty:)_
 
-- **EASY** (HAIRY POTTER'S WAND):
-  > **CAPTION:** HAIRY POTTER'S WAND, OFF THE WALL. / IT'S ALL I NEED TO BRING HER HOME.
+- **EASY** (FIRE EXTINGUISHER):
+  > **CAPTION:** THE OLD EXTINGUISHER OFF THE WALL. / IT'S ALL I NEED TO BRING HER HOME.
 - **MEDIUM** (MEDIEVAL SWORD):
   > **CAPTION:** THE OLD SWORD OFF THE WALL. / IT'S ALL I NEED TO BRING HER HOME.
 - **HARD** (COMBAT KNIFE):

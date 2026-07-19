@@ -202,17 +202,53 @@ export const WEAPON_DEFS: Record<string, WeaponDef> = {
   // weapon supplants the starter (see isBetterEquipment). The ladder runs
   // from EASY's genuinely decent wand down to the JESUS stick.
   //
-  // EASY: a ranged magic starter that holds a lane from safety — the kindest
-  // opening loadout in the game. Bought at a licensing discount.
+  // EASY: the shop fire extinguisher off the garage wall — a short-range CONE
+  // of pressurized spray that washes over a whole PACK at once. The kindest
+  // opening loadout in the game: an ex-engineer's own tool, and unlike a
+  // single-target wand it teaches the crowd-clear read from the first knot of
+  // interns. Grounded (no magic), it wants no stat to shine — the fresh player
+  // just points it at the crowd and holds.
+  fire_extinguisher: {
+    id: "fire_extinguisher",
+    material: "metal",
+    name: "FIRE EXTINGUISHER",
+    class: "ranged",
+    levelReq: 1,
+    // Light per pellet — the AoE is the point. Six jets fan across a wide,
+    // short cone, so a point-blank blast hoses a clustered pack while a single
+    // straggler takes just a jet or two. Bumped `damage`/durability so it HOLDS
+    // the whole SPACEZ HQ onboarding without snapping and stranding the fresh
+    // player on the feeble sidearm; any looted weapon still supplants it
+    // (isBetterEquipment), and the ~kill-10 SECURITY BATON is its intended
+    // step-up.
+    damage: 8,
+    // A salvaged extinguisher sputters — the charge is never perfectly even.
+    damageVariance: 0.2,
+    cooldownMs: 500,
+    range: 165,
+    durability: 300,
+    projectile: {
+      speed: 250,
+      radius: 5,
+      lifetimeMs: 380,
+      sprite: "spark",
+      count: 6,
+      spreadDeg: 58,
+    },
+    icon: "icon_fire_extinguisher",
+  },
+  // A ranged magic starter that holds a lane from safety — bought at a
+  // licensing discount. No longer a shipped starting weapon (EASY now opens on
+  // the FIRE EXTINGUISHER), but kept as a droppable/scenario caster.
   hairy_potters_wand: {
     id: "hairy_potters_wand",
     name: "HAIRY POTTER'S WAND",
     class: "magic",
     levelReq: 1,
-    damage: 14,
+    damage: 17,
     cooldownMs: 550,
     range: 280,
-    durability: 150,
+    durability: 280,
     projectile: { speed: 340, radius: 4, lifetimeMs: 1200, sprite: "spark" },
     icon: "icon_hairy_wand",
   },
@@ -225,13 +261,16 @@ export const WEAPON_DEFS: Record<string, WeaponDef> = {
     name: "MEDIEVAL SWORD",
     class: "melee",
     levelReq: 1,
-    damage: 18,
+    damage: 20,
     cooldownMs: 720,
     range: 38,
     // A genuine slash: a broad arc that catches a pair of foes per swing —
     // the AoE yardstick the knife (narrower) and knuckles (none) sit under.
     sweepDeg: 100,
-    durability: 130,
+    // Enough steel to carry the MEDIUM onboarding: the old 130 snapped a third
+    // of the way through the floor and dropped the hero to the sidearm, right
+    // as the aisles swelled — the DPS crater that walled the back half.
+    durability: 200,
     icon: "icon_medieval_sword",
   },
   // DEVELOPER calibration probe — a debug melee weapon that NEVER drops (no
@@ -267,7 +306,9 @@ export const WEAPON_DEFS: Record<string, WeaponDef> = {
     cooldownMs: 400,
     range: 32,
     sweepDeg: 70,
-    durability: 150,
+    // A longer-lasting edge so the HARD opener doesn't strand the hero on the
+    // sidearm partway through the floor.
+    durability: 200,
     icon: "icon_combat_knife",
   },
   // NIGHTMARE: one target, real hurt. Each punch lands like a brick — and
@@ -353,7 +394,13 @@ export const WEAPON_DEFS: Record<string, WeaponDef> = {
     // so leveling still pays — and the damped melee AoE ranking
     // (WEAPON.meleeAoeRealized) makes it out-fight, not just out-paper, the
     // weapon it replaces.
-    damage: 6,
+    //
+    // Bumped again for the onboarding: as HQ's scripted first-AoE drop (~kill
+    // 10) it has to be a weapon the fresh hero WANTS to swing into the swelling
+    // aisles, not a sideways step off the starter — so it lands a real cone
+    // that thins a pack, still capped under the next melee rung so leveling
+    // keeps paying.
+    damage: 10,
     cooldownMs: 400,
     range: 42,
     sweepDeg: 100,
@@ -980,8 +1027,12 @@ export const WEAPON_DEFS: Record<string, WeaponDef> = {
     name: "PLASMA CUTTER",
     class: "melee",
     levelReq: 5,
-    // DOGE-1's hoard piece — cleanroom tooling rated for rocket hulls.
-    damage: 20,
+    // DOGE-1's hoard piece — cleanroom tooling rated for rocket hulls, and the
+    // level's TROPHY: it must stay the best weapon HQ yields (the elite drops
+    // are priced under it — story_test), so beating the boss is the run's
+    // clearest single upgrade. Bumped to keep that gap comfortable now the
+    // NIGHT MANAGER's putter is a real single-target blade.
+    damage: 24,
     cooldownMs: 340,
     range: 44,
     sweepDeg: 70,
@@ -1009,10 +1060,21 @@ export const WEAPON_DEFS: Record<string, WeaponDef> = {
     name: "EXECUTIVE PUTTER",
     class: "melee",
     levelReq: 3,
-    // The NIGHT MANAGER's back-nine special: crisp tempo, real reach.
-    damage: 5,
+    // The NIGHT MANAGER's back-nine special: crisp tempo, real reach. It is his
+    // GUARANTEED drop (enemies/spacez/night_manager.yaml) right at the wall
+    // where onboarding players stall — so it must ARM the hero for the back
+    // half, not auto-equip as a downgrade. At the old dmg-5 (~8 dps) it sat
+    // below every starter and craters DPS the instant it swaps in; bumped to a
+    // real single-target blade that beating the first elite genuinely rewards.
+    damage: 15,
     cooldownMs: 380,
     range: 46,
+    // A putter is a THRUST, not a cleave: a narrow arc, so the damage budget
+    // (and auto-equip) reads it as the single-target sidearm it is — which both
+    // fits the flavor and keeps its effective value under DOGE-1's boss trophy
+    // (the "elites price under the boss" rule, story_test). The SECURITY BATON
+    // stays the hero's crowd-clear; the putter is the hard single hit.
+    sweepDeg: 40,
     durability: 200,
     icon: "icon_putter",
   },

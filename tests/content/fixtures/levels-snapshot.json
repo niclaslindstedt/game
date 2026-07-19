@@ -1401,6 +1401,20 @@
           {
             "atKills": 20,
             "gear": "smart_glasses"
+          },
+          {
+            "atKills": [
+              34,
+              46
+            ],
+            "weapon": "nine_mm"
+          },
+          {
+            "atKills": [
+              50,
+              64
+            ],
+            "item": "repair"
           }
         ]
       },

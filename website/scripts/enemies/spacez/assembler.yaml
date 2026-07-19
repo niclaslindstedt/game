@@ -3,7 +3,7 @@ name: ASSEMBLER
 role: minion
 sprite: assembler
 gore: sparks
-hp: 70
+hp: 55
 speed: 16
 radius: 10
 contactDamage: 20
