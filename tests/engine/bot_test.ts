@@ -12,6 +12,7 @@ import {
   botAllocate,
   createBot,
   enemyDef,
+  JUMP,
   metaLane,
   step,
   weaponDef,
@@ -592,6 +593,89 @@ describe("bot sand-storm avoidance", () => {
     const bot = createBot("survivor");
     botAct(bot, state);
     expect(bot.lastThought).not.toBe("STORM");
+  });
+});
+
+describe("bot stampede awareness", () => {
+  /** A stampede level, staged clean with just the hero. */
+  function stageStampedeLevel(): GameState {
+    const state = startGame(1, "test_stampede_level");
+    clearStage(state);
+    state.stampedes = [];
+    return state;
+  }
+
+  const herd = (pos: { x: number; y: number }) => ({
+    id: 9400,
+    pos,
+    speed: 260,
+    runners: [],
+    struck: false,
+  });
+
+  /** A far, harmless mob so botAct runs its full combat flow (past the
+   * clear-field shortcut) — the realistic "mid-fight, a herd charges in" case. */
+  function distantFoe(state: GameState): void {
+    state.enemies = [
+      makeEnemy({
+        pos: { x: state.player.pos.x + 900, y: state.player.pos.y },
+        hp: 1_000_000,
+        maxHp: 1_000_000,
+      }),
+    ];
+  }
+
+  it("HOPS a herd bearing down its lane", () => {
+    const state = stageStampedeLevel();
+    distantFoe(state);
+    const p = state.player.pos;
+    state.stampedes.push(herd({ x: p.x + 40, y: p.y }));
+    const bot = createBot("survivor");
+    const input = botAct(bot, state);
+    expect(bot.lastThought).toBe("HERD");
+    expect(input.jump).toBe(true);
+  });
+
+  it("hops a herd even on a clear field, before it can idle him into one", () => {
+    const state = stageStampedeLevel();
+    state.enemies = []; // nothing to fight — the loop would otherwise idle
+    const p = state.player.pos;
+    state.stampedes.push(herd({ x: p.x + 40, y: p.y }));
+    const bot = createBot("survivor");
+    const input = botAct(bot, state);
+    expect(bot.lastThought).toBe("HERD");
+    expect(input.jump).toBe(true);
+  });
+
+  it("ignores a herd charging down a different lane", () => {
+    const state = stageStampedeLevel();
+    distantFoe(state);
+    const p = state.player.pos;
+    state.stampedes.push(herd({ x: p.x + 40, y: p.y + 300 }));
+    const bot = createBot("survivor");
+    botAct(bot, state);
+    expect(bot.lastThought).not.toBe("HERD");
+  });
+
+  it("ignores a herd that has already charged past it", () => {
+    const state = stageStampedeLevel();
+    distantFoe(state);
+    const p = state.player.pos;
+    state.stampedes.push(herd({ x: p.x - 200, y: p.y }));
+    const bot = createBot("survivor");
+    botAct(bot, state);
+    expect(bot.lastThought).not.toBe("HERD");
+  });
+
+  it("does not re-hop while already airborne over a herd", () => {
+    const state = stageStampedeLevel();
+    distantFoe(state);
+    const p = state.player.pos;
+    state.player.z = JUMP.dodgeHeight + 10;
+    state.stampedes.push(herd({ x: p.x + 40, y: p.y }));
+    const bot = createBot("survivor");
+    botAct(bot, state);
+    expect(bot.lastThought).not.toBe("HERD");
   });
 });
 

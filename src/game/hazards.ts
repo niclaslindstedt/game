@@ -24,6 +24,7 @@ import {
   KNOCKBACK,
   PLAYER,
   SANDSTORMS,
+  STAMPEDES,
   WELLS,
 } from "./config.ts";
 import { difficultyDef } from "./defs/difficulties.ts";
@@ -40,6 +41,8 @@ import type {
   GravityWell,
   HayBall,
   SandStorm,
+  Stampede,
+  StampedeRunner,
 } from "./types.ts";
 
 /** Resolve the level def's well specs against the config WELLS defaults. */
@@ -671,5 +674,149 @@ function spawnSandstorm(state: GameState): void {
     spin: state.rng() * Math.PI * 2,
     struck: false,
     fadeMs: null,
+  });
+}
+
+/**
+ * Whether a point sits inside a herd's collision band — an axis-aligned box
+ * around the anchor (`bandHalfDepth` along the charge, `bandHalfHeight` across
+ * it), grown by the caught body's own `pad` radius. The whole wall shares one
+ * band, so a body can't slip between two runners.
+ */
+function inHerdBand(herd: Stampede, pos: Vec2, pad: number): boolean {
+  return (
+    Math.abs(pos.x - herd.pos.x) <= STAMPEDES.bandHalfDepth + pad &&
+    Math.abs(pos.y - herd.pos.y) <= STAMPEDES.bandHalfHeight + pad
+  );
+}
+
+/**
+ * Advance the employee stampedes: mint a herd on the level's `everyMs` cadence
+ * (capped at STAMPEDES.maxAlive in flight), charge each straight to the LEFT at
+ * great speed, trample-and-KILL minions caught in its band (flung aside then
+ * removed — no XP, no loot, an environmental death that can't be farmed), shove
+ * elites/bosses out of the wall, strike the grounded hero ONCE (a flat max-hp
+ * bite AND a knockdown, `Player.knockoutMs`), and despawn a herd once it has
+ * charged clear of the player's stage. A jump (z above JUMP.dodgeHeight) sails
+ * over the whole wall; a hero already down is never trampled twice. Apparitions
+ * are mist. Ignores obstacles and level bounds.
+ */
+export function stepStampedes(
+  state: GameState,
+  dt: number,
+  dtMs: number,
+): void {
+  const spec = levelDef(state.level.id).stampedes;
+  if (spec) {
+    state.stampedeTimerMs -= dtMs;
+    if (
+      state.stampedeTimerMs <= 0 &&
+      state.stampedes.length < STAMPEDES.maxAlive
+    ) {
+      spawnStampede(state);
+      state.stampedeTimerMs = randomRange(
+        state.rng,
+        spec.everyMs[0],
+        spec.everyMs[1],
+      );
+    }
+  }
+  if (state.stampedes.length === 0) return;
+
+  const player = state.player;
+  const grounded = player.z <= JUMP.dodgeHeight;
+  const survivors: Stampede[] = [];
+  for (const herd of state.stampedes) {
+    herd.pos.x -= herd.speed * dt;
+
+    // Trample the grounded hero once: a flat bite of his max hp AND a knockdown
+    // (prone for `knockdownMs`). A jump clears the whole wall, and a hero
+    // already down is left where he lies — one herd can't chain-lock him.
+    if (
+      !herd.struck &&
+      grounded &&
+      player.knockoutMs <= 0 &&
+      inHerdBand(herd, player.pos, PLAYER.radius)
+    ) {
+      herd.struck = true;
+      const frac = difficultyDef(state.difficulty).stampedeDamageFrac;
+      hurtPlayer(state, Math.max(1, Math.round(player.maxHp * frac)));
+      player.knockoutMs = STAMPEDES.knockdownMs;
+      state.events.push({ type: "stampedeHit", pos: { ...player.pos } });
+      maybeHazardThought(state, spec?.struckThought);
+    }
+
+    // Everything in the wall's path is knocked over: a MINION is trampled —
+    // flung along the charge and KILLED outright (collected here, removed after,
+    // so the loop never mutates the array it walks) — while an elite or boss
+    // holds its ground and is only shoved clear of the band.
+    const trampled: Enemy[] = [];
+    for (const enemy of state.enemies) {
+      const def = enemyDef(enemy.defId);
+      if (def.apparition) continue;
+      if (!inHerdBand(herd, enemy.pos, def.radius)) continue;
+      if (def.role === "minion") {
+        trampled.push(enemy);
+      } else {
+        // Shove a heavier foe to the nearer edge of the band (out of the wall),
+        // carrying it a touch along the charge — knocked over, not killed.
+        const up = enemy.pos.y >= herd.pos.y ? 1 : -1;
+        const edge = herd.pos.y + up * (STAMPEDES.bandHalfHeight + def.radius);
+        enemy.pos.y +=
+          (edge - enemy.pos.y) * Math.min(1, (STAMPEDES.speed[0] * dt) / 40);
+        enemy.pos.x -= herd.speed * dt * 0.4;
+      }
+    }
+    for (const enemy of trampled) {
+      state.enemies.splice(state.enemies.indexOf(enemy), 1);
+      state.events.push({
+        type: "stampedeTrample",
+        pos: { ...enemy.pos },
+        defId: enemy.defId,
+      });
+    }
+
+    if (distance(herd.pos, player.pos) <= STAMPEDES.despawnDistance) {
+      survivors.push(herd);
+    }
+  }
+  state.stampedes = survivors;
+}
+
+/** Mint one herd of runners just past the right screen edge, in its own band —
+ * the five staffers spread across the wall (evenly across the band's height
+ * with a little jitter) and staggered back along the charge into a ragged
+ * column, each wearing one of the three employee looks. */
+function spawnStampede(state: GameState): void {
+  const pos = vec(
+    state.player.pos.x + STAMPEDES.spawnDistance,
+    state.player.pos.y +
+      randomRange(state.rng, -STAMPEDES.laneJitter, STAMPEDES.laneJitter),
+  );
+  const runners: StampedeRunner[] = [];
+  const n: number = STAMPEDES.runnerCount;
+  const span = STAMPEDES.bandHalfHeight - STAMPEDES.runnerRadius;
+  for (let i = 0; i < n; i++) {
+    // Evenly across the band's height (top to bottom), jittered a few px so the
+    // rank isn't a ruler-straight line, and staggered back to the right so the
+    // wall reads as a charging column rather than one flat rank.
+    const t = n === 1 ? 0.5 : i / (n - 1);
+    const dy = -span + t * span * 2 + randomRange(state.rng, -6, 6);
+    const dx =
+      (i % 2 === 0 ? 0 : STAMPEDES.runnerStaggerX) +
+      randomRange(state.rng, 0, STAMPEDES.runnerStaggerX);
+    runners.push({
+      dx,
+      dy,
+      variant: Math.floor(state.rng() * 3) % 3,
+      phase: state.rng(),
+    });
+  }
+  state.stampedes.push({
+    id: state.nextId++,
+    pos,
+    speed: randomRange(state.rng, STAMPEDES.speed[0], STAMPEDES.speed[1]),
+    runners,
+    struck: false,
   });
 }

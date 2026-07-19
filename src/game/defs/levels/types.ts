@@ -582,6 +582,21 @@ export type LevelDef = {
    */
   sandstorms?: { everyMs: [number, number]; struckThought?: string };
   /**
+   * Employee stampedes: presence turns the herd hazard on (config STAMPEDES).
+   * Every `everyMs` (rolled per herd) a wall of five panicked staffers charges
+   * in from the right screen edge and thunders straight LEFT at great speed,
+   * a dust cloud boiling off its back. The herd tramples minions in its lane
+   * (flung aside AND killed — no farm) and shoves elites/bosses; a grounded
+   * hero it catches takes a difficulty-scaled bite of his max hp
+   * (DifficultyDef.stampedeDamageFrac) AND a knockdown (prone for
+   * STAMPEDES.knockdownMs). Jumping sails clean over it,
+   * and stepping out of the lane clears it. SpaceZ HQ's "asteroid" beat.
+   * `struckThought` (a THOUGHT_DEFS id) fires a one-time inner monologue the
+   * first time a herd downs the hero this run, tracked in the same
+   * `thoughtsSeen` ledger.
+   */
+  stampedes?: { everyMs: [number, number]; struckThought?: string };
+  /**
    * Locked doors: built exactly like walls (chains of solid `door_locked`
    * circles) but tracked in `state.doors` — carrying the story-item key
    * whose `unlocks` names the door's `id` up to it slides it open. Pair

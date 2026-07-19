@@ -61,6 +61,14 @@ default:
   # distant gust that may drift wide, then peels once it's genuinely on his line).
   sandstormClearance: 30
   sandstormReactSec: 1.6
+  # EMPLOYEE STAMPEDES (SpaceZ HQ): a wall of five staffers charges fast right-to-
+  # left and a jump sails clean over the whole herd, so the hero HOPS it rather
+  # than eating the ~20% bite + 2-second knockdown. `stampedeDodgeDist` is how far
+  # ahead (px, along the charge) the herd's near edge trips the hop — timed so
+  # he's airborne when the wall arrives; `stampedeLaneMargin` is the lane slack
+  # added to the herd band + his radius. 0 dist disables the dodge.
+  stampedeDodgeDist: 64
+  stampedeLaneMargin: 10
 
 # Per-level overrides. Add a block under a level id to bend a knob for that map.
 levels:

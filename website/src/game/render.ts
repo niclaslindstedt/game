@@ -29,6 +29,7 @@ import {
   orbitSpellParams,
   orbPositions,
   SANDSTORMS,
+  STAMPEDES,
   stasisSpellParams,
   storyItemDef,
   WOUNDS,
@@ -1108,6 +1109,51 @@ export function drawFrame(
     ctx.globalAlpha = 1;
   }
 
+  // Employee stampedes charge over the ground plane like the storms — drawn
+  // AFTER the hero so a herd visibly tramples OVER him (he lies knocked down
+  // beneath it). A churning dust cloud boils off the wall's BACK (to its right,
+  // since it charges left), then the five runners ride their offsets, each with
+  // a little leg-pumping bob out of step with the pack.
+  for (const herd of state.stampedes) {
+    if (!inView(herd.pos.x, herd.pos.y, STAMPEDES.bandHalfHeight + 80))
+      continue;
+    drawHerdDust(ctx, herd, camera, timeMs);
+    // Draw back-to-front (smaller dy first) so the front rank overlaps cleanly.
+    const order = [...herd.runners].sort((a, b) => a.dy - b.dy);
+    for (const runner of order) {
+      const rx = herd.pos.x + runner.dx;
+      const ry = herd.pos.y + runner.dy;
+      const family =
+        STAMPEDE_VARIANTS[runner.variant % STAMPEDE_VARIANTS.length];
+      const frame = Math.floor(timeMs / 110 + runner.phase * 2) % 2;
+      const sprite = spriteByName(sprites, `stampede_${family}_${frame}`);
+      if (!sprite) continue;
+      const size = STAMPEDES.runnerRadius * 2 + 8;
+      // A quick pumping bob so the wall reads as a hard sprint, not a slide.
+      const bob =
+        2 * Math.abs(Math.sin(Math.PI * (timeMs / 130 + runner.phase)));
+      const sx = Math.round(rx - size / 2 - camera.x);
+      const sy = Math.round(ry - size / 2 - camera.y - bob);
+      // A tight ground shadow anchors each runner to the floor.
+      ctx.save();
+      ctx.globalAlpha = 0.22;
+      ctx.fillStyle = "#1a1c2c";
+      ctx.beginPath();
+      ctx.ellipse(
+        Math.round(rx - camera.x),
+        Math.round(ry - camera.y + size / 2 - 3),
+        size / 2.6,
+        size / 6,
+        0,
+        0,
+        Math.PI * 2,
+      );
+      ctx.fill();
+      ctx.restore();
+      ctx.drawImage(sprite, sx, sy, size, size);
+    }
+  }
+
   // "Go this way" — a blinking arrow toward the next intended-path waypoint,
   // shown once the hero's immediate area is clear, to point him onward.
   drawGuidanceArrow(ctx, state, camera, timeMs);
@@ -1122,6 +1168,49 @@ export function drawFrame(
     ctx.fillStyle = `rgba(216, 58, 58, ${(0.25 * state.player.hurtFlashMs) / 250})`;
     ctx.fillRect(0, 0, view.width, view.height);
   }
+}
+
+/** The three employee-runner looks a stampede's `runner.variant` (0..2) indexes
+ * into — the sprite family letters (suit / lab coat / hi-vis). */
+const STAMPEDE_VARIANTS = ["a", "b", "c"] as const;
+
+/** The dusty cloud that boils off a charging herd's BACK (to its right, since it
+ * charges left) — a churn of translucent tan/grey puffs that signals the wall is
+ * moving at great speed and flattening everything. Purely presentational; the
+ * puff positions are seeded off the herd id + a slow time churn so the cloud
+ * roils without allocating. */
+function drawHerdDust(
+  ctx: CanvasRenderingContext2D,
+  herd: GameState["stampedes"][number],
+  camera: { x: number; y: number },
+  timeMs: number,
+): void {
+  const cx = herd.pos.x - camera.x;
+  const cy = herd.pos.y - camera.y;
+  const back = STAMPEDES.bandHalfDepth - 2; // the wall's trailing edge
+  const trail = STAMPEDES.bandHalfDepth * 2 + 70; // how far the cloud streams
+  const puffs = 22;
+  ctx.save();
+  for (let i = 0; i < puffs; i++) {
+    // A slow per-puff churn phase; the trail streams back and thins with depth.
+    const churn = timeMs / 240 + i * 1.7 + herd.id;
+    const depth = (i / puffs + (churn % 1) * 0.35) % 1; // 0 = at the wall
+    const px = cx + back + depth * trail;
+    const py =
+      cy +
+      Math.sin(churn) * STAMPEDES.bandHalfHeight +
+      Math.cos(churn * 1.3 + i) * 8;
+    const r = (1 - depth) * 15 + 6;
+    // A warm, dusty churn — darker body puffs with lighter kicked-up motes on
+    // top — pitched to read against the pale SpaceZ floor.
+    ctx.globalAlpha = (1 - depth) * 0.5;
+    ctx.fillStyle =
+      i % 3 === 0 ? "#efe7d4" : i % 3 === 1 ? "#b0a892" : "#8f8874";
+    ctx.beginPath();
+    ctx.arc(Math.round(px), Math.round(py), r, 0, Math.PI * 2);
+    ctx.fill();
+  }
+  ctx.restore();
 }
 
 /** How near a foe can be and still suppress the guidance arrow — the arrow is a

@@ -28,6 +28,9 @@ animations:
     { frames: [head_scientist_0, head_scientist_1], delayMs: 300 }
   janitor_walk: { frames: [janitor_0, janitor_1], delayMs: 340 }
   architect_walk: { frames: [architect_0, architect_1], delayMs: 300 }
+  stampede_a_run: { frames: [stampede_a_0, stampede_a_1], delayMs: 110 }
+  stampede_b_run: { frames: [stampede_b_0, stampede_b_1], delayMs: 110 }
+  stampede_c_run: { frames: [stampede_c_0, stampede_c_1], delayMs: 110 }
 wounds:
   wandering_tourist: { splat: r, core: O }
 contrastExempt: [lab_0, lab_1, vent_0, vent_1, cable, stain]

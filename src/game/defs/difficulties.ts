@@ -316,6 +316,14 @@ export type DifficultyDef = {
    * dodge roll — a squall is dodged with the feet.
    */
   sandstormDamageFrac: number;
+  /**
+   * The bite an EMPLOYEE STAMPEDE trample takes out of the hero, as a fraction
+   * of his MAX hp (see stepStampedes) — like the sand storm, the herd's real
+   * punishment is the 2s KNOCKDOWN it lands with it. Scales up the rung; the
+   * suit's plating soaks its share, no crit, no dodge roll — a herd is dodged
+   * with the feet (a jump clears the whole wall).
+   */
+  stampedeDamageFrac: number;
 };
 
 export const DIFFICULTY_DEFS: Record<Difficulty, DifficultyDef> = {
@@ -372,6 +380,7 @@ export const DIFFICULTY_DEFS: Record<Difficulty, DifficultyDef> = {
     enemyDodgeMult: 0.5,
     asteroidDamageFrac: 0.2,
     sandstormDamageFrac: 0.1,
+    stampedeDamageFrac: 0.1,
   },
   medium: {
     id: "medium",
@@ -429,6 +438,7 @@ export const DIFFICULTY_DEFS: Record<Difficulty, DifficultyDef> = {
     enemyDodgeMult: 1,
     asteroidDamageFrac: 0.3,
     sandstormDamageFrac: 0.15,
+    stampedeDamageFrac: 0.15,
   },
   hard: {
     id: "hard",
@@ -477,6 +487,7 @@ export const DIFFICULTY_DEFS: Record<Difficulty, DifficultyDef> = {
     enemyDodgeMult: 1.1,
     asteroidDamageFrac: 0.4,
     sandstormDamageFrac: 0.2,
+    stampedeDamageFrac: 0.2,
   },
   nightmare: {
     id: "nightmare",
@@ -527,6 +538,7 @@ export const DIFFICULTY_DEFS: Record<Difficulty, DifficultyDef> = {
     enemyDodgeMult: 1.25,
     asteroidDamageFrac: 0.5,
     sandstormDamageFrac: 0.28,
+    stampedeDamageFrac: 0.3,
   },
   jesus: {
     id: "jesus",
@@ -578,6 +590,7 @@ export const DIFFICULTY_DEFS: Record<Difficulty, DifficultyDef> = {
     enemyDodgeMult: 1.4,
     asteroidDamageFrac: 0.75,
     sandstormDamageFrac: 0.4,
+    stampedeDamageFrac: 0.4,
   },
 };
 

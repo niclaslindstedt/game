@@ -71,6 +71,7 @@ import {
   stepHayBalls,
   stepKnockback,
   stepSandstorms,
+  stepStampedes,
   stepWells,
 } from "./hazards.ts";
 import { spawnEnemy } from "./create.ts";
@@ -314,6 +315,7 @@ export function step(state: GameState, input: GameInput, dtMs: number): void {
   stepAsteroids(state, dt, dtMs);
   stepHayBalls(state, dt, dtMs);
   stepSandstorms(state, dt, dtMs);
+  stepStampedes(state, dt, dtMs);
   // Meteor-blast knockback settles after the hazards fire, so an impulse armed
   // by an impact this tick lands its first shove the same frame; a flung mob's
   // AI (moveEnemy) sat the fling out. Crater scars age down alongside.

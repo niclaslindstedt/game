@@ -103,6 +103,17 @@ export type BotTuning = {
    * inside this window (or already overlaps), so he ignores a distant gust that
    * may still drift wide. */
   sandstormReactSec: number;
+  /** EMPLOYEE-STAMPEDE avoidance (SpaceZ HQ): how far AHEAD (world px, along its
+   * charge) a herd's near edge must be before the hero HOPS to clear it. A herd
+   * charges fast and a jump sails clean over the whole wall, so the read is a
+   * well-timed hop — big enough that he's airborne (z above JUMP.dodgeHeight)
+   * when the wall reaches him. 0 disables the dodge; only a herd in his lane and
+   * bearing down triggers it (see `dodgeStampede`). */
+  stampedeDodgeDist: number;
+  /** EMPLOYEE-STAMPEDE avoidance: extra half-height (world px) added to the herd
+   * band + the hero's radius when judging whether a herd shares his LANE — the
+   * slack that decides "this wall will hit me" vs "it charges past clear". */
+  stampedeLaneMargin: number;
   /** The three posture rows (aggro/balanced/flee). */
   postures: Record<"aggro" | "balanced" | "flee", PostureTuning>;
 };
@@ -123,6 +134,8 @@ export const BOT_TUNING_DEFAULTS: BotTuning = {
   hayBallLaneMargin: 12,
   sandstormClearance: 30,
   sandstormReactSec: 1.6,
+  stampedeDodgeDist: 64,
+  stampedeLaneMargin: 10,
   postures: {
     // Trades safety for kills: fights up close, tolerates a denser ring.
     aggro: { standoffMul: 0.65, fleeHp: 0.28, surround: 7 },

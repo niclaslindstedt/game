@@ -63,6 +63,13 @@ tiles:
     every: 9
 heroSuited: false
 foes: STAFF
+# EMPLOYEE STAMPEDES — the "asteroid" beat of the sales floor: every 6-11s a wall
+# of five panicked staffers charges right-to-left across the aisles at great
+# speed, a dust cloud boiling off its back. It tramples and KILLS any minion in
+# its lane (no farm) and knocks the grounded hero down (~20% hp + a 2s knockdown)
+# unless he jumps it or steps out of its lane. Jumping is the intended dodge.
+stampedes:
+  everyMs: [6000, 11000]
 merchant:
   sprite: merchant_vendor
   greeting:

@@ -159,6 +159,11 @@ describe("SPACEZ HQ level def", () => {
       const state = equipBlaster(startGame(seed, "spacez_hq")); // pick off at range
       clearStage(state); // just the parked boss remains, waves silenced
       state.spawners = []; // silence the spawn points so only the parked stack drops
+      // Silence the employee stampede too, or a charging herd would trample the
+      // parked stack dead (an environmental kill drops nothing) and skew the
+      // drop-rate comparison this test isolates.
+      state.stampedes = [];
+      state.stampedeTimerMs = Number.POSITIVE_INFINITY;
       state.items = [];
       state.player.stats.luck = 0; // isolate the base rate + the profile bonus
       // The parked stack sits inside the sight radius — mute the level's
