@@ -1,0 +1,66 @@
+name: vault_door
+family: bunker
+size: [32, 40]
+description: >
+  The great treasury vault door in the far wall — a massive circular bank-vault
+  door of dark steel with a gold-ringed rim, a central spoke wheel over a lit
+  amber lock, framed by yellow-and-black hazard chevrons. The level's exit lies
+  beyond it.
+subject:
+  kind: prop
+  build: a massive circular bank-vault door set in a steel wall, larger than any doorway
+  features: a gold-ringed rim, a central spoke wheel over a lit amber lock, hazard chevrons top and bottom
+  accent: gold rim and lit amber lock
+  flavor: the treasury door — the vault that locks from the outside
+palette:
+  I: "#f6d074" # lit amber lock
+  K: "#0c0b12" # black chevron / bore
+  N: "#3a3846" # dark steel frame
+  O: "#1a1c2c" # navy outline
+  V: "#9095a5" # steel highlight
+  W: "#f4f4f4" # lock highlight
+  b: "#3f4553" # steel panel
+  h: "#e2c640" # gold ring
+  v: "#60687e" # steel body
+  y: "#ffb02e" # hazard yellow
+grid: |
+  ................................
+  ..OOOOOOOOOOOOOOOOOOOOOOOOOOOO..
+  .ONNNNNNNNNNNNNNNNNNNNNNNNNNNNO.
+  .ONyKyKyKyKyKyKyKyKyKyKyKyKyKNO.
+  .ONNNNNNNNNNNNNNNNNNNNNNNNNNNNO.
+  .ONvvvvvvvvvvvvvvvvvvvvvvvvvvNO.
+  .ONvvvvvhhhhhhhhhhhhhhvvvvvvvNO.
+  .ONvvvhhhVVVVVVVVVVVVhhhvvvvvNO.
+  .ONvvhhVVbbbbbbbbbbbbVVhhvvvvNO.
+  .ONvvhVbbvvvvvvvvvvvvbbVhvvvvNO.
+  .ONvhVbvvvVVVVVVVVvvvvbVhvvvvNO.
+  .ONvhVbvVVbbbbbbbbVVvvbVhvvvvNO.
+  .ONvhVbvVbbvvIIvvbbVvvbVhvvvvNO.
+  .ONvhVbvVbvvIWWIvvbVvvbVhvvvvNO.
+  .ONvhVbvVbvIWKKWIvbVvvbVhvvvvNO.
+  .ONvhVbvVbvIWKKWIvbVvvbVhvvvvNO.
+  .ONvhVbvVbvvIWWIvvbVvvbVhvvvvNO.
+  .ONvhVbvVbbvvIIvvbbVvvbVhvvvvNO.
+  .ONvhVbvVVbbbbbbbbVVvvbVhvvvvNO.
+  .ONvhVbvvvVVVVVVVVvvvvbVhvvvvNO.
+  .ONvvhVbbvvvvvvvvvvvvbbVhvvvvNO.
+  .ONvvhhVVbbbbbbbbbbbbVVhhvvvvNO.
+  .ONvvvhhhVVVVVVVVVVVVhhhvvvvvNO.
+  .ONvvvvvhhhhhhhhhhhhhhvvvvvvvNO.
+  .ONvvvvvvvvvvvvvvvvvvvvvvvvvvNO.
+  .ONNNNNNNNNNNNNNNNNNNNNNNNNNNNO.
+  .ONyKyKyKyKyKyKyKyKyKyKyKyKyKNO.
+  .ONNNNNNNNNNNNNNNNNNNNNNNNNNNNO.
+  .ONIvvvIvvvIvvvIvvvIvvvIvvvIvNO.
+  .ONNNNNNNNNNNNNNNNNNNNNNNNNNNNO.
+  ..OOOOOOOOOOOOOOOOOOOOOOOOOOOO..
+  ................................
+  ................................
+  ................................
+  ................................
+  ................................
+  ................................
+  ................................
+  ................................
+  ................................

@@ -1,0 +1,39 @@
+name: reception_desk
+family: bunker
+size: [24, 16]
+description: >
+  The foyer's security reception desk — a broad dark-marble counter with a pale
+  top, a small glowing monitor and a call bell, where guests once checked in to
+  the apocalypse.
+subject:
+  kind: prop
+  build: a broad rectangular reception counter, dark marble base under a pale marble top
+  features: a small glowing cyan monitor and a gold call bell on the counter
+  accent: glowing cyan monitor
+  flavor: check-in for the end of the world
+palette:
+  O: "#1a1c2c" # navy outline
+  Q: "#5cd2ff" # monitor glow
+  W: "#f4f4f4" # marble top highlight
+  b: "#3f4553" # dark marble body
+  h: "#e2c640" # gold call bell
+  u: "#d8dae4" # pale marble top
+  v: "#60687e" # marble mid
+  w: "#c6c6c6" # marble shadow
+grid: |
+  ........................
+  ........................
+  ....OOO..........OO.....
+  ...OQQQO........OhhO....
+  ...OQvQO........OhhO....
+  ..OOOOOOOOOOOOOOOOOOOO..
+  .OWuuuuuuuuuuuuuuuuuuWO.
+  .OWuuuuuuuuuuuuuuuuuuwO.
+  .ObvvvvvvvvvvvvvvvvvvbO.
+  .ObvbbbbbbbbbbbbbbbbvbO.
+  .ObvbwwwwwwwwwwwwwwbvbO.
+  .ObvbwbbbbbbbbbbbbwbvbO.
+  .ObvbwbbbbbbbbbbbbwbvbO.
+  .ObbbwwwwwwwwwwwwwwbbbO.
+  ..OOOOOOOOOOOOOOOOOOOO..
+  ........................

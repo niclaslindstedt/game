@@ -2,30 +2,33 @@ name: bunker_0
 family: bunker
 size: [16, 16]
 description: >
-  A polished pale-grey bunker-concrete floor tile, faintly speckled — the
-  vault's climate-controlled hard floor.
+  A reinforced bunker-concrete floor slab: pale grey with a recessed grout seam
+  along its top and left edges (so the tiles read as a bolted slab grid) and
+  steel rivets at the corners.
 subject:
   kind: ground tile
-  build: flat polished bunker-concrete floor, faintly speckled
-  flavor: the vault's climate-controlled hard floor
+  build: a square reinforced-concrete floor slab with a recessed grout seam on two edges and corner rivets
+  features: a dark grout groove top and left, a lit bevel just inside it, steel rivet bolts near the corners
+  flavor: the vault's fortified hard floor, poured and bolted
 palette:
-  Z: "#9c9eac" # darker speckle
-  u: "#d8dae4" # light speckle
+  Z: "#9c9eac" # grout seam shadow / speckle
+  b: "#3f4553" # steel rivet bolt
+  u: "#d8dae4" # lit bevel / speckle
   z: "#babcc6" # pale-grey concrete
 grid: |
-  zzzzzzzzzzzzzzzz
-  zzzzuzzzzzzzzzzz
-  zzzzzzzzzzzZzzzz
-  zzzzzzzzzzzzzzzz
-  zZzzzzzzzuzzzzzz
-  zzzzzzzzzzzzzzzz
-  zzzzzzZzzzzzzuzz
-  zzzzzzzzzzzzzzzz
-  zzuzzzzzzzzzzzzz
-  zzzzzzzzzZzzzzzz
-  zzzzzzzzzzzzzzzz
-  zzzzzZzzzzzzuzzz
-  zzzzzzzzzzzzzzzz
-  zuzzzzzzzzzzzzzz
-  zzzzzzzzzZzzzzzz
-  zzzzzzzzzzzzzzzz
+  ZZZZZZZZZZZZZZZZ
+  Zuuuuuuuuuuuuuuu
+  Zubzzzzzzzzzzbzz
+  Zuzzzzzuzzzzzzzz
+  Zuzzzzzzzzzzzzzz
+  ZuzzzzzzzzzZzzzz
+  Zuzzzzzzzzzzzzzz
+  Zuzzzuzzzzzzzuzz
+  Zuzzzzzzzzzzzzzz
+  ZuzzzzzzzzZzzzzz
+  Zuzzzzzzzzzzzzzz
+  Zuzzuzzzzzzzzzzz
+  Zuzzzzzzzzzzzzzz
+  Zubzzzzzzzzzzbzz
+  Zuzzzzzzzzzzzzzz
+  Zuzzzzzzzzzzzuzz

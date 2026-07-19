@@ -156,23 +156,38 @@ names its in-run music with an optional `music` id (a key into the app's
   in the rift (a `USE` row on its item card, or a desktop right-click;
   `LevelDef.gates` + `spendGateKey`) tears open a blast door beside the hero.
   Stepping in carries the whole build into the bunker: the billionaires'
-  continuity-of-wealth vault, six marble suites strung on one narrow corridor
-  spine (`bunker` biome — polished concrete with brass-inlay medallions and
-  burgundy carpet runs; ~800 px/s² gravity). Each suite holds a **resident** —
-  VLADIMIR PUTAIN (a clone? the backup), MARK SUCKERBERG, LARRY ALLISON, JEFF
-  BAYWATCH, SAM HALTMAN, DONALD DUMP — every one far tougher than any campaign
-  elite and ringed by his **personal bodyguards** (one drawing, six liveries, a
-  size up from the crew), while the privatized security state (CIA and FBI
-  agents, ICE's border detail, soldiers that shoot from cover, armed VACUUM
-  BOTS) floods the halls harder and denser than Eastworld. The level's real
-  reveal — delivered through a found **ZEROED LEDGER** (a callback to Mars's
-  COLONY LEDGER, every net-worth column now transferred to the CORE) and two
-  residents (a knows-but-terrified SAM HALTMAN, an oblivious DONALD DUMP) — is
-  that the vault is a **prison**: the CORE already took the residents' money and
-  bolted the door, so the guards are its wardens and the residents are in denial.
-  There is **no boss**: the exit blast door is the objective (`reachExit`),
-  reaching it plays the where-was-this-place mystery outro (its purpose now
-  plain, its location still unknown), and the splash offers **BACK TO THE RIFT**
+  continuity-of-wealth vault, walked as a **themed descent** through four
+  distinct chambers, west to east (`bunker` biome — polished concrete with
+  brass-inlay medallions and burgundy carpet runs; ~800 px/s² gravity). **(1)
+  The FOYER** — a grand marble reception (a two-tier fountain, gold chandeliers,
+  a security desk, an entry safe-pocket, the wandering merchant) where the hero
+  meets the first CIA suits and armed VACUUM BOTS. **(2) The CHECKPOINT** — a
+  fortified gauntlet where bolted-down automated **SENTRY GUNS** rake the
+  corridor from fixed emplacements while soldiers, ICE and FBI agents press in,
+  baffle walls forcing a zigzag under fire. **(3) The SUITES WING** — the
+  optional farm: six marble suites off a central boulevard, each holding a
+  **resident** — VLADIMIR PUTAIN (a clone? the backup), MARK SUCKERBERG, LARRY
+  ALLISON, JEFF BAYWATCH, SAM HALTMAN, DONALD DUMP — every one far tougher than
+  any campaign elite and ringed by his **personal bodyguards** (one drawing, six
+  liveries, a size up from the crew); the con ramps up west-to-east, the two
+  toughest residents in the easternmost suites. **(4) The TREASURY** — the
+  climax. The level's real reveal — delivered through a found **ZEROED LEDGER** (a
+  callback to Mars's COLONY LEDGER, every net-worth column now transferred to the
+  CORE) and two residents (a knows-but-terrified SAM HALTMAN, an oblivious DONALD
+  DUMP) — is that the vault is a **prison**: the CORE already took the residents'
+  money and bolted the door, so the guards are its wardens and the residents are
+  in denial. The finale makes that twist physical: **THE VAULT WARDEN**, a hulking
+  automated security construct (48×48 boss, `sparks` gore) — the CORE's own
+  enforcer, not the residents' — guards the treasury door. It deploys a
+  sentry-gun defence grid (a `summon` mechanic that collapses once it drops below
+  half and stops deploying — a winnable endgame, not an attrition stalemate) and
+  brings a piston **slam** down at the door, enraging past half. It is the
+  **mandatory gate**: the exit is a locked door (`doors` → `vault_exit`) and only
+  the **WARDEN ACCESS TOKEN** the warden drops (`loot.storyItems` → the story
+  item that `unlocks` it) opens it, so there is no slipping past. The objective is
+  still to reach the exit door (`reachExit`); reaching it plays the
+  where-was-this-place mystery outro (its purpose now plain, its location still
+  unknown), and the splash offers **BACK TO THE RIFT**
   (`exitTo`). The reward is the loot: the level's `worldUniques` table re-lists
   **every** campaign relic at sweetened odds (`worldDropMult` 1.5) — the one
   venue that can pay out anything, still behind the per-rung

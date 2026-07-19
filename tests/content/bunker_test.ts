@@ -19,6 +19,7 @@ import {
   skipCutscene,
   step,
   enemyDef,
+  storyItemDef,
   type GameState,
 } from "@game/core";
 
@@ -121,13 +122,24 @@ describe("the bunker", () => {
     expect(droppedSeveredHand(killRasputinInRift(["eastworld"]))).toBe(true);
   });
 
-  it("has no boss: the exit door is the objective, the outro the mystery", () => {
-    for (const spawn of bunker.spawns) {
-      expect(enemyDef(spawn.enemy).role).not.toBe("boss");
-    }
+  it("crescendos at THE VAULT WARDEN, the machine's gate on the exit", () => {
+    // The redesign adds a single finale boss — the ONE boss on the map, pinned
+    // in the vault. (The residents stay elites; the horde stays minions.)
+    const bosses = bunker.spawns.filter(
+      (s) => enemyDef(s.enemy).role === "boss",
+    );
+    expect(bosses.map((s) => s.enemy)).toEqual(["vault_warden"]);
+
+    // It GATES the exit: a locked door whose key the warden drops, so the
+    // finale is mandatory — no key, no way out.
+    const door = (bunker.doors ?? []).find((d) => d.id === "vault_exit");
+    expect(door, "vault_exit door").toBeDefined();
+    expect(enemyDef("vault_warden").loot?.storyItems).toContain("warden_key");
+    expect(storyItemDef("warden_key").unlocks).toBe("vault_exit");
+
+    // The objective is still to REACH the exit door, which leads to the rift.
     expect(bunker.objective.type).toBe("reachExit");
     if (bunker.objective.type === "reachExit") {
-      // The objective stands at the exit-door landmark.
       const exit = bunker.landmarks.find((l) => l.kind === "bunker_exit")!;
       expect(exit.pos).toEqual(bunker.objective.at);
     }
@@ -151,5 +163,12 @@ describe("the bunker", () => {
         id,
       ).toBe(true);
     }
+    // The automated wardens: bolted SENTRY GUNS pinned through the checkpoint,
+    // and deployed by the warden's defence grid.
+    expect(ENEMY_DEFS.sentry_gun?.role).toBe("minion");
+    expect(
+      bunker.spawns.some((s) => s.enemy === "sentry_gun"),
+      "sentry_gun pinned in spawns",
+    ).toBe(true);
   });
 });

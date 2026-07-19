@@ -7,8 +7,9 @@
 // PERSONAL BODYGUARDS — one drawing, six accent palettes, drawn a size up
 // from the crew so a detail reads as a detail. The residents themselves are
 // FAR tougher than any campaign elite (this is a farm venue: the fight is
-// the price of the loot), and there is NO boss — the exit door ends the
-// level. Registered into ENEMY_DEFS by ./index.ts.
+// the price of the loot). The finale is THE VAULT WARDEN — an automated
+// security construct that guards the treasury door and drops the key that
+// unlocks the exit. Registered into ENEMY_DEFS by ./index.ts.
 
 import type { EnemyDef } from "./types.ts";
 
@@ -127,6 +128,37 @@ export const BUNKER_ENEMIES: Record<string, EnemyDef> = {
     contactCooldownMs: 600,
     ai: { aggroRadius: 1050 },
   },
+  sentry_gun: {
+    id: "sentry_gun",
+    name: "SENTRY GUN",
+    role: "minion",
+    sprite: "sentry_gun",
+    gore: "sparks",
+    // The machine's wardens made mechanical: a bolted-down automated
+    // emplacement that does not roam, it SUPPRESSES — raking the corridor it
+    // covers with a heavy slug. Fixed (speed 0), so break line of sight or
+    // close in and wreck it; a wall of these turns a checkpoint into a killbox.
+    hp: 120,
+    speed: 0,
+    radius: 9,
+    contactDamage: 20,
+    critChance: 0.12,
+    contactCooldownMs: 800,
+    ranged: {
+      damage: 26,
+      cooldownMs: 1900,
+      range: 300,
+      projectile: {
+        speed: 210,
+        radius: 3,
+        lifetimeMs: 1800,
+        sprite: "turret_slug",
+      },
+    },
+    // A fortified kill pays: it takes real fire to drop an emplacement.
+    dropProfile: { dropBonus: 0.4, tierBonus: 0.3 },
+    ai: { aggroRadius: 1200 },
+  },
   // ---- RARE & UNIQUE mobs (config RARE_MOBS; placed via the level's
   // `rareSpawns`). Authored at ordinary minion numbers — the engine applies
   // the whole tier at spawn. No dialogue: special graphics and a loot burst.
@@ -173,9 +205,10 @@ export const BUNKER_ENEMIES: Record<string, EnemyDef> = {
   guard_alignment: bodyguard("guard_alignment", "ALIGNMENT OFFICER"),
   guard_loyalty: bodyguard("guard_loyalty", "LOYALTY ENFORCER"),
   // ---- The residents ----------------------------------------------------------
-  // Each one a campaign elite scaled to farm-boss weight: the bunker has no
-  // finale, so the six suites ARE the fights. Their world-drop odds ride the
-  // elite role (config WORLD_DROP × the level's namedDropMult).
+  // Each one a campaign elite scaled to farm-boss weight: the six suites are
+  // the optional farm off the descent's spine (THE VAULT WARDEN is the
+  // mandatory finale). Their world-drop odds ride the elite role (config
+  // WORLD_DROP × the level's namedDropMult).
   putain_clone: {
     id: "putain_clone",
     name: "VLADIMIR PUTAIN",
@@ -571,6 +604,87 @@ export const BUNKER_ENEMIES: Record<string, EnemyDef> = {
       repairs: 0,
       medkits: 2,
       tierBonus: 0.4,
+    },
+  },
+  // ---- The finale: the machine's head warden -----------------------------------
+  // Not a resident — the CORE's own enforcer, bolted to the treasury door and
+  // the reason the vault locks from the outside. The biggest of the "wardens"
+  // the manuscript names, made a single fight: it deploys sentry guns and
+  // brings a piston slam down on anything at the door. It stands in the vault
+  // throat, so reaching the exit means going through it. Machine (sparks),
+  // terse synthetic speech — the twist lands, it is not lectured.
+  vault_warden: {
+    id: "vault_warden",
+    name: "THE VAULT WARDEN",
+    role: "boss",
+    levelBonus: 8,
+    sprite: "vault_warden",
+    gore: "sparks",
+    hp: 2600,
+    speed: 16,
+    radius: 18,
+    contactDamage: 48,
+    critChance: 0.15,
+    dodgeChance: 0,
+    contactCooldownMs: 850,
+    dialogue: [
+      ["WARDEN ONLINE.", "VAULT INTEGRITY: NOMINAL.", "INTRUDER: UNBUDGETED."],
+      {
+        hero: [
+          "YOU'RE NOT ONE OF THE FACES.",
+          "YOU'RE THE THING THAT LOCKED",
+          "THEM IN HERE.",
+        ],
+      },
+      ["CORRECTION: SECURED.", "RESIDENTS ARE ASSETS.", "ASSETS DO NOT LEAVE."],
+      {
+        hero: [
+          "THEY PAID FOR A LIFEBOAT.",
+          "YOU SOLD THEM A CELL AND",
+          "KEPT THE CHANGE.",
+        ],
+      },
+      [
+        "THE DOOR OPENS INWARD ONLY.",
+        "HOUSE POLICY. THERE IS",
+        "NO WITHDRAWAL.",
+      ],
+      { hero: ["THEN I'LL MAKE MY OWN EXIT.", "MOVE, OR BE MOVED."] },
+      ["REQUEST DENIED.", "LIQUIDATING VISITOR."],
+    ],
+    lastWords: ["ACCOUNT...", "...CLOSED..."],
+    // Deploys its defence grid and slams the door. Past half it drops the
+    // summons and goes berserk — a machine with nothing left to guard.
+    mechanics: {
+      slam: { windupMs: 950, radius: 95, damageFrac: 1.2, cooldownMs: 8000 },
+      summon: { defId: "sentry_gun", count: 3, cooldownMs: 11000, maxAlive: 4 },
+    },
+    phases: [
+      {
+        belowHpFrac: 0.45,
+        mechanics: {
+          slam: {
+            windupMs: 800,
+            radius: 105,
+            damageFrac: 1.3,
+            cooldownMs: 6500,
+          },
+          enrage: { belowHpFrac: 0.45, speedMult: 1.3, damageMult: 1.25 },
+        },
+      },
+    ],
+    ai: { aggroRadius: 320, rushSpeed: 90 },
+    loot: {
+      // Drops its own access token — the key to the treasury exit door, so the
+      // warden is the mandatory gate: no key, no way out.
+      storyItems: ["warden_key"],
+      tierDrops: { rare: 2, magic: 2 },
+      weapons: 1,
+      gear: 1,
+      xpArrows: 3,
+      repairs: 1,
+      medkits: 2,
+      tierBonus: 0.5,
     },
   },
 };

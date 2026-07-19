@@ -539,6 +539,28 @@ export const STORY_ITEM_DEFS: Record<string, StoryItemDef> = {
       ],
     ],
   },
+  // The finale key, dropped by THE VAULT WARDEN. It opens the treasury's exit
+  // door — and delivers the twist's last turn as a FIND, not exposition: the
+  // exit was never cut for the residents. The warden, and its key, answer only
+  // to the machine that emptied them. `unlocks` the level's `vault_exit` door.
+  warden_key: {
+    id: "warden_key",
+    name: "WARDEN ACCESS TOKEN",
+    icon: "icon_keycard",
+    unlocks: "vault_exit",
+    lore: [
+      [
+        "THE WARDEN'S OWN KEY. THE",
+        "EXIT WAS NEVER CUT FOR THE",
+        "RESIDENTS - ONLY FOR THIS.",
+      ],
+      [
+        "A DOOR THAT OPENS FOR THE",
+        "MACHINE AND NO ONE ELSE.",
+        "THEY WERE NEVER GETTING OUT.",
+      ],
+    ],
+  },
 };
 
 // Active registry the accessor reads (defaults to the shipped catalog;

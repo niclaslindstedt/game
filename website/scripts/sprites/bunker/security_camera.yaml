@@ -1,0 +1,34 @@
+name: security_camera
+family: bunker
+size: [12, 12]
+description: >
+  A steel surveillance camera on a wall bracket, its lens ringed and a red
+  record LED lit — the bunker watches every marble hall.
+subject:
+  kind: prop
+  build: a boxy steel surveillance camera on a short wall bracket
+  features: a ringed dark lens and a lit red record LED
+  accent: red record LED
+  flavor: the surveillance state, privatized and pointed inward
+palette:
+  O: "#1a1c2c" # navy outline
+  K: "#0c0b12" # lens bore
+  N: "#3a3846" # dark steel
+  R: "#ff5252" # red LED
+  V: "#9095a5" # steel highlight
+  W: "#f4f4f4" # lens glint
+  b: "#3f4553" # steel panel
+  v: "#60687e" # steel body
+grid: |
+  ............
+  ..OO........
+  ..ObO.......
+  ..ObOOOOO...
+  .OVvvvvvVO..
+  OVvbbbbbvR..
+  OvbKKKKbvO..
+  OvbKWKKbvO..
+  .OVvvvvVO...
+  ..OOOOOO....
+  ............
+  ............

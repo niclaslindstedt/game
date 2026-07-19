@@ -6007,14 +6007,14 @@
           "TOOK THEIR MONEY AND LOCKED THEM IN."
         ],
         [
+          "THE WARDEN AT THE DOOR WASN'T",
+          "THEIRS. IT NEVER WAS. IT ANSWERS",
+          "TO THE THING THAT EMPTIED THEM."
+        ],
+        [
           "WHERE WAS THAT PLACE? NO WINDOWS.",
           "NO STARS. EARTH GRAVITY, MOON",
           "SILENCE, MARBLE FROM NO QUARRY."
-        ],
-        [
-          "UNDER NEVADA? UNDER ZURICH? UNDER",
-          "THE MOON? OR JUST A CELLAR BOLTED",
-          "TO THE BACK OF THE UNIVERSE?"
         ],
         [
           "NO ADDRESS. NO NATION. NO",
@@ -6027,7 +6027,7 @@
           "SHOULDN'T ANSWER."
         ]
       ],
-      "width": 3400,
+      "width": 4200,
       "height": 1700,
       "gravity": 800,
       "biome": "bunker",
@@ -6061,9 +6061,9 @@
         },
         {
           "kind": "bunker_exit",
-          "sprite": "blast_door",
+          "sprite": "vault_door",
           "pos": {
-            "x": 3320,
+            "x": 4130,
             "y": 850
           },
           "anchor": "base"
@@ -6072,11 +6072,107 @@
       "objective": {
         "type": "reachExit",
         "at": {
-          "x": 3320,
+          "x": 4130,
           "y": 850
         }
       },
       "exitTo": "the_rift",
+      "path": [
+        {
+          "x": 500,
+          "y": 850
+        },
+        {
+          "x": 1080,
+          "y": 850
+        },
+        {
+          "x": 1720,
+          "y": 400
+        },
+        {
+          "x": 2340,
+          "y": 850
+        },
+        {
+          "x": 2960,
+          "y": 1300
+        },
+        {
+          "x": 3650,
+          "y": 850
+        },
+        {
+          "x": 4130,
+          "y": 850
+        }
+      ],
+      "safeZones": [
+        {
+          "shape": "circle",
+          "pos": {
+            "x": 220,
+            "y": 850
+          },
+          "radius": 180
+        },
+        {
+          "shape": "rect",
+          "rect": {
+            "x": 2950,
+            "y": 720,
+            "width": 260,
+            "height": 260
+          }
+        }
+      ],
+      "quietZones": [
+        {
+          "shape": "rect",
+          "rect": {
+            "x": 100,
+            "y": 200,
+            "width": 340,
+            "height": 320
+          }
+        }
+      ],
+      "merchantSpawns": [
+        {
+          "x": 300,
+          "y": 1150
+        }
+      ],
+      "tempo": [
+        {
+          "at": 0,
+          "intensity": 0.5
+        },
+        {
+          "at": 0.16,
+          "intensity": 1.35
+        },
+        {
+          "at": 0.4,
+          "intensity": 1
+        },
+        {
+          "at": 0.75,
+          "intensity": 0.8
+        },
+        {
+          "at": 0.95,
+          "intensity": 1.5
+        }
+      ],
+      "chests": [
+        {
+          "at": {
+            "x": 220,
+            "y": 320
+          }
+        }
+      ],
       "rareSpawns": {
         "rare": [
           "moonlighting_agent"
@@ -6091,45 +6187,254 @@
           "count": 22,
           "band": [
             0,
-            0.35
+            0.28
           ]
         },
         {
           "enemy": "vacuum_bot",
-          "count": 14,
+          "count": 16,
           "band": [
             0,
-            0.45
+            0.4
           ]
         },
         {
           "enemy": "ice_agent",
-          "count": 10,
+          "count": 12,
+          "band": [
+            0.16,
+            0.55
+          ]
+        },
+        {
+          "enemy": "fbi_agent",
+          "count": 12,
           "band": [
             0.2,
             0.6
           ]
         },
         {
-          "enemy": "fbi_agent",
+          "enemy": "soldier",
           "count": 10,
           "band": [
-            0.3,
-            0.7
+            0.16,
+            0.5
           ]
         },
         {
-          "enemy": "soldier",
-          "count": 8,
-          "band": [
-            0.5,
-            1
+          "enemy": "sentry_gun",
+          "at": {
+            "x": 1330,
+            "y": 470
+          },
+          "level": [
+            27,
+            27,
+            29,
+            56
+          ],
+          "hp": [
+            150,
+            225,
+            345,
+            900
+          ]
+        },
+        {
+          "enemy": "sentry_gun",
+          "at": {
+            "x": 1330,
+            "y": 1230
+          },
+          "level": [
+            27,
+            27,
+            29,
+            56
+          ],
+          "hp": [
+            150,
+            225,
+            345,
+            900
+          ]
+        },
+        {
+          "enemy": "sentry_gun",
+          "at": {
+            "x": 1080,
+            "y": 850
+          },
+          "level": [
+            27,
+            27,
+            29,
+            56
+          ],
+          "hp": [
+            150,
+            225,
+            345,
+            900
+          ]
+        },
+        {
+          "enemy": "mark_suckerberg",
+          "at": {
+            "x": 1720,
+            "y": 400
+          },
+          "level": [
+            28,
+            28,
+            30,
+            57
+          ],
+          "hp": [
+            1700,
+            2550,
+            3910,
+            10200
+          ]
+        },
+        {
+          "enemy": "guard_meta",
+          "at": {
+            "x": 1650,
+            "y": 390
+          },
+          "level": [
+            28,
+            28,
+            30,
+            57
+          ],
+          "hp": [
+            380,
+            570,
+            874,
+            2280
+          ]
+        },
+        {
+          "enemy": "guard_meta",
+          "at": {
+            "x": 1790,
+            "y": 345
+          },
+          "level": [
+            28,
+            28,
+            30,
+            57
+          ],
+          "hp": [
+            380,
+            570,
+            874,
+            2280
+          ]
+        },
+        {
+          "enemy": "guard_meta",
+          "at": {
+            "x": 1720,
+            "y": 475
+          },
+          "level": [
+            28,
+            28,
+            30,
+            57
+          ],
+          "hp": [
+            380,
+            570,
+            874,
+            2280
+          ]
+        },
+        {
+          "enemy": "sam_haltman",
+          "at": {
+            "x": 1720,
+            "y": 1300
+          },
+          "level": [
+            28,
+            28,
+            30,
+            57
+          ],
+          "hp": [
+            1600,
+            2400,
+            3680,
+            9600
+          ]
+        },
+        {
+          "enemy": "guard_alignment",
+          "at": {
+            "x": 1650,
+            "y": 1290
+          },
+          "level": [
+            28,
+            28,
+            30,
+            57
+          ],
+          "hp": [
+            380,
+            570,
+            874,
+            2280
+          ]
+        },
+        {
+          "enemy": "guard_alignment",
+          "at": {
+            "x": 1790,
+            "y": 1245
+          },
+          "level": [
+            28,
+            28,
+            30,
+            57
+          ],
+          "hp": [
+            380,
+            570,
+            874,
+            2280
+          ]
+        },
+        {
+          "enemy": "guard_alignment",
+          "at": {
+            "x": 1720,
+            "y": 1375
+          },
+          "level": [
+            28,
+            28,
+            30,
+            57
+          ],
+          "hp": [
+            380,
+            570,
+            874,
+            2280
           ]
         },
         {
           "enemy": "putain_clone",
           "at": {
-            "x": 770,
+            "x": 2340,
             "y": 400
           },
           "level": [
@@ -6148,7 +6453,7 @@
         {
           "enemy": "guard_kremlin",
           "at": {
-            "x": 700,
+            "x": 2270,
             "y": 390
           },
           "level": [
@@ -6167,7 +6472,7 @@
         {
           "enemy": "guard_kremlin",
           "at": {
-            "x": 835,
+            "x": 2410,
             "y": 345
           },
           "level": [
@@ -6186,159 +6491,7 @@
         {
           "enemy": "guard_kremlin",
           "at": {
-            "x": 800,
-            "y": 475
-          },
-          "level": [
-            28,
-            28,
-            30,
-            57
-          ],
-          "hp": [
-            380,
-            570,
-            874,
-            2280
-          ]
-        },
-        {
-          "enemy": "mark_suckerberg",
-          "at": {
-            "x": 1650,
-            "y": 380
-          },
-          "level": [
-            28,
-            28,
-            30,
-            57
-          ],
-          "hp": [
-            1700,
-            2550,
-            3910,
-            10200
-          ]
-        },
-        {
-          "enemy": "guard_meta",
-          "at": {
-            "x": 1580,
-            "y": 370
-          },
-          "level": [
-            28,
-            28,
-            30,
-            57
-          ],
-          "hp": [
-            380,
-            570,
-            874,
-            2280
-          ]
-        },
-        {
-          "enemy": "guard_meta",
-          "at": {
-            "x": 1715,
-            "y": 325
-          },
-          "level": [
-            28,
-            28,
-            30,
-            57
-          ],
-          "hp": [
-            380,
-            570,
-            874,
-            2280
-          ]
-        },
-        {
-          "enemy": "guard_meta",
-          "at": {
-            "x": 1680,
-            "y": 455
-          },
-          "level": [
-            28,
-            28,
-            30,
-            57
-          ],
-          "hp": [
-            380,
-            570,
-            874,
-            2280
-          ]
-        },
-        {
-          "enemy": "sam_haltman",
-          "at": {
-            "x": 2580,
-            "y": 400
-          },
-          "level": [
-            28,
-            28,
-            30,
-            57
-          ],
-          "hp": [
-            1600,
-            2400,
-            3680,
-            9600
-          ]
-        },
-        {
-          "enemy": "guard_alignment",
-          "at": {
-            "x": 2510,
-            "y": 390
-          },
-          "level": [
-            28,
-            28,
-            30,
-            57
-          ],
-          "hp": [
-            380,
-            570,
-            874,
-            2280
-          ]
-        },
-        {
-          "enemy": "guard_alignment",
-          "at": {
-            "x": 2645,
-            "y": 345
-          },
-          "level": [
-            28,
-            28,
-            30,
-            57
-          ],
-          "hp": [
-            380,
-            570,
-            874,
-            2280
-          ]
-        },
-        {
-          "enemy": "guard_alignment",
-          "at": {
-            "x": 2610,
+            "x": 2340,
             "y": 475
           },
           "level": [
@@ -6357,7 +6510,7 @@
         {
           "enemy": "larry_allison",
           "at": {
-            "x": 770,
+            "x": 2340,
             "y": 1300
           },
           "level": [
@@ -6376,7 +6529,7 @@
         {
           "enemy": "guard_oracle",
           "at": {
-            "x": 700,
+            "x": 2270,
             "y": 1290
           },
           "level": [
@@ -6395,7 +6548,7 @@
         {
           "enemy": "guard_oracle",
           "at": {
-            "x": 835,
+            "x": 2410,
             "y": 1245
           },
           "level": [
@@ -6414,7 +6567,7 @@
         {
           "enemy": "guard_oracle",
           "at": {
-            "x": 800,
+            "x": 2340,
             "y": 1375
           },
           "level": [
@@ -6433,14 +6586,14 @@
         {
           "enemy": "jeff_baywatch",
           "at": {
-            "x": 1650,
-            "y": 1320
+            "x": 2960,
+            "y": 400
           },
           "level": [
-            28,
-            28,
-            30,
-            57
+            29,
+            29,
+            31,
+            58
           ],
           "hp": [
             2200,
@@ -6452,71 +6605,71 @@
         {
           "enemy": "guard_prime",
           "at": {
-            "x": 1580,
-            "y": 1310
+            "x": 2890,
+            "y": 390
           },
           "level": [
-            28,
-            28,
-            30,
-            57
+            29,
+            29,
+            31,
+            58
           ],
           "hp": [
-            380,
-            570,
-            874,
-            2280
+            400,
+            600,
+            920,
+            2400
           ]
         },
         {
           "enemy": "guard_prime",
           "at": {
-            "x": 1715,
-            "y": 1265
+            "x": 3030,
+            "y": 345
           },
           "level": [
-            28,
-            28,
-            30,
-            57
+            29,
+            29,
+            31,
+            58
           ],
           "hp": [
-            380,
-            570,
-            874,
-            2280
+            400,
+            600,
+            920,
+            2400
           ]
         },
         {
           "enemy": "guard_prime",
           "at": {
-            "x": 1680,
-            "y": 1395
+            "x": 2960,
+            "y": 475
           },
           "level": [
-            28,
-            28,
-            30,
-            57
+            29,
+            29,
+            31,
+            58
           ],
           "hp": [
-            380,
-            570,
-            874,
-            2280
+            400,
+            600,
+            920,
+            2400
           ]
         },
         {
           "enemy": "donald_dump",
           "at": {
-            "x": 2580,
+            "x": 2960,
             "y": 1300
           },
           "level": [
-            28,
-            28,
-            30,
-            57
+            29,
+            29,
+            31,
+            58
           ],
           "hp": [
             2600,
@@ -6528,81 +6681,116 @@
         {
           "enemy": "guard_loyalty",
           "at": {
-            "x": 2510,
+            "x": 2890,
             "y": 1290
           },
           "level": [
-            28,
-            28,
-            30,
-            57
+            29,
+            29,
+            31,
+            58
           ],
           "hp": [
-            380,
-            570,
-            874,
-            2280
+            400,
+            600,
+            920,
+            2400
           ]
         },
         {
           "enemy": "guard_loyalty",
           "at": {
-            "x": 2645,
+            "x": 3030,
             "y": 1245
           },
           "level": [
-            28,
-            28,
-            30,
-            57
+            29,
+            29,
+            31,
+            58
           ],
           "hp": [
-            380,
-            570,
-            874,
-            2280
+            400,
+            600,
+            920,
+            2400
           ]
         },
         {
           "enemy": "guard_loyalty",
           "at": {
-            "x": 2610,
+            "x": 2960,
             "y": 1375
           },
           "level": [
-            28,
-            28,
-            30,
-            57
+            29,
+            29,
+            31,
+            58
           ],
           "hp": [
-            380,
-            570,
-            874,
-            2280
+            400,
+            600,
+            920,
+            2400
+          ]
+        },
+        {
+          "enemy": "vault_warden",
+          "at": {
+            "x": 3650,
+            "y": 850
+          },
+          "level": [
+            30,
+            32,
+            36,
+            59
+          ],
+          "hp": [
+            2600,
+            3900,
+            5980,
+            15600
           ]
         }
       ],
       "packs": [
         {
           "at": {
-            "x": 1150,
+            "x": 1080,
             "y": 850
           },
           "members": [
             {
               "enemy": "cia_agent",
-              "count": 5
+              "count": 4
             },
             {
-              "enemy": "vacuum_bot",
+              "enemy": "soldier",
               "count": 2
             }
           ]
         },
         {
           "at": {
-            "x": 2050,
+            "x": 550,
+            "y": 850
+          },
+          "members": [
+            {
+              "enemy": "cia_agent",
+              "count": 4
+            },
+            {
+              "enemy": "vacuum_bot",
+              "count": 3
+            }
+          ]
+        },
+        {
+          "at": {
+            "x": 2340,
             "y": 850
           },
           "members": [
@@ -6618,26 +6806,30 @@
         },
         {
           "at": {
-            "x": 2850,
+            "x": 3200,
             "y": 850
           },
           "members": [
             {
-              "enemy": "soldier",
-              "count": 4
+              "enemy": "fbi_agent",
+              "count": 3
+            },
+            {
+              "enemy": "vacuum_bot",
+              "count": 3
             }
           ]
         }
       ],
       "waves": {
-        "rampDurationMs": 380000,
+        "rampDurationMs": 400000,
         "maxAlive": 250,
         "minAlive": 26,
         "moveSpawnEvery": 52,
         "budget": [
           {
             "enemy": "cia_agent",
-            "count": 620,
+            "count": 560,
             "window": [
               0,
               0.5
@@ -6645,10 +6837,10 @@
           },
           {
             "enemy": "vacuum_bot",
-            "count": 400,
+            "count": 420,
             "window": [
               0,
-              0.65
+              0.7
             ]
           },
           {
@@ -6656,7 +6848,7 @@
             "count": 320,
             "window": [
               0.25,
-              0.75
+              0.8
             ]
           },
           {
@@ -6664,14 +6856,14 @@
             "count": 360,
             "window": [
               0.3,
-              0.8
+              0.85
             ]
           },
           {
             "enemy": "soldier",
-            "count": 260,
+            "count": 280,
             "window": [
-              0.55,
+              0.5,
               1
             ]
           }
@@ -6682,12 +6874,12 @@
           "kind": "bunker_wall",
           "sprite": "wall",
           "from": {
-            "x": 340,
+            "x": 760,
             "y": 8
           },
           "to": {
-            "x": 340,
-            "y": 790
+            "x": 760,
+            "y": 770
           },
           "radius": 10,
           "jumpable": false
@@ -6696,11 +6888,11 @@
           "kind": "bunker_wall",
           "sprite": "wall",
           "from": {
-            "x": 340,
-            "y": 910
+            "x": 760,
+            "y": 930
           },
           "to": {
-            "x": 340,
+            "x": 760,
             "y": 1692
           },
           "radius": 10,
@@ -6710,12 +6902,12 @@
           "kind": "bunker_wall",
           "sprite": "wall",
           "from": {
-            "x": 340,
-            "y": 790
+            "x": 1000,
+            "y": 300
           },
           "to": {
-            "x": 730,
-            "y": 790
+            "x": 1000,
+            "y": 640
           },
           "radius": 10,
           "jumpable": false
@@ -6724,12 +6916,12 @@
           "kind": "bunker_wall",
           "sprite": "wall",
           "from": {
-            "x": 810,
-            "y": 790
+            "x": 1150,
+            "y": 1060
           },
           "to": {
-            "x": 1610,
-            "y": 790
+            "x": 1150,
+            "y": 1400
           },
           "radius": 10,
           "jumpable": false
@@ -6738,96 +6930,12 @@
           "kind": "bunker_wall",
           "sprite": "wall",
           "from": {
-            "x": 1690,
-            "y": 790
-          },
-          "to": {
-            "x": 2530,
-            "y": 790
-          },
-          "radius": 10,
-          "jumpable": false
-        },
-        {
-          "kind": "bunker_wall",
-          "sprite": "wall",
-          "from": {
-            "x": 2610,
-            "y": 790
-          },
-          "to": {
-            "x": 3060,
-            "y": 790
-          },
-          "radius": 10,
-          "jumpable": false
-        },
-        {
-          "kind": "bunker_wall",
-          "sprite": "wall",
-          "from": {
-            "x": 340,
-            "y": 910
-          },
-          "to": {
-            "x": 950,
-            "y": 910
-          },
-          "radius": 10,
-          "jumpable": false
-        },
-        {
-          "kind": "bunker_wall",
-          "sprite": "wall",
-          "from": {
-            "x": 1030,
-            "y": 910
-          },
-          "to": {
-            "x": 1830,
-            "y": 910
-          },
-          "radius": 10,
-          "jumpable": false
-        },
-        {
-          "kind": "bunker_wall",
-          "sprite": "wall",
-          "from": {
-            "x": 1910,
-            "y": 910
-          },
-          "to": {
-            "x": 2750,
-            "y": 910
-          },
-          "radius": 10,
-          "jumpable": false
-        },
-        {
-          "kind": "bunker_wall",
-          "sprite": "wall",
-          "from": {
-            "x": 2830,
-            "y": 910
-          },
-          "to": {
-            "x": 3060,
-            "y": 910
-          },
-          "radius": 10,
-          "jumpable": false
-        },
-        {
-          "kind": "bunker_wall",
-          "sprite": "wall",
-          "from": {
-            "x": 1200,
+            "x": 1400,
             "y": 8
           },
           "to": {
-            "x": 1200,
-            "y": 360
+            "x": 1400,
+            "y": 770
           },
           "radius": 10,
           "jumpable": false
@@ -6836,67 +6944,11 @@
           "kind": "bunker_wall",
           "sprite": "wall",
           "from": {
-            "x": 1200,
-            "y": 440
+            "x": 1400,
+            "y": 930
           },
           "to": {
-            "x": 1200,
-            "y": 790
-          },
-          "radius": 10,
-          "jumpable": false
-        },
-        {
-          "kind": "bunker_wall",
-          "sprite": "wall",
-          "from": {
-            "x": 2100,
-            "y": 8
-          },
-          "to": {
-            "x": 2100,
-            "y": 360
-          },
-          "radius": 10,
-          "jumpable": false
-        },
-        {
-          "kind": "bunker_wall",
-          "sprite": "wall",
-          "from": {
-            "x": 2100,
-            "y": 440
-          },
-          "to": {
-            "x": 2100,
-            "y": 790
-          },
-          "radius": 10,
-          "jumpable": false
-        },
-        {
-          "kind": "bunker_wall",
-          "sprite": "wall",
-          "from": {
-            "x": 1200,
-            "y": 910
-          },
-          "to": {
-            "x": 1200,
-            "y": 1260
-          },
-          "radius": 10,
-          "jumpable": false
-        },
-        {
-          "kind": "bunker_wall",
-          "sprite": "wall",
-          "from": {
-            "x": 1200,
-            "y": 1340
-          },
-          "to": {
-            "x": 1200,
+            "x": 1400,
             "y": 1692
           },
           "radius": 10,
@@ -6906,12 +6958,12 @@
           "kind": "bunker_wall",
           "sprite": "wall",
           "from": {
-            "x": 2100,
-            "y": 910
+            "x": 1400,
+            "y": 740
           },
           "to": {
-            "x": 2100,
-            "y": 1260
+            "x": 1560,
+            "y": 740
           },
           "radius": 10,
           "jumpable": false
@@ -6920,12 +6972,12 @@
           "kind": "bunker_wall",
           "sprite": "wall",
           "from": {
-            "x": 2100,
-            "y": 1340
+            "x": 1880,
+            "y": 740
           },
           "to": {
-            "x": 2100,
-            "y": 1692
+            "x": 2180,
+            "y": 740
           },
           "radius": 10,
           "jumpable": false
@@ -6934,12 +6986,96 @@
           "kind": "bunker_wall",
           "sprite": "wall",
           "from": {
-            "x": 3060,
+            "x": 2500,
+            "y": 740
+          },
+          "to": {
+            "x": 2800,
+            "y": 740
+          },
+          "radius": 10,
+          "jumpable": false
+        },
+        {
+          "kind": "bunker_wall",
+          "sprite": "wall",
+          "from": {
+            "x": 3120,
+            "y": 740
+          },
+          "to": {
+            "x": 3300,
+            "y": 740
+          },
+          "radius": 10,
+          "jumpable": false
+        },
+        {
+          "kind": "bunker_wall",
+          "sprite": "wall",
+          "from": {
+            "x": 1400,
+            "y": 960
+          },
+          "to": {
+            "x": 1560,
+            "y": 960
+          },
+          "radius": 10,
+          "jumpable": false
+        },
+        {
+          "kind": "bunker_wall",
+          "sprite": "wall",
+          "from": {
+            "x": 1880,
+            "y": 960
+          },
+          "to": {
+            "x": 2180,
+            "y": 960
+          },
+          "radius": 10,
+          "jumpable": false
+        },
+        {
+          "kind": "bunker_wall",
+          "sprite": "wall",
+          "from": {
+            "x": 2500,
+            "y": 960
+          },
+          "to": {
+            "x": 2800,
+            "y": 960
+          },
+          "radius": 10,
+          "jumpable": false
+        },
+        {
+          "kind": "bunker_wall",
+          "sprite": "wall",
+          "from": {
+            "x": 3120,
+            "y": 960
+          },
+          "to": {
+            "x": 3300,
+            "y": 960
+          },
+          "radius": 10,
+          "jumpable": false
+        },
+        {
+          "kind": "bunker_wall",
+          "sprite": "wall",
+          "from": {
+            "x": 2030,
             "y": 8
           },
           "to": {
-            "x": 3060,
-            "y": 360
+            "x": 2030,
+            "y": 740
           },
           "radius": 10,
           "jumpable": false
@@ -6948,12 +7084,12 @@
           "kind": "bunker_wall",
           "sprite": "wall",
           "from": {
-            "x": 3060,
-            "y": 440
+            "x": 2650,
+            "y": 8
           },
           "to": {
-            "x": 3060,
-            "y": 1260
+            "x": 2650,
+            "y": 740
           },
           "radius": 10,
           "jumpable": false
@@ -6962,15 +7098,119 @@
           "kind": "bunker_wall",
           "sprite": "wall",
           "from": {
-            "x": 3060,
-            "y": 1340
+            "x": 2030,
+            "y": 960
           },
           "to": {
-            "x": 3060,
+            "x": 2030,
             "y": 1692
           },
           "radius": 10,
           "jumpable": false
+        },
+        {
+          "kind": "bunker_wall",
+          "sprite": "wall",
+          "from": {
+            "x": 2650,
+            "y": 960
+          },
+          "to": {
+            "x": 2650,
+            "y": 1692
+          },
+          "radius": 10,
+          "jumpable": false
+        },
+        {
+          "kind": "bunker_wall",
+          "sprite": "wall",
+          "from": {
+            "x": 3300,
+            "y": 8
+          },
+          "to": {
+            "x": 3300,
+            "y": 770
+          },
+          "radius": 10,
+          "jumpable": false
+        },
+        {
+          "kind": "bunker_wall",
+          "sprite": "wall",
+          "from": {
+            "x": 3300,
+            "y": 930
+          },
+          "to": {
+            "x": 3300,
+            "y": 1692
+          },
+          "radius": 10,
+          "jumpable": false
+        },
+        {
+          "kind": "bunker_wall",
+          "sprite": "wall",
+          "from": {
+            "x": 3960,
+            "y": 8
+          },
+          "to": {
+            "x": 3960,
+            "y": 760
+          },
+          "radius": 10,
+          "jumpable": false
+        },
+        {
+          "kind": "bunker_wall",
+          "sprite": "wall",
+          "from": {
+            "x": 3960,
+            "y": 940
+          },
+          "to": {
+            "x": 3960,
+            "y": 1692
+          },
+          "radius": 10,
+          "jumpable": false
+        }
+      ],
+      "doors": [
+        {
+          "id": "vault_exit",
+          "from": {
+            "x": 3960,
+            "y": 760
+          },
+          "to": {
+            "x": 3960,
+            "y": 940
+          },
+          "radius": 10
+        }
+      ],
+      "buildings": [
+        {
+          "sprite": "fountain",
+          "pos": {
+            "x": 430,
+            "y": 850
+          },
+          "w": 44,
+          "h": 44
+        },
+        {
+          "sprite": "reception_desk",
+          "pos": {
+            "x": 250,
+            "y": 560
+          },
+          "w": 44,
+          "h": 26
         }
       ],
       "placedItems": [
@@ -6978,91 +7218,103 @@
           "kind": "story",
           "defId": "bunker_ledger",
           "pos": {
-            "x": 1650,
-            "y": 800
+            "x": 2340,
+            "y": 850
           }
         },
         {
           "kind": "medkit",
           "pos": {
-            "x": 150,
-            "y": 700
+            "x": 160,
+            "y": 760
           }
         },
         {
           "kind": "repair",
           "pos": {
-            "x": 150,
-            "y": 1000
+            "x": 160,
+            "y": 960
           }
         },
         {
           "kind": "xp",
           "pos": {
-            "x": 770,
-            "y": 620
+            "x": 1720,
+            "y": 600
           }
         },
         {
           "kind": "xp",
           "pos": {
-            "x": 2580,
-            "y": 620
+            "x": 2960,
+            "y": 600
           }
         },
         {
           "kind": "medkit",
           "pos": {
-            "x": 1650,
+            "x": 2340,
             "y": 150
           }
         },
         {
           "kind": "repair",
           "pos": {
-            "x": 1650,
+            "x": 2340,
             "y": 1550
           }
         },
         {
           "kind": "xp",
           "pos": {
-            "x": 770,
+            "x": 1720,
             "y": 1500
           }
         },
         {
           "kind": "medkit",
           "pos": {
-            "x": 2900,
-            "y": 1500
+            "x": 3120,
+            "y": 850
           }
         },
         {
           "kind": "medkit",
           "pos": {
-            "x": 3250,
-            "y": 700
+            "x": 3820,
+            "y": 850
           }
         }
       ],
       "obstacles": [
         {
           "kind": "server",
-          "count": 14,
+          "count": 12,
           "radius": 9,
           "jumpable": false
         },
         {
           "kind": "vending",
-          "count": 8,
+          "count": 6,
           "radius": 8,
           "jumpable": false
         },
         {
           "kind": "marble_column",
-          "count": 10,
+          "count": 14,
           "radius": 9,
+          "jumpable": false
+        },
+        {
+          "kind": "wine_rack",
+          "count": 8,
+          "radius": 8,
+          "jumpable": false
+        },
+        {
+          "kind": "art_pedestal",
+          "count": 8,
+          "radius": 8,
           "jumpable": false
         },
         {
@@ -7074,7 +7326,7 @@
         },
         {
           "kind": "gold_pallet",
-          "count": 10,
+          "count": 14,
           "radius": 7,
           "jumpable": true
         }
@@ -7082,11 +7334,19 @@
       "decor": [
         {
           "kind": "money_pile",
-          "count": 16
+          "count": 20
+        },
+        {
+          "kind": "chandelier",
+          "count": 14
+        },
+        {
+          "kind": "security_camera",
+          "count": 12
         },
         {
           "kind": "papers",
-          "count": 18
+          "count": 16
         },
         {
           "kind": "cable",
