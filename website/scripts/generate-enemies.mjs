@@ -12,11 +12,14 @@
 // The output is gitignored and regenerated on every build (like levels.ts), so
 // the YAML is the single source of truth.
 //
-// MUST run BEFORE generate-levels.mjs: the level generator imports
-// enemies/index.ts (which now reads this file) to cross-ref its spawn ids.
-// The cross-ref catalogs below are imported DIRECTLY (never @game/core, and
-// never the enemy index) so nothing pulls the file we are about to write —
-// mirroring the bootstrap-cycle note in generate-levels.mjs.
+// MUST run FIRST in the generate chain: both generate-assets.mjs (the sprite
+// pipeline derives wound frames from every enemy's role/gore, so
+// sprite-data/index.mjs imports the enemy catalog) and generate-levels.mjs
+// (cross-refs spawn ids) import enemies/index.ts, which now reads the file this
+// script writes — so it must exist before either runs. The cross-ref catalogs
+// below are imported DIRECTLY (never @game/core, and never the enemy index) so
+// nothing pulls the file we are about to write — mirroring the bootstrap-cycle
+// note in generate-levels.mjs.
 
 import { mkdirSync, writeFileSync } from "node:fs";
 import { register } from "node:module";

@@ -450,9 +450,11 @@ render them are `website/src/game/DialogueOverlay.tsx` and `CutsceneOverlay.tsx`
   the live cross-ref catalogs (companions, uniques, story items, weapons/gear)
   and emit `src/generated/enemies.ts` (gitignored, regenerated on build — never
   edit or commit it), which `src/game/defs/enemies/index.ts` re-exposes as
-  `ENEMY_DEFS`. It **must run before `generate-levels.mjs`** (levels cross-ref
-  the enemy ids), so the chain is `generate-assets → generate-enemies →
-  generate-levels → generate-bot-tuning`. The biome directory is organizational
+  `ENEMY_DEFS`. It **must run first** — both `generate-assets.mjs` (the sprite
+  pipeline derives wound frames from every enemy's `role`/`gore`) and
+  `generate-levels.mjs` (cross-ref the enemy ids) import the enemy catalog — so
+  the chain is `generate-enemies → generate-assets → generate-levels →
+  generate-bot-tuning`. The biome directory is organizational
   only (the merged catalog is flat; a duplicate id fails the build). The
   round-trip guard (`tests/content/enemy_roundtrip_test.ts`) pins the compiled
   catalog to `tests/content/fixtures/enemies-snapshot.json`; accept an
