@@ -7,8 +7,9 @@
 // PERSONAL BODYGUARDS — one drawing, six accent palettes, drawn a size up
 // from the crew so a detail reads as a detail. The residents themselves are
 // FAR tougher than any campaign elite (this is a farm venue: the fight is
-// the price of the loot), and there is NO boss — the exit door ends the
-// level. Registered into ENEMY_DEFS by ./index.ts.
+// the price of the loot). The finale is THE VAULT WARDEN — an automated
+// security construct that guards the treasury door and drops the key that
+// unlocks the exit. Registered into ENEMY_DEFS by ./index.ts.
 
 import type { EnemyDef } from "./types.ts";
 
@@ -204,9 +205,10 @@ export const BUNKER_ENEMIES: Record<string, EnemyDef> = {
   guard_alignment: bodyguard("guard_alignment", "ALIGNMENT OFFICER"),
   guard_loyalty: bodyguard("guard_loyalty", "LOYALTY ENFORCER"),
   // ---- The residents ----------------------------------------------------------
-  // Each one a campaign elite scaled to farm-boss weight: the bunker has no
-  // finale, so the six suites ARE the fights. Their world-drop odds ride the
-  // elite role (config WORLD_DROP × the level's namedDropMult).
+  // Each one a campaign elite scaled to farm-boss weight: the six suites are
+  // the optional farm off the descent's spine (THE VAULT WARDEN is the
+  // mandatory finale). Their world-drop odds ride the elite role (config
+  // WORLD_DROP × the level's namedDropMult).
   putain_clone: {
     id: "putain_clone",
     name: "VLADIMIR PUTAIN",
@@ -634,11 +636,7 @@ export const BUNKER_ENEMIES: Record<string, EnemyDef> = {
           "THEM IN HERE.",
         ],
       },
-      [
-        "CORRECTION: SECURED.",
-        "RESIDENTS ARE ASSETS.",
-        "ASSETS DO NOT LEAVE.",
-      ],
+      ["CORRECTION: SECURED.", "RESIDENTS ARE ASSETS.", "ASSETS DO NOT LEAVE."],
       {
         hero: [
           "THEY PAID FOR A LIFEBOAT.",
@@ -665,7 +663,12 @@ export const BUNKER_ENEMIES: Record<string, EnemyDef> = {
       {
         belowHpFrac: 0.45,
         mechanics: {
-          slam: { windupMs: 800, radius: 105, damageFrac: 1.3, cooldownMs: 6500 },
+          slam: {
+            windupMs: 800,
+            radius: 105,
+            damageFrac: 1.3,
+            cooldownMs: 6500,
+          },
           enrage: { belowHpFrac: 0.45, speedMult: 1.3, damageMult: 1.25 },
         },
       },
