@@ -722,15 +722,17 @@ function stampedeRumbleIntensity(state: GameState, hasSpec: boolean): number {
 const STAMPEDE_RUMBLE_FLOOR = 0.05;
 
 /**
- * Advance the employee stampedes: mint a herd on the level's `everyMs` cadence
- * (capped at STAMPEDES.maxAlive in flight), charge each straight to the LEFT at
- * great speed, trample-and-KILL minions caught in its band (flung aside then
- * removed — no XP, no loot, an environmental death that can't be farmed), shove
- * elites/bosses out of the wall, strike the grounded hero ONCE (a flat max-hp
- * bite AND a knockdown, `Player.knockoutMs`), and despawn a herd once it has
- * charged clear of the player's stage. A jump (z above JUMP.dodgeHeight) sails
- * over the whole wall; a hero already down is never trampled twice. Apparitions
- * are mist. Ignores obstacles and level bounds.
+ * Advance the employee stampedes: light the approach-dust telegraph as a herd
+ * nears (rolling the lane it locks onto), mint a herd on the level's `everyMs`
+ * cadence (capped at STAMPEDES.maxAlive in flight) down that lane, charge each
+ * straight to the LEFT at great speed, BOWL OVER minions caught in its band
+ * (flung aside and knocked out for a few seconds — no damage, no XP, no loot, no
+ * kill, so it can't be farmed and doesn't thin the horde), shove elites/bosses
+ * out of the wall, strike the grounded hero ONCE (a flat max-hp bite AND a
+ * knockdown, `Player.knockoutMs`), and despawn a herd once it has charged clear
+ * of the player's stage. A jump (z above JUMP.dodgeHeight) sails over the whole
+ * wall; a hero already down is never trampled twice. Apparitions are mist.
+ * Ignores obstacles and level bounds.
  */
 export function stepStampedes(
   state: GameState,
@@ -740,11 +742,39 @@ export function stepStampedes(
   const spec = levelDef(state.level.id).stampedes;
   if (spec) {
     state.stampedeTimerMs -= dtMs;
+
+    // APPROACH TELEGRAPH — the wall is SEEN coming: once the countdown enters
+    // its (difficulty-scaled) lead window and a herd can mint, light the dust and
+    // ROLL THE LANE NOW, so the telegraph marks the exact band the wall will
+    // charge down (`spawnStampede` then mints on that same y). Age it each tick.
+    const leadMs =
+      STAMPEDES.telegraphMs *
+      difficultyDef(state.difficulty).stampedeTelegraphMult;
+    if (
+      state.stampedeWarn === null &&
+      state.stampedes.length < STAMPEDES.maxAlive &&
+      state.stampedeTimerMs > 0 &&
+      state.stampedeTimerMs <= leadMs
+    ) {
+      state.stampedeWarn = {
+        y:
+          state.player.pos.y +
+          randomRange(state.rng, -STAMPEDES.laneJitter, STAMPEDES.laneJitter),
+        leadMs,
+        ageMs: 0,
+      };
+    } else if (state.stampedeWarn !== null) {
+      state.stampedeWarn.ageMs += dtMs;
+    }
+
     if (
       state.stampedeTimerMs <= 0 &&
       state.stampedes.length < STAMPEDES.maxAlive
     ) {
-      spawnStampede(state);
+      // Mint on the telegraphed lane (falling back to a fresh roll if the timer
+      // outran the whole lead window in one tick), then clear the spent warn.
+      spawnStampede(state, state.stampedeWarn?.y);
+      state.stampedeWarn = null;
       state.stampedeTimerMs = randomRange(
         state.rng,
         spec.everyMs[0],
@@ -793,34 +823,38 @@ export function stepStampedes(
       maybeHazardThought(state, spec?.struckThought);
     }
 
-    // Everything in the wall's path is knocked over: a MINION is trampled —
-    // flung along the charge and KILLED outright (collected here, removed after,
-    // so the loop never mutates the array it walks) — while an elite or boss
-    // holds its ground and is only shoved clear of the band.
-    const trampled: Enemy[] = [];
+    // Everything in the wall's path is knocked OVER, never out of existence: a
+    // MINION is BOWLED over — flung aside along the charge (and out to the nearer
+    // band edge) and left KNOCKED OUT for a few seconds (`trampleStunMs` on its
+    // `knockMs`, so `moveEnemy` sits its AI out and `stepKnockback` coasts the
+    // fling), scrambling back up after. No damage, no kill, no farm — the herd
+    // doesn't thin the horde. An elite or boss holds its ground and is only shoved
+    // clear of the band. One knockdown per pass: a mob already down is left be.
     for (const enemy of state.enemies) {
       const def = enemyDef(enemy.defId);
       if (def.apparition) continue;
       if (!inHerdBand(herd, enemy.pos, def.radius)) continue;
+      const up = enemy.pos.y >= herd.pos.y ? 1 : -1;
       if (def.role === "minion") {
-        trampled.push(enemy);
+        if (enemy.knockMs && enemy.knockMs > 0) continue; // already bowled over
+        enemy.knockVel = {
+          x: -STAMPEDES.tramplePush,
+          y: up * STAMPEDES.tramplePush * 0.5,
+        };
+        enemy.knockMs = STAMPEDES.trampleStunMs;
+        state.events.push({
+          type: "stampedeTrample",
+          pos: { ...enemy.pos },
+          defId: enemy.defId,
+        });
       } else {
         // Shove a heavier foe to the nearer edge of the band (out of the wall),
         // carrying it a touch along the charge — knocked over, not killed.
-        const up = enemy.pos.y >= herd.pos.y ? 1 : -1;
         const edge = herd.pos.y + up * (STAMPEDES.bandHalfHeight + def.radius);
         enemy.pos.y +=
           (edge - enemy.pos.y) * Math.min(1, (STAMPEDES.speed[0] * dt) / 40);
         enemy.pos.x -= herd.speed * dt * 0.4;
       }
-    }
-    for (const enemy of trampled) {
-      state.enemies.splice(state.enemies.indexOf(enemy), 1);
-      state.events.push({
-        type: "stampedeTrample",
-        pos: { ...enemy.pos },
-        defId: enemy.defId,
-      });
     }
 
     if (distance(herd.pos, player.pos) <= STAMPEDES.despawnDistance) {
@@ -834,11 +868,14 @@ export function stepStampedes(
  * the five staffers spread across the wall (evenly across the band's height
  * with a little jitter) and staggered back along the charge into a ragged
  * column, each wearing one of the three employee looks. */
-function spawnStampede(state: GameState): void {
+function spawnStampede(state: GameState, laneY?: number): void {
   const pos = vec(
     state.player.pos.x + STAMPEDES.spawnDistance,
-    state.player.pos.y +
-      randomRange(state.rng, -STAMPEDES.laneJitter, STAMPEDES.laneJitter),
+    // The telegraphed lane (locked when the dust lit) if there is one, else a
+    // fresh roll — so the wall arrives exactly where the approach-dust warned.
+    laneY ??
+      state.player.pos.y +
+        randomRange(state.rng, -STAMPEDES.laneJitter, STAMPEDES.laneJitter),
   );
   const runners: StampedeRunner[] = [];
   const n: number = STAMPEDES.runnerCount;

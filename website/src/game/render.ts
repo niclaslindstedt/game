@@ -1109,6 +1109,13 @@ export function drawFrame(
     ctx.globalAlpha = 1;
   }
 
+  // The APPROACH TELEGRAPH — a line of dust kicking up along the lane a herd is
+  // about to charge down, drawn under the runners so the wall rolls in over its
+  // own warning. Grows as the spawn nears (its `ageMs / leadMs` fade).
+  if (state.stampedeWarn) {
+    drawStampedeWarn(ctx, state.stampedeWarn, camera, view, timeMs);
+  }
+
   // Employee stampedes charge over the ground plane like the storms — drawn
   // AFTER the hero so a herd visibly tramples OVER him (he lies knocked down
   // beneath it). A churning dust cloud boils off the wall's BACK (to its right,
@@ -1128,7 +1135,10 @@ export function drawFrame(
       const frame = Math.floor(timeMs / 110 + runner.phase * 2) % 2;
       const sprite = spriteByName(sprites, `stampede_${family}_${frame}`);
       if (!sprite) continue;
-      const size = STAMPEDES.runnerRadius * 2 + 8;
+      // Drawn at 3× the runner radius — a touch over the body so the art isn't
+      // clipped to the collision circle. Halved with the runner radius so the
+      // herd reads as a smaller, easier-to-clear wall.
+      const size = STAMPEDES.runnerRadius * 3;
       // A quick pumping bob so the wall reads as a hard sprint, not a slide.
       const bob =
         2 * Math.abs(Math.sin(Math.PI * (timeMs / 130 + runner.phase)));
@@ -1206,6 +1216,45 @@ function drawHerdDust(
     ctx.globalAlpha = (1 - depth) * 0.5;
     ctx.fillStyle =
       i % 3 === 0 ? "#efe7d4" : i % 3 === 1 ? "#b0a892" : "#8f8874";
+    ctx.beginPath();
+    ctx.arc(Math.round(px), Math.round(py), r, 0, Math.PI * 2);
+    ctx.fill();
+  }
+  ctx.restore();
+}
+
+/** The APPROACH-DUST TELEGRAPH: a line of dust kicking up across the lane a herd
+ * is about to charge down (`state.stampedeWarn`), spanning the view width at the
+ * warned world-y. It fades IN as the spawn nears (the warn's `ageMs / leadMs`
+ * progress), so the player reads WHICH band to clear before the runners appear.
+ * Purely presentational; each puff's churn is seeded off time + index so the line
+ * roils without allocating. */
+function drawStampedeWarn(
+  ctx: CanvasRenderingContext2D,
+  warn: NonNullable<GameState["stampedeWarn"]>,
+  camera: { x: number; y: number },
+  view: { width: number; height: number },
+  timeMs: number,
+): void {
+  const progress = Math.max(0, Math.min(1, warn.ageMs / warn.leadMs));
+  if (progress <= 0) return;
+  const laneY = warn.y - camera.y;
+  // A lane scrolled well off the top/bottom needs no dust drawn.
+  if (laneY < -40 || laneY > view.height + 40) return;
+  const puffs = 16;
+  const spread = STAMPEDES.bandHalfHeight * 0.6;
+  ctx.save();
+  for (let i = 0; i < puffs; i++) {
+    // Spread evenly across the whole view width — the wall sweeps the full lane —
+    // each puff bobbing within the band on its own churn phase.
+    const churn = timeMs / 260 + i * 1.9;
+    const px = ((i + 0.5) / puffs) * view.width + Math.sin(churn) * 6;
+    const py = laneY + Math.cos(churn * 1.3 + i) * spread;
+    // Puffs grow and brighten as the herd nears, with a soft per-puff flicker.
+    const flicker = 0.7 + 0.3 * Math.sin(churn * 2 + i);
+    const r = (3 + progress * 6) * flicker;
+    ctx.globalAlpha = progress * 0.4 * flicker;
+    ctx.fillStyle = i % 2 === 0 ? "#d8cfb8" : "#a89f88";
     ctx.beginPath();
     ctx.arc(Math.round(px), Math.round(py), r, 0, Math.PI * 2);
     ctx.fill();

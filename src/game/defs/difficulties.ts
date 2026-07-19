@@ -324,6 +324,16 @@ export type DifficultyDef = {
    * with the feet (a jump clears the whole wall).
    */
   stampedeDamageFrac: number;
+  /**
+   * How long a warning the EMPLOYEE STAMPEDE's approach-dust telegraph gives on
+   * this rung — a multiplier on the base lead (config `STAMPEDES.telegraphMs`,
+   * 1s). Above 1 the gentle rungs get a long look at which lane to clear before
+   * the wall appears; below 1 the hard rungs get a blink. Ramps down the ladder:
+   * EASY 1.5, MEDIUM 1.3, HARD 1.0, NIGHTMARE 0.7, JESUS 0.4 — the same lever
+   * every hazard uses to make the top rungs less forgiving without touching the
+   * blow itself (here it's the reaction window, not the bite).
+   */
+  stampedeTelegraphMult: number;
 };
 
 export const DIFFICULTY_DEFS: Record<Difficulty, DifficultyDef> = {
@@ -381,6 +391,7 @@ export const DIFFICULTY_DEFS: Record<Difficulty, DifficultyDef> = {
     asteroidDamageFrac: 0.2,
     sandstormDamageFrac: 0.1,
     stampedeDamageFrac: 0.1,
+    stampedeTelegraphMult: 1.5,
   },
   medium: {
     id: "medium",
@@ -439,6 +450,7 @@ export const DIFFICULTY_DEFS: Record<Difficulty, DifficultyDef> = {
     asteroidDamageFrac: 0.3,
     sandstormDamageFrac: 0.15,
     stampedeDamageFrac: 0.15,
+    stampedeTelegraphMult: 1.3,
   },
   hard: {
     id: "hard",
@@ -488,6 +500,7 @@ export const DIFFICULTY_DEFS: Record<Difficulty, DifficultyDef> = {
     asteroidDamageFrac: 0.4,
     sandstormDamageFrac: 0.2,
     stampedeDamageFrac: 0.2,
+    stampedeTelegraphMult: 1.0,
   },
   nightmare: {
     id: "nightmare",
@@ -539,6 +552,7 @@ export const DIFFICULTY_DEFS: Record<Difficulty, DifficultyDef> = {
     asteroidDamageFrac: 0.5,
     sandstormDamageFrac: 0.28,
     stampedeDamageFrac: 0.3,
+    stampedeTelegraphMult: 0.7,
   },
   jesus: {
     id: "jesus",
@@ -591,6 +605,7 @@ export const DIFFICULTY_DEFS: Record<Difficulty, DifficultyDef> = {
     asteroidDamageFrac: 0.75,
     sandstormDamageFrac: 0.4,
     stampedeDamageFrac: 0.4,
+    stampedeTelegraphMult: 0.4,
   },
 };
 
