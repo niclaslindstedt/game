@@ -2640,6 +2640,42 @@ export const HAY_BALLS = {
 } as const;
 
 /**
+ * Sand storms — small, animated dust squalls a level turns on with
+ * LevelDef.sandstorms (Mars). Each spawns on a ring just past the phone screen
+ * edge (the asteroid/enemy-spawn rationale) and DRIFTS across the player's
+ * surroundings in a straight line, SLOW enough to walk clear of — getting out
+ * of the way is the whole defence. A storm shoves minions aside like an
+ * asteroid (chaos, no harm). The grounded hero it catches is struck ONCE: a
+ * difficulty-scaled bite of his MAX hp (DifficultyDef.sandstormDamageFrac) AND
+ * a KNOCKOUT — he drops prone and helpless for `knockoutMs`. Having struck,
+ * the storm keeps drifting (passes OVER the fallen hero) and thins out over
+ * `fadeMs` before vanishing. A jump (z above JUMP.dodgeHeight) sails clear of
+ * the gust exactly like a rock, and a hero already knocked out is never caught
+ * a second time. Units: world px, px/s, ms.
+ */
+export const SANDSTORMS = {
+  /** Spawn distance from the player — just past the screen edge. */
+  ringDistance: 260,
+  /** Aim scatter around the player (px): a storm threatens a swathe, not a
+   * homing strike. */
+  targetJitter: 90,
+  /** Drift speed, rolled per storm (px/s) — a slow rolling wall of dust the
+   * hero can stroll out of, well under the asteroid streak. */
+  speed: [52, 78] as [number, number],
+  /** Body radius, rolled per storm (px) — SMALL squalls, a few strides wide. */
+  radius: [26, 40] as [number, number],
+  /** Storms in flight are capped here; the spawner defers above it. */
+  maxAlive: 2,
+  /** A storm this far from the player despawns — it has left the stage. */
+  despawnDistance: 700,
+  /** How long the caught hero lies prone and helpless (ms). */
+  knockoutMs: 2000,
+  /** After it strikes, the storm thins out over this window (ms) as it passes
+   * over the fallen hero, then vanishes. */
+  fadeMs: 1400,
+} as const;
+
+/**
  * Ranged enemies (`EnemyDef.ranged`) — shooters that fire hostile projectiles
  * at the player and, with `takesCover`, play hide-and-peek behind the level's
  * solid obstacles between shots (the per-enemy numbers — damage, cooldown,

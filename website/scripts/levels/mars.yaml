@@ -58,6 +58,16 @@ tiles:
         b: vent_1
         every: 9
 foes: MACHINES
+# Small sand storms roll across the red planet: every so often a churning dust
+# gust drifts in from off-screen and sweeps the hero's surroundings. Walk clear
+# and it's harmless; stand in its path and it flattens you - a bite of damage
+# and a knockout, prone on the dirt for a couple of seconds while it passes over
+# and fades. Tuning (speed, size, damage, knockout length) lives in config
+# SANDSTORMS / DifficultyDef.sandstormDamageFrac.
+sandstorms:
+  everyMs:
+    - 9000
+    - 16000
 merchant:
   sprite: merchant_mars
   greeting:

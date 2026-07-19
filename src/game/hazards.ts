@@ -10,7 +10,14 @@
 
 import { randomRange } from "@game/lib/rng.ts";
 import { direction, distance, moveToward, vec } from "@game/lib/vec.ts";
-import { ASTEROIDS, HAY_BALLS, JUMP, PLAYER, WELLS } from "./config.ts";
+import {
+  ASTEROIDS,
+  HAY_BALLS,
+  JUMP,
+  PLAYER,
+  SANDSTORMS,
+  WELLS,
+} from "./config.ts";
 import { difficultyDef } from "./defs/difficulties.ts";
 import { enemyDef } from "./defs/enemies/index.ts";
 import { levelDef, type LevelDef } from "./defs/levels/index.ts";
@@ -23,6 +30,7 @@ import type {
   GameState,
   GravityWell,
   HayBall,
+  SandStorm,
 } from "./types.ts";
 
 /** Resolve the level def's well specs against the config WELLS defaults. */
@@ -206,7 +214,7 @@ export function stepAsteroids(
       const frac = difficultyDef(state.difficulty).asteroidDamageFrac;
       hurtPlayer(state, Math.max(1, Math.round(player.maxHp * frac)));
       // First rock to land this run pauses for the "watch out for these" read.
-      maybeAsteroidThought(state, spec?.struckThought);
+      maybeHazardThought(state, spec?.struckThought);
     }
 
     // Minions in the path are shoved aside, not hurt — the rock plows the
@@ -230,13 +238,14 @@ export function stepAsteroids(
 }
 
 /**
- * The first asteroid strike's inner monologue (a level's
- * `asteroids.struckThought`): the first time a rock lands on the hero this
- * run, fire its thought exactly once (tracked in `state.thoughtsSeen`, the
- * same ledger as the kill/sight pins). Silent for a level with no
- * `struckThought`, once it has already played, or while a scene is up.
+ * A hazard's first-strike inner monologue (a level's
+ * `asteroids.struckThought` / `sandstorms.struckThought`): the first time the
+ * hazard lands on the hero this run, fire its thought exactly once (tracked in
+ * `state.thoughtsSeen`, the same ledger as the kill/sight pins). Silent for a
+ * level with no such thought, once it has already played, or while a scene is
+ * up.
  */
-function maybeAsteroidThought(
+function maybeHazardThought(
   state: GameState,
   thought: string | undefined,
 ): void {
@@ -357,5 +366,116 @@ function spawnAsteroid(state: GameState): void {
     radius: randomRange(state.rng, ASTEROIDS.radius[0], ASTEROIDS.radius[1]),
     spin: randomRange(state.rng, -3, 3),
     struck: false,
+  });
+}
+
+/**
+ * Advance the sand storms (config SANDSTORMS; a level turns them on with
+ * LevelDef.sandstorms): spawn on the level's `everyMs` cadence (capped at
+ * SANDSTORMS.maxAlive in flight), drift each gust straight and SLOW — slow
+ * enough that stepping aside is the whole defence — shove minions out of the
+ * path unharmed like an asteroid, and CATCH the grounded hero once: a
+ * difficulty-scaled bite of his max hp PLUS a knockout (he drops prone and
+ * helpless for `knockoutMs`). A caught storm then fades out over `fadeMs` as it
+ * passes over the fallen hero and despawns; a storm that misses despawns once
+ * it has left the player's stage. A jump sails clear like it clears a rock, and
+ * a hero already knocked out is never caught a second time (no chain-lock).
+ * Elites and bosses hold their ground; apparitions are mist.
+ */
+export function stepSandstorms(
+  state: GameState,
+  dt: number,
+  dtMs: number,
+): void {
+  const spec = levelDef(state.level.id).sandstorms;
+  if (spec) {
+    state.sandstormTimerMs -= dtMs;
+    if (
+      state.sandstormTimerMs <= 0 &&
+      state.sandstorms.length < SANDSTORMS.maxAlive
+    ) {
+      spawnSandstorm(state);
+      state.sandstormTimerMs = randomRange(
+        state.rng,
+        spec.everyMs[0],
+        spec.everyMs[1],
+      );
+    }
+  }
+  if (state.sandstorms.length === 0) return;
+
+  const player = state.player;
+  const survivors: SandStorm[] = [];
+  for (const storm of state.sandstorms) {
+    storm.pos.x += storm.dir.x * storm.speed * dt;
+    storm.pos.y += storm.dir.y * storm.speed * dt;
+
+    // Catch the grounded hero once. A jump (z above dodgeHeight) rides over the
+    // gust like a rock, and a hero already down is left where he lies — one
+    // storm can't chain-lock him, and neither can a second gust piling on.
+    if (
+      !storm.struck &&
+      player.knockoutMs <= 0 &&
+      player.z <= JUMP.dodgeHeight &&
+      distance(storm.pos, player.pos) <= storm.radius + PLAYER.radius
+    ) {
+      storm.struck = true;
+      storm.fadeMs = SANDSTORMS.fadeMs;
+      const frac = difficultyDef(state.difficulty).sandstormDamageFrac;
+      hurtPlayer(state, Math.max(1, Math.round(player.maxHp * frac)));
+      player.knockoutMs = SANDSTORMS.knockoutMs;
+      state.events.push({ type: "sandstormHit", pos: { ...player.pos } });
+      // First storm to down the hero this run pauses for the "watch out" read.
+      maybeHazardThought(state, spec?.struckThought);
+    }
+
+    // Minions in the path are shoved aside, not hurt — the gust plows the crowd
+    // open, which reads as a real storm without minting farmable kills.
+    for (const enemy of state.enemies) {
+      const def = enemyDef(enemy.defId);
+      if (def.role !== "minion" || def.apparition) continue;
+      const gap = def.radius + storm.radius;
+      const d = distance(enemy.pos, storm.pos);
+      if (d >= gap || d === 0) continue;
+      const push = direction(storm.pos, enemy.pos);
+      enemy.pos.x += push.x * (gap - d);
+      enemy.pos.y += push.y * (gap - d);
+    }
+
+    // A struck storm thins out as it drifts on; when the fade runs out it is
+    // spent and drops. An unstruck storm lives until it leaves the stage.
+    if (storm.fadeMs !== null) {
+      storm.fadeMs -= dtMs;
+      if (storm.fadeMs <= 0) continue;
+    }
+    if (distance(storm.pos, player.pos) <= SANDSTORMS.despawnDistance) {
+      survivors.push(storm);
+    }
+  }
+  state.sandstorms = survivors;
+}
+
+/** Mint one storm on the spawn ring, aimed across the player with scatter. */
+function spawnSandstorm(state: GameState): void {
+  const angle = state.rng() * Math.PI * 2;
+  const pos = vec(
+    state.player.pos.x + Math.cos(angle) * SANDSTORMS.ringDistance,
+    state.player.pos.y + Math.sin(angle) * SANDSTORMS.ringDistance,
+  );
+  const target = vec(
+    state.player.pos.x +
+      randomRange(state.rng, -SANDSTORMS.targetJitter, SANDSTORMS.targetJitter),
+    state.player.pos.y +
+      randomRange(state.rng, -SANDSTORMS.targetJitter, SANDSTORMS.targetJitter),
+  );
+  state.sandstorms.push({
+    id: state.nextId++,
+    pos,
+    dir: direction(pos, target),
+    speed: randomRange(state.rng, SANDSTORMS.speed[0], SANDSTORMS.speed[1]),
+    radius: randomRange(state.rng, SANDSTORMS.radius[0], SANDSTORMS.radius[1]),
+    spin: state.rng() * Math.PI * 2,
+    struck: false,
+    fadeMs: null,
   });
 }

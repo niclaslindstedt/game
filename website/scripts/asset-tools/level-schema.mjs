@@ -193,6 +193,7 @@ export function validateLevel(def, refs, description = "") {
     thought(def.openingStrike.after, "openingStrike.after");
   }
   thought(def.asteroids?.struckThought, "asteroids.struckThought");
+  thought(def.sandstorms?.struckThought, "sandstorms.struckThought");
 
   // ---- loot references -------------------------------------------------------
   const loot = def.loot ?? {};

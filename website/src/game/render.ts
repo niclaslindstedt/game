@@ -27,6 +27,7 @@ import {
   nextPathWaypoint,
   orbitSpellParams,
   orbPositions,
+  SANDSTORMS,
   stasisSpellParams,
   storyItemDef,
   WOUNDS,
@@ -995,6 +996,33 @@ export function drawFrame(
       size,
       size,
     );
+  }
+
+  // Sand storms sweep over the ground plane like the rocks — drawn AFTER the
+  // hero so a gust visibly passes OVER him (he lies knocked out beneath it).
+  // Each storm churns through its four frames and, once it has struck, thins
+  // out over its fade window as it drifts away and vanishes.
+  for (const storm of state.sandstorms) {
+    if (!inView(storm.pos.x, storm.pos.y, storm.radius + 40)) continue;
+    const frame = Math.floor(timeMs / 120 + storm.id) % 4;
+    const sprite = spriteByName(sprites, `sandstorm_${frame}`);
+    if (!sprite) continue;
+    // The visual is a touch wider than the collision body so the swirl reaches
+    // the hero as it catches him. A struck storm fades with its timer.
+    const size = Math.round(storm.radius * 2 + 24);
+    const fade =
+      storm.fadeMs === null
+        ? 1
+        : Math.max(0, Math.min(1, storm.fadeMs / SANDSTORMS.fadeMs));
+    ctx.globalAlpha = 0.88 * fade;
+    ctx.drawImage(
+      sprite,
+      Math.round(storm.pos.x - size / 2 - camera.x),
+      Math.round(storm.pos.y - size / 2 - camera.y),
+      size,
+      size,
+    );
+    ctx.globalAlpha = 1;
   }
 
   // "Go this way" — a blinking arrow toward the next intended-path waypoint,
@@ -2412,6 +2440,15 @@ function drawPlayer(
   // Blink during the post-hit flash so damage is legible on the character.
   if (player.hurtFlashMs > 0 && Math.floor(timeMs / 60) % 2 === 0) return;
 
+  // KNOCKED OUT: a sand storm flattened him. Lay the whole doll on its back
+  // (the costume stays glued, no facing flip, no weapon swing) and spin a ring
+  // of daze stars over his head. He can't act until he comes to (engine).
+  if (player.knockoutMs > 0) {
+    drawKnockedOut(ctx, sprites, layers, x, y);
+    drawDazeStars(ctx, player.pos, camera, timeMs);
+    return;
+  }
+
   // Facing is a whole-doll horizontal mirror, so every layer — body, worn
   // overlays, held weapon — draws inside one flipped transform and the
   // outfit stays glued to the body. A layer's own `flip` mirrors the sprite
@@ -2463,6 +2500,64 @@ function drawPlayer(
   const slash = meleeSlashArc(action, state.stats.timeMs);
   if (slash) {
     drawSlash(ctx, slash, slashStyleFor(player.equipment.weapon.uniqueId));
+  }
+  ctx.restore();
+}
+
+/**
+ * The prone knockout pose: lay the whole paper-doll on its back by rotating it
+ * a near-quarter-turn about its own centre and dropping it to the ground line,
+ * so the costume (body, armor, weapon) stays glued as one flattened figure. No
+ * facing flip, no weapon swing — a hero flat on the floor isn't fighting.
+ */
+function drawKnockedOut(
+  ctx: CanvasRenderingContext2D,
+  sprites: Sprites,
+  layers: ReturnType<typeof playerDollLayers>,
+  x: number,
+  y: number,
+): void {
+  ctx.save();
+  // Pivot about the sprite centre, tip it flat, and settle it a few px down so
+  // the toppled body lies along the ground rather than floating at head height.
+  ctx.translate(x + TILE / 2, y + TILE / 2 + 3);
+  ctx.rotate(Math.PI / 2 - 0.12);
+  ctx.translate(-(TILE / 2), -(TILE / 2));
+  for (const layer of layers) {
+    const image = spriteByName(sprites, layer.sprite);
+    if (!image) continue;
+    if (layer.flip) {
+      ctx.save();
+      ctx.translate(layer.dx + image.width, layer.dy);
+      ctx.scale(-1, 1);
+      ctx.drawImage(image, 0, 0);
+      ctx.restore();
+    } else {
+      ctx.drawImage(image, layer.dx, layer.dy);
+    }
+  }
+  ctx.restore();
+}
+
+/** A ring of little four-point daze stars orbiting over a knocked-out hero. */
+function drawDazeStars(
+  ctx: CanvasRenderingContext2D,
+  pos: { x: number; y: number },
+  camera: Camera,
+  timeMs: number,
+): void {
+  const cx = pos.x - camera.x;
+  const cy = pos.y - camera.y - 12; // over where his head has fallen
+  const spin = timeMs / 320;
+  ctx.save();
+  ctx.fillStyle = "#ffe3b6";
+  for (let i = 0; i < 3; i++) {
+    const a = spin + (i * Math.PI * 2) / 3;
+    const sx = Math.round(cx + Math.cos(a) * 7);
+    const sy = Math.round(cy + Math.sin(a) * 3);
+    // A tiny plus-shaped twinkle (a 3px cross) — cheap and reads as a star.
+    ctx.fillRect(sx - 1, sy, 3, 1);
+    ctx.fillRect(sx, sy - 1, 1, 3);
   }
   ctx.restore();
 }

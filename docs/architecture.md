@@ -432,7 +432,15 @@ run against synthetic fixtures with no shipped content (see
   hazards read at a glance — and the **asteroid rain**
   (`LevelDef.asteroids`, config `ASTEROIDS`): rocks spawned on a ring past
   the screen edge streak across the player (one strike per rock, jumpable,
-  armor reduces) and shove minions aside unharmed. Related:
+  armor reduces) and shove minions aside unharmed — and the **sand storms**
+  (`LevelDef.sandstorms`, config `SANDSTORMS`; MARS): small animated dust
+  gusts spawned the same way that drift across the player SLOW enough to walk
+  clear of, shove minions aside, and — catching the grounded hero — strike him
+  once for a difficulty-scaled bite (`DifficultyDef.sandstormDamageFrac`) AND
+  KNOCK HIM OUT (`sandstormHit`; `Player.knockoutMs`): he drops prone and
+  helpless (no move/attack/cast/item — every player pass is gated on the timer)
+  for `SANDSTORMS.knockoutMs` while the storm passes over him, fades, and
+  vanishes; he gets up on `knockoutRecovered`. Related:
   **apparitions** (`EnemyDef.apparition`, config `APPARITION`) are
   dialogue-only figures the combat/hazard paths all skip — they rush in to
   speak like any elite, then walk off and dissolve (`apparitionVanished`).
