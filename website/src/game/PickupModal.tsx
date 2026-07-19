@@ -9,16 +9,20 @@
 // in Hearthstone. Only bag gear triggers the card; loose pickups (medkits,
 // arrows, powerups) stay in the lower-corner PickupFeed.
 //
-// The card is clickable: tapping a bagged find equips it on the spot (the
-// caller wires `onEquip`), so a good drop is one tap from being worn. Auto-
-// equipped upgrades arrive already worn and badge themselves EQUIPPED instead.
+// An UPGRADE card is clickable: tapping a bagged upgrade equips it on the spot
+// (the caller wires `onEquip`), so a good drop is one tap from being worn.
+// Auto-equipped upgrades arrive already worn and badge themselves EQUIPPED
+// instead. A NON-upgrade card is deliberately NOT interactive — it's
+// pointer-events:none (see styles.css), so a hold steers straight through it
+// (the virtual dpad) and a quick tap over it flicks it away (dismiss handled on
+// the canvas in GameScreen) — a non-upgrade never blocks play in the thumb zone.
 //
 // One card shows at a time — the newest replaces whatever is on screen. The
 // caller keys the mount by the card's id so a new pickup restarts the pop,
 // spark, and reveal, and clears it after PICKUP_CARD_TTL_MS (kept in sync with
 // the CSS animation length in styles.css).
 
-import type { CSSProperties } from "react";
+import type { CSSProperties, Ref } from "react";
 
 import type { Quality, Tier } from "@game/core";
 
@@ -289,10 +293,14 @@ export function PickupModal({
   font,
   relicFonts,
   card,
+  cardRef,
 }: {
   font: PixelFont;
   relicFonts: Record<RelicTier, PixelFont>;
   card: PickupCard;
+  /** The card <button> element, exposed so the canvas can tap-to-dismiss a
+   * non-interactive card that lands in the thumb zone (see GameScreen). */
+  cardRef?: Ref<HTMLButtonElement>;
 }) {
   const clickable = card.onEquip != null;
   // A unique/legendary/artifact drop announces its NAME in the tier's own
@@ -317,6 +325,7 @@ export function PickupModal({
   // rather than remounting it and replaying the whole pop + reveal.
   return (
     <button
+      ref={cardRef}
       type="button"
       className={className}
       style={style}

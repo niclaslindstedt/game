@@ -2685,38 +2685,6 @@ export function wouldUpgradeSlot(
   );
 }
 
-/**
- * How much better/worse a find must score than the worn piece before the pickup
- * card calls it a clear up- or down-grade rather than a side-grade. A find
- * inside this band of the worn score is "about the same" — worth keeping the
- * tap-to-equip on, since the player may still prefer it.
- */
-const PICKUP_SIDEGRADE_BAND = 0.05;
-
-/**
- * Is `candidate` CLEARLY worse for its slot than what the hero wears now, judged
- * by the same spec-aware scores as `wouldUpgradeSlot` (weapons by `weaponScore`,
- * gear by `specGearScore`)? The pickup card drops its TAP-TO-EQUIP affordance
- * when this is true — a piece that plainly won't improve the hero isn't worth a
- * tap. An EMPTY slot and a near-tie (within `PICKUP_SIDEGRADE_BAND`) are NOT
- * downgrades: filling an empty slot always helps, and a side-grade may still be
- * one the player wants to wear. Never mutates state.
- */
-export function isSlotDowngrade(
-  state: GameState,
-  candidate: Equipment,
-): boolean {
-  const floor = 1 - PICKUP_SIDEGRADE_BAND;
-  if (candidate.slot === "weapon") {
-    const worn = weaponScore(state, state.player.equipment.weapon);
-    return worn > 0 && weaponScore(state, candidate) < worn * floor;
-  }
-  const current = state.player.equipment[candidate.slot];
-  if (current === null) return false;
-  const worn = specGearScore(state, current);
-  return worn > 0 && specGearScore(state, candidate) < worn * floor;
-}
-
 // ---- Inventory capacity (STRENGTH-scaled) --------------------------------------
 
 /**

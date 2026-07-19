@@ -4,13 +4,13 @@
 // the passive-charm and equal-durability exclusions, so a stronger passive
 // still reads as an upgrade the player can act on with a tap. It ranks gear by
 // the SPEC-AWARE score (`specGearScore`), so an off-spec +STAT find no longer
-// reads as an upgrade. Its cousin `isSlotDowngrade` marks a find CLEARLY worse
-// for its slot — the pickup card drops its tap-to-equip when it's true.
+// reads as an upgrade (and so the pickup card no longer offers a tap-to-equip
+// for it — non-upgrades are non-interactive).
 
 import { describe, expect, it } from "vitest";
 
 import type { Affix, GameState, StatName } from "@game/core";
-import { isSlotDowngrade, wouldUpgradeSlot, type Equipment } from "@game/core";
+import { wouldUpgradeSlot, type Equipment } from "@game/core";
 import { clearStage, idle, run, startGame } from "./helpers.ts";
 
 /** Mint a fixture weapon instance at a chosen tier/ilvl. */
@@ -92,34 +92,6 @@ describe("wouldUpgradeSlot", () => {
     state.player.equipment.charm = intCharm;
     const strCharm = gear(3, "test_charm", "charm", [statAffix("strength", 5)]);
     expect(wouldUpgradeSlot(state, strCharm)).toBe(false);
-    expect(isSlotDowngrade(state, strCharm)).toBe(true);
-  });
-});
-
-describe("isSlotDowngrade", () => {
-  it("flags a clearly weaker weapon as a downgrade", () => {
-    const state = startGame();
-    state.player.equipment.weapon = weapon(1, "test_hammer"); // damage 34
-    expect(isSlotDowngrade(state, weapon(2, "blaster"))).toBe(true); // damage 8
-  });
-
-  it("does not flag a stronger weapon as a downgrade", () => {
-    const state = startGame();
-    expect(isSlotDowngrade(state, weapon(1, "test_hammer"))).toBe(false);
-  });
-
-  it("does not flag a near-tie (same weapon) as a downgrade", () => {
-    const state = startGame();
-    state.player.equipment.weapon = weapon(1, "test_hammer");
-    // A fresh copy of the worn weapon scores the same — a side-grade, not a
-    // downgrade, so the pickup card keeps its tap-to-equip.
-    expect(isSlotDowngrade(state, weapon(2, "test_hammer"))).toBe(false);
-  });
-
-  it("never calls an empty slot a downgrade", () => {
-    const state = startGame();
-    expect(state.player.equipment.chest).toBeNull();
-    expect(isSlotDowngrade(state, gear(1, "test_vest", "chest"))).toBe(false);
   });
 });
 
