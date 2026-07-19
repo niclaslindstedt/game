@@ -291,19 +291,19 @@ from GitHub Packages. **Prefer the framework over hand-rolling**:
 
 ## Where new code goes
 
-| Change type                                 | Goes in                                                                                                                                             |
-| ------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Engine/gameplay logic specific to this game | `src/...` (framework-free TypeScript)                                                                                                               |
-| A level (mission)                           | `website/scripts/levels/<id>.yaml` — the YAML source of truth, compiled to `src/generated/levels.ts` by `make levels`; see the `level-design` skill |
+| Change type                                 | Goes in                                                                                                                                                                 |
+| ------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Engine/gameplay logic specific to this game | `src/...` (framework-free TypeScript)                                                                                                                                   |
+| A level (mission)                           | `website/scripts/levels/<id>.yaml` — the YAML source of truth, compiled to `src/generated/levels.ts` by `make levels`; see the `level-design` skill                     |
 | An enemy (minion/elite/boss)                | `website/scripts/enemies/<biome>/<id>.yaml` — one YAML file per mob (stem == id), compiled to `src/generated/enemies.ts` by `make levels`; see the `enemy-design` skill |
-| Generic engine code (usable by any game)    | `src/lib/...` — imported as `@game/lib/*`; earmarked for extraction to oss-framework once mature                                                    |
-| App shell, rendering, PWA, game-specific UI | `website/src/...`                                                                                                                                   |
-| Generic React/UI game components            | `website/src/lib/...` — imported as `@ui/lib/*`; earmarked for extraction to oss-framework once mature                                              |
-| Mature, playtested generic code             | extract into `oss-framework`, then import the package here                                                                                          |
-| Tests                                       | `tests/...` (engine) — name them `*_test.ts`                                                                                                        |
-| Docs update                                 | `docs/...`                                                                                                                                          |
-| Examples                                    | `examples/...`                                                                                                                                      |
-| LLM prompt                                  | `prompts/<name>/<major>_<minor>_<patch>.md` (see `prompts/README.md`)                                                                               |
+| Generic engine code (usable by any game)    | `src/lib/...` — imported as `@game/lib/*`; earmarked for extraction to oss-framework once mature                                                                        |
+| App shell, rendering, PWA, game-specific UI | `website/src/...`                                                                                                                                                       |
+| Generic React/UI game components            | `website/src/lib/...` — imported as `@ui/lib/*`; earmarked for extraction to oss-framework once mature                                                                  |
+| Mature, playtested generic code             | extract into `oss-framework`, then import the package here                                                                                                              |
+| Tests                                       | `tests/...` (engine) — name them `*_test.ts`                                                                                                                            |
+| Docs update                                 | `docs/...`                                                                                                                                                              |
+| Examples                                    | `examples/...`                                                                                                                                                          |
+| LLM prompt                                  | `prompts/<name>/<major>_<minor>_<patch>.md` (see `prompts/README.md`)                                                                                                   |
 
 ## Test conventions
 
@@ -454,7 +454,7 @@ render them are `website/src/game/DialogueOverlay.tsx` and `CutsceneOverlay.tsx`
   pipeline derives wound frames from every enemy's `role`/`gore`) and
   `generate-levels.mjs` (cross-ref the enemy ids) import the enemy catalog — so
   the chain is `generate-enemies → generate-assets → generate-levels →
-  generate-bot-tuning`. The biome directory is organizational
+generate-bot-tuning`. The biome directory is organizational
   only (the merged catalog is flat; a duplicate id fails the build). The
   round-trip guard (`tests/content/enemy_roundtrip_test.ts`) pins the compiled
   catalog to `tests/content/fixtures/enemies-snapshot.json`; accept an
