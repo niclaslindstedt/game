@@ -10,7 +10,7 @@
 // named unique, are AUTHORED, never rolled: a set piece drops only from its boss
 // (`EnemyDef.uniquesByDifficulty`).
 //
-// The catalog rolls out melee-first across the campaign: MUSKRAT (SpaceZ) and
+// The catalog rolls out melee-first across the campaign: DOGE-1 (SpaceZ) and
 // ARMSTRONG (Moon) drop MELEE sets, ELON MOSQUE on Mars and in the Rift drop
 // RANGED sets, and GROK OMEGA drops the MAGIC set. The membership here is the
 // source of truth; each member `UniqueDef` carries a matching `setId`
@@ -48,11 +48,11 @@ export type SetDef = {
 
 const ARMOR_SLOTS: readonly EquipSlot[] = ["head", "chest", "legs", "feet"];
 
-// MUSKRAT (SpaceZ) — the night-shift rat that ate the CORE. A MELEE crit/speed
+// DOGE-1 (SpaceZ) — the memecoin prototype boss. A MELEE crit/speed
 // kit: the scavenger who never stops moving and never misses a bite.
 const THE_SCAVENGERS_HIDE: SetDef = {
   id: "scavengers_hide",
-  name: "THE SCAVENGER'S HIDE",
+  name: "THE GOOD BOY",
   weaponClass: "melee",
   members: [
     "whiskerweave_hood",

@@ -523,6 +523,37 @@ export type LevelDef = {
     jumpable?: boolean;
   }[];
   /**
+   * PROP LINES: a sprite stamped at a fixed `spacing` (world px) along the
+   * segment `from`→`to`, so a level can be composed as STRUCTURED ROWS — a
+   * conveyor run down a bay, a line of workstations, a painted lane edge —
+   * instead of the random `obstacles`/`decor` scatter. Placed deterministically
+   * (no rng), exactly where the author draws them, and laid down BEFORE the
+   * scatter so decor keeps its distance.
+   *
+   * A `collide` line becomes box `Obstacle`s (sized by `half`, or a circle of
+   * `radius`) that block movement/sight/shots like a `building`; a flat line
+   * (the default) becomes `Decor` the hero walks over. Use dense spacing to read
+   * as a continuous belt/rail, wider spacing for spaced stations.
+   */
+  propLines?: {
+    /** Sprite name the renderer blits at each step (a decor/obstacle sprite). */
+    sprite: string;
+    /** Segment start (world px) — the first prop sits exactly here. */
+    from: Vec2;
+    /** Segment end (world px). */
+    to: Vec2;
+    /** Distance in world px between successive props along the segment. */
+    spacing: number;
+    /** True → colliding box/circle obstacles; false/omitted → flat decor. */
+    collide?: boolean;
+    /** Colliding: rectangular half-extents (world px). Wins over `radius`. */
+    half?: Vec2;
+    /** Colliding: circle radius when no `half` is given (default 8). */
+    radius?: number;
+    /** Colliding: a jumping hero clears it (default false). */
+    jumpable?: boolean;
+  }[];
+  /**
    * Black holes: static gravity wells that drag the grounded player,
    * enemies and loose loot toward their core — minions and the grounded
    * player are devoured there (instant death for the hero), while loot piles

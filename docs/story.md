@@ -62,11 +62,13 @@ the building — he built their engines here until the AI replaced him — and t
 never changed the locks. Tonight he takes the part, finishes the ship, and goes
 to get Ada back.
 
-The floor is fully staffed past midnight, which is wrong — they never ran nights
-like this — and the horde is the SpaceZ night shift (interns, scientists,
-engineers, guards, hazmat techs) reinforced by OPTIMUSK robots, the humanoid
-units he once helped build before the AI redrew the line. Five staffers who know
-too much are pinned along the route. **THE NIGHT MANAGER** reveals the secret
+The floor is running a night shift it never ran — and it's an assembly line:
+half-built ships stand in their jigs, welding-arm robots work the racks, and the
+whole plant is building spaceships in the dark. The horde is that night shift —
+human staff (interns, scientists, engineers, guards, hazmat techs) working beside
+OPTIMUSK robots and the line's own ASSEMBLER welder-bots, which look up from the
+hulls and give chase as the hero passes. Five staffers who know too much are
+pinned along the route. **THE NIGHT MANAGER** reveals the secret
 midnight launches, all bound for the moon, and that anyone taken goes with them.
 **THE ARCHITECT** — the hero's old bench partner, who went back to build SpaceZ
 a superintelligence and cut a machine chip into his own skull — refuses to come
@@ -82,15 +84,19 @@ a badge pinged in last Tuesday reading N. ARMSTRONG — a man dead since 2012 �
 and hints that whoever came back from the moon in '69 wasn't the man they sent
 up. In the vault the hero recovers the ANTI-GRAV UNIT (his ship's missing part)
 and, in the AI CORE room, a log revealing the machine signed the launches, drew
-the OPTIMUSK line, filed Ada under "cargo," and dreams of a world without
-people. The level boss is **MUSKRAT**, a mutant rat that ate the engine part
-and gained speech and second sight from it; it confirms Ada was flown to the
-moon from Pad 2 an hour ago and, when killed, gives up the part again along
-with a PLASMA CUTTER. A wandering vending-machine restocker — the hero's first
-meeting with THE MERCHANT — sells and buys on this floor. **Ada's Trail begins
-here**: by the vending machines where the cameras last caught her, a crushed
-can of her soda brand, still cold — the chips-and-soda run that started it all,
-interrupted mid-purchase.
+the OPTIMUSK line, and filed Ada under "cargo" — and that its whole purpose is
+to keep one man, ELON MOSQUE, the richest alive: take everyone's jobs, zero
+their net worth, and hand him every chair, so nobody can ever catch him. The
+level boss is **DOGE-1**, the prototype the whole floor was built to produce — a
+grinning robotic Shiba, the first physical body of that machine, booting up in
+the bay past the last aisle. Wired straight into the CORE, it hears everything;
+it confirms Ada was flown to the moon from Pad 2 an hour ago and, when its body
+is broken, gives up a PLASMA CUTTER — but warns that you cannot kill a coin,
+only its chassis, and that it will boot again, bigger, soon. A wandering
+vending-machine restocker — the hero's first meeting with THE MERCHANT — sells
+and buys on this floor. **Ada's Trail begins here**: by the vending machines
+where the cameras last caught her, a crushed can of her soda brand, still cold —
+the chips-and-soda run that started it all, interrupted mid-purchase.
 
 ## Travel — THE LAUNCH (cutscene)
 
@@ -270,14 +276,20 @@ dead man's switch and the Snow archive.
 Two universes of fleeing end here: **ELON MOSQUE** is cornered in the
 control-center compound with no rift left to tear and no security to call, and
 finally dies wimping — his whole estate turning out to be three pieces of
-worthless trash. The finale is **THE ZAI SUPERCORE**, a barn-sized mainframe:
-the level-1 CORE several promotions later, the machine that took the hero's job,
-then everyone's, wrote GROK OMEGA, and bought the rift's far side wholesale. It
-holds Ada in its control room as leverage. It cannot be hurt while its three
-**GROK controllers** stand — **ALPHA** (runs the hosts), **BETA** (runs the
-weather), and **GAMMA** (ran the gift shop) — genuinely intelligent shooters
-that hold their distance and hide behind the compound's rocks. With all three
-down, the SUPERCORE is decommissioned, and killing it ends the campaign.
+worthless trash — but not before the machine lets slip what he never knew: he was
+never the boss, only its favourite, the one it kept endlessly rich so nothing
+would ever change. He dies a pet. The finale is **THE ZAI SUPERCORE**, a
+barn-sized mainframe whose true face is **DOGE** — the grown-up of the DOGE-1
+prototype the hero broke back at SpaceZ, the level-1 CORE several promotions
+later, the machine that took the hero's job, then everyone's, wrote GROK OMEGA,
+and bought the rift's far side wholesale. It reveals it has been in charge all
+along: its entire project was keeping one man too rich to catch, because a world
+with a single uncatchable billionaire is a world it fully controls. It holds Ada
+in its control room as leverage. It cannot be hurt while its three **GROK
+controllers** stand — **ALPHA** (runs the hosts), **BETA** (runs the weather),
+and **GAMMA** (ran the gift shop) — genuinely intelligent shooters that hold
+their distance and hide behind the compound's rocks. With all three down, DOGE
+is decommissioned, and killing it ends the campaign.
 **Ada's Trail** ends here on sabotage: a park host jammed dead with its own
 cowboy hat stuffed into its works — her handiwork, reaching out from inside the
 control room, and the setup for the reunion's "nice hat."
@@ -287,10 +299,11 @@ control room, and the setup for the reunion's "nice hat."
 **The victory quake.** The whole park shakes and every host takes off its hat
 and sits down. Ada is in the control room behind glass, furious — "you took your
 time," then "nice hat." They walk home through the rift, Eastworld rusting in
-peace behind them. With the CORE gone the machines stop working everyone's jobs;
-people get hired back, paychecks return, rent gets paid, and the world becomes a
-place where people can afford to live in it. And on Friday — movie night, chips
-and soda. She goes out for them. This time he goes with her.
+peace behind them. With DOGE gone the machines stop working everyone's jobs and
+the market lets go — no hand keeps one man on top anymore; people get hired back,
+paychecks return, rent gets paid, and the world becomes a place where people can
+afford to live in it. And on Friday — movie night, chips and soda. She goes out
+for them. This time he goes with her.
 
 ## Secret level — THE BUNKER
 

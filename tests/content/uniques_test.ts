@@ -235,11 +235,11 @@ describe("boss unique drop tables", () => {
     const easy = [...(perRung.easy ?? [])].sort();
     expect([...(perRung.medium ?? [])].sort()).toEqual(easy);
     expect([...(perRung.hard ?? [])].sort()).toEqual(easy);
-    // The campaign rungs list each boss's low-ilvl taste (+ MUSKRAT's bag /
+    // The campaign rungs list each boss's low-ilvl taste (+ DOGE-1's bag /
     // GROK's charm) — a merged 20 across the five bosses.
     expect(easy.length).toBe(20);
     // The ENDGAME rungs are the SET FARM: each boss opens its whole green set +
-    // its signature weapon (MUSKRAT/GROK also pay a bag/charm), so a
+    // its signature weapon (DOGE-1/GROK also pay a bag/charm), so a
     // nightmare/jesus grind can complete a set from one boss. That's far more
     // per rung than the campaign taste — see sets_test.ts for the per-set proof.
     expect((perRung.nightmare ?? []).length).toBe(26);

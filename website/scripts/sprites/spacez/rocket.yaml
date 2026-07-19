@@ -3,13 +3,13 @@ family: spacez
 size: [32, 48]
 description: >
   The prototype rocket landmark — a white launch vehicle with a red nose cone
-  and fins on the pad, where MUSKRAT nests beneath.
+  and fins on the pad, where DOGE-1 boots up beneath.
 subject:
   kind: landmark prop
   build: a tall launch vehicle standing upright on splayed landing legs, tapering to a nose cone
   features: a red nose cone and swept red fins, cyan-lit porthole windows down the body
   accent: red nose and fins on a white hull
-  flavor: the SpaceZ prototype on its pad; MUSKRAT nests in the shadow beneath it
+  flavor: the SpaceZ prototype on its pad; DOGE-1 boots up in the shadow beneath it
 palette:
   A: "#8d9196" # grey hull shading
   O: "#1a1c2c" # outline

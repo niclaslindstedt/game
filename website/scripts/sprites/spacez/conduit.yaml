@@ -1,0 +1,23 @@
+name: conduit
+family: spacez
+size: [16, 6]
+description: >
+  A tidy run of cable conduit laid flush along the assembly-floor edge — a slate
+  trunk with amber junction bands and connector boxes; flat ground decor.
+subject:
+  kind: ground decor prop
+  build: a straight length of cable conduit with a connector box at each end
+  accent: slate conduit with amber junction bands
+  flavor: the line's power run, routed and clipped down — not the loose cords of a lab
+palette:
+  O: "#1a1c2c" # outline
+  v: "#60687e" # slate conduit
+  b: "#3f4553" # conduit shadow
+  y: "#ffb02e" # amber junction band
+grid: |
+  ................
+  .OyOvvvvvvOyO...
+  .OybvvvvvvbyO...
+  .OybvvvvvvbyO...
+  .OyObbbbbbOyO...
+  ................

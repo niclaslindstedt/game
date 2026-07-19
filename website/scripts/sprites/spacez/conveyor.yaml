@@ -1,0 +1,36 @@
+name: conveyor
+family: spacez
+size: [20, 16]
+description: >
+  A segment of assembly-line conveyor belt — a dark rubber belt between bright
+  slate side rails, with roller seams and amber guide dashes; tiles end-to-end
+  into a continuous belt running down a build bay. Flat ground decor.
+subject:
+  kind: ground decor prop
+  build: a straight conveyor-belt section seen from above, side rails framing a dark belt
+  features: roller seams across the belt and a dashed amber centre guide
+  accent: dark belt with amber guide dashes between chrome rails
+  flavor: the line the half-built ships ride down as the plant assembles them
+palette:
+  v: "#3f4553" # dark rail shadow
+  V: "#9095a5" # bright rail
+  b: "#2b2f3a" # dark belt
+  B: "#454b59" # belt roller seam
+  y: "#ffb02e" # amber guide dash
+grid: |
+  vVVbbbbbbbbbbbbbbVVv
+  vVVbBBBBBBBBBBBBbVVv
+  vVVbbbbbbbbbbbbbbVVv
+  vVVbbbbbbyybbbbbbVVv
+  vVVbbbbbbyybbbbbbVVv
+  vVVbbbbbbbbbbbbbbVVv
+  vVVbBBBBBBBBBBBBbVVv
+  vVVbbbbbbbbbbbbbbVVv
+  vVVbbbbbbyybbbbbbVVv
+  vVVbbbbbbyybbbbbbVVv
+  vVVbbbbbbbbbbbbbbVVv
+  vVVbBBBBBBBBBBBBbVVv
+  vVVbbbbbbbbbbbbbbVVv
+  vVVbbbbbbyybbbbbbVVv
+  vVVbbbbbbyybbbbbbVVv
+  vVVbbbbbbbbbbbbbbVVv

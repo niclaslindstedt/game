@@ -197,7 +197,7 @@ for (const tier of RELIC_TIERS) {
 // Specimen: the alphabet plus a real name of each tier, struck in that tier's
 // own metal, over the card's dark ground — the surface to judge the font on.
 const relicSpecimen = [
-  { text: "UNIQUE ABCDEFG MUSKRAT'S TOOTH", tier: "unique" },
+  { text: "UNIQUE ABCDEFG DOGE'S FANG", tier: "unique" },
   { text: "LEGENDARY HIJKLMN DRAGON'S BREATH", tier: "legendary" },
   { text: "ARTIFACT OPQRSTU WORLDSPLITTER", tier: "artifact" },
   { text: "MJÖLNIR EXCALIBUR THE PANOPTICON", tier: "unique" },

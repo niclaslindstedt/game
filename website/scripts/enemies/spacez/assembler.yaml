@@ -1,0 +1,16 @@
+id: assembler
+name: ASSEMBLER
+role: minion
+sprite: assembler
+gore: sparks
+hp: 70
+speed: 16
+radius: 10
+contactDamage: 20
+critChance: 0.12
+contactCooldownMs: 700
+ai:
+  aggroRadius: 950
+dropProfile:
+  dropBonus: 0.25
+  tierBonus: 0.2

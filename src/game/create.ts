@@ -185,6 +185,11 @@ export function createGame(
   // architecture.
   const obstacles = buildWalls(def, () => nextId++);
   obstacles.push(...buildBuildings(def, () => nextId++));
+  // Structured prop lines (conveyor runs, workstation rows) — placed before the
+  // scatter so scattered pieces keep clear of the architecture. Its colliding
+  // props join the obstacle field; its flat props are merged into `decor` below.
+  const propLines = buildPropLines(def, () => nextId++);
+  obstacles.push(...propLines.obstacles);
   const doors = buildDoors(def, obstacles, () => nextId++);
   // Break hp for this run's crates, scaled once to the hero's starting level so
   // a crate takes about as many blows as a weak trash mob all campaign.
@@ -341,7 +346,7 @@ export function createGame(
     mobLvl,
   );
 
-  const decor = scatterDecor(rng, def);
+  const decor = [...propLines.decor, ...scatterDecor(rng, def)];
 
   // Untouchable dialogue figures are not foes: they can never be killed, so
   // counting them would leave the HUD's total forever out of reach.
@@ -1108,6 +1113,51 @@ function buildBuildings(def: LevelDef, takeId: () => number): Obstacle[] {
     });
   }
   return obstacles;
+}
+
+/**
+ * Expand the level's PROP LINES (`LevelDef.propLines`) into STRUCTURED placements:
+ * a sprite stamped every `spacing` world px along each `from`→`to` segment, so a
+ * factory floor reads as aligned rows (a conveyor belt, a line of workstations, a
+ * painted lane) instead of random scatter. Deterministic — no rng, so the
+ * structure sits exactly where the author drew it. A `collide` line yields box/
+ * circle `Obstacle`s (like a `building`); a flat line yields non-colliding
+ * `Decor`. The first prop sits on `from`, the rest march toward `to` at
+ * `spacing`, the last one at or before `to`.
+ */
+export function buildPropLines(
+  def: LevelDef,
+  takeId: () => number,
+): { obstacles: Obstacle[]; decor: Decor[] } {
+  const obstacles: Obstacle[] = [];
+  const decor: Decor[] = [];
+  for (const line of def.propLines ?? []) {
+    const dx = line.to.x - line.from.x;
+    const dy = line.to.y - line.from.y;
+    const len = Math.hypot(dx, dy);
+    const step = Math.max(1, line.spacing);
+    const ux = len === 0 ? 0 : dx / len;
+    const uy = len === 0 ? 0 : dy / len;
+    for (let d = 0; d <= len + 1e-6; d += step) {
+      const pos = vec(line.from.x + ux * d, line.from.y + uy * d);
+      if (line.collide) {
+        const half = line.half ? vec(line.half.x, line.half.y) : undefined;
+        obstacles.push({
+          id: takeId(),
+          kind: line.sprite,
+          sprite: line.sprite,
+          pos,
+          radius: half ? boundingRadius(half) : (line.radius ?? 8),
+          ...(half ? { half } : {}),
+          jumpable: line.jumpable ?? false,
+        });
+      } else {
+        decor.push({ kind: line.sprite, sprite: line.sprite, pos });
+      }
+      if (len === 0) break;
+    }
+  }
+  return { obstacles, decor };
 }
 
 /**

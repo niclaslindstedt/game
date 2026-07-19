@@ -2,16 +2,16 @@ description: |-
   LEVEL 1 - SPACEZ HQ. Ada's trail points off-planet and our hero builds
   spaceships for a living - but his garage ship's engine needs the one part
   SpaceZ keeps in its cleanroom, and the night shift is not letting it leave the
-  building. The sales floor is laid out like a grocery store: a serpentine of
-  solid SHELF AISLES with alternating end-gaps herds the player up and down the
-  whole floor left-to-right, so clearing the level means walking almost every
-  square of it. MUSKRAT, the mutant rat who ate the part, nests under the
-  prototype rocket in the bay past the last aisle.
+  building. The assembly floor is laid out like an assembly line: a serpentine of
+  solid FUSELAGE-JIG AISLES with alternating end-gaps herds the player up and down
+  the whole floor left-to-right, so clearing the level means walking almost every
+  square of it. DOGE-1, the prototype the whole line is built to make, boots up
+  under the prototype rocket in the bay past the last aisle.
   THE ONBOARDING FEEL: a gentle start that eases the player into steering and the
   loot loop (an opening-strike beat draws the weapon, early drops reward the first
   kills), then a build-and-release arc - the horde swells through the aisles,
   eases into a calm strip by the prototype where the vending-machine merchant
-  waits so the player can shop, then surges for MUSKRAT.
+  waits so the player can shop, then surges for DOGE-1.
   TWO OFF-PATH DETOURS reward the player who pokes into a dead-end - the "explore
   for loot" lesson: the STOCK ROOM, a walled cul-de-sac off the last aisle
   holding a SpaceZ locker, and the BREAK ROOM, a pocket off an early aisle where
@@ -53,17 +53,40 @@ height: 1200
 gravity: 800
 biome: spacez
 tiles:
+  # THREE READABLE FLOOR ZONES so the plant reads as a workplace at a glance
+  # (no random patch blobs): the light lab tile is the level-wide default for the
+  # OFFICES, the corner vaults and the walkways; a warm checker-plate deck floors
+  # the central ASSEMBLY FLOOR; a blue rivet deck floors the LAUNCH BAY past the
+  # last aisle where DOGE-1 boots up. Zones are purely visual — collision never
+  # reads tiles — so the tested wall/path geometry is untouched.
   ground:
     common: lab_0
     rare: lab_1
-    rareEvery: 11
-  patch:
-    a: vent_0
-    b: vent_1
-    every: 9
+    rareEvery: 13
+  zones:
+    # THE ASSEMBLY FLOOR — the central build bays, warm industrial deck plate.
+    - rect:
+        x: 300
+        y: 0
+        width: 1310
+        height: 1200
+      ground:
+        common: vent_0
+        rare: vent_1
+        rareEvery: 9
+    # THE LAUNCH BAY — DOGE-1's arena past the last aisle, a blue rivet deck.
+    - rect:
+        x: 1610
+        y: 0
+        width: 390
+        height: 1200
+      ground:
+        common: deck_0
+        rare: deck_1
+        rareEvery: 13
 heroSuited: false
 foes: STAFF
-# EMPLOYEE STAMPEDES — the "asteroid" beat of the sales floor: every 6-11s a wall
+# EMPLOYEE STAMPEDES — the "asteroid" beat of the assembly floor: every 6-11s a wall
 # of five panicked staffers charges right-to-left across the aisles at a steady,
 # heavy pace, a dust cloud boiling off its back. It tramples and KILLS any minion in
 # its lane (no farm) and knocks the grounded hero down (~20% hp + a 2s knockdown)
@@ -96,8 +119,8 @@ landmarks:
       y: 520
 objective:
   type: killBoss
-# THE INTENDED PATH: the route through the shelf-aisle gaps from spawn to
-# MUSKRAT. The autopilot follows it (so it rounds the walls instead of wedging),
+# THE INTENDED PATH: the route through the jig-aisle gaps from spawn to
+# DOGE-1. The autopilot follows it (so it rounds the walls instead of wedging),
 # and the app points its "go this way" arrow along it. Each leg threads the next
 # aisle's pass-gap, ending at the PIT STOP and the boss.
 path:
@@ -169,7 +192,7 @@ spawns:
       y: 150
     ramp: fierce
     hp: 180
-  - enemy: muskrat
+  - enemy: doge_1
     at:
       x: 1850
       y: 590
@@ -180,7 +203,7 @@ safeZones:
   # horde is repelled out of the entrance itself, not just the room beyond — the
   # player (and the autopilot) walks IN clean instead of grinding through a wave
   # bottlenecked at the chokepoint. A breather + the vending-machine merchant
-  # before MUSKRAT (who sits ~240px east, outside the zone).
+  # before DOGE-1 (who sits ~240px east, outside the zone).
   - shape: circle
     pos:
       x: 1610
@@ -239,7 +262,7 @@ chests:
 tempo:
   # Build-and-release onboarding arc over the 280s ramp: a gentle start while the
   # player learns to steer, a mid-floor swell, a breather at the PIT STOP / shop
-  # beat, then a surge for MUSKRAT.
+  # beat, then a surge for DOGE-1.
   - at: 0
     intensity: 0.5
   - at: 0.18
@@ -266,7 +289,7 @@ spawners:
   # cut corner still trips it) and DRAINING its mob count — the emitted mobs give
   # chase, so he fights and clears them ON THE MOVE, then the patch is empty and
   # he walks on. The counts are sized so clearing the sweep levels him enough to
-  # finish MUSKRAT (a finite total, not a bottomless wave). `maxAlive` is a
+  # finish DOGE-1 (a finite total, not a bottomless wave). `maxAlive` is a
   # generous 20 (up from 15) so a player who WANTS to fight has a thick enough
   # crowd on screen to level on — the onboarding floor should reward engaging the
   # horde with real levels before the boss, not throttle the fight down to a
@@ -276,7 +299,7 @@ spawners:
   # hazmat/OPTIMUSK).
   # --- Opening: a light knot of interns the level-1 hero can actually clear to
   # find his feet — deliberately small so the opener LEVELS him instead of
-  # pinning him against the first shelf. ---
+  # pinning him against the first jig. ---
   # Counts sum to ~900 across the sweep (an 800–1200 "clear the whole floor"
   # battle), back-loaded so the opener stays the gentle onboarding knot and the
   # aisles swell toward the boss. The per-map XP cap (not the head-count) bounds
@@ -342,17 +365,19 @@ spawners:
     lingering: 10
     members:
       - enemy: engineer
-        count: 70
+        count: 55
       - enemy: guard
-        count: 70
+        count: 45
+      - enemy: assembler
+        count: 40
   - after: a3
     at: { x: 1200, y: 340 }
     maxAlive: 20
     ramp: fierce
     members:
       - enemy: guard
-        count: 40
-      - enemy: hazmat
+        count: 30
+      - enemy: assembler
         count: 30
   # --- Aisle 4 (up-sweep toward the boss mouth). ---
   - id: a4
@@ -363,26 +388,30 @@ spawners:
     lingering: 8
     members:
       - enemy: guard
-        count: 60
+        count: 45
       - enemy: hazmat
-        count: 50
-      - enemy: optimusk
         count: 40
-  # --- The boss bay: a last surge of OPTIMUSK units as MUSKRAT wakes. ---
+      - enemy: optimusk
+        count: 35
+      - enemy: assembler
+        count: 40
+  # --- The boss bay: a last surge of OPTIMUSK and ASSEMBLER units as DOGE-1 wakes. ---
   - at: { x: 1780, y: 600 }
     triggerRadius: 320
     lingering: 6
     members:
       - enemy: optimusk
-        count: 45
+        count: 40
+      - enemy: assembler
+        count: 30
       - enemy: hazmat
-        count: 35
+        count: 25
 walls:
-  # === GROCERY-STORE SHELF AISLES ===
-  # Five full-height shelf walls, each with ONE wide (~440px) pass-gap that
+  # === ASSEMBLY-LINE FUSELAGE-JIG AISLES ===
+  # Five full-height jig walls, each with ONE wide (~440px) pass-gap that
   # ALTERNATES between a LOW band and a HIGH band, so crossing the floor sweeps
   # the hero DOWN then UP then down then up, aisle by aisle, before the mid mouth
-  # into MUSKRAT's bay. The gaps are deliberately WIDE — a pressured hero (and the
+  # into DOGE-1's bay. The gaps are deliberately WIDE — a pressured hero (and the
   # autopilot) can thread them without pixel-perfect lining-up — and the swing is
   # kept to ~370px centre-to-centre so the weave reads without being a marathon
   # climb. The authored `path` threads the gap centres so the autopilot (and the
@@ -463,7 +492,7 @@ walls:
       y: 1192
     radius: 8
     jumpable: false
-  # --- Aisle 5 (x=1610), gap MID (430-780): the mouth into MUSKRAT's bay. ---
+  # --- Aisle 5 (x=1610), gap MID (430-780): the mouth into DOGE-1's bay. ---
   - kind: wall
     from:
       x: 1610
@@ -687,33 +716,73 @@ placedItems:
     pos:
       x: 1960
       y: 60
+# STRUCTURED ASSEMBLY LINES (placed + aligned, NOT scatter) — the structure that
+# makes the floor read as a working factory: a conveyor belt runs down the centre
+# of each of the four build bays, and half-built ships (fuselages) are stationed
+# in aligned columns beside two of the lines as solid cover. Everything else is a
+# deliberately LIGHT scatter on top, so the eye reads the lines first.
+propLines:
+  # Conveyor belts down the four build bays (flat — the hero walks the line).
+  - sprite: conveyor
+    from: { x: 620, y: 40 }
+    to: { x: 620, y: 1160 }
+    spacing: 16
+  - sprite: conveyor
+    from: { x: 940, y: 300 }
+    to: { x: 940, y: 1160 }
+    spacing: 16
+  - sprite: conveyor
+    from: { x: 1240, y: 40 }
+    to: { x: 1240, y: 1160 }
+    spacing: 16
+  - sprite: conveyor
+    from: { x: 1500, y: 40 }
+    to: { x: 1500, y: 880 }
+    spacing: 16
+  # Ships on the line — colliding cover, stationed in aligned columns beside the
+  # belts (clear of the aisle pass-gaps and the pinned elites).
+  - sprite: fuselage
+    from: { x: 690, y: 180 }
+    to: { x: 690, y: 1060 }
+    spacing: 440
+    collide: true
+    radius: 12
+  - sprite: fuselage
+    from: { x: 1310, y: 180 }
+    to: { x: 1310, y: 1060 }
+    spacing: 440
+    collide: true
+    radius: 12
 obstacles:
   - kind: server
-    count: 16
+    count: 6
     radius: 9
     jumpable: false
   - kind: vending
-    count: 8
+    count: 6
     radius: 8
     jumpable: false
   - kind: desk
-    count: 18
+    count: 6
     radius: 8
     jumpable: true
   - kind: crate
-    count: 22
+    count: 14
     radius: 7
     jumpable: true
     breakable: true
 decor:
-  - kind: papers
-    count: 24
-  - kind: cable
-    count: 16
-  - kind: stain
-    count: 12
-  - kind: plant
-    count: 10
+  # A LIGHT flat-decor scatter on the structured floor: painted hazard-chevron
+  # lanes for colour, tidy conduit runs, open parts bins, and weld scorch where a
+  # bot was working the hull.
+  - kind: floor_marks
+    count: 8
+  - kind: conduit
+    count: 6
+  - kind: parts_bin
+    count: 6
+  - kind: weld_scorch
+    count: 5
 decorClearance: 70
 firstSightThoughts:
   - enemy: intern
