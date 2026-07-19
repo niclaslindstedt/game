@@ -586,6 +586,11 @@ export function GameScreen({
   const powerupDockRef = useRef<HTMLDivElement>(null);
   const jumpQueuedRef = useRef(false);
   const useItemQueuedRef = useRef(false);
+  // A pause the VIEWER opened by hand (clicking the timer / pressing P) while
+  // watching BOT VIEW. The bot's input loop clears auto-pauses (tab blur) so
+  // autoplay keeps running, but must LEAVE a hand-opened pause alone — that's
+  // the only way a viewer can reach the pause menu to quit to the main menu.
+  const userPausedRef = useRef(false);
   // The consumable dock: a medkit / stamina-potion / repair-kit use queued this
   // frame (a slot tap or its bindable key), spent on the next sim tick.
   const useMedkitQueuedRef = useRef(false);
@@ -1162,14 +1167,18 @@ export function GameScreen({
     // together; resume lifts both. Music truly resumes in place — the chiptune
     // player keeps its position across the pause. Guarded so it only toggles
     // mid-run, never over an intro/level-up/end splash.
-    const pause = () => {
+    const pause = (userInitiated = false) => {
       if (state.phase !== "playing") return;
+      // A hand-opened pause latches so the bot's input loop won't clear it (an
+      // auto-pause from tab blur passes userInitiated=false and stays clearable).
+      if (userInitiated) userPausedRef.current = true;
       pauseGame(state);
       pauseMusic();
       bumpUi();
     };
     const resume = () => {
       if (state.phase !== "paused") return;
+      userPausedRef.current = false;
       resumeGame(state);
       resumeMusic();
       bumpUi();
@@ -1220,7 +1229,7 @@ export function GameScreen({
           return;
         case "pause":
           if (state.phase === "playing") {
-            pause();
+            pause(true);
             playUiSound(synth, "confirm");
           } else if (state.phase === "paused") {
             resume();
@@ -1353,7 +1362,7 @@ export function GameScreen({
           playUiSound(synth, "back");
           bumpUi();
         } else if (state.phase === "playing") {
-          pause();
+          pause(true);
           playUiSound(synth, "confirm");
         } else if (state.phase === "paused") {
           resume();
@@ -1579,8 +1588,13 @@ export function GameScreen({
         if (bot) {
           // The bot is a drop-in input source; it also clears the paused
           // phases a human would click through (including an auto-pause from
-          // the headless tab reporting itself hidden/unfocused).
-          if (state.phase === "paused") resumeGame(state);
+          // the headless tab reporting itself hidden/unfocused). But a pause the
+          // VIEWER opened by hand (timer tap / P while watching BOT VIEW) is left
+          // alone so the pause menu holds and they can quit to the main menu —
+          // the loop still runs, step() just no-ops under the paused phase.
+          if (state.phase === "paused" && !userPausedRef.current) {
+            resumeGame(state);
+          }
           if (state.phase === "cutscene") skipCutscene(state);
           if (state.phase === "intro") skipIntro(state);
           if (state.phase === "outro") skipOutro(state);
@@ -3486,6 +3500,9 @@ export function GameScreen({
                 }}
                 onPause={() => {
                   if (state?.phase === "playing") {
+                    // Latch it as viewer-initiated so BOT VIEW's autopilot won't
+                    // clear the pause before the menu can show (see the sim loop).
+                    userPausedRef.current = true;
                     pauseGame(state);
                     pauseMusic();
                     playUiSound(synth, "confirm");
@@ -4124,6 +4141,7 @@ export function GameScreen({
           font={font}
           onResume={() => {
             if (state.phase !== "paused") return;
+            userPausedRef.current = false;
             resumeGame(state);
             resumeMusic();
             bumpUi();
