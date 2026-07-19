@@ -605,6 +605,15 @@ export function GameScreen({
   // checks it against the discovered merchant — a tap on him at the counter
   // opens the shop instead of jumping.
   const shopTapRef = useRef<{ x: number; y: number } | null>(null);
+  // The live pickup-card <button> element, so a tap landing over a
+  // NON-INTERACTIVE (non-upgrade) card can dismiss it instead of jumping — its
+  // steering already passes straight through (pointer-events:none). Null when
+  // no card is up. `pickupDismissRef` carries the dismiss action for the
+  // current card, or null when the card is a tap-to-equip upgrade (which owns
+  // its own tap) — so the canvas only steals the tap for a card meant to be
+  // flicked away.
+  const pickupCardElRef = useRef<HTMLButtonElement | null>(null);
+  const pickupDismissRef = useRef<(() => void) | null>(null);
   // Desktop keyboard steering: which movement-bound key codes are held right
   // now, and whether the walk modifier is down. Read every sim tick (the loop
   // resolves each held code to a direction via the player's key bindings).
@@ -933,6 +942,15 @@ export function GameScreen({
     const cardQueue: PickupCard[] = [];
     let cardShowing = false;
 
+    // Clear the card on screen now and roll the queue forward (the tap-to-
+    // dismiss action and the dwell timer both land here).
+    const dismissCurrentCard = () => {
+      if (pickupCardTimer) clearTimeout(pickupCardTimer);
+      setPickupCard(null);
+      pickupDismissRef.current = null;
+      pumpPickupCards();
+    };
+
     // Pull the next queued card onto the screen, sizing its dwell to the state
     // at show time: a better find lingers, an ordinary one is halved while a
     // backlog still waits behind it, and otherwise runs the full base time.
@@ -941,9 +959,15 @@ export function GameScreen({
       const next = cardQueue.shift();
       if (!next) {
         cardShowing = false;
+        pickupDismissRef.current = null;
         return;
       }
       cardShowing = true;
+      // A NON-INTERACTIVE card (no tap-to-equip — every non-upgrade) is
+      // tap-to-dismiss: the canvas flicks it away when a tap lands over it, so
+      // a non-upgrade never squats in the thumb zone. A tap-to-equip upgrade
+      // owns its own tap, so it isn't dismissable this way.
+      pickupDismissRef.current = next.onEquip ? null : dismissCurrentCard;
       const better = next.upgrade || next.equipped;
       const ttlMs = better
         ? PICKUP_CARD_TTL_UPGRADE_MS
@@ -954,6 +978,7 @@ export function GameScreen({
       if (pickupCardTimer) clearTimeout(pickupCardTimer);
       pickupCardTimer = setTimeout(() => {
         setPickupCard(null);
+        pickupDismissRef.current = null;
         pumpPickupCards();
       }, ttlMs);
     };
@@ -973,17 +998,20 @@ export function GameScreen({
         : undefined;
       const color = TIER_COLORS[tier] ?? TIER_COLORS.regular;
       const id = ++pickupCardSeq;
-      // Tap-to-equip is offered only for a bagged find the hero can wear right
-      // now — an auto-equipped upgrade is already worn, and an under-leveled
-      // find would be refused. The item is located by its stable id so a bag
-      // rearranged while the card is up still equips the right piece, and its
-      // requirement is read off the INSTANCE (`itemLevelReq`) so an artifact's
-      // cap gate matches the engine's refusal instead of its lower base req.
+      // Tap-to-equip is offered ONLY for a bagged UPGRADE the hero can wear
+      // right now — a non-upgrade is never interactive (it's tap-to-dismiss /
+      // steer-through instead), an auto-equipped upgrade is already worn, and an
+      // under-leveled find would be refused. The item is located by its stable
+      // id so a bag rearranged while the card is up still equips the right
+      // piece, and its requirement is read off the INSTANCE (`itemLevelReq`) so
+      // an artifact's cap gate matches the engine's refusal instead of its lower
+      // base req.
       const bagged =
         itemId != null
           ? (state.player.inventory.find((it) => it?.id === itemId) ?? null)
           : null;
       const canEquip =
+        upgrade &&
         !equipped &&
         defId != null &&
         bagged != null &&
@@ -1144,10 +1172,33 @@ export function GameScreen({
     // steering setting — cursor-follow mode turns clicks into item use
     // (Space jumps), classic mode keeps click-tap = jump.
     const pointer = trackPointer(canvas, {
-      onTap: ({ pointerType }) => {
+      onTap: ({ fingers, pointerType }) => {
         // Remember where the tap landed (CSS px): the sim loop checks it
         // against the merchant before letting it act as a jump.
         shopTapRef.current = { x: pointer.state.x, y: pointer.state.y };
+        // A single-finger tap landing ON a non-interactive pickup card flicks
+        // it away instead of jumping — the card is pointer-events:none so the
+        // press already steers/jumps through it, and this makes a quick tap the
+        // deliberate way to clear a non-upgrade out of the thumb zone.
+        if (fingers === 1) {
+          const dismiss = pickupDismissRef.current;
+          const el = pickupCardElRef.current;
+          if (dismiss && el) {
+            const card = el.getBoundingClientRect();
+            const view = canvas.getBoundingClientRect();
+            const px = view.left + pointer.state.x;
+            const py = view.top + pointer.state.y;
+            if (
+              px >= card.left &&
+              px <= card.right &&
+              py >= card.top &&
+              py <= card.bottom
+            ) {
+              dismiss();
+              return; // swallow the jump — the tap was spent dismissing
+            }
+          }
+        }
         if (pointerType !== "mouse" || getSettings().steering === "hold") {
           jumpQueuedRef.current = true;
         }
@@ -2978,6 +3029,7 @@ export function GameScreen({
       canvas.removeEventListener("pointerdown", unlock);
       pickupTimers.forEach(clearTimeout);
       if (pickupCardTimer) clearTimeout(pickupCardTimer);
+      pickupDismissRef.current = null;
     };
   }, [
     assets,
@@ -3908,6 +3960,7 @@ export function GameScreen({
           font={font}
           relicFonts={assets.relicFonts}
           card={pickupCard}
+          cardRef={pickupCardElRef}
         />
       )}
 
