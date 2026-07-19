@@ -1,0 +1,25 @@
+id: sentry_gun
+name: SENTRY GUN
+role: minion
+sprite: sentry_gun
+gore: sparks
+hp: 120
+speed: 0
+radius: 9
+contactDamage: 20
+critChance: 0.12
+contactCooldownMs: 800
+ranged:
+  damage: 26
+  cooldownMs: 1900
+  range: 300
+  projectile:
+    speed: 210
+    radius: 3
+    lifetimeMs: 1800
+    sprite: turret_slug
+dropProfile:
+  dropBonus: 0.4
+  tierBonus: 0.3
+ai:
+  aggroRadius: 1200

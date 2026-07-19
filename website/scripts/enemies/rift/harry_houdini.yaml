@@ -1,0 +1,29 @@
+id: harry_houdini
+name: HARRY HOUDINI
+role: elite
+levelBonus: 3
+sprite: harry_houdini
+apparition: true
+phasing: true
+hp: 50
+speed: 18
+radius: 9
+contactDamage: 0
+critChance: 0
+contactCooldownMs: 700
+dialogue:
+  - - PSST. CARE TO SEE THE
+    - GREATEST ESCAPE EVER
+    - PERFORMED? WATCH CLOSELY.
+  - hero:
+      - HOUDINI? YOU'VE BEEN DEAD
+      - FOR A HUNDRED YEARS.
+  - - DEAD? NO. IN 1926 I ESCAPED THE
+    - BOX, CHAINS, RIVER - AND THE
+    - WORLD. ONE DOOR TOO FAR.
+  - - THE TRICK TO ANY ESCAPE IS
+    - "SIMPLE: BE SOMEWHERE ELSE."
+    - OBSERVE.
+ai:
+  aggroRadius: 260
+  rushSpeed: 105

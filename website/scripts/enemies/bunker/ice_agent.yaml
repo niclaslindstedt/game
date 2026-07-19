@@ -1,0 +1,12 @@
+id: ice_agent
+name: ICE AGENT
+role: minion
+sprite: ice_agent
+hp: 120
+speed: 27
+radius: 8
+contactDamage: 22
+critChance: 0.14
+contactCooldownMs: 650
+ai:
+  aggroRadius: 1050

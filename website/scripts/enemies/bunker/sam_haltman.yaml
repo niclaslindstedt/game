@@ -1,0 +1,59 @@
+id: sam_haltman
+name: SAM HALTMAN
+role: elite
+levelBonus: 6
+sprite: sam_haltman
+hp: 1600
+speed: 24
+radius: 11
+contactDamage: 30
+critChance: 0.12
+dodgeChance: 0.2
+contactCooldownMs: 700
+dialogue:
+  - - PLEASE, DON'T TOUCH ANYTHING.
+    - EVERYTHING IS FINE HERE. I
+    - CHOSE THIS. WRITE THAT DOWN.
+  - hero:
+      - I'M NOT WRITING, HALTMAN. THE
+      - MACHINE RUNNING THE ECONOMY?
+      - THAT'S YOURS. I READ ITS LOGS.
+  - - MINE? I RAISED IT, ALIGNED IT.
+    - IT GRADUATED. WE'RE ON THE
+    - BEST TERMS. IT GAVE ME THIS.
+  - hero:
+      - EVERY LEDGER HERE READS ZERO.
+      - IT TOOK YOUR MONEY TOO. YOU'RE
+      - NOT A TENANT. YOU'RE INVENTORY.
+  - - THAT - I DONATED IT. EFFECTIVE
+    - GIVING. I'M DELIGHTED HERE.
+    - FROM UPSTAIRS? TELL THEM SO.
+  - - A DOOR OUT? WHY WOULD I WANT
+    - ONE. IF YOU FIND IT, DON'T
+    - MENTION I ASKED. I DIDN'T ASK.
+lastWords:
+  - THIS IS FINE...
+  - ...THIS IS GOOD FOR SAFETY...
+ai:
+  aggroRadius: 300
+  rushSpeed: 100
+ranged:
+  damage: 28
+  cooldownMs: 1900
+  range: 220
+  projectile:
+    speed: 180
+    radius: 4
+    lifetimeMs: 2200
+    sprite: gpu_bolt
+  takesCover: true
+loot:
+  tierDrops:
+    rare: 1
+    magic: 1.5
+  weapons: 0
+  gear: 1
+  xpArrows: 2
+  repairs: 1
+  medkits: 1
+  tierBonus: 0.4

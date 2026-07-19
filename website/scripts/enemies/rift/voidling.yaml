@@ -1,0 +1,13 @@
+id: voidling
+name: VOIDLING
+role: minion
+sprite: voidling
+gore: ecto
+hp: 16
+speed: 19
+radius: 8
+contactDamage: 9
+critChance: 0.1
+contactCooldownMs: 700
+ai:
+  aggroRadius: 950

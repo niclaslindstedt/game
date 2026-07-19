@@ -1,0 +1,52 @@
+id: janitor
+name: THE JANITOR
+role: elite
+levelBonus: 3
+sprite: janitor
+hp: 230
+speed: 16
+radius: 12
+contactDamage: 22
+critChance: 0.1
+contactCooldownMs: 800
+dialogue:
+  - - MIND THE FLOOR. I JUST DID IT.
+    - THIRTY YEARS MOPPING THIS LAB.
+    - YOU LEARN THINGS, MOPPING.
+  - hero:
+      - THEN YOU SEE EVERYTHING THAT
+      - GOES ON HERE. WHAT'S GOT THE
+      - WHOLE PLACE UP AT MIDNIGHT?
+  - - SOMETHING UP ON THE MOON. ONE
+    - "BADGE PINGED: N. ARMSTRONG."
+    - DEAD SINCE 2012. FUNNY THING.
+  - hero:
+      - ARMSTRONG? THE FIRST MAN ON
+      - THE MOON? SOMEBODY'S JUST
+      - USING HIS OLD BADGE.
+  - - OR WHOEVER CAME BACK FROM THE
+    - MOON IN '69 WASN'T THE FELLA
+    - THEY SENT UP. NOW DROP IT.
+lastWords:
+  - AND I JUST... URGH...
+  - ...DID THIS FLOOR...
+mechanics:
+  slam:
+    windupMs: 900
+    radius: 70
+    damageFrac: 1.2
+    cooldownMs: 8000
+ai:
+  aggroRadius: 240
+  rushSpeed: 110
+loot:
+  items:
+    - wet_floor_sign
+  tierDrops:
+    magic: 1
+  weapons: 0
+  gear: 0
+  xpArrows: 1
+  repairs: 1
+  medkits: 2
+  tierBonus: 0.25

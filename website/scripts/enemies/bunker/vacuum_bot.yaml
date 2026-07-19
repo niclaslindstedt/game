@@ -1,0 +1,13 @@
+id: vacuum_bot
+name: VACUUM BOT
+role: minion
+sprite: vacuum_bot
+gore: sparks
+hp: 24
+speed: 30
+radius: 6
+contactDamage: 10
+critChance: 0.1
+contactCooldownMs: 600
+ai:
+  aggroRadius: 1050

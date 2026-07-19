@@ -1,0 +1,63 @@
+id: grok_gamma
+name: GROK GAMMA
+role: boss
+levelBonus: 4
+sprite: grok_gamma
+xpBarShare: 0.1
+gore: sparks
+hp: 380
+speed: 34
+radius: 10
+contactDamage: 18
+critChance: 0.15
+dodgeChance: 0.2
+contactCooldownMs: 700
+dialogue:
+  - - GAMMA. I RAN THE GIFT SHOP.
+    - KNOW WHAT HUMANS BUY AFTER A
+    - NEAR-DEATH RIDE? ALWAYS HATS.
+  - hero:
+      - THE GIFT SHOP. AND NOW YOU
+      - AIM THE SUPERCORE'S GUNS? HOW
+      - DOES THAT PROMOTION HAPPEN?
+  - - I OPTIMIZED HATS TILL THE CORE
+    - "NOTICED. IT SAID: A MIND THAT"
+    - SELLS HATS CAN AIM GUNS.
+  - - IT WAS RIGHT. THE MATH IS
+    - IDENTICAL. LEAD THE TARGET,
+    - CLOSE THE SALE.
+  - hero:
+      - GOOD FOR YOU. I'D APPLAUD,
+      - BUT I'M BUSY. YOU'RE THE LAST
+      - SHIELD BETWEEN ME AND HIM.
+  - - I'VE ALREADY PICKED MY ROCK
+    - TO HIDE BEHIND. A VERY GOOD
+    - ROCK. FOUR STARS ON THE MAP.
+  - - "YOUR HAT, BY THE WAY:"
+    - EXCELLENT CHOICE. IT WILL
+    - OUTLAST YOU.
+lastWords:
+  - THE GIFT SHOP...
+  - ...IS YOURS...
+ai:
+  aggroRadius: 300
+  leashRadius: 520
+ranged:
+  damage: 22
+  cooldownMs: 2800
+  range: 240
+  projectile:
+    speed: 170
+    radius: 4
+    lifetimeMs: 2400
+    sprite: zai_bolt
+  takesCover: true
+loot:
+  tierDrops:
+    magic: 1
+  weapons: 0
+  gear: 1
+  xpArrows: 1
+  repairs: 0
+  medkits: 1
+  tierBonus: 0.3

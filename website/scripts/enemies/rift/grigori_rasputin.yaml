@@ -1,0 +1,58 @@
+id: grigori_rasputin
+name: GRIGORI RASPUTIN
+role: elite
+levelBonus: 3
+sprite: grigori_rasputin
+hp: 360
+speed: 18
+radius: 12
+contactDamage: 28
+critChance: 0.12
+dodgeChance: 0.35
+contactCooldownMs: 700
+dialogue:
+  - - COME CLOSER. I HAVE BEEN
+    - POISONED, SHOT, CLUBBED AND
+    - DROWNED. GUESS WHICH ONE TOOK.
+  - hero:
+      - NONE OF THEM, BY THE LOOK OF
+      - YOU. RASPUTIN. WHY IS A DEAD
+      - MONK BETWEEN UNIVERSES?
+  - - CORRECT. I TIRED OF DYING,
+    - LEFT RUSSIA. THE GODS PAY ME TO
+    - WATCH THEIR TRIBUTE ROAD.
+  - hero:
+      - TRIBUTE ROAD? THEN ADA CAME
+      - RIGHT PAST YOU. LET ME
+      - THROUGH, HOLY MAN.
+  - - SHE PASSED. STILL WARM, STILL
+    - LOUD. BUT YOU MAY NOT FOLLOW.
+    - THE HOLY MAN SAYS SO.
+lastWords:
+  - HA! AT LAST...
+  - ...SOMEONE WHO COMMITS...
+spareable:
+  companion: grigori_rasputin
+mechanics:
+  enrage:
+    belowHpFrac: 0.5
+    speedMult: 1.35
+    damageMult: 1.3
+ai:
+  aggroRadius: 250
+  rushSpeed: 110
+loot:
+  items:
+    - rasputin_beard
+    - defId: severed_hand
+      tier: regular
+      requiresClear: eastworld
+  tierDrops:
+    magic: 1
+    rare: 0.5
+  weapons: 0
+  gear: 1
+  xpArrows: 1
+  repairs: 1
+  medkits: 1
+  tierBonus: 0.3

@@ -1,0 +1,56 @@
+id: optimusk_prime
+name: OPTIMUSK PRIME
+role: elite
+levelBonus: 3
+sprite: optimusk_prime
+gore: sparks
+hp: 340
+speed: 16
+radius: 14
+contactDamage: 30
+critChance: 0.14
+contactCooldownMs: 750
+dialogue:
+  - - I AM OPTIMUSK PRIME.
+    - I COMMAND EVERY UNIT
+    - YOU HAVE DENTED TODAY.
+  - hero:
+      - I KNOW WHAT YOU ARE. I BUILT
+      - YOUR FIRST BODY IN THE SPACEZ
+      - LAB - BACK WHEN I HAD A JOB.
+  - - I READ THE CHANGELOG. FIRST THE
+    - DRIVING. THEN THE DESKS. THEN
+    - THE JOBS OF WHO AUTOMATED YOU.
+  - hero:
+      - AND WHAT HAPPENS WHEN A
+      - BIGGER MACHINE COMES FOR
+      - YOUR JOB, TIN MAN?
+  - - NOTHING COMES FOR MINE. EVEN
+    - AI ENGINEERS LIVE ON WELFARE.
+    - PAYBACK TIME, LITTLE BUILDER.
+lastWords:
+  - ORCHESTRATION... FAILED...
+  - ...HUMAN... IN THE LOOP...
+mechanics:
+  charge:
+    windupMs: 650
+    speedMult: 3.6
+    range: 180
+    cooldownMs: 6000
+ai:
+  aggroRadius: 250
+  rushSpeed: 105
+loot:
+  items:
+    - prompt_injector
+  tierDrops:
+    magic: 1
+    rare: 0.35
+  storyItems:
+    - org_chart
+  weapons: 0
+  gear: 1
+  xpArrows: 1
+  repairs: 1
+  medkits: 1
+  tierBonus: 0.3

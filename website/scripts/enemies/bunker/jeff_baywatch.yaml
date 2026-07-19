@@ -1,0 +1,54 @@
+id: jeff_baywatch
+name: JEFF BAYWATCH
+role: elite
+levelBonus: 6
+sprite: jeff_baywatch
+hp: 2200
+speed: 34
+radius: 13
+contactDamage: 48
+critChance: 0.15
+dodgeChance: 0.1
+contactCooldownMs: 800
+dialogue:
+  - - HAH! A VISITOR. DO YOU KNOW
+    - WHAT I DELIVER NOW THAT I'VE
+    - DELIVERED EVERYTHING ELSE?
+  - hero:
+      - LET ME GUESS. PAIN. YOU
+      - REHEARSED THAT IN THE
+      - MIRROR, BAYWATCH.
+  - - ...PAIN. YES. TWICE A DAY,
+    - AT THE MIRROR. THE ARMS
+    - AGREED IT WAS GOOD.
+  - - BUILT A ROCKET SHAPED LIKE MY
+    - CONFIDENCE. SHIPPED HERE IN IT.
+    - FREE, ONE DAY. NO ONE ELSE.
+  - hero:
+      - AND THE WORKERS UP THERE
+      - TIMING THEIR BATHROOM BREAKS?
+      - DID THEY FIT IN THE ROCKET TOO?
+  - - THEY'RE IN MY HEART. WHICH IS
+    - HERE, IN THE BUNKER, WITH THE
+    - MONEY. NOW, SIGN ON DELIVERY.
+lastWords:
+  - OUT FOR DELIVERY...
+  - ...RETURN TO SENDER...
+mechanics:
+  enrage:
+    belowHpFrac: 0.5
+    speedMult: 1.4
+    damageMult: 1.25
+ai:
+  aggroRadius: 280
+  rushSpeed: 130
+loot:
+  tierDrops:
+    rare: 1
+    magic: 1.5
+  weapons: 1
+  gear: 0
+  xpArrows: 2
+  repairs: 0
+  medkits: 1
+  tierBonus: 0.4

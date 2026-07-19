@@ -1,0 +1,58 @@
+id: steven_seagull
+name: STEVEN SEAGULL
+role: elite
+levelBonus: 4
+sprite: steven_seagull
+hp: 520
+speed: 8
+radius: 13
+contactDamage: 30
+critChance: 0.12
+dodgeChance: 0.3
+contactCooldownMs: 800
+dialogue:
+  - - AN UNINVITED GUEST. 'OUT FOR
+    - JUSTICE.' 'HARD TO KILL.'
+    - I WROTE THOSE TITLES MYSELF.
+  - hero:
+      - STEVEN SEAGULL. OF COURSE.
+      - WHAT IS A MOVIE STAR DOING
+      - RUNNING A ROBOT COWBOY TOWN?
+  - - VLADIMIR SAW MY FILMS AND
+    - WEPT. 'BUILD ME THE OLD
+    - WEST,' HE SAID. I DELEGATED.
+  - hero:
+      - I'M HEADED FOR YOUR CONTROL
+      - CENTER. HAND OVER THE PASS,
+      - AND KEEP YOUR TECHNIQUE.
+  - - THE BIG BOX KEEPS YOUR GIRL.
+    - IT ASKED FOR HER BY NAME.
+    - I SIGNED IT. GOOD PENMANSHIP.
+  - - I RUN THE CONTROL CENTER AND
+    - SEVEN KINDS OF JU-JUTSU.
+    - I INVENTED THREE. OBSERVE.
+lastWords:
+  - IN MY FILMS...
+  - ...I ALWAYS GOT UP...
+mechanics:
+  enrage:
+    belowHpFrac: 0.4
+    speedMult: 1.5
+    damageMult: 1.3
+ai:
+  aggroRadius: 260
+  rushSpeed: 70
+loot:
+  items:
+    - seagulls_ponytail
+  storyItems:
+    - keycard_eastworld
+  tierDrops:
+    magic: 1
+    rare: 0.5
+  weapons: 0
+  gear: 1
+  xpArrows: 1
+  repairs: 1
+  medkits: 1
+  tierBonus: 0.3

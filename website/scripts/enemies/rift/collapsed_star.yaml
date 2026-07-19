@@ -1,0 +1,15 @@
+id: collapsed_star
+name: COLLAPSED STAR
+role: minion
+rarity: rare
+sprite: collapsed_star
+gore: ecto
+phasing: true
+hp: 100
+speed: 12
+radius: 9
+contactDamage: 20
+critChance: 0.12
+contactCooldownMs: 700
+ai:
+  aggroRadius: 950

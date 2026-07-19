@@ -1,0 +1,48 @@
+id: head_scientist
+name: DR. NOVA
+role: elite
+levelBonus: 3
+sprite: head_scientist
+hp: 170
+speed: 18
+radius: 12
+contactDamage: 18
+critChance: 0.1
+contactCooldownMs: 700
+dialogue:
+  - - FASCINATING. AN INTRUDER WITH
+    - WORKING LEGS. KNOW WHAT WE
+    - KEEP IN THE CLEANROOM VAULT?
+  - hero:
+      - AN ENGINE PART. I CAME TO TAKE
+      - IT. I HELPED BUILD THAT ENGINE,
+      - BEFORE YOU PEOPLE FIRED ME.
+  - - BUILD IT? NOBODY BUILT IT.
+    - WE DUG IT FROM THE SEA OF
+    - TRANQUILITY IN '69. NOT EARTH'S.
+  - hero:
+      - NOT FROM EARTH? I MACHINED
+      - PARTS FOR THAT THING FOR TEN
+      - YEARS. IT'S JUST ENGINEERING.
+  - - WE SPENT FIFTY YEARS COPYING
+    - A MACHINE THAT ISN'T BROKEN.
+    - IT'S WAITING. TO GO HOME.
+lastWords:
+  - IT'S STILL... HHH...
+  - STILL... HUMMING...
+ai:
+  aggroRadius: 240
+  rushSpeed: 115
+loot:
+  items:
+    - overclocked_laser
+  tierDrops:
+    magic: 1
+  storyItems:
+    - keycard_vault
+  weapons: 0
+  gear: 0
+  xpArrows: 1
+  repairs: 1
+  medkits: 1
+  tierBonus: 0.25

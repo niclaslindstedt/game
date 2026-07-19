@@ -1,0 +1,17 @@
+id: misprinted_fembot
+name: MISPRINTED FEMBOT
+role: minion
+rarity: rare
+pack:
+  - 2
+  - 4
+sprite: misprinted_fembot
+gore: sparks
+hp: 60
+speed: 24
+radius: 8
+contactDamage: 15
+critChance: 0.18
+contactCooldownMs: 700
+ai:
+  aggroRadius: 1000

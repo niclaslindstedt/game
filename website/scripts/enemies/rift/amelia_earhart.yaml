@@ -1,0 +1,49 @@
+id: amelia_earhart
+name: AMELIA EARHART
+role: elite
+levelBonus: 3
+sprite: amelia_earhart
+hp: 290
+speed: 24
+radius: 12
+contactDamage: 22
+critChance: 0.12
+contactCooldownMs: 700
+dialogue:
+  - - STATE YOUR HEADING, PILOT.
+    - NO? NOBODY HAS ONE IN HERE.
+    - THE COMPASS JUST APOLOGIZES.
+  - hero:
+      - AMELIA EARHART. THEY SEARCHED
+      - HALF THE PACIFIC FOR YOU.
+      - YOU WERE HERE ALL ALONG?
+  - - WRONG OCEAN. I FLEW INTO A
+    - CLOUD IN 1937. IT HAD NO OTHER
+    - SIDE. BEEN CIRCLING EVER SINCE.
+  - hero:
+      - I'M LOOKING FOR A GIRL. THE
+      - LIZARDS CARRIED HER THROUGH
+      - HERE IN A CRATE. WHICH WAY?
+  - - TO THE FAR DOOR, LAST NIGHT. SHE
+    - BIT ONE. GOOD FORM. HURRY AFTER
+    - HER - HURRYING IS A DOGFIGHT.
+lastWords:
+  - FINALLY...
+  - ...A RUNWAY...
+spareable:
+  companion: amelia_earhart
+ai:
+  aggroRadius: 250
+  rushSpeed: 120
+loot:
+  items:
+    - aviator_goggles
+  tierDrops:
+    magic: 1
+    rare: 0.5
+  weapons: 0
+  gear: 1
+  xpArrows: 1
+  repairs: 0
+  medkits: 1
+  tierBonus: 0.3

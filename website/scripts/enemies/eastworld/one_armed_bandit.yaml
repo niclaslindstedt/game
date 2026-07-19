@@ -1,0 +1,14 @@
+id: one_armed_bandit
+name: THE ONE-ARMED BANDIT
+role: minion
+rarity: unique
+sprite: one_armed_bandit
+gore: sparks
+hp: 130
+speed: 18
+radius: 9
+contactDamage: 24
+critChance: 0.15
+contactCooldownMs: 700
+ai:
+  aggroRadius: 1000

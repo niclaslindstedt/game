@@ -1,0 +1,14 @@
+id: star_jelly
+name: STAR JELLY
+role: minion
+sprite: star_jelly
+gore: ecto
+phasing: true
+hp: 75
+speed: 14
+radius: 9
+contactDamage: 16
+critChance: 0.12
+contactCooldownMs: 700
+ai:
+  aggroRadius: 950

@@ -1,0 +1,13 @@
+id: night_shift_temp
+name: NIGHT-SHIFT TEMP
+role: minion
+rarity: rare
+sprite: night_shift_temp
+hp: 55
+speed: 18
+radius: 9
+contactDamage: 14
+critChance: 0.1
+contactCooldownMs: 700
+ai:
+  aggroRadius: 950

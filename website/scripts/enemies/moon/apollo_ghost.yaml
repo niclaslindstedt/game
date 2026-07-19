@@ -1,0 +1,55 @@
+id: apollo_ghost
+name: MISSION SPECIALIST
+role: elite
+levelBonus: 3
+sprite: apollo_ghost
+gore: ecto
+phasing: true
+hp: 220
+speed: 20
+radius: 12
+contactDamage: 20
+critChance: 0.1
+contactCooldownMs: 700
+dialogue:
+  - - A LIVE ONE. BREATHING AND
+    - EVERYTHING. WE STOPPED THAT
+    - HABIT DECADES AGO.
+  - hero:
+      - YOU'RE A DEAD ASTRONAUT. HOW
+      - ARE THERE DEAD MEN UP HERE?
+      - NOBODY EVER DIED ON THE MOON.
+  - - THAT'S WHAT THE BROADCAST SAID.
+    - ONE SMALL STEP - ONTO WHAT? A
+    - WRECK LIES UNDER THE DUST, KID.
+  - hero:
+      - A WRECK? UNDER THE SEA OF
+      - TRANQUILITY? IT WAS NEVER IN
+      - ANY FOOTAGE I EVER SAW.
+  - - IT'S OLDER THAN THE DUST. WE
+    - PLANTED THE FLAG ON A GRAVE,
+    - SMILED. THE SMILE'S OVER.
+lastWords:
+  - ONE SMALL... STEP...
+  - ONTO A... GRAVE... HHK
+mechanics:
+  enrage:
+    belowHpFrac: 0.35
+    speedMult: 1.4
+    damageMult: 1.3
+ai:
+  aggroRadius: 250
+  rushSpeed: 115
+loot:
+  items:
+    - flare_gun
+  tierDrops:
+    magic: 1
+  storyItems:
+    - mission_log
+  weapons: 0
+  gear: 0
+  xpArrows: 1
+  repairs: 0
+  medkits: 1
+  tierBonus: 0.3

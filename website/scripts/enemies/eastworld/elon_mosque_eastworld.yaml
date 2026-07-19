@@ -1,0 +1,63 @@
+id: elon_mosque_eastworld
+name: ELON MOSQUE
+role: boss
+levelBonus: 5
+sprite: elon_mosque_beach
+hp: 900
+speed: 42
+radius: 20
+contactDamage: 36
+critChance: 0.15
+contactCooldownMs: 900
+dialogue:
+  - - NO. NO NO NO. HOW. I SOLD THE
+    - RIFT TO EXACTLY ONE DICTATOR.
+    - THIS WAS A GATED COMMUNITY.
+  - hero:
+      - YOU MADE ME CHASE YOU ACROSS
+      - UNIVERSES, MOSQUE. NOWHERE
+      - LEFT TO RUN. WHERE IS ADA?
+  - - LOOK - EASTWORLD RUNS ON MY
+    - ZAI. LICENSING, RECURRING
+    - REVENUE. I AM A SUBSCRIPTION.
+  - hero:
+      - WHERE. IS. SHE. LAST TIME
+      - I ASK NICELY.
+  - - DELIVERED. THE SUPERCORE
+    - WANTED HER. I DON'T READ ITS
+    - LOGS ANYMORE. IT READS MINE.
+  - hero:
+      - THE SUPERCORE? YOUR OWN AI
+      - GIVES ORDERS NOW? SHE'S SOLD
+      - TO AN AI YOU DON'T CONTROL?
+  - - FINE. FINE! TAKE THE PARK.
+    - TAKE THE COMPANY. I'LL START
+    - ANOTHER. I ALWAYS DO.
+  - - SECURITY! GROKS! STEVEN!
+    - ANYONE! ...I'LL GIVE YOU
+    - EQUITY.
+lastWords:
+  - THIS ISN'T FAIR...
+  - ...I WAS GOING PRIVATE...
+mechanics:
+  enrage:
+    belowHpFrac: 0.25
+    speedMult: 1.4
+    damageMult: 1.35
+ai:
+  aggroRadius: 280
+  leashRadius: 460
+loot:
+  items:
+    - defId: soggy_cardboard_sword
+      tier: trash
+    - defId: busted_flamethrower
+      tier: trash
+    - defId: cybervan_wiper
+      tier: trash
+  weapons: 0
+  gear: 0
+  xpArrows: 0
+  repairs: 0
+  medkits: 0
+  tierBonus: 0

@@ -1,0 +1,55 @@
+id: prospector
+name: THE PROSPECTOR
+role: elite
+levelBonus: 3
+sprite: prospector
+gore: ecto
+phasing: true
+hp: 240
+speed: 22
+radius: 12
+contactDamage: 24
+critChance: 0.12
+contactCooldownMs: 700
+dialogue:
+  - - CLAIM'S TAKEN. WHOLE ROCK'S
+    - TAKEN. STAMPED, FILED, AND
+    - PAID FOR BY SPACEZ.
+  - hero:
+      - SPACEZ OWNS THE MOON? SINCE
+      - WHEN? WHAT ARE THEY EVEN
+      - DOING UP HERE?
+  - - BUILDING. I DUG THEIR TUNNELS
+    - AT SITE T, ON THE FAR SIDE.
+    - SECRET FREIGHT, NEVER TRACKED.
+  - hero:
+      - FREIGHT. WOULD THAT FREIGHT
+      - EVER INCLUDE PEOPLE?
+  - - LAST MONTH THE MANIFESTS
+    - CHANGED. THE CRATES STARTED
+    - BREATHING. I QUIT. BADLY.
+lastWords:
+  - THE CLAIM'S... URGH...
+  - ...YOURS NOW, KID...
+mechanics:
+  charge:
+    windupMs: 700
+    speedMult: 3.5
+    range: 160
+    cooldownMs: 6500
+ai:
+  aggroRadius: 250
+  rushSpeed: 120
+loot:
+  items:
+    - core_drill
+  tierDrops:
+    magic: 1
+  storyItems:
+    - spacez_blueprints
+  weapons: 0
+  gear: 1
+  xpArrows: 1
+  repairs: 0
+  medkits: 1
+  tierBonus: 0.3

@@ -1,0 +1,14 @@
+id: unraveler
+name: UNRAVELER
+role: minion
+sprite: unraveler
+gore: sparks
+hp: 100
+speed: 25
+radius: 8
+contactDamage: 19
+critChance: 0.2
+dodgeChance: 0.15
+contactCooldownMs: 700
+ai:
+  aggroRadius: 1000

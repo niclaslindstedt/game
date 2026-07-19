@@ -1,0 +1,22 @@
+id: soldier
+name: SOLDIER
+role: minion
+sprite: soldier
+hp: 140
+speed: 18
+radius: 8
+contactDamage: 16
+critChance: 0.12
+contactCooldownMs: 800
+ranged:
+  damage: 24
+  cooldownMs: 2600
+  range: 200
+  projectile:
+    speed: 185
+    radius: 3
+    lifetimeMs: 1600
+    sprite: rifle_round
+  takesCover: true
+ai:
+  aggroRadius: 1000

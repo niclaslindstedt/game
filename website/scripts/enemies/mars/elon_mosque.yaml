@@ -1,0 +1,102 @@
+id: elon_mosque
+name: ELON MOSQUE
+role: boss
+levelBonus: 5
+sprite: elon_mosque
+hp: 700
+speed: 42
+radius: 20
+contactDamage: 30
+critChance: 0.15
+contactCooldownMs: 900
+dialogue:
+  - - AH. THE GARAGE INVENTOR.
+    - YOU'RE TRENDING, YOU KNOW.
+    - MOSTLY LAUGHING EMOJIS.
+  - hero:
+      - WHERE'S ADA? YOUR COMPANY
+      - GRABBED HER OFF THE STREET AND
+      - FLEW HER HERE. I WANT HER BACK.
+  - - STRAIGHT TO BUSINESS? FINE.
+    - A WHOLE PLANET, NO REGULATORS.
+    - I'M THE LAW HERE. ALSO HR.
+  - hero:
+      - THE MOON IS FULL OF YOUR DEAD,
+      - AND YOU'RE GIVING ME A SALES
+      - TOUR. WHAT HAPPENED UP THERE?
+  - - THE MOON? A ROUNDING ERROR.
+    - WE PLUGGED INTO SOMETHING OLD
+    - AND IT SANG BACK. OFF-BRAND.
+  - - BUT IT INTRODUCED US TO THE
+    - ACTUAL OWNERS OUT HERE. THE
+    - LIZARD GODS. GREAT GUYS. HUGE.
+  - hero:
+      - THE GIRL, MOSQUE. WHERE
+      - IS SHE?
+  - - YOUR GIRL ISN'T CARGO. SHE'S
+    - MARS' PRICE TO THE GODS. AND
+    - I ALWAYS CLOSE. SECURITY!
+lastWords:
+  - OKAY! OKAY! NOT THE FACE!
+  - BOARD MEETING. OTHER UNIVERSE.
+flees:
+  landmark: rift
+  belowHpFrac: 0.25
+mechanics:
+  summon:
+    defId: servo_bot
+    count: 2
+    cooldownMs: 13000
+    maxAlive: 4
+phases:
+  - belowHpFrac: 0.35
+    mechanics:
+      summon:
+        defId: servo_bot
+        count: 3
+        cooldownMs: 11000
+        maxAlive: 5
+      enrage:
+        belowHpFrac: 0.35
+        speedMult: 1.35
+        damageMult: 1.25
+ai:
+  aggroRadius: 280
+  leashRadius: 460
+loot:
+  items:
+    - not_a_flamethrower
+  tierDrops:
+    magic: 1.5
+    rare: 0.75
+  weapons: 0
+  gear: 1
+  xpArrows: 2
+  repairs: 1
+  medkits: 2
+  tierBonus: 0.35
+uniquesByDifficulty:
+  easy:
+    - gilded_carapace
+    - lawless_stride
+    - ovation_striders
+  medium:
+    - gilded_carapace
+    - lawless_stride
+    - ovation_striders
+  hard:
+    - gilded_carapace
+    - lawless_stride
+    - ovation_striders
+  nightmare:
+    - gilded_carapace
+    - lawless_stride
+    - ovation_striders
+    - the_signal_crown
+    - wrathflame
+  jesus:
+    - gilded_carapace
+    - lawless_stride
+    - ovation_striders
+    - the_signal_crown
+    - wrathflame

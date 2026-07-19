@@ -1,0 +1,12 @@
+id: scientist
+name: LAB SCIENTIST
+role: minion
+sprite: scientist
+hp: 30
+speed: 15
+radius: 8
+contactDamage: 10
+critChance: 0.1
+contactCooldownMs: 700
+ai:
+  aggroRadius: 950
