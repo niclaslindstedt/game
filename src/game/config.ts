@@ -2761,8 +2761,8 @@ export const SANDSTORMS = {
  * Employee stampedes — the "asteroid" beat of SpaceZ HQ (a level turns them on
  * with LevelDef.stampedes). Every `everyMs` a HERD of `runnerCount` panicked
  * staffers mints just past the RIGHT screen edge in a vertical wall and
- * charges straight to the LEFT at GREAT SPEED (well over an asteroid streak),
- * a churning dust cloud boiling off its back. The wall knocks over EVERYTHING
+ * charges straight to the LEFT at a steady, heavy pace, a churning dust cloud
+ * boiling off its back. The wall knocks over EVERYTHING
  * in its lane: minions caught in the band are trampled — flung aside and killed
  * outright (no XP, no loot, like a well swallow — an environmental death can't
  * be farmed) — while elites and bosses hold their ground and are only shoved.
@@ -2784,9 +2784,9 @@ export const STAMPEDES = {
   laneJitter: 130,
   /** Runners in one herd — the "group of five" that reads as a stampede. */
   runnerCount: 5,
-  /** Charge speed, rolled per herd (px/s) — GREAT speed, faster than a rock, so
-   * the wall is on the hero in a beat and a hop is the only clean out. */
-  speed: [240, 300] as [number, number],
+  /** Charge speed, rolled per herd (px/s) — a heavy, rolling wall the hero has
+   * a beat to read before a hop or a step aside clears it. */
+  speed: [120, 150] as [number, number],
   /** Collision radius of a single runner (px) — one staffer's body. */
   runnerRadius: 8,
   /** Half-height of the herd's collision band (px): the vertical wall the five

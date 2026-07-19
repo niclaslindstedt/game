@@ -60,7 +60,8 @@ names its in-run music with an optional `music` id (a key into the app's
   hero opens in plain clothes (`heroSuited: false`) and recovers the EVA suit
   here. **Employee stampedes** (`LevelDef.stampedes` → the engine's herd
   hazard): every 6–11 s a wall of five panicked staffers charges across the
-  aisles right-to-left at great speed, a dust cloud boiling off its back. The
+  aisles right-to-left at a steady, heavy pace, a dust cloud boiling off its
+  back. The
   herd tramples everything in its lane — minions are flung aside and killed
   outright (an environmental death: no XP, no loot), elites and bosses are only
   shoved — and a grounded hero it catches takes a difficulty-scaled bite of his
