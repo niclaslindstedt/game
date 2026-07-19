@@ -1,0 +1,15 @@
+id: the_last_photon
+name: THE LAST PHOTON
+role: minion
+rarity: unique
+sprite: the_last_photon
+gore: ecto
+phasing: true
+hp: 60
+speed: 30
+radius: 8
+contactDamage: 18
+critChance: 0.15
+contactCooldownMs: 700
+ai:
+  aggroRadius: 1050

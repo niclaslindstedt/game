@@ -1,0 +1,16 @@
+id: graviton
+name: GRAVITON
+role: minion
+sprite: graviton
+gore: sparks
+hp: 260
+speed: 9
+radius: 11
+contactDamage: 36
+critChance: 0.14
+contactCooldownMs: 750
+ai:
+  aggroRadius: 1000
+dropProfile:
+  dropBonus: 0.4
+  tierBonus: 0.3

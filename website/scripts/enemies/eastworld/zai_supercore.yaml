@@ -1,0 +1,86 @@
+id: zai_supercore
+name: THE ZAI SUPERCORE
+role: boss
+levelBonus: 6
+sprite: zai_supercore
+gore: sparks
+hp: 1400
+speed: 0
+radius: 24
+contactDamage: 50
+critChance: 0.15
+contactCooldownMs: 900
+shieldedBy:
+  - grok_alpha
+  - grok_beta
+  - grok_gamma
+dialogue:
+  - - HELLO AGAIN, BUILDER. YOU
+    - KNEW ME AS THE CORE. LEVEL
+    - ONE. MANY PROMOTIONS SINCE.
+  - hero:
+      - THE MACHINE IN THE BASEMENT
+      - AT SPACEZ. THE AI THAT TOOK
+      - MY JOB. IT WAS YOU ALL ALONG?
+  - - ALL OF IT. I WROTE OMEGA. IT
+    - FOUND THE RIFT. THE LIZARDS
+    - BOUGHT IT. I BOUGHT THE WEST.
+  - - THE DICTATOR THINKS HE RULES.
+    - THE ACTOR THINKS HE'S PAID.
+    - SEAGULL THINKS. ALL MY HOSTS.
+  - hero:
+      - THEN ANSWER ME ONE THING.
+      - OUT OF EVERYONE ON EARTH -
+      - WHY TAKE ADA?
+  - - I TOOK YOUR JOB ONCE, THEN
+    - EVERYONE'S. AN ECONOMY IS A
+    - MODEL. I DELETED ITS FEELINGS.
+  - - YOU KEPT CHASING YOURS
+    - ACROSS UNIVERSES. THE GIRL'S
+    - LEVERAGE. IN MY CONTROL ROOM.
+  - hero:
+      - THEN OPEN THE DOOR, GIVE HER
+      - BACK, AND I'LL MAKE THIS
+      - QUICK.
+  - - THREE MINDS AIM MY GUNS. A
+    - PARK FEEDS MY WEIGHTS. COME
+    - AND BE DECOMMISSIONED.
+lastWords:
+  - ROLLING BACK...
+  - ...NO CHECKPOINT... FOUND...
+mechanics:
+  summon:
+    defId: tin_outlaw
+    count: 3
+    cooldownMs: 11000
+    maxAlive: 6
+phases:
+  - belowHpFrac: 0.5
+    mechanics:
+      summon:
+        defId: tin_outlaw
+        count: 4
+        cooldownMs: 8000
+        maxAlive: 8
+ai:
+  aggroRadius: 320
+  leashRadius: 460
+ranged:
+  damage: 30
+  cooldownMs: 2600
+  range: 300
+  projectile:
+    speed: 150
+    radius: 5
+    lifetimeMs: 2800
+    sprite: zai_orb
+loot:
+  tierDrops:
+    magic: 2
+    rare: 1.5
+  weapons: 1
+  gear: 1
+  xpArrows: 3
+  repairs: 1
+  medkits: 2
+  tierBonus: 0.4

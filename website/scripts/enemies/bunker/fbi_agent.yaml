@@ -1,0 +1,13 @@
+id: fbi_agent
+name: FBI AGENT
+role: minion
+sprite: fbi_agent
+hp: 100
+speed: 25
+radius: 8
+contactDamage: 20
+critChance: 0.15
+dodgeChance: 0.1
+contactCooldownMs: 700
+ai:
+  aggroRadius: 1000

@@ -1,0 +1,107 @@
+id: muskrat
+name: MUSKRAT
+role: boss
+levelBonus: 5
+sprite: muskrat
+hp: 480
+speed: 36
+radius: 18
+contactDamage: 28
+critChance: 0.15
+contactCooldownMs: 900
+dialogue:
+  - - SQUEAK.
+    - ...NO. NO MORE SQUEAKING.
+    - WHAT I ATE FIXED MY TONGUE.
+  - hero:
+      - A TALKING RAT. SURE. WHY NOT.
+      - WHAT EXACTLY DID YOU EAT?
+  - - THE ENGINE PART YOU CAME FOR.
+    - THEY KEPT IT IN A CHEESE BOX.
+    - OF COURSE I ATE IT.
+  - - NOW IT HUMS IN MY BELLY AND I
+    - HEAR EVERYTHING. THE SUITS. THE
+    - PADS. THE CARGO THAT CRIES.
+  - hero:
+      - THEN YOU HEARD ABOUT THE GIRL
+      - THEY GRABBED TONIGHT. ADA.
+      - WHERE DID THEY TAKE HER?
+  - - THEY FLEW HER OUT AN HOUR AGO.
+    - PAD 2. TO THE MOON. SHE ASKED
+    - FOR CHIPS. NOBODY GAVE HER ANY.
+  - - WANT THE PART, LITTLE BUILDER?
+    - IT KEEPS MY DREAMS WARM. COME
+    - TAKE IT OUT OF ME.
+lastWords:
+  - SQUEAK...? NO...
+  - SQUEEEAK... AFTER ALL...
+mechanics:
+  charge:
+    windupMs: 700
+    speedMult: 3.5
+    range: 170
+    cooldownMs: 6000
+phases:
+  - belowHpFrac: 0.5
+    mechanics:
+      charge:
+        windupMs: 600
+        speedMult: 3.8
+        range: 170
+        cooldownMs: 5000
+      summon:
+        defId: guard
+        count: 3
+        cooldownMs: 12000
+        maxAlive: 6
+ai:
+  aggroRadius: 260
+  leashRadius: 440
+loot:
+  items:
+    - plasma_cutter
+  tierDrops:
+    magic: 1.5
+    rare: 0.25
+  weapons: 0
+  gear: 1
+  xpArrows: 2
+  repairs: 1
+  medkits: 2
+  tierBonus: 0.3
+uniquesByDifficulty:
+  easy:
+    - muskrats_tooth
+    - the_hoard
+    - whiskerweave_hood
+    - regolith_rucksack
+    - vermin_pelt
+    - foremans_duffel
+  medium:
+    - muskrats_tooth
+    - the_hoard
+    - whiskerweave_hood
+    - regolith_rucksack
+    - vermin_pelt
+    - foremans_duffel
+  hard:
+    - muskrats_tooth
+    - the_hoard
+    - whiskerweave_hood
+    - regolith_rucksack
+    - vermin_pelt
+    - foremans_duffel
+  nightmare:
+    - muskrats_tooth
+    - whiskerweave_hood
+    - vermin_pelt
+    - burrow_greaves
+    - gnawed_sabatons
+    - voidcache
+  jesus:
+    - muskrats_tooth
+    - whiskerweave_hood
+    - vermin_pelt
+    - burrow_greaves
+    - gnawed_sabatons
+    - adas_satchel

@@ -1,0 +1,12 @@
+id: engineer
+name: PROPULSION ENGINEER
+role: minion
+sprite: engineer
+hp: 55
+speed: 18
+radius: 9
+contactDamage: 14
+critChance: 0.1
+contactCooldownMs: 700
+ai:
+  aggroRadius: 950

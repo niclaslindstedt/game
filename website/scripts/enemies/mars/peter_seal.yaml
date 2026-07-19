@@ -1,0 +1,50 @@
+id: peter_seal
+name: PETER SEAL
+role: elite
+levelBonus: 3
+sprite: peter_seal
+hp: 280
+speed: 20
+radius: 12
+contactDamage: 24
+critChance: 0.12
+contactCooldownMs: 700
+dialogue:
+  - - FASCINATING. EVERYONE FLEES
+    - SOMETHING. I FUND WHAT THEY
+    - FLEE TO. AND WHAT THEY FLEE.
+  - hero:
+      - YOU'RE ONE OF THE BILLIONAIRES
+      - WHO BOUGHT A SEAT OFF EARTH. SO
+      - WHO RUNS THIS PLACE? MOSQUE?
+  - - MOSQUE THINKS HE OWNS MARS.
+    - HE RENTS IT. THE LANDLORDS ARE
+    - OLDER. SCALED. COLD-BLOODED.
+  - hero:
+      - SCALED? YOU'RE TELLING ME THE
+      - PLANET'S REAL OWNERS ARE...
+      - WHAT, LIZARDS?
+  - - LIZARD GODS. I KEEP THE SHRINE
+    - AND TITHE. THE PRICE ROSE.
+    - IT WANTS WARM THINGS NOW.
+lastWords:
+  - THE TITHE... IS DUE...
+  - ...IT'S ALWAYS... DUE...
+ai:
+  aggroRadius: 250
+  rushSpeed: 115
+loot:
+  items:
+    - contrarian_dagger
+  tierDrops:
+    magic: 1
+    rare: 0.35
+  storyItems:
+    - keycard_terrarium
+    - colony_ledger
+  weapons: 0
+  gear: 1
+  xpArrows: 1
+  repairs: 1
+  medkits: 1
+  tierBonus: 0.3

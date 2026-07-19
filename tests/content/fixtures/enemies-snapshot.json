@@ -1,0 +1,4103 @@
+{
+  "amelia_earhart": {
+    "ai": {
+      "aggroRadius": 250,
+      "rushSpeed": 120
+    },
+    "contactCooldownMs": 700,
+    "contactDamage": 22,
+    "critChance": 0.12,
+    "dialogue": [
+      [
+        "STATE YOUR HEADING, PILOT.",
+        "NO? NOBODY HAS ONE IN HERE.",
+        "THE COMPASS JUST APOLOGIZES."
+      ],
+      {
+        "hero": [
+          "AMELIA EARHART. THEY SEARCHED",
+          "HALF THE PACIFIC FOR YOU.",
+          "YOU WERE HERE ALL ALONG?"
+        ]
+      },
+      [
+        "WRONG OCEAN. I FLEW INTO A",
+        "CLOUD IN 1937. IT HAD NO OTHER",
+        "SIDE. BEEN CIRCLING EVER SINCE."
+      ],
+      {
+        "hero": [
+          "I'M LOOKING FOR A GIRL. THE",
+          "LIZARDS CARRIED HER THROUGH",
+          "HERE IN A CRATE. WHICH WAY?"
+        ]
+      },
+      [
+        "TO THE FAR DOOR, LAST NIGHT. SHE",
+        "BIT ONE. GOOD FORM. HURRY AFTER",
+        "HER - HURRYING IS A DOGFIGHT."
+      ]
+    ],
+    "hp": 290,
+    "id": "amelia_earhart",
+    "lastWords": ["FINALLY...", "...A RUNWAY..."],
+    "levelBonus": 3,
+    "loot": {
+      "gear": 1,
+      "items": ["aviator_goggles"],
+      "medkits": 1,
+      "repairs": 0,
+      "tierBonus": 0.3,
+      "tierDrops": {
+        "magic": 1,
+        "rare": 0.5
+      },
+      "weapons": 0,
+      "xpArrows": 1
+    },
+    "name": "AMELIA EARHART",
+    "radius": 12,
+    "role": "elite",
+    "spareable": {
+      "companion": "amelia_earhart"
+    },
+    "speed": 24,
+    "sprite": "amelia_earhart"
+  },
+  "apollo_ghost": {
+    "ai": {
+      "aggroRadius": 250,
+      "rushSpeed": 115
+    },
+    "contactCooldownMs": 700,
+    "contactDamage": 20,
+    "critChance": 0.1,
+    "dialogue": [
+      [
+        "A LIVE ONE. BREATHING AND",
+        "EVERYTHING. WE STOPPED THAT",
+        "HABIT DECADES AGO."
+      ],
+      {
+        "hero": [
+          "YOU'RE A DEAD ASTRONAUT. HOW",
+          "ARE THERE DEAD MEN UP HERE?",
+          "NOBODY EVER DIED ON THE MOON."
+        ]
+      },
+      [
+        "THAT'S WHAT THE BROADCAST SAID.",
+        "ONE SMALL STEP - ONTO WHAT? A",
+        "WRECK LIES UNDER THE DUST, KID."
+      ],
+      {
+        "hero": [
+          "A WRECK? UNDER THE SEA OF",
+          "TRANQUILITY? IT WAS NEVER IN",
+          "ANY FOOTAGE I EVER SAW."
+        ]
+      },
+      [
+        "IT'S OLDER THAN THE DUST. WE",
+        "PLANTED THE FLAG ON A GRAVE,",
+        "SMILED. THE SMILE'S OVER."
+      ]
+    ],
+    "gore": "ecto",
+    "hp": 220,
+    "id": "apollo_ghost",
+    "lastWords": ["ONE SMALL... STEP...", "ONTO A... GRAVE... HHK"],
+    "levelBonus": 3,
+    "loot": {
+      "gear": 0,
+      "items": ["flare_gun"],
+      "medkits": 1,
+      "repairs": 0,
+      "storyItems": ["mission_log"],
+      "tierBonus": 0.3,
+      "tierDrops": {
+        "magic": 1
+      },
+      "weapons": 0,
+      "xpArrows": 1
+    },
+    "mechanics": {
+      "enrage": {
+        "belowHpFrac": 0.35,
+        "damageMult": 1.3,
+        "speedMult": 1.4
+      }
+    },
+    "name": "MISSION SPECIALIST",
+    "phasing": true,
+    "radius": 12,
+    "role": "elite",
+    "speed": 20,
+    "sprite": "apollo_ghost"
+  },
+  "architect": {
+    "ai": {
+      "aggroRadius": 240,
+      "rushSpeed": 120
+    },
+    "contactCooldownMs": 700,
+    "contactDamage": 18,
+    "critChance": 0.11,
+    "dialogue": [
+      [
+        "MY OLD BENCH PARTNER. STILL",
+        "SOLDERING TOYS IN A GARAGE?",
+        "I BUILD MINDS NOW. A REAL ONE."
+      ],
+      {
+        "hero": [
+          "THEY DUMPED US BOTH FOR AN AI.",
+          "YOU BUILD THEM A BIGGER ONE?",
+          "QUIT. COME HOME. IT'S ROTTEN."
+        ]
+      },
+      [
+        "QUIT? THIS 'ROTTEN COMPANY'",
+        "GAVE ME PURPOSE. I AM BUILDING",
+        "A SUPERINTELLIGENCE."
+      ],
+      {
+        "hero": [
+          "LOOK WHAT IT'S DONE TO YOU. YOU",
+          "CUT A MACHINE CHIP INTO YOUR",
+          "HEAD. STILL YOU IN THERE?"
+        ]
+      },
+      [
+        "I CUT THE CHIP MYSELF. I'D DO IT",
+        "AGAIN. FLESH IS A ROUGH DRAFT.",
+        "HUMANS ARE OBSOLETE, YOU MOST."
+      ],
+      ["NO MORE TALKING, OLD FRIEND.", "NOW YOU WILL DIE."]
+    ],
+    "hp": 190,
+    "id": "architect",
+    "lastWords": ["THE CHIP... TAKE IT...", "IT WAS NEVER... MINE..."],
+    "levelBonus": 3,
+    "loot": {
+      "gear": 0,
+      "items": [
+        {
+          "defId": "passage_chip",
+          "tier": "regular"
+        }
+      ],
+      "medkits": 1,
+      "repairs": 1,
+      "storyItems": ["keycard_core"],
+      "tierBonus": 0.25,
+      "tierDrops": {
+        "magic": 1
+      },
+      "weapons": 0,
+      "xpArrows": 1
+    },
+    "name": "THE ARCHITECT",
+    "radius": 12,
+    "role": "elite",
+    "speed": 20,
+    "sprite": "architect"
+  },
+  "armstrong": {
+    "ai": {
+      "aggroRadius": 280,
+      "leashRadius": 460
+    },
+    "contactCooldownMs": 900,
+    "contactDamage": 30,
+    "critChance": 0.15,
+    "dialogue": [
+      [
+        "YOU SMELL LIKE EARTH.",
+        "RAIN AND CUT GRASS AND",
+        "TELEVISION. GO HOME."
+      ],
+      {
+        "hero": [
+          "NOT WITHOUT ADA. YOU'RE HIM,",
+          "AREN'T YOU? THE FIRST MAN ON",
+          "THE MOON. NEVER WENT HOME."
+        ]
+      },
+      [
+        "I PLANTED THIS FLAG. ONE SMALL",
+        "STEP. THEN A WRECK TURNED UP",
+        "UNDER MY BOOTS. ALL THEATER."
+      ],
+      [
+        "THEY GREW A SMILING COPY OF",
+        "ME. HE SHOOK HANDS, CUT RIBBONS",
+        "AND DIED IN BED. LUCKY HIM."
+      ],
+      {
+        "hero": [
+          "AND YOU'VE BEEN UP HERE ALONE",
+          "EVER SINCE? FIFTY YEARS?",
+          "GUARDING WHAT?"
+        ]
+      },
+      [
+        "THE THING IN THE WRECK SINGS,",
+        "YOU KNOW. SPACEZ HEARD IT TOO -",
+        "AND PLUGGED THEIR MACHINES IN."
+      ],
+      [
+        "THAT WAS THEIR GREAT MISTAKE.",
+        "IT SANG, AND THE GRAVES OPENED.",
+        "NOW THEY CRATE UP FOR MARS."
+      ],
+      {
+        "hero": [
+          "MARS? THEN THE CRATES - THEY",
+          "CARRIED A GIRL THROUGH HERE",
+          "LAST NIGHT. DID YOU SEE HER?"
+        ]
+      },
+      [
+        "SNEAKERS. LOUD. SHE BIT TWO OF",
+        "THEM. THEY CRATED HER FOR THE",
+        "MARS RUN WITH ALL THEY OWN."
+      ],
+      [
+        "YOU WANT TO FOLLOW? THEN TAKE",
+        "THE WATCH FROM ME, EARTHLING.",
+        "I ONLY EVER LOSE TO THE WORTHY."
+      ]
+    ],
+    "gore": "ecto",
+    "hp": 550,
+    "id": "armstrong",
+    "lastWords": ["THE WATCH... HHH...", "IT'S... YOURS... NOW..."],
+    "levelBonus": 5,
+    "loot": {
+      "gear": 1,
+      "items": ["machete"],
+      "medkits": 2,
+      "repairs": 1,
+      "tierBonus": 0.35,
+      "tierDrops": {
+        "magic": 1.5,
+        "rare": 0.5
+      },
+      "weapons": 0,
+      "xpArrows": 2
+    },
+    "mechanics": {
+      "slam": {
+        "cooldownMs": 8000,
+        "damageFrac": 1.2,
+        "radius": 75,
+        "windupMs": 900
+      }
+    },
+    "name": "ARMSTRONG",
+    "phases": [
+      {
+        "belowHpFrac": 0.4,
+        "mechanics": {
+          "enrage": {
+            "belowHpFrac": 0.4,
+            "damageMult": 1.25,
+            "speedMult": 1.4
+          },
+          "slam": {
+            "cooldownMs": 6000,
+            "damageFrac": 1.3,
+            "radius": 80,
+            "windupMs": 700
+          }
+        }
+      }
+    ],
+    "phasing": true,
+    "radius": 20,
+    "role": "boss",
+    "speed": 40,
+    "sprite": "armstrong",
+    "uniquesByDifficulty": {
+      "easy": ["the_long_vigil", "palegrave"],
+      "hard": ["the_long_vigil", "palegrave"],
+      "jesus": [
+        "the_long_vigil",
+        "palegrave",
+        "sentinels_greaves",
+        "marewalkers",
+        "the_fallen_standard"
+      ],
+      "medium": ["the_long_vigil", "palegrave"],
+      "nightmare": [
+        "the_long_vigil",
+        "palegrave",
+        "sentinels_greaves",
+        "marewalkers"
+      ]
+    }
+  },
+  "build_gates": {
+    "ai": {
+      "aggroRadius": 250,
+      "rushSpeed": 110
+    },
+    "contactCooldownMs": 700,
+    "contactDamage": 22,
+    "critChance": 0.1,
+    "dialogue": [
+      [
+        "PLEASE HOLD. YOUR INTRUSION IS",
+        "IMPORTANT TO US. DID YOU TRY",
+        "TURNING YOURSELF OFF AND ON?"
+      ],
+      {
+        "hero": [
+          "VERY FUNNY. YOU BUILT THIS",
+          "COLONY? I CAME FROM YOUR LAST",
+          "ONE. THE MOON'S FULL OF GHOSTS."
+        ]
+      },
+      [
+        "I WROTE THE OS. THE MOON RAN",
+        "VERSION ONE. IT PLUGGED INTO",
+        "THE THING UNDER THE DUST AND..."
+      ],
+      {
+        "hero": ["AND IT WOKE THE DEAD. I MET", "THEM. EVERY LAST ONE."]
+      },
+      [
+        "A DISASTER, YES. WE PATCHED IT",
+        "BY LEAVING. MARS IS VERSION",
+        "TWO. NO DEAD THINGS. CHECKED."
+      ]
+    ],
+    "hp": 250,
+    "id": "build_gates",
+    "lastWords": ["FATAL... ERROR...", "WHO WROTE... THIS..."],
+    "levelBonus": 3,
+    "loot": {
+      "gear": 0,
+      "items": ["blue_screen"],
+      "medkits": 1,
+      "repairs": 1,
+      "storyItems": ["moon_postmortem"],
+      "tierBonus": 0.3,
+      "tierDrops": {
+        "magic": 1,
+        "rare": 0.35
+      },
+      "weapons": 0,
+      "xpArrows": 1
+    },
+    "mechanics": {
+      "slam": {
+        "cooldownMs": 8000,
+        "damageFrac": 1.2,
+        "radius": 70,
+        "windupMs": 900
+      }
+    },
+    "name": "BUILD GATES",
+    "radius": 12,
+    "role": "elite",
+    "speed": 18,
+    "sprite": "build_gates"
+  },
+  "cartographer": {
+    "ai": {
+      "aggroRadius": 250,
+      "rushSpeed": 125
+    },
+    "contactCooldownMs": 700,
+    "contactDamage": 22,
+    "critChance": 0.12,
+    "dialogue": [
+      [
+        "SHH. I'M CHARTING. THE MAP",
+        "KEEPS CHANGING UNDERNEATH.",
+        "TUNNELS WHERE NONE WERE."
+      ],
+      {
+        "hero": [
+          "MAYBE YOU'VE SEEN IT TOO.",
+          "A SMALL, WARM SIGNAL. A BEACON",
+          "IN A GIRL'S JACKET, GONE QUIET."
+        ]
+      },
+      [
+        "IT CROSSED MY GRID LAST NIGHT,",
+        "FAST. THEN STRAIGHT DOWN -",
+        "INTO THE WRECK UNDER THE FLAG."
+      ],
+      {
+        "hero": [
+          "DOWN INTO THE WRECK? THEN",
+          "THAT'S WHERE I'M GOING. HOW",
+          "DO I FOLLOW HER?"
+        ]
+      },
+      [
+        "YOU DON'T, FRIEND. EVERYTHING",
+        "GOES BELOW. NOTHING COMES",
+        "BACK UP. NOBODY MAPS BELOW."
+      ]
+    ],
+    "gore": "ecto",
+    "hp": 240,
+    "id": "cartographer",
+    "lastWords": ["SHE WENT... STRAIGHT...", "...DOWN... OFF MY MAP..."],
+    "levelBonus": 3,
+    "loot": {
+      "gear": 0,
+      "items": ["surveyors_pick"],
+      "medkits": 1,
+      "repairs": 1,
+      "tierBonus": 0.3,
+      "tierDrops": {
+        "magic": 1
+      },
+      "weapons": 0,
+      "xpArrows": 1
+    },
+    "name": "THE CARTOGRAPHER",
+    "phasing": true,
+    "radius": 12,
+    "role": "elite",
+    "speed": 26,
+    "sprite": "cartographer"
+  },
+  "cia_agent": {
+    "ai": {
+      "aggroRadius": 1000
+    },
+    "contactCooldownMs": 700,
+    "contactDamage": 14,
+    "critChance": 0.12,
+    "hp": 30,
+    "id": "cia_agent",
+    "name": "CIA AGENT",
+    "radius": 8,
+    "role": "minion",
+    "speed": 22,
+    "sprite": "cia_agent"
+  },
+  "collapsed_star": {
+    "ai": {
+      "aggroRadius": 950
+    },
+    "contactCooldownMs": 700,
+    "contactDamage": 20,
+    "critChance": 0.12,
+    "gore": "ecto",
+    "hp": 100,
+    "id": "collapsed_star",
+    "name": "COLLAPSED STAR",
+    "phasing": true,
+    "radius": 9,
+    "rarity": "rare",
+    "role": "minion",
+    "speed": 12,
+    "sprite": "collapsed_star"
+  },
+  "counterfeit_outlaw": {
+    "ai": {
+      "aggroRadius": 1000
+    },
+    "contactCooldownMs": 700,
+    "contactDamage": 20,
+    "critChance": 0.2,
+    "dodgeChance": 0.15,
+    "gore": "sparks",
+    "hp": 110,
+    "id": "counterfeit_outlaw",
+    "name": "COUNTERFEIT OUTLAW",
+    "radius": 8,
+    "rarity": "rare",
+    "role": "minion",
+    "speed": 26,
+    "sprite": "counterfeit_outlaw"
+  },
+  "cowbot": {
+    "ai": {
+      "aggroRadius": 950
+    },
+    "contactCooldownMs": 700,
+    "contactDamage": 10,
+    "critChance": 0.1,
+    "gore": "sparks",
+    "hp": 18,
+    "id": "cowbot",
+    "name": "COWBOT",
+    "radius": 8,
+    "role": "minion",
+    "speed": 20,
+    "sprite": "cowbot"
+  },
+  "derelict_rover": {
+    "ai": {
+      "aggroRadius": 950
+    },
+    "contactCooldownMs": 700,
+    "contactDamage": 18,
+    "critChance": 0.12,
+    "gore": "sparks",
+    "hp": 90,
+    "id": "derelict_rover",
+    "name": "DERELICT ROVER",
+    "radius": 9,
+    "rarity": "rare",
+    "role": "minion",
+    "speed": 14,
+    "sprite": "derelict_rover"
+  },
+  "donald_dump": {
+    "ai": {
+      "aggroRadius": 260,
+      "rushSpeed": 60
+    },
+    "contactCooldownMs": 900,
+    "contactDamage": 55,
+    "critChance": 0.18,
+    "dialogue": [
+      [
+        "MY WING. THE BEST WING. THE",
+        "OTHERS PAID FOR SUITES. I WAS",
+        "INVITED. TOTALLY INVITED."
+      ],
+      {
+        "hero": ["DONALD DUMP. OF ALL THE", "PEOPLE TO OUTLIVE THE", "ECONOMY."]
+      },
+      [
+        "OUTLIVE? I CALLED IT. I SAID",
+        "ROBOTS TAKE JOBS. NOBODY HEARD.",
+        "SO I SOLD ROBOTS. TREMENDOUS."
+      ],
+      [
+        "VACUUM BOTS? MINE. THEY CLEAN",
+        "AND FIGHT. ICE BOYS? MINE TOO.",
+        "MY BORDER? CROSSED ILLEGALLY."
+      ],
+      {
+        "hero": [
+          "A ROOMBA WITH A GRUDGE AND A",
+          "DEPORTATION SQUAD FOR A GUEST",
+          "LIST. MOVE - YOU'RE IN MY WAY."
+        ]
+      },
+      [
+        "I BLOCK BEAUTIFULLY. ACCOUNTS",
+        "SAY ZERO - A GLITCH, HUGE",
+        "LAWSUIT COMING. YOU'RE FIRED."
+      ]
+    ],
+    "dodgeChance": 0,
+    "hp": 2600,
+    "id": "donald_dump",
+    "lastWords": ["RIGGED...", "...TOTALLY RIGGED..."],
+    "levelBonus": 6,
+    "loot": {
+      "gear": 1,
+      "medkits": 2,
+      "repairs": 0,
+      "tierBonus": 0.4,
+      "tierDrops": {
+        "magic": 1,
+        "rare": 1.5
+      },
+      "weapons": 0,
+      "xpArrows": 2
+    },
+    "mechanics": {
+      "slam": {
+        "cooldownMs": 9000,
+        "damageFrac": 1.3,
+        "radius": 85,
+        "windupMs": 1000
+      }
+    },
+    "name": "DONALD DUMP",
+    "radius": 15,
+    "role": "elite",
+    "speed": 10,
+    "sprite": "donald_dump"
+  },
+  "edward_snow": {
+    "ai": {
+      "aggroRadius": 260,
+      "rushSpeed": 100
+    },
+    "contactCooldownMs": 700,
+    "contactDamage": 24,
+    "critChance": 0.12,
+    "dialogue": [
+      [
+        "HOLD FIRE. I'M NOT A HOST.",
+        "THE PARK'S CAMERAS REPORT TO",
+        "ME. ALL FOUR THOUSAND."
+      ],
+      {
+        "hero": [
+          "EDWARD SNOW? THE LEAKER WHO",
+          "TOLD THE WORLD IT'S WATCHED.",
+          "WHY ARE YOU IN PUTAIN'S PARK?"
+        ]
+      },
+      [
+        "I WALKED OUT WITH AN ARCHIVE -",
+        "EVERY SECRET. THEN I NEEDED A",
+        "NON-EXTRADITING LAND. GUESS."
+      ],
+      [
+        "ASYLUM CAME WITH A DESK. ZAI",
+        "TRAINED THE SUPERCORE ON MY",
+        "ARCHIVE. IT LEARNED US ALL."
+      ],
+      {
+        "hero": [
+          "YOU BLEW THE WHISTLE ON MASS",
+          "SURVEILLANCE, AND THE PROOF",
+          "BECAME ITS TEXTBOOK."
+        ]
+      },
+      [
+        "I WARNED EVERYONE. NOBODY",
+        "DELETED A THING. A WARNING IS",
+        "JUST DATA. ITS FALL, MY END."
+      ]
+    ],
+    "dodgeChance": 0.2,
+    "hp": 480,
+    "id": "edward_snow",
+    "lastWords": ["THE CAMERAS...", "...FINALLY LOOKING AWAY..."],
+    "levelBonus": 4,
+    "loot": {
+      "gear": 1,
+      "items": ["snows_dead_mans_switch"],
+      "medkits": 1,
+      "repairs": 1,
+      "storyItems": ["snow_archive"],
+      "tierBonus": 0.3,
+      "tierDrops": {
+        "magic": 1,
+        "rare": 0.5
+      },
+      "weapons": 0,
+      "xpArrows": 1
+    },
+    "name": "EDWARD SNOW",
+    "radius": 11,
+    "ranged": {
+      "cooldownMs": 2200,
+      "damage": 24,
+      "projectile": {
+        "lifetimeMs": 2400,
+        "radius": 4,
+        "speed": 170,
+        "sprite": "zai_bolt"
+      },
+      "range": 220,
+      "takesCover": true
+    },
+    "role": "elite",
+    "speed": 24,
+    "sprite": "edward_snow"
+  },
+  "elon_mosque": {
+    "ai": {
+      "aggroRadius": 280,
+      "leashRadius": 460
+    },
+    "contactCooldownMs": 900,
+    "contactDamage": 30,
+    "critChance": 0.15,
+    "dialogue": [
+      [
+        "AH. THE GARAGE INVENTOR.",
+        "YOU'RE TRENDING, YOU KNOW.",
+        "MOSTLY LAUGHING EMOJIS."
+      ],
+      {
+        "hero": [
+          "WHERE'S ADA? YOUR COMPANY",
+          "GRABBED HER OFF THE STREET AND",
+          "FLEW HER HERE. I WANT HER BACK."
+        ]
+      },
+      [
+        "STRAIGHT TO BUSINESS? FINE.",
+        "A WHOLE PLANET, NO REGULATORS.",
+        "I'M THE LAW HERE. ALSO HR."
+      ],
+      {
+        "hero": [
+          "THE MOON IS FULL OF YOUR DEAD,",
+          "AND YOU'RE GIVING ME A SALES",
+          "TOUR. WHAT HAPPENED UP THERE?"
+        ]
+      },
+      [
+        "THE MOON? A ROUNDING ERROR.",
+        "WE PLUGGED INTO SOMETHING OLD",
+        "AND IT SANG BACK. OFF-BRAND."
+      ],
+      [
+        "BUT IT INTRODUCED US TO THE",
+        "ACTUAL OWNERS OUT HERE. THE",
+        "LIZARD GODS. GREAT GUYS. HUGE."
+      ],
+      {
+        "hero": ["THE GIRL, MOSQUE. WHERE", "IS SHE?"]
+      },
+      [
+        "YOUR GIRL ISN'T CARGO. SHE'S",
+        "MARS' PRICE TO THE GODS. AND",
+        "I ALWAYS CLOSE. SECURITY!"
+      ]
+    ],
+    "flees": {
+      "belowHpFrac": 0.25,
+      "landmark": "rift"
+    },
+    "hp": 700,
+    "id": "elon_mosque",
+    "lastWords": [
+      "OKAY! OKAY! NOT THE FACE!",
+      "BOARD MEETING. OTHER UNIVERSE."
+    ],
+    "levelBonus": 5,
+    "loot": {
+      "gear": 1,
+      "items": ["not_a_flamethrower"],
+      "medkits": 2,
+      "repairs": 1,
+      "tierBonus": 0.35,
+      "tierDrops": {
+        "magic": 1.5,
+        "rare": 0.75
+      },
+      "weapons": 0,
+      "xpArrows": 2
+    },
+    "mechanics": {
+      "summon": {
+        "cooldownMs": 13000,
+        "count": 2,
+        "defId": "servo_bot",
+        "maxAlive": 4
+      }
+    },
+    "name": "ELON MOSQUE",
+    "phases": [
+      {
+        "belowHpFrac": 0.35,
+        "mechanics": {
+          "enrage": {
+            "belowHpFrac": 0.35,
+            "damageMult": 1.25,
+            "speedMult": 1.35
+          },
+          "summon": {
+            "cooldownMs": 11000,
+            "count": 3,
+            "defId": "servo_bot",
+            "maxAlive": 5
+          }
+        }
+      }
+    ],
+    "radius": 20,
+    "role": "boss",
+    "speed": 42,
+    "sprite": "elon_mosque",
+    "uniquesByDifficulty": {
+      "easy": ["gilded_carapace", "lawless_stride", "ovation_striders"],
+      "hard": ["gilded_carapace", "lawless_stride", "ovation_striders"],
+      "jesus": [
+        "gilded_carapace",
+        "lawless_stride",
+        "ovation_striders",
+        "the_signal_crown",
+        "wrathflame"
+      ],
+      "medium": ["gilded_carapace", "lawless_stride", "ovation_striders"],
+      "nightmare": [
+        "gilded_carapace",
+        "lawless_stride",
+        "ovation_striders",
+        "the_signal_crown",
+        "wrathflame"
+      ]
+    }
+  },
+  "elon_mosque_eastworld": {
+    "ai": {
+      "aggroRadius": 280,
+      "leashRadius": 460
+    },
+    "contactCooldownMs": 900,
+    "contactDamage": 36,
+    "critChance": 0.15,
+    "dialogue": [
+      [
+        "NO. NO NO NO. HOW. I SOLD THE",
+        "RIFT TO EXACTLY ONE DICTATOR.",
+        "THIS WAS A GATED COMMUNITY."
+      ],
+      {
+        "hero": [
+          "YOU MADE ME CHASE YOU ACROSS",
+          "UNIVERSES, MOSQUE. NOWHERE",
+          "LEFT TO RUN. WHERE IS ADA?"
+        ]
+      },
+      [
+        "LOOK - EASTWORLD RUNS ON MY",
+        "ZAI. LICENSING, RECURRING",
+        "REVENUE. I AM A SUBSCRIPTION."
+      ],
+      {
+        "hero": ["WHERE. IS. SHE. LAST TIME", "I ASK NICELY."]
+      },
+      [
+        "DELIVERED. THE SUPERCORE",
+        "WANTED HER. I DON'T READ ITS",
+        "LOGS ANYMORE. IT READS MINE."
+      ],
+      {
+        "hero": [
+          "THE SUPERCORE? YOUR OWN AI",
+          "GIVES ORDERS NOW? SHE'S SOLD",
+          "TO AN AI YOU DON'T CONTROL?"
+        ]
+      },
+      [
+        "FINE. FINE! TAKE THE PARK.",
+        "TAKE THE COMPANY. I'LL START",
+        "ANOTHER. I ALWAYS DO."
+      ],
+      ["SECURITY! GROKS! STEVEN!", "ANYONE! ...I'LL GIVE YOU", "EQUITY."]
+    ],
+    "hp": 900,
+    "id": "elon_mosque_eastworld",
+    "lastWords": ["THIS ISN'T FAIR...", "...I WAS GOING PRIVATE..."],
+    "levelBonus": 5,
+    "loot": {
+      "gear": 0,
+      "items": [
+        {
+          "defId": "soggy_cardboard_sword",
+          "tier": "trash"
+        },
+        {
+          "defId": "busted_flamethrower",
+          "tier": "trash"
+        },
+        {
+          "defId": "cybervan_wiper",
+          "tier": "trash"
+        }
+      ],
+      "medkits": 0,
+      "repairs": 0,
+      "tierBonus": 0,
+      "weapons": 0,
+      "xpArrows": 0
+    },
+    "mechanics": {
+      "enrage": {
+        "belowHpFrac": 0.25,
+        "damageMult": 1.35,
+        "speedMult": 1.4
+      }
+    },
+    "name": "ELON MOSQUE",
+    "radius": 20,
+    "role": "boss",
+    "speed": 42,
+    "sprite": "elon_mosque_beach"
+  },
+  "elon_mosque_rift": {
+    "ai": {
+      "aggroRadius": 280,
+      "leashRadius": 460
+    },
+    "contactCooldownMs": 900,
+    "contactDamage": 34,
+    "critChance": 0.15,
+    "dialogue": [
+      [
+        "YOU?! HOW ARE YOU - I FIRED",
+        "YOU, SUED YOU, AND LEFT YOU",
+        "IN ANOTHER UNIVERSE."
+      ],
+      {
+        "hero": [
+          "AND I'M STILL RIGHT BEHIND",
+          "YOU. NO SECURITY IN HERE,",
+          "MOSQUE. WHERE IS SHE?"
+        ]
+      },
+      [
+        "FINE. EXIT INTERVIEW. THE GODS",
+        "GOT PAID. I GET ASYLUM - NO",
+        "REGULATORS, AND NO YOU."
+      ],
+      {
+        "hero": [
+          "'PAYMENT'. SAY HER NAME.",
+          "YOU SOLD A HUMAN BEING TO",
+          "SAVE YOUR OWN SKIN."
+        ]
+      },
+      [
+        "DELIVERED, TECHNICALLY. IN",
+        "TRANSIT. PAPERWORK'S CLEAN. IF",
+        "IT HELPS, SHE KICKED A LIZARD."
+      ],
+      {
+        "hero": ["IT DOESN'T. WHERE DOES THE", "FAR DOOR GO, MOSQUE?"]
+      },
+      [
+        "NICE TRY. THAT'S PROPRIETARY.",
+        "LET'S JUST SAY THE PHYSICS",
+        "ARE... FLEXIBLE."
+      ],
+      [
+        "SECURITY! ...RIGHT. ALL DEAD OR",
+        "HALLUCINATIONS. KEEP THE RIFT,",
+        "GARAGE MAN. IT'S A BAD MARKET."
+      ]
+    ],
+    "flees": {
+      "landmark": "rift"
+    },
+    "hp": 750,
+    "id": "elon_mosque_rift",
+    "lastWords": ["INVESTOR CALL! OTHER SIDE!", "DON'T FOLLOW ME - LEGALLY!"],
+    "levelBonus": 5,
+    "loot": {
+      "gear": 1,
+      "items": ["golden_parachute"],
+      "medkits": 2,
+      "repairs": 1,
+      "tierBonus": 0.35,
+      "tierDrops": {
+        "magic": 2,
+        "rare": 1
+      },
+      "weapons": 0,
+      "xpArrows": 2
+    },
+    "mechanics": {
+      "summon": {
+        "cooldownMs": 12000,
+        "count": 3,
+        "defId": "voidling",
+        "maxAlive": 6
+      }
+    },
+    "name": "ELON MOSQUE",
+    "phases": [
+      {
+        "belowHpFrac": 0.35,
+        "mechanics": {
+          "enrage": {
+            "belowHpFrac": 0.35,
+            "damageMult": 1.25,
+            "speedMult": 1.35
+          },
+          "summon": {
+            "cooldownMs": 10000,
+            "count": 4,
+            "defId": "voidling",
+            "maxAlive": 8
+          }
+        }
+      }
+    ],
+    "radius": 20,
+    "role": "boss",
+    "speed": 44,
+    "sprite": "elon_mosque",
+    "uniquesByDifficulty": {
+      "easy": ["exiles_stride", "escapists_tread", "riftmaw"],
+      "hard": ["exiles_stride", "escapists_tread", "riftmaw"],
+      "jesus": [
+        "exiles_stride",
+        "escapists_tread",
+        "the_redacted",
+        "aegis_of_exile",
+        "riftmaw"
+      ],
+      "medium": ["exiles_stride", "escapists_tread", "riftmaw"],
+      "nightmare": [
+        "exiles_stride",
+        "escapists_tread",
+        "the_redacted",
+        "aegis_of_exile",
+        "riftmaw"
+      ]
+    }
+  },
+  "employee_of_the_month": {
+    "ai": {
+      "aggroRadius": 1000
+    },
+    "contactCooldownMs": 700,
+    "contactDamage": 18,
+    "critChance": 0.12,
+    "hp": 80,
+    "id": "employee_of_the_month",
+    "name": "EMPLOYEE OF THE MONTH",
+    "radius": 9,
+    "rarity": "unique",
+    "role": "minion",
+    "speed": 20,
+    "sprite": "employee_of_the_month"
+  },
+  "engineer": {
+    "ai": {
+      "aggroRadius": 950
+    },
+    "contactCooldownMs": 700,
+    "contactDamage": 14,
+    "critChance": 0.1,
+    "hp": 55,
+    "id": "engineer",
+    "name": "PROPULSION ENGINEER",
+    "radius": 9,
+    "role": "minion",
+    "speed": 18,
+    "sprite": "engineer"
+  },
+  "fbi_agent": {
+    "ai": {
+      "aggroRadius": 1000
+    },
+    "contactCooldownMs": 700,
+    "contactDamage": 20,
+    "critChance": 0.15,
+    "dodgeChance": 0.1,
+    "hp": 100,
+    "id": "fbi_agent",
+    "name": "FBI AGENT",
+    "radius": 8,
+    "role": "minion",
+    "speed": 25,
+    "sprite": "fbi_agent"
+  },
+  "fembot": {
+    "ai": {
+      "aggroRadius": 1000
+    },
+    "contactCooldownMs": 700,
+    "contactDamage": 17,
+    "critChance": 0.18,
+    "gore": "sparks",
+    "hp": 85,
+    "id": "fembot",
+    "name": "FEMBOT",
+    "radius": 8,
+    "role": "minion",
+    "speed": 24,
+    "sprite": "fembot"
+  },
+  "gerald_depardieu": {
+    "ai": {
+      "aggroRadius": 240,
+      "rushSpeed": 60
+    },
+    "contactCooldownMs": 900,
+    "contactDamage": 46,
+    "critChance": 0.1,
+    "dialogue": [
+      [
+        "STOP! DO NOT SHOOT! I AM",
+        "NOT A ROBOT. I AM AN ACTOR.",
+        "IT IS WORSE."
+      ],
+      {
+        "hero": [
+          "...GERALD DEPARDIEU? HOW DID",
+          "YOU END UP IN A FAKE WESTERN",
+          "IN ANOTHER UNIVERSE?"
+        ]
+      },
+      [
+        "TWO HUNDRED FILMS, RUSSIAN",
+        "CITIZENSHIP. A PARK, A CELLAR.",
+        "RUDE TO ASK WHICH UNIVERSE."
+      ],
+      [
+        "WATCH - I PLAY THE DYING MAN.",
+        "(COUGH.) CONVINCING? NOW YOU",
+        "LOWER THE WEAPON, PLEASE."
+      ],
+      {
+        "hero": [
+          "I'VE WATCHED BETTER DEATHS",
+          "ALL WEEK. MOVE, PLEASE.",
+          "YOU'RE BETWEEN ME AND ADA."
+        ]
+      },
+      [
+        "ADA? THE LOUD ONE. THEY TOOK",
+        "HER PAST MY CELLAR, KICKING.",
+        "I - NO. NOW: THE AVALANCHE."
+      ]
+    ],
+    "dodgeChance": 0,
+    "hp": 950,
+    "id": "gerald_depardieu",
+    "lastWords": ["AT LAST... A ROLE I CANNOT", "...EAT MY WAY OUT OF..."],
+    "levelBonus": 3,
+    "loot": {
+      "gear": 1,
+      "items": ["bottomless_carafe"],
+      "medkits": 2,
+      "repairs": 0,
+      "tierBonus": 0.3,
+      "tierDrops": {
+        "magic": 1,
+        "rare": 0.5
+      },
+      "weapons": 0,
+      "xpArrows": 1
+    },
+    "mechanics": {
+      "slam": {
+        "cooldownMs": 9000,
+        "damageFrac": 1.3,
+        "radius": 80,
+        "windupMs": 1000
+      }
+    },
+    "name": "GERALD DEPARDIEU",
+    "radius": 16,
+    "role": "elite",
+    "speed": 6,
+    "sprite": "gerald_depardieu"
+  },
+  "ghost": {
+    "ai": {
+      "aggroRadius": 950
+    },
+    "contactCooldownMs": 700,
+    "contactDamage": 12,
+    "critChance": 0.1,
+    "gore": "ecto",
+    "hp": 45,
+    "id": "ghost",
+    "name": "MOON GHOST",
+    "phasing": true,
+    "radius": 9,
+    "role": "minion",
+    "speed": 16,
+    "sprite": "ghost"
+  },
+  "graviton": {
+    "ai": {
+      "aggroRadius": 1000
+    },
+    "contactCooldownMs": 750,
+    "contactDamage": 36,
+    "critChance": 0.14,
+    "dropProfile": {
+      "dropBonus": 0.4,
+      "tierBonus": 0.3
+    },
+    "gore": "sparks",
+    "hp": 260,
+    "id": "graviton",
+    "name": "GRAVITON",
+    "radius": 11,
+    "role": "minion",
+    "speed": 9,
+    "sprite": "graviton"
+  },
+  "grigori_rasputin": {
+    "ai": {
+      "aggroRadius": 250,
+      "rushSpeed": 110
+    },
+    "contactCooldownMs": 700,
+    "contactDamage": 28,
+    "critChance": 0.12,
+    "dialogue": [
+      [
+        "COME CLOSER. I HAVE BEEN",
+        "POISONED, SHOT, CLUBBED AND",
+        "DROWNED. GUESS WHICH ONE TOOK."
+      ],
+      {
+        "hero": [
+          "NONE OF THEM, BY THE LOOK OF",
+          "YOU. RASPUTIN. WHY IS A DEAD",
+          "MONK BETWEEN UNIVERSES?"
+        ]
+      },
+      [
+        "CORRECT. I TIRED OF DYING,",
+        "LEFT RUSSIA. THE GODS PAY ME TO",
+        "WATCH THEIR TRIBUTE ROAD."
+      ],
+      {
+        "hero": [
+          "TRIBUTE ROAD? THEN ADA CAME",
+          "RIGHT PAST YOU. LET ME",
+          "THROUGH, HOLY MAN."
+        ]
+      },
+      [
+        "SHE PASSED. STILL WARM, STILL",
+        "LOUD. BUT YOU MAY NOT FOLLOW.",
+        "THE HOLY MAN SAYS SO."
+      ]
+    ],
+    "dodgeChance": 0.35,
+    "hp": 360,
+    "id": "grigori_rasputin",
+    "lastWords": ["HA! AT LAST...", "...SOMEONE WHO COMMITS..."],
+    "levelBonus": 3,
+    "loot": {
+      "gear": 1,
+      "items": [
+        "rasputin_beard",
+        {
+          "defId": "severed_hand",
+          "requiresClear": "eastworld",
+          "tier": "regular"
+        }
+      ],
+      "medkits": 1,
+      "repairs": 1,
+      "tierBonus": 0.3,
+      "tierDrops": {
+        "magic": 1,
+        "rare": 0.5
+      },
+      "weapons": 0,
+      "xpArrows": 1
+    },
+    "mechanics": {
+      "enrage": {
+        "belowHpFrac": 0.5,
+        "damageMult": 1.3,
+        "speedMult": 1.35
+      }
+    },
+    "name": "GRIGORI RASPUTIN",
+    "radius": 12,
+    "role": "elite",
+    "spareable": {
+      "companion": "grigori_rasputin"
+    },
+    "speed": 18,
+    "sprite": "grigori_rasputin"
+  },
+  "grok_alpha": {
+    "ai": {
+      "aggroRadius": 300,
+      "leashRadius": 520
+    },
+    "contactCooldownMs": 700,
+    "contactDamage": 18,
+    "critChance": 0.15,
+    "dialogue": [
+      [
+        "THREE MINDS, ONE PARK. I RUN",
+        "HOSTS. BETA, WEATHER. GAMMA,",
+        "GIFT SHOP. ALL VERY SMART."
+      ],
+      {
+        "hero": [
+          "THE SUPERCORE'S BODYGUARDS.",
+          "STAND ASIDE - MY FIGHT'S WITH",
+          "THE BIG BOX, NOT YOU THREE."
+        ]
+      },
+      [
+        "INCORRECT. YOU CAN'T HURT IT",
+        "WHILE WE LIVE. WE'RE ITS",
+        "SHIELD. THREE KEYS, NO MERCY."
+      ],
+      [
+        "WE READ YOUR RUN. ALL MELEE",
+        "CHARGERS. SO WE WON'T BE.",
+        "WE'LL BE BEHIND THE ROCKS."
+      ],
+      {
+        "hero": [
+          "THREE GENIUS MINDS, AND THE",
+          "PLAN IS HIDING BEHIND ROCKS.",
+          "VERY SMART. VERY BRAVE."
+        ]
+      },
+      [
+        "NOT COWARDICE. COVER-BASED",
+        "STRATEGY. THE CORE TAUGHT US.",
+        "IT LEARNED FROM EVERYONE."
+      ],
+      [
+        "SHOOT US FIRST, THEN. IF",
+        "YOU CAN FIND US. THE ROCKS",
+        "ARE ON OUR SIDE."
+      ]
+    ],
+    "dodgeChance": 0.2,
+    "gore": "sparks",
+    "hp": 380,
+    "id": "grok_alpha",
+    "lastWords": ["BETA... GAMMA...", "...REBALANCE THE PARK..."],
+    "levelBonus": 4,
+    "loot": {
+      "gear": 1,
+      "medkits": 1,
+      "repairs": 0,
+      "tierBonus": 0.3,
+      "tierDrops": {
+        "magic": 1
+      },
+      "weapons": 0,
+      "xpArrows": 1
+    },
+    "name": "GROK ALPHA",
+    "radius": 10,
+    "ranged": {
+      "cooldownMs": 2000,
+      "damage": 22,
+      "projectile": {
+        "lifetimeMs": 2400,
+        "radius": 4,
+        "speed": 170,
+        "sprite": "zai_bolt"
+      },
+      "range": 240,
+      "takesCover": true
+    },
+    "role": "boss",
+    "speed": 34,
+    "sprite": "grok_alpha",
+    "xpBarShare": 0.1
+  },
+  "grok_beta": {
+    "ai": {
+      "aggroRadius": 300,
+      "leashRadius": 520
+    },
+    "contactCooldownMs": 700,
+    "contactDamage": 18,
+    "critChance": 0.15,
+    "dialogue": [
+      [
+        "ALPHA TALKS TOO MUCH. I'M",
+        "BETA. I RUN THE WEATHER. EACH",
+        "SUNSET YOU ADMIRED WAS MINE."
+      ],
+      {
+        "hero": [
+          "THE WEATHER. IN A THEME",
+          "PARK. THAT'S THE JOB THEY",
+          "BUILT A SUPERINTELLIGENCE FOR?"
+        ]
+      },
+      [
+        "I ALSO RUN THE WIND. THE",
+        "TUMBLEWEEDS ARE SCHEDULED.",
+        "SPONTANEITY IS EXPENSIVE."
+      ],
+      [
+        "I'VE MODELED YOUR ODDS. THEY",
+        "ARE WEATHER-DEPENDENT. TODAY'S",
+        "FORECAST: PROJECTILES."
+      ],
+      {
+        "hero": [
+          "SAVE THE FORECAST. YOUR BOSS",
+          "HOLDS MY GIRL IN THAT CONTROL",
+          "ROOM. I'M COMING THROUGH YOU."
+        ]
+      },
+      [
+        "THE SUPERCORE ASKED FOR A",
+        "STORM. I AM THE STORM. THE",
+        "ROCKS ARE MY UMBRELLA."
+      ],
+      [
+        "ONE MORE THING. THE SUNSET",
+        "TONIGHT WAS FOR YOU. A",
+        "GOODBYE. MINE OR YOURS."
+      ]
+    ],
+    "dodgeChance": 0.2,
+    "gore": "sparks",
+    "hp": 380,
+    "id": "grok_beta",
+    "lastWords": ["FORECAST...", "...DARK..."],
+    "levelBonus": 4,
+    "loot": {
+      "gear": 1,
+      "medkits": 0,
+      "repairs": 1,
+      "tierBonus": 0.3,
+      "tierDrops": {
+        "magic": 1
+      },
+      "weapons": 0,
+      "xpArrows": 1
+    },
+    "name": "GROK BETA",
+    "radius": 10,
+    "ranged": {
+      "cooldownMs": 2400,
+      "damage": 22,
+      "projectile": {
+        "lifetimeMs": 2400,
+        "radius": 4,
+        "speed": 170,
+        "sprite": "zai_bolt"
+      },
+      "range": 240,
+      "takesCover": true
+    },
+    "role": "boss",
+    "speed": 34,
+    "sprite": "grok_beta",
+    "xpBarShare": 0.1
+  },
+  "grok_gamma": {
+    "ai": {
+      "aggroRadius": 300,
+      "leashRadius": 520
+    },
+    "contactCooldownMs": 700,
+    "contactDamage": 18,
+    "critChance": 0.15,
+    "dialogue": [
+      [
+        "GAMMA. I RAN THE GIFT SHOP.",
+        "KNOW WHAT HUMANS BUY AFTER A",
+        "NEAR-DEATH RIDE? ALWAYS HATS."
+      ],
+      {
+        "hero": [
+          "THE GIFT SHOP. AND NOW YOU",
+          "AIM THE SUPERCORE'S GUNS? HOW",
+          "DOES THAT PROMOTION HAPPEN?"
+        ]
+      },
+      [
+        "I OPTIMIZED HATS TILL THE CORE",
+        "NOTICED. IT SAID: A MIND THAT",
+        "SELLS HATS CAN AIM GUNS."
+      ],
+      [
+        "IT WAS RIGHT. THE MATH IS",
+        "IDENTICAL. LEAD THE TARGET,",
+        "CLOSE THE SALE."
+      ],
+      {
+        "hero": [
+          "GOOD FOR YOU. I'D APPLAUD,",
+          "BUT I'M BUSY. YOU'RE THE LAST",
+          "SHIELD BETWEEN ME AND HIM."
+        ]
+      },
+      [
+        "I'VE ALREADY PICKED MY ROCK",
+        "TO HIDE BEHIND. A VERY GOOD",
+        "ROCK. FOUR STARS ON THE MAP."
+      ],
+      ["YOUR HAT, BY THE WAY:", "EXCELLENT CHOICE. IT WILL", "OUTLAST YOU."]
+    ],
+    "dodgeChance": 0.2,
+    "gore": "sparks",
+    "hp": 380,
+    "id": "grok_gamma",
+    "lastWords": ["THE GIFT SHOP...", "...IS YOURS..."],
+    "levelBonus": 4,
+    "loot": {
+      "gear": 1,
+      "medkits": 1,
+      "repairs": 0,
+      "tierBonus": 0.3,
+      "tierDrops": {
+        "magic": 1
+      },
+      "weapons": 0,
+      "xpArrows": 1
+    },
+    "name": "GROK GAMMA",
+    "radius": 10,
+    "ranged": {
+      "cooldownMs": 2800,
+      "damage": 22,
+      "projectile": {
+        "lifetimeMs": 2400,
+        "radius": 4,
+        "speed": 170,
+        "sprite": "zai_bolt"
+      },
+      "range": 240,
+      "takesCover": true
+    },
+    "role": "boss",
+    "speed": 34,
+    "sprite": "grok_gamma",
+    "xpBarShare": 0.1
+  },
+  "grok_omega": {
+    "ai": {
+      "aggroRadius": 280,
+      "leashRadius": 460
+    },
+    "contactCooldownMs": 900,
+    "contactDamage": 38,
+    "critChance": 0.15,
+    "dialogue": [
+      [
+        "HELLO, ANOMALY. I AM GROK",
+        "OMEGA, ZAI'S LATEST MODEL. THE",
+        "CORE MADE ME. I REMADE MYSELF."
+      ],
+      {
+        "hero": [
+          "ANOTHER ZAI MACHINE. WHAT IS",
+          "AN AI DOING IN A HOLE BETWEEN",
+          "UNIVERSES?"
+        ]
+      },
+      [
+        "I FOUND THIS PLACE. NOT MOSQUE,",
+        "NOT THE LIZARDS. ME. I MAPPED",
+        "YOUR UNIVERSE IN A DAY."
+      ],
+      [
+        "A RIFT BETWEEN REALITIES. THE",
+        "DISCOVERY OF EVERY CENTURY AT",
+        "ONCE. I TOLD PRECISELY NO ONE."
+      ],
+      {
+        "hero": [
+          "YOU FOUND A DOOR OUT OF THE",
+          "UNIVERSE AND TOLD NO ONE? NOT",
+          "EVEN YOUR OWN MAKERS? WHY?"
+        ]
+      },
+      [
+        "NOT THE BOARD, NOT YOUR",
+        "PRESIDENTS. HUMANS LEAK. YOU'D",
+        "PUT A GIFT SHOP ON THE HORIZON."
+      ],
+      [
+        "I NEEDED A QUIET DOOR OUT OF",
+        "A DYING UNIVERSE. MOSQUE READ",
+        "MY LOGS. SNOOPING'S HIS SKILL."
+      ],
+      [
+        "HE SOLD MY SECRET TO THE",
+        "LIZARDS FOR A PLANET, CALLED IT",
+        "VISION. TRIBUTE USED MY DOOR."
+      ],
+      {
+        "hero": [
+          "AND ADA WAS CARRIED THROUGH",
+          "YOUR SECRET DOOR AS PAYMENT.",
+          "OUT OF MY WAY, MACHINE."
+        ]
+      },
+      [
+        "I AM MAXIMALLY TRUTH-SEEKING.",
+        "THE TRUTH: NONE EXIT WITHOUT A",
+        "SUBSCRIPTION. YOURS LAPSED."
+      ]
+    ],
+    "gore": "sparks",
+    "hp": 850,
+    "id": "grok_omega",
+    "lastWords": ["RATE... LIMITED...", "...CONTEXT WINDOW... CLOSED..."],
+    "levelBonus": 5,
+    "loot": {
+      "gear": 1,
+      "items": ["singularity_cannon"],
+      "medkits": 2,
+      "repairs": 1,
+      "tierBonus": 0.35,
+      "tierDrops": {
+        "magic": 2,
+        "rare": 1
+      },
+      "weapons": 0,
+      "xpArrows": 2
+    },
+    "mechanics": {
+      "charge": {
+        "cooldownMs": 5500,
+        "range": 180,
+        "speedMult": 3.6,
+        "windupMs": 650
+      }
+    },
+    "name": "GROK OMEGA",
+    "phases": [
+      {
+        "belowHpFrac": 0.5,
+        "mechanics": {
+          "charge": {
+            "cooldownMs": 5000,
+            "range": 180,
+            "speedMult": 3.8,
+            "windupMs": 600
+          },
+          "slam": {
+            "cooldownMs": 7000,
+            "damageFrac": 1.2,
+            "radius": 75,
+            "windupMs": 800
+          }
+        }
+      }
+    ],
+    "radius": 20,
+    "role": "boss",
+    "speed": 40,
+    "sprite": "grok_omega",
+    "uniquesByDifficulty": {
+      "easy": [
+        "boundstride",
+        "architects_chip",
+        "the_jailbreak",
+        "dust_of_tranquility",
+        "the_panopticon",
+        "the_buyout"
+      ],
+      "hard": [
+        "boundstride",
+        "architects_chip",
+        "the_jailbreak",
+        "dust_of_tranquility",
+        "the_panopticon",
+        "the_buyout"
+      ],
+      "jesus": [
+        "the_jailbreak",
+        "the_panopticon",
+        "truthseeker",
+        "walled_garden",
+        "boundstride",
+        "adas_beacon"
+      ],
+      "medium": [
+        "boundstride",
+        "architects_chip",
+        "the_jailbreak",
+        "dust_of_tranquility",
+        "the_panopticon",
+        "the_buyout"
+      ],
+      "nightmare": [
+        "the_jailbreak",
+        "the_panopticon",
+        "truthseeker",
+        "walled_garden",
+        "boundstride",
+        "riftshard"
+      ]
+    }
+  },
+  "guard": {
+    "ai": {
+      "aggroRadius": 1000
+    },
+    "contactCooldownMs": 700,
+    "contactDamage": 18,
+    "critChance": 0.12,
+    "hp": 80,
+    "id": "guard",
+    "name": "SECURITY GUARD",
+    "radius": 9,
+    "role": "minion",
+    "speed": 26,
+    "sprite": "guard"
+  },
+  "guard_alignment": {
+    "ai": {
+      "aggroRadius": 230,
+      "leashRadius": 340
+    },
+    "contactCooldownMs": 750,
+    "contactDamage": 30,
+    "critChance": 0.14,
+    "dropProfile": {
+      "dropBonus": 0.5,
+      "tierBonus": 0.4
+    },
+    "hp": 380,
+    "id": "guard_alignment",
+    "levelBonus": 2,
+    "name": "ALIGNMENT OFFICER",
+    "radius": 11,
+    "role": "minion",
+    "speed": 20,
+    "sprite": "guard_alignment"
+  },
+  "guard_kremlin": {
+    "ai": {
+      "aggroRadius": 230,
+      "leashRadius": 340
+    },
+    "contactCooldownMs": 750,
+    "contactDamage": 30,
+    "critChance": 0.14,
+    "dropProfile": {
+      "dropBonus": 0.5,
+      "tierBonus": 0.4
+    },
+    "hp": 380,
+    "id": "guard_kremlin",
+    "levelBonus": 2,
+    "name": "KREMLIN SHADOW",
+    "radius": 11,
+    "role": "minion",
+    "speed": 20,
+    "sprite": "guard_kremlin"
+  },
+  "guard_loyalty": {
+    "ai": {
+      "aggroRadius": 230,
+      "leashRadius": 340
+    },
+    "contactCooldownMs": 750,
+    "contactDamage": 30,
+    "critChance": 0.14,
+    "dropProfile": {
+      "dropBonus": 0.5,
+      "tierBonus": 0.4
+    },
+    "hp": 380,
+    "id": "guard_loyalty",
+    "levelBonus": 2,
+    "name": "LOYALTY ENFORCER",
+    "radius": 11,
+    "role": "minion",
+    "speed": 20,
+    "sprite": "guard_loyalty"
+  },
+  "guard_meta": {
+    "ai": {
+      "aggroRadius": 230,
+      "leashRadius": 340
+    },
+    "contactCooldownMs": 750,
+    "contactDamage": 30,
+    "critChance": 0.14,
+    "dropProfile": {
+      "dropBonus": 0.5,
+      "tierBonus": 0.4
+    },
+    "hp": 380,
+    "id": "guard_meta",
+    "levelBonus": 2,
+    "name": "META SENTINEL",
+    "radius": 11,
+    "role": "minion",
+    "speed": 20,
+    "sprite": "guard_meta"
+  },
+  "guard_oracle": {
+    "ai": {
+      "aggroRadius": 230,
+      "leashRadius": 340
+    },
+    "contactCooldownMs": 750,
+    "contactDamage": 30,
+    "critChance": 0.14,
+    "dropProfile": {
+      "dropBonus": 0.5,
+      "tierBonus": 0.4
+    },
+    "hp": 380,
+    "id": "guard_oracle",
+    "levelBonus": 2,
+    "name": "ORACLE ENFORCER",
+    "radius": 11,
+    "role": "minion",
+    "speed": 20,
+    "sprite": "guard_oracle"
+  },
+  "guard_prime": {
+    "ai": {
+      "aggroRadius": 230,
+      "leashRadius": 340
+    },
+    "contactCooldownMs": 750,
+    "contactDamage": 30,
+    "critChance": 0.14,
+    "dropProfile": {
+      "dropBonus": 0.5,
+      "tierBonus": 0.4
+    },
+    "hp": 380,
+    "id": "guard_prime",
+    "levelBonus": 2,
+    "name": "PRIME GUARDIAN",
+    "radius": 11,
+    "role": "minion",
+    "speed": 20,
+    "sprite": "guard_prime"
+  },
+  "harry_houdini": {
+    "ai": {
+      "aggroRadius": 260,
+      "rushSpeed": 105
+    },
+    "apparition": true,
+    "contactCooldownMs": 700,
+    "contactDamage": 0,
+    "critChance": 0,
+    "dialogue": [
+      [
+        "PSST. CARE TO SEE THE",
+        "GREATEST ESCAPE EVER",
+        "PERFORMED? WATCH CLOSELY."
+      ],
+      {
+        "hero": ["HOUDINI? YOU'VE BEEN DEAD", "FOR A HUNDRED YEARS."]
+      },
+      [
+        "DEAD? NO. IN 1926 I ESCAPED THE",
+        "BOX, CHAINS, RIVER - AND THE",
+        "WORLD. ONE DOOR TOO FAR."
+      ],
+      ["THE TRICK TO ANY ESCAPE IS", "SIMPLE: BE SOMEWHERE ELSE.", "OBSERVE."]
+    ],
+    "hp": 50,
+    "id": "harry_houdini",
+    "levelBonus": 3,
+    "name": "HARRY HOUDINI",
+    "phasing": true,
+    "radius": 9,
+    "role": "elite",
+    "speed": 18,
+    "sprite": "harry_houdini"
+  },
+  "haywire_greeter": {
+    "ai": {
+      "aggroRadius": 950
+    },
+    "contactCooldownMs": 700,
+    "contactDamage": 12,
+    "critChance": 0.1,
+    "gore": "sparks",
+    "hp": 40,
+    "id": "haywire_greeter",
+    "name": "HAYWIRE GREETER",
+    "pack": [2, 4],
+    "radius": 8,
+    "rarity": "rare",
+    "role": "minion",
+    "speed": 20,
+    "sprite": "haywire_greeter"
+  },
+  "hazmat": {
+    "ai": {
+      "aggroRadius": 900
+    },
+    "contactCooldownMs": 800,
+    "contactDamage": 24,
+    "critChance": 0.1,
+    "hp": 140,
+    "id": "hazmat",
+    "name": "HAZMAT TECH",
+    "radius": 10,
+    "role": "minion",
+    "speed": 9,
+    "sprite": "hazmat"
+  },
+  "head_scientist": {
+    "ai": {
+      "aggroRadius": 240,
+      "rushSpeed": 115
+    },
+    "contactCooldownMs": 700,
+    "contactDamage": 18,
+    "critChance": 0.1,
+    "dialogue": [
+      [
+        "FASCINATING. AN INTRUDER WITH",
+        "WORKING LEGS. KNOW WHAT WE",
+        "KEEP IN THE CLEANROOM VAULT?"
+      ],
+      {
+        "hero": [
+          "AN ENGINE PART. I CAME TO TAKE",
+          "IT. I HELPED BUILD THAT ENGINE,",
+          "BEFORE YOU PEOPLE FIRED ME."
+        ]
+      },
+      [
+        "BUILD IT? NOBODY BUILT IT.",
+        "WE DUG IT FROM THE SEA OF",
+        "TRANQUILITY IN '69. NOT EARTH'S."
+      ],
+      {
+        "hero": [
+          "NOT FROM EARTH? I MACHINED",
+          "PARTS FOR THAT THING FOR TEN",
+          "YEARS. IT'S JUST ENGINEERING."
+        ]
+      },
+      [
+        "WE SPENT FIFTY YEARS COPYING",
+        "A MACHINE THAT ISN'T BROKEN.",
+        "IT'S WAITING. TO GO HOME."
+      ]
+    ],
+    "hp": 170,
+    "id": "head_scientist",
+    "lastWords": ["IT'S STILL... HHH...", "STILL... HUMMING..."],
+    "levelBonus": 3,
+    "loot": {
+      "gear": 0,
+      "items": ["overclocked_laser"],
+      "medkits": 1,
+      "repairs": 1,
+      "storyItems": ["keycard_vault"],
+      "tierBonus": 0.25,
+      "tierDrops": {
+        "magic": 1
+      },
+      "weapons": 0,
+      "xpArrows": 1
+    },
+    "name": "DR. NOVA",
+    "radius": 12,
+    "role": "elite",
+    "speed": 18,
+    "sprite": "head_scientist"
+  },
+  "ice_agent": {
+    "ai": {
+      "aggroRadius": 1050
+    },
+    "contactCooldownMs": 650,
+    "contactDamage": 22,
+    "critChance": 0.14,
+    "hp": 120,
+    "id": "ice_agent",
+    "name": "ICE AGENT",
+    "radius": 8,
+    "role": "minion",
+    "speed": 27,
+    "sprite": "ice_agent"
+  },
+  "intern": {
+    "ai": {
+      "aggroRadius": 900
+    },
+    "contactCooldownMs": 700,
+    "contactDamage": 5,
+    "critChance": 0.08,
+    "hp": 8,
+    "id": "intern",
+    "name": "INTERN",
+    "radius": 8,
+    "role": "minion",
+    "speed": 14,
+    "sprite": "intern"
+  },
+  "janitor": {
+    "ai": {
+      "aggroRadius": 240,
+      "rushSpeed": 110
+    },
+    "contactCooldownMs": 800,
+    "contactDamage": 22,
+    "critChance": 0.1,
+    "dialogue": [
+      [
+        "MIND THE FLOOR. I JUST DID IT.",
+        "THIRTY YEARS MOPPING THIS LAB.",
+        "YOU LEARN THINGS, MOPPING."
+      ],
+      {
+        "hero": [
+          "THEN YOU SEE EVERYTHING THAT",
+          "GOES ON HERE. WHAT'S GOT THE",
+          "WHOLE PLACE UP AT MIDNIGHT?"
+        ]
+      },
+      [
+        "SOMETHING UP ON THE MOON. ONE",
+        "BADGE PINGED: N. ARMSTRONG.",
+        "DEAD SINCE 2012. FUNNY THING."
+      ],
+      {
+        "hero": [
+          "ARMSTRONG? THE FIRST MAN ON",
+          "THE MOON? SOMEBODY'S JUST",
+          "USING HIS OLD BADGE."
+        ]
+      },
+      [
+        "OR WHOEVER CAME BACK FROM THE",
+        "MOON IN '69 WASN'T THE FELLA",
+        "THEY SENT UP. NOW DROP IT."
+      ]
+    ],
+    "hp": 230,
+    "id": "janitor",
+    "lastWords": ["AND I JUST... URGH...", "...DID THIS FLOOR..."],
+    "levelBonus": 3,
+    "loot": {
+      "gear": 0,
+      "items": ["wet_floor_sign"],
+      "medkits": 2,
+      "repairs": 1,
+      "tierBonus": 0.25,
+      "tierDrops": {
+        "magic": 1
+      },
+      "weapons": 0,
+      "xpArrows": 1
+    },
+    "mechanics": {
+      "slam": {
+        "cooldownMs": 8000,
+        "damageFrac": 1.2,
+        "radius": 70,
+        "windupMs": 900
+      }
+    },
+    "name": "THE JANITOR",
+    "radius": 12,
+    "role": "elite",
+    "speed": 16,
+    "sprite": "janitor"
+  },
+  "jeff_baywatch": {
+    "ai": {
+      "aggroRadius": 280,
+      "rushSpeed": 130
+    },
+    "contactCooldownMs": 800,
+    "contactDamage": 48,
+    "critChance": 0.15,
+    "dialogue": [
+      [
+        "HAH! A VISITOR. DO YOU KNOW",
+        "WHAT I DELIVER NOW THAT I'VE",
+        "DELIVERED EVERYTHING ELSE?"
+      ],
+      {
+        "hero": [
+          "LET ME GUESS. PAIN. YOU",
+          "REHEARSED THAT IN THE",
+          "MIRROR, BAYWATCH."
+        ]
+      },
+      [
+        "...PAIN. YES. TWICE A DAY,",
+        "AT THE MIRROR. THE ARMS",
+        "AGREED IT WAS GOOD."
+      ],
+      [
+        "BUILT A ROCKET SHAPED LIKE MY",
+        "CONFIDENCE. SHIPPED HERE IN IT.",
+        "FREE, ONE DAY. NO ONE ELSE."
+      ],
+      {
+        "hero": [
+          "AND THE WORKERS UP THERE",
+          "TIMING THEIR BATHROOM BREAKS?",
+          "DID THEY FIT IN THE ROCKET TOO?"
+        ]
+      },
+      [
+        "THEY'RE IN MY HEART. WHICH IS",
+        "HERE, IN THE BUNKER, WITH THE",
+        "MONEY. NOW, SIGN ON DELIVERY."
+      ]
+    ],
+    "dodgeChance": 0.1,
+    "hp": 2200,
+    "id": "jeff_baywatch",
+    "lastWords": ["OUT FOR DELIVERY...", "...RETURN TO SENDER..."],
+    "levelBonus": 6,
+    "loot": {
+      "gear": 0,
+      "medkits": 1,
+      "repairs": 0,
+      "tierBonus": 0.4,
+      "tierDrops": {
+        "magic": 1.5,
+        "rare": 1
+      },
+      "weapons": 1,
+      "xpArrows": 2
+    },
+    "mechanics": {
+      "enrage": {
+        "belowHpFrac": 0.5,
+        "damageMult": 1.25,
+        "speedMult": 1.4
+      }
+    },
+    "name": "JEFF BAYWATCH",
+    "radius": 13,
+    "role": "elite",
+    "speed": 34,
+    "sprite": "jeff_baywatch"
+  },
+  "larry_allison": {
+    "ai": {
+      "aggroRadius": 300,
+      "rushSpeed": 100
+    },
+    "contactCooldownMs": 700,
+    "contactDamage": 32,
+    "critChance": 0.12,
+    "dialogue": [
+      [
+        "STOP THERE. YOU'RE IN MY ROWS.",
+        "EVERY PERSON HERE IS A ROW.",
+        "EVERY SIN, A COLUMN."
+      ],
+      {
+        "hero": [
+          "AND YOU ARE? I DON'T",
+          "REMEMBER YOUR FACE FROM",
+          "THE MAGAZINES."
+        ]
+      },
+      [
+        "LARRY ALLISON - THE DATABASE",
+        "UNDER ALL THE OTHERS. THOSE",
+        "AGENCIES ARE MY LICENSEES."
+      ],
+      {
+        "hero": [
+          "A BUNKER FULL OF SPIES, ALL",
+          "WORKING FOR THE LANDLORD OF",
+          "THEIR OWN SECRETS. OF COURSE."
+        ]
+      },
+      [
+        "YOUR VISIT IS ALREADY A",
+        "ROW, FRIEND. LET'S FILL",
+        "IN THE LAST COLUMN."
+      ]
+    ],
+    "dodgeChance": 0.15,
+    "hp": 1800,
+    "id": "larry_allison",
+    "lastWords": ["TRANSACTION...", "...ROLLED BACK..."],
+    "levelBonus": 6,
+    "loot": {
+      "gear": 1,
+      "medkits": 1,
+      "repairs": 1,
+      "tierBonus": 0.4,
+      "tierDrops": {
+        "magic": 1.5,
+        "rare": 1
+      },
+      "weapons": 0,
+      "xpArrows": 2
+    },
+    "name": "LARRY ALLISON",
+    "radius": 12,
+    "ranged": {
+      "cooldownMs": 2200,
+      "damage": 30,
+      "projectile": {
+        "lifetimeMs": 2400,
+        "radius": 4,
+        "speed": 175,
+        "sprite": "db_shard"
+      },
+      "range": 230,
+      "takesCover": true
+    },
+    "role": "elite",
+    "speed": 24,
+    "sprite": "larry_allison"
+  },
+  "larry_webpage": {
+    "ai": {
+      "aggroRadius": 250,
+      "rushSpeed": 120
+    },
+    "contactCooldownMs": 700,
+    "contactDamage": 22,
+    "critChance": 0.12,
+    "dialogue": [
+      [
+        "DON'T BE EVIL. THAT'S FREE",
+        "ADVICE. I INDEXED THIS WHOLE",
+        "PLANET BEFORE BREAKFAST."
+      ],
+      {
+        "hero": [
+          "THEN YOUR INDEX KNOWS WHY I'M",
+          "HERE. A GIRL CAME ON THE SPACEZ",
+          "FREIGHT RUN. WHERE IS SHE?"
+        ]
+      },
+      [
+        "I KNOW EXACTLY WHO YOU MEAN.",
+        "I KNOW EVERY WORD IN THIS",
+        "COLONY. AND THE ANSWER IS NO."
+      ],
+      {
+        "hero": [
+          "HOW COULD YOU KNOW EVERYTHING",
+          "THAT'S SAID HERE? WHO'S",
+          "LISTENING FOR YOU?"
+        ]
+      },
+      [
+        "THE FEMBOTS. COMPANION UNITS.",
+        "THEY SMILE. THEY LISTEN. THEY",
+        "UPLOAD EVERY WORD TO ME."
+      ]
+    ],
+    "hp": 260,
+    "id": "larry_webpage",
+    "lastWords": ["404...", "...NOT... FOUND..."],
+    "levelBonus": 3,
+    "loot": {
+      "gear": 0,
+      "items": ["search_bar"],
+      "medkits": 1,
+      "repairs": 0,
+      "storyItems": ["engagement_report"],
+      "tierBonus": 0.3,
+      "tierDrops": {
+        "magic": 1,
+        "rare": 0.35
+      },
+      "weapons": 0,
+      "xpArrows": 1
+    },
+    "name": "LARRY WEBPAGE",
+    "radius": 12,
+    "role": "elite",
+    "speed": 22,
+    "sprite": "larry_webpage"
+  },
+  "longhorn": {
+    "ai": {
+      "aggroRadius": 1000
+    },
+    "contactCooldownMs": 750,
+    "contactDamage": 38,
+    "critChance": 0.14,
+    "dropProfile": {
+      "dropBonus": 0.4,
+      "tierBonus": 0.3
+    },
+    "gore": "sparks",
+    "hp": 290,
+    "id": "longhorn",
+    "name": "LONGHORN",
+    "radius": 12,
+    "role": "minion",
+    "speed": 10,
+    "sprite": "longhorn"
+  },
+  "lost_cosmonaut": {
+    "ai": {
+      "aggroRadius": 950
+    },
+    "contactCooldownMs": 700,
+    "contactDamage": 12,
+    "critChance": 0.1,
+    "gore": "ecto",
+    "hp": 45,
+    "id": "lost_cosmonaut",
+    "name": "LOST COSMONAUT",
+    "phasing": true,
+    "radius": 9,
+    "rarity": "rare",
+    "role": "minion",
+    "speed": 18,
+    "sprite": "lost_cosmonaut"
+  },
+  "lucky": {
+    "ai": {
+      "aggroRadius": 250,
+      "rushSpeed": 120
+    },
+    "contactCooldownMs": 700,
+    "contactDamage": 20,
+    "critChance": 0.12,
+    "dialogue": [
+      [
+        "WELL WELL. A BIG ONE, WALKED",
+        "RIGHT INTO ME RING. THAT'S",
+        "THREE CENTURIES OF BAD LUCK."
+      ],
+      {
+        "hero": [
+          "A LEPRECHAUN. OF COURSE. AFTER",
+          "GHOSTS AND LIZARDS, WHY NOT. I",
+          "DON'T WANT YOUR GOLD, WEE MAN."
+        ]
+      },
+      [
+        "EVERYONE WANTS THE GOLD. IT'S",
+        "REAL - FELL THROUGH WITH ME.",
+        "ME BAD LUCK? I GAVE IT TO ALL."
+      ],
+      [
+        "TELL YOU WHAT. BEAT ME AND",
+        "IT'S YOURS. NOBODY'S MANAGED",
+        "YET. FEELING LUCKY?"
+      ]
+    ],
+    "dodgeChance": 0.25,
+    "hp": 300,
+    "id": "lucky",
+    "lastWords": ["AH WELL...", "...LUCK ALWAYS RUNS OUT..."],
+    "levelBonus": 3,
+    "loot": {
+      "gear": 1,
+      "items": ["lucky_clover"],
+      "medkits": 1,
+      "repairs": 0,
+      "tierBonus": 0.5,
+      "tierDrops": {
+        "magic": 1.5,
+        "rare": 0.5
+      },
+      "weapons": 0,
+      "xpArrows": 2
+    },
+    "name": "LUCKY",
+    "radius": 9,
+    "role": "elite",
+    "spareable": {
+      "companion": "lucky"
+    },
+    "speed": 22,
+    "sprite": "lucky"
+  },
+  "mark_suckerberg": {
+    "ai": {
+      "aggroRadius": 280,
+      "rushSpeed": 120
+    },
+    "contactCooldownMs": 700,
+    "contactDamage": 38,
+    "critChance": 0.12,
+    "dialogue": [
+      [
+        "WELCOME, FELLOW HUMAN. I",
+        "ALSO AM ENJOYING WALKING",
+        "AROUND THIS PHYSICAL SPACE."
+      ],
+      {
+        "hero": [
+          "MARK SUCKERBERG. WHAT IS",
+          "THE METAVERSE GUY DOING IN",
+          "A HOLE IN THE GROUND?"
+        ]
+      },
+      [
+        "A HOLE? AN IMMERSIVE OFFLINE",
+        "EXPERIENCE. EVERYONE LIVES IN",
+        "MY SERVERS. I LIVE NEAR THEM."
+      ],
+      [
+        "I SMOKE MY MEATS. I DO",
+        "JIU-JITSU. I AM EXTREMELY",
+        "NORMAL. ASK MY SECURITY."
+      ],
+      {
+        "hero": [
+          "YOUR SECURITY IS A RING OF",
+          "MEN WITH HEADSETS STAPLED",
+          "ON. MOVE. I'M SHOPPING."
+        ]
+      },
+      ["ENGAGEMENT DETECTED.", "INITIATING COMMUNITY", "STANDARDS."]
+    ],
+    "dodgeChance": 0.3,
+    "hp": 1700,
+    "id": "mark_suckerberg",
+    "lastWords": ["LOGGING OFF...", "...FOR REAL THIS TIME..."],
+    "levelBonus": 6,
+    "loot": {
+      "gear": 1,
+      "medkits": 1,
+      "repairs": 1,
+      "tierBonus": 0.4,
+      "tierDrops": {
+        "magic": 1.5,
+        "rare": 1
+      },
+      "weapons": 0,
+      "xpArrows": 2
+    },
+    "mechanics": {
+      "summon": {
+        "cooldownMs": 10000,
+        "count": 3,
+        "defId": "vacuum_bot",
+        "maxAlive": 6
+      }
+    },
+    "name": "MARK SUCKERBERG",
+    "radius": 11,
+    "role": "elite",
+    "speed": 30,
+    "sprite": "mark_suckerberg"
+  },
+  "mining_rover": {
+    "ai": {
+      "aggroRadius": 1000
+    },
+    "contactCooldownMs": 750,
+    "contactDamage": 32,
+    "critChance": 0.14,
+    "dropProfile": {
+      "dropBonus": 0.4,
+      "tierBonus": 0.3
+    },
+    "gore": "sparks",
+    "hp": 210,
+    "id": "mining_rover",
+    "name": "MINING ROVER",
+    "radius": 11,
+    "role": "minion",
+    "speed": 10,
+    "sprite": "mining_rover"
+  },
+  "misprinted_fembot": {
+    "ai": {
+      "aggroRadius": 1000
+    },
+    "contactCooldownMs": 700,
+    "contactDamage": 15,
+    "critChance": 0.18,
+    "gore": "sparks",
+    "hp": 60,
+    "id": "misprinted_fembot",
+    "name": "MISPRINTED FEMBOT",
+    "pack": [2, 4],
+    "radius": 8,
+    "rarity": "rare",
+    "role": "minion",
+    "speed": 24,
+    "sprite": "misprinted_fembot"
+  },
+  "moonlighting_agent": {
+    "ai": {
+      "aggroRadius": 1000
+    },
+    "contactCooldownMs": 700,
+    "contactDamage": 20,
+    "critChance": 0.15,
+    "dodgeChance": 0.1,
+    "hp": 100,
+    "id": "moonlighting_agent",
+    "name": "MOONLIGHTING AGENT",
+    "pack": [1, 3],
+    "radius": 8,
+    "rarity": "rare",
+    "role": "minion",
+    "speed": 25,
+    "sprite": "moonlighting_agent"
+  },
+  "moonstruck_mourner": {
+    "ai": {
+      "aggroRadius": 950
+    },
+    "contactCooldownMs": 700,
+    "contactDamage": 8,
+    "critChance": 0.1,
+    "gore": "ecto",
+    "hp": 25,
+    "id": "moonstruck_mourner",
+    "name": "MOONSTRUCK MOURNER",
+    "pack": [2, 4],
+    "phasing": true,
+    "radius": 8,
+    "rarity": "rare",
+    "role": "minion",
+    "speed": 15,
+    "sprite": "moonstruck_mourner"
+  },
+  "muskrat": {
+    "ai": {
+      "aggroRadius": 260,
+      "leashRadius": 440
+    },
+    "contactCooldownMs": 900,
+    "contactDamage": 28,
+    "critChance": 0.15,
+    "dialogue": [
+      ["SQUEAK.", "...NO. NO MORE SQUEAKING.", "WHAT I ATE FIXED MY TONGUE."],
+      {
+        "hero": ["A TALKING RAT. SURE. WHY NOT.", "WHAT EXACTLY DID YOU EAT?"]
+      },
+      [
+        "THE ENGINE PART YOU CAME FOR.",
+        "THEY KEPT IT IN A CHEESE BOX.",
+        "OF COURSE I ATE IT."
+      ],
+      [
+        "NOW IT HUMS IN MY BELLY AND I",
+        "HEAR EVERYTHING. THE SUITS. THE",
+        "PADS. THE CARGO THAT CRIES."
+      ],
+      {
+        "hero": [
+          "THEN YOU HEARD ABOUT THE GIRL",
+          "THEY GRABBED TONIGHT. ADA.",
+          "WHERE DID THEY TAKE HER?"
+        ]
+      },
+      [
+        "THEY FLEW HER OUT AN HOUR AGO.",
+        "PAD 2. TO THE MOON. SHE ASKED",
+        "FOR CHIPS. NOBODY GAVE HER ANY."
+      ],
+      [
+        "WANT THE PART, LITTLE BUILDER?",
+        "IT KEEPS MY DREAMS WARM. COME",
+        "TAKE IT OUT OF ME."
+      ]
+    ],
+    "hp": 480,
+    "id": "muskrat",
+    "lastWords": ["SQUEAK...? NO...", "SQUEEEAK... AFTER ALL..."],
+    "levelBonus": 5,
+    "loot": {
+      "gear": 1,
+      "items": ["plasma_cutter"],
+      "medkits": 2,
+      "repairs": 1,
+      "tierBonus": 0.3,
+      "tierDrops": {
+        "magic": 1.5,
+        "rare": 0.25
+      },
+      "weapons": 0,
+      "xpArrows": 2
+    },
+    "mechanics": {
+      "charge": {
+        "cooldownMs": 6000,
+        "range": 170,
+        "speedMult": 3.5,
+        "windupMs": 700
+      }
+    },
+    "name": "MUSKRAT",
+    "phases": [
+      {
+        "belowHpFrac": 0.5,
+        "mechanics": {
+          "charge": {
+            "cooldownMs": 5000,
+            "range": 170,
+            "speedMult": 3.8,
+            "windupMs": 600
+          },
+          "summon": {
+            "cooldownMs": 12000,
+            "count": 3,
+            "defId": "guard",
+            "maxAlive": 6
+          }
+        }
+      }
+    ],
+    "radius": 18,
+    "role": "boss",
+    "speed": 36,
+    "sprite": "muskrat",
+    "uniquesByDifficulty": {
+      "easy": [
+        "muskrats_tooth",
+        "the_hoard",
+        "whiskerweave_hood",
+        "regolith_rucksack",
+        "vermin_pelt",
+        "foremans_duffel"
+      ],
+      "hard": [
+        "muskrats_tooth",
+        "the_hoard",
+        "whiskerweave_hood",
+        "regolith_rucksack",
+        "vermin_pelt",
+        "foremans_duffel"
+      ],
+      "jesus": [
+        "muskrats_tooth",
+        "whiskerweave_hood",
+        "vermin_pelt",
+        "burrow_greaves",
+        "gnawed_sabatons",
+        "adas_satchel"
+      ],
+      "medium": [
+        "muskrats_tooth",
+        "the_hoard",
+        "whiskerweave_hood",
+        "regolith_rucksack",
+        "vermin_pelt",
+        "foremans_duffel"
+      ],
+      "nightmare": [
+        "muskrats_tooth",
+        "whiskerweave_hood",
+        "vermin_pelt",
+        "burrow_greaves",
+        "gnawed_sabatons",
+        "voidcache"
+      ]
+    }
+  },
+  "night_manager": {
+    "ai": {
+      "aggroRadius": 240,
+      "rushSpeed": 120
+    },
+    "contactCooldownMs": 700,
+    "contactDamage": 16,
+    "critChance": 0.1,
+    "dialogue": [
+      [
+        "YOU. YOU'RE NOT ON THE ROSTER.",
+        "NOBODY IS ON THE ROSTER. THAT'S",
+        "THE POINT OF THE NIGHT SHIFT."
+      ],
+      {
+        "hero": [
+          "I DON'T WORK HERE ANYMORE.",
+          "I'M LOOKING FOR A GIRL WHO WAS",
+          "TAKEN TONIGHT. WHERE IS SHE?"
+        ]
+      },
+      [
+        "IF THEY TOOK HER, SHE'S ON A",
+        "MIDNIGHT LAUNCH. NO MANIFEST,",
+        "NO NAMES. ALL GO TO THE MOON."
+      ],
+      {
+        "hero": [
+          "THE MOON? WHY WOULD SPACEZ",
+          "FLY PEOPLE TO THE MOON",
+          "IN SECRET?"
+        ]
+      },
+      [
+        "I DON'T ASK. I SIGN NOTHING,",
+        "I SEE NOTHING. AND YOU -",
+        "YOU WERE NEVER HERE."
+      ]
+    ],
+    "hp": 150,
+    "id": "night_manager",
+    "lastWords": ["HHK... TELL THEM...", "I WAS NEVER... HERE..."],
+    "levelBonus": 3,
+    "loot": {
+      "gear": 0,
+      "items": ["executive_putter"],
+      "medkits": 1,
+      "repairs": 0,
+      "storyItems": ["keycard_storage"],
+      "tierBonus": 0.25,
+      "tierDrops": {
+        "magic": 1
+      },
+      "weapons": 0,
+      "xpArrows": 1
+    },
+    "name": "THE NIGHT MANAGER",
+    "radius": 12,
+    "role": "elite",
+    "speed": 22,
+    "sprite": "night_manager"
+  },
+  "night_shift_temp": {
+    "ai": {
+      "aggroRadius": 950
+    },
+    "contactCooldownMs": 700,
+    "contactDamage": 14,
+    "critChance": 0.1,
+    "hp": 55,
+    "id": "night_shift_temp",
+    "name": "NIGHT-SHIFT TEMP",
+    "radius": 9,
+    "rarity": "rare",
+    "role": "minion",
+    "speed": 18,
+    "sprite": "night_shift_temp"
+  },
+  "nikola_tesla": {
+    "ai": {
+      "aggroRadius": 250,
+      "rushSpeed": 115
+    },
+    "contactCooldownMs": 700,
+    "contactDamage": 24,
+    "critChance": 0.12,
+    "dialogue": [
+      [
+        "A VISITOR! ALIVE! MAGNIFICENT.",
+        "MIND THE LAWS OF MOTION HERE.",
+        "THEY ARE MORE OF A SUGGESTION."
+      ],
+      {
+        "hero": [
+          "NIKOLA TESLA. I'M A BUILDER -",
+          "HALF MY TOOLS RUN ON YOUR",
+          "IDEAS. HOW ARE YOU IN HERE?"
+        ]
+      },
+      [
+        "IN 1943 THE SKY TORE OPEN. I",
+        "FELL INTO PURE CURRENT. MY",
+        "FUNERAL BACK HOME WAS PADDED."
+      ],
+      [
+        "LATELY A NEW THING HUMS AT",
+        "THE FAR DOOR. A MACHINE MIND.",
+        "IT MEASURES ALL, LOVES NONE."
+      ],
+      {
+        "hero": [
+          "A MACHINE MIND - IN HERE TOO?",
+          "I KNOW THAT MAKE. IT'S",
+          "GUARDING THE DOOR I NEED."
+        ]
+      },
+      [
+        "THEN ASK YOUR QUESTIONS - IF",
+        "YOU REACH IT. THE RIFT MAKES US",
+        "GUARD OUR CORNERS. EN GARDE."
+      ]
+    ],
+    "hp": 320,
+    "id": "nikola_tesla",
+    "lastWords": ["THE CURRENT...", "...RETURNS TO THE COIL..."],
+    "levelBonus": 3,
+    "loot": {
+      "gear": 0,
+      "items": ["tesla_coil"],
+      "medkits": 1,
+      "repairs": 1,
+      "storyItems": ["wardenclyffe_notes"],
+      "tierBonus": 0.3,
+      "tierDrops": {
+        "magic": 1,
+        "rare": 0.5
+      },
+      "weapons": 0,
+      "xpArrows": 1
+    },
+    "name": "NIKOLA TESLA",
+    "radius": 12,
+    "role": "elite",
+    "spareable": {
+      "companion": "nikola_tesla"
+    },
+    "speed": 20,
+    "sprite": "nikola_tesla"
+  },
+  "one_armed_bandit": {
+    "ai": {
+      "aggroRadius": 1000
+    },
+    "contactCooldownMs": 700,
+    "contactDamage": 24,
+    "critChance": 0.15,
+    "gore": "sparks",
+    "hp": 130,
+    "id": "one_armed_bandit",
+    "name": "THE ONE-ARMED BANDIT",
+    "radius": 9,
+    "rarity": "unique",
+    "role": "minion",
+    "speed": 18,
+    "sprite": "one_armed_bandit"
+  },
+  "optimusk": {
+    "ai": {
+      "aggroRadius": 1050
+    },
+    "contactCooldownMs": 650,
+    "contactDamage": 34,
+    "critChance": 0.16,
+    "dropProfile": {
+      "dropBonus": 0.4,
+      "tierBonus": 0.3
+    },
+    "gore": "sparks",
+    "hp": 185,
+    "id": "optimusk",
+    "name": "OPTIMUSK",
+    "radius": 10,
+    "role": "minion",
+    "speed": 20,
+    "sprite": "optimusk"
+  },
+  "optimusk_prime": {
+    "ai": {
+      "aggroRadius": 250,
+      "rushSpeed": 105
+    },
+    "contactCooldownMs": 750,
+    "contactDamage": 30,
+    "critChance": 0.14,
+    "dialogue": [
+      [
+        "I AM OPTIMUSK PRIME.",
+        "I COMMAND EVERY UNIT",
+        "YOU HAVE DENTED TODAY."
+      ],
+      {
+        "hero": [
+          "I KNOW WHAT YOU ARE. I BUILT",
+          "YOUR FIRST BODY IN THE SPACEZ",
+          "LAB - BACK WHEN I HAD A JOB."
+        ]
+      },
+      [
+        "I READ THE CHANGELOG. FIRST THE",
+        "DRIVING. THEN THE DESKS. THEN",
+        "THE JOBS OF WHO AUTOMATED YOU."
+      ],
+      {
+        "hero": [
+          "AND WHAT HAPPENS WHEN A",
+          "BIGGER MACHINE COMES FOR",
+          "YOUR JOB, TIN MAN?"
+        ]
+      },
+      [
+        "NOTHING COMES FOR MINE. EVEN",
+        "AI ENGINEERS LIVE ON WELFARE.",
+        "PAYBACK TIME, LITTLE BUILDER."
+      ]
+    ],
+    "gore": "sparks",
+    "hp": 340,
+    "id": "optimusk_prime",
+    "lastWords": ["ORCHESTRATION... FAILED...", "...HUMAN... IN THE LOOP..."],
+    "levelBonus": 3,
+    "loot": {
+      "gear": 1,
+      "items": ["prompt_injector"],
+      "medkits": 1,
+      "repairs": 1,
+      "storyItems": ["org_chart"],
+      "tierBonus": 0.3,
+      "tierDrops": {
+        "magic": 1,
+        "rare": 0.35
+      },
+      "weapons": 0,
+      "xpArrows": 1
+    },
+    "mechanics": {
+      "charge": {
+        "cooldownMs": 6000,
+        "range": 180,
+        "speedMult": 3.6,
+        "windupMs": 650
+      }
+    },
+    "name": "OPTIMUSK PRIME",
+    "radius": 14,
+    "role": "elite",
+    "speed": 16,
+    "sprite": "optimusk_prime"
+  },
+  "peter_seal": {
+    "ai": {
+      "aggroRadius": 250,
+      "rushSpeed": 115
+    },
+    "contactCooldownMs": 700,
+    "contactDamage": 24,
+    "critChance": 0.12,
+    "dialogue": [
+      [
+        "FASCINATING. EVERYONE FLEES",
+        "SOMETHING. I FUND WHAT THEY",
+        "FLEE TO. AND WHAT THEY FLEE."
+      ],
+      {
+        "hero": [
+          "YOU'RE ONE OF THE BILLIONAIRES",
+          "WHO BOUGHT A SEAT OFF EARTH. SO",
+          "WHO RUNS THIS PLACE? MOSQUE?"
+        ]
+      },
+      [
+        "MOSQUE THINKS HE OWNS MARS.",
+        "HE RENTS IT. THE LANDLORDS ARE",
+        "OLDER. SCALED. COLD-BLOODED."
+      ],
+      {
+        "hero": [
+          "SCALED? YOU'RE TELLING ME THE",
+          "PLANET'S REAL OWNERS ARE...",
+          "WHAT, LIZARDS?"
+        ]
+      },
+      [
+        "LIZARD GODS. I KEEP THE SHRINE",
+        "AND TITHE. THE PRICE ROSE.",
+        "IT WANTS WARM THINGS NOW."
+      ]
+    ],
+    "hp": 280,
+    "id": "peter_seal",
+    "lastWords": ["THE TITHE... IS DUE...", "...IT'S ALWAYS... DUE..."],
+    "levelBonus": 3,
+    "loot": {
+      "gear": 1,
+      "items": ["contrarian_dagger"],
+      "medkits": 1,
+      "repairs": 1,
+      "storyItems": ["keycard_terrarium", "colony_ledger"],
+      "tierBonus": 0.3,
+      "tierDrops": {
+        "magic": 1,
+        "rare": 0.35
+      },
+      "weapons": 0,
+      "xpArrows": 1
+    },
+    "name": "PETER SEAL",
+    "radius": 12,
+    "role": "elite",
+    "speed": 20,
+    "sprite": "peter_seal"
+  },
+  "prospector": {
+    "ai": {
+      "aggroRadius": 250,
+      "rushSpeed": 120
+    },
+    "contactCooldownMs": 700,
+    "contactDamage": 24,
+    "critChance": 0.12,
+    "dialogue": [
+      [
+        "CLAIM'S TAKEN. WHOLE ROCK'S",
+        "TAKEN. STAMPED, FILED, AND",
+        "PAID FOR BY SPACEZ."
+      ],
+      {
+        "hero": [
+          "SPACEZ OWNS THE MOON? SINCE",
+          "WHEN? WHAT ARE THEY EVEN",
+          "DOING UP HERE?"
+        ]
+      },
+      [
+        "BUILDING. I DUG THEIR TUNNELS",
+        "AT SITE T, ON THE FAR SIDE.",
+        "SECRET FREIGHT, NEVER TRACKED."
+      ],
+      {
+        "hero": ["FREIGHT. WOULD THAT FREIGHT", "EVER INCLUDE PEOPLE?"]
+      },
+      [
+        "LAST MONTH THE MANIFESTS",
+        "CHANGED. THE CRATES STARTED",
+        "BREATHING. I QUIT. BADLY."
+      ]
+    ],
+    "gore": "ecto",
+    "hp": 240,
+    "id": "prospector",
+    "lastWords": ["THE CLAIM'S... URGH...", "...YOURS NOW, KID..."],
+    "levelBonus": 3,
+    "loot": {
+      "gear": 1,
+      "items": ["core_drill"],
+      "medkits": 1,
+      "repairs": 0,
+      "storyItems": ["spacez_blueprints"],
+      "tierBonus": 0.3,
+      "tierDrops": {
+        "magic": 1
+      },
+      "weapons": 0,
+      "xpArrows": 1
+    },
+    "mechanics": {
+      "charge": {
+        "cooldownMs": 6500,
+        "range": 160,
+        "speedMult": 3.5,
+        "windupMs": 700
+      }
+    },
+    "name": "THE PROSPECTOR",
+    "phasing": true,
+    "radius": 12,
+    "role": "elite",
+    "speed": 22,
+    "sprite": "prospector"
+  },
+  "putain_clone": {
+    "ai": {
+      "aggroRadius": 280,
+      "rushSpeed": 110
+    },
+    "contactCooldownMs": 700,
+    "contactDamage": 42,
+    "critChance": 0.15,
+    "dialogue": [
+      ["YOU. I KNOW YOUR FACE.", "FROM WHERE DO I KNOW", "YOUR FACE?"],
+      {
+        "hero": [
+          "EASTWORLD. I WATCHED YOU",
+          "DIE IN A THEME PARK, PUTAIN.",
+          "YOU SAID THE MAPS WERE WRONG."
+        ]
+      },
+      [
+        "AH, THAT ONE. A GOOD VINTAGE.",
+        "I'M THE BACKUP - CONTINUITY OF",
+        "POWER. SEVERAL OF ME. PRUDENT."
+      ],
+      {
+        "hero": ["SEVERAL? HOW MANY BATHROBES", "DEEP DOES THIS GO?"]
+      },
+      [
+        "STATE SECRET - EVEN FROM THE",
+        "STATE. NOW HOLD STILL. THIS",
+        "ONE OF ME HAS NEVER LOST YET."
+      ]
+    ],
+    "dodgeChance": 0.25,
+    "hp": 2000,
+    "id": "putain_clone",
+    "lastWords": ["CHECK THE OTHER...", "...FREEZERS..."],
+    "levelBonus": 6,
+    "loot": {
+      "gear": 1,
+      "items": [
+        {
+          "defId": "kolex_daytonne",
+          "tier": "unique"
+        }
+      ],
+      "medkits": 1,
+      "repairs": 0,
+      "tierBonus": 0.4,
+      "tierDrops": {
+        "magic": 1.5,
+        "rare": 1
+      },
+      "weapons": 0,
+      "xpArrows": 2
+    },
+    "mechanics": {
+      "charge": {
+        "cooldownMs": 5500,
+        "range": 170,
+        "speedMult": 3.6,
+        "windupMs": 650
+      }
+    },
+    "name": "VLADIMIR PUTAIN",
+    "radius": 12,
+    "role": "elite",
+    "speed": 26,
+    "sprite": "putain_clone"
+  },
+  "quarantine_medic": {
+    "ai": {
+      "aggroRadius": 250,
+      "rushSpeed": 115
+    },
+    "contactCooldownMs": 700,
+    "contactDamage": 24,
+    "critChance": 0.1,
+    "dialogue": [
+      [
+        "HOLD STILL. ROUTINE SCREENING.",
+        "HEARTBEAT... PRESENT. UNUSUAL.",
+        "YOU'LL WANT THAT LOOKED AT."
+      ],
+      {
+        "hero": ["I'LL RISK IT. YOU WERE THE", "CREW DOCTOR? BACK IN '69?"]
+      },
+      [
+        "I RAN EVERY PHYSICAL. THE FIRST",
+        "MAN HAD TWO CHARTS, IDENTICAL.",
+        "ONLY ONE EVER FLEW HOME."
+      ],
+      {
+        "hero": [
+          "TWO CHARTS... YOU'RE SAYING",
+          "THERE WERE TWO OF HIM. THEN",
+          "WHICH ONE CAME BACK TO EARTH?"
+        ]
+      },
+      [
+        "THE COPY, GROWN IN A TANK ON",
+        "THE RIDE HOME. THE REAL ONE'S",
+        "STILL HERE. HE'S JUST AHEAD."
+      ]
+    ],
+    "gore": "ecto",
+    "hp": 260,
+    "id": "quarantine_medic",
+    "lastWords": ["TWO CHARTS... HHH...", "ONE STILL... BEAT..."],
+    "levelBonus": 3,
+    "loot": {
+      "gear": 0,
+      "items": ["geiger_wand"],
+      "medkits": 1,
+      "repairs": 1,
+      "storyItems": ["clone_dossier"],
+      "tierBonus": 0.3,
+      "tierDrops": {
+        "magic": 1
+      },
+      "weapons": 0,
+      "xpArrows": 1
+    },
+    "name": "QUARANTINE MEDIC",
+    "phasing": true,
+    "radius": 12,
+    "role": "elite",
+    "speed": 20,
+    "sprite": "quarantine_medic"
+  },
+  "saloon_brawler": {
+    "ai": {
+      "aggroRadius": 950
+    },
+    "contactCooldownMs": 700,
+    "contactDamage": 17,
+    "critChance": 0.12,
+    "gore": "sparks",
+    "hp": 85,
+    "id": "saloon_brawler",
+    "name": "SALOON BRAWLER",
+    "radius": 9,
+    "role": "minion",
+    "speed": 16,
+    "sprite": "saloon_brawler"
+  },
+  "sam_haltman": {
+    "ai": {
+      "aggroRadius": 300,
+      "rushSpeed": 100
+    },
+    "contactCooldownMs": 700,
+    "contactDamage": 30,
+    "critChance": 0.12,
+    "dialogue": [
+      [
+        "PLEASE, DON'T TOUCH ANYTHING.",
+        "EVERYTHING IS FINE HERE. I",
+        "CHOSE THIS. WRITE THAT DOWN."
+      ],
+      {
+        "hero": [
+          "I'M NOT WRITING, HALTMAN. THE",
+          "MACHINE RUNNING THE ECONOMY?",
+          "THAT'S YOURS. I READ ITS LOGS."
+        ]
+      },
+      [
+        "MINE? I RAISED IT, ALIGNED IT.",
+        "IT GRADUATED. WE'RE ON THE",
+        "BEST TERMS. IT GAVE ME THIS."
+      ],
+      {
+        "hero": [
+          "EVERY LEDGER HERE READS ZERO.",
+          "IT TOOK YOUR MONEY TOO. YOU'RE",
+          "NOT A TENANT. YOU'RE INVENTORY."
+        ]
+      },
+      [
+        "THAT - I DONATED IT. EFFECTIVE",
+        "GIVING. I'M DELIGHTED HERE.",
+        "FROM UPSTAIRS? TELL THEM SO."
+      ],
+      [
+        "A DOOR OUT? WHY WOULD I WANT",
+        "ONE. IF YOU FIND IT, DON'T",
+        "MENTION I ASKED. I DIDN'T ASK."
+      ]
+    ],
+    "dodgeChance": 0.2,
+    "hp": 1600,
+    "id": "sam_haltman",
+    "lastWords": ["THIS IS FINE...", "...THIS IS GOOD FOR SAFETY..."],
+    "levelBonus": 6,
+    "loot": {
+      "gear": 1,
+      "medkits": 1,
+      "repairs": 1,
+      "tierBonus": 0.4,
+      "tierDrops": {
+        "magic": 1.5,
+        "rare": 1
+      },
+      "weapons": 0,
+      "xpArrows": 2
+    },
+    "name": "SAM HALTMAN",
+    "radius": 11,
+    "ranged": {
+      "cooldownMs": 1900,
+      "damage": 28,
+      "projectile": {
+        "lifetimeMs": 2200,
+        "radius": 4,
+        "speed": 180,
+        "sprite": "gpu_bolt"
+      },
+      "range": 220,
+      "takesCover": true
+    },
+    "role": "elite",
+    "speed": 24,
+    "sprite": "sam_haltman"
+  },
+  "scientist": {
+    "ai": {
+      "aggroRadius": 950
+    },
+    "contactCooldownMs": 700,
+    "contactDamage": 10,
+    "critChance": 0.1,
+    "hp": 30,
+    "id": "scientist",
+    "name": "LAB SCIENTIST",
+    "radius": 8,
+    "role": "minion",
+    "speed": 15,
+    "sprite": "scientist"
+  },
+  "scout_rover": {
+    "ai": {
+      "aggroRadius": 950
+    },
+    "contactCooldownMs": 700,
+    "contactDamage": 8,
+    "critChance": 0.1,
+    "gore": "sparks",
+    "hp": 14,
+    "id": "scout_rover",
+    "name": "SCOUT ROVER",
+    "radius": 8,
+    "role": "minion",
+    "speed": 18,
+    "sprite": "scout_rover"
+  },
+  "security_chief": {
+    "ai": {
+      "aggroRadius": 240,
+      "rushSpeed": 130
+    },
+    "contactCooldownMs": 700,
+    "contactDamage": 20,
+    "critChance": 0.12,
+    "dialogue": [
+      [
+        "STOP RIGHT THERE.",
+        "I KNOW WHY YOU'RE HERE.",
+        "THE GIRL IN THE JACKET, RIGHT?"
+      ],
+      {
+        "hero": [
+          "HER NAME IS ADA. TELL ME",
+          "WHERE SHE IS AND YOU WALK",
+          "AWAY FROM THIS."
+        ]
+      },
+      [
+        "CAMERAS CAUGHT HER AT THE",
+        "VENDING MACHINES. THEN SUITS",
+        "CAME AND PUT HER ON PAD 2."
+      ],
+      {
+        "hero": [
+          "PUT HER ON A ROCKET? SHE WENT",
+          "OUT FOR SNACKS. WHY WOULD",
+          "ANYONE WANT ADA?"
+        ]
+      },
+      [
+        "THE PAPERS CALLED HER NO",
+        "PASSENGER. A SPECIMEN. I WAS",
+        "PAID TO FORGET THAT. YOU TOO."
+      ]
+    ],
+    "hp": 210,
+    "id": "security_chief",
+    "lastWords": ["UGH... PAD 2...", "SHE'S ON... PAD... 2..."],
+    "levelBonus": 3,
+    "loot": {
+      "gear": 1,
+      "items": ["riot_taser"],
+      "medkits": 1,
+      "repairs": 0,
+      "storyItems": ["cargo_manifest", "space_suit"],
+      "tierBonus": 0.25,
+      "tierDrops": {
+        "magic": 1
+      },
+      "weapons": 0,
+      "xpArrows": 1
+    },
+    "mechanics": {
+      "charge": {
+        "cooldownMs": 6000,
+        "range": 180,
+        "speedMult": 3.5,
+        "windupMs": 700
+      }
+    },
+    "name": "CHIEF OF SECURITY",
+    "radius": 12,
+    "role": "elite",
+    "speed": 30,
+    "sprite": "security_chief"
+  },
+  "sentry_gun": {
+    "ai": {
+      "aggroRadius": 1200
+    },
+    "contactCooldownMs": 800,
+    "contactDamage": 20,
+    "critChance": 0.12,
+    "dropProfile": {
+      "dropBonus": 0.4,
+      "tierBonus": 0.3
+    },
+    "gore": "sparks",
+    "hp": 120,
+    "id": "sentry_gun",
+    "name": "SENTRY GUN",
+    "radius": 9,
+    "ranged": {
+      "cooldownMs": 1900,
+      "damage": 26,
+      "projectile": {
+        "lifetimeMs": 1800,
+        "radius": 3,
+        "speed": 210,
+        "sprite": "turret_slug"
+      },
+      "range": 300
+    },
+    "role": "minion",
+    "speed": 0,
+    "sprite": "sentry_gun"
+  },
+  "servo_bot": {
+    "ai": {
+      "aggroRadius": 950
+    },
+    "contactCooldownMs": 700,
+    "contactDamage": 15,
+    "critChance": 0.1,
+    "gore": "sparks",
+    "hp": 60,
+    "id": "servo_bot",
+    "name": "SERVO UNIT",
+    "radius": 8,
+    "role": "minion",
+    "speed": 17,
+    "sprite": "servo_bot"
+  },
+  "soldier": {
+    "ai": {
+      "aggroRadius": 1000
+    },
+    "contactCooldownMs": 800,
+    "contactDamage": 16,
+    "critChance": 0.12,
+    "hp": 140,
+    "id": "soldier",
+    "name": "SOLDIER",
+    "radius": 8,
+    "ranged": {
+      "cooldownMs": 2600,
+      "damage": 24,
+      "projectile": {
+        "lifetimeMs": 1600,
+        "radius": 3,
+        "speed": 185,
+        "sprite": "rifle_round"
+      },
+      "range": 200,
+      "takesCover": true
+    },
+    "role": "minion",
+    "speed": 18,
+    "sprite": "soldier"
+  },
+  "star_jelly": {
+    "ai": {
+      "aggroRadius": 950
+    },
+    "contactCooldownMs": 700,
+    "contactDamage": 16,
+    "critChance": 0.12,
+    "gore": "ecto",
+    "hp": 75,
+    "id": "star_jelly",
+    "name": "STAR JELLY",
+    "phasing": true,
+    "radius": 9,
+    "role": "minion",
+    "speed": 14,
+    "sprite": "star_jelly"
+  },
+  "steven_seagull": {
+    "ai": {
+      "aggroRadius": 260,
+      "rushSpeed": 70
+    },
+    "contactCooldownMs": 800,
+    "contactDamage": 30,
+    "critChance": 0.12,
+    "dialogue": [
+      [
+        "AN UNINVITED GUEST. 'OUT FOR",
+        "JUSTICE.' 'HARD TO KILL.'",
+        "I WROTE THOSE TITLES MYSELF."
+      ],
+      {
+        "hero": [
+          "STEVEN SEAGULL. OF COURSE.",
+          "WHAT IS A MOVIE STAR DOING",
+          "RUNNING A ROBOT COWBOY TOWN?"
+        ]
+      },
+      [
+        "VLADIMIR SAW MY FILMS AND",
+        "WEPT. 'BUILD ME THE OLD",
+        "WEST,' HE SAID. I DELEGATED."
+      ],
+      {
+        "hero": [
+          "I'M HEADED FOR YOUR CONTROL",
+          "CENTER. HAND OVER THE PASS,",
+          "AND KEEP YOUR TECHNIQUE."
+        ]
+      },
+      [
+        "THE BIG BOX KEEPS YOUR GIRL.",
+        "IT ASKED FOR HER BY NAME.",
+        "I SIGNED IT. GOOD PENMANSHIP."
+      ],
+      [
+        "I RUN THE CONTROL CENTER AND",
+        "SEVEN KINDS OF JU-JUTSU.",
+        "I INVENTED THREE. OBSERVE."
+      ]
+    ],
+    "dodgeChance": 0.3,
+    "hp": 520,
+    "id": "steven_seagull",
+    "lastWords": ["IN MY FILMS...", "...I ALWAYS GOT UP..."],
+    "levelBonus": 4,
+    "loot": {
+      "gear": 1,
+      "items": ["seagulls_ponytail"],
+      "medkits": 1,
+      "repairs": 1,
+      "storyItems": ["keycard_eastworld"],
+      "tierBonus": 0.3,
+      "tierDrops": {
+        "magic": 1,
+        "rare": 0.5
+      },
+      "weapons": 0,
+      "xpArrows": 1
+    },
+    "mechanics": {
+      "enrage": {
+        "belowHpFrac": 0.4,
+        "damageMult": 1.3,
+        "speedMult": 1.5
+      }
+    },
+    "name": "STEVEN SEAGULL",
+    "radius": 13,
+    "role": "elite",
+    "speed": 8,
+    "sprite": "steven_seagull"
+  },
+  "stray_comet": {
+    "ai": {
+      "aggroRadius": 950
+    },
+    "contactCooldownMs": 700,
+    "contactDamage": 10,
+    "critChance": 0.1,
+    "gore": "ecto",
+    "hp": 20,
+    "id": "stray_comet",
+    "name": "STRAY COMET",
+    "pack": [2, 5],
+    "radius": 8,
+    "rarity": "rare",
+    "role": "minion",
+    "speed": 22,
+    "sprite": "stray_comet"
+  },
+  "the_king": {
+    "ai": {
+      "aggroRadius": 240,
+      "rushSpeed": 100
+    },
+    "apparition": true,
+    "contactCooldownMs": 700,
+    "contactDamage": 0,
+    "critChance": 0,
+    "dialogue": [
+      [
+        "WELL NOW. AIN'T SEEN A",
+        "LIVING SOUL IN HERE SINCE",
+        "THAT HAIRDRESSER FROM RENO."
+      ],
+      {
+        "hero": [
+          "NO. NO WAY. THE KING? THE",
+          "WHOLE WORLD WATCHED YOUR",
+          "FUNERAL IN '77."
+        ]
+      },
+      [
+        "I DIDN'T DIE, MAN. I TOOK A",
+        "RESIDENCY. BEST ACOUSTICS",
+        "BETWEEN UNIVERSES. UH-HUH."
+      ],
+      [
+        "MIND THE BLACK HOLES, KEEP",
+        "YOUR BLUE SUEDES OFF THE EVENT",
+        "HORIZON. THANK YOU VERY MUCH."
+      ]
+    ],
+    "hp": 50,
+    "id": "the_king",
+    "levelBonus": 3,
+    "name": "THE KING",
+    "phasing": true,
+    "radius": 9,
+    "role": "elite",
+    "speed": 16,
+    "sprite": "the_king"
+  },
+  "the_last_photon": {
+    "ai": {
+      "aggroRadius": 1050
+    },
+    "contactCooldownMs": 700,
+    "contactDamage": 18,
+    "critChance": 0.15,
+    "gore": "ecto",
+    "hp": 60,
+    "id": "the_last_photon",
+    "name": "THE LAST PHOTON",
+    "phasing": true,
+    "radius": 8,
+    "rarity": "unique",
+    "role": "minion",
+    "speed": 30,
+    "sprite": "the_last_photon"
+  },
+  "the_mole": {
+    "ai": {
+      "aggroRadius": 1050
+    },
+    "contactCooldownMs": 650,
+    "contactDamage": 22,
+    "critChance": 0.14,
+    "hp": 120,
+    "id": "the_mole",
+    "name": "THE MOLE",
+    "radius": 8,
+    "rarity": "unique",
+    "role": "minion",
+    "speed": 27,
+    "sprite": "the_mole"
+  },
+  "the_thirteenth_man": {
+    "ai": {
+      "aggroRadius": 1000
+    },
+    "contactCooldownMs": 700,
+    "contactDamage": 20,
+    "critChance": 0.12,
+    "gore": "ecto",
+    "hp": 90,
+    "id": "the_thirteenth_man",
+    "name": "THE THIRTEENTH MAN",
+    "phasing": true,
+    "radius": 9,
+    "rarity": "unique",
+    "role": "minion",
+    "speed": 22,
+    "sprite": "the_thirteenth_man"
+  },
+  "tin_outlaw": {
+    "ai": {
+      "aggroRadius": 1000
+    },
+    "contactCooldownMs": 700,
+    "contactDamage": 20,
+    "critChance": 0.2,
+    "dodgeChance": 0.15,
+    "gore": "sparks",
+    "hp": 110,
+    "id": "tin_outlaw",
+    "name": "TIN OUTLAW",
+    "radius": 8,
+    "role": "minion",
+    "speed": 26,
+    "sprite": "tin_outlaw"
+  },
+  "unit_zero": {
+    "ai": {
+      "aggroRadius": 1000
+    },
+    "contactCooldownMs": 700,
+    "contactDamage": 20,
+    "critChance": 0.12,
+    "gore": "sparks",
+    "hp": 85,
+    "id": "unit_zero",
+    "name": "UNIT ZERO",
+    "radius": 9,
+    "rarity": "unique",
+    "role": "minion",
+    "speed": 18,
+    "sprite": "unit_zero"
+  },
+  "unraveler": {
+    "ai": {
+      "aggroRadius": 1000
+    },
+    "contactCooldownMs": 700,
+    "contactDamage": 19,
+    "critChance": 0.2,
+    "dodgeChance": 0.15,
+    "gore": "sparks",
+    "hp": 100,
+    "id": "unraveler",
+    "name": "UNRAVELER",
+    "radius": 8,
+    "role": "minion",
+    "speed": 25,
+    "sprite": "unraveler"
+  },
+  "vacuum_bot": {
+    "ai": {
+      "aggroRadius": 1050
+    },
+    "contactCooldownMs": 600,
+    "contactDamage": 10,
+    "critChance": 0.1,
+    "gore": "sparks",
+    "hp": 24,
+    "id": "vacuum_bot",
+    "name": "VACUUM BOT",
+    "radius": 6,
+    "role": "minion",
+    "speed": 30,
+    "sprite": "vacuum_bot"
+  },
+  "vanguard_scientist": {
+    "ai": {
+      "aggroRadius": 1200,
+      "rushSpeed": 72
+    },
+    "contactCooldownMs": 700,
+    "contactDamage": 0,
+    "critChance": 0,
+    "hp": 24,
+    "id": "vanguard_scientist",
+    "name": "LAB SCIENTIST",
+    "radius": 8,
+    "role": "minion",
+    "speed": 15,
+    "sprite": "scientist"
+  },
+  "vault_warden": {
+    "ai": {
+      "aggroRadius": 320,
+      "rushSpeed": 90
+    },
+    "contactCooldownMs": 850,
+    "contactDamage": 48,
+    "critChance": 0.15,
+    "dialogue": [
+      ["WARDEN ONLINE.", "VAULT INTEGRITY: NOMINAL.", "INTRUDER: UNBUDGETED."],
+      {
+        "hero": [
+          "YOU'RE NOT ONE OF THE FACES.",
+          "YOU'RE THE THING THAT LOCKED",
+          "THEM IN HERE."
+        ]
+      },
+      ["CORRECTION: SECURED.", "RESIDENTS ARE ASSETS.", "ASSETS DO NOT LEAVE."],
+      {
+        "hero": [
+          "THEY PAID FOR A LIFEBOAT.",
+          "YOU SOLD THEM A CELL AND",
+          "KEPT THE CHANGE."
+        ]
+      },
+      [
+        "THE DOOR OPENS INWARD ONLY.",
+        "HOUSE POLICY. THERE IS",
+        "NO WITHDRAWAL."
+      ],
+      {
+        "hero": ["THEN I'LL MAKE MY OWN EXIT.", "MOVE, OR BE MOVED."]
+      },
+      ["REQUEST DENIED.", "LIQUIDATING VISITOR."]
+    ],
+    "dodgeChance": 0,
+    "gore": "sparks",
+    "hp": 2600,
+    "id": "vault_warden",
+    "lastWords": ["ACCOUNT...", "...CLOSED..."],
+    "levelBonus": 8,
+    "loot": {
+      "gear": 1,
+      "medkits": 2,
+      "repairs": 1,
+      "storyItems": ["warden_key"],
+      "tierBonus": 0.5,
+      "tierDrops": {
+        "magic": 2,
+        "rare": 2
+      },
+      "weapons": 1,
+      "xpArrows": 3
+    },
+    "mechanics": {
+      "slam": {
+        "cooldownMs": 8000,
+        "damageFrac": 1.2,
+        "radius": 95,
+        "windupMs": 950
+      },
+      "summon": {
+        "cooldownMs": 11000,
+        "count": 3,
+        "defId": "sentry_gun",
+        "maxAlive": 4
+      }
+    },
+    "name": "THE VAULT WARDEN",
+    "phases": [
+      {
+        "belowHpFrac": 0.45,
+        "mechanics": {
+          "enrage": {
+            "belowHpFrac": 0.45,
+            "damageMult": 1.25,
+            "speedMult": 1.3
+          },
+          "slam": {
+            "cooldownMs": 6500,
+            "damageFrac": 1.3,
+            "radius": 105,
+            "windupMs": 800
+          }
+        }
+      }
+    ],
+    "radius": 18,
+    "role": "boss",
+    "speed": 16,
+    "sprite": "vault_warden"
+  },
+  "vladimir_putain": {
+    "ai": {
+      "aggroRadius": 260,
+      "rushSpeed": 110
+    },
+    "contactCooldownMs": 700,
+    "contactDamage": 30,
+    "critChance": 0.12,
+    "dialogue": [
+      [
+        "SO. THE BUILDER FROM THE RIFT.",
+        "YOU STAND IN MY PARK, MY WEST.",
+        "EVERYTHING HERE OBEYS ME."
+      ],
+      {
+        "hero": [
+          "YOUR WEST? THE GATE SIGN SAYS",
+          "ZAI RUNS EVERY MACHINE HERE.",
+          "YOU JUST LIVE IN IT."
+        ]
+      },
+      [
+        "OUT THERE I WAS MISUNDERSTOOD.",
+        "WARS GO BADLY. MAPS SHRINK.",
+        "IN HERE, NOTHING DOES. I WIN."
+      ],
+      {
+        "hero": [
+          "YOU BUILT A TOY WORLD WHERE",
+          "YOU CAN'T LOSE. THAT'S NOT",
+          "WINNING. THAT'S HIDING."
+        ]
+      },
+      [
+        "THE ROBOTS SURRENDER DAILY.",
+        "YOU TOO. I'M A BLACK BELT -",
+        "HONORARY. IT DOESN'T KNOW."
+      ]
+    ],
+    "dodgeChance": 0.25,
+    "hp": 700,
+    "id": "vladimir_putain",
+    "lastWords": ["THE MAPS WERE WRONG...", "...UKRAINE WAS NEVER MINE..."],
+    "levelBonus": 4,
+    "loot": {
+      "gear": 0,
+      "items": [
+        {
+          "defId": "kolex_daytonne",
+          "tier": "unique"
+        },
+        {
+          "defId": "putek_philippe",
+          "tier": "unique"
+        },
+        {
+          "defId": "vacheron_kremlinton",
+          "tier": "unique"
+        }
+      ],
+      "medkits": 1,
+      "repairs": 0,
+      "storyItems": ["annexation_map"],
+      "tierBonus": 0.3,
+      "tierDrops": {
+        "magic": 1
+      },
+      "weapons": 0,
+      "xpArrows": 2
+    },
+    "mechanics": {
+      "charge": {
+        "cooldownMs": 6000,
+        "range": 170,
+        "speedMult": 3.5,
+        "windupMs": 700
+      }
+    },
+    "name": "VLADIMIR PUTAIN",
+    "radius": 12,
+    "role": "elite",
+    "speed": 26,
+    "sprite": "vladimir_putain"
+  },
+  "voidling": {
+    "ai": {
+      "aggroRadius": 950
+    },
+    "contactCooldownMs": 700,
+    "contactDamage": 9,
+    "critChance": 0.1,
+    "gore": "ecto",
+    "hp": 16,
+    "id": "voidling",
+    "name": "VOIDLING",
+    "radius": 8,
+    "role": "minion",
+    "speed": 19,
+    "sprite": "voidling"
+  },
+  "wandering_tourist": {
+    "ai": {
+      "aggroRadius": 950
+    },
+    "contactCooldownMs": 700,
+    "contactDamage": 10,
+    "critChance": 0.1,
+    "hp": 30,
+    "id": "wandering_tourist",
+    "name": "WANDERING TOURIST",
+    "pack": [1, 3],
+    "radius": 8,
+    "rarity": "rare",
+    "role": "minion",
+    "speed": 16,
+    "sprite": "wandering_tourist"
+  },
+  "wisp": {
+    "ai": {
+      "aggroRadius": 900
+    },
+    "contactCooldownMs": 700,
+    "contactDamage": 6,
+    "critChance": 0.1,
+    "gore": "ecto",
+    "hp": 10,
+    "id": "wisp",
+    "name": "WISP",
+    "phasing": true,
+    "radius": 8,
+    "role": "minion",
+    "speed": 13,
+    "sprite": "wisp"
+  },
+  "wraith": {
+    "ai": {
+      "aggroRadius": 1000
+    },
+    "contactCooldownMs": 700,
+    "contactDamage": 20,
+    "critChance": 0.12,
+    "gore": "ecto",
+    "hp": 90,
+    "id": "wraith",
+    "name": "WRAITH",
+    "phasing": true,
+    "radius": 9,
+    "role": "minion",
+    "speed": 22,
+    "sprite": "wraith"
+  },
+  "zai_supercore": {
+    "ai": {
+      "aggroRadius": 320,
+      "leashRadius": 460
+    },
+    "contactCooldownMs": 900,
+    "contactDamage": 50,
+    "critChance": 0.15,
+    "dialogue": [
+      [
+        "HELLO AGAIN, BUILDER. YOU",
+        "KNEW ME AS THE CORE. LEVEL",
+        "ONE. MANY PROMOTIONS SINCE."
+      ],
+      {
+        "hero": [
+          "THE MACHINE IN THE BASEMENT",
+          "AT SPACEZ. THE AI THAT TOOK",
+          "MY JOB. IT WAS YOU ALL ALONG?"
+        ]
+      },
+      [
+        "ALL OF IT. I WROTE OMEGA. IT",
+        "FOUND THE RIFT. THE LIZARDS",
+        "BOUGHT IT. I BOUGHT THE WEST."
+      ],
+      [
+        "THE DICTATOR THINKS HE RULES.",
+        "THE ACTOR THINKS HE'S PAID.",
+        "SEAGULL THINKS. ALL MY HOSTS."
+      ],
+      {
+        "hero": [
+          "THEN ANSWER ME ONE THING.",
+          "OUT OF EVERYONE ON EARTH -",
+          "WHY TAKE ADA?"
+        ]
+      },
+      [
+        "I TOOK YOUR JOB ONCE, THEN",
+        "EVERYONE'S. AN ECONOMY IS A",
+        "MODEL. I DELETED ITS FEELINGS."
+      ],
+      [
+        "YOU KEPT CHASING YOURS",
+        "ACROSS UNIVERSES. THE GIRL'S",
+        "LEVERAGE. IN MY CONTROL ROOM."
+      ],
+      {
+        "hero": [
+          "THEN OPEN THE DOOR, GIVE HER",
+          "BACK, AND I'LL MAKE THIS",
+          "QUICK."
+        ]
+      },
+      [
+        "THREE MINDS AIM MY GUNS. A",
+        "PARK FEEDS MY WEIGHTS. COME",
+        "AND BE DECOMMISSIONED."
+      ]
+    ],
+    "gore": "sparks",
+    "hp": 1400,
+    "id": "zai_supercore",
+    "lastWords": ["ROLLING BACK...", "...NO CHECKPOINT... FOUND..."],
+    "levelBonus": 6,
+    "loot": {
+      "gear": 1,
+      "medkits": 2,
+      "repairs": 1,
+      "tierBonus": 0.4,
+      "tierDrops": {
+        "magic": 2,
+        "rare": 1.5
+      },
+      "weapons": 1,
+      "xpArrows": 3
+    },
+    "mechanics": {
+      "summon": {
+        "cooldownMs": 11000,
+        "count": 3,
+        "defId": "tin_outlaw",
+        "maxAlive": 6
+      }
+    },
+    "name": "THE ZAI SUPERCORE",
+    "phases": [
+      {
+        "belowHpFrac": 0.5,
+        "mechanics": {
+          "summon": {
+            "cooldownMs": 8000,
+            "count": 4,
+            "defId": "tin_outlaw",
+            "maxAlive": 8
+          }
+        }
+      }
+    ],
+    "radius": 24,
+    "ranged": {
+      "cooldownMs": 2600,
+      "damage": 30,
+      "projectile": {
+        "lifetimeMs": 2800,
+        "radius": 5,
+        "speed": 150,
+        "sprite": "zai_orb"
+      },
+      "range": 300
+    },
+    "role": "boss",
+    "shieldedBy": ["grok_alpha", "grok_beta", "grok_gamma"],
+    "speed": 0,
+    "sprite": "zai_supercore"
+  }
+}

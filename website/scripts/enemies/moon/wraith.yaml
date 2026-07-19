@@ -1,0 +1,14 @@
+id: wraith
+name: WRAITH
+role: minion
+sprite: wraith
+gore: ecto
+phasing: true
+hp: 90
+speed: 22
+radius: 9
+contactDamage: 20
+critChance: 0.12
+contactCooldownMs: 700
+ai:
+  aggroRadius: 1000

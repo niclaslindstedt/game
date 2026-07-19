@@ -1,0 +1,56 @@
+id: larry_allison
+name: LARRY ALLISON
+role: elite
+levelBonus: 6
+sprite: larry_allison
+hp: 1800
+speed: 24
+radius: 12
+contactDamage: 32
+critChance: 0.12
+dodgeChance: 0.15
+contactCooldownMs: 700
+dialogue:
+  - - STOP THERE. YOU'RE IN MY ROWS.
+    - EVERY PERSON HERE IS A ROW.
+    - EVERY SIN, A COLUMN.
+  - hero:
+      - AND YOU ARE? I DON'T
+      - REMEMBER YOUR FACE FROM
+      - THE MAGAZINES.
+  - - LARRY ALLISON - THE DATABASE
+    - UNDER ALL THE OTHERS. THOSE
+    - AGENCIES ARE MY LICENSEES.
+  - hero:
+      - A BUNKER FULL OF SPIES, ALL
+      - WORKING FOR THE LANDLORD OF
+      - THEIR OWN SECRETS. OF COURSE.
+  - - YOUR VISIT IS ALREADY A
+    - ROW, FRIEND. LET'S FILL
+    - IN THE LAST COLUMN.
+lastWords:
+  - TRANSACTION...
+  - ...ROLLED BACK...
+ai:
+  aggroRadius: 300
+  rushSpeed: 100
+ranged:
+  damage: 30
+  cooldownMs: 2200
+  range: 230
+  projectile:
+    speed: 175
+    radius: 4
+    lifetimeMs: 2400
+    sprite: db_shard
+  takesCover: true
+loot:
+  tierDrops:
+    rare: 1
+    magic: 1.5
+  weapons: 0
+  gear: 1
+  xpArrows: 2
+  repairs: 1
+  medkits: 1
+  tierBonus: 0.4

@@ -1,0 +1,17 @@
+id: guard_meta
+name: META SENTINEL
+role: minion
+sprite: guard_meta
+hp: 380
+levelBonus: 2
+speed: 20
+radius: 11
+contactDamage: 30
+critChance: 0.14
+contactCooldownMs: 750
+ai:
+  aggroRadius: 230
+  leashRadius: 340
+dropProfile:
+  dropBonus: 0.5
+  tierBonus: 0.4

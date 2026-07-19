@@ -1,0 +1,14 @@
+id: derelict_rover
+name: DERELICT ROVER
+role: minion
+rarity: rare
+sprite: derelict_rover
+gore: sparks
+hp: 90
+speed: 14
+radius: 9
+contactDamage: 18
+critChance: 0.12
+contactCooldownMs: 700
+ai:
+  aggroRadius: 950

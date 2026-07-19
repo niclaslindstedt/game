@@ -1,0 +1,12 @@
+id: hazmat
+name: HAZMAT TECH
+role: minion
+sprite: hazmat
+hp: 140
+speed: 9
+radius: 10
+contactDamage: 24
+critChance: 0.1
+contactCooldownMs: 800
+ai:
+  aggroRadius: 900

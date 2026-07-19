@@ -1,0 +1,54 @@
+id: putain_clone
+name: VLADIMIR PUTAIN
+role: elite
+levelBonus: 6
+sprite: putain_clone
+hp: 2000
+speed: 26
+radius: 12
+contactDamage: 42
+critChance: 0.15
+dodgeChance: 0.25
+contactCooldownMs: 700
+dialogue:
+  - - YOU. I KNOW YOUR FACE.
+    - FROM WHERE DO I KNOW
+    - YOUR FACE?
+  - hero:
+      - EASTWORLD. I WATCHED YOU
+      - DIE IN A THEME PARK, PUTAIN.
+      - YOU SAID THE MAPS WERE WRONG.
+  - - AH, THAT ONE. A GOOD VINTAGE.
+    - I'M THE BACKUP - CONTINUITY OF
+    - POWER. SEVERAL OF ME. PRUDENT.
+  - hero:
+      - SEVERAL? HOW MANY BATHROBES
+      - DEEP DOES THIS GO?
+  - - STATE SECRET - EVEN FROM THE
+    - STATE. NOW HOLD STILL. THIS
+    - ONE OF ME HAS NEVER LOST YET.
+lastWords:
+  - CHECK THE OTHER...
+  - ...FREEZERS...
+mechanics:
+  charge:
+    windupMs: 650
+    speedMult: 3.6
+    range: 170
+    cooldownMs: 5500
+ai:
+  aggroRadius: 280
+  rushSpeed: 110
+loot:
+  items:
+    - defId: kolex_daytonne
+      tier: unique
+  tierDrops:
+    rare: 1
+    magic: 1.5
+  weapons: 0
+  gear: 1
+  xpArrows: 2
+  repairs: 0
+  medkits: 1
+  tierBonus: 0.4

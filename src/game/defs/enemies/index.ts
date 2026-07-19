@@ -1,51 +1,24 @@
 // SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
-// The enemy catalog: one roster module per level/biome (spacez.ts, moon.ts,
-// …), merged into ENEMY_DEFS here. This split keeps each roster well under
-// the source-size cap as the game grows to 100+ mobs — a new mob is one entry
-// in the right roster + a sprite named after it, no engine changes. Merging
-// throws loudly on a duplicate id (the same loud-fail style as the sprite
-// `register()`), so two rosters can never silently shadow each other.
+// The enemy catalog. The monsters are authored as YAML — one self-describing
+// file per mob under `website/scripts/enemies/<biome>/<id>.yaml` — and compiled
+// into GENERATED_ENEMIES (`src/generated/enemies.ts`, gitignored, regenerated on
+// every build via `npm run levels` / `make assets`) by
+// `website/scripts/generate-enemies.mjs`, which is where a duplicate id / bad
+// field / dangling cross-ref fails loudly. This module just re-exposes that
+// compiled catalog behind the `enemyDef()` accessor the engine reads; adding a
+// mob is one YAML file + a sprite named after it, no engine changes.
 
 import type { EnemyDef } from "./types.ts";
 
-import { BUNKER_ENEMIES } from "./bunker.ts";
-import { EASTWORLD_ENEMIES } from "./eastworld.ts";
-import { MARS_ENEMIES } from "./mars.ts";
-import { MOON_ENEMIES } from "./moon.ts";
-import { RIFT_ENEMIES } from "./rift.ts";
-import { SPACEZ_ENEMIES } from "./spacez.ts";
+import { GENERATED_ENEMIES } from "../../../generated/enemies.ts";
 
 export type { DialoguePage, EnemyDef, EnemyRole, MobRarity } from "./types.ts";
 
-/** Merge the rosters into one registry, failing loudly on a duplicate id so a
- * clash surfaces at module load, not as a silently shadowed monster. */
-function mergeRosters(
-  rosters: Record<string, EnemyDef>[],
-): Record<string, EnemyDef> {
-  const merged: Record<string, EnemyDef> = {};
-  for (const roster of rosters) {
-    for (const [id, def] of Object.entries(roster)) {
-      if (id in merged) {
-        throw new Error(`duplicate enemy id "${id}" across rosters`);
-      }
-      merged[id] = def;
-    }
-  }
-  return merged;
-}
-
 /**
- * Every monster in the game, keyed by id. The rosters are listed in story
- * order; the map is flat, so callers never care which file an enemy lives in.
+ * Every monster in the game, keyed by id. The map is flat, so callers never
+ * care which biome file an enemy was authored in.
  */
-export const ENEMY_DEFS: Record<string, EnemyDef> = mergeRosters([
-  SPACEZ_ENEMIES,
-  MOON_ENEMIES,
-  MARS_ENEMIES,
-  RIFT_ENEMIES,
-  EASTWORLD_ENEMIES,
-  BUNKER_ENEMIES,
-]);
+export const ENEMY_DEFS: Record<string, EnemyDef> = GENERATED_ENEMIES;
 
 // Active registry the accessor reads (defaults to the shipped catalog;
 // tests swap in fixtures via `registerDefs`). See src/index.ts.

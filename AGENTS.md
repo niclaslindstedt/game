@@ -295,6 +295,7 @@ from GitHub Packages. **Prefer the framework over hand-rolling**:
 | ------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------- |
 | Engine/gameplay logic specific to this game | `src/...` (framework-free TypeScript)                                                                                                               |
 | A level (mission)                           | `website/scripts/levels/<id>.yaml` — the YAML source of truth, compiled to `src/generated/levels.ts` by `make levels`; see the `level-design` skill |
+| An enemy (minion/elite/boss)                | `website/scripts/enemies/<biome>/<id>.yaml` — one YAML file per mob (stem == id), compiled to `src/generated/enemies.ts` by `make levels`; see the `enemy-design` skill |
 | Generic engine code (usable by any game)    | `src/lib/...` — imported as `@game/lib/*`; earmarked for extraction to oss-framework once mature                                                    |
 | App shell, rendering, PWA, game-specific UI | `website/src/...`                                                                                                                                   |
 | Generic React/UI game components            | `website/src/lib/...` — imported as `@ui/lib/*`; earmarked for extraction to oss-framework once mature                                              |
@@ -440,6 +441,23 @@ render them are `website/src/game/DialogueOverlay.tsx` and `CutsceneOverlay.tsx`
   = count, colour = con vs the YAML's `intendedLevel`); read it alongside the
   YAML), and how it plays with `make map LEVEL=<id>`
   (`website/scripts/map-preview.mjs` — design/`--actual`/`--heatmap`).
+- **Enemies are compiled from YAML**, the same way. `website/scripts/enemies/<biome>/<id>.yaml`
+  is the source of truth — one self-describing file per mob, file stem == the
+  enemy `id`, carrying the whole `EnemyDef` (`src/game/defs/enemies/types.ts`).
+  `make levels` runs `generate-enemies.mjs` (loader
+  `website/scripts/enemy-data/load-yaml.mjs`, schema
+  `website/scripts/asset-tools/enemy-schema.mjs`) to validate every def against
+  the live cross-ref catalogs (companions, uniques, story items, weapons/gear)
+  and emit `src/generated/enemies.ts` (gitignored, regenerated on build — never
+  edit or commit it), which `src/game/defs/enemies/index.ts` re-exposes as
+  `ENEMY_DEFS`. It **must run before `generate-levels.mjs`** (levels cross-ref
+  the enemy ids), so the chain is `generate-assets → generate-enemies →
+  generate-levels → generate-bot-tuning`. The biome directory is organizational
+  only (the merged catalog is flat; a duplicate id fails the build). The
+  round-trip guard (`tests/content/enemy_roundtrip_test.ts`) pins the compiled
+  catalog to `tests/content/fixtures/enemies-snapshot.json`; accept an
+  intentional enemy change with `node scripts/update-enemy-snapshot.mjs`. See the
+  `enemy-design` skill.
 - The **autopilot's positioning knobs** compile the same way. `website/scripts/bot.yaml`
   (a global `default:` layer + per-level `levels:` overrides, mirroring
   `ladder.yaml`) is the hand-authored source of truth; `make levels` runs

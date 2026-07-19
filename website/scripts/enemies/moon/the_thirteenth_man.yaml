@@ -1,0 +1,15 @@
+id: the_thirteenth_man
+name: THE THIRTEENTH MAN
+role: minion
+rarity: unique
+sprite: the_thirteenth_man
+gore: ecto
+phasing: true
+hp: 90
+speed: 22
+radius: 9
+contactDamage: 20
+critChance: 0.12
+contactCooldownMs: 700
+ai:
+  aggroRadius: 1000

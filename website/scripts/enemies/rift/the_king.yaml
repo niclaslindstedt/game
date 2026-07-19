@@ -1,0 +1,30 @@
+id: the_king
+name: THE KING
+role: elite
+levelBonus: 3
+sprite: the_king
+apparition: true
+phasing: true
+hp: 50
+speed: 16
+radius: 9
+contactDamage: 0
+critChance: 0
+contactCooldownMs: 700
+dialogue:
+  - - WELL NOW. AIN'T SEEN A
+    - LIVING SOUL IN HERE SINCE
+    - THAT HAIRDRESSER FROM RENO.
+  - hero:
+      - NO. NO WAY. THE KING? THE
+      - WHOLE WORLD WATCHED YOUR
+      - FUNERAL IN '77.
+  - - I DIDN'T DIE, MAN. I TOOK A
+    - RESIDENCY. BEST ACOUSTICS
+    - BETWEEN UNIVERSES. UH-HUH.
+  - - MIND THE BLACK HOLES, KEEP
+    - YOUR BLUE SUEDES OFF THE EVENT
+    - HORIZON. THANK YOU VERY MUCH.
+ai:
+  aggroRadius: 240
+  rushSpeed: 100

@@ -1,0 +1,60 @@
+id: vladimir_putain
+name: VLADIMIR PUTAIN
+role: elite
+levelBonus: 4
+sprite: vladimir_putain
+hp: 700
+speed: 26
+radius: 12
+contactDamage: 30
+critChance: 0.12
+dodgeChance: 0.25
+contactCooldownMs: 700
+dialogue:
+  - - SO. THE BUILDER FROM THE RIFT.
+    - YOU STAND IN MY PARK, MY WEST.
+    - EVERYTHING HERE OBEYS ME.
+  - hero:
+      - YOUR WEST? THE GATE SIGN SAYS
+      - ZAI RUNS EVERY MACHINE HERE.
+      - YOU JUST LIVE IN IT.
+  - - OUT THERE I WAS MISUNDERSTOOD.
+    - WARS GO BADLY. MAPS SHRINK.
+    - IN HERE, NOTHING DOES. I WIN.
+  - hero:
+      - YOU BUILT A TOY WORLD WHERE
+      - YOU CAN'T LOSE. THAT'S NOT
+      - WINNING. THAT'S HIDING.
+  - - THE ROBOTS SURRENDER DAILY.
+    - YOU TOO. I'M A BLACK BELT -
+    - HONORARY. IT DOESN'T KNOW.
+lastWords:
+  - THE MAPS WERE WRONG...
+  - ...UKRAINE WAS NEVER MINE...
+mechanics:
+  charge:
+    windupMs: 700
+    speedMult: 3.5
+    range: 170
+    cooldownMs: 6000
+ai:
+  aggroRadius: 260
+  rushSpeed: 110
+loot:
+  items:
+    - defId: kolex_daytonne
+      tier: unique
+    - defId: putek_philippe
+      tier: unique
+    - defId: vacheron_kremlinton
+      tier: unique
+  storyItems:
+    - annexation_map
+  tierDrops:
+    magic: 1
+  weapons: 0
+  gear: 0
+  xpArrows: 2
+  repairs: 0
+  medkits: 1
+  tierBonus: 0.3

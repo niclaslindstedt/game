@@ -1,0 +1,55 @@
+id: donald_dump
+name: DONALD DUMP
+role: elite
+levelBonus: 6
+sprite: donald_dump
+hp: 2600
+speed: 10
+radius: 15
+contactDamage: 55
+critChance: 0.18
+dodgeChance: 0
+contactCooldownMs: 900
+dialogue:
+  - - MY WING. THE BEST WING. THE
+    - OTHERS PAID FOR SUITES. I WAS
+    - INVITED. TOTALLY INVITED.
+  - hero:
+      - DONALD DUMP. OF ALL THE
+      - PEOPLE TO OUTLIVE THE
+      - ECONOMY.
+  - - OUTLIVE? I CALLED IT. I SAID
+    - ROBOTS TAKE JOBS. NOBODY HEARD.
+    - SO I SOLD ROBOTS. TREMENDOUS.
+  - - VACUUM BOTS? MINE. THEY CLEAN
+    - AND FIGHT. ICE BOYS? MINE TOO.
+    - MY BORDER? CROSSED ILLEGALLY.
+  - hero:
+      - A ROOMBA WITH A GRUDGE AND A
+      - DEPORTATION SQUAD FOR A GUEST
+      - LIST. MOVE - YOU'RE IN MY WAY.
+  - - I BLOCK BEAUTIFULLY. ACCOUNTS
+    - SAY ZERO - A GLITCH, HUGE
+    - LAWSUIT COMING. YOU'RE FIRED.
+lastWords:
+  - RIGGED...
+  - ...TOTALLY RIGGED...
+mechanics:
+  slam:
+    windupMs: 1000
+    radius: 85
+    damageFrac: 1.3
+    cooldownMs: 9000
+ai:
+  aggroRadius: 260
+  rushSpeed: 60
+loot:
+  tierDrops:
+    rare: 1.5
+    magic: 1
+  weapons: 0
+  gear: 1
+  xpArrows: 2
+  repairs: 0
+  medkits: 2
+  tierBonus: 0.4

@@ -1,0 +1,17 @@
+id: moonlighting_agent
+name: MOONLIGHTING AGENT
+role: minion
+rarity: rare
+pack:
+  - 1
+  - 3
+sprite: moonlighting_agent
+hp: 100
+speed: 25
+radius: 8
+contactDamage: 20
+critChance: 0.15
+dodgeChance: 0.1
+contactCooldownMs: 700
+ai:
+  aggroRadius: 1000

@@ -1,0 +1,49 @@
+id: larry_webpage
+name: LARRY WEBPAGE
+role: elite
+levelBonus: 3
+sprite: larry_webpage
+hp: 260
+speed: 22
+radius: 12
+contactDamage: 22
+critChance: 0.12
+contactCooldownMs: 700
+dialogue:
+  - - DON'T BE EVIL. THAT'S FREE
+    - ADVICE. I INDEXED THIS WHOLE
+    - PLANET BEFORE BREAKFAST.
+  - hero:
+      - THEN YOUR INDEX KNOWS WHY I'M
+      - HERE. A GIRL CAME ON THE SPACEZ
+      - FREIGHT RUN. WHERE IS SHE?
+  - - I KNOW EXACTLY WHO YOU MEAN.
+    - I KNOW EVERY WORD IN THIS
+    - COLONY. AND THE ANSWER IS NO.
+  - hero:
+      - HOW COULD YOU KNOW EVERYTHING
+      - THAT'S SAID HERE? WHO'S
+      - LISTENING FOR YOU?
+  - - THE FEMBOTS. COMPANION UNITS.
+    - THEY SMILE. THEY LISTEN. THEY
+    - UPLOAD EVERY WORD TO ME.
+lastWords:
+  - 404...
+  - ...NOT... FOUND...
+ai:
+  aggroRadius: 250
+  rushSpeed: 120
+loot:
+  items:
+    - search_bar
+  tierDrops:
+    magic: 1
+    rare: 0.35
+  storyItems:
+    - engagement_report
+  weapons: 0
+  gear: 0
+  xpArrows: 1
+  repairs: 0
+  medkits: 1
+  tierBonus: 0.3

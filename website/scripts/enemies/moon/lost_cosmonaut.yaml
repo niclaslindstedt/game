@@ -1,0 +1,15 @@
+id: lost_cosmonaut
+name: LOST COSMONAUT
+role: minion
+rarity: rare
+sprite: lost_cosmonaut
+gore: ecto
+phasing: true
+hp: 45
+speed: 18
+radius: 9
+contactDamage: 12
+critChance: 0.1
+contactCooldownMs: 700
+ai:
+  aggroRadius: 950

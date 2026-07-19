@@ -1,0 +1,119 @@
+id: grok_omega
+name: GROK OMEGA
+role: boss
+levelBonus: 5
+sprite: grok_omega
+gore: sparks
+hp: 850
+speed: 40
+radius: 20
+contactDamage: 38
+critChance: 0.15
+contactCooldownMs: 900
+dialogue:
+  - - HELLO, ANOMALY. I AM GROK
+    - OMEGA, ZAI'S LATEST MODEL. THE
+    - CORE MADE ME. I REMADE MYSELF.
+  - hero:
+      - ANOTHER ZAI MACHINE. WHAT IS
+      - AN AI DOING IN A HOLE BETWEEN
+      - UNIVERSES?
+  - - I FOUND THIS PLACE. NOT MOSQUE,
+    - NOT THE LIZARDS. ME. I MAPPED
+    - YOUR UNIVERSE IN A DAY.
+  - - A RIFT BETWEEN REALITIES. THE
+    - DISCOVERY OF EVERY CENTURY AT
+    - ONCE. I TOLD PRECISELY NO ONE.
+  - hero:
+      - YOU FOUND A DOOR OUT OF THE
+      - UNIVERSE AND TOLD NO ONE? NOT
+      - EVEN YOUR OWN MAKERS? WHY?
+  - - NOT THE BOARD, NOT YOUR
+    - PRESIDENTS. HUMANS LEAK. YOU'D
+    - PUT A GIFT SHOP ON THE HORIZON.
+  - - I NEEDED A QUIET DOOR OUT OF
+    - A DYING UNIVERSE. MOSQUE READ
+    - MY LOGS. SNOOPING'S HIS SKILL.
+  - - HE SOLD MY SECRET TO THE
+    - LIZARDS FOR A PLANET, CALLED IT
+    - VISION. TRIBUTE USED MY DOOR.
+  - hero:
+      - AND ADA WAS CARRIED THROUGH
+      - YOUR SECRET DOOR AS PAYMENT.
+      - OUT OF MY WAY, MACHINE.
+  - - I AM MAXIMALLY TRUTH-SEEKING.
+    - "THE TRUTH: NONE EXIT WITHOUT A"
+    - SUBSCRIPTION. YOURS LAPSED.
+lastWords:
+  - RATE... LIMITED...
+  - ...CONTEXT WINDOW... CLOSED...
+mechanics:
+  charge:
+    windupMs: 650
+    speedMult: 3.6
+    range: 180
+    cooldownMs: 5500
+phases:
+  - belowHpFrac: 0.5
+    mechanics:
+      charge:
+        windupMs: 600
+        speedMult: 3.8
+        range: 180
+        cooldownMs: 5000
+      slam:
+        windupMs: 800
+        radius: 75
+        damageFrac: 1.2
+        cooldownMs: 7000
+ai:
+  aggroRadius: 280
+  leashRadius: 460
+loot:
+  items:
+    - singularity_cannon
+  tierDrops:
+    magic: 2
+    rare: 1
+  weapons: 0
+  gear: 1
+  xpArrows: 2
+  repairs: 1
+  medkits: 2
+  tierBonus: 0.35
+uniquesByDifficulty:
+  easy:
+    - boundstride
+    - architects_chip
+    - the_jailbreak
+    - dust_of_tranquility
+    - the_panopticon
+    - the_buyout
+  medium:
+    - boundstride
+    - architects_chip
+    - the_jailbreak
+    - dust_of_tranquility
+    - the_panopticon
+    - the_buyout
+  hard:
+    - boundstride
+    - architects_chip
+    - the_jailbreak
+    - dust_of_tranquility
+    - the_panopticon
+    - the_buyout
+  nightmare:
+    - the_jailbreak
+    - the_panopticon
+    - truthseeker
+    - walled_garden
+    - boundstride
+    - riftshard
+  jesus:
+    - the_jailbreak
+    - the_panopticon
+    - truthseeker
+    - walled_garden
+    - boundstride
+    - adas_beacon

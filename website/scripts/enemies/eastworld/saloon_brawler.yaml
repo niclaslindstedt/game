@@ -1,0 +1,13 @@
+id: saloon_brawler
+name: SALOON BRAWLER
+role: minion
+sprite: saloon_brawler
+gore: sparks
+hp: 85
+speed: 16
+radius: 9
+contactDamage: 17
+critChance: 0.12
+contactCooldownMs: 700
+ai:
+  aggroRadius: 950

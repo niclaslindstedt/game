@@ -93,9 +93,15 @@ run against synthetic fixtures with no shipped content (see
   over the run — build and release instead of a flat ramp), `chests` (placed
   containers with a richer haul than a crate), and `merchantSpawns` (authored
   trader spots).
-- **`src/game/defs/enemies/`** — the monster catalog, split one file per
-  roster (`spacez.ts`, `moon.ts`, …) merged into `ENEMY_DEFS` by
-  `enemies/index.ts` (which throws on a duplicate id): stats, AI radii,
+- **`src/game/defs/enemies/`** — the monster catalog. Enemies are authored as
+  **YAML** (`website/scripts/enemies/<biome>/<id>.yaml`, one self-describing file
+  per mob, stem == id) and compiled into `src/generated/enemies.ts` by
+  `website/scripts/generate-enemies.mjs` (`make levels`, before the level
+  generator so levels can cross-ref the enemy ids) — a schema validates every
+  referenced companion/unique/story/item id and fails the build on a typo or a
+  duplicate id, and the generated file is gitignored + regenerated (a round-trip
+  test pins it to a snapshot of the original defs). `enemies/index.ts` re-exposes
+  it as `ENEMY_DEFS` (stats, AI radii,
   roles; bosses and elites pin guaranteed drops). Roles: `minion` (the
   horde), `boss` (guards the objective), and `elite` — a unique story mob
   pinned to a spot by the level def, which sleeps until the player nears,

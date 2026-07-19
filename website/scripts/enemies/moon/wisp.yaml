@@ -1,0 +1,14 @@
+id: wisp
+name: WISP
+role: minion
+sprite: wisp
+gore: ecto
+phasing: true
+hp: 10
+speed: 13
+radius: 8
+contactDamage: 6
+critChance: 0.1
+contactCooldownMs: 700
+ai:
+  aggroRadius: 900

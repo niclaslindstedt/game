@@ -1,0 +1,63 @@
+id: grok_beta
+name: GROK BETA
+role: boss
+levelBonus: 4
+sprite: grok_beta
+xpBarShare: 0.1
+gore: sparks
+hp: 380
+speed: 34
+radius: 10
+contactDamage: 18
+critChance: 0.15
+dodgeChance: 0.2
+contactCooldownMs: 700
+dialogue:
+  - - ALPHA TALKS TOO MUCH. I'M
+    - BETA. I RUN THE WEATHER. EACH
+    - SUNSET YOU ADMIRED WAS MINE.
+  - hero:
+      - THE WEATHER. IN A THEME
+      - PARK. THAT'S THE JOB THEY
+      - BUILT A SUPERINTELLIGENCE FOR?
+  - - I ALSO RUN THE WIND. THE
+    - TUMBLEWEEDS ARE SCHEDULED.
+    - SPONTANEITY IS EXPENSIVE.
+  - - I'VE MODELED YOUR ODDS. THEY
+    - ARE WEATHER-DEPENDENT. TODAY'S
+    - "FORECAST: PROJECTILES."
+  - hero:
+      - SAVE THE FORECAST. YOUR BOSS
+      - HOLDS MY GIRL IN THAT CONTROL
+      - ROOM. I'M COMING THROUGH YOU.
+  - - THE SUPERCORE ASKED FOR A
+    - STORM. I AM THE STORM. THE
+    - ROCKS ARE MY UMBRELLA.
+  - - ONE MORE THING. THE SUNSET
+    - TONIGHT WAS FOR YOU. A
+    - GOODBYE. MINE OR YOURS.
+lastWords:
+  - FORECAST...
+  - ...DARK...
+ai:
+  aggroRadius: 300
+  leashRadius: 520
+ranged:
+  damage: 22
+  cooldownMs: 2400
+  range: 240
+  projectile:
+    speed: 170
+    radius: 4
+    lifetimeMs: 2400
+    sprite: zai_bolt
+  takesCover: true
+loot:
+  tierDrops:
+    magic: 1
+  weapons: 0
+  gear: 1
+  xpArrows: 1
+  repairs: 1
+  medkits: 0
+  tierBonus: 0.3

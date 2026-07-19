@@ -1,0 +1,12 @@
+id: guard
+name: SECURITY GUARD
+role: minion
+sprite: guard
+hp: 80
+speed: 26
+radius: 9
+contactDamage: 18
+critChance: 0.12
+contactCooldownMs: 700
+ai:
+  aggroRadius: 1000

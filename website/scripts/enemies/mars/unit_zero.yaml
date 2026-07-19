@@ -1,0 +1,14 @@
+id: unit_zero
+name: UNIT ZERO
+role: minion
+rarity: unique
+sprite: unit_zero
+gore: sparks
+hp: 85
+speed: 18
+radius: 9
+contactDamage: 20
+critChance: 0.12
+contactCooldownMs: 700
+ai:
+  aggroRadius: 1000

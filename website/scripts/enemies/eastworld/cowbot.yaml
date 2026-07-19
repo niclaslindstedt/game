@@ -1,0 +1,13 @@
+id: cowbot
+name: COWBOT
+role: minion
+sprite: cowbot
+gore: sparks
+hp: 18
+speed: 20
+radius: 8
+contactDamage: 10
+critChance: 0.1
+contactCooldownMs: 700
+ai:
+  aggroRadius: 950
