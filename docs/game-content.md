@@ -59,9 +59,11 @@ names its in-run music with an optional `music` id (a key into the app's
   ARCHITECT's keycard opens the last) still gate the corner story vaults. The
   hero opens in plain clothes (`heroSuited: false`) and recovers the EVA suit
   here. **Employee stampedes** (`LevelDef.stampedes` → the engine's herd
-  hazard): every 20–37 s a wall of five panicked staffers charges across the
-  aisles right-to-left at a steady, heavy pace, a dust cloud boiling off its
-  back. The herd knocks everything in its lane OVER — minions are flung aside
+  hazard): once the hero is halfway to DOGE-1 (`afterProgress: 0.5` — the
+  opening aisles, where a new player is still learning to steer and jump, stay
+  clear of the herd), every 20–37 s a wall of five panicked staffers charges
+  across the aisles right-to-left at a steady, heavy pace, a dust cloud boiling
+  off its back. The herd knocks everything in its lane OVER — minions are flung aside
   and knocked out for a few seconds (`STAMPEDES.trampleStunMs`; not killed, so
   a herd can't be farmed and doesn't thin the horde — no XP, no loot), elites
   and bosses are only shoved — and a grounded hero it catches takes a

@@ -919,6 +919,19 @@ function dropEarlyDrops(state: GameState, at: Vec2): void {
         pos,
         defId: entry.ability,
       });
+    } else if ("gear" in entry) {
+      // A scripted gear drop (a charm/armor onboarding hand-out — HQ's +INT
+      // focus visor on kill ~20). Minted at normal quality like the scripted
+      // weapon so the promised piece never arrives broken.
+      state.items.push({
+        id: state.nextId++,
+        kind: "equipment",
+        pos,
+        equipment: rollEquipment(state, {
+          defId: entry.gear,
+          quality: "normal",
+        }),
+      });
     } else {
       state.items.push({ id: state.nextId++, kind: entry.item, pos });
     }

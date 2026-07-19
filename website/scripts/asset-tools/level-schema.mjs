@@ -208,6 +208,8 @@ export function validateLevel(def, refs, description = "") {
   for (const d of loot.earlyDrops ?? []) {
     if (d.weapon && !refs.weapons.has(d.weapon))
       err(`unknown earlyDrops weapon "${d.weapon}"`);
+    if (d.gear && !refs.gear.has(d.gear))
+      err(`unknown earlyDrops gear "${d.gear}"`);
     if (d.ability && !refs.abilities.has(d.ability))
       err(`unknown earlyDrops ability "${d.ability}"`);
   }

@@ -722,6 +722,25 @@ function stampedeRumbleIntensity(state: GameState, hasSpec: boolean): number {
 const STAMPEDE_RUMBLE_FLOOR = 0.05;
 
 /**
+ * The hero's progress through the level along the spawn→boss run, 0..1. Uses
+ * the horizontal axis (the campaign floors read left-to-right, spawn on the
+ * left, boss on the right), so it is a stable "how far into the level am I"
+ * gauge that a weaving up-and-down path can't fool. Falls back to the level
+ * width when there is no boss to aim at.
+ */
+function heroRunProgress(state: GameState): number {
+  const def = levelDef(state.level.id);
+  const boss = def.spawns.find(
+    (s) => "at" in s && enemyDef(s.enemy).role === "boss",
+  );
+  const spawnX = state.playerSpawn.x;
+  const targetX = boss && "at" in boss ? boss.at.x : def.width;
+  const span = targetX - spawnX;
+  if (span <= 0) return 1;
+  return clamp((state.player.pos.x - spawnX) / span, 0, 1);
+}
+
+/**
  * Advance the employee stampedes: light the approach-dust telegraph as a herd
  * nears (rolling the lane it locks onto), mint a herd on the level's `everyMs`
  * cadence (capped at STAMPEDES.maxAlive in flight) down that lane, charge each
@@ -732,7 +751,8 @@ const STAMPEDE_RUMBLE_FLOOR = 0.05;
  * knockdown, `Player.knockoutMs`), and despawn a herd once it has charged clear
  * of the player's stage. A jump (z above JUMP.dodgeHeight) sails over the whole
  * wall; a hero already down is never trampled twice. Apparitions are mist.
- * Ignores obstacles and level bounds.
+ * Ignores obstacles and level bounds. Held back below the level's stampede
+ * `afterProgress` gate (see `heroRunProgress`).
  */
 export function stepStampedes(
   state: GameState,
@@ -740,7 +760,14 @@ export function stepStampedes(
   dtMs: number,
 ): void {
   const spec = levelDef(state.level.id).stampedes;
-  if (spec) {
+  // Hold the whole hazard back until the hero has crossed the level's
+  // `afterProgress` gate (the second-half beat of an onboarding floor). The
+  // countdown is FROZEN below the gate — so the first herd arrives a full
+  // interval AFTER the crossing, not the instant it is reached — and the
+  // approach rumble stays silent until then.
+  const gated = spec !== undefined && (spec.afterProgress ?? 0) > 0;
+  const armed = !gated || heroRunProgress(state) >= (spec?.afterProgress ?? 0);
+  if (spec && armed) {
     state.stampedeTimerMs -= dtMs;
 
     // APPROACH TELEGRAPH — the wall is SEEN coming: once the countdown enters
@@ -787,7 +814,9 @@ export function stepStampedes(
   // scaled by the current intensity — audible before the wall appears (the warn
   // window) and all through the charge. Runs even with no herd on the field yet
   // (the pre-spawn swell), so it sits ahead of the spawn/despawn bookkeeping.
-  if (spec) {
+  // Silent below the `afterProgress` gate — the floor stays quiet until the
+  // hazard can actually roll.
+  if (spec && armed) {
     state.stampedeRumbleMs -= dtMs;
     if (state.stampedeRumbleMs <= 0) {
       state.stampedeRumbleMs = STAMPEDES.rumbleEveryMs;

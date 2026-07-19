@@ -334,7 +334,8 @@ export const WEAPON_DEFS: Record<string, WeaponDef> = {
     icon: "icon_nine_mm",
   },
   // The guards' telescoping baton: real reach, honest tempo — and the HQ
-  // run's scripted second-kill drop, so its levelReq must stay at 1.
+  // run's scripted mid-opener drop (the first AoE, ~kill 10), so its levelReq
+  // must stay at 1.
   security_baton: {
     id: "security_baton",
     material: "metal",
@@ -343,14 +344,16 @@ export const WEAPON_DEFS: Record<string, WeaponDef> = {
     levelReq: 1,
     // A cone-AoE base — light per blow, the arc catching several at once — but
     // no longer the anomalously feeble dmg-4 it was: at 4 it hit softer than
-    // the JESUS stick and, as HQ's scripted second-kill drop, auto-equipped
+    // the JESUS stick and, as HQ's scripted mid-opener drop, auto-equipped
     // over EASY's ranged wand starter into a crippling downgrade. Bumped to a
-    // respectable opener; the cone budget (per-hit ÷4) over-prices its cleave,
-    // so this sits a touch above the cone-4 budget on purpose — capped just
-    // under the next melee rung (lunar_wrench) so leveling still pays — and the
-    // damped melee AoE ranking (WEAPON.meleeAoeRealized) makes it out-fight,
-    // not just out-paper, the weapon it replaces.
-    damage: 5,
+    // respectable opener — the crowd-clearing AoE weapon the onboarding hands
+    // the player once the starter has been let stretch its legs; the cone budget
+    // (per-hit ÷4) over-prices its cleave, so this sits a touch above the cone-4
+    // budget on purpose — capped just under the next melee rung (lunar_wrench)
+    // so leveling still pays — and the damped melee AoE ranking
+    // (WEAPON.meleeAoeRealized) makes it out-fight, not just out-paper, the
+    // weapon it replaces.
+    damage: 6,
     cooldownMs: 400,
     range: 42,
     sweepDeg: 100,

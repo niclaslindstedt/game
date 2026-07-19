@@ -1,0 +1,29 @@
+name: icon_focus_visor
+family: icons
+size: [12, 12]
+description: >
+  A pair of AR safety glasses with a glowing cyan heads-up lens band.
+subject:
+  kind: item icon
+  features: wraparound safety glasses with a single wide glowing lens band and side arms
+  accent: cyan heads-up glow
+  flavor: the assembly line's smart safety glasses — a sharper read of the floor
+palette:
+  O: "#1a1c2c" # dark outline
+  v: "#60687e" # grey frame
+  c: "#8ccdd7e1" # cyan lens glow
+  x: "#c5e6ebe1" # bright cyan highlight
+  y: "#ffb02e" # amber temple accent
+grid: |
+  ............
+  ............
+  ...OOOOOO...
+  ..OvvvvvvO..
+  yOOccccccOOy
+  yOxccxxccxOy
+  yOccccccccOy
+  ..OvvvvvvO..
+  ...OOOOOO...
+  ....O..O....
+  ............
+  ............

@@ -656,6 +656,21 @@ export const GEAR_DEFS: Record<string, GearDef> = {
     bonuses: { critChance: 0.03 },
     icon: "icon_badge",
   },
+  // SPACEZ HQ onboarding trinket — the assembly floor's AR safety glasses,
+  // scripted into the opening loot cadence (`earlyDrops`) around kill 20. Like
+  // the PASSAGE CHIP it is a passive charm: its `+1 INT` applies while merely
+  // carried, never occupying an equip slot (see `isPassiveItem`), so a new
+  // player pockets it and the starter's cleave WIDENS for free — the onboarding
+  // lesson that a stat lifts every weapon. A `charm` slot only so it is a
+  // well-formed piece of gear should the player ever drag it onto the body.
+  smart_glasses: {
+    id: "smart_glasses",
+    name: "SMART GLASSES",
+    slot: "charm",
+    bonuses: {},
+    passive: { intelligence: 1 },
+    icon: "icon_focus_visor",
+  },
   moon_charm: {
     id: "moon_charm",
     name: "MOON CHARM",
