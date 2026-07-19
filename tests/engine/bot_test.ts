@@ -485,3 +485,112 @@ describe("bot hay-ball awareness", () => {
     expect(bot.lastThought).not.toBe("HAY");
   });
 });
+
+describe("bot sand-storm avoidance", () => {
+  /** A hand-built storm placed by the test rather than the spawner. */
+  function pushStorm(
+    state: GameState,
+    overrides: Partial<{
+      pos: { x: number; y: number };
+      dir: { x: number; y: number };
+      speed: number;
+      radius: number;
+      struck: boolean;
+    }>,
+  ): void {
+    state.sandstorms.push({
+      id: state.nextId++,
+      pos: overrides.pos ?? { ...state.player.pos },
+      dir: overrides.dir ?? { x: 1, y: 0 },
+      speed: overrides.speed ?? 60,
+      radius: overrides.radius ?? 34,
+      spin: 0,
+      struck: overrides.struck ?? false,
+      fadeMs: overrides.struck ? 1400 : null,
+    });
+  }
+
+  /** A far, harmless mob so `botAct` runs its full combat flow (past the
+   * clear-field shortcut) — the realistic "mid-fight, a storm rolls in" case. */
+  function distantFoe(state: GameState): void {
+    state.enemies = [
+      makeEnemy({
+        pos: { x: state.player.pos.x + 900, y: state.player.pos.y },
+        hp: 1_000_000,
+        maxHp: 1_000_000,
+      }),
+    ];
+  }
+
+  it("sidesteps an incoming storm perpendicular off its drift line", () => {
+    const state = startGame();
+    clearStage(state);
+    distantFoe(state);
+    const at = { ...state.player.pos };
+    // A storm 100px behind him, drifting straight at him along +x: he sits dead
+    // on its centreline and it's closing — he must step off the line (in ±y).
+    pushStorm(state, { pos: { x: at.x - 100, y: at.y }, dir: { x: 1, y: 0 } });
+    const bot = createBot("survivor");
+    const input = botAct(bot, state);
+    expect(bot.lastThought).toBe("STORM");
+    expect(input.steering).toBe(true);
+    // The escape is lateral: mostly a ±y move, not straight down the drift.
+    expect(Math.abs(input.target.y - at.y)).toBeGreaterThan(
+      Math.abs(input.target.x - at.x),
+    );
+    expect(input.jump).toBe(false);
+  });
+
+  it("dodges a storm even on a clear field, before it can idle him into one", () => {
+    const state = startGame();
+    clearStage(state);
+    state.enemies = []; // nothing to fight — the loop would otherwise idle
+    const at = { ...state.player.pos };
+    pushStorm(state, { pos: { x: at.x - 100, y: at.y }, dir: { x: 1, y: 0 } });
+    const bot = createBot("survivor");
+    expect(botAct(bot, state).steering).toBe(true);
+    expect(bot.lastThought).toBe("STORM");
+  });
+
+  it("ignores a storm that has already struck (it can't hit again)", () => {
+    const state = startGame();
+    clearStage(state);
+    distantFoe(state);
+    pushStorm(state, {
+      pos: { x: state.player.pos.x - 40, y: state.player.pos.y },
+      dir: { x: 1, y: 0 },
+      struck: true,
+    });
+    const bot = createBot("survivor");
+    botAct(bot, state);
+    expect(bot.lastThought).not.toBe("STORM");
+  });
+
+  it("ignores a storm whose swept lane misses him", () => {
+    const state = startGame();
+    clearStage(state);
+    distantFoe(state);
+    // Same approach, but offset far to the side — well outside the corridor.
+    pushStorm(state, {
+      pos: { x: state.player.pos.x - 100, y: state.player.pos.y + 300 },
+      dir: { x: 1, y: 0 },
+    });
+    const bot = createBot("survivor");
+    botAct(bot, state);
+    expect(bot.lastThought).not.toBe("STORM");
+  });
+
+  it("ignores a storm already drifting away from him", () => {
+    const state = startGame();
+    clearStage(state);
+    distantFoe(state);
+    // Storm ahead of him, drifting further away (+x) — it's leaving, not coming.
+    pushStorm(state, {
+      pos: { x: state.player.pos.x + 120, y: state.player.pos.y },
+      dir: { x: 1, y: 0 },
+    });
+    const bot = createBot("survivor");
+    botAct(bot, state);
+    expect(bot.lastThought).not.toBe("STORM");
+  });
+});

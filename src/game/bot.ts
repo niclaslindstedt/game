@@ -293,7 +293,19 @@ const idleInput = (): GameInput => ({
 /** Decide this tick's input. Pure w.r.t. `state` (reads it, never mutates it);
  * only annotates the bot with its `nav` memory and `lastThought` debug label. */
 export function botAct(bot: Bot, state: GameState): GameInput {
-  if (bot.strategy === "idle" || state.enemies.length === 0) {
+  if (bot.strategy === "idle") {
+    think(bot, "IDLE");
+    return idleInput();
+  }
+  // A clear field: nothing to fight, so the loop below would just idle — but a
+  // sand storm (mars) can still roll in unopposed, and idling into a knockout
+  // is the worst place to be caught. Sidestep it first; else stand easy.
+  if (state.enemies.length === 0) {
+    const stormDodge = dodgeSandstorm(state, botTuningFor(state.level.id));
+    if (stormDodge) {
+      think(bot, "STORM");
+      return stormDodge;
+    }
     think(bot, "IDLE");
     return idleInput();
   }
@@ -349,6 +361,14 @@ export function botAct(bot: Bot, state: GameState): GameInput {
     if (hay) {
       think(bot, "HAY");
       return hay;
+    }
+    // Sidestep an incoming sand storm (mars) before it sweeps over him — a
+    // knockout in the horde is deadlier than most single hits, so getting off
+    // its line preempts the strategy below.
+    const stormDodge = dodgeSandstorm(state, tune);
+    if (stormDodge) {
+      think(bot, "STORM");
+      return stormDodge;
     }
     switch (bot.strategy) {
       case "rush":
@@ -986,6 +1006,57 @@ function dodgeHayBall(state: GameState, tune: BotTuning): GameInput | null {
   const grounded = player.z === 0;
   const jump = grounded && best <= threat.radius + PLAYER.radius;
   return steer(state, { x: player.pos.x, y: player.pos.y + sign * 90 }, jump);
+}
+
+/**
+ * A dodge input when a SAND STORM (mars) is about to sweep over the grounded
+ * hero — else null. A storm drifts a straight, readable line SLOW enough to
+ * walk clear of, and being caught means a 2-second KNOCKOUT (Player.knockoutMs)
+ * that leaves him prone and helpless in the horde — a far worse trade than one
+ * hit. So the bot reads it like a charge telegraph: if he sits inside a storm's
+ * swept corridor and it's closing, sidestep PERPENDICULAR off the drift line to
+ * the open side and walk clear. A gust is too wide to hop, so the escape is
+ * lateral, never a jump. A storm that already STRUCK is spent — it can't knock
+ * him out again — so its fading drift is ignored.
+ */
+function dodgeSandstorm(state: GameState, tune: BotTuning): GameInput | null {
+  const pos = state.player.pos;
+  for (const storm of state.sandstorms) {
+    if (storm.struck) continue;
+    const dir = storm.dir;
+    const relX = pos.x - storm.pos.x;
+    const relY = pos.y - storm.pos.y;
+    // How far ahead of the storm the hero sits, along its drift, and how far off
+    // its centreline (the swept lane's half-width).
+    const along = relX * dir.x + relY * dir.y;
+    if (along < -storm.radius) continue; // behind it — it's drifting away
+    const reactDist =
+      storm.radius + PLAYER.radius + storm.speed * tune.sandstormReactSec;
+    if (along > reactDist) continue; // still far up its path — it may drift wide
+    const perpX = relX - dir.x * along;
+    const perpY = relY - dir.y * along;
+    const perp = Math.hypot(perpX, perpY);
+    const corridor = storm.radius + PLAYER.radius + tune.sandstormClearance;
+    if (perp >= corridor) continue; // outside the swept lane — no need to move
+    // Step to whichever side he's already leaning (fastest out of the lane);
+    // dead-centre, take the drift's left normal. Flip if that side walks him
+    // into a wall.
+    let px = -dir.y;
+    let py = dir.x;
+    if (perp > 1e-3 && perpX * px + perpY * py < 0) {
+      px = -px;
+      py = -py;
+    }
+    const stepOut = corridor + 50;
+    let tx = pos.x + px * stepOut;
+    let ty = pos.y + py * stepOut;
+    if (insideObstacle(state, { x: tx, y: ty }, PLAYER.radius)) {
+      tx = pos.x - px * stepOut;
+      ty = pos.y - py * stepOut;
+    }
+    return steer(state, { x: tx, y: ty });
+  }
+  return null;
 }
 
 /** A unit vector pointing away from the local pack, weighted so the NEAREST
