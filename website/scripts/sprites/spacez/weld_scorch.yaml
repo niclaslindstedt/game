@@ -1,0 +1,28 @@
+name: weld_scorch
+family: spacez
+size: [14, 10]
+description: >
+  A weld-scorch mark burned into the assembly-floor plating, a few live sparks
+  still glowing at its edge; flat ground decor.
+subject:
+  kind: ground decor prop
+  build: an irregular dark scorch smeared across the floor panel
+  features: a scatter of tiny white-hot and amber spark flecks around the burn
+  accent: charred plating with live weld sparks
+  flavor: where a welder-bot was working the hull a moment ago
+palette:
+  O: "#1a1c2c" # charred core
+  b: "#3f4553" # scorch smear
+  y: "#ffb02e" # amber spark
+  x: "#c5e6ebe1" # white-hot spark
+grid: |
+  ..............
+  ....bb....x...
+  ...bbbbb......
+  ..bbOObbbb.y..
+  ..bbOObbbbb...
+  ...bbbbbbb.x..
+  ....bbbbb.....
+  ...y..bb......
+  ..............
+  ..............

@@ -1,0 +1,33 @@
+name: parts_bin
+family: spacez
+size: [14, 12]
+description: >
+  An open parts bin on the assembly floor — a slate tote heaped with colourful
+  ship components (bolts, panels, a coil) poking over the rim; ground decor.
+subject:
+  kind: ground decor prop
+  build: a small open supply bin seen from above, parts heaped above the rim
+  features: amber bolts, a red panel and a cyan coil sticking up out of the tote
+  accent: colourful ship parts in a slate bin
+  flavor: feedstock for the line — the plant runs on parts, not paperwork
+palette:
+  O: "#1a1c2c" # outline
+  v: "#60687e" # slate bin
+  b: "#3f4553" # bin shadow
+  W: "#f4f4f4" # bright bolt head
+  y: "#ffb02e" # amber bolts
+  r: "#d83a3a" # red panel
+  c: "#8ccdd7e1" # cyan coil
+grid: |
+  ..............
+  ...yy...cc....
+  ..OyWyOOccO...
+  ..OyyrrrycO...
+  .OvvvvvvvvvvO.
+  .OvbbbbbbbbvO.
+  .OvbWvvvvWbvO.
+  .OvbvvvvvvbvO.
+  .OvbbbbbbbbvO.
+  .OvvvvvvvvvvO.
+  ..OOOOOOOOOO..
+  ..............

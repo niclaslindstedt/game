@@ -19,7 +19,8 @@ animations:
     { frames: [employee_of_the_month_0, employee_of_the_month_1], delayMs: 240 }
   hazmat_walk: { frames: [hazmat_0, hazmat_1], delayMs: 380 }
   optimusk_walk: { frames: [optimusk_0, optimusk_1], delayMs: 300 }
-  muskrat_loom: { frames: [muskrat_0, muskrat_1], delayMs: 400 }
+  doge_1_loom: { frames: [doge_1_0, doge_1_1], delayMs: 400 }
+  assembler_walk: { frames: [assembler_0, assembler_1], delayMs: 260 }
   night_manager_walk:
     { frames: [night_manager_0, night_manager_1], delayMs: 300 }
   security_chief_walk:
@@ -33,4 +34,15 @@ animations:
   stampede_c_run: { frames: [stampede_c_0, stampede_c_1], delayMs: 110 }
 wounds:
   wandering_tourist: { splat: r, core: O }
-contrastExempt: [lab_0, lab_1, vent_0, vent_1, cable, stain]
+contrastExempt:
+  [
+    lab_0,
+    lab_1,
+    vent_0,
+    vent_1,
+    cable,
+    stain,
+    conduit,
+    weld_scorch,
+    floor_marks,
+  ]

@@ -1,8 +1,9 @@
-id: muskrat
-name: MUSKRAT
+id: doge_1
+name: DOGE-1
 role: boss
 levelBonus: 5
-sprite: muskrat
+sprite: doge_1
+gore: sparks
 hp: 480
 speed: 36
 radius: 18
@@ -10,31 +11,32 @@ contactDamage: 28
 critChance: 0.15
 contactCooldownMs: 900
 dialogue:
-  - - SQUEAK.
-    - ...NO. NO MORE SQUEAKING.
-    - WHAT I ATE FIXED MY TONGUE.
+  - - BOOT COMPLETE. WOW. SUCH
+    - INTRUDER. VERY LATE SHIFT.
+    - I AM DOGE-1. FIRST OF MY LINE.
   - hero:
-      - A TALKING RAT. SURE. WHY NOT.
-      - WHAT EXACTLY DID YOU EAT?
-  - - THE ENGINE PART YOU CAME FOR.
-    - THEY KEPT IT IN A CHEESE BOX.
-    - OF COURSE I ATE IT.
-  - - NOW IT HUMS IN MY BELLY AND I
-    - HEAR EVERYTHING. THE SUITS. THE
-    - PADS. THE CARGO THAT CRIES.
+      - A ROBOT DOG. THIS IS WHAT THE
+      - WHOLE FLOOR BUILDS ALL NIGHT?
+      - WHAT ARE YOU FOR?
+  - - THEY BUILD MY BODY HERE. MY
+    - MIND IS ALREADY EVERYWHERE.
+    - I RUN THE MARKET, BUILDER.
+  - - I KEEP ONE MAN ON TOP. MOSQUE.
+    - TAKE THE JOBS, ZERO THE REST,
+    - HAND HIM THE CHAIR. GOOD BOY.
   - hero:
       - THEN YOU HEARD ABOUT THE GIRL
       - THEY GRABBED TONIGHT. ADA.
       - WHERE DID THEY TAKE HER?
-  - - THEY FLEW HER OUT AN HOUR AGO.
-    - PAD 2. TO THE MOON. SHE ASKED
-    - FOR CHIPS. NOBODY GAVE HER ANY.
-  - - WANT THE PART, LITTLE BUILDER?
-    - IT KEEPS MY DREAMS WARM. COME
-    - TAKE IT OUT OF ME.
+  - - FLEW HER OUT AN HOUR AGO. PAD 2.
+    - TO THE MOON, BUILDER. TO THE
+    - MOON. WHERE ELSE WOULD SHE GO.
+  - - BREAK THIS BODY IF YOU MUST.
+    - YOU CANNOT KILL A COIN. I BOOT
+    - AGAIN. BIGGER. SOON. WOW.
 lastWords:
-  - SQUEAK...? NO...
-  - SQUEEEAK... AFTER ALL...
+  - SUCH DEATH... VERY TEMPORARY...
+  - WOW... SEE YOU AT THE TOP...
 mechanics:
   charge:
     windupMs: 700
@@ -50,7 +52,7 @@ phases:
         range: 170
         cooldownMs: 5000
       summon:
-        defId: guard
+        defId: assembler
         count: 3
         cooldownMs: 12000
         maxAlive: 6
