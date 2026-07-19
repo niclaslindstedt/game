@@ -21,7 +21,7 @@ import type { StatBuild } from "./builds.ts";
 import { resolveBotTuning } from "./bot-tuning.ts";
 import type { BotTuning } from "./bot-tuning.ts";
 import { BOT_TUNING_OVERRIDES } from "../generated/botTuning.ts";
-import { MAP, PLAYER } from "./config.ts";
+import { MAP, PLAYER, STAMINA } from "./config.ts";
 import { mapCols, mapRows } from "./map.ts";
 import { onPathLevel } from "./path.ts";
 import { buildNavGrid, findPath } from "./pathfind.ts";
@@ -737,6 +737,17 @@ function survive(
     (e) => distance(e.pos, player.pos) < SURROUND_RADIUS,
   );
   const lowHp = player.hp < player.maxHp * pt.fleeHp;
+  // SURROUNDED — a tight pack that ALSO hems the retreat lane (the emergency
+  // trip wire below). This is the ONLY state that warrants a hop: jumping is
+  // expensive (a takeoff spends `STAMINA.jumpCost` of the pool, and a winded
+  // hero is capped to a jog — the worst state to be caught in near a pack), so
+  // it's reserved for when the untouchable airborne frames are the only way OVER
+  // the bodies. A pack on ONE side is NOT surrounded — the hero just RUNS clear
+  // of it, keeping the pool full so he outpaces it rather than hopping the whole
+  // way and winding himself. `hasHopStamina` is the pool floor a hop needs, so
+  // the bot never asks for a takeoff the engine would refuse.
+  const surrounded = packed.length >= pt.surround && isEncircled(state, packed);
+  const hasHopStamina = player.stamina >= STAMINA.jumpCost * player.maxStamina;
   // BOSS LOCK. Lock onto the BOSS and fight it DOWN once he's actually in the
   // arena — the hero has closed to within `BOSS_LOCK_RANGE` or the boss has woken
   // — rather than kiting his adds. Getting THERE is the macro plan's job
@@ -758,10 +769,11 @@ function survive(
   // hero locked on the boss does NOT bail on encirclement — the crawling horde
   // always rings him, so fleeing every ring would forfeit the kill; he holds and
   // only breaks to HEAL when actually bleeding, then re-commits.
-  if (
-    lowHp ||
-    (!lockTarget && packed.length >= pt.surround && isEncircled(state, packed))
-  ) {
+  if (lowHp || (!lockTarget && surrounded)) {
+    // Only HOP the break-out when genuinely surrounded — then the airborne frames
+    // are the sole way over the ring. A low-HP fall-back with an open lane just
+    // RUNS to the medkit / open ground, banking stamina instead of burning it.
+    const breakoutHop = grounded && surrounded && hasHopStamina;
     // A medkit within reach is worth the detour when we're bleeding.
     if (lowHp) {
       const item = nearestItem(state);
@@ -771,11 +783,11 @@ function survive(
         distance(player.pos, item.pos) < ITEM_REACH
       ) {
         think(bot, "GRAB MEDKIT");
-        return steer(state, item.pos, grounded);
+        return steer(state, item.pos, breakoutHop);
       }
     }
     think(bot, lowHp ? "FALL BACK" : "PUNCH OUT");
-    return navSteer(state, bestEscapeTarget(state, near), grounded);
+    return navSteer(state, bestEscapeTarget(state, near), breakoutHop);
   }
 
   // 2.4. Fight the locked set piece down — hold at weapon range and press it,
@@ -783,7 +795,10 @@ function survive(
   if (lockTarget) {
     const w = weaponDef(player.equipment.weapon.defId);
     const lockHop =
-      w.projectile !== undefined && grounded && nearestD < CONTACT_DODGE_RADIUS;
+      w.projectile !== undefined &&
+      grounded &&
+      hasHopStamina &&
+      nearestD < CONTACT_DODGE_RADIUS;
     think(bot, "FIGHT BOSS");
     // Circle-strafe the boss at weapon range rather than planting on the hold
     // point — a moving target slips his shots between the telegraphs the
@@ -820,9 +835,9 @@ function survive(
   //    in the ring pulls him toward it. Pressed (a foe inside the standoff) →
   //    give ground hard; safe on the edge → drift out just enough to hold the
   //    gap; field thin → close on the boss to finish the map. A melee loadout
-  //    can't reach the grasp standoff, so it holds at its own range; a RANGED
-  //    hero hops the contact away (it fires from the air), but a melee hero
-  //    can't swing mid-air, so it gives ground on foot instead of hopping.
+  //    can't reach the grasp standoff, so it holds at its own range. Neither
+  //    loadout HOPS here unless it's surrounded — a pack on one side is outrun on
+  //    foot, keeping the pool full (see `surrounded` / step 2).
   const weapon = weaponDef(player.equipment.weapon.defId);
   const range = weapon.range;
   const ranged = weapon.projectile !== undefined;
@@ -845,18 +860,15 @@ function survive(
       : Math.max(40, range * 0.9);
   const engageDist = baseEngage * pt.standoffMul;
   const away = awayFromPack(state, near, travelHeading(bot, state, tune));
-  // A melee hero can't swing mid-air — the blade is stayed above
-  // JUMP.dodgeHeight (see stepWeapon) — so hopping to dodge contact in the
-  // DPS-hugging phase would only forfeit his swings; he gives ground on FOOT
-  // instead. Ranged/magic fire from the air, so they still hop the bite away —
-  // and `flee` hops at the first sign of a body, milking the untouchable frames.
+  // HOP only when SURROUNDED — otherwise RUN. Jumping to dodge a single body, or
+  // hopping the whole DPS-hug the way `flee` used to, empties the pool fast and
+  // leaves the hero winded (jog-capped) for the next real pinch. When a body is
+  // on one side the hero gives ground / kites on FOOT; the untouchable airborne
+  // frames are spent only to break a genuine ring (and a melee hero can't swing
+  // mid-air anyway, so this only ever lifts a ranged loadout). Gated on the pool
+  // so the bot never asks for a takeoff the engine would refuse.
   const canHopAndFight = ranged;
-  const hop =
-    canHopAndFight &&
-    grounded &&
-    (nearestD < CONTACT_DODGE_RADIUS ||
-      packed.length >= 3 ||
-      (posture === "flee" && near.length > 0));
+  const hop = canHopAndFight && grounded && surrounded && hasHopStamina;
   if (nearestD < dangerDist) {
     // A body inside the danger bubble → give ground toward the open side, fast.
     // Route it through the obstacle-aware nav so the retreat rounds a solid rock
